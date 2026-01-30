@@ -145,9 +145,32 @@ PORT=4000
 LOG_LEVEL=debug
 ```
 
-### Development
+### Development with Docker Compose (Recommended)
 
-Start all applications in development mode:
+For a fully containerized development environment with exact production parity:
+
+```bash
+# Start all services (PostgreSQL, Redis, Backend API, Frontend)
+./scripts/dev.sh
+```
+
+This starts:
+- **Frontend**: http://localhost:3000 (TanStack Start with Vite HMR)
+- **Backend API**: http://localhost:4000 (Effect-ts RPC + health check)
+- **PostgreSQL**: localhost:5432 (development database)
+- **Redis**: localhost:6379 (cache and rate limiting)
+
+**Features**:
+- Hot reload on code changes (tsx watch for backend, Vite HMR for frontend)
+- Full production parity (same versions, same architecture)
+- No local dependencies needed (Node, pnpm, PostgreSQL all in Docker)
+- Isolated development environment
+
+For detailed Docker instructions, see [DOCKER.md](./DOCKER.md).
+
+### Development Without Docker
+
+Start all applications in development mode locally:
 
 ```bash
 pnpm dev
@@ -155,7 +178,7 @@ pnpm dev
 
 This starts:
 
-- **api** (Node + oRPC): http://127.0.0.1:4000
+- **api** (Node + Effect-ts RPC): http://127.0.0.1:4000
 - **front** (Vite + React): http://127.0.0.1:3000 - Therapist chat interface
 - **web** (Next.js): http://127.0.0.1:3001
 
@@ -164,6 +187,11 @@ The **front** app includes:
 - Real-time personality trait visualization
 - Streaming responses from Claude
 - Session management with automatic redirect
+
+**Prerequisites for local development**:
+- PostgreSQL 16+ running locally
+- Redis running locally
+- All node_modules installed locally
 
 ### Running Individual Apps
 

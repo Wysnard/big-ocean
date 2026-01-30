@@ -149,6 +149,47 @@ pnpm drizzle-kit push              # Apply migrations to database
 pnpm drizzle-kit studio            # Open Drizzle Studio UI
 ```
 
+### Docker Compose Development (Story 1.4)
+
+For containerized development with exact production parity:
+
+```bash
+# Start all services (PostgreSQL, Redis, Backend API, Frontend)
+./scripts/dev.sh
+
+# Stop services (keeps data)
+docker compose stop
+# or
+./scripts/dev-stop.sh
+
+# Full reset (removes all data)
+./scripts/dev-reset.sh
+
+# View logs
+docker compose logs -f backend    # Backend logs with hot reload
+docker compose logs -f frontend   # Frontend logs with Vite HMR
+docker compose logs -f postgres   # Database logs
+docker compose logs -f redis      # Cache logs
+
+# Access services
+curl http://localhost:4000/health  # Test backend health
+docker compose exec postgres psql -U dev -d bigocean  # Access database
+docker compose exec redis redis-cli  # Access cache
+
+# Rebuild after dependency changes
+docker compose build
+docker compose up
+```
+
+**Key Features**:
+- **Port mapping**: Frontend (3000), Backend (4000), PostgreSQL (5432), Redis (6379)
+- **Hot reload**: Backend (tsx watch), Frontend (Vite HMR)
+- **Volumes**: `./apps/api/src` and `./apps/front/src` mounted for real-time changes
+- **Health checks**: All services validate startup order and readiness
+- **Database persistence**: postgres_data and redis_data named volumes
+
+See [DOCKER.md](./DOCKER.md) for comprehensive Docker development guide.
+
 ## Architecture & Key Patterns
 
 ### Workspace Dependencies
