@@ -47,7 +47,7 @@ development_status:
   1-2-integrate-better-auth-for-email-password-authentication: ready-for-dev
   1-3-configure-effect-ts-rpc-contracts-and-infrastructure-layer: done
   1-4-docker-compose-local-development-setup: review
-  1-5-frontend-mockup-home-and-mocked-chat-ui: in-progress
+  1-5-frontend-mockup-home-and-mocked-chat-ui: review
   epic-1-retrospective: optional
 
   # EPIC 2: Assessment Backend Services
