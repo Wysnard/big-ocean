@@ -53,9 +53,10 @@ Vulnerability
 - **Real-Time Trait Tracking**: Live updates of personality trait scores and confidence levels during the conversation
 - **Streaming Responses**: Server-sent events provide immediate feedback as the AI responds
 - **Session Persistence**: Conversation history and trait assessments are preserved across the session
-- **Type-Safe API**: End-to-end type safety using oRPC and Zod contracts
+- **Type-Safe API**: End-to-end type safety using Effect-ts RPC contracts and Effect Schema
 - **Comprehensive Logging**: Structured logging with Winston for debugging and monitoring
 - **Modern UI**: Built with shadcn/ui components and Tailwind CSS v4
+- **Production Ready**: Deployed on Railway with health checks and automatic restart policies
 
 ## Tech Stack
 
@@ -63,37 +64,56 @@ This is a modern monorepo built with:
 
 - **Monorepo**: Turbo + pnpm workspaces
 - **Frontend Apps**:
-  - **front**: Vite + React 19 with TanStack Router, React Query, React Form, and React Table
+  - **front**: TanStack Start (full-stack SSR) with React 19, TanStack Router, TanStack Query, TanStack Form
   - **web**: Next.js 16 with shadcn/ui components
-- **Backend**: Node.js with oRPC
+- **Backend**: Node.js with Effect-ts 3.19+ for functional programming
+- **API Framework**: @effect/rpc for type-safe RPC contracts with Effect Schema validation
 - **AI/LLM**: LangChain + LangGraph with Claude (Anthropic)
-- **API**: oRPC with type-safe contracts using Zod, streaming support
+- **Database**: Drizzle ORM with PostgreSQL (Railway managed)
+- **Real-Time Sync**: ElectricSQL for local-first data synchronization
 - **Logging**: Winston with structured logging
 - **Styling**: Tailwind CSS v4
-- **Code Quality**: Biome (front), ESLint, Prettier
+- **Code Quality**: ESLint, Prettier
+- **Deployment**: Railway with Docker containerization
 
 ## Project Structure
 
 ```
 apps/
-  ├── api/          # oRPC backend API
+  ├── api/          # Node.js backend with Effect-ts
   │   ├── src/
-  │   │   ├── llm/            # LangGraph therapist agent
-  │   │   ├── procedures/     # oRPC procedure implementations
-  │   │   ├── logger.ts       # Winston logging configuration
-  │   │   ├── router.ts       # oRPC router
-  │   │   └── index.ts        # Server with logging middleware
-  │   └── logs/      # Log files (all.log, error.log)
-  ├── front/        # Vite + React frontend (port 3000)
+  │   │   ├── llm/              # LangGraph therapist agent
+  │   │   ├── handlers/         # Effect-ts RPC handler layers
+  │   │   ├── logger.ts         # Winston logging configuration
+  │   │   ├── index.ts          # Effect-ts server with health check
+  │   │   └── Dockerfile        # Production container config
+  │   ├── railway.json          # Railway deployment config
+  │   └── package.json          # Dependencies and scripts
+  ├── front/        # TanStack Start full-stack SSR (port 3001)
   │   └── src/
-  │       ├── routes/chat/    # Therapist chat interface
-  │       ├── hooks/          # React hooks (useTherapistChat)
-  │       └── components/     # TherapistChat component
-  └── web/          # Next.js frontend (port 3001)
+  │       ├── routes/           # File-based routing
+  │       ├── hooks/            # React hooks (useAssessment, etc)
+  │       ├── lib/              # RPC client setup
+  │       └── components/       # shadcn/ui components
+  └── web/          # Next.js frontend (port 3000)
 
 packages/
-  ├── contracts/    # oRPC contract definitions (chat, therapist)
-  ├── ui/           # Shared React components (shadcn/ui based)
+  ├── contracts/    # Effect-ts RPC contracts (@effect/rpc + @effect/schema)
+  │   ├── src/
+  │   │   ├── assessment.ts     # Assessment service RPC procedures
+  │   │   ├── profile.ts        # Profile service RPC procedures
+  │   │   ├── errors.ts         # Tagged error definitions
+  │   │   ├── schemas.ts        # Shared schemas
+  │   │   └── index.ts          # Contract exports
+  ├── infrastructure/  # Effect-ts dependency injection
+  │   └── src/
+  │       ├── context/
+  │       │   ├── database.ts   # DatabaseRef FiberRef bridge
+  │       │   ├── logger.ts     # LoggerRef FiberRef bridge
+  │       │   └── cost-guard.ts # CostGuardRef FiberRef bridge
+  ├── domain/        # Core business logic and types
+  ├── database/      # Drizzle ORM schemas
+  ├── ui/            # Shared React components (shadcn/ui based)
   ├── eslint-config/
   └── typescript-config/
 ```
@@ -160,151 +180,121 @@ pnpm -C apps/web dev
 
 ## API Documentation
 
-The API is built with oRPC and provides REST-style endpoints:
+The API is built with Effect-ts and @effect/rpc, providing type-safe RPC endpoints at `/rpc` with NDJSON serialization.
 
-### Available Endpoints
+### Production Deployment
 
-#### List Planets
+The API is deployed on Railway at:
+- **Base URL**: https://api-production-f7de.up.railway.app
+- **Health Check**: GET `/health` → `{"status":"ok"}`
+- **RPC Endpoint**: POST `/rpc` (NDJSON serialization)
 
-```bash
-curl -X GET http://127.0.0.1:4000/planets
-```
+### Assessment RPC Endpoints
 
-Query parameters:
+Assessment services use Effect-ts RPC with type-safe contracts. All endpoints POST to `/rpc` with NDJSON serialization.
 
-- `limit` (optional): Max results (1-100)
-- `cursor` (optional): Pagination cursor (default: 0)
+#### Start Assessment Session
 
-#### Get Planet
-
-```bash
-curl -X GET http://127.0.0.1:4000/planets/{id}
-```
-
-#### Create Planet
+Creates a new personality assessment session:
 
 ```bash
-curl -X POST http://127.0.0.1:4000/planets \
+curl -X POST http://127.0.0.1:4000/rpc \
   -H "Content-Type: application/json" \
-  -d '{"name":"Earth","description":"A planet"}'
-```
-
-### Therapist Assessment Endpoints
-
-The API provides AI-powered personality assessment using Claude via LangGraph.
-
-#### Start Therapist Assessment
-
-Creates a new therapist assessment session:
-
-```bash
-curl -X POST http://127.0.0.1:4000/chat.startTherapistAssessment \
-  -H "Content-Type: application/json" \
-  -d '{"userId":"user123"}'
+  -d '{
+    "procedure": "StartAssessment",
+    "input": {"userId": "user123"}
+  }'
 ```
 
 Response:
 
 ```json
 {
-  "id": "uuid",
-  "userId": "user123",
-  "createdAt": "2025-01-25T00:00:00.000Z",
-  "updatedAt": "2025-01-25T00:00:00.000Z",
-  "completed": false,
-  "agentState": {
-    "messages": [],
-    "assessmentComplete": false,
-    "opennessPrecision": 0,
-    "conscientiousnessPrecision": 0,
-    "extraversionPrecision": 0,
-    "agreeablenessPrecision": 0,
-    "neuroticismPrecision": 0
+  "sessionId": "session_1706...",
+  "createdAt": "2026-01-30T14:20:00.000Z"
+}
+```
+
+#### Send Assessment Message
+
+Send a message during assessment and receive trait updates:
+
+```bash
+curl -X POST http://127.0.0.1:4000/rpc \
+  -H "Content-Type: application/json" \
+  -d '{
+    "procedure": "SendMessage",
+    "input": {
+      "sessionId": "session_1706...",
+      "message": "Tell me about yourself"
+    }
+  }'
+```
+
+Response:
+
+```json
+{
+  "response": "Thank you for sharing...",
+  "precision": {
+    "openness": 0.75,
+    "conscientiousness": 0.82,
+    "extraversion": 0.60,
+    "agreeableness": 0.88,
+    "neuroticism": 0.45
   }
 }
 ```
 
-#### Send Therapist Message (Streaming)
+#### Get Assessment Results
 
-Send a message and receive a streaming response with personality trait updates:
-
-```bash
-curl -X POST http://127.0.0.1:4000/chat.sendTherapistMessage \
-  -H "Content-Type: application/json" \
-  -d '{"sessionId":"<session-id>","message":"Hello"}'
-```
-
-Streams back events:
-- `type: "response"` - AI therapist response text chunks
-- `type: "traits"` - Updated personality trait scores and precision levels
-
-#### Get Therapist Results
-
-Retrieve current assessment results:
+Retrieve current assessment results and OCEAN code:
 
 ```bash
-curl -X POST http://127.0.0.1:4000/chat.getTherapistResults \
+curl -X POST http://127.0.0.1:4000/rpc \
   -H "Content-Type: application/json" \
-  -d '{"sessionId":"<session-id>"}'
+  -d '{
+    "procedure": "GetResults",
+    "input": {"sessionId": "session_1706..."}
+  }'
 ```
 
 Response:
 
 ```json
 {
-  "traits": {
-    "openness": 75,
-    "conscientiousness": 82,
-    "extraversion": 60,
-    "agreeableness": 88,
-    "neuroticism": 45,
-    "opennessPrecision": 0.85,
-    "conscientiousnessPrecision": 0.92,
-    "extraversionPrecision": 0.78,
-    "agreeablenessPrecision": 0.95,
-    "neuroticismPrecision": 0.81
-  },
-  "completed": false
+  "oceanCode4Letter": "PPAM",
+  "precision": 72,
+  "archetypeName": "The Grounded Thinker",
+  "traitScores": {
+    "openness": 15,
+    "conscientiousness": 12,
+    "extraversion": 8,
+    "agreeableness": 16,
+    "neuroticism": 6
+  }
 }
 ```
 
-### Legacy Chat Endpoints
+### RPC Contract Definition
 
-#### Create Chat Session
+API contracts are defined in `@workspace/contracts` using Effect-ts RPC and Effect Schema:
 
-```bash
-curl -X POST http://127.0.0.1:4000/chat.createSession \
-  -H "Content-Type: application/json" \
-  -d '{"userId":"user123"}'
+```typescript
+import { Rpc } from "@effect/rpc";
+import { Schema as S } from "effect";
+
+export const AssessmentService = Rpc.define({
+  startAssessment: Rpc.rpcFunction({
+    input: S.struct({ userId: S.optional(S.string) }),
+    output: S.struct({ sessionId: S.string, createdAt: S.string }),
+    failure: SessionError,
+  }),
+  // ... other procedures
+});
 ```
 
-#### Send Message
-
-```bash
-curl -X POST http://127.0.0.1:4000/chat.sendMessage \
-  -H "Content-Type: application/json" \
-  -d '{"sessionId":"<session-id>","message":"Tell me about yourself"}'
-```
-
-#### Get Chat Messages
-
-```bash
-curl -X POST http://127.0.0.1:4000/chat.getMessages \
-  -H "Content-Type: application/json" \
-  -d '{"sessionId":"<session-id>","limit":50}'
-```
-
-#### Get Chat Session
-
-```bash
-curl -X POST http://127.0.0.1:4000/chat.getSession \
-  -H "Content-Type: application/json" \
-  -d '{"sessionId":"<session-id>"}'
-```
-
-### API Contracts
-
-API contracts are defined in `@workspace/contracts` using oRPC and Zod for type safety. Both frontend applications can import these contracts for end-to-end type safety.
+Both frontend and backend applications import these contracts for compile-time type safety.
 
 ## Development Commands
 
@@ -348,6 +338,20 @@ Runs on http://127.0.0.1:6006
 
 ## Architecture Notes
 
+### Backend Stack (Story 1.3 Complete)
+
+**Effect-ts RPC Architecture** ([Story 1.3](https://github.com/Wysnard/big-ocean/blob/master/_bmad-output/implementation-artifacts/1-3-configure-effect-ts-rpc-contracts-and-infrastructure-layer.md)):
+
+- **@effect/rpc**: Type-safe RPC contracts with @effect/schema runtime validation
+- **FiberRef Bridges**: Request-scoped dependency injection (database, logger, cost guard)
+- **Layer Composition**: Clean service orchestration without prop drilling
+- **Error Handling**: Tagged error unions for discriminated error types
+- **Railway Deployment**: Docker containerization with health checks
+
+Production endpoints:
+- Health: GET `/health` → `{"status":"ok"}`
+- RPC: POST `/rpc` with NDJSON serialization
+
 ### AI-Powered Personality Assessment
 
 The therapist assessment feature uses:
@@ -359,42 +363,91 @@ The therapist assessment feature uses:
 
 The assessment maintains conversation state across turns, preserving:
 - Full message history
-- Current personality trait scores (0-100 scale)
-- Precision/confidence scores for each trait (0-1 scale)
+- Current personality trait scores (0-20 scale per OCEAN)
+- Precision/confidence scores for each trait (0-100%)
 
 Each user message triggers a graph execution that:
 1. Continues the conversation with full context
 2. Updates trait assessments via tool calls
 3. Returns streaming responses to the client
 
+### Infrastructure & Dependency Injection
+
+**FiberRef Context Bridges** (packages/infrastructure):
+
+```typescript
+// Request-scoped services accessible anywhere in handlers
+const getDatabase = Effect.gen(function* () {
+  return yield* FiberRef.get(DatabaseRef);
+});
+
+// Handlers access services without prop drilling
+const handler = Effect.gen(function* () {
+  const db = yield* getDatabase;
+  const logger = yield* getLogger;
+  // ... implementation
+});
+```
+
+Services are injected via Effect Layers:
+- **DatabaseRef**: Drizzle ORM database connection
+- **LoggerRef**: Winston logger instance
+- **CostGuardRef**: LLM cost tracking and rate limiting
+
 ### Logging Infrastructure
 
 The API uses Winston for structured logging with multiple levels:
-- HTTP request/response logging
-- RPC procedure call logging via interceptors
-- Business logic logging via context-injected logger
+- Effect-ts RPC procedure logging
+- Business logic logging via FiberRef-injected logger
 - LLM-specific logging for assessment events
-
-Logs are written to:
-- Console (colorized output)
-- `logs/all.log` (all log levels)
-- `logs/error.log` (errors only)
+- Railway deployment health monitoring
 
 ### Type-Safe API Contracts
 
-The `@workspace/contracts` package defines oRPC procedures with Zod validation. Both frontend and backend use the same contract definitions for end-to-end type safety.
+The `@workspace/contracts` package defines RPC procedures with Effect Schema:
 
-### UI Components
+```typescript
+// Fully typed at compile time
+export const StartAssessmentRpc = Rpc.make({
+  input: S.struct({ userId: S.optional(S.string) }),
+  output: S.struct({ sessionId: S.string, createdAt: S.string }),
+  failure: SessionError,
+});
+```
 
-The `@workspace/ui` package provides shadcn/ui-based components used across the frontend applications. Components are exported from individual files:
+Both frontend and backend use the same contract definitions for end-to-end type safety.
+
+### Data Persistence
+
+- **Database**: PostgreSQL (Railway managed) via Drizzle ORM
+- **Local-First Sync**: ElectricSQL for reactive client-side state
+- **Session Storage**: Server-side in PostgreSQL with client-side caching
+
+### UI Components & Styling
+
+The `@workspace/ui` package provides shadcn/ui-based components used across the frontend applications:
 
 ```tsx
 import { Button } from "@workspace/ui/components/button";
 ```
 
-### Styling
-
 Both frontend apps use Tailwind CSS v4 with the UI package's CSS variables for consistent theming.
+
+### Frontend Architecture
+
+**TanStack Start** (apps/front):
+- Full-stack SSR with React 19
+- File-based routing with TanStack Router
+- Server Actions for data mutations
+- TanStack Query 5 for caching and synchronization
+- TanStack Form for form state
+- ElectricSQL + TanStack DB for reactive state
+
+**Next.js** (apps/web):
+- Server-side rendering
+- API routes
+- shadcn/ui components
+- Tailwind CSS styling
 
 ## Troubleshooting
 
