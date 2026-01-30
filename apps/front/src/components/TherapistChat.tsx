@@ -27,12 +27,8 @@ export function TherapistChat({ sessionId }: TherapistChatProps) {
   const { messages, traits, isLoading, isCompleted, sendMessage } =
     useTherapistChat(sessionId);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = async () => {
@@ -47,7 +43,7 @@ export function TherapistChat({ sessionId }: TherapistChatProps) {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -55,15 +51,17 @@ export function TherapistChat({ sessionId }: TherapistChatProps) {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900">
+      <div className="bg-slate-800/50 border-b border-slate-700 px-6 py-4 shadow-sm backdrop-blur-sm">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
           Big Five Personality Assessment
         </h1>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="text-sm text-gray-400 mt-1">
           Session ID:{" "}
-          <code className="bg-gray-100 px-2 py-1 rounded">{sessionId}</code>
+          <code className="bg-slate-700 px-2 py-1 rounded text-gray-300">
+            {sessionId}
+          </code>
         </p>
       </div>
 
@@ -74,21 +72,21 @@ export function TherapistChat({ sessionId }: TherapistChatProps) {
           <div className="flex-1 overflow-y-auto space-y-4 mb-4">
             {messages.length === 0 ? (
               <div className="h-full flex items-center justify-center">
-                <Card className="w-full max-w-md">
+                <Card className="w-full max-w-md bg-slate-800/50 border-slate-700">
                   <CardHeader>
-                    <CardTitle className="text-center">
+                    <CardTitle className="text-center text-white">
                       Welcome to Personality Assessment
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p className="text-gray-600 text-center">
-                      The therapist will ask you questions to evaluate your
+                    <p className="text-gray-300 text-center">
+                      The AI therapist will ask you questions to evaluate your
                       personality across five key dimensions. Ready to begin?
                     </p>
                     <Button
                       onClick={handleStartAssessment}
                       disabled={isLoading}
-                      className="w-full"
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
                     >
                       {isLoading ? (
                         <>
@@ -106,22 +104,25 @@ export function TherapistChat({ sessionId }: TherapistChatProps) {
               messages.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex ${
+                    msg.role === "user" ? "justify-end" : "justify-start"
+                  }`}
                 >
                   <div
                     className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                       msg.role === "user"
-                        ? "bg-blue-500 text-white"
-                        : "bg-white border border-gray-200 text-gray-900"
+                        ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                        : "bg-slate-700/50 border border-slate-600 text-gray-100"
                     }`}
                   >
                     <p className="text-sm">{msg.content}</p>
                     <p
                       className={`text-xs mt-1 ${
-                        msg.role === "user" ? "text-blue-100" : "text-gray-500"
+                        msg.role === "user" ? "text-blue-100" : "text-gray-400"
                       }`}
                     >
-                      {msg.timestamp.toLocaleTimeString()}
+                      {msg.timestamp?.toLocaleTimeString() ||
+                        new Date(msg.createdAt || "").toLocaleTimeString()}
                     </p>
                   </div>
                 </div>
@@ -131,25 +132,26 @@ export function TherapistChat({ sessionId }: TherapistChatProps) {
           </div>
 
           {/* Input Area */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 backdrop-blur-sm">
             <div className="flex gap-2">
               <input
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 placeholder={
                   isCompleted
                     ? "Assessment complete!"
                     : "Type your response here..."
                 }
                 disabled={isLoading || isCompleted}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                className="flex-1 px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <Button
                 onClick={handleSendMessage}
                 disabled={!inputValue.trim() || isLoading || isCompleted}
                 size="sm"
+                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
               >
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -164,9 +166,9 @@ export function TherapistChat({ sessionId }: TherapistChatProps) {
         {/* Traits Sidebar */}
         {traits && (
           <div className="w-80 flex flex-col">
-            <Card>
+            <Card className="bg-slate-800/50 border-slate-700">
               <CardHeader>
-                <CardTitle className="text-lg">
+                <CardTitle className="text-lg text-white">
                   {isCompleted ? "Assessment Complete!" : "Current Scores"}
                 </CardTitle>
               </CardHeader>
@@ -184,14 +186,14 @@ export function TherapistChat({ sessionId }: TherapistChatProps) {
                   return (
                     <div key={key}>
                       <div className="flex justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-700">
+                        <span className="text-sm font-medium text-gray-300">
                           {label}
                         </span>
-                        <span className="text-sm font-bold text-gray-900">
+                        <span className="text-sm font-bold text-gray-100">
                           {percentage}%
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-slate-700 rounded-full h-2">
                         <div
                           className={`h-2 rounded-full transition-all ${color}`}
                           style={{ width: `${percentage}%` }}
@@ -202,8 +204,8 @@ export function TherapistChat({ sessionId }: TherapistChatProps) {
                 })}
 
                 {isCompleted && (
-                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-sm text-green-800 font-medium">
+                  <div className="mt-4 p-3 bg-green-900/20 border border-green-700/30 rounded-lg">
+                    <p className="text-sm text-green-200 font-medium">
                       Assessment completed successfully!
                     </p>
                   </div>
