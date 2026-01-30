@@ -43,14 +43,17 @@ packages/
   - shadcn/ui components with Tailwind CSS v4
   - Effect-ts for functional error handling and RPC client typing
 
-- **api** (`port 4000`): Node.js backend featuring:
-  - Effect-ts 3+ for functional programming and error handling
-  - @effect/rpc 0+ for type-safe RPC contracts
-  - @effect/schema 0+ for runtime validation and serialization
+- **api** (`port 4000` dev, Railway prod): Node.js backend featuring:
+  - Effect-ts 3.19+ for functional programming and error handling
+  - @effect/rpc 0.73+ for type-safe RPC contracts
+  - @effect/schema 0.71+ for runtime validation and serialization
   - @langchain/langgraph 1+ for multi-agent orchestration
-  - @anthropic-ai/sdk 0+ for Claude API integration
-  - Drizzle ORM 0+ for type-safe database queries
+  - @anthropic-ai/sdk 0.71+ for Claude API integration
+  - Drizzle ORM 0.45+ for type-safe database queries
   - PostgreSQL as primary database
+  - **Story 1.3 Complete**: Fully deployed to Railway at https://api-production-f7de.up.railway.app
+  - Health check: GET `/health` → `{"status":"ok"}`
+  - RPC endpoint: POST `/rpc` with NDJSON serialization
 
 ### Packages
 
@@ -70,11 +73,14 @@ packages/
   - Migration scripts for PostgreSQL
   - Query builders and type-safe helpers
 
-- **infrastructure**: Backend utilities and dependency injection
-  - FiberRef-based request context management
-  - Service layer bindings (database, logging, LLM)
-  - withContextBridge utility for Effect Layer setup
-  - PgDrizzle and ElectricSQL client initialization
+- **infrastructure**: Backend utilities and dependency injection (Story 1.3)
+  - **FiberRef Bridges**: Request-scoped context management
+    - `DatabaseRef`: Drizzle ORM database connection
+    - `LoggerRef`: Winston logger instance
+    - `CostGuardRef`: LLM cost tracking and rate limiting
+  - **Pattern**: Use `FiberRef.get()` in Effect.gen handlers to access services
+  - Service layer bindings without prop drilling
+  - Layer composition for clean dependency injection
 
 - **ui**: Shared React component library built on shadcn/ui
   - Exports components from `./components/*`
@@ -184,66 +190,130 @@ export const UserProfileSchema = z.object({
 export type UserProfile = z.infer<typeof UserProfileSchema>;
 ```
 
-### Effect/RPC Contracts
+### Effect/RPC Contracts (Story 1.3 ✅)
 
-The `@workspace/contracts` package defines type-safe RPC contracts using Effect/RPC and Effect Schema.
+The `@workspace/contracts` package defines type-safe RPC contracts using @effect/rpc and @effect/schema following the official effect-worker-mono pattern.
 
-**Contract Structure** (in `packages/contracts/src/index.ts`):
+**Contract Structure** (in `packages/contracts/src/assessment.ts`):
 
 ```typescript
 import * as S from "@effect/schema/Schema";
 import * as Rpc from "@effect/rpc/Rpc";
 
-export const AssessmentService = Rpc.define({
-  startAssessment: Rpc.rpcFunction({
-    input: S.struct({ userId: S.optional(S.string) }),
-    output: S.struct({ sessionId: S.string, createdAt: S.Date }),
-    failure: SessionError,
+// Individual response schemas
+export const StartAssessmentResponseSchema = S.Struct({
+  sessionId: S.String,
+  createdAt: S.String,
+});
+
+// Individual RPC procedures
+export const StartAssessmentRpc = Rpc.make({
+  input: S.Struct({ userId: S.optional(S.String) }),
+  output: StartAssessmentResponseSchema,
+  failure: SessionError,
+});
+
+export const SendMessageRpc = Rpc.make({
+  input: S.Struct({
+    sessionId: S.String,
+    message: S.String,
   }),
-  sendMessage: Rpc.rpcFunction({
-    input: S.struct({
-      sessionId: S.string,
-      message: S.string,
+  output: S.Struct({
+    response: S.String,
+    precision: S.Struct({
+      openness: S.Number,
+      conscientiousness: S.Number,
+      // ... other traits
     }),
-    output: S.struct({
-      response: S.string,
-      precision: S.struct({ // Updated trait precision
-        openness: S.number,
-        conscientiousness: S.number,
-        // ... other traits
-      }),
-    }),
-    failure: SessionError,
   }),
+  failure: SessionError,
+});
+
+// RpcGroup combines procedures
+export const AssessmentRpcs = Rpc.group({
+  StartAssessment: StartAssessmentRpc,
+  SendMessage: SendMessageRpc,
   // ... other procedures
 });
 ```
 
-**Procedure Implementation** (in `apps/api/src/handlers/`):
+**Handler Implementation** (in `apps/api/src/handlers/assessment.ts`):
 
 ```typescript
-import * as Effect from "effect";
-import * as Rpc from "@effect/rpc/Rpc";
-import { AssessmentService } from "@workspace/contracts";
+import { Effect, Layer } from "effect";
+import { AssessmentRpcs } from "@workspace/contracts";
+import { getLogger } from "@workspace/infrastructure";
 
-export const AssessmentHandlers = Rpc.handler(AssessmentService)({
-  startAssessment: ({ userId }) =>
+// Handlers exported as Layers following official pattern
+export const AssessmentRpcHandlersLive = AssessmentRpcs.toLayer({
+  StartAssessment: ({ userId }) =>
     Effect.gen(function* () {
-      const sessionId = yield* generateSessionId();
-      yield* persistSession(sessionId, userId);
-      return { sessionId, createdAt: new Date() };
+      const logger = yield* getLogger;
+
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      const createdAt = new Date();
+
+      logger.info("Assessment session started", { sessionId, userId });
+
+      return {
+        sessionId,
+        createdAt: createdAt.toISOString(),
+      };
     }),
 
-  sendMessage: ({ sessionId, message }) =>
+  SendMessage: ({ sessionId, message }) =>
     Effect.gen(function* () {
-      const session = yield* loadSession(sessionId);
-      const nerinResponse = yield* Nerin.chat(message, session);
-      // ... analysis, scoring, orchestration
-      return { response: nerinResponse, precision: updatedPrecision };
-    }),
+      const logger = yield* getLogger;
 
-  // ... other handlers
+      logger.info("Message received", { sessionId, messageLength: message.length });
+
+      // Placeholder response (real Nerin logic in Epic 2)
+      return {
+        response: "Thank you for sharing that...",
+        precision: {
+          openness: 0.5,
+          conscientiousness: 0.4,
+          extraversion: 0.6,
+          agreeableness: 0.7,
+          neuroticism: 0.3,
+        },
+      };
+    }),
 });
+```
+
+**Server Setup** (in `apps/api/src/index.ts`):
+
+```typescript
+import { Layer } from "effect";
+import { RpcServer, RpcSerialization } from "@effect/rpc";
+import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
+
+// Merge all handler layers
+const HandlersLayer = Layer.mergeAll(
+  AssessmentRpcHandlersLive,
+  ProfileRpcHandlersLive
+);
+
+// RPC Server with handlers
+const RpcLayer = RpcServer.layer(BigOceanRpcs).pipe(
+  Layer.provide(HandlersLayer)
+);
+
+// HTTP Protocol with NDJSON serialization
+const HttpProtocol = RpcServer.layerProtocolHttp({ path: "/rpc" }).pipe(
+  Layer.provide(RpcSerialization.layerNdjson)
+);
+
+// HTTP server with health check
+const Main = NodeHttpServer.layer(() => createServer(httpHandler), {
+  port: Number(process.env.PORT || 4000),
+}).pipe(
+  Layer.provide(RpcLayer),
+  Layer.provide(HttpProtocol)
+);
+
+NodeRuntime.runMain(Layer.launch(Main));
 ```
 
 ### Multi-Agent System (LangGraph)
@@ -332,6 +402,65 @@ export const messages = pgTable("messages", {
 });
 ```
 
+### FiberRef Dependency Injection Pattern (Story 1.3)
+
+FiberRef enables request-scoped context without prop drilling. Handlers access services via `FiberRef.get()`:
+
+**Define a FiberRef Bridge** (in `packages/infrastructure/src/context/logger.ts`):
+
+```typescript
+import { FiberRef, Effect } from "effect";
+
+export interface Logger {
+  info(msg: string, ...args: any[]): void;
+  error(msg: string, ...args: any[]): void;
+  // ... other methods
+}
+
+export const LoggerRef = FiberRef.unsafeMake<Logger>(null as any);
+
+// Helper to get the logger from current fiber
+export const getLogger = Effect.gen(function* () {
+  return yield* FiberRef.get(LoggerRef);
+});
+
+// Helper to execute effect with logger in scope
+export const withLogger = <A, E, R>(
+  logger: Logger,
+  effect: Effect.Effect<A, E, R>
+): Effect.Effect<A, E, R> =>
+  Effect.gen(function* () {
+    yield* FiberRef.set(LoggerRef, logger);
+    return yield* effect;
+  });
+```
+
+**Use in Handlers**:
+
+```typescript
+// In any handler, access logger without parameters
+const MyHandler = Effect.gen(function* () {
+  const logger = yield* getLogger;
+  logger.info("This message is automatically scoped to the request");
+  // ... more code
+});
+```
+
+**Provide to Layer**:
+
+```typescript
+// In server setup, provide the FiberRef
+const LoggerLayer = Layer.succeed(
+  LoggerRef,
+  winstonLogger // instance created elsewhere
+);
+
+// When running the effect, include the LoggerLayer
+const effect = MyEffect.pipe(Layer.provide(LoggerLayer));
+```
+
+This pattern prevents context leakage across requests and eliminates prop drilling throughout the codebase.
+
 ### Catalog Dependencies
 
 `pnpm-workspace.yaml` defines a `catalog` for consistent dependency versions:
@@ -357,10 +486,41 @@ Turbo.json defines task dependencies:
 - `typecheck`: Depends on `^typecheck`
 - `dev`: Not cached, persistent task
 
+## Production Deployment (Story 1.3 ✅)
+
+### Railway Deployment
+
+The API is deployed to Railway with automatic CI/CD:
+
+**Production URLs:**
+- **Base**: https://api-production-f7de.up.railway.app
+- **Health Check**: GET `/health` → `{"status":"ok"}`
+- **RPC Endpoint**: POST `/rpc` (NDJSON serialization)
+
+**Deployment Flow:**
+1. Push to `master` branch triggers Railway build
+2. Docker image built using `apps/api/Dockerfile`
+3. TypeScript compiled with workspace package resolution
+4. Container starts with `pnpm --filter api start` → runs `tsx src/index.ts`
+5. Health check endpoint validates deployment
+6. Automatic restart on failure (10 max retries)
+
+**Environment Variables:**
+- `PORT`: 8080 (Railway default)
+- `HOST`: 0.0.0.0
+- `ANTHROPIC_API_KEY`: Set in Railway dashboard
+- Custom vars: `DATABASE_URL`, `REDIS_URL`, etc.
+
+**Docker Best Practices:**
+- Multi-stage build (builder + runtime)
+- pnpm workspace resolution with double install for linking
+- tsx for production TypeScript execution (handles workspace imports)
+- Minimal production image (Node 20 Alpine)
+
 ## Linting & Code Quality
 
 - **Root level**: ESLint with shared config
-- **web app**: Next.js ESLint (configured for React 19)
+- **front app**: ESLint (configured for React + TanStack)
 - **api app**: ESLint (configured for Node.js)
 - **ui package**: ESLint with zero-warnings policy
 - **contracts/domain/infrastructure packages**: ESLint with zero-warnings policy
@@ -397,14 +557,31 @@ import { Button } from "@workspace/ui/components/button";
 **Frontend Stack:**
 - React 19, TanStack Start, TanStack Router 1+, TanStack Query 5+, TanStack Form 1+, TanStack DB 0+
 - ElectricSQL 1.4.1, Tailwind CSS 4+, shadcn/ui
-- Effect 3.19.14 for client-side error handling
+- Effect (latest) for client-side error handling
 
-**Backend Stack:**
-- Effect 3.19.14, @effect/rpc 0.73.0, @effect/schema 0.71.0
+**Backend Stack (Story 1.3):**
+- Effect 3.19.15 (latest in catalog), @effect/rpc 0.73.0, @effect/schema 0.71.0
+- @effect/platform 0.94.2, @effect/platform-node for Node.js runtime
 - LangChain LangGraph 1.1+, Anthropic SDK 0.71.2
 - Drizzle ORM 0.45.1, PostgreSQL
-- Winston for structured logging
+- Winston 3.19.0 for structured logging
+- Pino 9.6.0 for high-performance logging
 
 **Shared:**
-- Zod 4.2.1 (for schema validation before Effect Schema migration)
-- TypeScript 5.7+, pnpm 10.4.1
+- Zod 4.2.1 (for domain validation)
+- TypeScript 5.7.3+, pnpm 10.4.1
+- Node.js >= 20 required
+
+**Catalog Configuration** (`pnpm-workspace.yaml`):
+```yaml
+catalog:
+  effect: "latest"           # Story 1.3: Using latest for compatibility
+  "@effect/rpc": "latest"
+  "@effect/schema": "latest"
+  "@effect/platform": "latest"
+  "@effect/platform-node": "latest"
+  drizzle-orm: "0.45.1"
+  "@anthropic-ai/sdk": "0.71.2"
+  zod: "4.2.1"
+  pino: "9.6.0"
+```
