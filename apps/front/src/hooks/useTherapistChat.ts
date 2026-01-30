@@ -192,31 +192,27 @@ export function useTherapistChat(sessionId: string) {
                 },
               ])
 
-              // Update with mock trait updates
-              setTraits((prev) => ({
-                ...prev,
-                openness: Math.min(prev.openness + Math.random() * 0.04, 0.95),
-                conscientiousness: Math.min(
-                  prev.conscientiousness + Math.random() * 0.04,
-                  0.95
-                ),
-                extraversion: Math.min(prev.extraversion + Math.random() * 0.04, 0.95),
-                agreeableness: Math.min(prev.agreeableness + Math.random() * 0.04, 0.95),
-                neuroticism: Math.min(prev.neuroticism + Math.random() * 0.04, 0.95),
-                opennessPrecision: Math.round(Math.min(prev.openness + Math.random() * 0.04, 0.95) * 100),
-                conscientiousnessPrecision: Math.round(
-                  Math.min(prev.conscientiousness + Math.random() * 0.04, 0.95) * 100
-                ),
-                extraversionPrecision: Math.round(
-                  Math.min(prev.extraversion + Math.random() * 0.04, 0.95) * 100
-                ),
-                agreeablenessPrecision: Math.round(
-                  Math.min(prev.agreeableness + Math.random() * 0.04, 0.95) * 100
-                ),
-                neuroticismPrecision: Math.round(
-                  Math.min(prev.neuroticism + Math.random() * 0.04, 0.95) * 100
-                ),
-              }))
+              // Update with mock trait updates - calculate decimals first, then percentages for consistency
+              setTraits((prev) => {
+                const newOpenness = Math.min(prev.openness + Math.random() * 0.04, 0.95)
+                const newConscientiousness = Math.min(prev.conscientiousness + Math.random() * 0.04, 0.95)
+                const newExtraversion = Math.min(prev.extraversion + Math.random() * 0.04, 0.95)
+                const newAgreeableness = Math.min(prev.agreeableness + Math.random() * 0.04, 0.95)
+                const newNeuroticism = Math.min(prev.neuroticism + Math.random() * 0.04, 0.95)
+
+                return {
+                  openness: newOpenness,
+                  conscientiousness: newConscientiousness,
+                  extraversion: newExtraversion,
+                  agreeableness: newAgreeableness,
+                  neuroticism: newNeuroticism,
+                  opennessPrecision: Math.round(newOpenness * 100),
+                  conscientiousnessPrecision: Math.round(newConscientiousness * 100),
+                  extraversionPrecision: Math.round(newExtraversion * 100),
+                  agreeablenessPrecision: Math.round(newAgreeableness * 100),
+                  neuroticismPrecision: Math.round(newNeuroticism * 100),
+                }
+              })
 
               setIsLoading(false)
             },
