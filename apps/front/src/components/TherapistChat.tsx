@@ -9,10 +9,19 @@ import {
 } from "@workspace/ui/components/card";
 import { Loader2, Send } from "lucide-react";
 
+/**
+ * Props for the TherapistChat component
+ * @interface TherapistChatProps
+ * @property {string} sessionId - Unique identifier for this assessment session
+ */
 interface TherapistChatProps {
   sessionId: string;
 }
 
+/**
+ * Mapping of trait score keys to display labels for the UI.
+ * Used to render the trait precision sidebar with human-readable labels.
+ */
 const traitLabels: Record<string, string> = {
   opennessPrecision: "Openness",
   conscientiousnessPrecision: "Conscientiousness",
@@ -21,28 +30,74 @@ const traitLabels: Record<string, string> = {
   neuroticismPrecision: "Neuroticism",
 };
 
+/**
+ * TherapistChat Component - Main chat interface for the personality assessment.
+ *
+ * Displays a conversation with Nerin (the AI therapist), message history, and
+ * real-time trait precision scores. This is a mocked version for Story 1.5 that
+ * uses deterministic mock responses. Will be upgraded to use real RPC in Epic 4.
+ *
+ * Features:
+ * - Bi-directional messaging (user left/assistant right)
+ * - Real-time trait precision display (sidebar)
+ * - Auto-scrolling message history
+ * - Loading states and accessibility features
+ * - Responsive design for desktop and mobile
+ *
+ * @component
+ * @param {TherapistChatProps} props - Component props
+ * @param {string} props.sessionId - The assessment session ID
+ * @returns {React.ReactElement} The chat interface
+ *
+ * @example
+ * <TherapistChat sessionId="session_1234567890_abc" />
+ */
 export function TherapistChat({ sessionId }: TherapistChatProps) {
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { messages, traits, isLoading, isCompleted, sendMessage } =
     useTherapistChat(sessionId);
 
+  /**
+   * Auto-scroll to the latest message when new messages arrive.
+   * Provides smooth scroll behavior for better UX.
+   */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  /**
+   * Handles sending a user message via the send button or Enter key.
+   * Clears the input field after sending.
+   *
+   * @async
+   * @returns {Promise<void>}
+   */
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
     await sendMessage(inputValue);
     setInputValue("");
   };
 
+  /**
+   * Handles the "Start Assessment" button click.
+   * Initiates the conversation by sending the first user turn.
+   *
+   * @async
+   * @returns {Promise<void>}
+   */
   const handleStartAssessment = async () => {
     if (!isLoading) {
       await sendMessage();
     }
   };
 
+  /**
+   * Handles keyboard events in the message input field.
+   * Sends message on Enter (without Shift), but Shift+Enter creates new line.
+   *
+   * @param {React.KeyboardEvent} e - The keyboard event
+   */
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
