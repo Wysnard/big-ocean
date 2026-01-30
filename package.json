@@ -6,7 +6,10 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "start:api": "turbo run start --filter=api",
+    "start:front": "turbo run start --filter=front",
+    "start:web": "turbo run start --filter=web"
   },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",

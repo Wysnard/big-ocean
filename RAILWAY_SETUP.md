@@ -26,12 +26,14 @@ railway init
 ```
 
 Select:
+
 - **Project name:** big-ocean
 - **Environment:** production
 
 ### Step 3: Link GitHub Repository
 
 Option A: Via Railway Dashboard (Recommended)
+
 1. Go to https://railway.app/dashboard
 2. Open your `big-ocean` project
 3. Click "Settings" → "Connect GitHub"
@@ -39,6 +41,7 @@ Option A: Via Railway Dashboard (Recommended)
 5. Enable "Auto-deploy on push to main"
 
 Option B: Via CLI
+
 ```bash
 # After pushing code to GitHub
 railway link
@@ -51,6 +54,7 @@ railway add --database postgres
 ```
 
 This creates a PostgreSQL 16 instance with:
+
 - Automatic connection string (DATABASE_URL)
 - 1GB storage (expandable)
 - Logical replication enabled
@@ -62,6 +66,7 @@ railway add --database redis
 ```
 
 This creates a Redis 7 instance with:
+
 - Automatic connection string (REDIS_URL)
 - 128MB memory (expandable)
 
@@ -80,6 +85,7 @@ railway variables set SENTRY_DSN=https://your-sentry-dsn
 ```
 
 **Important:** Railway automatically provides:
+
 - `DATABASE_URL` (from PostgreSQL service)
 - `REDIS_URL` (from Redis service)
 
@@ -111,6 +117,7 @@ railway run bash
 ### Option 2: Automatic via railway.json (Already configured)
 
 The `railway.json` file is already configured. When you push code:
+
 1. Railway builds the Dockerfile
 2. Runs the backend
 3. Migrations will auto-run when Drizzle schemas are added in Story 1.3
@@ -170,6 +177,7 @@ node -e "const redis = require('ioredis'); const client = new redis(process.env.
 
 **Symptom:** Logs show "Error: Anthropic API key not found"
 **Fix:** Set ANTHROPIC_API_KEY environment variable
+
 ```bash
 railway variables set ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
@@ -178,6 +186,7 @@ railway variables set ANTHROPIC_API_KEY=sk-ant-your-key-here
 
 **Symptom:** Railway shows "Unhealthy" status
 **Fix:** Check logs and verify:
+
 1. Server is listening on 0.0.0.0:4000 (not 127.0.0.1)
 2. PORT environment variable is set to 4000
 3. No crashes on startup
@@ -186,11 +195,13 @@ railway variables set ANTHROPIC_API_KEY=sk-ant-your-key-here
 
 **Symptom:** Logs show "ECONNREFUSED" or "Connection refused"
 **Fix:** Verify DATABASE_URL is set:
+
 ```bash
 railway variables | grep DATABASE_URL
 ```
 
 If missing, re-add PostgreSQL service:
+
 ```bash
 railway add --database postgres
 ```
