@@ -32,9 +32,9 @@ FROM node:20-alpine AS development
 WORKDIR /app
 
 # Install pnpm
-RUN npm install -g pnpm@10.4.1
+RUN npm install -g pnpm@10.4.1 && corepack enable
 
-# Copy package files
+# Copy package files for dependency installation
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
 COPY packages/infrastructure/package.json ./packages/infrastructure/
@@ -43,23 +43,20 @@ COPY packages/eslint-config/package.json ./packages/eslint-config/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY apps/api/package.json ./apps/api/
 
-# Install all dependencies (including dev)
+# Install all dependencies (including dev, including tsx)
 RUN pnpm install --frozen-lockfile
 
 # Copy source code and workspace packages
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
 
-# Re-run install to ensure workspace packages are properly linked
+# Re-run install to ensure workspace packages are properly linked and tsx is available
 RUN pnpm install --frozen-lockfile
 
 # Expose port
 EXPOSE 4000
 
-# Install tsx globally for development
-RUN npm install -g tsx
-
-# Start with tsx watch mode for hot reload during development
+# Start with pnpm dev (uses tsx watch mode from package.json)
 CMD ["pnpm", "-C", "apps/api", "dev"]
 
 # Production stage
