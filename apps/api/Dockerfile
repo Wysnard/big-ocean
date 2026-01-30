@@ -8,19 +8,23 @@ RUN npm install -g pnpm@10.4.1
 # Copy package files for dependency installation
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/infrastructure/package.json ./packages/infrastructure/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/eslint-config/package.json ./packages/eslint-config/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY apps/api/package.json ./apps/api/
 
-# Install dependencies
+# Install dependencies (this will install effect and other catalog dependencies)
 RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
 
-# Build the API
+# Re-run install to ensure workspace packages are properly linked
+RUN pnpm install --frozen-lockfile
+
+# Build the API (TypeScript compilation)
 RUN pnpm --filter=api run build
 
 # Runtime stage
@@ -33,6 +37,7 @@ RUN npm install -g pnpm@10.4.1
 # Copy package files for production dependencies
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/infrastructure/package.json ./packages/infrastructure/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/eslint-config/package.json ./packages/eslint-config/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
