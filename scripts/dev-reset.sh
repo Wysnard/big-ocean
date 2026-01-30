@@ -18,7 +18,7 @@ fi
 
 echo ""
 echo "Stopping and removing containers, networks, and volumes..."
-docker compose down -v --remove-orphans
+docker compose --env-file .env.local down -v --remove-orphans
 
 echo ""
 echo "✅ Development environment reset"

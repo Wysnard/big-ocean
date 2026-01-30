@@ -53,4 +53,4 @@ echo ""
 echo "Press Ctrl+C to stop all services"
 echo ""
 
-docker compose up
+docker compose --env-file .env.local up
