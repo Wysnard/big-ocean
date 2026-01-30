@@ -1,7 +1,6 @@
 import "dotenv/config";
-import { createServer } from "node:http";
-import { Layer } from "effect";
-import { HttpRouter } from "@effect/platform";
+import { createServer, IncomingMessage, ServerResponse } from "node:http";
+import { Effect, Layer } from "effect";
 import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
 import { RpcServer, RpcSerialization } from "@effect/rpc";
 import { BigOceanRpcs } from "@workspace/contracts";
@@ -33,26 +32,41 @@ const HttpProtocol = RpcServer.layerProtocolHttp({
 }).pipe(Layer.provide(RpcSerialization.layerNdjson));
 
 /**
+ * Custom HTTP handler with health check
+ */
+const httpHandler = (req: IncomingMessage, res: ServerResponse) => {
+  const url = req.url || "";
+  const method = req.method || "GET";
+
+  // Health check endpoint (CRITICAL for Railway deployment)
+  if (url === "/health" && method === "GET") {
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify({ status: "ok" }));
+    logger.debug("[HTTP] Health check passed");
+    return;
+  }
+
+  // All other requests go to Effect RPC handler
+  // (Effect RPC will handle /rpc requests via the HttpProtocol layer)
+};
+
+/**
  * Main Server Layer
  *
- * Combines RPC, protocol, and HTTP server layers following the official pattern.
+ * Combines RPC, protocol, and HTTP server layers with health check.
  */
-const Main = HttpRouter.Default.serve().pipe(
-  Layer.provide(RpcLayer),
-  Layer.provide(HttpProtocol),
-  Layer.provide(
-    NodeHttpServer.layer(() => createServer(), {
-      port: Number(process.env.PORT || 4000),
-      host: process.env.HOST || "0.0.0.0",
-    })
-  )
-);
+const Main = NodeHttpServer.layer(() => createServer(httpHandler), {
+  port: Number(process.env.PORT || 4000),
+  host: process.env.HOST || "0.0.0.0",
+}).pipe(Layer.provide(RpcLayer), Layer.provide(HttpProtocol));
 
 /**
  * Startup logging
  */
 logger.info(`Server starting on http://0.0.0.0:${process.env.PORT || 4000}`);
 logger.info(`RPC endpoint available at /rpc`);
+logger.info(`Health endpoint available at /health`);
 
 // Launch the server
 NodeRuntime.runMain(Layer.launch(Main));
