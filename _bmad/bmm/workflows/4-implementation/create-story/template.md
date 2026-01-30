@@ -13,6 +13,8 @@ so that {{benefit}}.
 ## Acceptance Criteria
 
 1. [Add acceptance criteria from epics/PRD]
+2. **Documentation**: All new code has JSDoc comments; README/CLAUDE.md updated if applicable
+3. **Tests**: Unit tests added with minimum 80% coverage for new functionality; integration tests if needed
 
 ## Tasks / Subtasks
 
@@ -20,6 +22,13 @@ so that {{benefit}}.
   - [ ] Subtask 1.1
 - [ ] Task 2 (AC: #)
   - [ ] Subtask 2.1
+- [ ] Documentation & Testing (AC: #2-3) — **REQUIRED BEFORE DONE**
+  - [ ] Add JSDoc comments to new functions/classes
+  - [ ] Update README.md if architecture or features changed
+  - [ ] Update CLAUDE.md if patterns or setup changed
+  - [ ] Write unit tests (80% coverage target)
+  - [ ] Write integration tests if needed
+  - [ ] Update story file with completion notes
 
 ## Dev Notes
 
