@@ -52,3 +52,8 @@
 2026-01-30 14:24:02:242 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
 2026-01-30 14:24:44:2444 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
 2026-01-30 14:24:44:2444 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
+2026-01-30 14:53:34:5334 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-30 14:53:34:5334 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
+2026-01-30 15:19:39:1939 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-30 15:19:39:1939 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
+2026-01-30 15:19:39:1939 [32minfo[39m: [32mHealth endpoint available at /health[39m

@@ -4,10 +4,10 @@
  * Type-safe RPC client for frontend-backend communication.
  * Connects to the backend RPC endpoint at /rpc with NDJSON serialization.
  *
- * Based on the official @effect/rpc pattern from effect-worker-mono repository.
+ * Based on the official @effect/rpc pattern.
  */
 
-import { RpcClient, RpcSerialization } from "@effect/rpc";
+import { RpcClient, RpcResolver, RpcSerialization } from "@effect/rpc";
 import { FetchHttpClient } from "@effect/platform";
 import { Effect, Layer } from "effect";
 import { BigOceanRpcs } from "@workspace/contracts";
@@ -41,7 +41,6 @@ const ProtocolLayer = RpcClient.layerProtocolHttp({
  * Convenience function to call an RPC procedure
  *
  * Simplifies RPC calls for React hooks by handling Effect execution.
- * Type-checking is relaxed to allow schema types to be passed through.
  *
  * @example
  * ```typescript
@@ -53,11 +52,12 @@ const ProtocolLayer = RpcClient.layerProtocolHttp({
  */
 export const callRpc = async (rpc: any, payload: any): Promise<any> => {
   const effect = Effect.gen(function* () {
-    const client = yield* RpcClient.make(BigOceanRpcs);
-    // @ts-expect-error - RPC client typing is complex, runtime will handle schema encoding/decoding
-    return yield* client(rpc, payload);
-  }).pipe(Effect.provide(ProtocolLayer), Effect.scoped);
+    // Get the resolver
+    const resolver = yield* RpcResolver.make(BigOceanRpcs);
 
-  // @ts-expect-error - Effect context type compatibility
+    // Resolve the RPC call
+    return yield* resolver(rpc, payload);
+  }).pipe(Effect.provide(ProtocolLayer));
+
   return Effect.runPromise(effect);
 };
