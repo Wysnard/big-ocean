@@ -1,9 +1,9 @@
 ---
-status: review
+status: in-progress
 story_id: "1.1"
 epic: 1
 created_date: 2026-01-30
-completed_date: 2026-01-30
+completed_date: null
 phase_1_complete: true
 ---
 
@@ -18,6 +18,7 @@ so that **the platform has a scalable, managed infrastructure with zero operatio
 ## Acceptance Criteria
 
 ### Deployment Automation
+
 **Given** the monorepo is ready to deploy
 **When** I push to GitHub main branch
 **Then** Railway automatically deploys backend + PostgreSQL + Redis
@@ -26,6 +27,7 @@ so that **the platform has a scalable, managed infrastructure with zero operatio
 **And** logs appear in Railway dashboard
 
 ### Service Validation
+
 **Given** the system is deployed to Railway
 **When** I check the Railway dashboard
 **Then** Backend service shows healthy status
@@ -36,18 +38,21 @@ so that **the platform has a scalable, managed infrastructure with zero operatio
 ## Business Context
 
 **Why This Story Matters:**
+
 - Foundational infrastructure requirement for all subsequent development
 - Enables local → staging → production deployment pipeline
 - Establishes cost control (Railway usage-based, ~$5-12/month MVP)
 - Zero operational overhead (Railway manages databases, auto-scaling, monitoring)
 
 **Blocks Until Complete:**
+
 - Epic 2-7 development (all features depend on running backend)
 - Sprint planning execution (team can't start other stories without deployed infrastructure)
 
 ## Technical Requirements
 
 ### Services to Deploy
+
 1. **Backend** (`apps/api` - Node.js/Effect-ts)
    - Port: 4000 (internal)
    - Processes: LangGraph orchestration, RPC handlers, database access
@@ -66,7 +71,9 @@ so that **the platform has a scalable, managed infrastructure with zero operatio
    - Commands: SET, GET, INCR (standard cache operations)
 
 ### Environment Variables
+
 **Must configure in Railway Dashboard:**
+
 ```
 # Database
 DATABASE_URL=postgresql://[user]:[password]@[host]:[port]/[database]
@@ -85,7 +92,9 @@ NODE_ENV=production
 ```
 
 ### Dockerfile Requirements
+
 **apps/api must have:**
+
 - Base image: `node:20-alpine` (matches Node requirement: >=20)
 - Build stage: `pnpm install && pnpm build`
 - Runtime stage: `pnpm run start`
@@ -93,12 +102,16 @@ NODE_ENV=production
 - Port exposure: `EXPOSE 4000`
 
 ### Database Migrations
+
 **Auto-run script:**
+
 ```bash
 # In railway.json postdeploy hook
 pnpm -C packages/database drizzle-kit push --config drizzle.config.ts
 ```
+
 Or manual:
+
 ```bash
 # SSH into Railway backend
 railway shell
@@ -108,6 +121,7 @@ cd /app && pnpm -C packages/database drizzle-kit push
 ## Architecture Compliance
 
 **From architecture.md ADR-3 (Infrastructure & Hosting):**
+
 - ✅ All-Railway deployment (single platform: backend + PostgreSQL + Redis)
 - ✅ Zero operational overhead (Railway auto-manages services)
 - ✅ Cost control: Usage-based pricing (~$5-12/month MVP)
@@ -115,6 +129,7 @@ cd /app && pnpm -C packages/database drizzle-kit push
 - ✅ Monitoring: Railway dashboard covers logs, metrics, deployments
 
 **Docker Compose Parity (Local Development):**
+
 - Must also work with `docker-compose.yml` in project root
 - Local PostgreSQL and Redis should mirror Railway services
 - Environment variables in `.env.local` for local testing
@@ -143,6 +158,7 @@ big-ocean/
 ```
 
 **No Changes Needed:**
+
 - `pnpm-workspace.yaml` (already correct)
 - `packages/ui` (frontend deployed separately or via backend static serve)
 - Migration scripts in `packages/database`
@@ -150,6 +166,7 @@ big-ocean/
 ## Dependencies
 
 ### NPM Libraries (Already in pnpm-lock.yaml)
+
 - `express` (backend HTTP server)
 - `@effect/rpc` (type-safe RPC)
 - `drizzle-orm` (database ORM)
@@ -158,6 +175,7 @@ big-ocean/
 - `@sentry/node` (error tracking)
 
 ### External Services
+
 - **Railway Account** (https://railway.app) - Free tier sufficient for MVP
 - **GitHub Repo** - Must be public or Railway must have read access
 - **Anthropic API Key** - From https://console.anthropic.com (already in architecture)
@@ -166,6 +184,7 @@ big-ocean/
 ## Implementation Checklist
 
 ### Phase 1: Local Docker Setup
+
 - [x] Create `Dockerfile` in `apps/api` (see template below)
 - [x] Create `docker-compose.yml` at project root with PostgreSQL + Redis
 - [x] Test local build: `docker-compose up`
@@ -174,6 +193,7 @@ big-ocean/
 - [x] Verify Redis accessible: `redis-cli PING`
 
 ### Phase 2: Railway Project Setup ⏸️ Requires User Authentication
+
 See **RAILWAY_SETUP.md** for detailed instructions.
 
 - [ ] Create Railway project at railway.app (requires Railway account)
@@ -186,6 +206,7 @@ See **RAILWAY_SETUP.md** for detailed instructions.
 - [ ] Enable auto-deploy on main branch push
 
 **Commands documented:**
+
 ```bash
 railway login
 railway init
@@ -195,6 +216,7 @@ railway variables set ANTHROPIC_API_KEY=sk-ant-...
 ```
 
 ### Phase 3: Database Migrations ⏸️ Blocked by Story 1.3
+
 - [x] Create `railway.json` with postdeploy script
 - [ ] Run migrations on Railway PostgreSQL (blocked: no database schemas yet)
 - [ ] Verify tables created: `\dt` in psql (blocked: needs Story 1.3)
@@ -202,6 +224,7 @@ railway variables set ANTHROPIC_API_KEY=sk-ant-...
 **Note:** Database package with Drizzle schemas will be created in Story 1.3.
 
 ### Phase 4: Validation ⏸️ Requires Railway Deployment
+
 Instructions provided in **RAILWAY_SETUP.md** - ready to execute after Phase 2 complete.
 
 - [ ] Backend health check: `GET https://[railway-backend-url]/health`
@@ -211,6 +234,7 @@ Instructions provided in **RAILWAY_SETUP.md** - ready to execute after Phase 2 c
 - [ ] Cost tracking in Railway dashboard (showing ~$0-2/month base)
 
 **Validation commands documented:**
+
 ```bash
 railway domain  # Get backend URL
 curl https://[url]/health  # Test health endpoint
@@ -218,15 +242,37 @@ railway logs --service backend  # Check connection logs
 railway status  # Verify all services healthy
 ```
 
+### Review Follow-ups (AI) - Added 2026-01-30
+
+**🔴 HIGH PRIORITY - Must Complete Before "Done"**
+
+- [ ] [AI-Review][HIGH] **Deploy big-ocean-api service to Railway** - Service created but never deployed. Run: `railway service big-ocean-api && railway up` or push to GitHub to trigger auto-deploy. Verify deployment succeeds and health check passes.
+- [ ] [AI-Review][HIGH] **Configure REDIS_URL environment variable for big-ocean-api service** - Redis service exists, but big-ocean-api service needs REDIS_URL variable. Run: `railway service big-ocean-api && railway variables set REDIS_URL=$REDIS_URL` (copy from Redis service).
+- [ ] [AI-Review][HIGH] **Validate all Acceptance Criteria after deployment** - Test: Backend healthy status, PostgreSQL reachable, Redis connected, logs visible in dashboard.
+
+**🟡 MEDIUM PRIORITY - Should Fix**
+
+- [ ] [AI-Review][MEDIUM] **Test docker-compose locally** - Story claims "tested and operational" but no containers found running. Run: `docker-compose up` and verify all services healthy.
+- [ ] [AI-Review][MEDIUM] **Verify health endpoint responds within 500ms** - After deployment, test: `time curl https://[railway-url]/health`. Should be <500ms consistently.
+
+**📋 NOTES**
+
+- railway.json fixed: health check timeout increased to 500ms (was 100ms)
+- railway.json fixed: removed redundant startCommand (Dockerfile handles it)
+- Redis service ✅ confirmed running in Railway dashboard
+- Next: Deploy big-ocean-api service, then re-run code review to verify all ACs met
+
 ## Dev Notes
 
 ### Critical Paths
+
 1. **Backend must start without errors** - Missing env vars will crash startup
 2. **Migrations must run automatically** - Manual migrations are fragile
 3. **Health endpoint must work** - Railway uses this for deployment validation
 4. **Logs must be structured JSON** - Pino configured for cloud logging
 
 ### Common Pitfalls to Avoid
+
 - ❌ Hardcoding DATABASE_URL or REDIS_URL in code (use environment variables)
 - ❌ Forgetting NODE_ENV=production in Railway
 - ❌ Missing `EXPOSE 4000` in Dockerfile (Railway won't route traffic)
@@ -234,7 +280,9 @@ railway status  # Verify all services healthy
 - ❌ Database charset issues (use UTF-8 in migrations)
 
 ### Testing Checklist
+
 Before declaring story complete:
+
 ```bash
 # 1. Local Docker works
 docker-compose up
@@ -283,10 +331,6 @@ COPY --from=builder /app/packages ./packages
 # Expose port
 EXPOSE 4000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:4000/health || exit 1
-
 # Start backend
 CMD ["node", "apps/api/dist/index.js"]
 ```
@@ -294,11 +338,13 @@ CMD ["node", "apps/api/dist/index.js"]
 ## Reference Docs
 
 **Source Documents:**
+
 - [Architecture Decision: Infrastructure & Hosting](../planning-artifacts/architecture.md#infrastructure--hosting)
 - [Project Requirements: Cost Optimization](../planning-artifacts/prd.md#cost-optimization)
 - [CLAUDE.md: Railway Configuration](../../CLAUDE.md#infrastructure)
 
 **External References:**
+
 - [Railway Docs: Node.js Deployment](https://docs.railway.app/getting-started)
 - [Drizzle ORM: PostgreSQL Migrations](https://orm.drizzle.team/docs/migrations)
 - [Docker Best Practices: Node.js](https://nodejs.org/en/docs/guides/nodejs-docker-webapp/)
@@ -307,10 +353,13 @@ CMD ["node", "apps/api/dist/index.js"]
 ## Dev Agent Record
 
 ### Agent Model Used
+
 Claude Sonnet 4.5
 
 ### Implementation Notes
+
 **Phase 1 - Local Docker Setup:** ✅ Complete
+
 - Created production Dockerfile with multi-stage build (builder + runtime)
 - Configured health endpoint at `GET /health` returning `{"status":"ok"}`
 - Fixed server host binding from `127.0.0.1` to `0.0.0.0` for container accessibility
@@ -319,6 +368,7 @@ Claude Sonnet 4.5
 - Tested successfully: health endpoint, PostgreSQL connection, Redis connection
 
 **Technical Decisions Made:**
+
 - Using `tsx` in production for now since workspace packages (contracts) export TypeScript source
   - Alternative considered: build all workspace packages, but adds complexity for MVP
   - Follow-up: Story 1.3 will establish proper build process when migrating to Effect RPC
@@ -327,6 +377,7 @@ Claude Sonnet 4.5
 - TypeScript config updated to output `dist/` directory (removed `noEmit: true`)
 
 **Remaining Work:**
+
 - Phase 2: Railway project setup (requires manual Railway dashboard configuration)
 - Phase 3: Database migrations (blocked until packages/database exists with Drizzle schema)
 - Phase 4: Production validation (requires Railway deployment)
@@ -334,6 +385,7 @@ Claude Sonnet 4.5
 ### Completion Notes
 
 **✅ Phase 1 Complete (100%):**
+
 - Docker infrastructure fully implemented and tested
 - Health endpoint verified working
 - All local services (PostgreSQL, Redis, Backend) tested and operational
@@ -341,6 +393,7 @@ Claude Sonnet 4.5
 - Railway CLI installed and ready for deployment
 
 **📋 Phase 2-4 Documented (Awaiting User Action):**
+
 - Comprehensive Railway setup guide created (RAILWAY_SETUP.md)
 - All required commands documented with examples
 - Step-by-step instructions for project creation, service setup, and validation
@@ -348,6 +401,7 @@ Claude Sonnet 4.5
 - Cost optimization tips provided
 
 **⏸️ Blocked Items:**
+
 - Phase 2: Requires Railway account authentication (user action)
 - Phase 3: Database migrations require Story 1.3 (database schemas not created yet)
 - Phase 4: Production validation requires Phase 2 deployment complete
@@ -355,19 +409,57 @@ Claude Sonnet 4.5
 **Story Status:** Phase 1 complete and verified. Phases 2-4 ready to execute with provided documentation when prerequisites are met.
 
 ### File List
+
 - `apps/api/Dockerfile` - Created: Multi-stage Docker build with tsx support
 - `apps/api/package.json` - Modified: Added build, start, typecheck scripts
 - `apps/api/tsconfig.json` - Modified: Configured outDir, removed noEmit
 - `apps/api/src/index.ts` - Modified: Added `/health` endpoint, changed host to 0.0.0.0
 - `docker-compose.yml` - Created: Local development stack (PostgreSQL, Redis, API)
 - `.env.example` - Created: Environment variable template
-- `railway.json` - Created: Railway deployment configuration
+- `railway.json` - Modified: Health check timeout 100ms→500ms, removed redundant startCommand
 - `RAILWAY_SETUP.md` - Created: Comprehensive Railway deployment guide
+- `1-1-deploy-infrastructure-to-railway.md` - Modified: Added code review findings, deployment action items
+
+### Code Review Findings (2026-01-30)
+
+**Adversarial Review by Claude Sonnet 4.5**
+
+**Issues Found:** 3 High, 3 Medium, 2 Low (Redis service verified ✅)
+
+**Automatically Fixed:**
+
+- ✅ railway.json health check timeout: 100ms → 500ms (more realistic for Node.js cold starts)
+- ✅ railway.json removed redundant startCommand (Dockerfile CMD handles it)
+- ✅ Story status corrected: "review" → "in-progress" (ACs not yet met)
+
+**Action Items Created (See "Review Follow-ups" section):**
+
+- 🔴 Deploy big-ocean-api service to Railway (created but never deployed)
+- 🔴 Configure REDIS_URL for big-ocean-api service (Redis running, needs env var shared)
+- 🔴 Validate all Acceptance Criteria post-deployment
+- 🟡 Test docker-compose locally (claimed tested but no evidence)
+- 🟡 Verify health endpoint performance (<500ms)
+
+**Root Cause Analysis:**
+
+- Phase 1 (local Docker) completed successfully ✅
+- Phase 2 (Railway setup) mostly done: project created, Postgres ✅, Redis ✅, API service created
+- **Critical Gap:** No deployment triggered for big-ocean-api service
+- Acceptance Criteria validation blocked until deployment completes
+
+**Next Steps:**
+
+1. Deploy big-ocean-api service: `railway service big-ocean-api && railway up`
+2. Verify all ACs met
+3. Re-run code review to confirm "done" status
 
 ### Known Issues / Follow-ups
-- Story partially complete: Phase 1 done locally, Phases 2-4 require Railway account setup
-- Database migrations pending (no packages/database with schemas yet)
+
+- Story partially complete: Phase 1 done locally, Phases 2-4 require Railway deployment execution
+- Database migrations pending (no packages/database with schemas yet - Story 1.3)
 - Production tsx usage is temporary - Story 1.3 will establish proper workspace builds
+- big-ocean-api service created but never deployed ⬅️ BLOCKING ISSUE
+- REDIS_URL needs to be configured for big-ocean-api service (Redis service running ✅)
 
 ---
 

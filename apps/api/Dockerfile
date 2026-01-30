@@ -49,10 +49,6 @@ COPY --from=builder /app/packages ./packages
 # Expose port
 EXPOSE 4000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:4000/health || exit 1
-
 # Install tsx for running TypeScript in production (temporary until contracts package is built)
 RUN npm install -g tsx
 

@@ -1,10 +1,10 @@
 # Story 7.1: Unit Testing Framework Setup & TDD Pattern
 
-**Status:** ready-for-dev
-
-**Epic:** 7 - Testing & Quality Assurance
-
 **Story ID:** 7.1
+**Story Key:** 7-1-unit-testing-framework-setup-tdd-pattern
+**Epic:** 7 - Testing & Quality Assurance
+**Status:** ready-for-dev
+**Created:** 2026-01-30
 
 ---
 
@@ -18,281 +18,212 @@ So that **all domain logic, RPC contracts, and backend services are built with c
 
 ## Acceptance Criteria
 
-### Core Framework Setup
-1. **Given** Vitest is configured across the monorepo
-   **When** I run `pnpm test`
-   **Then** all unit tests execute successfully
-   **And** tests complete in <2 seconds total (excluding test discovery)
-   **And** I can run `pnpm test --ui` for interactive test browser
-   **And** coverage reports are generated automatically
+### Primary Acceptance Criteria
 
-2. **Given** a test file exists (`*.test.ts`)
-   **When** tests run
-   **Then** coverage reports show results for domain logic, contracts, and infrastructure
-   **And** coverage threshold enforcement prevents commits if <100% for domain logic
+**Given** Vitest is configured across the monorepo
+**When** I run `pnpm test`
+**Then** all unit tests execute in <2 seconds total
+**And** I can run `pnpm test --ui` for interactive test browser
+**And** coverage reports generated showing domain logic at 100%
+
+**Given** I'm implementing a domain feature (e.g., OCEAN code generation)
+**When** I follow TDD red-green-refactor cycle
+**Then** I write failing test first (red phase)
+**And** test defines expected behavior with assertion
+**And** I implement code to pass test (green phase)
+**And** I refactor for clarity while keeping tests green
+
+**Given** a backend feature story requires testing
+**When** the story is implemented
+**Then** unit tests exist for all code paths
+**And** coverage report shows ≥100% for domain logic, ≥90% for RPC contracts
+
+---
+
+## Developer Context
+
+### Project Overview
+
+**big-ocean** is a psychological profiling platform using the Big Five personality framework. This story establishes the testing foundation that enables all subsequent backend development (Stories 2.1-2.5, 3.1-3.2, 6.1-6.3).
+
+**Key Context for Developer:**
+- **Monorepo Structure:** Apps (frontend: `apps/front`, backend: `apps/api`) + Packages (`domain`, `contracts`, `database`, `infrastructure`, `ui`)
+- **Tech Stack Locked:** Effect-ts 3.19.14, @effect/rpc 0.73.0, @effect/schema 0.71.0, Drizzle ORM 0.45.1, PostgreSQL
+- **Critical Path:** Testing framework must be ready BEFORE Epic 2 implementation (backend services depend on this)
+- **Team Model:** Primarily solo dev (Vincentlay) with potential future AI agent collaboration
+
+### Business Context
+
+**Highest Risk for MVP Success:** LLM costs exploding before product-market fit. This story establishes the testing discipline that prevents expensive regressions in cost control logic (Story 2.5) and the multi-agent orchestration (Story 2.4).
+
+**MVP Target:** 500 beta users with unit test coverage preventing:
+- Cost calculation bugs (would be catastrophic at scale)
+- Session management issues (users lose assessment data)
+- OCEAN code generation determinism failures (same traits must always produce same code)
+
+---
+
+## Technical Requirements
+
+### Vitest Framework Setup
+
+**Must implement:**
+
+1. **Vitest Configuration for Monorepo**
+   - ESM-native configuration (required for modern Node.js + pnpm workspaces)
+   - Test discovery: `*.test.ts` pattern in core packages
+   - Test execution: `pnpm test` runs all tests, `pnpm test --ui` opens interactive browser
+   - Performance target: All tests complete in <2 seconds (critical for developer feedback loop)
+
+2. **Package-Level Test Setup**
+   - `packages/domain` - Domain logic tests (100% coverage target)
+   - `packages/contracts` - RPC contract tests (90%+ coverage target)
+   - `packages/database` - Database interaction tests (70%+ coverage target)
+   - `packages/infrastructure` - Dependency injection tests (80%+ coverage target)
+   - `apps/api` - Backend handler tests (80%+ coverage target for story implementations)
+
+3. **Vitest Plugins & Extensions**
+   - `@vitest/ui` for interactive test browser (developer productivity)
+   - `@vitest/coverage-v8` for code coverage reporting
+   - `vi.mock()` utilities for mocking external dependencies
+   - Snapshot testing for OCEAN archetype descriptions (Story 3.2)
+
+### Test Utilities & Mocks
+
+**Must provide:**
+
+1. **Mock Utilities**
+   - Mock Anthropic API responses (deterministic for Nerin testing)
+   - Mock PostgreSQL database (for unit tests without TestContainers)
+   - Mock Cost Guard for cost tracking testing
+   - Mock Rate Limiter for limiting rules testing
+
+2. **Test Fixtures**
+   - Sample conversation data (reusable across tests)
+   - Sample facet scores (for Scorer testing in Story 2.3)
+   - Sample OCEAN codes (for archetype lookup testing in Story 3.2)
+
+3. **Helper Functions**
+   - `createTestSession()` - Generate test session with predictable data
+   - `mockNerin()` - Mock Nerin agent response with token counts
+   - `mockAnalyzer()` - Mock pattern extraction result
+   - `mockScorer()` - Mock facet score output
 
 ### TDD Workflow
-3. **Given** I'm implementing a backend feature (e.g., OCEAN code generation, session management)
-   **When** I follow TDD red-green-refactor cycle
-   **Then** I write failing test first (red phase) that defines expected behavior
-   **And** test uses clear assertions (Vitest `expect()` API)
-   **And** I implement code to pass the test (green phase)
-   **And** I refactor for clarity while keeping all tests green (refactor phase)
 
-4. **Given** a backend feature story requires testing
-   **When** the story is implemented
-   **Then** unit tests exist covering all major code paths
-   **And** domain logic has ≥100% test coverage
-   **And** RPC contracts have ≥90% test coverage
-   **And** test results are visible in CI (GitHub Actions or equivalent)
+**Process to implement:**
 
-### Test Infrastructure & Utilities
-5. **Given** I'm writing tests for domain features
-   **When** I need to mock external dependencies
-   **Then** test utilities are available for common patterns:
-   - Mock Anthropic API responses (deterministic testing)
-   - Mock database queries (without spinning up PostgreSQL)
-   - Mock Effect services (dependency injection)
-   - Mock Redis (cost tracking)
+1. **Red Phase:** Write test first that fails
+   - Test file: `module.test.ts`
+   - Describe expected behavior with clear assertions
+   - Test fails because implementation doesn't exist (expected state)
 
-6. **Given** I need to test archetype descriptions or similar static data
-   **When** I write snapshot tests
-   **Then** snapshot testing infrastructure works with Vitest
-   **And** snapshots are tracked in git (`*.snap` files)
+2. **Green Phase:** Implement code to pass test
+   - Keep implementation minimal (no over-engineering)
+   - Test passes, confirming behavior is correct
 
-### CI/CD Integration
-7. **Given** code is pushed to a feature branch
-   **When** GitHub Actions runs
-   **Then** `pnpm test` executes automatically
-   **And** tests must pass before PR can be merged
-   **And** coverage reports are posted as PR comments
-   **And** failed tests block merge (enforced via branch protection rules)
+3. **Refactor Phase:** Improve code while keeping tests green
+   - Extract reusable functions
+   - Simplify logic for clarity
+   - All tests still pass (regression prevention)
+
+### Coverage Targets
+
+| Package/Module | Coverage Target | Rationale |
+|---|---|---|
+| `packages/domain` | **100%** | Core business logic, zero tolerance for bugs |
+| RPC Contracts | **90%+** | API contracts between frontend/backend |
+| Cost calculation (Story 2.5) | **100%** | Financial calculations, critical |
+| OCEAN code generation (Story 3.1) | **100%** | Determinism critical |
+| Scorer/Analyzer logic (Story 2.3) | **95%+** | Statistical calculations, must be precise |
+| Session management (Story 2.1) | **95%+** | User data persistence, high risk |
+| Encryption/Decryption (Story 6.1) | **100%** | Security-critical |
+| GDPR operations (Story 6.2) | **100%** | Legal compliance |
 
 ---
 
-## Tasks / Subtasks
+## Architecture Compliance
 
-### Task 1: Install & Configure Vitest
-- [ ] Add `vitest`, `@vitest/ui`, `vitest-coverage-c8` to root `package.json`
-- [ ] Create `vitest.config.ts` with:
-  - ESM configuration (ESM-native Vitest)
-  - Coverage thresholds: 100% for `packages/domain/**`, 90% for `packages/contracts/**`
-  - Include patterns: `src/**/*.test.ts`
-  - Exclude patterns: `node_modules`, `dist`
-  - Coverage reporter: `text`, `html`, `json` formats
-- [ ] Add npm scripts to root `package.json`:
-  - `pnpm test` → `vitest run` (CI mode, exit on completion)
-  - `pnpm test:watch` → `vitest` (watch mode for development)
-  - `pnpm test:ui` → `vitest --ui` (interactive browser)
-  - `pnpm test:coverage` → `vitest run --coverage` (generate coverage reports)
-- [ ] Verify Vitest runs with `pnpm test`
+### Project Structure
 
-### Task 2: Configure Packages for Testing
-- [ ] Update `packages/domain/package.json`:
-  - Add `vitest` to `devDependencies` (if not inherited from root)
-  - Create `tsconfig.test.json` with Vitest-compatible settings (if needed)
-- [ ] Update `packages/contracts/package.json`:
-  - Add `vitest` to `devDependencies`
-- [ ] Update `packages/infrastructure/package.json`:
-  - Add `vitest` to `devDependencies`
-- [ ] Update `packages/database/package.json`:
-  - Add `vitest` to `devDependencies`
-- [ ] Create `packages/domain/src/__tests__` directory structure (optional but recommended)
+```
+packages/
+├── domain/
+│   └── src/__tests__/
+│       ├── schemas.test.ts
+│       ├── errors.test.ts
+│       └── types.test.ts
+├── contracts/src/__tests__/
+│   └── rpc-contracts.test.ts
+├── database/src/__tests__/
+│   └── schema.test.ts
+└── infrastructure/src/__tests__/
+    └── context-bridge.test.ts
 
-### Task 3: Create Test Utilities & Mocks
-- [ ] Create `packages/domain/src/__tests__/mocks/anthropic-api.mock.ts`:
-  - Mock Anthropic API `chat.completions.create()` response
-  - Support streaming and non-streaming modes
-  - Allow configurable token counts for cost testing
-  - Example: `mockAnthropic.setResponse("Hello, I'm Nerin...")`
+apps/api/src/
+├── handlers/__tests__/
+│   └── assessment.test.ts
+└── lib/__tests__/
+    └── cost-guard.test.ts
+```
 
-- [ ] Create `packages/domain/src/__tests__/mocks/database.mock.ts`:
-  - Mock Drizzle ORM query builder
-  - Support in-memory data storage for session/message tests
-  - Example: `mockDb.sessions.create({ id, userId })`
+### Effect-ts Integration
 
-- [ ] Create `packages/domain/src/__tests__/mocks/redis.mock.ts`:
-  - Mock Redis for cost tracking tests
-  - Support `get`, `set`, `incr` operations
-  - Example: `mockRedis.set("cost:user-1:2026-01-30", "1500")`
-
-- [ ] Create `packages/domain/src/__tests__/mocks/effect-services.mock.ts`:
-  - Mock Effect Layer for dependency injection
-  - Allow tests to inject mock services without framework overhead
-  - Example: `mockEffectService("Logger", mockLogger)`
-
-- [ ] Create `packages/domain/src/__tests__/helpers/test-fixtures.ts`:
-  - Reusable test data (sample messages, sessions, precision scores)
-  - Factory functions for creating test data
-  - Example: `createTestSession({ userId, messageCount: 5 })`
-
-### Task 4: Write Sample TDD Tests
-- [ ] Create `packages/domain/src/__tests__/ocean-code-generator.test.ts`:
-  - Test 1: Facet means calculated correctly
-  - Test 2: Boundary conditions (0, 6.67, 13.33, 20)
-  - Test 3: All 243 trait level combinations map correctly
-  - Test 4: Determinism (same input → same output)
-  - Test 5: Code is exactly 5 letters
-  - Demonstrates red → green → refactor cycle
-
-- [ ] Create `packages/domain/src/__tests__/cost-guard.test.ts`:
-  - Test 1: Cost calculation formula accurate
-  - Test 2: Daily accumulation in Redis
-  - Test 3: Rate limit enforced (1 assessment/user/day)
-  - Test 4: Hard cap at $75/day
-  - Test 5: Graceful error messages
-
-- [ ] Create `packages/domain/src/__tests__/session-manager.test.ts`:
-  - Test 1: Session creation with unique ID
-  - Test 2: Messages persisted correctly
-  - Test 3: Precision scores saved and restored
-  - Test 4: Session resume loads full history
-  - Test 5: Conversation state accurate after resume
-
-### Task 5: CI/CD Integration
-- [ ] Create `.github/workflows/test.yml` (if not exists):
-  - Trigger on: PR to main, push to main
-  - Steps:
-    1. Checkout code
-    2. Setup Node.js (v20+)
-    3. Install pnpm
-    4. Run `pnpm install`
-    5. Run `pnpm test --coverage`
-    6. Upload coverage reports to CodeCov or similar (optional)
-    7. Post coverage as PR comment (optional)
-  - Fail if tests fail or coverage thresholds unmet
-
-- [ ] Configure branch protection rule:
-  - Require tests to pass before merge
-  - Require status check from GitHub Actions test workflow
-  - Dismiss stale PR approvals when new commits are pushed
-
-### Task 6: Documentation & Team Onboarding
-- [ ] Create `docs/testing-guide.md`:
-  - Overview of TDD workflow
-  - Step-by-step guide: red → green → refactor
-  - Example: Writing a test for new feature
-  - Running tests locally: `pnpm test`, `pnpm test:watch`, `pnpm test:ui`
-  - Coverage reports: `pnpm test:coverage` (opens HTML report)
-  - Debugging tips: Vitest debug flag, VSCode integration
-
-- [ ] Update `README.md` (root):
-  - Add "Testing" section with quick start commands
-  - Link to testing guide
-
-- [ ] Add inline code comments:
-  - Add JSDoc comments to test helpers explaining usage
-  - Example: `/**  createTestSession creates a realistic session for testing */`
+**Tests must be Effect-native:**
+- Use `Effect.runSync()` or `Effect.runPromise()` in tests
+- Leverage Effect's error handling for predictable test outcomes
+- Mock Effect Services for isolated unit testing
 
 ---
 
-## Dev Notes
+## Library & Framework Requirements
 
-### Architectural Patterns
-- **Monorepo Testing:** Vitest can test multiple packages; use glob patterns in `vitest.config.ts` to target specific packages
-- **TDD Workflow:** Core to this story — developers write failing test first, then implement code to pass test
-- **Mock Strategy:** Avoid spinning up real dependencies (Anthropic API, PostgreSQL, Redis) — use mocks for unit tests, leave integration tests for Story 7.2
-- **Coverage Thresholds:** 100% for domain logic is strict but essential for core business logic (OCEAN scoring, cost calculations)
+### Vitest Core
+- **Version:** Latest stable (currently ~1.x)
+- **Configuration:** `vitest.config.ts` at monorepo root
+- **ESM Support:** Native ES modules (Node.js 20+)
 
-### Project Structure Notes
-This story primarily touches:
-- **Root `package.json` & `vitest.config.ts`** — central test configuration
-- **`packages/domain/`** — domain logic tests (highest coverage priority)
-- **`packages/contracts/`** — RPC contract tests (90% coverage)
-- **`packages/infrastructure/`** — utility tests as needed
-- **`.github/workflows/test.yml`** — CI/CD integration
-- **`docs/testing-guide.md`** — team documentation
-
-No changes to frontend (`apps/front`) or API (`apps/api`) in this story; test setup is infrastructure-level.
-
-### Dependencies & Versions
-- **Vitest:** Latest stable (v1.x) — ESM-native, Effect-ts friendly
-- **@vitest/ui:** Interactive browser for test debugging
-- **vitest-coverage-c8:** Coverage reporter compatible with Vitest
-- **Node.js:** ≥20 (as per CLAUDE.md requirement)
-- **TypeScript:** 5.7+ (existing in project)
-
-### Success Criteria Clarification
-- Tests must run quickly (<2 sec) — mocks essential, no real I/O
-- Coverage reports must be machine-parseable (JSON format) for CI integration
-- Sample tests should demonstrate TDD pattern clearly for team to follow
-- CI/CD integration must prevent merging of failing tests or coverage regressions
-
-### Known Constraints
-- **Vitest ESM requirement:** Ensure all test files use ESM imports/exports (not CommonJS)
-- **Effect-ts testing:** May require `Effect.runPromise()` or `Effect.runSync()` for synchronous tests
-- **Mocking Anthropic API:** Must support both streaming and non-streaming modes for realistic testing
-
-### Architecture Compliance
-Per [CLAUDE.md Architecture Guidelines](../../CLAUDE.md#domain-driven-design) and [Architecture ADRs](../../_bmad-output/planning-artifacts/architecture.md):
-- All domain logic (scoring, code generation, cost calculations) must have 100% coverage
-- RPC contracts must be validated against schema at test time
-- Error handling must be tested (tagged Error types, not exceptions)
-- No changes to production code structure; testing is isolated in `__tests__` folders
-
-### Files Involved
-- `packages/domain/src/**/*.test.ts` — domain logic tests
-- `packages/contracts/src/**/*.test.ts` — RPC contract tests
-- `packages/infrastructure/src/**/*.test.ts` — utility tests
-- `vitest.config.ts` (root) — central configuration
-- `.github/workflows/test.yml` — CI/CD workflow
-- `docs/testing-guide.md` — team guide
+### Supporting Libraries
+- `@vitest/ui` - Interactive test browser
+- `@vitest/coverage-v8` - Code coverage reporting
+- `@testing-library/react` - React component testing (Story 4.1+)
 
 ---
 
 ## Story Completion Status
 
-**Status:** ready-for-dev
+### Deliverables
 
-**Context Engine Analysis:** ✅ Complete
-- Epic context loaded from `epics.md`
-- Architecture patterns identified from `architecture.md`
-- PRD cost constraints integrated
-- No previous story (first in testing epic) — starting fresh
-- Git history reviewed (initial commit, no test patterns yet)
+1. **✅ Vitest configured** - `vitest.config.ts` created, tests runnable via `pnpm test`
+2. **✅ Example tests written** - Sample test files demonstrating TDD workflow
+3. **✅ Coverage reports generated** - `pnpm test:coverage` produces HTML report
+4. **✅ Test utilities provided** - Mock factories and helpers documented
+5. **✅ CI integration** - Tests run on every PR
+6. **✅ Team documentation** - TDD workflow documented
 
-**Developer Readiness:** ✅ Ready
-- All acceptance criteria clearly defined (7 criteria with sub-checklist)
-- 6 major tasks broken into specific subtasks
-- Mock infrastructure utilities specified
-- CI/CD integration documented
-- Team onboarding documentation required
+### Success Metrics
 
-**Next Steps for Developer:**
-1. Set up Vitest configuration
-2. Create mock utilities
-3. Write sample TDD tests demonstrating red → green → refactor
-4. Integrate CI/CD
-5. Write team documentation
-6. Mark story done when tests pass in CI
-
----
-
-## References & Source Documentation
-
-- **Epic Source:** [big-ocean Epics Document - Story 7.1](../../_bmad-output/planning-artifacts/epics.md#story-71-unit-testing-framework-setup--tdd-pattern)
-- **Architecture Decisions:** [Architecture ADR-2: LLM Cost Control](../../_bmad-output/planning-artifacts/architecture.md#adr-2-llm-cost-control-architecture--active) — cost testing requirements
-- **Project Guidelines:** [CLAUDE.md - Testing Strategy](../../CLAUDE.md#testing-strategy)
-- **Related Stories:** None (foundational); enables Stories 2.x onwards for TDD pattern
-- **Tech Stack Reference:** Vitest, Effect-ts, @anthropic-ai/sdk, Drizzle ORM
+- [ ] `pnpm test` runs all tests in <2 seconds
+- [ ] `pnpm test --ui` opens interactive browser without errors
+- [ ] Coverage reports show baseline for future improvements
+- [ ] At least 5 example tests written
+- [ ] Zero ESM/module import errors
+- [ ] Zero Effect-ts compatibility issues
+- [ ] Documentation explains TDD red-green-refactor cycle
 
 ---
 
 ## Dev Agent Record
 
-### Agent Model Used
-Claude Haiku 4.5 (claude-haiku-4-5-20251001)
+### Status
 
-### Generated With
-BMad Create Story Workflow - Ultimate Story Context Engine
+**ready-for-dev**
 
-### Key Context Integrated
-- Monorepo structure (Turbo + pnpm workspaces)
-- Effect-ts functional error handling patterns
-- LLM cost monitoring requirements (Story 2.5 dependency)
-- TDD as core team pattern (required for all subsequent backend stories)
-- CI/CD integration for branch protection
+### Implementation Status
 
-### File List
-- `_bmad-output/implementation-artifacts/7-1-unit-testing-framework-setup-tdd-pattern.md` — this file
-- Related files to review: `vitest.config.ts` (to be created), `.github/workflows/test.yml` (to be created)
+- Created: 2026-01-30
+- Story prepared: By Create Story workflow
+
+---
+
+**Next Step:** Run dev-story workflow to implement
