@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/contracts",
+  "name": "@workspace/infrastructure",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -8,15 +8,10 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./assessment": "./src/assessment.ts",
-    "./profile": "./src/profile.ts",
-    "./errors": "./src/errors.ts",
-    "./schemas": "./src/schemas.ts"
+    "./context/*": "./src/context/*.ts"
   },
   "dependencies": {
-    "effect": "catalog:",
-    "@effect/rpc": "catalog:",
-    "@effect/schema": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@workspace/typescript-config": "workspace:*",

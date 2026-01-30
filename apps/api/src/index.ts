@@ -1,108 +1,63 @@
 import "dotenv/config";
 import { createServer } from "node:http";
-import { RPCHandler } from "@orpc/server/node";
-import { CORSPlugin } from "@orpc/server/plugins";
-import { onError } from "@orpc/server";
-import router from "./router.js";
+import { Layer } from "effect";
+import { HttpRouter } from "@effect/platform";
+import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
+import { RpcServer, RpcSerialization } from "@effect/rpc";
+import { BigOceanRpcs } from "@workspace/contracts";
 import logger from "./logger.js";
+import { AssessmentRpcHandlersLive } from "./handlers/assessment.js";
+import { ProfileRpcHandlersLive } from "./handlers/profile.js";
 
-// Logging interceptor middleware
-const loggingInterceptor = ({ context, input, next, path }: any) => {
-  const startTime = Date.now();
-  const procedurePath = path?.join(".") || "unknown";
-  const contextLogger = context?.logger;
+/**
+ * Combined RPC Handlers Layer
+ *
+ * Merges all handler layers following the official @effect/rpc pattern.
+ */
+const HandlersLayer = Layer.mergeAll(AssessmentRpcHandlersLive, ProfileRpcHandlersLive);
 
-  contextLogger?.info(`[RPC] Procedure called: ${procedurePath}`, {
-    procedure: procedurePath,
-    hasInput: !!input,
-    inputKeys: input ? Object.keys(input).join(", ") : "none",
-    inputPreview:
-      input && typeof input === "object"
-        ? JSON.stringify(input).substring(0, 200)
-        : String(input),
-  });
+/**
+ * RPC Server Layer
+ *
+ * Creates the RPC server with handlers.
+ */
+const RpcLayer = RpcServer.layer(BigOceanRpcs).pipe(Layer.provide(HandlersLayer));
 
-  return next().then((result: any) => {
-    const duration = Date.now() - startTime;
-    contextLogger?.debug(`[RPC] Procedure completed: ${procedurePath}`, {
-      procedure: procedurePath,
-      duration: `${duration}ms`,
-      hasResult: !!result,
-    });
-    return result;
-  });
-};
+/**
+ * HTTP Protocol Layer
+ *
+ * Configures HTTP protocol and serialization for RPC.
+ */
+const HttpProtocol = RpcServer.layerProtocolHttp({
+  path: "/rpc",
+}).pipe(Layer.provide(RpcSerialization.layerNdjson));
 
-const handler = new RPCHandler(router, {
-  plugins: [new CORSPlugin()],
-  interceptors: [
-    loggingInterceptor,
-    onError((error) => {
-      const message = error instanceof Error ? error.message : String(error);
-      logger.error(`[RPC] Error`, {
-        message,
-        error: error instanceof Error ? error.stack : String(error),
-      });
-    }),
-  ],
-});
+/**
+ * Main Server Layer
+ *
+ * Combines RPC, protocol, and HTTP server layers following the official pattern.
+ */
+const Main = HttpRouter.Default.serve().pipe(
+  Layer.provide(RpcLayer),
+  Layer.provide(HttpProtocol),
+  Layer.provide(
+    NodeHttpServer.layer(() => createServer(), {
+      port: Number(process.env.PORT || 4000),
+      host: process.env.HOST || "0.0.0.0",
+    })
+  )
+);
 
-const server = createServer(async (req, res) => {
-  const method = req.method || "UNKNOWN";
-  const url = req.url || "UNKNOWN";
-  const startTime = Date.now();
+/**
+ * Startup logging
+ */
+logger.info(`Server starting on http://0.0.0.0:${process.env.PORT || 4000}`);
+logger.info(`RPC endpoint available at /rpc`);
 
-  // Health check endpoint (for Railway deployment validation)
-  if (url === "/health" && method === "GET") {
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({ status: "ok" }));
-    logger.debug(`[HTTP] Health check`, { duration: `${Date.now() - startTime}ms` });
-    return;
-  }
+// Launch the server
+NodeRuntime.runMain(Layer.launch(Main));
 
-  logger.http(`[HTTP] ${method} ${url}`, {
-    method,
-    path: url,
-    userAgent: req.headers["user-agent"] || "unknown",
-  });
-
-  const result = await handler.handle(req, res, {
-    context: { headers: req.headers, logger },
-  });
-
-  const duration = Date.now() - startTime;
-  const statusCode = res.statusCode || 200;
-
-  if (!result.matched) {
-    res.statusCode = 404;
-    logger.warn(`[HTTP] 404 - No procedure matched`, {
-      method,
-      path: url,
-      duration: `${duration}ms`,
-    });
-    res.end("No procedure matched");
-  } else {
-    logger.debug(`[HTTP] Response sent`, {
-      method,
-      path: url,
-      statusCode,
-      duration: `${duration}ms`,
-    });
-  }
-});
-
-const host = process.env.HOST || "0.0.0.0";
-const port = Number(process.env.PORT || 4000);
-
-server.listen(port, host, () => {
-  logger.info(`Server listening on http://${host}:${port}`);
-});
-
-server.on("error", (error) => {
-  logger.error(`Server error: ${error.message}`, { error });
-});
-
+// Error handlers
 process.on("unhandledRejection", (reason) => {
   logger.error(`Unhandled Rejection: ${reason}`);
 });

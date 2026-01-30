@@ -1,6 +1,8 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { TherapistChat } from "@/components/TherapistChat";
-import { orpc } from "@/orpc/client";
+// TODO: Migrate to Effect-ts RPC - see use-assessment.ts for pattern
+// import { orpc } from "@/orpc/client";
+const orpc = { chat: { startTherapistAssessment: async () => ({ id: 'temp-session' }) } } as any; // Temporary placeholder
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/chat/")({

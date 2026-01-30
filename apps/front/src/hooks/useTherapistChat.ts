@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
-import { orpc } from '@/orpc/client'
+// TODO: Migrate to Effect-ts RPC - see use-assessment.ts for pattern
+// import { orpc } from '@/orpc/client'
 
 interface Message {
   id: string
@@ -47,41 +48,44 @@ export function useTherapistChat(sessionId: string) {
       }
 
       try {
-        let assistantMessage = ''
-        let currentTraits: TraitScores | null = null
+        // TODO: Migrate to Effect-ts RPC - see use-assessment.ts for pattern
+        throw new Error('oRPC removed - migrate to Effect-ts RPC')
 
-        // Stream the response
-        for await (const event of await orpc.chat.sendTherapistMessage({
-          sessionId,
-          message: userMessage,
-        })) {
-          if (event.type === 'response') {
-            assistantMessage += event.chunk
-          } else if (event.type === 'traits') {
-            currentTraits = event.traits
-          } else if (event.type === 'complete') {
-            currentTraits = event.traits
-            setIsCompleted(true)
-          }
-        }
+        // let assistantMessage = ''
+        // let currentTraits: TraitScores | null = null
 
-        // Add assistant message
-        if (assistantMessage) {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `msg-${Date.now()}`,
-              role: 'assistant',
-              content: assistantMessage,
-              timestamp: new Date(),
-            },
-          ])
-        }
+        // // Stream the response
+        // for await (const event of await orpc.chat.sendTherapistMessage({
+        //   sessionId,
+        //   message: userMessage,
+        // })) {
+        //   if (event.type === 'response') {
+        //     assistantMessage += event.chunk
+        //   } else if (event.type === 'traits') {
+        //     currentTraits = event.traits
+        //   } else if (event.type === 'complete') {
+        //     currentTraits = event.traits
+        //     setIsCompleted(true)
+        //   }
+        // }
 
-        // Update traits
-        if (currentTraits) {
-          setTraits(currentTraits)
-        }
+        // // Add assistant message
+        // if (assistantMessage) {
+        //   setMessages((prev) => [
+        //     ...prev,
+        //     {
+        //       id: `msg-${Date.now()}`,
+        //       role: 'assistant',
+        //       content: assistantMessage,
+        //       timestamp: new Date(),
+        //     },
+        //   ])
+        // }
+
+        // // Update traits
+        // if (currentTraits) {
+        //   setTraits(currentTraits)
+        // }
       } catch (error) {
         console.error('Failed to send message:', error)
       } finally {

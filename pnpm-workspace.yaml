@@ -4,6 +4,15 @@ packages:
 
 catalog:
   zod: "4.2.1"
+  effect: "latest"
+  "@effect/rpc": "latest"
+  "@effect/schema": "latest"
+  "@effect/platform": "latest"
+  "@effect/platform-node": "latest"
+  "@effect/cluster": "latest"
+  "@effect/sql": "latest"
+  "@effect/experimental": "latest"
+  pino: "9.6.0"
 
 overrides:
   zod: "catalog:"

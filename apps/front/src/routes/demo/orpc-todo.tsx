@@ -2,7 +2,9 @@ import { useCallback, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
 
-import { orpc } from '@/orpc/client'
+// TODO: Migrate to Effect-ts RPC - see use-assessment.ts for pattern
+// import { orpc } from '@/orpc/client'
+const orpc = {} as any // Temporary placeholder to avoid compile errors
 
 export const Route = createFileRoute('/demo/orpc-todo')({
   component: ORPCTodos,

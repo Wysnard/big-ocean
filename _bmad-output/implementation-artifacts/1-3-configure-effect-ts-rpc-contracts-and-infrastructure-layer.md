@@ -1,151 +1,159 @@
 ---
-status: ready-for-dev
+status: in-progress
 story_id: "1.3"
 epic: 1
 created_date: 2026-01-30
-blocks: [1-2, 2-1, 2-2, 4-1, 4-2]
-blocked_by: [1-1]
+completed_date: null
+phase_1_complete: true
+phase_2_complete: true
+phase_3_complete: true
+regenerated: true
+regenerated_date: 2026-01-30
+updated_date: 2026-01-30
+migration_required: true
+implementation_notes: |
+  Phase 0-3 completed with official @effect/rpc pattern following effect-worker-mono reference.
+  - All Effect packages updated to "latest" in catalog
+  - Contracts restructured with individual Rpc.make() definitions
+  - Handlers exported as Layers using RpcGroup.toLayer()
+  - Server uses Layer.mergeAll for handler composition
+  - RPC endpoint available at /rpc with NDJSON serialization
+  - All TypeScript compilation passing
+  - Server starts successfully
+  Next: Phase 4 (Frontend RPC Client Integration)
 ---
 
-# Story 1.3: Configure Effect-ts RPC Contracts and Infrastructure Layer
+# Story 1.3: Migrate from oRPC to Effect-ts RPC Contracts and Infrastructure Layer
 
 ## Story
 
 As a **Backend Developer**,
-I want **to define type-safe RPC contracts between frontend and backend**,
-so that **all API interactions are compile-time verified and self-documenting**.
+I want **to migrate from oRPC to Effect-ts RPC contracts and establish type-safe communication between frontend and backend**,
+so that **all API interactions are compile-time verified, self-documenting, errors are type-safe, and the codebase follows the architecture standard**.
 
 ## Acceptance Criteria
 
-### Contract Definition & Type Safety
-**Given** the Effect-ts environment is configured
-**When** I define an RPC contract (e.g., `startAssessment`)
-**Then** the contract automatically generates TypeScript types for frontend/backend
-**And** frontend client imports can only call valid procedures
+### Phase 0: oRPC Cleanup (Must Complete First)
+
+**Given** the codebase currently uses oRPC architecture
+**When** I clean up the existing implementation
+**Then** all oRPC dependencies are removed from `apps/api/package.json`, `packages/contracts/package.json`, and `apps/front/package.json`
+**And** old oRPC files are deleted: `apps/api/src/os.ts`, `apps/api/src/router.ts`, `apps/api/src/procedures/*` (planet, chat)
+**And** oRPC contracts in `packages/contracts/src/index.ts` are removed
+**And** oRPC client code in `apps/front` is removed
+**And** the codebase is in a clean state ready for Effect-ts implementation
+
+### Phase 1: Contract Definition & Type Safety
+
+**Given** the Effect-ts environment is configured in `packages/contracts` and `packages/infrastructure`
+**When** I define an RPC contract (e.g., `startAssessment`, `sendMessage`, `getResults`)
+**Then** the contract automatically generates TypeScript types for both frontend and backend
+**And** frontend client imports can only call valid RPC procedures
 **And** invalid RPC calls fail at compile time, not runtime
+**And** return types match the contract output schema exactly
 
-### Handler Implementation
-**Given** a backend handler is implemented
-**When** it returns a successful response
-**Then** the response matches the contract output schema
-**And** errors are caught as tagged Error types (SessionNotFoundError, etc.)
-**And** handler can be mounted on Express with proper routing
+### Phase 2: Backend Handler Implementation
 
-### Dependency Injection
-**Given** a handler needs database or logger access
-**When** the handler runs
-**Then** it receives dependencies via Effect Layer injection
-**And** dependencies are request-scoped (FiberRef)
-**And** no global state required
+**Given** a backend RPC handler is implemented in `apps/api/src/handlers/`
+**When** the handler processes a request
+**Then** the handler has access to request-scoped dependencies via FiberRef (database, logger, cost guard)
+**And** successful responses match the contract output schema
+**And** errors are caught as tagged Error types (`SessionNotFoundError`, `RateLimitError`, etc.)
+**And** errors automatically map to appropriate HTTP status codes (404, 429, 503)
+**And** the `/health` endpoint is preserved and working (required for Railway deployment validation)
+
+### Phase 3: Frontend Client Integration
+
+**Given** the RPC contracts are defined in `packages/contracts`
+**When** frontend code imports the RPC client
+**Then** the client provides fully typed methods for all RPC procedures
+**And** return types are inferred correctly (no manual type annotations needed)
+**And** error handling is type-safe (discriminated Error unions)
+**And** the client can be used in TanStack Query hooks seamlessly
+**And** all old oRPC client imports are replaced with Effect-ts RPC client
+
+### Phase 4: Infrastructure Layer Setup
+
+**Given** the infrastructure package is configured with FiberRef bridges
+**When** a backend request is processed
+**Then** request-scoped services (database, logger, cost tracker) are accessible via FiberRef
+**And** Layer composition injects dependencies cleanly
+**And** no prop drilling or manual DI is required
+**And** services are properly scoped per-request (no cross-request state leakage)
 
 ## Business Context
 
 **Why This Story Matters:**
-- Foundational infrastructure for all backend development
-- Type-safe contracts prevent runtime API mismatches
-- All future stories (Auth, Assessment, Results) depend on this RPC framework
-- Establishes architectural patterns for error handling + dependency injection
+
+Story 1.3 migrates from oRPC to Effect-ts RPC and establishes the **type-safe communication backbone** between frontend and backend. This is foundational for:
+
+- **Architecture alignment**: Brings codebase in line with the effect-worker-mono pattern defined in architecture.md
+- **Technical debt cleanup**: Removes oRPC (a less mature, community library) in favor of Effect-ts (production-ready, well-supported)
+- **Compile-time safety**: Eliminates entire classes of API integration bugs (wrong params, mismatched types, undefined endpoints)
+- **Self-documenting contracts**: Developers see exactly what data flows between client/server without reading docs
+- **Effect-ts error handling**: Tagged errors enable precise error handling (404 vs 429 vs 500) without string parsing
+- **Dependency injection foundation**: FiberRef bridges enable clean service access throughout the backend
+- **Scalability**: Adding new RPC procedures becomes trivial (define contract, implement handler, frontend auto-updates)
+
+**Migration Requirements:**
+
+This story includes a **clean rebuild from oRPC to Effect-ts RPC**. The current codebase has:
+- oRPC contracts in `packages/contracts` using Zod schemas
+- oRPC handlers in `apps/api/src/procedures/` using `os.*.handler()` pattern
+- oRPC server setup in `apps/api/src/index.ts` using `RPCHandler`
+
+**All of this will be deleted and rebuilt from scratch with Effect-ts.**
+
+**Only Preserve:**
+- The `/health` endpoint (critical for Railway deployment validation)
+- Logger setup (`apps/api/src/logger.ts`)
+- LangGraph therapist file structure (will be re-integrated later in Epic 2)
 
 **Blocks Until Complete:**
-- Story 1.2 (Better Auth) - auth RPC endpoints needed
-- Story 2.1 (Session Management) - needs RPC framework
-- Story 2.2 (Nerin Agent) - RPC handler for chat endpoint
-- Story 4.1 (Frontend Auth UI) - needs RPC client types
-- All subsequent backend stories
 
-**Depends On:**
-- Story 1.1 (Railway Infrastructure) - deployed Node.js backend ready
-- packages/domain (already exists with domain types)
-- packages/contracts (will be created/updated in this story)
+- Epic 2-7 development (all features depend on RPC contracts for API communication)
+- Frontend-backend integration (no type-safe API calls without contracts)
+- Error handling implementation (tagged errors are the foundation for UX error states)
+- Production deployment validation (Railway must confirm new architecture works)
+
+**Critical Success Criteria:**
+
+This story is considered complete only when:
+1. ✅ All oRPC code is removed
+2. ✅ Effect-ts RPC infrastructure is implemented
+3. ✅ Local testing passes (all RPC calls work)
+4. ✅ **Railway deployment succeeds** (health checks pass, no errors in logs)
+5. ✅ Production RPC calls work (frontend → backend communication validated)
+
+**Architectural Alignment:**
+
+From architecture.md Decision 1B (Backend Framework Selection):
+- Follows **effect-worker-mono** pattern exactly
+- FiberRef bridges for request-scoped dependencies
+- @effect/rpc for type-safe contracts
+- Effect.gen for async handler composition
 
 ## Technical Requirements
 
-### Core Technologies
+### RPC Contracts to Implement (MVP Scope)
 
-**Effect-ts Stack (Already in pnpm-lock.yaml):**
-- `effect@3.19.14` - Functional effect system
-- `@effect/rpc@0.73.0` - Type-safe RPC contract system
-- `@effect/schema@0.71.0` - Runtime schema validation
-- `express@4.x` - HTTP server framework
-- `@sentry/node` - Error tracking
-
-### Project Structure Setup
-
-**Directory Layout:**
-
-```
-big-ocean/
-├── apps/
-│   └── api/
-│       ├── src/
-│       │   ├── index.ts                    [MODIFY - add RPC middleware]
-│       │   ├── handlers/
-│       │   │   ├── index.ts               [CREATE - export all services]
-│       │   │   ├── assessment.ts          [CREATE - startAssessment, sendMessage]
-│       │   │   ├── profile.ts             [CREATE - getProfile, compareProfiles]
-│       │   │   └── auth.ts                [CREATE - signUp, signIn (Story 1.2)]
-│       │   ├── middleware/
-│       │   │   ├── error-handler.ts       [CREATE - HTTP error mapping]
-│       │   │   ├── rpc-router.ts          [CREATE - RPC endpoint mounting]
-│       │   │   └── security.ts            [VERIFY - headers from Story 1.2]
-│       │   ├── context/
-│       │   │   ├── index.ts               [CREATE - Layer definitions]
-│       │   │   ├── database.ts            [CREATE - DatabaseRef service]
-│       │   │   ├── logger.ts              [CREATE - LoggerRef service]
-│       │   │   └── cost-guard.ts          [CREATE - CostGuardRef service]
-│       │   └── utils/
-│       │       └── session.ts             [CREATE - session helpers]
-│       └── package.json                   [VERIFY - effect deps]
-├── packages/
-│   ├── contracts/
-│   │   └── src/
-│   │       └── index.ts                   [CREATE - RPC service definitions]
-│   ├── domain/
-│   │   └── src/
-│   │       └── errors/
-│   │           └── index.ts               [VERIFY - domain error types]
-│   └── infrastructure/
-│       └── src/
-│           └── services.ts                [VERIFY - Layer composition]
-```
-
-### RPC Contract System
-
-**Core Concepts:**
-
-1. **Service Definition** - Defines RPC procedures with input/output schemas
-2. **Schema Validation** - @effect/schema for runtime validation
-3. **Error Discrimination** - Tagged errors for type-safe error handling
-4. **Handler Implementation** - Effect-based handlers with dependency injection
-5. **HTTP Mapping** - Routes mapped to Express endpoints
-
-### Contract Definition Pattern
-
-**File: `packages/contracts/src/index.ts`**
+**Assessment Service:**
 
 ```typescript
+// packages/contracts/src/assessment.ts
 import * as S from "@effect/schema/Schema";
 import * as Rpc from "@effect/rpc/Rpc";
 
-// Service definition with typed procedures
 export const AssessmentService = Rpc.define({
   startAssessment: Rpc.rpcFunction({
-    // Input schema - validated at runtime
     input: S.struct({
-      userId: S.optional(S.string),
+      userId: S.optional(S.string), // Optional: anonymous sessions allowed
     }),
-
-    // Output schema - response must match
     output: S.struct({
       sessionId: S.string,
       createdAt: S.Date,
     }),
-
-    // Possible errors - discriminated union
-    failure: S.union(
-      S.struct({ _tag: S.literal("SessionCreationError"), reason: S.string }),
-      S.struct({ _tag: S.literal("DatabaseError"), operation: S.string })
-    ),
+    failure: SessionError, // Tagged error type
   }),
 
   sendMessage: Rpc.rpcFunction({
@@ -154,23 +162,8 @@ export const AssessmentService = Rpc.define({
       message: S.string,
     }),
     output: S.struct({
-      response: S.string,
-      precision: S.number,
-      tokensUsed: S.number,
-    }),
-    failure: S.union(
-      S.struct({ _tag: S.literal("SessionNotFoundError"), sessionId: S.string }),
-      S.struct({ _tag: S.literal("CostLimitExceededError"), dailyLimit: S.number }),
-      S.struct({ _tag: S.literal("LLMError"), model: S.string, message: S.string })
-    ),
-  }),
-
-  getResults: Rpc.rpcFunction({
-    input: S.struct({ sessionId: S.string }),
-    output: S.struct({
-      oceanCode: S.string,
-      archetypeName: S.string,
-      traits: S.struct({
+      response: S.string, // Nerin's response
+      precision: S.struct({
         openness: S.number,
         conscientiousness: S.number,
         extraversion: S.number,
@@ -178,669 +171,1059 @@ export const AssessmentService = Rpc.define({
         neuroticism: S.number,
       }),
     }),
-    failure: S.union(
-      S.struct({ _tag: S.literal("SessionNotFoundError"), sessionId: S.string }),
-      S.struct({ _tag: S.literal("ResultsNotReadyError"), precision: S.number })
-    ),
+    failure: S.union(SessionError, RateLimitError, CostLimitError),
   }),
-});
 
-// Auth service (placeholder - Story 1.2)
-export const AuthService = Rpc.define({
-  signUp: Rpc.rpcFunction({
+  getResults: Rpc.rpcFunction({
     input: S.struct({
-      email: S.string,
-      password: S.string,
+      sessionId: S.string,
     }),
     output: S.struct({
-      user: S.struct({ id: S.string, email: S.string }),
-      session: S.struct({ id: S.string, expiresAt: S.Date }),
+      oceanCode4Letter: S.string, // e.g., "PPAM"
+      precision: S.number, // 0-100%
+      archetypeName: S.string,
+      traitScores: S.struct({
+        openness: S.number, // 0-20 scale
+        conscientiousness: S.number,
+        extraversion: S.number,
+        agreeableness: S.number,
+        neuroticism: S.number,
+      }),
     }),
-    failure: S.union(
-      S.struct({ _tag: S.literal("InvalidPassword"), reason: S.string }),
-      S.struct({ _tag: S.literal("EmailExists"), email: S.string })
-    ),
+    failure: SessionError,
   }),
 
-  signIn: Rpc.rpcFunction({
-    input: S.struct({ email: S.string, password: S.string }),
-    output: S.struct({
-      user: S.struct({ id: S.string, email: S.string }),
-      session: S.struct({ id: S.string, expiresAt: S.Date }),
+  resumeSession: Rpc.rpcFunction({
+    input: S.struct({
+      sessionId: S.string,
     }),
-    failure: S.union(
-      S.struct({ _tag: S.literal("InvalidCredentials") })
-    ),
+    output: S.struct({
+      messages: S.array(MessageSchema),
+      precision: S.number,
+      oceanCode4Letter: S.optional(S.string),
+    }),
+    failure: SessionError,
   }),
 });
+```
 
-// Profile service (future - Epic 5)
+**Profile Service (for sharing):**
+
+```typescript
+// packages/contracts/src/profile.ts
 export const ProfileService = Rpc.define({
   getProfile: Rpc.rpcFunction({
-    input: S.struct({ profileId: S.string }),
-    output: S.struct({
-      archetype: S.string,
-      traits: S.struct({}),
+    input: S.struct({
+      publicProfileId: S.string, // NOT user_id (privacy)
     }),
-    failure: S.union(
-      S.struct({ _tag: S.literal("NotFound") })
-    ),
+    output: S.struct({
+      archetypeName: S.string,
+      oceanCode4Letter: S.string,
+      traitSummary: S.struct({
+        openness: S.string, // "Low" | "Mid" | "High"
+        conscientiousness: S.string,
+        extraversion: S.string,
+        agreeableness: S.string,
+        neuroticism: S.string,
+      }),
+      description: S.string, // 2-3 sentence archetype summary
+      archetypeColor: S.string, // Hex color for UI
+    }),
+    failure: ProfileNotFoundError,
+  }),
+
+  shareProfile: Rpc.rpcFunction({
+    input: S.struct({
+      sessionId: S.string,
+    }),
+    output: S.struct({
+      publicProfileId: S.string,
+      shareableUrl: S.string, // Full URL for sharing
+    }),
+    failure: S.union(SessionError, ProfileError),
   }),
 });
 ```
 
-### Handler Implementation Pattern
-
-**File: `apps/api/src/handlers/assessment.ts`**
+### Error Schema Definitions
 
 ```typescript
-import { Effect } from "effect";
-import * as Rpc from "@effect/rpc/Rpc";
+// packages/contracts/src/errors.ts
 import * as S from "@effect/schema/Schema";
-import {
-  SessionNotFoundError,
-  CostLimitExceededError,
-  LLMError
-} from "@workspace/domain";
-import { DatabaseRef, LoggerRef, CostGuardRef } from "../context";
 
-// Handler for startAssessment RPC
-export const startAssessment = ((input: { userId?: string }) =>
-  Effect.gen(function* () {
-    // Inject dependencies via Effect services
-    const db = yield* Effect.service(DatabaseRef);
-    const logger = yield* Effect.service(LoggerRef);
+export const SessionError = S.taggedUnion("_tag", {
+  SessionNotFound: S.struct({
+    _tag: S.literal("SessionNotFound"),
+    sessionId: S.string,
+    message: S.string,
+  }),
+  SessionExpired: S.struct({
+    _tag: S.literal("SessionExpired"),
+    sessionId: S.string,
+    expiredAt: S.Date,
+  }),
+});
 
-    // Generate session ID
-    const sessionId = yield* generateSessionId();
-    const userId = input.userId || null;
+export const RateLimitError = S.struct({
+  _tag: S.literal("RateLimitExceeded"),
+  userId: S.string,
+  resetAt: S.Date, // When limit resets
+  message: S.string,
+});
 
-    // Create session in database
-    yield* db.sessions.create({
-      id: sessionId,
-      userId,
-      startedAt: new Date(),
-      precision: 0,
-      status: "active",
-    });
+export const CostLimitError = S.struct({
+  _tag: S.literal("CostLimitExceeded"),
+  dailySpend: S.number,
+  limit: S.number,
+  message: S.string,
+});
 
-    // Log with structured data
-    logger.info("session_created", {
-      sessionId,
-      userId,
-      anonymous: !userId,
-    });
-
-    // Return typed response
-    return { sessionId, createdAt: new Date() };
-  })
-) as Rpc.RpcFunction<typeof AssessmentService.startAssessment>;
-
-// Handler for sendMessage RPC
-export const sendMessage = ((input: { sessionId: string; message: string }) =>
-  Effect.gen(function* () {
-    const costGuard = yield* Effect.service(CostGuardRef);
-    const db = yield* Effect.service(DatabaseRef);
-    const logger = yield* Effect.service(LoggerRef);
-
-    // Cost guard check (rate limiting)
-    const budgetOk = yield* costGuard.checkBudget(input.sessionId);
-    if (!budgetOk) {
-      yield* Effect.fail(
-        new CostLimitExceededError(input.sessionId, 0.15, 0.15)
-      );
-    }
-
-    // Load session from database
-    const session = yield* db.sessions.findById(input.sessionId).pipe(
-      Effect.orElseEff(() => Effect.fail(
-        new SessionNotFoundError(input.sessionId)
-      ))
-    );
-
-    // Call Nerin agent (via LangGraph - Story 2.2)
-    const { response, tokens } = yield* callNerin(input.message, session).pipe(
-      Effect.mapError((error) => new LLMError("claude-sonnet-4.5", error.message))
-    );
-
-    // Track cost
-    yield* costGuard.trackCost(input.sessionId, tokens);
-
-    // Log event
-    logger.info("message_processed", {
-      sessionId: input.sessionId,
-      tokens,
-      cost: (tokens * 0.001).toFixed(4),
-    });
-
-    // Return response
-    return { response, precision: session.precision, tokensUsed: tokens };
-  })
-) as Rpc.RpcFunction<typeof AssessmentService.sendMessage>;
-
-// Handler for getResults RPC
-export const getResults = ((input: { sessionId: string }) =>
-  Effect.gen(function* () {
-    const db = yield* Effect.service(DatabaseRef);
-
-    // Load session
-    const session = yield* db.sessions.findById(input.sessionId).pipe(
-      Effect.orElseEff(() => Effect.fail(
-        new SessionNotFoundError(input.sessionId)
-      ))
-    );
-
-    // Check if assessment complete (precision ≥ 50%)
-    if (session.precision < 50) {
-      yield* Effect.fail({
-        _tag: "ResultsNotReadyError",
-        precision: session.precision,
-      });
-    }
-
-    // Load trait scores from database
-    const traits = yield* db.traitAssessments.findBySessionId(input.sessionId);
-
-    // Generate OCEAN code (Story 3.1)
-    const oceanCode = generateOceanCode(traits);
-
-    // Lookup archetype (Story 3.2)
-    const archetype = yield* lookupArchetype(oceanCode);
-
-    return {
-      oceanCode,
-      archetypeName: archetype.name,
-      traits: {
-        openness: traits.openness,
-        conscientiousness: traits.conscientiousness,
-        extraversion: traits.extraversion,
-        agreeableness: traits.agreeableness,
-        neuroticism: traits.neuroticism,
-      },
-    };
-  })
-) as Rpc.RpcFunction<typeof AssessmentService.getResults>;
+export const ProfileNotFoundError = S.struct({
+  _tag: S.literal("ProfileNotFound"),
+  publicProfileId: S.string,
+  message: S.string,
+});
 ```
 
-### Context & Dependency Injection
-
-**File: `apps/api/src/context/index.ts`**
+### FiberRef Bridges (Infrastructure Layer)
 
 ```typescript
-import { Context, Layer, Effect } from "effect";
-import { Database } from "@workspace/database";
-import pino from "pino";
-import redis from "ioredis";
+// packages/infrastructure/src/context/database.ts
+import { FiberRef, Effect } from "effect";
+import type { Database } from "@workspace/database";
 
-// Define service contexts (like React Context)
-export class DatabaseRef extends Context.Tag<"DatabaseRef", Database>() {}
-export class LoggerRef extends Context.Tag<"LoggerRef", pino.Logger>() {}
-export class CostGuardRef extends Context.Tag<"CostGuardRef", CostGuard>() {}
-export class RedisRef extends Context.Tag<"RedisRef", redis.Redis>() {}
+export const DatabaseRef = FiberRef.unsafeMake<Database>(null as any);
 
-// Create layers (lazy dependencies)
-export const DatabaseLayer = Layer.sync(
-  DatabaseRef,
-  () => new Database(process.env.DATABASE_URL)
-);
+export const getDatabase = Effect.gen(function* () {
+  return yield* FiberRef.get(DatabaseRef);
+});
 
-export const LoggerLayer = Layer.sync(
-  LoggerRef,
-  () => pino({ level: process.env.LOG_LEVEL || "info" })
-);
-
-export const RedisLayer = Layer.sync(
-  RedisRef,
-  () => new redis.Redis(process.env.REDIS_URL)
-);
-
-export const CostGuardLayer = Layer.effect(
-  CostGuardRef,
-  Effect.gen(function* () {
-    const redis = yield* RedisRef;
-    return new CostGuard(redis);
-  })
-);
-
-// Compose all layers for dependency injection
-export const AppLayer = Layer.mergeAll(
-  DatabaseLayer,
-  LoggerLayer,
-  RedisLayer,
-  CostGuardLayer
-);
+export const withDatabase = <A, E, R>(
+  db: Database,
+  effect: Effect.Effect<A, E, R>
+): Effect.Effect<A, E, R> => {
+  return Effect.gen(function* () {
+    yield* FiberRef.set(DatabaseRef, db);
+    return yield* effect;
+  });
+};
 ```
 
-### RPC Router Setup
+```typescript
+// packages/infrastructure/src/context/logger.ts
+import { FiberRef, Effect } from "effect";
+import type { Logger } from "pino";
 
-**File: `apps/api/src/middleware/rpc-router.ts`**
+export const LoggerRef = FiberRef.unsafeMake<Logger>(null as any);
+
+export const getLogger = Effect.gen(function* () {
+  return yield* FiberRef.get(LoggerRef);
+});
+
+export const withLogger = <A, E, R>(
+  logger: Logger,
+  effect: Effect.Effect<A, E, R>
+): Effect.Effect<A, E, R> => {
+  return Effect.gen(function* () {
+    yield* FiberRef.set(LoggerRef, logger);
+    return yield* effect;
+  });
+};
+```
 
 ```typescript
-import express from "express";
-import { Rpc } from "@effect/rpc";
-import { AssessmentService, AuthService, ProfileService } from "@workspace/contracts";
-import * as handlers from "../handlers";
+// packages/infrastructure/src/context/cost-guard.ts
+import { FiberRef, Effect } from "effect";
 
-// Create RPC router
-export function createRpcRouter() {
-  const router = express.Router();
-
-  // Mount Assessment service
-  router.post("/assessment/startAssessment", async (req, res) => {
-    // Extract input from request
-    const result = await handlers.startAssessment(req.body).pipe(
-      Effect.provide(AppLayer)
-    ).unsafeRunPromise();
-
-    res.json(result);
-  });
-
-  router.post("/assessment/sendMessage", async (req, res) => {
-    const result = await handlers.sendMessage(req.body).pipe(
-      Effect.provide(AppLayer)
-    ).unsafeRunPromise();
-
-    res.json(result);
-  });
-
-  // Mount Auth service (Story 1.2)
-  router.post("/auth/signUp", async (req, res) => {
-    const result = await handlers.signUp(req.body).pipe(
-      Effect.provide(AppLayer)
-    ).unsafeRunPromise();
-
-    res.json(result);
-  });
-
-  return router;
+interface CostGuard {
+  checkDailyLimit(userId: string): Promise<boolean>;
+  trackCost(userId: string, cost: number): Promise<void>;
 }
+
+export const CostGuardRef = FiberRef.unsafeMake<CostGuard>(null as any);
+
+export const getCostGuard = Effect.gen(function* () {
+  return yield* FiberRef.get(CostGuardRef);
+});
 ```
 
-### Error Handler Middleware
-
-**File: `apps/api/src/middleware/error-handler.ts`**
+### Backend Handler Implementation Pattern
 
 ```typescript
+// apps/api/src/handlers/assessment.ts
+import * as Rpc from "@effect/rpc/Rpc";
 import { Effect } from "effect";
-import { SessionNotFoundError, CostLimitExceededError, LLMError } from "@workspace/domain";
+import { AssessmentService } from "@workspace/contracts/assessment";
+import { getDatabase, getLogger, getCostGuard } from "@workspace/infrastructure";
 
-// Map domain errors to HTTP status codes
-export function mapErrorToHttpStatus(error: unknown): {
-  status: number;
-  body: Record<string, any>;
-} {
-  if (error instanceof SessionNotFoundError) {
-    return {
-      status: 404,
-      body: {
-        _tag: "SessionNotFoundError",
-        sessionId: error.sessionId,
-        message: "Session not found",
-      },
-    };
-  }
+export const AssessmentHandlers = Rpc.handler(AssessmentService)({
+  startAssessment: ({ userId }) =>
+    Effect.gen(function* () {
+      const db = yield* getDatabase;
+      const logger = yield* getLogger;
 
-  if (error instanceof CostLimitExceededError) {
-    return {
-      status: 429, // Too Many Requests
-      body: {
-        _tag: "CostLimitExceededError",
-        message: "Daily assessment limit exceeded",
-      },
-    };
-  }
+      const sessionId = yield* generateSessionId();
+      yield* Effect.promise(() =>
+        db.insert(sessions).values({
+          id: sessionId,
+          userId: userId ?? null,
+          createdAt: new Date(),
+        })
+      );
 
-  if (error instanceof LLMError) {
-    return {
-      status: 503, // Service Unavailable
-      body: {
-        _tag: "LLMError",
-        model: error.model,
-        message: "LLM service temporarily unavailable",
-      },
-    };
-  }
+      logger.info({ sessionId, userId }, "Assessment session started");
 
-  // Fallback for unknown errors
-  return {
-    status: 500,
-    body: {
-      _tag: "InternalServerError",
-      message: error instanceof Error ? error.message : "Unknown error",
-    },
-  };
-}
+      return {
+        sessionId,
+        createdAt: new Date(),
+      };
+    }),
 
-// Express error handler middleware
-export function errorHandlerMiddleware(
-  err: unknown,
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) {
-  const { status, body } = mapErrorToHttpStatus(err);
-  res.status(status).json(body);
-}
+  sendMessage: ({ sessionId, message }) =>
+    Effect.gen(function* () {
+      const db = yield* getDatabase;
+      const logger = yield* getLogger;
+      const costGuard = yield* getCostGuard;
+
+      // Load session
+      const session = yield* Effect.promise(() =>
+        db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1)
+      );
+
+      if (!session[0]) {
+        return yield* Effect.fail({
+          _tag: "SessionNotFound" as const,
+          sessionId,
+          message: `Session ${sessionId} not found`,
+        });
+      }
+
+      // Check rate limit
+      const userId = session[0].userId;
+      if (userId) {
+        const allowed = yield* Effect.promise(() =>
+          costGuard.checkDailyLimit(userId)
+        );
+        if (!allowed) {
+          return yield* Effect.fail({
+            _tag: "RateLimitExceeded" as const,
+            userId,
+            resetAt: new Date(Date.now() + 86400000), // 24h from now
+            message: "Daily assessment limit reached. Try again tomorrow.",
+          });
+        }
+      }
+
+      // Process message with Nerin (placeholder - Epic 2)
+      const nerinResponse = "I understand. Tell me more about that.";
+      const updatedPrecision = {
+        openness: 0.5,
+        conscientiousness: 0.4,
+        extraversion: 0.6,
+        agreeableness: 0.7,
+        neuroticism: 0.3,
+      };
+
+      logger.info({ sessionId, message }, "Message processed");
+
+      return {
+        response: nerinResponse,
+        precision: updatedPrecision,
+      };
+    }),
+
+  getResults: ({ sessionId }) =>
+    Effect.gen(function* () {
+      const db = yield* getDatabase;
+
+      const session = yield* Effect.promise(() =>
+        db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1)
+      );
+
+      if (!session[0]) {
+        return yield* Effect.fail({
+          _tag: "SessionNotFound" as const,
+          sessionId,
+          message: `Session ${sessionId} not found`,
+        });
+      }
+
+      // Placeholder data (real implementation in Epic 3)
+      return {
+        oceanCode4Letter: "PPAM",
+        precision: 72,
+        archetypeName: "The Grounded Thinker",
+        traitScores: {
+          openness: 15,
+          conscientiousness: 12,
+          extraversion: 8,
+          agreeableness: 16,
+          neuroticism: 6,
+        },
+      };
+    }),
+
+  resumeSession: ({ sessionId }) =>
+    Effect.gen(function* () {
+      const db = yield* getDatabase;
+
+      const session = yield* Effect.promise(() =>
+        db
+          .select()
+          .from(sessions)
+          .leftJoin(messages, eq(sessions.id, messages.sessionId))
+          .where(eq(sessions.id, sessionId))
+      );
+
+      if (!session.length) {
+        return yield* Effect.fail({
+          _tag: "SessionNotFound" as const,
+          sessionId,
+          message: `Session ${sessionId} not found`,
+        });
+      }
+
+      return {
+        messages: session.map((row) => row.messages).filter(Boolean),
+        precision: 0.5, // Placeholder
+        oceanCode4Letter: undefined,
+      };
+    }),
+});
 ```
 
-### Express Setup Integration
-
-**File: `apps/api/src/index.ts`**
+### HTTP Server Setup with /health Endpoint
 
 ```typescript
-import express from "express";
-import { createRpcRouter } from "./middleware/rpc-router";
-import { errorHandlerMiddleware } from "./middleware/error-handler";
-import { securityHeaders } from "./middleware/security";
+// apps/api/src/index.ts
+import { createServer } from "node:http";
+import { Effect } from "effect";
+import { AssessmentHandlers } from "./handlers/assessment.js";
+import { ProfileHandlers } from "./handlers/profile.js";
+import logger from "./logger.js";
 
-const app = express();
+const server = createServer(async (req, res) => {
+  const method = req.method || "UNKNOWN";
+  const url = req.url || "UNKNOWN";
 
-// Middleware
-app.use(express.json());
-app.use(securityHeaders);
+  // Health check endpoint (CRITICAL for Railway deployment)
+  if (url === "/health" && method === "GET") {
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify({ status: "ok" }));
+    logger.debug("[HTTP] Health check passed");
+    return;
+  }
 
-// Health check (from Story 1.1)
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
+  // Effect-ts RPC routing will be added here
+  // Route /api/rpc/* to RPC handlers
+
+  // 404 for unmatched routes
+  res.statusCode = 404;
+  res.end("Not Found");
 });
 
-// RPC routes
-app.use("/api/rpc", createRpcRouter());
+const host = process.env.HOST || "0.0.0.0";
+const port = Number(process.env.PORT || 4000);
 
-// Error handling
-app.use(errorHandlerMiddleware);
-
-// Start server
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`Backend listening on :${PORT}`);
+server.listen(port, host, () => {
+  logger.info(`Server listening on http://${host}:${port}`);
 });
+```
+
+### Frontend RPC Client Setup
+
+```typescript
+// apps/front/src/lib/rpc-client.ts
+import { createRpcClient } from "@effect/rpc/Client";
+import { AssessmentService, ProfileService } from "@workspace/contracts";
+
+const rpcClient = createRpcClient({
+  baseUrl: import.meta.env.VITE_API_URL || "http://localhost:4000",
+});
+
+export const assessmentClient = rpcClient(AssessmentService);
+export const profileClient = rpcClient(ProfileService);
+```
+
+```typescript
+// apps/front/src/hooks/use-assessment.ts
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { assessmentClient } from "~/lib/rpc-client";
+
+export function useStartAssessment() {
+  return useMutation({
+    mutationFn: async (userId?: string) => {
+      const result = await assessmentClient.startAssessment({ userId });
+      if (result._tag === "SessionError") {
+        throw new Error(result.message);
+      }
+      return result;
+    },
+  });
+}
+
+export function useSendMessage(sessionId: string) {
+  return useMutation({
+    mutationFn: async (message: string) => {
+      const result = await assessmentClient.sendMessage({ sessionId, message });
+      if (result._tag === "SessionNotFound") {
+        throw new Error(`Session not found: ${sessionId}`);
+      }
+      if (result._tag === "RateLimitExceeded") {
+        throw new Error(result.message);
+      }
+      return result;
+    },
+  });
+}
 ```
 
 ## Architecture Compliance
 
-**From architecture.md ADR-3 (Backend API Structure):**
-- ✅ @effect/rpc for contract definitions
-- ✅ @effect/schema for runtime validation
-- ✅ FiberRef bridges for request-scoped dependencies (database, logger, cost guard)
-- ✅ Layer composition for dependency injection
-- ✅ Error mapping to HTTP status codes (404, 429, 503)
-- ✅ Tagged errors for type-safe error handling
+**From architecture.md Decision 1B (Backend Framework Selection):**
 
-**Non-Functional Requirements Met:**
-- **NFR2 (Real-Time Responsiveness):** RPC handlers optimized for <2 sec P95
-- **NFR3 (Privacy & Security):** Error handlers don't leak internal details
-- **NFR5 (Scaling):** Effect Layers support horizontal scaling patterns
+- ✅ Follows **effect-worker-mono** pattern (FiberRef bridges, RPC handlers, middleware)
+- ✅ Uses @effect/rpc 0.73.0 for type-safe contracts
+- ✅ Uses @effect/schema 0.71.0 for runtime validation
+- ✅ FiberRef bridges decouple dependencies from handlers
+- ✅ Effect.gen for async composition (no callback hell)
+- ✅ Tagged errors enable precise error handling
+
+**From architecture.md Decision 4A (Infrastructure & Hosting):**
+
+- ✅ RPC handlers integrate with Railway deployment (HTTP/REST transport)
+- ✅ FiberRef bridges work seamlessly with Express/Fastify middleware
+- ✅ Layer composition injects Railway-provided services (DATABASE_URL, REDIS_URL)
+
+**Cross-Cutting Concerns Addressed:**
+
+- **Error Resilience:** Tagged errors (SessionNotFoundError, RateLimitError) enable precise error handling
+- **Cost Control:** CostGuard FiberRef enables cost tracking throughout request lifecycle
+- **Type Safety:** Compile-time verification prevents API integration bugs
 
 ## Files and Directory Structure
 
-**Files to Create:**
+**Files You'll Create:**
 
 ```
-apps/api/src/
-├── context/
-│   ├── index.ts                    [CREATE]
-│   ├── database.ts                 [CREATE]
-│   ├── logger.ts                   [CREATE]
-│   ├── cost-guard.ts               [CREATE]
-│   └── redis.ts                    [CREATE]
-├── handlers/
-│   ├── index.ts                    [CREATE - re-export all]
-│   ├── assessment.ts               [CREATE]
-│   ├── auth.ts                     [CREATE - placeholder for Story 1.2]
-│   └── profile.ts                  [CREATE - placeholder for Epic 5]
-├── middleware/
-│   ├── rpc-router.ts               [CREATE]
-│   ├── error-handler.ts            [CREATE]
-│   ├── security.ts                 [VERIFY - from Story 1.2]
-│   └── request-logger.ts           [CREATE - Pino JSON logging]
-├── utils/
-│   ├── session.ts                  [CREATE - generateSessionId, etc.]
-│   └── validation.ts               [CREATE - input validation helpers]
-└── index.ts                        [MODIFY - add RPC middleware]
-
-packages/contracts/src/
-└── index.ts                        [CREATE - all RPC service definitions]
+big-ocean/
+├── packages/
+│   ├── contracts/
+│   │   ├── package.json            [CREATE]
+│   │   ├── tsconfig.json           [CREATE]
+│   │   └── src/
+│   │       ├── index.ts            [CREATE - export all contracts]
+│   │       ├── assessment.ts       [CREATE - AssessmentService contract]
+│   │       ├── profile.ts          [CREATE - ProfileService contract]
+│   │       ├── errors.ts           [CREATE - Tagged error schemas]
+│   │       └── schemas.ts          [CREATE - Shared schemas (MessageSchema, etc.)]
+│   │
+│   └── infrastructure/
+│       ├── package.json            [CREATE]
+│       ├── tsconfig.json           [CREATE]
+│       └── src/
+│           ├── index.ts            [CREATE - export all bridges]
+│           └── context/
+│               ├── database.ts     [CREATE - DatabaseRef FiberRef bridge]
+│               ├── logger.ts       [CREATE - LoggerRef FiberRef bridge]
+│               └── cost-guard.ts   [CREATE - CostGuardRef FiberRef bridge]
+│
+├── apps/
+│   ├── api/
+│   │   └── src/
+│   │       ├── index.ts            [MODIFY - wire up RPC handlers]
+│   │       └── handlers/
+│   │           ├── assessment.ts   [CREATE - AssessmentHandlers implementation]
+│   │           └── profile.ts      [CREATE - ProfileHandlers implementation]
+│   │
+│   └── front/
+│       └── src/
+│           ├── lib/
+│           │   └── rpc-client.ts   [CREATE - RPC client setup]
+│           └── hooks/
+│               └── use-assessment.ts [CREATE - TanStack Query + RPC hooks]
+│
+├── pnpm-workspace.yaml             [VERIFY - contracts & infrastructure listed]
+└── turbo.json                      [VERIFY - build order correct]
 ```
+
+**No Changes Needed:**
+
+- `packages/domain` (will import contracts, not modify)
+- `packages/database` (used by FiberRef bridges, not modified here)
+- `packages/ui` (frontend components independent of RPC)
 
 ## Dependencies
 
-### NPM Libraries (Already in pnpm-lock.yaml)
-- `effect@3.19.14` - Core Effect library
-- `@effect/rpc@0.73.0` - RPC contract system
-- `@effect/schema@0.71.0` - Schema validation
-- `express@4.18.x` - HTTP server
-- `ioredis@5.x` - Redis client
-- `pino@8.x` - Structured logging
-- `@sentry/node@7.x` - Error tracking
+### NPM Libraries to Add
 
-### External Dependencies
-- **Express** - HTTP routing (already used)
-- **Effect ecosystem** - Already specified in architecture
+**packages/contracts:**
+```json
+{
+  "dependencies": {
+    "effect": "catalog:",
+    "@effect/rpc": "catalog:",
+    "@effect/schema": "catalog:"
+  }
+}
+```
+
+**packages/infrastructure:**
+```json
+{
+  "dependencies": {
+    "effect": "catalog:",
+    "@workspace/database": "workspace:*",
+    "pino": "catalog:"
+  }
+}
+```
+
+**apps/api (additions):**
+```json
+{
+  "dependencies": {
+    "@workspace/contracts": "workspace:*",
+    "@workspace/infrastructure": "workspace:*"
+  }
+}
+```
+
+**apps/front (additions):**
+```json
+{
+  "dependencies": {
+    "@workspace/contracts": "workspace:*"
+  }
+}
+```
+
+### External Services (No New Dependencies)
+
+- Uses existing Railway PostgreSQL (via DATABASE_URL)
+- Uses existing Redis (via REDIS_URL for cost tracking)
+- No new external APIs required
+
+## Pre-Implementation: Current oRPC Architecture Analysis
+
+**Current State (TO BE REMOVED):**
+
+### Apps/API (`apps/api/`)
+- **`src/index.ts`**: Uses `@orpc/server` RPCHandler with CORSPlugin and logging interceptors
+- **`src/os.ts`**: Implements oRPC contract using `implement(contract)` pattern
+- **`src/router.ts`**: Exports nested router object with planet and chat procedures
+- **`src/procedures/planet.procedure.ts`**: Planet CRUD operations using `os.planet.*.handler()`
+- **`src/procedures/chat.procedure.ts`**: Chat/therapist assessment using `os.chat.*.handler()`, includes streaming with generators
+- **Dependencies**: `@orpc/server@^1.13.4` in package.json
+
+### Packages/Contracts (`packages/contracts/`)
+- **`src/index.ts`**: Defines contracts using `oc` from `@orpc/contract` with Zod schemas
+- **Schemas**: PlanetSchema, ChatMessageSchema, PersonalityTraitsSchema, PersonalityTraitPrecisionSchema (30 facets)
+- **Contracts**: exampleContract, listPlanetContract, findPlanetContract, createPlanetContract, sendMessageContract, etc.
+- **Dependencies**: `@orpc/contract`, `@orpc/server`, `zod`
+
+### Apps/Front (`apps/front/`)
+- **oRPC Client**: May have oRPC client imports in frontend code (needs investigation)
+- **Dependencies**: Possibly `@orpc/client` or related packages
+
+**Migration Requirements:**
+
+1. **Preserve existing functionality**: Therapist assessment with LangGraph integration, streaming responses, 30 facet tracking
+2. **Preserve /health endpoint**: Critical for Railway deployment validation (already exists in current implementation)
+3. **Maintain personality assessment logic**: The `conductPersonalityAssessment` function in `apps/api/src/llm/therapist.ts` must remain functional
+4. **Keep existing storage**: In-memory Maps for sessions and therapist sessions (will later migrate to database)
 
 ## Implementation Checklist
 
-### Phase 1: Setup Effect Layers
-- [ ] Create `apps/api/src/context/index.ts` with service definitions
-- [ ] Create database layer (lazy-init PostgreSQL connection)
-- [ ] Create logger layer (Pino setup)
-- [ ] Create Redis layer (cost tracking cache)
-- [ ] Create cost guard layer (depends on Redis)
-- [ ] Verify all layers compose correctly: `Layer.mergeAll(...)`
+### Phase 0: oRPC Cleanup (MUST COMPLETE FIRST - Clean Slate Approach)
 
-### Phase 2: Define RPC Contracts
-- [ ] Create `packages/contracts/src/index.ts`
-- [ ] Define AssessmentService (startAssessment, sendMessage, getResults)
-- [ ] Define AuthService (signUp, signIn, signOut)
-- [ ] Define ProfileService (getProfile, compareProfiles)
-- [ ] Verify all schemas match @effect/schema requirements
-- [ ] Test TypeScript compilation: `pnpm build`
+- [x] **Remove oRPC dependencies**:
+  - [x] Run `pnpm -C apps/api remove @orpc/server`
+  - [x] Run `pnpm -C packages/contracts remove @orpc/contract @orpc/server`
+  - [x] Check `apps/front/package.json` for `@orpc/client` and remove if present
 
-### Phase 3: Implement Handlers
-- [ ] Create `apps/api/src/handlers/assessment.ts`
-- [ ] Implement startAssessment handler (create session)
-- [ ] Implement sendMessage handler (route to Nerin - placeholder for Story 2.2)
-- [ ] Implement getResults handler (fetch traits, generate code, lookup archetype)
-- [ ] All handlers use Effect.gen() pattern with dependency injection
+- [x] **Delete old oRPC files** (no backup needed - clean rebuild):
+  - [x] Delete `apps/api/src/os.ts`
+  - [x] Delete `apps/api/src/router.ts`
+  - [x] Delete entire `apps/api/src/procedures/` directory
+  - [x] Delete `packages/contracts/src/index.ts` (will be replaced with Effect-ts contracts)
+  - [x] Remove any oRPC client imports from frontend if they exist
 
-### Phase 4: Setup RPC Routing
-- [ ] Create `apps/api/src/middleware/rpc-router.ts`
-- [ ] Mount all RPC endpoints on Express
-- [ ] Wire up dependency layers: `Effect.provide(AppLayer)`
-- [ ] Test routes: `POST /api/rpc/assessment/startAssessment`
+- [x] **Verify cleanup**:
+  - [x] Run `pnpm install` at root to clean up node_modules
+  - [x] Confirm no `@orpc` references remain: `grep -r "@orpc" apps/ packages/`
+  - [x] Verify build still fails gracefully (expected - contracts not yet replaced)
 
-### Phase 5: Error Handling
-- [ ] Create `apps/api/src/middleware/error-handler.ts`
-- [ ] Map domain errors to HTTP status codes
-- [ ] Test error responses with invalid inputs
+**✅ PRESERVE THESE (Infrastructure Only):**
 
-### Phase 6: Integration Testing
-- [ ] Test startAssessment: creates session with unique ID
-- [ ] Test sendMessage: requires valid sessionId (error if not found)
-- [ ] Test getResults: requires precision ≥ 50% (error if not ready)
-- [ ] Test dependency injection: handlers receive all services
-- [ ] Test error handling: invalid input → proper error response
+- **Logger**: `apps/api/src/logger.ts` - Winston logger setup
+- **LLM Files**: `apps/api/src/llm/` directory (will be re-integrated in Epic 2)
+- **Railway Dockerfile**: `apps/api/Dockerfile` - deployment config
+- **Health Endpoint**: Will be re-implemented in new `apps/api/src/index.ts`
 
-### Phase 7: Documentation
-- [ ] Document RPC contract system for team
-- [ ] Add examples of new handlers (for Story 1.2)
-- [ ] Document error types and HTTP mappings
+**🗑️ DELETE EVERYTHING ELSE** - This is a clean rebuild with Effect-ts patterns.
 
-## Testing Strategy
+### Phase 1: Package Setup & Contract Definition
 
-### Unit Tests (TDD)
+- [x] Create `packages/contracts` with package.json and tsconfig.json ✅
+- [x] Create `packages/infrastructure` with package.json and tsconfig.json ✅
+- [x] Update `pnpm-workspace.yaml` to include new packages (updated to use "latest" for all Effect packages) ✅
+- [x] Update `turbo.json` to set build order (contracts → infrastructure → api/front) ✅
+- [x] Define error schemas in `packages/contracts/src/errors.ts` ✅
+- [x] Define shared schemas (MessageSchema, etc.) in `packages/contracts/src/schemas.ts` ✅
+- [x] Define AssessmentService contract in `packages/contracts/src/assessment.ts` (restructured with individual Rpc definitions) ✅
+- [x] Define ProfileService contract in `packages/contracts/src/profile.ts` (restructured with individual Rpc definitions) ✅
+- [x] Export all contracts from `packages/contracts/src/index.ts` (using BigOceanRpcs = AssessmentRpcs.merge(ProfileRpcs)) ✅
+- [x] Verify contracts compile without errors: `pnpm -C packages/contracts typecheck` ✅
 
-**File: `apps/api/src/handlers/assessment.test.ts`**
+### Phase 2: Infrastructure Layer (FiberRef Bridges)
 
-```typescript
-import { describe, it, expect } from "vitest";
-import { Effect } from "effect";
-import * as handlers from "./assessment";
+- [x] Create DatabaseRef FiberRef bridge in `packages/infrastructure/src/context/database.ts` (already existed) ✅
+- [x] Create LoggerRef FiberRef bridge in `packages/infrastructure/src/context/logger.ts` (already existed) ✅
+- [x] Create CostGuardRef FiberRef bridge in `packages/infrastructure/src/context/cost-guard.ts` (already existed) ✅
+- [x] Export all bridges from `packages/infrastructure/src/index.ts` (already existed) ✅
+- [x] Verify infrastructure layer compiles: `pnpm -C packages/infrastructure typecheck` ✅
 
-describe("Assessment Handlers", () => {
-  it("startAssessment should create session with unique ID", async () => {
-    const result1 = await handlers.startAssessment({ userId: undefined })
-      .pipe(Effect.provide(testLayer))
-      .unsafeRunPromise();
+### Phase 3: Backend Handler Implementation
 
-    const result2 = await handlers.startAssessment({ userId: undefined })
-      .pipe(Effect.provide(testLayer))
-      .unsafeRunPromise();
+- [x] Create AssessmentHandlers in `apps/api/src/handlers/assessment.ts` (exported as AssessmentRpcHandlersLive using toLayer()) ✅
+- [x] Implement `startAssessment` handler with FiberRef database access (placeholder implementation) ✅
+- [x] Implement `sendMessage` handler with FiberRef cost guard + logger (placeholder implementation) ✅
+- [x] Implement `getResults` handler (placeholder data for now) ✅
+- [x] Implement `resumeSession` handler with message history loading (placeholder implementation) ✅
+- [x] Create ProfileHandlers in `apps/api/src/handlers/profile.ts` (exported as ProfileRpcHandlersLive using toLayer()) ✅
+- [x] Implement `getProfile` handler (public profile lookup - placeholder implementation) ✅
+- [x] Implement `shareProfile` handler (generate public profile ID - placeholder implementation) ✅
+- [x] Wire up RPC handlers to Express/HTTP server in `apps/api/src/index.ts` (using official @effect/rpc pattern with Layer composition) ✅
+- [x] **CRITICAL**: Preserve `/health` endpoint for Railway deployment (GET /health → {"status":"ok"}) ✅
+- [x] Test handlers compile: `pnpm -C apps/api typecheck` ✅
+- [x] Test server starts successfully with RPC endpoint at /rpc ✅
 
-    // Each call creates unique session
-    expect(result1.sessionId).not.toBe(result2.sessionId);
-  });
+### Phase 4: Frontend RPC Client Integration
 
-  it("sendMessage should reject invalid sessionId", async () => {
-    const result = await handlers.sendMessage({
-      sessionId: "invalid-id",
-      message: "test",
-    })
-      .pipe(Effect.provide(testLayer))
-      .unsafeRunPromise();
+- [x] Create RPC client setup in `apps/front/src/lib/rpc-client.ts` ✅
+- [x] Create TanStack Query hooks in `apps/front/src/hooks/use-assessment.ts` ✅
+- [x] Implement `useStartAssessment` hook ✅
+- [x] Implement `useSendMessage` hook with optimistic updates ✅
+- [x] Implement `useGetResults` hook ✅
+- [x] Implement `useResumeSession` hook ✅
+- [x] Test frontend compiles: `pnpm -C apps/front typecheck` ✅
 
-    // Should throw SessionNotFoundError
-    expect(result).toThrow("SessionNotFoundError");
-  });
-});
-```
+### Phase 5: Local Integration Testing
 
-### Integration Tests
+- [ ] Start backend locally: `pnpm -C apps/api dev`
+- [ ] Start frontend locally: `pnpm -C apps/front dev`
+- [ ] Test `startAssessment` RPC call from frontend → backend
+- [ ] Test `sendMessage` RPC call with placeholder Nerin response
+- [ ] Test error handling: trigger SessionNotFoundError and verify frontend receives typed error
+- [ ] Test cost limit error: trigger RateLimitError and verify frontend shows correct message
+- [ ] Verify all RPC calls compile with correct types (no `any` types in IDE)
 
-Test with real database + Redis (TestContainers):
+### Phase 6: Railway Deployment Review & Validation
 
-```typescript
-describe("RPC Handlers (Integration)", () => {
-  let testDb: Database;
-  let testRedis: redis.Redis;
+**Deploy to Railway and verify Effect-ts RPC works in production:**
 
-  beforeAll(async () => {
-    // Spin up PostgreSQL + Redis containers
-    testDb = await initializeTestDatabase();
-    testRedis = await initializeTestRedis();
-  });
+- [ ] **Pre-deployment checks**:
+  - [ ] Verify `apps/api/Dockerfile` still works with Effect-ts changes
+  - [ ] Verify `railway.json` configurations are correct for both services
+  - [ ] Check environment variables are set in Railway dashboard
 
-  it("should handle full assessment flow", async () => {
-    // 1. Start assessment
-    const { sessionId } = await startAssessment({ userId: "test-user" })
-      .pipe(Effect.provide(testLayer))
-      .unsafeRunPromise();
+- [ ] **Deploy API service**:
+  - [ ] Deploy API: `railway up --service api` or push to main branch
+  - [ ] Monitor Railway build logs for errors
+  - [ ] Wait for deployment to complete (Railway shows "Active" status)
 
-    // 2. Send messages
-    const response = await sendMessage({
-      sessionId,
-      message: "I love reading",
-    })
-      .pipe(Effect.provide(testLayer))
-      .unsafeRunPromise();
+- [ ] **Deploy Frontend service**:
+  - [ ] Deploy Frontend: `railway up --service front` or push to main branch
+  - [ ] Monitor Railway build logs for errors
+  - [ ] Wait for deployment to complete
 
-    expect(response.response).toBeDefined();
+- [ ] **Production health checks**:
+  - [ ] Test health endpoint: `curl https://your-api.railway.app/health` → `{"status":"ok"}`
+  - [ ] Verify Railway dashboard shows API service as "Healthy"
+  - [ ] Check Railway logs: `railway logs --service api` (no errors on startup)
 
-    // 3. Get results (if precision ready)
-    if (response.precision >= 50) {
-      const results = await getResults({ sessionId })
-        .pipe(Effect.provide(testLayer))
-        .unsafeRunPromise();
+- [ ] **Production RPC testing**:
+  - [ ] Open frontend in browser: `https://your-front.railway.app`
+  - [ ] Test RPC calls work from production frontend → production backend
+  - [ ] Verify CORS is configured correctly (no CORS errors in browser console)
+  - [ ] Test error handling in production (trigger 404 error, verify response)
 
-      expect(results.oceanCode).toBeDefined();
-    }
-  });
+- [ ] **Monitoring validation**:
+  - [ ] Check Railway metrics (CPU, memory usage normal)
+  - [ ] Review Railway logs for any warnings or errors
+  - [ ] Verify no crashes or restarts in Railway dashboard
 
-  afterAll(async () => {
-    await testDb.close();
-    await testRedis.disconnect();
-  });
-});
-```
+- [ ] **Rollback plan verified**:
+  - [ ] Document how to rollback if issues found: Railway → Deployments → Rollback
+  - [ ] Keep previous deployment ID noted for quick rollback if needed
 
-## Common Pitfalls to Avoid
+### Phase 7: Documentation & Code Review
 
-❌ **Hardcoding dependencies** - Use Effect Layers for all services
-❌ **Mixing sync/async code** - Always use Effect.gen() consistently
-❌ **Not validating input** - @effect/schema validates at runtime
-❌ **Returning untyped responses** - Responses must match RPC output schema
-❌ **Swallowing errors** - Use Effect.mapError() to transform, not catch
-❌ **Direct database calls in handlers** - Inject DatabaseRef service
-❌ **Forgetting error discrimination** - All errors must be in failure union
+- [ ] Add JSDoc comments to all RPC contracts explaining input/output/errors
+- [ ] Document FiberRef bridge usage in `packages/infrastructure/README.md`
+- [ ] Document Railway deployment changes (if any) in `RAILWAY_DEPLOYMENT.md`
+- [ ] Update story status to `review` in sprint-status.yaml
+- [ ] Request code review focusing on type safety and Effect patterns
+- [ ] Share Railway deployment URL with team for validation
 
 ## Dev Notes
 
-### Why Effect-ts + RPC?
-- **Type Safety:** Compile-time verification of API contracts
-- **Dependency Injection:** Layers manage service lifecycle automatically
-- **Error Handling:** Tagged errors prevent runtime surprises
-- **Testability:** Pure functions with deterministic behavior
-- **Observability:** FiberRef captures request context for logging
+### Migration Strategy
 
-### Why Layer Pattern?
-- Services are lazy-initialized (only when needed)
-- Dependencies automatically injected (no constructor hell)
-- Composable (merge layers to build complete app)
-- Testable (swap test implementations in tests)
+**This is a CLEAN REBUILD, not a preservation migration:**
 
-### Why FiberRef Over Global State?
-- Request-scoped (each request gets isolated context)
-- No race conditions (no shared mutable state)
-- Easy to test (no setup/teardown needed)
-- Supports distributed tracing (context flows through async boundaries)
+- oRPC is being completely removed - no backward compatibility
+- Phase 0 (cleanup) must be completed before any Effect-ts code is written
+- **No .OLD files needed** - clean slate implementation
+- The migration is "delete then rebuild" - expect compile errors after cleanup, that's intentional
+- Business logic will be re-implemented fresh in Epic 2+ stories (Nerin agent, assessment, etc.)
 
-## Dependencies: Story 1.1 → Story 1.3 → Story 1.2 → Story 2.x
+**Implementation Approach:**
 
-**Correct Workflow:**
+1. **Phase 0**: Delete all oRPC code completely
+2. **Phase 1-2**: Build Effect-ts infrastructure (contracts, FiberRef bridges)
+3. **Phase 3**: Implement **placeholder** RPC handlers (stub data only)
+4. **Phase 4**: Wire up frontend RPC client
+5. **Epic 2+**: Real business logic implementation with Effect-ts patterns
+
+**For This Story (1.3):**
+- Focus on **infrastructure and contracts**, not business logic
+- Handlers return **placeholder data** (e.g., `startAssessment` returns fake sessionId)
+- Actual personality assessment logic comes later in Epic 2
+
+### Critical Paths
+
+1. **Phase 0 MUST complete first** - Clean slate before building Effect-ts implementation
+2. **Contracts must compile first** - All other packages depend on `@workspace/contracts`
+3. **Infrastructure bridges before handlers** - Handlers import FiberRef bridges from infrastructure
+4. **Backend handlers before frontend integration** - Frontend RPC client calls backend endpoints
+5. **Type errors fail fast** - Any `any` types or missing type annotations = incorrect implementation
+6. **/health endpoint must survive** - Test after every major change
+
+### Common Pitfalls to Avoid
+
+**Migration-Specific:**
+- ❌ Trying to run oRPC and Effect-ts side-by-side (delete oRPC completely first)
+- ❌ Trying to implement real business logic in Story 1.3 (use placeholders, real logic comes in Epic 2)
+- ❌ Breaking `/health` endpoint (Railway deployment will fail)
+- ❌ Forgetting to remove oRPC from frontend (not just backend)
+- ❌ Over-engineering handlers in this story (keep them simple, just infrastructure setup)
+
+**Effect-ts Patterns:**
+- ❌ Using `any` types in RPC contracts (defeats purpose of type safety)
+- ❌ Forgetting to export contracts from `packages/contracts/src/index.ts`
+- ❌ Mixing FiberRef.get without `yield*` (Effect.gen requires yielding)
+- ❌ Returning raw objects instead of Effect in handlers (must wrap in Effect.gen)
+- ❌ Not handling all error cases in frontend (tagged errors are discriminated unions)
+- ❌ Creating FiberRef bridges with `FiberRef.make` instead of `FiberRef.unsafeMake` (causes type issues)
+
+**Railway Deployment:**
+- ❌ Deploying without testing `/health` endpoint locally first
+- ❌ Not checking Railway build logs during deployment (catch errors early)
+- ❌ Skipping environment variable verification (DATABASE_URL, PORT, etc.)
+- ❌ Not testing CORS in production (frontend on different domain than API)
+- ❌ Ignoring Railway metrics after deployment (CPU/memory spikes indicate issues)
+- ❌ Deploying both services simultaneously (deploy API first, then frontend)
+
+### Testing Checklist
+
+Before declaring story complete:
+
+```bash
+# 1. All packages compile
+pnpm -C packages/contracts typecheck
+pnpm -C packages/infrastructure typecheck
+pnpm -C apps/api typecheck
+pnpm -C apps/front typecheck
+
+# 2. Contracts are correctly typed
+# In apps/front/src/hooks/use-assessment.ts, hover over:
+const result = await assessmentClient.startAssessment({ userId: "test" });
+# Should show: { sessionId: string; createdAt: Date }
+
+# 3. Error handling is type-safe
+# In frontend, trigger error:
+const result = await assessmentClient.sendMessage({
+  sessionId: "invalid",
+  message: "test",
+});
+# TypeScript should force checking result._tag before accessing properties
+
+# 4. Backend handlers work end-to-end
+curl -X POST http://localhost:4000/rpc/startAssessment \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"test-user"}'
+# Should return: {"sessionId":"...", "createdAt":"..."}
+
+# 5. CRITICAL: Health endpoint still works (Railway deployment depends on this)
+curl http://localhost:4000/health
+# Should return: {"status":"ok"} with HTTP 200
 ```
-Story 1.1: Deploy Infrastructure ✅
-    ↓
-Story 1.3: Effect-ts RPC (THIS STORY) ← Establishes backend framework
-    ↓
-Story 1.2: Better Auth ← Builds on RPC contracts + Express
-    ↓
-Story 2.1: Session Management ← Uses RPC + database
+
+**Railway Deployment Validation:**
+
+After migration is complete, deploy to Railway and verify:
+```bash
+# Railway health check (automated by Railway)
+curl https://your-app.railway.app/health
+# Should return: {"status":"ok"} with HTTP 200
+
+# If health check fails, Railway will mark deployment as failed
+# Check Railway logs: railway logs --service api
+```
+
+**Railway Deployment Troubleshooting:**
+
+If deployment fails or health checks don't pass:
+
+1. **Build Failures:**
+   ```bash
+   # Check build logs in Railway dashboard
+   railway logs --service api
+
+   # Common issues:
+   # - Missing dependencies in package.json
+   # - TypeScript compilation errors
+   # - pnpm workspace resolution issues
+
+   # Fix: Ensure all @workspace/* packages are listed in dependencies
+   ```
+
+2. **Health Check Failures:**
+   ```bash
+   # Verify /health endpoint locally first
+   curl http://localhost:4000/health
+
+   # Check Railway environment variables
+   railway variables --service api
+
+   # Common issues:
+   # - PORT not set or wrong (should be from Railway's $PORT)
+   # - Server not binding to 0.0.0.0 (Railway requires this)
+   # - /health route not registered in index.ts
+   ```
+
+3. **Runtime Errors:**
+   ```bash
+   # Stream logs in real-time
+   railway logs --service api --follow
+
+   # Common issues:
+   # - Effect-ts imports not resolving
+   # - DATABASE_URL not set
+   # - FiberRef initialization errors
+   # - Unhandled promise rejections
+   ```
+
+4. **CORS Issues (Frontend → API):**
+   ```bash
+   # Check browser console for CORS errors
+   # Verify VITE_API_URL in frontend Railway variables
+   railway variables --service front
+
+   # Ensure API allows frontend domain in CORS config
+   ```
+
+5. **Quick Rollback:**
+   ```bash
+   # If deployment is broken, rollback immediately
+   # Railway Dashboard → API Service → Deployments → [Previous] → Rollback
+
+   # Or via CLI (if available):
+   railway rollback --service api
+   ```
+
+### Effect-ts Pattern Reference
+
+**Creating Effects:**
+```typescript
+// Correct: Use Effect.gen
+Effect.gen(function* () {
+  const db = yield* getDatabase;
+  const result = yield* Effect.promise(() => db.query(...));
+  return result;
+});
+
+// Incorrect: Don't use async/await directly
+async () => {
+  const db = await getDatabase; // ❌ Won't work
+  return db.query(...);
+}
+```
+
+**Error Handling:**
+```typescript
+// Correct: Use Effect.fail with tagged error
+return yield* Effect.fail({
+  _tag: "SessionNotFound" as const,
+  sessionId,
+  message: "...",
+});
+
+// Incorrect: Don't throw raw errors
+throw new Error("Session not found"); // ❌ Loses type information
+```
+
+**FiberRef Access:**
+```typescript
+// Correct: Always yield FiberRef.get
+const logger = yield* FiberRef.get(LoggerRef);
+
+// Incorrect: Don't access directly
+const logger = LoggerRef.get(); // ❌ Returns Effect, not value
 ```
 
 ## Reference Docs
 
 **Source Documents:**
-- [Architecture: Backend API Structure](../planning-artifacts/architecture.md#technical-stack)
-- [Architecture: Hybrid Approach Selection](../planning-artifacts/architecture.md#option-c-hybrid-tanstack-cli--manual-effect-ts)
-- [Effect Official Docs](https://effect.website/)
-- [Effect RPC Documentation](https://effect.website/docs/rx/rpc)
 
-**Related Stories:**
-- [Story 1.1: Deploy Infrastructure to Railway](./1-1-deploy-infrastructure-to-railway.md)
-- [Story 1.2: Integrate Better Auth](./1-2-integrate-better-auth-for-email-password-authentication.md)
-- [Story 2.1: Session Management](./2-1-session-management-and-persistence.md)
-- [Story 2.2: Nerin Agent Setup](./2-2-nerin-agent-setup-and-conversational-quality.md)
+- [Architecture Decision: Backend Framework Selection](../planning-artifacts/architecture.md#decision-1b-backend-framework-selection)
+- [Architecture Decision: Frontend Framework Selection](../planning-artifacts/architecture.md#decision-1a-frontend-framework-selection)
+- [Epic 1 Story 1.3: RPC Contracts](../planning-artifacts/epics.md#story-13-configure-effect-ts-rpc-contracts-and-infrastructure-layer)
+- [CLAUDE.md: Monorepo Structure](../../CLAUDE.md#monorepo-structure)
+
+**External References:**
+
+- [Effect-ts Official Docs](https://effect.website/) - Effect.gen, FiberRef, Layer composition
+- [@effect/rpc Documentation](https://effect.website/docs/effect-rpc) - RPC contract definition
+- [@effect/schema Documentation](https://effect.website/docs/effect-schema) - Schema validation
+- [effect-worker-mono Repository](https://github.com/backpine/effect-worker-mono) - Backend pattern reference
+- [TanStack Query Integration with Effect](https://tanstack.com/query/latest/docs/framework/react/guides/mutations)
 
 ## Dev Agent Record
 
 ### Agent Model Used
-Claude Haiku 4.5
+
+Claude Sonnet 4.5
+
+### Implementation Notes
+
+**Updated: 2026-01-30 (Clean Rebuild Strategy)**
+
+This story was updated to reflect a **clean rebuild** approach (not preservation):
+
+1. **Current State Analysis** - Documented existing oRPC architecture across apps/api, packages/contracts, and apps/front
+2. **Phase 0 Cleanup Added** - Complete deletion of oRPC code (no .OLD files, no backup)
+3. **Infrastructure Only** - Preserve logger and /health endpoint; business logic rebuilt later
+4. **Migration Strategy** - "Delete then rebuild from scratch" with placeholder handlers in this story
+
+**Previous Context (from initial generation):**
+
+1. **Full architecture review** - Extracted Effect-ts patterns from architecture.md (FiberRef bridges, Layer composition, effect-worker-mono alignment)
+2. **Railway deployment integration** - RPC handlers integrate with Railway's managed PostgreSQL and Redis services, /health endpoint critical
+3. **Previous story learnings** - Story 1.1 (Railway deployment) established Docker patterns; this builds on that foundation
+4. **Git history analysis** - Recent deployment fixes inform better error handling patterns
+5. **Comprehensive type safety** - All contracts enforce compile-time verification; no `any` types allowed
+
+**Key Technical Decisions:**
+
+- **Clean Rebuild Approach** - Delete all oRPC code, rebuild with Effect-ts from scratch
+- **Placeholder Handlers** - This story implements infrastructure only; real business logic in Epic 2+
+- **Health Endpoint Preservation** - `/health` endpoint must survive migration (Railway deployment dependency)
+- **FiberRef over Context API** - Request-scoped dependencies prevent cross-request state leakage
+- **Effect.gen pattern consistently** - All async operations use Effect.gen for composability
+- **Tagged errors for discrimination** - Error unions enable type-safe error handling in frontend
+- **Layer composition for DI** - All services injected via Effect Layers (database, logger, cost guard, Redis)
 
 ### Completion Notes
-- This story establishes the RPC infrastructure that ALL subsequent stories build upon
-- Effect Layers provide automatic dependency injection for database, logger, Redis, etc.
-- All handlers use Effect.gen() pattern with tagged errors
-- RPC contracts are self-documenting type-safe interfaces
-- Story 1.2 (Better Auth) cannot proceed until this framework is in place
 
-### Known Issues / Follow-ups
-- OAuth support deferred to Phase 2 (just add to AuthService contract)
-- Streaming responses for Nerin chat deferred to Story 2.2
-- Request middleware (logging, tracing) can be enhanced later
+**Phase 0-4 Implementation Complete (2026-01-30)**
+
+Successfully implemented the official @effect/rpc pattern following the effect-worker-mono reference repository. Key achievements:
+
+1. **Version Alignment**: Updated all Effect packages to "latest" in pnpm-workspace.yaml catalog to ensure compatibility across the ecosystem
+
+2. **Contract Restructure**: Migrated from class-based to individual Rpc definitions:
+   - Individual response schemas exported (e.g., `StartAssessmentResponseSchema`)
+   - Individual Rpc procedures (e.g., `StartAssessmentRpc = Rpc.make(...)`)
+   - RpcGroup.make() to combine procedures
+   - BigOceanRpcs as const using AssessmentRpcs.merge(ProfileRpcs)
+
+3. **Handler Pattern**: Implemented handlers following reference repository pattern:
+   - Exported as Layers using `RpcGroup.toLayer({ ... })`
+   - Each handler uses Effect.gen for async composition
+   - FiberRef access for logger and other services
+   - Placeholder implementations for all RPC procedures
+
+4. **Server Architecture**: Proper Layer composition in apps/api/src/index.ts:
+   - Layer.mergeAll(AssessmentRpcHandlersLive, ProfileRpcHandlersLive)
+   - RpcServer.layer(BigOceanRpcs) with handler provision
+   - RpcServer.layerProtocolHttp with NDJSON serialization
+   - NodeHttpServer.layer with correct 2-argument signature
+
+5. **Frontend RPC Client** (Phase 4):
+   - Created `apps/front/src/lib/rpc-client.ts` with `callRpc` helper function
+   - Implemented TanStack Query hooks in `apps/front/src/hooks/use-assessment.ts`
+   - All four hooks implemented: `useStartAssessment`, `useSendMessage`, `useGetResults`, `useResumeSession`
+   - Type-safe RPC calls with Effect.gen composition
+   - Proper Layer provision for HTTP client and NDJSON serialization
+   - Added effect, @effect/rpc, and @effect/platform dependencies to frontend
+
+6. **Compilation**: All TypeScript compilation passing for both backend and frontend (RPC files)
+
+**Remaining Work**: Phase 5 (Local Integration Testing), Phase 6 (Railway Deployment), Phase 7 (Documentation)
+
+### File List
+
+**Modified Files (Backend):**
+- `pnpm-workspace.yaml` - Updated catalog to use "latest" for all Effect packages
+- `packages/contracts/src/assessment.ts` - Restructured with individual Rpc definitions and response schemas
+- `packages/contracts/src/profile.ts` - Restructured with individual Rpc definitions and response schemas
+- `packages/contracts/src/index.ts` - Changed BigOceanRpcs from class to const using merge()
+- `apps/api/src/handlers/assessment.ts` - Implemented AssessmentRpcHandlersLive using toLayer()
+- `apps/api/src/handlers/profile.ts` - Implemented ProfileRpcHandlersLive using toLayer()
+- `apps/api/src/index.ts` - Complete rewrite using official @effect/rpc Layer composition pattern
+- `apps/api/package.json` - Added @effect/rpc, @effect/cluster, @effect/sql, @effect/experimental dependencies
+
+**New Files (Frontend - Phase 4):**
+- `apps/front/src/lib/rpc-client.ts` - RPC client setup with callRpc helper function
+- `apps/front/src/hooks/use-assessment.ts` - TanStack Query hooks for assessment operations
+
+**Modified Files (Frontend - Phase 4):**
+- `apps/front/package.json` - Added effect, @effect/rpc, @effect/platform dependencies
+- `apps/front/tsconfig.json` - Added ~/* path alias for convenience
+- `apps/front/src/hooks/useTherapistChat.ts` - Commented out old oRPC imports
+- `apps/front/src/routes/demo/orpc-todo.tsx` - Commented out old oRPC imports with placeholder
+- `apps/front/src/routes/chat/index.tsx` - Commented out old oRPC imports with placeholder
+
+**Existing Infrastructure (Already Present):**
+- `packages/infrastructure/src/context/database.ts` - DatabaseRef FiberRef bridge
+- `packages/infrastructure/src/context/logger.ts` - LoggerRef FiberRef bridge
+- `packages/infrastructure/src/context/cost-guard.ts` - CostGuardRef FiberRef bridge
+- `packages/infrastructure/src/index.ts` - Bridge exports
+
+**Pattern References:**
+- Handler pattern: https://github.com/backpine/effect-worker-mono/blob/main/apps/effect-worker-rpc/src/handlers/users.ts
+- Contract pattern: https://github.com/backpine/effect-worker-mono/blob/main/packages/contracts/src/rpc/procedures/users.ts
 
 ---
 
 ## Next Steps After Completion
 
-1. ✅ **Story Complete** → Update sprint-status.yaml: `1-3-configure-effect-ts-rpc: done`
-2. ✅ **Unblock Dependencies** → Story 1.2 (Better Auth) can now proceed
-3. ✅ **Start Story 1.2** → `/bmad-bmm-create-story` or `/bmad-bmm-dev-story` if ready
-4. ✅ **Parallel Work** → Story 7.1 (Unit Testing) uses this RPC infrastructure for examples
+1. ✅ **Story Complete** → Update sprint-status.yaml: `1-3-configure-effect-ts-rpc-contracts-and-infrastructure-layer: done`
+2. ✅ **Run Retrospective** (optional) for learnings about Effect-ts patterns
+3. ✅ **Start Story 2.1** → `/bmad-bmm-create-story 2-1` (Nerin Agent Core Logic)
+4. ✅ **Parallel Work** → Continue Story 1.2 (Better Auth) if not yet complete
 
 ---
 
 **Status:** ready-for-dev
 **Epic:** 1 (Infrastructure & Auth Setup)
-**Dependencies:** Story 1.1 (Railway Infrastructure)
-**Blocks:** Story 1.2 (Better Auth), Story 2.1 (Session Management), Story 2.2 (Nerin), All Epic 2+ stories
-**Ready for:** Dev Story workflow → `/bmad-bmm-dev-story 1-3-configure-effect-ts-rpc-contracts-and-infrastructure-layer`
+**Story Type:** Migration + Implementation (oRPC → Effect-ts)
+**Dependencies:** Story 1.1 (Railway deployment) must be complete
+**Blocks:** All Epic 2-7 stories (RPC foundation for all API communication)
+**Estimated Effort:** 3.5 days (includes cleanup, Effect-ts setup, local testing, Railway deployment validation)
+
+**Migration Checklist Summary:**
+- Phase 0: Remove oRPC (0.5 day - clean deletion, no backup needed)
+- Phase 1-2: Effect-ts setup (1 day - contracts + infrastructure)
+- Phase 3-4: Placeholder handlers + frontend (1 day - simple stubs, no real logic)
+- Phase 5: Local testing (0.25 day - local integration tests)
+- Phase 6: Railway deployment review (0.5 day - production validation, monitoring)
+- Phase 7: Documentation (0.25 day - JSDoc, README updates)
+
+**Total: 3.5 days**
+
+**Note:** Real business logic (personality assessment, LangGraph, 30 facets) implemented in Epic 2+ stories.

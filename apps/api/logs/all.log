@@ -1,428 +1,54 @@
-2026-01-25 19:28:46:2846 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 19:28:52:2852 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:28:52:2852 [33mwarn[39m: [33m404 - No procedure matched for POST /chat/startTherapistAssessment[39m
-2026-01-25 19:28:53:2853 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:28:53:2853 [33mwarn[39m: [33m404 - No procedure matched for POST /chat/startTherapistAssessment[39m
-2026-01-25 19:29:33:2933 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 19:29:33:2933 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:29:33:2933 [33mwarn[39m: [33m404 - No procedure matched for POST /chat/startTherapistAssessment[39m
-2026-01-25 19:30:41:3041 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 19:30:45:3045 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:30:45:3045 [33mwarn[39m: [33m404 - No procedure matched for POST /chat/startTherapistAssessment[39m
-2026-01-25 19:30:46:3046 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:30:46:3046 [33mwarn[39m: [33m404 - No procedure matched for POST /chat/startTherapistAssessment[39m
-2026-01-25 19:33:34:3334 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 19:33:59:3359 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:33:59:3359 [33mwarn[39m: [33m404 - No procedure matched for POST /chat/startTherapistAssessment[39m
-2026-01-25 19:37:40:3740 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 19:37:53:3753 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:37:53:3753 [33mwarn[39m: [33m404 - No procedure matched for POST /chat/startTherapistAssessment[39m
-2026-01-25 19:38:00:380 [35mhttp[39m: [35mPOST /planet/list[39m
-2026-01-25 19:38:00:380 [33mwarn[39m: [33m404 - No procedure matched for POST /planet/list[39m
-2026-01-25 19:40:55:4055 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 19:41:03:413 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 19:41:10:4110 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:41:10:4110 [31merror[39m: [31mRPC Error: Input validation failed[39m
-2026-01-25 19:41:22:4122 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:41:22:4122 [31merror[39m: [31mRPC Error: Input validation failed[39m
-2026-01-25 19:42:16:4216 [31merror[39m: [31mServer error: listen EADDRINUSE: address already in use 127.0.0.1:4000[39m
-2026-01-25 19:43:16:4316 [31merror[39m: [31mServer error: listen EADDRINUSE: address already in use 127.0.0.1:4000[39m
-2026-01-25 19:43:22:4322 [31merror[39m: [31mServer error: listen EADDRINUSE: address already in use 127.0.0.1:4000[39m
-2026-01-25 19:44:06:446 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 19:44:12:4412 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:44:12:4412 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 19:44:12:4412 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 19:44:13:4413 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:44:13:4413 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 19:44:13:4413 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 19:44:17:4417 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 19:44:17:4417 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:44:17:4417 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 19:44:17:4417 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 19:46:27:4627 [31merror[39m: [31mServer error: listen EADDRINUSE: address already in use 127.0.0.1:4000[39m
-2026-01-25 19:46:43:4643 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 19:47:05:475 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 19:47:57:4757 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:47:57:4757 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 19:47:57:4757 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 19:48:03:483 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 19:48:03:483 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:48:03:483 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 19:48:03:483 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 19:48:20:4820 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:48:20:4820 [31merror[39m: [31mRPC Error: Input validation failed[39m
-2026-01-25 19:49:11:4911 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 19:49:11:4911 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:49:11:4911 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 19:49:11:4911 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 19:49:42:4942 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 19:49:42:4942 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:49:42:4942 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 19:49:42:4942 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 19:50:08:508 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:50:08:508 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 19:50:08:508 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 19:51:01:511 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:51:01:511 [31merror[39m: [31mRPC Error: Input validation failed[39m
-2026-01-25 19:51:27:5127 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 19:53:00:530 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:53:00:530 [31merror[39m: [31mRPC Error: Input validation failed[39m
-2026-01-25 19:54:06:546 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 19:54:29:5429 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:54:29:5429 [31merror[39m: [31mRPC Error: Input validation failed[39m
-2026-01-25 19:54:58:5458 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 19:56:13:5613 [35mhttp[39m: [35mPOST /planet/list[39m
-2026-01-25 19:56:13:5613 [31merror[39m: [31mRPC Error: Input validation failed[39m
-2026-01-25 19:56:22:5622 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 19:56:29:5629 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 19:56:29:5629 [31merror[39m: [31mRPC Error: Input validation failed[39m
-2026-01-25 19:59:11:5911 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:01:25:125 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:01:25:125 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:01:25:125 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:01:31:131 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 20:01:31:131 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:01:31:131 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:01:31:131 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:02:07:27 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 20:02:07:27 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:02:07:27 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:02:07:27 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:02:11:211 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:02:11:211 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:02:11:211 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:02:16:216 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:02:16:216 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:02:16:216 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:02:36:236 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 20:02:36:236 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:02:36:236 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:02:36:236 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:02:58:258 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 20:02:58:258 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:02:58:258 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:02:58:258 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:03:01:31 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:03:01:31 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:03:01:31 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:03:14:314 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 20:03:14:314 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:03:14:314 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:03:14:314 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:03:21:321 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:03:21:321 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:03:21:321 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:03:51:351 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 20:03:51:351 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:03:51:351 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:03:51:351 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:03:54:354 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:03:54:354 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:03:54:354 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:04:08:48 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:04:10:410 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:04:10:410 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:04:10:410 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:04:11:411 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:04:11:411 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:04:11:411 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:04:37:437 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:04:37:437 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:04:37:437 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:12:28:1228 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 20:12:28:1228 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:12:28:1228 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:12:28:1228 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:12:31:1231 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:12:31:1231 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:12:31:1231 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:19:01:191 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 20:19:01:191 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:19:01:191 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:19:01:191 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:19:08:198 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:19:08:198 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:19:08:198 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:20:07:207 [35mhttp[39m: [35mOPTIONS /chat/sendTherapistMessage[39m
-2026-01-25 20:20:07:207 [35mhttp[39m: [35mPOST /chat/sendTherapistMessage[39m
-2026-01-25 20:20:07:207 [32minfo[39m: [32mProcessing therapist message[39m
-2026-01-25 20:20:07:207 [33mwarn[39m: [33mTherapist session not found[39m
-2026-01-25 20:20:31:2031 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:20:31:2031 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:20:31:2031 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:22:02:222 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 20:22:02:222 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:22:02:222 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:22:02:222 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:22:17:2217 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 20:22:17:2217 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:22:17:2217 [32minfo[39m: [32mStarting therapist assessment[39m
-2026-01-25 20:22:17:2217 [37mdebug[39m: [37mTherapist session created[39m
-2026-01-25 20:22:20:2220 [35mhttp[39m: [35mOPTIONS /chat/sendTherapistMessage[39m
-2026-01-25 20:22:20:2220 [35mhttp[39m: [35mPOST /chat/sendTherapistMessage[39m
-2026-01-25 20:22:20:2220 [32minfo[39m: [32mProcessing therapist message[39m
-2026-01-25 20:22:39:2239 [35mhttp[39m: [35mOPTIONS /chat/sendTherapistMessage[39m
-2026-01-25 20:22:39:2239 [35mhttp[39m: [35mPOST /chat/sendTherapistMessage[39m
-2026-01-25 20:22:39:2239 [32minfo[39m: [32mProcessing therapist message[39m
-2026-01-25 20:24:28:2428 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:24:36:2436 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:24:41:2441 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:24:45:2445 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:24:52:2452 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:25:05:255 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:25:12:2512 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:25:17:2517 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:25:57:2557 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 20:25:57:2557 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:25:57:2557 [32minfo[39m: [32m[API] startTherapistAssessment called[39m
-2026-01-25 20:25:57:2557 [32minfo[39m: [32m[API] Starting therapist assessment[39m
-2026-01-25 20:25:57:2557 [37mdebug[39m: [37m[API] Therapist session created[39m
-2026-01-25 20:26:00:260 [35mhttp[39m: [35mOPTIONS /chat/sendTherapistMessage[39m
-2026-01-25 20:26:00:260 [35mhttp[39m: [35mPOST /chat/sendTherapistMessage[39m
-2026-01-25 20:26:00:260 [32minfo[39m: [32m[API] sendTherapistMessage called[39m
-2026-01-25 20:26:12:2612 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:26:19:2619 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:26:19:2619 [32minfo[39m: [32m[API] startTherapistAssessment called[39m
-2026-01-25 20:26:19:2619 [32minfo[39m: [32m[API] Starting therapist assessment[39m
-2026-01-25 20:26:19:2619 [37mdebug[39m: [37m[API] Therapist session created[39m
-2026-01-25 20:26:22:2622 [35mhttp[39m: [35mOPTIONS /chat/sendTherapistMessage[39m
-2026-01-25 20:26:22:2622 [35mhttp[39m: [35mPOST /chat/sendTherapistMessage[39m
-2026-01-25 20:26:22:2622 [32minfo[39m: [32m[API] sendTherapistMessage called[39m
-2026-01-25 20:49:39:4939 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:49:40:4940 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:49:45:4945 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:49:48:4948 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:50:04:504 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:50:10:5010 [35mhttp[39m: [35mOPTIONS /chat/startTherapistAssessment[39m
-2026-01-25 20:50:10:5010 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:50:13:5013 [35mhttp[39m: [35mOPTIONS /chat/sendTherapistMessage[39m
-2026-01-25 20:50:13:5013 [35mhttp[39m: [35mPOST /chat/sendTherapistMessage[39m
-2026-01-25 20:50:13:5013 [32minfo[39m: [32m[API] sendTherapistMessage called[39m
-2026-01-25 20:51:11:5111 [35mhttp[39m: [35mOPTIONS /chat/sendTherapistMessage[39m
-2026-01-25 20:51:11:5111 [35mhttp[39m: [35mPOST /chat/sendTherapistMessage[39m
-2026-01-25 20:51:11:5111 [32minfo[39m: [32m[API] sendTherapistMessage called[39m
-2026-01-25 20:56:23:5623 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:56:29:5629 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:56:40:5640 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:56:50:5650 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:57:20:5720 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 20:57:29:5729 [35mhttp[39m: [35mPOST /chat/startTherapistAssessment[39m
-2026-01-25 20:57:33:5733 [35mhttp[39m: [35mOPTIONS /chat/sendTherapistMessage[39m
-2026-01-25 20:57:33:5733 [35mhttp[39m: [35mPOST /chat/sendTherapistMessage[39m
-2026-01-25 20:57:33:5733 [32minfo[39m: [32m[API] sendTherapistMessage called[39m {"sessionId":"bdff5375-5e60-4cd8-b360-984f734c44d4","hasMessage":true,"messageLength":5,"messagePreview":"Hello"}
-2026-01-25 20:57:33:5733 [32minfo[39m: [32m[Therapist] Starting personality assessment[39m {"hasUserInput":true,"inputLength":5}
-2026-01-25 20:57:33:5733 [37mdebug[39m: [37m[Therapist] Invoking agent[39m {"messageCount":1}
-2026-01-25 20:58:03:583 [31merror[39m: [31m[Therapist] Assessment failed[39m {"error":"Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the \"recursionLimit\" config key.\n\nTroubleshooting URL: https://docs.langchain.com/oss/javascript/langgraph/GRAPH_RECURSION_LIMIT/\n","stack":"GraphRecursionError: Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the \"recursionLimit\" config key.\n\nTroubleshooting URL: https://docs.langchain.com/oss/javascript/langgraph/GRAPH_RECURSION_LIMIT/\n\n    at CompiledStateGraph._runLoop (/Users/vincentlay/Projects/big-ocean/node_modules/.pnpm/@langchain+langgraph@1.1.2_@langchain+core@1.1.17_react-dom@19.2.1_react@19.2.1__react@_976b406b8b08ddfe6afa0d0d1f613bc4/node_modules/@langchain/langgraph/src/pregel/index.ts:2290:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async createAndRunLoop (/Users/vincentlay/Projects/big-ocean/node_modules/.pnpm/@langchain+langgraph@1.1.2_@langchain+core@1.1.17_react-dom@19.2.1_react@19.2.1__react@_976b406b8b08ddfe6afa0d0d1f613bc4/node_modules/@langchain/langgraph/src/pregel/index.ts:2121:9)"}
-2026-01-25 20:59:50:5950 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:00:18:018 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:00:24:024 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:00:29:029 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:00:35:035 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:00:41:041 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:00:47:047 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:00:54:054 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:01:27:127 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:01:32:132 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:01:37:137 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:01:47:147 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:03:09:39 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:03:53:353 [35mhttp[39m: [35m[HTTP] POST /chat/startTherapistAssessment[39m {"method":"POST","path":"/chat/startTherapistAssessment","userAgent":"node"}
-2026-01-25 21:03:53:353 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-25 21:03:53:353 [32minfo[39m: [32m[Procedure] startTherapistAssessment called[39m {}
-2026-01-25 21:03:53:353 [37mdebug[39m: [37m[Procedure] Therapist session created[39m {"sessionId":"bc5bd3e4-d4d4-4f14-99f8-0b226c61bd39"}
-2026-01-25 21:03:53:353 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"3ms","hasResult":true}
-2026-01-25 21:03:53:353 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/startTherapistAssessment","statusCode":200,"duration":"6ms"}
-2026-01-25 21:03:58:358 [35mhttp[39m: [35m[HTTP] OPTIONS /chat/sendTherapistMessage[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:03:58:358 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","statusCode":204,"duration":"2ms"}
-2026-01-25 21:03:58:358 [35mhttp[39m: [35m[HTTP] POST /chat/sendTherapistMessage[39m {"method":"POST","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:03:58:358 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-25 21:03:58:358 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"1ms","hasResult":true}
-2026-01-25 21:03:58:358 [32minfo[39m: [32m[Procedure] sendTherapistMessage called[39m {"sessionId":"bc5bd3e4-d4d4-4f14-99f8-0b226c61bd39","hasMessage":true,"messageLength":1}
-2026-01-25 21:03:58:358 [32minfo[39m: [32m[Therapist] Starting personality assessment[39m {"hasUserInput":true,"inputLength":1}
-2026-01-25 21:03:58:358 [37mdebug[39m: [37m[Therapist] Invoking agent[39m {"messageCount":1}
-2026-01-25 21:04:35:435 [31merror[39m: [31m[Therapist] Assessment failed[39m {"error":"Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the \"recursionLimit\" config key.\n\nTroubleshooting URL: https://docs.langchain.com/oss/javascript/langgraph/GRAPH_RECURSION_LIMIT/\n","stack":"GraphRecursionError: Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the \"recursionLimit\" config key.\n\nTroubleshooting URL: https://docs.langchain.com/oss/javascript/langgraph/GRAPH_RECURSION_LIMIT/\n\n    at CompiledStateGraph._runLoop (/Users/vincentlay/Projects/big-ocean/node_modules/.pnpm/@langchain+langgraph@1.1.2_@langchain+core@1.1.17_react-dom@19.2.1_react@19.2.1__react@_976b406b8b08ddfe6afa0d0d1f613bc4/node_modules/@langchain/langgraph/src/pregel/index.ts:2290:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async createAndRunLoop (/Users/vincentlay/Projects/big-ocean/node_modules/.pnpm/@langchain+langgraph@1.1.2_@langchain+core@1.1.17_react-dom@19.2.1_react@19.2.1__react@_976b406b8b08ddfe6afa0d0d1f613bc4/node_modules/@langchain/langgraph/src/pregel/index.ts:2121:9)"}
-2026-01-25 21:04:35:435 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/sendTherapistMessage","statusCode":200,"duration":"37789ms"}
-2026-01-25 21:07:54:754 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:08:03:83 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:08:07:87 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:08:18:818 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:08:24:824 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:08:27:827 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:09:00:90 [35mhttp[39m: [35m[HTTP] POST /chat/startTherapistAssessment[39m {"method":"POST","path":"/chat/startTherapistAssessment","userAgent":"node"}
-2026-01-25 21:09:00:90 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-25 21:09:00:90 [32minfo[39m: [32m[Procedure] startTherapistAssessment called[39m {}
-2026-01-25 21:09:00:90 [37mdebug[39m: [37m[Procedure] Therapist session created[39m {"sessionId":"c1bb2170-5dcd-4880-bdcc-0de172f0ef03"}
-2026-01-25 21:09:00:90 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"5ms","hasResult":true}
-2026-01-25 21:09:00:90 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/startTherapistAssessment","statusCode":200,"duration":"8ms"}
-2026-01-25 21:09:04:94 [35mhttp[39m: [35m[HTTP] OPTIONS /chat/sendTherapistMessage[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:09:04:94 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","statusCode":204,"duration":"1ms"}
-2026-01-25 21:09:04:94 [35mhttp[39m: [35m[HTTP] POST /chat/sendTherapistMessage[39m {"method":"POST","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:09:04:94 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-25 21:09:04:94 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"2ms","hasResult":true}
-2026-01-25 21:09:04:94 [32minfo[39m: [32m[Procedure] sendTherapistMessage called[39m {"sessionId":"c1bb2170-5dcd-4880-bdcc-0de172f0ef03","hasMessage":true,"messageLength":5}
-2026-01-25 21:09:04:94 [32minfo[39m: [32m[Therapist] Starting personality assessment[39m {"hasUserInput":true,"inputLength":5}
-2026-01-25 21:09:04:94 [37mdebug[39m: [37m[Therapist] Invoking agent[39m {"messageCount":1}
-2026-01-25 21:09:36:936 [31merror[39m: [31m[Therapist] Assessment failed[39m {"error":"Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the \"recursionLimit\" config key.\n\nTroubleshooting URL: https://docs.langchain.com/oss/javascript/langgraph/GRAPH_RECURSION_LIMIT/\n","stack":"GraphRecursionError: Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the \"recursionLimit\" config key.\n\nTroubleshooting URL: https://docs.langchain.com/oss/javascript/langgraph/GRAPH_RECURSION_LIMIT/\n\n    at CompiledStateGraph._runLoop (/Users/vincentlay/Projects/big-ocean/node_modules/.pnpm/@langchain+langgraph@1.1.2_@langchain+core@1.1.17_react-dom@19.2.1_react@19.2.1__react@_976b406b8b08ddfe6afa0d0d1f613bc4/node_modules/@langchain/langgraph/src/pregel/index.ts:2290:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async createAndRunLoop (/Users/vincentlay/Projects/big-ocean/node_modules/.pnpm/@langchain+langgraph@1.1.2_@langchain+core@1.1.17_react-dom@19.2.1_react@19.2.1__react@_976b406b8b08ddfe6afa0d0d1f613bc4/node_modules/@langchain/langgraph/src/pregel/index.ts:2121:9)"}
-2026-01-25 21:09:36:936 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/sendTherapistMessage","statusCode":200,"duration":"32680ms"}
-2026-01-25 21:11:05:115 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:11:34:1134 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:11:39:1139 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 21:12:07:127 [35mhttp[39m: [35m[HTTP] POST /chat/startTherapistAssessment[39m {"method":"POST","path":"/chat/startTherapistAssessment","userAgent":"node"}
-2026-01-25 21:12:07:127 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-25 21:12:07:127 [32minfo[39m: [32m[Procedure] startTherapistAssessment called[39m {}
-2026-01-25 21:12:07:127 [37mdebug[39m: [37m[Procedure] Therapist session created[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5"}
-2026-01-25 21:12:07:127 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"4ms","hasResult":true}
-2026-01-25 21:12:07:127 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/startTherapistAssessment","statusCode":200,"duration":"6ms"}
-2026-01-25 21:12:10:1210 [35mhttp[39m: [35m[HTTP] OPTIONS /chat/sendTherapistMessage[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:12:10:1210 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","statusCode":204,"duration":"1ms"}
-2026-01-25 21:12:10:1210 [35mhttp[39m: [35m[HTTP] POST /chat/sendTherapistMessage[39m {"method":"POST","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:12:10:1210 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-25 21:12:10:1210 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"2ms","hasResult":true}
-2026-01-25 21:12:10:1210 [32minfo[39m: [32m[Procedure] sendTherapistMessage called[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5","hasMessage":true,"messageLength":5}
-2026-01-25 21:12:10:1210 [32minfo[39m: [32m[Therapist] Starting personality assessment[39m {"hasUserInput":true,"inputLength":5,"hasPreviousState":true}
-2026-01-25 21:12:10:1210 [37mdebug[39m: [37m[Therapist] Invoking agent[39m {"messageCount":1,"previousPrecisions":{"openness":0,"conscientiousness":0,"extraversion":0,"agreeableness":0,"neuroticism":0}}
-2026-01-25 21:12:14:1214 [37mdebug[39m: [37m[Therapist] Assessment completed[39m {"messageCount":2,"opennessPrecision":0,"conscientiousnessPrecision":0,"extraversionPrecision":0,"agreeablenessPrecision":0,"neuroticismPrecision":0}
-2026-01-25 21:12:14:1214 [37mdebug[39m: [37m[Procedure] sendTherapistMessage session updated[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5"}
-2026-01-25 21:12:14:1214 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/sendTherapistMessage","statusCode":200,"duration":"4625ms"}
-2026-01-25 21:16:34:1634 [35mhttp[39m: [35m[HTTP] OPTIONS /chat/sendTherapistMessage[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:16:34:1634 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","statusCode":204,"duration":"1ms"}
-2026-01-25 21:16:34:1634 [35mhttp[39m: [35m[HTTP] POST /chat/sendTherapistMessage[39m {"method":"POST","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:16:34:1634 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-25 21:16:34:1634 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"0ms","hasResult":true}
-2026-01-25 21:16:34:1634 [32minfo[39m: [32m[Procedure] sendTherapistMessage called[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5","hasMessage":true,"messageLength":534}
-2026-01-25 21:16:34:1634 [32minfo[39m: [32m[Therapist] Starting personality assessment[39m {"hasUserInput":true,"inputLength":534,"hasPreviousState":true}
-2026-01-25 21:16:34:1634 [37mdebug[39m: [37m[Therapist] Invoking agent[39m {"messageCount":3,"previousPrecisions":{"openness":0,"conscientiousness":0,"extraversion":0,"agreeableness":0,"neuroticism":0}}
-2026-01-25 21:16:40:1640 [37mdebug[39m: [37m[Therapist] Assessment completed[39m {"messageCount":4,"opennessPrecision":0,"conscientiousnessPrecision":0,"extraversionPrecision":0,"agreeablenessPrecision":0,"neuroticismPrecision":0}
-2026-01-25 21:16:40:1640 [37mdebug[39m: [37m[Procedure] sendTherapistMessage session updated[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5"}
-2026-01-25 21:16:40:1640 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/sendTherapistMessage","statusCode":200,"duration":"5491ms"}
-2026-01-25 21:23:08:238 [35mhttp[39m: [35m[HTTP] OPTIONS /chat/sendTherapistMessage[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:23:08:238 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","statusCode":204,"duration":"1ms"}
-2026-01-25 21:23:08:238 [35mhttp[39m: [35m[HTTP] POST /chat/sendTherapistMessage[39m {"method":"POST","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:23:08:238 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-25 21:23:08:238 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"1ms","hasResult":true}
-2026-01-25 21:23:08:238 [32minfo[39m: [32m[Procedure] sendTherapistMessage called[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5","hasMessage":true,"messageLength":860}
-2026-01-25 21:23:08:238 [32minfo[39m: [32m[Therapist] Starting personality assessment[39m {"hasUserInput":true,"inputLength":860,"hasPreviousState":true}
-2026-01-25 21:23:08:238 [37mdebug[39m: [37m[Therapist] Invoking agent[39m {"messageCount":5,"previousPrecisions":{"openness":0,"conscientiousness":0,"extraversion":0,"agreeableness":0,"neuroticism":0}}
-2026-01-25 21:23:17:2317 [37mdebug[39m: [37m[Therapist] Assessment completed[39m {"messageCount":6,"opennessPrecision":0,"conscientiousnessPrecision":0,"extraversionPrecision":0,"agreeablenessPrecision":0,"neuroticismPrecision":0}
-2026-01-25 21:23:17:2317 [37mdebug[39m: [37m[Procedure] sendTherapistMessage session updated[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5"}
-2026-01-25 21:23:17:2317 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/sendTherapistMessage","statusCode":200,"duration":"8755ms"}
-2026-01-25 21:32:47:3247 [35mhttp[39m: [35m[HTTP] OPTIONS /chat/sendTherapistMessage[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:32:47:3247 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","statusCode":204,"duration":"1ms"}
-2026-01-25 21:32:47:3247 [35mhttp[39m: [35m[HTTP] POST /chat/sendTherapistMessage[39m {"method":"POST","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:32:47:3247 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-25 21:32:47:3247 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"1ms","hasResult":true}
-2026-01-25 21:32:47:3247 [32minfo[39m: [32m[Procedure] sendTherapistMessage called[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5","hasMessage":true,"messageLength":1346}
-2026-01-25 21:32:47:3247 [32minfo[39m: [32m[Therapist] Starting personality assessment[39m {"hasUserInput":true,"inputLength":1346,"hasPreviousState":true}
-2026-01-25 21:32:47:3247 [37mdebug[39m: [37m[Therapist] Invoking agent[39m {"messageCount":7,"previousPrecisions":{"openness":0,"conscientiousness":0,"extraversion":0,"agreeableness":0,"neuroticism":0}}
-2026-01-25 21:32:56:3256 [37mdebug[39m: [37m[Therapist] Assessment completed[39m {"messageCount":8,"opennessPrecision":0,"conscientiousnessPrecision":0,"extraversionPrecision":0,"agreeablenessPrecision":0,"neuroticismPrecision":0}
-2026-01-25 21:32:56:3256 [37mdebug[39m: [37m[Procedure] sendTherapistMessage session updated[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5"}
-2026-01-25 21:32:56:3256 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/sendTherapistMessage","statusCode":200,"duration":"8505ms"}
-2026-01-25 21:42:48:4248 [35mhttp[39m: [35m[HTTP] OPTIONS /chat/sendTherapistMessage[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:42:48:4248 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","statusCode":204,"duration":"2ms"}
-2026-01-25 21:42:48:4248 [35mhttp[39m: [35m[HTTP] POST /chat/sendTherapistMessage[39m {"method":"POST","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:42:48:4248 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-25 21:42:48:4248 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"1ms","hasResult":true}
-2026-01-25 21:42:48:4248 [32minfo[39m: [32m[Procedure] sendTherapistMessage called[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5","hasMessage":true,"messageLength":1526}
-2026-01-25 21:42:48:4248 [32minfo[39m: [32m[Therapist] Starting personality assessment[39m {"hasUserInput":true,"inputLength":1526,"hasPreviousState":true}
-2026-01-25 21:42:48:4248 [37mdebug[39m: [37m[Therapist] Invoking agent[39m {"messageCount":9,"previousPrecisions":{"openness":0,"conscientiousness":0,"extraversion":0,"agreeableness":0,"neuroticism":0}}
-2026-01-25 21:42:57:4257 [37mdebug[39m: [37m[Therapist] Assessment completed[39m {"messageCount":10,"opennessPrecision":0,"conscientiousnessPrecision":0,"extraversionPrecision":0,"agreeablenessPrecision":0,"neuroticismPrecision":0}
-2026-01-25 21:42:57:4257 [37mdebug[39m: [37m[Procedure] sendTherapistMessage session updated[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5"}
-2026-01-25 21:42:57:4257 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/sendTherapistMessage","statusCode":200,"duration":"9087ms"}
-2026-01-25 21:50:56:5056 [35mhttp[39m: [35m[HTTP] OPTIONS /chat/sendTherapistMessage[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:50:56:5056 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","statusCode":204,"duration":"1ms"}
-2026-01-25 21:50:56:5056 [35mhttp[39m: [35m[HTTP] POST /chat/sendTherapistMessage[39m {"method":"POST","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:50:56:5056 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-25 21:50:56:5056 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"1ms","hasResult":true}
-2026-01-25 21:50:56:5056 [32minfo[39m: [32m[Procedure] sendTherapistMessage called[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5","hasMessage":true,"messageLength":959}
-2026-01-25 21:50:56:5056 [32minfo[39m: [32m[Therapist] Starting personality assessment[39m {"hasUserInput":true,"inputLength":959,"hasPreviousState":true}
-2026-01-25 21:50:56:5056 [37mdebug[39m: [37m[Therapist] Invoking agent[39m {"messageCount":11,"previousPrecisions":{"openness":0,"conscientiousness":0,"extraversion":0,"agreeableness":0,"neuroticism":0}}
-2026-01-25 21:51:06:516 [37mdebug[39m: [37m[Therapist] Assessment completed[39m {"messageCount":12,"opennessPrecision":0,"conscientiousnessPrecision":0,"extraversionPrecision":0,"agreeablenessPrecision":0,"neuroticismPrecision":0}
-2026-01-25 21:51:06:516 [37mdebug[39m: [37m[Procedure] sendTherapistMessage session updated[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5"}
-2026-01-25 21:51:06:516 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/sendTherapistMessage","statusCode":200,"duration":"9472ms"}
-2026-01-25 21:55:57:5557 [35mhttp[39m: [35m[HTTP] OPTIONS /chat/sendTherapistMessage[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:55:57:5557 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","statusCode":204,"duration":"1ms"}
-2026-01-25 21:55:57:5557 [35mhttp[39m: [35m[HTTP] POST /chat/sendTherapistMessage[39m {"method":"POST","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 21:55:57:5557 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-25 21:55:57:5557 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"0ms","hasResult":true}
-2026-01-25 21:55:57:5557 [32minfo[39m: [32m[Procedure] sendTherapistMessage called[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5","hasMessage":true,"messageLength":733}
-2026-01-25 21:55:57:5557 [32minfo[39m: [32m[Therapist] Starting personality assessment[39m {"hasUserInput":true,"inputLength":733,"hasPreviousState":true}
-2026-01-25 21:55:57:5557 [37mdebug[39m: [37m[Therapist] Invoking agent[39m {"messageCount":13,"previousPrecisions":{"openness":0,"conscientiousness":0,"extraversion":0,"agreeableness":0,"neuroticism":0}}
-2026-01-25 21:56:04:564 [37mdebug[39m: [37m[Therapist] Assessment completed[39m {"messageCount":14,"opennessPrecision":0,"conscientiousnessPrecision":0,"extraversionPrecision":0,"agreeablenessPrecision":0,"neuroticismPrecision":0}
-2026-01-25 21:56:04:564 [37mdebug[39m: [37m[Procedure] sendTherapistMessage session updated[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5"}
-2026-01-25 21:56:04:564 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/sendTherapistMessage","statusCode":200,"duration":"7332ms"}
-2026-01-25 22:01:16:116 [35mhttp[39m: [35m[HTTP] OPTIONS /chat/sendTherapistMessage[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 22:01:16:116 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","statusCode":204,"duration":"1ms"}
-2026-01-25 22:01:16:116 [35mhttp[39m: [35m[HTTP] POST /chat/sendTherapistMessage[39m {"method":"POST","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 22:01:16:116 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-25 22:01:16:116 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"1ms","hasResult":true}
-2026-01-25 22:01:16:116 [32minfo[39m: [32m[Procedure] sendTherapistMessage called[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5","hasMessage":true,"messageLength":759}
-2026-01-25 22:01:16:116 [32minfo[39m: [32m[Therapist] Starting personality assessment[39m {"hasUserInput":true,"inputLength":759,"hasPreviousState":true}
-2026-01-25 22:01:16:116 [37mdebug[39m: [37m[Therapist] Invoking agent[39m {"messageCount":15,"previousPrecisions":{"openness":0,"conscientiousness":0,"extraversion":0,"agreeableness":0,"neuroticism":0}}
-2026-01-25 22:01:25:125 [37mdebug[39m: [37m[Therapist] Assessment completed[39m {"messageCount":16,"opennessPrecision":0,"conscientiousnessPrecision":0,"extraversionPrecision":0,"agreeablenessPrecision":0,"neuroticismPrecision":0}
-2026-01-25 22:01:25:125 [37mdebug[39m: [37m[Procedure] sendTherapistMessage session updated[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5"}
-2026-01-25 22:01:25:125 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/sendTherapistMessage","statusCode":200,"duration":"8688ms"}
-2026-01-25 22:02:31:231 [35mhttp[39m: [35m[HTTP] OPTIONS /chat/sendTherapistMessage[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 22:02:31:231 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","statusCode":204,"duration":"1ms"}
-2026-01-25 22:02:31:231 [35mhttp[39m: [35m[HTTP] POST /chat/sendTherapistMessage[39m {"method":"POST","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 22:02:31:231 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-25 22:02:31:231 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"2ms","hasResult":true}
-2026-01-25 22:02:31:231 [32minfo[39m: [32m[Procedure] sendTherapistMessage called[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5","hasMessage":true,"messageLength":34}
-2026-01-25 22:02:31:231 [32minfo[39m: [32m[Therapist] Starting personality assessment[39m {"hasUserInput":true,"inputLength":34,"hasPreviousState":true}
-2026-01-25 22:02:31:231 [37mdebug[39m: [37m[Therapist] Invoking agent[39m {"messageCount":17,"previousPrecisions":{"openness":0,"conscientiousness":0,"extraversion":0,"agreeableness":0,"neuroticism":0}}
-2026-01-25 22:02:49:249 [37mdebug[39m: [37m[Therapist] Assessment completed[39m {"messageCount":20,"opennessPrecision":0,"conscientiousnessPrecision":0,"extraversionPrecision":0,"agreeablenessPrecision":0,"neuroticismPrecision":0}
-2026-01-25 22:02:49:249 [37mdebug[39m: [37m[Procedure] sendTherapistMessage session updated[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5"}
-2026-01-25 22:02:49:249 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/sendTherapistMessage","statusCode":200,"duration":"17836ms"}
-2026-01-25 22:04:07:47 [35mhttp[39m: [35m[HTTP] OPTIONS /chat/sendTherapistMessage[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 22:04:07:47 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","statusCode":204,"duration":"0ms"}
-2026-01-25 22:04:07:47 [35mhttp[39m: [35m[HTTP] POST /chat/sendTherapistMessage[39m {"method":"POST","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-25 22:04:07:47 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-25 22:04:07:47 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"1ms","hasResult":true}
-2026-01-25 22:04:07:47 [32minfo[39m: [32m[Procedure] sendTherapistMessage called[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5","hasMessage":true,"messageLength":3}
-2026-01-25 22:04:07:47 [32minfo[39m: [32m[Therapist] Starting personality assessment[39m {"hasUserInput":true,"inputLength":3,"hasPreviousState":true}
-2026-01-25 22:04:07:47 [37mdebug[39m: [37m[Therapist] Invoking agent[39m {"messageCount":21,"previousPrecisions":{"openness":0,"conscientiousness":0,"extraversion":0,"agreeableness":0,"neuroticism":0}}
-2026-01-25 22:04:14:414 [37mdebug[39m: [37m[Therapist] Assessment completed[39m {"messageCount":22,"opennessPrecision":0,"conscientiousnessPrecision":0,"extraversionPrecision":0,"agreeablenessPrecision":0,"neuroticismPrecision":0}
-2026-01-25 22:04:14:414 [37mdebug[39m: [37m[Procedure] sendTherapistMessage session updated[39m {"sessionId":"48db663b-c94e-41bf-be9c-46bfac80f0d5"}
-2026-01-25 22:04:14:414 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/sendTherapistMessage","statusCode":200,"duration":"7298ms"}
-2026-01-25 22:12:58:1258 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 22:13:09:139 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 22:30:13:3013 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 22:30:42:3042 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 22:38:22:3822 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 22:40:41:4041 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 22:43:02:432 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 22:43:39:4339 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 22:44:31:4431 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-25 22:45:22:4522 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-26 21:51:35:5135 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
-2026-01-26 21:51:46:5146 [35mhttp[39m: [35m[HTTP] OPTIONS /chat/startTherapistAssessment[39m {"method":"OPTIONS","path":"/chat/startTherapistAssessment","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-26 21:51:46:5146 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"OPTIONS","path":"/chat/startTherapistAssessment","statusCode":204,"duration":"5ms"}
-2026-01-26 21:51:46:5146 [35mhttp[39m: [35m[HTTP] POST /chat/startTherapistAssessment[39m {"method":"POST","path":"/chat/startTherapistAssessment","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-26 21:51:46:5146 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-26 21:51:46:5146 [32minfo[39m: [32m[Procedure] startTherapistAssessment called[39m {}
-2026-01-26 21:51:46:5146 [37mdebug[39m: [37m[Procedure] Therapist session created[39m {"sessionId":"7790d33c-3eb4-4071-8898-3e10d260c5c6"}
-2026-01-26 21:51:46:5146 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"6ms","hasResult":true}
-2026-01-26 21:51:46:5146 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/startTherapistAssessment","statusCode":200,"duration":"8ms"}
-2026-01-26 21:51:49:5149 [35mhttp[39m: [35m[HTTP] OPTIONS /chat/sendTherapistMessage[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-26 21:51:49:5149 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"OPTIONS","path":"/chat/sendTherapistMessage","statusCode":204,"duration":"2ms"}
-2026-01-26 21:51:49:5149 [35mhttp[39m: [35m[HTTP] POST /chat/sendTherapistMessage[39m {"method":"POST","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-26 21:51:49:5149 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-26 21:51:49:5149 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"3ms","hasResult":true}
-2026-01-26 21:51:49:5149 [32minfo[39m: [32m[Procedure] sendTherapistMessage called[39m {"sessionId":"7790d33c-3eb4-4071-8898-3e10d260c5c6","hasMessage":false}
-2026-01-26 21:51:49:5149 [32minfo[39m: [32m[Therapist] Starting personality assessment[39m {"hasUserInput":false,"hasPreviousState":true}
-2026-01-26 21:51:49:5149 [37mdebug[39m: [37m[Therapist] Invoking agent[39m {"messageCount":0,"previousPrecisions":{"openness":0,"conscientiousness":0,"extraversion":0,"agreeableness":0,"neuroticism":0}}
-2026-01-26 21:51:49:5149 [37mdebug[39m: [37m[Therapist] Conversational LLM generating response[39m
-2026-01-26 21:51:50:5150 [31merror[39m: [31m[Therapist] Assessment failed[39m {"error":"400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages: at least one message is required\"},\"request_id\":\"req_011CXWejiVYTCqyaRcRYw4Su\"}","stack":"Error: 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages: at least one message is required\"},\"request_id\":\"req_011CXWejiVYTCqyaRcRYw4Su\"}\n    at Function.generate (/Users/vincentlay/Projects/big-ocean/node_modules/.pnpm/@anthropic-ai+sdk@0.71.2_zod@4.2.1/node_modules/@anthropic-ai/sdk/src/core/error.ts:63:14)\n    at Anthropic.makeStatusError (/Users/vincentlay/Projects/big-ocean/node_modules/.pnpm/@anthropic-ai+sdk@0.71.2_zod@4.2.1/node_modules/@anthropic-ai/sdk/src/client.ts:443:28)\n    at Anthropic.makeRequest (/Users/vincentlay/Projects/big-ocean/node_modules/.pnpm/@anthropic-ai+sdk@0.71.2_zod@4.2.1/node_modules/@anthropic-ai/sdk/src/client.ts:678:24)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async makeCompletionRequest (/Users/vincentlay/Projects/big-ocean/node_modules/.pnpm/@langchain+anthropic@1.3.12_@langchain+core@1.1.17/node_modules/@langchain/anthropic/src/chat_models.ts:1386:16)\n    at async pRetry (/Users/vincentlay/Projects/big-ocean/node_modules/.pnpm/@langchain+core@1.1.17/node_modules/@langchain/core/src/utils/p-retry/index.js:236:22)\n    at async run (/Users/vincentlay/Projects/big-ocean/node_modules/.pnpm/p-queue@6.6.2/node_modules/p-queue/dist/index.js:163:29)"}
-2026-01-26 21:51:50:5150 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/sendTherapistMessage","statusCode":200,"duration":"252ms"}
-2026-01-26 21:51:53:5153 [35mhttp[39m: [35m[HTTP] POST /chat/sendTherapistMessage[39m {"method":"POST","path":"/chat/sendTherapistMessage","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-2026-01-26 21:51:53:5153 [32minfo[39m: [32m[RPC] Procedure called: unknown[39m {"procedure":"unknown","hasInput":false,"inputKeys":"none","inputPreview":"undefined"}
-2026-01-26 21:51:53:5153 [37mdebug[39m: [37m[RPC] Procedure completed: unknown[39m {"procedure":"unknown","duration":"1ms","hasResult":true}
-2026-01-26 21:51:53:5153 [32minfo[39m: [32m[Procedure] sendTherapistMessage called[39m {"sessionId":"7790d33c-3eb4-4071-8898-3e10d260c5c6","hasMessage":true,"messageLength":5}
-2026-01-26 21:51:53:5153 [32minfo[39m: [32m[Therapist] Starting personality assessment[39m {"hasUserInput":true,"inputLength":5,"hasPreviousState":true}
-2026-01-26 21:51:53:5153 [37mdebug[39m: [37m[Therapist] Invoking agent[39m {"messageCount":1,"previousPrecisions":{"openness":0,"conscientiousness":0,"extraversion":0,"agreeableness":0,"neuroticism":0}}
-2026-01-26 21:51:53:5153 [37mdebug[39m: [37m[Therapist] Conversational LLM generating response[39m
-2026-01-26 21:51:57:5157 [37mdebug[39m: [37m[Therapist] Triggering evaluation[39m {"messageCount":1,"reason":"first message"}
-2026-01-26 21:51:57:5157 [37mdebug[39m: [37m[Therapist] Evaluator LLM analyzing conversation[39m
-2026-01-26 21:52:04:524 [32minfo[39m: [32m[Therapist] Evaluation completed[39m {"messageCount":1,"opennessPrecision":0.05,"conscientiousnessPrecision":0.05}
-2026-01-26 21:52:04:524 [37mdebug[39m: [37m[Therapist] Assessment completed[39m {"messageCount":2,"opennessPrecision":0.05,"conscientiousnessPrecision":0.05,"extraversionPrecision":0.05,"agreeablenessPrecision":0.05,"neuroticismPrecision":0.05}
-2026-01-26 21:52:04:524 [37mdebug[39m: [37m[Procedure] sendTherapistMessage session updated[39m {"sessionId":"7790d33c-3eb4-4071-8898-3e10d260c5c6","mainTraits":{"openness":60,"conscientiousness":60,"extraversion":60,"agreeableness":60,"neuroticism":60}}
-2026-01-26 21:52:04:524 [37mdebug[39m: [37m[HTTP] Response sent[39m {"method":"POST","path":"/chat/sendTherapistMessage","statusCode":200,"duration":"10316ms"}
+2026-01-30 13:36:00:360 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
+2026-01-30 13:36:25:3625 [37mdebug[39m: [37m[HTTP] Health check[39m {"duration":"1ms"}
+2026-01-30 13:39:06:396 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
+2026-01-30 13:39:06:396 [32minfo[39m: [32mHealth check available at http://127.0.0.1:4000/health[39m
+2026-01-30 13:39:06:396 [32minfo[39m: [32mRPC endpoints available at http://127.0.0.1:4000/rpc/*[39m
+2026-01-30 13:39:08:398 [35mhttp[39m: [35m[HTTP] POST /rpc/startAssessment[39m {"method":"POST","path":"/rpc/startAssessment","userAgent":"curl/8.7.1"}
+2026-01-30 13:39:08:398 [32minfo[39m: [32mAssessment session started (placeholder)[39m {"sessionId":"session_1769776748973_b1k0kx","userId":"test-user-123"}
+2026-01-30 13:39:08:398 [37mdebug[39m: [37m[RPC] startAssessment completed[39m {"procedure":"startAssessment","duration":"7ms"}
+2026-01-30 13:39:08:398 [35mhttp[39m: [35m[HTTP] POST /rpc/sendMessage[39m {"method":"POST","path":"/rpc/sendMessage","userAgent":"curl/8.7.1"}
+2026-01-30 13:39:08:398 [31merror[39m: [31m[RPC] Error in sendMessage[39m {"procedure":"sendMessage","error":"Bad escaped character in JSON at position 45 (line 1 column 46)","duration":"0ms"}
+2026-01-30 13:41:34:4134 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
+2026-01-30 13:41:34:4134 [32minfo[39m: [32mHealth check available at http://127.0.0.1:4000/health[39m
+2026-01-30 13:41:34:4134 [32minfo[39m: [32mRPC endpoints available at http://127.0.0.1:4000/rpc/*[39m
+2026-01-30 13:46:39:4639 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
+2026-01-30 13:46:39:4639 [32minfo[39m: [32mHealth check available at http://127.0.0.1:4000/health[39m
+2026-01-30 13:46:39:4639 [32minfo[39m: [32mRPC endpoints available at http://127.0.0.1:4000/rpc/*[39m
+2026-01-30 13:46:58:4658 [37mdebug[39m: [37m[HTTP] Health check[39m {"duration":"1ms"}
+2026-01-30 13:46:58:4658 [35mhttp[39m: [35m[HTTP] POST /rpc/startAssessment[39m {"method":"POST","path":"/rpc/startAssessment","userAgent":"curl/8.7.1"}
+2026-01-30 13:46:58:4658 [32minfo[39m: [32mAssessment session started (placeholder)[39m {"sessionId":"session_1769777218149_my4mvk","userId":"test"}
+2026-01-30 13:46:58:4658 [37mdebug[39m: [37m[RPC] startAssessment completed[39m {"procedure":"startAssessment","duration":"3ms"}
+2026-01-30 13:46:58:4658 [35mhttp[39m: [35m[HTTP] POST /rpc/unknownProcedure[39m {"method":"POST","path":"/rpc/unknownProcedure","userAgent":"curl/8.7.1"}
+2026-01-30 13:46:58:4658 [33mwarn[39m: [33m[RPC] Procedure not found: unknownProcedure[39m
+2026-01-30 13:50:02:502 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
+2026-01-30 13:50:02:502 [32minfo[39m: [32mHealth check available at http://127.0.0.1:4000/health[39m
+2026-01-30 13:50:02:502 [32minfo[39m: [32mRPC endpoints available at http://127.0.0.1:4000/rpc/*[39m
+2026-01-30 13:50:11:5011 [37mdebug[39m: [37m[HTTP] Health check[39m {"duration":"1ms"}
+2026-01-30 13:50:11:5011 [35mhttp[39m: [35m[HTTP] POST /rpc/startAssessment[39m {"method":"POST","path":"/rpc/startAssessment","userAgent":"curl/8.7.1"}
+2026-01-30 13:50:11:5011 [32minfo[39m: [32mAssessment session started (placeholder)[39m {"sessionId":"session_1769777411104_r894e8","userId":"test"}
+2026-01-30 13:50:11:5011 [37mdebug[39m: [37m[RPC] startAssessment completed[39m {"procedure":"startAssessment","duration":"3ms"}
+2026-01-30 13:53:11:5311 [32minfo[39m: [32mServer listening on http://127.0.0.1:4000[39m
+2026-01-30 13:53:11:5311 [32minfo[39m: [32mHealth check available at http://127.0.0.1:4000/health[39m
+2026-01-30 13:53:11:5311 [32minfo[39m: [32mRPC endpoints available at http://127.0.0.1:4000/rpc/*[39m
+2026-01-30 13:53:14:5314 [37mdebug[39m: [37m[HTTP] Health check[39m {"duration":"0ms"}
+2026-01-30 13:53:14:5314 [35mhttp[39m: [35m[HTTP] POST /rpc/startAssessment[39m {"method":"POST","path":"/rpc/startAssessment","userAgent":"curl/8.7.1"}
+2026-01-30 13:53:14:5314 [32minfo[39m: [32mAssessment session started (placeholder)[39m {"sessionId":"session_1769777594130_pntxn","userId":"test"}
+2026-01-30 13:53:14:5314 [37mdebug[39m: [37m[RPC] startAssessment completed[39m {"procedure":"startAssessment","duration":"2ms"}
+2026-01-30 14:12:49:1249 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-30 14:12:49:1249 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
+2026-01-30 14:17:26:1726 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-30 14:17:26:1726 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
+2026-01-30 14:17:45:1745 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-30 14:17:45:1745 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
+2026-01-30 14:18:05:185 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-30 14:18:05:185 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
+2026-01-30 14:18:21:1821 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-30 14:18:21:1821 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
+2026-01-30 14:20:18:2018 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-30 14:20:18:2018 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
+2026-01-30 14:21:55:2155 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-30 14:21:55:2155 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
+2026-01-30 14:24:02:242 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-30 14:24:02:242 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
+2026-01-30 14:24:44:2444 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-30 14:24:44:2444 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
