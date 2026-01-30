@@ -46,7 +46,7 @@ development_status:
   1-1-deploy-infrastructure-to-railway: in-progress
   1-2-integrate-better-auth-for-email-password-authentication: ready-for-dev
   1-3-configure-effect-ts-rpc-contracts-and-infrastructure-layer: done
-  1-4-docker-compose-local-development-setup: ready-for-dev
+  1-4-docker-compose-local-development-setup: in-progress
   epic-1-retrospective: optional
 
   # EPIC 2: Assessment Backend Services

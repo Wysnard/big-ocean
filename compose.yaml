@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: bigocean-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-bigocean}
+      POSTGRES_USER: ${POSTGRES_USER:-dev}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dev}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bigocean-network
+
+  # Redis Cache & Rate Limiting
+  redis:
+    image: redis:7-alpine
+    container_name: bigocean-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bigocean-network
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: development
+    container_name: bigocean-backend
+    environment:
+      DATABASE_URL: postgres://dev:devpassword@postgres:5432/bigocean
+      REDIS_URL: redis://redis:6379
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      NODE_ENV: development
+      PORT: 4000
+      HOST: 0.0.0.0
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./apps/api/src:/app/apps/api/src
+      - ./apps/api/logs:/app/apps/api/logs
+      - ./packages:/app/packages
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bigocean-network
+
+  # Frontend Application
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/front/Dockerfile
+      target: development
+    container_name: bigocean-frontend
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://backend:4000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/front/src:/app/apps/front/src
+      - ./packages:/app/packages
+      - /app/node_modules
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - bigocean-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  bigocean-network:
+    driver: bridge
