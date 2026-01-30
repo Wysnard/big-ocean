@@ -10,9 +10,8 @@ import {
 import { Loader2, Send } from "lucide-react";
 
 /**
- * Props for the TherapistChat component
- * @interface TherapistChatProps
- * @property {string} sessionId - Unique identifier for this assessment session
+ * Props for the TherapistChat component.
+ * Requires a unique session identifier to initialize the chat state.
  */
 interface TherapistChatProps {
   sessionId: string;
@@ -44,11 +43,6 @@ const traitLabels: Record<string, string> = {
  * - Loading states and accessibility features
  * - Responsive design for desktop and mobile
  *
- * @component
- * @param {TherapistChatProps} props - Component props
- * @param {string} props.sessionId - The assessment session ID
- * @returns {React.ReactElement} The chat interface
- *
  * @example
  * <TherapistChat sessionId="session_1234567890_abc" />
  */
@@ -69,9 +63,6 @@ export function TherapistChat({ sessionId }: TherapistChatProps) {
   /**
    * Handles sending a user message via the send button or Enter key.
    * Clears the input field after sending.
-   *
-   * @async
-   * @returns {Promise<void>}
    */
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -82,9 +73,6 @@ export function TherapistChat({ sessionId }: TherapistChatProps) {
   /**
    * Handles the "Start Assessment" button click.
    * Initiates the conversation by sending the first user turn.
-   *
-   * @async
-   * @returns {Promise<void>}
    */
   const handleStartAssessment = async () => {
     if (!isLoading) {
@@ -95,8 +83,6 @@ export function TherapistChat({ sessionId }: TherapistChatProps) {
   /**
    * Handles keyboard events in the message input field.
    * Sends message on Enter (without Shift), but Shift+Enter creates new line.
-   *
-   * @param {React.KeyboardEvent} e - The keyboard event
    */
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {

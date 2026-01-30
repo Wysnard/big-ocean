@@ -3,12 +3,7 @@ import { useSendMessage } from './use-assessment'
 
 /**
  * Represents a single message in the chat conversation.
- * @interface Message
- * @property {string} id - Unique identifier for the message
- * @property {'user' | 'assistant'} role - Who sent the message (user or Nerin)
- * @property {string} content - The text content of the message
- * @property {Date} timestamp - When the message was created (client-side timestamp)
- * @property {string} [createdAt] - Server-side timestamp (ISO string, optional for mock data)
+ * Includes both client-side timestamp and optional server-side timestamp for compatibility.
  */
 interface Message {
   id: string
@@ -21,17 +16,8 @@ interface Message {
 /**
  * Trait precision scores for the Big Five personality model.
  * Stores both decimal (0-1) and percentage (0-100) representations for UI convenience.
- * @interface TraitScores
- * @property {number} openness - Decimal openness score (0-1)
- * @property {number} conscientiousness - Decimal conscientiousness score (0-1)
- * @property {number} extraversion - Decimal extraversion score (0-1)
- * @property {number} agreeableness - Decimal agreeableness score (0-1)
- * @property {number} neuroticism - Decimal neuroticism score (0-1)
- * @property {number} opennessPrecision - Percentage openness score (0-100)
- * @property {number} conscientiousnessPrecision - Percentage conscientiousness score (0-100)
- * @property {number} extraversionPrecision - Percentage extraversion score (0-100)
- * @property {number} agreeablenessPrecision - Percentage agreeableness score (0-100)
- * @property {number} neuroticismPrecision - Percentage neuroticism score (0-100)
+ * Decimal values (openness, conscientiousness, etc.) are used for calculations.
+ * Percentage values (opennessPrecision, etc.) are pre-calculated for UI display.
  */
 interface TraitScores {
   openness: number
@@ -50,9 +36,6 @@ interface TraitScores {
  * Generates deterministic mock responses based on user input keywords.
  * Used for demo/mocking before real RPC integration. Responses are semantic
  * and contextual based on keywords detected in user messages.
- *
- * @param {string} userMessage - The user's input message to analyze
- * @returns {string} A contextually relevant mock response from Nerin
  *
  * @example
  * generateMockResponse("I love hiking") // Returns adventure-themed response
@@ -133,14 +116,7 @@ function generateMockResponse(userMessage: string): string {
  *
  * This is a mock implementation for Story 1.5 (frontend mockup). In production (Epic 4+),
  * this will be replaced with real RPC calls via useSendMessage hook.
- *
- * @param {string} sessionId - Unique session identifier for this assessment
- * @returns {Object} Chat state and methods
- * @returns {Message[]} messages - Array of messages in the conversation
- * @returns {TraitScores} traits - Current trait precision scores (both decimal and percentage)
- * @returns {boolean} isLoading - Whether a response is currently being generated
- * @returns {boolean} isCompleted - Whether the assessment is complete
- * @returns {Function} sendMessage - Function to send a user message and get response
+ * Returns an object with messages array, trait scores, loading state, and sendMessage callback.
  *
  * @example
  * const { messages, traits, isLoading, sendMessage } = useTherapistChat('session-123')
@@ -175,10 +151,6 @@ export function useTherapistChat(sessionId: string) {
    * Sends a user message and triggers a mocked assistant response.
    * Optimistically adds the user message, then waits 1-2 seconds before
    * adding the assistant's response. Trait scores update with each exchange.
-   *
-   * @async
-   * @param {string} [userMessage] - The message text to send. If undefined, nothing is sent.
-   * @returns {Promise<void>}
    *
    * @example
    * await sendMessage('What does it mean to be creative?')
