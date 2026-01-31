@@ -3,7 +3,7 @@
 **Story ID:** 7.1
 **Story Key:** 7-1-unit-testing-framework-setup-tdd-pattern
 **Epic:** 7 - Testing & Quality Assurance
-**Status:** review
+**Status:** in-progress
 **Created:** 2026-01-30
 
 ---
@@ -217,7 +217,7 @@ apps/api/src/
 
 ### Status
 
-**review** - Ready for code review
+**in-progress** - Code review completed, addressing findings
 
 ### Implementation Status
 
@@ -271,4 +271,71 @@ apps/api/src/
 
 ---
 
-**Next Step:** Run code review workflow (/bmad-bmm-code-review)
+## Code Review Findings
+
+### Review Status: ISSUES FOUND - Action Items Created
+
+**Critical Issue Discovered:** `pnpm test` from root fails due to pre-existing test failures in other packages (13 tests failing across 3 test suites). Story 7-1's acceptance criteria claim foundation is ready, but full monorepo test suite is broken.
+
+### 🔴 CRITICAL ACTION ITEMS - BLOCKERS
+
+**[AI-Review] CRITICAL: Pre-existing Test Failures Block Full Test Suite**
+- Location: Pre-existing failures in packages/contracts and apps/api
+- Issue: Running `pnpm test` from monorepo root shows 13 test failures (83 total tests, 70 pass)
+  - packages/contracts/src/__tests__/http-contracts.test.ts: 3 failures (DateTimeUtc schema issues)
+  - apps/api/src/__tests__/auth.integration.test.ts: 9 failures (Better Auth integration issues)
+  - apps/front/src/components/TherapistChat.test.tsx: 1 failure (missing @workspace/ui imports)
+- Impact: Story 7-1 only verified domain tests work in isolation, NOT the full monorepo test suite
+- Resolution: Either fix pre-existing failures OR scope Story 7-1 AC to domain package only
+- Recommendation: Create Story 7-2 to fix monorepo test failures, or extend Story 7-1 scope
+
+### 🔴 HIGH ACTION ITEMS
+
+**[AI-Review] HIGH: Coverage Threshold Mismatch (AC vs Implementation)**
+- Story Claim: "coverage report shows domain logic at 100%"
+- Actual: vitest.config.ts sets baseline 80% thresholds for ALL packages (lines, functions, branches, statements)
+- Impact: Domain package not enforcing the 100% coverage target stated in AC
+- File: vitest.config.ts:23-28
+- Fix Required: Either update config to domain-specific 100% OR update story AC to document 80% baseline
+- Action: [ ] Decide on coverage target approach and update vitest.config.ts OR update story AC
+
+### 🟡 MEDIUM ACTION ITEMS
+
+**[AI-Review] MEDIUM: Incomplete Acceptance Criteria Verification**
+- Story Claim: "I can run `pnpm test` for interactive test browser"
+- Actual: Only verified with domain tests in isolation (`pnpm test:run packages/domain/src/__tests__/`)
+- Issue: Full monorepo `pnpm test` command fails due to pre-existing failures
+- Resolution: [ ] Verify and document scope of AC - is it domain-only or full monorepo?
+
+**[AI-Review] MEDIUM: Coverage Report Exclusions Not Documented**
+- File: vitest.config.ts:14-22
+- Issue: Coverage excludes `**/index.ts` (barrel exports) but story doesn't document this caveat
+- Impact: Index files could hide untested domain logic
+- Action: [ ] Add documentation to story explaining coverage exclusions and assumptions
+
+**[AI-Review] MEDIUM: CI Workflow Doesn't Verify Interactive UI**
+- Story Claims: "pnpm test:ui opens interactive browser"
+- Actual: GitHub workflow runs tests and coverage but never validates UI launcher
+- File: .github/workflows/test.yml
+- Risk: UI could be broken and CI would still pass
+- Action: [ ] Document UI testing as manual-only, OR add `pnpm test:ui` validation to CI
+
+### 🟢 LOW ACTION ITEMS
+
+**[AI-Review] LOW: Missing TypeScript Strictness in Test Mocks**
+- File: packages/domain/src/test-utils/index.ts:16
+- Issue: `mockAnthropicResponse()` doesn't enforce type safety for `usage` param
+- Improvement: `usage: { input_tokens: number, output_tokens: number }` instead of generic object
+- Action: [ ] Add proper type annotations to all mock factory parameters
+
+**[AI-Review] LOW: Documentation Gap in TDD Guide**
+- File: docs/testing/tdd-guide.md
+- Issue: Good overall guide, but missing common patterns:
+  - Running only failing tests
+  - Running tests matching a pattern
+  - Debugging individual tests with breakpoints
+- Action: [ ] Enhance TDD guide with advanced test running techniques
+
+---
+
+**Next Step:** Address CRITICAL blocker (pre-existing test failures) before story can be marked done

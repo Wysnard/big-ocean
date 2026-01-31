@@ -89,7 +89,7 @@ development_status:
 
   # EPIC 7: Testing & Quality Assurance
   epic-7: in-progress
-  7-1-unit-testing-framework-setup-tdd-pattern: review
+  7-1-unit-testing-framework-setup-tdd-pattern: in-progress
   7-2-integration-testing-with-real-database: backlog
   7-3-e2e-testing-with-playwright: backlog
   7-4-component-documentation-with-storybook: backlog
