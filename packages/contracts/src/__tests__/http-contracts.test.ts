@@ -20,18 +20,18 @@ describe("Health Check Contracts", () => {
   it("should validate health check response schema", () => {
     const validResponse = {
       status: "ok" as const,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(), // DateTimeUtc expects ISO string
     }
 
     const result = S.decodeUnknownSync(HealthCheckResponseSchema)(validResponse)
     expect(result.status).toBe("ok")
-    expect(result.timestamp).toBeInstanceOf(Date)
+    expect(result.timestamp).toBeDefined() // DateTimeUtc decodes to DateTime.Utc, not Date
   })
 
   it("should reject invalid health check status", () => {
     const invalidResponse = {
       status: "error", // Invalid - only "ok" allowed
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
     }
 
     expect(() =>
@@ -61,17 +61,17 @@ describe("Assessment Contracts", () => {
     it("should validate start assessment response schema", () => {
       const validResponse = {
         sessionId: "session_123",
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
       }
 
       const result = S.decodeUnknownSync(StartAssessmentResponseSchema)(validResponse)
       expect(result.sessionId).toBe("session_123")
-      expect(result.createdAt).toBeInstanceOf(Date)
+      expect(result.createdAt).toBeDefined() // DateTimeUtc decodes to DateTime.Utc
     })
 
     it("should reject start assessment response with missing sessionId", () => {
       const invalidResponse = {
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
       }
 
       expect(() =>
@@ -166,12 +166,12 @@ describe("Assessment Contracts", () => {
           {
             role: "user" as const,
             content: "Hello",
-            timestamp: new Date(),
+            timestamp: new Date().toISOString(),
           },
           {
             role: "assistant" as const,
             content: "Hi there!",
-            timestamp: new Date(),
+            timestamp: new Date().toISOString(),
           },
         ],
         precision: {

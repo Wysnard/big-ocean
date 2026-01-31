@@ -7,6 +7,9 @@ export default defineConfig({
     environment: "node",
     globals: true,
 
+    // Universal setup file (works for both node and jsdom environments)
+    setupFiles: ["./vitest.setup.ts"],
+
     // Coverage
     coverage: {
       provider: "v8",
@@ -41,6 +44,14 @@ export default defineConfig({
 
   resolve: {
     alias: {
+      // Frontend app alias
+      "@": path.resolve(__dirname, "./apps/front/src"),
+      // Specific subpath aliases for package.json exports (Vitest doesn't resolve these automatically)
+      "@workspace/ui/components": path.resolve(__dirname, "./packages/ui/src/components"),
+      "@workspace/ui/lib": path.resolve(__dirname, "./packages/ui/src/lib"),
+      "@workspace/ui/hooks": path.resolve(__dirname, "./packages/ui/src/hooks"),
+      "@workspace/infrastructure/auth-schema": path.resolve(__dirname, "./packages/infrastructure/src/auth-schema"),
+      // General workspace alias
       "@workspace": path.resolve(__dirname, "./packages"),
       "~": path.resolve(__dirname, "./"),
     },
