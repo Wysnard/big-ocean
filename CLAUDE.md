@@ -58,7 +58,7 @@ packages/
 ### Packages
 
 - **domain**: Core domain types and business logic exports
-  - Schemas for users, sessions, personality traits, archetypes
+  - Effect Schema definitions for users, sessions, personality traits, archetypes
   - Error definitions for domain-level errors
   - Branded types for type-safe IDs (userId, sessionId, etc.)
 
@@ -182,6 +182,7 @@ docker compose up
 ```
 
 **Key Features**:
+
 - **Port mapping**: Frontend (3000), Backend (4000), PostgreSQL (5432), Redis (6379)
 - **Hot reload**: Backend (tsx watch), Frontend (Vite HMR)
 - **Volumes**: `./apps/api/src` and `./apps/front/src` mounted for real-time changes
@@ -197,6 +198,7 @@ See [DOCKER.md](./DOCKER.md) for comprehensive Docker development guide.
 Packages use `workspace:*` and `workspace:^` to reference other packages in the monorepo. This ensures they're always in sync with local versions.
 
 **Dependency Graph:**
+
 ```
 apps/front     → contracts, domain, ui, database
 apps/api       → contracts, domain, database, infrastructure
@@ -210,25 +212,29 @@ ui             → (independent component library)
 The `@workspace/domain` package encapsulates core business logic:
 
 **Domain Package Structure:**
+
 ```typescript
 // packages/domain/src/
-├── schemas/          # Zod schemas for types
+├── schemas/          # Effect Schema definitions for domain types
 ├── errors/           # Tagged Error types
 ├── types/            # Branded types (userId, sessionId, etc.)
 └── constants/        # Domain constants (trait names, facets, etc.)
 ```
 
 **Example Domain Export:**
+
 ```typescript
 // packages/domain/src/schemas/index.ts
-export const UserProfileSchema = z.object({
-  id: z.string().brand<"UserId">(),
-  name: z.string(),
+import * as S from "@effect/schema/Schema";
+
+export const UserProfileSchema = S.Struct({
+  id: S.String,
+  name: S.String,
   traits: PersonalityTraitsSchema,
   // ... more fields
 });
 
-export type UserProfile = z.infer<typeof UserProfileSchema>;
+export type UserProfile = S.To<typeof UserProfileSchema>;
 ```
 
 ### Effect/RPC Contracts (Story 1.3 ✅)
@@ -306,7 +312,10 @@ export const AssessmentRpcHandlersLive = AssessmentRpcs.toLayer({
     Effect.gen(function* () {
       const logger = yield* getLogger;
 
-      logger.info("Message received", { sessionId, messageLength: message.length });
+      logger.info("Message received", {
+        sessionId,
+        messageLength: message.length,
+      });
 
       // Placeholder response (real Nerin logic in Epic 2)
       return {
@@ -333,26 +342,23 @@ import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
 // Merge all handler layers
 const HandlersLayer = Layer.mergeAll(
   AssessmentRpcHandlersLive,
-  ProfileRpcHandlersLive
+  ProfileRpcHandlersLive,
 );
 
 // RPC Server with handlers
 const RpcLayer = RpcServer.layer(BigOceanRpcs).pipe(
-  Layer.provide(HandlersLayer)
+  Layer.provide(HandlersLayer),
 );
 
 // HTTP Protocol with NDJSON serialization
 const HttpProtocol = RpcServer.layerProtocolHttp({ path: "/rpc" }).pipe(
-  Layer.provide(RpcSerialization.layerNdjson)
+  Layer.provide(RpcSerialization.layerNdjson),
 );
 
 // HTTP server with health check
 const Main = NodeHttpServer.layer(() => createServer(httpHandler), {
   port: Number(process.env.PORT || 4000),
-}).pipe(
-  Layer.provide(RpcLayer),
-  Layer.provide(HttpProtocol)
-);
+}).pipe(Layer.provide(RpcLayer), Layer.provide(HttpProtocol));
 
 NodeRuntime.runMain(Layer.launch(Main));
 ```
@@ -362,6 +368,7 @@ NodeRuntime.runMain(Layer.launch(Main));
 The backend uses LangGraph to orchestrate multiple specialized agents:
 
 **Agent Architecture:**
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │ Orchestrator (Rules-based routing)                  │
@@ -410,9 +417,10 @@ export function useSession(sessionId: string) {
   // ElectricSQL syncs automatically with PostgreSQL
   const { data } = useQuery({
     queryKey: ["session", sessionId],
-    queryFn: () => electric.db.session.findUnique({
-      where: { id: sessionId }
-    }),
+    queryFn: () =>
+      electric.db.session.findUnique({
+        where: { id: sessionId },
+      }),
   });
 
   return data;
@@ -468,7 +476,7 @@ export const getLogger = Effect.gen(function* () {
 // Helper to execute effect with logger in scope
 export const withLogger = <A, E, R>(
   logger: Logger,
-  effect: Effect.Effect<A, E, R>
+  effect: Effect.Effect<A, E, R>,
 ): Effect.Effect<A, E, R> =>
   Effect.gen(function* () {
     yield* FiberRef.set(LoggerRef, logger);
@@ -493,7 +501,7 @@ const MyHandler = Effect.gen(function* () {
 // In server setup, provide the FiberRef
 const LoggerLayer = Layer.succeed(
   LoggerRef,
-  winstonLogger // instance created elsewhere
+  winstonLogger, // instance created elsewhere
 );
 
 // When running the effect, include the LoggerLayer
@@ -534,11 +542,13 @@ Turbo.json defines task dependencies:
 The API is deployed to Railway with automatic CI/CD:
 
 **Production URLs:**
+
 - **Base**: https://api-production-f7de.up.railway.app
 - **Health Check**: GET `/health` → `{"status":"ok"}`
 - **RPC Endpoint**: POST `/rpc` (NDJSON serialization)
 
 **Deployment Flow:**
+
 1. Push to `master` branch triggers Railway build
 2. Docker image built using `apps/api/Dockerfile`
 3. TypeScript compiled with workspace package resolution
@@ -547,12 +557,14 @@ The API is deployed to Railway with automatic CI/CD:
 6. Automatic restart on failure (10 max retries)
 
 **Environment Variables:**
+
 - `PORT`: 8080 (Railway default)
 - `HOST`: 0.0.0.0
 - `ANTHROPIC_API_KEY`: Set in Railway dashboard
 - Custom vars: `DATABASE_URL`, `REDIS_URL`, etc.
 
 **Docker Best Practices:**
+
 - Multi-stage build (builder + runtime)
 - pnpm workspace resolution with double install for linking
 - tsx for production TypeScript execution (handles workspace imports)
@@ -596,11 +608,13 @@ import { Button } from "@workspace/ui/components/button";
 ## Key Dependencies & Versions
 
 **Frontend Stack:**
+
 - React 19, TanStack Start, TanStack Router 1+, TanStack Query 5+, TanStack Form 1+, TanStack DB 0+
 - ElectricSQL 1.4.1, Tailwind CSS 4+, shadcn/ui
 - Effect (latest) for client-side error handling
 
 **Backend Stack (Story 1.3):**
+
 - Effect 3.19.15 (latest in catalog), @effect/rpc 0.73.0, @effect/schema 0.71.0
 - @effect/platform 0.94.2, @effect/platform-node for Node.js runtime
 - LangChain LangGraph 1.1+, Anthropic SDK 0.71.2
@@ -609,21 +623,24 @@ import { Button } from "@workspace/ui/components/button";
 - Pino 9.6.0 for high-performance logging
 
 **Shared:**
-- Zod 4.2.1 (for domain validation)
+
+- Effect Schema (for domain validation and type safety)
 - TypeScript 5.7.3+, pnpm 10.4.1
 - Node.js >= 20 required
 
 **Catalog Configuration** (`pnpm-workspace.yaml`):
+
 ```yaml
 catalog:
-  effect: "latest"           # Story 1.3: Using latest for compatibility
+  effect: "latest" # Story 1.3: Using latest for compatibility
   "@effect/rpc": "latest"
   "@effect/schema": "latest"
   "@effect/platform": "latest"
   "@effect/platform-node": "latest"
+  "@effect/cluster": "latest"
+  "@effect/experimental": "latest"
   drizzle-orm: "0.45.1"
   "@anthropic-ai/sdk": "0.71.2"
-  zod: "4.2.1"
   pino: "9.6.0"
 ```
 
@@ -647,11 +664,13 @@ catalog:
    ```
 
 **During development:**
+
 - All work happens on the feature branch
 - Commit incrementally as phases complete (e.g., one commit per phase if implementing multi-phase stories)
 - Use conventional commit format: `feat(story-X-Y): Description`
 
 **At story completion:**
+
 - Run `/bmad-bmm-dev-story` with the story code
 - Dev Agent will handle final testing and commit
 - Agent commits with co-author signature:
@@ -660,6 +679,7 @@ catalog:
   ```
 
 **After dev completes:**
+
 1. Run `/bmad-bmm-code-review` on the feature branch in a fresh context
 2. If fixes needed: return to dev branch and fix (new commit)
 3. If approved: request merge to master via Pull Request
@@ -674,6 +694,7 @@ feat/story-{epic-num}-{story-num}-{slug}
 ```
 
 **Examples:**
+
 - `feat/story-1-2-integrate-better-auth`
 - `feat/story-2-1-session-management-persistence`
 - `feat/story-4-2-assessment-conversation-component`
@@ -681,6 +702,7 @@ feat/story-{epic-num}-{story-num}-{slug}
 ### Commit Message Format
 
 **Single-phase stories:**
+
 ```
 feat(story-X-Y): Brief description
 
@@ -690,10 +712,12 @@ Co-Authored-By: Claude <model> <noreply@anthropic.com>
 ```
 
 **Multi-phase stories:**
+
 - One commit per major phase is acceptable
 - Later commits can be: `feat(story-X-Y): Phase N - Description`
 
 Example from Story 1.6 (6 phases in one commit):
+
 ```
 feat(story-1-6): Migrate to Effect/Platform HTTP with Better Auth
 
@@ -716,6 +740,7 @@ Co-Authored-By: Claude <model> <noreply@anthropic.com>
 ### Safety Checks
 
 **Never commit directly to master/main.** CI/CD should enforce this, but manual checks:
+
 ```bash
 # Before creating branch
 git status  # Should show "On branch master" or "On branch main"
@@ -730,6 +755,7 @@ git branch  # Should show * next to your feature branch
 ### Pull Request Process
 
 1. **Push feature branch:**
+
    ```bash
    git push -u origin feat/story-1-X-your-story-name
    ```
