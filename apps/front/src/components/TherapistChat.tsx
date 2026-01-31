@@ -58,7 +58,7 @@ export function TherapistChat({ sessionId }: TherapistChatProps) {
    */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  });
 
   /**
    * Handles sending a user message via the send button or Enter key.

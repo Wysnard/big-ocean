@@ -9,5 +9,20 @@
   "files": {
     "ignoreUnknown": false,
     "includes": ["src/**/*"]
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.gen.ts", "**/*.gen.js"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          },
+          "correctness": {
+            "noUnusedImports": "off"
+          }
+        }
+      }
+    }
+  ]
 }
