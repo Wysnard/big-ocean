@@ -8,6 +8,7 @@
 import { HttpApiBuilder } from "@effect/platform"
 import { DateTime, Effect } from "effect"
 import { BigOceanApi } from "@workspace/contracts"
+import { LoggerService } from "../services/logger.js"
 
 export const AssessmentGroupLive = HttpApiBuilder.group(
   BigOceanApi,
@@ -17,12 +18,14 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
       return handlers
         .handle("start", ({ payload }) =>
           Effect.gen(function* () {
+            const logger = yield* LoggerService
+
             // Generate session ID
             const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`
             const createdAt = DateTime.unsafeMake(Date.now())
 
             // TODO: Store session in database (Epic 2)
-            console.info("Assessment session started", {
+            logger.info("Assessment session started", {
               sessionId,
               userId: payload.userId,
             })
@@ -35,7 +38,9 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
         )
         .handle("sendMessage", ({ payload }) =>
           Effect.gen(function* () {
-            console.info("Message received", {
+            const logger = yield* LoggerService
+
+            logger.info("Message received", {
               sessionId: payload.sessionId,
               messageLength: payload.message.length,
             })
@@ -55,8 +60,13 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
         )
         .handle("getResults", ({ request }) =>
           Effect.gen(function* () {
-            const sessionId = request.url.split("/").slice(-2, -1)[0]
-            console.info("Get results request", { sessionId })
+            const logger = yield* LoggerService
+            // Extract sessionId from URL path
+            const url = new URL(request.url, "http://localhost")
+            const pathParts = url.pathname.split("/")
+            const sessionId = pathParts[pathParts.length - 2] // /:sessionId/results
+
+            logger.info("Get results request", { sessionId })
 
             // TODO: Retrieve results from database (Epic 2)
             return {
@@ -74,8 +84,13 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
         )
         .handle("resumeSession", ({ request }) =>
           Effect.gen(function* () {
-            const sessionId = request.url.split("/").slice(-2, -1)[0]
-            console.info("Resume session request", { sessionId })
+            const logger = yield* LoggerService
+            // Extract sessionId from URL path
+            const url = new URL(request.url, "http://localhost")
+            const pathParts = url.pathname.split("/")
+            const sessionId = pathParts[pathParts.length - 2] // /:sessionId/resume
+
+            logger.info("Resume session request", { sessionId })
 
             // TODO: Load session from database (Epic 2)
             return {

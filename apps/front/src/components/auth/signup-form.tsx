@@ -26,9 +26,9 @@ export function SignupForm() {
       return;
     }
 
-    // Validate password length (Better Auth minimum)
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+    // Validate password length (NIST 2025 standard: 12 chars minimum)
+    if (password.length < 12) {
+      setError("Password must be at least 12 characters");
       return;
     }
 
@@ -98,12 +98,12 @@ export function SignupForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          minLength={8}
+          minLength={12}
           className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="At least 8 characters"
+          placeholder="At least 12 characters"
         />
         <p className="text-xs text-gray-500 mt-1">
-          Minimum 8 characters required
+          Minimum 12 characters required (NIST 2025)
         </p>
       </div>
 
@@ -120,7 +120,7 @@ export function SignupForm() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
-          minLength={8}
+          minLength={12}
           className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Confirm password"
         />

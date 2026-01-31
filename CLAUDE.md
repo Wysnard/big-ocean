@@ -680,9 +680,14 @@ catalog:
 
 **After dev completes:**
 
-1. Run `/bmad-bmm-code-review` on the feature branch in a fresh context
-2. If fixes needed: return to dev branch and fix (new commit)
-3. If approved: request merge to master via Pull Request
+1. **Code Review:** Run `/bmad-bmm-code-review` on the feature branch in a fresh context
+2. **Address Findings:** If issues found, return to dev branch and fix (create new commit)
+3. **Re-review if needed:** If fixes were made, re-run code review to confirm approval
+4. **Create Pull Request:** Once code review is approved, create a PR to merge to master
+   - Push feature branch: `git push -u origin feat/story-{epic}-{num}-{slug}`
+   - Create PR via GitHub/GitLab UI (see Pull Request Process section below)
+   - Link to sprint-status.yaml and story artifact
+5. **Merge to master:** After PR approval and any final checks, merge to master
 
 ### Branch Naming Convention
 
@@ -752,26 +757,107 @@ git branch  # Should show * next to your feature branch
 
 ### Pull Request Process
 
-1. **Push feature branch:**
+**Timing:** Create PR after code review is approved and any fixes are committed.
+
+1. **Push feature branch** (if not already pushed):
 
    ```bash
-   git push -u origin feat/story-1-X-your-story-name
+   git push -u origin feat/story-{epic}-{num}-{slug}
+   # Example: git push -u origin feat/story-1-6-migrate-to-effect-platform-http
    ```
 
-2. **Create PR from GitHub/GitLab UI with template:**
-   - Title: `Story 1.X: Brief Description`
-   - Link to sprint-status.yaml and story artifact
-   - Checklist:
-     - [ ] Passes all linting
-     - [ ] TypeScript compilation successful
-     - [ ] Code review completed
-     - [ ] Related tests pass
-     - [ ] Story artifact updated
+2. **Create PR from GitHub UI:**
 
-3. **Merge strategy:** Squash commits if multiple work commits, or keep linear history if clean commits
+   GitHub will show a prompt to create a PR when you push. Alternatively:
+   - Visit: https://github.com/Wysnard/big-ocean/pull/new/{your-branch-name}
+   - Or: Go to Pull Requests tab → New Pull Request → select your branch
+
+3. **Fill PR details:**
+
+   - **Title:** `Story {epic}.{num}: {Brief Description}`
+     - Example: `Story 1.6: Migrate to Effect/Platform HTTP with Better Auth`
+
+   - **Description template:**
+     ```markdown
+     ## Summary
+     Brief description of what this story accomplishes.
+
+     ## Changes
+     - List of key changes
+     - Reference any related commits or phases
+
+     ## Story Artifact
+     Link to: `_bmad-output/implementation-artifacts/story-{epic}-{num}-*.md`
+
+     ## Checklist
+     - [x] Passes all linting (`pnpm lint`)
+     - [x] TypeScript compilation successful (`pnpm build`)
+     - [x] Code review completed (`/bmad-bmm-code-review`)
+     - [x] Related tests pass
+     - [x] Story artifact updated in sprint-status.yaml
+     ```
+
+4. **Review & Merge:**
+
+   - Wait for any additional review/approval (if required by your team)
+   - Merge strategy:
+     - **Squash & Merge** if multiple work commits (cleaner history)
+     - **Create Merge Commit** if commits are logically separated by phase
+   - Delete feature branch after merging
+
+5. **Verify merge:**
+
+   ```bash
+   git checkout master
+   git pull origin master
+   git log --oneline -5  # Verify your commits are there
+   ```
+
+### Complete Story Workflow Summary
+
+**Every story must follow this complete workflow:**
+
+```
+1. Create Branch
+   git checkout -b feat/story-{epic}-{num}-{slug}
+
+2. Develop
+   /bmad-bmm-dev-story {epic}-{num}
+
+3. Code Review
+   /bmad-bmm-code-review
+
+4. Fix Issues (if any)
+   git add .
+   git commit -m "fix: address code review findings"
+   git push
+
+5. Re-review if Fixes Needed
+   /bmad-bmm-code-review (again if changes were made)
+
+6. Create Pull Request ← MANDATORY
+   git push -u origin feat/story-{epic}-{num}-{slug}
+   Create PR via GitHub UI
+   - Title: Story {epic}.{num}: Description
+   - Link to story artifact
+   - Include checklist
+
+7. Merge to Master
+   After approval, merge PR to master
+   Delete feature branch
+```
+
+**Key Rule:** Story is NOT considered complete until:
+- ✅ Code review passed
+- ✅ All fixes committed
+- ✅ Pull Request created
+- ✅ PR merged to master
+
+**Violation:** Committing directly to master bypasses this protection and is not allowed.
 
 ### Current Branch Status
 
 - **Main branch:** `master`
 - **Active branch:** Check with `git status` / `git branch`
 - **Convention:** Always feature branches for user stories, except hotfixes
+- **PR Required:** Every story must have a PR before merging to master
