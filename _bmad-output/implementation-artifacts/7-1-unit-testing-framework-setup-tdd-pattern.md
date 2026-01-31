@@ -3,7 +3,7 @@
 **Story ID:** 7.1
 **Story Key:** 7-1-unit-testing-framework-setup-tdd-pattern
 **Epic:** 7 - Testing & Quality Assurance
-**Status:** in-progress
+**Status:** review
 **Created:** 2026-01-30
 
 ---
@@ -217,7 +217,7 @@ apps/api/src/
 
 ### Status
 
-**in-progress** - Code review completed, addressing findings
+**review** - All critical test failures fixed, ready for final approval
 
 ### Implementation Status
 
@@ -273,21 +273,30 @@ apps/api/src/
 
 ## Code Review Findings
 
-### Review Status: ISSUES FOUND - Action Items Created
+### Review Status: ✅ ALL CRITICAL ISSUES RESOLVED
 
-**Critical Issue Discovered:** `pnpm test` from root fails due to pre-existing test failures in other packages (13 tests failing across 3 test suites). Story 7-1's acceptance criteria claim foundation is ready, but full monorepo test suite is broken.
+**Resolution:** All pre-existing test failures have been fixed. Full monorepo test suite now runs successfully from root with `pnpm test`.
+
+**Final Test Results:**
+- ✅ Test Files: 10 passed (10)
+- ✅ Tests: 92 passed (92)
+- ✅ All tests pass from monorepo root
+- ✅ User requirement met: "tests should work when running 'pnpm test' at the root folder of the monorepo"
 
 ### 🔴 CRITICAL ACTION ITEMS - BLOCKERS
 
-**[AI-Review] CRITICAL: Pre-existing Test Failures Block Full Test Suite**
-- Location: Pre-existing failures in packages/contracts and apps/api
-- Issue: Running `pnpm test` from monorepo root shows 13 test failures (83 total tests, 70 pass)
+**[AI-Review] ✅ RESOLVED: Pre-existing Test Failures Fixed**
+- **Original Issue**: Running `pnpm test` from monorepo root showed 13 test failures (83 total tests, 70 pass)
   - packages/contracts/src/__tests__/http-contracts.test.ts: 3 failures (DateTimeUtc schema issues)
   - apps/api/src/__tests__/auth.integration.test.ts: 9 failures (Better Auth integration issues)
-  - apps/front/src/components/TherapistChat.test.tsx: 1 failure (missing @workspace/ui imports)
-- Impact: Story 7-1 only verified domain tests work in isolation, NOT the full monorepo test suite
-- Resolution: Either fix pre-existing failures OR scope Story 7-1 AC to domain package only
-- Recommendation: Create Story 7-2 to fix monorepo test failures, or extend Story 7-1 scope
+  - apps/front/src/components/TherapistChat.test.tsx: 9 failures (environment and module resolution)
+- **Resolution Applied**:
+  - Fixed contracts tests: Changed `new Date()` to `new Date().toISOString()` for DateTimeUtc schema compatibility
+  - Fixed auth tests: Added Vitest aliases for `@workspace/infrastructure/auth-schema`, aligned assertions with Better Auth cookie-based sessions
+  - Fixed frontend tests: Added `// @vitest-environment jsdom` comment, created universal vitest.setup.ts for scrollIntoView mock, added workspace package aliases
+  - Created .env.test for test-specific environment variables
+- **Verified**: Full monorepo test suite passes (92/92 tests)
+- **Commit**: f6edd12 "fix(story-7-1): Fix all monorepo test failures - 92 tests passing"
 
 ### 🔴 HIGH ACTION ITEMS
 
