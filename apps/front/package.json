@@ -7,9 +7,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "format": "biome format",
-    "lint": "biome lint",
-    "check": "biome check",
+    "format": "biome format src",
+    "lint": "biome lint src",
+    "check": "biome check src",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -46,7 +46,6 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.4",
     "@tanstack/devtools-vite": "^0.3.11",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.2.0",
