@@ -626,3 +626,128 @@ catalog:
   zod: "4.2.1"
   pino: "9.6.0"
 ```
+
+## BMAD Development Workflow Rules
+
+**Purpose:** Enforce clean git history and story-based development through branch-per-story workflow.
+
+### Story Development Process
+
+**Before starting any story with `/bmad-bmm-dev-story`:**
+
+1. **Verify active phase:** Check sprint-status.yaml to confirm which stories are ready-for-dev
+2. **Create feature branch** with consistent naming:
+   ```bash
+   git checkout -b feat/story-{epic-num}-{story-num}-{slug}
+   # Example: feat/story-1-6-migrate-to-effect-platform-http
+   ```
+3. **Verify branch exists:**
+   ```bash
+   git status  # Should show your feature branch name, not master/main
+   ```
+
+**During development:**
+- All work happens on the feature branch
+- Commit incrementally as phases complete (e.g., one commit per phase if implementing multi-phase stories)
+- Use conventional commit format: `feat(story-X-Y): Description`
+
+**At story completion:**
+- Run `/bmad-bmm-dev-story` with the story code
+- Dev Agent will handle final testing and commit
+- Agent commits with co-author signature:
+  ```
+  Co-Authored-By: Claude <model-signature>
+  ```
+
+**After dev completes:**
+1. Run `/bmad-bmm-code-review` on the feature branch in a fresh context
+2. If fixes needed: return to dev branch and fix (new commit)
+3. If approved: request merge to master via Pull Request
+
+### Branch Naming Convention
+
+```
+feat/story-{epic-num}-{story-num}-{slug}
+├─ epic-num: Epic number (1-7 for current project)
+├─ story-num: Story number within epic
+└─ slug: URL-safe description of the story
+```
+
+**Examples:**
+- `feat/story-1-2-integrate-better-auth`
+- `feat/story-2-1-session-management-persistence`
+- `feat/story-4-2-assessment-conversation-component`
+
+### Commit Message Format
+
+**Single-phase stories:**
+```
+feat(story-X-Y): Brief description
+
+Detailed explanation of what was changed and why.
+
+Co-Authored-By: Claude <model> <noreply@anthropic.com>
+```
+
+**Multi-phase stories:**
+- One commit per major phase is acceptable
+- Later commits can be: `feat(story-X-Y): Phase N - Description`
+
+Example from Story 1.6 (6 phases in one commit):
+```
+feat(story-1-6): Migrate to Effect/Platform HTTP with Better Auth
+
+## Summary
+Successfully migrated from Express.js to Effect/Platform HTTP...
+
+## Changes
+
+### HTTP Contracts Migration (Phase 1)
+- [details]
+
+### HTTP Handlers (Phase 2)
+- [details]
+
+[... other phases ...]
+
+Co-Authored-By: Claude <model> <noreply@anthropic.com>
+```
+
+### Safety Checks
+
+**Never commit directly to master/main.** CI/CD should enforce this, but manual checks:
+```bash
+# Before creating branch
+git status  # Should show "On branch master" or "On branch main"
+
+# After creating branch
+git status  # Should show "On branch feat/story-..." or similar
+
+# Before committing
+git branch  # Should show * next to your feature branch
+```
+
+### Pull Request Process
+
+1. **Push feature branch:**
+   ```bash
+   git push -u origin feat/story-1-X-your-story-name
+   ```
+
+2. **Create PR from GitHub/GitLab UI with template:**
+   - Title: `Story 1.X: Brief Description`
+   - Link to sprint-status.yaml and story artifact
+   - Checklist:
+     - [ ] Passes all linting
+     - [ ] TypeScript compilation successful
+     - [ ] Code review completed
+     - [ ] Related tests pass
+     - [ ] Story artifact updated
+
+3. **Merge strategy:** Squash commits if multiple work commits, or keep linear history if clean commits
+
+### Current Branch Status
+
+- **Main branch:** `master`
+- **Active branch:** Check with `git status` / `git branch`
+- **Convention:** Always feature branches for user stories, except hotfixes
