@@ -126,7 +126,7 @@ const logStartup = Effect.gen(function* () {
   logger.info("  - GET  /api/auth/get-session")
   logger.info("")
   logger.info("✓ Effect/Platform routes (Effect layer):")
-  logger.info("  - GET  /api/health")
+  logger.info("  - GET  /health")
   logger.info("  - POST /api/assessment/start")
   logger.info("  - POST /api/assessment/message")
   logger.info("  - GET  /api/assessment/:sessionId/resume")
