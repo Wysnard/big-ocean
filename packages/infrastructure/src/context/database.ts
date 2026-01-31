@@ -8,14 +8,10 @@
  *
  * Key principle: "Layers act as constructors for creating services,
  * allowing us to manage dependencies during construction rather than at the service level."
- *
- * IMPLEMENTATION NOTE:
- * Using drizzle-orm/node-postgres with @effect/sql-pg since drizzle-orm/effect-postgres
- * is only available in beta versions. We access the underlying pg.Pool from PgClient.
  */
 
 import { Context, Layer, Effect, Redacted } from "effect";
-import { drizzle } from "drizzle-orm/node-postgres";
+import { drizzle } from "drizzle-orm/effect-postgres";
 import { PgClient } from "@effect/sql-pg";
 import { SqlClient, SqlError } from "@effect/sql";
 import { types } from "pg";
@@ -76,14 +72,10 @@ export const DatabaseLive = Layer.effect(
   Database,
   Effect.gen(function* () {
     // Dependency: PgClient resolved during layer construction
-    const sqlClient = yield* PgClient.PgClient;
+    const client = yield* PgClient.PgClient;
 
-    // Access the underlying pg.Pool from @effect/sql-pg
-    // @ts-expect-error - Accessing internal pool property
-    const pool = sqlClient.pool;
-
-    // Create Drizzle instance with node-postgres driver using the Effect-managed pool
-    const db = drizzle(pool, {
+    // Create Drizzle instance with Effect Postgres driver
+    const db = drizzle(client, {
       schema: authSchema,
       logger: process.env.NODE_ENV === "development",
     });
