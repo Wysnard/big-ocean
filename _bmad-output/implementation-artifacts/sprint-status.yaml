@@ -53,6 +53,7 @@ development_status:
 
   # EPIC 2: Assessment Backend Services
   epic-2: in-progress
+  2-0-linter-unification-and-frontend-fixes: ready-for-dev
   2-1-session-management-and-persistence: ready-for-dev
   2-2-nerin-agent-setup-and-conversational-quality: backlog
   2-3-analyzer-and-scorer-agent-implementation: backlog
