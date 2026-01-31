@@ -5,17 +5,17 @@
  * Pattern from: Effect official service documentation
  */
 
-import { Context, Effect, Layer } from "effect"
+import { Context, Layer } from "effect"
 import pino from "pino"
 
 /**
  * Logger Service Interface
  */
 export interface Logger {
-  info(message: string, context?: Record<string, any>): void
-  error(message: string, context?: Record<string, any>): void
-  warn(message: string, context?: Record<string, any>): void
-  debug(message: string, context?: Record<string, any>): void
+  info(message: string, context?: Record<string, unknown>): void
+  error(message: string, context?: Record<string, unknown>): void
+  warn(message: string, context?: Record<string, unknown>): void
+  debug(message: string, context?: Record<string, unknown>): void
 }
 
 /**
@@ -46,16 +46,16 @@ const createPinoLogger = (): Logger => {
   })
 
   return {
-    info: (message: string, context?: Record<string, any>) => {
+    info: (message: string, context?: Record<string, unknown>) => {
       logger.info(context || {}, message)
     },
-    error: (message: string, context?: Record<string, any>) => {
+    error: (message: string, context?: Record<string, unknown>) => {
       logger.error(context || {}, message)
     },
-    warn: (message: string, context?: Record<string, any>) => {
+    warn: (message: string, context?: Record<string, unknown>) => {
       logger.warn(context || {}, message)
     },
-    debug: (message: string, context?: Record<string, any>) => {
+    debug: (message: string, context?: Record<string, unknown>) => {
       logger.debug(context || {}, message)
     },
   }

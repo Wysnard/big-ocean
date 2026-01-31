@@ -88,8 +88,9 @@ const createCustomServer = (): Server => {
           error: "Service initializing"
         }))
       }
-    } catch (error: any) {
-      console.error("Server error:", error.message)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error("Server error:", errorMessage)
       if (!res.headersSent) {
         res.statusCode = 500
         res.setHeader("Content-Type", "application/json")

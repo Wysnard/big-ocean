@@ -7,9 +7,7 @@
   "exports": {
     "./biome": "./biome.json"
   },
-  "devDependencies": {
-    "@biomejs/biome": "^2.2.4"
-  },
+  "devDependencies": {},
   "scripts": {
     "lint": "biome lint .",
     "format": "biome format ."

@@ -77,7 +77,9 @@ describe('Docker Compose Integration Tests', () => {
       const response = await new Promise<string>((resolve, reject) => {
         const req = http.request(options, (res) => {
           let data = '';
-          res.on('data', chunk => (data += chunk));
+          res.on('data', (chunk) => {
+            data += chunk;
+          });
           res.on('end', () => resolve(data));
         });
         req.on('error', reject);
