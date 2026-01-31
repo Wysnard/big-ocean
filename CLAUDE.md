@@ -45,15 +45,17 @@ packages/
 
 - **api** (`port 4000` dev, Railway prod): Node.js backend featuring:
   - Effect-ts 3.19+ for functional programming and error handling
-  - @effect/rpc 0.73+ for type-safe RPC contracts
+  - @effect/platform 0.94+ for HTTP server and API contracts
+  - @effect/platform-node for Node.js HTTP runtime
   - @effect/schema 0.71+ for runtime validation and serialization
   - @langchain/langgraph 1+ for multi-agent orchestration
   - @anthropic-ai/sdk 0.71+ for Claude API integration
   - Drizzle ORM 0.45+ for type-safe database queries
   - PostgreSQL as primary database
-  - **Story 1.3 Complete**: Fully deployed to Railway at https://api-production-f7de.up.railway.app
-  - Health check: GET `/health` → `{"status":"ok"}`
-  - RPC endpoint: POST `/rpc` with NDJSON serialization
+  - Better Auth for authentication (integrated at node:http layer)
+  - **Story 1.6 Complete**: Migrated to Effect/Platform HTTP with Better Auth
+  - Health check: GET `/health` → `{"status":"ok","timestamp":"..."}`
+  - HTTP API: All routes under `/api/*` (except `/health`)
 
 ### Packages
 
@@ -62,11 +64,12 @@ packages/
   - Error definitions for domain-level errors
   - Branded types for type-safe IDs (userId, sessionId, etc.)
 
-- **contracts**: Effect/RPC contract definitions using @effect/rpc and @effect/schema
-  - Assessment RPC group (startAssessment, sendMessage, resumeSession, getResults)
-  - Profile RPC group (getProfile, compareProfiles, findSimilar)
-  - Streaming contract support for real-time responses from Nerin agent
-  - Shared middleware tags for cross-protocol concerns
+- **contracts**: Effect/Platform HTTP contract definitions using @effect/platform and @effect/schema
+  - HTTP API Groups: AssessmentGroup, HealthGroup, ProfileGroup (future)
+  - Type-safe request/response schemas with Effect Schema validation
+  - BigOceanApi composition class with route grouping and prefixing
+  - Exported TypeScript types for frontend consumption
+  - Pattern: HttpApiGroup.make() → HttpApiEndpoint → HttpApiBuilder handlers
 
 - **database**: Drizzle ORM schema and utilities
   - Tables: users, sessions, messages, trait_assessments, etc.
@@ -237,130 +240,176 @@ export const UserProfileSchema = S.Struct({
 export type UserProfile = S.To<typeof UserProfileSchema>;
 ```
 
-### Effect/RPC Contracts (Story 1.3 ✅)
+### Effect/Platform HTTP Contracts (Story 1.6 ✅)
 
-The `@workspace/contracts` package defines type-safe RPC contracts using @effect/rpc and @effect/schema following the official effect-worker-mono pattern.
+The `@workspace/contracts` package defines type-safe HTTP API contracts using @effect/platform and @effect/schema following the official effect-worker-mono pattern.
 
-**Contract Structure** (in `packages/contracts/src/assessment.ts`):
+**HTTP Contract Structure** (in `packages/contracts/src/http/groups/assessment.ts`):
 
 ```typescript
-import * as S from "@effect/schema/Schema";
-import * as Rpc from "@effect/rpc/Rpc";
+import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform"
+import { Schema as S } from "effect"
 
-// Individual response schemas
+// Request/Response schemas
+export const StartAssessmentRequestSchema = S.Struct({
+  userId: S.optional(S.String),
+})
+
 export const StartAssessmentResponseSchema = S.Struct({
   sessionId: S.String,
-  createdAt: S.String,
-});
+  createdAt: S.DateTimeUtc,
+})
 
-// Individual RPC procedures
-export const StartAssessmentRpc = Rpc.make({
-  input: S.Struct({ userId: S.optional(S.String) }),
-  output: StartAssessmentResponseSchema,
-  failure: SessionError,
-});
+export const SendMessageRequestSchema = S.Struct({
+  sessionId: S.String,
+  message: S.String,
+})
 
-export const SendMessageRpc = Rpc.make({
-  input: S.Struct({
-    sessionId: S.String,
-    message: S.String,
+export const SendMessageResponseSchema = S.Struct({
+  response: S.String,
+  precision: S.Struct({
+    openness: S.Number,
+    conscientiousness: S.Number,
+    extraversion: S.Number,
+    agreeableness: S.Number,
+    neuroticism: S.Number,
   }),
-  output: S.Struct({
-    response: S.String,
-    precision: S.Struct({
-      openness: S.Number,
-      conscientiousness: S.Number,
-      // ... other traits
-    }),
-  }),
-  failure: SessionError,
-});
+})
 
-// RpcGroup combines procedures
-export const AssessmentRpcs = Rpc.group({
-  StartAssessment: StartAssessmentRpc,
-  SendMessage: SendMessageRpc,
-  // ... other procedures
-});
+// HTTP API Group combines endpoints
+export const AssessmentGroup = HttpApiGroup.make("assessment")
+  .add(
+    HttpApiEndpoint.post("start", "/start")
+      .addSuccess(StartAssessmentResponseSchema)
+      .setPayload(StartAssessmentRequestSchema)
+  )
+  .add(
+    HttpApiEndpoint.post("sendMessage", "/message")
+      .addSuccess(SendMessageResponseSchema)
+      .setPayload(SendMessageRequestSchema)
+  )
+  .prefix("/assessment")
 ```
 
 **Handler Implementation** (in `apps/api/src/handlers/assessment.ts`):
 
 ```typescript
-import { Effect, Layer } from "effect";
-import { AssessmentRpcs } from "@workspace/contracts";
-import { getLogger } from "@workspace/infrastructure";
+import { HttpApiBuilder } from "@effect/platform"
+import { DateTime, Effect } from "effect"
+import { BigOceanApi } from "@workspace/contracts"
+import { LoggerService } from "../services/logger.js"
 
-// Handlers exported as Layers following official pattern
-export const AssessmentRpcHandlersLive = AssessmentRpcs.toLayer({
-  StartAssessment: ({ userId }) =>
+// Handlers use HttpApiBuilder.group pattern
+export const AssessmentGroupLive = HttpApiBuilder.group(
+  BigOceanApi,
+  "assessment",
+  (handlers) =>
     Effect.gen(function* () {
-      const logger = yield* getLogger;
+      return handlers
+        .handle("start", ({ payload }) =>
+          Effect.gen(function* () {
+            const logger = yield* LoggerService
 
-      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-      const createdAt = new Date();
+            const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`
+            const createdAt = DateTime.unsafeMake(Date.now())
 
-      logger.info("Assessment session started", { sessionId, userId });
+            logger.info("Assessment session started", {
+              sessionId,
+              userId: payload.userId,
+            })
 
-      return {
-        sessionId,
-        createdAt: createdAt.toISOString(),
-      };
-    }),
+            return { sessionId, createdAt }
+          })
+        )
+        .handle("sendMessage", ({ payload }) =>
+          Effect.gen(function* () {
+            const logger = yield* LoggerService
 
-  SendMessage: ({ sessionId, message }) =>
-    Effect.gen(function* () {
-      const logger = yield* getLogger;
+            logger.info("Message received", {
+              sessionId: payload.sessionId,
+              messageLength: payload.message.length,
+            })
 
-      logger.info("Message received", {
-        sessionId,
-        messageLength: message.length,
-      });
-
-      // Placeholder response (real Nerin logic in Epic 2)
-      return {
-        response: "Thank you for sharing that...",
-        precision: {
-          openness: 0.5,
-          conscientiousness: 0.4,
-          extraversion: 0.6,
-          agreeableness: 0.7,
-          neuroticism: 0.3,
-        },
-      };
-    }),
-});
+            // Placeholder response (real Nerin logic in Epic 2)
+            return {
+              response: "Thank you for sharing that...",
+              precision: {
+                openness: 0.5,
+                conscientiousness: 0.4,
+                extraversion: 0.6,
+                agreeableness: 0.7,
+                neuroticism: 0.3,
+              },
+            }
+          })
+        )
+    })
+)
 ```
 
 **Server Setup** (in `apps/api/src/index.ts`):
 
 ```typescript
-import { Layer } from "effect";
-import { RpcServer, RpcSerialization } from "@effect/rpc";
-import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
+import { Effect, Layer } from "effect"
+import { HttpApiBuilder, HttpMiddleware } from "@effect/platform"
+import { NodeHttpServer, NodeRuntime } from "@effect/platform-node"
+import { createServer } from "node:http"
+import { BigOceanApi } from "@workspace/contracts"
+import { HealthGroupLive } from "./handlers/health.js"
+import { AssessmentGroupLive } from "./handlers/assessment.js"
+import { LoggerServiceLive } from "./services/logger.js"
+import { betterAuthHandler } from "./middleware/better-auth.js"
 
-// Merge all handler layers
-const HandlersLayer = Layer.mergeAll(
-  AssessmentRpcHandlersLive,
-  ProfileRpcHandlersLive,
-);
+// Merge all handler groups with services
+const HttpGroupsLive = Layer.mergeAll(
+  HealthGroupLive,
+  AssessmentGroupLive,
+  LoggerServiceLive
+)
 
-// RPC Server with handlers
-const RpcLayer = RpcServer.layer(BigOceanRpcs).pipe(
-  Layer.provide(HandlersLayer),
-);
+// Build API from contracts with handlers
+const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(
+  Layer.provide(HttpGroupsLive)
+)
 
-// HTTP Protocol with NDJSON serialization
-const HttpProtocol = RpcServer.layerProtocolHttp({ path: "/rpc" }).pipe(
-  Layer.provide(RpcSerialization.layerNdjson),
-);
+// Complete API with router and middleware
+const ApiLayer = Layer.mergeAll(
+  ApiLive,
+  HttpApiBuilder.Router.Live,
+  HttpApiBuilder.Middleware.layer
+)
 
-// HTTP server with health check
-const Main = NodeHttpServer.layer(() => createServer(httpHandler), {
-  port: Number(process.env.PORT || 4000),
-}).pipe(Layer.provide(RpcLayer), Layer.provide(HttpProtocol));
+// Hybrid server: Better Auth (node:http) → Effect (remaining routes)
+const createCustomServer = () => {
+  const server = createServer()
+  let effectHandler: any = null
 
-NodeRuntime.runMain(Layer.launch(Main));
+  server.on("newListener", (event, listener) => {
+    if (event === "request") {
+      effectHandler = listener
+      server.removeListener("request", listener as any)
+    }
+  })
+
+  server.on("request", async (req, res) => {
+    await betterAuthHandler(req, res)
+    if (!res.writableEnded && effectHandler) {
+      effectHandler(req, res)
+    }
+  })
+
+  return server
+}
+
+// HTTP Server with Better Auth integration
+const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
+  Layer.provide(ApiLayer),
+  Layer.provide(NodeHttpServer.layer(createCustomServer, { port: 4000 })),
+  Layer.provide(LoggerServiceLive)
+)
+
+// Launch server
+NodeRuntime.runMain(Layer.launch(HttpLive))
 ```
 
 ### Multi-Agent System (LangGraph)

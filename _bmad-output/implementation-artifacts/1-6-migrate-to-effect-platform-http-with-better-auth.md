@@ -1,6 +1,6 @@
 # Story 1.6: Migrate to Effect/Platform HTTP with Better Auth Integration
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -812,3 +812,86 @@ _To be filled by dev agent after implementation_
 - HTTP contracts are more standard than RPC for REST APIs
 - Better Auth integration is cleaner with direct node:http adapter
 - Official Better Auth pattern improves maintainability and aligns with library best practices
+
+---
+
+## Dev Agent Record
+
+**Agent Model**: Claude Sonnet 4.5 (claude-sonnet-4-5-20250929)
+
+**Completion Date**: 2026-01-31
+
+**Implementation Summary**:
+
+Successfully migrated from Express.js to Effect/Platform HTTP with Better Auth integration. Key achievements:
+
+1. **HTTP Contracts Created** (packages/contracts/src/http/):
+   - `groups/health.ts` - Health check endpoint with `S.Literal("ok")` status
+   - `groups/assessment.ts` - Assessment endpoints (start, sendMessage, getResults, resumeSession)
+   - `api.ts` - BigOceanApi composition with route prefixing
+
+2. **HTTP Handlers Implemented** (apps/api/src/handlers/):
+   - `health.ts` - Health check handler using HttpApiBuilder.group pattern
+   - `assessment.ts` - Assessment handlers with Effect.gen() syntax and LoggerService
+
+3. **Server Architecture**:
+   - Hybrid node:http server with Better Auth integration
+   - Better Auth handles `/api/auth/*` routes at http layer
+   - Effect/Platform handles remaining routes with HttpApiBuilder
+   - Custom server factory intercepts requests for authentication first
+
+4. **Services Layer**:
+   - Created `LoggerService` using Effect Context pattern
+   - Replaced FiberRef with Service pattern for cleaner DI
+   - Winston logger wrapped in Effect Layer
+
+5. **Testing**:
+   - Created HTTP contracts unit tests (`packages/contracts/src/__tests__/http-contracts.test.ts`)
+   - Created Better Auth adapter stub tests (`apps/api/src/__tests__/better-auth-adapter.test.ts`)
+   - All schema validation tests pass
+
+6. **Documentation**:
+   - Updated CLAUDE.md with Effect/Platform HTTP patterns
+   - Removed all RPC references and replaced with HTTP examples
+   - Added hybrid server architecture documentation
+
+**Files Modified**:
+- `packages/contracts/src/http/groups/health.ts` (created)
+- `packages/contracts/src/http/groups/assessment.ts` (created)
+- `packages/contracts/src/http/api.ts` (created)
+- `packages/contracts/src/index.ts` (updated exports)
+- `apps/api/src/handlers/health.ts` (created)
+- `apps/api/src/handlers/assessment.ts` (created)
+- `apps/api/src/services/logger.ts` (created)
+- `apps/api/src/index.ts` (migrated to Effect/Platform HTTP)
+- `apps/api/src/setup.ts` (updated)
+- `CLAUDE.md` (updated Effect/Platform HTTP documentation)
+- `packages/contracts/src/__tests__/http-contracts.test.ts` (created)
+- `apps/api/src/__tests__/better-auth-adapter.test.ts` (created)
+
+**Dependencies Updated**:
+- Added `@effect/platform@latest` and `@effect/platform-node@latest`
+- Maintained Better Auth from Story 1.2
+- Updated catalog to use `effect: "latest"` for compatibility
+
+**Known Issues / Future Work**:
+- Better Auth adapter tests are stubs (marked with TODOs)
+- Should export `incomingMessageToRequest` function from better-auth.ts for testability
+- Consider adding JSDoc comments to betterAuthHandler function
+- Integration tests with real Better Auth handler would improve coverage
+
+**Code Review Findings Addressed**:
+- ✅ Created HTTP contracts structure in packages/contracts/src/http/
+- ✅ Exported BigOceanApi from contracts index.ts
+- ✅ Created unit tests for HTTP contract schemas
+- ✅ Updated CLAUDE.md with Effect/Platform HTTP architecture
+- ✅ Updated story file status to "done"
+- ✅ Added Dev Agent Record
+
+**Verification**:
+- Server starts successfully on port 4000
+- Health check endpoint responds: GET `/health` → `{"status":"ok","timestamp":"..."}`
+- Better Auth routes functional: POST `/api/auth/sign-up/email`, `/api/auth/sign-in/email`
+- Assessment routes available: POST `/api/assessment/start`, `/api/assessment/message`
+- TypeScript compilation successful with `pnpm build`
+- Linting passes with `pnpm lint`
