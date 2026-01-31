@@ -42,6 +42,7 @@ export function UserMenu() {
       </div>
 
       <button
+        type="button"
         onClick={() => signOut()}
         className="px-3 py-1 text-sm font-medium text-gray-700 border border-gray-300 rounded hover:bg-gray-50"
       >

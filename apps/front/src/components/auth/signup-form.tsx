@@ -38,11 +38,12 @@ export function SignupForm() {
       await signUp.email(email, password, name);
       // Redirect or update UI on success
       window.location.href = "/dashboard";
-    } catch (err: any) {
-      if (err.message?.includes("already exists")) {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (errorMessage.includes("already exists")) {
         setError("An account with this email already exists");
       } else {
-        setError(err.message || "Sign up failed. Please try again.");
+        setError(errorMessage || "Sign up failed. Please try again.");
       }
     } finally {
       setIsLoading(false);
