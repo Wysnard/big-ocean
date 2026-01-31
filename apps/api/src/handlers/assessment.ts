@@ -58,7 +58,7 @@ export const AssessmentRpcHandlersLive = AssessmentRpcs.toLayer({
 
       // Select response based on message length (deterministic)
       const responseIndex = (message.length + sessionId.length) % mockResponses.length;
-      const selectedResponse = mockResponses[responseIndex] ?? mockResponses[0];
+      const selectedResponse = mockResponses[responseIndex]!; // non-null assertion: index is always valid
 
       // Mock precision scores - increment towards 1.0
       const baseScore = 0.4;
@@ -73,7 +73,7 @@ export const AssessmentRpcHandlersLive = AssessmentRpcs.toLayer({
           agreeableness: Math.min(baseScore + increment * 2.2, 1),
           neuroticism: Math.min(baseScore + increment * 0.5, 1),
         },
-      } as const;
+      };
     }),
 
   /**

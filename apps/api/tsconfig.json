@@ -9,6 +9,7 @@
     "types": ["node"]
   },
   "include": ["src/**/*"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts", "src/__tests__/**/*"],
   "ts-node": {
     "compilerOptions": {
       "allowImportingTsExtensions": true,

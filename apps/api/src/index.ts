@@ -69,7 +69,7 @@ logger.info(`RPC endpoint available at /rpc`);
 logger.info(`Health endpoint available at /health`);
 
 // Launch the server
-NodeRuntime.runMain(Layer.launch(Main));
+Layer.launch(Main).pipe(NodeRuntime.runMain);
 
 // Error handlers
 process.on("unhandledRejection", (reason) => {
