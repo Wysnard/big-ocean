@@ -1000,7 +1000,7 @@ Based on [NIST 2025 Guidelines](https://www.strongdm.com/blog/nist-password-guid
 
 - **Minimum Length:** 12 characters (recommended over 8-character minimum)
 - **Character Composition:** All ASCII + Unicode allowed (no forced uppercase/numbers/symbols)
-- **Compromised Credential Screening:** Check against [HaveIBeenPwned](https://haveibeenpwned.com/) or similar service
+- **Compromised Credential Screening:** *Optional post-MVP enhancement* (intentionally excluded from MVP to reduce external dependencies and improve signup reliability)
 - **No Mandatory Expiration:** Only reset on confirmed breach
 - **Password Manager Support:** Full compatibility with long, random passwords
 
@@ -1036,21 +1036,8 @@ export const auth = betterAuth({
   },
 });
 
-// Hook: Screen against compromised credentials (NIST requirement)
-auth.onBeforeSignUp(async (context) => {
-  const password = context.body.password;
-
-  // Check HaveIBeenPwned API
-  const isCompromised = await checkCompromisedPassword(password);
-
-  if (isCompromised) {
-    throw new Error(
-      "This password has appeared in data breaches. Please choose another."
-    );
-  }
-
-  return context;
-});
+// Note: Compromised credential screening (HaveIBeenPwned) intentionally excluded
+// for MVP to reduce external dependencies. Can be added as post-MVP enhancement.
 
 // Hook: Link anonymous session to user account on sign-up
 auth.onAfterSignUp(async (context) => {

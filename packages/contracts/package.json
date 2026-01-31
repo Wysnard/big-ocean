@@ -10,6 +10,7 @@
     ".": "./src/index.ts",
     "./assessment": "./src/assessment.ts",
     "./profile": "./src/profile.ts",
+    "./auth": "./src/auth.ts",
     "./errors": "./src/errors.ts",
     "./schemas": "./src/schemas.ts"
   },

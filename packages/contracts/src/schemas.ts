@@ -58,8 +58,32 @@ export const TraitSummarySchema = S.Struct({
   neuroticism: S.Union(S.Literal("Low"), S.Literal("Mid"), S.Literal("High")),
 });
 
+/**
+ * User schema for authentication
+ */
+export const UserSchema = S.Struct({
+  id: S.String,
+  email: S.String,
+  name: S.optional(S.String),
+  createdAt: S.Date,
+  updatedAt: S.Date,
+});
+
+/**
+ * Session schema for authentication
+ */
+export const SessionSchema = S.Struct({
+  id: S.String,
+  userId: S.String,
+  token: S.String,
+  expiresAt: S.Date,
+  createdAt: S.Date,
+});
+
 // Type exports
 export type Message = S.Schema.Type<typeof MessageSchema>;
 export type TraitPrecision = S.Schema.Type<typeof TraitPrecisionSchema>;
 export type TraitScores = S.Schema.Type<typeof TraitScoresSchema>;
 export type TraitSummary = S.Schema.Type<typeof TraitSummarySchema>;
+export type User = S.Schema.Type<typeof UserSchema>;
+export type Session = S.Schema.Type<typeof SessionSchema>;
