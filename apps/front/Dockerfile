@@ -8,6 +8,7 @@ RUN npm install -g pnpm@10.4.1
 # Copy package files for dependency installation
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/database/package.json ./packages/database/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/lint/package.json ./packages/lint/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
@@ -33,6 +34,7 @@ RUN npm install -g pnpm@10.4.1
 # Copy package files
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/database/package.json ./packages/database/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/lint/package.json ./packages/lint/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
@@ -64,6 +66,7 @@ RUN npm install -g pnpm@10.4.1
 # Copy package files for dependency installation
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/database/package.json ./packages/database/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/lint/package.json ./packages/lint/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
@@ -83,14 +86,27 @@ RUN pnpm --filter=front run build
 FROM node:20-alpine
 WORKDIR /app
 
-# Copy built output from Nitro build
-COPY --from=production /app/apps/front/.output /app/.output
+# Install Node.js dependencies needed at runtime
+RUN npm install -g pnpm@10.4.1
 
-# Expose port (TanStack Start/Nitro default is 3000)
-EXPOSE 3000
+# Copy package files for dependency resolution
+COPY --from=production /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
+COPY --from=production /app/packages ./packages
+COPY --from=production /app/apps/front/package.json ./apps/front/
 
-# Set NODE_ENV
+# Install production dependencies
+RUN pnpm install --frozen-lockfile --prod
+
+# Copy built Nitro output
+COPY --from=production /app/apps/front/.output ./.output
+
+# Expose Railway's default port
+EXPOSE 8080
+
+# Set environment variables
 ENV NODE_ENV=production
+ENV PORT=8080
+ENV HOST=0.0.0.0
 
 # Start the Nitro server
 CMD ["node", ".output/server/index.mjs"]

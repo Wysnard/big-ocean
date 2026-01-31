@@ -83,15 +83,19 @@ COPY --from=builder /app/apps/api/src ./apps/api/src
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/packages ./packages
 
-# Expose port
-EXPOSE 4000
+# Set NODE_ENV to production
+ENV NODE_ENV=production
+
+# Expose Railway's default port (but app reads from PORT env var)
+EXPOSE 8080
 
 # Install tsx for running TypeScript in production (temporary until contracts package is built)
 RUN npm install -g tsx
 
-# Health check
+# Health check using wget (more reliable than inline Node.js)
+RUN apk add --no-cache wget
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:4000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+  CMD wget --quiet --tries=1 --spider http://localhost:${PORT:-8080}/health || exit 1
 
 # Start backend using tsx (handles TypeScript imports from workspace packages)
 CMD ["tsx", "apps/api/src/index.ts"]
