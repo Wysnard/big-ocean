@@ -1,42 +1,41 @@
 /**
- * Cost Guard FiberRef Bridge
+ * Cost Guard Service
  *
- * Provides request-scoped cost tracking and rate limiting.
- * This is a placeholder for Story 1.3 - real implementation in Epic 2.
+ * Provides cost tracking and rate limiting for LLM operations.
+ * Uses Context.Tag pattern for Effect-based dependency injection.
+ * This is a placeholder implementation - full implementation in Story 2.5.
  */
 
-import { FiberRef, Effect } from "effect";
+import { Context, Effect, Layer } from "effect";
 
 /**
- * Cost Guard interface for tracking LLM costs and rate limits
+ * Cost Guard Service Interface
  */
-export interface CostGuard {
-  checkDailyLimit(userId: string): Promise<boolean>;
-  trackCost(userId: string, cost: number): Promise<void>;
-  getDailySpend(userId: string): Promise<number>;
+export interface CostGuardShape {
+  readonly checkDailyLimit: (userId: string) => Effect.Effect<boolean>;
+  readonly trackCost: (userId: string, cost: number) => Effect.Effect<void>;
+  readonly getDailySpend: (userId: string) => Effect.Effect<number>;
 }
 
 /**
- * FiberRef for request-scoped cost guard
+ * Cost Guard Service Tag
+ *
+ * Using Context.Tag for proper Effect dependency injection.
+ * Service interface has NO requirements - dependencies managed during layer construction.
  */
-export const CostGuardRef = FiberRef.unsafeMake<CostGuard>(null as any);
+export class CostGuardService extends Context.Tag("CostGuardService")<
+  CostGuardService,
+  CostGuardShape
+>() {}
 
 /**
- * Get the cost guard from the current fiber context
+ * Cost Guard Service Layer (Placeholder Implementation)
+ *
+ * Returns a no-op implementation for now.
+ * Full implementation with Redis/PostgreSQL in Story 2.5.
  */
-export const getCostGuard = Effect.gen(function* () {
-  return yield* FiberRef.get(CostGuardRef);
+export const CostGuardServiceLive = Layer.succeed(CostGuardService, {
+  checkDailyLimit: (_userId: string) => Effect.succeed(true),
+  trackCost: (_userId: string, _cost: number) => Effect.void,
+  getDailySpend: (_userId: string) => Effect.succeed(0),
 });
-
-/**
- * Execute an effect with a cost guard in scope
- */
-export const withCostGuard = <A, E, R>(
-  costGuard: CostGuard,
-  effect: Effect.Effect<A, E, R>
-): Effect.Effect<A, E, R> => {
-  return Effect.gen(function* () {
-    yield* FiberRef.set(CostGuardRef, costGuard);
-    return yield* effect;
-  });
-};

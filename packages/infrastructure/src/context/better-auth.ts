@@ -10,7 +10,8 @@
 
 import { Context, Layer, Effect } from "effect";
 import { Database } from "./database.js";
-import { betterAuth } from "better-auth";
+import { LoggerService } from "./logger-service.js";
+import { betterAuth, type Auth, type BetterAuthOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -24,7 +25,7 @@ import * as authSchema from "../auth-schema.js";
  */
 export class BetterAuthService extends Context.Tag("BetterAuthService")<
   BetterAuthService,
-  ReturnType<typeof betterAuth>
+  Auth<BetterAuthOptions>
 >() {}
 
 /**
@@ -35,16 +36,17 @@ export type BetterAuthShape = Context.Tag.Service<BetterAuthService>;
 /**
  * Better Auth Layer
  *
- * Layer type: Layer<BetterAuthService, never, Database>
- * Database dependency resolved during construction, not at service level.
+ * Layer type: Layer<BetterAuthService, never, Database | LoggerService>
+ * Dependencies (Database, LoggerService) resolved during construction.
  *
  * CRITICAL: The Drizzle adapter receives the database through DI.
  */
 export const BetterAuthLive = Layer.effect(
   BetterAuthService,
   Effect.gen(function* () {
-    // KEY: Receive database through DI during layer construction
+    // Receive dependencies through DI during layer construction
     const database = yield* Database;
+    const logger = yield* LoggerService;
 
     // Create Better Auth with injected database
     const auth = betterAuth({
@@ -108,7 +110,7 @@ export const BetterAuthLive = Layer.effect(
         user: {
           create: {
             after: async (user, context) => {
-              console.info(`User created: ${user.id} (${user.email})`);
+              logger.info(`User created: ${user.id} (${user.email})`);
 
               // Link anonymous session to new user account
               const body = context?.body;
@@ -127,13 +129,13 @@ export const BetterAuthLive = Layer.effect(
                     .set({ userId: user.id, updatedAt: new Date() })
                     .where(eq(authSchema.session.id, anonymousSessionId));
 
-                  console.info(
+                  logger.info(
                     `Linked anonymous session ${anonymousSessionId} to user ${user.id}`
                   );
                 } catch (error) {
                   const errorMessage =
                     error instanceof Error ? error.message : String(error);
-                  console.error(
+                  logger.error(
                     `Failed to link anonymous session: ${errorMessage}`
                   );
                 }
