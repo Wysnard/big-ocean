@@ -6,7 +6,7 @@ WORKDIR /app
 RUN npm install -g pnpm@10.4.1
 
 # Copy package files for dependency installation
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/lint/package.json ./packages/lint/
@@ -31,7 +31,7 @@ WORKDIR /app
 RUN npm install -g pnpm@10.4.1
 
 # Copy package files
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/lint/package.json ./packages/lint/
@@ -62,7 +62,7 @@ WORKDIR /app
 RUN npm install -g pnpm@10.4.1
 
 # Copy package files for dependency installation
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/lint/package.json ./packages/lint/
