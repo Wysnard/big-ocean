@@ -73,7 +73,7 @@ This is a modern monorepo built with:
 - **Real-Time Sync**: ElectricSQL for local-first data synchronization
 - **Logging**: Winston with structured logging
 - **Styling**: Tailwind CSS v4
-- **Code Quality**: ESLint, Prettier
+- **Code Quality**: Biome linter/formatter, Prettier
 - **Deployment**: Railway with Docker containerization
 
 ## Project Structure
@@ -114,7 +114,7 @@ packages/
   ├── domain/        # Core business logic and types
   ├── database/      # Drizzle ORM schemas
   ├── ui/            # Shared React components (shadcn/ui based)
-  ├── eslint-config/
+  ├── lint/          # Shared Biome linting and formatting configuration
   └── typescript-config/
 ```
 

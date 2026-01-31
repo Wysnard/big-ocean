@@ -7,6 +7,10 @@
     "access": "public"
   },
   "scripts": {
-    "lint": "true"
+    "lint": "biome lint ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.13",
+    "@workspace/lint": "workspace:*"
   }
 }

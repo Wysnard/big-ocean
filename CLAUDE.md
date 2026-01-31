@@ -27,7 +27,7 @@ packages/
   ├── database/     # Drizzle ORM schema and migrations
   ├── ui/           # Shared React components (shadcn/ui based)
   ├── infrastructure/ # Backend utilities (context bridges, dependency injection)
-  ├── eslint-config/
+  ├── lint/         # Shared Biome linting and formatting configuration
   └── typescript-config/
 ```
 
@@ -90,7 +90,7 @@ packages/
   - Includes hooks for RPC interaction
   - Utilities for personality visualization and formatting
 
-- **eslint-config**: Shared ESLint configuration used across packages
+- **lint**: Shared Biome configuration used across all apps and packages
 - **typescript-config**: Shared TypeScript configuration
 
 ## Common Commands
@@ -121,7 +121,7 @@ pnpm format                 # Format all code with Prettier
 pnpm -C apps/front dev              # Start dev server with HMR (port 3000)
 pnpm -C apps/front build            # Build for production (SSR)
 pnpm -C apps/front start            # Start production server
-pnpm -C apps/front lint             # Run ESLint
+pnpm -C apps/front lint             # Run Biome linter
 pnpm -C apps/front typecheck        # TypeScript type checking
 ```
 
@@ -621,12 +621,12 @@ The API is deployed to Railway with automatic CI/CD:
 
 ## Linting & Code Quality
 
-- **Root level**: ESLint with shared config
-- **front app**: ESLint (configured for React + TanStack)
-- **api app**: ESLint (configured for Node.js)
-- **ui package**: ESLint with zero-warnings policy
-- **contracts/domain/infrastructure packages**: ESLint with zero-warnings policy
+- **Root level**: Biome with shared config from @workspace/lint
+- **All apps (front, api)**: Biome via extends pattern from @workspace/lint/biome
+- **All packages (ui, contracts, domain, infrastructure, lint, typescript-config)**: Biome via extends pattern
+- **Zero-warnings policy**: Maintained for packages/ui, packages/contracts
 - **Format all**: `pnpm format` runs Prettier on all code
+- **Shared config**: `packages/lint/biome.json` is the single source of truth for linting rules
 
 ## Adding New Packages or Apps
 

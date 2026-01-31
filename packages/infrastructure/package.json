@@ -20,6 +20,8 @@
     "postgres": "catalog:"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.13",
+    "@workspace/lint": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
     "typescript": "^5.7.2"
   }
