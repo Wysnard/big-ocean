@@ -9,7 +9,6 @@
   },
   "devDependencies": {},
   "scripts": {
-    "lint": "biome lint .",
-    "format": "biome format ."
+    "lint": "biome lint ."
   }
 }

@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "lint": "biome lint src",
+    "format": "biome format src",
     "typecheck": "tsc --noEmit"
   },
   "exports": {

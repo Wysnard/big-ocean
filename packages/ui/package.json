@@ -4,8 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "lint": "biome lint .",
-    "format": "biome format ."
+    "lint": "biome lint src",
+    "format": "biome format src"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
