@@ -3,7 +3,7 @@
 **Story ID:** 7.1
 **Story Key:** 7-1-unit-testing-framework-setup-tdd-pattern
 **Epic:** 7 - Testing & Quality Assurance
-**Status:** ready-for-dev
+**Status:** review
 **Created:** 2026-01-30
 
 ---
@@ -203,13 +203,13 @@ apps/api/src/
 
 ### Success Metrics
 
-- [ ] `pnpm test` runs all tests in <2 seconds
-- [ ] `pnpm test --ui` opens interactive browser without errors
-- [ ] Coverage reports show baseline for future improvements
-- [ ] At least 5 example tests written
-- [ ] Zero ESM/module import errors
-- [ ] Zero Effect-ts compatibility issues
-- [ ] Documentation explains TDD red-green-refactor cycle
+- [x] `pnpm test` runs all tests in <2 seconds (✅ 26ms for domain tests)
+- [x] `pnpm test --ui` opens interactive browser without errors (✅ Verified working)
+- [x] Coverage reports show baseline for future improvements (✅ HTML/JSON reports generated)
+- [x] At least 5 example tests written (✅ 32 tests across 3 test files)
+- [x] Zero ESM/module import errors (✅ All imports working)
+- [x] Zero Effect-ts compatibility issues (✅ Effect 3.19.15 + Schema 0.75.5)
+- [x] Documentation explains TDD red-green-refactor cycle (✅ docs/testing/tdd-guide.md)
 
 ---
 
@@ -217,13 +217,58 @@ apps/api/src/
 
 ### Status
 
-**ready-for-dev**
+**review** - Ready for code review
 
 ### Implementation Status
 
 - Created: 2026-01-30
-- Story prepared: By Create Story workflow
+- Started: 2026-01-31
+- Completed: 2026-01-31
+- Developer: Claude Sonnet 4.5
+- Feature Branch: `feat/story-7-1-unit-testing-framework-setup-tdd-pattern`
+
+### Implementation Notes
+
+**Phase 1: Vitest Installation & Configuration**
+- Installed Vitest 4.0.18 with @vitest/ui and @vitest/coverage-v8
+- Created root-level vitest.config.ts with ESM-native configuration
+- Configured workspace aliases for @workspace packages
+- Added test scripts to root package.json
+
+**Phase 2: Test Utilities & Mocks**
+- Created `packages/domain/src/test-utils/index.ts` with comprehensive mocks:
+  - mockNerin, mockAnalyzer, mockScorer (agent mocks)
+  - mockDatabase (in-memory database)
+  - mockCostGuard, mockRateLimiter
+  - mockAnthropicResponse, createTestSession helpers
+
+**Phase 3: Example Tests**
+- Created `packages/domain/src/__tests__/placeholder.test.ts` (7 tests) - TDD demonstration
+- Created `packages/domain/src/__tests__/effect-patterns.test.ts` (15 tests) - Effect service patterns
+- Created `packages/domain/src/__tests__/schema-validation.test.ts` (10 tests) - Schema validation patterns
+
+**Phase 4: Documentation**
+- Created `docs/testing/tdd-guide.md` - Comprehensive TDD workflow guide with examples
+
+**Phase 5: CI Integration**
+- Created `.github/workflows/test.yml` - GitHub Actions workflow for PR testing
+
+**Performance Results:**
+- All 32 tests pass in 26ms
+- Test execution well under 2-second target
+- Coverage reporting functional
+
+**File List:**
+1. `/vitest.config.ts` (NEW) - Root test configuration
+2. `/package.json` (MODIFIED) - Added test scripts
+3. `/packages/domain/package.json` (NEW) - Domain package config
+4. `/packages/domain/src/test-utils/index.ts` (NEW) - Test utilities
+5. `/packages/domain/src/__tests__/placeholder.test.ts` (NEW) - TDD example
+6. `/packages/domain/src/__tests__/effect-patterns.test.ts` (NEW) - Effect patterns
+7. `/packages/domain/src/__tests__/schema-validation.test.ts` (NEW) - Schema validation
+8. `/docs/testing/tdd-guide.md` (NEW) - TDD workflow documentation
+9. `/.github/workflows/test.yml` (NEW) - CI workflow
 
 ---
 
-**Next Step:** Run dev-story workflow to implement
+**Next Step:** Run code review workflow (/bmad-bmm-code-review)
