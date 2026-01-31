@@ -28,11 +28,34 @@ workflow:
     # Available variables: {story_id}, {story_title}, {story_short_title}
     template: "feat(#{story_id}): - {story_title}"
 
+    # Commit message semantic type based on story status
+    # When story transitions to "review" status, fixes use "fix:" instead of "feat:"
+    semantic_types:
+      # Initial implementation when story status is "ready-for-dev" or "in-progress"
+      implementation: "feat"
+      # Fixes that come from code review when story status is "review"
+      review_fixes: "fix"
+
     # Include story file reference in body
     include_story_reference: true
 
-    # Example commit message:
-    # feat: Story 1.2 - Integrate Better Auth for Email/Password Authentication
+    # Always include co-author footer
+    include_coauthor: true
+    coauthor_name: "Claude Haiku 4.5"
+    coauthor_email: "noreply@anthropic.com"
+
+    # Example commit messages:
+    # Initial implementation (story in ready-for-dev/in-progress):
+    # feat(#1.2): Integrate Better Auth for Email/Password Authentication
+    #
+    # Ref: _bmad-output/implementation-artifacts/1-2-integrate-better-auth-for-email-password-authentication.md
+    #
+    # Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
+    #
+    # Review fixes (story in review status):
+    # fix(#1.2): [specific issue from code review]
+    #
+    # Fixes issue from code review regarding [description].
     #
     # Ref: _bmad-output/implementation-artifacts/1-2-integrate-better-auth-for-email-password-authentication.md
     #
