@@ -60,9 +60,9 @@ const createCustomServer = (): Server => {
   // Store reference to Effect's handler when it gets attached
   server.on("newListener", (event, listener) => {
     if (event === "request") {
-      effectHandler = listener as any
+      effectHandler = listener as ((req: IncomingMessage, res: ServerResponse) => void)
       // Remove the Effect listener - we'll call it manually after Better Auth
-      server.removeListener("request", listener as any)
+      server.removeListener("request", listener as ((req: IncomingMessage, res: ServerResponse) => void))
     }
   })
 
