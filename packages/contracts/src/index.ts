@@ -8,9 +8,10 @@
  * Better Auth handles authentication via HTTP, other services follow same pattern.
  */
 
-// Service Schemas (HTTP endpoint schemas)
-export * from "./assessment.js";
-export * from "./profile.js";
+// HTTP API Groups
+export * from "./groups/assessment.js";
+export * from "./groups/health.js";
+export * from "./api.js";
 
 // Error Definitions
 export * from "./errors.js";

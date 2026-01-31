@@ -1,32 +1,94 @@
 /**
- * Assessment Handlers (Placeholder - HTTP Endpoints)
+ * Assessment Handlers
  *
- * These are placeholder implementations for Story 1.3.
- * Real business logic will be implemented in Epic 2 with LangGraph integration.
- *
- * NOTE: Migrated from RPC to HTTP endpoints.
- * Actual HTTP route handlers should be implemented in apps/api/src/routes/assessment.ts
+ * HTTP handlers for assessment endpoints using Effect.gen() syntax.
+ * Pattern from: effect-worker-mono/apps/effect-worker-api/src/handlers/*.ts
  */
 
-/**
- * TODO: Implement HTTP route handlers for assessment endpoints:
- *
- * POST /api/assessment/start
- * - Input: { userId?: string }
- * - Output: { sessionId: string, createdAt: string }
- *
- * POST /api/assessment/message
- * - Input: { sessionId: string, message: string }
- * - Output: { response: string, precision: { openness, conscientiousness, extraversion, agreeableness, neuroticism } }
- *
- * GET /api/assessment/:sessionId/results
- * - Output: { oceanCode4Letter, precision, archetypeName, traitScores }
- *
- * GET /api/assessment/:sessionId/resume
- * - Output: { messages[], precision, oceanCode4Letter? }
- */
+import { HttpApiBuilder } from "@effect/platform"
+import { DateTime, Effect } from "effect"
+import { BigOceanApi } from "@workspace/contracts"
 
-// Export placeholder - remove when actual HTTP handlers are implemented
-export const AssessmentHandlersPlaceholder = {
-  message: "Assessment handlers deferred to Story 1.3 - use HTTP endpoints, not RPC",
-};
+export const AssessmentGroupLive = HttpApiBuilder.group(
+  BigOceanApi,
+  "assessment",
+  (handlers) =>
+    Effect.gen(function* () {
+      return handlers
+        .handle("start", ({ payload }) =>
+          Effect.gen(function* () {
+            // Generate session ID
+            const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`
+            const createdAt = DateTime.unsafeMake(Date.now())
+
+            // TODO: Store session in database (Epic 2)
+            console.info("Assessment session started", {
+              sessionId,
+              userId: payload.userId,
+            })
+
+            return {
+              sessionId,
+              createdAt,
+            }
+          })
+        )
+        .handle("sendMessage", ({ payload }) =>
+          Effect.gen(function* () {
+            console.info("Message received", {
+              sessionId: payload.sessionId,
+              messageLength: payload.message.length,
+            })
+
+            // TODO: Implement Nerin agent logic (Epic 2)
+            return {
+              response: "Thank you for sharing that. This is a placeholder response until Epic 2 implements the Nerin agent.",
+              precision: {
+                openness: 0.5,
+                conscientiousness: 0.4,
+                extraversion: 0.6,
+                agreeableness: 0.7,
+                neuroticism: 0.3,
+              },
+            }
+          })
+        )
+        .handle("getResults", ({ request }) =>
+          Effect.gen(function* () {
+            const sessionId = request.url.split("/").slice(-2, -1)[0]
+            console.info("Get results request", { sessionId })
+
+            // TODO: Retrieve results from database (Epic 2)
+            return {
+              oceanCode: "PPAM",
+              archetypeName: "The Grounded Thinker",
+              traits: {
+                openness: 0.75,
+                conscientiousness: 0.65,
+                extraversion: 0.45,
+                agreeableness: 0.85,
+                neuroticism: 0.25,
+              },
+            }
+          })
+        )
+        .handle("resumeSession", ({ request }) =>
+          Effect.gen(function* () {
+            const sessionId = request.url.split("/").slice(-2, -1)[0]
+            console.info("Resume session request", { sessionId })
+
+            // TODO: Load session from database (Epic 2)
+            return {
+              messages: [],
+              precision: {
+                openness: 0.5,
+                conscientiousness: 0.5,
+                extraversion: 0.5,
+                agreeableness: 0.5,
+                neuroticism: 0.5,
+              },
+            }
+          })
+        )
+    })
+)

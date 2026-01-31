@@ -13,3 +13,4 @@ export * from "./context/auth.js";
 // Database and auth
 export * from "./database.js";
 export * from "./auth-config.js";
+export * from "./auth-schema.js";
