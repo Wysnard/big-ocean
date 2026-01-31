@@ -29,24 +29,6 @@
       }
     }
   },
-  "overrides": [
-    {
-      "include": ["apps/front/**", "packages/ui/**"],
-      "linter": {
-        "rules": {
-          "react": "recommended"
-        }
-      }
-    },
-    {
-      "include": ["**/__tests__/**", "**/*.test.*", "**/*.spec.*"],
-      "linter": {
-        "rules": {
-          "test": "recommended"
-        }
-      }
-    }
-  ],
   "javascript": {
     "formatter": {
       "quoteStyle": "double",
