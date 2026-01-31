@@ -8,10 +8,10 @@ set -e
 echo "🚀 Starting big-ocean development environment..."
 echo ""
 
-# Check if .env.local exists
-if [ ! -f .env.local ]; then
-    echo "⚠️  .env.local not found. Creating from template..."
-    cat > .env.local << EOF
+# Check if .env exists
+if [ ! -f .env ]; then
+    echo "⚠️  .env not found. Creating from template..."
+    cat > .env << EOF
 # Database Configuration
 POSTGRES_DB=bigocean
 POSTGRES_USER=dev
@@ -30,15 +30,29 @@ NODE_ENV=development
 # Server Configuration
 PORT=4000
 HOST=0.0.0.0
+
+# Better Auth (REQUIRED - generate with: openssl rand -base64 32)
+BETTER_AUTH_SECRET=your-32-character-secret-key-here
+BETTER_AUTH_URL=http://localhost:4000
+
+# Frontend
+VITE_API_URL=http://localhost:4000
 EOF
-    echo "✅ Created .env.local - please add your ANTHROPIC_API_KEY"
+    echo "✅ Created .env - please add your ANTHROPIC_API_KEY"
     echo ""
 fi
 
 # Check if ANTHROPIC_API_KEY is set
-if grep -q "sk-ant-your-api-key-here" .env.local; then
-    echo "⚠️  WARNING: ANTHROPIC_API_KEY not configured in .env.local"
-    echo "Please edit .env.local and set your Anthropic API key before running services."
+if grep -q "sk-ant-your-api-key-here" .env; then
+    echo "⚠️  WARNING: ANTHROPIC_API_KEY not configured in .env"
+    echo "Please edit .env and set your Anthropic API key before running services."
+    echo ""
+fi
+
+# Check if BETTER_AUTH_SECRET is set
+if grep -q "your-32-character-secret-key-here" .env; then
+    echo "⚠️  WARNING: BETTER_AUTH_SECRET not configured in .env"
+    echo "Please edit .env and set your Better Auth secret (run: openssl rand -base64 32)"
     echo ""
 fi
 
@@ -53,4 +67,4 @@ echo ""
 echo "Press Ctrl+C to stop all services"
 echo ""
 
-docker compose --env-file .env.local up
+docker compose --env-file .env up

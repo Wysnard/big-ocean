@@ -1,16 +1,17 @@
 /**
- * Profile Service RPC Contract
+ * Profile Service Schemas
  *
- * Type-safe contracts for profile operations.
- * Uses Effect Schema for runtime validation and @effect/rpc for procedure definitions.
+ * Shared type definitions for profile operations.
+ * Used for validation and type safety across frontend/backend.
  */
 
-import { Rpc, RpcGroup } from "@effect/rpc";
 import { Schema as S } from "effect";
 
 /**
- * Response Schemas
+ * Request/Response Schemas for Profile Endpoints
  */
+
+// GET /api/profile/:publicProfileId
 export const GetProfileResponseSchema = S.Struct({
   archetypeName: S.String,
   oceanCode4Letter: S.String,
@@ -25,31 +26,19 @@ export const GetProfileResponseSchema = S.Struct({
   archetypeColor: S.String,
 });
 
+// POST /api/profile/share
+export const ShareProfileRequestSchema = S.Struct({
+  sessionId: S.String,
+});
+
 export const ShareProfileResponseSchema = S.Struct({
   publicProfileId: S.String,
   shareableUrl: S.String,
 });
 
 /**
- * RPC Procedures
+ * TypeScript Types (inferred from schemas)
  */
-export const GetProfileRpc = Rpc.make("GetProfile", {
-  success: GetProfileResponseSchema,
-  payload: {
-    publicProfileId: S.String,
-  },
-});
-
-export const ShareProfileRpc = Rpc.make("ShareProfile", {
-  success: ShareProfileResponseSchema,
-  payload: {
-    sessionId: S.String,
-  },
-});
-
-/**
- * Profile RPC Group
- *
- * All profile-related procedures.
- */
-export const ProfileRpcs = RpcGroup.make(GetProfileRpc, ShareProfileRpc);
+export type GetProfileResponse = S.Schema.Type<typeof GetProfileResponseSchema>;
+export type ShareProfileRequest = S.Schema.Type<typeof ShareProfileRequestSchema>;
+export type ShareProfileResponse = S.Schema.Type<typeof ShareProfileResponseSchema>;

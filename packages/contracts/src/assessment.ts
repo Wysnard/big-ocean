@@ -1,19 +1,30 @@
 /**
- * Assessment Service RPC Contract
+ * Assessment Service Schemas
  *
- * Type-safe contracts for personality assessment operations.
- * Uses Effect Schema for runtime validation and @effect/rpc for procedure definitions.
+ * Shared type definitions for personality assessment operations.
+ * Used for validation and type safety across frontend/backend.
  */
 
-import { Rpc, RpcGroup } from "@effect/rpc";
 import { Schema as S } from "effect";
 
 /**
- * Response Schemas
+ * Request/Response Schemas for Assessment Endpoints
  */
+
+// POST /api/assessment/start
+export const StartAssessmentRequestSchema = S.Struct({
+  userId: S.optional(S.String),
+});
+
 export const StartAssessmentResponseSchema = S.Struct({
   sessionId: S.String,
   createdAt: S.String,
+});
+
+// POST /api/assessment/message
+export const SendMessageRequestSchema = S.Struct({
+  sessionId: S.String,
+  message: S.String,
 });
 
 export const SendMessageResponseSchema = S.Struct({
@@ -27,6 +38,7 @@ export const SendMessageResponseSchema = S.Struct({
   }),
 });
 
+// GET /api/assessment/:sessionId/results
 export const GetResultsResponseSchema = S.Struct({
   oceanCode4Letter: S.String,
   precision: S.Number,
@@ -40,6 +52,7 @@ export const GetResultsResponseSchema = S.Struct({
   }),
 });
 
+// GET /api/assessment/:sessionId/resume
 export const ResumeSessionResponseSchema = S.Struct({
   messages: S.Array(
     S.Struct({
@@ -55,45 +68,11 @@ export const ResumeSessionResponseSchema = S.Struct({
 });
 
 /**
- * RPC Procedures
+ * TypeScript Types (inferred from schemas)
  */
-export const StartAssessmentRpc = Rpc.make("StartAssessment", {
-  success: StartAssessmentResponseSchema,
-  payload: {
-    userId: S.optional(S.String),
-  },
-});
-
-export const SendMessageRpc = Rpc.make("SendMessage", {
-  success: SendMessageResponseSchema,
-  payload: {
-    sessionId: S.String,
-    message: S.String,
-  },
-});
-
-export const GetResultsRpc = Rpc.make("GetResults", {
-  success: GetResultsResponseSchema,
-  payload: {
-    sessionId: S.String,
-  },
-});
-
-export const ResumeSessionRpc = Rpc.make("ResumeSession", {
-  success: ResumeSessionResponseSchema,
-  payload: {
-    sessionId: S.String,
-  },
-});
-
-/**
- * Assessment RPC Group
- *
- * All assessment-related procedures.
- */
-export const AssessmentRpcs = RpcGroup.make(
-  StartAssessmentRpc,
-  SendMessageRpc,
-  GetResultsRpc,
-  ResumeSessionRpc
-);
+export type StartAssessmentRequest = S.Schema.Type<typeof StartAssessmentRequestSchema>;
+export type StartAssessmentResponse = S.Schema.Type<typeof StartAssessmentResponseSchema>;
+export type SendMessageRequest = S.Schema.Type<typeof SendMessageRequestSchema>;
+export type SendMessageResponse = S.Schema.Type<typeof SendMessageResponseSchema>;
+export type GetResultsResponse = S.Schema.Type<typeof GetResultsResponseSchema>;
+export type ResumeSessionResponse = S.Schema.Type<typeof ResumeSessionResponseSchema>;

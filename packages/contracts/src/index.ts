@@ -1,26 +1,19 @@
 /**
- * Effect-ts RPC Contracts
+ * Shared Contracts Package
  *
- * Type-safe RPC contracts for frontend-backend communication.
- * Exports all services, error schemas, and shared data structures.
+ * Type-safe schemas for frontend-backend communication.
+ * Exports schemas, TypeScript types, and shared data structures.
+ *
+ * Note: Migrated from @effect/rpc to plain HTTP endpoints.
+ * Better Auth handles authentication via HTTP, other services follow same pattern.
  */
 
-import { AssessmentRpcs } from "./assessment.js";
-import { ProfileRpcs } from "./profile.js";
-
-// Services
+// Service Schemas (HTTP endpoint schemas)
 export * from "./assessment.js";
 export * from "./profile.js";
 
-// Errors
+// Error Definitions
 export * from "./errors.js";
 
-// Shared Schemas
+// Shared Schemas & Types
 export * from "./schemas.js";
-
-/**
- * Combined RPC Group
- *
- * Merges all RPC groups into a single group for server and client.
- */
-export const BigOceanRpcs = AssessmentRpcs.merge(ProfileRpcs);

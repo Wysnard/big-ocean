@@ -7,7 +7,7 @@
 set -e
 
 echo "⏹️  Stopping big-ocean development environment..."
-docker compose --env-file .env.local stop
+docker compose --env-file .env stop
 echo "✅ Services stopped (data preserved)"
 echo ""
 echo "To restart: ./scripts/dev.sh"

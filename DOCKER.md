@@ -19,10 +19,10 @@ cd big-ocean
 
 # 2. Start all services
 ./scripts/dev.sh
-# This creates .env.local and starts services
+# This creates .env and starts services
 
 # 3. Add your Anthropic API key
-# Edit .env.local and replace sk-ant-your-api-key-here with your actual key
+# Edit .env and replace sk-ant-your-api-key-here with your actual key
 
 # 4. Verify services are running
 docker compose ps
@@ -333,8 +333,8 @@ docker system prune -a
 ### Environment Variables Not Loading
 
 ```bash
-# Verify .env.local exists
-ls -la .env.local
+# Verify .env exists
+ls -la .env
 
 # Check variables are loaded in container
 docker compose exec backend env | grep DATABASE_URL
@@ -486,11 +486,11 @@ docker compose down -v
 
 ### Environment Secrets in CI
 
-Never commit `.env.local` to git. In CI/CD:
+Never commit `.env` to git. In CI/CD:
 
 ```bash
-# Create .env.local from secrets
-echo "ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" > .env.local
+# Create .env from secrets
+echo "ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" > .env
 
 # Start services
 docker compose up -d

@@ -6,7 +6,7 @@
  * and frontend code.
  */
 
-import * as S from "@effect/schema/Schema";
+import { Schema as S } from "effect";
 
 /**
  * Session-related errors (404, 410)
@@ -63,6 +63,44 @@ export const ProfileError = S.Struct({
   message: S.String,
 });
 
+/**
+ * Auth-related errors
+ */
+
+/**
+ * Invalid credentials error (401)
+ */
+export const InvalidCredentialsError = S.Struct({
+  _tag: S.Literal("InvalidCredentials"),
+  message: S.String,
+});
+
+/**
+ * User already exists error (409)
+ */
+export const UserAlreadyExistsError = S.Struct({
+  _tag: S.Literal("UserAlreadyExists"),
+  email: S.String,
+  message: S.String,
+});
+
+/**
+ * Unauthorized error (401)
+ */
+export const UnauthorizedError = S.Struct({
+  _tag: S.Literal("Unauthorized"),
+  message: S.String,
+});
+
+/**
+ * Auth error union
+ */
+export const AuthError = S.Union(
+  InvalidCredentialsError,
+  UserAlreadyExistsError,
+  UnauthorizedError
+);
+
 // Type exports for TypeScript
 export type SessionNotFoundError = S.Schema.Type<typeof SessionNotFoundError>;
 export type SessionExpiredError = S.Schema.Type<typeof SessionExpiredError>;
@@ -71,3 +109,7 @@ export type RateLimitError = S.Schema.Type<typeof RateLimitError>;
 export type CostLimitError = S.Schema.Type<typeof CostLimitError>;
 export type ProfileNotFoundError = S.Schema.Type<typeof ProfileNotFoundError>;
 export type ProfileError = S.Schema.Type<typeof ProfileError>;
+export type InvalidCredentialsError = S.Schema.Type<typeof InvalidCredentialsError>;
+export type UserAlreadyExistsError = S.Schema.Type<typeof UserAlreadyExistsError>;
+export type UnauthorizedError = S.Schema.Type<typeof UnauthorizedError>;
+export type AuthError = S.Schema.Type<typeof AuthError>;

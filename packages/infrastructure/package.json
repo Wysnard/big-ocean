@@ -11,7 +11,10 @@
     "./context/*": "./src/context/*.ts"
   },
   "dependencies": {
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "better-auth": "catalog:",
+    "drizzle-orm": "catalog:",
+    "postgres": "catalog:"
   },
   "devDependencies": {
     "@workspace/typescript-config": "workspace:*",

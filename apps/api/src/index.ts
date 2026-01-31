@@ -1,77 +1,154 @@
 import "dotenv/config";
-import { createServer, IncomingMessage, ServerResponse } from "node:http";
-import { Effect, Layer } from "effect";
-import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
-import { RpcServer, RpcSerialization } from "@effect/rpc";
-import { BigOceanRpcs } from "@workspace/contracts";
+import express, { Request, Response } from "express";
+import cors from "cors";
 import logger from "./logger.js";
-import { AssessmentRpcHandlersLive } from "./handlers/assessment.js";
-import { ProfileRpcHandlersLive } from "./handlers/profile.js";
+import { auth } from "./setup.js";
+import { securityHeaders } from "./middleware/security.js";
 
 /**
- * Combined RPC Handlers Layer
+ * Express App Setup
+ */
+const app = express();
+const port = Number(process.env.PORT || 4000);
+
+// Middleware
+// CORS must come before security headers to set Access-Control headers first
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "http://localhost:3001", // TanStack Start dev server (port 3001)
+  "http://localhost:3000", // Fallback for legacy port
+  "https://*.railway.app", // Railway preview deployments
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, Postman, curl)
+    if (!origin) return callback(null, true);
+
+    // Check if origin matches any allowed origin (including wildcards)
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed.includes("*")) {
+        const regex = new RegExp(allowed.replace("*", ".*"));
+        return regex.test(origin);
+      }
+      return allowed === origin;
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    }
+  },
+  credentials: true,
+}));
+
+app.use(securityHeaders); // Security headers after CORS
+app.use(express.json());
+
+/**
+ * Health Check Endpoint
+ */
+app.get("/health", (req: Request, res: Response) => {
+  res.json({ status: "ok" });
+  logger.debug("[HTTP] Health check passed");
+});
+
+/**
+ * Better Auth Middleware
  *
- * Merges all handler layers following the official @effect/rpc pattern.
- */
-const HandlersLayer = Layer.mergeAll(AssessmentRpcHandlersLive, ProfileRpcHandlersLive);
-
-/**
- * RPC Server Layer
+ * Better Auth automatically handles all /api/auth/* routes.
+ * Available endpoints:
+ * - POST /api/auth/sign-up/email (signup)
+ * - POST /api/auth/sign-in/email (signin)
+ * - POST /api/auth/sign-out (signout)
+ * - GET  /api/auth/get-session (get session)
  *
- * Creates the RPC server with handlers.
+ * See: https://www.better-auth.com/docs/concepts/session-management
  */
-const RpcLayer = RpcServer.layer(BigOceanRpcs).pipe(Layer.provide(HandlersLayer));
+app.use("/api/auth", async (req: Request, res: Response, next) => {
+  try {
+    // Convert Express request to Web API Request
+    const url = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    const headers = new Headers();
+    Object.entries(req.headers).forEach(([key, value]) => {
+      if (value) {
+        headers.set(key, Array.isArray(value) ? value.join(", ") : value);
+      }
+    });
 
-/**
- * HTTP Protocol Layer
- *
- * Configures HTTP protocol and serialization for RPC.
- */
-const HttpProtocol = RpcServer.layerProtocolHttp({
-  path: "/rpc",
-}).pipe(Layer.provide(RpcSerialization.layerNdjson));
+    const webRequest = new globalThis.Request(url, {
+      method: req.method,
+      headers,
+      body: req.method !== "GET" && req.method !== "HEAD" ? JSON.stringify(req.body) : undefined,
+    });
 
-/**
- * Custom HTTP handler with health check
- */
-const httpHandler = (req: IncomingMessage, res: ServerResponse) => {
-  const url = req.url || "";
-  const method = req.method || "GET";
+    // Handle Better Auth request
+    const response = await auth.handler(webRequest);
 
-  // Health check endpoint (CRITICAL for Railway deployment)
-  if (url === "/health" && method === "GET") {
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({ status: "ok" }));
-    logger.debug("[HTTP] Health check passed");
-    return;
+    // Convert Web API Response to Express response
+    res.status(response.status);
+    response.headers.forEach((value, key) => {
+      res.setHeader(key, value);
+    });
+
+    const body = await response.text();
+    res.send(body);
+  } catch (error: any) {
+    logger.error("Better Auth handler error", { error: error.message });
+    next(error);
   }
-
-  // All other requests go to Effect RPC handler
-  // (Effect RPC will handle /rpc requests via the HttpProtocol layer)
-};
+});
 
 /**
- * Main Server Layer
+ * Assessment Routes
  *
- * Combines RPC, protocol, and HTTP server layers with health check.
+ * TODO: Implement assessment endpoints using Effect-ts for business logic
+ * Example endpoints:
+ * - POST /api/assessment/start
+ * - POST /api/assessment/message
+ * - GET  /api/assessment/:sessionId
+ * - GET  /api/assessment/:sessionId/results
  */
-const Main = NodeHttpServer.layer(() => createServer(httpHandler), {
-  port: Number(process.env.PORT || 4000),
-  host: process.env.HOST || "0.0.0.0",
-}).pipe(Layer.provide(RpcLayer), Layer.provide(HttpProtocol));
+app.post("/api/assessment/start", async (req: Request, res: Response) => {
+  logger.info("Start assessment request");
+  res.json({
+    message: "Assessment start endpoint - coming soon",
+    note: "Will use Effect-ts for business logic",
+  });
+});
 
 /**
- * Startup logging
+ * Profile Routes
+ *
+ * TODO: Implement profile endpoints using Effect-ts for business logic
+ * Example endpoints:
+ * - GET  /api/profile/:userId
+ * - POST /api/profile/compare
+ * - GET  /api/profile/similar
  */
-logger.info(`Server starting on http://0.0.0.0:${process.env.PORT || 4000}`);
-logger.info(`RPC endpoint available at /rpc`);
-logger.info(`Health endpoint available at /health`);
+app.get("/api/profile/:userId", async (req: Request, res: Response) => {
+  logger.info("Get profile request", { userId: req.params.userId });
+  res.json({
+    message: "Profile endpoint - coming soon",
+    note: "Will use Effect-ts for business logic",
+  });
+});
 
-// Launch the server
-Layer.launch(Main).pipe(NodeRuntime.runMain);
+/**
+ * Start Server
+ */
+app.listen(port, () => {
+  logger.info(`Server started on http://0.0.0.0:${port}`);
+  logger.info(`Better Auth routes: /api/auth/* (sign-up, sign-in, sign-out, get-session)`);
+  logger.info(`Assessment routes: /api/assessment/* (start, message, results)`);
+  logger.info(`Profile routes: /api/profile/* (get, compare, similar)`);
+  logger.info(`Health check: GET /health`);
+  logger.info(`Frontend CORS enabled for: ${process.env.FRONTEND_URL || "http://localhost:3000"}`);
+});
 
-// Error handlers
+/**
+ * Error Handlers
+ */
 process.on("unhandledRejection", (reason) => {
   logger.error(`Unhandled Rejection: ${reason}`);
 });

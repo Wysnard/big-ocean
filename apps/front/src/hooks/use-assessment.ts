@@ -1,18 +1,42 @@
 /**
- * Assessment RPC Hooks
+ * Assessment HTTP Hooks
  *
  * React hooks for type-safe assessment operations using TanStack Query.
- * Integrates Effect-ts RPC client with React Query for caching and state management.
+ * Uses direct HTTP calls to backend assessment endpoints.
  */
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  StartAssessmentRpc,
-  SendMessageRpc,
-  GetResultsRpc,
-  ResumeSessionRpc,
+import type {
+  StartAssessmentRequest,
+  StartAssessmentResponse,
+  SendMessageRequest,
+  SendMessageResponse,
+  GetResultsResponse,
+  ResumeSessionResponse,
 } from "@workspace/contracts";
-import { callRpc } from "../lib/rpc-client.js";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
+/**
+ * HTTP client for assessment endpoints
+ */
+async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    },
+    credentials: "include", // Include cookies for auth
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || `HTTP ${response.status}: ${response.statusText}`);
+  }
+
+  return response.json();
+}
 
 /**
  * Start a new assessment session
@@ -31,8 +55,11 @@ import { callRpc } from "../lib/rpc-client.js";
 export function useStartAssessment() {
   return useMutation({
     mutationKey: ["assessment", "start"],
-    mutationFn: async (input: { userId?: string } = {}) => {
-      return callRpc(StartAssessmentRpc, input);
+    mutationFn: async (input: StartAssessmentRequest = {}): Promise<StartAssessmentResponse> => {
+      return fetchApi("/api/assessment/start", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
     },
   });
 }
@@ -57,8 +84,11 @@ export function useStartAssessment() {
 export function useSendMessage() {
   return useMutation({
     mutationKey: ["assessment", "sendMessage"],
-    mutationFn: async (input: { sessionId: string; message: string }) => {
-      return callRpc(SendMessageRpc, input);
+    mutationFn: async (input: SendMessageRequest): Promise<SendMessageResponse> => {
+      return fetchApi("/api/assessment/message", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
     },
   });
 }
@@ -86,8 +116,8 @@ export function useSendMessage() {
 export function useGetResults(sessionId: string, enabled = true) {
   return useQuery({
     queryKey: ["assessment", "results", sessionId],
-    queryFn: async () => {
-      return callRpc(GetResultsRpc, { sessionId });
+    queryFn: async (): Promise<GetResultsResponse> => {
+      return fetchApi(`/api/assessment/${sessionId}/results`);
     },
     enabled: enabled && !!sessionId,
   });
@@ -120,8 +150,8 @@ export function useGetResults(sessionId: string, enabled = true) {
 export function useResumeSession(sessionId: string, enabled = true) {
   return useQuery({
     queryKey: ["assessment", "session", sessionId],
-    queryFn: async () => {
-      return callRpc(ResumeSessionRpc, { sessionId });
+    queryFn: async (): Promise<ResumeSessionResponse> => {
+      return fetchApi(`/api/assessment/${sessionId}/resume`);
     },
     enabled: enabled && !!sessionId,
   });

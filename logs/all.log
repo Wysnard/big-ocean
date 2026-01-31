@@ -1,0 +1,31 @@
+2026-01-31 03:08:22:822 [32minfo[39m: [32mDatabase and Better Auth initialized[39m
+2026-01-31 03:08:22:822 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-31 03:08:22:822 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
+2026-01-31 03:08:22:822 [32minfo[39m: [32mHealth endpoint available at /health[39m
+2026-01-31 03:08:31:831 [37mdebug[39m: [37m[HTTP] Health check passed[39m
+2026-01-31 03:36:22:3622 [37mdebug[39m: [37m[HTTP] Health check passed[39m
+2026-01-31 03:47:46:4746 [32minfo[39m: [32mDatabase and Better Auth initialized[39m
+2026-01-31 03:47:46:4746 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-31 03:47:46:4746 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
+2026-01-31 03:47:46:4746 [32minfo[39m: [32mHealth endpoint available at /health[39m
+2026-01-31 03:52:21:5221 [32minfo[39m: [32mDatabase and Better Auth initialized[39m
+2026-01-31 03:52:21:5221 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-31 03:52:21:5221 [32minfo[39m: [32mRPC endpoint available at /rpc[39m
+2026-01-31 03:52:21:5221 [32minfo[39m: [32mHealth endpoint available at /health[39m
+2026-01-31 03:52:28:5228 [37mdebug[39m: [37m[HTTP] Health check passed[39m
+2026-01-31 04:02:15:215 [32minfo[39m: [32mDatabase and Better Auth initialized[39m
+2026-01-31 04:02:15:215 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-31 04:02:15:215 [32minfo[39m: [32mAuth endpoints: POST /auth/signup, /auth/signin, /auth/signout, GET /auth/session[39m
+2026-01-31 04:02:15:215 [32minfo[39m: [32mHealth endpoint: GET /health[39m
+2026-01-31 04:04:31:431 [32minfo[39m: [32mDatabase and Better Auth initialized[39m
+2026-01-31 04:04:31:431 [32minfo[39m: [32mServer starting on http://0.0.0.0:4000[39m
+2026-01-31 04:04:31:431 [32minfo[39m: [32mAuth endpoints: POST /auth/signup, /auth/signin, /auth/signout, GET /auth/session[39m
+2026-01-31 04:04:31:431 [32minfo[39m: [32mHealth endpoint: GET /health[39m
+2026-01-31 04:37:03:373 [32minfo[39m: [32mDatabase and Better Auth initialized[39m
+2026-01-31 04:37:03:373 [32minfo[39m: [32mServer started on http://0.0.0.0:4000[39m
+2026-01-31 04:37:03:373 [32minfo[39m: [32mBetter Auth routes: /api/auth/* (sign-up, sign-in, sign-out, get-session)[39m
+2026-01-31 04:37:03:373 [32minfo[39m: [32mAssessment routes: /api/assessment/* (start, message, results)[39m
+2026-01-31 04:37:03:373 [32minfo[39m: [32mProfile routes: /api/profile/* (get, compare, similar)[39m
+2026-01-31 04:37:03:373 [32minfo[39m: [32mHealth check: GET /health[39m
+2026-01-31 04:37:03:373 [32minfo[39m: [32mFrontend CORS enabled for: http://localhost:3000[39m
+2026-01-31 04:37:09:379 [37mdebug[39m: [37m[HTTP] Health check passed[39m
