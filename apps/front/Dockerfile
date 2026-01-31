@@ -83,19 +83,19 @@ RUN pnpm --filter=front run build
 FROM node:20-slim
 WORKDIR /app
 
-# Install Node.js dependencies needed at runtime
+# Install pnpm
 RUN npm install -g pnpm@10.4.1
 
-# Copy package files for dependency resolution
-COPY --from=production /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
-COPY --from=production /app/packages ./packages
-COPY --from=production /app/apps/front/package.json ./apps/front/
+# Use pnpm deploy to extract only frontend dependencies
+COPY --from=production /app /temp
+WORKDIR /temp
+RUN pnpm deploy --filter=front --prod /app/deployed
 
-# Install production dependencies
-RUN pnpm install --frozen-lockfile --prod
+# Switch to deployment directory
+WORKDIR /app/deployed
 
-# Copy built Nitro output
-COPY --from=production /app/apps/front/.output ./.output
+# Copy built Nitro output to deployment
+COPY --from=production /app/apps/front/.output ./apps/front/.output
 
 # Expose Railway's default port
 EXPOSE 8080
@@ -106,4 +106,4 @@ ENV PORT=8080
 ENV HOST=0.0.0.0
 
 # Start the Nitro server
-CMD ["node", ".output/server/index.mjs"]
+CMD ["node", "apps/front/.output/server/index.mjs"]
