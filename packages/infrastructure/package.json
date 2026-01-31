@@ -14,9 +14,9 @@
     "./auth-schema": "./src/auth-schema.ts"
   },
   "dependencies": {
-    "effect": "catalog:",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
+    "effect": "catalog:",
     "postgres": "catalog:"
   },
   "devDependencies": {

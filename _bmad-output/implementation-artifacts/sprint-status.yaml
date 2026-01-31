@@ -54,6 +54,7 @@ development_status:
   # EPIC 2: Assessment Backend Services
   epic-2: in-progress
   2-0-linter-unification-and-frontend-fixes: done
+  2-0.5-effect-based-dependency-injection-refactoring: in-progress
   2-1-session-management-and-persistence: ready-for-dev
   2-2-nerin-agent-setup-and-conversational-quality: backlog
   2-3-analyzer-and-scorer-agent-implementation: backlog
@@ -90,7 +91,7 @@ development_status:
 
   # EPIC 7: Testing & Quality Assurance
   epic-7: in-progress
-  7-1-unit-testing-framework-setup-tdd-pattern: review
+  7-1-unit-testing-framework-setup-tdd-pattern: done
   7-2-integration-testing-with-real-database: backlog
   7-3-e2e-testing-with-playwright: backlog
   7-4-component-documentation-with-storybook: backlog
@@ -101,12 +102,12 @@ development_status:
 # SPRINT SUMMARY
 
 total_epics: 7
-total_stories: 22
+total_stories: 23
 epics_backlog: 4
 epics_in_progress: 3
 epics_done: 0
-stories_backlog: 14
-stories_ready_for_dev: 1
+stories_backlog: 13
+stories_ready_for_dev: 2
 stories_in_progress: 0
 stories_review: 0
 stories_done: 7
