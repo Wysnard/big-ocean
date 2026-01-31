@@ -20,6 +20,8 @@ const range = (len: number) => {
 }
 
 const newPerson = (num: number): Person => {
+  const statuses: Person['status'][] = ['relationship', 'complicated', 'single']
+  const shuffled = faker.helpers.shuffle(statuses)
   return {
     id: num,
     firstName: faker.person.firstName(),
@@ -27,17 +29,13 @@ const newPerson = (num: number): Person => {
     age: faker.number.int(40),
     visits: faker.number.int(1000),
     progress: faker.number.int(100),
-    status: faker.helpers.shuffle<Person['status']>([
-      'relationship',
-      'complicated',
-      'single',
-    ])[0]!,
+    status: shuffled[0] ?? 'single',
   }
 }
 
 export function makeData(...lens: number[]) {
   const makeDataLevel = (depth = 0): Person[] => {
-    const len = lens[depth]!
+    const len = lens[depth] ?? 0
     return range(len).map((index): Person => {
       return {
         ...newPerson(index),

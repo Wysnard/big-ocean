@@ -12,6 +12,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Workspace package aliases
+      '@workspace/ui/components': path.resolve(__dirname, '../../packages/ui/src/components'),
+      '@workspace/ui/lib': path.resolve(__dirname, '../../packages/ui/src/lib'),
+      '@workspace/ui/hooks': path.resolve(__dirname, '../../packages/ui/src/hooks'),
+      '@workspace': path.resolve(__dirname, '../../packages'),
     },
   },
 })

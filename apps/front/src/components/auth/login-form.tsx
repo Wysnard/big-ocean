@@ -23,8 +23,8 @@ export function LoginForm() {
       await signIn.email(email, password);
       // Redirect or update UI on success
       window.location.href = "/dashboard";
-    } catch (err: any) {
-      setError(err.message || "Invalid email or password");
+    } catch (err) {
+      setError((err instanceof Error ? err.message : String(err)) || "Invalid email or password");
     } finally {
       setIsLoading(false);
     }

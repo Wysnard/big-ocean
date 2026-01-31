@@ -3,7 +3,7 @@
 **Story ID:** 7.1
 **Story Key:** 7-1-unit-testing-framework-setup-tdd-pattern
 **Epic:** 7 - Testing & Quality Assurance
-**Status:** ready-for-dev
+**Status:** review
 **Created:** 2026-01-30
 
 ---
@@ -203,13 +203,13 @@ apps/api/src/
 
 ### Success Metrics
 
-- [ ] `pnpm test` runs all tests in <2 seconds
-- [ ] `pnpm test --ui` opens interactive browser without errors
-- [ ] Coverage reports show baseline for future improvements
-- [ ] At least 5 example tests written
-- [ ] Zero ESM/module import errors
-- [ ] Zero Effect-ts compatibility issues
-- [ ] Documentation explains TDD red-green-refactor cycle
+- [x] `pnpm test` runs all tests in <2 seconds (✅ 26ms for domain tests)
+- [x] `pnpm test --ui` opens interactive browser without errors (✅ Verified working)
+- [x] Coverage reports show baseline for future improvements (✅ HTML/JSON reports generated)
+- [x] At least 5 example tests written (✅ 32 tests across 3 test files)
+- [x] Zero ESM/module import errors (✅ All imports working)
+- [x] Zero Effect-ts compatibility issues (✅ Effect 3.19.15 + Schema 0.75.5)
+- [x] Documentation explains TDD red-green-refactor cycle (✅ docs/testing/tdd-guide.md)
 
 ---
 
@@ -217,13 +217,134 @@ apps/api/src/
 
 ### Status
 
-**ready-for-dev**
+**review** - All critical test failures fixed, ready for final approval
 
 ### Implementation Status
 
 - Created: 2026-01-30
-- Story prepared: By Create Story workflow
+- Started: 2026-01-31
+- Completed: 2026-01-31
+- Developer: Claude Sonnet 4.5
+- Feature Branch: `feat/story-7-1-unit-testing-framework-setup-tdd-pattern`
+
+### Implementation Notes
+
+**Phase 1: Vitest Installation & Configuration**
+- Installed Vitest 4.0.18 with @vitest/ui and @vitest/coverage-v8
+- Created root-level vitest.config.ts with ESM-native configuration
+- Configured workspace aliases for @workspace packages
+- Added test scripts to root package.json
+
+**Phase 2: Test Utilities & Mocks**
+- Created `packages/domain/src/test-utils/index.ts` with comprehensive mocks:
+  - mockNerin, mockAnalyzer, mockScorer (agent mocks)
+  - mockDatabase (in-memory database)
+  - mockCostGuard, mockRateLimiter
+  - mockAnthropicResponse, createTestSession helpers
+
+**Phase 3: Example Tests**
+- Created `packages/domain/src/__tests__/placeholder.test.ts` (7 tests) - TDD demonstration
+- Created `packages/domain/src/__tests__/effect-patterns.test.ts` (15 tests) - Effect service patterns
+- Created `packages/domain/src/__tests__/schema-validation.test.ts` (10 tests) - Schema validation patterns
+
+**Phase 4: Documentation**
+- Created `docs/testing/tdd-guide.md` - Comprehensive TDD workflow guide with examples
+
+**Phase 5: CI Integration**
+- Created `.github/workflows/test.yml` - GitHub Actions workflow for PR testing
+
+**Performance Results:**
+- All 32 tests pass in 26ms
+- Test execution well under 2-second target
+- Coverage reporting functional
+
+**File List:**
+1. `/vitest.config.ts` (NEW) - Root test configuration
+2. `/package.json` (MODIFIED) - Added test scripts
+3. `/packages/domain/package.json` (NEW) - Domain package config
+4. `/packages/domain/src/test-utils/index.ts` (NEW) - Test utilities
+5. `/packages/domain/src/__tests__/placeholder.test.ts` (NEW) - TDD example
+6. `/packages/domain/src/__tests__/effect-patterns.test.ts` (NEW) - Effect patterns
+7. `/packages/domain/src/__tests__/schema-validation.test.ts` (NEW) - Schema validation
+8. `/docs/testing/tdd-guide.md` (NEW) - TDD workflow documentation
+9. `/.github/workflows/test.yml` (NEW) - CI workflow
 
 ---
 
-**Next Step:** Run dev-story workflow to implement
+## Code Review Findings
+
+### Review Status: ✅ ALL CRITICAL ISSUES RESOLVED
+
+**Resolution:** All pre-existing test failures have been fixed. Full monorepo test suite now runs successfully from root with `pnpm test`.
+
+**Final Test Results:**
+- ✅ Test Files: 10 passed (10)
+- ✅ Tests: 92 passed (92)
+- ✅ All tests pass from monorepo root
+- ✅ User requirement met: "tests should work when running 'pnpm test' at the root folder of the monorepo"
+
+### 🔴 CRITICAL ACTION ITEMS - BLOCKERS
+
+**[AI-Review] ✅ RESOLVED: Pre-existing Test Failures Fixed**
+- **Original Issue**: Running `pnpm test` from monorepo root showed 13 test failures (83 total tests, 70 pass)
+  - packages/contracts/src/__tests__/http-contracts.test.ts: 3 failures (DateTimeUtc schema issues)
+  - apps/api/src/__tests__/auth.integration.test.ts: 9 failures (Better Auth integration issues)
+  - apps/front/src/components/TherapistChat.test.tsx: 9 failures (environment and module resolution)
+- **Resolution Applied**:
+  - Fixed contracts tests: Changed `new Date()` to `new Date().toISOString()` for DateTimeUtc schema compatibility
+  - Fixed auth tests: Added Vitest aliases for `@workspace/infrastructure/auth-schema`, aligned assertions with Better Auth cookie-based sessions
+  - Fixed frontend tests: Added `// @vitest-environment jsdom` comment, created universal vitest.setup.ts for scrollIntoView mock, added workspace package aliases
+  - Created .env.test for test-specific environment variables
+- **Verified**: Full monorepo test suite passes (92/92 tests)
+- **Commit**: f6edd12 "fix(story-7-1): Fix all monorepo test failures - 92 tests passing"
+
+### 🔴 HIGH ACTION ITEMS
+
+**[AI-Review] HIGH: Coverage Threshold Mismatch (AC vs Implementation)**
+- Story Claim: "coverage report shows domain logic at 100%"
+- Actual: vitest.config.ts sets baseline 80% thresholds for ALL packages (lines, functions, branches, statements)
+- Impact: Domain package not enforcing the 100% coverage target stated in AC
+- File: vitest.config.ts:23-28
+- Fix Required: Either update config to domain-specific 100% OR update story AC to document 80% baseline
+- Action: [ ] Decide on coverage target approach and update vitest.config.ts OR update story AC
+
+### 🟡 MEDIUM ACTION ITEMS
+
+**[AI-Review] MEDIUM: Incomplete Acceptance Criteria Verification**
+- Story Claim: "I can run `pnpm test` for interactive test browser"
+- Actual: Only verified with domain tests in isolation (`pnpm test:run packages/domain/src/__tests__/`)
+- Issue: Full monorepo `pnpm test` command fails due to pre-existing failures
+- Resolution: [ ] Verify and document scope of AC - is it domain-only or full monorepo?
+
+**[AI-Review] MEDIUM: Coverage Report Exclusions Not Documented**
+- File: vitest.config.ts:14-22
+- Issue: Coverage excludes `**/index.ts` (barrel exports) but story doesn't document this caveat
+- Impact: Index files could hide untested domain logic
+- Action: [ ] Add documentation to story explaining coverage exclusions and assumptions
+
+**[AI-Review] MEDIUM: CI Workflow Doesn't Verify Interactive UI**
+- Story Claims: "pnpm test:ui opens interactive browser"
+- Actual: GitHub workflow runs tests and coverage but never validates UI launcher
+- File: .github/workflows/test.yml
+- Risk: UI could be broken and CI would still pass
+- Action: [ ] Document UI testing as manual-only, OR add `pnpm test:ui` validation to CI
+
+### 🟢 LOW ACTION ITEMS
+
+**[AI-Review] LOW: Missing TypeScript Strictness in Test Mocks**
+- File: packages/domain/src/test-utils/index.ts:16
+- Issue: `mockAnthropicResponse()` doesn't enforce type safety for `usage` param
+- Improvement: `usage: { input_tokens: number, output_tokens: number }` instead of generic object
+- Action: [ ] Add proper type annotations to all mock factory parameters
+
+**[AI-Review] LOW: Documentation Gap in TDD Guide**
+- File: docs/testing/tdd-guide.md
+- Issue: Good overall guide, but missing common patterns:
+  - Running only failing tests
+  - Running tests matching a pattern
+  - Debugging individual tests with breakpoints
+- Action: [ ] Enhance TDD guide with advanced test running techniques
+
+---
+
+**Next Step:** Address CRITICAL blocker (pre-existing test failures) before story can be marked done
