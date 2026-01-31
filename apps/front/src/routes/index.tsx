@@ -113,9 +113,9 @@ function App() {
           The Five Dimensions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          {traits.map((trait, index) => (
+          {traits.map((trait) => (
             <div
-              key={index}
+              key={trait.title}
               className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10"
             >
               <div className="mb-4">{trait.icon}</div>
