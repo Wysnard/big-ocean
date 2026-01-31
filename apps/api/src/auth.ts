@@ -75,10 +75,12 @@ export const auth = betterAuth({
           console.info(`User created: ${user.id} (${user.email})`)
 
           // Link anonymous session to new user account
-          const body = context?.body as any
-          const anonymousSessionId = body?.anonymousSessionId
+          const body = context?.body
+          const anonymousSessionId = typeof body === "object" && body !== null && "anonymousSessionId" in body
+            ? (body as Record<string, unknown>).anonymousSessionId
+            : undefined
 
-          if (anonymousSessionId) {
+          if (typeof anonymousSessionId === "string") {
             try {
               await db
                 .update(authSchema.session)
@@ -88,9 +90,10 @@ export const auth = betterAuth({
               console.info(
                 `Linked anonymous session ${anonymousSessionId} to user ${user.id}`
               )
-            } catch (error: any) {
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error)
               console.error(
-                `Failed to link anonymous session: ${error.message}`
+                `Failed to link anonymous session: ${errorMessage}`
               )
             }
           }
