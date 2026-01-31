@@ -89,7 +89,7 @@ RUN npm install -g pnpm@10.4.1
 # Use pnpm deploy to extract only frontend dependencies
 COPY --from=production /app /temp
 WORKDIR /temp
-RUN pnpm deploy --filter=front --prod /app/deployed
+RUN pnpm deploy --filter=front --prod --legacy /app/deployed
 
 # Switch to deployment directory
 WORKDIR /app/deployed
