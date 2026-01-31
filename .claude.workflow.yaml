@@ -1,0 +1,113 @@
+# Claude Code Workflow Configuration
+# Defines branch naming, commit messages, and PR templates for story implementation
+
+workflow:
+  # Git branch configuration
+  git:
+    # Base branch for all feature branches
+    base_branch: master
+
+    # Branch naming convention
+    # Uses story_id (e.g., "1.2") converted to kebab-case (e.g., "1-2")
+    # Story titles are automatically extracted from story file frontmatter
+    branch_naming: "feat/story-{story_id}"
+    # Example: Story 1.2 → feat/story-1-2-better-auth
+
+    # Auto-create and checkout branch when starting work
+    auto_create_branch: true
+
+    # Automatically push when committing
+    auto_push: true
+
+    # Settings for push
+    push_flags: "-u origin" # Creates remote tracking branch
+
+  # Commit message configuration
+  commit:
+    # Commit message template
+    # Available variables: {story_id}, {story_title}, {story_short_title}
+    template: "feat(#{story_id}): - {story_title}"
+
+    # Include story file reference in body
+    include_story_reference: true
+
+    # Example commit message:
+    # feat: Story 1.2 - Integrate Better Auth for Email/Password Authentication
+    #
+    # Ref: _bmad-output/implementation-artifacts/1-2-integrate-better-auth-for-email-password-authentication.md
+    #
+    # Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
+
+  # Pull request configuration
+  pull_request:
+    # Auto-create PR when pushing
+    auto_create_pr: true
+
+    # PR title template
+    title_template: "Story {story_id}: {story_title}"
+    # Example: "Story 1.2: Integrate Better Auth for Email/Password Authentication"
+
+    # PR body template includes:
+    # - Story ID and title
+    # - Summary section from story file
+    # - Link to story file
+    # - Acceptance criteria
+    # - Testing instructions
+    body_sections:
+      - summary
+      - acceptance_criteria
+      - testing_notes
+      - story_link
+
+    # Set PR as draft initially (optional)
+    draft: false
+
+    # Target branch for PR
+    target_branch: master
+
+    # Example PR body structure:
+    # ## Summary
+    # As a [role], I want [feature], so that [benefit]
+    #
+    # ## Acceptance Criteria
+    # - [Criteria 1]
+    # - [Criteria 2]
+    # ...
+    #
+    # ## Story Reference
+    # See: _bmad-output/implementation-artifacts/{story_file}.md
+    #
+    # 🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+  # Workflow execution
+  execution:
+    # Show confirmation prompts before key actions
+    confirm_branch_creation: false # Auto-create without asking
+    confirm_push: false # Auto-push without asking
+    confirm_pr_creation: false # Auto-create PR without asking
+
+    # Interaction mode: "auto" | "interactive" | "silent"
+    # - auto: Create branch/commit/push/PR without prompts
+    # - interactive: Ask before each major step
+    # - silent: No output, just execute
+    mode: auto
+
+    # Log output level: "verbose" | "normal" | "minimal"
+    log_level: normal
+
+# Story file location patterns
+story_files:
+  location: "_bmad-output/implementation-artifacts"
+  pattern: "{epic}-{story_number}-*.md"
+  # Examples:
+  # - 1-2-integrate-better-auth-for-email-password-authentication.md
+  # - 2-1-session-management-and-persistence.md
+
+# Variable reference for templates
+# {story_id}          - Story ID from YAML frontmatter (e.g., "1.2")
+# {story_id_kebab}    - Story ID converted to kebab-case (e.g., "1-2")
+# {story_title}       - Full story title from markdown heading
+# {story_short_title} - Story title without "Story X.Y -" prefix
+# {epic}              - Epic number (e.g., "1")
+# {story_number}      - Story number within epic (e.g., "2")
+# {date}              - Current date (YYYY-MM-DD)
