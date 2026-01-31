@@ -8,7 +8,6 @@ RUN npm install -g pnpm@10.4.1
 # Copy package files for dependency installation
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
-COPY packages/database/package.json ./packages/database/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/lint/package.json ./packages/lint/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
@@ -34,7 +33,6 @@ RUN npm install -g pnpm@10.4.1
 # Copy package files
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
-COPY packages/database/package.json ./packages/database/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/lint/package.json ./packages/lint/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
@@ -66,7 +64,6 @@ RUN npm install -g pnpm@10.4.1
 # Copy package files for dependency installation
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
-COPY packages/database/package.json ./packages/database/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/lint/package.json ./packages/lint/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
