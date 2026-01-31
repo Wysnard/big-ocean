@@ -30,19 +30,21 @@ export class LoggerService extends Context.Tag("LoggerService")<
  * Pino Logger Implementation
  */
 const createPinoLogger = (): Logger => {
+  // Only use pino-pretty in explicit development mode
+  const isDevelopment = process.env.NODE_ENV === "development"
+
   const logger = pino({
     level: process.env.LOG_LEVEL || "info",
-    transport:
-      process.env.NODE_ENV !== "production"
-        ? {
-            target: "pino-pretty",
-            options: {
-              colorize: true,
-              translateTime: "HH:MM:ss",
-              ignore: "pid,hostname",
-            },
-          }
-        : undefined,
+    transport: isDevelopment
+      ? {
+          target: "pino-pretty",
+          options: {
+            colorize: true,
+            translateTime: "HH:MM:ss",
+            ignore: "pid,hostname",
+          },
+        }
+      : undefined,
   })
 
   return {
