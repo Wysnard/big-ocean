@@ -55,7 +55,7 @@ import {
   StateSchema,
   MessagesValue,
   ReducedValue,
-  GraphNode,
+  type GraphNode,
   ConditionalEdgeRouter,
   START,
   END,
@@ -73,7 +73,7 @@ const MessagesState = new StateSchema({
 import {
   SystemMessage,
   AIMessage,
-  ToolMessage,
+  type ToolMessage,
 } from "@langchain/core/messages";
 
 const llmCall: GraphNode<typeof MessagesState> = async (state) => {

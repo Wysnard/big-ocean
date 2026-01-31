@@ -82,7 +82,7 @@ import {
   StateSchema,
   MessagesValue,
   ReducedValue,
-  GraphNode,
+  type GraphNode,
   START,
   END,
 } from "@langchain/langgraph";

@@ -179,7 +179,7 @@ describe("Better Auth Integration", () => {
           email: `anon-link-${Date.now()}@example.com`,
           password: "AnonLinkPassword123",
           name: "Anon Link Test",
-          // @ts-ignore - anonymousSessionId is custom field
+          // @ts-expect-error - anonymousSessionId is custom field
           anonymousSessionId,
         },
       });
