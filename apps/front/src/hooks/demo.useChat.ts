@@ -5,9 +5,9 @@ import { messagesCollection, type Message } from '@/db-collections'
 
 import type { Collection } from '@tanstack/react-db'
 
-function useStreamConnection(
+function useStreamConnection<T extends Record<string, unknown>>(
   url: string,
-  collection: Collection<any, any, any>,
+  collection: Collection<T, unknown, unknown>,
 ) {
   const loadedRef = useRef(false)
 

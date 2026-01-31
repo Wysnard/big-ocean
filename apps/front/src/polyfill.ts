@@ -17,5 +17,6 @@ import { File } from 'node:buffer'
  * If you're not using `oz.file()`, you can safely remove this polyfill.
  */
 if (typeof globalThis.File === 'undefined') {
-  globalThis.File = File as any
+  // @ts-expect-error: Node.js File polyfill for missing browser API
+  globalThis.File = File
 }
