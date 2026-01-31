@@ -39,11 +39,6 @@ workflow:
     # Include story file reference in body
     include_story_reference: true
 
-    # Always include co-author footer
-    include_coauthor: true
-    coauthor_name: "Claude Haiku 4.5"
-    coauthor_email: "noreply@anthropic.com"
-
     # Example commit messages:
     # Initial implementation (story in ready-for-dev/in-progress):
     # feat(#1.2): Integrate Better Auth for Email/Password Authentication
