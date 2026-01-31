@@ -1,10 +1,9 @@
 import { ChatAnthropic } from "@langchain/anthropic";
 import * as z from "zod";
 import "dotenv/config";
-import logger from "../logger.js";
 
 if (!process.env.ANTHROPIC_API_KEY) {
-  logger.warn("[Therapist] ANTHROPIC_API_KEY not set in environment");
+  console.warn("[Therapist] ANTHROPIC_API_KEY not set in environment");
 }
 
 // LLM 1: Conversational Therapist (focused on empathetic dialogue)
@@ -183,7 +182,7 @@ Your ONLY job is to have a warm, natural conversation with the person. DO NOT wo
 
 Be warm, non-judgmental, and conversational. Let the dialogue flow naturally.`;
 
-  logger.debug("[Therapist] Conversational LLM generating response");
+  console.debug("[Therapist] Conversational LLM generating response");
 
   const response = await conversationalModel.invoke([
     new SystemMessage(systemPrompt),
@@ -281,7 +280,7 @@ Analyze the conversation history and provide updated scores for all 30 facets an
 
 Return updated scores for ALL 30 facets and 5 confidence levels.`;
 
-  logger.debug("[Therapist] Evaluator LLM analyzing conversation");
+  console.debug("[Therapist] Evaluator LLM analyzing conversation");
 
   try {
     const assessment = await evaluatorWithStructuredOutput.invoke([
@@ -291,7 +290,7 @@ Return updated scores for ALL 30 facets and 5 confidence levels.`;
 
     const messageCount = state.messages.filter((m) => m.type === "human").length;
 
-    logger.info("[Therapist] Evaluation completed", {
+    console.info("[Therapist] Evaluation completed", {
       messageCount,
       opennessPrecision: assessment.opennessPrecision,
       conscientiousnessPrecision: assessment.conscientiousnessPrecision,
@@ -342,7 +341,7 @@ Return updated scores for ALL 30 facets and 5 confidence levels.`;
       evaluateNow: false, // Reset the flag
     };
   } catch (error) {
-    logger.error("[Therapist] Evaluation failed", {
+    console.error("[Therapist] Evaluation failed", {
       error: error instanceof Error ? error.message : String(error),
     });
     // On error, return previous state (no updates)
@@ -367,7 +366,7 @@ const shouldEvaluate = (state: typeof TherapistState.State) => {
     messageCount % evaluationInterval === 0 ||
     shouldEvaluateNow
   ) {
-    logger.debug("[Therapist] Triggering evaluation", {
+    console.debug("[Therapist] Triggering evaluation", {
       messageCount,
       reason: messageCount === 1
         ? "first message"
@@ -378,7 +377,7 @@ const shouldEvaluate = (state: typeof TherapistState.State) => {
     return "evaluate";
   }
 
-  logger.debug("[Therapist] Skipping evaluation", { messageCount });
+  console.debug("[Therapist] Skipping evaluation", { messageCount });
   return "skip";
 };
 
@@ -405,7 +404,7 @@ export async function conductPersonalityAssessment(
   previousState?: Partial<AgentOutput>,
 ): Promise<AgentOutput> {
   try {
-    logger.info("[Therapist] Starting personality assessment", {
+    console.info("[Therapist] Starting personality assessment", {
       hasUserInput: !!userInput,
       inputLength: userInput?.length,
       hasPreviousState: !!previousState,
@@ -417,7 +416,7 @@ export async function conductPersonalityAssessment(
       messages.push(new HumanMessage(userInput));
     }
 
-    logger.debug("[Therapist] Invoking agent", {
+    console.debug("[Therapist] Invoking agent", {
       messageCount: messages.length,
       previousPrecisions: previousState
         ? {
@@ -484,7 +483,7 @@ export async function conductPersonalityAssessment(
       vulnerability: previousState?.vulnerability ?? 0,
     });
 
-    logger.debug("[Therapist] Assessment completed", {
+    console.debug("[Therapist] Assessment completed", {
       messageCount: result.messages?.length || 0,
       opennessPrecision: result.opennessPrecision,
       conscientiousnessPrecision: result.conscientiousnessPrecision,
@@ -495,7 +494,7 @@ export async function conductPersonalityAssessment(
 
     return result;
   } catch (error) {
-    logger.error("[Therapist] Assessment failed", {
+    console.error("[Therapist] Assessment failed", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });

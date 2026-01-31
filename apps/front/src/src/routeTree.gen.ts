@@ -8,28 +8,28 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ChatIndexRouteImport } from './routes/chat/index'
-import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
-import { Route as DemoTableRouteImport } from './routes/demo/table'
-import { Route as DemoStorybookRouteImport } from './routes/demo/storybook'
-import { Route as DemoOrpcTodoRouteImport } from './routes/demo/orpc-todo'
-import { Route as DemoDbChatApiRouteImport } from './routes/demo/db-chat-api'
-import { Route as DemoDbChatRouteImport } from './routes/demo/db-chat'
-import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
-import { Route as DemoStartApiRequestRouteImport } from './routes/demo/start.api-request'
-import { Route as DemoFormSimpleRouteImport } from './routes/demo/form.simple'
-import { Route as DemoFormAddressRouteImport } from './routes/demo/form.address'
-import { Route as DemoApiTqTodosRouteImport } from './routes/demo/api.tq-todos'
-import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names'
-import { Route as DemoStartSsrIndexRouteImport } from './routes/demo/start.ssr.index'
-import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr.spa-mode'
-import { Route as DemoStartSsrFullSsrRouteImport } from './routes/demo/start.ssr.full-ssr'
-import { Route as DemoStartSsrDataOnlyRouteImport } from './routes/demo/start.ssr.data-only'
+import { Route as rootRouteImport } from './../routes/__root'
+import { Route as SignupRouteImport } from './../routes/signup'
+import { Route as LoginRouteImport } from './../routes/login'
+import { Route as DashboardRouteImport } from './../routes/dashboard'
+import { Route as IndexRouteImport } from './../routes/index'
+import { Route as ChatIndexRouteImport } from './../routes/chat/index'
+import { Route as DemoTanstackQueryRouteImport } from './../routes/demo/tanstack-query'
+import { Route as DemoTableRouteImport } from './../routes/demo/table'
+import { Route as DemoStorybookRouteImport } from './../routes/demo/storybook'
+import { Route as DemoOrpcTodoRouteImport } from './../routes/demo/orpc-todo'
+import { Route as DemoDbChatApiRouteImport } from './../routes/demo/db-chat-api'
+import { Route as DemoDbChatRouteImport } from './../routes/demo/db-chat'
+import { Route as DemoStartServerFuncsRouteImport } from './../routes/demo/start.server-funcs'
+import { Route as DemoStartApiRequestRouteImport } from './../routes/demo/start.api-request'
+import { Route as DemoFormSimpleRouteImport } from './../routes/demo/form.simple'
+import { Route as DemoFormAddressRouteImport } from './../routes/demo/form.address'
+import { Route as DemoApiTqTodosRouteImport } from './../routes/demo/api.tq-todos'
+import { Route as DemoApiNamesRouteImport } from './../routes/demo/api.names'
+import { Route as DemoStartSsrIndexRouteImport } from './../routes/demo/start.ssr.index'
+import { Route as DemoStartSsrSpaModeRouteImport } from './../routes/demo/start.ssr.spa-mode'
+import { Route as DemoStartSsrFullSsrRouteImport } from './../routes/demo/start.ssr.full-ssr'
+import { Route as DemoStartSsrDataOnlyRouteImport } from './../routes/demo/start.ssr.data-only'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -482,7 +482,7 @@ export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from './router.tsx'
+import type { getRouter } from '../router.tsx'
 import type { createStart } from '@tanstack/react-start'
 declare module '@tanstack/react-start' {
   interface Register {

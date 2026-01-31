@@ -27,6 +27,8 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@effect/platform": "catalog:",
+    "@effect/platform-node": "catalog:",
     "bcryptjs": "catalog:",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",

@@ -1,159 +1,152 @@
-import "dotenv/config";
-import express, { Request, Response } from "express";
-import cors from "cors";
-import logger from "./logger.js";
-import { auth } from "./setup.js";
-import { securityHeaders } from "./middleware/security.js";
+/**
+ * Big Ocean API Server
+ *
+ * Hybrid architecture - Better Auth at node:http layer, Effect handles rest
+ * Pattern from: https://dev.to/danimydev/authentication-with-nodehttp-and-better-auth-2l2g
+ */
+
+import "dotenv/config"
+import { Effect, Layer } from "effect"
+import { HttpApiBuilder, HttpMiddleware } from "@effect/platform"
+import { NodeHttpServer, NodeRuntime } from "@effect/platform-node"
+import { createServer } from "node:http"
+import type { Server, IncomingMessage, ServerResponse } from "node:http"
+import { BigOceanApi } from "@workspace/contracts"
+import { HealthGroupLive } from "./handlers/health.js"
+import { AssessmentGroupLive } from "./handlers/assessment.js"
+import { LoggerService, LoggerServiceLive } from "./services/logger.js"
+import { betterAuthHandler } from "./middleware/better-auth.js"
 
 /**
- * Express App Setup
+ * Configuration
  */
-const app = express();
-const port = Number(process.env.PORT || 4000);
+const port = Number(process.env.PORT || 4000)
 
-// Middleware
-// CORS must come before security headers to set Access-Control headers first
-const allowedOrigins = [
-  process.env.FRONTEND_URL || "http://localhost:3001", // TanStack Start dev server (port 3001)
-  "http://localhost:3000", // Fallback for legacy port
-  "https://*.railway.app", // Railway preview deployments
-];
+/**
+ * Combined Handler Layers with Logger Service
+ */
+const HttpGroupsLive = Layer.mergeAll(
+  HealthGroupLive,
+  AssessmentGroupLive,
+  LoggerServiceLive
+)
 
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, Postman, curl)
-    if (!origin) return callback(null, true);
+/**
+ * API Layer - Builds HTTP API from contracts with handlers
+ */
+const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(
+  Layer.provide(HttpGroupsLive)
+)
 
-    // Check if origin matches any allowed origin (including wildcards)
-    const isAllowed = allowedOrigins.some(allowed => {
-      if (allowed.includes("*")) {
-        const regex = new RegExp(allowed.replace("*", ".*"));
-        return regex.test(origin);
-      }
-      return allowed === origin;
-    });
+/**
+ * Complete API Layer with Router, Middleware, and Server Context
+ */
+const ApiLayer = Layer.mergeAll(
+  ApiLive,
+  HttpApiBuilder.Router.Live,
+  HttpApiBuilder.Middleware.layer
+)
 
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      callback(new Error(`Origin ${origin} not allowed by CORS`));
+/**
+ * Custom server factory that integrates Better Auth BEFORE Effect
+ *
+ * NodeHttpServer.layer will attach the Effect handler to this server.
+ * We intercept requests first to handle Better Auth routes.
+ */
+const createCustomServer = (): Server => {
+  const server = createServer()
+  let effectHandler: ((req: IncomingMessage, res: ServerResponse) => void) | null = null
+
+  // Store reference to Effect's handler when it gets attached
+  server.on("newListener", (event, listener) => {
+    if (event === "request") {
+      effectHandler = listener as any
+      // Remove the Effect listener - we'll call it manually after Better Auth
+      server.removeListener("request", listener as any)
     }
-  },
-  credentials: true,
-}));
+  })
 
-app.use(securityHeaders); // Security headers after CORS
-app.use(express.json());
+  // Our custom request handler
+  server.on("request", async (req: IncomingMessage, res: ServerResponse) => {
+    try {
+      // Step 1: Try Better Auth first
+      await betterAuthHandler(req, res)
 
-/**
- * Health Check Endpoint
- */
-app.get("/health", (req: Request, res: Response) => {
-  res.json({ status: "ok" });
-  logger.debug("[HTTP] Health check passed");
-});
-
-/**
- * Better Auth Middleware
- *
- * Better Auth automatically handles all /api/auth/* routes.
- * Available endpoints:
- * - POST /api/auth/sign-up/email (signup)
- * - POST /api/auth/sign-in/email (signin)
- * - POST /api/auth/sign-out (signout)
- * - GET  /api/auth/get-session (get session)
- *
- * See: https://www.better-auth.com/docs/concepts/session-management
- */
-app.use("/api/auth", async (req: Request, res: Response, next) => {
-  try {
-    // Convert Express request to Web API Request
-    const url = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-    const headers = new Headers();
-    Object.entries(req.headers).forEach(([key, value]) => {
-      if (value) {
-        headers.set(key, Array.isArray(value) ? value.join(", ") : value);
+      // Step 2: If Better Auth handled the request, we're done
+      if (res.writableEnded) {
+        return
       }
-    });
 
-    const webRequest = new globalThis.Request(url, {
-      method: req.method,
-      headers,
-      body: req.method !== "GET" && req.method !== "HEAD" ? JSON.stringify(req.body) : undefined,
-    });
+      // Step 3: Pass to Effect handler
+      if (effectHandler) {
+        effectHandler(req, res)
+      } else {
+        // Fallback if Effect hasn't attached yet
+        res.statusCode = 503
+        res.setHeader("Content-Type", "application/json")
+        res.end(JSON.stringify({
+          error: "Service initializing"
+        }))
+      }
+    } catch (error: any) {
+      console.error("Server error:", error.message)
+      if (!res.headersSent) {
+        res.statusCode = 500
+        res.setHeader("Content-Type", "application/json")
+        res.end(JSON.stringify({ error: "Internal server error" }))
+      }
+    }
+  })
 
-    // Handle Better Auth request
-    const response = await auth.handler(webRequest);
-
-    // Convert Web API Response to Express response
-    res.status(response.status);
-    response.headers.forEach((value, key) => {
-      res.setHeader(key, value);
-    });
-
-    const body = await response.text();
-    res.send(body);
-  } catch (error: any) {
-    logger.error("Better Auth handler error", { error: error.message });
-    next(error);
-  }
-});
-
-/**
- * Assessment Routes
- *
- * TODO: Implement assessment endpoints using Effect-ts for business logic
- * Example endpoints:
- * - POST /api/assessment/start
- * - POST /api/assessment/message
- * - GET  /api/assessment/:sessionId
- * - GET  /api/assessment/:sessionId/results
- */
-app.post("/api/assessment/start", async (req: Request, res: Response) => {
-  logger.info("Start assessment request");
-  res.json({
-    message: "Assessment start endpoint - coming soon",
-    note: "Will use Effect-ts for business logic",
-  });
-});
+  return server
+}
 
 /**
- * Profile Routes
- *
- * TODO: Implement profile endpoints using Effect-ts for business logic
- * Example endpoints:
- * - GET  /api/profile/:userId
- * - POST /api/profile/compare
- * - GET  /api/profile/similar
+ * HTTP Server Layer with Better Auth integration
  */
-app.get("/api/profile/:userId", async (req: Request, res: Response) => {
-  logger.info("Get profile request", { userId: req.params.userId });
-  res.json({
-    message: "Profile endpoint - coming soon",
-    note: "Will use Effect-ts for business logic",
-  });
-});
+const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
+  Layer.provide(ApiLayer),
+  Layer.provide(NodeHttpServer.layer(createCustomServer, { port })),
+  Layer.provide(LoggerServiceLive)
+)
 
 /**
- * Start Server
+ * Startup logging
  */
-app.listen(port, () => {
-  logger.info(`Server started on http://0.0.0.0:${port}`);
-  logger.info(`Better Auth routes: /api/auth/* (sign-up, sign-in, sign-out, get-session)`);
-  logger.info(`Assessment routes: /api/assessment/* (start, message, results)`);
-  logger.info(`Profile routes: /api/profile/* (get, compare, similar)`);
-  logger.info(`Health check: GET /health`);
-  logger.info(`Frontend CORS enabled for: ${process.env.FRONTEND_URL || "http://localhost:3000"}`);
-});
+const logStartup = Effect.gen(function* () {
+  const logger = yield* LoggerService
+
+  logger.info(`Starting Big Ocean API server on port ${port}`)
+  logger.info("")
+  logger.info("✓ Better Auth routes (node:http layer):")
+  logger.info("  - POST /api/auth/sign-up/email")
+  logger.info("  - POST /api/auth/sign-in/email")
+  logger.info("  - POST /api/auth/sign-out")
+  logger.info("  - GET  /api/auth/get-session")
+  logger.info("")
+  logger.info("✓ Effect/Platform routes (Effect layer):")
+  logger.info("  - GET  /api/health")
+  logger.info("  - POST /api/assessment/start")
+  logger.info("  - POST /api/assessment/message")
+  logger.info("  - GET  /api/assessment/:sessionId/resume")
+  logger.info("  - GET  /api/assessment/:sessionId/results")
+}).pipe(Effect.provide(LoggerServiceLive))
+
+/**
+ * Launch server
+ */
+Effect.runPromise(logStartup).then(() => {
+  NodeRuntime.runMain(Layer.launch(HttpLive))
+})
 
 /**
  * Error Handlers
  */
 process.on("unhandledRejection", (reason) => {
-  logger.error(`Unhandled Rejection: ${reason}`);
-});
+  console.error(`Unhandled Rejection: ${reason}`)
+})
 
 process.on("uncaughtException", (error) => {
-  logger.error(`Uncaught Exception: ${error.message}`, { error });
-  process.exit(1);
-});
+  console.error(`Uncaught Exception: ${error.message}`, error)
+  process.exit(1)
+})
