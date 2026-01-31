@@ -7,7 +7,8 @@
  * @see Story 1.4: Docker Compose Local Development Setup
  */
 
-import http from 'http';
+import { describe, test, expect } from 'vitest';
+import http from 'node:http';
 
 /**
  * Helper: Make HTTP request
