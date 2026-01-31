@@ -32,11 +32,19 @@ export {
   CostGuardServiceLive,
 } from "./context/cost-guard.js";
 
+// Session Manager Service (Context.Tag pattern)
+export {
+  SessionManager,
+  SessionManagerLive,
+} from "./context/session-manager.js";
+
 // Schema exports (used by applications)
 export {
   user,
   session,
   account,
   verification,
+  sessions,
+  messages,
   relations,
 } from "./auth-schema.js";

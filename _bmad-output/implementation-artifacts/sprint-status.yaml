@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-01-30
+# Generated: 2026-01-31
 # Project: big-ocean
 # Project Key: big-ocean
 # Tracking System: file-system
@@ -34,7 +34,7 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-01-30
+generated: 2026-01-31
 project: big-ocean
 project_key: big-ocean
 tracking_system: file-system
@@ -55,7 +55,7 @@ development_status:
   epic-2: in-progress
   2-0-linter-unification-and-frontend-fixes: done
   2-0.5-effect-based-dependency-injection-refactoring: done
-  2-1-session-management-and-persistence: ready-for-dev
+  2-1-session-management-and-persistence: in-progress
   2-2-nerin-agent-setup-and-conversational-quality: backlog
   2-3-analyzer-and-scorer-agent-implementation: backlog
   2-4-langgraph-state-machine-and-orchestration: backlog
@@ -102,56 +102,95 @@ development_status:
 # SPRINT SUMMARY
 
 total_epics: 7
-total_stories: 23
+total_stories: 25
 epics_backlog: 4
 epics_in_progress: 3
 epics_done: 0
-stories_backlog: 13
+stories_backlog: 15
 stories_ready_for_dev: 1
 stories_in_progress: 0
-stories_review: 1
-stories_done: 7
-retrospectives_optional: 7
-retrospectives_done: 0
+stories_review: 0
+stories_done: 9
+retrospectives_optional: 6
+retrospectives_done: 1
 
 # IMPLEMENTATION ROADMAP
 
-## Phase 1: Foundation (Weeks 1-2)
-- **Epic 1** (Infrastructure & Auth): Deploy to Railway, set up Better Auth, configure RPC contracts
-- **Parallel:** Story 7.1 (Unit Test Framework) to establish TDD patterns for subsequent features
+## Phase 1: Foundation (COMPLETED - Weeks 1-2)
+- ✅ **Epic 1** (Infrastructure & Auth): Deploy to Railway, set up Better Auth, configure RPC contracts
+  - ✅ Story 1.1: Deploy Infrastructure to Railway
+  - ✅ Story 1.2: Integrate Better Auth for Email/Password Authentication
+  - ✅ Story 1.3: Configure Effect-ts RPC Contracts and Infrastructure Layer
+  - ✅ Story 1.4: Docker Compose Local Development Setup
+  - ✅ Story 1.5: Frontend Mockup Home and Mocked Chat UI
+  - ✅ Story 1.6: Migrate to Effect/Platform HTTP with Better Auth
+  - ✅ Epic 1 Retrospective completed
+- ✅ **Parallel:** Story 7.1 (Unit Test Framework) to establish TDD patterns for subsequent features
 
-## Phase 2: Backend Logic (Weeks 3-5)
-- **Epic 2** (Assessment Backend): Session management, Nerin orchestration, Analyzer/Scorer, cost tracking
-- **Epic 3** (OCEAN System): Code generation, archetype lookup
+## Phase 2: Backend Logic (IN PROGRESS - Weeks 3-5)
+- 🔄 **Epic 2** (Assessment Backend): Session management, Nerin orchestration, Analyzer/Scorer, cost tracking
+  - ✅ Story 2.0: Linter Unification and Frontend Fixes
+  - ✅ Story 2.0.5: Effect-Based Dependency Injection Refactoring
+  - 📋 **NEXT:** Story 2.1: Session Management and Persistence (TDD) - ready-for-dev
+  - ⏳ Story 2.2: Nerin Agent Setup and Conversational Quality (TDD)
+  - ⏳ Story 2.3: Analyzer and Scorer Agent Implementation (TDD)
+  - ⏳ Story 2.4: LangGraph State Machine and Orchestration (TDD)
+  - ⏳ Story 2.5: LLM Cost Tracking, Rate Limiting, and Budget Enforcement (TDD)
+- **Then:** Epic 3 (OCEAN System): Code generation, archetype lookup
 - **Parallel:** Integration testing setup (Story 7.2)
 
 ## Phase 3: User Experience (Weeks 6-8)
 - **Epic 4** (Frontend UI): Auth modal, conversation component, session resumption, optimistic updates
+  - Story 4.1: Authentication UI (Sign-Up Modal)
+  - Story 4.2: Assessment Conversation Component
+  - Story 4.3: Session Resumption & Device Switching (TDD)
+  - Story 4.4: Optimistic Updates & Progress Indicator (TDD)
 - **Parallel:** Component documentation (Story 7.4) as components are built
 
 ## Phase 4: Launch Features (Weeks 9-10)
 - **Epic 5** (Results & Profile Sharing): Results display, shareable links
+  - Story 5.1: Display Assessment Results
+  - Story 5.2: Generate Shareable Profile Links
 - **Parallel:** E2E testing (Story 7.3) to validate complete user flows
 
 ## Phase 5: Security & Compliance (Weeks 11-12)
 - **Epic 6** (Privacy & Data): Encryption, GDPR compliance, audit logging
+  - Story 6.1: Server-Side Encryption at Rest and TLS in Transit (TDD)
+  - Story 6.2: GDPR Compliance (Data Deletion & Portability, TDD)
+  - Story 6.3: Audit Logging and Access Control (TDD)
 
 ## Critical Path Dependencies
 ```
-Epic 1 (Infrastructure)
-  ├─→ Epic 2 (Backend Services)
-  │    ├─→ Epic 3 (Archetypes)
-  │    │    ├─→ Epic 4 (Frontend)
-  │    │    │    ├─→ Epic 5 (Sharing)
-  │    │    │    └─→ Epic 6 (Privacy)
-  │    │    └─→ Epic 4 (Frontend)
-  │    └─→ Epic 4 (Frontend)
-  └─→ Epic 7 (Testing)
+Epic 1 (Infrastructure) ✅ COMPLETE
+  ├─→ Epic 2 (Backend Services) 🔄 IN PROGRESS
+  │    ├─→ Epic 3 (Archetypes) ⏳ BLOCKED (needs Epic 2 complete)
+  │    │    └─→ Epic 4 (Frontend) ⏳ BLOCKED (needs Epic 3 complete)
+  │    │         ├─→ Epic 5 (Sharing) ⏳ BLOCKED (needs Epic 4 complete)
+  │    │         └─→ Epic 6 (Privacy) ⏳ BLOCKED (needs Epic 4 complete)
+  │    └─→ Epic 7 (Testing) 🔄 IN PROGRESS (7.1 done, can parallelize 7.2)
+  └─→ Epic 7 (Testing) ✅ 7.1 COMPLETE
 ```
 
 ## Key Metrics to Track
-- [ ] Unit test coverage ≥100% for domain logic
+- [ ] Unit test coverage ≥100% for domain logic (Story 7.1 framework ready)
 - [ ] API response latency P95 <2 sec for Nerin, <100ms for archetype lookups
-- [ ] Session resume time <1 second
-- [ ] Daily LLM cost ≤$75
+- [ ] Session resume time <1 second (Story 2.1 will implement)
+- [ ] Daily LLM cost ≤$75 (Story 2.5 will implement tracking)
 - [ ] Assessment completion rate ≥70%
+
+## Current Focus & Next Steps
+
+**Current Sprint:** Phase 2 - Backend Logic
+**Active Epic:** Epic 2 (Assessment Backend Services)
+**Next Story:** 2.1 - Session Management and Persistence (TDD)
+
+**Recommended Actions:**
+1. ✅ Review Story 2.1 artifact in `_bmad-output/implementation-artifacts/`
+2. 🔄 Run `/bmad-bmm-dev-story 2-1` to implement Session Management
+3. After 2.1 completion: Run `/bmad-bmm-code-review` before marking done
+4. Continue sequentially through Epic 2 stories (2.2 → 2.3 → 2.4 → 2.5)
+5. After Epic 2 complete: Move to Epic 3 (OCEAN Archetype System)
+
+**Parallel Work Opportunities:**
+- Story 7.2 (Integration Testing) can be started in parallel with Epic 2
+- Design work for Epic 4 (Frontend UI) can begin now (wireframes, component specs)

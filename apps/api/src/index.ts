@@ -5,38 +5,45 @@
  * Pattern from: https://dev.to/danimydev/authentication-with-nodehttp-and-better-auth-2l2g
  */
 
-import "dotenv/config"
-import { Effect, Layer } from "effect"
-import { HttpApiBuilder, HttpMiddleware } from "@effect/platform"
-import { NodeHttpServer, NodeRuntime } from "@effect/platform-node"
-import { createServer } from "node:http"
-import type { Server, IncomingMessage, ServerResponse } from "node:http"
-import { BigOceanApi } from "@workspace/contracts"
-import { HealthGroupLive } from "./handlers/health.js"
-import { AssessmentGroupLive } from "./handlers/assessment.js"
-import { LoggerService, LoggerServiceLive } from "./services/logger.js"
-import { betterAuthHandler } from "./middleware/better-auth.js"
+import "dotenv/config";
+import { Effect, Layer } from "effect";
+import { HttpApiBuilder, HttpMiddleware } from "@effect/platform";
+import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
+import { createServer } from "node:http";
+import type { Server, IncomingMessage, ServerResponse } from "node:http";
+import { BigOceanApi } from "@workspace/contracts";
+import { HealthGroupLive } from "./handlers/health.js";
+import { AssessmentGroupLive } from "./handlers/assessment.js";
+import { LoggerService, LoggerServiceLive } from "./services/logger.js";
+import { betterAuthHandler } from "./middleware/better-auth.js";
+import { SessionManagerLive, DatabaseStack } from "@workspace/infrastructure";
 
 /**
  * Configuration
  */
-const port = Number(process.env.PORT || 4000)
+const port = Number(process.env.PORT || 4000);
 
 /**
- * Combined Handler Layers with Logger Service
+ * Service Layers
+ * Story 2-1: Database and SessionManager services
+ */
+const ServiceLayers = SessionManagerLive.pipe(Layer.provide(DatabaseStack));
+
+/**
+ * Combined Handler Layers with Services
  */
 const HttpGroupsLive = Layer.mergeAll(
   HealthGroupLive,
   AssessmentGroupLive,
-  LoggerServiceLive
-)
+  LoggerServiceLive,
+);
 
 /**
  * API Layer - Builds HTTP API from contracts with handlers
  */
 const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(
-  Layer.provide(HttpGroupsLive)
-)
+  Layer.provide(HttpGroupsLive),
+);
 
 /**
  * Complete API Layer with Router, Middleware, and Server Context
@@ -44,8 +51,8 @@ const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(
 const ApiLayer = Layer.mergeAll(
   ApiLive,
   HttpApiBuilder.Router.Live,
-  HttpApiBuilder.Middleware.layer
-)
+  HttpApiBuilder.Middleware.layer,
+);
 
 /**
  * Custom server factory that integrates Better Auth BEFORE Effect
@@ -54,53 +61,64 @@ const ApiLayer = Layer.mergeAll(
  * We intercept requests first to handle Better Auth routes.
  */
 const createCustomServer = (): Server => {
-  const server = createServer()
-  let effectHandler: ((req: IncomingMessage, res: ServerResponse) => void) | null = null
+  const server = createServer();
+  let effectHandler:
+    | ((req: IncomingMessage, res: ServerResponse) => void)
+    | null = null;
 
   // Store reference to Effect's handler when it gets attached
   server.on("newListener", (event, listener) => {
     if (event === "request") {
-      effectHandler = listener as ((req: IncomingMessage, res: ServerResponse) => void)
+      effectHandler = listener as (
+        req: IncomingMessage,
+        res: ServerResponse,
+      ) => void;
       // Remove the Effect listener - we'll call it manually after Better Auth
-      server.removeListener("request", listener as ((req: IncomingMessage, res: ServerResponse) => void))
+      server.removeListener(
+        "request",
+        listener as (req: IncomingMessage, res: ServerResponse) => void,
+      );
     }
-  })
+  });
 
   // Our custom request handler
   server.on("request", async (req: IncomingMessage, res: ServerResponse) => {
     try {
       // Step 1: Try Better Auth first
-      await betterAuthHandler(req, res)
+      await betterAuthHandler(req, res);
 
       // Step 2: If Better Auth handled the request, we're done
       if (res.writableEnded) {
-        return
+        return;
       }
 
       // Step 3: Pass to Effect handler
       if (effectHandler) {
-        effectHandler(req, res)
+        effectHandler(req, res);
       } else {
         // Fallback if Effect hasn't attached yet
-        res.statusCode = 503
-        res.setHeader("Content-Type", "application/json")
-        res.end(JSON.stringify({
-          error: "Service initializing"
-        }))
+        res.statusCode = 503;
+        res.setHeader("Content-Type", "application/json");
+        res.end(
+          JSON.stringify({
+            error: "Service initializing",
+          }),
+        );
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      console.error("Server error:", errorMessage)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error("Server error:", errorMessage);
       if (!res.headersSent) {
-        res.statusCode = 500
-        res.setHeader("Content-Type", "application/json")
-        res.end(JSON.stringify({ error: "Internal server error" }))
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ error: "Internal server error" }));
       }
     }
-  })
+  });
 
-  return server
-}
+  return server;
+};
 
 /**
  * HTTP Server Layer with Better Auth integration
@@ -108,46 +126,47 @@ const createCustomServer = (): Server => {
 const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
   Layer.provide(ApiLayer),
   Layer.provide(NodeHttpServer.layer(createCustomServer, { port })),
-  Layer.provide(LoggerServiceLive)
-)
+  Layer.provide(LoggerServiceLive),
+  Layer.provide(ServiceLayers),
+);
 
 /**
  * Startup logging
  */
 const logStartup = Effect.gen(function* () {
-  const logger = yield* LoggerService
+  const logger = yield* LoggerService;
 
-  logger.info(`Starting Big Ocean API server on port ${port}`)
-  logger.info("")
-  logger.info("✓ Better Auth routes (node:http layer):")
-  logger.info("  - POST /api/auth/sign-up/email")
-  logger.info("  - POST /api/auth/sign-in/email")
-  logger.info("  - POST /api/auth/sign-out")
-  logger.info("  - GET  /api/auth/get-session")
-  logger.info("")
-  logger.info("✓ Effect/Platform routes (Effect layer):")
-  logger.info("  - GET  /health")
-  logger.info("  - POST /api/assessment/start")
-  logger.info("  - POST /api/assessment/message")
-  logger.info("  - GET  /api/assessment/:sessionId/resume")
-  logger.info("  - GET  /api/assessment/:sessionId/results")
-}).pipe(Effect.provide(LoggerServiceLive))
+  logger.info(`Starting Big Ocean API server on port ${port}`);
+  logger.info("");
+  logger.info("✓ Better Auth routes (node:http layer):");
+  logger.info("  - POST /api/auth/sign-up/email");
+  logger.info("  - POST /api/auth/sign-in/email");
+  logger.info("  - POST /api/auth/sign-out");
+  logger.info("  - GET  /api/auth/get-session");
+  logger.info("");
+  logger.info("✓ Effect/Platform routes (Effect layer):");
+  logger.info("  - GET  /health");
+  logger.info("  - POST /api/assessment/start");
+  logger.info("  - POST /api/assessment/message");
+  logger.info("  - GET  /api/assessment/:sessionId/resume");
+  logger.info("  - GET  /api/assessment/:sessionId/results");
+}).pipe(Effect.provide(LoggerServiceLive));
 
 /**
  * Launch server
  */
 Effect.runPromise(logStartup).then(() => {
-  NodeRuntime.runMain(Layer.launch(HttpLive))
-})
+  NodeRuntime.runMain(Layer.launch(HttpLive));
+});
 
 /**
  * Error Handlers
  */
 process.on("unhandledRejection", (reason) => {
-  console.error(`Unhandled Rejection: ${reason}`)
-})
+  console.error(`Unhandled Rejection: ${reason}`);
+});
 
 process.on("uncaughtException", (error) => {
-  console.error(`Uncaught Exception: ${error.message}`, error)
-  process.exit(1)
-})
+  console.error(`Uncaught Exception: ${error.message}`, error);
+  process.exit(1);
+});

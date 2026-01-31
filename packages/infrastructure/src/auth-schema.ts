@@ -3,13 +3,17 @@
  *
  * Core tables for Better Auth:
  * - user: User accounts
- * - session: Active sessions
+ * - session: Active sessions (Better Auth)
  * - account: OAuth/provider accounts
  * - verification: Email verification tokens
+ *
+ * Assessment tables:
+ * - sessions: Assessment conversation sessions (note: plural, different from Better Auth "session")
+ * - messages: Conversation messages in sessions
  */
 
 import { defineRelations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, index, integer, jsonb } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -86,6 +90,57 @@ export const verification = pgTable(
 );
 
 /**
+ * Assessment Sessions (plural - different from Better Auth "session")
+ *
+ * Tracks personality assessment conversation sessions.
+ * Sessions can be anonymous (userId NULL) or linked to authenticated users.
+ */
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: text("id").primaryKey(), // Format: session_{timestamp}_{nanoid}
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }), // NULL for anonymous
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    status: text("status").notNull().default("active"), // 'active' | 'paused' | 'completed'
+    precision: jsonb("precision").notNull(), // PrecisionScores object
+    messageCount: integer("message_count").default(0).notNull(),
+  },
+  (table) => [
+    // Index for quick session lookup by user
+    index("sessions_user_id_idx").on(table.userId),
+  ]
+);
+
+/**
+ * Messages in Assessment Sessions
+ *
+ * Stores conversation history for each assessment session.
+ * Links to user if message was sent by authenticated user (NULL for anonymous or assistant messages).
+ */
+export const messages = pgTable(
+  "messages",
+  {
+    id: text("id").primaryKey(), // Format: msg_{nanoid}
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => sessions.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }), // User who sent message (NULL for assistant or anonymous)
+    role: text("role").notNull(), // 'user' | 'assistant'
+    content: text("content").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    // CRITICAL for <1 second resume: composite index on (sessionId, createdAt)
+    // Allows efficient retrieval of all messages for a session in chronological order
+    index("messages_session_created_idx").on(table.sessionId, table.createdAt),
+  ]
+);
+
+/**
  * Relations (Drizzle v2 syntax)
  */
 
@@ -95,12 +150,16 @@ const authSchema = {
   session,
   account,
   verification,
+  sessions, // Assessment sessions
+  messages, // Assessment messages
 };
 
 export const relations = defineRelations(authSchema, (r) => ({
   user: {
-    sessions: r.many.session(),
+    sessions: r.many.session(), // Better Auth sessions
     accounts: r.many.account(),
+    assessmentSessions: r.many.sessions(), // Assessment sessions
+    messages: r.many.messages(), // Messages sent by user
   },
   session: {
     user: r.one.user({
@@ -111,6 +170,23 @@ export const relations = defineRelations(authSchema, (r) => ({
   account: {
     user: r.one.user({
       from: r.account.userId,
+      to: r.user.id,
+    }),
+  },
+  sessions: {
+    user: r.one.user({
+      from: r.sessions.userId,
+      to: r.user.id,
+    }),
+    messages: r.many.messages(),
+  },
+  messages: {
+    session: r.one.sessions({
+      from: r.messages.sessionId,
+      to: r.sessions.id,
+    }),
+    user: r.one.user({
+      from: r.messages.userId,
       to: r.user.id,
     }),
   },
