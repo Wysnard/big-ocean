@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 
 # Install pnpm
@@ -24,7 +24,7 @@ COPY apps/front/ ./apps/front/
 RUN pnpm --filter=front run build
 
 # Development stage (Vite dev server with HMR)
-FROM node:20-alpine AS development
+FROM node:20-slim AS development
 WORKDIR /app
 
 # Install pnpm
@@ -55,7 +55,7 @@ ENV NODE_ENV=development
 CMD ["pnpm", "-C", "apps/front", "dev", "--host"]
 
 # Production stage
-FROM node:20-alpine AS production
+FROM node:20-slim AS production
 WORKDIR /app
 
 # Install pnpm
@@ -80,7 +80,7 @@ COPY apps/front/ ./apps/front/
 RUN pnpm --filter=front run build
 
 # Final production runtime
-FROM node:20-alpine
+FROM node:20-slim
 WORKDIR /app
 
 # Install Node.js dependencies needed at runtime
