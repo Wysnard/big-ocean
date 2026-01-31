@@ -33,7 +33,7 @@ packages/
 
 ### Apps
 
-- **front** (`port 3001`): TanStack Start full-stack SSR frontend with React 19, featuring:
+- **front** (`port 3000`): TanStack Start full-stack SSR frontend with React 19, featuring:
   - TanStack Start framework for isomorphic React (SSR/streaming)
   - TanStack Router 1+ for file-based routing
   - TanStack Query 5+ for data fetching and caching
@@ -98,7 +98,7 @@ All commands run from repository root:
 
 ```bash
 pnpm dev                      # Start all apps in dev mode (front + api)
-pnpm dev --filter=front      # Run only frontend (TanStack Start, port 3001)
+pnpm dev --filter=front      # Run only frontend (TanStack Start, port 3000)
 pnpm dev --filter=api        # Run only backend (Node.js, port 4000)
 ```
 
@@ -115,7 +115,7 @@ pnpm format                 # Format all code with Prettier
 **front** (TanStack Start frontend):
 
 ```bash
-pnpm -C apps/front dev              # Start dev server with HMR (port 3001)
+pnpm -C apps/front dev              # Start dev server with HMR (port 3000)
 pnpm -C apps/front build            # Build for production (SSR)
 pnpm -C apps/front start            # Start production server
 pnpm -C apps/front lint             # Run ESLint
@@ -733,8 +733,6 @@ Successfully migrated from Express.js to Effect/Platform HTTP...
 - [details]
 
 [... other phases ...]
-
-Co-Authored-By: Claude <model> <noreply@anthropic.com>
 ```
 
 ### Safety Checks
