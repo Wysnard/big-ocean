@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "lint": "eslint . --max-warnings 0"
+    "lint": "biome lint .",
+    "format": "biome format ."
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
@@ -25,9 +26,7 @@
     "@types/node": "^20.19.9",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
-    "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
-    "eslint": "^9.32.0",
     "shadcn": "^3.7.0",
     "tailwindcss": "^4.1.11",
     "typescript": "^5.9.2"
