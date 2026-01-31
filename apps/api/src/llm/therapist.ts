@@ -384,7 +384,7 @@ const shouldEvaluate = (state: typeof TherapistState.State) => {
 // Build the agent graph
 import { HumanMessage } from "@langchain/core/messages";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint: StateGraph typing requires any for dynamic graph construction
 const agent: any = new StateGraph(TherapistState)
   .addNode("conversationNode", conversationNode)
   .addNode("evaluationNode", evaluationNode)
