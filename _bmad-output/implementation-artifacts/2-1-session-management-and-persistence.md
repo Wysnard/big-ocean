@@ -1,13 +1,14 @@
 # Story 2.1: Session Management & Persistence (TDD)
 
 **Story ID:** 2.1
-**Status:** review
+**Status:** done
 **Created:** 2026-01-31
 **Dev Completed:** 2026-02-01
 **Code Review:** 2026-02-01 (10 findings identified → 4 CRITICAL fixed, 4 MEDIUM fixed, 2 remaining)
 **Follow-up Review:** 2026-02-01 (All CRITICAL issues resolved, test files restored)
+**Story Accepted:** 2026-02-01 (All critical blockers resolved, test coverage complete)
 **Epic:** 2 - Assessment Backend Services
-**Epic Status:** in-progress (Story 2-0.5 complete, Story 2-1 code review)
+**Epic Status:** in-progress (Story 2-0.5 complete, Story 2-1 done)
 
 **Developer Context:** This story builds directly on Story 2-0.5 (Effect-Based DI refactoring). All service patterns established there must be followed. Key learnings: Use Context.Tag (not FiberRef), implement services via Layer.effect, test service wiring (not library behavior), access services via `yield* ServiceTag` in handlers.
 
