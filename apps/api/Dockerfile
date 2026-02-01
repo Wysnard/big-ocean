@@ -78,8 +78,8 @@ COPY packages/lint/package.json ./packages/lint/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY apps/api/package.json ./apps/api/
 
-# Install production dependencies only
-RUN pnpm install --frozen-lockfile --prod
+# Install production dependencies only (skip scripts to avoid simple-git-hooks failure)
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # Copy source code and built artifacts from builder
 COPY --from=builder /app/apps/api/src ./apps/api/src
