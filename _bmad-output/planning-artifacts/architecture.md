@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5]
+stepsCompleted: [1, 2, 3, 4, 5, 6]
 inputDocuments:
   - "prd.md"
   - "ux-design-specification.md"
@@ -8,6 +8,8 @@ workflowType: 'architecture'
 project_name: 'big-ocean'
 user_name: 'Vincentlay'
 date: '2026-01-29'
+lastUpdate: '2026-02-01'
+updateReason: 'Added ADR-6 for Hexagonal Architecture implementation'
 ---
 
 # Architecture Decision Document - big-ocean
@@ -125,7 +127,7 @@ Two-layer cost control strategy:
 1. **Rate Limiting (Baseline Protection):**
    - Maximum 1 assessment per user per day (prevents spam)
    - Maximum 1 resume per week (prevents gaming)
-   - Enforced at RPC contract level
+   - Enforced at use-case level (business logic layer)
 
 2. **Adaptive Token Budget (Real-Time Optimization):**
    - Each session allocated token budget based on daily spend
@@ -139,11 +141,30 @@ Two-layer cost control strategy:
    - Per-user cost history (identify expensive users)
    - Alert thresholds (warn at 50%, 75%, 90% of daily budget)
 
+**Hexagonal Architecture Integration:**
+
+Following ADR-6 (Hexagonal Architecture), cost tracking is implemented as:
+
+- **Domain Layer** (`packages/domain/src/repositories/cost-guard.repository.ts`):
+  - `CostGuardRepository` interface using Context.Tag
+  - Methods: `incrementDailyCost()`, `getDailyCost()`, `checkRateLimit()`
+
+- **Infrastructure Layer** (`packages/infrastructure/src/repositories/cost-guard.redis.repository.ts`):
+  - `CostGuardRedisRepositoryLive` implementation using ioredis
+  - Redis key schema: `cost:{userId}:{YYYY-MM-DD}`, `assessments:{userId}:{YYYY-MM-DD}`
+  - TTL: 48 hours for automatic cleanup
+
+- **Use-Case Layer** (`apps/api/src/use-cases/send-message.use-case.ts`):
+  - Use-cases depend on `CostGuardRepository` via Effect type signature
+  - Business logic checks budget before calling LLM agents
+  - Graceful degradation logic resides in use-cases
+
 **Rationale:**
 - Prevents runaway costs while allowing flexibility for engaged users
 - Frictionless to users (they don't see limits, just graceful messaging)
 - Realistic for self-funded MVP ($75/day budget ≈ 500 users × 1 assessment/day)
 - Cost-aware routing enables intelligent degradation before hard stops
+- Hexagonal architecture allows testing cost logic without Redis (mock repository)
 
 **Trade-offs Accepted:**
 - Requires Redis for real-time cost tracking
@@ -1363,40 +1384,116 @@ export type DomainError =
   | ElectricSyncError;
 ```
 
-**RPC Error Handling:**
+**Error Flow in Hexagonal Architecture:**
+
+Following ADR-6 (Hexagonal Architecture), errors flow through layers as follows:
+
+```
+Infrastructure (throws errors) → Use-Cases (propagate via Effect) → Handlers (HTTP response)
+```
+
+**Example: Use-Case Error Handling**
+
+```typescript
+// apps/api/src/use-cases/send-message.use-case.ts
+import { Effect } from "effect";
+import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
+import { SessionNotFound, DatabaseError } from "@workspace/contracts/errors";
+
+export const sendMessage = (
+  input: SendMessageInput
+): Effect.Effect<
+  SendMessageOutput,
+  DatabaseError | SessionNotFound,  // ← Errors declared in type signature
+  AssessmentSessionRepository | AssessmentMessageRepository
+> =>
+  Effect.gen(function* () {
+    const sessionRepo = yield* AssessmentSessionRepository;
+
+    // Infrastructure layer throws SessionNotFound if not found
+    // Error propagates automatically via Effect
+    const session = yield* sessionRepo.getSession(input.sessionId);
+
+    // Business logic continues...
+    return { response, precision };
+  });
+```
+
+**Example: Infrastructure Error Throwing**
+
+```typescript
+// packages/infrastructure/src/repositories/assessment-session.drizzle.repository.ts
+import { Layer, Effect } from "effect";
+import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
+import { SessionNotFound, DatabaseError } from "@workspace/contracts/errors";
+
+export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
+  AssessmentSessionRepository,
+  Effect.gen(function* () {
+    const db = yield* Database;
+    const logger = yield* LoggerRepository;
+
+    return AssessmentSessionRepository.of({
+      getSession: (sessionId) =>
+        Effect.gen(function* () {
+          const session = yield* db
+            .select()
+            .from(sessions)
+            .where(eq(sessions.id, sessionId))
+            .pipe(
+              Effect.mapError((error) => {
+                logger.error("Database operation failed", { operation: "getSession", error });
+                return new DatabaseError({ message: "Failed to fetch session" });
+              })
+            );
+
+          if (!session || session.length === 0) {
+            // Infrastructure throws domain error
+            return yield* Effect.fail(
+              new SessionNotFound({ sessionId })
+            );
+          }
+
+          return session[0];
+        }),
+    });
+  })
+);
+```
+
+**Example: Handler Error Propagation**
 
 ```typescript
 // apps/api/src/handlers/assessment.ts
+import { HttpApiBuilder } from "@effect/platform";
 import { Effect } from "effect";
-import * as Rpc from "@effect/rpc/Rpc";
-import * as S from "@effect/schema/Schema";
-import { SessionNotFoundError, CostLimitExceededError, LLMError } from "@workspace/domain";
+import { BigOceanApi } from "@workspace/contracts";
+import { sendMessage } from "../use-cases/index.js";
 
-export const AssessmentService = Rpc.define({
-  startAssessment: Rpc.rpcFunction({
-    input: S.struct({ userId: S.optional(S.string) }),
-    output: S.struct({ sessionId: S.string, createdAt: S.Date }),
-    failure: S.union(
-      S.struct({ _tag: S.literal("SessionNotFoundError"), sessionId: S.string }),
-      S.struct({ _tag: S.literal("DatabaseError"), operation: S.string, cause: S.string })
-    ),
-  }),
-});
+export const AssessmentGroupLive = HttpApiBuilder.group(
+  BigOceanApi,
+  "assessment",
+  (handlers) =>
+    Effect.gen(function* () {
+      return handlers
+        .handle("sendMessage", ({ payload }) =>
+          Effect.gen(function* () {
+            // Use-case errors propagate directly to HTTP
+            // Effect/Platform automatically converts to HTTP status codes
+            // via .addError() declarations in contracts
+            const result = yield* sendMessage({
+              sessionId: payload.sessionId,
+              message: payload.message,
+            });
 
-export const startAssessment = ((input) =>
-  Effect.gen(function* () {
-    const db = yield* Effect.service(DatabaseRef);
-    const logger = yield* Effect.service(LoggerRef);
-
-    try {
-      const sessionId = yield* generateSessionId();
-      const userId = input.userId || null;
-
-      yield* db.sessions.create({
-        id: sessionId,
-        userId,
-        startedAt: new Date(),
-      });
+            return {
+              response: result.response,
+              precision: result.precision,
+            };
+          })
+        );
+    })
+);
 
       logger.info("session_created", {
         sessionId,
@@ -2935,7 +3032,118 @@ pnpm add -D vitest @vitest/ui @vitest/coverage-v8
 - ✅ ~10x smaller than Jest
 - ✅ Snapshot testing built-in
 
-**Example: OCEAN Code Generation Test**
+**Unit Testing Strategy (Hexagonal Architecture):**
+
+Following ADR-6 (Hexagonal Architecture), unit tests are primarily written for **use-cases**, not infrastructure:
+
+**Testing Hierarchy:**
+1. **Use-Cases** (Primary Target): Business logic tested with mock repositories
+2. **Domain Utilities**: Pure functions (OCEAN code generation, cost calculation)
+3. **Infrastructure**: Tested via integration tests (not unit tests)
+
+**Example: Use-Case Test (Primary Pattern)**
+
+```typescript
+// apps/api/src/use-cases/__tests__/send-message.test.ts
+import { describe, it, expect } from "vitest";
+import { Effect, Layer } from "effect";
+import { sendMessage } from "../send-message.use-case";
+import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
+import { AssessmentMessageRepository } from "@workspace/domain/repositories/assessment-message.repository";
+import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
+
+// Test implementations (mock repositories)
+const TestSessionRepo = Layer.succeed(
+  AssessmentSessionRepository,
+  AssessmentSessionRepository.of({
+    getSession: (sessionId) =>
+      Effect.succeed({
+        id: sessionId,
+        userId: "test-user",
+        precision: {
+          openness: 0.5,
+          conscientiousness: 0.4,
+          extraversion: 0.6,
+          agreeableness: 0.7,
+          neuroticism: 0.3,
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
+    updateSession: (sessionId, data) => Effect.succeed(undefined),
+  })
+);
+
+const TestMessageRepo = Layer.succeed(
+  AssessmentMessageRepository,
+  AssessmentMessageRepository.of({
+    saveMessage: (sessionId, role, content, userId) =>
+      Effect.succeed({
+        id: "msg-1",
+        sessionId,
+        userId,
+        role,
+        content,
+        createdAt: new Date(),
+      }),
+    getMessages: (sessionId) => Effect.succeed([]),
+    getMessageCount: (sessionId) => Effect.succeed(0),
+  })
+);
+
+const TestLogger = Layer.succeed(
+  LoggerRepository,
+  LoggerRepository.of({
+    info: (msg, meta) => Effect.sync(() => {}),
+    error: (msg, meta) => Effect.sync(() => {}),
+  })
+);
+
+const TestLayer = Layer.mergeAll(TestSessionRepo, TestMessageRepo, TestLogger);
+
+describe("sendMessage use-case", () => {
+  it("should save user message and return AI response", async () => {
+    const program = Effect.gen(function* () {
+      const result = yield* sendMessage({
+        sessionId: "session-1",
+        message: "Hello, I'm excited about new experiences!",
+        userId: "user-1",
+      });
+
+      expect(result.response).toBeDefined();
+      expect(result.precision.openness).toBe(0.5);
+    });
+
+    await Effect.runPromise(program.pipe(Effect.provide(TestLayer)));
+  });
+
+  it("should fail when session not found", async () => {
+    // Test error cases by injecting failing repositories
+    const FailingSessionRepo = Layer.succeed(
+      AssessmentSessionRepository,
+      AssessmentSessionRepository.of({
+        getSession: (sessionId) =>
+          Effect.fail(new SessionNotFound({ sessionId })),
+      })
+    );
+
+    const FailLayer = Layer.mergeAll(FailingSessionRepo, TestMessageRepo, TestLogger);
+
+    const program = sendMessage({
+      sessionId: "non-existent",
+      message: "Test",
+    });
+
+    const result = await Effect.runPromise(
+      program.pipe(Effect.provide(FailLayer), Effect.either)
+    );
+
+    expect(result._tag).toBe("Left");
+  });
+});
+```
+
+**Example: Domain Utility Test (Secondary Pattern)**
 
 ```typescript
 // packages/domain/src/ocean.test.ts
@@ -2968,48 +3176,13 @@ describe("OCEAN Code Generation", () => {
 });
 ```
 
-**Example: Cost Calculation Test**
+**Key Testing Principles:**
 
-```typescript
-// packages/domain/src/cost-guard.test.ts
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { CostCalculator } from "./cost-calculator";
-
-describe("Cost Calculation", () => {
-  let calculator: CostCalculator;
-
-  beforeEach(() => {
-    calculator = new CostCalculator({
-      inputCostPerMToken: 0.003,
-      outputCostPerMToken: 0.015,
-    });
-  });
-
-  it("calculates cost correctly for token counts", () => {
-    const cost = calculator.calculateCost(1000, 500);
-    expect(cost).toBeCloseTo(0.0000105, 7);
-  });
-
-  it("enforces daily limit", () => {
-    calculator.setDailyLimit(75); // cents
-    calculator.recordCost(0.50);
-
-    expect(calculator.getRemainingBudget()).toBeCloseTo(0.25, 2);
-    expect(calculator.canSpend(0.30)).toBe(false);
-  });
-
-  it("resets daily budget at midnight", () => {
-    calculator.setDailyLimit(75);
-    calculator.recordCost(0.50);
-
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-01-31"));
-
-    expect(calculator.getRemainingBudget()).toBeCloseTo(0.75, 2);
-    vi.useRealTimers();
-  });
-});
-```
+1. **Use-cases are the primary unit test boundary** (not infrastructure)
+2. **Mock repositories** via `Layer.succeed()` with test implementations
+3. **Test business logic**, not database queries or HTTP handling
+4. **Fast tests**: No I/O, no database, no external services
+5. **Effect.provide()** injects test layers at runtime
 
 ---
 
@@ -4049,5 +4222,676 @@ apps/
 - [Playwright Documentation](https://playwright.dev/)
 - [TestContainers Documentation](https://testcontainers.com/)
 - [Effect Testing Guide](https://effect.website/docs/testing/)
+
+---
+
+## ADR-6: Hexagonal Architecture & Dependency Inversion ✅
+
+### Decision: Hexagonal Architecture with Effect-ts Dependency Inversion
+
+Implement a clean hexagonal (ports & adapters) architecture using Effect-ts Context.Tag for dependency inversion, with clearly separated layers: **Contracts → Domain → Infrastructure → Use-Cases → Handlers**.
+
+### Context: Why Hexagonal Architecture?
+
+As the project evolved from initial prototypes to production-ready code, several pain points emerged:
+
+1. **Testability**: Business logic was intertwined with database/API calls, making unit testing difficult
+2. **Tight Coupling**: Handlers directly called repositories, creating hard dependencies on implementation details
+3. **Code Clarity**: Unclear boundaries between presentation logic, business rules, and data access
+4. **Flexibility**: Difficult to swap implementations (e.g., mock vs. real database) without code changes
+
+**Hexagonal architecture solves these problems by:**
+
+- **Inverting dependencies**: Business logic (use-cases) depends on abstractions (domain interfaces), not concrete implementations
+- **Clear boundaries**: Each layer has a single responsibility and well-defined contracts
+- **Testability**: Use-cases can be tested in isolation by injecting test implementations
+- **Effect-ts alignment**: Context.Tag and Layer system provide natural dependency injection
+
+### Architecture: Layer Structure
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Contracts (packages/contracts)                                  │
+│ ─────────────────────────────────────────────────────────────── │
+│ • HTTP API contracts (@effect/platform)                         │
+│ • Request/Response schemas                                      │
+│ • Shared between frontend and backend                           │
+│ • Type-safe RPC definitions                                     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Handlers (apps/api/src/handlers) - ADAPTERS (Driving)          │
+│ ─────────────────────────────────────────────────────────────── │
+│ • HTTP/WebSocket controllers (presenters)                       │
+│ • Transform HTTP requests → use-case inputs                     │
+│ • Transform use-case outputs → HTTP responses                   │
+│ • No business logic - thin adapter layer                        │
+│ • Example: assessment.ts (HTTP handlers)                        │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Use-Cases (apps/api/src/use-cases) - APPLICATION LAYER         │
+│ ─────────────────────────────────────────────────────────────── │
+│ • Pure business logic functions                                 │
+│ • Orchestrate domain operations                                 │
+│ • Depend on domain interfaces (repositories)                    │
+│ • Main target for unit testing                                  │
+│ • Examples: start-assessment, send-message, resume-session      │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Domain (packages/domain) - CORE (Ports)                        │
+│ ─────────────────────────────────────────────────────────────── │
+│ • Repository interfaces (Context.Tag)                           │
+│ • Entity schemas (Effect Schema)                                │
+│ • Domain types and business rules                               │
+│ • Pure abstractions - no implementation                         │
+│ • Examples: AssessmentMessageRepository, AssessmentSessionRepo  │
+└─────────────────────────────────────────────────────────────────┘
+                              ↑ (dependency inversion)
+┌─────────────────────────────────────────────────────────────────┐
+│ Infrastructure (packages/infrastructure) - ADAPTERS (Driven)   │
+│ ─────────────────────────────────────────────────────────────── │
+│ • Repository implementations (Layer.effect)                     │
+│ • Database access (Drizzle ORM)                                 │
+│ • External APIs (Anthropic, LangGraph)                          │
+│ • File system, caching, logging                                 │
+│ • Naming: *.drizzle.repository.ts, *.pino.repository.ts        │
+│ • Exports: *RepositoryLive (Effect Layers)                      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Dependency Flow
+
+**Key Principle: Dependencies point INWARD toward the domain**
+
+```
+Handlers → Use-Cases → Domain (interfaces)
+                          ↑
+                   Infrastructure (injected)
+```
+
+**How it works:**
+
+1. **Domain defines abstractions**: Repository interfaces using `Context.Tag`
+2. **Infrastructure implements abstractions**: Concrete implementations as `Layer.effect`
+3. **Use-cases depend on abstractions**: Effect type signatures declare requirements
+4. **Handlers wire everything together**: Provide layers and execute use-cases
+
+**Example dependency flow for "send message":**
+
+```
+HTTP Request
+   ↓
+AssessmentGroupLive (handler)
+   ↓
+sendMessage (use-case)
+   ↓ requires
+AssessmentMessageRepository (domain interface)
+   ↑ implemented by
+AssessmentMessageDrizzleRepositoryLive (infrastructure layer)
+```
+
+### Implementation Details
+
+#### 1. Domain Layer (Ports)
+
+**Location**: `packages/domain/src/`
+
+**Structure**:
+```
+packages/domain/src/
+├── entities/              # Domain entities (Effect Schema)
+│   ├── message.entity.ts
+│   └── session.entity.ts
+├── repositories/          # Repository interfaces (Context.Tag)
+│   ├── assessment-message.repository.ts
+│   ├── assessment-session.repository.ts
+│   └── logger.repository.ts
+├── errors/                # Domain errors
+├── types/                 # Domain types
+└── index.ts               # Public exports
+```
+
+**Pattern: Context.Tag for Service Interfaces**
+
+```typescript
+// packages/domain/src/repositories/assessment-message.repository.ts
+import { Context, Effect } from "effect";
+import { AssessmentMessageEntity } from "../entities/message.entity";
+import { DatabaseError } from "@workspace/contracts/errors";
+
+export class AssessmentMessageRepository extends Context.Tag(
+  "AssessmentMessageRepository"
+)<
+  AssessmentMessageRepository,
+  {
+    readonly saveMessage: (
+      sessionId: string,
+      role: "user" | "assistant",
+      content: string,
+      userId?: string
+    ) => Effect.Effect<AssessmentMessageEntity, DatabaseError, never>;
+
+    readonly getMessages: (
+      sessionId: string
+    ) => Effect.Effect<AssessmentMessageEntity[], DatabaseError, never>;
+
+    readonly getMessageCount: (
+      sessionId: string
+    ) => Effect.Effect<number, DatabaseError, never>;
+  }
+>() {}
+```
+
+**Key characteristics:**
+- Pure interface definitions (no implementation)
+- Uses `Context.Tag` for dependency injection
+- Effect type signatures declare errors and dependencies
+- Shared between frontend and backend via monorepo
+
+#### 2. Infrastructure Layer (Adapters - Driven)
+
+**Location**: `packages/infrastructure/src/repositories/`
+
+**Structure**:
+```
+packages/infrastructure/src/
+├── repositories/                    # Repository implementations
+│   ├── assessment-message.drizzle.repository.ts
+│   ├── assessment-session.drizzle.repository.ts
+│   └── logger.pino.repository.ts
+├── context/                         # Shared context (Database, Logger)
+│   └── database.ts
+└── infrastructure/
+    └── db/
+        └── schema.ts                # Drizzle schema definitions
+```
+
+**Pattern: Layer.effect for Implementations**
+
+```typescript
+// packages/infrastructure/src/repositories/assessment-message.drizzle.repository.ts
+import { Layer, Effect, Schema } from "effect";
+import { Database } from "../context/database.js";
+import { AssessmentMessageRepository } from "@workspace/domain/repositories/assessment-message.repository";
+import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
+
+export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
+  AssessmentMessageRepository,
+  Effect.gen(function* () {
+    // Receive dependencies through DI during layer construction
+    const db = yield* Database;
+    const logger = yield* LoggerRepository;
+
+    // Return service implementation using .of() pattern
+    return AssessmentMessageRepository.of({
+      saveMessage: (sessionId, role, content, userId) =>
+        Effect.gen(function* () {
+          const [message] = yield* db
+            .insert(assessmentMessage)
+            .values({ sessionId, userId, role, content, createdAt: new Date() })
+            .returning()
+            .pipe(
+              Effect.mapError((error) => {
+                logger.error("Database operation failed", { operation: "saveMessage", error });
+                return new DatabaseError({ message: "Failed to save message" });
+              })
+            );
+
+          return yield* Schema.decodeUnknown(AssessmentMessageEntitySchema)(message);
+        }),
+
+      getMessages: (sessionId) =>
+        Effect.gen(function* () {
+          const messages = yield* db
+            .select()
+            .from(assessmentMessage)
+            .where(eq(assessmentMessage.sessionId, sessionId))
+            .orderBy(asc(assessmentMessage.createdAt));
+
+          return yield* Schema.decodeUnknown(
+            Schema.Array(AssessmentMessageEntitySchema)
+          )(messages);
+        }),
+
+      getMessageCount: (sessionId) =>
+        Effect.gen(function* () {
+          const result = yield* db
+            .select({ count: sql<number>`cast(count(*) as int)` })
+            .from(assessmentMessage)
+            .where(eq(assessmentMessage.sessionId, sessionId));
+
+          return result[0]?.count ?? 0;
+        }),
+    });
+  })
+);
+```
+
+**Naming Conventions:**
+
+| Pattern | Example | Purpose |
+|---------|---------|---------|
+| `*.drizzle.repository.ts` | `assessment-message.drizzle.repository.ts` | Drizzle ORM implementation |
+| `*.pino.repository.ts` | `logger.pino.repository.ts` | Pino logger implementation |
+| `*RepositoryLive` | `AssessmentMessageDrizzleRepositoryLive` | Effect Layer export (production) |
+| `*RepositoryTest` | `AssessmentMessageTestRepositoryLive` | Effect Layer export (testing) |
+
+**Key characteristics:**
+- Implementation-specific file naming (e.g., `.drizzle`, `.pino`)
+- Exports Effect Layers with `Live` suffix
+- Uses `Repository.of({...})` pattern for service implementation
+- Dependencies injected via Layer construction
+- Error handling and logging at implementation boundary
+
+#### 3. Use-Cases Layer (Application Logic)
+
+**Location**: `apps/api/src/use-cases/`
+
+**Structure**:
+```
+apps/api/src/use-cases/
+├── __tests__/                       # Unit tests for use-cases
+│   ├── start-assessment.test.ts
+│   └── send-message.test.ts
+├── start-assessment.use-case.ts
+├── send-message.use-case.ts
+├── resume-session.use-case.ts
+├── get-results.use-case.ts
+└── index.ts                         # Public exports
+```
+
+**Pattern: Pure Business Logic Functions**
+
+```typescript
+// apps/api/src/use-cases/send-message.use-case.ts
+import { Effect } from "effect";
+import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
+import { AssessmentMessageRepository } from "@workspace/domain/repositories/assessment-message.repository";
+import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
+import { SessionNotFound, DatabaseError } from "@workspace/contracts/errors";
+
+export interface SendMessageInput {
+  readonly sessionId: string;
+  readonly message: string;
+  readonly userId?: string;
+}
+
+export interface SendMessageOutput {
+  readonly response: string;
+  readonly precision: {
+    readonly openness: number;
+    readonly conscientiousness: number;
+    readonly extraversion: number;
+    readonly agreeableness: number;
+    readonly neuroticism: number;
+  };
+}
+
+export const sendMessage = (
+  input: SendMessageInput
+): Effect.Effect<
+  SendMessageOutput,
+  DatabaseError | SessionNotFound,
+  AssessmentSessionRepository | AssessmentMessageRepository | LoggerRepository
+> =>
+  Effect.gen(function* () {
+    // Access injected dependencies via yield*
+    const sessionRepo = yield* AssessmentSessionRepository;
+    const messageRepo = yield* AssessmentMessageRepository;
+    const logger = yield* LoggerRepository;
+
+    // Business logic starts here
+    // 1. Verify session exists
+    const session = yield* sessionRepo.getSession(input.sessionId);
+
+    logger.info("Message received", {
+      sessionId: input.sessionId,
+      messageLength: input.message.length,
+    });
+
+    // 2. Save user message
+    yield* messageRepo.saveMessage(
+      input.sessionId,
+      "user",
+      input.message,
+      input.userId
+    );
+
+    // 3. TODO: Generate AI response (will use LangGraph/Nerin)
+    const aiResponse = "Thank you for sharing that. Can you tell me more?";
+
+    // 4. Save AI message
+    yield* messageRepo.saveMessage(input.sessionId, "assistant", aiResponse);
+
+    // 5. TODO: Calculate precision scores (will use Analyzer agent)
+    const updatedPrecision = session.precision;
+
+    // 6. Update session
+    yield* sessionRepo.updateSession(input.sessionId, {
+      precision: updatedPrecision,
+    });
+
+    logger.info("Message processed", {
+      sessionId: input.sessionId,
+      responseLength: aiResponse.length,
+    });
+
+    return {
+      response: aiResponse,
+      precision: updatedPrecision,
+    };
+  });
+```
+
+**Key characteristics:**
+- Pure functions (no side effects outside Effect)
+- Explicit dependency declaration in Effect type signature
+- Business logic orchestrates domain operations
+- Main target for unit testing
+- Clear input/output interfaces
+- Effect.gen for readable async flow
+
+#### 4. Handlers Layer (Adapters - Driving)
+
+**Location**: `apps/api/src/handlers/`
+
+**Structure**:
+```
+apps/api/src/handlers/
+├── health.ts                        # Health check endpoints
+├── assessment.ts                    # Assessment HTTP handlers
+└── index.ts                         # Public exports
+```
+
+**Pattern: Thin HTTP Adapters**
+
+```typescript
+// apps/api/src/handlers/assessment.ts
+import { HttpApiBuilder, HttpServerResponse } from "@effect/platform";
+import { DateTime, Effect } from "effect";
+import { BigOceanApi } from "@workspace/contracts";
+import { startAssessment, sendMessage, resumeSession, getResults } from "../use-cases/index.js";
+
+export const AssessmentGroupLive = HttpApiBuilder.group(
+  BigOceanApi,
+  "assessment",
+  (handlers) =>
+    Effect.gen(function* () {
+      return handlers
+        .handle("start", ({ payload }) =>
+          Effect.gen(function* () {
+            // 1. Extract input from HTTP request
+            // 2. Call use case - errors propagate directly to HTTP
+            const result = yield* startAssessment({
+              userId: payload.userId,
+            });
+
+            // 3. Format HTTP response
+            return {
+              sessionId: result.sessionId,
+              createdAt: DateTime.unsafeMake(result.createdAt.getTime()),
+            };
+          })
+        )
+        .handle("sendMessage", ({ payload }) =>
+          Effect.gen(function* () {
+            // Call use case - errors propagate directly to HTTP
+            const result = yield* sendMessage({
+              sessionId: payload.sessionId,
+              message: payload.message,
+            });
+
+            // Format HTTP response
+            return {
+              response: result.response,
+              precision: result.precision,
+            };
+          })
+        );
+    })
+);
+```
+
+**Key characteristics:**
+- Thin adapter layer (no business logic)
+- HTTP request → use-case input transformation
+- Use-case output → HTTP response transformation
+- Error propagation handled by Effect/Platform
+- Uses `HttpApiBuilder.group` pattern
+
+### Testing Strategy: Use-Cases as Boundary
+
+**Why use-cases are the main unit test target:**
+
+1. **Business logic isolation**: Use-cases contain pure business rules
+2. **No I/O**: Infrastructure dependencies are injected (mockable)
+3. **Fast tests**: No database/API calls in unit tests
+4. **Clear contracts**: Input/output interfaces are explicit
+5. **Effect-based**: Easy to test with Effect.provide
+
+**Testing Pattern:**
+
+```typescript
+// apps/api/src/use-cases/__tests__/send-message.test.ts
+import { describe, it, expect } from "vitest";
+import { Effect, Layer } from "effect";
+import { sendMessage } from "../send-message.use-case";
+import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
+import { AssessmentMessageRepository } from "@workspace/domain/repositories/assessment-message.repository";
+import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
+
+// Test implementations
+const TestSessionRepo = Layer.succeed(
+  AssessmentSessionRepository,
+  AssessmentSessionRepository.of({
+    getSession: (sessionId) =>
+      Effect.succeed({
+        id: sessionId,
+        userId: "test-user",
+        precision: { openness: 0.5, conscientiousness: 0.4, /* ... */ },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
+    updateSession: (sessionId, data) => Effect.succeed(undefined),
+    // ... other methods
+  })
+);
+
+const TestMessageRepo = Layer.succeed(
+  AssessmentMessageRepository,
+  AssessmentMessageRepository.of({
+    saveMessage: (sessionId, role, content, userId) =>
+      Effect.succeed({
+        id: "msg-1",
+        sessionId,
+        userId,
+        role,
+        content,
+        createdAt: new Date(),
+      }),
+    // ... other methods
+  })
+);
+
+const TestLogger = Layer.succeed(
+  LoggerRepository,
+  LoggerRepository.of({
+    info: (msg, meta) => Effect.sync(() => console.log(msg, meta)),
+    error: (msg, meta) => Effect.sync(() => console.error(msg, meta)),
+  })
+);
+
+const TestLayer = Layer.mergeAll(TestSessionRepo, TestMessageRepo, TestLogger);
+
+describe("sendMessage use-case", () => {
+  it("should save user message and return AI response", async () => {
+    const program = Effect.gen(function* () {
+      const result = yield* sendMessage({
+        sessionId: "session-1",
+        message: "Hello, I'm excited about new experiences!",
+        userId: "user-1",
+      });
+
+      expect(result.response).toBeDefined();
+      expect(result.precision.openness).toBe(0.5);
+    });
+
+    await Effect.runPromise(program.pipe(Effect.provide(TestLayer)));
+  });
+
+  it("should fail when session not found", async () => {
+    // Test error cases by injecting failing repositories
+    const FailingSessionRepo = Layer.succeed(
+      AssessmentSessionRepository,
+      AssessmentSessionRepository.of({
+        getSession: (sessionId) =>
+          Effect.fail(new SessionNotFound({ sessionId })),
+        // ... other methods
+      })
+    );
+
+    const FailLayer = Layer.mergeAll(FailingSessionRepo, TestMessageRepo, TestLogger);
+
+    const program = sendMessage({
+      sessionId: "non-existent",
+      message: "Test",
+    });
+
+    const result = await Effect.runPromise(
+      program.pipe(Effect.provide(FailLayer), Effect.either)
+    );
+
+    expect(result._tag).toBe("Left");
+  });
+});
+```
+
+**Testing approach:**
+- **Unit tests**: Use-cases with test implementations (`*RepositoryTest`)
+- **Integration tests**: Use-cases with live implementations (`*RepositoryLive`)
+- **E2E tests**: Full HTTP handlers → use-cases → live infrastructure
+
+### Monorepo Organization
+
+**Workspace dependencies:**
+
+```json
+// apps/api/package.json
+{
+  "dependencies": {
+    "@workspace/domain": "workspace:*",
+    "@workspace/contracts": "workspace:*",
+    "@workspace/infrastructure": "workspace:*"
+  }
+}
+
+// packages/infrastructure/package.json
+{
+  "dependencies": {
+    "@workspace/domain": "workspace:*",
+    "@workspace/contracts": "workspace:*"
+  }
+}
+
+// packages/domain/package.json
+{
+  "dependencies": {
+    "@workspace/contracts": "workspace:*"  // For shared errors
+  }
+}
+```
+
+**Build order (Turbo):**
+1. `domain` (pure types/interfaces)
+2. `infrastructure` (depends on domain)
+3. `api` (depends on both)
+
+### Benefits of This Architecture
+
+**1. Testability**
+- Use-cases tested in isolation
+- Fast unit tests (no I/O)
+- Easy to mock dependencies
+
+**2. Flexibility**
+- Swap implementations without changing use-cases
+- Add new repositories without modifying business logic
+- Multiple implementations (e.g., Drizzle vs. Prisma)
+
+**3. Clarity**
+- Clear separation of concerns
+- Each layer has single responsibility
+- Easy to understand data flow
+
+**4. Effect-ts Integration**
+- Natural fit with Context.Tag and Layer system
+- Type-safe dependency injection
+- Composable error handling
+
+**5. Scalability**
+- Add new use-cases without affecting existing code
+- Parallel development (different teams can work on different layers)
+- Easy to refactor (changes isolated to single layer)
+
+### Migration Path (Already Complete)
+
+**Phase 1: Domain Layer** ✅
+- Defined repository interfaces as Context.Tag
+- Created entity schemas with Effect Schema
+- Established domain errors
+
+**Phase 2: Infrastructure Layer** ✅
+- Implemented Drizzle repositories
+- Created Layer.effect exports with `Live` suffix
+- Integrated Database and Logger contexts
+
+**Phase 3: Use-Cases Layer** ✅
+- Extracted business logic from handlers
+- Created pure use-case functions
+- Declared dependencies via Effect type signatures
+
+**Phase 4: Handlers Refactoring** ✅
+- Converted handlers to thin adapters
+- Removed business logic from handlers
+- Connected to use-cases
+
+**Phase 5: Testing Setup** (In Progress)
+- Unit tests for use-cases with test implementations
+- Integration tests with live implementations
+- Story 7.1 established testing framework
+
+### Related ADRs
+
+This ADR complements and enhances:
+
+- **ADR-1 (Nerin Orchestration)**: Use-cases will orchestrate LangGraph agents
+- **ADR-2 (LLM Cost Control)**: ✅ Updated - Cost tracking implemented as CostGuardRepository in infrastructure layer
+- **ADR-3 (Frontend State)**: Contracts layer enables type-safe client communication
+- **Decision 2A (Error Handling)**: ✅ Updated - Shows hexagonal error flow from infrastructure → use-cases → handlers
+- **Decision 5A (Testing Strategy)**: ✅ Updated - Emphasizes use-cases as primary unit test boundary with mock repositories
+
+**ADRs Updated for Hexagonal Architecture (2026-02-01):**
+- ADR-2: Added hexagonal architecture integration section for cost tracking
+- Decision 2A: Replaced old FiberRef examples with hexagonal error flow patterns
+- Decision 5A: Added use-case testing as primary pattern with test repository examples
+
+### References
+
+**Effect-ts Patterns:**
+- [Effect Services Documentation](https://effect.website/docs/requirements-management/services/)
+- [Effect Layers Documentation](https://effect.website/docs/requirements-management/layers/)
+- [Effect Testing Guide](https://effect.website/docs/testing/)
+
+**Hexagonal Architecture:**
+- [Ports and Adapters by Alistair Cockburn](https://alistair.cockburn.us/hexagonal-architecture/)
+- [Clean Architecture by Robert C. Martin](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+
+**Implementation Reference:**
+- `packages/domain/src/repositories/` - Domain interfaces
+- `packages/infrastructure/src/repositories/` - Infrastructure implementations
+- `apps/api/src/use-cases/` - Application use-cases
+- `apps/api/src/handlers/` - HTTP adapters
 
 ---

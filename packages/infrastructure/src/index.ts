@@ -19,5 +19,8 @@ export { AssessmentSessionDrizzleRepositoryLive } from "./repositories/assessmen
 // Message repository implementation
 export { AssessmentMessageDrizzleRepositoryLive } from "./repositories/assessment-message.drizzle.repository.js";
 
+// Nerin agent repository implementation
+export { NerinAgentLangGraphRepositoryLive } from "./repositories/nerin-agent.langgraph.repository.js";
+
 // Database schema (for Better Auth adapter and migrations)
 export * as dbSchema from "./infrastructure/db/schema.js";

@@ -44,6 +44,9 @@ packages/
   - Effect-ts for functional error handling and RPC client typing
 
 - **api** (`port 4000` dev, Railway prod): Node.js backend featuring:
+  - **Hexagonal Architecture**:
+    - `src/handlers/` - Thin HTTP adapters (controllers/presenters)
+    - `src/use-cases/` - Business logic (main unit test target)
   - Effect-ts 3.19+ for functional programming and error handling
   - @effect/platform 0.94+ for HTTP server and API contracts
   - @effect/platform-node for Node.js HTTP runtime
@@ -59,10 +62,12 @@ packages/
 
 ### Packages
 
-- **domain**: Core domain types and business logic exports
-  - Effect Schema definitions for users, sessions, personality traits, archetypes
-  - Error definitions for domain-level errors
+- **domain**: Core domain layer (hexagonal architecture - ports)
+  - Repository interfaces using Context.Tag (no implementations)
+  - Entity schemas with Effect Schema (users, sessions, messages, etc.)
+  - Domain errors and types
   - Branded types for type-safe IDs (userId, sessionId, etc.)
+  - Pure abstractions - no external dependencies
 
 - **contracts**: Effect/Platform HTTP contract definitions using @effect/platform and @effect/schema
   - HTTP API Groups: AssessmentGroup, HealthGroup, ProfileGroup (future)
@@ -76,14 +81,14 @@ packages/
   - Migration scripts for PostgreSQL
   - Query builders and type-safe helpers
 
-- **infrastructure**: Backend utilities and dependency injection (Story 1.3)
-  - **FiberRef Bridges**: Request-scoped context management
-    - `DatabaseRef`: Drizzle ORM database connection
-    - `LoggerRef`: Winston logger instance
-    - `CostGuardRef`: LLM cost tracking and rate limiting
-  - **Pattern**: Use `FiberRef.get()` in Effect.gen handlers to access services
-  - Service layer bindings without prop drilling
-  - Layer composition for clean dependency injection
+- **infrastructure**: Infrastructure layer (hexagonal architecture - adapters)
+  - Repository implementations as Effect Layers (`*RepositoryLive`)
+  - Drizzle ORM implementations (`*.drizzle.repository.ts`)
+  - Pino logger implementation (`*.pino.repository.ts`)
+  - Database context and schema definitions
+  - Naming: `AssessmentMessageDrizzleRepositoryLive` (production)
+  - Testing: `AssessmentMessageTestRepositoryLive` (test implementations)
+  - Injected into use-cases via Layer composition
 
 - **ui**: Shared React component library built on shadcn/ui
   - Exports components from `./components/*`
@@ -240,6 +245,93 @@ docker compose up
 See [DOCKER.md](./DOCKER.md) for comprehensive Docker development guide.
 
 ## Architecture & Key Patterns
+
+### Hexagonal Architecture (Ports & Adapters)
+
+The codebase follows **hexagonal architecture** with clear layer separation and dependency inversion using Effect-ts Context.Tag pattern.
+
+**Architecture Layers:**
+
+```
+Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
+                                         ↑
+                                  Infrastructure (injected)
+```
+
+**Layer Responsibilities:**
+
+1. **Contracts** (`packages/contracts`): HTTP API definitions shared between frontend and backend
+2. **Handlers** (`apps/api/src/handlers`): Thin HTTP adapters (controllers/presenters) - no business logic
+3. **Use-Cases** (`apps/api/src/use-cases`): Pure business logic - **main unit test target**
+4. **Domain** (`packages/domain`): Repository interfaces (Context.Tag), entities, types
+5. **Infrastructure** (`packages/infrastructure`): Repository implementations (Drizzle, Pino, etc.)
+
+**Naming Conventions:**
+
+| Component | Location | Example | Notes |
+|-----------|----------|---------|-------|
+| Repository Interface | `packages/domain/src/repositories/` | `assessment-message.repository.ts` | Context.Tag definition |
+| Repository Implementation | `packages/infrastructure/src/repositories/` | `assessment-message.drizzle.repository.ts` | Layer.effect implementation |
+| Live Layer Export | Same as implementation | `AssessmentMessageDrizzleRepositoryLive` | Production Layer |
+| Test Layer Export | Test files | `AssessmentMessageTestRepositoryLive` | Testing Layer |
+| Use-Case | `apps/api/src/use-cases/` | `send-message.use-case.ts` | Pure business logic |
+| Handler | `apps/api/src/handlers/` | `assessment.ts` | HTTP adapter |
+
+**Example Use-Case Pattern:**
+
+```typescript
+// apps/api/src/use-cases/send-message.use-case.ts
+import { Effect } from "effect";
+import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
+import { AssessmentMessageRepository } from "@workspace/domain/repositories/assessment-message.repository";
+import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
+
+export const sendMessage = (
+  input: SendMessageInput
+): Effect.Effect<
+  SendMessageOutput,
+  DatabaseError | SessionNotFound,
+  AssessmentSessionRepository | AssessmentMessageRepository | LoggerRepository
+> =>
+  Effect.gen(function* () {
+    // Access injected dependencies
+    const sessionRepo = yield* AssessmentSessionRepository;
+    const messageRepo = yield* AssessmentMessageRepository;
+    const logger = yield* LoggerRepository;
+
+    // Business logic orchestrates domain operations
+    const session = yield* sessionRepo.getSession(input.sessionId);
+    yield* messageRepo.saveMessage(input.sessionId, "user", input.message);
+
+    // ... more business logic
+
+    return { response, precision };
+  });
+```
+
+**Testing Pattern:**
+
+```typescript
+// Unit test with test implementations
+const TestLayer = Layer.mergeAll(
+  Layer.succeed(AssessmentSessionRepository, TestSessionRepo),
+  Layer.succeed(AssessmentMessageRepository, TestMessageRepo),
+  Layer.succeed(LoggerRepository, TestLogger)
+);
+
+const result = await Effect.runPromise(
+  sendMessage({ sessionId: "test", message: "Hello" })
+    .pipe(Effect.provide(TestLayer))
+);
+```
+
+**Key Benefits:**
+- **Testability**: Use-cases tested in isolation with test implementations
+- **Flexibility**: Swap implementations without changing business logic
+- **Clarity**: Each layer has single responsibility
+- **Effect-ts native**: Context.Tag and Layer system for DI
+
+For complete architecture details, see `_bmad-output/planning-artifacts/architecture.md` (ADR-6).
 
 ### Workspace Dependencies
 
@@ -494,6 +586,255 @@ The backend uses LangGraph to orchestrate multiple specialized agents:
        └───────┬───────────┘
                ▼
          (update state)
+```
+
+### Nerin Agent Implementation (Story 2.2 ✅) - Hexagonal Architecture
+
+The Nerin conversational agent follows **hexagonal architecture** (ports & adapters) with Effect-ts dependency injection.
+
+**Architecture Overview:**
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ packages/domain (PORT - Interface)                                   │
+│   └─ repositories/nerin-agent.repository.ts                         │
+│       - NerinAgentRepository (Context.Tag)                          │
+│       - NerinInvokeInput, NerinInvokeOutput types                   │
+│       - PrecisionScores, TokenUsage interfaces                      │
+└─────────────────────────────────────────────────────────────────────┘
+                              ▲
+                              │ implements
+                              │
+┌─────────────────────────────────────────────────────────────────────┐
+│ packages/infrastructure (ADAPTER - Implementation)                   │
+│   └─ repositories/nerin-agent.langgraph.repository.ts               │
+│       - NerinAgentLangGraphRepositoryLive (Layer)                   │
+│       - LangGraph StateGraph with PostgresSaver                     │
+│       - ChatAnthropic model integration                             │
+│       - Token tracking and cost calculation                         │
+└─────────────────────────────────────────────────────────────────────┘
+                              ▲
+                              │ injected via Layer
+                              │
+┌─────────────────────────────────────────────────────────────────────┐
+│ apps/api/src/use-cases (Business Logic)                             │
+│   └─ send-message.use-case.ts                                       │
+│       - Pure Effect, no direct LangGraph import                     │
+│       - Accesses NerinAgentRepository via Context.Tag               │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Repository Interface (PORT)** in `packages/domain/src/repositories/nerin-agent.repository.ts`:
+
+```typescript
+import { Context, Effect } from "effect";
+import type { BaseMessage } from "@langchain/core/messages";
+import { AgentInvocationError } from "@workspace/contracts/errors";
+
+export interface PrecisionScores {
+  readonly openness?: number;
+  readonly conscientiousness?: number;
+  readonly extraversion?: number;
+  readonly agreeableness?: number;
+  readonly neuroticism?: number;
+}
+
+export interface NerinInvokeInput {
+  readonly sessionId: string;
+  readonly messages: readonly BaseMessage[];
+  readonly precision?: PrecisionScores;
+}
+
+export interface NerinInvokeOutput {
+  readonly response: string;
+  readonly tokenCount: TokenUsage;
+}
+
+export class NerinAgentRepository extends Context.Tag("NerinAgentRepository")<
+  NerinAgentRepository,
+  {
+    readonly invoke: (
+      input: NerinInvokeInput,
+    ) => Effect.Effect<NerinInvokeOutput, AgentInvocationError, never>;
+  }
+>() {}
+```
+
+**Repository Implementation (ADAPTER)** in `packages/infrastructure/src/repositories/nerin-agent.langgraph.repository.ts`:
+
+```typescript
+import { Layer, Effect } from "effect";
+import { StateGraph, START, END } from "@langchain/langgraph";
+import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
+import { ChatAnthropic } from "@langchain/anthropic";
+import { NerinAgentRepository } from "@workspace/domain/repositories/nerin-agent.repository";
+import { AgentInvocationError } from "@workspace/contracts/errors";
+
+export const NerinAgentLangGraphRepositoryLive = Layer.effect(
+  NerinAgentRepository,
+  Effect.gen(function* () {
+    const logger = yield* LoggerRepository;
+
+    // Initialize PostgresSaver checkpointer
+    const dbUri = process.env.DATABASE_URL;
+    let checkpointer: PostgresSaver | undefined;
+    if (dbUri) {
+      checkpointer = PostgresSaver.fromConnString(dbUri);
+      yield* Effect.tryPromise({
+        try: () => checkpointer!.setup(),
+        catch: () => undefined,
+      });
+    }
+
+    // Create ChatAnthropic model
+    const model = new ChatAnthropic({
+      model: process.env.NERIN_MODEL_ID || "claude-sonnet-4-20250514",
+      maxTokens: Number(process.env.NERIN_MAX_TOKENS) || 1024,
+      temperature: Number(process.env.NERIN_TEMPERATURE) || 0.7,
+    });
+
+    // Build LangGraph workflow
+    const workflow = new StateGraph({ channels: {...} })
+      .addNode("nerin", async (state) => {...})
+      .addEdge(START, "nerin")
+      .addEdge(END, "nerin");
+
+    const graph = workflow.compile({ checkpointer });
+
+    // Return service implementation
+    return NerinAgentRepository.of({
+      invoke: (input) =>
+        Effect.tryPromise({
+          try: async () => {
+            const result = await graph.invoke({...}, { configurable: { thread_id: input.sessionId } });
+            return { response: result.messages.at(-1)?.content ?? "", tokenCount: result.tokenCount };
+          },
+          catch: (error) => new AgentInvocationError({
+            agentName: "Nerin",
+            sessionId: input.sessionId,
+            message: error instanceof Error ? error.message : "Unknown error",
+          }),
+        }),
+    });
+  }),
+);
+```
+
+**Use-Case Integration** in `apps/api/src/use-cases/send-message.use-case.ts`:
+
+```typescript
+import { Effect } from "effect";
+import { NerinAgentRepository } from "@workspace/domain/repositories/nerin-agent.repository";
+import type { AgentInvocationError } from "@workspace/contracts/errors";
+
+export const sendMessage = (
+  input: SendMessageInput
+): Effect.Effect<
+  SendMessageOutput,
+  DatabaseError | SessionNotFound | AgentInvocationError,
+  | AssessmentSessionRepository
+  | AssessmentMessageRepository
+  | LoggerRepository
+  | NerinAgentRepository  // Dependency declared in type signature
+> =>
+  Effect.gen(function* () {
+    // Access injected dependencies via Context.Tag
+    const nerinAgent = yield* NerinAgentRepository;
+    const logger = yield* LoggerRepository;
+
+    // Invoke agent through repository abstraction
+    const result = yield* nerinAgent.invoke({
+      sessionId: input.sessionId,
+      messages: langchainMessages,
+      precision: session.precision,
+    }).pipe(
+      Effect.tapError((error) =>
+        Effect.sync(() => logger.error("Agent invocation failed", { error }))
+      )
+    );
+
+    return { response: result.response, precision: session.precision };
+  });
+```
+
+**Layer Composition** in `apps/api/src/index.ts`:
+
+```typescript
+import { NerinAgentLangGraphRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.langgraph.repository";
+
+const ServiceLayers = Layer.mergeAll(
+  AssessmentSessionDrizzleRepositoryLive,
+  AssessmentMessageDrizzleRepositoryLive,
+  NerinAgentLangGraphRepositoryLive,  // Injected here
+).pipe(
+  Layer.provide(DatabaseStack),
+  Layer.provide(LoggerPinoRepositoryLive),
+);
+```
+
+**Error Handling** with `AgentInvocationError` in `packages/contracts/src/errors.ts`:
+
+```typescript
+import { Schema as S } from "effect";
+
+export class AgentInvocationError extends S.TaggedError<AgentInvocationError>()(
+  "AgentInvocationError",
+  {
+    agentName: S.String,
+    sessionId: S.String,
+    message: S.String,
+  }
+) {}
+```
+
+HTTP contract maps this to 503 status in `packages/contracts/src/http/groups/assessment.ts`:
+
+```typescript
+HttpApiEndpoint.post("sendMessage", "/message")
+  .addError(AgentInvocationError, { status: 503 })
+```
+
+**Token Cost Calculation** (Claude Sonnet 4.5 pricing):
+
+```typescript
+// Pricing per 1M tokens
+const INPUT_PRICE_PER_MILLION = 0.003;   // $0.003/1M input tokens
+const OUTPUT_PRICE_PER_MILLION = 0.015;  // $0.015/1M output tokens
+
+function calculateCost(usage: TokenUsage): {
+  inputCost: number;
+  outputCost: number;
+  totalCost: number;
+} {
+  const inputCost = (usage.input / 1_000_000) * INPUT_PRICE_PER_MILLION;
+  const outputCost = (usage.output / 1_000_000) * OUTPUT_PRICE_PER_MILLION;
+  return { inputCost, outputCost, totalCost: inputCost + outputCost };
+}
+```
+
+**Testing Pattern (Mock Repository Injection):**
+
+```typescript
+import { Layer, Effect } from "effect";
+import { NerinAgentRepository } from "@workspace/domain/repositories/nerin-agent.repository";
+
+// Create mock repository for testing
+const mockNerinAgent = {
+  invoke: vi.fn().mockImplementation((input) =>
+    Effect.succeed({
+      response: "Mock response for testing",
+      tokenCount: { input: 100, output: 50, total: 150 },
+    })
+  ),
+};
+
+const TestLayer = Layer.succeed(NerinAgentRepository, mockNerinAgent);
+
+// Run use-case with mock
+const result = await Effect.runPromise(
+  sendMessage({ sessionId: "test", message: "Hello" })
+    .pipe(Effect.provide(TestLayer))
+);
 ```
 
 ### Local-First Data Sync (ElectricSQL + TanStack DB)

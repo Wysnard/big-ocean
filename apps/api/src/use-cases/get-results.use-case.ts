@@ -8,7 +8,6 @@
 import { Effect } from "effect";
 import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
-import { SessionNotFound, DatabaseError } from "@workspace/contracts/errors";
 
 export interface GetResultsInput {
   readonly sessionId: string;
@@ -68,13 +67,7 @@ const getArchetypeName = (oceanCode: string): string => {
  * Dependencies: AssessmentSessionRepository, LoggerRepository
  * Returns: Ocean code, archetype name, and trait scores
  */
-export const getResults = (
-  input: GetResultsInput,
-): Effect.Effect<
-  GetResultsOutput,
-  DatabaseError | SessionNotFound,
-  AssessmentSessionRepository | LoggerRepository
-> =>
+export const getResults = (input: GetResultsInput) =>
   Effect.gen(function* () {
     const sessionRepo = yield* AssessmentSessionRepository;
     const logger = yield* LoggerRepository;
