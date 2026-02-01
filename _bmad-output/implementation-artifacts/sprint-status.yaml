@@ -56,6 +56,7 @@ development_status:
   2-0-linter-unification-and-frontend-fixes: done
   2-0.5-effect-based-dependency-injection-refactoring: done
   2-1-session-management-and-persistence: done
+  2-1-1-github-actions-ci-cd-and-testing: ready-for-dev
   2-2-nerin-agent-setup-and-conversational-quality: backlog
   2-3-analyzer-and-scorer-agent-implementation: backlog
   2-4-langgraph-state-machine-and-orchestration: backlog
@@ -102,12 +103,12 @@ development_status:
 # SPRINT SUMMARY
 
 total_epics: 7
-total_stories: 25
+total_stories: 26
 epics_backlog: 4
 epics_in_progress: 3
 epics_done: 0
 stories_backlog: 15
-stories_ready_for_dev: 0
+stories_ready_for_dev: 1
 stories_in_progress: 0
 stories_review: 0
 stories_done: 10
@@ -183,13 +184,14 @@ Epic 1 (Infrastructure) ✅ COMPLETE
 **Current Sprint:** Phase 2 - Backend Logic
 **Active Epic:** Epic 2 (Assessment Backend Services)
 **Completed:** 2.1 - Session Management and Persistence (TDD) ✅
+**Ready for Dev:** 2.1.1 - GitHub Actions CI/CD with Testing & Git Hooks
 **Next Story:** 2.2 - Nerin Agent Setup and Conversational Quality (TDD)
 
 **Recommended Actions:**
 1. ✅ Story 2.1 COMPLETE - Session persistence, message history, <1sec resume all verified
-2. 🔄 Run `/bmad-bmm-create-story 2-2` to prepare Nerin Agent story
-3. Run `/bmad-bmm-dev-story 2-2` to implement conversational quality agent
-4. Continue sequentially through Epic 2 stories (2.3 → 2.4 → 2.5)
+2. 🔄 Run `/bmad-bmm-dev-story 2-1-1` to implement GitHub Actions CI/CD and Git hooks
+3. After 2-1.1 complete: Run `/bmad-bmm-create-story 2-2` to prepare Nerin Agent story
+4. Continue sequentially through Epic 2 stories (2.2 → 2.3 → 2.4 → 2.5)
 5. After Epic 2 complete: Move to Epic 3 (OCEAN Archetype System)
 
 **Parallel Work Opportunities:**
