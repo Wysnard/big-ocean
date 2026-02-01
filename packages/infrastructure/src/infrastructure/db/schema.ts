@@ -12,11 +12,22 @@
  * - messages: Conversation messages in sessions
  */
 
-import { defineRelations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index, integer, jsonb } from "drizzle-orm/pg-core";
+import { defineRelations, sql } from "drizzle-orm";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  index,
+  integer,
+  jsonb,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
-  id: text("id").primaryKey(),
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
@@ -31,7 +42,9 @@ export const user = pgTable("user", {
 export const session = pgTable(
   "session",
   {
-    id: text("id").primaryKey(),
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     expiresAt: timestamp("expires_at").notNull(),
     token: text("token").notNull().unique(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -41,20 +54,22 @@ export const session = pgTable(
       .notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
-    userId: text("user_id")
+    userId: uuid("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
   },
-  (table) => [index("session_userId_idx").on(table.userId)]
+  (table) => [index("session_userId_idx").on(table.userId)],
 );
 
 export const account = pgTable(
   "account",
   {
-    id: text("id").primaryKey(),
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
-    userId: text("user_id")
+    userId: uuid("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     accessToken: text("access_token"),
@@ -70,13 +85,15 @@ export const account = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)]
+  (table) => [index("account_userId_idx").on(table.userId)],
 );
 
 export const verification = pgTable(
   "verification",
   {
-    id: text("id").primaryKey(),
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     identifier: text("identifier").notNull(),
     value: text("value").notNull(),
     expiresAt: timestamp("expires_at").notNull(),
@@ -86,7 +103,7 @@ export const verification = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [index("verification_identifier_idx").on(table.identifier)]
+  (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
 /**
@@ -95,11 +112,13 @@ export const verification = pgTable(
  * Tracks personality assessment conversation sessions.
  * Sessions can be anonymous (userId NULL) or linked to authenticated users.
  */
-export const sessions = pgTable(
-  "sessions",
+export const assessmentSession = pgTable(
+  "assessment_session",
   {
-    id: text("id").primaryKey(), // Format: session_{timestamp}_{nanoid}
-    userId: text("user_id").references(() => user.id, { onDelete: "set null" }), // NULL for anonymous
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`), // Format: session_{timestamp}_{nanoid}
+    userId: uuid("user_id").references(() => user.id, { onDelete: "set null" }), // NULL for anonymous
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -111,8 +130,8 @@ export const sessions = pgTable(
   },
   (table) => [
     // Index for quick session lookup by user
-    index("sessions_user_id_idx").on(table.userId),
-  ]
+    index("assessment_session_user_id_idx").on(table.userId),
+  ],
 );
 
 /**
@@ -121,14 +140,16 @@ export const sessions = pgTable(
  * Stores conversation history for each assessment session.
  * Links to user if message was sent by authenticated user (NULL for anonymous or assistant messages).
  */
-export const messages = pgTable(
-  "messages",
+export const assessmentMessage = pgTable(
+  "assessment_message",
   {
-    id: text("id").primaryKey(), // Format: msg_{nanoid}
-    sessionId: text("session_id")
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`), // Format: msg_{nanoid}
+    sessionId: uuid("session_id")
       .notNull()
-      .references(() => sessions.id, { onDelete: "cascade" }),
-    userId: text("user_id").references(() => user.id, { onDelete: "set null" }), // User who sent message (NULL for assistant or anonymous)
+      .references(() => assessmentSession.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").references(() => user.id, { onDelete: "set null" }), // User who sent message (NULL for assistant or anonymous)
     role: text("role").notNull(), // 'user' | 'assistant'
     content: text("content").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -136,58 +157,61 @@ export const messages = pgTable(
   (table) => [
     // CRITICAL for <1 second resume: composite index on (sessionId, createdAt)
     // Allows efficient retrieval of all messages for a session in chronological order
-    index("messages_session_created_idx").on(table.sessionId, table.createdAt),
-  ]
+    index("assessment_message_session_created_idx").on(
+      table.sessionId,
+      table.createdAt,
+    ),
+  ],
 );
 
 /**
  * Relations (Drizzle v2 syntax)
  */
 
-// Create schema object for relations
-const authSchema = {
-  user,
-  session,
-  account,
-  verification,
-  sessions, // Assessment sessions
-  messages, // Assessment messages
-};
-
-export const relations = defineRelations(authSchema, (r) => ({
-  user: {
-    sessions: r.many.session(), // Better Auth sessions
-    accounts: r.many.account(),
-    assessmentSessions: r.many.sessions(), // Assessment sessions
-    messages: r.many.messages(), // Messages sent by user
+export const relations = defineRelations(
+  {
+    user,
+    session,
+    account,
+    verification,
+    assessmentSession, // Assessment sessions
+    assessmentMessage, // Assessment messages
   },
-  session: {
-    user: r.one.user({
-      from: r.session.userId,
-      to: r.user.id,
-    }),
-  },
-  account: {
-    user: r.one.user({
-      from: r.account.userId,
-      to: r.user.id,
-    }),
-  },
-  sessions: {
-    user: r.one.user({
-      from: r.sessions.userId,
-      to: r.user.id,
-    }),
-    messages: r.many.messages(),
-  },
-  messages: {
-    session: r.one.sessions({
-      from: r.messages.sessionId,
-      to: r.sessions.id,
-    }),
-    user: r.one.user({
-      from: r.messages.userId,
-      to: r.user.id,
-    }),
-  },
-}));
+  (r) => ({
+    user: {
+      sessions: r.many.session(), // Better Auth sessions
+      accounts: r.many.account(),
+      assessmentSession: r.many.assessmentSession(), // Assessment sessions
+      assessmentMessage: r.many.assessmentMessage(), // Assessment messages
+    },
+    session: {
+      user: r.one.user({
+        from: r.session.userId,
+        to: r.user.id,
+      }),
+    },
+    account: {
+      user: r.one.user({
+        from: r.account.userId,
+        to: r.user.id,
+      }),
+    },
+    assessmentSession: {
+      user: r.one.user({
+        from: r.assessmentSession.userId,
+        to: r.user.id,
+      }),
+      assessmentMessages: r.many.assessmentMessage(),
+    },
+    assessmentMessage: {
+      session: r.one.assessmentSession({
+        from: r.assessmentMessage.sessionId,
+        to: r.assessmentSession.id,
+      }),
+      user: r.one.user({
+        from: r.assessmentMessage.userId,
+        to: r.user.id,
+      }),
+    },
+  }),
+);

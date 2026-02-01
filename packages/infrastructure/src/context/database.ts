@@ -15,7 +15,7 @@ import { drizzle } from "drizzle-orm/effect-postgres";
 import { PgClient } from "@effect/sql-pg";
 import { SqlClient, SqlError } from "@effect/sql";
 import { types } from "pg";
-import * as authSchema from "../auth-schema.js";
+import * as authSchema from "../infrastructure/db/schema.js";
 
 /**
  * PostgreSQL Client Layer
@@ -23,10 +23,14 @@ import * as authSchema from "../auth-schema.js";
  * Manages connection pool with Effect-based lifecycle.
  * Preserves PostgreSQL date/time types as strings (not parsed to Date).
  */
-export const PgClientLive: Layer.Layer<PgClient.PgClient | SqlClient.SqlClient, SqlError.SqlError, never> = PgClient.layer({
+export const PgClientLive: Layer.Layer<
+  PgClient.PgClient | SqlClient.SqlClient,
+  SqlError.SqlError,
+  never
+> = PgClient.layer({
   url: Redacted.make(
     process.env.DATABASE_URL ||
-      "postgresql://dev:devpassword@localhost:5432/bigocean"
+      "postgresql://dev:devpassword@localhost:5432/bigocean",
   ),
   types: {
     // Preserve PostgreSQL date/time types as strings
@@ -81,7 +85,7 @@ export const DatabaseLive = Layer.effect(
     });
 
     return db;
-  })
+  }),
 );
 
 /**
@@ -90,4 +94,5 @@ export const DatabaseLive = Layer.effect(
  * Merges PgClient and Database layers.
  * Usage: Layer.provide(DatabaseStack, program)
  */
-export const DatabaseStack: Layer.Layer<Database, SqlError.SqlError, never> = DatabaseLive.pipe(Layer.provide(PgClientLive));
+export const DatabaseStack: Layer.Layer<Database, SqlError.SqlError, never> =
+  DatabaseLive.pipe(Layer.provide(PgClientLive));

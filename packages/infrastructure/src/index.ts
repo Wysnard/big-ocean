@@ -1,50 +1,23 @@
 /**
- * Infrastructure Layer
+ * Infrastructure Package Exports
  *
- * Exports Effect Services for dependency injection.
- * Uses official Effect Services + Layers pattern.
+ * Provides repository implementations, database context, and database schema.
  */
 
-// Effect Services (NEW - Context.Tag pattern)
-export {
-  Database,
-  type DatabaseShape,
-  DatabaseLive,
-  DatabaseStack,
-  PgClientLive,
-} from "./context/database.js";
-export {
-  BetterAuthService,
-  type BetterAuthShape,
-  BetterAuthLive,
-} from "./context/better-auth.js";
-export {
-  LoggerService,
-  LoggerServiceLive,
-  getLogger,
-  type Logger,
-} from "./context/logger-service.js";
+// Database context
+export { Database, DatabaseStack } from "./context/database.js";
 
-// Cost Guard Service (Context.Tag pattern)
-export {
-  CostGuardService,
-  type CostGuardShape,
-  CostGuardServiceLive,
-} from "./context/cost-guard.js";
+// Better Auth context
+export { BetterAuthService, BetterAuthLive } from "./context/better-auth.js";
 
-// Session Manager Service (Context.Tag pattern)
-export {
-  SessionManager,
-  SessionManagerLive,
-} from "./context/session-manager.js";
+// Logger repository implementation
+export { LoggerPinoRepositoryLive } from "./repositories/logger.pino.repository.js";
 
-// Schema exports (used by applications)
-export {
-  user,
-  session,
-  account,
-  verification,
-  sessions,
-  messages,
-  relations,
-} from "./auth-schema.js";
+// Session repository implementation
+export { AssessmentSessionDrizzleRepositoryLive } from "./repositories/assessment-session.drizzle.repository.js";
+
+// Message repository implementation
+export { AssessmentMessageDrizzleRepositoryLive } from "./repositories/assessment-message.drizzle.repository.js";
+
+// Database schema (for Better Auth adapter and migrations)
+export * as dbSchema from "./infrastructure/db/schema.js";

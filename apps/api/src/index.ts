@@ -14,9 +14,12 @@ import type { Server, IncomingMessage, ServerResponse } from "node:http";
 import { BigOceanApi } from "@workspace/contracts";
 import { HealthGroupLive } from "./handlers/health.js";
 import { AssessmentGroupLive } from "./handlers/assessment.js";
-import { LoggerService, LoggerServiceLive } from "./services/logger.js";
 import { betterAuthHandler } from "./middleware/better-auth.js";
-import { SessionManagerLive, DatabaseStack } from "@workspace/infrastructure";
+import { DatabaseStack } from "@workspace/infrastructure/context/database";
+import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
+import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
+import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 
 /**
  * Configuration
@@ -25,9 +28,15 @@ const port = Number(process.env.PORT || 4000);
 
 /**
  * Service Layers
- * Story 2-1: Database and SessionManager services
+ * Story 2-1: Database and repositories (now require LoggerRepository)
  */
-const ServiceLayers = SessionManagerLive.pipe(Layer.provide(DatabaseStack));
+const ServiceLayers = Layer.mergeAll(
+  AssessmentSessionDrizzleRepositoryLive,
+  AssessmentMessageDrizzleRepositoryLive,
+).pipe(
+  Layer.provide(DatabaseStack),
+  Layer.provide(LoggerPinoRepositoryLive),
+);
 
 /**
  * Combined Handler Layers with Services
@@ -35,7 +44,7 @@ const ServiceLayers = SessionManagerLive.pipe(Layer.provide(DatabaseStack));
 const HttpGroupsLive = Layer.mergeAll(
   HealthGroupLive,
   AssessmentGroupLive,
-  LoggerServiceLive,
+  LoggerPinoRepositoryLive,
 );
 
 /**
@@ -126,7 +135,7 @@ const createCustomServer = (): Server => {
 const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
   Layer.provide(ApiLayer),
   Layer.provide(NodeHttpServer.layer(createCustomServer, { port })),
-  Layer.provide(LoggerServiceLive),
+  Layer.provide(LoggerPinoRepositoryLive),
   Layer.provide(ServiceLayers),
 );
 
@@ -134,7 +143,7 @@ const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
  * Startup logging
  */
 const logStartup = Effect.gen(function* () {
-  const logger = yield* LoggerService;
+  const logger = yield* LoggerRepository;
 
   logger.info(`Starting Big Ocean API server on port ${port}`);
   logger.info("");
@@ -150,7 +159,7 @@ const logStartup = Effect.gen(function* () {
   logger.info("  - POST /api/assessment/message");
   logger.info("  - GET  /api/assessment/:sessionId/resume");
   logger.info("  - GET  /api/assessment/:sessionId/results");
-}).pipe(Effect.provide(LoggerServiceLive));
+}).pipe(Effect.provide(LoggerPinoRepositoryLive));
 
 /**
  * Launch server

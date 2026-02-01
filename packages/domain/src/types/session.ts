@@ -9,51 +9,32 @@
  * Values range from 0.0 (low confidence/low trait) to 1.0 (high confidence/high trait)
  */
 export interface PrecisionScores {
-  openness: number
-  conscientiousness: number
-  extraversion: number
-  agreeableness: number
-  neuroticism: number
+  openness: number;
+  conscientiousness: number;
+  extraversion: number;
+  agreeableness: number;
+  neuroticism: number;
 }
 
 /**
  * Session status states
  */
-export type SessionStatus = "active" | "paused" | "completed"
+export type SessionStatus = "active" | "paused" | "completed";
 
 /**
  * Message role in conversation
  */
-export type MessageRole = "user" | "assistant"
+export type MessageRole = "user" | "assistant";
 
 /**
  * Session metadata and state
  */
 export interface Session {
-  id: string
-  userId: string | null
-  createdAt: Date
-  updatedAt: Date
-  status: SessionStatus
-  precision: PrecisionScores
-  messageCount: number
-}
-
-/**
- * Message in a conversation session
- */
-export interface Message {
-  id: string
-  sessionId: string
-  role: MessageRole
-  content: string
-  createdAt: Date
-}
-
-/**
- * Complete session data with messages
- */
-export interface SessionData {
-  session: Session
-  messages: Message[]
+  id: string;
+  userId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  status: SessionStatus;
+  precision: PrecisionScores;
+  messageCount: number;
 }

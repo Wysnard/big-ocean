@@ -12,9 +12,6 @@ import { Layer } from "effect";
 import * as pinoModule from "pino";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 
-// Handle ESM/CJS pino import
-const pino = (pinoModule as any).default || pinoModule;
-
 /**
  * Logger Repository Layer - Creates Pino logger instance
  *
@@ -22,6 +19,7 @@ const pino = (pinoModule as any).default || pinoModule;
  * No dependencies required.
  */
 export const LoggerPinoRepositoryLive = Layer.sync(LoggerRepository, () => {
+  const pino = (pinoModule as any).default || pinoModule;
   // Only use pino-pretty in explicit development mode
   const isDevelopment = process.env.NODE_ENV === "development";
 

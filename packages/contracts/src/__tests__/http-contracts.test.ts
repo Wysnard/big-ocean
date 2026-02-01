@@ -185,7 +185,7 @@ describe("Assessment Contracts", () => {
 
       const result = S.decodeUnknownSync(ResumeSessionResponseSchema)(validResponse)
       expect(result.messages).toHaveLength(2)
-      expect(result.messages[0].role).toBe("user")
+      expect(result.messages[0]?.role).toBe("user")
       expect(result.precision.openness).toBe(0.5)
     })
 

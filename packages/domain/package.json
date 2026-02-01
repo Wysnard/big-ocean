@@ -8,7 +8,10 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./test-utils": "./src/test-utils/index.ts"
+    "./test-utils": "./src/test-utils/index.ts",
+    "./entities/*": "./src/entities/*.ts",
+    "./errors/*": "./src/errors/*.ts",
+    "./repositories/*": "./src/repositories/*.ts"
   },
   "dependencies": {
     "effect": "catalog:",

@@ -5,15 +5,16 @@
  * Pattern from: effect-worker-mono/packages/contracts/src/http/groups/*.ts
  */
 
-import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform"
-import { Schema as S } from "effect"
+import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
+import { Schema as S } from "effect";
+import { SessionNotFound, DatabaseError } from "@workspace/contracts/errors";
 
 /**
  * Start Assessment Request Schema
  */
 export const StartAssessmentRequestSchema = S.Struct({
   userId: S.optional(S.String),
-})
+});
 
 /**
  * Start Assessment Response Schema
@@ -21,7 +22,7 @@ export const StartAssessmentRequestSchema = S.Struct({
 export const StartAssessmentResponseSchema = S.Struct({
   sessionId: S.String,
   createdAt: S.DateTimeUtc,
-})
+});
 
 /**
  * Send Message Request Schema
@@ -29,7 +30,7 @@ export const StartAssessmentResponseSchema = S.Struct({
 export const SendMessageRequestSchema = S.Struct({
   sessionId: S.String,
   message: S.String,
-})
+});
 
 /**
  * Send Message Response Schema
@@ -43,7 +44,7 @@ export const SendMessageResponseSchema = S.Struct({
     agreeableness: S.Number,
     neuroticism: S.Number,
   }),
-})
+});
 
 /**
  * Get Results Response Schema
@@ -58,7 +59,7 @@ export const GetResultsResponseSchema = S.Struct({
     agreeableness: S.Number,
     neuroticism: S.Number,
   }),
-})
+});
 
 /**
  * Resume Session Response Schema
@@ -69,7 +70,7 @@ export const ResumeSessionResponseSchema = S.Struct({
       role: S.Literal("user", "assistant"),
       content: S.String,
       timestamp: S.DateTimeUtc,
-    })
+    }),
   ),
   precision: S.Struct({
     openness: S.Number,
@@ -78,7 +79,7 @@ export const ResumeSessionResponseSchema = S.Struct({
     agreeableness: S.Number,
     neuroticism: S.Number,
   }),
-})
+});
 
 /**
  * Assessment API Group
@@ -94,26 +95,33 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
     HttpApiEndpoint.post("start", "/start")
       .addSuccess(StartAssessmentResponseSchema)
       .setPayload(StartAssessmentRequestSchema)
+      .addError(DatabaseError, { status: 500 }),
   )
   .add(
     HttpApiEndpoint.post("sendMessage", "/message")
       .addSuccess(SendMessageResponseSchema)
       .setPayload(SendMessageRequestSchema)
+      .addError(SessionNotFound, { status: 404 })
+      .addError(DatabaseError, { status: 500 }),
   )
   .add(
     HttpApiEndpoint.get("getResults", "/:sessionId/results")
       .addSuccess(GetResultsResponseSchema)
+      .addError(SessionNotFound, { status: 404 })
+      .addError(DatabaseError, { status: 500 }),
   )
   .add(
     HttpApiEndpoint.get("resumeSession", "/:sessionId/resume")
       .addSuccess(ResumeSessionResponseSchema)
+      .addError(SessionNotFound, { status: 404 })
+      .addError(DatabaseError, { status: 500 }),
   )
-  .prefix("/assessment")
+  .prefix("/assessment");
 
 // Export TypeScript types for frontend use
-export type StartAssessmentRequest = typeof StartAssessmentRequestSchema.Type
-export type StartAssessmentResponse = typeof StartAssessmentResponseSchema.Type
-export type SendMessageRequest = typeof SendMessageRequestSchema.Type
-export type SendMessageResponse = typeof SendMessageResponseSchema.Type
-export type GetResultsResponse = typeof GetResultsResponseSchema.Type
-export type ResumeSessionResponse = typeof ResumeSessionResponseSchema.Type
+export type StartAssessmentRequest = typeof StartAssessmentRequestSchema.Type;
+export type StartAssessmentResponse = typeof StartAssessmentResponseSchema.Type;
+export type SendMessageRequest = typeof SendMessageRequestSchema.Type;
+export type SendMessageResponse = typeof SendMessageResponseSchema.Type;
+export type GetResultsResponse = typeof GetResultsResponseSchema.Type;
+export type ResumeSessionResponse = typeof ResumeSessionResponseSchema.Type;

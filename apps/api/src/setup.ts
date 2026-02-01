@@ -7,7 +7,7 @@
 
 import { drizzle } from "drizzle-orm/postgres-js";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import * as authSchema from "@workspace/infrastructure/auth-schema";
+import { dbSchema as authSchema } from "@workspace/infrastructure";
 
 /**
  * Initialize database connection
@@ -19,7 +19,7 @@ if (!databaseUrl) {
 
 const db: PostgresJsDatabase<typeof authSchema> = drizzle(
   databaseUrl || "postgresql://dev:devpassword@localhost:5432/bigocean",
-  { schema: authSchema }
+  { schema: authSchema },
 );
 
 console.info("Database initialized");

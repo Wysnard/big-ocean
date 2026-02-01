@@ -8,10 +8,10 @@ export type {
   SessionStatus,
   MessageRole,
   Session,
-  Message,
-  SessionData,
-} from "./types/session.js"
+} from "./types/session.js";
 
-// Session errors
-export { SessionNotFoundError, InvalidSessionStateError } from "./errors/session.js"
-export type { SessionError } from "./errors/session.js"
+// Convenience re-exports of contract errors
+export {
+  SessionNotFound,
+  DatabaseError,
+} from "@workspace/contracts/errors";

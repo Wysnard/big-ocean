@@ -10,12 +10,12 @@
 
 import { Context, Layer, Effect } from "effect";
 import { Database } from "./database.js";
-import { LoggerService } from "./logger-service.js";
+import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import { betterAuth, type Auth, type BetterAuthOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import * as authSchema from "../auth-schema.js";
+import * as authSchema from "../infrastructure/db/schema.js";
 
 /**
  * Better Auth Service Tag
@@ -36,8 +36,8 @@ export type BetterAuthShape = Context.Tag.Service<BetterAuthService>;
 /**
  * Better Auth Layer
  *
- * Layer type: Layer<BetterAuthService, never, Database | LoggerService>
- * Dependencies (Database, LoggerService) resolved during construction.
+ * Layer type: Layer<BetterAuthService, never, Database | LoggerRepository>
+ * Dependencies (Database, LoggerRepository) resolved during construction.
  *
  * CRITICAL: The Drizzle adapter receives the database through DI.
  */
@@ -46,7 +46,7 @@ export const BetterAuthLive = Layer.effect(
   Effect.gen(function* () {
     // Receive dependencies through DI during layer construction
     const database = yield* Database;
-    const logger = yield* LoggerService;
+    const logger = yield* LoggerRepository;
 
     // Create Better Auth with injected database
     const auth = betterAuth({
@@ -81,8 +81,7 @@ export const BetterAuthLive = Layer.effect(
         },
       },
 
-      baseURL:
-        process.env.BETTER_AUTH_URL || "http://localhost:4000",
+      baseURL: process.env.BETTER_AUTH_URL || "http://localhost:4000",
       secret:
         process.env.BETTER_AUTH_SECRET ||
         "placeholder-secret-for-development-only",
@@ -130,13 +129,13 @@ export const BetterAuthLive = Layer.effect(
                     .where(eq(authSchema.session.id, anonymousSessionId));
 
                   logger.info(
-                    `Linked anonymous session ${anonymousSessionId} to user ${user.id}`
+                    `Linked anonymous session ${anonymousSessionId} to user ${user.id}`,
                   );
                 } catch (error) {
                   const errorMessage =
                     error instanceof Error ? error.message : String(error);
                   logger.error(
-                    `Failed to link anonymous session: ${errorMessage}`
+                    `Failed to link anonymous session: ${errorMessage}`,
                   );
                 }
               }
@@ -147,5 +146,5 @@ export const BetterAuthLive = Layer.effect(
     });
 
     return auth;
-  })
+  }),
 );
