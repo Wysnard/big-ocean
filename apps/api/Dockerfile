@@ -65,7 +65,7 @@ WORKDIR /app
 # Install pnpm
 RUN npm install -g pnpm@10.4.1
 
-# Copy package files
+# Copy workspace config and package files
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
 COPY packages/domain/package.json ./packages/domain/
@@ -75,14 +75,11 @@ COPY packages/lint/package.json ./packages/lint/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY apps/api/package.json ./apps/api/
 
-# First install to get dependencies
-RUN pnpm install --frozen-lockfile
-
-# Copy source code
+# Copy ALL source code BEFORE installing to avoid binary mismatch
 COPY --from=builder /app/apps/api/src ./apps/api/src
 COPY --from=builder /app/packages ./packages
 
-# Re-install to link workspace packages properly (simple-git-hooks skips when no .git dir)
+# Single install with all source present - this ensures correct platform binaries
 RUN pnpm install --frozen-lockfile
 
 # Set NODE_ENV to production
