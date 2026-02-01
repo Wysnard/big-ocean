@@ -6,7 +6,7 @@ WORKDIR /app
 RUN npm install -g pnpm@10.4.1
 
 # Copy package files for dependency installation
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
 COPY packages/contracts/package.json ./packages/contracts/
 COPY packages/domain/package.json ./packages/domain/
 COPY packages/infrastructure/package.json ./packages/infrastructure/
@@ -33,7 +33,7 @@ WORKDIR /app
 RUN npm install -g pnpm@10.4.1 && corepack enable
 
 # Copy package files for dependency installation
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
 COPY packages/contracts/package.json ./packages/contracts/
 COPY packages/domain/package.json ./packages/domain/
 COPY packages/infrastructure/package.json ./packages/infrastructure/
@@ -58,29 +58,21 @@ EXPOSE 4000
 # Start with pnpm dev (uses tsx watch mode from package.json)
 CMD ["pnpm", "-C", "apps/api", "dev"]
 
-# Production stage
+# Production build stage - use pnpm deploy for monorepo
+FROM builder AS deploy
+WORKDIR /app
+
+# Use pnpm deploy to create isolated production deployment of api package
+# This copies api and all workspace dependencies into /app/prod with proper linking
+# Using --legacy flag for compatibility with pnpm v10 workspace handling
+RUN pnpm --filter=api --prod deploy --legacy prod
+
+# Production runtime stage
 FROM node:20-alpine AS production
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm@10.4.1
-
-# Copy workspace config and package files
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
-COPY packages/contracts/package.json ./packages/contracts/
-COPY packages/domain/package.json ./packages/domain/
-COPY packages/infrastructure/package.json ./packages/infrastructure/
-COPY packages/ui/package.json ./packages/ui/
-COPY packages/lint/package.json ./packages/lint/
-COPY packages/typescript-config/package.json ./packages/typescript-config/
-COPY apps/api/package.json ./apps/api/
-
-# Copy ALL source code BEFORE installing to avoid binary mismatch
-COPY --from=builder /app/apps/api/src ./apps/api/src
-COPY --from=builder /app/packages ./packages
-
-# Single install with all source present - this ensures correct platform binaries
-RUN pnpm install --frozen-lockfile
+# Copy deployed package from deploy stage (includes isolated node_modules)
+COPY --from=deploy /app/prod .
 
 # Set NODE_ENV to production
 ENV NODE_ENV=production
@@ -97,4 +89,4 @@ HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:${PORT:-8080}/health || exit 1
 
 # Start backend using tsx (handles TypeScript imports from workspace packages)
-CMD ["tsx", "apps/api/src/index.ts"]
+CMD ["tsx", "src/index.ts"]
