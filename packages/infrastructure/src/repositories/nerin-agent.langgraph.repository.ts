@@ -14,11 +14,14 @@ import { Layer, Effect } from "effect";
 import { Annotation, StateGraph, START, END } from "@langchain/langgraph";
 import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 import { ChatAnthropic } from "@langchain/anthropic";
-import { AIMessage, SystemMessage, type BaseMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  SystemMessage,
+  type BaseMessage,
+} from "@langchain/core/messages";
 import {
   NerinAgentRepository,
   type NerinInvokeInput,
-  type NerinInvokeOutput,
   type TokenUsage,
   type PrecisionScores,
 } from "@workspace/domain/repositories/nerin-agent.repository";
@@ -49,12 +52,12 @@ Key behaviors:
   if (precision) {
     // Find lowest precision trait for exploration focus
     const entries = Object.entries(precision).filter(
-      ([_, value]) => value !== undefined,
+      ([_, value]) => value !== undefined
     ) as [string, number][];
 
     if (entries.length > 0) {
       const lowest = entries.reduce((min, curr) =>
-        (curr[1] ?? 100) < (min[1] ?? 100) ? curr : min,
+        (curr[1] ?? 100) < (min[1] ?? 100) ? curr : min
       );
 
       prompt += `
@@ -157,9 +160,11 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
         },
       }).pipe(
         Effect.tap(() =>
-          Effect.sync(() => logger.info("PostgresSaver checkpointer initialized")),
+          Effect.sync(() =>
+            logger.info("PostgresSaver checkpointer initialized")
+          )
         ),
-        Effect.catchAll(() => Effect.succeed(undefined)),
+        Effect.catchAll(() => Effect.succeed(undefined))
       );
     } else {
       logger.warn("DATABASE_URL not set - Nerin agent state will not persist");
@@ -220,7 +225,7 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
               },
               {
                 configurable: { thread_id: input.sessionId },
-              },
+              }
             );
 
             // Extract response from last message
@@ -252,9 +257,10 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
             new AgentInvocationError({
               agentName: "Nerin",
               sessionId: input.sessionId,
-              message: error instanceof Error ? error.message : "Unknown agent error",
+              message:
+                error instanceof Error ? error.message : "Unknown agent error",
             }),
         }),
     });
-  }),
+  })
 );

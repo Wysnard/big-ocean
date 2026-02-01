@@ -4,11 +4,35 @@
 
 // Session types
 export type {
-  PrecisionScores,
   SessionStatus,
   MessageRole,
   Session,
 } from "./types/session.js";
+
+// Trait types (Big Five)
+export type { BigFiveTrait, TraitPrecisionScores } from "./types/trait.js";
+export { BIG_FIVE_TRAITS } from "./types/trait.js";
+
+// Facet types
+export type {
+  OpennessFacet,
+  ConscientiousnessFacet,
+  ExtravertFacet,
+  AgreeableFacet,
+  NeuroticismFacet,
+  BigFiveFacet,
+  FacetPrecisionScores,
+} from "./types/facet.js";
+export { FACETS_BY_TRAIT } from "./types/facet.js";
+
+// Precision calculation service
+export {
+  calculateTraitPrecision,
+  calculateWeightedAverage,
+  initializeFacetPrecision,
+  updateFacetPrecision,
+  mergePrecisionScores,
+} from "./services/precision-calculator.service.js";
 
 // Repository interfaces (ports in hexagonal architecture)
 export {

@@ -6,6 +6,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
 
+## Table of Contents
+
+### 🚀 Quick Start
+- [Repository Overview](#repository-overview)
+- [Common Commands](#common-commands)
+
+### 📚 Core Documentation
+- [Architecture & Key Patterns](#architecture--key-patterns) → [ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+- [Completed Stories](#completed-stories-) → [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md)
+- [Tech Stack Summary](#tech-stack-summary)
+- [Key Dependencies & Versions](#key-dependencies--versions)
+
+### ⚙️ Development Setup
+- [Monorepo Structure](#monorepo-structure)
+- [Common Commands](#common-commands) → [COMMANDS.md](./docs/COMMANDS.md)
+- [Git Hooks](#git-hooks-local-enforcement)
+
+### 🚢 Production & Deployment
+- [Production Deployment](#production-deployment-story-13-) → [DEPLOYMENT.md](./docs/DEPLOYMENT.md)
+
+### 📋 Conventions & Workflows
+- [Git Conventions](#git-conventions) → [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md)
+- [Linting & Code Quality](#linting--code-quality)
+- [Adding New Packages or Apps](#adding-new-packages-or-apps)
+- [Adding Components to UI Library](#adding-components-to-ui-library)
+
 ## Repository Overview
 
 **big-ocean** is a sophisticated psychological profiling platform built on the Big Five personality framework. It's a monorepo using [Turbo](https://turbo.build) and [pnpm workspaces](https://pnpm.io) with a clear separation between frontend, backend, shared packages, and infrastructure.
@@ -98,638 +124,122 @@ packages/
 
 ## Common Commands
 
-All commands run from repository root:
-
-### Development
+**Quick Start:**
 
 ```bash
-pnpm dev                      # Start all apps in dev mode (front + api)
-pnpm dev --filter=front      # Run only frontend (TanStack Start, port 3000)
-pnpm dev --filter=api        # Run only backend (Node.js, port 4000)
-```
-
-### Building & Testing
-
-```bash
-pnpm build                  # Build all packages and apps
-pnpm lint                   # Lint all packages
-pnpm format                 # Format all code with Prettier
+pnpm install                # Install dependencies
+pnpm prepare                # Install git hooks (automatic via postinstall)
+pnpm dev                    # Start all services
 pnpm test:run               # Run all tests
-pnpm test:coverage          # Run tests with coverage report
+pnpm lint                   # Lint all packages
 ```
 
-### CI/CD Pipeline (Story 2.1.1)
+For complete command reference, see [COMMANDS.md](./docs/COMMANDS.md).
 
-GitHub Actions automatically runs on all pushes and pull requests:
-
-**Pipeline Steps:**
-
-1. Checkout code
-2. Setup pnpm 10.4.1 + Node.js 20.x
-3. Install dependencies (`pnpm install`)
-4. TypeScript check (`pnpm turbo lint`)
-5. Lint check (`pnpm lint`)
-6. Build (`pnpm build`)
-7. Run tests (`pnpm test:run`)
-8. Validate commit messages (PR only - conventional commit format)
-
-**Configuration:** `.github/workflows/ci.yml`
+**Key Commands:**
+- `pnpm dev --filter=front` - Frontend only (TanStack Start, port 3000)
+- `pnpm dev --filter=api` - Backend only (Node.js, port 4000)
+- `pnpm build` - Build all packages
+- `pnpm format` - Format all code
+- `pnpm test:coverage` - Run tests with coverage
 
 ### Git Hooks (Local Enforcement)
 
 Git hooks ensure code quality before commits and pushes:
 
 **Pre-push hook** (runs before `git push`):
-
-- Runs `pnpm lint` (Biome linting)
-- Runs `pnpm turbo lint` (TypeScript check)
-- Runs `pnpm test:run` (all tests)
+- Lint check (`pnpm lint`)
+- TypeScript check (`pnpm turbo lint`)
+- Test suite (`pnpm test:run`)
 - Blocks push if any check fails
 
 **Commit-msg hook** (validates commit messages):
-
-- Requires conventional commit format: `type(scope): Description` or `type: Description`
+- Requires [conventional commit format](#commit-message-format)
 - Allowed types: `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `perf`, `style`, `build`, `revert`
-- Allows merge commits
 
 **Bypass hooks (use sparingly):**
-
 ```bash
 git commit --no-verify   # Skip commit-msg hook
 git push --no-verify     # Skip pre-push hook
 ```
 
-**Hook setup:** Hooks are managed by `simple-git-hooks`. After cloning:
-
-```bash
-pnpm install           # Installs dependencies
-pnpm prepare           # Installs git hooks (runs automatically via postinstall)
-```
-
-### App-Specific Commands
-
-**front** (TanStack Start frontend):
-
-```bash
-pnpm -C apps/front dev              # Start dev server with HMR (port 3000)
-pnpm -C apps/front build            # Build for production (SSR)
-pnpm -C apps/front start            # Start production server
-pnpm -C apps/front lint             # Run Biome linter
-pnpm -C apps/front typecheck        # TypeScript type checking
-```
-
-**api** (Node.js backend):
-
-```bash
-pnpm -C apps/api dev              # Start dev server with watch (port 4000)
-pnpm -C apps/api build            # Build/compile TypeScript
-pnpm -C apps/api typecheck        # TypeScript type checking
-```
-
-**packages** (Shared):
-
-```bash
-pnpm -C packages/domain lint      # Lint domain package
-pnpm -C packages/contracts lint   # Lint contracts (zero warnings required)
-pnpm -C packages/database lint    # Lint database package
-pnpm -C packages/ui lint          # Lint UI components (zero warnings required)
-pnpm -C packages/infrastructure lint # Lint infrastructure package
-```
-
-### Database Commands
-
-```bash
-# Migration management (from apps/api or packages/database)
-pnpm drizzle-kit generate          # Generate migration files
-pnpm drizzle-kit push              # Apply migrations to database
-pnpm drizzle-kit studio            # Open Drizzle Studio UI
-```
-
-### Docker Compose Development (Story 1.4)
-
-For containerized development with exact production parity:
-
-```bash
-# Start all services (PostgreSQL, Redis, Backend API, Frontend)
-./scripts/dev.sh
-
-# Stop services (keeps data)
-docker compose stop
-# or
-./scripts/dev-stop.sh
-
-# Full reset (removes all data)
-./scripts/dev-reset.sh
-
-# View logs
-docker compose logs -f backend    # Backend logs with hot reload
-docker compose logs -f frontend   # Frontend logs with Vite HMR
-docker compose logs -f postgres   # Database logs
-docker compose logs -f redis      # Cache logs
-
-# Access services
-curl http://localhost:4000/health  # Test backend health
-docker compose exec postgres psql -U dev -d bigocean  # Access database
-docker compose exec redis redis-cli  # Access cache
-
-# Rebuild after dependency changes
-docker compose build
-docker compose up
-```
-
-**Common Gotchas:**
-
-- After `pnpm install` changes to `package.json`, run `docker compose build` before starting services
-- If services won't start, try `./scripts/dev-reset.sh` to clear volumes and remove all state
-- Use `docker compose logs {service}` to debug startup issues
-
-**Key Features**:
-
-- **Port mapping**: Frontend (3000), Backend (4000), PostgreSQL (5432), Redis (6379)
-- **Hot reload**: Backend (tsx watch), Frontend (Vite HMR)
-- **Volumes**: `./apps/api/src` and `./apps/front/src` mounted for real-time changes
-- **Health checks**: All services validate startup order and readiness
-- **Database persistence**: postgres_data and redis_data named volumes
-
-See [DOCKER.md](./DOCKER.md) for comprehensive Docker development guide.
+Hooks are managed by `simple-git-hooks` (installed automatically via `pnpm install`).
 
 ## Architecture & Key Patterns
 
-### Hexagonal Architecture (Ports & Adapters)
-
 The codebase follows **hexagonal architecture** with clear layer separation and dependency inversion using Effect-ts Context.Tag pattern.
 
-**Architecture Layers:**
+**Key Principles:**
+- **Handlers**: Thin HTTP adapters - extract request data and call use-cases
+- **Use-Cases**: Pure business logic - main unit test target
+- **Domain**: Repository interfaces (Context.Tag), entities, types
+- **Infrastructure**: Repository implementations (Drizzle, LangGraph, Pino, etc.)
 
-```
-Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
-                                         ↑
-                                  Infrastructure (injected)
-```
-
-**Layer Responsibilities:**
-
-1. **Contracts** (`packages/contracts`): HTTP API definitions shared between frontend and backend
-2. **Handlers** (`apps/api/src/handlers`): Thin HTTP adapters (controllers/presenters) - no business logic
-3. **Use-Cases** (`apps/api/src/use-cases`): Pure business logic - **main unit test target**
-4. **Domain** (`packages/domain`): Repository interfaces (Context.Tag), entities, types
-5. **Infrastructure** (`packages/infrastructure`): Repository implementations (Drizzle, Pino, etc.)
-
-**Hard Rule:** Handlers extract request data and call use-cases. No conditional logic, validation, or orchestration in handlers. All business logic belongs in use-cases.
+**Hard Rule:** No conditional logic, validation, or orchestration in handlers. All business logic belongs in use-cases.
 
 **Quick Discovery Pattern:**
-
-- Need a repository interface? Check `packages/domain/src/repositories/{name}.repository.ts` - this is the source of truth
-- Once you have the interface, find the implementation (Drizzle, LangGraph, etc.) in `packages/infrastructure/src/repositories/`
-- Test implementations live in `*.test.ts` files next to the production implementations
-
-**Naming Conventions:**
-
-| Component                 | Location                                    | Example                                    | Notes                       |
-| ------------------------- | ------------------------------------------- | ------------------------------------------ | --------------------------- |
-| Repository Interface      | `packages/domain/src/repositories/`         | `assessment-message.repository.ts`         | Context.Tag definition      |
-| Repository Implementation | `packages/infrastructure/src/repositories/` | `assessment-message.drizzle.repository.ts` | Layer.effect implementation |
-| Live Layer Export         | Same as implementation                      | `AssessmentMessageDrizzleRepositoryLive`   | Production Layer            |
-| Test Layer Export         | Test files                                  | `AssessmentMessageTestRepositoryLive`      | Testing Layer               |
-| Use-Case                  | `apps/api/src/use-cases/`                   | `send-message.use-case.ts`                 | Pure business logic         |
-| Handler                   | `apps/api/src/handlers/`                    | `assessment.ts`                            | HTTP adapter                |
-
-**Example Use-Case Pattern:**
-
-```typescript
-// apps/api/src/use-cases/send-message.use-case.ts
-import { Effect } from "effect";
-import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
-import { AssessmentMessageRepository } from "@workspace/domain/repositories/assessment-message.repository";
-import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
-
-export const sendMessage = (
-  input: SendMessageInput
-): Effect.Effect<
-  SendMessageOutput,
-  DatabaseError | SessionNotFound,
-  AssessmentSessionRepository | AssessmentMessageRepository | LoggerRepository
-> =>
-  Effect.gen(function* () {
-    // Access injected dependencies
-    const sessionRepo = yield* AssessmentSessionRepository;
-    const messageRepo = yield* AssessmentMessageRepository;
-    const logger = yield* LoggerRepository;
-
-    // Business logic orchestrates domain operations
-    const session = yield* sessionRepo.getSession(input.sessionId);
-    yield* messageRepo.saveMessage(input.sessionId, "user", input.message);
-
-    // ... more business logic
-
-    return { response, precision };
-  });
-```
-
-**Testing Pattern:**
-
-```typescript
-// Unit test with test implementations
-const TestLayer = Layer.mergeAll(
-  Layer.succeed(AssessmentSessionRepository, TestSessionRepo),
-  Layer.succeed(AssessmentMessageRepository, TestMessageRepo),
-  Layer.succeed(LoggerRepository, TestLogger)
-);
-
-const result = await Effect.runPromise(
-  sendMessage({ sessionId: "test", message: "Hello" }).pipe(
-    Effect.provide(TestLayer)
-  )
-);
-```
-
-**Key Pattern:** Each test double must implement the same interface as the production layer. Create test implementations in `*.test.ts` files alongside production code. Use `Layer.succeed(RepositoryTag, mockImplementation)` to inject test doubles.
-
-**Key Benefits:**
-
-- **Testability**: Use-cases tested in isolation with test implementations
-- **Flexibility**: Swap implementations without changing business logic
-- **Clarity**: Each layer has single responsibility
-- **Effect-ts native**: Context.Tag and Layer system for DI
-
-For complete architecture details, see `_bmad-output/planning-artifacts/architecture.md` (ADR-6).
-
-### Workspace Dependencies
-
-Packages use `workspace:*` and `workspace:^` to reference other packages in the monorepo. This ensures they're always in sync with local versions.
-
-**Dependency Graph:**
-
-```
-apps/front     → contracts, domain, ui, database
-apps/api       → contracts, domain, database, infrastructure
-contracts      → domain (schema imports)
-infrastructure → domain, database
-ui             → (independent component library)
-```
-
-### Domain-Driven Design
-
-The `@workspace/domain` package encapsulates core business logic:
-
-**Domain Package Structure:**
-
-```typescript
-// packages/domain/src/
-├── schemas/          # Effect Schema definitions for domain types
-├── errors/           # Tagged Error types
-├── types/            # Branded types (userId, sessionId, etc.)
-└── constants/        # Domain constants (trait names, facets, etc.)
-```
-
-**Example Domain Export:**
-
-```typescript
-// packages/domain/src/schemas/index.ts
-import * as S from "@effect/schema/Schema";
-
-export const UserProfileSchema = S.Struct({
-  id: S.String,
-  name: S.String,
-  traits: PersonalityTraitsSchema,
-  // ... more fields
-});
-
-export type UserProfile = S.To<typeof UserProfileSchema>;
-```
-
-### Effect/Platform HTTP Contracts (Story 1.6 ✅)
-
-The `@workspace/contracts` package defines type-safe HTTP API contracts using @effect/platform and @effect/schema following the official effect-worker-mono pattern.
-
-**HTTP Contract Structure** (in `packages/contracts/src/http/groups/assessment.ts`):
-
-```typescript
-import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
-import { Schema as S } from "effect";
-
-// Request/Response schemas
-export const StartAssessmentRequestSchema = S.Struct({
-  userId: S.optional(S.String),
-});
-
-export const StartAssessmentResponseSchema = S.Struct({
-  sessionId: S.String,
-  createdAt: S.DateTimeUtc,
-});
-
-export const SendMessageRequestSchema = S.Struct({
-  sessionId: S.String,
-  message: S.String,
-});
-
-export const SendMessageResponseSchema = S.Struct({
-  response: S.String,
-  precision: S.Struct({
-    openness: S.Number,
-    conscientiousness: S.Number,
-    extraversion: S.Number,
-    agreeableness: S.Number,
-    neuroticism: S.Number,
-  }),
-});
-
-// HTTP API Group combines endpoints
-export const AssessmentGroup = HttpApiGroup.make("assessment")
-  .add(
-    HttpApiEndpoint.post("start", "/start")
-      .addSuccess(StartAssessmentResponseSchema)
-      .setPayload(StartAssessmentRequestSchema)
-  )
-  .add(
-    HttpApiEndpoint.post("sendMessage", "/message")
-      .addSuccess(SendMessageResponseSchema)
-      .setPayload(SendMessageRequestSchema)
-  )
-  .prefix("/assessment");
-```
-
-**Handler Implementation** (in `apps/api/src/handlers/assessment.ts`):
-
-```typescript
-import { HttpApiBuilder } from "@effect/platform";
-import { DateTime, Effect } from "effect";
-import { BigOceanApi } from "@workspace/contracts";
-import { LoggerService } from "../services/logger.js";
-
-// Handlers use HttpApiBuilder.group pattern
-export const AssessmentGroupLive = HttpApiBuilder.group(
-  BigOceanApi,
-  "assessment",
-  (handlers) =>
-    Effect.gen(function* () {
-      return handlers
-        .handle("start", ({ payload }) =>
-          Effect.gen(function* () {
-            const logger = yield* LoggerService;
-
-            const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-            const createdAt = DateTime.unsafeMake(Date.now());
-
-            logger.info("Assessment session started", {
-              sessionId,
-              userId: payload.userId,
-            });
-
-            return { sessionId, createdAt };
-          })
-        )
-        .handle("sendMessage", ({ payload }) =>
-          Effect.gen(function* () {
-            const logger = yield* LoggerService;
-
-            logger.info("Message received", {
-              sessionId: payload.sessionId,
-              messageLength: payload.message.length,
-            });
-
-            // Placeholder response (real Nerin logic in Epic 2)
-            return {
-              response: "Thank you for sharing that...",
-              precision: {
-                openness: 0.5,
-                conscientiousness: 0.4,
-                extraversion: 0.6,
-                agreeableness: 0.7,
-                neuroticism: 0.3,
-              },
-            };
-          })
-        );
-    })
-);
-```
-
-**Server Setup** (in `apps/api/src/index.ts`):
-
-```typescript
-import { Effect, Layer } from "effect";
-import { HttpApiBuilder, HttpMiddleware } from "@effect/platform";
-import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
-import { createServer } from "node:http";
-import { BigOceanApi } from "@workspace/contracts";
-import { HealthGroupLive } from "./handlers/health.js";
-import { AssessmentGroupLive } from "./handlers/assessment.js";
-import { LoggerServiceLive } from "./services/logger.js";
-import { betterAuthHandler } from "./middleware/better-auth.js";
-
-// Merge all handler groups with services
-const HttpGroupsLive = Layer.mergeAll(
-  HealthGroupLive,
-  AssessmentGroupLive,
-  LoggerServiceLive
-);
-
-// Build API from contracts with handlers
-const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(
-  Layer.provide(HttpGroupsLive)
-);
-
-// Complete API with router and middleware
-const ApiLayer = Layer.mergeAll(
-  ApiLive,
-  HttpApiBuilder.Router.Live,
-  HttpApiBuilder.Middleware.layer
-);
-
-// Hybrid server: Better Auth (node:http) → Effect (remaining routes)
-const createCustomServer = () => {
-  const server = createServer();
-  let effectHandler: any = null;
-
-  server.on("newListener", (event, listener) => {
-    if (event === "request") {
-      effectHandler = listener;
-      server.removeListener("request", listener as any);
-    }
-  });
-
-  server.on("request", async (req, res) => {
-    await betterAuthHandler(req, res);
-    if (!res.writableEnded && effectHandler) {
-      effectHandler(req, res);
-    }
-  });
-
-  return server;
-};
-
-// HTTP Server with Better Auth integration
-const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
-  Layer.provide(ApiLayer),
-  Layer.provide(NodeHttpServer.layer(createCustomServer, { port: 4000 })),
-  Layer.provide(LoggerServiceLive)
-);
-
-// Launch server
-NodeRuntime.runMain(Layer.launch(HttpLive));
-```
-
-### Multi-Agent System (LangGraph)
-
-The backend uses LangGraph to orchestrate multiple specialized agents:
-
-**Agent Architecture:**
-
-```
-┌─────────────────────────────────────────────────────┐
-│ Orchestrator (Rules-based routing)                  │
-│ - Identifies lowest precision trait                 │
-│ - Recommends exploration domain                     │
-│ - Generates context for Nerin                       │
-└────────────────┬────────────────────────────────────┘
-                 │ guidance
-                 ▼
-┌──────────────────────────────────────────────────────┐
-│ Nerin (Conversational Agent - Claude 3.5 Sonnet)   │
-│ - Handles conversational quality                    │
-│ - Builds relational safety                          │
-│ - No assessment responsibility                      │
-└────────────────┬────────────────────────────────────┘
-                 │ user response
-      ┌──────────┴──────────┐
-      │ (batch every 3 msgs)│
-      ▼                     ▼
-┌──────────────┐   ┌──────────────┐
-│ Analyzer     │   │ Scorer       │
-│ - Pattern    │   │ - Calculates │
-│   extraction │   │   trait      │
-│ - Detects    │   │   scores     │
-│   contradic. │   │ - Identifies │
-│              │   │   facets     │
-└──────┬───────┘   └───────┬──────┘
-       │                   │
-       └───────┬───────────┘
-               ▼
-         (update state)
-```
-
-### Nerin Agent Implementation (Story 2.2 ✅) - Hexagonal Architecture
-
-The Nerin conversational agent follows **hexagonal architecture** (ports & adapters) with Effect-ts dependency injection.
-
-**Architecture Overview:**
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│ packages/domain (PORT - Interface)                                   │
-│   └─ repositories/nerin-agent.repository.ts                         │
-│       - NerinAgentRepository (Context.Tag)                          │
-│       - NerinInvokeInput, NerinInvokeOutput types                   │
-│       - PrecisionScores, TokenUsage interfaces                      │
-└─────────────────────────────────────────────────────────────────────┘
-                              ▲
-                              │ implements
-                              │
-┌─────────────────────────────────────────────────────────────────────┐
-│ packages/infrastructure (ADAPTER - Implementation)                   │
-│   └─ repositories/nerin-agent.langgraph.repository.ts               │
-│       - NerinAgentLangGraphRepositoryLive (Layer)                   │
-│       - LangGraph StateGraph with PostgresSaver                     │
-│       - ChatAnthropic model integration                             │
-│       - Token tracking and cost calculation                         │
-└─────────────────────────────────────────────────────────────────────┘
-                              ▲
-                              │ injected via Layer
-                              │
-┌─────────────────────────────────────────────────────────────────────┐
-│ apps/api/src/use-cases (Business Logic)                             │
-│   └─ send-message.use-case.ts                                       │
-│       - Pure Effect, no direct LangGraph import                     │
-│       - Accesses NerinAgentRepository via Context.Tag               │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-**Critical Note on thread_id:** The `configurable.thread_id` passed to `graph.invoke()` is required for checkpointer persistence. Use `sessionId` as the thread_id to maintain conversation history across requests. Omitting this breaks state persistence and each invocation will start fresh.
-
-### Database (Drizzle ORM + PostgreSQL)
-
-Type-safe database access with Drizzle:
-
-```typescript
-// packages/database/src/schema.ts
-import { pgTable, text, timestamp, numeric } from "drizzle-orm/pg-core";
-
-export const sessions = pgTable("sessions", {
-  id: text("id").primaryKey(),
-  userId: text("user_id"),
-  createdAt: timestamp("created_at").defaultNow(),
-  // ... other fields
-});
-
-export const messages = pgTable("messages", {
-  id: text("id").primaryKey(),
-  sessionId: text("session_id").references(() => sessions.id),
-  role: text("role"), // 'user' | 'assistant'
-  content: text("content"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-```
-
-### Catalog Dependencies
-
-`pnpm-workspace.yaml` defines a `catalog` for consistent dependency versions:
-
-```yaml
-catalog:
-  zod: "4.2.1"
-  effect: "3.19.14"
-  "@effect/schema": "0.71.0"
-  drizzle-orm: "0.45.1"
-  "@anthropic-ai/sdk": "0.71.2"
-```
-
-Packages reference versions with `"catalog:"` to ensure consistency.
-
-**Best Practice:** Before updating any package version, check `pnpm-workspace.yaml` catalog first. Use `catalog:` prefix in package.json (e.g., `"effect": "catalog:"`). This ensures all packages stay synchronized. Only add new versions to the catalog, never hardcode versions in individual package.json files.
-
-### Turbo Tasks
-
-Turbo.json defines task dependencies:
-
-- `build`: Depends on `^build` (dependencies must build first)
-- `lint`: Depends on `^lint`
-- `typecheck`: Depends on `^typecheck`
-- `dev`: Not cached, persistent task
+- Repository interface? → `packages/domain/src/repositories/{name}.repository.ts`
+- Repository implementation? → `packages/infrastructure/src/repositories/{name}*.repository.ts`
+- Test implementations? → `*.test.ts` files next to production code
+
+For complete architecture details, see:
+- [ARCHITECTURE.md](./docs/ARCHITECTURE.md) - Detailed patterns, examples, and diagrams
+- [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) - Component naming and file locations
+
+### Tech Stack Summary
+
+**Core Dependencies:**
+- **Effect-ts**: Functional programming and error handling (latest)
+- **@effect/platform**: Type-safe HTTP contracts and server
+- **@effect/schema**: Runtime validation and serialization
+- **LangGraph + Anthropic SDK**: Multi-agent orchestration and Claude integration
+- **Drizzle ORM**: Type-safe database queries with PostgreSQL
+- **Pino**: High-performance structured logging
+- **React 19 + TanStack**: Frontend with SSR, routing, forms, state
+
+**Deployment & Dev:**
+- Railway for production API
+- Docker Compose for development environment parity
+- GitHub Actions for CI/CD (lint → build → test → validate commits)
+- Better Auth for authentication
+
+See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for production details.
 
 ## Production Deployment (Story 1.3 ✅)
 
-### Railway Deployment
+Railway deployment with automatic CI/CD, Docker multi-stage builds, and health checks.
 
-The API is deployed to Railway with automatic CI/CD:
+**Production:** https://api-production-f7de.up.railway.app/health
 
-**Production URLs:**
+**Key Features:**
+- Automatic deployment on `master` branch
+- Docker containers with workspace resolution
+- Health check validation endpoint
+- Environment variable configuration in Railway dashboard
 
-- **Base**: https://api-production-f7de.up.railway.app
-- **Health Check**: GET `/health` → `{"status":"ok"}`
+For complete deployment guide, see [DEPLOYMENT.md](./docs/DEPLOYMENT.md)
 
-**Deployment Flow:**
+## Completed Stories ✅
 
-1. Push or merge to `master` branch triggers Railway build
-2. Docker image built using `apps/api/Dockerfile`
-3. TypeScript compiled with workspace package resolution
-4. Container starts with `pnpm --filter api start` → runs `tsx src/index.ts`
-5. Health check endpoint validates deployment
-6. Automatic restart on failure (10 max retries)
+Stories that are fully implemented and deployed:
 
-**Environment Variables:**
+- **Story 1.3**: Production Deployment (Railway + Docker)
+- **Story 1.4**: Docker Compose Development
+- **Story 1.6**: Effect/Platform HTTP Contracts
+- **Story 2.1.1**: CI/CD Pipeline
+- **Story 2.2**: Nerin Agent Implementation (Hexagonal Architecture)
 
-- `PORT`: 8080 (Railway default)
-- `HOST`: 0.0.0.0
-- `ANTHROPIC_API_KEY`: Set in Railway dashboard
-- Custom vars: `DATABASE_URL`, `REDIS_URL`, etc.
+For details on each completed story, see [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md)
 
-**Docker Best Practices:**
+## Git Conventions
 
-- Multi-stage build (builder + runtime)
-- pnpm workspace resolution with double install for linking
-- tsx for production TypeScript execution (handles workspace imports)
-- Minimal production image (Node 20 Alpine)
+Branch naming, commit messages, and component naming follow consistent patterns.
+
+See [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) for:
+- Branch naming format (`feat/story-{epic-num}-{story-num}-{slug}`)
+- Commit message format with examples
+- Component naming conventions
+- Repository interface and implementation patterns
 
 ## Linting & Code Quality
 
@@ -768,73 +278,36 @@ import { Button } from "@workspace/ui/components/button";
 
 ## Key Dependencies & Versions
 
+**Requirements:**
+- Node.js >= 20
+- pnpm 10.4.1
+- TypeScript 5.7.3+
+
 **Frontend Stack:**
+- React 19, TanStack Start, TanStack Router, TanStack Query, TanStack Form
+- ElectricSQL, Tailwind CSS 4+, shadcn/ui
+- Effect for error handling
 
-- React 19, TanStack Start, TanStack Router 1+, TanStack Query 5+, TanStack Form 1+, TanStack DB 0+
-- ElectricSQL 1.4.1, Tailwind CSS 4+, shadcn/ui
-- Effect (latest) for client-side error handling
+**Backend Stack:**
+- Effect, @effect/platform (HTTP contracts)
+- @effect/schema (runtime validation)
+- LangGraph + Anthropic SDK (multi-agent AI)
+- Drizzle ORM + PostgreSQL (database)
+- Pino (structured logging)
+- Better Auth (authentication)
 
-**Backend Stack (Story 1.3):**
+**Catalog Configuration:**
 
-- Effect 3.19.15 (latest in catalog), @effect/schema 0.71.0
-- @effect/platform 0.94.2, @effect/platform-node for Node.js runtime
-- LangChain LangGraph 1.1+, Anthropic SDK 0.71.2
-- Drizzle ORM 0.45.1, PostgreSQL
-- Winston 3.19.0 for structured logging
-- Pino 9.6.0 for high-performance logging
+Versions are centralized in `pnpm-workspace.yaml` to ensure consistency across packages. Always reference the catalog when updating dependencies.
 
-**Shared:**
+See [ARCHITECTURE.md](./docs/ARCHITECTURE.md#catalog-dependencies) for the complete catalog configuration.
 
-- Effect Schema (for domain validation and type safety)
-- TypeScript 5.7.3+, pnpm 10.4.1
-- Node.js >= 20 required
+## Git Conventions
 
-**Catalog Configuration** (`pnpm-workspace.yaml`):
+Branch naming, commit messages, and component naming follow consistent patterns.
 
-```yaml
-catalog:
-  effect: "latest" # Story 1.3: Using latest for compatibility
-  "@effect/schema": "latest"
-  "@effect/platform": "latest"
-  "@effect/platform-node": "latest"
-  "@effect/cluster": "latest"
-  "@effect/experimental": "latest"
-  drizzle-orm: "0.45.1"
-  "@anthropic-ai/sdk": "0.71.2"
-  pino: "9.6.0"
-```
-
-### Branch Naming Convention
-
-```
-feat/story-{epic-num}-{story-num}-{slug}
-├─ epic-num: Epic number (1-7 for current project)
-├─ story-num: Story number within epic
-└─ slug: URL-safe description of the story
-```
-
-**Examples:**
-
-- `feat/story-1-2-integrate-better-auth`
-- `feat/story-2-1-session-management-persistence`
-- `feat/story-4-2-assessment-conversation-component`
-
-### Commit Message Format
-
-**Standard format:**
-
-```
-type(scope): Brief description
-
-Detailed explanation of what was changed and why.
-
-Co-Authored-By: Claude <model> <noreply@anthropic.com>
-```
-
-**Types:** `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `perf`, `style`, `build`, `revert`
-
-**Examples:**
-
-- `feat: Add user authentication`
-- `fix(api): Resolve session timeout issue`
-- `docs: Update README with setup instructions`
+See [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) for:
+- Branch naming format (`feat/story-{epic-num}-{story-num}-{slug}`)
+- Commit message format with examples
+- Component naming conventions
+- Repository interface and implementation patterns

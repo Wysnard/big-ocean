@@ -11,12 +11,11 @@
 
 import { Effect, Layer } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
 import {
   AssessmentSessionRepository,
   LoggerRepository,
 } from "@workspace/domain";
-import { startAssessment } from "../start-assessment.use-case";
+import { startAssessment } from "../start-assessment.use-case.js";
 
 describe("startAssessment Use Case", () => {
   // @biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
@@ -120,10 +119,13 @@ describe("startAssessment Use Case", () => {
         startAssessment(input).pipe(Effect.provide(testLayer))
       );
 
-      expect(mockLogger.info).toHaveBeenCalledWith("Assessment session started", {
-        sessionId: "session_new_789",
-        userId: "user_456",
-      });
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "Assessment session started",
+        {
+          sessionId: "session_new_789",
+          userId: "user_456",
+        }
+      );
     });
 
     it("should return session ID and creation timestamp", async () => {
@@ -144,8 +146,12 @@ describe("startAssessment Use Case", () => {
       expect(result).toHaveProperty("sessionId");
       expect(result).toHaveProperty("createdAt");
       expect(result.sessionId).toBe("session_new_789");
-      expect(result.createdAt.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
-      expect(result.createdAt.getTime()).toBeLessThanOrEqual(afterTime.getTime());
+      expect(result.createdAt.getTime()).toBeGreaterThanOrEqual(
+        beforeTime.getTime()
+      );
+      expect(result.createdAt.getTime()).toBeLessThanOrEqual(
+        afterTime.getTime()
+      );
     });
 
     it("should handle multiple session creations independently", async () => {
@@ -166,8 +172,14 @@ describe("startAssessment Use Case", () => {
       );
 
       expect(mockSessionRepo.createSession).toHaveBeenCalledTimes(2);
-      expect(mockSessionRepo.createSession).toHaveBeenNthCalledWith(1, "user_1");
-      expect(mockSessionRepo.createSession).toHaveBeenNthCalledWith(2, "user_2");
+      expect(mockSessionRepo.createSession).toHaveBeenNthCalledWith(
+        1,
+        "user_1"
+      );
+      expect(mockSessionRepo.createSession).toHaveBeenNthCalledWith(
+        2,
+        "user_2"
+      );
     });
   });
 
@@ -184,7 +196,9 @@ describe("startAssessment Use Case", () => {
       const input = {};
 
       await expect(
-        Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)))
+        Effect.runPromise(
+          startAssessment(input).pipe(Effect.provide(testLayer))
+        )
       ).rejects.toThrow("Database connection failed");
     });
 
@@ -200,7 +214,9 @@ describe("startAssessment Use Case", () => {
       const input = { userId: "user_test" };
 
       await expect(
-        Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)))
+        Effect.runPromise(
+          startAssessment(input).pipe(Effect.provide(testLayer))
+        )
       ).rejects.toThrow("Repository unavailable");
     });
   });
@@ -294,8 +310,12 @@ describe("startAssessment Use Case", () => {
 
       // The result should have a createdAt that's close to current time,
       // not the repository's old timestamp
-      expect(result.createdAt.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
-      expect(result.createdAt.getTime()).toBeLessThanOrEqual(afterTime.getTime());
+      expect(result.createdAt.getTime()).toBeGreaterThanOrEqual(
+        beforeTime.getTime()
+      );
+      expect(result.createdAt.getTime()).toBeLessThanOrEqual(
+        afterTime.getTime()
+      );
     });
   });
 
@@ -313,10 +333,13 @@ describe("startAssessment Use Case", () => {
       );
 
       expect(result).toHaveProperty("sessionId");
-      expect(mockLogger.info).toHaveBeenCalledWith("Assessment session started", {
-        sessionId: "session_new_789",
-        userId: undefined,
-      });
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "Assessment session started",
+        {
+          sessionId: "session_new_789",
+          userId: undefined,
+        }
+      );
     });
 
     it("should be idempotent - each call creates new session", async () => {
