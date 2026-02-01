@@ -122,11 +122,12 @@ GitHub Actions automatically runs on all pushes and pull requests:
 **Pipeline Steps:**
 1. Checkout code
 2. Setup pnpm 10.4.1 + Node.js 20.x
-3. Install dependencies (`pnpm install --frozen-lockfile`)
+3. Install dependencies (`pnpm install`)
 4. TypeScript check (`pnpm turbo lint`)
 5. Lint check (`pnpm lint`)
 6. Build (`pnpm build`)
 7. Run tests (`pnpm test:run`)
+8. Validate commit messages (PR only - ensures story references)
 
 **Configuration:** `.github/workflows/ci.yml`
 

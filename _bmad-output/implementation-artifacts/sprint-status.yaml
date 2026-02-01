@@ -56,7 +56,7 @@ development_status:
   2-0-linter-unification-and-frontend-fixes: done
   2-0.5-effect-based-dependency-injection-refactoring: done
   2-1-session-management-and-persistence: done
-  2-1-1-github-actions-ci-cd-and-testing: review
+  2-1-1-github-actions-ci-cd-and-testing: in-progress
   2-2-nerin-agent-setup-and-conversational-quality: backlog
   2-3-analyzer-and-scorer-agent-implementation: backlog
   2-4-langgraph-state-machine-and-orchestration: backlog
