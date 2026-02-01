@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Validate commit messages reference story numbers (PR only)
+  # Validate commit messages follow conventional commit format (PR only)
   validate-commits:
     name: Validate Commit Messages
     runs-on: ubuntu-latest
@@ -34,9 +34,8 @@ jobs:
               pull_number: context.issue.number
             });
 
-            // Patterns for valid commit messages
-            const storyPattern = /^(feat|fix|chore)\(story-\d+(-\d+)+\):/;
-            const specialPattern = /^(docs|chore|test|ci|refactor|perf|style)(\(.+\))?:/;
+            // Conventional commit pattern: type(scope): or type:
+            const conventionalPattern = /^(feat|fix|docs|chore|test|ci|refactor|perf|style|build|revert)(\(.+\))?:/;
             const mergePattern = /^Merge /;
 
             const invalidCommits = [];
@@ -45,8 +44,7 @@ jobs:
               const message = commit.commit.message.split('\n')[0]; // First line only
 
               if (mergePattern.test(message)) continue;
-              if (specialPattern.test(message)) continue;
-              if (storyPattern.test(message)) continue;
+              if (conventionalPattern.test(message)) continue;
 
               invalidCommits.push({
                 sha: commit.sha.substring(0, 7),
@@ -55,16 +53,16 @@ jobs:
             }
 
             if (invalidCommits.length > 0) {
-              let errorMsg = '❌ The following commits do not follow the required format:\n\n';
+              let errorMsg = '❌ The following commits do not follow conventional commit format:\n\n';
               for (const c of invalidCommits) {
                 errorMsg += `- \`${c.sha}\`: ${c.message}\n`;
               }
-              errorMsg += '\n**Required format:** `feat(story-X-Y): Description` or `fix(story-X-Y): Description`\n';
-              errorMsg += '\n**Allowed special commits:** `docs:`, `chore:`, `test:`, `ci:`, `refactor:`, `perf:`, `style:`';
+              errorMsg += '\n**Required format:** `type(scope): Description` or `type: Description`\n';
+              errorMsg += '\n**Allowed types:** `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `perf`, `style`, `build`, `revert`';
 
               core.setFailed(errorMsg);
             } else {
-              console.log('✅ All commit messages follow the required format');
+              console.log('✅ All commit messages follow conventional commit format');
             }
 
   ci:

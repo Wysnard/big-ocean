@@ -1,8 +1,7 @@
 #!/bin/sh
 
-# Commit message hook: Validates commit message format
-# Format: feat(story-X-Y): Description
-# Or special types: docs:, chore:, test:, ci:, refactor:, perf:, style:
+# Commit message hook: Validates conventional commit format
+# Format: type(scope): Description  or  type: Description
 # Bypass with: git commit --no-verify
 
 COMMIT_MSG_FILE="$1"
@@ -13,37 +12,36 @@ if echo "$COMMIT_MSG" | grep -E "^Merge " > /dev/null; then
   exit 0
 fi
 
-# Allow special commits (docs, chore, test, ci, refactor, perf, style)
-if echo "$COMMIT_MSG" | grep -E "^(docs|chore|test|ci|refactor|perf|style)(\(.+\))?:" > /dev/null; then
+# Allow conventional commits with optional scope
+# Types: feat, fix, docs, chore, test, ci, refactor, perf, style, build, revert
+if echo "$COMMIT_MSG" | grep -E "^(feat|fix|docs|chore|test|ci|refactor|perf|style|build|revert)(\(.+\))?:" > /dev/null; then
   exit 0
 fi
 
-# Require story reference: feat(story-X-Y): or fix(story-X-Y): or chore(story-X-Y): (supports X-Y or X-Y-Z format)
-# Pattern: type(story-N-N) or type(story-N-N-N) followed by ): and description
-if ! echo "$COMMIT_MSG" | grep -E "^(feat|fix|chore)\(story-[0-9]+-[0-9]+(-[0-9]+)?\):" > /dev/null; then
-  echo ""
-  echo "❌ Commit message must reference story number!"
-  echo ""
-  echo "Format: feat(story-X-Y): Description"
-  echo "    or: fix(story-X-Y): Description"
-  echo "    or: chore(story-X-Y): Description"
-  echo ""
-  echo "Examples:"
-  echo "  feat(story-2-1-1): Add GitHub Actions CI/CD pipeline"
-  echo "  fix(story-2-1): Resolve import path issue in contracts"
-  echo "  chore(story-2-1-1): Update dependencies"
-  echo ""
-  echo "Allowed special commits (no story ref required):"
-  echo "  - docs: Documentation only changes"
-  echo "  - chore: Build process or auxiliary tool changes"
-  echo "  - test: Adding or modifying tests"
-  echo "  - ci: CI/CD configuration changes"
-  echo "  - refactor: Code restructuring without behavior changes"
-  echo "  - perf: Performance improvements"
-  echo "  - style: Code style/formatting changes"
-  echo ""
-  echo "Bypass with: git commit --no-verify"
-  exit 1
-fi
-
-exit 0
+echo ""
+echo "❌ Commit message must follow conventional commit format!"
+echo ""
+echo "Format: type(scope): Description"
+echo "    or: type: Description"
+echo ""
+echo "Types:"
+echo "  - feat: A new feature"
+echo "  - fix: A bug fix"
+echo "  - docs: Documentation only changes"
+echo "  - chore: Build process or auxiliary tool changes"
+echo "  - test: Adding or modifying tests"
+echo "  - ci: CI/CD configuration changes"
+echo "  - refactor: Code restructuring without behavior changes"
+echo "  - perf: Performance improvements"
+echo "  - style: Code style/formatting changes"
+echo "  - build: Build system or external dependencies"
+echo "  - revert: Reverts a previous commit"
+echo ""
+echo "Examples:"
+echo "  feat: Add user authentication"
+echo "  fix(api): Resolve session timeout issue"
+echo "  docs: Update README with setup instructions"
+echo "  chore(deps): Update dependencies"
+echo ""
+echo "Bypass with: git commit --no-verify"
+exit 1

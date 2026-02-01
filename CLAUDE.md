@@ -127,7 +127,7 @@ GitHub Actions automatically runs on all pushes and pull requests:
 5. Lint check (`pnpm lint`)
 6. Build (`pnpm build`)
 7. Run tests (`pnpm test:run`)
-8. Validate commit messages (PR only - ensures story references)
+8. Validate commit messages (PR only - conventional commit format)
 
 **Configuration:** `.github/workflows/ci.yml`
 
@@ -142,8 +142,8 @@ Git hooks ensure code quality before commits and pushes:
 - Blocks push if any check fails
 
 **Commit-msg hook** (validates commit messages):
-- Requires story reference: `feat(story-X-Y): Description` or `fix(story-X-Y): Description`
-- Allows special commits: `docs:`, `chore:`, `test:`, `ci:`, `refactor:`, `perf:`, `style:`
+- Requires conventional commit format: `type(scope): Description` or `type: Description`
+- Allowed types: `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `perf`, `style`, `build`, `revert`
 - Allows merge commits
 
 **Bypass hooks (use sparingly):**
@@ -761,7 +761,7 @@ catalog:
 
 - All work happens on the feature branch
 - Commit incrementally as phases complete (e.g., one commit per phase if implementing multi-phase stories)
-- Use conventional commit format: `feat(story-X-Y): Description`
+- Use conventional commit format: `feat: Description` or `feat(scope): Description`
 
 **At story completion:**
 
@@ -800,25 +800,33 @@ feat/story-{epic-num}-{story-num}-{slug}
 
 ### Commit Message Format
 
-**Single-phase stories:**
+**Standard format:**
 
 ```
-feat(story-X-Y): Brief description
+type(scope): Brief description
 
 Detailed explanation of what was changed and why.
 
 Co-Authored-By: Claude <model> <noreply@anthropic.com>
 ```
 
-**Multi-phase stories:**
+**Types:** `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `perf`, `style`, `build`, `revert`
+
+**Examples:**
+
+- `feat: Add user authentication`
+- `fix(api): Resolve session timeout issue`
+- `docs: Update README with setup instructions`
+
+**Multi-phase work:**
 
 - One commit per major phase is acceptable
-- Later commits can be: `feat(story-X-Y): Phase N - Description`
+- Later commits can be: `feat(scope): Phase N - Description`
 
-Example from Story 1.6 (6 phases in one commit):
+Example:
 
 ```
-feat(story-1-6): Migrate to Effect/Platform HTTP with Better Auth
+feat(http): Migrate to Effect/Platform HTTP with Better Auth
 
 ## Summary
 Successfully migrated from Express.js to Effect/Platform HTTP...
