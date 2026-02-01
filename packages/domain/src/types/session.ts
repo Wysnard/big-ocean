@@ -4,17 +4,7 @@
  * Core types for session management and personality assessment tracking
  */
 
-/**
- * Precision scores for Big Five personality traits
- * Values range from 0.0 (low confidence/low trait) to 1.0 (high confidence/high trait)
- */
-export interface PrecisionScores {
-  openness: number;
-  conscientiousness: number;
-  extraversion: number;
-  agreeableness: number;
-  neuroticism: number;
-}
+import type { TraitPrecisionScores } from "./trait.js";
 
 /**
  * Session status states
@@ -35,6 +25,6 @@ export interface Session {
   createdAt: Date;
   updatedAt: Date;
   status: SessionStatus;
-  precision: PrecisionScores;
+  precision: TraitPrecisionScores;
   messageCount: number;
 }

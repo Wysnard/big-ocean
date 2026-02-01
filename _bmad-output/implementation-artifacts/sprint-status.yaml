@@ -57,7 +57,7 @@ development_status:
   2-0.5-effect-based-dependency-injection-refactoring: done
   2-1-session-management-and-persistence: done
   2-1-1-github-actions-ci-cd-and-testing: done
-  2-2-nerin-agent-setup-and-conversational-quality: ready-for-dev
+  2-2-nerin-agent-setup-and-conversational-quality: done
   2-2.5-setup-redis-and-cost-management-with-token-counting: ready-for-dev
   2-3-analyzer-and-scorer-agent-implementation: backlog
   2-4-langgraph-state-machine-and-orchestration: backlog
@@ -112,7 +112,7 @@ stories_backlog: 15
 stories_ready_for_dev: 1
 stories_in_progress: 0
 stories_review: 0
-stories_done: 11
+stories_done: 12
 retrospectives_optional: 6
 retrospectives_done: 1
 
@@ -135,8 +135,8 @@ retrospectives_done: 1
   - ✅ Story 2.0.5: Effect-Based Dependency Injection Refactoring
   - ✅ Story 2.1: Session Management and Persistence (TDD)
   - ✅ Story 2.1.1: GitHub Actions CI/CD and Testing
-  - 📋 **NEXT:** Story 2.2: Nerin Agent Setup and Conversational Quality (TDD)
-  - 📋 Story 2.2.5: Setup Redis and Cost Management Infrastructure (TDD) **[NEW]**
+  - ✅ Story 2.2: Nerin Agent Setup and Conversational Quality (TDD)
+  - 📋 **NEXT:** Story 2.2.5: Setup Redis and Cost Management Infrastructure (TDD)
   - ⏳ Story 2.3: Analyzer and Scorer Agent Implementation (TDD)
   - ⏳ Story 2.4: LangGraph State Machine and Orchestration (TDD)
   - ⏳ Story 2.5: LLM Cost Tracking, Rate Limiting, and Budget Enforcement (TDD)
@@ -186,15 +186,15 @@ Epic 1 (Infrastructure) ✅ COMPLETE
 
 **Current Sprint:** Phase 2 - Backend Logic
 **Active Epic:** Epic 2 (Assessment Backend Services)
-**Completed:** 2.1.1 - GitHub Actions CI/CD and Testing ✅
-**Next Story:** 2.2 - Nerin Agent Setup and Conversational Quality (TDD)
+**Completed:** 2.2 - Nerin Agent Setup and Conversational Quality (TDD) ✅
+**Next Story:** 2.2.5 - Setup Redis and Cost Management Infrastructure (TDD)
 
 **Recommended Actions:**
 1. ✅ Story 2.1 COMPLETE - Session persistence, message history, <1sec resume all verified
 2. ✅ Story 2.1.1 COMPLETE - CI/CD pipeline, git hooks, and automated testing
-3. 📋 Story 2.2 READY - Nerin Agent Setup and Conversational Quality
-4. 📋 Story 2.2.5 READY - Redis and Cost Management Infrastructure **[NEW]**
-5. Continue through Epic 2 stories (2.2 → 2.2.5 → 2.3 → 2.4 → 2.5)
+3. ✅ Story 2.2 COMPLETE - Nerin Agent with LangGraph, streaming, token tracking
+4. 📋 Story 2.2.5 READY - Redis and Cost Management Infrastructure **[NEXT]**
+5. Continue through Epic 2 stories (2.2.5 → 2.3 → 2.4 → 2.5)
 6. After Epic 2 complete: Move to Epic 3 (OCEAN Archetype System)
 
 **Parallel Work Opportunities:**

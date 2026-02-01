@@ -6,6 +6,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
 
+## Table of Contents
+
+### 🚀 Quick Start
+- [Repository Overview](#repository-overview)
+- [Common Commands](#common-commands)
+
+### 📚 Core Documentation
+- [Architecture & Key Patterns](#architecture--key-patterns) → [ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+- [Completed Stories](#completed-stories-) → [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md)
+- [Tech Stack Summary](#tech-stack-summary)
+- [Key Dependencies & Versions](#key-dependencies--versions)
+
+### ⚙️ Development Setup
+- [Monorepo Structure](#monorepo-structure)
+- [Common Commands](#common-commands) → [COMMANDS.md](./docs/COMMANDS.md)
+- [Git Hooks](#git-hooks-local-enforcement)
+
+### 🚢 Production & Deployment
+- [Production Deployment](#production-deployment-story-13-) → [DEPLOYMENT.md](./docs/DEPLOYMENT.md)
+
+### 📋 Conventions & Workflows
+- [Git Conventions](#git-conventions) → [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md)
+- [Linting & Code Quality](#linting--code-quality)
+- [Adding New Packages or Apps](#adding-new-packages-or-apps)
+- [Adding Components to UI Library](#adding-components-to-ui-library)
+
 ## Repository Overview
 
 **big-ocean** is a sophisticated psychological profiling platform built on the Big Five personality framework. It's a monorepo using [Turbo](https://turbo.build) and [pnpm workspaces](https://pnpm.io) with a clear separation between frontend, backend, shared packages, and infrastructure.
@@ -23,7 +49,7 @@ apps/
   └── api/          # Node.js backend with Effect-ts and LangGraph
 packages/
   ├── domain/       # Core types, schemas, and domain models
-  ├── contracts/    # Effect/RPC contracts and schema definitions
+  ├── contracts/    # Effect/HTTP contracts and schema definitions
   ├── database/     # Drizzle ORM schema and migrations
   ├── ui/           # Shared React components (shadcn/ui based)
   ├── infrastructure/ # Backend utilities (context bridges, dependency injection)
@@ -41,7 +67,7 @@ packages/
   - TanStack DB 0+ for reactive state management
   - ElectricSQL (@electric-sql/client, @electric-sql/react) for local-first sync
   - shadcn/ui components with Tailwind CSS v4
-  - Effect-ts for functional error handling and RPC client typing
+  - Effect-ts for functional error handling and HTTP client typing
 
 - **api** (`port 4000` dev, Railway prod): Node.js backend featuring:
   - **Hexagonal Architecture**:
@@ -56,7 +82,6 @@ packages/
   - Drizzle ORM 0.45+ for type-safe database queries
   - PostgreSQL as primary database
   - Better Auth for authentication (integrated at node:http layer)
-  - **Story 1.6 Complete**: Migrated to Effect/Platform HTTP with Better Auth
   - Health check: GET `/health` → `{"status":"ok","timestamp":"..."}`
   - HTTP API: All routes under `/api/*` (except `/health`)
 
@@ -92,7 +117,6 @@ packages/
 
 - **ui**: Shared React component library built on shadcn/ui
   - Exports components from `./components/*`
-  - Includes hooks for RPC interaction
   - Utilities for personality visualization and formatting
 
 - **lint**: Shared Biome configuration used across all apps and packages
@@ -100,56 +124,38 @@ packages/
 
 ## Common Commands
 
-All commands run from repository root:
-
-### Development
+**Quick Start:**
 
 ```bash
-pnpm dev                      # Start all apps in dev mode (front + api)
-pnpm dev --filter=front      # Run only frontend (TanStack Start, port 3000)
-pnpm dev --filter=api        # Run only backend (Node.js, port 4000)
-```
-
-### Building & Testing
-
-```bash
-pnpm build                  # Build all packages and apps
-pnpm lint                   # Lint all packages
-pnpm format                 # Format all code with Prettier
+pnpm install                # Install dependencies
+pnpm prepare                # Install git hooks (automatic via postinstall)
+pnpm dev                    # Start all services
 pnpm test:run               # Run all tests
-pnpm test:coverage          # Run tests with coverage report
+pnpm lint                   # Lint all packages
 ```
 
-### CI/CD Pipeline (Story 2.1.1)
+For complete command reference, see [COMMANDS.md](./docs/COMMANDS.md).
 
-GitHub Actions automatically runs on all pushes and pull requests:
-
-**Pipeline Steps:**
-1. Checkout code
-2. Setup pnpm 10.4.1 + Node.js 20.x
-3. Install dependencies (`pnpm install`)
-4. TypeScript check (`pnpm turbo lint`)
-5. Lint check (`pnpm lint`)
-6. Build (`pnpm build`)
-7. Run tests (`pnpm test:run`)
-8. Validate commit messages (PR only - conventional commit format)
-
-**Configuration:** `.github/workflows/ci.yml`
+**Key Commands:**
+- `pnpm dev --filter=front` - Frontend only (TanStack Start, port 3000)
+- `pnpm dev --filter=api` - Backend only (Node.js, port 4000)
+- `pnpm build` - Build all packages
+- `pnpm format` - Format all code
+- `pnpm test:coverage` - Run tests with coverage
 
 ### Git Hooks (Local Enforcement)
 
 Git hooks ensure code quality before commits and pushes:
 
 **Pre-push hook** (runs before `git push`):
-- Runs `pnpm lint` (Biome linting)
-- Runs `pnpm turbo lint` (TypeScript check)
-- Runs `pnpm test:run` (all tests)
+- Lint check (`pnpm lint`)
+- TypeScript check (`pnpm turbo lint`)
+- Test suite (`pnpm test:run`)
 - Blocks push if any check fails
 
 **Commit-msg hook** (validates commit messages):
-- Requires conventional commit format: `type(scope): Description` or `type: Description`
+- Requires [conventional commit format](#commit-message-format)
 - Allowed types: `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `perf`, `style`, `build`, `revert`
-- Allows merge commits
 
 **Bypass hooks (use sparingly):**
 ```bash
@@ -157,92 +163,7 @@ git commit --no-verify   # Skip commit-msg hook
 git push --no-verify     # Skip pre-push hook
 ```
 
-**Hook setup:** Hooks are managed by `simple-git-hooks`. After cloning:
-```bash
-pnpm install           # Installs dependencies
-pnpm prepare           # Installs git hooks (runs automatically via postinstall)
-```
-
-### App-Specific Commands
-
-**front** (TanStack Start frontend):
-
-```bash
-pnpm -C apps/front dev              # Start dev server with HMR (port 3000)
-pnpm -C apps/front build            # Build for production (SSR)
-pnpm -C apps/front start            # Start production server
-pnpm -C apps/front lint             # Run Biome linter
-pnpm -C apps/front typecheck        # TypeScript type checking
-```
-
-**api** (Node.js backend):
-
-```bash
-pnpm -C apps/api dev              # Start dev server with watch (port 4000)
-pnpm -C apps/api build            # Build/compile TypeScript
-pnpm -C apps/api typecheck        # TypeScript type checking
-```
-
-**packages** (Shared):
-
-```bash
-pnpm -C packages/domain lint      # Lint domain package
-pnpm -C packages/contracts lint   # Lint contracts (zero warnings required)
-pnpm -C packages/database lint    # Lint database package
-pnpm -C packages/ui lint          # Lint UI components (zero warnings required)
-pnpm -C packages/infrastructure lint # Lint infrastructure package
-```
-
-### Database Commands
-
-```bash
-# Migration management (from apps/api or packages/database)
-pnpm drizzle-kit generate          # Generate migration files
-pnpm drizzle-kit push              # Apply migrations to database
-pnpm drizzle-kit studio            # Open Drizzle Studio UI
-```
-
-### Docker Compose Development (Story 1.4)
-
-For containerized development with exact production parity:
-
-```bash
-# Start all services (PostgreSQL, Redis, Backend API, Frontend)
-./scripts/dev.sh
-
-# Stop services (keeps data)
-docker compose stop
-# or
-./scripts/dev-stop.sh
-
-# Full reset (removes all data)
-./scripts/dev-reset.sh
-
-# View logs
-docker compose logs -f backend    # Backend logs with hot reload
-docker compose logs -f frontend   # Frontend logs with Vite HMR
-docker compose logs -f postgres   # Database logs
-docker compose logs -f redis      # Cache logs
-
-# Access services
-curl http://localhost:4000/health  # Test backend health
-docker compose exec postgres psql -U dev -d bigocean  # Access database
-docker compose exec redis redis-cli  # Access cache
-
-# Rebuild after dependency changes
-docker compose build
-docker compose up
-```
-
-**Key Features**:
-
-- **Port mapping**: Frontend (3000), Backend (4000), PostgreSQL (5432), Redis (6379)
-- **Hot reload**: Backend (tsx watch), Frontend (Vite HMR)
-- **Volumes**: `./apps/api/src` and `./apps/front/src` mounted for real-time changes
-- **Health checks**: All services validate startup order and readiness
-- **Database persistence**: postgres_data and redis_data named volumes
-
-See [DOCKER.md](./DOCKER.md) for comprehensive Docker development guide.
+Hooks are managed by `simple-git-hooks` (installed automatically via `pnpm install`).
 
 ## Architecture & Key Patterns
 
@@ -646,115 +567,77 @@ FiberRef enables request-scoped context without prop drilling. Handlers access s
 ```typescript
 import { FiberRef, Effect } from "effect";
 
-export interface Logger {
-  info(msg: string, ...args: any[]): void;
-  error(msg: string, ...args: any[]): void;
-  // ... other methods
-}
+**Key Principles:**
+- **Handlers**: Thin HTTP adapters - extract request data and call use-cases
+- **Use-Cases**: Pure business logic - main unit test target
+- **Domain**: Repository interfaces (Context.Tag), entities, types
+- **Infrastructure**: Repository implementations (Drizzle, LangGraph, Pino, etc.)
 
-export const LoggerRef = FiberRef.unsafeMake<Logger>(null as any);
+**Hard Rule:** No conditional logic, validation, or orchestration in handlers. All business logic belongs in use-cases.
 
-// Helper to get the logger from current fiber
-export const getLogger = Effect.gen(function* () {
-  return yield* FiberRef.get(LoggerRef);
-});
+**Quick Discovery Pattern:**
+- Repository interface? → `packages/domain/src/repositories/{name}.repository.ts`
+- Repository implementation? → `packages/infrastructure/src/repositories/{name}*.repository.ts`
+- Test implementations? → `*.test.ts` files next to production code
 
-// Helper to execute effect with logger in scope
-export const withLogger = <A, E, R>(
-  logger: Logger,
-  effect: Effect.Effect<A, E, R>,
-): Effect.Effect<A, E, R> =>
-  Effect.gen(function* () {
-    yield* FiberRef.set(LoggerRef, logger);
-    return yield* effect;
-  });
-```
+For complete architecture details, see:
+- [ARCHITECTURE.md](./docs/ARCHITECTURE.md) - Detailed patterns, examples, and diagrams
+- [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) - Component naming and file locations
 
-**Use in Handlers**:
+### Tech Stack Summary
 
-```typescript
-// In any handler, access logger without parameters
-const MyHandler = Effect.gen(function* () {
-  const logger = yield* getLogger;
-  logger.info("This message is automatically scoped to the request");
-  // ... more code
-});
-```
+**Core Dependencies:**
+- **Effect-ts**: Functional programming and error handling (latest)
+- **@effect/platform**: Type-safe HTTP contracts and server
+- **@effect/schema**: Runtime validation and serialization
+- **LangGraph + Anthropic SDK**: Multi-agent orchestration and Claude integration
+- **Drizzle ORM**: Type-safe database queries with PostgreSQL
+- **Pino**: High-performance structured logging
+- **React 19 + TanStack**: Frontend with SSR, routing, forms, state
 
-**Provide to Layer**:
+**Deployment & Dev:**
+- Railway for production API
+- Docker Compose for development environment parity
+- GitHub Actions for CI/CD (lint → build → test → validate commits)
+- Better Auth for authentication
 
-```typescript
-// In server setup, provide the FiberRef
-const LoggerLayer = Layer.succeed(
-  LoggerRef,
-  winstonLogger, // instance created elsewhere
-);
-
-// When running the effect, include the LoggerLayer
-const effect = MyEffect.pipe(Layer.provide(LoggerLayer));
-```
-
-This pattern prevents context leakage across requests and eliminates prop drilling throughout the codebase.
-
-### Catalog Dependencies
-
-`pnpm-workspace.yaml` defines a `catalog` for consistent dependency versions:
-
-```yaml
-catalog:
-  zod: "4.2.1"
-  effect: "3.19.14"
-  "@effect/rpc": "0.73.0"
-  "@effect/schema": "0.71.0"
-  drizzle-orm: "0.45.1"
-  "@anthropic-ai/sdk": "0.71.2"
-```
-
-Packages reference versions with `"catalog:"` to ensure consistency.
-
-### Turbo Tasks
-
-Turbo.json defines task dependencies:
-
-- `build`: Depends on `^build` (dependencies must build first)
-- `lint`: Depends on `^lint`
-- `typecheck`: Depends on `^typecheck`
-- `dev`: Not cached, persistent task
+See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for production details.
 
 ## Production Deployment (Story 1.3 ✅)
 
-### Railway Deployment
+Railway deployment with automatic CI/CD, Docker multi-stage builds, and health checks.
 
-The API is deployed to Railway with automatic CI/CD:
+**Production:** https://api-production-f7de.up.railway.app/health
 
-**Production URLs:**
+**Key Features:**
+- Automatic deployment on `master` branch
+- Docker containers with workspace resolution
+- Health check validation endpoint
+- Environment variable configuration in Railway dashboard
 
-- **Base**: https://api-production-f7de.up.railway.app
-- **Health Check**: GET `/health` → `{"status":"ok"}`
-- **RPC Endpoint**: POST `/rpc` (NDJSON serialization)
+For complete deployment guide, see [DEPLOYMENT.md](./docs/DEPLOYMENT.md)
 
-**Deployment Flow:**
+## Completed Stories ✅
 
-1. Push to `master` branch triggers Railway build
-2. Docker image built using `apps/api/Dockerfile`
-3. TypeScript compiled with workspace package resolution
-4. Container starts with `pnpm --filter api start` → runs `tsx src/index.ts`
-5. Health check endpoint validates deployment
-6. Automatic restart on failure (10 max retries)
+Stories that are fully implemented and deployed:
 
-**Environment Variables:**
+- **Story 1.3**: Production Deployment (Railway + Docker)
+- **Story 1.4**: Docker Compose Development
+- **Story 1.6**: Effect/Platform HTTP Contracts
+- **Story 2.1.1**: CI/CD Pipeline
+- **Story 2.2**: Nerin Agent Implementation (Hexagonal Architecture)
 
-- `PORT`: 8080 (Railway default)
-- `HOST`: 0.0.0.0
-- `ANTHROPIC_API_KEY`: Set in Railway dashboard
-- Custom vars: `DATABASE_URL`, `REDIS_URL`, etc.
+For details on each completed story, see [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md)
 
-**Docker Best Practices:**
+## Git Conventions
 
-- Multi-stage build (builder + runtime)
-- pnpm workspace resolution with double install for linking
-- tsx for production TypeScript execution (handles workspace imports)
-- Minimal production image (Node 20 Alpine)
+Branch naming, commit messages, and component naming follow consistent patterns.
+
+See [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) for:
+- Branch naming format (`feat/story-{epic-num}-{story-num}-{slug}`)
+- Commit message format with examples
+- Component naming conventions
+- Repository interface and implementation patterns
 
 ## Linting & Code Quality
 
@@ -793,265 +676,36 @@ import { Button } from "@workspace/ui/components/button";
 
 ## Key Dependencies & Versions
 
+**Requirements:**
+- Node.js >= 20
+- pnpm 10.4.1
+- TypeScript 5.7.3+
+
 **Frontend Stack:**
+- React 19, TanStack Start, TanStack Router, TanStack Query, TanStack Form
+- ElectricSQL, Tailwind CSS 4+, shadcn/ui
+- Effect for error handling
 
-- React 19, TanStack Start, TanStack Router 1+, TanStack Query 5+, TanStack Form 1+, TanStack DB 0+
-- ElectricSQL 1.4.1, Tailwind CSS 4+, shadcn/ui
-- Effect (latest) for client-side error handling
+**Backend Stack:**
+- Effect, @effect/platform (HTTP contracts)
+- @effect/schema (runtime validation)
+- LangGraph + Anthropic SDK (multi-agent AI)
+- Drizzle ORM + PostgreSQL (database)
+- Pino (structured logging)
+- Better Auth (authentication)
 
-**Backend Stack (Story 1.3):**
+**Catalog Configuration:**
 
-- Effect 3.19.15 (latest in catalog), @effect/rpc 0.73.0, @effect/schema 0.71.0
-- @effect/platform 0.94.2, @effect/platform-node for Node.js runtime
-- LangChain LangGraph 1.1+, Anthropic SDK 0.71.2
-- Drizzle ORM 0.45.1, PostgreSQL
-- Winston 3.19.0 for structured logging
-- Pino 9.6.0 for high-performance logging
+Versions are centralized in `pnpm-workspace.yaml` to ensure consistency across packages. Always reference the catalog when updating dependencies.
 
-**Shared:**
+See [ARCHITECTURE.md](./docs/ARCHITECTURE.md#catalog-dependencies) for the complete catalog configuration.
 
-- Effect Schema (for domain validation and type safety)
-- TypeScript 5.7.3+, pnpm 10.4.1
-- Node.js >= 20 required
+## Git Conventions
 
-**Catalog Configuration** (`pnpm-workspace.yaml`):
+Branch naming, commit messages, and component naming follow consistent patterns.
 
-```yaml
-catalog:
-  effect: "latest" # Story 1.3: Using latest for compatibility
-  "@effect/rpc": "latest"
-  "@effect/schema": "latest"
-  "@effect/platform": "latest"
-  "@effect/platform-node": "latest"
-  "@effect/cluster": "latest"
-  "@effect/experimental": "latest"
-  drizzle-orm: "0.45.1"
-  "@anthropic-ai/sdk": "0.71.2"
-  pino: "9.6.0"
-```
-
-## BMAD Development Workflow Rules
-
-**Purpose:** Enforce clean git history and story-based development through branch-per-story workflow.
-
-### Story Development Process
-
-**Before starting any story with `/bmad-bmm-dev-story`:**
-
-1. **Verify active phase:** Check sprint-status.yaml to confirm which stories are ready-for-dev
-2. **Create feature branch** with consistent naming:
-   ```bash
-   git checkout -b feat/story-{epic-num}-{story-num}-{slug}
-   # Example: feat/story-1-6-migrate-to-effect-platform-http
-   ```
-3. **Verify branch exists:**
-   ```bash
-   git status  # Should show your feature branch name, not master/main
-   ```
-
-**During development:**
-
-- All work happens on the feature branch
-- Commit incrementally as phases complete (e.g., one commit per phase if implementing multi-phase stories)
-- Use conventional commit format: `feat: Description` or `feat(scope): Description`
-
-**At story completion:**
-
-- Run `/bmad-bmm-dev-story` with the story code
-- Dev Agent will handle final testing and commit
-- Agent commits with co-author signature:
-  ```
-  Co-Authored-By: Claude <model-signature>
-  ```
-
-**After dev completes:**
-
-1. **Code Review:** Run `/bmad-bmm-code-review` on the feature branch in a fresh context
-2. **Address Findings:** If issues found, return to dev branch and fix (create new commit)
-3. **Re-review if needed:** If fixes were made, re-run code review to confirm approval
-4. **Create Pull Request:** Once code review is approved, create a PR to merge to master
-   - Push feature branch: `git push -u origin feat/story-{epic}-{num}-{slug}`
-   - Create PR via GitHub/GitLab UI (see Pull Request Process section below)
-   - Link to sprint-status.yaml and story artifact
-5. **Merge to master:** After PR approval and any final checks, merge to master
-
-### Branch Naming Convention
-
-```
-feat/story-{epic-num}-{story-num}-{slug}
-├─ epic-num: Epic number (1-7 for current project)
-├─ story-num: Story number within epic
-└─ slug: URL-safe description of the story
-```
-
-**Examples:**
-
-- `feat/story-1-2-integrate-better-auth`
-- `feat/story-2-1-session-management-persistence`
-- `feat/story-4-2-assessment-conversation-component`
-
-### Commit Message Format
-
-**Standard format:**
-
-```
-type(scope): Brief description
-
-Detailed explanation of what was changed and why.
-
-Co-Authored-By: Claude <model> <noreply@anthropic.com>
-```
-
-**Types:** `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `perf`, `style`, `build`, `revert`
-
-**Examples:**
-
-- `feat: Add user authentication`
-- `fix(api): Resolve session timeout issue`
-- `docs: Update README with setup instructions`
-
-**Multi-phase work:**
-
-- One commit per major phase is acceptable
-- Later commits can be: `feat(scope): Phase N - Description`
-
-Example:
-
-```
-feat(http): Migrate to Effect/Platform HTTP with Better Auth
-
-## Summary
-Successfully migrated from Express.js to Effect/Platform HTTP...
-
-## Changes
-
-### HTTP Contracts Migration (Phase 1)
-- [details]
-
-### HTTP Handlers (Phase 2)
-- [details]
-
-[... other phases ...]
-```
-
-### Safety Checks
-
-**Never commit directly to master/main.** CI/CD should enforce this, but manual checks:
-
-```bash
-# Before creating branch
-git status  # Should show "On branch master" or "On branch main"
-
-# After creating branch
-git status  # Should show "On branch feat/story-..." or similar
-
-# Before committing
-git branch  # Should show * next to your feature branch
-```
-
-### Pull Request Process
-
-**Timing:** Create PR after code review is approved and any fixes are committed.
-
-1. **Push feature branch** (if not already pushed):
-
-   ```bash
-   git push -u origin feat/story-{epic}-{num}-{slug}
-   # Example: git push -u origin feat/story-1-6-migrate-to-effect-platform-http
-   ```
-
-2. **Create PR from GitHub UI:**
-
-   GitHub will show a prompt to create a PR when you push. Alternatively:
-   - Visit: https://github.com/Wysnard/big-ocean/pull/new/{your-branch-name}
-   - Or: Go to Pull Requests tab → New Pull Request → select your branch
-
-3. **Fill PR details:**
-
-   - **Title:** `Story {epic}.{num}: {Brief Description}`
-     - Example: `Story 1.6: Migrate to Effect/Platform HTTP with Better Auth`
-
-   - **Description template:**
-     ```markdown
-     ## Summary
-     Brief description of what this story accomplishes.
-
-     ## Changes
-     - List of key changes
-     - Reference any related commits or phases
-
-     ## Story Artifact
-     Link to: `_bmad-output/implementation-artifacts/story-{epic}-{num}-*.md`
-
-     ## Checklist
-     - [x] Passes all linting (`pnpm lint`)
-     - [x] TypeScript compilation successful (`pnpm build`)
-     - [x] Code review completed (`/bmad-bmm-code-review`)
-     - [x] Related tests pass
-     - [x] Story artifact updated in sprint-status.yaml
-     ```
-
-4. **Review & Merge:**
-
-   - Wait for any additional review/approval (if required by your team)
-   - Merge strategy:
-     - **Squash & Merge** if multiple work commits (cleaner history)
-     - **Create Merge Commit** if commits are logically separated by phase
-   - Delete feature branch after merging
-
-5. **Verify merge:**
-
-   ```bash
-   git checkout master
-   git pull origin master
-   git log --oneline -5  # Verify your commits are there
-   ```
-
-### Complete Story Workflow Summary
-
-**Every story must follow this complete workflow:**
-
-```
-1. Create Branch
-   git checkout -b feat/story-{epic}-{num}-{slug}
-
-2. Develop
-   /bmad-bmm-dev-story {epic}-{num}
-
-3. Code Review
-   /bmad-bmm-code-review
-
-4. Fix Issues (if any)
-   git add .
-   git commit -m "fix: address code review findings"
-   git push
-
-5. Re-review if Fixes Needed
-   /bmad-bmm-code-review (again if changes were made)
-
-6. Create Pull Request ← MANDATORY
-   git push -u origin feat/story-{epic}-{num}-{slug}
-   Create PR via GitHub UI
-   - Title: Story {epic}.{num}: Description
-   - Link to story artifact
-   - Include checklist
-
-7. Merge to Master
-   After approval, merge PR to master
-   Delete feature branch
-```
-
-**Key Rule:** Story is NOT considered complete until:
-- ✅ Code review passed
-- ✅ All fixes committed
-- ✅ Pull Request created
-- ✅ PR merged to master
-
-**Violation:** Committing directly to master bypasses this protection and is not allowed.
-
-### Current Branch Status
-
-- **Main branch:** `master`
-- **Active branch:** Check with `git status` / `git branch`
-- **Convention:** Always feature branches for user stories, except hotfixes
-- **PR Required:** Every story must have a PR before merging to master
+See [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) for:
+- Branch naming format (`feat/story-{epic-num}-{story-num}-{slug}`)
+- Commit message format with examples
+- Component naming conventions
+- Repository interface and implementation patterns

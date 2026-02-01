@@ -6,9 +6,10 @@
  */
 
 import { Effect } from "effect";
-import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
-import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
-import { DatabaseError } from "@workspace/contracts/errors";
+import {
+  AssessmentSessionRepository,
+  LoggerRepository,
+} from "@workspace/domain";
 
 export interface StartAssessmentInput {
   readonly userId?: string;
@@ -25,13 +26,7 @@ export interface StartAssessmentOutput {
  * Dependencies: AssessmentSessionRepository, LoggerRepository
  * Returns: Session ID and creation timestamp
  */
-export const startAssessment = (
-  input: StartAssessmentInput,
-): Effect.Effect<
-  StartAssessmentOutput,
-  DatabaseError,
-  AssessmentSessionRepository | LoggerRepository
-> =>
+export const startAssessment = (input: StartAssessmentInput) =>
   Effect.gen(function* () {
     const sessionRepo = yield* AssessmentSessionRepository;
     const logger = yield* LoggerRepository;

@@ -6,10 +6,11 @@
  */
 
 import { Effect } from "effect";
-import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
-import { AssessmentMessageRepository } from "@workspace/domain/repositories/assessment-message.repository";
-import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
-import { SessionNotFound, DatabaseError } from "@workspace/contracts/errors";
+import {
+  AssessmentSessionRepository,
+  AssessmentMessageRepository,
+  LoggerRepository,
+} from "@workspace/domain";
 import type { AssessmentMessageEntity } from "@workspace/domain/entities/message.entity";
 
 export interface ResumeSessionInput {
@@ -33,15 +34,7 @@ export interface ResumeSessionOutput {
  * Dependencies: AssessmentSessionRepository, AssessmentMessageRepository, LoggerRepository
  * Returns: Session precision scores and message history
  */
-export const resumeSession = (
-  input: ResumeSessionInput,
-): Effect.Effect<
-  ResumeSessionOutput,
-  DatabaseError | SessionNotFound,
-  | AssessmentSessionRepository
-  | AssessmentMessageRepository
-  | LoggerRepository
-> =>
+export const resumeSession = (input: ResumeSessionInput) =>
   Effect.gen(function* () {
     const sessionRepo = yield* AssessmentSessionRepository;
     const messageRepo = yield* AssessmentMessageRepository;

@@ -123,3 +123,16 @@ export class Unauthorized extends S.TaggedError<Unauthorized>()(
     message: S.String,
   }
 ) {}
+
+/**
+ * Agent invocation error (503)
+ * Represents failure to generate a response from an AI agent (Nerin, Analyzer, etc.)
+ */
+export class AgentInvocationError extends S.TaggedError<AgentInvocationError>()(
+  "AgentInvocationError",
+  {
+    agentName: S.String,
+    sessionId: S.String,
+    message: S.String,
+  }
+) {}

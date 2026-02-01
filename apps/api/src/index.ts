@@ -19,6 +19,7 @@ import { DatabaseStack } from "@workspace/infrastructure/context/database";
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
+import { NerinAgentLangGraphRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.langgraph.repository";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 
 /**
@@ -29,10 +30,12 @@ const port = Number(process.env.PORT || 4000);
 /**
  * Service Layers
  * Story 2-1: Database and repositories (now require LoggerRepository)
+ * Story 2-2: Nerin agent repository (requires LoggerRepository)
  */
 const ServiceLayers = Layer.mergeAll(
   AssessmentSessionDrizzleRepositoryLive,
   AssessmentMessageDrizzleRepositoryLive,
+  NerinAgentLangGraphRepositoryLive,
 ).pipe(
   Layer.provide(DatabaseStack),
   Layer.provide(LoggerPinoRepositoryLive),
