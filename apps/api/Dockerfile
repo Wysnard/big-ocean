@@ -75,12 +75,15 @@ COPY packages/lint/package.json ./packages/lint/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY apps/api/package.json ./apps/api/
 
-# Copy source code BEFORE installing (so pnpm can link workspace packages properly)
+# First install to get dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
 COPY --from=builder /app/apps/api/src ./apps/api/src
 COPY --from=builder /app/packages ./packages
 
-# Single install with all source code present (skip scripts to avoid git hooks)
-RUN pnpm install --frozen-lockfile --filter=api... --ignore-scripts
+# Re-install to link workspace packages properly (simple-git-hooks skips when no .git dir)
+RUN pnpm install --frozen-lockfile
 
 # Set NODE_ENV to production
 ENV NODE_ENV=production
