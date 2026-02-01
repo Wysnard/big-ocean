@@ -55,7 +55,7 @@ development_status:
   epic-2: in-progress
   2-0-linter-unification-and-frontend-fixes: done
   2-0.5-effect-based-dependency-injection-refactoring: done
-  2-1-session-management-and-persistence: review
+  2-1-session-management-and-persistence: done
   2-2-nerin-agent-setup-and-conversational-quality: backlog
   2-3-analyzer-and-scorer-agent-implementation: backlog
   2-4-langgraph-state-machine-and-orchestration: backlog
@@ -107,10 +107,10 @@ epics_backlog: 4
 epics_in_progress: 3
 epics_done: 0
 stories_backlog: 15
-stories_ready_for_dev: 1
+stories_ready_for_dev: 0
 stories_in_progress: 0
 stories_review: 0
-stories_done: 9
+stories_done: 10
 retrospectives_optional: 6
 retrospectives_done: 1
 
@@ -174,7 +174,7 @@ Epic 1 (Infrastructure) ✅ COMPLETE
 ## Key Metrics to Track
 - [ ] Unit test coverage ≥100% for domain logic (Story 7.1 framework ready)
 - [ ] API response latency P95 <2 sec for Nerin, <100ms for archetype lookups
-- [ ] Session resume time <1 second (Story 2.1 will implement)
+- [x] Session resume time <1 second (**VERIFIED: 19ms with 103 messages**)
 - [ ] Daily LLM cost ≤$75 (Story 2.5 will implement tracking)
 - [ ] Assessment completion rate ≥70%
 
@@ -182,13 +182,14 @@ Epic 1 (Infrastructure) ✅ COMPLETE
 
 **Current Sprint:** Phase 2 - Backend Logic
 **Active Epic:** Epic 2 (Assessment Backend Services)
-**Next Story:** 2.1 - Session Management and Persistence (TDD)
+**Completed:** 2.1 - Session Management and Persistence (TDD) ✅
+**Next Story:** 2.2 - Nerin Agent Setup and Conversational Quality (TDD)
 
 **Recommended Actions:**
-1. ✅ Review Story 2.1 artifact in `_bmad-output/implementation-artifacts/`
-2. 🔄 Run `/bmad-bmm-dev-story 2-1` to implement Session Management
-3. After 2.1 completion: Run `/bmad-bmm-code-review` before marking done
-4. Continue sequentially through Epic 2 stories (2.2 → 2.3 → 2.4 → 2.5)
+1. ✅ Story 2.1 COMPLETE - Session persistence, message history, <1sec resume all verified
+2. 🔄 Run `/bmad-bmm-create-story 2-2` to prepare Nerin Agent story
+3. Run `/bmad-bmm-dev-story 2-2` to implement conversational quality agent
+4. Continue sequentially through Epic 2 stories (2.3 → 2.4 → 2.5)
 5. After Epic 2 complete: Move to Epic 3 (OCEAN Archetype System)
 
 **Parallel Work Opportunities:**
