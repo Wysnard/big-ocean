@@ -23,7 +23,7 @@ apps/
   └── api/          # Node.js backend with Effect-ts and LangGraph
 packages/
   ├── domain/       # Core types, schemas, and domain models
-  ├── contracts/    # Effect/RPC contracts and schema definitions
+  ├── contracts/    # Effect/HTTP contracts and schema definitions
   ├── database/     # Drizzle ORM schema and migrations
   ├── ui/           # Shared React components (shadcn/ui based)
   ├── infrastructure/ # Backend utilities (context bridges, dependency injection)
@@ -41,7 +41,7 @@ packages/
   - TanStack DB 0+ for reactive state management
   - ElectricSQL (@electric-sql/client, @electric-sql/react) for local-first sync
   - shadcn/ui components with Tailwind CSS v4
-  - Effect-ts for functional error handling and RPC client typing
+  - Effect-ts for functional error handling and HTTP client typing
 
 - **api** (`port 4000` dev, Railway prod): Node.js backend featuring:
   - **Hexagonal Architecture**:
@@ -56,7 +56,6 @@ packages/
   - Drizzle ORM 0.45+ for type-safe database queries
   - PostgreSQL as primary database
   - Better Auth for authentication (integrated at node:http layer)
-  - **Story 1.6 Complete**: Migrated to Effect/Platform HTTP with Better Auth
   - Health check: GET `/health` → `{"status":"ok","timestamp":"..."}`
   - HTTP API: All routes under `/api/*` (except `/health`)
 
@@ -92,7 +91,6 @@ packages/
 
 - **ui**: Shared React component library built on shadcn/ui
   - Exports components from `./components/*`
-  - Includes hooks for RPC interaction
   - Utilities for personality visualization and formatting
 
 - **lint**: Shared Biome configuration used across all apps and packages
@@ -125,6 +123,7 @@ pnpm test:coverage          # Run tests with coverage report
 GitHub Actions automatically runs on all pushes and pull requests:
 
 **Pipeline Steps:**
+
 1. Checkout code
 2. Setup pnpm 10.4.1 + Node.js 20.x
 3. Install dependencies (`pnpm install`)
@@ -141,23 +140,27 @@ GitHub Actions automatically runs on all pushes and pull requests:
 Git hooks ensure code quality before commits and pushes:
 
 **Pre-push hook** (runs before `git push`):
+
 - Runs `pnpm lint` (Biome linting)
 - Runs `pnpm turbo lint` (TypeScript check)
 - Runs `pnpm test:run` (all tests)
 - Blocks push if any check fails
 
 **Commit-msg hook** (validates commit messages):
+
 - Requires conventional commit format: `type(scope): Description` or `type: Description`
 - Allowed types: `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `perf`, `style`, `build`, `revert`
 - Allows merge commits
 
 **Bypass hooks (use sparingly):**
+
 ```bash
 git commit --no-verify   # Skip commit-msg hook
 git push --no-verify     # Skip pre-push hook
 ```
 
 **Hook setup:** Hooks are managed by `simple-git-hooks`. After cloning:
+
 ```bash
 pnpm install           # Installs dependencies
 pnpm prepare           # Installs git hooks (runs automatically via postinstall)
@@ -234,6 +237,12 @@ docker compose build
 docker compose up
 ```
 
+**Common Gotchas:**
+
+- After `pnpm install` changes to `package.json`, run `docker compose build` before starting services
+- If services won't start, try `./scripts/dev-reset.sh` to clear volumes and remove all state
+- Use `docker compose logs {service}` to debug startup issues
+
 **Key Features**:
 
 - **Port mapping**: Frontend (3000), Backend (4000), PostgreSQL (5432), Redis (6379)
@@ -266,16 +275,24 @@ Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
 4. **Domain** (`packages/domain`): Repository interfaces (Context.Tag), entities, types
 5. **Infrastructure** (`packages/infrastructure`): Repository implementations (Drizzle, Pino, etc.)
 
+**Hard Rule:** Handlers extract request data and call use-cases. No conditional logic, validation, or orchestration in handlers. All business logic belongs in use-cases.
+
+**Quick Discovery Pattern:**
+
+- Need a repository interface? Check `packages/domain/src/repositories/{name}.repository.ts` - this is the source of truth
+- Once you have the interface, find the implementation (Drizzle, LangGraph, etc.) in `packages/infrastructure/src/repositories/`
+- Test implementations live in `*.test.ts` files next to the production implementations
+
 **Naming Conventions:**
 
-| Component | Location | Example | Notes |
-|-----------|----------|---------|-------|
-| Repository Interface | `packages/domain/src/repositories/` | `assessment-message.repository.ts` | Context.Tag definition |
+| Component                 | Location                                    | Example                                    | Notes                       |
+| ------------------------- | ------------------------------------------- | ------------------------------------------ | --------------------------- |
+| Repository Interface      | `packages/domain/src/repositories/`         | `assessment-message.repository.ts`         | Context.Tag definition      |
 | Repository Implementation | `packages/infrastructure/src/repositories/` | `assessment-message.drizzle.repository.ts` | Layer.effect implementation |
-| Live Layer Export | Same as implementation | `AssessmentMessageDrizzleRepositoryLive` | Production Layer |
-| Test Layer Export | Test files | `AssessmentMessageTestRepositoryLive` | Testing Layer |
-| Use-Case | `apps/api/src/use-cases/` | `send-message.use-case.ts` | Pure business logic |
-| Handler | `apps/api/src/handlers/` | `assessment.ts` | HTTP adapter |
+| Live Layer Export         | Same as implementation                      | `AssessmentMessageDrizzleRepositoryLive`   | Production Layer            |
+| Test Layer Export         | Test files                                  | `AssessmentMessageTestRepositoryLive`      | Testing Layer               |
+| Use-Case                  | `apps/api/src/use-cases/`                   | `send-message.use-case.ts`                 | Pure business logic         |
+| Handler                   | `apps/api/src/handlers/`                    | `assessment.ts`                            | HTTP adapter                |
 
 **Example Use-Case Pattern:**
 
@@ -320,12 +337,16 @@ const TestLayer = Layer.mergeAll(
 );
 
 const result = await Effect.runPromise(
-  sendMessage({ sessionId: "test", message: "Hello" })
-    .pipe(Effect.provide(TestLayer))
+  sendMessage({ sessionId: "test", message: "Hello" }).pipe(
+    Effect.provide(TestLayer)
+  )
 );
 ```
 
+**Key Pattern:** Each test double must implement the same interface as the production layer. Create test implementations in `*.test.ts` files alongside production code. Use `Layer.succeed(RepositoryTag, mockImplementation)` to inject test doubles.
+
 **Key Benefits:**
+
 - **Testability**: Use-cases tested in isolation with test implementations
 - **Flexibility**: Swap implementations without changing business logic
 - **Clarity**: Each layer has single responsibility
@@ -384,23 +405,23 @@ The `@workspace/contracts` package defines type-safe HTTP API contracts using @e
 **HTTP Contract Structure** (in `packages/contracts/src/http/groups/assessment.ts`):
 
 ```typescript
-import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform"
-import { Schema as S } from "effect"
+import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
+import { Schema as S } from "effect";
 
 // Request/Response schemas
 export const StartAssessmentRequestSchema = S.Struct({
   userId: S.optional(S.String),
-})
+});
 
 export const StartAssessmentResponseSchema = S.Struct({
   sessionId: S.String,
   createdAt: S.DateTimeUtc,
-})
+});
 
 export const SendMessageRequestSchema = S.Struct({
   sessionId: S.String,
   message: S.String,
-})
+});
 
 export const SendMessageResponseSchema = S.Struct({
   response: S.String,
@@ -411,7 +432,7 @@ export const SendMessageResponseSchema = S.Struct({
     agreeableness: S.Number,
     neuroticism: S.Number,
   }),
-})
+});
 
 // HTTP API Group combines endpoints
 export const AssessmentGroup = HttpApiGroup.make("assessment")
@@ -425,16 +446,16 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
       .addSuccess(SendMessageResponseSchema)
       .setPayload(SendMessageRequestSchema)
   )
-  .prefix("/assessment")
+  .prefix("/assessment");
 ```
 
 **Handler Implementation** (in `apps/api/src/handlers/assessment.ts`):
 
 ```typescript
-import { HttpApiBuilder } from "@effect/platform"
-import { DateTime, Effect } from "effect"
-import { BigOceanApi } from "@workspace/contracts"
-import { LoggerService } from "../services/logger.js"
+import { HttpApiBuilder } from "@effect/platform";
+import { DateTime, Effect } from "effect";
+import { BigOceanApi } from "@workspace/contracts";
+import { LoggerService } from "../services/logger.js";
 
 // Handlers use HttpApiBuilder.group pattern
 export const AssessmentGroupLive = HttpApiBuilder.group(
@@ -445,27 +466,27 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
       return handlers
         .handle("start", ({ payload }) =>
           Effect.gen(function* () {
-            const logger = yield* LoggerService
+            const logger = yield* LoggerService;
 
-            const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`
-            const createdAt = DateTime.unsafeMake(Date.now())
+            const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+            const createdAt = DateTime.unsafeMake(Date.now());
 
             logger.info("Assessment session started", {
               sessionId,
               userId: payload.userId,
-            })
+            });
 
-            return { sessionId, createdAt }
+            return { sessionId, createdAt };
           })
         )
         .handle("sendMessage", ({ payload }) =>
           Effect.gen(function* () {
-            const logger = yield* LoggerService
+            const logger = yield* LoggerService;
 
             logger.info("Message received", {
               sessionId: payload.sessionId,
               messageLength: payload.message.length,
-            })
+            });
 
             // Placeholder response (real Nerin logic in Epic 2)
             return {
@@ -477,76 +498,76 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
                 agreeableness: 0.7,
                 neuroticism: 0.3,
               },
-            }
+            };
           })
-        )
+        );
     })
-)
+);
 ```
 
 **Server Setup** (in `apps/api/src/index.ts`):
 
 ```typescript
-import { Effect, Layer } from "effect"
-import { HttpApiBuilder, HttpMiddleware } from "@effect/platform"
-import { NodeHttpServer, NodeRuntime } from "@effect/platform-node"
-import { createServer } from "node:http"
-import { BigOceanApi } from "@workspace/contracts"
-import { HealthGroupLive } from "./handlers/health.js"
-import { AssessmentGroupLive } from "./handlers/assessment.js"
-import { LoggerServiceLive } from "./services/logger.js"
-import { betterAuthHandler } from "./middleware/better-auth.js"
+import { Effect, Layer } from "effect";
+import { HttpApiBuilder, HttpMiddleware } from "@effect/platform";
+import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
+import { createServer } from "node:http";
+import { BigOceanApi } from "@workspace/contracts";
+import { HealthGroupLive } from "./handlers/health.js";
+import { AssessmentGroupLive } from "./handlers/assessment.js";
+import { LoggerServiceLive } from "./services/logger.js";
+import { betterAuthHandler } from "./middleware/better-auth.js";
 
 // Merge all handler groups with services
 const HttpGroupsLive = Layer.mergeAll(
   HealthGroupLive,
   AssessmentGroupLive,
   LoggerServiceLive
-)
+);
 
 // Build API from contracts with handlers
 const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(
   Layer.provide(HttpGroupsLive)
-)
+);
 
 // Complete API with router and middleware
 const ApiLayer = Layer.mergeAll(
   ApiLive,
   HttpApiBuilder.Router.Live,
   HttpApiBuilder.Middleware.layer
-)
+);
 
 // Hybrid server: Better Auth (node:http) → Effect (remaining routes)
 const createCustomServer = () => {
-  const server = createServer()
-  let effectHandler: any = null
+  const server = createServer();
+  let effectHandler: any = null;
 
   server.on("newListener", (event, listener) => {
     if (event === "request") {
-      effectHandler = listener
-      server.removeListener("request", listener as any)
+      effectHandler = listener;
+      server.removeListener("request", listener as any);
     }
-  })
+  });
 
   server.on("request", async (req, res) => {
-    await betterAuthHandler(req, res)
+    await betterAuthHandler(req, res);
     if (!res.writableEnded && effectHandler) {
-      effectHandler(req, res)
+      effectHandler(req, res);
     }
-  })
+  });
 
-  return server
-}
+  return server;
+};
 
 // HTTP Server with Better Auth integration
 const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
   Layer.provide(ApiLayer),
   Layer.provide(NodeHttpServer.layer(createCustomServer, { port: 4000 })),
   Layer.provide(LoggerServiceLive)
-)
+);
 
 // Launch server
-NodeRuntime.runMain(Layer.launch(HttpLive))
+NodeRuntime.runMain(Layer.launch(HttpLive));
 ```
 
 ### Multi-Agent System (LangGraph)
@@ -624,243 +645,7 @@ The Nerin conversational agent follows **hexagonal architecture** (ports & adapt
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-**Repository Interface (PORT)** in `packages/domain/src/repositories/nerin-agent.repository.ts`:
-
-```typescript
-import { Context, Effect } from "effect";
-import type { BaseMessage } from "@langchain/core/messages";
-import { AgentInvocationError } from "@workspace/contracts/errors";
-
-export interface PrecisionScores {
-  readonly openness?: number;
-  readonly conscientiousness?: number;
-  readonly extraversion?: number;
-  readonly agreeableness?: number;
-  readonly neuroticism?: number;
-}
-
-export interface NerinInvokeInput {
-  readonly sessionId: string;
-  readonly messages: readonly BaseMessage[];
-  readonly precision?: PrecisionScores;
-}
-
-export interface NerinInvokeOutput {
-  readonly response: string;
-  readonly tokenCount: TokenUsage;
-}
-
-export class NerinAgentRepository extends Context.Tag("NerinAgentRepository")<
-  NerinAgentRepository,
-  {
-    readonly invoke: (
-      input: NerinInvokeInput,
-    ) => Effect.Effect<NerinInvokeOutput, AgentInvocationError, never>;
-  }
->() {}
-```
-
-**Repository Implementation (ADAPTER)** in `packages/infrastructure/src/repositories/nerin-agent.langgraph.repository.ts`:
-
-```typescript
-import { Layer, Effect } from "effect";
-import { StateGraph, START, END } from "@langchain/langgraph";
-import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
-import { ChatAnthropic } from "@langchain/anthropic";
-import { NerinAgentRepository } from "@workspace/domain/repositories/nerin-agent.repository";
-import { AgentInvocationError } from "@workspace/contracts/errors";
-
-export const NerinAgentLangGraphRepositoryLive = Layer.effect(
-  NerinAgentRepository,
-  Effect.gen(function* () {
-    const logger = yield* LoggerRepository;
-
-    // Initialize PostgresSaver checkpointer
-    const dbUri = process.env.DATABASE_URL;
-    let checkpointer: PostgresSaver | undefined;
-    if (dbUri) {
-      checkpointer = PostgresSaver.fromConnString(dbUri);
-      yield* Effect.tryPromise({
-        try: () => checkpointer!.setup(),
-        catch: () => undefined,
-      });
-    }
-
-    // Create ChatAnthropic model
-    const model = new ChatAnthropic({
-      model: process.env.NERIN_MODEL_ID || "claude-sonnet-4-20250514",
-      maxTokens: Number(process.env.NERIN_MAX_TOKENS) || 1024,
-      temperature: Number(process.env.NERIN_TEMPERATURE) || 0.7,
-    });
-
-    // Build LangGraph workflow
-    const workflow = new StateGraph({ channels: {...} })
-      .addNode("nerin", async (state) => {...})
-      .addEdge(START, "nerin")
-      .addEdge(END, "nerin");
-
-    const graph = workflow.compile({ checkpointer });
-
-    // Return service implementation
-    return NerinAgentRepository.of({
-      invoke: (input) =>
-        Effect.tryPromise({
-          try: async () => {
-            const result = await graph.invoke({...}, { configurable: { thread_id: input.sessionId } });
-            return { response: result.messages.at(-1)?.content ?? "", tokenCount: result.tokenCount };
-          },
-          catch: (error) => new AgentInvocationError({
-            agentName: "Nerin",
-            sessionId: input.sessionId,
-            message: error instanceof Error ? error.message : "Unknown error",
-          }),
-        }),
-    });
-  }),
-);
-```
-
-**Use-Case Integration** in `apps/api/src/use-cases/send-message.use-case.ts`:
-
-```typescript
-import { Effect } from "effect";
-import { NerinAgentRepository } from "@workspace/domain/repositories/nerin-agent.repository";
-import type { AgentInvocationError } from "@workspace/contracts/errors";
-
-export const sendMessage = (
-  input: SendMessageInput
-): Effect.Effect<
-  SendMessageOutput,
-  DatabaseError | SessionNotFound | AgentInvocationError,
-  | AssessmentSessionRepository
-  | AssessmentMessageRepository
-  | LoggerRepository
-  | NerinAgentRepository  // Dependency declared in type signature
-> =>
-  Effect.gen(function* () {
-    // Access injected dependencies via Context.Tag
-    const nerinAgent = yield* NerinAgentRepository;
-    const logger = yield* LoggerRepository;
-
-    // Invoke agent through repository abstraction
-    const result = yield* nerinAgent.invoke({
-      sessionId: input.sessionId,
-      messages: langchainMessages,
-      precision: session.precision,
-    }).pipe(
-      Effect.tapError((error) =>
-        Effect.sync(() => logger.error("Agent invocation failed", { error }))
-      )
-    );
-
-    return { response: result.response, precision: session.precision };
-  });
-```
-
-**Layer Composition** in `apps/api/src/index.ts`:
-
-```typescript
-import { NerinAgentLangGraphRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.langgraph.repository";
-
-const ServiceLayers = Layer.mergeAll(
-  AssessmentSessionDrizzleRepositoryLive,
-  AssessmentMessageDrizzleRepositoryLive,
-  NerinAgentLangGraphRepositoryLive,  // Injected here
-).pipe(
-  Layer.provide(DatabaseStack),
-  Layer.provide(LoggerPinoRepositoryLive),
-);
-```
-
-**Error Handling** with `AgentInvocationError` in `packages/contracts/src/errors.ts`:
-
-```typescript
-import { Schema as S } from "effect";
-
-export class AgentInvocationError extends S.TaggedError<AgentInvocationError>()(
-  "AgentInvocationError",
-  {
-    agentName: S.String,
-    sessionId: S.String,
-    message: S.String,
-  }
-) {}
-```
-
-HTTP contract maps this to 503 status in `packages/contracts/src/http/groups/assessment.ts`:
-
-```typescript
-HttpApiEndpoint.post("sendMessage", "/message")
-  .addError(AgentInvocationError, { status: 503 })
-```
-
-**Token Cost Calculation** (Claude Sonnet 4.5 pricing):
-
-```typescript
-// Pricing per 1M tokens
-const INPUT_PRICE_PER_MILLION = 0.003;   // $0.003/1M input tokens
-const OUTPUT_PRICE_PER_MILLION = 0.015;  // $0.015/1M output tokens
-
-function calculateCost(usage: TokenUsage): {
-  inputCost: number;
-  outputCost: number;
-  totalCost: number;
-} {
-  const inputCost = (usage.input / 1_000_000) * INPUT_PRICE_PER_MILLION;
-  const outputCost = (usage.output / 1_000_000) * OUTPUT_PRICE_PER_MILLION;
-  return { inputCost, outputCost, totalCost: inputCost + outputCost };
-}
-```
-
-**Testing Pattern (Mock Repository Injection):**
-
-```typescript
-import { Layer, Effect } from "effect";
-import { NerinAgentRepository } from "@workspace/domain/repositories/nerin-agent.repository";
-
-// Create mock repository for testing
-const mockNerinAgent = {
-  invoke: vi.fn().mockImplementation((input) =>
-    Effect.succeed({
-      response: "Mock response for testing",
-      tokenCount: { input: 100, output: 50, total: 150 },
-    })
-  ),
-};
-
-const TestLayer = Layer.succeed(NerinAgentRepository, mockNerinAgent);
-
-// Run use-case with mock
-const result = await Effect.runPromise(
-  sendMessage({ sessionId: "test", message: "Hello" })
-    .pipe(Effect.provide(TestLayer))
-);
-```
-
-### Local-First Data Sync (ElectricSQL + TanStack DB)
-
-Frontend uses reactive local-first sync:
-
-```typescript
-// apps/web/src/lib/sync.ts
-import { useElectricClient } from "@electric-sql/react";
-import { useQuery } from "@tanstack/react-query";
-
-export function useSession(sessionId: string) {
-  const electric = useElectricClient();
-
-  // ElectricSQL syncs automatically with PostgreSQL
-  const { data } = useQuery({
-    queryKey: ["session", sessionId],
-    queryFn: () =>
-      electric.db.session.findUnique({
-        where: { id: sessionId },
-      }),
-  });
-
-  return data;
-}
-```
+**Critical Note on thread_id:** The `configurable.thread_id` passed to `graph.invoke()` is required for checkpointer persistence. Use `sessionId` as the thread_id to maintain conversation history across requests. Omitting this breaks state persistence and each invocation will start fresh.
 
 ### Database (Drizzle ORM + PostgreSQL)
 
@@ -886,65 +671,6 @@ export const messages = pgTable("messages", {
 });
 ```
 
-### FiberRef Dependency Injection Pattern (Story 1.3)
-
-FiberRef enables request-scoped context without prop drilling. Handlers access services via `FiberRef.get()`:
-
-**Define a FiberRef Bridge** (in `packages/infrastructure/src/context/logger.ts`):
-
-```typescript
-import { FiberRef, Effect } from "effect";
-
-export interface Logger {
-  info(msg: string, ...args: any[]): void;
-  error(msg: string, ...args: any[]): void;
-  // ... other methods
-}
-
-export const LoggerRef = FiberRef.unsafeMake<Logger>(null as any);
-
-// Helper to get the logger from current fiber
-export const getLogger = Effect.gen(function* () {
-  return yield* FiberRef.get(LoggerRef);
-});
-
-// Helper to execute effect with logger in scope
-export const withLogger = <A, E, R>(
-  logger: Logger,
-  effect: Effect.Effect<A, E, R>,
-): Effect.Effect<A, E, R> =>
-  Effect.gen(function* () {
-    yield* FiberRef.set(LoggerRef, logger);
-    return yield* effect;
-  });
-```
-
-**Use in Handlers**:
-
-```typescript
-// In any handler, access logger without parameters
-const MyHandler = Effect.gen(function* () {
-  const logger = yield* getLogger;
-  logger.info("This message is automatically scoped to the request");
-  // ... more code
-});
-```
-
-**Provide to Layer**:
-
-```typescript
-// In server setup, provide the FiberRef
-const LoggerLayer = Layer.succeed(
-  LoggerRef,
-  winstonLogger, // instance created elsewhere
-);
-
-// When running the effect, include the LoggerLayer
-const effect = MyEffect.pipe(Layer.provide(LoggerLayer));
-```
-
-This pattern prevents context leakage across requests and eliminates prop drilling throughout the codebase.
-
 ### Catalog Dependencies
 
 `pnpm-workspace.yaml` defines a `catalog` for consistent dependency versions:
@@ -953,13 +679,14 @@ This pattern prevents context leakage across requests and eliminates prop drilli
 catalog:
   zod: "4.2.1"
   effect: "3.19.14"
-  "@effect/rpc": "0.73.0"
   "@effect/schema": "0.71.0"
   drizzle-orm: "0.45.1"
   "@anthropic-ai/sdk": "0.71.2"
 ```
 
 Packages reference versions with `"catalog:"` to ensure consistency.
+
+**Best Practice:** Before updating any package version, check `pnpm-workspace.yaml` catalog first. Use `catalog:` prefix in package.json (e.g., `"effect": "catalog:"`). This ensures all packages stay synchronized. Only add new versions to the catalog, never hardcode versions in individual package.json files.
 
 ### Turbo Tasks
 
@@ -980,11 +707,10 @@ The API is deployed to Railway with automatic CI/CD:
 
 - **Base**: https://api-production-f7de.up.railway.app
 - **Health Check**: GET `/health` → `{"status":"ok"}`
-- **RPC Endpoint**: POST `/rpc` (NDJSON serialization)
 
 **Deployment Flow:**
 
-1. Push to `master` branch triggers Railway build
+1. Push or merge to `master` branch triggers Railway build
 2. Docker image built using `apps/api/Dockerfile`
 3. TypeScript compiled with workspace package resolution
 4. Container starts with `pnpm --filter api start` → runs `tsx src/index.ts`
@@ -1050,7 +776,7 @@ import { Button } from "@workspace/ui/components/button";
 
 **Backend Stack (Story 1.3):**
 
-- Effect 3.19.15 (latest in catalog), @effect/rpc 0.73.0, @effect/schema 0.71.0
+- Effect 3.19.15 (latest in catalog), @effect/schema 0.71.0
 - @effect/platform 0.94.2, @effect/platform-node for Node.js runtime
 - LangChain LangGraph 1.1+, Anthropic SDK 0.71.2
 - Drizzle ORM 0.45.1, PostgreSQL
@@ -1068,7 +794,6 @@ import { Button } from "@workspace/ui/components/button";
 ```yaml
 catalog:
   effect: "latest" # Story 1.3: Using latest for compatibility
-  "@effect/rpc": "latest"
   "@effect/schema": "latest"
   "@effect/platform": "latest"
   "@effect/platform-node": "latest"
@@ -1078,51 +803,6 @@ catalog:
   "@anthropic-ai/sdk": "0.71.2"
   pino: "9.6.0"
 ```
-
-## BMAD Development Workflow Rules
-
-**Purpose:** Enforce clean git history and story-based development through branch-per-story workflow.
-
-### Story Development Process
-
-**Before starting any story with `/bmad-bmm-dev-story`:**
-
-1. **Verify active phase:** Check sprint-status.yaml to confirm which stories are ready-for-dev
-2. **Create feature branch** with consistent naming:
-   ```bash
-   git checkout -b feat/story-{epic-num}-{story-num}-{slug}
-   # Example: feat/story-1-6-migrate-to-effect-platform-http
-   ```
-3. **Verify branch exists:**
-   ```bash
-   git status  # Should show your feature branch name, not master/main
-   ```
-
-**During development:**
-
-- All work happens on the feature branch
-- Commit incrementally as phases complete (e.g., one commit per phase if implementing multi-phase stories)
-- Use conventional commit format: `feat: Description` or `feat(scope): Description`
-
-**At story completion:**
-
-- Run `/bmad-bmm-dev-story` with the story code
-- Dev Agent will handle final testing and commit
-- Agent commits with co-author signature:
-  ```
-  Co-Authored-By: Claude <model-signature>
-  ```
-
-**After dev completes:**
-
-1. **Code Review:** Run `/bmad-bmm-code-review` on the feature branch in a fresh context
-2. **Address Findings:** If issues found, return to dev branch and fix (create new commit)
-3. **Re-review if needed:** If fixes were made, re-run code review to confirm approval
-4. **Create Pull Request:** Once code review is approved, create a PR to merge to master
-   - Push feature branch: `git push -u origin feat/story-{epic}-{num}-{slug}`
-   - Create PR via GitHub/GitLab UI (see Pull Request Process section below)
-   - Link to sprint-status.yaml and story artifact
-5. **Merge to master:** After PR approval and any final checks, merge to master
 
 ### Branch Naming Convention
 
@@ -1158,149 +838,3 @@ Co-Authored-By: Claude <model> <noreply@anthropic.com>
 - `feat: Add user authentication`
 - `fix(api): Resolve session timeout issue`
 - `docs: Update README with setup instructions`
-
-**Multi-phase work:**
-
-- One commit per major phase is acceptable
-- Later commits can be: `feat(scope): Phase N - Description`
-
-Example:
-
-```
-feat(http): Migrate to Effect/Platform HTTP with Better Auth
-
-## Summary
-Successfully migrated from Express.js to Effect/Platform HTTP...
-
-## Changes
-
-### HTTP Contracts Migration (Phase 1)
-- [details]
-
-### HTTP Handlers (Phase 2)
-- [details]
-
-[... other phases ...]
-```
-
-### Safety Checks
-
-**Never commit directly to master/main.** CI/CD should enforce this, but manual checks:
-
-```bash
-# Before creating branch
-git status  # Should show "On branch master" or "On branch main"
-
-# After creating branch
-git status  # Should show "On branch feat/story-..." or similar
-
-# Before committing
-git branch  # Should show * next to your feature branch
-```
-
-### Pull Request Process
-
-**Timing:** Create PR after code review is approved and any fixes are committed.
-
-1. **Push feature branch** (if not already pushed):
-
-   ```bash
-   git push -u origin feat/story-{epic}-{num}-{slug}
-   # Example: git push -u origin feat/story-1-6-migrate-to-effect-platform-http
-   ```
-
-2. **Create PR from GitHub UI:**
-
-   GitHub will show a prompt to create a PR when you push. Alternatively:
-   - Visit: https://github.com/Wysnard/big-ocean/pull/new/{your-branch-name}
-   - Or: Go to Pull Requests tab → New Pull Request → select your branch
-
-3. **Fill PR details:**
-
-   - **Title:** `Story {epic}.{num}: {Brief Description}`
-     - Example: `Story 1.6: Migrate to Effect/Platform HTTP with Better Auth`
-
-   - **Description template:**
-     ```markdown
-     ## Summary
-     Brief description of what this story accomplishes.
-
-     ## Changes
-     - List of key changes
-     - Reference any related commits or phases
-
-     ## Story Artifact
-     Link to: `_bmad-output/implementation-artifacts/story-{epic}-{num}-*.md`
-
-     ## Checklist
-     - [x] Passes all linting (`pnpm lint`)
-     - [x] TypeScript compilation successful (`pnpm build`)
-     - [x] Code review completed (`/bmad-bmm-code-review`)
-     - [x] Related tests pass
-     - [x] Story artifact updated in sprint-status.yaml
-     ```
-
-4. **Review & Merge:**
-
-   - Wait for any additional review/approval (if required by your team)
-   - Merge strategy:
-     - **Squash & Merge** if multiple work commits (cleaner history)
-     - **Create Merge Commit** if commits are logically separated by phase
-   - Delete feature branch after merging
-
-5. **Verify merge:**
-
-   ```bash
-   git checkout master
-   git pull origin master
-   git log --oneline -5  # Verify your commits are there
-   ```
-
-### Complete Story Workflow Summary
-
-**Every story must follow this complete workflow:**
-
-```
-1. Create Branch
-   git checkout -b feat/story-{epic}-{num}-{slug}
-
-2. Develop
-   /bmad-bmm-dev-story {epic}-{num}
-
-3. Code Review
-   /bmad-bmm-code-review
-
-4. Fix Issues (if any)
-   git add .
-   git commit -m "fix: address code review findings"
-   git push
-
-5. Re-review if Fixes Needed
-   /bmad-bmm-code-review (again if changes were made)
-
-6. Create Pull Request ← MANDATORY
-   git push -u origin feat/story-{epic}-{num}-{slug}
-   Create PR via GitHub UI
-   - Title: Story {epic}.{num}: Description
-   - Link to story artifact
-   - Include checklist
-
-7. Merge to Master
-   After approval, merge PR to master
-   Delete feature branch
-```
-
-**Key Rule:** Story is NOT considered complete until:
-- ✅ Code review passed
-- ✅ All fixes committed
-- ✅ Pull Request created
-- ✅ PR merged to master
-
-**Violation:** Committing directly to master bypasses this protection and is not allowed.
-
-### Current Branch Status
-
-- **Main branch:** `master`
-- **Active branch:** Check with `git status` / `git branch`
-- **Convention:** Always feature branches for user stories, except hotfixes
-- **PR Required:** Every story must have a PR before merging to master

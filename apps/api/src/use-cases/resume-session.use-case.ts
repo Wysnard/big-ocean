@@ -6,9 +6,11 @@
  */
 
 import { Effect } from "effect";
-import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
-import { AssessmentMessageRepository } from "@workspace/domain/repositories/assessment-message.repository";
-import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
+import {
+  AssessmentSessionRepository,
+  AssessmentMessageRepository,
+  LoggerRepository,
+} from "@workspace/domain";
 import type { AssessmentMessageEntity } from "@workspace/domain/entities/message.entity";
 
 export interface ResumeSessionInput {

@@ -10,10 +10,12 @@
 
 import { Effect } from "effect";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
-import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
-import { AssessmentMessageRepository } from "@workspace/domain/repositories/assessment-message.repository";
-import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
-import { NerinAgentRepository } from "@workspace/domain/repositories/nerin-agent.repository";
+import {
+  AssessmentSessionRepository,
+  AssessmentMessageRepository,
+  LoggerRepository,
+  NerinAgentRepository,
+} from "@workspace/domain";
 
 export interface SendMessageInput {
   readonly sessionId: string;

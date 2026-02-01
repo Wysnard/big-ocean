@@ -6,8 +6,10 @@
  */
 
 import { Effect } from "effect";
-import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
-import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
+import {
+  AssessmentSessionRepository,
+  LoggerRepository,
+} from "@workspace/domain";
 
 export interface GetResultsInput {
   readonly sessionId: string;
