@@ -167,7 +167,405 @@ Hooks are managed by `simple-git-hooks` (installed automatically via `pnpm insta
 
 ## Architecture & Key Patterns
 
+### Hexagonal Architecture (Ports & Adapters)
+
 The codebase follows **hexagonal architecture** with clear layer separation and dependency inversion using Effect-ts Context.Tag pattern.
+
+**Architecture Layers:**
+
+```
+Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
+                                         ↑
+                                  Infrastructure (injected)
+```
+
+**Layer Responsibilities:**
+
+1. **Contracts** (`packages/contracts`): HTTP API definitions shared between frontend and backend
+2. **Handlers** (`apps/api/src/handlers`): Thin HTTP adapters (controllers/presenters) - no business logic
+3. **Use-Cases** (`apps/api/src/use-cases`): Pure business logic - **main unit test target**
+4. **Domain** (`packages/domain`): Repository interfaces (Context.Tag), entities, types
+5. **Infrastructure** (`packages/infrastructure`): Repository implementations (Drizzle, Pino, etc.)
+
+**Naming Conventions:**
+
+| Component | Location | Example | Notes |
+|-----------|----------|---------|-------|
+| Repository Interface | `packages/domain/src/repositories/` | `assessment-message.repository.ts` | Context.Tag definition |
+| Repository Implementation | `packages/infrastructure/src/repositories/` | `assessment-message.drizzle.repository.ts` | Layer.effect implementation |
+| Live Layer Export | Same as implementation | `AssessmentMessageDrizzleRepositoryLive` | Production Layer |
+| Test Layer Export | Test files | `AssessmentMessageTestRepositoryLive` | Testing Layer |
+| Use-Case | `apps/api/src/use-cases/` | `send-message.use-case.ts` | Pure business logic |
+| Handler | `apps/api/src/handlers/` | `assessment.ts` | HTTP adapter |
+
+**Example Use-Case Pattern:**
+
+```typescript
+// apps/api/src/use-cases/send-message.use-case.ts
+import { Effect } from "effect";
+import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
+import { AssessmentMessageRepository } from "@workspace/domain/repositories/assessment-message.repository";
+import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
+
+export const sendMessage = (
+  input: SendMessageInput
+): Effect.Effect<
+  SendMessageOutput,
+  DatabaseError | SessionNotFound,
+  AssessmentSessionRepository | AssessmentMessageRepository | LoggerRepository
+> =>
+  Effect.gen(function* () {
+    // Access injected dependencies
+    const sessionRepo = yield* AssessmentSessionRepository;
+    const messageRepo = yield* AssessmentMessageRepository;
+    const logger = yield* LoggerRepository;
+
+    // Business logic orchestrates domain operations
+    const session = yield* sessionRepo.getSession(input.sessionId);
+    yield* messageRepo.saveMessage(input.sessionId, "user", input.message);
+
+    // ... more business logic
+
+    return { response, precision };
+  });
+```
+
+**Testing Pattern:**
+
+```typescript
+// Unit test with test implementations
+const TestLayer = Layer.mergeAll(
+  Layer.succeed(AssessmentSessionRepository, TestSessionRepo),
+  Layer.succeed(AssessmentMessageRepository, TestMessageRepo),
+  Layer.succeed(LoggerRepository, TestLogger)
+);
+
+const result = await Effect.runPromise(
+  sendMessage({ sessionId: "test", message: "Hello" })
+    .pipe(Effect.provide(TestLayer))
+);
+```
+
+**Key Benefits:**
+- **Testability**: Use-cases tested in isolation with test implementations
+- **Flexibility**: Swap implementations without changing business logic
+- **Clarity**: Each layer has single responsibility
+- **Effect-ts native**: Context.Tag and Layer system for DI
+
+For complete architecture details, see `_bmad-output/planning-artifacts/architecture.md` (ADR-6).
+
+### Workspace Dependencies
+
+Packages use `workspace:*` and `workspace:^` to reference other packages in the monorepo. This ensures they're always in sync with local versions.
+
+**Dependency Graph:**
+
+```
+apps/front     → contracts, domain, ui, database
+apps/api       → contracts, domain, database, infrastructure
+contracts      → domain (schema imports)
+infrastructure → domain, database
+ui             → (independent component library)
+```
+
+### Domain-Driven Design
+
+The `@workspace/domain` package encapsulates core business logic:
+
+**Domain Package Structure:**
+
+```typescript
+// packages/domain/src/
+├── schemas/          # Effect Schema definitions for domain types
+├── errors/           # Tagged Error types
+├── types/            # Branded types (userId, sessionId, etc.)
+└── constants/        # Domain constants (trait names, facets, etc.)
+```
+
+**Example Domain Export:**
+
+```typescript
+// packages/domain/src/schemas/index.ts
+import * as S from "@effect/schema/Schema";
+
+export const UserProfileSchema = S.Struct({
+  id: S.String,
+  name: S.String,
+  traits: PersonalityTraitsSchema,
+  // ... more fields
+});
+
+export type UserProfile = S.To<typeof UserProfileSchema>;
+```
+
+### Effect/Platform HTTP Contracts (Story 1.6 ✅)
+
+The `@workspace/contracts` package defines type-safe HTTP API contracts using @effect/platform and @effect/schema following the official effect-worker-mono pattern.
+
+**HTTP Contract Structure** (in `packages/contracts/src/http/groups/assessment.ts`):
+
+```typescript
+import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform"
+import { Schema as S } from "effect"
+
+// Request/Response schemas
+export const StartAssessmentRequestSchema = S.Struct({
+  userId: S.optional(S.String),
+})
+
+export const StartAssessmentResponseSchema = S.Struct({
+  sessionId: S.String,
+  createdAt: S.DateTimeUtc,
+})
+
+export const SendMessageRequestSchema = S.Struct({
+  sessionId: S.String,
+  message: S.String,
+})
+
+export const SendMessageResponseSchema = S.Struct({
+  response: S.String,
+  precision: S.Struct({
+    openness: S.Number,
+    conscientiousness: S.Number,
+    extraversion: S.Number,
+    agreeableness: S.Number,
+    neuroticism: S.Number,
+  }),
+})
+
+// HTTP API Group combines endpoints
+export const AssessmentGroup = HttpApiGroup.make("assessment")
+  .add(
+    HttpApiEndpoint.post("start", "/start")
+      .addSuccess(StartAssessmentResponseSchema)
+      .setPayload(StartAssessmentRequestSchema)
+  )
+  .add(
+    HttpApiEndpoint.post("sendMessage", "/message")
+      .addSuccess(SendMessageResponseSchema)
+      .setPayload(SendMessageRequestSchema)
+  )
+  .prefix("/assessment")
+```
+
+**Handler Implementation** (in `apps/api/src/handlers/assessment.ts`):
+
+```typescript
+import { HttpApiBuilder } from "@effect/platform"
+import { DateTime, Effect } from "effect"
+import { BigOceanApi } from "@workspace/contracts"
+import { LoggerService } from "../services/logger.js"
+
+// Handlers use HttpApiBuilder.group pattern
+export const AssessmentGroupLive = HttpApiBuilder.group(
+  BigOceanApi,
+  "assessment",
+  (handlers) =>
+    Effect.gen(function* () {
+      return handlers
+        .handle("start", ({ payload }) =>
+          Effect.gen(function* () {
+            const logger = yield* LoggerService
+
+            const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`
+            const createdAt = DateTime.unsafeMake(Date.now())
+
+            logger.info("Assessment session started", {
+              sessionId,
+              userId: payload.userId,
+            })
+
+            return { sessionId, createdAt }
+          })
+        )
+        .handle("sendMessage", ({ payload }) =>
+          Effect.gen(function* () {
+            const logger = yield* LoggerService
+
+            logger.info("Message received", {
+              sessionId: payload.sessionId,
+              messageLength: payload.message.length,
+            })
+
+            // Placeholder response (real Nerin logic in Epic 2)
+            return {
+              response: "Thank you for sharing that...",
+              precision: {
+                openness: 0.5,
+                conscientiousness: 0.4,
+                extraversion: 0.6,
+                agreeableness: 0.7,
+                neuroticism: 0.3,
+              },
+            }
+          })
+        )
+    })
+)
+```
+
+**Server Setup** (in `apps/api/src/index.ts`):
+
+```typescript
+import { Effect, Layer } from "effect"
+import { HttpApiBuilder, HttpMiddleware } from "@effect/platform"
+import { NodeHttpServer, NodeRuntime } from "@effect/platform-node"
+import { createServer } from "node:http"
+import { BigOceanApi } from "@workspace/contracts"
+import { HealthGroupLive } from "./handlers/health.js"
+import { AssessmentGroupLive } from "./handlers/assessment.js"
+import { LoggerServiceLive } from "./services/logger.js"
+import { betterAuthHandler } from "./middleware/better-auth.js"
+
+// Merge all handler groups with services
+const HttpGroupsLive = Layer.mergeAll(
+  HealthGroupLive,
+  AssessmentGroupLive,
+  LoggerServiceLive
+)
+
+// Build API from contracts with handlers
+const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(
+  Layer.provide(HttpGroupsLive)
+)
+
+// Complete API with router and middleware
+const ApiLayer = Layer.mergeAll(
+  ApiLive,
+  HttpApiBuilder.Router.Live,
+  HttpApiBuilder.Middleware.layer
+)
+
+// Hybrid server: Better Auth (node:http) → Effect (remaining routes)
+const createCustomServer = () => {
+  const server = createServer()
+  let effectHandler: any = null
+
+  server.on("newListener", (event, listener) => {
+    if (event === "request") {
+      effectHandler = listener
+      server.removeListener("request", listener as any)
+    }
+  })
+
+  server.on("request", async (req, res) => {
+    await betterAuthHandler(req, res)
+    if (!res.writableEnded && effectHandler) {
+      effectHandler(req, res)
+    }
+  })
+
+  return server
+}
+
+// HTTP Server with Better Auth integration
+const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
+  Layer.provide(ApiLayer),
+  Layer.provide(NodeHttpServer.layer(createCustomServer, { port: 4000 })),
+  Layer.provide(LoggerServiceLive)
+)
+
+// Launch server
+NodeRuntime.runMain(Layer.launch(HttpLive))
+```
+
+### Multi-Agent System (LangGraph)
+
+The backend uses LangGraph to orchestrate multiple specialized agents:
+
+**Agent Architecture:**
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Orchestrator (Rules-based routing)                  │
+│ - Identifies lowest precision trait                 │
+│ - Recommends exploration domain                     │
+│ - Generates context for Nerin                       │
+└────────────────┬────────────────────────────────────┘
+                 │ guidance
+                 ▼
+┌──────────────────────────────────────────────────────┐
+│ Nerin (Conversational Agent - Claude 3.5 Sonnet)   │
+│ - Handles conversational quality                    │
+│ - Builds relational safety                          │
+│ - No assessment responsibility                      │
+└────────────────┬────────────────────────────────────┘
+                 │ user response
+      ┌──────────┴──────────┐
+      │ (batch every 3 msgs)│
+      ▼                     ▼
+┌──────────────┐   ┌──────────────┐
+│ Analyzer     │   │ Scorer       │
+│ - Pattern    │   │ - Calculates │
+│   extraction │   │   trait      │
+│ - Detects    │   │   scores     │
+│   contradic. │   │ - Identifies │
+│              │   │   facets     │
+└──────┬───────┘   └───────┬──────┘
+       │                   │
+       └───────┬───────────┘
+               ▼
+         (update state)
+```
+
+### Local-First Data Sync (ElectricSQL + TanStack DB)
+
+Frontend uses reactive local-first sync:
+
+```typescript
+// apps/web/src/lib/sync.ts
+import { useElectricClient } from "@electric-sql/react";
+import { useQuery } from "@tanstack/react-query";
+
+export function useSession(sessionId: string) {
+  const electric = useElectricClient();
+
+  // ElectricSQL syncs automatically with PostgreSQL
+  const { data } = useQuery({
+    queryKey: ["session", sessionId],
+    queryFn: () =>
+      electric.db.session.findUnique({
+        where: { id: sessionId },
+      }),
+  });
+
+  return data;
+}
+```
+
+### Database (Drizzle ORM + PostgreSQL)
+
+Type-safe database access with Drizzle:
+
+```typescript
+// packages/database/src/schema.ts
+import { pgTable, text, timestamp, numeric } from "drizzle-orm/pg-core";
+
+export const sessions = pgTable("sessions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  // ... other fields
+});
+
+export const messages = pgTable("messages", {
+  id: text("id").primaryKey(),
+  sessionId: text("session_id").references(() => sessions.id),
+  role: text("role"), // 'user' | 'assistant'
+  content: text("content"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+```
+
+### FiberRef Dependency Injection Pattern (Story 1.3)
+
+FiberRef enables request-scoped context without prop drilling. Handlers access services via `FiberRef.get()`:
+
+**Define a FiberRef Bridge** (in `packages/infrastructure/src/context/logger.ts`):
+
+```typescript
+import { FiberRef, Effect } from "effect";
 
 **Key Principles:**
 - **Handlers**: Thin HTTP adapters - extract request data and call use-cases
