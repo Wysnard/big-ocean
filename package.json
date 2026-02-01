@@ -55,6 +55,7 @@
     "postgres": "catalog:"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "*"
+    "@rollup/rollup-linux-x64-gnu": "*",
+    "@esbuild/linux-x64": "*"
   }
 }
