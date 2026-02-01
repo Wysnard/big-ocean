@@ -2,8 +2,8 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm@10.4.1
+# Install latest pnpm
+RUN npm install -g pnpm@latest
 
 # Copy package files for dependency installation
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
@@ -29,8 +29,8 @@ RUN pnpm install --frozen-lockfile
 FROM node:20-alpine AS development
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm@10.4.1 && corepack enable
+# Install latest pnpm
+RUN npm install -g pnpm@latest && corepack enable
 
 # Copy package files for dependency installation
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
