@@ -19,7 +19,8 @@ if echo "$COMMIT_MSG" | grep -E "^(docs|chore|test|ci|refactor|perf|style)(\(.+\
 fi
 
 # Require story reference: feat(story-X-Y): or fix(story-X-Y): or chore(story-X-Y): (supports X-Y or X-Y-Z format)
-if ! echo "$COMMIT_MSG" | grep -E "^(feat|fix|chore)\(story-[0-9]+(-[0-9]+)+" > /dev/null; then
+# Pattern: type(story-N-N) or type(story-N-N-N) followed by ): and description
+if ! echo "$COMMIT_MSG" | grep -E "^(feat|fix|chore)\(story-[0-9]+-[0-9]+(-[0-9]+)?\):" > /dev/null; then
   echo ""
   echo "❌ Commit message must reference story number!"
   echo ""
