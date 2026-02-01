@@ -53,5 +53,8 @@
     "drizzle-orm": "1.0.0-beta.12-a5629fb",
     "pg": "^8.18.0",
     "postgres": "catalog:"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "*"
   }
 }
