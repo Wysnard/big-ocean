@@ -55,7 +55,7 @@ development_status:
   epic-2: in-progress
   2-0-linter-unification-and-frontend-fixes: done
   2-0.5-effect-based-dependency-injection-refactoring: done
-  2-1-session-management-and-persistence: in-progress
+  2-1-session-management-and-persistence: review
   2-2-nerin-agent-setup-and-conversational-quality: backlog
   2-3-analyzer-and-scorer-agent-implementation: backlog
   2-4-langgraph-state-machine-and-orchestration: backlog
