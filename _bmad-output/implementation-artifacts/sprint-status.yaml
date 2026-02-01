@@ -42,7 +42,7 @@ story_location: "{project-root}/_bmad-output/implementation-artifacts"
 
 development_status:
   # EPIC 1: Infrastructure & Auth Setup
-  epic-1: in-progress
+  epic-1: done
   1-1-deploy-infrastructure-to-railway: done
   1-2-integrate-better-auth-for-email-password-authentication: done
   1-3-configure-effect-ts-rpc-contracts-and-infrastructure-layer: done
@@ -56,7 +56,7 @@ development_status:
   2-0-linter-unification-and-frontend-fixes: done
   2-0.5-effect-based-dependency-injection-refactoring: done
   2-1-session-management-and-persistence: done
-  2-1-1-github-actions-ci-cd-and-testing: ready-for-dev
+  2-1-1-github-actions-ci-cd-and-testing: review
   2-2-nerin-agent-setup-and-conversational-quality: backlog
   2-3-analyzer-and-scorer-agent-implementation: backlog
   2-4-langgraph-state-machine-and-orchestration: backlog
@@ -105,8 +105,8 @@ development_status:
 total_epics: 7
 total_stories: 26
 epics_backlog: 4
-epics_in_progress: 3
-epics_done: 0
+epics_in_progress: 2
+epics_done: 1
 stories_backlog: 15
 stories_ready_for_dev: 1
 stories_in_progress: 0

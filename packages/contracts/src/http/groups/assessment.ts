@@ -7,7 +7,7 @@
 
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema as S } from "effect";
-import { SessionNotFound, DatabaseError } from "@workspace/contracts/errors";
+import { SessionNotFound, DatabaseError } from "../../errors.js";
 
 /**
  * Start Assessment Request Schema

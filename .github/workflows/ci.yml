@@ -1,0 +1,60 @@
+name: CI - TypeScript, Lint, Build, Test
+
+on:
+  push:
+    branches: ['**']  # All branches
+  pull_request:
+    branches: [master]
+  workflow_dispatch:  # Manual trigger
+
+# Cancel in-progress runs on same PR/branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: CI Pipeline
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]  # Node 20.x LTS (matches CLAUDE.md requirement)
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.4.1
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript Check
+        run: pnpm turbo lint
+
+      - name: Lint (Biome)
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+      - name: Run Tests
+        run: pnpm test:run
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            **/coverage/
+          retention-days: 7

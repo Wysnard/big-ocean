@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# Commit message hook: Validates commit message format
+# Format: feat(story-X-Y): Description
+# Or special types: docs:, chore:, test:, ci:, refactor:, perf:, style:
+# Bypass with: git commit --no-verify
+
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Allow merge commits
+if echo "$COMMIT_MSG" | grep -E "^Merge " > /dev/null; then
+  exit 0
+fi
+
+# Allow special commits (docs, chore, test, ci, refactor, perf, style)
+if echo "$COMMIT_MSG" | grep -E "^(docs|chore|test|ci|refactor|perf|style)(\(.+\))?:" > /dev/null; then
+  exit 0
+fi
+
+# Require story reference: feat(story-X-Y): or fix(story-X-Y): or chore(story-X-Y): (supports X-Y or X-Y-Z format)
+if ! echo "$COMMIT_MSG" | grep -E "^(feat|fix|chore)\(story-[0-9]+(-[0-9]+)+" > /dev/null; then
+  echo ""
+  echo "❌ Commit message must reference story number!"
+  echo ""
+  echo "Format: feat(story-X-Y): Description"
+  echo "    or: fix(story-X-Y): Description"
+  echo "    or: chore(story-X-Y): Description"
+  echo ""
+  echo "Examples:"
+  echo "  feat(story-2-1-1): Add GitHub Actions CI/CD pipeline"
+  echo "  fix(story-2-1): Resolve import path issue in contracts"
+  echo "  chore(story-2-1-1): Update dependencies"
+  echo ""
+  echo "Allowed special commits (no story ref required):"
+  echo "  - docs: Documentation only changes"
+  echo "  - chore: Build process or auxiliary tool changes"
+  echo "  - test: Adding or modifying tests"
+  echo "  - ci: CI/CD configuration changes"
+  echo "  - refactor: Code restructuring without behavior changes"
+  echo "  - perf: Performance improvements"
+  echo "  - style: Code style/formatting changes"
+  echo ""
+  echo "Bypass with: git commit --no-verify"
+  exit 1
+fi
+
+exit 0
