@@ -123,6 +123,10 @@ importers:
       vitest:
         specifier: ^4.0.18
         version: 4.0.18(@types/node@25.1.0)(@vitest/ui@4.0.18)(jiti@2.6.1)(jsdom@27.4.0(@noble/hashes@2.0.1))(lightningcss@1.30.2)(msw@2.12.7(@types/node@25.1.0)(typescript@5.7.3))(tsx@4.21.0)
+    optionalDependencies:
+      '@rollup/rollup-linux-x64-gnu':
+        specifier: '*'
+        version: 4.56.0
 
   apps/api:
     dependencies:
