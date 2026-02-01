@@ -8,6 +8,8 @@ RUN npm install -g pnpm@10.4.1
 # Copy package files for dependency installation
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/domain/package.json ./packages/domain/
+COPY packages/database/package.json ./packages/database/
 COPY packages/infrastructure/package.json ./packages/infrastructure/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/lint/package.json ./packages/lint/
@@ -37,6 +39,8 @@ RUN npm install -g pnpm@10.4.1 && corepack enable
 # Copy package files for dependency installation
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/domain/package.json ./packages/domain/
+COPY packages/database/package.json ./packages/database/
 COPY packages/infrastructure/package.json ./packages/infrastructure/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/lint/package.json ./packages/lint/
@@ -69,6 +73,8 @@ RUN npm install -g pnpm@10.4.1
 # Copy package files for production dependencies
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/domain/package.json ./packages/domain/
+COPY packages/database/package.json ./packages/database/
 COPY packages/infrastructure/package.json ./packages/infrastructure/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/lint/package.json ./packages/lint/

@@ -15,10 +15,7 @@ import { eq } from "drizzle-orm";
 import { Database } from "@workspace/infrastructure/context/database";
 import { assessmentSession } from "@workspace/infrastructure/infrastructure/db/schema";
 import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
-import {
-  AssessmentSessionEntity,
-  AssessmentSessionEntitySchema,
-} from "@workspace/domain/entities/session.entity";
+import { AssessmentSessionEntitySchema } from "@workspace/domain/entities/session.entity";
 import { SessionNotFound, DatabaseError } from "@workspace/contracts/errors";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 
@@ -65,7 +62,8 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
                 try {
                   logger.error("Database operation failed", {
                     operation: "createSession",
-                    error: error instanceof Error ? error.message : String(error),
+                    error:
+                      error instanceof Error ? error.message : String(error),
                     stack: error instanceof Error ? error.stack : undefined,
                   });
                 } catch (logError) {
@@ -111,7 +109,8 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
                   logger.error("Database operation failed", {
                     operation: "getSession",
                     sessionId,
-                    error: error instanceof Error ? error.message : String(error),
+                    error:
+                      error instanceof Error ? error.message : String(error),
                     stack: error instanceof Error ? error.stack : undefined,
                   });
                 } catch (logError) {
@@ -193,7 +192,8 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
                   logger.error("Database operation failed", {
                     operation: "updateSession",
                     sessionId,
-                    error: error instanceof Error ? error.message : String(error),
+                    error:
+                      error instanceof Error ? error.message : String(error),
                     stack: error instanceof Error ? error.stack : undefined,
                   });
                 } catch (logError) {
