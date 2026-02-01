@@ -9,7 +9,6 @@ RUN npm install -g pnpm@10.4.1
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
 COPY packages/domain/package.json ./packages/domain/
-COPY packages/database/package.json ./packages/database/
 COPY packages/infrastructure/package.json ./packages/infrastructure/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/lint/package.json ./packages/lint/
@@ -40,7 +39,6 @@ RUN npm install -g pnpm@10.4.1 && corepack enable
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
 COPY packages/domain/package.json ./packages/domain/
-COPY packages/database/package.json ./packages/database/
 COPY packages/infrastructure/package.json ./packages/infrastructure/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/lint/package.json ./packages/lint/
@@ -74,7 +72,6 @@ RUN npm install -g pnpm@10.4.1
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
 COPY packages/domain/package.json ./packages/domain/
-COPY packages/database/package.json ./packages/database/
 COPY packages/infrastructure/package.json ./packages/infrastructure/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/lint/package.json ./packages/lint/
