@@ -111,6 +111,50 @@ pnpm dev --filter=api        # Run only backend (Node.js, port 4000)
 pnpm build                  # Build all packages and apps
 pnpm lint                   # Lint all packages
 pnpm format                 # Format all code with Prettier
+pnpm test:run               # Run all tests
+pnpm test:coverage          # Run tests with coverage report
+```
+
+### CI/CD Pipeline (Story 2.1.1)
+
+GitHub Actions automatically runs on all pushes and pull requests:
+
+**Pipeline Steps:**
+1. Checkout code
+2. Setup pnpm 10.4.1 + Node.js 20.x
+3. Install dependencies (`pnpm install --frozen-lockfile`)
+4. TypeScript check (`pnpm turbo lint`)
+5. Lint check (`pnpm lint`)
+6. Build (`pnpm build`)
+7. Run tests (`pnpm test:run`)
+
+**Configuration:** `.github/workflows/ci.yml`
+
+### Git Hooks (Local Enforcement)
+
+Git hooks ensure code quality before commits and pushes:
+
+**Pre-push hook** (runs before `git push`):
+- Runs `pnpm lint` (Biome linting)
+- Runs `pnpm turbo lint` (TypeScript check)
+- Runs `pnpm test:run` (all tests)
+- Blocks push if any check fails
+
+**Commit-msg hook** (validates commit messages):
+- Requires story reference: `feat(story-X-Y): Description` or `fix(story-X-Y): Description`
+- Allows special commits: `docs:`, `chore:`, `test:`, `ci:`, `refactor:`, `perf:`, `style:`
+- Allows merge commits
+
+**Bypass hooks (use sparingly):**
+```bash
+git commit --no-verify   # Skip commit-msg hook
+git push --no-verify     # Skip pre-push hook
+```
+
+**Hook setup:** Hooks are managed by `simple-git-hooks`. After cloning:
+```bash
+pnpm install           # Installs dependencies
+pnpm prepare           # Installs git hooks (runs automatically via postinstall)
 ```
 
 ### App-Specific Commands

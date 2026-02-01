@@ -1,5 +1,7 @@
 # BIG OCEAN
 
+[![CI](https://github.com/Wysnard/big-ocean/actions/workflows/ci.yml/badge.svg)](https://github.com/Wysnard/big-ocean/actions/workflows/ci.yml)
+
 Big Ocean is a full-stack web application that conducts personality assessments through an interactive chat interface, analyzing users based on the Big Five personality traits:
 
 1. Openness to Experience

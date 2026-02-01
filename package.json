@@ -9,6 +9,7 @@
     "dev": "./scripts/dev.sh",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "prepare": "simple-git-hooks",
     "start:api": "turbo run start --filter=api",
     "start:front": "turbo run start --filter=front",
     "start:web": "turbo run start --filter=web",
@@ -17,6 +18,10 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest watch"
+  },
+  "simple-git-hooks": {
+    "pre-push": "./.githooks/pre-push",
+    "commit-msg": "./.githooks/commit-msg \"$1\""
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.13",
@@ -28,6 +33,7 @@
     "drizzle-kit": "1.0.0-beta.12-a5629fb",
     "jsdom": "^27.0.0",
     "prettier": "^3.7.4",
+    "simple-git-hooks": "^2.13.1",
     "tsx": "^4.21.0",
     "turbo": "^2.6.3",
     "typescript": "5.7.3",
