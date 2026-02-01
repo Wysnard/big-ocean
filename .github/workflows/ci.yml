@@ -41,7 +41,7 @@ jobs:
       # Workaround for rollup platform-specific binary issue
       # See: https://github.com/npm/cli/issues/4828
       - name: Install Rollup native binary
-        run: pnpm add -D @rollup/rollup-linux-x64-gnu --save-optional
+        run: pnpm add -wD @rollup/rollup-linux-x64-gnu
 
       - name: TypeScript Check
         run: pnpm turbo lint
