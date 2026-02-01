@@ -44,6 +44,9 @@ packages/
   - Effect-ts for functional error handling and RPC client typing
 
 - **api** (`port 4000` dev, Railway prod): Node.js backend featuring:
+  - **Hexagonal Architecture**:
+    - `src/handlers/` - Thin HTTP adapters (controllers/presenters)
+    - `src/use-cases/` - Business logic (main unit test target)
   - Effect-ts 3.19+ for functional programming and error handling
   - @effect/platform 0.94+ for HTTP server and API contracts
   - @effect/platform-node for Node.js HTTP runtime
@@ -59,10 +62,12 @@ packages/
 
 ### Packages
 
-- **domain**: Core domain types and business logic exports
-  - Effect Schema definitions for users, sessions, personality traits, archetypes
-  - Error definitions for domain-level errors
+- **domain**: Core domain layer (hexagonal architecture - ports)
+  - Repository interfaces using Context.Tag (no implementations)
+  - Entity schemas with Effect Schema (users, sessions, messages, etc.)
+  - Domain errors and types
   - Branded types for type-safe IDs (userId, sessionId, etc.)
+  - Pure abstractions - no external dependencies
 
 - **contracts**: Effect/Platform HTTP contract definitions using @effect/platform and @effect/schema
   - HTTP API Groups: AssessmentGroup, HealthGroup, ProfileGroup (future)
@@ -76,14 +81,14 @@ packages/
   - Migration scripts for PostgreSQL
   - Query builders and type-safe helpers
 
-- **infrastructure**: Backend utilities and dependency injection (Story 1.3)
-  - **FiberRef Bridges**: Request-scoped context management
-    - `DatabaseRef`: Drizzle ORM database connection
-    - `LoggerRef`: Winston logger instance
-    - `CostGuardRef`: LLM cost tracking and rate limiting
-  - **Pattern**: Use `FiberRef.get()` in Effect.gen handlers to access services
-  - Service layer bindings without prop drilling
-  - Layer composition for clean dependency injection
+- **infrastructure**: Infrastructure layer (hexagonal architecture - adapters)
+  - Repository implementations as Effect Layers (`*RepositoryLive`)
+  - Drizzle ORM implementations (`*.drizzle.repository.ts`)
+  - Pino logger implementation (`*.pino.repository.ts`)
+  - Database context and schema definitions
+  - Naming: `AssessmentMessageDrizzleRepositoryLive` (production)
+  - Testing: `AssessmentMessageTestRepositoryLive` (test implementations)
+  - Injected into use-cases via Layer composition
 
 - **ui**: Shared React component library built on shadcn/ui
   - Exports components from `./components/*`
@@ -240,6 +245,93 @@ docker compose up
 See [DOCKER.md](./DOCKER.md) for comprehensive Docker development guide.
 
 ## Architecture & Key Patterns
+
+### Hexagonal Architecture (Ports & Adapters)
+
+The codebase follows **hexagonal architecture** with clear layer separation and dependency inversion using Effect-ts Context.Tag pattern.
+
+**Architecture Layers:**
+
+```
+Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
+                                         ↑
+                                  Infrastructure (injected)
+```
+
+**Layer Responsibilities:**
+
+1. **Contracts** (`packages/contracts`): HTTP API definitions shared between frontend and backend
+2. **Handlers** (`apps/api/src/handlers`): Thin HTTP adapters (controllers/presenters) - no business logic
+3. **Use-Cases** (`apps/api/src/use-cases`): Pure business logic - **main unit test target**
+4. **Domain** (`packages/domain`): Repository interfaces (Context.Tag), entities, types
+5. **Infrastructure** (`packages/infrastructure`): Repository implementations (Drizzle, Pino, etc.)
+
+**Naming Conventions:**
+
+| Component | Location | Example | Notes |
+|-----------|----------|---------|-------|
+| Repository Interface | `packages/domain/src/repositories/` | `assessment-message.repository.ts` | Context.Tag definition |
+| Repository Implementation | `packages/infrastructure/src/repositories/` | `assessment-message.drizzle.repository.ts` | Layer.effect implementation |
+| Live Layer Export | Same as implementation | `AssessmentMessageDrizzleRepositoryLive` | Production Layer |
+| Test Layer Export | Test files | `AssessmentMessageTestRepositoryLive` | Testing Layer |
+| Use-Case | `apps/api/src/use-cases/` | `send-message.use-case.ts` | Pure business logic |
+| Handler | `apps/api/src/handlers/` | `assessment.ts` | HTTP adapter |
+
+**Example Use-Case Pattern:**
+
+```typescript
+// apps/api/src/use-cases/send-message.use-case.ts
+import { Effect } from "effect";
+import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
+import { AssessmentMessageRepository } from "@workspace/domain/repositories/assessment-message.repository";
+import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
+
+export const sendMessage = (
+  input: SendMessageInput
+): Effect.Effect<
+  SendMessageOutput,
+  DatabaseError | SessionNotFound,
+  AssessmentSessionRepository | AssessmentMessageRepository | LoggerRepository
+> =>
+  Effect.gen(function* () {
+    // Access injected dependencies
+    const sessionRepo = yield* AssessmentSessionRepository;
+    const messageRepo = yield* AssessmentMessageRepository;
+    const logger = yield* LoggerRepository;
+
+    // Business logic orchestrates domain operations
+    const session = yield* sessionRepo.getSession(input.sessionId);
+    yield* messageRepo.saveMessage(input.sessionId, "user", input.message);
+
+    // ... more business logic
+
+    return { response, precision };
+  });
+```
+
+**Testing Pattern:**
+
+```typescript
+// Unit test with test implementations
+const TestLayer = Layer.mergeAll(
+  Layer.succeed(AssessmentSessionRepository, TestSessionRepo),
+  Layer.succeed(AssessmentMessageRepository, TestMessageRepo),
+  Layer.succeed(LoggerRepository, TestLogger)
+);
+
+const result = await Effect.runPromise(
+  sendMessage({ sessionId: "test", message: "Hello" })
+    .pipe(Effect.provide(TestLayer))
+);
+```
+
+**Key Benefits:**
+- **Testability**: Use-cases tested in isolation with test implementations
+- **Flexibility**: Swap implementations without changing business logic
+- **Clarity**: Each layer has single responsibility
+- **Effect-ts native**: Context.Tag and Layer system for DI
+
+For complete architecture details, see `_bmad-output/planning-artifacts/architecture.md` (ADR-6).
 
 ### Workspace Dependencies
 
