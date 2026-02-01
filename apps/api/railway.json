@@ -9,6 +9,7 @@
     "restartPolicyMaxRetries": 10,
     "healthcheckPath": "/health",
     "healthcheckTimeout": 10,
-    "region": "us-west1"
+    "region": "us-west1",
+    "startCommand": "tsx src/index.ts"
   }
 }
