@@ -16,6 +16,8 @@
     "./db/schema": "./src/infrastructure/db/schema.ts"
   },
   "dependencies": {
+    "@workspace/contracts": "workspace:*",
+    "@workspace/domain": "workspace:*",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",

@@ -25,9 +25,6 @@ COPY apps/api/ ./apps/api/
 # Re-run install to ensure workspace packages are properly linked
 RUN pnpm install --frozen-lockfile
 
-# Build the API (TypeScript compilation)
-RUN pnpm --filter=api run build
-
 # Development stage (hot reload with tsx watch)
 FROM node:20-alpine AS development
 WORKDIR /app
@@ -68,7 +65,7 @@ WORKDIR /app
 # Install pnpm
 RUN npm install -g pnpm@10.4.1
 
-# Copy package files for production dependencies
+# Copy package files
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/contracts/package.json ./packages/contracts/
 COPY packages/domain/package.json ./packages/domain/
@@ -78,13 +75,12 @@ COPY packages/lint/package.json ./packages/lint/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY apps/api/package.json ./apps/api/
 
-# Install production dependencies only (skip scripts to avoid simple-git-hooks failure)
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts
-
-# Copy source code and built artifacts from builder
+# Copy source code BEFORE installing (so pnpm can link workspace packages properly)
 COPY --from=builder /app/apps/api/src ./apps/api/src
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/packages ./packages
+
+# Single install with all source code present (skip scripts to avoid git hooks)
+RUN pnpm install --frozen-lockfile --filter=api... --ignore-scripts
 
 # Set NODE_ENV to production
 ENV NODE_ENV=production
@@ -92,7 +88,7 @@ ENV NODE_ENV=production
 # Expose Railway's default port (but app reads from PORT env var)
 EXPOSE 8080
 
-# Install tsx for running TypeScript in production (temporary until contracts package is built)
+# Install tsx for running TypeScript directly in production
 RUN npm install -g tsx
 
 # Health check using wget (more reliable than inline Node.js)

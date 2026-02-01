@@ -160,6 +160,9 @@ importers:
       '@workspace/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@workspace/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@workspace/infrastructure':
         specifier: workspace:*
         version: link:../../packages/infrastructure
@@ -389,6 +392,12 @@ importers:
 
   packages/infrastructure:
     dependencies:
+      '@workspace/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@workspace/domain':
+        specifier: workspace:*
+        version: link:../domain
       better-auth:
         specifier: 'catalog:'
         version: 1.4.18(@tanstack/react-start@1.157.7(crossws@0.4.3(srvx@0.10.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(vite@7.3.1(@types/node@25.1.0)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)))(drizzle-kit@0.31.8)(drizzle-orm@1.0.0-beta.12-a5629fb(@effect/sql-pg@0.50.1(@effect/experimental@0.58.0(@effect/platform@0.94.2(effect@3.19.15))(effect@3.19.15))(@effect/platform@0.94.2(effect@3.19.15))(@effect/sql@0.49.0(@effect/experimental@0.58.0(@effect/platform@0.94.2(effect@3.19.15))(effect@3.19.15))(@effect/platform@0.94.2(effect@3.19.15))(effect@3.19.15))(effect@3.19.15))(@effect/sql@0.49.0(@effect/experimental@0.58.0(@effect/platform@0.94.2(effect@3.19.15))(effect@3.19.15))(@effect/platform@0.94.2(effect@3.19.15))(effect@3.19.15))(@types/mssql@9.1.9)(@types/pg@8.16.0)(mssql@11.0.1)(pg@8.18.0)(postgres@3.4.8))(next@16.0.10(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(pg@8.18.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(solid-js@1.9.11)(vitest@4.0.18)
