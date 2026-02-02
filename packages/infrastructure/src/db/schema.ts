@@ -211,8 +211,8 @@ export const facetScores = pgTable(
 			.notNull()
 			.references(() => assessmentSession.id, { onDelete: "cascade" }),
 		facetName: text("facet_name").notNull(), // Clean name
-		score: integer("score").notNull(), // 0-20 aggregated from evidence
-		confidence: integer("confidence").notNull(), // 0-100 (adjusted for contradictions)
+		score: integer("score").notNull().default(0), // 0-20 aggregated from evidence (0 = no data)
+		confidence: integer("confidence").notNull().default(0), // 0-100 (0 = no evidence yet)
 		updatedAt: timestamp("updated_at")
 			.defaultNow()
 			.$onUpdate(() => new Date())
@@ -247,8 +247,8 @@ export const traitScores = pgTable(
 			.notNull()
 			.references(() => assessmentSession.id, { onDelete: "cascade" }),
 		traitName: text("trait_name").notNull(), // "openness", "conscientiousness", etc.
-		score: integer("score").notNull(), // 0-20 mean of facet scores
-		confidence: integer("confidence").notNull(), // 0-100 minimum across facets
+		score: integer("score").notNull().default(0), // 0-20 mean of facet scores (0 = no data)
+		confidence: integer("confidence").notNull().default(0), // 0-100 (0 = no evidence yet)
 		updatedAt: timestamp("updated_at")
 			.defaultNow()
 			.$onUpdate(() => new Date())
