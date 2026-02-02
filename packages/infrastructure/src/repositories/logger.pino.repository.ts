@@ -19,6 +19,7 @@ import * as pinoModule from "pino";
  * No dependencies required.
  */
 export const LoggerPinoRepositoryLive = Layer.sync(LoggerRepository, () => {
+	// biome-ignore lint/suspicious/noExplicitAny: ESM/CJS dynamic import compatibility
 	const pino = (pinoModule as any).default || pinoModule;
 	// Only use pino-pretty in explicit development mode
 	const isDevelopment = process.env.NODE_ENV === "development";

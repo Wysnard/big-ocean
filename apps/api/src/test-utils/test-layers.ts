@@ -45,6 +45,7 @@ import { Effect, Layer } from "effect";
  * ```
  */
 export const createTestAssessmentSessionLayer = () => {
+	// biome-ignore lint/suspicious/noExplicitAny: test layer stores dynamic session objects
 	const sessions = new Map<string, any>();
 
 	return Layer.succeed(AssessmentSessionRepository, {
@@ -76,6 +77,7 @@ export const createTestAssessmentSessionLayer = () => {
 				return session;
 			}),
 
+		// biome-ignore lint/suspicious/noExplicitAny: test layer accepts flexible update objects
 		updateSession: (sessionId: string, updates: any) =>
 			Effect.sync(() => {
 				const session = sessions.get(sessionId);
@@ -95,6 +97,7 @@ export const createTestAssessmentSessionLayer = () => {
  * Provides an in-memory message store for testing.
  */
 export const createTestAssessmentMessageLayer = () => {
+	// biome-ignore lint/suspicious/noExplicitAny: test layer stores dynamic message objects
 	const messages = new Map<string, any[]>();
 
 	return Layer.succeed(AssessmentMessageRepository, {
@@ -111,7 +114,8 @@ export const createTestAssessmentMessageLayer = () => {
 				const sessionMessages = messages.get(sessionId) || [];
 				sessionMessages.push(message);
 				messages.set(sessionId, sessionMessages);
-				return message as any; // Type assertion to bypass union type complexity
+				// biome-ignore lint/suspicious/noExplicitAny: bypass union type complexity in test layer
+				return message as any;
 			}),
 
 		getMessages: (sessionId: string) => Effect.sync(() => messages.get(sessionId) || []),
@@ -469,5 +473,6 @@ export const TestRepositoriesLayer = Layer.mergeAll(
  * )
  * ```
  */
+// biome-ignore lint/suspicious/noExplicitAny: generic R parameter accepts any requirements
 export const provideTestLayer = <A, E>(effect: Effect.Effect<A, E, any>) =>
 	Effect.provide(effect, TestRepositoriesLayer);

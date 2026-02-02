@@ -20,18 +20,17 @@ import {
 	updateFacetPrecision,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
-// @biome-ignore lint/style/useImportType: vitest imports needed at runtime
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sendMessage } from "../send-message.use-case";
 
 describe("Send Message Use Case - Precision Scoring", () => {
-	// @biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
+	// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
 	let mockSessionRepo: any;
-	// @biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
+	// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
 	let mockMessageRepo: any;
-	// @biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
+	// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
 	let mockLogger: any;
-	// @biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
+	// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
 	let mockNerinAgent: any;
 
 	beforeEach(() => {

@@ -513,7 +513,7 @@ f09c42f feat(db): Add default values of 0 for score and confidence columns
 - [x] Integrate biome fix into pre-commit hook
 - [x] Create `pnpm lint:fix` script
 - [x] Run across monorepo: `pnpm lint:fix` (fixed 132 files)
-- [ ] Commit: "style: apply biome auto-fixes across monorepo"
+- [x] Commit: Combined into 79b3a3f (refactor(2.7): TypeScript compilation, linting, and code quality improvements)
 - [x] Validate: All tests still pass, no regressions (115 API + 9 frontend tests pass)
 
 ### Phase 2: Module Resolution (2 hours)
@@ -521,7 +521,8 @@ f09c42f feat(db): Add default values of 0 for score and confidence columns
 - [x] Update package-level `tsconfig.json` files to extend root (cleaned up api tsconfig)
 - [x] Strip `.js` extensions from all imports via sed (~143 imports fixed)
 - [x] Validate: `pnpm test:run` passes (115 API + 9 frontend tests)
-- [ ] Commit: "refactor: migrate to bare imports without .js extensions"
+- [x] Commit: Combined into 79b3a3f (refactor(2.7): TypeScript compilation, linting, and code quality improvements)
+- [ ] ~~Add Biome lint rule to prevent .js imports~~ (Note: `noImplicitImportExtension` rule doesn't exist in Biome - rely on moduleResolution: bundler + code review)
 
 ### Phase 3: Type Safety Audit (1 hour)
 - [x] Script to find all `as any` occurrences (grep across apps/packages)
@@ -529,29 +530,29 @@ f09c42f feat(db): Add default values of 0 for score and confidence columns
 - [x] Categorize each cast (generated, test-mocks, complex-generic, external-lib, type-index)
 - [x] Prioritize by fixability + impact
 - [x] Document in `_bmad-output/implementation-artifacts/as-any-audit.md`
-  - 25 total occurrences: 13 test, 8 production, 4 generated
-  - 3-4 high priority fixes identified
+  - 25 total occurrences at audit time (reduced to ~15 after fixes)
+  - Categories: test-mocks, external-lib, complex-generic, generated
 
 ### Phase 4: Type Safety Improvements (2 hours)
 - [x] Strict flags already enabled in base tsconfig (strict: true, noUncheckedIndexedAccess: true)
-- [x] Fix 4 high-priority `as any` casts:
-  - calculate-precision.use-case.test.ts: Used FacetName[] type, fixed "depression" → "depressiveness"
-  - analyzer-scorer-integration.test.ts: Used TraitName[] type with proper optional chaining
-  - scorer.drizzle.repository.ts: Changed error: any → error: unknown
-- [x] Update `CLAUDE.md` with "Type Safety Patterns" section
+- [x] Fix high-priority `as any` cast:
+  - scorer.drizzle.repository.ts: Changed `error: any` → `error: unknown`
+- [x] Add proper `biome-ignore` comments to all remaining `any` usages (test mocks, external libs)
+- [x] Fix incorrect `@biome-ignore` format → `biome-ignore` (Biome 1.x+ format)
+- [x] Update `CLAUDE.md` with "Type Safety Patterns" section (branded types, discriminated unions, Effect Schema)
 - [x] Document import strategy (bare imports, bundler mode) in `CLAUDE.md`
 - [x] Validate: All 115 API + 9 frontend tests pass
 
 ### Final Validation
-- [x] Run full test suite: `pnpm test:run` (115 API + 9 frontend tests pass)
-- [x] Validate linting: `pnpm lint` (16 warnings, all acceptable test mocks)
+- [x] Run full test suite: `pnpm test:run` (124 tests pass: 115 API + 9 frontend, 2 skipped)
+- [x] Validate linting: `pnpm lint` (0 warnings - all documented with biome-ignore comments)
 - [x] All acceptance criteria met:
   - AC 1: ✅ Bare imports without .js extensions (moduleResolution: bundler)
   - AC 2: ✅ useImportType set to off per user request
-  - AC 3: ✅ `as any` audit complete, 4 high-priority fixes made
+  - AC 3: ✅ `as any` audit complete, all high-priority documented with biome-ignore
   - AC 4: ✅ lint:fix script, pre-commit hook, Type Safety docs in CLAUDE.md
-  - AC 5: ✅ All 124 tests pass (115 API + 9 frontend)
-  - AC 6: ✅ Type Safety Patterns section in CLAUDE.md
+  - AC 5: ✅ All 124 tests pass (115 API + 9 frontend), 2 intentionally skipped
+  - AC 6: ✅ Type Safety Patterns section in CLAUDE.md (branded types, unions, Schema)
 - [x] Commit changes (79b3a3f on feat/story-2-7-typescript-linting-code-quality)
 - [x] Update sprint status to "done"
 
@@ -642,9 +643,23 @@ Claude Haiku 4.5 (created via story creation workflow)
 **Validation:**
 - All 124 tests pass (115 API + 9 frontend)
 - TypeScript compilation succeeds
-- Linting passes (16 warnings - all documented test mocks)
+- Linting passes (0 warnings - all documented with biome-ignore comments)
 
 ---
 
 ### Code Review Fixes (2026-02-02)
 - Fixed TypeScript build error in `nerin-agent.langgraph.repository.ts:144` - `checkpointer?.setup()` → `checkpointer!.setup()`
+
+### Code Review Fixes (2026-02-03) - Adversarial Review
+- Fixed incorrect `@biome-ignore` format → `biome-ignore` (Biome 1.x+ format) in 3 test files
+- Removed unused `useImportType` suppression comments (rule is off globally)
+- Added missing `biome-ignore` comments to all remaining `any` usages:
+  - `apps/api/src/test-utils/test-layers.ts` - 5 test layer mocks
+  - `packages/infrastructure/src/context/database.ts` - pg library type parser
+  - `packages/infrastructure/src/repositories/logger.pino.repository.ts` - ESM/CJS compat
+  - `packages/infrastructure/src/repositories/cost-guard.redis.repository.ts` - ISO date split
+  - `packages/infrastructure/src/repositories/__tests__/analyzer.claude.repository.test.ts` - JSON.parse
+  - `apps/api/src/use-cases/__tests__/save-facet-evidence.use-case.test.ts` - intentional invalid input
+- Updated CLAUDE.md Type Safety Patterns with complete examples (branded types, discriminated unions, Effect Schema)
+- Corrected story checklist claims (commit messages, fix counts)
+- Note: `noImplicitImportExtension` rule does not exist in Biome - documented as limitation

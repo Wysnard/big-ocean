@@ -15,9 +15,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { startAssessment } from "../start-assessment.use-case";
 
 describe("startAssessment Use Case", () => {
-	// @biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
+	// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
 	let mockSessionRepo: any;
-	// @biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
+	// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
 	let mockLogger: any;
 
 	beforeEach(() => {

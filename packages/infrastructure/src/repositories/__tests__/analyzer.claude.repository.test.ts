@@ -35,6 +35,7 @@ function createMockAnalyzerLayer(mockResponse: string) {
 			Effect.gen(function* () {
 				// Simulate parsing the mock response
 				const parsed = JSON.parse(mockResponse);
+				// biome-ignore lint/suspicious/noExplicitAny: JSON.parse returns unknown, mapping for test
 				return parsed.map((e: any) => ({
 					messageId: _messageId,
 					facetName: e.facet,
@@ -476,6 +477,7 @@ describe("AnalyzerClaudeRepository - Edge Cases", () => {
 						Effect.sync(() => {
 							const cleaned = mockResponse.trim().replace(/^```(?:json)?\n?|\n?```$/g, "");
 							const parsed = JSON.parse(cleaned);
+							// biome-ignore lint/suspicious/noExplicitAny: JSON.parse returns unknown, mapping for test
 							return parsed.map((e: any) => ({
 								messageId,
 								facetName: e.facet,

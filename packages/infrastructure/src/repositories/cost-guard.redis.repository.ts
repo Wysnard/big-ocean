@@ -24,6 +24,7 @@ const TTL_SECONDS = 48 * 60 * 60;
  * Get today's date in YYYY-MM-DD format (UTC)
  */
 const getDateKey = (): string => {
+	// biome-ignore lint/style/noNonNullAssertion: ISO 8601 format guarantees T separator
 	return new Date().toISOString().split("T")[0]!;
 };
 
@@ -90,6 +91,7 @@ export const createTestCostGuardRepository = () => {
 	const costs = new Map<string, number>();
 	const assessments = new Map<string, number>();
 
+	// biome-ignore lint/style/noNonNullAssertion: ISO 8601 format guarantees T separator
 	const getDateKey = (): string => new Date().toISOString().split("T")[0]!;
 
 	return CostGuardRepository.of({

@@ -61,6 +61,7 @@ export const calculateWeightedAverage = (facetScores: number[], weights?: number
 	// Calculate weighted sum
 	let total = 0;
 	for (let i = 0; i < facetScores.length; i++) {
+		// biome-ignore lint/style/noNonNullAssertion: i is bounded by array length
 		total += facetScores[i]! * (normalizedWeights[i] ?? 0);
 	}
 

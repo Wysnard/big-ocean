@@ -40,9 +40,11 @@ export const PgClientLive = Layer.unwrapEffect(
 			url: Redacted.make(config.databaseUrl),
 			types: {
 				// Preserve PostgreSQL date/time types as strings
+				// biome-ignore lint/suspicious/noExplicitAny: pg library doesn't export TypeParser types
 				getTypeParser: (typeId: number, format: any) => {
 					// Type IDs for: timestamptz, timestamp, date, interval, etc.
 					if ([1184, 1114, 1082, 1186, 1231, 1115, 1185, 1187, 1182].includes(typeId)) {
+						// biome-ignore lint/suspicious/noExplicitAny: pg type parser callback
 						return (val: any) => val;
 					}
 					return types.getTypeParser(typeId, format);

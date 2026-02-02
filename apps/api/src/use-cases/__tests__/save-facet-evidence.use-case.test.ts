@@ -229,6 +229,7 @@ describe("saveFacetEvidence use-case", () => {
 				const invalidEvidence: FacetEvidence[] = [
 					{
 						messageId: "msg_invalid_facet",
+						// biome-ignore lint/suspicious/noExplicitAny: intentionally testing invalid facet name
 						facetName: "openness_imagination" as any, // Invalid: should be "imagination" not prefixed
 						score: 15,
 						confidence: 0.8,
