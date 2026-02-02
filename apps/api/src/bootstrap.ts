@@ -13,8 +13,8 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
-import { loadConfig, type AppConfigService } from "@workspace/domain";
-import { dbSchema as authSchema } from "@workspace/infrastructure";
+import type { AppConfigService } from "@workspace/domain";
+import { loadConfig, dbSchema as authSchema } from "@workspace/infrastructure";
 
 /**
  * Database type

@@ -1,14 +1,15 @@
 /**
- * AppConfig Tests - TDD Red Phase
+ * AppConfigLive Tests
  *
- * Tests for type-safe environment variable configuration using Effect Config.
- * Following TDD: Write failing tests first, then implement to pass.
+ * Tests for the live implementation of AppConfig using Effect Config.
+ * Tests validation, defaults, type safety, and secret handling.
  */
 import { describe, it, expect } from "vitest";
 import { ConfigProvider, Effect, Redacted } from "effect";
-import { AppConfig, AppConfigLive, loadConfig } from "../app-config.js";
+import { AppConfig } from "@workspace/domain";
+import { AppConfigLive, loadConfig } from "../app-config.live.js";
 
-describe("AppConfig", () => {
+describe("AppConfigLive", () => {
   /**
    * Helper to create a config provider from a map of environment variables
    */
