@@ -623,27 +623,28 @@ Claude Haiku 4.5 (created via story creation workflow)
 - Architecture patterns already demonstrated in Story 2.3 (schema transformations) and 2.6 (Effect/vitest migration)
 
 ### File List
-**Files to Create:**
-- `packages/domain/src/types/branded.ts` - Branded type utilities
-- `packages/domain/src/types/discriminated-union.ts` - Result/Error pattern (optional)
-- `_bmad-output/implementation-artifacts/as-any-audit.md` - Cast audit spreadsheet (during Phase 3)
+**Files Created:**
+- `_bmad-output/implementation-artifacts/as-any-audit.md` - Cast audit documenting 25 occurrences
+- `.githooks/pre-commit` - Biome auto-fix hook for staged files
 
-**Files to Modify:**
-- `tsconfig.json` - Add baseUrl + paths
-- `packages/*/tsconfig.json` - Enable strict mode flags
-- `apps/*/tsconfig.json` - Enable strict mode flags
-- `packages/lint/biome.json` - Enable auto-fixes + import rules
-- `simple-git-hooks.json` or `.git/hooks/pre-commit` - Add biome fix
-- `CLAUDE.md` - Add type safety patterns section
-- ~200 source files - Strip `.js` from imports (via codemod)
+**Files Modified:**
+- `packages/typescript-config/base.json` - Set `moduleResolution: "bundler"`, `noUncheckedIndexedAccess: true`
+- `packages/lint/biome.json` - Set `useImportType: "off"`, configure formatter
+- `package.json` - Add `lint:fix` script, configure `simple-git-hooks`
+- `CLAUDE.md` - Add "Type Safety Patterns" section
+- ~143 source files - Strip `.js` from imports
+- `packages/infrastructure/src/repositories/nerin-agent.langgraph.repository.ts` - Fix TypeScript error (code review fix)
 
-**Expected Test Coverage:**
-- No new feature tests needed (refactoring story)
-- Validation: Existing tests all pass (115+ tests)
-- Validation: TypeScript compilation succeeds
-- Validation: Linting passes cleanly
+**NOT Created (deemed unnecessary):**
+- `packages/domain/src/types/branded.ts` - Existing `TraitName[]`, `FacetName[]` types sufficient
+- `packages/domain/src/types/discriminated-union.ts` - Effect already provides Result patterns
+
+**Validation:**
+- All 124 tests pass (115 API + 9 frontend)
+- TypeScript compilation succeeds
+- Linting passes (16 warnings - all documented test mocks)
 
 ---
 
-**This story is READY FOR DEVELOPMENT.**
-Next step: Run `dev-story 2-7` to begin implementation with development agent.
+### Code Review Fixes (2026-02-02)
+- Fixed TypeScript build error in `nerin-agent.langgraph.repository.ts:144` - `checkpointer?.setup()` → `checkpointer!.setup()`

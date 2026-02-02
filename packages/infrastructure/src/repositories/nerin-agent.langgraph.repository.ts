@@ -141,6 +141,7 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
 		if (dbUri) {
 			checkpointer = PostgresSaver.fromConnString(dbUri);
 			// Setup checkpointer tables (using Effect.promise for async)
+			// Note: checkpointer is guaranteed defined here since we're inside if (dbUri)
 			yield* Effect.tryPromise({
 				try: () => checkpointer?.setup(),
 				catch: (error) => {
