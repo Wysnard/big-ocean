@@ -144,7 +144,7 @@ export class AgentInvocationError extends S.TaggedError<AgentInvocationError>()(
 export class AnalyzerError extends S.TaggedError<AnalyzerError>()(
   "AnalyzerError",
   {
-    messageId: S.String,
+    assessmentMessageId: S.String,
     message: S.String,
     cause: S.optional(S.String),
   }
@@ -170,7 +170,7 @@ export class InvalidFacetNameError extends S.TaggedError<InvalidFacetNameError>(
 export class MalformedEvidenceError extends S.TaggedError<MalformedEvidenceError>()(
   "MalformedEvidenceError",
   {
-    messageId: S.String,
+    assessmentMessageId: S.String,
     rawOutput: S.String,
     parseError: S.String,
     message: S.String,

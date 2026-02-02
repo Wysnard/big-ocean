@@ -158,7 +158,7 @@ export const ScorerDrizzleRepositoryLive = Layer.effect(
             .from(facetEvidence)
             .innerJoin(
               assessmentMessage,
-              eq(facetEvidence.messageId, assessmentMessage.id)
+              eq(facetEvidence.assessmentMessageId, assessmentMessage.id)
             )
             .where(eq(assessmentMessage.sessionId, sessionId))
             .orderBy(facetEvidence.createdAt)

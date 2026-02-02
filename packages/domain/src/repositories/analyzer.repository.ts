@@ -30,9 +30,9 @@ export class AnalyzerRepository extends Context.Tag("AnalyzerRepository")<
      * Algorithm: Single JSON call with Claude Sonnet 4.5 (Path 2 from Tree of Thoughts)
      * - Cost: ~$0.003 per message
      * - Latency: 1-2 seconds
-     * - Output: Array of FacetEvidence with messageId, facet, score (0-20), confidence (0-1), quote, highlightRange
+     * - Output: Array of FacetEvidence with assessmentMessageId, facet, score (0-20), confidence (0-1), quote, highlightRange
      *
-     * @param messageId - ID of the message being analyzed (for evidence linkage)
+     * @param assessmentMessageId - ID of the assessment message being analyzed (for evidence linkage)
      * @param content - User message text to analyze for personality signals
      * @returns Effect with array of facet evidence (typically 3-10 facets per message)
      * @throws AnalyzerError - Generic LLM invocation failure
@@ -53,7 +53,7 @@ export class AnalyzerRepository extends Context.Tag("AnalyzerRepository")<
      * ```
      */
     readonly analyzeFacets: (
-      messageId: string,
+      assessmentMessageId: string,
       content: string,
     ) => Effect.Effect<
       FacetEvidence[],

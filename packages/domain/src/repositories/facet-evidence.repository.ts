@@ -27,7 +27,7 @@ export interface FacetEvidenceRepository {
   /**
    * Save multiple facet evidence records for a message.
    *
-   * @param messageId - The message ID these evidence records belong to
+   * @param assessmentMessageId - The assessment message ID these evidence records belong to
    * @param evidence - Array of FacetEvidence to persist
    * @returns Effect containing saved evidence with generated IDs
    *
@@ -40,18 +40,18 @@ export interface FacetEvidenceRepository {
    * ```
    */
   saveEvidence(
-    messageId: string,
+    assessmentMessageId: string,
     evidence: FacetEvidence[]
   ): Effect.Effect<SavedFacetEvidence[], FacetEvidencePersistenceError>;
 
   /**
-   * Get all evidence records for a specific message.
+   * Get all evidence records for a specific assessment message.
    *
-   * @param messageId - The message ID to get evidence for
+   * @param assessmentMessageId - The assessment message ID to get evidence for
    * @returns Effect containing array of saved evidence records
    */
   getEvidenceByMessage(
-    messageId: string
+    assessmentMessageId: string
   ): Effect.Effect<SavedFacetEvidence[], FacetEvidencePersistenceError>;
 
   /**

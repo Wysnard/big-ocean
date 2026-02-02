@@ -14,13 +14,13 @@
 
 import { defineRelations, sql } from "drizzle-orm";
 import {
-  pgTable,
-  text,
-  timestamp,
   boolean,
   index,
   integer,
   jsonb,
+  pgTable,
+  text,
+  timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -176,7 +176,7 @@ export const facetEvidence = pgTable(
 		id: uuid("id")
 			.primaryKey()
 			.default(sql`gen_random_uuid()`),
-		messageId: uuid("message_id")
+		assessmentMessageId: uuid("assessment_message_id")
 			.notNull()
 			.references(() => assessmentMessage.id, { onDelete: "cascade" }),
 		facetName: text("facet_name").notNull(), // Clean name: "imagination", "altruism", etc.
@@ -188,8 +188,8 @@ export const facetEvidence = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => [
-		// Index for retrieving evidence by message
-		index("facet_evidence_message_id_idx").on(table.messageId),
+		// Index for retrieving evidence by assessment message
+		index("facet_evidence_assessment_message_id_idx").on(table.assessmentMessageId),
 		// Index for retrieving all evidence for a specific facet
 		index("facet_evidence_facet_name_idx").on(table.facetName),
 	],
@@ -324,7 +324,7 @@ export const relations = defineRelations(
 		},
 		facetEvidence: {
 			message: r.one.assessmentMessage({
-				from: r.facetEvidence.messageId,
+				from: r.facetEvidence.assessmentMessageId,
 				to: r.assessmentMessage.id,
 			}),
 		},

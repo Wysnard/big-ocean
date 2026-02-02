@@ -247,7 +247,7 @@ export const createTestNerinAgentLayer = () =>
  */
 export const createTestAnalyzerLayer = () =>
   Layer.succeed(AnalyzerRepository, {
-    analyzeFacets: (messageId: string, content: string) =>
+    analyzeFacets: (assessmentMessageId: string, content: string) =>
       Effect.sync(() => {
         // Return deterministic evidence based on message content
         const evidence: FacetEvidence[] = []
@@ -257,7 +257,7 @@ export const createTestAnalyzerLayer = () =>
             content.toLowerCase().includes("imaginat") ||
             content.toLowerCase().includes("ideas")) {
           evidence.push({
-            messageId,
+            assessmentMessageId,
             facetName: "imagination",
             score: 16,
             confidence: 0.85,
@@ -271,7 +271,7 @@ export const createTestAnalyzerLayer = () =>
             content.toLowerCase().includes("care") ||
             content.toLowerCase().includes("kind")) {
           evidence.push({
-            messageId,
+            assessmentMessageId,
             facetName: "altruism",
             score: 18,
             confidence: 0.9,
@@ -285,7 +285,7 @@ export const createTestAnalyzerLayer = () =>
             content.toLowerCase().includes("plan") ||
             content.toLowerCase().includes("schedule")) {
           evidence.push({
-            messageId,
+            assessmentMessageId,
             facetName: "orderliness",
             score: 17,
             confidence: 0.8,
@@ -297,7 +297,7 @@ export const createTestAnalyzerLayer = () =>
         // Always return at least one piece of evidence for testing
         if (evidence.length === 0) {
           evidence.push({
-            messageId,
+            assessmentMessageId,
             facetName: "intellect",
             score: 12,
             confidence: 0.6,
@@ -369,16 +369,16 @@ export const createTestScorerLayer = () =>
  * Creates a test Layer for FacetEvidenceRepository.
  *
  * Provides an in-memory evidence store for testing.
- * Stores evidence by message ID with generated UUIDs.
+ * Stores evidence by assessment message ID with generated UUIDs.
  */
 export const createTestFacetEvidenceLayer = () => {
-  // In-memory evidence store: messageId -> SavedFacetEvidence[]
+  // In-memory evidence store: assessmentMessageId -> SavedFacetEvidence[]
   const evidenceByMessage = new Map<string, SavedFacetEvidence[]>()
-  // Track all evidence for session-level queries (sessionId -> messageId[])
+  // Track all evidence for session-level queries (sessionId -> assessmentMessageId[])
   const messagesBySession = new Map<string, string[]>()
 
   return Layer.succeed(FacetEvidenceRepository, {
-    saveEvidence: (messageId: string, evidence: FacetEvidence[]) =>
+    saveEvidence: (assessmentMessageId: string, evidence: FacetEvidence[]) =>
       Effect.sync(() => {
         const saved: SavedFacetEvidence[] = evidence.map((e) => ({
           ...e,
@@ -386,21 +386,21 @@ export const createTestFacetEvidenceLayer = () => {
           createdAt: new Date(),
         }))
 
-        const existing = evidenceByMessage.get(messageId) || []
-        evidenceByMessage.set(messageId, [...existing, ...saved])
+        const existing = evidenceByMessage.get(assessmentMessageId) || []
+        evidenceByMessage.set(assessmentMessageId, [...existing, ...saved])
 
         return saved
       }),
 
-    getEvidenceByMessage: (messageId: string) =>
-      Effect.sync(() => evidenceByMessage.get(messageId) || []),
+    getEvidenceByMessage: (assessmentMessageId: string) =>
+      Effect.sync(() => evidenceByMessage.get(assessmentMessageId) || []),
 
     getEvidenceByFacet: (sessionId: string, facetName: FacetName) =>
       Effect.sync(() => {
-        const messageIds = messagesBySession.get(sessionId) || []
+        const assessmentMessageIds = messagesBySession.get(sessionId) || []
         const allEvidence: SavedFacetEvidence[] = []
 
-        for (const msgId of messageIds) {
+        for (const msgId of assessmentMessageIds) {
           const evidence = evidenceByMessage.get(msgId) || []
           allEvidence.push(...evidence.filter((e) => e.facetName === facetName))
         }
@@ -410,10 +410,10 @@ export const createTestFacetEvidenceLayer = () => {
 
     getEvidenceBySession: (sessionId: string) =>
       Effect.sync(() => {
-        const messageIds = messagesBySession.get(sessionId) || []
+        const assessmentMessageIds = messagesBySession.get(sessionId) || []
         const allEvidence: SavedFacetEvidence[] = []
 
-        for (const msgId of messageIds) {
+        for (const msgId of assessmentMessageIds) {
           const evidence = evidenceByMessage.get(msgId) || []
           allEvidence.push(...evidence)
         }

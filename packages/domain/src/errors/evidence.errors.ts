@@ -13,7 +13,7 @@ import { Schema } from "effect";
 export class FacetEvidencePersistenceError extends Schema.TaggedError<FacetEvidencePersistenceError>()(
   "FacetEvidencePersistenceError",
   {
-    messageId: Schema.String,
+    assessmentMessageId: Schema.String,
     reason: Schema.String,
     evidenceCount: Schema.Number,
   }
@@ -25,7 +25,7 @@ export class FacetEvidencePersistenceError extends Schema.TaggedError<FacetEvide
 export class EvidenceValidationError extends Schema.TaggedError<EvidenceValidationError>()(
   "EvidenceValidationError",
   {
-    messageId: Schema.String,
+    assessmentMessageId: Schema.String,
     field: Schema.String,
     value: Schema.Unknown,
     reason: Schema.String,

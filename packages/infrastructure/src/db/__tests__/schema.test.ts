@@ -20,7 +20,7 @@ describe("Facet Evidence Schema", () => {
 		expect(facetEvidence.id).toBeDefined();
 
 		// Verify foreign keys
-		expect(facetEvidence.messageId).toBeDefined();
+		expect(facetEvidence.assessmentMessageId).toBeDefined();
 
 		// Verify evidence fields
 		expect(facetEvidence.facetName).toBeDefined();
@@ -39,7 +39,7 @@ describe("Facet Evidence Schema", () => {
 		const columns = Object.keys(facetEvidence);
 
 		expect(columns).toContain("id");
-		expect(columns).toContain("messageId");
+		expect(columns).toContain("assessmentMessageId");
 		expect(columns).toContain("facetName");
 		expect(columns).toContain("score");
 		expect(columns).toContain("confidence");

@@ -22,7 +22,7 @@ import {
 } from "@workspace/domain";
 
 export interface SaveFacetEvidenceInput {
-  readonly messageId: string;
+  readonly assessmentMessageId: string;
   readonly evidence: FacetEvidence[];
 }
 
@@ -41,7 +41,7 @@ export interface SaveFacetEvidenceOutput {
  * - Highlight range is valid (start < end)
  */
 const validateEvidence = (
-  messageId: string,
+  assessmentMessageId: string,
   evidence: FacetEvidence
 ): Effect.Effect<void, EvidenceValidationError> =>
   Effect.gen(function* () {
@@ -49,7 +49,7 @@ const validateEvidence = (
     if (evidence.score < 0 || evidence.score > 20) {
       yield* Effect.fail(
         new EvidenceValidationError({
-          messageId,
+          assessmentMessageId,
           field: "score",
           value: evidence.score,
           reason: `Score must be between 0 and 20, got ${evidence.score}`,
@@ -61,7 +61,7 @@ const validateEvidence = (
     if (evidence.confidence < 0 || evidence.confidence > 1) {
       yield* Effect.fail(
         new EvidenceValidationError({
-          messageId,
+          assessmentMessageId,
           field: "confidence",
           value: evidence.confidence,
           reason: `Confidence must be between 0 and 1, got ${evidence.confidence}`,
@@ -73,7 +73,7 @@ const validateEvidence = (
     if (!isFacetName(evidence.facetName)) {
       yield* Effect.fail(
         new EvidenceValidationError({
-          messageId,
+          assessmentMessageId,
           field: "facetName",
           value: evidence.facetName,
           reason: `Invalid facet name: ${evidence.facetName}. Must be one of: ${ALL_FACETS.join(", ")}`,
@@ -85,7 +85,7 @@ const validateEvidence = (
     if (evidence.highlightRange.start >= evidence.highlightRange.end) {
       yield* Effect.fail(
         new EvidenceValidationError({
-          messageId,
+          assessmentMessageId,
           field: "highlightRange",
           value: evidence.highlightRange,
           reason: `Highlight range start (${evidence.highlightRange.start}) must be less than end (${evidence.highlightRange.end})`,
@@ -105,7 +105,7 @@ const validateEvidence = (
  * @example
  * ```typescript
  * const result = yield* saveFacetEvidence({
- *   messageId: "msg_123",
+ *   assessmentMessageId: "msg_123",
  *   evidence: [
  *     { facetName: "imagination", score: 16, confidence: 0.85, ... }
  *   ]
@@ -126,29 +126,29 @@ export const saveFacetEvidence = (
 
     // Handle empty evidence array
     if (input.evidence.length === 0) {
-      logger.debug("No evidence to save", { messageId: input.messageId });
+      logger.debug("No evidence to save", { assessmentMessageId: input.assessmentMessageId });
       return { savedCount: 0, evidenceIds: [] };
     }
 
     // Validate all evidence records
     for (const evidence of input.evidence) {
-      yield* validateEvidence(input.messageId, evidence);
+      yield* validateEvidence(input.assessmentMessageId, evidence);
     }
 
     logger.info("Saving facet evidence", {
-      messageId: input.messageId,
+      assessmentMessageId: input.assessmentMessageId,
       evidenceCount: input.evidence.length,
       facets: input.evidence.map((e) => e.facetName),
     });
 
     // Save evidence to database
     const savedEvidence = yield* evidenceRepo.saveEvidence(
-      input.messageId,
+      input.assessmentMessageId,
       input.evidence
     );
 
     logger.info("Facet evidence saved", {
-      messageId: input.messageId,
+      assessmentMessageId: input.assessmentMessageId,
       savedCount: savedEvidence.length,
       evidenceIds: savedEvidence.map((e) => e.id),
     });

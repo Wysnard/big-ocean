@@ -143,7 +143,7 @@ function validateFacetName(
  */
 function parseResponse(
   rawOutput: string,
-  messageId: string
+  assessmentMessageId: string
 ): Effect.Effect<
   FacetEvidence[],
   MalformedEvidenceError | InvalidFacetNameError
@@ -157,7 +157,7 @@ function parseResponse(
       try: () => JSON.parse(cleaned),
       catch: (error) =>
         new MalformedEvidenceError({
-          messageId,
+          assessmentMessageId,
           rawOutput: rawOutput.substring(0, 500), // Truncate for logging
           parseError: error instanceof Error ? error.message : String(error),
           message: "Failed to parse analyzer JSON response",
@@ -171,7 +171,7 @@ function parseResponse(
       Effect.mapError(
         (error) =>
           new MalformedEvidenceError({
-            messageId,
+            assessmentMessageId,
             rawOutput: rawOutput.substring(0, 500),
             parseError: String(error),
             message: "Response structure validation failed",
@@ -184,9 +184,9 @@ function parseResponse(
       yield* validateFacetName(evidence.facet);
     }
 
-    // Convert to FacetEvidence with messageId
+    // Convert to FacetEvidence with assessmentMessageId
     return validated.map((e) => ({
-      messageId,
+      assessmentMessageId,
       facetName: e.facet as any, // Type is safe because validateFacetName already verified it
       score: e.score,
       confidence: e.confidence,
@@ -222,7 +222,7 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 
     // Return service implementation
     return AnalyzerRepository.of({
-      analyzeFacets: (messageId: string, content: string) =>
+      analyzeFacets: (assessmentMessageId: string, content: string) =>
         Effect.gen(function* () {
           const startTime = Date.now();
 
@@ -244,19 +244,19 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
             },
             catch: (error) =>
               new AnalyzerError({
-                messageId,
+                assessmentMessageId,
                 message: "Failed to invoke Claude for facet analysis",
                 cause: error instanceof Error ? error.message : String(error),
               }),
           });
 
           // Parse and validate response
-          const evidence = yield* parseResponse(response, messageId);
+          const evidence = yield* parseResponse(response, assessmentMessageId);
 
           const duration = Date.now() - startTime;
 
           logger.info("Facet analysis completed", {
-            messageId,
+            assessmentMessageId,
             evidenceCount: evidence.length,
             durationMs: duration,
             facets: evidence.map((e) => e.facetName),

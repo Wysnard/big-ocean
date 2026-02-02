@@ -33,8 +33,8 @@ export interface HighlightRange {
  * Lifecycle: Created on every message analysis, never updated
  */
 export interface FacetEvidence {
-	/** Reference to the message this evidence came from (UUID) */
-	messageId: string;
+	/** Reference to the assessment message this evidence came from (UUID) */
+	assessmentMessageId: string;
 
 	/** Clean facet name (e.g., "imagination", "altruism") */
 	facetName: FacetName;

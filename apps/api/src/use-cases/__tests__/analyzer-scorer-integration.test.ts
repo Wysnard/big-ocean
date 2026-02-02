@@ -33,7 +33,7 @@ describe("Analyzer and Scorer Integration", () => {
         const evidence = yield* analyzer.analyzeFacets(messageId, messageContent);
 
         expect(evidence.length).toBeGreaterThan(0);
-        expect(evidence[0].messageId).toBe(messageId);
+        expect(evidence[0].assessmentMessageId).toBe(messageId);
 
         // Step 2: Save evidence
         const saveResult = yield* saveFacetEvidence({
@@ -79,7 +79,7 @@ describe("Analyzer and Scorer Integration", () => {
 
         for (const msg of messages) {
           const evidence = yield* analyzer.analyzeFacets(msg.id, msg.content);
-          yield* saveFacetEvidence({ messageId: msg.id, evidence });
+          yield* saveFacetEvidence({ assessmentMessageId: msg.id, evidence });
         }
 
         // On 3rd message, aggregate
@@ -108,14 +108,14 @@ describe("Analyzer and Scorer Integration", () => {
 
         // Analyze and save
         const evidence = yield* analyzer.analyzeFacets(messageId, content);
-        yield* saveFacetEvidence({ messageId, evidence });
+        yield* saveFacetEvidence({ assessmentMessageId: messageId, evidence });
 
         // Retrieve
         const retrieved = yield* evidenceRepo.getEvidenceByMessage(messageId);
 
         expect(retrieved.length).toBe(evidence.length);
         for (const e of retrieved) {
-          expect(e.messageId).toBe(messageId);
+          expect(e.assessmentMessageId).toBe(messageId);
           expect(e.id).toBeDefined();
           expect(e.createdAt).toBeDefined();
         }
@@ -219,14 +219,14 @@ describe("Analyzer and Scorer Integration", () => {
 
         // Save evidence
         const evidence = yield* analyzer.analyzeFacets(messageId, content);
-        yield* saveFacetEvidence({ messageId, evidence });
+        yield* saveFacetEvidence({ assessmentMessageId: messageId, evidence });
 
         // Navigate from message to facets
         const facetsForMessage = yield* evidenceRepo.getEvidenceByMessage(messageId);
 
         expect(facetsForMessage.length).toBeGreaterThan(0);
         for (const f of facetsForMessage) {
-          expect(f.messageId).toBe(messageId);
+          expect(f.assessmentMessageId).toBe(messageId);
           expect(f.facetName).toBeDefined();
         }
       }).pipe(Effect.provide(TestRepositoriesLayer))
