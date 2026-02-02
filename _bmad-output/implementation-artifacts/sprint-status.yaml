@@ -58,7 +58,9 @@ development_status:
   2-1-session-management-and-persistence: done
   2-1-1-github-actions-ci-cd-and-testing: done
   2-2-nerin-agent-setup-and-conversational-quality: done
-  2-2.5-setup-redis-and-cost-management-with-token-counting: ready-for-dev
+  2-2-1-migrate-to-effect-config: ready-for-dev
+  2-2.5-setup-redis-and-cost-management-with-token-counting: done
+  2-6-migrate-to-effect-vitest-and-centralize-effect-packages: ready-for-dev
   2-3-analyzer-and-scorer-agent-implementation: backlog
   2-4-langgraph-state-machine-and-orchestration: backlog
   2-5-llm-cost-tracking-rate-limiting-and-budget-enforcement: backlog
@@ -104,15 +106,15 @@ development_status:
 # SPRINT SUMMARY
 
 total_epics: 7
-total_stories: 27
+total_stories: 29
 epics_backlog: 4
 epics_in_progress: 2
 epics_done: 1
-stories_backlog: 15
-stories_ready_for_dev: 1
+stories_backlog: 14
+stories_ready_for_dev: 2
 stories_in_progress: 0
 stories_review: 0
-stories_done: 12
+stories_done: 13
 retrospectives_optional: 6
 retrospectives_done: 1
 
@@ -136,7 +138,8 @@ retrospectives_done: 1
   - ✅ Story 2.1: Session Management and Persistence (TDD)
   - ✅ Story 2.1.1: GitHub Actions CI/CD and Testing
   - ✅ Story 2.2: Nerin Agent Setup and Conversational Quality (TDD)
-  - 📋 **NEXT:** Story 2.2.5: Setup Redis and Cost Management Infrastructure (TDD)
+  - ✅ Story 2.2.5: Setup Redis and Cost Management Infrastructure (TDD)
+  - 📋 **NEXT:** Story 2.2-1: Migrate to Effect Config (environment management)
   - ⏳ Story 2.3: Analyzer and Scorer Agent Implementation (TDD)
   - ⏳ Story 2.4: LangGraph State Machine and Orchestration (TDD)
   - ⏳ Story 2.5: LLM Cost Tracking, Rate Limiting, and Budget Enforcement (TDD)
@@ -186,16 +189,18 @@ Epic 1 (Infrastructure) ✅ COMPLETE
 
 **Current Sprint:** Phase 2 - Backend Logic
 **Active Epic:** Epic 2 (Assessment Backend Services)
-**Completed:** 2.2 - Nerin Agent Setup and Conversational Quality (TDD) ✅
-**Next Story:** 2.2.5 - Setup Redis and Cost Management Infrastructure (TDD)
+**Completed:** 2.2.5 - Setup Redis and Cost Management Infrastructure (TDD) ✅
+**Next Stories:** 2.2-1 (Effect Config Migration), 2.6 (Migrate to Effect + Vitest)
 
 **Recommended Actions:**
 1. ✅ Story 2.1 COMPLETE - Session persistence, message history, <1sec resume all verified
 2. ✅ Story 2.1.1 COMPLETE - CI/CD pipeline, git hooks, and automated testing
 3. ✅ Story 2.2 COMPLETE - Nerin Agent with LangGraph, streaming, token tracking
-4. 📋 Story 2.2.5 READY - Redis and Cost Management Infrastructure **[NEXT]**
-5. Continue through Epic 2 stories (2.2.5 → 2.3 → 2.4 → 2.5)
-6. After Epic 2 complete: Move to Epic 3 (OCEAN Archetype System)
+4. ✅ Story 2.2.5 COMPLETE - Redis infrastructure, CostGuard repository, cost calculator (22 tests added)
+5. 📋 Story 2.2-1 READY - Migrate to Effect Config (environment variable management) **[NEXT]**
+6. 📋 Story 2.6 READY - Migrate to Effect + Vitest and centralize Effect packages
+7. Continue through Epic 2 stories (2.2-1 → 2.6 → 2.3 → 2.4 → 2.5)
+8. After Epic 2 complete: Move to Epic 3 (OCEAN Archetype System)
 
 **Parallel Work Opportunities:**
 - Story 7.2 (Integration Testing) can be started in parallel with Epic 2
