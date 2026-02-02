@@ -6,484 +6,451 @@
  */
 
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
 import {
-  AnalyzerRepository,
-  LoggerRepository,
-  AnalyzerError,
-  InvalidFacetNameError,
-  MalformedEvidenceError,
-  ALL_FACETS,
+	ALL_FACETS,
+	AnalyzerRepository,
+	InvalidFacetNameError,
+	LoggerRepository,
+	MalformedEvidenceError,
 } from "@workspace/domain";
-import { AnalyzerClaudeRepositoryLive } from "../analyzer.claude.repository.js";
+import { Effect, Layer } from "effect";
+import { AnalyzerClaudeRepositoryLive } from "../analyzer.claude.repository";
 
 /**
  * Test Logger Layer
  */
-const TestLoggerLayer = Layer.succeed(LoggerRepository, {
-  info: () => Effect.void,
-  error: () => Effect.void,
-  warn: () => Effect.void,
-  debug: () => Effect.void,
+const _TestLoggerLayer = Layer.succeed(LoggerRepository, {
+	info: () => Effect.void,
+	error: () => Effect.void,
+	warn: () => Effect.void,
+	debug: () => Effect.void,
 });
 
 /**
  * Mock analyzer that returns controlled responses
  */
 function createMockAnalyzerLayer(mockResponse: string) {
-  return Layer.succeed(AnalyzerRepository, {
-    analyzeFacets: (_messageId: string, _content: string) =>
-      Effect.gen(function* () {
-        // Simulate parsing the mock response
-        const parsed = JSON.parse(mockResponse);
-        return parsed.map((e: any) => ({
-          messageId: _messageId,
-          facetName: e.facet,
-          score: e.score,
-          confidence: e.confidence,
-          quote: e.quote,
-          highlightRange: e.highlightRange,
-        }));
-      }),
-  });
+	return Layer.succeed(AnalyzerRepository, {
+		analyzeFacets: (_messageId: string, _content: string) =>
+			Effect.gen(function* () {
+				// Simulate parsing the mock response
+				const parsed = JSON.parse(mockResponse);
+				return parsed.map((e: any) => ({
+					messageId: _messageId,
+					facetName: e.facet,
+					score: e.score,
+					confidence: e.confidence,
+					quote: e.quote,
+					highlightRange: e.highlightRange,
+				}));
+			}),
+	});
 }
 
 describe("AnalyzerClaudeRepository - Structure", () => {
-  it.effect("should be a valid Layer", () =>
-    Effect.sync(() => {
-      // AnalyzerClaudeRepositoryLive should be a Layer
-      expect(AnalyzerClaudeRepositoryLive).toBeDefined();
-    })
-  );
+	it.effect("should be a valid Layer", () =>
+		Effect.sync(() => {
+			// AnalyzerClaudeRepositoryLive should be a Layer
+			expect(AnalyzerClaudeRepositoryLive).toBeDefined();
+		}),
+	);
 
-  it.effect("should provide AnalyzerRepository service", () =>
-    Effect.gen(function* () {
-      const analyzer = yield* AnalyzerRepository;
-      expect(analyzer).toBeDefined();
-      expect(analyzer.analyzeFacets).toBeDefined();
-    }).pipe(
-      Effect.provide(
-        createMockAnalyzerLayer(
-          JSON.stringify([
-            {
-              facet: "imagination",
-              score: 15,
-              confidence: 0.8,
-              quote: "test",
-              highlightRange: { start: 0, end: 4 },
-            },
-          ])
-        )
-      )
-    )
-  );
+	it.effect("should provide AnalyzerRepository service", () =>
+		Effect.gen(function* () {
+			const analyzer = yield* AnalyzerRepository;
+			expect(analyzer).toBeDefined();
+			expect(analyzer.analyzeFacets).toBeDefined();
+		}).pipe(
+			Effect.provide(
+				createMockAnalyzerLayer(
+					JSON.stringify([
+						{
+							facet: "imagination",
+							score: 15,
+							confidence: 0.8,
+							quote: "test",
+							highlightRange: { start: 0, end: 4 },
+						},
+					]),
+				),
+			),
+		),
+	);
 });
 
 describe("AnalyzerClaudeRepository - Happy Path", () => {
-  it.effect("should return array of FacetEvidence", () =>
-    Effect.gen(function* () {
-      const analyzer = yield* AnalyzerRepository;
-      const mockResponse = JSON.stringify([
-        {
-          facet: "imagination",
-          score: 16,
-          confidence: 0.85,
-          quote: "I love exploring",
-          highlightRange: { start: 0, end: 16 },
-        },
-      ]);
+	it.effect("should return array of FacetEvidence", () =>
+		Effect.gen(function* () {
+			const analyzer = yield* AnalyzerRepository;
+			const _mockResponse = JSON.stringify([
+				{
+					facet: "imagination",
+					score: 16,
+					confidence: 0.85,
+					quote: "I love exploring",
+					highlightRange: { start: 0, end: 16 },
+				},
+			]);
 
-      const result = yield* analyzer.analyzeFacets(
-        "msg_123",
-        "I love exploring new ideas"
-      );
+			const result = yield* analyzer.analyzeFacets("msg_123", "I love exploring new ideas");
 
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBeGreaterThan(0);
-    }).pipe(
-      Effect.provide(
-        createMockAnalyzerLayer(
-          JSON.stringify([
-            {
-              facet: "imagination",
-              score: 16,
-              confidence: 0.85,
-              quote: "I love exploring",
-              highlightRange: { start: 0, end: 16 },
-            },
-          ])
-        )
-      )
-    )
-  );
+			expect(Array.isArray(result)).toBe(true);
+			expect(result.length).toBeGreaterThan(0);
+		}).pipe(
+			Effect.provide(
+				createMockAnalyzerLayer(
+					JSON.stringify([
+						{
+							facet: "imagination",
+							score: 16,
+							confidence: 0.85,
+							quote: "I love exploring",
+							highlightRange: { start: 0, end: 16 },
+						},
+					]),
+				),
+			),
+		),
+	);
 
-  it.effect("should include messageId in all evidence", () =>
-    Effect.gen(function* () {
-      const analyzer = yield* AnalyzerRepository;
+	it.effect("should include messageId in all evidence", () =>
+		Effect.gen(function* () {
+			const analyzer = yield* AnalyzerRepository;
 
-      const result = yield* analyzer.analyzeFacets(
-        "msg_test_123",
-        "I enjoy helping others"
-      );
+			const result = yield* analyzer.analyzeFacets("msg_test_123", "I enjoy helping others");
 
-      result.forEach((evidence) => {
-        expect(evidence.messageId).toBe("msg_test_123");
-      });
-    }).pipe(
-      Effect.provide(
-        createMockAnalyzerLayer(
-          JSON.stringify([
-            {
-              facet: "altruism",
-              score: 18,
-              confidence: 0.9,
-              quote: "helping others",
-              highlightRange: { start: 0, end: 14 },
-            },
-          ])
-        )
-      )
-    )
-  );
+			result.forEach((evidence) => {
+				expect(evidence.messageId).toBe("msg_test_123");
+			});
+		}).pipe(
+			Effect.provide(
+				createMockAnalyzerLayer(
+					JSON.stringify([
+						{
+							facet: "altruism",
+							score: 18,
+							confidence: 0.9,
+							quote: "helping others",
+							highlightRange: { start: 0, end: 14 },
+						},
+					]),
+				),
+			),
+		),
+	);
 
-  it.effect("should use clean facet names (no prefixes)", () =>
-    Effect.gen(function* () {
-      const analyzer = yield* AnalyzerRepository;
+	it.effect("should use clean facet names (no prefixes)", () =>
+		Effect.gen(function* () {
+			const analyzer = yield* AnalyzerRepository;
 
-      const result = yield* analyzer.analyzeFacets(
-        "msg_123",
-        "I love exploring new ideas"
-      );
+			const result = yield* analyzer.analyzeFacets("msg_123", "I love exploring new ideas");
 
-      result.forEach((evidence) => {
-        expect(ALL_FACETS).toContain(evidence.facetName);
-        // Should not have trait prefix like "openness_imagination"
-        expect(evidence.facetName).not.toMatch(/^(openness|conscientiousness|extraversion|agreeableness|neuroticism)_/);
-      });
-    }).pipe(
-      Effect.provide(
-        createMockAnalyzerLayer(
-          JSON.stringify([
-            {
-              facet: "imagination",
-              score: 16,
-              confidence: 0.85,
-              quote: "exploring new ideas",
-              highlightRange: { start: 0, end: 19 },
-            },
-          ])
-        )
-      )
-    )
-  );
+			result.forEach((evidence) => {
+				expect(ALL_FACETS).toContain(evidence.facetName);
+				// Should not have trait prefix like "openness_imagination"
+				expect(evidence.facetName).not.toMatch(
+					/^(openness|conscientiousness|extraversion|agreeableness|neuroticism)_/,
+				);
+			});
+		}).pipe(
+			Effect.provide(
+				createMockAnalyzerLayer(
+					JSON.stringify([
+						{
+							facet: "imagination",
+							score: 16,
+							confidence: 0.85,
+							quote: "exploring new ideas",
+							highlightRange: { start: 0, end: 19 },
+						},
+					]),
+				),
+			),
+		),
+	);
 
-  it.effect("should return scores in 0-20 range", () =>
-    Effect.gen(function* () {
-      const analyzer = yield* AnalyzerRepository;
+	it.effect("should return scores in 0-20 range", () =>
+		Effect.gen(function* () {
+			const analyzer = yield* AnalyzerRepository;
 
-      const result = yield* analyzer.analyzeFacets(
-        "msg_123",
-        "I love exploring new ideas"
-      );
+			const result = yield* analyzer.analyzeFacets("msg_123", "I love exploring new ideas");
 
-      result.forEach((evidence) => {
-        expect(evidence.score).toBeGreaterThanOrEqual(0);
-        expect(evidence.score).toBeLessThanOrEqual(20);
-      });
-    }).pipe(
-      Effect.provide(
-        createMockAnalyzerLayer(
-          JSON.stringify([
-            {
-              facet: "imagination",
-              score: 16,
-              confidence: 0.85,
-              quote: "exploring new ideas",
-              highlightRange: { start: 0, end: 19 },
-            },
-          ])
-        )
-      )
-    )
-  );
+			result.forEach((evidence) => {
+				expect(evidence.score).toBeGreaterThanOrEqual(0);
+				expect(evidence.score).toBeLessThanOrEqual(20);
+			});
+		}).pipe(
+			Effect.provide(
+				createMockAnalyzerLayer(
+					JSON.stringify([
+						{
+							facet: "imagination",
+							score: 16,
+							confidence: 0.85,
+							quote: "exploring new ideas",
+							highlightRange: { start: 0, end: 19 },
+						},
+					]),
+				),
+			),
+		),
+	);
 
-  it.effect("should return confidence in 0-1 range", () =>
-    Effect.gen(function* () {
-      const analyzer = yield* AnalyzerRepository;
+	it.effect("should return confidence in 0-1 range", () =>
+		Effect.gen(function* () {
+			const analyzer = yield* AnalyzerRepository;
 
-      const result = yield* analyzer.analyzeFacets(
-        "msg_123",
-        "I love exploring new ideas"
-      );
+			const result = yield* analyzer.analyzeFacets("msg_123", "I love exploring new ideas");
 
-      result.forEach((evidence) => {
-        expect(evidence.confidence).toBeGreaterThanOrEqual(0);
-        expect(evidence.confidence).toBeLessThanOrEqual(1);
-      });
-    }).pipe(
-      Effect.provide(
-        createMockAnalyzerLayer(
-          JSON.stringify([
-            {
-              facet: "imagination",
-              score: 16,
-              confidence: 0.85,
-              quote: "exploring new ideas",
-              highlightRange: { start: 0, end: 19 },
-            },
-          ])
-        )
-      )
-    )
-  );
+			result.forEach((evidence) => {
+				expect(evidence.confidence).toBeGreaterThanOrEqual(0);
+				expect(evidence.confidence).toBeLessThanOrEqual(1);
+			});
+		}).pipe(
+			Effect.provide(
+				createMockAnalyzerLayer(
+					JSON.stringify([
+						{
+							facet: "imagination",
+							score: 16,
+							confidence: 0.85,
+							quote: "exploring new ideas",
+							highlightRange: { start: 0, end: 19 },
+						},
+					]),
+				),
+			),
+		),
+	);
 
-  it.effect("should return valid highlightRange", () =>
-    Effect.gen(function* () {
-      const analyzer = yield* AnalyzerRepository;
+	it.effect("should return valid highlightRange", () =>
+		Effect.gen(function* () {
+			const analyzer = yield* AnalyzerRepository;
 
-      const result = yield* analyzer.analyzeFacets(
-        "msg_123",
-        "I love exploring new ideas"
-      );
+			const result = yield* analyzer.analyzeFacets("msg_123", "I love exploring new ideas");
 
-      result.forEach((evidence) => {
-        expect(evidence.highlightRange).toBeDefined();
-        expect(evidence.highlightRange.start).toBeGreaterThanOrEqual(0);
-        expect(evidence.highlightRange.end).toBeGreaterThan(
-          evidence.highlightRange.start
-        );
-      });
-    }).pipe(
-      Effect.provide(
-        createMockAnalyzerLayer(
-          JSON.stringify([
-            {
-              facet: "imagination",
-              score: 16,
-              confidence: 0.85,
-              quote: "exploring new ideas",
-              highlightRange: { start: 7, end: 26 },
-            },
-          ])
-        )
-      )
-    )
-  );
+			result.forEach((evidence) => {
+				expect(evidence.highlightRange).toBeDefined();
+				expect(evidence.highlightRange.start).toBeGreaterThanOrEqual(0);
+				expect(evidence.highlightRange.end).toBeGreaterThan(evidence.highlightRange.start);
+			});
+		}).pipe(
+			Effect.provide(
+				createMockAnalyzerLayer(
+					JSON.stringify([
+						{
+							facet: "imagination",
+							score: 16,
+							confidence: 0.85,
+							quote: "exploring new ideas",
+							highlightRange: { start: 7, end: 26 },
+						},
+					]),
+				),
+			),
+		),
+	);
 
-  it.effect("should handle multiple facets in response", () => {
-    const mockResponse = JSON.stringify([
-      {
-        facet: "imagination",
-        score: 16,
-        confidence: 0.85,
-        quote: "love exploring",
-        highlightRange: { start: 2, end: 16 },
-      },
-      {
-        facet: "intellect",
-        score: 15,
-        confidence: 0.8,
-        quote: "new ideas",
-        highlightRange: { start: 17, end: 26 },
-      },
-    ]);
+	it.effect("should handle multiple facets in response", () => {
+		const mockResponse = JSON.stringify([
+			{
+				facet: "imagination",
+				score: 16,
+				confidence: 0.85,
+				quote: "love exploring",
+				highlightRange: { start: 2, end: 16 },
+			},
+			{
+				facet: "intellect",
+				score: 15,
+				confidence: 0.8,
+				quote: "new ideas",
+				highlightRange: { start: 17, end: 26 },
+			},
+		]);
 
-    return Effect.gen(function* () {
-      const analyzer = yield* AnalyzerRepository;
+		return Effect.gen(function* () {
+			const analyzer = yield* AnalyzerRepository;
 
-      const result = yield* analyzer.analyzeFacets(
-        "msg_123",
-        "I love exploring new ideas"
-      );
+			const result = yield* analyzer.analyzeFacets("msg_123", "I love exploring new ideas");
 
-      expect(result.length).toBe(2);
-      expect(result[0].facetName).toBe("imagination");
-      expect(result[1].facetName).toBe("intellect");
-    }).pipe(Effect.provide(createMockAnalyzerLayer(mockResponse)));
-  });
+			expect(result.length).toBe(2);
+			expect(result[0].facetName).toBe("imagination");
+			expect(result[1].facetName).toBe("intellect");
+		}).pipe(Effect.provide(createMockAnalyzerLayer(mockResponse)));
+	});
 });
 
 describe("AnalyzerClaudeRepository - Error Handling", () => {
-  it.effect("should handle invalid JSON", () =>
-    Effect.gen(function* () {
-      const analyzer = yield* AnalyzerRepository;
+	it.effect("should handle invalid JSON", () =>
+		Effect.gen(function* () {
+			const analyzer = yield* AnalyzerRepository;
 
-      const result = yield* Effect.either(
-        analyzer.analyzeFacets("msg_123", "test message")
-      );
+			const result = yield* Effect.either(analyzer.analyzeFacets("msg_123", "test message"));
 
-      expect(result._tag).toBe("Left");
-      if (result._tag === "Left") {
-        expect(result.left._tag).toBe("MalformedEvidenceError");
-      }
-    }).pipe(
-      Effect.provide(
-        Layer.succeed(AnalyzerRepository, {
-          analyzeFacets: (messageId: string, _content: string) =>
-            Effect.fail(
-              new MalformedEvidenceError({
-                messageId,
-                rawOutput: "invalid json{",
-                parseError: "Unexpected token",
-                message: "Failed to parse analyzer JSON response",
-              })
-            ),
-        })
-      )
-    )
-  );
+			expect(result._tag).toBe("Left");
+			if (result._tag === "Left") {
+				expect(result.left._tag).toBe("MalformedEvidenceError");
+			}
+		}).pipe(
+			Effect.provide(
+				Layer.succeed(AnalyzerRepository, {
+					analyzeFacets: (messageId: string, _content: string) =>
+						Effect.fail(
+							new MalformedEvidenceError({
+								messageId,
+								rawOutput: "invalid json{",
+								parseError: "Unexpected token",
+								message: "Failed to parse analyzer JSON response",
+							}),
+						),
+				}),
+			),
+		),
+	);
 
-  it.effect("should handle invalid facet names", () =>
-    Effect.gen(function* () {
-      const analyzer = yield* AnalyzerRepository;
+	it.effect("should handle invalid facet names", () =>
+		Effect.gen(function* () {
+			const analyzer = yield* AnalyzerRepository;
 
-      const result = yield* Effect.either(
-        analyzer.analyzeFacets("msg_123", "test")
-      );
+			const result = yield* Effect.either(analyzer.analyzeFacets("msg_123", "test"));
 
-      expect(result._tag).toBe("Left");
-      if (result._tag === "Left") {
-        expect(result.left._tag).toBe("InvalidFacetNameError");
-      }
-    }).pipe(
-      Effect.provide(
-        Layer.succeed(AnalyzerRepository, {
-          analyzeFacets: (messageId: string, _content: string) =>
-            Effect.fail(
-              new InvalidFacetNameError({
-                facetName: "invalid_facet",
-                validFacets: ALL_FACETS,
-                message: "Invalid facet name",
-              })
-            ),
-        })
-      )
-    )
-  );
+			expect(result._tag).toBe("Left");
+			if (result._tag === "Left") {
+				expect(result.left._tag).toBe("InvalidFacetNameError");
+			}
+		}).pipe(
+			Effect.provide(
+				Layer.succeed(AnalyzerRepository, {
+					analyzeFacets: (_messageId: string, _content: string) =>
+						Effect.fail(
+							new InvalidFacetNameError({
+								facetName: "invalid_facet",
+								validFacets: ALL_FACETS,
+								message: "Invalid facet name",
+							}),
+						),
+				}),
+			),
+		),
+	);
 
-  it.effect("should handle scores out of range", () => {
-    const mockResponse = JSON.stringify([
-      {
-        facet: "imagination",
-        score: 25, // Invalid: > 20
-        confidence: 0.85,
-        quote: "test",
-        highlightRange: { start: 0, end: 4 },
-      },
-    ]);
+	it.effect("should handle scores out of range", () => {
+		const mockResponse = JSON.stringify([
+			{
+				facet: "imagination",
+				score: 25, // Invalid: > 20
+				confidence: 0.85,
+				quote: "test",
+				highlightRange: { start: 0, end: 4 },
+			},
+		]);
 
-    return Effect.gen(function* () {
-      const analyzer = yield* AnalyzerRepository;
+		return Effect.gen(function* () {
+			const analyzer = yield* AnalyzerRepository;
 
-      const result = yield* Effect.either(
-        analyzer.analyzeFacets("msg_123", "test")
-      );
+			const result = yield* Effect.either(analyzer.analyzeFacets("msg_123", "test"));
 
-      expect(result._tag).toBe("Left");
-      if (result._tag === "Left") {
-        expect(result.left._tag).toBe("MalformedEvidenceError");
-      }
-    }).pipe(
-      Effect.provide(
-        Layer.succeed(AnalyzerRepository, {
-          analyzeFacets: (messageId: string, _content: string) =>
-            Effect.fail(
-              new MalformedEvidenceError({
-                messageId,
-                rawOutput: mockResponse,
-                parseError: "Score validation failed",
-                message: "Response structure validation failed",
-              })
-            ),
-        })
-      )
-    );
-  });
+			expect(result._tag).toBe("Left");
+			if (result._tag === "Left") {
+				expect(result.left._tag).toBe("MalformedEvidenceError");
+			}
+		}).pipe(
+			Effect.provide(
+				Layer.succeed(AnalyzerRepository, {
+					analyzeFacets: (messageId: string, _content: string) =>
+						Effect.fail(
+							new MalformedEvidenceError({
+								messageId,
+								rawOutput: mockResponse,
+								parseError: "Score validation failed",
+								message: "Response structure validation failed",
+							}),
+						),
+				}),
+			),
+		);
+	});
 
-  it.effect("should handle confidence out of range", () => {
-    const mockResponse = JSON.stringify([
-      {
-        facet: "imagination",
-        score: 16,
-        confidence: 1.5, // Invalid: > 1.0
-        quote: "test",
-        highlightRange: { start: 0, end: 4 },
-      },
-    ]);
+	it.effect("should handle confidence out of range", () => {
+		const mockResponse = JSON.stringify([
+			{
+				facet: "imagination",
+				score: 16,
+				confidence: 1.5, // Invalid: > 1.0
+				quote: "test",
+				highlightRange: { start: 0, end: 4 },
+			},
+		]);
 
-    return Effect.gen(function* () {
-      const analyzer = yield* AnalyzerRepository;
+		return Effect.gen(function* () {
+			const analyzer = yield* AnalyzerRepository;
 
-      const result = yield* Effect.either(
-        analyzer.analyzeFacets("msg_123", "test")
-      );
+			const result = yield* Effect.either(analyzer.analyzeFacets("msg_123", "test"));
 
-      expect(result._tag).toBe("Left");
-      if (result._tag === "Left") {
-        expect(result.left._tag).toBe("MalformedEvidenceError");
-      }
-    }).pipe(
-      Effect.provide(
-        Layer.succeed(AnalyzerRepository, {
-          analyzeFacets: (messageId: string, _content: string) =>
-            Effect.fail(
-              new MalformedEvidenceError({
-                messageId,
-                rawOutput: mockResponse,
-                parseError: "Confidence validation failed",
-                message: "Response structure validation failed",
-              })
-            ),
-        })
-      )
-    );
-  });
+			expect(result._tag).toBe("Left");
+			if (result._tag === "Left") {
+				expect(result.left._tag).toBe("MalformedEvidenceError");
+			}
+		}).pipe(
+			Effect.provide(
+				Layer.succeed(AnalyzerRepository, {
+					analyzeFacets: (messageId: string, _content: string) =>
+						Effect.fail(
+							new MalformedEvidenceError({
+								messageId,
+								rawOutput: mockResponse,
+								parseError: "Confidence validation failed",
+								message: "Response structure validation failed",
+							}),
+						),
+				}),
+			),
+		);
+	});
 });
 
 describe("AnalyzerClaudeRepository - Edge Cases", () => {
-  it.effect("should handle empty evidence array", () => {
-    const mockResponse = JSON.stringify([]);
+	it.effect("should handle empty evidence array", () => {
+		const mockResponse = JSON.stringify([]);
 
-    return Effect.gen(function* () {
-      const analyzer = yield* AnalyzerRepository;
+		return Effect.gen(function* () {
+			const analyzer = yield* AnalyzerRepository;
 
-      const result = yield* analyzer.analyzeFacets(
-        "msg_123",
-        "A short message"
-      );
+			const result = yield* analyzer.analyzeFacets("msg_123", "A short message");
 
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBe(0);
-    }).pipe(Effect.provide(createMockAnalyzerLayer(mockResponse)));
-  });
+			expect(Array.isArray(result)).toBe(true);
+			expect(result.length).toBe(0);
+		}).pipe(Effect.provide(createMockAnalyzerLayer(mockResponse)));
+	});
 
-  it.effect("should handle very long messages", () =>
-    Effect.gen(function* () {
-      const analyzer = yield* AnalyzerRepository;
-      const longMessage = "I love exploring new ideas. ".repeat(100); // 2800 chars
+	it.effect("should handle very long messages", () =>
+		Effect.gen(function* () {
+			const analyzer = yield* AnalyzerRepository;
+			const longMessage = "I love exploring new ideas. ".repeat(100); // 2800 chars
 
-      const result = yield* analyzer.analyzeFacets("msg_123", longMessage);
+			const result = yield* analyzer.analyzeFacets("msg_123", longMessage);
 
-      expect(Array.isArray(result)).toBe(true);
-    }).pipe(
-      Effect.provide(
-        createMockAnalyzerLayer(
-          JSON.stringify([
-            {
-              facet: "imagination",
-              score: 16,
-              confidence: 0.85,
-              quote: "love exploring new ideas",
-              highlightRange: { start: 2, end: 26 },
-            },
-          ])
-        )
-      )
-    )
-  );
+			expect(Array.isArray(result)).toBe(true);
+		}).pipe(
+			Effect.provide(
+				createMockAnalyzerLayer(
+					JSON.stringify([
+						{
+							facet: "imagination",
+							score: 16,
+							confidence: 0.85,
+							quote: "love exploring new ideas",
+							highlightRange: { start: 2, end: 26 },
+						},
+					]),
+				),
+			),
+		),
+	);
 
-  it.effect("should strip markdown code blocks from response", () => {
-    const mockResponse = `\`\`\`json
+	it.effect("should strip markdown code blocks from response", () => {
+		const mockResponse = `\`\`\`json
 [
   {
     "facet": "imagination",
@@ -495,33 +462,31 @@ describe("AnalyzerClaudeRepository - Edge Cases", () => {
 ]
 \`\`\``;
 
-    return Effect.gen(function* () {
-      const analyzer = yield* AnalyzerRepository;
+		return Effect.gen(function* () {
+			const analyzer = yield* AnalyzerRepository;
 
-      const result = yield* analyzer.analyzeFacets("msg_123", "test message");
+			const result = yield* analyzer.analyzeFacets("msg_123", "test message");
 
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBeGreaterThan(0);
-    }).pipe(
-      Effect.provide(
-        Layer.succeed(AnalyzerRepository, {
-          analyzeFacets: (messageId: string, _content: string) =>
-            Effect.sync(() => {
-              const cleaned = mockResponse
-                .trim()
-                .replace(/^```(?:json)?\n?|\n?```$/g, "");
-              const parsed = JSON.parse(cleaned);
-              return parsed.map((e: any) => ({
-                messageId,
-                facetName: e.facet,
-                score: e.score,
-                confidence: e.confidence,
-                quote: e.quote,
-                highlightRange: e.highlightRange,
-              }));
-            }),
-        })
-      )
-    );
-  });
+			expect(Array.isArray(result)).toBe(true);
+			expect(result.length).toBeGreaterThan(0);
+		}).pipe(
+			Effect.provide(
+				Layer.succeed(AnalyzerRepository, {
+					analyzeFacets: (messageId: string, _content: string) =>
+						Effect.sync(() => {
+							const cleaned = mockResponse.trim().replace(/^```(?:json)?\n?|\n?```$/g, "");
+							const parsed = JSON.parse(cleaned);
+							return parsed.map((e: any) => ({
+								messageId,
+								facetName: e.facet,
+								score: e.score,
+								confidence: e.confidence,
+								quote: e.quote,
+								highlightRange: e.highlightRange,
+							}));
+						}),
+				}),
+			),
+		);
+	});
 });

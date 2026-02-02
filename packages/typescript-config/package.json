@@ -1,16 +1,16 @@
 {
-  "name": "@workspace/typescript-config",
-  "version": "0.0.0",
-  "private": true,
-  "license": "PROPRIETARY",
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "lint": "biome lint ."
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^2.3.13",
-    "@workspace/lint": "workspace:*"
-  }
+	"name": "@workspace/typescript-config",
+	"version": "0.0.0",
+	"private": true,
+	"license": "PROPRIETARY",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"lint": "biome lint ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.3.13",
+		"@workspace/lint": "workspace:*"
+	}
 }

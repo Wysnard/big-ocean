@@ -5,27 +5,27 @@
  * Returns session data with message history.
  */
 
-import { Effect } from "effect";
 import {
-  AssessmentSessionRepository,
-  AssessmentMessageRepository,
-  LoggerRepository,
+	AssessmentMessageRepository,
+	AssessmentSessionRepository,
+	LoggerRepository,
 } from "@workspace/domain";
 import type { AssessmentMessageEntity } from "@workspace/domain/entities/message.entity";
+import { Effect } from "effect";
 
 export interface ResumeSessionInput {
-  readonly sessionId: string;
+	readonly sessionId: string;
 }
 
 export interface ResumeSessionOutput {
-  readonly precision: {
-    readonly openness: number;
-    readonly conscientiousness: number;
-    readonly extraversion: number;
-    readonly agreeableness: number;
-    readonly neuroticism: number;
-  };
-  readonly messages: readonly AssessmentMessageEntity[];
+	readonly precision: {
+		readonly openness: number;
+		readonly conscientiousness: number;
+		readonly extraversion: number;
+		readonly agreeableness: number;
+		readonly neuroticism: number;
+	};
+	readonly messages: readonly AssessmentMessageEntity[];
 }
 
 /**
@@ -35,24 +35,24 @@ export interface ResumeSessionOutput {
  * Returns: Session precision scores and message history
  */
 export const resumeSession = (input: ResumeSessionInput) =>
-  Effect.gen(function* () {
-    const sessionRepo = yield* AssessmentSessionRepository;
-    const messageRepo = yield* AssessmentMessageRepository;
-    const logger = yield* LoggerRepository;
+	Effect.gen(function* () {
+		const sessionRepo = yield* AssessmentSessionRepository;
+		const messageRepo = yield* AssessmentMessageRepository;
+		const logger = yield* LoggerRepository;
 
-    // Get session
-    const session = yield* sessionRepo.getSession(input.sessionId);
+		// Get session
+		const session = yield* sessionRepo.getSession(input.sessionId);
 
-    // Get all messages
-    const messages = yield* messageRepo.getMessages(input.sessionId);
+		// Get all messages
+		const messages = yield* messageRepo.getMessages(input.sessionId);
 
-    logger.info("Session resumed", {
-      sessionId: input.sessionId,
-      messageCount: messages.length,
-    });
+		logger.info("Session resumed", {
+			sessionId: input.sessionId,
+			messageCount: messages.length,
+		});
 
-    return {
-      precision: session.precision,
-      messages,
-    };
-  });
+		return {
+			precision: session.precision,
+			messages,
+		};
+	});

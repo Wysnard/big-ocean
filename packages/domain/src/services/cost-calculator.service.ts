@@ -12,24 +12,24 @@
  * These are the per-million-token rates for Claude Sonnet 4.5
  */
 export const PRICING = {
-  /** $0.003 per 1 million input tokens */
-  INPUT_PER_MILLION: 0.003,
-  /** $0.015 per 1 million output tokens */
-  OUTPUT_PER_MILLION: 0.015,
+	/** $0.003 per 1 million input tokens */
+	INPUT_PER_MILLION: 0.003,
+	/** $0.015 per 1 million output tokens */
+	OUTPUT_PER_MILLION: 0.015,
 } as const;
 
 /**
  * Result of a cost calculation
  */
 export interface CostResult {
-  /** Cost in dollars for input tokens */
-  readonly inputCost: number;
-  /** Cost in dollars for output tokens */
-  readonly outputCost: number;
-  /** Total cost in dollars (inputCost + outputCost) */
-  readonly totalCost: number;
-  /** Total cost in cents, rounded up (for Redis storage as integer) */
-  readonly totalCents: number;
+	/** Cost in dollars for input tokens */
+	readonly inputCost: number;
+	/** Cost in dollars for output tokens */
+	readonly outputCost: number;
+	/** Total cost in dollars (inputCost + outputCost) */
+	readonly totalCost: number;
+	/** Total cost in cents, rounded up (for Redis storage as integer) */
+	readonly totalCents: number;
 }
 
 /**
@@ -54,22 +54,19 @@ export interface CostResult {
  * // result.totalCents = 1 (rounded up)
  * ```
  */
-export function calculateCost(
-  inputTokens: number,
-  outputTokens: number,
-): CostResult {
-  const inputCost = (inputTokens / 1_000_000) * PRICING.INPUT_PER_MILLION;
-  const outputCost = (outputTokens / 1_000_000) * PRICING.OUTPUT_PER_MILLION;
-  const totalCost = inputCost + outputCost;
+export function calculateCost(inputTokens: number, outputTokens: number): CostResult {
+	const inputCost = (inputTokens / 1_000_000) * PRICING.INPUT_PER_MILLION;
+	const outputCost = (outputTokens / 1_000_000) * PRICING.OUTPUT_PER_MILLION;
+	const totalCost = inputCost + outputCost;
 
-  // Round up to nearest cent for Redis storage
-  // Use 0 if total is 0 to avoid unnecessary 1 cent charges
-  const totalCents = totalCost === 0 ? 0 : Math.ceil(totalCost * 100);
+	// Round up to nearest cent for Redis storage
+	// Use 0 if total is 0 to avoid unnecessary 1 cent charges
+	const totalCents = totalCost === 0 ? 0 : Math.ceil(totalCost * 100);
 
-  return {
-    inputCost,
-    outputCost,
-    totalCost,
-    totalCents,
-  };
+	return {
+		inputCost,
+		outputCost,
+		totalCost,
+		totalCents,
+	};
 }

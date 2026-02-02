@@ -2,101 +2,91 @@
  * Domain Package - Core business types and errors
  */
 
+// Convenience re-exports of contract errors
+export {
+	AnalyzerError,
+	DatabaseError,
+	InvalidFacetNameError,
+	MalformedEvidenceError,
+	SessionNotFound,
+} from "@workspace/contracts";
 // Configuration service interface (implementation in @workspace/infrastructure)
-export { AppConfig, type AppConfigService } from "./config/index.js";
-
-// Session types
-export type { SessionStatus, MessageRole, Session } from "./types/session.js";
-
-// Trait types (Big Five)
-export type { BigFiveTrait, TraitPrecisionScores } from "./types/trait.js";
-export { BIG_FIVE_TRAITS } from "./types/trait.js";
-
-// Facet types
-export type {
-  OpennessFacet,
-  ConscientiousnessFacet,
-  ExtravertFacet,
-  AgreeableFacet,
-  NeuroticismFacet,
-  BigFiveFacet,
-  FacetPrecisionScores,
-} from "./types/facet.js";
-export { FACETS_BY_TRAIT } from "./types/facet.js";
-
+export { AppConfig, type AppConfigService } from "./config/index";
 // Big Five constants and types (Story 2.3)
 export {
+	AGREEABLENESS_FACETS,
 	ALL_FACETS,
-	OPENNESS_FACETS,
 	CONSCIENTIOUSNESS_FACETS,
 	EXTRAVERSION_FACETS,
-	AGREEABLENESS_FACETS,
-	NEUROTICISM_FACETS,
 	FACET_TO_TRAIT,
-	TRAIT_TO_FACETS,
+	type FacetName,
 	isFacetName,
 	isTraitName,
-	type FacetName,
+	NEUROTICISM_FACETS,
+	OPENNESS_FACETS,
+	TRAIT_TO_FACETS,
 	type TraitName,
-} from "./constants/big-five.js";
-
+} from "./constants/big-five";
+// Evidence errors
+export {
+	EvidenceValidationError,
+	FacetEvidencePersistenceError,
+} from "./errors/evidence.errors";
+export { AnalyzerRepository } from "./repositories/analyzer.repository";
+export { AssessmentMessageRepository } from "./repositories/assessment-message.repository";
+// Repository interfaces (ports in hexagonal architecture)
+export { AssessmentSessionRepository } from "./repositories/assessment-session.repository";
+export { CostGuardRepository } from "./repositories/cost-guard.repository";
+export { FacetEvidenceRepository } from "./repositories/facet-evidence.repository";
+export { LoggerRepository } from "./repositories/logger.repository";
+export { NerinAgentRepository } from "./repositories/nerin-agent.repository";
+export {
+	RedisConnectionError,
+	RedisOperationError,
+	RedisRepository,
+} from "./repositories/redis.repository";
+export {
+	InsufficientEvidenceError,
+	ScorerError,
+	ScorerRepository,
+} from "./repositories/scorer.repository";
+// Cost calculation service
+export {
+	type CostResult,
+	calculateCost,
+	PRICING,
+} from "./services/cost-calculator.service";
+// Precision calculation service
+export {
+	calculateTraitPrecision,
+	calculateWeightedAverage,
+	initializeFacetPrecision,
+	mergePrecisionScores,
+	updateFacetPrecision,
+} from "./services/precision-calculator.service";
+// Facet types
+export type {
+	AgreeableFacet,
+	BigFiveFacet,
+	ConscientiousnessFacet,
+	ExtravertFacet,
+	FacetPrecisionScores,
+	NeuroticismFacet,
+	OpennessFacet,
+} from "./types/facet";
+export { FACETS_BY_TRAIT } from "./types/facet";
 // Facet evidence and scoring types (Story 2.3)
 export type {
 	FacetEvidence,
-	SavedFacetEvidence,
 	FacetScore,
-	TraitScore,
-	HighlightRange,
 	FacetScoresMap,
+	HighlightRange,
+	SavedFacetEvidence,
+	TraitScore,
 	TraitScoresMap,
-} from "./types/facet-evidence.js";
-
-// Precision calculation service
-export {
-  calculateTraitPrecision,
-  calculateWeightedAverage,
-  initializeFacetPrecision,
-  updateFacetPrecision,
-  mergePrecisionScores,
-} from "./services/precision-calculator.service.js";
-
-// Cost calculation service
-export {
-  calculateCost,
-  PRICING,
-  type CostResult,
-} from "./services/cost-calculator.service.js";
-
-// Repository interfaces (ports in hexagonal architecture)
-export { AssessmentSessionRepository } from "./repositories/assessment-session.repository.js";
-export { AssessmentMessageRepository } from "./repositories/assessment-message.repository.js";
-export { LoggerRepository } from "./repositories/logger.repository.js";
-export { NerinAgentRepository } from "./repositories/nerin-agent.repository.js";
-export {
-  RedisRepository,
-  RedisConnectionError,
-  RedisOperationError,
-} from "./repositories/redis.repository.js";
-export { CostGuardRepository } from "./repositories/cost-guard.repository.js";
-export { AnalyzerRepository } from "./repositories/analyzer.repository.js";
-export {
-  ScorerRepository,
-  InsufficientEvidenceError,
-  ScorerError,
-} from "./repositories/scorer.repository.js";
-export { FacetEvidenceRepository } from "./repositories/facet-evidence.repository.js";
-
-// Evidence errors
-export {
-  FacetEvidencePersistenceError,
-  EvidenceValidationError,
-} from "./errors/evidence.errors.js";
-
-// Convenience re-exports of contract errors
-export {
-  SessionNotFound,
-  DatabaseError,
-  AnalyzerError,
-  InvalidFacetNameError,
-  MalformedEvidenceError,
-} from "@workspace/contracts";
+} from "./types/facet-evidence";
+// Session types
+export type { MessageRole, Session, SessionStatus } from "./types/session";
+// Trait types (Big Five)
+export type { BigFiveTrait, TraitPrecisionScores } from "./types/trait";
+export { BIG_FIVE_TRAITS } from "./types/trait";

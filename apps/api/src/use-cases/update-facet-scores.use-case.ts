@@ -9,24 +9,24 @@
  * @see packages/domain/src/repositories/scorer.repository.ts
  */
 
-import { Effect } from "effect";
 import {
-  ScorerRepository,
-  LoggerRepository,
-  DatabaseError,
-  ScorerError,
-  type FacetScoresMap,
-  type TraitScoresMap,
+	DatabaseError,
+	type FacetScoresMap,
+	LoggerRepository,
+	ScorerError,
+	ScorerRepository,
+	type TraitScoresMap,
 } from "@workspace/domain";
+import { Effect } from "effect";
 
 export interface UpdateFacetScoresInput {
-  readonly sessionId: string;
+	readonly sessionId: string;
 }
 
 export interface UpdateFacetScoresOutput {
-  readonly facetScores: FacetScoresMap;
-  readonly traitScores: TraitScoresMap;
-  readonly updatedAt: Date;
+	readonly facetScores: FacetScoresMap;
+	readonly traitScores: TraitScoresMap;
+	readonly updatedAt: Date;
 }
 
 /**
@@ -46,7 +46,7 @@ export interface UpdateFacetScoresOutput {
  * ```
  */
 export const shouldTriggerScoring = (messageCount: number): boolean => {
-  return messageCount > 0 && messageCount % 3 === 0;
+	return messageCount > 0 && messageCount % 3 === 0;
 };
 
 /**
@@ -77,52 +77,52 @@ export const shouldTriggerScoring = (messageCount: number): boolean => {
  * ```
  */
 export const updateFacetScores = (
-  input: UpdateFacetScoresInput
+	input: UpdateFacetScoresInput,
 ): Effect.Effect<
-  UpdateFacetScoresOutput,
-  DatabaseError | ScorerError,
-  ScorerRepository | LoggerRepository
+	UpdateFacetScoresOutput,
+	DatabaseError | ScorerError,
+	ScorerRepository | LoggerRepository
 > =>
-  Effect.gen(function* () {
-    const scorer = yield* ScorerRepository;
-    const logger = yield* LoggerRepository;
+	Effect.gen(function* () {
+		const scorer = yield* ScorerRepository;
+		const logger = yield* LoggerRepository;
 
-    logger.info("Updating facet scores", {
-      sessionId: input.sessionId,
-    });
+		logger.info("Updating facet scores", {
+			sessionId: input.sessionId,
+		});
 
-    // Aggregate facet scores from evidence
-    const facetScores = yield* scorer.aggregateFacetScores(input.sessionId);
+		// Aggregate facet scores from evidence
+		const facetScores = yield* scorer.aggregateFacetScores(input.sessionId);
 
-    const facetCount = Object.keys(facetScores).length;
-    logger.info("Facet scores aggregated", {
-      sessionId: input.sessionId,
-      facetCount,
-      facetNames: Object.keys(facetScores),
-    });
+		const facetCount = Object.keys(facetScores).length;
+		logger.info("Facet scores aggregated", {
+			sessionId: input.sessionId,
+			facetCount,
+			facetNames: Object.keys(facetScores),
+		});
 
-    // Derive trait scores from facet scores
-    const traitScores = yield* scorer.deriveTraitScores(facetScores);
+		// Derive trait scores from facet scores
+		const traitScores = yield* scorer.deriveTraitScores(facetScores);
 
-    const traitCount = Object.keys(traitScores).length;
-    logger.info("Trait scores derived", {
-      sessionId: input.sessionId,
-      traitCount,
-      traitNames: Object.keys(traitScores),
-    });
+		const traitCount = Object.keys(traitScores).length;
+		logger.info("Trait scores derived", {
+			sessionId: input.sessionId,
+			traitCount,
+			traitNames: Object.keys(traitScores),
+		});
 
-    const updatedAt = new Date();
+		const updatedAt = new Date();
 
-    logger.info("Facet scores update complete", {
-      sessionId: input.sessionId,
-      facetCount,
-      traitCount,
-      updatedAt: updatedAt.toISOString(),
-    });
+		logger.info("Facet scores update complete", {
+			sessionId: input.sessionId,
+			facetCount,
+			traitCount,
+			updatedAt: updatedAt.toISOString(),
+		});
 
-    return {
-      facetScores,
-      traitScores,
-      updatedAt,
-    };
-  });
+		return {
+			facetScores,
+			traitScores,
+			updatedAt,
+		};
+	});

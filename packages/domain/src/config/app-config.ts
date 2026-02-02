@@ -23,29 +23,29 @@ import { Context, type Redacted } from "effect";
  * Application configuration service interface
  */
 export interface AppConfigService {
-  /** PostgreSQL database connection URL (required) */
-  readonly databaseUrl: string;
+	/** PostgreSQL database connection URL (required) */
+	readonly databaseUrl: string;
 
-  /** Redis connection URL for caching and rate limiting */
-  readonly redisUrl: string;
+	/** Redis connection URL for caching and rate limiting */
+	readonly redisUrl: string;
 
-  /** Anthropic API key for Claude (required, secret) */
-  readonly anthropicApiKey: Redacted.Redacted<string>;
+	/** Anthropic API key for Claude (required, secret) */
+	readonly anthropicApiKey: Redacted.Redacted<string>;
 
-  /** Better Auth secret for session signing (required, secret) */
-  readonly betterAuthSecret: Redacted.Redacted<string>;
+	/** Better Auth secret for session signing (required, secret) */
+	readonly betterAuthSecret: Redacted.Redacted<string>;
 
-  /** Better Auth base URL for auth endpoints */
-  readonly betterAuthUrl: string;
+	/** Better Auth base URL for auth endpoints */
+	readonly betterAuthUrl: string;
 
-  /** Frontend URL for CORS and redirects */
-  readonly frontendUrl: string;
+	/** Frontend URL for CORS and redirects */
+	readonly frontendUrl: string;
 
-  /** HTTP server port */
-  readonly port: number;
+	/** HTTP server port */
+	readonly port: number;
 
-  /** Node.js environment (development, production, test) */
-  readonly nodeEnv: string;
+	/** Node.js environment (development, production, test) */
+	readonly nodeEnv: string;
 }
 
 /**
@@ -56,7 +56,4 @@ export interface AppConfigService {
  * const config = yield* AppConfig;
  * ```
  */
-export class AppConfig extends Context.Tag("AppConfig")<
-  AppConfig,
-  AppConfigService
->() {}
+export class AppConfig extends Context.Tag("AppConfig")<AppConfig, AppConfigService>() {}

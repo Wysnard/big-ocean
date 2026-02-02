@@ -1,9 +1,5 @@
-import { describe, it, expect } from "vitest";
-import {
-	facetEvidence,
-	facetScores,
-	traitScores,
-} from "../schema.js";
+import { describe, expect, it } from "vitest";
+import { facetEvidence, facetScores, traitScores } from "../schema";
 
 /**
  * Schema validation tests for facet evidence and scoring tables

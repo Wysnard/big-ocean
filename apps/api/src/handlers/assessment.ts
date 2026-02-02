@@ -10,106 +10,94 @@
  */
 
 import { HttpApiBuilder, HttpServerResponse } from "@effect/platform";
-import { DateTime, Effect } from "effect";
 import { BigOceanApi } from "@workspace/contracts";
-import {
-  startAssessment,
-  sendMessage,
-  resumeSession,
-  getResults,
-} from "../use-cases/index.js";
+import { DateTime, Effect } from "effect";
+import { getResults, resumeSession, sendMessage, startAssessment } from "../use-cases/index";
 
-export const AssessmentGroupLive = HttpApiBuilder.group(
-  BigOceanApi,
-  "assessment",
-  (handlers) =>
-    Effect.gen(function* () {
-      return handlers
-        .handle("start", ({ payload }) =>
-          Effect.gen(function* () {
-            // Call use case - errors propagate directly to HTTP
-            const result = yield* startAssessment({
-              userId: payload.userId,
-            });
+export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment", (handlers) =>
+	Effect.gen(function* () {
+		return handlers
+			.handle("start", ({ payload }) =>
+				Effect.gen(function* () {
+					// Call use case - errors propagate directly to HTTP
+					const result = yield* startAssessment({
+						userId: payload.userId,
+					});
 
-            // Format HTTP response
-            return {
-              sessionId: result.sessionId,
-              createdAt: DateTime.unsafeMake(result.createdAt.getTime()),
-            };
-          }),
-        )
-        .handle("sendMessage", ({ payload }) =>
-          Effect.gen(function* () {
-            // Call use case - errors propagate directly to HTTP
-            const result = yield* sendMessage({
-              sessionId: payload.sessionId,
-              message: payload.message,
-            });
+					// Format HTTP response
+					return {
+						sessionId: result.sessionId,
+						createdAt: DateTime.unsafeMake(result.createdAt.getTime()),
+					};
+				}),
+			)
+			.handle("sendMessage", ({ payload }) =>
+				Effect.gen(function* () {
+					// Call use case - errors propagate directly to HTTP
+					const result = yield* sendMessage({
+						sessionId: payload.sessionId,
+						message: payload.message,
+					});
 
-            // Format HTTP response
-            return {
-              response: result.response,
-              precision: result.precision,
-            };
-          }),
-        )
-        .handle("getResults", ({ request }) =>
-          Effect.gen(function* () {
-            // Extract sessionId from URL path
-            const url = new URL(request.url, "http://localhost");
-            const pathParts = url.pathname.split("/");
-            const sessionId = pathParts[pathParts.length - 2];
+					// Format HTTP response
+					return {
+						response: result.response,
+						precision: result.precision,
+					};
+				}),
+			)
+			.handle("getResults", ({ request }) =>
+				Effect.gen(function* () {
+					// Extract sessionId from URL path
+					const url = new URL(request.url, "http://localhost");
+					const pathParts = url.pathname.split("/");
+					const sessionId = pathParts[pathParts.length - 2];
 
-            if (!sessionId) {
-              return HttpServerResponse.text("Missing session ID", {
-                status: 400,
-              });
-            }
+					if (!sessionId) {
+						return HttpServerResponse.text("Missing session ID", {
+							status: 400,
+						});
+					}
 
-            // Call use case - errors propagate directly to HTTP
-            const result = yield* getResults({ sessionId });
+					// Call use case - errors propagate directly to HTTP
+					const result = yield* getResults({ sessionId });
 
-            // Format HTTP response
-            return {
-              oceanCode: result.oceanCode,
-              archetypeName: result.archetypeName,
-              traits: result.traits,
-            };
-          }),
-        )
-        .handle("resumeSession", ({ request }) =>
-          Effect.gen(function* () {
-            // Extract sessionId from URL path
-            const url = new URL(request.url, "http://localhost");
-            const pathParts = url.pathname.split("/");
-            const sessionId = pathParts[pathParts.length - 2];
+					// Format HTTP response
+					return {
+						oceanCode: result.oceanCode,
+						archetypeName: result.archetypeName,
+						traits: result.traits,
+					};
+				}),
+			)
+			.handle("resumeSession", ({ request }) =>
+				Effect.gen(function* () {
+					// Extract sessionId from URL path
+					const url = new URL(request.url, "http://localhost");
+					const pathParts = url.pathname.split("/");
+					const sessionId = pathParts[pathParts.length - 2];
 
-            if (!sessionId) {
-              return HttpServerResponse.text("Missing session ID", {
-                status: 400,
-              });
-            }
+					if (!sessionId) {
+						return HttpServerResponse.text("Missing session ID", {
+							status: 400,
+						});
+					}
 
-            // Call use case - errors propagate directly to HTTP
-            const result = yield* resumeSession({ sessionId });
+					// Call use case - errors propagate directly to HTTP
+					const result = yield* resumeSession({ sessionId });
 
-            // Format HTTP response
-            return {
-              messages: result.messages.map(
-                (message: {
-                  role: string;
-                  content: string;
-                  createdAt: Date;
-                }) => ({
-                  role: message.role as "user" | "assistant",
-                  content: message.content,
-                  timestamp: DateTime.unsafeMake(message.createdAt.getTime()),
-                }),
-              ),
-              precision: result.precision,
-            };
-          }),
-        );
-    }),
+					// Format HTTP response
+					return {
+						messages: result.messages.map(
+							(message: { role: string; content: string; createdAt: Date }) => ({
+								role: message.role as "user" | "assistant",
+								content: message.content,
+								timestamp: DateTime.unsafeMake(message.createdAt.getTime()),
+							}),
+						),
+						precision: result.precision,
+					};
+				}),
+			);
+	}),
 );

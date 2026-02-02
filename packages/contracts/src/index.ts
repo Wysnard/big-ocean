@@ -8,19 +8,16 @@
  * Better Auth handles authentication via HTTP, other services follow same pattern.
  */
 
-// HTTP API Composition
-export { BigOceanApi } from "./http/api.js";
-
-// HTTP API Groups
-export { HealthGroup } from "./http/groups/health.js";
-export { AssessmentGroup } from "./http/groups/assessment.js";
-
-// HTTP Schemas and Types
-export * from "./http/groups/assessment.js";
-export * from "./http/groups/health.js";
-
 // Error Definitions
-export * from "./errors.js";
+export * from "./errors";
+// HTTP API Composition
+export { BigOceanApi } from "./http/api";
+// HTTP Schemas and Types
+export * from "./http/groups/assessment";
+export { AssessmentGroup } from "./http/groups/assessment";
+export * from "./http/groups/health";
+// HTTP API Groups
+export { HealthGroup } from "./http/groups/health";
 
 // Shared Schemas & Types
-export * from "./schemas.js";
+export * from "./schemas";

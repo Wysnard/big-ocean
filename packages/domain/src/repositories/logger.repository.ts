@@ -8,25 +8,25 @@ import { Context } from "effect";
  */
 
 export interface LoggerMethods {
-  /**
-   * Log an informational message
-   */
-  readonly info: (message: string, meta?: Record<string, unknown>) => void;
+	/**
+	 * Log an informational message
+	 */
+	readonly info: (message: string, meta?: Record<string, unknown>) => void;
 
-  /**
-   * Log a warning message
-   */
-  readonly warn: (message: string, meta?: Record<string, unknown>) => void;
+	/**
+	 * Log a warning message
+	 */
+	readonly warn: (message: string, meta?: Record<string, unknown>) => void;
 
-  /**
-   * Log an error message
-   */
-  readonly error: (message: string, meta?: Record<string, unknown>) => void;
+	/**
+	 * Log an error message
+	 */
+	readonly error: (message: string, meta?: Record<string, unknown>) => void;
 
-  /**
-   * Log a debug message
-   */
-  readonly debug: (message: string, meta?: Record<string, unknown>) => void;
+	/**
+	 * Log a debug message
+	 */
+	readonly debug: (message: string, meta?: Record<string, unknown>) => void;
 }
 
 /**
@@ -35,6 +35,6 @@ export interface LoggerMethods {
  * Service interface has NO requirements - dependencies managed by layer.
  */
 export class LoggerRepository extends Context.Tag("LoggerRepository")<
-  LoggerRepository,
-  LoggerMethods
+	LoggerRepository,
+	LoggerMethods
 >() {}

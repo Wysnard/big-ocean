@@ -18,114 +18,112 @@
  * - Dependencies: Database, LoggerRepository
  */
 
-import { Layer, Effect } from "effect";
-import { eq } from "drizzle-orm";
-import { Database } from "../context/database.js";
-import { facetEvidence, assessmentMessage } from "../db/schema.js";
 import {
-  ScorerRepository,
-  ScorerError,
-  type FacetScoresMap,
-  type TraitScoresMap,
-  LoggerRepository,
-  TRAIT_TO_FACETS,
-  type FacetName,
-  type TraitName,
+	DatabaseError,
+	type FacetName,
+	type FacetScoresMap,
+	LoggerRepository,
+	ScorerError,
+	ScorerRepository,
+	TRAIT_TO_FACETS,
+	type TraitName,
+	type TraitScoresMap,
 } from "@workspace/domain";
-import { DatabaseError } from "@workspace/domain";
+import { eq } from "drizzle-orm";
+import { Effect, Layer } from "effect";
+import { Database } from "../context/database";
+import { assessmentMessage, facetEvidence } from "../db/schema";
 
 /**
  * Calculate mean of numbers
  */
 function mean(values: number[]): number {
-  if (values.length === 0) return 0;
-  return values.reduce((sum, val) => sum + val, 0) / values.length;
+	if (values.length === 0) return 0;
+	return values.reduce((sum, val) => sum + val, 0) / values.length;
 }
 
 /**
  * Calculate variance (measure of spread/contradiction)
  */
 function variance(values: number[]): number {
-  if (values.length < 2) return 0;
-  const avg = mean(values);
-  const squaredDiffs = values.map((val) => (val - avg) ** 2);
-  return mean(squaredDiffs);
+	if (values.length < 2) return 0;
+	const avg = mean(values);
+	const squaredDiffs = values.map((val) => (val - avg) ** 2);
+	return mean(squaredDiffs);
 }
 
 /**
  * Clamp value to range
  */
 function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
+	return Math.max(min, Math.min(max, value));
 }
 
 /**
  * Evidence row from database query
  */
 interface EvidenceRow {
-  facetName: string;
-  score: number; // 0-20
-  confidence: number; // 0-100 (stored as integer)
-  createdAt: Date;
+	facetName: string;
+	score: number; // 0-20
+	confidence: number; // 0-100 (stored as integer)
+	createdAt: Date;
 }
 
 /**
  * Aggregate evidence for a single facet
  */
 function aggregateFacet(evidence: EvidenceRow[]): {
-  score: number;
-  confidence: number;
+	score: number;
+	confidence: number;
 } {
-  // Sort by createdAt (oldest first) for recency weighting
-  const sorted = [...evidence].sort(
-    (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
-  );
+	// Sort by createdAt (oldest first) for recency weighting
+	const sorted = [...evidence].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
-  // Calculate weighted average with recency bias
-  let weightedSum = 0;
-  let weightTotal = 0;
+	// Calculate weighted average with recency bias
+	let weightedSum = 0;
+	let weightTotal = 0;
 
-  sorted.forEach((e, idx) => {
-    // Weight = confidence × (1 + position × 0.1)
-    // Recent messages get 10% boost per position
-    const confidenceNormalized = e.confidence / 100; // Convert 0-100 to 0-1
-    const recencyBoost = 1 + idx * 0.1;
-    const weight = confidenceNormalized * recencyBoost;
+	sorted.forEach((e, idx) => {
+		// Weight = confidence × (1 + position × 0.1)
+		// Recent messages get 10% boost per position
+		const confidenceNormalized = e.confidence / 100; // Convert 0-100 to 0-1
+		const recencyBoost = 1 + idx * 0.1;
+		const weight = confidenceNormalized * recencyBoost;
 
-    weightedSum += e.score * weight;
-    weightTotal += weight;
-  });
+		weightedSum += e.score * weight;
+		weightTotal += weight;
+	});
 
-  const aggregatedScore = weightTotal > 0 ? weightedSum / weightTotal : 0;
+	const aggregatedScore = weightTotal > 0 ? weightedSum / weightTotal : 0;
 
-  // Calculate variance for contradiction detection
-  const scores = sorted.map((e) => e.score);
-  const varianceValue = variance(scores);
+	// Calculate variance for contradiction detection
+	const scores = sorted.map((e) => e.score);
+	const varianceValue = variance(scores);
 
-  // Calculate average confidence
-  const confidences = sorted.map((e) => e.confidence / 100);
-  const avgConfidence = mean(confidences);
+	// Calculate average confidence
+	const confidences = sorted.map((e) => e.confidence / 100);
+	const avgConfidence = mean(confidences);
 
-  // Adjust confidence based on variance and sample size
-  let adjustedConfidence = avgConfidence;
+	// Adjust confidence based on variance and sample size
+	let adjustedConfidence = avgConfidence;
 
-  // High variance (>15) indicates contradictions → lower confidence
-  if (varianceValue > 15) {
-    adjustedConfidence -= 0.3;
-  }
+	// High variance (>15) indicates contradictions → lower confidence
+	if (varianceValue > 15) {
+		adjustedConfidence -= 0.3;
+	}
 
-  // Large sample (>10) increases confidence
-  if (sorted.length > 10) {
-    adjustedConfidence += 0.2;
-  }
+	// Large sample (>10) increases confidence
+	if (sorted.length > 10) {
+		adjustedConfidence += 0.2;
+	}
 
-  // Clamp to 0-1 range
-  adjustedConfidence = clamp(adjustedConfidence, 0, 1);
+	// Clamp to 0-1 range
+	adjustedConfidence = clamp(adjustedConfidence, 0, 1);
 
-  return {
-    score: Math.round(aggregatedScore * 10) / 10, // Round to 1 decimal
-    confidence: Math.round(adjustedConfidence * 100) / 100, // Round to 2 decimals
-  };
+	return {
+		score: Math.round(aggregatedScore * 10) / 10, // Round to 1 decimal
+		confidence: Math.round(adjustedConfidence * 100) / 100, // Round to 2 decimals
+	};
 }
 
 /**
@@ -134,129 +132,120 @@ function aggregateFacet(evidence: EvidenceRow[]): {
  * Layer type: Layer<ScorerRepository, never, Database | LoggerRepository>
  */
 export const ScorerDrizzleRepositoryLive = Layer.effect(
-  ScorerRepository,
-  Effect.gen(function* () {
-    const db = yield* Database;
-    const logger = yield* LoggerRepository;
+	ScorerRepository,
+	Effect.gen(function* () {
+		const db = yield* Database;
+		const logger = yield* LoggerRepository;
 
-    logger.info("Scorer Drizzle repository initialized");
+		logger.info("Scorer Drizzle repository initialized");
 
-    return ScorerRepository.of({
-      aggregateFacetScores: (sessionId: string) =>
-        Effect.gen(function* () {
-          const startTime = Date.now();
+		return ScorerRepository.of({
+			aggregateFacetScores: (sessionId: string) =>
+				Effect.gen(function* () {
+					const startTime = Date.now();
 
-          // Query all evidence for this session
-          // JOIN facetEvidence with assessmentMessage to get sessionId
-          const evidenceRows = yield* db
-            .select({
-              facetName: facetEvidence.facetName,
-              score: facetEvidence.score,
-              confidence: facetEvidence.confidence,
-              createdAt: facetEvidence.createdAt,
-            })
-            .from(facetEvidence)
-            .innerJoin(
-              assessmentMessage,
-              eq(facetEvidence.assessmentMessageId, assessmentMessage.id)
-            )
-            .where(eq(assessmentMessage.sessionId, sessionId))
-            .orderBy(facetEvidence.createdAt)
-            .pipe(
-              Effect.mapError(
-                (_error) =>
-                  new DatabaseError({
-                    message: "Failed to query facet evidence",
-                  })
-              )
-            );
+					// Query all evidence for this session
+					// JOIN facetEvidence with assessmentMessage to get sessionId
+					const evidenceRows = yield* db
+						.select({
+							facetName: facetEvidence.facetName,
+							score: facetEvidence.score,
+							confidence: facetEvidence.confidence,
+							createdAt: facetEvidence.createdAt,
+						})
+						.from(facetEvidence)
+						.innerJoin(assessmentMessage, eq(facetEvidence.assessmentMessageId, assessmentMessage.id))
+						.where(eq(assessmentMessage.sessionId, sessionId))
+						.orderBy(facetEvidence.createdAt)
+						.pipe(
+							Effect.mapError(
+								(_error) =>
+									new DatabaseError({
+										message: "Failed to query facet evidence",
+									}),
+							),
+						);
 
-          // Group evidence by facetName
-          const evidenceByFacet = new Map<string, EvidenceRow[]>();
-          for (const row of evidenceRows) {
-            const existing = evidenceByFacet.get(row.facetName) || [];
-            existing.push(row);
-            evidenceByFacet.set(row.facetName, existing);
-          }
+					// Group evidence by facetName
+					const evidenceByFacet = new Map<string, EvidenceRow[]>();
+					for (const row of evidenceRows) {
+						const existing = evidenceByFacet.get(row.facetName) || [];
+						existing.push(row);
+						evidenceByFacet.set(row.facetName, existing);
+					}
 
-          // Aggregate each facet
-          const facetScores: FacetScoresMap = {};
-          for (const [facetName, evidence] of evidenceByFacet.entries()) {
-            const aggregated = aggregateFacet(evidence);
-            facetScores[facetName as FacetName] = aggregated;
-          }
+					// Aggregate each facet
+					const facetScores: FacetScoresMap = {};
+					for (const [facetName, evidence] of evidenceByFacet.entries()) {
+						const aggregated = aggregateFacet(evidence);
+						facetScores[facetName as FacetName] = aggregated;
+					}
 
-          const duration = Date.now() - startTime;
+					const duration = Date.now() - startTime;
 
-          logger.info("Facet scores aggregated", {
-            sessionId,
-            facetCount: Object.keys(facetScores).length,
-            evidenceCount: evidenceRows.length,
-            durationMs: duration,
-          });
+					logger.info("Facet scores aggregated", {
+						sessionId,
+						facetCount: Object.keys(facetScores).length,
+						evidenceCount: evidenceRows.length,
+						durationMs: duration,
+					});
 
-          return facetScores;
-        }).pipe(
-          Effect.catchAll((error) =>
-            Effect.fail(
-              new ScorerError(
-                sessionId,
-                "Failed to aggregate facet scores",
-                error instanceof Error ? error.message : String(error)
-              )
-            )
-          )
-        ),
+					return facetScores;
+				}).pipe(
+					Effect.catchAll((error) =>
+						Effect.fail(
+							new ScorerError(
+								sessionId,
+								"Failed to aggregate facet scores",
+								error instanceof Error ? error.message : String(error),
+							),
+						),
+					),
+				),
 
-      deriveTraitScores: (facetScores: FacetScoresMap) =>
-        Effect.gen(function* () {
-          const traitScores: TraitScoresMap = {};
+			deriveTraitScores: (facetScores: FacetScoresMap) =>
+				Effect.gen(function* () {
+					const traitScores: TraitScoresMap = {};
 
-          // For each of the 5 traits
-          for (const [traitName, facetNames] of Object.entries(
-            TRAIT_TO_FACETS
-          )) {
-            // Get scores for all 6 facets belonging to this trait
-            const facetsForTrait = facetNames
-              .map((fn) => facetScores[fn])
-              .filter((f) => f !== undefined); // Handle missing facets gracefully
+					// For each of the 5 traits
+					for (const [traitName, facetNames] of Object.entries(TRAIT_TO_FACETS)) {
+						// Get scores for all 6 facets belonging to this trait
+						const facetsForTrait = facetNames.map((fn) => facetScores[fn]).filter((f) => f !== undefined); // Handle missing facets gracefully
 
-            if (facetsForTrait.length === 0) {
-              // Skip trait if no facets scored yet
-              continue;
-            }
+						if (facetsForTrait.length === 0) {
+							// Skip trait if no facets scored yet
+							continue;
+						}
 
-            // Trait score = mean of facet scores
-            const traitScore = mean(facetsForTrait.map((f) => f!.score));
+						// Trait score = mean of facet scores
+						const traitScore = mean(facetsForTrait.map((f) => f?.score));
 
-            // Trait confidence = minimum confidence (conservative estimate)
-            const traitConfidence = Math.min(
-              ...facetsForTrait.map((f) => f!.confidence)
-            );
+						// Trait confidence = minimum confidence (conservative estimate)
+						const traitConfidence = Math.min(...facetsForTrait.map((f) => f?.confidence));
 
-            traitScores[traitName as TraitName] = {
-              score: Math.round(traitScore * 10) / 10, // Round to 1 decimal
-              confidence: Math.round(traitConfidence * 100) / 100, // Round to 2 decimals
-            };
-          }
+						traitScores[traitName as TraitName] = {
+							score: Math.round(traitScore * 10) / 10, // Round to 1 decimal
+							confidence: Math.round(traitConfidence * 100) / 100, // Round to 2 decimals
+						};
+					}
 
-          logger.info("Trait scores derived", {
-            traitCount: Object.keys(traitScores).length,
-            facetCount: Object.keys(facetScores).length,
-          });
+					logger.info("Trait scores derived", {
+						traitCount: Object.keys(traitScores).length,
+						facetCount: Object.keys(facetScores).length,
+					});
 
-          return traitScores;
-        }).pipe(
-          Effect.catchAll((error: any) =>
-            Effect.fail(
-              new ScorerError(
-                "unknown", // No sessionId in this context
-                "Failed to derive trait scores",
-                error instanceof Error ? error.message : String(error)
-              )
-            )
-          )
-        ),
-    });
-  })
+					return traitScores;
+				}).pipe(
+					Effect.catchAll((error: unknown) =>
+						Effect.fail(
+							new ScorerError(
+								"unknown", // No sessionId in this context
+								"Failed to derive trait scores",
+								error instanceof Error ? error.message : String(error),
+							),
+						),
+					),
+				),
+		});
+	}),
 );

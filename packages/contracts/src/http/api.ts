@@ -5,9 +5,9 @@
  * Pattern from: effect-worker-mono/packages/contracts/src/http/api.ts
  */
 
-import { HttpApi } from "@effect/platform"
-import { AssessmentGroup } from "./groups/assessment.js"
-import { HealthGroup } from "./groups/health.js"
+import { HttpApi } from "@effect/platform";
+import { AssessmentGroup } from "./groups/assessment";
+import { HealthGroup } from "./groups/health";
 
 /**
  * Big Ocean API
@@ -16,5 +16,5 @@ import { HealthGroup } from "./groups/health.js"
  * All routes are prefixed with /api except /health.
  */
 export class BigOceanApi extends HttpApi.make("BigOceanApi")
-  .add(HealthGroup) // /health (no prefix)
-  .add(AssessmentGroup.prefix("/api")) {} // /api/assessment/*
+	.add(HealthGroup) // /health (no prefix)
+	.add(AssessmentGroup.prefix("/api")) {} // /api/assessment/*

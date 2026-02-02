@@ -14,20 +14,18 @@
 
 import { defineRelations, sql } from "drizzle-orm";
 import {
-  boolean,
-  index,
-  integer,
-  jsonb,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
+	boolean,
+	index,
+	integer,
+	jsonb,
+	pgTable,
+	text,
+	timestamp,
+	uuid,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
-	id: uuid("id")
-		.primaryKey()
-		.default(sql`gen_random_uuid()`),
+	id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
 	name: text("name").notNull(),
 	email: text("email").notNull().unique(),
 	emailVerified: boolean("email_verified").default(false).notNull(),
@@ -40,70 +38,64 @@ export const user = pgTable("user", {
 });
 
 export const session = pgTable(
-  "session",
-  {
-    id: uuid("id")
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
-    expiresAt: timestamp("expires_at").notNull(),
-    token: text("token").notNull().unique(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
-    ipAddress: text("ip_address"),
-    userAgent: text("user_agent"),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-  },
-  (table) => [index("session_userId_idx").on(table.userId)],
+	"session",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		expiresAt: timestamp("expires_at").notNull(),
+		token: text("token").notNull().unique(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+		ipAddress: text("ip_address"),
+		userAgent: text("user_agent"),
+		userId: uuid("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+	},
+	(table) => [index("session_userId_idx").on(table.userId)],
 );
 
 export const account = pgTable(
-  "account",
-  {
-    id: uuid("id")
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
-    accountId: text("account_id").notNull(),
-    providerId: text("provider_id").notNull(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    accessToken: text("access_token"),
-    refreshToken: text("refresh_token"),
-    idToken: text("id_token"),
-    accessTokenExpiresAt: timestamp("access_token_expires_at"),
-    refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
-    scope: text("scope"),
-    password: text("password"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
-  },
-  (table) => [index("account_userId_idx").on(table.userId)],
+	"account",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		accountId: text("account_id").notNull(),
+		providerId: text("provider_id").notNull(),
+		userId: uuid("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		accessToken: text("access_token"),
+		refreshToken: text("refresh_token"),
+		idToken: text("id_token"),
+		accessTokenExpiresAt: timestamp("access_token_expires_at"),
+		refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+		scope: text("scope"),
+		password: text("password"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [index("account_userId_idx").on(table.userId)],
 );
 
 export const verification = pgTable(
-  "verification",
-  {
-    id: uuid("id")
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
-    identifier: text("identifier").notNull(),
-    value: text("value").notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
-  },
-  (table) => [index("verification_identifier_idx").on(table.identifier)],
+	"verification",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		identifier: text("identifier").notNull(),
+		value: text("value").notNull(),
+		expiresAt: timestamp("expires_at").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
 /**
@@ -113,25 +105,23 @@ export const verification = pgTable(
  * Sessions can be anonymous (userId NULL) or linked to authenticated users.
  */
 export const assessmentSession = pgTable(
-  "assessment_session",
-  {
-    id: uuid("id")
-      .primaryKey()
-      .default(sql`gen_random_uuid()`), // Format: session_{timestamp}_{nanoid}
-    userId: uuid("user_id").references(() => user.id, { onDelete: "set null" }), // NULL for anonymous
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
-    status: text("status").notNull().default("active"), // 'active' | 'paused' | 'completed'
-    precision: jsonb("precision").notNull(), // PrecisionScores object
-    messageCount: integer("message_count").default(0).notNull(),
-  },
-  (table) => [
-    // Index for quick session lookup by user
-    index("assessment_session_user_id_idx").on(table.userId),
-  ],
+	"assessment_session",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`), // Format: session_{timestamp}_{nanoid}
+		userId: uuid("user_id").references(() => user.id, { onDelete: "set null" }), // NULL for anonymous
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+		status: text("status").notNull().default("active"), // 'active' | 'paused' | 'completed'
+		precision: jsonb("precision").notNull(), // PrecisionScores object
+		messageCount: integer("message_count").default(0).notNull(),
+	},
+	(table) => [
+		// Index for quick session lookup by user
+		index("assessment_session_user_id_idx").on(table.userId),
+	],
 );
 
 /**
@@ -141,27 +131,22 @@ export const assessmentSession = pgTable(
  * Links to user if message was sent by authenticated user (NULL for anonymous or assistant messages).
  */
 export const assessmentMessage = pgTable(
-  "assessment_message",
-  {
-    id: uuid("id")
-      .primaryKey()
-      .default(sql`gen_random_uuid()`), // Format: msg_{nanoid}
-    sessionId: uuid("session_id")
-      .notNull()
-      .references(() => assessmentSession.id, { onDelete: "cascade" }),
-    userId: uuid("user_id").references(() => user.id, { onDelete: "set null" }), // User who sent message (NULL for assistant or anonymous)
-    role: text("role").notNull(), // 'user' | 'assistant'
-    content: text("content").notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-  },
-  (table) => [
-    // CRITICAL for <1 second resume: composite index on (sessionId, createdAt)
-    // Allows efficient retrieval of all messages for a session in chronological order
-    index("assessment_message_session_created_idx").on(
-      table.sessionId,
-      table.createdAt,
-    ),
-  ],
+	"assessment_message",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`), // Format: msg_{nanoid}
+		sessionId: uuid("session_id")
+			.notNull()
+			.references(() => assessmentSession.id, { onDelete: "cascade" }),
+		userId: uuid("user_id").references(() => user.id, { onDelete: "set null" }), // User who sent message (NULL for assistant or anonymous)
+		role: text("role").notNull(), // 'user' | 'assistant'
+		content: text("content").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		// CRITICAL for <1 second resume: composite index on (sessionId, createdAt)
+		// Allows efficient retrieval of all messages for a session in chronological order
+		index("assessment_message_session_created_idx").on(table.sessionId, table.createdAt),
+	],
 );
 
 /**
@@ -173,9 +158,7 @@ export const assessmentMessage = pgTable(
 export const facetEvidence = pgTable(
 	"facet_evidence",
 	{
-		id: uuid("id")
-			.primaryKey()
-			.default(sql`gen_random_uuid()`),
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
 		assessmentMessageId: uuid("assessment_message_id")
 			.notNull()
 			.references(() => assessmentMessage.id, { onDelete: "cascade" }),
@@ -204,9 +187,7 @@ export const facetEvidence = pgTable(
 export const facetScores = pgTable(
 	"facet_scores",
 	{
-		id: uuid("id")
-			.primaryKey()
-			.default(sql`gen_random_uuid()`),
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
 		sessionId: uuid("session_id")
 			.notNull()
 			.references(() => assessmentSession.id, { onDelete: "cascade" }),
@@ -224,10 +205,7 @@ export const facetScores = pgTable(
 		// Index for querying specific facet across sessions
 		index("facet_scores_facet_name_idx").on(table.facetName),
 		// Unique constraint: one score per (session, facet) pair
-		index("facet_scores_session_facet_unique_idx").on(
-			table.sessionId,
-			table.facetName,
-		),
+		index("facet_scores_session_facet_unique_idx").on(table.sessionId, table.facetName),
 	],
 );
 
@@ -240,9 +218,7 @@ export const facetScores = pgTable(
 export const traitScores = pgTable(
 	"trait_scores",
 	{
-		id: uuid("id")
-			.primaryKey()
-			.default(sql`gen_random_uuid()`),
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
 		sessionId: uuid("session_id")
 			.notNull()
 			.references(() => assessmentSession.id, { onDelete: "cascade" }),
@@ -260,10 +236,7 @@ export const traitScores = pgTable(
 		// Index for querying specific trait across sessions
 		index("trait_scores_trait_name_idx").on(table.traitName),
 		// Unique constraint: one score per (session, trait) pair
-		index("trait_scores_session_trait_unique_idx").on(
-			table.sessionId,
-			table.traitName,
-		),
+		index("trait_scores_session_trait_unique_idx").on(table.sessionId, table.traitName),
 	],
 );
 

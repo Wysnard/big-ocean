@@ -8,9 +8,9 @@
  * - Uses LoggerRepository.of({...}) for proper service implementation
  */
 
+import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import { Layer } from "effect";
 import * as pinoModule from "pino";
-import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 
 /**
  * Logger Repository Layer - Creates Pino logger instance
@@ -19,37 +19,37 @@ import { LoggerRepository } from "@workspace/domain/repositories/logger.reposito
  * No dependencies required.
  */
 export const LoggerPinoRepositoryLive = Layer.sync(LoggerRepository, () => {
-  const pino = (pinoModule as any).default || pinoModule;
-  // Only use pino-pretty in explicit development mode
-  const isDevelopment = process.env.NODE_ENV === "development";
+	const pino = (pinoModule as any).default || pinoModule;
+	// Only use pino-pretty in explicit development mode
+	const isDevelopment = process.env.NODE_ENV === "development";
 
-  const logger = pino({
-    level: process.env.LOG_LEVEL || "info",
-    transport: isDevelopment
-      ? {
-          target: "pino-pretty",
-          options: {
-            colorize: true,
-            translateTime: "HH:MM:ss",
-            ignore: "pid,hostname",
-          },
-        }
-      : undefined,
-  });
+	const logger = pino({
+		level: process.env.LOG_LEVEL || "info",
+		transport: isDevelopment
+			? {
+					target: "pino-pretty",
+					options: {
+						colorize: true,
+						translateTime: "HH:MM:ss",
+						ignore: "pid,hostname",
+					},
+				}
+			: undefined,
+	});
 
-  // Return service implementation using .of() pattern
-  return LoggerRepository.of({
-    info: (message: string, meta?: Record<string, unknown>) => {
-      logger.info(meta || {}, message);
-    },
-    error: (message: string, meta?: Record<string, unknown>) => {
-      logger.error(meta || {}, message);
-    },
-    warn: (message: string, meta?: Record<string, unknown>) => {
-      logger.warn(meta || {}, message);
-    },
-    debug: (message: string, meta?: Record<string, unknown>) => {
-      logger.debug(meta || {}, message);
-    },
-  });
+	// Return service implementation using .of() pattern
+	return LoggerRepository.of({
+		info: (message: string, meta?: Record<string, unknown>) => {
+			logger.info(meta || {}, message);
+		},
+		error: (message: string, meta?: Record<string, unknown>) => {
+			logger.error(meta || {}, message);
+		},
+		warn: (message: string, meta?: Record<string, unknown>) => {
+			logger.warn(meta || {}, message);
+		},
+		debug: (message: string, meta?: Record<string, unknown>) => {
+			logger.debug(meta || {}, message);
+		},
+	});
 });

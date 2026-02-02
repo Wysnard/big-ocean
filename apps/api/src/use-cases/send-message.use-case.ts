@@ -8,30 +8,30 @@
  * Integration: Nerin agent via repository injection (hexagonal architecture).
  */
 
-import { Effect } from "effect";
-import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import {
-  AssessmentSessionRepository,
-  AssessmentMessageRepository,
-  LoggerRepository,
-  NerinAgentRepository,
+	AssessmentMessageRepository,
+	AssessmentSessionRepository,
+	LoggerRepository,
+	NerinAgentRepository,
 } from "@workspace/domain";
+import { Effect } from "effect";
 
 export interface SendMessageInput {
-  readonly sessionId: string;
-  readonly message: string;
-  readonly userId?: string;
+	readonly sessionId: string;
+	readonly message: string;
+	readonly userId?: string;
 }
 
 export interface SendMessageOutput {
-  readonly response: string;
-  readonly precision: {
-    readonly openness: number;
-    readonly conscientiousness: number;
-    readonly extraversion: number;
-    readonly agreeableness: number;
-    readonly neuroticism: number;
-  };
+	readonly response: string;
+	readonly precision: {
+		readonly openness: number;
+		readonly conscientiousness: number;
+		readonly extraversion: number;
+		readonly agreeableness: number;
+		readonly neuroticism: number;
+	};
 }
 
 /**
@@ -41,81 +41,72 @@ export interface SendMessageOutput {
  * Returns: AI response and updated precision scores
  */
 export const sendMessage = (input: SendMessageInput) =>
-  Effect.gen(function* () {
-    const sessionRepo = yield* AssessmentSessionRepository;
-    const messageRepo = yield* AssessmentMessageRepository;
-    const logger = yield* LoggerRepository;
-    const nerinAgent = yield* NerinAgentRepository;
+	Effect.gen(function* () {
+		const sessionRepo = yield* AssessmentSessionRepository;
+		const messageRepo = yield* AssessmentMessageRepository;
+		const logger = yield* LoggerRepository;
+		const nerinAgent = yield* NerinAgentRepository;
 
-    // Verify session exists
-    const session = yield* sessionRepo.getSession(input.sessionId);
+		// Verify session exists
+		const session = yield* sessionRepo.getSession(input.sessionId);
 
-    logger.info("Message received", {
-      sessionId: input.sessionId,
-      messageLength: input.message.length,
-    });
+		logger.info("Message received", {
+			sessionId: input.sessionId,
+			messageLength: input.message.length,
+		});
 
-    // Save user message
-    yield* messageRepo.saveMessage(
-      input.sessionId,
-      "user",
-      input.message,
-      input.userId
-    );
+		// Save user message
+		yield* messageRepo.saveMessage(input.sessionId, "user", input.message, input.userId);
 
-    // Get all previous messages for context
-    const previousMessages = yield* messageRepo.getMessages(input.sessionId);
+		// Get all previous messages for context
+		const previousMessages = yield* messageRepo.getMessages(input.sessionId);
 
-    // Convert to LangChain message format
-    const langchainMessages = previousMessages.map((msg) =>
-      msg.role === "user"
-        ? new HumanMessage({ content: msg.content })
-        : new AIMessage({ content: msg.content })
-    );
+		// Convert to LangChain message format
+		const langchainMessages = previousMessages.map((msg) =>
+			msg.role === "user"
+				? new HumanMessage({ content: msg.content })
+				: new AIMessage({ content: msg.content }),
+		);
 
-    // Invoke Nerin agent via repository
-    const result = yield* nerinAgent
-      .invoke({
-        sessionId: input.sessionId,
-        messages: langchainMessages,
-        precision: session.precision,
-      })
-      .pipe(
-        Effect.tapError((error) =>
-          Effect.sync(() =>
-            logger.error("Nerin agent invocation failed", {
-              agentName: error.agentName,
-              sessionId: error.sessionId,
-              message: error.message,
-            })
-          )
-        )
-      );
+		// Invoke Nerin agent via repository
+		const result = yield* nerinAgent
+			.invoke({
+				sessionId: input.sessionId,
+				messages: langchainMessages,
+				precision: session.precision,
+			})
+			.pipe(
+				Effect.tapError((error) =>
+					Effect.sync(() =>
+						logger.error("Nerin agent invocation failed", {
+							agentName: error.agentName,
+							sessionId: error.sessionId,
+							message: error.message,
+						}),
+					),
+				),
+			);
 
-    // Save AI message
-    yield* messageRepo.saveMessage(
-      input.sessionId,
-      "assistant",
-      result.response
-    );
+		// Save AI message
+		yield* messageRepo.saveMessage(input.sessionId, "assistant", result.response);
 
-    // Return current session precision
-    // (Precision updates will come in Story 2.4 with Analyzer/Scorer agents)
-    const updatedPrecision = session.precision;
+		// Return current session precision
+		// (Precision updates will come in Story 2.4 with Analyzer/Scorer agents)
+		const updatedPrecision = session.precision;
 
-    // Update session with new precision scores
-    yield* sessionRepo.updateSession(input.sessionId, {
-      precision: updatedPrecision,
-    });
+		// Update session with new precision scores
+		yield* sessionRepo.updateSession(input.sessionId, {
+			precision: updatedPrecision,
+		});
 
-    logger.info("Message processed", {
-      sessionId: input.sessionId,
-      responseLength: result.response.length,
-      tokenCount: result.tokenCount,
-    });
+		logger.info("Message processed", {
+			sessionId: input.sessionId,
+			responseLength: result.response.length,
+			tokenCount: result.tokenCount,
+		});
 
-    return {
-      response: result.response,
-      precision: updatedPrecision,
-    };
-  });
+		return {
+			response: result.response,
+			precision: updatedPrecision,
+		};
+	});
