@@ -76,15 +76,6 @@ export const createTestAssessmentSessionLayer = () => {
         sessions.set(sessionId, updated)
         return updated
       }),
-
-    resumeSession: (sessionId: string) =>
-      Effect.sync(() => {
-        const session = sessions.get(sessionId)
-        if (!session) {
-          throw new Error(`SessionNotFound: ${sessionId}`)
-        }
-        return session
-      }),
   })
 }
 
@@ -104,13 +95,13 @@ export const createTestAssessmentMessageLayer = () => {
           sessionId,
           role,
           content,
-          userId,
+          userId: userId ?? null, // Convert undefined to null to match entity schema
           createdAt: new Date(),
         }
         const sessionMessages = messages.get(sessionId) || []
         sessionMessages.push(message)
         messages.set(sessionId, sessionMessages)
-        return message
+        return message as any // Type assertion to bypass union type complexity
       }),
 
     getMessages: (sessionId: string) =>
@@ -189,12 +180,6 @@ export const createTestRedisLayer = () => {
     get: (key: string) =>
       Effect.sync(() => store.get(key) || null),
 
-    set: (key: string, value: string) =>
-      Effect.sync(() => {
-        store.set(key, value)
-        return "OK"
-      }),
-
     incrby: (key: string, increment: number) =>
       Effect.sync(() => {
         const current = Number.parseInt(store.get(key) || "0", 10)
@@ -219,6 +204,10 @@ export const createTestRedisLayer = () => {
 
     ttl: (key: string) =>
       Effect.sync(() => ttls.get(key) || -1),
+
+    ping: () => Effect.succeed(true),
+
+    disconnect: () => Effect.void,
   })
 }
 
@@ -229,19 +218,13 @@ export const createTestRedisLayer = () => {
  */
 export const createTestNerinAgentLayer = () =>
   Layer.succeed(NerinAgentRepository, {
-    sendMessage: (sessionId: string, message: string) =>
+    invoke: (input) =>
       Effect.succeed({
-        response: `Mock response to: "${message}"`,
-        precision: {
-          openness: 0.5 + Math.random() * 0.2,
-          conscientiousness: 0.5 + Math.random() * 0.2,
-          extraversion: 0.5 + Math.random() * 0.2,
-          agreeableness: 0.5 + Math.random() * 0.2,
-          neuroticism: 0.5 + Math.random() * 0.2,
-        },
-        usage: {
-          inputTokens: 100,
-          outputTokens: 50,
+        response: `Mock response for session ${input.sessionId}`,
+        tokenCount: {
+          input: 100,
+          output: 50,
+          total: 150,
         },
       }),
   })
