@@ -13,9 +13,9 @@
     "start:api": "turbo run start --filter=api",
     "start:front": "turbo run start --filter=front",
     "start:web": "turbo run start --filter=web",
-    "test": "vitest",
+    "test": "turbo test",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run",
+    "test:run": "turbo test",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest watch"
   },

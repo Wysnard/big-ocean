@@ -69,7 +69,7 @@ This is a modern monorepo built with:
   - **front**: TanStack Start (full-stack SSR) with React 19, TanStack Router, TanStack Query, TanStack Form
   - **web**: Next.js 16 with shadcn/ui components
 - **Backend**: Node.js with Effect-ts 3.19+ for functional programming
-- **API Framework**: @effect/platform with HTTP API Groups for type-safe HTTP contracts with Effect Schema validation
+- **API Framework**: Hybrid approach using node:http (for authentication) + @effect/platform HTTP (for type-safe API endpoints with @effect/schema validation)
 - **AI/LLM**: LangChain + LangGraph with Claude (Anthropic)
 - **Database**: Drizzle ORM with PostgreSQL (Railway managed)
 - **Real-Time Sync**: ElectricSQL for local-first data synchronization
@@ -366,18 +366,33 @@ Runs on http://127.0.0.1:6006
 
 ### Backend Stack
 
-**Effect-ts HTTP API Architecture**:
+**Hybrid HTTP Architecture**:
 
-- **@effect/platform HTTP API Groups**: Type-safe HTTP contracts with @effect/schema runtime validation
+The API uses a **layered HTTP approach** combining two complementary technologies:
+
+1. **node:http Layer** (Foundation):
+   - Raw Node.js HTTP server for maximum compatibility
+   - Handles Better Auth routes for authentication (`/api/auth/*`)
+   - Passes remaining requests to Effect Platform layer
+
+2. **@effect/platform HTTP Layer** (Application):
+   - Type-safe HTTP contracts with @effect/schema runtime validation
+   - All assessment and profile API routes (`/api/assessment/*`, `/api/profile/*`, etc.)
+   - Middleware logging and error handling
+   - Built on top of node:http for seamless integration
+
+**Key Architecture Patterns**:
+
+- **@effect/platform HTTP API Groups**: Compile-time type-safe endpoint definitions
 - **Hexagonal Architecture**: Clear separation between handlers (presenters), use-cases (business logic), and domain
-- **FiberRef Bridges**: Request-scoped dependency injection (database, logger, Better Auth, cost tracking)
-- **Layer Composition**: Clean service orchestration using Effect Layers
+- **Effect Context & Layers**: Request-scoped dependency injection (database, logger, Better Auth, cost tracking)
 - **Error Handling**: Tagged error unions for discriminated error types
-- **Railway Deployment**: Docker containerization with health checks
+- **Railway Deployment**: Docker containerization with health checks and automatic restarts
 
 Production endpoints:
-- Health: GET `/health` → `{"status":"ok"}`
-- API: All routes under `/api/*` with HTTP methods (GET, POST, etc.)
+- **Health Check**: GET `/health` → `{"status":"ok"}`
+- **Authentication**: All routes under `/api/auth/*` (node:http)
+- **API**: All routes under `/api/*` (Effect Platform HTTP with method-specific handlers)
 
 ### AI-Powered Personality Assessment
 

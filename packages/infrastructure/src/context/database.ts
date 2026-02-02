@@ -15,7 +15,7 @@ import { drizzle } from "drizzle-orm/effect-postgres";
 import { PgClient } from "@effect/sql-pg";
 import { SqlClient, SqlError } from "@effect/sql";
 import { types } from "pg";
-import * as authSchema from "../infrastructure/db/schema.js";
+import * as authSchema from "../db/schema.js";
 import { AppConfig } from "@workspace/domain";
 
 /**

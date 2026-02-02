@@ -22,6 +22,7 @@ Always use Context7 MCP when I need library/API documentation, code generation, 
 - [Monorepo Structure](#monorepo-structure)
 - [Common Commands](#common-commands) → [COMMANDS.md](./docs/COMMANDS.md)
 - [Git Hooks](#git-hooks-local-enforcement)
+- [Testing with Effect and @effect/vitest](#testing-with-effect-and-effectvitest)
 
 ### 🚢 Production & Deployment
 - [Production Deployment](#production-deployment-story-13-) → [DEPLOYMENT.md](./docs/DEPLOYMENT.md)
@@ -602,6 +603,188 @@ For complete architecture details, see:
 - Better Auth for authentication
 
 See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for production details.
+
+## Testing with Effect and @effect/vitest
+
+The codebase uses [@effect/vitest](https://github.com/Effect-TS/effect/tree/main/packages/vitest) for testing Effect programs with proper dependency injection and virtual time control.
+
+### Test Layer Pattern
+
+All repository dependencies are mocked using **Test Layers** defined in `apps/api/src/test-utils/test-layers.ts`:
+
+```typescript
+import { Effect } from "effect"
+import { TestRepositoriesLayer } from "../test-utils/test-layers.js"
+import { AssessmentSessionRepository } from "@workspace/domain"
+
+it.effect('should create session', () =>
+  Effect.gen(function* () {
+    const sessionRepo = yield* AssessmentSessionRepository
+    const session = yield* sessionRepo.createSession("user123")
+    expect(session.sessionId).toBeDefined()
+  }).pipe(Effect.provide(TestRepositoriesLayer))
+)
+```
+
+**TestRepositoriesLayer** merges all repository mocks:
+- AssessmentSessionRepository (in-memory Map)
+- AssessmentMessageRepository (in-memory Map)
+- LoggerRepository (no-op logger)
+- CostGuardRepository (in-memory tracking)
+- RedisRepository (in-memory key-value store)
+- NerinAgentRepository (mock Claude responses)
+
+### Writing Tests for Use-Cases
+
+**Pattern**: Use-cases are pure business logic that depend on repository interfaces. Test them by providing test implementations via Layers.
+
+```typescript
+import { it } from '@effect/vitest'
+import { Effect } from 'effect'
+import { TestRepositoriesLayer } from '../../test-utils/test-layers.js'
+import { myUseCase } from '../../use-cases/my-use-case.js'
+
+describe('myUseCase', () => {
+  it.effect('should handle success case', () =>
+    Effect.gen(function* () {
+      const result = yield* myUseCase({ input: 'test' })
+      expect(result.output).toBe('expected')
+    }).pipe(Effect.provide(TestRepositoriesLayer))
+  )
+
+  it.effect('should handle failure case', () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        myUseCase({ input: 'invalid' })
+      )
+
+      expect(exit._tag).toBe('Failure')
+    }).pipe(Effect.provide(TestRepositoriesLayer))
+  )
+})
+```
+
+### Testing Time-Dependent Code with TestClock
+
+@effect/vitest provides **TestClock** for testing time-dependent operations without real delays:
+
+```typescript
+import { TestClock, Effect, Fiber } from 'effect'
+
+it.effect('should handle delayed operations', () =>
+  Effect.gen(function* () {
+    const testClock = yield* TestClock.TestClock
+
+    // Start operation that delays 5 seconds
+    const deferred = yield* Effect.fork(
+      Effect.sleep('5 seconds').pipe(Effect.as('done'))
+    )
+
+    // Advance virtual time instantly
+    yield* testClock.adjust('5 seconds')
+
+    // Operation completes immediately (no real wait)
+    const result = yield* Fiber.join(deferred)
+    expect(result).toBe('done')
+  })
+)
+```
+
+### Resource Management with it.scoped
+
+Use `it.scoped` for tests that need automatic cleanup:
+
+```typescript
+it.scoped('should clean up resources', () =>
+  Effect.gen(function* () {
+    const resource = yield* Effect.acquireRelease(
+      Effect.sync(() => openConnection()),
+      (conn) => Effect.sync(() => closeConnection(conn))
+    )
+
+    const result = yield* useResource(resource)
+    expect(result).toBeDefined()
+
+    // Resource automatically closed after test
+  }).pipe(Effect.provide(TestRepositoriesLayer))
+)
+```
+
+### Test Modifiers
+
+@effect/vitest supports standard test modifiers:
+
+```typescript
+// Skip test temporarily
+it.effect.skip('not ready yet', () => Effect.void)
+
+// Run only this test (for debugging)
+it.effect.only('focus on this', () => Effect.succeed(undefined))
+
+// Expect test to fail
+it.effect.fails('should fail', () =>
+  Effect.fail(new Error('Expected'))
+)
+```
+
+### Overriding Specific Services
+
+Override individual services while keeping others from TestRepositoriesLayer:
+
+```typescript
+it.effect('should use custom logger', () => {
+  let callCount = 0
+  const customLogger = {
+    info: () => Effect.sync(() => { callCount++ }),
+    error: () => Effect.void,
+    warn: () => Effect.void,
+    debug: () => Effect.void,
+  }
+
+  const customLayer = Layer.mergeAll(
+    TestRepositoriesLayer,
+    Layer.succeed(LoggerRepository, customLogger)
+  )
+
+  return Effect.gen(function* () {
+    const logger = yield* LoggerRepository
+    yield* logger.info('test')
+    expect(callCount).toBe(1)
+  }).pipe(Effect.provide(customLayer))
+})
+```
+
+### Best Practices
+
+1. **Use it.effect() for Effect programs** - Automatically injects TestContext (TestClock, etc.)
+2. **Provide TestRepositoriesLayer** - All use-cases need repository dependencies
+3. **Test failures with Effect.exit** - Capture exit to inspect failure causes
+4. **Use TestClock for time** - Virtual time is deterministic and instant
+5. **Keep tests pure** - Test Layers ensure no database/API calls
+6. **Test at use-case level** - Main unit test target per hexagonal architecture
+
+### Running Tests
+
+```bash
+# Run all tests (via turbo)
+pnpm test:run
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run API tests only
+pnpm --filter=api test
+
+# Run with coverage
+pnpm test:coverage
+```
+
+**Pre-push hook** automatically runs all tests before allowing pushes.
+
+For complete examples, see:
+- `apps/api/src/__tests__/effect-vitest-examples.test.ts` - Full feature showcase
+- `apps/api/src/__tests__/smoke.test.ts` - Basic setup verification
+- `apps/api/src/__tests__/use-cases/*.test.ts` - Real-world use-case tests
 
 ## Production Deployment (Story 1.3 ✅)
 

@@ -13,4 +13,4 @@ export {
   createTestAppConfig,
   AppConfigTestLive,
   defaultTestConfig,
-} from "./app-config.testing.js";
+} from "../utils/test/app-config.testing.js";

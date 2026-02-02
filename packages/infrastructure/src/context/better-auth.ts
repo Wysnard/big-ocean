@@ -16,7 +16,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { Database } from "./database.js";
-import * as authSchema from "../infrastructure/db/schema.js";
+import * as authSchema from "../db/schema.js";
 
 /**
  * Better Auth Service Tag
