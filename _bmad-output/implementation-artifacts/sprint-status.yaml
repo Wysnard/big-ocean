@@ -60,7 +60,7 @@ development_status:
   2-2-nerin-agent-setup-and-conversational-quality: done
   2-2-1-migrate-to-effect-config: done
   2-2.5-setup-redis-and-cost-management-with-token-counting: done
-  2-6-migrate-to-effect-vitest-and-centralize-effect-packages: ready-for-dev
+  2-6-migrate-to-effect-vitest-and-centralize-effect-packages: done
   2-3-analyzer-and-scorer-agent-implementation: backlog
   2-4-langgraph-state-machine-and-orchestration: backlog
   2-5-llm-cost-tracking-rate-limiting-and-budget-enforcement: backlog

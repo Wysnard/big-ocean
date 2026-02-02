@@ -48,4 +48,4 @@ export {
 } from "./repositories/cost-guard.redis.repository.js";
 
 // Database schema (for Better Auth adapter and migrations)
-export * as dbSchema from "./infrastructure/db/schema.js";
+export * as dbSchema from "./db/schema.js";

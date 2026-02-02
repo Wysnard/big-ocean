@@ -13,7 +13,7 @@
 import { Layer, Effect, Schema } from "effect";
 import { eq, asc, sql } from "drizzle-orm";
 import { Database } from "../context/database.js";
-import { assessmentMessage } from "../infrastructure/db/schema.js";
+import { assessmentMessage } from "../db/schema.js";
 import { AssessmentMessageRepository } from "@workspace/domain/repositories/assessment-message.repository";
 import { AssessmentMessageEntitySchema } from "@workspace/domain/entities/message.entity";
 import { DatabaseError } from "@workspace/contracts/errors";
@@ -53,7 +53,8 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
                   logger.error("Database operation failed", {
                     operation: "saveMessage",
                     sessionId,
-                    error: error instanceof Error ? error.message : String(error),
+                    error:
+                      error instanceof Error ? error.message : String(error),
                     stack: error instanceof Error ? error.stack : undefined,
                   });
                 } catch (logError) {
@@ -64,7 +65,7 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
                 return new DatabaseError({
                   message: "Failed to save message",
                 });
-              }),
+              })
             );
 
           if (!message) {
@@ -82,12 +83,12 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
             return yield* Effect.fail(
               new DatabaseError({
                 message: "Failed to save message",
-              }),
+              })
             );
           }
 
           return yield* Schema.decodeUnknown(AssessmentMessageEntitySchema)(
-            message,
+            message
           ).pipe(
             Effect.mapError((error) => {
               // Log technical details before throwing (safe - wrapped in try-catch)
@@ -105,7 +106,7 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
               return new DatabaseError({
                 message: "Failed to save message",
               });
-            }),
+            })
           );
         }),
 
@@ -123,7 +124,8 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
                   logger.error("Database operation failed", {
                     operation: "getMessages",
                     sessionId,
-                    error: error instanceof Error ? error.message : String(error),
+                    error:
+                      error instanceof Error ? error.message : String(error),
                     stack: error instanceof Error ? error.stack : undefined,
                   });
                 } catch (logError) {
@@ -134,11 +136,11 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
                 return new DatabaseError({
                   message: "Failed to fetch messages",
                 });
-              }),
+              })
             );
 
           return yield* Schema.decodeUnknown(
-            Schema.mutable(Schema.Array(AssessmentMessageEntitySchema)),
+            Schema.mutable(Schema.Array(AssessmentMessageEntitySchema))
           )(messages).pipe(
             Effect.mapError((error) => {
               // Log technical details before throwing (safe - wrapped in try-catch)
@@ -156,7 +158,7 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
               return new DatabaseError({
                 message: "Failed to fetch messages",
               });
-            }),
+            })
           );
         }),
 
@@ -174,7 +176,8 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
                   logger.error("Database operation failed", {
                     operation: "getMessageCount",
                     sessionId,
-                    error: error instanceof Error ? error.message : String(error),
+                    error:
+                      error instanceof Error ? error.message : String(error),
                     stack: error instanceof Error ? error.stack : undefined,
                   });
                 } catch (logError) {
@@ -185,11 +188,11 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
                 return new DatabaseError({
                   message: "Failed to count messages",
                 });
-              }),
+              })
             );
 
           return result[0]?.count ?? 0;
         }),
     });
-  }),
+  })
 );

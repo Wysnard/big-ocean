@@ -8,7 +8,7 @@ import {
   createTestAppConfig,
   AppConfigTestLive,
   defaultTestConfig,
-} from "../app-config.testing.js";
+} from "../../utils/test/app-config.testing.js";
 
 describe("Test Configuration Factory", () => {
   describe("createTestAppConfig", () => {
@@ -25,7 +25,9 @@ describe("Test Configuration Factory", () => {
       const result = await Effect.runPromise(program);
       expect(result.port).toBe(4000);
       expect(result.nodeEnv).toBe("test");
-      expect(result.databaseUrl).toBe("postgres://test:test@localhost:5432/test");
+      expect(result.databaseUrl).toBe(
+        "postgres://test:test@localhost:5432/test"
+      );
     });
 
     it("should allow overriding individual config values", async () => {

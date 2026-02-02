@@ -13,7 +13,7 @@
 import { Layer, Effect, Schema } from "effect";
 import { eq } from "drizzle-orm";
 import { Database } from "@workspace/infrastructure/context/database";
-import { assessmentSession } from "@workspace/infrastructure/infrastructure/db/schema";
+import { assessmentSession } from "../db/schema.js";
 import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
 import { AssessmentSessionEntitySchema } from "@workspace/domain/entities/session.entity";
 import { SessionNotFound, DatabaseError } from "@workspace/contracts/errors";
@@ -75,7 +75,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
                 return new DatabaseError({
                   message: "Failed to create session",
                 });
-              }),
+              })
             );
 
           if (!session) {
@@ -87,7 +87,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
             return yield* Effect.fail(
               new DatabaseError({
                 message: "Failed to create session",
-              }),
+              })
             );
           }
 
@@ -121,7 +121,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
                 return new DatabaseError({
                   message: "Failed to fetch session",
                 });
-              }),
+              })
             );
 
           // Session not found error
@@ -131,7 +131,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
               new SessionNotFound({
                 sessionId,
                 message: `Session '${sessionId}' not found`,
-              }),
+              })
             );
           }
 
@@ -146,13 +146,13 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
             return yield* Effect.fail(
               new DatabaseError({
                 message: "Failed to fetch session",
-              }),
+              })
             );
           }
 
           // Parse with SessionEntitySchema
           return yield* Schema.decodeUnknown(AssessmentSessionEntitySchema)(
-            session,
+            session
           ).pipe(
             Effect.mapError((error) => {
               // Log technical details before throwing (safe - wrapped in try-catch)
@@ -170,7 +170,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
               return new DatabaseError({
                 message: "Failed to fetch session",
               });
-            }),
+            })
           );
         }),
 
@@ -204,7 +204,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
                 return new DatabaseError({
                   message: "Failed to update session",
                 });
-              }),
+              })
             );
 
           if (!updatedSession) {
@@ -222,7 +222,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
             return yield* Effect.fail(
               new DatabaseError({
                 message: "Failed to update session",
-              }),
+              })
             );
           }
 
@@ -239,7 +239,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 
           // Parse with SessionEntitySchema
           return yield* Schema.decodeUnknown(AssessmentSessionEntitySchema)(
-            sessionData,
+            sessionData
           ).pipe(
             Effect.mapError((error) => {
               // Log technical details before throwing (safe - wrapped in try-catch)
@@ -257,9 +257,9 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
               return new DatabaseError({
                 message: "Failed to update session",
               });
-            }),
+            })
           );
         }),
     });
-  }),
+  })
 );
