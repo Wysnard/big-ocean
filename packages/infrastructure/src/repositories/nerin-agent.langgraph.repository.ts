@@ -139,11 +139,11 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
 		let checkpointer: PostgresSaver | undefined;
 
 		if (dbUri) {
-			checkpointer = PostgresSaver.fromConnString(dbUri);
+			const saver = PostgresSaver.fromConnString(dbUri);
+			checkpointer = saver;
 			// Setup checkpointer tables (using Effect.promise for async)
-			// Note: checkpointer is guaranteed defined here since we're inside if (dbUri)
 			yield* Effect.tryPromise({
-				try: () => checkpointer?.setup(),
+				try: () => saver.setup(),
 				catch: (error) => {
 					logger.error("Failed to initialize PostgresSaver", {
 						error: error instanceof Error ? error.message : String(error),
