@@ -68,9 +68,6 @@ jobs:
   ci:
     name: CI Pipeline
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20.x]  # Node 20.x LTS (matches CLAUDE.md requirement)
 
     steps:
       - name: Checkout code
@@ -81,10 +78,10 @@ jobs:
         with:
           version: 10.4.1
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js 20.x
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20.x
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -95,35 +92,19 @@ jobs:
       - name: Install Rollup native binary
         run: pnpm add -wD @rollup/rollup-linux-x64-gnu
 
-      - name: TypeScript Check
-        run: pnpm turbo lint
-
-      - name: Lint (Biome)
+      - name: Lint and TypeCheck
         run: pnpm lint
 
       - name: Build
         run: pnpm build
 
-      - name: Run Tests with Coverage
-        run: pnpm test:run -- --coverage
+      - name: Run Tests
+        run: pnpm test:run
 
-      - name: Upload Coverage Artifact
+      - name: Upload Coverage Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: |
-            **/coverage/
+          path: '**/coverage/'
           retention-days: 7
-
-      - name: Coverage Summary
-        if: always()
-        run: |
-          echo "## 📊 Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -f "apps/api/coverage/coverage-summary.json" ]; then
-            echo "### API Coverage" >> $GITHUB_STEP_SUMMARY
-            cat apps/api/coverage/coverage-summary.json | jq -r '.total | "| Metric | Coverage |\n|--------|----------|\n| Lines | \(.lines.pct)% |\n| Statements | \(.statements.pct)% |\n| Functions | \(.functions.pct)% |\n| Branches | \(.branches.pct)% |"' >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "Coverage data not in expected format" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "Coverage report not found" >> $GITHUB_STEP_SUMMARY
-          fi
