@@ -55,7 +55,7 @@ Vulnerability
 - **Real-Time Trait Tracking**: Live updates of personality trait scores and confidence levels during the conversation
 - **Streaming Responses**: Server-sent events provide immediate feedback as the AI responds
 - **Session Persistence**: Conversation history and trait assessments are preserved across the session
-- **Type-Safe API**: End-to-end type safety using Effect-ts RPC contracts and Effect Schema
+- **Type-Safe API**: End-to-end type safety using @effect/platform HTTP API contracts and Effect Schema
 - **Comprehensive Logging**: Structured logging with Winston for debugging and monitoring
 - **Modern UI**: Built with shadcn/ui components and Tailwind CSS v4
 - **Production Ready**: Deployed on Railway with health checks and automatic restart policies
@@ -69,7 +69,7 @@ This is a modern monorepo built with:
   - **front**: TanStack Start (full-stack SSR) with React 19, TanStack Router, TanStack Query, TanStack Form
   - **web**: Next.js 16 with shadcn/ui components
 - **Backend**: Node.js with Effect-ts 3.19+ for functional programming
-- **API Framework**: @effect/rpc for type-safe RPC contracts with Effect Schema validation
+- **API Framework**: @effect/platform with HTTP API Groups for type-safe HTTP contracts with Effect Schema validation
 - **AI/LLM**: LangChain + LangGraph with Claude (Anthropic)
 - **Database**: Drizzle ORM with PostgreSQL (Railway managed)
 - **Real-Time Sync**: ElectricSQL for local-first data synchronization
@@ -85,7 +85,8 @@ apps/
   ├── api/          # Node.js backend with Effect-ts
   │   ├── src/
   │   │   ├── llm/              # LangGraph therapist agent
-  │   │   ├── handlers/         # Effect-ts RPC handler layers
+  │   │   ├── handlers/         # HTTP API handler layers (@effect/platform)
+  │   │   ├── use-cases/        # Business logic layer
   │   │   ├── logger.ts         # Winston logging configuration
   │   │   ├── index.ts          # Effect-ts server with health check
   │   │   └── Dockerfile        # Production container config
@@ -95,15 +96,16 @@ apps/
   │   └── src/
   │       ├── routes/           # File-based routing
   │       ├── hooks/            # React hooks (useAssessment, etc)
-  │       ├── lib/              # RPC client setup
+  │       ├── lib/              # HTTP client setup and utilities
   │       └── components/       # shadcn/ui components
   └── web/          # Next.js frontend (port 3000)
 
 packages/
-  ├── contracts/    # Effect-ts RPC contracts (@effect/rpc + @effect/schema)
+  ├── contracts/    # HTTP API contracts (@effect/platform + @effect/schema)
   │   ├── src/
-  │   │   ├── assessment.ts     # Assessment service RPC procedures
-  │   │   ├── profile.ts        # Profile service RPC procedures
+  │   │   ├── groups/           # HTTP API endpoint groups
+  │   │   ├── assessment.ts     # Assessment service HTTP endpoints
+  │   │   ├── profile.ts        # Profile service HTTP endpoints (future)
   │   │   ├── errors.ts         # Tagged error definitions
   │   │   ├── schemas.ts        # Shared schemas
   │   │   └── index.ts          # Contract exports
@@ -158,7 +160,7 @@ For a fully containerized development environment with exact production parity:
 
 This starts:
 - **Frontend**: http://localhost:3000 (TanStack Start with Vite HMR)
-- **Backend API**: http://localhost:4000 (Effect-ts RPC + health check)
+- **Backend API**: http://localhost:4000 (@effect/platform HTTP API + health check)
 - **PostgreSQL**: localhost:5432 (development database)
 - **Redis**: localhost:6379 (cache and rate limiting)
 
@@ -180,7 +182,7 @@ pnpm dev
 
 This starts:
 
-- **api** (Node + Effect-ts RPC): http://127.0.0.1:4000
+- **api** (Node + @effect/platform): http://127.0.0.1:4000
 - **front** (Vite + React): http://127.0.0.1:3000 - Therapist chat interface
 - **web** (Next.js): http://127.0.0.1:3001
 
@@ -210,30 +212,27 @@ pnpm -C apps/web dev
 
 ## API Documentation
 
-The API is built with Effect-ts and @effect/rpc, providing type-safe RPC endpoints at `/rpc` with NDJSON serialization.
+The API is built with Effect-ts and @effect/platform, providing type-safe HTTP endpoints with Effect Schema validation.
 
 ### Production Deployment
 
 The API is deployed on Railway at:
 - **Base URL**: https://api-production-f7de.up.railway.app
 - **Health Check**: GET `/health` → `{"status":"ok"}`
-- **RPC Endpoint**: POST `/rpc` (NDJSON serialization)
+- **API Base Path**: `/api`
 
-### Assessment RPC Endpoints
+### Assessment HTTP Endpoints
 
-Assessment services use Effect-ts RPC with type-safe contracts. All endpoints POST to `/rpc` with NDJSON serialization.
+Assessment services use @effect/platform with type-safe HTTP API contracts defined in `@workspace/contracts`.
 
 #### Start Assessment Session
 
 Creates a new personality assessment session:
 
 ```bash
-curl -X POST http://127.0.0.1:4000/rpc \
+curl -X POST http://127.0.0.1:4000/api/assessment/start \
   -H "Content-Type: application/json" \
-  -d '{
-    "procedure": "StartAssessment",
-    "input": {"userId": "user123"}
-  }'
+  -d '{"userId": "user123"}'
 ```
 
 Response:
@@ -250,14 +249,11 @@ Response:
 Send a message during assessment and receive trait updates:
 
 ```bash
-curl -X POST http://127.0.0.1:4000/rpc \
+curl -X POST http://127.0.0.1:4000/api/assessment/message \
   -H "Content-Type: application/json" \
   -d '{
-    "procedure": "SendMessage",
-    "input": {
-      "sessionId": "session_1706...",
-      "message": "Tell me about yourself"
-    }
+    "sessionId": "session_1706...",
+    "message": "Tell me about yourself"
   }'
 ```
 
@@ -281,12 +277,8 @@ Response:
 Retrieve current assessment results and OCEAN code:
 
 ```bash
-curl -X POST http://127.0.0.1:4000/rpc \
-  -H "Content-Type: application/json" \
-  -d '{
-    "procedure": "GetResults",
-    "input": {"sessionId": "session_1706..."}
-  }'
+curl -X GET http://127.0.0.1:4000/api/assessment/session_1706.../results \
+  -H "Content-Type: application/json"
 ```
 
 Response:
@@ -306,25 +298,29 @@ Response:
 }
 ```
 
-### RPC Contract Definition
+### HTTP Contract Definition
 
-API contracts are defined in `@workspace/contracts` using Effect-ts RPC and Effect Schema:
+API contracts are defined in `@workspace/contracts` using @effect/platform HTTP API Groups and Effect Schema:
 
 ```typescript
-import { Rpc } from "@effect/rpc";
+import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema as S } from "effect";
 
-export const AssessmentService = Rpc.define({
-  startAssessment: Rpc.rpcFunction({
-    input: S.struct({ userId: S.optional(S.string) }),
-    output: S.struct({ sessionId: S.string, createdAt: S.string }),
-    failure: SessionError,
-  }),
-  // ... other procedures
-});
+export const AssessmentGroup = HttpApiGroup.make("assessment")
+  .add(
+    HttpApiEndpoint.post("start", "/start")
+      .addSuccess(StartAssessmentResponseSchema)
+      .setPayload(StartAssessmentRequestSchema)
+  )
+  .add(
+    HttpApiEndpoint.post("sendMessage", "/message")
+      .addSuccess(SendMessageResponseSchema)
+      .setPayload(SendMessageRequestSchema)
+  )
+  .prefix("/assessment");
 ```
 
-Both frontend and backend applications import these contracts for compile-time type safety.
+Handlers implement these contracts using `HttpApiBuilder.group()`, providing compile-time type safety between frontend and backend.
 
 ## Development Commands
 
@@ -368,19 +364,20 @@ Runs on http://127.0.0.1:6006
 
 ## Architecture Notes
 
-### Backend Stack (Story 1.3 Complete)
+### Backend Stack
 
-**Effect-ts RPC Architecture** ([Story 1.3](https://github.com/Wysnard/big-ocean/blob/master/_bmad-output/implementation-artifacts/1-3-configure-effect-ts-rpc-contracts-and-infrastructure-layer.md)):
+**Effect-ts HTTP API Architecture**:
 
-- **@effect/rpc**: Type-safe RPC contracts with @effect/schema runtime validation
-- **FiberRef Bridges**: Request-scoped dependency injection (database, logger, cost guard)
-- **Layer Composition**: Clean service orchestration without prop drilling
+- **@effect/platform HTTP API Groups**: Type-safe HTTP contracts with @effect/schema runtime validation
+- **Hexagonal Architecture**: Clear separation between handlers (presenters), use-cases (business logic), and domain
+- **FiberRef Bridges**: Request-scoped dependency injection (database, logger, Better Auth, cost tracking)
+- **Layer Composition**: Clean service orchestration using Effect Layers
 - **Error Handling**: Tagged error unions for discriminated error types
 - **Railway Deployment**: Docker containerization with health checks
 
 Production endpoints:
 - Health: GET `/health` → `{"status":"ok"}`
-- RPC: POST `/rpc` with NDJSON serialization
+- API: All routes under `/api/*` with HTTP methods (GET, POST, etc.)
 
 ### AI-Powered Personality Assessment
 
@@ -403,49 +400,67 @@ Each user message triggers a graph execution that:
 
 ### Infrastructure & Dependency Injection
 
-**FiberRef Context Bridges** (packages/infrastructure):
+**Context.Tag & Effect Layers** (packages/infrastructure):
+
+Services are defined as Effect Context.Tag instances and composed via Effect Layers:
 
 ```typescript
-// Request-scoped services accessible anywhere in handlers
-const getDatabase = Effect.gen(function* () {
-  return yield* FiberRef.get(DatabaseRef);
-});
+// Service definition (packages/infrastructure/src/context/better-auth.ts)
+export class BetterAuthService extends Context.Tag("BetterAuthService")<
+  BetterAuthService,
+  Auth<BetterAuthOptions>
+>() {}
 
-// Handlers access services without prop drilling
-const handler = Effect.gen(function* () {
-  const db = yield* getDatabase;
-  const logger = yield* getLogger;
-  // ... implementation
+export const BetterAuthLive = Layer.effect(
+  BetterAuthService,
+  Effect.gen(function* () {
+    const config = yield* AppConfig;
+    const database = yield* Database;
+    const logger = yield* LoggerRepository;
+    // ... initialize service
+  })
+);
+```
+
+Use-cases access services via context:
+
+```typescript
+const result = Effect.gen(function* () {
+  const auth = yield* BetterAuthService;
+  const db = yield* Database;
+  // ... business logic
 });
 ```
 
-Services are injected via Effect Layers:
-- **DatabaseRef**: Drizzle ORM database connection
-- **LoggerRef**: Winston logger instance
-- **CostGuardRef**: LLM cost tracking and rate limiting
+Core services:
+- **BetterAuthService**: Authentication layer with session management
+- **Database**: Drizzle ORM connection for PostgreSQL
+- **LoggerRepository**: Winston structured logging
+- **AppConfig**: Configuration management via environment variables
 
 ### Logging Infrastructure
 
 The API uses Winston for structured logging with multiple levels:
-- Effect-ts RPC procedure logging
-- Business logic logging via FiberRef-injected logger
+- HTTP request/response logging via @effect/platform middleware
+- Business logic logging via Effect Context-injected logger
 - LLM-specific logging for assessment events
 - Railway deployment health monitoring
 
 ### Type-Safe API Contracts
 
-The `@workspace/contracts` package defines RPC procedures with Effect Schema:
+The `@workspace/contracts` package defines HTTP API groups with @effect/platform and Effect Schema:
 
 ```typescript
 // Fully typed at compile time
-export const StartAssessmentRpc = Rpc.make({
-  input: S.struct({ userId: S.optional(S.string) }),
-  output: S.struct({ sessionId: S.string, createdAt: S.string }),
-  failure: SessionError,
-});
+export const AssessmentGroup = HttpApiGroup.make("assessment")
+  .add(
+    HttpApiEndpoint.post("start", "/start")
+      .setPayload(StartAssessmentRequestSchema)
+      .addSuccess(StartAssessmentResponseSchema)
+  );
 ```
 
-Both frontend and backend use the same contract definitions for end-to-end type safety.
+Backend handlers and frontend clients use the same contract definitions for end-to-end type safety.
 
 ### Data Persistence
 
