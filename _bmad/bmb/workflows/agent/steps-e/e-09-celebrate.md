@@ -1,12 +1,12 @@
 ---
-name: 'e-09-celebrate'
-description: 'Celebrate successful agent edit completion'
+name: "e-09-celebrate"
+description: "Celebrate successful agent edit completion"
 
-editPlan: '{bmb_creations_output_folder}/edit-plan-{agent-name}.md'
+editPlan: "{bmb_creations_output_folder}/edit-plan-{agent-name}.md"
 
-advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'
-partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
-validationWorkflow: '{project-root}/src/modules/bmb/workflows/agent/steps-v/v-01-load-review.md'
+advancedElicitationTask: "{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml"
+partyModeWorkflow: "{project-root}/_bmad/core/workflows/party-mode/workflow.md"
+validationWorkflow: "{project-root}/src/modules/bmb/workflows/agent/steps-v/v-01-load-review.md"
 ---
 
 # Edit Step 9: Celebration
@@ -56,6 +56,7 @@ Celebrate the successful agent edit, provide summary of changes, and mark edit w
 ### 1. Read Edit Plan
 
 Read `{editPlan}` to get:
+
 - Original agent state
 - All edits that were applied
 - Validation results (before and after)
@@ -88,10 +89,12 @@ Read `{editPlan}` to get:
 ### 4. Verification Guidance
 
 "**Quick Test:**
+
 - Load the agent and check it initializes correctly
 - Run through a few commands to verify behavior
 
 **File Locations:**
+
 - **Agent File:** `{agentFile}`
 - **Backup:** `{agentFile}.backup`"
 
@@ -106,6 +109,7 @@ Append to editPlan:
 **Status:** Success
 
 ### Final State
+
 - Agent file updated successfully
 - All edits applied
 - Backup preserved

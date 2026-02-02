@@ -1,11 +1,11 @@
 ---
-name: 'v-02a-validate-metadata'
-description: 'Validate metadata and append to report'
+name: "v-02a-validate-metadata"
+description: "Validate metadata and append to report"
 
-nextStepFile: './v-02b-validate-persona.md'
-validationReport: '{bmb_creations_output_folder}/validation-report-{agent-name}.md'
+nextStepFile: "./v-02b-validate-persona.md"
+validationReport: "{bmb_creations_output_folder}/validation-report-{agent-name}.md"
 agentMetadata: ../data/agent-metadata.md
-agentFile: '{agent-file-path}'
+agentFile: "{agent-file-path}"
 ---
 
 # Validate Step 2a: Validate Metadata
@@ -88,6 +88,7 @@ Append to `{validationReport}`:
 **Status:** {✅ PASS / ⚠️ WARNING / ❌ FAIL}
 
 **Checks:**
+
 - [ ] id: kebab-case, no spaces, unique
 - [ ] name: clear display name
 - [ ] title: concise function description
@@ -97,13 +98,13 @@ Append to `{validationReport}`:
 
 **Detailed Findings:**
 
-*PASSING:*
+_PASSING:_
 {List of passing checks}
 
-*WARNINGS:*
+_WARNINGS:_
 {List of non-blocking issues}
 
-*FAILURES:*
+_FAILURES:_
 {List of blocking issues that must be fixed}
 ```
 

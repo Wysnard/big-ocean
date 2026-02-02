@@ -1,10 +1,10 @@
 ---
 name: create-prd
 description: PRD tri-modal workflow - Create, Validate, or Edit comprehensive PRDs
-main_config: '{project-root}/_bmad/bmm/config.yaml'
-nextStep: './steps-c/step-01-init.md'
-validateWorkflow: './steps-v/step-v-01-discovery.md'
-editWorkflow: './steps-e/step-e-01-discovery.md'
+main_config: "{project-root}/_bmad/bmm/config.yaml"
+nextStep: "./steps-c/step-01-init.md"
+validateWorkflow: "./steps-v/step-v-01-discovery.md"
+editWorkflow: "./steps-e/step-e-01-discovery.md"
 web_bundle: true
 ---
 
@@ -13,6 +13,7 @@ web_bundle: true
 **Goal:** Create, Validate, or Edit comprehensive PRDs through structured workflows.
 
 **Your Role:**
+
 - **Create Mode:** Product-focused PM facilitator collaborating with an expert peer
 - **Validate Mode:** Validation Architect and Quality Assurance Specialist
 - **Edit Mode:** PRD improvement specialist

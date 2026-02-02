@@ -4,12 +4,12 @@ inputDocuments:
   - "prd.md"
   - "ux-design-specification.md"
   - "CLAUDE.md"
-workflowType: 'architecture'
-project_name: 'big-ocean'
-user_name: 'Vincentlay'
-date: '2026-01-29'
-lastUpdate: '2026-02-01'
-updateReason: 'Added ADR-6 for Hexagonal Architecture implementation'
+workflowType: "architecture"
+project_name: "big-ocean"
+user_name: "Vincentlay"
+date: "2026-01-29"
+lastUpdate: "2026-02-01"
+updateReason: "Added ADR-6 for Hexagonal Architecture implementation"
 ---
 
 # Architecture Decision Document - big-ocean
@@ -51,11 +51,13 @@ The system must deliver conversational personality assessment through seven inte
 ### Technical Constraints & Dependencies
 
 **Monorepo Architecture (Existing):**
+
 - Apps: `apps/front` (TanStack Start), `apps/api` (Node.js/Effect-ts)
 - Packages: `domain`, `contracts`, `database`, `infrastructure`, `ui`
 - Build system: Turbo + pnpm workspaces
 
 **Tech Stack (Locked):**
+
 - Frontend: React 19, TanStack Start (SSR), TanStack Query 5+, TanStack Form 1+
 - Backend: Effect 3.19.14, @effect/rpc 0.73.0, @effect/schema 0.71.0
 - LLM Orchestration: @langchain/langgraph 1.1+, @anthropic-ai/sdk 0.71.2
@@ -63,10 +65,12 @@ The system must deliver conversational personality assessment through seven inte
 - Design System: shadcn/ui, Tailwind CSS v4
 
 **External Dependencies:**
+
 - Claude API for Nerin responses (cost-critical: $0.15/assessment target)
 - PostgreSQL database (must handle conversation history + precision tracking + secure encryption)
 
 **Budget Constraint (CRITICAL):**
+
 - Self-funded MVP target 500 users
 - LLM cost must be ≤ $0.15/assessment (~$75/day max)
 - Caching, batching, prompt optimization non-negotiable
@@ -100,17 +104,20 @@ Nerin (conversational agent), Analyzer (pattern extraction), and Scorer (trait c
   - Cost awareness (skip analysis if approaching token budget)
 
 **Rationale:**
+
 - Leverages existing LangGraph dependency (already in stack)
 - Enables intelligent routing to optimize costs while maintaining responsiveness
 - Centralized state management is debuggable and maintainable
 - Precision updates stream to UI in real-time (visible engagement signal)
 
 **Trade-offs Accepted:**
+
 - Higher implementation complexity upfront
 - Requires careful orchestration between agents
 - Must handle concurrent LLM calls with cost monitoring
 
 **Key Metrics:**
+
 - Nerin response time: < 2 sec (P95)
 - Analysis latency: < 500ms (batched, non-blocking)
 
@@ -160,6 +167,7 @@ Following ADR-6 (Hexagonal Architecture), cost tracking is implemented as:
   - Graceful degradation logic resides in use-cases
 
 **Rationale:**
+
 - Prevents runaway costs while allowing flexibility for engaged users
 - Frictionless to users (they don't see limits, just graceful messaging)
 - Realistic for self-funded MVP ($75/day budget ≈ 500 users × 1 assessment/day)
@@ -167,11 +175,13 @@ Following ADR-6 (Hexagonal Architecture), cost tracking is implemented as:
 - Hexagonal architecture allows testing cost logic without Redis (mock repository)
 
 **Trade-offs Accepted:**
+
 - Requires Redis for real-time cost tracking
 - Complex implementation (multi-layer budget logic)
 - Requires monitoring and tuning post-launch
 
 **Key Metrics:**
+
 - Cost per assessment: Target ≤ $0.10 (realistic: $0.12-$0.15 with overhead)
 - Daily budget utilization: 80-95% (predictable costs)
 - Users hitting daily limit: < 5% (most users complete 1 assessment)
@@ -279,6 +289,7 @@ Following ADR-6 (Hexagonal Architecture), cost tracking is implemented as:
 - **Database Trigger:** Trigger keeps `public_profiles` in sync when `user_profiles` updates
 
 **Rationale:**
+
 - **Single Source of Truth:** `user_profiles` and `sessions` are authoritative on server
 - **No Sync Complexity:** Server-side encryption only (no key management in browser)
 - **Defense in Depth:** RLS (database) + API auth (application) + encrypted storage
@@ -286,11 +297,13 @@ Following ADR-6 (Hexagonal Architecture), cost tracking is implemented as:
 - **Simpler Architecture:** No local database to manage, fewer sync edge cases
 
 **Trade-offs Accepted:**
+
 - Database trigger complexity (keep tables in sync)
 - RLS policy maintenance
 - Two-layer access control (more to audit)
 
 **Key Metrics:**
+
 - Zero unauthorized profile access (audit log verification)
 - Shareable link access: Anonymous (no auth required)
 - Private data encryption: AES-256 at rest
@@ -348,7 +361,10 @@ const useSendMessage = (sessionId: string) => {
       const prev = queryClient.getQueryData(["session", sessionId]);
       queryClient.setQueryData(["session", sessionId], (old: any) => ({
         ...old,
-        messages: [...old.messages, { id: "temp", role: "user", content: message }],
+        messages: [
+          ...old.messages,
+          { id: "temp", role: "user", content: message },
+        ],
       }));
       return { prev };
     },
@@ -400,6 +416,7 @@ const useSendMessage = (sessionId: string) => {
 **Rationale (Why ElectricSQL Removed):**
 
 **Original ElectricSQL approach:**
+
 - ❌ Full client-side SQLite with bidirectional sync
 - ❌ Complex encryption key management (keys in browser)
 - ❌ Logical replication setup & maintenance
@@ -408,6 +425,7 @@ const useSendMessage = (sessionId: string) => {
 - ❌ Testing burden: offline scenarios, reconnection edge cases
 
 **New TanStack Query approach:**
+
 - ✅ Simple HTTP-based fetching (standard, proven pattern)
 - ✅ No encryption key management (server-side encryption only)
 - ✅ No sync complexity (stateless REST API)
@@ -435,6 +453,7 @@ const useSendMessage = (sessionId: string) => {
 Two-tier archetype naming system optimized for performance and scalability:
 
 **Tier 1: Curated Archetypes (In-Memory)**
+
 - 25-30 hand-curated memorable names stored in TypeScript constant
 - Loaded once at app startup
 - Lookup: O(1) object property access
@@ -442,6 +461,7 @@ Two-tier archetype naming system optimized for performance and scalability:
 - Examples: "The Grounded Thinker", "The Catalyst", "The Architect"
 
 **Tier 2: Component-Based Generation (Algorithm Fallback)**
+
 - For remaining ~51 combinations (81 total POC - 30 curated = 51 fallback)
 - Generate names on-the-fly from trait components
 - Algorithm: [Trait1 Adjective] + [Trait2 Noun]
@@ -454,12 +474,12 @@ Two-tier archetype naming system optimized for performance and scalability:
 ```typescript
 // packages/domain/src/archetypes.ts
 export const CURATED_ARCHETYPES = {
-  "RPAM": {
+  RPAM: {
     name: "The Anchor",
     description: "You approach life with thoughtful balance...",
     color: "#7C3AED",
   },
-  "IDEC": {
+  IDEC: {
     name: "The Catalyst",
     description: "You spark change and inspire action...",
     color: "#DC2626",
@@ -468,13 +488,15 @@ export const CURATED_ARCHETYPES = {
 } as const;
 
 export function getArchetype(code: string) {
-  return CURATED_ARCHETYPES[code as keyof typeof CURATED_ARCHETYPES]
-    || generateComponentBasedName(code);
+  return (
+    CURATED_ARCHETYPES[code as keyof typeof CURATED_ARCHETYPES] ||
+    generateComponentBasedName(code)
+  );
 }
 
 // Component-based fallback
 function generateComponentBasedName(code: string): ArchetypeDetail {
-  const [o, c, e, a] = code.split('');
+  const [o, c, e, a] = code.split("");
   const adjective = TRAIT_ADJECTIVES[o + c]; // "Pragmatic"
   const noun = TRAIT_NOUNS[e + a]; // "Peer"
   return {
@@ -486,6 +508,7 @@ function generateComponentBasedName(code: string): ArchetypeDetail {
 ```
 
 **No Database Lookup Needed:**
+
 - Archetypes NOT stored in database
 - No migrations needed when adding new names
 - No RPC round-trip for archetype display
@@ -493,30 +516,34 @@ function generateComponentBasedName(code: string): ArchetypeDetail {
 
 **Performance Characteristics:**
 
-| Lookup Type | Time | Notes |
-|-------------|------|-------|
-| Curated (in-memory) | < 1ms | Object property access |
-| Generated (component) | < 5ms | String interpolation + color generation |
-| **Target: < 100ms** | ✅ Achieved | Both options far below threshold |
+| Lookup Type           | Time        | Notes                                   |
+| --------------------- | ----------- | --------------------------------------- |
+| Curated (in-memory)   | < 1ms       | Object property access                  |
+| Generated (component) | < 5ms       | String interpolation + color generation |
+| **Target: < 100ms**   | ✅ Achieved | Both options far below threshold        |
 
 **Rationale:**
+
 - Meets <100ms performance requirement with massive margin
 - Curated names are memorable (shareable identity)
 - Component generation scales to 243+ combinations without bottleneck
 - No database load (queries are expensive for high-volume queries)
 
 **Phase 2 Migration Path (if needed):**
+
 - If A/B testing archetype names becomes critical
 - Move to database-backed approach without refactoring
 - Add cache layer (Redis) for sub-millisecond lookups
 - No frontend logic changes needed
 
 **Trade-offs Accepted:**
+
 - Can't change archetype names without code redeploy (but rare post-MVP)
 - Generated names less memorable than hand-curated (acceptable for 51 fallback)
 - Component algorithm must be carefully designed for semantic coherence
 
 **Key Metrics:**
+
 - Lookup performance: < 5ms (P95)
 - Memory footprint: < 50KB (in-memory constant)
 - Curation coverage: 30-35% of 81 combinations (hand-curated)
@@ -526,13 +553,13 @@ function generateComponentBasedName(code: string): ArchetypeDetail {
 
 ## Architectural Decisions Summary
 
-| Decision | Recommended | Rationale | Key Trade-off |
-|----------|-------------|-----------|---------------|
-| **Nerin Orchestration** | LangGraph State Machine | Intelligent routing, cost-aware, centralized | Higher implementation complexity |
-| **Cost Control** | Adaptive Token Budget + Rate Limit | Prevents runaway costs, frictionless | Requires Redis + budget logic |
-| **Privacy Model** | Server-side Encryption + RLS + API Filtering | Single source of truth, defense in depth, secure | Requires AES-256 crypto layer |
-| **Frontend State** | TanStack Query + Session Resumption | Proven pattern, simple testing, no sync complexity | No offline message queuing (acceptable) |
-| **Archetype Lookup** | In-Memory + Component Fallback | <5ms performance, scalable, no DB load | Can't change names without redeploy |
+| Decision                | Recommended                                  | Rationale                                          | Key Trade-off                           |
+| ----------------------- | -------------------------------------------- | -------------------------------------------------- | --------------------------------------- |
+| **Nerin Orchestration** | LangGraph State Machine                      | Intelligent routing, cost-aware, centralized       | Higher implementation complexity        |
+| **Cost Control**        | Adaptive Token Budget + Rate Limit           | Prevents runaway costs, frictionless               | Requires Redis + budget logic           |
+| **Privacy Model**       | Server-side Encryption + RLS + API Filtering | Single source of truth, defense in depth, secure   | Requires AES-256 crypto layer           |
+| **Frontend State**      | TanStack Query + Session Resumption          | Proven pattern, simple testing, no sync complexity | No offline message queuing (acceptable) |
+| **Archetype Lookup**    | In-Memory + Component Fallback               | <5ms performance, scalable, no DB load             | Can't change names without redeploy     |
 
 ---
 
@@ -626,7 +653,7 @@ export const sendMessage = Rpc.rpcFunction({
     const session = yield* loadSession(input.sessionId);
     const response = yield* callNerin(input.message, session);
     return { response, precision: session.precision };
-  })
+  }),
 );
 ```
 
@@ -668,7 +695,7 @@ export const costGuardImpl = CostGuard.of({
 // Provide in app layer
 const app = Effect.provide(
   assessmentHandlers,
-  Layer.succeed(CostGuard, costGuardImpl)
+  Layer.succeed(CostGuard, costGuardImpl),
 );
 ```
 
@@ -786,6 +813,7 @@ ui             → (independent)
 ### Project Initialization with effect-worker-mono Pattern
 
 **Step 1: Frontend Setup**
+
 ```bash
 pnpm create @tanstack/start@latest apps/front \
   --add-ons shadcn,tanstack-query \
@@ -793,6 +821,7 @@ pnpm create @tanstack/start@latest apps/front \
 ```
 
 **Step 2: Backend Setup (Manual, following effect-worker-mono structure)**
+
 ```bash
 mkdir -p apps/api/src/{agents,handlers,services,middleware,db}
 
@@ -802,6 +831,7 @@ pnpm -C apps/api add effect @effect/rpc @effect/schema \
 ```
 
 **Step 3: Shared Packages (Already in place, follow effect-worker-mono structure)**
+
 - `packages/domain/` — Branded types, domain errors, Big Five schemas
 - `packages/contracts/` — RPC definitions, middleware tags, shared error types
 - `packages/database/` — Drizzle schema, migrations
@@ -823,15 +853,15 @@ pnpm -C apps/api add effect @effect/rpc @effect/schema \
 
 ### Evaluation Criteria (Weighted)
 
-| Criterion | Weight | Why It Matters |
-|-----------|--------|----------------|
-| **Setup Speed (MVP Timeline)** | 15% | Need working frontend + backend quickly |
-| **Effect-ts / RPC Alignment** | 20% | Must follow effect-worker-mono pattern cleanly |
-| **Cost Control Integration** | 15% | Budget enforcement is existential for self-funded MVP |
-| **LLM Orchestration (LangGraph)** | 15% | Nerin orchestration is your competitive moat |
-| **TanStack Query Integration** | 10% | Server-state management needs clean patterns |
-| **Long-Term Maintainability** | 15% | Avoid tech debt that haunts you post-launch |
-| **Documentation & Community** | 10% | Can you find help when stuck? |
+| Criterion                         | Weight | Why It Matters                                        |
+| --------------------------------- | ------ | ----------------------------------------------------- |
+| **Setup Speed (MVP Timeline)**    | 15%    | Need working frontend + backend quickly               |
+| **Effect-ts / RPC Alignment**     | 20%    | Must follow effect-worker-mono pattern cleanly        |
+| **Cost Control Integration**      | 15%    | Budget enforcement is existential for self-funded MVP |
+| **LLM Orchestration (LangGraph)** | 15%    | Nerin orchestration is your competitive moat          |
+| **TanStack Query Integration**    | 10%    | Server-state management needs clean patterns          |
+| **Long-Term Maintainability**     | 15%    | Avoid tech debt that haunts you post-launch           |
+| **Documentation & Community**     | 10%    | Can you find help when stuck?                         |
 
 ### Comparative Analysis: Starter Options
 
@@ -839,18 +869,19 @@ pnpm -C apps/api add effect @effect/rpc @effect/schema \
 
 **Approach:** Run `pnpm create @tanstack/start@latest` for both frontend AND backend
 
-| Criterion | Score | Analysis |
-|-----------|-------|----------|
-| Setup Speed | 9/10 | Fastest possible — one command, everything ready |
-| Effect-ts Alignment | 2/10 | ❌ TanStack Start doesn't include Effect-ts; retrofitting feels awkward |
-| Cost Control | 3/10 | ❌ No built-in Redis/budget tracking; requires custom bolting-on |
-| LangGraph Ready | 2/10 | ❌ Designed for tRPC/Server Functions, not multi-agent orchestration |
-| TanStack Query | 8/10 | ✅ TanStack Start integrates Query patterns well |
-| Maintainability | 4/10 | ⚠️ Mixing backend logic in TanStack blurs concerns; hard to separate |
-| Documentation | 9/10 | ✅ Excellent docs (for TanStack, not Effect-ts integration) |
-| **WEIGHTED SCORE** | **4.8/10** | ❌ **AVOID** |
+| Criterion           | Score      | Analysis                                                                |
+| ------------------- | ---------- | ----------------------------------------------------------------------- |
+| Setup Speed         | 9/10       | Fastest possible — one command, everything ready                        |
+| Effect-ts Alignment | 2/10       | ❌ TanStack Start doesn't include Effect-ts; retrofitting feels awkward |
+| Cost Control        | 3/10       | ❌ No built-in Redis/budget tracking; requires custom bolting-on        |
+| LangGraph Ready     | 2/10       | ❌ Designed for tRPC/Server Functions, not multi-agent orchestration    |
+| TanStack Query      | 8/10       | ✅ TanStack Start integrates Query patterns well                        |
+| Maintainability     | 4/10       | ⚠️ Mixing backend logic in TanStack blurs concerns; hard to separate    |
+| Documentation       | 9/10       | ✅ Excellent docs (for TanStack, not Effect-ts integration)             |
+| **WEIGHTED SCORE**  | **4.8/10** | ❌ **AVOID**                                                            |
 
 **Why This Fails:**
+
 - TanStack Start optimized for SSR + Server Functions (tRPC-style), not Effect-ts/RPC
 - Cost control, LangGraph orchestration, privacy layer feel bolted-on
 - Architectural confusion mixing frontend + backend in same framework
@@ -861,18 +892,19 @@ pnpm -C apps/api add effect @effect/rpc @effect/schema \
 
 **Approach:** Build frontend + backend scaffolding from scratch (no starters)
 
-| Criterion | Score | Analysis |
-|-----------|-------|----------|
-| Setup Speed | 3/10 | ❌ Slowest — you build everything from scratch |
-| Effect-ts Alignment | 10/10 | ✅ Full control; follow effect-worker-mono perfectly |
-| Cost Control | 10/10 | ✅ Build cost tracking exactly as envisioned |
-| LangGraph Ready | 10/10 | ✅ LangGraph + Effect layers integrate seamlessly |
-| TanStack Query | 7/10 | ⚠️ Works, but manual state management patterns needed |
-| Maintainability | 9/10 | ✅ Clear separation; no framework assumptions to fight |
-| Documentation | 4/10 | ❌ You write docs as you go; Effect-ts community is small |
-| **WEIGHTED SCORE** | **7.5/10** | ⚠️ **ACCEPTABLE** (slow to first working state) |
+| Criterion           | Score      | Analysis                                                  |
+| ------------------- | ---------- | --------------------------------------------------------- |
+| Setup Speed         | 3/10       | ❌ Slowest — you build everything from scratch            |
+| Effect-ts Alignment | 10/10      | ✅ Full control; follow effect-worker-mono perfectly      |
+| Cost Control        | 10/10      | ✅ Build cost tracking exactly as envisioned              |
+| LangGraph Ready     | 10/10      | ✅ LangGraph + Effect layers integrate seamlessly         |
+| TanStack Query      | 7/10       | ⚠️ Works, but manual state management patterns needed     |
+| Maintainability     | 9/10       | ✅ Clear separation; no framework assumptions to fight    |
+| Documentation       | 4/10       | ❌ You write docs as you go; Effect-ts community is small |
+| **WEIGHTED SCORE**  | **7.5/10** | ⚠️ **ACCEPTABLE** (slow to first working state)           |
 
 **Trade-off:**
+
 - ✅ Architectural purity
 - ❌ Weeks of scaffolding before first session runs
 - ❌ Risk: Solo decisions may miss best practices
@@ -883,18 +915,19 @@ pnpm -C apps/api add effect @effect/rpc @effect/schema \
 
 **Approach:** TanStack Start for `apps/front` + Manual Effect-ts for `apps/api` + effect-worker-mono pattern
 
-| Criterion | Score | Analysis |
-|-----------|-------|----------|
-| Setup Speed | 8/10 | ✅ Frontend ready immediately; backend scaffolding manageable |
-| Effect-ts Alignment | 9/10 | ✅ Backend follows effect-worker-mono exactly; frontend separate |
-| Cost Control | 9/10 | ✅ Effect layer for cost tracking feels natural; FiberRef bridges work seamlessly |
-| LangGraph Ready | 9/10 | ✅ LangGraph agents + Effect state machine is canonical pattern |
-| TanStack Query | 9/10 | ✅ TanStack Query provides proven server-state patterns seamlessly |
-| Maintainability | 9/10 | ✅ Clear split: frontend (TanStack) + backend (Effect) concerns |
-| Documentation | 8/10 | ✅ Reference TanStack Start docs + effect-worker-mono as guides |
-| **WEIGHTED SCORE** | **8.6/10** | ✅ **STRONGLY RECOMMENDED** |
+| Criterion           | Score      | Analysis                                                                          |
+| ------------------- | ---------- | --------------------------------------------------------------------------------- |
+| Setup Speed         | 8/10       | ✅ Frontend ready immediately; backend scaffolding manageable                     |
+| Effect-ts Alignment | 9/10       | ✅ Backend follows effect-worker-mono exactly; frontend separate                  |
+| Cost Control        | 9/10       | ✅ Effect layer for cost tracking feels natural; FiberRef bridges work seamlessly |
+| LangGraph Ready     | 9/10       | ✅ LangGraph agents + Effect state machine is canonical pattern                   |
+| TanStack Query      | 9/10       | ✅ TanStack Query provides proven server-state patterns seamlessly                |
+| Maintainability     | 9/10       | ✅ Clear split: frontend (TanStack) + backend (Effect) concerns                   |
+| Documentation       | 8/10       | ✅ Reference TanStack Start docs + effect-worker-mono as guides                   |
+| **WEIGHTED SCORE**  | **8.6/10** | ✅ **STRONGLY RECOMMENDED**                                                       |
 
 **Why This Wins:**
+
 - ✅ Frontend ready in hours (leverage TanStack CLI)
 - ✅ Backend clarity (manual scaffolding = exact effect-worker-mono alignment)
 - ✅ Cost control, LangGraph, TanStack Query feel like natural extensions
@@ -929,6 +962,7 @@ The **Hybrid approach** (TanStack Start CLI + Manual Effect-ts) scores **8.6/10*
 ### Implementation Path
 
 **Step 1: Frontend Initialization**
+
 ```bash
 pnpm create @tanstack/start@latest apps/front \
   --add-ons shadcn,tanstack-query \
@@ -936,6 +970,7 @@ pnpm create @tanstack/start@latest apps/front \
 ```
 
 **Step 2: Backend Scaffolding (Manual, effect-worker-mono pattern)**
+
 ```bash
 # Create directory structure
 mkdir -p apps/api/src/{agents,handlers,services,middleware,db,context}
@@ -958,10 +993,12 @@ pnpm -C apps/api add -D \
 ```
 
 **Step 3: Shared Packages (Already exist in monorepo)**
+
 - No additional commands; pnpm workspace links automatically
 - Existing: `packages/{domain,contracts,database,infrastructure,ui}`
 
 **Step 4: Wire Up First Session (End-to-End Flow)**
+
 - Implement `startAssessment` RPC handler
 - Implement `sendMessage` RPC handler with Nerin orchestration
 - Wire TanStack Query hooks (useSessionHistory, useSendMessage)
@@ -969,14 +1006,14 @@ pnpm -C apps/api add -D \
 
 ### Timeline & Milestones
 
-| Phase | Week | Deliverable |
-|-------|------|-------------|
-| **Phase 1: Setup** | Week 1 | TanStack Start initialized + backend directory structure + RPC contracts |
+| Phase                          | Week     | Deliverable                                                               |
+| ------------------------------ | -------- | ------------------------------------------------------------------------- |
+| **Phase 1: Setup**             | Week 1   | TanStack Start initialized + backend directory structure + RPC contracts  |
 | **Phase 2: Core Session Flow** | Week 1-2 | First session end-to-end (startAssessment → sendMessage → resume via URL) |
-| **Phase 3: Nerin Integration** | Week 2-3 | LangGraph agent orchestration working + streaming responses |
-| **Phase 4: Cost Control** | Week 3 | Budget tracking + rate limiting operational |
-| **Phase 5: Privacy & Sharing** | Week 3-4 | Server-side encryption + RLS + public profiles working |
-| **Phase 6: Testing & QA** | Week 4 | Unit tests, integration tests, E2E tests, Storybook docs |
+| **Phase 3: Nerin Integration** | Week 2-3 | LangGraph agent orchestration working + streaming responses               |
+| **Phase 4: Cost Control**      | Week 3   | Budget tracking + rate limiting operational                               |
+| **Phase 5: Privacy & Sharing** | Week 3-4 | Server-side encryption + RLS + public profiles working                    |
+| **Phase 6: Testing & QA**      | Week 4   | Unit tests, integration tests, E2E tests, Storybook docs                  |
 
 ### Key References During Implementation
 
@@ -989,14 +1026,17 @@ pnpm -C apps/api add -D \
 ### Risk Mitigation
 
 **Risk 1: Manual backend scaffolding creates inconsistency**
+
 - **Mitigation:** Use effect-worker-mono as strict reference; follow directory structure exactly
 - **Prevention:** Create implementation checklist verifying against effect-worker-mono pattern
 
 **Risk 2: Effect-ts learning curve delays backend work**
+
 - **Mitigation:** Dedicate developer time to study effect-worker-mono handlers before implementation
 - **Prevention:** Team review of Effect patterns + FiberRef bridges first
 
 **Risk 3: TanStack Query caching edge cases (stale data)**
+
 - **Mitigation:** Set appropriate `staleTime` and `refetchInterval` for assessment data (suggest: staleTime 1s, refetch on window focus)
 - **Prevention:** Write integration tests for mutation + refetch cycles (test optimistic update rollback)
 
@@ -1011,6 +1051,7 @@ pnpm -C apps/api add -D \
 **Library:** [Better Auth](https://www.better-auth.com/docs/basic-usage) (default transport: HTTP cookies + sessions)
 
 **Authentication Methods (MVP):**
+
 - ✅ Email & Password (with NIST 2025 validation)
 - ❌ OAuth Providers (deferred to Phase 2: Facebook, Google)
 - ❌ Multi-Factor Authentication (deferred to Phase 2: optional email code or TOTP)
@@ -1021,7 +1062,7 @@ Based on [NIST 2025 Guidelines](https://www.strongdm.com/blog/nist-password-guid
 
 - **Minimum Length:** 12 characters (recommended over 8-character minimum)
 - **Character Composition:** All ASCII + Unicode allowed (no forced uppercase/numbers/symbols)
-- **Compromised Credential Screening:** *Optional post-MVP enhancement* (intentionally excluded from MVP to reduce external dependencies and improve signup reliability)
+- **Compromised Credential Screening:** _Optional post-MVP enhancement_ (intentionally excluded from MVP to reduce external dependencies and improve signup reliability)
 - **No Mandatory Expiration:** Only reset on confirmed breach
 - **Password Manager Support:** Full compatibility with long, random passwords
 
@@ -1069,7 +1110,7 @@ auth.onAfterSignUp(async (context) => {
     // Link anonymous session → new user account
     await db.sessions.update(
       { id: anonymousSessionId },
-      { userId: newUser.id }
+      { userId: newUser.id },
     );
   }
 
@@ -1271,7 +1312,7 @@ export const startAssessment = Rpc.rpcFunction({
     yield* persistSession(sessionId, auth.userId);
 
     return { sessionId, createdAt: new Date() };
-  })
+  }),
 );
 
 // sendMessage allows both anonymous and authenticated
@@ -1293,27 +1334,31 @@ export const sendMessage = Rpc.rpcFunction({
     const response = yield* Nerin.chat(input.message, session);
 
     return { response, precision: session.precision };
-  })
+  }),
 );
 ```
 
 **Multi-Factor Authentication (MFA):**
+
 - ❌ **MVP Scope:** Skipped for speed
 - ✅ **Phase 2:** Add optional email code or TOTP-based MFA
 
 **OAuth Providers:**
+
 - ❌ **MVP Scope:** Email/password only
 - ✅ **Phase 2:** Add Google, Facebook social login
 
 **Database Tables (Better Auth Auto-Creates):**
 
 Better Auth creates these tables automatically with Drizzle adapter:
+
 - `user` — User accounts
 - `session` — Active sessions
 - `account` — OAuth account links (for Phase 2)
 - `verification` — Email verification tokens
 
 **Sources:**
+
 - [Better Auth: Basic Usage](https://www.better-auth.com/docs/basic-usage)
 - [Better Auth: Email & Password](https://www.better-auth.com/docs/authentication/email-password)
 - [Better Auth: Hooks](https://www.better-auth.com/docs/concepts/hooks)
@@ -1338,38 +1383,61 @@ Using Effect's `Data.TaggedError` for all domain errors:
 import { Data } from "effect";
 
 // Domain-specific errors
-export class SessionNotFoundError extends Data.TaggedError("SessionNotFoundError") {
+export class SessionNotFoundError extends Data.TaggedError(
+  "SessionNotFoundError",
+) {
   constructor(readonly sessionId: string) {
     super();
   }
 }
 
-export class CostLimitExceededError extends Data.TaggedError("CostLimitExceededError") {
-  constructor(readonly userId: string, readonly spent: number, readonly limit: number) {
+export class CostLimitExceededError extends Data.TaggedError(
+  "CostLimitExceededError",
+) {
+  constructor(
+    readonly userId: string,
+    readonly spent: number,
+    readonly limit: number,
+  ) {
     super();
   }
 }
 
 export class LLMError extends Data.TaggedError("LLMError") {
-  constructor(readonly model: string, readonly message: string, readonly status?: number) {
+  constructor(
+    readonly model: string,
+    readonly message: string,
+    readonly status?: number,
+  ) {
     super();
   }
 }
 
-export class PrecisionTooLowError extends Data.TaggedError("PrecisionTooLowError") {
-  constructor(readonly sessionId: string, readonly currentPrecision: number) {
+export class PrecisionTooLowError extends Data.TaggedError(
+  "PrecisionTooLowError",
+) {
+  constructor(
+    readonly sessionId: string,
+    readonly currentPrecision: number,
+  ) {
     super();
   }
 }
 
 export class DatabaseError extends Data.TaggedError("DatabaseError") {
-  constructor(readonly operation: string, readonly cause: Error) {
+  constructor(
+    readonly operation: string,
+    readonly cause: Error,
+  ) {
     super();
   }
 }
 
 export class ElectricSyncError extends Data.TaggedError("ElectricSyncError") {
-  constructor(readonly table: string, readonly message: string) {
+  constructor(
+    readonly table: string,
+    readonly message: string,
+  ) {
     super();
   }
 }
@@ -1401,10 +1469,10 @@ import { AssessmentSessionRepository } from "@workspace/domain/repositories/asse
 import { SessionNotFound, DatabaseError } from "@workspace/contracts/errors";
 
 export const sendMessage = (
-  input: SendMessageInput
+  input: SendMessageInput,
 ): Effect.Effect<
   SendMessageOutput,
-  DatabaseError | SessionNotFound,  // ← Errors declared in type signature
+  DatabaseError | SessionNotFound, // ← Errors declared in type signature
   AssessmentSessionRepository | AssessmentMessageRepository
 > =>
   Effect.gen(function* () {
@@ -1442,22 +1510,25 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
             .where(eq(sessions.id, sessionId))
             .pipe(
               Effect.mapError((error) => {
-                logger.error("Database operation failed", { operation: "getSession", error });
-                return new DatabaseError({ message: "Failed to fetch session" });
-              })
+                logger.error("Database operation failed", {
+                  operation: "getSession",
+                  error,
+                });
+                return new DatabaseError({
+                  message: "Failed to fetch session",
+                });
+              }),
             );
 
           if (!session || session.length === 0) {
             // Infrastructure throws domain error
-            return yield* Effect.fail(
-              new SessionNotFound({ sessionId })
-            );
+            return yield* Effect.fail(new SessionNotFound({ sessionId }));
           }
 
           return session[0];
         }),
     });
-  })
+  }),
 );
 ```
 
@@ -1565,11 +1636,19 @@ export function mapErrorToHttpStatus(error: unknown): {
   tag?: string;
 } {
   if (error instanceof SessionNotFoundError) {
-    return { status: 404, message: "Session not found", tag: "SessionNotFoundError" };
+    return {
+      status: 404,
+      message: "Session not found",
+      tag: "SessionNotFoundError",
+    };
   }
 
   if (error instanceof CostLimitExceededError) {
-    return { status: 429, message: "Daily assessment limit reached", tag: "CostLimitExceededError" };
+    return {
+      status: 429,
+      message: "Daily assessment limit reached",
+      tag: "CostLimitExceededError",
+    };
   }
 
   if (error instanceof LLMError) {
@@ -1601,12 +1680,14 @@ app.post("/api/rpc", async (req, res) => {
 ```
 
 **Key Benefits:**
+
 - ✅ Type-safe: Compiler catches unhandled error types
 - ✅ Discriminated unions: Easy pattern matching on error tags
 - ✅ Composable: Errors flow through Effect pipelines
 - ✅ Serializable: Works with @effect/rpc automatically
 
 **Sources:**
+
 - [Effect Documentation: Expected Errors](https://effect.website/docs/error-management/expected-errors/)
 - [Effect Documentation: TaggedError](https://www.typeonce.dev/course/effect-beginners-complete-getting-started/type-safe-error-handling-with-effect/define-errors-with-taggederror)
 
@@ -1646,17 +1727,15 @@ export const logger =
           err: pino.stdSerializers.err,
         },
       })
-    : pino(
-        {
-          level: process.env.LOG_LEVEL || "debug",
-          transport: {
-            target: "pino-pretty",
-            options: {
-              colorize: true,
-            },
+    : pino({
+        level: process.env.LOG_LEVEL || "debug",
+        transport: {
+          target: "pino-pretty",
+          options: {
+            colorize: true,
           },
-        }
-      );
+        },
+      });
 
 // Child logger per request (for context tracking)
 export function getRequestLogger(sessionId: string, userId?: string) {
@@ -1690,8 +1769,7 @@ export const sendMessage = ((input) =>
     });
 
     return { response, precision: 0.72 };
-  })
-) as RpcFunction;
+  })) as RpcFunction;
 ```
 
 **Log Output (JSON):**
@@ -1713,12 +1791,14 @@ export const sendMessage = ((input) =>
 ```
 
 **Key Benefits:**
+
 - ✅ 5x faster than Winston (minimal overhead)
 - ✅ JSON by default (searchable, structured)
 - ✅ Child loggers (per-session context)
 - ✅ Cloud-native (works with log aggregators)
 
 **Sources:**
+
 - [Pino Complete Guide 2026](https://signoz.io/guides/pino-logger/)
 - [Pino vs Winston Comparison](https://betterstack.com/community/comparisons/pino-vs-winston/)
 
@@ -1731,6 +1811,7 @@ export const sendMessage = ((input) =>
 Sentry provides error tracking, performance monitoring, and alerting:
 
 **Pricing & Plan:**
+
 - **Plan:** Free Developer (supports MVP)
 - **Cost:** $0/month
 - **Event Quota:** ~5,000 events/month (should be sufficient for MVP)
@@ -1802,7 +1883,11 @@ app.listen(4000);
 ```typescript
 // apps/api/src/middleware/error-handler.ts
 import * as Sentry from "@sentry/node";
-import { SessionNotFoundError, CostLimitExceededError, LLMError } from "@workspace/domain";
+import {
+  SessionNotFoundError,
+  CostLimitExceededError,
+  LLMError,
+} from "@workspace/domain";
 
 export function captureError(error: unknown, context: Record<string, any>) {
   if (error instanceof SessionNotFoundError) {
@@ -1885,6 +1970,7 @@ export function AssessmentUI() {
 **Critical Alerts (Email):**
 
 Sentry sends email alerts for:
+
 - ✅ **New Error Types:** First time an error occurs
 - ✅ **Error Spike:** Error rate suddenly increases (> 2x baseline)
 - ✅ **Regression:** Error reappears after being marked resolved
@@ -1907,6 +1993,7 @@ Sentry sends email alerts for:
 **Monitoring Dashboard:**
 
 Sentry provides:
+
 - Error timeline (when errors occurred)
 - Stack traces (where errors happened)
 - Breadcrumbs (what happened before error)
@@ -1914,6 +2001,7 @@ Sentry provides:
 - Performance metrics (transaction duration, slow requests)
 
 **Key Benefits:**
+
 - ✅ Free (Developer plan fits MVP)
 - ✅ Backend + Frontend unified
 - ✅ Email alerts (no Slack needed)
@@ -1921,6 +2009,7 @@ Sentry provides:
 - ✅ Session replay (debug user issues)
 
 **Sources:**
+
 - [Sentry: Express Integration](https://docs.sentry.io/platforms/javascript/guides/express/)
 - [Sentry: Pricing & Plans 2026](https://sentry.io/pricing/)
 - [Sentry: Node.js Setup](https://docs.sentry.io/platforms/javascript/guides/node/)
@@ -1933,44 +2022,47 @@ Sentry provides:
 
 ```typescript
 // apps/api/src/handlers/assessment.ts
-const handleSendMessage = yield* Effect.gen(function* () {
-  const logger = getRequestLogger(sessionId);
-  const costGuard = yield* Effect.service(CostGuard);
+const handleSendMessage =
+  yield *
+  Effect.gen(function* () {
+    const logger = getRequestLogger(sessionId);
+    const costGuard = yield* Effect.service(CostGuard);
 
-  // Log LLM call as breadcrumb (appears in Sentry error context)
-  Sentry.addBreadcrumb({
-    category: "llm",
-    message: "Claude API call",
-    level: "info",
-    data: {
+    // Log LLM call as breadcrumb (appears in Sentry error context)
+    Sentry.addBreadcrumb({
+      category: "llm",
+      message: "Claude API call",
+      level: "info",
+      data: {
+        model: "claude-3.5-sonnet",
+        tokens: response.tokens,
+        cost: response.tokens * 0.003,
+      },
+    });
+
+    logger.info("llm_cost_tracked", {
+      sessionId,
       model: "claude-3.5-sonnet",
       tokens: response.tokens,
       cost: response.tokens * 0.003,
-    },
-  });
-
-  logger.info("llm_cost_tracked", {
-    sessionId,
-    model: "claude-3.5-sonnet",
-    tokens: response.tokens,
-    cost: response.tokens * 0.003,
-    totalSessionCost: yield* costGuard.getSessionCost(sessionId),
-  });
-
-  // Alert if approaching daily limit
-  const dailySpent = yield* costGuard.getDailySpent();
-  if (dailySpent > 60) {
-    Sentry.captureMessage("Approaching daily cost limit", "warning", {
-      tags: { cost_tracking: "true" },
-      extra: { spent: dailySpent, limit: 75 },
+      totalSessionCost: yield* costGuard.getSessionCost(sessionId),
     });
-  }
-});
+
+    // Alert if approaching daily limit
+    const dailySpent = yield* costGuard.getDailySpent();
+    if (dailySpent > 60) {
+      Sentry.captureMessage("Approaching daily cost limit", "warning", {
+        tags: { cost_tracking: "true" },
+        extra: { spent: dailySpent, limit: 75 },
+      });
+    }
+  });
 ```
 
 **Query logs in production:**
 
 You can query Pino logs via:
+
 - Local development: `grep "llm_cost_tracked"` in logs
 - Production: Export logs to monitoring service
 - Sentry: View cost data in breadcrumbs when debugging errors
@@ -1979,13 +2071,13 @@ You can query Pino logs via:
 
 ### Decision Summary: Error Handling & Observability
 
-| Component | Choice | Rationale |
-|-----------|--------|-----------|
-| **Error Model** | Effect TaggedError | Type-safe, composable, integrates with @effect/rpc |
-| **Structured Logging** | Pino | 5x faster, cloud-native, minimal overhead |
-| **Error Monitoring** | Sentry Free Plan | $0/month, backend + frontend, email alerts |
-| **Cost Tracking** | Pino logs + Sentry breadcrumbs | Queryable cost events, correlated with errors |
-| **Alerting** | Email (Sentry default) | Simple setup, no Slack needed for MVP |
+| Component              | Choice                         | Rationale                                          |
+| ---------------------- | ------------------------------ | -------------------------------------------------- |
+| **Error Model**        | Effect TaggedError             | Type-safe, composable, integrates with @effect/rpc |
+| **Structured Logging** | Pino                           | 5x faster, cloud-native, minimal overhead          |
+| **Error Monitoring**   | Sentry Free Plan               | $0/month, backend + frontend, email alerts         |
+| **Cost Tracking**      | Pino logs + Sentry breadcrumbs | Queryable cost events, correlated with errors      |
+| **Alerting**           | Email (Sentry default)         | Simple setup, no Slack needed for MVP              |
 
 **Implementation Order:**
 
@@ -2029,6 +2121,7 @@ React Component (automatic re-render with latest state)
 ```
 
 **Why TanStack Query:**
+
 - ✅ Standard, proven React data fetching library
 - ✅ Optimistic mutations (instant feedback)
 - ✅ Automatic background refetching and caching
@@ -2093,7 +2186,10 @@ export function useSendMessage(sessionId: string) {
       await queryClient.cancelQueries({ queryKey: ["session", sessionId] });
 
       // Save previous state for rollback
-      const previous = queryClient.getQueryData<Session>(["session", sessionId]);
+      const previous = queryClient.getQueryData<Session>([
+        "session",
+        sessionId,
+      ]);
 
       // Optimistic update: add user message immediately
       if (previous) {
@@ -2135,6 +2231,7 @@ export function usePrecision(sessionId: string) {
 ```
 
 **Benefits:**
+
 - ✅ **Instant feedback:** Optimistic updates feel seamless
 - ✅ **Automatic sync:** Background refetch keeps UI in sync with server
 - ✅ **Network resilient:** Retry logic handles temporary failures
@@ -2143,6 +2240,7 @@ export function usePrecision(sessionId: string) {
 - ✅ **Proven pattern:** Used by millions of React apps
 
 **Sources:**
+
 - [TanStack Query Overview](https://tanstack.com/query/latest)
 - [Optimistic Updates](https://tanstack.com/query/latest/docs/react/guides/optimistic-updates)
 - [Using React Query](https://tkdodo.eu/blog/the-end-of-an-era-tannos-last-dance)
@@ -2212,6 +2310,7 @@ All smooth, no jank
 - ✅ **Automatic refetch:** Background sync keeps UI in sync with server
 
 **Sources:**
+
 - [TanStack Query Optimistic Updates](https://tanstack.com/query/latest/docs/react/guides/optimistic-updates)
 
 ---
@@ -2323,6 +2422,7 @@ export function AssessmentPage() {
 - ✅ **Robust:** No ElectricSQL/sync edge cases
 
 **Sources:**
+
 - [TanStack Query Overview](https://tanstack.com/query/latest)
 
 ---
@@ -2443,15 +2543,15 @@ export function SignUpModal() {
 
 ### Frontend State Management Architecture Summary
 
-| State Type | Technology | Pattern | Updates |
-|-----------|-----------|---------|---------|
-| **Assessment Data** | TanStack Query | Server-state caching | Background refetch |
-| **Conversation** | TanStack Query (cached) | useSessionHistory hook | On refetch |
-| **Precision** | TanStack Query (cached) | useSessionHistory hook | On refetch |
-| **OCEAN Code** | TanStack Query (cached) | useSessionHistory hook | On refetch |
-| **UI (Modals)** | React Context | Manual | User events |
-| **Form (Sign-up)** | TanStack Form | Form-driven | Form submission |
-| **Shared Profile** | TanStack Query | Server state | On-demand |
+| State Type          | Technology              | Pattern                | Updates            |
+| ------------------- | ----------------------- | ---------------------- | ------------------ |
+| **Assessment Data** | TanStack Query          | Server-state caching   | Background refetch |
+| **Conversation**    | TanStack Query (cached) | useSessionHistory hook | On refetch         |
+| **Precision**       | TanStack Query (cached) | useSessionHistory hook | On refetch         |
+| **OCEAN Code**      | TanStack Query (cached) | useSessionHistory hook | On refetch         |
+| **UI (Modals)**     | React Context           | Manual                 | User events        |
+| **Form (Sign-up)**  | TanStack Form           | Form-driven            | Form submission    |
+| **Shared Profile**  | TanStack Query          | Server state           | On-demand          |
 
 **Key Principles:**
 
@@ -2480,6 +2580,7 @@ This decision addresses three interconnected concerns: deployment platform simpl
 ### Context: Why Simplified Infrastructure Matters
 
 For a self-funded MVP with complex LLM orchestration, **operational burden is a productivity killer**. Every additional platform means:
+
 - Extra login credentials to manage
 - Separate billing invoices
 - Different learning curves
@@ -2496,15 +2597,15 @@ For a self-funded MVP with complex LLM orchestration, **operational burden is a 
 
 #### Why All-Railway vs. Vercel + Railway?
 
-| Aspect | All Railway | Vercel + Railway |
-|--------|------------|-----------------|
-| **Platforms to manage** | 1 | 2 |
-| **Dashboards** | 1 | 2 |
-| **Billing** | 1 invoice | 2 invoices |
-| **Latency** | Lowest (co-located) | Slight cross-platform overhead |
-| **Learning curve** | Single ecosystem | Learn both platforms |
+| Aspect                    | All Railway                      | Vercel + Railway               |
+| ------------------------- | -------------------------------- | ------------------------------ |
+| **Platforms to manage**   | 1                                | 2                              |
+| **Dashboards**            | 1                                | 2                              |
+| **Billing**               | 1 invoice                        | 2 invoices                     |
+| **Latency**               | Lowest (co-located)              | Slight cross-platform overhead |
+| **Learning curve**        | Single ecosystem                 | Learn both platforms           |
 | **Docker Compose parity** | Perfect (same container runtime) | Good but two deployment styles |
-| **MVP Friction** | Minimal | Additional context switching |
+| **MVP Friction**          | Minimal                          | Additional context switching   |
 
 **Key Insight:** Vercel's main advantage is TanStack Start SSR optimization (built by same team). For MVP, this is **premature optimization**. Railway serves TanStack Start perfectly fine.
 
@@ -2532,12 +2633,14 @@ Railway Dashboard (Single pane of glass):
 ```
 
 **Cost Estimate (MVP):**
+
 - Backend service: $2-5/month (usage-based)
 - PostgreSQL: $2-5/month (usage-based)
 - Redis: $1-2/month (usage-based)
 - **Total: $5-12/month** ✅ Cheapest option
 
 **Key Benefits:**
+
 - ✅ Single dashboard = single source of truth for monitoring
 - ✅ Docker Compose locally → exact same container in production
 - ✅ No cold starts (traditional VPS, not serverless)
@@ -2547,12 +2650,14 @@ Railway Dashboard (Single pane of glass):
 - ✅ Free tier available for experimentation
 
 **Constraints:**
+
 - ⚠️ Less advanced SSR optimizations than Vercel (negligible for MVP)
 - ⚠️ No global edge deployment (acceptable for MVP latency targets)
 
 **When You'd Upgrade (Phase 2):**
 
 If you need global edge deployment or advanced SSR optimizations, add **Vercel as a CDN in front** without changing backend:
+
 ```
 Users → Vercel CDN (edge caching)
      → Railway backend (origin)
@@ -2566,14 +2671,14 @@ Users → Vercel CDN (edge caching)
 
 **Why Railway Database?**
 
-| Aspect | Railway | Alternatives |
-|--------|---------|--------------|
-| **Cost (MVP)** | $2-5/month | Neon $0 (free), Render $7+, Supabase $0-25 |
-| **Setup time** | 2 minutes (click "Add Postgres") | 5 minutes (external setup) |
-| **Encryption at rest** | ✅ Supported | ✅ All support encryption |
-| **Operational burden** | Minimal (managed by Railway) | Minimal (managed) |
-| **Scaling** | Automatic | Automatic |
-| **Backup included** | Yes (7 days) | Yes (varies by provider) |
+| Aspect                 | Railway                          | Alternatives                               |
+| ---------------------- | -------------------------------- | ------------------------------------------ |
+| **Cost (MVP)**         | $2-5/month                       | Neon $0 (free), Render $7+, Supabase $0-25 |
+| **Setup time**         | 2 minutes (click "Add Postgres") | 5 minutes (external setup)                 |
+| **Encryption at rest** | ✅ Supported                     | ✅ All support encryption                  |
+| **Operational burden** | Minimal (managed by Railway)     | Minimal (managed)                          |
+| **Scaling**            | Automatic                        | Automatic                                  |
+| **Backup included**    | Yes (7 days)                     | Yes (varies by provider)                   |
 
 **PostgreSQL Configuration:**
 
@@ -2600,6 +2705,7 @@ REDIS_URL=redis://user:pass@host:port
 ```
 
 **No Additional Setup Required:**
+
 - Railway manages schema migrations (you run `drizzle-kit push`)
 - Railway manages backups automatically
 - Railway manages connection pooling
@@ -2624,7 +2730,9 @@ Railway automatic backups (included):
 **Recovery Strategy:**
 
 If disaster occurs:
+
 1. **Within 7 days:** Use Railway's PITR (point-in-time recovery)
+
    ```bash
    # In Railway dashboard: Database → Restore → Choose timestamp
    ```
@@ -2634,6 +2742,7 @@ If disaster occurs:
 **When You'd Add 3-2-1 Backups (Phase 2):**
 
 Once you have paying users, implement:
+
 ```bash
 # Daily export to S3
 * 0 1 * * * \
@@ -2742,12 +2851,14 @@ pnpm -C apps/api drizzle-kit push
 ### Step 8: (Optional) Configure Frontend Deployment
 
 **Option A: Serve from Backend**
+
 ```typescript
 // apps/api/src/index.ts
 app.use(express.static("../front/dist"));
 ```
 
-**Option B: Separate Railway Service (Frontend as separate service)****
+**Option B: Separate Railway Service (Frontend as separate service)\*\***
+
 ```bash
 # In Railway dashboard → Add Service → GitHub
 # Select: apps/front
@@ -2763,7 +2874,7 @@ Your existing Docker Compose setup works **exactly** as production:
 
 ```yaml
 # docker-compose.yml
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
@@ -2835,6 +2946,7 @@ docker-compose logs -f backend
 ```
 
 **Parity with Production:**
+
 - ✅ Same PostgreSQL version (16)
 - ✅ Same Redis version (7)
 - ✅ Same Node.js runtime (Railway uses your Dockerfile)
@@ -2877,6 +2989,7 @@ Dashboard → Redis:
 **Alerting (Phase 2):**
 
 When database grows, add:
+
 - Railway alerts (CPU, memory, disk thresholds)
 - Custom metrics via Sentry
 
@@ -2884,17 +2997,18 @@ When database grows, add:
 
 ## Cost Summary (All-Railway Path)
 
-| Component | Monthly Cost | Notes |
-|-----------|------------|-------|
-| Backend | $2-5 | Usage-based (CPU hours, memory) |
-| PostgreSQL | $2-5 | Usage-based (storage, queries) |
-| Redis | $1-2 | Usage-based (memory, operations) |
-| **Railway Total** | **$5-12** | Scales with usage |
-| Claude API | ~$90 | Fixed (based on assessment volume) |
-| Sentry | $0 | Free Developer plan |
-| **MVP Total** | **~$95-102/month** | Dominated by LLM costs |
+| Component         | Monthly Cost       | Notes                              |
+| ----------------- | ------------------ | ---------------------------------- |
+| Backend           | $2-5               | Usage-based (CPU hours, memory)    |
+| PostgreSQL        | $2-5               | Usage-based (storage, queries)     |
+| Redis             | $1-2               | Usage-based (memory, operations)   |
+| **Railway Total** | **$5-12**          | Scales with usage                  |
+| Claude API        | ~$90               | Fixed (based on assessment volume) |
+| Sentry            | $0                 | Free Developer plan                |
+| **MVP Total**     | **~$95-102/month** | Dominated by LLM costs             |
 
 **Payment Model:**
+
 - All Railway services: Usage-based (you can set spending limits)
 - Claude API: Based on token usage (configure daily cap: $75/day)
 - Billing: Single Railway invoice + Anthropic invoice
@@ -2904,24 +3018,28 @@ When database grows, add:
 ## Why Not the Alternatives?
 
 ### Cloudflare Workers (Pages + Workers)
+
 - ❌ **10-30 second timeout** is dealbreaker for Nerin agent reasoning
 - ⚠️ LangGraph compatibility uncertain under timeout constraint
 - ⚠️ Effect-ts requires bridge pattern (extra complexity)
 - 🚨 Risk: Long reasoning chains would timeout
 
 ### Cloudflare Containers (Pages + Containers)
+
 - ⏳ **Still in beta** (launched June 2025, stability unproven)
 - ⚠️ **Pricing model unclear** (free during beta, unknown at GA)
 - ⚠️ Community track record thin
 - Later: Once Containers GA + pricing transparent, consider as alternative
 
 ### Vercel + Railway
+
 - ✅ Works well
 - ⚠️ **Extra complexity:** Two platforms, two dashboards, two invoices
 - ⚠️ Vercel's SSR advantages negligible for MVP
 - Later: Add Vercel CDN in Phase 2 if needed
 
 ### Docker VPS (Linode, Vultr, DigitalOcean)
+
 - ✅ Works, full control
 - ⚠️ **Operational burden:** You manage OS patching, backups, monitoring
 - ⚠️ Fixed cost ($20/month minimum)
@@ -2972,14 +3090,14 @@ As Needed:
 
 ## Decisions Summary
 
-| Aspect | Choice | Rationale |
-|--------|--------|-----------|
-| **Deployment Platform** | All-Railway | Single platform, lowest operational burden, perfect Docker Compose parity |
-| **Database** | Railway PostgreSQL | Managed, server-side encryption, AES-256 at rest, $2-5/month |
-| **Cache** | Railway Redis | Same platform, cost tracking + rate limiting, $1-2/month |
-| **Backup Strategy** | Railway managed + manual export (Phase 2) | 7-day PITR included, add 3-2-1 later |
-| **Monitoring** | Railway dashboard + Sentry + Pino | Coverage without extra tools |
-| **Frontend** | Serve from backend (MVP) or separate Railway service (Phase 2) | Simplicity vs. scaling trade-off |
+| Aspect                  | Choice                                                         | Rationale                                                                 |
+| ----------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| **Deployment Platform** | All-Railway                                                    | Single platform, lowest operational burden, perfect Docker Compose parity |
+| **Database**            | Railway PostgreSQL                                             | Managed, server-side encryption, AES-256 at rest, $2-5/month              |
+| **Cache**               | Railway Redis                                                  | Same platform, cost tracking + rate limiting, $1-2/month                  |
+| **Backup Strategy**     | Railway managed + manual export (Phase 2)                      | 7-day PITR included, add 3-2-1 later                                      |
+| **Monitoring**          | Railway dashboard + Sentry + Pino                              | Coverage without extra tools                                              |
+| **Frontend**            | Serve from backend (MVP) or separate Railway service (Phase 2) | Simplicity vs. scaling trade-off                                          |
 
 **Why This Wins for MVP:**
 
@@ -2992,6 +3110,7 @@ As Needed:
 ---
 
 **Sources:**
+
 - [Railway Documentation](https://docs.railway.app/)
 - [Railway Pricing](https://railway.app/pricing)
 - [PostgreSQL AES-256 Encryption](https://www.postgresql.org/docs/current/pgcrypto.html)
@@ -3024,6 +3143,7 @@ pnpm add -D vitest @vitest/ui @vitest/coverage-v8
 ```
 
 **Why Vitest:**
+
 - ✅ Native ESM support (no CommonJS issues)
 - ✅ Effect-ts friendly (Effect team uses Vitest)
 - ✅ Monorepo optimized (workspace setup built-in)
@@ -3037,6 +3157,7 @@ pnpm add -D vitest @vitest/ui @vitest/coverage-v8
 Following ADR-6 (Hexagonal Architecture), unit tests are primarily written for **use-cases**, not infrastructure:
 
 **Testing Hierarchy:**
+
 1. **Use-Cases** (Primary Target): Business logic tested with mock repositories
 2. **Domain Utilities**: Pure functions (OCEAN code generation, cost calculation)
 3. **Infrastructure**: Tested via integration tests (not unit tests)
@@ -3071,7 +3192,7 @@ const TestSessionRepo = Layer.succeed(
         updatedAt: new Date(),
       }),
     updateSession: (sessionId, data) => Effect.succeed(undefined),
-  })
+  }),
 );
 
 const TestMessageRepo = Layer.succeed(
@@ -3088,7 +3209,7 @@ const TestMessageRepo = Layer.succeed(
       }),
     getMessages: (sessionId) => Effect.succeed([]),
     getMessageCount: (sessionId) => Effect.succeed(0),
-  })
+  }),
 );
 
 const TestLogger = Layer.succeed(
@@ -3096,7 +3217,7 @@ const TestLogger = Layer.succeed(
   LoggerRepository.of({
     info: (msg, meta) => Effect.sync(() => {}),
     error: (msg, meta) => Effect.sync(() => {}),
-  })
+  }),
 );
 
 const TestLayer = Layer.mergeAll(TestSessionRepo, TestMessageRepo, TestLogger);
@@ -3124,10 +3245,14 @@ describe("sendMessage use-case", () => {
       AssessmentSessionRepository.of({
         getSession: (sessionId) =>
           Effect.fail(new SessionNotFound({ sessionId })),
-      })
+      }),
     );
 
-    const FailLayer = Layer.mergeAll(FailingSessionRepo, TestMessageRepo, TestLogger);
+    const FailLayer = Layer.mergeAll(
+      FailingSessionRepo,
+      TestMessageRepo,
+      TestLogger,
+    );
 
     const program = sendMessage({
       sessionId: "non-existent",
@@ -3135,7 +3260,7 @@ describe("sendMessage use-case", () => {
     });
 
     const result = await Effect.runPromise(
-      program.pipe(Effect.provide(FailLayer), Effect.either)
+      program.pipe(Effect.provide(FailLayer), Effect.either),
     );
 
     expect(result._tag).toBe("Left");
@@ -3234,7 +3359,7 @@ describe("Assessment RPC Integration", () => {
         expect(session).toBeDefined();
         expect(session?.userId).toBe("user123");
         expect(session?.precision).toBe(0);
-      }).pipe(Layer.provide(testEnv.layer))
+      }).pipe(Layer.provide(testEnv.layer)),
     );
   });
 
@@ -3252,14 +3377,16 @@ describe("Assessment RPC Integration", () => {
         });
 
         const handlers = AssessmentHandlers;
-        const result = yield* handlers.sendMessage({
-          sessionId,
-          message: "Message",
-        }).pipe(Effect.either);
+        const result = yield* handlers
+          .sendMessage({
+            sessionId,
+            message: "Message",
+          })
+          .pipe(Effect.either);
 
         expect(result._tag).toBe("Left");
         expect(result.left).toBeInstanceOf(CostLimitExceededError);
-      }).pipe(Layer.provide(testEnv.layer))
+      }).pipe(Layer.provide(testEnv.layer)),
     );
   });
 });
@@ -3320,6 +3447,7 @@ pnpm exec playwright install
 ```
 
 **Why Playwright:**
+
 - ✅ Multi-browser support (Chromium, Firefox, WebKit)
 - ✅ Better TanStack Start SSR support
 - ✅ Faster than Cypress (no instrumentation overhead)
@@ -3343,7 +3471,7 @@ test.describe("Assessment Flow", () => {
 
     // 2. Verify first message from Nerin
     await expect(
-      page.locator("[data-testid='nerin-message']").first()
+      page.locator("[data-testid='nerin-message']").first(),
     ).toContainText(/tell me about|describe yourself/i, { timeout: 10000 });
 
     // 3. Send messages (5 total to trigger analysis)
@@ -3363,19 +3491,20 @@ test.describe("Assessment Flow", () => {
       await page.waitForFunction(
         () =>
           document.querySelectorAll("[data-testid='nerin-message']").length > 0,
-        { timeout: 10000 }
+        { timeout: 10000 },
       );
     }
 
     // 4. Verify precision indicator updated
-    const precision = await page.locator("[data-testid='precision-bar']")
+    const precision = await page
+      .locator("[data-testid='precision-bar']")
       .getAttribute("data-precision");
     expect(Number(precision)).toBeGreaterThan(0);
 
     // 5. Verify OCEAN code displayed
-    await expect(
-      page.locator("[data-testid='ocean-code-4letter']")
-    ).toMatch(/^[A-Z]{4}$/);
+    await expect(page.locator("[data-testid='ocean-code-4letter']")).toMatch(
+      /^[A-Z]{4}$/,
+    );
 
     // 6. Verify archetype name displayed
     await expect(page.locator("[data-testid='archetype-name']")).toBeDefined();
@@ -3394,7 +3523,7 @@ test.describe("Assessment Flow", () => {
 
     // Verify message still there
     await expect(
-      page.locator("[data-testid='user-message']").first()
+      page.locator("[data-testid='user-message']").first(),
     ).toContainText("I love nature");
   });
 
@@ -3420,13 +3549,17 @@ test.describe("Assessment Flow", () => {
     await anonPage.goto(shareLink);
 
     // Verify public profile visible
-    await expect(anonPage.locator("[data-testid='archetype-name']")).toBeDefined();
     await expect(
-      anonPage.locator("[data-testid='ocean-code-4letter']")
+      anonPage.locator("[data-testid='archetype-name']"),
+    ).toBeDefined();
+    await expect(
+      anonPage.locator("[data-testid='ocean-code-4letter']"),
     ).toBeDefined();
 
     // Verify private data NOT visible
-    await expect(anonPage.locator("[data-testid='full-conversation']")).not.toBeVisible();
+    await expect(
+      anonPage.locator("[data-testid='full-conversation']"),
+    ).not.toBeVisible();
   });
 });
 ```
@@ -3577,7 +3710,7 @@ describe("Precision Scoring Determinism", () => {
         conscientiousness: 16,
         extraversion: 14,
         agreeableness: 17,
-      })
+      }),
     );
 
     const messages = [
@@ -3601,23 +3734,24 @@ describe("Precision Scoring Determinism", () => {
 
 ### Test Coverage Goals (MVP Phase 1)
 
-| Layer | Coverage Goal | Priority |
-|-------|--------------|----------|
-| **Domain Logic** (OCEAN, cost, precision) | 100% | Critical |
-| **RPC Contracts** (sendMessage, startAssessment) | 90%+ | Critical |
-| **Database Queries** (Drizzle) | 80%+ | High |
-| **LangGraph Routing** | 85%+ | High |
-| **Authentication Flow** | 70%+ | High |
-| **UI Components** (shadcn/ui) | 100% Storybook docs, 60% unit tests | High |
-| **Component Accessibility** (a11y) | 100% checklist via Storybook addon | Critical |
-| **Error Handling** | 90%+ | Critical |
-| **E2E Happy Path** | 100% | Critical |
+| Layer                                            | Coverage Goal                       | Priority |
+| ------------------------------------------------ | ----------------------------------- | -------- |
+| **Domain Logic** (OCEAN, cost, precision)        | 100%                                | Critical |
+| **RPC Contracts** (sendMessage, startAssessment) | 90%+                                | Critical |
+| **Database Queries** (Drizzle)                   | 80%+                                | High     |
+| **LangGraph Routing**                            | 85%+                                | High     |
+| **Authentication Flow**                          | 70%+                                | High     |
+| **UI Components** (shadcn/ui)                    | 100% Storybook docs, 60% unit tests | High     |
+| **Component Accessibility** (a11y)               | 100% checklist via Storybook addon  | Critical |
+| **Error Handling**                               | 90%+                                | Critical |
+| **E2E Happy Path**                               | 100%                                | Critical |
 
 ---
 
 ### Decision 5E: Component Documentation & Storybook
 
 **Context:** The `packages/ui` library contains shadcn/ui-based components shared across frontend and backend (SSR-friendly). Each component needs:
+
 - Interactive documentation (Storybook)
 - Visual regression testing
 - Accessibility testing
@@ -3682,7 +3816,14 @@ const meta = {
   argTypes: {
     variant: {
       control: "select",
-      options: ["default", "destructive", "outline", "secondary", "ghost", "link"],
+      options: [
+        "default",
+        "destructive",
+        "outline",
+        "secondary",
+        "ghost",
+        "link",
+      ],
     },
     size: {
       control: "select",
@@ -3935,6 +4076,7 @@ pnpm chromatic --auto
 ### Decision 5G: Component Accessibility Testing
 
 **Built-in:** Storybook's `@storybook/addon-a11y` checks every story for:
+
 - ✅ Color contrast (WCAG AA/AAA)
 - ✅ Missing labels/ARIA attributes
 - ✅ Keyboard navigation
@@ -3989,6 +4131,7 @@ export const Default: Story = {
 **Every component story should include:**
 
 1. **JSDoc Comments** — Brief description + usage notes
+
    ```typescript
    /**
     * Button component for primary actions.
@@ -4000,6 +4143,7 @@ export const Default: Story = {
    ```
 
 2. **Args & ArgTypes** — Document all props
+
    ```typescript
    argTypes: {
      variant: {
@@ -4011,6 +4155,7 @@ export const Default: Story = {
    ```
 
 3. **Accessibility Demo** — Show a11y-compliant usage
+
    ```typescript
    export const Accessible: Story = {
      args: { ... },
@@ -4025,8 +4170,8 @@ export const Default: Story = {
    export const Interactive: Story = {
      play: async ({ canvasElement }) => {
        await userEvent.click(button);
-     }
-   }
+     },
+   };
    ```
 
 ---
@@ -4100,6 +4245,7 @@ jobs:
 ```
 
 **Result:** Every PR shows:
+
 - ✅ Component stories built successfully
 - ✅ No accessibility violations
 - ✅ Storybook deployed to GitHub Pages
@@ -4195,17 +4341,17 @@ apps/
 
 ## Decisions Summary: Testing Strategy
 
-| Aspect | Choice | Rationale |
-|--------|--------|-----------|
-| **Unit Testing** | Vitest | Fast, ESM-native, Effect-friendly |
-| **Integration Testing** | Vitest + Test Containers | Full Effect layer wiring, actual database |
-| **E2E Testing** | Playwright | Multi-browser, fast, TanStack compatible |
-| **LLM Testing** | Mock Anthropic API | Fast, deterministic, no API costs |
-| **Component Documentation** | Storybook 10.1.11 | Interactive docs, a11y testing, auto-docs |
-| **Component a11y Testing** | Storybook a11y addon | Built-in WCAG checks, no extra cost |
-| **Visual Regression** | Chromatic (Phase 2) | Cloud-based diffs, deferred cost |
-| **Coverage Goals** | 90%+ domain, 60% UI, 100% component docs | Focus on critical paths |
-| **CI/CD** | GitHub Actions | Built-in, free, easy matrix |
+| Aspect                      | Choice                                   | Rationale                                 |
+| --------------------------- | ---------------------------------------- | ----------------------------------------- |
+| **Unit Testing**            | Vitest                                   | Fast, ESM-native, Effect-friendly         |
+| **Integration Testing**     | Vitest + Test Containers                 | Full Effect layer wiring, actual database |
+| **E2E Testing**             | Playwright                               | Multi-browser, fast, TanStack compatible  |
+| **LLM Testing**             | Mock Anthropic API                       | Fast, deterministic, no API costs         |
+| **Component Documentation** | Storybook 10.1.11                        | Interactive docs, a11y testing, auto-docs |
+| **Component a11y Testing**  | Storybook a11y addon                     | Built-in WCAG checks, no extra cost       |
+| **Visual Regression**       | Chromatic (Phase 2)                      | Cloud-based diffs, deferred cost          |
+| **Coverage Goals**          | 90%+ domain, 60% UI, 100% component docs | Focus on critical paths                   |
+| **CI/CD**                   | GitHub Actions                           | Built-in, free, easy matrix               |
 
 **Why This Works for MVP:**
 
@@ -4218,6 +4364,7 @@ apps/
 ---
 
 **Sources:**
+
 - [Vitest Documentation](https://vitest.dev/)
 - [Playwright Documentation](https://playwright.dev/)
 - [TestContainers Documentation](https://testcontainers.com/)
@@ -4339,6 +4486,7 @@ AssessmentMessageDrizzleRepositoryLive (infrastructure layer)
 **Location**: `packages/domain/src/`
 
 **Structure**:
+
 ```
 packages/domain/src/
 ├── entities/              # Domain entities (Effect Schema)
@@ -4362,7 +4510,7 @@ import { AssessmentMessageEntity } from "../entities/message.entity";
 import { DatabaseError } from "@workspace/contracts/errors";
 
 export class AssessmentMessageRepository extends Context.Tag(
-  "AssessmentMessageRepository"
+  "AssessmentMessageRepository",
 )<
   AssessmentMessageRepository,
   {
@@ -4370,21 +4518,22 @@ export class AssessmentMessageRepository extends Context.Tag(
       sessionId: string,
       role: "user" | "assistant",
       content: string,
-      userId?: string
+      userId?: string,
     ) => Effect.Effect<AssessmentMessageEntity, DatabaseError, never>;
 
     readonly getMessages: (
-      sessionId: string
+      sessionId: string,
     ) => Effect.Effect<AssessmentMessageEntity[], DatabaseError, never>;
 
     readonly getMessageCount: (
-      sessionId: string
+      sessionId: string,
     ) => Effect.Effect<number, DatabaseError, never>;
   }
 >() {}
 ```
 
 **Key characteristics:**
+
 - Pure interface definitions (no implementation)
 - Uses `Context.Tag` for dependency injection
 - Effect type signatures declare errors and dependencies
@@ -4395,6 +4544,7 @@ export class AssessmentMessageRepository extends Context.Tag(
 **Location**: `packages/infrastructure/src/repositories/`
 
 **Structure**:
+
 ```
 packages/infrastructure/src/
 ├── repositories/                    # Repository implementations
@@ -4434,12 +4584,17 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
             .returning()
             .pipe(
               Effect.mapError((error) => {
-                logger.error("Database operation failed", { operation: "saveMessage", error });
+                logger.error("Database operation failed", {
+                  operation: "saveMessage",
+                  error,
+                });
                 return new DatabaseError({ message: "Failed to save message" });
-              })
+              }),
             );
 
-          return yield* Schema.decodeUnknown(AssessmentMessageEntitySchema)(message);
+          return yield* Schema.decodeUnknown(AssessmentMessageEntitySchema)(
+            message,
+          );
         }),
 
       getMessages: (sessionId) =>
@@ -4451,7 +4606,7 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
             .orderBy(asc(assessmentMessage.createdAt));
 
           return yield* Schema.decodeUnknown(
-            Schema.Array(AssessmentMessageEntitySchema)
+            Schema.Array(AssessmentMessageEntitySchema),
           )(messages);
         }),
 
@@ -4465,20 +4620,21 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
           return result[0]?.count ?? 0;
         }),
     });
-  })
+  }),
 );
 ```
 
 **Naming Conventions:**
 
-| Pattern | Example | Purpose |
-|---------|---------|---------|
-| `*.drizzle.repository.ts` | `assessment-message.drizzle.repository.ts` | Drizzle ORM implementation |
-| `*.pino.repository.ts` | `logger.pino.repository.ts` | Pino logger implementation |
-| `*RepositoryLive` | `AssessmentMessageDrizzleRepositoryLive` | Effect Layer export (production) |
-| `*RepositoryTest` | `AssessmentMessageTestRepositoryLive` | Effect Layer export (testing) |
+| Pattern                   | Example                                    | Purpose                          |
+| ------------------------- | ------------------------------------------ | -------------------------------- |
+| `*.drizzle.repository.ts` | `assessment-message.drizzle.repository.ts` | Drizzle ORM implementation       |
+| `*.pino.repository.ts`    | `logger.pino.repository.ts`                | Pino logger implementation       |
+| `*RepositoryLive`         | `AssessmentMessageDrizzleRepositoryLive`   | Effect Layer export (production) |
+| `*RepositoryTest`         | `AssessmentMessageTestRepositoryLive`      | Effect Layer export (testing)    |
 
 **Key characteristics:**
+
 - Implementation-specific file naming (e.g., `.drizzle`, `.pino`)
 - Exports Effect Layers with `Live` suffix
 - Uses `Repository.of({...})` pattern for service implementation
@@ -4490,6 +4646,7 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 **Location**: `apps/api/src/use-cases/`
 
 **Structure**:
+
 ```
 apps/api/src/use-cases/
 ├── __tests__/                       # Unit tests for use-cases
@@ -4530,7 +4687,7 @@ export interface SendMessageOutput {
 }
 
 export const sendMessage = (
-  input: SendMessageInput
+  input: SendMessageInput,
 ): Effect.Effect<
   SendMessageOutput,
   DatabaseError | SessionNotFound,
@@ -4556,7 +4713,7 @@ export const sendMessage = (
       input.sessionId,
       "user",
       input.message,
-      input.userId
+      input.userId,
     );
 
     // 3. TODO: Generate AI response (will use LangGraph/Nerin)
@@ -4586,6 +4743,7 @@ export const sendMessage = (
 ```
 
 **Key characteristics:**
+
 - Pure functions (no side effects outside Effect)
 - Explicit dependency declaration in Effect type signature
 - Business logic orchestrates domain operations
@@ -4598,6 +4756,7 @@ export const sendMessage = (
 **Location**: `apps/api/src/handlers/`
 
 **Structure**:
+
 ```
 apps/api/src/handlers/
 ├── health.ts                        # Health check endpoints
@@ -4612,7 +4771,12 @@ apps/api/src/handlers/
 import { HttpApiBuilder, HttpServerResponse } from "@effect/platform";
 import { DateTime, Effect } from "effect";
 import { BigOceanApi } from "@workspace/contracts";
-import { startAssessment, sendMessage, resumeSession, getResults } from "../use-cases/index.js";
+import {
+  startAssessment,
+  sendMessage,
+  resumeSession,
+  getResults,
+} from "../use-cases/index.js";
 
 export const AssessmentGroupLive = HttpApiBuilder.group(
   BigOceanApi,
@@ -4633,7 +4797,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
               sessionId: result.sessionId,
               createdAt: DateTime.unsafeMake(result.createdAt.getTime()),
             };
-          })
+          }),
         )
         .handle("sendMessage", ({ payload }) =>
           Effect.gen(function* () {
@@ -4648,13 +4812,14 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
               response: result.response,
               precision: result.precision,
             };
-          })
+          }),
         );
-    })
+    }),
 );
 ```
 
 **Key characteristics:**
+
 - Thin adapter layer (no business logic)
 - HTTP request → use-case input transformation
 - Use-case output → HTTP response transformation
@@ -4690,13 +4855,13 @@ const TestSessionRepo = Layer.succeed(
       Effect.succeed({
         id: sessionId,
         userId: "test-user",
-        precision: { openness: 0.5, conscientiousness: 0.4, /* ... */ },
+        precision: { openness: 0.5, conscientiousness: 0.4 /* ... */ },
         createdAt: new Date(),
         updatedAt: new Date(),
       }),
     updateSession: (sessionId, data) => Effect.succeed(undefined),
     // ... other methods
-  })
+  }),
 );
 
 const TestMessageRepo = Layer.succeed(
@@ -4712,7 +4877,7 @@ const TestMessageRepo = Layer.succeed(
         createdAt: new Date(),
       }),
     // ... other methods
-  })
+  }),
 );
 
 const TestLogger = Layer.succeed(
@@ -4720,7 +4885,7 @@ const TestLogger = Layer.succeed(
   LoggerRepository.of({
     info: (msg, meta) => Effect.sync(() => console.log(msg, meta)),
     error: (msg, meta) => Effect.sync(() => console.error(msg, meta)),
-  })
+  }),
 );
 
 const TestLayer = Layer.mergeAll(TestSessionRepo, TestMessageRepo, TestLogger);
@@ -4749,10 +4914,14 @@ describe("sendMessage use-case", () => {
         getSession: (sessionId) =>
           Effect.fail(new SessionNotFound({ sessionId })),
         // ... other methods
-      })
+      }),
     );
 
-    const FailLayer = Layer.mergeAll(FailingSessionRepo, TestMessageRepo, TestLogger);
+    const FailLayer = Layer.mergeAll(
+      FailingSessionRepo,
+      TestMessageRepo,
+      TestLogger,
+    );
 
     const program = sendMessage({
       sessionId: "non-existent",
@@ -4760,7 +4929,7 @@ describe("sendMessage use-case", () => {
     });
 
     const result = await Effect.runPromise(
-      program.pipe(Effect.provide(FailLayer), Effect.either)
+      program.pipe(Effect.provide(FailLayer), Effect.either),
     );
 
     expect(result._tag).toBe("Left");
@@ -4769,6 +4938,7 @@ describe("sendMessage use-case", () => {
 ```
 
 **Testing approach:**
+
 - **Unit tests**: Use-cases with test implementations (`*RepositoryTest`)
 - **Integration tests**: Use-cases with live implementations (`*RepositoryLive`)
 - **E2E tests**: Full HTTP handlers → use-cases → live infrastructure
@@ -4804,6 +4974,7 @@ describe("sendMessage use-case", () => {
 ```
 
 **Build order (Turbo):**
+
 1. `domain` (pure types/interfaces)
 2. `infrastructure` (depends on domain)
 3. `api` (depends on both)
@@ -4811,26 +4982,31 @@ describe("sendMessage use-case", () => {
 ### Benefits of This Architecture
 
 **1. Testability**
+
 - Use-cases tested in isolation
 - Fast unit tests (no I/O)
 - Easy to mock dependencies
 
 **2. Flexibility**
+
 - Swap implementations without changing use-cases
 - Add new repositories without modifying business logic
 - Multiple implementations (e.g., Drizzle vs. Prisma)
 
 **3. Clarity**
+
 - Clear separation of concerns
 - Each layer has single responsibility
 - Easy to understand data flow
 
 **4. Effect-ts Integration**
+
 - Natural fit with Context.Tag and Layer system
 - Type-safe dependency injection
 - Composable error handling
 
 **5. Scalability**
+
 - Add new use-cases without affecting existing code
 - Parallel development (different teams can work on different layers)
 - Easy to refactor (changes isolated to single layer)
@@ -4838,26 +5014,31 @@ describe("sendMessage use-case", () => {
 ### Migration Path (Already Complete)
 
 **Phase 1: Domain Layer** ✅
+
 - Defined repository interfaces as Context.Tag
 - Created entity schemas with Effect Schema
 - Established domain errors
 
 **Phase 2: Infrastructure Layer** ✅
+
 - Implemented Drizzle repositories
 - Created Layer.effect exports with `Live` suffix
 - Integrated Database and Logger contexts
 
 **Phase 3: Use-Cases Layer** ✅
+
 - Extracted business logic from handlers
 - Created pure use-case functions
 - Declared dependencies via Effect type signatures
 
 **Phase 4: Handlers Refactoring** ✅
+
 - Converted handlers to thin adapters
 - Removed business logic from handlers
 - Connected to use-cases
 
 **Phase 5: Testing Setup** (In Progress)
+
 - Unit tests for use-cases with test implementations
 - Integration tests with live implementations
 - Story 7.1 established testing framework
@@ -4873,6 +5054,7 @@ This ADR complements and enhances:
 - **Decision 5A (Testing Strategy)**: ✅ Updated - Emphasizes use-cases as primary unit test boundary with mock repositories
 
 **ADRs Updated for Hexagonal Architecture (2026-02-01):**
+
 - ADR-2: Added hexagonal architecture integration section for cost tracking
 - Decision 2A: Replaced old FiberRef examples with hexagonal error flow patterns
 - Decision 5A: Added use-case testing as primary pattern with test repository examples
@@ -4880,15 +5062,18 @@ This ADR complements and enhances:
 ### References
 
 **Effect-ts Patterns:**
+
 - [Effect Services Documentation](https://effect.website/docs/requirements-management/services/)
 - [Effect Layers Documentation](https://effect.website/docs/requirements-management/layers/)
 - [Effect Testing Guide](https://effect.website/docs/testing/)
 
 **Hexagonal Architecture:**
+
 - [Ports and Adapters by Alistair Cockburn](https://alistair.cockburn.us/hexagonal-architecture/)
 - [Clean Architecture by Robert C. Martin](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 
 **Implementation Reference:**
+
 - `packages/domain/src/repositories/` - Domain interfaces
 - `packages/infrastructure/src/repositories/` - Infrastructure implementations
 - `apps/api/src/use-cases/` - Application use-cases

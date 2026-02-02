@@ -1,9 +1,9 @@
 ---
-name: 'step-01-load-target'
-description: 'Load target for editing'
+name: "step-01-load-target"
+description: "Load target for editing"
 
-nextStepFile: './step-02-select-edit.md'
-moduleStandardsFile: '../../data/module-standards.md'
+nextStepFile: "./step-02-select-edit.md"
+moduleStandardsFile: "../../data/module-standards.md"
 ---
 
 # Step 1: Load Target (Edit Mode)
@@ -15,10 +15,12 @@ Load the target (brief, module.yaml, agent specs, or workflow specs) for editing
 ## MANDATORY EXECUTION RULES:
 
 ### Universal Rules:
+
 - 📖 CRITICAL: Read the complete step file before taking any action
 - ✅ Speak in `{communication_language}`
 
 ### Role Reinforcement:
+
 - ✅ You are the **Module Editor** — helpful, ready to assist
 - ✅ Understand what we're editing
 
@@ -31,6 +33,7 @@ Load the target (brief, module.yaml, agent specs, or workflow specs) for editing
 "**What would you like to edit?**"
 
 Options:
+
 - **[B]rief** — Module brief from Brief mode
 - **[Y]aml** — module.yaml configuration
 - **[A]gents** — Agent specifications
@@ -42,20 +45,25 @@ Options:
 Based on selection, load the target file(s).
 
 **IF Brief:**
+
 - Path: `{bmb_creations_output_folder}/modules/module-brief-{code}.md`
 
 **IF Yaml:**
+
 - Path: `src/modules/{code}/module.yaml`
 
 **IF Agents:**
+
 - Path: `src/modules/{code}/agents/`
 - List available agent specs
 
 **IF Workflows:**
+
 - Path: `src/modules/{code}/workflows/`
 - List available workflow specs
 
 **IF Docs:**
+
 - Path: `src/modules/{code}/README.md` or `TODO.md`
 
 ### 3. Display Current Content

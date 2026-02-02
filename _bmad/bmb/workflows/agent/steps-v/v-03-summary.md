@@ -1,11 +1,11 @@
 ---
-name: 'v-03-summary'
-description: 'Display complete validation report and offer next steps'
+name: "v-03-summary"
+description: "Display complete validation report and offer next steps"
 
-validationReport: '{bmb_creations_output_folder}/validation-report-{agent-name}.md'
+validationReport: "{bmb_creations_output_folder}/validation-report-{agent-name}.md"
 
-advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'
-partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
+advancedElicitationTask: "{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml"
+partyModeWorkflow: "{project-root}/_bmad/core/workflows/party-mode/workflow.md"
 ---
 
 # Validate Step 3: Validation Summary

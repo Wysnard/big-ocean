@@ -39,7 +39,13 @@ const mockSession = {
 };
 
 const mockMessages = [
-  { id: "msg_1", sessionId: "session_test_123", role: "user", content: "Tell me about yourself", createdAt: new Date() },
+  {
+    id: "msg_1",
+    sessionId: "session_test_123",
+    role: "user",
+    content: "Tell me about yourself",
+    createdAt: new Date(),
+  },
   {
     id: "msg_2",
     sessionId: "session_test_123",
@@ -47,7 +53,13 @@ const mockMessages = [
     content: "Hi! I'm Nerin, nice to meet you.",
     createdAt: new Date(),
   },
-  { id: "msg_3", sessionId: "session_test_123", role: "user", content: "What do you do?", createdAt: new Date() },
+  {
+    id: "msg_3",
+    sessionId: "session_test_123",
+    role: "user",
+    content: "What do you do?",
+    createdAt: new Date(),
+  },
 ];
 
 const mockNerinResponse = {
@@ -108,7 +120,7 @@ describe("sendMessage Use Case", () => {
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -117,7 +129,7 @@ describe("sendMessage Use Case", () => {
       };
 
       const result = await Effect.runPromise(
-        sendMessage(input).pipe(Effect.provide(testLayer))
+        sendMessage(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(result).toEqual({
@@ -131,7 +143,7 @@ describe("sendMessage Use Case", () => {
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -141,14 +153,14 @@ describe("sendMessage Use Case", () => {
       };
 
       await Effect.runPromise(
-        sendMessage(input).pipe(Effect.provide(testLayer))
+        sendMessage(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
         "session_test_123",
         "user",
         "Tell me something interesting",
-        "user_456"
+        "user_456",
       );
     });
 
@@ -157,7 +169,7 @@ describe("sendMessage Use Case", () => {
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -166,13 +178,13 @@ describe("sendMessage Use Case", () => {
       };
 
       await Effect.runPromise(
-        sendMessage(input).pipe(Effect.provide(testLayer))
+        sendMessage(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
         "session_test_123",
         "assistant",
-        mockNerinResponse.response
+        mockNerinResponse.response,
       );
     });
 
@@ -181,7 +193,7 @@ describe("sendMessage Use Case", () => {
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -190,7 +202,7 @@ describe("sendMessage Use Case", () => {
       };
 
       await Effect.runPromise(
-        sendMessage(input).pipe(Effect.provide(testLayer))
+        sendMessage(input).pipe(Effect.provide(testLayer)),
       );
 
       // Verify Nerin agent was called with properly formatted messages
@@ -209,7 +221,7 @@ describe("sendMessage Use Case", () => {
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -218,14 +230,14 @@ describe("sendMessage Use Case", () => {
       };
 
       await Effect.runPromise(
-        sendMessage(input).pipe(Effect.provide(testLayer))
+        sendMessage(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(mockSessionRepo.updateSession).toHaveBeenCalledWith(
         "session_test_123",
         {
           precision: mockSession.precision,
-        }
+        },
       );
     });
 
@@ -234,7 +246,7 @@ describe("sendMessage Use Case", () => {
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -243,7 +255,7 @@ describe("sendMessage Use Case", () => {
       };
 
       const result = await Effect.runPromise(
-        sendMessage(input).pipe(Effect.provide(testLayer))
+        sendMessage(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(result.precision).toEqual({
@@ -260,7 +272,7 @@ describe("sendMessage Use Case", () => {
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -269,7 +281,7 @@ describe("sendMessage Use Case", () => {
       };
 
       await Effect.runPromise(
-        sendMessage(input).pipe(Effect.provide(testLayer))
+        sendMessage(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(mockLogger.info).toHaveBeenCalledWith("Message received", {
@@ -277,24 +289,29 @@ describe("sendMessage Use Case", () => {
         messageLength: 12,
       });
 
-      expect(mockLogger.info).toHaveBeenCalledWith("Message processed", expect.objectContaining({
-        sessionId: "session_test_123",
-        responseLength: mockNerinResponse.response.length,
-        tokenCount: mockNerinResponse.tokenCount,
-      }));
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "Message processed",
+        expect.objectContaining({
+          sessionId: "session_test_123",
+          responseLength: mockNerinResponse.response.length,
+          tokenCount: mockNerinResponse.tokenCount,
+        }),
+      );
     });
   });
 
   describe("Error handling", () => {
     it("should fail when session not found", async () => {
       const sessionNotFoundError = new Error("Session not found");
-      mockSessionRepo.getSession.mockReturnValue(Effect.fail(sessionNotFoundError));
+      mockSessionRepo.getSession.mockReturnValue(
+        Effect.fail(sessionNotFoundError),
+      );
 
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -303,7 +320,7 @@ describe("sendMessage Use Case", () => {
       };
 
       await expect(
-        Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)))
+        Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer))),
       ).rejects.toThrow("Session not found");
     });
 
@@ -315,7 +332,7 @@ describe("sendMessage Use Case", () => {
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -324,7 +341,7 @@ describe("sendMessage Use Case", () => {
       };
 
       await expect(
-        Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)))
+        Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer))),
       ).rejects.toThrow("Nerin agent failed");
 
       // Should log the error
@@ -339,7 +356,7 @@ describe("sendMessage Use Case", () => {
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -348,7 +365,7 @@ describe("sendMessage Use Case", () => {
       };
 
       await expect(
-        Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)))
+        Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer))),
       ).rejects.toThrow("Database error");
     });
   });
@@ -361,7 +378,7 @@ describe("sendMessage Use Case", () => {
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -370,7 +387,7 @@ describe("sendMessage Use Case", () => {
       };
 
       const result = await Effect.runPromise(
-        sendMessage(input).pipe(Effect.provide(testLayer))
+        sendMessage(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(result.response).toBe(mockNerinResponse.response);
@@ -387,7 +404,7 @@ describe("sendMessage Use Case", () => {
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -396,7 +413,7 @@ describe("sendMessage Use Case", () => {
       };
 
       const result = await Effect.runPromise(
-        sendMessage(input).pipe(Effect.provide(testLayer))
+        sendMessage(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(result.response).toBe(mockNerinResponse.response);
@@ -404,7 +421,7 @@ describe("sendMessage Use Case", () => {
         "session_test_123",
         "user",
         longMessage,
-        undefined
+        undefined,
       );
     });
 
@@ -413,13 +430,15 @@ describe("sendMessage Use Case", () => {
         ...mockSession,
         precision: undefined,
       };
-      mockSessionRepo.getSession.mockReturnValue(Effect.succeed(sessionWithoutPrecision));
+      mockSessionRepo.getSession.mockReturnValue(
+        Effect.succeed(sessionWithoutPrecision),
+      );
 
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -428,7 +447,7 @@ describe("sendMessage Use Case", () => {
       };
 
       const result = await Effect.runPromise(
-        sendMessage(input).pipe(Effect.provide(testLayer))
+        sendMessage(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(result.precision).toBeUndefined();

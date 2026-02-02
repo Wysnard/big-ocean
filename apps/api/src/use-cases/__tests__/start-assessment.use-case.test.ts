@@ -37,7 +37,7 @@ describe("startAssessment Use Case", () => {
             agreeableness: 50,
             neuroticism: 50,
           },
-        })
+        }),
       ),
       getSession: vi.fn(),
       updateSession: vi.fn(),
@@ -60,13 +60,13 @@ describe("startAssessment Use Case", () => {
     it("should create a new assessment session", async () => {
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-        Layer.succeed(LoggerRepository, mockLogger)
+        Layer.succeed(LoggerRepository, mockLogger),
       );
 
       const input = {};
 
       const result = await Effect.runPromise(
-        startAssessment(input).pipe(Effect.provide(testLayer))
+        startAssessment(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(result.sessionId).toBe("session_new_789");
@@ -76,7 +76,7 @@ describe("startAssessment Use Case", () => {
     it("should create session with user ID when provided", async () => {
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-        Layer.succeed(LoggerRepository, mockLogger)
+        Layer.succeed(LoggerRepository, mockLogger),
       );
 
       const input = {
@@ -84,7 +84,7 @@ describe("startAssessment Use Case", () => {
       };
 
       await Effect.runPromise(
-        startAssessment(input).pipe(Effect.provide(testLayer))
+        startAssessment(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(mockSessionRepo.createSession).toHaveBeenCalledWith("user_123");
@@ -93,13 +93,13 @@ describe("startAssessment Use Case", () => {
     it("should create session without user ID when not provided", async () => {
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-        Layer.succeed(LoggerRepository, mockLogger)
+        Layer.succeed(LoggerRepository, mockLogger),
       );
 
       const input = {};
 
       await Effect.runPromise(
-        startAssessment(input).pipe(Effect.provide(testLayer))
+        startAssessment(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(mockSessionRepo.createSession).toHaveBeenCalledWith(undefined);
@@ -108,7 +108,7 @@ describe("startAssessment Use Case", () => {
     it("should log session creation event", async () => {
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-        Layer.succeed(LoggerRepository, mockLogger)
+        Layer.succeed(LoggerRepository, mockLogger),
       );
 
       const input = {
@@ -116,7 +116,7 @@ describe("startAssessment Use Case", () => {
       };
 
       await Effect.runPromise(
-        startAssessment(input).pipe(Effect.provide(testLayer))
+        startAssessment(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -124,21 +124,21 @@ describe("startAssessment Use Case", () => {
         {
           sessionId: "session_new_789",
           userId: "user_456",
-        }
+        },
       );
     });
 
     it("should return session ID and creation timestamp", async () => {
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-        Layer.succeed(LoggerRepository, mockLogger)
+        Layer.succeed(LoggerRepository, mockLogger),
       );
 
       const beforeTime = new Date();
       const input = {};
 
       const result = await Effect.runPromise(
-        startAssessment(input).pipe(Effect.provide(testLayer))
+        startAssessment(input).pipe(Effect.provide(testLayer)),
       );
 
       const afterTime = new Date();
@@ -147,38 +147,38 @@ describe("startAssessment Use Case", () => {
       expect(result).toHaveProperty("createdAt");
       expect(result.sessionId).toBe("session_new_789");
       expect(result.createdAt.getTime()).toBeGreaterThanOrEqual(
-        beforeTime.getTime()
+        beforeTime.getTime(),
       );
       expect(result.createdAt.getTime()).toBeLessThanOrEqual(
-        afterTime.getTime()
+        afterTime.getTime(),
       );
     });
 
     it("should handle multiple session creations independently", async () => {
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-        Layer.succeed(LoggerRepository, mockLogger)
+        Layer.succeed(LoggerRepository, mockLogger),
       );
 
       const input1 = { userId: "user_1" };
       const input2 = { userId: "user_2" };
 
       await Effect.runPromise(
-        startAssessment(input1).pipe(Effect.provide(testLayer))
+        startAssessment(input1).pipe(Effect.provide(testLayer)),
       );
 
       await Effect.runPromise(
-        startAssessment(input2).pipe(Effect.provide(testLayer))
+        startAssessment(input2).pipe(Effect.provide(testLayer)),
       );
 
       expect(mockSessionRepo.createSession).toHaveBeenCalledTimes(2);
       expect(mockSessionRepo.createSession).toHaveBeenNthCalledWith(
         1,
-        "user_1"
+        "user_1",
       );
       expect(mockSessionRepo.createSession).toHaveBeenNthCalledWith(
         2,
-        "user_2"
+        "user_2",
       );
     });
   });
@@ -190,15 +190,15 @@ describe("startAssessment Use Case", () => {
 
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-        Layer.succeed(LoggerRepository, mockLogger)
+        Layer.succeed(LoggerRepository, mockLogger),
       );
 
       const input = {};
 
       await expect(
         Effect.runPromise(
-          startAssessment(input).pipe(Effect.provide(testLayer))
-        )
+          startAssessment(input).pipe(Effect.provide(testLayer)),
+        ),
       ).rejects.toThrow("Database connection failed");
     });
 
@@ -208,15 +208,15 @@ describe("startAssessment Use Case", () => {
 
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-        Layer.succeed(LoggerRepository, mockLogger)
+        Layer.succeed(LoggerRepository, mockLogger),
       );
 
       const input = { userId: "user_test" };
 
       await expect(
         Effect.runPromise(
-          startAssessment(input).pipe(Effect.provide(testLayer))
-        )
+          startAssessment(input).pipe(Effect.provide(testLayer)),
+        ),
       ).rejects.toThrow("Repository unavailable");
     });
   });
@@ -225,7 +225,7 @@ describe("startAssessment Use Case", () => {
     it("should handle empty user ID string", async () => {
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-        Layer.succeed(LoggerRepository, mockLogger)
+        Layer.succeed(LoggerRepository, mockLogger),
       );
 
       const input = {
@@ -233,7 +233,7 @@ describe("startAssessment Use Case", () => {
       };
 
       await Effect.runPromise(
-        startAssessment(input).pipe(Effect.provide(testLayer))
+        startAssessment(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(mockSessionRepo.createSession).toHaveBeenCalledWith("");
@@ -244,7 +244,7 @@ describe("startAssessment Use Case", () => {
 
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-        Layer.succeed(LoggerRepository, mockLogger)
+        Layer.succeed(LoggerRepository, mockLogger),
       );
 
       const input = {
@@ -252,7 +252,7 @@ describe("startAssessment Use Case", () => {
       };
 
       await Effect.runPromise(
-        startAssessment(input).pipe(Effect.provide(testLayer))
+        startAssessment(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(mockSessionRepo.createSession).toHaveBeenCalledWith(specialUserId);
@@ -263,7 +263,7 @@ describe("startAssessment Use Case", () => {
 
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-        Layer.succeed(LoggerRepository, mockLogger)
+        Layer.succeed(LoggerRepository, mockLogger),
       );
 
       const input = {
@@ -271,7 +271,7 @@ describe("startAssessment Use Case", () => {
       };
 
       await Effect.runPromise(
-        startAssessment(input).pipe(Effect.provide(testLayer))
+        startAssessment(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(mockSessionRepo.createSession).toHaveBeenCalledWith(longUserId);
@@ -291,19 +291,19 @@ describe("startAssessment Use Case", () => {
             agreeableness: 50,
             neuroticism: 50,
           },
-        })
+        }),
       );
 
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-        Layer.succeed(LoggerRepository, mockLogger)
+        Layer.succeed(LoggerRepository, mockLogger),
       );
 
       const beforeTime = new Date();
       const input = {};
 
       const result = await Effect.runPromise(
-        startAssessment(input).pipe(Effect.provide(testLayer))
+        startAssessment(input).pipe(Effect.provide(testLayer)),
       );
 
       const afterTime = new Date();
@@ -311,10 +311,10 @@ describe("startAssessment Use Case", () => {
       // The result should have a createdAt that's close to current time,
       // not the repository's old timestamp
       expect(result.createdAt.getTime()).toBeGreaterThanOrEqual(
-        beforeTime.getTime()
+        beforeTime.getTime(),
       );
       expect(result.createdAt.getTime()).toBeLessThanOrEqual(
-        afterTime.getTime()
+        afterTime.getTime(),
       );
     });
   });
@@ -323,13 +323,13 @@ describe("startAssessment Use Case", () => {
     it("should create session for anonymous user", async () => {
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-        Layer.succeed(LoggerRepository, mockLogger)
+        Layer.succeed(LoggerRepository, mockLogger),
       );
 
       const input = { userId: undefined };
 
       const result = await Effect.runPromise(
-        startAssessment(input).pipe(Effect.provide(testLayer))
+        startAssessment(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(result).toHaveProperty("sessionId");
@@ -338,7 +338,7 @@ describe("startAssessment Use Case", () => {
         {
           sessionId: "session_new_789",
           userId: undefined,
-        }
+        },
       );
     });
 
@@ -362,17 +362,17 @@ describe("startAssessment Use Case", () => {
 
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-        Layer.succeed(LoggerRepository, mockLogger)
+        Layer.succeed(LoggerRepository, mockLogger),
       );
 
       const input = { userId: "user_test" };
 
       const result1 = await Effect.runPromise(
-        startAssessment(input).pipe(Effect.provide(testLayer))
+        startAssessment(input).pipe(Effect.provide(testLayer)),
       );
 
       const result2 = await Effect.runPromise(
-        startAssessment(input).pipe(Effect.provide(testLayer))
+        startAssessment(input).pipe(Effect.provide(testLayer)),
       );
 
       expect(result1.sessionId).toBe("session_1");

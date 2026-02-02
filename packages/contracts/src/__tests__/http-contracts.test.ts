@@ -4,8 +4,8 @@
  * Tests Effect Schema validation for HTTP request/response contracts.
  */
 
-import { describe, it, expect } from "vitest"
-import { Schema as S } from "effect"
+import { describe, it, expect } from "vitest";
+import { Schema as S } from "effect";
 import {
   StartAssessmentRequestSchema,
   StartAssessmentResponseSchema,
@@ -13,99 +13,112 @@ import {
   SendMessageResponseSchema,
   GetResultsResponseSchema,
   ResumeSessionResponseSchema,
-} from "../http/groups/assessment.js"
-import { HealthCheckResponseSchema } from "../http/groups/health.js"
+} from "../http/groups/assessment.js";
+import { HealthCheckResponseSchema } from "../http/groups/health.js";
 
 describe("Health Check Contracts", () => {
   it("should validate health check response schema", () => {
     const validResponse = {
       status: "ok" as const,
       timestamp: new Date().toISOString(), // DateTimeUtc expects ISO string
-    }
+    };
 
-    const result = S.decodeUnknownSync(HealthCheckResponseSchema)(validResponse)
-    expect(result.status).toBe("ok")
-    expect(result.timestamp).toBeDefined() // DateTimeUtc decodes to DateTime.Utc, not Date
-  })
+    const result = S.decodeUnknownSync(HealthCheckResponseSchema)(
+      validResponse,
+    );
+    expect(result.status).toBe("ok");
+    expect(result.timestamp).toBeDefined(); // DateTimeUtc decodes to DateTime.Utc, not Date
+  });
 
   it("should reject invalid health check status", () => {
     const invalidResponse = {
       status: "error", // Invalid - only "ok" allowed
       timestamp: new Date().toISOString(),
-    }
+    };
 
     expect(() =>
-      S.decodeUnknownSync(HealthCheckResponseSchema)(invalidResponse)
-    ).toThrow()
-  })
-})
+      S.decodeUnknownSync(HealthCheckResponseSchema)(invalidResponse),
+    ).toThrow();
+  });
+});
 
 describe("Assessment Contracts", () => {
   describe("StartAssessment", () => {
     it("should validate start assessment request with userId", () => {
       const validRequest = {
         userId: "user_123",
-      }
+      };
 
-      const result = S.decodeUnknownSync(StartAssessmentRequestSchema)(validRequest)
-      expect(result.userId).toBe("user_123")
-    })
+      const result = S.decodeUnknownSync(StartAssessmentRequestSchema)(
+        validRequest,
+      );
+      expect(result.userId).toBe("user_123");
+    });
 
     it("should validate start assessment request without userId", () => {
-      const validRequest = {}
+      const validRequest = {};
 
-      const result = S.decodeUnknownSync(StartAssessmentRequestSchema)(validRequest)
-      expect(result.userId).toBeUndefined()
-    })
+      const result = S.decodeUnknownSync(StartAssessmentRequestSchema)(
+        validRequest,
+      );
+      expect(result.userId).toBeUndefined();
+    });
 
     it("should validate start assessment response schema", () => {
       const validResponse = {
         sessionId: "session_123",
         createdAt: new Date().toISOString(),
-      }
+      };
 
-      const result = S.decodeUnknownSync(StartAssessmentResponseSchema)(validResponse)
-      expect(result.sessionId).toBe("session_123")
-      expect(result.createdAt).toBeDefined() // DateTimeUtc decodes to DateTime.Utc
-    })
+      const result = S.decodeUnknownSync(StartAssessmentResponseSchema)(
+        validResponse,
+      );
+      expect(result.sessionId).toBe("session_123");
+      expect(result.createdAt).toBeDefined(); // DateTimeUtc decodes to DateTime.Utc
+    });
 
     it("should reject start assessment response with missing sessionId", () => {
       const invalidResponse = {
         createdAt: new Date().toISOString(),
-      }
+      };
 
       expect(() =>
-        S.decodeUnknownSync(StartAssessmentResponseSchema)(invalidResponse)
-      ).toThrow()
-    })
-  })
+        S.decodeUnknownSync(StartAssessmentResponseSchema)(invalidResponse),
+      ).toThrow();
+    });
+  });
 
   describe("SendMessage", () => {
     it("should validate send message request schema", () => {
       const validRequest = {
         sessionId: "session_123",
         message: "I enjoy outdoor activities and meeting new people.",
-      }
+      };
 
-      const result = S.decodeUnknownSync(SendMessageRequestSchema)(validRequest)
-      expect(result.sessionId).toBe("session_123")
-      expect(result.message).toBe("I enjoy outdoor activities and meeting new people.")
-    })
+      const result = S.decodeUnknownSync(SendMessageRequestSchema)(
+        validRequest,
+      );
+      expect(result.sessionId).toBe("session_123");
+      expect(result.message).toBe(
+        "I enjoy outdoor activities and meeting new people.",
+      );
+    });
 
     it("should reject send message request with missing fields", () => {
       const invalidRequest = {
         sessionId: "session_123",
         // message missing
-      }
+      };
 
       expect(() =>
-        S.decodeUnknownSync(SendMessageRequestSchema)(invalidRequest)
-      ).toThrow()
-    })
+        S.decodeUnknownSync(SendMessageRequestSchema)(invalidRequest),
+      ).toThrow();
+    });
 
     it("should validate send message response schema", () => {
       const validResponse = {
-        response: "That's interesting! Tell me more about what draws you to outdoor activities.",
+        response:
+          "That's interesting! Tell me more about what draws you to outdoor activities.",
         precision: {
           openness: 0.75,
           conscientiousness: 0.5,
@@ -113,12 +126,14 @@ describe("Assessment Contracts", () => {
           agreeableness: 0.6,
           neuroticism: 0.3,
         },
-      }
+      };
 
-      const result = S.decodeUnknownSync(SendMessageResponseSchema)(validResponse)
-      expect(result.response).toBeTruthy()
-      expect(result.precision.extraversion).toBe(0.8)
-    })
+      const result = S.decodeUnknownSync(SendMessageResponseSchema)(
+        validResponse,
+      );
+      expect(result.response).toBeTruthy();
+      expect(result.precision.extraversion).toBe(0.8);
+    });
 
     it("should reject send message response with invalid precision values", () => {
       const invalidResponse = {
@@ -130,13 +145,13 @@ describe("Assessment Contracts", () => {
           agreeableness: 0.6,
           neuroticism: 0.3,
         },
-      }
+      };
 
       expect(() =>
-        S.decodeUnknownSync(SendMessageResponseSchema)(invalidResponse)
-      ).toThrow()
-    })
-  })
+        S.decodeUnknownSync(SendMessageResponseSchema)(invalidResponse),
+      ).toThrow();
+    });
+  });
 
   describe("GetResults", () => {
     it("should validate get results response schema", () => {
@@ -146,18 +161,20 @@ describe("Assessment Contracts", () => {
         traits: {
           openness: 0.85,
           conscientiousness: 0.65,
-          extraversion: 0.90,
-          agreeableness: 0.70,
+          extraversion: 0.9,
+          agreeableness: 0.7,
           neuroticism: 0.25,
         },
-      }
+      };
 
-      const result = S.decodeUnknownSync(GetResultsResponseSchema)(validResponse)
-      expect(result.oceanCode).toBe("HPHML")
-      expect(result.archetypeName).toBe("The Adventurous Leader")
-      expect(result.traits.openness).toBe(0.85)
-    })
-  })
+      const result = S.decodeUnknownSync(GetResultsResponseSchema)(
+        validResponse,
+      );
+      expect(result.oceanCode).toBe("HPHML");
+      expect(result.archetypeName).toBe("The Adventurous Leader");
+      expect(result.traits.openness).toBe(0.85);
+    });
+  });
 
   describe("ResumeSession", () => {
     it("should validate resume session response schema", () => {
@@ -181,13 +198,15 @@ describe("Assessment Contracts", () => {
           agreeableness: 0.5,
           neuroticism: 0.5,
         },
-      }
+      };
 
-      const result = S.decodeUnknownSync(ResumeSessionResponseSchema)(validResponse)
-      expect(result.messages).toHaveLength(2)
-      expect(result.messages[0]?.role).toBe("user")
-      expect(result.precision.openness).toBe(0.5)
-    })
+      const result = S.decodeUnknownSync(ResumeSessionResponseSchema)(
+        validResponse,
+      );
+      expect(result.messages).toHaveLength(2);
+      expect(result.messages[0]?.role).toBe("user");
+      expect(result.precision.openness).toBe(0.5);
+    });
 
     it("should reject resume session response with invalid message role", () => {
       const invalidResponse = {
@@ -205,11 +224,11 @@ describe("Assessment Contracts", () => {
           agreeableness: 0.5,
           neuroticism: 0.5,
         },
-      }
+      };
 
       expect(() =>
-        S.decodeUnknownSync(ResumeSessionResponseSchema)(invalidResponse)
-      ).toThrow()
-    })
-  })
-})
+        S.decodeUnknownSync(ResumeSessionResponseSchema)(invalidResponse),
+      ).toThrow();
+    });
+  });
+});

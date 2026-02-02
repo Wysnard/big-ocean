@@ -1,14 +1,14 @@
 ---
-name: 'e-04-type-metadata'
-description: 'Review and plan metadata edits'
+name: "e-04-type-metadata"
+description: "Review and plan metadata edits"
 
-nextStepFile: './e-05-persona.md'
-editPlan: '{bmb_creations_output_folder}/edit-plan-{agent-name}.md'
+nextStepFile: "./e-05-persona.md"
+editPlan: "{bmb_creations_output_folder}/edit-plan-{agent-name}.md"
 agentMetadata: ../data/agent-metadata.md
 agentTypesDoc: ../data/understanding-agent-types.md
 
-advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'
-partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
+advancedElicitationTask: "{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml"
+partyModeWorkflow: "{project-root}/_bmad/core/workflows/party-mode/workflow.md"
 ---
 
 # Edit Step 4: Type and Metadata
@@ -47,6 +47,7 @@ Read `{agentMetadata}` and `{agentTypesDoc}` to understand validation rules and 
 ### 2. Review Current Metadata
 
 From `{editPlan}`, display current:
+
 - agentType (simple/expert/module)
 - All metadata fields: id, name, title, icon, module, hasSidecar
 
@@ -55,11 +56,13 @@ From `{editPlan}`, display current:
 If user wants metadata changes:
 
 **For type conversion:**
+
 - "Converting from {current} to {target}"
 - Explain implications (e.g., Simple → Expert requires sidecar)
 - Update editPlan with type conversion
 
 **For metadata field changes:**
+
 - id: kebab-case requirements
 - name: display name conventions
 - title: function description format
@@ -74,13 +77,13 @@ Append to `{editPlan}`:
 ```yaml
 metadataEdits:
   typeConversion:
-    from: {current-type}
-    to: {target-type}
-    rationale: {explanation}
+    from: { current-type }
+    to: { target-type }
+    rationale: { explanation }
   fieldChanges:
-    - field: {field-name}
-      from: {current-value}
-      to: {target-value}
+    - field: { field-name }
+      from: { current-value }
+      to: { target-value }
 ```
 
 ### 5. Present MENU OPTIONS

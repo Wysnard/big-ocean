@@ -162,12 +162,14 @@ docker compose build --no-cache
 The development environment supports hot reload for both backend and frontend:
 
 **Backend (Node.js + Effect-ts)**:
+
 1. Edit files in `apps/api/src/`
 2. Changes detected by `tsx watch` (automatic file watching)
 3. Server restarts automatically (~2 seconds)
 4. View logs: `docker compose logs -f backend`
 
 **Frontend (React + Vite)**:
+
 1. Edit files in `apps/front/src/`
 2. Changes detected by Vite HMR (Hot Module Replacement)
 3. Browser automatically refreshes (no full page reload)
@@ -364,9 +366,11 @@ Named volumes persist across container restarts unless explicitly removed with `
 ### Logs
 
 Backend logs are mounted to:
+
 - `./apps/api/logs/` → `/app/apps/api/logs/`
 
 View logs:
+
 ```bash
 tail -f apps/api/logs/error.log
 tail -f apps/api/logs/all.log
@@ -379,18 +383,21 @@ The main configuration file is `compose.yaml` in the project root.
 ### Services
 
 **PostgreSQL (postgres)**
+
 - Image: postgres:16-alpine
 - Port: 5432
 - Health check: pg_isready
 - Volume: postgres_data (persisted)
 
 **Redis (redis)**
+
 - Image: redis:7-alpine
 - Port: 6379
 - Health check: redis-cli ping
 - Volume: redis_data (persisted)
 
 **Backend API (backend)**
+
 - Build: apps/api/Dockerfile (development stage)
 - Port: 4000
 - Health check: curl /health
@@ -398,6 +405,7 @@ The main configuration file is `compose.yaml` in the project root.
 - Depends on: postgres, redis
 
 **Frontend (frontend)**
+
 - Build: apps/front/Dockerfile (development stage)
 - Port: 3000
 - Volumes: src (hot reload), packages
@@ -406,6 +414,7 @@ The main configuration file is `compose.yaml` in the project root.
 ### Networks
 
 All services are connected to a custom Docker network `bigocean-network` for service-to-service communication:
+
 - Backend can access database as `postgres:5432`
 - Backend can access cache as `redis:6379`
 - Frontend can access backend as `backend:4000`
@@ -506,6 +515,7 @@ docker compose up -d
 ## Support
 
 For issues:
+
 1. Check logs: `docker compose logs <service>`
 2. Verify all services are healthy: `docker compose ps`
 3. Check this troubleshooting guide

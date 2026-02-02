@@ -1,17 +1,17 @@
 ---
-name: 'e-01-load-existing'
-description: 'Load and analyze existing agent for editing'
+name: "e-01-load-existing"
+description: "Load and analyze existing agent for editing"
 
 # File References
 thisStepFile: ./e-01-load-existing.md
 workflowFile: ../workflow.md
-nextStepFile: './e-02-discover-edits.md'
-editPlan: '{bmb_creations_output_folder}/edit-plan-{agent-name}.md'
+nextStepFile: "./e-02-discover-edits.md"
+editPlan: "{bmb_creations_output_folder}/edit-plan-{agent-name}.md"
 agentMetadata: ../data/agent-metadata.md
 agentMenuPatterns: ../data/agent-menu-patterns.md
 
-advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'
-partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
+advancedElicitationTask: "{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml"
+partyModeWorkflow: "{project-root}/_bmad/core/workflows/party-mode/workflow.md"
 ---
 
 # Edit Step 1: Load Existing Agent
@@ -86,23 +86,23 @@ If a module agent also hasSidecar: true - this means it is a modules expert agen
 
 ```yaml
 # Basic Metadata
-- name: {agent-name}
-- description: {agent-description}
-- module: {stand-alone|bmm|cis|bmgd|custom}
-- hasSidecar: {true|false}
+- name: { agent-name }
+- description: { agent-description }
+- module: { stand-alone|bmm|cis|bmgd|custom }
+- hasSidecar: { true|false }
 
 # Persona
-- persona: {full persona text}
-- system-context: {if present}
+- persona: { full persona text }
+- system-context: { if present }
 
 # Commands/Menu
-- commands: {full command structure}
+- commands: { full command structure }
 
 # Critical Actions (if present)
-- critical-actions: {list}
+- critical-actions: { list }
 
 # Metadata
-- metadata: {all metadata fields}
+- metadata: { all metadata fields }
 ```
 
 ### 3. Display Agent Summary
@@ -112,7 +112,7 @@ If a module agent also hasSidecar: true - this means it is a modules expert agen
 ```markdown
 ## Agent Analysis: {agent-name}
 
-**Type:** {simple|expert|module}  (derived from module + hasSidecar)
+**Type:** {simple|expert|module} (derived from module + hasSidecar)
 **Status:** ready-for-edit
 
 ### Current Structure:
@@ -136,10 +136,10 @@ If a module agent also hasSidecar: true - this means it is a modules expert agen
 ```markdown
 ---
 mode: edit
-originalAgent: '{agent-file-path}'
-agentName: '{agent-name}'
-agentType: '{simple|expert|module}'
-editSessionDate: '{YYYY-MM-DD}'
+originalAgent: "{agent-file-path}"
+agentName: "{agent-name}"
+agentType: "{simple|expert|module}"
+editSessionDate: "{YYYY-MM-DD}"
 stepsCompleted:
   - e-01-load-existing.md
 ---
@@ -168,13 +168,13 @@ stepsCompleted:
 
 ## Edits Planned
 
-*This section will be populated in subsequent steps*
+_This section will be populated in subsequent steps_
 
 ---
 
 ## Edits Applied
 
-*This section will track completed edits*
+_This section will track completed edits_
 ```
 
 Write to `{editPlan}`.

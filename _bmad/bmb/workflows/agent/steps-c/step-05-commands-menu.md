@@ -1,10 +1,10 @@
 ---
-name: 'step-05-commands-menu'
-description: 'Build capabilities and command structure'
+name: "step-05-commands-menu"
+description: "Build capabilities and command structure"
 
 # File References
-nextStepFile: './step-06-activation.md'
-agentPlan: '{bmb_creations_output_folder}/agent-plan-{agent_name}.md'
+nextStepFile: "./step-06-activation.md"
+agentPlan: "{bmb_creations_output_folder}/agent-plan-{agent_name}.md"
 agentMenuPatterns: ../data/agent-menu-patterns.md
 
 # Example Menus (for reference)
@@ -12,8 +12,8 @@ simpleExample: ../data/reference/simple-examples/commit-poet.agent.yaml
 expertExample: ../data/reference/expert-examples/journal-keeper/journal-keeper.agent.yaml
 
 # Task References
-advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'
-partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
+advancedElicitationTask: "{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml"
+partyModeWorkflow: "{project-root}/_bmad/core/workflows/party-mode/workflow.md"
 ---
 
 # STEP GOAL
@@ -35,6 +35,7 @@ Transform discovered capabilities into structured menu commands following BMAD m
 ## Load Menu Patterns
 
 Read agentMenuPatterns file to understand:
+
 - Command structure requirements
 - YAML formatting standards
 - Handler/action patterns
@@ -43,12 +44,14 @@ Read agentMenuPatterns file to understand:
 ## Capability Discovery Conversation
 
 Guide collaborative conversation to:
+
 1. Review capabilities from previous step
 2. Identify which capabilities become commands
 3. Group related capabilities
 4. Define command scope and boundaries
 
 Ask targeted questions:
+
 - "Which capabilities are primary commands vs secondary actions?"
 - "Can related capabilities be grouped under single commands?"
 - "What should each command accomplish?"
@@ -99,16 +102,19 @@ menu:
 ## Menu [A][P][C] Verification
 
 **[A]ccuracy**
+
 - All commands match defined capabilities
 - Triggers are clear and intuitive
 - Handlers reference actual capabilities
 
 **[P]attern Compliance**
+
 - Follows agent-menu-patterns.md structure
 - YAML formatting is correct
 - No help/exit commands included
 
 **[C]ompleteness**
+
 - All primary capabilities have commands
 - Commands cover agent's core functions
 - Menu is ready for next step

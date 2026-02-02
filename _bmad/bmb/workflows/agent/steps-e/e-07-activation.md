@@ -1,17 +1,17 @@
 ---
-name: 'e-07-activation'
-description: 'Review critical_actions and route to type-specific edit'
+name: "e-07-activation"
+description: "Review critical_actions and route to type-specific edit"
 
-editPlan: '{bmb_creations_output_folder}/edit-plan-{agent-name}.md'
+editPlan: "{bmb_creations_output_folder}/edit-plan-{agent-name}.md"
 criticalActions: ../data/critical-actions.md
 
 # Type-specific edit routes
-simpleEdit: './e-08a-edit-simple.md'
-expertEdit: './e-08b-edit-expert.md'
-moduleEdit: './e-08c-edit-module.md'
+simpleEdit: "./e-08a-edit-simple.md"
+expertEdit: "./e-08b-edit-expert.md"
+moduleEdit: "./e-08c-edit-module.md"
 
-advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'
-partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
+advancedElicitationTask: "{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml"
+partyModeWorkflow: "{project-root}/_bmad/core/workflows/party-mode/workflow.md"
 ---
 
 # Edit Step 7: Activation and Routing
@@ -46,12 +46,14 @@ Review critical_actions and route to the appropriate type-specific edit step (Si
 ### 1. Load Reference Documents
 
 Read `{criticalActions}` and `{editPlan}` to understand:
+
 - Current critical_actions (if any)
 - Target agent type after edits
 
 ### 2. Review Critical Actions
 
 If user wants to add/modify critical_actions:
+
 - Reference patterns from criticalActions.md
 - Define action name, description, invocation
 - For Expert agents: specify sidecar-folder and file paths
@@ -77,8 +79,8 @@ activationEdits:
     additions: []
     modifications: []
 routing:
-  destinationEdit: {e-08a|e-08b|e-08c}
-  sourceType: {simple|expert|module}  # Derived from module + hasSidecar
+  destinationEdit: { e-08a|e-08b|e-08c }
+  sourceType: { simple|expert|module } # Derived from module + hasSidecar
 ```
 
 ### 5. Present MENU OPTIONS

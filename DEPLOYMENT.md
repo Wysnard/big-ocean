@@ -5,6 +5,7 @@
 ### Backend (api service)
 
 **Required:**
+
 - `DATABASE_URL` - PostgreSQL connection string
   - Format: `postgresql://user:password@host:port/database`
   - Provided by Railway Postgres plugin
@@ -18,6 +19,7 @@
   - Format: `https://api-production-xxxx.up.railway.app`
 
 **Optional:**
+
 - `PORT` - Server port (default: 8080 on Railway)
 - `LOG_LEVEL` - Logging level (default: "info")
 - `NODE_ENV` - Set to "production" (Railway sets this automatically)
@@ -25,10 +27,12 @@
 ### Frontend (front service)
 
 **Required:**
+
 - `VITE_API_URL` - Backend API URL
   - Format: `https://api-production-xxxx.up.railway.app`
 
 **Optional:**
+
 - `PORT` - Server port (default: 8080 on Railway)
 - `NODE_ENV` - Set to "production" (Railway sets this automatically)
 
@@ -52,11 +56,13 @@
 ## Troubleshooting
 
 **Build fails:**
+
 - Check Railway build logs
 - Verify all workspace packages are copied in Dockerfile
 - Ensure pnpm-lock.yaml is up to date
 
 **Runtime fails:**
+
 - Check deployment logs: `railway logs --service <api|front>`
 - Verify all required environment variables are set
 - Check health endpoint responds correctly
@@ -64,22 +70,26 @@
 ## Key Changes in This Deployment Fix
 
 ### Frontend Dockerfile
+
 - Added `packages/database/package.json` to all stages
 - Fixed final production runtime stage to include node_modules
 - Changed from `nitro-nightly@latest` to stable `nitro@^2.9.7`
 - Updated port exposure to 8080 (Railway default)
 
 ### Backend Dockerfile
+
 - Added `NODE_ENV=production` environment variable
 - Improved health check using wget instead of inline Node.js
 - Updated port exposure documentation (reads from PORT env var)
 
 ### Railway Configuration
+
 - Added health check paths for both services
 - Frontend health check: `/`
 - Backend health check: `/health`
 
 ### Effect Package Versions
+
 - Pinned all Effect packages to specific versions with caret ranges
 - Prevents breaking changes from "latest" versions
 - Ensures deterministic builds

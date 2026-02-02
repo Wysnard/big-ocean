@@ -1,17 +1,17 @@
-import type React from 'react'
+import type React from "react";
 
 export interface RadioOption {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
 export interface RadioGroupProps {
-  label: string
-  name: string
-  options: RadioOption[]
-  value?: string
-  onChange?: (value: string) => void
-  className?: string
+  label: string;
+  name: string;
+  options: RadioOption[];
+  value?: string;
+  onChange?: (value: string) => void;
+  className?: string;
 }
 
 export const RadioGroup: React.FC<RadioGroupProps> = ({
@@ -20,7 +20,7 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
   options,
   value,
   onChange,
-  className = '',
+  className = "",
 }) => {
   return (
     <fieldset className={`flex flex-col gap-3 ${className}`}>
@@ -48,5 +48,5 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
         ))}
       </div>
     </fieldset>
-  )
-}
+  );
+};

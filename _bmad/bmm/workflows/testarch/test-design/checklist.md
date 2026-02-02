@@ -3,12 +3,14 @@
 ## Prerequisites (Mode-Dependent)
 
 **System-Level Mode (Phase 3):**
+
 - [ ] PRD exists with functional and non-functional requirements
 - [ ] ADR (Architecture Decision Record) exists
 - [ ] Architecture document available (architecture.md or tech-spec)
 - [ ] Requirements are testable and unambiguous
 
 **Epic-Level Mode (Phase 4):**
+
 - [ ] Story markdown with clear acceptance criteria exists
 - [ ] PRD or epic documentation available
 - [ ] Architecture documents available (test-design-architecture.md + test-design-qa.md from Phase 3, if exists)
@@ -259,6 +261,7 @@
 - [ ] **Appendix B: Knowledge Base References**
 
 **DON'T INCLUDE (bloat):**
+
 - [ ] ❌ NO Quick Reference section
 - [ ] ❌ NO System Architecture Summary
 - [ ] ❌ NO Test Environment Requirements as separate section (integrate into Dependencies)

@@ -5,8 +5,8 @@
  * Pattern from: effect-worker-mono/packages/contracts/src/http/groups/*.ts
  */
 
-import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform"
-import { Schema as S } from "effect"
+import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
+import { Schema as S } from "effect";
 
 /**
  * Response Schemas
@@ -14,7 +14,7 @@ import { Schema as S } from "effect"
 export const StartAssessmentResponseSchema = S.Struct({
   sessionId: S.String,
   createdAt: S.DateTimeUtc,
-})
+});
 
 export const SendMessageResponseSchema = S.Struct({
   response: S.String,
@@ -25,7 +25,7 @@ export const SendMessageResponseSchema = S.Struct({
     agreeableness: S.Number,
     neuroticism: S.Number,
   }),
-})
+});
 
 export const GetResultsResponseSchema = S.Struct({
   oceanCode: S.String,
@@ -37,7 +37,7 @@ export const GetResultsResponseSchema = S.Struct({
     agreeableness: S.Number,
     neuroticism: S.Number,
   }),
-})
+});
 
 export const ResumeSessionResponseSchema = S.Struct({
   messages: S.Array(
@@ -46,7 +46,7 @@ export const ResumeSessionResponseSchema = S.Struct({
       role: S.Literal("user", "assistant"),
       content: S.String,
       createdAt: S.DateTimeUtc,
-    })
+    }),
   ),
   precision: S.Struct({
     openness: S.Number,
@@ -55,19 +55,19 @@ export const ResumeSessionResponseSchema = S.Struct({
     agreeableness: S.Number,
     neuroticism: S.Number,
   }),
-})
+});
 
 /**
  * Request Schemas
  */
 export const StartAssessmentRequestSchema = S.Struct({
   userId: S.optional(S.String),
-})
+});
 
 export const SendMessageRequestSchema = S.Struct({
   sessionId: S.String,
   message: S.String,
-})
+});
 
 /**
  * Assessment HTTP API Group
@@ -76,21 +76,21 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
   .add(
     HttpApiEndpoint.post("start", "/start")
       .addSuccess(StartAssessmentResponseSchema)
-      .setPayload(StartAssessmentRequestSchema)
+      .setPayload(StartAssessmentRequestSchema),
   )
   .add(
     HttpApiEndpoint.post("sendMessage", "/message")
       .addSuccess(SendMessageResponseSchema)
-      .setPayload(SendMessageRequestSchema)
+      .setPayload(SendMessageRequestSchema),
   )
   .add(
     HttpApiEndpoint.get("getResults", "/:sessionId/results").addSuccess(
-      GetResultsResponseSchema
-    )
+      GetResultsResponseSchema,
+    ),
   )
   .add(
     HttpApiEndpoint.get("resumeSession", "/:sessionId/resume").addSuccess(
-      ResumeSessionResponseSchema
-    )
+      ResumeSessionResponseSchema,
+    ),
   )
-  .prefix("/assessment")
+  .prefix("/assessment");

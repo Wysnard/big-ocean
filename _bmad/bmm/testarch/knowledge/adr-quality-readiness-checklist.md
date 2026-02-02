@@ -3,11 +3,13 @@
 **Purpose:** Standardized 8-category, 29-criteria framework for evaluating system testability and NFR compliance during architecture review (Phase 3) and NFR assessment.
 
 **When to Use:**
+
 - System-level test design (Phase 3): Identify testability gaps in architecture
 - NFR assessment workflow: Structured evaluation with evidence
 - Gate decisions: Quantifiable criteria (X/29 met = PASS/CONCERNS/FAIL)
 
 **How to Use:**
+
 1. For each criterion, assess status: ✅ Covered / ⚠️ Gap / ⬜ Not Assessed
 2. Document gap description if ⚠️
 3. Describe risk if criterion unmet
@@ -27,12 +29,14 @@
 | 1.4 | **Sample Requests:** Are there valid and invalid cURL/JSON sample requests provided in the design doc for QA to build upon?                | Ambiguity on how to consume the service        | P1: Valid request succeeds, P1: Invalid request fails with clear error                                  |
 
 **Common Gaps:**
+
 - No mock endpoints for external services (Athena, Milvus, third-party APIs)
 - Business logic tightly coupled to UI (requires E2E tests for everything)
 - No seeding APIs (manual database setup required)
 - ADR has architecture diagrams but no sample API requests
 
 **Mitigation Examples:**
+
 - 1.1 (Isolation): Provide mock endpoints, dependency injection, interface abstractions
 - 1.2 (Headless): Expose all business logic via REST/GraphQL APIs
 - 1.3 (State Control): Implement `/api/test-data` seeding endpoints (dev/staging only)
@@ -51,11 +55,13 @@
 | 2.3 | **Teardown:** Is there a mechanism to "reset" the environment or clean up data after destructive tests?                               | Environment rot; subsequent test failures    | P0: Automated cleanup after tests, P2: Environment reset script                                |
 
 **Common Gaps:**
+
 - No `customer_id` scoping in queries (cross-tenant data leakage risk)
 - Reliance on production data dumps (GDPR/PII violations)
 - No cleanup mechanism (tests leave data behind, polluting environment)
 
 **Mitigation Examples:**
+
 - 2.1 (Segregation): Enforce `customer_id` in all queries, add test-specific headers
 - 2.2 (Generation): Use Faker library, create synthetic data generators, prohibit prod dumps
 - 2.3 (Teardown): Auto-cleanup hooks in test framework, isolated test customer IDs
@@ -74,12 +80,14 @@
 | 3.4 | **Circuit Breakers:** If a dependency fails, does this service fail fast or hang?                                           | Cascading failures taking down the whole platform | P1: Circuit breaker opens on 5 failures, P1: Auto-reset after recovery, P2: Timeout prevents hanging |
 
 **Common Gaps:**
+
 - Stateful session management (can't scale horizontally)
 - No load testing, bottlenecks unknown
 - SLA undefined or unrealistic (99.99% without redundancy)
 - No circuit breakers (cascading failures)
 
 **Mitigation Examples:**
+
 - 3.1 (Statelessness): Externalize session to Redis/JWT, design for horizontal scaling
 - 3.2 (Bottlenecks): Load test with k6, monitor connection pools, identify weak links
 - 3.3 (SLA): Define realistic SLA (99.9% = 43 min/month downtime), add redundancy
@@ -98,11 +106,13 @@
 | 4.3 | **Backups:** Are backups immutable and tested for restoration integrity?                                             | Ransomware vulnerability; corrupted backups    | P2: Backup restore succeeds, P2: Backup immutability validated          |
 
 **Common Gaps:**
+
 - RTO/RPO undefined (no recovery plan)
 - Failover never tested (manual process, prone to errors)
 - Backups exist but restoration never validated (untested backups = no backups)
 
 **Mitigation Examples:**
+
 - 4.1 (RTO/RPO): Define RTO (e.g., 4 hours) and RPO (e.g., 1 hour), document recovery procedures
 - 4.2 (Failover): Automate multi-region failover, practice failover drills quarterly
 - 4.3 (Backups): Implement immutable backups (S3 versioning), test restore monthly
@@ -121,12 +131,14 @@
 | 5.4 | **Input Validation:** Are inputs sanitized against Injection attacks (SQLi, XSS)?                                | System compromise via malicious payloads | P1: SQL injection sanitized, P1: XSS escaped, P2: Command injection prevented                                    |
 
 **Common Gaps:**
+
 - Weak authentication (no OAuth, hardcoded API keys)
 - No encryption at rest (plaintext in database)
 - Secrets in git (API keys, passwords in config files)
 - No input validation (vulnerable to SQLi, XSS, command injection)
 
 **Mitigation Examples:**
+
 - 5.1 (AuthN/AuthZ): Implement OAuth 2.1/OIDC, enforce least privilege, validate scopes
 - 5.2 (Encryption): Enable TDE (Transparent Data Encryption), enforce TLS 1.2+
 - 5.3 (Secrets): Migrate to AWS Secrets Manager/Vault, scan git history for leaks
@@ -146,12 +158,14 @@
 | 6.4 | **Config:** Is configuration externalized? Can we change behavior without a code build?              | Rigid system; full deploys needed for minor tweaks | P2: Config change without code build, P2: Feature flags toggle behavior                           |
 
 **Common Gaps:**
+
 - No distributed tracing (can't debug across microservices)
 - Static log levels (requires redeploy to enable DEBUG)
 - No metrics endpoint (blind to system health)
 - Configuration hardcoded (requires full deploy for minor changes)
 
 **Mitigation Examples:**
+
 - 6.1 (Tracing): Implement W3C Trace Context, add correlation IDs to all logs
 - 6.2 (Logs): Use dynamic log levels (environment variable), structured logging (JSON)
 - 6.3 (Metrics): Expose /metrics endpoint, track RED metrics (Rate, Errors, Duration)
@@ -171,12 +185,14 @@
 | 7.4 | **Degradation (QoE):** If the service is slow, does it show a friendly message or a raw stack trace? | Poor user trust; frustration                           | P2: Friendly error message shown (not stack trace), P1: Error boundary catches exceptions (E2E) |
 
 **Common Gaps:**
+
 - Latency targets undefined (no SLOs)
 - No rate limiting (vulnerable to DDoS, noisy neighbors)
 - Poor perceived performance (blank screen while loading)
 - Raw error messages (stack traces exposed to users)
 
 **Mitigation Examples:**
+
 - 7.1 (Latency): Define SLOs (P95 <2s, P99 <5s), load test to validate
 - 7.2 (Throttling): Implement rate limiting (per-user, per-IP), return 429 with Retry-After
 - 7.3 (Perceived Performance): Add skeleton screens, optimistic updates, progressive loading
@@ -195,11 +211,13 @@
 | 8.3 | **Rollback:** Is there an automated rollback trigger if Health Checks fail post-deploy?    | Prolonged outages after a bad deploy                   | P2: Health check fails → automated rollback, P2: Rollback completes within RTO |
 
 **Common Gaps:**
+
 - No zero-downtime strategy (requires maintenance window)
 - Tight coupling between DB and code (lock-step deployments)
 - No automated rollback (manual intervention required)
 
 **Mitigation Examples:**
+
 - 8.1 (Zero Downtime): Implement Blue/Green or Canary deployments, use feature flags
 - 8.2 (Backward Compatibility): Separate DB migrations from code deploys, support N-1 schema
 - 8.3 (Rollback): Automate rollback on health check failures, test rollback procedures
@@ -211,6 +229,7 @@
 **System-Level Mode (Phase 3):**
 
 **In test-design-architecture.md:**
+
 - Add "NFR Testability Requirements" section after ASRs
 - Use 8 categories with checkboxes (29 criteria)
 - For each criterion: Status (⬜ Not Assessed, ⚠️ Gap, ✅ Covered), Gap description, Risk if unmet
@@ -225,20 +244,22 @@
 
 Can we verify this effectively without manual toil?
 
-| Criterion                                                       | Status         | Gap/Requirement                      | Risk if Unmet                           |
-| --------------------------------------------------------------- | -------------- | ------------------------------------ | --------------------------------------- |
+| Criterion                                                        | Status          | Gap/Requirement                      | Risk if Unmet                           |
+| ---------------------------------------------------------------- | --------------- | ------------------------------------ | --------------------------------------- |
 | ⬜ Isolation: Can service be tested with downstream deps mocked? | ⚠️ Gap          | No mock endpoints for Athena queries | Flaky tests; can't test in isolation    |
 | ⬜ Headless: 100% business logic accessible via API?             | ✅ Covered      | All MCP tools are REST APIs          | N/A                                     |
 | ⬜ State Control: Seeding APIs to inject data states?            | ⚠️ Gap          | Need `/api/test-data` endpoints      | Long setup times; can't test edge cases |
 | ⬜ Sample Requests: Valid/invalid cURL/JSON samples provided?    | ⬜ Not Assessed | Pending ADR Tool schemas finalized   | Ambiguity on how to consume service     |
 
 **Actions Required:**
+
 - [ ] Backend: Implement mock endpoints for Athena (R-002 blocker)
 - [ ] Backend: Implement `/api/test-data` seeding APIs (R-002 blocker)
 - [ ] PM: Finalize ADR Tool schemas with sample requests (Q4)
 ```
 
 **In test-design-qa.md:**
+
 - Map each criterion to test scenarios
 - Add "NFR Test Coverage Plan" section with P0/P1/P2 priority for each category
 - Reference Architecture doc gaps
@@ -252,6 +273,7 @@ Can we verify this effectively without manual toil?
 ### 1. Testability & Automation (4 criteria)
 
 **Prerequisites from Architecture doc:**
+
 - [ ] R-002: Test data seeding APIs implemented (blocker)
 - [ ] Mock endpoints available for Athena queries
 
@@ -263,6 +285,7 @@ Can we verify this effectively without manual toil?
 | Sample Requests: cURL examples  | Valid request succeeds, Invalid request fails with clear error       | P1       | 2          | QA               |
 
 **Detailed Test Scenarios:**
+
 - [ ] Isolation: Service runs with Athena mocked (returns fixture data)
 - [ ] Isolation: Service runs with Milvus mocked (returns ANN fixture)
 - [ ] State Control: Seed test customer with 1000 baseline transactions
@@ -282,8 +305,8 @@ Can we verify this effectively without manual toil?
 
 ## Assessment Summary
 
-| Category                      | Status     | Criteria Met | Evidence                               | Next Action          |
-| ----------------------------- | ---------- | ------------ | -------------------------------------- | -------------------- |
+| Category                      | Status      | Criteria Met | Evidence                               | Next Action          |
+| ----------------------------- | ----------- | ------------ | -------------------------------------- | -------------------- |
 | 1. Testability & Automation   | ⚠️ CONCERNS | 2/4          | Mock endpoints missing                 | Implement R-002      |
 | 2. Test Data Strategy         | ✅ PASS     | 3/3          | Faker + auto-cleanup                   | None                 |
 | 3. Scalability & Availability | ⚠️ CONCERNS | 1/4          | SLA undefined                          | Define SLA           |
@@ -305,16 +328,17 @@ Can we verify this effectively without manual toil?
 
 **Question:** Can we verify this effectively without manual toil?
 
-| Criterion                   | Status | Evidence                 | Gap/Action               |
-| --------------------------- | ------ | ------------------------ | ------------------------ |
-| ⬜ Isolation: Mock deps      | ⚠️      | No Athena mock           | Implement mock endpoints |
-| ⬜ Headless: API-accessible  | ✅      | All MCP tools are REST   | N/A                      |
-| ⬜ State Control: Seeding    | ⚠️      | `/api/test-data` pending | Sprint 0 blocker         |
-| ⬜ Sample Requests: Examples | ⬜      | Pending schemas          | Finalize ADR Tools       |
+| Criterion                    | Status | Evidence                 | Gap/Action               |
+| ---------------------------- | ------ | ------------------------ | ------------------------ |
+| ⬜ Isolation: Mock deps      | ⚠️     | No Athena mock           | Implement mock endpoints |
+| ⬜ Headless: API-accessible  | ✅     | All MCP tools are REST   | N/A                      |
+| ⬜ State Control: Seeding    | ⚠️     | `/api/test-data` pending | Sprint 0 blocker         |
+| ⬜ Sample Requests: Examples | ⬜     | Pending schemas          | Finalize ADR Tools       |
 
 **Overall Status:** ⚠️ CONCERNS (2/4 criteria met)
 
 **Next Actions:**
+
 - [ ] Backend: Implement Athena mock endpoints (Sprint 0)
 - [ ] Backend: Implement `/api/test-data` (Sprint 0)
 - [ ] PM: Finalize sample requests (Sprint 1)
@@ -327,24 +351,27 @@ Can we verify this effectively without manual toil?
 ## Benefits
 
 **For test-design workflow:**
+
 - ✅ Standard NFR structure (same 8 categories every project)
 - ✅ Clear testability requirements for Architecture team
 - ✅ Direct mapping: criterion → requirement → test scenario
 - ✅ Comprehensive coverage (29 criteria = no blind spots)
 
 **For nfr-assess workflow:**
+
 - ✅ Structured assessment (not ad-hoc)
 - ✅ Quantifiable (X/29 criteria met)
 - ✅ Evidence-based (each criterion has evidence field)
 - ✅ Actionable (gaps → next actions with owners)
 
 **For Architecture teams:**
+
 - ✅ Clear checklist (29 yes/no questions)
 - ✅ Risk-aware (each criterion has "risk if unmet")
 - ✅ Scoped work (only implement what's needed, not everything)
 
 **For QA teams:**
+
 - ✅ Comprehensive test coverage (29 criteria → test scenarios)
 - ✅ Clear priorities (P0 for security/isolation, P1 for monitoring, etc.)
 - ✅ No ambiguity (each criterion has specific test scenarios)
-

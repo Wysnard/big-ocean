@@ -21,7 +21,7 @@ export class SessionNotFound extends S.TaggedError<SessionNotFound>()(
   {
     sessionId: S.String,
     message: S.String,
-  }
+  },
 ) {}
 
 export class SessionExpired extends S.TaggedError<SessionExpired>()(
@@ -30,7 +30,7 @@ export class SessionExpired extends S.TaggedError<SessionExpired>()(
     sessionId: S.String,
     expiredAt: S.DateTimeUtc,
     message: S.String,
-  }
+  },
 ) {}
 
 /**
@@ -41,7 +41,7 @@ export class DatabaseError extends S.TaggedError<DatabaseError>()(
   "DatabaseError",
   {
     message: S.String,
-  }
+  },
 ) {}
 
 /**
@@ -53,7 +53,7 @@ export class RateLimitExceeded extends S.TaggedError<RateLimitExceeded>()(
     userId: S.String,
     resetAt: S.DateTimeUtc,
     message: S.String,
-  }
+  },
 ) {}
 
 /**
@@ -65,7 +65,7 @@ export class CostLimitExceeded extends S.TaggedError<CostLimitExceeded>()(
     dailySpend: S.Number,
     limit: S.Number,
     message: S.String,
-  }
+  },
 ) {}
 
 /**
@@ -76,7 +76,7 @@ export class ProfileNotFound extends S.TaggedError<ProfileNotFound>()(
   {
     publicProfileId: S.String,
     message: S.String,
-  }
+  },
 ) {}
 
 /**
@@ -86,7 +86,7 @@ export class ProfileError extends S.TaggedError<ProfileError>()(
   "ProfileError",
   {
     message: S.String,
-  }
+  },
 ) {}
 
 /**
@@ -100,7 +100,7 @@ export class InvalidCredentials extends S.TaggedError<InvalidCredentials>()(
   "InvalidCredentials",
   {
     message: S.String,
-  }
+  },
 ) {}
 
 /**
@@ -111,7 +111,7 @@ export class UserAlreadyExists extends S.TaggedError<UserAlreadyExists>()(
   {
     email: S.String,
     message: S.String,
-  }
+  },
 ) {}
 
 /**
@@ -121,7 +121,7 @@ export class Unauthorized extends S.TaggedError<Unauthorized>()(
   "Unauthorized",
   {
     message: S.String,
-  }
+  },
 ) {}
 
 /**
@@ -134,5 +134,5 @@ export class AgentInvocationError extends S.TaggedError<AgentInvocationError>()(
     agentName: S.String,
     sessionId: S.String,
     message: S.String,
-  }
+  },
 ) {}

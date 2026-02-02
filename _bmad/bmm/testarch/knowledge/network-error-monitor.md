@@ -26,11 +26,11 @@ The `network-error-monitor` provides:
 ## Quick Start
 
 ```typescript
-import { test } from '@seontechnologies/playwright-utils/network-error-monitor/fixtures';
+import { test } from "@seontechnologies/playwright-utils/network-error-monitor/fixtures";
 
 // That's it! Network monitoring is automatically enabled
-test('my test', async ({ page }) => {
-  await page.goto('/dashboard');
+test("my test", async ({ page }) => {
+  await page.goto("/dashboard");
   // If any HTTP 4xx/5xx errors occur, the test will fail
 });
 ```
@@ -44,12 +44,12 @@ test('my test', async ({ page }) => {
 **Implementation**:
 
 ```typescript
-import { test } from '@seontechnologies/playwright-utils/network-error-monitor/fixtures';
+import { test } from "@seontechnologies/playwright-utils/network-error-monitor/fixtures";
 
 // Monitoring automatically enabled
-test('should load dashboard', async ({ page }) => {
-  await page.goto('/dashboard');
-  await expect(page.locator('h1')).toContainText('Dashboard');
+test("should load dashboard", async ({ page }) => {
+  await page.goto("/dashboard");
+  await expect(page.locator("h1")).toContainText("Dashboard");
 
   // Passes if no HTTP errors
   // Fails if any 4xx/5xx errors detected with clear message:
@@ -74,31 +74,35 @@ test('should load dashboard', async ({ page }) => {
 **Implementation**:
 
 ```typescript
-import { test } from '@seontechnologies/playwright-utils/network-error-monitor/fixtures';
+import { test } from "@seontechnologies/playwright-utils/network-error-monitor/fixtures";
 
 // Opt-out with annotation
 test(
-  'should show error on invalid input',
-  { annotation: [{ type: 'skipNetworkMonitoring' }] },
+  "should show error on invalid input",
+  { annotation: [{ type: "skipNetworkMonitoring" }] },
   async ({ page }) => {
-    await page.goto('/form');
-    await page.click('#submit'); // Triggers 400 error
+    await page.goto("/form");
+    await page.click("#submit"); // Triggers 400 error
 
     // Monitoring disabled - test won't fail on 400
-    await expect(page.getByText('Invalid input')).toBeVisible();
-  }
+    await expect(page.getByText("Invalid input")).toBeVisible();
+  },
 );
 
 // Or opt-out entire describe block
-test.describe('error handling', { annotation: [{ type: 'skipNetworkMonitoring' }] }, () => {
-  test('handles 404', async ({ page }) => {
-    // All tests in this block skip monitoring
-  });
+test.describe(
+  "error handling",
+  { annotation: [{ type: "skipNetworkMonitoring" }] },
+  () => {
+    test("handles 404", async ({ page }) => {
+      // All tests in this block skip monitoring
+    });
 
-  test('handles 500', async ({ page }) => {
-    // Monitoring disabled
-  });
-});
+    test("handles 500", async ({ page }) => {
+      // Monitoring disabled
+    });
+  },
+);
 ```
 
 **Key Points**:
@@ -123,11 +127,11 @@ test.describe('error handling', { annotation: [{ type: 'skipNetworkMonitoring' }
 **Example with test.skip():**
 
 ```typescript
-test('feature gated test', async ({ page }) => {
+test("feature gated test", async ({ page }) => {
   const featureEnabled = await checkFeatureFlag();
-  test.skip(!featureEnabled, 'Feature not enabled');
+  test.skip(!featureEnabled, "Feature not enabled");
   // If skipped, network errors won't turn this into a failure
-  await page.goto('/new-feature');
+  await page.goto("/new-feature");
 });
 ```
 
@@ -138,8 +142,8 @@ test('feature gated test', async ({ page }) => {
 **Implementation**:
 
 ```typescript
-import { test as base } from '@playwright/test';
-import { createNetworkErrorMonitorFixture } from '@seontechnologies/playwright-utils/network-error-monitor/fixtures';
+import { test as base } from "@playwright/test";
+import { createNetworkErrorMonitorFixture } from "@seontechnologies/playwright-utils/network-error-monitor/fixtures";
 
 export const test = base.extend(
   createNetworkErrorMonitorFixture({
@@ -148,20 +152,20 @@ export const test = base.extend(
       /idv\/session-templates\/list/, // IDV service returns 404 when not configured
       /sentry\.io\/api/, // External Sentry errors should not fail tests
     ],
-  })
+  }),
 );
 ```
 
 **For merged fixtures:**
 
 ```typescript
-import { test as base, mergeTests } from '@playwright/test';
-import { createNetworkErrorMonitorFixture } from '@seontechnologies/playwright-utils/network-error-monitor/fixtures';
+import { test as base, mergeTests } from "@playwright/test";
+import { createNetworkErrorMonitorFixture } from "@seontechnologies/playwright-utils/network-error-monitor/fixtures";
 
 const networkErrorMonitor = base.extend(
   createNetworkErrorMonitorFixture({
     excludePatterns: [/analytics\.google\.com/, /cdn\.example\.com/],
-  })
+  }),
 );
 
 export const test = mergeTests(authFixture, networkErrorMonitor);
@@ -174,14 +178,14 @@ export const test = mergeTests(authFixture, networkErrorMonitor);
 **Implementation**:
 
 ```typescript
-import { test as base } from '@playwright/test';
-import { createNetworkErrorMonitorFixture } from '@seontechnologies/playwright-utils/network-error-monitor/fixtures';
+import { test as base } from "@playwright/test";
+import { createNetworkErrorMonitorFixture } from "@seontechnologies/playwright-utils/network-error-monitor/fixtures";
 
 const networkErrorMonitor = base.extend(
   createNetworkErrorMonitorFixture({
     excludePatterns: [], // Required when using maxTestsPerError
     maxTestsPerError: 1, // Only first test fails per error pattern, rest just log
-  })
+  }),
 );
 ```
 
@@ -225,17 +229,17 @@ Error pattern counts are stored in worker-level global state:
 
 ```typescript
 // test-file-1.spec.ts (runs in Worker 1)
-test('test A', () => {
+test("test A", () => {
   /* triggers GET:500:/api/v2/cases */
 }); // FAILS
 
 // test-file-2.spec.ts (runs later in Worker 1)
-test('test B', () => {
+test("test B", () => {
   /* triggers GET:500:/api/v2/cases */
 }); // PASSES (limit reached)
 
 // test-file-3.spec.ts (runs in Worker 2 - different worker)
-test('test C', () => {
+test("test C", () => {
   /* triggers GET:500:/api/v2/cases */
 }); // FAILS (fresh worker)
 ```
@@ -248,22 +252,22 @@ test('test C', () => {
 
 ```typescript
 // playwright/support/merged-fixtures.ts
-import { mergeTests } from '@playwright/test';
-import { test as authFixture } from '@seontechnologies/playwright-utils/auth-session/fixtures';
-import { test as networkErrorMonitorFixture } from '@seontechnologies/playwright-utils/network-error-monitor/fixtures';
+import { mergeTests } from "@playwright/test";
+import { test as authFixture } from "@seontechnologies/playwright-utils/auth-session/fixtures";
+import { test as networkErrorMonitorFixture } from "@seontechnologies/playwright-utils/network-error-monitor/fixtures";
 
 export const test = mergeTests(
   authFixture,
-  networkErrorMonitorFixture
+  networkErrorMonitorFixture,
   // Add other fixtures
 );
 
 // In tests
-import { test, expect } from '../support/merged-fixtures';
+import { test, expect } from "../support/merged-fixtures";
 
-test('authenticated with monitoring', async ({ page, authToken }) => {
+test("authenticated with monitoring", async ({ page, authToken }) => {
   // Both auth and network monitoring active
-  await page.goto('/protected');
+  await page.goto("/protected");
 
   // Fails if backend returns errors during auth flow
 });
@@ -360,10 +364,10 @@ Ensure you're importing the test from the correct fixture:
 
 ```typescript
 // Correct
-import { test } from '@seontechnologies/playwright-utils/network-error-monitor/fixtures';
+import { test } from "@seontechnologies/playwright-utils/network-error-monitor/fixtures";
 
 // Wrong - this won't have network monitoring
-import { test } from '@playwright/test';
+import { test } from "@playwright/test";
 ```
 
 ## Related Fragments
@@ -378,15 +382,19 @@ import { test } from '@playwright/test';
 
 ```typescript
 // Every test skips monitoring
-test.use({ annotation: [{ type: 'skipNetworkMonitoring' }] });
+test.use({ annotation: [{ type: "skipNetworkMonitoring" }] });
 ```
 
 **DO opt-out only for specific error tests:**
 
 ```typescript
-test.describe('error scenarios', { annotation: [{ type: 'skipNetworkMonitoring' }] }, () => {
-  // Only these tests skip monitoring
-});
+test.describe(
+  "error scenarios",
+  { annotation: [{ type: "skipNetworkMonitoring" }] },
+  () => {
+    // Only these tests skip monitoring
+  },
+);
 ```
 
 **DON'T ignore network error artifacts:**

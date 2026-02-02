@@ -16,19 +16,23 @@
 **Scope:** {Brief description of feature scope}
 
 **Business Context** (from PRD):
+
 - **Revenue/Impact:** {Business metrics if applicable}
 - **Problem:** {Problem being solved}
 - **GA Launch:** {Target date or timeline}
 
 **Architecture** (from ADR {adr_number}):
+
 - **Key Decision 1:** {e.g., OAuth 2.1 authentication}
 - **Key Decision 2:** {e.g., Centralized MCP Server pattern}
 - **Key Decision 3:** {e.g., Stack: TypeScript, SDK v1.x}
 
 **Expected Scale** (from ADR):
+
 - {RPS, volume, users, etc.}
 
 **Risk Summary:**
+
 - **Total risks**: {N}
 - **High-priority (≥6)**: {N} risks requiring immediate mitigation
 - **Test effort**: ~{N} tests (~{X} weeks for 1 QA, ~{Y} weeks for 2 QAs)
@@ -79,21 +83,21 @@
 
 #### High-Priority Risks (Score ≥6) - IMMEDIATE ATTENTION
 
-| Risk ID | Category | Description | Probability | Impact | Score | Mitigation | Owner | Timeline |
-|---------|----------|-------------|-------------|--------|-------|------------|-------|----------|
-| **{R-ID}** | **{CAT}** | {Description} | {1-3} | {1-3} | **{Score}** | {Mitigation strategy} | {Owner} | {Date} |
+| Risk ID    | Category  | Description   | Probability | Impact | Score       | Mitigation            | Owner   | Timeline |
+| ---------- | --------- | ------------- | ----------- | ------ | ----------- | --------------------- | ------- | -------- |
+| **{R-ID}** | **{CAT}** | {Description} | {1-3}       | {1-3}  | **{Score}** | {Mitigation strategy} | {Owner} | {Date}   |
 
 #### Medium-Priority Risks (Score 3-5)
 
-| Risk ID | Category | Description | Probability | Impact | Score | Mitigation | Owner |
-|---------|----------|-------------|-------------|--------|-------|------------|-------|
-| {R-ID} | {CAT} | {Description} | {1-3} | {1-3} | {Score} | {Mitigation} | {Owner} |
+| Risk ID | Category | Description   | Probability | Impact | Score   | Mitigation   | Owner   |
+| ------- | -------- | ------------- | ----------- | ------ | ------- | ------------ | ------- |
+| {R-ID}  | {CAT}    | {Description} | {1-3}       | {1-3}  | {Score} | {Mitigation} | {Owner} |
 
 #### Low-Priority Risks (Score 1-2)
 
-| Risk ID | Category | Description | Probability | Impact | Score | Action |
-|---------|----------|-------------|-------------|--------|-------|--------|
-| {R-ID} | {CAT} | {Description} | {1-3} | {1-3} | {Score} | Monitor |
+| Risk ID | Category | Description   | Probability | Impact | Score   | Action  |
+| ------- | -------- | ------------- | ----------- | ------ | ------- | ------- |
+| {R-ID}  | {CAT}    | {Description} | {1-3}       | {1-3}  | {Score} | Monitor |
 
 #### Risk Category Legend
 
@@ -114,11 +118,12 @@
 
 #### 1. Blockers to Fast Feedback (WHAT WE NEED FROM ARCHITECTURE)
 
-| Concern | Impact | What Architecture Must Provide | Owner | Timeline |
-|---------|--------|--------------------------------|-------|----------|
+| Concern            | Impact              | What Architecture Must Provide         | Owner  | Timeline |
+| ------------------ | ------------------- | -------------------------------------- | ------ | -------- |
 | **{Concern name}** | {Impact on testing} | {Specific architectural change needed} | {Team} | {Sprint} |
 
 **Example:**
+
 - **No API for test data seeding** → Cannot parallelize tests → Provide POST /test/seed endpoint (Backend, Sprint 0)
 
 #### 2. Architectural Improvements Needed (WHAT SHOULD BE CHANGED)
@@ -149,6 +154,7 @@
 #### Accepted Trade-offs (No Action Required)
 
 For {Feature} Phase 1, the following trade-offs are acceptable:
+
 - **{Trade-off 1}** - {Why acceptable for now}
 - **{Trade-off 2}** - {Why acceptable for now}
 
@@ -163,6 +169,7 @@ For {Feature} Phase 1, the following trade-offs are acceptable:
 #### {R-ID}: {Risk Description} (Score: {Score}) - {CRITICALITY LEVEL}
 
 **Mitigation Strategy:**
+
 1. {Step 1}
 2. {Step 2}
 3. {Step 3}
@@ -202,12 +209,14 @@ For {Feature} Phase 1, the following trade-offs are acceptable:
 **End of Architecture Document**
 
 **Next Steps for Architecture Team:**
+
 1. Review Quick Guide (🚨/⚠️/📋) and prioritize blockers
 2. Assign owners and timelines for high-priority risks (≥6)
 3. Validate assumptions and dependencies
 4. Provide feedback to QA on testability gaps
 
 **Next Steps for QA Team:**
+
 1. Wait for Sprint 0 blockers to be resolved
 2. Refer to companion QA doc (test-design-qa.md) for test scenarios
 3. Begin test infrastructure setup (factories, fixtures, environments)

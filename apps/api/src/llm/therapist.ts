@@ -23,11 +23,31 @@ const evaluatorModel = new ChatAnthropic({
 // Define structured output schema for Evaluator LLM (assessment only, no response text)
 const AssessmentSchema = z.object({
   // Precision/confidence scores for main traits (0-1)
-  opennessPrecision: z.number().min(0).max(1).describe("Confidence in openness assessment"),
-  conscientiousnessPrecision: z.number().min(0).max(1).describe("Confidence in conscientiousness assessment"),
-  extraversionPrecision: z.number().min(0).max(1).describe("Confidence in extraversion assessment"),
-  agreeablenessPrecision: z.number().min(0).max(1).describe("Confidence in agreeableness assessment"),
-  neuroticismPrecision: z.number().min(0).max(1).describe("Confidence in neuroticism assessment"),
+  opennessPrecision: z
+    .number()
+    .min(0)
+    .max(1)
+    .describe("Confidence in openness assessment"),
+  conscientiousnessPrecision: z
+    .number()
+    .min(0)
+    .max(1)
+    .describe("Confidence in conscientiousness assessment"),
+  extraversionPrecision: z
+    .number()
+    .min(0)
+    .max(1)
+    .describe("Confidence in extraversion assessment"),
+  agreeablenessPrecision: z
+    .number()
+    .min(0)
+    .max(1)
+    .describe("Confidence in agreeableness assessment"),
+  neuroticismPrecision: z
+    .number()
+    .min(0)
+    .max(1)
+    .describe("Confidence in neuroticism assessment"),
 
   // Openness facets (0-20 each)
   fantasy: z.number().min(0).max(20).describe("Fantasy/Imagination facet"),
@@ -41,7 +61,11 @@ const AssessmentSchema = z.object({
   competence: z.number().min(0).max(20).describe("Competence facet"),
   order: z.number().min(0).max(20).describe("Order facet"),
   dutifulness: z.number().min(0).max(20).describe("Dutifulness facet"),
-  achievementStriving: z.number().min(0).max(20).describe("Achievement striving facet"),
+  achievementStriving: z
+    .number()
+    .min(0)
+    .max(20)
+    .describe("Achievement striving facet"),
   selfDiscipline: z.number().min(0).max(20).describe("Self-discipline facet"),
   deliberation: z.number().min(0).max(20).describe("Deliberation facet"),
 
@@ -50,22 +74,42 @@ const AssessmentSchema = z.object({
   gregariousness: z.number().min(0).max(20).describe("Gregariousness facet"),
   assertiveness: z.number().min(0).max(20).describe("Assertiveness facet"),
   activity: z.number().min(0).max(20).describe("Activity facet"),
-  excitementSeeking: z.number().min(0).max(20).describe("Excitement-seeking facet"),
-  positiveEmotions: z.number().min(0).max(20).describe("Positive emotions facet"),
+  excitementSeeking: z
+    .number()
+    .min(0)
+    .max(20)
+    .describe("Excitement-seeking facet"),
+  positiveEmotions: z
+    .number()
+    .min(0)
+    .max(20)
+    .describe("Positive emotions facet"),
 
   // Agreeableness facets (0-20 each)
   trust: z.number().min(0).max(20).describe("Trust facet"),
-  straightforwardness: z.number().min(0).max(20).describe("Straightforwardness facet"),
+  straightforwardness: z
+    .number()
+    .min(0)
+    .max(20)
+    .describe("Straightforwardness facet"),
   altruism: z.number().min(0).max(20).describe("Altruism facet"),
   compliance: z.number().min(0).max(20).describe("Compliance facet"),
   modesty: z.number().min(0).max(20).describe("Modesty facet"),
-  tenderMindedness: z.number().min(0).max(20).describe("Tender-mindedness facet"),
+  tenderMindedness: z
+    .number()
+    .min(0)
+    .max(20)
+    .describe("Tender-mindedness facet"),
 
   // Neuroticism facets (0-20 each)
   anxiety: z.number().min(0).max(20).describe("Anxiety facet"),
   angryHostility: z.number().min(0).max(20).describe("Angry hostility facet"),
   depression: z.number().min(0).max(20).describe("Depression facet"),
-  selfConsciousness: z.number().min(0).max(20).describe("Self-consciousness facet"),
+  selfConsciousness: z
+    .number()
+    .min(0)
+    .max(20)
+    .describe("Self-consciousness facet"),
   impulsiveness: z.number().min(0).max(20).describe("Impulsiveness facet"),
   vulnerability: z.number().min(0).max(20).describe("Vulnerability facet"),
 });
@@ -73,7 +117,7 @@ const AssessmentSchema = z.object({
 // Bind evaluator model with structured output
 const evaluatorWithStructuredOutput = evaluatorModel.withStructuredOutput(
   AssessmentSchema,
-  { name: "personality_assessment" }
+  { name: "personality_assessment" },
 );
 
 // Define state using LangGraph
@@ -127,34 +171,62 @@ const TherapistState = new StateSchema({
   // Conscientiousness facets
   competence: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
   order: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-  dutifulness: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-  achievementStriving: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-  selfDiscipline: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-  deliberation: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
+  dutifulness: new ReducedValue(z.number().default(0), {
+    reducer: (_, y) => y,
+  }),
+  achievementStriving: new ReducedValue(z.number().default(0), {
+    reducer: (_, y) => y,
+  }),
+  selfDiscipline: new ReducedValue(z.number().default(0), {
+    reducer: (_, y) => y,
+  }),
+  deliberation: new ReducedValue(z.number().default(0), {
+    reducer: (_, y) => y,
+  }),
 
   // Extraversion facets
   warmth: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-  gregariousness: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-  assertiveness: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
+  gregariousness: new ReducedValue(z.number().default(0), {
+    reducer: (_, y) => y,
+  }),
+  assertiveness: new ReducedValue(z.number().default(0), {
+    reducer: (_, y) => y,
+  }),
   activity: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-  excitementSeeking: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-  positiveEmotions: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
+  excitementSeeking: new ReducedValue(z.number().default(0), {
+    reducer: (_, y) => y,
+  }),
+  positiveEmotions: new ReducedValue(z.number().default(0), {
+    reducer: (_, y) => y,
+  }),
 
   // Agreeableness facets
   trust: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-  straightforwardness: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
+  straightforwardness: new ReducedValue(z.number().default(0), {
+    reducer: (_, y) => y,
+  }),
   altruism: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
   compliance: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
   modesty: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-  tenderMindedness: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
+  tenderMindedness: new ReducedValue(z.number().default(0), {
+    reducer: (_, y) => y,
+  }),
 
   // Neuroticism facets
   anxiety: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-  angryHostility: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
+  angryHostility: new ReducedValue(z.number().default(0), {
+    reducer: (_, y) => y,
+  }),
   depression: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-  selfConsciousness: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-  impulsiveness: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-  vulnerability: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
+  selfConsciousness: new ReducedValue(z.number().default(0), {
+    reducer: (_, y) => y,
+  }),
+  impulsiveness: new ReducedValue(z.number().default(0), {
+    reducer: (_, y) => y,
+  }),
+  vulnerability: new ReducedValue(z.number().default(0), {
+    reducer: (_, y) => y,
+  }),
 });
 
 // Import message types
@@ -205,11 +277,41 @@ const evaluationNode: GraphNode<typeof TherapistState> = async (state) => {
   };
 
   // Calculate current main trait scores from facets
-  const openness = state.fantasy + state.aesthetics + state.feelings + state.actions + state.ideas + state.values;
-  const conscientiousness = state.competence + state.order + state.dutifulness + state.achievementStriving + state.selfDiscipline + state.deliberation;
-  const extraversion = state.warmth + state.gregariousness + state.assertiveness + state.activity + state.excitementSeeking + state.positiveEmotions;
-  const agreeableness = state.trust + state.straightforwardness + state.altruism + state.compliance + state.modesty + state.tenderMindedness;
-  const neuroticism = state.anxiety + state.angryHostility + state.depression + state.selfConsciousness + state.impulsiveness + state.vulnerability;
+  const openness =
+    state.fantasy +
+    state.aesthetics +
+    state.feelings +
+    state.actions +
+    state.ideas +
+    state.values;
+  const conscientiousness =
+    state.competence +
+    state.order +
+    state.dutifulness +
+    state.achievementStriving +
+    state.selfDiscipline +
+    state.deliberation;
+  const extraversion =
+    state.warmth +
+    state.gregariousness +
+    state.assertiveness +
+    state.activity +
+    state.excitementSeeking +
+    state.positiveEmotions;
+  const agreeableness =
+    state.trust +
+    state.straightforwardness +
+    state.altruism +
+    state.compliance +
+    state.modesty +
+    state.tenderMindedness;
+  const neuroticism =
+    state.anxiety +
+    state.angryHostility +
+    state.depression +
+    state.selfConsciousness +
+    state.impulsiveness +
+    state.vulnerability;
 
   const systemPrompt = `You are a personality assessment expert analyzing a therapy conversation to score Big Five personality traits.
 
@@ -288,7 +390,9 @@ Return updated scores for ALL 30 facets and 5 confidence levels.`;
       ...state.messages,
     ]);
 
-    const messageCount = state.messages.filter((m) => m.type === "human").length;
+    const messageCount = state.messages.filter(
+      (m) => m.type === "human",
+    ).length;
 
     console.info("[Therapist] Evaluation completed", {
       messageCount,
@@ -368,11 +472,12 @@ const shouldEvaluate = (state: typeof TherapistState.State) => {
   ) {
     console.debug("[Therapist] Triggering evaluation", {
       messageCount,
-      reason: messageCount === 1
-        ? "first message"
-        : shouldEvaluateNow
-          ? "on demand"
-          : "periodic",
+      reason:
+        messageCount === 1
+          ? "first message"
+          : shouldEvaluateNow
+            ? "on demand"
+            : "periodic",
     });
     return "evaluate";
   }
@@ -437,7 +542,8 @@ export async function conductPersonalityAssessment(
 
       // Precision scores
       opennessPrecision: previousState?.opennessPrecision ?? 0,
-      conscientiousnessPrecision: previousState?.conscientiousnessPrecision ?? 0,
+      conscientiousnessPrecision:
+        previousState?.conscientiousnessPrecision ?? 0,
       extraversionPrecision: previousState?.extraversionPrecision ?? 0,
       agreeablenessPrecision: previousState?.agreeablenessPrecision ?? 0,
       neuroticismPrecision: previousState?.neuroticismPrecision ?? 0,

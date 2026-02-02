@@ -1,12 +1,12 @@
 ---
-name: 'v-02b-validate-persona'
-description: 'Validate persona and append to report'
+name: "v-02b-validate-persona"
+description: "Validate persona and append to report"
 
-nextStepFile: './v-02c-validate-menu.md'
-validationReport: '{bmb_creations_output_folder}/validation-report-{agent-name}.md'
+nextStepFile: "./v-02c-validate-menu.md"
+validationReport: "{bmb_creations_output_folder}/validation-report-{agent-name}.md"
 personaProperties: ../data/persona-properties.md
 principlesCrafting: ../data/principles-crafting.md
-agentFile: '{agent-file-path}'
+agentFile: "{agent-file-path}"
 ---
 
 # Validate Step 2b: Validate Persona
@@ -98,6 +98,7 @@ Append to `{validationReport}`:
 **Status:** {✅ PASS / ⚠️ WARNING / ❌ FAIL}
 
 **Checks:**
+
 - [ ] role: specific, not generic
 - [ ] identity: defines who agent is
 - [ ] communication_style: speech patterns only
@@ -105,13 +106,13 @@ Append to `{validationReport}`:
 
 **Detailed Findings:**
 
-*PASSING:*
+_PASSING:_
 {List of passing checks}
 
-*WARNINGS:*
+_WARNINGS:_
 {List of non-blocking issues}
 
-*FAILURES:*
+_FAILURES:_
 {List of blocking issues that must be fixed}
 ```
 

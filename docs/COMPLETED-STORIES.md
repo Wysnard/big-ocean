@@ -7,6 +7,7 @@ Completed implementation stories that are deployed and stable.
 Railway deployment with automatic CI/CD integration.
 
 **Deliverables:**
+
 - Dockerfile for Node.js backend
 - GitHub Actions CI/CD pipeline
 - Health check endpoint at `/health`
@@ -20,6 +21,7 @@ Railway deployment with automatic CI/CD integration.
 Containerized development environment with production parity.
 
 **Deliverables:**
+
 - `docker-compose.yml` with all services
 - Development scripts (`./scripts/dev.sh`, `./scripts/dev-stop.sh`, `./scripts/dev-reset.sh`)
 - Hot reload configuration for both frontend and backend
@@ -27,6 +29,7 @@ Containerized development environment with production parity.
 - Service health checks and startup order
 
 **Key Features:**
+
 - Port mapping: Frontend (3000), Backend (4000), PostgreSQL (5432), Redis (6379)
 - Hot reload: Backend (tsx watch), Frontend (Vite HMR)
 - Volumes: `./apps/api/src` and `./apps/front/src` mounted for real-time changes
@@ -40,6 +43,7 @@ Containerized development environment with production parity.
 Type-safe HTTP API contracts using @effect/platform and @effect/schema.
 
 **Deliverables:**
+
 - `@workspace/contracts` package with HttpApiGroup pattern
 - Type-safe request/response schemas
 - BigOceanApi composition class
@@ -48,6 +52,7 @@ Type-safe HTTP API contracts using @effect/platform and @effect/schema.
 - Server setup with Better Auth integration
 
 **Patterns:**
+
 - `HttpApiGroup.make()` → `HttpApiEndpoint` → `HttpApiBuilder` handlers
 - Request/response validation via Effect Schema
 - Thin HTTP adapters (handlers) separate from business logic
@@ -59,12 +64,14 @@ Type-safe HTTP API contracts using @effect/platform and @effect/schema.
 GitHub Actions pipeline for automated testing and validation.
 
 **Deliverables:**
+
 - `.github/workflows/ci.yml` configuration
 - Multi-step pipeline: lint → build → test → validate commits
 - Conventional commit message validation
 - Pre-push git hooks for local enforcement
 
 **Pipeline Steps:**
+
 1. Checkout code
 2. Setup pnpm 10.4.1 + Node.js 20.x
 3. Install dependencies
@@ -81,6 +88,7 @@ GitHub Actions pipeline for automated testing and validation.
 Hexagonal architecture implementation for the Nerin conversational agent.
 
 **Deliverables:**
+
 - `NerinAgentRepository` interface in domain package (ports)
 - `NerinAgentLangGraphRepositoryLive` implementation (adapters)
 - LangGraph StateGraph with PostgresSaver for persistence
@@ -89,6 +97,7 @@ Hexagonal architecture implementation for the Nerin conversational agent.
 - Send-message use-case leveraging dependency injection
 
 **Architecture:**
+
 - **Domain**: Defines `NerinAgentRepository` Context.Tag interface
 - **Infrastructure**: Implements LangGraph integration with Drizzle persistence
 - **Use-Cases**: Pure Effect functions accessing agent via DI

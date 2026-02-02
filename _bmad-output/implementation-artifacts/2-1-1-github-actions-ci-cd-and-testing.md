@@ -61,6 +61,7 @@ so that **code quality is enforced, regressions are caught early, and developmen
 ## Tasks / Subtasks
 
 ### Task 1: GitHub Actions Workflow Setup
+
 - [x] Create `.github/workflows/ci.yml` with jobs for:
   - Checkout code, setup Node.js/pnpm
   - Install dependencies (`pnpm install`)
@@ -74,6 +75,7 @@ so that **code quality is enforced, regressions are caught early, and developmen
 - [ ] Verify workflow runs successfully on sample PR
 
 ### Task 2: Master Branch Protection & Git Rules
+
 - [x] Enable branch protection on master (manual step in GitHub settings):
   - Require pull request reviews (optional: 1+ reviewer)
   - Require status checks to pass before merge
@@ -84,6 +86,7 @@ so that **code quality is enforced, regressions are caught early, and developmen
 - [x] Create branch protection rule enforcement (configured manually by user)
 
 ### Task 3: Test Integration & Coverage Reporting
+
 - [x] Integrate vitest with coverage reports (already in place from 7.1)
 - [x] Configure workflow to generate coverage reports (artifact upload)
 - [x] Display coverage metrics in job summary (added in code review)
@@ -91,12 +94,14 @@ so that **code quality is enforced, regressions are caught early, and developmen
 - [x] Add coverage badge to README (CI badge added)
 
 ### Task 4: Commit Message & Story Enforcement
+
 - [x] Create commit-msg hook: validates story reference in commit message
 - [x] Document commit message format: `feat(story-X-Y): Description` (in CLAUDE.md)
 - [x] Add GitHub Actions job to validate PR commits reference story numbers (added in code review)
 - [x] Block merge if commits don't reference story (via validate-commits job + branch protection)
 
 ### Task 5: Git Hooks Setup for Local Enforcement
+
 - [x] Install simple-git-hooks package:
   - `pnpm add -D simple-git-hooks`
   - Add to package.json: `"prepare": "simple-git-hooks"`
@@ -118,6 +123,7 @@ so that **code quality is enforced, regressions are caught early, and developmen
   - Try valid commit message (should pass) ✓
 
 ### Task 6: Documentation & Developer Workflow
+
 - [x] Update CLAUDE.md:
   - Add "CI/CD Workflow" section explaining GitHub Actions pipeline
   - Add "Git Hooks" section explaining local enforcement
@@ -139,6 +145,7 @@ so that **code quality is enforced, regressions are caught early, and developmen
 ### Architecture Compliance
 
 **Relevant Architecture Patterns (from Story 2-0.5):**
+
 - Effect-based dependency injection for services
 - Repository pattern for data access
 - Use-case pattern for business logic
@@ -146,6 +153,7 @@ so that **code quality is enforced, regressions are caught early, and developmen
 - Vitest for unit testing framework (Story 7.1)
 
 **CI/CD Pipeline Must:**
+
 1. Verify all 3 packages compile (domain, contracts, infrastructure)
 2. Verify all 2 apps compile (api, front)
 3. Run use-case tests (`apps/api/src/__tests__/session-management.test.ts` verified in 2-1)
@@ -154,6 +162,7 @@ so that **code quality is enforced, regressions are caught early, and developmen
 ### Project Structure Notes
 
 **Relevant Files & Directories:**
+
 - `.github/workflows/` - GitHub Actions workflow files (to be created)
 - `apps/api/src/__tests__/` - Use-case tests (already implemented in 2-1)
 - `packages/*/` - All packages must compile
@@ -162,6 +171,7 @@ so that **code quality is enforced, regressions are caught early, and developmen
 - `turbo.json` - Build configuration (reference for task ordering)
 
 **Build Commands Verified:**
+
 - `pnpm install` - Install workspace dependencies
 - `pnpm --filter=api typecheck` - TypeScript check API package
 - `pnpm lint` - Biome linting all packages
@@ -171,6 +181,7 @@ so that **code quality is enforced, regressions are caught early, and developmen
 ### Git Workflow Reference
 
 **From CLAUDE.md - Story Development Process:**
+
 ```
 1. Create feature branch: git checkout -b feat/story-{epic}-{num}-{slug}
 2. Develop story following TDD workflow
@@ -185,6 +196,7 @@ so that **code quality is enforced, regressions are caught early, and developmen
 ### Testing Standards Summary
 
 **From Story 7.1 (Unit Testing Framework Setup):**
+
 - Framework: `vitest`
 - Test files: `**/__tests__/*.test.ts`
 - Minimum coverage: 80% for new code
@@ -202,17 +214,20 @@ so that **code quality is enforced, regressions are caught early, and developmen
 ### Previous Story Intelligence
 
 **From Story 2-0.5 (Effect-Based DI Refactoring):**
+
 - Established Effect Context.Tag pattern for services
 - Repository implementations use Layer.effect for DI
 - All dependencies injected at layer construction time
 - Error handling uses contract errors (DatabaseError, SessionNotFound)
 
 **Learnings for Story 2-1.1:**
+
 - CI must verify services compose correctly (Layer.mergeAll)
 - Tests should verify service wiring, not just library behavior
 - Error handling patterns established must be validated in tests
 
 **From Story 2-1 (Session Management & Persistence):**
+
 - Created use-case tests at `apps/api/src/__tests__/session-management.test.ts`
 - Tests cover:
   - Service creation (createSession, getSession, updateSession)
@@ -227,6 +242,7 @@ so that **code quality is enforced, regressions are caught early, and developmen
 ### Git Analysis
 
 **Recent commits (from master branch):**
+
 ```
 4fdfa5d - feat(story-2-1): Mark session management story complete
 79bea4c - chore(sprint-status): Update story 2-1 status to review
@@ -236,12 +252,14 @@ fd99caf - feat(story-2-0.5): Effect-Based Dependency Injection Refactoring - COM
 ```
 
 **Pattern observations:**
+
 - Commit format: `{type}({scope}): {description}`
 - Scope includes story reference: `(story-2-1)`
 - Multiple commits per story (phase-based)
 - All stories use feature branches (git status on branches, not master)
 
 **For this story 2-1.1:**
+
 - Commits should follow: `chore(story-2-1.1): ...` or `feat(story-2-1.1): ...`
 - Branch: `feat/story-2-1-1-github-actions-ci-cd`
 - Enforce this pattern in CI
@@ -249,6 +267,7 @@ fd99caf - feat(story-2-0.5): Effect-Based Dependency Injection Refactoring - COM
 ### External Context & Latest Tech
 
 **GitHub Actions (Latest 2026):**
+
 - Matrix builds: Test across multiple Node.js versions (18.x, 20.x, 22.x)
 - Caching: Use `actions/setup-node@v4` with pnpm cache for faster builds
 - Coverage: `codecov/codecov-action` for external coverage reporting
@@ -256,12 +275,14 @@ fd99caf - feat(story-2-0.5): Effect-Based Dependency Injection Refactoring - COM
 - PR checks: Automatic status checks when workflow passes/fails
 
 **Recommended Actions:**
+
 - Use `actions/setup-node@v4` (latest)
 - Use `pnpm/action-setup@v2` (latest, handles setup)
 - Use `codecov/codecov-action@v3` for coverage reporting
 - Consider `dorny/test-reporter@v1` for detailed test reports
 
 **Testing Strategy:**
+
 - Run tests on Node.js 20.x (current LTS, matches CLAUDE.md requirement)
 - Optional: Matrix test on 18.x, 20.x for compatibility
 - Store coverage reports as artifacts for download
@@ -271,6 +292,7 @@ fd99caf - feat(story-2-0.5): Effect-Based Dependency Injection Refactoring - COM
 ## Technical Requirements
 
 ### Core Dependencies
+
 - Node.js >= 20 (verify in workflow)
 - pnpm >= 10.4.1 (verify in workflow)
 - All existing dependencies from package.json (no new major deps needed)
@@ -284,17 +306,17 @@ name: CI - TypeScript, Lint, Build, Test
 
 on:
   push:
-    branches: ['**']  # All branches
+    branches: ["**"] # All branches
   pull_request:
     branches: [master]
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch: # Manual trigger
 
 jobs:
   ci:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20.x]  # Primary: Node 20.x (LTS)
+        node-version: [20.x] # Primary: Node 20.x (LTS)
 
     steps:
       - uses: actions/checkout@v4
@@ -302,7 +324,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install
@@ -332,6 +354,7 @@ jobs:
 **Simple-Git-Hooks Setup:**
 
 File: `.githooks/pre-commit`
+
 ```bash
 #!/bin/sh
 
@@ -349,6 +372,7 @@ fi
 ```
 
 File: `.githooks/commit-msg`
+
 ```bash
 #!/bin/sh
 
@@ -377,6 +401,7 @@ exit 0
 ```
 
 **Package.json setup:**
+
 ```json
 {
   "scripts": {
@@ -395,6 +420,7 @@ exit 0
 ```
 
 **Installation:**
+
 ```bash
 # Install simple-git-hooks
 pnpm add -D simple-git-hooks
@@ -414,6 +440,7 @@ git commit -m "feat(story-2-1-1): Test commit"  # Should run pre-commit checks
 ```
 
 **Why simple-git-hooks over Husky:**
+
 - Zero dependencies (smaller footprint)
 - Simpler configuration (JSON in package.json)
 - Lightweight: 10.9 kB vs Husky's 6.44 kB
@@ -423,6 +450,7 @@ git commit -m "feat(story-2-1-1): Test commit"  # Should run pre-commit checks
 ### Branch Protection Rules
 
 **Master branch protection:**
+
 - Require status checks to pass: `ci` job
 - Require branches up-to-date: yes
 - Require code reviews: optional (1+ if enabled)
@@ -430,6 +458,7 @@ git commit -m "feat(story-2-1-1): Test commit"  # Should run pre-commit checks
 - Require commit signatures: optional
 
 **Via GitHub API (if automating):**
+
 ```bash
 gh api -X PUT /repos/OWNER/REPO/branches/master/protection \
   -f required_status_checks='{
@@ -443,10 +472,12 @@ gh api -X PUT /repos/OWNER/REPO/branches/master/protection \
 ### Commit Validation (Optional Advanced)
 
 **Pre-commit hook (local):** `.git/hooks/pre-commit`
+
 - Validate commit message matches `feat(story-X-Y):`
 - Prevent commits that don't reference story
 
 **GitHub Actions validation (CI):**
+
 - PR commit lint job (optional)
 - Check all commits reference story number
 - Block merge if any commit missing story reference
@@ -456,6 +487,7 @@ gh api -X PUT /repos/OWNER/REPO/branches/master/protection \
 ## Success Criteria
 
 **Dev Completion (definition of done):**
+
 - [ ] `.github/workflows/ci.yml` created and tested
 - [ ] Master branch protection enabled
 - [ ] Test workflow runs successfully on PR
@@ -466,6 +498,7 @@ gh api -X PUT /repos/OWNER/REPO/branches/master/protection \
 - [ ] Feature branch enforcement working (test: try pushing to master, expect failure)
 
 **Verification:**
+
 1. Create sample PR with changes
 2. Verify CI workflow runs automatically
 3. Verify all 5 checks pass or fail as expected
@@ -480,6 +513,7 @@ gh api -X PUT /repos/OWNER/REPO/branches/master/protection \
 ### Story Purpose
 
 This story establishes **automated quality gates and Git workflow enforcement** to prevent:
+
 1. Broken builds being committed to master
 2. Code without tests going to production
 3. Developers bypassing feature branch workflow
@@ -488,17 +522,20 @@ This story establishes **automated quality gates and Git workflow enforcement** 
 ### Key Implementation Files to Create/Modify
 
 **Create:**
+
 - `.github/workflows/ci.yml` - Main CI/CD workflow
 - `.github/workflows/README.md` (optional) - Workflow documentation
 - `.githooks/pre-commit` - Pre-commit hook (linting & type checking)
 - `.githooks/commit-msg` - Commit message validation hook
 
 **Modify:**
+
 - `CLAUDE.md` - Add CI/CD workflow section and feature branch enforcement docs
 - `README.md` - Add CI status badge
 - `package.json` - Add simple-git-hooks dependency and configuration
 
 **Reference (do not modify, just understand):**
+
 - `turbo.json` - Build task configuration
 - `pnpm-workspace.yaml` - Workspace setup
 - `.biomerc.json` - Linting configuration
@@ -563,10 +600,12 @@ This story establishes **automated quality gates and Git workflow enforcement** 
 Since this story is about **CI/CD infrastructure**, testing is partially manual:
 
 **Automated Tests:**
+
 - [ ] Verify workflow YAML syntax (GitHub Actions syntax checker)
 - [ ] Verify branch protection rules via GitHub API
 
 **Manual Tests (run before marking done):**
+
 - [ ] Push feature branch with intentional lint error → CI fails ✓
 - [ ] Fix lint error → CI passes ✓
 - [ ] Try commit to master directly → Blocked/warned ✓
@@ -578,15 +617,18 @@ Since this story is about **CI/CD infrastructure**, testing is partially manual:
 ## Dev Agent Record
 
 ### Agent Model Used
+
 Claude Haiku 4.5
 
 ### Key Context from Story 2-1 (Session Management)
+
 - Use-case tests created: `apps/api/src/__tests__/session-management.test.ts`
 - Tests verify service layer composition and session lifecycle
 - All TypeScript checks pass
 - Vitest framework in place (from Story 7.1)
 
 ### Key Dependencies
+
 - Story 2-0.5: Effect-based dependency injection patterns
 - Story 7.1: Unit testing framework (vitest, testing standards)
 - CLAUDE.md: Developer workflow and commit message standards
@@ -594,6 +636,7 @@ Claude Haiku 4.5
 ### Completion Notes
 
 **Implementation completed (2026-02-01):**
+
 - ✅ GitHub Actions CI workflow created at `.github/workflows/ci.yml`
 - ✅ Git hooks installed via simple-git-hooks (pre-push + commit-msg)
 - ✅ Pre-push hook runs: lint, typecheck, tests
@@ -605,6 +648,7 @@ Claude Haiku 4.5
 - ✅ Railway deployment region set to US West (us-west1) for API and Frontend
 
 **Code Review Fixes Applied (2026-02-01):**
+
 - ✅ Added commit message validation job to GitHub Actions (validates story refs in PRs)
 - ✅ Added coverage summary to GitHub Actions job summary
 - ✅ Fixed commit-msg hook regex for proper story-X-Y-Z pattern matching
@@ -612,11 +656,13 @@ Claude Haiku 4.5
 - ✅ Added step 8 to CI/CD pipeline documentation (commit validation)
 
 **Modified from original story:**
+
 - Changed from pre-commit to pre-push hook (per user request)
 - Pre-push runs full test suite (broader than AC #2 requirement - this is intentional and better)
 - Railway region configuration included (opportunistic improvement during development)
 
 **Branch protection (MANUAL STEP REQUIRED):**
+
 - ⚠️ GitHub branch protection rules need to be configured manually
 - Go to repo Settings → Branches → Add rule for `master`
 - Enable "Require status checks to pass before merging"
@@ -624,17 +670,20 @@ Claude Haiku 4.5
 - This step cannot be automated via code
 
 **PR Verification (MANUAL STEP REQUIRED):**
+
 - ⚠️ Create a test PR to verify workflow runs successfully
 - This validates the entire CI/CD pipeline end-to-end
 
 ### File List
 
 **Created:**
+
 - `.github/workflows/ci.yml` - Main CI/CD workflow with commit validation and coverage summary
 - `.githooks/pre-push` - Pre-push hook (lint, typecheck, tests)
 - `.githooks/commit-msg` - Commit message validation hook
 
 **Modified:**
+
 - `CLAUDE.md` - Added CI/CD and Git Hooks sections, fixed documentation
 - `README.md` - Added CI status badge
 - `package.json` - Added simple-git-hooks config and prepare script
@@ -657,15 +706,18 @@ Claude Haiku 4.5
 ## Related Stories & Dependencies
 
 **Depends on (must be done first):**
+
 - Story 2-1: Session Management & Persistence (use-case tests referenced)
 - Story 7.1: Unit Testing Framework (vitest setup)
 
 **Enables (unblocks):**
+
 - Story 2-2: Nerin Agent (will need CI pipeline for its tests)
 - Story 2-3, 2-4, 2-5: All subsequent backend stories
 - All frontend stories (Epic 4+) - CI ensures code quality across monorepo
 
 **Parallel work:**
+
 - Can be done in parallel with Story 2-2
 - Should be done before Epic 2 completion
 

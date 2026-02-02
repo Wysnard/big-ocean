@@ -23,6 +23,7 @@ feat/story-{epic-num}-{story-num}-{slug}
 ```
 
 **Examples:**
+
 - `feat/story-1-2-integrate-better-auth`
 - `feat/story-2-1-session-management-persistence`
 - `feat/story-4-2-assessment-conversation-component`
@@ -42,6 +43,7 @@ Co-Authored-By: Claude <model> <noreply@anthropic.com>
 **Types:** `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `perf`, `style`, `build`, `revert`
 
 **Examples:**
+
 - `feat: Add user authentication`
 - `fix(api): Resolve session timeout issue`
 - `docs: Update README with setup instructions`

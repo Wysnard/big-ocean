@@ -47,6 +47,7 @@ TEA test-design workflow supports TWO modes, detected automatically:
 **Mode Descriptions:**
 
 **System-Level Mode (PRD + ADR Input)**
+
 - **When to use:** Early in project (Phase 3 Solutioning), architecture being designed
 - **Input:** PRD, ADR, architecture.md (optional)
 - **Output:** TWO documents
@@ -55,6 +56,7 @@ TEA test-design workflow supports TWO modes, detected automatically:
 - **Focus:** Testability assessment, ASRs, NFR requirements, Sprint 0 setup
 
 **Epic-Level Mode (Epic + Stories Input)**
+
 - **When to use:** During implementation (Phase 4), per-epic planning
 - **Input:** Epic, Stories, tech-specs (optional)
 - **Output:** ONE document
@@ -64,21 +66,25 @@ TEA test-design workflow supports TWO modes, detected automatically:
 **Key Insight: TEA Works Standalone OR Integrated**
 
 **Standalone (No BMad artifacts):**
+
 - User provides PRD + ADR → System-Level Mode
 - User provides Epic description → Epic-Level Mode
 - TEA doesn't mandate full BMad workflow
 
 **BMad-Integrated (Full workflow):**
+
 - BMad creates `sprint-status.yaml` → Automatic Epic-Level detection
 - BMad creates PRD, ADR, architecture.md → Automatic System-Level detection
 - TEA leverages BMad artifacts for richer context
 
 **Message to User:**
+
 > You don't need to follow full BMad methodology to use TEA test-design.
 > Just provide PRD + ADR for system-level, or Epic for epic-level.
 > TEA will auto-detect and produce appropriate documents.
 
 **Halt Condition:** If mode cannot be determined AND user intent unclear AND required files missing, HALT and notify user:
+
 - "Please provide either: (A) PRD + ADR for system-level test design, OR (B) Epic + Stories for epic-level test design"
 
 ---
@@ -285,7 +291,6 @@ TEA test-design workflow supports TWO modes, detected automatically:
    **test-design-architecture.md sections (in this order):**
 
    **STRUCTURE PRINCIPLE: Actionable items FIRST, FYI items LAST**
-
    1. Executive Summary (scope, business context, architecture, risk summary)
    2. Quick Guide (🚨 BLOCKERS / ⚠️ HIGH PRIORITY / 📋 INFO ONLY)
    3. Risk Assessment (high/medium/low-priority risks with scoring) - **ACTIONABLE**
@@ -421,6 +426,7 @@ TEA test-design workflow supports TWO modes, detected automatically:
    ## Testability Assessment
 
    **Prerequisites from Architecture Doc:**
+
    - [ ] R-001: Multi-tenant isolation validated (see [Architecture doc R-001](test-design-architecture.md#r-001-multi-tenant-isolation-score-9) for mitigation plan)
    - [ ] R-002: Test customer provisioned (see [Architecture doc 🚨 BLOCKERS](test-design-architecture.md#blockers---team-must-decide-cant-proceed-without))
 
@@ -457,21 +463,23 @@ TEA test-design workflow supports TWO modes, detected automatically:
 
 **Common Over-Engineering to Avoid:**
 
-   **In QA Doc:**
-   1. ❌ Quality gate thresholds ("P0 must be 100%, P1 ≥95%") - Let teams decide for themselves
-   2. ❌ Effort estimates for other teams - QA doc should only estimate QA effort
-   3. ❌ Sprint breakdowns ("Sprint 0: 40 hours, Sprint 1: 48 hours") - Too prescriptive
-   4. ❌ Approval sections - Unnecessary formality
-   5. ❌ Assumptions about architecture (SLO targets, replication lag) - These are architectural concerns, belong in Arch doc
-   6. ❌ Mitigation plans for Backend/Arch/DevOps - Those belong in Arch doc
-   7. ❌ Follow-on workflows section - Bloat, BMAD commands are self-explanatory
-   8. ❌ NFR Readiness Summary - Bloat, covered in Risk Assessment
+**In QA Doc:**
 
-   **Test Coverage Numbers Reality Check:**
-   - With Playwright parallelization, running ALL Playwright tests is as fast as running just P0
-   - Don't split Playwright tests by priority into different CI gates - it adds no value
-   - Tool type matters, not priority labels
-   - Defer based on infrastructure cost, not importance
+1.  ❌ Quality gate thresholds ("P0 must be 100%, P1 ≥95%") - Let teams decide for themselves
+2.  ❌ Effort estimates for other teams - QA doc should only estimate QA effort
+3.  ❌ Sprint breakdowns ("Sprint 0: 40 hours, Sprint 1: 48 hours") - Too prescriptive
+4.  ❌ Approval sections - Unnecessary formality
+5.  ❌ Assumptions about architecture (SLO targets, replication lag) - These are architectural concerns, belong in Arch doc
+6.  ❌ Mitigation plans for Backend/Arch/DevOps - Those belong in Arch doc
+7.  ❌ Follow-on workflows section - Bloat, BMAD commands are self-explanatory
+8.  ❌ NFR Readiness Summary - Bloat, covered in Risk Assessment
+
+**Test Coverage Numbers Reality Check:**
+
+- With Playwright parallelization, running ALL Playwright tests is as fast as running just P0
+- Don't split Playwright tests by priority into different CI gates - it adds no value
+- Tool type matters, not priority labels
+- Defer based on infrastructure cost, not importance
 
 **After System-Level Mode:** Workflow COMPLETE. System-level outputs (test-design-architecture.md + test-design-qa.md) are written in this step. Steps 2-4 are epic-level only - do NOT execute them in system-level mode.
 
@@ -840,18 +848,24 @@ TEA test-design workflow supports TWO modes, detected automatically:
    **Organized by TOOL TYPE:**
 
    ### Every PR: Playwright Tests (~10-15 min)
+
    All functional tests (from any priority level):
+
    - All E2E, API, integration, unit tests using Playwright
    - Parallelized across {N} shards
    - Total: ~{N} tests (includes P0, P1, P2, P3)
 
    ### Nightly: k6 Performance Tests (~30-60 min)
+
    All performance tests (from any priority level):
+
    - Load, stress, spike, endurance
    - Reason: Expensive infrastructure, long-running (10-40 min per test)
 
    ### Weekly: Chaos & Long-Running (~hours)
+
    Special infrastructure tests (from any priority level):
+
    - Multi-region failover, disaster recovery, endurance
    - Reason: Very expensive, very long (4+ hours)
    ```
@@ -898,15 +912,18 @@ TEA test-design workflow supports TWO modes, detected automatically:
    ## Execution Strategy
 
    **Default: Run all functional tests in PRs (~10-15 min)**
+
    - All Playwright tests (parallelized across 4 shards)
    - Includes E2E, API, integration, unit tests
    - Total: ~{N} tests
 
    **Nightly: Performance & Infrastructure tests**
+
    - k6 load/stress/spike tests (~30-60 min)
    - Reason: Expensive infrastructure, long-running
 
    **Weekly: Chaos & Disaster Recovery**
+
    - Endurance tests (4+ hours)
    - Multi-region failover (requires AWS FIS)
    - Backup restore validation

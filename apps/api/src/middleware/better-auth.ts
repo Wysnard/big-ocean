@@ -5,37 +5,37 @@
  * Pattern from: https://dev.to/danimydev/authentication-with-nodehttp-and-better-auth-2l2g
  */
 
-import type { IncomingMessage, ServerResponse } from "node:http"
-import { auth } from "../auth.js"
+import type { IncomingMessage, ServerResponse } from "node:http";
+import { auth } from "../auth.js";
 
 /**
  * Convert Node.js IncomingMessage to Fetch API Request
  */
 async function incomingMessageToRequest(
   incomingMessage: IncomingMessage,
-  baseUrl: URL
+  baseUrl: URL,
 ): Promise<Request> {
-  const method = incomingMessage.method || "GET"
-  const url = new URL(incomingMessage.url || "/", baseUrl)
+  const method = incomingMessage.method || "GET";
+  const url = new URL(incomingMessage.url || "/", baseUrl);
 
-  const headers = new Headers()
+  const headers = new Headers();
   for (const [key, value] of Object.entries(incomingMessage.headers)) {
     if (value) {
-      headers.set(key, Array.isArray(value) ? value.join(", ") : value)
+      headers.set(key, Array.isArray(value) ? value.join(", ") : value);
     }
   }
 
   // Convert IncomingMessage to ReadableStream for body
-  let body: BodyInit | null = null
+  let body: BodyInit | null = null;
   if (method !== "GET" && method !== "HEAD") {
-    const chunks: Buffer[] = []
+    const chunks: Buffer[] = [];
     for await (const chunk of incomingMessage) {
-      chunks.push(chunk)
+      chunks.push(chunk);
     }
-    body = Buffer.concat(chunks)
+    body = Buffer.concat(chunks);
   }
 
-  return new Request(url.toString(), { method, headers, body })
+  return new Request(url.toString(), { method, headers, body });
 }
 
 /**
@@ -43,29 +43,29 @@ async function incomingMessageToRequest(
  */
 export async function betterAuthHandler(
   incomingMessage: IncomingMessage,
-  serverResponse: ServerResponse
+  serverResponse: ServerResponse,
 ): Promise<void> {
   const baseUrl = new URL(
-    process.env.BETTER_AUTH_URL || "http://localhost:4000"
-  )
-  const request = await incomingMessageToRequest(incomingMessage, baseUrl)
+    process.env.BETTER_AUTH_URL || "http://localhost:4000",
+  );
+  const request = await incomingMessageToRequest(incomingMessage, baseUrl);
 
-  const response = await auth.handler(request)
+  const response = await auth.handler(request);
 
-  serverResponse.statusCode = response.status
+  serverResponse.statusCode = response.status;
 
   response.headers.forEach((value, key) => {
-    serverResponse.setHeader(key, value)
-  })
+    serverResponse.setHeader(key, value);
+  });
 
   if (response.body) {
-    const reader = response.body.getReader()
+    const reader = response.body.getReader();
     while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      serverResponse.write(value)
+      const { done, value } = await reader.read();
+      if (done) break;
+      serverResponse.write(value);
     }
   }
 
-  serverResponse.end()
+  serverResponse.end();
 }

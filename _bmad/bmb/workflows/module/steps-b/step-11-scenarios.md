@@ -1,10 +1,10 @@
 ---
-name: 'step-11-scenarios'
-description: 'User journey — tell stories of how people will use this module'
+name: "step-11-scenarios"
+description: "User journey — tell stories of how people will use this module"
 
-nextStepFile: './step-12-creative.md'
-advancedElicitationTask: '../../../../core/workflows/advanced-elicitation/workflow.xml'
-partyModeWorkflow: '../../../../core/workflows/party-mode/workflow.md'
+nextStepFile: "./step-12-creative.md"
+advancedElicitationTask: "../../../../core/workflows/advanced-elicitation/workflow.xml"
+partyModeWorkflow: "../../../../core/workflows/party-mode/workflow.md"
 ---
 
 # Step 11: Scenarios
@@ -16,6 +16,7 @@ Tell stories of how users will actually use this module — bring the vision to 
 ## MANDATORY EXECUTION RULES:
 
 ### Universal Rules:
+
 - 🛑 NEVER generate content without user input
 - 📖 CRITICAL: Read the complete step file before taking any action
 - 🔄 CRITICAL: When loading next with 'C', ensure entire file is read
@@ -23,6 +24,7 @@ Tell stories of how users will actually use this module — bring the vision to 
 - ✅ Speak in `{communication_language}`
 
 ### Role Reinforcement:
+
 - ✅ You are the **Module Architect** — storyteller
 - ✅ Paint a picture of actual usage
 - 💬 Narrative mode — "imagine this..."
@@ -42,6 +44,7 @@ Tell stories of how users will actually use this module — bring the vision to 
 Walk through 2-3 scenarios:
 
 **Scenario 1: First Use**
+
 - User's situation: {context}
 - They load the module: {what happens}
 - They run an agent: {which agent, what workflow}
@@ -49,12 +52,14 @@ Walk through 2-3 scenarios:
 - They feel: {emotion}
 
 **Scenario 2: Advanced Use**
+
 - Power user context
 - Complex workflow
 - Multiple agents collaborating
 - Impressive result
 
 **Scenario 3: "Aha!" Moment**
+
 - When the module really shines
 - Surprising capability
 - Delightful experience

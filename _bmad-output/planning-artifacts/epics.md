@@ -1,5 +1,10 @@
 ---
-stepsCompleted: ["step-01-validate-prerequisites", "step-02-design-epics", "step-03-create-stories"]
+stepsCompleted:
+  [
+    "step-01-validate-prerequisites",
+    "step-02-design-epics",
+    "step-03-create-stories",
+  ]
 inputDocuments:
   - "prd.md"
   - "architecture.md"
@@ -126,31 +131,31 @@ This document provides the complete epic and story breakdown for big-ocean, deco
 
 ### FR Coverage Map
 
-| Epic | Story | Primary FR(s) | NFR(s) |
-|------|-------|---------------|-------|
-| 1. Infrastructure & Auth | 1.1 Railway Setup | Infrastructure | NFR8 (Cost) |
-| 1. Infrastructure & Auth | 1.2 Better Auth Integration | — | NFR3 (Privacy) |
-| 1. Infrastructure & Auth | 1.3 RPC & Effect Setup | — | NFR2 (Performance) |
-| 2. Assessment Backend | 2.1 Session Management | FR1, FR3, FR21 | NFR2, NFR5 |
-| 2. Assessment Backend | 2.2 Nerin Agent Setup | FR2, FR4 | NFR1 (Quality), NFR2 |
-| 2. Assessment Backend | 2.3 Analyzer & Scorer | FR5, FR6, FR7 | NFR2, NFR4 |
-| 2. Assessment Backend | 2.4 LangGraph Orchestration | FR1, FR3, FR4 | NFR1, NFR2, NFR8 |
-| 2. Assessment Backend | 2.5 Cost Tracking & Rate Limiting | FR24, FR25, FR26 | NFR8 |
-| 3. OCEAN Archetype System | 3.1 Code Generation | FR8, FR9 | NFR4 |
-| 3. OCEAN Archetype System | 3.2 Archetype Lookup & Storage | FR10, FR11 | NFR2, NFR4 |
-| 4. Frontend Assessment UI | 4.1 Assessment Component | FR1, FR2, FR4 | NFR2, NFR10 |
-| 4. Frontend Assessment UI | 4.2 Session Resumption (Device Switching) | FR21, FR23 | NFR2, NFR7 |
-| 4. Frontend Assessment UI | 4.3 Optimistic Updates & Progress Indicator | FR4, FR22 | NFR2, NFR10 |
-| 4. Frontend Assessment UI | 4.4 Authentication UI | — | NFR3 |
-| 5. Results & Profiles | 5.1 Results Display | FR5-FR11 | NFR2, NFR4 |
-| 5. Results & Profiles | 5.2 Profile Sharing | FR13, FR14, FR15 | NFR3, NFR6 |
-| 6. Privacy & Data | 6.1 Encryption at Rest | FR17, FR18 | NFR3, NFR6 |
-| 6. Privacy & Data | 6.2 GDPR Implementation | FR19, FR20 | NFR3 |
-| 6. Privacy & Data | 6.3 Audit Logging | FR20 | NFR3 |
-| 7. Testing & Quality | 7.1 Unit Testing Framework | — | — |
-| 7. Testing & Quality | 7.2 Integration Testing | — | — |
-| 7. Testing & Quality | 7.3 E2E Testing | — | — |
-| 7. Testing & Quality | 7.4 Component Documentation | — | — |
+| Epic                      | Story                                       | Primary FR(s)    | NFR(s)               |
+| ------------------------- | ------------------------------------------- | ---------------- | -------------------- |
+| 1. Infrastructure & Auth  | 1.1 Railway Setup                           | Infrastructure   | NFR8 (Cost)          |
+| 1. Infrastructure & Auth  | 1.2 Better Auth Integration                 | —                | NFR3 (Privacy)       |
+| 1. Infrastructure & Auth  | 1.3 RPC & Effect Setup                      | —                | NFR2 (Performance)   |
+| 2. Assessment Backend     | 2.1 Session Management                      | FR1, FR3, FR21   | NFR2, NFR5           |
+| 2. Assessment Backend     | 2.2 Nerin Agent Setup                       | FR2, FR4         | NFR1 (Quality), NFR2 |
+| 2. Assessment Backend     | 2.3 Analyzer & Scorer                       | FR5, FR6, FR7    | NFR2, NFR4           |
+| 2. Assessment Backend     | 2.4 LangGraph Orchestration                 | FR1, FR3, FR4    | NFR1, NFR2, NFR8     |
+| 2. Assessment Backend     | 2.5 Cost Tracking & Rate Limiting           | FR24, FR25, FR26 | NFR8                 |
+| 3. OCEAN Archetype System | 3.1 Code Generation                         | FR8, FR9         | NFR4                 |
+| 3. OCEAN Archetype System | 3.2 Archetype Lookup & Storage              | FR10, FR11       | NFR2, NFR4           |
+| 4. Frontend Assessment UI | 4.1 Assessment Component                    | FR1, FR2, FR4    | NFR2, NFR10          |
+| 4. Frontend Assessment UI | 4.2 Session Resumption (Device Switching)   | FR21, FR23       | NFR2, NFR7           |
+| 4. Frontend Assessment UI | 4.3 Optimistic Updates & Progress Indicator | FR4, FR22        | NFR2, NFR10          |
+| 4. Frontend Assessment UI | 4.4 Authentication UI                       | —                | NFR3                 |
+| 5. Results & Profiles     | 5.1 Results Display                         | FR5-FR11         | NFR2, NFR4           |
+| 5. Results & Profiles     | 5.2 Profile Sharing                         | FR13, FR14, FR15 | NFR3, NFR6           |
+| 6. Privacy & Data         | 6.1 Encryption at Rest                      | FR17, FR18       | NFR3, NFR6           |
+| 6. Privacy & Data         | 6.2 GDPR Implementation                     | FR19, FR20       | NFR3                 |
+| 6. Privacy & Data         | 6.3 Audit Logging                           | FR20             | NFR3                 |
+| 7. Testing & Quality      | 7.1 Unit Testing Framework                  | —                | —                    |
+| 7. Testing & Quality      | 7.2 Integration Testing                     | —                | —                    |
+| 7. Testing & Quality      | 7.3 E2E Testing                             | —                | —                    |
+| 7. Testing & Quality      | 7.4 Component Documentation                 | —                | —                    |
 
 ---
 
@@ -209,6 +214,7 @@ So that **the platform has a scalable, managed infrastructure with zero operatio
 - Cost estimate: $5-12/month (usage-based)
 
 **Acceptance Checklist:**
+
 - [ ] Railway project created and GitHub repo connected
 - [ ] Backend service deploys on git push
 - [ ] PostgreSQL initialized with migrations
@@ -249,6 +255,7 @@ So that **I can create an account and save my assessment results**.
 - Secure HTTP-only session cookies
 
 **Acceptance Checklist:**
+
 - [ ] Sign-up modal appears after first message
 - [ ] Password validation enforces 12+ characters
 - [ ] Compromised password check implemented
@@ -286,6 +293,7 @@ So that **all API interactions are compile-time verified and self-documenting**.
 - Error mapping to HTTP status codes (404, 429, 503)
 
 **Acceptance Checklist:**
+
 - [ ] RPC contracts defined in `packages/contracts`
 - [ ] startAssessment, sendMessage, getResults RPC procedures working
 - [ ] Type-safe RPC handlers in `apps/api/src/handlers`
@@ -321,11 +329,12 @@ So that **I can take time between conversations without losing progress**.
 **When** I run `pnpm test session-manager.test.ts`
 **Then** tests fail (red) because session implementation doesn't exist
 **And** each test defines expected behavior:
-  - Test: Session created with unique ID
-  - Test: Messages persisted to database
-  - Test: Precision scores saved and restored
-  - Test: Session resume loads full history
-  - Test: Conversation state is accurate after resume
+
+- Test: Session created with unique ID
+- Test: Messages persisted to database
+- Test: Precision scores saved and restored
+- Test: Session resume loads full history
+- Test: Conversation state is accurate after resume
 
 **IMPLEMENTATION (Green Phase):**
 **Given** an active assessment session
@@ -356,6 +365,7 @@ So that **I can take time between conversations without losing progress**.
 - Unit test coverage: 100% of session CRUD operations
 
 **Acceptance Checklist:**
+
 - [ ] Failing tests written first covering session scenarios (red phase)
 - [ ] Tests verify session creation and ID uniqueness
 - [ ] Tests verify message persistence
@@ -384,11 +394,12 @@ So that **the assessment feels authentic and I stay engaged for the full 30 minu
 **When** I run `pnpm test nerin-agent.test.ts`
 **Then** tests fail (red) because Nerin implementation doesn't exist
 **And** each test defines expected behavior (using mock Anthropic API):
-  - Test: First message is warm and inviting (not generic)
-  - Test: Responses reference earlier conversation (context awareness)
-  - Test: No repetitive questions in sequence
-  - Test: Streaming responses work with token tracking
-  - Test: Response latency tracked for P95 monitoring
+
+- Test: First message is warm and inviting (not generic)
+- Test: Responses reference earlier conversation (context awareness)
+- Test: No repetitive questions in sequence
+- Test: Streaming responses work with token tracking
+- Test: Response latency tracked for P95 monitoring
 
 **IMPLEMENTATION (Green Phase):**
 **Given** I start an assessment
@@ -416,6 +427,7 @@ So that **the assessment feels authentic and I stay engaged for the full 30 minu
 - Unit test coverage: 100% of Nerin system prompt logic
 
 **Acceptance Checklist:**
+
 - [ ] Failing tests written first with mock API (red phase)
 - [ ] Tests verify warm greeting generation
 - [ ] Tests verify context awareness (references prior messages)
@@ -444,10 +456,11 @@ So that **I can derive accurate trait scores and continuously improve precision 
 **When** I run `pnpm test scorer.test.ts`
 **Then** tests fail (red) because Scorer implementation doesn't exist
 **And** each test defines expected behavior:
-  - Test: Scorer takes conversation patterns → returns 30 facet scores (0-20)
-  - Test: Trait means calculated correctly (sum of 6 facets / 6)
-  - Test: Precision increases with more data points
-  - Test: Same patterns produce deterministic scores (no randomness)
+
+- Test: Scorer takes conversation patterns → returns 30 facet scores (0-20)
+- Test: Trait means calculated correctly (sum of 6 facets / 6)
+- Test: Precision increases with more data points
+- Test: Same patterns produce deterministic scores (no randomness)
 
 **IMPLEMENTATION (Green Phase):**
 **Given** 3 user messages have been received
@@ -455,13 +468,14 @@ So that **I can derive accurate trait scores and continuously improve precision 
 **Then** it extracts relevant personality patterns from conversation (e.g., "prefers solitude" → low Gregariousness facet)
 **And** the Scorer calculates scores for all 30 facets (0-20 scale each)
 **And** trait scores are computed by taking the mean of related facets:
-  - Openness = mean(Imagination, Artistic Interests, Emotionality, Adventurousness, Intellect, Liberalism)
-  - Conscientiousness = mean(Self-Efficacy, Orderliness, Dutifulness, Achievement-Striving, Self-Discipline, Cautiousness)
-  - Extraversion = mean(Friendliness, Gregariousness, Assertiveness, Activity Level, Excitement-Seeking, Cheerfulness)
-  - Agreeableness = mean(Trust, Morality, Altruism, Cooperation, Modesty, Sympathy)
-  - Neuroticism = mean(Anxiety, Anger, Depression, Self-Consciousness, Immoderation, Vulnerability)
-**And** precision confidence increases based on facet score convergence and pattern strength
-**And** all failing tests now pass (green)
+
+- Openness = mean(Imagination, Artistic Interests, Emotionality, Adventurousness, Intellect, Liberalism)
+- Conscientiousness = mean(Self-Efficacy, Orderliness, Dutifulness, Achievement-Striving, Self-Discipline, Cautiousness)
+- Extraversion = mean(Friendliness, Gregariousness, Assertiveness, Activity Level, Excitement-Seeking, Cheerfulness)
+- Agreeableness = mean(Trust, Morality, Altruism, Cooperation, Modesty, Sympathy)
+- Neuroticism = mean(Anxiety, Anger, Depression, Self-Consciousness, Immoderation, Vulnerability)
+  **And** precision confidence increases based on facet score convergence and pattern strength
+  **And** all failing tests now pass (green)
 
 **INTEGRATION:**
 **Given** precision is updated
@@ -484,6 +498,7 @@ So that **I can derive accurate trait scores and continuously improve precision 
 - Unit test coverage: 100% of Scorer logic (all facet calculations, trait means, edge cases)
 
 **Acceptance Checklist:**
+
 - [ ] Failing tests written first (red phase)
 - [ ] Tests cover all 30 facet scoring scenarios
 - [ ] Tests verify trait mean calculation
@@ -509,11 +524,12 @@ So that **I optimize for quality + cost by running expensive operations only whe
 **When** I run `pnpm test orchestrator.test.ts`
 **Then** tests fail (red) because orchestrator doesn't exist
 **And** each test defines expected routing behavior:
-  - Test: Always routes to Nerin on every message
-  - Test: Triggers Analyzer + Scorer on every 3rd message
-  - Test: Routes to Nerin with extra context when precision < 50%
-  - Test: Skips expensive ops when approaching budget
-  - Test: Routing decisions are deterministic (same state → same decision)
+
+- Test: Always routes to Nerin on every message
+- Test: Triggers Analyzer + Scorer on every 3rd message
+- Test: Routes to Nerin with extra context when precision < 50%
+- Test: Skips expensive ops when approaching budget
+- Test: Routing decisions are deterministic (same state → same decision)
 
 **IMPLEMENTATION (Green Phase):**
 **Given** a new message from the user
@@ -541,6 +557,7 @@ So that **I optimize for quality + cost by running expensive operations only whe
 - Unit test coverage: 100% of routing logic paths
 
 **Acceptance Checklist:**
+
 - [ ] Failing tests written first covering all routing scenarios (red phase)
 - [ ] Tests verify Nerin routing on every message
 - [ ] Tests verify Analyzer/Scorer batch triggering
@@ -569,17 +586,18 @@ So that **the MVP remains sustainable for 500 users at $75/day max**.
 **When** I run `pnpm test cost-guard.test.ts`
 **Then** tests fail (red) because CostGuard implementation doesn't exist
 **And** each test defines expected behavior:
-  - Test: Cost calculation formula: (inputTokens / 1M * 0.003) + (outputTokens / 1M * 0.015)
-  - Test: Daily cost accumulation in Redis
-  - Test: Rate limit enforced: 1 assessment per user per day
-  - Test: Hard cap: reject if daily spend exceeds $75
-  - Test: Graceful error messages returned to user
+
+- Test: Cost calculation formula: (inputTokens / 1M _ 0.003) + (outputTokens / 1M _ 0.015)
+- Test: Daily cost accumulation in Redis
+- Test: Rate limit enforced: 1 assessment per user per day
+- Test: Hard cap: reject if daily spend exceeds $75
+- Test: Graceful error messages returned to user
 
 **IMPLEMENTATION (Green Phase):**
 **Given** a user starts an assessment
 **When** Nerin is called
 **Then** system logs token counts (input + output)
-**And** cost is calculated (input_tokens * 0.003 + output_tokens * 0.015)
+**And** cost is calculated (input_tokens _ 0.003 + output_tokens _ 0.015)
 **And** daily cost counter is incremented in Redis
 **And** all cost calculation tests pass (green)
 
@@ -612,6 +630,7 @@ So that **the MVP remains sustainable for 500 users at $75/day max**.
 - Unit test coverage: 100% of cost calculation logic, rate limiting, and budget enforcement
 
 **Acceptance Checklist:**
+
 - [ ] Failing tests written first covering all cost scenarios (red phase)
 - [ ] Tests verify cost formula accuracy
 - [ ] Tests verify rate limit enforcement
@@ -654,30 +673,32 @@ So that **the same facet scores always produce the same trait levels for storage
 **When** I run `pnpm test ocean-code-generator.test.ts`
 **Then** tests fail (red) because code generator doesn't exist
 **And** each test defines expected behavior:
-  - Test: Facet means calculated correctly (6 facets per trait, 0-20 scale)
-  - Test: All 243 trait level combinations map to correct codes (3^5 possibilities)
-  - Test: Trait 0-6.67 → Low (L), 6.67-13.33 → Mid (M), 13.33-20 → High (H)
-  - Test: Same facet scores always produce same code (deterministic)
-  - Test: Code is exactly 5 letters (e.g., "HMLHM")
+
+- Test: Facet means calculated correctly (6 facets per trait, 0-20 scale)
+- Test: All 243 trait level combinations map to correct codes (3^5 possibilities)
+- Test: Trait 0-6.67 → Low (L), 6.67-13.33 → Mid (M), 13.33-20 → High (H)
+- Test: Same facet scores always produce same code (deterministic)
+- Test: Code is exactly 5 letters (e.g., "HMLHM")
 
 **IMPLEMENTATION (Green Phase):**
 **Given** all 30 facets are scored (e.g., Imagination=16, Artistic=14, etc.)
 **When** the Trait Score Aggregator calculates means for all 5 traits:
-  - Openness = mean(6 O facets) = 18
-  - Conscientiousness = mean(6 C facets) = 14
-  - Extraversion = mean(6 E facets) = 10
-  - Agreeableness = mean(6 A facets) = 16
-  - Neuroticism = mean(6 N facets) = 12
-**And** the code generator processes trait scores
-**Then** each trait is mapped to a level:
-  - Openness 18 → High (H)
-  - Conscientiousness 14 → Mid (M)
-  - Extraversion 10 → Low (L)
-  - Agreeableness 16 → High (H)
-  - Neuroticism 12 → Mid (M)
-**And** full 5-letter code is generated as: "HMLHM" (5 letters for complete OCEAN storage)
-**And** code is deterministic (same facet scores → same trait means → same code, always)
-**And** all failing tests now pass (green)
+
+- Openness = mean(6 O facets) = 18
+- Conscientiousness = mean(6 C facets) = 14
+- Extraversion = mean(6 E facets) = 10
+- Agreeableness = mean(6 A facets) = 16
+- Neuroticism = mean(6 N facets) = 12
+  **And** the code generator processes trait scores
+  **Then** each trait is mapped to a level:
+- Openness 18 → High (H)
+- Conscientiousness 14 → Mid (M)
+- Extraversion 10 → Low (L)
+- Agreeableness 16 → High (H)
+- Neuroticism 12 → Mid (M)
+  **And** full 5-letter code is generated as: "HMLHM" (5 letters for complete OCEAN storage)
+  **And** code is deterministic (same facet scores → same trait means → same code, always)
+  **And** all failing tests now pass (green)
 
 **REFACTOR & INTEGRATION:**
 **Given** facet scores are updated (precision increases)
@@ -702,6 +723,7 @@ So that **the same facet scores always produce the same trait levels for storage
 - Unit test coverage: 100% code paths (all 243 combinations tested)
 
 **Acceptance Checklist:**
+
 - [ ] Failing tests written first covering all combinations (red phase)
 - [ ] Tests verify boundary conditions (0, 6.67, 13.33, 20)
 - [ ] Tests verify all 243 combinations map correctly
@@ -728,11 +750,12 @@ So that **the archetype feels personal and shareable**.
 **When** I run `pnpm test archetype-lookup.test.ts`
 **Then** tests fail (red) because lookup implementation doesn't exist
 **And** each test defines expected behavior:
-  - Test: 4-letter code lookup returns correct archetype name
-  - Test: Hand-curated names exist for all 25-30 common combinations
-  - Test: Component-based fallback generates valid names for all 81 combinations
-  - Test: Description text is generated correctly for each combination
-  - Test: Color assignments are consistent
+
+- Test: 4-letter code lookup returns correct archetype name
+- Test: Hand-curated names exist for all 25-30 common combinations
+- Test: Component-based fallback generates valid names for all 81 combinations
+- Test: Description text is generated correctly for each combination
+- Test: Color assignments are consistent
 
 **IMPLEMENTATION (Green Phase):**
 **Given** full 5-letter OCEAN code is "HMLHM" (all 5 traits)
@@ -766,6 +789,7 @@ So that **the archetype feels personal and shareable**.
 - Unit test coverage: 100% of lookup logic (all 81 combinations tested)
 
 **Acceptance Checklist:**
+
 - [ ] Failing tests written first covering all 81 code combinations (red phase)
 - [ ] Tests verify hand-curated name lookup
 - [ ] Tests verify component-based fallback generation
@@ -785,6 +809,7 @@ So that **the archetype feels personal and shareable**.
 **Goal:** Build the conversational assessment interface with real-time sync, progress tracking, and seamless user experience.
 
 **Dependencies:**
+
 - Epic 1 (RPC contracts)
 - Epic 2 (backend assessment endpoints live)
 - Epic 3 (archetype system working for results display)
@@ -825,6 +850,7 @@ So that **my results are saved without friction**.
 - Session linking: anonymous → authenticated
 
 **Acceptance Checklist:**
+
 - [ ] Modal appears after first message
 - [ ] Can dismiss modal
 - [ ] Email/password input visible
@@ -869,6 +895,7 @@ So that **the assessment feels like a natural dialogue**.
 - Mobile-responsive with Tailwind CSS v4
 
 **Acceptance Checklist:**
+
 - [ ] Conversation displays message list
 - [ ] User messages appear instantly (optimistic)
 - [ ] Nerin responses stream in real-time
@@ -891,11 +918,12 @@ So that **I can start on desktop and finish on mobile without losing progress**.
 **When** I run `pnpm test session-resumption.test.ts`
 **Then** tests fail (red) because resumption endpoints don't exist
 **And** each test defines expected behavior:
-  - Test: Resume URL loads full session history from server
-  - Test: History loads in <1 second
-  - Test: Precision scores match server state
-  - Test: Can resume from different device with same session ID
-  - Test: Device switching doesn't lose any messages
+
+- Test: Resume URL loads full session history from server
+- Test: History loads in <1 second
+- Test: Precision scores match server state
+- Test: Can resume from different device with same session ID
+- Test: Device switching doesn't lose any messages
 
 **IMPLEMENTATION (Green Phase):**
 **Given** I start an assessment on desktop
@@ -926,6 +954,7 @@ So that **I can start on desktop and finish on mobile without losing progress**.
 - History caching: Browser cache for offline browsing (optional)
 
 **Acceptance Checklist:**
+
 - [ ] Failing tests written first covering resumption scenarios (red phase)
 - [ ] Tests verify history completeness
 - [ ] Tests verify load time <1 second
@@ -953,10 +982,11 @@ So that **I get instant feedback and feel motivated to continue**.
 **When** I run `pnpm test optimistic-updates.test.ts`
 **Then** tests fail (red) because optimistic update logic doesn't exist
 **And** each test defines expected behavior:
-  - Test: Message appears in UI immediately on send (before server confirm)
-  - Test: Precision updates trigger progress bar animation
-  - Test: Progress = min(precision, 100)
-  - Test: Progress bar shows correct percentage and label
+
+- Test: Message appears in UI immediately on send (before server confirm)
+- Test: Precision updates trigger progress bar animation
+- Test: Progress = min(precision, 100)
+- Test: Progress bar shows correct percentage and label
 
 **IMPLEMENTATION (Green Phase):**
 **Given** I send a message
@@ -988,6 +1018,7 @@ So that **I get instant feedback and feel motivated to continue**.
 - TanStack Form + TanStack Query for message input/mutation
 
 **Acceptance Checklist:**
+
 - [ ] Failing tests written first covering optimistic scenarios (red phase)
 - [ ] Tests verify immediate message appearance
 - [ ] Tests verify progress calculation
@@ -1008,6 +1039,7 @@ So that **I get instant feedback and feel motivated to continue**.
 **Goal:** Display assessment results with memorable archetypes, enable privacy-controlled sharing, and provide PDF export.
 
 **Dependencies:**
+
 - Epic 1 (infrastructure)
 - Epic 2 (assessment data available)
 - Epic 3 (archetype names/descriptions ready)
@@ -1032,18 +1064,20 @@ So that **I understand what my assessment revealed**.
 **Given** I complete an assessment (precision ≥ 50%)
 **When** I click "View Results"
 **Then** I see:
-  - Archetype name (e.g., "Thoughtful Collaborator")
-  - 3-level trait display (High/Mid/Low for O, C, E, A)
-  - Visual archetype card (name + color + icon)
-  - 2-3 sentence description explaining the combination
-  - Expandable facet details for each trait (shows how facets aggregate to trait score)
+
+- Archetype name (e.g., "Thoughtful Collaborator")
+- 3-level trait display (High/Mid/Low for O, C, E, A)
+- Visual archetype card (name + color + icon)
+- 2-3 sentence description explaining the combination
+- Expandable facet details for each trait (shows how facets aggregate to trait score)
 
 **Given** I expand Openness trait details
 **When** the facet breakdown appears
 **Then** I see:
-  - All 6 facet scores (0-20 scale): Imagination, Artistic Interests, Emotionality, Adventurousness, Intellect, Liberalism
-  - Average of these 6 facets = Openness trait score (High/Mid/Low)
-  - Top-scoring facets highlighted (e.g., "Imagination: 16/20" and "Intellect: 15/20")
+
+- All 6 facet scores (0-20 scale): Imagination, Artistic Interests, Emotionality, Adventurousness, Intellect, Liberalism
+- Average of these 6 facets = Openness trait score (High/Mid/Low)
+- Top-scoring facets highlighted (e.g., "Imagination: 16/20" and "Intellect: 15/20")
 
 **Given** precision < 50%
 **When** results are viewed
@@ -1061,6 +1095,7 @@ So that **I understand what my assessment revealed**.
 - Precision shown as facet convergence metric
 
 **Acceptance Checklist:**
+
 - [ ] Results component displays archetype name
 - [ ] Trait levels shown (High/Mid/Low) computed from facet means
 - [ ] All 30 facet scores stored and retrievable
@@ -1090,10 +1125,11 @@ So that **others can see my personality archetype without accessing my full asse
 **Given** someone opens my shared link
 **When** they visit it
 **Then** they see:
-  - My archetype name + visual
-  - Trait summary (High/Mid/Low)
-  - Facet insights
-  - **NOT visible:** Full conversation, precision %, or assessment progress
+
+- My archetype name + visual
+- Trait summary (High/Mid/Low)
+- Facet insights
+- **NOT visible:** Full conversation, precision %, or assessment progress
 
 **Given** I set profile to Private
 **When** someone tries to access the link
@@ -1110,6 +1146,7 @@ So that **others can see my personality archetype without accessing my full asse
 - No user_id in URL (anonymous sharing)
 
 **Acceptance Checklist:**
+
 - [ ] Public profile generated
 - [ ] Unique UUID-based link created
 - [ ] Link is copyable
@@ -1120,12 +1157,12 @@ So that **others can see my personality archetype without accessing my full asse
 
 ---
 
-
 ## Epic 6: Privacy & Data Management
 
 **Goal:** Implement encryption, GDPR compliance, and comprehensive audit logging.
 
 **Dependencies:**
+
 - Epic 1 (infrastructure in place)
 - Epics 2-5 (data models + assessment/sharing flows defined)
 
@@ -1150,12 +1187,13 @@ So that **users trust the platform with personal assessment data and network eav
 **When** I run `pnpm test encryption.test.ts`
 **Then** tests fail (red) because encryption implementation doesn't exist
 **And** each test defines expected behavior:
-  - Test: Conversation data encrypted with AES-256-GCM at rest
-  - Test: Encryption key derived from master secret (not user password)
-  - Test: Database stores only encrypted ciphertext, no plaintext
-  - Test: Decryption works for authorized backend services
-  - Test: TLS 1.3 enforced on all API endpoints
-  - Test: Security headers present (HSTS, X-Content-Type-Options, X-Frame-Options)
+
+- Test: Conversation data encrypted with AES-256-GCM at rest
+- Test: Encryption key derived from master secret (not user password)
+- Test: Database stores only encrypted ciphertext, no plaintext
+- Test: Decryption works for authorized backend services
+- Test: TLS 1.3 enforced on all API endpoints
+- Test: Security headers present (HSTS, X-Content-Type-Options, X-Frame-Options)
 
 **IMPLEMENTATION (Green Phase):**
 **Given** user conversation is stored
@@ -1170,11 +1208,12 @@ So that **users trust the platform with personal assessment data and network eav
 **When** API requests sent between frontend and backend
 **Then** all requests use TLS 1.3 (enforced by Railway + backend config)
 **And** HTTP headers include:
-  - `Strict-Transport-Security: max-age=31536000; includeSubDomains`
-  - `X-Content-Type-Options: nosniff`
-  - `X-Frame-Options: DENY`
-  - `X-XSS-Protection: 1; mode=block`
-**And** TLS/header tests pass
+
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains`
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `X-XSS-Protection: 1; mode=block`
+  **And** TLS/header tests pass
 
 **Technical Details:**
 
@@ -1190,6 +1229,7 @@ So that **users trust the platform with personal assessment data and network eav
 - No ElectricSQL (avoided key management nightmare)
 
 **Acceptance Checklist:**
+
 - [ ] Failing tests written first covering encryption/TLS scenarios (red phase)
 - [ ] Tests verify AES-256-GCM encryption
 - [ ] Tests verify master key management
@@ -1220,11 +1260,12 @@ So that **I have control over my personal information** (GDPR Article 17, 20).
 **When** I run `pnpm test gdpr-compliance.test.ts`
 **Then** tests fail (red) because GDPR endpoints don't exist
 **And** each test defines expected behavior:
-  - Test: Data export returns valid JSON with all user data
-  - Test: Export includes all assessments, conversations, archetypes
-  - Test: Account deletion removes all data (30-day soft delete)
-  - Test: Deleted data is unrecoverable after 30 days
-  - Test: Audit log records all deletion events
+
+- Test: Data export returns valid JSON with all user data
+- Test: Export includes all assessments, conversations, archetypes
+- Test: Account deletion removes all data (30-day soft delete)
+- Test: Deleted data is unrecoverable after 30 days
+- Test: Audit log records all deletion events
 
 **IMPLEMENTATION (Green Phase):**
 **Given** I want to delete my account
@@ -1236,12 +1277,13 @@ So that **I have control over my personal information** (GDPR Article 17, 20).
 **Given** I want to download my data
 **When** I click "Download My Data"
 **Then** a JSON file is generated with:
-  - Profile info (email, signup date)
-  - All assessments (results, OCEAN codes)
-  - Full conversation transcripts
-  - Archetype history
-**And** file is downloadable immediately
-**And** export tests pass
+
+- Profile info (email, signup date)
+- All assessments (results, OCEAN codes)
+- Full conversation transcripts
+- Archetype history
+  **And** file is downloadable immediately
+  **And** export tests pass
 
 **Technical Details:**
 
@@ -1253,6 +1295,7 @@ So that **I have control over my personal information** (GDPR Article 17, 20).
 - Unit test coverage: 100% of GDPR operations
 
 **Acceptance Checklist:**
+
 - [ ] Failing tests written first covering delete & export scenarios (red phase)
 - [ ] Tests verify export JSON structure and completeness
 - [ ] Tests verify soft-delete mechanism
@@ -1280,22 +1323,24 @@ So that **we can audit who accessed what data and when**.
 **When** I run `pnpm test audit-logger.test.ts`
 **Then** tests fail (red) because audit logging doesn't exist
 **And** each test defines expected behavior:
-  - Test: Profile access creates audit log entry
-  - Test: Log includes user ID, viewer ID, action, timestamp, IP
-  - Test: Anonymous access logged as "anonymous" viewer
-  - Test: Admin audit query returns all events for user
-  - Test: Audit logs retained for 1 year
+
+- Test: Profile access creates audit log entry
+- Test: Log includes user ID, viewer ID, action, timestamp, IP
+- Test: Anonymous access logged as "anonymous" viewer
+- Test: Admin audit query returns all events for user
+- Test: Audit logs retained for 1 year
 
 **IMPLEMENTATION (Green Phase):**
 **Given** a user's profile is viewed
 **When** someone accesses it (user viewing their own, or shared link viewed)
 **Then** an audit log entry is created with:
-  - User ID being accessed
-  - Viewer ID (if authenticated, or "anonymous" if shared link)
-  - Timestamp
-  - IP address
-  - Action (view, download, delete)
-**And** audit logging tests pass (green)
+
+- User ID being accessed
+- Viewer ID (if authenticated, or "anonymous" if shared link)
+- Timestamp
+- IP address
+- Action (view, download, delete)
+  **And** audit logging tests pass (green)
 
 **Given** I query the audit logs
 **When** I run `GET /api/admin/audit-logs?userId={userId}`
@@ -1313,6 +1358,7 @@ So that **we can audit who accessed what data and when**.
 - Unit test coverage: 100% of audit logging logic
 
 **Acceptance Checklist:**
+
 - [ ] Failing tests written first covering all audit scenarios (red phase)
 - [ ] Tests verify log entry creation on access
 - [ ] Tests verify data completeness (IP, user agent, timestamp)
@@ -1333,6 +1379,7 @@ So that **we can audit who accessed what data and when**.
 **Goal:** Implement comprehensive testing infrastructure covering unit, integration, E2E, and component documentation.
 
 **Dependencies:**
+
 - Epic 1 (infrastructure setup for test database)
 - Epics 2-6 (features to be tested)
 
@@ -1383,12 +1430,14 @@ So that **all domain logic, RPC contracts, and backend services are built with c
 - CI integration: tests run on every PR
 
 **TDD Examples for Backend Epics:**
+
 - **Story 2.3 (Analyzer & Scorer)**: Write facet scoring tests first, then implement scorer
 - **Story 3.1 (OCEAN Code Gen)**: Write tests for all 243 trait level combinations, then implement code generator
 - **Story 2.5 (Cost Tracking)**: Write cost calculation tests, then implement tracker
 - **Story 6.1 (Encryption)**: Write encryption/decryption roundtrip tests, then implement crypto layer
 
 **Acceptance Checklist:**
+
 - [ ] Vitest installed, configured, and working
 - [ ] Sample TDD test written (red → green → refactor cycle demonstrated)
 - [ ] Test utilities + mocks available for common patterns
@@ -1428,6 +1477,7 @@ So that **I catch query bugs before production**.
 - Cost: ~1 min per test suite (acceptable)
 
 **Acceptance Checklist:**
+
 - [ ] TestContainers working
 - [ ] PostgreSQL spins up automatically
 - [ ] Migrations run in test DB
@@ -1447,12 +1497,13 @@ So that **I catch UI bugs and integration issues**.
 **Given** Playwright is configured
 **When** I run `pnpm -C apps/front exec playwright test`
 **Then** browsers open and test the assessment flow:
-  1. Navigate to home
-  2. Click "Start Assessment"
-  3. Send 5 messages
-  4. Verify results display
-  5. Click "Share"
-  6. Verify profile link works
+
+1. Navigate to home
+2. Click "Start Assessment"
+3. Send 5 messages
+4. Verify results display
+5. Click "Share"
+6. Verify profile link works
 
 **Given** a test fails
 **When** I check artifacts
@@ -1468,6 +1519,7 @@ So that **I catch UI bugs and integration issues**.
 - Screenshots: `only-on-failure`
 
 **Acceptance Checklist:**
+
 - [ ] Playwright tests written
 - [ ] Happy path test passes
 - [ ] Error cases tested
@@ -1487,10 +1539,11 @@ So that **other devs can browse components before writing custom code**.
 **Given** I start Storybook with `pnpm -C packages/ui storybook`
 **When** I navigate to Components
 **Then** I see all shadcn/ui components with:
-  - Live examples of each variant
-  - Props documentation
-  - Accessibility checks (WCAG AA/AAA)
-  - Design pattern explanations
+
+- Live examples of each variant
+- Props documentation
+- Accessibility checks (WCAG AA/AAA)
+- Design pattern explanations
 
 **Given** a component has accessibility issues
 **When** Storybook a11y addon runs
@@ -1505,6 +1558,7 @@ So that **other devs can browse components before writing custom code**.
 - Deployment: GitHub Pages via CI
 
 **Acceptance Checklist:**
+
 - [ ] Storybook installed
 - [ ] Button, Input, Dialog components documented
 - [ ] Stories show variants
@@ -1530,4 +1584,3 @@ Each epic contains detailed, implementable stories with clear acceptance criteri
 ---
 
 **Document Status:** Requirements extracted and organized. Ready for Step 2: Epic Design (adding technical details, dependencies, and implementation sequencing).
-

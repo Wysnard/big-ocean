@@ -10,9 +10,7 @@ export function UserMenu() {
   const { user, isAuthenticated, isPending, signOut } = useAuth();
 
   if (isPending) {
-    return (
-      <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>
-    );
+    return <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>;
   }
 
   if (!isAuthenticated || !user) {

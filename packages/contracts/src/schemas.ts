@@ -47,14 +47,10 @@ export const TraitSummarySchema = S.Struct({
   conscientiousness: S.Union(
     S.Literal("Low"),
     S.Literal("Mid"),
-    S.Literal("High")
+    S.Literal("High"),
   ),
   extraversion: S.Union(S.Literal("Low"), S.Literal("Mid"), S.Literal("High")),
-  agreeableness: S.Union(
-    S.Literal("Low"),
-    S.Literal("Mid"),
-    S.Literal("High")
-  ),
+  agreeableness: S.Union(S.Literal("Low"), S.Literal("Mid"), S.Literal("High")),
   neuroticism: S.Union(S.Literal("Low"), S.Literal("Mid"), S.Literal("High")),
 });
 

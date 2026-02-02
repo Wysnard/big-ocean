@@ -49,12 +49,14 @@ So that **the codebase has consistent code quality enforcement across all apps a
 ### Current State
 
 **Linting Setup (Mixed):**
+
 - **apps/front**: Biome via `biome.json`
 - **packages/ui**: ESLint via `@workspace/eslint-config/react-internal`
 - **apps/api**: NO linting
 - **Other packages**: NO linting (contracts, domain, infrastructure)
 
 **Frontend Errors:** 26 total from previous work
+
 - useUniqueElementIds (8)
 - noExplicitAny (4)
 - useExhaustiveDependencies (11)
@@ -62,6 +64,7 @@ So that **the codebase has consistent code quality enforcement across all apps a
 - Non-null assertions (1)
 
 **Problem:**
+
 - Inconsistent tooling across monorepo
 - ESLint maintenance burden
 - New packages can't easily adopt linting
@@ -70,6 +73,7 @@ So that **the codebase has consistent code quality enforcement across all apps a
 ### Root Cause
 
 The project evolved without a unified linting strategy:
+
 1. Frontend (apps/front) adopted Biome for better performance
 2. UI package (packages/ui) uses older ESLint approach
 3. API and other packages never added linting
@@ -84,6 +88,7 @@ The project evolved without a unified linting strategy:
 **Goal:** Build centralized Biome configuration package
 
 **Actions:**
+
 - [ ] Create `packages/lint/` directory
 - [ ] Write `package.json` with Biome dependency
 - [ ] Write `biome.json` with shared ruleset
@@ -98,6 +103,7 @@ The project evolved without a unified linting strategy:
 **Goal:** Use shared config in existing Biome setup
 
 **Actions:**
+
 - [ ] Update `apps/front/biome.json` to extend from @workspace/lint
 - [ ] Add @workspace/lint to `apps/front/package.json` devDependencies
 - [ ] Run `pnpm lint --filter=front` to verify
@@ -109,6 +115,7 @@ The project evolved without a unified linting strategy:
 **Goal:** Add Biome linting to API
 
 **Actions:**
+
 - [ ] Add @biomejs/biome to `apps/api/package.json` devDependencies
 - [ ] Create `apps/api/biome.json` extending @workspace/lint
 - [ ] Add lint script: `"lint": "biome lint ."`
@@ -122,6 +129,7 @@ The project evolved without a unified linting strategy:
 **Goal:** Replace ESLint with Biome in UI package
 
 **Actions:**
+
 - [ ] Remove ESLint dependencies from `packages/ui/package.json`
 - [ ] Delete `packages/ui/.eslintrc.js`
 - [ ] Add @biomejs/biome to devDependencies
@@ -137,6 +145,7 @@ The project evolved without a unified linting strategy:
 **Goal:** Enable linting for contracts, domain, infrastructure
 
 **For each package (contracts, domain, infrastructure):**
+
 - [ ] Add @biomejs/biome to devDependencies
 - [ ] Create `biome.json` extending @workspace/lint
 - [ ] Add lint script to package.json
@@ -149,12 +158,14 @@ The project evolved without a unified linting strategy:
 **Goal:** Achieve zero-error status across entire monorepo
 
 **Actions:**
+
 - [ ] Run `pnpm lint` (root)
 - [ ] Categorize errors by app/package
 - [ ] Fix systematically (same approach as original Story 2-0)
 - [ ] Verify all 92 tests still pass
 
 **Error Types Expected:**
+
 - useUniqueElementIds (frontend)
 - useExhaustiveDependencies (hooks)
 - useButtonType (buttons)
@@ -170,6 +181,7 @@ The project evolved without a unified linting strategy:
 **Goal:** Clean up old tooling
 
 **Actions:**
+
 - [ ] Delete `packages/eslint-config/` directory
 - [ ] Remove from pnpm-workspace.yaml if listed
 - [ ] Remove any root ESLint dependencies
@@ -182,6 +194,7 @@ The project evolved without a unified linting strategy:
 **Goal:** Document new unified approach
 
 **Actions:**
+
 - [ ] Update CLAUDE.md "Linting & Code Quality" section
 - [ ] Write `packages/lint/README.md` migration guide
 - [ ] Update any deployment docs
@@ -194,6 +207,7 @@ The project evolved without a unified linting strategy:
 ## Files to Create/Modify/Delete
 
 ### New Files (9)
+
 - `packages/lint/package.json`
 - `packages/lint/biome.json`
 - `packages/lint/tsconfig.json`
@@ -205,6 +219,7 @@ The project evolved without a unified linting strategy:
 - `packages/infrastructure/biome.json`
 
 ### Modified Files (12)
+
 - `apps/front/biome.json`
 - `apps/front/package.json`
 - `apps/api/package.json`
@@ -219,9 +234,11 @@ The project evolved without a unified linting strategy:
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
 
 ### Deleted Files/Directories (1)
+
 - `packages/eslint-config/` (entire directory)
 
 ### Source Files with Linting Fixes (9+)
+
 - `apps/front/src/components/auth/login-form.tsx`
 - `apps/front/src/components/auth/signup-form.tsx`
 - `apps/front/src/components/storybook/dialog.stories.tsx`
@@ -238,12 +255,14 @@ The project evolved without a unified linting strategy:
 ## Testing Requirements
 
 ### Build & Linting Validation
+
 - [ ] `pnpm install` succeeds with new packages/lint
 - [ ] `pnpm lint` returns zero errors (all packages)
 - [ ] `pnpm build` compiles without errors
 - [ ] `pnpm test` passes 100% (92/92 tests)
 
 ### Package-Specific Validation
+
 - [ ] apps/front: `pnpm lint --filter=front` passes
 - [ ] apps/api: `pnpm lint --filter=api` passes
 - [ ] packages/ui: `pnpm lint --filter=ui` passes (zero-warnings policy maintained)
@@ -252,12 +271,14 @@ The project evolved without a unified linting strategy:
 - [ ] packages/infrastructure: `pnpm lint --filter=infrastructure` passes
 
 ### Cleanup Validation
+
 - [ ] packages/eslint-config/ deleted
 - [ ] No ESLint dependencies in package-lock
 - [ ] No .eslintrc files remain
 - [ ] pnpm-lock.yaml regenerated
 
 ### CI/CD Validation
+
 - [ ] GitHub Actions test workflow passes
 - [ ] All linting checks pass in CI
 - [ ] No ESLint-related warnings
@@ -267,17 +288,20 @@ The project evolved without a unified linting strategy:
 ## Deployment Impact
 
 **Risk Level:** Medium (breaking change to tooling)
+
 - Linting behavior may differ (Biome vs ESLint rules)
 - New error categories may appear
 - All packages affected simultaneously
 
 **Rollback Plan:**
+
 1. Revert feature branch to master
 2. Restore packages/eslint-config from git history
 3. Restore old biome.json configurations
 4. Railway redeploys automatically
 
 **Mitigation:**
+
 - Comprehensive testing before merge
 - Careful error categorization and fixes
 - Documentation of all changes
@@ -288,18 +312,21 @@ The project evolved without a unified linting strategy:
 ## Architecture Compliance
 
 ### Project Structure
+
 - New package follows monorepo conventions
 - Maintains pnpm workspace structure
 - No external directory changes
 - Follows existing patterns
 
 ### Coding Standards
+
 - Use Biome recommended rules
 - Maintain existing code style
 - Apply same patterns to all packages
 - Keep zero-warnings policy for UI
 
 ### Testing Standards
+
 - All existing tests must pass
 - No new test files needed (infrastructure change)
 - Linting is the primary validation
@@ -328,6 +355,7 @@ The project evolved without a unified linting strategy:
 **Blocked By:** None (depends on current codebase)
 
 **Critical Path:**
+
 - Must complete before other Epic 2 stories
 - Unblocks clean development environment
 - Enables code quality enforcement for all new work
@@ -337,18 +365,21 @@ The project evolved without a unified linting strategy:
 ## Dev Notes
 
 ### Linting Strategy
+
 - **Single Tool:** Biome for all linting (not ESLint)
 - **Shared Config:** @workspace/lint for consistency
 - **Zero Errors:** Must achieve zero across all packages
 - **Enforcement:** CI/CD enforces via `pnpm lint`
 
 ### Biome Configuration
+
 - File: `packages/lint/biome.json`
 - Rules: Recommended + strict accessibility + type safety
 - Extends: None (is the base config)
 - Used by: All apps/packages via extends
 
 ### Migration Checklist
+
 - [ ] Phase 1: Create packages/lint
 - [ ] Phase 2: apps/front migration
 - [ ] Phase 3: apps/api migration
@@ -367,6 +398,7 @@ The project evolved without a unified linting strategy:
 **Branch:** `feat/story-2-0-linter-unification`
 
 **Implementation Timeline:**
+
 - Phase 1: 1 hour (packages/lint creation)
 - Phase 2: 30 min (apps/front update)
 - Phase 3: 1-2 hours (apps/api migration + error fixes)
@@ -385,17 +417,16 @@ The project evolved without a unified linting strategy:
 After code review, identified and fixed 4 critical issues plus 3 major issues:
 
 **Critical Issues Fixed:**
+
 1. Created `packages/lint/biome.json` as single source of truth for linting config
 2. Migrated all packages to extends pattern from `@workspace/lint/biome`
 3. Deleted `packages/eslint-config/` directory and `.eslintrc.js`
 4. Updated CLAUDE.md and README.md to document Biome-only approach
 
-**Major Issues Fixed:**
-5. Added linting to `packages/typescript-config` (previously missing)
-6. Made Biome dependency explicit in all package.json devDependencies
-7. Verified zero linting errors across entire monorepo
+**Major Issues Fixed:** 5. Added linting to `packages/typescript-config` (previously missing) 6. Made Biome dependency explicit in all package.json devDependencies 7. Verified zero linting errors across entire monorepo
 
 **Final Verification:**
+
 - `pnpm lint` returns 0 errors across all 8 packages
 - All packages use `"extends": ["@workspace/lint/biome"]`
 - No ESLint references remain in codebase (except historical docs)
@@ -407,6 +438,7 @@ After code review, identified and fixed 4 critical issues plus 3 major issues:
 ## Change Log
 
 **2026-01-31 (Evening):** Code review completed, 4 critical + 3 major issues fixed:
+
 - Created shared `packages/lint/biome.json` as single source of truth
 - Migrated all packages to extends pattern (`@workspace/lint/biome`)
 - Deleted `packages/eslint-config/` and all ESLint references

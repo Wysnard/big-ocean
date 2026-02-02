@@ -53,7 +53,8 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
                   logger.error("Database operation failed", {
                     operation: "saveMessage",
                     sessionId,
-                    error: error instanceof Error ? error.message : String(error),
+                    error:
+                      error instanceof Error ? error.message : String(error),
                     stack: error instanceof Error ? error.stack : undefined,
                   });
                 } catch (logError) {
@@ -123,7 +124,8 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
                   logger.error("Database operation failed", {
                     operation: "getMessages",
                     sessionId,
-                    error: error instanceof Error ? error.message : String(error),
+                    error:
+                      error instanceof Error ? error.message : String(error),
                     stack: error instanceof Error ? error.stack : undefined,
                   });
                 } catch (logError) {
@@ -174,7 +176,8 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
                   logger.error("Database operation failed", {
                     operation: "getMessageCount",
                     sessionId,
-                    error: error instanceof Error ? error.message : String(error),
+                    error:
+                      error instanceof Error ? error.message : String(error),
                     stack: error instanceof Error ? error.stack : undefined,
                   });
                 } catch (logError) {

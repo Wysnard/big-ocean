@@ -25,6 +25,7 @@ Detect the active module from conversation context, recent workflows, or user qu
 ## INPUT ANALYSIS
 
 Determine what was just completed:
+
 - Did someone state they completed something? Proceed as if that was the input.
 - Was a workflow just completed in this conversation? Proceed as if that was the input.
 - Search resolved artifact locations for files; fuzzy-match to workflow `outputs` patterns.
@@ -45,18 +46,20 @@ Determine what was just completed:
 
 ## RECOMMENDED OUTPUT FORMAT
 
-   **Optional items first** — List optional workflows until a required step is reached
-   **Required items next** — List the next required workflow
-   For each item show:
-   - Workflow **name**
-   - **Command** (prefixed with `/`, e.g., `/bmad:example:build-prototype`)
-   - **Agent** title and display name from the CSV (e.g., "🎨 Alex (Designer)")
-   - Brief **description**
+**Optional items first** — List optional workflows until a required step is reached
+**Required items next** — List the next required workflow
+For each item show:
 
-   ### Additional response output guidance to convey:
-   - Run each workflow in a **fresh context window**
-   - Load the agent using (`/` + `agent-command`), or run the workflow command directly
-   - For **validation workflows**: recommend using a different high-quality LLM if available
-   - For conversational requests: match the user's tone while presenting clearly
+- Workflow **name**
+- **Command** (prefixed with `/`, e.g., `/bmad:example:build-prototype`)
+- **Agent** title and display name from the CSV (e.g., "🎨 Alex (Designer)")
+- Brief **description**
+
+### Additional response output guidance to convey:
+
+- Run each workflow in a **fresh context window**
+- Load the agent using (`/` + `agent-command`), or run the workflow command directly
+- For **validation workflows**: recommend using a different high-quality LLM if available
+- For conversational requests: match the user's tone while presenting clearly
 
 6. Return to the calling process after presenting recommendations.

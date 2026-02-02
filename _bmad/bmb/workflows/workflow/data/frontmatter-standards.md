@@ -30,8 +30,9 @@
 Workflows in a MODULE can access additional variables from its `module.yaml`.
 
 **BMB Module example:**
+
 ```yaml
-bmb_creations_output_folder: '{project-root}/_bmad/bmb-creations'
+bmb_creations_output_folder: "{project-root}/_bmad/bmb-creations"
 ```
 
 **Standalone workflows:** Only have access to standard variables.
@@ -41,31 +42,33 @@ bmb_creations_output_folder: '{project-root}/_bmad/bmb-creations'
 ## Frontmatter Structure
 
 ### Required Fields
+
 ```yaml
 ---
-name: 'step-[N]-[name]'
-description: '[what this step does]'
+name: "step-[N]-[name]"
+description: "[what this step does]"
 ---
 ```
 
 ### File References - ONLY variables used in this step
+
 ```yaml
 ---
 # Step to step (SAME folder) - use ./filename.md
-nextStepFile: './step-02-vision.md'
+nextStepFile: "./step-02-vision.md"
 
 # Step to template (PARENT folder) - use ../filename.md
-productBriefTemplate: '../product-brief.template.md'
+productBriefTemplate: "../product-brief.template.md"
 
 # Step to data (SUBFOLDER) - use ./data/filename.md
-someData: './data/config.csv'
+someData: "./data/config.csv"
 
 # Output files - use variable
-outputFile: '{planning_artifacts}/product-brief-{{project_name}}-{{date}}.md'
+outputFile: "{planning_artifacts}/product-brief-{{project_name}}-{{date}}.md"
 
 # External references - use {project-root}
-advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'
-partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
+advancedElicitationTask: "{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml"
+partyModeWorkflow: "{project-root}/_bmad/core/workflows/party-mode/workflow.md"
 ---
 ```
 
@@ -74,20 +77,22 @@ partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
 ## Critical Rule: Unused Variables Forbidden
 
 ### ❌ VIOLATION - Variable defined but never used
+
 ```yaml
 ---
-outputFile: '{output_folder}/output.md'
-thisStepFile: './step-01-init.md'      # ❌ NEVER USED in body
-workflowFile: './workflow.md'           # ❌ NEVER USED in body
+outputFile: "{output_folder}/output.md"
+thisStepFile: "./step-01-init.md" # ❌ NEVER USED in body
+workflowFile: "./workflow.md" # ❌ NEVER USED in body
 ---
 # Step body never mentions {thisStepFile} or {workflowFile}
 ```
 
 ### ✅ CORRECT - Only variables that are used
+
 ```yaml
 ---
-outputFile: '{output_folder}/output.md'
-nextStepFile: './step-02-foo.md'
+outputFile: "{output_folder}/output.md"
+nextStepFile: "./step-02-foo.md"
 ---
 # Step body uses {outputFile} and {nextStepFile}
 ```
@@ -99,6 +104,7 @@ nextStepFile: './step-02-foo.md'
 ## Path Rules - NO EXCEPTIONS
 
 ### 1. Step to Step (SAME folder) = ./filename.md
+
 ```yaml
 # ❌ WRONG
 nextStepFile: './step-02.md'
@@ -109,6 +115,7 @@ nextStepFile: './step-02-vision.md'
 ```
 
 ### 2. Step to Template (PARENT folder) = ../filename.md
+
 ```yaml
 # ❌ WRONG
 someTemplate: '{workflow_path}/templates/template.md'
@@ -118,6 +125,7 @@ someTemplate: '../template.md'
 ```
 
 ### 3. Step to Subfolder = ./subfolder/file.md
+
 ```yaml
 # ❌ WRONG
 dataFile: '{workflow_path}/data/config.csv'
@@ -127,12 +135,14 @@ dataFile: './data/config.csv'
 ```
 
 ### 4. External References = {project-root}/...
+
 ```yaml
 # ✅ CORRECT
-advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'
+advancedElicitationTask: "{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml"
 ```
 
 ### 5. Output Files = Use folder variable
+
 ```yaml
 # ✅ CORRECT
 outputFile: '{planning_artifacts}/workflow-output-{project_name}.md'
@@ -175,18 +185,20 @@ Use `snake_case` with descriptive prefixes:
 Steps can define NEW variables that future steps will use.
 
 **Step 01 defines:**
+
 ```yaml
 ---
-targetWorkflowPath: '{bmb_creations_output_folder}/workflows/{workflow_name}'
+targetWorkflowPath: "{bmb_creations_output_folder}/workflows/{workflow_name}"
 ---
 # Uses {targetWorkflowPath} in body
 ```
 
 **Step 02 uses:**
+
 ```yaml
 ---
-targetWorkflowPath: '{bmb_creations_output_folder}/workflows/{workflow_name}'
-workflowPlanFile: '{targetWorkflowPath}/plan.md'
+targetWorkflowPath: "{bmb_creations_output_folder}/workflows/{workflow_name}"
+workflowPlanFile: "{targetWorkflowPath}/plan.md"
 ---
 # Uses {targetWorkflowPath} and {workflowPlanFile} in body
 ```
@@ -197,10 +209,10 @@ workflowPlanFile: '{targetWorkflowPath}/plan.md'
 
 ```yaml
 ---
-stepsCompleted: ['step-01-init', 'step-02-gather', 'step-03-design']
-lastStep: 'step-03-design'
-lastContinued: '2025-01-02'
-date: '2025-01-01'
+stepsCompleted: ["step-01-init", "step-02-gather", "step-03-design"]
+lastStep: "step-03-design"
+lastContinued: "2025-01-02"
+date: "2025-01-01"
 ---
 ```
 

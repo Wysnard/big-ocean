@@ -125,12 +125,14 @@ pnpm lint --filter=api
 The shared configuration enforces:
 
 ### Correctness
+
 - No unused variables (warn)
 - No unreachable code (error)
 - Exhaustive dependencies for React hooks (error)
 - No constant conditions (error)
 
 ### Accessibility (a11y)
+
 - Button type attributes required (error)
 - Valid ARIA attributes (error)
 - Image alt text required (error)
@@ -138,18 +140,21 @@ The shared configuration enforces:
 - Form labels required (error)
 
 ### Type Safety
+
 - No explicit `any` types (error)
 - Proper null checking (error)
 - Type narrowing required (error)
 - No unnecessary non-null assertions (warn)
 
 ### Style
+
 - Use const for non-reassigned variables (warn)
 - Use template literals where appropriate (warn)
 - Collapsed else-if statements (warn)
 - Consistent naming conventions (error)
 
 ### JavaScript/TypeScript
+
 - Double quotes (style)
 - Tab indentation (style)
 - Trailing commas in all (multiline)
@@ -161,11 +166,13 @@ The shared configuration enforces:
 If migrating from ESLint:
 
 1. **Remove ESLint dependencies**:
+
    ```bash
    pnpm remove eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser
    ```
 
 2. **Delete ESLint config files**:
+
    ```bash
    rm .eslintrc.js .eslintrc.json .eslintignore
    ```
@@ -174,11 +181,13 @@ If migrating from ESLint:
    - Copy template above and customize as needed
 
 4. **Add Biome dependency**:
+
    ```bash
    pnpm add -D @biomejs/biome
    ```
 
 5. **Update package.json lint script**:
+
    ```json
    {
      "scripts": {
@@ -212,8 +221,8 @@ export function legacyFunction(data: any) {
 function MyComponent() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: Intentional pattern
   useEffect(() => {
-    console.log("This is a controlled side effect")
-  }, [])
+    console.log("This is a controlled side effect");
+  }, []);
 }
 ```
 
@@ -239,6 +248,7 @@ Create `biome.json` in package with custom rules:
 ### "Cannot find module @workspace/lint"
 
 Make sure `packages/lint` is installed:
+
 ```bash
 pnpm install
 ```
@@ -250,6 +260,7 @@ Review the rule in your package's `biome.json` and adjust severity or disable if
 ### Formatting Conflicts
 
 If your IDE auto-formats differently:
+
 - Make sure VSCode has Biome extension installed
 - Set Biome as default formatter: `formatOnSave: true` in settings
 - Or run `pnpm format` before committing

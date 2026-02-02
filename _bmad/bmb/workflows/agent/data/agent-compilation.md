@@ -12,6 +12,7 @@ You write: **YAML source file** (`agent-name.agent.yaml`)
 Compiler produces: **Markdown with XML** (`agent-name.md`) for LLM consumption
 
 The compiler transforms your clean YAML into a fully functional agent by adding:
+
 - Frontmatter (name, description)
 - XML activation block with numbered steps
 - Menu handlers (workflow, exec, action)
@@ -63,15 +64,18 @@ agent:
 ## What COMPILER Adds (DO NOT Include)
 
 ### 1. Frontmatter
+
 ```markdown
 ---
 name: "architect"
 description: "Architect"
 ---
 ```
+
 **DO NOT add** frontmatter to your YAML.
 
 ### 2. XML Activation Block
+
 ```xml
 <activation critical="MANDATORY">
   <step n="1">Load persona from this current agent file</step>
@@ -86,19 +90,22 @@ description: "Architect"
   <rules>...</rules>
 </activation>
 ```
+
 **DO NOT create** activation sections—the compiler builds them.
 
 ### 3. Auto-Injected Menu Items
+
 Every agent gets these 4 items automatically. **DO NOT add them to your YAML:**
 
-| Code | Trigger | Description |
-|------|---------|-------------|
-| MH | menu or help | Redisplay Menu Help |
-| CH | chat | Chat with the Agent about anything |
-| PM | party-mode | Start Party Mode |
-| DA | exit, leave, goodbye, dismiss agent | Dismiss Agent |
+| Code | Trigger                             | Description                        |
+| ---- | ----------------------------------- | ---------------------------------- |
+| MH   | menu or help                        | Redisplay Menu Help                |
+| CH   | chat                                | Chat with the Agent about anything |
+| PM   | party-mode                          | Start Party Mode                   |
+| DA   | exit, leave, goodbye, dismiss agent | Dismiss Agent                      |
 
 ### 4. Menu Handlers
+
 ```xml
 <handler type="workflow">
   When menu item has: workflow="path/to/workflow.yaml"
@@ -109,6 +116,7 @@ Every agent gets these 4 items automatically. **DO NOT add them to your YAML:**
   → Load and execute the file at that path
 </handler>
 ```
+
 **DO NOT add** handlers—the compiler detects and generates them.
 
 ---
@@ -116,6 +124,7 @@ Every agent gets these 4 items automatically. **DO NOT add them to your YAML:**
 ## Before/After Example: Architect Agent
 
 ### Source: `architect.agent.yaml` (32 lines - YOU WRITE)
+
 ```yaml
 agent:
   metadata:
@@ -147,7 +156,8 @@ agent:
 ```
 
 ### Compiled: `architect.md` (69 lines - COMPILER PRODUCES)
-```markdown
+
+````markdown
 ---
 name: "architect"
 description: "Architect"
@@ -199,6 +209,8 @@ You must fully embody this agent's persona...
 </menu>
 </agent>
 ```
+````
+
 **Key additions by compiler:** Frontmatter, activation block, handlers, rules, MH/CH/PM/DA menu items.
 
 ---
@@ -218,6 +230,7 @@ When building agent YAML, **DO NOT:**
 - [ ] Duplicate any auto-injected content
 
 **DO:**
+
 - [ ] Define metadata (id, name, title, icon, module)
 - [ ] Define persona (role, identity, communication_style, principles)
 - [ ] Define critical_actions (Expert agents only)
@@ -252,15 +265,15 @@ The compiler injects these as steps 4, 5, 6 in the activation block:
 
 ## Division of Responsibilities
 
-| Aspect | YOU Provide (YAML) | COMPILER Adds |
-|--------|-------------------|---------------|
-| Agent identity | metadata + persona | Wrapped in XML |
-| Memory/actions | critical_actions | Inserted as activation steps |
-| Prompts | prompts with IDs | Referenced by menu actions |
-| Menu items | Your custom commands only | + MH, CH, PM, DA (auto) |
-| Activation | — | Full XML block with handlers |
-| Rules | — | Standardized rules section |
-| Frontmatter | — | name/description header |
+| Aspect         | YOU Provide (YAML)        | COMPILER Adds                |
+| -------------- | ------------------------- | ---------------------------- |
+| Agent identity | metadata + persona        | Wrapped in XML               |
+| Memory/actions | critical_actions          | Inserted as activation steps |
+| Prompts        | prompts with IDs          | Referenced by menu actions   |
+| Menu items     | Your custom commands only | + MH, CH, PM, DA (auto)      |
+| Activation     | —                         | Full XML block with handlers |
+| Rules          | —                         | Standardized rules section   |
+| Frontmatter    | —                         | name/description header      |
 
 ---
 

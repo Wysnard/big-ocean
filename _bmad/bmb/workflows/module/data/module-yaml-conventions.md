@@ -7,6 +7,7 @@
 ## Overview
 
 `module.yaml` is the configuration file for a BMAD module. It:
+
 - Defines module metadata (code, name, description)
 - Collects user input via prompts during installation
 - Makes those inputs available to agents and workflows as variables
@@ -19,20 +20,20 @@
 ### Required Fields
 
 ```yaml
-code: {module-code}              # kebab-case identifier
-name: "Display Name"             # Human-readable name
-header: "Brief description"      # One-line summary
-subheader: "Additional context"  # More detail
-default_selected: false          # Auto-select on install?
+code: { module-code } # kebab-case identifier
+name: "Display Name" # Human-readable name
+header: "Brief description" # One-line summary
+subheader: "Additional context" # More detail
+default_selected: false # Auto-select on install?
 ```
 
 ### `default_selected` Guidelines
 
-| Module Type | default_selected | Example |
-|-------------|------------------|---------|
-| Core/Primary | `true` | BMM (agile software delivery) |
-| Specialized | `false` | CIS (creative innovation), BMGD (game dev) |
-| Experimental | `false` | New modules in development |
+| Module Type  | default_selected | Example                                    |
+| ------------ | ---------------- | ------------------------------------------ |
+| Core/Primary | `true`           | BMM (agile software delivery)              |
+| Specialized  | `false`          | CIS (creative innovation), BMGD (game dev) |
+| Experimental | `false`          | New modules in development                 |
 
 ---
 
@@ -78,13 +79,13 @@ project_name:
 
 In `prompt` and `result`, you can use templates:
 
-| Template | Expands To |
-|----------|------------|
-| `{value}` | The user's input |
-| `{directory_name}` | Current directory name |
-| `{output_folder}` | Output folder from core config |
-| `{project-root}` | Project root path |
-| `{variable_name}` | Another variable's value |
+| Template           | Expands To                     |
+| ------------------ | ------------------------------ |
+| `{value}`          | The user's input               |
+| `{directory_name}` | Current directory name         |
+| `{output_folder}`  | Output folder from core config |
+| `{project-root}`   | Project root path              |
+| `{variable_name}`  | Another variable's value       |
 
 ---
 
@@ -211,7 +212,7 @@ After installation, variables are available in agent frontmatter/context:
 
 ```yaml
 # In agent.agent.yaml or workflow execution
-{variable_name}  # Expands to the user's configured value
+{ variable_name } # Expands to the user's configured value
 ```
 
 **Example:** If the user configured `project_name: "MyApp"`, agents can reference `{project_name}` and it will expand to `"MyApp"`.
@@ -222,7 +223,7 @@ Workflows can reference module variables in their step files:
 
 ```yaml
 ---
-outputFile: '{implementation_artifacts}/my-output.md'
+outputFile: "{implementation_artifacts}/my-output.md"
 ---
 ```
 
@@ -344,6 +345,7 @@ primary_platform:
 ## Best Practices
 
 ### DO:
+
 - Keep prompts clear and concise
 - Provide sensible defaults
 - Use `result: "{project-root}/{value}"` for paths
@@ -351,6 +353,7 @@ primary_platform:
 - Group related variables logically
 
 ### DON'T:
+
 - Overwhelm users with too many questions
 - Ask for information that could be inferred
 - Use technical jargon in prompts
@@ -380,13 +383,13 @@ After creating module.yaml, test it:
 
 ## Quick Reference
 
-| Pattern | Use Case |
-|---------|----------|
-| Simple text input | Names, titles, descriptions |
-| Boolean/Flag | Enable/disable features |
-| Single select | Experience levels, categories |
-| Multi select | Platforms, frameworks, options |
+| Pattern           | Use Case                          |
+| ----------------- | --------------------------------- |
+| Simple text input | Names, titles, descriptions       |
+| Boolean/Flag      | Enable/disable features           |
+| Single select     | Experience levels, categories     |
+| Multi select      | Platforms, frameworks, options    |
 | Multi-line prompt | Complex questions needing context |
-| Required | Must-have information |
-| Path variable | Directory locations |
-| Inherit/Alias | Compatibility, references |
+| Required          | Must-have information             |
+| Path variable     | Directory locations               |
+| Inherit/Alias     | Compatibility, references         |

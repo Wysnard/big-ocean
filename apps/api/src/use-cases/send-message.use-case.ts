@@ -60,7 +60,7 @@ export const sendMessage = (input: SendMessageInput) =>
       input.sessionId,
       "user",
       input.message,
-      input.userId
+      input.userId,
     );
 
     // Get all previous messages for context
@@ -70,7 +70,7 @@ export const sendMessage = (input: SendMessageInput) =>
     const langchainMessages = previousMessages.map((msg) =>
       msg.role === "user"
         ? new HumanMessage({ content: msg.content })
-        : new AIMessage({ content: msg.content })
+        : new AIMessage({ content: msg.content }),
     );
 
     // Invoke Nerin agent via repository
@@ -87,16 +87,16 @@ export const sendMessage = (input: SendMessageInput) =>
               agentName: error.agentName,
               sessionId: error.sessionId,
               message: error.message,
-            })
-          )
-        )
+            }),
+          ),
+        ),
       );
 
     // Save AI message
     yield* messageRepo.saveMessage(
       input.sessionId,
       "assistant",
-      result.response
+      result.response,
     );
 
     // Return current session precision

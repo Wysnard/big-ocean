@@ -52,12 +52,12 @@ Key behaviors:
   if (precision) {
     // Find lowest precision trait for exploration focus
     const entries = Object.entries(precision).filter(
-      ([_, value]) => value !== undefined
+      ([_, value]) => value !== undefined,
     ) as [string, number][];
 
     if (entries.length > 0) {
       const lowest = entries.reduce((min, curr) =>
-        (curr[1] ?? 100) < (min[1] ?? 100) ? curr : min
+        (curr[1] ?? 100) < (min[1] ?? 100) ? curr : min,
       );
 
       prompt += `
@@ -161,10 +161,10 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
       }).pipe(
         Effect.tap(() =>
           Effect.sync(() =>
-            logger.info("PostgresSaver checkpointer initialized")
-          )
+            logger.info("PostgresSaver checkpointer initialized"),
+          ),
         ),
-        Effect.catchAll(() => Effect.succeed(undefined))
+        Effect.catchAll(() => Effect.succeed(undefined)),
       );
     } else {
       logger.warn("DATABASE_URL not set - Nerin agent state will not persist");
@@ -225,7 +225,7 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
               },
               {
                 configurable: { thread_id: input.sessionId },
-              }
+              },
             );
 
             // Extract response from last message
@@ -262,5 +262,5 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
             }),
         }),
     });
-  })
+  }),
 );

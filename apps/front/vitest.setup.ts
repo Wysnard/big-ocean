@@ -1,10 +1,10 @@
-import { vi, afterEach } from 'vitest'
-import { cleanup } from '@testing-library/react'
+import { vi, afterEach } from "vitest";
+import { cleanup } from "@testing-library/react";
 
 // Cleanup after each test
 afterEach(() => {
-  cleanup()
-})
+  cleanup();
+});
 
 // Mock scrollIntoView for jsdom
-Element.prototype.scrollIntoView = vi.fn()
+Element.prototype.scrollIntoView = vi.fn();

@@ -1,23 +1,23 @@
 ---
-name: 'step-e-04-direct-edit'
-description: 'Apply direct user-requested changes to workflow'
+name: "step-e-04-direct-edit"
+description: "Apply direct user-requested changes to workflow"
 
 # File References
-nextStepFile: './step-e-05-apply-edit.md'
-editPlan: '{bmb_creations_output_folder}/edit-plan-{workflow_name}.md'
-targetWorkflowPath: '{targetWorkflowPath}'
+nextStepFile: "./step-e-05-apply-edit.md"
+editPlan: "{bmb_creations_output_folder}/edit-plan-{workflow_name}.md"
+targetWorkflowPath: "{targetWorkflowPath}"
 
 # Standards References
-architecture: '../data/architecture.md'
-stepFileRules: '../data/step-file-rules.md'
-frontmatterStandards: '../data/frontmatter-standards.md'
-menuHandlingStandards: '../data/menu-handling-standards.md'
-outputFormatStandards: '../data/output-format-standards.md'
-stepTypePatterns: '../data/step-type-patterns.md'
-workflowTypeCriteria: '../data/workflow-type-criteria.md'
-inputDiscoveryStandards: '../data/input-discovery-standards.md'
-csvDataFileStandards: '../data/csv-data-file-standards.md'
-intentVsPrescriptive: '../data/intent-vs-prescriptive-spectrum.md'
+architecture: "../data/architecture.md"
+stepFileRules: "../data/step-file-rules.md"
+frontmatterStandards: "../data/frontmatter-standards.md"
+menuHandlingStandards: "../data/menu-handling-standards.md"
+outputFormatStandards: "../data/output-format-standards.md"
+stepTypePatterns: "../data/step-type-patterns.md"
+workflowTypeCriteria: "../data/workflow-type-criteria.md"
+inputDiscoveryStandards: "../data/input-discovery-standards.md"
+csvDataFileStandards: "../data/csv-data-file-standards.md"
+intentVsPrescriptive: "../data/intent-vs-prescriptive-spectrum.md"
 ---
 
 # Edit Step 4: Direct Edit
@@ -71,29 +71,37 @@ Read `{editPlan}` to review direct change goals from step 2.
 #### A. Identify Change Type and Load Standards
 
 **For workflow.md changes:**
+
 - Load {architecture}
 
 **For step file changes:**
+
 - Load {stepFileRules}
 - Load {stepTypePatterns}
 - Load {intentVsPrescriptive}
 
 **For frontmatter changes:**
+
 - Load {frontmatterStandards}
 
 **For menu changes:**
+
 - Load {menuHandlingStandards}
 
 **For output/template changes:**
+
 - Load {outputFormatStandards}
 
 **For data file changes:**
+
 - Load {csvDataFileStandards}
 
 **For workflow type changes:**
+
 - Load {workflowTypeCriteria}
 
 **For discovery/input changes:**
+
 - Load {inputDiscoveryStandards}
 
 #### B. Load Target File and Check Compliance
@@ -165,10 +173,12 @@ Wait for user approval.
 ```
 
 **Update editPlan:**
+
 ```markdown
 ### Direct Changes Applied
 
 **[{change type}]** {filename}
+
 - ✅ Changed: {description}
 - User approved: Yes
 - Compliance check: Passed/Fixed/Accepted risk
@@ -229,10 +239,12 @@ Wait for user approval.
 **Modified:** {count}
 
 **Compliance Issues Found During Editing:** {count}
+
 - Fixed: {count}
 - User accepted risk: {count}
 
 **Files Modified:**
+
 - {file1}
 - {file2}
 - etc."

@@ -144,6 +144,7 @@ Validate Expert agents meet BMAD quality standards.
 ## What the Compiler Adds (DO NOT validate presence)
 
 These are auto-injected, don't validate for them:
+
 - Frontmatter (`---name/description---`)
 - XML activation block (your critical_actions become numbered steps)
 - Menu items: MH (menu/help), CH (chat), PM (party-mode), DA (dismiss/exit)
@@ -162,11 +163,12 @@ These are auto-injected, don't validate for them:
 ### Issue: Missing critical_actions
 
 **Fix:** Add at minimum:
+
 ```yaml
 critical_actions:
-  - 'Load COMPLETE file {project-root}/_bmad/_memory/{sidecar-folder}/memories.md'
-  - 'Load COMPLETE file {project-root}/_bmad/_memory/{sidecar-folder}/instructions.md'
-  - 'ONLY read/write files in {project-root}/_bmad/_memory/{sidecar-folder}/'
+  - "Load COMPLETE file {project-root}/_bmad/_memory/{sidecar-folder}/memories.md"
+  - "Load COMPLETE file {project-root}/_bmad/_memory/{sidecar-folder}/instructions.md"
+  - "ONLY read/write files in {project-root}/_bmad/_memory/{sidecar-folder}/"
 ```
 
 ### Issue: Communication Style Missing Memory References

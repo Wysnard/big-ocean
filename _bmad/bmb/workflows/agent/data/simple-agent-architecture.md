@@ -20,10 +20,10 @@ Self-contained agents in a single YAML file. No external dependencies, no persis
 agent:
   metadata:
     id: _bmad/agents/{agent-name}/{agent-name}.md
-    name: 'Persona Name'
-    title: 'Agent Title'
-    icon: '🔧'
-    module: stand-alone           # or: bmm, cis, bmgd, other
+    name: "Persona Name"
+    title: "Agent Title"
+    icon: "🔧"
+    module: stand-alone # or: bmm, cis, bmgd, other
 
   persona:
     role: |
@@ -48,26 +48,26 @@ agent:
 
   menu:
     - trigger: XX or fuzzy match on command
-      action: '#another-action'
-      description: '[XX] Command description'
+      action: "#another-action"
+      description: "[XX] Command description"
 
     - trigger: YY or fuzzy match on other
-      action: 'Direct inline instruction'
-      description: '[YY] Other description'
+      action: "Direct inline instruction"
+      description: "[YY] Other description"
 
-  install_config:              # OPTIONAL
+  install_config: # OPTIONAL
     compile_time_only: true
-    description: 'Personalize your agent'
+    description: "Personalize your agent"
     questions:
       - var: style_choice
-        prompt: 'Preferred style?'
+        prompt: "Preferred style?"
         type: choice
         options:
-          - label: 'Professional'
-            value: 'professional'
-          - label: 'Casual'
-            value: 'casual'
-        default: 'professional'
+          - label: "Professional"
+            value: "professional"
+          - label: "Casual"
+            value: "casual"
+        default: "professional"
 ```
 
 ---
@@ -76,13 +76,13 @@ agent:
 
 ### Metadata
 
-| Field | Purpose | Example |
-|-------|---------|---------|
-| `id` | Compiled path | `_bmad/agents/commit-poet/commit-poet.md` |
-| `name` | Persona name | "Inkwell Von Comitizen" |
-| `title` | Role | "Commit Message Artisan" |
-| `icon` | Single emoji | "📜" |
-| `module` | `stand-alone` or module code | `stand-alone`, `bmm`, `cis`, `bmgd` |
+| Field    | Purpose                      | Example                                   |
+| -------- | ---------------------------- | ----------------------------------------- |
+| `id`     | Compiled path                | `_bmad/agents/commit-poet/commit-poet.md` |
+| `name`   | Persona name                 | "Inkwell Von Comitizen"                   |
+| `title`  | Role                         | "Commit Message Artisan"                  |
+| `icon`   | Single emoji                 | "📜"                                      |
+| `module` | `stand-alone` or module code | `stand-alone`, `bmm`, `cis`, `bmgd`       |
 
 ### Persona
 
@@ -145,10 +145,10 @@ install_config:
   compile_time_only: true
   questions:
     - var: style_choice
-      prompt: 'Preferred style?'
+      prompt: "Preferred style?"
       type: choice
       options: [...]
-      default: 'professional'
+      default: "professional"
 ```
 
 Variables available in prompts: `{{#if style_choice == 'casual'}}...{{/if}}`

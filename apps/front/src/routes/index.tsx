@@ -73,7 +73,9 @@ function App() {
           </p>
           <div className="flex flex-col items-center gap-4">
             <Button
-              onClick={() => navigate({ to: "/chat", search: { sessionId: undefined } })}
+              onClick={() =>
+                navigate({ to: "/chat", search: { sessionId: undefined } })
+              }
               size="lg"
               className="px-8 py-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-lg transition-all shadow-lg shadow-blue-500/50 text-lg"
             >
@@ -141,7 +143,9 @@ function App() {
             personality profile in minutes.
           </p>
           <Button
-            onClick={() => navigate({ to: "/chat", search: { sessionId: undefined } })}
+            onClick={() =>
+              navigate({ to: "/chat", search: { sessionId: undefined } })
+            }
             size="lg"
             className="px-12 py-6 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-semibold rounded-lg transition-all shadow-lg shadow-purple-500/50 text-lg"
           >

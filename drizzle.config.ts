@@ -11,6 +11,8 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL || "postgresql://dev:devpassword@localhost:5432/bigocean",
+    url:
+      process.env.DATABASE_URL ||
+      "postgresql://dev:devpassword@localhost:5432/bigocean",
   },
 });

@@ -25,11 +25,12 @@ so that **the assessment feels authentic and I stay engaged for the full 30 minu
 **When** I run `pnpm --filter=api test`
 **Then** tests fail (red) because Nerin implementation doesn't exist
 **And** each test defines expected behavior (using mock Anthropic API):
-  - Test: First message is warm and inviting (not generic)
-  - Test: Responses reference earlier conversation (context awareness)
-  - Test: No repetitive questions in sequence
-  - Test: Streaming responses work with token tracking
-  - Test: Response latency tracked for P95 monitoring
+
+- Test: First message is warm and inviting (not generic)
+- Test: Responses reference earlier conversation (context awareness)
+- Test: No repetitive questions in sequence
+- Test: Streaming responses work with token tracking
+- Test: Response latency tracked for P95 monitoring
 
 ### IMPLEMENTATION (Green Phase)
 
@@ -51,6 +52,7 @@ so that **the assessment feels authentic and I stay engaged for the full 30 minu
 ## Tasks / Subtasks
 
 ### Task 1: LangGraph Application Structure Setup ✅
+
 - [x] Create directory structure: utils/, agent.ts
 - [x] Define state schema in utils/state.ts (NerinStateSchema with Zod)
 - [x] Implement node function in utils/nodes.ts (nerinNode)
@@ -61,12 +63,14 @@ so that **the assessment feels authentic and I stay engaged for the full 30 minu
 - [x] Test graph invocation in handler
 
 ### Task 1.5: Effect Platform HTTP Integration ✅
+
 - [x] Import LangGraph graph directly into Effect Platform HTTP handlers
 - [x] Update assessment handler to invoke Nerin graph
 - [x] Test single unified API endpoint (via unit tests - API integration deferred)
 - [x] Update CLAUDE.md with architecture explanation (hexagonal architecture documented)
 
 ### Task 2: Nerin System Prompt & Context Management ✅
+
 - [x] Design Nerin system prompt (non-judgmental, curious, conversational)
 - [x] Implement conversation context builder (include previous messages)
 - [x] Add precision gap context for low-confidence traits
@@ -74,13 +78,15 @@ so that **the assessment feels authentic and I stay engaged for the full 30 minu
 - [x] Verify warm greeting generation
 
 ### Task 3: Token Tracking & Cost Monitoring ✅
+
 - [x] Implement token counter using Anthropic API response
 - [x] Track input + output tokens per request
-- [x] Calculate cost: (inputTokens / 1M * $0.003) + (outputTokens / 1M * $0.015)
+- [x] Calculate cost: (inputTokens / 1M _ $0.003) + (outputTokens / 1M _ $0.015)
 - [x] Return token usage in API response (storage deferred to Story 2.5)
 - [x] Write tests for cost calculation accuracy
 
 ### Task 4: Streaming Implementation ✅
+
 - [x] Set up streaming with @anthropic-ai/sdk (via @langchain/anthropic)
 - [x] Implement stream handlers for token-by-token output
 - [ ] Add latency tracking (start → first token) - deferred to integration testing
@@ -88,6 +94,7 @@ so that **the assessment feels authentic and I stay engaged for the full 30 minu
 - [x] Handle stream errors gracefully
 
 ### Task 5: Integration with Session Management ✅
+
 - [x] Load session state from SessionRepository
 - [x] Append Nerin response to message history
 - [x] Update session with new message
@@ -95,6 +102,7 @@ so that **the assessment feels authentic and I stay engaged for the full 30 minu
 - [ ] Test end-to-end message flow - requires API integration test
 
 ### Task 6: Testing & Validation ✅
+
 - [x] Create mock Anthropic API for deterministic testing
 - [x] Write test: First message is warm/inviting
 - [x] Write test: Context awareness (references prior messages)
@@ -103,6 +111,7 @@ so that **the assessment feels authentic and I stay engaged for the full 30 minu
 - [x] Achieve 100% unit test coverage for Nerin module
 
 ### Documentation & Testing (AC: #6) — REQUIRED BEFORE DONE
+
 - [x] Add JSDoc comments to Nerin agent functions
 - [x] Update CLAUDE.md with Nerin agent patterns
 - [x] Write unit tests (100% coverage target)
@@ -190,6 +199,7 @@ This story implements a **single unified API** where LangGraph is imported direc
 5. **PostgresSaver** persists state to same PostgreSQL database
 
 **Future Evolution (Story 2.4):**
+
 - Add Analyzer and Scorer nodes to LangGraph graph
 - Update conditional routing in graph
 - Handler remains simple: just invoke the graph
@@ -209,10 +219,12 @@ Nerin (conversational agent) is orchestrated via LangGraph state machine with in
   - Cost awareness (skip analysis if approaching token budget)
 
 **Key Metrics (from Architecture):**
+
 - Nerin response time: < 2 sec (P95)
 - Analysis latency: < 500ms (batched, non-blocking)
 
 **Effect-ts Integration Pattern (from Story 2-0.5):**
+
 - All services use Context.Tag for dependency injection
 - Repository pattern for data access (SessionRepository)
 - Use Effect.gen for async operations
@@ -236,6 +248,7 @@ apps/api/src/agents/nerin/
 ```
 
 **Why This Structure:**
+
 - **Separation of Concerns:** State, nodes, and utilities are independently testable
 - **Direct Import:** Graph is imported into Effect handlers (no separate server)
 - **Scalability:** Multiple graphs can coexist (Analyzer, Scorer in Story 2.3)
@@ -243,6 +256,7 @@ apps/api/src/agents/nerin/
 **Relevant Files & Directories:**
 
 **CREATE (New files for Story 2.2):**
+
 - `apps/api/src/agents/nerin/` - Nerin agent implementation (LangGraph structure)
   - `agent.ts` - Graph construction & compilation (exports compiled graph)
   - `utils/state.ts` - State schema with Zod (NerinStateSchema)
@@ -255,6 +269,7 @@ apps/api/src/agents/nerin/
   - `mocks/anthropic-mock.ts` - Mock Anthropic API for testing
 
 **REFERENCE (Existing dependencies):**
+
 - `packages/domain/src/schemas/` - Session, Message schemas
 - `packages/contracts/src/http/groups/assessment.ts` - AssessmentGroup HTTP API contracts
 - `apps/api/src/repositories/session-repository.ts` - Session data access (from Story 2.1)
@@ -262,6 +277,7 @@ apps/api/src/agents/nerin/
 - `apps/api/src/handlers/assessment.ts` - Assessment HTTP handlers (from Story 1.6)
 
 **UPDATE (Existing files to modify):**
+
 - `apps/api/src/handlers/assessment.ts` - Import graph and invoke in `sendMessage` handler
 - `apps/api/package.json` - Add LangGraph dependencies if missing
 - `CLAUDE.md` - Add Nerin agent documentation and unified architecture explanation
@@ -269,6 +285,7 @@ apps/api/src/agents/nerin/
 ### Testing Standards Summary
 
 **From Story 7.1 (Unit Testing Framework):**
+
 - Framework: `vitest`
 - Test files: `**/__tests__/*.test.ts`
 - Minimum coverage: 100% for domain logic, 90% for handlers
@@ -276,11 +293,13 @@ apps/api/src/agents/nerin/
 - Coverage report: `pnpm --filter=api test -- --coverage`
 
 **TDD Workflow (Red-Green-Refactor):**
+
 1. **Red:** Write failing tests defining expected behavior
 2. **Green:** Write minimal code to pass tests
 3. **Refactor:** Improve code while keeping tests green
 
 **Mock Strategy:**
+
 - Mock Anthropic API for deterministic testing
 - Use vitest `vi.fn()` and `vi.mock()` for dependencies
 - Test streaming with async iterators
@@ -289,23 +308,27 @@ apps/api/src/agents/nerin/
 ### Known Dependencies
 
 **Story 2-1 (Session Management & Persistence):**
+
 - SessionRepository with createSession, getSession, updateSession
 - MessageRepository with saveMessage, getMessages
 - Effect-based service composition
 - Database schema: sessions, messages tables
 
 **Story 2-0.5 (Effect-Based DI Refactoring):**
+
 - Context.Tag pattern for services
 - Layer.effect for repository implementations
 - Error handling with tagged errors
 
 **Story 1-6 (Migrate to Effect/Platform HTTP):**
+
 - Effect Platform HTTP API Groups (AssessmentGroup)
 - HttpApiBuilder pattern for handlers
 - Better Auth integration at node:http layer
 - Single unified HTTP API on port 4000
 
 **Story 7.1 (Unit Testing Framework):**
+
 - Vitest configured for ESM + Effect-ts
 - Test patterns established
 - Coverage reporting setup
@@ -313,6 +336,7 @@ apps/api/src/agents/nerin/
 ### Previous Story Intelligence
 
 **From Story 2-1-1 (GitHub Actions CI/CD):**
+
 - CI/CD pipeline runs all tests on PR
 - Git hooks enforce commit message format: `feat(story-X-Y): ...`
 - Pre-push hooks run lint, typecheck, tests
@@ -320,6 +344,7 @@ apps/api/src/agents/nerin/
 - Branch protection prevents direct commits to master
 
 **Learnings for Story 2.2:**
+
 - All tests must pass in CI before merge
 - Follow TDD pattern (red-green-refactor)
 - Use mocks for external APIs (Anthropic)
@@ -327,12 +352,14 @@ apps/api/src/agents/nerin/
 - Commit message: `feat(story-2-2): ...`
 
 **From Story 2-1 (Session Management):**
+
 - Session state stored server-side in PostgreSQL
 - Messages persisted with role (user/assistant), content, timestamp
 - Session resume verified: 19ms load time for 103 messages
 - Effect service composition working correctly
 
 **Patterns to follow:**
+
 - Use SessionRepository.getSession to load conversation history
 - Use MessageRepository.saveMessage to persist Nerin responses
 - All database operations wrapped in Effect.gen
@@ -364,7 +391,7 @@ curl -X POST http://localhost:4000/api/assessment/message \
 ```typescript
 // apps/api/src/agents/nerin/agent.ts
 export const graph = workflow.compile({
-  checkpointer: PostgresSaver.fromConnString(process.env.DATABASE_URL)
+  checkpointer: PostgresSaver.fromConnString(process.env.DATABASE_URL),
 });
 
 // apps/api/src/handlers/assessment.ts
@@ -381,14 +408,14 @@ import { graph } from "../agents/nerin/agent";
 
 **Benefits of Embedded Approach:**
 
-| Aspect | Embedded LangGraph | Separate API Server |
-|--------|-------------------|---------------------|
-| Deployment | ✅ Single service | ❌ Two services to manage |
-| Port management | ✅ One port (4000) | ❌ Two ports (4000, 8123) |
-| Auth integration | ✅ Same Better Auth context | ❌ Separate auth needed |
-| Error handling | ✅ Unified Effect errors | ❌ Two error systems |
-| Local dev | ✅ One command | ❌ Two terminals |
-| Railway cost | ✅ One service charge | ❌ Two service charges |
+| Aspect           | Embedded LangGraph          | Separate API Server       |
+| ---------------- | --------------------------- | ------------------------- |
+| Deployment       | ✅ Single service           | ❌ Two services to manage |
+| Port management  | ✅ One port (4000)          | ❌ Two ports (4000, 8123) |
+| Auth integration | ✅ Same Better Auth context | ❌ Separate auth needed   |
+| Error handling   | ✅ Unified Effect errors    | ❌ Two error systems      |
+| Local dev        | ✅ One command              | ❌ Two terminals          |
+| Railway cost     | ✅ One service charge       | ❌ Two service charges    |
 
 **Frontend Integration:**
 
@@ -399,8 +426,8 @@ const response = await fetch("/api/assessment/message", {
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     sessionId: currentSessionId,
-    message: userMessage
-  })
+    message: userMessage,
+  }),
 });
 
 const data = await response.json();
@@ -413,28 +440,34 @@ console.log(data.precision); // Trait precision scores
 ### Core Dependencies
 
 **LangGraph Stack:**
+
 - `@langchain/langgraph` ^1.1.0 - StateGraph for agent orchestration
 - `@langchain/langgraph-checkpoint-postgres` - PostgresSaver for state persistence
 - `@langchain/core` - BaseMessage types
 - `zod` ^3.23.0 - State schema validation
 
 **Future (Epic 4):**
+
 - `@langsmith/react` - Generative UI hooks (not needed for Story 2.2)
 
 **Anthropic Integration:**
+
 - `@anthropic-ai/sdk` ^0.71.2 - Claude API client (already in stack)
 - Environment variable: `ANTHROPIC_API_KEY` (configured in Railway)
 
 **Effect-ts (existing):**
+
 - `effect` ^3.19.15 - Effect.gen, Context.Tag, Layer
 - `@effect/schema` ^0.71.0 - Schema validation
 - `@effect/platform` ^0.94.2 - HTTP integration
 
 **Database (existing):**
+
 - `drizzle-orm` ^0.45.1 - Type-safe database access
 - PostgreSQL - Session, message persistence
 
 **Testing:**
+
 - `vitest` - Unit testing framework
 - `@vitest/coverage-v8` - Coverage reporting
 
@@ -491,7 +524,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
             // Invoke Nerin for first greeting
             const result = await graph.invoke(
               { sessionId: session.id, messages: [] },
-              { configurable: { thread_id: session.id } }
+              { configurable: { thread_id: session.id } },
             );
 
             const greeting = result.messages.at(-1).content;
@@ -504,7 +537,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
             });
 
             return { sessionId: session.id, createdAt: session.createdAt };
-          })
+          }),
         )
         .handle("sendMessage", ({ payload }) =>
           Effect.gen(function* () {
@@ -525,7 +558,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
                 messages: [new HumanMessage({ content: payload.message })],
                 precision: session.precision, // Pass current precision for context
               },
-              { configurable: { thread_id: payload.sessionId } }
+              { configurable: { thread_id: payload.sessionId } },
             );
 
             // Extract Nerin's response
@@ -551,9 +584,9 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
               },
               tokenCount, // For cost tracking (Story 2.5)
             };
-          })
+          }),
         );
-    })
+    }),
 );
 ```
 
@@ -565,7 +598,13 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 
 function AssessmentChat() {
   const sendMessage = useMutation({
-    mutationFn: async ({ sessionId, message }: { sessionId: string; message: string }) => {
+    mutationFn: async ({
+      sessionId,
+      message,
+    }: {
+      sessionId: string;
+      message: string;
+    }) => {
       const response = await fetch("/api/assessment/message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -618,6 +657,7 @@ for await (const chunk of stream) {
 - ✅ **No langgraph.json configuration** needed
 
 **Migration Path:**
+
 - **Story 2.2:** Nerin graph + basic handler integration
 - **Story 2.3:** Add Analyzer/Scorer nodes (still same handler pattern)
 - **Story 2.4:** Update graph routing logic (handler stays simple)
@@ -756,11 +796,11 @@ export default {
 
 **Implementation Timeline:**
 
-| Phase | Scope | Story |
-|-------|-------|-------|
-| **Story 2.2** | Backend only: Nerin text responses | This story |
-| **Story 2.4** | Backend orchestration: Routing logic | Future |
-| **Epic 4** | Frontend integration: useStream + Generative UI | Future |
+| Phase         | Scope                                           | Story      |
+| ------------- | ----------------------------------------------- | ---------- |
+| **Story 2.2** | Backend only: Nerin text responses              | This story |
+| **Story 2.4** | Backend orchestration: Routing logic            | Future     |
+| **Epic 4**    | Frontend integration: useStream + Generative UI | Future     |
 
 **Benefits:**
 
@@ -786,24 +826,29 @@ import { registry } from "@langchain/langgraph/zod";
 export const NerinStateSchema = z.object({
   sessionId: z.string(),
   messages: z.array(z.custom<BaseMessage>).register(registry, MessagesZodMeta),
-  precision: z.object({
-    openness: z.number().int().min(0).max(100),      // 60 means 60% confidence
-    conscientiousness: z.number().int().min(0).max(100),
-    extraversion: z.number().int().min(0).max(100),
-    agreeableness: z.number().int().min(0).max(100),
-    neuroticism: z.number().int().min(0).max(100),
-  }).optional(),
-  tokenCount: z.object({
-    input: z.number(),
-    output: z.number(),
-    total: z.number(),
-  }).optional(),
+  precision: z
+    .object({
+      openness: z.number().int().min(0).max(100), // 60 means 60% confidence
+      conscientiousness: z.number().int().min(0).max(100),
+      extraversion: z.number().int().min(0).max(100),
+      agreeableness: z.number().int().min(0).max(100),
+      neuroticism: z.number().int().min(0).max(100),
+    })
+    .optional(),
+  tokenCount: z
+    .object({
+      input: z.number(),
+      output: z.number(),
+      total: z.number(),
+    })
+    .optional(),
 });
 
 export type NerinState = z.infer<typeof NerinStateSchema>;
 ```
 
 **Message Structure:**
+
 ```typescript
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
@@ -837,18 +882,22 @@ export const NerinStateSchema = z.object({
   messages: z
     .array(z.custom<BaseMessage>())
     .register(registry, MessagesZodMeta),
-  precision: z.object({
-    openness: z.number().int().min(0).max(100).optional(),      // 60 = 60% confidence
-    conscientiousness: z.number().int().min(0).max(100).optional(),
-    extraversion: z.number().int().min(0).max(100).optional(),
-    agreeableness: z.number().int().min(0).max(100).optional(),
-    neuroticism: z.number().int().min(0).max(100).optional(),
-  }).optional(),
-  tokenCount: z.object({
-    input: z.number(),
-    output: z.number(),
-    total: z.number(),
-  }).optional(),
+  precision: z
+    .object({
+      openness: z.number().int().min(0).max(100).optional(), // 60 = 60% confidence
+      conscientiousness: z.number().int().min(0).max(100).optional(),
+      extraversion: z.number().int().min(0).max(100).optional(),
+      agreeableness: z.number().int().min(0).max(100).optional(),
+      neuroticism: z.number().int().min(0).max(100).optional(),
+    })
+    .optional(),
+  tokenCount: z
+    .object({
+      input: z.number(),
+      output: z.number(),
+      total: z.number(),
+    })
+    .optional(),
 });
 
 export type NerinState = z.infer<typeof NerinStateSchema>;
@@ -881,8 +930,9 @@ export async function nerinNode(state: NerinState) {
   // Prepare messages for Claude
   const messages = [
     { role: "system" as const, content: systemPrompt },
-    ...state.messages.map(msg => ({
-      role: msg._getType() === "human" ? "user" as const : "assistant" as const,
+    ...state.messages.map((msg) => ({
+      role:
+        msg._getType() === "human" ? ("user" as const) : ("assistant" as const),
       content: msg.content as string,
     })),
   ];
@@ -953,7 +1003,10 @@ Your conversation style:
 Your goal is to have a natural 30-minute conversation that helps them reflect on themselves.`;
 
   if (!precision) {
-    return basePrompt + "\n\nThis is the start of your conversation. Begin with a warm greeting.";
+    return (
+      basePrompt +
+      "\n\nThis is the start of your conversation. Begin with a warm greeting."
+    );
   }
 
   // Identify lowest precision trait for exploration guidance
@@ -963,18 +1016,23 @@ Your goal is to have a natural 30-minute conversation that helps them reflect on
     { name: "extraversion", score: precision.extraversion },
     { name: "agreeableness", score: precision.agreeableness },
     { name: "neuroticism", score: precision.neuroticism },
-  ].filter(t => t.score !== undefined);
+  ].filter((t) => t.score !== undefined);
 
   if (traits.length === 0) return basePrompt;
 
-  const lowestTrait = traits.reduce((min, t) => (t.score! < min.score! ? t : min));
+  const lowestTrait = traits.reduce((min, t) =>
+    t.score! < min.score! ? t : min,
+  );
 
-  return basePrompt + `
+  return (
+    basePrompt +
+    `
 
-Current assessment progress: You've learned about their ${traits.map(t => t.name).join(", ")}.
+Current assessment progress: You've learned about their ${traits.map((t) => t.name).join(", ")}.
 The least understood trait so far is ${lowestTrait.name} (${lowestTrait.score}% confidence).
 
-Consider gently exploring areas related to ${lowestTrait.name}, but keep the conversation natural—don't make it feel like an interrogation.`;
+Consider gently exploring areas related to ${lowestTrait.name}, but keep the conversation natural—don't make it feel like an interrogation.`
+  );
 }
 
 /**
@@ -984,7 +1042,8 @@ export function trackTokens(usageMetadata: any): TokenUsage {
   return {
     input: usageMetadata.input_tokens || 0,
     output: usageMetadata.output_tokens || 0,
-    total: (usageMetadata.input_tokens || 0) + (usageMetadata.output_tokens || 0),
+    total:
+      (usageMetadata.input_tokens || 0) + (usageMetadata.output_tokens || 0),
   };
 }
 
@@ -1067,7 +1126,7 @@ export interface StreamConfig {
 export async function streamNerinResponse(
   model: ChatAnthropic,
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
-  config: StreamConfig
+  config: StreamConfig,
 ): Promise<void> {
   const startTime = Date.now();
   let fullText = "";
@@ -1091,7 +1150,9 @@ export async function streamNerinResponse(
     }
 
     const latency = Date.now() - startTime;
-    console.log(`Nerin response completed in ${latency}ms (${tokenCount.total} tokens)`);
+    console.log(
+      `Nerin response completed in ${latency}ms (${tokenCount.total} tokens)`,
+    );
 
     config.onComplete(fullText, tokenCount);
   } catch (error) {
@@ -1133,7 +1194,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
                 sessionId: session.id,
                 messages: [], // Empty for first greeting
               },
-              { configurable: { thread_id: session.id } }
+              { configurable: { thread_id: session.id } },
             );
 
             const greeting = result.messages.at(-1).content as string;
@@ -1149,7 +1210,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
               sessionId: session.id,
               createdAt: session.createdAt,
             };
-          })
+          }),
         )
         .handle("sendMessage", ({ payload }) =>
           Effect.gen(function* () {
@@ -1170,7 +1231,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
                 messages: [new HumanMessage({ content: payload.message })],
                 precision: session.precision, // Pass precision for context
               },
-              { configurable: { thread_id: payload.sessionId } }
+              { configurable: { thread_id: payload.sessionId } },
             );
 
             // Extract response and metadata
@@ -1197,9 +1258,9 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
               },
               tokenCount, // For cost tracking (Story 2.5)
             };
-          })
+          }),
         );
-    })
+    }),
 );
 ```
 
@@ -1212,7 +1273,10 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
 ```typescript
 import { vi } from "vitest";
 
-export function mockAnthropicStream(responseText: string, tokens = { input: 100, output: 50 }) {
+export function mockAnthropicStream(
+  responseText: string,
+  tokens = { input: 100, output: 50 },
+) {
   const chunks = responseText.split(" ");
 
   return {
@@ -1319,6 +1383,7 @@ describe("Nerin Agent - Streaming", () => {
 ## Success Criteria
 
 **Dev Completion (definition of done):**
+
 - [ ] LangGraph StateGraph configured with NerinStateSchema
 - [ ] Nerin node implemented with Claude Sonnet 4.5
 - [ ] System prompt generates warm, context-aware messages
@@ -1331,6 +1396,7 @@ describe("Nerin Agent - Streaming", () => {
 - [ ] CI pipeline passes
 
 **Verification:**
+
 1. Run `pnpm --filter=api test` - all tests pass
 2. Start assessment → Nerin sends warm greeting
 3. Send message → Nerin responds with context awareness
@@ -1348,6 +1414,7 @@ describe("Nerin Agent - Streaming", () => {
 This story implements **Nerin**, the conversational agent that drives personality assessment through natural dialogue. Unlike traditional questionnaires, Nerin engages users in a 30-minute conversation that feels authentic and personalized.
 
 **Key Success Factors:**
+
 1. **Conversational Quality:** Nerin must feel warm, curious, and adaptive (not robotic)
 2. **Context Awareness:** References earlier conversation to demonstrate understanding
 3. **Cost Efficiency:** Token tracking ensures budget compliance ($0.15/assessment target)
@@ -1358,6 +1425,7 @@ This story implements **Nerin**, the conversational agent that drives personalit
 **Architecture Forward-Compatibility:**
 
 This story establishes the **LangGraph application structure** that enables:
+
 - **Story 2.4:** Multi-agent orchestration (Analyzer, Scorer) with conditional routing
 - **Epic 4:** Frontend streaming with `@langsmith/react` Generative UI hooks
 - **Phase 2:** Component streaming (precision charts, trait insights, suggestions)
@@ -1367,6 +1435,7 @@ By following [LangGraph best practices](https://docs.langchain.com/oss/javascrip
 ### Key Implementation Files
 
 **CREATE:**
+
 - `apps/api/src/agents/nerin/nerin-agent.ts` - Main Nerin agent with LangGraph
 - `apps/api/src/agents/nerin/system-prompt.ts` - Prompt generation
 - `apps/api/src/agents/nerin/context-builder.ts` - Context management
@@ -1375,12 +1444,14 @@ By following [LangGraph best practices](https://docs.langchain.com/oss/javascrip
 - `apps/api/src/agents/nerin/__tests__/` - Test files
 
 **UPDATE:**
+
 - `apps/api/src/handlers/assessment.ts` - Integrate Nerin into sendMessage handler
 - `CLAUDE.md` - Document Nerin patterns
 
 ### Development Checklist
 
 **Phase 1: Setup LangGraph Application (Red)**
+
 1. Create directory structure:
    ```bash
    mkdir -p apps/api/src/agents/nerin/utils
@@ -1398,12 +1469,14 @@ By following [LangGraph best practices](https://docs.langchain.com/oss/javascrip
 8. Create failing test: "should invoke graph and return response"
 
 **Phase 2: Implement Nerin Node (Green)**
+
 1. Create Nerin node function with Claude Sonnet 4.5
 2. Implement system prompt builder
 3. Add streaming response handler
 4. Pass test: Nerin node generates response
 
 **Phase 3: Token Tracking (Red → Green)**
+
 1. Write failing test: "should track tokens accurately"
 2. Implement trackTokens function
 3. Write failing test: "should calculate cost correctly"
@@ -1411,12 +1484,14 @@ By following [LangGraph best practices](https://docs.langchain.com/oss/javascrip
 5. Pass both tests
 
 **Phase 4: Integration (Green)**
+
 1. Update assessment handler to call Nerin
 2. Load session state from SessionRepository
 3. Save messages to MessageRepository
 4. Test end-to-end message flow
 
 **Phase 5: Testing & Refinement**
+
 1. Create mock Anthropic API
 2. Write tests for all scenarios
 3. Achieve 100% coverage
@@ -1438,6 +1513,7 @@ By following [LangGraph best practices](https://docs.langchain.com/oss/javascrip
 **TDD Red-Green-Refactor Cycle:**
 
 **Red Phase:**
+
 1. Write test: "Nerin greeting is warm and inviting"
 2. Write test: "Nerin references earlier conversation"
 3. Write test: "Token tracking is accurate"
@@ -1445,6 +1521,7 @@ By following [LangGraph best practices](https://docs.langchain.com/oss/javascrip
 5. Run tests → All fail (no implementation yet)
 
 **Green Phase:**
+
 1. Implement Nerin node with Claude API
 2. Implement system prompt builder
 3. Implement token tracker
@@ -1452,6 +1529,7 @@ By following [LangGraph best practices](https://docs.langchain.com/oss/javascrip
 5. Run tests → All pass
 
 **Refactor Phase:**
+
 1. Extract system prompt to separate module
 2. Simplify streaming handler
 3. Improve error handling
@@ -1465,18 +1543,21 @@ By following [LangGraph best practices](https://docs.langchain.com/oss/javascrip
 ### LangGraph Best Practices (2026-02-01)
 
 **StateGraph with PostgresSaver:**
+
 - Use `PostgresSaver.fromConnString()` for production persistence
 - Call `await checkpointer.setup()` once on startup
 - Thread ID maps to sessionId for conversation continuity
 - State persists automatically across invocations
 
 **Streaming with Anthropic:**
+
 - Use `streaming: true` in ChatAnthropic config
 - Stream returns async iterator of chunks
 - Token counts in final chunk's `usage_metadata`
 - Handle errors gracefully with try/catch
 
 **Best Practices:**
+
 - Keep nodes focused (single responsibility)
 - Use conditional edges for routing (Story 2.4)
 - State schema validation with Zod
@@ -1487,16 +1568,19 @@ By following [LangGraph best practices](https://docs.langchain.com/oss/javascrip
 **Model ID:** `claude-sonnet-4-5-20250929`
 
 **Pricing (as of 2026-02-01):**
+
 - Input: $0.003 per 1M tokens
 - Output: $0.015 per 1M tokens
 
 **Capabilities:**
+
 - Streaming support (token-by-token)
 - 200K context window
 - Excellent conversational quality
 - Fast response times (< 2 sec P95)
 
 **System Prompt Tips:**
+
 - Be specific about tone and style
 - Provide context about precision gaps
 - Avoid over-constraining (let Claude be creative)
@@ -1507,6 +1591,7 @@ By following [LangGraph best practices](https://docs.langchain.com/oss/javascrip
 **Target:** $0.15 per assessment (~500 assessments/day = $75 total)
 
 **Realistic Token Budget:**
+
 - System prompt: ~200 tokens (fixed overhead)
 - Average conversation: ~20 exchanges (user + assistant)
 - Context growth: ~50 tokens/message (conversation history accumulates)
@@ -1516,6 +1601,7 @@ By following [LangGraph best practices](https://docs.langchain.com/oss/javascrip
 - Cost per assessment: ~$0.05-0.10 (within budget, with margin)
 
 **Optimization Techniques:**
+
 - Batch Analyzer/Scorer calls (Story 2.3)
 - Skip analysis if precision high
 - Prompt compression (remove redundant context)
@@ -1554,6 +1640,7 @@ Successfully implemented Nerin conversational agent using LangGraph StateGraph w
 **Test Results:** All 102 tests pass
 
 **Deferred Items:**
+
 - P95 latency testing (requires production deployment)
 - API integration test (requires full stack running)
 - Latency tracking metrics (deferred to integration testing phase)
@@ -1561,13 +1648,15 @@ Successfully implemented Nerin conversational agent using LangGraph StateGraph w
 ### File List
 
 **Created (Hexagonal Architecture - Code Review Refactor 2026-02-01):**
+
 - `packages/domain/src/repositories/nerin-agent.repository.ts` - PORT: NerinAgentRepository interface (Context.Tag)
 - `packages/infrastructure/src/repositories/nerin-agent.langgraph.repository.ts` - ADAPTER: LangGraph implementation with PostgresSaver
 - `packages/contracts/src/errors.ts` - Added AgentInvocationError for agent failures (HTTP 503)
 
 **Modified (Hexagonal Architecture - Code Review Refactor 2026-02-01):**
+
 - `packages/domain/package.json` - Added @langchain/core and @workspace/contracts dependencies
-- `packages/infrastructure/package.json` - Added @langchain/* dependencies
+- `packages/infrastructure/package.json` - Added @langchain/\* dependencies
 - `packages/infrastructure/src/index.ts` - Export NerinAgentLangGraphRepositoryLive
 - `apps/api/src/use-cases/send-message.use-case.ts` - Pure Effect with NerinAgentRepository injection
 - `apps/api/src/index.ts` - Added NerinAgentLangGraphRepositoryLive to ServiceLayers
@@ -1576,6 +1665,7 @@ Successfully implemented Nerin conversational agent using LangGraph StateGraph w
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` - Updated story status
 
 **Removed (Dead code cleanup during code review):**
+
 - `apps/api/src/agents/nerin/` - Entire directory removed (old non-DI implementation)
 
 ---
@@ -1583,6 +1673,7 @@ Successfully implemented Nerin conversational agent using LangGraph StateGraph w
 ## References
 
 **LangGraph Documentation:**
+
 - [LangGraph Application Structure](https://docs.langchain.com/oss/javascript/langgraph/application-structure) - Directory layout, state management, deployment
 - [LangGraph StateGraph API](https://docs.langchain.com/oss/javascript/langgraph) - Core graph construction patterns
 - [LangGraph PostgresSaver](https://docs.langchain.com/oss/javascript/langgraph/add-memory) - State persistence with checkpointer
@@ -1590,10 +1681,12 @@ Successfully implemented Nerin conversational agent using LangGraph StateGraph w
 - [LangSmith Generative UI React](https://docs.langchain.com/langsmith/generative-ui-react) - Streaming UI components
 
 **Anthropic Documentation:**
+
 - [Anthropic API - Streaming](https://docs.anthropic.com/claude/reference/streaming) - Token-by-token response streaming
 - [Claude Sonnet 4.5 Pricing](https://www.anthropic.com/pricing) - Current token pricing
 
 **Internal Documentation:**
+
 - [Story 2-1 - Session Management](file:///Users/vincentlay/Projects/big-ocean/_bmad-output/implementation-artifacts/2-1-session-management-and-persistence.md) - Repository patterns
 - [Story 2-0.5 - Effect-Based DI](file:///Users/vincentlay/Projects/big-ocean/_bmad-output/implementation-artifacts/2-0.5-effect-based-dependency-injection-refactoring.md) - Service composition
 - [Epic 2 Architecture - ADR-1](file:///Users/vincentlay/Projects/big-ocean/_bmad-output/planning-artifacts/architecture.md#ADR-1-Nerin-Orchestration-Strategy) - Orchestration strategy
@@ -1603,17 +1696,20 @@ Successfully implemented Nerin conversational agent using LangGraph StateGraph w
 ## Related Stories & Dependencies
 
 **Depends on (must be done first):**
+
 - Story 2-1: Session Management & Persistence ✅ (session/message repositories)
 - Story 2-0.5: Effect-Based DI Refactoring ✅ (service patterns)
 - Story 1-6: Migrate to Effect/Platform HTTP ✅ (HTTP handlers)
 - Story 7.1: Unit Testing Framework ✅ (vitest setup)
 
 **Enables (unblocks):**
+
 - Story 2-3: Analyzer and Scorer Agent (uses Nerin responses for analysis)
 - Story 2-4: LangGraph Orchestration (integrates Nerin with Analyzer/Scorer)
 - Story 2-5: Cost Tracking (uses token counts from Nerin)
 
 **Parallel work:**
+
 - Story 2-3 can start design while 2-2 is in implementation
 - Frontend UI (Epic 4) can design conversation component in parallel
 

@@ -1,10 +1,10 @@
 ---
-name: 'step-05-adversarial-review'
-description: 'Construct diff and invoke adversarial review task'
+name: "step-05-adversarial-review"
+description: "Construct diff and invoke adversarial review task"
 
-workflow_path: '{project-root}/_bmad/bmm/workflows/bmad-quick-flow/quick-dev'
-thisStepFile: './step-05-adversarial-review.md'
-nextStepFile: './step-06-resolve-findings.md'
+workflow_path: "{project-root}/_bmad/bmm/workflows/bmad-quick-flow/quick-dev"
+thisStepFile: "./step-05-adversarial-review.md"
+nextStepFile: "./step-06-resolve-findings.md"
 ---
 
 # Step 5: Adversarial Code Review

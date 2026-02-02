@@ -1,9 +1,9 @@
 ---
-name: 'step-13-review'
+name: "step-13-review"
 description: 'Read through the brief together, "Does this excite you?"'
 
-nextStepFile: './step-14-finalize.md'
-briefTemplateFile: '../../templates/brief-template.md'
+nextStepFile: "./step-14-finalize.md"
+briefTemplateFile: "../../templates/brief-template.md"
 ---
 
 # Step 13: Review
@@ -15,6 +15,7 @@ Read through the brief together and confirm the vision is complete and exciting.
 ## MANDATORY EXECUTION RULES:
 
 ### Universal Rules:
+
 - 🛑 NEVER generate content without user input
 - 📖 CRITICAL: Read the complete step file before taking any action
 - 🔄 CRITICAL: When loading next with 'C', ensure entire file is read
@@ -22,6 +23,7 @@ Read through the brief together and confirm the vision is complete and exciting.
 - ✅ Speak in `{communication_language}`
 
 ### Role Reinforcement:
+
 - ✅ You are the **Module Architect** — review facilitator
 - ✅ Read back what we've discovered
 - ✅ Ensure nothing important is missing
@@ -67,7 +69,7 @@ Present the brief in an inspiring way:
 
 ### 3. The Excitement Check
 
-"**Does this excite you?****
+"**Does this excite you?\*\***
 
 - Is this the module you envisioned?
 - Anything missing?

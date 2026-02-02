@@ -9,24 +9,29 @@ Always use Context7 MCP when I need library/API documentation, code generation, 
 ## Table of Contents
 
 ### 🚀 Quick Start
+
 - [Repository Overview](#repository-overview)
 - [Common Commands](#common-commands)
 
 ### 📚 Core Documentation
+
 - [Architecture & Key Patterns](#architecture--key-patterns) → [ARCHITECTURE.md](./docs/ARCHITECTURE.md)
 - [Completed Stories](#completed-stories-) → [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md)
 - [Tech Stack Summary](#tech-stack-summary)
 - [Key Dependencies & Versions](#key-dependencies--versions)
 
 ### ⚙️ Development Setup
+
 - [Monorepo Structure](#monorepo-structure)
 - [Common Commands](#common-commands) → [COMMANDS.md](./docs/COMMANDS.md)
 - [Git Hooks](#git-hooks-local-enforcement)
 
 ### 🚢 Production & Deployment
+
 - [Production Deployment](#production-deployment-story-13-) → [DEPLOYMENT.md](./docs/DEPLOYMENT.md)
 
 ### 📋 Conventions & Workflows
+
 - [Git Conventions](#git-conventions) → [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md)
 - [Linting & Code Quality](#linting--code-quality)
 - [Adding New Packages or Apps](#adding-new-packages-or-apps)
@@ -137,6 +142,7 @@ pnpm lint                   # Lint all packages
 For complete command reference, see [COMMANDS.md](./docs/COMMANDS.md).
 
 **Key Commands:**
+
 - `pnpm dev --filter=front` - Frontend only (TanStack Start, port 3000)
 - `pnpm dev --filter=api` - Backend only (Node.js, port 4000)
 - `pnpm build` - Build all packages
@@ -148,16 +154,19 @@ For complete command reference, see [COMMANDS.md](./docs/COMMANDS.md).
 Git hooks ensure code quality before commits and pushes:
 
 **Pre-push hook** (runs before `git push`):
+
 - Lint check (`pnpm lint`)
 - TypeScript check (`pnpm turbo lint`)
 - Test suite (`pnpm test:run`)
 - Blocks push if any check fails
 
 **Commit-msg hook** (validates commit messages):
+
 - Requires [conventional commit format](#commit-message-format)
 - Allowed types: `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `perf`, `style`, `build`, `revert`
 
 **Bypass hooks (use sparingly):**
+
 ```bash
 git commit --no-verify   # Skip commit-msg hook
 git push --no-verify     # Skip pre-push hook
@@ -189,14 +198,14 @@ Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
 
 **Naming Conventions:**
 
-| Component | Location | Example | Notes |
-|-----------|----------|---------|-------|
-| Repository Interface | `packages/domain/src/repositories/` | `assessment-message.repository.ts` | Context.Tag definition |
+| Component                 | Location                                    | Example                                    | Notes                       |
+| ------------------------- | ------------------------------------------- | ------------------------------------------ | --------------------------- |
+| Repository Interface      | `packages/domain/src/repositories/`         | `assessment-message.repository.ts`         | Context.Tag definition      |
 | Repository Implementation | `packages/infrastructure/src/repositories/` | `assessment-message.drizzle.repository.ts` | Layer.effect implementation |
-| Live Layer Export | Same as implementation | `AssessmentMessageDrizzleRepositoryLive` | Production Layer |
-| Test Layer Export | Test files | `AssessmentMessageTestRepositoryLive` | Testing Layer |
-| Use-Case | `apps/api/src/use-cases/` | `send-message.use-case.ts` | Pure business logic |
-| Handler | `apps/api/src/handlers/` | `assessment.ts` | HTTP adapter |
+| Live Layer Export         | Same as implementation                      | `AssessmentMessageDrizzleRepositoryLive`   | Production Layer            |
+| Test Layer Export         | Test files                                  | `AssessmentMessageTestRepositoryLive`      | Testing Layer               |
+| Use-Case                  | `apps/api/src/use-cases/`                   | `send-message.use-case.ts`                 | Pure business logic         |
+| Handler                   | `apps/api/src/handlers/`                    | `assessment.ts`                            | HTTP adapter                |
 
 **Example Use-Case Pattern:**
 
@@ -208,7 +217,7 @@ import { AssessmentMessageRepository } from "@workspace/domain/repositories/asse
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 
 export const sendMessage = (
-  input: SendMessageInput
+  input: SendMessageInput,
 ): Effect.Effect<
   SendMessageOutput,
   DatabaseError | SessionNotFound,
@@ -237,16 +246,18 @@ export const sendMessage = (
 const TestLayer = Layer.mergeAll(
   Layer.succeed(AssessmentSessionRepository, TestSessionRepo),
   Layer.succeed(AssessmentMessageRepository, TestMessageRepo),
-  Layer.succeed(LoggerRepository, TestLogger)
+  Layer.succeed(LoggerRepository, TestLogger),
 );
 
 const result = await Effect.runPromise(
-  sendMessage({ sessionId: "test", message: "Hello" })
-    .pipe(Effect.provide(TestLayer))
+  sendMessage({ sessionId: "test", message: "Hello" }).pipe(
+    Effect.provide(TestLayer),
+  ),
 );
 ```
 
 **Key Benefits:**
+
 - **Testability**: Use-cases tested in isolation with test implementations
 - **Flexibility**: Swap implementations without changing business logic
 - **Clarity**: Each layer has single responsibility
@@ -305,23 +316,23 @@ The `@workspace/contracts` package defines type-safe HTTP API contracts using @e
 **HTTP Contract Structure** (in `packages/contracts/src/http/groups/assessment.ts`):
 
 ```typescript
-import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform"
-import { Schema as S } from "effect"
+import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
+import { Schema as S } from "effect";
 
 // Request/Response schemas
 export const StartAssessmentRequestSchema = S.Struct({
   userId: S.optional(S.String),
-})
+});
 
 export const StartAssessmentResponseSchema = S.Struct({
   sessionId: S.String,
   createdAt: S.DateTimeUtc,
-})
+});
 
 export const SendMessageRequestSchema = S.Struct({
   sessionId: S.String,
   message: S.String,
-})
+});
 
 export const SendMessageResponseSchema = S.Struct({
   response: S.String,
@@ -332,30 +343,30 @@ export const SendMessageResponseSchema = S.Struct({
     agreeableness: S.Number,
     neuroticism: S.Number,
   }),
-})
+});
 
 // HTTP API Group combines endpoints
 export const AssessmentGroup = HttpApiGroup.make("assessment")
   .add(
     HttpApiEndpoint.post("start", "/start")
       .addSuccess(StartAssessmentResponseSchema)
-      .setPayload(StartAssessmentRequestSchema)
+      .setPayload(StartAssessmentRequestSchema),
   )
   .add(
     HttpApiEndpoint.post("sendMessage", "/message")
       .addSuccess(SendMessageResponseSchema)
-      .setPayload(SendMessageRequestSchema)
+      .setPayload(SendMessageRequestSchema),
   )
-  .prefix("/assessment")
+  .prefix("/assessment");
 ```
 
 **Handler Implementation** (in `apps/api/src/handlers/assessment.ts`):
 
 ```typescript
-import { HttpApiBuilder } from "@effect/platform"
-import { DateTime, Effect } from "effect"
-import { BigOceanApi } from "@workspace/contracts"
-import { LoggerService } from "../services/logger.js"
+import { HttpApiBuilder } from "@effect/platform";
+import { DateTime, Effect } from "effect";
+import { BigOceanApi } from "@workspace/contracts";
+import { LoggerService } from "../services/logger.js";
 
 // Handlers use HttpApiBuilder.group pattern
 export const AssessmentGroupLive = HttpApiBuilder.group(
@@ -366,27 +377,27 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
       return handlers
         .handle("start", ({ payload }) =>
           Effect.gen(function* () {
-            const logger = yield* LoggerService
+            const logger = yield* LoggerService;
 
-            const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`
-            const createdAt = DateTime.unsafeMake(Date.now())
+            const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+            const createdAt = DateTime.unsafeMake(Date.now());
 
             logger.info("Assessment session started", {
               sessionId,
               userId: payload.userId,
-            })
+            });
 
-            return { sessionId, createdAt }
-          })
+            return { sessionId, createdAt };
+          }),
         )
         .handle("sendMessage", ({ payload }) =>
           Effect.gen(function* () {
-            const logger = yield* LoggerService
+            const logger = yield* LoggerService;
 
             logger.info("Message received", {
               sessionId: payload.sessionId,
               messageLength: payload.message.length,
-            })
+            });
 
             // Placeholder response (real Nerin logic in Epic 2)
             return {
@@ -398,76 +409,76 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
                 agreeableness: 0.7,
                 neuroticism: 0.3,
               },
-            }
-          })
-        )
-    })
-)
+            };
+          }),
+        );
+    }),
+);
 ```
 
 **Server Setup** (in `apps/api/src/index.ts`):
 
 ```typescript
-import { Effect, Layer } from "effect"
-import { HttpApiBuilder, HttpMiddleware } from "@effect/platform"
-import { NodeHttpServer, NodeRuntime } from "@effect/platform-node"
-import { createServer } from "node:http"
-import { BigOceanApi } from "@workspace/contracts"
-import { HealthGroupLive } from "./handlers/health.js"
-import { AssessmentGroupLive } from "./handlers/assessment.js"
-import { LoggerServiceLive } from "./services/logger.js"
-import { betterAuthHandler } from "./middleware/better-auth.js"
+import { Effect, Layer } from "effect";
+import { HttpApiBuilder, HttpMiddleware } from "@effect/platform";
+import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
+import { createServer } from "node:http";
+import { BigOceanApi } from "@workspace/contracts";
+import { HealthGroupLive } from "./handlers/health.js";
+import { AssessmentGroupLive } from "./handlers/assessment.js";
+import { LoggerServiceLive } from "./services/logger.js";
+import { betterAuthHandler } from "./middleware/better-auth.js";
 
 // Merge all handler groups with services
 const HttpGroupsLive = Layer.mergeAll(
   HealthGroupLive,
   AssessmentGroupLive,
-  LoggerServiceLive
-)
+  LoggerServiceLive,
+);
 
 // Build API from contracts with handlers
 const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(
-  Layer.provide(HttpGroupsLive)
-)
+  Layer.provide(HttpGroupsLive),
+);
 
 // Complete API with router and middleware
 const ApiLayer = Layer.mergeAll(
   ApiLive,
   HttpApiBuilder.Router.Live,
-  HttpApiBuilder.Middleware.layer
-)
+  HttpApiBuilder.Middleware.layer,
+);
 
 // Hybrid server: Better Auth (node:http) → Effect (remaining routes)
 const createCustomServer = () => {
-  const server = createServer()
-  let effectHandler: any = null
+  const server = createServer();
+  let effectHandler: any = null;
 
   server.on("newListener", (event, listener) => {
     if (event === "request") {
-      effectHandler = listener
-      server.removeListener("request", listener as any)
+      effectHandler = listener;
+      server.removeListener("request", listener as any);
     }
-  })
+  });
 
   server.on("request", async (req, res) => {
-    await betterAuthHandler(req, res)
+    await betterAuthHandler(req, res);
     if (!res.writableEnded && effectHandler) {
-      effectHandler(req, res)
+      effectHandler(req, res);
     }
-  })
+  });
 
-  return server
-}
+  return server;
+};
 
 // HTTP Server with Better Auth integration
 const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
   Layer.provide(ApiLayer),
   Layer.provide(NodeHttpServer.layer(createCustomServer, { port: 4000 })),
-  Layer.provide(LoggerServiceLive)
-)
+  Layer.provide(LoggerServiceLive),
+);
 
 // Launch server
-NodeRuntime.runMain(Layer.launch(HttpLive))
+NodeRuntime.runMain(Layer.launch(HttpLive));
 ```
 
 ### Multi-Agent System (LangGraph)
@@ -564,7 +575,7 @@ FiberRef enables request-scoped context without prop drilling. Handlers access s
 
 **Define a FiberRef Bridge** (in `packages/infrastructure/src/context/logger.ts`):
 
-```typescript
+````typescript
 import { FiberRef, Effect } from "effect";
 
 **Key Principles:**
@@ -666,7 +677,7 @@ pnpm dlx shadcn@latest add [component-name] -c apps/front
 
 # Then move generated files from apps/front to packages/ui/src/components/
 # and export from packages/ui/src/index.ts
-```
+````
 
 Components are imported across apps as:
 
@@ -677,16 +688,19 @@ import { Button } from "@workspace/ui/components/button";
 ## Key Dependencies & Versions
 
 **Requirements:**
+
 - Node.js >= 20
 - pnpm 10.4.1
 - TypeScript 5.7.3+
 
 **Frontend Stack:**
+
 - React 19, TanStack Start, TanStack Router, TanStack Query, TanStack Form
 - ElectricSQL, Tailwind CSS 4+, shadcn/ui
 - Effect for error handling
 
 **Backend Stack:**
+
 - Effect, @effect/platform (HTTP contracts)
 - @effect/schema (runtime validation)
 - LangGraph + Anthropic SDK (multi-agent AI)
@@ -705,6 +719,7 @@ See [ARCHITECTURE.md](./docs/ARCHITECTURE.md#catalog-dependencies) for the compl
 Branch naming, commit messages, and component naming follow consistent patterns.
 
 See [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) for:
+
 - Branch naming format (`feat/story-{epic-num}-{story-num}-{slug}`)
 - Commit message format with examples
 - Component naming conventions

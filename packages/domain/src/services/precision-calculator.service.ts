@@ -20,7 +20,7 @@ import { BIG_FIVE_TRAITS } from "../types/trait.js";
  * @returns Computed trait-level precision scores (Big Five)
  */
 export const calculateTraitPrecision = (
-  facetPrecision: FacetPrecisionScores
+  facetPrecision: FacetPrecisionScores,
 ): TraitPrecisionScores => {
   const result: Partial<TraitPrecisionScores> = {};
 
@@ -48,7 +48,7 @@ export const calculateTraitPrecision = (
  */
 export const calculateWeightedAverage = (
   facetScores: number[],
-  weights?: number[]
+  weights?: number[],
 ): number => {
   if (facetScores.length === 0) return 0;
 
@@ -78,7 +78,7 @@ export const calculateWeightedAverage = (
  * @returns New FacetPrecisionScores object with all facets set to baseline
  */
 export const initializeFacetPrecision = (
-  baseline: number = 0.5
+  baseline: number = 0.5,
 ): FacetPrecisionScores => {
   const facets: Array<keyof FacetPrecisionScores> = [
     // Openness
@@ -138,7 +138,7 @@ export const initializeFacetPrecision = (
 export const updateFacetPrecision = (
   facetPrecision: FacetPrecisionScores,
   facet: keyof FacetPrecisionScores,
-  newScore: number
+  newScore: number,
 ): FacetPrecisionScores => {
   // Clamp score to [0, 1]
   const clampedScore = Math.max(0, Math.min(1, newScore));
@@ -161,7 +161,7 @@ export const updateFacetPrecision = (
 export const mergePrecisionScores = (
   current: FacetPrecisionScores,
   update: Partial<FacetPrecisionScores>,
-  weight: number = 0.5
+  weight: number = 0.5,
 ): FacetPrecisionScores => {
   const clampedWeight = Math.max(0, Math.min(1, weight));
   const result: Partial<FacetPrecisionScores> = {};

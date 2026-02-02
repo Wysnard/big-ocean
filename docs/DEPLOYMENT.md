@@ -22,13 +22,13 @@ The API is deployed to Railway with automatic CI/CD integration.
 
 Configure these in the Railway dashboard:
 
-| Variable | Value | Notes |
-|----------|-------|-------|
-| `PORT` | `8080` | Railway default |
-| `HOST` | `0.0.0.0` | Listen on all interfaces |
-| `ANTHROPIC_API_KEY` | `sk-...` | Claude API key |
-| `DATABASE_URL` | PostgreSQL connection | Set in Railway |
-| `REDIS_URL` | Redis connection | Set in Railway |
+| Variable            | Value                 | Notes                    |
+| ------------------- | --------------------- | ------------------------ |
+| `PORT`              | `8080`                | Railway default          |
+| `HOST`              | `0.0.0.0`             | Listen on all interfaces |
+| `ANTHROPIC_API_KEY` | `sk-...`              | Claude API key           |
+| `DATABASE_URL`      | PostgreSQL connection | Set in Railway           |
+| `REDIS_URL`         | Redis connection      | Set in Railway           |
 
 ## Docker Best Practices
 

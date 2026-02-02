@@ -88,6 +88,15 @@ export const RedisIoRedisRepositoryLive = Layer.effect(
             ),
         }),
 
+      ttl: (key: string) =>
+        Effect.tryPromise({
+          try: () => redis.ttl(key),
+          catch: (error) =>
+            new RedisOperationError(
+              `TTL failed for key ${key}: ${error instanceof Error ? error.message : String(error)}`,
+            ),
+        }),
+
       ping: () =>
         Effect.tryPromise({
           try: async () => {
@@ -143,6 +152,14 @@ export const createTestRedisRepository = () => {
           return 1;
         }
         return 0;
+      }),
+
+    ttl: (key: string) =>
+      Effect.sync(() => {
+        if (!store.has(key)) {
+          return -2; // Key doesn't exist
+        }
+        return ttls.get(key) ?? -1; // -1 if no expiration
       }),
 
     ping: () => Effect.succeed(true),

@@ -1,18 +1,18 @@
 ---
-name: 'step-04-installer'
-description: 'Setup _module-installer folder and installer.js'
+name: "step-04-installer"
+description: "Setup _module-installer folder and installer.js"
 
-nextStepFile: './step-05-agents.md'
-moduleInstallerStandardsFile: '../../data/module-installer-standards.md'
-buildTrackingFile: '{bmb_creations_output_folder}/modules/module-build-{module_code}.md'
-targetLocation: '{build_tracking_targetLocation}'
+nextStepFile: "./step-05-agents.md"
+moduleInstallerStandardsFile: "../../data/module-installer-standards.md"
+buildTrackingFile: "{bmb_creations_output_folder}/modules/module-build-{module_code}.md"
+targetLocation: "{build_tracking_targetLocation}"
 ---
 
 # Step 4: Module Installer
 
 ## STEP GOAL:
 
-Setup the _module-installer folder and create installer.js if needed.
+Setup the \_module-installer folder and create installer.js if needed.
 
 ## MANDATORY EXECUTION RULES:
 
@@ -41,6 +41,7 @@ Load `{moduleInstallerStandardsFile}` and ask:
 "**Does your module need an installer?**"
 
 Installers are needed when:
+
 - Creating directories from config variables
 - Copying template/assets
 - IDE-specific configuration
@@ -66,10 +67,12 @@ Skip to step 5. Folder structure already exists.
 Create `{targetLocation}/_module-installer/installer.js`:
 
 ```javascript
-const fs = require('fs-extra');
-const path = require('node:path');
-const chalk = require('chalk');
-const platformCodes = require(path.join(__dirname, '../../../../tools/cli/lib/platform-codes'));
+const fs = require("fs-extra");
+const path = require("node:path");
+const chalk = require("chalk");
+const platformCodes = require(
+  path.join(__dirname, "../../../../tools/cli/lib/platform-codes"),
+);
 
 /**
  * {module_name} Module Installer
@@ -78,11 +81,14 @@ async function install(options) {
   const { projectRoot, config, installedIDEs, logger } = options;
 
   try {
-    logger.log(chalk.blue('Installing {module_name}...'));
+    logger.log(chalk.blue("Installing {module_name}..."));
 
     // Create directories
-    if (config['{variable_name}']) {
-      const dirConfig = config['{variable_name}'].replace('{project-root}/', '');
+    if (config["{variable_name}"]) {
+      const dirConfig = config["{variable_name}"].replace(
+        "{project-root}/",
+        "",
+      );
       const dirPath = path.join(projectRoot, dirConfig);
       if (!(await fs.pathExists(dirPath))) {
         logger.log(chalk.yellow(`Creating directory: ${dirConfig}`));
@@ -97,7 +103,7 @@ async function install(options) {
       }
     }
 
-    logger.log(chalk.green('✓ {module_name} installation complete'));
+    logger.log(chalk.green("✓ {module_name} installation complete"));
     return true;
   } catch (error) {
     logger.error(chalk.red(`Error installing module: ${error.message}`));
@@ -111,17 +117,23 @@ async function configureForIDE(ide, projectRoot, config, logger) {
     return;
   }
 
-  const platformSpecificPath = path.join(__dirname, 'platform-specifics', `${ide}.js`);
+  const platformSpecificPath = path.join(
+    __dirname,
+    "platform-specifics",
+    `${ide}.js`,
+  );
 
   try {
     if (await fs.pathExists(platformSpecificPath)) {
       const platformHandler = require(platformSpecificPath);
-      if (typeof platformHandler.install === 'function') {
+      if (typeof platformHandler.install === "function") {
         await platformHandler.install({ projectRoot, config, logger });
       }
     }
   } catch (error) {
-    logger.warn(chalk.yellow(`Warning: Could not configure ${ide}: ${error.message}`));
+    logger.warn(
+      chalk.yellow(`Warning: Could not configure ${ide}: ${error.message}`),
+    );
   }
 }
 
@@ -133,6 +145,7 @@ Customize based on module requirements.
 ### 4. Platform-Specific Handlers (Optional)
 
 If IDE-specific setup needed, ask which IDEs and create:
+
 - `{targetLocation}/_module-installer/platform-specifics/claude-code.js`
 - `{targetLocation}/_module-installer/platform-specifics/windsurf.js`
 - etc.
@@ -140,6 +153,7 @@ If IDE-specific setup needed, ask which IDEs and create:
 ### 5. Update Build Tracking
 
 Update `{buildTrackingFile}`:
+
 - Add 'step-04-installer' to stepsCompleted
 - Note: installer created or skipped
 

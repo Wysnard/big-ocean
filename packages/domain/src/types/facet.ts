@@ -123,7 +123,10 @@ export interface FacetPrecisionScores {
  * Mapping from Big Five traits to their component facets.
  * Scores are ALWAYS stored on facets. Trait scores are ALWAYS computed from facet scores.
  */
-export const FACETS_BY_TRAIT: Record<BigFiveTrait, Array<keyof FacetPrecisionScores>> = {
+export const FACETS_BY_TRAIT: Record<
+  BigFiveTrait,
+  Array<keyof FacetPrecisionScores>
+> = {
   openness: [
     "imagination",
     "artistic_interests",

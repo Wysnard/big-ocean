@@ -157,12 +157,14 @@ For a fully containerized development environment with exact production parity:
 ```
 
 This starts:
+
 - **Frontend**: http://localhost:3000 (TanStack Start with Vite HMR)
 - **Backend API**: http://localhost:4000 (Effect-ts RPC + health check)
 - **PostgreSQL**: localhost:5432 (development database)
 - **Redis**: localhost:6379 (cache and rate limiting)
 
 **Features**:
+
 - Hot reload on code changes (tsx watch for backend, Vite HMR for frontend)
 - Full production parity (same versions, same architecture)
 - No local dependencies needed (Node, pnpm, PostgreSQL all in Docker)
@@ -185,12 +187,14 @@ This starts:
 - **web** (Next.js): http://127.0.0.1:3001
 
 The **front** app includes:
+
 - Interactive therapist chat interface at `/chat`
 - Real-time personality trait visualization
 - Streaming responses from Claude
 - Session management with automatic redirect
 
 **Prerequisites for local development**:
+
 - PostgreSQL 16+ running locally
 - Redis running locally
 - All node_modules installed locally
@@ -215,6 +219,7 @@ The API is built with Effect-ts and @effect/rpc, providing type-safe RPC endpoin
 ### Production Deployment
 
 The API is deployed on Railway at:
+
 - **Base URL**: https://api-production-f7de.up.railway.app
 - **Health Check**: GET `/health` → `{"status":"ok"}`
 - **RPC Endpoint**: POST `/rpc` (NDJSON serialization)
@@ -269,7 +274,7 @@ Response:
   "precision": {
     "openness": 0.75,
     "conscientiousness": 0.82,
-    "extraversion": 0.60,
+    "extraversion": 0.6,
     "agreeableness": 0.88,
     "neuroticism": 0.45
   }
@@ -379,6 +384,7 @@ Runs on http://127.0.0.1:6006
 - **Railway Deployment**: Docker containerization with health checks
 
 Production endpoints:
+
 - Health: GET `/health` → `{"status":"ok"}`
 - RPC: POST `/rpc` with NDJSON serialization
 
@@ -392,11 +398,13 @@ The therapist assessment feature uses:
 - **Tool Calling**: `recordAssessment` tool for tracking personality trait scores
 
 The assessment maintains conversation state across turns, preserving:
+
 - Full message history
 - Current personality trait scores (0-20 scale per OCEAN)
 - Precision/confidence scores for each trait (0-100%)
 
 Each user message triggers a graph execution that:
+
 1. Continues the conversation with full context
 2. Updates trait assessments via tool calls
 3. Returns streaming responses to the client
@@ -420,6 +428,7 @@ const handler = Effect.gen(function* () {
 ```
 
 Services are injected via Effect Layers:
+
 - **DatabaseRef**: Drizzle ORM database connection
 - **LoggerRef**: Winston logger instance
 - **CostGuardRef**: LLM cost tracking and rate limiting
@@ -427,6 +436,7 @@ Services are injected via Effect Layers:
 ### Logging Infrastructure
 
 The API uses Winston for structured logging with multiple levels:
+
 - Effect-ts RPC procedure logging
 - Business logic logging via FiberRef-injected logger
 - LLM-specific logging for assessment events
@@ -466,6 +476,7 @@ Both frontend apps use Tailwind CSS v4 with the UI package's CSS variables for c
 ### Frontend Architecture
 
 **TanStack Start** (apps/front):
+
 - Full-stack SSR with React 19
 - File-based routing with TanStack Router
 - Server Actions for data mutations
@@ -474,6 +485,7 @@ Both frontend apps use Tailwind CSS v4 with the UI package's CSS variables for c
 - ElectricSQL + TanStack DB for reactive state
 
 **Next.js** (apps/web):
+
 - Server-side rendering
 - API routes
 - shadcn/ui components
@@ -492,12 +504,14 @@ If you encounter errors when using the therapist chat:
 ### Recursion Limit Errors
 
 If you see "Recursion limit reached" errors:
+
 - This has been fixed by ensuring the LangGraph properly ends each conversation turn
 - If it persists, check the `shouldContinue` function in `apps/api/src/llm/therapist.ts`
 
 ### Session Issues
 
 If the chat doesn't load or redirects constantly:
+
 - Clear browser localStorage
 - Check browser console for errors
 - Verify the session is created successfully in the API logs

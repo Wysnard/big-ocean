@@ -1,12 +1,12 @@
 ---
-name: 'step-06-build-expert'
-description: 'Generate Expert agent YAML with sidecar from plan'
+name: "step-06-build-expert"
+description: "Generate Expert agent YAML with sidecar from plan"
 
 # File References
-nextStepFile: './step-08-celebrate.md'
-agentPlan: '{bmb_creations_output_folder}/agent-plan-{agent_name}.md'
-agentBuildOutput: '{bmb_creations_output_folder}/{agent-name}/'
-agentYamlOutput: '{bmb_creations_output_folder}/{agent-name}/{agent-name}.agent.yaml'
+nextStepFile: "./step-08-celebrate.md"
+agentPlan: "{bmb_creations_output_folder}/agent-plan-{agent_name}.md"
+agentBuildOutput: "{bmb_creations_output_folder}/{agent-name}/"
+agentYamlOutput: "{bmb_creations_output_folder}/{agent-name}/{agent-name}.agent.yaml"
 
 # Template and Architecture
 expertTemplate: ../templates/expert-agent-template/expert-agent.template.md
@@ -15,8 +15,8 @@ agentCompilation: ../data/agent-compilation.md
 criticalActions: ../data/critical-actions.md
 
 # Task References
-advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'
-partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
+advancedElicitationTask: "{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml"
+partyModeWorkflow: "{project-root}/_bmad/core/workflows/party-mode/workflow.md"
 ---
 
 # STEP GOAL
@@ -35,12 +35,14 @@ Assemble the agent plan content into a complete Expert agent YAML file with side
 ## EXECUTION PROTOCOLS
 
 ### Phase 1: Load Architecture and Templates
+
 1. Read `expertTemplate` - defines YAML structure for Expert agents
 2. Read `expertArch` - architecture requirements for Expert-level agents
 3. Read `agentCompilation` - assembly rules for YAML generation
 4. Read `criticalActions` - validation requirements for critical_actions
 
 ### Phase 2: Load Agent Plan
+
 1. Read `agentPlan` containing all collected content from Steps 1-5
 2. Verify plan contains:
    - Agent type: "expert"
@@ -50,15 +52,16 @@ Assemble the agent plan content into a complete Expert agent YAML file with side
    - Critical actions (if applicable)
 
 ### Phase 3: Assemble Expert YAML
+
 Using expertTemplate as structure:
 
 ```yaml
-name: '{agent-name}'
-description: '{short-description}'
+name: "{agent-name}"
+description: "{short-description}"
 
 author:
-  name: '{author}'
-  created: '{date}'
+  name: "{author}"
+  created: "{date}"
 
 persona: |
   {multi-line persona content from plan}
@@ -67,42 +70,42 @@ system-context: |
   {expanded context from plan}
 
 capabilities:
-  - {capability from plan}
-  - {capability from plan}
+  - { capability from plan }
+  - { capability from plan }
   # ... all capabilities
 
 critical-actions:
-  - name: '{action-name}'
-    description: '{what it does}'
-    invocation: '{when/how to invoke}'
+  - name: "{action-name}"
+    description: "{what it does}"
+    invocation: "{when/how to invoke}"
     implementation: |
       {multi-line implementation}
-    output: '{expected-output}'
-    sidecar-folder: '{sidecar-folder-name}'
+    output: "{expected-output}"
+    sidecar-folder: "{sidecar-folder-name}"
     sidecar-files:
-      - '{project-root}/_bmad/_memory/{sidecar-folder}/{file1}.md'
-      - '{project-root}/_bmad/_memory/{sidecar-folder}/{file2}.md'
+      - "{project-root}/_bmad/_memory/{sidecar-folder}/{file1}.md"
+      - "{project-root}/_bmad/_memory/{sidecar-folder}/{file2}.md"
   # ... all critical actions referencing sidecar structure
 
 commands:
-  - name: '{command-name}'
-    description: '{what command does}'
+  - name: "{command-name}"
+    description: "{what command does}"
     steps:
-      - {step 1}
-      - {step 2}
+      - { step 1 }
+      - { step 2 }
     # ... all commands from plan
 
 configuration:
-  temperature: {temperature}
-  max-tokens: {max-tokens}
-  response-format: {format}
+  temperature: { temperature }
+  max-tokens: { max-tokens }
+  response-format: { format }
   # ... other configuration from plan
 
 metadata:
-  sidecar-folder: '{sidecar-folder-name}'
-  sidecar-path: '{project-root}/_bmad/_memory/{sidecar-folder}/'
-  agent-type: 'expert'
-  memory-type: 'persistent'
+  sidecar-folder: "{sidecar-folder-name}"
+  sidecar-path: "{project-root}/_bmad/_memory/{sidecar-folder}/"
+  agent-type: "expert"
+  memory-type: "persistent"
 ```
 
 ### Phase 4: Create Sidecar Structure
@@ -113,25 +116,30 @@ metadata:
    - Note: This folder gets installed to `_bmad/_memory/` during BMAD installation
 
 2. **Create Starter Files** (if specified in critical_actions):
+
    ```bash
    touch {agentBuildOutput}/{agent-name}-sidecar/{file1}.md
    touch {agentBuildOutput}/{agent-name}-sidecar/{file2}.md
    ```
 
 3. **Add README to Sidecar**:
+
    ```markdown
    # {sidecar-folder} Sidecar
 
    This folder stores persistent memory for the **{agent-name}** Expert agent.
 
    ## Purpose
+
    {purpose from critical_actions}
 
    ## Files
+
    - {file1}.md: {description}
    - {file2}.md: {description}
 
    ## Runtime Access
+
    After BMAD installation, this folder will be accessible at:
    `{project-root}/_bmad/_memory/{sidecar-folder}/{filename}.md`
    ```
@@ -174,6 +182,7 @@ Display: "**Select an Option:** [A] Advanced Elicitation [P] Party Mode [C] Cont
 ONLY WHEN [C continue option] is selected and [complete YAML generated and written to output], will you then load and read fully `{nextStepFile}` to execute and celebrate completion.
 
 This step produces TWO artifacts:
+
 1. **Agent YAML**: Complete expert agent definition at `{agentYamlOutput}`
 2. **Sidecar Structure**: Folder and files at `{agentBuildOutput}/{agent-name}-sidecar/` (build location, installs to `_bmad/_memory/` during BMAD installation)
 

@@ -1,13 +1,13 @@
 ---
 stepsCompleted: [1, 2, 3, 4, 5]
 inputDocuments: []
-workflowType: 'research'
+workflowType: "research"
 lastStep: 5
-research_type: 'technical'
-research_topic: 'LangGraph patterns for multi-agent orchestration with Effect-ts in a monorepo and frontend integration'
-research_goals: 'LangGraph graph construction patterns (StateGraph, nodes, edges, conditional routing), Effect-ts integration patterns (service composition, layers), embedded graph approach (imported as module, no separate server), sequential and parallel agent execution patterns, real-time streaming for frontend, and Generative UI patterns'
-user_name: 'Vincentlay'
-date: '2026-02-01'
+research_type: "technical"
+research_topic: "LangGraph patterns for multi-agent orchestration with Effect-ts in a monorepo and frontend integration"
+research_goals: "LangGraph graph construction patterns (StateGraph, nodes, edges, conditional routing), Effect-ts integration patterns (service composition, layers), embedded graph approach (imported as module, no separate server), sequential and parallel agent execution patterns, real-time streaming for frontend, and Generative UI patterns"
+user_name: "Vincentlay"
+date: "2026-02-01"
 web_research_enabled: true
 source_verification: true
 research_completed: true
@@ -41,6 +41,7 @@ This approach ensures LangGraph remains a replaceable implementation detail rath
 **Research Topic:** LangGraph patterns for multi-agent orchestration with Effect-ts in a monorepo and frontend integration
 
 **Research Goals:**
+
 - LangGraph graph construction patterns (StateGraph, nodes, edges, conditional routing)
 - Effect-ts integration patterns (service composition, layers)
 - Embedded graph approach (imported as module, no separate server)
@@ -75,12 +76,14 @@ This approach ensures LangGraph remains a replaceable implementation detail rath
 **Overview:** LangGraph is a low-level orchestration framework for building, managing, and deploying long-running, stateful agents. Trusted by companies like Klarna, Replit, Uber, LinkedIn, GitLab, and Elastic. [High Confidence]
 
 **TypeScript/JavaScript Support:**
+
 - Dedicated JavaScript/TypeScript version: `@langchain/langgraph` (separate from Python)
 - Full feature parity with Python version for core functionality
 - Current version: Available via npm with active development
 - Source: [LangGraph.js GitHub](https://github.com/langchain-ai/langgraphjs)
 
 **StateGraph Architecture:**
+
 - Workflows structured as explicit graphs with nodes and edges
 - Each node represents an LLM-executable unit or agent behavior
 - Shared state object updated by nodes
@@ -89,6 +92,7 @@ This approach ensures LangGraph remains a replaceable implementation detail rath
 - Source: [LangGraph Overview](https://docs.langchain.com/oss/javascript/langgraph/overview)
 
 **Key StateGraph Pattern (TypeScript):**
+
 ```typescript
 import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
 
@@ -112,6 +116,7 @@ const graph = new StateGraph(StateAnnotation)
 **Overview:** Effect is a TypeScript library for building production-grade software with functional programming principles. Described as "The missing standard library for TypeScript." [High Confidence]
 
 **Core Type Signature:**
+
 - `Effect<A, E, R>` - Makes requirements, errors, and results explicit in the type system
 - `A` = Success type
 - `E` = Error type
@@ -119,6 +124,7 @@ const graph = new StateGraph(StateAnnotation)
 - Source: [Effect Website](https://effect.website/)
 
 **Layer System for Dependency Injection:**
+
 - Best practice: Use Layer for all external dependencies (DB, HTTP, config)
 - Layers can combine concurrently with merged input/output types
 - No hidden global states or ambient contexts
@@ -126,20 +132,27 @@ const graph = new StateGraph(StateAnnotation)
 - Source: [Effect-TS GitHub](https://github.com/Effect-TS/effect)
 
 **Repository Pattern with Context.Tag:**
+
 ```typescript
 import { Context, Effect, Layer, Stream } from "effect";
 
 // Domain layer - packages/domain/src/repositories/assessment.repository.ts
 interface AssessmentRepository {
-  readonly startSession: (userId: string) => Effect.Effect<Session, AssessmentError>;
-  readonly sendMessage: (sessionId: string, message: string) =>
-    Effect.Effect<AssessmentState, AssessmentError>;
-  readonly streamMessage: (sessionId: string, message: string) =>
-    Stream.Stream<AssessmentStreamEvent, AssessmentError>;
+  readonly startSession: (
+    userId: string,
+  ) => Effect.Effect<Session, AssessmentError>;
+  readonly sendMessage: (
+    sessionId: string,
+    message: string,
+  ) => Effect.Effect<AssessmentState, AssessmentError>;
+  readonly streamMessage: (
+    sessionId: string,
+    message: string,
+  ) => Stream.Stream<AssessmentStreamEvent, AssessmentError>;
 }
 
 export const AssessmentRepository = Context.GenericTag<AssessmentRepository>(
-  "AssessmentRepository"
+  "AssessmentRepository",
 );
 
 // Infrastructure layer - packages/infrastructure/src/repositories/langgraph/
@@ -155,13 +168,15 @@ export const LangGraphAssessmentRepositoryLive = Layer.effect(
     return {
       startSession: (userId) => Effect.tryPromise(/* ... */),
       sendMessage: (sessionId, message) => Effect.tryPromise(/* ... */),
-      streamMessage: (sessionId, message) => Stream.fromAsyncIterable(/* ... */)
+      streamMessage: (sessionId, message) =>
+        Stream.fromAsyncIterable(/* ... */),
     };
-  })
+  }),
 );
 ```
 
 **Considerations:**
+
 - Ecosystem is still young with fewer Effect-native libraries
 - May require writing interop code to wrap non-Effect libraries
 - Trade-off between "principled" programming model vs. library ecosystem
@@ -172,6 +187,7 @@ export const LangGraphAssessmentRepositoryLive = Layer.effect(
 **Overview:** The `@langchain/langgraph-checkpoint-postgres` package provides production-grade checkpointing using PostgreSQL. [High Confidence]
 
 **Key Features:**
+
 - Saves checkpoint of graph state at every super-step
 - Enables human-in-the-loop, memory, time travel, and fault-tolerance
 - Checkpoints saved to threads for post-execution access
@@ -179,6 +195,7 @@ export const LangGraphAssessmentRepositoryLive = Layer.effect(
 - Source: [LangGraph Persistence Docs](https://docs.langchain.com/oss/javascript/langgraph/persistence)
 
 **Setup Requirements:**
+
 ```typescript
 import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 
@@ -186,13 +203,16 @@ import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 const checkpointer = PostgresSaver.fromConnString(process.env.DATABASE_URL);
 
 // Option 2: Existing pg pool
-const checkpointer = new PostgresSaver(pool, undefined, { schema: "langgraph" });
+const checkpointer = new PostgresSaver(pool, undefined, {
+  schema: "langgraph",
+});
 
 // CRITICAL: Must call setup() first time
 await checkpointer.setup(); // Creates tables and runs migrations
 ```
 
 **Production Considerations:**
+
 - Only use InMemorySaver for debugging/testing
 - Every graph trip creates ~100 rows across 3 tables
 - Need strategy for managing unbounded data growth
@@ -201,6 +221,7 @@ await checkpointer.setup(); // Creates tables and runs migrations
 ### Parallel Execution Patterns
 
 **Fan-Out/Fan-In Architecture:**
+
 - Parallel execution created by adding multiple edges from single node
 - Graph auto-detects fan-out pattern and executes concurrently
 - Supersteps are transactional: if any branch fails, no updates applied
@@ -208,17 +229,19 @@ await checkpointer.setup(); // Creates tables and runs migrations
 - Source: [LangChain Forum - Best Practices for Parallel Nodes](https://forum.langchain.com/t/best-practices-for-parallel-nodes-fanouts/1900)
 
 **Static vs Dynamic Parallelization:**
+
 - **Static:** Nodes explicitly connected to multiple next nodes at design time
 - **Dynamic:** Conditional edges determine parallel nodes at runtime using `Send` class
 - Map-reduce pattern uses Send API for dynamic task creation
 - Source: [Scaling LangGraph Agents](https://aipractitioner.substack.com/p/scaling-langgraph-agents-parallelization)
 
 **Orchestrator-Worker Pattern:**
+
 ```typescript
 // Dynamic parallel dispatch at runtime
 const orchestratorRouter = (state: State) => {
   const tasks = planTasks(state.input);
-  return tasks.map(task => new Send("worker", { task }));
+  return tasks.map((task) => new Send("worker", { task }));
 };
 
 graph.addConditionalEdges("orchestrator", orchestratorRouter);
@@ -227,21 +250,25 @@ graph.addConditionalEdges("orchestrator", orchestratorRouter);
 ### Frontend Streaming: SSE & useStream()
 
 **Official React Integration:**
+
 - `useStream()` hook provides seamless LangGraph integration
 - Handles streaming, state management, and branching logic
 - Uses `streamMode: "messages-tuple"` for token-by-token streaming
 - Source: [LangGraph useStream Docs](https://docs.langchain.com/langsmith/use-stream-react)
 
 **SSE Architecture:**
+
 - Three layers: per-run message buffer, centralized StreamManager, SSE HTTP endpoints
 - Multiple runs can stream concurrently with independent event streams
 - Resumable streams allow reconnection and event replay
 - Source: [DeepWiki - Event Streaming Architecture](https://deepwiki.com/langchain-ai/langgraphjs/7.1-streaming-and-real-time-output)
 
 **Implementation Options:**
+
 1. **Native LangGraph SDK:** `useStream()` hook (recommended)
 2. **fetch-event-source:** For custom SSE with POST payloads
 3. **CopilotKit / assistant-ui:** Pre-built chat components
+
 - Source: [LangGraph React Integration](https://langchain-ai.github.io/langgraphjs/cloud/how-tos/use_stream_react/)
 
 ### Generative UI Patterns
@@ -249,24 +276,27 @@ graph.addConditionalEdges("orchestrator", orchestratorRouter);
 **Overview:** Generative UI allows agents to generate rich user interfaces beyond text, creating interactive, context-aware applications. [High Confidence]
 
 **React Component Colocation:**
+
 - LangGraph Platform supports colocating React components with graph code
 - CSS and Tailwind 4.x supported out of the box
 - shadcn/ui compatible
 - Source: [LangGraph Generative UI Docs](https://docs.langchain.com/langsmith/generative-ui-react)
 
 **Streaming UI Updates:**
+
 - Use `onCustomEvent` callback for UI updates during LLM generation
 - Stream UI messages before node execution finishes
 - Source: [GitHub - LangGraph.js Gen UI Examples](https://github.com/langchain-ai/langgraphjs-gen-ui-examples)
 
 **Example Implementation:**
+
 ```typescript
 // In graph node - emit UI event
 import { dispatchCustomEvent } from "@langchain/core/callbacks/dispatch";
 
 await dispatchCustomEvent("ui_update", {
   component: "StockPrice",
-  props: { ticker: "AAPL", price: 150.25 }
+  props: { ticker: "AAPL", price: 150.25 },
 });
 
 // In React - consume UI events
@@ -276,25 +306,28 @@ const { messages, uiMessages } = useStream({
     if (event.name === "ui_update") {
       renderComponent(event.data);
     }
-  }
+  },
 });
 ```
 
 ### Technology Adoption Trends
 
 **LangGraph Adoption:**
+
 - Used by major companies: Replit, Uber, LinkedIn, GitLab, Elastic, Klarna
 - Active open-source development with regular releases
 - Growing ecosystem of examples and integrations
 - Source: [LangChain LangGraph](https://www.langchain.com/langgraph)
 
 **Emerging Standards:**
+
 - Agent2Agent (A2A) protocol for agent interoperability
 - Anthropic's Model Context Protocol (MCP) for tool integration
 - AG-UI Protocol (CopilotKit) for frontend-agent communication
 - Source: [ZenML Blog - LangGraph vs CrewAI](https://www.zenml.io/blog/langgraph-vs-crewai)
 
 **Effect-ts Ecosystem:**
+
 - @effect/platform for cross-runtime abstractions
 - @effect/typeclass for functional programming abstractions
 - Growing but still young ecosystem
@@ -322,25 +355,28 @@ import { Context, Effect, Stream } from "effect";
  */
 export interface AssessmentRepository {
   readonly startSession: (
-    userId: string
+    userId: string,
   ) => Effect.Effect<Session, AssessmentError>;
 
   readonly sendMessage: (
     sessionId: string,
-    message: string
+    message: string,
   ) => Effect.Effect<AssessmentState, AssessmentError | SessionNotFoundError>;
 
   readonly streamMessage: (
     sessionId: string,
-    message: string
-  ) => Stream.Stream<AssessmentStreamEvent, AssessmentError | SessionNotFoundError>;
+    message: string,
+  ) => Stream.Stream<
+    AssessmentStreamEvent,
+    AssessmentError | SessionNotFoundError
+  >;
 
   readonly resumeSession: (
-    sessionId: string
+    sessionId: string,
   ) => Effect.Effect<AssessmentState, SessionNotFoundError>;
 
   readonly getPrecision: (
-    sessionId: string
+    sessionId: string,
   ) => Effect.Effect<Precision, SessionNotFoundError>;
 }
 
@@ -348,7 +384,7 @@ export interface AssessmentRepository {
  * Context Tag for dependency injection
  */
 export const AssessmentRepository = Context.GenericTag<AssessmentRepository>(
-  "AssessmentRepository"
+  "AssessmentRepository",
 );
 ```
 
@@ -366,7 +402,7 @@ import { AssessmentRepository } from "@workspace/domain";
  * All LangGraph specifics encapsulated here
  */
 export const LangGraphAssessmentRepositoryLive = Layer.effect(
-  AssessmentRepository,  // Context.Tag from domain
+  AssessmentRepository, // Context.Tag from domain
   Effect.gen(function* () {
     const db = yield* DatabaseService;
 
@@ -387,8 +423,14 @@ export const LangGraphAssessmentRepositoryLive = Layer.effect(
           yield* Effect.tryPromise({
             try: () =>
               graph.invoke(
-                { messages: [], userId, precision: { /* ... */ } },
-                { configurable: { thread_id: sessionId } }
+                {
+                  messages: [],
+                  userId,
+                  precision: {
+                    /* ... */
+                  },
+                },
+                { configurable: { thread_id: sessionId } },
               ),
             catch: (e) => new AssessmentError({ cause: e }),
           });
@@ -401,7 +443,7 @@ export const LangGraphAssessmentRepositoryLive = Layer.effect(
           try: async () => {
             const result = await graph.invoke(
               { messages: [{ role: "user", content: message }] },
-              { configurable: { thread_id: sessionId } }
+              { configurable: { thread_id: sessionId } },
             );
             return mapStateToDomain(result);
           },
@@ -415,12 +457,10 @@ export const LangGraphAssessmentRepositoryLive = Layer.effect(
             {
               configurable: { thread_id: sessionId },
               streamMode: ["updates", "custom", "messages"],
-            }
+            },
           ),
-          (e) => new AssessmentError({ cause: e })
-        ).pipe(
-          Stream.map(mapLangGraphEventToDomain)
-        ),
+          (e) => new AssessmentError({ cause: e }),
+        ).pipe(Stream.map(mapLangGraphEventToDomain)),
 
       resumeSession: (sessionId) =>
         Effect.tryPromise({
@@ -450,7 +490,7 @@ export const LangGraphAssessmentRepositoryLive = Layer.effect(
           catch: (e) => new SessionNotFoundError({ sessionId }),
         }),
     };
-  })
+  }),
 );
 ```
 
@@ -485,7 +525,7 @@ import { AssessmentRepository } from "@workspace/domain";
 
 export const sendMessageUseCase = (sessionId: string, message: string) =>
   Effect.gen(function* () {
-    const repo = yield* AssessmentRepository;  // Domain interface!
+    const repo = yield* AssessmentRepository; // Domain interface!
     return yield* repo.sendMessage(sessionId, message);
   });
 ```
@@ -494,6 +534,7 @@ export const sendMessageUseCase = (sessionId: string, message: string) =>
 - Source: [hex-effect - Hexagonal Architecture Reference](https://github.com/jkonowitch/hex-effect)
 
 **Why Repository Pattern:**
+
 - **Domain Purity:** Domain has zero LangGraph knowledge
 - **Testability:** Mock `AssessmentRepository` without LangGraph
 - **Swappability:** Can replace LangGraph with another framework
@@ -508,7 +549,11 @@ export const sendMessageUseCase = (sessionId: string, message: string) =>
 The `@effect/platform` package provides declarative HTTP API definition with streaming support. [High Confidence]
 
 ```typescript
-import { HttpApiEndpoint, HttpApiGroup, HttpApiBuilder } from "@effect/platform";
+import {
+  HttpApiEndpoint,
+  HttpApiGroup,
+  HttpApiBuilder,
+} from "@effect/platform";
 import { Schema as S } from "effect";
 
 // Define API contract
@@ -516,11 +561,12 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
   .add(
     HttpApiEndpoint.post("sendMessage", "/message")
       .addSuccess(SendMessageResponseSchema)
-      .setPayload(SendMessageRequestSchema)
+      .setPayload(SendMessageRequestSchema),
   )
   .add(
-    HttpApiEndpoint.get("streamMessage", "/stream/:sessionId")
-      .addSuccess(S.Unknown) // Streaming response
+    HttpApiEndpoint.get("streamMessage", "/stream/:sessionId").addSuccess(
+      S.Unknown,
+    ), // Streaming response
   )
   .prefix("/assessment");
 
@@ -537,18 +583,19 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
           langGraph.invoke({
             sessionId: payload.sessionId,
             message: payload.message,
-          })
+          }),
         )
         .handle("streamMessage", ({ path }) =>
           // Return streaming response
           Effect.gen(function* () {
             const stream = langGraph.stream({ sessionId: path.sessionId });
             return HttpServerResponse.stream(stream);
-          })
+          }),
         );
-    })
+    }),
 );
 ```
+
 - Source: [HttpApiBuilder.ts](https://effect-ts.github.io/effect/platform/HttpApiBuilder.ts.html)
 - Source: [Building Robust TypeScript APIs with Effect](https://dev.to/martinpersson/building-robust-typescript-apis-with-effect-ecosystem-1m7c)
 
@@ -570,7 +617,7 @@ const nerinNode: GraphNode<typeof State> = async (state, config) => {
   // Emit precision update mid-generation
   config.writer({
     type: "precision_update",
-    precision: { openness: 65, conscientiousness: 72 }
+    precision: { openness: 65, conscientiousness: 72 },
   });
 
   const response = await llm.invoke(state.messages);
@@ -580,7 +627,7 @@ const nerinNode: GraphNode<typeof State> = async (state, config) => {
 
 // Consumer combines modes
 const stream = graph.stream(input, {
-  streamMode: ["updates", "custom", "messages"]
+  streamMode: ["updates", "custom", "messages"],
 });
 
 for await (const event of stream) {
@@ -591,6 +638,7 @@ for await (const event of stream) {
   }
 }
 ```
+
 - Source: [LangGraph Streaming Docs](https://docs.langchain.com/oss/javascript/langgraph/streaming)
 - Source: [LangGraph Streaming 101](https://dev.to/sreeni5018/langgraph-streaming-101-5-modes-to-build-responsive-ai-applications-4p3f)
 
@@ -610,7 +658,7 @@ export const Route = createAPIFileRoute("/api/assessment/stream/$sessionId")({
       async start(controller) {
         // Connect to backend LangGraph stream
         const response = await fetch(
-          `${API_URL}/assessment/stream/${params.sessionId}`
+          `${API_URL}/assessment/stream/${params.sessionId}`,
         );
 
         const reader = response.body?.getReader();
@@ -638,6 +686,7 @@ export const Route = createAPIFileRoute("/api/assessment/stream/$sessionId")({
   },
 });
 ```
+
 - Source: [TanStack Start Streaming Data](https://tanstack.com/start/latest/docs/framework/react/guide/streaming-data-from-server-functions)
 
 **TanStack AI SSE Protocol**
@@ -650,10 +699,10 @@ import { fetchServerSentEvents } from "@tanstack/ai-react";
 // Client-side consumption
 const { data, isLoading } = useStreamQuery({
   queryKey: ["assessment", sessionId],
-  queryFn: () =>
-    fetchServerSentEvents(`/api/assessment/stream/${sessionId}`),
+  queryFn: () => fetchServerSentEvents(`/api/assessment/stream/${sessionId}`),
 });
 ```
+
 - Source: [TanStack AI SSE Protocol](https://tanstack.com/ai/latest/docs/protocol/sse-protocol)
 
 ### Embedded LangGraph Pattern (No Separate Server)
@@ -735,6 +784,7 @@ packages/infrastructure/
 ```
 
 **Benefits of Repository-Based Embedded Pattern:**
+
 - No separate server process to manage
 - Direct function calls (lower latency than HTTP)
 - Shared database connection pool
@@ -754,11 +804,13 @@ In a pnpm monorepo, packages communicate via workspace protocol imports followin
 ```typescript
 // packages/domain/src/repositories/assessment.repository.ts
 export interface AssessmentRepository {
-  readonly sendMessage: (sessionId: string, message: string) =>
-    Effect.Effect<AssessmentState, AssessmentError>;
+  readonly sendMessage: (
+    sessionId: string,
+    message: string,
+  ) => Effect.Effect<AssessmentState, AssessmentError>;
 }
 export const AssessmentRepository = Context.GenericTag<AssessmentRepository>(
-  "AssessmentRepository"
+  "AssessmentRepository",
 );
 
 // packages/contracts/src/http/groups/assessment.ts
@@ -774,10 +826,10 @@ export const SendMessageResponseSchema = S.Struct({
 import { AssessmentRepository } from "@workspace/domain";
 
 export const LangGraphAssessmentRepositoryLive = Layer.effect(
-  AssessmentRepository,  // Implements domain interface
+  AssessmentRepository, // Implements domain interface
   Effect.gen(function* () {
     // LangGraph implementation hidden here
-  })
+  }),
 );
 
 // apps/api/src/use-cases/send-message.use-case.ts
@@ -785,7 +837,7 @@ import { AssessmentRepository } from "@workspace/domain";
 
 export const sendMessageUseCase = (sessionId: string, message: string) =>
   Effect.gen(function* () {
-    const repo = yield* AssessmentRepository;  // Uses domain interface
+    const repo = yield* AssessmentRepository; // Uses domain interface
     return yield* repo.sendMessage(sessionId, message);
   });
 
@@ -793,7 +845,7 @@ export const sendMessageUseCase = (sessionId: string, message: string) =>
 import { LangGraphAssessmentRepositoryLive } from "@workspace/infrastructure";
 
 export const AssessmentGroupLive = HttpApiBuilder.group(/* ... */).pipe(
-  Layer.provide(LangGraphAssessmentRepositoryLive)  // Provides implementation
+  Layer.provide(LangGraphAssessmentRepositoryLive), // Provides implementation
 );
 
 // apps/front/src/hooks/useAssessment.ts
@@ -801,6 +853,7 @@ import type { SendMessageResponse } from "@workspace/contracts";
 ```
 
 **Package Boundary Pattern (Hexagonal Architecture):**
+
 ```
 packages/domain     → Ports (interfaces, types, errors - NO deps)
     ↓
@@ -873,6 +926,7 @@ function AssessmentChat({ sessionId }) {
   );
 }
 ```
+
 - Source: [LangGraph Generative UI](https://docs.langchain.com/langsmith/generative-ui-react)
 - Source: [LangChain Custom Events](https://x.com/LangChainAI/status/1813627059299893407)
 
@@ -904,13 +958,14 @@ FiberRef ensures request-scoped context without cross-request leakage:
 // Each HTTP request gets isolated fiber context
 const handler = Effect.gen(function* () {
   const logger = yield* LoggerRef; // Request-scoped
-  const userId = yield* UserIdRef;  // Request-scoped
+  const userId = yield* UserIdRef; // Request-scoped
 
   // LangGraph invoked with isolated context
   const graph = yield* LangGraph;
   return yield* graph.invoke({ userId });
 });
 ```
+
 - Source: Your CLAUDE.md FiberRef patterns
 
 ---
@@ -921,13 +976,13 @@ const handler = Effect.gen(function* () {
 
 **Five Core Orchestration Patterns for AI Agents:** [High Confidence]
 
-| Pattern | Description | Best For | Trade-offs |
-|---------|-------------|----------|------------|
-| **Supervisor/Centralized** | Central orchestrator coordinates all agents | Complex tasks requiring oversight | Single point of control, potential bottleneck |
-| **Sequential** | Agents chained in linear pipeline | Predictable transformation workflows | Limited parallelism |
-| **Concurrent** | Multiple agents process simultaneously | Independent analyses | Requires result aggregation |
-| **Decentralized/Adaptive** | Agents collaborate peer-to-peer | Low-latency, high-interactivity | Complex debugging |
-| **Hybrid** | Supervisor for planning, specialists execute | Balance of control and flexibility | More complex setup |
+| Pattern                    | Description                                  | Best For                             | Trade-offs                                    |
+| -------------------------- | -------------------------------------------- | ------------------------------------ | --------------------------------------------- |
+| **Supervisor/Centralized** | Central orchestrator coordinates all agents  | Complex tasks requiring oversight    | Single point of control, potential bottleneck |
+| **Sequential**             | Agents chained in linear pipeline            | Predictable transformation workflows | Limited parallelism                           |
+| **Concurrent**             | Multiple agents process simultaneously       | Independent analyses                 | Requires result aggregation                   |
+| **Decentralized/Adaptive** | Agents collaborate peer-to-peer              | Low-latency, high-interactivity      | Complex debugging                             |
+| **Hybrid**                 | Supervisor for planning, specialists execute | Balance of control and flexibility   | More complex setup                            |
 
 - Source: [Microsoft AI Agent Design Patterns](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/ai-agent-design-patterns)
 - Source: [Kore.ai Orchestration Patterns](https://www.kore.ai/blog/choosing-the-right-orchestration-pattern-for-multi-agent-systems)
@@ -937,6 +992,7 @@ const handler = Effect.gen(function* () {
 **Hierarchical Multi-Agent Architecture:**
 
 The Supervisor pattern uses a central agent to coordinate specialized worker agents. The supervisor:
+
 1. Receives initial request
 2. Decomposes into subtasks
 3. Delegates to appropriate worker agents
@@ -949,7 +1005,9 @@ The Supervisor pattern uses a central agent to coordinate specialized worker age
 // Supervisor pattern in LangGraph
 const supervisorNode = async (state: State) => {
   const decision = await supervisorLLM.invoke([
-    systemMessage("You are a supervisor coordinating Nerin, Analyzer, and Scorer agents..."),
+    systemMessage(
+      "You are a supervisor coordinating Nerin, Analyzer, and Scorer agents...",
+    ),
     ...state.messages,
   ]);
 
@@ -1015,6 +1073,7 @@ const graph = new StateGraph(StateAnnotation)
 ```
 
 **Why This Architecture:**
+
 - **Orchestrator is rules-based** (not LLM) → Deterministic, fast, cheap
 - **Nerin is conversation-focused** → Single responsibility, optimized prompts
 - **Analyzer + Scorer run in parallel** → 137× speedup potential
@@ -1104,6 +1163,7 @@ packages/domain
 ```
 
 **Effect-ts Makes This Practical:**
+
 - `Context.Tag` in domain for abstract service interfaces (ports)
 - `Layer.effect` in infrastructure for concrete implementations (adapters)
 - Dependencies explicit in `R` type parameter (compile-time checking)
@@ -1119,7 +1179,7 @@ const MockAssessmentRepository = Layer.succeed(AssessmentRepository, {
     Effect.succeed({
       sessionId,
       messages: [{ role: "assistant", content: "Mock" }],
-      precision: { openness: 50, conscientiousness: 60, /* ... */ },
+      precision: { openness: 50, conscientiousness: 60 /* ... */ },
       currentPhase: "conversation",
       messageCount: 2,
     }),
@@ -1128,7 +1188,7 @@ const MockAssessmentRepository = Layer.succeed(AssessmentRepository, {
 // Test use case
 const program = sendMessageUseCase("session_123", "Hello");
 const result = await Effect.runPromise(
-  program.pipe(Effect.provide(MockAssessmentRepository))
+  program.pipe(Effect.provide(MockAssessmentRepository)),
 );
 ```
 
@@ -1164,7 +1224,7 @@ const worker = async () => {
 
     // Process with thread isolation
     await graph.invoke(input, {
-      configurable: { thread_id: threadId }
+      configurable: { thread_id: threadId },
     });
 
     // State automatically persisted by checkpointer
@@ -1180,6 +1240,7 @@ const worker = async () => {
 **Cost-Efficiency Pattern: Plan-and-Execute**
 
 Research shows Plan-and-Execute can reduce costs by 90%:
+
 1. **Planner (Frontier Model):** Creates strategy (e.g., Claude Opus)
 2. **Executors (Cheaper Models):** Execute individual steps (e.g., Claude Haiku)
 
@@ -1216,6 +1277,7 @@ const StateAnnotation = Annotation.Root({
 ```
 
 **Reducer Strategies:**
+
 - **Append:** For messages, analysis results
 - **Overwrite:** For precision, guidance
 - **Custom merge:** For complex aggregation
@@ -1231,12 +1293,12 @@ Each user session gets a unique `thread_id`, ensuring complete isolation:
 ```typescript
 // User A's session
 await graph.invoke(input, {
-  configurable: { thread_id: "session_user_a_123" }
+  configurable: { thread_id: "session_user_a_123" },
 });
 
 // User B's session (completely isolated)
 await graph.invoke(input, {
-  configurable: { thread_id: "session_user_b_456" }
+  configurable: { thread_id: "session_user_b_456" },
 });
 
 // Checkpointer stores state per-thread in separate rows
@@ -1250,8 +1312,8 @@ FiberRef ensures request-scoped context:
 ```typescript
 // Each HTTP request gets isolated fiber
 const handler = Effect.gen(function* () {
-  const userId = yield* UserIdRef;  // Request-scoped
-  const logger = yield* LoggerRef;  // Request-scoped
+  const userId = yield* UserIdRef; // Request-scoped
+  const logger = yield* LoggerRef; // Request-scoped
 
   // All downstream operations use isolated context
   yield* AssessmentService.process(userId);
@@ -1319,6 +1381,7 @@ const handler = Effect.gen(function* () {
 ```
 
 **Benefits:**
+
 - **Single container:** Simpler deployment
 - **Shared resources:** Database pool, Redis connection across all services
 - **No network latency:** Direct function calls within repository
@@ -1327,6 +1390,7 @@ const handler = Effect.gen(function* () {
 - **Testability:** Mock AssessmentRepository without LangGraph/PostgreSQL
 
 **Future Scale-Out Path:**
+
 - Horizontal scaling via Railway replicas (stateless app layer)
 - Redis for distributed cost tracking already included
 - Optional: Extract LangGraph to separate service if graph execution becomes bottleneck
@@ -1362,7 +1426,7 @@ describe("Nerin Agent Node", () => {
 
     const state = {
       messages: [{ role: "user", content: "I love spending time outdoors" }],
-      precision: { openness: 0, conscientiousness: 0 }
+      precision: { openness: 0, conscientiousness: 0 },
     };
 
     const result = await nerinNode(state, {});
@@ -1389,12 +1453,14 @@ describe("Assessment Flow Integration", () => {
     for (let i = 0; i < 3; i++) {
       await graph.invoke(
         { messages: [{ role: "user", content: `Message ${i}` }] },
-        { configurable: { thread_id: threadId }, interrupt_after: ["nerin"] }
+        { configurable: { thread_id: threadId }, interrupt_after: ["nerin"] },
       );
     }
 
     // Verify state shows analyzer should run
-    const state = await graph.getState({ configurable: { thread_id: threadId } });
+    const state = await graph.getState({
+      configurable: { thread_id: threadId },
+    });
     expect(state.next).toContain("analyzer");
   });
 });
@@ -1414,7 +1480,7 @@ describe("Complete Assessment E2E", () => {
 
     const result = await graph.invoke(
       { messages: [{ role: "user", content: "Tell me about yourself" }] },
-      { configurable: { thread_id: "e2e_test" } }
+      { configurable: { thread_id: "e2e_test" } },
     );
 
     expect(result.precision.openness).toBeGreaterThan(0);
@@ -1441,7 +1507,7 @@ describe("AssessmentService", () => {
   const TestLayer = Layer.mergeAll(
     AssessmentServiceLive,
     MockLangGraphLive,
-    MockDatabaseLive
+    MockDatabaseLive,
   );
 
   it("should start assessment session", async () => {
@@ -1471,27 +1537,21 @@ it.layer("should invoke LangGraph", [TestLayer], () =>
     const result = yield* langGraph.invoke({ message: "test" });
 
     expect(result).toBeDefined();
-  })
+  }),
 );
 ```
 
 **Mock Layers for External Services:**
 
 ```typescript
-export const MockLangGraphLive = Layer.succeed(
-  LangGraph,
-  {
-    invoke: (input) =>
-      Effect.succeed({
-        response: "Mock response",
-        precision: { openness: 50, conscientiousness: 60 }
-      }),
-    stream: (input) =>
-      Stream.make(
-        { type: "update", node: "nerin", data: {} }
-      )
-  }
-);
+export const MockLangGraphLive = Layer.succeed(LangGraph, {
+  invoke: (input) =>
+    Effect.succeed({
+      response: "Mock response",
+      precision: { openness: 50, conscientiousness: 60 },
+    }),
+  stream: (input) => Stream.make({ type: "update", node: "nerin", data: {} }),
+});
 ```
 
 - Source: [Effect-ts Testing Guide](https://effect.website/docs/guides/testing/introduction/)
@@ -1563,6 +1623,7 @@ CMD ["node", "dist/index.js"]
 ```
 
 **Railway Features:**
+
 - Git-based deployments with automatic preview environments
 - Built-in PostgreSQL and Redis plugins
 - Automatic SSL certificates
@@ -1587,6 +1648,7 @@ Vercel optimized for TanStack Start with streaming support:
 ```
 
 **TanStack Start Deployment:**
+
 - Automatic edge functions for API routes
 - Streaming SSR support
 - Built-in caching with SWR
@@ -1630,7 +1692,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - run: pnpm install
       - run: pnpm lint
@@ -1670,6 +1732,7 @@ const graph = new StateGraph(StateAnnotation)
 ```
 
 **LangSmith Features:**
+
 - **Tracing:** Visualize full agent execution flows with timing
 - **Monitoring:** Real-time dashboards for latency, token usage, costs
 - **Debugging:** Inspect intermediate states and LLM calls
@@ -1694,18 +1757,18 @@ const langfuse = new Langfuse({
 const trace = langfuse.trace({
   name: "assessment-session",
   userId: "user_123",
-  metadata: { sessionId: "session_456" }
+  metadata: { sessionId: "session_456" },
 });
 
 const span = trace.span({
   name: "nerin-generation",
-  input: { message: "Tell me about yourself" }
+  input: { message: "Tell me about yourself" },
 });
 
 // After LLM call
 span.end({
   output: { response: "..." },
-  usage: { inputTokens: 1200, outputTokens: 300 }
+  usage: { inputTokens: 1200, outputTokens: 300 },
 });
 ```
 
@@ -1721,9 +1784,11 @@ import { Logger } from "effect";
 export const LoggerLive = Layer.effect(
   Logger,
   Effect.sync(() => ({
-    info: (msg, meta) => console.log(JSON.stringify({ level: "info", msg, ...meta })),
-    error: (msg, meta) => console.error(JSON.stringify({ level: "error", msg, ...meta }))
-  }))
+    info: (msg, meta) =>
+      console.log(JSON.stringify({ level: "info", msg, ...meta })),
+    error: (msg, meta) =>
+      console.error(JSON.stringify({ level: "error", msg, ...meta })),
+  })),
 );
 
 // Railway automatically collects JSON logs
@@ -1731,6 +1796,7 @@ export const LoggerLive = Layer.effect(
 ```
 
 **Monitoring Stack Recommendation:**
+
 - **LangSmith** for LLM-specific observability (tracing, token usage)
 - **Railway Logs** for infrastructure (health, errors, deployments)
 - **Langfuse** (optional) for open-source alternative with cost tracking
@@ -1763,20 +1829,22 @@ docker compose exec redis redis-cli
    - Source: [LangGraph Studio](https://blog.langchain.dev/langgraph-studio/)
 
 2. **InMemorySaver for Local Dev:**
+
    ```typescript
    const graph = createNerinGraph(
      process.env.NODE_ENV === "production"
        ? new PostgresSaver(pool)
-       : new InMemorySaver() // Fast local dev
+       : new InMemorySaver(), // Fast local dev
    );
    ```
 
 3. **Interrupt Points for Testing:**
+
    ```typescript
    // Pause execution after specific nodes
    await graph.invoke(input, {
      configurable: { thread_id },
-     interrupt_after: ["nerin"] // Pause for inspection
+     interrupt_after: ["nerin"], // Pause for inspection
    });
 
    // Resume later
@@ -1792,6 +1860,7 @@ docker compose exec redis redis-cli
    - Source: [Effect DevTools](https://effect.website/docs/guides/devtools/)
 
 2. **Type-Safe API Contract Generation:**
+
    ```bash
    # Generate TypeScript types from Effect schemas
    pnpm --filter=contracts generate:types
@@ -1814,7 +1883,7 @@ const plan = await plannerLLM.invoke(userQuery);
 
 // Executors use Claude Haiku (cheap and fast)
 const results = await Promise.all(
-  plan.steps.map(step => executorLLM.invoke(step))
+  plan.steps.map((step) => executorLLM.invoke(step)),
 );
 ```
 
@@ -1844,7 +1913,8 @@ const trackCost = async (usage: TokenUsage) => {
   await costGuard.incrementDailyCost(userId, cost.totalCents);
 
   const dailyTotal = await costGuard.getDailyCost(userId);
-  if (dailyTotal > 7500) { // $75 limit
+  if (dailyTotal > 7500) {
+    // $75 limit
     throw new BudgetExceededError();
   }
 };
@@ -1868,7 +1938,7 @@ const prompt = `Recent messages:\n${lastThreeMessages}\n\nCurrent trait precisio
 // Cache archetype lookups (deterministic results)
 const getArchetype = cached(
   (oceanCode: string) => archetypeTable.lookup(oceanCode),
-  { ttl: 86400 } // 24 hours
+  { ttl: 86400 }, // 24 hours
 );
 
 // Avoid redundant LLM calls for same inputs
@@ -1925,43 +1995,48 @@ Week 7+: Optimization
 
 **Required Technical Competencies:**
 
-| Skill | Priority | Learning Curve |
-|-------|----------|----------------|
-| TypeScript Advanced | Critical | Medium |
-| Effect-ts Core | Critical | High |
-| LangGraph StateGraph | Critical | Medium |
-| React 19 + TanStack | High | Medium |
-| PostgreSQL + Drizzle | High | Low |
-| SSE Streaming | High | Medium |
-| Prompt Engineering | High | Medium-High |
-| Railway/Vercel Deploy | Medium | Low |
-| Multi-Agent Patterns | Medium | High |
+| Skill                 | Priority | Learning Curve |
+| --------------------- | -------- | -------------- |
+| TypeScript Advanced   | Critical | Medium         |
+| Effect-ts Core        | Critical | High           |
+| LangGraph StateGraph  | Critical | Medium         |
+| React 19 + TanStack   | High     | Medium         |
+| PostgreSQL + Drizzle  | High     | Low            |
+| SSE Streaming         | High     | Medium         |
+| Prompt Engineering    | High     | Medium-High    |
+| Railway/Vercel Deploy | Medium   | Low            |
+| Multi-Agent Patterns  | Medium   | High           |
 
 ### Technology Adoption Recommendations
 
 **Migration Strategy for Existing Projects:**
 
 **Phase 1: Foundation (Week 1-2)**
+
 - Set up Effect-ts Layer system for dependency injection
 - Replace existing HTTP framework with @effect/platform
 - Migrate database access to Effect-wrapped Drizzle
 
 **Phase 2: LangGraph Integration (Week 3-4)**
+
 - Implement first simple graph (single node + checkpointer)
 - Wrap LangGraph in Effect service layer
 - Add basic streaming endpoint
 
 **Phase 3: Multi-Agent (Week 5-6)**
+
 - Add Supervisor or Orchestrator pattern
 - Implement parallel execution for independent agents
 - Add LangSmith observability
 
 **Phase 4: Frontend Integration (Week 7-8)**
+
 - Implement SSE streaming endpoints
 - Add `useStream()` hook for React
 - Implement Generative UI components
 
 **Phase 5: Production Hardening (Week 9-10)**
+
 - Comprehensive testing (unit, integration, e2e)
 - Cost tracking and rate limiting
 - Horizontal scaling setup
@@ -1970,12 +2045,14 @@ Week 7+: Optimization
 **Gradual vs. Big Bang Approach:**
 
 **Gradual (Recommended):**
+
 - Start with single agent graph
 - Add Effect-ts incrementally to new modules
 - Migrate existing endpoints one-by-one
 - Lower risk, continuous delivery
 
 **Big Bang (Higher Risk):**
+
 - Rewrite entire backend at once
 - All-in on Effect-ts from day 1
 - Higher upfront cost, bigger payoff
@@ -2038,14 +2115,14 @@ Week 7+: Optimization
 
 **Technical Success Criteria:**
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| API Response Time (Nerin) | P95 < 2s | LangSmith traces |
-| Token Cost per Assessment | < $0.50 | CostGuard tracking |
-| Test Coverage (Domain) | 100% | Vitest coverage report |
-| Type Safety | Zero `any` types | TypeScript strict mode |
-| Deployment Success Rate | > 99% | Railway dashboard |
-| Error Rate | < 1% | Railway logs + LangSmith |
+| Metric                    | Target           | Measurement              |
+| ------------------------- | ---------------- | ------------------------ |
+| API Response Time (Nerin) | P95 < 2s         | LangSmith traces         |
+| Token Cost per Assessment | < $0.50          | CostGuard tracking       |
+| Test Coverage (Domain)    | 100%             | Vitest coverage report   |
+| Type Safety               | Zero `any` types | TypeScript strict mode   |
+| Deployment Success Rate   | > 99%            | Railway dashboard        |
+| Error Rate                | < 1%             | Railway logs + LangSmith |
 
 **Architectural Validation:**
 
@@ -2060,28 +2137,34 @@ Week 7+: Optimization
 ### Key Implementation Risks and Mitigations
 
 **Risk 1: Effect-ts Learning Curve**
+
 - **Impact:** Slower initial development
 - **Mitigation:** Pair programming, focused training, example patterns in CLAUDE.md
 
 **Risk 2: LangGraph Production Issues**
+
 - **Impact:** Downtime, poor user experience
 - **Mitigation:** Comprehensive testing, LangSmith monitoring, graceful degradation
 
 **Risk 3: Token Cost Overruns**
+
 - **Impact:** Budget exceeded
 - **Mitigation:** Hard caps ($75/day), batching (every 3 messages), Plan-and-Execute pattern
 
 **Risk 4: Streaming Latency**
+
 - **Impact:** Slow perceived performance
 - **Mitigation:** SSE with immediate first token, optimistic updates, progress indicators
 
 **Risk 5: Multi-Agent Complexity**
+
 - **Impact:** Hard to debug, maintain
 - **Mitigation:** LangSmith tracing, unit tests for each node, clear separation of concerns
 
 ### Research Confidence Assessment
 
 **High Confidence (Verified from Multiple Sources):**
+
 - LangGraph StateGraph architecture and patterns
 - Effect-ts Layer system and Context.Tag
 - PostgresSaver checkpointing setup
@@ -2090,11 +2173,13 @@ Week 7+: Optimization
 - Railway and Vercel deployment
 
 **Medium Confidence (Limited to Official Docs):**
+
 - Generative UI exact implementation details
 - Effect-ts + LangGraph integration edge cases
 - LangGraph Studio TypeScript support timeline
 
 **Areas Requiring Further Investigation:**
+
 - Production scaling patterns beyond 1000 concurrent users
 - Effect-ts performance benchmarks vs. raw Promises
 - LangGraph checkpoint database growth mitigation strategies
@@ -2140,10 +2225,12 @@ Week 7+: Optimization
 **Backend (Hexagonal Architecture):**
 
 **Domain Layer (packages/domain):**
+
 - `effect` 3.19+ - Core Effect types, Context.Tag for interfaces
 - Zero external dependencies - pure types and interfaces only
 
 **Infrastructure Layer (packages/infrastructure):**
+
 - `@langchain/langgraph` - Multi-agent orchestration (embedded as repository)
 - `@langchain/langgraph-checkpoint-postgres` - State persistence
 - `@anthropic-ai/sdk` - Claude API client
@@ -2151,11 +2238,13 @@ Week 7+: Optimization
 - `ioredis` - Redis client for cost tracking
 
 **Application Layer (apps/api):**
+
 - `@effect/platform` - HTTP server and contracts
 - `@effect/platform-node` - Node.js runtime
 - Better Auth - Authentication middleware
 
 **Frontend:**
+
 - `@tanstack/react-start` - Full-stack SSR framework
 - `@tanstack/react-router` - File-based routing
 - `@tanstack/react-query` - Data fetching
@@ -2164,6 +2253,7 @@ Week 7+: Optimization
 - `shadcn/ui` - Component library
 
 **DevOps:**
+
 - Railway - Backend hosting with PostgreSQL
 - Vercel - Frontend hosting with edge functions
 - LangSmith - LLM observability and tracing
@@ -2172,42 +2262,39 @@ Week 7+: Optimization
 ### Implementation Priority Recommendations
 
 **High Priority (Epic 2 - Next 2 Weeks):**
+
 1. ✅ **Story 2.2:** Nerin single-node graph with Effect wrapper
 2. ✅ **Story 2.2.5:** Redis + CostGuard service for tracking
 3. 🔄 **Story 2.3:** Analyzer + Scorer with parallel execution
 4. 🔄 **Story 2.4:** Complete orchestration graph
 5. 🔄 **Story 2.5:** Cost enforcement and rate limiting
 
-**Medium Priority (Epic 3-4 - Weeks 3-6):**
-6. OCEAN archetype system (deterministic logic)
-7. Frontend streaming UI with SSE
-8. Generative UI for precision visualization
-9. Session resumption and device switching
+**Medium Priority (Epic 3-4 - Weeks 3-6):** 6. OCEAN archetype system (deterministic logic) 7. Frontend streaming UI with SSE 8. Generative UI for precision visualization 9. Session resumption and device switching
 
-**Lower Priority (Epic 5-7 - Weeks 7-12):**
-10. Results display and sharing
-11. GDPR compliance and encryption
-12. Comprehensive E2E testing with Playwright
-13. Horizontal scaling setup
+**Lower Priority (Epic 5-7 - Weeks 7-12):** 10. Results display and sharing 11. GDPR compliance and encryption 12. Comprehensive E2E testing with Playwright 13. Horizontal scaling setup
 
 ### Alternative Approaches Considered
 
 **Alternative 1: LangGraph Cloud (Hosted Service)**
+
 - **Pros:** Managed infrastructure, auto-scaling, built-in observability
 - **Cons:** Vendor lock-in, higher cost, less control
 - **Decision:** NOT recommended for big-ocean (embedded pattern simpler)
 
 **Alternative 2: CrewAI instead of LangGraph**
+
 - **Pros:** Higher-level abstractions, simpler setup
 - **Cons:** Less control, Python-first (limited TypeScript support)
 - **Decision:** NOT recommended (LangGraph more mature for TypeScript)
 
 **Alternative 3: Raw Effect-ts without LangGraph**
+
 - **Pros:** Full control, fewer dependencies
 - **Cons:** Reinvent orchestration, checkpointing, streaming
 - **Decision:** NOT recommended (LangGraph provides battle-tested patterns)
 
 **Alternative 4: Separate LangGraph Server**
+
 - **Pros:** Independent scaling, language flexibility
 - **Cons:** Network latency, deployment complexity, no type safety
 - **Decision:** NOT recommended for initial version (embedded pattern sufficient)
@@ -2250,21 +2337,25 @@ Week 7+: Optimization
 ## Sources and References
 
 **Primary Documentation:**
+
 - [LangGraph.js Official Docs](https://langchain-ai.github.io/langgraphjs/)
 - [Effect-ts Official Docs](https://effect.website/)
 - [TanStack Start Documentation](https://tanstack.com/start/latest)
 - [Railway Documentation](https://docs.railway.app/)
 
 **Technical Articles:**
+
 - [Microsoft AI Agent Design Patterns](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/ai-agent-design-patterns)
 - [Scaling LangGraph Production](https://www.athousandnodes.com/posts/scaling-langgraph-production)
 - [Building Robust TypeScript APIs with Effect](https://dev.to/martinpersson/building-robust-typescript-apis-with-effect-ecosystem-1m7c)
 
 **Community Resources:**
+
 - [LangChain Forum - Best Practices for Parallel Nodes](https://forum.langchain.com/t/best-practices-for-parallel-nodes-fanouts/1900)
 - [Reddit r/LangChain - Testing Strategies](https://www.reddit.com/r/LangChain/comments/1i29djl/best_practices_for_unit_testing_in_langgraph/)
 
 **Reference Implementations:**
+
 - [hex-effect - Hexagonal Architecture with Effect-ts](https://github.com/jkonowitch/hex-effect)
 - [LangGraph.js Gen UI Examples](https://github.com/langchain-ai/langgraphjs-gen-ui-examples)
 

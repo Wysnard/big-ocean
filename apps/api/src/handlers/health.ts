@@ -5,9 +5,9 @@
  * Pattern from: effect-worker-mono/apps/effect-worker-api/src/handlers/health.ts
  */
 
-import { HttpApiBuilder } from "@effect/platform"
-import { DateTime, Effect } from "effect"
-import { BigOceanApi } from "@workspace/contracts"
+import { HttpApiBuilder } from "@effect/platform";
+import { DateTime, Effect } from "effect";
+import { BigOceanApi } from "@workspace/contracts";
 
 export const HealthGroupLive = HttpApiBuilder.group(
   BigOceanApi,
@@ -18,7 +18,7 @@ export const HealthGroupLive = HttpApiBuilder.group(
         Effect.succeed({
           status: "ok" as const,
           timestamp: DateTime.unsafeMake(Date.now()),
-        })
-      )
-    })
-)
+        }),
+      );
+    }),
+);

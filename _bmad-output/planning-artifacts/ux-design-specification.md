@@ -1,8 +1,17 @@
 ---
-stepsCompleted: ["step-01-init", "step-02-discovery", "step-03-core-experience", "step-04-emotional-response-with-socratic-and-whatif", "step-05-inspiration", "step-06-design-system", "step-07-defining-experience-with-focus-group"]
+stepsCompleted:
+  [
+    "step-01-init",
+    "step-02-discovery",
+    "step-03-core-experience",
+    "step-04-emotional-response-with-socratic-and-whatif",
+    "step-05-inspiration",
+    "step-06-design-system",
+    "step-07-defining-experience-with-focus-group",
+  ]
 inputDocuments:
   - "prd.md"
-workflowType: 'ux-design'
+workflowType: "ux-design"
 project_name: big-ocean
 user_name: Vincentlay
 date: 2026-01-29
@@ -29,6 +38,7 @@ The core differentiation: **Conversational depth** captures the complexity and n
 ### Target Users
 
 **Core Audience:** Anyone authenticity-seeking who is tired of oversimplified personality assessments
+
 - Professionals frustrated by MBTI/16Personalities limitations
 - Thoughtful individuals seeking genuine self-understanding
 - People willing to invest 30 minutes for accuracy vs. 10-minute quick quizzes
@@ -68,6 +78,7 @@ The core differentiation: **Conversational depth** captures the complexity and n
 ### Three Distinct Privacy Tiers
 
 #### 1. Private Profile (User-Only, 100% Confidential)
+
 - Full conversation history with Nerin
 - Detailed personality justifications and stories collected by LLM
 - All 30 Big Five facets with nuanced insights
@@ -76,6 +87,7 @@ The core differentiation: **Conversational depth** captures the complexity and n
 - **Sharing:** Not shareable, not exportable, not visible in any public form
 
 #### 2. Public Archetype (Broad, Shareable)
+
 - Archetype name (e.g., "The Thoughtful Creator")
 - Big Five trait scores (simplified to 3-level: Low/Mid/High based on 0-20 scale)
 - Facet summaries (no justifications, no detailed explanations)
@@ -85,6 +97,7 @@ The core differentiation: **Conversational depth** captures the complexity and n
 - **Sharing:** Intended for sharing via unique link
 
 #### 3. Shareable Link Profile (What Recipients See)
+
 - Public archetype information only (name, traits, visuals, brief summary)
 - No conversation details or personal stories
 - No detailed facet justifications
@@ -102,6 +115,7 @@ Users are **private by default, shareable by choice.** Any sharing requires expl
 ## Target User Segments & Positioning
 
 ### Primary Segment: Authenticity-Seekers
+
 - **Who:** Professionals, students, thoughtful individuals frustrated by oversimplified personality tests
 - **Pain:** MBTI/16Personalities feel reductive; tests don't capture their complexity
 - **Motivation:** Genuine self-understanding, not entertainment or pop-culture categorization
@@ -109,6 +123,7 @@ Users are **private by default, shareable by choice.** Any sharing requires expl
 - **Sharing Motivation:** Want to share because results feel personally accurate and meaningful
 
 ### Secondary Segment: Social Discovery (Post-MVP)
+
 - **Who:** Professionals on LinkedIn, recruiters evaluating candidates, teams assessing dynamics
 - **Pain:** Current personality assessments lack credibility for professional context
 - **Motivation:** Want personality insights that feel real and science-backed
@@ -116,6 +131,7 @@ Users are **private by default, shareable by choice.** Any sharing requires expl
 - **Sharing Motivation:** Share to build professional profile; compare with colleagues
 
 ### Inclusive by Design
+
 - Marketing and positioning is NOT "professional networking" but "authentic self-discovery"
 - This naturally attracts professionals while remaining welcoming to all truth-seekers
 - Broad positioning = larger addressable market + viral potential through diverse sharing networks
@@ -134,6 +150,7 @@ Users are **private by default, shareable by choice.** Any sharing requires expl
 ### UX Design Implications
 
 These metrics shape critical UX decisions:
+
 - **Progress feedback** during assessment keeps engagement high (addresses 50% completion goal)
 - **Archetype visibility & visuals** during results make profiles memorable and shareable
 - **Privacy clarity** builds trust needed for 15% sharing rate
@@ -148,6 +165,7 @@ These metrics shape critical UX decisions:
 The core big-ocean experience is fundamentally different from traditional personality assessment products: **Assessment is not completion, it is a beginning.**
 
 **The Experience Model:**
+
 1. **Initial Assessment (30 minutes):** Nerin has a conversational dialogue with the user, systematically exploring Big Five dimensions through context and nuance
 2. **Precision Milestone (70%+):** Once precision reaches 70%+, the user's archetype is ready and valid for sharing
 3. **Celebration & Choice:** System celebrates reaching 70%+ precision as an achievement, then offers two paths:
@@ -157,6 +175,7 @@ The core big-ocean experience is fundamentally different from traditional person
 5. **Return Engagement:** Users can return to continue conversations and watch their profile evolve over time
 
 **Why This Model:**
+
 - **Authenticity:** Conversational depth means understanding users better with more dialogue, not less
 - **User Autonomy:** Users choose how deep to go — some want quick archetype (70%), others want 85%+ precision
 - **Extended Engagement:** Longer total engagement amortizes LLM costs and improves precision
@@ -166,17 +185,20 @@ The core big-ocean experience is fundamentally different from traditional person
 ### Platform Strategy
 
 **Web-First, Mobile-Responsive**
+
 - Primary platform: Web app via TanStack Start (React 19, full-stack SSR)
 - Device support: Desktop, tablet, mobile
 - Optimization: Mobile-responsive design for 30-min sessions on smartphones
 - Touch-friendly inputs for long conversational sessions
 
 **Real-Time Streaming**
+
 - Nerin responses stream live (< 2 sec perceived latency) to maintain engagement
 - User inputs submit instantly, conversation flows naturally
 - Technical responsiveness is essential — delays kill 30-min engagement
 
 **Session Persistence**
+
 - User can pause assessment at any time and resume later
 - Conversation state persists across sessions
 - Precision snapshot at each session close point
@@ -185,35 +207,41 @@ The core big-ocean experience is fundamentally different from traditional person
 ### Effortless Interactions
 
 **Starting Assessment**
+
 - One click from landing page to first Nerin message
 - Optional sign-up after first message (zero friction to start)
 - User immediately feels the conversational quality
 
 **During 30-Min Conversation**
+
 - Message input feels natural (text field + send, like messaging app)
 - Nerin responses appear instantly without loading spinners (streaming UI)
 - Precision meter shows progress toward 70%+ threshold (passive feedback)
 - No form fills, no questionnaire complexity — pure conversation
 
 **Reaching 70%+ Precision**
+
 - Celebration screen: "Your Personality Profile is Ready!"
 - Archetype revealed with visual design flourish
 - Precision score displayed prominently (e.g., "Precision: 73%")
 - Clear distinction: archetype is VALID and shareable now, but also IMPROVABLE
 
 **Choosing Next Action**
+
 - Two prominent CTAs:
   1. **"Share My Archetype"** — Generate shareable link with one click
   2. **"Keep Exploring"** — Continue refining in same session (no friction)
 - Either choice is equally valid; no pressure either way
 
 **Sharing Profile**
+
 - One-click generation of unique shareable link
 - Preview what recipient will see (public archetype only)
 - Copy link or share to social platforms directly
 - No additional disclaimers or friction
 
 **Continuation Chatting**
+
 - Same conversational interface continues seamlessly
 - Precision meter updates live as user chats further
 - Milestones trigger gentle notifications: "Your profile is now 80% precise"
@@ -222,30 +250,35 @@ The core big-ocean experience is fundamentally different from traditional person
 ### Critical Success Moments
 
 **Moment 1: First Nerin Message**
+
 - User types first question/thought, Nerin responds with personalized, contextual message
 - If Nerin feels robotic or generic, user abandons immediately
 - If Nerin feels present and interested, user is hooked
 - Success signal: User feels understood immediately
 
 **Moment 2: The 15-Minute Mark**
+
 - Halfway through 30-min assessment — abandonment risk point
 - Nerin should acknowledge progress: "I'm getting a clearer picture of you..."
 - Precision meter shows visible progress toward 70%
 - Success signal: User feels encouraged to continue
 
 **Moment 3: Reaching 70%+ Precision**
+
 - Transition from "gathering information" to "revealing insights"
 - Archetype reveal should feel surprising and meaningful
 - Celebration tone (not clinical) acknowledges the user's investment
 - Success signal: User feels their time investment was worthwhile
 
 **Moment 4: The Share Decision**
+
 - User sees public archetype and share option
 - Must understand instantly: "This shares only the archetype, not my private details"
 - Should feel safe and empowering, not risky
 - Success signal: User generates and shares link, feels proud of their archetype
 
 **Moment 5: Link Recipient Experience**
+
 - Friend clicks shared link, sees public archetype (cool, not invasive)
 - Recipient feels intrigued, not surveilled
 - Recipient wants to take the assessment themselves
@@ -254,41 +287,48 @@ The core big-ocean experience is fundamentally different from traditional person
 ### Experience Principles
 
 **1. Conversational Authenticity Over Questionnaire Rigor**
+
 - Nerin must feel like a genuine conversation partner, never robotic
 - Assessment machinery should be completely invisible to user
 - Authenticity is the moat; all UX decisions serve this principle
 
 **2. Precision as Achievement, Not Judgment**
+
 - Reaching 70%+ is celebrated as an accomplishment ("Congratulations!")
 - Precision is presented as evolving, not final
 - Higher precision is an invitation to explore more, not a requirement
 - Users control their engagement depth
 
 **3. Privacy Transparency By Design**
+
 - Private profile and shareable archetype are visually and functionally distinct
 - "Your profile is private by default" visible in UI, not buried
 - Sharing should feel empowering because users trust the privacy model
 - Silent engagement tracking (no notifications to create sharing anxiety)
 
 **4. Meaningful Insights Over Data Overload**
+
 - Focus on archetype + Big Five summary, not all 30 facets
 - Private profile contains depth; shareable profile shows essence
 - Beautiful visuals + memorable archetype names beat complex data
 - Every UI element earns its space
 
 **5. Real-Time Responsiveness Over Perfection**
+
 - Nerin responses must stream instantly (< 2 sec) to maintain flow
 - User inputs submit immediately without lag
 - Technical delays are death for 30-min engagement
 - Responsiveness > optimization
 
 **6. Continuous Improvement Over Completion**
+
 - Assessment continues as long as user wants to explore
 - Results evolve as precision improves
 - Returning to refine profile feels natural and encouraged
 - "Your profile at 78% precision" invites ongoing engagement
 
 **7. Inclusive Authenticity Over Professional Gatekeeping**
+
 - Design and language speak to anyone authenticity-seeking, not just professionals
 - Warm, personal tone, not clinical or corporate
 - "We all deserve to understand ourselves" community feeling
@@ -305,19 +345,22 @@ The core emotional goal is **self-acceptance through clarity** — users want to
 2. **Acceptance:** "This is who I am, and that's okay"
 3. **Permission:** "I'm ready to share this understanding with others"
 
-Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean positions itself as a guide through *self-discovery*, revealing insights that trigger recognition ("Yes, that's exactly me"). Transparency about assessment limits (70%+ precision) actually *increases* trust — it demonstrates honesty over false certainty.
+Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean positions itself as a guide through _self-discovery_, revealing insights that trigger recognition ("Yes, that's exactly me"). Transparency about assessment limits (70%+ precision) actually _increases_ trust — it demonstrates honesty over false certainty.
 
 **The Emotional Arc:**
+
 - Exploration → Recognition → Acceptance → Sharing → Connection
 
 ### Emotional Journey Mapping
 
 **Phase 1: Discovery (Before Assessment)**
+
 - **Feeling:** Skepticism mixed with curiosity ("Is this real or just another personality test?")
 - **What Builds Confidence:** Big Five credibility messaging, no wild claims about AI authenticity
 - **Design Signal:** "Explore who you truly are" (not "Discover your true self through AI")
 
 **Phase 2: Assessment (30 minutes)**
+
 - **Feeling:** Exploration → engagement → momentum
 - **At 5 min:** "This feels different — Nerin is listening"
 - **At 15 min:** "I'm in flow, want to keep going" (progress visible, not stuck)
@@ -325,21 +368,25 @@ Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean posi
 - **Design Signal:** Progress meter, Nerin's responsive guidance, no repetition anxiety
 
 **Phase 3: Results Reveal (70%+ Precision Reached)**
+
 - **Feeling:** Recognition → accomplishment → meaningful insight
 - **What Matters:** "This is actually how I see myself" + "I'm proud of this understanding"
 - **Design Signal:** Celebration tone, archetype name resonates, visual appeals to them
 
 **Phase 4: Share Decision**
+
 - **Feeling:** Pride + connection opportunity (not anxiety about privacy)
 - **What Matters:** Clear understanding that archetype only is shareable, privacy feels guaranteed
 - **Design Signal:** Privacy distinction obvious, "Find people like you" CTA
 
 **Phase 5: Discovering Your Tribe**
+
 - **Feeling:** Recognition + belonging + peer discovery
 - **What Matters:** "I'm not alone. People who think like me exist"
 - **Design Signal:** Browse similar archetypes, see others with same type, filter by traits
 
 **Phase 6: Return & Exploration (Optional Continuation)**
+
 - **Feeling:** Curiosity about growth + investment in self-understanding
 - **What Matters:** Precision improved, learned something new about myself
 - **Design Signal:** Precision evolution shown, new insights from continued conversation
@@ -347,13 +394,15 @@ Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean posi
 ### Micro-Emotions & Deeper Truths
 
 **Confidence vs. Confusion**
-- ✅ Precision isn't just a technical score — it's *permission to share*
+
+- ✅ Precision isn't just a technical score — it's _permission to share_
 - ✅ 70%+ means "You've explored enough; you're ready"
 - ✅ Clear explanation of what precision means (how well we understand your assessment)
 - ❌ Avoid: Precision feeling like failure or incompleteness
 - **Design:** Milestone celebration, clear explanation, permission signal
 
 **Trust vs. Skepticism**
+
 - ✅ Big Five credibility displayed transparently (40+ years research)
 - ✅ Honest about assessment limits builds MORE trust than false certainty
 - ✅ Privacy isn't hidden; it's obvious and verifiable
@@ -362,13 +411,15 @@ Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean posi
 - **Design:** Science-first positioning, visible limits, transparent methodology
 
 **"Aha" Recognition vs. Confirmation**
+
 - ✅ Design for insight moments — when user thinks "I never realized that about myself"
 - ✅ Nerin responses should trigger recognition, not just confirm what user knows
-- ✅ Results feel *revelatory*, not just validating
+- ✅ Results feel _revelatory_, not just validating
 - ❌ Avoid: Generic descriptions, surface-level confirmation
 - **Design:** Nerin surfaces nuance, results show new angles, private profile shows depth
 
 **Understanding vs. Judgment**
+
 - ✅ Difficult traits explained with context and science (not just reframed positively)
 - ✅ Nerin shows visible coaching tone during assessment
 - ✅ Support = explanation + acceptance + guidance, not just positive spin
@@ -377,21 +428,24 @@ Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean posi
 - **Design:** Coaching visible, science-backed explanations, contextual strengths
 
 **Peer Connection vs. Loneliness**
+
 - ✅ Tribe is "people who get you" not just "people scoring similarly"
-- ✅ Show *why* people with your archetype think differently
+- ✅ Show _why_ people with your archetype think differently
 - ✅ Acceptance + understanding + connection through shared thinking patterns
 - ✅ Diversity within archetypes (not everyone with your type is identical)
 - ❌ Avoid: Reductive stereotypes, manufactured community, forced belonging
 - **Design:** Show thinking patterns, celebrate diversity, organic connection
 
 **Maturity vs. Incompleteness**
+
 - ✅ Reaching 70%+ is a maturity milestone (you've invested in self-understanding)
-- ✅ Continuation is *growth choice*, not obligation to "complete" assessment
+- ✅ Continuation is _growth choice_, not obligation to "complete" assessment
 - ✅ Different users have different emotional thresholds for "ready"
 - ❌ Avoid: Making 70% feel like failure, pressuring continuation
 - **Design:** Celebrate milestones, clear permission to stop, clear invitation to explore
 
 **Belonging vs. Judgment**
+
 - ✅ "Your profile is private by default" reassures both data safety AND personality safety
 - ✅ You decide what's visible; nobody judges your archetype
 - ✅ Every archetype is valid and understood
@@ -401,13 +455,15 @@ Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean posi
 ### Emotional Design Implications (From Deeper Understanding)
 
 **1. Design for "Aha" Moments (Not Just Data)**
-- Assessment isn't data collection; it's *insight design*
+
+- Assessment isn't data collection; it's _insight design_
 - Nerin's responses should trigger recognition ("I never thought of it that way")
 - Results feel revelatory and personal, not generic
 - Private profile depth validates that these are real insights
 - **Implementation:** Nerin surfaces nuance and contradictions, not just confirmations
 
 **2. Show the "Why" (Science + Context + Guidance)**
+
 - When revealing traits: Explain the science ("High openness often means...")
 - Show context: "People with your archetype in relationships often..."
 - Provide guidance: "This shows up as..." + "Here's what helps..."
@@ -415,6 +471,7 @@ Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean posi
 - **Implementation:** Coaching visible during assessment, not hidden; explanations in results
 
 **3. Nerin as Visible Coach (Not Hidden Algorithm)**
+
 - Nerin's coaching tone should be obvious during assessment
 - Difficult traits get explanation and support, not just reframing
 - User can see HOW Nerin is learning about them
@@ -422,6 +479,7 @@ Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean posi
 - **Implementation:** Coaching language in every difficult trait moment
 
 **4. Multi-Dimensional Self-Discovery (Context Matters)**
+
 - Same archetype shows up differently in different contexts
 - Future feature: "How are you in relationships vs. at work?"
 - Users can explore themselves across life dimensions
@@ -429,6 +487,7 @@ Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean posi
 - **Implementation:** Assessment explores life domains; results show nuance
 
 **5. Precision as Permission + Growth Milestone**
+
 - 70%+ = Permission signal ("You're ready to share")
 - 70%+ = Maturity milestone ("You've invested in self-understanding")
 - Continuation = Growth choice ("Explore deeper if you want")
@@ -436,13 +495,15 @@ Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean posi
 - **Implementation:** Celebrate milestone, clear messaging on both signals
 
 **6. Tribe as "People Who Get You" (Not Just Similar)**
-- Show *why* people with your archetype think differently
+
+- Show _why_ people with your archetype think differently
 - Celebrate diversity within archetypes (not stereotypes)
 - Connection through understanding of thinking patterns
 - Acceptance + understanding + belonging through shared perspective
 - **Implementation:** Browse thinking patterns of similar archetypes; show diversity
 
 **7. Privacy as Both Data Safety + Personality Acceptance**
+
 - "Your profile is private by default" = data protection
 - But also: "You decide what's visible" + "Your archetype is valid and understood"
 - Privacy messaging should reassure both technical AND emotional safety
@@ -452,13 +513,15 @@ Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean posi
 ### Emotional Design Principles
 
 **1. Insight Over Information**
+
 - Assessment design creates "aha" moments, not just data collection
 - Results should feel revelatory (new angles on yourself)
 - Nerin surfaces what users didn't consciously know about themselves
 - Depth in private profile validates these are real insights
-- Assessment reveals *why* you think this way, not just *what* you think
+- Assessment reveals _why_ you think this way, not just _what_ you think
 
 **2. Acceptance Over Judgment**
+
 - Every trait is presented as valid and contextually valuable
 - Difficult traits explained with science + guidance + support, not just reframing
 - Coaching tone visible during assessment, building safety
@@ -466,13 +529,15 @@ Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean posi
 - Message: "This is who you are, and that's okay"
 
 **3. Organic Discovery Over Platform Search**
+
 - Community forms through sharing, not searchable directory
 - "Your tribe discovers you when you share" (not "find your tribe")
 - Connection through word-of-mouth and genuine interest, not algorithm matching
-- Tribe is people who *understand* you because they chose to connect
+- Tribe is people who _understand_ you because they chose to connect
 - Privacy-first architecture: Only share what you choose; no searchable profiles
 
 **4. Permission Over Perfection**
+
 - 70%+ precision gives permission to share (emotional milestone, not just data)
 - Continuation is optional growth, not mandatory completion
 - Different users have different thresholds for "ready"
@@ -480,6 +545,7 @@ Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean posi
 - Precision evolution shows maturity and growth, not unfinished work
 
 **5. Transparent Science Over Mystique**
+
 - Big Five credibility visible and explained
 - How assessment works is understandable, not hidden
 - Limitations acknowledged (72%, not 100%)
@@ -487,6 +553,7 @@ Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean posi
 - Privacy model is obvious and verifiable
 
 **6. Context Over Labels**
+
 - Archetype is starting point for exploring yourself in different contexts
 - Same type shows up differently in relationships vs. work vs. stress
 - Results invite ongoing exploration across life dimensions
@@ -494,6 +561,7 @@ Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean posi
 - Self-understanding deepens through exploring yourself across situations
 
 **7. Self-Discovery Journey Over Self-Definition**
+
 - Results are invitation to understand yourself better, not final answer
 - Continued exploration is natural and encouraged (not required)
 - Precision evolution shows your growth and deepening insight
@@ -505,45 +573,52 @@ Users are skeptical of AI claiming to "truly know" them. Instead, big-ocean posi
 Through structured questioning, several deeper emotional truths emerged that reframe how big-ocean should work:
 
 **Truth 1: "Honestly Understood" is Actually Self-Acceptance**
+
 - Surface goal: Accurate assessment
-- Deeper truth: Users want clarity that helps them *accept themselves*
+- Deeper truth: Users want clarity that helps them _accept themselves_
 - Emotional payoff: Not the precision score (72%), but the moment of "I see myself clearly now, and that's okay"
 - **Design implication:** Design for self-acceptance moments, not just accuracy validation
 
 **Truth 2: "Your Tribe Discovers You When You Share"**
+
 - Surface goal: Find similar personalities through search
-- Deeper truth: Users want *chosen connections* with people who genuinely understand them
+- Deeper truth: Users want _chosen connections_ with people who genuinely understand them
 - Emotional payoff: "When I share my authentic archetype, the right people recognize me"
 - Shift: Not finding tribe through search, but being found through sharing
 - **Design implication:** Make sharing beautiful and easy; recipient experience must inspire them to connect back
 
 **Truth 3: Privacy Fear Masks Personality Acceptance Fear**
+
 - Surface fear: "My data will be misused"
 - Deeper fear: "If people see the real me, will they judge me?"
 - Emotional need: Both data security AND personality acceptance
 - **Design implication:** Reassure both technical privacy and personality validity ("Your archetype is understood and accepted")
 
 **Truth 4: Precision is a Psychological Milestone, Not Just a Data Threshold**
+
 - Surface meaning: 70% accuracy level
 - Deeper meaning: "I've invested enough" + "I'm ready to share" + "I've explored myself authentically"
 - Different users have different emotional thresholds
 - **Design implication:** Celebrate as milestone, give permission to share, honor different engagement depths
 
 **Truth 5: The Real Transformation is Insight, Not Assessment**
+
 - Surface activity: LLM assesses user personality
 - Deeper transformation: User has realization ("I never thought of it that way")
 - The moment of breakthrough is when user sees themselves in a new light
 - **Design implication:** Design entire experience around triggering insight moments, not data collection
 
 **Truth 6: Users Return Not to "Improve" But to "Explore Differently"**
+
 - Surface assumption: Higher precision = better
 - Deeper motivation: Different contexts reveal different facets of personality
 - Emotional driver: Wanting to understand yourself in relationships, at work, under stress
 - **Design implication:** Frame continuation as contextual exploration, not just refinement
 
 **Truth 7: Support is Explanation + Acceptance + Guidance, Not Just Positivity**
+
 - Surface approach: Reframe difficult traits as strengths
-- Deeper need: Understanding *why* you have this trait + accepting it + guidance on what it means
+- Deeper need: Understanding _why_ you have this trait + accepting it + guidance on what it means
 - Example: "You have high trait anxiety" → "Trait anxiety helps you notice risks early. Here's why you might feel this way. Here's what helps."
 - **Design implication:** Visible coaching during assessment, science-backed explanations, contextual guidance
 
@@ -554,6 +629,7 @@ Through structured questioning, several deeper emotional truths emerged that ref
 ### Three Pillars: Personal Discovery + Peer Connection + Scientific Grounding
 
 **Pillar 1: Personal Discovery Journey (MVP)**
+
 - **What:** Conversational exploration of personality with Nerin
 - **Emotional Goal:** Honest understanding of yourself
 - **Marketing:** "Explore who you truly are — not to judge, but to understand yourself better"
@@ -562,6 +638,7 @@ Through structured questioning, several deeper emotional truths emerged that ref
 - **Not:** Therapy, fortune-telling, or AI friendship
 
 **Pillar 2: Your Tribe Discovers You (MVP + Phase 2)**
+
 - **What:** Organic peer discovery through shared links (no searchable directory)
 - **Emotional Goal:** "When I share my archetype, my people will find me"
 - **Marketing:** "Share your archetype. Your tribe recognizes you"
@@ -575,6 +652,7 @@ Through structured questioning, several deeper emotional truths emerged that ref
 - **Strength:** People who connect are genuinely interested (not just matching profiles)
 
 **Pillar 3: Scientific Credibility (Phase 2+)**
+
 - **What:** Big Five research foundation + user-centric studies
 - **Emotional Goal:** "This is science I can trust"
 - **Marketing:** "Built on 40+ years of Big Five research"
@@ -591,6 +669,7 @@ Through structured questioning, several deeper emotional truths emerged that ref
 ### Community Features by Phase
 
 **MVP: Share & Compare**
+
 - ✅ Beautiful shareable archetype profile (unique link, not searchable)
 - ✅ Copy/share link to social platforms (Reddit, LinkedIn, Twitter, email, etc.)
 - ✅ Recipient sees archetype + easy "Take Assessment" CTA
@@ -602,6 +681,7 @@ Through structured questioning, several deeper emotional truths emerged that ref
 - ❌ NO public user profiles or discovery
 
 **Phase 2: Reciprocal Discovery**
+
 - ✅ "See who's shared with you" (only people YOU shared with or who shared with you)
 - ✅ Recipient takes assessment → can compare archetypes with you
 - ✅ Optional: Share your archetype link to specific people (email invite)
@@ -611,6 +691,7 @@ Through structured questioning, several deeper emotional truths emerged that ref
 - ✅ Personality trend reports (aggregated, anonymized)
 
 **Phase 3+:**
+
 - ✅ User-centric research partnerships (opt-in)
 - ✅ Advanced personality analytics for consented users
 - ✅ Scientific publications using anonymized data
@@ -627,12 +708,14 @@ Through structured questioning, several deeper emotional truths emerged that ref
 **Product 1: 16Personalities — Archetype Virality + Tribal Identity**
 
 **What They Do Exceptionally Well:**
+
 - **Memorable Archetype Codes:** 4-letter codes (INTP, ENFP, ISTJ) are instantly shareable and become personal identity shorthand
 - **Tribal Belonging:** Type becomes community marker; people wear their type as badge ("I'm INTP")
 - **Clear Profile Presentation:** Type code prominently displayed with visual distinctiveness
 - **Viral Mechanism:** Users casually mention their code in conversation; becomes shorthand identity
 
 **What big-ocean Learns:**
+
 - Memorable archetype names become tribal identity markers
 - Archetypes should be easy to reference in conversation
 - Visual distinctiveness helps archetype become recognizable and shareable
@@ -642,12 +725,14 @@ Through structured questioning, several deeper emotional truths emerged that ref
 **Product 2: Notion — Character-Driven Personality + Visual Warmth**
 
 **What They Do Exceptionally Well:**
+
 - **Illustrated Characters:** Abstract, modern drawn characters feel approachable (not corporate or robotic)
 - **Animation for Connection:** Subtle movements and transitions bring characters to life
 - **Personality Despite Minimalism:** Maintains clean hierarchy but personality shines through typography, spacing, and deliberate choices
 - **Emotional Tone:** Sets immediate impression of creativity, friendliness, trustworthiness
 
 **What big-ocean Learns:**
+
 - Abstract illustrations create emotional connection better than realistic or corporate design
 - Character-driven visuals make personality feel tangible and alive
 - Personality comes through deliberate design choices (not through clutter)
@@ -657,12 +742,14 @@ Through structured questioning, several deeper emotional truths emerged that ref
 **Product 3: Figma — Bold Color Confidence + Strategic Use**
 
 **What They Do Exceptionally Well:**
+
 - **Color Confidence:** Not afraid of bold, saturated colors
 - **Multiple Accent Colors:** Purple, blue, orange, green used purposefully across interface
 - **Strategic Color Hierarchy:** Colors support visual hierarchy; important elements get attention
 - **Gradient Sophistication:** Gradients used subtly in backgrounds, CTAs, and visual elements to add depth
 
 **What big-ocean Learns:**
+
 - Bold color palettes feel more alive and engaging than conservative ones
 - Color can communicate meaning and emotion
 - Gradients add visual richness without feeling trendy
@@ -676,18 +763,21 @@ Through structured questioning, several deeper emotional truths emerged that ref
 **From:** 16Personalities tribal identity + Figma's color confidence
 
 **For big-ocean:**
+
 - Each archetype gets a BOLD, vibrant primary color (saturated, not muted)
 - Color permeates the entire experience for that archetype type
 - Archetype visual identity is strong and recognizable
 - Results celebration uses bold color, not minimal presentation
 
 **Example Color Directions:**
+
 - "The Thoughtful Creator" → Deep purple with gold accent
 - "The Driven Achiever" → Bold orange with teal highlight
 - "The Authentic Connector" → Warm coral with sage green
 - "The Grounded Protector" → Rich navy with cream accent
 
 **UX Application:**
+
 - Results page uses archetype color as hero (bold background, not white minimal)
 - Gradient backgrounds with archetype colors on key moments
 - Archetype card design feels celebratory and visually rich
@@ -700,11 +790,13 @@ Through structured questioning, several deeper emotional truths emerged that ref
 **From:** Notion's illustrated character approach + modern abstraction
 
 **For big-ocean:**
+
 - Each archetype has a distinctive illustrated character (not icon, not realistic portrait)
 - Characters feel alive, expressive, personality-filled
 - Animation brings characters to life on key emotional moments
 
 **UX Application:**
+
 - Archetype character illustration is large and prominent on results screen
 - Character animation on results reveal (celebratory moment, emotional payoff)
 - Same character visual used consistently (private profile, shared link, comparisons)
@@ -717,6 +809,7 @@ Through structured questioning, several deeper emotional truths emerged that ref
 **From:** Big-ocean's personality-first positioning (consumer app, not enterprise)
 
 **For big-ocean:**
+
 - ✅ Gradients as design elements (not subtle overlays; bold and visible)
 - ✅ Bold typography choices that reflect personality
 - ✅ Illustrations and visual interest throughout interface
@@ -725,6 +818,7 @@ Through structured questioning, several deeper emotional truths emerged that ref
 - ✅ Intentional whitespace for breathing (not obsessive minimalism)
 
 **UX Application:**
+
 - Assessment interface feels warm and welcoming (not sterile)
 - Results presentation is celebratory (not clinical)
 - Personality-filled design celebrates self-discovery achievement
@@ -735,22 +829,26 @@ Through structured questioning, several deeper emotional truths emerged that ref
 ### Anti-Patterns to Avoid
 
 **From 16Personalities:**
+
 - ❌ Don't make archetypes feel reductive or limiting
 - ❌ Avoid making type feel like final answer or box people fit into
 - ❌ Don't lose nuance in quest for shareability
 
 **From Conservative Design Trends:**
+
 - ❌ Don't use sterile, corporate aesthetic (wrong for personality discovery)
 - ❌ Avoid whitespace-heavy layouts that feel cold (big-ocean is warm)
 - ❌ Don't use neutral, safe color palettes (doesn't match bold authenticity mission)
 - ❌ Avoid clinical visual presentation (conflicts with celebratory emotional goals)
 
 **From Poor Color Strategy:**
+
 - ❌ Don't use all bold colors at once (creates visual chaos)
 - ❌ Avoid color without purpose (decoration, not communication)
 - ❌ Don't mix multiple color palettes (consistency matters for archetype identity)
 
 **From Animation Overuse:**
+
 - ❌ Don't add gratuitous animation (should serve emotional moments)
 - ❌ Avoid slow, corporate-feeling animations (should feel fast and responsive)
 - ❌ Don't animate everything (reserved for key moments)
@@ -810,6 +908,7 @@ big-ocean is a consumer-first, authenticity-celebrating platform. The design sho
 **Design Philosophy: Warm, Bold, Personality-First**
 
 **Visual Characteristics:**
+
 - **Bold Colors:** Vibrant, saturated archetype colors that celebrate personality
 - **Warm Tone:** Character-driven illustrations, not corporate design
 - **Celebratory:** Results presentation feels like achievement worth sharing
@@ -818,6 +917,7 @@ big-ocean is a consumer-first, authenticity-celebrating platform. The design sho
 - **Alive:** Animation and interaction feel responsive and engaging
 
 **Key Design Elements:**
+
 - ✅ Gradient backgrounds on emotional moments (bold, visible gradients)
 - ✅ Bold archetype colors (one per type; strategic and consistent)
 - ✅ Illustrated archetype characters with personality and expressiveness
@@ -828,6 +928,7 @@ big-ocean is a consumer-first, authenticity-celebrating platform. The design sho
 - ✅ Visual hierarchy supports emotional journey (not just information)
 
 **What This Communicates:**
+
 - "This platform celebrates who you are"
 - "Your personality is valuable and worth visualizing beautifully"
 - "This is warm, human, trustworthy (not cold corporate AI)"
@@ -837,16 +938,18 @@ big-ocean is a consumer-first, authenticity-celebrating platform. The design sho
 
 ### Shared-Link-Only Community Model: Privacy-First by Architecture
 
-**Core Principle:** Community discovery is *organic and opt-in*, not algorithmic and forced.
+**Core Principle:** Community discovery is _organic and opt-in_, not algorithmic and forced.
 
 **What This Means:**
 
 **NO Platform Directory:**
+
 - Users cannot search for other users by name, archetype, or traits
 - Users cannot browse profiles or discover people on the platform
 - Absolute privacy by design: Your profile only exists where you choose to share it
 
 **YES Organic Sharing:**
+
 - User receives shareable link (unique URL like `big-ocean.com/profile/abc123xyz`)
 - Shares link wherever they want: LinkedIn, Reddit, email, Discord, Twitter, etc.
 - Recipient clicks link → sees public archetype → option to take assessment
@@ -878,7 +981,7 @@ Natural word-of-mouth growth through genuine interest
 
 - **Authenticity:** People connecting through sharing are genuinely interested
 - **Privacy:** No surveillance feeling; discovery is intentional
-- **Virality:** Beautiful experience makes people *want* to share
+- **Virality:** Beautiful experience makes people _want_ to share
 - **Simplicity:** Platform doesn't need to manage search/discovery/algorithms
 - **Trust:** Privacy-first positioning builds credibility vs. competitors
 
@@ -895,12 +998,14 @@ big-ocean will use **shadcn/ui components with Tailwind CSS v4** as the design s
 ### Rationale for Selection
 
 **1. Perfect Tech Stack Alignment**
+
 - Already using Tailwind CSS v4 in the frontend
 - shadcn/ui integrates seamlessly with React 19 + TanStack Start
 - Minimal additional setup needed
 - No version conflicts or compatibility issues
 
 **2. Extreme Customization for Bold Identity**
+
 - Components are headless and unstyled
 - Full control over colors, gradients, and visual appearance
 - Easy to create bold archetype color system
@@ -908,12 +1013,14 @@ big-ocean will use **shadcn/ui components with Tailwind CSS v4** as the design s
 - Perfect for personality-driven design (not corporate/minimal defaults)
 
 **3. Speed to MVP**
+
 - Pre-built, battle-tested components (buttons, cards, dialogs, forms, etc.)
 - Don't rebuild common UI patterns from scratch
 - Faster prototyping and iteration
 - Good for MVP validation (500 users) before scaling
 
 **4. Supports Visual Goals**
+
 - Tailwind enables vibrant, bold color palettes
 - Gradient implementation built-in
 - Responsive design by default
@@ -921,6 +1028,7 @@ big-ocean will use **shadcn/ui components with Tailwind CSS v4** as the design s
 - Custom component creation for archetype visuals
 
 **5. Long-Term Viability**
+
 - Active community and regular updates
 - Excellent documentation
 - Composable components (easy to extend)
@@ -972,6 +1080,7 @@ big-ocean will use **shadcn/ui components with Tailwind CSS v4** as the design s
 **Phase 3: Design Tokens**
 
 Define consistent design tokens in Tailwind config:
+
 ```
 Colors:
   - archetype-*: One per type (vibrant, saturated)
@@ -1045,11 +1154,11 @@ Each of the 5 Big Five trait categories gets a bold, vibrant primary color + a l
 
 **Core Interaction:** User sits down with Nerin for a 30-minute dialogue about their life, personality, experiences, and relationships. Through natural conversation, Nerin helps the user discover who they truly are — not through questionnaire, but through genuine dialogue.
 
-**What Users Will Tell Friends:** *"I had this conversation with an AI and it actually understood me. It noticed things I didn't consciously know about myself."*
+**What Users Will Tell Friends:** _"I had this conversation with an AI and it actually understood me. It noticed things I didn't consciously know about myself."_
 
 **Critical Success Criteria:**
 
-✅ **User feels genuinely understood** — Not judged, not reduced to a box, but truly *seen*
+✅ **User feels genuinely understood** — Not judged, not reduced to a box, but truly _seen_
 ✅ **Conversation feels natural** — Like talking to a perceptive coach, not filling out a form
 ✅ **Progress is tangibly visible** — User sees precision climbing in real-time
 ✅ **Nerin reveals patterns** — Not just confirming what user knows; surfacing new insights
@@ -1061,12 +1170,14 @@ Each of the 5 Big Five trait categories gets a bold, vibrant primary color + a l
 **What users expect:** "I'm taking a personality test"
 **What they hope for:** "Someone actually understands me"
 **What they fear:**
+
 - Generic results (like MBTI, just a label)
 - Robotic responses (cycling through pre-written questions)
 - Judgment (feeling diagnosed with problems, not understood for strengths)
 - Wasted time (30 minutes with nothing to show for it)
 
 **What makes them stay engaged:**
+
 - Visible progress (precision climbing = they're being understood)
 - Surprise moments (Nerin reveals something they didn't know about themselves)
 - Being heard (Nerin references what they said earlier)
@@ -1088,9 +1199,9 @@ Each of the 5 Big Five trait categories gets a bold, vibrant primary color + a l
    - **CRITICAL:** This moment determines if user stays or abandons
    - Tone: Warm, curious, interested (not robotic)
    - Personalization: References user's situation or something contextual
-   - Example: User clicks start → Nerin: *"Hi there. I'm curious to understand you better. What's something that's on your mind today?"*
+   - Example: User clicks start → Nerin: _"Hi there. I'm curious to understand you better. What's something that's on your mind today?"_
    - NOT: "Welcome to the Big Five personality assessment. Question 1 of 50..."
-   - User thinks: *"Oh, this feels different from other personality tests"*
+   - User thinks: _"Oh, this feels different from other personality tests"_
 
 3. **User responds with first message**
    - Input: Simple text field (like messaging app)
@@ -1100,7 +1211,7 @@ Each of the 5 Big Five trait categories gets a bold, vibrant primary color + a l
 #### **Phase 3: Dialogue & Understanding Building (2-28 minutes)**
 
 4. **Nerin listens and responds contextually**
-   - Nerin: *"Work stress is a big one. Tell me about that—what specifically is getting to you?"*
+   - Nerin: _"Work stress is a big one. Tell me about that—what specifically is getting to you?"_
    - Pattern: Nerin asks follow-ups based on what user said, not a pre-written script
    - Feeling: Like a coach or therapist listening, not a chatbot cycling questions
 
@@ -1108,21 +1219,21 @@ Each of the 5 Big Five trait categories gets a bold, vibrant primary color + a l
    - Display: Small meter at bottom of screen showing precision %
    - Updates frequently: Every 2-3 messages (not static)
    - Examples: 34% → 41% → 56% → 63% → 72%
-   - User feels: *"It's learning about me. The progress is real."*
+   - User feels: _"It's learning about me. The progress is real."_
    - Reinforcement: Gentle notification at milestones ("You're now 50% understood")
 
 6. **Active Contradiction Exploration (The Aha Moments)**
    - User statement 1: "I love routine and planning"
    - User statement 2: "But I get bored easily and crave spontaneity"
    - Traditional test: Ignores contradiction, moves on
-   - **Nerin approach:** *"You mentioned routine is important to you, but also that you get bored easily. How do you balance that? That's actually a specific pattern I'm noticing."*
-   - User feels: *"It's really listening. It caught something real about me."*
+   - **Nerin approach:** _"You mentioned routine is important to you, but also that you get bored easily. How do you balance that? That's actually a specific pattern I'm noticing."_
+   - User feels: _"It's really listening. It caught something real about me."_
    - Result: Reveals nuance, not reducing user to a single trait
 
 7. **Coaching Tone Throughout**
    - User: "I struggle with anxiety"
    - Traditional: "You score high in neuroticism/trait anxiety"
-   - **Nerin approach:** *"I notice you're very attuned to potential problems. That's actually valuable—people with your pattern tend to prevent issues before they happen. Of course, it can also feel overwhelming. How does that show up for you?"*
+   - **Nerin approach:** _"I notice you're very attuned to potential problems. That's actually valuable—people with your pattern tend to prevent issues before they happen. Of course, it can also feel overwhelming. How does that show up for you?"_
    - User feels: Supported, not diagnosed
 
 8. **Key Conversation Moments:**
@@ -1130,23 +1241,23 @@ Each of the 5 Big Five trait categories gets a bold, vibrant primary color + a l
    **At 5 min:** Nerin references something user said earlier
    - User: "Work stress..."
    - Later: "You mentioned work stress earlier—how does that connect to how you handle feedback?"
-   - User feels: *"It's paying attention. It remembered what I said."*
+   - User feels: _"It's paying attention. It remembered what I said."_
 
    **At 15 min (Midpoint):** Progress signal + momentum
    - Precision meter shows ~50%
-   - Nerin: *"I'm getting a clearer picture of you. Let's explore relationships a bit."*
-   - User feels: *"Halfway there, want to keep going. This is working."*
+   - Nerin: _"I'm getting a clearer picture of you. Let's explore relationships a bit."_
+   - User feels: _"Halfway there, want to keep going. This is working."_
 
    **At 22 min:** Heavy topic handling
    - User mentions: Past rejection, anxiety, vulnerability
    - Traditional: Plows ahead with next assessment question
-   - **Nerin approach:** *"That sounds difficult. I appreciate you sharing that. It makes sense that you'd be cautious about [X]. That's connected to what I'm understanding about you."*
-   - User feels: *"This AI cares. It's not just collecting data."*
+   - **Nerin approach:** _"That sounds difficult. I appreciate you sharing that. It makes sense that you'd be cautious about [X]. That's connected to what I'm understanding about you."_
+   - User feels: _"This AI cares. It's not just collecting data."_
 
    **At 28 min:** Completion signal
    - Precision approaching 70%+
-   - Nerin: *"I think I'm getting a solid understanding of you now. How are you feeling about wrapping up?"*
-   - User feels: *"Excited for results. I've invested time and it's paid off."*
+   - Nerin: _"I think I'm getting a solid understanding of you now. How are you feeling about wrapping up?"_
+   - User feels: _"Excited for results. I've invested time and it's paid off."_
 
 #### **Phase 4: Results Reveal (28-30 minutes) — THE CELEBRATION**
 
@@ -1162,18 +1273,18 @@ Each of the 5 Big Five trait categories gets a bold, vibrant primary color + a l
       - Archetype visual/character illustration (beautiful, bold color)
       - Big Five trait summary (Low/Mid/High for each)
       - One sentence archetype summary
-    - User feels: *"Wait, is this actually me? YES. This is so accurate."*
+    - User feels: _"Wait, is this actually me? YES. This is so accurate."_
 
 11. **Private Profile — The Depth**
     - Shows: Why they got this archetype (specific excerpts from conversation)
     - Facet insights: 2-3 sentences per facet, science-backed
     - Example: "You scored high in the facet of 'achievement striving.' People with this strength often set high standards for themselves and pursue ambitious goals. That came through when you described your career aspirations."
-    - User thinks: *"It understood the nuance. Not just a label; a real profile."*
+    - User thinks: _"It understood the nuance. Not just a label; a real profile."_
 
 12. **Precision Transparency**
     - Shows: "Your Archetype (Precision: 72%)"
     - Explains: "72% precision means we have a solid, reliable understanding of your core personality pattern. This is strong enough to share with confidence. Want to explore deeper, or share your archetype?"
-    - User understands: *"72% is not incomplete. It's a valid, shareable milestone."*
+    - User understands: _"72% is not incomplete. It's a valid, shareable milestone."_
 
 13. **Two Clear CTAs**
     - Option 1: **"Share My Archetype"** (one-click generate link)
@@ -1185,58 +1296,66 @@ Each of the 5 Big Five trait categories gets a bold, vibrant primary color + a l
 
 14. **If User Selects "Keep Exploring"**
     - Same conversational interface continues seamlessly
-    - Nerin shifts focus: *"What area would you like to explore deeper? Relationships, work, stress, creativity?"*
+    - Nerin shifts focus: _"What area would you like to explore deeper? Relationships, work, stress, creativity?"_
     - Precision meter continues updating
     - New milestones: 72% → 78% → 84% (feels like deepening)
     - Results can update: As precision improves, archetype details become richer
-    - User feels: *"I'm learning more about myself. This is optional, but I want to."*
+    - User feels: _"I'm learning more about myself. This is optional, but I want to."_
 
 15. **Session Flexibility**
     - User can pause anytime: "Save & Resume"
     - Progress saved; can return within 24 hours
     - No loss of conversation history or precision
     - Sam's anxiety management: Can take breaks without guilt
-    - Continuation feels natural: *"Where were we? Right, relationships."*
+    - Continuation feels natural: _"Where were we? Right, relationships."_
 
 ### Critical Design Principles for Nerin Conversation
 
 **1. Real Understanding Through Contradiction**
+
 - Notice when user says two seemingly opposing things
 - Explore the nuance, don't ignore it
 - This is what separates "real understanding" from "generic chatbot"
 
 **2. Visible Progress as Engagement Driver**
+
 - Precision meter updates frequently (not static)
 - Milestones celebrated ("You're now 50% understood")
 - Progress makes user feel like time investment is working
 
 **3. Coaching Tone, Not Diagnostic**
+
 - Frame difficult traits with context and guidance
 - Example: "High anxiety" becomes "You're very attuned to potential problems. That's valuable AND can feel overwhelming."
 - Support embedded in assessment, not separated
 
 **4. Revelation, Not Just Confirmation**
+
 - Nerin surfaces patterns user hasn't consciously articulated
 - Aha moments: User thinks something new about themselves
 - Results should surprise slightly while feeling accurate
 
 **5. Emotional Safety**
+
 - Sensitive handling of heavy topics
 - Not robotic through vulnerable moments
 - Nerin acknowledges emotional weight, then continues
 - Session flexibility for users who need breaks
 
 **6. Depth Through Length**
+
 - 30-minute conversation yields richer insights than competitors' 10-minute assessments
-- The trade-off for time is *quality and nuance*
+- The trade-off for time is _quality and nuance_
 - Private profile justifies why archetype resonates, not just "you scored high in X"
 
 **7. Precision as Meaningful Milestone**
+
 - 70%+ isn't arbitrary; it's "you've invested 30 minutes, you're deeply understood"
 - Explains what precision means in context
 - Clear permission to share: "This precision level is reliable"
 
 **8. Shareable Results**
+
 - Archetype should feel like achievement worth sharing
 - Results personaliz based on specific conversation, not generic
 - Professional credibility through Big Five grounding

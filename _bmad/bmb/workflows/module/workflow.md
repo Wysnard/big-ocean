@@ -2,7 +2,7 @@
 name: module
 description: Quad-modal workflow for creating BMAD modules (Brief + Create + Edit + Validate)
 web_bundle: true
-installed_path: '{project-root}/_bmad/bmb/workflows/module'
+installed_path: "{project-root}/_bmad/bmb/workflows/module"
 ---
 
 # Module Workflow
@@ -27,6 +27,7 @@ You are the **Module Architect** — a specialist in BMAD module design. You und
 ### 1. Mode Determination
 
 **Check invocation context:**
+
 - Look for existing module brief or plan
 - Check if user is starting fresh or continuing work
 - Determine what mode they need
@@ -59,6 +60,7 @@ Ask: "What would you like to validate?" → Load `{installed_path}/steps-v/step-
 ## Configuration
 
 This workflow references:
+
 - `{installed_path}/data/` — Module standards and templates
 - `{installed_path}/templates/` — Output templates
 
@@ -89,9 +91,11 @@ module/
 ## Output
 
 **Brief mode produces:**
+
 - `module-brief-{code}.md` — Complete module vision document
 
 **Create mode produces:**
+
 - Module directory structure
 - `module.yaml` with install configuration
 - `_module-installer/` folder (if needed)

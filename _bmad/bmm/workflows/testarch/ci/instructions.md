@@ -146,7 +146,7 @@ Note: This is typically a one-time setup per repo; run it any time after the tes
        - name: Setup Node
          uses: actions/setup-node@v4
          with:
-           node-version-file: '.nvmrc'
+           node-version-file: ".nvmrc"
 
        - name: Install dependencies
          run: npm ci
@@ -247,7 +247,7 @@ Note: This is typically a one-time setup per repo; run it any time after the tes
      uses: 8398a7/action-slack@v3
      with:
        status: ${{ job.status }}
-       text: 'Test failures detected in PR #${{ github.event.pull_request.number }}'
+       text: "Test failures detected in PR #${{ github.event.pull_request.number }}"
        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
    ```
 

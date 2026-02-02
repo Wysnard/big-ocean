@@ -5,8 +5,8 @@
  * Pattern from: effect-worker-mono/packages/contracts/src/http/groups/health.ts
  */
 
-import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform"
-import { Schema as S } from "effect"
+import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
+import { Schema as S } from "effect";
 
 /**
  * Health check response schema
@@ -14,11 +14,11 @@ import { Schema as S } from "effect"
 export const HealthResponseSchema = S.Struct({
   status: S.Literal("ok"),
   timestamp: S.optional(S.DateTimeUtc),
-})
+});
 
 /**
  * Health check HTTP API group
  */
 export const HealthGroup = HttpApiGroup.make("health").add(
-  HttpApiEndpoint.get("check", "/health").addSuccess(HealthResponseSchema)
-)
+  HttpApiEndpoint.get("check", "/health").addSuccess(HealthResponseSchema),
+);

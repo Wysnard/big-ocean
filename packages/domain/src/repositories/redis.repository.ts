@@ -72,6 +72,13 @@ export interface RedisRepositoryMethods {
   ) => Effect.Effect<number, RedisOperationError>;
 
   /**
+   * Get time to live for a key
+   * @param key - Redis key
+   * @returns TTL in seconds, -1 if no expiration, -2 if key doesn't exist
+   */
+  readonly ttl: (key: string) => Effect.Effect<number, RedisOperationError>;
+
+  /**
    * Check if Redis is healthy
    * @returns true if Redis responds to ping
    */

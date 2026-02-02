@@ -208,7 +208,7 @@ describe("Send Message Use Case - Precision Scoring", () => {
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -217,7 +217,7 @@ describe("Send Message Use Case - Precision Scoring", () => {
       };
 
       await Effect.runPromise(
-        sendMessage(input).pipe(Effect.provide(testLayer))
+        sendMessage(input).pipe(Effect.provide(testLayer)),
       );
 
       // Verify session was updated with precision scores
@@ -225,7 +225,7 @@ describe("Send Message Use Case - Precision Scoring", () => {
         "session_test_precision",
         expect.objectContaining({
           precision: expect.any(Object),
-        })
+        }),
       );
     });
 
@@ -234,7 +234,7 @@ describe("Send Message Use Case - Precision Scoring", () => {
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -243,7 +243,7 @@ describe("Send Message Use Case - Precision Scoring", () => {
       };
 
       const result = await Effect.runPromise(
-        sendMessage(input).pipe(Effect.provide(testLayer))
+        sendMessage(input).pipe(Effect.provide(testLayer)),
       );
 
       // Should return precision scores
@@ -260,7 +260,7 @@ describe("Send Message Use Case - Precision Scoring", () => {
           expect(typeof value).toBe("number");
           expect(value).toBeGreaterThanOrEqual(0);
           expect(value).toBeLessThanOrEqual(1);
-        }
+        },
       );
     });
 
@@ -280,14 +280,14 @@ describe("Send Message Use Case - Precision Scoring", () => {
       };
 
       mockSessionRepo.getSession.mockReturnValue(
-        Effect.succeed(sessionWithPrecision)
+        Effect.succeed(sessionWithPrecision),
       );
 
       const testLayer = Layer.mergeAll(
         Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
         Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
         Layer.succeed(LoggerRepository, mockLogger),
-        Layer.succeed(NerinAgentRepository, mockNerinAgent)
+        Layer.succeed(NerinAgentRepository, mockNerinAgent),
       );
 
       const input = {
@@ -296,7 +296,7 @@ describe("Send Message Use Case - Precision Scoring", () => {
       };
 
       const result = await Effect.runPromise(
-        sendMessage(input).pipe(Effect.provide(testLayer))
+        sendMessage(input).pipe(Effect.provide(testLayer)),
       );
 
       // All precision scores should remain in valid bounds
@@ -304,7 +304,7 @@ describe("Send Message Use Case - Precision Scoring", () => {
         (value) => {
           expect(value).toBeGreaterThanOrEqual(0);
           expect(value).toBeLessThanOrEqual(1);
-        }
+        },
       );
     });
   });
@@ -319,7 +319,7 @@ describe("Send Message Use Case - Precision Scoring", () => {
       facetPrecision = updateFacetPrecision(
         facetPrecision,
         "artistic_interests",
-        0.75
+        0.75,
       );
 
       let traitPrecision = calculateTraitPrecision(facetPrecision);
@@ -330,12 +330,12 @@ describe("Send Message Use Case - Precision Scoring", () => {
       facetPrecision = updateFacetPrecision(
         facetPrecision,
         "emotionality",
-        0.7
+        0.7,
       );
       facetPrecision = updateFacetPrecision(
         facetPrecision,
         "adventurousness",
-        0.75
+        0.75,
       );
 
       traitPrecision = calculateTraitPrecision(facetPrecision);
@@ -353,13 +353,13 @@ describe("Send Message Use Case - Precision Scoring", () => {
       updatedFacets = updateFacetPrecision(
         updatedFacets,
         "self_discipline",
-        0.75
+        0.75,
       );
       updatedFacets = updateFacetPrecision(updatedFacets, "orderliness", 0.7);
 
       let traits = calculateTraitPrecision(updatedFacets);
       expect(traits.conscientiousness).toBeGreaterThan(
-        initialTraits.conscientiousness
+        initialTraits.conscientiousness,
       );
 
       // After second message: also shows high agreeableness
@@ -378,7 +378,7 @@ describe("Send Message Use Case - Precision Scoring", () => {
       const updated = updateFacetPrecision(
         facetPrecision,
         "gregariousness",
-        0.8
+        0.8,
       );
       const final = updateFacetPrecision(updated, "assertiveness", 0.3);
 

@@ -24,7 +24,10 @@ export function LoginForm() {
       // Redirect or update UI on success
       window.location.href = "/dashboard";
     } catch (err) {
-      setError((err instanceof Error ? err.message : String(err)) || "Invalid email or password");
+      setError(
+        (err instanceof Error ? err.message : String(err)) ||
+          "Invalid email or password",
+      );
     } finally {
       setIsLoading(false);
     }

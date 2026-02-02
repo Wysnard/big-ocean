@@ -1,11 +1,11 @@
 ---
-name: 'step-10-report-complete'
-description: 'Finalize validation report - check for plan file, summarize all findings, present to user'
+name: "step-10-report-complete"
+description: "Finalize validation report - check for plan file, summarize all findings, present to user"
 
-targetWorkflowPath: '{workflow_folder_path}'
-validationReportFile: '{workflow_folder_path}/validation-report-{datetime}.md'
-workflowPlanFile: '{workflow_folder_path}/workflow-plan.md'
-planValidationStep: './step-11-plan-validation.md'
+targetWorkflowPath: "{workflow_folder_path}"
+validationReportFile: "{workflow_folder_path}/validation-report-{datetime}.md"
+workflowPlanFile: "{workflow_folder_path}/workflow-plan.md"
+planValidationStep: "./step-11-plan-validation.md"
 ---
 
 # Validation Step 10: Report Complete
@@ -53,6 +53,7 @@ To check if a plan file exists (and run plan validation if it does), then summar
 Before finalizing the report, check if a plan file exists:
 
 **Check if {workflowPlanFile} exists:**
+
 - **IF YES:** Run plan validation first
   - Load, read entire file, then execute {planValidationStep}
   - The plan validation will append its findings to the report
@@ -65,7 +66,7 @@ After plan validation (if applicable), load {validationReportFile} and read ALL 
 
 ### 3. Create Summary Section
 
-At the end of {validationReportFile}, replace "## Summary *Pending...*" with a comprehensive summary that includes:
+At the end of {validationReportFile}, replace "## Summary _Pending..._" with a comprehensive summary that includes:
 
 - Validation completion date
 - Overall status assessment (based on all validation steps)

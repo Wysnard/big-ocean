@@ -17,6 +17,7 @@ So that **stakeholders can visualize the assessment experience and the team has 
 ## Acceptance Criteria
 
 ### Home Page (Already Complete - Verify)
+
 1. **Given** a user visits the home page (`/`)
    - **When** the page loads
    - **Then** they see:
@@ -30,6 +31,7 @@ So that **stakeholders can visualize the assessment experience and the team has 
    - **Then** they are redirected to `/chat` with a new session started
 
 ### Mocked Chat UI (New Implementation)
+
 3. **Given** a user visits `/chat` (new session or resumed)
    - **When** the page loads
    - **Then** they see:
@@ -59,6 +61,7 @@ So that **stakeholders can visualize the assessment experience and the team has 
    - **And** the input field remains accessible above the keyboard
 
 ### Mocked Data
+
 7. **Given** the chat component mounts
    - **When** messages are displayed
    - **Then** mock data includes:
@@ -68,6 +71,7 @@ So that **stakeholders can visualize the assessment experience and the team has 
      - Progress bar value (35-40%)
 
 ### Navigation
+
 8. **Given** a user is in the chat
    - **When** they look at the header/navigation
    - **Then** they see a logo or "Big Ocean" branding
@@ -127,13 +131,16 @@ So that **stakeholders can visualize the assessment experience and the team has 
 ## Dev Notes
 
 ### Current Frontend State
+
 - **Home page** (`routes/index.tsx`): Already fully implemented with hero section, Big Five descriptions, and CTA buttons
 - **Chat route** (`routes/chat/index.tsx`): Exists but uses incomplete `useTherapistChat` hook
 - **TherapistChat component** (`components/TherapistChat.tsx`): UI structure exists, but no RPC integration yet
 - **RPC Hooks** (`hooks/use-assessment.ts`): Already defined and ready to use (startAssessment, sendMessage, etc.)
 
 ### Strategy for This Story
+
 This story creates a **mocked version** to visualize the UX before backend integration:
+
 1. Copy TherapistChat component logic (keep UI layout)
 2. Replace RPC calls with mock data generation
 3. Use `useState` for local message management
@@ -141,6 +148,7 @@ This story creates a **mocked version** to visualize the UX before backend integ
 5. This foundation makes it easy to swap mock → real RPC in later Epic 4 stories
 
 ### Mock Data Structure
+
 ```typescript
 interface Message {
   id: string;
@@ -150,7 +158,7 @@ interface Message {
 }
 
 interface TraitPrecision {
-  openness: number;        // 0-100 (%)
+  openness: number; // 0-100 (%)
   conscientiousness: number;
   extraversion: number;
   agreeableness: number;
@@ -166,6 +174,7 @@ interface MockSession {
 ```
 
 ### Mocked Response Examples
+
 ```
 User: "I love hiking and exploring new places"
 Assistant: "That's wonderful! Exploration seems to be important to you. When you discover a new trail or destination, what excites you most — the physical challenge, the natural beauty, or the sense of adventure?"
@@ -175,11 +184,13 @@ Assistant: "I hear that! The thrill of discovery. Do you bring that same adventu
 ```
 
 ### Key Files to Modify
+
 - `/Users/vincentlay/Projects/big-ocean/apps/front/src/components/TherapistChat.tsx` → Create `MockedTherapistChat.tsx` (parallel component for this story)
 - `/Users/vincentlay/Projects/big-ocean/apps/front/src/routes/chat/index.tsx` → Import and render mocked component
 - `/Users/vincentlay/Projects/big-ocean/apps/front/src/routes/index.tsx` → Ensure button links to `/chat`
 
 ### Testing Standards
+
 - **Unit Tests**: Components render, messages display, input works
 - **Integration Tests**: (deferred to later stories when RPC is live)
 - **E2E Tests**: (deferred to Epic 7)
@@ -187,18 +198,22 @@ Assistant: "I hear that! The thrill of discovery. Do you bring that same adventu
 - **Mobile Testing**: Manual testing on mobile device or emulator
 
 ### Architecture Compliance
+
 - **TanStack Stack**: Use React hooks (`useState`, `useEffect`), NOT TanStack Query (no API calls yet)
 - **Tailwind CSS v4**: Existing design tokens and spacing
 - **shadcn/ui Components**: Use Card, Button from existing component library
 - **No External Dependencies**: Keep mocking simple (pure JS, no mock libraries like MSW yet)
 
 ### Performance Considerations
+
 - Mock message delay: 1-2 seconds (simulates network latency)
 - Component should remain responsive during mock response generation
 - No optimization needed at this stage (mock data is tiny)
 
 ### Future Integration Path
+
 This mocked implementation directly transitions to Epic 4 (Real RPC Integration):
+
 1. In Epic 4, replace mock data initialization with `useStartAssessment()` hook
 2. Replace mock response generation with `useSendMessage()` hook
 3. Replace local state with TanStack Query mutations
@@ -209,6 +224,7 @@ This mocked implementation directly transitions to Epic 4 (Real RPC Integration)
 ## Previous Story Intelligence
 
 **Story 1.3 ✅ (RPC Contracts & Infrastructure Layer):**
+
 - RPC contracts already defined in `packages/contracts/src/assessment.ts`
 - Assessment, Profile RPC procedures ready
 - Type-safe client hooks in frontend ready to use
@@ -219,17 +235,20 @@ This mocked implementation directly transitions to Epic 4 (Real RPC Integration)
 ## Git Intelligence
 
 **Recent Commits Relevant to Frontend:**
+
 - `37c44e7`: "refactor: Move tsx to workspace-level dependency for consistency"
 - `4a0dfcb`: "feat: Story 1.4 Phase 1 - Docker Compose local development setup"
 - `dd4423e`: "feat: docker setup"
 
 **Code Patterns Established:**
+
 - Component: `apps/front/src/components/*.tsx` with TypeScript interfaces
 - Routes: `apps/front/src/routes/` using file-based TanStack Router
 - Styling: Tailwind CSS v4 with custom gradients and dark theme
 - Hooks: `apps/front/src/hooks/use-*.ts` for reusable logic
 
 **Dependencies to Note:**
+
 - React 19.2.0
 - TanStack Start 1.132.0
 - TanStack Router 1.132.0
@@ -242,6 +261,7 @@ This mocked implementation directly transitions to Epic 4 (Real RPC Integration)
 ## Project Structure Notes
 
 **Frontend Organization:**
+
 ```
 apps/front/src/
 ├── routes/
@@ -263,6 +283,7 @@ apps/front/src/
 
 **Design Decision:**
 Keep `MockedTherapistChat.tsx` as a separate component from `TherapistChat.tsx`. This allows:
+
 - Easy A/B testing between mock and real versions
 - Clean transition in Epic 4 by just switching the import
 - No risk of breaking existing code
@@ -273,6 +294,7 @@ Keep `MockedTherapistChat.tsx` as a separate component from `TherapistChat.tsx`.
 ## Testing Requirements
 
 ### Unit Tests (`MockedTherapistChat.test.ts`)
+
 ```typescript
 describe("MockedTherapistChat", () => {
   test("renders initial Nerin greeting", () => {
@@ -310,6 +332,7 @@ describe("MockedTherapistChat", () => {
 ```
 
 ### Manual Testing Checklist
+
 - [ ] Home page button navigates to chat
 - [ ] Chat loads with Nerin's greeting
 - [ ] Can type and send message
@@ -325,6 +348,7 @@ describe("MockedTherapistChat", () => {
 ## Completion Notes
 
 **Status After Completion:**
+
 - Home page navigation verified ✅
 - Mocked chat component complete ✅
 - Foundation for Epic 4 (Real RPC Integration) ready ✅
@@ -333,12 +357,14 @@ describe("MockedTherapistChat", () => {
 - Enables parallel development: frontend UI + backend logic
 
 **Artifacts Generated:**
+
 - `MockedTherapistChat.tsx` component
 - Unit tests with full coverage
 - Documentation in CLAUDE.md
 - Updated sprint status
 
 **Next Phase (Epic 4):**
+
 - Story 4.1: Replace mocks with real RPC hooks
 - Story 4.2: Add session resumption UI
 - Story 4.3: Add optimistic updates & progress tracking
@@ -346,6 +372,7 @@ describe("MockedTherapistChat", () => {
 
 **Parallel Development Opportunity:**
 While Epic 2 backend team develops Nerin agent, Analyzer/Scorer, this mockup allows:
+
 - Frontend team to refine UX with mock data
 - Product team to get stakeholder feedback
 - QA to plan test scenarios
@@ -362,6 +389,7 @@ Claude Haiku 4.5 (claude-haiku-4-5-20251001)
 ### Completion Notes
 
 ✅ **All Acceptance Criteria Met**
+
 - Home page navigation verified: both CTA buttons link to `/chat` with proper session generation
 - Chat interface fully functional with mock data and responses
 - Trait precision scores display correctly (updated on each message)
@@ -371,12 +399,14 @@ Claude Haiku 4.5 (claude-haiku-4-5-20251001)
 - Responsive design working on mobile and desktop
 
 ✅ **Testing Complete**
+
 - Unit tests: 9 test cases, all passing
 - Test coverage: Component rendering, input handling, message display, trait display, layout
 - vitest setup with jsdom environment configured
 - Accessibility features included: ARIA labels, semantic HTML, keyboard navigation
 
 ✅ **Code Quality**
+
 - TypeScript strict mode compliant
 - ESLint clean (fixed onKeyPress deprecation, unused imports)
 - Proper component structure with hooks
@@ -384,6 +414,7 @@ Claude Haiku 4.5 (claude-haiku-4-5-20251001)
 - Mock response generator: keyword-based, deterministic
 
 ✅ **RPC Integration Strategy**
+
 - useTherapistChat hook uses useSendMessage RPC hook
 - callRpc function returns mock data as fallback (works with simplified HTTP or future Effect-ts integration)
 - Message state managed locally with proper async handling
@@ -407,11 +438,13 @@ Claude Haiku 4.5 (claude-haiku-4-5-20251001)
 ### File List
 
 **Created:**
+
 - `apps/front/src/components/TherapistChat.test.tsx` - Comprehensive unit tests (9 test cases)
 - `apps/front/vitest.config.ts` - Vitest configuration with jsdom environment
 - `apps/front/vitest.setup.ts` - Vitest setup file for DOM mocking
 
 **Modified:**
+
 - `apps/front/src/hooks/useTherapistChat.ts` - Implemented with mock response generator and RPC integration
 - `apps/front/src/components/TherapistChat.tsx` - Updated with mock data and proper Tailwind styling
 - `apps/front/src/lib/rpc-client.ts` - Simplified RPC client with mock fallback
@@ -427,4 +460,3 @@ Claude Haiku 4.5 (claude-haiku-4-5-20251001)
 - **TanStack Start**: [Source: apps/front/src/routes/__root.tsx#Root layout]
 - **Big Five Model**: [Source: _bmad-output/planning-artifacts/epics.md#Story 1.4]
 - **Mocking Strategy**: [No external dependencies — pure JavaScript mock functions]
-

@@ -11,11 +11,12 @@ Every menu item requires:
 ```yaml
 - trigger: XX or fuzzy match on command-name
   [handler]: [value]
-  description: '[XX] Display text here'
-  data: [optional]   # Pass file to workflow
+  description: "[XX] Display text here"
+  data: [optional] # Pass file to workflow
 ```
 
 **Required fields:**
+
 - `trigger` - Format: `XX or fuzzy match on command-name` (XX = 2-letter code, command-name = what user says)
 - `description` - Must start with `[XX]` code
 - Handler - Either `action` (Simple/Expert) or `exec` (Module)
@@ -33,13 +34,13 @@ For Simple/Expert agents with self-contained operations.
 ```yaml
 # Reference prompt by ID
 - trigger: WC or fuzzy match on write-commit
-  action: '#write-commit'
-  description: '[WC] Write commit message'
+  action: "#write-commit"
+  description: "[WC] Write commit message"
 
 # Direct inline instruction
 - trigger: QC or fuzzy match on quick-commit
-  action: 'Generate commit message from diff'
-  description: '[QC] Quick commit from diff'
+  action: "Generate commit message from diff"
+  description: "[QC] Quick commit from diff"
 ```
 
 **When to use:** Simple/Expert agents. Use `#id` for complex multi-step prompts, inline text for simple operations.
@@ -50,17 +51,17 @@ For module agents referencing external workflow files.
 
 ```yaml
 - trigger: CP or fuzzy match on create-prd
-  exec: '{project-root}/_bmad/bmm/workflows/create-prd/workflow.md'
-  description: '[CP] Create Product Requirements Document'
+  exec: "{project-root}/_bmad/bmm/workflows/create-prd/workflow.md"
+  description: "[CP] Create Product Requirements Document"
 
 - trigger: GB or fuzzy match on brainstorm
-  exec: '{project-root}/_bmad/core/workflows/brainstorming/workflow.md'
-  description: '[GB] Guided brainstorming session'
+  exec: "{project-root}/_bmad/core/workflows/brainstorming/workflow.md"
+  description: "[GB] Guided brainstorming session"
 
 # Planned but unimplemented
 - trigger: FF or fuzzy match on future-feature
-  exec: 'todo'
-  description: '[FF] Coming soon'
+  exec: "todo"
+  description: "[FF] Coming soon"
 ```
 
 **When to use:** Module agents, multi-step workflows, complex processes. Use `exec: 'todo'` for unimplemented features.
@@ -71,14 +72,14 @@ Add to ANY handler to pass files to the workflow/action.
 
 ```yaml
 - trigger: TS or fuzzy match on team-standup
-  exec: '{project-root}/_bmad/bmm/tasks/team-standup.md'
-  data: '{project-root}/_bmad/_config/agent-manifest.csv'
-  description: '[TS] Run team standup'
+  exec: "{project-root}/_bmad/bmm/tasks/team-standup.md"
+  data: "{project-root}/_bmad/_config/agent-manifest.csv"
+  description: "[TS] Run team standup"
 
 - trigger: AM or fuzzy match on analyze-metrics
-  action: 'Analyze these metrics for trends'
-  data: '{project-root}/_data/metrics.json'
-  description: '[AM] Analyze metrics'
+  action: "Analyze these metrics for trends"
+  data: "{project-root}/_data/metrics.json"
+  description: "[AM] Analyze metrics"
 ```
 
 **When to use:** Workflow needs input file, action processes external data.
@@ -98,8 +99,8 @@ prompts:
 
 menu:
   - trigger: AC or fuzzy match on analyze-code
-    action: '#analyze-code'
-    description: '[AC] Analyze code patterns'
+    action: "#analyze-code"
+    description: "[AC] Analyze code patterns"
 ```
 
 **Common XML tags:** `<instructions>`, `<process>`, `<example>`, `<output_format>`
@@ -120,15 +121,17 @@ exec: '../../../core/workflows/brainstorming/workflow.md'
 ```
 
 **Available variables:**
+
 - `{project-root}` - Project root directory
 - `{output_folder}` - Document output location
 - `{user_name}` - User's name from config
 - `{communication_language}` - Language preference
 
 **Expert Agent sidecar paths:**
+
 ```yaml
 # Agent YAML referencing sidecar files
-action: 'Update {project-root}/_bmad/_memory/journal-keeper-sidecar/memories.md with insights'
+action: "Update {project-root}/_bmad/_memory/journal-keeper-sidecar/memories.md with insights"
 ```
 
 ---
@@ -144,10 +147,11 @@ When creating menu items, follow this sequence:
 5. **Write description** → `[LC] Lint code for issues`
 
 Result:
+
 ```yaml
 - trigger: LC or fuzzy match on lint-code
-  action: 'Check code for common issues and anti-patterns'
-  description: '[LC] Lint code for issues'
+  action: "Check code for common issues and anti-patterns"
+  description: "[LC] Lint code for issues"
 ```
 
 ---
@@ -165,25 +169,25 @@ prompts:
 
 menu:
   - trigger: FC or fuzzy match on format-code
-    action: '#format-code'
-    description: '[FC] Format code to style guidelines'
+    action: "#format-code"
+    description: "[FC] Format code to style guidelines"
 
   - trigger: LC or fuzzy match on lint-code
-    action: 'Check code for common issues and anti-patterns'
-    description: '[LC] Lint code for issues'
+    action: "Check code for common issues and anti-patterns"
+    description: "[LC] Lint code for issues"
 
   - trigger: SI or fuzzy match on suggest-improvements
-    action: 'Suggest improvements following project-context.md guidelines'
-    description: '[SI] Suggest improvements'
+    action: "Suggest improvements following project-context.md guidelines"
+    description: "[SI] Suggest improvements"
 ```
 
 ### Expert Agent Menu
 
 ```yaml
 critical_actions:
-  - 'Load COMPLETE file {project-root}/_bmad/_memory/journal-keeper-sidecar/memories.md'
-  - 'Load COMPLETE file {project-root}/_bmad/_memory/journal-keeper-sidecar/instructions.md'
-  - 'ONLY read/write files in {project-root}/_bmad/_memory/journal-keeper-sidecar/'
+  - "Load COMPLETE file {project-root}/_bmad/_memory/journal-keeper-sidecar/memories.md"
+  - "Load COMPLETE file {project-root}/_bmad/_memory/journal-keeper-sidecar/instructions.md"
+  - "ONLY read/write files in {project-root}/_bmad/_memory/journal-keeper-sidecar/"
 
 prompts:
   - id: guided-entry
@@ -192,16 +196,16 @@ prompts:
 
 menu:
   - trigger: WE or fuzzy match on write-entry
-    action: '#guided-entry'
-    description: '[WE] Write journal entry'
+    action: "#guided-entry"
+    description: "[WE] Write journal entry"
 
   - trigger: QC or fuzzy match on quick-capture
-    action: 'Save entry to {project-root}/_bmad/_memory/journal-keeper-sidecar/entries/entry-{date}.md'
-    description: '[QC] Quick capture'
+    action: "Save entry to {project-root}/_bmad/_memory/journal-keeper-sidecar/entries/entry-{date}.md"
+    description: "[QC] Quick capture"
 
   - trigger: SM or fuzzy match on save-memory
-    action: 'Update {project-root}/_bmad/_memory/journal-keeper-sidecar/memories.md with insights'
-    description: '[SM] Save session'
+    action: "Update {project-root}/_bmad/_memory/journal-keeper-sidecar/memories.md with insights"
+    description: "[SM] Save session"
 ```
 
 ### Module Agent Menu
@@ -209,16 +213,16 @@ menu:
 ```yaml
 menu:
   - trigger: WI or fuzzy match on workflow-init
-    exec: '{project-root}/_bmad/bmm/workflows/workflow-status/workflow.md'
-    description: '[WI] Initialize workflow path'
+    exec: "{project-root}/_bmad/bmm/workflows/workflow-status/workflow.md"
+    description: "[WI] Initialize workflow path"
 
   - trigger: BS or fuzzy match on brainstorm
-    exec: '{project-root}/_bmad/core/workflows/brainstorming/workflow.md'
-    description: '[BS] Guided brainstorming [K,T,A,B,C]'
+    exec: "{project-root}/_bmad/core/workflows/brainstorming/workflow.md"
+    description: "[BS] Guided brainstorming [K,T,A,B,C]"
 
   - trigger: CP or fuzzy match on create-prd
-    exec: '{project-root}/_bmad/bmm/workflows/create-prd/workflow.md'
-    description: '[CP] Create PRD'
+    exec: "{project-root}/_bmad/bmm/workflows/create-prd/workflow.md"
+    description: "[CP] Create PRD"
 ```
 
 ---

@@ -110,6 +110,7 @@ Story 1.3 migrates from oRPC to Effect-ts RPC and establishes the **type-safe co
 **Migration Requirements:**
 
 This story includes a **clean rebuild from oRPC to Effect-ts RPC**. The current codebase has:
+
 - oRPC contracts in `packages/contracts` using Zod schemas
 - oRPC handlers in `apps/api/src/procedures/` using `os.*.handler()` pattern
 - oRPC server setup in `apps/api/src/index.ts` using `RPCHandler`
@@ -117,6 +118,7 @@ This story includes a **clean rebuild from oRPC to Effect-ts RPC**. The current 
 **All of this will be deleted and rebuilt from scratch with Effect-ts.**
 
 **Only Preserve:**
+
 - The `/health` endpoint (critical for Railway deployment validation)
 - Logger setup (`apps/api/src/logger.ts`)
 - LangGraph therapist file structure (will be re-integrated later in Epic 2)
@@ -131,6 +133,7 @@ This story includes a **clean rebuild from oRPC to Effect-ts RPC**. The current 
 **Critical Success Criteria:**
 
 This story is considered complete only when:
+
 1. ✅ All oRPC code is removed
 2. ✅ Effect-ts RPC infrastructure is implemented
 3. ✅ Local testing passes (all RPC calls work)
@@ -140,6 +143,7 @@ This story is considered complete only when:
 **Architectural Alignment:**
 
 From architecture.md Decision 1B (Backend Framework Selection):
+
 - Follows **effect-worker-mono** pattern exactly
 - FiberRef bridges for request-scoped dependencies
 - @effect/rpc for type-safe contracts
@@ -312,7 +316,7 @@ export const getDatabase = Effect.gen(function* () {
 
 export const withDatabase = <A, E, R>(
   db: Database,
-  effect: Effect.Effect<A, E, R>
+  effect: Effect.Effect<A, E, R>,
 ): Effect.Effect<A, E, R> => {
   return Effect.gen(function* () {
     yield* FiberRef.set(DatabaseRef, db);
@@ -334,7 +338,7 @@ export const getLogger = Effect.gen(function* () {
 
 export const withLogger = <A, E, R>(
   logger: Logger,
-  effect: Effect.Effect<A, E, R>
+  effect: Effect.Effect<A, E, R>,
 ): Effect.Effect<A, E, R> => {
   return Effect.gen(function* () {
     yield* FiberRef.set(LoggerRef, logger);
@@ -366,7 +370,11 @@ export const getCostGuard = Effect.gen(function* () {
 import * as Rpc from "@effect/rpc/Rpc";
 import { Effect } from "effect";
 import { AssessmentService } from "@workspace/contracts/assessment";
-import { getDatabase, getLogger, getCostGuard } from "@workspace/infrastructure";
+import {
+  getDatabase,
+  getLogger,
+  getCostGuard,
+} from "@workspace/infrastructure";
 
 export const AssessmentHandlers = Rpc.handler(AssessmentService)({
   startAssessment: ({ userId }) =>
@@ -380,7 +388,7 @@ export const AssessmentHandlers = Rpc.handler(AssessmentService)({
           id: sessionId,
           userId: userId ?? null,
           createdAt: new Date(),
-        })
+        }),
       );
 
       logger.info({ sessionId, userId }, "Assessment session started");
@@ -399,7 +407,7 @@ export const AssessmentHandlers = Rpc.handler(AssessmentService)({
 
       // Load session
       const session = yield* Effect.promise(() =>
-        db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1)
+        db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1),
       );
 
       if (!session[0]) {
@@ -414,7 +422,7 @@ export const AssessmentHandlers = Rpc.handler(AssessmentService)({
       const userId = session[0].userId;
       if (userId) {
         const allowed = yield* Effect.promise(() =>
-          costGuard.checkDailyLimit(userId)
+          costGuard.checkDailyLimit(userId),
         );
         if (!allowed) {
           return yield* Effect.fail({
@@ -449,7 +457,7 @@ export const AssessmentHandlers = Rpc.handler(AssessmentService)({
       const db = yield* getDatabase;
 
       const session = yield* Effect.promise(() =>
-        db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1)
+        db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1),
       );
 
       if (!session[0]) {
@@ -484,7 +492,7 @@ export const AssessmentHandlers = Rpc.handler(AssessmentService)({
           .select()
           .from(sessions)
           .leftJoin(messages, eq(sessions.id, messages.sessionId))
-          .where(eq(sessions.id, sessionId))
+          .where(eq(sessions.id, sessionId)),
       );
 
       if (!session.length) {
@@ -671,6 +679,7 @@ big-ocean/
 ### NPM Libraries to Add
 
 **packages/contracts:**
+
 ```json
 {
   "dependencies": {
@@ -682,6 +691,7 @@ big-ocean/
 ```
 
 **packages/infrastructure:**
+
 ```json
 {
   "dependencies": {
@@ -693,6 +703,7 @@ big-ocean/
 ```
 
 **apps/api (additions):**
+
 ```json
 {
   "dependencies": {
@@ -703,6 +714,7 @@ big-ocean/
 ```
 
 **apps/front (additions):**
+
 ```json
 {
   "dependencies": {
@@ -722,6 +734,7 @@ big-ocean/
 **Current State (TO BE REMOVED):**
 
 ### Apps/API (`apps/api/`)
+
 - **`src/index.ts`**: Uses `@orpc/server` RPCHandler with CORSPlugin and logging interceptors
 - **`src/os.ts`**: Implements oRPC contract using `implement(contract)` pattern
 - **`src/router.ts`**: Exports nested router object with planet and chat procedures
@@ -730,12 +743,14 @@ big-ocean/
 - **Dependencies**: `@orpc/server@^1.13.4` in package.json
 
 ### Packages/Contracts (`packages/contracts/`)
+
 - **`src/index.ts`**: Defines contracts using `oc` from `@orpc/contract` with Zod schemas
 - **Schemas**: PlanetSchema, ChatMessageSchema, PersonalityTraitsSchema, PersonalityTraitPrecisionSchema (30 facets)
 - **Contracts**: exampleContract, listPlanetContract, findPlanetContract, createPlanetContract, sendMessageContract, etc.
 - **Dependencies**: `@orpc/contract`, `@orpc/server`, `zod`
 
 ### Apps/Front (`apps/front/`)
+
 - **oRPC Client**: May have oRPC client imports in frontend code (needs investigation)
 - **Dependencies**: Possibly `@orpc/client` or related packages
 
@@ -837,6 +852,7 @@ big-ocean/
 **Note**: Full end-to-end RPC testing deferred to Epic 2 when real business logic is implemented.
 
 **Phase 5 Infrastructure Validation Complete** ✅:
+
 - ✅ Server starts successfully and RPC endpoint is available at `/rpc`
 - ✅ All TypeScript code compiles without errors (frontend & backend)
 - ✅ Contracts properly structured with individual `Rpc.make()` definitions
@@ -914,6 +930,7 @@ big-ocean/
 5. **Epic 2+**: Real business logic implementation with Effect-ts patterns
 
 **For This Story (1.3):**
+
 - Focus on **infrastructure and contracts**, not business logic
 - Handlers return **placeholder data** (e.g., `startAssessment` returns fake sessionId)
 - Actual personality assessment logic comes later in Epic 2
@@ -930,6 +947,7 @@ big-ocean/
 ### Common Pitfalls to Avoid
 
 **Migration-Specific:**
+
 - ❌ Trying to run oRPC and Effect-ts side-by-side (delete oRPC completely first)
 - ❌ Trying to implement real business logic in Story 1.3 (use placeholders, real logic comes in Epic 2)
 - ❌ Breaking `/health` endpoint (Railway deployment will fail)
@@ -937,6 +955,7 @@ big-ocean/
 - ❌ Over-engineering handlers in this story (keep them simple, just infrastructure setup)
 
 **Effect-ts Patterns:**
+
 - ❌ Using `any` types in RPC contracts (defeats purpose of type safety)
 - ❌ Forgetting to export contracts from `packages/contracts/src/index.ts`
 - ❌ Mixing FiberRef.get without `yield*` (Effect.gen requires yielding)
@@ -945,6 +964,7 @@ big-ocean/
 - ❌ Creating FiberRef bridges with `FiberRef.make` instead of `FiberRef.unsafeMake` (causes type issues)
 
 **Railway Deployment:**
+
 - ❌ Deploying without testing `/health` endpoint locally first
 - ❌ Not checking Railway build logs during deployment (catch errors early)
 - ❌ Skipping environment variable verification (DATABASE_URL, PORT, etc.)
@@ -990,6 +1010,7 @@ curl http://localhost:4000/health
 **Railway Deployment Validation:**
 
 After migration is complete, deploy to Railway and verify:
+
 ```bash
 # Railway health check (automated by Railway)
 curl https://your-app.railway.app/health
@@ -1004,6 +1025,7 @@ curl https://your-app.railway.app/health
 If deployment fails or health checks don't pass:
 
 1. **Build Failures:**
+
    ```bash
    # Check build logs in Railway dashboard
    railway logs --service api
@@ -1017,6 +1039,7 @@ If deployment fails or health checks don't pass:
    ```
 
 2. **Health Check Failures:**
+
    ```bash
    # Verify /health endpoint locally first
    curl http://localhost:4000/health
@@ -1031,6 +1054,7 @@ If deployment fails or health checks don't pass:
    ```
 
 3. **Runtime Errors:**
+
    ```bash
    # Stream logs in real-time
    railway logs --service api --follow
@@ -1043,6 +1067,7 @@ If deployment fails or health checks don't pass:
    ```
 
 4. **CORS Issues (Frontend → API):**
+
    ```bash
    # Check browser console for CORS errors
    # Verify VITE_API_URL in frontend Railway variables
@@ -1052,6 +1077,7 @@ If deployment fails or health checks don't pass:
    ```
 
 5. **Quick Rollback:**
+
    ```bash
    # If deployment is broken, rollback immediately
    # Railway Dashboard → API Service → Deployments → [Previous] → Rollback
@@ -1063,6 +1089,7 @@ If deployment fails or health checks don't pass:
 ### Effect-ts Pattern Reference
 
 **Creating Effects:**
+
 ```typescript
 // Correct: Use Effect.gen
 Effect.gen(function* () {
@@ -1079,22 +1106,27 @@ async () => {
 ```
 
 **Error Handling:**
+
 ```typescript
 // Correct: Use Effect.fail with tagged error
-return yield* Effect.fail({
-  _tag: "SessionNotFound" as const,
-  sessionId,
-  message: "...",
-});
+return (
+  yield *
+  Effect.fail({
+    _tag: "SessionNotFound" as const,
+    sessionId,
+    message: "...",
+  })
+);
 
 // Incorrect: Don't throw raw errors
 throw new Error("Session not found"); // ❌ Loses type information
 ```
 
 **FiberRef Access:**
+
 ```typescript
 // Correct: Always yield FiberRef.get
-const logger = yield* FiberRef.get(LoggerRef);
+const logger = yield * FiberRef.get(LoggerRef);
 
 // Incorrect: Don't access directly
 const logger = LoggerRef.get(); // ❌ Returns Effect, not value
@@ -1207,6 +1239,7 @@ Successfully implemented the official @effect/rpc pattern following the effect-w
 ### File List
 
 **Modified Files (Backend):**
+
 - `pnpm-workspace.yaml` - Updated catalog to use "latest" for all Effect packages
 - `packages/contracts/src/assessment.ts` - Restructured with individual Rpc definitions and response schemas
 - `packages/contracts/src/profile.ts` - Restructured with individual Rpc definitions and response schemas
@@ -1217,23 +1250,27 @@ Successfully implemented the official @effect/rpc pattern following the effect-w
 - `apps/api/package.json` - Added @effect/rpc, @effect/cluster, @effect/sql, @effect/experimental dependencies
 
 **New Files (Frontend - Phase 4):**
+
 - `apps/front/src/lib/rpc-client.ts` - RPC client setup with callRpc helper function
 - `apps/front/src/hooks/use-assessment.ts` - TanStack Query hooks for assessment operations
 
 **Modified Files (Frontend - Phase 4):**
+
 - `apps/front/package.json` - Added effect, @effect/rpc, @effect/platform dependencies
-- `apps/front/tsconfig.json` - Added ~/* path alias for convenience
+- `apps/front/tsconfig.json` - Added ~/\* path alias for convenience
 - `apps/front/src/hooks/useTherapistChat.ts` - Commented out old oRPC imports
 - `apps/front/src/routes/demo/orpc-todo.tsx` - Commented out old oRPC imports with placeholder
 - `apps/front/src/routes/chat/index.tsx` - Commented out old oRPC imports with placeholder
 
 **Existing Infrastructure (Already Present):**
+
 - `packages/infrastructure/src/context/database.ts` - DatabaseRef FiberRef bridge
 - `packages/infrastructure/src/context/logger.ts` - LoggerRef FiberRef bridge
 - `packages/infrastructure/src/context/cost-guard.ts` - CostGuardRef FiberRef bridge
 - `packages/infrastructure/src/index.ts` - Bridge exports
 
 **Pattern References:**
+
 - Handler pattern: https://github.com/backpine/effect-worker-mono/blob/main/apps/effect-worker-rpc/src/handlers/users.ts
 - Contract pattern: https://github.com/backpine/effect-worker-mono/blob/main/packages/contracts/src/rpc/procedures/users.ts
 
@@ -1256,6 +1293,7 @@ Successfully implemented the official @effect/rpc pattern following the effect-w
 **Completion Date:** 2026-01-30
 
 **Migration Checklist Summary:**
+
 - Phase 0: Remove oRPC (0.5 day - clean deletion, no backup needed)
 - Phase 1-2: Effect-ts setup (1 day - contracts + infrastructure)
 - Phase 3-4: Placeholder handlers + frontend (1 day - simple stubs, no real logic)

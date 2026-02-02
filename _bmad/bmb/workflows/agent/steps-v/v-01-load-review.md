@@ -1,13 +1,13 @@
 ---
-name: 'v-01-load-review'
-description: 'Load agent and initialize validation report'
+name: "v-01-load-review"
+description: "Load agent and initialize validation report"
 
-nextStepFile: './v-02a-validate-metadata.md'
-validationReport: '{bmb_creations_output_folder}/validation-report-{agent-name}.md'
+nextStepFile: "./v-02a-validate-metadata.md"
+validationReport: "{bmb_creations_output_folder}/validation-report-{agent-name}.md"
 agentMetadata: ../data/agent-metadata.md
 
-advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'
-partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
+advancedElicitationTask: "{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml"
+partyModeWorkflow: "{project-root}/_bmad/core/workflows/party-mode/workflow.md"
 ---
 
 # Validate Step 1: Load Agent for Review
@@ -69,10 +69,10 @@ Initialize the validation report:
 
 ```markdown
 ---
-agentName: '{agent-name}'
-agentType: '{simple|expert|module}'  # Derived from module + hasSidecar
-agentFile: '{agent-file-path}'
-validationDate: '{YYYY-MM-DD}'
+agentName: "{agent-name}"
+agentType: "{simple|expert|module}" # Derived from module + hasSidecar
+agentFile: "{agent-file-path}"
+validationDate: "{YYYY-MM-DD}"
 stepsCompleted:
   - v-01-load-review.md
 ---
@@ -82,7 +82,7 @@ stepsCompleted:
 ## Agent Overview
 
 **Name:** {agent-name}
-**Type:** {simple|expert|module}  # Derived from: module + hasSidecar
+**Type:** {simple|expert|module} # Derived from: module + hasSidecar
 **module:** {module-value}
 **hasSidecar:** {true|false}
 **File:** {agent-file-path}
@@ -91,7 +91,7 @@ stepsCompleted:
 
 ## Validation Findings
 
-*This section will be populated by validation steps*
+_This section will be populated by validation steps_
 ```
 
 Write to `{validationReport}`.

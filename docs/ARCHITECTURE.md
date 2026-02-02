@@ -125,12 +125,12 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
   .add(
     HttpApiEndpoint.post("start", "/start")
       .addSuccess(StartAssessmentResponseSchema)
-      .setPayload(StartAssessmentRequestSchema)
+      .setPayload(StartAssessmentRequestSchema),
   )
   .add(
     HttpApiEndpoint.post("sendMessage", "/message")
       .addSuccess(SendMessageResponseSchema)
-      .setPayload(SendMessageRequestSchema)
+      .setPayload(SendMessageRequestSchema),
   )
   .prefix("/assessment");
 ```
@@ -163,7 +163,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
             });
 
             return { sessionId, createdAt };
-          })
+          }),
         )
         .handle("sendMessage", ({ payload }) =>
           Effect.gen(function* () {
@@ -185,9 +185,9 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
                 neuroticism: 0.3,
               },
             };
-          })
+          }),
         );
-    })
+    }),
 );
 ```
 
@@ -208,19 +208,19 @@ import { betterAuthHandler } from "./middleware/better-auth.js";
 const HttpGroupsLive = Layer.mergeAll(
   HealthGroupLive,
   AssessmentGroupLive,
-  LoggerServiceLive
+  LoggerServiceLive,
 );
 
 // Build API from contracts with handlers
 const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(
-  Layer.provide(HttpGroupsLive)
+  Layer.provide(HttpGroupsLive),
 );
 
 // Complete API with router and middleware
 const ApiLayer = Layer.mergeAll(
   ApiLive,
   HttpApiBuilder.Router.Live,
-  HttpApiBuilder.Middleware.layer
+  HttpApiBuilder.Middleware.layer,
 );
 
 // Hybrid server: Better Auth (node:http) → Effect (remaining routes)
@@ -249,7 +249,7 @@ const createCustomServer = () => {
 const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
   Layer.provide(ApiLayer),
   Layer.provide(NodeHttpServer.layer(createCustomServer, { port: 4000 })),
-  Layer.provide(LoggerServiceLive)
+  Layer.provide(LoggerServiceLive),
 );
 
 // Launch server
@@ -348,7 +348,7 @@ import { AssessmentMessageRepository } from "@workspace/domain/repositories/asse
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 
 export const sendMessage = (
-  input: SendMessageInput
+  input: SendMessageInput,
 ): Effect.Effect<
   SendMessageOutput,
   DatabaseError | SessionNotFound,
@@ -382,13 +382,13 @@ export const sendMessage = (
 const TestLayer = Layer.mergeAll(
   Layer.succeed(AssessmentSessionRepository, TestSessionRepo),
   Layer.succeed(AssessmentMessageRepository, TestMessageRepo),
-  Layer.succeed(LoggerRepository, TestLogger)
+  Layer.succeed(LoggerRepository, TestLogger),
 );
 
 const result = await Effect.runPromise(
   sendMessage({ sessionId: "test", message: "Hello" }).pipe(
-    Effect.provide(TestLayer)
-  )
+    Effect.provide(TestLayer),
+  ),
 );
 ```
 

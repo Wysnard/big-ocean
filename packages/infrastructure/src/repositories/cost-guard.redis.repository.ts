@@ -42,7 +42,13 @@ export const CostGuardRedisRepositoryLive = Layer.effect(
         Effect.gen(function* () {
           const key = `cost:${userId}:${getDateKey()}`;
           const newValue = yield* redis.incrby(key, costCents);
-          yield* redis.expire(key, TTL_SECONDS);
+
+          // Only set TTL if key is new (TTL returns -1 for no expiration)
+          const existingTTL = yield* redis.ttl(key);
+          if (existingTTL === -1) {
+            yield* redis.expire(key, TTL_SECONDS);
+          }
+
           return newValue;
         }),
 
@@ -57,7 +63,13 @@ export const CostGuardRedisRepositoryLive = Layer.effect(
         Effect.gen(function* () {
           const key = `assessments:${userId}:${getDateKey()}`;
           const newValue = yield* redis.incr(key);
-          yield* redis.expire(key, TTL_SECONDS);
+
+          // Only set TTL if key is new (TTL returns -1 for no expiration)
+          const existingTTL = yield* redis.ttl(key);
+          if (existingTTL === -1) {
+            yield* redis.expire(key, TTL_SECONDS);
+          }
+
           return newValue;
         }),
 

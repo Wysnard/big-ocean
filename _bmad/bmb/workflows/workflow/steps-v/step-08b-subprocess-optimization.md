@@ -1,11 +1,11 @@
 ---
-name: 'step-08b-subprocess-optimization'
-description: 'Identify subprocess optimization opportunities - reduce context load, improve performance'
+name: "step-08b-subprocess-optimization"
+description: "Identify subprocess optimization opportunities - reduce context load, improve performance"
 
-nextStepFile: './step-09-cohesive-review.md'
-targetWorkflowPath: '{workflow_folder_path}'
-validationReportFile: '{workflow_folder_path}/validation-report-{datetime}.md'
-subprocessPatterns: '../data/subprocess-optimization-patterns.md'
+nextStepFile: "./step-09-cohesive-review.md"
+targetWorkflowPath: "{workflow_folder_path}"
+validationReportFile: "{workflow_folder_path}/validation-report-{datetime}.md"
+subprocessPatterns: "../data/subprocess-optimization-patterns.md"
 ---
 
 # Validation Step 8b: Subprocess Optimization Analysis
@@ -51,16 +51,20 @@ To identify opportunities for subprocess optimization throughout the workflow - 
 **First, understand the subprocess optimization patterns by loading {subprocessPatterns}:**
 
 **If subprocess capability available:**
+
 ```markdown
 Launch a subprocess that:
+
 1. Loads {subprocessPatterns}
 2. Studies all patterns and examples deeply (Pattern 3: data operations!)
 3. Returns summary of key patterns to parent (not full file - saves context)
 ```
 
 **If subprocess unavailable:**
+
 ```markdown
 Load {subprocessPatterns} in main context
+
 # Larger context but still functional - demonstrates graceful fallback
 ```
 
@@ -78,6 +82,7 @@ Load {subprocessPatterns} in main context
 4. Returns specific, actionable suggestions to parent
 
 **Subprocess gets full context:**
+
 - The step file being analyzed
 - The subprocess-optimization-patterns.md reference (all examples and patterns)
 - Returns only findings to parent (context savings!)
@@ -93,6 +98,7 @@ Load {subprocessPatterns} in main context
 **Pattern 4: Parallel execution** - Independent operations that could run simultaneously. Suggest: "Run in parallel subprocesses to reduce execution time"
 
 **RETURN FORMAT (example structure, adapt as needed):**
+
 ```json
 {
   "step_file": "step-02-*.md",
@@ -121,6 +127,7 @@ After ALL files analyzed, create/update section in {validationReportFile}:
 ### High-Priority Opportunities
 
 **{Step Name}** - {Pattern Type}
+
 - **Current:** {brief description of current approach}
 - **Suggested:** {specific optimization suggestion}
 - **Impact:** {context savings, performance gain}

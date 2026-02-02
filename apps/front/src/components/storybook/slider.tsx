@@ -1,15 +1,15 @@
-import type React from 'react'
+import type React from "react";
 
 export interface SliderProps {
-  label: string
-  id: string
-  value?: number
-  onChange?: (value: number) => void
-  min?: number
-  max?: number
-  step?: number
-  showValue?: boolean
-  className?: string
+  label: string;
+  id: string;
+  value?: number;
+  onChange?: (value: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  showValue?: boolean;
+  className?: string;
 }
 
 export const Slider: React.FC<SliderProps> = ({
@@ -21,7 +21,7 @@ export const Slider: React.FC<SliderProps> = ({
   max = 100,
   step = 1,
   showValue = true,
-  className = '',
+  className = "",
 }) => {
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
@@ -53,5 +53,5 @@ export const Slider: React.FC<SliderProps> = ({
         <span>{max}</span>
       </div>
     </div>
-  )
-}
+  );
+};

@@ -20,7 +20,10 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 /**
  * HTTP client for assessment endpoints
  */
-async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+async function fetchApi<T>(
+  endpoint: string,
+  options?: RequestInit,
+): Promise<T> {
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
@@ -31,8 +34,12 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || `HTTP ${response.status}: ${response.statusText}`);
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    throw new Error(
+      error.message || `HTTP ${response.status}: ${response.statusText}`,
+    );
   }
 
   return response.json();
@@ -55,7 +62,9 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
 export function useStartAssessment() {
   return useMutation({
     mutationKey: ["assessment", "start"],
-    mutationFn: async (input: StartAssessmentRequest = {}): Promise<StartAssessmentResponse> => {
+    mutationFn: async (
+      input: StartAssessmentRequest = {},
+    ): Promise<StartAssessmentResponse> => {
       return fetchApi("/api/assessment/start", {
         method: "POST",
         body: JSON.stringify(input),
@@ -84,7 +93,9 @@ export function useStartAssessment() {
 export function useSendMessage() {
   return useMutation({
     mutationKey: ["assessment", "sendMessage"],
-    mutationFn: async (input: SendMessageRequest): Promise<SendMessageResponse> => {
+    mutationFn: async (
+      input: SendMessageRequest,
+    ): Promise<SendMessageResponse> => {
       return fetchApi("/api/assessment/message", {
         method: "POST",
         body: JSON.stringify(input),

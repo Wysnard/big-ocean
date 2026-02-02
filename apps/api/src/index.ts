@@ -36,10 +36,7 @@ const ServiceLayers = Layer.mergeAll(
   AssessmentSessionDrizzleRepositoryLive,
   AssessmentMessageDrizzleRepositoryLive,
   NerinAgentLangGraphRepositoryLive,
-).pipe(
-  Layer.provide(DatabaseStack),
-  Layer.provide(LoggerPinoRepositoryLive),
-);
+).pipe(Layer.provide(DatabaseStack), Layer.provide(LoggerPinoRepositoryLive));
 
 /**
  * Combined Handler Layers with Services

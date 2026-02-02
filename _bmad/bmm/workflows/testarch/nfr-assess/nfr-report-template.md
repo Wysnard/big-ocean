@@ -357,19 +357,20 @@ Note: This assessment summarizes existing evidence; it does not run tests or CI 
 
 **Based on ADR Quality Readiness Checklist (8 categories, 29 criteria)**
 
-| Category | Criteria Met | PASS | CONCERNS | FAIL | Overall Status |
-|----------|--------------|------|----------|------|----------------|
-| 1. Testability & Automation | {T_MET}/4 | {T_PASS} | {T_CONCERNS} | {T_FAIL} | {T_STATUS} {T_ICON} |
-| 2. Test Data Strategy | {TD_MET}/3 | {TD_PASS} | {TD_CONCERNS} | {TD_FAIL} | {TD_STATUS} {TD_ICON} |
-| 3. Scalability & Availability | {SA_MET}/4 | {SA_PASS} | {SA_CONCERNS} | {SA_FAIL} | {SA_STATUS} {SA_ICON} |
-| 4. Disaster Recovery | {DR_MET}/3 | {DR_PASS} | {DR_CONCERNS} | {DR_FAIL} | {DR_STATUS} {DR_ICON} |
-| 5. Security | {SEC_MET}/4 | {SEC_PASS} | {SEC_CONCERNS} | {SEC_FAIL} | {SEC_STATUS} {SEC_ICON} |
-| 6. Monitorability, Debuggability & Manageability | {MON_MET}/4 | {MON_PASS} | {MON_CONCERNS} | {MON_FAIL} | {MON_STATUS} {MON_ICON} |
-| 7. QoS & QoE | {QOS_MET}/4 | {QOS_PASS} | {QOS_CONCERNS} | {QOS_FAIL} | {QOS_STATUS} {QOS_ICON} |
-| 8. Deployability | {DEP_MET}/3 | {DEP_PASS} | {DEP_CONCERNS} | {DEP_FAIL} | {DEP_STATUS} {DEP_ICON} |
-| **Total** | **{TOTAL_MET}/29** | **{TOTAL_PASS}** | **{TOTAL_CONCERNS}** | **{TOTAL_FAIL}** | **{OVERALL_STATUS} {OVERALL_ICON}** |
+| Category                                         | Criteria Met       | PASS             | CONCERNS             | FAIL             | Overall Status                      |
+| ------------------------------------------------ | ------------------ | ---------------- | -------------------- | ---------------- | ----------------------------------- |
+| 1. Testability & Automation                      | {T_MET}/4          | {T_PASS}         | {T_CONCERNS}         | {T_FAIL}         | {T_STATUS} {T_ICON}                 |
+| 2. Test Data Strategy                            | {TD_MET}/3         | {TD_PASS}        | {TD_CONCERNS}        | {TD_FAIL}        | {TD_STATUS} {TD_ICON}               |
+| 3. Scalability & Availability                    | {SA_MET}/4         | {SA_PASS}        | {SA_CONCERNS}        | {SA_FAIL}        | {SA_STATUS} {SA_ICON}               |
+| 4. Disaster Recovery                             | {DR_MET}/3         | {DR_PASS}        | {DR_CONCERNS}        | {DR_FAIL}        | {DR_STATUS} {DR_ICON}               |
+| 5. Security                                      | {SEC_MET}/4        | {SEC_PASS}       | {SEC_CONCERNS}       | {SEC_FAIL}       | {SEC_STATUS} {SEC_ICON}             |
+| 6. Monitorability, Debuggability & Manageability | {MON_MET}/4        | {MON_PASS}       | {MON_CONCERNS}       | {MON_FAIL}       | {MON_STATUS} {MON_ICON}             |
+| 7. QoS & QoE                                     | {QOS_MET}/4        | {QOS_PASS}       | {QOS_CONCERNS}       | {QOS_FAIL}       | {QOS_STATUS} {QOS_ICON}             |
+| 8. Deployability                                 | {DEP_MET}/3        | {DEP_PASS}       | {DEP_CONCERNS}       | {DEP_FAIL}       | {DEP_STATUS} {DEP_ICON}             |
+| **Total**                                        | **{TOTAL_MET}/29** | **{TOTAL_PASS}** | **{TOTAL_CONCERNS}** | **{TOTAL_FAIL}** | **{OVERALL_STATUS} {OVERALL_ICON}** |
 
 **Criteria Met Scoring:**
+
 - ≥26/29 (90%+) = Strong foundation
 - 20-25/29 (69-86%) = Room for improvement
 - <20/29 (<69%) = Significant gaps
@@ -380,20 +381,20 @@ Note: This assessment summarizes existing evidence; it does not run tests or CI 
 
 ```yaml
 nfr_assessment:
-  date: '{DATE}'
-  story_id: '{STORY_ID}'
-  feature_name: '{FEATURE_NAME}'
-  adr_checklist_score: '{TOTAL_MET}/29'  # ADR Quality Readiness Checklist
+  date: "{DATE}"
+  story_id: "{STORY_ID}"
+  feature_name: "{FEATURE_NAME}"
+  adr_checklist_score: "{TOTAL_MET}/29" # ADR Quality Readiness Checklist
   categories:
-    testability_automation: '{T_STATUS}'
-    test_data_strategy: '{TD_STATUS}'
-    scalability_availability: '{SA_STATUS}'
-    disaster_recovery: '{DR_STATUS}'
-    security: '{SEC_STATUS}'
-    monitorability: '{MON_STATUS}'
-    qos_qoe: '{QOS_STATUS}'
-    deployability: '{DEP_STATUS}'
-  overall_status: '{OVERALL_STATUS}'
+    testability_automation: "{T_STATUS}"
+    test_data_strategy: "{TD_STATUS}"
+    scalability_availability: "{SA_STATUS}"
+    disaster_recovery: "{DR_STATUS}"
+    security: "{SEC_STATUS}"
+    monitorability: "{MON_STATUS}"
+    qos_qoe: "{QOS_STATUS}"
+    deployability: "{DEP_STATUS}"
+  overall_status: "{OVERALL_STATUS}"
   critical_issues: { CRITICAL_COUNT }
   high_priority_issues: { HIGH_COUNT }
   medium_priority_issues: { MEDIUM_COUNT }
@@ -402,9 +403,9 @@ nfr_assessment:
   quick_wins: { QUICK_WIN_COUNT }
   evidence_gaps: { EVIDENCE_GAP_COUNT }
   recommendations:
-    - '{RECOMMENDATION_1}'
-    - '{RECOMMENDATION_2}'
-    - '{RECOMMENDATION_3}'
+    - "{RECOMMENDATION_1}"
+    - "{RECOMMENDATION_2}"
+    - "{RECOMMENDATION_3}"
 ```
 
 ---

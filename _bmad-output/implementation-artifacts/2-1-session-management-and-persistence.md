@@ -17,6 +17,7 @@
 ## Dev Agent Record → File List
 
 **Files Created:**
+
 - `packages/domain/src/entities/session.entity.ts` — AssessmentSessionEntity schema with precision scores
 - `packages/domain/src/entities/message.entity.ts` — Assessment message entity schemas (user/assistant types)
 - `packages/domain/src/repositories/assessment-session.repository.ts` — Session repository service interface
@@ -31,6 +32,7 @@
 - `apps/api/src/__tests__/session-management.test.ts` — Use-case tests for session lifecycle and persistence
 
 **Files Modified:**
+
 - `packages/infrastructure/src/context/database.ts` — Database context provider with Drizzle integration
 - `packages/infrastructure/src/context/logger-service.ts` — Logger context provider
 - `packages/infrastructure/src/infrastructure/db/migrations/` — Database migrations for assessment tables
@@ -43,11 +45,13 @@
 ## Tasks/Subtasks
 
 ### Task 1: Domain Types and Errors ✅
+
 - [x] Create session types (SessionData, PrecisionScores, etc.)
 - [x] Create session errors (SessionNotFoundError, InvalidSessionStateError)
 - [x] Export from domain package index
 
 ### Task 2: Database Schema ✅
+
 - [x] Add sessions table with status, precision, messageCount fields
 - [x] Add messages table with role, content, createdAt fields
 - [x] Add composite index on (sessionId, createdAt) for performance
@@ -55,6 +59,7 @@
 - [x] Apply migration: `drizzle-kit push`
 
 ### Task 3: SessionManager Service ✅
+
 - [x] Create SessionManager Context.Tag
 - [x] Implement createSession method
 - [x] Implement saveMessage method
@@ -63,24 +68,28 @@
 - [x] Create SessionManagerLive layer with Database dependency
 
 ### Task 4: Service Tests ✅
+
 - [x] Test service tag existence
 - [x] Test layer construction with mock database
 - [x] Test method availability (createSession, saveMessage, getSession, updatePrecision)
 - [x] Test method execution (verify operations work)
 
 ### Task 5: HTTP Handler Integration ✅
+
 - [x] Update `start` handler to use SessionManager.createSession
 - [x] Update `sendMessage` handler to use SessionManager (getSession + saveMessage)
 - [x] Update `resumeSession` handler to use SessionManager.getSession
 - [x] Add Effect.orDie for error handling (TypeScript compatibility)
 
 ### Task 6: API Layer Composition ✅
+
 - [x] Create ServiceLayers combining SessionManagerLive and DatabaseStack
 - [x] Add ServiceLayers to HttpLive layer provides
 - [x] Verify TypeScript compilation passes
 - [x] Verify build succeeds
 
 ### Task 7: Integration Testing ✅
+
 - [x] Start API server (`pnpm dev --filter api`)
 - [x] Test POST /api/assessment/start
 - [x] Test POST /api/assessment/message
@@ -88,28 +97,33 @@
 - [x] Verify session persistence works end-to-end
 
 ### Task 8: Performance Validation ✅
+
 - [x] Test resume endpoint with 100+ message history
 - [x] Verify load time <1 second (composite index working)
 - [x] Test message persistence (no data loss)
 
 ### Task 9: Documentation ✅
+
 - [x] Add JSDoc comments to repository methods (all methods documented)
 - [x] Update CLAUDE.md with SessionManager usage examples (not needed - already documented)
 
 ### Review Follow-ups (AI) ⏳
 
 **Critical Issues:**
+
 - [x] [AI-Review][CRITICAL] Verify acceptance criteria claims vs actual implementation - **FIXED**: Aligned AC documentation with actual verification evidence [story-file:overall-documentation]
 - [x] [AI-Review][CRITICAL] Restore deleted test files or verify new test files created - **FIXED**: Created comprehensive use-case tests covering session lifecycle, message persistence, and service interface verification [apps/api/src/__tests__/session-management.test.ts]
 - [x] [AI-Review][CRITICAL] Document entity schema modifications made post-development - **FIXED**: Added detailed explanation of Schema fixes in Technical Notes section [session.entity.ts:15-17, message.entity.ts:11-13]
 
 **High Priority Issues:**
+
 - [x] [AI-Review][MEDIUM] Fix or document HTTP response serialization issue - **FIXED**: Documented as request body tracing issue (non-critical, core functionality working) [completion-summary]
 - [ ] [AI-Review][MEDIUM] Clarify performance test methodology - 19ms claim for 103 messages needs verification of test conditions vs realistic load [performance-validation:task-8]
 - [ ] [AI-Review][MEDIUM] Create actual integration test files - No test files found in codebase despite claiming test coverage [apps/api/src/use-cases/, packages/infrastructure/src/repositories/]
 - [x] [AI-Review][MEDIUM] Add error handling to logger operations - **FIXED**: Wrapped all logger calls in try-catch blocks in both repository implementations [assessment-session.drizzle.repository.ts, assessment-message.drizzle.repository.ts]
 
 **Low Priority Issues:**
+
 - [ ] [AI-Review][LOW] Standardize story file status indicator formatting - Inconsistent emoji usage (✅ vs ⏳) between task headers and completion summary [task-headers, completion-summary]
 - [ ] [AI-Review][LOW] Verify message content integrity not just count - Integration tests only checked message count, not content validation [completion-summary:test-results]
 - [ ] [AI-Review][LOW] Verify schema consolidation complete - drizzle.config.ts path changed but unclear if duplicate schemas exist [drizzle.config.ts:10]
@@ -129,6 +143,7 @@ So that **I can take time between conversations without losing progress**.
 ### Primary (TDD-Based)
 
 **TEST-FIRST (Red Phase):**
+
 - Test: Session created with unique ID
 - Test: Messages persisted to database
 - Test: Precision scores saved and restored
@@ -136,17 +151,20 @@ So that **I can take time between conversations without losing progress**.
 - Test: Conversation state accurate after resume
 
 **IMPLEMENTATION (Green Phase):**
+
 - Session saved with full conversation history
 - History loads from server in <1 second
 - Next agent response can be generated seamlessly
 - All tests pass (green)
 
 **INTEGRATION:**
+
 - Full conversation history visible (scrollable)
 - Precision scores continue updating
 - Assessment continues from exact pause point
 
 ### Secondary
+
 - **Documentation**: Session pattern documented; JSDoc on all methods
 - **Tests**: 100% coverage for SessionManager code paths
 - **Integration**: History loads <1s; no message loss
@@ -165,8 +183,8 @@ So that **I can take time between conversations without losing progress**.
 ```typescript
 // packages/infrastructure/src/context/session-manager.ts
 
-import { Context, Layer, Effect } from "effect"
-import { Database } from "./database.js"
+import { Context, Layer, Effect } from "effect";
+import { Database } from "./database.js";
 
 /**
  * Session Manager Service Tag
@@ -177,10 +195,19 @@ import { Database } from "./database.js"
 export class SessionManager extends Context.Tag("SessionManager")<
   SessionManager,
   {
-    readonly createSession: (userId?: string) => Effect.Effect<{ sessionId: string }>;
-    readonly saveMessage: (sessionId: string, role: "user" | "assistant", content: string) => Effect.Effect<void>;
+    readonly createSession: (
+      userId?: string,
+    ) => Effect.Effect<{ sessionId: string }>;
+    readonly saveMessage: (
+      sessionId: string,
+      role: "user" | "assistant",
+      content: string,
+    ) => Effect.Effect<void>;
     readonly getSession: (sessionId: string) => Effect.Effect<SessionData>;
-    readonly updatePrecision: (sessionId: string, precision: PrecisionScores) => Effect.Effect<void>;
+    readonly updatePrecision: (
+      sessionId: string,
+      precision: PrecisionScores,
+    ) => Effect.Effect<void>;
   }
 >() {}
 
@@ -194,14 +221,14 @@ export const SessionManagerLive = Layer.effect(
   SessionManager,
   Effect.gen(function* () {
     // KEY: Receive database through DI during layer construction
-    const database = yield* Database
+    const database = yield* Database;
 
     // Return service implementation
     return {
       createSession: (userId?: string) =>
         Effect.gen(function* () {
           // Use injected database
-          const sessionId = `session_${Date.now()}_${nanoid()}`
+          const sessionId = `session_${Date.now()}_${nanoid()}`;
           yield* database.insert(sessions).values({
             id: sessionId,
             userId: userId ?? null,
@@ -216,8 +243,8 @@ export const SessionManagerLive = Layer.effect(
               neuroticism: 0.5,
             },
             messageCount: 0,
-          })
-          return { sessionId }
+          });
+          return { sessionId };
         }),
 
       saveMessage: (sessionId, role, content) =>
@@ -229,45 +256,51 @@ export const SessionManagerLive = Layer.effect(
             role,
             content,
             createdAt: new Date(),
-          })
-          yield* database.update(sessions).set({
-            messageCount: count + 1,
-            updatedAt: new Date()
-          }).where(eq(sessions.id, sessionId))
+          });
+          yield* database
+            .update(sessions)
+            .set({
+              messageCount: count + 1,
+              updatedAt: new Date(),
+            })
+            .where(eq(sessions.id, sessionId));
         }),
 
       getSession: (sessionId) =>
         Effect.gen(function* () {
           // Load full session with messages
           const session = yield* database.query.sessions.findFirst({
-            where: eq(sessions.id, sessionId)
-          })
+            where: eq(sessions.id, sessionId),
+          });
           const msgs = yield* database.query.messages.findMany({
             where: eq(messages.sessionId, sessionId),
-            orderBy: asc(messages.createdAt)
-          })
-          return { session, messages: msgs }
+            orderBy: asc(messages.createdAt),
+          });
+          return { session, messages: msgs };
         }),
 
       updatePrecision: (sessionId, precision) =>
         Effect.gen(function* () {
-          yield* database.update(sessions).set({ precision, updatedAt: new Date() })
-            .where(eq(sessions.id, sessionId))
-        })
-    }
-  })
-)
+          yield* database
+            .update(sessions)
+            .set({ precision, updatedAt: new Date() })
+            .where(eq(sessions.id, sessionId));
+        }),
+    };
+  }),
+);
 
 // Usage in handlers:
 const handler = Effect.gen(function* () {
-  const sessionMgr = yield* SessionManager
-  const { sessionId } = yield* sessionMgr.createSession("user-123")
-  yield* sessionMgr.saveMessage(sessionId, "user", "Tell me about myself")
-  return { sessionId }
-})
+  const sessionMgr = yield* SessionManager;
+  const { sessionId } = yield* sessionMgr.createSession("user-123");
+  yield* sessionMgr.saveMessage(sessionId, "user", "Tell me about myself");
+  return { sessionId };
+});
 ```
 
 **Why This Pattern Matters:**
+
 - Service interfaces stay clean (no requirements parameters)
 - Dependencies managed at layer construction time (not at service usage time)
 - Enables straightforward testing through layer substitution
@@ -279,6 +312,7 @@ const handler = Effect.gen(function* () {
 **DO NOT test the underlying library behavior.** Test service wiring only.
 
 **Anti-pattern:**
+
 ```typescript
 // ❌ WRONG - Testing library behavior
 it("should insert into database", async () => {
@@ -289,31 +323,29 @@ it("should insert into database", async () => {
 ```
 
 **Correct pattern:**
+
 ```typescript
 // ✅ CORRECT - Testing service wiring
 it("should create session with injected database", async () => {
-  const mockDb = mockDatabase() // Test double with method stubs
+  const mockDb = mockDatabase(); // Test double with method stubs
 
   const handler = Effect.gen(function* () {
-    const sessionMgr = yield* SessionManager
-    return yield* sessionMgr.createSession("user-123")
-  })
+    const sessionMgr = yield* SessionManager;
+    return yield* sessionMgr.createSession("user-123");
+  });
 
   // Provide mock database layer
   const result = await Effect.runPromise(
-    handler.pipe(
-      Effect.provide(
-        Layer.succeed(Database, mockDb)
-      )
-    )
-  )
+    handler.pipe(Effect.provide(Layer.succeed(Database, mockDb))),
+  );
 
-  expect(result).toHaveProperty("sessionId")
-  expect(mockDb.insert).toHaveBeenCalled() // Verify interaction
-})
+  expect(result).toHaveProperty("sessionId");
+  expect(mockDb.insert).toHaveBeenCalled(); // Verify interaction
+});
 ```
 
 **Focus on:**
+
 - ✅ Service tag existence
 - ✅ Layer construction succeeds
 - ✅ Method availability
@@ -321,6 +353,7 @@ it("should create session with injected database", async () => {
 - ✅ Effect.gen syntax and error handling
 
 **Avoid testing:**
+
 - ❌ Database insert/update behavior (Drizzle's responsibility)
 - ❌ Transaction semantics
 - ❌ SQL generation
@@ -339,51 +372,69 @@ The schema extends the existing Better Auth schema created in Story 1-2. All tab
 ```typescript
 // packages/database/src/schema.ts
 
-import { pgTable, text, timestamp, integer, index, jsonb } from "drizzle-orm/pg-core"
-import { relations } from "drizzle-orm"
+import {
+  pgTable,
+  text,
+  timestamp,
+  integer,
+  index,
+  jsonb,
+} from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
-export const sessions = pgTable("sessions", {
-  id: text("id").primaryKey(),                              // session_{timestamp}_{nanoid}
-  userId: text("user_id"),                                  // NULL for anonymous, linked on auth
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  status: text("status").notNull().default("active"),        // 'active' | 'paused' | 'completed'
-  precision: jsonb("precision").notNull(),                   // { openness, conscientiousness, ... }
-  messageCount: integer("message_count").default(0).notNull(),
-}, (table) => ({
-  // Index by user_id for quick session lookup by user
-  userIdIdx: index("idx_sessions_user_id").on(table.userId),
-}))
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: text("id").primaryKey(), // session_{timestamp}_{nanoid}
+    userId: text("user_id"), // NULL for anonymous, linked on auth
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    status: text("status").notNull().default("active"), // 'active' | 'paused' | 'completed'
+    precision: jsonb("precision").notNull(), // { openness, conscientiousness, ... }
+    messageCount: integer("message_count").default(0).notNull(),
+  },
+  (table) => ({
+    // Index by user_id for quick session lookup by user
+    userIdIdx: index("idx_sessions_user_id").on(table.userId),
+  }),
+);
 
-export const messages = pgTable("messages", {
-  id: text("id").primaryKey(),
-  sessionId: text("session_id")
-    .notNull()
-    .references(() => sessions.id, { onDelete: "cascade" }),
-  role: text("role").notNull(),                              // 'user' | 'assistant'
-  content: text("content").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => ({
-  // CRITICAL for <1 second resume load time: composite index on (sessionId, createdAt)
-  // Allows efficient retrieval of all messages for a session in order
-  sessionCreatedIdx: index("idx_messages_session_created")
-    .on(table.sessionId, table.createdAt),
-}))
+export const messages = pgTable(
+  "messages",
+  {
+    id: text("id").primaryKey(),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => sessions.id, { onDelete: "cascade" }),
+    role: text("role").notNull(), // 'user' | 'assistant'
+    content: text("content").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    // CRITICAL for <1 second resume load time: composite index on (sessionId, createdAt)
+    // Allows efficient retrieval of all messages for a session in order
+    sessionCreatedIdx: index("idx_messages_session_created").on(
+      table.sessionId,
+      table.createdAt,
+    ),
+  }),
+);
 
 // Relations for Drizzle query builder
 export const sessionsRelations = relations(sessions, ({ many }) => ({
   messages: many(messages),
-}))
+}));
 
 export const messagesRelations = relations(messages, ({ one }) => ({
   session: one(sessions, {
     fields: [messages.sessionId],
     references: [sessions.id],
   }),
-}))
+}));
 ```
 
 **Index Performance Notes:**
+
 - `idx_sessions_user_id`: Enables fast lookup of all sessions by a user (for user profile, resumption list)
 - `idx_messages_session_created`: **Critical for story requirement** - enables efficient retrieval of all messages for a session in chronological order. Combined index (sessionId, createdAt) allows DB to:
   1. Locate all rows for a session (sessionId filter)
@@ -392,6 +443,7 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   4. Query execution: ~10ms for 100 messages, <1s for 1000 messages
 
 **Migration:**
+
 ```bash
 # After adding/modifying schema
 pnpm -C packages/database drizzle-kit generate:pg
@@ -407,18 +459,18 @@ pnpm -C packages/database drizzle-kit push
 // StartAssessment endpoint
 export const StartAssessmentRequestSchema = S.Struct({
   userId: S.optional(S.String),
-})
+});
 
 export const StartAssessmentResponseSchema = S.Struct({
   sessionId: S.String,
   createdAt: S.DateTimeUtc,
-})
+});
 
 // SendMessage endpoint (stores user message, gets response)
 export const SendMessageRequestSchema = S.Struct({
   sessionId: S.String,
   message: S.String,
-})
+});
 
 export const SendMessageResponseSchema = S.Struct({
   response: S.String,
@@ -429,12 +481,12 @@ export const SendMessageResponseSchema = S.Struct({
     agreeableness: S.Number,
     neuroticism: S.Number,
   }),
-})
+});
 
 // GetSession endpoint (resume session, load full history)
 export const GetSessionRequestSchema = S.Struct({
   sessionId: S.String,
-})
+});
 
 export const GetSessionResponseSchema = S.Struct({
   session: S.Struct({
@@ -456,30 +508,34 @@ export const GetSessionResponseSchema = S.Struct({
       role: S.Literal("user", "assistant"),
       content: S.String,
       createdAt: S.DateTimeUtc,
-    })
+    }),
   ),
-})
+});
 ```
 
 ### Core Session Operations
 
 **1. Create Session** (startAssessment HTTP POST)
-- Generate unique sessionId (session_{timestamp}_{nanoid})
+
+- Generate unique sessionId (session*{timestamp}*{nanoid})
 - Insert into sessions table with status='active', precision baseline (all 0.5)
 - Return { sessionId, createdAt }
 
 **2. Persist Message** (sendMessage HTTP POST)
+
 - Validate sessionId exists and status='active'
 - Insert message into messages table (role: 'user')
 - Increment sessions.messageCount, update updatedAt
 - Must be fast (synchronous) for optimistic update in frontend
 
 **3. Update Precision** (async, after Analyzer/Scorer runs)
+
 - Update sessions.precision with new scores
 - Update sessions.updatedAt
 - Can be asynchronous; called after analysis completes
 
 **4. Retrieve Full Session** (HTTP GET /sessions/{sessionId})
+
 - Query sessions table by ID (fail if not found)
 - Query messages table WHERE sessionId=... ORDER BY createdAt ASC
 - Return { session, messages }
@@ -490,27 +546,31 @@ export const GetSessionResponseSchema = S.Struct({
 ```typescript
 // packages/domain/src/errors/session.ts
 
-import { Tagged } from "effect"
+import { Tagged } from "effect";
 
 export class SessionNotFoundError extends Tagged("SessionNotFoundError")<{
-  readonly sessionId: string
+  readonly sessionId: string;
 }> {}
 
-export class InvalidSessionStateError extends Tagged("InvalidSessionStateError")<{
-  readonly sessionId: string
-  readonly currentStatus: string
+export class InvalidSessionStateError extends Tagged(
+  "InvalidSessionStateError",
+)<{
+  readonly sessionId: string;
+  readonly currentStatus: string;
 }> {}
 
-export type SessionError = SessionNotFoundError | InvalidSessionStateError
+export type SessionError = SessionNotFoundError | InvalidSessionStateError;
 ```
 
 Then in HTTP handlers:
+
 ```typescript
-const session = yield* db.sessions.findById(payload.sessionId)
+const session = yield * db.sessions.findById(payload.sessionId);
 if (!session) {
-  return yield* Effect.fail(
-    new SessionNotFoundError({ sessionId: payload.sessionId })
-  )
+  return (
+    yield *
+    Effect.fail(new SessionNotFoundError({ sessionId: payload.sessionId }))
+  );
 }
 ```
 
@@ -525,11 +585,11 @@ Story 1.6 established Effect/Platform HTTP handlers. Story 2-0.5 established pro
 ```typescript
 // apps/api/src/handlers/assessment.ts
 
-import { HttpApiBuilder } from "@effect/platform"
-import { DateTime, Effect } from "effect"
-import { BigOceanApi } from "@workspace/contracts"
-import { SessionManager } from "@workspace/infrastructure"
-import { SessionError } from "@workspace/domain"
+import { HttpApiBuilder } from "@effect/platform";
+import { DateTime, Effect } from "effect";
+import { BigOceanApi } from "@workspace/contracts";
+import { SessionManager } from "@workspace/infrastructure";
+import { SessionError } from "@workspace/domain";
 
 export const AssessmentGroupLive = HttpApiBuilder.group(
   BigOceanApi,
@@ -538,65 +598,71 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
     Effect.gen(function* () {
       // KEY: Access SessionManager service via Context.Tag injection
       // Following Story 2-0.5 pattern: service dependencies resolved at layer construction
-      const sessionMgr = yield* SessionManager
+      const sessionMgr = yield* SessionManager;
 
       return handlers
         .handle("startAssessment", ({ payload }) =>
           Effect.gen(function* () {
             // Service method - dependencies (database) already injected during layer construction
-            const { sessionId } = yield* sessionMgr.createSession(payload.userId)
+            const { sessionId } = yield* sessionMgr.createSession(
+              payload.userId,
+            );
 
             return {
               sessionId,
               createdAt: DateTime.unsafeMake(Date.now()),
-            }
-          })
+            };
+          }),
         )
         .handle("sendMessage", ({ payload }) =>
           Effect.gen(function* () {
             // Get current session to validate it exists and is active
-            const sessionData = yield* sessionMgr.getSession(payload.sessionId).pipe(
-              Effect.catchTag("SessionNotFoundError", () =>
-                Effect.fail(
-                  new SessionNotFoundError({ sessionId: payload.sessionId })
-                )
-              )
-            )
+            const sessionData = yield* sessionMgr
+              .getSession(payload.sessionId)
+              .pipe(
+                Effect.catchTag("SessionNotFoundError", () =>
+                  Effect.fail(
+                    new SessionNotFoundError({ sessionId: payload.sessionId }),
+                  ),
+                ),
+              );
 
             if (sessionData.session.status !== "active") {
               return yield* Effect.fail(
                 new InvalidSessionStateError({
                   sessionId: payload.sessionId,
                   currentStatus: sessionData.session.status,
-                })
-              )
+                }),
+              );
             }
 
             // Save user message
             yield* sessionMgr.saveMessage(
               payload.sessionId,
               "user",
-              payload.message
-            )
+              payload.message,
+            );
 
             // Placeholder response (Nerin will be added in Story 2.2)
             return {
               response: "Thank you for sharing that...",
               precision: sessionData.session.precision,
-            }
-          })
+            };
+          }),
         )
         .handle("getSession", ({ payload }) =>
           Effect.gen(function* () {
             // Load full session and message history
             // Service ensures <1 second load via composite index on (sessionId, createdAt)
-            const { session, messages } = yield* sessionMgr.getSession(payload.sessionId).pipe(
-              Effect.catchTag("SessionNotFoundError", () =>
-                Effect.fail(
-                  new SessionNotFoundError({ sessionId: payload.sessionId })
-                )
-              )
-            )
+            const { session, messages } = yield* sessionMgr
+              .getSession(payload.sessionId)
+              .pipe(
+                Effect.catchTag("SessionNotFoundError", () =>
+                  Effect.fail(
+                    new SessionNotFoundError({ sessionId: payload.sessionId }),
+                  ),
+                ),
+              );
 
             return {
               session: {
@@ -612,14 +678,15 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
                 content: m.content,
                 createdAt: DateTime.unsafeMake(m.createdAt.getTime()),
               })),
-            }
-          })
-        )
-    })
-)
+            };
+          }),
+        );
+    }),
+);
 ```
 
 **Key Patterns (From Story 2-0.5):**
+
 - Use `Context.Tag` for service definitions (not FiberRef)
 - Access services via `yield* ServiceTag` (example: `yield* SessionManager`)
 - Service interfaces have NO requirements - dependencies managed at layer construction
@@ -633,6 +700,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
 ## File Structure
 
 **New Files to Create:**
+
 1. `packages/infrastructure/src/context/session-manager.ts` — SessionManager service with Context.Tag pattern
 2. `packages/domain/src/errors/session.ts` — Session error types (SessionNotFoundError, InvalidSessionStateError)
 3. `packages/domain/src/types/session.ts` — Session/Message type definitions (SessionData, PrecisionScores, etc.)
@@ -640,12 +708,14 @@ export const AssessmentGroupLive = HttpApiBuilder.group(
 5. `packages/infrastructure/src/__tests__/session-manager.test.ts` — Service layer tests (verify service wiring)
 
 **Files to Modify:**
+
 1. `packages/database/src/schema.ts` — Add sessions and messages tables with indexes
 2. `packages/infrastructure/src/index.ts` — Export SessionManager service and live layer
 3. `apps/api/src/handlers/assessment.ts` — Update handlers to use SessionManager service
 4. `apps/api/src/index.ts` — Add SessionManagerLive to service layer composition (Layer.mergeAll)
 
 **Database Migration:**
+
 ```bash
 # Generate migration from schema changes
 pnpm -C packages/database drizzle-kit generate:pg
@@ -666,12 +736,12 @@ docker compose exec postgres psql -U dev -d bigocean -c "SELECT * FROM informati
 // packages/api/src/index.ts - Add SessionManager to layer composition
 
 const ServiceLayers = Layer.mergeAll(
-  DatabaseStack,           // Database + PgClient (from Story 2-0.5)
-  BetterAuthLive,          // Better Auth (from Story 2-0.5)
-  LoggerServiceLive,       // Logger (from Story 2-0.5)
-  SessionManagerLive,      // NEW - Session management (Story 2-1)
-  CostGuardServiceLive,    // Cost guard (placeholder, Story 2.5)
-)
+  DatabaseStack, // Database + PgClient (from Story 2-0.5)
+  BetterAuthLive, // Better Auth (from Story 2-0.5)
+  LoggerServiceLive, // Logger (from Story 2-0.5)
+  SessionManagerLive, // NEW - Session management (Story 2-1)
+  CostGuardServiceLive, // Cost guard (placeholder, Story 2.5)
+);
 ```
 
 ---
@@ -681,6 +751,7 @@ const ServiceLayers = Layer.mergeAll(
 ### Red Phase: Write Failing Tests First
 
 **Strategy (From Story 2-0.5):** Test service wiring, not library behavior. Focus on:
+
 - Service tag existence
 - Layer construction succeeds
 - Method availability
@@ -692,10 +763,13 @@ const ServiceLayers = Layer.mergeAll(
 // packages/infrastructure/src/__tests__/session-manager.test.ts
 // Tests the SessionManager service wiring and layer composition
 
-import { describe, it, expect, beforeEach } from "vitest"
-import { Layer, Effect, Context } from "effect"
-import { SessionManager, SessionManagerLive } from "../context/session-manager.js"
-import { Database } from "../context/database.js"
+import { describe, it, expect, beforeEach } from "vitest";
+import { Layer, Effect, Context } from "effect";
+import {
+  SessionManager,
+  SessionManagerLive,
+} from "../context/session-manager.js";
+import { Database } from "../context/database.js";
 
 // Mock database for testing (test double, not Drizzle execution)
 const createMockDatabase = () => ({
@@ -716,93 +790,92 @@ const createMockDatabase = () => ({
       findMany: Effect.succeed([]),
     },
   },
-})
+});
 
 describe("SessionManager Service", () => {
   describe("Service Layer Composition", () => {
     it("should define SessionManager service tag", () => {
-      expect(SessionManager).toBeDefined()
-    })
+      expect(SessionManager).toBeDefined();
+    });
 
     it("should construct with mock database", async () => {
-      const mockDb = createMockDatabase()
+      const mockDb = createMockDatabase();
 
       const test = Effect.gen(function* () {
-        const sessionMgr = yield* SessionManager
-        expect(sessionMgr).toBeDefined()
-        expect(sessionMgr.createSession).toBeDefined()
-        expect(sessionMgr.saveMessage).toBeDefined()
-        expect(sessionMgr.getSession).toBeDefined()
-        expect(sessionMgr.updatePrecision).toBeDefined()
-      })
+        const sessionMgr = yield* SessionManager;
+        expect(sessionMgr).toBeDefined();
+        expect(sessionMgr.createSession).toBeDefined();
+        expect(sessionMgr.saveMessage).toBeDefined();
+        expect(sessionMgr.getSession).toBeDefined();
+        expect(sessionMgr.updatePrecision).toBeDefined();
+      });
 
       // Provide mock database layer
       await Effect.runPromise(
         test.pipe(
-          Effect.provide(
-            Layer.succeed(Database, mockDb)
-          ),
-          Effect.provide(SessionManagerLive)
-        )
-      )
-    })
-  })
+          Effect.provide(Layer.succeed(Database, mockDb)),
+          Effect.provide(SessionManagerLive),
+        ),
+      );
+    });
+  });
 
   describe("Service Method Availability", () => {
     it("should expose createSession method", async () => {
-      const mockDb = createMockDatabase()
+      const mockDb = createMockDatabase();
 
       const test = Effect.gen(function* () {
-        const sessionMgr = yield* SessionManager
-        expect(typeof sessionMgr.createSession).toBe("function")
-      })
+        const sessionMgr = yield* SessionManager;
+        expect(typeof sessionMgr.createSession).toBe("function");
+      });
 
       await Effect.runPromise(
         test.pipe(
           Effect.provide(Layer.succeed(Database, mockDb)),
-          Effect.provide(SessionManagerLive)
-        )
-      )
-    })
+          Effect.provide(SessionManagerLive),
+        ),
+      );
+    });
 
     it("should expose saveMessage method", async () => {
-      const mockDb = createMockDatabase()
+      const mockDb = createMockDatabase();
 
       const test = Effect.gen(function* () {
-        const sessionMgr = yield* SessionManager
-        expect(typeof sessionMgr.saveMessage).toBe("function")
-      })
+        const sessionMgr = yield* SessionManager;
+        expect(typeof sessionMgr.saveMessage).toBe("function");
+      });
 
       await Effect.runPromise(
         test.pipe(
           Effect.provide(Layer.succeed(Database, mockDb)),
-          Effect.provide(SessionManagerLive)
-        )
-      )
-    })
+          Effect.provide(SessionManagerLive),
+        ),
+      );
+    });
 
     it("should expose getSession method", async () => {
-      const mockDb = createMockDatabase()
+      const mockDb = createMockDatabase();
 
       const test = Effect.gen(function* () {
-        const sessionMgr = yield* SessionManager
-        expect(typeof sessionMgr.getSession).toBe("function")
-      })
+        const sessionMgr = yield* SessionManager;
+        expect(typeof sessionMgr.getSession).toBe("function");
+      });
 
       await Effect.runPromise(
         test.pipe(
           Effect.provide(Layer.succeed(Database, mockDb)),
-          Effect.provide(SessionManagerLive)
-        )
-      )
-    })
-  })
-})
+          Effect.provide(SessionManagerLive),
+        ),
+      );
+    });
+  });
+});
 ```
 
 ### Green Phase: Implement SessionManager to Pass Tests
 
 Create `packages/infrastructure/src/context/session-manager.ts` with full implementation following the service pattern shown in Developer Guidance section above. Tests should pass when:
+
 1. Service tag defined
 2. Layer construction succeeds with mock database
 3. All service methods are callable
@@ -821,10 +894,12 @@ Create `packages/infrastructure/src/context/session-manager.ts` with full implem
 **Acceptance Checklist:**
 
 **TDD (Red Phase):**
+
 - [ ] Write service wiring tests (verify service tag, layer construction, method availability)
 - [ ] Tests fail initially (red phase)
 
 **Implementation (Green Phase):**
+
 - [ ] Create `packages/infrastructure/src/context/session-manager.ts` with SessionManager service
 - [ ] Create `packages/domain/src/errors/session.ts` with error types
 - [ ] Create `packages/domain/src/types/session.ts` with type definitions
@@ -833,12 +908,14 @@ Create `packages/infrastructure/src/context/session-manager.ts` with full implem
 - [ ] Database tables created: `pnpm drizzle-kit generate:pg && pnpm drizzle-kit push`
 
 **Integration:**
+
 - [ ] Update `apps/api/src/handlers/assessment.ts` to use SessionManager service
 - [ ] Update `apps/api/src/index.ts` to compose SessionManagerLive layer
 - [ ] Update `packages/infrastructure/src/index.ts` to export SessionManager and SessionManagerLive
 - [ ] HTTP handlers work: `pnpm dev --filter=api` starts without errors
 
 **Validation:**
+
 - [ ] Resume loads full history in <1 second (composite index working)
 - [ ] No message loss on pause/resume cycle
 - [ ] Error handling: 404 for missing session, 400 for invalid state
@@ -852,12 +929,14 @@ Create `packages/infrastructure/src/context/session-manager.ts` with full implem
 ## Dependencies
 
 **Already Complete:**
+
 - Story 1.1: Railway infrastructure (PostgreSQL running)
 - Story 1.4: Docker Compose setup (local PostgreSQL)
 - Story 1.6: Effect/Platform HTTP handlers (handler pattern)
 - Story 7.1: Vitest testing framework
 
 **Use From Previous Stories:**
+
 - RPC contract pattern: `packages/contracts/src/http/groups/assessment.ts`
 - Handler pattern: Story 1.6 implementation
 - Error handling: Effect-ts tagged errors
@@ -881,6 +960,7 @@ Create `packages/infrastructure/src/context/session-manager.ts` with full implem
 ### Where Story 2-1 Fits in Epic 2
 
 **Epic 2: Assessment Backend Services** (in-progress)
+
 - Story 2-0: Linter fixes ✅ (complete)
 - Story 2-0.5: Effect DI refactoring ✅ (complete, establishes service patterns)
 - **Story 2-1: Session Management** ← YOU ARE HERE
@@ -906,6 +986,7 @@ precision: {
 ```
 
 Score persistence enables:
+
 1. **Frontend Display:** Real-time precision updates in conversation UI
 2. **Cost Awareness:** Scores below 60% confidence trigger more questions (Story 2-2)
 3. **Archetype Generation:** Final scores map to OCEAN codes (Story 3-1)
@@ -913,13 +994,15 @@ Score persistence enables:
 ### Cost Control Architecture
 
 Sessions tracked via `messageCount` for cost awareness (Story 2.5). Each session can be tagged with:
+
 - `userId`: Links to user's daily budget tracking (Redis)
 - `createdAt`: Enables per-day cost aggregation
 - `status`: 'active' allows new messages, 'paused'/'completed' blocks further messages
 
 Cost guard service (Story 2.5) will:
+
 ```typescript
-const canContinue = yield* costGuard.checkDailyLimit(session.userId)
+const canContinue = yield * costGuard.checkDailyLimit(session.userId);
 if (!canContinue) {
   // Update session.status to 'cost-limit-reached'
   // Send user message: "Assessment paused due to daily budget..."
@@ -929,6 +1012,7 @@ if (!canContinue) {
 ### Frontend State Synchronization (TanStack Query)
 
 Sessions are retrieved via `GET /assessment/session/{sessionId}` and cached by TanStack Query (Story 4). The HTTP response includes:
+
 - Complete session metadata (id, userId, createdAt, status, precision)
 - Full message history (enables scrolling)
 - Enables session resumption: Frontend loads history on URL with `?sessionId=...` param
@@ -940,6 +1024,7 @@ Local-first sync via ElectricSQL (Story 5) will sync messages and precision to l
 ## Developer Onboarding Checklist
 
 **Before Starting Development:**
+
 - [ ] Review Story 2-0.5 (Effect service patterns) for implementation examples
 - [ ] Review Story 1.6 (HTTP handlers) for handler structure
 - [ ] Check `CLAUDE.md` section on "FiberRef Dependency Injection Pattern"
@@ -947,13 +1032,15 @@ Local-first sync via ElectricSQL (Story 5) will sync messages and precision to l
 - [ ] Familiar with Drizzle ORM + Effect Postgres integration
 
 **During Development:**
-- [ ] Follow Effect service pattern: Context.Tag + Layer.effect + yield* ServiceTag
+
+- [ ] Follow Effect service pattern: Context.Tag + Layer.effect + yield\* ServiceTag
 - [ ] Test service wiring, not library behavior (lesson from 2-0.5)
 - [ ] Keep database logic in SessionManager service, HTTP logic in handlers
 - [ ] Use Effect.gen for all async/DB operations
 - [ ] Ensure composite index created for performance testing
 
 **After Development:**
+
 - [ ] All tests pass with no regressions
 - [ ] Code review validates Effect patterns match 2-0.5
 - [ ] Performance test: <1 second for 100+ message history load
@@ -971,6 +1058,7 @@ Local-first sync via ElectricSQL (Story 5) will sync messages and precision to l
 **Architectural Context Established:** ✅ (Precision pipeline, cost control, frontend sync)
 
 Proceed with TDD workflow:
+
 1. **Red Phase:** Write service wiring tests
 2. **Green Phase:** Implement SessionManager service
 3. **Refactor Phase:** Optimize, document, integrate with API
@@ -1065,6 +1153,7 @@ Successfully implemented session management and persistence for assessment conve
 2. **HTTP Response Encoding (FIXED)**
 
    **Original Issue:** Stderr messages showing request body parsing errors
+
    ```
    Server error: The "list[0]" argument must be an instance of Buffer or Uint8Array. Received type string ('{}')
    ```
@@ -1087,6 +1176,7 @@ Successfully implemented session management and persistence for assessment conve
 ### Test Results
 
 **Database Verification:**
+
 ```sql
 -- Sessions created
 SELECT id, user_id, status FROM assessment_session;
@@ -1102,6 +1192,7 @@ GET /api/assessment/{sessionId}/resume
 ```
 
 **Server Logs:**
+
 ```
 [04:06:22.782] INFO: Sent HTTP response
   http.status: 200
@@ -1114,27 +1205,32 @@ GET /api/assessment/{sessionId}/resume
 ### Files Modified
 
 **Database:**
+
 - `packages/infrastructure/src/infrastructure/db/schema.ts` - Added assessment tables, fixed foreign key types
 - `drizzle.config.ts` - Updated schema path
 
 **Domain:**
+
 - `packages/domain/src/entities/session.entity.ts` - Session entity schema
 - `packages/domain/src/entities/message.entity.ts` - Message entity schema
 - `packages/domain/src/repositories/assessment-session.repository.ts` - Session repository interface
 - `packages/domain/src/repositories/assessment-message.repository.ts` - Message repository interface
 
 **Infrastructure:**
+
 - `packages/infrastructure/src/repositories/assessment-session.drizzle.repository.ts` - Session repository implementation
 - `packages/infrastructure/src/repositories/assessment-message.drizzle.repository.ts` - Message repository implementation
 - `packages/infrastructure/src/__tests__/better-auth.test.ts` - Fixed test imports
 
 **Use Cases:**
+
 - `apps/api/src/use-cases/start-assessment.use-case.ts` - Start session use case
 - `apps/api/src/use-cases/send-message.use-case.ts` - Send message use case
 - `apps/api/src/use-cases/resume-session.use-case.ts` - Resume session use case
 - `apps/api/src/use-cases/get-results.use-case.ts` - Get results use case
 
 **Handlers:**
+
 - `apps/api/src/handlers/assessment.ts` - HTTP handler integration
 
 ---
@@ -1150,21 +1246,25 @@ GET /api/assessment/{sessionId}/resume
 ### Fixes Applied During Review
 
 ✅ **Fixed #1: AC Documentation Consistency**
+
 - Aligned completion summary with actual verification evidence
 - Added database verification results: session count, message count, response times
 - Clarified which ACs are VERIFIED vs CLAIMED
 
 ✅ **Fixed #3: Entity Schema Post-Dev Changes Documentation**
+
 - Documented all schema fixes in Technical Notes section
 - Explained why each fix was necessary (null handling, Date objects)
 - Added specific file references (session.entity.ts, message.entity.ts) with line numbers
 
 ✅ **Fixed #4: HTTP Response Serialization Issue**
+
 - Investigated root cause: request body tracing (non-critical)
 - Verified actual functionality: HTTP 200 statuses, successful DB operations
 - Documented that error is in logging layer, not response encoding
 
 ✅ **Fixed #7: Logger Error Handling**
+
 - Wrapped all logger.error calls in try-catch blocks
 - Added 15+ try-catch guards across both repository implementations
 - Prevents logger failures from breaking error handling chains
@@ -1173,6 +1273,7 @@ GET /api/assessment/{sessionId}/resume
 ### Remaining Critical Issue
 
 ❌ **Still Need to Fix #2: Missing Test Files**
+
 - Task 4 marked [x] complete but test files deleted in refactoring
 - Need to either:
   - Restore the test files, OR
@@ -1189,6 +1290,7 @@ GET /api/assessment/{sessionId}/resume
 ### Acceptance Criteria Status (Code Review Verified)
 
 **Primary (TDD-Based):** ✅ CORE FUNCTIONALITY MET
+
 - ✅ **Session created with unique ID** - VERIFIED: 2 unique UUID sessions created in `assessment_session` table
 - ✅ **Messages persisted to database** - VERIFIED: 103 user/assistant messages saved in `assessment_message` table
 - ✅ **Precision scores saved and restored** - VERIFIED: JSONB precision field in schema, updates via `updateSession` method
@@ -1196,6 +1298,7 @@ GET /api/assessment/{sessionId}/resume
 - ✅ **Conversation state accurate after resume** - VERIFIED: Messages retrieved in correct chronological order (createdAt ASC)
 
 **Evidence Summary:**
+
 ```
 Database Verification (2026-02-01):
 - assessment_session table: 2 active sessions with UUID IDs
@@ -1205,10 +1308,10 @@ Database Verification (2026-02-01):
 ```
 
 **Secondary:** ✅ MOSTLY MET (test files are the blocker)
+
 - ✅ Documentation: JSDoc on all repository methods (comprehensive)
 - ❌ Tests: Original test files deleted in refactoring (see Review Follow-ups #2)
 - ✅ Integration: Message persistence verified, performance exceeds requirement
 - ✅ Error Handling: SessionNotFound, DatabaseError properly implemented
 
 **Story Status:** in-progress (Resolve Review Follow-ups #1, #3, #4, #7)
-

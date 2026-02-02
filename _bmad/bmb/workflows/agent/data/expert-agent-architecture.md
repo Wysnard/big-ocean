@@ -31,6 +31,7 @@ Agents with a sidecar folder for persistent memory, custom workflows, and restri
 ```
 
 **Naming:**
+
 - Agent file: `{agent-name}.agent.yaml`
 - Sidecar folder: `{agent-name}-sidecar/`
 - Lowercase, hyphenated names
@@ -75,10 +76,10 @@ critical_actions:
 agent:
   metadata:
     id: _bmad/agents/{agent-name}/{agent-name}.md
-    name: 'Persona Name'
-    title: 'Agent Title'
-    icon: '🔧'
-    module: stand-alone           # or: bmm, cis, bmgd, other
+    name: "Persona Name"
+    title: "Agent Title"
+    icon: "🔧"
+    module: stand-alone # or: bmm, cis, bmgd, other
 
   persona:
     role: |
@@ -92,9 +93,9 @@ agent:
       - Another guiding principle
 
   critical_actions:
-    - 'Load COMPLETE file {project-root}/_bmad/_memory/{sidecar-folder}/memories.md'
-    - 'Load COMPLETE file {project-root}/_bmad/_memory/{sidecar-folder}/instructions.md'
-    - 'ONLY read/write files in {project-root}/_bmad/_memory/{sidecar-folder}/'
+    - "Load COMPLETE file {project-root}/_bmad/_memory/{sidecar-folder}/memories.md"
+    - "Load COMPLETE file {project-root}/_bmad/_memory/{sidecar-folder}/instructions.md"
+    - "ONLY read/write files in {project-root}/_bmad/_memory/{sidecar-folder}/"
 
   prompts:
     - id: main-action
@@ -104,12 +105,12 @@ agent:
 
   menu:
     - trigger: XX or fuzzy match on command
-      action: '#main-action'
-      description: '[XX] Command description'
+      action: "#main-action"
+      description: "[XX] Command description"
 
     - trigger: SM or fuzzy match on save
-      action: 'Update {project-root}/_bmad/_memory/{sidecar-folder}/memories.md with insights'
-      description: '[SM] Save session'
+      action: "Update {project-root}/_bmad/_memory/{sidecar-folder}/memories.md with insights"
+      description: "[SM] Save session"
 ```
 
 ---
@@ -122,18 +123,20 @@ Become activation steps when compiled. Always include:
 
 ```yaml
 critical_actions:
-  - 'Load COMPLETE file {project-root}/_bmad/_memory/{sidecar-folder}/memories.md'
-  - 'Load COMPLETE file {project-root}/_bmad/_memory/{sidecar-folder}/instructions.md'
-  - 'ONLY read/write files in {project-root}/_bmad/_memory/{sidecar-folder}/'
+  - "Load COMPLETE file {project-root}/_bmad/_memory/{sidecar-folder}/memories.md"
+  - "Load COMPLETE file {project-root}/_bmad/_memory/{sidecar-folder}/instructions.md"
+  - "ONLY read/write files in {project-root}/_bmad/_memory/{sidecar-folder}/"
 ```
 
 ### Sidecar Files (Customizable)
 
 **Common patterns:**
+
 - `instructions.md` - Startup protocols, domain boundaries
 - `memories.md` - User profile, session notes, patterns
 
 **Fully customizable - add what your agent needs:**
+
 - `workflows/` - Large workflows for on-demand loading
 - `knowledge/` - Domain reference material
 - `data/` - Data files
@@ -148,13 +151,13 @@ All action types available, including sidecar updates:
 ```yaml
 # Prompt reference
 - trigger: XX or fuzzy match on command
-  action: '#prompt-id'
-  description: '[XX] Description'
+  action: "#prompt-id"
+  description: "[XX] Description"
 
 # Inline that updates sidecar
 - trigger: SM or fuzzy match on save
-  action: 'Update {project-root}/_bmad/_memory/{sidecar-folder}/memories.md with insights'
-  description: '[SM] Save session'
+  action: "Update {project-root}/_bmad/_memory/{sidecar-folder}/memories.md with insights"
+  description: "[SM] Save session"
 ```
 
 ### Memory Reference Patterns
@@ -172,14 +175,14 @@ communication_style: |
 
 ```yaml
 # Single folder (most common)
-- 'ONLY read/write files in {project-root}/_bmad/_memory/{sidecar-folder}/'
+- "ONLY read/write files in {project-root}/_bmad/_memory/{sidecar-folder}/"
 
 # Read-only knowledge
-- 'Load from {project-root}/_bmad/_memory/{sidecar-folder}/knowledge/ but NEVER modify'
-- 'Write ONLY to {project-root}/_bmad/_memory/{sidecar-folder}/memories.md'
+- "Load from {project-root}/_bmad/_memory/{sidecar-folder}/knowledge/ but NEVER modify"
+- "Write ONLY to {project-root}/_bmad/_memory/{sidecar-folder}/memories.md"
 
 # User folder access
-- 'ONLY access files in {user-folder}/journals/ - private space'
+- "ONLY access files in {user-folder}/journals/ - private space"
 ```
 
 ---
@@ -203,6 +206,7 @@ Compiler handles these automatically:
 **Folder:** `{workflow_path}/data/reference/expert-examples/journal-keeper/`
 
 **Features:**
+
 - First-person persona with memory reference patterns
 - critical_actions loading sidecar files
 - Menu items updating sidecar files

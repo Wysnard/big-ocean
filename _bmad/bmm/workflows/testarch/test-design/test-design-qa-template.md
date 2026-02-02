@@ -16,10 +16,12 @@
 **Scope:** {Brief description of testing scope}
 
 **Risk Summary:**
+
 - Total Risks: {N} ({X} high-priority score ≥6, {Y} medium, {Z} low)
 - Critical Categories: {Categories with most high-priority risks}
 
 **Coverage Summary:**
+
 - P0 tests: ~{N} (critical paths, security)
 - P1 tests: ~{N} (important features, integration)
 - P2 tests: ~{N} (edge cases, regression)
@@ -58,19 +60,19 @@
 **Example factory pattern:**
 
 ```typescript
-import { test } from '@seontechnologies/playwright-utils/api-request/fixtures';
-import { expect } from '@playwright/test';
-import { faker } from '@faker-js/faker';
+import { test } from "@seontechnologies/playwright-utils/api-request/fixtures";
+import { expect } from "@playwright/test";
+import { faker } from "@faker-js/faker";
 
-test('example test @p0', async ({ apiRequest }) => {
+test("example test @p0", async ({ apiRequest }) => {
   const testData = {
     id: `test-${faker.string.uuid()}`,
     email: faker.internet.email(),
   };
 
   const { status } = await apiRequest({
-    method: 'POST',
-    path: '/api/resource',
+    method: "POST",
+    path: "/api/resource",
     body: testData,
   });
 
@@ -86,15 +88,15 @@ test('example test @p0', async ({ apiRequest }) => {
 
 ### High-Priority Risks (Score ≥6)
 
-| Risk ID | Category | Description | Score | QA Test Coverage |
-|---------|----------|-------------|-------|------------------|
-| **{R-ID}** | {CAT} | {Brief description} | **{Score}** | {How QA validates this risk} |
+| Risk ID    | Category | Description         | Score       | QA Test Coverage             |
+| ---------- | -------- | ------------------- | ----------- | ---------------------------- |
+| **{R-ID}** | {CAT}    | {Brief description} | **{Score}** | {How QA validates this risk} |
 
 ### Medium/Low-Priority Risks
 
-| Risk ID | Category | Description | Score | QA Test Coverage |
-|---------|----------|-------------|-------|------------------|
-| {R-ID} | {CAT} | {Brief description} | {Score} | {How QA validates this risk} |
+| Risk ID | Category | Description         | Score   | QA Test Coverage             |
+| ------- | -------- | ------------------- | ------- | ---------------------------- |
+| {R-ID}  | {CAT}    | {Brief description} | {Score} | {How QA validates this risk} |
 
 ---
 
@@ -106,10 +108,10 @@ test('example test @p0', async ({ apiRequest }) => {
 
 **Criteria:** Blocks core functionality + High risk (≥6) + No workaround + Affects majority of users
 
-| Test ID | Requirement | Test Level | Risk Link | Notes |
-|---------|-------------|------------|-----------|-------|
-| **P0-001** | {Requirement} | {Level} | {R-ID} | {Notes} |
-| **P0-002** | {Requirement} | {Level} | {R-ID} | {Notes} |
+| Test ID    | Requirement   | Test Level | Risk Link | Notes   |
+| ---------- | ------------- | ---------- | --------- | ------- |
+| **P0-001** | {Requirement} | {Level}    | {R-ID}    | {Notes} |
+| **P0-002** | {Requirement} | {Level}    | {R-ID}    | {Notes} |
 
 **Total P0:** ~{N} tests
 
@@ -119,10 +121,10 @@ test('example test @p0', async ({ apiRequest }) => {
 
 **Criteria:** Important features + Medium risk (3-4) + Common workflows + Workaround exists but difficult
 
-| Test ID | Requirement | Test Level | Risk Link | Notes |
-|---------|-------------|------------|-----------|-------|
-| **P1-001** | {Requirement} | {Level} | {R-ID} | {Notes} |
-| **P1-002** | {Requirement} | {Level} | {R-ID} | {Notes} |
+| Test ID    | Requirement   | Test Level | Risk Link | Notes   |
+| ---------- | ------------- | ---------- | --------- | ------- |
+| **P1-001** | {Requirement} | {Level}    | {R-ID}    | {Notes} |
+| **P1-002** | {Requirement} | {Level}    | {R-ID}    | {Notes} |
 
 **Total P1:** ~{N} tests
 
@@ -132,9 +134,9 @@ test('example test @p0', async ({ apiRequest }) => {
 
 **Criteria:** Secondary features + Low risk (1-2) + Edge cases + Regression prevention
 
-| Test ID | Requirement | Test Level | Risk Link | Notes |
-|---------|-------------|------------|-----------|-------|
-| **P2-001** | {Requirement} | {Level} | {R-ID} | {Notes} |
+| Test ID    | Requirement   | Test Level | Risk Link | Notes   |
+| ---------- | ------------- | ---------- | --------- | ------- |
+| **P2-001** | {Requirement} | {Level}    | {R-ID}    | {Notes} |
 
 **Total P2:** ~{N} tests
 
@@ -144,9 +146,9 @@ test('example test @p0', async ({ apiRequest }) => {
 
 **Criteria:** Nice-to-have + Exploratory + Performance benchmarks + Documentation validation
 
-| Test ID | Requirement | Test Level | Notes |
-|---------|-------------|------------|-------|
-| **P3-001** | {Requirement} | {Level} | {Notes} |
+| Test ID    | Requirement   | Test Level | Notes   |
+| ---------- | ------------- | ---------- | ------- |
+| **P3-001** | {Requirement} | {Level}    | {Notes} |
 
 **Total P3:** ~{N} tests
 
@@ -161,6 +163,7 @@ test('example test @p0', async ({ apiRequest }) => {
 ### Every PR: Playwright Tests (~10-15 min)
 
 **All functional tests** (from any priority level):
+
 - All E2E, API, integration, unit tests using Playwright
 - Parallelized across {N} shards
 - Total: ~{N} Playwright tests (includes P0, P1, P2, P3)
@@ -170,6 +173,7 @@ test('example test @p0', async ({ apiRequest }) => {
 ### Nightly: k6 Performance Tests (~30-60 min)
 
 **All performance tests** (from any priority level):
+
 - Load, stress, spike, endurance tests
 - Total: ~{N} k6 tests (may include P0, P1, P2)
 
@@ -178,6 +182,7 @@ test('example test @p0', async ({ apiRequest }) => {
 ### Weekly: Chaos & Long-Running (~hours)
 
 **Special infrastructure tests** (from any priority level):
+
 - Multi-region failover (requires AWS Fault Injection Simulator)
 - Disaster recovery (backup restore, 4+ hours)
 - Endurance tests (4+ hours runtime)
@@ -185,6 +190,7 @@ test('example test @p0', async ({ apiRequest }) => {
 **Why defer to weekly:** Very expensive infrastructure, very long-running, infrequent validation sufficient
 
 **Manual tests** (excluded from automation):
+
 - DevOps validation (deployment, monitoring)
 - Finance validation (cost alerts)
 - Documentation validation
@@ -195,20 +201,22 @@ test('example test @p0', async ({ apiRequest }) => {
 
 **QA test development effort only** (excludes DevOps, Backend, Data Eng, Finance work):
 
-| Priority | Count | Effort Range | Notes |
-|----------|-------|--------------|-------|
-| P0 | ~{N} | ~{X}-{Y} weeks | Complex setup (security, performance, multi-step) |
-| P1 | ~{N} | ~{X}-{Y} weeks | Standard coverage (integration, API tests) |
-| P2 | ~{N} | ~{X}-{Y} days | Edge cases, simple validation |
-| P3 | ~{N} | ~{X}-{Y} days | Exploratory, benchmarks |
-| **Total** | ~{N} | **~{X}-{Y} weeks** | **1 QA engineer, full-time** |
+| Priority  | Count | Effort Range       | Notes                                             |
+| --------- | ----- | ------------------ | ------------------------------------------------- |
+| P0        | ~{N}  | ~{X}-{Y} weeks     | Complex setup (security, performance, multi-step) |
+| P1        | ~{N}  | ~{X}-{Y} weeks     | Standard coverage (integration, API tests)        |
+| P2        | ~{N}  | ~{X}-{Y} days      | Edge cases, simple validation                     |
+| P3        | ~{N}  | ~{X}-{Y} days      | Exploratory, benchmarks                           |
+| **Total** | ~{N}  | **~{X}-{Y} weeks** | **1 QA engineer, full-time**                      |
 
 **Assumptions:**
+
 - Includes test design, implementation, debugging, CI integration
 - Excludes ongoing maintenance (~10% effort)
 - Assumes test infrastructure (factories, fixtures) ready
 
 **Dependencies from other teams:**
+
 - See "Dependencies & Test Blockers" section for what QA needs from Backend, DevOps, Data Eng
 
 ---
@@ -218,39 +226,43 @@ test('example test @p0', async ({ apiRequest }) => {
 **Playwright Tags for Selective Execution:**
 
 ```typescript
-import { test } from '@seontechnologies/playwright-utils/api-request/fixtures';
-import { expect } from '@playwright/test';
+import { test } from "@seontechnologies/playwright-utils/api-request/fixtures";
+import { expect } from "@playwright/test";
 
 // P0 critical test
-test('@P0 @API @Security unauthenticated request returns 401', async ({ apiRequest }) => {
+test("@P0 @API @Security unauthenticated request returns 401", async ({
+  apiRequest,
+}) => {
   const { status, body } = await apiRequest({
-    method: 'POST',
-    path: '/api/endpoint',
-    body: { data: 'test' },
+    method: "POST",
+    path: "/api/endpoint",
+    body: { data: "test" },
     skipAuth: true,
   });
 
   expect(status).toBe(401);
-  expect(body.error).toContain('unauthorized');
+  expect(body.error).toContain("unauthorized");
 });
 
 // P1 integration test
-test('@P1 @Integration data syncs correctly', async ({ apiRequest }) => {
+test("@P1 @Integration data syncs correctly", async ({ apiRequest }) => {
   // Seed data
   await apiRequest({
-    method: 'POST',
-    path: '/api/seed',
-    body: { /* test data */ },
+    method: "POST",
+    path: "/api/seed",
+    body: {
+      /* test data */
+    },
   });
 
   // Validate
   const { status, body } = await apiRequest({
-    method: 'GET',
-    path: '/api/resource',
+    method: "GET",
+    path: "/api/resource",
   });
 
   expect(status).toBe(200);
-  expect(body).toHaveProperty('data');
+  expect(body).toHaveProperty("data");
 });
 ```
 

@@ -1,11 +1,11 @@
 ---
-name: 'step-01-brainstorm'
-description: 'Optional brainstorming for agent ideas'
+name: "step-01-brainstorm"
+description: "Optional brainstorming for agent ideas"
 
 # File References
-nextStepFile: './step-02-discovery.md'
+nextStepFile: "./step-02-discovery.md"
 brainstormContext: ../data/brainstorm-context.md
-brainstormWorkflow: '{project-root}/_bmad/core/workflows/brainstorming/workflow.md'
+brainstormWorkflow: "{project-root}/_bmad/core/workflows/brainstorming/workflow.md"
 ---
 
 # Step 1: Optional Brainstorming

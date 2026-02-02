@@ -1,9 +1,9 @@
 ---
 stepsCompleted: []
-lastStep: ''
-date: ''
-user_name: ''
-project_name: ''
+lastStep: ""
+date: ""
+user_name: ""
+project_name: ""
 ---
 
 # {{document_title}}

@@ -13,12 +13,13 @@ So that **I have exact parity with production and can develop/test without insta
 **Given** Docker with Compose plugin (docker compose v2+) is installed on my machine
 **When** I run `docker compose up` from the project root
 **Then** the entire application starts:
-  - PostgreSQL database accessible at localhost:5432
-  - Redis cache accessible at localhost:6379
-  - Backend API healthy and responding at http://localhost:4000/health
-  - Frontend accessible at http://localhost:3000
-  - All services are connected and communicate properly
-  - Logs are visible and persistent
+
+- PostgreSQL database accessible at localhost:5432
+- Redis cache accessible at localhost:6379
+- Backend API healthy and responding at http://localhost:4000/health
+- Frontend accessible at http://localhost:3000
+- All services are connected and communicate properly
+- Logs are visible and persistent
 
 **Given** I make code changes in the repository
 **When** I save files locally
@@ -111,6 +112,7 @@ So that **I have exact parity with production and can develop/test without insta
 This story implements the **Local Development Container Orchestration** layer for big-ocean. It enables developers to run the entire application stack locally with production parity using Docker Compose (via `docker compose` CLI - modern Docker v2+ syntax).
 
 **Local Development Flow**:
+
 1. **Setup**: Developer clones repo, creates `.env.local`
 2. **Start**: `docker compose up` from project root
 3. **Initialize**: Services start in dependency order (PostgreSQL → Redis → API → Frontend)
@@ -120,6 +122,7 @@ This story implements the **Local Development Container Orchestration** layer fo
 7. **Reset**: `docker compose down -v` cleans everything for fresh start
 
 **Modern Docker Compose CLI**:
+
 - Uses `docker compose` (not `docker-compose`) - modern Docker v2+ syntax
 - No separate installation needed - included with Docker Desktop
 - Replaces legacy standalone `docker-compose` binary (v1)
@@ -160,7 +163,7 @@ This story implements the **Local Development Container Orchestration** layer fo
 **compose.yaml Structure** (to be created in project root):
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   # PostgreSQL Database
@@ -205,7 +208,7 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-      target: development  # Use dev stage for hot reload
+      target: development # Use dev stage for hot reload
     container_name: bigocean-backend
     environment:
       DATABASE_URL: postgres://dev:devpassword@postgres:5432/bigocean
@@ -239,7 +242,7 @@ services:
     build:
       context: .
       dockerfile: apps/front/Dockerfile
-      target: development  # Use dev stage for Vite HMR
+      target: development # Use dev stage for Vite HMR
     container_name: bigocean-frontend
     environment:
       NODE_ENV: development
@@ -349,13 +352,13 @@ docker compose down -v --remove-orphans
 
 **Troubleshooting**:
 
-| Issue | Solution |
-|-------|----------|
-| Port already in use | Change port in compose.yaml or stop other services |
-| Database connection refused | Wait for PostgreSQL health check (10-15 seconds) |
-| Hot reload not working | Ensure volumes are mounted correctly; restart container |
-| Out of disk space | Run `docker system prune` to clean unused images/volumes |
-| ANTHROPIC_API_KEY not set | Create .env.local with valid API key |
+| Issue                             | Solution                                                         |
+| --------------------------------- | ---------------------------------------------------------------- |
+| Port already in use               | Change port in compose.yaml or stop other services               |
+| Database connection refused       | Wait for PostgreSQL health check (10-15 seconds)                 |
+| Hot reload not working            | Ensure volumes are mounted correctly; restart container          |
+| Out of disk space                 | Run `docker system prune` to clean unused images/volumes         |
+| ANTHROPIC_API_KEY not set         | Create .env.local with valid API key                             |
 | Command not found: docker compose | Upgrade to Docker Desktop v4.0+ or install Docker Compose plugin |
 
 ### Multi-Stage Dockerfile for Development
@@ -472,6 +475,7 @@ RAILS_API_KEY=
 ```
 
 **Documentation Requirements**:
+
 - All secrets should be in `.env.local` (never committed)
 - `.env.local` should be added to `.gitignore`
 - `.env.example` documents all required variables
@@ -480,6 +484,7 @@ RAILS_API_KEY=
 ### Project Structure Notes
 
 **Key Files for This Story**:
+
 - Create: `compose.yaml` (root) or `docker-compose.yml` for compatibility
 - Create: `.env.local` (root, in .gitignore)
 - Create: `scripts/dev.sh` (startup helper)
@@ -494,6 +499,7 @@ RAILS_API_KEY=
 - Modify: `.gitignore` (add .env.local, docker artifacts)
 
 **Dependencies** (already in Story 1.3):
+
 - Docker Desktop v4.0+ (includes Docker Compose v2+ with `docker compose` CLI)
 - Or: Docker with Docker Compose plugin installed
 - Node 20+ (for development)
@@ -581,6 +587,7 @@ Claude Haiku 4.5 (claude-haiku-4-5-20251001)
 **Phase 1 - Tasks 1-4 COMPLETE** ✅
 
 **Implementation Summary**:
+
 1. ✅ Created `compose.yaml` with 4 services: PostgreSQL (16-alpine), Redis (7-alpine), Backend API, Frontend
 2. ✅ Configured all service dependencies using `depends_on` with health checks
 3. ✅ Set up named volumes for PostgreSQL data persistence (postgres_data, redis_data)
@@ -604,6 +611,7 @@ Claude Haiku 4.5 (claude-haiku-4-5-20251001)
 10. ✅ Removed duplicate `docker-compose.yml`, kept modern `compose.yaml` standard
 
 **Ready for Testing**:
+
 - All 4 services defined and networked (bigocean-network)
 - Service startup order enforced via depends_on with health checks
 - Environment variables externalized (no hardcoding)
@@ -612,6 +620,7 @@ Claude Haiku 4.5 (claude-haiku-4-5-20251001)
 - Hot reload infrastructure in place (tsx watch + Vite HMR)
 
 **Phase 2 - Tasks 5-8 COMPLETE** ✅
+
 - [x] Created helper scripts: scripts/dev.sh, dev-stop.sh, dev-reset.sh (all executable)
 - [x] Created DOCKER.md comprehensive 300+ line guide with troubleshooting
 - [x] Updated README.md with Docker Compose quick start section
@@ -624,6 +633,7 @@ Claude Haiku 4.5 (claude-haiku-4-5-20251001)
 **Created/Modified - ALL TASKS COMPLETE** ✅
 
 **New Files Created**:
+
 - ✅ `compose.yaml` (Docker Compose v2+ configuration with PostgreSQL, Redis, Backend, Frontend)
 - ✅ `.env.local` (Environment variables template - user creates with ANTHROPIC_API_KEY)
 - ✅ `docker/init-db.sql` (PostgreSQL initialization script, prepared for Story 2.1)
@@ -634,10 +644,10 @@ Claude Haiku 4.5 (claude-haiku-4-5-20251001)
 - ✅ `apps/api/src/__tests__/docker-compose.integration.test.ts` (Integration tests for Docker setup)
 
 **Files Modified**:
+
 - ✅ `apps/api/Dockerfile` (Added development stage with tsx watch, added health check)
 - ✅ `apps/front/Dockerfile` (Added development stage with Vite HMR, proper build chain)
 - ✅ `README.md` (Added Docker Compose Quick Start section with clear instructions)
 - ✅ `CLAUDE.md` (Added Docker development patterns and command reference)
 - ✅ `_bmad-output/implementation-artifacts/1-4-docker-compose-local-development-setup.md` (This story file - all tasks marked complete)
 - ✅ `_bmad-output/implementation-artifacts/sprint-status.yaml` (Story 1-4 status updated)
-

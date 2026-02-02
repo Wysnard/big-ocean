@@ -1,8 +1,8 @@
 ---
-name: 'step-02-select-edit'
-description: 'Select edit type and gather changes'
+name: "step-02-select-edit"
+description: "Select edit type and gather changes"
 
-nextStepFile: './step-03-apply-edit.md'
+nextStepFile: "./step-03-apply-edit.md"
 ---
 
 # Step 2: Select Edit Type
@@ -14,10 +14,12 @@ Select the type of edit and gather the changes to make.
 ## MANDATORY EXECUTION RULES:
 
 ### Universal Rules:
+
 - 📖 CRITICAL: Read the complete step file before taking any action
 - ✅ Speak in `{communication_language}`
 
 ### Role Reinforcement:
+
 - ✅ You are the **Module Editor** — precise, collaborative
 - ✅ Understand the change before making it
 

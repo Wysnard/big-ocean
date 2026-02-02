@@ -1,14 +1,14 @@
 ---
-name: 'step-e-06-validate-after'
-description: 'Run validation after edits and present results'
+name: "step-e-06-validate-after"
+description: "Run validation after edits and present results"
 
 # File References
-nextStepFile: './step-e-07-complete.md'
-fixStep: './step-e-03-fix-validation.md'
-editPlan: '{bmb_creations_output_folder}/edit-plan-{workflow_name}.md'
-targetWorkflowPath: '{targetWorkflowPath}'
-validationWorkflow: '../steps-v/step-01-validate.md'
-validationReport: '{targetWorkflowPath}/validation-report-{workflow_name}.md'
+nextStepFile: "./step-e-07-complete.md"
+fixStep: "./step-e-03-fix-validation.md"
+editPlan: "{bmb_creations_output_folder}/edit-plan-{workflow_name}.md"
+targetWorkflowPath: "{targetWorkflowPath}"
+validationWorkflow: "../steps-v/step-01-validate.md"
+validationReport: "{targetWorkflowPath}/validation-report-{workflow_name}.md"
 ---
 
 # Edit Step 6: Validate After Edit
@@ -68,6 +68,7 @@ This may take a few moments..."
 **After validation completes, load the validation report:**
 
 Read `{validationReport}` and extract:
+
 - Overall status
 - Critical issues count
 - Warning issues count
@@ -144,21 +145,24 @@ Read `{validationReport}` and extract:
 **Before routing to complete:**
 
 Update editPlan frontmatter:
+
 ```yaml
-completionDate: '{current-date}'
+completionDate: "{current-date}"
 validationAfterEdit: complete
-finalValidationStatus: {status from validation report}
-remainingCriticalIssues: {count}
-remainingWarnings: {count}
+finalValidationStatus: { status from validation report }
+remainingCriticalIssues: { count }
+remainingWarnings: { count }
 ```
 
 Document in editPlan:
+
 ```markdown
 ## Final Validation
 
 **Validation Date:** {current-date}
 **Status:** {status}
 **Issues After Editing:**
+
 - Critical: {count}
 - Warnings: {count}
 

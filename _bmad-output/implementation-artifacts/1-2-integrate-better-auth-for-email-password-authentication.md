@@ -19,6 +19,7 @@ so that **I can create an account and save my assessment results**.
 ## Acceptance Criteria
 
 ### Sign-Up Modal and Validation
+
 **Given** an unauthenticated user
 **When** they click "Sign Up" after first assessment message
 **Then** a modal appears with email and password fields
@@ -26,6 +27,7 @@ so that **I can create an account and save my assessment results**.
 **And** on success, anonymous session links to new user account
 
 ### Sign-In and Session Persistence
+
 **Given** a user is signed up
 **When** they sign in with email/password
 **Then** session is established with auth token
@@ -33,6 +35,7 @@ so that **I can create an account and save my assessment results**.
 **And** profile data syncs across devices
 
 ### Session Integrity
+
 **Given** a user authenticates
 **When** they close and reopen browser
 **Then** session persists via HTTP-only cookie
@@ -41,17 +44,20 @@ so that **I can create an account and save my assessment results**.
 ## Business Context
 
 **Why This Story Matters:**
+
 - Enables users to save assessment results persistently
 - Links anonymous sessions (pre-signup) to user accounts
 - Establishes user identity for privacy controls and sharing
 - NIST 2025 password standards ensure modern security
 
 **Blocks Until Complete:**
+
 - Story 1.3 (RPC Contracts) - auth RPC endpoints needed
 - Story 2.1 (Session Management) - user_id required for session association
 - Story 4.1 (Frontend Auth UI) - modal UI design depends on auth flow
 
 **Depends On:**
+
 - Story 1.1 (Railway Infrastructure) - Better Auth needs database + environment
 
 ## Technical Requirements
@@ -59,12 +65,14 @@ so that **I can create an account and save my assessment results**.
 ### Better Auth Library Setup
 
 **Version & Dependencies:**
+
 - `better-auth` >= 1.0.0 (latest from npm)
 - `bcryptjs` for password hashing
 - `drizzle-orm` adapter for PostgreSQL
 - Transport: HTTP cookies with secure, httpOnly flags
 
 **Installation:**
+
 ```bash
 pnpm add better-auth bcryptjs
 # Already in monorepo via pnpm-lock.yaml
@@ -109,6 +117,7 @@ export const auth = betterAuth({
 ### Password Validation Rules (NIST 2025 Standards - Simplified)
 
 **Minimum Requirements:**
+
 - **Length:** 12 characters minimum (modern approach - length > complexity)
 - **Character Composition:** All ASCII + Unicode allowed (no forced uppercase/numbers)
 - **No Mandatory Expiration:** Only reset if breach confirmed
@@ -118,6 +127,7 @@ export const auth = betterAuth({
 
 **Note on Compromised Credential Screening:**
 While NIST recommends checking against breach databases, this implementation intentionally excludes external API dependencies (HaveIBeenPwned) to:
+
 - Reduce external service dependencies and failure points
 - Simplify MVP authentication flow
 - Avoid blocking signups when external services are unavailable
@@ -139,10 +149,12 @@ auth.onAfterSignUp(async (context) => {
     // Link anonymous session → new user account
     await db.sessions.update(
       { id: anonymousSessionId },
-      { userId: newUser.id, updatedAt: new Date() }
+      { userId: newUser.id, updatedAt: new Date() },
     );
 
-    console.info(`Linked anonymous session ${anonymousSessionId} to user ${newUser.id}`);
+    console.info(
+      `Linked anonymous session ${anonymousSessionId} to user ${newUser.id}`,
+    );
   }
 
   return context;
@@ -164,6 +176,7 @@ BETTER_AUTH_URL=http://localhost:4000
 ```
 
 **Generate BETTER_AUTH_SECRET:**
+
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
@@ -242,7 +255,7 @@ export const AuthService = Rpc.define({
     failure: S.union(
       S.struct({ _tag: S.literal("InvalidPassword") }),
       S.struct({ _tag: S.literal("EmailAlreadyExists") }),
-      S.struct({ _tag: S.literal("PasswordCompromised") })
+      S.struct({ _tag: S.literal("PasswordCompromised") }),
     ),
   }),
 
@@ -263,7 +276,7 @@ export const AuthService = Rpc.define({
     }),
     failure: S.union(
       S.struct({ _tag: S.literal("InvalidCredentials") }),
-      S.struct({ _tag: S.literal("UserNotFound") })
+      S.struct({ _tag: S.literal("UserNotFound") }),
     ),
   }),
 
@@ -308,9 +321,16 @@ app.listen(4000, () => console.log("Backend running on :4000"));
 ```typescript
 import express from "express";
 
-export function securityHeaders(req: express.Request, res: express.Response, next: express.NextFunction) {
+export function securityHeaders(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction,
+) {
   // HSTS: Enforce HTTPS
-  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  res.setHeader(
+    "Strict-Transport-Security",
+    "max-age=31536000; includeSubDomains",
+  );
 
   // Prevent MIME type sniffing
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -324,7 +344,7 @@ export function securityHeaders(req: express.Request, res: express.Response, nex
   // CSP (basic)
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
   );
 
   next();
@@ -353,6 +373,7 @@ const auth = betterAuth({
 ## Architecture Compliance
 
 **From architecture.md ADR-2 (Authentication & Authorization):**
+
 - ✅ Better Auth for email/password authentication
 - ✅ NIST 2025 password validation (12+ chars length requirement)
 - ✅ HTTP-only cookies for session storage
@@ -361,6 +382,7 @@ const auth = betterAuth({
 - ✅ Bcrypt (cost factor 12) for password hashing
 
 **Non-Functional Requirements Met:**
+
 - **NFR3 (Privacy & Security):** All passwords hashed, TLS in transit, no plaintext storage
 - **NFR7 (Session Persistence):** HTTP-only cookies survive browser refresh
 - **NFR8 (Cost Optimization):** Better Auth uses sessions, no complex key management
@@ -391,12 +413,14 @@ big-ocean/
 ```
 
 **Database Setup:**
+
 - Better Auth auto-creates tables with Drizzle adapter
 - Migration via `pnpm -C packages/database drizzle-kit push` (from Story 1.1)
 
 ## Dependencies
 
 ### NPM Libraries (Add to pnpm-lock.yaml)
+
 ```bash
 pnpm add better-auth bcryptjs
 ```
@@ -406,6 +430,7 @@ pnpm add better-auth bcryptjs
 - `drizzle-orm` (already installed) - Database adapter
 
 ### Environment & Configuration
+
 - **BETTER_AUTH_SECRET** - Generate via `crypto.randomBytes(32).toString('hex')`
 - **Railway PostgreSQL** - From Story 1.1
 - **HTTPS/TLS** - Enforced by Railway
@@ -413,6 +438,7 @@ pnpm add better-auth bcryptjs
 ## Tasks/Subtasks
 
 ### Phase 1: Backend Auth Setup
+
 - [x] Install `better-auth` and `bcryptjs` - Already installed (better-auth 1.4.18, bcryptjs 3.0.3)
 - [x] Configure Better Auth in `packages/infrastructure/src/auth-config.ts`
 - [x] Configure password validation (12+ chars, NIST 2025)
@@ -421,30 +447,35 @@ pnpm add better-auth bcryptjs
 - [x] Remove HaveIBeenPwned requirement (per user request)
 
 ### Phase 2: Security Hardening
+
 - [x] Create `apps/api/src/middleware/security.ts` with headers
 - [x] Mount security middleware in Express
 - [x] Configure HTTP-only cookie flags via Better Auth
 - [x] Implement security headers: HSTS, X-Frame-Options, CSP, X-XSS-Protection
 
 ### Phase 3: RPC Integration
+
 - [ ] Define `AuthService` in `packages/contracts` (Deferred to Story 1.3)
 - [ ] Create RPC handlers for signUp, signIn, signOut (Deferred to Story 1.3)
 - [ ] Type-safe RPC client available in frontend (Deferred to Story 1.3)
 - [ ] Test RPC roundtrip: contract → handler → client (Deferred to Story 1.3)
 
 ### Phase 4: Database Validation
+
 - [x] Better Auth schema defined in `packages/infrastructure/src/auth-schema.ts`
 - [x] Database tables auto-created by Better Auth Drizzle adapter
 - [x] User, session, account, verification tables implemented
 - [ ] Anonymous session linking (Deferred to Story 2.1 - Session Management)
 
 ### Phase 5: Testing
+
 - [x] Create integration test file: `apps/api/src/__tests__/auth.integration.test.ts`
 - [x] Type check passes for infrastructure and API packages
 - [x] Build verification successful
 - [ ] Manual testing with running server (requires database setup)
 
 ### Phase 6: Documentation
+
 - [x] Update .env.example with Better Auth configuration (already present)
 - [x] Document NIST 2025 password validation approach
 - [x] Document security headers implementation
@@ -540,26 +571,32 @@ describe("Better Auth Integration (Real Database)", () => {
 ## Dev Notes
 
 ### Why NIST 2025 Over Complexity?
+
 Modern NIST guidance (2025) recommends:
+
 - **Length over complexity** - "Correct Horse Battery Staple" > "P@ssw0rd!"
 - **No mandatory expiration** - Users create weaker passwords if forced to change
 - **No composition rules** - Leads to predictable patterns (uppercase first, number last)
 - **12+ character minimum** - Strong defense against brute force attacks
 
 ### Why Simple Validation (No Breach Database)?
+
 For MVP, we intentionally exclude external breach database checks because:
+
 - **Reduces dependencies** - No external API calls = fewer failure points
 - **Improves reliability** - Signup works even if external services are down
 - **12+ chars is strong** - Length requirement already provides excellent security
 - **Can add later** - Breach checking can be added post-MVP if needed
 
 ### Why HTTP-Only Cookies?
+
 - JavaScript can't access cookies (protects from XSS theft)
 - Browser automatically includes in requests (no manual token handling)
 - Session continuation survives page refresh
 - Railway + TLS handles transport security
 
 ### Why Better Auth Over Custom Solution?
+
 - Production-tested, widely used library
 - Drizzle adapter auto-creates & manages schema
 - Hooks system for custom validation (compromised passwords)
@@ -568,6 +605,7 @@ For MVP, we intentionally exclude external breach database checks because:
 ## Dependencies: Story 1.1 → Story 1.2 → Story 1.3
 
 **Workflow:**
+
 ```
 Story 1.1: Deploy Infrastructure ✅ (complete)
     ↓
@@ -581,6 +619,7 @@ Story 2.1: Session Management (can start in parallel)
 ## Reference Docs
 
 **Source Documents:**
+
 - [Architecture Decision: Authentication & Authorization](../planning-artifacts/architecture.md#decision-1-authentication--authorization)
 - [Better Auth Docs: Basic Usage](https://www.better-auth.com/docs/basic-usage)
 - [Better Auth: Email & Password](https://www.better-auth.com/docs/authentication/email-password)
@@ -588,6 +627,7 @@ Story 2.1: Session Management (can start in parallel)
 - [NIST 2025 Password Guidelines](https://www.strongdm.com/blog/nist-password-guidelines)
 
 **Related Stories:**
+
 - [Story 1.1: Deploy Infrastructure to Railway](./1-1-deploy-infrastructure-to-railway.md)
 - [Story 1.3: Configure Effect-ts RPC Contracts](./1-3-configure-effect-ts-rpc-contracts-and-infrastructure-layer.md)
 - [Story 4.1: Authentication UI Sign-Up Modal](./4-1-authentication-ui-sign-up-modal.md)
@@ -595,9 +635,11 @@ Story 2.1: Session Management (can start in parallel)
 ## Dev Agent Record
 
 ### Agent Model Used
+
 Claude Haiku 4.5
 
 ### Implementation Plan
+
 Story 1.2 implements Better Auth for email/password authentication with NIST 2025 password validation:
 
 1. **Better Auth Configuration** (`packages/infrastructure/src/auth-config.ts`):
@@ -626,11 +668,12 @@ Story 1.2 implements Better Auth for email/password authentication with NIST 202
    - Drizzle ORM relations
 
 ### Completion Notes (Post-Code Review)
+
 - ✅ Better Auth 1.4.18 integrated with Drizzle adapter
 - ✅ NIST 2025 password validation: 12-128 character length requirement
 - ✅ Bcrypt password hashing with cost factor 12 (industry standard)
 - ✅ HTTP-only cookies configured for XSS protection
-- ✅ Security headers middleware with selective CSP (excludes /api/* routes)
+- ✅ Security headers middleware with selective CSP (excludes /api/\* routes)
 - ✅ Database schema with Better Auth tables
 - ✅ Type checking and build verification passed
 - ✅ Integration test suite created (comprehensive Better Auth tests)
@@ -643,6 +686,7 @@ Story 1.2 implements Better Auth for email/password authentication with NIST 202
 - ⏸️ RPC contracts removed (migrated to HTTP schemas)
 
 ### Known Issues / Follow-ups
+
 - **Frontend scope creep**: Login/signup/dashboard pages created but should be Story 4.1
 - OAuth providers (Facebook, Google) deferred to Phase 2
 - Email verification deferred to Phase 2
@@ -654,21 +698,25 @@ Story 1.2 implements Better Auth for email/password authentication with NIST 202
 ### Backend Files
 
 **Created:**
+
 - `apps/api/src/middleware/security.ts` - Security headers middleware (HSTS, CSP, X-Frame-Options, selective CSP for API routes)
 - `apps/api/src/__tests__/auth.integration.test.ts` - Comprehensive Better Auth integration tests
 
 **Modified:**
+
 - `apps/api/src/index.ts` - Mounted Better Auth handler, security middleware, CORS with multi-origin support (port 3001)
 - `apps/api/package.json` - Added better-auth, bcryptjs dependencies
 - `apps/api/logs/all.log` - Generated log file
 
 **Infrastructure:**
+
 - `packages/infrastructure/src/auth-config.ts` - Better Auth configuration (NIST 2025, bcrypt, HTTP-only cookies, anonymous session linking hook)
 - `packages/infrastructure/src/auth-schema.ts` - Better Auth database schema (existing)
 - `packages/infrastructure/src/database.ts` - Database connection (existing)
 - `packages/infrastructure/package.json` - Added better-auth dependencies
 
 **Contracts (Migrated from RPC to HTTP):**
+
 - `packages/contracts/src/assessment.ts` - Converted from RPC to HTTP schemas
 - `packages/contracts/src/profile.ts` - Converted from RPC to HTTP schemas
 - `packages/contracts/src/index.ts` - Removed RPC group, export HTTP schemas only
@@ -681,6 +729,7 @@ Story 1.2 implements Better Auth for email/password authentication with NIST 202
 **Note:** These files were created but represent scope creep beyond Story 1.2 (Backend Auth Setup). They should have been deferred to Story 4.1 (Frontend Auth UI).
 
 **Created:**
+
 - `apps/front/src/lib/auth-client.ts` - Better Auth React client configuration
 - `apps/front/src/hooks/use-auth.ts` - Auth hooks for React components
 - `apps/front/src/routes/login.tsx` - Login page
@@ -689,12 +738,14 @@ Story 1.2 implements Better Auth for email/password authentication with NIST 202
 - `apps/front/src/components/auth/` - Auth UI components (directory)
 
 **Modified:**
+
 - `apps/front/package.json` - Added better-auth/react
 - `apps/front/vite.config.ts` - Vite configuration updates
 
 ### Configuration Files
 
 **Modified:**
+
 - `.env.example` - Better Auth environment variables (BETTER_AUTH_SECRET, BETTER_AUTH_URL)
 - `pnpm-lock.yaml` - Updated with better-auth, bcryptjs dependencies
 - `pnpm-workspace.yaml` - Updated catalog versions
@@ -704,6 +755,7 @@ Story 1.2 implements Better Auth for email/password authentication with NIST 202
 ### Docker & Scripts
 
 **Modified:**
+
 - `compose.yaml` - Docker Compose configuration
 - `scripts/dev.sh` - Development startup script
 - `scripts/dev-stop.sh` - Stop script
@@ -713,23 +765,27 @@ Story 1.2 implements Better Auth for email/password authentication with NIST 202
 ### Documentation
 
 **Created:**
+
 - `AUTH_INTEGRATION.md` - Better Auth integration documentation
 - `BETTER_AUTH_INTEGRATION.md` - Detailed integration guide
 
 ### Development Environment
 
 **Created:**
+
 - `.agents/` - Agent configuration (from BMAD workflows)
 - `.claude/skills/` - Claude Code skills
 - `.cursor/skills/` - Cursor IDE skills
 - `logs/` - Application logs directory
 
 **Modified:**
+
 - `.mcp.json` - MCP server configuration
 
 ### Removed Files (Code Review Fixes)
 
 **Deleted (Out of Scope - RPC removed in favor of HTTP):**
+
 - `apps/api/src/handlers/auth.ts` - RPC handlers (removed - using Better Auth HTTP endpoints)
 - `packages/contracts/src/auth.ts` - Auth RPC contracts (removed - migrated to HTTP schemas)
 
@@ -743,6 +799,7 @@ Story 1.2 implements Better Auth for email/password authentication with NIST 202
 ## Change Log
 
 **2026-01-31 (Initial Implementation):**
+
 - Implemented Better Auth configuration with NIST 2025 password validation (12+ character minimum)
 - Configured bcrypt password hashing with cost factor 12
 - Implemented HTTP-only cookies via Better Auth advanced configuration
@@ -755,6 +812,7 @@ Story 1.2 implements Better Auth for email/password authentication with NIST 202
 - Deferred anonymous session linking to Story 2.1
 
 **2026-01-31 (Code Review Fixes):**
+
 - **CRITICAL-1**: Updated File List with all 41 changed files (was only showing 4)
 - **CRITICAL-2**: Created missing integration test file `apps/api/src/__tests__/auth.integration.test.ts`
 - **CRITICAL-3/4**: Removed RPC handlers and contracts (out of scope - migrated to HTTP endpoints)
@@ -763,7 +821,7 @@ Story 1.2 implements Better Auth for email/password authentication with NIST 202
   - Converted `packages/contracts/src/assessment.ts` from RPC to HTTP schemas
   - Converted `packages/contracts/src/profile.ts` from RPC to HTTP schemas
   - Updated `packages/contracts/src/index.ts` to remove RPC references
-- **MEDIUM-1**: Fixed security headers to apply CSP selectively (exclude /api/* routes)
+- **MEDIUM-1**: Fixed security headers to apply CSP selectively (exclude /api/\* routes)
 - **MEDIUM-2**: Fixed CORS configuration:
   - Updated default port from 3000 to 3001 (TanStack Start)
   - Added multi-origin support (localhost:3001, localhost:3000, Railway previews)

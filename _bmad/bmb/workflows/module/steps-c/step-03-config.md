@@ -1,11 +1,11 @@
 ---
-name: 'step-03-config'
-description: 'Generate module.yaml with install questions'
+name: "step-03-config"
+description: "Generate module.yaml with install questions"
 
-nextStepFile: './step-04-installer.md'
-moduleYamlConventionsFile: '../../data/module-yaml-conventions.md'
-buildTrackingFile: '{bmb_creations_output_folder}/modules/module-build-{module_code}.md'
-targetLocation: '{build_tracking_targetLocation}'
+nextStepFile: "./step-04-installer.md"
+moduleYamlConventionsFile: "../../data/module-yaml-conventions.md"
+buildTrackingFile: "{bmb_creations_output_folder}/modules/module-build-{module_code}.md"
+targetLocation: "{build_tracking_targetLocation}"
 ---
 
 # Step 3: Module Configuration
@@ -43,8 +43,9 @@ Load `{moduleYamlConventionsFile}` for reference.
 Create `{targetLocation}/module.yaml` with:
 
 **Required fields:**
+
 ```yaml
-code: {module_code}
+code: { module_code }
 name: "{module_display_name}"
 header: "{brief_header}"
 subheader: "{additional_context}"
@@ -58,11 +59,13 @@ default_selected: false
 "**Does your module need any custom configuration variables?**"
 
 Reference the brief for:
+
 - User input needed during installation
 - Paths or settings users should configure
 - Feature flags or options
 
 **For each variable, create:**
+
 ```yaml
 variable_name:
   prompt: "{question to ask}"
@@ -71,6 +74,7 @@ variable_name:
 ```
 
 **Common patterns:**
+
 - Text input (names, titles)
 - Boolean (enable features)
 - Single-select (experience levels)
@@ -88,6 +92,7 @@ Write the complete module.yaml to `{targetLocation}/module.yaml`
 ### 5. Update Build Tracking
 
 Update `{buildTrackingFile}`:
+
 - Add 'step-03-config' to stepsCompleted
 - Note: module.yaml created
 

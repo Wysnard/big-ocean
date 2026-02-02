@@ -1,13 +1,13 @@
 ---
-name: 'step-e-05-apply-edit'
-description: 'Offer validation after edits, complete or continue editing'
+name: "step-e-05-apply-edit"
+description: "Offer validation after edits, complete or continue editing"
 
 # File References
-nextStepFile: './step-e-06-validate-after.md'
-completeStep: './step-e-07-complete.md'
-editPlan: '{bmb_creations_output_folder}/edit-plan-{workflow_name}.md'
-targetWorkflowPath: '{targetWorkflowPath}'
-validationWorkflow: '../steps-v/step-01-validate.md'
+nextStepFile: "./step-e-06-validate-after.md"
+completeStep: "./step-e-07-complete.md"
+editPlan: "{bmb_creations_output_folder}/edit-plan-{workflow_name}.md"
+targetWorkflowPath: "{targetWorkflowPath}"
+validationWorkflow: "../steps-v/step-01-validate.md"
 ---
 
 # Edit Step 5: Post-Edit Options
@@ -89,13 +89,15 @@ Read `{editPlan}` to understand what edits were applied.
 **IF user selects [C] Complete:**
 
 Update editPlan frontmatter:
+
 ```yaml
-completionDate: '{current-date}'
+completionDate: "{current-date}"
 validationAfterEdit: skipped
 completionStatus: complete_without_validation
 ```
 
 Document in editPlan:
+
 ```markdown
 ## Completion
 
