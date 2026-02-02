@@ -56,7 +56,7 @@ export const calculatePrecisionFromFacets = (
 
     // Handle empty facet scores
     if (facetCount === 0) {
-      yield* logger.debug("No facets available for precision calculation");
+      logger.debug("No facets available for precision calculation");
       return { precision: 0, facetCount: 0 };
     }
 
@@ -70,7 +70,7 @@ export const calculatePrecisionFromFacets = (
     const meanConfidence = confidenceSum / facetCount;
     const precision = Math.round(meanConfidence * 10000) / 100; // Round to 2 decimal places
 
-    yield* logger.info("Precision calculated", {
+    logger.info("Precision calculated", {
       facetCount,
       confidenceSum: Math.round(confidenceSum * 100) / 100,
       precision,

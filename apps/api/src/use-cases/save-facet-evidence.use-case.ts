@@ -126,7 +126,7 @@ export const saveFacetEvidence = (
 
     // Handle empty evidence array
     if (input.evidence.length === 0) {
-      yield* logger.debug("No evidence to save", { messageId: input.messageId });
+      logger.debug("No evidence to save", { messageId: input.messageId });
       return { savedCount: 0, evidenceIds: [] };
     }
 
@@ -135,7 +135,7 @@ export const saveFacetEvidence = (
       yield* validateEvidence(input.messageId, evidence);
     }
 
-    yield* logger.info("Saving facet evidence", {
+    logger.info("Saving facet evidence", {
       messageId: input.messageId,
       evidenceCount: input.evidence.length,
       facets: input.evidence.map((e) => e.facetName),
@@ -147,7 +147,7 @@ export const saveFacetEvidence = (
       input.evidence
     );
 
-    yield* logger.info("Facet evidence saved", {
+    logger.info("Facet evidence saved", {
       messageId: input.messageId,
       savedCount: savedEvidence.length,
       evidenceIds: savedEvidence.map((e) => e.id),

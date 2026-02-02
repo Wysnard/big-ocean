@@ -129,10 +129,10 @@ export const createTestAssessmentMessageLayer = () => {
  */
 export const createTestLoggerLayer = () =>
   Layer.succeed(LoggerRepository, {
-    info: () => Effect.succeed(undefined),
-    error: () => Effect.succeed(undefined),
-    warn: () => Effect.succeed(undefined),
-    debug: () => Effect.succeed(undefined),
+    info: () => {},
+    error: () => {},
+    warn: () => {},
+    debug: () => {},
   })
 
 /**

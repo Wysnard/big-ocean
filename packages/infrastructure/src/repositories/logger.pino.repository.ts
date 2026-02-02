@@ -8,7 +8,7 @@
  * - Uses LoggerRepository.of({...}) for proper service implementation
  */
 
-import { Layer, Effect } from "effect";
+import { Layer } from "effect";
 import * as pinoModule from "pino";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 
@@ -39,21 +39,17 @@ export const LoggerPinoRepositoryLive = Layer.sync(LoggerRepository, () => {
 
   // Return service implementation using .of() pattern
   return LoggerRepository.of({
-    info: (message: string, meta?: Record<string, unknown>) =>
-      Effect.sync(() => {
-        logger.info(meta || {}, message);
-      }),
-    error: (message: string, meta?: Record<string, unknown>) =>
-      Effect.sync(() => {
-        logger.error(meta || {}, message);
-      }),
-    warn: (message: string, meta?: Record<string, unknown>) =>
-      Effect.sync(() => {
-        logger.warn(meta || {}, message);
-      }),
-    debug: (message: string, meta?: Record<string, unknown>) =>
-      Effect.sync(() => {
-        logger.debug(meta || {}, message);
-      }),
+    info: (message: string, meta?: Record<string, unknown>) => {
+      logger.info(meta || {}, message);
+    },
+    error: (message: string, meta?: Record<string, unknown>) => {
+      logger.error(meta || {}, message);
+    },
+    warn: (message: string, meta?: Record<string, unknown>) => {
+      logger.warn(meta || {}, message);
+    },
+    debug: (message: string, meta?: Record<string, unknown>) => {
+      logger.debug(meta || {}, message);
+    },
   });
 });

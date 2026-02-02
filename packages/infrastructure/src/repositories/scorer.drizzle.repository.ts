@@ -139,7 +139,7 @@ export const ScorerDrizzleRepositoryLive = Layer.effect(
     const db = yield* Database;
     const logger = yield* LoggerRepository;
 
-    yield* logger.info("Scorer Drizzle repository initialized");
+    logger.info("Scorer Drizzle repository initialized");
 
     return ScorerRepository.of({
       aggregateFacetScores: (sessionId: string) =>
@@ -188,7 +188,7 @@ export const ScorerDrizzleRepositoryLive = Layer.effect(
 
           const duration = Date.now() - startTime;
 
-          yield* logger.info("Facet scores aggregated", {
+          logger.info("Facet scores aggregated", {
             sessionId,
             facetCount: Object.keys(facetScores).length,
             evidenceCount: evidenceRows.length,
@@ -240,7 +240,7 @@ export const ScorerDrizzleRepositoryLive = Layer.effect(
             };
           }
 
-          yield* logger.info("Trait scores derived", {
+          logger.info("Trait scores derived", {
             traitCount: Object.keys(traitScores).length,
             facetCount: Object.keys(facetScores).length,
           });

@@ -87,7 +87,7 @@ export const updateFacetScores = (
     const scorer = yield* ScorerRepository;
     const logger = yield* LoggerRepository;
 
-    yield* logger.info("Updating facet scores", {
+    logger.info("Updating facet scores", {
       sessionId: input.sessionId,
     });
 
@@ -95,7 +95,7 @@ export const updateFacetScores = (
     const facetScores = yield* scorer.aggregateFacetScores(input.sessionId);
 
     const facetCount = Object.keys(facetScores).length;
-    yield* logger.info("Facet scores aggregated", {
+    logger.info("Facet scores aggregated", {
       sessionId: input.sessionId,
       facetCount,
       facetNames: Object.keys(facetScores),
@@ -105,7 +105,7 @@ export const updateFacetScores = (
     const traitScores = yield* scorer.deriveTraitScores(facetScores);
 
     const traitCount = Object.keys(traitScores).length;
-    yield* logger.info("Trait scores derived", {
+    logger.info("Trait scores derived", {
       sessionId: input.sessionId,
       traitCount,
       traitNames: Object.keys(traitScores),
@@ -113,7 +113,7 @@ export const updateFacetScores = (
 
     const updatedAt = new Date();
 
-    yield* logger.info("Facet scores update complete", {
+    logger.info("Facet scores update complete", {
       sessionId: input.sessionId,
       facetCount,
       traitCount,
