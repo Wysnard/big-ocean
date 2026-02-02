@@ -12,7 +12,11 @@
  */
 
 import { Context, Effect } from "effect";
-import type { FacetEvidence, FacetName, SavedFacetEvidence } from "../types/facet-evidence.js";
+import type {
+  FacetEvidence,
+  FacetName,
+  SavedFacetEvidence,
+} from "../types/facet-evidence.js";
 import { FacetEvidencePersistenceError } from "../errors/evidence.errors.js";
 
 // Re-export SavedFacetEvidence for convenience
@@ -82,6 +86,5 @@ export interface FacetEvidenceRepository {
  *
  * Used for dependency injection via Effect's Layer system.
  */
-export const FacetEvidenceRepository = Context.GenericTag<FacetEvidenceRepository>(
-  "FacetEvidenceRepository"
-);
+export const FacetEvidenceRepository =
+  Context.GenericTag<FacetEvidenceRepository>("FacetEvidenceRepository");

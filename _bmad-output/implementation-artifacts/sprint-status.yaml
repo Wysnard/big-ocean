@@ -62,6 +62,7 @@ development_status:
   2-2.5-setup-redis-and-cost-management-with-token-counting: done
   2-6-migrate-to-effect-vitest-and-centralize-effect-packages: done
   2-3-analyzer-and-scorer-agent-implementation: done
+  2-7-typescript-compilation-linting-code-quality: ready-for-dev
   2-4-langgraph-state-machine-and-orchestration: backlog
   2-5-llm-cost-tracking-rate-limiting-and-budget-enforcement: backlog
   epic-2-retrospective: optional
@@ -110,8 +111,8 @@ total_stories: 29
 epics_backlog: 4
 epics_in_progress: 2
 epics_done: 1
-stories_backlog: 14
-stories_ready_for_dev: 0
+stories_backlog: 13
+stories_ready_for_dev: 1
 stories_in_progress: 0
 stories_review: 0
 stories_done: 15
@@ -140,8 +141,9 @@ retrospectives_done: 1
   - ✅ Story 2.2: Nerin Agent Setup and Conversational Quality (TDD)
   - ✅ Story 2.2.5: Setup Redis and Cost Management Infrastructure (TDD)
   - ✅ Story 2.2-1: Migrate to Effect Config (environment management)
-  - 📋 **NEXT:** Story 2.6: Migrate to Effect + Vitest
-  - ⏳ Story 2.3: Analyzer and Scorer Agent Implementation (TDD)
+  - ✅ Story 2.6: Migrate to Effect + Vitest and Centralize Effect Packages
+  - ✅ Story 2.3: Analyzer and Scorer Agent Implementation (TDD)
+  - 📋 **NEXT:** Story 2.7: TypeScript Compilation, Linting, and Code Quality (4-phase implementation)
   - ⏳ Story 2.4: LangGraph State Machine and Orchestration (TDD)
   - ⏳ Story 2.5: LLM Cost Tracking, Rate Limiting, and Budget Enforcement (TDD)
 - **Then:** Epic 3 (OCEAN System): Code generation, archetype lookup
@@ -201,8 +203,9 @@ Epic 1 (Infrastructure) ✅ COMPLETE
 5. ✅ Story 2.2-1 COMPLETE - Effect Config migration (type-safe env vars, secrets redaction, 22 new tests)
 6. ✅ Story 2.6 COMPLETE - Migrate to Effect + Vitest and centralize Effect packages
 7. ✅ Story 2.3 COMPLETE - Analyzer and Scorer Agent Implementation (301 total tests)
-8. 📋 Story 2.4 READY - LangGraph State Machine and Orchestration **[NEXT]**
-9. After Epic 2 complete: Move to Epic 3 (OCEAN Archetype System)
+8. 📋 Story 2.7 READY - TypeScript Compilation, Linting, and Code Quality (4-phase: Biome → Paths → Audit → Patterns) **[NEXT]**
+9. After Story 2.7: Story 2.4 (LangGraph State Machine) and 2.5 (Cost Tracking)
+10. After Epic 2 complete: Move to Epic 3 (OCEAN Archetype System)
 
 **Parallel Work Opportunities:**
 - Story 7.2 (Integration Testing) can be started in parallel with Epic 2

@@ -3,25 +3,36 @@ packages:
   - "packages/*"
 
 catalog:
-  zod: "4.2.1"
-  esbuild: "0.27.2"
+  # Core Effect ecosystem
   effect: "^3.19.15"
-  "@effect/rpc": "^0.73.0"
   "@effect/schema": "^0.75.5"
   "@effect/platform": "^0.94.2"
   "@effect/platform-node": "^0.104.1"
+  "@effect/rpc": "^0.73.0"
   "@effect/cluster": "^0.56.1"
   "@effect/sql": "^0.49.0"
+  "@effect/sql-pg": "^0.50.1"
   "@effect/experimental": "^0.58.0"
   "@effect/vitest": "^0.27.0"
+
+  # Testing
   vitest: "^4.0.18"
   "@vitest/coverage-v8": "^4.0.18"
-  pino: "9.6.0"
-  better-auth: "^1.4.18"
-  drizzle-orm: "^1.0.0-beta.12"
+
+  # Database
+  drizzle-orm: "1.0.0-beta.12-a5629fb"
   postgres: "^3.4.8"
+  pg: "^8.18.0"
+
+  # Auth & utilities
+  better-auth: "^1.4.18"
   bcryptjs: "^3.0.3"
   ioredis: "^5.4.3"
+  pino: "9.6.0"
+
+  # Build tools
+  zod: "4.2.1"
+  esbuild: "0.27.2"
 
 overrides:
   zod: "catalog:"
