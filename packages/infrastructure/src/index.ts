@@ -22,5 +22,19 @@ export { AssessmentMessageDrizzleRepositoryLive } from "./repositories/assessmen
 // Nerin agent repository implementation
 export { NerinAgentLangGraphRepositoryLive } from "./repositories/nerin-agent.langgraph.repository.js";
 
+// Redis repository implementation
+export {
+  RedisIoRedisRepositoryLive,
+  createTestRedisRepository,
+  RedisTestRepositoryLive,
+} from "./repositories/redis.ioredis.repository.js";
+
+// CostGuard repository implementation
+export {
+  CostGuardRedisRepositoryLive,
+  createTestCostGuardRepository,
+  CostGuardTestRepositoryLive,
+} from "./repositories/cost-guard.redis.repository.js";
+
 // Database schema (for Better Auth adapter and migrations)
 export * as dbSchema from "./infrastructure/db/schema.js";
