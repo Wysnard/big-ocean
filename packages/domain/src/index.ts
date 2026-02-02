@@ -43,6 +43,7 @@ export {
 // Facet evidence and scoring types (Story 2.3)
 export type {
 	FacetEvidence,
+	SavedFacetEvidence,
 	FacetScore,
 	TraitScore,
 	HighlightRange,
@@ -83,10 +84,7 @@ export {
   InsufficientEvidenceError,
   ScorerError,
 } from "./repositories/scorer.repository.js";
-export {
-  FacetEvidenceRepository,
-  type SavedFacetEvidence,
-} from "./repositories/facet-evidence.repository.js";
+export { FacetEvidenceRepository } from "./repositories/facet-evidence.repository.js";
 
 // Evidence errors
 export {

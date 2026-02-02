@@ -12,16 +12,11 @@
  */
 
 import { Context, Effect } from "effect";
-import type { FacetEvidence, FacetName } from "../types/facet-evidence.js";
+import type { FacetEvidence, FacetName, SavedFacetEvidence } from "../types/facet-evidence.js";
 import { FacetEvidencePersistenceError } from "../errors/evidence.errors.js";
 
-/**
- * Saved evidence record with database-generated ID.
- */
-export interface SavedFacetEvidence extends FacetEvidence {
-  readonly id: string;
-  readonly createdAt: Date;
-}
+// Re-export SavedFacetEvidence for convenience
+export type { SavedFacetEvidence };
 
 /**
  * Facet Evidence Repository Interface

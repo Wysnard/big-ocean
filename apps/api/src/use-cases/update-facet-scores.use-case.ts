@@ -13,6 +13,8 @@ import { Effect } from "effect";
 import {
   ScorerRepository,
   LoggerRepository,
+  DatabaseError,
+  ScorerError,
   type FacetScoresMap,
   type TraitScoresMap,
 } from "@workspace/domain";
@@ -78,7 +80,7 @@ export const updateFacetScores = (
   input: UpdateFacetScoresInput
 ): Effect.Effect<
   UpdateFacetScoresOutput,
-  never,
+  DatabaseError | ScorerError,
   ScorerRepository | LoggerRepository
 > =>
   Effect.gen(function* () {

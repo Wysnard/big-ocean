@@ -1,10 +1,10 @@
 import { Context, Effect } from "effect";
-import type { FacetEvidence } from "@workspace/domain/types/facet-evidence";
+import type { FacetEvidence } from "../types/facet-evidence.js";
 import {
   AnalyzerError,
   InvalidFacetNameError,
   MalformedEvidenceError,
-} from "@workspace/contracts/errors";
+} from "@workspace/contracts";
 
 /**
  * Analyzer Repository Service Tag

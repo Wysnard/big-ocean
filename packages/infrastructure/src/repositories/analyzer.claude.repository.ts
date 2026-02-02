@@ -187,7 +187,7 @@ function parseResponse(
     // Convert to FacetEvidence with messageId
     return validated.map((e) => ({
       messageId,
-      facetName: e.facet,
+      facetName: e.facet as any, // Type is safe because validateFacetName already verified it
       score: e.score,
       confidence: e.confidence,
       quote: e.quote,

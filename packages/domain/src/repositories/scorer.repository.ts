@@ -2,8 +2,8 @@ import { Context, type Effect } from "effect";
 import type {
   FacetScoresMap,
   TraitScoresMap,
-} from "@workspace/domain/types/facet-evidence";
-import type { DatabaseError } from "@workspace/contracts/errors";
+} from "../types/facet-evidence.js";
+import type { DatabaseError } from "@workspace/domain";
 
 /**
  * Domain errors for Scorer operations

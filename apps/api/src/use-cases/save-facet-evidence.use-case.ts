@@ -15,6 +15,7 @@ import {
   FacetEvidenceRepository,
   LoggerRepository,
   EvidenceValidationError,
+  FacetEvidencePersistenceError,
   isFacetName,
   ALL_FACETS,
   type FacetEvidence,
@@ -116,7 +117,7 @@ export const saveFacetEvidence = (
   input: SaveFacetEvidenceInput
 ): Effect.Effect<
   SaveFacetEvidenceOutput,
-  EvidenceValidationError,
+  EvidenceValidationError | FacetEvidencePersistenceError,
   FacetEvidenceRepository | LoggerRepository
 > =>
   Effect.gen(function* () {

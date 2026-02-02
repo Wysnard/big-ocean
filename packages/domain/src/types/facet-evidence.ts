@@ -7,6 +7,9 @@
 
 import type { FacetName, TraitName } from "../constants/big-five.js";
 
+// Re-export for convenience
+export type { FacetName, TraitName };
+
 /**
  * Highlight Range
  *
@@ -24,16 +27,12 @@ export interface HighlightRange {
  * Facet Evidence (Analyzer Output)
  *
  * Represents a single facet signal detected by the Analyzer from a user message.
- * Each evidence record links to a specific message and contains the analyzer's
- * interpretation with confidence, quote, and highlighting information.
+ * This is the input type - id and createdAt are added by the database.
  *
  * Storage: facet_evidence table (one row per detection)
  * Lifecycle: Created on every message analysis, never updated
  */
 export interface FacetEvidence {
-	/** Unique identifier (UUID) */
-	id: string;
-
 	/** Reference to the message this evidence came from (UUID) */
 	messageId: string;
 
@@ -59,13 +58,24 @@ export interface FacetEvidence {
 
 	/** Character indices for highlighting the quote in the UI */
 	highlightRange: HighlightRange;
+}
+
+/**
+ * Saved Facet Evidence (Database Record)
+ *
+ * Represents a facet evidence record returned from the database.
+ * Includes the id and createdAt timestamp added by the database.
+ */
+export interface SavedFacetEvidence extends FacetEvidence {
+	/** Unique identifier (UUID) */
+	id: string;
 
 	/** When this evidence was created */
 	createdAt: Date;
 }
 
 /**
- * Facet Score (Aggregated from Evidence)
+ * Facet Score Value (Aggregated from Evidence)
  *
  * Represents an aggregated score for a single facet across multiple messages.
  * Computed by the Scorer using weighted averaging with recency bias and
@@ -73,11 +83,10 @@ export interface FacetEvidence {
  *
  * Storage: facet_scores table (one row per session-facet pair, updated every 3 messages)
  * Lifecycle: Created/updated during aggregation, replaces previous value
+ *
+ * Note: facetName is stored as the map key, not in the value itself.
  */
 export interface FacetScore {
-	/** Clean facet name (e.g., "imagination", "altruism") */
-	facetName: FacetName;
-
 	/**
 	 * Aggregated score: 0-20 scale
 	 * Weighted average of all evidence scores for this facet.
@@ -117,11 +126,10 @@ export interface FacetScore {
  *
  * Storage: trait_scores table (one row per session-trait pair, updated with facet scores)
  * Lifecycle: Created/updated when facet scores are aggregated, replaces previous value
+ *
+ * Note: traitName is stored as the map key, not in the value itself.
  */
 export interface TraitScore {
-	/** Trait name: "openness", "conscientiousness", etc. */
-	traitName: TraitName;
-
 	/**
 	 * Trait score: 0-20 scale
 	 * Mean of the 6 related facet scores.

@@ -24,8 +24,8 @@ import {
   type TraitScoresMap,
   type SavedFacetEvidence,
   TRAIT_TO_FACETS,
-  isFacetName,
   type FacetName,
+  type TraitName,
 } from "@workspace/domain"
 
 /**
@@ -129,10 +129,10 @@ export const createTestAssessmentMessageLayer = () => {
  */
 export const createTestLoggerLayer = () =>
   Layer.succeed(LoggerRepository, {
-    info: () => Effect.void,
-    error: () => Effect.void,
-    warn: () => Effect.void,
-    debug: () => Effect.void,
+    info: () => Effect.succeed(undefined),
+    error: () => Effect.succeed(undefined),
+    warn: () => Effect.succeed(undefined),
+    debug: () => Effect.succeed(undefined),
   })
 
 /**
@@ -343,19 +343,19 @@ export const createTestScorerLayer = () =>
         for (const [traitName, facetNames] of Object.entries(TRAIT_TO_FACETS)) {
           const facetsForTrait = facetNames
             .map((fn) => facetScores[fn])
-            .filter(Boolean)
+            .filter((f) => f !== undefined)
 
           if (facetsForTrait.length === 0) continue
 
           // Mean of facet scores
-          const scores = facetsForTrait.map((f) => f.score)
+          const scores = facetsForTrait.map((f) => f!.score)
           const traitScore = scores.reduce((sum, s) => sum + s, 0) / scores.length
 
           // Minimum confidence
-          const confidences = facetsForTrait.map((f) => f.confidence)
+          const confidences = facetsForTrait.map((f) => f!.confidence)
           const traitConfidence = Math.min(...confidences)
 
-          traitScores[traitName as any] = {
+          traitScores[traitName as TraitName] = {
             score: Math.round(traitScore * 10) / 10,
             confidence: Math.round(traitConfidence * 100) / 100,
           }

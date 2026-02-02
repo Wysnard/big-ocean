@@ -139,7 +139,7 @@ export const ScorerDrizzleRepositoryLive = Layer.effect(
     const db = yield* Database;
     const logger = yield* LoggerRepository;
 
-    logger.info("Scorer Drizzle repository initialized");
+    yield* logger.info("Scorer Drizzle repository initialized");
 
     return ScorerRepository.of({
       aggregateFacetScores: (sessionId: string) =>
@@ -188,7 +188,7 @@ export const ScorerDrizzleRepositoryLive = Layer.effect(
 
           const duration = Date.now() - startTime;
 
-          logger.info("Facet scores aggregated", {
+          yield* logger.info("Facet scores aggregated", {
             sessionId,
             facetCount: Object.keys(facetScores).length,
             evidenceCount: evidenceRows.length,
@@ -219,7 +219,7 @@ export const ScorerDrizzleRepositoryLive = Layer.effect(
             // Get scores for all 6 facets belonging to this trait
             const facetsForTrait = facetNames
               .map((fn) => facetScores[fn])
-              .filter(Boolean); // Handle missing facets gracefully
+              .filter((f) => f !== undefined); // Handle missing facets gracefully
 
             if (facetsForTrait.length === 0) {
               // Skip trait if no facets scored yet
@@ -227,11 +227,11 @@ export const ScorerDrizzleRepositoryLive = Layer.effect(
             }
 
             // Trait score = mean of facet scores
-            const traitScore = mean(facetsForTrait.map((f) => f.score));
+            const traitScore = mean(facetsForTrait.map((f) => f!.score));
 
             // Trait confidence = minimum confidence (conservative estimate)
             const traitConfidence = Math.min(
-              ...facetsForTrait.map((f) => f.confidence)
+              ...facetsForTrait.map((f) => f!.confidence)
             );
 
             traitScores[traitName as TraitName] = {
@@ -240,14 +240,14 @@ export const ScorerDrizzleRepositoryLive = Layer.effect(
             };
           }
 
-          logger.info("Trait scores derived", {
+          yield* logger.info("Trait scores derived", {
             traitCount: Object.keys(traitScores).length,
             facetCount: Object.keys(facetScores).length,
           });
 
           return traitScores;
         }).pipe(
-          Effect.catchAll((error) =>
+          Effect.catchAll((error: any) =>
             Effect.fail(
               new ScorerError(
                 "unknown", // No sessionId in this context
