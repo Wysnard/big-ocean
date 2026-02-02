@@ -1,6 +1,6 @@
 # Story 2.7: TypeScript Compilation, Linting, and Code Quality Improvements
 
-**Status:** in-progress
+**Status:** done
 
 **Epic:** 2 - Assessment Backend Services
 **Story ID:** 2.7
@@ -552,8 +552,8 @@ f09c42f feat(db): Add default values of 0 for score and confidence columns
   - AC 4: ✅ lint:fix script, pre-commit hook, Type Safety docs in CLAUDE.md
   - AC 5: ✅ All 124 tests pass (115 API + 9 frontend)
   - AC 6: ✅ Type Safety Patterns section in CLAUDE.md
-- [ ] Commit changes
-- [ ] Update sprint status to "done"
+- [x] Commit changes (79b3a3f on feat/story-2-7-typescript-linting-code-quality)
+- [x] Update sprint status to "done"
 
 ---
 
