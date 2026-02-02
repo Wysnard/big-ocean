@@ -510,6 +510,63 @@ The backend uses LangGraph to orchestrate multiple specialized agents:
          (update state)
 ```
 
+### Analyzer and Scorer Implementation (Story 2.3 ✅)
+
+The Analyzer and Scorer work together to build personality profiles from conversation:
+
+**Big Five Framework:**
+- 5 traits: Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism
+- 30 facets total (6 per trait)
+- Constants defined in `packages/domain/src/constants/big-five.ts`
+
+**Database Schema (facet_evidence, facet_scores, trait_scores):**
+
+```typescript
+// packages/infrastructure/src/db/schema.ts
+export const facetEvidence = pgTable("facet_evidence", {
+  id: uuid("id").primaryKey(),
+  messageId: uuid("message_id").references(() => assessmentMessage.id),
+  facetName: text("facet_name").notNull(),  // "imagination", "altruism", etc.
+  score: integer("score").notNull(),        // 0-20
+  confidence: integer("confidence").notNull(), // 0-100
+  quote: text("quote").notNull(),           // Evidence text
+  highlightStart: integer("highlight_start").notNull(),
+  highlightEnd: integer("highlight_end").notNull(),
+});
+```
+
+**Repository Pattern:**
+
+| Repository | Interface | Implementation | Purpose |
+|------------|-----------|----------------|---------|
+| AnalyzerRepository | `packages/domain/src/repositories/analyzer.repository.ts` | `analyzer.claude.repository.ts` | Claude API for facet extraction |
+| ScorerRepository | `packages/domain/src/repositories/scorer.repository.ts` | `scorer.drizzle.repository.ts` | Facet aggregation + trait derivation |
+| FacetEvidenceRepository | `packages/domain/src/repositories/facet-evidence.repository.ts` | (test only) | Evidence persistence |
+
+**Use-Cases:**
+
+```typescript
+// Analyze message and extract facet evidence
+const evidence = yield* analyzer.analyzeFacets(messageId, content);
+
+// Save evidence (validates: score 0-20, confidence 0-1, valid facet names)
+const saved = yield* saveFacetEvidence({ messageId, evidence });
+
+// Aggregate every 3 messages
+if (shouldTriggerScoring(messageCount)) {
+  const scores = yield* updateFacetScores({ sessionId });
+  const precision = yield* calculatePrecisionFromFacets({ facetScores: scores.facetScores });
+}
+```
+
+**Scoring Algorithm:**
+1. Group evidence by facetName
+2. Weighted average with recency bias: `confidence × (1 + position × 0.1)`
+3. Contradiction detection via variance analysis
+4. Trait score = mean of 6 related facet scores
+5. Trait confidence = minimum confidence across facets
+6. Precision = mean of all facet confidences × 100
+
 ### Local-First Data Sync (ElectricSQL + TanStack DB)
 
 Frontend uses reactive local-first sync:

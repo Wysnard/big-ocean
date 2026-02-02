@@ -136,3 +136,43 @@ export class AgentInvocationError extends S.TaggedError<AgentInvocationError>()(
     message: S.String,
   }
 ) {}
+
+/**
+ * Analyzer error (500)
+ * Generic error for personality facet analysis operations
+ */
+export class AnalyzerError extends S.TaggedError<AnalyzerError>()(
+  "AnalyzerError",
+  {
+    assessmentMessageId: S.String,
+    message: S.String,
+    cause: S.optional(S.String),
+  }
+) {}
+
+/**
+ * Invalid facet name error (422)
+ * Validation failure for facet name not in the 30 Big Five facets
+ */
+export class InvalidFacetNameError extends S.TaggedError<InvalidFacetNameError>()(
+  "InvalidFacetNameError",
+  {
+    facetName: S.String,
+    validFacets: S.Array(S.String),
+    message: S.String,
+  }
+) {}
+
+/**
+ * Malformed evidence error (422)
+ * JSON parsing or structure validation failure for analyzer output
+ */
+export class MalformedEvidenceError extends S.TaggedError<MalformedEvidenceError>()(
+  "MalformedEvidenceError",
+  {
+    assessmentMessageId: S.String,
+    rawOutput: S.String,
+    parseError: S.String,
+    message: S.String,
+  }
+) {}

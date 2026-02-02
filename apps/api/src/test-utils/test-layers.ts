@@ -16,6 +16,16 @@ import {
   CostGuardRepository,
   RedisRepository,
   NerinAgentRepository,
+  AnalyzerRepository,
+  ScorerRepository,
+  FacetEvidenceRepository,
+  type FacetEvidence,
+  type FacetScoresMap,
+  type TraitScoresMap,
+  type SavedFacetEvidence,
+  TRAIT_TO_FACETS,
+  type FacetName,
+  type TraitName,
 } from "@workspace/domain"
 
 /**
@@ -119,10 +129,10 @@ export const createTestAssessmentMessageLayer = () => {
  */
 export const createTestLoggerLayer = () =>
   Layer.succeed(LoggerRepository, {
-    info: () => Effect.void,
-    error: () => Effect.void,
-    warn: () => Effect.void,
-    debug: () => Effect.void,
+    info: () => {},
+    error: () => {},
+    warn: () => {},
+    debug: () => {},
   })
 
 /**
@@ -230,6 +240,190 @@ export const createTestNerinAgentLayer = () =>
   })
 
 /**
+ * Creates a test Layer for AnalyzerRepository.
+ *
+ * Provides a mock analyzer for testing without Claude API calls.
+ * Returns deterministic facet evidence for predictable testing.
+ */
+export const createTestAnalyzerLayer = () =>
+  Layer.succeed(AnalyzerRepository, {
+    analyzeFacets: (assessmentMessageId: string, content: string) =>
+      Effect.sync(() => {
+        // Return deterministic evidence based on message content
+        const evidence: FacetEvidence[] = []
+
+        // Check for openness signals
+        if (content.toLowerCase().includes("creative") ||
+            content.toLowerCase().includes("imaginat") ||
+            content.toLowerCase().includes("ideas")) {
+          evidence.push({
+            assessmentMessageId,
+            facetName: "imagination",
+            score: 16,
+            confidence: 0.85,
+            quote: content.substring(0, Math.min(30, content.length)),
+            highlightRange: { start: 0, end: Math.min(30, content.length) },
+          })
+        }
+
+        // Check for agreeableness signals
+        if (content.toLowerCase().includes("help") ||
+            content.toLowerCase().includes("care") ||
+            content.toLowerCase().includes("kind")) {
+          evidence.push({
+            assessmentMessageId,
+            facetName: "altruism",
+            score: 18,
+            confidence: 0.9,
+            quote: content.substring(0, Math.min(25, content.length)),
+            highlightRange: { start: 0, end: Math.min(25, content.length) },
+          })
+        }
+
+        // Check for conscientiousness signals
+        if (content.toLowerCase().includes("organized") ||
+            content.toLowerCase().includes("plan") ||
+            content.toLowerCase().includes("schedule")) {
+          evidence.push({
+            assessmentMessageId,
+            facetName: "orderliness",
+            score: 17,
+            confidence: 0.8,
+            quote: content.substring(0, Math.min(20, content.length)),
+            highlightRange: { start: 0, end: Math.min(20, content.length) },
+          })
+        }
+
+        // Always return at least one piece of evidence for testing
+        if (evidence.length === 0) {
+          evidence.push({
+            assessmentMessageId,
+            facetName: "intellect",
+            score: 12,
+            confidence: 0.6,
+            quote: content.substring(0, Math.min(20, content.length)),
+            highlightRange: { start: 0, end: Math.min(20, content.length) },
+          })
+        }
+
+        return evidence
+      }),
+  })
+
+/**
+ * Creates a test Layer for ScorerRepository.
+ *
+ * Provides a mock scorer for testing without database queries.
+ * Returns deterministic aggregated scores and derived traits.
+ */
+export const createTestScorerLayer = () =>
+  Layer.succeed(ScorerRepository, {
+    aggregateFacetScores: (_sessionId: string) =>
+      Effect.sync(() => {
+        // Return mock aggregated facet scores
+        const facetScores: FacetScoresMap = {
+          imagination: { score: 16.5, confidence: 0.85 },
+          artistic_interests: { score: 15.2, confidence: 0.8 },
+          emotionality: { score: 14.8, confidence: 0.78 },
+          adventurousness: { score: 17.1, confidence: 0.88 },
+          intellect: { score: 16.9, confidence: 0.87 },
+          liberalism: { score: 15.5, confidence: 0.82 },
+          // Add a few more for other traits
+          altruism: { score: 18.2, confidence: 0.9 },
+          cooperation: { score: 17.5, confidence: 0.85 },
+        }
+        return facetScores
+      }),
+
+    deriveTraitScores: (facetScores: FacetScoresMap) =>
+      Effect.sync(() => {
+        // Calculate trait scores from facet scores (same algorithm as production)
+        const traitScores: TraitScoresMap = {}
+
+        for (const [traitName, facetNames] of Object.entries(TRAIT_TO_FACETS)) {
+          const facetsForTrait = facetNames
+            .map((fn) => facetScores[fn])
+            .filter((f) => f !== undefined)
+
+          if (facetsForTrait.length === 0) continue
+
+          // Mean of facet scores
+          const scores = facetsForTrait.map((f) => f!.score)
+          const traitScore = scores.reduce((sum, s) => sum + s, 0) / scores.length
+
+          // Minimum confidence
+          const confidences = facetsForTrait.map((f) => f!.confidence)
+          const traitConfidence = Math.min(...confidences)
+
+          traitScores[traitName as TraitName] = {
+            score: Math.round(traitScore * 10) / 10,
+            confidence: Math.round(traitConfidence * 100) / 100,
+          }
+        }
+
+        return traitScores
+      }),
+  })
+
+/**
+ * Creates a test Layer for FacetEvidenceRepository.
+ *
+ * Provides an in-memory evidence store for testing.
+ * Stores evidence by assessment message ID with generated UUIDs.
+ */
+export const createTestFacetEvidenceLayer = () => {
+  // In-memory evidence store: assessmentMessageId -> SavedFacetEvidence[]
+  const evidenceByMessage = new Map<string, SavedFacetEvidence[]>()
+  // Track all evidence for session-level queries (sessionId -> assessmentMessageId[])
+  const messagesBySession = new Map<string, string[]>()
+
+  return Layer.succeed(FacetEvidenceRepository, {
+    saveEvidence: (assessmentMessageId: string, evidence: FacetEvidence[]) =>
+      Effect.sync(() => {
+        const saved: SavedFacetEvidence[] = evidence.map((e) => ({
+          ...e,
+          id: `evidence_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+          createdAt: new Date(),
+        }))
+
+        const existing = evidenceByMessage.get(assessmentMessageId) || []
+        evidenceByMessage.set(assessmentMessageId, [...existing, ...saved])
+
+        return saved
+      }),
+
+    getEvidenceByMessage: (assessmentMessageId: string) =>
+      Effect.sync(() => evidenceByMessage.get(assessmentMessageId) || []),
+
+    getEvidenceByFacet: (sessionId: string, facetName: FacetName) =>
+      Effect.sync(() => {
+        const assessmentMessageIds = messagesBySession.get(sessionId) || []
+        const allEvidence: SavedFacetEvidence[] = []
+
+        for (const msgId of assessmentMessageIds) {
+          const evidence = evidenceByMessage.get(msgId) || []
+          allEvidence.push(...evidence.filter((e) => e.facetName === facetName))
+        }
+
+        return allEvidence
+      }),
+
+    getEvidenceBySession: (sessionId: string) =>
+      Effect.sync(() => {
+        const assessmentMessageIds = messagesBySession.get(sessionId) || []
+        const allEvidence: SavedFacetEvidence[] = []
+
+        for (const msgId of assessmentMessageIds) {
+          const evidence = evidenceByMessage.get(msgId) || []
+          allEvidence.push(...evidence)
+        }
+
+        return allEvidence
+      }),
+  })
+}
+
+/**
  * Complete test Layer merging all repository mocks.
  *
  * Provides all dependencies needed for use-case testing.
@@ -250,7 +444,10 @@ export const TestRepositoriesLayer = Layer.mergeAll(
   createTestLoggerLayer(),
   createTestCostGuardLayer(),
   createTestRedisLayer(),
-  createTestNerinAgentLayer()
+  createTestNerinAgentLayer(),
+  createTestAnalyzerLayer(),
+  createTestScorerLayer(),
+  createTestFacetEvidenceLayer()
 )
 
 /**

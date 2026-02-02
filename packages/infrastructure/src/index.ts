@@ -33,6 +33,12 @@ export { AssessmentMessageDrizzleRepositoryLive } from "./repositories/assessmen
 // Nerin agent repository implementation
 export { NerinAgentLangGraphRepositoryLive } from "./repositories/nerin-agent.langgraph.repository.js";
 
+// Analyzer repository implementation
+export { AnalyzerClaudeRepositoryLive } from "./repositories/analyzer.claude.repository.js";
+
+// Scorer repository implementation
+export { ScorerDrizzleRepositoryLive } from "./repositories/scorer.drizzle.repository.js";
+
 // Redis repository implementation
 export {
   RedisIoRedisRepositoryLive,

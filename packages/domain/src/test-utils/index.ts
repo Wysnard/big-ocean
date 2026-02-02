@@ -83,7 +83,7 @@ export interface AnalysisResult {
 }
 
 export const mockAnalyzer = (
-  messages: string[],
+  _messages: string[],
 ): Effect.Effect<AnalysisResult, never, never> =>
   Effect.succeed({
     patterns: ["openness to experience", "conscientiousness"],

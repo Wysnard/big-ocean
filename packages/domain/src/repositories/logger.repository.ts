@@ -4,7 +4,7 @@ import { Context } from "effect";
  * Logger Repository Interface
  *
  * Provides structured logging capabilities across the application.
- * Follows official Effect pattern from https://effect.website/docs/requirements-management/services/
+ * Methods are synchronous side-effects that return void.
  */
 
 export interface LoggerMethods {

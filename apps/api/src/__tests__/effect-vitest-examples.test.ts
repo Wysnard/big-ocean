@@ -149,7 +149,7 @@ describe('@effect/vitest Feature Examples', () => {
         const logger = yield* LoggerRepository
 
         const session = yield* sessionRepo.createSession('layer-test')
-        yield* logger.info('Session created', { sessionId: session.sessionId })
+        logger.info('Session created', { sessionId: session.sessionId })
 
         expect(session.sessionId).toBeDefined()
       }).pipe(Effect.provide(TestRepositoriesLayer))
@@ -159,10 +159,10 @@ describe('@effect/vitest Feature Examples', () => {
       // Create custom logger that tracks calls
       let callCount = 0
       const trackingLogger = {
-        info: () => Effect.sync(() => { callCount++ }),
-        error: () => Effect.void,
-        warn: () => Effect.void,
-        debug: () => Effect.void,
+        info: () => { callCount++ },
+        error: () => {},
+        warn: () => {},
+        debug: () => {},
       }
 
       const customLayer = Layer.mergeAll(
@@ -172,8 +172,8 @@ describe('@effect/vitest Feature Examples', () => {
 
       return Effect.gen(function* () {
         const logger = yield* LoggerRepository
-        yield* logger.info('Test message')
-        yield* logger.info('Another message')
+        logger.info('Test message')
+        logger.info('Another message')
 
         expect(callCount).toBe(2)
       }).pipe(Effect.provide(customLayer))

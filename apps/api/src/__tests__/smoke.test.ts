@@ -78,7 +78,7 @@ describe('Test Layer Examples', () => {
       const session = yield* sessionRepo.createSession('user-multi-test')
 
       // Log event (no-op in test layer)
-      yield* logger.info('Session created', { sessionId: session.sessionId })
+      logger.info('Session created', { sessionId: session.sessionId })
 
       // Verify session
       const retrieved = yield* sessionRepo.getSession(session.sessionId)

@@ -61,7 +61,7 @@ development_status:
   2-2-1-migrate-to-effect-config: done
   2-2.5-setup-redis-and-cost-management-with-token-counting: done
   2-6-migrate-to-effect-vitest-and-centralize-effect-packages: done
-  2-3-analyzer-and-scorer-agent-implementation: backlog
+  2-3-analyzer-and-scorer-agent-implementation: done
   2-4-langgraph-state-machine-and-orchestration: backlog
   2-5-llm-cost-tracking-rate-limiting-and-budget-enforcement: backlog
   epic-2-retrospective: optional
@@ -111,10 +111,10 @@ epics_backlog: 4
 epics_in_progress: 2
 epics_done: 1
 stories_backlog: 14
-stories_ready_for_dev: 1
+stories_ready_for_dev: 0
 stories_in_progress: 0
 stories_review: 0
-stories_done: 14
+stories_done: 15
 retrospectives_optional: 6
 retrospectives_done: 1
 
@@ -199,9 +199,10 @@ Epic 1 (Infrastructure) ✅ COMPLETE
 3. ✅ Story 2.2 COMPLETE - Nerin Agent with LangGraph, streaming, token tracking
 4. ✅ Story 2.2.5 COMPLETE - Redis infrastructure, CostGuard repository, cost calculator (22 tests added)
 5. ✅ Story 2.2-1 COMPLETE - Effect Config migration (type-safe env vars, secrets redaction, 22 new tests)
-6. 📋 Story 2.6 READY - Migrate to Effect + Vitest and centralize Effect packages **[NEXT]**
-7. Continue through Epic 2 stories (2.6 → 2.3 → 2.4 → 2.5)
-8. After Epic 2 complete: Move to Epic 3 (OCEAN Archetype System)
+6. ✅ Story 2.6 COMPLETE - Migrate to Effect + Vitest and centralize Effect packages
+7. ✅ Story 2.3 COMPLETE - Analyzer and Scorer Agent Implementation (301 total tests)
+8. 📋 Story 2.4 READY - LangGraph State Machine and Orchestration **[NEXT]**
+9. After Epic 2 complete: Move to Epic 3 (OCEAN Archetype System)
 
 **Parallel Work Opportunities:**
 - Story 7.2 (Integration Testing) can be started in parallel with Epic 2
