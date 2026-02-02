@@ -4,6 +4,17 @@
  * Provides repository implementations, database context, and database schema.
  */
 
+// Configuration
+export {
+  AppConfig,
+  AppConfigLive,
+  loadConfig,
+  type AppConfigService,
+  createTestAppConfig,
+  AppConfigTestLive,
+  defaultTestConfig,
+} from "./config/index.js";
+
 // Database context
 export { Database, DatabaseStack } from "./context/database.js";
 
