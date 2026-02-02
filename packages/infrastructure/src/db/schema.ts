@@ -25,18 +25,18 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
-  id: uuid("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").default(false).notNull(),
-  image: text("image"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
+	id: uuid("id")
+		.primaryKey()
+		.default(sql`gen_random_uuid()`),
+	name: text("name").notNull(),
+	email: text("email").notNull().unique(),
+	emailVerified: boolean("email_verified").default(false).notNull(),
+	image: text("image"),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at")
+		.defaultNow()
+		.$onUpdate(() => new Date())
+		.notNull(),
 });
 
 export const session = pgTable(
@@ -165,53 +165,180 @@ export const assessmentMessage = pgTable(
 );
 
 /**
+ * Facet Evidence (Analyzer Output)
+ *
+ * Stores raw facet signals detected by the Analyzer from each message.
+ * Each evidence record represents a single facet detection with confidence and quote.
+ */
+export const facetEvidence = pgTable(
+	"facet_evidence",
+	{
+		id: uuid("id")
+			.primaryKey()
+			.default(sql`gen_random_uuid()`),
+		messageId: uuid("message_id")
+			.notNull()
+			.references(() => assessmentMessage.id, { onDelete: "cascade" }),
+		facetName: text("facet_name").notNull(), // Clean name: "imagination", "altruism", etc.
+		score: integer("score").notNull(), // 0-20 analyzer's suggestion for THIS message
+		confidence: integer("confidence").notNull(), // 0-100 (stored as integer, divide by 100 for 0.0-1.0)
+		quote: text("quote").notNull(), // Exact phrase from message
+		highlightStart: integer("highlight_start").notNull(), // Character index
+		highlightEnd: integer("highlight_end").notNull(), // Character index
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		// Index for retrieving evidence by message
+		index("facet_evidence_message_id_idx").on(table.messageId),
+		// Index for retrieving all evidence for a specific facet
+		index("facet_evidence_facet_name_idx").on(table.facetName),
+	],
+);
+
+/**
+ * Facet Scores (Aggregated from Evidence)
+ *
+ * Stores aggregated facet scores computed from multiple FacetEvidence records.
+ * Updated every 3 messages with weighted averaging and contradiction detection.
+ */
+export const facetScores = pgTable(
+	"facet_scores",
+	{
+		id: uuid("id")
+			.primaryKey()
+			.default(sql`gen_random_uuid()`),
+		sessionId: uuid("session_id")
+			.notNull()
+			.references(() => assessmentSession.id, { onDelete: "cascade" }),
+		facetName: text("facet_name").notNull(), // Clean name
+		score: integer("score").notNull(), // 0-20 aggregated from evidence
+		confidence: integer("confidence").notNull(), // 0-100 (adjusted for contradictions)
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		// Index for retrieving all facet scores for a session
+		index("facet_scores_session_id_idx").on(table.sessionId),
+		// Index for querying specific facet across sessions
+		index("facet_scores_facet_name_idx").on(table.facetName),
+		// Unique constraint: one score per (session, facet) pair
+		index("facet_scores_session_facet_unique_idx").on(
+			table.sessionId,
+			table.facetName,
+		),
+	],
+);
+
+/**
+ * Trait Scores (Derived from Facet Scores)
+ *
+ * Stores Big Five trait scores derived from aggregated facet scores.
+ * Each trait is the mean of 6 related facets.
+ */
+export const traitScores = pgTable(
+	"trait_scores",
+	{
+		id: uuid("id")
+			.primaryKey()
+			.default(sql`gen_random_uuid()`),
+		sessionId: uuid("session_id")
+			.notNull()
+			.references(() => assessmentSession.id, { onDelete: "cascade" }),
+		traitName: text("trait_name").notNull(), // "openness", "conscientiousness", etc.
+		score: integer("score").notNull(), // 0-20 mean of facet scores
+		confidence: integer("confidence").notNull(), // 0-100 minimum across facets
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		// Index for retrieving all trait scores for a session
+		index("trait_scores_session_id_idx").on(table.sessionId),
+		// Index for querying specific trait across sessions
+		index("trait_scores_trait_name_idx").on(table.traitName),
+		// Unique constraint: one score per (session, trait) pair
+		index("trait_scores_session_trait_unique_idx").on(
+			table.sessionId,
+			table.traitName,
+		),
+	],
+);
+
+/**
  * Relations (Drizzle v2 syntax)
  */
 
 export const relations = defineRelations(
-  {
-    user,
-    session,
-    account,
-    verification,
-    assessmentSession, // Assessment sessions
-    assessmentMessage, // Assessment messages
-  },
-  (r) => ({
-    user: {
-      sessions: r.many.session(), // Better Auth sessions
-      accounts: r.many.account(),
-      assessmentSession: r.many.assessmentSession(), // Assessment sessions
-      assessmentMessage: r.many.assessmentMessage(), // Assessment messages
-    },
-    session: {
-      user: r.one.user({
-        from: r.session.userId,
-        to: r.user.id,
-      }),
-    },
-    account: {
-      user: r.one.user({
-        from: r.account.userId,
-        to: r.user.id,
-      }),
-    },
-    assessmentSession: {
-      user: r.one.user({
-        from: r.assessmentSession.userId,
-        to: r.user.id,
-      }),
-      assessmentMessages: r.many.assessmentMessage(),
-    },
-    assessmentMessage: {
-      session: r.one.assessmentSession({
-        from: r.assessmentMessage.sessionId,
-        to: r.assessmentSession.id,
-      }),
-      user: r.one.user({
-        from: r.assessmentMessage.userId,
-        to: r.user.id,
-      }),
-    },
-  }),
+	{
+		user,
+		session,
+		account,
+		verification,
+		assessmentSession, // Assessment sessions
+		assessmentMessage, // Assessment messages
+		facetEvidence, // Facet evidence
+		facetScores, // Aggregated facet scores
+		traitScores, // Trait scores
+	},
+	(r) => ({
+		user: {
+			sessions: r.many.session(), // Better Auth sessions
+			accounts: r.many.account(),
+			assessmentSession: r.many.assessmentSession(), // Assessment sessions
+			assessmentMessage: r.many.assessmentMessage(), // Assessment messages
+		},
+		session: {
+			user: r.one.user({
+				from: r.session.userId,
+				to: r.user.id,
+			}),
+		},
+		account: {
+			user: r.one.user({
+				from: r.account.userId,
+				to: r.user.id,
+			}),
+		},
+		assessmentSession: {
+			user: r.one.user({
+				from: r.assessmentSession.userId,
+				to: r.user.id,
+			}),
+			assessmentMessages: r.many.assessmentMessage(),
+			facetScores: r.many.facetScores(),
+			traitScores: r.many.traitScores(),
+		},
+		assessmentMessage: {
+			session: r.one.assessmentSession({
+				from: r.assessmentMessage.sessionId,
+				to: r.assessmentSession.id,
+			}),
+			user: r.one.user({
+				from: r.assessmentMessage.userId,
+				to: r.user.id,
+			}),
+			facetEvidence: r.many.facetEvidence(),
+		},
+		facetEvidence: {
+			message: r.one.assessmentMessage({
+				from: r.facetEvidence.messageId,
+				to: r.assessmentMessage.id,
+			}),
+		},
+		facetScores: {
+			session: r.one.assessmentSession({
+				from: r.facetScores.sessionId,
+				to: r.assessmentSession.id,
+			}),
+		},
+		traitScores: {
+			session: r.one.assessmentSession({
+				from: r.traitScores.sessionId,
+				to: r.assessmentSession.id,
+			}),
+		},
+	}),
 );
