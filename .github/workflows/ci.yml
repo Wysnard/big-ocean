@@ -40,10 +40,10 @@ jobs:
       - name: Install Rollup native binary
         run: pnpm add -wD @rollup/rollup-linux-x64-gnu
 
-      - name: Lint and TypeCheck
+      - name: Lint
         run: pnpm lint
 
-      - name: Build
+      - name: Build (includes TypeScript check)
         run: pnpm build
 
       - name: Run Tests

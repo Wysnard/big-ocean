@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Pre-push hook: Runs lint, typecheck, and tests before pushing
+# Pre-push hook: Runs lint and tests before pushing
 # This ensures code quality before pushing to remote
 # Bypass with: git push --no-verify
 
@@ -13,16 +13,6 @@ LINT_EXIT=$?
 
 if [ $LINT_EXIT -ne 0 ]; then
   echo "❌ Lint failed. Fix lint errors before pushing."
-  exit 1
-fi
-
-# Run TypeScript check
-echo "🔷 Running typecheck..."
-pnpm turbo lint
-TYPECHECK_EXIT=$?
-
-if [ $TYPECHECK_EXIT -ne 0 ]; then
-  echo "❌ TypeScript check failed. Fix type errors before pushing."
   exit 1
 fi
 
