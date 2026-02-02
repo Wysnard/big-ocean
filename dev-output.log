@@ -1,0 +1,80 @@
+🚀 Starting big-ocean development environment...
+
+📦 Starting services (PostgreSQL, Redis, Backend API, Frontend)...
+
+Services will be available at:
+  🌐 Frontend:       http://localhost:3000
+  🔌 Backend API:    http://localhost:4000
+  🗄️  PostgreSQL:     localhost:5432
+  💾 Redis:         localhost:6379
+
+Press Ctrl+C to stop all services
+
+Attaching to bigocean-backend, bigocean-frontend, bigocean-postgres, bigocean-redis
+ Container bigocean-postgres Starting 
+ Container bigocean-redis Starting 
+ Container bigocean-redis Started 
+bigocean-redis  | 1:C 02 Feb 2026 03:18:57.001 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+bigocean-redis  | 1:C 02 Feb 2026 03:18:57.001 * Redis version=7.4.7, bits=64, commit=00000000, modified=0, pid=1, just started
+bigocean-redis  | 1:C 02 Feb 2026 03:18:57.001 # Warning: no config file specified, using the default config. In order to specify a config file use redis-server /path/to/redis.conf
+bigocean-redis  | 1:M 02 Feb 2026 03:18:57.001 * monotonic clock: POSIX clock_gettime
+bigocean-redis  | 1:M 02 Feb 2026 03:18:57.002 * Running mode=standalone, port=6379.
+bigocean-redis  | 1:M 02 Feb 2026 03:18:57.002 * Server initialized
+bigocean-redis  | 1:M 02 Feb 2026 03:18:57.002 * Loading RDB produced by version 7.4.7
+bigocean-redis  | 1:M 02 Feb 2026 03:18:57.002 * RDB age 110 seconds
+bigocean-redis  | 1:M 02 Feb 2026 03:18:57.002 * RDB memory usage when created 0.96 Mb
+bigocean-redis  | 1:M 02 Feb 2026 03:18:57.002 * Done loading RDB, keys loaded: 0, keys expired: 0.
+bigocean-redis  | 1:M 02 Feb 2026 03:18:57.002 * DB loaded from disk: 0.000 seconds
+bigocean-redis  | 1:M 02 Feb 2026 03:18:57.002 * Ready to accept connections tcp
+ Container bigocean-postgres Started 
+ Container bigocean-postgres Waiting 
+ Container bigocean-redis Waiting 
+bigocean-postgres  | 
+bigocean-postgres  | PostgreSQL Database directory appears to contain a database; Skipping initialization
+bigocean-postgres  | 
+bigocean-postgres  | 2026-02-02 03:18:57.029 UTC [1] LOG:  starting PostgreSQL 16.11 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+bigocean-postgres  | 2026-02-02 03:18:57.029 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+bigocean-postgres  | 2026-02-02 03:18:57.029 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+bigocean-postgres  | 2026-02-02 03:18:57.030 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+bigocean-postgres  | 2026-02-02 03:18:57.032 UTC [29] LOG:  database system was shut down at 2026-02-02 03:17:07 UTC
+bigocean-postgres  | 2026-02-02 03:18:57.036 UTC [1] LOG:  database system is ready to accept connections
+ Container bigocean-postgres Healthy 
+ Container bigocean-redis Healthy 
+ Container bigocean-backend Starting 
+ Container bigocean-backend Started 
+ Container bigocean-backend Waiting 
+bigocean-backend   | 
+bigocean-backend   | > api@0.0.0 dev /app/apps/api
+bigocean-backend   | > tsx -r dotenv/config --watch src/index.ts
+bigocean-backend   | 
+bigocean-backend   | 
+bigocean-backend   | node:internal/modules/run_main:123
+bigocean-backend   |     triggerUncaughtException(
+bigocean-backend   |     ^
+bigocean-backend   | Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@effect/platform-node' imported from /app/apps/api/src/index.ts
+bigocean-backend   |     at packageResolve (node:internal/modules/esm/resolve:873:9)
+bigocean-backend   |     at moduleResolve (node:internal/modules/esm/resolve:946:18)
+bigocean-backend   |     at defaultResolve (node:internal/modules/esm/resolve:1188:11)
+bigocean-backend   |     at nextResolve (node:internal/modules/esm/hooks:864:28)
+bigocean-backend   |     at resolveBase (file:///app/node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/esm/index.mjs?1770002347963:2:3744)
+bigocean-backend   |     at resolveDirectory (file:///app/node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/esm/index.mjs?1770002347963:2:4243)
+bigocean-backend   |     at resolveTsPaths (file:///app/node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/esm/index.mjs?1770002347963:2:4984)
+bigocean-backend   |     at async resolve (file:///app/node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/esm/index.mjs?1770002347963:2:5355)
+bigocean-backend   |     at async nextResolve (node:internal/modules/esm/hooks:864:22)
+bigocean-backend   |     at async Hooks.resolve (node:internal/modules/esm/hooks:306:24) {
+bigocean-backend   |   code: 'ERR_MODULE_NOT_FOUND'
+bigocean-backend   | }
+bigocean-backend   | 
+bigocean-backend   | Node.js v20.20.0
+bigocean-backend   | Failed running 'src/index.ts'
+[Kbigocean-backend exited with code 0
+bigocean-redis     | 1:signal-handler (1770002382) Received SIGTERM scheduling shutdown...
+bigocean-postgres  | 2026-02-02 03:19:42.113 UTC [1] LOG:  received fast shutdown request
+bigocean-postgres  | 2026-02-02 03:19:42.114 UTC [1] LOG:  aborting any active transactions
+bigocean-postgres  | 2026-02-02 03:19:42.116 UTC [1] LOG:  background worker "logical replication launcher" (PID 32) exited with exit code 1
+bigocean-postgres  | 2026-02-02 03:19:42.116 UTC [27] LOG:  shutting down
+bigocean-postgres  | 2026-02-02 03:19:42.116 UTC [27] LOG:  checkpoint starting: shutdown immediate
+bigocean-postgres  | 2026-02-02 03:19:42.120 UTC [27] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.005 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/1A128A0, redo lsn=0/1A128A0
+bigocean-postgres  | 2026-02-02 03:19:42.121 UTC [1] LOG:  database system is shut down
+ Container bigocean-backend Error dependency backend failed to start
+dependency failed to start: Error response from daemon: No such container: f52e93e73647466b806f10d9d493257cc2cb058f9b400e7fb1ddaf40c44225a1

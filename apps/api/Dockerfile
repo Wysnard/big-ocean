@@ -22,9 +22,6 @@ RUN pnpm install --frozen-lockfile
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
 
-# Re-run install to ensure workspace packages are properly linked
-RUN pnpm install --frozen-lockfile
-
 # Development stage (hot reload with tsx watch)
 FROM node:20-alpine AS development
 WORKDIR /app
@@ -42,20 +39,29 @@ COPY packages/lint/package.json ./packages/lint/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY apps/api/package.json ./apps/api/
 
-# Install all dependencies (including dev, including tsx)
-RUN pnpm install --frozen-lockfile
+# Install all dependencies (including dev, tsx, and optional platform binaries)
+RUN pnpm install --frozen-lockfile --include-workspace-root
+
+# Explicitly install platform-specific esbuild binary to workspace root
+RUN pnpm add -D -w @esbuild/linux-arm64@0.27.2
+
+# Rebuild esbuild for the container's platform (Linux Alpine)
+# This ensures the native binary matches the container architecture
+RUN pnpm rebuild esbuild
 
 # Copy source code and workspace packages
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
 
-# Re-run install to ensure workspace packages are properly linked and tsx is available
-RUN pnpm install --frozen-lockfile
+# Copy entrypoint script
+COPY apps/api/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 # Expose port
 EXPOSE 4000
 
-# Start with pnpm dev (uses tsx watch mode from package.json)
+# Use entrypoint to rebuild esbuild after volumes are mounted
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["pnpm", "-C", "apps/api", "dev"]
 
 # Production build stage - use pnpm deploy for monorepo

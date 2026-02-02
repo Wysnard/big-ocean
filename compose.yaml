@@ -58,7 +58,16 @@ services:
       - ./apps/api/src:/app/apps/api/src
       - ./apps/api/logs:/app/apps/api/logs
       - ./packages:/app/packages
-      - /app/node_modules
+      # Preserve container's node_modules with Linux binaries
+      - backend_node_modules:/app/node_modules
+      - backend_api_node_modules:/app/apps/api/node_modules
+      # Preserve each package's node_modules to prevent host binaries from overwriting
+      - backend_contracts_node_modules:/app/packages/contracts/node_modules
+      - backend_domain_node_modules:/app/packages/domain/node_modules
+      - backend_infrastructure_node_modules:/app/packages/infrastructure/node_modules
+      - backend_ui_node_modules:/app/packages/ui/node_modules
+      - backend_lint_node_modules:/app/packages/lint/node_modules
+      - backend_typescript_config_node_modules:/app/packages/typescript-config/node_modules
     depends_on:
       postgres:
         condition: service_healthy
@@ -104,6 +113,14 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  backend_node_modules:
+  backend_api_node_modules:
+  backend_contracts_node_modules:
+  backend_domain_node_modules:
+  backend_infrastructure_node_modules:
+  backend_ui_node_modules:
+  backend_lint_node_modules:
+  backend_typescript_config_node_modules:
   frontend_node_modules:
   frontend_app_node_modules:
 

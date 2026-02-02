@@ -43,6 +43,11 @@
   "engines": {
     "node": ">=20"
   },
+  "pnpm": {
+    "overrides": {
+      "esbuild": "0.27.2"
+    }
+  },
   "dependencies": {
     "@effect/platform": "catalog:",
     "@effect/platform-node": "catalog:",
@@ -56,6 +61,7 @@
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "*",
-    "@esbuild/linux-x64": "*"
+    "@esbuild/linux-x64": "*",
+    "@esbuild/linux-arm64": "*"
   }
 }
