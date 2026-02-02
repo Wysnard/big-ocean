@@ -5,19 +5,16 @@
  * Creates a new session with baseline precision scores.
  */
 
+import { AssessmentSessionRepository, LoggerRepository } from "@workspace/domain";
 import { Effect } from "effect";
-import {
-  AssessmentSessionRepository,
-  LoggerRepository,
-} from "@workspace/domain";
 
 export interface StartAssessmentInput {
-  readonly userId?: string;
+	readonly userId?: string;
 }
 
 export interface StartAssessmentOutput {
-  readonly sessionId: string;
-  readonly createdAt: Date;
+	readonly sessionId: string;
+	readonly createdAt: Date;
 }
 
 /**
@@ -27,20 +24,20 @@ export interface StartAssessmentOutput {
  * Returns: Session ID and creation timestamp
  */
 export const startAssessment = (input: StartAssessmentInput) =>
-  Effect.gen(function* () {
-    const sessionRepo = yield* AssessmentSessionRepository;
-    const logger = yield* LoggerRepository;
+	Effect.gen(function* () {
+		const sessionRepo = yield* AssessmentSessionRepository;
+		const logger = yield* LoggerRepository;
 
-    // Create new session
-    const result = yield* sessionRepo.createSession(input.userId);
+		// Create new session
+		const result = yield* sessionRepo.createSession(input.userId);
 
-    logger.info("Assessment session started", {
-      sessionId: result.sessionId,
-      userId: input.userId,
-    });
+		logger.info("Assessment session started", {
+			sessionId: result.sessionId,
+			userId: input.userId,
+		});
 
-    return {
-      sessionId: result.sessionId,
-      createdAt: new Date(),
-    };
-  });
+		return {
+			sessionId: result.sessionId,
+			createdAt: new Date(),
+		};
+	});

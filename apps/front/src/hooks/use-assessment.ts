@@ -7,12 +7,12 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
-  StartAssessmentRequest,
-  StartAssessmentResponse,
-  SendMessageRequest,
-  SendMessageResponse,
-  GetResultsResponse,
-  ResumeSessionResponse,
+	GetResultsResponse,
+	ResumeSessionResponse,
+	SendMessageRequest,
+	SendMessageResponse,
+	StartAssessmentRequest,
+	StartAssessmentResponse,
 } from "@workspace/contracts";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
@@ -21,21 +21,21 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
  * HTTP client for assessment endpoints
  */
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
-    credentials: "include", // Include cookies for auth
-  });
+	const response = await fetch(`${API_URL}${endpoint}`, {
+		...options,
+		headers: {
+			"Content-Type": "application/json",
+			...options?.headers,
+		},
+		credentials: "include", // Include cookies for auth
+	});
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || `HTTP ${response.status}: ${response.statusText}`);
-  }
+	if (!response.ok) {
+		const error = await response.json().catch(() => ({ message: response.statusText }));
+		throw new Error(error.message || `HTTP ${response.status}: ${response.statusText}`);
+	}
 
-  return response.json();
+	return response.json();
 }
 
 /**
@@ -53,15 +53,15 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
  * ```
  */
 export function useStartAssessment() {
-  return useMutation({
-    mutationKey: ["assessment", "start"],
-    mutationFn: async (input: StartAssessmentRequest = {}): Promise<StartAssessmentResponse> => {
-      return fetchApi("/api/assessment/start", {
-        method: "POST",
-        body: JSON.stringify(input),
-      });
-    },
-  });
+	return useMutation({
+		mutationKey: ["assessment", "start"],
+		mutationFn: async (input: StartAssessmentRequest = {}): Promise<StartAssessmentResponse> => {
+			return fetchApi("/api/assessment/start", {
+				method: "POST",
+				body: JSON.stringify(input),
+			});
+		},
+	});
 }
 
 /**
@@ -82,15 +82,15 @@ export function useStartAssessment() {
  * ```
  */
 export function useSendMessage() {
-  return useMutation({
-    mutationKey: ["assessment", "sendMessage"],
-    mutationFn: async (input: SendMessageRequest): Promise<SendMessageResponse> => {
-      return fetchApi("/api/assessment/message", {
-        method: "POST",
-        body: JSON.stringify(input),
-      });
-    },
-  });
+	return useMutation({
+		mutationKey: ["assessment", "sendMessage"],
+		mutationFn: async (input: SendMessageRequest): Promise<SendMessageResponse> => {
+			return fetchApi("/api/assessment/message", {
+				method: "POST",
+				body: JSON.stringify(input),
+			});
+		},
+	});
 }
 
 /**
@@ -114,13 +114,13 @@ export function useSendMessage() {
  * ```
  */
 export function useGetResults(sessionId: string, enabled = true) {
-  return useQuery({
-    queryKey: ["assessment", "results", sessionId],
-    queryFn: async (): Promise<GetResultsResponse> => {
-      return fetchApi(`/api/assessment/${sessionId}/results`);
-    },
-    enabled: enabled && !!sessionId,
-  });
+	return useQuery({
+		queryKey: ["assessment", "results", sessionId],
+		queryFn: async (): Promise<GetResultsResponse> => {
+			return fetchApi(`/api/assessment/${sessionId}/results`);
+		},
+		enabled: enabled && !!sessionId,
+	});
 }
 
 /**
@@ -148,13 +148,13 @@ export function useGetResults(sessionId: string, enabled = true) {
  * ```
  */
 export function useResumeSession(sessionId: string, enabled = true) {
-  return useQuery({
-    queryKey: ["assessment", "session", sessionId],
-    queryFn: async (): Promise<ResumeSessionResponse> => {
-      return fetchApi(`/api/assessment/${sessionId}/resume`);
-    },
-    enabled: enabled && !!sessionId,
-  });
+	return useQuery({
+		queryKey: ["assessment", "session", sessionId],
+		queryFn: async (): Promise<ResumeSessionResponse> => {
+			return fetchApi(`/api/assessment/${sessionId}/resume`);
+		},
+		enabled: enabled && !!sessionId,
+	});
 }
 
 /**

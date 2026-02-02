@@ -17,7 +17,7 @@ import { createAuthClient } from "better-auth/react";
  * - Request/response formatting
  */
 export const authClient = createAuthClient({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000",
+	baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000",
 });
 
 /**
@@ -26,18 +26,18 @@ export const authClient = createAuthClient({
  * Pre-configured auth methods for use in components.
  */
 export const {
-  signUp,
-  signIn,
-  signOut,
-  useSession,
-  getSession,
-  updateUser,
-  changeEmail,
-  changePassword,
-  forgetPassword,
-  resetPassword,
-  sendVerificationEmail,
-  verifyEmail,
+	signUp,
+	signIn,
+	signOut,
+	useSession,
+	getSession,
+	updateUser,
+	changeEmail,
+	changePassword,
+	forgetPassword,
+	resetPassword,
+	sendVerificationEmail,
+	verifyEmail,
 } = authClient;
 
 /**

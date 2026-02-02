@@ -12,9 +12,9 @@ import { Context, Effect, Layer } from "effect";
  * Cost Guard Service Interface
  */
 export interface CostGuardShape {
-  readonly checkDailyLimit: (userId: string) => Effect.Effect<boolean>;
-  readonly trackCost: (userId: string, cost: number) => Effect.Effect<void>;
-  readonly getDailySpend: (userId: string) => Effect.Effect<number>;
+	readonly checkDailyLimit: (userId: string) => Effect.Effect<boolean>;
+	readonly trackCost: (userId: string, cost: number) => Effect.Effect<void>;
+	readonly getDailySpend: (userId: string) => Effect.Effect<number>;
 }
 
 /**
@@ -24,8 +24,8 @@ export interface CostGuardShape {
  * Service interface has NO requirements - dependencies managed during layer construction.
  */
 export class CostGuardService extends Context.Tag("CostGuardService")<
-  CostGuardService,
-  CostGuardShape
+	CostGuardService,
+	CostGuardShape
 >() {}
 
 /**
@@ -35,7 +35,7 @@ export class CostGuardService extends Context.Tag("CostGuardService")<
  * Full implementation with Redis/PostgreSQL in Story 2.5.
  */
 export const CostGuardServiceLive = Layer.succeed(CostGuardService, {
-  checkDailyLimit: (_userId: string) => Effect.succeed(true),
-  trackCost: (_userId: string, _cost: number) => Effect.void,
-  getDailySpend: (_userId: string) => Effect.succeed(0),
+	checkDailyLimit: (_userId: string) => Effect.succeed(true),
+	trackCost: (_userId: string, _cost: number) => Effect.void,
+	getDailySpend: (_userId: string) => Effect.succeed(0),
 });

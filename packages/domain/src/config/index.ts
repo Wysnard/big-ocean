@@ -3,4 +3,4 @@
  *
  * Live implementations are in @workspace/infrastructure
  */
-export { AppConfig, type AppConfigService } from "./app-config.js";
+export { AppConfig, type AppConfigService } from "./app-config";

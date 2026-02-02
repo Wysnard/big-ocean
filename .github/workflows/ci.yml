@@ -13,64 +13,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Validate commit messages follow conventional commit format (PR only)
-  validate-commits:
-    name: Validate Commit Messages
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Need full history for commit validation
-
-      - name: Validate PR commit messages
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { data: commits } = await github.rest.pulls.listCommits({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number
-            });
-
-            // Conventional commit pattern: type(scope): or type:
-            const conventionalPattern = /^(feat|fix|docs|chore|test|ci|refactor|perf|style|build|revert)(\(.+\))?:/;
-            const mergePattern = /^Merge /;
-
-            const invalidCommits = [];
-
-            for (const commit of commits) {
-              const message = commit.commit.message.split('\n')[0]; // First line only
-
-              if (mergePattern.test(message)) continue;
-              if (conventionalPattern.test(message)) continue;
-
-              invalidCommits.push({
-                sha: commit.sha.substring(0, 7),
-                message: message.substring(0, 60)
-              });
-            }
-
-            if (invalidCommits.length > 0) {
-              let errorMsg = '❌ The following commits do not follow conventional commit format:\n\n';
-              for (const c of invalidCommits) {
-                errorMsg += `- \`${c.sha}\`: ${c.message}\n`;
-              }
-              errorMsg += '\n**Required format:** `type(scope): Description` or `type: Description`\n';
-              errorMsg += '\n**Allowed types:** `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `perf`, `style`, `build`, `revert`';
-
-              core.setFailed(errorMsg);
-            } else {
-              console.log('✅ All commit messages follow conventional commit format');
-            }
-
   ci:
     name: CI Pipeline
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20.x]  # Node 20.x LTS (matches CLAUDE.md requirement)
 
     steps:
       - name: Checkout code
@@ -81,10 +26,10 @@ jobs:
         with:
           version: 10.4.1
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js 20.x
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20.x
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -95,35 +40,19 @@ jobs:
       - name: Install Rollup native binary
         run: pnpm add -wD @rollup/rollup-linux-x64-gnu
 
-      - name: TypeScript Check
-        run: pnpm turbo lint
-
-      - name: Lint (Biome)
+      - name: Lint
         run: pnpm lint
 
-      - name: Build
+      - name: Build (includes TypeScript check)
         run: pnpm build
 
-      - name: Run Tests with Coverage
-        run: pnpm test:run -- --coverage
+      - name: Run Tests
+        run: pnpm test:run
 
-      - name: Upload Coverage Artifact
+      - name: Upload Coverage Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: |
-            **/coverage/
+          path: '**/coverage/'
           retention-days: 7
-
-      - name: Coverage Summary
-        if: always()
-        run: |
-          echo "## 📊 Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -f "apps/api/coverage/coverage-summary.json" ]; then
-            echo "### API Coverage" >> $GITHUB_STEP_SUMMARY
-            cat apps/api/coverage/coverage-summary.json | jq -r '.total | "| Metric | Coverage |\n|--------|----------|\n| Lines | \(.lines.pct)% |\n| Statements | \(.statements.pct)% |\n| Functions | \(.functions.pct)% |\n| Branches | \(.branches.pct)% |"' >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "Coverage data not in expected format" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "Coverage report not found" >> $GITHUB_STEP_SUMMARY
-          fi

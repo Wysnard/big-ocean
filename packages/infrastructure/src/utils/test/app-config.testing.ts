@@ -13,8 +13,9 @@
  * );
  * ```
  */
-import { Layer, Redacted } from "effect";
+
 import { AppConfig, type AppConfigService } from "@workspace/domain";
+import { Layer, Redacted } from "effect";
 
 /**
  * Default test configuration values
@@ -22,14 +23,14 @@ import { AppConfig, type AppConfigService } from "@workspace/domain";
  * These provide sensible defaults for testing without needing real environment variables.
  */
 export const defaultTestConfig: AppConfigService = {
-  databaseUrl: "postgres://test:test@localhost:5432/test",
-  redisUrl: "redis://localhost:6379",
-  anthropicApiKey: Redacted.make("test-anthropic-api-key"),
-  betterAuthSecret: Redacted.make("test-better-auth-secret-minimum-32-chars"),
-  betterAuthUrl: "http://localhost:4000",
-  frontendUrl: "http://localhost:3000",
-  port: 4000,
-  nodeEnv: "test",
+	databaseUrl: "postgres://test:test@localhost:5432/test",
+	redisUrl: "redis://localhost:6379",
+	anthropicApiKey: Redacted.make("test-anthropic-api-key"),
+	betterAuthSecret: Redacted.make("test-better-auth-secret-minimum-32-chars"),
+	betterAuthUrl: "http://localhost:4000",
+	frontendUrl: "http://localhost:3000",
+	port: 4000,
+	nodeEnv: "test",
 };
 
 /**
@@ -56,12 +57,12 @@ export const defaultTestConfig: AppConfigService = {
  * ```
  */
 export const createTestAppConfig = (
-  overrides: Partial<AppConfigService> = {}
+	overrides: Partial<AppConfigService> = {},
 ): Layer.Layer<AppConfig> =>
-  Layer.succeed(AppConfig, {
-    ...defaultTestConfig,
-    ...overrides,
-  });
+	Layer.succeed(AppConfig, {
+		...defaultTestConfig,
+		...overrides,
+	});
 
 /**
  * Pre-built test Layer using all defaults

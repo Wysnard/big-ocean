@@ -12,12 +12,8 @@
  */
 
 import { Context, Effect } from "effect";
-import type {
-  FacetEvidence,
-  FacetName,
-  SavedFacetEvidence,
-} from "../types/facet-evidence.js";
-import { FacetEvidencePersistenceError } from "../errors/evidence.errors.js";
+import { FacetEvidencePersistenceError } from "../errors/evidence.errors";
+import type { FacetEvidence, FacetName, SavedFacetEvidence } from "../types/facet-evidence";
 
 // Re-export SavedFacetEvidence for convenience
 export type { SavedFacetEvidence };
@@ -28,57 +24,57 @@ export type { SavedFacetEvidence };
  * Handles persistence of FacetEvidence records to the database.
  */
 export interface FacetEvidenceRepository {
-  /**
-   * Save multiple facet evidence records for a message.
-   *
-   * @param assessmentMessageId - The assessment message ID these evidence records belong to
-   * @param evidence - Array of FacetEvidence to persist
-   * @returns Effect containing saved evidence with generated IDs
-   *
-   * @example
-   * ```typescript
-   * const saved = yield* evidenceRepo.saveEvidence("msg_123", [
-   *   { facetName: "imagination", score: 16, confidence: 0.85, quote: "...", highlightRange: { start: 0, end: 20 } }
-   * ])
-   * console.log(saved[0].id) // "evidence_abc123"
-   * ```
-   */
-  saveEvidence(
-    assessmentMessageId: string,
-    evidence: FacetEvidence[]
-  ): Effect.Effect<SavedFacetEvidence[], FacetEvidencePersistenceError>;
+	/**
+	 * Save multiple facet evidence records for a message.
+	 *
+	 * @param assessmentMessageId - The assessment message ID these evidence records belong to
+	 * @param evidence - Array of FacetEvidence to persist
+	 * @returns Effect containing saved evidence with generated IDs
+	 *
+	 * @example
+	 * ```typescript
+	 * const saved = yield* evidenceRepo.saveEvidence("msg_123", [
+	 *   { facetName: "imagination", score: 16, confidence: 0.85, quote: "...", highlightRange: { start: 0, end: 20 } }
+	 * ])
+	 * console.log(saved[0].id) // "evidence_abc123"
+	 * ```
+	 */
+	saveEvidence(
+		assessmentMessageId: string,
+		evidence: FacetEvidence[],
+	): Effect.Effect<SavedFacetEvidence[], FacetEvidencePersistenceError>;
 
-  /**
-   * Get all evidence records for a specific assessment message.
-   *
-   * @param assessmentMessageId - The assessment message ID to get evidence for
-   * @returns Effect containing array of saved evidence records
-   */
-  getEvidenceByMessage(
-    assessmentMessageId: string
-  ): Effect.Effect<SavedFacetEvidence[], FacetEvidencePersistenceError>;
+	/**
+	 * Get all evidence records for a specific assessment message.
+	 *
+	 * @param assessmentMessageId - The assessment message ID to get evidence for
+	 * @returns Effect containing array of saved evidence records
+	 */
+	getEvidenceByMessage(
+		assessmentMessageId: string,
+	): Effect.Effect<SavedFacetEvidence[], FacetEvidencePersistenceError>;
 
-  /**
-   * Get all evidence records for a specific facet within a session.
-   *
-   * @param sessionId - The session ID
-   * @param facetName - The facet name to filter by
-   * @returns Effect containing array of saved evidence records
-   */
-  getEvidenceByFacet(
-    sessionId: string,
-    facetName: FacetName
-  ): Effect.Effect<SavedFacetEvidence[], FacetEvidencePersistenceError>;
+	/**
+	 * Get all evidence records for a specific facet within a session.
+	 *
+	 * @param sessionId - The session ID
+	 * @param facetName - The facet name to filter by
+	 * @returns Effect containing array of saved evidence records
+	 */
+	getEvidenceByFacet(
+		sessionId: string,
+		facetName: FacetName,
+	): Effect.Effect<SavedFacetEvidence[], FacetEvidencePersistenceError>;
 
-  /**
-   * Get all evidence records for a session.
-   *
-   * @param sessionId - The session ID
-   * @returns Effect containing array of saved evidence records
-   */
-  getEvidenceBySession(
-    sessionId: string
-  ): Effect.Effect<SavedFacetEvidence[], FacetEvidencePersistenceError>;
+	/**
+	 * Get all evidence records for a session.
+	 *
+	 * @param sessionId - The session ID
+	 * @returns Effect containing array of saved evidence records
+	 */
+	getEvidenceBySession(
+		sessionId: string,
+	): Effect.Effect<SavedFacetEvidence[], FacetEvidencePersistenceError>;
 }
 
 /**
@@ -87,4 +83,4 @@ export interface FacetEvidenceRepository {
  * Used for dependency injection via Effect's Layer system.
  */
 export const FacetEvidenceRepository =
-  Context.GenericTag<FacetEvidenceRepository>("FacetEvidenceRepository");
+	Context.GenericTag<FacetEvidenceRepository>("FacetEvidenceRepository");

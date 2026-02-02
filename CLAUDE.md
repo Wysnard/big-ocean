@@ -30,6 +30,7 @@ Always use Context7 MCP when I need library/API documentation, code generation, 
 ### 📋 Conventions & Workflows
 - [Git Conventions](#git-conventions) → [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md)
 - [Linting & Code Quality](#linting--code-quality)
+- [Type Safety Patterns](#type-safety-patterns)
 - [Adding New Packages or Apps](#adding-new-packages-or-apps)
 - [Adding Components to UI Library](#adding-components-to-ui-library)
 
@@ -887,6 +888,149 @@ See [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) for:
 - **Zero-warnings policy**: Maintained for packages/ui, packages/contracts
 - **Format all**: `pnpm format` runs Prettier on all code
 - **Shared config**: `packages/lint/biome.json` is the single source of truth for linting rules
+- **Auto-fix**: `pnpm lint:fix` applies all safe Biome fixes across the monorepo
+- **Pre-commit hook**: Automatically runs Biome check with auto-fix on staged files
+
+## Type Safety Patterns
+
+The codebase follows strict TypeScript patterns with `moduleResolution: "bundler"` for consistent bare imports.
+
+### Import Style
+
+- **Bare imports** - No `.js` extensions needed (bundler mode)
+- **Workspace imports** - Use `@workspace/domain`, `@workspace/contracts`, etc.
+- **Type imports** - Use `import type` for type-only imports (enforced by Biome)
+
+### Type Assertions (Avoid `as any`)
+
+When you need type flexibility, prefer these patterns over `as any`:
+
+```typescript
+// GOOD: Use proper type guards
+function isTraitName(name: string): name is TraitName {
+  return BIG_FIVE_TRAITS.includes(name as TraitName);
+}
+
+// GOOD: Use typed arrays with explicit annotation
+const traits: TraitName[] = ["openness", "agreeableness"];
+
+// GOOD: Use unknown for catch-all error handling
+Effect.catchAll((error: unknown) =>
+  Effect.fail(new MyError(error instanceof Error ? error.message : String(error)))
+);
+
+// AVOID: as any for index access
+// BAD:  traitScores[trait as any]
+// GOOD: const score = traitScores[trait]; // where trait is typed as TraitName
+```
+
+### Acceptable `any` Usage
+
+`any` is acceptable with documentation in these cases:
+1. **Test mocks** - Add `// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types`
+2. **Complex generics** - LangGraph StateGraph, complex Effect types (add comment explaining why)
+3. **Generated files** - Auto-generated code (e.g., `routeTree.gen.ts`)
+4. **External library compatibility** - pg type parsers, ESM/CJS dynamic imports (add comment)
+
+### Branded Types Pattern
+
+Use branded types for type-safe IDs that prevent accidental mixing:
+
+```typescript
+// Define branded type (string with invisible brand)
+export type UserId = string & { readonly __brand: "UserId" };
+export type SessionId = string & { readonly __brand: "SessionId" };
+
+// Factory functions to create branded values
+export const makeUserId = (value: string): UserId => value as UserId;
+export const makeSessionId = (value: string): SessionId => value as SessionId;
+
+// Usage - prevents mixing user and session IDs
+function getSession(sessionId: SessionId): Session { ... }
+const userId = makeUserId("user_123");
+const sessionId = makeSessionId("session_456");
+getSession(userId); // TypeScript error! Cannot assign UserId to SessionId
+getSession(sessionId); // OK
+```
+
+### Discriminated Unions (Result Types)
+
+Use tagged unions for type-safe error handling:
+
+```typescript
+// Define discriminated union
+type Result<T, E> =
+  | { _tag: "Success"; value: T }
+  | { _tag: "Failure"; error: E };
+
+// Type-safe handling with exhaustive switch
+function handleResult<T, E>(result: Result<T, E>) {
+  switch (result._tag) {
+    case "Success":
+      return result.value; // TypeScript knows 'value' exists
+    case "Failure":
+      throw result.error; // TypeScript knows 'error' exists
+  }
+}
+
+// Effect-ts provides this pattern built-in via Effect.Effect<A, E, R>
+```
+
+### Effect Schema Transformations
+
+Use `S.transform` for type-safe conversions between external data and domain types:
+
+```typescript
+import { Schema as S } from "effect";
+
+// External API response shape
+const ClaudeResponseSchema = S.Struct({
+  facet: S.String,
+  score: S.Number,
+  confidence: S.Number,
+  quote: S.String,
+});
+
+// Domain entity shape
+const FacetEvidenceSchema = S.Struct({
+  facetName: FacetNameSchema, // Validated facet name
+  score: S.Number.pipe(S.between(0, 20)),
+  confidence: S.Number.pipe(S.between(0, 1)),
+  quote: S.String,
+});
+
+// Transform: ClaudeResponse → FacetEvidence (validated)
+const FacetEvidenceFromClaude = S.transform(
+  ClaudeResponseSchema,
+  FacetEvidenceSchema,
+  {
+    decode: (claude) => ({
+      facetName: claude.facet, // Rename field
+      score: claude.score,
+      confidence: claude.confidence,
+      quote: claude.quote,
+    }),
+    encode: (evidence) => ({
+      facet: evidence.facetName,
+      score: evidence.score,
+      confidence: evidence.confidence,
+      quote: evidence.quote,
+    }),
+  }
+);
+
+// Usage - decode validates and transforms
+const evidence = S.decodeUnknownSync(FacetEvidenceFromClaude)(apiResponse);
+```
+
+### Domain Types
+
+Key domain types are exported from `@workspace/domain`:
+- `TraitName` - Big Five trait names ("openness", "conscientiousness", etc.)
+- `FacetName` - 30 facet names across all traits
+- `FacetScoresMap`, `TraitScoresMap` - Score records indexed by name
+- `BIG_FIVE_TRAITS` - Array of valid trait names for validation
+- `ALL_FACETS` - Array of all 30 valid facet names
 
 ## Adding New Packages or Apps
 

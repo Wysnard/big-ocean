@@ -4,8 +4,8 @@
  * Convenient hooks for authentication in React components.
  */
 
-import { useSession, signIn, signUp, signOut } from "../lib/auth-client";
 import type { Session, User } from "../lib/auth-client";
+import { signIn, signOut, signUp, useSession } from "../lib/auth-client";
 
 /**
  * Main Auth Hook
@@ -22,52 +22,52 @@ import type { Session, User } from "../lib/auth-client";
  * ```
  */
 export function useAuth() {
-  const { data: session, isPending, error } = useSession();
+	const { data: session, isPending, error } = useSession();
 
-  return {
-    // Session data
-    session,
-    user: session?.user ?? null,
-    isAuthenticated: !!session?.user,
-    isPending,
-    error,
+	return {
+		// Session data
+		session,
+		user: session?.user ?? null,
+		isAuthenticated: !!session?.user,
+		isPending,
+		error,
 
-    // Auth actions
-    signIn: {
-      email: async (email: string, password: string) => {
-        const result = await signIn.email({
-          email,
-          password,
-        });
+		// Auth actions
+		signIn: {
+			email: async (email: string, password: string) => {
+				const result = await signIn.email({
+					email,
+					password,
+				});
 
-        if (result.error) {
-          throw new Error(result.error.message || "Sign in failed");
-        }
+				if (result.error) {
+					throw new Error(result.error.message || "Sign in failed");
+				}
 
-        return result.data;
-      },
-    },
+				return result.data;
+			},
+		},
 
-    signUp: {
-      email: async (email: string, password: string, name?: string) => {
-        const result = await signUp.email({
-          email,
-          password,
-          name: name || email.split("@")[0],
-        });
+		signUp: {
+			email: async (email: string, password: string, name?: string) => {
+				const result = await signUp.email({
+					email,
+					password,
+					name: name || email.split("@")[0],
+				});
 
-        if (result.error) {
-          throw new Error(result.error.message || "Sign up failed");
-        }
+				if (result.error) {
+					throw new Error(result.error.message || "Sign up failed");
+				}
 
-        return result.data;
-      },
-    },
+				return result.data;
+			},
+		},
 
-    signOut: async () => {
-      await signOut();
-    },
-  };
+		signOut: async () => {
+			await signOut();
+		},
+	};
 }
 
 /**
@@ -85,13 +85,13 @@ export function useAuth() {
  * ```
  */
 export function useRequireAuth(redirectTo = "/login") {
-  const { user, isAuthenticated, isPending } = useAuth();
+	const { user, isAuthenticated, isPending } = useAuth();
 
-  if (!isPending && !isAuthenticated && typeof window !== "undefined") {
-    window.location.href = redirectTo;
-  }
+	if (!isPending && !isAuthenticated && typeof window !== "undefined") {
+		window.location.href = redirectTo;
+	}
 
-  return { user, isAuthenticated, isPending };
+	return { user, isAuthenticated, isPending };
 }
 
 export type { Session, User };

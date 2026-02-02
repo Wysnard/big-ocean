@@ -11,21 +11,21 @@
  * Big Five trait names
  */
 export type BigFiveTrait =
-  | "openness"
-  | "conscientiousness"
-  | "extraversion"
-  | "agreeableness"
-  | "neuroticism";
+	| "openness"
+	| "conscientiousness"
+	| "extraversion"
+	| "agreeableness"
+	| "neuroticism";
 
 /**
  * All Big Five traits as an array
  */
 export const BIG_FIVE_TRAITS: readonly BigFiveTrait[] = [
-  "openness",
-  "conscientiousness",
-  "extraversion",
-  "agreeableness",
-  "neuroticism",
+	"openness",
+	"conscientiousness",
+	"extraversion",
+	"agreeableness",
+	"neuroticism",
 ] as const;
 
 /**
@@ -35,9 +35,9 @@ export const BIG_FIVE_TRAITS: readonly BigFiveTrait[] = [
  * NOTE: These are ALWAYS computed from facet scores, never stored directly.
  */
 export interface TraitPrecisionScores {
-  openness: number;
-  conscientiousness: number;
-  extraversion: number;
-  agreeableness: number;
-  neuroticism: number;
+	openness: number;
+	conscientiousness: number;
+	extraversion: number;
+	agreeableness: number;
+	neuroticism: number;
 }

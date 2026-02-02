@@ -5,7 +5,7 @@
  * These types represent the data flow: Message → FacetEvidence → FacetScore → TraitScore
  */
 
-import type { FacetName, TraitName } from "../constants/big-five.js";
+import type { FacetName, TraitName } from "../constants/big-five";
 
 // Re-export for convenience
 export type { FacetName, TraitName };

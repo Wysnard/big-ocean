@@ -5,14 +5,14 @@
  * Pattern from: effect-worker-mono/packages/contracts/src/http/api.ts
  */
 
-import { HttpApi } from "@effect/platform"
-import { AssessmentGroup } from "./groups/assessment.js"
-import { HealthGroup } from "./groups/health.js"
+import { HttpApi } from "@effect/platform";
+import { AssessmentGroup } from "./groups/assessment";
+import { HealthGroup } from "./groups/health";
 
 /**
  * Big Ocean API - Composed from all route groups
  */
 export class BigOceanApi extends HttpApi.make("BigOceanApi")
-  .add(HealthGroup)
-  .add(AssessmentGroup)
-  .prefix("/api") {}
+	.add(HealthGroup)
+	.add(AssessmentGroup)
+	.prefix("/api") {}

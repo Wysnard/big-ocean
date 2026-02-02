@@ -1,14 +1,14 @@
 {
-  "name": "@workspace/lint",
-  "version": "0.0.0",
-  "type": "module",
-  "private": true,
-  "description": "Shared Biome linting and formatting configuration for big-ocean monorepo",
-  "exports": {
-    "./biome": "./biome.json"
-  },
-  "devDependencies": {},
-  "scripts": {
-    "lint": "biome lint ."
-  }
+	"name": "@workspace/lint",
+	"version": "0.0.0",
+	"type": "module",
+	"private": true,
+	"description": "Shared Biome linting and formatting configuration for big-ocean monorepo",
+	"exports": {
+		"./biome": "./biome.json"
+	},
+	"devDependencies": {},
+	"scripts": {
+		"lint": "biome lint ."
+	}
 }

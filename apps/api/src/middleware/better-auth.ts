@@ -12,60 +12,60 @@ import type { Auth, BetterAuthOptions } from "better-auth";
  * Convert Node.js IncomingMessage to Fetch API Request
  */
 async function incomingMessageToRequest(
-  incomingMessage: IncomingMessage,
-  baseUrl: URL
+	incomingMessage: IncomingMessage,
+	baseUrl: URL,
 ): Promise<Request> {
-  const method = incomingMessage.method || "GET"
-  const url = new URL(incomingMessage.url || "/", baseUrl)
+	const method = incomingMessage.method || "GET";
+	const url = new URL(incomingMessage.url || "/", baseUrl);
 
-  const headers = new Headers()
-  for (const [key, value] of Object.entries(incomingMessage.headers)) {
-    if (value) {
-      headers.set(key, Array.isArray(value) ? value.join(", ") : value)
-    }
-  }
+	const headers = new Headers();
+	for (const [key, value] of Object.entries(incomingMessage.headers)) {
+		if (value) {
+			headers.set(key, Array.isArray(value) ? value.join(", ") : value);
+		}
+	}
 
-  // Convert IncomingMessage to ReadableStream for body
-  let body: BodyInit | null = null
-  if (method !== "GET" && method !== "HEAD") {
-    const chunks: Buffer[] = []
-    for await (const chunk of incomingMessage) {
-      chunks.push(chunk)
-    }
-    body = Buffer.concat(chunks)
-  }
+	// Convert IncomingMessage to ReadableStream for body
+	let body: BodyInit | null = null;
+	if (method !== "GET" && method !== "HEAD") {
+		const chunks: Buffer[] = [];
+		for await (const chunk of incomingMessage) {
+			chunks.push(chunk);
+		}
+		body = Buffer.concat(chunks);
+	}
 
-  return new Request(url.toString(), { method, headers, body })
+	return new Request(url.toString(), { method, headers, body });
 }
 
 /**
  * Create Better Auth handler for node:http integration
  */
 export function createBetterAuthHandler(auth: Auth<BetterAuthOptions>, betterAuthUrl: string) {
-  return async function betterAuthHandler(
-    incomingMessage: IncomingMessage,
-    serverResponse: ServerResponse
-  ): Promise<void> {
-    const baseUrl = new URL(betterAuthUrl)
-    const request = await incomingMessageToRequest(incomingMessage, baseUrl)
+	return async function betterAuthHandler(
+		incomingMessage: IncomingMessage,
+		serverResponse: ServerResponse,
+	): Promise<void> {
+		const baseUrl = new URL(betterAuthUrl);
+		const request = await incomingMessageToRequest(incomingMessage, baseUrl);
 
-    const response = await auth.handler(request)
+		const response = await auth.handler(request);
 
-    serverResponse.statusCode = response.status
+		serverResponse.statusCode = response.status;
 
-    response.headers.forEach((value, key) => {
-      serverResponse.setHeader(key, value)
-    })
+		response.headers.forEach((value, key) => {
+			serverResponse.setHeader(key, value);
+		});
 
-    if (response.body) {
-      const reader = response.body.getReader()
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        serverResponse.write(value)
-      }
-    }
+		if (response.body) {
+			const reader = response.body.getReader();
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+				serverResponse.write(value);
+			}
+		}
 
-    serverResponse.end()
-  }
+		serverResponse.end();
+	};
 }

@@ -10,13 +10,12 @@
  * allowing us to manage dependencies during construction rather than at the service level."
  */
 
-import { Context, Layer, Effect, Redacted } from "effect";
-import { drizzle } from "drizzle-orm/effect-postgres";
 import { PgClient } from "@effect/sql-pg";
-import { SqlClient, SqlError } from "@effect/sql";
-import { types } from "pg";
-import * as authSchema from "../db/schema.js";
 import { AppConfig } from "@workspace/domain";
+import { drizzle } from "drizzle-orm/effect-postgres";
+import { Context, Effect, Layer, Redacted } from "effect";
+import { types } from "pg";
+import * as authSchema from "../db/schema";
 
 /**
  * PostgreSQL Client Layer
@@ -33,28 +32,26 @@ import { AppConfig } from "@workspace/domain";
  * PgClient.layer handles Scope and Reactivity internally.
  */
 export const PgClientLive = Layer.unwrapEffect(
-  Effect.gen(function* () {
-    const config = yield* AppConfig;
+	Effect.gen(function* () {
+		const config = yield* AppConfig;
 
-    // Return a layer that creates PgClient with injected config
-    return PgClient.layer({
-      url: Redacted.make(config.databaseUrl),
-      types: {
-        // Preserve PostgreSQL date/time types as strings
-        getTypeParser: (typeId: number, format: any) => {
-          // Type IDs for: timestamptz, timestamp, date, interval, etc.
-          if (
-            [1184, 1114, 1082, 1186, 1231, 1115, 1185, 1187, 1182].includes(
-              typeId
-            )
-          ) {
-            return (val: any) => val;
-          }
-          return types.getTypeParser(typeId, format);
-        },
-      },
-    });
-  })
+		// Return a layer that creates PgClient with injected config
+		return PgClient.layer({
+			url: Redacted.make(config.databaseUrl),
+			types: {
+				// Preserve PostgreSQL date/time types as strings
+				// biome-ignore lint/suspicious/noExplicitAny: pg library doesn't export TypeParser types
+				getTypeParser: (typeId: number, format: any) => {
+					// Type IDs for: timestamptz, timestamp, date, interval, etc.
+					if ([1184, 1114, 1082, 1186, 1231, 1115, 1185, 1187, 1182].includes(typeId)) {
+						// biome-ignore lint/suspicious/noExplicitAny: pg type parser callback
+						return (val: any) => val;
+					}
+					return types.getTypeParser(typeId, format);
+				},
+			},
+		});
+	}),
 );
 
 /**
@@ -65,10 +62,7 @@ export const PgClientLive = Layer.unwrapEffect(
  *
  * Using Context.Tag for proper Effect dependency injection.
  */
-export class Database extends Context.Tag("Database")<
-  Database,
-  ReturnType<typeof drizzle>
->() {}
+export class Database extends Context.Tag("Database")<Database, ReturnType<typeof drizzle>>() {}
 
 /**
  * Extract service shape using Context.Tag.Service utility
@@ -84,20 +78,20 @@ export type DatabaseShape = Context.Tag.Service<Database>;
  * "Layers act as constructors" - dependencies resolved during construction.
  */
 export const DatabaseLive = Layer.effect(
-  Database,
-  Effect.gen(function* () {
-    const config = yield* AppConfig;
-    // Dependency: PgClient resolved during layer construction
-    const client = yield* PgClient.PgClient;
+	Database,
+	Effect.gen(function* () {
+		const config = yield* AppConfig;
+		// Dependency: PgClient resolved during layer construction
+		const client = yield* PgClient.PgClient;
 
-    // Create Drizzle instance with Effect Postgres driver
-    const db = drizzle(client, {
-      schema: authSchema,
-      logger: config.nodeEnv === "development",
-    });
+		// Create Drizzle instance with Effect Postgres driver
+		const db = drizzle(client, {
+			schema: authSchema,
+			logger: config.nodeEnv === "development",
+		});
 
-    return db;
-  })
+		return db;
+	}),
 );
 
 /**

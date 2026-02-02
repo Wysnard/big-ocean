@@ -7,25 +7,22 @@
  */
 
 export {
-  startAssessment,
-  type StartAssessmentInput,
-  type StartAssessmentOutput,
-} from "./start-assessment.use-case.js";
-
+	type GetResultsInput,
+	type GetResultsOutput,
+	getResults,
+} from "./get-results.use-case";
 export {
-  sendMessage,
-  type SendMessageInput,
-  type SendMessageOutput,
-} from "./send-message.use-case.js";
-
+	type ResumeSessionInput,
+	type ResumeSessionOutput,
+	resumeSession,
+} from "./resume-session.use-case";
 export {
-  resumeSession,
-  type ResumeSessionInput,
-  type ResumeSessionOutput,
-} from "./resume-session.use-case.js";
-
+	type SendMessageInput,
+	type SendMessageOutput,
+	sendMessage,
+} from "./send-message.use-case";
 export {
-  getResults,
-  type GetResultsInput,
-  type GetResultsOutput,
-} from "./get-results.use-case.js";
+	type StartAssessmentInput,
+	type StartAssessmentOutput,
+	startAssessment,
+} from "./start-assessment.use-case";

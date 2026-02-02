@@ -5,10 +5,10 @@
  * Trait precision is the average of its component facets.
  */
 
-import type { FacetPrecisionScores } from "../types/facet.js";
-import { FACETS_BY_TRAIT } from "../types/facet.js";
-import type { TraitPrecisionScores } from "../types/trait.js";
-import { BIG_FIVE_TRAITS } from "../types/trait.js";
+import type { FacetPrecisionScores } from "../types/facet";
+import { FACETS_BY_TRAIT } from "../types/facet";
+import type { TraitPrecisionScores } from "../types/trait";
+import { BIG_FIVE_TRAITS } from "../types/trait";
 
 /**
  * Calculate trait-level precision from facet precision scores.
@@ -20,22 +20,22 @@ import { BIG_FIVE_TRAITS } from "../types/trait.js";
  * @returns Computed trait-level precision scores (Big Five)
  */
 export const calculateTraitPrecision = (
-  facetPrecision: FacetPrecisionScores
+	facetPrecision: FacetPrecisionScores,
 ): TraitPrecisionScores => {
-  const result: Partial<TraitPrecisionScores> = {};
+	const result: Partial<TraitPrecisionScores> = {};
 
-  for (const trait of BIG_FIVE_TRAITS) {
-    const facets = FACETS_BY_TRAIT[trait];
+	for (const trait of BIG_FIVE_TRAITS) {
+		const facets = FACETS_BY_TRAIT[trait];
 
-    // Calculate mean of all facet precisions for this trait
-    const sum = facets.reduce((acc, facet) => {
-      return acc + facetPrecision[facet];
-    }, 0);
+		// Calculate mean of all facet precisions for this trait
+		const sum = facets.reduce((acc, facet) => {
+			return acc + facetPrecision[facet];
+		}, 0);
 
-    result[trait] = sum / facets.length;
-  }
+		result[trait] = sum / facets.length;
+	}
 
-  return result as TraitPrecisionScores;
+	return result as TraitPrecisionScores;
 };
 
 /**
@@ -46,28 +46,26 @@ export const calculateTraitPrecision = (
  * @param weights - Optional array of weights (must sum to 1 or will be normalized)
  * @returns Weighted average precision score
  */
-export const calculateWeightedAverage = (
-  facetScores: number[],
-  weights?: number[]
-): number => {
-  if (facetScores.length === 0) return 0;
+export const calculateWeightedAverage = (facetScores: number[], weights?: number[]): number => {
+	if (facetScores.length === 0) return 0;
 
-  if (!weights || weights.length !== facetScores.length) {
-    // Equal weighting - simple average
-    return facetScores.reduce((a, b) => a + b, 0) / facetScores.length;
-  }
+	if (!weights || weights.length !== facetScores.length) {
+		// Equal weighting - simple average
+		return facetScores.reduce((a, b) => a + b, 0) / facetScores.length;
+	}
 
-  // Normalize weights to sum to 1
-  const weightSum = weights.reduce((a, b) => a + b, 0);
-  const normalizedWeights = weights.map((w) => w / weightSum);
+	// Normalize weights to sum to 1
+	const weightSum = weights.reduce((a, b) => a + b, 0);
+	const normalizedWeights = weights.map((w) => w / weightSum);
 
-  // Calculate weighted sum
-  let total = 0;
-  for (let i = 0; i < facetScores.length; i++) {
-    total += facetScores[i]! * (normalizedWeights[i] ?? 0);
-  }
+	// Calculate weighted sum
+	let total = 0;
+	for (let i = 0; i < facetScores.length; i++) {
+		// biome-ignore lint/style/noNonNullAssertion: i is bounded by array length
+		total += facetScores[i]! * (normalizedWeights[i] ?? 0);
+	}
 
-  return total;
+	return total;
 };
 
 /**
@@ -77,53 +75,51 @@ export const calculateWeightedAverage = (
  * @param baseline - Initial precision score for all facets (default: 0.5)
  * @returns New FacetPrecisionScores object with all facets set to baseline
  */
-export const initializeFacetPrecision = (
-  baseline: number = 0.5
-): FacetPrecisionScores => {
-  const facets: Array<keyof FacetPrecisionScores> = [
-    // Openness
-    "imagination",
-    "artistic_interests",
-    "emotionality",
-    "adventurousness",
-    "intellect",
-    "liberalism",
-    // Conscientiousness
-    "self_efficacy",
-    "orderliness",
-    "dutifulness",
-    "achievement_striving",
-    "self_discipline",
-    "cautiousness",
-    // Extraversion
-    "friendliness",
-    "gregariousness",
-    "assertiveness",
-    "activity_level",
-    "excitement_seeking",
-    "cheerfulness",
-    // Agreeableness
-    "trust",
-    "morality",
-    "altruism",
-    "cooperation",
-    "modesty",
-    "sympathy",
-    // Neuroticism
-    "anxiety",
-    "anger",
-    "depressiveness",
-    "self_consciousness",
-    "immoderation",
-    "vulnerability",
-  ];
+export const initializeFacetPrecision = (baseline: number = 0.5): FacetPrecisionScores => {
+	const facets: Array<keyof FacetPrecisionScores> = [
+		// Openness
+		"imagination",
+		"artistic_interests",
+		"emotionality",
+		"adventurousness",
+		"intellect",
+		"liberalism",
+		// Conscientiousness
+		"self_efficacy",
+		"orderliness",
+		"dutifulness",
+		"achievement_striving",
+		"self_discipline",
+		"cautiousness",
+		// Extraversion
+		"friendliness",
+		"gregariousness",
+		"assertiveness",
+		"activity_level",
+		"excitement_seeking",
+		"cheerfulness",
+		// Agreeableness
+		"trust",
+		"morality",
+		"altruism",
+		"cooperation",
+		"modesty",
+		"sympathy",
+		// Neuroticism
+		"anxiety",
+		"anger",
+		"depressiveness",
+		"self_consciousness",
+		"immoderation",
+		"vulnerability",
+	];
 
-  const result: Partial<FacetPrecisionScores> = {};
-  for (const facet of facets) {
-    result[facet] = baseline;
-  }
+	const result: Partial<FacetPrecisionScores> = {};
+	for (const facet of facets) {
+		result[facet] = baseline;
+	}
 
-  return result as FacetPrecisionScores;
+	return result as FacetPrecisionScores;
 };
 
 /**
@@ -136,17 +132,17 @@ export const initializeFacetPrecision = (
  * @returns Updated facet precision scores
  */
 export const updateFacetPrecision = (
-  facetPrecision: FacetPrecisionScores,
-  facet: keyof FacetPrecisionScores,
-  newScore: number
+	facetPrecision: FacetPrecisionScores,
+	facet: keyof FacetPrecisionScores,
+	newScore: number,
 ): FacetPrecisionScores => {
-  // Clamp score to [0, 1]
-  const clampedScore = Math.max(0, Math.min(1, newScore));
+	// Clamp score to [0, 1]
+	const clampedScore = Math.max(0, Math.min(1, newScore));
 
-  return {
-    ...facetPrecision,
-    [facet]: clampedScore,
-  };
+	return {
+		...facetPrecision,
+		[facet]: clampedScore,
+	};
 };
 
 /**
@@ -159,24 +155,22 @@ export const updateFacetPrecision = (
  * @returns Merged precision scores
  */
 export const mergePrecisionScores = (
-  current: FacetPrecisionScores,
-  update: Partial<FacetPrecisionScores>,
-  weight: number = 0.5
+	current: FacetPrecisionScores,
+	update: Partial<FacetPrecisionScores>,
+	weight: number = 0.5,
 ): FacetPrecisionScores => {
-  const clampedWeight = Math.max(0, Math.min(1, weight));
-  const result: Partial<FacetPrecisionScores> = {};
+	const clampedWeight = Math.max(0, Math.min(1, weight));
+	const result: Partial<FacetPrecisionScores> = {};
 
-  const allFacets = Object.keys(current) as Array<keyof FacetPrecisionScores>;
+	const allFacets = Object.keys(current) as Array<keyof FacetPrecisionScores>;
 
-  for (const facet of allFacets) {
-    const currentValue = current[facet];
-    const updateValue =
-      update[facet] !== undefined ? update[facet] : currentValue;
+	for (const facet of allFacets) {
+		const currentValue = current[facet];
+		const updateValue = update[facet] !== undefined ? update[facet] : currentValue;
 
-    // Weighted average of current and update
-    result[facet] =
-      currentValue * (1 - clampedWeight) + updateValue * clampedWeight;
-  }
+		// Weighted average of current and update
+		result[facet] = currentValue * (1 - clampedWeight) + updateValue * clampedWeight;
+	}
 
-  return result as FacetPrecisionScores;
+	return result as FacetPrecisionScores;
 };

@@ -19,16 +19,16 @@
  * - Dependencies: LoggerRepository
  */
 
-import { Layer, Effect, Schema as S } from "effect";
 import { ChatAnthropic } from "@langchain/anthropic";
 import {
-  AnalyzerRepository,
-  type FacetEvidence,
-  LoggerRepository,
-  AnalyzerError,
-  MalformedEvidenceError,
-  ALL_FACETS,
+	ALL_FACETS,
+	AnalyzerError,
+	AnalyzerRepository,
+	type FacetEvidence,
+	LoggerRepository,
+	MalformedEvidenceError,
 } from "@workspace/domain";
+import { Effect, Layer, Schema as S } from "effect";
 
 /**
  * System prompt for facet analysis
@@ -109,8 +109,8 @@ For each user message, identify signals for all 30 facets across 5 traits:
 
 // Highlight range schema for character positions
 const HighlightRange = S.Struct({
-  start: S.Number.pipe(S.int(), S.greaterThanOrEqualTo(0)),
-  end: S.Number.pipe(S.int(), S.greaterThan(0)),
+	start: S.Number.pipe(S.int(), S.greaterThanOrEqualTo(0)),
+	end: S.Number.pipe(S.int(), S.greaterThan(0)),
 });
 
 // Literal union of all valid Big Five facet names
@@ -118,24 +118,24 @@ const FacetName = S.Literal(...(ALL_FACETS as readonly [string, ...string[]]));
 
 // Input schema: Claude's JSON response with assessmentMessageId added
 const ClaudeResponseWithMessageId = S.Struct({
-  assessmentMessageId: S.String,
-  facet: FacetName,
-  score: S.Number.pipe(S.int(), S.between(0, 20)),
-  confidence: S.Number.pipe(S.between(0, 1)),
-  quote: S.String,
-  highlightRange: HighlightRange,
+	assessmentMessageId: S.String,
+	facet: FacetName,
+	score: S.Number.pipe(S.int(), S.between(0, 20)),
+	confidence: S.Number.pipe(S.between(0, 1)),
+	quote: S.String,
+	highlightRange: HighlightRange,
 });
 
 // Output schema: Domain FacetEvidence structure
 const FacetEvidenceSchema = S.mutable(
-  S.Struct({
-    assessmentMessageId: S.String,
-    facetName: FacetName,
-    score: S.Number,
-    confidence: S.Number,
-    quote: S.String,
-    highlightRange: S.mutable(HighlightRange),
-  })
+	S.Struct({
+		assessmentMessageId: S.String,
+		facetName: FacetName,
+		score: S.Number,
+		confidence: S.Number,
+		quote: S.String,
+		highlightRange: S.mutable(HighlightRange),
+	}),
 );
 
 /**
@@ -148,36 +148,34 @@ const FacetEvidenceSchema = S.mutable(
  * Renames 'facet' to 'facetName' to match domain model.
  */
 const FacetEvidenceFromClaudeResponse = S.transform(
-  ClaudeResponseWithMessageId,
-  FacetEvidenceSchema,
-  {
-    strict: true,
-    decode: (response): FacetEvidence => ({
-      assessmentMessageId: response.assessmentMessageId,
-      facetName: response.facet as FacetEvidence["facetName"],
-      score: response.score,
-      confidence: response.confidence,
-      quote: response.quote,
-      highlightRange: {
-        start: response.highlightRange.start,
-        end: response.highlightRange.end,
-      },
-    }),
-    encode: (evidence) => ({
-      assessmentMessageId: evidence.assessmentMessageId,
-      facet: evidence.facetName,
-      score: evidence.score,
-      confidence: evidence.confidence,
-      quote: evidence.quote,
-      highlightRange: evidence.highlightRange,
-    }),
-  }
+	ClaudeResponseWithMessageId,
+	FacetEvidenceSchema,
+	{
+		strict: true,
+		decode: (response): FacetEvidence => ({
+			assessmentMessageId: response.assessmentMessageId,
+			facetName: response.facet as FacetEvidence["facetName"],
+			score: response.score,
+			confidence: response.confidence,
+			quote: response.quote,
+			highlightRange: {
+				start: response.highlightRange.start,
+				end: response.highlightRange.end,
+			},
+		}),
+		encode: (evidence) => ({
+			assessmentMessageId: evidence.assessmentMessageId,
+			facet: evidence.facetName,
+			score: evidence.score,
+			confidence: evidence.confidence,
+			quote: evidence.quote,
+			highlightRange: evidence.highlightRange,
+		}),
+	},
 );
 
 // Array transformation schema
-const FacetEvidenceArrayFromClaudeResponse = S.mutable(
-  S.Array(FacetEvidenceFromClaudeResponse)
-);
+const FacetEvidenceArrayFromClaudeResponse = S.mutable(S.Array(FacetEvidenceFromClaudeResponse));
 
 /**
  * Parse and validate Claude response using Effect Schema transformations
@@ -187,64 +185,61 @@ const FacetEvidenceArrayFromClaudeResponse = S.mutable(
  * Transforms Claude's response structure to FacetEvidence using schema transformations.
  */
 function parseResponse(
-  rawOutput: string,
-  assessmentMessageId: string
+	rawOutput: string,
+	assessmentMessageId: string,
 ): Effect.Effect<
-  S.Schema.Type<typeof FacetEvidenceArrayFromClaudeResponse>,
-  MalformedEvidenceError
+	S.Schema.Type<typeof FacetEvidenceArrayFromClaudeResponse>,
+	MalformedEvidenceError
 > {
-  return Effect.gen(function* () {
-    // Strip markdown code blocks if present (Claude sometimes wraps JSON in code blocks)
-    const cleaned = rawOutput.trim().replace(/^```(?:json)?\n?|\n?```$/g, "");
+	return Effect.gen(function* () {
+		// Strip markdown code blocks if present (Claude sometimes wraps JSON in code blocks)
+		const cleaned = rawOutput.trim().replace(/^```(?:json)?\n?|\n?```$/g, "");
 
-    // Parse JSON string
-    const parsed = yield* Effect.try({
-      try: () => JSON.parse(cleaned) as unknown,
-      catch: (error) =>
-        new MalformedEvidenceError({
-          assessmentMessageId,
-          rawOutput: rawOutput.substring(0, 500),
-          parseError: error instanceof Error ? error.message : String(error),
-          message: "Failed to parse JSON",
-        }),
-    });
+		// Parse JSON string
+		const parsed = yield* Effect.try({
+			try: () => JSON.parse(cleaned) as unknown,
+			catch: (error) =>
+				new MalformedEvidenceError({
+					assessmentMessageId,
+					rawOutput: rawOutput.substring(0, 500),
+					parseError: error instanceof Error ? error.message : String(error),
+					message: "Failed to parse JSON",
+				}),
+		});
 
-    // Inject assessmentMessageId into each parsed item
-    const parsedWithMessageId = yield* Effect.try({
-      try: () => {
-        if (!Array.isArray(parsed)) {
-          throw new Error("Expected array from Claude response");
-        }
-        return parsed.map((item) => ({
-          ...item,
-          assessmentMessageId,
-        }));
-      },
-      catch: (error) =>
-        new MalformedEvidenceError({
-          assessmentMessageId,
-          rawOutput: rawOutput.substring(0, 500),
-          parseError: error instanceof Error ? error.message : String(error),
-          message: "Failed to add assessmentMessageId to parsed data",
-        }),
-    });
+		// Inject assessmentMessageId into each parsed item
+		const parsedWithMessageId = yield* Effect.try({
+			try: () => {
+				if (!Array.isArray(parsed)) {
+					throw new Error("Expected array from Claude response");
+				}
+				return parsed.map((item) => ({
+					...item,
+					assessmentMessageId,
+				}));
+			},
+			catch: (error) =>
+				new MalformedEvidenceError({
+					assessmentMessageId,
+					rawOutput: rawOutput.substring(0, 500),
+					parseError: error instanceof Error ? error.message : String(error),
+					message: "Failed to add assessmentMessageId to parsed data",
+				}),
+		});
 
-    // Validate and transform using Effect Schema
-    return yield* S.decodeUnknown(FacetEvidenceArrayFromClaudeResponse)(
-      parsedWithMessageId
-    ).pipe(
-      Effect.mapError(
-        (error) =>
-          new MalformedEvidenceError({
-            assessmentMessageId,
-            rawOutput: rawOutput.substring(0, 500),
-            parseError: String(error),
-            message:
-              "Schema validation failed - invalid structure or facet name",
-          })
-      )
-    );
-  });
+		// Validate and transform using Effect Schema
+		return yield* S.decodeUnknown(FacetEvidenceArrayFromClaudeResponse)(parsedWithMessageId).pipe(
+			Effect.mapError(
+				(error) =>
+					new MalformedEvidenceError({
+						assessmentMessageId,
+						rawOutput: rawOutput.substring(0, 500),
+						parseError: String(error),
+						message: "Schema validation failed - invalid structure or facet name",
+					}),
+			),
+		);
+	});
 }
 
 /**
@@ -256,69 +251,66 @@ function parseResponse(
  * Layer type: Layer<AnalyzerRepository, never, LoggerRepository>
  */
 export const AnalyzerClaudeRepositoryLive = Layer.effect(
-  AnalyzerRepository,
-  Effect.gen(function* () {
-    const logger = yield* LoggerRepository;
+	AnalyzerRepository,
+	Effect.gen(function* () {
+		const logger = yield* LoggerRepository;
 
-    // Create ChatAnthropic model
-    const model = new ChatAnthropic({
-      model: process.env.ANALYZER_MODEL_ID || "claude-sonnet-4-20250514",
-      maxTokens: Number(process.env.ANALYZER_MAX_TOKENS) || 2048,
-      temperature: Number(process.env.ANALYZER_TEMPERATURE) || 0.3, // Lower temperature for structured output
-    });
+		// Create ChatAnthropic model
+		const model = new ChatAnthropic({
+			model: process.env.ANALYZER_MODEL_ID || "claude-sonnet-4-20250514",
+			maxTokens: Number(process.env.ANALYZER_MAX_TOKENS) || 2048,
+			temperature: Number(process.env.ANALYZER_TEMPERATURE) || 0.3, // Lower temperature for structured output
+		});
 
-    logger.info("Analyzer Claude repository initialized", {
-      model: process.env.ANALYZER_MODEL_ID || "claude-sonnet-4-20250514",
-    });
+		logger.info("Analyzer Claude repository initialized", {
+			model: process.env.ANALYZER_MODEL_ID || "claude-sonnet-4-20250514",
+		});
 
-    // Return service implementation
-    return AnalyzerRepository.of({
-      analyzeFacets: (assessmentMessageId: string, content: string) =>
-        Effect.gen(function* () {
-          const startTime = Date.now();
+		// Return service implementation
+		return AnalyzerRepository.of({
+			analyzeFacets: (assessmentMessageId: string, content: string) =>
+				Effect.gen(function* () {
+					const startTime = Date.now();
 
-          // Call Claude with system prompt and user message
-          const response = yield* Effect.tryPromise({
-            try: async () => {
-              const result = await model.invoke([
-                {
-                  role: "system" as const,
-                  content: ANALYZER_SYSTEM_PROMPT,
-                },
-                {
-                  role: "user" as const,
-                  content: `Analyze this message for personality facet signals:\n\n${content}`,
-                },
-              ]);
+					// Call Claude with system prompt and user message
+					const response = yield* Effect.tryPromise({
+						try: async () => {
+							const result = await model.invoke([
+								{
+									role: "system" as const,
+									content: ANALYZER_SYSTEM_PROMPT,
+								},
+								{
+									role: "user" as const,
+									content: `Analyze this message for personality facet signals:\n\n${content}`,
+								},
+							]);
 
-              return String(result.content);
-            },
-            catch: (error) =>
-              new AnalyzerError({
-                assessmentMessageId,
-                message: "Failed to invoke Claude for facet analysis",
-                cause: error instanceof Error ? error.message : String(error),
-              }),
-          });
+							return String(result.content);
+						},
+						catch: (error) =>
+							new AnalyzerError({
+								assessmentMessageId,
+								message: "Failed to invoke Claude for facet analysis",
+								cause: error instanceof Error ? error.message : String(error),
+							}),
+					});
 
-          // Parse and validate response
-          // Cast to FacetEvidence[] since schema output is structurally compatible
-          const evidence = (yield* parseResponse(
-            response,
-            assessmentMessageId
-          )) as FacetEvidence[];
+					// Parse and validate response
+					// Cast to FacetEvidence[] since schema output is structurally compatible
+					const evidence = (yield* parseResponse(response, assessmentMessageId)) as FacetEvidence[];
 
-          const duration = Date.now() - startTime;
+					const duration = Date.now() - startTime;
 
-          logger.info("Facet analysis completed", {
-            assessmentMessageId,
-            evidenceCount: evidence.length,
-            durationMs: duration,
-            facets: evidence.map((e) => e.facetName),
-          });
+					logger.info("Facet analysis completed", {
+						assessmentMessageId,
+						evidenceCount: evidence.length,
+						durationMs: duration,
+						facets: evidence.map((e) => e.facetName),
+					});
 
-          return evidence;
-        }),
-    });
-  })
+					return evidence;
+				}),
+		});
+	}),
 );

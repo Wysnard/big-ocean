@@ -32,23 +32,17 @@ import { Config, type ConfigError, Effect, Layer } from "effect";
  * Secrets use Config.redacted() to prevent accidental logging.
  */
 const configSchema = Config.all({
-  // Required variables (no defaults - fail fast if missing)
-  databaseUrl: Config.string("DATABASE_URL"),
-  anthropicApiKey: Config.redacted("ANTHROPIC_API_KEY"),
-  betterAuthSecret: Config.redacted("BETTER_AUTH_SECRET"),
+	// Required variables (no defaults - fail fast if missing)
+	databaseUrl: Config.string("DATABASE_URL"),
+	anthropicApiKey: Config.redacted("ANTHROPIC_API_KEY"),
+	betterAuthSecret: Config.redacted("BETTER_AUTH_SECRET"),
 
-  // Optional variables with sensible defaults
-  redisUrl: Config.string("REDIS_URL").pipe(
-    Config.withDefault("redis://localhost:6379")
-  ),
-  betterAuthUrl: Config.string("BETTER_AUTH_URL").pipe(
-    Config.withDefault("http://localhost:4000")
-  ),
-  frontendUrl: Config.string("FRONTEND_URL").pipe(
-    Config.withDefault("http://localhost:3000")
-  ),
-  port: Config.number("PORT").pipe(Config.withDefault(4000)),
-  nodeEnv: Config.string("NODE_ENV").pipe(Config.withDefault("development")),
+	// Optional variables with sensible defaults
+	redisUrl: Config.string("REDIS_URL").pipe(Config.withDefault("redis://localhost:6379")),
+	betterAuthUrl: Config.string("BETTER_AUTH_URL").pipe(Config.withDefault("http://localhost:4000")),
+	frontendUrl: Config.string("FRONTEND_URL").pipe(Config.withDefault("http://localhost:3000")),
+	port: Config.number("PORT").pipe(Config.withDefault(4000)),
+	nodeEnv: Config.string("NODE_ENV").pipe(Config.withDefault("development")),
 });
 
 /**
@@ -68,11 +62,11 @@ const configSchema = Config.all({
  * before the program runs, providing fail-fast behavior.
  */
 export const AppConfigLive = Layer.effect(
-  AppConfig,
-  Effect.gen(function* () {
-    const config = yield* configSchema;
-    return config;
-  })
+	AppConfig,
+	Effect.gen(function* () {
+		const config = yield* configSchema;
+		return config;
+	}),
 );
 
 /**
@@ -89,7 +83,4 @@ export const AppConfigLive = Layer.effect(
  * });
  * ```
  */
-export const loadConfig: Effect.Effect<
-  AppConfigService,
-  ConfigError.ConfigError
-> = configSchema;
+export const loadConfig: Effect.Effect<AppConfigService, ConfigError.ConfigError> = configSchema;
