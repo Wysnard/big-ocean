@@ -2,6 +2,9 @@
  * Domain Package - Core business types and errors
  */
 
+// Configuration service interface (implementation in @workspace/infrastructure)
+export { AppConfig, type AppConfigService } from "./config/index.js";
+
 // Session types
 export type { SessionStatus, MessageRole, Session } from "./types/session.js";
 
