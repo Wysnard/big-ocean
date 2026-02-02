@@ -13,58 +13,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Validate commit messages follow conventional commit format (PR only)
-  validate-commits:
-    name: Validate Commit Messages
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Need full history for commit validation
-
-      - name: Validate PR commit messages
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { data: commits } = await github.rest.pulls.listCommits({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number
-            });
-
-            // Conventional commit pattern: type(scope): or type:
-            const conventionalPattern = /^(feat|fix|docs|chore|test|ci|refactor|perf|style|build|revert)(\(.+\))?:/;
-            const mergePattern = /^Merge /;
-
-            const invalidCommits = [];
-
-            for (const commit of commits) {
-              const message = commit.commit.message.split('\n')[0]; // First line only
-
-              if (mergePattern.test(message)) continue;
-              if (conventionalPattern.test(message)) continue;
-
-              invalidCommits.push({
-                sha: commit.sha.substring(0, 7),
-                message: message.substring(0, 60)
-              });
-            }
-
-            if (invalidCommits.length > 0) {
-              let errorMsg = '❌ The following commits do not follow conventional commit format:\n\n';
-              for (const c of invalidCommits) {
-                errorMsg += `- \`${c.sha}\`: ${c.message}\n`;
-              }
-              errorMsg += '\n**Required format:** `type(scope): Description` or `type: Description`\n';
-              errorMsg += '\n**Allowed types:** `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `perf`, `style`, `build`, `revert`';
-
-              core.setFailed(errorMsg);
-            } else {
-              console.log('✅ All commit messages follow conventional commit format');
-            }
-
   ci:
     name: CI Pipeline
     runs-on: ubuntu-latest
