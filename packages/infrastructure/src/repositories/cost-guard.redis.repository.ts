@@ -24,7 +24,7 @@ const TTL_SECONDS = 48 * 60 * 60;
  * Get today's date in YYYY-MM-DD format (UTC)
  */
 const getDateKey = (): string => {
-  return new Date().toISOString().split("T")[0];
+  return new Date().toISOString().split("T")[0]!;
 };
 
 /**
@@ -90,7 +90,7 @@ export const createTestCostGuardRepository = () => {
   const costs = new Map<string, number>();
   const assessments = new Map<string, number>();
 
-  const getDateKey = (): string => new Date().toISOString().split("T")[0];
+  const getDateKey = (): string => new Date().toISOString().split("T")[0]!;
 
   return CostGuardRepository.of({
     incrementDailyCost: (userId: string, costCents: number) =>
