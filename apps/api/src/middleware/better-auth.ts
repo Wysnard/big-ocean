@@ -5,8 +5,8 @@
  * Pattern from: https://dev.to/danimydev/authentication-with-nodehttp-and-better-auth-2l2g
  */
 
-import type { IncomingMessage, ServerResponse } from "node:http"
-import type { Auth } from "../bootstrap.js"
+import type { IncomingMessage, ServerResponse } from "node:http";
+import type { Auth, BetterAuthOptions } from "better-auth";
 
 /**
  * Convert Node.js IncomingMessage to Fetch API Request
@@ -41,7 +41,7 @@ async function incomingMessageToRequest(
 /**
  * Create Better Auth handler for node:http integration
  */
-export function createBetterAuthHandler(auth: Auth, betterAuthUrl: string) {
+export function createBetterAuthHandler(auth: Auth<BetterAuthOptions>, betterAuthUrl: string) {
   return async function betterAuthHandler(
     incomingMessage: IncomingMessage,
     serverResponse: ServerResponse

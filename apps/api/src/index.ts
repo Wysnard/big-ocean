@@ -1,57 +1,96 @@
 /**
  * Big Ocean API Server
  *
- * Effect-first architecture - all initialization runs within Effect context.
+ * Effect-first architecture - all initialization via Layer composition.
  * Better Auth at node:http layer, Effect handles remaining routes.
  * Pattern from: https://dev.to/danimydev/authentication-with-nodehttp-and-better-auth-2l2g
  */
 
 import "dotenv/config";
-import { Effect, Layer } from "effect";
+import { Context, Effect, Layer } from "effect";
 import { HttpApiBuilder, HttpMiddleware } from "@effect/platform";
 import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
 import { createServer } from "node:http";
 import type { Server, IncomingMessage, ServerResponse } from "node:http";
 import { BigOceanApi } from "@workspace/contracts";
+import { AppConfig } from "@workspace/domain";
+import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import { HealthGroupLive } from "./handlers/health.js";
 import { AssessmentGroupLive } from "./handlers/assessment.js";
-import { bootstrap, type BootstrapResult } from "./bootstrap.js";
 import { createBetterAuthHandler } from "./middleware/better-auth.js";
-import { DatabaseStack } from "@workspace/infrastructure/context/database";
+import {
+  AppConfigLive,
+  DatabaseStack,
+  BetterAuthService,
+  BetterAuthLive,
+} from "@workspace/infrastructure";
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 import { NerinAgentLangGraphRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.langgraph.repository";
-import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 
 /**
- * Service Layers
- * Story 2-1: Database and repositories (now require LoggerRepository)
- * Story 2-2: Nerin agent repository (requires LoggerRepository)
+ * Infrastructure Layer - Config, Database, Auth, Logger
+ *
+ * Build layers bottom-up: base services first, then dependent services.
+ * AppConfig is the foundation - all other services depend on it.
  */
-const ServiceLayers = Layer.mergeAll(
-  AssessmentSessionDrizzleRepositoryLive,
-  AssessmentMessageDrizzleRepositoryLive,
-  NerinAgentLangGraphRepositoryLive,
-).pipe(
-  Layer.provide(DatabaseStack),
+
+// Base services with no dependencies
+const BaseServices = Layer.mergeAll(
+  AppConfigLive,
+  LoggerPinoRepositoryLive
+);
+
+// Database stack needs AppConfig
+const DatabaseServices = DatabaseStack.pipe(
+  Layer.provide(AppConfigLive)
+);
+
+// BetterAuth needs AppConfig, Database, and LoggerRepository
+const AuthServices = BetterAuthLive.pipe(
+  Layer.provide(DatabaseServices),
   Layer.provide(LoggerPinoRepositoryLive),
+  Layer.provide(AppConfigLive)
+);
+
+// Complete infrastructure layer - merge all services for consumers
+const InfrastructureLayer = Layer.mergeAll(
+  BaseServices,
+  DatabaseServices,
+  AuthServices
 );
 
 /**
- * Combined Handler Layers with Services
+ * Repository Layers - require Database and Logger
+ */
+const RepositoryLayers = Layer.mergeAll(
+  AssessmentSessionDrizzleRepositoryLive,
+  AssessmentMessageDrizzleRepositoryLive,
+  NerinAgentLangGraphRepositoryLive
+);
+
+/**
+ * Service Layers - combines infrastructure with repositories
+ */
+const ServiceLayers = RepositoryLayers.pipe(
+  Layer.provide(InfrastructureLayer)
+);
+
+/**
+ * Handler Layers - HTTP API handlers
  */
 const HttpGroupsLive = Layer.mergeAll(
   HealthGroupLive,
   AssessmentGroupLive,
-  LoggerPinoRepositoryLive,
+  LoggerPinoRepositoryLive
 );
 
 /**
  * API Layer - Builds HTTP API from contracts with handlers
  */
 const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(
-  Layer.provide(HttpGroupsLive),
+  Layer.provide(HttpGroupsLive)
 );
 
 /**
@@ -60,7 +99,7 @@ const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(
 const ApiLayer = Layer.mergeAll(
   ApiLive,
   HttpApiBuilder.Router.Live,
-  HttpApiBuilder.Middleware.layer,
+  HttpApiBuilder.Middleware.layer
 );
 
 /**
@@ -69,9 +108,11 @@ const ApiLayer = Layer.mergeAll(
  * NodeHttpServer.layer will attach the Effect handler to this server.
  * We intercept requests first to handle Better Auth routes.
  */
-const createCustomServerFactory = (bootstrapResult: BootstrapResult) => (): Server => {
-  const { config, auth } = bootstrapResult;
-  const betterAuthHandler = createBetterAuthHandler(auth, config.betterAuthUrl);
+const createCustomServerFactory = (
+  auth: Context.Tag.Service<typeof BetterAuthService>,
+  betterAuthUrl: string
+) => (): Server => {
+  const betterAuthHandler = createBetterAuthHandler(auth, betterAuthUrl);
 
   const server = createServer();
   let effectHandler:
@@ -83,12 +124,12 @@ const createCustomServerFactory = (bootstrapResult: BootstrapResult) => (): Serv
     if (event === "request") {
       effectHandler = listener as (
         req: IncomingMessage,
-        res: ServerResponse,
+        res: ServerResponse
       ) => void;
       // Remove the Effect listener - we'll call it manually after Better Auth
       server.removeListener(
         "request",
-        listener as (req: IncomingMessage, res: ServerResponse) => void,
+        listener as (req: IncomingMessage, res: ServerResponse) => void
       );
     }
   });
@@ -114,7 +155,7 @@ const createCustomServerFactory = (bootstrapResult: BootstrapResult) => (): Serv
         res.end(
           JSON.stringify({
             error: "Service initializing",
-          }),
+          })
         );
       }
     } catch (error) {
@@ -131,21 +172,6 @@ const createCustomServerFactory = (bootstrapResult: BootstrapResult) => (): Serv
 
   return server;
 };
-
-/**
- * Create HTTP Server Layer with Better Auth integration
- */
-const createHttpLive = (bootstrapResult: BootstrapResult) =>
-  HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
-    Layer.provide(ApiLayer),
-    Layer.provide(
-      NodeHttpServer.layer(createCustomServerFactory(bootstrapResult), {
-        port: bootstrapResult.config.port,
-      }),
-    ),
-    Layer.provide(LoggerPinoRepositoryLive),
-    Layer.provide(ServiceLayers),
-  );
 
 /**
  * Startup logging
@@ -168,24 +194,40 @@ const logStartup = (port: number) =>
     logger.info("  - POST /api/assessment/message");
     logger.info("  - GET  /api/assessment/:sessionId/resume");
     logger.info("  - GET  /api/assessment/:sessionId/results");
-  }).pipe(Effect.provide(LoggerPinoRepositoryLive));
+  });
 
 /**
- * Main program - bootstrap and launch server
+ * Main program - all initialization via Layer composition
  *
  * All initialization runs within Effect context for proper error handling.
  */
 const main = Effect.gen(function* () {
-  // Bootstrap all services (config, database, auth)
-  const bootstrapResult = yield* bootstrap;
+  // Get injected services
+  const config = yield* AppConfig;
+  const auth = yield* BetterAuthService;
+  const logger = yield* LoggerRepository;
 
   // Log startup info
-  yield* logStartup(bootstrapResult.config.port);
+  yield* logStartup(config.port);
 
-  // Create and launch HTTP server
-  const HttpLive = createHttpLive(bootstrapResult);
+  // Create HTTP server layer with Better Auth integration
+  const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
+    Layer.provide(ApiLayer),
+    Layer.provide(
+      NodeHttpServer.layer(
+        createCustomServerFactory(auth, config.betterAuthUrl),
+        { port: config.port }
+      )
+    ),
+    Layer.provide(ServiceLayers),
+    Layer.provide(InfrastructureLayer)
+  );
+
+  logger.info("Launching HTTP server...");
+
+  // Launch server
   yield* Layer.launch(HttpLive);
-});
+}).pipe(Effect.provide(InfrastructureLayer));
 
 /**
  * Launch server

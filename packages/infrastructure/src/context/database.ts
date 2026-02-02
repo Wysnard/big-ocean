@@ -16,35 +16,46 @@ import { PgClient } from "@effect/sql-pg";
 import { SqlClient, SqlError } from "@effect/sql";
 import { types } from "pg";
 import * as authSchema from "../infrastructure/db/schema.js";
+import { AppConfig } from "@workspace/domain";
 
 /**
  * PostgreSQL Client Layer
  *
  * Manages connection pool with Effect-based lifecycle.
  * Preserves PostgreSQL date/time types as strings (not parsed to Date).
+ *
+ * Requires AppConfig to be provided for DATABASE_URL.
  */
-export const PgClientLive: Layer.Layer<
-  PgClient.PgClient | SqlClient.SqlClient,
-  SqlError.SqlError,
-  never
-> = PgClient.layer({
-  url: Redacted.make(
-    process.env.DATABASE_URL ||
-      "postgresql://dev:devpassword@localhost:5432/bigocean",
-  ),
-  types: {
-    // Preserve PostgreSQL date/time types as strings
-    getTypeParser: (typeId: number, format: any) => {
-      // Type IDs for: timestamptz, timestamp, date, interval, etc.
-      if (
-        [1184, 1114, 1082, 1186, 1231, 1115, 1185, 1187, 1182].includes(typeId)
-      ) {
-        return (val: any) => val;
-      }
-      return types.getTypeParser(typeId, format);
-    },
-  },
-});
+/**
+ * Create PgClient Layer dynamically using AppConfig
+ *
+ * Uses Layer.unwrapEffect to inject AppConfig and create PgClient.layer
+ * PgClient.layer handles Scope and Reactivity internally.
+ */
+export const PgClientLive = Layer.unwrapEffect(
+  Effect.gen(function* () {
+    const config = yield* AppConfig;
+
+    // Return a layer that creates PgClient with injected config
+    return PgClient.layer({
+      url: Redacted.make(config.databaseUrl),
+      types: {
+        // Preserve PostgreSQL date/time types as strings
+        getTypeParser: (typeId: number, format: any) => {
+          // Type IDs for: timestamptz, timestamp, date, interval, etc.
+          if (
+            [1184, 1114, 1082, 1186, 1231, 1115, 1185, 1187, 1182].includes(
+              typeId
+            )
+          ) {
+            return (val: any) => val;
+          }
+          return types.getTypeParser(typeId, format);
+        },
+      },
+    });
+  })
+);
 
 /**
  * Database Service Tag
@@ -75,24 +86,26 @@ export type DatabaseShape = Context.Tag.Service<Database>;
 export const DatabaseLive = Layer.effect(
   Database,
   Effect.gen(function* () {
+    const config = yield* AppConfig;
     // Dependency: PgClient resolved during layer construction
     const client = yield* PgClient.PgClient;
 
     // Create Drizzle instance with Effect Postgres driver
     const db = drizzle(client, {
       schema: authSchema,
-      logger: process.env.NODE_ENV === "development",
+      logger: config.nodeEnv === "development",
     });
 
     return db;
-  }),
+  })
 );
 
 /**
  * Complete Database Stack
  *
  * Merges PgClient and Database layers.
- * Usage: Layer.provide(DatabaseStack, program)
+ * Requires AppConfig to be provided.
+ *
+ * Usage: Layer.provide(DatabaseStack, AppConfigLive)
  */
-export const DatabaseStack: Layer.Layer<Database, SqlError.SqlError, never> =
-  DatabaseLive.pipe(Layer.provide(PgClientLive));
+export const DatabaseStack = DatabaseLive.pipe(Layer.provide(PgClientLive));
