@@ -178,9 +178,10 @@ The core big-ocean experience is fundamentally different from traditional person
 
 **Session Persistence**
 - User can pause assessment at any time and resume later
-- Conversation state persists across sessions
+- Conversation state persists on server, accessible via session URL
 - Precision snapshot at each session close point
-- ElectricSQL enables real-time sync + offline retry (Phase 2)
+- Device switching enabled via unique session URL (paste URL on new device to continue)
+- **Phase 2 Enhancement:** ElectricSQL for automatic real-time sync + offline capability
 
 ### Effortless Interactions
 
@@ -1169,6 +1170,54 @@ Each of the 5 Big Five trait categories gets a bold, vibrant primary color + a l
     - Facet insights: 2-3 sentences per facet, science-backed
     - Example: "You scored high in the facet of 'achievement striving.' People with this strength often set high standards for themselves and pursue ambitious goals. That came through when you described your career aspirations."
     - User thinks: *"It understood the nuance. Not just a label; a real profile."*
+
+11a. **Evidence-Based Transparency — "Show Your Work"**
+
+**Profile → Conversation Navigation:**
+    - User clicks any facet score (e.g., "Altruism: 16/20")
+    - "View Evidence" panel appears showing all supporting quotes:
+      - Message #3: "I love helping people in need" → Score contribution: 18/20
+      - Message #7: "I sometimes volunteer" → Score contribution: 14/20
+      - Message #12: "I prioritize myself first" → Score contribution: 8/20 (contradictory)
+    - User clicks "Jump to Message" → conversation scrolls to that message
+    - Exact quote is highlighted in the conversation:
+      - Green highlight: Strong positive signal (high confidence)
+      - Yellow highlight: Moderate signal
+      - Red highlight: Contradictory signal
+      - Opacity: Confidence level (solid = high confidence, faded = low confidence)
+    - User thinks: *"I can SEE why it scored me this way. This is transparent."*
+
+**Conversation → Profile Navigation:**
+    - User scrolls through conversation history
+    - Clicks on a message they wrote
+    - Side panel appears showing which facets this message contributed to:
+      - 🤝 Altruism: +18/20
+      - 💭 Emotionality: +14/20
+      - 🎨 Imagination: +12/20
+    - User clicks a facet → jumps to that facet's score in profile view
+    - User thinks: *"My words actually matter. Each thing I said influenced the results."*
+
+**Design Principles for Evidence Highlighting:**
+    1. **Trust Through Transparency:** Users can verify every score by seeing the evidence
+    2. **Self-Reflection Tool:** Contradictions aren't errors; they're opportunities for insight
+    3. **Visual Clarity:** Color-coded highlights make patterns easy to spot
+    4. **Bidirectional Navigation:** Profile ↔ Evidence ↔ Message (seamless flow)
+    5. **Non-Intrusive:** Highlighting is optional; users who don't care can ignore it
+    6. **Confidence Signals:** Opacity and color convey reliability at a glance
+
+**User Experience Flow:**
+    - Step 1: User sees facet score they disagree with
+    - Step 2: Clicks "View Evidence" to understand WHY
+    - Step 3: Sees actual quotes that influenced the score
+    - Step 4: Either: "Oh, I DID say that" (validation) or "That was out of context" (reflection)
+    - Step 5: Returns to conversation to clarify or accepts the score
+
+**Technical Implementation:**
+    - Uses `highlightRange` (character-level start/end) from facet evidence
+    - Frontend highlights exact text using CSS spans
+    - Smooth scroll animation to message location
+    - Persistent highlighting until user navigates away
+    - Mobile-optimized touch targets for evidence items
 
 12. **Precision Transparency**
     - Shows: "Your Archetype (Precision: 72%)"

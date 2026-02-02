@@ -64,9 +64,9 @@ This document provides the complete epic and story breakdown for big-ocean, deco
 
 **FR21:** System maintains full session state on server with resumption via session ID (device switching via URL)
 
-**FR22:** System implements optimistic updates for instant UI feedback (user message appears immediately, synced on server response)
+**FR22:** System maintains session state across device switches without data loss via session URL (loads full conversation history in <1 second when resuming)
 
-**FR23:** System loads full conversation history in <1 second when resuming assessment from different device
+**FR23:** System implements optimistic updates for instant UI feedback (user message appears immediately, synced on server response)
 
 **FR24:** System monitors LLM costs per user and session in real-time
 
@@ -139,18 +139,15 @@ This document provides the complete epic and story breakdown for big-ocean, deco
 | 3. OCEAN Archetype System | 3.1 Code Generation | FR8, FR9 | NFR4 |
 | 3. OCEAN Archetype System | 3.2 Archetype Lookup & Storage | FR10, FR11 | NFR2, NFR4 |
 | 4. Frontend Assessment UI | 4.1 Assessment Component | FR1, FR2, FR4 | NFR2, NFR10 |
-| 4. Frontend Assessment UI | 4.2 Session Resumption (Device Switching) | FR21, FR23 | NFR2, NFR7 |
-| 4. Frontend Assessment UI | 4.3 Optimistic Updates & Progress Indicator | FR4, FR22 | NFR2, NFR10 |
+| 4. Frontend Assessment UI | 4.2 Session Resumption (Device Switching) | FR21, FR22 | NFR2, NFR7 |
+| 4. Frontend Assessment UI | 4.3 Optimistic Updates & Progress Indicator | FR4, FR23 | NFR2, NFR10 |
 | 4. Frontend Assessment UI | 4.4 Authentication UI | — | NFR3 |
+| 4. Frontend Assessment UI | 4.5 Component Documentation (Storybook) | — | NFR3 (Accessibility) |
 | 5. Results & Profiles | 5.1 Results Display | FR5-FR11 | NFR2, NFR4 |
 | 5. Results & Profiles | 5.2 Profile Sharing | FR13, FR14, FR15 | NFR3, NFR6 |
 | 6. Privacy & Data | 6.1 Encryption at Rest | FR17, FR18 | NFR3, NFR6 |
 | 6. Privacy & Data | 6.2 GDPR Implementation | FR19, FR20 | NFR3 |
 | 6. Privacy & Data | 6.3 Audit Logging | FR20 | NFR3 |
-| 7. Testing & Quality | 7.1 Unit Testing Framework | — | — |
-| 7. Testing & Quality | 7.2 Integration Testing | — | — |
-| 7. Testing & Quality | 7.3 E2E Testing | — | — |
-| 7. Testing & Quality | 7.4 Component Documentation | — | — |
 
 ---
 
@@ -159,10 +156,9 @@ This document provides the complete epic and story breakdown for big-ocean, deco
 1. **Infrastructure & Auth Setup** — Railway deployment, authentication, RPC foundation
 2. **Assessment Backend Services** — Nerin orchestration, multi-agent coordination, cost control
 3. **OCEAN Archetype System** — 4-letter code generation, archetype lookup, facet mappings
-4. **Frontend Assessment UI** — Conversation component, real-time sync, progress tracking
+4. **Frontend Assessment UI** — Conversation component, real-time sync, progress tracking, component documentation
 5. **Results & Profile Sharing** — Results display, shareable links, PDF export
 6. **Privacy & Data Management** — Encryption, GDPR compliance, audit logging
-7. **Testing & Quality Assurance** — Test infrastructure, component documentation, CI/CD
 
 ---
 
@@ -347,25 +343,41 @@ So that **I can take time between conversations without losing progress**.
 **Technical Details:**
 
 - **TDD Workflow**: Tests written first (define session contract), implementation follows
-- `sessions` table: `id, userId, createdAt, precision, status (active/paused/completed)`
-- `messages` table: `id, sessionId, role (user/assistant), content, createdAt`
+- Database tables for session persistence:
+  - `sessions` table: `id, userId, createdAt, precision, status (active/paused/completed)`
+  - `assessment_messages` table: `id, sessionId, role (user/assistant), content, createdAt`
+  - `facet_evidence` table: `id, messageId, facet, score, confidence, quote, highlightStart, highlightEnd, createdAt`
+  - `facet_scores` table: `id, sessionId, facet, score, confidence, updatedAt`
+  - `trait_scores` table: `id, sessionId, trait, score, confidence, updatedAt`
 - Session state stored entirely server-side
 - Resume via URL: `/assessment?sessionId={sessionId}`
-- History load on resume: TanStack Query fetches all messages + precision from server
-- Session restoration: <1 second load time for full history
+- History load on resume: TanStack Query fetches:
+  - All messages
+  - All facet evidence linked to messages
+  - Current facet scores (aggregated)
+  - Current trait scores (derived)
+  - Overall precision metric
+- Session restoration: <1 second load time for full history + evidence + scores
 - Unit test coverage: 100% of session CRUD operations
 
 **Acceptance Checklist:**
 - [ ] Failing tests written first covering session scenarios (red phase)
 - [ ] Tests verify session creation and ID uniqueness
 - [ ] Tests verify message persistence
+- [ ] Tests verify facet evidence persistence
+- [ ] Tests verify facet/trait score persistence
 - [ ] Tests verify precision restoration
 - [ ] Implementation passes all tests (green phase)
 - [ ] Session created on startAssessment
-- [ ] Messages persisted in database
+- [ ] Messages persisted in assessment_messages table
+- [ ] Facet evidence persisted in facet_evidence table
+- [ ] Facet scores persisted in facet_scores table
+- [ ] Trait scores persisted in trait_scores table
 - [ ] Session resume loads full conversation history
+- [ ] Session resume restores all facet evidence
+- [ ] Session resume restores facet and trait scores
 - [ ] Precision scores restored on resume
-- [ ] History loads in <1 second
+- [ ] History loads in <1 second (including evidence + scores)
 - [ ] Can resume from different device via session URL
 - [ ] 100% unit test coverage for SessionManager
 
@@ -431,68 +443,97 @@ So that **the assessment feels authentic and I stay engaged for the full 30 minu
 
 ---
 
-### Story 2.3: Analyzer and Scorer Agent Implementation (TDD)
+### Story 2.3: Evidence-Based Analyzer and Scorer Implementation (TDD)
 
 As a **Backend System**,
-I want **to extract patterns from conversation and score all 30 Big Five facets**,
-So that **I can derive accurate trait scores and continuously improve precision estimates**.
+I want **to create facet evidence from each message and aggregate evidence into scores**,
+So that **I can provide transparent, testable personality assessment with user-visible evidence trails**.
 
 **Acceptance Criteria:**
 
 **TEST-FIRST (Red Phase):**
-**Given** tests are written for facet scoring
-**When** I run `pnpm test scorer.test.ts`
-**Then** tests fail (red) because Scorer implementation doesn't exist
+**Given** tests are written for evidence-based facet scoring
+**When** I run `pnpm test analyzer.test.ts scorer.test.ts`
+**Then** tests fail (red) because implementations don't exist
 **And** each test defines expected behavior:
-  - Test: Scorer takes conversation patterns → returns 30 facet scores (0-20)
-  - Test: Trait means calculated correctly (sum of 6 facets / 6)
-  - Test: Precision increases with more data points
-  - Test: Same patterns produce deterministic scores (no randomness)
+  - Test: Analyzer creates FacetEvidence records with messageId, facet (clean name), numeric score (0-20), confidence, quote, highlightRange
+  - Test: Scorer aggregates FacetEvidence[] by facet using weighted averaging
+  - Test: Scorer detects contradictions via variance analysis (high variance → lower confidence)
+  - Test: Trait scores computed from facet averages using FACET_TO_TRAIT lookup
+  - Test: Statistics (mean, variance, sampleSize) computed on-demand, not stored
 
-**IMPLEMENTATION (Green Phase):**
-**Given** 3 user messages have been received
-**When** the Analyzer is triggered
-**Then** it extracts relevant personality patterns from conversation (e.g., "prefers solitude" → low Gregariousness facet)
-**And** the Scorer calculates scores for all 30 facets (0-20 scale each)
-**And** trait scores are computed by taking the mean of related facets:
-  - Openness = mean(Imagination, Artistic Interests, Emotionality, Adventurousness, Intellect, Liberalism)
-  - Conscientiousness = mean(Self-Efficacy, Orderliness, Dutifulness, Achievement-Striving, Self-Discipline, Cautiousness)
-  - Extraversion = mean(Friendliness, Gregariousness, Assertiveness, Activity Level, Excitement-Seeking, Cheerfulness)
-  - Agreeableness = mean(Trust, Morality, Altruism, Cooperation, Modesty, Sympathy)
-  - Neuroticism = mean(Anxiety, Anger, Depression, Self-Consciousness, Immoderation, Vulnerability)
-**And** precision confidence increases based on facet score convergence and pattern strength
-**And** all failing tests now pass (green)
+**IMPLEMENTATION (Green Phase - Analyzer):**
+**Given** a user message is received
+**When** the Analyzer processes it
+**Then** it detects 30 facet signals and creates FacetEvidence records:
+  - messageId: Reference to assessment_messages.id
+  - facet: Clean name ("altruism" not "agreeableness_altruism")
+  - score: Numeric 0-20 (analyzer's suggestion for THIS message)
+  - confidence: 0.0-1.0 (analyzer's confidence in this interpretation)
+  - quote: Exact phrase from message
+  - highlightRange: { start: charIndex, end: charIndex }
+**And** evidence is stored in facet_evidence table
+**And** analyzer tests pass (green)
+
+**IMPLEMENTATION (Green Phase - Scorer):**
+**Given** multiple FacetEvidence records exist for a facet
+**When** the Scorer aggregates (every 3 messages)
+**Then** it calculates aggregated score using weighted averaging:
+  - Weighted by confidence + recency (recent messages weighted higher)
+  - Variance calculated to detect contradictions
+  - Confidence adjusted: high variance → -0.3 penalty, more samples → +0.2 bonus
+**And** statistics computed on-demand from evidence:
+  - mean = average of all scores
+  - variance = measure of contradiction
+  - sampleSize = number of evidence records
+**And** Result stored as Record<FacetName, FacetScore> (no redundant facet field)
+**And** scorer tests pass (green)
+
+**IMPLEMENTATION (Green Phase - Aggregator):**
+**Given** facet scores are computed
+**When** the Aggregator derives traits
+**Then** it uses FACET_TO_TRAIT lookup to group facets by trait
+**And** trait score = mean of facet scores
+**And** trait confidence = minimum confidence across facets
+**And** Traits stored as Record<TraitName, TraitScore>
+**And** aggregator tests pass (green)
 
 **INTEGRATION:**
-**Given** precision is updated
+**Given** facet evidence and scores exist
 **When** the frontend renders results
-**Then** facet scores are visible (all 30, user-selectable by trait)
-**And** trait scores reflect the mean of facets
-**And** the "you're X% assessed" progress bar updates
-**And** precision stability is visible (e.g., "High confidence in Openness based on 4 facets")
+**Then** users can click facet score → view evidence with quotes
+**And** users can click message → view contributing facets
+**And** UI highlights exact quote using highlightRange
+**And** precision bar updates based on facet confidence
+**And** trait scores reflect means of facets
 
 **Technical Details:**
 
-- **TDD Workflow**: Tests written first (define contracts), implementation follows
-- Analyzer: Extracts personality patterns using Claude API (cheaper model option)
-- Scorer: Calculates facet scores (0-20 scale) using deterministic algorithm
-- Facet list: 30 facets across 5 traits (6 per trait)
-- Trait calculation: `traitScore = mean(facet1, facet2, ..., facet6)` for each trait
-- Score storage: Database stores all 30 facet scores, computed trait scores, and precision
-- Batch execution: Analyzer/Scorer run every 3 messages (configurable)
-- Determinism: Same conversation patterns always produce same facet → same trait scores
-- Unit test coverage: 100% of Scorer logic (all facet calculations, trait means, edge cases)
+- **Unified FacetEvidence Type**: Single type for Analyzer output and Scorer input
+- **Clean Facet Naming**: "imagination", "altruism", "orderliness" (no trait prefixes)
+- **Database Schema**:
+  - facet_evidence: id, messageId (FK), facet, score, confidence, quote, highlightStart, highlightEnd
+  - facet_scores: id, sessionId, facet, score, confidence (statistics NOT stored)
+  - trait_scores: id, sessionId, trait, score, confidence
+- **Facet-First Data Model**: 30 facets → 5 traits (traits derived from facets)
+- **Record Storage Pattern**: `Record<FacetName, FacetScore>` (efficient O(1) lookup)
+- **Statistics Computed**: mean/variance/sampleSize calculated from facet_evidence, not stored redundantly
+- **Bidirectional Navigation**: Profile ↔ Evidence ↔ Message (messageId enables linking)
+- **Batch Execution**: Analyzer per message, Scorer every 3 messages
 
 **Acceptance Checklist:**
 - [ ] Failing tests written first (red phase)
-- [ ] Tests cover all 30 facet scoring scenarios
-- [ ] Tests verify trait mean calculation
-- [ ] Tests verify determinism (same input → same output)
+- [ ] Tests verify FacetEvidence creation with messageId
+- [ ] Tests verify clean facet naming (no prefixes)
+- [ ] Tests verify Scorer aggregation logic (weighted average)
+- [ ] Tests verify contradiction detection (variance analysis)
+- [ ] Tests verify trait derivation from facets
+- [ ] Tests verify statistics are computed, not stored
 - [ ] Implementation passes all tests (green phase)
-- [ ] Analyzer extracts patterns from 3+ messages
-- [ ] Trait scores verified: trait = mean(facets) for all 5 traits
-- [ ] Precision increases as more facet data gathered
-- [ ] 100% unit test coverage for Scorer module
+- [ ] Evidence stored in facet_evidence table
+- [ ] Facet scores stored as Record<FacetName, FacetScore>
+- [ ] Bidirectional navigation works (Profile ↔ Message)
+- [ ] 100% unit test coverage for Analyzer, Scorer, Aggregator
 
 ---
 
@@ -533,8 +574,16 @@ So that **I optimize for quality + cost by running expensive operations only whe
 **Technical Details:**
 
 - **TDD Workflow**: Tests written first (define routing contracts), implementation follows
-- LangGraph state machine with nodes: Nerin, Analyzer, Scorer
-- State includes: messages, precision, cost spent, precision gaps
+- LangGraph state machine with nodes: Nerin, Analyzer, Scorer, Aggregator
+- State includes:
+  - messages: conversation history
+  - facetEvidence: FacetEvidence[] (created by Analyzer)
+  - facetScores: Record<FacetName, FacetScore> (aggregated by Scorer)
+  - traitScores: Record<TraitName, TraitScore> (derived by Aggregator)
+  - precision: overall confidence metric
+  - cost: accumulated spend
+  - precisionGaps: lowest-confidence facets for Router guidance
+- Pipeline flow: Analyzer (per message) → Scorer (every 3 messages) → Aggregator (derives traits) → Router (guides Nerin)
 - Routing logic: Always Nerin, conditional Analyzer/Scorer (every 3 msgs or low precision)
 - Cost-aware routing: Skip expensive ops if approaching budget
 - Deterministic: Same state always produces same routing decision
@@ -689,7 +738,10 @@ So that **the same facet scores always produce the same trait levels for storage
 
 - **TDD Workflow**: Tests written first (cover all 243 combinations), implementation follows
 - Facet → Trait aggregation:
+  - Uses FACET_TO_TRAIT lookup table to group facets by trait
   - Trait score = mean of 6 related facets (each 0-20 scale)
+  - Example: `FACET_TO_TRAIT["altruism"] = "agreeableness"`
+  - Facet names are clean (no trait prefixes): "imagination", "altruism", "orderliness"
   - Result is 0-20 scale for the trait
 - Trait → Level mapping:
   - 0-6.67: Low (L)
@@ -782,7 +834,7 @@ So that **the archetype feels personal and shareable**.
 
 ## Epic 4: Frontend Assessment UI
 
-**Goal:** Build the conversational assessment interface with real-time sync, progress tracking, and seamless user experience.
+**Goal:** Build the conversational assessment interface with real-time sync, progress tracking, component documentation, and seamless user experience.
 
 **Dependencies:**
 - Epic 1 (RPC contracts)
@@ -793,9 +845,9 @@ So that **the archetype feels personal and shareable**.
 
 **Blocked By:** Epics 1, 2, 3 must complete first
 
-**Parallel Development:** Can design UI components + storybook docs (Epic 7) in parallel with backend work
+**Parallel Development:** Can design UI components in parallel with backend work; Storybook documentation can be added as components are completed
 
-**User Value:** Delivers engaging, responsive assessment experience with instant feedback and progress visibility
+**User Value:** Delivers engaging, responsive assessment experience with instant feedback, progress visibility, and documented component library for team onboarding
 
 ### Story 4.1: Authentication UI (Sign-Up Modal)
 
@@ -859,6 +911,11 @@ So that **the assessment feels like a natural dialogue**.
 **Then** layout is responsive and readable on small screens
 **And** keyboard doesn't obscure message input
 
+**Given** I click on any message I wrote (Story 5.3 integration)
+**When** the click is registered
+**Then** a side panel opens showing which facets this message contributed to
+**And** each facet is clickable to navigate to profile
+
 **Technical Details:**
 
 - React component: `AssessmentUI.tsx`
@@ -867,6 +924,8 @@ So that **the assessment feels like a natural dialogue**.
 - Streaming response display (word-by-word)
 - Optimistic insert: message added locally before server confirms
 - Mobile-responsive with Tailwind CSS v4
+- **NEW:** Message click handlers for evidence highlighting (Story 5.3)
+- **NEW:** Support for text highlighting via `highlightRange` (Story 5.3)
 
 **Acceptance Checklist:**
 - [ ] Conversation displays message list
@@ -875,6 +934,8 @@ So that **the assessment feels like a natural dialogue**.
 - [ ] Scrolling shows full history
 - [ ] Mobile layout is readable
 - [ ] Input field accessible and responsive
+- [ ] User messages are clickable (Story 5.3 dependency)
+- [ ] Messages support text highlighting (Story 5.3 dependency)
 
 ---
 
@@ -912,6 +973,13 @@ So that **I can start on desktop and finish on mobile without losing progress**.
 **And** Nerin generates response
 **And** both devices reflect new message (if both open)
 
+**Given** I reach 70%+ precision and see celebration screen with results
+**When** I click "Keep Exploring" CTA
+**Then** conversation interface remains open in same session
+**And** I can continue chatting with Nerin seamlessly
+**And** precision continues to improve with additional messages
+**And** no new session is created (session ID unchanged)
+
 **Technical Details:**
 
 - **TDD Workflow**: Tests written first (define resumption contract), implementation follows
@@ -931,11 +999,14 @@ So that **I can start on desktop and finish on mobile without losing progress**.
 - [ ] Tests verify load time <1 second
 - [ ] Tests verify precision accuracy
 - [ ] Tests verify cross-device resumption
+- [ ] Tests verify "Keep Exploring" continuation flow
 - [ ] Implementation passes all tests (green phase)
 - [ ] Resume endpoint returns full session state
 - [ ] History loads in <1 second
 - [ ] Can resume from different device
 - [ ] No message loss on device switch
+- [ ] "Keep Exploring" CTA continues same session without creating new one
+- [ ] User can chat seamlessly after viewing 70% results
 - [ ] 100% unit test coverage for SessionResumption
 
 ---
@@ -972,6 +1043,16 @@ So that **I get instant feedback and feel motivated to continue**.
 **And** "You're X% assessed" message updates
 **And** "You're nearly there!" shows when >80%
 
+**Given** precision reaches 70%+ for the first time
+**When** the precision update arrives
+**Then** a celebration screen appears: "Your Personality Profile is Ready!"
+**And** archetype revealed with visual design flourish
+**And** precision score displayed prominently (e.g., "Precision: 73%")
+**And** two prominent CTAs presented:
+  1. "Share My Archetype" — Generate shareable link
+  2. "Keep Exploring" — Continue refining in same session
+**And** user can choose either path without friction
+
 **Technical Details:**
 
 - **TDD Workflow**: Tests written first (define optimistic update contracts), implementation follows
@@ -992,14 +1073,55 @@ So that **I get instant feedback and feel motivated to continue**.
 - [ ] Tests verify immediate message appearance
 - [ ] Tests verify progress calculation
 - [ ] Tests verify animation smoothness
+- [ ] Tests verify 70% celebration trigger
 - [ ] Implementation passes all tests (green phase)
 - [ ] Messages appear instantly (optimistic)
 - [ ] Input field clears immediately
 - [ ] Progress bar displays precision
 - [ ] Updates animate smoothly
 - [ ] Correct labels shown at thresholds
+- [ ] 70% celebration screen appears with archetype reveal
+- [ ] Two CTAs present: "Share My Archetype" and "Keep Exploring"
 - [ ] Mobile-responsive
 - [ ] 100% unit test coverage for optimistic updates
+
+---
+
+### Story 4.5: Component Documentation with Storybook
+
+As a **Frontend Developer**,
+I want **to document all UI components in Storybook with interactive examples**,
+So that **other devs can browse components before writing custom code and ensure accessibility compliance**.
+
+**Acceptance Criteria:**
+
+**Given** I start Storybook with `pnpm -C packages/ui storybook`
+**When** I navigate to Components
+**Then** I see all shadcn/ui components with:
+  - Live examples of each variant
+  - Props documentation
+  - Accessibility checks (WCAG AA/AAA)
+  - Design pattern explanations
+
+**Given** a component has accessibility issues
+**When** Storybook a11y addon runs
+**Then** violations are highlighted with explanations
+
+**Technical Details:**
+
+- Storybook 10.1.11 (latest stable)
+- `.stories.tsx` files for each component
+- Autodocs: `tags: ["autodocs"]`
+- a11y addon: `@storybook/addon-a11y`
+- Deployment: GitHub Pages via CI
+
+**Acceptance Checklist:**
+- [ ] Storybook installed and configured
+- [ ] Button, Input, Dialog, Card components documented
+- [ ] Assessment UI components (NerinMessage, PrecisionMeter, ArchetypeCard) documented
+- [ ] Stories show all variants
+- [ ] a11y addon finds and reports accessibility issues
+- [ ] Storybook builds successfully for deployment
 
 ---
 
@@ -1021,11 +1143,11 @@ So that **I get instant feedback and feel motivated to continue**.
 
 **User Value:** Users can share personality insights virally while maintaining privacy control
 
-### Story 5.1: Display Assessment Results
+### Story 5.1: Display Assessment Results with Evidence-Based Scores
 
 As a **User**,
-I want **to see my personality summarized with my archetype name, trait levels, and facet descriptions**,
-So that **I understand what my assessment revealed**.
+I want **to see my personality summarized with my archetype name, trait levels, and facet descriptions with evidence**,
+So that **I understand what my assessment revealed and can verify the accuracy**.
 
 **Acceptance Criteria:**
 
@@ -1041,9 +1163,18 @@ So that **I understand what my assessment revealed**.
 **Given** I expand Openness trait details
 **When** the facet breakdown appears
 **Then** I see:
-  - All 6 facet scores (0-20 scale): Imagination, Artistic Interests, Emotionality, Adventurousness, Intellect, Liberalism
+  - All 6 facet scores (0-20 scale) with clean names: Imagination, Artistic Interests, Emotionality, Adventurousness, Intellect, Liberalism
   - Average of these 6 facets = Openness trait score (High/Mid/Low)
   - Top-scoring facets highlighted (e.g., "Imagination: 16/20" and "Intellect: 15/20")
+  - **NEW:** "View Evidence" button next to each facet score
+  - Confidence indicator per facet (0.0-1.0 displayed as percentage)
+
+**Given** I click "View Evidence" on any facet
+**When** the evidence panel opens
+**Then** I see (Story 5.3 details):
+  - List of supporting message quotes
+  - Score contribution per quote
+  - "Jump to Message" links
 
 **Given** precision < 50%
 **When** results are viewed
@@ -1052,23 +1183,29 @@ So that **I understand what my assessment revealed**.
 
 **Technical Details:**
 
-- Results component fetches all 30 facet scores from database
-- Displays trait levels (High/Mid/Low) derived from facet means
+- Results component fetches all 30 facet scores from database (stored as `Record<FacetName, FacetScore>`)
+- Facet names are clean (no trait prefixes): "imagination" not "openness_imagination"
+- Displays trait levels (High/Mid/Low) derived from facet means using FACET_TO_TRAIT lookup
 - Trait score = mean of 6 related facet scores
+- Facet confidence displayed based on evidence consistency (adjusted for contradictions)
 - Shows facet breakdown on demand (expandable sections)
 - Color-coded by trait
 - Archetype description is pre-written (not LLM-generated)
 - Precision shown as facet convergence metric
+- Evidence button links to Story 5.3 highlighting feature
 
 **Acceptance Checklist:**
 - [ ] Results component displays archetype name
 - [ ] Trait levels shown (High/Mid/Low) computed from facet means
-- [ ] All 30 facet scores stored and retrievable
+- [ ] All 30 facet scores stored as Record<FacetName, FacetScore>
+- [ ] Facet names are clean (no "trait_" prefixes)
 - [ ] Facet details expandable for each trait
 - [ ] Facet breakdown shows how mean is calculated
+- [ ] Each facet shows confidence percentage
+- [ ] "View Evidence" button visible for each facet
 - [ ] Archetype description visible
 - [ ] Color differentiation applied by trait
-- [ ] Precision calculation considers facet convergence
+- [ ] Precision calculation considers facet convergence and variance
 - [ ] Low precision shows appropriate message with partial facet data
 
 ---
@@ -1120,6 +1257,123 @@ So that **others can see my personality archetype without accessing my full asse
 
 ---
 
+### Story 5.3: Bidirectional Evidence Highlighting and Transparency (TDD)
+
+As a **User**,
+I want **to see exactly which conversation quotes influenced each facet score**,
+So that **I can verify the accuracy and understand how my results were calculated**.
+
+**Acceptance Criteria:**
+
+**TEST-FIRST (Red Phase):**
+**Given** tests are written for evidence highlighting
+**When** I run `pnpm test evidence-highlighting.test.ts`
+**Then** tests fail (red) because highlighting components don't exist
+**And** each test defines expected behavior:
+  - Test: Clicking facet score opens evidence panel with quotes
+  - Test: Clicking "Jump to Message" scrolls to message and highlights quote
+  - Test: Clicking message opens side panel with contributing facets
+  - Test: Highlight colors match evidence confidence (green/yellow/red)
+  - Test: highlightRange accurately highlights exact text in message
+
+**IMPLEMENTATION (Green Phase - Profile → Conversation):**
+**Given** I'm viewing my profile results
+**When** I click "View Evidence" on a facet score (e.g., "Altruism: 16/20")
+**Then** an evidence panel opens showing:
+  - List of all supporting message quotes
+  - Each quote shows: message timestamp, quote text, score contribution (0-20)
+  - Contradictory quotes marked with red indicator
+  - "Jump to Message" button for each quote
+**And** panel design:
+  - Scrollable list (max 10 visible, scroll for more)
+  - Color-coded contribution: Green (15+), Yellow (8-14), Red (<8 or contradictory)
+  - Confidence indicator per quote (opacity reflects confidence)
+
+**Given** I click "Jump to Message" in evidence panel
+**When** the conversation scrolls to that message
+**Then** the exact quote is highlighted in the message:
+  - Green highlight: Strong positive signal (score 15+)
+  - Yellow highlight: Moderate signal (score 8-14)
+  - Red highlight: Contradictory signal (score <8 or conflicts with other evidence)
+  - Opacity: High confidence = solid, low confidence = faded
+**And** highlight persists until I navigate away
+**And** smooth scroll animation to message location
+
+**IMPLEMENTATION (Green Phase - Conversation → Profile):**
+**Given** I'm viewing my conversation history
+**When** I click on any message I wrote
+**Then** a side panel opens showing:
+  - "This message contributed to:"
+  - List of facets with score contributions:
+    - 🤝 Altruism: +18/20 (strong signal)
+    - 💭 Emotionality: +14/20 (moderate)
+    - 🎨 Imagination: +12/20 (moderate)
+  - Each facet is clickable
+
+**Given** I click a facet in the side panel
+**When** the click is registered
+**Then** the view navigates to profile page
+**And** scrolls to that facet's score
+**And** optionally opens the evidence panel for that facet
+
+**INTEGRATION:**
+**Given** evidence highlighting is implemented
+**When** I interact with profile and conversation views
+**Then** bidirectional navigation works seamlessly:
+  - Profile → Evidence → Message (forward navigation)
+  - Message → Facets → Profile (backward navigation)
+**And** all highlighting is precise and color-coded
+**And** mobile touch targets are ≥44px for all evidence items
+**And** tests pass (green)
+
+**Technical Details:**
+
+- **Database Queries:**
+  - Profile → Evidence: `SELECT * FROM facet_evidence WHERE facet = 'altruism' ORDER BY created_at`
+  - Message → Facets: `SELECT * FROM facet_evidence WHERE message_id = 'msg_123'`
+  - Evidence includes: messageId (FK), facet, score, confidence, quote, highlightStart, highlightEnd
+
+- **Frontend Components:**
+  - `EvidencePanel`: Modal/panel showing evidence list for a facet
+  - `EvidenceItem`: Individual quote with score and "Jump to Message" button
+  - `MessageHighlight`: CSS-based text highlighting using highlightRange
+  - `FacetSidePanel`: Side panel showing facets contributed by a message
+
+- **Highlighting Logic:**
+  - Uses `highlightRange.start` and `highlightRange.end` (character indices)
+  - Wraps text with `<span class="highlight highlight-{color}">` using CSS
+  - Color determined by: score ≥15 (green), 8-14 (yellow), <8 (red)
+  - Opacity determined by: confidence (0.3 = low, 1.0 = high)
+
+- **Navigation:**
+  - Smooth scroll: `element.scrollIntoView({ behavior: 'smooth', block: 'center' })`
+  - URL state management: Optional query params `?highlight=msg_123&facet=altruism`
+  - Mobile-optimized: Touch targets ≥44px, swipe-friendly panels
+
+- **Performance:**
+  - Lazy load evidence (fetch only when "View Evidence" clicked)
+  - Virtualized list for messages with 100+ evidence items
+  - Debounced highlighting to avoid layout thrashing
+
+**Acceptance Checklist:**
+- [ ] Failing tests written first (red phase)
+- [ ] Tests cover Profile → Evidence → Message flow
+- [ ] Tests cover Message → Facets → Profile flow
+- [ ] Tests verify color-coded highlighting
+- [ ] Tests verify highlightRange accuracy
+- [ ] Implementation passes all tests (green phase)
+- [ ] "View Evidence" button opens evidence panel
+- [ ] Evidence panel shows all supporting quotes
+- [ ] "Jump to Message" scrolls and highlights quote
+- [ ] Message click opens facet side panel
+- [ ] Facet click navigates to profile
+- [ ] Color coding matches score ranges (green/yellow/red)
+- [ ] Opacity reflects confidence levels
+- [ ] Mobile touch targets ≥44px
+- [ ] Smooth scroll animations work
+- [ ] 100% unit test coverage for highlighting components
+
+---
 
 ## Epic 6: Privacy & Data Management
 
@@ -1140,7 +1394,7 @@ So that **others can see my personality archetype without accessing my full asse
 ### Story 6.1: Server-Side Encryption at Rest and TLS in Transit (TDD)
 
 As a **Security Engineer**,
-I want **all user conversation data encrypted at rest in the database and encrypted in transit**,
+I want **all user conversation data, facet evidence, and assessment scores encrypted at rest in the database and encrypted in transit**,
 So that **users trust the platform with personal assessment data and network eavesdropping is prevented**.
 
 **Acceptance Criteria:**
@@ -1151,6 +1405,8 @@ So that **users trust the platform with personal assessment data and network eav
 **Then** tests fail (red) because encryption implementation doesn't exist
 **And** each test defines expected behavior:
   - Test: Conversation data encrypted with AES-256-GCM at rest
+  - Test: Facet evidence (quotes, scores) encrypted with AES-256-GCM at rest
+  - Test: Assessment scores (facet/trait) encrypted at rest
   - Test: Encryption key derived from master secret (not user password)
   - Test: Database stores only encrypted ciphertext, no plaintext
   - Test: Decryption works for authorized backend services
@@ -1158,11 +1414,14 @@ So that **users trust the platform with personal assessment data and network eav
   - Test: Security headers present (HSTS, X-Content-Type-Options, X-Frame-Options)
 
 **IMPLEMENTATION (Green Phase):**
-**Given** user conversation is stored
+**Given** user conversation and assessment data is stored
 **When** it's written to database
-**Then** it's encrypted using AES-256-GCM
+**Then** all sensitive data is encrypted using AES-256-GCM:
+  - Conversation messages (assessment_messages.content)
+  - Facet evidence quotes (facet_evidence.quote)
+  - User profile data
 **And** encryption key is derived from master secret (stored securely in Railway environment)
-**And** encrypted data stored in PostgreSQL conversation table
+**And** encrypted data stored in PostgreSQL tables (assessment_messages, facet_evidence, sessions)
 **And** backend services can decrypt for authorized access
 **And** encryption tests pass (green)
 
@@ -1192,17 +1451,21 @@ So that **users trust the platform with personal assessment data and network eav
 **Acceptance Checklist:**
 - [ ] Failing tests written first covering encryption/TLS scenarios (red phase)
 - [ ] Tests verify AES-256-GCM encryption
+- [ ] Tests verify facet evidence encryption (quotes)
+- [ ] Tests verify assessment score encryption
 - [ ] Tests verify master key management
 - [ ] Tests verify encrypted storage in database
 - [ ] Tests verify TLS 1.3 enforcement
 - [ ] Tests verify all security headers present
 - [ ] Implementation passes all tests (green phase)
 - [ ] Conversation data encrypted before database storage
+- [ ] Facet evidence quotes encrypted in facet_evidence table
+- [ ] Assessment scores encrypted in facet_scores/trait_scores tables
 - [ ] Master key stored securely in Railway env vars
 - [ ] TLS 1.3 enforced on all API endpoints
 - [ ] All security headers configured
 - [ ] Decryption works for authorized backend services
-- [ ] No plaintext conversation data stored
+- [ ] No plaintext conversation or evidence data stored
 - [ ] 100% unit test coverage for encryption module
 
 ---
@@ -1221,8 +1484,9 @@ So that **I have control over my personal information** (GDPR Article 17, 20).
 **Then** tests fail (red) because GDPR endpoints don't exist
 **And** each test defines expected behavior:
   - Test: Data export returns valid JSON with all user data
-  - Test: Export includes all assessments, conversations, archetypes
-  - Test: Account deletion removes all data (30-day soft delete)
+  - Test: Export includes all assessments, conversations, archetypes, facet evidence
+  - Test: Export includes all facet/trait scores with timestamps
+  - Test: Account deletion removes all data including evidence (30-day soft delete)
   - Test: Deleted data is unrecoverable after 30 days
   - Test: Audit log records all deletion events
 
@@ -1237,8 +1501,9 @@ So that **I have control over my personal information** (GDPR Article 17, 20).
 **When** I click "Download My Data"
 **Then** a JSON file is generated with:
   - Profile info (email, signup date)
-  - All assessments (results, OCEAN codes)
-  - Full conversation transcripts
+  - All assessments (results, OCEAN codes, facet/trait scores)
+  - Full conversation transcripts with timestamps
+  - Facet evidence (all quotes, scores, confidence ratings)
   - Archetype history
 **And** file is downloadable immediately
 **And** export tests pass
@@ -1255,11 +1520,14 @@ So that **I have control over my personal information** (GDPR Article 17, 20).
 **Acceptance Checklist:**
 - [ ] Failing tests written first covering delete & export scenarios (red phase)
 - [ ] Tests verify export JSON structure and completeness
-- [ ] Tests verify soft-delete mechanism
+- [ ] Tests verify facet evidence included in export
+- [ ] Tests verify soft-delete removes evidence data
 - [ ] Tests verify audit logging on deletion
 - [ ] Implementation passes all tests (green phase)
-- [ ] Delete account removes all user data
-- [ ] Data export includes all assessments
+- [ ] Delete account removes all user data (messages, evidence, scores)
+- [ ] Data export includes all assessments with facet evidence
+- [ ] Export includes conversation transcripts with evidence quotes
+- [ ] Export includes facet/trait scores with timestamps
 - [ ] Export is valid JSON
 - [ ] 30-day retention enforced
 - [ ] Audit log records deletions
@@ -1328,191 +1596,6 @@ So that **we can audit who accessed what data and when**.
 
 ---
 
-## Epic 7: Testing & Quality Assurance
-
-**Goal:** Implement comprehensive testing infrastructure covering unit, integration, E2E, and component documentation.
-
-**Dependencies:**
-- Epic 1 (infrastructure setup for test database)
-- Epics 2-6 (features to be tested)
-
-**Enables:** Confidence in code quality, automated regression prevention, team onboarding via component docs
-
-**Parallel Development:** Test framework setup can begin in Epic 1; unit tests written during Epics 2-5; integration/E2E tests after features exist
-
-**Note:** Not a blocker for launch (can test manually in MVP), but recommended to have basic test infrastructure by launch
-
-**User Value:** High confidence in code quality, regression prevention, and component library documentation
-
-### Story 7.1: Unit Testing Framework Setup & TDD Pattern
-
-As a **Developer**,
-I want **to set up Vitest with Test-Driven Development (TDD) workflow for backend features**,
-So that **all domain logic, RPC contracts, and backend services are built with comprehensive test coverage**.
-
-**Acceptance Criteria:**
-
-**Given** Vitest is configured across the monorepo
-**When** I run `pnpm test`
-**Then** all unit tests execute in <2 seconds total
-**And** I can run `pnpm test --ui` for interactive test browser
-**And** coverage reports generated showing domain logic at 100%
-
-**Given** I'm implementing a domain feature (e.g., OCEAN code generation)
-**When** I follow TDD red-green-refactor cycle
-**Then** I write failing test first (red phase)
-**And** test defines expected behavior with assertion
-**And** I implement code to pass test (green phase)
-**And** I refactor for clarity while keeping tests green
-
-**Given** a backend feature story requires testing
-**When** the story is implemented
-**Then** unit tests exist for all code paths
-**And** coverage report shows ≥100% for domain logic, ≥90% for RPC contracts
-
-**Technical Details:**
-
-- Vitest ESM-native configuration
-- Test files: `*.test.ts` in packages/domain, packages/contracts, packages/database
-- TDD workflow: Test → Implementation → Refactor
-- Test utilities: describe/it/expect with vitest
-- Snapshot testing for OCEAN archetype descriptions
-- Mock utilities for external dependencies (Anthropic API, database)
-- Coverage target: 100% domain logic, 90%+ RPC contracts, 60% UI
-- `@vitest/ui` for interactive test browser
-- CI integration: tests run on every PR
-
-**TDD Examples for Backend Epics:**
-- **Story 2.3 (Analyzer & Scorer)**: Write facet scoring tests first, then implement scorer
-- **Story 3.1 (OCEAN Code Gen)**: Write tests for all 243 trait level combinations, then implement code generator
-- **Story 2.5 (Cost Tracking)**: Write cost calculation tests, then implement tracker
-- **Story 6.1 (Encryption)**: Write encryption/decryption roundtrip tests, then implement crypto layer
-
-**Acceptance Checklist:**
-- [ ] Vitest installed, configured, and working
-- [ ] Sample TDD test written (red → green → refactor cycle demonstrated)
-- [ ] Test utilities + mocks available for common patterns
-- [ ] Coverage reports generated and tracked
-- [ ] Tests run in CI on every PR
-- [ ] `pnpm test --ui` interactive browser functional
-- [ ] Documentation of TDD workflow for team
-
----
-
-### Story 7.2: Integration Testing with Real Database
-
-As a **Developer**,
-I want **to test RPC handlers with actual PostgreSQL to verify database interactions**,
-So that **I catch query bugs before production**.
-
-**Acceptance Criteria:**
-
-**Given** TestContainers is configured
-**When** I run `pnpm test assessment.integration`
-**Then** a PostgreSQL container spins up automatically
-**And** migrations run
-**And** tests execute against real database
-**And** container is torn down after tests complete
-
-**Given** a test calls `startAssessment` RPC
-**When** the handler runs
-**Then** a session is created in database
-**And** test verifies the session exists and has correct data
-
-**Technical Details:**
-
-- TestContainers: `new GenericContainer("postgres:16")`
-- Automatic port mapping
-- Database cleanup after each test
-- Test utilities: `testDb.start()`, `testDb.cleanup()`
-- Cost: ~1 min per test suite (acceptable)
-
-**Acceptance Checklist:**
-- [ ] TestContainers working
-- [ ] PostgreSQL spins up automatically
-- [ ] Migrations run in test DB
-- [ ] Tests verify database state
-- [ ] Cleanup works
-
----
-
-### Story 7.3: E2E Testing with Playwright
-
-As a **QA Engineer**,
-I want **to test the complete assessment flow from start to results**,
-So that **I catch UI bugs and integration issues**.
-
-**Acceptance Criteria:**
-
-**Given** Playwright is configured
-**When** I run `pnpm -C apps/front exec playwright test`
-**Then** browsers open and test the assessment flow:
-  1. Navigate to home
-  2. Click "Start Assessment"
-  3. Send 5 messages
-  4. Verify results display
-  5. Click "Share"
-  6. Verify profile link works
-
-**Given** a test fails
-**When** I check artifacts
-**Then** screenshots of failure are saved
-**And** video of test session is recorded
-
-**Technical Details:**
-
-- Playwright test runner
-- Multi-browser: Chromium, Firefox, WebKit
-- Test scenarios: happy path, resume, error handling
-- Video recording: `on-failure`
-- Screenshots: `only-on-failure`
-
-**Acceptance Checklist:**
-- [ ] Playwright tests written
-- [ ] Happy path test passes
-- [ ] Error cases tested
-- [ ] Artifacts captured on failure
-- [ ] Tests run in <5 minutes
-
----
-
-### Story 7.4: Component Documentation with Storybook
-
-As a **Frontend Developer**,
-I want **to document all UI components in Storybook with interactive examples**,
-So that **other devs can browse components before writing custom code**.
-
-**Acceptance Criteria:**
-
-**Given** I start Storybook with `pnpm -C packages/ui storybook`
-**When** I navigate to Components
-**Then** I see all shadcn/ui components with:
-  - Live examples of each variant
-  - Props documentation
-  - Accessibility checks (WCAG AA/AAA)
-  - Design pattern explanations
-
-**Given** a component has accessibility issues
-**When** Storybook a11y addon runs
-**Then** violations are highlighted with explanations
-
-**Technical Details:**
-
-- Storybook 10.1.11 (latest stable)
-- `.stories.tsx` files for each component
-- Autodocs: `tags: ["autodocs"]`
-- a11y addon: `@storybook/addon-a11y`
-- Deployment: GitHub Pages via CI
-
-**Acceptance Checklist:**
-- [ ] Storybook installed
-- [ ] Button, Input, Dialog components documented
-- [ ] Stories show variants
-- [ ] a11y addon finds issues
-- [ ] Storybook builds successfully
-
----
-
 ## Next Steps
 
 This epic and story breakdown is now ready for implementation. The sequence is:
@@ -1520,12 +1603,13 @@ This epic and story breakdown is now ready for implementation. The sequence is:
 1. **Epic 1** - Infrastructure & Auth (foundational, enables all others)
 2. **Epic 2** - Assessment Backend (core logic)
 3. **Epic 3** - OCEAN Archetype System (results)
-4. **Epic 4** - Frontend UI (user experience)
+4. **Epic 4** - Frontend UI (user experience + component documentation)
 5. **Epic 5** - Profile Sharing (viral growth)
 6. **Epic 6** - Privacy & Data (compliance)
-7. **Epic 7** - Testing & QA (quality)
 
 Each epic contains detailed, implementable stories with clear acceptance criteria. Stories are sized for 2-5 day implementation cycles.
+
+**Note on Testing:** Testing is integrated into implementation via TDD (Test-Driven Development) pattern. Each story includes comprehensive test coverage in its acceptance criteria following red-green-refactor cycle.
 
 ---
 

@@ -3,7 +3,16 @@ stepsCompleted: ["step-01-init", "step-02-discovery", "step-02-advanced-elicitat
 inputDocuments:
   - "brainstorming-session-2026-01-29.md"
   - "CLAUDE.md"
+  - "prd-validation-report-2026-02-02.md"
 workflowType: 'prd'
+lastEdited: '2026-02-02'
+editHistory:
+  - date: '2026-02-02T14:30:00Z'
+    changes: 'Priority 2 Fixes: Replaced 5 subjective NFRs with measurable criteria, Added Web Application Requirements section (browser matrix, responsive design, SEO, accessibility), Abstracted technology names (TanStack/React/Node.js → capability descriptions), Fixed FR format for FR1/2/3/6/8/26'
+    reason: 'Address warning-level validation issues for quality improvement'
+  - date: '2026-02-02T13:00:00Z'
+    changes: 'Added Executive Summary (vision, goals, metrics), Added User Journeys section (3 B2C journeys), Reclassified Infrastructure FRs (FR20, FR24-26)'
+    reason: 'Fix critical structural gaps identified in validation report'
 brownfield: true
 brainstormingCount: 1
 researchCount: 0
@@ -44,7 +53,7 @@ classification:
     - "All 30 facets with simplified archetype variants"
   scientificPositioning: "Market existing Big Five research, not original validation study"
   mvpArchetype: "Simplified variant count while preserving all 30 facets"
-  mvpElectricSQL: "Adopt ElectricSQL from day 1 (refactoring debt cost > implementation cost)"
+  mvpElectricSQL: "Server-side session management for MVP (Phase 1), ElectricSQL local-first sync deferred to Phase 2 for enhanced offline capability"
   mvpCompliance: "Privacy-first (default), detailed GDPR/CCPA Phase 2-3 (not MVP)"
   conversionHistory: "Keep forever for MVP, review retention policy post-launch"
   launchGeography: "US first, add EU/Asia after PMF validation"
@@ -55,8 +64,8 @@ classification:
 **Author:** Vincentlay
 **Date:** 2026-01-29
 **Project Type:** Brownfield (Existing monorepo infrastructure)
-**Frontend App:** apps/front (TanStack Start, React 19, full-stack SSR)
-**Backend App:** apps/api (Node.js with Effect-ts, LangGraph)
+**Frontend App:** apps/front (Interactive full-stack framework with server-side rendering)
+**Backend App:** apps/api (Backend service with functional programming runtime and multi-agent orchestration)
 
 ---
 
@@ -77,7 +86,7 @@ Based on Pre-mortem Analysis, these requirements are **non-negotiable** for plat
 - ✅ Smart caching: Cache common Nerin responses, reuse for similar users (reduce 30-50%)
 - ✅ Rate limiting: 1 assessment per user per day, 1 resume per week (prevent abuse/spam)
 - ✅ Tiered LLM quality: Free tier uses cheaper model (GPT-3.5), Premium uses Claude
-- ✅ Batch processing: Analyzer/Scorer runs offline during low-cost hours (reduce peak API spend)
+- ✅ Batch processing: Analyzer creates facet evidence per message; Scorer aggregates every 3 messages (batched, non-blocking)
 - ✅ Circuit breakers: Auto-disable Nerin if cost/day exceeds cap, show graceful degradation
 - ✅ Cost monitoring: Real-time dashboard tracking spend per user, per feature
 - ✅ User cap: Scale gradually (500 → 2000 → 10k) as cost optimization improves
@@ -371,7 +380,7 @@ POC includes all facets for 4 traits (24 facets total). Full table maintained in
 
 #### Data Flow: Trait Scores → OCEAN Code → Character Name → Description
 
-1. **Assessment End:** Nerin conversation completes, Analyzer/Scorer generate trait scores (0-20 per trait)
+1. **Assessment End:** Nerin conversation completes, Analyzer has created facet evidence per message, Scorer aggregates evidence into 30 facet scores (0-20), Aggregator derives 5 trait scores from facets
 2. **Code Calculation:** Trait scores (4 traits) map to levels, creating 4-letter OCEAN code
 3. **Name Lookup:** Code queries archetype registry (~25 curated + component-based fallback for remaining 56)
 4. **Description Retrieval:** Full trait description loaded and displayed with archetype name
@@ -392,11 +401,71 @@ POC includes all facets for 4 traits (24 facets total). Full table maintained in
 ---
 
 ### Backend Precision (Database):
-- **Big Five traits:** 0-20 scale per trait (100-120 total when summed across 6 facets)
-- **All 30 facets:** 0-20 scale each (e.g., fantasy, aesthetics, feelings, actions, ideas, values for Openness)
-- **Precision tracking:** Confidence score per trait (0-100%) updated every 3 messages
-- **Conversation log:** Complete user/assistant message history encrypted at rest
-- **Analyzer insights:** Behavioral patterns, contradictions, domain coverage extracted from conversation
+
+**Evidence-Based Facet Scoring Architecture:**
+
+The assessment system uses a **facet-first, evidence-based** approach where every personality insight is tied to specific conversation evidence:
+
+1. **Facet Evidence (Atomic Level)**
+   - Each message analyzed for 30 facet signals
+   - **Unified FacetEvidence type:** messageId reference, facet name (clean - no trait prefix), numeric score (0-20), confidence (0.0-1.0), exact quote, character-level highlight range
+   - Stored in `facet_evidence` table with indexes on messageId and facet
+   - Example: User says "I love helping people" → Creates evidence record: `{ messageId: "msg_5", facet: "altruism", score: 18, confidence: 0.9, quote: "helping people", highlightRange: {start: 7, end: 21} }`
+
+2. **Facet Scores (Aggregated Level)**
+   - 30 facets scored independently (0-20 scale each)
+   - Clean naming: "altruism", "imagination", "orderliness" (not "agreeableness_altruism")
+   - Stored as `Record<FacetName, FacetScore>` - no redundant facet field
+   - Each score includes: aggregated score, adjusted confidence, evidence array, statistics (computed on-demand: mean, variance, sampleSize)
+   - Contradiction detection via variance analysis: high variance → lower confidence
+   - Recency weighting: more recent messages weighted higher in aggregation
+
+3. **Trait Scores (Derived Level)**
+   - 5 Big Five traits derived from facet averages using `FACET_TO_TRAIT` lookup
+   - Trait confidence = minimum confidence across contributing facets
+   - Traits are computed properties, not primary data
+
+4. **Data Storage**
+   - **assessment_messages:** Complete conversation history (existing table)
+   - **facet_evidence:** Per-message facet detections with evidence (NEW)
+   - **facet_scores:** Aggregated scores per facet (NEW - 30 rows per session)
+   - **trait_scores:** Derived trait scores (NEW - 5 rows per session)
+   - **Statistics computed, not stored:** mean/variance/sampleSize calculated from facet_evidence on query
+
+5. **Bidirectional UI Highlighting**
+   - **Profile → Conversation:** Click "Altruism: 16/20" → highlights all supporting messages
+   - **Conversation → Profile:** Click message → shows which facets it contributed to
+   - `highlightRange` enables precise text highlighting in UI
+   - Builds user trust through transparency ("show your work")
+
+**Multi-Agent Pipeline:**
+
+```
+Analyzer (per message):
+  - Detects 30 facet signals
+  - Outputs numeric scores (0-20) per facet
+  - Creates FacetEvidence records with messageId references
+       ↓
+Scorer (every 3 messages):
+  - Aggregates FacetEvidence by facet
+  - Detects contradictions (variance analysis)
+  - Adjusts confidence based on consistency
+  - Outputs Record<FacetName, FacetScore>
+       ↓
+Aggregator:
+  - Derives 5 trait scores from facet averages
+  - Uses FACET_TO_TRAIT lookup table
+       ↓
+Router:
+  - Finds lowest-confidence facet
+  - Guides Nerin with specific exploration strategy
+```
+
+**Key Benefits:**
+- **Transparency:** Users see exact quotes that influenced each score
+- **Scientific Validity:** Facet-level measurement aligns with Big Five research (NEO-PI-R pattern)
+- **Testability:** Clear separation between per-message analysis and cross-message aggregation
+- **Trust-Building:** Evidence trails enable user verification and self-reflection
 
 ### Frontend Display (UI/UX Readability):
 - **Big Five traits:** 3-level display (Low/Mid/High) based on 0-20 range thresholds
@@ -520,7 +589,7 @@ The BMAD expert team reviewed your success criteria and provided refinements:
 **MVP Scope Decisions:**
 - ✅ **Keep 30 facets** - Scientific integrity of Big Five framework is non-negotiable
 - ✅ **Simplify archetype variants** - Reduce complexity of variant combinations while preserving all facets
-- ✅ **Adopt ElectricSQL now** - Rather than refactor post-launch (prevents technical debt)
+- ✅ **Server-side session management for MVP** - ElectricSQL local-first sync deferred to Phase 2 (cleaner MVP scope, defer complexity)
 - ✅ **Keep conversation history forever (MVP)** - Simpler for MVP, review retention policy post-launch
 - ✅ **Defer compliance** - Privacy-first yes, but GDPR/CCPA detail Phase 2-3, not Phase 1
 - ✅ **US launch first** - Add EU/Asia regions after PMF validation
@@ -640,19 +709,19 @@ The BMAD expert team reviewed your success criteria and provided refinements:
 ### Technical Success
 
 **Nerin Conversational Quality (Launch Moat)**
-- Responses feel personalized, not generic
+- ≥70% of users rate responses as "specifically tailored to me" vs "generic" in post-assessment survey
 - Conversation adapts based on user context (Orchestrator prevents repetition)
-- Users stay engaged for 30+ minutes without forcing
-- **Measurement:** User feedback on conversation quality, conversation length distribution, drop-off analysis
+- Users stay engaged for 30+ minutes without forcing (measured by completion rate ≥50%)
+- **Measurement:** Post-assessment survey question: "How personalized did the conversation feel? (1-5 scale, ≥4 = success)", conversation length distribution, drop-off analysis
 - **Non-negotiable:** Nerin must be excellent, or entire product fails
 
 **UX/UI Polish (Trust & Aesthetics)**
-- Privacy controls are obvious in UI (not hidden in settings)
-- Shareable profile card is beautiful + compelling (makes users want to share)
-- Assessment flow is intuitive (no confusion on progress, next steps)
-- Archetype names + visuals are memorable (users remember their type)
-- **Measurement:** User testing feedback, aesthetics rating, sharing willingness
-- **Non-negotiable:** Beautiful design builds trust and drives virality
+- ≥80% of users locate privacy settings without help in usability testing (5 participants, task: "Show me how to make profile private")
+- ≥4/5 design review score from 3 independent designers for shareable profile card (aesthetics + clarity criteria)
+- ≥75% of users complete assessment flow without requesting help or expressing confusion (measured via support requests + exit survey)
+- ≥60% of users recall their 4-letter archetype code after 1 week (follow-up email survey)
+- **Measurement:** Usability testing sessions, design peer review, support ticket analysis, follow-up recall survey
+- **Non-negotiable:** Excellent UX builds trust and drives virality
 
 **OCEAN Archetype System Quality**
 - Archetype code generation deterministic: Same trait scores always produce identical 4-letter OCEAN code (POC scope: 4 traits)
@@ -719,13 +788,14 @@ The BMAD expert team reviewed your success criteria and provided refinements:
 - ✅ Privacy controls visible in UI ("Your profile is private by default")
 - ✅ Real-time streaming responses (< 2 sec response time)
 - ✅ OCEAN Archetype System (POC Scope): 4-letter main archetype code (81 combinations: 4 traits × 3 levels), ~25-30 hand-curated archetype character names covering common combinations, component-based naming system for remaining 56 combinations, all 24 facets (4 traits × 6 facets) with scientific precision in database, trait descriptions providing psychological accuracy
-- ✅ ElectricSQL + TanStack DB for session state management
+- ✅ Server-side session state management with URL-based resumption (client-side state management for frontend)
 - ✅ LLM cost monitoring + capping dashboard
 - ✅ EU GDPR compliance (data deletion, portability, consent)
 - ✅ Nerin quality + UX/UI polish (beautiful profile card, intuitive flow)
 
 **Explicitly NOT in MVP:**
 - ❌ Export conversation to PDF (removed for scope simplification)
+- ❌ ElectricSQL local-first sync (Phase 2 - MVP uses server-side sessions with URL resumption)
 - ❌ Coaching partner integrations (Phase 2)
 - ❌ Merch infrastructure (Phase 2)
 - ❌ B2B team/recruiter features (Phase 2)
@@ -769,26 +839,192 @@ The BMAD expert team reviewed your success criteria and provided refinements:
 
 ---
 
+## Web Application Requirements
+
+As a web_app project type, the following platform-specific requirements ensure cross-browser compatibility, responsive design, discoverability, and accessibility.
+
+### Browser Compatibility Matrix
+
+**Supported Browsers (Minimum Versions):**
+- Chrome/Chromium: 90+ (covers 70%+ of users)
+- Firefox: 88+ (covers 10%+ of users)
+- Safari: 14+ (covers 15%+ of users, iOS compatibility)
+- Edge: 90+ (covers 5%+ of users)
+
+**Testing Strategy:**
+- Automated cross-browser testing via Playwright/Cypress
+- Manual testing on latest stable versions
+- Graceful degradation for older browsers (show upgrade notice for <90)
+
+**Critical Features per Browser:**
+- Real-time streaming (SSE/WebSocket support)
+- Local storage for session persistence
+- CSS Grid/Flexbox for responsive layout
+- TLS 1.3 for secure connections
+
+### Responsive Design Requirements
+
+**Mobile-First Approach:**
+- Design for smallest screen first (375px width minimum)
+- Progressive enhancement for larger screens
+
+**Breakpoints:**
+- Mobile: 375px - 767px (portrait phone, primary for conversational assessment)
+- Tablet: 768px - 1023px (portrait iPad, assessment + results viewing)
+- Desktop: 1024px - 1439px (laptop, optimal for profile exploration)
+- Large Desktop: 1440px+ (external monitor, admin/analytics views)
+
+**Responsive Behavior:**
+- Mobile: Single-column layout, bottom navigation, touch-optimized tap targets (44px minimum)
+- Tablet: Two-column layout for results, persistent side navigation
+- Desktop: Multi-column dashboard, hover states, keyboard navigation
+
+**Touch & Interaction:**
+- Touch targets ≥44px for mobile (finger-friendly)
+- Swipe gestures for navigation (optional enhancement)
+- Keyboard navigation for desktop accessibility
+
+### SEO Strategy
+
+**Organic Discovery Goals:**
+- Rank for "Big Five personality test", "OCEAN personality assessment", "scientific personality test"
+- Drive 50%+ of traffic from organic search (post-MVP)
+
+**On-Page SEO:**
+- Meta tags: Title (55 chars), Description (155 chars), Keywords
+- Open Graph tags for social sharing (og:title, og:description, og:image)
+- Twitter Card markup for rich previews
+- Structured data (Schema.org): FAQPage, Person, Organization
+
+**Technical SEO:**
+- XML sitemap with assessment + profile pages
+- Robots.txt allowing all public pages
+- Canonical URLs for duplicate content prevention
+- 301 redirects for URL changes
+- Page load speed <2 seconds (Core Web Vitals)
+
+**Content Strategy:**
+- Educational content: "What is Big Five?", "MBTI vs Big Five comparison"
+- Landing pages per archetype (81 unique URLs for SEO)
+- Blog posts: Personality insights, research summaries
+
+### Accessibility Standards
+
+**WCAG 2.1 Level AA Compliance (Minimum):**
+- Perceivable: Alt text for images, captions for videos, color contrast ≥4.5:1
+- Operable: Keyboard navigation (Tab, Enter, Escape), focus indicators, no keyboard traps
+- Understandable: Clear language (8th grade reading level), consistent navigation, error identification
+- Robust: Valid HTML5, ARIA landmarks, semantic markup
+
+**Screen Reader Support:**
+- NVDA (Windows), JAWS (Windows), VoiceOver (macOS/iOS) testing
+- ARIA labels for interactive elements
+- Skip navigation links
+- Focus management during Nerin conversation
+
+**Keyboard Navigation:**
+- Tab order follows visual flow
+- Enter/Space activates buttons
+- Escape closes modals
+- Arrow keys navigate lists
+
+**Testing:**
+- Automated: axe DevTools, Lighthouse accessibility audit
+- Manual: Screen reader testing, keyboard-only navigation
+- Target: Zero critical accessibility violations before launch
+
+---
+
+## User Journeys
+
+User journeys map how target users interact with the platform from discovery through ongoing engagement, ensuring all functional requirements trace back to actual user needs.
+
+### Journey 1: New User → Assessment → Profile → Share
+
+**User:** Maya (32, product manager seeking self-awareness for career growth)
+
+**Trigger:** Discovers big-ocean through LinkedIn post from friend sharing their archetype
+
+**Steps:**
+1. **Discover:** Clicks shared profile link → Views friend's archetype results → Intrigued by "Mindful Architect" description
+2. **Start Assessment:** Clicks "Take Your Assessment" → Lands on homepage → Reads "30-min conversation" promise
+3. **Engage with Nerin:** Begins conversational assessment → Nerin asks open-ended questions → Maya responds naturally → Progress indicator shows 35% complete
+4. **Continue Conversation:** Nerin adapts questions based on responses → Explores values, work style, social preferences → No repetitive or generic questions → 25 minutes elapsed
+5. **Receive Results:** Assessment complete → System displays 4-letter OCEAN code → Archetype name revealed: "The Catalyst" → Reads 2-sentence archetype description
+6. **Explore Profile:** Views trait breakdown (5 Big Five traits with scores 0-20) → Reads facet-level details (6 facets per trait) → Precision score shows 85% confidence
+7. **Share:** Clicks "Share Profile" → Generates unique URL → Copies link → Posts to LinkedIn with caption "Just discovered I'm 'The Catalyst' 🔥"
+
+**Success Criteria:** Completion rate ≥50%, Sharing rate ≥15%, User sentiment ≥7/10
+
+**Key FRs:** FR1-4 (Assessment), FR5-7 (Trait scoring), FR8-11 (Archetype system), FR13-15 (Profile sharing)
+
+---
+
+### Journey 2: Returning User → Resume → Complete → Export
+
+**User:** Alex (28, engineer who started assessment during lunch break, needs to finish)
+
+**Trigger:** Started assessment 2 days ago, received email reminder "Your personality assessment is waiting"
+
+**Steps:**
+1. **Return:** Clicks email link → Lands on resume page → Sees "Pick up where you left off" message
+2. **Resume:** System loads session state → Last conversation message visible → Progress shows 60% complete → "~12 minutes remaining"
+3. **Continue Assessment:** Nerin picks up conversation naturally → No repeated questions → Feels seamless, not fragmented
+4. **Complete:** Final questions answered → Assessment complete → Results generated
+5. **Review Results:** Explores full profile → Reads trait descriptions → Checks facet scores
+6. **Export:** Clicks "Download Results" → Receives PDF with conversation history + trait breakdown → Saves for personal records
+
+**Success Criteria:** Resume rate ≥70% (users who pause actually return), Session continuity feels natural
+
+**Key FRs:** FR3 (Pause/resume), FR4 (Progress indicator), FR16 (Export), FR21-22 (Session state management)
+
+---
+
+### Journey 3: Privacy-Conscious User → Selective Sharing → Access Control
+
+**User:** Jordan (35, therapist concerned about data privacy and professional boundaries)
+
+**Trigger:** Interested in assessment but wary of data collection and unwanted profile visibility
+
+**Steps:**
+1. **Research Privacy:** Visits homepage → Clicks "Privacy Policy" → Reads "Default Private" and "Explicit Sharing Only" promises
+2. **Start Assessment:** Begins conversation → Notices "Your data is encrypted" badge → Feels reassured
+3. **Complete Assessment:** Receives results → Profile shows "Private" status by default → No public directory listing
+4. **Control Sharing:** Views sharing options → Generates unique link for close friend only → Does NOT share publicly → Link expires after 30 days (Phase 2 feature)
+5. **Manage Data:** Clicks "Data Settings" → Reviews data retention policy → Sees option to delete all data (GDPR Article 17) → Exports conversation as backup before deletion
+6. **Delete Profile:** Requests account deletion → System confirms all data will be permanently removed within 30 days → Receives confirmation email
+
+**Success Criteria:** Zero unauthorized profile access, GDPR compliance day 1, User trust metrics >8/10
+
+**Key FRs:** FR15 (Privacy controls), FR17-20 (Data encryption, deletion, audit logs), NFRs for GDPR compliance
+
+---
+
 ## Functional Requirements
 
 Functional requirements define what the system must DO—the core capabilities and user interactions.
 
 ### Assessment & Conversation
 
-- **FR1:** System conducts multi-turn conversational personality assessment with Nerin agent for minimum 30 minutes
-- **FR2:** System accepts user messages and returns contextually relevant responses in real-time (streaming)
-- **FR3:** System allows users to pause assessment and resume later from exact conversation point
+- **FR1:** Users can complete multi-turn conversational personality assessment with AI agent for minimum 30 minutes
+- **FR2:** Users can send messages and receive responses in real-time with streaming (response time <2 seconds P95)
+- **FR3:** Users can pause assessment and resume later from saved conversation state (session ID + message offset + conversation context)
 - **FR4:** System displays real-time progress indicator showing percentage completion (0-100%)
 
-### Big Five Trait Assessment
+### Big Five Trait Assessment (Evidence-Based Facet Scoring)
 
-- **FR5:** System analyzes conversation to extract and score all 30 Big Five facets (0-20 scale per facet)
-- **FR6:** System calculates Big Five trait scores from facet scores (0-20 per trait: Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism)
-- **FR7:** System maintains and updates trait precision/confidence score (0-100%) throughout conversation
+- **FR5:** System analyzes each message to detect 30 Big Five facet signals, creating evidence records with: facet name (clean, no trait prefix), numeric score (0-20), confidence (0.0-1.0), exact quote, and character-level highlight range tied to messageId
+- **FR5.1:** System stores facet evidence in `facet_evidence` table with indexes on messageId and facet for bidirectional navigation (Profile ↔ Conversation)
+- **FR5.2:** System aggregates facet evidence every 3 messages using weighted averaging (recency + confidence) and contradiction detection (variance analysis)
+- **FR5.3:** System adjusts facet confidence based on evidence consistency: high variance → lower confidence, more samples → higher confidence
+- **FR6:** Users can view Big Five trait scores derived from facet averages using FACET_TO_TRAIT lookup (traits are computed properties, not primary data)
+- **FR6.1:** Users can click any facet score in profile to view supporting evidence with highlighted message quotes
+- **FR6.2:** Users can click any message in conversation history to see which facets it contributed to and their score contributions
+- **FR7:** System maintains and updates per-facet confidence scores (0.0-1.0) throughout conversation, with trait confidence derived as minimum across contributing facets
 
 ### OCEAN Archetype System (POC Scope: 4 Traits)
 
-- **FR8:** System generates 4-letter OCEAN archetype code based on trait levels from Openness, Conscientiousness, Extraversion, Agreeableness (each: Low/Mid/High)
+- **FR8:** Users receive 4-letter OCEAN archetype code generated from trait levels (Openness, Conscientiousness, Extraversion, Agreeableness: each Low/Mid/High)
 - **FR9:** System maps OCEAN codes to memorable character archetype names: ~25-30 hand-curated names + component-based generation for remaining combinations
 - **FR10:** System retrieves archetype name + 2-3 sentence trait description explaining the personality combination
 - **FR11:** System displays all 24 facet level names (Low/High pairs for 4 traits) aligned with user's assessment results on request
@@ -801,24 +1037,36 @@ Functional requirements define what the system must DO—the core capabilities a
 - **FR15:** System displays profile as private by default with explicit user control for sharing
 - **FR16:** System allows users to download/export assessment results in human-readable format
 
+### Bidirectional Evidence Highlighting (Transparency Feature)
+
+- **FR17:** Users can click any facet score in their profile to view "Show Evidence" panel listing all supporting message quotes with their score contributions
+- **FR17.1:** Clicking "Jump to Message" in evidence panel scrolls conversation to that message and highlights the exact quote that contributed to the facet score
+- **FR17.2:** System applies color-coded highlighting: green (strong positive signal), yellow (moderate signal), red (contradictory signal), with opacity indicating confidence level
+- **FR18:** Users can click any message in conversation history to view side panel showing which facets it contributed to and their respective score contributions
+- **FR18.1:** System displays bidirectional navigation: Profile → Evidence → Message (forward) and Message → Facets → Profile (backward)
+- **FR19:** System uses character-level `highlightRange` from facet evidence to precisely highlight relevant text in message content
+
 ### Data Management
 
-- **FR17:** System stores complete conversation history encrypted at rest with user data
-- **FR18:** System encrypts all data in transit (TLS 1.3 minimum)
-- **FR19:** System provides data deletion and portability capabilities per GDPR Article 17, 20
-- **FR20:** System logs all profile access with timestamp, user, and request type for audit trail
+- **FR20:** System stores complete conversation history encrypted at rest with user data
+- **FR20.1:** System stores facet evidence records with messageId references for transparency and bidirectional navigation
+- **FR21:** System encrypts all data in transit (TLS 1.3 minimum)
+- **FR22:** System provides data deletion and portability capabilities per GDPR Article 17, 20
 
 ### Real-Time Synchronization
 
-- **FR21:** System uses ElectricSQL for local-first sync between frontend and backend
-- **FR22:** System maintains session state across device switches without data loss
-- **FR23:** System implements optimistic updates for instant UI feedback during conversation
+- **FR23:** System maintains session state on server with URL-based resumption capability (ElectricSQL local-first sync deferred to Phase 2)
+- **FR24:** System maintains session state across device switches without data loss via session URL
+- **FR25:** System implements optimistic updates for instant UI feedback during conversation
 
-### Cost Management
+### Infrastructure Requirements
 
-- **FR24:** System monitors LLM costs per user and session in real-time
-- **FR25:** System implements rate limiting (1 assessment per user per day, 1 resume per week)
-- **FR26:** System auto-disables assessment if daily LLM cost threshold exceeded with graceful degradation message
+*These requirements address backend operational concerns (compliance, cost control, system monitoring) without direct user-facing features. They enable business viability and regulatory compliance.*
+
+- **FR26:** System logs all profile access with timestamp, user, and request type for audit trail
+- **FR27:** System monitors LLM costs per user and session in real-time
+- **FR28:** System implements rate limiting (1 assessment per user per day, 1 resume per week)
+- **FR29:** System auto-disables assessment if daily LLM cost threshold exceeded, displaying message: "We've reached our daily assessment limit. Please try again tomorrow or upgrade to premium for immediate access."
 
 ---
 
@@ -832,5 +1080,23 @@ Non-functional requirements specify HOW WELL the system performs—quality attri
 
 ## Executive Summary
 
-*To be filled during discovery phase*
+**Vision:** Transform personality assessment through conversational AI that provides engaging, scientifically-grounded Big Five personality profiles with memorable archetypes and privacy-first sharing.
+
+**Product:** big-ocean delivers a 30-minute conversational assessment via Nerin (AI agent) that analyzes 30 Big Five facets, generates a unique 4-letter OCEAN archetype code with memorable character name, and creates shareable profiles for social discovery—while maintaining user privacy control.
+
+**Target Users:** B2C individuals globally seeking authentic personality insight beyond MBTI's oversimplification, particularly professionals interested in self-awareness, team dynamics, and personal growth.
+
+**Core Business Goals:**
+- Validate product-market fit with 500 beta users (MVP Phase 1)
+- Achieve 50% completion rate and 15% sharing rate demonstrating engagement
+- Maintain LLM costs ≤$0.15 per assessment through optimization and rate limiting
+- Build conversation data moat (competitive advantage for future model training)
+- Position Big Five as scientifically superior to MBTI through market education
+
+**Key Success Metrics:**
+- User Engagement: ≥50% completion rate, ≥15% sharing rate, NPS ≥40
+- Technical Performance: <2 sec response time (P95), zero data breaches
+- Business Viability: Cost ≤$0.15/user, CAC payback <6 months (post-MVP)
+
+**Differentiation:** Conversational depth + memorable archetypes + privacy-first + scientific credibility (vs. questionnaire-based assessments with generic results)
 

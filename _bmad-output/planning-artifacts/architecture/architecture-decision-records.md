@@ -1,34 +1,251 @@
 # Architecture Decision Records
 
-## ADR-1: Nerin Orchestration Strategy ✅
+## ADR-1: Evidence-Based Facet-First Architecture ✅
 
-**Decision:** LangGraph State Machine with Intelligent Routing
+**Decision:** Evidence-Based Facet Scoring with Unified Data Model and Bidirectional UI Highlighting
 
 **Architecture:**
 
-Nerin (conversational agent), Analyzer (pattern extraction), and Scorer (trait calculation) are orchestrated via LangGraph state machine with intelligent routing:
+The multi-agent personality assessment system uses a **facet-first, evidence-based** approach where:
 
-- **Nerin:** Streams conversational responses in real-time (< 2 sec P95)
-- **Analyzer & Scorer:** Run asynchronously in background every 3 messages
-- **Router:** LangGraph agent decides which agents to activate based on:
-  - Message count (every 3 messages, trigger analysis)
-  - Precision gaps (if confidence < 60%, request more exploration on low-confidence traits)
-  - Cost awareness (skip analysis if approaching token budget)
+1. **Analyzer** annotates each message with facet-level evidence (30 facets, numeric scores 0-20)
+2. **Scorer** aggregates evidence across messages with contradiction detection
+3. **Aggregator** derives 5 trait scores from facet scores
+4. **Router** guides Nerin based on lowest-confidence facets
+5. **UI** provides bidirectional highlighting (Profile ↔ Conversation)
+
+**Agent Pipeline:**
+
+```
+User Message → assessment_messages table
+       ↓
+Analyzer (per message):
+  - Detects 30 facet signals
+  - Outputs numeric scores (0-20)
+  - Creates FacetEvidence records
+       ↓
+facet_evidence table (messageId reference)
+       ↓
+Scorer (every 3 messages):
+  - Aggregates FacetEvidence by facet
+  - Detects contradictions (variance analysis)
+  - Adjusts confidence based on consistency
+  - Outputs Record<FacetName, FacetScore>
+       ↓
+facet_scores table (30 rows per session)
+       ↓
+Aggregator:
+  - Derives 5 trait scores from facets
+  - Uses FACET_TO_TRAIT lookup
+       ↓
+trait_scores table (5 rows per session)
+       ↓
+Router:
+  - Finds lowest-confidence facet
+  - Guides Nerin with specific exploration strategy
+```
+
+**Data Model:**
+
+**1. Unified FacetEvidence Type** (used by Analyzer and stored in database):
+
+```typescript
+interface FacetEvidence {
+  id: string;                     // evidence_xxx
+  messageId: string;              // FK to assessment_messages
+  facet: FacetName;               // "altruism", "imagination", etc. (no trait prefix)
+  score: number;                  // 0-20 (this message's contribution)
+  confidence: number;             // 0.0-1.0 (analyzer's confidence)
+  quote: string;                  // Exact phrase from message
+  highlightRange: {
+    start: number;                // Character index start
+    end: number;                  // Character index end
+  };
+  createdAt: Date;
+}
+```
+
+**2. FacetScore (Scorer output)**:
+
+```typescript
+interface FacetScore {
+  // No 'facet' field - stored as Record<FacetName, FacetScore>
+  score: number;                  // 0-20 (aggregated)
+  confidence: number;             // 0.0-1.0 (adjusted for contradictions)
+  evidence: FacetEvidence[];      // References to supporting messages
+  statistics: {                   // ✅ COMPUTED (not stored in DB)
+    mean: number;                 // Average of score suggestions
+    variance: number;             // Contradiction indicator
+    sampleSize: number;           // Number of messages
+  };
+}
+```
+
+**3. Profile Storage** (clean Record pattern):
+
+```typescript
+interface UserProfile {
+  userId: string;
+  sessionId: string;
+  facetScores: Record<FacetName, FacetScore>;  // ✅ No redundant facet field
+  traitScores: Record<TraitName, TraitScore>;  // Derived from facets
+  precision: number;
+  oceanCode4Letter?: string;
+  oceanCode5Letter?: string;
+  archetypeName?: string;
+}
+```
+
+**Database Schema:**
+
+```sql
+-- Existing table (reused)
+assessment_messages (
+  id TEXT PRIMARY KEY,
+  session_id TEXT REFERENCES assessment_sessions(id),
+  role TEXT,  -- "user" | "assistant"
+  content TEXT,
+  timestamp TIMESTAMP
+);
+
+-- NEW: Facet evidence (unified Analyzer/Scorer data)
+facet_evidence (
+  id TEXT PRIMARY KEY,
+  message_id TEXT REFERENCES assessment_messages(id),  -- ✅ Always present
+  facet TEXT,                 -- "altruism", "imagination", etc.
+  score INTEGER,              -- 0-20
+  confidence REAL,            -- 0.0-1.0
+  quote TEXT,
+  highlight_start INTEGER,
+  highlight_end INTEGER,
+  created_at TIMESTAMP
+);
+CREATE INDEX ON facet_evidence(message_id);
+CREATE INDEX ON facet_evidence(facet);
+
+-- NEW: Aggregated facet scores
+facet_scores (
+  id TEXT PRIMARY KEY,
+  session_id TEXT REFERENCES assessment_sessions(id),
+  facet TEXT,                 -- One row per facet (30 max)
+  score INTEGER,              -- 0-20 (aggregated)
+  confidence REAL,            -- 0.0-1.0 (adjusted)
+  -- Note: statistics (mean, variance, sampleSize) are COMPUTED from facet_evidence, not stored
+  updated_at TIMESTAMP
+);
+
+-- NEW: Derived trait scores
+trait_scores (
+  id TEXT PRIMARY KEY,
+  session_id TEXT REFERENCES assessment_sessions(id),
+  trait TEXT,                 -- One row per trait (5)
+  score INTEGER,              -- 0-100 (derived from facets)
+  confidence REAL,
+  updated_at TIMESTAMP
+);
+```
+
+**Key Architectural Decisions:**
+
+1. **Facet-First Measurement**
+   - 30 facets scored independently (not 5 traits)
+   - Traits are computed properties (averages of facets)
+   - Aligns with Big Five research methodology (NEO-PI-R pattern)
+
+2. **Clean Facet Naming**
+   - No trait prefixes: "altruism" not "agreeableness_altruism"
+   - Each facet name is globally unique across traits
+   - Simpler queries, cleaner UI, better UX
+
+3. **Numeric Score Suggestions**
+   - Analyzer outputs 0-20 scores per message (not "high"/"low" categorical)
+   - Preserves full information for Scorer aggregation
+   - Enables transparent evidence display to users
+
+4. **Unified FacetEvidence Type**
+   - Single type used by Analyzer (create) and Scorer (aggregate)
+   - No separate FacetMarker/Evidence types
+   - Always includes messageId reference for bidirectional navigation
+
+5. **Record Storage Pattern**
+   - `Record<FacetName, FacetScore>` instead of array
+   - No redundant facet field in FacetScore
+   - Efficient O(1) lookups, type-safe keys
+
+6. **Statistics as Computed Properties**
+   - Statistics (mean, variance, sampleSize) computed from facet_evidence table
+   - Not stored redundantly in facet_scores table
+   - Always fresh, no synchronization issues
+
+7. **Bidirectional UI Highlighting**
+   - Profile → Conversation: Click facet score → highlight supporting messages
+   - Conversation → Profile: Click message → show contributing facets
+   - highlightRange enables precise text highlighting in UI
+   - Builds user trust through transparency
+
+**Scorer Aggregation Logic:**
+
+```typescript
+export const aggregateFacetScores = (
+  evidence: FacetEvidence[]
+): FacetScore => {
+  // Weighted average (more recent + higher confidence = more weight)
+  const weightedScore = calculateWeightedAverage(
+    evidence.map(e => e.score),
+    evidence.map(e => e.confidence)
+  );
+
+  // Detect contradictions via variance
+  const variance = calculateVariance(evidence.map(e => e.score));
+
+  // Adjust confidence
+  const baseConfidence = mean(evidence.map(e => e.confidence));
+  const variancePenalty = variance > 25 ? 0.3 : 0;  // High variance = contradiction
+  const sampleSizeBonus = Math.min(evidence.length / 10, 0.2);
+
+  const finalConfidence = clamp(
+    baseConfidence - variancePenalty + sampleSizeBonus,
+    0.1,
+    1.0
+  );
+
+  return {
+    score: weightedScore,
+    confidence: finalConfidence,
+    evidence,
+    statistics: {  // Computed on the fly
+      mean: mean(evidence.map(e => e.score)),
+      variance,
+      sampleSize: evidence.length,
+    },
+  };
+};
+```
 
 **Rationale:**
-- Leverages existing LangGraph dependency (already in stack)
-- Enables intelligent routing to optimize costs while maintaining responsiveness
-- Centralized state management is debuggable and maintainable
-- Precision updates stream to UI in real-time (visible engagement signal)
+
+- **Transparency:** Users see exactly which quotes influenced each facet score
+- **Scientific Validity:** Facet-level measurement aligns with validated research (NEO-PI-R)
+- **Testability:** Clear separation between Analyzer (per-message) and Scorer (aggregation)
+- **Trust-Building:** Evidence trails enable user verification and self-reflection
+- **Simplicity:** Unified type, clean naming, Record pattern = less complexity
+- **UI Value:** Bidirectional highlighting creates "show your work" transparency
+- **Data Integrity:** Statistics computed from source data, never stale
 
 **Trade-offs Accepted:**
-- Higher implementation complexity upfront
-- Requires careful orchestration between agents
-- Must handle concurrent LLM calls with cost monitoring
+
+- Analyzer must detect 30 facets (not 5 traits) → More complex prompt engineering
+- Database stores granular evidence → More storage (but still ~1KB per message)
+- UI highlighting requires precise character ranges → Analyzer must compute offsets
+- Statistics computed on-demand → Negligible performance impact (simple aggregation)
 
 **Key Metrics:**
+
 - Nerin response time: < 2 sec (P95)
-- Analysis latency: < 500ms (batched, non-blocking)
+- Analyzer per-message: < 500ms (30 facet detection)
+- Scorer aggregation: < 200ms (batched, non-blocking)
+- Facet confidence threshold: 60% (trigger exploration if below)
+- Evidence storage: ~1KB per message (including all facets)
 
 ---
 
