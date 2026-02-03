@@ -95,6 +95,18 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 
 			getSession: (sessionId) =>
 				Effect.gen(function* () {
+					// Validate UUID format before querying to return 404 for invalid IDs
+					const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+					if (!uuidRegex.test(sessionId)) {
+						logger.warn("Invalid session ID format", { sessionId });
+						return yield* Effect.fail(
+							new SessionNotFound({
+								sessionId,
+								message: `Session '${sessionId}' not found`,
+							}),
+						);
+					}
+
 					// Load session
 					const sessionResults = yield* db
 						.select()
@@ -224,7 +236,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 					// Prepare session data for parsing
 					const sessionData = {
 						id: updatedSession.id,
-						userId: updatedSession.userId ?? undefined,
+						userId: updatedSession.userId,
 						createdAt: updatedSession.createdAt,
 						updatedAt: updatedSession.updatedAt,
 						status: updatedSession.status,

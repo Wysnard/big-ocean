@@ -1,0 +1,87 @@
+# Docker Compose Test Environment for Integration Testing
+# ---
+# Purpose: Production-mirroring environment for Tier 2 integration tests
+#
+# Key Design Decisions:
+# - Uses postgres-test on port 5433 to avoid conflict with dev postgres (5432)
+# - API builds from production Dockerfile to validate deployment artifact
+# - MOCK_LLM=true prevents real Anthropic API calls (zero cost testing)
+# - Tests run on HOST (not in container) to enable vitest watch/UI/debugging
+# - Isolated network prevents cross-contamination with dev environment
+#
+# Usage:
+#   pnpm test:integration        # Automatic: starts Docker → runs tests → stops Docker
+#   pnpm docker:test:up          # Manual: start test environment (for debugging)
+#   pnpm docker:test:down        # Manual: stop and clean test environment
+#
+# Reference: Story 2.8 - Docker Setup for Integration Testing
+
+services:
+  # PostgreSQL Test Database
+  # Isolated from development database on different port
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: bigocean-postgres-test
+    environment:
+      POSTGRES_DB: bigocean_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5433:5432"  # Host port 5433 → Container port 5432 (avoids conflict with dev)
+    volumes:
+      # Initialize database with test schema (includes all tables)
+      - ./docker/init-db-test.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      # Validates PostgreSQL is ready to accept connections
+      test: ["CMD-SHELL", "pg_isready -U test_user -d bigocean_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    networks:
+      - bigocean-test-network
+
+  # API Test Service
+  # Built from production Dockerfile to validate actual deployment artifact
+  api-test:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: production  # Use production target (same as Railway deployment)
+    container_name: bigocean-api-test
+    environment:
+      # Database connection (uses internal Docker network hostname)
+      DATABASE_URL: postgresql://test_user:test_password@postgres-test:5432/bigocean_test
+      # CRITICAL: Mock LLM to avoid Anthropic API costs
+      MOCK_LLM: "true"
+      # Dummy API key (required for env validation, but MOCK_LLM=true prevents actual usage)
+      ANTHROPIC_API_KEY: "sk-test-dummy-key-for-integration-tests"
+      # Better Auth configuration
+      BETTER_AUTH_SECRET: test-secret-minimum-32-characters-long-for-security
+      BETTER_AUTH_URL: http://localhost:4000
+      # Runtime configuration
+      NODE_ENV: test
+      PORT: 4000
+      HOST: 0.0.0.0
+      # Disable SSL for test database
+      DATABASE_SSL: "false"
+    ports:
+      - "4001:4000"  # Host port 4001 → Container port 4000 (avoids conflict with dev API)
+    depends_on:
+      postgres-test:
+        condition: service_healthy  # Wait for PostgreSQL to be ready
+    healthcheck:
+      # Validates API server is running and migrations completed
+      # wget is more reliable than curl in Alpine containers
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://127.0.0.1:4000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s  # Allow time for migrations and startup
+    networks:
+      - bigocean-test-network
+
+networks:
+  # Isolated network for test services
+  # Prevents any interaction with dev environment
+  bigocean-test-network:
+    driver: bridge

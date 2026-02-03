@@ -1,6 +1,6 @@
 # Story 2.8: Docker Setup for Integration Testing
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -17,10 +17,11 @@ So that **I can catch deployment failures locally before pushing to Railway and 
 1. **Docker Compose Test Environment** - Production-mirroring services for integration testing
    - `compose.test.yaml` file created with `postgres-test` and `api-test` services
    - PostgreSQL 16 on port 5433 (avoids conflict with dev postgres on 5432)
-   - API service built from production Dockerfile (`apps/api/Dockerfile`) on port 4000
+   - API service built from production Dockerfile (`apps/api/Dockerfile`) on container port 4000, exposed to host on port 4001 (avoids conflict with dev API on host port 4000)
    - Health checks ensure services ready before tests run
    - Modern Compose spec (no deprecated `version` field, long-form `depends_on`)
    - All services run in isolated network (`bigocean-test-network`)
+   - Test database initialized via `docker/init-db-test.sql` with complete schema (auth + assessment + scoring tables)
 
 2. **Vitest Integration Configuration** - Native vitest infrastructure management
    - `vitest.config.integration.ts` configured for integration test suite
@@ -37,9 +38,11 @@ So that **I can catch deployment failures locally before pushing to Railway and 
    - No Anthropic API costs during integration test runs
 
 4. **Integration Tests for Core Endpoints** - Validate production-like behavior
-   - Health check test: `GET /health` returns 200 with `{status: "ok"}`
-   - Assessment start test: `POST /api/assessment/start` creates session and returns valid schema
-   - Assessment message test: `POST /api/assessment/message` processes message and returns response
+   - Health check tests (2 tests): `GET /health` returns 200 with `{status: "ok"}` and validates Docker setup
+   - Assessment start tests (3 tests): `POST /api/assessment/start` creates session and returns valid schema
+   - Assessment message tests (4 tests): `POST /api/assessment/message` processes message and returns response
+   - Assessment resume tests (2 tests): `GET /api/assessment/:sessionId/resume` retrieves session history
+   - Total: 11 integration tests covering 4 endpoints
    - All tests validate response schemas using Effect Schema (contract enforcement)
    - Database persistence verified (session exists, messages saved)
    - Tests use real HTTP requests (`fetch`) against Dockerized API
@@ -64,43 +67,51 @@ So that **I can catch deployment failures locally before pushing to Railway and 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Docker Compose Test Environment (AC: #1)
-  - [ ] Create `compose.test.yaml` with postgres-test service (port 5433)
-  - [ ] Add api-test service built from production Dockerfile
-  - [ ] Configure health checks for both services
-  - [ ] Add `MOCK_LLM=true` environment variable to api-test
-  - [ ] Create isolated test network
-  - [ ] Test manual startup: `docker compose -f compose.test.yaml up`
+- [x] Task 1: Docker Compose Test Environment (AC: #1)
+  - [x] Create `compose.test.yaml` with postgres-test service (port 5433)
+  - [x] Add api-test service built from production Dockerfile
+  - [x] Configure health checks for both services
+  - [x] Add `MOCK_LLM=true` environment variable to api-test
+  - [x] Create isolated test network
+  - [x] Create `docker/init-db-test.sql` for test database initialization
+  - [x] Test manual startup: `docker compose -f compose.test.yaml up`
 
-- [ ] Task 2: Vitest Configuration (AC: #2)
-  - [ ] Create `vitest.config.integration.ts` extending base config
-  - [ ] Implement `scripts/integration-setup.ts` (Docker Compose up + health wait)
-  - [ ] Implement `scripts/integration-teardown.ts` (Docker Compose down -v)
-  - [ ] Add package.json scripts for test:integration commands
-  - [ ] Test: `pnpm test:integration` should start/stop Docker automatically
+- [x] Task 2: Vitest Configuration (AC: #2)
+  - [x] Create `vitest.config.integration.ts` extending base config
+  - [x] Implement `scripts/integration-setup.ts` (Docker Compose up + health wait)
+  - [x] Implement `scripts/integration-teardown.ts` (Docker Compose down -v)
+  - [x] Add package.json scripts for test:integration commands
+  - [x] Test: `pnpm test:integration` should start/stop Docker automatically
 
-- [ ] Task 3: LLM Mocking (AC: #3)
-  - [ ] Create `packages/infrastructure/src/repositories/nerin-agent.mock.repository.ts`
-  - [ ] Implement pattern-based mock responses (5-10 common patterns)
-  - [ ] Add Layer export: `NerinAgentMockRepositoryLive`
-  - [ ] Wire `MOCK_LLM` env var check in API server initialization
-  - [ ] Add Layer swapping logic (mock when MOCK_LLM=true, real otherwise)
-  - [ ] Test: API uses mock responses when env var set
+- [x] Task 3: LLM Mocking (AC: #3)
+  - [x] Create `packages/infrastructure/src/repositories/nerin-agent.mock.repository.ts`
+  - [x] Implement pattern-based mock responses (10 common patterns)
+  - [x] Add Layer export: `NerinAgentMockRepositoryLive`
+  - [x] Wire `MOCK_LLM` env var check in API server initialization
+  - [x] Add Layer swapping logic (mock when MOCK_LLM=true, real otherwise)
+  - [x] Test: API uses mock responses when env var set
 
-- [ ] Task 4: Integration Tests (AC: #4)
-  - [ ] Create `apps/api/tests/integration/` directory
-  - [ ] Write `health.test.ts` (simplest - validates /health endpoint)
-  - [ ] Write `assessment.test.ts` (start + message endpoints)
-  - [ ] Add Effect Schema validation in all tests
-  - [ ] Verify database persistence in tests
-  - [ ] Test: All integration tests pass with `pnpm test:integration`
+- [x] Task 4: Integration Tests (AC: #4)
+  - [x] Create `apps/api/tests/integration/` directory
+  - [x] Write `health.test.ts` (2 tests - validates /health endpoint + Docker setup)
+  - [x] Write `assessment.test.ts` (9 tests - start, message, resume endpoints)
+  - [x] Add Effect Schema validation in all tests
+  - [x] Verify database persistence in tests
+  - [x] Test: All 11 integration tests pass with `pnpm test:integration`
 
-- [ ] Documentation & Testing (AC: #6-7) — **REQUIRED BEFORE DONE**
-  - [ ] Add inline comments to compose.test.yaml
-  - [ ] Create `apps/api/tests/integration/README.md` with usage guide
-  - [ ] Update CLAUDE.md with integration testing section
-  - [ ] Update story file with completion notes
-  - [ ] Verify all 3 integration tests pass consistently
+- [x] Documentation & Testing (AC: #6-7) — **REQUIRED BEFORE DONE**
+  - [x] Add inline comments to compose.test.yaml
+  - [x] Create `apps/api/tests/integration/README.md` with usage guide
+  - [x] Update CLAUDE.md with integration testing section
+  - [x] Update story file with completion notes
+  - [x] Verify all 11 integration tests pass consistently
+
+- [ ] Task 5: CI/CD Integration (Future Enhancement)
+  - [ ] Add integration tests to GitHub Actions CI pipeline
+  - [ ] Configure Docker-in-Docker for CI environment
+  - [ ] Set `MOCK_LLM=true` in CI workflow
+  - [ ] Add integration test step after unit tests
+  - [ ] Ensure test artifacts uploaded on failure
 
 ## Dev Notes
 
@@ -449,44 +460,68 @@ Claude Sonnet 4.5 (create-story workflow)
 
 ### Completion Notes List
 
-**Story Creation Process:**
-- ✅ Loaded existing user story from `user-stories/` folder (390 lines of detailed planning)
-- ✅ Analyzed Epic 2 (Assessment Backend Services) for story context
-- ✅ Reviewed previous story 2.7 (TypeScript compilation) for patterns and learnings
-- ✅ Analyzed architecture decision 5 (Testing Strategy) for integration testing approach
-- ✅ Examined existing Docker Compose setup (compose.yaml) for reference patterns
-- ✅ Created comprehensive implementation-ready story in `implementation-artifacts/`
-- ✅ Updated sprint status with detailed comment for story tracking
+**Implementation Summary:**
+- ✅ **Story Status**: COMPLETED (all acceptance criteria met, all tasks done)
+- ✅ **Test Results**: 11 integration tests passing (2 health + 9 assessment/resume)
+- ✅ **Docker Environment**: Production-parity test environment on ports 4001/5433
+- ✅ **Mock LLM**: Zero-cost testing with 10 pattern-based responses
+- ✅ **Documentation**: Complete (README + CLAUDE.md section)
+- ✅ **CI/CD**: Task 5 added for future GitHub Actions integration
 
-**Key Context Provided to Developer:**
-- 🔥 **Critical anti-patterns** documented (what NOT to do)
-- 📋 **Exact specifications** for Docker Compose test environment (ports, health checks, env vars)
-- 🧪 **LLM mocking patterns** with 5 example response patterns (prevents API costs)
-- 🏗️ **Vitest global setup/teardown** implementation guide
-- 📚 **Effect-ts Layer swapping** logic for MOCK_LLM environment variable
-- 🎯 **Integration test patterns** with code examples
-- 🔗 **Previous work intelligence** from Story 2.7 (patterns, learnings, recent commits)
+**Implementation Details:**
+- 🐳 **Docker Compose**: compose.test.yaml with postgres-test + api-test services
+- 📊 **Database Schema**: docker/init-db-test.sql initializes full schema (Better Auth + Assessment + Scoring tables)
+- 🧪 **Vitest Config**: Separate integration config with global setup/teardown
+- 🤖 **LLM Mocking**: Effect Layer swapping via MOCK_LLM=true environment variable
+- 🎯 **Test Coverage**: 11 tests covering health, start, message, and resume endpoints
+- 📝 **Port Configuration**: Host 4001 → Container 4000 (avoids dev conflict)
 
-**Story Readiness:**
-- Status: `ready-for-dev` (comprehensive context provided)
-- Estimated implementation: 8-10 hours (6 phases from user story)
-- No blockers identified
-- All dependencies available (Docker, Vitest, Effect-ts, existing contracts)
+**Files Created (9 files):**
+1. compose.test.yaml - Docker Compose test environment
+2. docker/init-db-test.sql - Test database initialization (169 lines)
+3. apps/api/vitest.config.integration.ts - Integration test config
+4. apps/api/scripts/integration-setup.ts - Docker lifecycle setup
+5. apps/api/scripts/integration-teardown.ts - Docker lifecycle teardown
+6. apps/api/tests/integration/README.md - Integration testing guide
+7. apps/api/tests/integration/health.test.ts - Health endpoint tests
+8. apps/api/tests/integration/assessment.test.ts - Assessment endpoint tests
+9. packages/infrastructure/src/repositories/nerin-agent.mock.repository.ts - Mock LLM
+
+**Files Modified (4 files):**
+1. package.json - Root test:integration scripts
+2. apps/api/package.json - API test:integration scripts
+3. apps/api/src/index.ts - MOCK_LLM Layer swapping (line 67-68)
+4. CLAUDE.md - Integration testing documentation (lines 848-940)
+
+**Verification Commands:**
+```bash
+# All passing ✅
+pnpm test:integration              # 11 passed in ~10 seconds
+pnpm docker:test:up                # Manual start works
+pnpm docker:test:down              # Clean teardown works
+pnpm test:integration:watch        # Watch mode works
+```
+
+**Future Enhancement (Task 5):**
+- Add integration tests to GitHub Actions CI/CD pipeline
+- Configure Docker-in-Docker for CI environment
+- Ensure Railway deployment validation before production
 
 ### File List
 
-**Files to be Created:**
+**Files Created:**
 1. `compose.test.yaml` - Docker Compose test environment (postgres + API)
-2. `apps/api/vitest.config.integration.ts` - Vitest integration test config
-3. `apps/api/scripts/integration-setup.ts` - Global setup (Docker Compose up)
-4. `apps/api/scripts/integration-teardown.ts` - Global teardown (Docker Compose down)
-5. `apps/api/tests/integration/README.md` - Integration testing guide
-6. `apps/api/tests/integration/health.test.ts` - Health endpoint integration test
-7. `apps/api/tests/integration/assessment.test.ts` - Assessment endpoints integration tests
-8. `packages/infrastructure/src/repositories/nerin-agent.mock.repository.ts` - Mock LLM Layer
+2. `docker/init-db-test.sql` - PostgreSQL test database initialization script (auth + assessment + scoring tables with indexes and constraints)
+3. `apps/api/vitest.config.integration.ts` - Vitest integration test config
+4. `apps/api/scripts/integration-setup.ts` - Global setup (Docker Compose up)
+5. `apps/api/scripts/integration-teardown.ts` - Global teardown (Docker Compose down)
+6. `apps/api/tests/integration/README.md` - Integration testing guide
+7. `apps/api/tests/integration/health.test.ts` - Health endpoint integration test (2 tests)
+8. `apps/api/tests/integration/assessment.test.ts` - Assessment endpoints integration tests (9 tests)
+9. `packages/infrastructure/src/repositories/nerin-agent.mock.repository.ts` - Mock LLM Layer (10 patterns)
 
-**Files to be Modified:**
-1. `package.json` - Add integration test scripts (test:integration, docker:test:up/down)
-2. `apps/api/src/index.ts` - Add MOCK_LLM Layer swapping logic
-3. `CLAUDE.md` - Document integration testing patterns
-4. `.githooks/pre-push` - Add integration test coverage check (optional, Phase 6)
+**Files Modified:**
+1. `package.json` - Add integration test scripts (test:integration, test:integration:watch, docker:test:up/down)
+2. `apps/api/package.json` - Add integration test scripts
+3. `apps/api/src/index.ts` - Add MOCK_LLM Layer swapping logic (line 67-68)
+4. `CLAUDE.md` - Document integration testing patterns (lines 848-940)

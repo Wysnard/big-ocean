@@ -24,6 +24,7 @@ import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructur
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 import { NerinAgentLangGraphRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.langgraph.repository";
+import { NerinAgentMockRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.mock.repository";
 import { Context, Effect, Layer } from "effect";
 import { AssessmentGroupLive } from "./handlers/assessment";
 import { HealthGroupLive } from "./handlers/health";
@@ -53,12 +54,26 @@ const AuthServices = BetterAuthLive.pipe(
 const InfrastructureLayer = Layer.mergeAll(BaseServices, DatabaseServices, AuthServices);
 
 /**
+ * Nerin Agent Layer Selection
+ *
+ * Uses mock implementation when MOCK_LLM=true (for integration testing).
+ * Uses real LangGraph implementation otherwise (production/development).
+ *
+ * Benefits:
+ * - Zero Anthropic API costs during integration testing
+ * - Deterministic responses for reliable test assertions
+ * - Same Layer interface for both mock and real implementations
+ */
+const NerinAgentLayer =
+	process.env.MOCK_LLM === "true" ? NerinAgentMockRepositoryLive : NerinAgentLangGraphRepositoryLive;
+
+/**
  * Repository Layers - require Database and Logger
  */
 const RepositoryLayers = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
 	AssessmentMessageDrizzleRepositoryLive,
-	NerinAgentLangGraphRepositoryLive,
+	NerinAgentLayer,
 );
 
 /**
@@ -100,52 +115,17 @@ const createCustomServerFactory =
 		const betterAuthHandler = createBetterAuthHandler(auth, betterAuthUrl);
 
 		const server = createServer();
-		let effectHandler: ((req: IncomingMessage, res: ServerResponse) => void) | null = null;
 
-		// Store reference to Effect's handler when it gets attached
-		server.on("newListener", (event, listener) => {
+		// Add a one-time listener for when Effect attaches its handler
+		// We need to prepend our handler BEFORE Effect's handler
+		server.once("newListener", (event) => {
 			if (event === "request") {
-				effectHandler = listener as (req: IncomingMessage, res: ServerResponse) => void;
-				// Remove the Effect listener - we'll call it manually after Better Auth
-				server.removeListener(
-					"request",
-					listener as (req: IncomingMessage, res: ServerResponse) => void,
-				);
-			}
-		});
-
-		// Our custom request handler
-		server.on("request", async (req: IncomingMessage, res: ServerResponse) => {
-			try {
-				// Step 1: Try Better Auth first
-				await betterAuthHandler(req, res);
-
-				// Step 2: If Better Auth handled the request, we're done
-				if (res.writableEnded) {
-					return;
-				}
-
-				// Step 3: Pass to Effect handler
-				if (effectHandler) {
-					effectHandler(req, res);
-				} else {
-					// Fallback if Effect hasn't attached yet
-					res.statusCode = 503;
-					res.setHeader("Content-Type", "application/json");
-					res.end(
-						JSON.stringify({
-							error: "Service initializing",
-						}),
-					);
-				}
-			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : String(error);
-				console.error("Server error:", errorMessage);
-				if (!res.headersSent) {
-					res.statusCode = 500;
-					res.setHeader("Content-Type", "application/json");
-					res.end(JSON.stringify({ error: "Internal server error" }));
-				}
+				// Prepend our custom handler that runs BEFORE Effect
+				// prependListener ensures we run first
+				server.prependListener("request", async (req: IncomingMessage, res: ServerResponse) => {
+					// Only process Better Auth routes - others pass through to Effect
+					await betterAuthHandler(req, res);
+				});
 			}
 		});
 

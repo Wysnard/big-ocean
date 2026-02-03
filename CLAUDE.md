@@ -23,6 +23,7 @@ Always use Context7 MCP when I need library/API documentation, code generation, 
 - [Common Commands](#common-commands) → [COMMANDS.md](./docs/COMMANDS.md)
 - [Git Hooks](#git-hooks-local-enforcement)
 - [Testing with Effect and @effect/vitest](#testing-with-effect-and-effectvitest)
+- [Integration Testing with Docker](#integration-testing-with-docker-story-28-)
 
 ### 🚢 Production & Deployment
 - [Production Deployment](#production-deployment-story-13-) → [DEPLOYMENT.md](./docs/DEPLOYMENT.md)
@@ -843,6 +844,100 @@ For complete examples, see:
 - `apps/api/src/__tests__/effect-vitest-examples.test.ts` - Full feature showcase
 - `apps/api/src/__tests__/smoke.test.ts` - Basic setup verification
 - `apps/api/src/__tests__/use-cases/*.test.ts` - Real-world use-case tests
+
+## Integration Testing with Docker (Story 2.8 ✅)
+
+Tier 2 integration tests validate the complete HTTP stack (Docker build + PostgreSQL + API endpoints) in a production-like environment before Railway deployment.
+
+### Quick Start
+
+```bash
+# Run all integration tests (automatic Docker lifecycle)
+pnpm test:integration
+
+# Run in watch mode (for development)
+pnpm test:integration:watch
+
+# Manual Docker control (for debugging)
+pnpm docker:test:up   # Start test environment
+pnpm docker:test:down # Stop and clean up
+```
+
+### Architecture
+
+Integration tests run on the **HOST machine** making real HTTP requests to a **Dockerized API**:
+
+```
+Host Machine (Vitest)  ──HTTP───►  Docker: compose.test.yaml
+                        :4001      ├── api-test (production Dockerfile)
+                                   └── postgres-test (PostgreSQL 16)
+```
+
+**Key Design Decisions:**
+- Tests run on HOST (not in container) - enables watch mode, UI, debugging
+- Production Dockerfile target - validates actual deployment artifact
+- Mock LLM via `MOCK_LLM=true` - zero Anthropic API costs
+- Separate ports (5433/4001) - can run alongside development
+
+### Port Configuration
+
+| Service       | Dev Port | Test Port |
+|---------------|----------|-----------|
+| PostgreSQL    | 5432     | 5433      |
+| API           | 4000     | 4001      |
+
+### LLM Mocking Pattern
+
+The API uses Layer swapping to mock LLM responses during integration tests:
+
+```typescript
+// apps/api/src/index.ts
+const NerinAgentLayer = process.env.MOCK_LLM === "true"
+  ? NerinAgentMockRepositoryLive  // Deterministic mock responses
+  : NerinAgentLangGraphRepositoryLive  // Real Claude API
+```
+
+Mock responses are pattern-based (keywords trigger Big Five trait responses).
+
+### Integration Test Pattern
+
+```typescript
+import { Schema } from "effect";
+import { MyResponseSchema } from "@workspace/contracts";
+
+const API_URL = process.env.API_URL || "http://localhost:4001";
+
+test("validates response against contract schema", async () => {
+  const response = await fetch(`${API_URL}/api/endpoint`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key: "value" }),
+  });
+
+  expect(response.status).toBe(200);
+  const data = await response.json();
+
+  // Contract enforcement via Effect Schema
+  const decoded = Schema.decodeUnknownSync(MyResponseSchema)(data);
+  expect(decoded.field).toBeDefined();
+});
+```
+
+### Test Files
+
+- `apps/api/tests/integration/health.test.ts` - Validates Docker setup (build, migrations, server)
+- `apps/api/tests/integration/assessment.test.ts` - Assessment endpoints (start, message, resume)
+- `apps/api/tests/integration/README.md` - Detailed documentation
+
+### Testing Strategy (Three Tiers)
+
+| Tier | Type | What It Tests | Speed | Cost |
+|------|------|--------------|-------|------|
+| 1 | Unit Tests | Use-cases with mock repos | Fast | Free |
+| 2 | **Integration Tests** | HTTP + DB + Docker (this story) | Medium | Free |
+| 3 | Real LLM Tests | Full AI pipeline | Slow | $$ |
+
+Tier 2 catches "works on my machine" bugs before Railway deployment.
 
 ## Production Deployment (Story 1.3 ✅)
 

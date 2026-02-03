@@ -96,3 +96,40 @@ Hexagonal architecture implementation for the Nerin conversational agent.
 **Critical Detail:** The `configurable.thread_id` passed to `graph.invoke()` is required for checkpointer persistence. Use `sessionId` as thread_id to maintain conversation history.
 
 **Details:** See [ARCHITECTURE.md](./ARCHITECTURE.md#nerin-agent-implementation)
+
+## Story 2.8 - Docker Setup for Integration Testing ✅
+
+Tier 2 integration tests that validate the complete HTTP stack in a production-like Docker environment.
+
+**Deliverables:**
+- `compose.test.yaml` with postgres-test (port 5433) and api-test (port 4001)
+- `docker/init-db-test.sql` for test database initialization
+- `vitest.config.integration.ts` with global setup/teardown
+- Global setup/teardown scripts for automatic Docker lifecycle
+- Integration test suite (11 tests): health, start, message, resume endpoints
+- Mock LLM repository (`NerinAgentMockRepositoryLive`) with pattern-based responses
+- Effect Layer swapping via `MOCK_LLM=true` environment variable
+- Integration testing documentation in CLAUDE.md
+
+**Key Features:**
+- Tests run on HOST machine (enables watch mode, Vitest UI, debugging)
+- Production Dockerfile target (validates actual deployment artifact)
+- Mock LLM via Layer swapping (zero Anthropic API costs)
+- Separate ports from dev (5433/4001 vs 5432/4000) for parallel execution
+- Effect Schema validation in all tests (contract enforcement)
+- Complete database persistence validation
+
+**Test Commands:**
+```bash
+pnpm test:integration              # Automatic Docker lifecycle
+pnpm test:integration:watch        # Watch mode for rapid iteration
+pnpm docker:test:up                # Manual start (debugging)
+pnpm docker:test:down              # Clean teardown
+```
+
+**Testing Strategy:**
+- **Tier 1**: Unit tests (use-cases with mock repos) - Fast, free
+- **Tier 2**: Integration tests (HTTP + DB + Docker) - Medium speed, free
+- **Tier 3**: Real LLM tests (full AI pipeline) - Slow, expensive
+
+**Details:** See [apps/api/tests/integration/README.md](../apps/api/tests/integration/README.md) and [CLAUDE.md](../CLAUDE.md#integration-testing-with-docker-story-28-)

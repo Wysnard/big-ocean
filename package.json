@@ -18,7 +18,11 @@
 		"test:ui": "vitest --ui",
 		"test:run": "turbo test",
 		"test:coverage": "vitest run --coverage",
-		"test:watch": "vitest watch"
+		"test:watch": "vitest watch",
+		"test:integration": "pnpm --filter=api test:integration",
+		"test:integration:watch": "pnpm --filter=api test:integration:watch",
+		"docker:test:up": "docker compose -f compose.test.yaml up -d --build",
+		"docker:test:down": "docker compose -f compose.test.yaml down -v --remove-orphans"
 	},
 	"simple-git-hooks": {
 		"pre-commit": "./.githooks/pre-commit",
