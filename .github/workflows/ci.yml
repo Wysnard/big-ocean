@@ -56,3 +56,30 @@ jobs:
           name: coverage-report
           path: '**/coverage/'
           retention-days: 7
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    # Only run on PRs to master to save CI minutes
+    if: github.event_name == 'pull_request' && github.base_ref == 'master'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.4.1
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run Integration Tests
+        run: pnpm test:integration

@@ -345,12 +345,53 @@ pnpm format         # Format with Prettier
 
 ### Testing
 
-**Front app (Vitest)**:
+**Unit Tests** (Vitest with @effect/vitest):
 
 ```bash
-pnpm -C apps/front test
-pnpm -C apps/front test --watch
+# Run all unit tests
+pnpm test:run
+
+# Watch mode
+pnpm test:watch
+
+# Coverage report
+pnpm test:coverage
+
+# App-specific tests
+pnpm -C apps/api test          # Backend unit tests (99 tests)
+pnpm -C apps/front test        # Frontend unit tests (9 tests)
 ```
+
+**Integration Tests** (Docker + HTTP + PostgreSQL):
+
+Tier 2 integration tests validate the complete HTTP stack in a production-like Docker environment:
+
+```bash
+# Automatic Docker lifecycle (recommended)
+pnpm test:integration              # Start Docker → Run tests → Stop Docker
+
+# Watch mode for rapid iteration
+pnpm test:integration:watch        # Tests re-run on code changes
+
+# Manual Docker control (for debugging)
+pnpm docker:test:up                # Start test environment only
+pnpm docker:test:down              # Stop and clean up
+```
+
+**What Integration Tests Validate:**
+- ✅ Docker image builds from production Dockerfile
+- ✅ PostgreSQL migrations execute correctly
+- ✅ API endpoints return valid HTTP responses
+- ✅ Response schemas match @workspace/contracts
+- ✅ Database persistence (sessions, messages saved)
+- ✅ Mock LLM responds appropriately (zero API costs)
+
+**Test Environment:**
+- **PostgreSQL**: localhost:5433 (isolated from dev on 5432)
+- **API**: localhost:4001 (isolated from dev on 4000)
+- **Tests run on HOST**: Enables watch mode, Vitest UI, debugging
+
+See [apps/api/tests/integration/README.md](apps/api/tests/integration/README.md) for detailed documentation.
 
 ### Storybook
 

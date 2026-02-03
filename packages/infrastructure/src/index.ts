@@ -35,8 +35,9 @@ export {
 } from "./repositories/cost-guard.redis.repository";
 // Logger repository implementation
 export { LoggerPinoRepositoryLive } from "./repositories/logger.pino.repository";
-// Nerin agent repository implementation
+// Nerin agent repository implementations
 export { NerinAgentLangGraphRepositoryLive } from "./repositories/nerin-agent.langgraph.repository";
+export { NerinAgentMockRepositoryLive } from "./repositories/nerin-agent.mock.repository";
 // Redis repository implementation
 export {
 	createTestRedisRepository,

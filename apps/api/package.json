@@ -9,6 +9,8 @@
     "start": "tsx src/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.config.integration.ts",
+    "test:integration:watch": "vitest --config vitest.config.integration.ts",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint src",
     "format": "biome format src"

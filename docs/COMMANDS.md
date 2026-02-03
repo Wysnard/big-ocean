@@ -23,12 +23,45 @@ pnpm dev --filter=api         # Run only backend (Node.js, port 4000)
 ## Building & Testing
 
 ```bash
-pnpm build                  # Build all packages and apps
-pnpm lint                   # Lint all packages
-pnpm format                 # Format all code
-pnpm test:run               # Run all tests
-pnpm test:coverage          # Run tests with coverage report
+pnpm build                     # Build all packages and apps
+pnpm lint                      # Lint all packages
+pnpm format                    # Format all code
+pnpm test:run                  # Run all unit tests
+pnpm test:coverage             # Run unit tests with coverage report
+pnpm test:integration          # Run integration tests (Docker + HTTP + DB)
+pnpm test:integration:watch    # Run integration tests in watch mode
 ```
+
+### Integration Testing
+
+Integration tests validate the complete HTTP stack (Docker build + PostgreSQL + API endpoints) in a production-like environment:
+
+```bash
+# Automatic Docker lifecycle (recommended)
+pnpm test:integration             # Start Docker → Run tests → Stop Docker
+
+# Watch mode for rapid iteration
+pnpm test:integration:watch       # Run tests in watch mode
+
+# Manual Docker control (for debugging)
+pnpm docker:test:up               # Start test environment only
+pnpm docker:test:down             # Stop and clean up test environment
+```
+
+**What Integration Tests Validate:**
+- Docker image builds successfully from production Dockerfile
+- PostgreSQL migrations run correctly
+- API endpoints return correct HTTP responses
+- Response schemas match @workspace/contracts
+- Database persistence works (sessions, messages saved)
+- Mock LLM responds appropriately (zero API costs)
+
+**Test Environment:**
+- PostgreSQL: localhost:5433 (test DB, isolated from dev on 5432)
+- API: localhost:4001 (test API, isolated from dev on 4000)
+- Tests run on HOST machine (enables watch mode, UI, debugging)
+
+See [apps/api/tests/integration/README.md](../apps/api/tests/integration/README.md) for detailed documentation.
 
 ## First-Time Setup
 
