@@ -53,6 +53,8 @@ services:
       DATABASE_URL: postgresql://test_user:test_password@postgres-test:5432/bigocean_test
       # CRITICAL: Mock LLM to avoid Anthropic API costs
       MOCK_LLM: "true"
+      # Dummy API key (required for env validation, but MOCK_LLM=true prevents actual usage)
+      ANTHROPIC_API_KEY: "sk-test-dummy-key-for-integration-tests"
       # Better Auth configuration
       BETTER_AUTH_SECRET: test-secret-minimum-32-characters-long-for-security
       BETTER_AUTH_URL: http://localhost:4000
