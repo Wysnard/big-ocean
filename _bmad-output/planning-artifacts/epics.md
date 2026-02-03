@@ -551,23 +551,44 @@ So that **I optimize for quality + cost by running expensive operations only whe
 **Then** tests fail (red) because orchestrator doesn't exist
 **And** each test defines expected routing behavior:
   - Test: Always routes to Nerin on every message
-  - Test: Triggers Analyzer + Scorer on every 3rd message
-  - Test: Routes to Nerin with extra context when precision < 50%
-  - Test: Skips expensive ops when approaching budget
+  - Test: Analyzer runs on every message (evidence extraction)
+  - Test: Scorer triggers every 3rd message (batch aggregation)
+  - Test: Hint injected only at scoring boundaries (when `messagesSinceLastScore === 0`)
+  - Test: Hint targets lowest-confidence facet (`precisionGaps[0]`)
+  - Test: Hint cleared after Nerin consumes it (messages 2-3 hint-free)
+  - Test: Hint phrasing uses curiosity framing ("You haven't heard much about...")
+  - Test: No hints when precision >= 70%
+  - Test: Skips Scorer when approaching budget (Analyzer continues)
   - Test: Routing decisions are deterministic (same state → same decision)
 
 **IMPLEMENTATION (Green Phase):**
 **Given** a new message from the user
 **When** the orchestrator receives it
 **Then** it routes to Nerin for response generation (always)
-**And** every 3rd message triggers Analyzer + Scorer (batch)
-**And** if precision < 50%, extra context is generated for Nerin
+**And** Analyzer extracts facet evidence from every message
+**And** every 3rd message triggers Scorer (batch aggregation)
 **And** routing tests pass (green)
+
+**Given** a scoring cycle completes (every 3rd message)
+**When** the Router evaluates precision gaps
+**Then** it injects a hint for the NEXT cycle targeting the lowest-confidence facet
+**And** hint is phrased as Nerin's curiosity (e.g., "You haven't heard much about how they relate to helping others")
+**And** hint is consumed by Nerin on first message of cycle, then cleared
+**And** messages 2 and 3 of each cycle receive NO hint injection
+**And** Nerin operates with natural conversation flow between hints
+**And** hint cadence tests pass (green)
+
+**Given** precision reaches 70%+ at a scoring boundary
+**When** the next cycle would begin
+**Then** no further hints are injected
+**And** celebration screen triggers (per Story 4.4)
+**And** user can continue chatting hint-free via "Keep Exploring"
+**And** precision threshold tests pass
 
 **Given** cost is approaching daily limit
 **When** the next assessment would exceed budget
-**Then** the orchestrator skips Analyzer/Scorer
-**And** routes directly to Nerin (cost-saving)
+**Then** the orchestrator skips Scorer (Analyzer still runs for evidence)
+**And** routes directly to Nerin without hints (cost-saving)
 **And** shows user graceful message: "Quality may be reduced while optimizing..."
 **And** cost-aware routing tests pass
 
@@ -582,25 +603,43 @@ So that **I optimize for quality + cost by running expensive operations only whe
   - traitScores: Record<TraitName, TraitScore> (derived by Aggregator)
   - precision: overall confidence metric
   - cost: accumulated spend
-  - precisionGaps: lowest-confidence facets for Router guidance
+  - precisionGaps: FacetName[] (ordered by confidence ascending)
+  - currentHint: FacetName | null (set at scoring boundary, cleared after Nerin consumes)
+  - messagesSinceLastScore: number (resets to 0 after Scorer runs)
 - Pipeline flow: Analyzer (per message) → Scorer (every 3 messages) → Aggregator (derives traits) → Router (guides Nerin)
-- Routing logic: Always Nerin, conditional Analyzer/Scorer (every 3 msgs or low precision)
-- Cost-aware routing: Skip expensive ops if approaching budget
+- Routing logic:
+  - Nerin: Every message
+  - Analyzer: Every message (extracts evidence)
+  - Scorer: Every 3 messages (aggregates scores, updates precision)
+  - Hint injection: Only at scoring boundaries (message 1 of each 3-message cycle)
+  - Hint cleared: After Nerin consumes it (messages 2-3 are hint-free)
+  - Hint language: Framed as Nerin's curiosity ("You haven't heard much about..."), not directives
+- Cost-aware routing: Skip Scorer if approaching budget (Analyzer still runs for evidence collection)
 - Deterministic: Same state always produces same routing decision
 - Unit test coverage: 100% of routing logic paths
 
 **Acceptance Checklist:**
 - [ ] Failing tests written first covering all routing scenarios (red phase)
 - [ ] Tests verify Nerin routing on every message
-- [ ] Tests verify Analyzer/Scorer batch triggering
-- [ ] Tests verify precision-based routing
-- [ ] Tests verify cost-aware skipping
+- [ ] Tests verify Analyzer runs on every message (evidence extraction)
+- [ ] Tests verify Scorer batch triggering (every 3 messages)
+- [ ] Tests verify hint injection only at scoring boundaries (`messagesSinceLastScore === 0`)
+- [ ] Tests verify `currentHint` is `null` for messages where `messagesSinceLastScore > 0`
+- [ ] Tests verify hint content matches `precisionGaps[0]` facet name
+- [ ] Tests verify no hint injection when `precision >= 0.7`
+- [ ] Tests verify hint phrasing uses curiosity framing, not directives
+- [ ] Tests verify cost-aware skipping (Scorer skipped, Analyzer continues)
+- [ ] Tests verify conversation transcripts show natural topic variation between hints
 - [ ] Implementation passes all tests (green phase)
-- [ ] State machine defined in LangGraph
+- [ ] State machine defined in LangGraph with hint state management
 - [ ] Routing to Nerin on every message
-- [ ] Analyzer/Scorer triggered every 3 messages
-- [ ] Cost-aware routing skips analysis when needed
-- [ ] Precision tracking influences routing decisions
+- [ ] Analyzer triggered every message for evidence collection
+- [ ] Scorer triggered every 3 messages for aggregation
+- [ ] Hint injected only at scoring boundaries (message 1 of each 3-message cycle)
+- [ ] Hint targets lowest-confidence facet from precision gaps
+- [ ] Messages between scoring cycles are hint-free (natural flow)
+- [ ] No hints after precision reaches 70%
+- [ ] Cost-aware routing skips Scorer when needed (preserves Analyzer)
 - [ ] 100% unit test coverage for orchestration logic
 
 ---
