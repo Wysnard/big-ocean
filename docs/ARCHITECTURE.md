@@ -44,10 +44,10 @@ Packages use `workspace:*` and `workspace:^` to reference other packages in the 
 **Dependency Graph:**
 
 ```
-apps/front     → contracts, domain, ui, database
-apps/api       → contracts, domain, database, infrastructure
+apps/front     → contracts, domain, ui
+apps/api       → contracts, domain, infrastructure
 contracts      → domain (schema imports)
-infrastructure → domain, database
+infrastructure → domain (DB schema lives here)
 ui             → (independent component library)
 ```
 
@@ -57,28 +57,28 @@ The `@workspace/domain` package encapsulates core business logic:
 
 **Domain Package Structure:**
 
-```typescript
-// packages/domain/src/
-├── schemas/          # Effect Schema definitions for domain types
-├── errors/           # Tagged Error types
-├── types/            # Branded types (userId, sessionId, etc.)
-└── constants/        # Domain constants (trait names, facets, etc.)
+```
+packages/domain/src/
+├── schemas/       # Effect Schema definitions for domain types
+├── errors/        # Tagged Error types
+├── types/         # Branded types (userId, sessionId, etc.)
+├── constants/     # Domain constants (trait names, facets, etc.)
+└── repositories/  # Context.Tag interfaces (ports)
 ```
 
 **Example Domain Export:**
 
 ```typescript
 // packages/domain/src/schemas/index.ts
-import * as S from "@effect/schema/Schema";
+import { Schema as S } from "effect";
 
 export const UserProfileSchema = S.Struct({
   id: S.String,
   name: S.String,
   traits: PersonalityTraitsSchema,
-  // ... more fields
 });
 
-export type UserProfile = S.To<typeof UserProfileSchema>;
+export type UserProfile = typeof UserProfileSchema.Type;
 ```
 
 ## Effect/Platform HTTP Contracts
@@ -398,27 +398,11 @@ const result = await Effect.runPromise(
 
 ## Database (Drizzle ORM + PostgreSQL)
 
-Type-safe database access using Drizzle ORM with PostgreSQL.
+Type-safe database access using Drizzle ORM with PostgreSQL. Schema lives in `packages/infrastructure/src/db/schema.ts`.
 
-```typescript
-// packages/database/src/schema.ts
-import { pgTable, text, timestamp, numeric } from "drizzle-orm/pg-core";
+**Key Tables:** `assessment_session`, `assessment_message`, `facet_evidence`, `facet_scores`, `trait_scores`
 
-export const sessions = pgTable("sessions", {
-  id: text("id").primaryKey(),
-  userId: text("user_id"),
-  createdAt: timestamp("created_at").defaultNow(),
-  // ... other fields
-});
-
-export const messages = pgTable("messages", {
-  id: text("id").primaryKey(),
-  sessionId: text("session_id").references(() => sessions.id),
-  role: text("role"), // 'user' | 'assistant'
-  content: text("content"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-```
+See actual schema file for current table definitions.
 
 ## Catalog Dependencies
 

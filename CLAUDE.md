@@ -6,34 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
 
-## Table of Contents
-
-### 🚀 Quick Start
-- [Repository Overview](#repository-overview)
-- [Common Commands](#common-commands)
-
-### 📚 Core Documentation
-- [Architecture & Key Patterns](#architecture--key-patterns) → [ARCHITECTURE.md](./docs/ARCHITECTURE.md)
-- [Completed Stories](#completed-stories-) → [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md)
-- [Tech Stack Summary](#tech-stack-summary)
-- [Key Dependencies & Versions](#key-dependencies--versions)
-
-### ⚙️ Development Setup
-- [Monorepo Structure](#monorepo-structure)
-- [Common Commands](#common-commands) → [COMMANDS.md](./docs/COMMANDS.md)
-- [Git Hooks](#git-hooks-local-enforcement)
-- [Testing with Effect and @effect/vitest](#testing-with-effect-and-effectvitest)
-- [Integration Testing with Docker](#integration-testing-with-docker-story-28-)
-
-### 🚢 Production & Deployment
-- [Production Deployment](#production-deployment-story-13-) → [DEPLOYMENT.md](./docs/DEPLOYMENT.md)
-
-### 📋 Conventions & Workflows
-- [Git Conventions](#git-conventions) → [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md)
-- [Linting & Code Quality](#linting--code-quality)
-- [Type Safety Patterns](#type-safety-patterns)
-- [Adding New Packages or Apps](#adding-new-packages-or-apps)
-- [Adding Components to UI Library](#adding-components-to-ui-library)
+**Related docs:** [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | [COMMANDS.md](./docs/COMMANDS.md) | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) | [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md)
 
 ## Repository Overview
 
@@ -48,82 +21,31 @@ Always use Context7 MCP when I need library/API documentation, code generation, 
 
 ```
 apps/
-  ├── front/        # TanStack Start frontend (React 19, full-stack SSR)
-  └── api/          # Node.js backend with Effect-ts and LangGraph
+  ├── front/          # TanStack Start frontend (React 19, full-stack SSR)
+  └── api/            # Node.js backend with Effect-ts and LangGraph
 packages/
-  ├── domain/       # Core types, schemas, and domain models
-  ├── contracts/    # Effect/HTTP contracts and schema definitions
-  ├── database/     # Drizzle ORM schema and migrations
-  ├── ui/           # Shared React components (shadcn/ui based)
-  ├── infrastructure/ # Backend utilities (context bridges, dependency injection)
-  ├── lint/         # Shared Biome linting and formatting configuration
+  ├── domain/         # Core types, schemas, repository interfaces
+  ├── contracts/      # Effect/HTTP contracts and schema definitions
+  ├── infrastructure/ # Repository implementations, DB schema (Drizzle)
+  ├── ui/             # Shared React components (shadcn/ui based)
+  ├── lint/           # Shared Biome linting configuration
   └── typescript-config/
 ```
 
 ### Apps
 
-- **front** (`port 3000`): TanStack Start full-stack SSR frontend with React 19, featuring:
-  - TanStack Start framework for isomorphic React (SSR/streaming)
-  - TanStack Router 1+ for file-based routing
-  - TanStack Query 5+ for data fetching and caching
-  - TanStack Form 1+ for form state management
-  - TanStack DB 0+ for reactive state management
-  - ElectricSQL (@electric-sql/client, @electric-sql/react) for local-first sync
-  - shadcn/ui components with Tailwind CSS v4
-  - Effect-ts for functional error handling and HTTP client typing
-
-- **api** (`port 4000` dev, Railway prod): Node.js backend featuring:
-  - **Hexagonal Architecture**:
-    - `src/handlers/` - Thin HTTP adapters (controllers/presenters)
-    - `src/use-cases/` - Business logic (main unit test target)
-  - Effect-ts 3.19+ for functional programming and error handling
-  - @effect/platform 0.94+ for HTTP server and API contracts
-  - @effect/platform-node for Node.js HTTP runtime
-  - @effect/schema 0.71+ for runtime validation and serialization
-  - @langchain/langgraph 1+ for multi-agent orchestration
-  - @anthropic-ai/sdk 0.71+ for Claude API integration
-  - Drizzle ORM 0.45+ for type-safe database queries
-  - PostgreSQL as primary database
-  - Better Auth for authentication (integrated at node:http layer)
-  - Health check: GET `/health` → `{"status":"ok","timestamp":"..."}`
-  - HTTP API: All routes under `/api/*` (except `/health`)
+- **front** (`port 3000`): TanStack Start SSR frontend - React 19, TanStack Router/Query/Form/DB, ElectricSQL, shadcn/ui, Tailwind v4
+- **api** (`port 4000`): Effect-ts backend - hexagonal architecture, LangGraph multi-agent, Drizzle + PostgreSQL, Better Auth
+  - Health: `GET /health` | API: `/api/*`
+  - Structure: `src/handlers/` (HTTP adapters) → `src/use-cases/` (business logic)
 
 ### Packages
 
-- **domain**: Core domain layer (hexagonal architecture - ports)
-  - Repository interfaces using Context.Tag (no implementations)
-  - Entity schemas with Effect Schema (users, sessions, messages, etc.)
-  - Domain errors and types
-  - Branded types for type-safe IDs (userId, sessionId, etc.)
-  - Pure abstractions - no external dependencies
-
-- **contracts**: Effect/Platform HTTP contract definitions using @effect/platform and @effect/schema
-  - HTTP API Groups: AssessmentGroup, HealthGroup, ProfileGroup (future)
-  - Type-safe request/response schemas with Effect Schema validation
-  - BigOceanApi composition class with route grouping and prefixing
-  - Exported TypeScript types for frontend consumption
-  - Pattern: HttpApiGroup.make() → HttpApiEndpoint → HttpApiBuilder handlers
-
-- **database**: Drizzle ORM schema and utilities
-  - Tables: users, sessions, messages, trait_assessments, etc.
-  - Migration scripts for PostgreSQL
-  - Query builders and type-safe helpers
-
-- **infrastructure**: Infrastructure layer (hexagonal architecture - adapters)
-  - Repository implementations as Effect Layers (`*RepositoryLive`)
-  - Drizzle ORM implementations (`*.drizzle.repository.ts`)
-  - Pino logger implementation (`*.pino.repository.ts`)
-  - Database context and schema definitions
-  - Naming: `AssessmentMessageDrizzleRepositoryLive` (production)
-  - Testing: `AssessmentMessageTestRepositoryLive` (test implementations)
-  - Injected into use-cases via Layer composition
-
-- **ui**: Shared React component library built on shadcn/ui
-  - Exports components from `./components/*`
-  - Utilities for personality visualization and formatting
-
-- **lint**: Shared Biome configuration used across all apps and packages
-- **typescript-config**: Shared TypeScript configuration
+- **domain**: Repository interfaces (Context.Tag), schemas, branded types, domain errors - pure abstractions
+- **contracts**: HTTP API definitions (HttpApiGroup/HttpApiEndpoint) shared frontend ↔ backend
+- **infrastructure**: Repository implementations (`*RepositoryLive`), Drizzle DB schema, Pino logger
+- **ui**: shadcn/ui component library
+- **lint** / **typescript-config**: Shared configurations
 
 ## Common Commands
 
@@ -201,61 +123,11 @@ Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
 | Use-Case | `apps/api/src/use-cases/` | `send-message.use-case.ts` | Pure business logic |
 | Handler | `apps/api/src/handlers/` | `assessment.ts` | HTTP adapter |
 
-**Example Use-Case Pattern:**
+**Use-Case Pattern:** `Effect.gen` + `yield*` to access repositories → return typed result with errors in signature.
 
-```typescript
-// apps/api/src/use-cases/send-message.use-case.ts
-import { Effect } from "effect";
-import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
-import { AssessmentMessageRepository } from "@workspace/domain/repositories/assessment-message.repository";
-import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
+**Testing:** Provide `TestLayer` with mock implementations via `Effect.provide()`.
 
-export const sendMessage = (
-  input: SendMessageInput
-): Effect.Effect<
-  SendMessageOutput,
-  DatabaseError | SessionNotFound,
-  AssessmentSessionRepository | AssessmentMessageRepository | LoggerRepository
-> =>
-  Effect.gen(function* () {
-    // Access injected dependencies
-    const sessionRepo = yield* AssessmentSessionRepository;
-    const messageRepo = yield* AssessmentMessageRepository;
-    const logger = yield* LoggerRepository;
-
-    // Business logic orchestrates domain operations
-    const session = yield* sessionRepo.getSession(input.sessionId);
-    yield* messageRepo.saveMessage(input.sessionId, "user", input.message);
-
-    // ... more business logic
-
-    return { response, precision };
-  });
-```
-
-**Testing Pattern:**
-
-```typescript
-// Unit test with test implementations
-const TestLayer = Layer.mergeAll(
-  Layer.succeed(AssessmentSessionRepository, TestSessionRepo),
-  Layer.succeed(AssessmentMessageRepository, TestMessageRepo),
-  Layer.succeed(LoggerRepository, TestLogger)
-);
-
-const result = await Effect.runPromise(
-  sendMessage({ sessionId: "test", message: "Hello" })
-    .pipe(Effect.provide(TestLayer))
-);
-```
-
-**Key Benefits:**
-- **Testability**: Use-cases tested in isolation with test implementations
-- **Flexibility**: Swap implementations without changing business logic
-- **Clarity**: Each layer has single responsibility
-- **Effect-ts native**: Context.Tag and Layer system for DI
-
-For complete architecture details, see `_bmad-output/planning-artifacts/architecture.md` (ADR-6).
+See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full examples and ADR-6 details.
 
 ### Workspace Dependencies
 
@@ -264,385 +136,53 @@ Packages use `workspace:*` and `workspace:^` to reference other packages in the 
 **Dependency Graph:**
 
 ```
-apps/front     → contracts, domain, ui, database
-apps/api       → contracts, domain, database, infrastructure
+apps/front     → contracts, domain, ui
+apps/api       → contracts, domain, infrastructure
 contracts      → domain (schema imports)
-infrastructure → domain, database
+infrastructure → domain (DB schema lives here)
 ui             → (independent component library)
 ```
 
-### Domain-Driven Design
+### Domain Package Structure
 
-The `@workspace/domain` package encapsulates core business logic:
-
-**Domain Package Structure:**
-
-```typescript
-// packages/domain/src/
-├── schemas/          # Effect Schema definitions for domain types
-├── errors/           # Tagged Error types
-├── types/            # Branded types (userId, sessionId, etc.)
-└── constants/        # Domain constants (trait names, facets, etc.)
 ```
-
-**Example Domain Export:**
-
-```typescript
-// packages/domain/src/schemas/index.ts
-import * as S from "@effect/schema/Schema";
-
-export const UserProfileSchema = S.Struct({
-  id: S.String,
-  name: S.String,
-  traits: PersonalityTraitsSchema,
-  // ... more fields
-});
-
-export type UserProfile = S.To<typeof UserProfileSchema>;
+packages/domain/src/
+├── schemas/      # Effect Schema definitions
+├── errors/       # Tagged Error types
+├── types/        # Branded types (userId, sessionId)
+├── constants/    # Big Five traits, facets
+└── repositories/ # Context.Tag interfaces
 ```
 
 ### Effect/Platform HTTP Contracts (Story 1.6 ✅)
 
-The `@workspace/contracts` package defines type-safe HTTP API contracts using @effect/platform and @effect/schema following the official effect-worker-mono pattern.
+Type-safe HTTP API contracts using @effect/platform and @effect/schema.
 
-**HTTP Contract Structure** (in `packages/contracts/src/http/groups/assessment.ts`):
+**Key Files:**
+- Contract definitions: `packages/contracts/src/http/groups/*.ts`
+- Handler implementations: `apps/api/src/handlers/*.ts`
+- Server setup: `apps/api/src/index.ts`
 
-```typescript
-import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform"
-import { Schema as S } from "effect"
+**Pattern:** `HttpApiGroup.make()` → `HttpApiEndpoint` → `HttpApiBuilder.group()` handlers
 
-// Request/Response schemas
-export const StartAssessmentRequestSchema = S.Struct({
-  userId: S.optional(S.String),
-})
-
-export const StartAssessmentResponseSchema = S.Struct({
-  sessionId: S.String,
-  createdAt: S.DateTimeUtc,
-})
-
-export const SendMessageRequestSchema = S.Struct({
-  sessionId: S.String,
-  message: S.String,
-})
-
-export const SendMessageResponseSchema = S.Struct({
-  response: S.String,
-  precision: S.Struct({
-    openness: S.Number,
-    conscientiousness: S.Number,
-    extraversion: S.Number,
-    agreeableness: S.Number,
-    neuroticism: S.Number,
-  }),
-})
-
-// HTTP API Group combines endpoints
-export const AssessmentGroup = HttpApiGroup.make("assessment")
-  .add(
-    HttpApiEndpoint.post("start", "/start")
-      .addSuccess(StartAssessmentResponseSchema)
-      .setPayload(StartAssessmentRequestSchema)
-  )
-  .add(
-    HttpApiEndpoint.post("sendMessage", "/message")
-      .addSuccess(SendMessageResponseSchema)
-      .setPayload(SendMessageRequestSchema)
-  )
-  .prefix("/assessment")
-```
-
-**Handler Implementation** (in `apps/api/src/handlers/assessment.ts`):
-
-```typescript
-import { HttpApiBuilder } from "@effect/platform"
-import { DateTime, Effect } from "effect"
-import { BigOceanApi } from "@workspace/contracts"
-import { LoggerService } from "../services/logger.js"
-
-// Handlers use HttpApiBuilder.group pattern
-export const AssessmentGroupLive = HttpApiBuilder.group(
-  BigOceanApi,
-  "assessment",
-  (handlers) =>
-    Effect.gen(function* () {
-      return handlers
-        .handle("start", ({ payload }) =>
-          Effect.gen(function* () {
-            const logger = yield* LoggerService
-
-            const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`
-            const createdAt = DateTime.unsafeMake(Date.now())
-
-            logger.info("Assessment session started", {
-              sessionId,
-              userId: payload.userId,
-            })
-
-            return { sessionId, createdAt }
-          })
-        )
-        .handle("sendMessage", ({ payload }) =>
-          Effect.gen(function* () {
-            const logger = yield* LoggerService
-
-            logger.info("Message received", {
-              sessionId: payload.sessionId,
-              messageLength: payload.message.length,
-            })
-
-            // Placeholder response (real Nerin logic in Epic 2)
-            return {
-              response: "Thank you for sharing that...",
-              precision: {
-                openness: 0.5,
-                conscientiousness: 0.4,
-                extraversion: 0.6,
-                agreeableness: 0.7,
-                neuroticism: 0.3,
-              },
-            }
-          })
-        )
-    })
-)
-```
-
-**Server Setup** (in `apps/api/src/index.ts`):
-
-```typescript
-import { Effect, Layer } from "effect"
-import { HttpApiBuilder, HttpMiddleware } from "@effect/platform"
-import { NodeHttpServer, NodeRuntime } from "@effect/platform-node"
-import { createServer } from "node:http"
-import { BigOceanApi } from "@workspace/contracts"
-import { HealthGroupLive } from "./handlers/health.js"
-import { AssessmentGroupLive } from "./handlers/assessment.js"
-import { LoggerServiceLive } from "./services/logger.js"
-import { betterAuthHandler } from "./middleware/better-auth.js"
-
-// Merge all handler groups with services
-const HttpGroupsLive = Layer.mergeAll(
-  HealthGroupLive,
-  AssessmentGroupLive,
-  LoggerServiceLive
-)
-
-// Build API from contracts with handlers
-const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(
-  Layer.provide(HttpGroupsLive)
-)
-
-// Complete API with router and middleware
-const ApiLayer = Layer.mergeAll(
-  ApiLive,
-  HttpApiBuilder.Router.Live,
-  HttpApiBuilder.Middleware.layer
-)
-
-// Hybrid server: Better Auth (node:http) → Effect (remaining routes)
-const createCustomServer = () => {
-  const server = createServer()
-  let effectHandler: any = null
-
-  server.on("newListener", (event, listener) => {
-    if (event === "request") {
-      effectHandler = listener
-      server.removeListener("request", listener as any)
-    }
-  })
-
-  server.on("request", async (req, res) => {
-    await betterAuthHandler(req, res)
-    if (!res.writableEnded && effectHandler) {
-      effectHandler(req, res)
-    }
-  })
-
-  return server
-}
-
-// HTTP Server with Better Auth integration
-const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
-  Layer.provide(ApiLayer),
-  Layer.provide(NodeHttpServer.layer(createCustomServer, { port: 4000 })),
-  Layer.provide(LoggerServiceLive)
-)
-
-// Launch server
-NodeRuntime.runMain(Layer.launch(HttpLive))
-```
+See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full examples.
 
 ### Multi-Agent System (LangGraph)
 
-The backend uses LangGraph to orchestrate multiple specialized agents:
+Orchestrator → Nerin (conversational) → Analyzer + Scorer (batch every 3 msgs)
 
-**Agent Architecture:**
+**Big Five Framework:** 5 traits × 6 facets = 30 facets total
+- Constants: `packages/domain/src/constants/big-five.ts`
+- Scoring triggers every 3 messages with recency-weighted averaging
 
-```
-┌─────────────────────────────────────────────────────┐
-│ Orchestrator (Rules-based routing)                  │
-│ - Identifies lowest precision trait                 │
-│ - Recommends exploration domain                     │
-│ - Generates context for Nerin                       │
-└────────────────┬────────────────────────────────────┘
-                 │ guidance
-                 ▼
-┌──────────────────────────────────────────────────────┐
-│ Nerin (Conversational Agent - Claude 3.5 Sonnet)   │
-│ - Handles conversational quality                    │
-│ - Builds relational safety                          │
-│ - No assessment responsibility                      │
-└────────────────┬────────────────────────────────────┘
-                 │ user response
-      ┌──────────┴──────────┐
-      │ (batch every 3 msgs)│
-      ▼                     ▼
-┌──────────────┐   ┌──────────────┐
-│ Analyzer     │   │ Scorer       │
-│ - Pattern    │   │ - Calculates │
-│   extraction │   │   trait      │
-│ - Detects    │   │   scores     │
-│   contradic. │   │ - Identifies │
-│              │   │   facets     │
-└──────┬───────┘   └───────┬──────┘
-       │                   │
-       └───────┬───────────┘
-               ▼
-         (update state)
-```
+See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for agent flow diagrams and scoring algorithm.
 
-### Analyzer and Scorer Implementation (Story 2.3 ✅)
+### Database & Sync
 
-The Analyzer and Scorer work together to build personality profiles from conversation:
+- **Backend:** Drizzle ORM + PostgreSQL (`packages/infrastructure/src/db/schema.ts`)
+- **Frontend:** ElectricSQL + TanStack DB for local-first reactive sync
 
-**Big Five Framework:**
-- 5 traits: Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism
-- 30 facets total (6 per trait)
-- Constants defined in `packages/domain/src/constants/big-five.ts`
-
-**Database Schema (facet_evidence, facet_scores, trait_scores):**
-
-```typescript
-// packages/infrastructure/src/db/schema.ts
-export const facetEvidence = pgTable("facet_evidence", {
-  id: uuid("id").primaryKey(),
-  messageId: uuid("message_id").references(() => assessmentMessage.id),
-  facetName: text("facet_name").notNull(),  // "imagination", "altruism", etc.
-  score: integer("score").notNull(),        // 0-20
-  confidence: integer("confidence").notNull(), // 0-100
-  quote: text("quote").notNull(),           // Evidence text
-  highlightStart: integer("highlight_start").notNull(),
-  highlightEnd: integer("highlight_end").notNull(),
-});
-```
-
-**Repository Pattern:**
-
-| Repository | Interface | Implementation | Purpose |
-|------------|-----------|----------------|---------|
-| AnalyzerRepository | `packages/domain/src/repositories/analyzer.repository.ts` | `analyzer.claude.repository.ts` | Claude API for facet extraction |
-| ScorerRepository | `packages/domain/src/repositories/scorer.repository.ts` | `scorer.drizzle.repository.ts` | Facet aggregation + trait derivation |
-| FacetEvidenceRepository | `packages/domain/src/repositories/facet-evidence.repository.ts` | (test only) | Evidence persistence |
-
-**Use-Cases:**
-
-```typescript
-// Analyze message and extract facet evidence
-const evidence = yield* analyzer.analyzeFacets(messageId, content);
-
-// Save evidence (validates: score 0-20, confidence 0-1, valid facet names)
-const saved = yield* saveFacetEvidence({ messageId, evidence });
-
-// Aggregate every 3 messages
-if (shouldTriggerScoring(messageCount)) {
-  const scores = yield* updateFacetScores({ sessionId });
-  const precision = yield* calculatePrecisionFromFacets({ facetScores: scores.facetScores });
-}
-```
-
-**Scoring Algorithm:**
-1. Group evidence by facetName
-2. Weighted average with recency bias: `confidence × (1 + position × 0.1)`
-3. Contradiction detection via variance analysis
-4. Trait score = mean of 6 related facet scores
-5. Trait confidence = minimum confidence across facets
-6. Precision = mean of all facet confidences × 100
-
-### Local-First Data Sync (ElectricSQL + TanStack DB)
-
-Frontend uses reactive local-first sync:
-
-```typescript
-// apps/web/src/lib/sync.ts
-import { useElectricClient } from "@electric-sql/react";
-import { useQuery } from "@tanstack/react-query";
-
-export function useSession(sessionId: string) {
-  const electric = useElectricClient();
-
-  // ElectricSQL syncs automatically with PostgreSQL
-  const { data } = useQuery({
-    queryKey: ["session", sessionId],
-    queryFn: () =>
-      electric.db.session.findUnique({
-        where: { id: sessionId },
-      }),
-  });
-
-  return data;
-}
-```
-
-### Database (Drizzle ORM + PostgreSQL)
-
-Type-safe database access with Drizzle:
-
-```typescript
-// packages/database/src/schema.ts
-import { pgTable, text, timestamp, numeric } from "drizzle-orm/pg-core";
-
-export const sessions = pgTable("sessions", {
-  id: text("id").primaryKey(),
-  userId: text("user_id"),
-  createdAt: timestamp("created_at").defaultNow(),
-  // ... other fields
-});
-
-export const messages = pgTable("messages", {
-  id: text("id").primaryKey(),
-  sessionId: text("session_id").references(() => sessions.id),
-  role: text("role"), // 'user' | 'assistant'
-  content: text("content"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-```
-
-### FiberRef Dependency Injection Pattern (Story 1.3)
-
-FiberRef enables request-scoped context without prop drilling. Handlers access services via `FiberRef.get()`:
-
-**Define a FiberRef Bridge** (in `packages/infrastructure/src/context/logger.ts`):
-
-```typescript
-import { FiberRef, Effect } from "effect";
-
-**Key Principles:**
-- **Handlers**: Thin HTTP adapters - extract request data and call use-cases
-- **Use-Cases**: Pure business logic - main unit test target
-- **Domain**: Repository interfaces (Context.Tag), entities, types
-- **Infrastructure**: Repository implementations (Drizzle, LangGraph, Pino, etc.)
-
-**Hard Rule:** No conditional logic, validation, or orchestration in handlers. All business logic belongs in use-cases.
-
-**Quick Discovery Pattern:**
-- Repository interface? → `packages/domain/src/repositories/{name}.repository.ts`
-- Repository implementation? → `packages/infrastructure/src/repositories/{name}*.repository.ts`
-- Test implementations? → `*.test.ts` files next to production code
-
-For complete architecture details, see:
-- [ARCHITECTURE.md](./docs/ARCHITECTURE.md) - Detailed patterns, examples, and diagrams
-- [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) - Component naming and file locations
+**Hard Rule:** No business logic in handlers - all logic belongs in use-cases.
 
 ### Tech Stack Summary
 
@@ -663,281 +203,55 @@ For complete architecture details, see:
 
 See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for production details.
 
-## Testing with Effect and @effect/vitest
+## Testing
 
-The codebase uses [@effect/vitest](https://github.com/Effect-TS/effect/tree/main/packages/vitest) for testing Effect programs with proper dependency injection and virtual time control.
+Uses [@effect/vitest](https://github.com/Effect-TS/effect/tree/main/packages/vitest) with dependency injection via Test Layers.
 
-### Test Layer Pattern
-
-All repository dependencies are mocked using **Test Layers** defined in `apps/api/src/test-utils/test-layers.ts`:
-
-```typescript
-import { Effect } from "effect"
-import { TestRepositoriesLayer } from "../test-utils/test-layers.js"
-import { AssessmentSessionRepository } from "@workspace/domain"
-
-it.effect('should create session', () =>
-  Effect.gen(function* () {
-    const sessionRepo = yield* AssessmentSessionRepository
-    const session = yield* sessionRepo.createSession("user123")
-    expect(session.sessionId).toBeDefined()
-  }).pipe(Effect.provide(TestRepositoriesLayer))
-)
+**Commands:**
+```bash
+pnpm test:run          # Run all tests
+pnpm test:watch        # Watch mode
+pnpm --filter=api test # API tests only
+pnpm test:coverage     # With coverage
 ```
 
-**TestRepositoriesLayer** merges all repository mocks:
-- AssessmentSessionRepository (in-memory Map)
-- AssessmentMessageRepository (in-memory Map)
-- LoggerRepository (no-op logger)
-- CostGuardRepository (in-memory tracking)
-- RedisRepository (in-memory key-value store)
-- NerinAgentRepository (mock Claude responses)
-
-### Writing Tests for Use-Cases
-
-**Pattern**: Use-cases are pure business logic that depend on repository interfaces. Test them by providing test implementations via Layers.
+**Key Pattern:** Provide `TestRepositoriesLayer` (in `apps/api/src/test-utils/test-layers.ts`) to all use-case tests:
 
 ```typescript
-import { it } from '@effect/vitest'
-import { Effect } from 'effect'
-import { TestRepositoriesLayer } from '../../test-utils/test-layers.js'
-import { myUseCase } from '../../use-cases/my-use-case.js'
-
-describe('myUseCase', () => {
-  it.effect('should handle success case', () =>
-    Effect.gen(function* () {
-      const result = yield* myUseCase({ input: 'test' })
-      expect(result.output).toBe('expected')
-    }).pipe(Effect.provide(TestRepositoriesLayer))
-  )
-
-  it.effect('should handle failure case', () =>
-    Effect.gen(function* () {
-      const exit = yield* Effect.exit(
-        myUseCase({ input: 'invalid' })
-      )
-
-      expect(exit._tag).toBe('Failure')
-    }).pipe(Effect.provide(TestRepositoriesLayer))
-  )
-})
-```
-
-### Testing Time-Dependent Code with TestClock
-
-@effect/vitest provides **TestClock** for testing time-dependent operations without real delays:
-
-```typescript
-import { TestClock, Effect, Fiber } from 'effect'
-
-it.effect('should handle delayed operations', () =>
+it.effect('should work', () =>
   Effect.gen(function* () {
-    const testClock = yield* TestClock.TestClock
-
-    // Start operation that delays 5 seconds
-    const deferred = yield* Effect.fork(
-      Effect.sleep('5 seconds').pipe(Effect.as('done'))
-    )
-
-    // Advance virtual time instantly
-    yield* testClock.adjust('5 seconds')
-
-    // Operation completes immediately (no real wait)
-    const result = yield* Fiber.join(deferred)
-    expect(result).toBe('done')
-  })
-)
-```
-
-### Resource Management with it.scoped
-
-Use `it.scoped` for tests that need automatic cleanup:
-
-```typescript
-it.scoped('should clean up resources', () =>
-  Effect.gen(function* () {
-    const resource = yield* Effect.acquireRelease(
-      Effect.sync(() => openConnection()),
-      (conn) => Effect.sync(() => closeConnection(conn))
-    )
-
-    const result = yield* useResource(resource)
+    const result = yield* myUseCase({ input: 'test' })
     expect(result).toBeDefined()
-
-    // Resource automatically closed after test
   }).pipe(Effect.provide(TestRepositoriesLayer))
 )
 ```
 
-### Test Modifiers
+**Test utilities:**
+- `it.effect()` - Test Effect programs with TestClock injected
+- `it.scoped` - Auto-cleanup for resources
+- `Effect.exit()` - Capture failures for assertion
+- `TestClock.adjust()` - Virtual time control
 
-@effect/vitest supports standard test modifiers:
+See `apps/api/src/__tests__/` for examples.
 
-```typescript
-// Skip test temporarily
-it.effect.skip('not ready yet', () => Effect.void)
+## Integration Testing (Docker)
 
-// Run only this test (for debugging)
-it.effect.only('focus on this', () => Effect.succeed(undefined))
-
-// Expect test to fail
-it.effect.fails('should fail', () =>
-  Effect.fail(new Error('Expected'))
-)
-```
-
-### Overriding Specific Services
-
-Override individual services while keeping others from TestRepositoriesLayer:
-
-```typescript
-it.effect('should use custom logger', () => {
-  let callCount = 0
-  const customLogger = {
-    info: () => Effect.sync(() => { callCount++ }),
-    error: () => Effect.void,
-    warn: () => Effect.void,
-    debug: () => Effect.void,
-  }
-
-  const customLayer = Layer.mergeAll(
-    TestRepositoriesLayer,
-    Layer.succeed(LoggerRepository, customLogger)
-  )
-
-  return Effect.gen(function* () {
-    const logger = yield* LoggerRepository
-    yield* logger.info('test')
-    expect(callCount).toBe(1)
-  }).pipe(Effect.provide(customLayer))
-})
-```
-
-### Best Practices
-
-1. **Use it.effect() for Effect programs** - Automatically injects TestContext (TestClock, etc.)
-2. **Provide TestRepositoriesLayer** - All use-cases need repository dependencies
-3. **Test failures with Effect.exit** - Capture exit to inspect failure causes
-4. **Use TestClock for time** - Virtual time is deterministic and instant
-5. **Keep tests pure** - Test Layers ensure no database/API calls
-6. **Test at use-case level** - Main unit test target per hexagonal architecture
-
-### Running Tests
+Validates HTTP stack with Dockerized API before Railway deployment.
 
 ```bash
-# Run all tests (via turbo)
-pnpm test:run
-
-# Run tests in watch mode
-pnpm test:watch
-
-# Run API tests only
-pnpm --filter=api test
-
-# Run with coverage
-pnpm test:coverage
+pnpm test:integration       # Run all (auto Docker lifecycle)
+pnpm test:integration:watch # Watch mode
+pnpm docker:test:up         # Manual: start test env
+pnpm docker:test:down       # Manual: stop and clean
 ```
 
-**Pre-push hook** automatically runs all tests before allowing pushes.
+**Ports:** Dev (API 4000, PG 5432) / Test (API 4001, PG 5433)
 
-For complete examples, see:
-- `apps/api/src/__tests__/effect-vitest-examples.test.ts` - Full feature showcase
-- `apps/api/src/__tests__/smoke.test.ts` - Basic setup verification
-- `apps/api/src/__tests__/use-cases/*.test.ts` - Real-world use-case tests
+**LLM Mocking:** `MOCK_LLM=true` swaps real Claude for deterministic mock responses.
 
-## Integration Testing with Docker (Story 2.8 ✅)
+**Three-tier strategy:** Unit (mock repos) → Integration (Docker) → Real LLM ($$)
 
-Tier 2 integration tests validate the complete HTTP stack (Docker build + PostgreSQL + API endpoints) in a production-like environment before Railway deployment.
-
-### Quick Start
-
-```bash
-# Run all integration tests (automatic Docker lifecycle)
-pnpm test:integration
-
-# Run in watch mode (for development)
-pnpm test:integration:watch
-
-# Manual Docker control (for debugging)
-pnpm docker:test:up   # Start test environment
-pnpm docker:test:down # Stop and clean up
-```
-
-### Architecture
-
-Integration tests run on the **HOST machine** making real HTTP requests to a **Dockerized API**:
-
-```
-Host Machine (Vitest)  ──HTTP───►  Docker: compose.test.yaml
-                        :4001      ├── api-test (production Dockerfile)
-                                   └── postgres-test (PostgreSQL 16)
-```
-
-**Key Design Decisions:**
-- Tests run on HOST (not in container) - enables watch mode, UI, debugging
-- Production Dockerfile target - validates actual deployment artifact
-- Mock LLM via `MOCK_LLM=true` - zero Anthropic API costs
-- Separate ports (5433/4001) - can run alongside development
-
-### Port Configuration
-
-| Service       | Dev Port | Test Port |
-|---------------|----------|-----------|
-| PostgreSQL    | 5432     | 5433      |
-| API           | 4000     | 4001      |
-
-### LLM Mocking Pattern
-
-The API uses Layer swapping to mock LLM responses during integration tests:
-
-```typescript
-// apps/api/src/index.ts
-const NerinAgentLayer = process.env.MOCK_LLM === "true"
-  ? NerinAgentMockRepositoryLive  // Deterministic mock responses
-  : NerinAgentLangGraphRepositoryLive  // Real Claude API
-```
-
-Mock responses are pattern-based (keywords trigger Big Five trait responses).
-
-### Integration Test Pattern
-
-```typescript
-import { Schema } from "effect";
-import { MyResponseSchema } from "@workspace/contracts";
-
-const API_URL = process.env.API_URL || "http://localhost:4001";
-
-test("validates response against contract schema", async () => {
-  const response = await fetch(`${API_URL}/api/endpoint`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ key: "value" }),
-  });
-
-  expect(response.status).toBe(200);
-  const data = await response.json();
-
-  // Contract enforcement via Effect Schema
-  const decoded = Schema.decodeUnknownSync(MyResponseSchema)(data);
-  expect(decoded.field).toBeDefined();
-});
-```
-
-### Test Files
-
-- `apps/api/tests/integration/health.test.ts` - Validates Docker setup (build, migrations, server)
-- `apps/api/tests/integration/assessment.test.ts` - Assessment endpoints (start, message, resume)
-- `apps/api/tests/integration/README.md` - Detailed documentation
-
-### Testing Strategy (Three Tiers)
-
-| Tier | Type | What It Tests | Speed | Cost |
-|------|------|--------------|-------|------|
-| 1 | Unit Tests | Use-cases with mock repos | Fast | Free |
-| 2 | **Integration Tests** | HTTP + DB + Docker (this story) | Medium | Free |
-| 3 | Real LLM Tests | Full AI pipeline | Slow | $$ |
-
-Tier 2 catches "works on my machine" bugs before Railway deployment.
+See `apps/api/tests/integration/README.md` for details.
 
 ## Production Deployment (Story 1.3 ✅)
 
@@ -988,144 +302,18 @@ See [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) for:
 
 ## Type Safety Patterns
 
-The codebase follows strict TypeScript patterns with `moduleResolution: "bundler"` for consistent bare imports.
+- **Bare imports** - No `.js` extensions (bundler mode)
+- **Workspace imports** - `@workspace/domain`, `@workspace/contracts`, etc.
+- **Type imports** - Use `import type` for type-only imports (Biome enforced)
 
-### Import Style
+**Avoid `as any`** - Use type guards, typed arrays, or `unknown` instead. Acceptable with comment for: test mocks, complex generics (LangGraph), generated files, external library compat.
 
-- **Bare imports** - No `.js` extensions needed (bundler mode)
-- **Workspace imports** - Use `@workspace/domain`, `@workspace/contracts`, etc.
-- **Type imports** - Use `import type` for type-only imports (enforced by Biome)
+**Key patterns:**
+- **Branded types** - Type-safe IDs (`UserId`, `SessionId`) prevent accidental mixing
+- **Discriminated unions** - Tagged `_tag` for exhaustive matching (Effect provides this)
+- **Schema transforms** - `S.transform()` for validated external → domain conversions
 
-### Type Assertions (Avoid `as any`)
-
-When you need type flexibility, prefer these patterns over `as any`:
-
-```typescript
-// GOOD: Use proper type guards
-function isTraitName(name: string): name is TraitName {
-  return BIG_FIVE_TRAITS.includes(name as TraitName);
-}
-
-// GOOD: Use typed arrays with explicit annotation
-const traits: TraitName[] = ["openness", "agreeableness"];
-
-// GOOD: Use unknown for catch-all error handling
-Effect.catchAll((error: unknown) =>
-  Effect.fail(new MyError(error instanceof Error ? error.message : String(error)))
-);
-
-// AVOID: as any for index access
-// BAD:  traitScores[trait as any]
-// GOOD: const score = traitScores[trait]; // where trait is typed as TraitName
-```
-
-### Acceptable `any` Usage
-
-`any` is acceptable with documentation in these cases:
-1. **Test mocks** - Add `// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types`
-2. **Complex generics** - LangGraph StateGraph, complex Effect types (add comment explaining why)
-3. **Generated files** - Auto-generated code (e.g., `routeTree.gen.ts`)
-4. **External library compatibility** - pg type parsers, ESM/CJS dynamic imports (add comment)
-
-### Branded Types Pattern
-
-Use branded types for type-safe IDs that prevent accidental mixing:
-
-```typescript
-// Define branded type (string with invisible brand)
-export type UserId = string & { readonly __brand: "UserId" };
-export type SessionId = string & { readonly __brand: "SessionId" };
-
-// Factory functions to create branded values
-export const makeUserId = (value: string): UserId => value as UserId;
-export const makeSessionId = (value: string): SessionId => value as SessionId;
-
-// Usage - prevents mixing user and session IDs
-function getSession(sessionId: SessionId): Session { ... }
-const userId = makeUserId("user_123");
-const sessionId = makeSessionId("session_456");
-getSession(userId); // TypeScript error! Cannot assign UserId to SessionId
-getSession(sessionId); // OK
-```
-
-### Discriminated Unions (Result Types)
-
-Use tagged unions for type-safe error handling:
-
-```typescript
-// Define discriminated union
-type Result<T, E> =
-  | { _tag: "Success"; value: T }
-  | { _tag: "Failure"; error: E };
-
-// Type-safe handling with exhaustive switch
-function handleResult<T, E>(result: Result<T, E>) {
-  switch (result._tag) {
-    case "Success":
-      return result.value; // TypeScript knows 'value' exists
-    case "Failure":
-      throw result.error; // TypeScript knows 'error' exists
-  }
-}
-
-// Effect-ts provides this pattern built-in via Effect.Effect<A, E, R>
-```
-
-### Effect Schema Transformations
-
-Use `S.transform` for type-safe conversions between external data and domain types:
-
-```typescript
-import { Schema as S } from "effect";
-
-// External API response shape
-const ClaudeResponseSchema = S.Struct({
-  facet: S.String,
-  score: S.Number,
-  confidence: S.Number,
-  quote: S.String,
-});
-
-// Domain entity shape
-const FacetEvidenceSchema = S.Struct({
-  facetName: FacetNameSchema, // Validated facet name
-  score: S.Number.pipe(S.between(0, 20)),
-  confidence: S.Number.pipe(S.between(0, 1)),
-  quote: S.String,
-});
-
-// Transform: ClaudeResponse → FacetEvidence (validated)
-const FacetEvidenceFromClaude = S.transform(
-  ClaudeResponseSchema,
-  FacetEvidenceSchema,
-  {
-    decode: (claude) => ({
-      facetName: claude.facet, // Rename field
-      score: claude.score,
-      confidence: claude.confidence,
-      quote: claude.quote,
-    }),
-    encode: (evidence) => ({
-      facet: evidence.facetName,
-      score: evidence.score,
-      confidence: evidence.confidence,
-      quote: evidence.quote,
-    }),
-  }
-);
-
-// Usage - decode validates and transforms
-const evidence = S.decodeUnknownSync(FacetEvidenceFromClaude)(apiResponse);
-```
-
-### Domain Types
-
-Key domain types are exported from `@workspace/domain`:
-- `TraitName` - Big Five trait names ("openness", "conscientiousness", etc.)
-- `FacetName` - 30 facet names across all traits
-- `FacetScoresMap`, `TraitScoresMap` - Score records indexed by name
-- `BIG_FIVE_TRAITS` - Array of valid trait names for validation
-- `ALL_FACETS` - Array of all 30 valid facet names
+**Domain types** from `@workspace/domain`: `TraitName`, `FacetName`, `BIG_FIVE_TRAITS`, `ALL_FACETS`
 
 ## Adding New Packages or Apps
 
@@ -1178,13 +366,3 @@ import { Button } from "@workspace/ui/components/button";
 Versions are centralized in `pnpm-workspace.yaml` to ensure consistency across packages. Always reference the catalog when updating dependencies.
 
 See [ARCHITECTURE.md](./docs/ARCHITECTURE.md#catalog-dependencies) for the complete catalog configuration.
-
-## Git Conventions
-
-Branch naming, commit messages, and component naming follow consistent patterns.
-
-See [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) for:
-- Branch naming format (`feat/story-{epic-num}-{story-num}-{slug}`)
-- Commit message format with examples
-- Component naming conventions
-- Repository interface and implementation patterns
