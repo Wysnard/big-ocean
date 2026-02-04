@@ -15,7 +15,7 @@ import { AppConfig } from "@workspace/domain";
 import { drizzle } from "drizzle-orm/effect-postgres";
 import { Context, Effect, Layer, Redacted } from "effect";
 import { types } from "pg";
-import * as authSchema from "../db/schema";
+import * as authSchema from "../db/drizzle/schema";
 
 /**
  * PostgreSQL Client Layer

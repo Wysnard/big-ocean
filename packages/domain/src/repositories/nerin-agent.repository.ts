@@ -1,6 +1,7 @@
 import type { BaseMessage } from "@langchain/core/messages";
 import { AgentInvocationError } from "@workspace/contracts/errors";
 import { Context, Effect } from "effect";
+import type { FacetScoresMap } from "../types/facet-evidence";
 
 /**
  * Token usage metrics from agent invocation
@@ -12,24 +13,24 @@ export interface TokenUsage {
 }
 
 /**
- * Precision scores for Big Five personality traits
- * Values are percentages (0-100) representing confidence level
- */
-export interface PrecisionScores {
-	readonly openness?: number;
-	readonly conscientiousness?: number;
-	readonly extraversion?: number;
-	readonly agreeableness?: number;
-	readonly neuroticism?: number;
-}
-
-/**
  * Input for Nerin agent invocation
+ *
+ * Nerin operates at facet-level granularity for personality assessment.
+ * Receives facet scores (30 facets) rather than trait scores (5 traits)
+ * for more precise conversational steering.
  */
 export interface NerinInvokeInput {
+	/** Session identifier for state persistence */
 	readonly sessionId: string;
+
+	/** Message history for conversational context */
 	readonly messages: readonly BaseMessage[];
-	readonly precision?: PrecisionScores;
+
+	/** Current facet scores for assessment context (optional, may be empty early in conversation) */
+	readonly facetScores?: FacetScoresMap;
+
+	/** Natural language steering hint to guide conversation toward low-confidence facets (optional) */
+	readonly steeringHint?: string;
 }
 
 /**
@@ -56,7 +57,7 @@ export class NerinAgentRepository extends Context.Tag("NerinAgentRepository")<
 		/**
 		 * Invoke the Nerin agent to generate a conversational response
 		 *
-		 * @param input - Session context, message history, and precision scores
+		 * @param input - Session context, message history, facet scores, and optional steering hint
 		 * @returns Effect with response text and token usage metrics
 		 */
 		readonly invoke: (

@@ -169,11 +169,77 @@ See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full examples.
 
 ### Multi-Agent System (LangGraph)
 
-Orchestrator → Nerin (conversational) → Analyzer + Scorer (batch every 3 msgs)
+**Architecture:** Orchestrator → Nerin (conversational) → Analyzer + Scorer (batch every 3 msgs)
 
 **Big Five Framework:** 5 traits × 6 facets = 30 facets total
 - Constants: `packages/domain/src/constants/big-five.ts`
 - Scoring triggers every 3 messages with recency-weighted averaging
+
+**Orchestrator Repository (Story 2.4):**
+- Interface: `packages/domain/src/repositories/orchestrator.repository.ts`
+- Graph Interface: `packages/domain/src/repositories/orchestrator-graph.repository.ts`
+- Checkpointer Interface: `packages/domain/src/repositories/checkpointer.repository.ts`
+- Production Layer: `packages/infrastructure/src/repositories/orchestrator.langgraph.repository.ts`
+- Graph Layer: `packages/infrastructure/src/repositories/orchestrator-graph.langgraph.repository.ts`
+
+**LangGraph Effect DI Pattern:**
+```
+OrchestratorRepository (pure Effect, no bridging)
+    └── OrchestratorGraphRepository (bridges Effect → LangGraph async internally)
+            └── CheckpointerRepository (PostgresSaver or MemorySaver)
+            └── NerinAgentRepository, AnalyzerRepository, ScorerRepository
+```
+- Bridge logic (Effect.runPromise) is **internal** to `OrchestratorGraphLangGraphRepositoryLive`
+- External code only sees Effect-based APIs - no `OrchestratorDependencies` interface exposed
+- Graph compilation happens once during layer construction
+
+**Key Routing Logic:**
+1. **Budget Check FIRST** - Throws `BudgetPausedError` if `dailyCostUsed + MESSAGE_COST >= $75`
+2. **Steering Calculation** - Pure outlier detection: `confidence < (mean - stddev)` identifies weakest facet
+   - Generates natural language `steeringHint` from facet target (e.g., "Explore how they organize their space...")
+   - **Nerin receives both `facetScores` and `steeringHint`** for precise conversation guidance
+3. **Always Route to Nerin** - Every message gets conversational response with facet-level context
+4. **Batch Trigger** - Every 3rd message (`messageCount % 3 === 0`) runs Analyzer + Scorer
+
+**Error Types:**
+- `BudgetPausedError` - Assessment paused, resume next day (includes `resumeAfter` timestamp)
+- `OrchestrationError` - Generic routing/pipeline failure
+- `PrecisionGapError` - Precision calculation failure (422)
+
+**Nerin Data Flow (Facet-Level Granularity):**
+
+Nerin operates at **facet-level** (30 facets) rather than trait-level (5 traits) for precise conversational steering:
+
+```typescript
+// Router calculates steering from facetScores
+const steeringTarget = getSteeringTarget(facetScores);  // e.g., "orderliness"
+const steeringHint = getSteeringHint(steeringTarget);   // e.g., "Explore how they organize..."
+
+// Nerin receives facet-level data
+nerinAgent.invoke({
+  sessionId,
+  messages,
+  facetScores,      // 30 facets with scores + confidence
+  steeringHint,     // Natural language guidance
+  // NOT trait-level precision (deprecated pattern)
+});
+```
+
+**Data Flow Principle:** Work with primitives (facetScores), derive aggregates (traitScores) on demand.
+- **Input:** Use-case provides `facetScores` (30 facets)
+- **Steering:** Router calculates single weakest outlier facet
+- **Nerin:** Receives facet-level context for natural conversation
+- **Output:** Scorer transforms `facetScores` → `traitScores` for user display
+
+**Use-Case Integration:**
+```typescript
+// send-message.use-case.ts uses Orchestrator instead of direct Nerin
+const result = yield* orchestrator.processMessage({
+  sessionId, userMessage, messages, messageCount,
+  precision, dailyCostUsed, facetScores
+});
+// Returns: nerinResponse, tokenUsage, costIncurred, facetEvidence?, facetScores?, traitScores?
+```
 
 See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for agent flow diagrams and scoring algorithm.
 

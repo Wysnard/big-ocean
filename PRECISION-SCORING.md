@@ -20,13 +20,23 @@ Each of the Big Five traits is composed of **6 facets** - sub-dimensions that co
 
 **Total: 30 facets** across all Big Five traits
 
+### Score Ranges
+
+| Metric | Range | Description |
+|--------|-------|-------------|
+| **Facet Score** | 0-20 | Personality score for a single facet (matches NEO-PI-R psychometric standard) |
+| **Trait Score** | 0-120 | Sum of 6 related facet scores (enables stacked visualization) |
+| **Confidence** | 0.0-1.0 | How certain the system is about a score |
+| **Precision** | 0-100 | Overall assessment confidence (average confidence × 100) |
+
 ### Precision Score Meaning
 
-- **Range**: 0.0 to 1.0
-- **Interpretation**: Confidence level in the assessment
-  - 0.0 = Very uncertain about this facet
-  - 0.5 = Neutral/moderate confidence
-  - 1.0 = Very confident about this facet
+- **Range**: 0-100 (percentage scale)
+- **Calculation**: Average of all facet confidence values × 100
+- **Interpretation**: Overall confidence level in the assessment
+  - 0 = Very uncertain (no facets assessed)
+  - 50 = Moderate confidence
+  - 100 = Very confident about all facets
 
 ### Aggregation Method
 
@@ -55,7 +65,7 @@ Openness Precision = (imagination + artistic_interests + emotionality +
   - `initializeFacetPrecision()`: Create new session with baseline precision
   - `updateFacetPrecision()`: Update single facet (with bounds checking)
   - `mergePrecisionScores()`: Merge current and updated scores with weights
-- All functions validated to handle edge cases and bounds [0, 1]
+- All functions validated to handle edge cases and bounds (confidence: 0-1, precision: 0-100)
 
 ### Tests
 
@@ -77,7 +87,7 @@ Openness Precision = (imagination + artistic_interests + emotionality +
   - Trait precision aggregation from facets
   - Partial facet updates and merging
   - Integration with message flow
-  - Precision bounds validation [0, 1]
+  - Precision bounds validation (confidence 0-1, precision 0-100)
   - Precision aggregation workflows
   - Refinement through conversation iterations
   - Conflicting signal handling
@@ -115,7 +125,7 @@ Openness Precision = (imagination + artistic_interests + emotionality +
 - **Initialization**: All facets start at 0.5 (neutral confidence)
 - **Updates**: Individual facets can be updated independently
 - **Merging**: Combine current and new estimates with weighted averaging
-- **Bounds**: All scores automatically clamped to [0, 1]
+- **Bounds**: Confidence values clamped to 0-1, precision to 0-100
 
 ### 4. Weighted Merging
 - Merge facet scores using configurable weights
@@ -202,7 +212,7 @@ const updated = mergePrecisionScores(current, newEstimate, 0.75);
 ✓ Trait-level aggregation (simple average)
 ✓ Weighted average calculations
 ✓ Score initialization and updates
-✓ Bounds validation [0, 1]
+✓ Bounds validation (confidence 0-1, precision 0-100)
 ✓ Integration with message flow
 ✓ Precision refinement through conversation
 ✓ Conflict resolution (mixed facet signals)

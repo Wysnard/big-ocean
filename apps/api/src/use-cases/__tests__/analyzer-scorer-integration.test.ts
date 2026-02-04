@@ -38,7 +38,7 @@ describe("Analyzer and Scorer Integration", () => {
 
 				// Step 2: Save evidence
 				const saveResult = yield* saveFacetEvidence({
-					messageId,
+					assessmentMessageId: messageId,
 					evidence,
 				});
 
@@ -157,7 +157,7 @@ describe("Analyzer and Scorer Integration", () => {
 			}).pipe(Effect.provide(TestRepositoriesLayer)),
 		);
 
-		it.effect("should produce confidence in 0-1 range", () =>
+		it.effect("should produce confidence in 0-100 range", () =>
 			Effect.gen(function* () {
 				const analyzer = yield* AnalyzerRepository;
 
@@ -168,7 +168,7 @@ describe("Analyzer and Scorer Integration", () => {
 
 				for (const e of evidence) {
 					expect(e.confidence).toBeGreaterThanOrEqual(0);
-					expect(e.confidence).toBeLessThanOrEqual(1);
+					expect(e.confidence).toBeLessThanOrEqual(100);
 				}
 			}).pipe(Effect.provide(TestRepositoriesLayer)),
 		);
@@ -191,7 +191,7 @@ describe("Analyzer and Scorer Integration", () => {
 						const traitScore = scoresResult.traitScores[trait];
 						expect(traitScore).toBeDefined();
 						expect(traitScore?.score).toBeGreaterThanOrEqual(0);
-						expect(traitScore?.score).toBeLessThanOrEqual(20);
+						expect(traitScore?.score).toBeLessThanOrEqual(120); // Sum of 6 facets (0-20 each)
 					}
 				}
 			}).pipe(Effect.provide(TestRepositoriesLayer)),
@@ -201,9 +201,9 @@ describe("Analyzer and Scorer Integration", () => {
 			Effect.gen(function* () {
 				const scoresResult = yield* updateFacetScores({ sessionId: "session_confidence_test" });
 
-				// Trait confidence should be <= 1
+				// Trait confidence should be in 0-100 range
 				for (const [_, score] of Object.entries(scoresResult.traitScores)) {
-					expect(score.confidence).toBeLessThanOrEqual(1);
+					expect(score.confidence).toBeLessThanOrEqual(100);
 					expect(score.confidence).toBeGreaterThanOrEqual(0);
 				}
 			}).pipe(Effect.provide(TestRepositoriesLayer)),

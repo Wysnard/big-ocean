@@ -29,12 +29,12 @@ export const BIG_FIVE_TRAITS: readonly BigFiveTrait[] = [
 ] as const;
 
 /**
- * Computed precision scores for Big Five personality traits.
- * Values range from 0.0 (low confidence) to 1.0 (high confidence).
+ * Computed confidence scores for Big Five personality traits.
+ * Values range from 0 (no confidence) to 100 (complete confidence) as integers.
  *
  * NOTE: These are ALWAYS computed from facet scores, never stored directly.
  */
-export interface TraitPrecisionScores {
+export interface TraitConfidenceScores {
 	openness: number;
 	conscientiousness: number;
 	extraversion: number;

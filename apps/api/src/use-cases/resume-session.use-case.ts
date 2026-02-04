@@ -8,6 +8,7 @@
 import {
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
+	calculateTraitConfidence,
 	LoggerRepository,
 } from "@workspace/domain";
 import type { AssessmentMessageEntity } from "@workspace/domain/entities/message.entity";
@@ -51,8 +52,11 @@ export const resumeSession = (input: ResumeSessionInput) =>
 			messageCount: messages.length,
 		});
 
+		// Calculate trait confidence from facet confidence (session stores facet-level)
+		const traitConfidence = calculateTraitConfidence(session.confidence);
+
 		return {
-			precision: session.precision,
+			precision: traitConfidence,
 			messages,
 		};
 	});

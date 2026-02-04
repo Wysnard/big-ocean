@@ -5,7 +5,11 @@
  * Calculates personality archetype based on trait scores.
  */
 
-import { AssessmentSessionRepository, LoggerRepository } from "@workspace/domain";
+import {
+	AssessmentSessionRepository,
+	calculateTraitConfidence,
+	LoggerRepository,
+} from "@workspace/domain";
 import { Effect } from "effect";
 
 export interface GetResultsInput {
@@ -74,8 +78,11 @@ export const getResults = (input: GetResultsInput) =>
 		// Get session
 		const session = yield* sessionRepo.getSession(input.sessionId);
 
+		// Calculate trait confidence from facet confidence (session stores facet-level)
+		const traitConfidence = calculateTraitConfidence(session.confidence);
+
 		// Calculate OCEAN code
-		const oceanCode = calculateOceanCode(session.precision);
+		const oceanCode = calculateOceanCode(traitConfidence);
 
 		// Get archetype name
 		const archetypeName = getArchetypeName(oceanCode);
@@ -89,6 +96,6 @@ export const getResults = (input: GetResultsInput) =>
 		return {
 			oceanCode,
 			archetypeName,
-			traits: session.precision,
+			traits: traitConfidence,
 		};
 	});

@@ -47,9 +47,9 @@ export interface FacetEvidence {
 	score: number;
 
 	/**
-	 * Confidence: 0.0-1.0
+	 * Confidence: 0-100 (integer)
 	 * How confident the analyzer is in this interpretation.
-	 * Stored as integer (0-100) in DB, converted to float (0.0-1.0) in application.
+	 * 0 = No confidence, 50 = Moderate confidence, 100 = Complete confidence
 	 */
 	confidence: number;
 
@@ -95,7 +95,7 @@ export interface FacetScore {
 	score: number;
 
 	/**
-	 * Aggregated confidence: 0.0-1.0
+	 * Aggregated confidence: 0-100 (integer)
 	 * Adjusted confidence based on:
 	 * - Average evidence confidence
 	 * - Variance penalty (contradictions lower confidence)
@@ -122,7 +122,7 @@ export interface FacetScore {
  * Trait Score (Derived from Facet Scores)
  *
  * Represents a Big Five trait score derived from its 6 constituent facet scores.
- * Each trait score is the mean of its related facets.
+ * Each trait score is the sum of its related facets (0-120 scale).
  *
  * Storage: trait_scores table (one row per session-trait pair, updated with facet scores)
  * Lifecycle: Created/updated when facet scores are aggregated, replaces previous value
@@ -131,17 +131,20 @@ export interface FacetScore {
  */
 export interface TraitScore {
 	/**
-	 * Trait score: 0-20 scale
-	 * Mean of the 6 related facet scores.
+	 * Trait score: 0-120 scale
+	 * Sum of the 6 related facet scores (each 0-20).
+	 * Enables stacked bar visualization where each facet segment
+	 * contributes proportionally to the total trait score.
 	 *
 	 * @example
-	 * Openness score = mean(imagination, artistic_interests, emotionality,
-	 *                       adventurousness, intellect, liberalism)
+	 * Openness score = sum(imagination, artistic_interests, emotionality,
+	 *                      adventurousness, intellect, liberalism)
+	 * // If each facet is 15: total = 90/120
 	 */
 	score: number;
 
 	/**
-	 * Trait confidence: 0.0-1.0
+	 * Trait confidence: 0-100 (integer)
 	 * Minimum confidence across the 6 related facets (conservative estimate).
 	 * A trait is only as confident as its least confident facet.
 	 */
@@ -151,15 +154,17 @@ export interface TraitScore {
 /**
  * Facet Scores Map
  *
- * Convenient type for working with all 30 facet scores at once.
+ * Complete map of all 30 facet scores.
+ * Always initialized with all facets (default: score=10, confidence=0).
  * Used by the Scorer to return aggregated results.
  */
-export type FacetScoresMap = Partial<Record<FacetName, FacetScore>>;
+export type FacetScoresMap = Record<FacetName, FacetScore>;
 
 /**
  * Trait Scores Map
  *
- * Convenient type for working with all 5 trait scores at once.
+ * Complete map of all 5 trait scores.
+ * Always initialized with all traits (default: score=60, confidence=0).
  * Used by the Scorer to return derived trait results.
  */
-export type TraitScoresMap = Partial<Record<TraitName, TraitScore>>;
+export type TraitScoresMap = Record<TraitName, TraitScore>;

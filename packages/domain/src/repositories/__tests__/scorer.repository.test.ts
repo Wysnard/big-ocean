@@ -25,11 +25,11 @@ const createMockScorerRepository = (): Context.Tag.Service<typeof ScorerReposito
 	deriveTraitScores: (_facetScores: FacetScoresMap) =>
 		Effect.succeed({
 			openness: {
-				score: 15.5,
+				score: 93, // Sum of 6 facets (0-120 scale)
 				confidence: 0.8,
 			},
 			agreeableness: {
-				score: 17.2,
+				score: 102, // Sum of 6 facets (0-120 scale)
 				confidence: 0.85,
 			},
 		} as TraitScoresMap),
@@ -167,7 +167,7 @@ describe("ScorerRepository Interface", () => {
 		expect(typeof firstTrait.confidence).toBe("number");
 	});
 
-	it("should return trait scores with score in 0-20 range", async () => {
+	it("should return trait scores with score in 0-120 range (sum of 6 facets)", async () => {
 		const mockService = createMockScorerRepository();
 		const mockLayer = Context.make(ScorerRepository, mockService);
 
@@ -182,7 +182,7 @@ describe("ScorerRepository Interface", () => {
 
 		Object.values(result).forEach((traitScore) => {
 			expect(traitScore.score).toBeGreaterThanOrEqual(0);
-			expect(traitScore.score).toBeLessThanOrEqual(20);
+			expect(traitScore.score).toBeLessThanOrEqual(120);
 		});
 	});
 

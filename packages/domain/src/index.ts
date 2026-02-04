@@ -36,10 +36,32 @@ export { AnalyzerRepository } from "./repositories/analyzer.repository";
 export { AssessmentMessageRepository } from "./repositories/assessment-message.repository";
 // Repository interfaces (ports in hexagonal architecture)
 export { AssessmentSessionRepository } from "./repositories/assessment-session.repository";
+export { CheckpointerRepository } from "./repositories/checkpointer.repository";
 export { CostGuardRepository } from "./repositories/cost-guard.repository";
 export { FacetEvidenceRepository } from "./repositories/facet-evidence.repository";
-export { LoggerRepository } from "./repositories/logger.repository";
-export { NerinAgentRepository } from "./repositories/nerin-agent.repository";
+export {
+	type LoggerMethods,
+	LoggerRepository,
+} from "./repositories/logger.repository";
+export {
+	NerinAgentRepository,
+	type NerinInvokeInput,
+	type NerinInvokeOutput,
+} from "./repositories/nerin-agent.repository";
+export {
+	BudgetPausedError,
+	ConfidenceGapError,
+	OrchestrationError,
+	OrchestratorRepository,
+	PrecisionGapError,
+	type ProcessMessageInput,
+	type ProcessMessageOutput,
+} from "./repositories/orchestrator.repository";
+export {
+	type GraphInput,
+	type GraphOutput,
+	OrchestratorGraphRepository,
+} from "./repositories/orchestrator-graph.repository";
 export {
 	RedisConnectionError,
 	RedisOperationError,
@@ -50,27 +72,41 @@ export {
 	ScorerError,
 	ScorerRepository,
 } from "./repositories/scorer.repository";
+// Agent response schemas for structured LLM output (Story 2.4, Task 13)
+export {
+	type AnalyzerResponse,
+	AnalyzerResponseJsonSchema,
+	AnalyzerResponseSchema,
+	EmotionalTone,
+	FacetExtractionSchema,
+	HighlightRangeSchema,
+	type NerinResponse,
+	NerinResponseJsonSchema,
+	NerinResponseSchema,
+	validateAnalyzerResponse,
+	validateNerinResponse,
+} from "./schemas/agent-schemas";
+// Confidence calculation service
+export {
+	calculateTraitConfidence,
+	calculateWeightedAverage,
+	initializeFacetConfidence,
+	mergeConfidenceScores,
+	updateFacetConfidence,
+} from "./services/confidence-calculator.service";
 // Cost calculation service
 export {
 	type CostResult,
 	calculateCost,
 	PRICING,
 } from "./services/cost-calculator.service";
-// Precision calculation service
-export {
-	calculateTraitPrecision,
-	calculateWeightedAverage,
-	initializeFacetPrecision,
-	mergePrecisionScores,
-	updateFacetPrecision,
-} from "./services/precision-calculator.service";
 // Facet types
 export type {
 	AgreeableFacet,
 	BigFiveFacet,
 	ConscientiousnessFacet,
 	ExtravertFacet,
-	FacetPrecisionScores,
+	FacetConfidenceScores,
 	NeuroticismFacet,
 	OpennessFacet,
 } from "./types/facet";
@@ -88,5 +124,16 @@ export type {
 // Session types
 export type { MessageRole, Session, SessionStatus } from "./types/session";
 // Trait types (Big Five)
-export type { BigFiveTrait, TraitPrecisionScores } from "./types/trait";
+export type { BigFiveTrait, TraitConfidenceScores } from "./types/trait";
 export { BIG_FIVE_TRAITS } from "./types/trait";
+// Utility functions
+export {
+	calculateConfidenceFromFacetScores,
+	calculateOverallConfidence,
+	createInitialFacetScoresMap,
+	createInitialTraitScoresMap,
+	DEFAULT_FACET_CONFIDENCE,
+	DEFAULT_FACET_SCORE,
+	DEFAULT_TRAIT_SCORE,
+	type TraitConfidence,
+} from "./utils/index";

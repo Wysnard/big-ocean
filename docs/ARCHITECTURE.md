@@ -260,67 +260,216 @@ NodeRuntime.runMain(Layer.launch(HttpLive));
 
 ## Multi-Agent System (LangGraph)
 
-The backend uses LangGraph to orchestrate multiple specialized agents:
+The backend uses LangGraph to orchestrate multiple specialized agents via the **Orchestrator Repository** (Story 2.4).
 
 **Agent Architecture:**
 
 ```
-┌─────────────────────────────────────────────────────┐
-│ Orchestrator (Rules-based routing)                  │
-│ - Identifies lowest precision trait                 │
-│ - Recommends exploration domain                     │
-│ - Generates context for Nerin                       │
-└────────────────┬────────────────────────────────────┘
-                 │ guidance
+┌─────────────────────────────────────────────────────────────────┐
+│ Orchestrator (LangGraph State Machine)                           │
+│                                                                  │
+│ 1. BUDGET CHECK (FIRST) - throws BudgetPausedError if exceeded  │
+│ 2. STEERING - outlier detection (confidence < mean - stddev)    │
+│ 3. NERIN ROUTING - always (with optional steeringHint)          │
+│ 4. BATCH TRIGGER - every 3rd message (messageCount % 3 === 0)   │
+└────────────────┬────────────────────────────────────────────────┘
+                 │ steeringHint + messages
                  ▼
-┌──────────────────────────────────────────────────────┐
-│ Nerin (Conversational Agent - Claude 3.5 Sonnet)   │
-│ - Handles conversational quality                    │
-│ - Builds relational safety                          │
-│ - No assessment responsibility                      │
-└────────────────┬────────────────────────────────────┘
-                 │ user response
+┌──────────────────────────────────────────────────────────────────┐
+│ Nerin (Conversational Agent - Claude 3.5 Sonnet)                │
+│ - Handles conversational quality                                 │
+│ - Builds relational safety                                       │
+│ - Operates at FACET-LEVEL (30 facets, not 5 traits)             │
+│ - Receives facetScores + steeringHint for precise guidance       │
+└────────────────┬─────────────────────────────────────────────────┘
+                 │ nerinResponse
       ┌──────────┴──────────┐
       │ (batch every 3 msgs)│
       ▼                     ▼
 ┌──────────────┐   ┌──────────────┐
 │ Analyzer     │   │ Scorer       │
-│ - Pattern    │   │ - Calculates │
-│   extraction │   │   trait      │
-│ - Detects    │   │   scores     │
-│   contradic. │   │ - Identifies │
-│              │   │   facets     │
+│ - Extract    │   │ - Aggregate  │
+│   facet      │   │   facet      │
+│   evidence   │   │   scores     │
+│ - 30 facets  │   │ - Derive     │
+│              │   │   trait      │
+│              │   │   scores     │
 └──────┬───────┘   └───────┬──────┘
        │                   │
        └───────┬───────────┘
                ▼
-         (update state)
+      (update session precision)
 ```
+
+**Orchestrator Repository Interface:**
+
+```typescript
+// packages/domain/src/repositories/orchestrator.repository.ts
+export class OrchestratorRepository extends Context.Tag("OrchestratorRepository")<
+  OrchestratorRepository,
+  {
+    readonly processMessage: (
+      input: ProcessMessageInput,
+    ) => Effect.Effect<ProcessMessageOutput, OrchestrationError | BudgetPausedError, never>;
+  }
+>() {}
+```
+
+**Key Design Decisions:**
+
+1. **Single-Target Steering** - Pure outlier detection (`confidence < mean - stddev`) rather than arbitrary thresholds
+2. **Budget-First Pause** - Assessment pauses gracefully rather than degrading quality
+3. **Batch Processing** - Expensive operations (Analyzer, Scorer) only run every 3rd message
+4. **State Preservation** - `BudgetPausedError` includes `resumeAfter` timestamp and `currentPrecision`
+5. **Facet-Level Granularity** - Nerin operates on 30 facets, not 5 traits (traits are derived aggregates)
+
+**Data Flow Architecture (Facet-Level Primitives):**
+
+The system follows a **"primitives first, aggregates on demand"** pattern:
+
+```typescript
+// INPUT: Use-case provides facet-level data (30 facets)
+orchestrator.processMessage({
+  sessionId,
+  userMessage,
+  messageCount,
+  precision,          // Single overall precision score (0-100)
+  dailyCostUsed,
+  facetScores,        // FacetScoresMap - 30 facets with score + confidence
+});
+
+// ROUTER: Calculates steering from facet outliers
+const steeringTarget = getSteeringTarget(facetScores);
+// Example: "orderliness" (confidence 0.2, below mean - stddev)
+
+const steeringHint = getSteeringHint(steeringTarget);
+// Example: "Explore how they organize their space, time, or belongings"
+
+// NERIN: Receives facet-level data for precise conversation steering
+nerinAgent.invoke({
+  sessionId,
+  messages,
+  facetScores,        // All 30 facets for context
+  steeringHint,       // Natural language guidance toward weak facet
+  // NO trait-level precision (deprecated pattern - was duplicated across all 5 traits)
+});
+
+// System prompt includes steering:
+// "Current conversation focus:
+//  Explore how they organize their space, time, or belongings
+//  Naturally guide the conversation to explore this area..."
+
+// SCORER: Transforms facets → traits for OUTPUT only
+const traitScores = deriveTraitScores(facetScores);
+// Openness = mean(imagination, artistic_interests, ...) with min(confidence)
+
+// OUTPUT: Return both facets (internal) and traits (user-facing)
+return {
+  nerinResponse,
+  tokenUsage,
+  costIncurred,
+  facetScores,        // Granular data for next iteration
+  traitScores,        // Aggregated for user display
+  steeringTarget,     // Which facet was targeted
+  steeringHint,       // What guidance was given
+};
+```
+
+**Why Facet-Level?**
+- **Precision**: 30 facets provide finer steering than 5 traits
+- **No Duplication**: Single source of truth (facetScores), traits derived on demand
+- **Proper Abstraction**: Nerin operates at the granularity it needs
+- **Debugging**: Can trace which specific facet was targeted each turn
+
+**Error Types:**
+- `BudgetPausedError` - Daily $75 limit reached, session paused (resume next day)
+- `OrchestrationError` - Generic routing/pipeline failure
+- `PrecisionGapError` - Precision calculation failure (422)
 
 ## Nerin Agent Implementation
 
 The Nerin conversational agent follows **hexagonal architecture** (ports & adapters) with Effect-ts dependency injection.
 
-**Architecture Overview:**
+**Nerin Repository Interface (Facet-Level):**
+
+```typescript
+// packages/domain/src/repositories/nerin-agent.repository.ts
+export interface NerinInvokeInput {
+  /** Session identifier for state persistence */
+  readonly sessionId: string;
+
+  /** Message history for conversational context */
+  readonly messages: readonly BaseMessage[];
+
+  /** Current facet scores (30 facets) - NOT trait-level precision */
+  readonly facetScores?: FacetScoresMap;
+
+  /** Natural language steering hint from orchestrator outlier detection */
+  readonly steeringHint?: string;
+}
+
+export class NerinAgentRepository extends Context.Tag("NerinAgentRepository")<
+  NerinAgentRepository,
+  {
+    readonly invoke: (input: NerinInvokeInput) => Effect.Effect<NerinInvokeOutput, AgentInvocationError, never>;
+  }
+>() {}
+```
+
+**System Prompt Construction:**
+
+```typescript
+// packages/infrastructure/src/repositories/nerin-agent.langgraph.repository.ts
+function buildSystemPrompt(facetScores?: FacetScoresMap, steeringHint?: string): string {
+  let prompt = `You are Nerin, a warm and curious conversational partner...`;
+
+  // Add facet-level steering hint if provided
+  if (steeringHint) {
+    prompt += `\n\nCurrent conversation focus:\n${steeringHint}`;
+    prompt += `\nNaturally guide the conversation to explore this area...`;
+  }
+
+  // Add assessment progress context
+  if (facetScores) {
+    const assessedCount = Object.keys(facetScores).length;
+    prompt += `\n\nAssessment progress: ${assessedCount} personality facets explored so far.`;
+  }
+
+  return prompt;
+}
+```
+
+**Key Changes from Previous Implementation:**
+- ❌ **REMOVED**: `PrecisionScores` (trait-level object with 5 duplicated values)
+- ✅ **ADDED**: `facetScores` (30 facets with individual scores + confidence)
+- ✅ **ADDED**: `steeringHint` (natural language guidance from router)
+- ✅ **EFFECT**: System prompt now includes precise facet-level steering
+
+**Architecture Overview (with Orchestrator integration):**
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│ packages/domain (PORT - Interface)                                   │
+│ packages/domain (PORTS - Interfaces)                                 │
+│   └─ repositories/orchestrator.repository.ts (Story 2.4)           │
+│       - OrchestratorRepository (Context.Tag)                        │
+│       - ProcessMessageInput, ProcessMessageOutput types             │
+│       - BudgetPausedError, OrchestrationError                       │
 │   └─ repositories/nerin-agent.repository.ts                         │
-│       - NerinAgentRepository (Context.Tag)                          │
-│       - NerinInvokeInput, NerinInvokeOutput types                   │
-│       - PrecisionScores, TokenUsage interfaces                      │
+│       - NerinAgentRepository (used internally by Orchestrator)      │
+│   └─ repositories/analyzer.repository.ts                            │
+│   └─ repositories/scorer.repository.ts                              │
 └─────────────────────────────────────────────────────────────────────┘
                               ▲
                               │ implements
                               │
 ┌─────────────────────────────────────────────────────────────────────┐
-│ packages/infrastructure (ADAPTER - Implementation)                   │
+│ packages/infrastructure (ADAPTERS - Implementations)                 │
+│   └─ repositories/orchestrator.langgraph.repository.ts              │
+│       - OrchestratorLangGraphRepositoryLive (Layer)                 │
+│       - LangGraph StateGraph for routing                            │
 │   └─ repositories/nerin-agent.langgraph.repository.ts               │
-│       - NerinAgentLangGraphRepositoryLive (Layer)                   │
-│       - LangGraph StateGraph with PostgresSaver                     │
-│       - ChatAnthropic model integration                             │
-│       - Token tracking and cost calculation                         │
+│   └─ repositories/analyzer.claude.repository.ts                     │
+│   └─ repositories/scorer.drizzle.repository.ts                      │
 └─────────────────────────────────────────────────────────────────────┘
                               ▲
                               │ injected via Layer
@@ -329,7 +478,8 @@ The Nerin conversational agent follows **hexagonal architecture** (ports & adapt
 │ apps/api/src/use-cases (Business Logic)                             │
 │   └─ send-message.use-case.ts                                       │
 │       - Pure Effect, no direct LangGraph import                     │
-│       - Accesses NerinAgentRepository via Context.Tag               │
+│       - Accesses OrchestratorRepository via Context.Tag             │
+│       - Handles BudgetPausedError for graceful session pause        │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 

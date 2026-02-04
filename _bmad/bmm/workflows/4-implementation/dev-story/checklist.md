@@ -49,14 +49,11 @@ validation-rules:
 
 ## 📝 Documentation & Tracking
 
-- [ ] **Code Documentation:** All new/modified functions have JSDoc comments explaining purpose, parameters, return types, and exceptions
-- [ ] **Architecture Documentation:** README.md and/or CLAUDE.md updated if new patterns, features, or deployment changes introduced
 - [ ] **File List Complete:** File List includes EVERY new, modified, or deleted file (paths relative to repo root)
 - [ ] **Dev Agent Record Updated:** Contains relevant Implementation Notes and/or Debug Log for this work
 - [ ] **Change Log Updated:** Change Log includes clear summary of what changed and why
 - [ ] **Review Follow-ups:** All review follow-up tasks (marked [AI-Review]) completed and corresponding review items marked resolved (if applicable)
 - [ ] **Story Structure Compliance:** Only permitted sections of story file were modified
-- [ ] **Documentation Quality:** Docs are clear, concise, and follow project conventions (see CLAUDE.md for patterns)
 
 ## 🔚 Final Status Verification
 

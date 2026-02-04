@@ -15,7 +15,7 @@ import { type Auth, type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { eq } from "drizzle-orm";
 import { Context, Effect, Layer, Redacted } from "effect";
-import * as authSchema from "../db/schema";
+import * as authSchema from "../db/drizzle/schema";
 import { Database } from "./database";
 
 /**

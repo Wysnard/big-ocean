@@ -185,6 +185,12 @@ export const NerinAgentMockRepositoryLive = Layer.succeed(
 				console.log(`[MockNerin] Input: "${messageContent.substring(0, 50)}..."`);
 				console.log(`[MockNerin] Response: "${mockResponse.text.substring(0, 50)}..."`);
 				console.log(`[MockNerin] Reasoning: ${mockResponse.reasoning}`);
+				if (input.steeringHint) {
+					console.log(`[MockNerin] Steering: ${input.steeringHint}`);
+				}
+				if (input.facetScores) {
+					console.log(`[MockNerin] Facets assessed: ${Object.keys(input.facetScores).length}`);
+				}
 
 				return {
 					response: mockResponse.text,

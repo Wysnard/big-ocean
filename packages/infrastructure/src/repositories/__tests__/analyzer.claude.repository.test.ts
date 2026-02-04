@@ -9,7 +9,6 @@ import { describe, expect, it } from "@effect/vitest";
 import {
 	ALL_FACETS,
 	AnalyzerRepository,
-	InvalidFacetNameError,
 	LoggerRepository,
 	MalformedEvidenceError,
 } from "@workspace/domain";
@@ -31,13 +30,13 @@ const _TestLoggerLayer = Layer.succeed(LoggerRepository, {
  */
 function createMockAnalyzerLayer(mockResponse: string) {
 	return Layer.succeed(AnalyzerRepository, {
-		analyzeFacets: (_messageId: string, _content: string) =>
+		analyzeFacets: (assessmentMessageId: string, _content: string) =>
 			Effect.gen(function* () {
 				// Simulate parsing the mock response
 				const parsed = JSON.parse(mockResponse);
 				// biome-ignore lint/suspicious/noExplicitAny: JSON.parse returns unknown, mapping for test
 				return parsed.map((e: any) => ({
-					messageId: _messageId,
+					assessmentMessageId,
 					facetName: e.facet,
 					score: e.score,
 					confidence: e.confidence,
@@ -114,14 +113,14 @@ describe("AnalyzerClaudeRepository - Happy Path", () => {
 		),
 	);
 
-	it.effect("should include messageId in all evidence", () =>
+	it.effect("should include assessmentMessageId in all evidence", () =>
 		Effect.gen(function* () {
 			const analyzer = yield* AnalyzerRepository;
 
 			const result = yield* analyzer.analyzeFacets("msg_test_123", "I enjoy helping others");
 
 			result.forEach((evidence) => {
-				expect(evidence.messageId).toBe("msg_test_123");
+				expect(evidence.assessmentMessageId).toBe("msg_test_123");
 			});
 		}).pipe(
 			Effect.provide(
@@ -276,8 +275,8 @@ describe("AnalyzerClaudeRepository - Happy Path", () => {
 			const result = yield* analyzer.analyzeFacets("msg_123", "I love exploring new ideas");
 
 			expect(result.length).toBe(2);
-			expect(result[0].facetName).toBe("imagination");
-			expect(result[1].facetName).toBe("intellect");
+			expect(result[0]?.facetName).toBe("imagination");
+			expect(result[1]?.facetName).toBe("intellect");
 		}).pipe(Effect.provide(createMockAnalyzerLayer(mockResponse)));
 	});
 });
@@ -296,10 +295,10 @@ describe("AnalyzerClaudeRepository - Error Handling", () => {
 		}).pipe(
 			Effect.provide(
 				Layer.succeed(AnalyzerRepository, {
-					analyzeFacets: (messageId: string, _content: string) =>
+					analyzeFacets: (assessmentMessageId: string, _content: string) =>
 						Effect.fail(
 							new MalformedEvidenceError({
-								messageId,
+								assessmentMessageId,
 								rawOutput: "invalid json{",
 								parseError: "Unexpected token",
 								message: "Failed to parse analyzer JSON response",
@@ -318,17 +317,18 @@ describe("AnalyzerClaudeRepository - Error Handling", () => {
 
 			expect(result._tag).toBe("Left");
 			if (result._tag === "Left") {
-				expect(result.left._tag).toBe("InvalidFacetNameError");
+				expect(result.left._tag).toBe("MalformedEvidenceError");
 			}
 		}).pipe(
 			Effect.provide(
 				Layer.succeed(AnalyzerRepository, {
-					analyzeFacets: (_messageId: string, _content: string) =>
+					analyzeFacets: (assessmentMessageId: string, _content: string) =>
 						Effect.fail(
-							new InvalidFacetNameError({
-								facetName: "invalid_facet",
-								validFacets: ALL_FACETS,
-								message: "Invalid facet name",
+							new MalformedEvidenceError({
+								assessmentMessageId,
+								rawOutput: JSON.stringify([{ facet: "invalid_facet" }]),
+								parseError: `Invalid facet name: invalid_facet. Valid facets: ${ALL_FACETS.join(", ")}`,
+								message: "Invalid facet name in analyzer response",
 							}),
 						),
 				}),
@@ -359,10 +359,10 @@ describe("AnalyzerClaudeRepository - Error Handling", () => {
 		}).pipe(
 			Effect.provide(
 				Layer.succeed(AnalyzerRepository, {
-					analyzeFacets: (messageId: string, _content: string) =>
+					analyzeFacets: (assessmentMessageId: string, _content: string) =>
 						Effect.fail(
 							new MalformedEvidenceError({
-								messageId,
+								assessmentMessageId,
 								rawOutput: mockResponse,
 								parseError: "Score validation failed",
 								message: "Response structure validation failed",
@@ -396,10 +396,10 @@ describe("AnalyzerClaudeRepository - Error Handling", () => {
 		}).pipe(
 			Effect.provide(
 				Layer.succeed(AnalyzerRepository, {
-					analyzeFacets: (messageId: string, _content: string) =>
+					analyzeFacets: (assessmentMessageId: string, _content: string) =>
 						Effect.fail(
 							new MalformedEvidenceError({
-								messageId,
+								assessmentMessageId,
 								rawOutput: mockResponse,
 								parseError: "Confidence validation failed",
 								message: "Response structure validation failed",

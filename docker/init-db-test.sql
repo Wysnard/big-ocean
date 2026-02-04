@@ -66,7 +66,7 @@ CREATE TABLE "assessment_session" (
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"status" text DEFAULT 'active' NOT NULL,
-	"precision" jsonb NOT NULL,
+	"confidence" jsonb NOT NULL,
 	"message_count" integer DEFAULT 0 NOT NULL
 );
 

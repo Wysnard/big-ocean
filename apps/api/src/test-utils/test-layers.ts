@@ -12,13 +12,21 @@ import {
 	AnalyzerRepository,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
+	BudgetPausedError,
 	CostGuardRepository,
+	calculateConfidenceFromFacetScores,
+	createInitialFacetScoresMap,
+	createInitialTraitScoresMap,
 	type FacetEvidence,
 	FacetEvidenceRepository,
 	type FacetName,
+	type FacetScore,
 	type FacetScoresMap,
+	initializeFacetConfidence,
 	LoggerRepository,
 	NerinAgentRepository,
+	OrchestratorRepository,
+	type ProcessMessageInput,
 	RedisRepository,
 	type SavedFacetEvidence,
 	ScorerRepository,
@@ -56,13 +64,7 @@ export const createTestAssessmentSessionLayer = () => {
 					sessionId,
 					userId,
 					createdAt: new Date(),
-					precision: {
-						openness: 50,
-						conscientiousness: 50,
-						extraversion: 50,
-						agreeableness: 50,
-						neuroticism: 50,
-					},
+					confidence: initializeFacetConfidence(50),
 				};
 				sessions.set(sessionId, session);
 				return session;
@@ -262,7 +264,7 @@ export const createTestAnalyzerLayer = () =>
 						assessmentMessageId,
 						facetName: "imagination",
 						score: 16,
-						confidence: 0.85,
+						confidence: 85,
 						quote: content.substring(0, Math.min(30, content.length)),
 						highlightRange: { start: 0, end: Math.min(30, content.length) },
 					});
@@ -278,7 +280,7 @@ export const createTestAnalyzerLayer = () =>
 						assessmentMessageId,
 						facetName: "altruism",
 						score: 18,
-						confidence: 0.9,
+						confidence: 90,
 						quote: content.substring(0, Math.min(25, content.length)),
 						highlightRange: { start: 0, end: Math.min(25, content.length) },
 					});
@@ -294,7 +296,7 @@ export const createTestAnalyzerLayer = () =>
 						assessmentMessageId,
 						facetName: "orderliness",
 						score: 17,
-						confidence: 0.8,
+						confidence: 80,
 						quote: content.substring(0, Math.min(20, content.length)),
 						highlightRange: { start: 0, end: Math.min(20, content.length) },
 					});
@@ -306,7 +308,7 @@ export const createTestAnalyzerLayer = () =>
 						assessmentMessageId,
 						facetName: "intellect",
 						score: 12,
-						confidence: 0.6,
+						confidence: 60,
 						quote: content.substring(0, Math.min(20, content.length)),
 						highlightRange: { start: 0, end: Math.min(20, content.length) },
 					});
@@ -326,37 +328,34 @@ export const createTestScorerLayer = () =>
 	Layer.succeed(ScorerRepository, {
 		aggregateFacetScores: (_sessionId: string) =>
 			Effect.sync(() => {
-				// Return mock aggregated facet scores
-				const facetScores: FacetScoresMap = {
-					imagination: { score: 16.5, confidence: 0.85 },
-					artistic_interests: { score: 15.2, confidence: 0.8 },
-					emotionality: { score: 14.8, confidence: 0.78 },
-					adventurousness: { score: 17.1, confidence: 0.88 },
-					intellect: { score: 16.9, confidence: 0.87 },
-					liberalism: { score: 15.5, confidence: 0.82 },
+				// Return mock aggregated facet scores (initialize all 30, then override some)
+				return createInitialFacetScoresMap({
+					imagination: { score: 16.5, confidence: 85 },
+					artistic_interests: { score: 15.2, confidence: 80 },
+					emotionality: { score: 14.8, confidence: 78 },
+					adventurousness: { score: 17.1, confidence: 88 },
+					intellect: { score: 16.9, confidence: 87 },
+					liberalism: { score: 15.5, confidence: 82 },
 					// Add a few more for other traits
-					altruism: { score: 18.2, confidence: 0.9 },
-					cooperation: { score: 17.5, confidence: 0.85 },
-				};
-				return facetScores;
+					altruism: { score: 18.2, confidence: 90 },
+					cooperation: { score: 17.5, confidence: 85 },
+				});
 			}),
 
 		deriveTraitScores: (facetScores: FacetScoresMap) =>
 			Effect.sync(() => {
 				// Calculate trait scores from facet scores (same algorithm as production)
-				const traitScores: TraitScoresMap = {};
+				const traitScores: TraitScoresMap = createInitialTraitScoresMap();
 
 				for (const [traitName, facetNames] of Object.entries(TRAIT_TO_FACETS)) {
-					const facetsForTrait = facetNames.map((fn) => facetScores[fn]).filter((f) => f !== undefined);
-
-					if (facetsForTrait.length === 0) continue;
+					const facetsForTrait = facetNames.map((fn) => facetScores[fn]);
 
 					// Mean of facet scores
-					const scores = facetsForTrait.map((f) => f?.score);
+					const scores = facetsForTrait.map((f) => f.score);
 					const traitScore = scores.reduce((sum, s) => sum + s, 0) / scores.length;
 
 					// Minimum confidence
-					const confidences = facetsForTrait.map((f) => f?.confidence);
+					const confidences = facetsForTrait.map((f) => f.confidence);
 					const traitConfidence = Math.min(...confidences);
 
 					traitScores[traitName as TraitName] = {
@@ -428,6 +427,163 @@ export const createTestFacetEvidenceLayer = () => {
 };
 
 /**
+ * Creates a test Layer for OrchestratorRepository.
+ *
+ * Provides a mock orchestrator for testing without LangGraph or LLM calls.
+ * Implements deterministic routing logic matching production behavior:
+ * - Routes to Nerin on every message
+ * - Triggers Analyzer + Scorer on batch messages (every 3rd)
+ * - Calculates steering target via outlier detection
+ * - Throws BudgetPausedError when daily limit exceeded
+ */
+export const createTestOrchestratorLayer = () => {
+	const DAILY_COST_LIMIT = 75; // dollars
+	const MESSAGE_COST_ESTIMATE = 0.0043; // per message
+
+	/**
+	 * Calculate steering target using outlier detection.
+	 * Returns the facet with lowest confidence that is more than 1 stddev below mean.
+	 * Returns null if no outliers exist (tightly clustered or no data).
+	 *
+	 * Note: This matches production logic in orchestrator.nodes.ts exactly.
+	 */
+	const getSteeringTarget = (
+		facetScores: Record<string, FacetScore> | undefined,
+	): FacetName | null => {
+		if (!facetScores) return null;
+
+		// Filter to facets with confidence > 0 (actually assessed) - matches production logic
+		const assessed = Object.entries(facetScores).filter(
+			([_, score]) => score !== undefined && score.confidence > 0,
+		);
+
+		if (assessed.length === 0) return null;
+
+		const confidences = assessed.map(([_, s]) => s.confidence);
+		const mean = confidences.reduce((a, b) => a + b, 0) / confidences.length;
+		const variance = confidences.reduce((acc, c) => acc + (c - mean) ** 2, 0) / confidences.length;
+		const stddev = Math.sqrt(variance);
+
+		// If stddev is very small (tightly clustered), there are no outliers
+		// Threshold is 0.1 for 0-100 integer scale
+		if (stddev < 0.1) return null;
+
+		const threshold = mean - stddev;
+
+		// Find outliers (confidence below threshold)
+		const outliers = assessed
+			.filter(([_, s]) => s.confidence < threshold)
+			.sort((a, b) => a[1].confidence - b[1].confidence);
+
+		const weakestOutlier = outliers[0];
+		return weakestOutlier ? (weakestOutlier[0] as FacetName) : null;
+	};
+
+	/**
+	 * Facet steering hints mapping (subset for testing).
+	 */
+	const FACET_STEERING_HINTS: Partial<Record<FacetName, string>> = {
+		imagination: "Ask about daydreaming, creative scenarios, or 'what if' thinking",
+		artistic_interests: "Explore appreciation for art, music, literature, or beauty",
+		orderliness: "Explore how they organize their space, time, or belongings",
+		altruism: "Discuss helping others, volunteering, or selfless acts",
+		trust: "Ask about trusting others or giving people benefit of the doubt",
+		intellect: "Explore curiosity about ideas, philosophy, or abstract concepts",
+	};
+
+	/**
+	 * Get next day midnight UTC for resume timestamp.
+	 */
+	const getNextDayMidnightUTC = (): Date => {
+		const tomorrow = new Date();
+		tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+		tomorrow.setUTCHours(0, 0, 0, 0);
+		return tomorrow;
+	};
+
+	return Layer.succeed(OrchestratorRepository, {
+		processMessage: (input: ProcessMessageInput) =>
+			Effect.gen(function* () {
+				const { sessionId, messageCount, dailyCostUsed, facetScores } = input;
+
+				// 1. BUDGET CHECK - throw BudgetPausedError if limit would be exceeded
+				// Use > (not >=) so messages are allowed up to exactly $75.00
+				if (dailyCostUsed + MESSAGE_COST_ESTIMATE > DAILY_COST_LIMIT) {
+					const overallConfidence = facetScores ? calculateConfidenceFromFacetScores(facetScores) : 50;
+					yield* Effect.fail(
+						new BudgetPausedError(
+							sessionId,
+							"Your assessment is saved! Come back tomorrow to continue with full accuracy.",
+							getNextDayMidnightUTC(),
+							overallConfidence,
+						),
+					);
+					// This won't be reached due to Effect.fail, but TypeScript needs it
+					throw new Error("Unreachable");
+				}
+
+				// 2. STEERING CALCULATION
+				const steeringTarget = getSteeringTarget(facetScores);
+				const steeringHint = steeringTarget ? FACET_STEERING_HINTS[steeringTarget] : undefined;
+
+				// 3. ALWAYS route to Nerin
+				const nerinResponse = `Mock Nerin response for session ${sessionId}`;
+				const tokenUsage = { input: 100, output: 50, total: 150 };
+				const costIncurred = MESSAGE_COST_ESTIMATE;
+
+				// 4. BATCH PROCESSING (every 3rd message)
+				const isBatchMessage = messageCount % 3 === 0;
+
+				if (isBatchMessage) {
+					// Return with scoring data
+					const mockFacetScores: FacetScoresMap = createInitialFacetScoresMap({
+						imagination: { score: 16.5, confidence: 85 },
+						orderliness: { score: 15.2, confidence: 80 },
+						altruism: { score: 17.0, confidence: 87 },
+					});
+
+					const mockTraitScores: TraitScoresMap = createInitialTraitScoresMap({
+						openness: { score: 15.8, confidence: 82 },
+						conscientiousness: { score: 14.5, confidence: 78 },
+						agreeableness: { score: 16.2, confidence: 85 },
+					});
+
+					const mockFacetEvidence: FacetEvidence[] = [
+						{
+							assessmentMessageId: "mock-msg-id",
+							facetName: "imagination",
+							score: 16,
+							confidence: 85,
+							quote: "mock quote",
+							highlightRange: { start: 0, end: 10 },
+						},
+					];
+
+					return {
+						nerinResponse,
+						tokenUsage,
+						costIncurred,
+						facetEvidence: mockFacetEvidence,
+						facetScores: mockFacetScores,
+						traitScores: mockTraitScores,
+						steeringTarget: steeringTarget ?? undefined,
+						steeringHint: steeringHint ?? undefined,
+					};
+				}
+
+				// Non-batch message - no scoring data
+				return {
+					nerinResponse,
+					tokenUsage,
+					costIncurred,
+					steeringTarget: steeringTarget ?? undefined,
+					steeringHint: steeringHint ?? undefined,
+				};
+			}),
+	});
+};
+
+/**
  * Complete test Layer merging all repository mocks.
  *
  * Provides all dependencies needed for use-case testing.
@@ -452,6 +608,7 @@ export const TestRepositoriesLayer = Layer.mergeAll(
 	createTestAnalyzerLayer(),
 	createTestScorerLayer(),
 	createTestFacetEvidenceLayer(),
+	createTestOrchestratorLayer(),
 );
 
 /**

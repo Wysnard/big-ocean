@@ -84,91 +84,185 @@ const evaluatorWithStructuredOutput = evaluatorModel.withStructuredOutput(Assess
 });
 
 // Define state using LangGraph
-import {
-	END,
-	type GraphNode,
-	MessagesValue,
-	ReducedValue,
-	START,
-	StateGraph,
-	StateSchema,
-} from "@langchain/langgraph";
+import type { BaseMessage } from "@langchain/core/messages";
+import { Annotation, END, type GraphNode, START, StateGraph } from "@langchain/langgraph";
 
-const TherapistState = new StateSchema({
-	messages: MessagesValue,
-	assessmentComplete: new ReducedValue(z.boolean().default(false), {
-		reducer: (_, y) => y,
+const TherapistStateAnnotation = Annotation.Root({
+	messages: Annotation<BaseMessage[]>({
+		reducer: (prev, next) => [...(prev ?? []), ...(next ?? [])],
+		default: () => [],
 	}),
-	evaluateNow: new ReducedValue(z.boolean().default(false), {
-		reducer: (_, y) => y,
+	assessmentComplete: Annotation<boolean>({
+		reducer: (_, next) => next ?? false,
+		default: () => false,
 	}),
-	lastEvaluatedAt: new ReducedValue(z.number().default(0), {
-		reducer: (_, y) => y,
+	evaluateNow: Annotation<boolean>({
+		reducer: (_, next) => next ?? false,
+		default: () => false,
+	}),
+	lastEvaluatedAt: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
 	}),
 
 	// Precision scores for main traits
-	opennessPrecision: new ReducedValue(z.number().default(0), {
-		reducer: (_, y) => y,
+	opennessPrecision: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
 	}),
-	conscientiousnessPrecision: new ReducedValue(z.number().default(0), {
-		reducer: (_, y) => y,
+	conscientiousnessPrecision: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
 	}),
-	extraversionPrecision: new ReducedValue(z.number().default(0), {
-		reducer: (_, y) => y,
+	extraversionPrecision: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
 	}),
-	agreeablenessPrecision: new ReducedValue(z.number().default(0), {
-		reducer: (_, y) => y,
+	agreeablenessPrecision: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
 	}),
-	neuroticismPrecision: new ReducedValue(z.number().default(0), {
-		reducer: (_, y) => y,
+	neuroticismPrecision: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
 	}),
 
 	// Openness facets
-	fantasy: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	aesthetics: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	feelings: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	actions: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	ideas: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	values: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
+	fantasy: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	aesthetics: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	feelings: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	actions: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	ideas: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	values: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
 
 	// Conscientiousness facets
-	competence: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	order: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	dutifulness: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	achievementStriving: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	selfDiscipline: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	deliberation: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
+	competence: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	order: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	dutifulness: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	achievementStriving: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	selfDiscipline: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	deliberation: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
 
 	// Extraversion facets
-	warmth: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	gregariousness: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	assertiveness: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	activity: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	excitementSeeking: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	positiveEmotions: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
+	warmth: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	gregariousness: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	assertiveness: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	activity: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	excitementSeeking: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	positiveEmotions: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
 
 	// Agreeableness facets
-	trust: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	straightforwardness: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	altruism: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	compliance: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	modesty: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	tenderMindedness: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
+	trust: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	straightforwardness: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	altruism: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	compliance: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	modesty: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	tenderMindedness: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
 
 	// Neuroticism facets
-	anxiety: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	angryHostility: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	depression: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	selfConsciousness: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	impulsiveness: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
-	vulnerability: new ReducedValue(z.number().default(0), { reducer: (_, y) => y }),
+	anxiety: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	angryHostility: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	depression: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	selfConsciousness: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	impulsiveness: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
+	vulnerability: Annotation<number>({
+		reducer: (_, next) => next ?? 0,
+		default: () => 0,
+	}),
 });
 
 // Import message types
 import { SystemMessage } from "@langchain/core/messages";
 
 // Conversational Node - LLM 1: Generates empathetic therapist response
-const conversationNode: GraphNode<typeof TherapistState> = async (state) => {
+const conversationNode: GraphNode<typeof TherapistStateAnnotation.State> = async (state) => {
 	const systemPrompt = `You are an empathetic personality therapist conducting a Big Five personality assessment interview.
 
 Your ONLY job is to have a warm, natural conversation with the person. DO NOT worry about scoring or calculating personality traits - another system handles that automatically.
@@ -202,7 +296,7 @@ Be warm, non-judgmental, and conversational. Let the dialogue flow naturally.`;
 };
 
 // Evaluation Node - LLM 2: Analyzes conversation and provides scores
-const evaluationNode: GraphNode<typeof TherapistState> = async (state) => {
+const evaluationNode: GraphNode<typeof TherapistStateAnnotation.State> = async (state) => {
 	const currentPrecisions = {
 		openness: state.opennessPrecision,
 		conscientiousness: state.conscientiousnessPrecision,
@@ -320,7 +414,7 @@ Return updated scores for ALL 30 facets and 5 confidence levels.`;
 			...state.messages,
 		]);
 
-		const messageCount = state.messages.filter((m) => m.type === "human").length;
+		const messageCount = state.messages.filter((m: BaseMessage) => m.type === "human").length;
 
 		console.info("[Therapist] Evaluation completed", {
 			messageCount,
@@ -384,8 +478,8 @@ Return updated scores for ALL 30 facets and 5 confidence levels.`;
 };
 
 // Conditional function to determine if we should evaluate
-const shouldEvaluate = (state: typeof TherapistState.State) => {
-	const messageCount = state.messages.filter((m) => m.type === "human").length;
+const shouldEvaluate = (state: typeof TherapistStateAnnotation.State) => {
+	const messageCount = state.messages.filter((m: BaseMessage) => m.type === "human").length;
 	const evaluationInterval = 3; // Evaluate every 3 messages
 	const shouldEvaluateNow = state.evaluateNow ?? false;
 
@@ -409,7 +503,7 @@ const shouldEvaluate = (state: typeof TherapistState.State) => {
 import { HumanMessage } from "@langchain/core/messages";
 
 // biome-ignore lint: StateGraph typing requires any for dynamic graph construction
-const agent: any = new StateGraph(TherapistState)
+const agent: any = new StateGraph(TherapistStateAnnotation)
 	.addNode("conversationNode", conversationNode)
 	.addNode("evaluationNode", evaluationNode)
 	.addEdge(START, "conversationNode")
