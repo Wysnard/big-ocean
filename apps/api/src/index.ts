@@ -19,7 +19,7 @@ import {
 	AppConfigLive,
 	BetterAuthLive,
 	BetterAuthService,
-	CheckpointerMemoryRepositoryLive,
+	CheckpointerPostgresRepositoryLive,
 	CostGuardRedisRepositoryLive,
 	DatabaseStack,
 	OrchestratorGraphLangGraphRepositoryLive,
@@ -98,10 +98,12 @@ const AgentLayers = Layer.mergeAll(
 
 /**
  * Orchestrator Graph Layer - LangGraph graph with all agent dependencies
+ *
+ * Uses PostgreSQL checkpointer for durable conversation state persistence.
  */
 const OrchestratorGraphLayer = OrchestratorGraphLangGraphRepositoryLive.pipe(
 	Layer.provide(AgentLayers),
-	Layer.provide(CheckpointerMemoryRepositoryLive),
+	Layer.provide(CheckpointerPostgresRepositoryLive),
 	Layer.provide(InfrastructureLayer),
 );
 

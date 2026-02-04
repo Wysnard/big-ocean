@@ -28,7 +28,7 @@ export { AssessmentMessageDrizzleRepositoryLive } from "./repositories/assessmen
 export { AssessmentSessionDrizzleRepositoryLive } from "./repositories/assessment-session.drizzle.repository";
 // Checkpointer repository implementations
 export { CheckpointerMemoryRepositoryLive } from "./repositories/checkpointer.memory.repository";
-export { createPostgresCheckpointerLayer } from "./repositories/checkpointer.postgres.repository";
+export { CheckpointerPostgresRepositoryLive } from "./repositories/checkpointer.postgres.repository";
 // CostGuard repository implementation
 export {
 	CostGuardRedisRepositoryLive,

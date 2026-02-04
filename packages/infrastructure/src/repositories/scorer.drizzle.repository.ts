@@ -122,11 +122,6 @@ function aggregateFacet(evidence: EvidenceRow[]): {
 		adjustedConfidence -= 30; // -30 points on 0-100 scale
 	}
 
-	// Large sample (>10) increases confidence
-	if (sorted.length > 10) {
-		adjustedConfidence += 20; // +20 points on 0-100 scale
-	}
-
 	// Clamp to 0-100 integer range
 	adjustedConfidence = Math.round(clamp(adjustedConfidence, 0, 100));
 

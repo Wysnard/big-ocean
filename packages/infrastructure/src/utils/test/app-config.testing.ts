@@ -31,6 +31,9 @@ export const defaultTestConfig: AppConfigService = {
 	frontendUrl: "http://localhost:3000",
 	port: 4000,
 	nodeEnv: "test",
+	analyzerModelId: "claude-sonnet-4-20250514",
+	analyzerMaxTokens: 2048,
+	analyzerTemperature: 0.3,
 };
 
 /**

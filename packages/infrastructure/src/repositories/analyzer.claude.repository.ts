@@ -24,6 +24,7 @@ import {
 	AnalyzerError,
 	AnalyzerRepository,
 	AnalyzerResponseJsonSchema,
+	AppConfig,
 	type FacetEvidence,
 	LoggerRepository,
 	MalformedEvidenceError,
@@ -111,25 +112,26 @@ Each item in the array must have:
  * Uses Claude Sonnet 4.5 via ChatAnthropic for facet analysis with structured output.
  * Requires ANTHROPIC_API_KEY environment variable.
  *
- * Layer type: Layer<AnalyzerRepository, never, LoggerRepository>
+ * Layer type: Layer<AnalyzerRepository, never, LoggerRepository | AppConfig>
  */
 export const AnalyzerClaudeRepositoryLive = Layer.effect(
 	AnalyzerRepository,
 	Effect.gen(function* () {
 		const logger = yield* LoggerRepository;
+		const config = yield* AppConfig;
 
 		// Create ChatAnthropic model with structured output
 		const baseModel = new ChatAnthropic({
-			model: process.env.ANALYZER_MODEL_ID || "claude-sonnet-4-20250514",
-			maxTokens: Number(process.env.ANALYZER_MAX_TOKENS) || 2048,
-			temperature: Number(process.env.ANALYZER_TEMPERATURE) || 0.3, // Lower temperature for structured output
+			model: config.analyzerModelId,
+			maxTokens: config.analyzerMaxTokens,
+			temperature: config.analyzerTemperature, // Lower temperature for structured output
 		});
 
 		// Use structured output with JSON Schema from Effect Schema
 		const model = baseModel.withStructuredOutput(AnalyzerResponseJsonSchema);
 
 		logger.info("Analyzer Claude repository initialized", {
-			model: process.env.ANALYZER_MODEL_ID || "claude-sonnet-4-20250514",
+			model: config.analyzerModelId,
 		});
 
 		// Return service implementation

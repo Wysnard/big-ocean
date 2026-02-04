@@ -43,6 +43,13 @@ const configSchema = Config.all({
 	frontendUrl: Config.string("FRONTEND_URL").pipe(Config.withDefault("http://localhost:3000")),
 	port: Config.number("PORT").pipe(Config.withDefault(4000)),
 	nodeEnv: Config.string("NODE_ENV").pipe(Config.withDefault("development")),
+
+	// Analyzer agent configuration
+	analyzerModelId: Config.string("ANALYZER_MODEL_ID").pipe(
+		Config.withDefault("claude-sonnet-4-20250514"),
+	),
+	analyzerMaxTokens: Config.number("ANALYZER_MAX_TOKENS").pipe(Config.withDefault(2048)),
+	analyzerTemperature: Config.number("ANALYZER_TEMPERATURE").pipe(Config.withDefault(0.3)),
 });
 
 /**
