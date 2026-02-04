@@ -94,7 +94,8 @@ For each user message, identify signals for all 30 facets across 5 traits:
 Each item in the array must have:
 - facet: One of the 30 facet names listed above
 - evidence: Quote from the user's message showing the signal
-- confidence: Number between 0.0 and 1.0
+- score: Number between 0 and 20 (strength of signal for that facet)
+- confidence: Number between 0 and 100 (certainty of interpretation)
 - highlightRange: Object with start and end character indices`;
 
 /**

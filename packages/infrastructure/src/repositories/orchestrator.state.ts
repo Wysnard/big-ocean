@@ -62,6 +62,24 @@ export const OrchestratorStateAnnotation = Annotation.Root({
 	}),
 
 	/**
+	 * Indices of messages that have been analyzed by the Analyzer.
+	 * Used to track which messages have been processed to avoid re-analyzing.
+	 * Reducer appends new indices and deduplicates.
+	 *
+	 * Example: [0, 1, 2, 4] means messages at indices 0, 1, 2, and 4 have been analyzed
+	 * (message 3 is still pending analysis)
+	 */
+	analyzedMessageIndices: Annotation<number[]>({
+		reducer: (prev, next) => {
+			if (!next) return prev ?? [];
+			if (!prev) return next;
+			// Merge and deduplicate
+			return Array.from(new Set([...prev, ...next]));
+		},
+		default: () => [],
+	}),
+
+	/**
 	 * Current message count in the session (1-indexed).
 	 * Used to determine batch processing trigger (every 3rd message).
 	 */

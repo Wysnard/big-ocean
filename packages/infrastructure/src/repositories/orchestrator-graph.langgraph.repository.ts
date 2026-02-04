@@ -17,6 +17,7 @@
  * @see Story 2-4: LangGraph State Machine and Orchestration
  */
 
+import { HumanMessage } from "@langchain/core/messages";
 import { END, START, StateGraph } from "@langchain/langgraph";
 import {
 	AnalyzerRepository,
@@ -24,6 +25,7 @@ import {
 	CheckpointerRepository,
 	calculateConfidenceFromFacetScores,
 	createInitialFacetScoresMap,
+	type FacetEvidence,
 	type GraphInput,
 	type GraphOutput,
 	LoggerRepository,
@@ -151,6 +153,9 @@ const nerinNodeEffect = (state: OrchestratorState) =>
 /**
  * Analyzer Node Effect - Facet evidence extraction.
  * Uses yield* for DI of AnalyzerRepository and LoggerRepository.
+ *
+ * Analyzes only unanalyzed user messages to avoid duplicate processing.
+ * Tracks which messages have been analyzed via analyzedMessageIndices.
  */
 const analyzerNodeEffect = (state: OrchestratorState) =>
 	Effect.gen(function* () {
@@ -162,16 +167,43 @@ const analyzerNodeEffect = (state: OrchestratorState) =>
 			messageCount: state.messageCount,
 		});
 
-		const messageId = `msg_${state.sessionId}_${state.messageCount}`;
-		const facetEvidence = yield* analyzer.analyzeFacets(messageId, state.userMessage);
+		// Find unanalyzed user messages
+		const analyzedSet = new Set(state.analyzedMessageIndices ?? []);
+		const allEvidence: FacetEvidence[] = [];
+		const newlyAnalyzedIndices: number[] = [];
 
-		logger.debug("Analyzer evidence extracted", {
+		// Iterate through messages to find unanalyzed user messages
+		for (let i = 0; i < state.messages.length; i++) {
+			const message = state.messages[i];
+			if (!message) continue; // Skip if undefined (shouldn't happen)
+
+			// Only analyze human messages that haven't been analyzed yet
+			if (message instanceof HumanMessage && !analyzedSet.has(i)) {
+				const messageId = `msg_${state.sessionId}_${i + 1}`;
+				const content =
+					typeof message.content === "string" ? message.content : JSON.stringify(message.content);
+
+				const evidence = yield* analyzer.analyzeFacets(messageId, content);
+				allEvidence.push(...evidence);
+				newlyAnalyzedIndices.push(i);
+
+				logger.debug("Analyzed message", {
+					messageIndex: i,
+					messageId,
+					evidenceCount: evidence.length,
+				});
+			}
+		}
+
+		logger.debug("Analyzer evidence extraction complete", {
 			sessionId: state.sessionId,
-			evidenceCount: facetEvidence.length,
+			totalEvidence: allEvidence.length,
+			newlyAnalyzedCount: newlyAnalyzedIndices.length,
 		});
 
 		return {
-			facetEvidence,
+			facetEvidence: allEvidence,
+			analyzedMessageIndices: newlyAnalyzedIndices,
 		};
 	});
 
