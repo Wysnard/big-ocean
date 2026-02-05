@@ -5,30 +5,64 @@
  * the Orchestrator Router to Nerin Agent.
  *
  * Uses a spy Nerin layer to capture and verify input parameters.
+ * Uses inline test layers for dependencies (logger, config, analyzer, scorer)
+ * rather than vi.mock() since this test uses real orchestrator infrastructure.
  */
+
+import { vi } from "vitest";
+
+// Only mock domain config — the one __mocks__ file that exists
+vi.mock("@workspace/domain/config/app-config");
 
 import { describe, expect, it } from "@effect/vitest";
 import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import {
+	AnalyzerRepository,
 	CheckpointerRepository,
 	createInitialFacetScoresMap,
+	createInitialTraitScoresMap,
 	type FacetScoresMap,
+	LoggerRepository,
 	NerinAgentRepository,
 	type NerinInvokeInput,
 	OrchestratorRepository,
+	ScorerRepository,
 } from "@workspace/domain";
+// vi.mock() replaces this import with __mocks__/app-config.ts which exports createTestAppConfigLayer
+// @ts-expect-error -- TS sees the real module (no createTestAppConfigLayer), Vitest resolves the mock
+import { createTestAppConfigLayer } from "@workspace/domain/config/app-config";
 import {
 	OrchestratorGraphLangGraphRepositoryLive,
 	OrchestratorLangGraphRepositoryLive,
 } from "@workspace/infrastructure";
 import { Effect, Layer } from "effect";
-import {
-	createTestAnalyzerLayer,
-	createTestAppConfigLayer,
-	createTestLoggerLayer,
-	createTestScorerLayer,
-} from "../../test-utils/test-layers";
+
+// Inline test layers — no vi.mock() needed for these
+const TestLoggerLayer = Layer.succeed(
+	LoggerRepository,
+	LoggerRepository.of({
+		info: () => {},
+		warn: () => {},
+		error: () => {},
+		debug: () => {},
+	}),
+);
+
+const TestAnalyzerLayer = Layer.succeed(
+	AnalyzerRepository,
+	AnalyzerRepository.of({
+		analyzeFacets: () => Effect.succeed([]),
+	}),
+);
+
+const TestScorerLayer = Layer.succeed(
+	ScorerRepository,
+	ScorerRepository.of({
+		aggregateFacetScores: () => Effect.succeed(createInitialFacetScoresMap()),
+		deriveTraitScores: () => Effect.succeed(createInitialTraitScoresMap()),
+	}),
+);
 
 // Create memory checkpointer layer
 const TestCheckpointerLayer = Layer.succeed(CheckpointerRepository, {
@@ -57,11 +91,11 @@ describe("Nerin Steering Integration", () => {
 
 			// Build base layer with all dependencies
 			const BaseLayer = Layer.mergeAll(
-				createTestLoggerLayer(),
+				TestLoggerLayer,
 				createTestAppConfigLayer(),
 				SpyNerinLayer,
-				createTestAnalyzerLayer(),
-				createTestScorerLayer(),
+				TestAnalyzerLayer,
+				TestScorerLayer,
 				TestCheckpointerLayer,
 			);
 
@@ -69,10 +103,11 @@ describe("Nerin Steering Integration", () => {
 			const GraphLayer = OrchestratorGraphLangGraphRepositoryLive.pipe(Layer.provide(BaseLayer));
 
 			// Build orchestrator layer on top of graph
+			// Type assertion: all deps are satisfied via Layer.provide but TS can't resolve the full chain
 			const OrchestratorLayer = OrchestratorLangGraphRepositoryLive.pipe(
 				Layer.provide(GraphLayer),
-				Layer.provide(createTestLoggerLayer()),
-			);
+				Layer.provide(TestLoggerLayer),
+			) as Layer.Layer<OrchestratorRepository>;
 
 			// Run orchestrator with facetScores containing a clear outlier
 			const orchestrator = yield* OrchestratorRepository.pipe(Effect.provide(OrchestratorLayer));
@@ -136,18 +171,18 @@ describe("Nerin Steering Integration", () => {
 			});
 
 			const BaseLayer = Layer.mergeAll(
-				createTestLoggerLayer(),
+				TestLoggerLayer,
 				createTestAppConfigLayer(),
 				SpyNerinLayer,
-				createTestAnalyzerLayer(),
-				createTestScorerLayer(),
+				TestAnalyzerLayer,
+				TestScorerLayer,
 				TestCheckpointerLayer,
 			);
 
 			const GraphLayer = OrchestratorGraphLangGraphRepositoryLive.pipe(Layer.provide(BaseLayer));
 			const OrchestratorLayer = OrchestratorLangGraphRepositoryLive.pipe(
 				Layer.provide(GraphLayer),
-				Layer.provide(createTestLoggerLayer()),
+				Layer.provide(TestLoggerLayer),
 			);
 
 			const orchestrator = yield* OrchestratorRepository.pipe(Effect.provide(OrchestratorLayer));
@@ -206,18 +241,18 @@ describe("Nerin Steering Integration", () => {
 			});
 
 			const BaseLayer = Layer.mergeAll(
-				createTestLoggerLayer(),
+				TestLoggerLayer,
 				createTestAppConfigLayer(),
 				SpyNerinLayer,
-				createTestAnalyzerLayer(),
-				createTestScorerLayer(),
+				TestAnalyzerLayer,
+				TestScorerLayer,
 				TestCheckpointerLayer,
 			);
 
 			const GraphLayer = OrchestratorGraphLangGraphRepositoryLive.pipe(Layer.provide(BaseLayer));
 			const OrchestratorLayer = OrchestratorLangGraphRepositoryLive.pipe(
 				Layer.provide(GraphLayer),
-				Layer.provide(createTestLoggerLayer()),
+				Layer.provide(TestLoggerLayer),
 			);
 
 			const orchestrator = yield* OrchestratorRepository.pipe(Effect.provide(OrchestratorLayer));

@@ -17,8 +17,14 @@ import {
 	OrchestratorRepository,
 	type ProcessMessageInput,
 } from "@workspace/domain";
-import { Cause, Effect, Exit, Option } from "effect";
-import { TestRepositoriesLayer } from "../../test-utils/test-layers";
+import { Effect } from "effect";
+import { vi } from "vitest";
+
+vi.mock("@workspace/infrastructure/repositories/orchestrator.langgraph.repository");
+
+import { OrchestratorLangGraphRepositoryLive } from "@workspace/infrastructure/repositories/orchestrator.langgraph.repository";
+
+const TestLayer = OrchestratorLangGraphRepositoryLive;
 
 describe("OrchestratorRepository", () => {
 	describe("Routing behavior", () => {
@@ -37,7 +43,7 @@ describe("OrchestratorRepository", () => {
 				expect(result.nerinResponse.length).toBeGreaterThan(0);
 				expect(result.tokenUsage).toBeDefined();
 				expect(result.tokenUsage.total).toBeGreaterThan(0);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("triggers Analyzer + Scorer on every 3rd message", () =>
@@ -57,7 +63,7 @@ describe("OrchestratorRepository", () => {
 				expect(result.facetEvidence).toBeDefined();
 				expect(result.facetScores).toBeDefined();
 				expect(result.traitScores).toBeDefined();
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("does NOT trigger Analyzer on non-batch messages", () =>
@@ -77,7 +83,7 @@ describe("OrchestratorRepository", () => {
 				expect(result.facetEvidence).toBeUndefined();
 				expect(result.facetScores).toBeUndefined();
 				expect(result.traitScores).toBeUndefined();
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("triggers batch on message 6, 9, 12...", () =>
@@ -96,7 +102,7 @@ describe("OrchestratorRepository", () => {
 				// Message 6 should trigger batch
 				expect(result.facetEvidence).toBeDefined();
 				expect(result.facetScores).toBeDefined();
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -122,7 +128,7 @@ describe("OrchestratorRepository", () => {
 				expect(result.steeringTarget).toBe("orderliness");
 				expect(result.steeringHint).toBeDefined();
 				expect(result.steeringHint).toContain("organize");
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("returns null steering when no facets assessed", () =>
@@ -139,7 +145,7 @@ describe("OrchestratorRepository", () => {
 
 				expect(result.steeringTarget).toBeUndefined();
 				expect(result.steeringHint).toBeUndefined();
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("returns null steering when facets are tightly clustered", () =>
@@ -162,7 +168,7 @@ describe("OrchestratorRepository", () => {
 
 				// No outliers when all confidences are identical (stddev = 0)
 				expect(result.steeringTarget).toBeUndefined();
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("returns weakest outlier when multiple outliers exist", () =>
@@ -184,7 +190,7 @@ describe("OrchestratorRepository", () => {
 
 				// Should return orderliness (0.15) as it's the weakest
 				expect(result.steeringTarget).toBe("orderliness");
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -200,7 +206,7 @@ describe("OrchestratorRepository", () => {
 				for (const key of Object.keys(facetScores40)) {
 					facetScores40[key as keyof typeof facetScores40] = { score: 10, confidence: 40 };
 				}
-				const result = yield* orchestrator
+				const error = yield* orchestrator
 					.processMessage({
 						sessionId: "test-session",
 						userMessage: "I enjoy creative activities.",
@@ -208,22 +214,15 @@ describe("OrchestratorRepository", () => {
 						dailyCostUsed: 75.0, // Exactly at limit means next message exceeds
 						facetScores: facetScores40,
 					})
-					.pipe(Effect.exit);
+					.pipe(Effect.flip);
 
-				expect(Exit.isFailure(result)).toBe(true);
-				if (Exit.isFailure(result)) {
-					const error = Cause.failureOption(result.cause);
-					expect(Option.isSome(error)).toBe(true);
-					if (Option.isSome(error)) {
-						expect(error.value._tag).toBe("BudgetPausedError");
-						const budgetError = error.value as BudgetPausedError;
-						expect(budgetError.currentConfidence).toBe(40); // Average of all 40 values
-						expect(budgetError.sessionId).toBe("test-session");
-						expect(budgetError.resumeAfter).toBeDefined();
-						expect(budgetError.message).toContain("saved");
-					}
-				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+				expect(error._tag).toBe("BudgetPausedError");
+				const budgetError = error as BudgetPausedError;
+				expect(budgetError.currentConfidence).toBe(40); // Average of all 40 values
+				expect(budgetError.sessionId).toBe("test-session");
+				expect(budgetError.resumeAfter).toBeDefined();
+				expect(budgetError.message).toContain("saved");
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("processes normally when budget available", () =>
@@ -238,7 +237,7 @@ describe("OrchestratorRepository", () => {
 				});
 
 				expect(result.nerinResponse).toBeDefined();
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("BudgetPausedError has resumeAfter as next day midnight UTC", () =>
@@ -246,32 +245,28 @@ describe("OrchestratorRepository", () => {
 				const orchestrator = yield* OrchestratorRepository;
 
 				// Use dailyCostUsed = 75.0 so that 75.0 + 0.0043 > 75 triggers budget pause
-				const result = yield* orchestrator
+				const error = yield* orchestrator
 					.processMessage({
 						sessionId: "test-session",
 						userMessage: "Check resume timestamp.",
 						messageCount: 1,
 						dailyCostUsed: 75.0,
 					})
-					.pipe(Effect.exit);
+					.pipe(Effect.flip);
 
-				if (Exit.isFailure(result)) {
-					const error = Cause.failureOption(result.cause);
-					if (Option.isSome(error) && error.value._tag === "BudgetPausedError") {
-						const budgetError = error.value as BudgetPausedError;
-						const resumeDate = budgetError.resumeAfter;
+				expect(error._tag).toBe("BudgetPausedError");
+				const budgetError = error as BudgetPausedError;
+				const resumeDate = budgetError.resumeAfter;
 
-						// Should be next day
-						const now = new Date();
-						expect(resumeDate.getUTCDate()).toBeGreaterThanOrEqual(now.getUTCDate());
+				// Should be next day
+				const now = new Date();
+				expect(resumeDate.getUTCDate()).toBeGreaterThanOrEqual(now.getUTCDate());
 
-						// Should be midnight UTC
-						expect(resumeDate.getUTCHours()).toBe(0);
-						expect(resumeDate.getUTCMinutes()).toBe(0);
-						expect(resumeDate.getUTCSeconds()).toBe(0);
-					}
-				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+				// Should be midnight UTC
+				expect(resumeDate.getUTCHours()).toBe(0);
+				expect(resumeDate.getUTCMinutes()).toBe(0);
+				expect(resumeDate.getUTCSeconds()).toBe(0);
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -297,7 +292,7 @@ describe("OrchestratorRepository", () => {
 				// Both should have same routing decisions
 				expect(!!result1.facetEvidence).toBe(!!result2.facetEvidence);
 				expect(result1.steeringTarget).toBe(result2.steeringTarget);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -315,7 +310,7 @@ describe("OrchestratorRepository", () => {
 
 				expect(result.costIncurred).toBeDefined();
 				expect(result.costIncurred).toBeGreaterThan(0);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("returns updated precision after batch scoring", () =>
@@ -332,7 +327,7 @@ describe("OrchestratorRepository", () => {
 				// After batch scoring, facet scores should be updated
 				// (test layer should return a value)
 				expect(result.facetScores).toBeDefined();
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("preserves session state after BudgetPausedError", () =>
@@ -346,7 +341,7 @@ describe("OrchestratorRepository", () => {
 				}
 
 				// Try to process message when budget exceeded
-				const result = yield* orchestrator
+				const error = yield* orchestrator
 					.processMessage({
 						sessionId: "test-session",
 						userMessage: "This should fail.",
@@ -354,23 +349,17 @@ describe("OrchestratorRepository", () => {
 						dailyCostUsed: 75, // At limit
 						facetScores: initialFacetScores,
 					})
-					.pipe(Effect.exit);
+					.pipe(Effect.flip);
 
 				// Verify we got BudgetPausedError
-				expect(Exit.isFailure(result)).toBe(true);
-				if (Exit.isFailure(result)) {
-					const error = Cause.failureOption(result.cause);
-					expect(Option.isSome(error)).toBe(true);
-					if (Option.isSome(error)) {
-						const budgetError = error.value as BudgetPausedError;
-						// State should be preserved - confidence passed back in error
-						expect(budgetError.currentConfidence).toBe(50); // Average of all 50 values
-						expect(budgetError.sessionId).toBe("test-session");
-						// Resume timestamp should be set
-						expect(budgetError.resumeAfter).toBeInstanceOf(Date);
-					}
-				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+				expect(error._tag).toBe("BudgetPausedError");
+				const budgetError = error as BudgetPausedError;
+				// State should be preserved - confidence passed back in error
+				expect(budgetError.currentConfidence).toBe(50); // Average of all 50 values
+				expect(budgetError.sessionId).toBe("test-session");
+				// Resume timestamp should be set
+				expect(budgetError.resumeAfter).toBeInstanceOf(Date);
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		/**
@@ -423,7 +412,7 @@ describe("OrchestratorRepository", () => {
 				expect(result1.costIncurred).toBeGreaterThan(0);
 				expect(result2.costIncurred).toBeGreaterThan(0);
 				expect(result3.costIncurred).toBeGreaterThan(0);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -433,30 +422,22 @@ describe("OrchestratorRepository", () => {
 				const orchestrator = yield* OrchestratorRepository;
 
 				// Set dailyCostUsed to just under limit
-				const result = yield* orchestrator
+				const error = yield* orchestrator
 					.processMessage({
 						sessionId: "budget-test-session",
 						userMessage: "This should trigger budget pause",
 						messageCount: 1,
 						dailyCostUsed: 74.998, // Just over limit after MESSAGE_COST_ESTIMATE
 					})
-					.pipe(Effect.exit);
+					.pipe(Effect.flip);
 
 				// Should fail with BudgetPausedError
-				expect(Exit.isFailure(result)).toBe(true);
-
-				if (Exit.isFailure(result)) {
-					const error = Cause.failureOption(result.cause);
-					expect(Option.isSome(error)).toBe(true);
-
-					if (Option.isSome(error)) {
-						expect(error.value._tag).toBe("BudgetPausedError");
-						expect((error.value as BudgetPausedError).sessionId).toBe("budget-test-session");
-						expect((error.value as BudgetPausedError).currentConfidence).toBeDefined();
-						expect((error.value as BudgetPausedError).resumeAfter).toBeInstanceOf(Date);
-					}
-				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+				expect(error._tag).toBe("BudgetPausedError");
+				const budgetError = error as BudgetPausedError;
+				expect(budgetError.sessionId).toBe("budget-test-session");
+				expect(budgetError.currentConfidence).toBeDefined();
+				expect(budgetError.resumeAfter).toBeInstanceOf(Date);
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("handles orchestration failure gracefully", () =>
@@ -466,19 +447,17 @@ describe("OrchestratorRepository", () => {
 				// Test with invalid input that might cause graph invocation failure
 				// Note: Current mock implementation doesn't simulate failures,
 				// but this test documents expected behavior for production errors
-				const result = yield* orchestrator
-					.processMessage({
-						sessionId: "error-test-session",
-						userMessage: "", // Empty message
-						messageCount: 1,
-						dailyCostUsed: 0,
-					})
-					.pipe(Effect.exit);
+				const result = yield* orchestrator.processMessage({
+					sessionId: "error-test-session",
+					userMessage: "", // Empty message
+					messageCount: 1,
+					dailyCostUsed: 0,
+				});
 
 				// Should succeed with mock implementation
 				// In production, empty messages would be handled by validation
-				expect(Exit.isSuccess(result)).toBe(true);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+				expect(result.nerinResponse).toBeDefined();
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("maintains state consistency after BudgetPausedError", () =>
@@ -496,27 +475,22 @@ describe("OrchestratorRepository", () => {
 				expect(result1.nerinResponse).toBeDefined();
 
 				// Second message triggers budget pause
-				const result2 = yield* orchestrator
+				const error = yield* orchestrator
 					.processMessage({
 						sessionId: "consistency-test",
 						userMessage: "Second message",
 						messageCount: 2,
 						dailyCostUsed: 74.998, // Over limit
 					})
-					.pipe(Effect.exit);
+					.pipe(Effect.flip);
 
 				// Should fail with budget error
-				expect(Exit.isFailure(result2)).toBe(true);
-
-				if (Exit.isFailure(result2)) {
-					const error = Cause.failureOption(result2.cause);
-					if (Option.isSome(error)) {
-						// Precision should be preserved in error
-						expect((error.value as BudgetPausedError).currentConfidence).toBeGreaterThanOrEqual(0);
-						expect((error.value as BudgetPausedError).currentConfidence).toBeLessThanOrEqual(100);
-					}
-				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+				expect(error._tag).toBe("BudgetPausedError");
+				const budgetError = error as BudgetPausedError;
+				// Precision should be preserved in error
+				expect(budgetError.currentConfidence).toBeGreaterThanOrEqual(0);
+				expect(budgetError.currentConfidence).toBeLessThanOrEqual(100);
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 });

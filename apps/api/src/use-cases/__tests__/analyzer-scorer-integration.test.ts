@@ -12,17 +12,47 @@ import {
 	ALL_FACETS,
 	AnalyzerRepository,
 	FacetEvidenceRepository,
+	type LoggerRepository,
 	ScorerRepository,
 	type TraitName,
 } from "@workspace/domain";
-import { Effect } from "effect";
-import { describe, expect } from "vitest";
-import { TestRepositoriesLayer } from "../../test-utils/test-layers";
+import { Effect, Layer } from "effect";
+import { beforeEach, describe, expect, vi } from "vitest";
+
+vi.mock("@workspace/infrastructure/repositories/analyzer.claude.repository");
+vi.mock("@workspace/infrastructure/repositories/facet-evidence.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/scorer.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
+
+import { AnalyzerClaudeRepositoryLive } from "@workspace/infrastructure/repositories/analyzer.claude.repository";
+import {
+	FacetEvidenceDrizzleRepositoryLive,
+	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
+	_resetMockState as resetEvidenceState,
+} from "@workspace/infrastructure/repositories/facet-evidence.drizzle.repository";
+import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
+import { ScorerDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/scorer.drizzle.repository";
+
+// vi.mock() replaces real layers (which have DB/config deps) with __mocks__ versions (no deps).
+// TypeScript still sees the real module types, so we assert the actual runtime type.
+const TestLayer = Layer.mergeAll(
+	AnalyzerClaudeRepositoryLive,
+	FacetEvidenceDrizzleRepositoryLive,
+	ScorerDrizzleRepositoryLive,
+	LoggerPinoRepositoryLive,
+) as Layer.Layer<
+	AnalyzerRepository | FacetEvidenceRepository | ScorerRepository | LoggerRepository
+>;
+
 import { calculatePrecisionFromFacets } from "../calculate-precision.use-case";
 import { saveFacetEvidence } from "../save-facet-evidence.use-case";
 import { shouldTriggerScoring, updateFacetScores } from "../update-facet-scores.use-case";
 
 describe("Analyzer and Scorer Integration", () => {
+	beforeEach(() => {
+		resetEvidenceState();
+	});
+
 	describe("full flow: message → analyze → save → aggregate → derive", () => {
 		it.effect("should complete full analysis flow", () =>
 			Effect.gen(function* () {
@@ -34,7 +64,7 @@ describe("Analyzer and Scorer Integration", () => {
 				const evidence = yield* analyzer.analyzeFacets(messageId, messageContent);
 
 				expect(evidence.length).toBeGreaterThan(0);
-				expect(evidence[0].assessmentMessageId).toBe(messageId);
+				expect(evidence[0]?.assessmentMessageId).toBe(messageId);
 
 				// Step 2: Save evidence
 				const saveResult = yield* saveFacetEvidence({
@@ -64,7 +94,7 @@ describe("Analyzer and Scorer Integration", () => {
 
 				expect(precisionResult.precision).toBeGreaterThanOrEqual(0);
 				expect(precisionResult.precision).toBeLessThanOrEqual(100);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should analyze multiple messages and aggregate", () =>
@@ -94,7 +124,7 @@ describe("Analyzer and Scorer Integration", () => {
 
 				// Should have trait scores
 				expect(Object.keys(scoresResult.traitScores).length).toBeGreaterThan(0);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -120,7 +150,7 @@ describe("Analyzer and Scorer Integration", () => {
 					expect(e.id).toBeDefined();
 					expect(e.createdAt).toBeDefined();
 				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -138,7 +168,7 @@ describe("Analyzer and Scorer Integration", () => {
 				for (const e of evidence) {
 					expect(ALL_FACETS).toContain(e.facetName);
 				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should produce scores in 0-20 range", () =>
@@ -154,7 +184,7 @@ describe("Analyzer and Scorer Integration", () => {
 					expect(e.score).toBeGreaterThanOrEqual(0);
 					expect(e.score).toBeLessThanOrEqual(20);
 				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should produce confidence in 0-100 range", () =>
@@ -170,7 +200,7 @@ describe("Analyzer and Scorer Integration", () => {
 					expect(e.confidence).toBeGreaterThanOrEqual(0);
 					expect(e.confidence).toBeLessThanOrEqual(100);
 				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -194,7 +224,7 @@ describe("Analyzer and Scorer Integration", () => {
 						expect(traitScore?.score).toBeLessThanOrEqual(120); // Sum of 6 facets (0-20 each)
 					}
 				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should use minimum confidence for trait confidence", () =>
@@ -206,7 +236,7 @@ describe("Analyzer and Scorer Integration", () => {
 					expect(score.confidence).toBeLessThanOrEqual(100);
 					expect(score.confidence).toBeGreaterThanOrEqual(0);
 				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -231,7 +261,7 @@ describe("Analyzer and Scorer Integration", () => {
 					expect(f.assessmentMessageId).toBe(messageId);
 					expect(f.facetName).toBeDefined();
 				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -251,7 +281,7 @@ describe("Analyzer and Scorer Integration", () => {
 				expect(precisionResult.precision).toBeGreaterThanOrEqual(0);
 				expect(precisionResult.precision).toBeLessThanOrEqual(100);
 				expect(precisionResult.facetCount).toBe(Object.keys(scoresResult.facetScores).length);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 });

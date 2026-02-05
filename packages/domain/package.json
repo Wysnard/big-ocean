@@ -11,6 +11,7 @@
     "./test-utils": "./src/test-utils/index.ts",
     "./entities/*": "./src/entities/*.ts",
     "./errors/*": "./src/errors/*.ts",
+    "./config/*": "./src/config/*.ts",
     "./repositories/*": "./src/repositories/*.ts",
     "./services/*": "./src/services/*.ts"
   },

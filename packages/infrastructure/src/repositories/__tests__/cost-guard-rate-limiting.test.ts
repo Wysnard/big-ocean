@@ -8,7 +8,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { RateLimitExceeded } from "@workspace/contracts";
 import { CostGuardRepository } from "@workspace/domain";
-import { Cause, Effect, Exit, Layer } from "effect";
+import { DateTime, Effect, Layer } from "effect";
 import { createTestCostGuardRepository } from "../cost-guard.redis.repository";
 
 // Create fresh layer for each test to avoid state pollution
@@ -43,21 +43,13 @@ describe("CostGuardRepository - Rate Limiting", () => {
 			const canStart = yield* costGuard.canStartAssessment("user_123");
 			expect(canStart).toBe(false);
 
-			// Attempt second assessment (should fail)
-			const result = yield* costGuard.recordAssessmentStart("user_123").pipe(Effect.exit);
+			// Attempt second assessment (should fail with RateLimitExceeded)
+			const error = yield* costGuard.recordAssessmentStart("user_123").pipe(Effect.flip);
 
-			expect(Exit.isFailure(result)).toBe(true);
-			if (Exit.isFailure(result)) {
-				const error = Cause.failureOption(result.cause);
-				expect(error._tag).toBe("Some");
-				if (error._tag === "Some") {
-					expect(error.value).toBeInstanceOf(RateLimitExceeded);
-					const rateLimitError = error.value as RateLimitExceeded;
-					expect(rateLimitError.userId).toBe("user_123");
-					expect(rateLimitError.currentCount).toBe(2); // Overflow detected
-					expect(rateLimitError.limit).toBe(1);
-				}
-			}
+			expect(error).toBeInstanceOf(RateLimitExceeded);
+			const rateLimitError = error as RateLimitExceeded;
+			expect(rateLimitError.userId).toBe("user_123");
+			expect(rateLimitError.message).toContain("tomorrow");
 		}).pipe(Effect.provide(TestLayer)),
 	);
 
@@ -93,22 +85,17 @@ describe("CostGuardRepository - Rate Limiting", () => {
 			yield* costGuard.recordAssessmentStart("user_789");
 
 			// Second assessment fails with resetAt
-			const result = yield* costGuard.recordAssessmentStart("user_789").pipe(Effect.exit);
+			const error = yield* costGuard.recordAssessmentStart("user_789").pipe(Effect.flip);
 
-			expect(Exit.isFailure(result)).toBe(true);
-			if (Exit.isFailure(result)) {
-				const error = Cause.failureOption(result.cause);
-				if (error._tag === "Some" && error.value instanceof RateLimitExceeded) {
-					const rateLimitError = error.value;
-					expect(rateLimitError.resetAt).toBeInstanceOf(Date);
-					// resetAt should be tomorrow at midnight UTC
-					const resetDate = new Date(rateLimitError.resetAt);
-					const tomorrow = new Date();
-					tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-					tomorrow.setUTCHours(0, 0, 0, 0);
-					expect(resetDate.getTime()).toBe(tomorrow.getTime());
-				}
-			}
+			expect(error).toBeInstanceOf(RateLimitExceeded);
+			const rateLimitError = error as RateLimitExceeded;
+			expect(rateLimitError.resetAt).toBeDefined();
+			// resetAt should be tomorrow at midnight UTC
+			const resetDate = DateTime.toDateUtc(rateLimitError.resetAt);
+			const tomorrow = new Date();
+			tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+			tomorrow.setUTCHours(0, 0, 0, 0);
+			expect(resetDate.getTime()).toBe(tomorrow.getTime());
 		}).pipe(Effect.provide(TestLayer)),
 	);
 
@@ -120,16 +107,12 @@ describe("CostGuardRepository - Rate Limiting", () => {
 			yield* costGuard.recordAssessmentStart("user_999");
 
 			// Attempt second (should fail with message)
-			const result = yield* costGuard.recordAssessmentStart("user_999").pipe(Effect.exit);
+			const error = yield* costGuard.recordAssessmentStart("user_999").pipe(Effect.flip);
 
-			expect(Exit.isFailure(result)).toBe(true);
-			if (Exit.isFailure(result)) {
-				const error = Cause.failureOption(result.cause);
-				if (error._tag === "Some" && error.value instanceof RateLimitExceeded) {
-					expect(error.value.message).toContain("tomorrow");
-					expect(error.value.message).toContain("assessment");
-				}
-			}
+			expect(error).toBeInstanceOf(RateLimitExceeded);
+			const rateLimitError = error as RateLimitExceeded;
+			expect(rateLimitError.message).toContain("tomorrow");
+			expect(rateLimitError.message).toContain("assessment");
 		}).pipe(Effect.provide(TestLayer)),
 	);
 
@@ -185,16 +168,12 @@ describe("CostGuardRepository - Rate Limiting", () => {
 			yield* costGuard.recordAssessmentStart("user_idempotent");
 
 			// Second call fails with RateLimitExceeded
-			const result = yield* costGuard.recordAssessmentStart("user_idempotent").pipe(Effect.exit);
+			const error = yield* costGuard.recordAssessmentStart("user_idempotent").pipe(Effect.flip);
 
-			expect(Exit.isFailure(result)).toBe(true);
-			if (Exit.isFailure(result)) {
-				const error = Cause.failureOption(result.cause);
-				if (error._tag === "Some" && error.value instanceof RateLimitExceeded) {
-					expect(error.value.currentCount).toBe(2); // Overflow detected
-					expect(error.value.limit).toBe(1);
-				}
-			}
+			expect(error).toBeInstanceOf(RateLimitExceeded);
+			const rateLimitError = error as RateLimitExceeded;
+			expect(rateLimitError.userId).toBe("user_idempotent");
+			expect(rateLimitError.message).toContain("tomorrow");
 		}).pipe(Effect.provide(TestLayer)),
 	);
 
@@ -203,20 +182,13 @@ describe("CostGuardRepository - Rate Limiting", () => {
 			const costGuard = yield* CostGuardRepository;
 
 			yield* costGuard.recordAssessmentStart("user_fields");
-			const result = yield* costGuard.recordAssessmentStart("user_fields").pipe(Effect.exit);
+			const error = yield* costGuard.recordAssessmentStart("user_fields").pipe(Effect.flip);
 
-			expect(Exit.isFailure(result)).toBe(true);
-			if (Exit.isFailure(result)) {
-				const error = Cause.failureOption(result.cause);
-				if (error._tag === "Some" && error.value instanceof RateLimitExceeded) {
-					const err = error.value;
-					expect(err.userId).toBe("user_fields");
-					expect(err.message).toBeTruthy();
-					expect(err.resetAt).toBeInstanceOf(Date);
-					expect(err.currentCount).toBeGreaterThan(1);
-					expect(err.limit).toBe(1);
-				}
-			}
+			expect(error).toBeInstanceOf(RateLimitExceeded);
+			const rateLimitError = error as RateLimitExceeded;
+			expect(rateLimitError.userId).toBe("user_fields");
+			expect(rateLimitError.message).toBeTruthy();
+			expect(rateLimitError.resetAt).toBeDefined();
 		}).pipe(Effect.provide(TestLayer)),
 	);
 });

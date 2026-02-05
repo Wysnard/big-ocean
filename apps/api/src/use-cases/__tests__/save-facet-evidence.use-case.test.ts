@@ -10,15 +10,31 @@
 
 import { it } from "@effect/vitest";
 import type { FacetEvidence } from "@workspace/domain";
-import { Effect, Exit } from "effect";
-import { describe, expect } from "vitest";
-import { TestRepositoriesLayer } from "../../test-utils/test-layers";
+import { Effect, Exit, Layer } from "effect";
+import { beforeEach, describe, expect, vi } from "vitest";
+
+vi.mock("@workspace/infrastructure/repositories/facet-evidence.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
+
+import {
+	FacetEvidenceDrizzleRepositoryLive,
+	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
+	_resetMockState as resetEvidenceState,
+} from "@workspace/infrastructure/repositories/facet-evidence.drizzle.repository";
+import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
+
+const TestLayer = Layer.mergeAll(FacetEvidenceDrizzleRepositoryLive, LoggerPinoRepositoryLive);
+
 import { type SaveFacetEvidenceInput, saveFacetEvidence } from "../save-facet-evidence.use-case";
 
 describe("saveFacetEvidence use-case", () => {
+	beforeEach(() => {
+		resetEvidenceState();
+	});
+
 	const mockEvidence: FacetEvidence[] = [
 		{
-			messageId: "msg_test_123",
+			assessmentMessageId: "msg_test_123",
 			facetName: "imagination",
 			score: 16,
 			confidence: 85,
@@ -26,7 +42,7 @@ describe("saveFacetEvidence use-case", () => {
 			highlightRange: { start: 0, end: 27 },
 		},
 		{
-			messageId: "msg_test_123",
+			assessmentMessageId: "msg_test_123",
 			facetName: "altruism",
 			score: 18,
 			confidence: 90,
@@ -48,7 +64,7 @@ describe("saveFacetEvidence use-case", () => {
 				expect(result.savedCount).toBe(1);
 				expect(result.evidenceIds).toHaveLength(1);
 				expect(result.evidenceIds[0]).toBeDefined();
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should save multiple evidence records", () =>
@@ -62,7 +78,7 @@ describe("saveFacetEvidence use-case", () => {
 
 				expect(result.savedCount).toBe(2);
 				expect(result.evidenceIds).toHaveLength(2);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should return empty result for empty evidence array", () =>
@@ -76,7 +92,7 @@ describe("saveFacetEvidence use-case", () => {
 
 				expect(result.savedCount).toBe(0);
 				expect(result.evidenceIds).toHaveLength(0);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should preserve evidence fields when saving", () =>
@@ -85,7 +101,7 @@ describe("saveFacetEvidence use-case", () => {
 					assessmentMessageId: "msg_test_fields",
 					evidence: [
 						{
-							messageId: "msg_test_fields",
+							assessmentMessageId: "msg_test_fields",
 							facetName: "intellect",
 							score: 14,
 							confidence: 75,
@@ -100,7 +116,7 @@ describe("saveFacetEvidence use-case", () => {
 				expect(result.savedCount).toBe(1);
 				// Evidence should be stored with all fields preserved
 				expect(result.evidenceIds[0]).toBeDefined();
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should handle all 30 facet types", () =>
@@ -108,7 +124,7 @@ describe("saveFacetEvidence use-case", () => {
 				// Test with a variety of valid facet names
 				const multipleEvidence: FacetEvidence[] = [
 					{
-						messageId: "msg_all_facets",
+						assessmentMessageId: "msg_all_facets",
 						facetName: "imagination",
 						score: 15,
 						confidence: 80,
@@ -116,7 +132,7 @@ describe("saveFacetEvidence use-case", () => {
 						highlightRange: { start: 0, end: 4 },
 					},
 					{
-						messageId: "msg_all_facets",
+						assessmentMessageId: "msg_all_facets",
 						facetName: "artistic_interests",
 						score: 14,
 						confidence: 70,
@@ -124,7 +140,7 @@ describe("saveFacetEvidence use-case", () => {
 						highlightRange: { start: 0, end: 4 },
 					},
 					{
-						messageId: "msg_all_facets",
+						assessmentMessageId: "msg_all_facets",
 						facetName: "self_efficacy",
 						score: 16,
 						confidence: 85,
@@ -132,7 +148,7 @@ describe("saveFacetEvidence use-case", () => {
 						highlightRange: { start: 0, end: 4 },
 					},
 					{
-						messageId: "msg_all_facets",
+						assessmentMessageId: "msg_all_facets",
 						facetName: "friendliness",
 						score: 17,
 						confidence: 90,
@@ -140,7 +156,7 @@ describe("saveFacetEvidence use-case", () => {
 						highlightRange: { start: 0, end: 4 },
 					},
 					{
-						messageId: "msg_all_facets",
+						assessmentMessageId: "msg_all_facets",
 						facetName: "trust",
 						score: 18,
 						confidence: 88,
@@ -148,7 +164,7 @@ describe("saveFacetEvidence use-case", () => {
 						highlightRange: { start: 0, end: 4 },
 					},
 					{
-						messageId: "msg_all_facets",
+						assessmentMessageId: "msg_all_facets",
 						facetName: "anxiety",
 						score: 10,
 						confidence: 75,
@@ -166,7 +182,7 @@ describe("saveFacetEvidence use-case", () => {
 
 				expect(result.savedCount).toBe(6);
 				expect(result.evidenceIds).toHaveLength(6);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -175,7 +191,7 @@ describe("saveFacetEvidence use-case", () => {
 			Effect.gen(function* () {
 				const invalidEvidence: FacetEvidence[] = [
 					{
-						messageId: "msg_invalid_score",
+						assessmentMessageId: "msg_invalid_score",
 						facetName: "imagination",
 						score: 25, // Invalid: > 20
 						confidence: 80,
@@ -197,14 +213,14 @@ describe("saveFacetEvidence use-case", () => {
 					// Error should indicate validation failure
 					expect(error).toBeDefined();
 				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should validate confidence is in 0-100 range", () =>
 			Effect.gen(function* () {
 				const invalidEvidence: FacetEvidence[] = [
 					{
-						messageId: "msg_invalid_confidence",
+						assessmentMessageId: "msg_invalid_confidence",
 						facetName: "imagination",
 						score: 15,
 						confidence: 150, // Invalid: > 100
@@ -221,14 +237,14 @@ describe("saveFacetEvidence use-case", () => {
 				const exit = yield* Effect.exit(saveFacetEvidence(input));
 
 				expect(exit._tag).toBe("Failure");
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should validate facetName is valid", () =>
 			Effect.gen(function* () {
 				const invalidEvidence: FacetEvidence[] = [
 					{
-						messageId: "msg_invalid_facet",
+						assessmentMessageId: "msg_invalid_facet",
 						// biome-ignore lint/suspicious/noExplicitAny: intentionally testing invalid facet name
 						facetName: "openness_imagination" as any, // Invalid: should be "imagination" not prefixed
 						score: 15,
@@ -246,7 +262,7 @@ describe("saveFacetEvidence use-case", () => {
 				const exit = yield* Effect.exit(saveFacetEvidence(input));
 
 				expect(exit._tag).toBe("Failure");
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -262,7 +278,7 @@ describe("saveFacetEvidence use-case", () => {
 				const result = yield* saveFacetEvidence(input);
 
 				expect(result.savedCount).toBe(2);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -271,7 +287,7 @@ describe("saveFacetEvidence use-case", () => {
 			Effect.gen(function* () {
 				const evidence: FacetEvidence[] = [
 					{
-						messageId: "msg_highlight",
+						assessmentMessageId: "msg_highlight",
 						facetName: "intellect",
 						score: 15,
 						confidence: 85,
@@ -288,14 +304,14 @@ describe("saveFacetEvidence use-case", () => {
 				const result = yield* saveFacetEvidence(input);
 
 				expect(result.savedCount).toBe(1);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should validate start is less than end", () =>
 			Effect.gen(function* () {
 				const invalidEvidence: FacetEvidence[] = [
 					{
-						messageId: "msg_invalid_range",
+						assessmentMessageId: "msg_invalid_range",
 						facetName: "imagination",
 						score: 15,
 						confidence: 80,
@@ -312,7 +328,7 @@ describe("saveFacetEvidence use-case", () => {
 				const exit = yield* Effect.exit(saveFacetEvidence(input));
 
 				expect(exit._tag).toBe("Failure");
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 });

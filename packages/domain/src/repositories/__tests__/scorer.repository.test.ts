@@ -87,8 +87,8 @@ describe("ScorerRepository Interface", () => {
 		expect(firstFacet).toHaveProperty("confidence");
 
 		// Verify types
-		expect(typeof firstFacet.score).toBe("number");
-		expect(typeof firstFacet.confidence).toBe("number");
+		expect(typeof firstFacet?.score).toBe("number");
+		expect(typeof firstFacet?.confidence).toBe("number");
 	});
 
 	it("should return facet scores with score in 0-20 range", async () => {
@@ -163,8 +163,8 @@ describe("ScorerRepository Interface", () => {
 		expect(firstTrait).toHaveProperty("confidence");
 
 		// Verify types
-		expect(typeof firstTrait.score).toBe("number");
-		expect(typeof firstTrait.confidence).toBe("number");
+		expect(typeof firstTrait?.score).toBe("number");
+		expect(typeof firstTrait?.confidence).toBe("number");
 	});
 
 	it("should return trait scores with score in 0-120 range (sum of 6 facets)", async () => {

@@ -30,11 +30,7 @@ export { AssessmentSessionDrizzleRepositoryLive } from "./repositories/assessmen
 export { CheckpointerMemoryRepositoryLive } from "./repositories/checkpointer.memory.repository";
 export { CheckpointerPostgresRepositoryLive } from "./repositories/checkpointer.postgres.repository";
 // CostGuard repository implementation
-export {
-	CostGuardRedisRepositoryLive,
-	CostGuardTestRepositoryLive,
-	createTestCostGuardRepository,
-} from "./repositories/cost-guard.redis.repository";
+export { CostGuardRedisRepositoryLive } from "./repositories/cost-guard.redis.repository";
 // Facet evidence repository implementation
 export { FacetEvidenceDrizzleRepositoryLive } from "./repositories/facet-evidence.drizzle.repository";
 // Facet steering hints
@@ -66,10 +62,6 @@ export {
 // Orchestrator graph repository implementation
 export { OrchestratorGraphLangGraphRepositoryLive } from "./repositories/orchestrator-graph.langgraph.repository";
 // Redis repository implementation
-export {
-	createTestRedisRepository,
-	RedisIoRedisRepositoryLive,
-	RedisTestRepositoryLive,
-} from "./repositories/redis.ioredis.repository";
+export { RedisIoRedisRepositoryLive } from "./repositories/redis.ioredis.repository";
 // Scorer repository implementation
 export { ScorerDrizzleRepositoryLive } from "./repositories/scorer.drizzle.repository";

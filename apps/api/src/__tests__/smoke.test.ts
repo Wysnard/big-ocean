@@ -10,11 +10,26 @@
 
 import { it } from "@effect/vitest";
 import { AssessmentSessionRepository, LoggerRepository } from "@workspace/domain";
-import { Effect } from "effect";
-import { describe, expect } from "vitest";
-import { TestRepositoriesLayer } from "../test-utils/test-layers";
+import { Effect, Layer } from "effect";
+import { beforeEach, describe, expect, vi } from "vitest";
+
+vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
+
+import {
+	AssessmentSessionDrizzleRepositoryLive,
+	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
+	_resetMockState as resetSessionState,
+} from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
+
+const TestLayer = Layer.mergeAll(AssessmentSessionDrizzleRepositoryLive, LoggerPinoRepositoryLive);
 
 describe("@effect/vitest Setup", () => {
+	beforeEach(() => {
+		resetSessionState();
+	});
+
 	// ✅ Basic Effect test
 	it.effect("should run Effect programs in tests", () =>
 		Effect.gen(function* () {
@@ -29,7 +44,7 @@ describe("@effect/vitest Setup", () => {
 			const sessionRepo = yield* AssessmentSessionRepository;
 			expect(sessionRepo).toBeDefined();
 			expect(sessionRepo.createSession).toBeTypeOf("function");
-		}).pipe(Effect.provide(TestRepositoriesLayer)),
+		}).pipe(Effect.provide(TestLayer)),
 	);
 
 	// ✅ Repository mock functionality
@@ -49,7 +64,7 @@ describe("@effect/vitest Setup", () => {
 			expect(session.confidence.friendliness).toBe(50); // Extraversion facet
 			expect(session.confidence.altruism).toBe(50); // Agreeableness facet
 			expect(session.confidence.anxiety).toBe(50); // Neuroticism facet
-		}).pipe(Effect.provide(TestRepositoriesLayer)),
+		}).pipe(Effect.provide(TestLayer)),
 	);
 
 	// ✅ Effect.exit for testing failures
@@ -81,7 +96,7 @@ describe("Test Layer Examples", () => {
 			// Verify session
 			const retrieved = yield* sessionRepo.getSession(session.sessionId);
 			expect(retrieved.sessionId).toBe(session.sessionId);
-		}).pipe(Effect.provide(TestRepositoriesLayer)),
+		}).pipe(Effect.provide(TestLayer)),
 	);
 
 	it.effect("should handle sequential operations", () =>
@@ -96,6 +111,6 @@ describe("Test Layer Examples", () => {
 			expect(session1.sessionId).not.toBe(session2.sessionId);
 			expect(session1.userId).toBe("user-1");
 			expect(session2.userId).toBe("user-2");
-		}).pipe(Effect.provide(TestRepositoriesLayer)),
+		}).pipe(Effect.provide(TestLayer)),
 	);
 });
