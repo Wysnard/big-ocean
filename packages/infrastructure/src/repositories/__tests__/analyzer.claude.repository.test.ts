@@ -6,24 +6,9 @@
  */
 
 import { describe, expect, it } from "@effect/vitest";
-import {
-	ALL_FACETS,
-	AnalyzerRepository,
-	LoggerRepository,
-	MalformedEvidenceError,
-} from "@workspace/domain";
+import { ALL_FACETS, AnalyzerRepository, MalformedEvidenceError } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 import { AnalyzerClaudeRepositoryLive } from "../analyzer.claude.repository";
-
-/**
- * Test Logger Layer
- */
-const _TestLoggerLayer = Layer.succeed(LoggerRepository, {
-	info: () => Effect.void,
-	error: () => Effect.void,
-	warn: () => Effect.void,
-	debug: () => Effect.void,
-});
 
 /**
  * Mock analyzer that returns controlled responses

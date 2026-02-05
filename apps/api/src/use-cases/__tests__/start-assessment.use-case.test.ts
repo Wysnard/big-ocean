@@ -2,11 +2,12 @@
  * Start Assessment Use Case Tests
  *
  * Tests for the startAssessment business logic.
- * Uses mock repositories to test:
+ * Uses inline spy layers (Layer.succeed with vi.fn()) for per-test control:
  * - Session creation
  * - User ID handling
  * - Logging
  * - Response format
+ * - Rate limiting
  */
 
 import {
@@ -18,64 +19,76 @@ import { Effect, Layer } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { startAssessment } from "../start-assessment.use-case";
 
+// Define mock repo objects locally with vi.fn() for spy access
+const mockAssessmentSessionRepo = {
+	createSession: vi.fn(),
+	getSession: vi.fn(),
+	updateSession: vi.fn(),
+};
+
+const mockLoggerRepo = {
+	info: vi.fn(),
+	error: vi.fn(),
+	warn: vi.fn(),
+	debug: vi.fn(),
+};
+
+const mockCostGuardRepo = {
+	incrementDailyCost: vi.fn(),
+	getDailyCost: vi.fn(),
+	incrementAssessmentCount: vi.fn(),
+	getAssessmentCount: vi.fn(),
+	canStartAssessment: vi.fn(),
+	recordAssessmentStart: vi.fn(),
+};
+
 describe("startAssessment Use Case", () => {
-	// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
-	let mockSessionRepo: any;
-	// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
-	let mockLogger: any;
-	// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
-	let mockCostGuard: any;
-
 	beforeEach(() => {
-		mockSessionRepo = {
-			createSession: vi.fn().mockReturnValue(
-				Effect.succeed({
-					sessionId: "session_new_789",
-					userId: undefined,
-					createdAt: new Date("2026-02-01T10:00:00Z"),
-					precision: {
-						openness: 50,
-						conscientiousness: 50,
-						extraversion: 50,
-						agreeableness: 50,
-						neuroticism: 50,
-					},
-				}),
-			),
-			getSession: vi.fn(),
-			updateSession: vi.fn(),
-			resumeSession: vi.fn(),
-		};
+		// Reset mocks to default behavior before each test
+		mockAssessmentSessionRepo.createSession.mockImplementation((userId?: string) =>
+			Effect.succeed({
+				sessionId: "session_new_789",
+				userId,
+				createdAt: new Date("2026-02-01T10:00:00Z"),
+				precision: {
+					openness: 50,
+					conscientiousness: 50,
+					extraversion: 50,
+					agreeableness: 50,
+					neuroticism: 50,
+				},
+			}),
+		);
+		mockAssessmentSessionRepo.getSession.mockImplementation(() => Effect.succeed(undefined));
+		mockAssessmentSessionRepo.updateSession.mockImplementation(() => Effect.succeed(undefined));
 
-		mockLogger = {
-			info: vi.fn(),
-			error: vi.fn(),
-			warn: vi.fn(),
-			debug: vi.fn(),
-		};
+		mockLoggerRepo.info.mockImplementation(() => {});
+		mockLoggerRepo.error.mockImplementation(() => {});
+		mockLoggerRepo.warn.mockImplementation(() => {});
+		mockLoggerRepo.debug.mockImplementation(() => {});
 
-		mockCostGuard = {
-			canStartAssessment: vi.fn().mockReturnValue(Effect.succeed(true)),
-			recordAssessmentStart: vi.fn().mockReturnValue(Effect.succeed(undefined)),
-			incrementDailyCost: vi.fn(),
-			getDailyCost: vi.fn(),
-			incrementAssessmentCount: vi.fn(),
-			getAssessmentCount: vi.fn(),
-		};
+		mockCostGuardRepo.canStartAssessment.mockImplementation(() => Effect.succeed(true));
+		mockCostGuardRepo.recordAssessmentStart.mockImplementation(() => Effect.succeed(undefined));
+		mockCostGuardRepo.incrementDailyCost.mockImplementation(() => Effect.succeed(0));
+		mockCostGuardRepo.getDailyCost.mockImplementation(() => Effect.succeed(0));
+		mockCostGuardRepo.incrementAssessmentCount.mockImplementation(() => Effect.succeed(0));
+		mockCostGuardRepo.getAssessmentCount.mockImplementation(() => Effect.succeed(0));
 	});
 
 	afterEach(() => {
 		vi.clearAllMocks();
 	});
 
+	const createTestLayer = () =>
+		Layer.mergeAll(
+			Layer.succeed(AssessmentSessionRepository, mockAssessmentSessionRepo),
+			Layer.succeed(LoggerRepository, mockLoggerRepo),
+			Layer.succeed(CostGuardRepository, mockCostGuardRepo),
+		);
+
 	describe("Success scenarios", () => {
 		it("should create a new assessment session", async () => {
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
+			const testLayer = createTestLayer();
 			const input = {};
 
 			const result = await Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)));
@@ -85,61 +98,37 @@ describe("startAssessment Use Case", () => {
 		});
 
 		it("should create session with user ID when provided", async () => {
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
-			const input = {
-				userId: "user_123",
-			};
+			const testLayer = createTestLayer();
+			const input = { userId: "user_123" };
 
 			await Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)));
 
-			expect(mockSessionRepo.createSession).toHaveBeenCalledWith("user_123");
+			expect(mockAssessmentSessionRepo.createSession).toHaveBeenCalledWith("user_123");
 		});
 
 		it("should create session without user ID when not provided", async () => {
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
+			const testLayer = createTestLayer();
 			const input = {};
 
 			await Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)));
 
-			expect(mockSessionRepo.createSession).toHaveBeenCalledWith(undefined);
+			expect(mockAssessmentSessionRepo.createSession).toHaveBeenCalledWith(undefined);
 		});
 
 		it("should log session creation event", async () => {
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
-			const input = {
-				userId: "user_456",
-			};
+			const testLayer = createTestLayer();
+			const input = { userId: "user_456" };
 
 			await Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)));
 
-			expect(mockLogger.info).toHaveBeenCalledWith("Assessment session started", {
+			expect(mockLoggerRepo.info).toHaveBeenCalledWith("Assessment session started", {
 				sessionId: "session_new_789",
 				userId: "user_456",
 			});
 		});
 
 		it("should return session ID and creation timestamp", async () => {
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
+			const testLayer = createTestLayer();
 			const beforeTime = new Date();
 			const input = {};
 
@@ -155,36 +144,25 @@ describe("startAssessment Use Case", () => {
 		});
 
 		it("should handle multiple session creations independently", async () => {
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
+			const testLayer = createTestLayer();
 			const input1 = { userId: "user_1" };
 			const input2 = { userId: "user_2" };
 
 			await Effect.runPromise(startAssessment(input1).pipe(Effect.provide(testLayer)));
-
 			await Effect.runPromise(startAssessment(input2).pipe(Effect.provide(testLayer)));
 
-			expect(mockSessionRepo.createSession).toHaveBeenCalledTimes(2);
-			expect(mockSessionRepo.createSession).toHaveBeenNthCalledWith(1, "user_1");
-			expect(mockSessionRepo.createSession).toHaveBeenNthCalledWith(2, "user_2");
+			expect(mockAssessmentSessionRepo.createSession).toHaveBeenCalledTimes(2);
+			expect(mockAssessmentSessionRepo.createSession).toHaveBeenNthCalledWith(1, "user_1");
+			expect(mockAssessmentSessionRepo.createSession).toHaveBeenNthCalledWith(2, "user_2");
 		});
 	});
 
 	describe("Error handling", () => {
 		it("should fail when session creation fails", async () => {
 			const creationError = new Error("Database connection failed");
-			mockSessionRepo.createSession.mockReturnValue(Effect.fail(creationError));
+			mockAssessmentSessionRepo.createSession.mockReturnValue(Effect.fail(creationError));
 
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
+			const testLayer = createTestLayer();
 			const input = {};
 
 			await expect(
@@ -194,14 +172,9 @@ describe("startAssessment Use Case", () => {
 
 		it("should handle repository errors gracefully", async () => {
 			const repoError = new Error("Repository unavailable");
-			mockSessionRepo.createSession.mockReturnValue(Effect.fail(repoError));
+			mockAssessmentSessionRepo.createSession.mockReturnValue(Effect.fail(repoError));
 
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
+			const testLayer = createTestLayer();
 			const input = { userId: "user_test" };
 
 			await expect(
@@ -212,60 +185,37 @@ describe("startAssessment Use Case", () => {
 
 	describe("Edge cases", () => {
 		it("should handle empty user ID string", async () => {
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
-			const input = {
-				userId: "",
-			};
+			const testLayer = createTestLayer();
+			const input = { userId: "" };
 
 			await Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)));
 
-			expect(mockSessionRepo.createSession).toHaveBeenCalledWith("");
+			expect(mockAssessmentSessionRepo.createSession).toHaveBeenCalledWith("");
 		});
 
 		it("should handle special characters in user ID", async () => {
 			const specialUserId = "user+test@example.com";
-
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
-			const input = {
-				userId: specialUserId,
-			};
+			const testLayer = createTestLayer();
+			const input = { userId: specialUserId };
 
 			await Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)));
 
-			expect(mockSessionRepo.createSession).toHaveBeenCalledWith(specialUserId);
+			expect(mockAssessmentSessionRepo.createSession).toHaveBeenCalledWith(specialUserId);
 		});
 
 		it("should handle very long user ID", async () => {
 			const longUserId = "a".repeat(1000);
-
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
-			const input = {
-				userId: longUserId,
-			};
+			const testLayer = createTestLayer();
+			const input = { userId: longUserId };
 
 			await Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)));
 
-			expect(mockSessionRepo.createSession).toHaveBeenCalledWith(longUserId);
+			expect(mockAssessmentSessionRepo.createSession).toHaveBeenCalledWith(longUserId);
 		});
 
 		it("should return current time, not repository creation time", async () => {
 			const repositoryTime = new Date("2025-01-01T00:00:00Z");
-			mockSessionRepo.createSession.mockReturnValue(
+			mockAssessmentSessionRepo.createSession.mockReturnValue(
 				Effect.succeed({
 					sessionId: "session_test_old",
 					userId: undefined,
@@ -280,12 +230,7 @@ describe("startAssessment Use Case", () => {
 				}),
 			);
 
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
+			const testLayer = createTestLayer();
 			const beforeTime = new Date();
 			const input = {};
 
@@ -293,8 +238,6 @@ describe("startAssessment Use Case", () => {
 
 			const afterTime = new Date();
 
-			// The result should have a createdAt that's close to current time,
-			// not the repository's old timestamp
 			expect(result.createdAt.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
 			expect(result.createdAt.getTime()).toBeLessThanOrEqual(afterTime.getTime());
 		});
@@ -302,18 +245,13 @@ describe("startAssessment Use Case", () => {
 
 	describe("Integration scenarios", () => {
 		it("should create session for anonymous user", async () => {
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
+			const testLayer = createTestLayer();
 			const input = { userId: undefined };
 
 			const result = await Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)));
 
 			expect(result).toHaveProperty("sessionId");
-			expect(mockLogger.info).toHaveBeenCalledWith("Assessment session started", {
+			expect(mockLoggerRepo.info).toHaveBeenCalledWith("Assessment session started", {
 				sessionId: "session_new_789",
 				userId: undefined,
 			});
@@ -321,7 +259,7 @@ describe("startAssessment Use Case", () => {
 
 		it("should be idempotent - each call creates new session", async () => {
 			let callCount = 0;
-			mockSessionRepo.createSession.mockImplementation(() => {
+			mockAssessmentSessionRepo.createSession.mockImplementation(() => {
 				callCount++;
 				return Effect.succeed({
 					sessionId: `session_${callCount}`,
@@ -337,16 +275,10 @@ describe("startAssessment Use Case", () => {
 				});
 			});
 
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
+			const testLayer = createTestLayer();
 			const input = { userId: "user_test" };
 
 			const result1 = await Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)));
-
 			const result2 = await Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)));
 
 			expect(result1.sessionId).toBe("session_1");
@@ -357,71 +289,52 @@ describe("startAssessment Use Case", () => {
 
 	describe("Rate limiting", () => {
 		it("should check rate limit before creating session for authenticated users", async () => {
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
+			const testLayer = createTestLayer();
 			const input = { userId: "user_ratelimit" };
 
 			await Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)));
 
-			expect(mockCostGuard.canStartAssessment).toHaveBeenCalledWith("user_ratelimit");
-			expect(mockCostGuard.recordAssessmentStart).toHaveBeenCalledWith("user_ratelimit");
+			expect(mockCostGuardRepo.canStartAssessment).toHaveBeenCalledWith("user_ratelimit");
+			expect(mockCostGuardRepo.recordAssessmentStart).toHaveBeenCalledWith("user_ratelimit");
 		});
 
 		it("should fail with RateLimitExceeded when user already started assessment today", async () => {
-			mockCostGuard.canStartAssessment.mockReturnValue(Effect.succeed(false));
+			mockCostGuardRepo.canStartAssessment.mockReturnValue(Effect.succeed(false));
 
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
+			const testLayer = createTestLayer();
 			const input = { userId: "user_blocked" };
 
 			try {
 				await Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)));
-				// If we get here, test should fail
 				expect.fail("Expected RateLimitExceeded to be thrown");
 			} catch (error) {
-				// Effect wraps errors in FiberFailure, so check the message
 				expect(error).toHaveProperty("message", "You can start a new assessment tomorrow");
 				expect(error).toHaveProperty("name");
-				expect(error.name).toContain("RateLimitExceeded");
+				// biome-ignore lint/suspicious/noExplicitAny: error type narrowing in test
+				expect((error as any).name).toContain("RateLimitExceeded");
 			}
 
-			// Should not create session if rate limited
-			expect(mockSessionRepo.createSession).not.toHaveBeenCalled();
-			expect(mockLogger.warn).toHaveBeenCalledWith("Rate limit exceeded for assessment start", {
+			expect(mockAssessmentSessionRepo.createSession).not.toHaveBeenCalled();
+			expect(mockLoggerRepo.warn).toHaveBeenCalledWith("Rate limit exceeded for assessment start", {
 				userId: "user_blocked",
 			});
 		});
 
 		it("should skip rate limiting for anonymous users", async () => {
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
+			const testLayer = createTestLayer();
 			const input = { userId: undefined };
 
 			await Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)));
 
-			// Should not check rate limit for anonymous
-			expect(mockCostGuard.canStartAssessment).not.toHaveBeenCalled();
-			expect(mockCostGuard.recordAssessmentStart).not.toHaveBeenCalled();
-			// But should still create session
-			expect(mockSessionRepo.createSession).toHaveBeenCalled();
+			expect(mockCostGuardRepo.canStartAssessment).not.toHaveBeenCalled();
+			expect(mockCostGuardRepo.recordAssessmentStart).not.toHaveBeenCalled();
+			expect(mockAssessmentSessionRepo.createSession).toHaveBeenCalled();
 		});
 
 		it("should record assessment start after session created", async () => {
 			const callOrder: string[] = [];
 
-			mockSessionRepo.createSession.mockImplementation(() => {
+			mockAssessmentSessionRepo.createSession.mockImplementation(() => {
 				callOrder.push("createSession");
 				return Effect.succeed({
 					sessionId: "session_order",
@@ -437,22 +350,16 @@ describe("startAssessment Use Case", () => {
 				});
 			});
 
-			mockCostGuard.recordAssessmentStart.mockImplementation(() => {
+			mockCostGuardRepo.recordAssessmentStart.mockImplementation(() => {
 				callOrder.push("recordAssessmentStart");
 				return Effect.succeed(undefined);
 			});
 
-			const testLayer = Layer.mergeAll(
-				Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-				Layer.succeed(LoggerRepository, mockLogger),
-				Layer.succeed(CostGuardRepository, mockCostGuard),
-			);
-
+			const testLayer = createTestLayer();
 			const input = { userId: "user_order" };
 
 			await Effect.runPromise(startAssessment(input).pipe(Effect.provide(testLayer)));
 
-			// Verify order: session created BEFORE recording start
 			expect(callOrder).toEqual(["createSession", "recordAssessmentStart"]);
 		});
 	});

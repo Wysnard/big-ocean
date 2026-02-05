@@ -352,6 +352,49 @@ it.effect('should work', () =>
 )
 ```
 
+### Mock Architecture (`__mocks__` + `vi.mock()` Pattern)
+
+Mock implementations are co-located with their repository implementations using [Vitest's `__mocks__` auto-resolution](https://vitest.dev/guide/mocking/modules):
+
+```
+packages/infrastructure/src/repositories/
+├── assessment-session.drizzle.repository.ts    # Production implementation
+├── orchestrator.langgraph.repository.ts
+├── ...
+└── __mocks__/
+    ├── assessment-session.drizzle.repository.ts  # In-memory mock Layer
+    ├── orchestrator.langgraph.repository.ts      # Deterministic mock with business logic
+    └── ...                                       # 11 mock files total
+
+packages/domain/src/config/
+├── app-config.ts                           # Interface
+└── __mocks__/
+    └── app-config.ts                       # Test config defaults (uses vi.importActual)
+```
+
+**Each `__mocks__` file:**
+- Exports the same Live layer name as the real module (e.g., `AssessmentSessionDrizzleRepositoryLive`)
+- Implements `Layer.succeed(Tag, implementation)` with in-memory behavior
+- Imports Context.Tags directly from `@workspace/domain`
+
+**How to use in test files** — call `vi.mock()` with the infrastructure module path (no factory), then import the Live layer. Vitest auto-resolves to the `__mocks__` sibling:
+```typescript
+import { vi } from "vitest";
+
+// Activate mocking — Vitest auto-resolves to __mocks__ siblings
+vi.mock("@workspace/infrastructure/repositories/cost-guard.redis.repository");
+
+// Import Live layer — Vitest replaces with __mocks__ version
+import { CostGuardRedisRepositoryLive } from "@workspace/infrastructure/repositories/cost-guard.redis.repository";
+
+// Compose local TestLayer with only the dependencies this test needs
+const TestLayer = Layer.mergeAll(CostGuardRedisRepositoryLive, LoggerPinoRepositoryLive);
+```
+
+**Important:** Never import directly from `__mocks__/` paths. Always use `vi.mock()` + original paths.
+
+**No centralized `TestRepositoriesLayer`** — each test file declares its own `vi.mock()` calls and composes a minimal local `TestLayer` with only the services it needs via `Layer.mergeAll(...)`.
+
 **Test utilities:**
 - `it.effect()` - Test Effect programs with TestClock injected
 - `it.scoped` - Auto-cleanup for resources

@@ -12,10 +12,10 @@ import { AnalyzerRepository } from "../analyzer.repository";
  * Real test implementations will be created in infrastructure layer.
  */
 const createMockAnalyzerRepository = (): Context.Tag.Service<typeof AnalyzerRepository> => ({
-	analyzeFacets: (messageId: string, content: string) =>
+	analyzeFacets: (assessmentMessageId: string, content: string) =>
 		Effect.succeed([
 			{
-				messageId,
+				assessmentMessageId,
 				facetName: "imagination",
 				score: 15,
 				confidence: 0.8,
@@ -75,15 +75,15 @@ describe("AnalyzerRepository Interface", () => {
 		expect(evidence).toHaveProperty("highlightRange");
 
 		// Verify types
-		expect(typeof evidence.messageId).toBe("string");
-		expect(typeof evidence.facetName).toBe("string");
-		expect(typeof evidence.score).toBe("number");
-		expect(typeof evidence.confidence).toBe("number");
-		expect(typeof evidence.quote).toBe("string");
-		expect(typeof evidence.highlightRange).toBe("object");
+		expect(typeof evidence?.assessmentMessageId).toBe("string");
+		expect(typeof evidence?.facetName).toBe("string");
+		expect(typeof evidence?.score).toBe("number");
+		expect(typeof evidence?.confidence).toBe("number");
+		expect(typeof evidence?.quote).toBe("string");
+		expect(typeof evidence?.highlightRange).toBe("object");
 	});
 
-	it("should return evidence with messageId matching input", async () => {
+	it("should return evidence with assessmentMessageId matching input", async () => {
 		const mockService = createMockAnalyzerRepository();
 		const mockLayer = Context.make(AnalyzerRepository, mockService);
 
@@ -96,7 +96,7 @@ describe("AnalyzerRepository Interface", () => {
 		const result = await Effect.runPromise(program.pipe(Effect.provide(mockLayer)));
 
 		result.forEach((evidence) => {
-			expect(evidence.messageId).toBe("msg_test_123");
+			expect(evidence?.assessmentMessageId).toBe("msg_test_123");
 		});
 	});
 
@@ -191,9 +191,8 @@ describe("AnalyzerRepository Interface", () => {
 		// Verify we can catch specific error types
 		const withErrorHandling = program.pipe(
 			Effect.catchTags({
-				AnalyzerError: (_e) => Effect.succeed([]),
-				InvalidFacetNameError: (_e) => Effect.succeed([]),
-				MalformedEvidenceError: (_e) => Effect.succeed([]),
+				AnalyzerError: (_e: AnalyzerError) => Effect.succeed([]),
+				MalformedEvidenceError: (_e: MalformedEvidenceError) => Effect.succeed([]),
 			}),
 			Effect.provide(mockLayer),
 		);
@@ -205,18 +204,18 @@ describe("AnalyzerRepository Interface", () => {
 describe("AnalyzerError", () => {
 	it("should be instantiable with required fields", () => {
 		const error = new AnalyzerError({
-			messageId: "msg_123",
+			assessmentMessageId: "msg_123",
 			message: "Failed to analyze message",
 		});
 
 		expect(error._tag).toBe("AnalyzerError");
-		expect(error.messageId).toBe("msg_123");
+		expect(error.assessmentMessageId).toBe("msg_123");
 		expect(error.message).toBe("Failed to analyze message");
 	});
 
 	it("should accept optional cause field", () => {
 		const error = new AnalyzerError({
-			messageId: "msg_123",
+			assessmentMessageId: "msg_123",
 			message: "Failed to analyze message",
 			cause: "API timeout",
 		});
@@ -243,14 +242,14 @@ describe("InvalidFacetNameError", () => {
 describe("MalformedEvidenceError", () => {
 	it("should be instantiable with required fields", () => {
 		const error = new MalformedEvidenceError({
-			messageId: "msg_123",
+			assessmentMessageId: "msg_123",
 			rawOutput: '{"invalid": json}',
 			parseError: "Unexpected token",
 			message: "Failed to parse evidence",
 		});
 
 		expect(error._tag).toBe("MalformedEvidenceError");
-		expect(error.messageId).toBe("msg_123");
+		expect(error.assessmentMessageId).toBe("msg_123");
 		expect(error.rawOutput).toBe('{"invalid": json}');
 		expect(error.parseError).toBe("Unexpected token");
 		expect(error.message).toBe("Failed to parse evidence");

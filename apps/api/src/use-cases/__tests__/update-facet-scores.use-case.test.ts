@@ -8,9 +8,17 @@
  */
 
 import { it } from "@effect/vitest";
-import { Effect } from "effect";
-import { describe, expect } from "vitest";
-import { TestRepositoriesLayer } from "../../test-utils/test-layers";
+import { Effect, Layer } from "effect";
+import { describe, expect, vi } from "vitest";
+
+vi.mock("@workspace/infrastructure/repositories/scorer.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
+
+import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
+import { ScorerDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/scorer.drizzle.repository";
+
+const TestLayer = Layer.mergeAll(ScorerDrizzleRepositoryLive, LoggerPinoRepositoryLive);
+
 import {
 	shouldTriggerScoring,
 	type UpdateFacetScoresInput,
@@ -68,7 +76,7 @@ describe("updateFacetScores use-case", () => {
 				expect(result.facetScores).toBeDefined();
 				expect(result.traitScores).toBeDefined();
 				expect(result.updatedAt).toBeInstanceOf(Date);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should return facet scores with correct structure", () =>
@@ -89,7 +97,7 @@ describe("updateFacetScores use-case", () => {
 					expect(score.confidence).toBeGreaterThanOrEqual(0);
 					expect(score.confidence).toBeLessThanOrEqual(100);
 				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should derive trait scores from facet scores", () =>
@@ -116,11 +124,11 @@ describe("updateFacetScores use-case", () => {
 					expect(score).toHaveProperty("score");
 					expect(score).toHaveProperty("confidence");
 					expect(score.score).toBeGreaterThanOrEqual(0);
-					expect(score.score).toBeLessThanOrEqual(20);
+					expect(score.score).toBeLessThanOrEqual(120); // Trait scores are sum of 6 facets (0-20 each) = 0-120
 					expect(score.confidence).toBeGreaterThanOrEqual(0);
 					expect(score.confidence).toBeLessThanOrEqual(100);
 				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -139,7 +147,7 @@ describe("updateFacetScores use-case", () => {
 					expect(score.confidence).toBeLessThanOrEqual(100);
 					expect(score.confidence).toBeGreaterThanOrEqual(0);
 				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -154,7 +162,7 @@ describe("updateFacetScores use-case", () => {
 				const result = yield* updateFacetScores(input);
 
 				expect(result.facetScores).toBeDefined();
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -170,7 +178,7 @@ describe("updateFacetScores use-case", () => {
 
 				expect(result.facetScores).toBeDefined();
 				expect(result.traitScores).toBeDefined();
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 });

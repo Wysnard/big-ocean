@@ -136,6 +136,7 @@ This document provides the complete epic and story breakdown for big-ocean, deco
 | 2. Assessment Backend | 2.3 Analyzer & Scorer | FR5, FR6, FR7 | NFR2, NFR4 |
 | 2. Assessment Backend | 2.4 LangGraph Orchestration | FR1, FR3, FR4 | NFR1, NFR2, NFR8 |
 | 2. Assessment Backend | 2.5 Cost Tracking & Rate Limiting | FR24, FR25, FR26 | NFR8 |
+| 3. OCEAN Archetype System | 3.0 Test Migration (__mocks__) | — | — |
 | 3. OCEAN Archetype System | 3.1 Code Generation | FR8, FR9 | NFR4 |
 | 3. OCEAN Archetype System | 3.2 Archetype Lookup & Storage | FR10, FR11 | NFR2, NFR4 |
 | 4. Frontend Assessment UI | 4.1 Assessment Component | FR1, FR2, FR4 | NFR2, NFR10 |
@@ -728,6 +729,41 @@ So that **the MVP remains sustainable for 500 users at $75/day max**.
 **Note:** Can start database design in parallel with Epic 2, but archetype lookup requires facet scores first
 
 **User Value:** Transforms raw trait scores into memorable, shareable personality archetypes
+
+### Story 3.0: Migrate Tests to Vitest Mock Modules with `__mocks__` Folders
+
+As a **Developer**,
+I want **test mock implementations extracted into `__mocks__` folders using Vitest's mock module system**,
+So that **mock implementations are reusable, co-located with source, and test files are leaner**.
+
+**Acceptance Criteria:**
+
+**Given** all test layer factory functions exist in `test-layers.ts`
+**When** I extract mock implementations into `__mocks__` folders
+**Then** mock files are co-located with their source interfaces in `packages/domain/src/repositories/__mocks__/`
+**And** test files use `vi.mock()` (path-only, no factory) for `__mocks__` folder resolution
+**And** the centralized `TestRepositoriesLayer` composition is preserved
+**And** all existing tests pass without behavioral changes (zero regressions)
+**And** no changes to production source code
+
+**Technical Details:**
+
+- Extract 11+ mock factory functions from `test-layers.ts` into `__mocks__` folders
+- Co-locate `__mocks__` with repository interfaces in `packages/domain/src/repositories/`
+- Preserve Effect DI pattern (`Layer.succeed` + `Effect.provide`) as core testing architecture
+- Each `__mocks__` file exports both the raw mock object AND a `createTest*Layer()` factory
+- Per-test mock customization via `vi.fn().mockReturnValueOnce()` overrides on imported mocks
+- Update CLAUDE.md testing section with `__mocks__` pattern documentation
+
+**Acceptance Checklist:**
+- [ ] All mock factory functions extracted from `test-layers.ts` into `__mocks__/` files
+- [ ] `test-layers.ts` slimmed to imports + `Layer.mergeAll` composition
+- [ ] Test files use `__mocks__` imports instead of inline `vi.fn()` blocks
+- [ ] All existing tests pass (zero regressions)
+- [ ] `__mocks__` pattern documented in CLAUDE.md
+- [ ] No production source code changes
+
+---
 
 ### Story 3.1: Generate 5-Letter OCEAN Codes from Trait Scores (TDD)
 

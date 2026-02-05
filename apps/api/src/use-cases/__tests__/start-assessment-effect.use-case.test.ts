@@ -7,12 +7,39 @@
 
 import { it } from "@effect/vitest";
 import { AssessmentSessionRepository } from "@workspace/domain";
-import { Effect } from "effect";
-import { describe, expect } from "vitest";
-import { TestRepositoriesLayer } from "../../test-utils/test-layers";
+import { Effect, Layer } from "effect";
+import { beforeEach, describe, expect, vi } from "vitest";
+
+vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
+vi.mock("@workspace/infrastructure/repositories/cost-guard.redis.repository");
+
+import {
+	AssessmentSessionDrizzleRepositoryLive,
+	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
+	_resetMockState as resetSessionState,
+} from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+import {
+	CostGuardRedisRepositoryLive,
+	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
+	_resetMockState as resetCostGuardState,
+} from "@workspace/infrastructure/repositories/cost-guard.redis.repository";
+import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
+
+const TestLayer = Layer.mergeAll(
+	AssessmentSessionDrizzleRepositoryLive,
+	LoggerPinoRepositoryLive,
+	CostGuardRedisRepositoryLive,
+);
+
 import { startAssessment } from "../../use-cases/start-assessment.use-case";
 
 describe("startAssessment Use Case (@effect/vitest)", () => {
+	beforeEach(() => {
+		resetSessionState();
+		resetCostGuardState();
+	});
+
 	describe("Success scenarios", () => {
 		it.effect("should create a new assessment session", () =>
 			Effect.gen(function* () {
@@ -20,7 +47,7 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 
 				expect(result.sessionId).toMatch(/^session_/);
 				expect(result.createdAt).toBeInstanceOf(Date);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should create session with user ID when provided", () =>
@@ -34,7 +61,7 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 				// Verify session was created with correct user ID
 				const session = yield* sessionRepo.getSession(result.sessionId);
 				expect(session.userId).toBe("user_123");
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should create session without user ID when not provided", () =>
@@ -46,7 +73,7 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 				// Verify session was created without user ID
 				const session = yield* sessionRepo.getSession(result.sessionId);
 				expect(session.userId).toBeUndefined();
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should return session ID and creation timestamp", () =>
@@ -59,7 +86,7 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 				expect(result).toHaveProperty("createdAt");
 				expect(result.createdAt.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
 				expect(result.createdAt.getTime()).toBeLessThanOrEqual(afterTime.getTime());
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should handle multiple session creations independently", () =>
@@ -68,7 +95,7 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 				const result2 = yield* startAssessment({ userId: "user_2" });
 
 				expect(result1.sessionId).not.toBe(result2.sessionId);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -89,10 +116,10 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 					failingSessionRepo,
 				);
 
-				const exit = yield* Effect.exit(failingLayer.pipe(Effect.provide(TestRepositoriesLayer)));
+				const exit = yield* Effect.exit(failingLayer.pipe(Effect.provide(TestLayer)));
 
 				expect(exit._tag).toBe("Failure");
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -105,7 +132,7 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 
 				const session = yield* sessionRepo.getSession(result.sessionId);
 				expect(session.userId).toBe("");
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should handle special characters in user ID", () =>
@@ -117,7 +144,7 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 
 				const session = yield* sessionRepo.getSession(result.sessionId);
 				expect(session.userId).toBe(specialUserId);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should handle very long user ID", () =>
@@ -129,7 +156,7 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 
 				const session = yield* sessionRepo.getSession(result.sessionId);
 				expect(session.userId).toBe(longUserId);
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 
@@ -140,7 +167,7 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 
 				expect(result).toHaveProperty("sessionId");
 				expect(result.sessionId).toBeDefined();
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 
 		it.effect("should enforce rate limit - second call fails for same user", () =>
@@ -160,7 +187,7 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 						expect(error).toHaveProperty("message", "You can start a new assessment tomorrow");
 					}
 				}
-			}).pipe(Effect.provide(TestRepositoriesLayer)),
+			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
 });

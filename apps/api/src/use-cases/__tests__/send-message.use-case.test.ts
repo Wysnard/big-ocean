@@ -2,7 +2,7 @@
  * Send Message Use Case Tests
  *
  * Tests for the sendMessage business logic.
- * Uses mock repositories to test:
+ * Uses inline spy layers (Layer.succeed with vi.fn()) for per-test control:
  * - Session validation
  * - Message persistence
  * - Orchestrator invocation (Nerin + optional Analyzer/Scorer)
@@ -24,13 +24,46 @@ import {
 	OrchestratorRepository,
 	type ProcessMessageOutput,
 } from "@workspace/domain";
-import { Cause, Effect, Exit, Layer, Option } from "effect";
+import { Effect, Layer } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sendMessage } from "../send-message.use-case";
 
 // Helper to create facet confidence with all facets at a given value
 const createMockFacetConfidence = (value: number = 50): FacetConfidenceScores =>
 	initializeFacetConfidence(value);
+
+// Define mock repo objects locally with vi.fn() for spy access
+const mockAssessmentSessionRepo = {
+	createSession: vi.fn(),
+	getSession: vi.fn(),
+	updateSession: vi.fn(),
+};
+
+const mockAssessmentMessageRepo = {
+	saveMessage: vi.fn(),
+	getMessages: vi.fn(),
+	getMessageCount: vi.fn(),
+};
+
+const mockLoggerRepo = {
+	info: vi.fn(),
+	error: vi.fn(),
+	warn: vi.fn(),
+	debug: vi.fn(),
+};
+
+const mockOrchestratorRepo = {
+	processMessage: vi.fn(),
+};
+
+const mockCostGuardRepo = {
+	incrementDailyCost: vi.fn(),
+	getDailyCost: vi.fn(),
+	incrementAssessmentCount: vi.fn(),
+	getAssessmentCount: vi.fn(),
+	canStartAssessment: vi.fn(),
+	recordAssessmentStart: vi.fn(),
+};
 
 // Mock data factories
 const mockSession = {
@@ -99,66 +132,45 @@ const mockOrchestratorBatchResponse: ProcessMessageOutput = {
 			highlightRange: { start: 0, end: 18 },
 		},
 	],
+	// These are optional fields — partial records are intentional for test data
 	facetScores: {
 		imagination: { score: 16.5, confidence: 85 },
 		orderliness: { score: 15.2, confidence: 80 },
-	},
+	} as ProcessMessageOutput["facetScores"],
 	traitScores: {
 		openness: { score: 15.8, confidence: 82 },
 		conscientiousness: { score: 14.5, confidence: 78 },
-	},
+	} as ProcessMessageOutput["traitScores"],
 	steeringTarget: "orderliness",
 	steeringHint: "Explore how they organize their space, time, or belongings",
 };
 
 describe("sendMessage Use Case", () => {
-	// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
-	let mockSessionRepo: any;
-	// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
-	let mockMessageRepo: any;
-	// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
-	let mockLogger: any;
-	// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
-	let mockOrchestrator: any;
-	// biome-ignore lint/suspicious/noExplicitAny: vitest mocks require flexible types
-	let mockCostGuard: any;
-
 	beforeEach(() => {
 		// Session Repository mock
-		mockSessionRepo = {
-			getSession: vi.fn().mockReturnValue(Effect.succeed(mockSession)),
-			updateSession: vi.fn().mockReturnValue(Effect.succeed(mockSession)),
-			createSession: vi.fn(),
-			resumeSession: vi.fn(),
-		};
+		mockAssessmentSessionRepo.getSession.mockReturnValue(Effect.succeed(mockSession));
+		mockAssessmentSessionRepo.updateSession.mockReturnValue(Effect.succeed(mockSession));
+		mockAssessmentSessionRepo.createSession.mockImplementation(() => Effect.succeed(undefined));
 
 		// Message Repository mock
-		mockMessageRepo = {
-			saveMessage: vi.fn().mockReturnValue(Effect.succeed(undefined)),
-			getMessages: vi.fn().mockReturnValue(Effect.succeed(mockMessages)),
-			getMessageCount: vi.fn().mockReturnValue(Effect.succeed(3)),
-		};
+		mockAssessmentMessageRepo.saveMessage.mockReturnValue(Effect.succeed(undefined));
+		mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(mockMessages));
+		mockAssessmentMessageRepo.getMessageCount.mockReturnValue(Effect.succeed(3));
 
 		// Logger Repository mock
-		mockLogger = {
-			info: vi.fn(),
-			error: vi.fn(),
-			warn: vi.fn(),
-			debug: vi.fn(),
-		};
+		mockLoggerRepo.info.mockImplementation(() => {});
+		mockLoggerRepo.error.mockImplementation(() => {});
+		mockLoggerRepo.warn.mockImplementation(() => {});
+		mockLoggerRepo.debug.mockImplementation(() => {});
 
 		// Orchestrator Repository mock
-		mockOrchestrator = {
-			processMessage: vi.fn().mockReturnValue(Effect.succeed(mockOrchestratorResponse)),
-		};
+		mockOrchestratorRepo.processMessage.mockReturnValue(Effect.succeed(mockOrchestratorResponse));
 
 		// CostGuard Repository mock
-		mockCostGuard = {
-			getDailyCost: vi.fn().mockReturnValue(Effect.succeed(1000)), // 1000 cents = $10
-			incrementDailyCost: vi.fn().mockReturnValue(Effect.succeed(1043)),
-			incrementAssessmentCount: vi.fn().mockReturnValue(Effect.succeed(1)),
-			getAssessmentCount: vi.fn().mockReturnValue(Effect.succeed(1)),
-		};
+		mockCostGuardRepo.getDailyCost.mockReturnValue(Effect.succeed(1000)); // 1000 cents = $10
+		mockCostGuardRepo.incrementDailyCost.mockReturnValue(Effect.succeed(1043));
+		mockCostGuardRepo.incrementAssessmentCount.mockReturnValue(Effect.succeed(1));
+		mockCostGuardRepo.getAssessmentCount.mockReturnValue(Effect.succeed(1));
 	});
 
 	afterEach(() => {
@@ -167,11 +179,11 @@ describe("sendMessage Use Case", () => {
 
 	const createTestLayer = () =>
 		Layer.mergeAll(
-			Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-			Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
-			Layer.succeed(LoggerRepository, mockLogger),
-			Layer.succeed(OrchestratorRepository, mockOrchestrator),
-			Layer.succeed(CostGuardRepository, mockCostGuard),
+			Layer.succeed(AssessmentSessionRepository, mockAssessmentSessionRepo),
+			Layer.succeed(AssessmentMessageRepository, mockAssessmentMessageRepo),
+			Layer.succeed(LoggerRepository, mockLoggerRepo),
+			Layer.succeed(OrchestratorRepository, mockOrchestratorRepo),
+			Layer.succeed(CostGuardRepository, mockCostGuardRepo),
 		);
 
 	describe("Success scenarios", () => {
@@ -210,7 +222,7 @@ describe("sendMessage Use Case", () => {
 
 			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
-			expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
+			expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledWith(
 				"session_test_123",
 				"user",
 				"Tell me something interesting",
@@ -228,7 +240,7 @@ describe("sendMessage Use Case", () => {
 
 			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
-			expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
+			expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledWith(
 				"session_test_123",
 				"assistant",
 				mockOrchestratorResponse.nerinResponse,
@@ -245,8 +257,8 @@ describe("sendMessage Use Case", () => {
 
 			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
-			expect(mockOrchestrator.processMessage).toHaveBeenCalled();
-			const callArg = mockOrchestrator.processMessage.mock.calls[0][0];
+			expect(mockOrchestratorRepo.processMessage).toHaveBeenCalled();
+			const callArg = mockOrchestratorRepo.processMessage.mock.calls[0]?.[0];
 
 			expect(callArg.sessionId).toBe("session_test_123");
 			expect(callArg.userMessage).toBe("Another message");
@@ -265,7 +277,7 @@ describe("sendMessage Use Case", () => {
 
 			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
-			expect(mockSessionRepo.updateSession).toHaveBeenCalledWith("session_test_123", {
+			expect(mockAssessmentSessionRepo.updateSession).toHaveBeenCalledWith("session_test_123", {
 				confidence: mockSession.confidence,
 			});
 		});
@@ -299,12 +311,12 @@ describe("sendMessage Use Case", () => {
 
 			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
-			expect(mockLogger.info).toHaveBeenCalledWith("Message received", {
+			expect(mockLoggerRepo.info).toHaveBeenCalledWith("Message received", {
 				sessionId: "session_test_123",
 				messageLength: 12,
 			});
 
-			expect(mockLogger.info).toHaveBeenCalledWith(
+			expect(mockLoggerRepo.info).toHaveBeenCalledWith(
 				"Message processed",
 				expect.objectContaining({
 					sessionId: "session_test_123",
@@ -324,14 +336,19 @@ describe("sendMessage Use Case", () => {
 			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
 			// Cost should be incremented (0.0043 dollars = 0.43 cents, rounded)
-			expect(mockCostGuard.incrementDailyCost).toHaveBeenCalledWith("user_456", expect.any(Number));
+			expect(mockCostGuardRepo.incrementDailyCost).toHaveBeenCalledWith(
+				"user_456",
+				expect.any(Number),
+			);
 		});
 	});
 
 	describe("Batch processing (every 3rd message)", () => {
 		it("should update precision from facet scores on batch message", async () => {
-			mockOrchestrator.processMessage.mockReturnValue(Effect.succeed(mockOrchestratorBatchResponse));
-			mockMessageRepo.getMessageCount.mockReturnValue(Effect.succeed(3)); // Batch trigger
+			mockOrchestratorRepo.processMessage.mockReturnValue(
+				Effect.succeed(mockOrchestratorBatchResponse),
+			);
+			mockAssessmentMessageRepo.getMessageCount.mockReturnValue(Effect.succeed(3)); // Batch trigger
 
 			const testLayer = createTestLayer();
 
@@ -356,8 +373,10 @@ describe("sendMessage Use Case", () => {
 		});
 
 		it("should log batch processing info", async () => {
-			mockOrchestrator.processMessage.mockReturnValue(Effect.succeed(mockOrchestratorBatchResponse));
-			mockMessageRepo.getMessageCount.mockReturnValue(Effect.succeed(3));
+			mockOrchestratorRepo.processMessage.mockReturnValue(
+				Effect.succeed(mockOrchestratorBatchResponse),
+			);
+			mockAssessmentMessageRepo.getMessageCount.mockReturnValue(Effect.succeed(3));
 
 			const testLayer = createTestLayer();
 
@@ -368,7 +387,7 @@ describe("sendMessage Use Case", () => {
 
 			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
-			expect(mockLogger.info).toHaveBeenCalledWith(
+			expect(mockLoggerRepo.info).toHaveBeenCalledWith(
 				"Message processed",
 				expect.objectContaining({
 					isBatchMessage: true,
@@ -381,7 +400,7 @@ describe("sendMessage Use Case", () => {
 	describe("Error handling", () => {
 		it("should fail when session not found", async () => {
 			const sessionNotFoundError = new Error("Session not found");
-			mockSessionRepo.getSession.mockReturnValue(Effect.fail(sessionNotFoundError));
+			mockAssessmentSessionRepo.getSession.mockReturnValue(Effect.fail(sessionNotFoundError));
 
 			const testLayer = createTestLayer();
 
@@ -401,7 +420,7 @@ describe("sendMessage Use Case", () => {
 				sessionId: "session_test_123",
 				message: "Orchestrator pipeline failed",
 			};
-			mockOrchestrator.processMessage.mockReturnValue(Effect.fail(orchestratorError));
+			mockOrchestratorRepo.processMessage.mockReturnValue(Effect.fail(orchestratorError));
 
 			const testLayer = createTestLayer();
 
@@ -410,22 +429,15 @@ describe("sendMessage Use Case", () => {
 				message: "Test message",
 			};
 
-			// Use Effect.exit to capture the failure and check error properties
-			const exit = await Effect.runPromise(
-				sendMessage(input).pipe(Effect.provide(testLayer), Effect.exit),
+			// Use Effect.flip to capture the error directly
+			const error = await Effect.runPromise(
+				sendMessage(input).pipe(Effect.provide(testLayer), Effect.flip),
 			);
 
-			expect(Exit.isFailure(exit)).toBe(true);
-			if (Exit.isFailure(exit)) {
-				const errorOption = Cause.failureOption(exit.cause);
-				expect(Option.isSome(errorOption)).toBe(true);
-				if (Option.isSome(errorOption)) {
-					expect(errorOption.value._tag).toBe("OrchestrationError");
-				}
-			}
+			expect(error._tag).toBe("OrchestrationError");
 
 			// Should log the error
-			expect(mockLogger.error).toHaveBeenCalled();
+			expect(mockLoggerRepo.error).toHaveBeenCalled();
 		});
 
 		it("should handle BudgetPausedError", async () => {
@@ -437,7 +449,7 @@ describe("sendMessage Use Case", () => {
 				resumeAfter: new Date("2026-02-04T00:00:00Z"),
 				currentConfidence: 50,
 			};
-			mockOrchestrator.processMessage.mockReturnValue(Effect.fail(budgetError));
+			mockOrchestratorRepo.processMessage.mockReturnValue(Effect.fail(budgetError));
 
 			const testLayer = createTestLayer();
 
@@ -446,25 +458,18 @@ describe("sendMessage Use Case", () => {
 				message: "Test message",
 			};
 
-			// Use Effect.exit to capture the failure and check error properties
-			const exit = await Effect.runPromise(
-				sendMessage(input).pipe(Effect.provide(testLayer), Effect.exit),
+			// Use Effect.flip to capture the error directly
+			const error = await Effect.runPromise(
+				sendMessage(input).pipe(Effect.provide(testLayer), Effect.flip),
 			);
 
-			expect(Exit.isFailure(exit)).toBe(true);
-			if (Exit.isFailure(exit)) {
-				const errorOption = Cause.failureOption(exit.cause);
-				expect(Option.isSome(errorOption)).toBe(true);
-				if (Option.isSome(errorOption)) {
-					expect(errorOption.value._tag).toBe("BudgetPausedError");
-					expect((errorOption.value as BudgetPausedError).sessionId).toBe("session_test_123");
-				}
-			}
+			expect(error._tag).toBe("BudgetPausedError");
+			expect((error as BudgetPausedError).sessionId).toBe("session_test_123");
 		});
 
 		it("should handle message save failure", async () => {
 			const saveError = new Error("Database error");
-			mockMessageRepo.saveMessage.mockReturnValue(Effect.fail(saveError));
+			mockAssessmentMessageRepo.saveMessage.mockReturnValue(Effect.fail(saveError));
 
 			const testLayer = createTestLayer();
 
@@ -481,8 +486,8 @@ describe("sendMessage Use Case", () => {
 
 	describe("Edge cases", () => {
 		it("should handle empty message history", async () => {
-			mockMessageRepo.getMessages.mockReturnValue(Effect.succeed([]));
-			mockMessageRepo.getMessageCount.mockReturnValue(Effect.succeed(1));
+			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed([]));
+			mockAssessmentMessageRepo.getMessageCount.mockReturnValue(Effect.succeed(1));
 
 			const testLayer = createTestLayer();
 
@@ -494,8 +499,8 @@ describe("sendMessage Use Case", () => {
 			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
 			expect(result.response).toBe(mockOrchestratorResponse.nerinResponse);
-			expect(mockOrchestrator.processMessage).toHaveBeenCalled();
-			const callArg = mockOrchestrator.processMessage.mock.calls[0][0];
+			expect(mockOrchestratorRepo.processMessage).toHaveBeenCalled();
+			const callArg = mockOrchestratorRepo.processMessage.mock.calls[0]?.[0];
 			expect(callArg.messages).toEqual([]);
 			expect(callArg.sessionId).toBe("session_test_123");
 		});
@@ -513,7 +518,7 @@ describe("sendMessage Use Case", () => {
 			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
 			expect(result.response).toBe(mockOrchestratorResponse.nerinResponse);
-			expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
+			expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledWith(
 				"session_test_123",
 				"user",
 				longMessage,
@@ -526,7 +531,7 @@ describe("sendMessage Use Case", () => {
 				...mockSession,
 				precision: undefined,
 			};
-			mockSessionRepo.getSession.mockReturnValue(Effect.succeed(sessionWithoutPrecision));
+			mockAssessmentSessionRepo.getSession.mockReturnValue(Effect.succeed(sessionWithoutPrecision));
 
 			const testLayer = createTestLayer();
 
@@ -552,7 +557,7 @@ describe("sendMessage Use Case", () => {
 				...mockSession,
 				userId: undefined,
 			};
-			mockSessionRepo.getSession.mockReturnValue(Effect.succeed(sessionWithoutUser));
+			mockAssessmentSessionRepo.getSession.mockReturnValue(Effect.succeed(sessionWithoutUser));
 
 			const testLayer = createTestLayer();
 
@@ -564,8 +569,11 @@ describe("sendMessage Use Case", () => {
 			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
 			// Should use "anonymous" as userId for cost tracking
-			expect(mockCostGuard.getDailyCost).toHaveBeenCalledWith("anonymous");
-			expect(mockCostGuard.incrementDailyCost).toHaveBeenCalledWith("anonymous", expect.any(Number));
+			expect(mockCostGuardRepo.getDailyCost).toHaveBeenCalledWith("anonymous");
+			expect(mockCostGuardRepo.incrementDailyCost).toHaveBeenCalledWith(
+				"anonymous",
+				expect.any(Number),
+			);
 		});
 	});
 });

@@ -70,6 +70,7 @@ development_status:
 
   # EPIC 3: OCEAN Archetype System
   epic-3: in-progress
+  3-0-migrate-tests-to-vitest-mock-modules: review
   3-1-generate-5-letter-ocean-codes-from-trait-scores: ready-for-dev
   3-2-create-and-manage-archetype-lookup-table: backlog
   epic-3-retrospective: optional
@@ -110,12 +111,12 @@ development_status:
 # SPRINT SUMMARY
 
 total_epics: 7
-total_stories: 32
+total_stories: 33
 epics_backlog: 3
 epics_in_progress: 2
 epics_done: 2
 stories_backlog: 13
-stories_ready_for_dev: 1
+stories_ready_for_dev: 2
 stories_in_progress: 0
 stories_review: 0
 stories_done: 18
@@ -150,8 +151,9 @@ retrospectives_done: 1
   - ✅ Story 2.8: Docker Setup for Integration Testing
   - ✅ Story 2.4: LangGraph State Machine and Orchestration (TDD)
   - ✅ Story 2.5: LLM Cost Tracking, Rate Limiting, and Budget Enforcement (TDD)
-- 🆕 **Epic 3** (OCEAN System): Code generation, archetype lookup
-  - 📋 **READY:** Story 3.1: Generate 5-Letter OCEAN Codes from Trait Scores (TDD) - **NEWLY CREATED**
+- 🆕 **Epic 3** (OCEAN System): Test migration, code generation, archetype lookup
+  - 📋 **READY:** Story 3.0: Migrate Tests to Vitest Mock Modules with `__mocks__` Folders
+  - 📋 **READY:** Story 3.1: Generate 5-Letter OCEAN Codes from Trait Scores (TDD)
   - ⏳ Story 3.2: Create and Manage Archetype Lookup Table
 - **Parallel:** Integration testing setup (Story 7.2)
 
@@ -201,8 +203,8 @@ Epic 1 (Infrastructure) ✅ COMPLETE
 **Current Sprint:** Phase 2 - Backend Logic
 **Active Epics:** Epic 2 (Assessment Backend), Epic 3 (OCEAN System)
 **Just Completed:** Story 2.5 - LLM Cost Tracking, Rate Limiting, and Budget Enforcement ✅
-**Ready for Dev:** Story 3.1 - Generate 5-Letter OCEAN Codes (NEWLY CREATED)
-**Completed Stories:** 18/32 (56% complete)
+**Ready for Dev:** Story 3.0 - Migrate Tests to Vitest Mock Modules, Story 3.1 - Generate 5-Letter OCEAN Codes
+**Completed Stories:** 18/33 (55% complete)
 
 **Recommended Actions:**
 1. ✅ Story 2.1 COMPLETE - Session persistence, message history, <1sec resume all verified
@@ -216,11 +218,13 @@ Epic 1 (Infrastructure) ✅ COMPLETE
 9. ✅ Story 2.8 COMPLETE - Docker Setup for Integration Testing (11 integration tests, mock LLM)
 10. ✅ Story 2.4 COMPLETE - LangGraph State Machine and Orchestration (120 tests, Orchestrator integration)
 11. ✅ Story 2.5 COMPLETE - LLM Cost Tracking, Rate Limiting, and Budget Enforcement (111 tests, Epic 2 COMPLETE!)
-12. 🆕 **READY:** Story 3.1 - OCEAN code generation (pure algorithm, 250+ tests planned)
-13. **MILESTONE:** Epic 2 (Assessment Backend Services) COMPLETE - All backend services operational
-14. **NEXT:** Story 3.1 - Begin Epic 3 (OCEAN Archetype System)
+12. 🆕 **READY:** Story 3.0 - Migrate Tests to Vitest Mock Modules (test infrastructure refactoring)
+13. 🆕 **READY:** Story 3.1 - OCEAN code generation (pure algorithm, 250+ tests planned)
+14. **MILESTONE:** Epic 2 (Assessment Backend Services) COMPLETE - All backend services operational
+15. **NEXT:** Story 3.0 - Test migration, then Story 3.1 - Begin Epic 3 (OCEAN Archetype System)
 
 **Parallel Work Opportunities:**
+- Story 3.0 (Test Migration) ready for immediate start - pure test infrastructure refactoring, no production code changes
 - Story 3.1 (OCEAN Code Generator) ready for immediate start - pure utility function, no Epic 2 blocking
 - Story 7.2 (Integration Testing) can be started in parallel with Epic 2
 - Design work for Epic 4 (Frontend UI) can begin now (wireframes, component specs)
