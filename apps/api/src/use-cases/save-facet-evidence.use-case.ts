@@ -36,7 +36,7 @@ export interface SaveFacetEvidenceOutput {
  *
  * Checks:
  * - Score is in 0-20 range
- * - Confidence is in 0-1 range
+ * - Confidence is in 0-100 range (integer percentage)
  * - Facet name is valid (one of 30 defined facets)
  * - Highlight range is valid (start < end)
  */
@@ -57,14 +57,14 @@ const validateEvidence = (
 			);
 		}
 
-		// Validate confidence range
-		if (evidence.confidence < 0 || evidence.confidence > 1) {
+		// Validate confidence range (0-100 integer)
+		if (evidence.confidence < 0 || evidence.confidence > 100) {
 			yield* Effect.fail(
 				new EvidenceValidationError({
 					assessmentMessageId,
 					field: "confidence",
 					value: evidence.confidence,
-					reason: `Confidence must be between 0 and 1, got ${evidence.confidence}`,
+					reason: `Confidence must be between 0 and 100, got ${evidence.confidence}`,
 				}),
 			);
 		}
@@ -107,7 +107,7 @@ const validateEvidence = (
  * const result = yield* saveFacetEvidence({
  *   assessmentMessageId: "msg_123",
  *   evidence: [
- *     { facetName: "imagination", score: 16, confidence: 0.85, ... }
+ *     { facetName: "imagination", score: 16, confidence: 85, ... }
  *   ]
  * })
  * console.log(result.savedCount) // 1

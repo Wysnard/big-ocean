@@ -14,10 +14,11 @@ import { DatabaseError, SessionNotFound } from "@workspace/contracts/errors";
 import { AssessmentSessionEntitySchema } from "@workspace/domain/entities/session.entity";
 import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
+import { initializeFacetConfidence } from "@workspace/domain/services/confidence-calculator.service";
 import { Database } from "@workspace/infrastructure/context/database";
 import { eq } from "drizzle-orm";
 import { Effect, Layer, Schema } from "effect";
-import { assessmentSession } from "../db/schema";
+import { assessmentSession } from "../db/drizzle/schema";
 
 /**
  * Session Repository Layer - Receives database and logger through DI
@@ -38,7 +39,10 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 		return AssessmentSessionRepository.of({
 			createSession: (userId?: string) =>
 				Effect.gen(function* () {
-					// Insert session with baseline precision scores
+					// Insert session with baseline confidence scores (0-100 integer scale)
+					// Initialize all 30 facet-level confidence scores at 50 (neutral baseline)
+					const facetConfidence = initializeFacetConfidence(50);
+
 					const [session] = yield* db
 						.insert(assessmentSession)
 						.values({
@@ -46,13 +50,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 							createdAt: new Date(),
 							updatedAt: new Date(),
 							status: "active",
-							precision: {
-								openness: 0.5,
-								conscientiousness: 0.5,
-								extraversion: 0.5,
-								agreeableness: 0.5,
-								neuroticism: 0.5,
-							},
+							confidence: facetConfidence,
 							messageCount: 0,
 						})
 						.returning()
@@ -240,7 +238,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 						createdAt: updatedSession.createdAt,
 						updatedAt: updatedSession.updatedAt,
 						status: updatedSession.status,
-						precision: updatedSession.precision,
+						confidence: updatedSession.confidence,
 						messageCount: updatedSession.messageCount,
 					};
 

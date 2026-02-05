@@ -17,7 +17,7 @@ import { LoggerRepository } from "@workspace/domain/repositories/logger.reposito
 import { asc, eq, sql } from "drizzle-orm";
 import { Effect, Layer, Schema } from "effect";
 import { Database } from "../context/database";
-import { assessmentMessage } from "../db/schema";
+import { assessmentMessage } from "../db/drizzle/schema";
 
 /**
  * Message Repository Layer - Receives database and logger through DI

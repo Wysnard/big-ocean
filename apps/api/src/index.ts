@@ -15,16 +15,23 @@ import { BigOceanApi } from "@workspace/contracts";
 import { AppConfig } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import {
+	AnalyzerClaudeRepositoryLive,
 	AppConfigLive,
 	BetterAuthLive,
 	BetterAuthService,
+	CheckpointerPostgresRepositoryLive,
+	CostGuardRedisRepositoryLive,
 	DatabaseStack,
+	OrchestratorGraphLangGraphRepositoryLive,
+	OrchestratorLangGraphRepositoryLive,
+	ScorerDrizzleRepositoryLive,
 } from "@workspace/infrastructure";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 import { NerinAgentLangGraphRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.langgraph.repository";
 import { NerinAgentMockRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.mock.repository";
+import { RedisIoRedisRepositoryLive } from "@workspace/infrastructure/repositories/redis.ioredis.repository";
 import { Context, Effect, Layer } from "effect";
 import { AssessmentGroupLive } from "./handlers/assessment";
 import { HealthGroupLive } from "./handlers/health";
@@ -68,12 +75,55 @@ const NerinAgentLayer =
 	process.env.MOCK_LLM === "true" ? NerinAgentMockRepositoryLive : NerinAgentLangGraphRepositoryLive;
 
 /**
+ * Redis Layer - provides Redis for CostGuard
+ */
+const RedisLayer = RedisIoRedisRepositoryLive.pipe(Layer.provide(InfrastructureLayer));
+
+/**
+ * CostGuard Layer - budget tracking
+ */
+const CostGuardLayer = CostGuardRedisRepositoryLive.pipe(
+	Layer.provide(RedisLayer),
+	Layer.provide(InfrastructureLayer),
+);
+
+/**
+ * Agent Layers - Nerin, Analyzer, Scorer for orchestration
+ */
+const AgentLayers = Layer.mergeAll(
+	NerinAgentLayer,
+	AnalyzerClaudeRepositoryLive,
+	ScorerDrizzleRepositoryLive,
+).pipe(Layer.provide(InfrastructureLayer));
+
+/**
+ * Orchestrator Graph Layer - LangGraph graph with all agent dependencies
+ *
+ * Uses PostgreSQL checkpointer for durable conversation state persistence.
+ */
+const OrchestratorGraphLayer = OrchestratorGraphLangGraphRepositoryLive.pipe(
+	Layer.provide(AgentLayers),
+	Layer.provide(CheckpointerPostgresRepositoryLive),
+	Layer.provide(InfrastructureLayer),
+);
+
+/**
+ * Orchestrator Layer - high-level orchestration repository
+ */
+const OrchestratorLayer = OrchestratorLangGraphRepositoryLive.pipe(
+	Layer.provide(OrchestratorGraphLayer),
+	Layer.provide(InfrastructureLayer),
+);
+
+/**
  * Repository Layers - require Database and Logger
  */
 const RepositoryLayers = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
 	AssessmentMessageDrizzleRepositoryLive,
 	NerinAgentLayer,
+	CostGuardLayer,
+	OrchestratorLayer,
 );
 
 /**

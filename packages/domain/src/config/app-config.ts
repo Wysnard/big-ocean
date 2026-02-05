@@ -46,6 +46,15 @@ export interface AppConfigService {
 
 	/** Node.js environment (development, production, test) */
 	readonly nodeEnv: string;
+
+	/** Analyzer agent model ID */
+	readonly analyzerModelId: string;
+
+	/** Analyzer agent max tokens per request */
+	readonly analyzerMaxTokens: number;
+
+	/** Analyzer agent temperature (0-1, lower = more structured) */
+	readonly analyzerTemperature: number;
 }
 
 /**

@@ -64,7 +64,7 @@ development_status:
   2-3-analyzer-and-scorer-agent-implementation: done
   2-7-typescript-compilation-linting-code-quality: done
   2-8-docker-setup-for-integration-testing: done  # Story 2.8: Docker-based integration testing (Tier 2) - validates HTTP + DB + Docker build before Railway deployment
-  2-4-langgraph-state-machine-and-orchestration: ready-for-dev
+  2-4-langgraph-state-machine-and-orchestration: done  # LangGraph orchestrator with message tracking, structured output, all 107 tests passing ✅
   2-5-llm-cost-tracking-rate-limiting-and-budget-enforcement: backlog
   epic-2-retrospective: optional
 
@@ -116,7 +116,7 @@ stories_backlog: 13
 stories_ready_for_dev: 0
 stories_in_progress: 0
 stories_review: 0
-stories_done: 17
+stories_done: 19
 retrospectives_optional: 6
 retrospectives_done: 1
 
@@ -206,8 +206,9 @@ Epic 1 (Infrastructure) ✅ COMPLETE
 7. ✅ Story 2.3 COMPLETE - Analyzer and Scorer Agent Implementation (301 total tests)
 8. ✅ Story 2.7 COMPLETE - TypeScript Compilation, Linting, and Code Quality
 9. ✅ Story 2.8 COMPLETE - Docker Setup for Integration Testing (11 integration tests, mock LLM)
-10. 📋 Next: Story 2.4 (LangGraph State Machine) and 2.5 (Cost Tracking)
-11. After Epic 2 complete: Move to Epic 3 (OCEAN Archetype System)
+10. ✅ Story 2.4 COMPLETE - LangGraph State Machine and Orchestration (120 tests, Orchestrator integration)
+11. 📋 Next: Story 2.5 (Cost Tracking) - completes Epic 2
+12. After Epic 2 complete: Move to Epic 3 (OCEAN Archetype System)
 
 **Parallel Work Opportunities:**
 - Story 7.2 (Integration Testing) can be started in parallel with Epic 2

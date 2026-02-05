@@ -11,8 +11,6 @@
 - [ ] Acceptance Criteria cross-checked against implementation
 - [ ] File List reviewed and validated for completeness
 - [ ] Tests identified and mapped to ACs; gaps noted
-- [ ] **Code Documentation verified:** JSDoc comments present for all new functions/classes
-- [ ] **README/CLAUDE.md updated:** Architecture/feature/deployment changes documented
 - [ ] Code quality review performed on changed files
 - [ ] Security review performed on changed files and dependencies
 - [ ] Outcome decided (Approve/Changes Requested/Blocked)

@@ -21,14 +21,16 @@
 
 import { ChatAnthropic } from "@langchain/anthropic";
 import {
-	ALL_FACETS,
 	AnalyzerError,
 	AnalyzerRepository,
+	AnalyzerResponseJsonSchema,
+	AppConfig,
 	type FacetEvidence,
 	LoggerRepository,
 	MalformedEvidenceError,
+	validateAnalyzerResponse,
 } from "@workspace/domain";
-import { Effect, Layer, Schema as S } from "effect";
+import { Effect, Layer } from "effect";
 
 /**
  * System prompt for facet analysis
@@ -85,20 +87,17 @@ For each user message, identify signals for all 30 facets across 5 traits:
 2. Only include facets with clear evidence (typically 3-10 per message)
 3. Return valid JSON array only, no markdown formatting or code blocks
 4. Score 0-20: Higher = stronger signal for that facet
-5. Confidence 0.0-1.0: Higher = more certain interpretation
+5. Confidence 0-100: Higher = more certain interpretation
 6. Quote exact substring from user message (preserve formatting)
 7. highlightRange uses 0-based character indices
 
-**Output Format (JSON only, no markdown):**
-[
-  {
-    "facet": "imagination",
-    "score": 16,
-    "confidence": 0.8,
-    "quote": "I love daydreaming about...",
-    "highlightRange": { "start": 0, "end": 25 }
-  }
-]`;
+**Output Format (JSON array):**
+Each item in the array must have:
+- facet: One of the 30 facet names listed above
+- evidence: Quote from the user's message showing the signal
+- score: Number between 0 and 20 (strength of signal for that facet)
+- confidence: Number between 0 and 100 (certainty of interpretation)
+- highlightRange: Object with start and end character indices`;
 
 /**
  * Effect Schema for FacetEvidence validation and transformation
@@ -107,163 +106,32 @@ For each user message, identify signals for all 30 facets across 5 traits:
  * Follows Effect Schema naming convention: AFromB (output from input).
  */
 
-// Highlight range schema for character positions
-const HighlightRange = S.Struct({
-	start: S.Number.pipe(S.int(), S.greaterThanOrEqualTo(0)),
-	end: S.Number.pipe(S.int(), S.greaterThan(0)),
-});
-
-// Literal union of all valid Big Five facet names
-const FacetName = S.Literal(...(ALL_FACETS as readonly [string, ...string[]]));
-
-// Input schema: Claude's JSON response with assessmentMessageId added
-const ClaudeResponseWithMessageId = S.Struct({
-	assessmentMessageId: S.String,
-	facet: FacetName,
-	score: S.Number.pipe(S.int(), S.between(0, 20)),
-	confidence: S.Number.pipe(S.between(0, 1)),
-	quote: S.String,
-	highlightRange: HighlightRange,
-});
-
-// Output schema: Domain FacetEvidence structure
-const FacetEvidenceSchema = S.mutable(
-	S.Struct({
-		assessmentMessageId: S.String,
-		facetName: FacetName,
-		score: S.Number,
-		confidence: S.Number,
-		quote: S.String,
-		highlightRange: S.mutable(HighlightRange),
-	}),
-);
-
-/**
- * FacetEvidenceFromClaudeResponse
- *
- * Schema transformation: ClaudeResponseWithMessageId → FacetEvidence
- * Follows Effect Schema naming convention (OutputFromInput).
- *
- * Transforms Claude's response (with assessmentMessageId added) to domain FacetEvidence.
- * Renames 'facet' to 'facetName' to match domain model.
- */
-const FacetEvidenceFromClaudeResponse = S.transform(
-	ClaudeResponseWithMessageId,
-	FacetEvidenceSchema,
-	{
-		strict: true,
-		decode: (response): FacetEvidence => ({
-			assessmentMessageId: response.assessmentMessageId,
-			facetName: response.facet as FacetEvidence["facetName"],
-			score: response.score,
-			confidence: response.confidence,
-			quote: response.quote,
-			highlightRange: {
-				start: response.highlightRange.start,
-				end: response.highlightRange.end,
-			},
-		}),
-		encode: (evidence) => ({
-			assessmentMessageId: evidence.assessmentMessageId,
-			facet: evidence.facetName,
-			score: evidence.score,
-			confidence: evidence.confidence,
-			quote: evidence.quote,
-			highlightRange: evidence.highlightRange,
-		}),
-	},
-);
-
-// Array transformation schema
-const FacetEvidenceArrayFromClaudeResponse = S.mutable(S.Array(FacetEvidenceFromClaudeResponse));
-
-/**
- * Parse and validate Claude response using Effect Schema transformations
- *
- * Uses Effect Schema for declarative JSON parsing, validation, and transformation.
- * Automatically validates facet names against the 30 Big Five facets via literal union.
- * Transforms Claude's response structure to FacetEvidence using schema transformations.
- */
-function parseResponse(
-	rawOutput: string,
-	assessmentMessageId: string,
-): Effect.Effect<
-	S.Schema.Type<typeof FacetEvidenceArrayFromClaudeResponse>,
-	MalformedEvidenceError
-> {
-	return Effect.gen(function* () {
-		// Strip markdown code blocks if present (Claude sometimes wraps JSON in code blocks)
-		const cleaned = rawOutput.trim().replace(/^```(?:json)?\n?|\n?```$/g, "");
-
-		// Parse JSON string
-		const parsed = yield* Effect.try({
-			try: () => JSON.parse(cleaned) as unknown,
-			catch: (error) =>
-				new MalformedEvidenceError({
-					assessmentMessageId,
-					rawOutput: rawOutput.substring(0, 500),
-					parseError: error instanceof Error ? error.message : String(error),
-					message: "Failed to parse JSON",
-				}),
-		});
-
-		// Inject assessmentMessageId into each parsed item
-		const parsedWithMessageId = yield* Effect.try({
-			try: () => {
-				if (!Array.isArray(parsed)) {
-					throw new Error("Expected array from Claude response");
-				}
-				return parsed.map((item) => ({
-					...item,
-					assessmentMessageId,
-				}));
-			},
-			catch: (error) =>
-				new MalformedEvidenceError({
-					assessmentMessageId,
-					rawOutput: rawOutput.substring(0, 500),
-					parseError: error instanceof Error ? error.message : String(error),
-					message: "Failed to add assessmentMessageId to parsed data",
-				}),
-		});
-
-		// Validate and transform using Effect Schema
-		return yield* S.decodeUnknown(FacetEvidenceArrayFromClaudeResponse)(parsedWithMessageId).pipe(
-			Effect.mapError(
-				(error) =>
-					new MalformedEvidenceError({
-						assessmentMessageId,
-						rawOutput: rawOutput.substring(0, 500),
-						parseError: String(error),
-						message: "Schema validation failed - invalid structure or facet name",
-					}),
-			),
-		);
-	});
-}
-
 /**
  * Analyzer Repository Layer (Production)
  *
- * Uses Claude Sonnet 4.5 via ChatAnthropic for facet analysis.
+ * Uses Claude Sonnet 4.5 via ChatAnthropic for facet analysis with structured output.
  * Requires ANTHROPIC_API_KEY environment variable.
  *
- * Layer type: Layer<AnalyzerRepository, never, LoggerRepository>
+ * Layer type: Layer<AnalyzerRepository, never, LoggerRepository | AppConfig>
  */
 export const AnalyzerClaudeRepositoryLive = Layer.effect(
 	AnalyzerRepository,
 	Effect.gen(function* () {
 		const logger = yield* LoggerRepository;
+		const config = yield* AppConfig;
 
-		// Create ChatAnthropic model
-		const model = new ChatAnthropic({
-			model: process.env.ANALYZER_MODEL_ID || "claude-sonnet-4-20250514",
-			maxTokens: Number(process.env.ANALYZER_MAX_TOKENS) || 2048,
-			temperature: Number(process.env.ANALYZER_TEMPERATURE) || 0.3, // Lower temperature for structured output
+		// Create ChatAnthropic model with structured output
+		const baseModel = new ChatAnthropic({
+			model: config.analyzerModelId,
+			maxTokens: config.analyzerMaxTokens,
+			temperature: config.analyzerTemperature, // Lower temperature for structured output
 		});
 
+		// Use structured output with JSON Schema from Effect Schema
+		const model = baseModel.withStructuredOutput(AnalyzerResponseJsonSchema);
+
 		logger.info("Analyzer Claude repository initialized", {
-			model: process.env.ANALYZER_MODEL_ID || "claude-sonnet-4-20250514",
+			model: config.analyzerModelId,
 		});
 
 		// Return service implementation
@@ -273,9 +141,9 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 					const startTime = Date.now();
 
 					// Call Claude with system prompt and user message
-					const response = yield* Effect.tryPromise({
+					const rawResponse = yield* Effect.tryPromise({
 						try: async () => {
-							const result = await model.invoke([
+							return await model.invoke([
 								{
 									role: "system" as const,
 									content: ANALYZER_SYSTEM_PROMPT,
@@ -285,8 +153,6 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 									content: `Analyze this message for personality facet signals:\n\n${content}`,
 								},
 							]);
-
-							return String(result.content);
 						},
 						catch: (error) =>
 							new AnalyzerError({
@@ -296,9 +162,39 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 							}),
 					});
 
-					// Parse and validate response
-					// Cast to FacetEvidence[] since schema output is structurally compatible
-					const evidence = (yield* parseResponse(response, assessmentMessageId)) as FacetEvidence[];
+					// Validate structured response
+					const validationResult = validateAnalyzerResponse(rawResponse);
+
+					if (validationResult._tag === "Left") {
+						logger.warn("Analyzer response validation failed", {
+							assessmentMessageId,
+							error: String(validationResult.left),
+						});
+						return yield* Effect.fail(
+							new MalformedEvidenceError({
+								assessmentMessageId,
+								rawOutput: JSON.stringify(rawResponse).substring(0, 500),
+								parseError: String(validationResult.left),
+								message: "Schema validation failed - invalid analyzer response",
+							}),
+						);
+					}
+
+					// Use validated response
+					const structuredResponse = validationResult.right;
+
+					// Transform validated response to FacetEvidence format
+					const evidence: FacetEvidence[] = structuredResponse.map((item) => ({
+						assessmentMessageId,
+						facetName: item.facet as FacetEvidence["facetName"],
+						score: item.score, // Use score from analyzer (0-20)
+						confidence: item.confidence, // Already 0-100 from schema
+						quote: item.evidence,
+						highlightRange: {
+							start: item.highlightRange.start,
+							end: item.highlightRange.end,
+						},
+					}));
 
 					const duration = Date.now() - startTime;
 

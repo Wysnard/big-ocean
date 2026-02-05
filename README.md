@@ -446,7 +446,7 @@ The therapist assessment feature uses:
 
 The assessment maintains conversation state across turns, preserving:
 - Full message history
-- Current personality trait scores (0-20 scale per OCEAN)
+- Current personality trait scores (0-120 scale per OCEAN, sum of 6 facets each 0-20)
 - Precision/confidence scores for each trait (0-100%)
 
 Each user message triggers a graph execution that:

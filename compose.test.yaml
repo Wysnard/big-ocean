@@ -17,6 +17,22 @@
 # Reference: Story 2.8 - Docker Setup for Integration Testing
 
 services:
+  # Redis Test Service
+  # Required for CostGuard budget tracking
+  redis-test:
+    image: redis:7-alpine
+    container_name: bigocean-redis-test
+    ports:
+      - "6380:6379"  # Host port 6380 → Container port 6379 (avoids conflict with dev)
+    healthcheck:
+      # Validates Redis is ready to accept connections
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    networks:
+      - bigocean-test-network
+
   # PostgreSQL Test Database
   # Isolated from development database on different port
   postgres-test:
@@ -51,6 +67,8 @@ services:
     environment:
       # Database connection (uses internal Docker network hostname)
       DATABASE_URL: postgresql://test_user:test_password@postgres-test:5432/bigocean_test
+      # Redis connection for CostGuard budget tracking (uses internal Docker network hostname)
+      REDIS_URL: "redis://redis-test:6379"
       # CRITICAL: Mock LLM to avoid Anthropic API costs
       MOCK_LLM: "true"
       # Dummy API key (required for env validation, but MOCK_LLM=true prevents actual usage)
@@ -67,6 +85,8 @@ services:
     ports:
       - "4001:4000"  # Host port 4001 → Container port 4000 (avoids conflict with dev API)
     depends_on:
+      redis-test:
+        condition: service_healthy  # Wait for Redis to be ready
       postgres-test:
         condition: service_healthy  # Wait for PostgreSQL to be ready
     healthcheck:

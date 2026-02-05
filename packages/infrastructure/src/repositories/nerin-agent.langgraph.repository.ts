@@ -15,14 +15,19 @@ import { AIMessage, type BaseMessage, SystemMessage } from "@langchain/core/mess
 import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
 import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 import { AgentInvocationError } from "@workspace/contracts/errors";
-import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
+import type { FacetScoresMap } from "@workspace/domain";
+import {
+	LoggerRepository,
+	type NerinResponse,
+	NerinResponseJsonSchema,
+	validateNerinResponse,
+} from "@workspace/domain";
 import {
 	NerinAgentRepository,
 	type NerinInvokeInput,
-	type PrecisionScores,
 	type TokenUsage,
 } from "@workspace/domain/repositories/nerin-agent.repository";
-import { Effect, Layer } from "effect";
+import { Effect, Either, Layer } from "effect";
 
 /**
  * Pricing constants for Claude Sonnet 4.5
@@ -32,9 +37,13 @@ const INPUT_PRICE_PER_MILLION = 0.003;
 const OUTPUT_PRICE_PER_MILLION = 0.015;
 
 /**
- * Build dynamic system prompt based on precision scores
+ * Build dynamic system prompt based on facet scores and steering hint
+ *
+ * @param facetScores - Current facet assessment scores (optional)
+ * @param steeringHint - Natural language hint for conversation direction (optional)
+ * @returns System prompt for Nerin agent
  */
-function buildSystemPrompt(precision?: PrecisionScores): string {
+function buildSystemPrompt(facetScores?: FacetScoresMap, steeringHint?: string): string {
 	let prompt = `You are Nerin, a warm and curious conversational partner helping users explore their personality through natural dialogue.
 
 Key behaviors:
@@ -43,40 +52,42 @@ Key behaviors:
 - Maintain a non-judgmental, supportive tone throughout
 - Reference earlier parts of the conversation to show you're listening
 - Avoid repetitive questions or making it feel forced or clinical
-- Keep responses concise but engaging (2-4 sentences typically)`;
+- Keep responses concise but engaging (2-4 sentences typically)
 
-	if (precision) {
-		// Find lowest precision trait for exploration focus
-		const entries = Object.entries(precision).filter(([_, value]) => value !== undefined) as [
-			string,
-			number,
-		][];
+You MUST respond in the following JSON format:
+{
+  "message": "Your conversational response here",
+  "emotionalTone": "warm" | "curious" | "supportive" | "encouraging",
+  "followUpIntent": true | false,
+  "suggestedTopics": ["topic1", "topic2"]
+}
 
-		if (entries.length > 0) {
-			const lowest = entries.reduce((min, curr) => ((curr[1] ?? 100) < (min[1] ?? 100) ? curr : min));
+Guidelines for JSON fields:
+- message: Your natural, conversational response (required)
+- emotionalTone: Choose based on the conversation context (required)
+- followUpIntent: true if you're asking a question to continue conversation (required)
+- suggestedTopics: Optional future conversation topics (can be empty array)`;
 
+	// Add steering hint if provided (facet-level guidance from orchestrator)
+	if (steeringHint) {
+		prompt += `
+
+Current conversation focus:
+${steeringHint}
+Naturally guide the conversation to explore this area while keeping the dialogue comfortable and authentic.`;
+	}
+
+	// Add assessment progress context if facet scores available
+	if (facetScores) {
+		const assessedCount = Object.keys(facetScores).length;
+		if (assessedCount > 0) {
 			prompt += `
 
-Current assessment focus:
-Trait with lowest confidence: ${lowest[0]} (${lowest[1]}%)
-Naturally guide the conversation to explore this area while keeping the dialogue comfortable and authentic.`;
+Assessment progress: ${assessedCount} personality facets have been explored so far.`;
 		}
 	}
 
 	return prompt;
-}
-
-/**
- * Track token usage from API response metadata
- */
-function trackTokens(usageMetadata: { input_tokens?: number; output_tokens?: number }): TokenUsage {
-	const input = usageMetadata.input_tokens ?? 0;
-	const output = usageMetadata.output_tokens ?? 0;
-	return {
-		input,
-		output,
-		total: input + output,
-	};
 }
 
 /**
@@ -99,6 +110,9 @@ function calculateCost(usage: TokenUsage): {
 /**
  * State Annotation for LangGraph
  * Uses Annotation.Root for proper TypeScript typing
+ *
+ * Nerin operates at facet-level granularity with optional steering hints
+ * calculated by the orchestrator based on outlier detection.
  */
 const NerinStateAnnotation = Annotation.Root({
 	sessionId: Annotation<string>,
@@ -106,21 +120,25 @@ const NerinStateAnnotation = Annotation.Root({
 		reducer: (prev, next) => [...(prev ?? []), ...(next ?? [])],
 		default: () => [] as BaseMessage[],
 	}),
-	precision: Annotation<PrecisionScores | undefined>,
+	facetScores: Annotation<FacetScoresMap | undefined>,
+	steeringHint: Annotation<string | undefined>,
 	tokenCount: Annotation<TokenUsage | undefined>,
 });
 
 type NerinGraphState = typeof NerinStateAnnotation.State;
 
 /**
- * Create the ChatAnthropic model instance
+ * Create the ChatAnthropic model instance with structured output
  */
-function createModel(): ChatAnthropic {
-	return new ChatAnthropic({
+function createModel() {
+	const baseModel = new ChatAnthropic({
 		model: process.env.NERIN_MODEL_ID || "claude-sonnet-4-20250514",
 		maxTokens: Number(process.env.NERIN_MAX_TOKENS) || 1024,
 		temperature: Number(process.env.NERIN_TEMPERATURE) || 0.7,
 	});
+
+	// Use structured output with JSON Schema from Effect Schema
+	return baseModel.withStructuredOutput(NerinResponseJsonSchema);
 }
 
 /**
@@ -165,26 +183,55 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
 		// Build the LangGraph workflow with typed state
 		const workflow = new StateGraph(NerinStateAnnotation)
 			.addNode("nerin", async (state: NerinGraphState) => {
-				// Build system prompt with precision context
-				const systemPrompt = buildSystemPrompt(state.precision);
+				// Build system prompt with facet scores and steering hint
+				const systemPrompt = buildSystemPrompt(state.facetScores, state.steeringHint);
 
 				// Prepare messages with system prompt
 				const allMessages = [new SystemMessage({ content: systemPrompt }), ...state.messages];
 
-				// Stream response and collect tokens
-				let fullContent = "";
+				// Track token usage via callback
 				let tokenUsage: TokenUsage = { input: 0, output: 0, total: 0 };
 
-				const stream = await model.stream(allMessages);
-				for await (const chunk of stream) {
-					fullContent += chunk.content;
-					if (chunk.usage_metadata) {
-						tokenUsage = trackTokens(chunk.usage_metadata);
-					}
+				// Invoke model with structured output and token tracking
+				const response = await model.invoke(allMessages, {
+					callbacks: [
+						{
+							handleLLMEnd: (output) => {
+								const usage = output.llmOutput?.tokenUsage;
+								if (usage) {
+									tokenUsage = {
+										input: usage.promptTokens || 0,
+										output: usage.completionTokens || 0,
+										total: usage.totalTokens || 0,
+									};
+								}
+							},
+						},
+					],
+				});
+
+				// Validate response against schema
+				const validationResult = validateNerinResponse(response);
+
+				if (Either.isLeft(validationResult)) {
+					// Log validation error but continue with raw response
+					logger.warn("Nerin response validation failed, using raw response", {
+						sessionId: state.sessionId,
+						error: String(validationResult.left),
+					});
+					// Use raw response when validation fails
+					const rawResponse = response as NerinResponse;
+					return {
+						messages: [new AIMessage({ content: rawResponse.message })],
+						tokenCount: tokenUsage,
+					};
 				}
 
+				// Use validated response
+				const structuredResponse = validationResult.right;
+
 				return {
-					messages: [new AIMessage({ content: fullContent })],
+					messages: [new AIMessage({ content: structuredResponse.message })],
 					tokenCount: tokenUsage,
 				};
 			})
@@ -207,7 +254,8 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
 							{
 								sessionId: input.sessionId,
 								messages: [...input.messages],
-								precision: input.precision,
+								facetScores: input.facetScores,
+								steeringHint: input.steeringHint,
 							},
 							{
 								configurable: { thread_id: input.sessionId },
@@ -232,6 +280,8 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
 							responseLength: response.length,
 							tokenCount,
 							cost: cost.totalCost,
+							steeringHint: input.steeringHint,
+							facetCount: Object.keys(input.facetScores ?? {}).length,
 						});
 
 						return {

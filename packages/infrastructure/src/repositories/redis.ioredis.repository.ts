@@ -5,38 +5,45 @@
  * Follows Effect Service Pattern:
  * - Context.Tag for service definition (in domain)
  * - Layer.effect for async implementation
+ *
+ * Requires AppConfig to be provided for Redis URL.
  */
 
-import { RedisConnectionError, RedisOperationError, RedisRepository } from "@workspace/domain";
+import {
+	AppConfig,
+	RedisConnectionError,
+	RedisOperationError,
+	RedisRepository,
+} from "@workspace/domain";
 import { Effect, Layer } from "effect";
 import Redis from "ioredis";
 
 /**
- * Create Redis client from environment
- */
-const createRedisClient = (): Redis => {
-	const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
-	return new Redis(redisUrl, {
-		retryStrategy: (times: number) => {
-			// Retry with exponential backoff, max 3 seconds
-			const delay = Math.min(times * 100, 3000);
-			return delay;
-		},
-		maxRetriesPerRequest: 3,
-		enableReadyCheck: true,
-		lazyConnect: false, // Connect immediately
-	});
-};
-
-/**
  * Redis Repository Layer - Creates ioredis client instance
  *
- * Layer type: Layer<RedisRepository, RedisConnectionError, never>
+ * Uses AppConfig for Redis URL configuration.
+ *
+ * Dependencies:
+ * - AppConfig: For REDIS_URL
+ *
+ * Layer type: Layer<RedisRepository, RedisConnectionError, AppConfig>
  */
 export const RedisIoRedisRepositoryLive = Layer.effect(
 	RedisRepository,
 	Effect.gen(function* () {
-		const redis = createRedisClient();
+		const config = yield* AppConfig;
+
+		// Create Redis client with retry and connection settings
+		const redis = new Redis(config.redisUrl, {
+			retryStrategy: (times: number) => {
+				// Retry with exponential backoff, max 3 seconds
+				const delay = Math.min(times * 100, 3000);
+				return delay;
+			},
+			maxRetriesPerRequest: 3,
+			enableReadyCheck: true,
+			lazyConnect: false, // Connect immediately
+		});
 
 		// Test connection on startup
 		yield* Effect.tryPromise({

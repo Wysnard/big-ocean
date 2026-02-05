@@ -2,9 +2,9 @@
  * Calculate Precision Use Case
  *
  * Calculates overall assessment precision from facet confidence scores.
- * Precision = mean of all facet confidences (0-100%).
+ * Precision = mean of all facet confidences (0-100 integers).
  *
- * Formula: (sum of facet confidences / facet count) * 100
+ * Formula: sum of facet confidences / facet count
  *
  * This provides a single metric representing how confident the system
  * is in the overall personality assessment.
@@ -27,8 +27,8 @@ export interface CalculatePrecisionOutput {
 /**
  * Calculate Precision from Facet Scores
  *
- * Computes overall precision as the mean of all facet confidences,
- * converted to a percentage (0-100%).
+ * Computes overall precision as the mean of all facet confidences.
+ * Confidence values are 0-100 integers.
  *
  * Dependencies: LoggerRepository
  * Returns: Precision percentage and facet count
@@ -37,8 +37,8 @@ export interface CalculatePrecisionOutput {
  * ```typescript
  * const result = yield* calculatePrecisionFromFacets({
  *   facetScores: {
- *     imagination: { score: 16, confidence: 0.85 },
- *     altruism: { score: 18, confidence: 0.9 }
+ *     imagination: { score: 16, confidence: 85 },
+ *     altruism: { score: 18, confidence: 90 }
  *   }
  * })
  * console.log(result.precision) // 87.5
@@ -60,16 +60,15 @@ export const calculatePrecisionFromFacets = (
 			return { precision: 0, facetCount: 0 };
 		}
 
-		// Sum all confidence values
+		// Sum all confidence values (already 0-100 integers)
 		const confidenceSum = facetEntries.reduce((sum, [_, score]) => sum + score.confidence, 0);
 
-		// Calculate mean confidence and convert to percentage
-		const meanConfidence = confidenceSum / facetCount;
-		const precision = Math.round(meanConfidence * 10000) / 100; // Round to 2 decimal places
+		// Calculate mean confidence (already in 0-100 range)
+		const precision = Math.round((confidenceSum / facetCount) * 100) / 100; // Round to 2 decimal places
 
 		logger.info("Precision calculated", {
 			facetCount,
-			confidenceSum: Math.round(confidenceSum * 100) / 100,
+			confidenceSum,
 			precision,
 		});
 

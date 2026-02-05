@@ -5,12 +5,13 @@
  * Handles HTTP request/response transformation only.
  * Business logic lives in use cases.
  *
- * Errors propagate directly from use cases (contract errors) to HTTP responses.
+ * Domain errors are mapped to contract errors for HTTP responses.
  * Effect/Platform automatically handles HTTP status codes via .addError() declarations.
  */
 
 import { HttpApiBuilder, HttpServerResponse } from "@effect/platform";
-import { BigOceanApi } from "@workspace/contracts";
+import { AgentInvocationError, BigOceanApi, DatabaseError } from "@workspace/contracts";
+import { BudgetPausedError, OrchestrationError, RedisOperationError } from "@workspace/domain";
 import { DateTime, Effect } from "effect";
 import { getResults, resumeSession, sendMessage, startAssessment } from "../use-cases/index";
 
@@ -33,11 +34,37 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 			)
 			.handle("sendMessage", ({ payload }) =>
 				Effect.gen(function* () {
-					// Call use case - errors propagate directly to HTTP
+					// Call use case - map domain errors to contract errors
 					const result = yield* sendMessage({
 						sessionId: payload.sessionId,
 						message: payload.message,
-					});
+					}).pipe(
+						Effect.catchTag("BudgetPausedError", (error: BudgetPausedError) =>
+							Effect.fail(
+								new AgentInvocationError({
+									agentName: "orchestrator",
+									sessionId: error.sessionId,
+									message: error.message,
+								}),
+							),
+						),
+						Effect.catchTag("OrchestrationError", (error: OrchestrationError) =>
+							Effect.fail(
+								new AgentInvocationError({
+									agentName: "orchestrator",
+									sessionId: error.sessionId,
+									message: error.message,
+								}),
+							),
+						),
+						Effect.catchTag("RedisOperationError", (error: RedisOperationError) =>
+							Effect.fail(
+								new DatabaseError({
+									message: `Redis operation failed: ${error.message}`,
+								}),
+							),
+						),
+					);
 
 					// Format HTTP response
 					return {

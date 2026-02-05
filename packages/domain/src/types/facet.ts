@@ -75,9 +75,9 @@ export type BigFiveFacet =
 	| NeuroticismFacet;
 
 /**
- * Facet precision - confidence level (0-1) for each facet
+ * Facet confidence - confidence level (0-100 integer) for each facet
  */
-export interface FacetPrecisionScores {
+export interface FacetConfidenceScores {
 	// Openness facets
 	imagination: number;
 	artistic_interests: number;
@@ -123,7 +123,7 @@ export interface FacetPrecisionScores {
  * Mapping from Big Five traits to their component facets.
  * Scores are ALWAYS stored on facets. Trait scores are ALWAYS computed from facet scores.
  */
-export const FACETS_BY_TRAIT: Record<BigFiveTrait, Array<keyof FacetPrecisionScores>> = {
+export const FACETS_BY_TRAIT: Record<BigFiveTrait, Array<keyof FacetConfidenceScores>> = {
 	openness: [
 		"imagination",
 		"artistic_interests",

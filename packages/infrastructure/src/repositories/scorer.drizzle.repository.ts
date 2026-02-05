@@ -10,7 +10,7 @@
  * 3. Calculate weighted average: confidence × (1 + position × 0.1)
  * 4. Detect contradictions via variance (high variance = conflicting signals)
  * 5. Adjust confidence: -0.3 for high variance, +0.2 for large sample
- * 6. Derive traits from facets: mean of 6 facets, minimum confidence
+ * 6. Derive traits from facets: sum of 6 facets (0-120 scale), minimum confidence
  *
  * Follows Effect Service Pattern:
  * - Context.Tag for service definition (in domain)
@@ -19,6 +19,8 @@
  */
 
 import {
+	createInitialFacetScoresMap,
+	createInitialTraitScoresMap,
 	DatabaseError,
 	type FacetName,
 	type FacetScoresMap,
@@ -32,14 +34,21 @@ import {
 import { eq } from "drizzle-orm";
 import { Effect, Layer } from "effect";
 import { Database } from "../context/database";
-import { assessmentMessage, facetEvidence } from "../db/schema";
+import { assessmentMessage, facetEvidence } from "../db/drizzle/schema";
+
+/**
+ * Calculate sum of numbers
+ */
+function sum(values: number[]): number {
+	return values.reduce((acc, val) => acc + val, 0);
+}
 
 /**
  * Calculate mean of numbers
  */
 function mean(values: number[]): number {
 	if (values.length === 0) return 0;
-	return values.reduce((sum, val) => sum + val, 0) / values.length;
+	return sum(values) / values.length;
 }
 
 /**
@@ -86,7 +95,8 @@ function aggregateFacet(evidence: EvidenceRow[]): {
 	sorted.forEach((e, idx) => {
 		// Weight = confidence × (1 + position × 0.1)
 		// Recent messages get 10% boost per position
-		const confidenceNormalized = e.confidence / 100; // Convert 0-100 to 0-1
+		// Confidence is already 0-100, normalize to 0-1 for weighting calculation
+		const confidenceNormalized = e.confidence / 100;
 		const recencyBoost = 1 + idx * 0.1;
 		const weight = confidenceNormalized * recencyBoost;
 
@@ -100,29 +110,24 @@ function aggregateFacet(evidence: EvidenceRow[]): {
 	const scores = sorted.map((e) => e.score);
 	const varianceValue = variance(scores);
 
-	// Calculate average confidence
-	const confidences = sorted.map((e) => e.confidence / 100);
+	// Calculate average confidence (work with 0-100 integers)
+	const confidences = sorted.map((e) => e.confidence);
 	const avgConfidence = mean(confidences);
 
-	// Adjust confidence based on variance and sample size
+	// Adjust confidence based on variance and sample size (0-100 scale)
 	let adjustedConfidence = avgConfidence;
 
 	// High variance (>15) indicates contradictions → lower confidence
 	if (varianceValue > 15) {
-		adjustedConfidence -= 0.3;
+		adjustedConfidence -= 30; // -30 points on 0-100 scale
 	}
 
-	// Large sample (>10) increases confidence
-	if (sorted.length > 10) {
-		adjustedConfidence += 0.2;
-	}
-
-	// Clamp to 0-1 range
-	adjustedConfidence = clamp(adjustedConfidence, 0, 1);
+	// Clamp to 0-100 integer range
+	adjustedConfidence = Math.round(clamp(adjustedConfidence, 0, 100));
 
 	return {
 		score: Math.round(aggregatedScore * 10) / 10, // Round to 1 decimal
-		confidence: Math.round(adjustedConfidence * 100) / 100, // Round to 2 decimals
+		confidence: adjustedConfidence, // Already 0-100 integer
 	};
 }
 
@@ -174,8 +179,8 @@ export const ScorerDrizzleRepositoryLive = Layer.effect(
 						evidenceByFacet.set(row.facetName, existing);
 					}
 
-					// Aggregate each facet
-					const facetScores: FacetScoresMap = {};
+					// Initialize full map, then update with aggregated evidence
+					const facetScores: FacetScoresMap = createInitialFacetScoresMap();
 					for (const [facetName, evidence] of evidenceByFacet.entries()) {
 						const aggregated = aggregateFacet(evidence);
 						facetScores[facetName as FacetName] = aggregated;
@@ -205,27 +210,22 @@ export const ScorerDrizzleRepositoryLive = Layer.effect(
 
 			deriveTraitScores: (facetScores: FacetScoresMap) =>
 				Effect.gen(function* () {
-					const traitScores: TraitScoresMap = {};
+					const traitScores: TraitScoresMap = createInitialTraitScoresMap();
 
 					// For each of the 5 traits
 					for (const [traitName, facetNames] of Object.entries(TRAIT_TO_FACETS)) {
 						// Get scores for all 6 facets belonging to this trait
-						const facetsForTrait = facetNames.map((fn) => facetScores[fn]).filter((f) => f !== undefined); // Handle missing facets gracefully
+						const facetsForTrait = facetNames.map((fn) => facetScores[fn]);
 
-						if (facetsForTrait.length === 0) {
-							// Skip trait if no facets scored yet
-							continue;
-						}
-
-						// Trait score = mean of facet scores
-						const traitScore = mean(facetsForTrait.map((f) => f?.score));
+						// Trait score = sum of facet scores (0-120 scale for stacked visualization)
+						const traitScore = sum(facetsForTrait.map((f) => f.score));
 
 						// Trait confidence = minimum confidence (conservative estimate)
-						const traitConfidence = Math.min(...facetsForTrait.map((f) => f?.confidence));
+						const traitConfidence = Math.min(...facetsForTrait.map((f) => f.confidence));
 
 						traitScores[traitName as TraitName] = {
 							score: Math.round(traitScore * 10) / 10, // Round to 1 decimal
-							confidence: Math.round(traitConfidence * 100) / 100, // Round to 2 decimals
+							confidence: Math.round(traitConfidence), // Already 0-100 integer, just ensure it's rounded
 						};
 					}
 

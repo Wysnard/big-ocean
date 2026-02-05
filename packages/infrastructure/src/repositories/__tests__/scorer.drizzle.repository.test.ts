@@ -6,7 +6,12 @@
  */
 
 import { describe, expect, it } from "@effect/vitest";
-import { type FacetScoresMap, LoggerRepository, ScorerRepository } from "@workspace/domain";
+import {
+	createInitialFacetScoresMap,
+	type FacetScoresMap,
+	LoggerRepository,
+	ScorerRepository,
+} from "@workspace/domain";
 import { Effect, Layer } from "effect";
 import { Database } from "../../context/database";
 import { ScorerDrizzleRepositoryLive } from "../scorer.drizzle.repository";
@@ -275,21 +280,20 @@ describe("ScorerDrizzleRepository - Trait Derivation", () => {
 			const scorer = yield* ScorerRepository;
 
 			// Create mock facet scores for openness facets
-			const facetScores: FacetScoresMap = {
+			const facetScores: FacetScoresMap = createInitialFacetScoresMap({
 				imagination: { score: 16, confidence: 0.85 },
 				artistic_interests: { score: 15, confidence: 0.8 },
 				emotionality: { score: 14, confidence: 0.78 },
 				adventurousness: { score: 17, confidence: 0.88 },
 				intellect: { score: 16, confidence: 0.87 },
 				liberalism: { score: 15, confidence: 0.82 },
-			};
+			});
 
 			const result = yield* scorer.deriveTraitScores(facetScores);
 
 			expect(result.openness).toBeDefined();
-			// Mean should be around 15.5
-			expect(result.openness.score).toBeGreaterThan(14);
-			expect(result.openness.score).toBeLessThan(17);
+			// Sum should be 93 (16+15+14+17+16+15)
+			expect(result.openness.score).toBe(93);
 		}).pipe(
 			Effect.provide(
 				ScorerDrizzleRepositoryLive.pipe(
@@ -304,14 +308,14 @@ describe("ScorerDrizzleRepository - Trait Derivation", () => {
 			const scorer = yield* ScorerRepository;
 
 			// Create facet scores with varying confidences
-			const facetScores: FacetScoresMap = {
+			const facetScores: FacetScoresMap = createInitialFacetScoresMap({
 				imagination: { score: 16, confidence: 0.9 },
 				artistic_interests: { score: 15, confidence: 0.85 },
 				emotionality: { score: 14, confidence: 0.7 }, // Lowest
 				adventurousness: { score: 17, confidence: 0.88 },
 				intellect: { score: 16, confidence: 0.87 },
 				liberalism: { score: 15, confidence: 0.82 },
-			};
+			});
 
 			const result = yield* scorer.deriveTraitScores(facetScores);
 
@@ -330,12 +334,12 @@ describe("ScorerDrizzleRepository - Trait Derivation", () => {
 		Effect.gen(function* () {
 			const scorer = yield* ScorerRepository;
 
-			// Only provide 3 of 6 facets
-			const facetScores: FacetScoresMap = {
+			// Use initial map with only 3 openness facets having meaningful scores
+			const facetScores: FacetScoresMap = createInitialFacetScoresMap({
 				imagination: { score: 16, confidence: 0.85 },
 				intellect: { score: 16, confidence: 0.87 },
 				liberalism: { score: 15, confidence: 0.82 },
-			};
+			});
 
 			const result = yield* scorer.deriveTraitScores(facetScores);
 
@@ -354,26 +358,26 @@ describe("ScorerDrizzleRepository - Trait Derivation", () => {
 		Effect.gen(function* () {
 			const scorer = yield* ScorerRepository;
 
-			// Only provide openness facets
-			const facetScores: FacetScoresMap = {
+			// Only provide openness facets with meaningful confidence
+			const facetScores: FacetScoresMap = createInitialFacetScoresMap({
 				imagination: { score: 16, confidence: 0.85 },
 				artistic_interests: { score: 15, confidence: 0.8 },
 				emotionality: { score: 14, confidence: 0.78 },
 				adventurousness: { score: 17, confidence: 0.88 },
 				intellect: { score: 16, confidence: 0.87 },
 				liberalism: { score: 15, confidence: 0.82 },
-			};
+			});
 
 			const result = yield* scorer.deriveTraitScores(facetScores);
 
-			// Openness should be present
+			// Openness should have meaningful values
 			expect(result.openness).toBeDefined();
 
-			// Other traits should be missing (no facet data)
-			expect(result.conscientiousness).toBeUndefined();
-			expect(result.extraversion).toBeUndefined();
-			expect(result.agreeableness).toBeUndefined();
-			expect(result.neuroticism).toBeUndefined();
+			// Other traits exist with default values (score=60, confidence=0)
+			expect(result.conscientiousness).toBeDefined();
+			expect(result.extraversion).toBeDefined();
+			expect(result.agreeableness).toBeDefined();
+			expect(result.neuroticism).toBeDefined();
 		}).pipe(
 			Effect.provide(
 				ScorerDrizzleRepositoryLive.pipe(
@@ -383,24 +387,24 @@ describe("ScorerDrizzleRepository - Trait Derivation", () => {
 		),
 	);
 
-	it.effect("should return trait scores in 0-20 range", () =>
+	it.effect("should return trait scores in 0-120 range (sum of 6 facets)", () =>
 		Effect.gen(function* () {
 			const scorer = yield* ScorerRepository;
 
-			const facetScores: FacetScoresMap = {
+			const facetScores: FacetScoresMap = createInitialFacetScoresMap({
 				imagination: { score: 16, confidence: 0.85 },
 				artistic_interests: { score: 15, confidence: 0.8 },
 				emotionality: { score: 14, confidence: 0.78 },
 				adventurousness: { score: 17, confidence: 0.88 },
 				intellect: { score: 16, confidence: 0.87 },
 				liberalism: { score: 15, confidence: 0.82 },
-			};
+			});
 
 			const result = yield* scorer.deriveTraitScores(facetScores);
 
 			Object.values(result).forEach((traitScore) => {
 				expect(traitScore.score).toBeGreaterThanOrEqual(0);
-				expect(traitScore.score).toBeLessThanOrEqual(20);
+				expect(traitScore.score).toBeLessThanOrEqual(120);
 			});
 		}).pipe(
 			Effect.provide(
@@ -415,14 +419,14 @@ describe("ScorerDrizzleRepository - Trait Derivation", () => {
 		Effect.gen(function* () {
 			const scorer = yield* ScorerRepository;
 
-			const facetScores: FacetScoresMap = {
+			const facetScores: FacetScoresMap = createInitialFacetScoresMap({
 				imagination: { score: 16, confidence: 0.85 },
 				artistic_interests: { score: 15, confidence: 0.8 },
 				emotionality: { score: 14, confidence: 0.78 },
 				adventurousness: { score: 17, confidence: 0.88 },
 				intellect: { score: 16, confidence: 0.87 },
 				liberalism: { score: 15, confidence: 0.82 },
-			};
+			});
 
 			const result = yield* scorer.deriveTraitScores(facetScores);
 
@@ -441,12 +445,17 @@ describe("ScorerDrizzleRepository - Trait Derivation", () => {
 });
 
 describe("ScorerDrizzleRepository - Edge Cases", () => {
-	it.effect("should handle empty facet scores map", () =>
+	it.effect("should handle default initialized facet scores map", () =>
 		Effect.gen(function* () {
 			const scorer = yield* ScorerRepository;
-			const result = yield* scorer.deriveTraitScores({});
+			// Initial map has all 30 facets with score=10, confidence=0
+			const result = yield* scorer.deriveTraitScores(createInitialFacetScoresMap());
 
-			expect(Object.keys(result).length).toBe(0);
+			// All 5 traits should be present with default values
+			expect(Object.keys(result).length).toBe(5);
+			// Each trait should have score=60 (sum of 6 facets at 10 each)
+			expect(result.openness.score).toBe(60);
+			expect(result.openness.confidence).toBe(0);
 		}).pipe(
 			Effect.provide(
 				ScorerDrizzleRepositoryLive.pipe(
@@ -460,14 +469,14 @@ describe("ScorerDrizzleRepository - Edge Cases", () => {
 		Effect.gen(function* () {
 			const scorer = yield* ScorerRepository;
 
-			// Provide at least one facet for each trait
-			const facetScores: FacetScoresMap = {
+			// Provide at least one facet with meaningful data for each trait
+			const facetScores: FacetScoresMap = createInitialFacetScoresMap({
 				imagination: { score: 16, confidence: 0.85 }, // Openness
 				self_efficacy: { score: 15, confidence: 0.8 }, // Conscientiousness
 				friendliness: { score: 17, confidence: 0.88 }, // Extraversion
 				altruism: { score: 18, confidence: 0.9 }, // Agreeableness
 				anxiety: { score: 12, confidence: 0.75 }, // Neuroticism
-			};
+			});
 
 			const result = yield* scorer.deriveTraitScores(facetScores);
 

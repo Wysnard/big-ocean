@@ -50,20 +50,17 @@ const modelWithTools = model.bindTools(tools);
 
 // Step 2: Define state
 
-import {
-	END,
-	type GraphNode,
-	MessagesValue,
-	ReducedValue,
-	START,
-	StateGraph,
-	StateSchema,
-} from "@langchain/langgraph";
+import type { BaseMessage } from "@langchain/core/messages";
+import { Annotation, END, type GraphNode, START, StateGraph } from "@langchain/langgraph";
 
-const MessagesState = new StateSchema({
-	messages: MessagesValue,
-	llmCalls: new ReducedValue(z.number().default(0), {
-		reducer: (x, y) => x + y,
+const MessagesStateAnnotation = Annotation.Root({
+	messages: Annotation<BaseMessage[]>({
+		reducer: (prev, next) => [...(prev ?? []), ...(next ?? [])],
+		default: () => [],
+	}),
+	llmCalls: Annotation<number>({
+		reducer: (prev, next) => (prev ?? 0) + (next ?? 0),
+		default: () => 0,
 	}),
 });
 
@@ -71,7 +68,7 @@ const MessagesState = new StateSchema({
 
 import { AIMessage, SystemMessage, type ToolMessage } from "@langchain/core/messages";
 
-const llmCall: GraphNode<typeof MessagesState> = async (state) => {
+const llmCall: GraphNode<typeof MessagesStateAnnotation.State> = async (state) => {
 	return {
 		messages: [
 			await modelWithTools.invoke([
@@ -87,7 +84,7 @@ const llmCall: GraphNode<typeof MessagesState> = async (state) => {
 
 // Step 4: Define tool node
 
-const toolNode: GraphNode<typeof MessagesState> = async (state) => {
+const toolNode: GraphNode<typeof MessagesStateAnnotation.State> = async (state) => {
 	const lastMessage = state.messages.at(-1);
 
 	if (lastMessage == null || !AIMessage.isInstance(lastMessage)) {
@@ -106,7 +103,7 @@ const toolNode: GraphNode<typeof MessagesState> = async (state) => {
 
 // Step 5: Define logic to determine whether to end
 
-const shouldContinue = (state: typeof MessagesState.State) => {
+const shouldContinue = (state: typeof MessagesStateAnnotation.State) => {
 	const lastMessage = state.messages.at(-1);
 
 	// Check if it's an AIMessage before accessing tool_calls
@@ -126,7 +123,7 @@ const shouldContinue = (state: typeof MessagesState.State) => {
 // Step 6: Build and compile the agent
 import { HumanMessage } from "@langchain/core/messages";
 
-const agent = new StateGraph(MessagesState)
+const agent = new StateGraph(MessagesStateAnnotation)
 	.addNode("llmCall", llmCall)
 	.addNode("toolNode", toolNode)
 	.addEdge(START, "llmCall")

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { facetEvidence, facetScores, traitScores } from "../schema";
+import { facetEvidence, facetScores, traitScores } from "../drizzle/schema";
 
 /**
  * Schema validation tests for facet evidence and scoring tables

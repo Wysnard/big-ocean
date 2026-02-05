@@ -87,7 +87,7 @@ describe("updateFacetScores use-case", () => {
 					expect(score.score).toBeGreaterThanOrEqual(0);
 					expect(score.score).toBeLessThanOrEqual(20);
 					expect(score.confidence).toBeGreaterThanOrEqual(0);
-					expect(score.confidence).toBeLessThanOrEqual(1);
+					expect(score.confidence).toBeLessThanOrEqual(100);
 				}
 			}).pipe(Effect.provide(TestRepositoriesLayer)),
 		);
@@ -118,7 +118,7 @@ describe("updateFacetScores use-case", () => {
 					expect(score.score).toBeGreaterThanOrEqual(0);
 					expect(score.score).toBeLessThanOrEqual(20);
 					expect(score.confidence).toBeGreaterThanOrEqual(0);
-					expect(score.confidence).toBeLessThanOrEqual(1);
+					expect(score.confidence).toBeLessThanOrEqual(100);
 				}
 			}).pipe(Effect.provide(TestRepositoriesLayer)),
 		);
@@ -136,7 +136,7 @@ describe("updateFacetScores use-case", () => {
 				// Trait confidence should be the minimum of facet confidences
 				// This is verified through the mock layer which implements the same algorithm
 				for (const score of Object.values(result.traitScores)) {
-					expect(score.confidence).toBeLessThanOrEqual(1);
+					expect(score.confidence).toBeLessThanOrEqual(100);
 					expect(score.confidence).toBeGreaterThanOrEqual(0);
 				}
 			}).pipe(Effect.provide(TestRepositoriesLayer)),
