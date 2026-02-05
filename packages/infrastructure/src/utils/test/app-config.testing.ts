@@ -34,6 +34,7 @@ export const defaultTestConfig: AppConfigService = {
 	analyzerModelId: "claude-sonnet-4-20250514",
 	analyzerMaxTokens: 2048,
 	analyzerTemperature: 0.3,
+	dailyCostLimit: 75,
 };
 
 /**
