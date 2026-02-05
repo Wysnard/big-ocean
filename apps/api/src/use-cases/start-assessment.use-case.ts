@@ -5,8 +5,13 @@
  * Creates a new session with baseline precision scores.
  */
 
-import { AssessmentSessionRepository, LoggerRepository } from "@workspace/domain";
-import { Effect } from "effect";
+import { RateLimitExceeded } from "@workspace/contracts";
+import {
+	AssessmentSessionRepository,
+	CostGuardRepository,
+	LoggerRepository,
+} from "@workspace/domain";
+import { DateTime, Effect } from "effect";
 
 export interface StartAssessmentInput {
 	readonly userId?: string;
@@ -20,16 +25,46 @@ export interface StartAssessmentOutput {
 /**
  * Start Assessment Use Case
  *
- * Dependencies: AssessmentSessionRepository, LoggerRepository
+ * Dependencies: AssessmentSessionRepository, CostGuardRepository, LoggerRepository
  * Returns: Session ID and creation timestamp
+ * Throws: RateLimitExceeded if user already started assessment today
  */
 export const startAssessment = (input: StartAssessmentInput) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* AssessmentSessionRepository;
+		const costGuard = yield* CostGuardRepository;
 		const logger = yield* LoggerRepository;
+
+		const { userId } = input;
+
+		// Skip rate limiting for anonymous users (no userId)
+		if (userId) {
+			// Check rate limit
+			const canStart = yield* costGuard.canStartAssessment(userId);
+			if (!canStart) {
+				logger.warn("Rate limit exceeded for assessment start", { userId });
+				// Calculate next day midnight UTC for reset time
+				const tomorrow = new Date();
+				tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+				tomorrow.setUTCHours(0, 0, 0, 0);
+
+				return yield* Effect.fail(
+					new RateLimitExceeded({
+						userId,
+						message: "You can start a new assessment tomorrow",
+						resetAt: DateTime.unsafeMake(tomorrow.getTime()),
+					}),
+				);
+			}
+		}
 
 		// Create new session
 		const result = yield* sessionRepo.createSession(input.userId);
+
+		// Record assessment start for rate limiting (only for authenticated users)
+		if (userId) {
+			yield* costGuard.recordAssessmentStart(userId);
+		}
 
 		logger.info("Assessment session started", {
 			sessionId: result.sessionId,

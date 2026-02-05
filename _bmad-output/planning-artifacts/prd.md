@@ -311,7 +311,7 @@ The OCEAN system transforms raw Big Five trait scores into memorable, shareable 
 - **Archetype Name:** **"The Grounded Thinker"**
 - **Description:** *"You approach life with practical realism, adapting easily to change while maintaining thoughtful perspectives. You navigate relationships diplomatically, finding balance without sacrificing authenticity."*
 
-**Calculation:** At assessment end, trait scores (0-20 per trait) map to levels: Low (0-7) → Mid (8-12) → High (13-20). First letter of each level name creates the 5-letter OCEAN code. Archetype name uses only first 4 letters (O-C-E-A).
+**Calculation:** At assessment end, trait scores (0-120 per trait, sum of 6 facets) map to levels: Low (0-40) → Mid (40-80) → High (80-120). First letter of each level name creates the 5-letter OCEAN code. Archetype name uses only first 4 letters (O-C-E-A).
 
 #### Archetype Naming Philosophy: Names as Anchors, Descriptions as Truth
 
@@ -468,10 +468,10 @@ Router:
 - **Trust-Building:** Evidence trails enable user verification and self-reflection
 
 ### Frontend Display (UI/UX Readability):
-- **Big Five traits:** 3-level display (Low/Mid/High) based on 0-20 range thresholds
-  - Low: 0-7
-  - Mid: 8-12
-  - High: 13-20
+- **Big Five traits:** 3-level display (Low/Mid/High) based on 0-120 range thresholds (sum of 6 facets)
+  - Low: 0-40
+  - Mid: 40-80
+  - High: 80-120
 - **Facets:** 2-level display (Lower/Higher) for clarity, with numeric score on hover
 - **Progress indicator:** Visual trait precision (0-100%) during assessment
 - **Shareable profile:** Public profile card shows traits + archetypes, optionally includes conversation insights

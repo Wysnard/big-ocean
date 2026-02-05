@@ -87,7 +87,7 @@ documentsInventoried:
 
 **Big Five Trait Assessment (FR5-FR7):**
 - **FR5:** System analyzes conversation to extract and score all 30 Big Five facets (0-20 scale per facet)
-- **FR6:** System calculates Big Five trait scores from facet scores (0-20 per trait: Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism)
+- **FR6:** System calculates Big Five trait scores from facet scores using sum calculation (0-120 per trait: Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism)
 - **FR7:** System maintains and updates trait precision/confidence score (0-100%) throughout conversation
 
 **OCEAN Archetype System - POC Scope: 4 Traits (FR8-FR12):**

@@ -11,8 +11,9 @@
  * TTL: 48 hours (auto-cleanup after day expires)
  */
 
+import { RateLimitExceeded } from "@workspace/contracts";
 import { CostGuardRepository, RedisRepository } from "@workspace/domain";
-import { Effect, Layer } from "effect";
+import { DateTime, Effect, Layer } from "effect";
 
 /**
  * TTL in seconds: 48 hours
@@ -26,6 +27,16 @@ const TTL_SECONDS = 48 * 60 * 60;
 const getDateKey = (): string => {
 	// biome-ignore lint/style/noNonNullAssertion: ISO 8601 format guarantees T separator
 	return new Date().toISOString().split("T")[0]!;
+};
+
+/**
+ * Get next day midnight UTC for rate limit reset
+ */
+const getNextDayMidnightUTC = (): Date => {
+	const tomorrow = new Date();
+	tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+	tomorrow.setUTCHours(0, 0, 0, 0);
+	return tomorrow;
 };
 
 /**
@@ -80,6 +91,39 @@ export const CostGuardRedisRepositoryLive = Layer.effect(
 					const value = yield* redis.get(key);
 					return value ? parseInt(value, 10) : 0;
 				}),
+
+			canStartAssessment: (userId: string) =>
+				Effect.gen(function* () {
+					const key = `assessments:${userId}:${getDateKey()}`;
+					const value = yield* redis.get(key);
+					const count = value ? parseInt(value, 10) : 0;
+					return count < 1; // Allow if count is 0
+				}),
+
+			recordAssessmentStart: (userId: string) =>
+				Effect.gen(function* () {
+					const key = `assessments:${userId}:${getDateKey()}`;
+
+					// Atomic increment
+					const newCount = yield* redis.incr(key);
+
+					// Check overflow (should never happen if canStartAssessment called first)
+					if (newCount > 1) {
+						return yield* Effect.fail(
+							new RateLimitExceeded({
+								userId,
+								message: "You can start a new assessment tomorrow",
+								resetAt: DateTime.unsafeMake(getNextDayMidnightUTC().getTime()),
+							}),
+						);
+					}
+
+					// Set TTL on new key (TTL returns -1 for no expiration)
+					const existingTTL = yield* redis.ttl(key);
+					if (existingTTL === -1) {
+						yield* redis.expire(key, TTL_SECONDS);
+					}
+				}),
 		});
 	}),
 );
@@ -123,6 +167,34 @@ export const createTestCostGuardRepository = () => {
 			Effect.sync(() => {
 				const key = `assessments:${userId}:${getDateKey()}`;
 				return assessments.get(key) || 0;
+			}),
+
+		canStartAssessment: (userId: string) =>
+			Effect.sync(() => {
+				const key = `assessments:${userId}:${getDateKey()}`;
+				const count = assessments.get(key) || 0;
+				return count < 1; // Allow if count is 0
+			}),
+
+		recordAssessmentStart: (userId: string) =>
+			Effect.gen(function* () {
+				const key = `assessments:${userId}:${getDateKey()}`;
+
+				// Atomic increment simulation
+				const current = assessments.get(key) || 0;
+				const newCount = current + 1;
+				assessments.set(key, newCount);
+
+				// Check overflow
+				if (newCount > 1) {
+					return yield* Effect.fail(
+						new RateLimitExceeded({
+							userId,
+							message: "You can start a new assessment tomorrow",
+							resetAt: DateTime.unsafeMake(getNextDayMidnightUTC().getTime()),
+						}),
+					);
+				}
 			}),
 	});
 };

@@ -8,6 +8,7 @@ export {
 	DatabaseError,
 	InvalidFacetNameError,
 	MalformedEvidenceError,
+	RateLimitExceeded,
 	SessionNotFound,
 } from "@workspace/contracts";
 // Configuration service interface (implementation in @workspace/infrastructure)

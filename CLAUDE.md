@@ -127,6 +127,8 @@ Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
 
 **Testing:** Provide `TestLayer` with mock implementations via `Effect.provide()`.
 
+**Error Location Rules:** HTTP-facing errors MUST be in `contracts/src/errors.ts` (Schema.TaggedError). Infrastructure errors are co-located with repository interfaces in `domain/src/repositories/`. Use-cases throw contract errors directly. See [Error Architecture](./docs/ARCHITECTURE.md#error-architecture--location-rules) for complete rules.
+
 See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full examples and ADR-6 details.
 
 ### Workspace Dependencies

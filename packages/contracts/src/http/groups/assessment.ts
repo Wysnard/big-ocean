@@ -7,7 +7,12 @@
 
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema as S } from "effect";
-import { AgentInvocationError, DatabaseError, SessionNotFound } from "../../errors";
+import {
+	AgentInvocationError,
+	DatabaseError,
+	RateLimitExceeded,
+	SessionNotFound,
+} from "../../errors";
 
 /**
  * Start Assessment Request Schema
@@ -95,6 +100,7 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 		HttpApiEndpoint.post("start", "/start")
 			.addSuccess(StartAssessmentResponseSchema)
 			.setPayload(StartAssessmentRequestSchema)
+			.addError(RateLimitExceeded, { status: 429 })
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.add(

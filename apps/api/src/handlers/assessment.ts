@@ -9,7 +9,7 @@
  * Effect/Platform automatically handles HTTP status codes via .addError() declarations.
  */
 
-import { HttpApiBuilder, HttpServerResponse } from "@effect/platform";
+import { HttpApiBuilder } from "@effect/platform";
 import { AgentInvocationError, BigOceanApi, DatabaseError } from "@workspace/contracts";
 import { BudgetPausedError, OrchestrationError, RedisOperationError } from "@workspace/domain";
 import { DateTime, Effect } from "effect";
@@ -20,10 +20,18 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 		return handlers
 			.handle("start", ({ payload }) =>
 				Effect.gen(function* () {
-					// Call use case - errors propagate directly to HTTP
+					// Call use case - map infrastructure errors to contract errors
 					const result = yield* startAssessment({
 						userId: payload.userId,
-					});
+					}).pipe(
+						Effect.catchTag("RedisOperationError", (error: RedisOperationError) =>
+							Effect.fail(
+								new DatabaseError({
+									message: `Rate limiting check failed: ${error.message}`,
+								}),
+							),
+						),
+					);
 
 					// Format HTTP response
 					return {
@@ -81,9 +89,11 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 					const sessionId = pathParts[pathParts.length - 2];
 
 					if (!sessionId) {
-						return HttpServerResponse.text("Missing session ID", {
-							status: 400,
-						});
+						return yield* Effect.fail(
+							new DatabaseError({
+								message: "Missing session ID in request path",
+							}),
+						);
 					}
 
 					// Call use case - errors propagate directly to HTTP
@@ -105,9 +115,11 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 					const sessionId = pathParts[pathParts.length - 2];
 
 					if (!sessionId) {
-						return HttpServerResponse.text("Missing session ID", {
-							status: 400,
-						});
+						return yield* Effect.fail(
+							new DatabaseError({
+								message: "Missing session ID in request path",
+							}),
+						);
 					}
 
 					// Call use case - errors propagate directly to HTTP

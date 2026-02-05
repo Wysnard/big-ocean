@@ -25,6 +25,7 @@ import {
 import { Effect, Layer } from "effect";
 import {
 	createTestAnalyzerLayer,
+	createTestAppConfigLayer,
 	createTestLoggerLayer,
 	createTestScorerLayer,
 } from "../../test-utils/test-layers";
@@ -57,6 +58,7 @@ describe("Nerin Steering Integration", () => {
 			// Build base layer with all dependencies
 			const BaseLayer = Layer.mergeAll(
 				createTestLoggerLayer(),
+				createTestAppConfigLayer(),
 				SpyNerinLayer,
 				createTestAnalyzerLayer(),
 				createTestScorerLayer(),
@@ -135,6 +137,7 @@ describe("Nerin Steering Integration", () => {
 
 			const BaseLayer = Layer.mergeAll(
 				createTestLoggerLayer(),
+				createTestAppConfigLayer(),
 				SpyNerinLayer,
 				createTestAnalyzerLayer(),
 				createTestScorerLayer(),
@@ -204,6 +207,7 @@ describe("Nerin Steering Integration", () => {
 
 			const BaseLayer = Layer.mergeAll(
 				createTestLoggerLayer(),
+				createTestAppConfigLayer(),
 				SpyNerinLayer,
 				createTestAnalyzerLayer(),
 				createTestScorerLayer(),

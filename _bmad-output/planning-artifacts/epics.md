@@ -32,7 +32,7 @@ This document provides the complete epic and story breakdown for big-ocean, deco
 
 **FR5:** System analyzes conversation to extract and score all 30 Big Five facets (0-20 scale per facet, 6 facets per trait)
 
-**FR6:** System calculates Big Five trait scores as the mean of their related facets (trait score = mean of 6 facets, 0-20 per trait: Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism)
+**FR6:** System calculates Big Five trait scores as the sum of their related facets (trait score = sum of 6 facets, 0-120 per trait: Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism)
 
 **FR7:** System maintains and updates trait precision/confidence score (0-100%) throughout conversation
 
@@ -493,7 +493,7 @@ So that **I can provide transparent, testable personality assessment with user-v
 **Given** facet scores are computed
 **When** the Aggregator derives traits
 **Then** it uses FACET_TO_TRAIT lookup to group facets by trait
-**And** trait score = mean of facet scores
+**And** trait score = sum of facet scores (0-120 scale)
 **And** trait confidence = minimum confidence across facets
 **And** Traits stored as Record<TraitName, TraitScore>
 **And** aggregator tests pass (green)
@@ -505,7 +505,7 @@ So that **I can provide transparent, testable personality assessment with user-v
 **And** users can click message → view contributing facets
 **And** UI highlights exact quote using highlightRange
 **And** precision bar updates based on facet confidence
-**And** trait scores reflect means of facets
+**And** trait scores reflect sums of facets (0-120 scale)
 
 **Technical Details:**
 
@@ -732,7 +732,7 @@ So that **the MVP remains sustainable for 500 users at $75/day max**.
 ### Story 3.1: Generate 5-Letter OCEAN Codes from Trait Scores (TDD)
 
 As a **Backend System**,
-I want **to deterministically map trait scores (derived from facet means) to 5-letter OCEAN codes for all traits**,
+I want **to deterministically map trait scores (derived from facet sums) to 5-letter OCEAN codes for all traits**,
 So that **the same facet scores always produce the same trait levels for storage and reference**.
 
 **Acceptance Criteria:**
@@ -742,34 +742,34 @@ So that **the same facet scores always produce the same trait levels for storage
 **When** I run `pnpm test ocean-code-generator.test.ts`
 **Then** tests fail (red) because code generator doesn't exist
 **And** each test defines expected behavior:
-  - Test: Facet means calculated correctly (6 facets per trait, 0-20 scale)
+  - Test: Facet sums calculated correctly (6 facets per trait, each 0-20 → trait 0-120)
   - Test: All 243 trait level combinations map to correct codes (3^5 possibilities)
-  - Test: Trait 0-6.67 → Low (L), 6.67-13.33 → Mid (M), 13.33-20 → High (H)
+  - Test: Trait 0-40 → Low (L), 40-80 → Mid (M), 80-120 → High (H)
   - Test: Same facet scores always produce same code (deterministic)
-  - Test: Code is exactly 5 letters (e.g., "HMLHM")
+  - Test: Code is exactly 5 letters (e.g., "HHMHM")
 
 **IMPLEMENTATION (Green Phase):**
-**Given** all 30 facets are scored (e.g., Imagination=16, Artistic=14, etc.)
-**When** the Trait Score Aggregator calculates means for all 5 traits:
-  - Openness = mean(6 O facets) = 18
-  - Conscientiousness = mean(6 C facets) = 14
-  - Extraversion = mean(6 E facets) = 10
-  - Agreeableness = mean(6 A facets) = 16
-  - Neuroticism = mean(6 N facets) = 12
+**Given** all 30 facets are scored (e.g., Imagination=18, Artistic=18, Emotionality=18, Adventurousness=18, Intellect=18, Liberalism=18)
+**When** the Trait Score Aggregator calculates sums for all 5 traits:
+  - Openness = sum(6 O facets) = 108 (example: 18+18+18+18+18+18)
+  - Conscientiousness = sum(6 C facets) = 84 (example: 14+14+14+14+14+14)
+  - Extraversion = sum(6 E facets) = 60 (example: 10+10+10+10+10+10)
+  - Agreeableness = sum(6 A facets) = 96 (example: 16+16+16+16+16+16)
+  - Neuroticism = sum(6 N facets) = 72 (example: 12+12+12+12+12+12)
 **And** the code generator processes trait scores
 **Then** each trait is mapped to a level:
-  - Openness 18 → High (H)
-  - Conscientiousness 14 → Mid (M)
-  - Extraversion 10 → Low (L)
-  - Agreeableness 16 → High (H)
-  - Neuroticism 12 → Mid (M)
-**And** full 5-letter code is generated as: "HMLHM" (5 letters for complete OCEAN storage)
-**And** code is deterministic (same facet scores → same trait means → same code, always)
+  - Openness 108 → High (H) [>80]
+  - Conscientiousness 84 → High (H) [>80]
+  - Extraversion 60 → Mid (M) [40-80]
+  - Agreeableness 96 → High (H) [>80]
+  - Neuroticism 72 → Mid (M) [40-80]
+**And** full 5-letter code is generated as: "HHMHM" (5 letters for complete OCEAN storage)
+**And** code is deterministic (same facet scores → same trait sums → same code, always)
 **And** all failing tests now pass (green)
 
 **REFACTOR & INTEGRATION:**
 **Given** facet scores are updated (precision increases)
-**When** trait means are recalculated and code is regenerated
+**When** trait sums are recalculated and code is regenerated
 **Then** if any trait level changed, code changes
 **And** if all trait levels stay same, code stays same
 
@@ -778,27 +778,27 @@ So that **the same facet scores always produce the same trait levels for storage
 - **TDD Workflow**: Tests written first (cover all 243 combinations), implementation follows
 - Facet → Trait aggregation:
   - Uses FACET_TO_TRAIT lookup table to group facets by trait
-  - Trait score = mean of 6 related facets (each 0-20 scale)
+  - Trait score = sum of 6 related facets (each 0-20 scale)
   - Example: `FACET_TO_TRAIT["altruism"] = "agreeableness"`
   - Facet names are clean (no trait prefixes): "imagination", "altruism", "orderliness"
-  - Result is 0-20 scale for the trait
+  - Result is 0-120 scale for the trait
 - Trait → Level mapping:
-  - 0-6.67: Low (L)
-  - 6.67-13.33: Mid (M)
-  - 13.33-20: High (H)
+  - 0-40: Low (L)
+  - 40-80: Mid (M)
+  - 80-120: High (H)
 - 5-letter code storage: Stores all 5 traits (O, C, E, A, N) in database for complete profile
 - Archetype naming (Story 3.2): Uses first 4 letters (O, C, E, A) for POC; Phase 2 adds N
 - Facet database storage: All 30 facet scores (0-20 each)
-- Derived trait scores: Computed as means from stored facets
+- Derived trait scores: Computed as sums from stored facets (0-120 scale)
 - Unit test coverage: 100% code paths (all 243 combinations tested)
 
 **Acceptance Checklist:**
 - [ ] Failing tests written first covering all combinations (red phase)
-- [ ] Tests verify boundary conditions (0, 6.67, 13.33, 20)
+- [ ] Tests verify boundary conditions (0, 40, 80, 120)
 - [ ] Tests verify all 243 combinations map correctly
 - [ ] Implementation passes all tests (green phase)
 - [ ] All 30 facet scores stored in database
-- [ ] Trait scores calculated as mean of related facets
+- [ ] Trait scores calculated as sum of related facets (0-120 scale)
 - [ ] 5-letter code generation algorithm implemented
 - [ ] Code stored in database
 - [ ] Code is deterministic (same facets → same code)
@@ -1203,7 +1203,7 @@ So that **I understand what my assessment revealed and can verify the accuracy**
 **When** the facet breakdown appears
 **Then** I see:
   - All 6 facet scores (0-20 scale) with clean names: Imagination, Artistic Interests, Emotionality, Adventurousness, Intellect, Liberalism
-  - Average of these 6 facets = Openness trait score (High/Mid/Low)
+  - Sum of these 6 facets = Openness trait score (0-120 scale, displayed as High/Mid/Low)
   - Top-scoring facets highlighted (e.g., "Imagination: 16/20" and "Intellect: 15/20")
   - **NEW:** "View Evidence" button next to each facet score
   - Confidence indicator per facet (0.0-1.0 displayed as percentage)
@@ -1224,8 +1224,8 @@ So that **I understand what my assessment revealed and can verify the accuracy**
 
 - Results component fetches all 30 facet scores from database (stored as `Record<FacetName, FacetScore>`)
 - Facet names are clean (no trait prefixes): "imagination" not "openness_imagination"
-- Displays trait levels (High/Mid/Low) derived from facet means using FACET_TO_TRAIT lookup
-- Trait score = mean of 6 related facet scores
+- Displays trait levels (High/Mid/Low) derived from facet sums using FACET_TO_TRAIT lookup
+- Trait score = sum of 6 related facet scores (0-120 scale)
 - Facet confidence displayed based on evidence consistency (adjusted for contradictions)
 - Shows facet breakdown on demand (expandable sections)
 - Color-coded by trait
@@ -1235,11 +1235,11 @@ So that **I understand what my assessment revealed and can verify the accuracy**
 
 **Acceptance Checklist:**
 - [ ] Results component displays archetype name
-- [ ] Trait levels shown (High/Mid/Low) computed from facet means
+- [ ] Trait levels shown (High/Mid/Low) computed from facet sums (0-120 scale)
 - [ ] All 30 facet scores stored as Record<FacetName, FacetScore>
 - [ ] Facet names are clean (no "trait_" prefixes)
 - [ ] Facet details expandable for each trait
-- [ ] Facet breakdown shows how mean is calculated
+- [ ] Facet breakdown shows how sum is calculated
 - [ ] Each facet shows confidence percentage
 - [ ] "View Evidence" button visible for each facet
 - [ ] Archetype description visible
