@@ -21,6 +21,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import { END, START, StateGraph } from "@langchain/langgraph";
 import {
 	AnalyzerRepository,
+	AppConfig,
 	BudgetPausedError,
 	CheckpointerRepository,
 	calculateConfidenceFromFacetScores,
@@ -37,7 +38,6 @@ import {
 import { Effect, Layer } from "effect";
 import {
 	calculateCostFromTokens,
-	DAILY_COST_LIMIT,
 	getNextDayMidnightUTC,
 	getSteeringHint,
 	getSteeringTarget,
@@ -56,6 +56,7 @@ import { type OrchestratorState, OrchestratorStateAnnotation } from "./orchestra
 const routerNodeEffect = (state: OrchestratorState) =>
 	Effect.gen(function* () {
 		const logger = yield* LoggerRepository;
+		const config = yield* AppConfig;
 		const { sessionId, messageCount, dailyCostUsed, facetScores } = state;
 
 		logger.debug("Router node executing", {
@@ -65,11 +66,11 @@ const routerNodeEffect = (state: OrchestratorState) =>
 		});
 
 		// 1. BUDGET CHECK - throws BudgetPausedError if exceeded
-		if (dailyCostUsed + MESSAGE_COST_ESTIMATE > DAILY_COST_LIMIT) {
+		if (dailyCostUsed + MESSAGE_COST_ESTIMATE > config.dailyCostLimit) {
 			logger.warn("Budget limit reached, pausing assessment", {
 				sessionId,
 				dailyCostUsed,
-				limit: DAILY_COST_LIMIT,
+				limit: config.dailyCostLimit,
 			});
 
 			// Calculate overall confidence from facetScores
@@ -261,6 +262,7 @@ export const OrchestratorGraphLangGraphRepositoryLive = Layer.effect(
 	Effect.gen(function* () {
 		// DI all dependencies
 		const logger = yield* LoggerRepository;
+		const config = yield* AppConfig;
 		const nerinAgent = yield* NerinAgentRepository;
 		const analyzer = yield* AnalyzerRepository;
 		const scorer = yield* ScorerRepository;
@@ -271,6 +273,7 @@ export const OrchestratorGraphLangGraphRepositoryLive = Layer.effect(
 		// Create service provision layer for node effects
 		const nodeServicesLayer = Layer.mergeAll(
 			Layer.succeed(LoggerRepository, logger),
+			Layer.succeed(AppConfig, config),
 			Layer.succeed(NerinAgentRepository, nerinAgent),
 			Layer.succeed(AnalyzerRepository, analyzer),
 			Layer.succeed(ScorerRepository, scorer),

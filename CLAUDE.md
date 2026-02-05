@@ -127,6 +127,8 @@ Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
 
 **Testing:** Provide `TestLayer` with mock implementations via `Effect.provide()`.
 
+**Error Location Rules:** HTTP-facing errors MUST be in `contracts/src/errors.ts` (Schema.TaggedError). Infrastructure errors are co-located with repository interfaces in `domain/src/repositories/`. Use-cases throw contract errors directly. See [Error Architecture](./docs/ARCHITECTURE.md#error-architecture--location-rules) for complete rules.
+
 See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full examples and ADR-6 details.
 
 ### Workspace Dependencies
@@ -242,6 +244,64 @@ const result = yield* orchestrator.processMessage({
 ```
 
 See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for agent flow diagrams and scoring algorithm.
+
+### Cost Tracking & Rate Limiting (Story 2.5)
+
+**Budget Enforcement:** $75 daily cost limit (configurable via `DAILY_COST_LIMIT` env var)
+**Rate Limiting:** 1 new assessment per user per day (unlimited message resumption)
+
+**CostGuard Repository (Story 2.2.5 + 2.5):**
+- Interface: `packages/domain/src/repositories/cost-guard.repository.ts`
+- Implementation: `packages/infrastructure/src/repositories/cost-guard.redis.repository.ts`
+- Methods:
+  - `incrementDailyCost(userId, costCents)` - Atomic cost tracking
+  - `getDailyCost(userId)` - Get current daily spend (cents)
+  - `canStartAssessment(userId)` - Check if user can start new assessment
+  - `recordAssessmentStart(userId)` - Atomically record assessment start with overflow protection
+
+**Redis Key Patterns:**
+- Cost tracking: `cost:{userId}:{YYYY-MM-DD}` (TTL: 48 hours)
+- Rate limiting: `assessments:{userId}:{YYYY-MM-DD}` (TTL: 48 hours)
+- Daily reset: Keys automatically expire, new day = fresh counters
+
+**Cost Calculation Formula:**
+```typescript
+// Story 2.2.5: Anthropic Claude pricing
+const costCents = Math.ceil(
+  (inputTokens / 1_000_000) * 0.003 +  // $3 per 1M input tokens
+  (outputTokens / 1_000_000) * 0.015    // $15 per 1M output tokens
+) * 100;
+```
+
+**Budget Check Flow (Story 2.4):**
+1. Router node checks: `dailyCostUsed + MESSAGE_COST_ESTIMATE > dailyCostLimit`
+2. If exceeded: Throw `BudgetPausedError` with `resumeAfter` = next day midnight UTC
+3. Session state preserved for resumption
+4. HTTP 503 response with countdown timer
+
+**Rate Limiting Flow (Story 2.5):**
+1. `start-assessment` use-case checks `canStartAssessment(userId)`
+2. If limit exceeded: Throw `RateLimitExceeded` with `resetAt` = next day midnight UTC
+3. HTTP 429 response with retry-after header
+4. Users can resume existing assessments (no rate limit on resume)
+5. Anonymous users bypass rate limiting
+
+**Date Utilities:**
+- `getUTCDateKey()` - Returns `YYYY-MM-DD` for Redis keys
+- `getNextDayMidnightUTC()` - Returns next day 00:00:00 UTC Date object
+- Location: `packages/domain/src/utils/date.utils.ts`
+
+**Structured Logging (Story 2.5):**
+All cost events logged with Pino for analytics:
+- Assessment start: `{ userId, count, dateKey }`
+- Cost increment: `{ userId, costCents, newDailyTotal, dateKey }`
+- Rate limit check: `{ userId, currentCount, limit, canStart, dateKey }`
+- Rate limit exceeded: `{ userId, currentCount, limit, resetAt, dateKey }`
+
+**Error Types:**
+- `RateLimitExceeded` (429) - Daily assessment limit reached
+- `BudgetPausedError` (503) - Daily cost budget exceeded
+- `RedisOperationError` (500) - Redis connectivity/operation failure
 
 ### Database & Sync
 

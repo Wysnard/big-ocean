@@ -143,14 +143,23 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 			}).pipe(Effect.provide(TestRepositoriesLayer)),
 		);
 
-		it.effect("should be idempotent - each call creates new session", () =>
+		it.effect("should enforce rate limit - second call fails for same user", () =>
 			Effect.gen(function* () {
+				// First call succeeds
 				const result1 = yield* startAssessment({ userId: "user_test" });
-				const result2 = yield* startAssessment({ userId: "user_test" });
-
-				expect(result1.sessionId).not.toBe(result2.sessionId);
 				expect(result1.sessionId).toMatch(/^session_/);
-				expect(result2.sessionId).toMatch(/^session_/);
+
+				// Second call fails with RateLimitExceeded
+				const exit = yield* Effect.exit(startAssessment({ userId: "user_test" }));
+				expect(exit._tag).toBe("Failure");
+				if (exit._tag === "Failure") {
+					expect(exit.cause._tag).toBe("Fail");
+					if (exit.cause._tag === "Fail") {
+						const error = exit.cause.error;
+						expect(error).toHaveProperty("_tag", "RateLimitExceeded");
+						expect(error).toHaveProperty("message", "You can start a new assessment tomorrow");
+					}
+				}
 			}).pipe(Effect.provide(TestRepositoriesLayer)),
 		);
 	});

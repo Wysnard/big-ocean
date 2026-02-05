@@ -8,6 +8,7 @@ export {
 	DatabaseError,
 	InvalidFacetNameError,
 	MalformedEvidenceError,
+	RateLimitExceeded,
 	SessionNotFound,
 } from "@workspace/contracts";
 // Configuration service interface (implementation in @workspace/infrastructure)
@@ -126,6 +127,8 @@ export type { MessageRole, Session, SessionStatus } from "./types/session";
 // Trait types (Big Five)
 export type { BigFiveTrait, TraitConfidenceScores } from "./types/trait";
 export { BIG_FIVE_TRAITS } from "./types/trait";
+// Date utilities for cost tracking and rate limiting
+export { getNextDayMidnightUTC, getUTCDateKey } from "./utils/date.utils";
 // Utility functions
 export {
 	calculateConfidenceFromFacetScores,

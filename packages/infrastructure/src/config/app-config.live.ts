@@ -50,6 +50,9 @@ const configSchema = Config.all({
 	),
 	analyzerMaxTokens: Config.number("ANALYZER_MAX_TOKENS").pipe(Config.withDefault(2048)),
 	analyzerTemperature: Config.number("ANALYZER_TEMPERATURE").pipe(Config.withDefault(0.3)),
+
+	// Cost management (Story 2.5)
+	dailyCostLimit: Config.number("DAILY_COST_LIMIT").pipe(Config.withDefault(75)),
 });
 
 /**

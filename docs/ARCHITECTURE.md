@@ -81,6 +81,132 @@ export const UserProfileSchema = S.Struct({
 export type UserProfile = typeof UserProfileSchema.Type;
 ```
 
+## Error Architecture & Location Rules
+
+**CRITICAL RULE: Errors MUST be defined in the correct package based on their purpose.**
+
+### Error Location Rules
+
+**1. HTTP-Facing Errors** → `packages/contracts/src/errors.ts`
+
+All errors that are returned via HTTP API MUST be defined in contracts using `Schema.TaggedError`:
+
+```typescript
+// ✅ CORRECT: HTTP error in contracts
+export class RateLimitExceeded extends S.TaggedError<RateLimitExceeded>()("RateLimitExceeded", {
+  userId: S.String,
+  resetAt: S.DateTimeUtc,
+  message: S.String,
+}) {}
+```
+
+**Why?** These errors are part of the API contract - they're JSON-serialized and sent to clients.
+
+**2. Infrastructure-Specific Errors** → Co-located with repository interfaces in `packages/domain/src/repositories/`
+
+Errors that represent infrastructure failures (Redis, database, external APIs) are defined alongside their repository interfaces:
+
+```typescript
+// ✅ CORRECT: Infrastructure error co-located with interface
+// packages/domain/src/repositories/redis.repository.ts
+export class RedisOperationError extends Error {
+  readonly _tag = "RedisOperationError";
+  constructor(public readonly message: string, public readonly operation: string) {
+    super(message);
+    this.name = "RedisOperationError";
+  }
+}
+```
+
+**Why?** These are internal errors that get mapped to contract errors in handlers.
+
+**3. Domain Logic Errors** → Use contract errors directly
+
+Use-cases should throw contract errors directly when the error will be returned to the client:
+
+```typescript
+// ✅ CORRECT: Use-case throws contract error
+import { RateLimitExceeded } from "@workspace/contracts";
+
+export const startAssessment = (input: StartAssessmentInput) =>
+  Effect.gen(function* () {
+    if (!canStart) {
+      return yield* Effect.fail(
+        new RateLimitExceeded({
+          userId,
+          message: "You can start a new assessment tomorrow",
+          resetAt: DateTime.unsafeMake(tomorrow.getTime()),
+        }),
+      );
+    }
+  });
+```
+
+### Error Mapping Pattern
+
+When infrastructure errors need to be exposed via HTTP, handlers map them to contract errors:
+
+```typescript
+// Handler maps infrastructure error → contract error
+.handle("start", ({ payload }) =>
+  Effect.gen(function* () {
+    const result = yield* startAssessment({ userId: payload.userId }).pipe(
+      Effect.catchTag("RedisOperationError", (error: RedisOperationError) =>
+        Effect.fail(
+          new DatabaseError({
+            message: `Rate limiting check failed: ${error.message}`,
+          }),
+        ),
+      ),
+    );
+    return result;
+  }),
+)
+```
+
+### Common Mistakes to Avoid
+
+❌ **WRONG: Duplicate error definitions**
+```typescript
+// packages/domain/src/errors/rate-limit.errors.ts
+export class RateLimitExceeded extends Error { ... } // ❌ Plain Error, wrong location
+
+// packages/contracts/src/errors.ts
+export class RateLimitExceeded extends S.TaggedError { ... } // Already exists!
+```
+
+❌ **WRONG: Use-case imports domain error that should be contract error**
+```typescript
+// ❌ Importing from wrong package
+import { RateLimitExceeded } from "@workspace/domain";
+
+// ✅ Should import from contracts
+import { RateLimitExceeded } from "@workspace/contracts";
+```
+
+### Package Dependency Rules
+
+- **Contracts**: No dependencies on domain (defines API surface)
+- **Domain**: Depends on contracts (re-exports HTTP errors for convenience)
+- **Infrastructure**: Depends on domain (implements interfaces)
+- **Use-Cases**: Import from contracts for HTTP errors, domain for infrastructure errors
+
+### Verification Checklist
+
+When adding a new error, ask:
+
+1. **Will this error be returned via HTTP?**
+   - YES → Define in `contracts/src/errors.ts` as `Schema.TaggedError`
+   - NO → Continue to question 2
+
+2. **Is this an infrastructure/external system failure?**
+   - YES → Define in `domain/src/repositories/{service}.repository.ts` as plain `Error`
+   - NO → Re-evaluate if it's truly a domain error or should be in contracts
+
+3. **Does the error need JSON serialization?**
+   - YES → Must be `Schema.TaggedError` in contracts
+   - NO → Can be plain `Error` in domain
+
 ## Effect/Platform HTTP Contracts
 
 The `@workspace/contracts` package defines type-safe HTTP API contracts using @effect/platform and @effect/schema following the official effect-worker-mono pattern.

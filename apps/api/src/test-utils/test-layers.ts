@@ -8,8 +8,11 @@
  * @see https://www.effect.solutions/testing
  */
 
+import { RateLimitExceeded } from "@workspace/contracts";
 import {
 	AnalyzerRepository,
+	AppConfig,
+	type AppConfigService,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	BudgetPausedError,
@@ -34,7 +37,7 @@ import {
 	type TraitName,
 	type TraitScoresMap,
 } from "@workspace/domain";
-import { Effect, Layer } from "effect";
+import { DateTime, Effect, Layer, Redacted } from "effect";
 
 /**
  * Creates a test Layer for AssessmentSessionRepository.
@@ -140,9 +143,30 @@ export const createTestLoggerLayer = () =>
 	});
 
 /**
+ * Creates a test Layer for AppConfig.
+ *
+ * Provides a test configuration with sensible defaults for testing.
+ */
+export const createTestAppConfigLayer = () =>
+	Layer.succeed(AppConfig, {
+		databaseUrl: "postgresql://test:test@localhost:5432/test",
+		redisUrl: "redis://localhost:6379",
+		anthropicApiKey: Redacted.make("test-api-key"),
+		betterAuthSecret: Redacted.make("test-secret"),
+		betterAuthUrl: "http://localhost:4000",
+		frontendUrl: "http://localhost:3000",
+		port: 4000,
+		nodeEnv: "test",
+		analyzerModelId: "claude-sonnet-4-20250514",
+		analyzerMaxTokens: 2048,
+		analyzerTemperature: 0.3,
+		dailyCostLimit: 75,
+	} satisfies AppConfigService);
+
+/**
  * Creates a test Layer for CostGuardRepository.
  *
- * Provides an in-memory cost tracking implementation.
+ * Provides an in-memory cost tracking and rate limiting implementation.
  */
 export const createTestCostGuardLayer = () => {
 	const costs = new Map<string, number>();
@@ -177,6 +201,33 @@ export const createTestCostGuardLayer = () => {
 			Effect.sync(() => {
 				const key = `assessments:${userId}:${new Date().toISOString().split("T")[0]}`;
 				return assessments.get(key) || 0;
+			}),
+
+		canStartAssessment: (userId: string) =>
+			Effect.sync(() => {
+				const key = `assessments:${userId}:${new Date().toISOString().split("T")[0]}`;
+				const count = assessments.get(key) || 0;
+				return count < 1;
+			}),
+
+		recordAssessmentStart: (userId: string) =>
+			Effect.gen(function* () {
+				const key = `assessments:${userId}:${new Date().toISOString().split("T")[0]}`;
+				const current = assessments.get(key) || 0;
+				const newCount = current + 1;
+				assessments.set(key, newCount);
+				if (newCount > 1) {
+					const tomorrow = new Date();
+					tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+					tomorrow.setUTCHours(0, 0, 0, 0);
+					return yield* Effect.fail(
+						new RateLimitExceeded({
+							userId,
+							message: "You can start a new assessment tomorrow",
+							resetAt: DateTime.unsafeMake(tomorrow.getTime()),
+						}),
+					);
+				}
 			}),
 	});
 };
@@ -602,6 +653,7 @@ export const TestRepositoriesLayer = Layer.mergeAll(
 	createTestAssessmentSessionLayer(),
 	createTestAssessmentMessageLayer(),
 	createTestLoggerLayer(),
+	createTestAppConfigLayer(),
 	createTestCostGuardLayer(),
 	createTestRedisLayer(),
 	createTestNerinAgentLayer(),

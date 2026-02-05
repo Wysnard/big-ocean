@@ -5,6 +5,7 @@
  * Follows official Effect pattern from https://effect.website/docs/requirements-management/services/
  */
 
+import type { RateLimitExceeded } from "@workspace/contracts";
 import { Context, Effect } from "effect";
 import type { RedisOperationError } from "./redis.repository";
 
@@ -43,6 +44,25 @@ export interface CostGuardMethods {
 	 * @returns Current assessment count for today (0 if none)
 	 */
 	readonly getAssessmentCount: (userId: string) => Effect.Effect<number, RedisOperationError>;
+
+	/**
+	 * Check if user can start a new assessment
+	 * @param userId - User identifier
+	 * @returns true if user can start assessment (count < 1), false otherwise
+	 * @throws RedisOperationError if Redis operation fails
+	 */
+	readonly canStartAssessment: (userId: string) => Effect.Effect<boolean, RedisOperationError>;
+
+	/**
+	 * Record assessment start for rate limiting
+	 * Atomically increments assessment counter and validates limit not exceeded
+	 * @param userId - User identifier
+	 * @throws RateLimitExceeded if user already started assessment today
+	 * @throws RedisOperationError if Redis operation fails
+	 */
+	readonly recordAssessmentStart: (
+		userId: string,
+	) => Effect.Effect<void, RedisOperationError | RateLimitExceeded>;
 }
 
 /**

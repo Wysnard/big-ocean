@@ -29,8 +29,12 @@ import type { OrchestratorState } from "./orchestrator.state";
 // ============================================
 
 /**
- * Daily cost limit in dollars.
+ * Default daily cost limit in dollars.
  * From NFR8: $75/day budget ceiling.
+ *
+ * NOTE: This is the default value. The actual limit is configured via
+ * DAILY_COST_LIMIT environment variable in AppConfig (Story 2.5).
+ * Use this constant only for testing and as a fallback.
  */
 export const DAILY_COST_LIMIT = 75;
 

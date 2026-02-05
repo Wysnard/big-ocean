@@ -55,6 +55,9 @@ export interface AppConfigService {
 
 	/** Analyzer agent temperature (0-1, lower = more structured) */
 	readonly analyzerTemperature: number;
+
+	/** Daily LLM cost limit in dollars (Story 2.5) */
+	readonly dailyCostLimit: number;
 }
 
 /**
