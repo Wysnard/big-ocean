@@ -153,7 +153,23 @@ packages/domain/src/
 ├── errors/       # Tagged Error types
 ├── types/        # Branded types (userId, sessionId)
 ├── constants/    # Big Five traits, facets
+├── utils/        # Pure domain functions (OCEAN code gen, confidence calc)
 └── repositories/ # Context.Tag interfaces
+```
+
+### OCEAN Code Generation (Story 3.1)
+
+Pure function that deterministically maps 30 facet scores to a 5-letter OCEAN code (e.g., "HHMHM").
+
+**Key File:** `packages/domain/src/utils/ocean-code-generator.ts`
+
+**Algorithm:** Sum 6 facets per trait (0-120) → map to level (L/M/H) → concatenate in OCEAN order.
+
+**Thresholds:** 0-40=L, 40-80=M, 80-120=H
+
+```typescript
+import { generateOceanCode } from "@workspace/domain";
+const code = generateOceanCode(facetScoresMap); // → "HHMHM"
 ```
 
 ### Effect/Platform HTTP Contracts (Story 1.6 ✅)

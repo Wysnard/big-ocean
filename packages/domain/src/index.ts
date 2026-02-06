@@ -138,5 +138,6 @@ export {
 	DEFAULT_FACET_CONFIDENCE,
 	DEFAULT_FACET_SCORE,
 	DEFAULT_TRAIT_SCORE,
+	generateOceanCode,
 	type TraitConfidence,
 } from "./utils/index";

@@ -14,3 +14,4 @@ export {
 	DEFAULT_TRAIT_SCORE,
 	type TraitConfidence,
 } from "./confidence";
+export { generateOceanCode } from "./ocean-code-generator";
