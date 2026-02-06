@@ -78,7 +78,7 @@ development_status:
   # EPIC 4: Frontend Assessment UI
   epic-4: in-progress
   4-1-authentication-ui-sign-up-modal: done
-  4-2-assessment-conversation-component: backlog
+  4-2-assessment-conversation-component: done
   4-3-session-resumption-device-switching: backlog
   4-4-optimistic-updates-progress-indicator: backlog
   4-5-component-documentation-with-storybook: backlog
@@ -115,8 +115,8 @@ total_stories: 34
 epics_backlog: 2
 epics_in_progress: 2
 epics_done: 3
-stories_backlog: 11
-stories_ready_for_dev: 0
+stories_backlog: 10
+stories_ready_for_dev: 1
 stories_in_progress: 0
 stories_review: 0
 stories_done: 23

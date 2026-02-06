@@ -35,10 +35,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      # Workaround for rollup platform-specific binary issue
-      # See: https://github.com/npm/cli/issues/4828
-      - name: Install Rollup native binary
-        run: pnpm add -wD @rollup/rollup-linux-x64-gnu
+      # Workaround: pnpm may skip optional native binaries (rollup, esbuild)
+      # when the store cache is cold. --force ensures all optional deps are linked.
+      - name: Ensure native binaries
+        run: |
+          node -e "require('@rollup/rollup-linux-x64-gnu')" 2>/dev/null && echo "rollup native binary OK" || {
+            echo "rollup native binary missing, reinstalling..."
+            pnpm install --force
+          }
 
       - name: Lint
         run: pnpm lint
