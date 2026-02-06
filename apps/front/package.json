@@ -7,6 +7,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:chromium": "playwright test --project=chromium",
+    "test:e2e:setup": "cd ../.. && pnpm docker:test:up",
+    "test:e2e:teardown": "cd ../.. && pnpm docker:test:down",
     "format": "biome format src",
     "lint": "biome lint src",
     "check": "biome check src",
@@ -47,6 +54,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.13",
+    "@playwright/test": "^1.58.1",
     "@tanstack/devtools-vite": "^0.3.11",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.2.0",
@@ -54,12 +62,13 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.4",
+    "@vitest/coverage-v8": "catalog:",
     "@workspace/lint": "workspace:*",
     "jsdom": "^27.0.0",
+    "playwright": "^1.58.1",
     "typescript": "^5.7.2",
     "vite": "^7.1.7",
     "vitest": "catalog:",
-    "@vitest/coverage-v8": "catalog:",
     "web-vitals": "^5.1.0"
   }
 }

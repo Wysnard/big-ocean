@@ -66,18 +66,18 @@ development_status:
   2-6-migrate-to-effect-vitest-and-centralize-effect-packages: done
   2-7-typescript-compilation-linting-code-quality: done
   2-8-docker-setup-for-integration-testing: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
 
   # EPIC 3: OCEAN Archetype System
-  epic-3: in-progress
+  epic-3: done
   3-0-migrate-tests-to-vitest-mock-modules: done
   3-1-generate-5-letter-ocean-codes-from-trait-scores: done
   3-2-create-and-manage-archetype-lookup-table: done
-  epic-3-retrospective: optional
+  epic-3-retrospective: done
 
   # EPIC 4: Frontend Assessment UI
-  epic-4: backlog
-  4-1-authentication-ui-sign-up-modal: backlog
+  epic-4: in-progress
+  4-1-authentication-ui-sign-up-modal: ready-for-dev
   4-2-assessment-conversation-component: backlog
   4-3-session-resumption-device-switching: backlog
   4-4-optimistic-updates-progress-indicator: backlog
@@ -98,7 +98,7 @@ development_status:
   6-3-audit-logging-and-access-control: backlog
   epic-6-retrospective: optional
 
-  # EPIC 7: Testing & Quality Assurance
+  # EPIC 7: Testing & Quality Assurance (ad-hoc)
   epic-7: in-progress
   7-1-unit-testing-framework-setup-tdd-pattern: done
   7-2-integration-testing-with-real-database: backlog
@@ -112,52 +112,51 @@ development_status:
 
 total_epics: 7
 total_stories: 34
-epics_backlog: 3
+epics_backlog: 2
 epics_in_progress: 2
-epics_done: 2
-stories_backlog: 12
+epics_done: 3
+stories_backlog: 11
 stories_ready_for_dev: 1
 stories_in_progress: 0
 stories_review: 0
-stories_done: 21
-retrospectives_optional: 5
-retrospectives_done: 1
+stories_done: 22
+retrospectives_optional: 4
+retrospectives_done: 2
 
 # IMPLEMENTATION ROADMAP
 
 ## Phase 1: Foundation (COMPLETED)
-- ✅ **Epic 1** (Infrastructure & Auth): Deploy to Railway, set up Better Auth, configure RPC contracts
-  - ✅ Story 1.1: Deploy Infrastructure to Railway
-  - ✅ Story 1.2: Integrate Better Auth for Email/Password Authentication
-  - ✅ Story 1.3: Configure Effect-ts RPC Contracts and Infrastructure Layer
-  - ✅ Story 1.4: Docker Compose Local Development Setup
-  - ✅ Story 1.5: Frontend Mockup Home and Mocked Chat UI
-  - ✅ Story 1.6: Migrate to Effect/Platform HTTP with Better Auth
-  - ✅ Epic 1 Retrospective completed
-- ✅ **Parallel:** Story 7.1 (Unit Test Framework) to establish TDD patterns for subsequent features
+- **Epic 1** (Infrastructure & Auth): Deploy to Railway, set up Better Auth, configure RPC contracts
+  - Story 1.1: Deploy Infrastructure to Railway
+  - Story 1.2: Integrate Better Auth for Email/Password Authentication
+  - Story 1.3: Configure Effect-ts RPC Contracts and Infrastructure Layer
+  - Story 1.4: Docker Compose Local Development Setup
+  - Story 1.5: Frontend Mockup Home and Mocked Chat UI
+  - Story 1.6: Migrate to Effect/Platform HTTP with Better Auth
+  - Epic 1 Retrospective completed
+- **Parallel:** Story 7.1 (Unit Test Framework) to establish TDD patterns for subsequent features
 
-## Phase 2: Backend Logic (NEARLY COMPLETE)
-- ✅ **Epic 2** (Assessment Backend): All stories complete!
-  - ✅ Story 2.0: Linter Unification and Frontend Fixes
-  - ✅ Story 2.0.5: Effect-Based Dependency Injection Refactoring
-  - ✅ Story 2.1: Session Management and Persistence (TDD)
-  - ✅ Story 2.1.1: GitHub Actions CI/CD and Testing
-  - ✅ Story 2.2: Nerin Agent Setup and Conversational Quality (TDD)
-  - ✅ Story 2.2.5: Setup Redis and Cost Management Infrastructure (TDD)
-  - ✅ Story 2.2-1: Migrate to Effect Config (environment management)
-  - ✅ Story 2.3: Analyzer and Scorer Agent Implementation (TDD)
-  - ✅ Story 2.4: LangGraph State Machine and Orchestration (TDD)
-  - ✅ Story 2.5: LLM Cost Tracking, Rate Limiting, and Budget Enforcement (TDD)
-  - ✅ Story 2.6: Migrate to Effect + Vitest and centralize Effect packages
-  - ✅ Story 2.7: TypeScript Compilation, Linting, and Code Quality
-  - ✅ Story 2.8: Docker Setup for Integration Testing
-- 🔄 **Epic 3** (OCEAN System): 2/3 stories done, archetype lookup remaining
-  - ✅ Story 3.0: Migrate Tests to Vitest Mock Modules (MERGED)
-  - ✅ Story 3.1: Generate 5-Letter OCEAN Codes from Trait Scores (DONE)
-  - ⏳ Story 3.2: Create and Manage Archetype Lookup Table (NEXT)
-- **Parallel:** Integration testing setup (Story 7.2)
+## Phase 2: Backend Logic (COMPLETED)
+- **Epic 2** (Assessment Backend): All stories complete!
+  - Story 2.0: Linter Unification and Frontend Fixes
+  - Story 2.0.5: Effect-Based Dependency Injection Refactoring
+  - Story 2.1: Session Management and Persistence (TDD)
+  - Story 2.1.1: GitHub Actions CI/CD and Testing
+  - Story 2.2: Nerin Agent Setup and Conversational Quality (TDD)
+  - Story 2.2.5: Setup Redis and Cost Management Infrastructure (TDD)
+  - Story 2.2-1: Migrate to Effect Config (environment management)
+  - Story 2.3: Analyzer and Scorer Agent Implementation (TDD)
+  - Story 2.4: LangGraph State Machine and Orchestration (TDD)
+  - Story 2.5: LLM Cost Tracking, Rate Limiting, and Budget Enforcement (TDD)
+  - Story 2.6: Migrate to Effect + Vitest and centralize Effect packages
+  - Story 2.7: TypeScript Compilation, Linting, and Code Quality
+  - Story 2.8: Docker Setup for Integration Testing
+- **Epic 3** (OCEAN System): All stories complete!
+  - Story 3.0: Migrate Tests to Vitest Mock Modules
+  - Story 3.1: Generate 5-Letter OCEAN Codes from Trait Scores
+  - Story 3.2: Create and Manage Archetype Lookup Table
 
-## Phase 3: User Experience
+## Phase 3: User Experience (NEXT)
 - **Epic 4** (Frontend UI): Auth modal, conversation component, session resumption, optimistic updates
   - Story 4.1: Authentication UI (Sign-Up Modal)
   - Story 4.2: Assessment Conversation Component
@@ -181,39 +180,39 @@ retrospectives_done: 1
 
 ## Critical Path Dependencies
 ```
-Epic 1 (Infrastructure) ✅ COMPLETE
-  ├─→ Epic 2 (Backend Services) ✅ COMPLETE (All stories done!)
-  │    ├─→ Epic 3 (Archetypes) 🔄 IN PROGRESS (3.0 done, 3.1 done, 3.2 next)
-  │    │    └─→ Epic 4 (Frontend) ⏳ BLOCKED (needs Epic 3 complete)
-  │    │         ├─→ Epic 5 (Sharing) ⏳ BLOCKED (needs Epic 4 complete)
-  │    │         └─→ Epic 6 (Privacy) ⏳ BLOCKED (needs Epic 4 complete)
-  │    └─→ Epic 7 (Testing) 🔄 IN PROGRESS (7.1 done, can parallelize 7.2)
-  └─→ Epic 7 (Testing) ✅ 7.1 COMPLETE
+Epic 1 (Infrastructure) COMPLETE
+  |-> Epic 2 (Backend Services) COMPLETE
+  |    |-> Epic 3 (Archetypes) COMPLETE
+  |    |    |-> Epic 4 (Frontend) UNBLOCKED - READY TO START
+  |    |         |-> Epic 5 (Sharing) BLOCKED (needs Epic 4 complete)
+  |    |         |-> Epic 6 (Privacy) BLOCKED (needs Epic 4 complete)
+  |    |-> Epic 7 (Testing) IN PROGRESS (7.1 done, can parallelize 7.2)
+  |-> Epic 7 (Testing) 7.1 COMPLETE
 ```
 
 ## Key Metrics to Track
 - [ ] Unit test coverage >=100% for domain logic (Story 7.1 framework ready)
 - [ ] API response latency P95 <2 sec for Nerin, <100ms for archetype lookups
-- [x] Session resume time <1 second (**VERIFIED: 19ms with 103 messages**)
+- [x] Session resume time <1 second (VERIFIED: 19ms with 103 messages)
 - [ ] Daily LLM cost <=$75 (Story 2.5 tracking implemented)
 - [ ] Assessment completion rate >=70%
 
 ## Current Focus & Next Steps
 
-**Current Sprint:** Phase 2 - Backend Logic (finishing Epic 3)
-**Active Epics:** Epic 3 (OCEAN System), Epic 7 (Testing)
-**Just Completed:** Story 3.1 - Generate 5-Letter OCEAN Codes from Trait Scores
-**Next Up:** Story 3.2 - Create and Manage Archetype Lookup Table (last story in Epic 3!)
-**Completed Stories:** 21/34 (62% complete)
+**Current Sprint:** Phase 3 - User Experience (Epic 4 in progress!)
+**Active Epics:** Epic 4 (Frontend UI), Epic 7 (Testing)
+**Just Completed:** Epic 3 - OCEAN Archetype System (all 3 stories done!)
+**Currently Ready:** Story 4.1 - Authentication UI (Sign-Up Modal) - ready for implementation
+**Completed Stories:** 22/34 (65% complete)
 
 **Recommended Actions:**
-1. ✅ Story 3.0 COMPLETE - Test mock migration to __mocks__ folders with vi.mock() pattern
-2. ✅ Story 3.1 COMPLETE - 5-Letter OCEAN code generation from trait scores
-3. 🆕 **NEXT:** Story 3.2 - Create and Manage Archetype Lookup Table (4-letter naming, TDD)
-4. **MILESTONE:** Epic 3 is 2/3 complete - one story remaining to finish the OCEAN Archetype System
-5. **After Epic 3:** Epic 4 (Frontend Assessment UI) becomes unblocked
+1. **✅ STORY CREATED:** Story 4.1 ready-for-dev with comprehensive context
+2. **NEXT:** Run `dev-story 4.1` to implement the sign-up modal
+3. **Epic 4 now IN PROGRESS** - first story created, backend fully ready
+4. **Parallel:** Story 7.2 (Integration Testing) can continue alongside Epic 4
 
 **Parallel Work Opportunities:**
-- Story 3.2 (Archetype Lookup) ready for immediate start - depends on Story 3.1 which is now done
-- Story 7.2 (Integration Testing) can be started in parallel with Epic 3
-- Design work for Epic 4 (Frontend UI) can begin now (wireframes, component specs)
+- Story 4.1 can be developed immediately - all dependencies satisfied
+- Story 7.2 (Integration Testing with real DB) can run in parallel
+- Design work for Epic 5 (Results & Sharing) can begin now (wireframes, component specs)
+- Story 4.2 (Assessment Conversation Component) can start after 4.1 completion
