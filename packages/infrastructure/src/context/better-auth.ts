@@ -1,22 +1,33 @@
 /**
  * Better Auth Service with Effect
  *
- * Receives config, database, and logger through dependency injection.
- * This allows tests to inject mocks and ensures type-safe configuration.
+ * Receives config and logger through dependency injection.
+ *
+ * IMPORTANT: Better Auth's drizzle adapter uses `await db.insert().returning()`,
+ * which requires a Promise-based drizzle instance (node-postgres driver).
+ * The app's main database uses drizzle-orm/effect-postgres which returns Effect monads.
+ * We create a separate plain pg.Pool-backed drizzle instance specifically for Better Auth.
  *
  * Official Effect Services pattern:
  * https://effect.website/docs/requirements-management/services/
  */
 
+import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { AppConfig } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import bcrypt from "bcryptjs";
-import { type Auth, type BetterAuthOptions, betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { betterAuth } from "better-auth";
 import { eq } from "drizzle-orm";
+import { drizzle as drizzleNodePg } from "drizzle-orm/node-postgres";
 import { Context, Effect, Layer, Redacted } from "effect";
+import pg from "pg";
 import * as authSchema from "../db/drizzle/schema";
-import { Database } from "./database";
+
+/**
+ * Better Auth instance type — inferred from betterAuth() return.
+ * Using ReturnType avoids invariance issues with Auth<SpecificOptions> vs Auth<BetterAuthOptions>.
+ */
+type BetterAuthInstance = ReturnType<typeof betterAuth>;
 
 /**
  * Better Auth Service Tag
@@ -26,7 +37,7 @@ import { Database } from "./database";
  */
 export class BetterAuthService extends Context.Tag("BetterAuthService")<
 	BetterAuthService,
-	Auth<BetterAuthOptions>
+	BetterAuthInstance
 >() {}
 
 /**
@@ -37,7 +48,7 @@ export type BetterAuthShape = Context.Tag.Service<BetterAuthService>;
 /**
  * Better Auth Layer
  *
- * Layer type: Layer<BetterAuthService, never, AppConfig | Database | LoggerRepository>
+ * Layer type: Layer<BetterAuthService, never, AppConfig | LoggerRepository>
  * Dependencies resolved during construction via Effect DI.
  *
  * CRITICAL: All configuration comes from AppConfig - no process.env usage.
@@ -47,15 +58,20 @@ export const BetterAuthLive = Layer.effect(
 	Effect.gen(function* () {
 		// Receive dependencies through DI during layer construction
 		const config = yield* AppConfig;
-		const database = yield* Database;
 		const logger = yield* LoggerRepository;
+
+		// Create a plain node-postgres pool for Better Auth
+		// Better Auth's drizzle adapter calls `await db.insert().returning()` which
+		// requires Promise-based queries (incompatible with drizzle-orm/effect-postgres)
+		const pool = new pg.Pool({ connectionString: config.databaseUrl });
+		const plainDb = drizzleNodePg({ client: pool, schema: authSchema });
 
 		// Determine if using HTTPS for secure cookies
 		const isHttps = config.betterAuthUrl.startsWith("https");
 
-		// Create Better Auth with injected dependencies
+		// Create Better Auth with plain node-postgres drizzle instance
 		const auth = betterAuth({
-			database: drizzleAdapter(database, {
+			database: drizzleAdapter(plainDb, {
 				provider: "pg",
 				schema: authSchema,
 			}),
@@ -122,8 +138,8 @@ export const BetterAuthLive = Layer.effect(
 
 							if (typeof anonymousSessionId === "string") {
 								try {
-									// Use injected database for session linking
-									await database
+									// Use plain drizzle instance for session linking
+									await plainDb
 										.update(authSchema.session)
 										.set({ userId: user.id, updatedAt: new Date() })
 										.where(eq(authSchema.session.id, anonymousSessionId));
@@ -140,6 +156,6 @@ export const BetterAuthLive = Layer.effect(
 			},
 		});
 
-		return auth;
+		return auth as BetterAuthInstance;
 	}),
 );

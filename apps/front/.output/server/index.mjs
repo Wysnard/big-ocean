@@ -38,7 +38,7 @@ function getViteEnv(input) {
     return input.headers["x-vite-env"] || input.headers.get?.("x-vite-env") || Array.isArray(input.headers) && input.headers.find((h) => h[0].toLowerCase() === "x-vite-env")?.[1];
   }
 }
-const manifest = { "src/integrations/tanstack-query/root-provider.tsx": { "file": "assets/router-C9ub7rpA.js" }, "src/components/Header.tsx": { "file": "assets/router-C9ub7rpA.js" }, "src/styles.css?transform-only": { "file": "assets/router-C9ub7rpA.js" }, "src/styles.css?url": { "file": "assets/router-C9ub7rpA.js" }, "src/routes/__root.tsx": { "file": "assets/router-C9ub7rpA.js" }, "src/routes/signup.tsx": { "file": "assets/router-C9ub7rpA.js" }, "src/routes/login.tsx": { "file": "assets/router-C9ub7rpA.js" }, "src/routes/dashboard.tsx": { "file": "assets/router-C9ub7rpA.js" }, "src/routes/index.tsx": { "file": "assets/router-C9ub7rpA.js" }, "src/routes/chat/index.tsx": { "file": "assets/router-C9ub7rpA.js" }, "src/src/routeTree.gen.ts": { "file": "assets/router-C9ub7rpA.js" }, "src/router.tsx": { "file": "assets/router-C9ub7rpA.js" }, "src/components/auth/signup-form.tsx": { "file": "assets/signup-B26xmlZK.js" }, "src/routes/signup.tsx?tsr-split=component": { "file": "assets/signup-B26xmlZK.js" }, "src/components/auth/login-form.tsx": { "file": "assets/login-D84B9Tiv.js" }, "src/routes/login.tsx?tsr-split=component": { "file": "assets/login-D84B9Tiv.js" }, "src/components/auth/user-menu.tsx": { "file": "assets/dashboard-BdwZAE39.js" }, "src/routes/dashboard.tsx?tsr-split=component": { "file": "assets/dashboard-BdwZAE39.js" }, "src/lib/auth-client.ts": { "file": "assets/use-auth-Dz7_Rgtt.js" }, "src/hooks/use-auth.ts": { "file": "assets/use-auth-Dz7_Rgtt.js" }, "src/routes/index.tsx?tsr-split=component": { "file": "assets/index-BwZq81l0.js" }, "src/hooks/use-assessment.ts": { "file": "assets/index-CMmvd4v1.js" }, "src/hooks/useTherapistChat.ts": { "file": "assets/index-CMmvd4v1.js" }, "src/components/TherapistChat.tsx": { "file": "assets/index-CMmvd4v1.js" }, "src/routes/chat/index.tsx?tsr-split=component": { "file": "assets/index-CMmvd4v1.js" } };
+const manifest = { "src/integrations/tanstack-query/root-provider.tsx": { "file": "assets/router-CjV7wRLF.js" }, "src/components/Header.tsx": { "file": "assets/router-CjV7wRLF.js" }, "src/styles.css?transform-only": { "file": "assets/router-CjV7wRLF.js" }, "src/styles.css?url": { "file": "assets/router-CjV7wRLF.js" }, "src/routes/__root.tsx": { "file": "assets/router-CjV7wRLF.js" }, "src/routes/signup.tsx": { "file": "assets/router-CjV7wRLF.js" }, "src/routes/login.tsx": { "file": "assets/router-CjV7wRLF.js" }, "src/routes/dashboard.tsx": { "file": "assets/router-CjV7wRLF.js" }, "src/routes/index.tsx": { "file": "assets/router-CjV7wRLF.js" }, "src/routes/chat/index.tsx": { "file": "assets/router-CjV7wRLF.js" }, "src/src/routeTree.gen.ts": { "file": "assets/router-CjV7wRLF.js" }, "src/router.tsx": { "file": "assets/router-CjV7wRLF.js" }, "src/components/auth/signup-form.tsx": { "file": "assets/signup-BW0AYwiF.js" }, "src/routes/signup.tsx?tsr-split=component": { "file": "assets/signup-BW0AYwiF.js" }, "src/components/auth/login-form.tsx": { "file": "assets/login-DAZKZ7Jp.js" }, "src/routes/login.tsx?tsr-split=component": { "file": "assets/login-DAZKZ7Jp.js" }, "src/components/auth/user-menu.tsx": { "file": "assets/dashboard-BtKFQEON.js" }, "src/routes/dashboard.tsx?tsr-split=component": { "file": "assets/dashboard-BtKFQEON.js" }, "src/routes/index.tsx?tsr-split=component": { "file": "assets/index-z79RYN8C.js" }, "src/hooks/use-assessment.ts": { "file": "assets/index-BJ9RkGV1.js" }, "src/hooks/useTherapistChat.ts": { "file": "assets/index-BJ9RkGV1.js" }, "src/components/auth/SignUpModal.tsx": { "file": "assets/index-BJ9RkGV1.js" }, "src/components/TherapistChat.tsx": { "file": "assets/index-BJ9RkGV1.js" }, "src/routes/chat/index.tsx?tsr-split=component": { "file": "assets/index-BJ9RkGV1.js" }, "src/lib/auth-client.ts": { "file": "assets/use-auth-DbltyjcL.js" }, "src/hooks/use-auth.ts": { "file": "assets/use-auth-DbltyjcL.js" } };
 function lazyService(loader) {
   let promise, mod;
   return {
@@ -1696,114 +1696,114 @@ const assets = {
   "/favicon.ico": {
     "type": "image/vnd.microsoft.icon",
     "etag": '"f1e-ESBTjHetHyiokkO0tT/irBbMO8Y"',
-    "mtime": "2026-02-05T20:28:50.278Z",
+    "mtime": "2026-02-06T14:41:08.898Z",
     "size": 3870,
     "path": "../public/favicon.ico"
   },
   "/logo192.png": {
     "type": "image/png",
     "etag": '"14e3-f08taHgqf6/O2oRVTsq5tImHdQA"',
-    "mtime": "2026-02-05T20:28:50.278Z",
+    "mtime": "2026-02-06T14:41:08.898Z",
     "size": 5347,
     "path": "../public/logo192.png"
   },
   "/logo512.png": {
     "type": "image/png",
     "etag": '"25c0-RpFfnQJpTtSb/HqVNJR2hBA9w/4"',
-    "mtime": "2026-02-05T20:28:50.278Z",
+    "mtime": "2026-02-06T14:41:08.898Z",
     "size": 9664,
     "path": "../public/logo512.png"
   },
   "/manifest.json": {
     "type": "application/json",
     "etag": '"1f2-Oqn/x1R1hBTtEjA8nFhpBeFJJNg"',
-    "mtime": "2026-02-05T20:28:50.279Z",
+    "mtime": "2026-02-06T14:41:08.898Z",
     "size": 498,
     "path": "../public/manifest.json"
   },
   "/robots.txt": {
     "type": "text/plain; charset=utf-8",
     "etag": '"43-BEzmj4PuhUNHX+oW9uOnPSihxtU"',
-    "mtime": "2026-02-05T20:28:50.279Z",
+    "mtime": "2026-02-06T14:41:08.898Z",
     "size": 67,
     "path": "../public/robots.txt"
   },
   "/tanstack-circle-logo.png": {
     "type": "image/png",
     "etag": '"40cab-HZ1KcYPs7tRjLe4Sd4g6CwKW+W8"',
-    "mtime": "2026-02-05T20:28:50.280Z",
+    "mtime": "2026-02-06T14:41:08.898Z",
     "size": 265387,
     "path": "../public/tanstack-circle-logo.png"
   },
   "/tanstack-word-logo-white.svg": {
     "type": "image/svg+xml",
     "etag": '"3a9a-9TQFm/pN8AZe1ZK0G1KyCEojnYg"',
-    "mtime": "2026-02-05T20:28:50.280Z",
+    "mtime": "2026-02-06T14:41:08.899Z",
     "size": 15002,
     "path": "../public/tanstack-word-logo-white.svg"
   },
-  "/assets/button-BMFwC-m0.js": {
+  "/assets/button-C1AgKP-N.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"740d-O1gdMoZ0Wc0qbVPS3bl2dQehU3k"',
-    "mtime": "2026-02-05T20:28:50.414Z",
-    "size": 29709,
-    "path": "../public/assets/button-BMFwC-m0.js"
+    "etag": '"7450-yqD9ovhvPbvaVIvJJ4XHaBiGTWI"',
+    "mtime": "2026-02-06T14:41:09.028Z",
+    "size": 29776,
+    "path": "../public/assets/button-C1AgKP-N.js"
   },
-  "/assets/dashboard-p7EqXn_W.js": {
+  "/assets/dashboard-CwedBWnM.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"96d-uXtURCOic9YWs7ndo6BFfoKAcNM"',
-    "mtime": "2026-02-05T20:28:50.414Z",
+    "etag": '"96d-olJGI/eRb14IbUOFcVQFf3gJbRI"',
+    "mtime": "2026-02-06T14:41:09.028Z",
     "size": 2413,
-    "path": "../public/assets/dashboard-p7EqXn_W.js"
+    "path": "../public/assets/dashboard-CwedBWnM.js"
   },
-  "/assets/index--spx2qUZ.js": {
+  "/assets/index-CKE__OMC.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"19c2-BvNfQlF+YIVRA22y9Dskg996RDU"',
-    "mtime": "2026-02-05T20:28:50.414Z",
+    "etag": '"19c2-1/dqZ7V4oDgnENZ0+g8LxnADDPs"',
+    "mtime": "2026-02-06T14:41:09.028Z",
     "size": 6594,
-    "path": "../public/assets/index--spx2qUZ.js"
+    "path": "../public/assets/index-CKE__OMC.js"
   },
-  "/assets/index-D6Fp1SJ1.js": {
+  "/assets/index-DiWeT-OQ.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"3171-GnnjryteQyJzwEZ8mCV1g2FTISg"',
-    "mtime": "2026-02-05T20:28:50.414Z",
-    "size": 12657,
-    "path": "../public/assets/index-D6Fp1SJ1.js"
+    "etag": '"c52c-cwolqqLcXADwxbSe98A2sXWK1nQ"',
+    "mtime": "2026-02-06T14:41:09.028Z",
+    "size": 50476,
+    "path": "../public/assets/index-DiWeT-OQ.js"
   },
-  "/assets/login-BBsKGZmH.js": {
+  "/assets/login-DE3JvHoz.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"81b-+GPVsLfr1KgJyPhpyCMCc0e2e04"',
-    "mtime": "2026-02-05T20:28:50.414Z",
+    "etag": '"81b-v35xBMhprHKVXcV3rQGECtSExEE"',
+    "mtime": "2026-02-06T14:41:09.028Z",
     "size": 2075,
-    "path": "../public/assets/login-BBsKGZmH.js"
+    "path": "../public/assets/login-DE3JvHoz.js"
   },
-  "/assets/main-BDQEJz8h.js": {
+  "/assets/main-DCnvL1B2.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"56525-wr3bUyoC47O58hYF/XMJps7zw2s"',
-    "mtime": "2026-02-05T20:28:50.414Z",
-    "size": 353573,
-    "path": "../public/assets/main-BDQEJz8h.js"
+    "etag": '"56547-WjSEcPbwJ1lBAePzsNGEn8Jf0fc"',
+    "mtime": "2026-02-06T14:41:09.028Z",
+    "size": 353607,
+    "path": "../public/assets/main-DCnvL1B2.js"
   },
-  "/assets/signup-DrqPwy_d.js": {
+  "/assets/signup-DtiGpOD2.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"c17-GzH6BfPpGBgjZNuahWp1DgShXSQ"',
-    "mtime": "2026-02-05T20:28:50.414Z",
+    "etag": '"c17-0f/Mij8Q6Nb2LHplNDOIMqAwFDc"',
+    "mtime": "2026-02-06T14:41:09.028Z",
     "size": 3095,
-    "path": "../public/assets/signup-DrqPwy_d.js"
+    "path": "../public/assets/signup-DtiGpOD2.js"
   },
-  "/assets/styles-CbFWcqJd.css": {
+  "/assets/styles-CPWhOFNh.css": {
     "type": "text/css; charset=utf-8",
-    "etag": '"b498-m6wx43glW0nfVmPd4S0l1Yq1vHI"',
-    "mtime": "2026-02-05T20:28:50.414Z",
-    "size": 46232,
-    "path": "../public/assets/styles-CbFWcqJd.css"
+    "etag": '"ec9b-es+qYS0QXYayS2kSkUP2jBpQ76Q"',
+    "mtime": "2026-02-06T14:41:09.028Z",
+    "size": 60571,
+    "path": "../public/assets/styles-CPWhOFNh.css"
   },
-  "/assets/use-auth-YGLyOqi8.js": {
+  "/assets/use-auth-BuLFPJAx.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"6606-catfnYVhI3rsTRIPrfv0Y68ZpDE"',
-    "mtime": "2026-02-05T20:28:50.414Z",
-    "size": 26118,
-    "path": "../public/assets/use-auth-YGLyOqi8.js"
+    "etag": '"70eb-V0NydfFmJZ8ZQZnO1mmPtHzNzlU"',
+    "mtime": "2026-02-06T14:41:09.028Z",
+    "size": 28907,
+    "path": "../public/assets/use-auth-BuLFPJAx.js"
   }
 };
 function readAsset(id) {
@@ -1827,7 +1827,7 @@ function getAsset(id) {
 }
 const METHODS = /* @__PURE__ */ new Set(["HEAD", "GET"]);
 const EncodingMap = { gzip: ".gz", br: ".br" };
-const _WZHCaL = defineHandler((event) => {
+const _hmwUE2 = defineHandler((event) => {
   if (event.req.method && !METHODS.has(event.req.method)) {
     return;
   }
@@ -1900,19 +1900,19 @@ const findRouteRules = (m, p) => {
   }
   return r;
 };
-const _lazy_6gEoFh = defineLazyEventHandler(() => Promise.resolve().then(function() {
+const _lazy_Y7M0v8 = defineLazyEventHandler(() => Promise.resolve().then(function() {
   return ssrRenderer$1;
 }));
 const findRoute = (m, p) => {
   if (p[p.length - 1] === "/") p = p.slice(0, -1) || "/";
   let s = p.split("/");
   s.length - 1;
-  return { data: { route: "/**", handler: _lazy_6gEoFh }, params: { "_": s.slice(1).join("/") } };
+  return { data: { route: "/**", handler: _lazy_Y7M0v8 }, params: { "_": s.slice(1).join("/") } };
 };
 const findRoutedMiddleware = (m, p) => {
   return [];
 };
-const globalMiddleware = [toEventHandler(_WZHCaL)];
+const globalMiddleware = [toEventHandler(_hmwUE2)];
 function useNitroApp() {
   return useNitroApp.__instance__ ??= initNitroApp();
 }

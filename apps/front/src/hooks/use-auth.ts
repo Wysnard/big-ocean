@@ -49,11 +49,12 @@ export function useAuth() {
 		},
 
 		signUp: {
-			email: async (email: string, password: string, name?: string) => {
+			email: async (email: string, password: string, name?: string, anonymousSessionId?: string) => {
 				const result = await signUp.email({
 					email,
 					password,
 					name: name || email.split("@")[0],
+					...(anonymousSessionId && { anonymousSessionId }),
 				});
 
 				if (result.error) {

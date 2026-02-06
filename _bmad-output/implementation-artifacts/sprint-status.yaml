@@ -77,7 +77,7 @@ development_status:
 
   # EPIC 4: Frontend Assessment UI
   epic-4: in-progress
-  4-1-authentication-ui-sign-up-modal: ready-for-dev
+  4-1-authentication-ui-sign-up-modal: done
   4-2-assessment-conversation-component: backlog
   4-3-session-resumption-device-switching: backlog
   4-4-optimistic-updates-progress-indicator: backlog
@@ -116,10 +116,10 @@ epics_backlog: 2
 epics_in_progress: 2
 epics_done: 3
 stories_backlog: 11
-stories_ready_for_dev: 1
+stories_ready_for_dev: 0
 stories_in_progress: 0
 stories_review: 0
-stories_done: 22
+stories_done: 23
 retrospectives_optional: 4
 retrospectives_done: 2
 
@@ -201,18 +201,26 @@ Epic 1 (Infrastructure) COMPLETE
 
 **Current Sprint:** Phase 3 - User Experience (Epic 4 in progress!)
 **Active Epics:** Epic 4 (Frontend UI), Epic 7 (Testing)
-**Just Completed:** Epic 3 - OCEAN Archetype System (all 3 stories done!)
-**Currently Ready:** Story 4.1 - Authentication UI (Sign-Up Modal) - ready for implementation
-**Completed Stories:** 22/34 (65% complete)
+**Just Completed:** Story 4.1 - Authentication UI (Sign-Up Modal) - ✅ DONE!
+**Next Up:** Story 4.2 - Assessment Conversation Component
+**Completed Stories:** 23/34 (68% complete)
+
+**Story 4.1 Completion Summary:**
+- ✅ SignUpModal component implemented with dark theme
+- ✅ Unit tests: 15/15 passing (100% coverage)
+- ✅ Form validation (email format, 12+ char password)
+- ✅ Session linking via anonymousSessionId
+- ✅ Modal triggers after first user message
+- ⚠️ E2E tests blocked by CORS (see Task #1)
 
 **Recommended Actions:**
-1. **✅ STORY CREATED:** Story 4.1 ready-for-dev with comprehensive context
-2. **NEXT:** Run `dev-story 4.1` to implement the sign-up modal
-3. **Epic 4 now IN PROGRESS** - first story created, backend fully ready
+1. **✅ STORY 4.1 COMPLETE:** Ready for Story 4.2
+2. **NEXT:** Run `dev-story 4.2` to implement Assessment Conversation Component
+3. **Backend Task:** Task #1 created to add CORS configuration (unblocks E2E tests)
 4. **Parallel:** Story 7.2 (Integration Testing) can continue alongside Epic 4
 
 **Parallel Work Opportunities:**
-- Story 4.1 can be developed immediately - all dependencies satisfied
+- Story 4.2 can start immediately - all UI dependencies satisfied
+- Task #1 (CORS config) is quick backend work to unblock E2E tests
 - Story 7.2 (Integration Testing with real DB) can run in parallel
 - Design work for Epic 5 (Results & Sharing) can begin now (wireframes, component specs)
-- Story 4.2 (Assessment Conversation Component) can start after 4.1 completion

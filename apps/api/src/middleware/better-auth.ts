@@ -1,15 +1,15 @@
 /**
  * Better Auth HTTP Adapter
  *
- * Converts Node.js IncomingMessage/ServerResponse to Fetch API Request/Response
- * Pattern from: https://dev.to/danimydev/authentication-with-nodehttp-and-better-auth-2l2g
+ * Uses Better Auth's built-in toNodeHandler for proper node:http ↔ Fetch API conversion.
+ * Adds CORS headers and OPTIONS handling around the auth handler.
  *
  * IMPORTANT: Only reads request body for auth routes (/api/auth/*) to avoid
  * consuming the body before Effect handler can process non-auth routes.
  */
 
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { Auth, BetterAuthOptions } from "better-auth";
+import { toNodeHandler } from "better-auth/node";
 
 /**
  * Check if request is for Better Auth routes
@@ -20,40 +20,14 @@ function isBetterAuthRoute(url: string | undefined): boolean {
 }
 
 /**
- * Convert Node.js IncomingMessage to Fetch API Request
- * Only reads body for auth routes to avoid consuming stream for other routes
+ * Add CORS headers to a ServerResponse
  */
-async function incomingMessageToRequest(
-	incomingMessage: IncomingMessage,
-	baseUrl: URL,
-	shouldReadBody: boolean,
-): Promise<Request> {
-	const method = incomingMessage.method || "GET";
-	const url = new URL(incomingMessage.url || "/", baseUrl);
-
-	const headers = new Headers();
-	for (const [key, value] of Object.entries(incomingMessage.headers)) {
-		if (value) {
-			headers.set(key, Array.isArray(value) ? value.join(", ") : value);
-		}
-	}
-
-	// Only read body for auth routes (POST/PUT methods)
-	let body: BodyInit | null = null;
-	if (shouldReadBody && method !== "GET" && method !== "HEAD") {
-		const chunks: Buffer[] = [];
-		for await (const chunk of incomingMessage) {
-			// Handle both Buffer and string chunks
-			if (typeof chunk === "string") {
-				chunks.push(Buffer.from(chunk));
-			} else {
-				chunks.push(chunk);
-			}
-		}
-		body = Buffer.concat(chunks);
-	}
-
-	return new Request(url.toString(), { method, headers, body });
+function addCorsHeaders(res: ServerResponse, frontendUrl: string): void {
+	res.setHeader("Access-Control-Allow-Origin", frontendUrl);
+	res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+	res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
+	res.setHeader("Access-Control-Allow-Credentials", "true");
+	res.setHeader("Access-Control-Max-Age", "86400");
 }
 
 /**
@@ -62,37 +36,34 @@ async function incomingMessageToRequest(
  * Only processes /api/auth/* routes - other routes pass through without
  * consuming the request body.
  */
-export function createBetterAuthHandler(auth: Auth<BetterAuthOptions>, betterAuthUrl: string) {
+export function createBetterAuthHandler(
+	auth: { handler: (request: Request) => Promise<Response> },
+	_betterAuthUrl: string,
+	frontendUrl: string,
+) {
+	const nodeHandler = toNodeHandler(auth);
+
 	return async function betterAuthHandler(
 		incomingMessage: IncomingMessage,
 		serverResponse: ServerResponse,
 	): Promise<void> {
-		// Only handle auth routes - let other routes pass through
-		if (!isBetterAuthRoute(incomingMessage.url)) {
-			// Don't consume body, don't set response - let Effect handle it
+		// Add CORS headers to ALL responses (auth and non-auth)
+		addCorsHeaders(serverResponse, frontendUrl);
+
+		// Handle OPTIONS preflight requests immediately
+		if (incomingMessage.method === "OPTIONS") {
+			serverResponse.statusCode = 204;
+			serverResponse.end();
 			return;
 		}
 
-		const baseUrl = new URL(betterAuthUrl);
-		const request = await incomingMessageToRequest(incomingMessage, baseUrl, true);
-
-		const response = await auth.handler(request);
-
-		serverResponse.statusCode = response.status;
-
-		response.headers.forEach((value, key) => {
-			serverResponse.setHeader(key, value);
-		});
-
-		if (response.body) {
-			const reader = response.body.getReader();
-			while (true) {
-				const { done, value } = await reader.read();
-				if (done) break;
-				serverResponse.write(value);
-			}
+		// Only handle auth routes - let other routes pass through
+		if (!isBetterAuthRoute(incomingMessage.url)) {
+			// CORS headers already set, don't consume body, let Effect handle it
+			return;
 		}
 
-		serverResponse.end();
+		// Delegate to Better Auth's built-in node handler for proper request conversion
+		await nodeHandler(incomingMessage, serverResponse);
 	};
 }

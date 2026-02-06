@@ -25,7 +25,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
-	id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+	id: text("id").primaryKey(),
 	name: text("name").notNull(),
 	email: text("email").notNull().unique(),
 	emailVerified: boolean("email_verified").default(false).notNull(),
@@ -40,7 +40,7 @@ export const user = pgTable("user", {
 export const session = pgTable(
 	"session",
 	{
-		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		id: text("id").primaryKey(),
 		expiresAt: timestamp("expires_at").notNull(),
 		token: text("token").notNull().unique(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -50,7 +50,7 @@ export const session = pgTable(
 			.notNull(),
 		ipAddress: text("ip_address"),
 		userAgent: text("user_agent"),
-		userId: uuid("user_id")
+		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 	},
@@ -60,10 +60,10 @@ export const session = pgTable(
 export const account = pgTable(
 	"account",
 	{
-		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		id: text("id").primaryKey(),
 		accountId: text("account_id").notNull(),
 		providerId: text("provider_id").notNull(),
-		userId: uuid("user_id")
+		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 		accessToken: text("access_token"),
@@ -85,7 +85,7 @@ export const account = pgTable(
 export const verification = pgTable(
 	"verification",
 	{
-		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		id: text("id").primaryKey(),
 		identifier: text("identifier").notNull(),
 		value: text("value").notNull(),
 		expiresAt: timestamp("expires_at").notNull(),
@@ -108,7 +108,7 @@ export const assessmentSession = pgTable(
 	"assessment_session",
 	{
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`), // Format: session_{timestamp}_{nanoid}
-		userId: uuid("user_id").references(() => user.id, { onDelete: "set null" }), // NULL for anonymous
+		userId: text("user_id").references(() => user.id, { onDelete: "set null" }), // NULL for anonymous
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at")
 			.defaultNow()
@@ -137,7 +137,7 @@ export const assessmentMessage = pgTable(
 		sessionId: uuid("session_id")
 			.notNull()
 			.references(() => assessmentSession.id, { onDelete: "cascade" }),
-		userId: uuid("user_id").references(() => user.id, { onDelete: "set null" }), // User who sent message (NULL for assistant or anonymous)
+		userId: text("user_id").references(() => user.id, { onDelete: "set null" }), // User who sent message (NULL for assistant or anonymous)
 		role: text("role").notNull(), // 'user' | 'assistant'
 		content: text("content").notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),

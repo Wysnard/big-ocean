@@ -19,6 +19,7 @@ import { describe, expect, test } from "vitest";
 
 // API URL from environment (set by vitest.config.integration.ts)
 const API_URL = process.env.API_URL || "http://localhost:4001";
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 /**
  * Helper to make JSON POST requests
@@ -218,5 +219,62 @@ describe("GET /api/assessment/:sessionId/resume", () => {
 	test("returns 404 for non-existent session", async () => {
 		const response = await fetch(`${API_URL}/api/assessment/fake-session-id/resume`);
 		expect(response.status).toBe(404);
+	});
+});
+
+describe("CORS - Assessment endpoints", () => {
+	test("includes CORS headers on POST /api/assessment/start", async () => {
+		const response = await fetch(`${API_URL}/api/assessment/start`, {
+			method: "POST",
+			headers: {
+				Origin: FRONTEND_URL,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({}),
+		});
+
+		// Verify CORS headers
+		expect(response.headers.get("Access-Control-Allow-Origin")).toBe(FRONTEND_URL);
+		expect(response.headers.get("Access-Control-Allow-Credentials")).toBe("true");
+	});
+
+	test("includes CORS headers on POST /api/assessment/message", async () => {
+		// Create session first
+		const startResponse = await postJson("/api/assessment/start", {});
+		const { sessionId } = await startResponse.json();
+
+		// Send message with Origin header
+		const response = await fetch(`${API_URL}/api/assessment/message`, {
+			method: "POST",
+			headers: {
+				Origin: FRONTEND_URL,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				sessionId,
+				message: "Test message",
+			}),
+		});
+
+		// Verify CORS headers
+		expect(response.headers.get("Access-Control-Allow-Origin")).toBe(FRONTEND_URL);
+		expect(response.headers.get("Access-Control-Allow-Credentials")).toBe("true");
+	});
+
+	test("includes CORS headers on GET /api/assessment/:sessionId/resume", async () => {
+		// Create session
+		const startResponse = await postJson("/api/assessment/start", {});
+		const { sessionId } = await startResponse.json();
+
+		// Resume with Origin header
+		const response = await fetch(`${API_URL}/api/assessment/${sessionId}/resume`, {
+			headers: {
+				Origin: FRONTEND_URL,
+			},
+		});
+
+		// Verify CORS headers
+		expect(response.headers.get("Access-Control-Allow-Origin")).toBe(FRONTEND_URL);
+		expect(response.headers.get("Access-Control-Allow-Credentials")).toBe("true");
 	});
 });

@@ -1,4 +1,4 @@
-import { r as rootRouteId, i as invariant, t as trimPathLeft, j as joinPaths, a as trimPathRight, b as redirect, c as reactExports, R as React, d as dummyMatchContext, m as matchContext, u as useRouterState, e as useRouter, f as requireReactDom, g as isDangerousProtocol, h as exactPathTest, k as removeTrailingSlash, l as deepEqual, n as functionalUpdate$1, o as React__default, p as jsxRuntimeExports, w as warning, q as isModuleNotFoundError, s as RouterCore, v as escapeHtml } from "../server.js";
+import { r as rootRouteId, i as invariant, t as trimPathLeft, j as joinPaths, a as trimPathRight, b as redirect, c as reactExports, R as React, d as dummyMatchContext, m as matchContext, u as useRouterState, e as useRouter, g as getDefaultExportFromCjs, f as requireReactDom, h as isDangerousProtocol, k as exactPathTest, l as removeTrailingSlash, n as deepEqual, o as functionalUpdate$1, p as React__default, q as jsxRuntimeExports, w as warning, s as isModuleNotFoundError, v as RouterCore, x as escapeHtml } from "../server.js";
 class BaseRoute {
   constructor(options) {
     this.init = (opts) => {
@@ -169,7 +169,8 @@ function useNavigate(_defaultOpts) {
     [_defaultOpts?.from, router2]
   );
 }
-requireReactDom();
+var reactDomExports = requireReactDom();
+const ReactDOM = /* @__PURE__ */ getDefaultExportFromCjs(reactDomExports);
 function useLinkProps(options, forwardedRef) {
   const router2 = useRouter();
   const innerRef = useForwardedRef(forwardedRef);
@@ -3544,7 +3545,7 @@ function Header() {
     )
   ] });
 }
-const appCss = "/assets/styles-CbFWcqJd.css";
+const appCss = "/assets/styles-CPWhOFNh.css";
 const Route$5 = createRootRouteWithContext()({
   head: () => ({
     meta: [
@@ -3578,23 +3579,23 @@ function RootDocument({ children }) {
     ] })
   ] });
 }
-const $$splitComponentImporter$4 = () => import("./signup-B26xmlZK.js");
+const $$splitComponentImporter$4 = () => import("./signup-BW0AYwiF.js");
 const Route$4 = createFileRoute("/signup")({
   component: lazyRouteComponent($$splitComponentImporter$4, "component")
 });
-const $$splitComponentImporter$3 = () => import("./login-D84B9Tiv.js");
+const $$splitComponentImporter$3 = () => import("./login-DAZKZ7Jp.js");
 const Route$3 = createFileRoute("/login")({
   component: lazyRouteComponent($$splitComponentImporter$3, "component")
 });
-const $$splitComponentImporter$2 = () => import("./dashboard-BdwZAE39.js");
+const $$splitComponentImporter$2 = () => import("./dashboard-BtKFQEON.js");
 const Route$2 = createFileRoute("/dashboard")({
   component: lazyRouteComponent($$splitComponentImporter$2, "component")
 });
-const $$splitComponentImporter$1 = () => import("./index-BwZq81l0.js");
+const $$splitComponentImporter$1 = () => import("./index-z79RYN8C.js");
 const Route$1 = createFileRoute("/")({
   component: lazyRouteComponent($$splitComponentImporter$1, "component")
 });
-const $$splitComponentImporter = () => import("./index-CMmvd4v1.js");
+const $$splitComponentImporter = () => import("./index-BJ9RkGV1.js");
 const Route2 = createFileRoute("/chat/")({
   validateSearch: (search) => {
     return {
@@ -3670,16 +3671,18 @@ const router = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProper
   getRouter
 }, Symbol.toStringTag, { value: "Module" }));
 export {
-  Route2 as R,
+  ReactDOM as R,
   Subscribable as S,
   useQueryClient as a,
   noop as b,
   createLucideIcon as c,
   shouldThrowError as d,
+  Route2 as e,
+  router as f,
   getDefaultState as g,
   hashKey as h,
   notifyManager as n,
-  router as r,
+  reactDomExports as r,
   shallowEqualObjects as s,
   useNavigate as u
 };

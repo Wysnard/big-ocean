@@ -50,9 +50,8 @@ const BaseServices = Layer.mergeAll(AppConfigLive, LoggerPinoRepositoryLive);
 // Database stack needs AppConfig
 const DatabaseServices = DatabaseStack.pipe(Layer.provide(AppConfigLive));
 
-// BetterAuth needs AppConfig, Database, and LoggerRepository
+// BetterAuth needs AppConfig and LoggerRepository (creates its own pg.Pool internally)
 const AuthServices = BetterAuthLive.pipe(
-	Layer.provide(DatabaseServices),
 	Layer.provide(LoggerPinoRepositoryLive),
 	Layer.provide(AppConfigLive),
 );
@@ -155,41 +154,76 @@ const ApiLayer = Layer.mergeAll(
 );
 
 /**
- * Create custom server factory that integrates Better Auth BEFORE Effect
+ * Wrap Better Auth handler to intercept ALL requests
+ *
+ * Creates a wrapper that:
+ * 1. Adds CORS headers to every response
+ * 2. Handles OPTIONS preflight
+ * 3. Processes Better Auth routes
+ * 4. Passes non-auth requests to next handler
+ */
+function wrapServerWithCorsAndAuth(
+	server: Server,
+	auth: Context.Tag.Service<typeof BetterAuthService>,
+	betterAuthUrl: string,
+	frontendUrl: string,
+): void {
+	const betterAuthHandler = createBetterAuthHandler(auth, betterAuthUrl, frontendUrl);
+
+	// Store original emit function
+	const originalEmit = server.emit.bind(server);
+
+	// Override emit to intercept "request" events
+	server.emit = ((event: string, ...args: any[]): boolean => {
+		if (event === "request") {
+			const [req, res] = args as [IncomingMessage, ServerResponse];
+
+			// Run our handler first (async, but we can't await in emit)
+			betterAuthHandler(req, res).then(() => {
+				// If response wasn't ended by our handler, let Effect handle it
+				if (!res.writableEnded) {
+					originalEmit("request", req, res);
+				}
+			});
+
+			return true;
+		}
+
+		// For other events, use original emit
+		return originalEmit(event, ...args);
+	}) as any;
+}
+
+/**
+ * Create custom server factory that integrates CORS and Better Auth BEFORE Effect
  *
  * NodeHttpServer.layer will attach the Effect handler to this server.
- * We intercept requests first to handle Better Auth routes.
+ * We intercept ALL requests first via emit override.
  */
 const createCustomServerFactory =
-	(auth: Context.Tag.Service<typeof BetterAuthService>, betterAuthUrl: string) => (): Server => {
-		const betterAuthHandler = createBetterAuthHandler(auth, betterAuthUrl);
-
+	(
+		auth: Context.Tag.Service<typeof BetterAuthService>,
+		betterAuthUrl: string,
+		frontendUrl: string,
+	) =>
+	(): Server => {
 		const server = createServer();
-
-		// Add a one-time listener for when Effect attaches its handler
-		// We need to prepend our handler BEFORE Effect's handler
-		server.once("newListener", (event) => {
-			if (event === "request") {
-				// Prepend our custom handler that runs BEFORE Effect
-				// prependListener ensures we run first
-				server.prependListener("request", async (req: IncomingMessage, res: ServerResponse) => {
-					// Only process Better Auth routes - others pass through to Effect
-					await betterAuthHandler(req, res);
-				});
-			}
-		});
-
+		wrapServerWithCorsAndAuth(server, auth, betterAuthUrl, frontendUrl);
 		return server;
 	};
 
 /**
  * Startup logging
  */
-const logStartup = (port: number) =>
+const logStartup = (port: number, frontendUrl: string) =>
 	Effect.gen(function* () {
 		const logger = yield* LoggerRepository;
 
 		logger.info(`Starting Big Ocean API server on port ${port}`);
+		logger.info("");
+		logger.info("✓ CORS enabled:");
+		logger.info(`  - Allowed origin: ${frontendUrl}`);
+		logger.info("  - Credentials: true");
 		logger.info("");
 		logger.info("✓ Better Auth routes (node:http layer):");
 		logger.info("  - POST /api/auth/sign-up/email");
@@ -217,13 +251,13 @@ const main = Effect.gen(function* () {
 	const logger = yield* LoggerRepository;
 
 	// Log startup info
-	yield* logStartup(config.port);
+	yield* logStartup(config.port, config.frontendUrl);
 
-	// Create HTTP server layer with Better Auth integration
+	// Create HTTP server layer with CORS and Better Auth integration
 	const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
 		Layer.provide(ApiLayer),
 		Layer.provide(
-			NodeHttpServer.layer(createCustomServerFactory(auth, config.betterAuthUrl), {
+			NodeHttpServer.layer(createCustomServerFactory(auth, config.betterAuthUrl, config.frontendUrl), {
 				port: config.port,
 			}),
 		),

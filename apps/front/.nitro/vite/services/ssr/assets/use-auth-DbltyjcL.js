@@ -9,19 +9,19 @@ const env = new Proxy(_envShim, {
     return prop in _getEnv() || prop in _envShim;
   },
   set(_, prop, value) {
-    const env$1 = _getEnv(true);
-    env$1[prop] = value;
+    const env2 = _getEnv(true);
+    env2[prop] = value;
     return true;
   },
   deleteProperty(_, prop) {
     if (!prop) return false;
-    const env$1 = _getEnv(true);
-    delete env$1[prop];
+    const env2 = _getEnv(true);
+    delete env2[prop];
     return true;
   },
   ownKeys() {
-    const env$1 = _getEnv(true);
-    return Object.keys(env$1);
+    const env2 = _getEnv(true);
+    return Object.keys(env2);
   }
 });
 typeof process !== "undefined" && process.env && "production" || "";
@@ -174,9 +174,63 @@ const createLogger = (options) => {
   };
 };
 createLogger();
-function capitalizeFirstLetter(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+function defineErrorCodes(codes) {
+  return Object.fromEntries(Object.entries(codes).map(([key, value]) => [key, {
+    code: key,
+    message: value,
+    toString: () => key
+  }]));
 }
+defineErrorCodes({
+  USER_NOT_FOUND: "User not found",
+  FAILED_TO_CREATE_USER: "Failed to create user",
+  FAILED_TO_CREATE_SESSION: "Failed to create session",
+  FAILED_TO_UPDATE_USER: "Failed to update user",
+  FAILED_TO_GET_SESSION: "Failed to get session",
+  INVALID_PASSWORD: "Invalid password",
+  INVALID_EMAIL: "Invalid email",
+  INVALID_EMAIL_OR_PASSWORD: "Invalid email or password",
+  INVALID_USER: "Invalid user",
+  SOCIAL_ACCOUNT_ALREADY_LINKED: "Social account already linked",
+  PROVIDER_NOT_FOUND: "Provider not found",
+  INVALID_TOKEN: "Invalid token",
+  TOKEN_EXPIRED: "Token expired",
+  ID_TOKEN_NOT_SUPPORTED: "id_token not supported",
+  FAILED_TO_GET_USER_INFO: "Failed to get user info",
+  USER_EMAIL_NOT_FOUND: "User email not found",
+  EMAIL_NOT_VERIFIED: "Email not verified",
+  PASSWORD_TOO_SHORT: "Password too short",
+  PASSWORD_TOO_LONG: "Password too long",
+  USER_ALREADY_EXISTS: "User already exists.",
+  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: "User already exists. Use another email.",
+  EMAIL_CAN_NOT_BE_UPDATED: "Email can not be updated",
+  CREDENTIAL_ACCOUNT_NOT_FOUND: "Credential account not found",
+  SESSION_EXPIRED: "Session expired. Re-authenticate to perform this action.",
+  FAILED_TO_UNLINK_LAST_ACCOUNT: "You can't unlink your last account",
+  ACCOUNT_NOT_FOUND: "Account not found",
+  USER_ALREADY_HAS_PASSWORD: "User already has a password. Provide that to delete the account.",
+  CROSS_SITE_NAVIGATION_LOGIN_BLOCKED: "Cross-site navigation login blocked. This request appears to be a CSRF attack.",
+  VERIFICATION_EMAIL_NOT_ENABLED: "Verification email isn't enabled",
+  EMAIL_ALREADY_VERIFIED: "Email is already verified",
+  EMAIL_MISMATCH: "Email mismatch",
+  SESSION_NOT_FRESH: "Session is not fresh",
+  LINKED_ACCOUNT_ALREADY_EXISTS: "Linked account already exists",
+  INVALID_ORIGIN: "Invalid origin",
+  INVALID_CALLBACK_URL: "Invalid callbackURL",
+  INVALID_REDIRECT_URL: "Invalid redirectURL",
+  INVALID_ERROR_CALLBACK_URL: "Invalid errorCallbackURL",
+  INVALID_NEW_USER_CALLBACK_URL: "Invalid newUserCallbackURL",
+  MISSING_OR_NULL_ORIGIN: "Missing or null Origin",
+  CALLBACK_URL_REQUIRED: "callbackURL is required",
+  FAILED_TO_CREATE_VERIFICATION: "Unable to create verification",
+  FIELD_NOT_ALLOWED: "Field not allowed to be set",
+  ASYNC_VALIDATION_NOT_SUPPORTED: "Async validation is not supported",
+  VALIDATION_ERROR: "Validation Error",
+  MISSING_FIELD: "Field is required",
+  METHOD_NOT_ALLOWED_DEFER_SESSION_REQUIRED: "POST method requires deferSessionRefresh to be enabled in session config",
+  BODY_MUST_BE_AN_OBJECT: "Body must be an object",
+  PASSWORD_ALREADY_SET: "User already has a password set"
+});
 var BetterAuthError = class extends Error {
   constructor(message, options) {
     super(message, options);
@@ -279,16 +333,16 @@ function betterJSONParse(value, options = {}) {
     return matches;
   }) && strict) throw new Error("[better-json] Potential prototype pollution attempt detected");
   try {
-    const secureReviver = (key, value$1) => {
-      if (key === "__proto__" || key === "constructor" && value$1 && typeof value$1 === "object" && "prototype" in value$1) {
+    const secureReviver = (key, value2) => {
+      if (key === "__proto__" || key === "constructor" && value2 && typeof value2 === "object" && "prototype" in value2) {
         if (warnings) console.warn(`[better-json] Dropping "${key}" key to prevent prototype pollution`);
         return;
       }
-      if (parseDates && typeof value$1 === "string") {
-        const date = parseISODate(value$1);
+      if (parseDates && typeof value2 === "string") {
+        const date = parseISODate(value2);
         if (date) return date;
       }
-      return reviver ? reviver(key, value$1) : value$1;
+      return reviver ? reviver(key, value2) : value2;
     };
     return JSON.parse(trimmed, secureReviver);
   } catch (error) {
@@ -649,30 +703,44 @@ function createSessionRefreshManager(opts) {
       return;
     }
     const currentSession = sessionAtom.get();
-    if (event?.event === "poll") {
+    const fetchSessionWithRefresh = () => {
       state.lastSessionRequest = now();
-      $fetch("/get-session").then((res) => {
-        if (res.error) sessionAtom.set({
+      $fetch("/get-session").then(async (res) => {
+        let data = res.data;
+        let error = res.error || null;
+        if (data?.needsRefresh) try {
+          const refreshRes = await $fetch("/get-session", { method: "POST" });
+          data = refreshRes.data;
+          error = refreshRes.error || null;
+        } catch {
+        }
+        const sessionData = data?.session && data?.user ? {
+          session: data.session,
+          user: data.user
+        } : null;
+        sessionAtom.set({
           ...currentSession,
-          data: null,
-          error: res.error
-        });
-        else sessionAtom.set({
-          ...currentSession,
-          data: res.data,
-          error: null
+          data: sessionData,
+          error
         });
         state.lastSync = now();
         sessionSignal.set(!sessionSignal.get());
       }).catch(() => {
       });
+    };
+    if (event?.event === "poll") {
+      fetchSessionWithRefresh();
       return;
     }
     if (event?.event === "visibilitychange") {
       if (now() - state.lastSessionRequest < FOCUS_REFETCH_RATE_LIMIT_SECONDS) return;
       state.lastSessionRequest = now();
     }
-    if (currentSession?.data === null || currentSession?.data === void 0 || event?.event === "visibilitychange") {
+    if (event?.event === "visibilitychange") {
+      fetchSessionWithRefresh();
+      return;
+    }
+    if (currentSession?.data === null || currentSession?.data === void 0) {
       state.lastSync = now();
       sessionSignal.set(!sessionSignal.get());
     }
@@ -1562,6 +1630,9 @@ function useStore(store, options = {}) {
   const get = () => snapshotRef.current;
   return reactExports.useSyncExternalStore(subscribe, get, get);
 }
+function capitalizeFirstLetter(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 function getAtomKey(str) {
   return `use${capitalizeFirstLetter(str)}`;
 }
@@ -1616,11 +1687,12 @@ function useAuth() {
       }
     },
     signUp: {
-      email: async (email, password, name) => {
+      email: async (email, password, name, anonymousSessionId) => {
         const result = await signUp.email({
           email,
           password,
-          name: name || email.split("@")[0]
+          name: name || email.split("@")[0],
+          ...anonymousSessionId && { anonymousSessionId }
         });
         if (result.error) {
           throw new Error(result.error.message || "Sign up failed");

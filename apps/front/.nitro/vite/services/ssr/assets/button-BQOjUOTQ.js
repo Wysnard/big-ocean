@@ -1,4 +1,4 @@
-import { c as reactExports, p as jsxRuntimeExports, R as React } from "../server.js";
+import { c as reactExports, q as jsxRuntimeExports, R as React } from "../server.js";
 function setRef(ref, value) {
   if (typeof ref === "function") {
     return ref(value);
@@ -29,6 +29,9 @@ function composeRefs(...refs) {
       };
     }
   };
+}
+function useComposedRefs(...refs) {
+  return reactExports.useCallback(composeRefs(...refs), refs);
 }
 var REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy");
 var use = React[" use ".trim().toString()];
@@ -3234,5 +3237,7 @@ function Button({
 }
 export {
   Button as B,
-  cn as c
+  composeRefs as a,
+  cn as c,
+  useComposedRefs as u
 };

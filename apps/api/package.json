@@ -30,7 +30,7 @@
     "@workspace/domain": "workspace:*",
     "@workspace/infrastructure": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
-    "better-auth": "1.4.18",
+    "better-auth": "catalog:",
     "dotenv": "^17.2.3",
     "effect": "catalog:",
     "pino": "catalog:",

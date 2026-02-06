@@ -24,6 +24,7 @@ function _mergeNamespaces(n2, m2) {
   }
   return Object.freeze(Object.defineProperty(n2, Symbol.toStringTag, { value: "Module" }));
 }
+var commonjsGlobal = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : {};
 function getDefaultExportFromCjs(x3) {
   return x3 && x3.__esModule && Object.prototype.hasOwnProperty.call(x3, "default") ? x3["default"] : x3;
 }
@@ -19259,7 +19260,7 @@ function getResponse() {
   return event.res;
 }
 async function getStartManifest(matchedRoutes) {
-  const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-DBeBPenR.js");
+  const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-uNrCW4r2.js");
   const startManifest = tsrStartManifest();
   const rootRoute = startManifest.routes[rootRouteId] = startManifest.routes[rootRouteId] || {};
   rootRoute.assets = rootRoute.assets || [];
@@ -19731,7 +19732,7 @@ function getStartResponseHeaders(opts) {
 let entriesPromise;
 let manifestPromise;
 async function loadEntries() {
-  const routerEntry = await import("./assets/router-C9ub7rpA.js").then((n2) => n2.r);
+  const routerEntry = await import("./assets/router-CjV7wRLF.js").then((n2) => n2.f);
   const startEntry = await import("./assets/start-HYkvq4Ni.js");
   return { startEntry, routerEntry };
 }
@@ -20092,21 +20093,23 @@ export {
   server as default,
   useRouter as e,
   requireReactDom as f,
-  isDangerousProtocol as g,
-  exactPathTest as h,
+  getDefaultExportFromCjs as g,
+  isDangerousProtocol as h,
   invariant as i,
   joinPaths as j,
-  removeTrailingSlash as k,
-  deepEqual as l,
+  exactPathTest as k,
+  removeTrailingSlash as l,
   matchContext as m,
-  functionalUpdate as n,
-  React__default as o,
-  jsxRuntimeExports as p,
-  isModuleNotFoundError as q,
+  deepEqual as n,
+  functionalUpdate as o,
+  React__default as p,
+  jsxRuntimeExports as q,
   rootRouteId as r,
-  RouterCore as s,
+  isModuleNotFoundError as s,
   trimPathLeft as t,
   useRouterState as u,
-  escapeHtml as v,
-  warning as w
+  RouterCore as v,
+  warning as w,
+  escapeHtml as x,
+  commonjsGlobal as y
 };

@@ -22,7 +22,10 @@
 		"test:integration": "pnpm --filter=api test:integration",
 		"test:integration:watch": "pnpm --filter=api test:integration:watch",
 		"docker:test:up": "docker compose -f compose.test.yaml up -d --build",
-		"docker:test:down": "docker compose -f compose.test.yaml down -v --remove-orphans"
+		"docker:test:down": "docker compose -f compose.test.yaml down -v --remove-orphans",
+		"test:e2e": "pnpm --filter=front test:e2e",
+		"test:e2e:ui": "pnpm --filter=front test:e2e:ui",
+		"test:e2e:headed": "pnpm --filter=front test:e2e:headed"
 	},
 	"simple-git-hooks": {
 		"pre-commit": "./.githooks/pre-commit",
