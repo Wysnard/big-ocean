@@ -33,7 +33,12 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
+
+      # Workaround for rollup platform-specific binary issue
+      # See: https://github.com/npm/cli/issues/4828
+      - name: Install Rollup native binary
+        run: pnpm add -wD @rollup/rollup-linux-x64-gnu
 
       - name: Lint
         run: pnpm lint
