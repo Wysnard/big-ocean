@@ -3,7 +3,7 @@
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
-# Story Location: {project-root}/_bmad-output/implementation-artifacts
+# Story Location: _bmad-output/implementation-artifacts
 
 # STATUS DEFINITIONS:
 # ==================
@@ -38,7 +38,7 @@ generated: 2026-02-06
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
-story_location: "{project-root}/_bmad-output/implementation-artifacts"
+story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # EPIC 1: Infrastructure & Auth Setup
@@ -53,6 +53,8 @@ development_status:
 
   # EPIC 2: Assessment Backend Services
   epic-2: done
+  2-0-linter-unification-and-frontend-fixes: done
+  2-0.5-effect-based-dependency-injection-refactoring: done
   2-1-session-management-and-persistence: done
   2-1-1-github-actions-ci-cd-and-testing: done
   2-2-nerin-agent-setup-and-conversational-quality: done
@@ -61,8 +63,6 @@ development_status:
   2-3-analyzer-and-scorer-agent-implementation: done
   2-4-langgraph-state-machine-and-orchestration: done
   2-5-llm-cost-tracking-rate-limiting-and-budget-enforcement: done
-  2-0-linter-unification-and-frontend-fixes: done
-  2-0.5-effect-based-dependency-injection-refactoring: done
   2-6-migrate-to-effect-vitest-and-centralize-effect-packages: done
   2-7-typescript-compilation-linting-code-quality: done
   2-8-docker-setup-for-integration-testing: done
@@ -72,7 +72,7 @@ development_status:
   epic-3: in-progress
   3-0-migrate-tests-to-vitest-mock-modules: done
   3-1-generate-5-letter-ocean-codes-from-trait-scores: done
-  3-2-create-and-manage-archetype-lookup-table: ready-for-dev
+  3-2-create-and-manage-archetype-lookup-table: done
   epic-3-retrospective: optional
 
   # EPIC 4: Frontend Assessment UI

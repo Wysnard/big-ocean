@@ -67,7 +67,7 @@ describe("AnalyzerRepository Interface", () => {
 		const evidence = result[0];
 
 		// Verify structure
-		expect(evidence).toHaveProperty("messageId");
+		expect(evidence).toHaveProperty("assessmentMessageId");
 		expect(evidence).toHaveProperty("facetName");
 		expect(evidence).toHaveProperty("score");
 		expect(evidence).toHaveProperty("confidence");

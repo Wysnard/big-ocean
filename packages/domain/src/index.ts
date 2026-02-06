@@ -13,6 +13,8 @@ export {
 } from "@workspace/contracts";
 // Configuration service interface (implementation in @workspace/infrastructure)
 export { AppConfig, type AppConfigService } from "./config/index";
+// Archetype constants (Story 3.2)
+export { CURATED_ARCHETYPES } from "./constants/archetypes";
 // Big Five constants and types (Story 2.3)
 export {
 	AGREEABLENESS_FACETS,
@@ -101,6 +103,8 @@ export {
 	calculateCost,
 	PRICING,
 } from "./services/cost-calculator.service";
+// Archetype types (Story 3.2)
+export type { Archetype, OceanCode4, OceanCode5, TraitLevel } from "./types/archetype";
 // Facet types
 export type {
 	AgreeableFacet,
@@ -138,6 +142,8 @@ export {
 	DEFAULT_FACET_CONFIDENCE,
 	DEFAULT_FACET_SCORE,
 	DEFAULT_TRAIT_SCORE,
+	extract4LetterCode,
 	generateOceanCode,
+	lookupArchetype,
 	type TraitConfidence,
 } from "./utils/index";
