@@ -2,6 +2,8 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { TherapistChat } from "@/components/TherapistChat";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
 export const Route = createFileRoute("/chat/")({
 	validateSearch: (search: Record<string, unknown>) => {
 		return {
@@ -12,12 +14,22 @@ export const Route = createFileRoute("/chat/")({
 		const { search } = context;
 
 		if (!search.sessionId) {
-			// Generate a session ID for the demo
-			// In production, this will call StartAssessment RPC handler
-			const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+			const response = await fetch(`${API_URL}/api/assessment/start`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({}),
+				credentials: "include",
+			});
+
+			if (!response.ok) {
+				const error = await response.json().catch(() => ({ message: response.statusText }));
+				throw new Error(error.message || `Failed to start assessment: ${response.status}`);
+			}
+
+			const data = await response.json();
 			throw redirect({
 				to: "/chat",
-				search: { sessionId },
+				search: { sessionId: data.sessionId },
 			});
 		}
 	},
