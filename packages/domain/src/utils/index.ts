@@ -4,6 +4,7 @@
  * Pure utility functions for domain calculations and map initialization.
  */
 
+export { extract4LetterCode, lookupArchetype } from "./archetype-lookup";
 export {
 	calculateConfidenceFromFacetScores,
 	calculateOverallConfidence,

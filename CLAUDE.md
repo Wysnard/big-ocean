@@ -172,6 +172,28 @@ import { generateOceanCode } from "@workspace/domain";
 const code = generateOceanCode(facetScoresMap); // → "HHMHM"
 ```
 
+### Archetype Lookup System (Story 3.2)
+
+Pure function that maps 4-letter OCEAN codes (O,C,E,A) to memorable personality archetypes.
+
+**Key Files:**
+- Lookup function: `packages/domain/src/utils/archetype-lookup.ts`
+- Curated data: `packages/domain/src/constants/archetypes.ts`
+- Types: `packages/domain/src/types/archetype.ts`
+
+**4-Letter vs 5-Letter Codes:**
+- Full 5-letter code includes Neuroticism (e.g., "HHMHM")
+- POC uses first 4 letters only (81 combinations): "HHMH" (O,C,E,A)
+- Phase 2 will extend to all 5 letters (243 combinations)
+
+**Lookup Strategy:** Hand-curated names (25 entries) → component-based fallback for remaining 56 combinations. Every valid code returns an `Archetype` with name, description, color, and `isCurated` flag.
+
+```typescript
+import { lookupArchetype, extract4LetterCode } from "@workspace/domain";
+const code4 = extract4LetterCode("HHMHM"); // → "HHMH"
+const archetype = lookupArchetype(code4);   // → { name: "The Creative Diplomat", ... }
+```
+
 ### Effect/Platform HTTP Contracts (Story 1.6 ✅)
 
 Type-safe HTTP API contracts using @effect/platform and @effect/schema.
