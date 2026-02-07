@@ -67,6 +67,8 @@ For complete command reference, see [COMMANDS.md](./docs/COMMANDS.md).
 - `pnpm build` - Build all packages
 - `pnpm format` - Format all code
 - `pnpm test:coverage` - Run tests with coverage
+- `pnpm db:migrate` - Apply Drizzle migrations
+- `pnpm db:generate` - Generate migration from schema changes
 
 ### Git Hooks (Local Enforcement)
 
@@ -321,8 +323,11 @@ All cost events logged with Pino for analytics:
 
 ### Database & Sync
 
-- **Backend:** Drizzle ORM + PostgreSQL (`packages/infrastructure/src/db/schema.ts`)
+- **Backend:** Drizzle ORM + PostgreSQL (`packages/infrastructure/src/db/drizzle/schema.ts`)
 - **Frontend:** ElectricSQL + TanStack DB for local-first reactive sync
+- **Migrations:** Managed by `drizzle-kit` — run `pnpm db:migrate` to apply, `pnpm db:generate` to create new migrations
+- **Docker:** Migrations run automatically on backend startup via `docker-entrypoint.sh`
+- **Config:** `drizzle.config.ts` at repo root (uses `tablesFilter` to ignore LangGraph `checkpoint_*` tables)
 
 **Hard Rule:** No business logic in handlers - all logic belongs in use-cases.
 

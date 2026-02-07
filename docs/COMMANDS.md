@@ -70,9 +70,12 @@ After cloning the repository:
 ```bash
 pnpm install                # Install all dependencies
 pnpm prepare                # Install git hooks (runs automatically via postinstall)
+pnpm db:migrate             # Apply database migrations (requires PostgreSQL running)
 pnpm dev --filter=api       # Verify backend starts
 pnpm dev --filter=front     # Verify frontend starts
 ```
+
+**With Docker (recommended):** Just run `./scripts/dev.sh` — migrations apply automatically on startup.
 
 ## App-Specific Commands
 
@@ -106,13 +109,19 @@ pnpm -C packages/infrastructure lint      # Lint infrastructure package
 
 ## Database Commands
 
-Migration management (run from `apps/api` or `packages/database`):
+Schema and migration management (run from repository root):
 
 ```bash
-pnpm drizzle-kit generate          # Generate migration files
-pnpm drizzle-kit push              # Apply migrations to database
-pnpm drizzle-kit studio            # Open Drizzle Studio UI
+pnpm db:migrate                    # Apply migrations to database
+pnpm db:push                       # Push schema directly (no migration files, dev only)
+pnpm db:generate                   # Generate migration files from schema changes
+pnpm db:generate --name=my-change  # Generate with a custom migration name
 ```
+
+**Note:** Migrations run automatically on `docker compose up` via the backend entrypoint. For local development without Docker, run `pnpm db:migrate` manually.
+
+**Schema source of truth:** `packages/infrastructure/src/db/drizzle/schema.ts`
+**Migration files:** `drizzle/` directory (checked into git)
 
 ## Docker Compose Development
 
