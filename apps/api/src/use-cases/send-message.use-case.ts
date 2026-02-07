@@ -3,7 +3,7 @@
  *
  * Business logic for sending a message in an assessment conversation.
  * Saves user message, orchestrates AI response via Nerin/Analyzer/Scorer pipeline,
- * and updates precision scores.
+ * and updates confidence scores.
  *
  * Integration: Orchestrator repository routes to Nerin (always),
  * and triggers Analyzer + Scorer on batch messages (every 3rd).
@@ -34,7 +34,7 @@ export interface SendMessageInput {
 
 export interface SendMessageOutput {
 	readonly response: string;
-	readonly precision: {
+	readonly confidence: {
 		readonly openness: number;
 		readonly conscientiousness: number;
 		readonly extraversion: number;
@@ -48,7 +48,7 @@ export interface SendMessageOutput {
  *
  * Dependencies: AssessmentSessionRepository, AssessmentMessageRepository,
  *               LoggerRepository, OrchestratorRepository, CostGuardRepository
- * Returns: AI response and updated precision scores
+ * Returns: AI response and updated confidence scores
  *
  * @throws BudgetPausedError - Daily cost limit reached, assessment paused
  * @throws OrchestrationError - Generic routing/pipeline failure
@@ -181,7 +181,7 @@ export const sendMessage = (input: SendMessageInput) =>
 
 		return {
 			response: result.nerinResponse,
-			precision: {
+			confidence: {
 				// Values are already 0-100 integers
 				openness: responseConfidence.openness,
 				conscientiousness: responseConfidence.conscientiousness,

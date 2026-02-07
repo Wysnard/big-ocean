@@ -22,20 +22,20 @@ const evaluatorModel = new ChatAnthropic({
 
 // Define structured output schema for Evaluator LLM (assessment only, no response text)
 const AssessmentSchema = z.object({
-	// Precision/confidence scores for main traits (0-1)
-	opennessPrecision: z.number().min(0).max(1).describe("Confidence in openness assessment"),
-	conscientiousnessPrecision: z
+	// Confidence/confidence scores for main traits (0-1)
+	opennessConfidence: z.number().min(0).max(1).describe("Confidence in openness assessment"),
+	conscientiousnessConfidence: z
 		.number()
 		.min(0)
 		.max(1)
 		.describe("Confidence in conscientiousness assessment"),
-	extraversionPrecision: z.number().min(0).max(1).describe("Confidence in extraversion assessment"),
-	agreeablenessPrecision: z
+	extraversionConfidence: z.number().min(0).max(1).describe("Confidence in extraversion assessment"),
+	agreeablenessConfidence: z
 		.number()
 		.min(0)
 		.max(1)
 		.describe("Confidence in agreeableness assessment"),
-	neuroticismPrecision: z.number().min(0).max(1).describe("Confidence in neuroticism assessment"),
+	neuroticismConfidence: z.number().min(0).max(1).describe("Confidence in neuroticism assessment"),
 
 	// Openness facets (0-20 each)
 	fantasy: z.number().min(0).max(20).describe("Fantasy/Imagination facet"),
@@ -105,24 +105,24 @@ const TherapistStateAnnotation = Annotation.Root({
 		default: () => 0,
 	}),
 
-	// Precision scores for main traits
-	opennessPrecision: Annotation<number>({
+	// Confidence scores for main traits
+	opennessConfidence: Annotation<number>({
 		reducer: (_, next) => next ?? 0,
 		default: () => 0,
 	}),
-	conscientiousnessPrecision: Annotation<number>({
+	conscientiousnessConfidence: Annotation<number>({
 		reducer: (_, next) => next ?? 0,
 		default: () => 0,
 	}),
-	extraversionPrecision: Annotation<number>({
+	extraversionConfidence: Annotation<number>({
 		reducer: (_, next) => next ?? 0,
 		default: () => 0,
 	}),
-	agreeablenessPrecision: Annotation<number>({
+	agreeablenessConfidence: Annotation<number>({
 		reducer: (_, next) => next ?? 0,
 		default: () => 0,
 	}),
-	neuroticismPrecision: Annotation<number>({
+	neuroticismConfidence: Annotation<number>({
 		reducer: (_, next) => next ?? 0,
 		default: () => 0,
 	}),
@@ -297,12 +297,12 @@ Be warm, non-judgmental, and conversational. Let the dialogue flow naturally.`;
 
 // Evaluation Node - LLM 2: Analyzes conversation and provides scores
 const evaluationNode: GraphNode<typeof TherapistStateAnnotation.State> = async (state) => {
-	const currentPrecisions = {
-		openness: state.opennessPrecision,
-		conscientiousness: state.conscientiousnessPrecision,
-		extraversion: state.extraversionPrecision,
-		agreeableness: state.agreeablenessPrecision,
-		neuroticism: state.neuroticismPrecision,
+	const currentConfidences = {
+		openness: state.opennessConfidence,
+		conscientiousness: state.conscientiousnessConfidence,
+		extraversion: state.extraversionConfidence,
+		agreeableness: state.agreeablenessConfidence,
+		neuroticism: state.neuroticismConfidence,
 	};
 
 	// Calculate current main trait scores from facets
@@ -356,7 +356,7 @@ Analyze the conversation history and provide updated scores for all 30 facets an
 
 **Current Assessment State:**
 
-1. **Openness to Experience** (${openness}/120) - Confidence: ${(currentPrecisions.openness * 100).toFixed(0)}%
+1. **Openness to Experience** (${openness}/120) - Confidence: ${(currentConfidences.openness * 100).toFixed(0)}%
    - Fantasy: ${state.fantasy}/20
    - Aesthetics: ${state.aesthetics}/20
    - Feelings: ${state.feelings}/20
@@ -364,7 +364,7 @@ Analyze the conversation history and provide updated scores for all 30 facets an
    - Ideas: ${state.ideas}/20
    - Values: ${state.values}/20
 
-2. **Conscientiousness** (${conscientiousness}/120) - Confidence: ${(currentPrecisions.conscientiousness * 100).toFixed(0)}%
+2. **Conscientiousness** (${conscientiousness}/120) - Confidence: ${(currentConfidences.conscientiousness * 100).toFixed(0)}%
    - Competence: ${state.competence}/20
    - Order: ${state.order}/20
    - Dutifulness: ${state.dutifulness}/20
@@ -372,7 +372,7 @@ Analyze the conversation history and provide updated scores for all 30 facets an
    - Self-Discipline: ${state.selfDiscipline}/20
    - Deliberation: ${state.deliberation}/20
 
-3. **Extraversion** (${extraversion}/120) - Confidence: ${(currentPrecisions.extraversion * 100).toFixed(0)}%
+3. **Extraversion** (${extraversion}/120) - Confidence: ${(currentConfidences.extraversion * 100).toFixed(0)}%
    - Warmth: ${state.warmth}/20
    - Gregariousness: ${state.gregariousness}/20
    - Assertiveness: ${state.assertiveness}/20
@@ -380,7 +380,7 @@ Analyze the conversation history and provide updated scores for all 30 facets an
    - Excitement-Seeking: ${state.excitementSeeking}/20
    - Positive Emotions: ${state.positiveEmotions}/20
 
-4. **Agreeableness** (${agreeableness}/120) - Confidence: ${(currentPrecisions.agreeableness * 100).toFixed(0)}%
+4. **Agreeableness** (${agreeableness}/120) - Confidence: ${(currentConfidences.agreeableness * 100).toFixed(0)}%
    - Trust: ${state.trust}/20
    - Straightforwardness: ${state.straightforwardness}/20
    - Altruism: ${state.altruism}/20
@@ -388,7 +388,7 @@ Analyze the conversation history and provide updated scores for all 30 facets an
    - Modesty: ${state.modesty}/20
    - Tender-Mindedness: ${state.tenderMindedness}/20
 
-5. **Neuroticism** (${neuroticism}/120) - Confidence: ${(currentPrecisions.neuroticism * 100).toFixed(0)}%
+5. **Neuroticism** (${neuroticism}/120) - Confidence: ${(currentConfidences.neuroticism * 100).toFixed(0)}%
    - Anxiety: ${state.anxiety}/20
    - Angry Hostility: ${state.angryHostility}/20
    - Depression: ${state.depression}/20
@@ -418,8 +418,8 @@ Return updated scores for ALL 30 facets and 5 confidence levels.`;
 
 		console.info("[Therapist] Evaluation completed", {
 			messageCount,
-			opennessPrecision: assessment.opennessPrecision,
-			conscientiousnessPrecision: assessment.conscientiousnessPrecision,
+			opennessConfidence: assessment.opennessConfidence,
+			conscientiousnessConfidence: assessment.conscientiousnessConfidence,
 		});
 
 		return {
@@ -455,12 +455,12 @@ Return updated scores for ALL 30 facets and 5 confidence levels.`;
 			impulsiveness: assessment.impulsiveness,
 			vulnerability: assessment.vulnerability,
 
-			// Update 5 precision scores
-			opennessPrecision: assessment.opennessPrecision,
-			conscientiousnessPrecision: assessment.conscientiousnessPrecision,
-			extraversionPrecision: assessment.extraversionPrecision,
-			agreeablenessPrecision: assessment.agreeablenessPrecision,
-			neuroticismPrecision: assessment.neuroticismPrecision,
+			// Update 5 confidence scores
+			opennessConfidence: assessment.opennessConfidence,
+			conscientiousnessConfidence: assessment.conscientiousnessConfidence,
+			extraversionConfidence: assessment.extraversionConfidence,
+			agreeablenessConfidence: assessment.agreeablenessConfidence,
+			neuroticismConfidence: assessment.neuroticismConfidence,
 
 			// Track when evaluation occurred
 			lastEvaluatedAt: messageCount,
@@ -536,13 +536,13 @@ export async function conductPersonalityAssessment(
 
 		console.debug("[Therapist] Invoking agent", {
 			messageCount: messages.length,
-			previousPrecisions: previousState
+			previousConfidences: previousState
 				? {
-						openness: previousState.opennessPrecision,
-						conscientiousness: previousState.conscientiousnessPrecision,
-						extraversion: previousState.extraversionPrecision,
-						agreeableness: previousState.agreeablenessPrecision,
-						neuroticism: previousState.neuroticismPrecision,
+						openness: previousState.opennessConfidence,
+						conscientiousness: previousState.conscientiousnessConfidence,
+						extraversion: previousState.extraversionConfidence,
+						agreeableness: previousState.agreeablenessConfidence,
+						neuroticism: previousState.neuroticismConfidence,
 					}
 				: "none",
 		});
@@ -553,12 +553,12 @@ export async function conductPersonalityAssessment(
 			evaluateNow: previousState?.evaluateNow ?? false,
 			lastEvaluatedAt: previousState?.lastEvaluatedAt ?? 0,
 
-			// Precision scores
-			opennessPrecision: previousState?.opennessPrecision ?? 0,
-			conscientiousnessPrecision: previousState?.conscientiousnessPrecision ?? 0,
-			extraversionPrecision: previousState?.extraversionPrecision ?? 0,
-			agreeablenessPrecision: previousState?.agreeablenessPrecision ?? 0,
-			neuroticismPrecision: previousState?.neuroticismPrecision ?? 0,
+			// Confidence scores
+			opennessConfidence: previousState?.opennessConfidence ?? 0,
+			conscientiousnessConfidence: previousState?.conscientiousnessConfidence ?? 0,
+			extraversionConfidence: previousState?.extraversionConfidence ?? 0,
+			agreeablenessConfidence: previousState?.agreeablenessConfidence ?? 0,
+			neuroticismConfidence: previousState?.neuroticismConfidence ?? 0,
 
 			// Openness facets
 			fantasy: previousState?.fantasy ?? 0,
@@ -603,11 +603,11 @@ export async function conductPersonalityAssessment(
 
 		console.debug("[Therapist] Assessment completed", {
 			messageCount: result.messages?.length || 0,
-			opennessPrecision: result.opennessPrecision,
-			conscientiousnessPrecision: result.conscientiousnessPrecision,
-			extraversionPrecision: result.extraversionPrecision,
-			agreeablenessPrecision: result.agreeablenessPrecision,
-			neuroticismPrecision: result.neuroticismPrecision,
+			opennessConfidence: result.opennessConfidence,
+			conscientiousnessConfidence: result.conscientiousnessConfidence,
+			extraversionConfidence: result.extraversionConfidence,
+			agreeablenessConfidence: result.agreeablenessConfidence,
+			neuroticismConfidence: result.neuroticismConfidence,
 		});
 
 		return result;

@@ -42,7 +42,7 @@ export const SendMessageRequestSchema = S.Struct({
  */
 export const SendMessageResponseSchema = S.Struct({
 	response: S.String,
-	precision: S.Struct({
+	confidence: S.Struct({
 		openness: S.Number,
 		conscientiousness: S.Number,
 		extraversion: S.Number,
@@ -77,7 +77,7 @@ export const ResumeSessionResponseSchema = S.Struct({
 			timestamp: S.DateTimeUtc,
 		}),
 	),
-	precision: S.Struct({
+	confidence: S.Struct({
 		openness: S.Number,
 		conscientiousness: S.Number,
 		extraversion: S.Number,

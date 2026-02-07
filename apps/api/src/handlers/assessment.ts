@@ -77,7 +77,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 					// Format HTTP response
 					return {
 						response: result.response,
-						precision: result.precision,
+						confidence: result.confidence,
 					};
 				}),
 			)
@@ -134,7 +134,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 								timestamp: DateTime.unsafeMake(message.createdAt.getTime()),
 							}),
 						),
-						precision: result.precision,
+						confidence: result.confidence,
 					};
 				}),
 			);

@@ -313,7 +313,7 @@ describe("OrchestratorRepository", () => {
 			}).pipe(Effect.provide(TestLayer)),
 		);
 
-		it.effect("returns updated precision after batch scoring", () =>
+		it.effect("returns updated confidence after batch scoring", () =>
 			Effect.gen(function* () {
 				const orchestrator = yield* OrchestratorRepository;
 

@@ -1,8 +1,8 @@
 /**
- * Calculate Precision Use Case
+ * Calculate Confidence Use Case
  *
- * Calculates overall assessment precision from facet confidence scores.
- * Precision = mean of all facet confidences (0-100 integers).
+ * Calculates overall assessment confidence from facet confidence scores.
+ * Confidence = mean of all facet confidences (0-100 integers).
  *
  * Formula: sum of facet confidences / facet count
  *
@@ -13,41 +13,41 @@
 import { type FacetScoresMap, LoggerRepository } from "@workspace/domain";
 import { Effect } from "effect";
 
-export interface CalculatePrecisionInput {
+export interface CalculateConfidenceInput {
 	readonly facetScores: FacetScoresMap;
 }
 
-export interface CalculatePrecisionOutput {
-	/** Overall precision percentage (0-100) */
-	readonly precision: number;
+export interface CalculateConfidenceOutput {
+	/** Overall confidence percentage (0-100) */
+	readonly confidence: number;
 	/** Number of facets used in calculation */
 	readonly facetCount: number;
 }
 
 /**
- * Calculate Precision from Facet Scores
+ * Calculate Confidence from Facet Scores
  *
- * Computes overall precision as the mean of all facet confidences.
+ * Computes overall confidence as the mean of all facet confidences.
  * Confidence values are 0-100 integers.
  *
  * Dependencies: LoggerRepository
- * Returns: Precision percentage and facet count
+ * Returns: Confidence percentage and facet count
  *
  * @example
  * ```typescript
- * const result = yield* calculatePrecisionFromFacets({
+ * const result = yield* calculateConfidenceFromFacets({
  *   facetScores: {
  *     imagination: { score: 16, confidence: 85 },
  *     altruism: { score: 18, confidence: 90 }
  *   }
  * })
- * console.log(result.precision) // 87.5
+ * console.log(result.confidence) // 87.5
  * console.log(result.facetCount) // 2
  * ```
  */
-export const calculatePrecisionFromFacets = (
-	input: CalculatePrecisionInput,
-): Effect.Effect<CalculatePrecisionOutput, never, LoggerRepository> =>
+export const calculateConfidenceFromFacets = (
+	input: CalculateConfidenceInput,
+): Effect.Effect<CalculateConfidenceOutput, never, LoggerRepository> =>
 	Effect.gen(function* () {
 		const logger = yield* LoggerRepository;
 
@@ -56,24 +56,24 @@ export const calculatePrecisionFromFacets = (
 
 		// Handle empty facet scores
 		if (facetCount === 0) {
-			logger.debug("No facets available for precision calculation");
-			return { precision: 0, facetCount: 0 };
+			logger.debug("No facets available for confidence calculation");
+			return { confidence: 0, facetCount: 0 };
 		}
 
 		// Sum all confidence values (already 0-100 integers)
 		const confidenceSum = facetEntries.reduce((sum, [_, score]) => sum + score.confidence, 0);
 
 		// Calculate mean confidence (already in 0-100 range)
-		const precision = Math.round((confidenceSum / facetCount) * 100) / 100; // Round to 2 decimal places
+		const confidence = Math.round((confidenceSum / facetCount) * 100) / 100; // Round to 2 decimal places
 
-		logger.info("Precision calculated", {
+		logger.info("Confidence calculated", {
 			facetCount,
 			confidenceSum,
-			precision,
+			confidence,
 		});
 
 		return {
-			precision,
+			confidence,
 			facetCount,
 		};
 	});

@@ -2,7 +2,7 @@
  * Start Assessment Use Case
  *
  * Business logic for starting a new assessment session.
- * Creates a new session with baseline precision scores.
+ * Creates a new session with baseline confidence scores.
  */
 
 import { RateLimitExceeded } from "@workspace/contracts";

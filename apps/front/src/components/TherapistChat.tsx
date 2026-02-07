@@ -14,11 +14,11 @@ interface TherapistChatProps {
 }
 
 const traitLabels: Record<string, string> = {
-	opennessPrecision: "Openness",
-	conscientiousnessPrecision: "Conscientiousness",
-	extraversionPrecision: "Extraversion",
-	agreeablenessPrecision: "Agreeableness",
-	neuroticismPrecision: "Neuroticism",
+	opennessConfidence: "Openness",
+	conscientiousnessConfidence: "Conscientiousness",
+	extraversionConfidence: "Extraversion",
+	agreeablenessConfidence: "Agreeableness",
+	neuroticismConfidence: "Neuroticism",
 };
 
 /**
@@ -48,7 +48,7 @@ function TypingIndicator() {
 }
 
 /**
- * Trait precision sidebar content, shared between desktop sidebar and mobile bottom sheet.
+ * Trait confidence sidebar content, shared between desktop sidebar and mobile bottom sheet.
  */
 function TraitSidebar({
 	traits,
@@ -111,6 +111,11 @@ export function TherapistChat({ sessionId, onMessageClick }: TherapistChatProps)
 		clearError,
 		retryLastMessage,
 		sendMessage,
+		isResuming,
+		resumeError,
+		isConfidenceReady,
+		hasShownCelebration,
+		setHasShownCelebration,
 	} = useTherapistChat(sessionId);
 	const { isAuthenticated } = useAuth();
 	const navigate = useNavigate();
@@ -202,71 +207,115 @@ export function TherapistChat({ sessionId, onMessageClick }: TherapistChatProps)
 				<div className="flex-1 overflow-hidden flex gap-4 p-4">
 					{/* Messages Area */}
 					<div className="flex-1 flex flex-col min-w-0">
-						<div className="flex-1 overflow-y-auto space-y-4 mb-4">
-							{messages.length === 0 ? (
-								<div className="h-full flex items-center justify-center">
-									<Card className="w-full max-w-md bg-slate-800/50 border-slate-700">
-										<CardHeader>
-											<CardTitle className="text-center text-white">
-												Welcome to Personality Assessment
-											</CardTitle>
-										</CardHeader>
-										<CardContent className="space-y-4">
-											<p className="text-gray-300 text-center">
-												The AI therapist will ask you questions to evaluate your personality across five key
-												dimensions. Ready to begin?
-											</p>
-											<Button
-												onClick={() => sendMessage()}
-												disabled={isLoading}
-												className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
-											>
-												{isLoading ? (
-													<>
-														<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-														Starting...
-													</>
-												) : (
-													"Start Assessment"
-												)}
-											</Button>
-										</CardContent>
-									</Card>
+						{/* Loading State */}
+						{isResuming && (
+							<div className="flex-1 flex items-center justify-center">
+								<div className="text-center">
+									<Loader2 className="h-8 w-8 animate-spin text-blue-400 mx-auto" />
+									<p className="text-slate-300 mt-4">Loading your assessment...</p>
 								</div>
-							) : (
-								messages.map((msg) => (
-									<div
-										key={msg.id}
-										className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-									>
-										{msg.role === "user" ? (
-											<button
-												type="button"
-												data-message-id={msg.id}
-												onClick={() => handleMessageClick(msg.id, msg.role)}
-												className="max-w-[85%] lg:max-w-md px-4 py-2 rounded-lg text-left bg-gradient-to-r from-blue-500 to-purple-500 text-white cursor-pointer hover:ring-2 hover:ring-blue-300/40 transition-shadow"
-											>
-												<p className="text-sm">{msg.content}</p>
-												<p className="text-xs mt-1 text-blue-100">{msg.timestamp.toLocaleTimeString()}</p>
-											</button>
-										) : (
-											<div
-												data-message-id={msg.id}
-												className="max-w-[85%] lg:max-w-md px-4 py-2 rounded-lg bg-slate-700/50 border border-slate-600 text-gray-100"
-											>
-												<p className="text-sm">{msg.content}</p>
-												<p className="text-xs mt-1 text-gray-400">{msg.timestamp.toLocaleTimeString()}</p>
-											</div>
-										)}
+							</div>
+						)}
+
+						{/* SessionNotFound Error */}
+						{!isResuming &&
+							resumeError &&
+							(resumeError.message.includes("404") || resumeError.message.includes("SessionNotFound")) && (
+								<div className="flex-1 flex items-center justify-center">
+									<div className="text-center max-w-md">
+										<p className="text-red-400 text-lg">Session not found</p>
+										<p className="text-slate-400 mt-2">This session may have expired or doesn't exist.</p>
+										<Button className="mt-4" onClick={() => navigate({ to: "/chat" })}>
+											Start New Assessment
+										</Button>
 									</div>
-								))
+								</div>
 							)}
 
-							{/* Typing indicator while loading */}
-							{isLoading && <TypingIndicator />}
+						{/* Generic Resume Error */}
+						{!isResuming &&
+							resumeError &&
+							!resumeError.message.includes("404") &&
+							!resumeError.message.includes("SessionNotFound") && (
+								<div className="flex-1 flex items-center justify-center">
+									<div className="text-center max-w-md">
+										<p className="text-red-400 text-lg">Something went wrong</p>
+										<p className="text-slate-400 mt-2">Unable to load your assessment.</p>
+										<Button className="mt-4" onClick={() => window.location.reload()}>
+											Retry
+										</Button>
+									</div>
+								</div>
+							)}
 
-							<div ref={messagesEndRef} />
-						</div>
+						{/* Messages (only show if not loading and no resume error) */}
+						{!isResuming && !resumeError && (
+							<div className="flex-1 overflow-y-auto space-y-4 mb-4">
+								{messages.length === 0 ? (
+									<div className="h-full flex items-center justify-center">
+										<Card className="w-full max-w-md bg-slate-800/50 border-slate-700">
+											<CardHeader>
+												<CardTitle className="text-center text-white">
+													Welcome to Personality Assessment
+												</CardTitle>
+											</CardHeader>
+											<CardContent className="space-y-4">
+												<p className="text-gray-300 text-center">
+													The AI therapist will ask you questions to evaluate your personality across five key
+													dimensions. Ready to begin?
+												</p>
+												<Button
+													onClick={() => sendMessage()}
+													disabled={isLoading}
+													className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+												>
+													{isLoading ? (
+														<>
+															<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+															Starting...
+														</>
+													) : (
+														"Start Assessment"
+													)}
+												</Button>
+											</CardContent>
+										</Card>
+									</div>
+								) : (
+									messages.map((msg) => (
+										<div
+											key={msg.id}
+											className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+										>
+											{msg.role === "user" ? (
+												<button
+													type="button"
+													data-message-id={msg.id}
+													onClick={() => handleMessageClick(msg.id, msg.role)}
+													className="max-w-[85%] lg:max-w-md px-4 py-2 rounded-lg text-left bg-gradient-to-r from-blue-500 to-purple-500 text-white cursor-pointer hover:ring-2 hover:ring-blue-300/40 transition-shadow"
+												>
+													<p className="text-sm">{msg.content}</p>
+													<p className="text-xs mt-1 text-blue-100">{msg.timestamp.toLocaleTimeString()}</p>
+												</button>
+											) : (
+												<div
+													data-message-id={msg.id}
+													className="max-w-[85%] lg:max-w-md px-4 py-2 rounded-lg bg-slate-700/50 border border-slate-600 text-gray-100"
+												>
+													<p className="text-sm">{msg.content}</p>
+													<p className="text-xs mt-1 text-gray-400">{msg.timestamp.toLocaleTimeString()}</p>
+												</div>
+											)}
+										</div>
+									))
+								)}
+
+								{/* Typing indicator while loading */}
+								{isLoading && <TypingIndicator />}
+
+								<div ref={messagesEndRef} />
+							</div>
+						)}
 
 						{/* Error Banner */}
 						{errorMessage && (
@@ -309,7 +358,7 @@ export function TherapistChat({ sessionId, onMessageClick }: TherapistChatProps)
 					</div>
 				</div>
 
-				{/* Mobile: floating precision button */}
+				{/* Mobile: floating confidence button */}
 				<div className="md:hidden fixed bottom-20 right-4 z-10">
 					<button
 						type="button"
@@ -345,6 +394,27 @@ export function TherapistChat({ sessionId, onMessageClick }: TherapistChatProps)
 								</button>
 							</div>
 							<TraitSidebar traits={traits} isCompleted={isCompleted} />
+						</div>
+					</div>
+				)}
+
+				{/* Celebration Overlay (70%+ Confidence) */}
+				{isConfidenceReady && !hasShownCelebration && (
+					<div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60">
+						<div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 max-w-md text-center">
+							<h2 className="text-2xl font-bold text-white">Your Personality Profile is Ready!</h2>
+							<p className="text-slate-300 mt-2">You've reached 70%+ confidence</p>
+							<div className="mt-6 flex gap-3 justify-center">
+								<Button
+									onClick={() => navigate({ to: "/results", search: { sessionId } })}
+									className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+								>
+									View Results
+								</Button>
+								<Button variant="outline" onClick={() => setHasShownCelebration(true)}>
+									Keep Exploring
+								</Button>
+							</div>
 						</div>
 					</div>
 				)}

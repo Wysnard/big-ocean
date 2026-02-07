@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
-import { useSendMessage } from "./use-assessment";
+import { useCallback, useEffect, useState } from "react";
+import { useResumeSession, useSendMessage } from "./use-assessment";
 
 interface Message {
 	id: string;
@@ -14,11 +14,11 @@ interface TraitScores {
 	extraversion: number;
 	agreeableness: number;
 	neuroticism: number;
-	opennessPrecision: number;
-	conscientiousnessPrecision: number;
-	extraversionPrecision: number;
-	agreeablenessPrecision: number;
-	neuroticismPrecision: number;
+	opennessConfidence: number;
+	conscientiousnessConfidence: number;
+	extraversionConfidence: number;
+	agreeablenessConfidence: number;
+	neuroticismConfidence: number;
 }
 
 /**
@@ -59,37 +59,80 @@ function parseApiError(error: unknown): {
 
 /**
  * Hook for managing the therapist chat conversation with real API integration.
- * Handles optimistic message updates, trait precision scoring from backend,
+ * Handles session resumption, optimistic message updates, trait confidence scoring from backend,
  * and structured error handling for known API error types.
  */
 export function useTherapistChat(sessionId: string) {
-	const [messages, setMessages] = useState<Message[]>([
-		{
-			id: "msg_init",
-			role: "assistant",
-			content:
-				"Hi! I'm Nerin, your AI therapist. I'd like to understand you better. Let's start with something simple: What are you currently passionate about?",
-			timestamp: new Date(Date.now() - 5000),
-		},
-	]);
+	const [messages, setMessages] = useState<Message[]>([]);
 	const [traits, setTraits] = useState<TraitScores>({
 		openness: 0,
 		conscientiousness: 0,
 		extraversion: 0,
 		agreeableness: 0,
 		neuroticism: 0,
-		opennessPrecision: 0,
-		conscientiousnessPrecision: 0,
-		extraversionPrecision: 0,
-		agreeablenessPrecision: 0,
-		neuroticismPrecision: 0,
+		opennessConfidence: 0,
+		conscientiousnessConfidence: 0,
+		extraversionConfidence: 0,
+		agreeablenessConfidence: 0,
+		neuroticismConfidence: 0,
 	});
 	const [isLoading, setIsLoading] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [errorType, setErrorType] = useState<
 		"session" | "budget" | "rate-limit" | "network" | "generic" | null
 	>(null);
+	const [hasShownCelebration, setHasShownCelebration] = useState(false);
 	const { mutate: sendMessageRpc } = useSendMessage();
+
+	// Session resumption
+	const {
+		data: resumeData,
+		isLoading: isResuming,
+		error: resumeError,
+	} = useResumeSession(sessionId);
+
+	// Initialize from resume data on mount
+	useEffect(() => {
+		if (!resumeData) return;
+
+		// Map server messages to local Message type
+		const mappedMessages = resumeData.messages.map((msg, index) => ({
+			id: `msg-resume-${index}`,
+			role: msg.role,
+			content: msg.content,
+			timestamp: new Date(msg.timestamp),
+		}));
+
+		// If empty messages, show Nerin greeting
+		if (mappedMessages.length === 0) {
+			setMessages([
+				{
+					id: "msg_init",
+					role: "assistant",
+					content:
+						"Hi! I'm Nerin, your AI therapist. I'd like to understand you better. Let's start with something simple: What are you currently passionate about?",
+					timestamp: new Date(Date.now() - 5000),
+				},
+			]);
+		} else {
+			// Otherwise, use server messages
+			setMessages(mappedMessages);
+		}
+
+		// Load confidence scores (values are already 0-100, do NOT multiply)
+		setTraits({
+			openness: resumeData.confidence.openness,
+			conscientiousness: resumeData.confidence.conscientiousness,
+			extraversion: resumeData.confidence.extraversion,
+			agreeableness: resumeData.confidence.agreeableness,
+			neuroticism: resumeData.confidence.neuroticism,
+			opennessConfidence: resumeData.confidence.openness,
+			conscientiousnessConfidence: resumeData.confidence.conscientiousness,
+			extraversionConfidence: resumeData.confidence.extraversion,
+			agreeablenessConfidence: resumeData.confidence.agreeableness,
+			neuroticismConfidence: resumeData.confidence.neuroticism,
+		});
+	}, [resumeData]);
 
 	const clearError = useCallback(() => {
 		setErrorMessage(null);
@@ -129,18 +172,18 @@ export function useTherapistChat(sessionId: string) {
 							},
 						]);
 
-						// Update trait precision from API response (values are 0-100 integers)
+						// Update trait confidence from API response (values are 0-100 integers)
 						setTraits({
-							openness: data.precision.openness,
-							conscientiousness: data.precision.conscientiousness,
-							extraversion: data.precision.extraversion,
-							agreeableness: data.precision.agreeableness,
-							neuroticism: data.precision.neuroticism,
-							opennessPrecision: data.precision.openness,
-							conscientiousnessPrecision: data.precision.conscientiousness,
-							extraversionPrecision: data.precision.extraversion,
-							agreeablenessPrecision: data.precision.agreeableness,
-							neuroticismPrecision: data.precision.neuroticism,
+							openness: data.confidence.openness,
+							conscientiousness: data.confidence.conscientiousness,
+							extraversion: data.confidence.extraversion,
+							agreeableness: data.confidence.agreeableness,
+							neuroticism: data.confidence.neuroticism,
+							opennessConfidence: data.confidence.openness,
+							conscientiousnessConfidence: data.confidence.conscientiousness,
+							extraversionConfidence: data.confidence.extraversion,
+							agreeablenessConfidence: data.confidence.agreeableness,
+							neuroticismConfidence: data.confidence.neuroticism,
 						});
 
 						setIsLoading(false);
@@ -166,6 +209,16 @@ export function useTherapistChat(sessionId: string) {
 		}
 	}, [messages, sendMessage]);
 
+	// Calculate if confidence is ready (70%+ average)
+	const avgConfidence =
+		(traits.openness +
+			traits.conscientiousness +
+			traits.extraversion +
+			traits.agreeableness +
+			traits.neuroticism) /
+		5;
+	const isConfidenceReady = avgConfidence >= 70;
+
 	return {
 		messages,
 		traits,
@@ -176,5 +229,10 @@ export function useTherapistChat(sessionId: string) {
 		clearError,
 		retryLastMessage,
 		sendMessage,
+		isResuming,
+		resumeError,
+		isConfidenceReady,
+		hasShownCelebration,
+		setHasShownCelebration,
 	};
 }
