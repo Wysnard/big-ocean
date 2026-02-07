@@ -13,14 +13,14 @@
 #   - done: All stories in epic completed
 #
 # Epic Status Transitions:
-#   - backlog -> in-progress: Automatically when first story is created (via create-story)
-#   - in-progress -> done: Manually when all stories reach 'done' status
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
 #
 # Story Status:
 #   - backlog: Story only exists in epic file
-#   - ready-for-dev: Story file created in stories folder
+#   - ready-for-dev: Story file created, ready for development
 #   - in-progress: Developer actively working on implementation
-#   - review: Ready for code review (via Dev's code-review workflow)
+#   - review: Implementation complete, ready for review
 #   - done: Story completed
 #
 # Retrospective Status:
@@ -31,8 +31,8 @@
 # ===============
 # - Epic transitions to 'in-progress' automatically when first story is created
 # - Stories can be worked in parallel if team capacity allows
-# - SM typically creates next story after previous one is 'done' to incorporate learnings
-# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+# - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
 generated: 2026-02-07
 project: big-ocean
@@ -80,7 +80,7 @@ development_status:
   4-1-authentication-ui-sign-up-modal: done
   4-2-assessment-conversation-component: done
   4-3-session-resumption-device-switching: done
-  4-4-optimistic-updates-progress-indicator: backlog
+  4-4-optimistic-updates-progress-indicator: done
   4-5-component-documentation-with-storybook: backlog
   epic-4-retrospective: optional
 
