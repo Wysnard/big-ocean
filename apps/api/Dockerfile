@@ -53,8 +53,9 @@ RUN pnpm rebuild esbuild
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
 
-# Copy drizzle config for db:push in entrypoint
+# Copy drizzle config and migration files for db:migrate in entrypoint
 COPY drizzle.config.ts ./
+COPY drizzle/ ./drizzle/
 
 # Copy entrypoint script
 COPY apps/api/docker-entrypoint.sh /docker-entrypoint.sh
