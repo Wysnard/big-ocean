@@ -46,7 +46,9 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 					const [session] = yield* db
 						.insert(assessmentSession)
 						.values({
-							userId: userId ?? null,
+							// Omit userId entirely when absent — the Drizzle Effect adapter serializes explicit null
+							// as an empty string in query params, violating the FK constraint on user.id.
+							...(userId ? { userId } : {}),
 							createdAt: new Date(),
 							updatedAt: new Date(),
 							status: "active",
