@@ -2,11 +2,12 @@ import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { BarChart3, Loader2, Send, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTherapistChat } from "@/hooks/useTherapistChat";
 import { SignUpModal } from "./auth/SignUpModal";
 import { ErrorBanner } from "./ErrorBanner";
+import { ProgressBar } from "./ProgressBar";
 
 interface TherapistChatProps {
 	sessionId: string;
@@ -127,6 +128,18 @@ export function TherapistChat({ sessionId, onMessageClick }: TherapistChatProps)
 	// Mobile traits bottom sheet
 	const [showMobileTraits, setShowMobileTraits] = useState(false);
 
+	// Calculate average confidence for progress bar
+	const avgConfidence = useMemo(() => {
+		return (
+			(traits.openness +
+				traits.conscientiousness +
+				traits.extraversion +
+				traits.agreeableness +
+				traits.neuroticism) /
+			5
+		);
+	}, [traits]);
+
 	// Auto-scroll to the latest message when message count changes
 	const messageCount = messages.length;
 	// biome-ignore lint/correctness/useExhaustiveDependencies: messageCount triggers scroll on new messages
@@ -202,6 +215,13 @@ export function TherapistChat({ sessionId, onMessageClick }: TherapistChatProps)
 						</code>
 					</p>
 				</div>
+
+				{/* Progress Bar - only show when messages exist */}
+				{messages.length > 0 && !isResuming && !resumeError && (
+					<div className="bg-slate-800/50 border-b border-slate-700">
+						<ProgressBar value={avgConfidence} showPercentage={true} />
+					</div>
+				)}
 
 				{/* Main Content */}
 				<div className="flex-1 overflow-hidden flex gap-4 p-4">

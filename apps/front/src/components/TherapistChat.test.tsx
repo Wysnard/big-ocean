@@ -450,4 +450,79 @@ describe("TherapistChat", () => {
 			});
 		});
 	});
+
+	// Task 3 Tests: ProgressBar Integration
+	describe("ProgressBar Integration", () => {
+		it("displays ProgressBar when messages exist", () => {
+			mockHookReturn.messages = [
+				{ id: "1", role: "assistant", content: "Hi!", timestamp: new Date() },
+				{ id: "2", role: "user", content: "Hello", timestamp: new Date() },
+			];
+			mockHookReturn.traits = {
+				openness: 60,
+				conscientiousness: 50,
+				extraversion: 40,
+				agreeableness: 70,
+				neuroticism: 30,
+				opennessConfidence: 60,
+				conscientiousnessConfidence: 50,
+				extraversionConfidence: 40,
+				agreeablenessConfidence: 70,
+				neuroticismConfidence: 30,
+			};
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			// Average = (60 + 50 + 40 + 70 + 30) / 5 = 50
+			expect(screen.getByText("50% assessed")).toBeInTheDocument();
+		});
+
+		it("hides ProgressBar when no messages exist", () => {
+			mockHookReturn.messages = [];
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			expect(screen.queryByText(/% assessed/)).toBeNull();
+			expect(screen.queryByText("You're nearly there!")).toBeNull();
+		});
+
+		it("updates ProgressBar label to 'You're nearly there!' when confidence >80%", () => {
+			mockHookReturn.messages = [{ id: "1", role: "user", content: "Hi", timestamp: new Date() }];
+			mockHookReturn.traits = {
+				openness: 85,
+				conscientiousness: 88,
+				extraversion: 90,
+				agreeableness: 82,
+				neuroticism: 80,
+				opennessConfidence: 85,
+				conscientiousnessConfidence: 88,
+				extraversionConfidence: 90,
+				agreeablenessConfidence: 82,
+				neuroticismConfidence: 80,
+			};
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			// Average = (85 + 88 + 90 + 82 + 80) / 5 = 85
+			expect(screen.getByText("You're nearly there!")).toBeInTheDocument();
+		});
+
+		it("hides ProgressBar when isResuming is true", () => {
+			mockHookReturn.messages = [{ id: "1", role: "user", content: "Hi", timestamp: new Date() }];
+			mockHookReturn.isResuming = true;
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			expect(screen.queryByText(/% assessed/)).toBeNull();
+		});
+
+		it("hides ProgressBar when resumeError exists", () => {
+			mockHookReturn.messages = [{ id: "1", role: "user", content: "Hi", timestamp: new Date() }];
+			mockHookReturn.resumeError = new Error("Session not found");
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			expect(screen.queryByText(/% assessed/)).toBeNull();
+		});
+	});
 });
