@@ -197,11 +197,11 @@ describe("sendMessage Use Case", () => {
 
 			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
-			// Response returns trait precision computed from facet precision
+			// Response returns trait confidence computed from facet confidence
 			// All facets at 0.5 -> all traits at 50
 			expect(result).toEqual({
 				response: mockOrchestratorResponse.nerinResponse,
-				precision: {
+				confidence: {
 					openness: 50,
 					conscientiousness: 50,
 					extraversion: 50,
@@ -267,7 +267,7 @@ describe("sendMessage Use Case", () => {
 			expect(callArg.dailyCostUsed).toBe(10); // 1000 cents = $10
 		});
 
-		it("should update session with precision scores", async () => {
+		it("should update session with confidence scores", async () => {
 			const testLayer = createTestLayer();
 
 			const input = {
@@ -282,7 +282,7 @@ describe("sendMessage Use Case", () => {
 			});
 		});
 
-		it("should include precision in response", async () => {
+		it("should include confidence in response", async () => {
 			const testLayer = createTestLayer();
 
 			const input = {
@@ -292,7 +292,7 @@ describe("sendMessage Use Case", () => {
 
 			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
-			expect(result.precision).toEqual({
+			expect(result.confidence).toEqual({
 				openness: 50,
 				conscientiousness: 50,
 				extraversion: 50,
@@ -344,7 +344,7 @@ describe("sendMessage Use Case", () => {
 	});
 
 	describe("Batch processing (every 3rd message)", () => {
-		it("should update precision from facet scores on batch message", async () => {
+		it("should update confidence from facet scores on batch message", async () => {
 			mockOrchestratorRepo.processMessage.mockReturnValue(
 				Effect.succeed(mockOrchestratorBatchResponse),
 			);
@@ -365,11 +365,11 @@ describe("sendMessage Use Case", () => {
 			// - orderliness (conscientiousness) updated to 0.8, other 5 conscientiousness facets at 0.5
 			//   conscientiousness = (0.8 + 5*0.5) / 6 = 0.55 -> 55%
 			// - Other traits keep all facets at 0.5 -> 50%
-			expect(result.precision.openness).toBe(56);
-			expect(result.precision.conscientiousness).toBe(55);
-			expect(result.precision.extraversion).toBe(50);
-			expect(result.precision.agreeableness).toBe(50);
-			expect(result.precision.neuroticism).toBe(50);
+			expect(result.confidence.openness).toBe(56);
+			expect(result.confidence.conscientiousness).toBe(55);
+			expect(result.confidence.extraversion).toBe(50);
+			expect(result.confidence.agreeableness).toBe(50);
+			expect(result.confidence.neuroticism).toBe(50);
 		});
 
 		it("should log batch processing info", async () => {
@@ -526,10 +526,10 @@ describe("sendMessage Use Case", () => {
 			);
 		});
 
-		it("should handle precision scores with null values by using defaults", async () => {
+		it("should handle confidence scores with null values by using defaults", async () => {
 			const sessionWithoutPrecision = {
 				...mockSession,
-				precision: undefined,
+				confidence: undefined,
 			};
 			mockAssessmentSessionRepo.getSession.mockReturnValue(Effect.succeed(sessionWithoutPrecision));
 
@@ -542,8 +542,8 @@ describe("sendMessage Use Case", () => {
 
 			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
-			// When session has no precision, defaults to 50 for all traits
-			expect(result.precision).toEqual({
+			// When session has no confidence, defaults to 50 for all traits
+			expect(result.confidence).toEqual({
 				openness: 50,
 				conscientiousness: 50,
 				extraversion: 50,

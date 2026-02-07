@@ -25,11 +25,11 @@ let mockHookReturn = {
 		extraversion: 0,
 		agreeableness: 0,
 		neuroticism: 0,
-		opennessPrecision: 0,
-		conscientiousnessPrecision: 0,
-		extraversionPrecision: 0,
-		agreeablenessPrecision: 0,
-		neuroticismPrecision: 0,
+		opennessConfidence: 0,
+		conscientiousnessConfidence: 0,
+		extraversionConfidence: 0,
+		agreeablenessConfidence: 0,
+		neuroticismConfidence: 0,
 	},
 	isLoading: false,
 	isCompleted: false,
@@ -38,6 +38,11 @@ let mockHookReturn = {
 	clearError: mockClearError,
 	retryLastMessage: mockRetryLastMessage,
 	sendMessage: mockSendMessage,
+	isResuming: false,
+	resumeError: null as Error | null,
+	isConfidenceReady: false,
+	hasShownCelebration: false,
+	setHasShownCelebration: vi.fn(),
 };
 
 vi.mock("@/hooks/useTherapistChat", () => ({
@@ -91,11 +96,11 @@ describe("TherapistChat", () => {
 				extraversion: 0,
 				agreeableness: 0,
 				neuroticism: 0,
-				opennessPrecision: 0,
-				conscientiousnessPrecision: 0,
-				extraversionPrecision: 0,
-				agreeablenessPrecision: 0,
-				neuroticismPrecision: 0,
+				opennessConfidence: 0,
+				conscientiousnessConfidence: 0,
+				extraversionConfidence: 0,
+				agreeablenessConfidence: 0,
+				neuroticismConfidence: 0,
 			},
 			isLoading: false,
 			isCompleted: false,
@@ -104,6 +109,11 @@ describe("TherapistChat", () => {
 			clearError: mockClearError,
 			retryLastMessage: mockRetryLastMessage,
 			sendMessage: mockSendMessage,
+			isResuming: false,
+			resumeError: null,
+			isConfidenceReady: false,
+			hasShownCelebration: false,
+			setHasShownCelebration: vi.fn(),
 		};
 	});
 
@@ -119,7 +129,7 @@ describe("TherapistChat", () => {
 		expect(screen.getByText(/session-123/)).toBeTruthy();
 	});
 
-	it("renders trait precision scores in sidebar", () => {
+	it("renders trait confidence scores in sidebar", () => {
 		renderWithProviders(<TherapistChat sessionId="session-123" />);
 
 		expect(screen.getByText("Openness")).toBeTruthy();
@@ -308,5 +318,136 @@ describe("TherapistChat", () => {
 		// Mobile floating button exists
 		const mobileButton = screen.getByLabelText("Show trait scores");
 		expect(mobileButton).toBeTruthy();
+	});
+
+	// Task 2 Tests: Loading and Error States for Resume
+	describe("Session Resume UI States", () => {
+		it("shows loading spinner while resuming session", () => {
+			mockHookReturn.isResuming = true;
+			mockHookReturn.messages = [];
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			expect(screen.getByText("Loading your assessment...")).toBeTruthy();
+			// Loader2 icon with animate-spin class
+			const { container } = render(<TherapistChat sessionId="session-123" />);
+			expect(container.querySelector(".animate-spin")).toBeTruthy();
+		});
+
+		it("shows SessionNotFound error with redirect button", () => {
+			mockHookReturn.isResuming = false;
+			mockHookReturn.resumeError = new Error("HTTP 404: SessionNotFound");
+			mockHookReturn.messages = [];
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			expect(screen.getByText("Session not found")).toBeTruthy();
+			expect(screen.getByText("Start New Assessment")).toBeTruthy();
+		});
+
+		it("shows generic error state with retry button", () => {
+			mockHookReturn.isResuming = false;
+			mockHookReturn.resumeError = new Error("Network failure");
+			mockHookReturn.messages = [];
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			expect(screen.getByText(/went wrong/)).toBeTruthy();
+			expect(screen.getByText(/Retry/)).toBeTruthy();
+		});
+
+		it("auto-scrolls to bottom after resume load completes", async () => {
+			// Mock scrollIntoView
+			Element.prototype.scrollIntoView = vi.fn();
+
+			mockHookReturn.messages = [
+				{ id: "msg_1", role: "assistant", content: "Previous", timestamp: new Date() },
+				{ id: "msg_2", role: "user", content: "Message", timestamp: new Date() },
+			];
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			await waitFor(() => {
+				expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+			});
+		});
+
+		it("hides loading state when resume completes", () => {
+			mockHookReturn.isResuming = false;
+			mockHookReturn.messages = [
+				{ id: "msg_1", role: "assistant", content: "Resumed", timestamp: new Date() },
+			];
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			expect(screen.queryByText("Loading your assessment...")).toBeNull();
+			expect(screen.getByText("Resumed")).toBeTruthy();
+		});
+	});
+
+	// Task 4 Tests: Celebration Overlay
+	describe("70% Celebration Overlay", () => {
+		it("shows celebration overlay when isConfidenceReady and not hasShownCelebration", () => {
+			mockHookReturn.isConfidenceReady = true;
+			mockHookReturn.hasShownCelebration = false;
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			expect(screen.getByText("Your Personality Profile is Ready!")).toBeTruthy();
+			expect(screen.getByText(/reached 70%/)).toBeTruthy();
+			expect(screen.getByText("View Results")).toBeTruthy();
+			expect(screen.getByText("Keep Exploring")).toBeTruthy();
+		});
+
+		it("hides celebration overlay if hasShownCelebration is true", () => {
+			mockHookReturn.isConfidenceReady = true;
+			mockHookReturn.hasShownCelebration = true;
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			expect(screen.queryByText("Your Personality Profile is Ready!")).toBeNull();
+		});
+
+		it("hides celebration overlay if isConfidenceReady is false", () => {
+			mockHookReturn.isConfidenceReady = false;
+			mockHookReturn.hasShownCelebration = false;
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			expect(screen.queryByText("Your Personality Profile is Ready!")).toBeNull();
+		});
+
+		it("navigates to results page when View Results clicked", async () => {
+			mockHookReturn.isConfidenceReady = true;
+			mockHookReturn.hasShownCelebration = false;
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			const viewResultsBtn = screen.getByText("View Results");
+			fireEvent.click(viewResultsBtn);
+
+			await waitFor(() => {
+				expect(mockNavigate).toHaveBeenCalledWith({
+					to: "/results",
+					search: { sessionId: "session-123" },
+				});
+			});
+		});
+
+		it("dismisses overlay when Keep Exploring clicked", async () => {
+			const mockSetHasShownCelebration = vi.fn();
+			mockHookReturn.isConfidenceReady = true;
+			mockHookReturn.hasShownCelebration = false;
+			mockHookReturn.setHasShownCelebration = mockSetHasShownCelebration;
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			const keepExploringBtn = screen.getByText("Keep Exploring");
+			fireEvent.click(keepExploringBtn);
+
+			await waitFor(() => {
+				expect(mockSetHasShownCelebration).toHaveBeenCalledWith(true);
+			});
+		});
 	});
 });

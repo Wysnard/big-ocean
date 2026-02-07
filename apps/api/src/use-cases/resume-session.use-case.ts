@@ -19,7 +19,7 @@ export interface ResumeSessionInput {
 }
 
 export interface ResumeSessionOutput {
-	readonly precision: {
+	readonly confidence: {
 		readonly openness: number;
 		readonly conscientiousness: number;
 		readonly extraversion: number;
@@ -33,7 +33,7 @@ export interface ResumeSessionOutput {
  * Resume Session Use Case
  *
  * Dependencies: AssessmentSessionRepository, AssessmentMessageRepository, LoggerRepository
- * Returns: Session precision scores and message history
+ * Returns: Session confidence scores and message history
  */
 export const resumeSession = (input: ResumeSessionInput) =>
 	Effect.gen(function* () {
@@ -56,7 +56,7 @@ export const resumeSession = (input: ResumeSessionInput) =>
 		const traitConfidence = calculateTraitConfidence(session.confidence);
 
 		return {
-			precision: traitConfidence,
+			confidence: traitConfidence,
 			messages,
 		};
 	});

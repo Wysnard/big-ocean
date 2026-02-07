@@ -50,7 +50,7 @@ describe("startAssessment Use Case", () => {
 				sessionId: "session_new_789",
 				userId,
 				createdAt: new Date("2026-02-01T10:00:00Z"),
-				precision: {
+				confidence: {
 					openness: 50,
 					conscientiousness: 50,
 					extraversion: 50,
@@ -220,7 +220,7 @@ describe("startAssessment Use Case", () => {
 					sessionId: "session_test_old",
 					userId: undefined,
 					createdAt: repositoryTime,
-					precision: {
+					confidence: {
 						openness: 50,
 						conscientiousness: 50,
 						extraversion: 50,
@@ -265,7 +265,7 @@ describe("startAssessment Use Case", () => {
 					sessionId: `session_${callCount}`,
 					userId: "user_test",
 					createdAt: new Date(),
-					precision: {
+					confidence: {
 						openness: 50,
 						conscientiousness: 50,
 						extraversion: 50,
@@ -340,7 +340,7 @@ describe("startAssessment Use Case", () => {
 					sessionId: "session_order",
 					userId: "user_order",
 					createdAt: new Date(),
-					precision: {
+					confidence: {
 						openness: 50,
 						conscientiousness: 50,
 						extraversion: 50,

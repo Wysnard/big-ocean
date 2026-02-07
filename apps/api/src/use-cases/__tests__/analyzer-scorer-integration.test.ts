@@ -44,7 +44,7 @@ const TestLayer = Layer.mergeAll(
 	AnalyzerRepository | FacetEvidenceRepository | ScorerRepository | LoggerRepository
 >;
 
-import { calculatePrecisionFromFacets } from "../calculate-precision.use-case";
+import { calculateConfidenceFromFacets } from "../calculate-confidence.use-case";
 import { saveFacetEvidence } from "../save-facet-evidence.use-case";
 import { shouldTriggerScoring, updateFacetScores } from "../update-facet-scores.use-case";
 
@@ -87,13 +87,13 @@ describe("Analyzer and Scorer Integration", () => {
 				const traitNames = Object.keys(scoresResult.traitScores);
 				expect(traitNames.length).toBeGreaterThan(0);
 
-				// Step 5: Calculate precision
-				const precisionResult = yield* calculatePrecisionFromFacets({
+				// Step 5: Calculate confidence
+				const confidenceResult = yield* calculateConfidenceFromFacets({
 					facetScores: scoresResult.facetScores,
 				});
 
-				expect(precisionResult.precision).toBeGreaterThanOrEqual(0);
-				expect(precisionResult.precision).toBeLessThanOrEqual(100);
+				expect(confidenceResult.confidence).toBeGreaterThanOrEqual(0);
+				expect(confidenceResult.confidence).toBeLessThanOrEqual(100);
 			}).pipe(Effect.provide(TestLayer)),
 		);
 
@@ -265,22 +265,22 @@ describe("Analyzer and Scorer Integration", () => {
 		);
 	});
 
-	describe("precision calculation", () => {
-		it.effect("should calculate precision after aggregation", () =>
+	describe("confidence calculation", () => {
+		it.effect("should calculate confidence after aggregation", () =>
 			Effect.gen(function* () {
-				const sessionId = "session_precision_integration";
+				const sessionId = "session_confidence_integration";
 
 				// Aggregate facet scores
 				const scoresResult = yield* updateFacetScores({ sessionId });
 
-				// Calculate precision
-				const precisionResult = yield* calculatePrecisionFromFacets({
+				// Calculate confidence
+				const confidenceResult = yield* calculateConfidenceFromFacets({
 					facetScores: scoresResult.facetScores,
 				});
 
-				expect(precisionResult.precision).toBeGreaterThanOrEqual(0);
-				expect(precisionResult.precision).toBeLessThanOrEqual(100);
-				expect(precisionResult.facetCount).toBe(Object.keys(scoresResult.facetScores).length);
+				expect(confidenceResult.confidence).toBeGreaterThanOrEqual(0);
+				expect(confidenceResult.confidence).toBeLessThanOrEqual(100);
+				expect(confidenceResult.facetCount).toBe(Object.keys(scoresResult.facetScores).length);
 			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
