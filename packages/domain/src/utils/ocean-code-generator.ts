@@ -18,16 +18,17 @@
 
 import type { FacetName, TraitName } from "../constants/big-five";
 import { FACET_TO_TRAIT } from "../constants/big-five";
+import type { OceanCode5, TraitLevel } from "../types/archetype";
 import type { FacetScore } from "../types/facet-evidence";
 import { BIG_FIVE_TRAITS } from "../types/trait";
 
-const mapTraitScoreToLevel = (score: number): "L" | "M" | "H" => {
+const mapTraitScoreToLevel = (score: number): TraitLevel => {
 	if (score < 40) return "L";
 	if (score < 80) return "M";
 	return "H";
 };
 
-export const generateOceanCode = (facetScores: Record<FacetName, FacetScore>): string => {
+export const generateOceanCode = (facetScores: Record<FacetName, FacetScore>): OceanCode5 => {
 	const traitScores = {} as Record<TraitName, number>;
 
 	for (const trait of BIG_FIVE_TRAITS) {
@@ -39,5 +40,7 @@ export const generateOceanCode = (facetScores: Record<FacetName, FacetScore>): s
 		traitScores[trait] += facetScores[facet].score;
 	}
 
-	return BIG_FIVE_TRAITS.map((trait) => mapTraitScoreToLevel(traitScores[trait])).join("");
+	return BIG_FIVE_TRAITS.map((trait) => mapTraitScoreToLevel(traitScores[trait])).join(
+		"",
+	) as OceanCode5;
 };

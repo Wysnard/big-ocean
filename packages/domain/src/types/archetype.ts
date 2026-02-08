@@ -12,10 +12,10 @@
 export type TraitLevel = "L" | "M" | "H";
 
 /** 4-letter OCEAN code using O, C, E, A traits (e.g., "HMLH") */
-export type OceanCode4 = string;
+export type OceanCode4 = `${TraitLevel}${TraitLevel}${TraitLevel}${TraitLevel}`;
 
 /** 5-letter OCEAN code using all 5 traits (e.g., "HMLHM") */
-export type OceanCode5 = string;
+export type OceanCode5 = `${TraitLevel}${TraitLevel}${TraitLevel}${TraitLevel}${TraitLevel}`;
 
 /**
  * Personality archetype derived from a 4-letter OCEAN code.

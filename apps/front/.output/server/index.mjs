@@ -38,7 +38,7 @@ function getViteEnv(input) {
     return input.headers["x-vite-env"] || input.headers.get?.("x-vite-env") || Array.isArray(input.headers) && input.headers.find((h) => h[0].toLowerCase() === "x-vite-env")?.[1];
   }
 }
-const manifest = { "src/integrations/tanstack-query/root-provider.tsx": { "file": "assets/router-CeRXc8Pc.js" }, "src/components/Header.tsx": { "file": "assets/router-CeRXc8Pc.js" }, "src/styles.css?transform-only": { "file": "assets/router-CeRXc8Pc.js" }, "src/styles.css?url": { "file": "assets/router-CeRXc8Pc.js" }, "src/routes/__root.tsx": { "file": "assets/router-CeRXc8Pc.js" }, "src/routes/signup.tsx": { "file": "assets/router-CeRXc8Pc.js" }, "src/routes/login.tsx": { "file": "assets/router-CeRXc8Pc.js" }, "src/routes/dashboard.tsx": { "file": "assets/router-CeRXc8Pc.js" }, "src/routes/index.tsx": { "file": "assets/router-CeRXc8Pc.js" }, "src/routes/chat/index.tsx": { "file": "assets/router-CeRXc8Pc.js" }, "src/src/routeTree.gen.ts": { "file": "assets/router-CeRXc8Pc.js" }, "src/router.tsx": { "file": "assets/router-CeRXc8Pc.js" }, "src/components/auth/signup-form.tsx": { "file": "assets/signup-BW0AYwiF.js" }, "src/routes/signup.tsx?tsr-split=component": { "file": "assets/signup-BW0AYwiF.js" }, "src/components/auth/login-form.tsx": { "file": "assets/login-DAZKZ7Jp.js" }, "src/routes/login.tsx?tsr-split=component": { "file": "assets/login-DAZKZ7Jp.js" }, "src/components/auth/user-menu.tsx": { "file": "assets/dashboard-BtKFQEON.js" }, "src/routes/dashboard.tsx?tsr-split=component": { "file": "assets/dashboard-BtKFQEON.js" }, "src/routes/index.tsx?tsr-split=component": { "file": "assets/index-DaSh3R-q.js" }, "src/hooks/use-assessment.ts": { "file": "assets/index-CgTNQPCq.js" }, "src/hooks/useTherapistChat.ts": { "file": "assets/index-CgTNQPCq.js" }, "src/components/ErrorBanner.tsx": { "file": "assets/index-CgTNQPCq.js" }, "src/components/auth/SignUpModal.tsx": { "file": "assets/index-CgTNQPCq.js" }, "src/components/TherapistChat.tsx": { "file": "assets/index-CgTNQPCq.js" }, "src/routes/chat/index.tsx?tsr-split=component": { "file": "assets/index-CgTNQPCq.js" }, "src/lib/auth-client.ts": { "file": "assets/use-auth-DbltyjcL.js" }, "src/hooks/use-auth.ts": { "file": "assets/use-auth-DbltyjcL.js" } };
+const manifest = { "src/integrations/tanstack-query/root-provider.tsx": { "file": "assets/router-CzTgl8kG.js" }, "src/components/Header.tsx": { "file": "assets/router-CzTgl8kG.js" }, "src/styles.css?transform-only": { "file": "assets/router-CzTgl8kG.js" }, "src/styles.css?url": { "file": "assets/router-CzTgl8kG.js" }, "src/routes/__root.tsx": { "file": "assets/router-CzTgl8kG.js" }, "src/routes/signup.tsx": { "file": "assets/router-CzTgl8kG.js" }, "src/routes/login.tsx": { "file": "assets/router-CzTgl8kG.js" }, "src/routes/dashboard.tsx": { "file": "assets/router-CzTgl8kG.js" }, "src/routes/index.tsx": { "file": "assets/router-CzTgl8kG.js" }, "src/routes/chat/index.tsx": { "file": "assets/router-CzTgl8kG.js" }, "src/src/routeTree.gen.ts": { "file": "assets/router-CzTgl8kG.js" }, "src/router.tsx": { "file": "assets/router-CzTgl8kG.js" }, "src/components/auth/signup-form.tsx": { "file": "assets/signup-BW0AYwiF.js" }, "src/routes/signup.tsx?tsr-split=component": { "file": "assets/signup-BW0AYwiF.js" }, "src/components/auth/login-form.tsx": { "file": "assets/login-DAZKZ7Jp.js" }, "src/routes/login.tsx?tsr-split=component": { "file": "assets/login-DAZKZ7Jp.js" }, "src/components/auth/user-menu.tsx": { "file": "assets/dashboard-BtKFQEON.js" }, "src/routes/dashboard.tsx?tsr-split=component": { "file": "assets/dashboard-BtKFQEON.js" }, "src/routes/index.tsx?tsr-split=component": { "file": "assets/index-DZhLc6Go.js" }, "src/hooks/use-assessment.ts": { "file": "assets/index-Dt6I18kt.js" }, "src/hooks/useTherapistChat.ts": { "file": "assets/index-Dt6I18kt.js" }, "src/components/auth/SignUpModal.tsx": { "file": "assets/index-Dt6I18kt.js" }, "src/components/ErrorBanner.tsx": { "file": "assets/index-Dt6I18kt.js" }, "src/components/ProgressBar.tsx": { "file": "assets/index-Dt6I18kt.js" }, "src/components/TherapistChat.tsx": { "file": "assets/index-Dt6I18kt.js" }, "src/routes/chat/index.tsx?tsr-split=component": { "file": "assets/index-Dt6I18kt.js" }, "src/lib/auth-client.ts": { "file": "assets/use-auth-DbltyjcL.js" }, "src/hooks/use-auth.ts": { "file": "assets/use-auth-DbltyjcL.js" } };
 function lazyService(loader) {
   let promise, mod;
   return {
@@ -1696,114 +1696,114 @@ const assets = {
   "/favicon.ico": {
     "type": "image/vnd.microsoft.icon",
     "etag": '"f1e-ESBTjHetHyiokkO0tT/irBbMO8Y"',
-    "mtime": "2026-02-06T22:07:15.203Z",
+    "mtime": "2026-02-08T08:15:41.397Z",
     "size": 3870,
     "path": "../public/favicon.ico"
   },
   "/logo192.png": {
     "type": "image/png",
     "etag": '"14e3-f08taHgqf6/O2oRVTsq5tImHdQA"',
-    "mtime": "2026-02-06T22:07:15.204Z",
+    "mtime": "2026-02-08T08:15:41.398Z",
     "size": 5347,
     "path": "../public/logo192.png"
   },
   "/logo512.png": {
     "type": "image/png",
     "etag": '"25c0-RpFfnQJpTtSb/HqVNJR2hBA9w/4"',
-    "mtime": "2026-02-06T22:07:15.204Z",
+    "mtime": "2026-02-08T08:15:41.398Z",
     "size": 9664,
     "path": "../public/logo512.png"
   },
   "/manifest.json": {
     "type": "application/json",
     "etag": '"1f2-Oqn/x1R1hBTtEjA8nFhpBeFJJNg"',
-    "mtime": "2026-02-06T22:07:15.204Z",
+    "mtime": "2026-02-08T08:15:41.398Z",
     "size": 498,
     "path": "../public/manifest.json"
   },
   "/robots.txt": {
     "type": "text/plain; charset=utf-8",
     "etag": '"43-BEzmj4PuhUNHX+oW9uOnPSihxtU"',
-    "mtime": "2026-02-06T22:07:15.204Z",
+    "mtime": "2026-02-08T08:15:41.398Z",
     "size": 67,
     "path": "../public/robots.txt"
   },
   "/tanstack-circle-logo.png": {
     "type": "image/png",
     "etag": '"40cab-HZ1KcYPs7tRjLe4Sd4g6CwKW+W8"',
-    "mtime": "2026-02-06T22:07:15.205Z",
+    "mtime": "2026-02-08T08:15:41.399Z",
     "size": 265387,
     "path": "../public/tanstack-circle-logo.png"
   },
   "/tanstack-word-logo-white.svg": {
     "type": "image/svg+xml",
     "etag": '"3a9a-9TQFm/pN8AZe1ZK0G1KyCEojnYg"',
-    "mtime": "2026-02-06T22:07:15.205Z",
+    "mtime": "2026-02-08T08:15:41.399Z",
     "size": 15002,
     "path": "../public/tanstack-word-logo-white.svg"
   },
-  "/assets/button-Ryopl_5T.js": {
+  "/assets/button-Zk1Dy4I3.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"7450-I69gIIY2Bkvp7XsIsL6Usx9pci4"',
-    "mtime": "2026-02-06T22:07:15.333Z",
+    "etag": '"7450-i7M+iK9LinF8gaSDZmo5orrZjyc"',
+    "mtime": "2026-02-08T08:15:41.536Z",
     "size": 29776,
-    "path": "../public/assets/button-Ryopl_5T.js"
+    "path": "../public/assets/button-Zk1Dy4I3.js"
   },
-  "/assets/dashboard-Ci0kiiL9.js": {
+  "/assets/dashboard-CN5ck3F0.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"96d-GV+64SjYCvRQa/ktdnhiNwfelck"',
-    "mtime": "2026-02-06T22:07:15.333Z",
+    "etag": '"96d-JUIg2TaxhdHKhBZkzzfQ8OBYSKw"',
+    "mtime": "2026-02-08T08:15:41.536Z",
     "size": 2413,
-    "path": "../public/assets/dashboard-Ci0kiiL9.js"
+    "path": "../public/assets/dashboard-CN5ck3F0.js"
   },
-  "/assets/index-DTgpcuph.js": {
+  "/assets/index-Bm29xyEQ.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"19c2-DhEZUZdugcfk4Keh3pSTRu/oE0w"',
-    "mtime": "2026-02-06T22:07:15.333Z",
+    "etag": '"19c2-DvGLimPKbmQ0AdUGSuUr2iYbF5Q"',
+    "mtime": "2026-02-08T08:15:41.536Z",
     "size": 6594,
-    "path": "../public/assets/index-DTgpcuph.js"
+    "path": "../public/assets/index-Bm29xyEQ.js"
   },
-  "/assets/index-SCdd5Wxp.js": {
+  "/assets/index-LYvV3zMD.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"cc5b-l2buUnS+D8VK3ZtJ0A+BFzhz3JA"',
-    "mtime": "2026-02-06T22:07:15.333Z",
-    "size": 52315,
-    "path": "../public/assets/index-SCdd5Wxp.js"
+    "etag": '"fee8-sxbmoEpZIAPMDpZo5joyJVjxyeU"',
+    "mtime": "2026-02-08T08:15:41.536Z",
+    "size": 65256,
+    "path": "../public/assets/index-LYvV3zMD.js"
   },
-  "/assets/login-DIVCUVNS.js": {
+  "/assets/login-CpNdE_Wa.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"81b-IXwslMIQDBhwOkH7rrQbQ/f/pBA"',
-    "mtime": "2026-02-06T22:07:15.333Z",
+    "etag": '"81b-ZOjGbx8KZVUd9LEcseImKQcn5Dc"',
+    "mtime": "2026-02-08T08:15:41.536Z",
     "size": 2075,
-    "path": "../public/assets/login-DIVCUVNS.js"
+    "path": "../public/assets/login-CpNdE_Wa.js"
   },
-  "/assets/main-BwNb3pMf.js": {
+  "/assets/main-DU8cP9if.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"56667-dmUB3+Q5nvwAt42CTsiea+J7tls"',
-    "mtime": "2026-02-06T22:07:15.333Z",
-    "size": 353895,
-    "path": "../public/assets/main-BwNb3pMf.js"
+    "etag": '"566b7-1NCTEwqlFRdRx1ksZm8Mkpxlr3g"',
+    "mtime": "2026-02-08T08:15:41.536Z",
+    "size": 353975,
+    "path": "../public/assets/main-DU8cP9if.js"
   },
-  "/assets/signup-RKnLsJze.js": {
+  "/assets/signup-CuDF0xAn.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"c17-DWE2We+DFbrzp8PcRHSMVRpO570"',
-    "mtime": "2026-02-06T22:07:15.333Z",
+    "etag": '"c17-QonwsdOZEpAjGp927GtFtVrNJ0E"',
+    "mtime": "2026-02-08T08:15:41.536Z",
     "size": 3095,
-    "path": "../public/assets/signup-RKnLsJze.js"
+    "path": "../public/assets/signup-CuDF0xAn.js"
   },
-  "/assets/styles-CHbk85X1.css": {
+  "/assets/styles-BMtT7nmC.css": {
     "type": "text/css; charset=utf-8",
-    "etag": '"f5f5-jTf2t9tu6d3h9YAL3pZ0GU5XKdU"',
-    "mtime": "2026-02-06T22:07:15.333Z",
-    "size": 62965,
-    "path": "../public/assets/styles-CHbk85X1.css"
+    "etag": '"bd04-Zk+1Aa6jGg5phLHCQRd24B46VD4"',
+    "mtime": "2026-02-08T08:15:41.536Z",
+    "size": 48388,
+    "path": "../public/assets/styles-BMtT7nmC.css"
   },
-  "/assets/use-auth-TWGkKgSh.js": {
+  "/assets/use-auth-CKgWsg7R.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"70eb-qEr/tfIy839zYnA4fOyVv/7tB4I"',
-    "mtime": "2026-02-06T22:07:15.333Z",
+    "etag": '"70eb-/LBkuOlGVH2Gz+0P3nHXMMDegIw"',
+    "mtime": "2026-02-08T08:15:41.536Z",
     "size": 28907,
-    "path": "../public/assets/use-auth-TWGkKgSh.js"
+    "path": "../public/assets/use-auth-CKgWsg7R.js"
   }
 };
 function readAsset(id) {

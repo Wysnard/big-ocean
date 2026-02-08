@@ -9,7 +9,7 @@
  */
 
 import { CURATED_ARCHETYPES } from "../constants/archetypes";
-import type { Archetype, TraitLevel } from "../types/archetype";
+import type { Archetype, OceanCode4, TraitLevel } from "../types/archetype";
 
 const VALID_CODE4_REGEX = /^[LMH]{4}$/;
 const VALID_CODE5_REGEX = /^[LMH]{5}$/;
@@ -213,10 +213,11 @@ export const lookupArchetype = (code4: string): Archetype => {
 		);
 	}
 
+	const validCode4 = code4 as OceanCode4;
 	const curated = CURATED_ARCHETYPES[code4];
 	if (curated) {
 		return {
-			code4,
+			code4: validCode4,
 			name: curated.name,
 			description: curated.description,
 			color: curated.color,
@@ -226,7 +227,7 @@ export const lookupArchetype = (code4: string): Archetype => {
 
 	const levels = parseCode4(code4);
 	return {
-		code4,
+		code4: validCode4,
 		name: generateArchetypeName(levels),
 		description: generateDescription(levels),
 		color: generateColor(levels),
@@ -248,11 +249,11 @@ export const lookupArchetype = (code4: string): Archetype => {
  * extract4LetterCode("HHMHM") // → "HHMH"
  * ```
  */
-export const extract4LetterCode = (oceanCode5: string): string => {
+export const extract4LetterCode = (oceanCode5: string): OceanCode4 => {
 	if (!VALID_CODE5_REGEX.test(oceanCode5)) {
 		throw new Error(
 			`Invalid 5-letter OCEAN code: "${oceanCode5}". Expected exactly 5 characters of L, M, or H.`,
 		);
 	}
-	return oceanCode5.slice(0, 4);
+	return oceanCode5.slice(0, 4) as OceanCode4;
 };

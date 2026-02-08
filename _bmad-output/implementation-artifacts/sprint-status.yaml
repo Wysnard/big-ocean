@@ -76,13 +76,13 @@ development_status:
   epic-3-retrospective: done
 
   # EPIC 4: Frontend Assessment UI
-  epic-4: in-progress
+  epic-4: done
   4-1-authentication-ui-sign-up-modal: done
   4-2-assessment-conversation-component: done
   4-3-session-resumption-device-switching: done
   4-4-optimistic-updates-progress-indicator: done
   4-5-component-documentation-with-storybook: done
-  epic-4-retrospective: optional
+  epic-4-retrospective: done
 
   # EPIC 5: Results & Profile Sharing
   epic-5: backlog
