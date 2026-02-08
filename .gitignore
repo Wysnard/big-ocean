@@ -33,6 +33,9 @@ dist
 # Debug
 npm-debug.log*
 
+# Storybook
+storybook-static
+
 # Misc
 .DS_Store
 *.pem
