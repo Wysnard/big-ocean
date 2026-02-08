@@ -39,6 +39,11 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 			{/* Progress bar track */}
 			<div
 				data-testid="progress-track"
+				role="progressbar"
+				aria-valuenow={clampedValue}
+				aria-valuemin={0}
+				aria-valuemax={100}
+				aria-label={displayLabel}
 				className="w-full bg-slate-700 h-3 rounded-full overflow-hidden"
 			>
 				{/* Progress bar fill */}

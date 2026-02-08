@@ -24,7 +24,6 @@
     "@effect/platform": "catalog:",
     "@effect/rpc": "catalog:",
     "@faker-js/faker": "^10.0.0",
-    "@storybook/react-vite": "^10.1.10",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/match-sorter-utils": "^8.19.4",
     "@tanstack/query-db-collection": "^1.0.8",
@@ -47,7 +46,6 @@
     "nitro": "^3.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "storybook": "^10.1.10",
     "tailwindcss": "^4.0.6",
     "vite-tsconfig-paths": "^6.0.2",
     "zod": "catalog:"
@@ -55,6 +53,9 @@
   "devDependencies": {
     "@biomejs/biome": "^2.3.13",
     "@playwright/test": "^1.58.1",
+    "@storybook/addon-a11y": "^10.2.7",
+    "@storybook/react-vite": "^10.2.7",
+    "storybook": "^10.2.7",
     "@tanstack/devtools-vite": "^0.3.11",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.9.1",
