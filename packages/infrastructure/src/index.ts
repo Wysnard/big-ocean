@@ -63,6 +63,8 @@ export {
 } from "./repositories/orchestrator.state";
 // Orchestrator graph repository implementation
 export { OrchestratorGraphLangGraphRepositoryLive } from "./repositories/orchestrator-graph.langgraph.repository";
+// Public profile repository implementation
+export { PublicProfileDrizzleRepositoryLive } from "./repositories/public-profile.drizzle.repository";
 // Redis repository implementation
 export { RedisIoRedisRepositoryLive } from "./repositories/redis.ioredis.repository";
 // Scorer repository implementation

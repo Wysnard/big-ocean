@@ -30,68 +30,69 @@ import {
 export const OrchestratorLangGraphRepositoryLive = Layer.succeed(
 	OrchestratorRepository,
 	OrchestratorRepository.of({
-		processMessage: (input) => {
-			const { sessionId, messageCount, dailyCostUsed, facetScores } = input;
+		processMessage: (input) =>
+			Effect.gen(function* () {
+				const { sessionId, messageCount, dailyCostUsed, facetScores } = input;
 
-			// 1. BUDGET CHECK
-			if (dailyCostUsed + MESSAGE_COST_ESTIMATE > DAILY_COST_LIMIT) {
-				const normalizedScores = createInitialFacetScoresMap(facetScores);
-				const overallConfidence = facetScores
-					? calculateConfidenceFromFacetScores(normalizedScores)
-					: 50;
+				// 1. BUDGET CHECK
+				if (dailyCostUsed + MESSAGE_COST_ESTIMATE > DAILY_COST_LIMIT) {
+					const normalizedScores = createInitialFacetScoresMap(facetScores);
+					const overallConfidence = facetScores
+						? calculateConfidenceFromFacetScores(normalizedScores)
+						: 50;
 
-				return Effect.fail(
-					new BudgetPausedError(
-						sessionId,
-						"Your assessment is saved! Come back tomorrow to continue with full accuracy.",
-						getNextDayMidnightUTC(),
-						overallConfidence,
-					),
-				);
-			}
+					return yield* Effect.fail(
+						new BudgetPausedError(
+							sessionId,
+							"Your assessment is saved! Come back tomorrow to continue with full accuracy.",
+							getNextDayMidnightUTC(),
+							overallConfidence,
+						),
+					);
+				}
 
-			// 2. STEERING CALCULATION
-			const normalizedFacetScores = createInitialFacetScoresMap(facetScores);
-			const steeringTarget = getSteeringTarget(normalizedFacetScores);
-			const steeringHint = getSteeringHint(steeringTarget);
+				// 2. STEERING CALCULATION
+				const normalizedFacetScores = createInitialFacetScoresMap(facetScores);
+				const steeringTarget = getSteeringTarget(normalizedFacetScores);
+				const steeringHint = getSteeringHint(steeringTarget);
 
-			// 3. BATCH DECISION
-			const isBatchMessage = shouldTriggerBatch(messageCount);
+				// 3. BATCH DECISION
+				const isBatchMessage = shouldTriggerBatch(messageCount);
 
-			// 4. BUILD RESPONSE
-			const costIncurred = MESSAGE_COST_ESTIMATE;
+				// 4. BUILD RESPONSE
+				const costIncurred = MESSAGE_COST_ESTIMATE;
 
-			if (isBatchMessage) {
-				// Batch: return evidence + scores
-				return Effect.succeed({
+				if (isBatchMessage) {
+					// Batch: return evidence + scores
+					return {
+						nerinResponse: `Mock orchestrator response for session ${sessionId}`,
+						tokenUsage: { input: 150, output: 80, total: 230 },
+						costIncurred,
+						facetEvidence: [
+							{
+								assessmentMessageId: `msg_${sessionId}`,
+								facetName: "imagination" as FacetName,
+								score: 15,
+								confidence: 70,
+								quote: "mock batch evidence",
+								highlightRange: { start: 0, end: 10 },
+							},
+						],
+						facetScores: createInitialFacetScoresMap(facetScores),
+						traitScores: createInitialTraitScoresMap(),
+						steeringTarget,
+						steeringHint,
+					};
+				}
+
+				// Non-batch: Nerin response only
+				return {
 					nerinResponse: `Mock orchestrator response for session ${sessionId}`,
 					tokenUsage: { input: 150, output: 80, total: 230 },
 					costIncurred,
-					facetEvidence: [
-						{
-							assessmentMessageId: `msg_${sessionId}`,
-							facetName: "imagination" as FacetName,
-							score: 15,
-							confidence: 70,
-							quote: "mock batch evidence",
-							highlightRange: { start: 0, end: 10 },
-						},
-					],
-					facetScores: createInitialFacetScoresMap(facetScores),
-					traitScores: createInitialTraitScoresMap(),
 					steeringTarget,
 					steeringHint,
-				});
-			}
-
-			// Non-batch: Nerin response only
-			return Effect.succeed({
-				nerinResponse: `Mock orchestrator response for session ${sessionId}`,
-				tokenUsage: { input: 150, output: 80, total: 230 },
-				costIncurred,
-				steeringTarget,
-				steeringHint,
-			});
-		},
+				};
+			}),
 	}),
 );

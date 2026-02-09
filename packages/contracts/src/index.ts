@@ -19,5 +19,9 @@ export * from "./http/groups/health";
 // HTTP API Groups
 export { HealthGroup } from "./http/groups/health";
 
+// Profile HTTP Schemas and Types
+export * from "./http/groups/profile";
+export { ProfileGroup } from "./http/groups/profile";
+
 // Shared Schemas & Types
 export * from "./schemas";

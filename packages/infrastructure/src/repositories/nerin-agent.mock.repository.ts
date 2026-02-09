@@ -182,7 +182,7 @@ export const NerinAgentMockRepositoryLive = Layer.succeed(
 	NerinAgentRepository,
 	NerinAgentRepository.of({
 		invoke: (input: NerinInvokeInput): Effect.Effect<NerinInvokeOutput, never, never> =>
-			Effect.sync(() => {
+			Effect.gen(function* () {
 				// Get the last user message for pattern matching
 				const lastMessage = input.messages.at(-1);
 				const messageContent = lastMessage
@@ -209,6 +209,11 @@ export const NerinAgentMockRepositoryLive = Layer.succeed(
 				if (input.facetScores) {
 					console.log(`[MockNerin] Facets assessed: ${Object.keys(input.facetScores).length}`);
 				}
+
+				// Add realistic delay to simulate API latency (500-1500ms)
+				// This ensures e2e tests can detect the loading state
+				const delay = Math.floor(Math.random() * 1000) + 500;
+				yield* Effect.sleep(`${delay} millis`);
 
 				return {
 					response: mockResponse.message,

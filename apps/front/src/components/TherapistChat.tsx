@@ -54,10 +54,14 @@ function TypingIndicator() {
 function TraitSidebar({
 	traits,
 	isCompleted,
+	sessionId,
 }: {
 	traits: Record<string, number>;
 	isCompleted: boolean;
+	sessionId: string;
 }) {
+	const navigate = useNavigate();
+
 	return (
 		<Card className="bg-slate-800/50 border-slate-700">
 			<CardHeader>
@@ -89,8 +93,17 @@ function TraitSidebar({
 				})}
 
 				{isCompleted && (
-					<div className="mt-4 p-3 bg-green-900/20 border border-green-700/30 rounded-lg">
-						<p className="text-sm text-green-200 font-medium">Assessment completed successfully!</p>
+					<div className="mt-4 space-y-3">
+						<div className="p-3 bg-green-900/20 border border-green-700/30 rounded-lg">
+							<p className="text-sm text-green-200 font-medium">Assessment completed successfully!</p>
+						</div>
+						<Button
+							onClick={() => navigate({ to: "/results", search: { sessionId } })}
+							className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+						>
+							<BarChart3 className="w-4 h-4 mr-2" />
+							View Results & Share
+						</Button>
 					</div>
 				)}
 			</CardContent>
@@ -374,7 +387,7 @@ export function TherapistChat({ sessionId, onMessageClick }: TherapistChatProps)
 
 					{/* Traits Sidebar — Desktop only */}
 					<div className="hidden md:flex md:w-80 flex-col">
-						<TraitSidebar traits={traits} isCompleted={isCompleted} />
+						<TraitSidebar traits={traits} isCompleted={isCompleted} sessionId={sessionId} />
 					</div>
 				</div>
 
@@ -413,7 +426,7 @@ export function TherapistChat({ sessionId, onMessageClick }: TherapistChatProps)
 									<X className="h-5 w-5" />
 								</button>
 							</div>
-							<TraitSidebar traits={traits} isCompleted={isCompleted} />
+							<TraitSidebar traits={traits} isCompleted={isCompleted} sessionId={sessionId} />
 						</div>
 					</div>
 				)}

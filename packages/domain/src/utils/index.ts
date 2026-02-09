@@ -15,4 +15,5 @@ export {
 	DEFAULT_TRAIT_SCORE,
 	type TraitConfidence,
 } from "./confidence";
+export { deriveTraitSummary } from "./derive-trait-summary";
 export { generateOceanCode } from "./ocean-code-generator";

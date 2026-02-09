@@ -8,6 +8,7 @@
 import { HttpApi } from "@effect/platform";
 import { AssessmentGroup } from "./groups/assessment";
 import { HealthGroup } from "./groups/health";
+import { ProfileGroup } from "./groups/profile";
 
 /**
  * Big Ocean API
@@ -17,4 +18,5 @@ import { HealthGroup } from "./groups/health";
  */
 export class BigOceanApi extends HttpApi.make("BigOceanApi")
 	.add(HealthGroup) // /health (no prefix)
-	.add(AssessmentGroup.prefix("/api")) {} // /api/assessment/*
+	.add(AssessmentGroup.prefix("/api")) // /api/assessment/*
+	.add(ProfileGroup.prefix("/api")) {} // /api/profile/*

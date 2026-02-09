@@ -69,6 +69,14 @@ export class ProfileError extends S.TaggedError<ProfileError>()("ProfileError", 
 }) {}
 
 /**
+ * Profile private error (403)
+ */
+export class ProfilePrivate extends S.TaggedError<ProfilePrivate>()("ProfilePrivate", {
+	publicProfileId: S.String,
+	message: S.String,
+}) {}
+
+/**
  * Auth-related errors
  */
 
