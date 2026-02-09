@@ -1,0 +1,138 @@
+import { cn } from "@workspace/ui/lib/utils";
+
+export interface FacetData {
+	name: string;
+	score: number;
+	confidence: number;
+}
+
+export interface FacetBreakdownProps {
+	traitName: string;
+	facets: FacetData[];
+	traitScore: number;
+	id: string;
+	className?: string;
+}
+
+const MAX_FACET_SCORE = 20;
+const HIGH_SCORE_THRESHOLD = 15;
+const LOW_CONFIDENCE_THRESHOLD = 30;
+
+/**
+ * Expandable breakdown showing the 6 facets that compose a Big Five trait.
+ * Highlights high-scoring facets and marks low-confidence ones.
+ */
+export function FacetBreakdown({
+	traitName,
+	facets,
+	traitScore,
+	id,
+	className,
+}: FacetBreakdownProps) {
+	return (
+		<section
+			id={id}
+			aria-label={`${traitName} facet breakdown`}
+			data-testid={`facet-breakdown-${traitName}`}
+			className={cn(
+				"overflow-hidden rounded-b-xl border border-t-0 border-slate-700/50 bg-slate-850/40 transition-all duration-300",
+				className,
+			)}
+		>
+			{/* Sum visualization */}
+			<div className="border-b border-slate-700/30 px-4 py-3">
+				<p className="text-xs text-slate-400" data-testid="facet-sum-label">
+					6 facets sum to{" "}
+					<span className="font-medium text-slate-300">
+						{traitName.charAt(0).toUpperCase() + traitName.slice(1)}
+					</span>{" "}
+					trait score ({traitScore}/120)
+				</p>
+			</div>
+
+			{/* Facet list */}
+			<ul className="divide-y divide-slate-700/20 px-4" data-testid="facet-list">
+				{facets.map((facet) => {
+					const isHighScore = facet.score >= HIGH_SCORE_THRESHOLD;
+					const isLowConfidence = facet.confidence < LOW_CONFIDENCE_THRESHOLD;
+					const scorePercent = Math.round(
+						(Math.min(Math.max(facet.score, 0), MAX_FACET_SCORE) / MAX_FACET_SCORE) * 100,
+					);
+
+					return (
+						<li
+							key={facet.name}
+							aria-label={`${facet.name}: ${facet.score} out of ${MAX_FACET_SCORE}, ${facet.confidence}% confidence`}
+							data-testid={`facet-item-${facet.name}`}
+							className={cn("py-3", isLowConfidence && "opacity-60")}
+						>
+							{/* Facet header: name, score, confidence */}
+							<div className="flex items-center justify-between gap-2">
+								<div className="flex items-center gap-2 min-w-0">
+									<span
+										className={cn(
+											"text-sm truncate",
+											isHighScore ? "font-semibold text-white" : "text-slate-300",
+										)}
+									>
+										{facet.name}
+									</span>
+									{isHighScore && (
+										<span
+											className="shrink-0 text-xs text-amber-400"
+											aria-hidden="true"
+											data-testid={`facet-highlight-${facet.name}`}
+										>
+											&#9733;
+										</span>
+									)}
+								</div>
+
+								<div className="flex items-center gap-3 shrink-0">
+									<span className="text-xs font-medium text-slate-300">
+										{facet.score}/{MAX_FACET_SCORE}
+									</span>
+									<span
+										className={cn("text-xs", isLowConfidence ? "text-red-400" : "text-slate-500")}
+										data-testid={`facet-confidence-${facet.name}`}
+									>
+										{facet.confidence}%
+									</span>
+								</div>
+							</div>
+
+							{/* Score bar */}
+							<div className="mt-1.5">
+								<div
+									className={cn(
+										"h-1.5 w-full overflow-hidden rounded-full bg-slate-700/40",
+										isLowConfidence && "border border-dashed border-slate-600/40",
+									)}
+								>
+									<div
+										className={cn(
+											"h-full rounded-full transition-all duration-300",
+											isHighScore ? "bg-amber-400/80" : "bg-slate-500/60",
+										)}
+										style={{ width: `${scorePercent}%` }}
+										data-testid={`facet-fill-${facet.name}`}
+									/>
+								</div>
+							</div>
+
+							{/* View Evidence button (disabled placeholder for Story 5.3) */}
+							<button
+								type="button"
+								disabled
+								className="mt-1.5 text-xs text-slate-500 cursor-not-allowed"
+								data-testid={`facet-evidence-btn-${facet.name}`}
+							>
+								View Evidence
+							</button>
+						</li>
+					);
+				})}
+			</ul>
+		</section>
+	);
+}

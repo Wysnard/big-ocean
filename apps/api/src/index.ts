@@ -22,9 +22,11 @@ import {
 	CheckpointerPostgresRepositoryLive,
 	CostGuardRedisRepositoryLive,
 	DatabaseStack,
+	FacetScoreDrizzleRepositoryLive,
 	OrchestratorGraphLangGraphRepositoryLive,
 	OrchestratorLangGraphRepositoryLive,
 	ScorerDrizzleRepositoryLive,
+	TraitScoreDrizzleRepositoryLive,
 } from "@workspace/infrastructure";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
@@ -120,6 +122,8 @@ const OrchestratorLayer = OrchestratorLangGraphRepositoryLive.pipe(
 const RepositoryLayers = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
 	AssessmentMessageDrizzleRepositoryLive,
+	FacetScoreDrizzleRepositoryLive,
+	TraitScoreDrizzleRepositoryLive,
 	NerinAgentLayer,
 	CostGuardLayer,
 	OrchestratorLayer,

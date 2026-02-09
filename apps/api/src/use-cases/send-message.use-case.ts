@@ -100,10 +100,8 @@ export const sendMessage = (input: SendMessageInput) =>
 		// Initialize facet scores with confidence values from session
 		const facetScores: FacetScoresMap = createInitialFacetScoresMap();
 		for (const [key, confidence] of Object.entries(sessionFacetConfidence)) {
-			// Map 'depressiveness' to 'depression' for compatibility
-			const facetKey = key === "depressiveness" ? "depression" : key;
-			if (facetKey in facetScores) {
-				facetScores[facetKey as keyof FacetScoresMap] = {
+			if (key in facetScores) {
+				facetScores[key as keyof FacetScoresMap] = {
 					score: 10, // Default neutral score
 					confidence: confidence as number,
 				};
@@ -147,12 +145,10 @@ export const sendMessage = (input: SendMessageInput) =>
 		// If batch processing occurred, update confidence from result
 		if (result.facetScores) {
 			// Convert FacetScoresMap back to FacetConfidenceScores
-			// Map 'depression' back to 'depressiveness' for session storage
 			const updatedFacets: Partial<FacetConfidenceScores> = {};
 			for (const [facetName, facetScore] of Object.entries(result.facetScores)) {
-				const sessionKey = facetName === "depression" ? "depressiveness" : facetName;
-				if (sessionKey in sessionFacetConfidence) {
-					updatedFacets[sessionKey as keyof FacetConfidenceScores] = facetScore.confidence;
+				if (facetName in sessionFacetConfidence) {
+					updatedFacets[facetName as keyof FacetConfidenceScores] = facetScore.confidence;
 				}
 			}
 

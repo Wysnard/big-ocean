@@ -426,10 +426,11 @@ export function TherapistChat({ sessionId, onMessageClick }: TherapistChatProps)
 							<p className="text-slate-300 mt-2">You've reached 70%+ confidence</p>
 							<div className="mt-6 flex gap-3 justify-center">
 								<Button
-									onClick={() => navigate({ to: "/results", search: { sessionId } })}
+									onClick={() => navigate({ to: "/results/$sessionId", params: { sessionId } })}
 									className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+									data-testid="view-results-btn"
 								>
-									View Results
+									View My Results
 								</Button>
 								<Button variant="outline" onClick={() => setHasShownCelebration(true)}>
 									Keep Exploring
