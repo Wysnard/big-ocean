@@ -1226,7 +1226,7 @@ So that **I understand what my assessment revealed and can verify the accuracy**
 
 **Acceptance Criteria:**
 
-**Given** I complete an assessment (precision ≥ 50%)
+**Given** I complete an assessment (all 30 facet confidences ≥ 70%)
 **When** I click "View Results"
 **Then** I see:
   - Archetype name (e.g., "Thoughtful Collaborator")

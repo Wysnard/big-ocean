@@ -210,6 +210,37 @@ export const facetScores = pgTable(
 );
 
 /**
+ * Public Profile (Shareable Profile Links)
+ *
+ * Stores public-facing personality profiles that can be shared via link.
+ * Each profile is generated from a completed assessment session.
+ * Private by default — users must explicitly toggle to public.
+ */
+export const publicProfile = pgTable(
+	"public_profile",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		sessionId: uuid("session_id")
+			.notNull()
+			.references(() => assessmentSession.id, { onDelete: "cascade" }),
+		userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+		oceanCode5: text("ocean_code_5").notNull(),
+		oceanCode4: text("ocean_code_4").notNull(),
+		isPublic: boolean("is_public").default(false).notNull(),
+		viewCount: integer("view_count").default(0).notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("public_profile_session_id_idx").on(table.sessionId),
+		index("public_profile_user_id_idx").on(table.userId),
+	],
+);
+
+/**
  * Trait Scores (Derived from Facet Scores)
  *
  * Stores Big Five trait scores derived from aggregated facet scores.
@@ -255,6 +286,7 @@ export const relations = defineRelations(
 		facetEvidence, // Facet evidence
 		facetScores, // Aggregated facet scores
 		traitScores, // Trait scores
+		publicProfile, // Shareable profile links
 	},
 	(r) => ({
 		user: {
@@ -262,6 +294,7 @@ export const relations = defineRelations(
 			accounts: r.many.account(),
 			assessmentSession: r.many.assessmentSession(), // Assessment sessions
 			assessmentMessage: r.many.assessmentMessage(), // Assessment messages
+			publicProfiles: r.many.publicProfile(), // Public profiles
 		},
 		session: {
 			user: r.one.user({
@@ -283,6 +316,7 @@ export const relations = defineRelations(
 			assessmentMessages: r.many.assessmentMessage(),
 			facetScores: r.many.facetScores(),
 			traitScores: r.many.traitScores(),
+			publicProfile: r.many.publicProfile(),
 		},
 		assessmentMessage: {
 			session: r.one.assessmentSession({
@@ -311,6 +345,16 @@ export const relations = defineRelations(
 			session: r.one.assessmentSession({
 				from: r.traitScores.sessionId,
 				to: r.assessmentSession.id,
+			}),
+		},
+		publicProfile: {
+			session: r.one.assessmentSession({
+				from: r.publicProfile.sessionId,
+				to: r.assessmentSession.id,
+			}),
+			user: r.one.user({
+				from: r.publicProfile.userId,
+				to: r.user.id,
 			}),
 		},
 	}),

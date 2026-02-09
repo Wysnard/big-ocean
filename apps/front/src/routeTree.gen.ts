@@ -8,17 +8,24 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./../routes/__root";
-import { Route as ChatIndexRouteImport } from "./../routes/chat/index";
-import { Route as DashboardRouteImport } from "./../routes/dashboard";
-import { Route as IndexRouteImport } from "./../routes/index";
-import { Route as LoginRouteImport } from "./../routes/login";
-import { Route as ResultsSessionIdRouteImport } from "./../routes/results/$sessionId";
-import { Route as SignupRouteImport } from "./../routes/signup";
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as ChatIndexRouteImport } from "./routes/chat/index";
+import { Route as DashboardRouteImport } from "./routes/dashboard";
+import { Route as IndexRouteImport } from "./routes/index";
+import { Route as LoginRouteImport } from "./routes/login";
+import { Route as ProfilePublicProfileIdRouteImport } from "./routes/profile.$publicProfileId";
+import { Route as ResultsRouteImport } from "./routes/results";
+import { Route as ResultsSessionIdRouteImport } from "./routes/results/$sessionId";
+import { Route as SignupRouteImport } from "./routes/signup";
 
 const SignupRoute = SignupRouteImport.update({
 	id: "/signup",
 	path: "/signup",
+	getParentRoute: () => rootRouteImport,
+} as any);
+const ResultsRoute = ResultsRouteImport.update({
+	id: "/results",
+	path: "/results",
 	getParentRoute: () => rootRouteImport,
 } as any);
 const LoginRoute = LoginRouteImport.update({
@@ -42,8 +49,13 @@ const ChatIndexRoute = ChatIndexRouteImport.update({
 	getParentRoute: () => rootRouteImport,
 } as any);
 const ResultsSessionIdRoute = ResultsSessionIdRouteImport.update({
-	id: "/results/$sessionId",
-	path: "/results/$sessionId",
+	id: "/$sessionId",
+	path: "/$sessionId",
+	getParentRoute: () => ResultsRoute,
+} as any);
+const ProfilePublicProfileIdRoute = ProfilePublicProfileIdRouteImport.update({
+	id: "/profile/$publicProfileId",
+	path: "/profile/$publicProfileId",
 	getParentRoute: () => rootRouteImport,
 } as any);
 
@@ -51,7 +63,9 @@ export interface FileRoutesByFullPath {
 	"/": typeof IndexRoute;
 	"/dashboard": typeof DashboardRoute;
 	"/login": typeof LoginRoute;
+	"/results": typeof ResultsRouteWithChildren;
 	"/signup": typeof SignupRoute;
+	"/profile/$publicProfileId": typeof ProfilePublicProfileIdRoute;
 	"/results/$sessionId": typeof ResultsSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
 }
@@ -59,7 +73,9 @@ export interface FileRoutesByTo {
 	"/": typeof IndexRoute;
 	"/dashboard": typeof DashboardRoute;
 	"/login": typeof LoginRoute;
+	"/results": typeof ResultsRouteWithChildren;
 	"/signup": typeof SignupRoute;
+	"/profile/$publicProfileId": typeof ProfilePublicProfileIdRoute;
 	"/results/$sessionId": typeof ResultsSessionIdRoute;
 	"/chat": typeof ChatIndexRoute;
 }
@@ -68,24 +84,52 @@ export interface FileRoutesById {
 	"/": typeof IndexRoute;
 	"/dashboard": typeof DashboardRoute;
 	"/login": typeof LoginRoute;
+	"/results": typeof ResultsRouteWithChildren;
 	"/signup": typeof SignupRoute;
+	"/profile/$publicProfileId": typeof ProfilePublicProfileIdRoute;
 	"/results/$sessionId": typeof ResultsSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
 }
 export interface FileRouteTypes {
 	fileRoutesByFullPath: FileRoutesByFullPath;
-	fullPaths: "/" | "/dashboard" | "/login" | "/signup" | "/results/$sessionId" | "/chat/";
+	fullPaths:
+		| "/"
+		| "/dashboard"
+		| "/login"
+		| "/results"
+		| "/signup"
+		| "/profile/$publicProfileId"
+		| "/results/$sessionId"
+		| "/chat/";
 	fileRoutesByTo: FileRoutesByTo;
-	to: "/" | "/dashboard" | "/login" | "/signup" | "/results/$sessionId" | "/chat";
-	id: "__root__" | "/" | "/dashboard" | "/login" | "/signup" | "/results/$sessionId" | "/chat/";
+	to:
+		| "/"
+		| "/dashboard"
+		| "/login"
+		| "/results"
+		| "/signup"
+		| "/profile/$publicProfileId"
+		| "/results/$sessionId"
+		| "/chat";
+	id:
+		| "__root__"
+		| "/"
+		| "/dashboard"
+		| "/login"
+		| "/results"
+		| "/signup"
+		| "/profile/$publicProfileId"
+		| "/results/$sessionId"
+		| "/chat/";
 	fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
 	IndexRoute: typeof IndexRoute;
 	DashboardRoute: typeof DashboardRoute;
 	LoginRoute: typeof LoginRoute;
+	ResultsRoute: typeof ResultsRouteWithChildren;
 	SignupRoute: typeof SignupRoute;
-	ResultsSessionIdRoute: typeof ResultsSessionIdRoute;
+	ProfilePublicProfileIdRoute: typeof ProfilePublicProfileIdRoute;
 	ChatIndexRoute: typeof ChatIndexRoute;
 }
 
@@ -96,6 +140,13 @@ declare module "@tanstack/react-router" {
 			path: "/signup";
 			fullPath: "/signup";
 			preLoaderRoute: typeof SignupRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/results": {
+			id: "/results";
+			path: "/results";
+			fullPath: "/results";
+			preLoaderRoute: typeof ResultsRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
 		"/login": {
@@ -128,20 +179,38 @@ declare module "@tanstack/react-router" {
 		};
 		"/results/$sessionId": {
 			id: "/results/$sessionId";
-			path: "/results/$sessionId";
+			path: "/$sessionId";
 			fullPath: "/results/$sessionId";
 			preLoaderRoute: typeof ResultsSessionIdRouteImport;
+			parentRoute: typeof ResultsRoute;
+		};
+		"/profile/$publicProfileId": {
+			id: "/profile/$publicProfileId";
+			path: "/profile/$publicProfileId";
+			fullPath: "/profile/$publicProfileId";
+			preLoaderRoute: typeof ProfilePublicProfileIdRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
 	}
 }
 
+interface ResultsRouteChildren {
+	ResultsSessionIdRoute: typeof ResultsSessionIdRoute;
+}
+
+const ResultsRouteChildren: ResultsRouteChildren = {
+	ResultsSessionIdRoute: ResultsSessionIdRoute,
+};
+
+const ResultsRouteWithChildren = ResultsRoute._addFileChildren(ResultsRouteChildren);
+
 const rootRouteChildren: RootRouteChildren = {
 	IndexRoute: IndexRoute,
 	DashboardRoute: DashboardRoute,
 	LoginRoute: LoginRoute,
+	ResultsRoute: ResultsRouteWithChildren,
 	SignupRoute: SignupRoute,
-	ResultsSessionIdRoute: ResultsSessionIdRoute,
+	ProfilePublicProfileIdRoute: ProfilePublicProfileIdRoute,
 	ChatIndexRoute: ChatIndexRoute,
 };
 export const routeTree = rootRouteImport
@@ -149,7 +218,7 @@ export const routeTree = rootRouteImport
 	._addFileTypes<FileRouteTypes>();
 
 import type { createStart } from "@tanstack/react-start";
-import type { getRouter } from "../router.tsx";
+import type { getRouter } from "./router.tsx";
 
 declare module "@tanstack/react-start" {
 	interface Register {

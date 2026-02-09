@@ -25,7 +25,7 @@ const config = defineConfig({
     tanstackStart({
       // Router config
       router: {
-        generatedRouteTree: './src/routeTree.gen.ts',
+        generatedRouteTree: './routeTree.gen.ts',
       },
     }),
     viteReact(),

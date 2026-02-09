@@ -67,6 +67,11 @@ export {
 	OrchestratorGraphRepository,
 } from "./repositories/orchestrator-graph.repository";
 export {
+	type CreatePublicProfileInput,
+	type PublicProfileData,
+	PublicProfileRepository,
+} from "./repositories/public-profile.repository";
+export {
 	RedisConnectionError,
 	RedisOperationError,
 	RedisRepository,
@@ -144,6 +149,7 @@ export {
 	DEFAULT_FACET_CONFIDENCE,
 	DEFAULT_FACET_SCORE,
 	DEFAULT_TRAIT_SCORE,
+	deriveTraitSummary,
 	extract4LetterCode,
 	generateOceanCode,
 	lookupArchetype,

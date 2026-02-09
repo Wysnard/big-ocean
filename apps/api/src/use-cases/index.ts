@@ -7,6 +7,16 @@
  */
 
 export {
+	type CreateShareableProfileInput,
+	type CreateShareableProfileOutput,
+	createShareableProfile,
+} from "./create-shareable-profile.use-case";
+export {
+	type GetPublicProfileInput,
+	type GetPublicProfileOutput,
+	getPublicProfile,
+} from "./get-public-profile.use-case";
+export {
 	type GetResultsInput,
 	type GetResultsOutput,
 	getResults,
@@ -26,3 +36,8 @@ export {
 	type StartAssessmentOutput,
 	startAssessment,
 } from "./start-assessment.use-case";
+export {
+	type ToggleProfileVisibilityInput,
+	type ToggleProfileVisibilityOutput,
+	toggleProfileVisibility,
+} from "./toggle-profile-visibility.use-case";
