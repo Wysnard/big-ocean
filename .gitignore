@@ -26,9 +26,6 @@ coverage
 out/
 build
 dist
-.nitro
-.output
-
 
 # Debug
 npm-debug.log*
