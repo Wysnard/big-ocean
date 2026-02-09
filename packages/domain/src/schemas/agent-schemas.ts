@@ -107,10 +107,21 @@ export const AnalyzerResponseSchema = S.Array(FacetExtractionSchema);
 export type AnalyzerResponse = S.Schema.Type<typeof AnalyzerResponseSchema>;
 
 /**
- * JSON Schema for LangChain integration
+ * Wrapped Analyzer Response Schema
+ *
+ * Anthropic tool use requires the top-level JSON Schema to be an object, not an array.
+ * This wraps the array in { extractions: [...] } for the LLM structured output call.
+ * The repository unwraps .extractions before validation.
+ */
+export const AnalyzerResponseWrappedSchema = S.Struct({
+	extractions: S.Array(FacetExtractionSchema),
+});
+
+/**
+ * JSON Schema for LangChain integration (wrapped in object for Anthropic tool use)
  * Used with: model.withStructuredOutput(AnalyzerResponseJsonSchema)
  */
-export const AnalyzerResponseJsonSchema = JSONSchema.make(AnalyzerResponseSchema);
+export const AnalyzerResponseJsonSchema = JSONSchema.make(AnalyzerResponseWrappedSchema);
 
 // ============================================================================
 // Validation Helpers

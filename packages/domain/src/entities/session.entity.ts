@@ -41,7 +41,7 @@ export const FacetConfidenceEntitySchema = Schema.Struct({
 	// Neuroticism facets
 	anxiety: Schema.Number,
 	anger: Schema.Number,
-	depressiveness: Schema.Number,
+	depression: Schema.Number,
 	self_consciousness: Schema.Number,
 	immoderation: Schema.Number,
 	vulnerability: Schema.Number,

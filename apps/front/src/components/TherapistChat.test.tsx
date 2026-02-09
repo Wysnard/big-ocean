@@ -395,7 +395,7 @@ describe("TherapistChat", () => {
 
 			expect(screen.getByText("Your Personality Profile is Ready!")).toBeTruthy();
 			expect(screen.getByText(/reached 70%/)).toBeTruthy();
-			expect(screen.getByText("View Results")).toBeTruthy();
+			expect(screen.getByText("View My Results")).toBeTruthy();
 			expect(screen.getByText("Keep Exploring")).toBeTruthy();
 		});
 
@@ -423,13 +423,13 @@ describe("TherapistChat", () => {
 
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-			const viewResultsBtn = screen.getByText("View Results");
+			const viewResultsBtn = screen.getByText("View My Results");
 			fireEvent.click(viewResultsBtn);
 
 			await waitFor(() => {
 				expect(mockNavigate).toHaveBeenCalledWith({
-					to: "/results",
-					search: { sessionId: "session-123" },
+					to: "/results/$sessionId",
+					params: { sessionId: "session-123" },
 				});
 			});
 		});

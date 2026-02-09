@@ -26,7 +26,6 @@ import {
 	CheckpointerRepository,
 	calculateConfidenceFromFacetScores,
 	createInitialFacetScoresMap,
-	type FacetEvidence,
 	type GraphInput,
 	type GraphOutput,
 	LoggerRepository,
@@ -168,33 +167,45 @@ const analyzerNodeEffect = (state: OrchestratorState) =>
 			messageCount: state.messageCount,
 		});
 
-		// Find unanalyzed user messages
+		// Collect unanalyzed user messages
 		const analyzedSet = new Set(state.analyzedMessageIndices ?? []);
-		const allEvidence: FacetEvidence[] = [];
-		const newlyAnalyzedIndices: number[] = [];
+		const unanalyzed: { index: number; messageId: string; content: string }[] = [];
 
-		// Iterate through messages to find unanalyzed user messages
 		for (let i = 0; i < state.messages.length; i++) {
 			const message = state.messages[i];
-			if (!message) continue; // Skip if undefined (shouldn't happen)
+			if (!message) continue;
 
-			// Only analyze human messages that haven't been analyzed yet
 			if (message instanceof HumanMessage && !analyzedSet.has(i)) {
-				const messageId = `msg_${state.sessionId}_${i + 1}`;
-				const content =
-					typeof message.content === "string" ? message.content : JSON.stringify(message.content);
-
-				const evidence = yield* analyzer.analyzeFacets(messageId, content);
-				allEvidence.push(...evidence);
-				newlyAnalyzedIndices.push(i);
-
-				logger.debug("Analyzed message", {
-					messageIndex: i,
-					messageId,
-					evidenceCount: evidence.length,
+				unanalyzed.push({
+					index: i,
+					messageId: `msg_${state.sessionId}_${i + 1}`,
+					content:
+						typeof message.content === "string" ? message.content : JSON.stringify(message.content),
 				});
 			}
 		}
+
+		// Analyze all unanalyzed messages in parallel
+		const results = yield* Effect.all(
+			unanalyzed.map(({ messageId, content, index }) =>
+				analyzer.analyzeFacets(messageId, content).pipe(
+					Effect.map((evidence) => ({ evidence, index })),
+					Effect.tap(({ evidence }) =>
+						Effect.sync(() =>
+							logger.debug("Analyzed message", {
+								messageIndex: index,
+								messageId,
+								evidenceCount: evidence.length,
+							}),
+						),
+					),
+				),
+			),
+			{ concurrency: 3 },
+		);
+
+		const allEvidence = results.flatMap((r) => r.evidence);
+		const newlyAnalyzedIndices = results.map((r) => r.index);
 
 		logger.debug("Analyzer evidence extraction complete", {
 			sessionId: state.sessionId,

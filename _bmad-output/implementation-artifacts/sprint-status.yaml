@@ -85,8 +85,8 @@ development_status:
   epic-4-retrospective: done
 
   # EPIC 5: Results & Profile Sharing
-  epic-5: backlog
-  5-1-display-assessment-results-with-evidence-based-scores: backlog
+  epic-5: in-progress
+  5-1-display-assessment-results-with-evidence-based-scores: done
   5-2-generate-shareable-profile-links: backlog
   5-3-bidirectional-evidence-highlighting-and-transparency: backlog
   epic-5-retrospective: optional

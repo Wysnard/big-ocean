@@ -110,7 +110,7 @@ export const initializeFacetConfidence = (baseline: number = 50): FacetConfidenc
 		// Neuroticism
 		"anxiety",
 		"anger",
-		"depressiveness",
+		"depression",
 		"self_consciousness",
 		"immoderation",
 		"vulnerability",

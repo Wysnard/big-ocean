@@ -100,7 +100,7 @@ describe("Assessment Contracts", () => {
 		it("should validate send message response schema", () => {
 			const validResponse = {
 				response: "That's interesting! Tell me more about what draws you to outdoor activities.",
-				precision: {
+				confidence: {
 					openness: 0.75,
 					conscientiousness: 0.5,
 					extraversion: 0.8,
@@ -111,13 +111,13 @@ describe("Assessment Contracts", () => {
 
 			const result = S.decodeUnknownSync(SendMessageResponseSchema)(validResponse);
 			expect(result.response).toBeTruthy();
-			expect(result.precision.extraversion).toBe(0.8);
+			expect(result.confidence.extraversion).toBe(0.8);
 		});
 
-		it("should reject send message response with invalid precision values", () => {
+		it("should reject send message response with invalid confidence values", () => {
 			const invalidResponse = {
 				response: "Response text",
-				precision: {
+				confidence: {
 					openness: "invalid", // Should be number
 					conscientiousness: 0.5,
 					extraversion: 0.8,
@@ -133,21 +133,49 @@ describe("Assessment Contracts", () => {
 	describe("GetResults", () => {
 		it("should validate get results response schema", () => {
 			const validResponse = {
-				oceanCode: "HPHML",
+				oceanCode5: "HLMHL",
+				oceanCode4: "HLMH",
 				archetypeName: "The Adventurous Leader",
-				traits: {
-					openness: 0.85,
-					conscientiousness: 0.65,
-					extraversion: 0.9,
-					agreeableness: 0.7,
-					neuroticism: 0.25,
-				},
+				archetypeDescription: "A bold explorer who combines curiosity with determination.",
+				archetypeColor: "#6B5CE7",
+				isCurated: true,
+				traits: [
+					{ name: "openness", score: 90, level: "H" as const, confidence: 85 },
+					{ name: "conscientiousness", score: 30, level: "L" as const, confidence: 70 },
+					{ name: "extraversion", score: 60, level: "M" as const, confidence: 60 },
+					{ name: "agreeableness", score: 90, level: "H" as const, confidence: 75 },
+					{ name: "neuroticism", score: 18, level: "L" as const, confidence: 50 },
+				],
+				facets: [{ name: "Imagination", traitName: "openness", score: 15, confidence: 85 }],
+				overallConfidence: 68,
 			};
 
 			const result = S.decodeUnknownSync(GetResultsResponseSchema)(validResponse);
-			expect(result.oceanCode).toBe("HPHML");
+			expect(result.oceanCode5).toBe("HLMHL");
+			expect(result.oceanCode4).toBe("HLMH");
 			expect(result.archetypeName).toBe("The Adventurous Leader");
-			expect(result.traits.openness).toBe(0.85);
+			expect(result.traits).toHaveLength(5);
+			expect(result.traits[0]?.level).toBe("H");
+			expect(result.facets).toHaveLength(1);
+			expect(result.overallConfidence).toBe(68);
+		});
+
+		it("should reject get results response with invalid trait level", () => {
+			const invalidResponse = {
+				oceanCode5: "HLMHL",
+				oceanCode4: "HLMH",
+				archetypeName: "Test",
+				archetypeDescription: "Test",
+				archetypeColor: "#000000",
+				isCurated: false,
+				traits: [
+					{ name: "openness", score: 90, level: "X", confidence: 85 }, // Invalid level
+				],
+				facets: [],
+				overallConfidence: 50,
+			};
+
+			expect(() => S.decodeUnknownSync(GetResultsResponseSchema)(invalidResponse)).toThrow();
 		});
 	});
 
@@ -166,7 +194,7 @@ describe("Assessment Contracts", () => {
 						timestamp: new Date().toISOString(),
 					},
 				],
-				precision: {
+				confidence: {
 					openness: 0.5,
 					conscientiousness: 0.5,
 					extraversion: 0.5,
@@ -178,7 +206,7 @@ describe("Assessment Contracts", () => {
 			const result = S.decodeUnknownSync(ResumeSessionResponseSchema)(validResponse);
 			expect(result.messages).toHaveLength(2);
 			expect(result.messages[0]?.role).toBe("user");
-			expect(result.precision.openness).toBe(0.5);
+			expect(result.confidence.openness).toBe(0.5);
 		});
 
 		it("should reject resume session response with invalid message role", () => {
@@ -190,7 +218,7 @@ describe("Assessment Contracts", () => {
 						timestamp: new Date(),
 					},
 				],
-				precision: {
+				confidence: {
 					openness: 0.5,
 					conscientiousness: 0.5,
 					extraversion: 0.5,

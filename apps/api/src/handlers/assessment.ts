@@ -81,47 +81,37 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 					};
 				}),
 			)
-			.handle("getResults", ({ request }) =>
+			.handle("getResults", ({ path: { sessionId } }) =>
 				Effect.gen(function* () {
-					// Extract sessionId from URL path
-					const url = new URL(request.url, "http://localhost");
-					const pathParts = url.pathname.split("/");
-					const sessionId = pathParts[pathParts.length - 2];
-
-					if (!sessionId) {
-						return yield* Effect.fail(
-							new DatabaseError({
-								message: "Missing session ID in request path",
-							}),
-						);
-					}
-
 					// Call use case - errors propagate directly to HTTP
 					const result = yield* getResults({ sessionId });
 
-					// Format HTTP response
+					// Format HTTP response per AC-5 contract
 					return {
-						oceanCode: result.oceanCode,
+						oceanCode5: result.oceanCode5,
+						oceanCode4: result.oceanCode4,
 						archetypeName: result.archetypeName,
-						traits: result.traits,
+						archetypeDescription: result.archetypeDescription,
+						archetypeColor: result.archetypeColor,
+						isCurated: result.isCurated,
+						traits: result.traits.map((t) => ({
+							name: t.name,
+							score: t.score,
+							level: t.level,
+							confidence: t.confidence,
+						})),
+						facets: result.facets.map((f) => ({
+							name: f.name,
+							traitName: f.traitName,
+							score: f.score,
+							confidence: f.confidence,
+						})),
+						overallConfidence: result.overallConfidence,
 					};
 				}),
 			)
-			.handle("resumeSession", ({ request }) =>
+			.handle("resumeSession", ({ path: { sessionId } }) =>
 				Effect.gen(function* () {
-					// Extract sessionId from URL path
-					const url = new URL(request.url, "http://localhost");
-					const pathParts = url.pathname.split("/");
-					const sessionId = pathParts[pathParts.length - 2];
-
-					if (!sessionId) {
-						return yield* Effect.fail(
-							new DatabaseError({
-								message: "Missing session ID in request path",
-							}),
-						);
-					}
-
 					// Call use case - errors propagate directly to HTTP
 					const result = yield* resumeSession({ sessionId });
 

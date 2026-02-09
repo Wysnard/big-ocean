@@ -59,7 +59,7 @@ export type AgreeableFacet =
 export type NeuroticismFacet =
 	| "anxiety" // Tendency to worry and experience nervousness
 	| "anger" // Tendency to experience frustration and irritability
-	| "depressiveness" // Tendency toward sadness and hopelessness
+	| "depression" // Depression: Tendency toward sadness and hopelessness
 	| "self_consciousness" // Sensitivity to criticism and embarrassment
 	| "immoderation" // Difficulty controlling urges and impulses
 	| "vulnerability"; // Susceptibility to stress and overwhelm
@@ -113,7 +113,7 @@ export interface FacetConfidenceScores {
 	// Neuroticism facets
 	anxiety: number;
 	anger: number;
-	depressiveness: number;
+	depression: number;
 	self_consciousness: number;
 	immoderation: number;
 	vulnerability: number;
@@ -152,7 +152,7 @@ export const FACETS_BY_TRAIT: Record<BigFiveTrait, Array<keyof FacetConfidenceSc
 	neuroticism: [
 		"anxiety",
 		"anger",
-		"depressiveness",
+		"depression",
 		"self_consciousness",
 		"immoderation",
 		"vulnerability",

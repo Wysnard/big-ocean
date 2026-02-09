@@ -55,7 +55,7 @@ describe("Precision Calculator Service", () => {
 				// Neuroticism
 				anxiety: 30,
 				anger: 30,
-				depressiveness: 30,
+				depression: 30,
 				self_consciousness: 30,
 				immoderation: 30,
 				vulnerability: 30,
@@ -103,7 +103,7 @@ describe("Precision Calculator Service", () => {
 				// Neuroticism (all 50)
 				anxiety: 50,
 				anger: 50,
-				depressiveness: 50,
+				depression: 50,
 				self_consciousness: 50,
 				immoderation: 50,
 				vulnerability: 50,
@@ -148,7 +148,7 @@ describe("Precision Calculator Service", () => {
 				sympathy: 50,
 				anxiety: 50,
 				anger: 50,
-				depressiveness: 50,
+				depression: 50,
 				self_consciousness: 50,
 				immoderation: 50,
 				vulnerability: 50,
@@ -297,7 +297,7 @@ describe("Precision Calculator Service", () => {
 			// Neuroticism
 			expect(result).toHaveProperty("anxiety");
 			expect(result).toHaveProperty("anger");
-			expect(result).toHaveProperty("depressiveness");
+			expect(result).toHaveProperty("depression");
 			expect(result).toHaveProperty("self_consciousness");
 			expect(result).toHaveProperty("immoderation");
 			expect(result).toHaveProperty("vulnerability");

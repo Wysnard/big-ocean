@@ -13,7 +13,11 @@
  * Reference: Story 2.8 - Docker Setup for Integration Testing
  */
 
-import { SendMessageResponseSchema, StartAssessmentResponseSchema } from "@workspace/contracts";
+import {
+	GetResultsResponseSchema,
+	SendMessageResponseSchema,
+	StartAssessmentResponseSchema,
+} from "@workspace/contracts";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -120,13 +124,13 @@ describe("POST /api/assessment/message", () => {
 		expect(typeof decoded.response).toBe("string");
 		expect(decoded.response.length).toBeGreaterThan(0);
 
-		// Assert precision scores are present and valid numbers
-		expect(decoded.precision).toBeDefined();
-		expect(typeof decoded.precision.openness).toBe("number");
-		expect(typeof decoded.precision.conscientiousness).toBe("number");
-		expect(typeof decoded.precision.extraversion).toBe("number");
-		expect(typeof decoded.precision.agreeableness).toBe("number");
-		expect(typeof decoded.precision.neuroticism).toBe("number");
+		// Assert confidence scores are present and valid numbers
+		expect(decoded.confidence).toBeDefined();
+		expect(typeof decoded.confidence.openness).toBe("number");
+		expect(typeof decoded.confidence.conscientiousness).toBe("number");
+		expect(typeof decoded.confidence.extraversion).toBe("number");
+		expect(typeof decoded.confidence.agreeableness).toBe("number");
+		expect(typeof decoded.confidence.neuroticism).toBe("number");
 	});
 
 	test("returns 404 for non-existent session", async () => {
@@ -193,7 +197,7 @@ describe("POST /api/assessment/message", () => {
 });
 
 describe("GET /api/assessment/:sessionId/resume", () => {
-	test("returns session with messages and precision", async () => {
+	test("returns session with messages and confidence", async () => {
 		// Create session and send a message
 		const startResponse = await postJson("/api/assessment/start", {});
 		const { sessionId } = await startResponse.json();
@@ -212,13 +216,112 @@ describe("GET /api/assessment/:sessionId/resume", () => {
 		// Validate structure
 		expect(data.messages).toBeDefined();
 		expect(Array.isArray(data.messages)).toBe(true);
-		expect(data.precision).toBeDefined();
-		expect(typeof data.precision.openness).toBe("number");
+		expect(data.confidence).toBeDefined();
+		expect(typeof data.confidence.openness).toBe("number");
 	});
 
 	test("returns 404 for non-existent session", async () => {
 		const response = await fetch(`${API_URL}/api/assessment/fake-session-id/resume`);
 		expect(response.status).toBe(404);
+	});
+});
+
+describe("GET /api/assessment/:sessionId/results", () => {
+	test("returns 200 with valid GetResultsResponseSchema", async () => {
+		// Create session and send enough messages to populate scores
+		const startResponse = await postJson("/api/assessment/start", {});
+		const { sessionId } = await startResponse.json();
+
+		// Send 3 messages to trigger Analyzer + Scorer batch
+		await postJson("/api/assessment/message", {
+			sessionId,
+			message: "I love exploring new creative ideas and imagining possibilities.",
+		});
+		await postJson("/api/assessment/message", {
+			sessionId,
+			message: "I tend to be organized and like making plans ahead of time.",
+		});
+		await postJson("/api/assessment/message", {
+			sessionId,
+			message: "I enjoy social gatherings and meeting new people.",
+		});
+
+		// Fetch results
+		const resultsResponse = await fetch(`${API_URL}/api/assessment/${sessionId}/results`);
+
+		expect(resultsResponse.status).toBe(200);
+		expect(resultsResponse.headers.get("content-type")).toContain("application/json");
+
+		const data = await resultsResponse.json();
+
+		// Validate against contract schema (throws if invalid)
+		const decoded = Schema.decodeUnknownSync(GetResultsResponseSchema)(data);
+
+		// OCEAN codes
+		expect(typeof decoded.oceanCode5).toBe("string");
+		expect(decoded.oceanCode5).toHaveLength(5);
+		expect(typeof decoded.oceanCode4).toBe("string");
+		expect(decoded.oceanCode4).toHaveLength(4);
+
+		// Archetype
+		expect(decoded.archetypeName).toBeDefined();
+		expect(decoded.archetypeName.length).toBeGreaterThan(0);
+		expect(decoded.archetypeColor).toMatch(/^#[0-9A-Fa-f]{6}$/);
+		expect(typeof decoded.isCurated).toBe("boolean");
+
+		// Traits
+		expect(decoded.traits).toHaveLength(5);
+		for (const trait of decoded.traits) {
+			expect(typeof trait.name).toBe("string");
+			expect(trait.score).toBeGreaterThanOrEqual(0);
+			expect(trait.score).toBeLessThanOrEqual(120);
+			expect(["H", "M", "L"]).toContain(trait.level);
+			expect(trait.confidence).toBeGreaterThanOrEqual(0);
+			expect(trait.confidence).toBeLessThanOrEqual(100);
+		}
+
+		// Facets
+		expect(decoded.facets).toHaveLength(30);
+		for (const facet of decoded.facets) {
+			expect(typeof facet.name).toBe("string");
+			expect(typeof facet.traitName).toBe("string");
+			expect(facet.score).toBeGreaterThanOrEqual(0);
+			expect(facet.score).toBeLessThanOrEqual(20);
+			expect(facet.confidence).toBeGreaterThanOrEqual(0);
+			expect(facet.confidence).toBeLessThanOrEqual(100);
+		}
+
+		// Overall confidence
+		expect(decoded.overallConfidence).toBeGreaterThanOrEqual(0);
+		expect(decoded.overallConfidence).toBeLessThanOrEqual(100);
+	});
+
+	test("returns 404 for non-existent session", async () => {
+		const response = await fetch(`${API_URL}/api/assessment/nonexistent-session-id/results`);
+		expect(response.status).toBe(404);
+
+		const data = await response.json();
+		expect(data._tag).toBe("SessionNotFound");
+	});
+
+	test("returns valid results even with default scores (no messages sent)", async () => {
+		// Create session but don't send any messages
+		const startResponse = await postJson("/api/assessment/start", {});
+		const { sessionId } = await startResponse.json();
+
+		const resultsResponse = await fetch(`${API_URL}/api/assessment/${sessionId}/results`);
+
+		expect(resultsResponse.status).toBe(200);
+		const data = await resultsResponse.json();
+
+		// Should still validate against schema with default values
+		const decoded = Schema.decodeUnknownSync(GetResultsResponseSchema)(data);
+
+		// Default scores: all facets at 10/20, all traits at 60/120 = Mid
+		expect(decoded.oceanCode5).toBe("MMMMM");
+		expect(decoded.traits).toHaveLength(5);
+		expect(decoded.facets).toHaveLength(30);
+		expect(decoded.overallConfidence).toBe(0); // No evidence yet
 	});
 });
 
@@ -268,6 +371,23 @@ describe("CORS - Assessment endpoints", () => {
 
 		// Resume with Origin header
 		const response = await fetch(`${API_URL}/api/assessment/${sessionId}/resume`, {
+			headers: {
+				Origin: FRONTEND_URL,
+			},
+		});
+
+		// Verify CORS headers
+		expect(response.headers.get("Access-Control-Allow-Origin")).toBe(FRONTEND_URL);
+		expect(response.headers.get("Access-Control-Allow-Credentials")).toBe("true");
+	});
+
+	test("includes CORS headers on GET /api/assessment/:sessionId/results", async () => {
+		// Create session
+		const startResponse = await postJson("/api/assessment/start", {});
+		const { sessionId } = await startResponse.json();
+
+		// Fetch results with Origin header
+		const response = await fetch(`${API_URL}/api/assessment/${sessionId}/results`, {
 			headers: {
 				Origin: FRONTEND_URL,
 			},

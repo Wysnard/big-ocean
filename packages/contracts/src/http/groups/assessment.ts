@@ -52,18 +52,49 @@ export const SendMessageResponseSchema = S.Struct({
 });
 
 /**
- * Get Results Response Schema
+ * Get Results Request Path Parameter
+ */
+export const GetResultsPathSchema = S.Struct({
+	sessionId: S.String,
+});
+
+/**
+ * Trait Result Schema
+ * Each of the 5 Big Five traits with score (0-120), level (H/M/L), confidence (0-100)
+ */
+export const TraitResultSchema = S.Struct({
+	name: S.String,
+	score: S.Number,
+	level: S.Literal("H", "M", "L"),
+	confidence: S.Number,
+});
+
+/**
+ * Facet Result Schema
+ * Each of the 30 facets with score (0-20), confidence (0-100), and parent trait
+ */
+export const FacetResultSchema = S.Struct({
+	name: S.String,
+	traitName: S.String,
+	score: S.Number,
+	confidence: S.Number,
+});
+
+/**
+ * Get Results Response Schema (AC-5)
+ *
+ * Full assessment results including archetype, traits, facets, and confidence.
  */
 export const GetResultsResponseSchema = S.Struct({
-	oceanCode: S.String,
+	oceanCode5: S.String,
+	oceanCode4: S.String,
 	archetypeName: S.String,
-	traits: S.Struct({
-		openness: S.Number,
-		conscientiousness: S.Number,
-		extraversion: S.Number,
-		agreeableness: S.Number,
-		neuroticism: S.Number,
-	}),
+	archetypeDescription: S.String,
+	archetypeColor: S.String,
+	isCurated: S.Boolean,
+	traits: S.Array(TraitResultSchema),
+	facets: S.Array(FacetResultSchema),
+	overallConfidence: S.Number,
 });
 
 /**
@@ -113,12 +144,14 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 	)
 	.add(
 		HttpApiEndpoint.get("getResults", "/:sessionId/results")
+			.setPath(GetResultsPathSchema)
 			.addSuccess(GetResultsResponseSchema)
 			.addError(SessionNotFound, { status: 404 })
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.add(
 		HttpApiEndpoint.get("resumeSession", "/:sessionId/resume")
+			.setPath(GetResultsPathSchema)
 			.addSuccess(ResumeSessionResponseSchema)
 			.addError(SessionNotFound, { status: 404 })
 			.addError(DatabaseError, { status: 500 }),

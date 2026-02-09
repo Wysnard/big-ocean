@@ -21,6 +21,7 @@
 
 import { ChatAnthropic } from "@langchain/anthropic";
 import {
+	ALL_FACETS,
 	AnalyzerError,
 	AnalyzerRepository,
 	AnalyzerResponseJsonSchema,
@@ -28,7 +29,6 @@ import {
 	type FacetEvidence,
 	LoggerRepository,
 	MalformedEvidenceError,
-	validateAnalyzerResponse,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
@@ -85,14 +85,15 @@ For each user message, identify signals for all 30 facets across 5 traits:
 **CRITICAL RULES:**
 1. Use clean facet names (e.g., "imagination" NOT "openness_imagination")
 2. Only include facets with clear evidence (typically 3-10 per message)
-3. Return valid JSON array only, no markdown formatting or code blocks
+3. Return a JSON object with an "extractions" key containing an array of facet evidence
 4. Score 0-20: Higher = stronger signal for that facet
 5. Confidence 0-100: Higher = more certain interpretation
 6. Quote exact substring from user message (preserve formatting)
 7. highlightRange uses 0-based character indices
 
-**Output Format (JSON array):**
-Each item in the array must have:
+**Output Format (JSON object with "extractions" array):**
+Return: { "extractions": [ ... ] }
+Each item in the extractions array must have:
 - facet: One of the 30 facet names listed above
 - evidence: Quote from the user's message showing the signal
 - score: Number between 0 and 20 (strength of signal for that facet)
@@ -162,39 +163,60 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 							}),
 					});
 
-					// Validate structured response
-					const validationResult = validateAnalyzerResponse(rawResponse);
+					// Unwrap .extractions from wrapped response (Anthropic tool use requires object root)
+					const unwrapped = (rawResponse as { extractions?: unknown }).extractions ?? rawResponse;
 
-					if (validationResult._tag === "Left") {
-						logger.warn("Analyzer response validation failed", {
-							assessmentMessageId,
-							error: String(validationResult.left),
-						});
+					// Validate per-item: filter out invalid entries instead of rejecting the whole response
+					const validFacetSet = new Set<string>(ALL_FACETS);
+					const items = Array.isArray(unwrapped) ? unwrapped : [];
+
+					if (items.length === 0) {
 						return yield* Effect.fail(
 							new MalformedEvidenceError({
 								assessmentMessageId,
 								rawOutput: JSON.stringify(rawResponse).substring(0, 500),
-								parseError: String(validationResult.left),
-								message: "Schema validation failed - invalid analyzer response",
+								parseError: "Empty or non-array response from analyzer",
+								message: "Schema validation failed - no extractions returned",
 							}),
 						);
 					}
 
-					// Use validated response
-					const structuredResponse = validationResult.right;
+					const evidence: FacetEvidence[] = [];
+					let skippedCount = 0;
 
-					// Transform validated response to FacetEvidence format
-					const evidence: FacetEvidence[] = structuredResponse.map((item) => ({
-						assessmentMessageId,
-						facetName: item.facet as FacetEvidence["facetName"],
-						score: item.score, // Use score from analyzer (0-20)
-						confidence: item.confidence, // Already 0-100 from schema
-						quote: item.evidence,
-						highlightRange: {
-							start: item.highlightRange.start,
-							end: item.highlightRange.end,
-						},
-					}));
+					for (const item of items) {
+						// Skip entries with invalid facet names (e.g. trait names like "openness")
+						if (!item || typeof item.facet !== "string" || !validFacetSet.has(item.facet)) {
+							skippedCount++;
+							logger.warn("Skipping invalid facet extraction", {
+								assessmentMessageId,
+								facet: item?.facet,
+								reason: "unrecognized facet name",
+							});
+							continue;
+						}
+
+						evidence.push({
+							assessmentMessageId,
+							facetName: item.facet as FacetEvidence["facetName"],
+							score: Math.max(0, Math.min(20, Number(item.score) || 0)),
+							confidence: Math.max(0, Math.min(100, Number(item.confidence) || 0)),
+							quote: String(item.evidence || ""),
+							highlightRange: {
+								start: Math.max(0, Number(item.highlightRange?.start) || 0),
+								end: Math.max(1, Number(item.highlightRange?.end) || 1),
+							},
+						});
+					}
+
+					if (skippedCount > 0) {
+						logger.warn("Some facet extractions were invalid", {
+							assessmentMessageId,
+							skippedCount,
+							validCount: evidence.length,
+							totalCount: items.length,
+						});
+					}
 
 					const duration = Date.now() - startTime;
 
