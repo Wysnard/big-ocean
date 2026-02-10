@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
 
-**Related docs:** [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | [COMMANDS.md](./docs/COMMANDS.md) | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) | [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md) | [API-CONTRACT-SPECIFICATION.md](./docs/API-CONTRACT-SPECIFICATION.md)
+When working on frontend code (`apps/front` or `packages/ui`), consult [FRONTEND.md](./docs/FRONTEND.md) for styling patterns, component conventions, and data attribute usage.
+
+**Related docs:** [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | [COMMANDS.md](./docs/COMMANDS.md) | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) | [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md) | [API-CONTRACT-SPECIFICATION.md](./docs/API-CONTRACT-SPECIFICATION.md) | [FRONTEND.md](./docs/FRONTEND.md)
 
 ## Repository Overview
 
