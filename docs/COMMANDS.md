@@ -32,6 +32,47 @@ pnpm test:integration          # Run integration tests (Docker + HTTP + DB)
 pnpm test:integration:watch    # Run integration tests in watch mode
 ```
 
+## Database
+
+```bash
+pnpm db:migrate                # Apply migrations to database
+pnpm db:push                   # Push schema changes to database (no migration)
+pnpm db:generate               # Generate migration from schema changes
+pnpm seed:test-assessment      # Seed database with test assessment data
+```
+
+### Database Seeding
+
+Populate your database with a completed assessment session for quick manual testing:
+
+```bash
+# Manual seeding
+pnpm seed:test-assessment
+
+# Automatic seeding (when using pnpm dev)
+pnpm dev  # Includes --profile seed flag
+```
+
+**What gets seeded:**
+- Test user: `test@bigocean.dev`
+- Completed assessment session (12 messages)
+- 30 facet scores + 5 trait scores (realistic personality profile)
+- ~40 facet evidence records with text highlights
+
+**Docker Compose integration:**
+```bash
+# Auto-seed on startup (default with pnpm dev)
+docker compose --profile seed up
+
+# No seeding
+docker compose up
+
+# Re-run seeding without restarting
+docker compose --profile seed up seeder
+```
+
+See [QUICK-TESTING-GUIDE.md](../QUICK-TESTING-GUIDE.md) for full documentation.
+
 ### Integration Testing
 
 Integration tests validate the complete HTTP stack (Docker build + PostgreSQL + API endpoints) in a production-like environment:

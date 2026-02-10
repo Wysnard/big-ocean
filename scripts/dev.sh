@@ -64,7 +64,10 @@ echo "  🔌 Backend API:    http://localhost:4000"
 echo "  🗄️  PostgreSQL:     localhost:5432"
 echo "  💾 Redis:         localhost:6379"
 echo ""
+echo "🌱 Auto-seeding database with test assessment..."
+echo "   (Disable with: docker compose up instead of pnpm dev)"
+echo ""
 echo "Press Ctrl+C to stop all services"
 echo ""
 
-docker compose --env-file .env up
+docker compose --profile seed --env-file .env up --build

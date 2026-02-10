@@ -85,6 +85,39 @@ services:
     networks:
       - bigocean-network
 
+  # Database Seeder (runs once after backend is healthy)
+  # Enable with: docker compose --profile seed up
+  seeder:
+    profiles: ["seed"]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: development
+    container_name: bigocean-seeder
+    environment:
+      DATABASE_URL: postgres://dev:devpassword@postgres:5432/bigocean
+      REDIS_URL: redis://redis:6379
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-dummy-key-for-seeding}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dummy-secret-for-seeding}
+      BETTER_AUTH_URL: http://localhost:4000
+      NODE_ENV: development
+    command: pnpm seed:test-assessment
+    volumes:
+      - ./scripts:/app/scripts
+      - ./packages:/app/packages
+      # Use same node_modules as backend to avoid rebuilding
+      - backend_node_modules:/app/node_modules
+      - backend_api_node_modules:/app/apps/api/node_modules
+      - backend_contracts_node_modules:/app/packages/contracts/node_modules
+      - backend_domain_node_modules:/app/packages/domain/node_modules
+      - backend_infrastructure_node_modules:/app/packages/infrastructure/node_modules
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: "no" # Run once and exit
+    networks:
+      - bigocean-network
+
   # Frontend Application
   frontend:
     build:

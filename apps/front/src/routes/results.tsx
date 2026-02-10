@@ -258,7 +258,7 @@ function ResultsPage() {
 						Your Personality Archetype
 					</p>
 					<h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{results.archetypeName}</h1>
-					<p className="text-sm font-mono text-slate-400">OCEAN Code: {results.oceanCode}</p>
+					<p className="text-sm font-mono text-slate-400">OCEAN Code: {results.oceanCode5}</p>
 				</div>
 
 				{/* Trait Scores with Facets */}

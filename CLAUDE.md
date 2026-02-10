@@ -89,6 +89,23 @@ For complete command reference, see [COMMANDS.md](./docs/COMMANDS.md).
 - `pnpm test:coverage` - Run tests with coverage
 - `pnpm db:migrate` - Apply Drizzle migrations
 - `pnpm db:generate` - Generate migration from schema changes
+- `pnpm seed:test-assessment` - Seed test assessment data
+
+### Quick Testing
+
+Test the assessment results page without running a full conversation:
+
+```bash
+# Option 1: Auto-seed on dev startup (recommended)
+pnpm dev  # Automatically seeds database with test assessment
+
+# Option 2: Manual seeding
+pnpm seed:test-assessment  # Run seed script directly
+```
+
+**What gets seeded:** Test user (`test@bigocean.dev`), completed assessment with 12 messages, 30 facet scores, 5 trait scores, ~40 evidence records.
+
+See [QUICK-TESTING-GUIDE.md](./QUICK-TESTING-GUIDE.md) for full documentation.
 
 ### Git Hooks (Local Enforcement)
 

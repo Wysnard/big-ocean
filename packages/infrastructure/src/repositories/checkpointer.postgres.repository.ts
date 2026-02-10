@@ -11,7 +11,7 @@
 
 import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 import { AppConfig, CheckpointerRepository, LoggerRepository } from "@workspace/domain";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Schedule } from "effect";
 
 /**
  * PostgreSQL Checkpointer Repository Live Layer
@@ -42,7 +42,12 @@ export const CheckpointerPostgresRepositoryLive = Layer.effect(
 				logger.error("Failed to initialize PostgresSaver", { error: message });
 				return new Error(`Failed to initialize PostgresSaver: ${message}`);
 			},
-		});
+		}).pipe(
+			// Retry on race condition: concurrent setup() calls can hit
+			// "duplicate key violates unique constraint pg_type_typname_nsp_index"
+			// when checkpoint tables are being created simultaneously.
+			Effect.retry({ times: 3, schedule: Schedule.spaced("1 seconds") }),
+		);
 
 		logger.info("PostgresSaver checkpointer initialized successfully");
 
