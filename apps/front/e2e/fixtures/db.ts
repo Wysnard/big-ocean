@@ -187,8 +187,24 @@ export function mixedLevelsProfile(): SeedProfile {
 
 // ── DB fixture ──────────────────────────────────────────────────────────
 
+interface EvidenceSeed {
+	messageId: string;
+	messageContent: string;
+	messageRole: "user" | "assistant";
+	facetName: string;
+	score: number;
+	confidence: number;
+	quote: string;
+	highlightStart: number;
+	highlightEnd: number;
+}
+
 interface DbFixture {
 	seedResultsData: (profile: SeedProfile) => Promise<string>;
+	seedEvidenceData: (
+		sessionId: string,
+		evidence: EvidenceSeed[],
+	) => Promise<{ sessionId: string; messageIds: string[] }>;
 }
 
 export const test = base.extend<{ db: DbFixture }>({
@@ -243,7 +259,73 @@ export const test = base.extend<{ db: DbFixture }>({
 			}
 		};
 
-		await use({ seedResultsData });
+		const seedEvidenceData = async (
+			sessionId: string,
+			evidence: EvidenceSeed[],
+		): Promise<{ sessionId: string; messageIds: string[] }> => {
+			const client = await pool.connect();
+			const messageIds: string[] = [];
+			const messageIdMap = new Map<string, string>();
+
+			try {
+				await client.query("BEGIN");
+
+				// 1. Insert unique messages first
+				const uniqueMessages = Array.from(
+					new Set(evidence.map((e) => e.messageId)),
+				).map((msgId) => {
+					const ev = evidence.find((e) => e.messageId === msgId);
+					return {
+						tempId: msgId,
+						content: ev?.messageContent || "",
+						role: ev?.messageRole || "user",
+					};
+				});
+
+				for (const msg of uniqueMessages) {
+					const msgResult = await client.query(
+						`INSERT INTO assessment_message (session_id, message, role, created_at)
+						 VALUES ($1, $2, $3, NOW())
+						 RETURNING id`,
+						[sessionId, msg.content, msg.role],
+					);
+					const realId: string = msgResult.rows[0].id;
+					messageIdMap.set(msg.tempId, realId);
+					messageIds.push(realId);
+				}
+
+				// 2. Insert facet_evidence rows
+				for (const ev of evidence) {
+					const realMessageId = messageIdMap.get(ev.messageId);
+					if (!realMessageId) continue;
+
+					await client.query(
+						`INSERT INTO facet_evidence
+						 (assessment_message_id, facet_name, score, confidence, quote, highlight_start, highlight_end, created_at)
+						 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+						[
+							realMessageId,
+							ev.facetName,
+							ev.score,
+							ev.confidence,
+							ev.quote,
+							ev.highlightStart,
+							ev.highlightEnd,
+						],
+					);
+				}
+
+				await client.query("COMMIT");
+				return { sessionId, messageIds };
+			} catch (err) {
+				await client.query("ROLLBACK");
+				throw err;
+			} finally {
+				client.release();
+			}
+		};
+
+		await use({ seedResultsData, seedEvidenceData });
 
 		// Cleanup: delete all seeded sessions (CASCADE handles child rows)
 		if (seededSessionIds.length > 0) {
@@ -262,3 +344,4 @@ export const test = base.extend<{ db: DbFixture }>({
 });
 
 export { expect };
+export type { EvidenceSeed };

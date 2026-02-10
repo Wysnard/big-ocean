@@ -15,13 +15,16 @@ export { BigOceanApi } from "./http/api";
 // HTTP Schemas and Types
 export * from "./http/groups/assessment";
 export { AssessmentGroup } from "./http/groups/assessment";
+// Evidence HTTP Schemas and Types
+export * from "./http/groups/evidence";
+export { EvidenceGroup } from "./http/groups/evidence";
 export * from "./http/groups/health";
 // HTTP API Groups
 export { HealthGroup } from "./http/groups/health";
-
 // Profile HTTP Schemas and Types
 export * from "./http/groups/profile";
 export { ProfileGroup } from "./http/groups/profile";
 
 // Shared Schemas & Types
 export * from "./schemas";
+export * from "./schemas/evidence";

@@ -12,6 +12,11 @@ import { ProgressBar } from "./ProgressBar";
 interface TherapistChatProps {
 	sessionId: string;
 	onMessageClick?: (messageId: string) => void;
+	highlightMessageId?: string;
+	highlightQuote?: string;
+	highlightStart?: number;
+	highlightEnd?: number;
+	highlightScore?: number;
 }
 
 const traitLabels: Record<string, string> = {
@@ -111,7 +116,61 @@ function TraitSidebar({
 	);
 }
 
-export function TherapistChat({ sessionId, onMessageClick }: TherapistChatProps) {
+/**
+ * Render message content with optional highlighting
+ *
+ * Color-codes highlighting based on evidence score using Tailwind data attributes:
+ * - Green (score >= 15): Strong positive signal
+ * - Yellow (score 8-14): Moderate signal
+ * - Red (score < 8): Weak/contradictory signal
+ */
+function renderMessageContent(
+	content: string,
+	messageId: string,
+	highlightMessageId?: string,
+	highlightStart?: number,
+	highlightEnd?: number,
+	highlightScore?: number,
+): React.ReactNode {
+	if (
+		messageId !== highlightMessageId ||
+		highlightStart === undefined ||
+		highlightEnd === undefined
+	) {
+		return content;
+	}
+
+	const before = content.slice(0, highlightStart);
+	const highlighted = content.slice(highlightStart, highlightEnd);
+	const after = content.slice(highlightEnd);
+
+	// Determine score level (default to high if score not provided for backward compatibility)
+	const score = highlightScore ?? 15;
+	const scoreLevel = score >= 15 ? "high" : score >= 8 ? "medium" : "low";
+
+	return (
+		<>
+			{before}
+			<mark
+				data-score={scoreLevel}
+				className="rounded px-1 data-[score=high]:bg-green-400/30 data-[score=high]:text-green-100 data-[score=medium]:bg-yellow-400/30 data-[score=medium]:text-yellow-100 data-[score=low]:bg-red-400/30 data-[score=low]:text-red-100"
+			>
+				{highlighted}
+			</mark>
+			{after}
+		</>
+	);
+}
+
+export function TherapistChat({
+	sessionId,
+	onMessageClick,
+	highlightMessageId,
+	highlightQuote,
+	highlightStart,
+	highlightEnd,
+	highlightScore,
+}: TherapistChatProps) {
 	const [inputValue, setInputValue] = useState("");
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -186,6 +245,16 @@ export function TherapistChat({ sessionId, onMessageClick }: TherapistChatProps)
 		viewport.addEventListener("resize", onResize);
 		return () => viewport.removeEventListener("resize", onResize);
 	}, []);
+
+	// Scroll to highlighted message
+	useEffect(() => {
+		if (highlightMessageId && messages.length > 0) {
+			setTimeout(() => {
+				const element = document.querySelector(`[data-message-id="${highlightMessageId}"]`);
+				element?.scrollIntoView({ behavior: "smooth", block: "center" });
+			}, 300); // Delay to ensure DOM is ready
+		}
+	}, [highlightMessageId, messages.length]);
 
 	const handleSendMessage = async () => {
 		if (!inputValue.trim() || isLoading) return;
@@ -327,7 +396,16 @@ export function TherapistChat({ sessionId, onMessageClick }: TherapistChatProps)
 													onClick={() => handleMessageClick(msg.id, msg.role)}
 													className="max-w-[85%] lg:max-w-md px-4 py-2 rounded-lg text-left bg-gradient-to-r from-blue-500 to-purple-500 text-white cursor-pointer hover:ring-2 hover:ring-blue-300/40 transition-shadow"
 												>
-													<p className="text-sm">{msg.content}</p>
+													<p className="text-sm">
+														{renderMessageContent(
+															msg.content,
+															msg.id,
+															highlightMessageId,
+															highlightStart,
+															highlightEnd,
+															highlightScore,
+														)}
+													</p>
 													<p className="text-xs mt-1 text-blue-100">{msg.timestamp.toLocaleTimeString()}</p>
 												</button>
 											) : (
@@ -335,7 +413,16 @@ export function TherapistChat({ sessionId, onMessageClick }: TherapistChatProps)
 													data-message-id={msg.id}
 													className="max-w-[85%] lg:max-w-md px-4 py-2 rounded-lg bg-slate-700/50 border border-slate-600 text-gray-100"
 												>
-													<p className="text-sm">{msg.content}</p>
+													<p className="text-sm">
+														{renderMessageContent(
+															msg.content,
+															msg.id,
+															highlightMessageId,
+															highlightStart,
+															highlightEnd,
+															highlightScore,
+														)}
+													</p>
 													<p className="text-xs mt-1 text-gray-400">{msg.timestamp.toLocaleTimeString()}</p>
 												</div>
 											)}

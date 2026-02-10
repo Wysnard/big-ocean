@@ -36,3 +36,6 @@ storybook-static
 # Misc
 .DS_Store
 *.pem
+
+.nitro
+.output

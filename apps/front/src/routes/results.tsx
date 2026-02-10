@@ -6,12 +6,16 @@
  */
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import type { FacetName } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
 import {
 	Check,
+	ChevronDown,
+	ChevronUp,
 	Copy,
 	Eye,
 	EyeOff,
+	FileText,
 	Handshake,
 	Heart,
 	Lightbulb,
@@ -22,14 +26,17 @@ import {
 	Waves,
 	Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { EvidencePanel } from "../components/EvidencePanel";
 import { useGetResults } from "../hooks/use-assessment";
+import { useFacetEvidence } from "../hooks/use-evidence";
 import { useShareProfile, useToggleVisibility } from "../hooks/use-profile";
 
 export const Route = createFileRoute("/results")({
 	validateSearch: (search: Record<string, unknown>) => {
 		return {
 			sessionId: (search.sessionId as string) || "",
+			scrollToFacet: (search.scrollToFacet as string) || undefined,
 		};
 	},
 	component: ResultsPage,
@@ -72,7 +79,7 @@ const TRAIT_CONFIG: Record<
 };
 
 function ResultsPage() {
-	const { sessionId } = Route.useSearch();
+	const { sessionId, scrollToFacet } = Route.useSearch();
 	const navigate = useNavigate();
 	const { data: results, isLoading, error } = useGetResults(sessionId);
 	const shareProfile = useShareProfile();
@@ -85,6 +92,39 @@ function ResultsPage() {
 	} | null>(null);
 	const [copied, setCopied] = useState(false);
 	const [shareError, setShareError] = useState<string | null>(null);
+
+	// Evidence panel state
+	const [selectedFacet, setSelectedFacet] = useState<FacetName | null>(null);
+	const [evidencePanelOpen, setEvidencePanelOpen] = useState(false);
+
+	// Expanded traits state
+	const [expandedTraits, setExpandedTraits] = useState<Set<string>>(new Set());
+
+	// Fetch evidence for selected facet
+	const { data: facetEvidence, isLoading: evidenceLoading } = useFacetEvidence(
+		sessionId,
+		selectedFacet,
+		evidencePanelOpen,
+	);
+
+	// Handle scrollToFacet search param
+	useEffect(() => {
+		if (scrollToFacet && results) {
+			// Find which trait contains this facet
+			const facet = results.facets.find(
+				(f) => f.name.toLowerCase().replace(/ /g, "_") === scrollToFacet,
+			);
+			if (facet) {
+				// Expand the trait
+				setExpandedTraits((prev) => new Set(prev).add(facet.traitName));
+				// Optionally scroll to the facet (using setTimeout to ensure DOM is updated)
+				setTimeout(() => {
+					const element = document.getElementById(`facet-${scrollToFacet}`);
+					element?.scrollIntoView({ behavior: "smooth", block: "center" });
+				}, 100);
+			}
+		}
+	}, [scrollToFacet, results]);
 
 	const handleShare = async () => {
 		setShareError(null);
@@ -125,6 +165,28 @@ function ResultsPage() {
 		} catch {
 			// Silently fail - user can retry
 		}
+	};
+
+	const handleViewEvidence = (facetName: FacetName) => {
+		setSelectedFacet(facetName);
+		setEvidencePanelOpen(true);
+	};
+
+	const handleCloseEvidence = () => {
+		setEvidencePanelOpen(false);
+		setSelectedFacet(null);
+	};
+
+	const toggleTrait = (trait: string) => {
+		setExpandedTraits((prev) => {
+			const newSet = new Set(prev);
+			if (newSet.has(trait)) {
+				newSet.delete(trait);
+			} else {
+				newSet.add(trait);
+			}
+			return newSet;
+		});
 	};
 
 	if (!sessionId) {
@@ -199,31 +261,75 @@ function ResultsPage() {
 					<p className="text-sm font-mono text-slate-400">OCEAN Code: {results.oceanCode}</p>
 				</div>
 
-				{/* Trait Scores */}
+				{/* Trait Scores with Facets */}
 				<div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-8">
 					<h2 className="text-xl font-bold text-white mb-6">Your Trait Scores</h2>
 					<div className="space-y-5">
 						{traitOrder.map((trait) => {
 							const config = TRAIT_CONFIG[trait];
-							const score = results.traits[trait];
-							const percentage = Math.round((score / maxTraitScore) * 100);
-							if (!config) return null;
+							const traitData = results.traits.find((t) => t.name === trait);
+							if (!config || !traitData) return null;
+
+							const percentage = Math.round((traitData.score / maxTraitScore) * 100);
+							const traitFacets = results.facets.filter((f) => f.traitName === trait);
+							const isExpanded = expandedTraits.has(trait);
 
 							return (
-								<div key={trait}>
-									<div className="flex items-center justify-between mb-2">
-										<div className={`flex items-center gap-2 ${config.color}`}>
-											{config.icon}
-											<span className="text-sm font-medium text-gray-300">{config.label}</span>
+								<div key={trait} className="border border-slate-700 rounded-lg p-4">
+									{/* Trait Header - Clickable to expand */}
+									<button onClick={() => toggleTrait(trait)} className="w-full text-left" type="button">
+										<div className="flex items-center justify-between mb-2">
+											<div className={`flex items-center gap-2 ${config.color}`}>
+												{config.icon}
+												<span className="text-sm font-medium text-gray-300">{config.label}</span>
+												{isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+											</div>
+											<span className="text-sm font-semibold text-gray-100">{percentage}%</span>
 										</div>
-										<span className="text-sm font-semibold text-gray-100">{percentage}%</span>
-									</div>
-									<div className="w-full bg-slate-700 rounded-full h-2.5">
-										<div
-											className={`h-2.5 rounded-full transition-all duration-500 ${config.barColor}`}
-											style={{ width: `${percentage}%` }}
-										/>
-									</div>
+										<div className="w-full bg-slate-700 rounded-full h-2.5">
+											<div
+												className={`h-2.5 rounded-full transition-all duration-500 ${config.barColor}`}
+												style={{ width: `${percentage}%` }}
+											/>
+										</div>
+									</button>
+
+									{/* Facets - Shown when expanded */}
+									{isExpanded && (
+										<div className="mt-4 space-y-3 pl-2 border-l-2 border-slate-600">
+											{traitFacets.map((facet) => {
+												const facetPercentage = Math.round((facet.score / 20) * 100);
+												const facetId = facet.name.toLowerCase().replace(/ /g, "_");
+												return (
+													<div key={facet.name} id={`facet-${facetId}`} className="pl-4">
+														<div className="flex items-center justify-between mb-1">
+															<span className="text-xs text-gray-400">{facet.name}</span>
+															<div className="flex items-center gap-2">
+																<span className="text-xs text-gray-400">
+																	{facet.score}/20 ({facet.confidence}%)
+																</span>
+																<Button
+																	onClick={() => handleViewEvidence(facetId as FacetName)}
+																	size="sm"
+																	variant="ghost"
+																	className="h-7 px-2 text-xs hover:bg-slate-700"
+																>
+																	<FileText className="w-3 h-3 mr-1" />
+																	Evidence
+																</Button>
+															</div>
+														</div>
+														<div className="w-full bg-slate-700 rounded-full h-1.5">
+															<div
+																className={`h-1.5 rounded-full ${config.barColor} opacity-70`}
+																style={{ width: `${facetPercentage}%` }}
+															/>
+														</div>
+													</div>
+												);
+											})}
+										</div>
+									)}
 								</div>
 							);
 						})}
@@ -331,6 +437,16 @@ function ResultsPage() {
 						Start New Assessment
 					</Button>
 				</div>
+
+				{/* Evidence Panel */}
+				<EvidencePanel
+					sessionId={sessionId}
+					facetName={selectedFacet}
+					evidence={facetEvidence}
+					isLoading={evidenceLoading}
+					isOpen={evidencePanelOpen}
+					onClose={handleCloseEvidence}
+				/>
 			</div>
 		</div>
 	);
