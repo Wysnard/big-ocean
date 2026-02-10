@@ -38,7 +38,7 @@ function getViteEnv(input) {
     return input.headers["x-vite-env"] || input.headers.get?.("x-vite-env") || Array.isArray(input.headers) && input.headers.find((h) => h[0].toLowerCase() === "x-vite-env")?.[1];
   }
 }
-const manifest = { "src/integrations/tanstack-query/root-provider.tsx": { "file": "assets/router-BKS0gMzo.js" }, "src/components/Header.tsx": { "file": "assets/router-BKS0gMzo.js" }, "src/styles.css?transform-only": { "file": "assets/router-BKS0gMzo.js" }, "src/styles.css?url": { "file": "assets/router-BKS0gMzo.js" }, "src/routes/__root.tsx": { "file": "assets/router-BKS0gMzo.js" }, "src/routes/signup.tsx": { "file": "assets/router-BKS0gMzo.js" }, "src/routes/results.tsx": { "file": "assets/router-BKS0gMzo.js" }, "src/routes/login.tsx": { "file": "assets/router-BKS0gMzo.js" }, "src/routes/dashboard.tsx": { "file": "assets/router-BKS0gMzo.js" }, "src/routes/index.tsx": { "file": "assets/router-BKS0gMzo.js" }, "src/routes/chat/index.tsx": { "file": "assets/router-BKS0gMzo.js" }, "src/routes/profile.$publicProfileId.tsx": { "file": "assets/router-BKS0gMzo.js" }, "src/routes/results/$sessionId.tsx": { "file": "assets/router-BKS0gMzo.js" }, "src/routeTree.gen.ts": { "file": "assets/router-BKS0gMzo.js" }, "src/router.tsx": { "file": "assets/router-BKS0gMzo.js" }, "src/components/auth/signup-form.tsx": { "file": "assets/signup-BW0AYwiF.js" }, "src/routes/signup.tsx?tsr-split=component": { "file": "assets/signup-BW0AYwiF.js" }, "src/routes/results.tsx?tsr-split=component": { "file": "assets/results-CP4PlIHA.js" }, "src/components/auth/login-form.tsx": { "file": "assets/login-DAZKZ7Jp.js" }, "src/routes/login.tsx?tsr-split=component": { "file": "assets/login-DAZKZ7Jp.js" }, "src/components/auth/user-menu.tsx": { "file": "assets/dashboard-BtKFQEON.js" }, "src/routes/dashboard.tsx?tsr-split=component": { "file": "assets/dashboard-BtKFQEON.js" }, "src/routes/index.tsx?tsr-split=component": { "file": "assets/index-CAGLGGtL.js" }, "src/hooks/useTherapistChat.ts": { "file": "assets/index-CV6G9AjW.js" }, "src/components/auth/SignUpModal.tsx": { "file": "assets/index-CV6G9AjW.js" }, "src/components/ErrorBanner.tsx": { "file": "assets/index-CV6G9AjW.js" }, "src/components/ProgressBar.tsx": { "file": "assets/index-CV6G9AjW.js" }, "src/components/TherapistChat.tsx": { "file": "assets/index-CV6G9AjW.js" }, "src/routes/chat/index.tsx?tsr-split=component": { "file": "assets/index-CV6G9AjW.js" }, "src/lib/auth-client.ts": { "file": "assets/use-auth-DbltyjcL.js" }, "src/hooks/use-auth.ts": { "file": "assets/use-auth-DbltyjcL.js" }, "src/routes/profile.$publicProfileId.tsx?tsr-split=component": { "file": "assets/profile._publicProfileId-CJpsPBBb.js" }, "src/hooks/use-profile.ts": { "file": "assets/use-profile-B0Q-nlNa.js" }, "src/components/results/ArchetypeCard.tsx": { "file": "assets/_sessionId-C2E_Nc2b.js" }, "src/components/results/FacetBreakdown.tsx": { "file": "assets/_sessionId-C2E_Nc2b.js" }, "src/components/results/TraitBar.tsx": { "file": "assets/_sessionId-C2E_Nc2b.js" }, "src/routes/results/$sessionId.tsx?tsr-split=component": { "file": "assets/_sessionId-C2E_Nc2b.js" }, "src/hooks/use-assessment.ts": { "file": "assets/use-assessment-DBdvijJ-.js" } };
+const manifest = { "src/integrations/tanstack-query/root-provider.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/components/Header.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/styles.css?transform-only": { "file": "assets/router-zwQxy4_d.js" }, "src/styles.css?url": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/__root.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/signup.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/results.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/login.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/dashboard.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/index.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/chat/index.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/profile.$publicProfileId.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/results/$sessionId.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routeTree.gen.ts": { "file": "assets/router-zwQxy4_d.js" }, "src/router.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/components/auth/signup-form.tsx": { "file": "assets/signup-BW0AYwiF.js" }, "src/routes/signup.tsx?tsr-split=component": { "file": "assets/signup-BW0AYwiF.js" }, "src/components/EvidencePanel.tsx": { "file": "assets/results-B5Y3U-32.js" }, "src/routes/results.tsx?tsr-split=component": { "file": "assets/results-B5Y3U-32.js" }, "src/components/auth/login-form.tsx": { "file": "assets/login-DAZKZ7Jp.js" }, "src/routes/login.tsx?tsr-split=component": { "file": "assets/login-DAZKZ7Jp.js" }, "src/components/auth/user-menu.tsx": { "file": "assets/dashboard-BtKFQEON.js" }, "src/routes/dashboard.tsx?tsr-split=component": { "file": "assets/dashboard-BtKFQEON.js" }, "src/routes/index.tsx?tsr-split=component": { "file": "assets/index-Doq6mj-C.js" }, "src/components/FacetSidePanel.tsx": { "file": "assets/index-Drrc1pD0.js" }, "src/hooks/useTherapistChat.ts": { "file": "assets/index-Drrc1pD0.js" }, "src/components/auth/SignUpModal.tsx": { "file": "assets/index-Drrc1pD0.js" }, "src/components/ErrorBanner.tsx": { "file": "assets/index-Drrc1pD0.js" }, "src/components/ProgressBar.tsx": { "file": "assets/index-Drrc1pD0.js" }, "src/components/TherapistChat.tsx": { "file": "assets/index-Drrc1pD0.js" }, "src/routes/chat/index.tsx?tsr-split=component": { "file": "assets/index-Drrc1pD0.js" }, "src/hooks/use-evidence.ts": { "file": "assets/use-evidence-BUdF-C3h.js" }, "src/lib/auth-client.ts": { "file": "assets/use-auth-DbltyjcL.js" }, "src/hooks/use-auth.ts": { "file": "assets/use-auth-DbltyjcL.js" }, "src/routes/profile.$publicProfileId.tsx?tsr-split=component": { "file": "assets/profile._publicProfileId-Dy_sqkty.js" }, "src/hooks/use-profile.ts": { "file": "assets/use-profile-BB9wBOzn.js" }, "src/components/results/ArchetypeCard.tsx": { "file": "assets/_sessionId-DYN_xFEI.js" }, "src/components/results/FacetBreakdown.tsx": { "file": "assets/_sessionId-DYN_xFEI.js" }, "src/components/results/TraitBar.tsx": { "file": "assets/_sessionId-DYN_xFEI.js" }, "src/routes/results/$sessionId.tsx?tsr-split=component": { "file": "assets/_sessionId-DYN_xFEI.js" }, "src/hooks/use-assessment.ts": { "file": "assets/use-assessment-Bck1frF4.js" } };
 function lazyService(loader) {
   let promise, mod;
   return {
@@ -1696,177 +1696,184 @@ const assets = {
   "/favicon.ico": {
     "type": "image/vnd.microsoft.icon",
     "etag": '"f1e-ESBTjHetHyiokkO0tT/irBbMO8Y"',
-    "mtime": "2026-02-09T23:31:53.860Z",
+    "mtime": "2026-02-10T00:52:26.191Z",
     "size": 3870,
     "path": "../public/favicon.ico"
   },
   "/logo192.png": {
     "type": "image/png",
     "etag": '"14e3-f08taHgqf6/O2oRVTsq5tImHdQA"',
-    "mtime": "2026-02-09T23:31:53.860Z",
+    "mtime": "2026-02-10T00:52:26.191Z",
     "size": 5347,
     "path": "../public/logo192.png"
   },
   "/logo512.png": {
     "type": "image/png",
     "etag": '"25c0-RpFfnQJpTtSb/HqVNJR2hBA9w/4"',
-    "mtime": "2026-02-09T23:31:53.860Z",
+    "mtime": "2026-02-10T00:52:26.191Z",
     "size": 9664,
     "path": "../public/logo512.png"
   },
   "/manifest.json": {
     "type": "application/json",
     "etag": '"1f2-Oqn/x1R1hBTtEjA8nFhpBeFJJNg"',
-    "mtime": "2026-02-09T23:31:53.861Z",
+    "mtime": "2026-02-10T00:52:26.192Z",
     "size": 498,
     "path": "../public/manifest.json"
   },
   "/robots.txt": {
     "type": "text/plain; charset=utf-8",
     "etag": '"43-BEzmj4PuhUNHX+oW9uOnPSihxtU"',
-    "mtime": "2026-02-09T23:31:53.861Z",
+    "mtime": "2026-02-10T00:52:26.192Z",
     "size": 67,
     "path": "../public/robots.txt"
   },
   "/tanstack-circle-logo.png": {
     "type": "image/png",
     "etag": '"40cab-HZ1KcYPs7tRjLe4Sd4g6CwKW+W8"',
-    "mtime": "2026-02-09T23:31:53.861Z",
+    "mtime": "2026-02-10T00:52:26.192Z",
     "size": 265387,
     "path": "../public/tanstack-circle-logo.png"
   },
   "/tanstack-word-logo-white.svg": {
     "type": "image/svg+xml",
     "etag": '"3a9a-9TQFm/pN8AZe1ZK0G1KyCEojnYg"',
-    "mtime": "2026-02-09T23:31:53.861Z",
+    "mtime": "2026-02-10T00:52:26.192Z",
     "size": 15002,
     "path": "../public/tanstack-word-logo-white.svg"
   },
-  "/assets/_sessionId-CQDk4ARr.js": {
+  "/assets/_sessionId-DVjTqymY.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"2992-J3l/JRifmVhOHc9pQZk9dW/S3cM"',
-    "mtime": "2026-02-09T23:31:54.000Z",
+    "etag": '"2992-EVN0x8GxCzXldAuys4Zir0RKQcw"',
+    "mtime": "2026-02-10T00:52:26.330Z",
     "size": 10642,
-    "path": "../public/assets/_sessionId-CQDk4ARr.js"
+    "path": "../public/assets/_sessionId-DVjTqymY.js"
   },
-  "/assets/button-B3t8njBi.js": {
+  "/assets/button-BGjrBqp1.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"10ac-5GILL5Z1wfNJvj9iYYlV8UN4mWc"',
-    "mtime": "2026-02-09T23:31:54.000Z",
+    "etag": '"10ac-YbKeb9oyxyhmvkaiRQaTwX0SoDI"',
+    "mtime": "2026-02-10T00:52:26.330Z",
     "size": 4268,
-    "path": "../public/assets/button-B3t8njBi.js"
+    "path": "../public/assets/button-BGjrBqp1.js"
   },
-  "/assets/dashboard-DNioiOJf.js": {
+  "/assets/dashboard-C12tH-D-.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"96d-wwRIBcUBfOUwKY5WMOUX1CKvB8Q"',
-    "mtime": "2026-02-09T23:31:53.999Z",
+    "etag": '"96d-PVR6u3fmvADrvyVUhXSrrURLJv0"',
+    "mtime": "2026-02-10T00:52:26.330Z",
     "size": 2413,
-    "path": "../public/assets/dashboard-DNioiOJf.js"
+    "path": "../public/assets/dashboard-C12tH-D-.js"
   },
-  "/assets/index-B41Ljzab.js": {
+  "/assets/index-BpZchYGo.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"142b-qEL3iKVDxWK16OJYTF2yWDCECgA"',
-    "mtime": "2026-02-09T23:31:54.000Z",
+    "etag": '"142b-xRtIiJCvjbC/28P/rGOtQKcw1No"',
+    "mtime": "2026-02-10T00:52:26.330Z",
     "size": 5163,
-    "path": "../public/assets/index-B41Ljzab.js"
+    "path": "../public/assets/index-BpZchYGo.js"
   },
-  "/assets/index-CKRifoJC.js": {
+  "/assets/index-CGqqEsfu.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"d3a4-Y0eQjJOZKkRiYvO2m2TyI4PYvxA"',
-    "mtime": "2026-02-09T23:31:54.000Z",
-    "size": 54180,
-    "path": "../public/assets/index-CKRifoJC.js"
+    "etag": '"55ae-I8Z2UjKe790CBcJ5I15XjkYpSqs"',
+    "mtime": "2026-02-10T00:52:26.330Z",
+    "size": 21934,
+    "path": "../public/assets/index-CGqqEsfu.js"
   },
-  "/assets/loader-circle-BWRtFEy-.js": {
+  "/assets/loader-circle-C6RxofIZ.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"8b-SNZyjfkBXh+E4OAYRMOAhHdfgYY"',
-    "mtime": "2026-02-09T23:31:54.000Z",
+    "etag": '"8b-eVEODo5DALkp6IuxdMyz7FGjLZQ"',
+    "mtime": "2026-02-10T00:52:26.330Z",
     "size": 139,
-    "path": "../public/assets/loader-circle-BWRtFEy-.js"
+    "path": "../public/assets/loader-circle-C6RxofIZ.js"
   },
-  "/assets/login-DWGwdHC1.js": {
+  "/assets/login-BDXt9mUl.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"81b-GfZkA8Rvg6IZUjNgeW9ueU74rdo"',
-    "mtime": "2026-02-09T23:31:53.999Z",
+    "etag": '"81b-CTcYT1RhZrUjeXjTJVzpU31jgDo"',
+    "mtime": "2026-02-10T00:52:26.330Z",
     "size": 2075,
-    "path": "../public/assets/login-DWGwdHC1.js"
+    "path": "../public/assets/login-BDXt9mUl.js"
   },
-  "/assets/main-RiaZkz5G.js": {
+  "/assets/main-BbUo8-hy.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"56b57-a04Rn2RHgXjk2DHoe5TZh/5O/zk"',
-    "mtime": "2026-02-09T23:31:53.999Z",
-    "size": 355159,
-    "path": "../public/assets/main-RiaZkz5G.js"
+    "etag": '"56cd3-JsXYGvjGdSIQN52+Sp6xZWIyfcU"',
+    "mtime": "2026-02-10T00:52:26.330Z",
+    "size": 355539,
+    "path": "../public/assets/main-BbUo8-hy.js"
   },
-  "/assets/profile._publicProfileId-C6Gn277R.js": {
+  "/assets/profile._publicProfileId-a4vO7k6B.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"2371-pp2DMtm6KFkS/YRVHRrpWkVVU6Q"',
-    "mtime": "2026-02-09T23:31:53.999Z",
-    "size": 9073,
-    "path": "../public/assets/profile._publicProfileId-C6Gn277R.js"
+    "etag": '"232d-jR3abmatYcdvcGJOWnj2GVfLcM8"',
+    "mtime": "2026-02-10T00:52:26.330Z",
+    "size": 9005,
+    "path": "../public/assets/profile._publicProfileId-a4vO7k6B.js"
   },
-  "/assets/results-B8jJn9fR.js": {
+  "/assets/results-Bs09zR6H.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"214b-QFwpfkDOMeaxHXigMlqdGF0cDrM"',
-    "mtime": "2026-02-09T23:31:53.999Z",
-    "size": 8523,
-    "path": "../public/assets/results-B8jJn9fR.js"
+    "etag": '"301d-sdTHRsQyR8XvzpHoCFh9ekKugdY"',
+    "mtime": "2026-02-10T00:52:26.330Z",
+    "size": 12317,
+    "path": "../public/assets/results-Bs09zR6H.js"
   },
-  "/assets/signup-Co49iFF8.js": {
+  "/assets/signup-DBdB7ozD.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"c17-3yT/yaTGJ0VU6mU7V2zYAPusZVU"',
-    "mtime": "2026-02-09T23:31:53.999Z",
+    "etag": '"c17-FZ7149fsNc99fIEtfBn7QkYsfPU"',
+    "mtime": "2026-02-10T00:52:26.330Z",
     "size": 3095,
-    "path": "../public/assets/signup-Co49iFF8.js"
+    "path": "../public/assets/signup-DBdB7ozD.js"
   },
-  "/assets/styles-C835ksGg.css": {
+  "/assets/styles-vyan1t0Q.css": {
     "type": "text/css; charset=utf-8",
-    "etag": '"dc56-HkCSCnZV/dUA9eLxLd8la9gasjY"',
-    "mtime": "2026-02-09T23:31:53.999Z",
-    "size": 56406,
-    "path": "../public/assets/styles-C835ksGg.css"
+    "etag": '"e7de-ycBgEWL85Ndn8jdbzYsbVurxI1g"',
+    "mtime": "2026-02-10T00:52:26.330Z",
+    "size": 59358,
+    "path": "../public/assets/styles-vyan1t0Q.css"
   },
-  "/assets/use-assessment-ogEYb1AK.js": {
+  "/assets/use-assessment-DCwQsUCh.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"32e-IPrigUcWzgK5kF+j0hCKOfu479E"',
-    "mtime": "2026-02-09T23:31:54.000Z",
-    "size": 814,
-    "path": "../public/assets/use-assessment-ogEYb1AK.js"
+    "etag": '"338-zCJu4xoZ0kNJqEB+jq4hIDECrrY"',
+    "mtime": "2026-02-10T00:52:26.330Z",
+    "size": 824,
+    "path": "../public/assets/use-assessment-DCwQsUCh.js"
   },
-  "/assets/use-auth-DE7wvnG3.js": {
+  "/assets/use-auth-C9qFaQnn.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"70eb-dFCnaLxGK77DKXvKugkfczLuTts"',
-    "mtime": "2026-02-09T23:31:53.999Z",
+    "etag": '"70eb-ZfQrZS8kO/QBfwK3u1qerWfwcTc"',
+    "mtime": "2026-02-10T00:52:26.330Z",
     "size": 28907,
-    "path": "../public/assets/use-auth-DE7wvnG3.js"
+    "path": "../public/assets/use-auth-C9qFaQnn.js"
   },
-  "/assets/use-profile-8lLscN6D.js": {
+  "/assets/use-evidence-B8gMg0p1.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"56b-1FaK7F5VUjWlmHM0gvp4sXcD8Rs"',
-    "mtime": "2026-02-09T23:31:54.000Z",
-    "size": 1387,
-    "path": "../public/assets/use-profile-8lLscN6D.js"
+    "etag": '"8b1e-pF12P4mnRSOEUFDPY+oxDY6QptY"',
+    "mtime": "2026-02-10T00:52:26.330Z",
+    "size": 35614,
+    "path": "../public/assets/use-evidence-B8gMg0p1.js"
   },
-  "/assets/useMutation-CSCeiqsJ.js": {
+  "/assets/use-profile-DW3J596Y.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"2a90-/N3s4Ofns2ElzOtpaDBG1MAkLQ0"',
-    "mtime": "2026-02-09T23:31:54.000Z",
+    "etag": '"5bb-G6vt9vh2KURXU8D5Lxwbj0z16Dk"',
+    "mtime": "2026-02-10T00:52:26.330Z",
+    "size": 1467,
+    "path": "../public/assets/use-profile-DW3J596Y.js"
+  },
+  "/assets/useMutation-DwqxfvEO.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"2a90-C2Yu1PlM5A3b1ZLg8PnMVQReqoQ"',
+    "mtime": "2026-02-10T00:52:26.330Z",
     "size": 10896,
-    "path": "../public/assets/useMutation-CSCeiqsJ.js"
+    "path": "../public/assets/useMutation-DwqxfvEO.js"
   },
   "/assets/utils-CDN07tui.js": {
     "type": "text/javascript; charset=utf-8",
     "etag": '"63aa-tlIrw8ZrUIZZqhEOI0GfGybRivo"',
-    "mtime": "2026-02-09T23:31:54.000Z",
+    "mtime": "2026-02-10T00:52:26.330Z",
     "size": 25514,
     "path": "../public/assets/utils-CDN07tui.js"
   },
-  "/assets/zap-DftW3tDo.js": {
+  "/assets/zap-DC0SSIJw.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"64f-9+KEundNTX9T875DNMsoJ8i/ft0"',
-    "mtime": "2026-02-09T23:31:54.000Z",
+    "etag": '"64f-toD3sm8WrHB3ynG4p+YLZSH6Tg0"',
+    "mtime": "2026-02-10T00:52:26.330Z",
     "size": 1615,
-    "path": "../public/assets/zap-DftW3tDo.js"
+    "path": "../public/assets/zap-DC0SSIJw.js"
   }
 };
 function readAsset(id) {

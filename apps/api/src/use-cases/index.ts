@@ -12,6 +12,14 @@ export {
 	createShareableProfile,
 } from "./create-shareable-profile.use-case";
 export {
+	type GetFacetEvidenceInput,
+	getFacetEvidence,
+} from "./get-facet-evidence.use-case";
+export {
+	type GetMessageEvidenceInput,
+	getMessageEvidence,
+} from "./get-message-evidence.use-case";
+export {
 	type GetPublicProfileInput,
 	type GetPublicProfileOutput,
 	getPublicProfile,

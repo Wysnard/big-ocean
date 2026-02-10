@@ -1,0 +1,89 @@
+/**
+ * Facet Side Panel Component
+ *
+ * Side panel showing which facets were detected in a specific message.
+ * Displays facets sorted by score (highest contribution first).
+ *
+ * Features:
+ * - Facet list with score badges
+ * - Click facet → navigate to profile page and scroll to that facet
+ * - Color-coded scores (green/yellow/red)
+ */
+
+"use client";
+
+import { useNavigate } from "@tanstack/react-router";
+import type { SavedFacetEvidence } from "@workspace/contracts";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@workspace/ui/components/dialog";
+import { cn } from "@workspace/ui/lib/utils";
+
+interface FacetSidePanelProps {
+	sessionId: string;
+	messageId: string;
+	evidence: SavedFacetEvidence[] | undefined;
+	isLoading: boolean;
+	isOpen: boolean;
+	onClose: () => void;
+}
+
+/**
+ * Facet Side Panel Component
+ *
+ * Shows all facets detected in a message with score badges.
+ * Clicking a facet navigates to the profile page.
+ */
+export function FacetSidePanel({
+	sessionId,
+	evidence,
+	isLoading,
+	isOpen,
+	onClose,
+}: FacetSidePanelProps) {
+	const navigate = useNavigate();
+
+	const handleFacetClick = (facetName: string) => {
+		navigate({
+			to: "/results",
+			search: { sessionId, scrollToFacet: facetName },
+		});
+		onClose();
+	};
+
+	const getScoreColor = (score: number) => {
+		if (score >= 15) return "text-green-400 border-green-500/30";
+		if (score >= 8) return "text-yellow-400 border-yellow-500/30";
+		return "text-red-400 border-red-500/30";
+	};
+
+	return (
+		<Dialog open={isOpen} onOpenChange={onClose}>
+			<DialogContent className="w-[90vw] sm:max-w-md">
+				<DialogHeader>
+					<DialogTitle>This message contributed to:</DialogTitle>
+				</DialogHeader>
+				<div className="space-y-2 mt-4">
+					{isLoading && <p className="text-center text-muted-foreground">Loading facets...</p>}
+					{!isLoading && evidence && evidence.length === 0 && (
+						<p className="text-center text-muted-foreground">No facet detections in this message.</p>
+					)}
+					{!isLoading &&
+						evidence &&
+						evidence.map((item) => (
+							<button
+								key={item.id}
+								onClick={() => handleFacetClick(item.facetName)}
+								className="w-full text-left p-3 border rounded-lg hover:bg-slate-700/50 transition-colors min-h-[44px]"
+								type="button"
+							>
+								<div className="flex justify-between items-center">
+									<span className="capitalize">{item.facetName.replace(/_/g, " ")}</span>
+									<span className={cn("font-bold", getScoreColor(item.score))}>+{item.score}/20</span>
+								</div>
+								<span className="text-xs text-gray-400">{item.confidence}% confident</span>
+							</button>
+						))}
+				</div>
+			</DialogContent>
+		</Dialog>
+	);
+}
