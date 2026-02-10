@@ -49,12 +49,15 @@ development_status:
   epic-1-retrospective: optional
 
   # EPIC 2: Assessment Backend Services
-  epic-2: done
+  # Reopened: Story 2-9 added post-completion
+  epic-2: in-progress
   2-1-session-management-and-persistence: done
   2-2-nerin-agent-setup-and-conversational-quality: done
   2-3-evidence-based-analyzer-and-scorer-implementation: done
   2-4-langgraph-state-machine-and-orchestration: done
   2-5-llm-cost-tracking-rate-limiting-and-budget-enforcement: done
+  2-8-integration-testing-docker-compose: done
+  2-9-evidence-sourced-scoring: ready-for-dev
   epic-2-retrospective: done
 
   # EPIC 3: OCEAN Archetype System
@@ -78,7 +81,7 @@ development_status:
   5-1-display-assessment-results-with-evidence-based-scores: done
   5-2-generate-shareable-profile-links: done
   5-3-bidirectional-evidence-highlighting-and-transparency: done
-  epic-5-retrospective: optional
+  epic-5-retrospective: done
 
   # EPIC 6: Privacy & Data Management (PHASE 2 - EU Launch)
   # Moved to Phase 2 on 2026-02-10 to accelerate Phase 1 MVP
