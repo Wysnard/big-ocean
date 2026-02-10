@@ -19,6 +19,24 @@ When working on frontend code (`apps/front` or `packages/ui`), consult [FRONTEND
 **Node requirement:** >= 20
 **Package manager:** pnpm@10.4.1
 
+## Privacy Implementation Strategy (Phased Approach)
+
+**Phase 1 (US MVP - Epics 1-5):**
+The MVP implements **basic privacy foundation** sufficient for US-only launch:
+- ✅ **TLS 1.3** encryption in transit (all API calls)
+- ✅ **Better Auth** password security (12+ char, compromised credential checks)
+- ✅ **Default-private profiles** (zero public discovery, explicit sharing only)
+- ✅ **PostgreSQL RLS** for data access control
+- ✅ Privacy controls visible in UI
+
+**Phase 2 (EU Launch - Epic 6):**
+Full GDPR compliance required for EU market expansion:
+- 🔒 **AES-256-GCM encryption at rest** (Story 6.1)
+- 🌍 **GDPR deletion/portability** endpoints (Story 6.2)
+- 📋 **Comprehensive audit logging** (Story 6.3)
+
+**Rationale:** Epic 6 (Privacy & Data Management) was moved from Phase 1 to Phase 2 on 2026-02-10 to accelerate MVP delivery. Basic privacy controls in Phase 1 are sufficient for US launch and PMF validation. Full GDPR compliance is deferred to Phase 2 when expanding to EU market.
+
 ## Monorepo Structure
 
 ```

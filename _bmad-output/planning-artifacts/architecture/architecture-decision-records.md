@@ -402,14 +402,22 @@ Following ADR-6 (Hexagonal Architecture), cost tracking is implemented as:
    - Server returns only safe public fields
    - User ID never exposed
 
-**Privacy Controls:**
+**Privacy Controls (Phased Implementation):**
 
+**Phase 1 (US MVP - Basic Privacy Foundation):**
+- **TLS 1.3 Encryption:** All API traffic encrypted in transit (HTTPS-only, configured in Epic 1)
+- **Better Auth Security:** Password hashing (bcrypt), 12+ character minimum, compromised credential checks (Epic 1)
 - **PostgreSQL Row-Level Security (RLS):** Users can only query their own assessment data
   - Policy: `auth.uid()::text = sessions.user_id` (at query level)
-- **Server-Side Encryption:** All conversations encrypted with AES-256 at rest
+- **Default-Private Profiles:** Profiles NOT searchable/discoverable, explicit sharing only (Epic 5)
 - **API Filtering:** GET /api/sessions/:id endpoint checks auth before returning data
 - **URL Privacy:** Shareable links use `public_profile_id`, never `user_id`
 - **Database Trigger:** Trigger keeps `public_profiles` in sync when `user_profiles` updates
+
+**Phase 2 (EU Launch - Full GDPR Compliance - Epic 6):**
+- **AES-256-GCM Encryption at Rest:** All conversation data encrypted in database (Story 6.1)
+- **GDPR Deletion/Portability:** Right to deletion, data export endpoints (Story 6.2)
+- **Comprehensive Audit Logging:** All data access logged (who accessed what, when) (Story 6.3)
 
 **Rationale:**
 - **Single Source of Truth:** `user_profiles` and `sessions` are authoritative on server

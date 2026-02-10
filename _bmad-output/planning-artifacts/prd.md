@@ -187,15 +187,24 @@ Based on Pre-mortem Analysis, these requirements are **non-negotiable** for plat
 - ✅ **Conversation privacy:** Full conversation stored encrypted, never shared or analyzed without user consent
 - ✅ **Data ownership:** Users own their conversation data, can export to PDF anytime
 
-**Technical Privacy Requirements:**
-- ✅ End-to-end encryption for all sensitive data (transport + at-rest)
-- ✅ Conversation logs encrypted in database, decrypted only for user
+**Technical Privacy Requirements (Phased Implementation):**
+
+**Phase 1 (US MVP - Basic Privacy Foundation):**
+- ✅ TLS 1.3 encryption in transit for all API calls
+- ✅ Better Auth password security (12+ char, compromised credential checks)
+- ✅ Default-private profiles (explicit sharing only, zero public discovery)
+- ✅ PostgreSQL Row-Level Security (RLS) for data access control
 - ✅ No inference/profiling: Conversation data NOT used for training without explicit consent
+- ✅ Third-party security vetting (Anthropic Claude API, Railway infrastructure)
+- ✅ Privacy policy in plain language + data retention policy
+
+**Phase 2 (EU Launch - Full GDPR Compliance):**
+- ✅ AES-256-GCM encryption at rest for all conversation data
 - ✅ Comprehensive audit logs for all data access (who accessed what, when)
-- ✅ Third-party security vetting (LLM API provider, database vendor)
+- ✅ GDPR compliance: Right to deletion, right to data portability, right to object (Epic 6)
 - ✅ Regular security audits + annual penetration testing
 - ✅ User data breach response plan (24-hour notification)
-- ✅ GDPR/CCPA compliant: Right to deletion, right to data portability, right to object
+- ✅ CCPA compliance for US region (if required post-MVP)
 
 **User Trust Signals (Marketing/Product):**
 - ✅ Privacy policy in plain language (not legal jargon)
@@ -206,15 +215,25 @@ Based on Pre-mortem Analysis, these requirements are **non-negotiable** for plat
 ### 5. Compliance & Governance (Fifth Priority)
 **What Could Fail:** GDPR violation + regulatory fines. Platform shut down by authorities.
 
-**Prevention Requirements:**
+**Prevention Requirements (Phased):**
+
+**Phase 1 (US MVP):**
 - ✅ Data governance framework: Assessment data classified as sensitive personal data
-- ✅ Data deletion/portability mechanisms (GDPR Article 17, 20, CCPA 1798.100) built-in day 1
-- ✅ Cross-border data transfer agreements (EU, US, Asia) before expansion
-- ✅ Consent flows: Explicit opt-in for assessment participation + conversation data storage + analytics
-- ✅ Data retention policies by region/jurisdiction (e.g., EU: delete after 3 years if inactive)
-- ✅ Legal review before any new market expansion or data use
+- ✅ Consent flows: Explicit opt-in for assessment participation + conversation data storage
+- ✅ Data retention policies (conversation kept 3 years, then deleted)
 - ✅ Privacy by design principle in all architectural decisions
+- ✅ US privacy compliance (basic CCPA requirements)
+
+**Phase 2 (EU Launch):**
+- ✅ Full GDPR compliance (Epic 6): Data deletion/portability mechanisms (Article 17, 20)
+- ✅ Cross-border data transfer agreements (EU-US)
+- ✅ Legal review for EU market expansion
+- ✅ Enhanced consent flows for GDPR requirements
 - ✅ DPA (Data Processing Agreement) ready for B2B use (startups/companies)
+
+**Phase 3+ (Asia Expansion):**
+- ✅ Asia region compliance (China, Japan, India data protection laws)
+- ✅ Additional cross-border data transfer agreements
 
 ---
 
@@ -782,7 +801,7 @@ The BMAD expert team reviewed your success criteria and provided refinements:
 
 ### MVP - Minimum Viable Product (500 users, Validate PMF)
 
-**Must Have:**
+**Must Have (US-Only Launch):**
 - ✅ Conversational Big Five assessment with Nerin (excellence is priority)
 - ✅ Shareable profiles (private by default, LinkedIn-style sharing)
 - ✅ Privacy controls visible in UI ("Your profile is private by default")
@@ -790,7 +809,7 @@ The BMAD expert team reviewed your success criteria and provided refinements:
 - ✅ OCEAN Archetype System (POC Scope): 4-letter main archetype code (81 combinations: 4 traits × 3 levels), ~25-30 hand-curated archetype character names covering common combinations, component-based naming system for remaining 56 combinations, all 24 facets (4 traits × 6 facets) with scientific precision in database, trait descriptions providing psychological accuracy
 - ✅ Server-side session state management with URL-based resumption (client-side state management for frontend)
 - ✅ LLM cost monitoring + capping dashboard
-- ✅ EU GDPR compliance (data deletion, portability, consent)
+- ✅ Basic privacy foundation (TLS 1.3, Better Auth security, default-private profiles, PostgreSQL RLS)
 - ✅ Nerin quality + UX/UI polish (beautiful profile card, intuitive flow)
 
 **Explicitly NOT in MVP:**
@@ -800,15 +819,17 @@ The BMAD expert team reviewed your success criteria and provided refinements:
 - ❌ Merch infrastructure (Phase 2)
 - ❌ B2B team/recruiter features (Phase 2)
 - ❌ ML models trained on conversation data (Phase 3+)
-- ❌ Global compliance beyond EU (Phase 2+, add regions one at a time)
 - ❌ Conversation data analytics dashboard (Phase 2)
 - ❌ Subscription tier for "continue with Nerin" (Phase 2+)
+- ❌ **Full GDPR compliance** (encryption at rest, data deletion/portability, audit logging - Phase 2 for EU launch)
+- ❌ **EU/Asia market launch** (US-only for MVP, expand to EU in Phase 2 after PMF validation)
 
 ---
 
 ### Growth Features (Post-MVP, After PMF Validation)
 
 **Phase 2 (1k-5k users):**
+- ✅ **EU Launch + GDPR Compliance** (Epic 6: encryption at rest, data deletion/portability, audit logging)
 - ✅ Coaching partner integrations (revenue share)
 - ✅ Merch infrastructure (e-commerce, personality-themed products)
 - ✅ B2B optionality (team assessments for startups, recruiter profiles)

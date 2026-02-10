@@ -80,7 +80,10 @@ development_status:
   5-3-bidirectional-evidence-highlighting-and-transparency: done
   epic-5-retrospective: optional
 
-  # EPIC 6: Privacy & Data Management
+  # EPIC 6: Privacy & Data Management (PHASE 2 - EU Launch)
+  # Moved to Phase 2 on 2026-02-10 to accelerate Phase 1 MVP
+  # Rationale: US-only launch with basic privacy foundation (TLS, Better Auth, default-private profiles)
+  # Phase 2 will add full GDPR compliance (encryption at rest, data deletion/portability, audit logging)
   epic-6: backlog
   6-1-server-side-encryption-at-rest-and-tls-in-transit: backlog
   6-2-gdpr-compliance-data-deletion-portability: backlog

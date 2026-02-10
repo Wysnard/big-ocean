@@ -1452,19 +1452,34 @@ So that **I can verify the accuracy and understand how my results were calculate
 
 ## Epic 6: Privacy & Data Management
 
-**Goal:** Implement encryption, GDPR compliance, and comprehensive audit logging.
+**Phase:** 2 (EU Launch + GDPR Compliance)
+
+**Goal:** Implement encryption at rest, GDPR compliance, and comprehensive audit logging.
 
 **Dependencies:**
 - Epic 1 (infrastructure in place)
 - Epics 2-5 (data models + assessment/sharing flows defined)
+- Phase 1 MVP completion (US launch validated)
 
-**Enables:** User trust + legal compliance; can work in parallel with Epics 2-4 for design, implementation after
+**Enables:** EU market expansion + comprehensive privacy compliance
 
-**Note:** Cross-cutting concern — encryption/privacy should be architected early (Epic 1) but detailed implementation (audit logs, deletion flows) follows after core features (Epics 2-5) exist
+**Note:** Cross-cutting concern — basic privacy is covered in Phase 1 via Epics 1, 4, 5 (TLS, Better Auth, default-private profiles). Epic 6 provides comprehensive GDPR compliance (encryption at rest, data deletion/portability, audit logging) needed for EU launch in Phase 2.
 
-**Critical:** Must be complete before launch (MVP blocker for legal compliance)
+**Phase 1 Privacy Coverage:**
+- ✅ TLS 1.3 encryption in transit (Epic 1)
+- ✅ Better Auth password security (Epic 1)
+- ✅ Default-private profiles (Epic 5)
+- ✅ Explicit sharing controls (Epic 5)
+- ✅ PostgreSQL RLS for data access control (Epic 2)
 
-**User Value:** Users trust that their data is secure and they have full control
+**Phase 2 Additions (Epic 6):**
+- 🔒 AES-256-GCM encryption at rest (Story 6.1)
+- 🌍 GDPR data deletion/portability (Story 6.2)
+- 📋 Comprehensive audit logging (Story 6.3)
+
+**Critical:** Not required for US-only MVP (Phase 1). Must be complete before EU launch (Phase 2).
+
+**User Value:** Users trust that their data is secure, and EU users have full GDPR rights
 
 ### Story 6.1: Server-Side Encryption at Rest and TLS in Transit (TDD)
 
