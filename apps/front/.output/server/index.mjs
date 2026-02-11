@@ -38,7 +38,7 @@ function getViteEnv(input) {
     return input.headers["x-vite-env"] || input.headers.get?.("x-vite-env") || Array.isArray(input.headers) && input.headers.find((h) => h[0].toLowerCase() === "x-vite-env")?.[1];
   }
 }
-const manifest = { "src/integrations/tanstack-query/root-provider.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/components/Header.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/styles.css?transform-only": { "file": "assets/router-zwQxy4_d.js" }, "src/styles.css?url": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/__root.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/signup.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/results.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/login.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/dashboard.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/index.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/chat/index.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/profile.$publicProfileId.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routes/results/$sessionId.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/routeTree.gen.ts": { "file": "assets/router-zwQxy4_d.js" }, "src/router.tsx": { "file": "assets/router-zwQxy4_d.js" }, "src/components/auth/signup-form.tsx": { "file": "assets/signup-BW0AYwiF.js" }, "src/routes/signup.tsx?tsr-split=component": { "file": "assets/signup-BW0AYwiF.js" }, "src/components/EvidencePanel.tsx": { "file": "assets/results-B5Y3U-32.js" }, "src/routes/results.tsx?tsr-split=component": { "file": "assets/results-B5Y3U-32.js" }, "src/components/auth/login-form.tsx": { "file": "assets/login-DAZKZ7Jp.js" }, "src/routes/login.tsx?tsr-split=component": { "file": "assets/login-DAZKZ7Jp.js" }, "src/components/auth/user-menu.tsx": { "file": "assets/dashboard-BtKFQEON.js" }, "src/routes/dashboard.tsx?tsr-split=component": { "file": "assets/dashboard-BtKFQEON.js" }, "src/routes/index.tsx?tsr-split=component": { "file": "assets/index-Doq6mj-C.js" }, "src/components/FacetSidePanel.tsx": { "file": "assets/index-Drrc1pD0.js" }, "src/hooks/useTherapistChat.ts": { "file": "assets/index-Drrc1pD0.js" }, "src/components/auth/SignUpModal.tsx": { "file": "assets/index-Drrc1pD0.js" }, "src/components/ErrorBanner.tsx": { "file": "assets/index-Drrc1pD0.js" }, "src/components/ProgressBar.tsx": { "file": "assets/index-Drrc1pD0.js" }, "src/components/TherapistChat.tsx": { "file": "assets/index-Drrc1pD0.js" }, "src/routes/chat/index.tsx?tsr-split=component": { "file": "assets/index-Drrc1pD0.js" }, "src/hooks/use-evidence.ts": { "file": "assets/use-evidence-BUdF-C3h.js" }, "src/lib/auth-client.ts": { "file": "assets/use-auth-DbltyjcL.js" }, "src/hooks/use-auth.ts": { "file": "assets/use-auth-DbltyjcL.js" }, "src/routes/profile.$publicProfileId.tsx?tsr-split=component": { "file": "assets/profile._publicProfileId-Dy_sqkty.js" }, "src/hooks/use-profile.ts": { "file": "assets/use-profile-BB9wBOzn.js" }, "src/components/results/ArchetypeCard.tsx": { "file": "assets/_sessionId-DYN_xFEI.js" }, "src/components/results/FacetBreakdown.tsx": { "file": "assets/_sessionId-DYN_xFEI.js" }, "src/components/results/TraitBar.tsx": { "file": "assets/_sessionId-DYN_xFEI.js" }, "src/routes/results/$sessionId.tsx?tsr-split=component": { "file": "assets/_sessionId-DYN_xFEI.js" }, "src/hooks/use-assessment.ts": { "file": "assets/use-assessment-Bck1frF4.js" } };
+const manifest = { "src/integrations/tanstack-query/root-provider.tsx": { "file": "assets/router-pbKMjz2_.js" }, "src/components/Header.tsx": { "file": "assets/router-pbKMjz2_.js" }, "src/styles.css?transform-only": { "file": "assets/router-pbKMjz2_.js" }, "src/styles.css?url": { "file": "assets/router-pbKMjz2_.js" }, "src/routes/__root.tsx": { "file": "assets/router-pbKMjz2_.js" }, "src/routes/signup.tsx": { "file": "assets/router-pbKMjz2_.js" }, "src/routes/results.tsx": { "file": "assets/router-pbKMjz2_.js" }, "src/routes/login.tsx": { "file": "assets/router-pbKMjz2_.js" }, "src/routes/dashboard.tsx": { "file": "assets/router-pbKMjz2_.js" }, "src/routes/index.tsx": { "file": "assets/router-pbKMjz2_.js" }, "src/routes/chat/index.tsx": { "file": "assets/router-pbKMjz2_.js" }, "src/routes/profile.$publicProfileId.tsx": { "file": "assets/router-pbKMjz2_.js" }, "src/routes/results/$sessionId.tsx": { "file": "assets/router-pbKMjz2_.js" }, "src/routeTree.gen.ts": { "file": "assets/router-pbKMjz2_.js" }, "src/router.tsx": { "file": "assets/router-pbKMjz2_.js" }, "src/components/auth/signup-form.tsx": { "file": "assets/signup-BW0AYwiF.js" }, "src/routes/signup.tsx?tsr-split=component": { "file": "assets/signup-BW0AYwiF.js" }, "src/components/EvidencePanel.tsx": { "file": "assets/results-Ci1HBm2q.js" }, "src/routes/results.tsx?tsr-split=component": { "file": "assets/results-Ci1HBm2q.js" }, "src/components/auth/login-form.tsx": { "file": "assets/login-DAZKZ7Jp.js" }, "src/routes/login.tsx?tsr-split=component": { "file": "assets/login-DAZKZ7Jp.js" }, "src/components/auth/user-menu.tsx": { "file": "assets/dashboard-BtKFQEON.js" }, "src/routes/dashboard.tsx?tsr-split=component": { "file": "assets/dashboard-BtKFQEON.js" }, "src/routes/index.tsx?tsr-split=component": { "file": "assets/index-Bal1QFhq.js" }, "src/components/FacetSidePanel.tsx": { "file": "assets/index-BF11Pa0e.js" }, "src/hooks/useTherapistChat.ts": { "file": "assets/index-BF11Pa0e.js" }, "src/components/auth/SignUpModal.tsx": { "file": "assets/index-BF11Pa0e.js" }, "src/components/ErrorBanner.tsx": { "file": "assets/index-BF11Pa0e.js" }, "src/components/ProgressBar.tsx": { "file": "assets/index-BF11Pa0e.js" }, "src/components/TherapistChat.tsx": { "file": "assets/index-BF11Pa0e.js" }, "src/routes/chat/index.tsx?tsr-split=component": { "file": "assets/index-BF11Pa0e.js" }, "src/hooks/use-evidence.ts": { "file": "assets/use-evidence-Dc0KRIh2.js" }, "src/lib/auth-client.ts": { "file": "assets/use-auth-DbltyjcL.js" }, "src/hooks/use-auth.ts": { "file": "assets/use-auth-DbltyjcL.js" }, "src/routes/profile.$publicProfileId.tsx?tsr-split=component": { "file": "assets/profile._publicProfileId-Cnj8WcL4.js" }, "src/hooks/use-profile.ts": { "file": "assets/use-profile-CZDkceIB.js" }, "src/components/results/ArchetypeCard.tsx": { "file": "assets/_sessionId-DRWlxFhc.js" }, "src/components/results/FacetBreakdown.tsx": { "file": "assets/_sessionId-DRWlxFhc.js" }, "src/components/results/TraitBar.tsx": { "file": "assets/_sessionId-DRWlxFhc.js" }, "src/routes/results/$sessionId.tsx?tsr-split=component": { "file": "assets/_sessionId-DRWlxFhc.js" }, "src/hooks/use-assessment.ts": { "file": "assets/use-assessment-B9ccJOe7.js" } };
 function lazyService(loader) {
   let promise, mod;
   return {
@@ -1696,184 +1696,184 @@ const assets = {
   "/favicon.ico": {
     "type": "image/vnd.microsoft.icon",
     "etag": '"f1e-ESBTjHetHyiokkO0tT/irBbMO8Y"',
-    "mtime": "2026-02-10T00:52:26.191Z",
+    "mtime": "2026-02-11T00:11:57.501Z",
     "size": 3870,
     "path": "../public/favicon.ico"
   },
   "/logo192.png": {
     "type": "image/png",
     "etag": '"14e3-f08taHgqf6/O2oRVTsq5tImHdQA"',
-    "mtime": "2026-02-10T00:52:26.191Z",
+    "mtime": "2026-02-11T00:11:57.501Z",
     "size": 5347,
     "path": "../public/logo192.png"
   },
   "/logo512.png": {
     "type": "image/png",
     "etag": '"25c0-RpFfnQJpTtSb/HqVNJR2hBA9w/4"',
-    "mtime": "2026-02-10T00:52:26.191Z",
+    "mtime": "2026-02-11T00:11:57.502Z",
     "size": 9664,
     "path": "../public/logo512.png"
   },
   "/manifest.json": {
     "type": "application/json",
     "etag": '"1f2-Oqn/x1R1hBTtEjA8nFhpBeFJJNg"',
-    "mtime": "2026-02-10T00:52:26.192Z",
+    "mtime": "2026-02-11T00:11:57.502Z",
     "size": 498,
     "path": "../public/manifest.json"
   },
   "/robots.txt": {
     "type": "text/plain; charset=utf-8",
     "etag": '"43-BEzmj4PuhUNHX+oW9uOnPSihxtU"',
-    "mtime": "2026-02-10T00:52:26.192Z",
+    "mtime": "2026-02-11T00:11:57.502Z",
     "size": 67,
     "path": "../public/robots.txt"
   },
   "/tanstack-circle-logo.png": {
     "type": "image/png",
     "etag": '"40cab-HZ1KcYPs7tRjLe4Sd4g6CwKW+W8"',
-    "mtime": "2026-02-10T00:52:26.192Z",
+    "mtime": "2026-02-11T00:11:57.502Z",
     "size": 265387,
     "path": "../public/tanstack-circle-logo.png"
   },
   "/tanstack-word-logo-white.svg": {
     "type": "image/svg+xml",
     "etag": '"3a9a-9TQFm/pN8AZe1ZK0G1KyCEojnYg"',
-    "mtime": "2026-02-10T00:52:26.192Z",
+    "mtime": "2026-02-11T00:11:57.502Z",
     "size": 15002,
     "path": "../public/tanstack-word-logo-white.svg"
   },
-  "/assets/_sessionId-DVjTqymY.js": {
+  "/assets/_sessionId-BtnqEQlQ.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"2992-EVN0x8GxCzXldAuys4Zir0RKQcw"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"2992-dHkKMFp5HbK8HkvZgDhiuIGPZYI"',
+    "mtime": "2026-02-11T00:11:57.638Z",
     "size": 10642,
-    "path": "../public/assets/_sessionId-DVjTqymY.js"
+    "path": "../public/assets/_sessionId-BtnqEQlQ.js"
   },
-  "/assets/button-BGjrBqp1.js": {
+  "/assets/button-sxjChjeB.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"10ac-YbKeb9oyxyhmvkaiRQaTwX0SoDI"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"10ac-63ToGHDrnrW9iNl5Ln0Z10Zg52s"',
+    "mtime": "2026-02-11T00:11:57.638Z",
     "size": 4268,
-    "path": "../public/assets/button-BGjrBqp1.js"
+    "path": "../public/assets/button-sxjChjeB.js"
   },
-  "/assets/dashboard-C12tH-D-.js": {
+  "/assets/dashboard-B4UURZaX.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"96d-PVR6u3fmvADrvyVUhXSrrURLJv0"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"96d-AfkJvoQC3KcqwTXnZTDSUWjZizs"',
+    "mtime": "2026-02-11T00:11:57.637Z",
     "size": 2413,
-    "path": "../public/assets/dashboard-C12tH-D-.js"
+    "path": "../public/assets/dashboard-B4UURZaX.js"
   },
-  "/assets/index-BpZchYGo.js": {
+  "/assets/index-1Zoq38Oj.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"142b-xRtIiJCvjbC/28P/rGOtQKcw1No"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"142b-1DMRHCSMOCof0H/P078bZsu0kVo"',
+    "mtime": "2026-02-11T00:11:57.638Z",
     "size": 5163,
-    "path": "../public/assets/index-BpZchYGo.js"
+    "path": "../public/assets/index-1Zoq38Oj.js"
   },
-  "/assets/index-CGqqEsfu.js": {
+  "/assets/index-pnZRWqpX.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"55ae-I8Z2UjKe790CBcJ5I15XjkYpSqs"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"55ae-TkKzYBhrzG6WEKA8IfMIP4Rbsxo"',
+    "mtime": "2026-02-11T00:11:57.637Z",
     "size": 21934,
-    "path": "../public/assets/index-CGqqEsfu.js"
+    "path": "../public/assets/index-pnZRWqpX.js"
   },
-  "/assets/loader-circle-C6RxofIZ.js": {
+  "/assets/loader-circle-DOmn7GP0.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"8b-eVEODo5DALkp6IuxdMyz7FGjLZQ"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"8b-mbwV3nalfIYUkk/fsB6CTDF8JLs"',
+    "mtime": "2026-02-11T00:11:57.638Z",
     "size": 139,
-    "path": "../public/assets/loader-circle-C6RxofIZ.js"
+    "path": "../public/assets/loader-circle-DOmn7GP0.js"
   },
-  "/assets/login-BDXt9mUl.js": {
+  "/assets/login-CAgv2G6C.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"81b-CTcYT1RhZrUjeXjTJVzpU31jgDo"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"81b-W9AkMmW7O2s+DrJsCK1Yk4FMhEQ"',
+    "mtime": "2026-02-11T00:11:57.637Z",
     "size": 2075,
-    "path": "../public/assets/login-BDXt9mUl.js"
+    "path": "../public/assets/login-CAgv2G6C.js"
   },
-  "/assets/main-BbUo8-hy.js": {
+  "/assets/main-CIu5Na6A.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"56cd3-JsXYGvjGdSIQN52+Sp6xZWIyfcU"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"56cd3-rRigg+Fg7lhKfzkg19MfBQYncPc"',
+    "mtime": "2026-02-11T00:11:57.637Z",
     "size": 355539,
-    "path": "../public/assets/main-BbUo8-hy.js"
+    "path": "../public/assets/main-CIu5Na6A.js"
   },
-  "/assets/profile._publicProfileId-a4vO7k6B.js": {
+  "/assets/profile._publicProfileId-cruKjOiu.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"232d-jR3abmatYcdvcGJOWnj2GVfLcM8"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"232d-NA1JnyRQGFJH2xunPY/qGO4iMo8"',
+    "mtime": "2026-02-11T00:11:57.638Z",
     "size": 9005,
-    "path": "../public/assets/profile._publicProfileId-a4vO7k6B.js"
+    "path": "../public/assets/profile._publicProfileId-cruKjOiu.js"
   },
-  "/assets/results-Bs09zR6H.js": {
+  "/assets/results-Byg820iM.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"301d-sdTHRsQyR8XvzpHoCFh9ekKugdY"',
-    "mtime": "2026-02-10T00:52:26.330Z",
-    "size": 12317,
-    "path": "../public/assets/results-Bs09zR6H.js"
+    "etag": '"301e-dKpDwG46zue9HFkFNYWmADpJK9E"',
+    "mtime": "2026-02-11T00:11:57.637Z",
+    "size": 12318,
+    "path": "../public/assets/results-Byg820iM.js"
   },
-  "/assets/signup-DBdB7ozD.js": {
+  "/assets/signup-DDr7Rf_R.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"c17-FZ7149fsNc99fIEtfBn7QkYsfPU"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"c17-IOi3bNzKDT6gnmTNahIY8+J3yqs"',
+    "mtime": "2026-02-11T00:11:57.637Z",
     "size": 3095,
-    "path": "../public/assets/signup-DBdB7ozD.js"
+    "path": "../public/assets/signup-DDr7Rf_R.js"
   },
   "/assets/styles-vyan1t0Q.css": {
     "type": "text/css; charset=utf-8",
     "etag": '"e7de-ycBgEWL85Ndn8jdbzYsbVurxI1g"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "mtime": "2026-02-11T00:11:57.637Z",
     "size": 59358,
     "path": "../public/assets/styles-vyan1t0Q.css"
   },
-  "/assets/use-assessment-DCwQsUCh.js": {
+  "/assets/use-assessment-Aa3xVgYi.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"338-zCJu4xoZ0kNJqEB+jq4hIDECrrY"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"338-sz+AgurY8XO3fsHdoJ0t5qPkB4U"',
+    "mtime": "2026-02-11T00:11:57.638Z",
     "size": 824,
-    "path": "../public/assets/use-assessment-DCwQsUCh.js"
+    "path": "../public/assets/use-assessment-Aa3xVgYi.js"
   },
-  "/assets/use-auth-C9qFaQnn.js": {
+  "/assets/use-auth-9LVm61D2.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"70eb-ZfQrZS8kO/QBfwK3u1qerWfwcTc"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"70eb-EbdgrQfhph3Q4U/CYDgWiM9BL1k"',
+    "mtime": "2026-02-11T00:11:57.637Z",
     "size": 28907,
-    "path": "../public/assets/use-auth-C9qFaQnn.js"
+    "path": "../public/assets/use-auth-9LVm61D2.js"
   },
-  "/assets/use-evidence-B8gMg0p1.js": {
+  "/assets/use-evidence-DdengFqD.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"8b1e-pF12P4mnRSOEUFDPY+oxDY6QptY"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"8b1e-vjaEiGGgN7UnQiLykcVw17wMX24"',
+    "mtime": "2026-02-11T00:11:57.637Z",
     "size": 35614,
-    "path": "../public/assets/use-evidence-B8gMg0p1.js"
+    "path": "../public/assets/use-evidence-DdengFqD.js"
   },
-  "/assets/use-profile-DW3J596Y.js": {
+  "/assets/use-profile-D65AbQI6.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"5bb-G6vt9vh2KURXU8D5Lxwbj0z16Dk"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"5bb-B4TxzAspzXdzE+JnuaAApzfIRhQ"',
+    "mtime": "2026-02-11T00:11:57.638Z",
     "size": 1467,
-    "path": "../public/assets/use-profile-DW3J596Y.js"
+    "path": "../public/assets/use-profile-D65AbQI6.js"
   },
-  "/assets/useMutation-DwqxfvEO.js": {
+  "/assets/useMutation-C-Tj83O_.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"2a90-C2Yu1PlM5A3b1ZLg8PnMVQReqoQ"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"2a90-9nYuIDmpUpWP1WfEK7z2e8rGeOs"',
+    "mtime": "2026-02-11T00:11:57.638Z",
     "size": 10896,
-    "path": "../public/assets/useMutation-DwqxfvEO.js"
+    "path": "../public/assets/useMutation-C-Tj83O_.js"
   },
   "/assets/utils-CDN07tui.js": {
     "type": "text/javascript; charset=utf-8",
     "etag": '"63aa-tlIrw8ZrUIZZqhEOI0GfGybRivo"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "mtime": "2026-02-11T00:11:57.638Z",
     "size": 25514,
     "path": "../public/assets/utils-CDN07tui.js"
   },
-  "/assets/zap-DC0SSIJw.js": {
+  "/assets/zap-CexWf1s4.js": {
     "type": "text/javascript; charset=utf-8",
-    "etag": '"64f-toD3sm8WrHB3ynG4p+YLZSH6Tg0"',
-    "mtime": "2026-02-10T00:52:26.330Z",
+    "etag": '"64f-fHKdZFVI1vRoOdXgSbNdopkDKc0"',
+    "mtime": "2026-02-11T00:11:57.637Z",
     "size": 1615,
-    "path": "../public/assets/zap-DC0SSIJw.js"
+    "path": "../public/assets/zap-CexWf1s4.js"
   }
 };
 function readAsset(id) {

@@ -1200,6 +1200,64 @@ So that **other devs can browse components before writing custom code and ensure
 
 ---
 
+### Story 4.6: Hide Scores During Assessment
+
+As a **User**,
+I want **to see my assessment progress without revealing scores or personality results during conversation**,
+So that **my responses remain authentic and unbiased by partial results**.
+
+**Acceptance Criteria:**
+
+**Given** I'm in an active assessment conversation
+**When** the chat interface renders
+**Then** I see:
+  - Precision percentage displayed prominently (e.g., "34% → 41% → 56%")
+  - Precision meter updates every 2-3 messages (visual progress indicator)
+  - Milestone notifications at key thresholds ("You're now 50% understood")
+  - NO individual facet or trait scores visible
+  - NO archetype name or hints visible
+  - NO indication of score "direction" (high/low on traits)
+
+**Given** my precision reaches 70%+
+**When** the threshold is crossed
+**Then**:
+  - Conversation pauses with transition screen: "Your personality profile is ready!"
+  - User is redirected to results page (`/results/:sessionId`)
+  - This is the FIRST time user sees scores/traits/archetype
+
+**Given** a user asks: "What's my score so far?" or "Can you tell me my personality type yet?"
+**When** Nerin receives this question
+**Then** Nerin responds:
+  - "I'm definitely seeing patterns, but I don't want to share partial insights that might not be accurate yet."
+  - "Right now we're at [X]% precision—let's get to 70%+ so I can give you the full picture."
+  - Reframes to precision (visible metric) without revealing scores
+
+**Technical Details:**
+
+- Remove score/trait displays from conversation UI
+- Keep precision meter visible and updating
+- Add milestone toast notifications (25%, 50%, 75%)
+- Create 70%+ precision transition screen
+- Update Nerin prompt to avoid Big Five terminology during assessment
+- Coordinate with Story 2.2 (Nerin Agent) for language patterns
+
+**Acceptance Checklist:**
+- [ ] Conversation UI shows precision meter, hides all scores/traits/archetypes
+- [ ] Milestone notifications appear at correct thresholds
+- [ ] 70%+ precision triggers transition to results page
+- [ ] Nerin language avoids trait terminology
+- [ ] User score inquiries handled with precision-reframing
+- [ ] Mobile responsive (precision meter visible, toasts work)
+- [ ] Storybook documentation (PrecisionMeter, MilestoneToast, PrecisionTransition)
+
+**Rationale:** Maintains assessment integrity by preventing user bias. Aligns with UX spec (Monetization & Display Transparency Model). Sets foundation for future premium tier with consistent hidden-score pattern.
+
+**Related Documents:**
+- UX Spec: `_bmad-output/planning-artifacts/ux-design-specification.md` (Monetization section)
+- Full implementation details: `_bmad-output/implementation-artifacts/4-6-hide-scores-during-assessment.md`
+
+---
+
 ## Epic 5: Results & Profile Sharing
 
 **Goal:** Display assessment results with memorable archetypes, enable privacy-controlled sharing, and provide PDF export.

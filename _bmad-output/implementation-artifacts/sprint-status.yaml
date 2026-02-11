@@ -57,7 +57,7 @@ development_status:
   2-4-langgraph-state-machine-and-orchestration: done
   2-5-llm-cost-tracking-rate-limiting-and-budget-enforcement: done
   2-8-integration-testing-docker-compose: done
-  2-9-evidence-sourced-scoring: ready-for-dev
+  2-9-evidence-sourced-scoring: review
   epic-2-retrospective: done
 
   # EPIC 3: OCEAN Archetype System
@@ -68,12 +68,14 @@ development_status:
   epic-3-retrospective: done
 
   # EPIC 4: Frontend Assessment UI
-  epic-4: done
+  # Reopened: Story 4-6 added (2026-02-11) for UX spec alignment
+  epic-4: in-progress
   4-1-authentication-ui-sign-up-modal: done
   4-2-assessment-conversation-component: done
   4-3-session-resumption-device-switching: done
   4-4-optimistic-updates-progress-indicator: done
   4-5-component-documentation-with-storybook: done
+  4-6-hide-scores-during-assessment: ready-for-dev
   epic-4-retrospective: done
 
   # EPIC 5: Results & Profile Sharing
