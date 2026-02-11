@@ -1777,6 +1777,29 @@ So that **the brand feels cohesive and memorable**.
 
 ---
 
+### Story 7.6: Add Global Header with Logo, Auth Controls, Theme Toggle, and Mobile Hamburger
+
+As a **User**,
+I want **a global header with logo, authentication controls, and a theme toggle that works well on mobile**,
+So that **I can navigate and manage my account/theme consistently on every page**.
+
+**Acceptance Criteria:**
+- Header renders globally on all routes (via root layout)
+- Logo is visible and links to `/`
+- When signed out:
+  - Header shows `Log in` and `Sign up` actions linking to `/login` and `/signup`
+- When signed in:
+  - Header shows a user menu (name/email) and `Sign out`
+- Theme toggle is available in the header (wires to Story 7.2 theme system)
+- Responsive behavior:
+  - Desktop: actions visible inline
+  - Mobile: inline actions collapse and a hamburger button appears
+  - Hamburger opens a menu/drawer containing nav + auth actions + theme toggle
+  - Drawer is dismissible (close button, backdrop click, `Esc`) and keyboard accessible
+- Styling uses semantic theme variables (no hard-coded colors); touch targets ≥44px
+
+---
+
 ### Story 7.2: Add Dark Mode Toggle with System Preference Detection
 
 As a **User**,
@@ -1879,4 +1902,3 @@ Each epic contains detailed, implementable stories with clear acceptance criteri
 ---
 
 **Document Status:** Requirements extracted and organized. Ready for Step 2: Epic Design (adding technical details, dependencies, and implementation sequencing).
-
