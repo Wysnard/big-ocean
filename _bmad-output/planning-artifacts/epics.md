@@ -160,6 +160,7 @@ This document provides the complete epic and story breakdown for big-ocean, deco
 4. **Frontend Assessment UI** — Conversation component, real-time sync, progress tracking, component documentation
 5. **Results & Profile Sharing** — Results display, shareable links, PDF export
 6. **Privacy & Data Management** — Encryption, GDPR compliance, audit logging
+7. **UI Theme & Visual Polish** — Ocean brand identity, dark mode, trait colors, home page redesign
 
 ---
 
@@ -1744,6 +1745,121 @@ So that **we can audit who accessed what data and when**.
 
 ---
 
+## Epic 7: UI Theme & Visual Polish
+
+**Phase:** 2 (Post-MVP Polish)
+
+**Goal:** Establish a distinctive ocean-inspired visual identity with dark mode support, custom color theming, Big Five trait visualization colors, and a redesigned home page.
+
+**Dependencies:**
+- Epic 4 (Frontend Assessment UI) - base components exist
+- Epic 5 (Results & Profiles) - visualization surfaces ready
+
+**Enables:** Brand differentiation, improved user experience, accessibility compliance
+
+**User Value:** Polished, memorable visual experience that reinforces the "big-ocean" brand identity and supports user preferences (dark mode)
+
+> **Detailed Specifications:** See [epic-7-ui-theming.md](./epic-7-ui-theming.md) for full design principles, color tokens, and component specifications.
+>
+> **Home Page Brainstorm:** See [story-7.5-home-page-brainstorm.md](./story-7.5-home-page-brainstorm.md) for detailed design exploration and wireframes.
+
+### Story 7.1: Implement Ocean Brand Color Theme with Gradients
+
+As a **User**,
+I want **the application to have a distinctive ocean-inspired visual identity**,
+So that **the brand feels cohesive and memorable**.
+
+**Acceptance Criteria:**
+- Primary color updated to ocean blue (OKLCH-based)
+- All components use semantic variables (`bg-primary`, not `bg-blue-500`)
+- Gradient CSS variables defined for hero sections and CTAs
+- WCAG AA contrast ratios maintained
+
+---
+
+### Story 7.2: Add Dark Mode Toggle with System Preference Detection
+
+As a **User**,
+I want **to switch between light and dark themes**,
+So that **I can use the app comfortably in any lighting condition**.
+
+**Acceptance Criteria:**
+- System preference detection on first visit
+- Manual toggle persists to localStorage
+- No flash of unstyled content on load
+- SSR-compatible (TanStack Start)
+
+---
+
+### Story 7.3: Define Big Five Trait and Facet Visualization Colors
+
+As a **User**,
+I want **each personality trait and facet to have a distinctive, consistent color**,
+So that **I can quickly identify traits in charts and results**.
+
+**Acceptance Criteria:**
+- 5 trait color tokens with dark mode variants
+- 30 facet color tokens (grouped by trait family)
+- 5 trait gradient tokens for visualizations
+- Utility functions: `getTraitColor()`, `getFacetColor()`, `getTraitGradient()`
+- Colors tested for colorblind accessibility
+
+---
+
+### Story 7.4: Polish Component Visual Consistency
+
+As a **User**,
+I want **all UI components to feel cohesive and polished**,
+So that **the application feels professional and trustworthy**.
+
+**Acceptance Criteria:**
+- Border radius consistent across components
+- Shadow depths standardized
+- Animation timings reviewed (150-300ms)
+- Touch targets ≥44px on mobile
+- Focus states visible and consistent
+
+---
+
+### Story 7.5: Redesign Home Page with Theme System
+
+As a **User**,
+I want **the home page to showcase the ocean brand identity with polished visuals**,
+So that **I immediately understand the product value and feel invited to start an assessment**.
+
+**Design Direction:** "Bento Ocean with Depth" — combining bento grid layout, subtle depth progression, interactive chat preview, and clean typography.
+
+**Page Sections:**
+1. Hero (gradient background, animated logo, CTA)
+2. Value Props (3 bento cards)
+3. Meet Nerin (chat preview mockup)
+4. Five Dimensions (trait cards with gradients)
+5. Results Teaser (blurred archetype preview)
+6. Social Proof (optional)
+7. Final CTA
+
+**Acceptance Criteria:**
+- All sections use semantic theme variables
+- Trait cards use `--gradient-trait-*` colors
+- No hard-coded colors remain
+- Works in both light and dark modes
+- Mobile responsive
+- Lighthouse accessibility ≥90
+
+---
+
+### Implementation Sequence
+
+1. **Story 7.1** (1 day) - Ocean colors + gradients foundation
+2. **Story 7.2** (1 day) - Dark mode toggle
+3. **Story 7.3** (1 day) - Trait + facet colors
+4. **Story 7.5** (2-3 days) - Home page redesign
+5. **Story 7.4** (1-2 days) - Visual polish
+
+**Estimated Effort:** 7-10 days total
+
+---
+
 ## Next Steps
 
 This epic and story breakdown is now ready for implementation. The sequence is:
@@ -1753,7 +1869,8 @@ This epic and story breakdown is now ready for implementation. The sequence is:
 3. **Epic 3** - OCEAN Archetype System (results)
 4. **Epic 4** - Frontend UI (user experience + component documentation)
 5. **Epic 5** - Profile Sharing (viral growth)
-6. **Epic 6** - Privacy & Data (compliance)
+6. **Epic 6** - Privacy & Data (compliance) — Phase 2
+7. **Epic 7** - UI Theme & Visual Polish — Phase 2
 
 Each epic contains detailed, implementable stories with clear acceptance criteria. Stories are sized for 2-5 day implementation cycles.
 
