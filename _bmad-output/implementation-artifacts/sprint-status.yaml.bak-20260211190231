@@ -100,7 +100,6 @@ development_status:
   # Rationale: Ocean brand identity and visual polish critical for first impressions and user trust
   epic-7: backlog
   7-1-implement-ocean-brand-color-theme-with-gradients: backlog
-  7-6-add-global-header-with-logo-auth-controls-theme-toggle-and-mobile-hamburger: backlog
   7-2-add-dark-mode-toggle-with-system-preference-detection: backlog
   7-3-define-big-five-trait-and-facet-visualization-colors: backlog
   7-4-polish-component-visual-consistency: backlog

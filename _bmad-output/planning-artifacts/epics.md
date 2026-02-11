@@ -717,6 +717,38 @@ So that **the MVP remains sustainable for 500 users at $75/day max**.
 
 ---
 
+### Story 2.8: Integration Testing (Docker Compose)
+
+As a **Backend Developer**,
+I want **integration tests that validate HTTP endpoints in a production-like Docker environment**,
+So that **I can catch deployment failures locally before pushing to Railway**.
+
+**Acceptance Criteria:**
+- `compose.test.yaml` exists with Postgres + API services (non-conflicting ports) and health checks
+- Integration test Vitest config and setup/teardown scripts start/stop Docker automatically
+- Integration tests run on the host and send real HTTP requests against the Dockerized API
+- LLM calls are mocked for integration tests (`MOCK_LLM=true`) to avoid external cost/flakiness
+- `pnpm test:integration` runs cleanly and consistently
+- Documentation exists for running/debugging integration tests
+
+---
+
+### Story 2.9: Evidence-Sourced Scoring (Remove Materialized Score Tables)
+
+As a **Developer**,
+I want **trait and facet scores computed on-demand from evidence**,
+So that **scoring formula changes are instant code deploys with zero data migrations/backfills and lower sync risk**.
+
+**Acceptance Criteria:**
+- DB migration drops `facet_scores` and `trait_scores` tables (and any redundant cached score columns)
+- Pure domain scoring functions exist (e.g., `aggregateFacetScores(evidence[])`, `deriveTraitScores(facetScoresMap)`)
+- Score repositories are removed (interfaces, implementations, mocks, layer wiring)
+- Use-cases fetch evidence and compute scores in-memory (single source of truth = evidence)
+- Tests updated and passing (unit/integration)
+- Architecture/docs updated to reflect evidence-sourced scoring model
+
+---
+
 ## Epic 3: OCEAN Archetype System
 
 **Goal:** Implement the 4-letter OCEAN code generation and mapping to memorable archetype names with facet-level descriptions.
