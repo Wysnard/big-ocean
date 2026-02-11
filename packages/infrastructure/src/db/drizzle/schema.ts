@@ -13,16 +13,7 @@
  */
 
 import { defineRelations, sql } from "drizzle-orm";
-import {
-	boolean,
-	index,
-	integer,
-	jsonb,
-	pgTable,
-	text,
-	timestamp,
-	uuid,
-} from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
 	id: text("id").primaryKey(),
@@ -115,7 +106,6 @@ export const assessmentSession = pgTable(
 			.$onUpdate(() => new Date())
 			.notNull(),
 		status: text("status").notNull().default("active"), // 'active' | 'paused' | 'completed'
-		confidence: jsonb("confidence").notNull(), // FacetConfidenceScores (30 facets, 0-100 integers)
 		messageCount: integer("message_count").default(0).notNull(),
 	},
 	(table) => [
@@ -179,37 +169,6 @@ export const facetEvidence = pgTable(
 );
 
 /**
- * Facet Scores (Aggregated from Evidence)
- *
- * Stores aggregated facet scores computed from multiple FacetEvidence records.
- * Updated every 3 messages with weighted averaging and contradiction detection.
- */
-export const facetScores = pgTable(
-	"facet_scores",
-	{
-		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-		sessionId: uuid("session_id")
-			.notNull()
-			.references(() => assessmentSession.id, { onDelete: "cascade" }),
-		facetName: text("facet_name").notNull(), // Clean name
-		score: integer("score").notNull().default(0), // 0-20 aggregated from evidence (0 = no data)
-		confidence: integer("confidence").notNull().default(0), // 0-100 (0 = no evidence yet)
-		updatedAt: timestamp("updated_at")
-			.defaultNow()
-			.$onUpdate(() => new Date())
-			.notNull(),
-	},
-	(table) => [
-		// Index for retrieving all facet scores for a session
-		index("facet_scores_session_id_idx").on(table.sessionId),
-		// Index for querying specific facet across sessions
-		index("facet_scores_facet_name_idx").on(table.facetName),
-		// Unique constraint: one score per (session, facet) pair
-		index("facet_scores_session_facet_unique_idx").on(table.sessionId, table.facetName),
-	],
-);
-
-/**
  * Public Profile (Shareable Profile Links)
  *
  * Stores public-facing personality profiles that can be shared via link.
@@ -241,37 +200,6 @@ export const publicProfile = pgTable(
 );
 
 /**
- * Trait Scores (Derived from Facet Scores)
- *
- * Stores Big Five trait scores derived from aggregated facet scores.
- * Each trait is the mean of 6 related facets.
- */
-export const traitScores = pgTable(
-	"trait_scores",
-	{
-		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-		sessionId: uuid("session_id")
-			.notNull()
-			.references(() => assessmentSession.id, { onDelete: "cascade" }),
-		traitName: text("trait_name").notNull(), // "openness", "conscientiousness", etc.
-		score: integer("score").notNull().default(0), // 0-20 mean of facet scores (0 = no data)
-		confidence: integer("confidence").notNull().default(0), // 0-100 (0 = no evidence yet)
-		updatedAt: timestamp("updated_at")
-			.defaultNow()
-			.$onUpdate(() => new Date())
-			.notNull(),
-	},
-	(table) => [
-		// Index for retrieving all trait scores for a session
-		index("trait_scores_session_id_idx").on(table.sessionId),
-		// Index for querying specific trait across sessions
-		index("trait_scores_trait_name_idx").on(table.traitName),
-		// Unique constraint: one score per (session, trait) pair
-		index("trait_scores_session_trait_unique_idx").on(table.sessionId, table.traitName),
-	],
-);
-
-/**
  * Relations (Drizzle v2 syntax)
  */
 
@@ -284,8 +212,6 @@ export const relations = defineRelations(
 		assessmentSession, // Assessment sessions
 		assessmentMessage, // Assessment messages
 		facetEvidence, // Facet evidence
-		facetScores, // Aggregated facet scores
-		traitScores, // Trait scores
 		publicProfile, // Shareable profile links
 	},
 	(r) => ({
@@ -314,8 +240,6 @@ export const relations = defineRelations(
 				to: r.user.id,
 			}),
 			assessmentMessages: r.many.assessmentMessage(),
-			facetScores: r.many.facetScores(),
-			traitScores: r.many.traitScores(),
 			publicProfile: r.many.publicProfile(),
 		},
 		assessmentMessage: {
@@ -333,18 +257,6 @@ export const relations = defineRelations(
 			message: r.one.assessmentMessage({
 				from: r.facetEvidence.assessmentMessageId,
 				to: r.assessmentMessage.id,
-			}),
-		},
-		facetScores: {
-			session: r.one.assessmentSession({
-				from: r.facetScores.sessionId,
-				to: r.assessmentSession.id,
-			}),
-		},
-		traitScores: {
-			session: r.one.assessmentSession({
-				from: r.traitScores.sessionId,
-				to: r.assessmentSession.id,
 			}),
 		},
 		publicProfile: {

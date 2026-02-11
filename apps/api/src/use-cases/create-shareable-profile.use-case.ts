@@ -11,13 +11,13 @@ import {
 	ALL_FACETS,
 	AppConfig,
 	AssessmentSessionRepository,
+	aggregateFacetScores,
 	extract4LetterCode,
-	type FacetScoresMap,
+	FacetEvidenceRepository,
 	generateOceanCode,
 	LoggerRepository,
 	lookupArchetype,
 	PublicProfileRepository,
-	ScorerRepository,
 } from "@workspace/domain";
 import { Effect } from "effect";
 
@@ -37,13 +37,14 @@ const MIN_CONFIDENCE_THRESHOLD = 70;
 /**
  * Create Shareable Profile Use Case
  *
- * Dependencies: AssessmentSessionRepository, PublicProfileRepository, ScorerRepository, LoggerRepository, AppConfig
+ * Dependencies: AssessmentSessionRepository, PublicProfileRepository,
+ *               FacetEvidenceRepository, LoggerRepository, AppConfig
  */
 export const createShareableProfile = (input: CreateShareableProfileInput) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const profileRepo = yield* PublicProfileRepository;
-		const scorer = yield* ScorerRepository;
+		const evidenceRepo = yield* FacetEvidenceRepository;
 		const logger = yield* LoggerRepository;
 		const config = yield* AppConfig;
 
@@ -64,8 +65,9 @@ export const createShareableProfile = (input: CreateShareableProfileInput) =>
 			};
 		}
 
-		// 3. Aggregate facet scores from evidence
-		const facetScores: FacetScoresMap = yield* scorer.aggregateFacetScores(input.sessionId);
+		// 3. Compute facet scores from evidence (on-demand)
+		const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
+		const facetScores = aggregateFacetScores(evidence);
 
 		// 4. Confidence validation (AC #5): ALL 30 facets must have confidence >= 70
 		const facetsWithData = ALL_FACETS.filter(

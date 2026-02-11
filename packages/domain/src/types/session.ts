@@ -4,8 +4,6 @@
  * Core types for session management and personality assessment tracking
  */
 
-import type { FacetConfidenceScores } from "./facet";
-
 /**
  * Session status states
  */
@@ -19,8 +17,8 @@ export type MessageRole = "user" | "assistant";
 /**
  * Session metadata and state
  *
- * NOTE: Confidence is stored at facet level (30 facets, 0-100 integers).
- * Trait confidence is ALWAYS computed from facet confidence, never stored.
+ * NOTE: Confidence is computed on-demand from facet_evidence.
+ * No confidence data is stored on the session itself.
  */
 export interface Session {
 	id: string;
@@ -28,6 +26,5 @@ export interface Session {
 	createdAt: Date;
 	updatedAt: Date;
 	status: SessionStatus;
-	confidence: FacetConfidenceScores;
 	messageCount: number;
 }

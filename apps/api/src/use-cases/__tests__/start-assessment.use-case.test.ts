@@ -50,13 +50,6 @@ describe("startAssessment Use Case", () => {
 				sessionId: "session_new_789",
 				userId,
 				createdAt: new Date("2026-02-01T10:00:00Z"),
-				confidence: {
-					openness: 50,
-					conscientiousness: 50,
-					extraversion: 50,
-					agreeableness: 50,
-					neuroticism: 50,
-				},
 			}),
 		);
 		mockAssessmentSessionRepo.getSession.mockImplementation(() => Effect.succeed(undefined));
@@ -220,13 +213,6 @@ describe("startAssessment Use Case", () => {
 					sessionId: "session_test_old",
 					userId: undefined,
 					createdAt: repositoryTime,
-					confidence: {
-						openness: 50,
-						conscientiousness: 50,
-						extraversion: 50,
-						agreeableness: 50,
-						neuroticism: 50,
-					},
 				}),
 			);
 
@@ -265,13 +251,6 @@ describe("startAssessment Use Case", () => {
 					sessionId: `session_${callCount}`,
 					userId: "user_test",
 					createdAt: new Date(),
-					confidence: {
-						openness: 50,
-						conscientiousness: 50,
-						extraversion: 50,
-						agreeableness: 50,
-						neuroticism: 50,
-					},
 				});
 			});
 
@@ -340,13 +319,6 @@ describe("startAssessment Use Case", () => {
 					sessionId: "session_order",
 					userId: "user_order",
 					createdAt: new Date(),
-					confidence: {
-						openness: 50,
-						conscientiousness: 50,
-						extraversion: 50,
-						agreeableness: 50,
-						neuroticism: 50,
-					},
 				});
 			});
 

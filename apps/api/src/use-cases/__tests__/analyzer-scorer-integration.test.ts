@@ -5,6 +5,7 @@
  * Verifies all components work together correctly.
  *
  * @see Story 2.3: Evidence-Based Analyzer and Scorer Implementation
+ * @see Story 2.9: Evidence-Sourced Scoring (pure functions, no score tables)
  */
 
 import { it } from "@effect/vitest";
@@ -13,7 +14,6 @@ import {
 	AnalyzerRepository,
 	FacetEvidenceRepository,
 	type LoggerRepository,
-	ScorerRepository,
 	type TraitName,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
@@ -21,7 +21,6 @@ import { beforeEach, describe, expect, vi } from "vitest";
 
 vi.mock("@workspace/infrastructure/repositories/analyzer.claude.repository");
 vi.mock("@workspace/infrastructure/repositories/facet-evidence.drizzle.repository");
-vi.mock("@workspace/infrastructure/repositories/scorer.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 
 import { AnalyzerClaudeRepositoryLive } from "@workspace/infrastructure/repositories/analyzer.claude.repository";
@@ -31,18 +30,14 @@ import {
 	_resetMockState as resetEvidenceState,
 } from "@workspace/infrastructure/repositories/facet-evidence.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
-import { ScorerDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/scorer.drizzle.repository";
 
 // vi.mock() replaces real layers (which have DB/config deps) with __mocks__ versions (no deps).
 // TypeScript still sees the real module types, so we assert the actual runtime type.
 const TestLayer = Layer.mergeAll(
 	AnalyzerClaudeRepositoryLive,
 	FacetEvidenceDrizzleRepositoryLive,
-	ScorerDrizzleRepositoryLive,
 	LoggerPinoRepositoryLive,
-) as Layer.Layer<
-	AnalyzerRepository | FacetEvidenceRepository | ScorerRepository | LoggerRepository
->;
+) as Layer.Layer<AnalyzerRepository | FacetEvidenceRepository | LoggerRepository>;
 
 import { calculateConfidenceFromFacets } from "../calculate-confidence.use-case";
 import { saveFacetEvidence } from "../save-facet-evidence.use-case";
@@ -205,10 +200,8 @@ describe("Analyzer and Scorer Integration", () => {
 	});
 
 	describe("trait derivation", () => {
-		it.effect("should derive all 5 traits when facets available", () =>
+		it.effect("should derive traits when facets available", () =>
 			Effect.gen(function* () {
-				const _scorer = yield* ScorerRepository;
-
 				const sessionId = "session_trait_derivation";
 				const scoresResult = yield* updateFacetScores({ sessionId });
 

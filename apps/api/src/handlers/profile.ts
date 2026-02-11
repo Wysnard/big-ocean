@@ -8,7 +8,7 @@
 
 import { HttpApiBuilder } from "@effect/platform";
 import { BigOceanApi, DatabaseError } from "@workspace/contracts";
-import type { ScorerError } from "@workspace/domain";
+import type { FacetEvidencePersistenceError } from "@workspace/domain";
 import { Effect } from "effect";
 import {
 	createShareableProfile,
@@ -24,10 +24,10 @@ export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (ha
 					const result = yield* createShareableProfile({
 						sessionId: payload.sessionId,
 					}).pipe(
-						Effect.catchTag("ScorerError", (error: ScorerError) =>
+						Effect.catchTag("FacetEvidencePersistenceError", (error: FacetEvidencePersistenceError) =>
 							Effect.fail(
 								new DatabaseError({
-									message: `Score aggregation failed: ${error.message}`,
+									message: `Evidence retrieval failed: ${error.message}`,
 								}),
 							),
 						),
@@ -56,10 +56,10 @@ export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (ha
 					}
 
 					const result = yield* getPublicProfile({ publicProfileId }).pipe(
-						Effect.catchTag("ScorerError", (error: ScorerError) =>
+						Effect.catchTag("FacetEvidencePersistenceError", (error: FacetEvidencePersistenceError) =>
 							Effect.fail(
 								new DatabaseError({
-									message: `Failed to fetch facet scores: ${error.message}`,
+									message: `Evidence retrieval failed: ${error.message}`,
 								}),
 							),
 						),

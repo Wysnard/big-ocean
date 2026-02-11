@@ -11,12 +11,13 @@
 
 import { ProfileNotFound, ProfilePrivate } from "@workspace/contracts/errors";
 import {
+	aggregateFacetScores,
 	deriveTraitSummary,
+	FacetEvidenceRepository,
 	type FacetScoresMap,
 	LoggerRepository,
 	lookupArchetype,
 	PublicProfileRepository,
-	ScorerRepository,
 } from "@workspace/domain";
 import { Effect } from "effect";
 
@@ -37,12 +38,12 @@ export interface GetPublicProfileOutput {
 /**
  * Get Public Profile Use Case
  *
- * Dependencies: PublicProfileRepository, ScorerRepository, LoggerRepository
+ * Dependencies: PublicProfileRepository, FacetEvidenceRepository, LoggerRepository
  */
 export const getPublicProfile = (input: GetPublicProfileInput) =>
 	Effect.gen(function* () {
 		const profileRepo = yield* PublicProfileRepository;
-		const scorer = yield* ScorerRepository;
+		const evidenceRepo = yield* FacetEvidenceRepository;
 		const logger = yield* LoggerRepository;
 
 		// 1. Get profile
@@ -84,8 +85,9 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 		const archetype = lookupArchetype(profile.oceanCode4);
 		const traitSummary = deriveTraitSummary(profile.oceanCode5);
 
-		// 6. Fetch facet scores from session for facet insights
-		const facets = yield* scorer.aggregateFacetScores(profile.sessionId);
+		// 6. Compute facet scores from evidence (on-demand)
+		const evidence = yield* evidenceRepo.getEvidenceBySession(profile.sessionId);
+		const facets = aggregateFacetScores(evidence);
 
 		logger.info("Public profile viewed", {
 			profileId: profile.id,

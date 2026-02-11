@@ -15,6 +15,7 @@
  * ```
  *
  * @see Story 2-4: LangGraph State Machine and Orchestration
+ * @see Story 2-9: Evidence-sourced scoring (pure functions, no score tables)
  */
 
 import { HumanMessage } from "@langchain/core/messages";
@@ -22,17 +23,19 @@ import { END, START, StateGraph } from "@langchain/langgraph";
 import {
 	AnalyzerRepository,
 	AppConfig,
+	aggregateFacetScores,
 	BudgetPausedError,
 	CheckpointerRepository,
 	calculateConfidenceFromFacetScores,
 	createInitialFacetScoresMap,
+	deriveTraitScores,
+	FacetEvidenceRepository,
 	type GraphInput,
 	type GraphOutput,
 	LoggerRepository,
 	NerinAgentRepository,
 	OrchestrationError,
 	OrchestratorGraphRepository,
-	ScorerRepository,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 import {
@@ -220,20 +223,22 @@ const analyzerNodeEffect = (state: OrchestratorState) =>
 	});
 
 /**
- * Scorer Node Effect - Score aggregation.
- * Uses yield* for DI of ScorerRepository and LoggerRepository.
+ * Scorer Node Effect - Score aggregation from evidence.
+ * Uses FacetEvidenceRepository + pure domain functions (no score tables).
  */
 const scorerNodeEffect = (state: OrchestratorState) =>
 	Effect.gen(function* () {
 		const logger = yield* LoggerRepository;
-		const scorer = yield* ScorerRepository;
+		const evidenceRepo = yield* FacetEvidenceRepository;
 
 		logger.debug("Scorer node executing", {
 			sessionId: state.sessionId,
 		});
 
-		const facetScores = yield* scorer.aggregateFacetScores(state.sessionId);
-		const traitScores = yield* scorer.deriveTraitScores(facetScores);
+		// Fetch evidence and compute scores on-demand (pure functions)
+		const evidence = yield* evidenceRepo.getEvidenceBySession(state.sessionId);
+		const facetScores = aggregateFacetScores(evidence);
+		const traitScores = deriveTraitScores(facetScores);
 
 		// Calculate overall confidence from facet scores
 		const overallConfidence = calculateConfidenceFromFacetScores(facetScores);
@@ -265,7 +270,7 @@ const scorerNodeEffect = (state: OrchestratorState) =>
  * - LoggerRepository: Structured logging
  * - NerinAgentRepository: Conversational agent
  * - AnalyzerRepository: Facet evidence extraction
- * - ScorerRepository: Score aggregation
+ * - FacetEvidenceRepository: Evidence data access for scoring
  * - CheckpointerRepository: State persistence
  */
 export const OrchestratorGraphLangGraphRepositoryLive = Layer.effect(
@@ -276,7 +281,7 @@ export const OrchestratorGraphLangGraphRepositoryLive = Layer.effect(
 		const config = yield* AppConfig;
 		const nerinAgent = yield* NerinAgentRepository;
 		const analyzer = yield* AnalyzerRepository;
-		const scorer = yield* ScorerRepository;
+		const evidenceRepo = yield* FacetEvidenceRepository;
 		const { checkpointer } = yield* CheckpointerRepository;
 
 		logger.info("Initializing OrchestratorGraphRepository with pure Effect DI");
@@ -287,7 +292,7 @@ export const OrchestratorGraphLangGraphRepositoryLive = Layer.effect(
 			Layer.succeed(AppConfig, config),
 			Layer.succeed(NerinAgentRepository, nerinAgent),
 			Layer.succeed(AnalyzerRepository, analyzer),
-			Layer.succeed(ScorerRepository, scorer),
+			Layer.succeed(FacetEvidenceRepository, evidenceRepo),
 		);
 
 		/**

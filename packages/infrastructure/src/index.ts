@@ -33,8 +33,6 @@ export { CheckpointerPostgresRepositoryLive } from "./repositories/checkpointer.
 export { CostGuardRedisRepositoryLive } from "./repositories/cost-guard.redis.repository";
 // Facet evidence repository implementation
 export { FacetEvidenceDrizzleRepositoryLive } from "./repositories/facet-evidence.drizzle.repository";
-// Facet score repository implementation
-export { FacetScoreDrizzleRepositoryLive } from "./repositories/facet-score.drizzle.repository";
 // Facet steering hints
 export { FACET_STEERING_HINTS } from "./repositories/facet-steering";
 // Logger repository implementation
@@ -67,7 +65,3 @@ export { OrchestratorGraphLangGraphRepositoryLive } from "./repositories/orchest
 export { PublicProfileDrizzleRepositoryLive } from "./repositories/public-profile.drizzle.repository";
 // Redis repository implementation
 export { RedisIoRedisRepositoryLive } from "./repositories/redis.ioredis.repository";
-// Scorer repository implementation
-export { ScorerDrizzleRepositoryLive } from "./repositories/scorer.drizzle.repository";
-// Trait score repository implementation
-export { TraitScoreDrizzleRepositoryLive } from "./repositories/trait-score.drizzle.repository";

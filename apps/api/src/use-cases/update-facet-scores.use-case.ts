@@ -1,20 +1,20 @@
 /**
  * Update Facet Scores Use Case
  *
- * Business logic for aggregating facet evidence into scores and deriving trait scores.
+ * Business logic for computing facet and trait scores from evidence.
  * Triggered every 3 messages (batch processing).
+ * Compute-only: fetches evidence, aggregates scores in-memory, returns results.
  *
- * Integration: ScorerRepository via dependency injection (hexagonal architecture).
- *
- * @see packages/domain/src/repositories/scorer.repository.ts
+ * @see packages/domain/src/utils/scoring.ts
  */
 
 import {
-	DatabaseError,
+	aggregateFacetScores,
+	deriveTraitScores,
+	type FacetEvidencePersistenceError,
+	FacetEvidenceRepository,
 	type FacetScoresMap,
 	LoggerRepository,
-	ScorerError,
-	ScorerRepository,
 	type TraitScoresMap,
 } from "@workspace/domain";
 import { Effect } from "effect";
@@ -52,68 +52,61 @@ export const shouldTriggerScoring = (messageCount: number): boolean => {
 /**
  * Update Facet Scores Use Case
  *
- * Aggregates facet evidence into scores using weighted averaging
- * with recency bias and contradiction detection, then derives
- * trait scores from the aggregated facet scores.
+ * Fetches evidence from the database and computes scores on-demand
+ * using pure domain functions. No score tables are written.
  *
- * Dependencies: ScorerRepository, LoggerRepository
+ * Dependencies: FacetEvidenceRepository, LoggerRepository
  * Returns: Aggregated facet scores and derived trait scores
- *
- * Algorithm (from Tree of Thoughts analysis):
- * 1. Group evidence by facetName
- * 2. Calculate weighted average: confidence × (1 + position × 0.1) for recency bias
- * 3. Detect contradictions via variance analysis
- * 4. Adjust confidence: -0.3 for high variance, +0.2 for large sample size
- * 5. Derive trait scores as mean of 6 related facets
- * 6. Set trait confidence as minimum confidence across facets
  *
  * @example
  * ```typescript
  * const result = yield* updateFacetScores({
  *   sessionId: "session_123"
  * })
- * console.log(result.facetScores.imagination) // { score: 16.5, confidence: 0.85 }
- * console.log(result.traitScores.openness)    // { score: 15.8, confidence: 0.78 }
+ * console.log(result.facetScores.imagination) // { score: 16.5, confidence: 85 }
+ * console.log(result.traitScores.openness)    // { score: 90.5, confidence: 72 }
  * ```
  */
 export const updateFacetScores = (
 	input: UpdateFacetScoresInput,
 ): Effect.Effect<
 	UpdateFacetScoresOutput,
-	DatabaseError | ScorerError,
-	ScorerRepository | LoggerRepository
+	FacetEvidencePersistenceError,
+	FacetEvidenceRepository | LoggerRepository
 > =>
 	Effect.gen(function* () {
-		const scorer = yield* ScorerRepository;
+		const evidenceRepo = yield* FacetEvidenceRepository;
 		const logger = yield* LoggerRepository;
 
-		logger.info("Updating facet scores", {
+		logger.info("Computing facet scores from evidence", {
 			sessionId: input.sessionId,
 		});
 
-		// Aggregate facet scores from evidence
-		const facetScores = yield* scorer.aggregateFacetScores(input.sessionId);
+		// Fetch all evidence for this session
+		const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
+
+		// Aggregate facet scores from evidence (pure function)
+		const facetScores = aggregateFacetScores(evidence);
 
 		const facetCount = Object.keys(facetScores).length;
-		logger.info("Facet scores aggregated", {
+		logger.info("Facet scores computed", {
 			sessionId: input.sessionId,
 			facetCount,
-			facetNames: Object.keys(facetScores),
+			evidenceCount: evidence.length,
 		});
 
-		// Derive trait scores from facet scores
-		const traitScores = yield* scorer.deriveTraitScores(facetScores);
+		// Derive trait scores from facet scores (pure function)
+		const traitScores = deriveTraitScores(facetScores);
 
 		const traitCount = Object.keys(traitScores).length;
 		logger.info("Trait scores derived", {
 			sessionId: input.sessionId,
 			traitCount,
-			traitNames: Object.keys(traitScores),
 		});
 
 		const updatedAt = new Date();
 
-		logger.info("Facet scores update complete", {
+		logger.info("Facet scores computation complete", {
 			sessionId: input.sessionId,
 			facetCount,
 			traitCount,

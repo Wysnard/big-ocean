@@ -3,7 +3,7 @@
  * Vitest auto-resolves when tests call:
  *   vi.mock('@workspace/infrastructure/repositories/assessment-session.drizzle.repository')
  */
-import { AssessmentSessionRepository, initializeFacetConfidence } from "@workspace/domain";
+import { AssessmentSessionRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
 const sessions = new Map<string, Record<string, unknown>>();
@@ -24,7 +24,6 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 					createdAt: new Date(),
 					updatedAt: new Date(),
 					status: "active" as const,
-					confidence: initializeFacetConfidence(50),
 					messageCount: 0,
 				};
 				sessions.set(sessionId, session);
@@ -43,7 +42,6 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 						createdAt: new Date(),
 						updatedAt: new Date(),
 						status: "active" as const,
-						confidence: initializeFacetConfidence(50),
 						messageCount: 0,
 					};
 				}
@@ -59,7 +57,6 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 					createdAt: new Date(),
 					updatedAt: new Date(),
 					status: "active" as const,
-					confidence: initializeFacetConfidence(50),
 					messageCount: 0,
 				};
 				const updated = { ...existing, ...partial };

@@ -59,7 +59,6 @@ export const AssessmentSessionEntitySchema = Schema.Struct({
 	createdAt: Schema.DateFromSelf,
 	updatedAt: Schema.DateFromSelf,
 	status: Schema.Literal("active", "paused", "completed", "archived"),
-	confidence: FacetConfidenceEntitySchema,
 	messageCount: Schema.Number,
 });
 

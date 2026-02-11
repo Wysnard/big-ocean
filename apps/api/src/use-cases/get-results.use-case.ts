@@ -2,26 +2,26 @@
  * Get Assessment Results Use Case
  *
  * Business logic for retrieving final assessment results.
- * Fetches persisted facet/trait scores, generates OCEAN code,
- * looks up archetype, and computes overall confidence.
+ * Fetches evidence, computes scores on-demand via pure domain functions,
+ * generates OCEAN code, looks up archetype, and computes overall confidence.
  *
- * Dependencies: AssessmentSessionRepository, FacetScoreRepository,
- *               TraitScoreRepository, LoggerRepository
+ * Dependencies: AssessmentSessionRepository, FacetEvidenceRepository, LoggerRepository
  */
 
 import {
 	AssessmentSessionRepository,
+	aggregateFacetScores,
 	BIG_FIVE_TRAITS,
 	calculateConfidenceFromFacetScores,
+	deriveTraitScores,
 	extract4LetterCode,
 	FACET_TO_TRAIT,
+	FacetEvidenceRepository,
 	type FacetName,
-	FacetScoreRepository,
 	generateOceanCode,
 	LoggerRepository,
 	lookupArchetype,
 	type TraitLevel,
-	TraitScoreRepository,
 } from "@workspace/domain";
 import { Effect } from "effect";
 
@@ -78,25 +78,26 @@ const toDisplayName = (name: string): string =>
  * Get Assessment Results Use Case
  *
  * 1. Validates session exists
- * 2. Fetches persisted facet scores (30 facets)
- * 3. Fetches persisted trait scores (5 traits)
- * 4. Generates 5-letter OCEAN code from facet scores
- * 5. Extracts 4-letter code, looks up archetype
- * 6. Computes overall confidence (mean of all facet confidences)
+ * 2. Fetches evidence via FacetEvidenceRepository
+ * 3. Computes facet scores on-demand via pure aggregateFacetScores()
+ * 4. Derives trait scores via pure deriveTraitScores()
+ * 5. Generates 5-letter OCEAN code from facet scores
+ * 6. Extracts 4-letter code, looks up archetype
+ * 7. Computes overall confidence (mean of all facet confidences)
  */
 export const getResults = (input: GetResultsInput) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* AssessmentSessionRepository;
-		const facetScoreRepo = yield* FacetScoreRepository;
-		const traitScoreRepo = yield* TraitScoreRepository;
+		const evidenceRepo = yield* FacetEvidenceRepository;
 		const logger = yield* LoggerRepository;
 
 		// 1. Validate session exists (throws SessionNotFound if missing)
 		yield* sessionRepo.getSession(input.sessionId);
 
-		// 2. Fetch persisted scores
-		const facetScoresMap = yield* facetScoreRepo.getBySession(input.sessionId);
-		const traitScoresMap = yield* traitScoreRepo.getBySession(input.sessionId);
+		// 2. Fetch evidence and compute scores on-demand
+		const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
+		const facetScoresMap = aggregateFacetScores(evidence);
+		const traitScoresMap = deriveTraitScores(facetScoresMap);
 
 		// 3. Generate OCEAN codes
 		const oceanCode5 = generateOceanCode(facetScoresMap);

@@ -3,17 +3,18 @@
  *
  * Tests for create, get, and toggle profile visibility use-cases.
  * Uses @effect/vitest with vi.mock() + __mocks__ pattern.
+ *
+ * Story 2.9: Uses FacetEvidenceRepository + pure functions instead of ScorerRepository.
  */
 
 import { it } from "@effect/vitest";
 import {
 	ALL_FACETS,
 	AssessmentSessionRepository,
-	createInitialFacetScoresMap,
-	type FacetScoresMap,
+	FacetEvidenceRepository,
 	lookupArchetype,
 	PublicProfileRepository,
-	ScorerRepository,
+	type SavedFacetEvidence,
 } from "@workspace/domain";
 import { AppConfigTestLive } from "@workspace/infrastructure";
 import { Effect, Layer } from "effect";
@@ -22,84 +23,85 @@ import { beforeEach, describe, expect, vi } from "vitest";
 vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 vi.mock("@workspace/infrastructure/repositories/public-profile.drizzle.repository");
-vi.mock("@workspace/infrastructure/repositories/scorer.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/facet-evidence.drizzle.repository");
 
 import {
 	AssessmentSessionDrizzleRepositoryLive,
 	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
 	_resetMockState as resetSessionState,
 } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+import {
+	FacetEvidenceDrizzleRepositoryLive,
+	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
+	_resetMockState as resetEvidenceState,
+} from "@workspace/infrastructure/repositories/facet-evidence.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 import {
 	PublicProfileDrizzleRepositoryLive,
 	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
 	_resetMockState as resetProfileState,
 } from "@workspace/infrastructure/repositories/public-profile.drizzle.repository";
-import { ScorerDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/scorer.drizzle.repository";
 
 import { createShareableProfile } from "../create-shareable-profile.use-case";
 import { getPublicProfile } from "../get-public-profile.use-case";
 import { toggleProfileVisibility } from "../toggle-profile-visibility.use-case";
 
 /**
- * Create a facet scores map where all facets have high confidence (>= 70)
+ * Create SavedFacetEvidence records for all 30 facets with specified confidence.
+ * Uses one evidence record per facet so aggregateFacetScores returns exact values.
  */
-function createHighConfidenceFacetScores(): FacetScoresMap {
-	const scores = createInitialFacetScoresMap();
-	for (const facet of ALL_FACETS) {
-		scores[facet] = { score: 15, confidence: 85 };
-	}
-	return scores;
+function createEvidenceWithConfidence(score: number, confidence: number): SavedFacetEvidence[] {
+	return ALL_FACETS.map((facet, idx) => ({
+		id: `evidence_${facet}`,
+		assessmentMessageId: `msg_${idx}`,
+		facetName: facet,
+		score,
+		confidence,
+		quote: `Test quote for ${facet}`,
+		highlightRange: { start: 0, end: 20 },
+		createdAt: new Date(Date.now() + idx * 1000),
+	}));
 }
 
 /**
- * Create a facet scores map where some facets have low confidence (< 70)
+ * Create a custom evidence layer that returns specific evidence
  */
-function createLowConfidenceFacetScores(): FacetScoresMap {
-	const scores = createInitialFacetScoresMap();
-	for (const facet of ALL_FACETS) {
-		scores[facet] = { score: 10, confidence: 50 };
-	}
-	return scores;
-}
-
-/**
- * Create a custom scorer layer that returns specific facet scores
- */
-function createScorerLayer(facetScores: FacetScoresMap) {
+function createEvidenceLayer(evidence: SavedFacetEvidence[]) {
 	return Layer.succeed(
-		ScorerRepository,
-		ScorerRepository.of({
-			aggregateFacetScores: () => Effect.succeed(facetScores),
-			deriveTraitScores: () => Effect.succeed({} as Record<string, unknown>),
+		FacetEvidenceRepository,
+		FacetEvidenceRepository.of({
+			saveEvidence: () => Effect.succeed([]),
+			getEvidenceByMessage: () => Effect.succeed([]),
+			getEvidenceByFacet: () => Effect.succeed([]),
+			getEvidenceBySession: () => Effect.succeed(evidence),
 		}),
 	);
 }
 
-// Base test layer with default (low confidence) scores
+// Base test layer with default mock evidence (low confidence from mock)
 const BaseTestLayer = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
 	LoggerPinoRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
-	ScorerDrizzleRepositoryLive,
+	FacetEvidenceDrizzleRepositoryLive,
 	AppConfigTestLive,
 );
 
-// Test layer with high confidence scores (assessment complete)
+// Test layer with high confidence evidence (assessment complete)
 const HighConfidenceTestLayer = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
 	LoggerPinoRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
-	createScorerLayer(createHighConfidenceFacetScores()),
+	createEvidenceLayer(createEvidenceWithConfidence(15, 85)),
 	AppConfigTestLive,
 );
 
-// Test layer with low confidence scores
+// Test layer with low confidence evidence
 const LowConfidenceTestLayer = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
 	LoggerPinoRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
-	createScorerLayer(createLowConfidenceFacetScores()),
+	createEvidenceLayer(createEvidenceWithConfidence(10, 50)),
 	AppConfigTestLive,
 );
 
@@ -107,6 +109,7 @@ describe("createShareableProfile Use Case", () => {
 	beforeEach(() => {
 		resetSessionState();
 		resetProfileState();
+		resetEvidenceState();
 	});
 
 	describe("Success scenarios", () => {
@@ -156,7 +159,7 @@ describe("createShareableProfile Use Case", () => {
 				const sessionRepo = yield* AssessmentSessionRepository;
 				const { sessionId } = yield* sessionRepo.createSession("user_123");
 
-				// BaseTestLayer uses default scorer mock which returns confidence: 0
+				// BaseTestLayer uses default evidence mock which returns confidence: 0
 				const exit = yield* Effect.exit(createShareableProfile({ sessionId }));
 
 				expect(exit._tag).toBe("Failure");
@@ -190,6 +193,7 @@ describe("getPublicProfile Use Case", () => {
 	beforeEach(() => {
 		resetSessionState();
 		resetProfileState();
+		resetEvidenceState();
 	});
 
 	// Derive expected values from lookupArchetype for "HHMH"
@@ -271,6 +275,7 @@ describe("toggleProfileVisibility Use Case", () => {
 	beforeEach(() => {
 		resetSessionState();
 		resetProfileState();
+		resetEvidenceState();
 	});
 
 	describe("Success scenarios", () => {

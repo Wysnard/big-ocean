@@ -2,13 +2,17 @@
  * Resume Session Use Case
  *
  * Business logic for resuming an existing assessment session.
- * Returns session data with message history.
+ * Returns session data with message history and confidence computed from evidence.
  */
 
 import {
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
+	aggregateFacetScores,
 	calculateTraitConfidence,
+	type FacetConfidenceScores,
+	FacetEvidenceRepository,
+	initializeFacetConfidence,
 	LoggerRepository,
 } from "@workspace/domain";
 import type { AssessmentMessageEntity } from "@workspace/domain/entities/message.entity";
@@ -32,28 +36,45 @@ export interface ResumeSessionOutput {
 /**
  * Resume Session Use Case
  *
- * Dependencies: AssessmentSessionRepository, AssessmentMessageRepository, LoggerRepository
- * Returns: Session confidence scores and message history
+ * Dependencies: AssessmentSessionRepository, AssessmentMessageRepository,
+ *               FacetEvidenceRepository, LoggerRepository
+ * Returns: Session confidence scores (computed from evidence) and message history
  */
 export const resumeSession = (input: ResumeSessionInput) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
+		const evidenceRepo = yield* FacetEvidenceRepository;
 		const logger = yield* LoggerRepository;
 
-		// Get session
-		const session = yield* sessionRepo.getSession(input.sessionId);
+		// Get session (validates it exists)
+		yield* sessionRepo.getSession(input.sessionId);
 
 		// Get all messages
 		const messages = yield* messageRepo.getMessages(input.sessionId);
+
+		// Compute facet scores from evidence (on-demand)
+		const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
+		const facetScores = aggregateFacetScores(evidence);
+
+		// Convert facet scores to facet confidence for trait calculation
+		const facetConfidence: Partial<FacetConfidenceScores> = {};
+		for (const [facetName, facetScore] of Object.entries(facetScores)) {
+			facetConfidence[facetName as keyof FacetConfidenceScores] = facetScore.confidence;
+		}
+
+		const defaultFacetConfidence = initializeFacetConfidence(50);
+		const mergedFacetConfidence: FacetConfidenceScores = {
+			...defaultFacetConfidence,
+			...facetConfidence,
+		};
+
+		const traitConfidence = calculateTraitConfidence(mergedFacetConfidence);
 
 		logger.info("Session resumed", {
 			sessionId: input.sessionId,
 			messageCount: messages.length,
 		});
-
-		// Calculate trait confidence from facet confidence (session stores facet-level)
-		const traitConfidence = calculateTraitConfidence(session.confidence);
 
 		return {
 			confidence: traitConfidence,

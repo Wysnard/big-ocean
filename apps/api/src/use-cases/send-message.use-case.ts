@@ -3,23 +3,24 @@
  *
  * Business logic for sending a message in an assessment conversation.
  * Saves user message, orchestrates AI response via Nerin/Analyzer/Scorer pipeline,
- * and updates confidence scores.
+ * and computes confidence scores from evidence.
  *
  * Integration: Orchestrator repository routes to Nerin (always),
  * and triggers Analyzer + Scorer on batch messages (every 3rd).
  *
  * Story 2.4: Replaces direct Nerin calls with Orchestrator for multi-agent coordination.
+ * Story 2.9: Scores computed on-demand from evidence instead of materialized tables.
  */
 
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import {
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
+	aggregateFacetScores,
 	CostGuardRepository,
 	calculateTraitConfidence,
-	createInitialFacetScoresMap,
 	type FacetConfidenceScores,
-	type FacetScoresMap,
+	FacetEvidenceRepository,
 	initializeFacetConfidence,
 	LoggerRepository,
 	OrchestratorRepository,
@@ -47,7 +48,8 @@ export interface SendMessageOutput {
  * Send Message Use Case
  *
  * Dependencies: AssessmentSessionRepository, AssessmentMessageRepository,
- *               LoggerRepository, OrchestratorRepository, CostGuardRepository
+ *               LoggerRepository, OrchestratorRepository, CostGuardRepository,
+ *               FacetEvidenceRepository
  * Returns: AI response and updated confidence scores
  *
  * @throws BudgetPausedError - Daily cost limit reached, assessment paused
@@ -60,6 +62,7 @@ export const sendMessage = (input: SendMessageInput) =>
 		const logger = yield* LoggerRepository;
 		const orchestrator = yield* OrchestratorRepository;
 		const costGuard = yield* CostGuardRepository;
+		const evidenceRepo = yield* FacetEvidenceRepository;
 
 		// Verify session exists
 		const session = yield* sessionRepo.getSession(input.sessionId);
@@ -89,24 +92,9 @@ export const sendMessage = (input: SendMessageInput) =>
 		const dailyCostCents = yield* costGuard.getDailyCost(session.userId ?? "anonymous");
 		const dailyCostUsed = dailyCostCents / 100; // Convert cents to dollars
 
-		// Default facet confidence if not set (all facets at 50 = 50%)
-		const defaultFacetConfidence = initializeFacetConfidence(50);
-
-		// Use session facet confidence or default
-		const sessionFacetConfidence: FacetConfidenceScores =
-			session.confidence ?? defaultFacetConfidence;
-
-		// Convert FacetConfidenceScores to FacetScoresMap for orchestrator
-		// Initialize facet scores with confidence values from session
-		const facetScores: FacetScoresMap = createInitialFacetScoresMap();
-		for (const [key, confidence] of Object.entries(sessionFacetConfidence)) {
-			if (key in facetScores) {
-				facetScores[key as keyof FacetScoresMap] = {
-					score: 10, // Default neutral score
-					confidence: confidence as number,
-				};
-			}
-		}
+		// Compute facet scores from evidence (on-demand, no materialized tables)
+		const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
+		const facetScores = aggregateFacetScores(evidence);
 
 		// Invoke Orchestrator (routes to Nerin, optionally triggers Analyzer + Scorer)
 		const result = yield* orchestrator
@@ -139,33 +127,24 @@ export const sendMessage = (input: SendMessageInput) =>
 			Math.round(result.costIncurred * 100),
 		);
 
-		// Calculate updated facet confidence from orchestrator result or use existing
-		let updatedFacetConfidence = sessionFacetConfidence;
+		// Recompute facet scores after orchestrator may have saved new evidence
+		const updatedEvidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
+		const updatedFacetScores = aggregateFacetScores(updatedEvidence);
 
-		// If batch processing occurred, update confidence from result
-		if (result.facetScores) {
-			// Convert FacetScoresMap back to FacetConfidenceScores
-			const updatedFacets: Partial<FacetConfidenceScores> = {};
-			for (const [facetName, facetScore] of Object.entries(result.facetScores)) {
-				if (facetName in sessionFacetConfidence) {
-					updatedFacets[facetName as keyof FacetConfidenceScores] = facetScore.confidence;
-				}
-			}
-
-			// Merge new facet confidence with existing
-			updatedFacetConfidence = {
-				...sessionFacetConfidence,
-				...updatedFacets,
-			};
+		// Convert facet scores to facet confidence for trait calculation
+		const facetConfidence: Partial<FacetConfidenceScores> = {};
+		for (const [facetName, facetScore] of Object.entries(updatedFacetScores)) {
+			facetConfidence[facetName as keyof FacetConfidenceScores] = facetScore.confidence;
 		}
 
-		// Update session with new facet confidence scores
-		yield* sessionRepo.updateSession(input.sessionId, {
-			confidence: updatedFacetConfidence,
-		});
+		const defaultFacetConfidence = initializeFacetConfidence(50);
+		const mergedFacetConfidence: FacetConfidenceScores = {
+			...defaultFacetConfidence,
+			...facetConfidence,
+		};
 
-		// Compute trait confidence for API response (from facet confidence)
-		const responseConfidence = calculateTraitConfidence(updatedFacetConfidence);
+		// Compute trait confidence for API response
+		const responseConfidence = calculateTraitConfidence(mergedFacetConfidence);
 
 		logger.info("Message processed", {
 			sessionId: input.sessionId,
@@ -178,7 +157,6 @@ export const sendMessage = (input: SendMessageInput) =>
 		return {
 			response: result.nerinResponse,
 			confidence: {
-				// Values are already 0-100 integers
 				openness: responseConfidence.openness,
 				conscientiousness: responseConfidence.conscientiousness,
 				extraversion: responseConfidence.extraversion,
