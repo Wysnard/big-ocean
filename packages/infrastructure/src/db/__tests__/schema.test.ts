@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { facetEvidence, facetScores, traitScores } from "../drizzle/schema";
+import { facetEvidence } from "../drizzle/schema";
 
 /**
- * Schema validation tests for facet evidence and scoring tables
+ * Schema validation tests for facet evidence table
  *
  * These tests verify the structure of Drizzle tables before they're migrated.
  * They ensure fields exist, have correct types, and follow naming conventions.
+ *
+ * Note: facet_scores and trait_scores tables were removed in Story 2-9.
+ * Scores are now computed on-demand from facet_evidence via pure functions.
  */
 describe("Facet Evidence Schema", () => {
 	it("should have facetEvidence table with correct fields", () => {
@@ -43,69 +46,5 @@ describe("Facet Evidence Schema", () => {
 		expect(columns).toContain("highlightStart");
 		expect(columns).toContain("highlightEnd");
 		expect(columns).toContain("createdAt");
-	});
-});
-
-describe("Facet Scores Schema", () => {
-	it("should have facetScores table with correct fields", () => {
-		// Verify table exists
-		expect(facetScores).toBeDefined();
-
-		// Verify primary key
-		expect(facetScores.id).toBeDefined();
-
-		// Verify foreign key
-		expect(facetScores.sessionId).toBeDefined();
-
-		// Verify aggregated score fields
-		expect(facetScores.facetName).toBeDefined();
-		expect(facetScores.score).toBeDefined();
-		expect(facetScores.confidence).toBeDefined();
-
-		// Verify timestamp
-		expect(facetScores.updatedAt).toBeDefined();
-	});
-
-	it("should have correct column names (camelCase in TypeScript)", () => {
-		const columns = Object.keys(facetScores);
-
-		expect(columns).toContain("id");
-		expect(columns).toContain("sessionId");
-		expect(columns).toContain("facetName");
-		expect(columns).toContain("score");
-		expect(columns).toContain("confidence");
-		expect(columns).toContain("updatedAt");
-	});
-});
-
-describe("Trait Scores Schema", () => {
-	it("should have traitScores table with correct fields", () => {
-		// Verify table exists
-		expect(traitScores).toBeDefined();
-
-		// Verify primary key
-		expect(traitScores.id).toBeDefined();
-
-		// Verify foreign key
-		expect(traitScores.sessionId).toBeDefined();
-
-		// Verify trait fields
-		expect(traitScores.traitName).toBeDefined();
-		expect(traitScores.score).toBeDefined();
-		expect(traitScores.confidence).toBeDefined();
-
-		// Verify timestamp
-		expect(traitScores.updatedAt).toBeDefined();
-	});
-
-	it("should have correct column names (camelCase in TypeScript)", () => {
-		const columns = Object.keys(traitScores);
-
-		expect(columns).toContain("id");
-		expect(columns).toContain("sessionId");
-		expect(columns).toContain("traitName");
-		expect(columns).toContain("score");
-		expect(columns).toContain("confidence");
-		expect(columns).toContain("updatedAt");
 	});
 });

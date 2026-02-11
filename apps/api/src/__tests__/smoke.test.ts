@@ -57,13 +57,6 @@ describe("@effect/vitest Setup", () => {
 
 			expect(session.sessionId).toMatch(/^session_/);
 			expect(session.userId).toBe("test-user-123");
-			// Confidence contains all 30 facets at baseline (50)
-			expect(session.confidence).toBeDefined();
-			expect(session.confidence.imagination).toBe(50); // Openness facet
-			expect(session.confidence.orderliness).toBe(50); // Conscientiousness facet
-			expect(session.confidence.friendliness).toBe(50); // Extraversion facet
-			expect(session.confidence.altruism).toBe(50); // Agreeableness facet
-			expect(session.confidence.anxiety).toBe(50); // Neuroticism facet
 		}).pipe(Effect.provide(TestLayer)),
 	);
 

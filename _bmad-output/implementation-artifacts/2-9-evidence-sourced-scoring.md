@@ -4,7 +4,7 @@
 **Epic:** 2 - Assessment Backend Services
 **Created:** 2026-02-10
 **Priority:** Medium
-**Status:** Ready for Development
+**Status:** Done
 
 ---
 
@@ -81,21 +81,21 @@ The results page (post-assessment) has no real-time constraint — a 20-50ms com
 
 ### Must Have
 
-- [ ] **AC1: Drop Materialized Score Tables**
+- [x] **AC1: Drop Materialized Score Tables**
   - Migration drops `facet_scores` and `trait_scores` tables
   - Migration drops `assessment_session.confidence` JSONB column
   - Remove table definitions from `packages/infrastructure/src/db/drizzle/schema.ts`
   - Remove associated Drizzle relations
   - Existing `facet_evidence` table and indexes unchanged
 
-- [ ] **AC2: Pure Domain Scoring Functions**
+- [x] **AC2: Pure Domain Scoring Functions**
   - `aggregateFacetScores(evidence: SavedFacetEvidence[])` → `FacetScoresMap` exists in `packages/domain/src/utils/`
   - `deriveTraitScores(facetScores: FacetScoresMap)` → `TraitScoresMap` exists in `packages/domain/src/utils/`
   - Both are pure functions with zero infrastructure dependencies
   - Algorithm unchanged: recency-weighted averaging, variance penalty, min-confidence derivation
   - Unit testable with plain data (no Effect layers, no DB)
 
-- [ ] **AC3: Delete Score Repositories**
+- [x] **AC3: Delete Score Repositories**
   - Delete `packages/domain/src/repositories/facet-score.repository.ts` (interface)
   - Delete `packages/domain/src/repositories/trait-score.repository.ts` (interface)
   - Delete `packages/infrastructure/src/repositories/facet-score.drizzle.repository.ts` (implementation)
@@ -105,103 +105,102 @@ The results page (post-assessment) has no real-time constraint — a 20-50ms com
   - Remove `FacetScoreDrizzleRepositoryLive` and `TraitScoreDrizzleRepositoryLive` from `packages/infrastructure/src/index.ts` exports
   - Remove from layer composition in `apps/api/src/index.ts`
 
-- [ ] **AC4: Refactor ScorerRepository**
+- [x] **AC4: Refactor ScorerRepository**
   - `ScorerRepository` interface updated: remove `aggregateFacetScores(sessionId)` and `deriveTraitScores(facetScores)` methods
-  - If no methods remain, delete `ScorerRepository` entirely (interface + implementation + mock)
-  - If retained, it should only contain methods that genuinely need DB access
-  - `ScorerDrizzleRepositoryLive` in `packages/infrastructure/src/repositories/scorer.drizzle.repository.ts` updated or deleted accordingly
+  - No methods remained → Deleted `ScorerRepository` entirely (interface + implementation + mock)
+  - `ScorerDrizzleRepositoryLive` in `packages/infrastructure/src/repositories/scorer.drizzle.repository.ts` deleted
 
-- [ ] **AC5: Refactor get-results Use Case**
+- [x] **AC5: Refactor get-results Use Case**
   - `apps/api/src/use-cases/get-results.use-case.ts` no longer depends on `FacetScoreRepository` or `TraitScoreRepository`
   - Instead: fetches evidence via `FacetEvidenceRepository.getEvidenceBySession(sessionId)`, then calls pure `aggregateFacetScores()` and `deriveTraitScores()`
   - Output shape (`GetResultsOutput`) unchanged — API contract preserved
   - `mapScoreToLevel()`, `generateOceanCode()`, `lookupArchetype()` logic unchanged
 
-- [ ] **AC6: Refactor update-facet-scores Use Case**
+- [x] **AC6: Refactor update-facet-scores Use Case**
   - `apps/api/src/use-cases/update-facet-scores.use-case.ts` no longer writes to any score table
   - Becomes a compute-only function: fetches evidence, aggregates, derives, returns scores
   - Output shape (`UpdateFacetScoresOutput`) unchanged
   - `shouldTriggerScoring()` function unchanged
 
-- [ ] **AC7: Refactor send-message / Orchestrator Flow**
+- [x] **AC7: Refactor send-message / Orchestrator Flow**
   - Orchestrator still receives `facetScores` for steering — now computed from evidence on each turn
   - `apps/api/src/use-cases/send-message.use-case.ts` fetches evidence → computes facet scores → passes to orchestrator
   - Nerin still receives `facetScores` and `steeringHint` — no change to agent interfaces
   - Scoring cycle (every 3 messages) still runs Analyzer → saves evidence → computes scores (just doesn't persist scores to separate tables)
 
-- [ ] **AC8: All Existing Tests Pass**
+- [x] **AC8: All Existing Tests Pass**
   - Update test files that mock `FacetScoreRepository` or `TraitScoreRepository` to use new patterns
   - Tests in `apps/api/src/use-cases/__tests__/` updated to reflect new dependencies
   - `vi.mock()` calls for deleted repositories removed
-  - New unit tests for pure `aggregateFacetScores()` and `deriveTraitScores()` functions
-  - `pnpm test:run` passes
+  - New unit tests for pure `aggregateFacetScores()` and `deriveTraitScores()` functions (21 tests)
+  - `pnpm test:run` passes (744 total tests)
   - `pnpm lint` passes
   - `pnpm build` succeeds
 
 ### Should Have
 
-- [ ] **AC9: Update Type Documentation**
+- [x] **AC9: Update Type Documentation**
   - `FacetScore` and `TraitScore` interfaces in `packages/domain/src/types/facet-evidence.ts` updated
   - Remove references to "Storage: facet_scores table" and "Storage: trait_scores table" from JSDoc
   - Update to reflect "Computed on-demand from evidence"
-  - `createInitialFacetScoresMap()` and `createInitialTraitScoresMap()` in `confidence.ts` reviewed — keep if still used as defaults, delete if no longer needed
+  - `createInitialFacetScoresMap()` and `createInitialTraitScoresMap()` in `confidence.ts` reviewed — kept as defaults for new sessions
 
-- [ ] **AC10: Update CLAUDE.md and Architecture Docs**
+- [x] **AC10: Update CLAUDE.md and Architecture Docs**
   - `CLAUDE.md` scoring sections reflect evidence-sourced model
-  - `docs/ARCHITECTURE.md` updated if it references score tables
-  - Remove references to `FacetScoreRepository`, `TraitScoreRepository` from documentation
+  - `docs/ARCHITECTURE.md` updated — removed scorer.repository references
+  - Removed references to `FacetScoreRepository`, `TraitScoreRepository` from documentation
 
 ---
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Create Pure Scoring Functions** (AC: 2)
-  - [ ] 1.1 Create `packages/domain/src/utils/scoring.ts` with `aggregateFacetScores(evidence[])` and `deriveTraitScores(facetScoresMap)`
-  - [ ] 1.2 Extract `aggregateFacet()`, `sum()`, `mean()`, `variance()`, `clamp()` helpers from `scorer.drizzle.repository.ts`
-  - [ ] 1.3 Write unit tests for pure functions (no Effect layers needed)
-  - [ ] 1.4 Export from `packages/domain/src/index.ts`
+- [x] **Task 1: Create Pure Scoring Functions** (AC: 2)
+  - [x] 1.1 Create `packages/domain/src/utils/scoring.ts` with `aggregateFacetScores(evidence[])` and `deriveTraitScores(facetScoresMap)`
+  - [x] 1.2 Extract `aggregateFacet()`, `sum()`, `mean()`, `variance()`, `clamp()` helpers from `scorer.drizzle.repository.ts`
+  - [x] 1.3 Write unit tests for pure functions (no Effect layers needed) — 21 tests
+  - [x] 1.4 Export from `packages/domain/src/index.ts`
 
-- [ ] **Task 2: Refactor Use Cases** (AC: 5, 6, 7)
-  - [ ] 2.1 Update `get-results.use-case.ts` — replace `FacetScoreRepository` + `TraitScoreRepository` with `FacetEvidenceRepository` + pure functions
-  - [ ] 2.2 Update `update-facet-scores.use-case.ts` — remove DB writes, compute-only
-  - [ ] 2.3 Update `send-message.use-case.ts` — compute facet scores from evidence before passing to orchestrator
-  - [ ] 2.4 Update `create-shareable-profile.use-case.ts` if it references score repos
-  - [ ] 2.5 Update `calculate-confidence.use-case.ts` if it references score repos
+- [x] **Task 2: Refactor Use Cases** (AC: 5, 6, 7)
+  - [x] 2.1 Update `get-results.use-case.ts` — replace `FacetScoreRepository` + `TraitScoreRepository` with `FacetEvidenceRepository` + pure functions
+  - [x] 2.2 Update `update-facet-scores.use-case.ts` — remove DB writes, compute-only
+  - [x] 2.3 Update `send-message.use-case.ts` — compute facet scores from evidence before passing to orchestrator
+  - [x] 2.4 Update `create-shareable-profile.use-case.ts` — updated to use pure functions
+  - [x] 2.5 N/A — `calculate-confidence.use-case.ts` does not exist, confidence calculated inline
 
-- [ ] **Task 3: Delete Score Repositories** (AC: 3, 4)
-  - [ ] 3.1 Delete `FacetScoreRepository` interface and `TraitScoreRepository` interface from `packages/domain/src/repositories/`
-  - [ ] 3.2 Delete `facet-score.drizzle.repository.ts` and `trait-score.drizzle.repository.ts` from infrastructure
-  - [ ] 3.3 Delete corresponding `__mocks__/` files
-  - [ ] 3.4 Refactor or delete `ScorerRepository` interface + `ScorerDrizzleRepositoryLive`
-  - [ ] 3.5 Remove exports from `packages/infrastructure/src/index.ts`
-  - [ ] 3.6 Remove from layer composition in `apps/api/src/index.ts` (lines 26, 31, 131, 133)
-  - [ ] 3.7 Remove from `packages/domain/src/index.ts` exports
+- [x] **Task 3: Delete Score Repositories** (AC: 3, 4)
+  - [x] 3.1 Delete `FacetScoreRepository` interface and `TraitScoreRepository` interface from `packages/domain/src/repositories/`
+  - [x] 3.2 Delete `facet-score.drizzle.repository.ts` and `trait-score.drizzle.repository.ts` from infrastructure
+  - [x] 3.3 Delete corresponding `__mocks__/` files
+  - [x] 3.4 Deleted `ScorerRepository` entirely (interface + `ScorerDrizzleRepositoryLive`) — no methods remained
+  - [x] 3.5 Remove exports from `packages/infrastructure/src/index.ts`
+  - [x] 3.6 Remove from layer composition in `apps/api/src/index.ts`
+  - [x] 3.7 Remove from `packages/domain/src/index.ts` exports
 
-- [ ] **Task 4: Database Migration** (AC: 1)
-  - [ ] 4.1 Generate Drizzle migration to drop `facet_scores` table
-  - [ ] 4.2 Generate Drizzle migration to drop `trait_scores` table
-  - [ ] 4.3 Generate Drizzle migration to drop `assessment_session.confidence` JSONB column
-  - [ ] 4.4 Remove table definitions from `packages/infrastructure/src/db/drizzle/schema.ts` (lines 187-210, 249-272)
-  - [ ] 4.5 Remove `confidence` column from `assessmentSession` definition (line 118)
-  - [ ] 4.6 Update Drizzle relations if they reference dropped tables
+- [x] **Task 4: Database Migration** (AC: 1)
+  - [x] 4.1 Generate Drizzle migration to drop `facet_scores` table
+  - [x] 4.2 Generate Drizzle migration to drop `trait_scores` table
+  - [x] 4.3 Generate Drizzle migration to drop `assessment_session.confidence` JSONB column
+  - [x] 4.4 Remove table definitions from `packages/infrastructure/src/db/drizzle/schema.ts`
+  - [x] 4.5 Remove `confidence` column from `assessmentSession` definition
+  - [x] 4.6 No Drizzle relations referenced dropped tables — N/A
 
-- [ ] **Task 5: Update Tests** (AC: 8)
-  - [ ] 5.1 Update `get-results.use-case.test.ts` — remove score repo mocks, add evidence fixtures
-  - [ ] 5.2 Update `send-message.use-case.test.ts` — adjust layer composition
-  - [ ] 5.3 Update `update-facet-scores.use-case.test.ts` — test pure computation
-  - [ ] 5.4 Update `analyzer-scorer-integration.test.ts`
-  - [ ] 5.5 Update `orchestrator-integration.test.ts`
-  - [ ] 5.6 Update `nerin-steering-integration.test.ts`
-  - [ ] 5.7 Update `shareable-profile.use-case.test.ts` if affected
-  - [ ] 5.8 Run full test suite: `pnpm test:run`
-  - [ ] 5.9 Run lint: `pnpm lint`
-  - [ ] 5.10 Run build: `pnpm build`
+- [x] **Task 5: Update Tests** (AC: 8)
+  - [x] 5.1 Update `get-results.use-case.test.ts` — remove score repo mocks, add evidence fixtures
+  - [x] 5.2 Update `send-message.use-case.test.ts` — adjust layer composition
+  - [x] 5.3 Update `update-facet-scores.use-case.test.ts` — test pure computation
+  - [x] 5.4 Update `analyzer-scorer-integration.test.ts`
+  - [x] 5.5 N/A — `orchestrator-integration.test.ts` already uses orchestrator mock
+  - [x] 5.6 Update `nerin-steering-integration.test.ts`
+  - [x] 5.7 Update `shareable-profile.use-case.test.ts`
+  - [x] 5.8 Run full test suite: `pnpm test:run` — 744 tests pass
+  - [x] 5.9 Run lint: `pnpm lint` — clean
+  - [x] 5.10 Run build: `pnpm build` — succeeds
 
-- [ ] **Task 6: Update Documentation** (AC: 9, 10)
-  - [ ] 6.1 Update type JSDoc in `packages/domain/src/types/facet-evidence.ts`
-  - [ ] 6.2 Review `createInitialFacetScoresMap()` / `createInitialTraitScoresMap()` — delete or update
-  - [ ] 6.3 Update `CLAUDE.md` scoring sections
-  - [ ] 6.4 Update `docs/ARCHITECTURE.md` if applicable
+- [x] **Task 6: Update Documentation** (AC: 9, 10)
+  - [x] 6.1 Update type JSDoc in `packages/domain/src/types/facet-evidence.ts`
+  - [x] 6.2 Keep `createInitialFacetScoresMap()` / `createInitialTraitScoresMap()` — used for default scores in new sessions
+  - [x] 6.3 Update `CLAUDE.md` scoring sections
+  - [x] 6.4 Update `docs/ARCHITECTURE.md` — removed scorer.repository references from architecture diagrams
 
 ---
 
@@ -346,3 +345,95 @@ Analyzer → facet_evidence → [on read] → aggregateFacetScores() → deriveT
 **Rationale:**
 
 The scoring formula is expected to evolve as we validate with real users. Materialized score tables create friction for formula iteration (backfills, sync risks, stale data windows). With ~300-600 evidence records per session and 1-3 second LLM latency dominating every interaction, the computation cost of on-demand scoring is invisible. Removing two tables, two repository interfaces, two implementations, and two mock files is significant complexity reduction for a pre-PMF product.
+
+---
+
+## Dev Agent Record
+
+**Completed:** 2026-02-11
+**Reviewed:** 2026-02-11
+
+### Implementation Summary
+
+- **ScorerRepository deleted entirely** — No methods remained after extracting scoring to pure domain functions
+- **Pure scoring functions** — `aggregateFacetScores()` and `deriveTraitScores()` now in `packages/domain/src/utils/scoring.ts`
+- **21 new unit tests** — Full coverage of recency weighting, variance detection, trait derivation
+- **Migration created** — `drizzle/20260210230152_lame_kate_bishop/migration.sql` drops tables + column
+
+### File List
+
+#### New Files Created
+
+| File | Purpose |
+|------|---------|
+| `packages/domain/src/utils/scoring.ts` | Pure `aggregateFacetScores()` + `deriveTraitScores()` functions |
+| `packages/domain/src/utils/__tests__/scoring.test.ts` | 21 unit tests for pure scoring functions |
+| `drizzle/20260210230152_lame_kate_bishop/migration.sql` | DROP facet_scores, trait_scores tables + confidence column |
+
+#### Files Deleted
+
+| File | Type |
+|------|------|
+| `packages/domain/src/repositories/facet-score.repository.ts` | Interface |
+| `packages/domain/src/repositories/trait-score.repository.ts` | Interface |
+| `packages/domain/src/repositories/scorer.repository.ts` | Interface |
+| `packages/domain/src/repositories/__tests__/scorer.repository.test.ts` | Tests |
+| `packages/infrastructure/src/repositories/facet-score.drizzle.repository.ts` | Implementation |
+| `packages/infrastructure/src/repositories/trait-score.drizzle.repository.ts` | Implementation |
+| `packages/infrastructure/src/repositories/scorer.drizzle.repository.ts` | Implementation |
+| `packages/infrastructure/src/repositories/__tests__/scorer.drizzle.repository.test.ts` | Tests |
+| `packages/infrastructure/src/repositories/__mocks__/facet-score.drizzle.repository.ts` | Mock |
+| `packages/infrastructure/src/repositories/__mocks__/trait-score.drizzle.repository.ts` | Mock |
+| `packages/infrastructure/src/repositories/__mocks__/scorer.drizzle.repository.ts` | Mock |
+
+#### Files Modified
+
+| File | Change Summary |
+|------|----------------|
+| `packages/infrastructure/src/db/drizzle/schema.ts` | Removed `facetScores`, `traitScores` tables + `confidence` column |
+| `packages/infrastructure/src/index.ts` | Removed score repository exports |
+| `packages/domain/src/index.ts` | Removed score repo exports, added scoring utils export |
+| `packages/domain/src/entities/session.entity.ts` | Removed confidence field |
+| `packages/domain/src/types/session.ts` | Removed confidence references |
+| `packages/domain/src/types/facet-evidence.ts` | Updated JSDoc |
+| `packages/domain/src/utils/index.ts` | Added scoring exports |
+| `apps/api/src/index.ts` | Removed score repo layers from composition |
+| `apps/api/src/handlers/assessment.ts` | Updated to use pure functions |
+| `apps/api/src/handlers/profile.ts` | Updated for new scoring flow |
+| `apps/api/src/use-cases/get-results.use-case.ts` | Fetch evidence → compute scores |
+| `apps/api/src/use-cases/update-facet-scores.use-case.ts` | Compute-only, no DB writes |
+| `apps/api/src/use-cases/send-message.use-case.ts` | Compute facet scores from evidence |
+| `apps/api/src/use-cases/resume-session.use-case.ts` | Updated for new flow |
+| `apps/api/src/use-cases/create-shareable-profile.use-case.ts` | Use pure functions |
+| `apps/api/src/use-cases/get-public-profile.use-case.ts` | Updated for new flow |
+| `scripts/seed-completed-assessment.ts` | Seeds only `facet_evidence`, not score tables |
+| `docs/ARCHITECTURE.md` | Removed scorer.repository references |
+| `CLAUDE.md` | Updated scoring sections |
+
+#### Test Files Updated
+
+| File | Change Summary |
+|------|----------------|
+| `apps/api/src/__tests__/smoke.test.ts` | Updated for new layer composition |
+| `apps/api/src/use-cases/__tests__/get-results.use-case.test.ts` | Evidence fixtures, removed score repo mocks |
+| `apps/api/src/use-cases/__tests__/update-facet-scores.use-case.test.ts` | Test pure computation |
+| `apps/api/src/use-cases/__tests__/send-message.use-case.test.ts` | Adjusted layer composition |
+| `apps/api/src/use-cases/__tests__/analyzer-scorer-integration.test.ts` | Updated integration flow |
+| `apps/api/src/use-cases/__tests__/nerin-steering-integration.test.ts` | Updated steering tests |
+| `apps/api/src/use-cases/__tests__/shareable-profile.use-case.test.ts` | Updated for pure functions |
+| `apps/api/src/use-cases/__tests__/start-assessment.use-case.test.ts` | Removed confidence refs |
+| `packages/infrastructure/src/db/__tests__/schema.test.ts` | Removed dropped table tests |
+| `packages/infrastructure/src/repositories/__mocks__/assessment-session.drizzle.repository.ts` | Removed confidence field |
+
+### Verification Results
+
+| Check | Result |
+|-------|--------|
+| `pnpm test:run` | ✅ 744 tests pass (501 domain + 139 api + 104 front) |
+| `pnpm lint` | ✅ Clean |
+| `pnpm build` | ✅ Succeeds |
+| Migration file | ✅ Created at `drizzle/20260210230152_lame_kate_bishop/migration.sql` |
+
+### Migration Note
+
+**Action Required:** Run `pnpm db:migrate` to apply the migration that drops the score tables. This is a destructive migration but safe — all score data is derivable from `facet_evidence`.

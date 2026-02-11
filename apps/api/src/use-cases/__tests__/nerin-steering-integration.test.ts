@@ -5,8 +5,10 @@
  * the Orchestrator Router to Nerin Agent.
  *
  * Uses a spy Nerin layer to capture and verify input parameters.
- * Uses inline test layers for dependencies (logger, config, analyzer, scorer)
+ * Uses inline test layers for dependencies (logger, config, analyzer)
  * rather than vi.mock() since this test uses real orchestrator infrastructure.
+ *
+ * Story 2.9: ScorerRepository removed — scorer node uses FacetEvidenceRepository + pure functions.
  */
 
 import { vi } from "vitest";
@@ -21,13 +23,12 @@ import {
 	AnalyzerRepository,
 	CheckpointerRepository,
 	createInitialFacetScoresMap,
-	createInitialTraitScoresMap,
+	FacetEvidenceRepository,
 	type FacetScoresMap,
 	LoggerRepository,
 	NerinAgentRepository,
 	type NerinInvokeInput,
 	OrchestratorRepository,
-	ScorerRepository,
 } from "@workspace/domain";
 // vi.mock() replaces this import with __mocks__/app-config.ts which exports createTestAppConfigLayer
 // @ts-expect-error -- TS sees the real module (no createTestAppConfigLayer), Vitest resolves the mock
@@ -56,11 +57,13 @@ const TestAnalyzerLayer = Layer.succeed(
 	}),
 );
 
-const TestScorerLayer = Layer.succeed(
-	ScorerRepository,
-	ScorerRepository.of({
-		aggregateFacetScores: () => Effect.succeed(createInitialFacetScoresMap()),
-		deriveTraitScores: () => Effect.succeed(createInitialTraitScoresMap()),
+const TestFacetEvidenceLayer = Layer.succeed(
+	FacetEvidenceRepository,
+	FacetEvidenceRepository.of({
+		saveEvidence: () => Effect.succeed([]),
+		getEvidenceByMessage: () => Effect.succeed([]),
+		getEvidenceByFacet: () => Effect.succeed([]),
+		getEvidenceBySession: () => Effect.succeed([]),
 	}),
 );
 
@@ -95,7 +98,7 @@ describe("Nerin Steering Integration", () => {
 				createTestAppConfigLayer(),
 				SpyNerinLayer,
 				TestAnalyzerLayer,
-				TestScorerLayer,
+				TestFacetEvidenceLayer,
 				TestCheckpointerLayer,
 			);
 
@@ -175,7 +178,7 @@ describe("Nerin Steering Integration", () => {
 				createTestAppConfigLayer(),
 				SpyNerinLayer,
 				TestAnalyzerLayer,
-				TestScorerLayer,
+				TestFacetEvidenceLayer,
 				TestCheckpointerLayer,
 			);
 
@@ -245,7 +248,7 @@ describe("Nerin Steering Integration", () => {
 				createTestAppConfigLayer(),
 				SpyNerinLayer,
 				TestAnalyzerLayer,
-				TestScorerLayer,
+				TestFacetEvidenceLayer,
 				TestCheckpointerLayer,
 			);
 

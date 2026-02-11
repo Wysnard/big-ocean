@@ -42,7 +42,6 @@ export { AssessmentSessionRepository } from "./repositories/assessment-session.r
 export { CheckpointerRepository } from "./repositories/checkpointer.repository";
 export { CostGuardRepository } from "./repositories/cost-guard.repository";
 export { FacetEvidenceRepository } from "./repositories/facet-evidence.repository";
-export { FacetScoreRepository } from "./repositories/facet-score.repository";
 export {
 	type LoggerMethods,
 	LoggerRepository,
@@ -76,12 +75,6 @@ export {
 	RedisOperationError,
 	RedisRepository,
 } from "./repositories/redis.repository";
-export {
-	InsufficientEvidenceError,
-	ScorerError,
-	ScorerRepository,
-} from "./repositories/scorer.repository";
-export { TraitScoreRepository } from "./repositories/trait-score.repository";
 // Agent response schemas for structured LLM output (Story 2.4, Task 13)
 export {
 	type AnalyzerResponse,
@@ -142,6 +135,7 @@ export { BIG_FIVE_TRAITS } from "./types/trait";
 export { getNextDayMidnightUTC, getUTCDateKey } from "./utils/date.utils";
 // Utility functions
 export {
+	aggregateFacetScores,
 	calculateConfidenceFromFacetScores,
 	calculateOverallConfidence,
 	createInitialFacetScoresMap,
@@ -149,6 +143,7 @@ export {
 	DEFAULT_FACET_CONFIDENCE,
 	DEFAULT_FACET_SCORE,
 	DEFAULT_TRAIT_SCORE,
+	deriveTraitScores,
 	deriveTraitSummary,
 	extract4LetterCode,
 	generateOceanCode,

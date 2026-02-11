@@ -9,22 +9,21 @@
  * - Test user (if doesn't exist)
  * - Completed assessment session
  * - Realistic conversation messages (12 messages)
- * - Facet scores with high confidence (all 30 facets)
- * - Trait scores derived from facets
- * - Facet evidence with highlights
+ * - Facet evidence with highlights (scores computed on-demand from evidence)
  *
  * Output: Prints session ID that can be used to navigate to /assessment/{sessionId}/results
+ *
+ * Story 2.9: facet_scores and trait_scores tables removed.
+ * Scores are now computed on-demand from facet_evidence via pure functions.
  */
 
 import "dotenv/config"; // Load .env file
-import type { FacetName, TraitName } from "@workspace/domain";
-import { ALL_FACETS, BIG_FIVE_TRAITS } from "@workspace/domain";
+import type { FacetName } from "@workspace/domain";
 import { AppConfigLive, Database, DatabaseStack, dbSchema } from "@workspace/infrastructure";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 
-const { assessmentMessage, assessmentSession, facetEvidence, facetScores, traitScores, user } =
-	dbSchema;
+const { assessmentMessage, assessmentSession, facetEvidence, user } = dbSchema;
 
 const TEST_USER_EMAIL = "test@bigocean.dev";
 const TEST_USER_ID = "00000000-0000-4000-a000-000000000001";
@@ -135,43 +134,6 @@ const FACET_SCORE_MAP: Record<FacetName, number> = {
 	self_consciousness: 12,
 	immoderation: 8,
 	vulnerability: 10,
-};
-
-// Map facets to traits for score calculation
-const TRAIT_FACET_MAP: Record<TraitName, FacetName[]> = {
-	openness: [
-		"imagination",
-		"artistic_interests",
-		"emotionality",
-		"adventurousness",
-		"intellect",
-		"liberalism",
-	],
-	conscientiousness: [
-		"self_efficacy",
-		"orderliness",
-		"dutifulness",
-		"achievement_striving",
-		"self_discipline",
-		"cautiousness",
-	],
-	extraversion: [
-		"friendliness",
-		"gregariousness",
-		"assertiveness",
-		"activity_level",
-		"excitement_seeking",
-		"cheerfulness",
-	],
-	agreeableness: ["trust", "morality", "altruism", "cooperation", "modesty", "sympathy"],
-	neuroticism: [
-		"anxiety",
-		"anger",
-		"depression",
-		"self_consciousness",
-		"immoderation",
-		"vulnerability",
-	],
 };
 
 // Evidence quotes mapping to facets
@@ -311,13 +273,6 @@ const seedProgram = Effect.gen(function* () {
 		.values({
 			userId,
 			status: "completed",
-			confidence: ALL_FACETS.reduce(
-				(acc, facet) => ({
-					...acc,
-					[facet]: 85, // High confidence (85%)
-				}),
-				{},
-			),
 			messageCount: CONVERSATION_MESSAGES.length,
 		})
 		.returning()
@@ -343,41 +298,8 @@ const seedProgram = Effect.gen(function* () {
 		console.log(`  ${index + 1}. ${msg.role}: ${msg.content.substring(0, 60)}...`);
 	}
 
-	// 4. Insert facet scores
-	console.log("\n🎯 Inserting facet scores...");
-	for (const facet of ALL_FACETS) {
-		yield* db
-			.insert(facetScores)
-			.values({
-				sessionId: session.id,
-				facetName: facet,
-				score: FACET_SCORE_MAP[facet],
-				confidence: 85, // High confidence
-			})
-			.pipe(Effect.mapError((error) => new Error(`Failed to insert facet score: ${error}`)));
-	}
-	console.log(`✓ Inserted ${ALL_FACETS.length} facet scores`);
-
-	// 5. Insert trait scores (derived from facets)
-	console.log("\n🏆 Calculating and inserting trait scores...");
-	for (const trait of BIG_FIVE_TRAITS) {
-		const facets = TRAIT_FACET_MAP[trait];
-		const traitScore = Math.round(
-			facets.reduce((sum, facet) => sum + FACET_SCORE_MAP[facet], 0) / facets.length,
-		);
-		yield* db
-			.insert(traitScores)
-			.values({
-				sessionId: session.id,
-				traitName: trait,
-				score: traitScore,
-				confidence: 85, // High confidence
-			})
-			.pipe(Effect.mapError((error) => new Error(`Failed to insert trait score: ${error}`)));
-		console.log(`  ${trait}: ${traitScore}/20`);
-	}
-
-	// 6. Insert facet evidence with highlights
+	// 4. Insert facet evidence with highlights
+	// (Scores are computed on-demand from evidence via pure functions)
 	console.log("\n🔍 Inserting facet evidence...");
 	let evidenceCount = 0;
 	for (const [facet, evidenceList] of Object.entries(EVIDENCE_QUOTES)) {
@@ -403,7 +325,7 @@ const seedProgram = Effect.gen(function* () {
 	}
 	console.log(`✓ Inserted ${evidenceCount} pieces of facet evidence`);
 
-	// 7. Print summary
+	// 5. Print summary
 	console.log("\n✨ Seed completed successfully!\n");
 	console.log("=".repeat(60));
 	console.log("SESSION DETAILS");
@@ -412,8 +334,6 @@ const seedProgram = Effect.gen(function* () {
 	console.log(`User: ${TEST_USER_EMAIL}`);
 	console.log(`Status: ${session.status}`);
 	console.log(`Messages: ${CONVERSATION_MESSAGES.length}`);
-	console.log(`Facet Scores: ${ALL_FACETS.length}`);
-	console.log(`Trait Scores: ${BIG_FIVE_TRAITS.length}`);
 	console.log(`Evidence Records: ${evidenceCount}`);
 	console.log("=".repeat(60));
 	console.log("\n🔗 Quick Test URLs:");

@@ -17,3 +17,4 @@ export {
 } from "./confidence";
 export { deriveTraitSummary } from "./derive-trait-summary";
 export { generateOceanCode } from "./ocean-code-generator";
+export { aggregateFacetScores, deriveTraitScores } from "./scoring";

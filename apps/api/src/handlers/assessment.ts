@@ -11,7 +11,12 @@
 
 import { HttpApiBuilder } from "@effect/platform";
 import { AgentInvocationError, BigOceanApi, DatabaseError } from "@workspace/contracts";
-import { BudgetPausedError, OrchestrationError, RedisOperationError } from "@workspace/domain";
+import {
+	BudgetPausedError,
+	type FacetEvidencePersistenceError,
+	OrchestrationError,
+	RedisOperationError,
+} from "@workspace/domain";
 import { DateTime, Effect } from "effect";
 import { getResults, resumeSession, sendMessage, startAssessment } from "../use-cases/index";
 
@@ -72,6 +77,13 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 								}),
 							),
 						),
+						Effect.catchTag("FacetEvidencePersistenceError", (error: FacetEvidencePersistenceError) =>
+							Effect.fail(
+								new DatabaseError({
+									message: `Evidence retrieval failed: ${error.message}`,
+								}),
+							),
+						),
 					);
 
 					// Format HTTP response
@@ -83,8 +95,16 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 			)
 			.handle("getResults", ({ path: { sessionId } }) =>
 				Effect.gen(function* () {
-					// Call use case - errors propagate directly to HTTP
-					const result = yield* getResults({ sessionId });
+					// Call use case - map infrastructure errors to contract errors
+					const result = yield* getResults({ sessionId }).pipe(
+						Effect.catchTag("FacetEvidencePersistenceError", (error: FacetEvidencePersistenceError) =>
+							Effect.fail(
+								new DatabaseError({
+									message: `Evidence retrieval failed: ${error.message}`,
+								}),
+							),
+						),
+					);
 
 					// Format HTTP response per AC-5 contract
 					return {
@@ -112,8 +132,16 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 			)
 			.handle("resumeSession", ({ path: { sessionId } }) =>
 				Effect.gen(function* () {
-					// Call use case - errors propagate directly to HTTP
-					const result = yield* resumeSession({ sessionId });
+					// Call use case - map infrastructure errors to contract errors
+					const result = yield* resumeSession({ sessionId }).pipe(
+						Effect.catchTag("FacetEvidencePersistenceError", (error: FacetEvidencePersistenceError) =>
+							Effect.fail(
+								new DatabaseError({
+									message: `Evidence retrieval failed: ${error.message}`,
+								}),
+							),
+						),
+					);
 
 					// Format HTTP response
 					return {

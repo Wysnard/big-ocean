@@ -23,12 +23,9 @@ import {
 	CostGuardRedisRepositoryLive,
 	DatabaseStack,
 	FacetEvidenceDrizzleRepositoryLive,
-	FacetScoreDrizzleRepositoryLive,
 	OrchestratorGraphLangGraphRepositoryLive,
 	OrchestratorLangGraphRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
-	ScorerDrizzleRepositoryLive,
-	TraitScoreDrizzleRepositoryLive,
 } from "@workspace/infrastructure";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
@@ -93,12 +90,12 @@ const CostGuardLayer = CostGuardRedisRepositoryLive.pipe(
 );
 
 /**
- * Agent Layers - Nerin, Analyzer, Scorer for orchestration
+ * Agent Layers - Nerin, Analyzer, Evidence for orchestration
  */
 const AgentLayers = Layer.mergeAll(
 	NerinAgentLayer,
 	AnalyzerClaudeRepositoryLive,
-	ScorerDrizzleRepositoryLive,
+	FacetEvidenceDrizzleRepositoryLive,
 ).pipe(Layer.provide(InfrastructureLayer));
 
 /**
@@ -127,10 +124,7 @@ const RepositoryLayers = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
 	AssessmentMessageDrizzleRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
-	ScorerDrizzleRepositoryLive,
-	FacetScoreDrizzleRepositoryLive,
 	FacetEvidenceDrizzleRepositoryLive,
-	TraitScoreDrizzleRepositoryLive,
 	NerinAgentLayer,
 	CostGuardLayer,
 	OrchestratorLayer,

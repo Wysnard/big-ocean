@@ -4,20 +4,20 @@
  * Tests for aggregating facet evidence and deriving trait scores.
  * Follows TDD: RED → GREEN → REFACTOR
  *
- * @see packages/domain/src/repositories/scorer.repository.ts
+ * @see packages/domain/src/utils/scoring.ts
  */
 
 import { it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { describe, expect, vi } from "vitest";
 
-vi.mock("@workspace/infrastructure/repositories/scorer.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/facet-evidence.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 
+import { FacetEvidenceDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/facet-evidence.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
-import { ScorerDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/scorer.drizzle.repository";
 
-const TestLayer = Layer.mergeAll(ScorerDrizzleRepositoryLive, LoggerPinoRepositoryLive);
+const TestLayer = Layer.mergeAll(FacetEvidenceDrizzleRepositoryLive, LoggerPinoRepositoryLive);
 
 import {
 	shouldTriggerScoring,

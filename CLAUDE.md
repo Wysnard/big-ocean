@@ -226,7 +226,7 @@ See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full examples.
 
 ### Multi-Agent System (LangGraph)
 
-**Architecture:** Orchestrator → Nerin (conversational) → Analyzer + Scorer (batch every 3 msgs)
+**Architecture:** Orchestrator → Nerin (conversational) → Analyzer (batch every 3 msgs) → Scores computed on-demand from evidence
 
 **Big Five Framework:** 5 traits × 6 facets = 30 facets total
 - Constants: `packages/domain/src/constants/big-five.ts`
@@ -244,7 +244,7 @@ See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full examples.
 OrchestratorRepository (pure Effect, no bridging)
     └── OrchestratorGraphRepository (bridges Effect → LangGraph async internally)
             └── CheckpointerRepository (PostgresSaver or MemorySaver)
-            └── NerinAgentRepository, AnalyzerRepository, ScorerRepository
+            └── NerinAgentRepository, AnalyzerRepository, FacetEvidenceRepository
 ```
 - Bridge logic (Effect.runPromise) is **internal** to `OrchestratorGraphLangGraphRepositoryLive`
 - External code only sees Effect-based APIs - no `OrchestratorDependencies` interface exposed
@@ -256,7 +256,7 @@ OrchestratorRepository (pure Effect, no bridging)
    - Generates natural language `steeringHint` from facet target (e.g., "Explore how they organize their space...")
    - **Nerin receives both `facetScores` and `steeringHint`** for precise conversation guidance
 3. **Always Route to Nerin** - Every message gets conversational response with facet-level context
-4. **Batch Trigger** - Every 3rd message (`messageCount % 3 === 0`) runs Analyzer + Scorer
+4. **Batch Trigger** - Every 3rd message (`messageCount % 3 === 0`) runs Analyzer → saves evidence → scores computed on-demand
 
 **Error Types:**
 - `BudgetPausedError` - Assessment paused, resume next day (includes `resumeAfter` timestamp)
@@ -286,7 +286,7 @@ nerinAgent.invoke({
 - **Input:** Use-case provides `facetScores` (30 facets)
 - **Steering:** Router calculates single weakest outlier facet
 - **Nerin:** Receives facet-level context for natural conversation
-- **Output:** Scorer transforms `facetScores` → `traitScores` for user display
+- **Output:** Pure functions (`aggregateFacetScores`, `deriveTraitScores`) compute scores from evidence on-demand
 
 **Use-Case Integration:**
 ```typescript

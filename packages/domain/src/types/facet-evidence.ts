@@ -78,11 +78,11 @@ export interface SavedFacetEvidence extends FacetEvidence {
  * Facet Score Value (Aggregated from Evidence)
  *
  * Represents an aggregated score for a single facet across multiple messages.
- * Computed by the Scorer using weighted averaging with recency bias and
- * contradiction detection via variance analysis.
+ * Computed on-demand via aggregateFacetScores() using weighted averaging with
+ * recency bias and contradiction detection via variance analysis.
  *
- * Storage: facet_scores table (one row per session-facet pair, updated every 3 messages)
- * Lifecycle: Created/updated during aggregation, replaces previous value
+ * Computed on-demand: No persistent storage - derived at query time from facet_evidence
+ * @see packages/domain/src/utils/scoring.ts
  *
  * Note: facetName is stored as the map key, not in the value itself.
  */
@@ -124,8 +124,8 @@ export interface FacetScore {
  * Represents a Big Five trait score derived from its 6 constituent facet scores.
  * Each trait score is the sum of its related facets (0-120 scale).
  *
- * Storage: trait_scores table (one row per session-trait pair, updated with facet scores)
- * Lifecycle: Created/updated when facet scores are aggregated, replaces previous value
+ * Computed on-demand: No persistent storage - derived at query time via deriveTraitScores()
+ * @see packages/domain/src/utils/scoring.ts
  *
  * Note: traitName is stored as the map key, not in the value itself.
  */
@@ -156,7 +156,7 @@ export interface TraitScore {
  *
  * Complete map of all 30 facet scores.
  * Always initialized with all facets (default: score=10, confidence=0).
- * Used by the Scorer to return aggregated results.
+ * Returned by aggregateFacetScores() from evidence records.
  */
 export type FacetScoresMap = Record<FacetName, FacetScore>;
 
@@ -165,6 +165,6 @@ export type FacetScoresMap = Record<FacetName, FacetScore>;
  *
  * Complete map of all 5 trait scores.
  * Always initialized with all traits (default: score=60, confidence=0).
- * Used by the Scorer to return derived trait results.
+ * Returned by deriveTraitScores() from facet scores.
  */
 export type TraitScoresMap = Record<TraitName, TraitScore>;

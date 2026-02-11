@@ -13,16 +13,11 @@ import {
 	AssessmentSessionRepository,
 	BIG_FIVE_TRAITS,
 	type BigFiveTrait,
-	createInitialFacetScoresMap,
-	createInitialTraitScoresMap,
+	FacetEvidenceRepository,
 	type FacetName,
-	FacetScoreRepository,
-	type FacetScoresMap,
-	initializeFacetConfidence,
 	LoggerRepository,
+	type SavedFacetEvidence,
 	SessionNotFound,
-	TraitScoreRepository,
-	type TraitScoresMap,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -35,72 +30,98 @@ import { getResults } from "../get-results.use-case";
 const TEST_SESSION_ID = "session_test_results_123";
 
 /**
- * Create facet scores where all facets for a trait have the same score/confidence
+ * Trait-to-facets mapping for helper functions
  */
-function createUniformFacetScores(
-	traitScores: Record<BigFiveTrait, { facetScore: number; confidence: number }>,
-): FacetScoresMap {
-	const map = createInitialFacetScoresMap();
-	const traitFacets: Record<BigFiveTrait, FacetName[]> = {
-		openness: [
-			"imagination",
-			"artistic_interests",
-			"emotionality",
-			"adventurousness",
-			"intellect",
-			"liberalism",
-		],
-		conscientiousness: [
-			"self_efficacy",
-			"orderliness",
-			"dutifulness",
-			"achievement_striving",
-			"self_discipline",
-			"cautiousness",
-		],
-		extraversion: [
-			"friendliness",
-			"gregariousness",
-			"assertiveness",
-			"activity_level",
-			"excitement_seeking",
-			"cheerfulness",
-		],
-		agreeableness: ["trust", "morality", "altruism", "cooperation", "modesty", "sympathy"],
-		neuroticism: [
-			"anxiety",
-			"anger",
-			"depression",
-			"self_consciousness",
-			"immoderation",
-			"vulnerability",
-		],
+const TRAIT_FACETS: Record<BigFiveTrait, FacetName[]> = {
+	openness: [
+		"imagination",
+		"artistic_interests",
+		"emotionality",
+		"adventurousness",
+		"intellect",
+		"liberalism",
+	],
+	conscientiousness: [
+		"self_efficacy",
+		"orderliness",
+		"dutifulness",
+		"achievement_striving",
+		"self_discipline",
+		"cautiousness",
+	],
+	extraversion: [
+		"friendliness",
+		"gregariousness",
+		"assertiveness",
+		"activity_level",
+		"excitement_seeking",
+		"cheerfulness",
+	],
+	agreeableness: ["trust", "morality", "altruism", "cooperation", "modesty", "sympathy"],
+	neuroticism: [
+		"anxiety",
+		"anger",
+		"depression",
+		"self_consciousness",
+		"immoderation",
+		"vulnerability",
+	],
+};
+
+/**
+ * Create a SavedFacetEvidence record for a single facet.
+ *
+ * With a single evidence item per facet, the aggregateFacetScores function
+ * will return exactly the input score and confidence (no averaging needed).
+ */
+function createEvidenceRecord(
+	facetName: FacetName,
+	score: number,
+	confidence: number,
+	messageIndex = 0,
+): SavedFacetEvidence {
+	return {
+		id: `evidence_${facetName}_${messageIndex}`,
+		assessmentMessageId: `msg_${messageIndex}`,
+		facetName,
+		score,
+		confidence,
+		quote: `Test quote for ${facetName}`,
+		highlightRange: { start: 0, end: 20 },
+		createdAt: new Date(Date.now() + messageIndex * 1000), // Ensure ordering
 	};
-
-	for (const [trait, config] of Object.entries(traitScores)) {
-		const facets = traitFacets[trait as BigFiveTrait];
-		for (const facet of facets) {
-			map[facet] = { score: config.facetScore, confidence: config.confidence };
-		}
-	}
-
-	return map;
 }
 
 /**
- * Create trait scores from uniform facet scores (sum of 6 facets per trait)
+ * Create evidence records that will produce uniform facet scores per trait.
+ *
+ * For each trait, creates one evidence record per facet with the specified score and confidence.
+ * When processed by aggregateFacetScores(), this produces facetScore = score, confidence = confidence.
  */
-function createUniformTraitScores(
-	traitConfigs: Record<BigFiveTrait, { facetScore: number; confidence: number }>,
-): TraitScoresMap {
-	const map = createInitialTraitScoresMap();
-	for (const [trait, config] of Object.entries(traitConfigs)) {
-		map[trait as BigFiveTrait] = {
-			score: config.facetScore * 6, // Sum of 6 facets
-			confidence: config.confidence,
-		};
+function createEvidenceForUniformScores(
+	traitScores: Record<BigFiveTrait, { facetScore: number; confidence: number }>,
+): SavedFacetEvidence[] {
+	const evidence: SavedFacetEvidence[] = [];
+	let messageIndex = 0;
+
+	for (const [trait, config] of Object.entries(traitScores)) {
+		const facets = TRAIT_FACETS[trait as BigFiveTrait];
+		for (const facet of facets) {
+			evidence.push(createEvidenceRecord(facet, config.facetScore, config.confidence, messageIndex));
+			messageIndex++;
+		}
 	}
-	return map;
+
+	return evidence;
+}
+
+/**
+ * Create evidence for all 30 facets with the same score and confidence.
+ *
+ * Used for testing uniform confidence calculations.
+ */
+function createUniformEvidence(score: number, confidence: number): SavedFacetEvidence[] {
+	return ALL_FACETS.map((facet, idx) => createEvidenceRecord(facet, score, confidence, idx));
 }
 
 // ============================================
@@ -113,12 +134,11 @@ const mockSessionRepo = {
 	updateSession: vi.fn(),
 };
 
-const mockFacetScoreRepo = {
-	getBySession: vi.fn(),
-};
-
-const mockTraitScoreRepo = {
-	getBySession: vi.fn(),
+const mockEvidenceRepo = {
+	saveEvidence: vi.fn(),
+	getEvidenceByMessage: vi.fn(),
+	getEvidenceByFacet: vi.fn(),
+	getEvidenceBySession: vi.fn(),
 };
 
 const mockLogger = {
@@ -132,13 +152,13 @@ const mockLogger = {
 // Test Layer
 // ============================================
 
-const createTestLayer = () =>
-	Layer.mergeAll(
+function createTestLayer() {
+	return Layer.mergeAll(
 		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-		Layer.succeed(FacetScoreRepository, mockFacetScoreRepo),
-		Layer.succeed(TraitScoreRepository, mockTraitScoreRepo),
+		Layer.succeed(FacetEvidenceRepository, mockEvidenceRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
 	);
+}
 
 // ============================================
 // Tests
@@ -157,7 +177,6 @@ describe("getResults Use Case", () => {
 				createdAt: new Date(),
 				updatedAt: new Date(),
 				status: "active",
-				confidence: initializeFacetConfidence(50),
 				messageCount: 10,
 			}),
 		);
@@ -169,7 +188,7 @@ describe("getResults Use Case", () => {
 
 	describe("Success scenarios", () => {
 		it("should return correct archetype for known high facet scores", async () => {
-			// All High: facetScore=15/20 → traitScore=90/120 → level H → OCEAN code "HHHHH"
+			// All High: facetScore=15/20 -> traitScore=90/120 -> level H -> OCEAN code "HHHHH"
 			const allHigh = {
 				openness: { facetScore: 15, confidence: 80 },
 				conscientiousness: { facetScore: 15, confidence: 80 },
@@ -178,11 +197,8 @@ describe("getResults Use Case", () => {
 				neuroticism: { facetScore: 15, confidence: 80 },
 			};
 
-			mockFacetScoreRepo.getBySession.mockImplementation(() =>
-				Effect.succeed(createUniformFacetScores(allHigh)),
-			);
-			mockTraitScoreRepo.getBySession.mockImplementation(() =>
-				Effect.succeed(createUniformTraitScores(allHigh)),
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
+				Effect.succeed(createEvidenceForUniformScores(allHigh)),
 			);
 
 			const result = await Effect.runPromise(
@@ -208,11 +224,8 @@ describe("getResults Use Case", () => {
 				neuroticism: { facetScore: 3, confidence: 50 }, // 18/120 = L
 			};
 
-			mockFacetScoreRepo.getBySession.mockImplementation(() =>
-				Effect.succeed(createUniformFacetScores(mixed)),
-			);
-			mockTraitScoreRepo.getBySession.mockImplementation(() =>
-				Effect.succeed(createUniformTraitScores(mixed)),
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
+				Effect.succeed(createEvidenceForUniformScores(mixed)),
 			);
 
 			const result = await Effect.runPromise(
@@ -224,28 +237,15 @@ describe("getResults Use Case", () => {
 		});
 
 		it("should compute overall confidence as mean of all facet confidences", async () => {
-			// Set specific confidence pattern: 30 facets with varying confidence
-			const facetScores = createInitialFacetScoresMap();
-			let totalConfidence = 0;
+			// Set specific confidence pattern: 30 facets with uniform confidence
+			const uniformEvidence = createUniformEvidence(10, 60);
 
-			for (const facet of ALL_FACETS) {
-				const confidence = 60; // uniform for easy math
-				facetScores[facet] = { score: 10, confidence };
-				totalConfidence += confidence;
-			}
-
-			const expectedOverallConfidence = Math.round(totalConfidence / ALL_FACETS.length);
-
-			mockFacetScoreRepo.getBySession.mockImplementation(() => Effect.succeed(facetScores));
-			mockTraitScoreRepo.getBySession.mockImplementation(() =>
-				Effect.succeed(createInitialTraitScoresMap()),
-			);
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed(uniformEvidence));
 
 			const result = await Effect.runPromise(
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
 			);
 
-			expect(result.overallConfidence).toBe(expectedOverallConfidence);
 			expect(result.overallConfidence).toBe(60);
 		});
 
@@ -258,11 +258,8 @@ describe("getResults Use Case", () => {
 				neuroticism: { facetScore: 10, confidence: 50 },
 			};
 
-			mockFacetScoreRepo.getBySession.mockImplementation(() =>
-				Effect.succeed(createUniformFacetScores(allMid)),
-			);
-			mockTraitScoreRepo.getBySession.mockImplementation(() =>
-				Effect.succeed(createUniformTraitScores(allMid)),
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
+				Effect.succeed(createEvidenceForUniformScores(allMid)),
 			);
 
 			const result = await Effect.runPromise(
@@ -283,12 +280,8 @@ describe("getResults Use Case", () => {
 		});
 
 		it("should return 30 facets with correct structure", async () => {
-			mockFacetScoreRepo.getBySession.mockImplementation(() =>
-				Effect.succeed(createInitialFacetScoresMap()),
-			);
-			mockTraitScoreRepo.getBySession.mockImplementation(() =>
-				Effect.succeed(createInitialTraitScoresMap()),
-			);
+			// Empty evidence returns default scores (score=10, confidence=0)
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
 
 			const result = await Effect.runPromise(
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
@@ -318,11 +311,8 @@ describe("getResults Use Case", () => {
 				neuroticism: { facetScore: 20, confidence: 80 }, // 120/120 = H
 			};
 
-			mockFacetScoreRepo.getBySession.mockImplementation(() =>
-				Effect.succeed(createUniformFacetScores(boundaries)),
-			);
-			mockTraitScoreRepo.getBySession.mockImplementation(() =>
-				Effect.succeed(createUniformTraitScores(boundaries)),
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
+				Effect.succeed(createEvidenceForUniformScores(boundaries)),
 			);
 
 			const result = await Effect.runPromise(
@@ -347,11 +337,8 @@ describe("getResults Use Case", () => {
 				neuroticism: { facetScore: 15, confidence: 80 },
 			};
 
-			mockFacetScoreRepo.getBySession.mockImplementation(() =>
-				Effect.succeed(createUniformFacetScores(allHigh)),
-			);
-			mockTraitScoreRepo.getBySession.mockImplementation(() =>
-				Effect.succeed(createUniformTraitScores(allHigh)),
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
+				Effect.succeed(createEvidenceForUniformScores(allHigh)),
 			);
 
 			const result = await Effect.runPromise(
@@ -391,19 +378,14 @@ describe("getResults Use Case", () => {
 
 	describe("Default scores", () => {
 		it("should handle default facet scores (no evidence yet)", async () => {
-			// Default scores: all facets at score=10, confidence=0
-			mockFacetScoreRepo.getBySession.mockImplementation(() =>
-				Effect.succeed(createInitialFacetScoresMap()),
-			);
-			mockTraitScoreRepo.getBySession.mockImplementation(() =>
-				Effect.succeed(createInitialTraitScoresMap()),
-			);
+			// Empty evidence array -> all facets get default score=10, confidence=0
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
 
 			const result = await Effect.runPromise(
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
 			);
 
-			// Default facet score 10 × 6 = 60 per trait → all Mid
+			// Default facet score 10 x 6 = 60 per trait -> all Mid
 			expect(result.oceanCode5).toBe("MMMMM");
 			expect(result.overallConfidence).toBe(0); // All facets at confidence 0
 		});

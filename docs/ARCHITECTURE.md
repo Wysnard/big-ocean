@@ -413,18 +413,19 @@ The backend uses LangGraph to orchestrate multiple specialized agents via the **
       │ (batch every 3 msgs)│
       ▼                     ▼
 ┌──────────────┐   ┌──────────────┐
-│ Analyzer     │   │ Scorer       │
-│ - Extract    │   │ - Aggregate  │
-│   facet      │   │   facet      │
-│   evidence   │   │   scores     │
-│ - 30 facets  │   │ - Derive     │
-│              │   │   trait      │
+│ Analyzer     │   │ Pure Scoring │
+│ - Extract    │   │ (on-demand)  │
+│   facet      │   │ - Aggregate  │
+│   evidence   │   │   facet      │
+│ - 30 facets  │   │   scores     │
+│ - Save to    │   │ - Derive     │
+│   DB         │   │   trait      │
 │              │   │   scores     │
 └──────┬───────┘   └───────┬──────┘
        │                   │
        └───────┬───────────┘
                ▼
-      (update session precision)
+      (scores computed from evidence)
 ```
 
 **Orchestrator Repository Interface:**
@@ -445,7 +446,7 @@ export class OrchestratorRepository extends Context.Tag("OrchestratorRepository"
 
 1. **Single-Target Steering** - Pure outlier detection (`confidence < mean - stddev`) rather than arbitrary thresholds
 2. **Budget-First Pause** - Assessment pauses gracefully rather than degrading quality
-3. **Batch Processing** - Expensive operations (Analyzer, Scorer) only run every 3rd message
+3. **Batch Processing** - Analyzer runs every 3rd message; scores computed on-demand from evidence via pure functions
 4. **State Preservation** - `BudgetPausedError` includes `resumeAfter` timestamp and `currentPrecision`
 5. **Facet-Level Granularity** - Nerin operates on 30 facets, not 5 traits (traits are derived aggregates)
 
@@ -583,7 +584,6 @@ function buildSystemPrompt(facetScores?: FacetScoresMap, steeringHint?: string):
 │   └─ repositories/nerin-agent.repository.ts                         │
 │       - NerinAgentRepository (used internally by Orchestrator)      │
 │   └─ repositories/analyzer.repository.ts                            │
-│   └─ repositories/scorer.repository.ts                              │
 └─────────────────────────────────────────────────────────────────────┘
                               ▲
                               │ implements
@@ -595,7 +595,6 @@ function buildSystemPrompt(facetScores?: FacetScoresMap, steeringHint?: string):
 │       - LangGraph StateGraph for routing                            │
 │   └─ repositories/nerin-agent.langgraph.repository.ts               │
 │   └─ repositories/analyzer.claude.repository.ts                     │
-│   └─ repositories/scorer.drizzle.repository.ts                      │
 └─────────────────────────────────────────────────────────────────────┘
                               ▲
                               │ injected via Layer
@@ -676,7 +675,9 @@ const result = await Effect.runPromise(
 
 Type-safe database access using Drizzle ORM with PostgreSQL. Schema lives in `packages/infrastructure/src/db/schema.ts`.
 
-**Key Tables:** `assessment_session`, `assessment_message`, `facet_evidence`, `facet_scores`, `trait_scores`
+**Key Tables:** `assessment_session`, `assessment_message`, `facet_evidence`
+
+> **Note (Story 2-9):** `facet_scores` and `trait_scores` tables were removed. Scores are now computed on-demand from `facet_evidence` via pure functions (`aggregateFacetScores`, `deriveTraitScores`).
 
 See actual schema file for current table definitions.
 
