@@ -38,11 +38,14 @@ type Code4Letter =
 	| ExtraversionLetter
 	| AgreeablenessLetter;
 
+/** Lookup type keyed by any valid code4 letter */
+type LevelLookup<T> = Record<TraitKey, Record<Code4Letter, T>>;
+
 /**
  * Adjective pools for each trait at each level.
  * Used by the fallback generator to construct personality names.
  */
-const TRAIT_ADJECTIVES: Record<TraitKey, Record<string, string[]>> = {
+const TRAIT_ADJECTIVES = {
 	O: {
 		O: ["Creative", "Curious", "Imaginative"],
 		G: ["Balanced", "Pragmatic"],
@@ -103,7 +106,7 @@ const TRAIT_DESCRIPTIONS: Record<TraitKey, Record<string, string>> = {
 /**
  * Base RGB colors per trait level for deterministic color generation.
  */
-const TRAIT_COLORS: Record<TraitKey, Record<string, [number, number, number]>> = {
+const TRAIT_COLORS = {
 	O: { O: [74, 144, 226], G: [128, 128, 128], P: [200, 180, 140] },
 	C: { D: [46, 139, 87], B: [128, 128, 128], F: [210, 150, 80] },
 	E: { E: [255, 165, 0], A: [128, 128, 128], I: [100, 100, 180] },
@@ -152,12 +155,12 @@ const generateArchetypeName = (levels: Code4Tuple): string => {
 	}
 
 	const primaryTrait = TRAIT_ORDER[primaryIdx] as TraitKey;
-	const primaryLevel = levels[primaryIdx] as string;
-	const adjectives = TRAIT_ADJECTIVES[primaryTrait][primaryLevel];
+	const primaryLevel = levels[primaryIdx] as Code4Letter;
+	const adjectives = (TRAIT_ADJECTIVES as LevelLookup<string[]>)[primaryTrait][primaryLevel];
 	const adjective = adjectives[0]; // deterministic: always first
 
-	const aLevel = levels[3] as string; // Agreeableness is 4th position
-	const noun = AGREEABLENESS_NOUNS[aLevel];
+	const aLevel = levels[3]; // Agreeableness is 4th position
+	const noun = AGREEABLENESS_NOUNS[aLevel as string];
 
 	return `${adjective} ${noun}`;
 };
@@ -172,13 +175,14 @@ const generateDescription = (levels: Code4Tuple): string => {
 	const sentences: string[] = [];
 
 	// First sentence: combine O and C descriptions
-	const oDesc = TRAIT_DESCRIPTIONS.O[levels[0] as string];
-	const cDesc = TRAIT_DESCRIPTIONS.C[levels[1] as string];
+	const descs = TRAIT_DESCRIPTIONS as LevelLookup<string>;
+	const oDesc = descs.O[levels[0]];
+	const cDesc = descs.C[levels[1]];
 	sentences.push(`Someone who ${oDesc} and ${cDesc}.`);
 
 	// Second sentence: combine E and A descriptions
-	const eDesc = TRAIT_DESCRIPTIONS.E[levels[2] as string];
-	const aDesc = TRAIT_DESCRIPTIONS.A[levels[3] as string];
+	const eDesc = descs.E[levels[2]];
+	const aDesc = descs.A[levels[3]];
 	sentences.push(`This person ${eDesc} and ${aDesc}.`);
 
 	return sentences.join(" ");
@@ -197,8 +201,8 @@ const generateColor = (levels: Code4Tuple): string => {
 
 	for (let i = 0; i < 4; i++) {
 		const trait = TRAIT_ORDER[i] as TraitKey;
-		const level = levels[i] as string;
-		const [tr, tg, tb] = TRAIT_COLORS[trait][level];
+		const level = levels[i] as Code4Letter;
+		const [tr, tg, tb] = (TRAIT_COLORS as LevelLookup<[number, number, number]>)[trait][level];
 		r += tr;
 		g += tg;
 		b += tb;

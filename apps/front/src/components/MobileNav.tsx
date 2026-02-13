@@ -55,7 +55,7 @@ export function MobileNav() {
 				<SheetContent side="right" showCloseButton>
 					<SheetHeader>
 						<SheetTitle>
-							<span className="text-xl font-bold bg-[image:var(--gradient-ocean)] bg-clip-text text-transparent">
+							<span className="text-xl font-bold bg-[image:var(--gradient-celebration)] bg-clip-text text-transparent">
 								Big Ocean
 							</span>
 						</SheetTitle>

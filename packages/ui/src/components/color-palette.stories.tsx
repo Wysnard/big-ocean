@@ -8,15 +8,20 @@ const SEMANTIC_TOKENS = [
 	{ label: "Popover", var: "--popover" },
 	{ label: "Popover Foreground", var: "--popover-foreground" },
 	{ label: "Primary", var: "--primary" },
+	{ label: "Primary Hover", var: "--primary-hover" },
 	{ label: "Primary Foreground", var: "--primary-foreground" },
 	{ label: "Secondary", var: "--secondary" },
 	{ label: "Secondary Foreground", var: "--secondary-foreground" },
+	{ label: "Tertiary", var: "--tertiary" },
+	{ label: "Tertiary Foreground", var: "--tertiary-foreground" },
 	{ label: "Accent", var: "--accent" },
 	{ label: "Accent Foreground", var: "--accent-foreground" },
 	{ label: "Muted", var: "--muted" },
 	{ label: "Muted Foreground", var: "--muted-foreground" },
 	{ label: "Destructive", var: "--destructive" },
 	{ label: "Destructive Foreground", var: "--destructive-foreground" },
+	{ label: "Success", var: "--success" },
+	{ label: "Warning", var: "--warning" },
 	{ label: "Border", var: "--border" },
 	{ label: "Input", var: "--input" },
 	{ label: "Ring", var: "--ring" },
@@ -108,9 +113,9 @@ const SIDEBAR_TOKENS = [
 ] as const;
 
 const GRADIENT_TOKENS = [
-	{ label: "Ocean Gradient", var: "--gradient-ocean" },
-	{ label: "Ocean Subtle", var: "--gradient-ocean-subtle" },
-	{ label: "Ocean Radial", var: "--gradient-ocean-radial" },
+	{ label: "Celebration", var: "--gradient-celebration" },
+	{ label: "Progress", var: "--gradient-progress" },
+	{ label: "Surface Glow", var: "--gradient-surface-glow" },
 	{ label: "Trait Gradient: Openness", var: "--gradient-trait-openness" },
 	{
 		label: "Trait Gradient: Conscientiousness",
@@ -119,6 +124,29 @@ const GRADIENT_TOKENS = [
 	{ label: "Trait Gradient: Extraversion", var: "--gradient-trait-extraversion" },
 	{ label: "Trait Gradient: Agreeableness", var: "--gradient-trait-agreeableness" },
 	{ label: "Trait Gradient: Neuroticism", var: "--gradient-trait-neuroticism" },
+] as const;
+
+const SPACING_TOKENS = [
+	{ label: "Space 1 (4px)", var: "--space-1" },
+	{ label: "Space 2 (8px)", var: "--space-2" },
+	{ label: "Space 3 (12px)", var: "--space-3" },
+	{ label: "Space 4 (16px)", var: "--space-4" },
+	{ label: "Space 6 (24px)", var: "--space-6" },
+	{ label: "Space 8 (32px)", var: "--space-8" },
+	{ label: "Space 12 (48px)", var: "--space-12" },
+	{ label: "Space 16 (64px)", var: "--space-16" },
+	{ label: "Space 24 (96px)", var: "--space-24" },
+] as const;
+
+const RADIUS_TOKENS = [
+	{ label: "Button (12px)", var: "--radius-button" },
+	{ label: "Input (12px)", var: "--radius-input" },
+	{ label: "Card (16px)", var: "--radius-card" },
+	{ label: "Dialog (24px)", var: "--radius-dialog" },
+	{ label: "Hero (32px)", var: "--radius-hero" },
+	{ label: "Full (9999px)", var: "--radius-full" },
+	{ label: "Chat Bubble (16px)", var: "--radius-chat-bubble" },
+	{ label: "Chat Sender (4px)", var: "--radius-chat-sender" },
 ] as const;
 
 function Swatch({ label, cssVar }: { label: string; cssVar: string }) {
@@ -186,6 +214,65 @@ function GradientBand({ label, cssVar }: { label: string; cssVar: string }) {
 	);
 }
 
+function SpacingBar({ label, cssVar }: { label: string; cssVar: string }) {
+	return (
+		<div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+			<div
+				style={{
+					width: `var(${cssVar})`,
+					height: 24,
+					borderRadius: 4,
+					backgroundColor: "var(--primary)",
+					opacity: 0.6,
+					flexShrink: 0,
+					minWidth: 4,
+				}}
+			/>
+			<div>
+				<div style={{ fontWeight: 600, fontSize: 13, color: "var(--foreground)" }}>{label}</div>
+				<div
+					style={{
+						fontSize: 11,
+						fontFamily: "monospace",
+						color: "var(--muted-foreground)",
+					}}
+				>
+					{cssVar}
+				</div>
+			</div>
+		</div>
+	);
+}
+
+function RadiusBox({ label, cssVar }: { label: string; cssVar: string }) {
+	return (
+		<div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+			<div
+				style={{
+					width: 48,
+					height: 48,
+					borderRadius: `var(${cssVar})`,
+					border: "2px solid var(--primary)",
+					backgroundColor: "var(--card)",
+					flexShrink: 0,
+				}}
+			/>
+			<div>
+				<div style={{ fontWeight: 600, fontSize: 13, color: "var(--foreground)" }}>{label}</div>
+				<div
+					style={{
+						fontSize: 11,
+						fontFamily: "monospace",
+						color: "var(--muted-foreground)",
+					}}
+				>
+					{cssVar}
+				</div>
+			</div>
+		</div>
+	);
+}
+
 function SwatchGrid({ tokens }: { tokens: ReadonlyArray<{ label: string; var: string }> }) {
 	return (
 		<div
@@ -202,8 +289,27 @@ function SwatchGrid({ tokens }: { tokens: ReadonlyArray<{ label: string; var: st
 	);
 }
 
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+	return (
+		<section style={{ marginBottom: 32 }}>
+			<h2
+				style={{
+					fontSize: 16,
+					fontWeight: 600,
+					marginBottom: 16,
+					borderBottom: "1px solid var(--border)",
+					paddingBottom: 8,
+				}}
+			>
+				{title}
+			</h2>
+			{children}
+		</section>
+	);
+}
+
 function ColorPalette({ mode }: { mode: "light" | "dark" }) {
-	const title = mode === "light" ? "Coral Reef (Light Mode)" : "Moonlit Navy (Dark Mode)";
+	const title = mode === "light" ? "Psychedelic Celebration (Light)" : "Abyss Deep-Ocean (Dark)";
 
 	return (
 		<div
@@ -233,67 +339,23 @@ function ColorPalette({ mode }: { mode: "light" | "dark" }) {
 				}}
 			>
 				{mode === "light"
-					? "Saturated coral-pink, ocean teal, and vivid orange — a coral reef in sunlight"
-					: "Saturated navy with teal-blue and golden moonlight — the ocean after sunset"}
+					? "Electric Pink, Vivid Orange, Saturated Teal — bold, warm, psychedelic"
+					: "Saturated Teal, Rich Gold, Hot Pink on Abyss Navy — the deep ocean at night"}
 			</p>
 
-			<section style={{ marginBottom: 32 }}>
-				<h2
-					style={{
-						fontSize: 16,
-						fontWeight: 600,
-						marginBottom: 16,
-						borderBottom: "1px solid var(--border)",
-						paddingBottom: 8,
-					}}
-				>
-					Core Semantic Tokens
-				</h2>
+			<Section title="Core Semantic Tokens">
 				<SwatchGrid tokens={SEMANTIC_TOKENS} />
-			</section>
+			</Section>
 
-			<section style={{ marginBottom: 32 }}>
-				<h2
-					style={{
-						fontSize: 16,
-						fontWeight: 600,
-						marginBottom: 16,
-						borderBottom: "1px solid var(--border)",
-						paddingBottom: 8,
-					}}
-				>
-					Chart Palette
-				</h2>
+			<Section title="Chart Palette">
 				<SwatchGrid tokens={CHART_TOKENS} />
-			</section>
+			</Section>
 
-			<section style={{ marginBottom: 32 }}>
-				<h2
-					style={{
-						fontSize: 16,
-						fontWeight: 600,
-						marginBottom: 16,
-						borderBottom: "1px solid var(--border)",
-						paddingBottom: 8,
-					}}
-				>
-					Big Five Trait Tokens
-				</h2>
+			<Section title="Big Five Trait Tokens">
 				<SwatchGrid tokens={TRAIT_TOKENS} />
-			</section>
+			</Section>
 
-			<section style={{ marginBottom: 32 }}>
-				<h2
-					style={{
-						fontSize: 16,
-						fontWeight: 600,
-						marginBottom: 16,
-						borderBottom: "1px solid var(--border)",
-						paddingBottom: 8,
-					}}
-				>
-					Big Five Facet Tokens
-				</h2>
+			<Section title="Big Five Facet Tokens">
 				<div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 					{FACET_TOKEN_GROUPS.map((group) => (
 						<div key={group.title}>
@@ -311,41 +373,41 @@ function ColorPalette({ mode }: { mode: "light" | "dark" }) {
 						</div>
 					))}
 				</div>
-			</section>
+			</Section>
 
-			<section style={{ marginBottom: 32 }}>
-				<h2
-					style={{
-						fontSize: 16,
-						fontWeight: 600,
-						marginBottom: 16,
-						borderBottom: "1px solid var(--border)",
-						paddingBottom: 8,
-					}}
-				>
-					Sidebar Tokens
-				</h2>
+			<Section title="Sidebar Tokens">
 				<SwatchGrid tokens={SIDEBAR_TOKENS} />
-			</section>
+			</Section>
 
-			<section>
-				<h2
-					style={{
-						fontSize: 16,
-						fontWeight: 600,
-						marginBottom: 16,
-						borderBottom: "1px solid var(--border)",
-						paddingBottom: 8,
-					}}
-				>
-					Gradients
-				</h2>
+			<Section title="Gradients">
 				<div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 					{GRADIENT_TOKENS.map((token) => (
 						<GradientBand key={token.var} label={token.label} cssVar={token.var} />
 					))}
 				</div>
-			</section>
+			</Section>
+
+			<Section title="Spacing Scale">
+				<div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+					{SPACING_TOKENS.map((token) => (
+						<SpacingBar key={token.var} label={token.label} cssVar={token.var} />
+					))}
+				</div>
+			</Section>
+
+			<Section title="Radius Scale">
+				<div
+					style={{
+						display: "grid",
+						gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+						gap: 16,
+					}}
+				>
+					{RADIUS_TOKENS.map((token) => (
+						<RadiusBox key={token.var} label={token.label} cssVar={token.var} />
+					))}
+				</div>
+			</Section>
 		</div>
 	);
 }
@@ -362,15 +424,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const CoralReefLight: Story = {
-	name: "Coral Reef (Light)",
+export const PsychedelicCelebrationLight: Story = {
+	name: "Psychedelic Celebration (Light)",
 	args: {
 		mode: "light",
 	},
 };
 
-export const MoonlitNavyDark: Story = {
-	name: "Moonlit Navy (Dark)",
+export const AbyssDeepOceanDark: Story = {
+	name: "Abyss Deep-Ocean (Dark)",
 	args: {
 		mode: "dark",
 	},

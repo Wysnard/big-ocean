@@ -48,7 +48,7 @@ export function ArchetypeTeaserSection() {
 				{/* Blurred mystery card */}
 				<div className="relative mx-auto inline-block">
 					<div className="w-72 rounded-xl border border-border bg-card p-6 blur-sm">
-						<div className="mx-auto mb-4 h-16 w-16 rounded-full bg-[image:var(--gradient-ocean)]" />
+						<div className="mx-auto mb-4 h-16 w-16 rounded-full bg-[image:var(--gradient-celebration)]" />
 						<h3 className="text-xl font-bold text-foreground">Thoughtful Explorer</h3>
 						<p className="mt-2 text-sm text-muted-foreground">
 							Creative, curious, and always seeking deeper understanding...

@@ -101,7 +101,7 @@ development_status:
   # custom typography, illustration system, auth-gated results, shareable profiles, user dashboard
   # All stories reset to backlog after epic scope rewrite
   epic-7: in-progress
-  7-1-psychedelic-brand-design-tokens: ready-for-dev
+  7-1-psychedelic-brand-design-tokens: done
   7-2-typography-system: backlog
   7-3-dark-mode-toggle-with-system-preference-detection: backlog
   7-4-ocean-geometric-identity-system-and-brand-mark: backlog
