@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-02-13
+# Generated: 2026-02-13 (refreshed)
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -103,7 +103,7 @@ development_status:
   epic-7: in-progress
   7-1-psychedelic-brand-design-tokens: done
   7-2-typography-system: done
-  7-3-dark-mode-toggle-with-system-preference-detection: backlog
+  7-3-dark-mode-toggle-with-system-preference-detection: done
   7-4-ocean-geometric-identity-system-and-brand-mark: backlog
   7-5-big-five-trait-and-facet-visualization-colors: backlog
   7-6-global-header-with-geometric-logo-auth-theme-toggle-mobile-nav: backlog
