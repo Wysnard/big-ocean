@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-02-13 (refreshed)
+# Generated: 2026-02-13 (refreshed sprint-planning)
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -49,15 +49,15 @@ development_status:
   epic-1-retrospective: optional
 
   # EPIC 2: Assessment Backend Services
-  # Reopened: Story 2-9 added post-completion
-  epic-2: in-progress
+  # Reopened: Story 2-9 added post-completion → now complete
+  epic-2: done
   2-1-session-management-and-persistence: done
   2-2-nerin-agent-setup-and-conversational-quality: done
   2-3-evidence-based-analyzer-and-scorer-implementation: done
   2-4-langgraph-state-machine-and-orchestration: done
   2-5-llm-cost-tracking-rate-limiting-and-budget-enforcement: done
   2-8-integration-testing-docker-compose: done
-  2-9-evidence-sourced-scoring: review
+  2-9-evidence-sourced-scoring: done
   epic-2-retrospective: done
 
   # EPIC 3: OCEAN Archetype System
@@ -108,7 +108,7 @@ development_status:
   7-5-big-five-trait-and-facet-visualization-colors: done
   7-6-global-header-with-geometric-logo-auth-theme-toggle-mobile-nav: done
   7-7-illustration-and-icon-system: review
-  7-8-home-page-redesign-with-color-block-composition: ready-for-dev
+  7-8-home-page-redesign-with-color-block-composition: done
   7-9-results-page-visual-redesign-with-archetype-theming: backlog
   7-10-assessment-chat-ux-polish: backlog
   7-11-auth-gated-results-reveal-and-sign-up-flow: backlog

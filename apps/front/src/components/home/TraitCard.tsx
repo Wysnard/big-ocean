@@ -1,22 +1,24 @@
-import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 interface TraitCardProps {
-	icon: LucideIcon;
+	shapeElement: ReactNode;
 	title: string;
 	color: string;
 	gradient: string;
 	glow: string;
 	humanDescription: string;
+	facets?: string[];
 	isLarge?: boolean;
 }
 
 export function TraitCard({
-	icon: Icon,
+	shapeElement,
 	title,
 	color,
 	gradient,
 	glow,
 	humanDescription,
+	facets,
 	isLarge,
 }: TraitCardProps) {
 	return (
@@ -39,9 +41,28 @@ export function TraitCard({
 			/>
 
 			<div className="relative">
-				<Icon className="mb-3 h-10 w-10" style={{ color }} />
+				<div className="mb-3" style={{ color }}>
+					{shapeElement}
+				</div>
 				<h3 className="mb-2 text-xl font-semibold text-foreground">{title}</h3>
 				<p className="text-sm leading-relaxed text-muted-foreground">{humanDescription}</p>
+
+				{/* Facet preview on hover */}
+				{facets && facets.length > 0 && (
+					<div className="mt-3 max-h-0 overflow-hidden opacity-0 transition-all duration-300 group-hover:max-h-40 group-hover:opacity-100">
+						<div className="flex flex-wrap gap-1.5">
+							{facets.map((facet) => (
+								<span
+									key={facet}
+									className="rounded-full border px-2 py-0.5 text-xs text-muted-foreground"
+									style={{ borderColor: color }}
+								>
+									{facet}
+								</span>
+							))}
+						</div>
+					</div>
+				)}
 			</div>
 		</div>
 	);
