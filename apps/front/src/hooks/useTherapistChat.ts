@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useResumeSession, useSendMessage } from "./use-assessment";
 
 interface Message {
@@ -84,6 +84,9 @@ export function useTherapistChat(sessionId: string) {
 	const [hasShownCelebration, setHasShownCelebration] = useState(false);
 	const { mutate: sendMessageRpc } = useSendMessage();
 
+	// Pending greeting messages not yet displayed (for stagger flush on early send)
+	const pendingGreetingsRef = useRef<Message[]>([]);
+
 	// Session resumption
 	const {
 		data: resumeData,
@@ -103,22 +106,6 @@ export function useTherapistChat(sessionId: string) {
 			timestamp: new Date(msg.timestamp),
 		}));
 
-		// If empty messages, show Nerin greeting
-		if (mappedMessages.length === 0) {
-			setMessages([
-				{
-					id: "msg_init",
-					role: "assistant",
-					content:
-						"Hi! I'm Nerin, your AI therapist. I'd like to understand you better. Let's start with something simple: What are you currently passionate about?",
-					timestamp: new Date(Date.now() - 5000),
-				},
-			]);
-		} else {
-			// Otherwise, use server messages
-			setMessages(mappedMessages);
-		}
-
 		// Load confidence scores (values are already 0-100, do NOT multiply)
 		setTraits({
 			openness: resumeData.confidence.openness,
@@ -132,6 +119,50 @@ export function useTherapistChat(sessionId: string) {
 			agreeablenessConfidence: resumeData.confidence.agreeableness,
 			neuroticismConfidence: resumeData.confidence.neuroticism,
 		});
+
+		// Detect new session: exactly 3 assistant-only messages (server-persisted greeting)
+		const isNewSession =
+			mappedMessages.length === 3 && mappedMessages.every((m) => m.role === "assistant");
+
+		if (!isNewSession) {
+			// Resumed session with existing conversation — show all immediately
+			setMessages(mappedMessages);
+			return;
+		}
+
+		// Stagger greeting messages per AC #1: 0ms / 1200ms / 2000ms
+		const prefersReducedMotion =
+			typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+		if (prefersReducedMotion) {
+			setMessages(mappedMessages);
+			return;
+		}
+
+		// First message appears immediately; remaining stagger in
+		const [first, ...rest] = mappedMessages;
+		setMessages([first]);
+		pendingGreetingsRef.current = [...rest];
+
+		const delays = [1200, 2000];
+		const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+		rest.forEach((msg, i) => {
+			timeouts.push(
+				setTimeout(
+					() => {
+						pendingGreetingsRef.current = pendingGreetingsRef.current.filter((m) => m.id !== msg.id);
+						setMessages((prev) => [...prev, msg]);
+					},
+					delays[i] ?? delays[delays.length - 1],
+				),
+			);
+		});
+
+		return () => {
+			for (const t of timeouts) clearTimeout(t);
+			pendingGreetingsRef.current = [];
+		};
 	}, [resumeData]);
 
 	const clearError = useCallback(() => {
@@ -142,6 +173,13 @@ export function useTherapistChat(sessionId: string) {
 	const sendMessage = useCallback(
 		async (userMessage?: string) => {
 			if (!sessionId || !userMessage) return;
+
+			// Flush any pending staggered greeting messages before user's message
+			if (pendingGreetingsRef.current.length > 0) {
+				const remaining = [...pendingGreetingsRef.current];
+				pendingGreetingsRef.current = [];
+				setMessages((prev) => [...prev, ...remaining]);
+			}
 
 			clearError();
 			setIsLoading(true);

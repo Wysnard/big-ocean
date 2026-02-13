@@ -30,6 +30,12 @@ export {
 	TRAIT_TO_FACETS,
 	type TraitName,
 } from "./constants/big-five";
+// Nerin greeting constants (Story 7.10)
+export {
+	GREETING_MESSAGES,
+	OPENING_QUESTIONS,
+	pickOpeningQuestion,
+} from "./constants/nerin-greeting";
 // Evidence errors
 export {
 	EvidenceValidationError,

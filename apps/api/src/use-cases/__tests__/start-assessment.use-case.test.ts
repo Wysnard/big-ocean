@@ -8,12 +8,16 @@
  * - Logging
  * - Response format
  * - Rate limiting
+ * - Greeting message persistence
  */
 
 import {
+	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	CostGuardRepository,
+	GREETING_MESSAGES,
 	LoggerRepository,
+	OPENING_QUESTIONS,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -24,6 +28,12 @@ const mockAssessmentSessionRepo = {
 	createSession: vi.fn(),
 	getSession: vi.fn(),
 	updateSession: vi.fn(),
+};
+
+const mockAssessmentMessageRepo = {
+	saveMessage: vi.fn(),
+	getMessages: vi.fn(),
+	getMessageCount: vi.fn(),
 };
 
 const mockLoggerRepo = {
@@ -42,8 +52,12 @@ const mockCostGuardRepo = {
 	recordAssessmentStart: vi.fn(),
 };
 
+let saveMessageCallCount = 0;
+
 describe("startAssessment Use Case", () => {
 	beforeEach(() => {
+		saveMessageCallCount = 0;
+
 		// Reset mocks to default behavior before each test
 		mockAssessmentSessionRepo.createSession.mockImplementation((userId?: string) =>
 			Effect.succeed({
@@ -54,6 +68,21 @@ describe("startAssessment Use Case", () => {
 		);
 		mockAssessmentSessionRepo.getSession.mockImplementation(() => Effect.succeed(undefined));
 		mockAssessmentSessionRepo.updateSession.mockImplementation(() => Effect.succeed(undefined));
+
+		mockAssessmentMessageRepo.saveMessage.mockImplementation(
+			(sessionId: string, role: string, content: string) => {
+				saveMessageCallCount++;
+				return Effect.succeed({
+					id: `msg-${saveMessageCallCount}`,
+					sessionId,
+					role,
+					content,
+					createdAt: new Date("2026-02-01T10:00:00Z"),
+				});
+			},
+		);
+		mockAssessmentMessageRepo.getMessages.mockImplementation(() => Effect.succeed([]));
+		mockAssessmentMessageRepo.getMessageCount.mockImplementation(() => Effect.succeed(0));
 
 		mockLoggerRepo.info.mockImplementation(() => {});
 		mockLoggerRepo.error.mockImplementation(() => {});
@@ -75,6 +104,7 @@ describe("startAssessment Use Case", () => {
 	const createTestLayer = () =>
 		Layer.mergeAll(
 			Layer.succeed(AssessmentSessionRepository, mockAssessmentSessionRepo),
+			Layer.succeed(AssessmentMessageRepository, mockAssessmentMessageRepo),
 			Layer.succeed(LoggerRepository, mockLoggerRepo),
 			Layer.succeed(CostGuardRepository, mockCostGuardRepo),
 		);
@@ -108,7 +138,7 @@ describe("startAssessment Use Case", () => {
 			expect(mockAssessmentSessionRepo.createSession).toHaveBeenCalledWith(undefined);
 		});
 
-		it("should log session creation event", async () => {
+		it("should log session creation event with greeting count", async () => {
 			const testLayer = createTestLayer();
 			const input = { userId: "user_456" };
 
@@ -117,10 +147,11 @@ describe("startAssessment Use Case", () => {
 			expect(mockLoggerRepo.info).toHaveBeenCalledWith("Assessment session started", {
 				sessionId: "session_new_789",
 				userId: "user_456",
+				greetingCount: 3,
 			});
 		});
 
-		it("should return session ID and creation timestamp", async () => {
+		it("should return session ID, creation timestamp, and messages", async () => {
 			const testLayer = createTestLayer();
 			const beforeTime = new Date();
 			const input = {};
@@ -131,6 +162,7 @@ describe("startAssessment Use Case", () => {
 
 			expect(result).toHaveProperty("sessionId");
 			expect(result).toHaveProperty("createdAt");
+			expect(result).toHaveProperty("messages");
 			expect(result.sessionId).toBe("session_new_789");
 			expect(result.createdAt.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
 			expect(result.createdAt.getTime()).toBeLessThanOrEqual(afterTime.getTime());
@@ -147,6 +179,75 @@ describe("startAssessment Use Case", () => {
 			expect(mockAssessmentSessionRepo.createSession).toHaveBeenCalledTimes(2);
 			expect(mockAssessmentSessionRepo.createSession).toHaveBeenNthCalledWith(1, "user_1");
 			expect(mockAssessmentSessionRepo.createSession).toHaveBeenNthCalledWith(2, "user_2");
+		});
+	});
+
+	describe("Greeting message persistence", () => {
+		it("should save exactly 3 greeting messages to the database", async () => {
+			const testLayer = createTestLayer();
+
+			await Effect.runPromise(startAssessment({}).pipe(Effect.provide(testLayer)));
+
+			expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledTimes(3);
+		});
+
+		it("should save messages with role 'assistant' and correct session ID", async () => {
+			const testLayer = createTestLayer();
+
+			await Effect.runPromise(startAssessment({}).pipe(Effect.provide(testLayer)));
+
+			for (let i = 1; i <= 3; i++) {
+				const call = mockAssessmentMessageRepo.saveMessage.mock.calls[i - 1];
+				expect(call[0]).toBe("session_new_789"); // sessionId
+				expect(call[1]).toBe("assistant"); // role
+				expect(typeof call[2]).toBe("string"); // content
+			}
+		});
+
+		it("should save the 2 fixed greeting messages in order", async () => {
+			const testLayer = createTestLayer();
+
+			await Effect.runPromise(startAssessment({}).pipe(Effect.provide(testLayer)));
+
+			const firstCall = mockAssessmentMessageRepo.saveMessage.mock.calls[0];
+			const secondCall = mockAssessmentMessageRepo.saveMessage.mock.calls[1];
+
+			expect(firstCall[2]).toBe(GREETING_MESSAGES[0]);
+			expect(secondCall[2]).toBe(GREETING_MESSAGES[1]);
+		});
+
+		it("should save a 3rd message from the OPENING_QUESTIONS pool", async () => {
+			const testLayer = createTestLayer();
+
+			await Effect.runPromise(startAssessment({}).pipe(Effect.provide(testLayer)));
+
+			const thirdCall = mockAssessmentMessageRepo.saveMessage.mock.calls[2];
+			const thirdContent = thirdCall[2] as string;
+
+			expect(OPENING_QUESTIONS).toContain(thirdContent);
+		});
+
+		it("should return 3 messages with role and content in the response", async () => {
+			const testLayer = createTestLayer();
+
+			const result = await Effect.runPromise(startAssessment({}).pipe(Effect.provide(testLayer)));
+
+			expect(result.messages).toHaveLength(3);
+			for (const msg of result.messages) {
+				expect(msg.role).toBe("assistant");
+				expect(typeof msg.content).toBe("string");
+				expect(msg.createdAt).toBeInstanceOf(Date);
+			}
+		});
+
+		it("should return messages with content matching what was saved", async () => {
+			const testLayer = createTestLayer();
+
+			const result = await Effect.runPromise(startAssessment({}).pipe(Effect.provide(testLayer)));
+
+			expect(result.messages[0].content).toBe(GREETING_MESSAGES[0]);
+			expect(result.messages[1].content).toBe(GREETING_MESSAGES[1]);
+			expect(OPENING_QUESTIONS).toContain(result.messages[2].content);
 		});
 	});
 
@@ -240,6 +341,7 @@ describe("startAssessment Use Case", () => {
 			expect(mockLoggerRepo.info).toHaveBeenCalledWith("Assessment session started", {
 				sessionId: "session_new_789",
 				userId: undefined,
+				greetingCount: 3,
 			});
 		});
 

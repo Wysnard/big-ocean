@@ -23,10 +23,19 @@ export const StartAssessmentRequestSchema = S.Struct({
 
 /**
  * Start Assessment Response Schema
+ *
+ * Returns session metadata plus the 3 persisted Nerin greeting messages.
  */
 export const StartAssessmentResponseSchema = S.Struct({
 	sessionId: S.String,
 	createdAt: S.DateTimeUtc,
+	messages: S.Array(
+		S.Struct({
+			role: S.Literal("user", "assistant"),
+			content: S.String,
+			timestamp: S.DateTimeUtc,
+		}),
+	),
 });
 
 /**
