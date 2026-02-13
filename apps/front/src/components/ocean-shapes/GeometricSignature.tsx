@@ -28,6 +28,8 @@ function getShapeSize(letter: string, baseSize: number): number {
 	return baseSize * SIZE_MULTIPLIERS[tier];
 }
 
+const VALID_LETTERS = new Set(Object.keys(LETTER_TO_SIZE_TIER));
+
 interface GeometricSignatureProps {
 	/** 5-letter OCEAN code (e.g., "ODEWR") */
 	oceanCode: string;
@@ -47,6 +49,21 @@ export function GeometricSignature({
 	archetypeName,
 	className,
 }: GeometricSignatureProps) {
+	if (process.env.NODE_ENV !== "production") {
+		if (oceanCode.length !== 5) {
+			console.warn(
+				`[GeometricSignature] Expected 5-letter OCEAN code, got "${oceanCode}" (${oceanCode.length} chars)`,
+			);
+		}
+		for (const letter of oceanCode) {
+			if (!VALID_LETTERS.has(letter)) {
+				console.warn(
+					`[GeometricSignature] Unknown trait letter "${letter}" in code "${oceanCode}". Valid letters: ${[...VALID_LETTERS].join(", ")}`,
+				);
+			}
+		}
+	}
+
 	const letters = oceanCode.split("").slice(0, 5);
 	const [o, c, e, a, n] = letters;
 
