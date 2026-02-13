@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { withRouter } from "../../.storybook/decorators";
+import { withRouter, withThemeProvider } from "../../.storybook/decorators";
 import Header from "./Header";
 
 const meta = {
@@ -10,7 +10,7 @@ const meta = {
 		layout: "fullscreen",
 	},
 	tags: ["autodocs"],
-	decorators: [withRouter],
+	decorators: [withThemeProvider, withRouter],
 } satisfies Meta<typeof Header>;
 
 export default meta;
