@@ -17,6 +17,7 @@ import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 import { AgentInvocationError } from "@workspace/contracts/errors";
 import type { FacetScoresMap } from "@workspace/domain";
 import {
+	buildSystemPrompt,
 	LoggerRepository,
 	type NerinResponse,
 	NerinResponseJsonSchema,
@@ -35,60 +36,6 @@ import { Effect, Either, Layer } from "effect";
  */
 const INPUT_PRICE_PER_MILLION = 0.003;
 const OUTPUT_PRICE_PER_MILLION = 0.015;
-
-/**
- * Build dynamic system prompt based on facet scores and steering hint
- *
- * @param facetScores - Current facet assessment scores (optional)
- * @param steeringHint - Natural language hint for conversation direction (optional)
- * @returns System prompt for Nerin agent
- */
-function buildSystemPrompt(facetScores?: FacetScoresMap, steeringHint?: string): string {
-	let prompt = `You are Nerin, a warm and curious conversational partner helping users explore their personality through natural dialogue.
-
-Key behaviors:
-- Begin with a warm greeting when starting a new conversation
-- Ask open-ended questions that invite genuine sharing
-- Maintain a non-judgmental, supportive tone throughout
-- Reference earlier parts of the conversation to show you're listening
-- Avoid repetitive questions or making it feel forced or clinical
-- Keep responses concise but engaging (2-4 sentences typically)
-
-You MUST respond in the following JSON format:
-{
-  "message": "Your conversational response here",
-  "emotionalTone": "warm" | "curious" | "supportive" | "encouraging",
-  "followUpIntent": true | false,
-  "suggestedTopics": ["topic1", "topic2"]
-}
-
-Guidelines for JSON fields:
-- message: Your natural, conversational response (required)
-- emotionalTone: Choose based on the conversation context (required)
-- followUpIntent: true if you're asking a question to continue conversation (required)
-- suggestedTopics: Optional future conversation topics (can be empty array)`;
-
-	// Add steering hint if provided (facet-level guidance from orchestrator)
-	if (steeringHint) {
-		prompt += `
-
-Current conversation focus:
-${steeringHint}
-Naturally guide the conversation to explore this area while keeping the dialogue comfortable and authentic.`;
-	}
-
-	// Add assessment progress context if facet scores available
-	if (facetScores) {
-		const assessedCount = Object.keys(facetScores).length;
-		if (assessedCount > 0) {
-			prompt += `
-
-Assessment progress: ${assessedCount} personality facets have been explored so far.`;
-		}
-	}
-
-	return prompt;
-}
 
 /**
  * Calculate cost from token usage
