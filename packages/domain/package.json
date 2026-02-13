@@ -14,7 +14,9 @@
     "./errors/*": "./src/errors/*.ts",
     "./config/*": "./src/config/*.ts",
     "./repositories/*": "./src/repositories/*.ts",
-    "./services/*": "./src/services/*.ts"
+    "./services/*": "./src/services/*.ts",
+    "./constants/*": "./src/constants/*.ts",
+    "./utils/*": "./src/utils/*.ts"
   },
   "dependencies": {
     "@langchain/core": "^1.1.17",
