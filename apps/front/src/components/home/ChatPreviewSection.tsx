@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
+import { NerinAvatar } from "../NerinAvatar";
 import { ChatBubble } from "./ChatBubble";
 
 const CHAT_MESSAGES: { message: string; variant: "ai" | "user" }[] = [
@@ -35,9 +36,7 @@ export function ChatPreviewSection() {
 			<div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xl motion-safe:animate-[float_6s_ease-in-out_infinite]">
 				{/* Chat header */}
 				<div className="flex items-center gap-3 border-b border-border px-5 py-4">
-					<div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-						N
-					</div>
+					<NerinAvatar size={40} />
 					<div>
 						<p className="font-semibold text-foreground">Nerin</p>
 						<p className="text-xs text-muted-foreground">AI Deep Dive Companion</p>
