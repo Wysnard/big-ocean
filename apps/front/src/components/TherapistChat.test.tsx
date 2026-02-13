@@ -59,15 +59,33 @@ vi.mock("@/hooks/use-auth", () => ({
 	}),
 }));
 
-// Mock TanStack Router useNavigate
+// Mock TanStack Router useNavigate and Link
 const mockNavigate = vi.fn();
 vi.mock("@tanstack/react-router", () => ({
 	useNavigate: () => mockNavigate,
+	Link: ({
+		children,
+		to,
+		...props
+	}: {
+		children: React.ReactNode;
+		to: string;
+		[key: string]: unknown;
+	}) => (
+		<a href={to} {...props}>
+			{children}
+		</a>
+	),
 }));
 
 // Mock SignUpModal
 vi.mock("./auth/SignUpModal", () => ({
 	SignUpModal: () => null,
+}));
+
+// Mock chat-placeholders
+vi.mock("@/constants/chat-placeholders", () => ({
+	getPlaceholder: () => "What comes to mind first?",
 }));
 
 const queryClient = new QueryClient({
@@ -120,35 +138,42 @@ describe("TherapistChat", () => {
 	it("renders initial Nerin greeting", () => {
 		renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-		expect(screen.getByText(/Nerin/)).toBeTruthy();
+		expect(screen.getAllByText(/Nerin/).length).toBeGreaterThan(0);
 	});
 
-	it("displays session ID in header", () => {
-		renderWithProviders(<TherapistChat sessionId="session-123" />);
+	it("displays Nerin name in header instead of session ID", () => {
+		const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-		expect(screen.getByText(/session-123/)).toBeTruthy();
+		const header = container.querySelector('[data-slot="chat-header"]');
+		expect(header).toBeTruthy();
+		// Nerin name should be in header
+		expect(header?.textContent).toContain("Nerin");
+		// Session ID should NOT be displayed
+		expect(screen.queryByText("session-123")).toBeNull();
 	});
 
-	it("renders message input field", () => {
+	it("renders textarea input field with rotating placeholder", () => {
 		renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-		expect(screen.getByPlaceholderText("Type your response here...")).toBeTruthy();
+		const textarea = screen.getByPlaceholderText("What comes to mind first?");
+		expect(textarea).toBeTruthy();
+		expect(textarea.tagName.toLowerCase()).toBe("textarea");
 	});
 
-	it("allows user to type in input field", () => {
+	it("allows user to type in textarea", () => {
 		renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-		const input = screen.getByPlaceholderText("Type your response here...") as HTMLInputElement;
-		fireEvent.change(input, { target: { value: "I love hiking" } });
+		const textarea = screen.getByPlaceholderText("What comes to mind first?") as HTMLTextAreaElement;
+		fireEvent.change(textarea, { target: { value: "I love hiking" } });
 
-		expect(input.value).toBe("I love hiking");
+		expect(textarea.value).toBe("I love hiking");
 	});
 
 	it("calls sendMessage when send button is clicked", async () => {
 		renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-		const input = screen.getByPlaceholderText("Type your response here...") as HTMLInputElement;
-		fireEvent.change(input, { target: { value: "I love hiking" } });
+		const textarea = screen.getByPlaceholderText("What comes to mind first?") as HTMLTextAreaElement;
+		fireEvent.change(textarea, { target: { value: "I love hiking" } });
 
 		const sendButton = screen.getAllByRole("button").find((btn) => !btn.getAttribute("aria-label"));
 		if (sendButton) {
@@ -163,9 +188,9 @@ describe("TherapistChat", () => {
 	it("calls sendMessage on Enter key press", async () => {
 		renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-		const input = screen.getByPlaceholderText("Type your response here...");
-		fireEvent.change(input, { target: { value: "I love reading" } });
-		fireEvent.keyDown(input, { key: "Enter", shiftKey: false });
+		const textarea = screen.getByPlaceholderText("What comes to mind first?");
+		fireEvent.change(textarea, { target: { value: "I love reading" } });
+		fireEvent.keyDown(textarea, { key: "Enter", shiftKey: false });
 
 		await waitFor(() => {
 			expect(mockSendMessage).toHaveBeenCalledWith("I love reading");
@@ -177,8 +202,8 @@ describe("TherapistChat", () => {
 
 		const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-		// Typing indicator has animate-bounce spans
-		const bouncingDots = container.querySelectorAll(".animate-bounce");
+		// Typing indicator uses motion-safe:animate-bounce spans
+		const bouncingDots = container.querySelectorAll("[class*='animate-bounce']");
 		expect(bouncingDots.length).toBe(3);
 	});
 
@@ -187,7 +212,7 @@ describe("TherapistChat", () => {
 
 		const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-		const bouncingDots = container.querySelectorAll(".animate-bounce");
+		const bouncingDots = container.querySelectorAll("[class*='animate-bounce']");
 		expect(bouncingDots.length).toBe(0);
 	});
 
@@ -288,13 +313,20 @@ describe("TherapistChat", () => {
 		expect(userMessage?.tagName.toLowerCase()).toBe("button");
 	});
 
-	it("disables input when loading", () => {
+	it("disables textarea when loading", () => {
 		mockHookReturn.isLoading = true;
 
 		renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-		const input = screen.getByPlaceholderText("Type your response here...") as HTMLInputElement;
-		expect(input.disabled).toBe(true);
+		const textarea = screen.getByPlaceholderText("What comes to mind first?") as HTMLTextAreaElement;
+		expect(textarea.disabled).toBe(true);
+	});
+
+	it("renders NerinAvatar next to assistant messages", () => {
+		const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+		const avatars = container.querySelectorAll("[data-slot='nerin-message-avatar']");
+		expect(avatars.length).toBeGreaterThan(0);
 	});
 
 	// Task 2 Tests: Loading and Error States for Resume
@@ -362,21 +394,20 @@ describe("TherapistChat", () => {
 		});
 	});
 
-	// Task 4 Tests: Celebration Overlay
-	describe("70% Celebration Overlay", () => {
-		it("shows celebration overlay when isConfidenceReady and not hasShownCelebration", () => {
+	// Task 4 Tests: In-Chat Celebration Card
+	describe("70% Celebration Card", () => {
+		it("shows celebration card when isConfidenceReady and not hasShownCelebration", () => {
 			mockHookReturn.isConfidenceReady = true;
 			mockHookReturn.hasShownCelebration = false;
 
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
 			expect(screen.getByText("Your Personality Profile is Ready!")).toBeTruthy();
-			expect(screen.getByText(/reached 70%/)).toBeTruthy();
-			expect(screen.getByText("View My Results")).toBeTruthy();
+			expect(screen.getByText("View Results")).toBeTruthy();
 			expect(screen.getByText("Keep Exploring")).toBeTruthy();
 		});
 
-		it("hides celebration overlay if hasShownCelebration is true", () => {
+		it("hides celebration card if hasShownCelebration is true", () => {
 			mockHookReturn.isConfidenceReady = true;
 			mockHookReturn.hasShownCelebration = true;
 
@@ -385,7 +416,7 @@ describe("TherapistChat", () => {
 			expect(screen.queryByText("Your Personality Profile is Ready!")).toBeNull();
 		});
 
-		it("hides celebration overlay if isConfidenceReady is false", () => {
+		it("hides celebration card if isConfidenceReady is false", () => {
 			mockHookReturn.isConfidenceReady = false;
 			mockHookReturn.hasShownCelebration = false;
 
@@ -400,7 +431,7 @@ describe("TherapistChat", () => {
 
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-			const viewResultsBtn = screen.getByText("View My Results");
+			const viewResultsBtn = screen.getByText("View Results");
 			fireEvent.click(viewResultsBtn);
 
 			await waitFor(() => {
@@ -411,7 +442,7 @@ describe("TherapistChat", () => {
 			});
 		});
 
-		it("dismisses overlay when Keep Exploring clicked", async () => {
+		it("dismisses card when Keep Exploring clicked", async () => {
 			const mockSetHasShownCelebration = vi.fn();
 			mockHookReturn.isConfidenceReady = true;
 			mockHookReturn.hasShownCelebration = false;
@@ -425,6 +456,14 @@ describe("TherapistChat", () => {
 			await waitFor(() => {
 				expect(mockSetHasShownCelebration).toHaveBeenCalledWith(true);
 			});
+		});
+
+		it("shows 'View Your Results' link in header when isConfidenceReady", () => {
+			mockHookReturn.isConfidenceReady = true;
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			expect(screen.getByTestId("view-results-header-link")).toBeTruthy();
 		});
 	});
 
@@ -450,8 +489,8 @@ describe("TherapistChat", () => {
 
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-			// Average = (60 + 50 + 40 + 70 + 30) / 5 = 50
-			expect(screen.getByText("50% assessed")).toBeInTheDocument();
+			// Average = (60 + 50 + 40 + 70 + 30) / 5 = 50 → Nerin-voice label
+			expect(screen.getByText("Building your profile...")).toBeInTheDocument();
 		});
 
 		it("hides ProgressBar when no messages exist", () => {
@@ -459,11 +498,11 @@ describe("TherapistChat", () => {
 
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-			expect(screen.queryByText(/% assessed/)).toBeNull();
-			expect(screen.queryByText("You're nearly there!")).toBeNull();
+			expect(screen.queryByText("Building your profile...")).toBeNull();
+			expect(screen.queryByText("Getting to know you...")).toBeNull();
 		});
 
-		it("updates ProgressBar label to 'You're nearly there!' when confidence >80%", () => {
+		it("updates ProgressBar label to 'Putting the finishing touches...' when confidence >= 80%", () => {
 			mockHookReturn.messages = [{ id: "1", role: "user", content: "Hi", timestamp: new Date() }];
 			mockHookReturn.traits = {
 				openness: 85,
@@ -481,7 +520,7 @@ describe("TherapistChat", () => {
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
 			// Average = (85 + 88 + 90 + 82 + 80) / 5 = 85
-			expect(screen.getByText("You're nearly there!")).toBeInTheDocument();
+			expect(screen.getByText("Putting the finishing touches...")).toBeInTheDocument();
 		});
 
 		it("hides ProgressBar when isResuming is true", () => {
@@ -490,7 +529,7 @@ describe("TherapistChat", () => {
 
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-			expect(screen.queryByText(/% assessed/)).toBeNull();
+			expect(screen.queryByText("Getting to know you...")).toBeNull();
 		});
 
 		it("hides ProgressBar when resumeError exists", () => {
@@ -499,7 +538,7 @@ describe("TherapistChat", () => {
 
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-			expect(screen.queryByText(/% assessed/)).toBeNull();
+			expect(screen.queryByText("Getting to know you...")).toBeNull();
 		});
 	});
 });

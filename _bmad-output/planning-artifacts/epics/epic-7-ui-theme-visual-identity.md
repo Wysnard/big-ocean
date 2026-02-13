@@ -886,15 +886,15 @@ The chat screen uses the **calmest expression** of the brand:
 - `apps/front/src/components/TherapistChat.tsx` — header, welcome flow, celebration, input, timestamps, mobile, results link
 - `apps/front/src/components/ProgressBar.tsx` — Nerin-voice labels
 
-**Greeting Copy:**
+**Greeting Copy (updated 2026-02-13 — Party Mode insights):**
 ```
-Message 1: "Hey there! I'm Nerin — think of me as a guide to understanding yourself a little better."
-Message 2: "This isn't a quiz or a test. We're just going to talk — like a real conversation. There are no wrong answers."
+Message 1: "Hey there! I'm Nerin — I'm here to help you understand your personality through conversation. No multiple choice, no right answers, just us talking."
+Message 2: "Here's the thing: the more openly and honestly you share, the more accurate and meaningful your insights will be. This is a judgment-free space — be as real as you'd like. The honest answer, even if it's messy or contradictory, is always more valuable than the polished one."
 Message 3: [Random from pool]:
-  - "So... what's been on your mind lately? Anything big or small."
   - "If your closest friend described you in three words, what would they say?"
   - "What's something most people get wrong about you?"
-  - "What brought you here today?"
+  - "Picture a perfect Saturday with nothing planned — what does your ideal day look like?"
+  - "Think of a moment recently when you felt most like yourself — what were you doing?"
 ```
 
 ### Implementation Order

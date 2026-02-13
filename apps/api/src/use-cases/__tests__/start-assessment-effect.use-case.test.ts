@@ -6,14 +6,24 @@
  */
 
 import { it } from "@effect/vitest";
-import { AssessmentSessionRepository } from "@workspace/domain";
+import {
+	AssessmentSessionRepository,
+	GREETING_MESSAGES,
+	OPENING_QUESTIONS,
+} from "@workspace/domain";
 import { Effect, Layer } from "effect";
 import { beforeEach, describe, expect, vi } from "vitest";
 
 vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/assessment-message.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 vi.mock("@workspace/infrastructure/repositories/cost-guard.redis.repository");
 
+import {
+	AssessmentMessageDrizzleRepositoryLive,
+	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
+	_resetMockState as resetMessageState,
+} from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
 import {
 	AssessmentSessionDrizzleRepositoryLive,
 	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
@@ -28,6 +38,7 @@ import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories
 
 const TestLayer = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
+	AssessmentMessageDrizzleRepositoryLive,
 	LoggerPinoRepositoryLive,
 	CostGuardRedisRepositoryLive,
 );
@@ -37,6 +48,7 @@ import { startAssessment } from "../../use-cases/start-assessment.use-case";
 describe("startAssessment Use Case (@effect/vitest)", () => {
 	beforeEach(() => {
 		resetSessionState();
+		resetMessageState();
 		resetCostGuardState();
 	});
 
@@ -76,7 +88,7 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 			}).pipe(Effect.provide(TestLayer)),
 		);
 
-		it.effect("should return session ID and creation timestamp", () =>
+		it.effect("should return session ID, creation timestamp, and greeting messages", () =>
 			Effect.gen(function* () {
 				const beforeTime = new Date();
 				const result = yield* startAssessment({});
@@ -84,8 +96,18 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 
 				expect(result).toHaveProperty("sessionId");
 				expect(result).toHaveProperty("createdAt");
+				expect(result).toHaveProperty("messages");
 				expect(result.createdAt.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
 				expect(result.createdAt.getTime()).toBeLessThanOrEqual(afterTime.getTime());
+
+				// Verify 3 greeting messages
+				expect(result.messages).toHaveLength(3);
+				expect(result.messages[0].content).toBe(GREETING_MESSAGES[0]);
+				expect(result.messages[1].content).toBe(GREETING_MESSAGES[1]);
+				expect(OPENING_QUESTIONS).toContain(result.messages[2].content);
+				for (const msg of result.messages) {
+					expect(msg.role).toBe("assistant");
+				}
 			}).pipe(Effect.provide(TestLayer)),
 		);
 

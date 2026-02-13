@@ -17,10 +17,13 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 	// Clamp value to 0-100
 	const clampedValue = Math.min(Math.max(value, 0), 100);
 
-	// Calculate label based on progress
+	// Nerin-voice contextual labels based on progress
 	const defaultLabel = useMemo(() => {
-		if (clampedValue > 80) return "You're nearly there!";
-		return `${Math.round(clampedValue)}% assessed`;
+		if (clampedValue >= 80) return "Putting the finishing touches...";
+		if (clampedValue >= 70) return "Almost there...";
+		if (clampedValue >= 50) return "Building your profile...";
+		if (clampedValue >= 25) return "Understanding your patterns...";
+		return "Getting to know you...";
 	}, [clampedValue]);
 
 	const displayLabel = label ?? defaultLabel;

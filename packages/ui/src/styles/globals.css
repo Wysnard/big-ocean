@@ -459,3 +459,7 @@
 @utility animate-fade-in {
 	animation: fade-in 400ms ease both;
 }
+
+@utility animate-fade-in-up {
+	animation: fadeInUp 300ms ease-out both;
+}

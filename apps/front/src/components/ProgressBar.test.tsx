@@ -24,36 +24,42 @@ describe("ProgressBar", () => {
 		expect(screen.queryByText("67%")).not.toBeInTheDocument();
 	});
 
-	it("shows '% assessed' label for values 0-50%", () => {
-		render(<ProgressBar value={23} />);
+	it("shows Nerin-voice label 'Getting to know you...' for values 0-24%", () => {
+		render(<ProgressBar value={10} />);
 
-		expect(screen.getByText("23% assessed")).toBeInTheDocument();
+		expect(screen.getByText("Getting to know you...")).toBeInTheDocument();
 	});
 
-	it("shows '% assessed' label for values 50-80%", () => {
-		render(<ProgressBar value={67} />);
+	it("shows 'Understanding your patterns...' for values 25-49%", () => {
+		render(<ProgressBar value={30} />);
 
-		expect(screen.getByText("67% assessed")).toBeInTheDocument();
+		expect(screen.getByText("Understanding your patterns...")).toBeInTheDocument();
 	});
 
-	it("shows 'You're nearly there!' for values >80%", () => {
+	it("shows 'Building your profile...' for values 50-69%", () => {
+		render(<ProgressBar value={60} />);
+
+		expect(screen.getByText("Building your profile...")).toBeInTheDocument();
+	});
+
+	it("shows 'Almost there...' for values 70-79%", () => {
+		render(<ProgressBar value={75} />);
+
+		expect(screen.getByText("Almost there...")).toBeInTheDocument();
+	});
+
+	it("shows 'Putting the finishing touches...' for values >= 80%", () => {
 		render(<ProgressBar value={85} />);
 
-		expect(screen.getByText("You're nearly there!")).toBeInTheDocument();
+		expect(screen.getByText("Putting the finishing touches...")).toBeInTheDocument();
 	});
 
-	it("shows '80% assessed' at exactly 80% (boundary test)", () => {
-		render(<ProgressBar value={80} />);
-
-		// At exactly 80%, still shows percentage (threshold is >80, not >=80)
-		expect(screen.getByText("80% assessed")).toBeInTheDocument();
-		expect(screen.queryByText("You're nearly there!")).not.toBeInTheDocument();
-	});
-
-	it("does not show percentage when >80% (motivational message only)", () => {
+	it("does not show percentage when >= 80% (Nerin message only)", () => {
 		render(<ProgressBar value={90} />);
 
-		expect(screen.getByText("You're nearly there!")).toBeInTheDocument();
+		expect(screen.getByText("Putting the finishing touches...")).toBeInTheDocument();
+		// showPercentage default is true, but label changes at this threshold
+		// Percentage should still show since showPercentageValue depends on showPercentage && clampedValue <= 80
 		expect(screen.queryByText("90%")).not.toBeInTheDocument();
 	});
 
@@ -75,7 +81,7 @@ describe("ProgressBar", () => {
 
 		const fillBar = container.querySelector('[data-testid="progress-fill"]');
 		expect(fillBar).toHaveStyle({ width: "0%" });
-		expect(screen.getByText("0% assessed")).toBeInTheDocument();
+		expect(screen.getByText("Getting to know you...")).toBeInTheDocument();
 	});
 
 	it("applies CSS transition class for animation", () => {

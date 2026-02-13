@@ -42,6 +42,11 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 					return {
 						sessionId: result.sessionId,
 						createdAt: DateTime.unsafeMake(result.createdAt.getTime()),
+						messages: result.messages.map((msg) => ({
+							role: msg.role,
+							content: msg.content,
+							timestamp: DateTime.unsafeMake(msg.createdAt.getTime()),
+						})),
 					};
 				}),
 			)

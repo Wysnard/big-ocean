@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the assessment hooks using vi.hoisted to avoid hoisting issues
 const { mockMutate, mockResumeSession } = vi.hoisted(() => ({
@@ -24,13 +24,61 @@ vi.mock("@/hooks/use-assessment", () => ({
 
 import { useTherapistChat } from "./useTherapistChat";
 
+/**
+ * Simulates the 3 greeting messages that the backend now persists during startAssessment.
+ * These are returned by the resume endpoint for new sessions.
+ */
+const SERVER_GREETING_MESSAGES = [
+	{
+		role: "assistant" as const,
+		content:
+			"Hey there! I'm Nerin — I'm here to help you understand your personality through conversation. No multiple choice, no right answers, just us talking.",
+		timestamp: "2026-02-01T10:00:00Z",
+	},
+	{
+		role: "assistant" as const,
+		content:
+			"Here's the thing: the more openly and honestly you share, the more accurate and meaningful your insights will be. This is a judgment-free space — be as real as you'd like. The honest answer, even if it's messy or contradictory, is always more valuable than the polished one.",
+		timestamp: "2026-02-01T10:00:01Z",
+	},
+	{
+		role: "assistant" as const,
+		content: "If your closest friend described you in three words, what would they say?",
+		timestamp: "2026-02-01T10:00:02Z",
+	},
+];
+
 describe("useTherapistChat", () => {
+	// Advance timers past all greeting stagger delays (0 + 1200 + 2000ms)
+	function completeGreetingStagger() {
+		act(() => {
+			vi.advanceTimersByTime(2500);
+		});
+	}
+
 	beforeEach(() => {
 		vi.clearAllMocks();
-		// Default mock: empty session (new session with greeting)
+		vi.useFakeTimers();
+
+		// Mock matchMedia for greeting stagger reduced-motion detection
+		Object.defineProperty(window, "matchMedia", {
+			writable: true,
+			value: vi.fn().mockImplementation((query: string) => ({
+				matches: false,
+				media: query,
+				onchange: null,
+				addListener: vi.fn(),
+				removeListener: vi.fn(),
+				addEventListener: vi.fn(),
+				removeEventListener: vi.fn(),
+				dispatchEvent: vi.fn(),
+			})),
+		});
+
+		// Default mock: new session with 3 server-persisted greeting messages
 		mockResumeSession.mockReturnValue({
 			data: {
-				messages: [],
+				messages: SERVER_GREETING_MESSAGES,
 				confidence: {
 					openness: 0,
 					conscientiousness: 0,
@@ -45,16 +93,36 @@ describe("useTherapistChat", () => {
 		});
 	});
 
-	it("initializes with Nerin greeting message", () => {
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it("staggers greeting messages for new sessions (0ms / 1200ms / 2000ms)", () => {
 		const { result } = renderHook(() => useTherapistChat("session-123"));
 
+		// First greeting message appears immediately (0ms)
 		expect(result.current.messages).toHaveLength(1);
 		expect(result.current.messages[0].role).toBe("assistant");
 		expect(result.current.messages[0].content).toContain("Nerin");
+
+		// Second message at 1200ms
+		act(() => {
+			vi.advanceTimersByTime(1200);
+		});
+		expect(result.current.messages).toHaveLength(2);
+		expect(result.current.messages[1].role).toBe("assistant");
+
+		// Third message at 2000ms
+		act(() => {
+			vi.advanceTimersByTime(800);
+		});
+		expect(result.current.messages).toHaveLength(3);
+		expect(result.current.messages[2].role).toBe("assistant");
 	});
 
 	it("initializes trait scores at zero", () => {
 		const { result } = renderHook(() => useTherapistChat("session-123"));
+		completeGreetingStagger();
 
 		expect(result.current.traits.openness).toBe(0);
 		expect(result.current.traits.conscientiousness).toBe(0);
@@ -63,15 +131,16 @@ describe("useTherapistChat", () => {
 
 	it("adds user message optimistically before API responds", () => {
 		const { result } = renderHook(() => useTherapistChat("session-123"));
+		completeGreetingStagger();
 
 		act(() => {
 			result.current.sendMessage("I love hiking");
 		});
 
-		// User message should appear immediately (optimistic)
-		expect(result.current.messages).toHaveLength(2);
-		expect(result.current.messages[1].role).toBe("user");
-		expect(result.current.messages[1].content).toBe("I love hiking");
+		// 3 greeting messages + 1 user message
+		expect(result.current.messages).toHaveLength(4);
+		expect(result.current.messages[3].role).toBe("user");
+		expect(result.current.messages[3].content).toBe("I love hiking");
 		expect(result.current.isLoading).toBe(true);
 	});
 
@@ -92,15 +161,16 @@ describe("useTherapistChat", () => {
 		);
 
 		const { result } = renderHook(() => useTherapistChat("session-123"));
+		completeGreetingStagger();
 
 		act(() => {
 			result.current.sendMessage("I love hiking");
 		});
 
-		// Should have: initial greeting + user message + assistant response
-		expect(result.current.messages).toHaveLength(3);
-		expect(result.current.messages[2].role).toBe("assistant");
-		expect(result.current.messages[2].content).toBe(
+		// 3 greeting + user message + assistant response = 5
+		expect(result.current.messages).toHaveLength(5);
+		expect(result.current.messages[4].role).toBe("assistant");
+		expect(result.current.messages[4].content).toBe(
 			"That's fascinating! Tell me more about your outdoor adventures.",
 		);
 		expect(result.current.isLoading).toBe(false);
@@ -123,6 +193,7 @@ describe("useTherapistChat", () => {
 		);
 
 		const { result } = renderHook(() => useTherapistChat("session-123"));
+		completeGreetingStagger();
 
 		act(() => {
 			result.current.sendMessage("I enjoy creative writing");
@@ -143,6 +214,7 @@ describe("useTherapistChat", () => {
 		);
 
 		const { result } = renderHook(() => useTherapistChat("session-123"));
+		completeGreetingStagger();
 
 		act(() => {
 			result.current.sendMessage("Hello");
@@ -161,6 +233,7 @@ describe("useTherapistChat", () => {
 		);
 
 		const { result } = renderHook(() => useTherapistChat("session-123"));
+		completeGreetingStagger();
 
 		act(() => {
 			result.current.sendMessage("Hello");
@@ -178,6 +251,7 @@ describe("useTherapistChat", () => {
 		);
 
 		const { result } = renderHook(() => useTherapistChat("session-123"));
+		completeGreetingStagger();
 
 		act(() => {
 			result.current.sendMessage("Hello");
@@ -195,6 +269,7 @@ describe("useTherapistChat", () => {
 		);
 
 		const { result } = renderHook(() => useTherapistChat("session-123"));
+		completeGreetingStagger();
 
 		act(() => {
 			result.current.sendMessage("Hello");
@@ -212,6 +287,7 @@ describe("useTherapistChat", () => {
 		);
 
 		const { result } = renderHook(() => useTherapistChat("session-123"));
+		completeGreetingStagger();
 
 		act(() => {
 			result.current.sendMessage("Hello");
@@ -229,6 +305,7 @@ describe("useTherapistChat", () => {
 		);
 
 		const { result } = renderHook(() => useTherapistChat("session-123"));
+		completeGreetingStagger();
 
 		act(() => {
 			result.current.sendMessage("Hello");
@@ -252,7 +329,6 @@ describe("useTherapistChat", () => {
 		});
 
 		expect(mockMutate).not.toHaveBeenCalled();
-		expect(result.current.messages).toHaveLength(1); // Only initial greeting
 	});
 
 	it("does not send when message is empty", () => {
@@ -324,7 +400,7 @@ describe("useTherapistChat", () => {
 		it("loads confidence scores correctly without multiplication", () => {
 			mockResumeSession.mockReturnValue({
 				data: {
-					messages: [],
+					messages: [{ role: "assistant", content: "Hi!", timestamp: "2026-01-01T00:00:00Z" }],
 					confidence: {
 						openness: 72,
 						conscientiousness: 48,
@@ -347,7 +423,16 @@ describe("useTherapistChat", () => {
 			expect(result.current.traits.opennessConfidence).toBe(72);
 		});
 
-		it("shows Nerin greeting for new session (empty messages)", () => {
+		it("loads server greeting messages for new session after stagger completes", () => {
+			// Default mock already has greeting messages — verify they all load after stagger
+			const { result } = renderHook(() => useTherapistChat("session-123"));
+			completeGreetingStagger();
+
+			expect(result.current.messages).toHaveLength(3);
+			expect(result.current.messages[0].content).toContain("Nerin");
+		});
+
+		it("sets empty messages when resume returns empty array", () => {
 			mockResumeSession.mockReturnValue({
 				data: {
 					messages: [],
@@ -366,9 +451,8 @@ describe("useTherapistChat", () => {
 
 			const { result } = renderHook(() => useTherapistChat("session-123"));
 
-			// Should show default Nerin greeting for new session
-			expect(result.current.messages).toHaveLength(1);
-			expect(result.current.messages[0].content).toContain("Nerin");
+			// With server-side greetings, empty means empty (edge case — shouldn't happen in practice)
+			expect(result.current.messages).toHaveLength(0);
 		});
 
 		it("skips Nerin greeting for existing session (has messages)", () => {
@@ -444,6 +528,7 @@ describe("useTherapistChat", () => {
 			);
 
 			const { result } = renderHook(() => useTherapistChat("session-123"));
+			completeGreetingStagger();
 
 			act(() => {
 				result.current.sendMessage("Test message");
@@ -470,6 +555,7 @@ describe("useTherapistChat", () => {
 			);
 
 			const { result } = renderHook(() => useTherapistChat("session-123"));
+			completeGreetingStagger();
 
 			act(() => {
 				result.current.sendMessage("Test message");
@@ -502,6 +588,7 @@ describe("useTherapistChat", () => {
 			);
 
 			const { result } = renderHook(() => useTherapistChat("session-123"));
+			completeGreetingStagger();
 
 			act(() => {
 				result.current.sendMessage("Test message");
