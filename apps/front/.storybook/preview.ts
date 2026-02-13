@@ -1,4 +1,5 @@
-import type { Preview } from '@storybook/react-vite'
+import type { Preview, Renderer } from '@storybook/react-vite'
+import { withThemeByClassName } from '@storybook/addon-themes'
 import { sb } from 'storybook/test'
 import '../src/styles.css'
 
@@ -7,13 +8,6 @@ sb.mock(import('../src/hooks/use-auth.ts'))
 
 const preview: Preview = {
   parameters: {
-    backgrounds: {
-      default: 'dark',
-      values: [
-        { name: 'dark', value: '#0f172a' },
-        { name: 'light', value: '#ffffff' },
-      ],
-    },
     controls: {
       matchers: {
         color: /(background|color)$/i,
@@ -21,6 +15,15 @@ const preview: Preview = {
       },
     },
   },
+  decorators: [
+    withThemeByClassName<Renderer>({
+      themes: {
+        light: '',
+        dark: 'dark',
+      },
+      defaultTheme: 'dark',
+    }),
+  ],
 }
 
 export default preview
