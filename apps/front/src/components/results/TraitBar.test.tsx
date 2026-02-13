@@ -45,10 +45,12 @@ describe("TraitBar", () => {
 		expect(screen.getByTestId("trait-confidence-openness")).toHaveTextContent("85%");
 	});
 
-	it("applies trait color to dot and fill bar", () => {
+	it("applies trait color to OCEAN shape and fill bar", () => {
 		render(<TraitBar {...defaultProps} color="#E74C8B" />);
-		const dot = screen.getByTestId("trait-color-openness");
-		expect(dot).toHaveStyle({ backgroundColor: "#E74C8B" });
+		// OCEAN shape renders as SVG with fill attribute (replaces old color dot)
+		const shape = screen.getByTestId("trait-bar-openness").querySelector('[data-slot="ocean-shape-o"]');
+		expect(shape).toBeInTheDocument();
+		expect(shape).toHaveAttribute("fill", "#E74C8B");
 		const fill = screen.getByTestId("trait-fill-openness");
 		expect(fill).toHaveStyle({ backgroundColor: "#E74C8B" });
 	});
