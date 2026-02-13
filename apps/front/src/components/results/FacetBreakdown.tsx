@@ -34,6 +34,7 @@ export function FacetBreakdown({
 			id={id}
 			aria-label={`${traitName} facet breakdown`}
 			data-testid={`facet-breakdown-${traitName}`}
+			data-slot="facet-breakdown"
 			className={cn(
 				"overflow-hidden rounded-b-xl border border-t-0 border-border bg-card transition-all duration-300",
 				className,

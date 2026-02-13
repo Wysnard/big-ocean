@@ -1,5 +1,20 @@
 import { TRAIT_LEVEL_LABELS } from "@workspace/domain";
 import { cn } from "@workspace/ui/lib/utils";
+import type { ReactNode } from "react";
+import { OceanCircle } from "../ocean-shapes/OceanCircle";
+import { OceanDiamond } from "../ocean-shapes/OceanDiamond";
+import { OceanHalfCircle } from "../ocean-shapes/OceanHalfCircle";
+import { OceanRectangle } from "../ocean-shapes/OceanRectangle";
+import { OceanTriangle } from "../ocean-shapes/OceanTriangle";
+
+/** OCEAN shape mapping per trait */
+const TRAIT_SHAPE: Record<string, (props: { size?: number; color?: string }) => ReactNode> = {
+	openness: OceanCircle,
+	conscientiousness: OceanHalfCircle,
+	extraversion: OceanRectangle,
+	agreeableness: OceanTriangle,
+	neuroticism: OceanDiamond,
+};
 
 export interface TraitBarProps {
 	traitName: string;
@@ -47,6 +62,7 @@ export function TraitBar({
 			aria-controls={controlsId}
 			onClick={onToggle}
 			data-testid={`trait-bar-${traitName}`}
+			data-slot="trait-bar"
 			className={cn(
 				"w-full rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent",
 				isExpanded && "border-ring/30",
@@ -56,12 +72,15 @@ export function TraitBar({
 			{/* Header row: name, level badge, confidence */}
 			<div className="flex items-center justify-between gap-3">
 				<div className="flex items-center gap-3 min-w-0">
-					{/* Color dot */}
-					<div
-						className="h-3 w-3 shrink-0 rounded-full"
-						style={{ backgroundColor: color }}
-						data-testid={`trait-color-${traitName}`}
-					/>
+					{/* OCEAN shape marker */}
+					{TRAIT_SHAPE[traitName] ? (
+						TRAIT_SHAPE[traitName]({ size: 20, color })
+					) : (
+						<div
+							className="h-3 w-3 shrink-0 rounded-full"
+							style={{ backgroundColor: color }}
+						/>
+					)}
 					<span className="text-sm font-semibold text-foreground truncate">{displayName}</span>
 					{/* Level badge */}
 					<span

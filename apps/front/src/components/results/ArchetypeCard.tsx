@@ -1,4 +1,5 @@
 import { cn } from "@workspace/ui/lib/utils";
+import { GeometricSignature } from "../ocean-shapes/GeometricSignature";
 
 export interface ArchetypeCardProps {
 	archetypeName: string;
@@ -31,8 +32,9 @@ export function ArchetypeCard({
 		<article
 			aria-label={`Archetype: ${archetypeName}`}
 			data-testid="archetype-card"
+			data-slot="archetype-card"
 			className={cn(
-				"relative overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-800/80 p-6 md:p-8",
+				"relative overflow-hidden rounded-2xl border border-border bg-card p-6 md:p-8",
 				className,
 			)}
 		>
@@ -43,11 +45,11 @@ export function ArchetypeCard({
 				data-testid="archetype-accent"
 			/>
 
-			{/* Header: name + codes */}
+			{/* Header: name + codes + signature */}
 			<div className="mt-2 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 				<div className="flex-1">
 					<h2
-						className="text-2xl font-bold tracking-tight text-white md:text-3xl"
+						className="text-2xl font-bold tracking-tight text-foreground md:text-3xl"
 						data-testid="archetype-name"
 					>
 						{archetypeName}
@@ -56,32 +58,37 @@ export function ArchetypeCard({
 					{/* OCEAN codes */}
 					<div className="mt-2 flex items-center gap-3">
 						<span
-							className="rounded-md bg-slate-700/60 px-2.5 py-1 font-mono text-sm font-semibold text-slate-200"
+							className="rounded-md bg-muted px-2.5 py-1 font-mono text-sm font-semibold text-foreground"
 							data-testid="ocean-code-4"
 						>
 							{oceanCode4}
 						</span>
-						<span className="font-mono text-xs text-slate-400" data-testid="ocean-code-5">
+						<span className="font-mono text-xs text-muted-foreground" data-testid="ocean-code-5">
 							{oceanCode5}
 						</span>
+					</div>
+
+					{/* Geometric Signature */}
+					<div className="mt-3">
+						<GeometricSignature oceanCode={oceanCode5} baseSize={24} />
 					</div>
 				</div>
 
 				{/* Confidence indicator */}
 				<div
-					className="flex items-center gap-2 rounded-lg bg-slate-700/40 px-3 py-2"
+					className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2"
 					data-testid="confidence-indicator"
 				>
-					<div className="h-8 w-8 rounded-full border-2 border-slate-600 flex items-center justify-center">
-						<span className="text-xs font-bold text-slate-200">{clampedConfidence}</span>
+					<div className="h-8 w-8 rounded-full border-2 border-border flex items-center justify-center">
+						<span className="text-xs font-bold text-foreground">{clampedConfidence}</span>
 					</div>
-					<span className="text-xs text-slate-400">% confidence</span>
+					<span className="text-xs text-muted-foreground">% confidence</span>
 				</div>
 			</div>
 
 			{/* Description */}
 			<p
-				className="mt-4 text-sm leading-relaxed text-slate-300 md:text-base"
+				className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base"
 				data-testid="archetype-description"
 			>
 				{description}
@@ -90,7 +97,7 @@ export function ArchetypeCard({
 			{/* Curated badge */}
 			{isCurated && (
 				<span
-					className="mt-4 inline-block rounded-full bg-slate-700/50 px-3 py-1 text-xs text-slate-400"
+					className="mt-4 inline-block rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"
 					data-testid="curated-badge"
 				>
 					Curated archetype

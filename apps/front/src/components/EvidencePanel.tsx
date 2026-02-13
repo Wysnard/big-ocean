@@ -5,8 +5,7 @@
  * Displays all message quotes that contributed to a facet score.
  *
  * Features:
- * - Color-coded evidence cards (green/yellow/red based on score)
- * - Opacity based on confidence
+ * - Left border accent colored to match the facet's theme color
  * - "Jump to Message" navigation to chat with highlighting
  * - Scrollable list with virtualization for >20 items
  */
@@ -16,9 +15,10 @@
 import { useNavigate } from "@tanstack/react-router";
 import type { SavedFacetEvidence } from "@workspace/contracts";
 import type { FacetName } from "@workspace/domain";
+import { getFacetColor } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@workspace/ui/components/dialog";
-import { cn } from "@workspace/ui/lib/utils";
+
 
 interface EvidencePanelProps {
 	sessionId: string;
@@ -36,6 +36,7 @@ interface EvidencePanelProps {
  */
 interface EvidenceItemProps {
 	evidence: SavedFacetEvidence;
+	facetColor: string;
 	onJumpToMessage: (
 		messageId: string,
 		quote: string,
@@ -45,23 +46,12 @@ interface EvidenceItemProps {
 	) => void;
 }
 
-function EvidenceItem({ evidence, onJumpToMessage }: EvidenceItemProps) {
-	// Color based on score
-	const colorClasses =
-		evidence.score >= 15
-			? "bg-green-500/20 border-green-500/30 text-green-200"
-			: evidence.score >= 8
-				? "bg-yellow-500/20 border-yellow-500/30 text-yellow-200"
-				: "bg-red-500/20 border-red-500/30 text-red-200";
-
-	// Opacity based on confidence (0-100 → 0.3-1.0)
-	const opacity = 0.3 + (evidence.confidence / 100) * 0.7;
-
+function EvidenceItem({ evidence, facetColor, onJumpToMessage }: EvidenceItemProps) {
 	return (
-		<div className={cn("p-3 border rounded-lg mb-3", colorClasses)} style={{ opacity }}>
-			<p className="text-sm mb-2">"{evidence.quote}"</p>
+		<div className="p-3 border border-l-4 rounded-lg mb-3 bg-card" style={{ borderLeftColor: facetColor }}>
+			<p className="text-sm mb-2 text-foreground">"{evidence.quote}"</p>
 			<div className="flex justify-between items-center">
-				<span className="text-xs">
+				<span className="text-xs text-muted-foreground">
 					Score: {evidence.score}/20 ({evidence.confidence}% confident)
 				</span>
 				<Button
@@ -134,7 +124,12 @@ export function EvidencePanel({
 					{!isLoading &&
 						evidence &&
 						evidence.map((item) => (
-							<EvidenceItem key={item.id} evidence={item} onJumpToMessage={handleJumpToMessage} />
+							<EvidenceItem
+								key={item.id}
+								evidence={item}
+								facetColor={facetName ? getFacetColor(facetName) : "var(--border)"}
+								onJumpToMessage={handleJumpToMessage}
+							/>
 						))}
 				</div>
 			</DialogContent>
