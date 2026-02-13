@@ -34,7 +34,7 @@ function Bubbles({
 	config: { size: number; left: string; delay: string; duration: string }[];
 }) {
 	return (
-		<>
+		<div aria-hidden="true">
 			{config.map((b) => (
 				<div
 					key={`${b.left}-${b.delay}`}
@@ -50,7 +50,7 @@ function Bubbles({
 					}
 				/>
 			))}
-		</>
+		</div>
 	);
 }
 

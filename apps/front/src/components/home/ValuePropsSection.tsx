@@ -11,18 +11,18 @@ interface ValueProp {
 const VALUE_PROPS: ValueProp[] = [
 	{
 		icon: MessageCircle,
-		title: "Deep Conversation, Not Surface Questions",
+		title: "Conversation, Not Quiz",
 		description:
 			"Nerin dives into what makes you tick through natural dialogue — no multiple choice, no forced answers.",
 	},
 	{
 		icon: Layers,
-		title: "30 Facets Deep",
+		title: "30 Facets, Not 5",
 		description: "While others skim the surface with 5 traits, we explore 30 facets of who you are.",
 	},
 	{
 		icon: Sparkles,
-		title: "An AI That Dives With You",
+		title: "AI That Adapts",
 		description:
 			"Nerin adapts to your responses in real-time, exploring deeper where it matters most.",
 	},
@@ -32,6 +32,15 @@ function useFadeInOnScroll(ref: React.RefObject<HTMLElement | null>) {
 	useEffect(() => {
 		const el = ref.current;
 		if (!el) return;
+
+		// Respect prefers-reduced-motion — skip animation entirely
+		const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		if (prefersReducedMotion) {
+			el.classList.add("opacity-100", "translate-y-0");
+			el.classList.remove("opacity-0", "translate-y-6");
+			return;
+		}
+
 		const observer = new IntersectionObserver(
 			([entry]) => {
 				if (entry.isIntersecting) {

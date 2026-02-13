@@ -9,9 +9,7 @@ export function FinalCTASection() {
 			<div className="absolute inset-0 bg-[image:var(--gradient-surface-glow)]" />
 			<div className="relative mx-auto max-w-3xl text-center">
 				<h2 className="mb-6 text-4xl font-bold text-foreground">Ready to Take the Plunge?</h2>
-				<p className="mb-8 text-lg text-muted-foreground">
-					A 20-minute deep dive · Free · No account needed
-				</p>
+				<p className="mb-8 text-lg text-muted-foreground">Takes 30 min · Free · No account needed</p>
 				<Button
 					onClick={() =>
 						navigate({
