@@ -108,11 +108,11 @@
 	--radius-chat-sender: 4px;
 
 	/* ========== BIG FIVE TRAIT TOKENS ========== */
-	--trait-openness: oklch(0.62 0.16 285);
-	--trait-conscientiousness: oklch(0.64 0.14 238);
-	--trait-extraversion: oklch(0.66 0.17 25);
-	--trait-agreeableness: oklch(0.63 0.13 162);
-	--trait-neuroticism: oklch(0.60 0.18 350);
+	--trait-openness: #A855F7;
+	--trait-conscientiousness: #FF6B2B;
+	--trait-extraversion: #FF0080;
+	--trait-agreeableness: #00B4A6;
+	--trait-neuroticism: #1c1c9c;
 
 	/* Openness facets */
 	--facet-imagination: oklch(0.67 0.14 290);
@@ -221,12 +221,12 @@
 	--depth-mid: #141838;
 	--depth-deep: #1C2148;
 
-	/* ========== BIG FIVE TRAIT TOKENS (dark mode) ========== */
-	--trait-openness: oklch(0.78 0.12 286);
-	--trait-conscientiousness: oklch(0.76 0.11 236);
-	--trait-extraversion: oklch(0.79 0.14 30);
-	--trait-agreeableness: oklch(0.80 0.10 160);
-	--trait-neuroticism: oklch(0.75 0.14 352);
+	/* ========== BIG FIVE TRAIT TOKENS (dark mode — brighter for dark backgrounds) ========== */
+	--trait-openness: #C084FC;
+	--trait-conscientiousness: #FF8F5E;
+	--trait-extraversion: #FF4DA6;
+	--trait-agreeableness: #2DD4BF;
+	--trait-neuroticism: #6366F1;
 }
 
 @theme inline {
@@ -375,4 +375,28 @@
 @keyframes float {
 	0%, 100% { transform: translateY(0); }
 	50% { transform: translateY(-4px); }
+}
+
+@keyframes shape-reveal {
+	from {
+		transform: scale(0);
+		opacity: 0;
+	}
+	to {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+@keyframes fade-in {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+@utility animate-shape-reveal {
+	animation: shape-reveal 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@utility animate-fade-in {
+	animation: fade-in 400ms ease both;
 }
