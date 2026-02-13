@@ -169,8 +169,8 @@ function FacetFamilies() {
 				);
 			})}
 			<p style={{ fontSize: 12, color: "var(--muted-foreground)" }}>
-				Each facet family shares the same hue as its parent trait, with lightness fanning across 6
-				steps. Chroma varies slightly for visual interest.
+				Each facet family shares the same hue as its parent trait, with lightness fanning across 6 steps
+				(L step=0.05, total span=0.25). Chroma varies slightly for visual interest.
 			</p>
 		</div>
 	);
@@ -392,7 +392,7 @@ function ContrastReference() {
 				backgrounds.
 				<br />
 				<br />
-				<strong>Facet-level note:</strong> Neuroticism dark mode facets range L=0.35 (anxiety) to L=0.50
+				<strong>Facet-level note:</strong> Neuroticism dark mode facets range L=0.31 (anxiety) to L=0.56
 				(vulnerability). The darkest facets (anxiety, anger) should be used as fills/borders only — not
 				as text color on dark backgrounds.
 			</div>

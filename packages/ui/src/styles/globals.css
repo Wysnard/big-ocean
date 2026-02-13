@@ -118,48 +118,48 @@
 	--trait-openness-accent: oklch(0.82 0.16 80);           /* spec: #FFB830 Gold */
 	--trait-conscientiousness-accent: oklch(0.67 0.13 181); /* spec: #00B4A6 Teal */
 	--trait-extraversion-accent: oklch(0.67 0.20 42);       /* spec: #FF6B2B Orange */
-	--trait-agreeableness-accent: oklch(0.80 0.17 166);     /* spec: #00E0A0 Mint */
+	--trait-agreeableness-accent: oklch(0.72 0.19 48);      /* Warm Orange — high contrast pair with Teal */
 	--trait-neuroticism-accent: oklch(0.78 0.14 182);       /* spec: #00D4C8 Teal */
 
-	/* Openness facets (base: L=0.55 C=0.24 H=293, lightness-step algorithm) */
-	--facet-imagination: oklch(0.49 0.22 293);
-	--facet-artistic_interests: oklch(0.52 0.23 293);
+	/* Openness facets (base: L=0.55 C=0.24 H=293, step=0.05) */
+	--facet-imagination: oklch(0.45 0.22 293);
+	--facet-artistic_interests: oklch(0.50 0.23 293);
 	--facet-emotionality: oklch(0.55 0.24 293);
-	--facet-adventurousness: oklch(0.58 0.25 293);
-	--facet-intellect: oklch(0.61 0.26 293);
-	--facet-liberalism: oklch(0.64 0.25 293);
+	--facet-adventurousness: oklch(0.60 0.25 293);
+	--facet-intellect: oklch(0.65 0.26 293);
+	--facet-liberalism: oklch(0.70 0.25 293);
 
-	/* Conscientiousness facets (base: L=0.67 C=0.20 H=42, lightness-step algorithm) */
-	--facet-self_efficacy: oklch(0.61 0.18 42);
-	--facet-orderliness: oklch(0.64 0.19 42);
+	/* Conscientiousness facets (base: L=0.67 C=0.20 H=42, step=0.05) */
+	--facet-self_efficacy: oklch(0.57 0.18 42);
+	--facet-orderliness: oklch(0.62 0.19 42);
 	--facet-dutifulness: oklch(0.67 0.20 42);
-	--facet-achievement_striving: oklch(0.70 0.21 42);
-	--facet-self_discipline: oklch(0.73 0.22 42);
-	--facet-cautiousness: oklch(0.76 0.21 42);
+	--facet-achievement_striving: oklch(0.72 0.21 42);
+	--facet-self_discipline: oklch(0.77 0.22 42);
+	--facet-cautiousness: oklch(0.82 0.21 42);
 
-	/* Extraversion facets (base: L=0.59 C=0.27 H=348, lightness-step algorithm) */
-	--facet-friendliness: oklch(0.53 0.25 348);
-	--facet-gregariousness: oklch(0.56 0.26 348);
+	/* Extraversion facets (base: L=0.59 C=0.27 H=348, step=0.05) */
+	--facet-friendliness: oklch(0.49 0.25 348);
+	--facet-gregariousness: oklch(0.54 0.26 348);
 	--facet-assertiveness: oklch(0.59 0.27 348);
-	--facet-activity_level: oklch(0.62 0.28 348);
-	--facet-excitement_seeking: oklch(0.65 0.29 348);
-	--facet-cheerfulness: oklch(0.68 0.28 348);
+	--facet-activity_level: oklch(0.64 0.28 348);
+	--facet-excitement_seeking: oklch(0.69 0.29 348);
+	--facet-cheerfulness: oklch(0.74 0.28 348);
 
-	/* Agreeableness facets (base: L=0.67 C=0.13 H=181, lightness-step algorithm) */
-	--facet-trust: oklch(0.61 0.11 181);
-	--facet-morality: oklch(0.64 0.12 181);
+	/* Agreeableness facets (base: L=0.67 C=0.13 H=181, step=0.05) */
+	--facet-trust: oklch(0.57 0.11 181);
+	--facet-morality: oklch(0.62 0.12 181);
 	--facet-altruism: oklch(0.67 0.13 181);
-	--facet-cooperation: oklch(0.70 0.14 181);
-	--facet-modesty: oklch(0.73 0.15 181);
-	--facet-sympathy: oklch(0.76 0.14 181);
+	--facet-cooperation: oklch(0.72 0.14 181);
+	--facet-modesty: oklch(0.77 0.15 181);
+	--facet-sympathy: oklch(0.82 0.14 181);
 
-	/* Neuroticism facets (base: L=0.29 C=0.19 H=272, lightness-step algorithm) */
-	--facet-anxiety: oklch(0.23 0.17 272);
-	--facet-anger: oklch(0.26 0.18 272);
+	/* Neuroticism facets (base: L=0.29 C=0.19 H=272, step=0.05) */
+	--facet-anxiety: oklch(0.19 0.17 272);
+	--facet-anger: oklch(0.24 0.18 272);
 	--facet-depression: oklch(0.29 0.19 272);
-	--facet-self_consciousness: oklch(0.32 0.20 272);
-	--facet-immoderation: oklch(0.35 0.21 272);
-	--facet-vulnerability: oklch(0.38 0.20 272);
+	--facet-self_consciousness: oklch(0.34 0.20 272);
+	--facet-immoderation: oklch(0.39 0.21 272);
+	--facet-vulnerability: oklch(0.44 0.20 272);
 
 	/* Trait gradients (accent-pair, auto light/dark via var() references) */
 	--gradient-trait-openness: linear-gradient(135deg, var(--trait-openness), var(--trait-openness-accent));
@@ -239,48 +239,48 @@
 	--trait-openness-accent: oklch(0.90 0.16 80);           /* Brighter gold */
 	--trait-conscientiousness-accent: oklch(0.79 0.13 181); /* Brighter teal */
 	--trait-extraversion-accent: oklch(0.79 0.20 42);       /* Brighter orange */
-	--trait-agreeableness-accent: oklch(0.88 0.17 166);     /* Brighter mint */
+	--trait-agreeableness-accent: oklch(0.80 0.19 48);      /* Brighter warm orange — high contrast pair with Teal */
 	--trait-neuroticism-accent: oklch(0.88 0.14 182);       /* Brighter teal */
 
-	/* Openness facets (dark mode: light-mode L + 0.12) */
-	--facet-imagination: oklch(0.61 0.22 293);
-	--facet-artistic_interests: oklch(0.64 0.23 293);
+	/* Openness facets (dark mode: light-mode L + 0.12, step=0.05) */
+	--facet-imagination: oklch(0.57 0.22 293);
+	--facet-artistic_interests: oklch(0.62 0.23 293);
 	--facet-emotionality: oklch(0.67 0.24 293);
-	--facet-adventurousness: oklch(0.70 0.25 293);
-	--facet-intellect: oklch(0.73 0.26 293);
-	--facet-liberalism: oklch(0.76 0.25 293);
+	--facet-adventurousness: oklch(0.72 0.25 293);
+	--facet-intellect: oklch(0.77 0.26 293);
+	--facet-liberalism: oklch(0.82 0.25 293);
 
-	/* Conscientiousness facets (dark mode: light-mode L + 0.12, hue matched to dark trait H=46) */
-	--facet-self_efficacy: oklch(0.73 0.18 46);
-	--facet-orderliness: oklch(0.76 0.19 46);
+	/* Conscientiousness facets (dark mode: light-mode L + 0.12, step=0.05, H=46) */
+	--facet-self_efficacy: oklch(0.69 0.18 46);
+	--facet-orderliness: oklch(0.74 0.19 46);
 	--facet-dutifulness: oklch(0.79 0.20 46);
-	--facet-achievement_striving: oklch(0.82 0.21 46);
-	--facet-self_discipline: oklch(0.85 0.22 46);
-	--facet-cautiousness: oklch(0.88 0.21 46);
+	--facet-achievement_striving: oklch(0.84 0.21 46);
+	--facet-self_discipline: oklch(0.89 0.22 46);
+	--facet-cautiousness: oklch(0.92 0.21 46);
 
-	/* Extraversion facets (dark mode: light-mode L + 0.12, hue matched to dark trait H=350) */
-	--facet-friendliness: oklch(0.65 0.25 350);
-	--facet-gregariousness: oklch(0.68 0.26 350);
+	/* Extraversion facets (dark mode: light-mode L + 0.12, step=0.05, H=350) */
+	--facet-friendliness: oklch(0.61 0.25 350);
+	--facet-gregariousness: oklch(0.66 0.26 350);
 	--facet-assertiveness: oklch(0.71 0.27 350);
-	--facet-activity_level: oklch(0.74 0.28 350);
-	--facet-excitement_seeking: oklch(0.77 0.29 350);
-	--facet-cheerfulness: oklch(0.80 0.28 350);
+	--facet-activity_level: oklch(0.76 0.28 350);
+	--facet-excitement_seeking: oklch(0.81 0.29 350);
+	--facet-cheerfulness: oklch(0.86 0.28 350);
 
-	/* Agreeableness facets (dark mode: light-mode L + 0.12, hue matched to dark trait H=178) */
-	--facet-trust: oklch(0.73 0.11 178);
-	--facet-morality: oklch(0.76 0.12 178);
+	/* Agreeableness facets (dark mode: light-mode L + 0.12, step=0.05, H=178) */
+	--facet-trust: oklch(0.69 0.11 178);
+	--facet-morality: oklch(0.74 0.12 178);
 	--facet-altruism: oklch(0.79 0.13 178);
-	--facet-cooperation: oklch(0.82 0.14 178);
-	--facet-modesty: oklch(0.85 0.15 178);
-	--facet-sympathy: oklch(0.88 0.14 178);
+	--facet-cooperation: oklch(0.84 0.14 178);
+	--facet-modesty: oklch(0.89 0.15 178);
+	--facet-sympathy: oklch(0.92 0.14 178);
 
-	/* Neuroticism facets (dark mode: light-mode L + 0.12, hue matched to dark trait H=275) */
-	--facet-anxiety: oklch(0.35 0.17 275);
-	--facet-anger: oklch(0.38 0.18 275);
+	/* Neuroticism facets (dark mode: light-mode L + 0.12, step=0.05, H=275) */
+	--facet-anxiety: oklch(0.31 0.17 275);
+	--facet-anger: oklch(0.36 0.18 275);
 	--facet-depression: oklch(0.41 0.19 275);
-	--facet-self_consciousness: oklch(0.44 0.20 275);
-	--facet-immoderation: oklch(0.47 0.21 275);
-	--facet-vulnerability: oklch(0.50 0.20 275);
+	--facet-self_consciousness: oklch(0.46 0.20 275);
+	--facet-immoderation: oklch(0.51 0.21 275);
+	--facet-vulnerability: oklch(0.56 0.20 275);
 }
 
 @theme inline {

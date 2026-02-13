@@ -72,7 +72,7 @@ Each archetype maps to a dominant Big Five trait. That trait determines the arch
 | **O — Openness** | Circle | `#A855F7` Purple | `#FFB830` Gold | Purple → Gold |
 | **C — Conscientiousness** | Half Circle | `#FF6B2B` Orange | `#00B4A6` Teal | Orange → Teal |
 | **E — Extraversion** | Tall Slim Rectangle (portrait) | `#FF0080` Electric Pink | `#FF6B2B` Orange | Pink → Orange |
-| **A — Agreeableness** | Triangle | `#00B4A6` Teal | `#00E0A0` Mint | Teal → Mint |
+| **A — Agreeableness** | Triangle | `#00B4A6` Teal | `#E08840` Warm Orange | Teal → Orange |
 | **N — Neuroticism** | Diamond | `#1c1c9c` Navy | `#00D4C8` Teal | Navy → Teal |
 
 ### Color Saturation as Data Encoding

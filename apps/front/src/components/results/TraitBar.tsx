@@ -48,8 +48,8 @@ export function TraitBar({
 			onClick={onToggle}
 			data-testid={`trait-bar-${traitName}`}
 			className={cn(
-				"w-full rounded-xl border border-slate-700/50 bg-slate-800/60 p-4 text-left transition-colors hover:bg-slate-800/80",
-				isExpanded && "border-slate-600/60",
+				"w-full rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent",
+				isExpanded && "border-ring/30",
 				className,
 			)}
 		>
@@ -62,14 +62,14 @@ export function TraitBar({
 						style={{ backgroundColor: color }}
 						data-testid={`trait-color-${traitName}`}
 					/>
-					<span className="text-sm font-semibold text-white truncate">{displayName}</span>
+					<span className="text-sm font-semibold text-foreground truncate">{displayName}</span>
 					{/* Level badge */}
 					<span
 						className={cn(
 							"shrink-0 rounded-md px-2 py-0.5 text-xs font-medium",
-							HIGH_LETTERS.has(level) && "bg-emerald-900/40 text-emerald-300",
-							MID_LETTERS.has(level) && "bg-amber-900/40 text-amber-300",
-							!HIGH_LETTERS.has(level) && !MID_LETTERS.has(level) && "bg-slate-700/60 text-slate-300",
+							HIGH_LETTERS.has(level) && "bg-success/15 text-success",
+							MID_LETTERS.has(level) && "bg-warning/15 text-warning",
+							!HIGH_LETTERS.has(level) && !MID_LETTERS.has(level) && "bg-muted text-muted-foreground",
 						)}
 						data-testid={`trait-level-${traitName}`}
 					>
@@ -78,13 +78,13 @@ export function TraitBar({
 				</div>
 
 				<div className="flex items-center gap-3 shrink-0">
-					<span className="text-xs text-slate-400" data-testid={`trait-confidence-${traitName}`}>
+					<span className="text-xs text-muted-foreground" data-testid={`trait-confidence-${traitName}`}>
 						{clampedConfidence}%
 					</span>
 					{/* Expand chevron */}
 					<svg
 						className={cn(
-							"h-4 w-4 text-slate-400 transition-transform duration-200",
+							"h-4 w-4 text-muted-foreground transition-transform duration-200",
 							isExpanded && "rotate-180",
 						)}
 						fill="none"
@@ -101,12 +101,12 @@ export function TraitBar({
 			{/* Score bar */}
 			<div className="mt-3">
 				<div className="flex items-center justify-between mb-1">
-					<span className="text-xs text-slate-500">
+					<span className="text-xs text-muted-foreground">
 						{clampedScore} / {MAX_TRAIT_SCORE}
 					</span>
 				</div>
 				<div
-					className="h-2 w-full overflow-hidden rounded-full bg-slate-700/60"
+					className="h-2 w-full overflow-hidden rounded-full bg-muted"
 					data-testid={`trait-track-${traitName}`}
 				>
 					<div
