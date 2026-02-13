@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-02-11
+# Generated: 2026-02-13
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-02-11
+generated: 2026-02-13
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -95,14 +95,35 @@ development_status:
   6-3-audit-logging-and-access-control: backlog
   epic-6-retrospective: optional
 
-  # EPIC 7: UI Theme & Visual Polish (PHASE 1 - MVP Polish)
-  # Moved to Phase 1 on 2026-02-11 for polished launch experience
-  # Rationale: Ocean brand identity and visual polish critical for first impressions and user trust
-  epic-7: backlog
-  7-1-implement-ocean-brand-color-theme-with-gradients: backlog
-  7-6-add-global-header-with-logo-auth-controls-theme-toggle-and-mobile-hamburger: backlog
-  7-2-add-dark-mode-toggle-with-system-preference-detection: backlog
-  7-3-define-big-five-trait-and-facet-visualization-colors: backlog
-  7-4-polish-component-visual-consistency: backlog
-  7-5-redesign-home-page-with-theme-system: backlog
+  # EPIC 7: UI Theme & Visual Identity (PHASE 1 - MVP Visual Identity)
+  # Rewritten 2026-02-13 to align with new UX Design Specification
+  # Psychedelic-bold visual identity with OCEAN geometric shapes, dual light/dark modes,
+  # custom typography, illustration system, auth-gated results, shareable profiles, user dashboard
+  # All stories reset to backlog after epic scope rewrite
+  epic-7: in-progress
+  7-1-psychedelic-brand-design-tokens: ready-for-dev
+  7-2-typography-system: backlog
+  7-3-dark-mode-toggle-with-system-preference-detection: backlog
+  7-4-ocean-geometric-identity-system-and-brand-mark: backlog
+  7-5-big-five-trait-and-facet-visualization-colors: backlog
+  7-6-global-header-with-geometric-logo-auth-theme-toggle-mobile-nav: backlog
+  7-7-illustration-and-icon-system: backlog
+  7-8-home-page-redesign-with-color-block-composition: backlog
+  7-9-results-page-visual-redesign-with-archetype-theming: backlog
+  7-10-assessment-chat-ux-polish: backlog
+  7-11-auth-gated-results-reveal-and-sign-up-flow: backlog
+  7-12-shareable-public-profile-and-share-cards: backlog
+  7-13-registered-user-profile-page: backlog
+  7-14-component-visual-consistency-and-final-polish: backlog
   epic-7-retrospective: optional
+
+  # EPIC 8: Results Page Content Enrichment
+  # Phase 1 (Stories 8.1-8.3): Static archetype/trait/facet descriptions
+  # Phase 2 (Stories 8.4-8.5): AI-generated personalized portraits + freemium model
+  epic-8: backlog
+  8-1-expand-archetype-descriptions-to-4-5-sentences: backlog
+  8-2-add-level-specific-trait-descriptions: backlog
+  8-3-add-level-specific-facet-descriptions: backlog
+  8-4-pre-generate-personalized-portrait-at-70-percent-confidence: backlog
+  8-5-regenerate-personalized-portrait-at-85-percent-confidence-paid-tier: backlog
+  epic-8-retrospective: optional

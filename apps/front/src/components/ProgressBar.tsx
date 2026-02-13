@@ -30,9 +30,9 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 		<div className={`w-full max-w-md mx-auto px-4 py-2 ${className}`}>
 			{/* Label and percentage */}
 			<div className="flex items-center justify-between mb-1 text-sm">
-				<span className="text-slate-300">{displayLabel}</span>
+				<span className="text-foreground">{displayLabel}</span>
 				{showPercentageValue && (
-					<span className="text-slate-400 font-medium">{Math.round(clampedValue)}%</span>
+					<span className="text-muted-foreground font-medium">{Math.round(clampedValue)}%</span>
 				)}
 			</div>
 
@@ -44,12 +44,12 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 				aria-valuemin={0}
 				aria-valuemax={100}
 				aria-label={displayLabel}
-				className="w-full bg-slate-700 h-3 rounded-full overflow-hidden"
+				className="w-full bg-muted h-3 rounded-full overflow-hidden"
 			>
 				{/* Progress bar fill */}
 				<div
 					data-testid="progress-fill"
-					className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500 ease-in-out"
+					className="h-full rounded-full transition-all duration-500 ease-in-out bg-primary"
 					style={{ width: `${clampedValue}%` }}
 				/>
 			</div>

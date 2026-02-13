@@ -104,7 +104,18 @@ export {
 	PRICING,
 } from "./services/cost-calculator.service";
 // Archetype types (Story 3.2)
-export type { Archetype, OceanCode4, OceanCode5, TraitLevel } from "./types/archetype";
+export type {
+	AgreeablenessLevel,
+	Archetype,
+	ConscientiousnessLevel,
+	ExtraversionLevel,
+	NeuroticismLevel,
+	OceanCode4,
+	OceanCode5,
+	OpennessLevel,
+	TraitLevel,
+} from "./types/archetype";
+export { TRAIT_LETTER_MAP, TRAIT_LEVEL_LABELS } from "./types/archetype";
 // Facet types
 export type {
 	AgreeableFacet,
@@ -147,6 +158,9 @@ export {
 	deriveTraitSummary,
 	extract4LetterCode,
 	generateOceanCode,
+	getFacetColor,
+	getTraitColor,
+	getTraitGradient,
 	lookupArchetype,
 	type TraitConfidence,
 } from "./utils/index";

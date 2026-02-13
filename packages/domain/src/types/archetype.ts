@@ -2,20 +2,79 @@
  * Archetype Types for OCEAN Personality Code System
  *
  * Maps 4-letter OCEAN codes (O,C,E,A trait levels) to memorable personality archetypes.
- * Each trait is classified as Low (L), Mid (M), or High (H), producing 81 combinations (3^4).
+ * Each trait uses unique, semantically meaningful letters instead of generic L/M/H:
+ *
+ * Openness:          P (Practical)     G (Grounded)     O (Open-minded)
+ * Conscientiousness:  F (Flexible)      B (Balanced)     D (Disciplined)
+ * Extraversion:       I (Introvert)     A (Ambivert)     E (Extravert)
+ * Agreeableness:      C (Candid)        N (Negotiator)   W (Warm)
+ * Neuroticism:        R (Resilient)     T (Temperate)    S (Sensitive)
  *
  * Full 5-letter codes (including Neuroticism) are stored but only 4 letters are used
  * for archetype naming in POC. Phase 2 will extend to all 5 traits (243 combinations).
  */
 
-/** Trait level classification: Low, Mid, or High */
-export type TraitLevel = "L" | "M" | "H";
+import type { TraitName } from "../constants/big-five";
 
-/** 4-letter OCEAN code using O, C, E, A traits (e.g., "HMLH") */
-export type OceanCode4 = `${TraitLevel}${TraitLevel}${TraitLevel}${TraitLevel}`;
+/** Openness level letters */
+export type OpennessLevel = "P" | "G" | "O";
+/** Conscientiousness level letters */
+export type ConscientiousnessLevel = "F" | "B" | "D";
+/** Extraversion level letters */
+export type ExtraversionLevel = "I" | "A" | "E";
+/** Agreeableness level letters */
+export type AgreeablenessLevel = "C" | "N" | "W";
+/** Neuroticism level letters */
+export type NeuroticismLevel = "R" | "T" | "S";
 
-/** 5-letter OCEAN code using all 5 traits (e.g., "HMLHM") */
-export type OceanCode5 = `${TraitLevel}${TraitLevel}${TraitLevel}${TraitLevel}${TraitLevel}`;
+/** Union of all possible trait-level letters */
+export type TraitLevel =
+	| OpennessLevel
+	| ConscientiousnessLevel
+	| ExtraversionLevel
+	| AgreeablenessLevel
+	| NeuroticismLevel;
+
+/** 4-letter OCEAN code using O, C, E, A traits (e.g., "ODEW") */
+export type OceanCode4 =
+	`${OpennessLevel}${ConscientiousnessLevel}${ExtraversionLevel}${AgreeablenessLevel}`;
+
+/** 5-letter OCEAN code using all 5 traits (e.g., "ODEWR") */
+export type OceanCode5 =
+	`${OpennessLevel}${ConscientiousnessLevel}${ExtraversionLevel}${AgreeablenessLevel}${NeuroticismLevel}`;
+
+/** Trait-specific letter mapping: [Low, Mid, High] per trait */
+export const TRAIT_LETTER_MAP: Record<TraitName, readonly [string, string, string]> = {
+	openness: ["P", "G", "O"],
+	conscientiousness: ["F", "B", "D"],
+	extraversion: ["I", "A", "E"],
+	agreeableness: ["C", "N", "W"],
+	neuroticism: ["R", "T", "S"],
+} as const;
+
+/** Human-readable label for each trait-level letter */
+export const TRAIT_LEVEL_LABELS: Record<string, string> = {
+	// Openness
+	P: "Practical",
+	G: "Grounded",
+	O: "Open-minded",
+	// Conscientiousness
+	F: "Flexible",
+	B: "Balanced",
+	D: "Disciplined",
+	// Extraversion
+	I: "Introvert",
+	A: "Ambivert",
+	E: "Extravert",
+	// Agreeableness
+	C: "Candid",
+	N: "Negotiator",
+	W: "Warm",
+	// Neuroticism
+	R: "Resilient",
+	T: "Temperate",
+	S: "Sensitive",
+} as const;
 
 /**
  * Personality archetype derived from a 4-letter OCEAN code.
@@ -23,7 +82,7 @@ export type OceanCode5 = `${TraitLevel}${TraitLevel}${TraitLevel}${TraitLevel}${
  * @example
  * ```typescript
  * const archetype: Archetype = {
- *   code4: "HHMH",
+ *   code4: "ODAW",
  *   name: "Creative Diplomat",
  *   description: "Open-minded and organized with a reserved nature...",
  *   color: "#4A90D9",

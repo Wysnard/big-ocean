@@ -39,6 +39,7 @@
     "@tanstack/react-table": "^8.21.2",
     "@tanstack/router-plugin": "^1.132.0",
     "@workspace/contracts": "workspace:*",
+    "@workspace/domain": "workspace:*",
     "@workspace/ui": "workspace:*",
     "better-auth": "catalog:",
     "effect": "catalog:",

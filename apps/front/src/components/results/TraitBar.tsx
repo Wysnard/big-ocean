@@ -1,11 +1,10 @@
+import { TRAIT_LEVEL_LABELS } from "@workspace/domain";
 import { cn } from "@workspace/ui/lib/utils";
-
-export type TraitLevel = "H" | "M" | "L";
 
 export interface TraitBarProps {
 	traitName: string;
 	score: number;
-	level: TraitLevel;
+	level: string;
 	confidence: number;
 	color: string;
 	isExpanded: boolean;
@@ -14,11 +13,9 @@ export interface TraitBarProps {
 	className?: string;
 }
 
-const LEVEL_LABELS: Record<TraitLevel, string> = {
-	H: "High",
-	M: "Mid",
-	L: "Low",
-};
+/** Level categories for styling: high, mid, or low */
+const HIGH_LETTERS = new Set(["O", "D", "E", "W", "S"]);
+const MID_LETTERS = new Set(["G", "B", "A", "N", "T"]);
 
 const MAX_TRAIT_SCORE = 120;
 
@@ -41,6 +38,7 @@ export function TraitBar({
 	const scorePercent = Math.round((clampedScore / MAX_TRAIT_SCORE) * 100);
 	const clampedConfidence = Math.min(Math.max(confidence, 0), 100);
 	const displayName = traitName.charAt(0).toUpperCase() + traitName.slice(1);
+	const levelLabel = TRAIT_LEVEL_LABELS[level] ?? level;
 
 	return (
 		<button
@@ -69,13 +67,13 @@ export function TraitBar({
 					<span
 						className={cn(
 							"shrink-0 rounded-md px-2 py-0.5 text-xs font-medium",
-							level === "H" && "bg-emerald-900/40 text-emerald-300",
-							level === "M" && "bg-amber-900/40 text-amber-300",
-							level === "L" && "bg-slate-700/60 text-slate-300",
+							HIGH_LETTERS.has(level) && "bg-emerald-900/40 text-emerald-300",
+							MID_LETTERS.has(level) && "bg-amber-900/40 text-amber-300",
+							!HIGH_LETTERS.has(level) && !MID_LETTERS.has(level) && "bg-slate-700/60 text-slate-300",
 						)}
 						data-testid={`trait-level-${traitName}`}
 					>
-						{LEVEL_LABELS[level]}
+						{levelLabel}
 					</span>
 				</div>
 

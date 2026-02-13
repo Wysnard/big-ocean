@@ -188,7 +188,7 @@ describe("getResults Use Case", () => {
 
 	describe("Success scenarios", () => {
 		it("should return correct archetype for known high facet scores", async () => {
-			// All High: facetScore=15/20 -> traitScore=90/120 -> level H -> OCEAN code "HHHHH"
+			// All High: facetScore=15/20 -> traitScore=90/120 -> level High -> OCEAN code "ODEWS"
 			const allHigh = {
 				openness: { facetScore: 15, confidence: 80 },
 				conscientiousness: { facetScore: 15, confidence: 80 },
@@ -205,8 +205,8 @@ describe("getResults Use Case", () => {
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
 			);
 
-			expect(result.oceanCode5).toBe("HHHHH");
-			expect(result.oceanCode4).toBe("HHHH");
+			expect(result.oceanCode5).toBe("ODEWS");
+			expect(result.oceanCode4).toBe("ODEW");
 			expect(result.archetypeName).toBeDefined();
 			expect(result.archetypeName.length).toBeGreaterThan(0);
 			expect(result.archetypeDescription).toBeDefined();
@@ -215,13 +215,13 @@ describe("getResults Use Case", () => {
 		});
 
 		it("should return correct OCEAN code for mixed trait levels", async () => {
-			// O=High, C=Low, E=Mid, A=High, N=Low
+			// O=High→O, C=Low→F, E=Mid→A, A=High→W, N=Low→R
 			const mixed = {
-				openness: { facetScore: 15, confidence: 85 }, // 90/120 = H
-				conscientiousness: { facetScore: 5, confidence: 70 }, // 30/120 = L
-				extraversion: { facetScore: 10, confidence: 60 }, // 60/120 = M
-				agreeableness: { facetScore: 15, confidence: 75 }, // 90/120 = H
-				neuroticism: { facetScore: 3, confidence: 50 }, // 18/120 = L
+				openness: { facetScore: 15, confidence: 85 }, // 90/120 = High → O
+				conscientiousness: { facetScore: 5, confidence: 70 }, // 30/120 = Low → F
+				extraversion: { facetScore: 10, confidence: 60 }, // 60/120 = Mid → A
+				agreeableness: { facetScore: 15, confidence: 75 }, // 90/120 = High → W
+				neuroticism: { facetScore: 3, confidence: 50 }, // 18/120 = Low → R
 			};
 
 			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
@@ -232,8 +232,8 @@ describe("getResults Use Case", () => {
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
 			);
 
-			expect(result.oceanCode5).toBe("HLMHL");
-			expect(result.oceanCode4).toBe("HLMH");
+			expect(result.oceanCode5).toBe("OFAWR");
+			expect(result.oceanCode4).toBe("OFAW");
 		});
 
 		it("should compute overall confidence as mean of all facet confidences", async () => {
@@ -272,7 +272,7 @@ describe("getResults Use Case", () => {
 				expect(trait.name).toBeDefined();
 				expect(BIG_FIVE_TRAITS).toContain(trait.name);
 				expect(typeof trait.score).toBe("number");
-				expect(["H", "M", "L"]).toContain(trait.level);
+				expect("PGOFBDIAECNWRTS").toContain(trait.level);
 				expect(typeof trait.confidence).toBe("number");
 				expect(trait.confidence).toBeGreaterThanOrEqual(0);
 				expect(trait.confidence).toBeLessThanOrEqual(100);
@@ -302,13 +302,13 @@ describe("getResults Use Case", () => {
 		});
 
 		it("should map trait level boundaries correctly", async () => {
-			// Test exact boundary values: 0-39=L, 40-79=M, 80-120=H
+			// Test exact boundary values: 0-39=Low, 40-79=Mid, 80-120=High
 			const boundaries = {
-				openness: { facetScore: 6, confidence: 80 }, // 36/120 = L (< 40)
-				conscientiousness: { facetScore: 7, confidence: 80 }, // 42/120 = M (>= 40)
-				extraversion: { facetScore: 13, confidence: 80 }, // 78/120 = M (< 80)
-				agreeableness: { facetScore: 14, confidence: 80 }, // 84/120 = H (>= 80)
-				neuroticism: { facetScore: 20, confidence: 80 }, // 120/120 = H
+				openness: { facetScore: 6, confidence: 80 }, // 36/120 = Low → P
+				conscientiousness: { facetScore: 7, confidence: 80 }, // 42/120 = Mid → B
+				extraversion: { facetScore: 13, confidence: 80 }, // 78/120 = Mid → A
+				agreeableness: { facetScore: 14, confidence: 80 }, // 84/120 = High → W
+				neuroticism: { facetScore: 20, confidence: 80 }, // 120/120 = High → S
 			};
 
 			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
@@ -320,15 +320,15 @@ describe("getResults Use Case", () => {
 			);
 
 			const traitMap = Object.fromEntries(result.traits.map((t) => [t.name, t]));
-			expect(traitMap.openness.level).toBe("L");
-			expect(traitMap.conscientiousness.level).toBe("M");
-			expect(traitMap.extraversion.level).toBe("M");
-			expect(traitMap.agreeableness.level).toBe("H");
-			expect(traitMap.neuroticism.level).toBe("H");
+			expect(traitMap.openness.level).toBe("P");
+			expect(traitMap.conscientiousness.level).toBe("B");
+			expect(traitMap.extraversion.level).toBe("A");
+			expect(traitMap.agreeableness.level).toBe("W");
+			expect(traitMap.neuroticism.level).toBe("S");
 		});
 
 		it("should return curated archetype when available", async () => {
-			// HHHH = curated archetype "The Catalyst" (per archetypes.ts)
+			// ODEW = curated archetype "The Idealist" (per archetypes.ts)
 			const allHigh = {
 				openness: { facetScore: 15, confidence: 80 },
 				conscientiousness: { facetScore: 15, confidence: 80 },
@@ -345,8 +345,8 @@ describe("getResults Use Case", () => {
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
 			);
 
-			// HHHH should be a curated archetype
-			expect(result.oceanCode4).toBe("HHHH");
+			// ODEW should be a curated archetype
+			expect(result.oceanCode4).toBe("ODEW");
 			// Verify the result has all required archetype fields
 			expect(result.archetypeName).toBeDefined();
 			expect(result.archetypeDescription).toBeDefined();
@@ -386,7 +386,7 @@ describe("getResults Use Case", () => {
 			);
 
 			// Default facet score 10 x 6 = 60 per trait -> all Mid
-			expect(result.oceanCode5).toBe("MMMMM");
+			expect(result.oceanCode5).toBe("GBANT");
 			expect(result.overallConfidence).toBe(0); // All facets at confidence 0
 		});
 	});

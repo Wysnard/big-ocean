@@ -72,14 +72,14 @@ export function FacetSidePanel({
 							<button
 								key={item.id}
 								onClick={() => handleFacetClick(item.facetName)}
-								className="w-full text-left p-3 border rounded-lg hover:bg-slate-700/50 transition-colors min-h-[44px]"
+								className="w-full text-left p-3 border border-border rounded-lg hover:bg-muted transition-colors min-h-[44px]"
 								type="button"
 							>
 								<div className="flex justify-between items-center">
 									<span className="capitalize">{item.facetName.replace(/_/g, " ")}</span>
 									<span className={cn("font-bold", getScoreColor(item.score))}>+{item.score}/20</span>
 								</div>
-								<span className="text-xs text-gray-400">{item.confidence}% confident</span>
+								<span className="text-xs text-muted-foreground">{item.confidence}% confident</span>
 							</button>
 						))}
 				</div>

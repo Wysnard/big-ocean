@@ -5,94 +5,115 @@
  * Uses hand-curated names for common combinations and a component-based fallback
  * generator for the remaining combinations.
  *
+ * Letter system (unique per trait):
+ *   Openness:          P (Practical)  G (Grounded)    O (Open-minded)
+ *   Conscientiousness: F (Flexible)   B (Balanced)    D (Disciplined)
+ *   Extraversion:      I (Introvert)  A (Ambivert)    E (Extravert)
+ *   Agreeableness:     C (Candid)     N (Negotiator)  W (Warm)
+ *
  * @module
  */
 
 import { CURATED_ARCHETYPES } from "../constants/archetypes";
-import type { Archetype, OceanCode4, TraitLevel } from "../types/archetype";
+import type { Archetype, OceanCode4 } from "../types/archetype";
 
-const VALID_CODE4_REGEX = /^[LMH]{4}$/;
-const VALID_CODE5_REGEX = /^[LMH]{5}$/;
+/** Valid letters per position in a 4-letter code (O, C, E, A) */
+const VALID_CODE4_REGEX = /^[PGO][FBD][IAE][CNW]$/;
+/** Valid letters per position in a 5-letter code (O, C, E, A, N) */
+const VALID_CODE5_REGEX = /^[PGO][FBD][IAE][CNW][RTS]$/;
 
 /** Short trait key for the 4 traits used in archetype lookup (OCEA order). */
 type TraitKey = "O" | "C" | "E" | "A";
+
+/** Valid letters for each trait position in a 4-letter code */
+type OpennessLetter = "P" | "G" | "O";
+type ConscientiousnessLetter = "F" | "B" | "D";
+type ExtraversionLetter = "I" | "A" | "E";
+type AgreeablenessLetter = "C" | "N" | "W";
+
+/** Union of all valid code4 position letters */
+type Code4Letter =
+	| OpennessLetter
+	| ConscientiousnessLetter
+	| ExtraversionLetter
+	| AgreeablenessLetter;
 
 /**
  * Adjective pools for each trait at each level.
  * Used by the fallback generator to construct personality names.
  */
-const TRAIT_ADJECTIVES: Record<TraitKey, Record<TraitLevel, string[]>> = {
+const TRAIT_ADJECTIVES: Record<TraitKey, Record<string, string[]>> = {
 	O: {
-		H: ["Creative", "Curious", "Imaginative"],
-		M: ["Balanced", "Pragmatic"],
-		L: ["Practical", "Traditional"],
+		O: ["Creative", "Curious", "Imaginative"],
+		G: ["Balanced", "Pragmatic"],
+		P: ["Practical", "Traditional"],
 	},
 	C: {
-		H: ["Organized", "Disciplined", "Methodical"],
-		M: ["Flexible", "Adaptable"],
-		L: ["Spontaneous", "Easygoing"],
+		D: ["Organized", "Disciplined", "Methodical"],
+		B: ["Flexible", "Adaptable"],
+		F: ["Spontaneous", "Easygoing"],
 	},
 	E: {
-		H: ["Energetic", "Social", "Outgoing"],
-		M: ["Moderate", "Selective"],
-		L: ["Quiet", "Reserved", "Reflective"],
+		E: ["Energetic", "Social", "Outgoing"],
+		A: ["Moderate", "Selective"],
+		I: ["Quiet", "Reserved", "Reflective"],
 	},
 	A: {
-		H: ["Caring", "Cooperative", "Warm"],
-		M: ["Fair", "Balanced"],
-		L: ["Independent", "Self-reliant", "Autonomous"],
+		W: ["Caring", "Cooperative", "Warm"],
+		N: ["Fair", "Balanced"],
+		C: ["Independent", "Self-reliant", "Autonomous"],
 	},
 };
 
 /**
  * Noun mapping derived from Agreeableness level.
  */
-const AGREEABLENESS_NOUNS: Record<TraitLevel, string> = {
-	H: "Collaborator",
-	M: "Navigator",
-	L: "Individualist",
+const AGREEABLENESS_NOUNS: Record<string, string> = {
+	W: "Collaborator",
+	N: "Navigator",
+	C: "Individualist",
 };
 
 /**
  * Trait-level description fragments for generating descriptions.
  */
-const TRAIT_DESCRIPTIONS: Record<TraitKey, Record<TraitLevel, string>> = {
+const TRAIT_DESCRIPTIONS: Record<TraitKey, Record<string, string>> = {
 	O: {
-		H: "embraces new ideas and creative exploration",
-		M: "balances curiosity with practicality",
-		L: "prefers familiar approaches and proven methods",
+		O: "embraces new ideas and creative exploration",
+		G: "balances curiosity with practicality",
+		P: "prefers familiar approaches and proven methods",
 	},
 	C: {
-		H: "approaches tasks with discipline and careful planning",
-		M: "adapts their organizational style to the situation",
-		L: "favors spontaneity and flexible approaches",
+		D: "approaches tasks with discipline and careful planning",
+		B: "adapts their organizational style to the situation",
+		F: "favors spontaneity and flexible approaches",
 	},
 	E: {
-		H: "thrives in social environments and draws energy from interaction",
-		M: "selectively engages with social settings",
-		L: "finds strength in quiet reflection and deeper connections",
+		E: "thrives in social environments and draws energy from interaction",
+		A: "selectively engages with social settings",
+		I: "finds strength in quiet reflection and deeper connections",
 	},
 	A: {
-		H: "prioritizes cooperation and genuine care for others",
-		M: "balances personal goals with the needs of others",
-		L: "values independence and self-directed decision-making",
+		W: "prioritizes cooperation and genuine care for others",
+		N: "balances personal goals with the needs of others",
+		C: "values independence and self-directed decision-making",
 	},
 };
 
 /**
  * Base RGB colors per trait level for deterministic color generation.
  */
-const TRAIT_COLORS: Record<TraitKey, Record<TraitLevel, [number, number, number]>> = {
-	O: { H: [74, 144, 226], M: [128, 128, 128], L: [200, 180, 140] },
-	C: { H: [46, 139, 87], M: [128, 128, 128], L: [210, 150, 80] },
-	E: { H: [255, 165, 0], M: [128, 128, 128], L: [100, 100, 180] },
-	A: { H: [255, 105, 180], M: [128, 128, 128], L: [120, 120, 120] },
+const TRAIT_COLORS: Record<TraitKey, Record<string, [number, number, number]>> = {
+	O: { O: [74, 144, 226], G: [128, 128, 128], P: [200, 180, 140] },
+	C: { D: [46, 139, 87], B: [128, 128, 128], F: [210, 150, 80] },
+	E: { E: [255, 165, 0], A: [128, 128, 128], I: [100, 100, 180] },
+	A: { W: [255, 105, 180], N: [128, 128, 128], C: [120, 120, 120] },
 };
 
 const TRAIT_ORDER: readonly TraitKey[] = ["O", "C", "E", "A"];
 
-/** Parsed 4-letter code as a fixed-length tuple of trait levels. */
-type Code4Tuple = [TraitLevel, TraitLevel, TraitLevel, TraitLevel];
+/** Parsed 4-letter code as a fixed-length tuple of trait-level letters. */
+type Code4Tuple = [Code4Letter, Code4Letter, Code4Letter, Code4Letter];
 
 /**
  * Parse a validated 4-letter code into a typed tuple.
@@ -102,10 +123,11 @@ const parseCode4 = (code4: string): Code4Tuple =>
 	[code4[0], code4[1], code4[2], code4[3]] as Code4Tuple;
 
 /**
- * Calculate the "extremeness" of a trait level (distance from M).
- * H and L are extreme (1), M is not (0).
+ * Calculate the "extremeness" of a trait level (distance from mid).
+ * High and Low letters are extreme (1), Mid letters are not (0).
  */
-const extremeness = (level: TraitLevel): number => (level === "M" ? 0 : 1);
+const MID_LETTERS = new Set(["G", "B", "A", "N"]);
+const extremeness = (letter: Code4Letter): number => (MID_LETTERS.has(letter) ? 0 : 1);
 
 /**
  * Generate a personality name from a 4-letter code using component-based approach.
@@ -117,12 +139,12 @@ const extremeness = (level: TraitLevel): number => (level === "M" ? 0 : 1);
  * @returns Generated name like "Creative Collaborator"
  */
 const generateArchetypeName = (levels: Code4Tuple): string => {
-	// Find primary trait: most extreme (H or L), OCEAN order for ties
+	// Find primary trait: most extreme (High or Low), OCEAN order for ties
 	let primaryIdx = 0;
 	let primaryExtremeness = extremeness(levels[0]);
 
 	for (let i = 1; i < 4; i++) {
-		const ext = extremeness(levels[i] as TraitLevel);
+		const ext = extremeness(levels[i] as Code4Letter);
 		if (ext > primaryExtremeness) {
 			primaryIdx = i;
 			primaryExtremeness = ext;
@@ -130,11 +152,11 @@ const generateArchetypeName = (levels: Code4Tuple): string => {
 	}
 
 	const primaryTrait = TRAIT_ORDER[primaryIdx] as TraitKey;
-	const primaryLevel = levels[primaryIdx] as TraitLevel;
+	const primaryLevel = levels[primaryIdx] as string;
 	const adjectives = TRAIT_ADJECTIVES[primaryTrait][primaryLevel];
 	const adjective = adjectives[0]; // deterministic: always first
 
-	const aLevel = levels[3]; // Agreeableness is 4th position
+	const aLevel = levels[3] as string; // Agreeableness is 4th position
 	const noun = AGREEABLENESS_NOUNS[aLevel];
 
 	return `${adjective} ${noun}`;
@@ -150,13 +172,13 @@ const generateDescription = (levels: Code4Tuple): string => {
 	const sentences: string[] = [];
 
 	// First sentence: combine O and C descriptions
-	const oDesc = TRAIT_DESCRIPTIONS.O[levels[0]];
-	const cDesc = TRAIT_DESCRIPTIONS.C[levels[1]];
+	const oDesc = TRAIT_DESCRIPTIONS.O[levels[0] as string];
+	const cDesc = TRAIT_DESCRIPTIONS.C[levels[1] as string];
 	sentences.push(`Someone who ${oDesc} and ${cDesc}.`);
 
 	// Second sentence: combine E and A descriptions
-	const eDesc = TRAIT_DESCRIPTIONS.E[levels[2]];
-	const aDesc = TRAIT_DESCRIPTIONS.A[levels[3]];
+	const eDesc = TRAIT_DESCRIPTIONS.E[levels[2] as string];
+	const aDesc = TRAIT_DESCRIPTIONS.A[levels[3] as string];
 	sentences.push(`This person ${eDesc} and ${aDesc}.`);
 
 	return sentences.join(" ");
@@ -175,7 +197,7 @@ const generateColor = (levels: Code4Tuple): string => {
 
 	for (let i = 0; i < 4; i++) {
 		const trait = TRAIT_ORDER[i] as TraitKey;
-		const level = levels[i] as TraitLevel;
+		const level = levels[i] as string;
 		const [tr, tg, tb] = TRAIT_COLORS[trait][level];
 		r += tr;
 		g += tg;
@@ -196,20 +218,20 @@ const generateColor = (levels: Code4Tuple): string => {
  * Checks hand-curated entries first, falls back to component-based generation.
  * Every valid 4-letter code (81 total) returns a valid archetype.
  *
- * @param code4 - 4-character string of L/M/H for O, C, E, A traits
+ * @param code4 - 4-character string using trait-specific letters (O,C,E,A positions)
  * @returns Archetype with name, description, color, and curation status
- * @throws Error if code4 is not exactly 4 characters of L/M/H
+ * @throws Error if code4 doesn't match valid letter pattern
  *
  * @example
  * ```typescript
- * const archetype = lookupArchetype("HHMH");
- * // → { code4: "HHMH", name: "The Creative Diplomat", description: "...", color: "#5B8FA8", isCurated: true }
+ * const archetype = lookupArchetype("ODAW");
+ * // → { code4: "ODAW", name: "The Creative Diplomat", ... }
  * ```
  */
 export const lookupArchetype = (code4: string): Archetype => {
 	if (!VALID_CODE4_REGEX.test(code4)) {
 		throw new Error(
-			`Invalid 4-letter OCEAN code: "${code4}". Expected exactly 4 characters of L, M, or H.`,
+			`Invalid 4-letter OCEAN code: "${code4}". Expected pattern: [PGO][FBD][IAE][CNW].`,
 		);
 	}
 
@@ -240,19 +262,19 @@ export const lookupArchetype = (code4: string): Archetype => {
  *
  * Drops the Neuroticism letter (5th position) for POC archetype lookup.
  *
- * @param oceanCode5 - 5-character OCEAN code (e.g., "HHMHM")
- * @returns 4-character code (e.g., "HHMH")
- * @throws Error if input is not exactly 5 characters of L/M/H
+ * @param oceanCode5 - 5-character OCEAN code (e.g., "ODEWR")
+ * @returns 4-character code (e.g., "ODEW")
+ * @throws Error if input doesn't match valid 5-letter pattern
  *
  * @example
  * ```typescript
- * extract4LetterCode("HHMHM") // → "HHMH"
+ * extract4LetterCode("ODEWR") // → "ODEW"
  * ```
  */
 export const extract4LetterCode = (oceanCode5: string): OceanCode4 => {
 	if (!VALID_CODE5_REGEX.test(oceanCode5)) {
 		throw new Error(
-			`Invalid 5-letter OCEAN code: "${oceanCode5}". Expected exactly 5 characters of L, M, or H.`,
+			`Invalid 5-letter OCEAN code: "${oceanCode5}". Expected pattern: [PGO][FBD][IAE][CNW][RTS].`,
 		);
 	}
 	return oceanCode5.slice(0, 4) as OceanCode4;

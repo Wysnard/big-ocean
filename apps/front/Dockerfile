@@ -51,6 +51,11 @@ EXPOSE 3000
 # Set NODE_ENV
 ENV NODE_ENV=development
 
+# Entrypoint runs pnpm install at startup to sync deps into the named volume
+COPY apps/front/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
+
 # Start Vite dev server with --host for Docker networking
 CMD ["pnpm", "-C", "apps/front", "dev", "--host"]
 

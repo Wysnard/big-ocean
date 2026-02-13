@@ -21,7 +21,7 @@ import {
 	generateOceanCode,
 	LoggerRepository,
 	lookupArchetype,
-	type TraitLevel,
+	TRAIT_LETTER_MAP,
 } from "@workspace/domain";
 import { Effect } from "effect";
 
@@ -32,7 +32,7 @@ export interface GetResultsInput {
 export interface TraitResult {
 	readonly name: string;
 	readonly score: number;
-	readonly level: TraitLevel;
+	readonly level: string;
 	readonly confidence: number;
 }
 
@@ -56,12 +56,13 @@ export interface GetResultsOutput {
 }
 
 /**
- * Map trait score (0-120) to level classification
+ * Map trait score (0-120) to trait-specific level letter
  */
-const mapScoreToLevel = (score: number): TraitLevel => {
-	if (score < 40) return "L";
-	if (score < 80) return "M";
-	return "H";
+const mapScoreToLevel = (traitName: string, score: number): string => {
+	const letters = TRAIT_LETTER_MAP[traitName as keyof typeof TRAIT_LETTER_MAP];
+	if (score < 40) return letters[0];
+	if (score < 80) return letters[1];
+	return letters[2];
 };
 
 /**
@@ -115,7 +116,7 @@ export const getResults = (input: GetResultsInput) =>
 			return {
 				name: traitName,
 				score: traitScore.score,
-				level: mapScoreToLevel(traitScore.score),
+				level: mapScoreToLevel(traitName, traitScore.score),
 				confidence: traitScore.confidence,
 			};
 		});

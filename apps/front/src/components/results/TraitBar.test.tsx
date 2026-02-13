@@ -6,7 +6,7 @@ import { TraitBar } from "./TraitBar";
 const defaultProps = {
 	traitName: "openness",
 	score: 90,
-	level: "H" as const,
+	level: "O",
 	confidence: 85,
 	color: "#6B5CE7",
 	isExpanded: false,
@@ -20,19 +20,19 @@ describe("TraitBar", () => {
 		expect(screen.getByText("Openness")).toBeInTheDocument();
 	});
 
-	it("renders High level badge", () => {
-		render(<TraitBar {...defaultProps} level="H" />);
-		expect(screen.getByTestId("trait-level-openness")).toHaveTextContent("High");
+	it("renders Open-minded level badge for O letter", () => {
+		render(<TraitBar {...defaultProps} level="O" />);
+		expect(screen.getByTestId("trait-level-openness")).toHaveTextContent("Open-minded");
 	});
 
-	it("renders Mid level badge", () => {
-		render(<TraitBar {...defaultProps} level="M" />);
-		expect(screen.getByTestId("trait-level-openness")).toHaveTextContent("Mid");
+	it("renders Grounded level badge for G letter", () => {
+		render(<TraitBar {...defaultProps} level="G" />);
+		expect(screen.getByTestId("trait-level-openness")).toHaveTextContent("Grounded");
 	});
 
-	it("renders Low level badge", () => {
-		render(<TraitBar {...defaultProps} level="L" />);
-		expect(screen.getByTestId("trait-level-openness")).toHaveTextContent("Low");
+	it("renders Practical level badge for P letter", () => {
+		render(<TraitBar {...defaultProps} level="P" />);
+		expect(screen.getByTestId("trait-level-openness")).toHaveTextContent("Practical");
 	});
 
 	it("renders score as fraction of 120", () => {

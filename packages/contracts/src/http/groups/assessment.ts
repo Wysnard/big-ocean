@@ -65,7 +65,7 @@ export const GetResultsPathSchema = S.Struct({
 export const TraitResultSchema = S.Struct({
 	name: S.String,
 	score: S.Number,
-	level: S.Literal("H", "M", "L"),
+	level: S.String,
 	confidence: S.Number,
 });
 

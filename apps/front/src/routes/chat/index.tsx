@@ -76,10 +76,10 @@ function RouteComponent() {
 
 	if (!sessionId) {
 		return (
-			<div className="h-screen flex items-center justify-center bg-gray-50">
+			<div className="h-[calc(100dvh-3.5rem)] flex items-center justify-center bg-background">
 				<div className="text-center">
-					<Loader2 className="h-12 w-12 animate-spin text-blue-500 mx-auto mb-4" />
-					<p className="text-gray-600">Creating assessment session...</p>
+					<Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+					<p className="text-muted-foreground">Creating assessment session...</p>
 				</div>
 			</div>
 		);

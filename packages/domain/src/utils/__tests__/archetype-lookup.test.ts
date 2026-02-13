@@ -3,117 +3,117 @@ import { extract4LetterCode, lookupArchetype } from "../archetype-lookup";
 
 describe("lookupArchetype", () => {
 	describe("hand-curated archetypes", () => {
-		it("returns curated name for HHHH", () => {
-			const result = lookupArchetype("HHHH");
+		it("returns curated name for ODEW (was HHHH)", () => {
+			const result = lookupArchetype("ODEW");
 			expect(result.name).toBe("The Idealist");
 			expect(result.isCurated).toBe(true);
 		});
 
-		it("returns curated name for HHHL", () => {
-			const result = lookupArchetype("HHHL");
+		it("returns curated name for ODEC (was HHHL)", () => {
+			const result = lookupArchetype("ODEC");
 			expect(result.name).toBe("The Visionary Planner");
 			expect(result.isCurated).toBe(true);
 		});
 
-		it("returns curated name for HHMH", () => {
-			const result = lookupArchetype("HHMH");
+		it("returns curated name for ODAW (was HHMH)", () => {
+			const result = lookupArchetype("ODAW");
 			expect(result.name).toBe("The Creative Diplomat");
 			expect(result.isCurated).toBe(true);
 		});
 
-		it("returns curated name for HHLH", () => {
-			const result = lookupArchetype("HHLH");
+		it("returns curated name for ODIW (was HHLH)", () => {
+			const result = lookupArchetype("ODIW");
 			expect(result.name).toBe("The Thoughtful Collaborator");
 			expect(result.isCurated).toBe(true);
 		});
 
-		it("returns curated name for HMHH", () => {
-			const result = lookupArchetype("HMHH");
+		it("returns curated name for OBEW (was HMHH)", () => {
+			const result = lookupArchetype("OBEW");
 			expect(result.name).toBe("The Curious Leader");
 			expect(result.isCurated).toBe(true);
 		});
 
-		it("returns curated name for HMMM", () => {
-			const result = lookupArchetype("HMMM");
+		it("returns curated name for OBAN (was HMMM)", () => {
+			const result = lookupArchetype("OBAN");
 			expect(result.name).toBe("The Balanced Explorer");
 			expect(result.isCurated).toBe(true);
 		});
 
-		it("returns curated name for HLHH", () => {
-			const result = lookupArchetype("HLHH");
+		it("returns curated name for OFEW (was HLHH)", () => {
+			const result = lookupArchetype("OFEW");
 			expect(result.name).toBe("The Free Spirit");
 			expect(result.isCurated).toBe(true);
 		});
 
-		it("returns curated name for MHHH", () => {
-			const result = lookupArchetype("MHHH");
+		it("returns curated name for GDEW (was MHHH)", () => {
+			const result = lookupArchetype("GDEW");
 			expect(result.name).toBe("The Steady Organizer");
 			expect(result.isCurated).toBe(true);
 		});
 
-		it("returns curated name for MMHH", () => {
-			const result = lookupArchetype("MMHH");
+		it("returns curated name for GBEW (was MMHH)", () => {
+			const result = lookupArchetype("GBEW");
 			expect(result.name).toBe("The Social Connector");
 			expect(result.isCurated).toBe(true);
 		});
 
-		it("returns curated name for MMMM", () => {
-			const result = lookupArchetype("MMMM");
+		it("returns curated name for GBAN (was MMMM)", () => {
+			const result = lookupArchetype("GBAN");
 			expect(result.name).toBe("The Centered Moderate");
 			expect(result.isCurated).toBe(true);
 		});
 
-		it("returns curated name for MMLH", () => {
-			const result = lookupArchetype("MMLH");
+		it("returns curated name for GBIW (was MMLH)", () => {
+			const result = lookupArchetype("GBIW");
 			expect(result.name).toBe("The Quiet Helper");
 			expect(result.isCurated).toBe(true);
 		});
 
-		it("returns curated name for LHHH", () => {
-			const result = lookupArchetype("LHHH");
+		it("returns curated name for PDEW (was LHHH)", () => {
+			const result = lookupArchetype("PDEW");
 			expect(result.name).toBe("The Traditional Leader");
 			expect(result.isCurated).toBe(true);
 		});
 
-		it("returns curated name for LHLH", () => {
-			const result = lookupArchetype("LHLH");
+		it("returns curated name for PDIW (was LHLH)", () => {
+			const result = lookupArchetype("PDIW");
 			expect(result.name).toBe("The Dependable Supporter");
 			expect(result.isCurated).toBe(true);
 		});
 
-		it("returns curated name for LLLL", () => {
-			const result = lookupArchetype("LLLL");
+		it("returns curated name for PFIC (was LLLL)", () => {
+			const result = lookupArchetype("PFIC");
 			expect(result.name).toBe("The Reserved Pragmatist");
 			expect(result.isCurated).toBe(true);
 		});
 
 		it("isCurated is true for all hand-curated entries", () => {
 			const curatedCodes = [
-				"HHHH",
-				"HHHL",
-				"HHMH",
-				"HHLH",
-				"HMHH",
-				"HMMM",
-				"HLHH",
-				"MHHH",
-				"MMHH",
-				"MMMM",
-				"MMLH",
-				"LHHH",
-				"LHLH",
-				"LMHH",
-				"LLHH",
-				"LLLL",
-				"HLLH",
-				"HLHL",
-				"LHHL",
-				"LHLL",
-				"MHLH",
-				"HMLL",
-				"HHLL",
-				"LMML",
-				"HHMM",
+				"ODEW",
+				"ODEC",
+				"ODAW",
+				"ODIW",
+				"OBEW",
+				"OBAN",
+				"OFEW",
+				"GDEW",
+				"GBEW",
+				"GBAN",
+				"GBIW",
+				"PDEW",
+				"PDIW",
+				"PBEW",
+				"PFEW",
+				"PFIC",
+				"OFIW",
+				"OFEC",
+				"PDEC",
+				"PDIC",
+				"GDIW",
+				"OBIC",
+				"ODIC",
+				"PBAC",
+				"ODAN",
 			];
 			for (const code of curatedCodes) {
 				const result = lookupArchetype(code);
@@ -123,31 +123,31 @@ describe("lookupArchetype", () => {
 
 		it("all curated entries have non-empty names", () => {
 			const curatedCodes = [
-				"HHHH",
-				"HHHL",
-				"HHMH",
-				"HHLH",
-				"HMHH",
-				"HMMM",
-				"HLHH",
-				"MHHH",
-				"MMHH",
-				"MMMM",
-				"MMLH",
-				"LHHH",
-				"LHLH",
-				"LMHH",
-				"LLHH",
-				"LLLL",
-				"HLLH",
-				"HLHL",
-				"LHHL",
-				"LHLL",
-				"MHLH",
-				"HMLL",
-				"HHLL",
-				"LMML",
-				"HHMM",
+				"ODEW",
+				"ODEC",
+				"ODAW",
+				"ODIW",
+				"OBEW",
+				"OBAN",
+				"OFEW",
+				"GDEW",
+				"GBEW",
+				"GBAN",
+				"GBIW",
+				"PDEW",
+				"PDIW",
+				"PBEW",
+				"PFEW",
+				"PFIC",
+				"OFIW",
+				"OFEC",
+				"PDEC",
+				"PDIC",
+				"GDIW",
+				"OBIC",
+				"ODIC",
+				"PBAC",
+				"ODAN",
 			];
 			for (const code of curatedCodes) {
 				const result = lookupArchetype(code);
@@ -157,31 +157,31 @@ describe("lookupArchetype", () => {
 
 		it("all curated entries have non-empty descriptions", () => {
 			const curatedCodes = [
-				"HHHH",
-				"HHHL",
-				"HHMH",
-				"HHLH",
-				"HMHH",
-				"HMMM",
-				"HLHH",
-				"MHHH",
-				"MMHH",
-				"MMMM",
-				"MMLH",
-				"LHHH",
-				"LHLH",
-				"LMHH",
-				"LLHH",
-				"LLLL",
-				"HLLH",
-				"HLHL",
-				"LHHL",
-				"LHLL",
-				"MHLH",
-				"HMLL",
-				"HHLL",
-				"LMML",
-				"HHMM",
+				"ODEW",
+				"ODEC",
+				"ODAW",
+				"ODIW",
+				"OBEW",
+				"OBAN",
+				"OFEW",
+				"GDEW",
+				"GBEW",
+				"GBAN",
+				"GBIW",
+				"PDEW",
+				"PDIW",
+				"PBEW",
+				"PFEW",
+				"PFIC",
+				"OFIW",
+				"OFEC",
+				"PDEC",
+				"PDIC",
+				"GDIW",
+				"OBIC",
+				"ODIC",
+				"PBAC",
+				"ODAN",
 			];
 			for (const code of curatedCodes) {
 				const result = lookupArchetype(code);
@@ -192,37 +192,38 @@ describe("lookupArchetype", () => {
 
 	describe("fallback-generated archetypes", () => {
 		it("isCurated is false for generated entries", () => {
-			// Pick codes that are NOT in the curated list
-			const _uncuratedCodes = ["LLM", "MLM", "HLM"].map((prefix) => `${prefix}M`);
-			// Use one guaranteed uncurated code
-			const result = lookupArchetype("LLML");
+			// PFAN = Practical, Flexible, Ambivert, Negotiator (not curated)
+			const result = lookupArchetype("PFAN");
 			expect(result.isCurated).toBe(false);
 		});
 
 		it("generated names are non-empty", () => {
-			const result = lookupArchetype("LLML");
+			const result = lookupArchetype("PFAN");
 			expect(result.name.length).toBeGreaterThan(0);
 		});
 
 		it("generated descriptions are non-empty (50-300 chars)", () => {
-			const result = lookupArchetype("LLML");
+			const result = lookupArchetype("PFAN");
 			expect(result.description.length).toBeGreaterThanOrEqual(50);
 			expect(result.description.length).toBeLessThanOrEqual(300);
 		});
 
 		it("generated colors are valid hex", () => {
-			const result = lookupArchetype("LLML");
+			const result = lookupArchetype("PFAN");
 			expect(result.color).toMatch(/^#[0-9A-Fa-f]{6}$/);
 		});
 	});
 
 	describe("all 81 combinations", () => {
-		const levels = ["L", "M", "H"] as const;
+		const oLevels = ["P", "G", "O"] as const;
+		const cLevels = ["F", "B", "D"] as const;
+		const eLevels = ["I", "A", "E"] as const;
+		const aLevels = ["C", "N", "W"] as const;
 
-		for (const O of levels) {
-			for (const C of levels) {
-				for (const E of levels) {
-					for (const A of levels) {
+		for (const O of oLevels) {
+			for (const C of cLevels) {
+				for (const E of eLevels) {
+					for (const A of aLevels) {
 						const code4 = `${O}${C}${E}${A}`;
 						it(`lookupArchetype("${code4}") returns valid archetype`, () => {
 							const result = lookupArchetype(code4);
@@ -240,17 +241,17 @@ describe("lookupArchetype", () => {
 
 	describe("determinism", () => {
 		it("same code returns identical result across 100 calls", () => {
-			const first = lookupArchetype("HHMH");
+			const first = lookupArchetype("ODAW");
 			for (let i = 0; i < 100; i++) {
-				const result = lookupArchetype("HHMH");
+				const result = lookupArchetype("ODAW");
 				expect(result).toEqual(first);
 			}
 		});
 
 		it("generated archetype is deterministic", () => {
-			const first = lookupArchetype("LLML");
+			const first = lookupArchetype("PFAN");
 			for (let i = 0; i < 100; i++) {
-				const result = lookupArchetype("LLML");
+				const result = lookupArchetype("PFAN");
 				expect(result).toEqual(first);
 			}
 		});
@@ -258,50 +259,50 @@ describe("lookupArchetype", () => {
 
 	describe("input validation", () => {
 		it("throws on code with 3 characters", () => {
-			expect(() => lookupArchetype("HHH")).toThrow();
+			expect(() => lookupArchetype("ODE")).toThrow();
 		});
 
 		it("throws on code with 5 characters", () => {
-			expect(() => lookupArchetype("HHHHH")).toThrow();
+			expect(() => lookupArchetype("ODEWR")).toThrow();
 		});
 
 		it("throws on empty string", () => {
 			expect(() => lookupArchetype("")).toThrow();
 		});
 
-		it("throws on invalid characters", () => {
-			expect(() => lookupArchetype("XXXX")).toThrow();
+		it("throws on invalid characters (old L/M/H format)", () => {
+			expect(() => lookupArchetype("HHMH")).toThrow();
 		});
 
 		it("throws on lowercase valid chars", () => {
-			expect(() => lookupArchetype("hhmh")).toThrow();
+			expect(() => lookupArchetype("odaw")).toThrow();
 		});
 
 		it("throws on mixed invalid chars", () => {
-			expect(() => lookupArchetype("HH1H")).toThrow();
+			expect(() => lookupArchetype("OD1W")).toThrow();
 		});
 	});
 });
 
 describe("extract4LetterCode", () => {
-	it('extracts "HHMH" from "HHMHM"', () => {
-		expect(extract4LetterCode("HHMHM")).toBe("HHMH");
+	it('extracts "ODAW" from "ODAWT"', () => {
+		expect(extract4LetterCode("ODAWT")).toBe("ODAW");
 	});
 
-	it('extracts "LLLL" from "LLLLL"', () => {
-		expect(extract4LetterCode("LLLLL")).toBe("LLLL");
+	it('extracts "PFIC" from "PFICR"', () => {
+		expect(extract4LetterCode("PFICR")).toBe("PFIC");
 	});
 
-	it('extracts "MMMM" from "MMMMM"', () => {
-		expect(extract4LetterCode("MMMMM")).toBe("MMMM");
+	it('extracts "GBAN" from "GBANT"', () => {
+		expect(extract4LetterCode("GBANT")).toBe("GBAN");
 	});
 
 	it("throws on 4-letter code", () => {
-		expect(() => extract4LetterCode("HHMH")).toThrow();
+		expect(() => extract4LetterCode("ODAW")).toThrow();
 	});
 
 	it("throws on 6-letter code", () => {
-		expect(() => extract4LetterCode("HHMHMM")).toThrow();
+		expect(() => extract4LetterCode("ODAWTS")).toThrow();
 	});
 
 	it("throws on empty string", () => {

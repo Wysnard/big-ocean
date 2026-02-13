@@ -9,74 +9,176 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-	--background: oklch(1 0 0);
-	--foreground: oklch(0.145 0 0);
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.145 0 0);
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.145 0 0);
-	--primary: oklch(0.205 0 0);
-	--primary-foreground: oklch(0.985 0 0);
-	--secondary: oklch(0.97 0 0);
-	--secondary-foreground: oklch(0.205 0 0);
-	--muted: oklch(0.97 0 0);
-	--muted-foreground: oklch(0.556 0 0);
-	--accent: oklch(0.97 0 0);
-	--accent-foreground: oklch(0.205 0 0);
+	/* ========== SURFACES & NEUTRALS (clean warm white) ========== */
+	--background: oklch(0.98 0.008 60);
+	--foreground: oklch(0.15 0.01 45);
+	--card: oklch(0.98 0.008 60);
+	--card-foreground: oklch(0.15 0.01 45);
+	--popover: oklch(0.98 0.008 60);
+	--popover-foreground: oklch(0.15 0.01 45);
+
+	/* ========== CORE SEMANTIC (coral reef family) ========== */
+	--primary: oklch(0.55 0.22 350);
+	--primary-foreground: oklch(0.98 0.005 60);
+	--secondary: oklch(0.93 0.03 195);
+	--secondary-foreground: oklch(0.25 0.06 350);
+	--accent: oklch(0.75 0.14 195);
+	--accent-foreground: oklch(0.18 0.04 195);
+	--muted: oklch(0.95 0.01 50);
+	--muted-foreground: oklch(0.45 0.02 45);
+	--ring: oklch(0.55 0.22 350);
+
+	/* ========== KEEP AS-IS ========== */
 	--destructive: oklch(0.577 0.245 27.325);
 	--destructive-foreground: oklch(0.577 0.245 27.325);
-	--border: oklch(0.922 0 0);
-	--input: oklch(0.922 0 0);
-	--ring: oklch(0.708 0 0);
-	--chart-1: oklch(0.646 0.222 41.116);
-	--chart-2: oklch(0.6 0.118 184.704);
-	--chart-3: oklch(0.398 0.07 227.392);
-	--chart-4: oklch(0.828 0.189 84.429);
-	--chart-5: oklch(0.769 0.188 70.08);
+	--border: oklch(0.90 0.01 50);
+	--input: oklch(0.90 0.01 50);
 	--radius: 0.625rem;
-	--sidebar: oklch(0.985 0 0);
-	--sidebar-foreground: oklch(0.145 0 0);
-	--sidebar-primary: oklch(0.205 0 0);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.97 0 0);
-	--sidebar-accent-foreground: oklch(0.205 0 0);
-	--sidebar-border: oklch(0.922 0 0);
-	--sidebar-ring: oklch(0.708 0 0);
+
+	/* ========== CHARTS (coral reef palette) ========== */
+	--chart-1: oklch(0.55 0.22 350);
+	--chart-2: oklch(0.75 0.14 195);
+	--chart-3: oklch(0.70 0.20 50);
+	--chart-4: oklch(0.65 0.12 330);
+	--chart-5: oklch(0.60 0.10 10);
+
+	/* ========== SIDEBAR (coral reef-themed) ========== */
+	--sidebar: oklch(0.97 0.008 60);
+	--sidebar-foreground: oklch(0.15 0.01 45);
+	--sidebar-primary: oklch(0.55 0.22 350);
+	--sidebar-primary-foreground: oklch(0.98 0.005 60);
+	--sidebar-accent: oklch(0.93 0.03 195);
+	--sidebar-accent-foreground: oklch(0.25 0.06 350);
+	--sidebar-border: oklch(0.90 0.01 50);
+	--sidebar-ring: oklch(0.55 0.22 350);
+
+	/* ========== GRADIENTS (coral reef) ========== */
+	--gradient-ocean: linear-gradient(135deg, oklch(0.55 0.22 350) 0%, oklch(0.75 0.14 195) 100%);
+	--gradient-ocean-subtle: linear-gradient(180deg, oklch(0.55 0.22 350 / 0.07) 0%, oklch(0.75 0.14 195 / 0.04) 50%, transparent 100%);
+	--gradient-ocean-radial: radial-gradient(ellipse at top, oklch(0.75 0.14 195 / 0.12) 0%, oklch(0.55 0.22 350 / 0.06) 50%, transparent 70%);
+
+	/* ========== DEPTH ZONES (scroll-based background transitions) ========== */
+	--depth-surface: var(--background);
+	--depth-shallows: oklch(0.95 0.015 195);
+	--depth-mid: oklch(0.90 0.03 200);
+	--depth-deep: oklch(0.84 0.05 205);
+
+	/* ========== BIG FIVE TRAIT TOKENS ========== */
+	--trait-openness: oklch(0.62 0.16 285);
+	--trait-conscientiousness: oklch(0.64 0.14 238);
+	--trait-extraversion: oklch(0.66 0.17 25);
+	--trait-agreeableness: oklch(0.63 0.13 162);
+	--trait-neuroticism: oklch(0.60 0.18 350);
+
+	/* Openness facets */
+	--facet-imagination: oklch(0.67 0.14 290);
+	--facet-artistic_interests: oklch(0.64 0.15 300);
+	--facet-emotionality: oklch(0.62 0.12 280);
+	--facet-adventurousness: oklch(0.69 0.13 275);
+	--facet-intellect: oklch(0.60 0.16 265);
+	--facet-liberalism: oklch(0.65 0.11 295);
+
+	/* Conscientiousness facets */
+	--facet-self_efficacy: oklch(0.67 0.13 230);
+	--facet-orderliness: oklch(0.63 0.11 240);
+	--facet-dutifulness: oklch(0.60 0.12 235);
+	--facet-achievement_striving: oklch(0.66 0.14 225);
+	--facet-self_discipline: oklch(0.58 0.10 245);
+	--facet-cautiousness: oklch(0.62 0.09 250);
+
+	/* Extraversion facets */
+	--facet-friendliness: oklch(0.72 0.16 35);
+	--facet-gregariousness: oklch(0.70 0.17 20);
+	--facet-assertiveness: oklch(0.64 0.18 15);
+	--facet-activity_level: oklch(0.69 0.15 30);
+	--facet-excitement_seeking: oklch(0.66 0.19 10);
+	--facet-cheerfulness: oklch(0.74 0.14 45);
+
+	/* Agreeableness facets */
+	--facet-trust: oklch(0.75 0.11 155);
+	--facet-morality: oklch(0.71 0.10 165);
+	--facet-altruism: oklch(0.73 0.12 150);
+	--facet-cooperation: oklch(0.69 0.11 170);
+	--facet-modesty: oklch(0.67 0.09 160);
+	--facet-sympathy: oklch(0.76 0.10 145);
+
+	/* Neuroticism facets */
+	--facet-anxiety: oklch(0.63 0.16 355);
+	--facet-anger: oklch(0.58 0.19 20);
+	--facet-depression: oklch(0.52 0.13 340);
+	--facet-self_consciousness: oklch(0.60 0.14 350);
+	--facet-immoderation: oklch(0.62 0.17 5);
+	--facet-vulnerability: oklch(0.66 0.12 345);
+
+	/* Trait gradients */
+	--gradient-trait-openness: linear-gradient(135deg, var(--trait-openness) 0%, var(--facet-imagination) 100%);
+	--gradient-trait-conscientiousness: linear-gradient(135deg, var(--trait-conscientiousness) 0%, var(--facet-achievement_striving) 100%);
+	--gradient-trait-extraversion: linear-gradient(135deg, var(--trait-extraversion) 0%, var(--facet-cheerfulness) 100%);
+	--gradient-trait-agreeableness: linear-gradient(135deg, var(--trait-agreeableness) 0%, var(--facet-sympathy) 100%);
+	--gradient-trait-neuroticism: linear-gradient(135deg, var(--trait-neuroticism) 0%, var(--facet-vulnerability) 100%);
 }
 
 .dark {
-	--background: oklch(0.145 0 0);
-	--foreground: oklch(0.985 0 0);
-	--card: oklch(0.145 0 0);
-	--card-foreground: oklch(0.985 0 0);
-	--popover: oklch(0.145 0 0);
-	--popover-foreground: oklch(0.985 0 0);
-	--primary: oklch(0.985 0 0);
-	--primary-foreground: oklch(0.205 0 0);
-	--secondary: oklch(0.269 0 0);
-	--secondary-foreground: oklch(0.985 0 0);
-	--muted: oklch(0.269 0 0);
-	--muted-foreground: oklch(0.708 0 0);
-	--accent: oklch(0.269 0 0);
-	--accent-foreground: oklch(0.985 0 0);
+	/* ========== SURFACES & NEUTRALS (saturated navy) ========== */
+	--background: oklch(0.22 0.065 245);
+	--foreground: oklch(0.96 0.008 240);
+	--card: oklch(0.25 0.055 245);
+	--card-foreground: oklch(0.96 0.008 240);
+	--popover: oklch(0.25 0.055 245);
+	--popover-foreground: oklch(0.96 0.008 240);
+
+	/* ========== CORE SEMANTIC (moonlit navy family) ========== */
+	--primary: oklch(0.55 0.14 235);
+	--primary-foreground: oklch(0.96 0.008 240);
+	--secondary: oklch(0.28 0.045 245);
+	--secondary-foreground: oklch(0.92 0.008 240);
+	--accent: oklch(0.84 0.15 85);
+	--accent-foreground: oklch(0.18 0.03 250);
+	--muted: oklch(0.28 0.035 245);
+	--muted-foreground: oklch(0.70 0.02 240);
+	--ring: oklch(0.55 0.14 235);
+
+	/* ========== KEEP AS-IS ========== */
 	--destructive: oklch(0.396 0.141 25.723);
 	--destructive-foreground: oklch(0.637 0.237 25.331);
-	--border: oklch(0.269 0 0);
-	--input: oklch(0.269 0 0);
-	--ring: oklch(0.556 0 0);
-	--chart-1: oklch(0.488 0.243 264.376);
-	--chart-2: oklch(0.696 0.17 162.48);
-	--chart-3: oklch(0.769 0.188 70.08);
-	--chart-4: oklch(0.627 0.265 303.9);
-	--chart-5: oklch(0.645 0.246 16.439);
-	--sidebar: oklch(0.205 0 0);
-	--sidebar-foreground: oklch(0.985 0 0);
-	--sidebar-primary: oklch(0.488 0.243 264.376);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.269 0 0);
-	--sidebar-accent-foreground: oklch(0.985 0 0);
-	--sidebar-border: oklch(0.269 0 0);
-	--sidebar-ring: oklch(0.439 0 0);
+	--border: oklch(0.32 0.04 245);
+	--input: oklch(0.32 0.04 245);
+
+	/* ========== CHARTS (moonlit navy palette) ========== */
+	--chart-1: oklch(0.55 0.14 235);
+	--chart-2: oklch(0.84 0.15 85);
+	--chart-3: oklch(0.50 0.12 260);
+	--chart-4: oklch(0.65 0.10 195);
+	--chart-5: oklch(0.78 0.06 85);
+
+	/* ========== SIDEBAR (moonlit navy) ========== */
+	--sidebar: oklch(0.20 0.06 245);
+	--sidebar-foreground: oklch(0.96 0.008 240);
+	--sidebar-primary: oklch(0.55 0.14 235);
+	--sidebar-primary-foreground: oklch(0.96 0.008 240);
+	--sidebar-accent: oklch(0.28 0.045 245);
+	--sidebar-accent-foreground: oklch(0.92 0.008 240);
+	--sidebar-border: oklch(0.32 0.04 245);
+	--sidebar-ring: oklch(0.50 0.10 235);
+
+	/* ========== GRADIENTS (moonlit navy) ========== */
+	--gradient-ocean: linear-gradient(135deg, oklch(0.45 0.14 235) 0%, oklch(0.84 0.15 85) 100%);
+	--gradient-ocean-subtle: linear-gradient(180deg, oklch(0.45 0.14 235 / 0.10) 0%, oklch(0.84 0.15 85 / 0.04) 50%, transparent 100%);
+	--gradient-ocean-radial: radial-gradient(ellipse at top, oklch(0.84 0.15 85 / 0.12) 0%, oklch(0.45 0.14 235 / 0.08) 50%, transparent 70%);
+
+	/* ========== DEPTH ZONES (scroll-based background transitions) ========== */
+	/* Monotonically darker with increasing chroma as you dive deeper */
+	--depth-surface: oklch(0.26 0.06 248);
+	--depth-shallows: oklch(0.22 0.065 246);
+	--depth-mid: oklch(0.17 0.07 244);
+	--depth-deep: oklch(0.12 0.075 242);
+
+	/* ========== BIG FIVE TRAIT TOKENS (dark mode) ========== */
+	--trait-openness: oklch(0.78 0.12 286);
+	--trait-conscientiousness: oklch(0.76 0.11 236);
+	--trait-extraversion: oklch(0.79 0.14 30);
+	--trait-agreeableness: oklch(0.80 0.10 160);
+	--trait-neuroticism: oklch(0.75 0.14 352);
 }
 
 @theme inline {
@@ -104,6 +206,41 @@
 	--color-chart-3: var(--chart-3);
 	--color-chart-4: var(--chart-4);
 	--color-chart-5: var(--chart-5);
+	--color-trait-openness: var(--trait-openness);
+	--color-trait-conscientiousness: var(--trait-conscientiousness);
+	--color-trait-extraversion: var(--trait-extraversion);
+	--color-trait-agreeableness: var(--trait-agreeableness);
+	--color-trait-neuroticism: var(--trait-neuroticism);
+	--color-facet-imagination: var(--facet-imagination);
+	--color-facet-artistic_interests: var(--facet-artistic_interests);
+	--color-facet-emotionality: var(--facet-emotionality);
+	--color-facet-adventurousness: var(--facet-adventurousness);
+	--color-facet-intellect: var(--facet-intellect);
+	--color-facet-liberalism: var(--facet-liberalism);
+	--color-facet-self_efficacy: var(--facet-self_efficacy);
+	--color-facet-orderliness: var(--facet-orderliness);
+	--color-facet-dutifulness: var(--facet-dutifulness);
+	--color-facet-achievement_striving: var(--facet-achievement_striving);
+	--color-facet-self_discipline: var(--facet-self_discipline);
+	--color-facet-cautiousness: var(--facet-cautiousness);
+	--color-facet-friendliness: var(--facet-friendliness);
+	--color-facet-gregariousness: var(--facet-gregariousness);
+	--color-facet-assertiveness: var(--facet-assertiveness);
+	--color-facet-activity_level: var(--facet-activity_level);
+	--color-facet-excitement_seeking: var(--facet-excitement_seeking);
+	--color-facet-cheerfulness: var(--facet-cheerfulness);
+	--color-facet-trust: var(--facet-trust);
+	--color-facet-morality: var(--facet-morality);
+	--color-facet-altruism: var(--facet-altruism);
+	--color-facet-cooperation: var(--facet-cooperation);
+	--color-facet-modesty: var(--facet-modesty);
+	--color-facet-sympathy: var(--facet-sympathy);
+	--color-facet-anxiety: var(--facet-anxiety);
+	--color-facet-anger: var(--facet-anger);
+	--color-facet-depression: var(--facet-depression);
+	--color-facet-self_consciousness: var(--facet-self_consciousness);
+	--color-facet-immoderation: var(--facet-immoderation);
+	--color-facet-vulnerability: var(--facet-vulnerability);
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
 	--radius-lg: var(--radius);
@@ -116,6 +253,16 @@
 	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-ring: var(--sidebar-ring);
+
+	/* Gradient mappings */
+	--gradient-ocean: var(--gradient-ocean);
+	--gradient-ocean-subtle: var(--gradient-ocean-subtle);
+	--gradient-ocean-radial: var(--gradient-ocean-radial);
+	--gradient-trait-openness: var(--gradient-trait-openness);
+	--gradient-trait-conscientiousness: var(--gradient-trait-conscientiousness);
+	--gradient-trait-extraversion: var(--gradient-trait-extraversion);
+	--gradient-trait-agreeableness: var(--gradient-trait-agreeableness);
+	--gradient-trait-neuroticism: var(--gradient-trait-neuroticism);
 }
 
 @layer base {
@@ -125,4 +272,31 @@
 	body {
 		@apply bg-background text-foreground;
 	}
+}
+
+@keyframes wave {
+	0%, 100% { transform: translateY(0) rotate(0deg); }
+	25% { transform: translateY(-3px) rotate(2deg); }
+	75% { transform: translateY(3px) rotate(-2deg); }
+}
+
+@keyframes caustic {
+	0%, 100% { background-position: 0% 0%; }
+	50% { background-position: 100% 100%; }
+}
+
+@keyframes bubble {
+	0% { transform: translateY(0) scale(1); opacity: 0.6; }
+	50% { opacity: 0.3; }
+	100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
+}
+
+@keyframes fadeInUp {
+	from { opacity: 0; transform: translateY(24px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+	0%, 100% { transform: translateY(0); }
+	50% { transform: translateY(-4px); }
 }

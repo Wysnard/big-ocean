@@ -4,10 +4,54 @@ import type { FacetName, FacetScore, TraitName } from "../../types/facet-evidenc
 import { generateOceanCode } from "../ocean-code-generator";
 
 // ---------------------------------------------------------------------------
-// Test helpers
+// New trait-specific letter mapping (mirrors TRAIT_LETTER_MAP)
 // ---------------------------------------------------------------------------
 
-type TraitLevel = "L" | "M" | "H";
+/**
+ * Trait level identifier: L=Low, M=Mid, H=High (internal test helper only)
+ */
+type InternalLevel = "L" | "M" | "H";
+
+/**
+ * Maps each trait to its [Low, Mid, High] letters for test assertions.
+ */
+const TRAIT_LETTERS: Record<TraitName, [string, string, string]> = {
+	openness: ["P", "G", "O"],
+	conscientiousness: ["F", "B", "D"],
+	extraversion: ["I", "A", "E"],
+	agreeableness: ["C", "N", "W"],
+	neuroticism: ["R", "T", "S"],
+};
+
+const LEVEL_INDEX: Record<InternalLevel, number> = { L: 0, M: 1, H: 2 };
+
+/**
+ * Get the expected letter for a trait at a given level.
+ */
+const expectedLetter = (trait: TraitName, level: InternalLevel): string =>
+	TRAIT_LETTERS[trait][LEVEL_INDEX[level]];
+
+/**
+ * Build expected 5-letter code from internal L/M/H levels.
+ */
+const expectedCode = (levels: {
+	O: InternalLevel;
+	C: InternalLevel;
+	E: InternalLevel;
+	A: InternalLevel;
+	N: InternalLevel;
+}): string =>
+	[
+		expectedLetter("openness", levels.O),
+		expectedLetter("conscientiousness", levels.C),
+		expectedLetter("extraversion", levels.E),
+		expectedLetter("agreeableness", levels.A),
+		expectedLetter("neuroticism", levels.N),
+	].join("");
+
+// ---------------------------------------------------------------------------
+// Test helpers
+// ---------------------------------------------------------------------------
 
 /**
  * Creates a full 30-facet score map where each trait's 6 facets
@@ -18,19 +62,19 @@ type TraitLevel = "L" | "M" | "H";
  * H → per-facet score 17 (sum = 102, > 80)
  */
 const createFacetScoresForTraitLevels = (levels: {
-	O: TraitLevel;
-	C: TraitLevel;
-	E: TraitLevel;
-	A: TraitLevel;
-	N: TraitLevel;
+	O: InternalLevel;
+	C: InternalLevel;
+	E: InternalLevel;
+	A: InternalLevel;
+	N: InternalLevel;
 }): Record<FacetName, FacetScore> => {
-	const levelToPerFacetScore: Record<TraitLevel, number> = {
+	const levelToPerFacetScore: Record<InternalLevel, number> = {
 		L: 3,
 		M: 10,
 		H: 17,
 	};
 
-	const traitLevelMap: Record<TraitName, TraitLevel> = {
+	const traitLevelMap: Record<TraitName, InternalLevel> = {
 		openness: levels.O,
 		conscientiousness: levels.C,
 		extraversion: levels.E,
@@ -109,82 +153,78 @@ describe("generateOceanCode", () => {
 
 	// === Task 2: Trait sum calculation tests ===
 	describe("trait sum calculation", () => {
-		it("all facets at 10 → trait sum = 60 (midpoint)", () => {
+		it("all facets at 10 → trait sum = 60 (midpoint) → all mid letters", () => {
 			const scores = createAllFacetsAtScore(10);
-			expect(generateOceanCode(scores)).toBe("MMMMM");
+			expect(generateOceanCode(scores)).toBe("GBANT");
 		});
 
-		it("all facets at 0 → trait sum = 0 (minimum → Low)", () => {
+		it("all facets at 0 → trait sum = 0 (minimum → Low) → all low letters", () => {
 			const scores = createAllFacetsAtScore(0);
-			expect(generateOceanCode(scores)).toBe("LLLLL");
+			expect(generateOceanCode(scores)).toBe("PFICR");
 		});
 
-		it("all facets at 20 → trait sum = 120 (maximum → High)", () => {
+		it("all facets at 20 → trait sum = 120 (maximum → High) → all high letters", () => {
 			const scores = createAllFacetsAtScore(20);
-			expect(generateOceanCode(scores)).toBe("HHHHH");
+			expect(generateOceanCode(scores)).toBe("ODEWS");
 		});
 
 		it("mixed facets sum correctly (e.g., [18,18,18,18,18,18] = 108 → H)", () => {
 			const scores = createAllFacetsAtScore(18);
 			// 18 * 6 = 108 per trait → all High
-			expect(generateOceanCode(scores)).toBe("HHHHH");
+			expect(generateOceanCode(scores)).toBe("ODEWS");
 		});
 	});
 
 	// === Task 3: Trait-to-level mapping boundary tests ===
 	describe("threshold boundaries", () => {
-		it("maps trait sum 0 to Low", () => {
+		it("maps trait sum 0 to Low (P for openness)", () => {
 			const scores = createScoresForTraitSum("openness", 0);
-			expect(generateOceanCode(scores)).toMatch(/^L/);
+			expect(generateOceanCode(scores)[0]).toBe("P");
 		});
 
 		it("maps trait sum 39 to Low", () => {
-			// 39/6 = 6.5 per facet
 			const scores = createScoresForTraitSum("openness", 39);
-			expect(generateOceanCode(scores)).toMatch(/^L/);
+			expect(generateOceanCode(scores)[0]).toBe("P");
 		});
 
-		it("maps trait sum 40 to Mid (low-mid boundary)", () => {
-			// 40/6 ≈ 6.667 per facet
+		it("maps trait sum 40 to Mid (G for openness)", () => {
 			const scores = createScoresForTraitSum("openness", 40);
-			expect(generateOceanCode(scores)).toMatch(/^M/);
+			expect(generateOceanCode(scores)[0]).toBe("G");
 		});
 
 		it("maps trait sum 79 to Mid", () => {
-			// 79/6 ≈ 13.167 per facet
 			const scores = createScoresForTraitSum("openness", 79);
-			expect(generateOceanCode(scores)).toMatch(/^M/);
+			expect(generateOceanCode(scores)[0]).toBe("G");
 		});
 
-		it("maps trait sum 80 to High (mid-high boundary)", () => {
-			// 80/6 ≈ 13.333 per facet
+		it("maps trait sum 80 to High (O for openness)", () => {
 			const scores = createScoresForTraitSum("openness", 80);
-			expect(generateOceanCode(scores)).toMatch(/^H/);
+			expect(generateOceanCode(scores)[0]).toBe("O");
 		});
 
 		it("maps trait sum 120 to High", () => {
 			const scores = createScoresForTraitSum("openness", 120);
-			expect(generateOceanCode(scores)).toMatch(/^H/);
+			expect(generateOceanCode(scores)[0]).toBe("O");
 		});
 
 		it("boundary at 39.9 → Low (< 40)", () => {
 			const scores = createScoresForTraitSum("openness", 39.9);
-			expect(generateOceanCode(scores)).toMatch(/^L/);
+			expect(generateOceanCode(scores)[0]).toBe("P");
 		});
 
 		it("boundary at 40.1 → Mid (>= 40)", () => {
 			const scores = createScoresForTraitSum("openness", 40.1);
-			expect(generateOceanCode(scores)).toMatch(/^M/);
+			expect(generateOceanCode(scores)[0]).toBe("G");
 		});
 
 		it("boundary at 79.9 → Mid (< 80)", () => {
 			const scores = createScoresForTraitSum("openness", 79.9);
-			expect(generateOceanCode(scores)).toMatch(/^M/);
+			expect(generateOceanCode(scores)[0]).toBe("G");
 		});
 
 		it("boundary at 80.1 → High (>= 80)", () => {
 			const scores = createScoresForTraitSum("openness", 80.1);
-			expect(generateOceanCode(scores)).toMatch(/^H/);
+			expect(generateOceanCode(scores)[0]).toBe("O");
 		});
 	});
 
@@ -200,9 +240,9 @@ describe("generateOceanCode", () => {
 			expect(generateOceanCode(scores)).toMatch(/^[A-Z]+$/);
 		});
 
-		it("output matches /^[LMH]{5}$/ regex", () => {
+		it("output matches valid OCEAN code pattern", () => {
 			const scores = createAllFacetsAtScore(10);
-			expect(generateOceanCode(scores)).toMatch(/^[LMH]{5}$/);
+			expect(generateOceanCode(scores)).toMatch(/^[PGO][FBD][IAE][CNW][RTS]$/);
 		});
 
 		it("OCEAN order is correct (O first, N last)", () => {
@@ -214,21 +254,21 @@ describe("generateOceanCode", () => {
 				A: "H",
 				N: "L",
 			});
-			expect(generateOceanCode(scores)).toBe("HLMHL");
+			expect(generateOceanCode(scores)).toBe("OFAWR");
 		});
 	});
 
 	// === Task 5: All 243 combinations ===
 	describe("all 243 OCEAN code combinations", () => {
-		const levels: TraitLevel[] = ["L", "M", "H"];
+		const levels: InternalLevel[] = ["L", "M", "H"];
 
 		for (const O of levels) {
 			for (const C of levels) {
 				for (const E of levels) {
 					for (const A of levels) {
 						for (const N of levels) {
-							const expectedCode = `${O}${C}${E}${A}${N}`;
-							it(`generates ${expectedCode} for appropriate facet scores`, () => {
+							const expected = expectedCode({ O, C, E, A, N });
+							it(`generates ${expected} for O=${O} C=${C} E=${E} A=${A} N=${N}`, () => {
 								const facetScores = createFacetScoresForTraitLevels({
 									O,
 									C,
@@ -237,7 +277,7 @@ describe("generateOceanCode", () => {
 									N,
 								});
 								const code = generateOceanCode(facetScores);
-								expect(code).toBe(expectedCode);
+								expect(code).toBe(expected);
 							});
 						}
 					}
@@ -248,9 +288,9 @@ describe("generateOceanCode", () => {
 
 	// === Task 5: Edge case tests ===
 	describe("edge cases", () => {
-		it("returns MMMMM for all facets at 10", () => {
+		it("returns GBANT for all facets at 10 (all mid)", () => {
 			const scores = createAllFacetsAtScore(10);
-			expect(generateOceanCode(scores)).toBe("MMMMM");
+			expect(generateOceanCode(scores)).toBe("GBANT");
 		});
 
 		it("is deterministic — same input called 100 times → same output", () => {
@@ -265,24 +305,24 @@ describe("generateOceanCode", () => {
 			expect(new Set(results).size).toBe(1);
 		});
 
-		it("returns LLLLL for all facets at 0", () => {
+		it("returns PFICR for all facets at 0 (all low)", () => {
 			const scores = createAllFacetsAtScore(0);
-			expect(generateOceanCode(scores)).toBe("LLLLL");
+			expect(generateOceanCode(scores)).toBe("PFICR");
 		});
 
-		it("returns HHHHH for all facets at 20", () => {
+		it("returns ODEWS for all facets at 20 (all high)", () => {
 			const scores = createAllFacetsAtScore(20);
-			expect(generateOceanCode(scores)).toBe("HHHHH");
+			expect(generateOceanCode(scores)).toBe("ODEWS");
 		});
 
-		it("example from AC: facets yielding HHMHM", () => {
-			// O=108(H), C=84(H), E=60(M), A=96(H), N=72(M)
+		it("example: facets yielding O=108(H) C=84(H) E=60(M) A=96(H) N=72(M)", () => {
+			// O=108(H→O), C=84(H→D), E=60(M→A), A=96(H→W), N=72(M→T)
 			const traitToFacetScore: Record<TraitName, number> = {
-				openness: 18, // 18*6=108 → H
-				conscientiousness: 14, // 14*6=84 → H
-				extraversion: 10, // 10*6=60 → M
-				agreeableness: 16, // 16*6=96 → H
-				neuroticism: 12, // 12*6=72 → M
+				openness: 18, // 18*6=108 → H → O
+				conscientiousness: 14, // 14*6=84 → H → D
+				extraversion: 10, // 10*6=60 → M → A
+				agreeableness: 16, // 16*6=96 → H → W
+				neuroticism: 12, // 12*6=72 → M → T
 			};
 			const scores = {} as Record<FacetName, FacetScore>;
 			for (const facet of ALL_FACETS) {
@@ -291,7 +331,7 @@ describe("generateOceanCode", () => {
 					confidence: 80,
 				};
 			}
-			expect(generateOceanCode(scores)).toBe("HHMHM");
+			expect(generateOceanCode(scores)).toBe("ODAWT");
 		});
 	});
 });

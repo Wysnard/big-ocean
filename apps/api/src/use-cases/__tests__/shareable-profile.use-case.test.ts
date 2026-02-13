@@ -196,8 +196,8 @@ describe("getPublicProfile Use Case", () => {
 		resetEvidenceState();
 	});
 
-	// Derive expected values from lookupArchetype for "HHMH"
-	const expectedArchetype = lookupArchetype("HHMH");
+	// Derive expected values from lookupArchetype for "ODAW"
+	const expectedArchetype = lookupArchetype("ODAW");
 
 	describe("Success scenarios", () => {
 		it.effect("should return profile data for a public profile", () =>
@@ -210,8 +210,8 @@ describe("getPublicProfile Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "HHMHM",
-					oceanCode4: "HHMH",
+					oceanCode5: "ODAWT",
+					oceanCode4: "ODAW",
 				});
 
 				// Make it public
@@ -220,10 +220,10 @@ describe("getPublicProfile Use Case", () => {
 				const result = yield* getPublicProfile({ publicProfileId: profile.id });
 
 				expect(result.archetypeName).toBe(expectedArchetype.name);
-				expect(result.oceanCode).toBe("HHMHM");
+				expect(result.oceanCode).toBe("ODAWT");
 				expect(result.description).toBe(expectedArchetype.description);
 				expect(result.color).toBe(expectedArchetype.color);
-				expect(result.traitSummary.openness).toBe("H");
+				expect(result.traitSummary.openness).toBe("O");
 				expect(result.isPublic).toBe(true);
 			}).pipe(Effect.provide(BaseTestLayer)),
 		);
@@ -240,8 +240,8 @@ describe("getPublicProfile Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "HHMHM",
-					oceanCode4: "HHMH",
+					oceanCode5: "ODAWT",
+					oceanCode4: "ODAW",
 				});
 
 				const exit = yield* Effect.exit(getPublicProfile({ publicProfileId: profile.id }));
@@ -288,8 +288,8 @@ describe("toggleProfileVisibility Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "HHMHM",
-					oceanCode4: "HHMH",
+					oceanCode5: "ODAWT",
+					oceanCode4: "ODAW",
 				});
 
 				const result = yield* toggleProfileVisibility({
@@ -317,8 +317,8 @@ describe("toggleProfileVisibility Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "HHMHM",
-					oceanCode4: "HHMH",
+					oceanCode5: "ODAWT",
+					oceanCode4: "ODAW",
 				});
 
 				const exit = yield* Effect.exit(

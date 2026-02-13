@@ -6,7 +6,7 @@
  */
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import type { FacetName } from "@workspace/domain";
+import { type FacetName, getFacetColor, getTraitColor, type TraitName } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
 import {
 	Check,
@@ -42,39 +42,26 @@ export const Route = createFileRoute("/results")({
 	component: ResultsPage,
 });
 
-const TRAIT_CONFIG: Record<
-	string,
-	{ label: string; icon: React.ReactNode; color: string; barColor: string }
-> = {
+const TRAIT_CONFIG: Record<string, { label: string; icon: React.ReactNode }> = {
 	openness: {
 		label: "Openness",
 		icon: <Lightbulb className="w-5 h-5" />,
-		color: "text-amber-400",
-		barColor: "bg-amber-400",
 	},
 	conscientiousness: {
 		label: "Conscientiousness",
 		icon: <Zap className="w-5 h-5" />,
-		color: "text-blue-400",
-		barColor: "bg-blue-400",
 	},
 	extraversion: {
 		label: "Extraversion",
 		icon: <Heart className="w-5 h-5" />,
-		color: "text-rose-400",
-		barColor: "bg-rose-400",
 	},
 	agreeableness: {
 		label: "Agreeableness",
 		icon: <Handshake className="w-5 h-5" />,
-		color: "text-green-400",
-		barColor: "bg-green-400",
 	},
 	neuroticism: {
 		label: "Neuroticism",
 		icon: <TrendingUp className="w-5 h-5" />,
-		color: "text-purple-400",
-		barColor: "bg-purple-400",
 	},
 };
 
@@ -191,7 +178,7 @@ function ResultsPage() {
 
 	if (!sessionId) {
 		return (
-			<div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-6">
+			<div className="dark min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-6">
 				<div className="text-center">
 					<h1 className="text-2xl font-bold text-white mb-4">No Session Found</h1>
 					<p className="text-gray-400 mb-6">Start an assessment to see your results.</p>
@@ -208,7 +195,7 @@ function ResultsPage() {
 
 	if (isLoading) {
 		return (
-			<div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+			<div className="dark min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
 				<div className="text-center">
 					<Loader2 className="h-12 w-12 animate-spin text-blue-400 mx-auto mb-4" />
 					<p className="text-gray-400">Calculating your personality profile...</p>
@@ -219,7 +206,7 @@ function ResultsPage() {
 
 	if (error || !results) {
 		return (
-			<div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-6">
+			<div className="dark min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-6">
 				<div className="text-center">
 					<h1 className="text-2xl font-bold text-white mb-4">Could Not Load Results</h1>
 					<p className="text-gray-400 mb-6">
@@ -247,7 +234,7 @@ function ResultsPage() {
 	const maxTraitScore = 120;
 
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-8 px-4 md:px-6">
+		<div className="dark min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-8 px-4 md:px-6">
 			<div className="max-w-2xl mx-auto">
 				{/* Archetype Header */}
 				<div className="text-center mb-8">
@@ -270,6 +257,7 @@ function ResultsPage() {
 							const traitData = results.traits.find((t) => t.name === trait);
 							if (!config || !traitData) return null;
 
+							const traitName = trait as TraitName;
 							const percentage = Math.round((traitData.score / maxTraitScore) * 100);
 							const traitFacets = results.facets.filter((f) => f.traitName === trait);
 							const isExpanded = expandedTraits.has(trait);
@@ -279,7 +267,7 @@ function ResultsPage() {
 									{/* Trait Header - Clickable to expand */}
 									<button onClick={() => toggleTrait(trait)} className="w-full text-left" type="button">
 										<div className="flex items-center justify-between mb-2">
-											<div className={`flex items-center gap-2 ${config.color}`}>
+											<div className="flex items-center gap-2" style={{ color: getTraitColor(traitName) }}>
 												{config.icon}
 												<span className="text-sm font-medium text-gray-300">{config.label}</span>
 												{isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -288,8 +276,11 @@ function ResultsPage() {
 										</div>
 										<div className="w-full bg-slate-700 rounded-full h-2.5">
 											<div
-												className={`h-2.5 rounded-full transition-all duration-500 ${config.barColor}`}
-												style={{ width: `${percentage}%` }}
+												className="h-2.5 rounded-full transition-all duration-500"
+												style={{
+													width: `${percentage}%`,
+													backgroundColor: getTraitColor(traitName),
+												}}
 											/>
 										</div>
 									</button>
@@ -321,8 +312,11 @@ function ResultsPage() {
 														</div>
 														<div className="w-full bg-slate-700 rounded-full h-1.5">
 															<div
-																className={`h-1.5 rounded-full ${config.barColor} opacity-70`}
-																style={{ width: `${facetPercentage}%` }}
+																className="h-1.5 rounded-full opacity-70"
+																style={{
+																	width: `${facetPercentage}%`,
+																	backgroundColor: `color-mix(in oklch, ${getFacetColor(facetId as FacetName)} 70%, white)`,
+																}}
 															/>
 														</div>
 													</div>

@@ -1,18 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { getTraitColor, type TraitName } from "@workspace/domain";
 import { useState } from "react";
 import { ArchetypeCard } from "@/components/results/ArchetypeCard";
 import { FacetBreakdown } from "@/components/results/FacetBreakdown";
 import { TraitBar } from "@/components/results/TraitBar";
 import { useGetResults } from "@/hooks/use-assessment";
-
-/** Trait color mapping per UX spec */
-const TRAIT_COLORS: Record<string, string> = {
-	openness: "#6B5CE7",
-	conscientiousness: "#E87B35",
-	extraversion: "#E74C8B",
-	agreeableness: "#4CAF6E",
-	neuroticism: "#2C3E7B",
-};
 
 const LOW_CONFIDENCE_THRESHOLD = 50;
 
@@ -31,7 +23,7 @@ function ResultsPage() {
 
 	if (error) {
 		return (
-			<div className="flex min-h-[60vh] items-center justify-center px-4">
+			<div className="dark flex min-h-[60vh] items-center justify-center px-4">
 				<div className="text-center">
 					<h2 className="text-xl font-semibold text-white">Session not found</h2>
 					<p className="mt-2 text-sm text-slate-400">
@@ -53,7 +45,7 @@ function ResultsPage() {
 	const isLowConfidence = data.overallConfidence < LOW_CONFIDENCE_THRESHOLD;
 
 	return (
-		<div className="mx-auto max-w-2xl px-4 py-8" data-testid="results-page">
+		<div className="dark mx-auto max-w-2xl px-4 py-8" data-testid="results-page">
 			{/* Low confidence banner (AC-4) */}
 			{isLowConfidence && (
 				<div
@@ -108,7 +100,7 @@ function ResultsPage() {
 								score={trait.score}
 								level={trait.level}
 								confidence={trait.confidence}
-								color={TRAIT_COLORS[trait.name] ?? "#6B7280"}
+								color={getTraitColor(trait.name as TraitName)}
 								isExpanded={isExpanded}
 								onToggle={() => setExpandedTrait(isExpanded ? null : trait.name)}
 								controlsId={controlsId}
@@ -154,7 +146,7 @@ function ResultsPage() {
 /** Skeleton loading state */
 function ResultsSkeleton() {
 	return (
-		<div className="mx-auto max-w-2xl px-4 py-8" data-testid="results-skeleton">
+		<div className="dark mx-auto max-w-2xl px-4 py-8" data-testid="results-skeleton">
 			{/* Archetype skeleton */}
 			<div className="animate-pulse rounded-2xl border border-slate-700/50 bg-slate-800/80 p-6 md:p-8">
 				<div className="h-1.5 w-full rounded bg-slate-700" />

@@ -29,7 +29,7 @@ export const HighOpenness: Story = {
 	args: {
 		traitName: "openness",
 		score: 95,
-		level: "H",
+		level: "O",
 		confidence: 85,
 		color: "#6B5CE7",
 		isExpanded: false,
@@ -41,7 +41,7 @@ export const MidConscientiousness: Story = {
 	args: {
 		traitName: "conscientiousness",
 		score: 60,
-		level: "M",
+		level: "B",
 		confidence: 62,
 		color: "#E87B35",
 		isExpanded: false,
@@ -53,7 +53,7 @@ export const LowExtraversion: Story = {
 	args: {
 		traitName: "extraversion",
 		score: 25,
-		level: "L",
+		level: "I",
 		confidence: 70,
 		color: "#E74C8B",
 		isExpanded: false,
@@ -65,7 +65,7 @@ export const Expanded: Story = {
 	args: {
 		traitName: "agreeableness",
 		score: 90,
-		level: "H",
+		level: "W",
 		confidence: 78,
 		color: "#4CAF6E",
 		isExpanded: true,
@@ -77,7 +77,7 @@ export const LowConfidence: Story = {
 	args: {
 		traitName: "neuroticism",
 		score: 45,
-		level: "M",
+		level: "T",
 		confidence: 22,
 		color: "#2C3E7B",
 		isExpanded: false,
@@ -89,7 +89,7 @@ export const HighConfidence: Story = {
 	args: {
 		traitName: "openness",
 		score: 100,
-		level: "H",
+		level: "O",
 		confidence: 95,
 		color: "#6B5CE7",
 		isExpanded: false,
