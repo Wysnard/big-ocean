@@ -79,6 +79,24 @@
 	--space-16: 64px;
 	--space-24: 96px;
 
+	/* ========== TYPOGRAPHY ========== */
+	--font-heading: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+	--font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+	--font-data: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+	/* ========== TYPE SCALE ========== */
+	--text-display-hero: 3.5rem;
+	--text-display-xl: 3rem;
+	--text-display: 2.25rem;
+	--text-h1: 1.875rem;
+	--text-h2: 1.5rem;
+	--text-h3: 1.25rem;
+	--text-h4: 1.125rem;
+	--text-body: 1rem;
+	--text-body-sm: 0.875rem;
+	--text-caption: 0.75rem;
+	--text-data: 1rem;
+
 	/* ========== RADIUS SCALE ========== */
 	--radius-button: 12px;
 	--radius-input: 12px;
@@ -276,6 +294,11 @@
 	--color-facet-self_consciousness: var(--facet-self_consciousness);
 	--color-facet-immoderation: var(--facet-immoderation);
 	--color-facet-vulnerability: var(--facet-vulnerability);
+	/* Font family mappings */
+	--font-heading: var(--font-heading);
+	--font-body: var(--font-body);
+	--font-data: var(--font-data);
+
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
 	--radius-lg: var(--radius);
@@ -323,6 +346,7 @@
 	}
 	body {
 		@apply bg-background text-foreground;
+		font-family: var(--font-body);
 	}
 }
 
