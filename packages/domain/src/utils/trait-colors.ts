@@ -15,6 +15,13 @@ export function getFacetColor(facet: FacetName): string {
 }
 
 /**
+ * Return the CSS variable reference for a trait accent color token.
+ */
+export function getTraitAccentColor(trait: TraitName): string {
+	return `var(--trait-${trait}-accent)`;
+}
+
+/**
  * Return the CSS variable reference for a trait gradient token.
  */
 export function getTraitGradient(trait: TraitName): string {

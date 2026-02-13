@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { ALL_FACETS, type TraitName } from "../../constants/big-five";
-import { getFacetColor, getTraitColor, getTraitGradient } from "../trait-colors";
+import {
+	getFacetColor,
+	getTraitAccentColor,
+	getTraitColor,
+	getTraitGradient,
+} from "../trait-colors";
 
 const TRAITS: TraitName[] = [
 	"openness",
@@ -30,9 +35,16 @@ describe("trait color utilities", () => {
 		}
 	});
 
+	it("resolves all 5 trait accent colors to CSS variable references", () => {
+		for (const trait of TRAITS) {
+			expect(getTraitAccentColor(trait)).toBe(`var(--trait-${trait}-accent)`);
+		}
+	});
+
 	it("is deterministic across repeated calls", () => {
 		expect(getTraitColor("openness")).toBe(getTraitColor("openness"));
 		expect(getFacetColor("imagination")).toBe(getFacetColor("imagination"));
 		expect(getTraitGradient("agreeableness")).toBe(getTraitGradient("agreeableness"));
+		expect(getTraitAccentColor("extraversion")).toBe(getTraitAccentColor("extraversion"));
 	});
 });
