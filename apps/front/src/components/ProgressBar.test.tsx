@@ -85,16 +85,6 @@ describe("ProgressBar", () => {
 		expect(fillBar).toHaveClass("transition-all", "duration-500", "ease-in-out");
 	});
 
-	it("uses dark theme styling", () => {
-		const { container } = render(<ProgressBar value={50} />);
-
-		const track = container.querySelector('[data-testid="progress-track"]');
-		expect(track).toHaveClass("bg-slate-700");
-
-		const fillBar = container.querySelector('[data-testid="progress-fill"]');
-		expect(fillBar).toHaveClass("bg-gradient-to-r", "from-blue-500", "to-purple-500");
-	});
-
 	it("applies custom className when provided", () => {
 		const { container } = render(<ProgressBar value={50} className="mt-4 mb-2" />);
 

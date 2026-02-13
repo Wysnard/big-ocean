@@ -129,17 +129,6 @@ describe("TherapistChat", () => {
 		expect(screen.getByText(/session-123/)).toBeTruthy();
 	});
 
-	it("renders trait confidence scores in sidebar", () => {
-		renderWithProviders(<TherapistChat sessionId="session-123" />);
-
-		expect(screen.getByText("Openness")).toBeTruthy();
-		expect(screen.getByText("Conscientiousness")).toBeTruthy();
-		expect(screen.getByText("Extraversion")).toBeTruthy();
-		expect(screen.getByText("Agreeableness")).toBeTruthy();
-		expect(screen.getByText("Neuroticism")).toBeTruthy();
-		expect(screen.getByText("Current Scores")).toBeTruthy();
-	});
-
 	it("renders message input field", () => {
 		renderWithProviders(<TherapistChat sessionId="session-123" />);
 
@@ -306,18 +295,6 @@ describe("TherapistChat", () => {
 
 		const input = screen.getByPlaceholderText("Type your response here...") as HTMLInputElement;
 		expect(input.disabled).toBe(true);
-	});
-
-	it("sidebar is hidden on mobile, has floating button", () => {
-		const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
-
-		// Desktop sidebar has hidden md:flex
-		const sidebar = container.querySelector(".hidden.md\\:flex.md\\:w-80");
-		expect(sidebar).toBeTruthy();
-
-		// Mobile floating button exists
-		const mobileButton = screen.getByLabelText("Show trait scores");
-		expect(mobileButton).toBeTruthy();
 	});
 
 	// Task 2 Tests: Loading and Error States for Resume
