@@ -25,6 +25,6 @@ export const OPENING_QUESTIONS = [
  * Pure function — caller provides randomness or uses Math.random() default.
  */
 export function pickOpeningQuestion(random: () => number = Math.random): string {
-	// Index is always in bounds: Math.floor(x * length) produces [0, length-1]
-	return OPENING_QUESTIONS[Math.floor(random() * OPENING_QUESTIONS.length)]!;
+	const index = Math.floor(random() * OPENING_QUESTIONS.length);
+	return OPENING_QUESTIONS[index] ?? OPENING_QUESTIONS[0];
 }
