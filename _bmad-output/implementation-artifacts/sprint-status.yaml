@@ -102,7 +102,7 @@ development_status:
   # All stories reset to backlog after epic scope rewrite
   epic-7: in-progress
   7-1-psychedelic-brand-design-tokens: done
-  7-2-typography-system: backlog
+  7-2-typography-system: done
   7-3-dark-mode-toggle-with-system-preference-detection: backlog
   7-4-ocean-geometric-identity-system-and-brand-mark: backlog
   7-5-big-five-trait-and-facet-visualization-colors: backlog
