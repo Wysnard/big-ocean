@@ -19,7 +19,8 @@ So that **I know how close I am to seeing my results without waiting for backgro
 **Design Decisions:**
 1. **Message count as progress proxy** — Simple, no API dependency, deterministic. User messages counted client-side from the `messages` array.
 2. **Keep confidence in resume endpoint** — Returning users with existing evidence still see accurate progress on load.
-3. **Phase 2: ElectricSQL live sync** — Deferred until ElectricSQL implementation.
+3. **Results reveal at threshold** — When `message_threshold` is reached, the celebration card triggers and the user can navigate to the results page. If unauthenticated, the auth gate (Story 7.11) intercepts with a teaser + sign-up flow.
+4. **Phase 2: ElectricSQL live sync** — Deferred until ElectricSQL implementation.
 
 ## Acceptance Criteria
 
@@ -44,7 +45,7 @@ So that **I know how close I am to seeing my results without waiting for backgro
 
 ### AC-3: Celebration Trigger (Message Count)
 
-**Given** the user has sent 15+ messages (configurable threshold)
+**Given** the user has sent 15+ messages (configurable threshold from backend `messageReadyThreshold`)
 **When** the progress check runs
 **Then** `isConfidenceReady` becomes true
 **And** the celebration card appears ("Your Personality Profile is Ready!")
@@ -67,6 +68,21 @@ So that **I know how close I am to seeing my results without waiting for backgro
 **And** the duplicate `{trait}Confidence` fields are cleaned up
 **And** `avgConfidence` calculation uses resume data OR message count
 
+### AC-6: Results Reveal After Message Threshold
+
+**Given** the user has reached the `message_threshold` (isConfidenceReady = true)
+**When** they click "View Results" on the celebration card or header link
+**Then** they navigate to `/results/$sessionId`
+**And** if the user is **authenticated**: results page renders with full archetype, trait scores, and evidence
+**And** if the user is **unauthenticated**: `ResultsAuthGate` intercepts with teaser (blurred archetype) + sign-up/sign-in form (Story 7.11 flow)
+**And** after successful sign-up/sign-in: results page renders with full data
+**And** the 24-hour localStorage privacy window (Story 7.11) applies to anonymous sessions
+
+**Given** the user has NOT reached the `message_threshold`
+**When** they attempt to navigate directly to `/results/$sessionId` via URL
+**Then** the results page still loads (no route guard — results are available if backend has data)
+**And** auth gate still applies if unauthenticated
+
 ## Tasks / Subtasks
 
 - [ ] **Task 1: Update `SendMessageResponseSchema` contract** (AC: 1)
@@ -77,7 +93,7 @@ So that **I know how close I am to seeing my results without waiting for backgro
   - [ ] Update `send-message.use-case.ts` to return only `{ response: string }` (remove trait confidence computation from synchronous path)
 - [ ] **Task 2: Refactor `useTherapistChat` hook — message-count progress** (AC: 1, 2, 3, 4, 5)
   - [ ] Remove `data.confidence` consumption from `onSuccess` callback (lines 247-272)
-  - [ ] Add `MESSAGE_READY_THRESHOLD = 15` constant
+  - [ ] Add `MESSAGE_READY_THRESHOLD = 15` constant (sourced from `resumeData?.messageReadyThreshold ?? 15`)
   - [ ] Compute `userMessageCount` from `messages.filter(m => m.role === "user").length`
   - [ ] Compute `progressPercent = Math.min(Math.round((userMessageCount / MESSAGE_READY_THRESHOLD) * 100), 100)`
   - [ ] Replace `isConfidenceReady` with message-count logic: `userMessageCount >= MESSAGE_READY_THRESHOLD`
@@ -85,7 +101,7 @@ So that **I know how close I am to seeing my results without waiting for backgro
   - [ ] Simplify `TraitScores` interface: remove duplicate `{trait}Confidence` fields, or replace entirely with a simpler state shape
   - [ ] Expose `progressPercent` in return value for `ProgressBar` consumption
   - [ ] Remove `traits` from return value (no longer consumed by UI for progress)
-- [ ] **Task 3: Update `TherapistChat` component** (AC: 2, 3)
+- [ ] **Task 3: Update `TherapistChat` component** (AC: 2, 3, 6)
   - [ ] Replace `avgConfidence` with `progressPercent` for `ProgressBar` value (line 333)
   - [ ] Update `MILESTONES` thresholds from confidence % to message-count-derived progress %:
     - 25% → ~4 messages → threshold 25 (stays same since progress is 0-100)
@@ -95,6 +111,8 @@ So that **I know how close I am to seeing my results without waiting for backgro
   - [ ] Update celebration card text: change "You've reached X% confidence" to "Your assessment is complete" (line 468)
   - [ ] Update `NerinAvatar` confidence prop to use `progressPercent` instead of `avgConfidence` (lines 315, 413, 491)
   - [ ] Update `TypingIndicator` confidence prop (line 491)
+  - [ ] Verify celebration card "View Results" button navigates to `/results/$sessionId` (existing behavior — no change needed)
+  - [ ] Verify header "View Your Results" link appears when `isConfidenceReady` (existing behavior — no change needed)
   - [ ] Keep `isConfidenceReady` name for now (it's a UI-agnostic boolean, renaming is optional)
 - [ ] **Task 4: Update `ProgressBar` labels** (AC: 2)
   - [ ] Update label thresholds in `ProgressBar.tsx` to match new progress mapping:
@@ -103,7 +121,15 @@ So that **I know how close I am to seeing my results without waiting for backgro
     - 50-84: "Refining your personality map..."
     - 85-100: "Almost ready for results!"
   - [ ] ProgressBar still receives 0-100 value — no structural change needed
-- [ ] **Task 5: Update tests** (AC: all)
+- [ ] **Task 5: Verify results reveal flow integration** (AC: 6)
+  - [ ] Verify `/results/$sessionId` route loads `ResultsAuthGate` for unauthenticated users (Story 7.11 already implemented)
+  - [ ] Verify authenticated users see full results immediately after threshold
+  - [ ] Verify the 24-hour privacy window for anonymous sessions works correctly with threshold-based reveal
+  - [ ] Test flow: threshold reached → click "View Results" → auth gate → sign up → results display
+  - [ ] Test flow: threshold reached → click "View Results" → already authenticated → results display immediately
+  - [ ] Ensure no race condition: results data exists in DB by time user reaches threshold (async analyzer should have processed enough messages by message 15)
+  - [ ] Add fallback UX: if results page loads but no archetype/scores exist yet (edge case — async analyzer still running), show a loading state with "Finalizing your profile..." rather than an error
+- [ ] **Task 6: Update tests** (AC: all)
   - [ ] Update `useTherapistChat.test.ts` — replace confidence-based assertions with message-count assertions
   - [ ] Update `TherapistChat.test.tsx` — update mock hook return values (remove `traits`, add `progressPercent`)
   - [ ] Add test: progress at 0 messages = 0%
@@ -111,6 +137,8 @@ So that **I know how close I am to seeing my results without waiting for backgro
   - [ ] Add test: progress at 15 messages = 100%, `isConfidenceReady = true`
   - [ ] Add test: resume with high confidence triggers celebration immediately
   - [ ] Add test: progress never decreases (monotonic)
+  - [ ] Add test: celebration card "View Results" navigates to `/results/$sessionId`
+  - [ ] Add test: header link appears when `isConfidenceReady` is true
   - [ ] Ensure all existing tests pass with updated types
 
 ## Dev Notes
@@ -120,6 +148,12 @@ So that **I know how close I am to seeing my results without waiting for backgro
 **Hexagonal architecture:** This story touches the **contract** layer (shared types), **frontend hooks** (presentation logic), and **frontend components** (UI). The contract change has backend implications too — the handler must stop computing and returning confidence on each message.
 
 **Effect Schema contract:** `SendMessageResponseSchema` is defined using `@effect/schema` in `packages/contracts/src/http/groups/assessment.ts`. The exported TypeScript type `SendMessageResponse` is auto-inferred from the schema. Changing the schema automatically changes the type.
+
+**Results reveal integration (Story 7.11):** The auth-gated results flow is already implemented:
+- `ResultsAuthGate.tsx` shows teaser (blurred archetype) + sign-up/sign-in for unauthenticated users
+- `results-auth-gate-storage.ts` manages 24-hour localStorage privacy window for anonymous sessions
+- On auth success, user sees full results immediately
+- This story ensures the message-count threshold triggers the same flow that was previously triggered by confidence scores
 
 **Frontend patterns:**
 - Data attributes: Use `data-slot` for structural identification, `data-testid` for test hooks per FRONTEND.md
@@ -131,7 +165,7 @@ So that **I know how close I am to seeing my results without waiting for backgro
 
 **`packages/contracts/src/http/groups/assessment.ts`:**
 - Lines 52-61: `SendMessageResponseSchema` — has `confidence` struct with 5 traits. **Remove the confidence field.**
-- Lines 112-127: `ResumeSessionResponseSchema` — has `confidence`. **Keep this.**
+- Lines 112-127: `ResumeSessionResponseSchema` — has `confidence` + `messageReadyThreshold`. **Keep both.**
 - Lines 170-176: Type exports — auto-inferred, no manual change needed.
 
 **`apps/front/src/hooks/useTherapistChat.ts`:**
@@ -139,19 +173,26 @@ So that **I know how close I am to seeing my results without waiting for backgro
 - Lines 90-101: `traits` state initialization — all zeros. **Remove or simplify.**
 - Lines 137-155: Resume confidence loading — **Keep this path, needed for AC-4.**
 - Lines 247-272: `onSuccess` callback — reads `data.confidence`, updates `traits`. **Remove confidence consumption. Only read `data.response`.**
-- Lines 297-305: `avgConfidence` and `isConfidenceReady` calculation. **Replace with message-count logic.**
-- Lines 307-323: Return values — `traits` exposed. **Replace with `progressPercent`.**
+- Lines 273-280: Message-count progress (already partially implemented). **Verify and complete.**
+- Lines 282-300: Return values. **Ensure `progressPercent`, `isConfidenceReady`, `messageReadyThreshold` are exposed.**
 
 **`apps/front/src/components/TherapistChat.tsx`:**
-- Lines 39-53: `MILESTONES` array — thresholds at 25, 50, 70 confidence %. **Keep thresholds as-is (they map to progress %).**
+- Lines 38-53: `MILESTONES` array — thresholds at 25, 50, 70 progress %. **Keep thresholds as-is (they map to progress %).**
 - Lines 174-184: `avgConfidence` computed from `traits`. **Replace with `progressPercent` from hook.**
 - Lines 186-197: Milestone tracking uses `avgConfidence`. **Use `progressPercent`.**
+- Lines 310-319: Header "View Your Results" link conditioned on `isConfidenceReady`. **No change needed (boolean stays).**
 - Lines 315, 413: `NerinAvatar confidence={avgConfidence}`. **Use `progressPercent`.**
-- Lines 318-327: Header "View Your Results" link conditioned on `isConfidenceReady`. **No change needed (boolean stays).**
-- Lines 333: `ProgressBar value={avgConfidence}`. **Use `progressPercent`.**
-- Lines 457-488: Celebration card conditioned on `isConfidenceReady`. **No change needed (boolean stays).**
+- Lines 325: `ProgressBar value={avgConfidence}`. **Use `progressPercent`.**
+- Lines 449-480: Celebration card with "View Results" → navigates to `/results/$sessionId`. **Update text, keep navigation.**
 - Line 468: "You've reached X% confidence" text. **Change to "Your assessment is complete" or similar.**
 - Line 491: `TypingIndicator confidence={avgConfidence}`. **Use `progressPercent`.**
+
+**`apps/front/src/components/ResultsAuthGate.tsx` (Story 7.11 — already implemented):**
+- Shows teaser mode (blurred archetype) for unauthenticated users
+- sign-up/sign-in forms inline
+- 24-hour localStorage TTL for anonymous sessions
+- On auth success: clears gate storage, navigates to results with `replace: true`
+- **No changes needed — this story just feeds into it via the celebration card navigation.**
 
 **`apps/front/src/components/ProgressBar.tsx`:**
 - Lines 21-27: Default labels based on `clampedValue`. **Update thresholds to match new progress semantics.**
@@ -163,7 +204,8 @@ So that **I know how close I am to seeing my results without waiting for backgro
 ### Message Count → Progress Mapping
 
 ```typescript
-const MESSAGE_READY_THRESHOLD = 15; // Configurable
+// Threshold configurable from backend via resume endpoint
+const MESSAGE_READY_THRESHOLD = resumeData?.messageReadyThreshold ?? 15;
 
 const userMessageCount = messages.filter(m => m.role === "user").length;
 
@@ -195,6 +237,34 @@ const progressPercent = Math.max(
 );
 ```
 
+### Results Reveal Flow (End-to-End)
+
+```
+User sends 15th message (or configurable threshold)
+  ↓
+isConfidenceReady = true
+  ↓
+Celebration card appears: "Your Personality Profile is Ready!"
+  ↓
+User clicks "View Results"
+  ↓
+Navigate to /results/$sessionId
+  ↓
+┌─ Authenticated? ─────────────────────────────┐
+│  YES → Results page renders with full data    │
+│  NO  → ResultsAuthGate intercepts:            │
+│        → Teaser (blurred archetype)           │
+│        → Sign-up / Sign-in forms              │
+│        → 24h localStorage privacy window      │
+│        → On auth success → full results       │
+└───────────────────────────────────────────────┘
+```
+
+**Edge case — async analyzer race condition:**
+By message 15, the async analyzer (Story 2.11) will have processed messages 3, 6, 9, 12 (batch trigger every 3rd message). This means at least 4 analysis rounds have completed, providing sufficient evidence for trait scoring. However, if the user navigates very quickly after the 15th message, the latest batch (message 15) may still be processing. The results page should handle this gracefully:
+- If archetype/scores exist → show results
+- If archetype doesn't exist yet → show "Finalizing your profile..." loading state with a short polling interval (2-3s) until data appears
+
 ### Backend Contract Change
 
 The `SendMessageResponseSchema` change in `packages/contracts/` affects both frontend and backend. The backend handler in `apps/api/src/handlers/assessment.ts` currently computes trait confidence on every message and includes it in the response. After this change:
@@ -203,7 +273,7 @@ The `SendMessageResponseSchema` change in `packages/contracts/` affects both fro
 2. The handler returns only `{ response: nerinResponse }`
 3. This aligns with Story 2.11's architecture: analysis happens async via `Effect.forkDaemon`
 
-**Note:** Story 2.11 is currently `backlog`. This story can be implemented independently — the backend contract change is simple (remove confidence from response) and doesn't require the full async analyzer refactor.
+**Note:** Story 2.11 has been implemented (commit `3632c79`). The backend already supports async analysis. This story completes the frontend alignment.
 
 ### Project Structure Notes
 
@@ -213,22 +283,28 @@ The `SendMessageResponseSchema` change in `packages/contracts/` affects both fro
 - Component changes are in `apps/front/src/components/`
 - No new files needed — all changes are modifications to existing files
 - No new dependencies needed
+- Results auth gate (Story 7.11) is already implemented — this story integrates with it
 
 ### References
 
 - [Source: packages/contracts/src/http/groups/assessment.ts#SendMessageResponseSchema] — Current contract with confidence field
-- [Source: apps/front/src/hooks/useTherapistChat.ts] — Current confidence consumption in hook
-- [Source: apps/front/src/components/TherapistChat.tsx] — Current UI using avgConfidence
+- [Source: apps/front/src/hooks/useTherapistChat.ts] — Current confidence consumption and message-count progress
+- [Source: apps/front/src/components/TherapistChat.tsx] — Celebration card, progress display, header link
 - [Source: apps/front/src/components/ProgressBar.tsx] — Progress bar component (receives 0-100)
 - [Source: apps/front/src/components/NerinAvatar.tsx] — Avatar with confidence tier styling
+- [Source: apps/front/src/components/ResultsAuthGate.tsx] — Auth gate for results page (Story 7.11)
+- [Source: apps/front/src/lib/results-auth-gate-storage.ts] — 24h localStorage privacy window
+- [Source: apps/front/src/routes/results.$sessionId.tsx] — Results route with auth gate integration
 - [Source: _bmad-output/planning-artifacts/epics/epic-4-frontend-assessment-ui.md#Story 4.7] — Epic specification
 - [Source: _bmad-output/implementation-artifacts/4-6-hide-scores-during-assessment.md] — Previous story context
 - [Source: docs/FRONTEND.md] — Frontend styling patterns and conventions
 - [Source: CLAUDE.md#Multi-Agent System] — Architecture context for async analyzer
+- [Source: packages/domain/src/config/app-config.ts#messageReadyThreshold] — Backend threshold config
 
 ### Dependency Notes
 
-- **Depends on:** Story 2.11 (conceptually — removes confidence from send-message response). However, this story can implement the frontend changes independently by simply removing confidence consumption. The backend contract change is a one-line schema removal.
+- **Depends on:** Story 2.11 (implemented — async analyzer removes confidence from send-message response).
+- **Integrates with:** Story 7.11 (implemented — auth-gated results reveal). The celebration trigger now feeds directly into the auth gate flow.
 - **Relationship with Story 4.6:** Story 4.6 (Hide Scores During Assessment) is `ready-for-dev` but hasn't been implemented yet. Both stories modify the same files. If 4.6 is implemented first, 4.7 will need to adjust to whatever precision/progress UI 4.6 introduces. If 4.7 is implemented first, 4.6 should build on the message-count progress pattern.
 - **Phase 2:** ElectricSQL live sync will replace message-count progress with real-time confidence computed from synced evidence table.
 
@@ -236,7 +312,7 @@ The `SendMessageResponseSchema` change in `packages/contracts/` affects both fro
 
 **Unit Tests (apps/front):**
 - `useTherapistChat.test.ts` — Message-count progress calculation, celebration trigger, resume hybrid logic
-- `TherapistChat.test.tsx` — ProgressBar receives correct value, milestones trigger at correct points, celebration card shows
+- `TherapistChat.test.tsx` — ProgressBar receives correct value, milestones trigger at correct points, celebration card shows, navigation to results
 
 **Key Test Cases:**
 1. 0 user messages → progress = 0%
@@ -248,10 +324,17 @@ The `SendMessageResponseSchema` change in `packages/contracts/` affects both fro
 7. Progress monotonically increases (never goes down)
 8. `onSuccess` callback does NOT read `data.confidence`
 9. Milestones trigger at correct progress percentages
+10. Celebration card "View Results" button navigates to `/results/$sessionId`
+11. Header "View Your Results" link appears when `isConfidenceReady` is true
+12. Authenticated user at threshold → results page renders (no gate)
+13. Unauthenticated user at threshold → auth gate renders with teaser
 
 **Manual Testing:**
 - Start fresh assessment → see progress increase per message
 - Send 15+ messages → see celebration card
+- Click "View Results" while authenticated → see full results page
+- Click "View Results" while unauthenticated → see auth gate teaser + sign-up
+- Sign up from auth gate → results reveal with full data
 - Resume session with high confidence → see celebration immediately
 - Verify ProgressBar labels match thresholds
 - Mobile responsive check

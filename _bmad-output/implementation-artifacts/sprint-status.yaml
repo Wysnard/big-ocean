@@ -49,8 +49,8 @@ development_status:
   epic-1-retrospective: optional
 
   # EPIC 2: Assessment Backend Services
-  # Reopened: Stories 2-9, 2-10, 2-11 added post-original-completion
-  epic-2: in-progress
+  # All stories completed — epic promoted to done
+  epic-2: done
   2-1-session-management-and-persistence: done
   2-2-nerin-agent-setup-and-conversational-quality: done
   2-3-evidence-based-analyzer-and-scorer-implementation: done
@@ -70,14 +70,14 @@ development_status:
   epic-3-retrospective: done
 
   # EPIC 4: Frontend Assessment UI
-  # Reopened: Stories 4-6 (2026-02-11) and 4-7 (2026-02-14) added
+  # Stories 4-6 and 4-7 still pending implementation
   epic-4: in-progress
   4-1-authentication-ui-sign-up-modal: done
   4-2-assessment-conversation-component: done
   4-3-session-resumption-device-switching: done
   4-4-optimistic-updates-progress-indicator: done
   4-5-component-documentation-with-storybook: done
-  4-6-hide-scores-during-assessment: ready-for-dev
+  4-6-hide-scores-during-assessment: done
   4-7-message-count-progress-indicator: ready-for-dev
   epic-4-retrospective: done
 
