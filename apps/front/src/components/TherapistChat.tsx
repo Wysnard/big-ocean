@@ -389,7 +389,7 @@ export function TherapistChat({
 														onClick={() => handleMessageClick(msg.id, msg.role)}
 														className="max-w-[90%] lg:max-w-md rounded-2xl rounded-br-sm px-4 py-3 text-left bg-primary text-primary-foreground cursor-pointer hover:ring-2 hover:ring-ring/40 transition-shadow"
 													>
-														<p className="text-sm leading-relaxed">
+														<p className="text-sm leading-relaxed whitespace-pre-line">
 															{renderMessageContent(
 																msg.content,
 																msg.id,
@@ -413,7 +413,7 @@ export function TherapistChat({
 															data-message-id={msg.id}
 															className="max-w-[90%] lg:max-w-md rounded-2xl rounded-bl-sm px-4 py-3 bg-muted text-foreground"
 														>
-															<p className="text-sm leading-relaxed">
+															<p className="text-sm leading-relaxed whitespace-pre-line">
 																{renderMessageContent(
 																	msg.content,
 																	msg.id,
