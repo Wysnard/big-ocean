@@ -18,7 +18,7 @@ So that **I feel genuinely understood and seen — not just assessed — which m
 
 3. **AC3: Contradiction Reconciliation** — When Nerin detects conflicting trait signals across the conversation (e.g., organized at work but messy at home), the system prompt instructs Nerin to find the coherent deeper truth instead of ignoring the contradiction. Example: "You're not unorganized — you invest your energy where it matters most to you, and you're selective about what deserves that effort."
 
-4. **AC4: Two-Paragraph Response Structure** — Nerin's system prompt includes explicit instructions for a consistent two-paragraph response format: Paragraph 1 responds using empathy patterns (acknowledge/reframe/reconcile), Paragraph 2 asks a natural follow-up question. This ensures every response demonstrates understanding AND continues the conversation flow. Example response included in prompt.
+4. **AC4: Two-Paragraph Response Structure** — Nerin's system prompt includes explicit instructions for a consistent two-paragraph response format: Paragraph 1 responds using empathy patterns (acknowledge/reframe/reconcile), then 2 line breaks (blank line) for visual separation, then Paragraph 2 asks a natural follow-up question. This ensures every response demonstrates understanding AND continues the conversation flow. Example response included in prompt.
 
 5. **AC5: No New Emotional Tones** — The existing `NerinResponseSchema` emotional tones (`warm`, `curious`, `supportive`, `encouraging`) remain unchanged. Empathy patterns work within the existing tone vocabulary — no schema changes.
 
@@ -94,6 +94,7 @@ Empathy patterns (use naturally, never formulaically):
 
 Response structure (follow this format for every message):
 - Paragraph 1: Respond to what they shared using one of the empathy patterns above. Acknowledge, reframe, or reconcile — showing you genuinely heard and understood them.
+- [2 line breaks - blank line to separate paragraphs visually]
 - Paragraph 2: Ask a natural follow-up question to continue the conversation. Make it open-ended and connected to what they just said.
 
 Example response:

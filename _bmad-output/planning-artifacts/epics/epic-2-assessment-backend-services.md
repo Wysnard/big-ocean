@@ -473,7 +473,7 @@ So that **I feel genuinely understood and seen — not just assessed — which m
 
 3. **Contradiction reconciliation** — When Nerin detects conflicting trait signals across the conversation, it finds the coherent deeper truth instead of ignoring the contradiction (e.g., organized at work but messy at home → "You're not unorganized — you value your time and effort to organize what matters to you, not to others")
 
-4. **Two-paragraph response structure** — Every response follows a consistent format: Paragraph 1 demonstrates understanding using empathy patterns (acknowledge/reframe/reconcile), Paragraph 2 asks a natural follow-up question. This ensures conversational quality and forward momentum.
+4. **Two-paragraph response structure** — Every response follows a consistent format: Paragraph 1 demonstrates understanding using empathy patterns (acknowledge/reframe/reconcile), then 2 line breaks (blank line) for visual separation, then Paragraph 2 asks a natural follow-up question. This ensures conversational quality and forward momentum.
 
 **Scope:** Backend-only — Nerin agent system prompt in LangGraph orchestrator. No API contract, schema, or frontend changes.
 
