@@ -19,17 +19,14 @@
 
 import type { BaseMessage } from "@langchain/core/messages";
 import { Context, Effect } from "effect";
-import type {
-	FacetEvidence,
-	FacetName,
-	FacetScoresMap,
-	TraitScoresMap,
-} from "../types/facet-evidence";
+import type { FacetName } from "../types/facet-evidence";
 import type { TokenUsage } from "./nerin-agent.repository";
 import type { BudgetPausedError, OrchestrationError } from "./orchestrator.repository";
 
 /**
  * Input for graph invocation
+ *
+ * Story 2.11: facetScores removed — router reads evidence internally on STEER messages.
  */
 export interface GraphInput {
 	readonly sessionId: string;
@@ -37,20 +34,18 @@ export interface GraphInput {
 	readonly messages: BaseMessage[];
 	readonly messageCount: number;
 	readonly dailyCostUsed: number;
-	readonly facetScores?: FacetScoresMap;
 }
 
 /**
  * Output from graph invocation
+ *
+ * Story 2.11: Conversation-only output. facetEvidence/facetScores/traitScores removed.
+ * Analyzer + scorer run separately via processAnalysis.
  */
 export interface GraphOutput {
 	readonly nerinResponse: string;
 	readonly tokenUsage: TokenUsage;
 	readonly costIncurred: number;
-	readonly isBatchMessage: boolean;
-	readonly facetEvidence?: FacetEvidence[];
-	readonly facetScores?: FacetScoresMap;
-	readonly traitScores?: TraitScoresMap;
 	readonly steeringTarget?: FacetName;
 	readonly steeringHint?: string;
 }

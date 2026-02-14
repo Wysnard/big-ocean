@@ -52,8 +52,15 @@ import { type OrchestratorState, OrchestratorStateAnnotation } from "./orchestra
 // ============================================
 
 /**
- * Router Node Effect - Pure function for budget check and steering.
- * Synchronous logic, but wrapped in Effect for consistency.
+ * Router Node Effect - Budget check, batch decision, and offset steering.
+ *
+ * Story 2.11: Offset steering — reads evidence from DB only on STEER messages.
+ *
+ * Message cadence (3-message cycle, offset by 1):
+ * - COLD START (msgs 1-3): No steering, no evidence read
+ * - STEER (msgs 4, 7, 10...): Read evidence from DB, compute fresh steering
+ * - COAST (msgs 5, 8, 11...): Use cached steering from state
+ * - BATCH (msgs 3, 6, 9...): Use cached steering, triggers async analysis
  */
 const routerNodeEffect = (state: OrchestratorState) =>
 	Effect.gen(function* () {
@@ -75,8 +82,7 @@ const routerNodeEffect = (state: OrchestratorState) =>
 				limit: config.dailyCostLimit,
 			});
 
-			// Calculate overall confidence from facetScores
-			const overallConfidence = facetScores ? calculateConfidenceFromFacetScores(facetScores) : 50; // Default if no scores yet
+			const overallConfidence = facetScores ? calculateConfidenceFromFacetScores(facetScores) : 50;
 
 			return yield* Effect.fail(
 				new BudgetPausedError(
@@ -88,24 +94,59 @@ const routerNodeEffect = (state: OrchestratorState) =>
 			);
 		}
 
-		// 2. BATCH DECISION
-		const isBatchMessage = messageCount % 3 === 0;
+		// 2. OFFSET STEERING
+		const isColdStart = messageCount <= 3;
+		const isSteeringMessage = messageCount % 3 === 1 && messageCount > 3;
 
-		// 3. STEERING CALCULATION
+		if (isColdStart) {
+			// No steering, no evidence read — Nerin uses default exploration
+			logger.debug("Router: cold start — no steering", {
+				sessionId,
+				messageCount,
+			});
+			return {
+				budgetOk: true,
+				facetScores: createInitialFacetScoresMap(),
+			};
+		}
+
+		if (isSteeringMessage) {
+			// FRESH steering — read evidence from DB
+			const evidenceRepo = yield* FacetEvidenceRepository;
+			const evidence = yield* evidenceRepo.getEvidenceBySession(sessionId);
+			const freshFacetScores = aggregateFacetScores(evidence);
+			const steeringTarget = getSteeringTarget(freshFacetScores);
+			const steeringHint = getSteeringHint(steeringTarget);
+
+			logger.debug("Router: STEER message — fresh evidence read", {
+				sessionId,
+				messageCount,
+				evidenceCount: evidence.length,
+				steeringTarget,
+			});
+
+			return {
+				budgetOk: true,
+				facetScores: freshFacetScores,
+				steeringTarget: steeringTarget ?? undefined,
+				steeringHint,
+			};
+		}
+
+		// CACHED steering — reuse facetScores/steeringHint from checkpointer state
 		const normalizedFacetScores = createInitialFacetScoresMap(facetScores);
 		const steeringTarget = getSteeringTarget(normalizedFacetScores);
 		const steeringHint = getSteeringHint(steeringTarget);
 
-		logger.debug("Router decisions", {
+		logger.debug("Router: cached steering", {
 			sessionId,
-			budgetOk: true,
-			isBatchMessage,
+			messageCount,
 			steeringTarget,
+			type: messageCount % 3 === 0 ? "BATCH" : "COAST",
 		});
 
 		return {
 			budgetOk: true,
-			isBatchMessage,
 			steeringTarget: steeringTarget ?? undefined,
 			steeringHint,
 		};
@@ -160,7 +201,7 @@ const nerinNodeEffect = (state: OrchestratorState) =>
  * Analyzes only unanalyzed user messages to avoid duplicate processing.
  * Tracks which messages have been analyzed via analyzedMessageIndices.
  */
-const analyzerNodeEffect = (state: OrchestratorState) =>
+const _analyzerNodeEffect = (state: OrchestratorState) =>
 	Effect.gen(function* () {
 		const logger = yield* LoggerRepository;
 		const analyzer = yield* AnalyzerRepository;
@@ -234,7 +275,7 @@ const analyzerNodeEffect = (state: OrchestratorState) =>
  * Scorer Node Effect - Score aggregation from evidence.
  * Uses FacetEvidenceRepository + pure domain functions (no score tables).
  */
-const scorerNodeEffect = (state: OrchestratorState) =>
+const _scorerNodeEffect = (state: OrchestratorState) =>
 	Effect.gen(function* () {
 		const logger = yield* LoggerRepository;
 		const evidenceRepo = yield* FacetEvidenceRepository;
@@ -303,22 +344,9 @@ export const OrchestratorGraphLangGraphRepositoryLive = Layer.effect(
 			Layer.succeed(FacetEvidenceRepository, evidenceRepo),
 		);
 
-		/**
-		 * Conditional edge function - routes to analyzer on batch messages, else ends.
-		 *
-		 * Determines the next node after Nerin completes:
-		 * - If batch message (every 3rd): route to "analyzer" for evidence extraction
-		 * - Otherwise: route to "end" (skip batch processing)
-		 *
-		 * @param state - Current orchestrator state with isBatchMessage flag set by router
-		 * @returns Next node name: "analyzer" or "end"
-		 */
-		const routeAfterNerin = (state: OrchestratorState): "analyzer" | "end" => {
-			return state.isBatchMessage ? "analyzer" : "end";
-		};
-
 		// ============================================
-		// Build StateGraph with Effect.runPromise nodes
+		// Build Conversation Graph: router → nerin → END
+		// Story 2.11: Analyzer/scorer removed from graph, run as separate pipeline
 		// ============================================
 
 		const workflow = new StateGraph(OrchestratorStateAnnotation)
@@ -328,20 +356,9 @@ export const OrchestratorGraphLangGraphRepositoryLive = Layer.effect(
 			.addNode("nerin", (state) =>
 				Effect.runPromise(nerinNodeEffect(state).pipe(Effect.provide(nodeServicesLayer))),
 			)
-			.addNode("analyzer", (state) =>
-				Effect.runPromise(analyzerNodeEffect(state).pipe(Effect.provide(nodeServicesLayer))),
-			)
-			.addNode("scorer", (state) =>
-				Effect.runPromise(scorerNodeEffect(state).pipe(Effect.provide(nodeServicesLayer))),
-			)
 			.addEdge(START, "router")
 			.addEdge("router", "nerin")
-			.addConditionalEdges("nerin", routeAfterNerin, {
-				analyzer: "analyzer",
-				end: END,
-			})
-			.addEdge("analyzer", "scorer")
-			.addEdge("scorer", END);
+			.addEdge("nerin", END);
 
 		// Compile with checkpointer
 		const graph = workflow.compile({
@@ -367,7 +384,6 @@ export const OrchestratorGraphLangGraphRepositoryLive = Layer.effect(
 								messages: input.messages,
 								messageCount: input.messageCount,
 								dailyCostUsed: input.dailyCostUsed,
-								facetScores: input.facetScores,
 							},
 							{ configurable: { thread_id: threadId } },
 						);
@@ -376,10 +392,6 @@ export const OrchestratorGraphLangGraphRepositoryLive = Layer.effect(
 							nerinResponse: result.nerinResponse ?? "",
 							tokenUsage: result.tokenUsage ?? { input: 0, output: 0, total: 0 },
 							costIncurred: result.costIncurred ?? 0,
-							isBatchMessage: result.isBatchMessage ?? false,
-							facetEvidence: result.facetEvidence,
-							facetScores: result.facetScores,
-							traitScores: result.traitScores,
 							steeringTarget: result.steeringTarget,
 							steeringHint: result.steeringHint,
 						};

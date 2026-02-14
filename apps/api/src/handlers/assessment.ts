@@ -139,19 +139,11 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 								}),
 							),
 						),
-						Effect.catchTag("FacetEvidencePersistenceError", (error: FacetEvidencePersistenceError) =>
-							Effect.fail(
-								new DatabaseError({
-									message: `Evidence retrieval failed: ${error.message}`,
-								}),
-							),
-						),
 					);
 
-					// Format HTTP response
+					// Format HTTP response (lean: response only, no confidence)
 					return {
 						response: result.response,
-						confidence: result.confidence,
 					};
 				}),
 			)
@@ -219,6 +211,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 							}),
 						),
 						confidence: result.confidence,
+						messageReadyThreshold: result.messageReadyThreshold,
 					};
 				}),
 			);

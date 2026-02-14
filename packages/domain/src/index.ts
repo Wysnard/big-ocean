@@ -63,6 +63,7 @@ export {
 	OrchestrationError,
 	OrchestratorRepository,
 	PrecisionGapError,
+	type ProcessAnalysisInput,
 	type ProcessMessageInput,
 	type ProcessMessageOutput,
 } from "./repositories/orchestrator.repository";

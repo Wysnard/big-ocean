@@ -34,7 +34,7 @@ export const CALM_PLACEHOLDERS = [
 /**
  * Returns a random placeholder from the appropriate tier based on user message count.
  */
-export function getPlaceholder(userMessageCount: number): string {
-	const pool = userMessageCount < 15 ? PLAYFUL_PLACEHOLDERS : CALM_PLACEHOLDERS;
+export function getPlaceholder(userMessageCount: number, threshold = 15): string {
+	const pool = userMessageCount < threshold ? PLAYFUL_PLACEHOLDERS : CALM_PLACEHOLDERS;
 	return pool[Math.floor(Math.random() * pool.length)];
 }

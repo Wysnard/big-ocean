@@ -105,15 +105,6 @@ export const OrchestratorStateAnnotation = Annotation.Root({
 	}),
 
 	/**
-	 * Whether this is a batch message (messageCount % 3 === 0).
-	 * Determines if Analyzer and Scorer are invoked.
-	 */
-	isBatchMessage: Annotation<boolean>({
-		reducer: (_, next) => next ?? false,
-		default: () => false,
-	}),
-
-	/**
 	 * Single steering target facet (outlier with lowest confidence).
 	 * Calculated from facetScores using standard deviation outlier detection
 	 * (confidence < mean - stddev). Passed to Nerin as exploration hint.

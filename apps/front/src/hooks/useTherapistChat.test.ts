@@ -159,13 +159,6 @@ describe("useTherapistChat", () => {
 			(_input: unknown, callbacks: { onSuccess?: (data: unknown) => void }) => {
 				callbacks?.onSuccess?.({
 					response: "That's fascinating! Tell me more about your outdoor adventures.",
-					confidence: {
-						openness: 65,
-						conscientiousness: 55,
-						extraversion: 60,
-						agreeableness: 50,
-						neuroticism: 40,
-					},
 				});
 			},
 		);
@@ -186,18 +179,11 @@ describe("useTherapistChat", () => {
 		expect(result.current.isLoading).toBe(false);
 	});
 
-	it("updates trait scores from API confidence response", () => {
+	it("does not update traits from send-message response (Story 2.11: lean response)", () => {
 		mockMutate.mockImplementation(
 			(_input: unknown, callbacks: { onSuccess?: (data: unknown) => void }) => {
 				callbacks?.onSuccess?.({
 					response: "Interesting",
-					confidence: {
-						openness: 72,
-						conscientiousness: 48,
-						extraversion: 65,
-						agreeableness: 53,
-						neuroticism: 35,
-					},
 				});
 			},
 		);
@@ -209,11 +195,9 @@ describe("useTherapistChat", () => {
 			result.current.sendMessage("I enjoy creative writing");
 		});
 
-		expect(result.current.traits.openness).toBe(72);
-		expect(result.current.traits.conscientiousness).toBe(48);
-		expect(result.current.traits.opennessConfidence).toBe(72);
-		expect(result.current.traits.conscientiousnessConfidence).toBe(48);
-		expect(result.current.traits.extraversionConfidence).toBe(65);
+		// Story 2.11: Traits are only updated from resume-session, not from send-message
+		expect(result.current.traits.openness).toBe(0);
+		expect(result.current.traits.conscientiousness).toBe(0);
 	});
 
 	it("sets error message on API failure", () => {
@@ -519,59 +503,63 @@ describe("useTherapistChat", () => {
 		});
 	});
 
-	// Task 4 Tests: Celebration Overlay (70%+ Confidence)
-	describe("70% Celebration", () => {
-		it("sets isConfidenceReady when average confidence reaches 70%", () => {
+	// Story 2.11: Message-count-based progress (replaces confidence-based celebration)
+	describe("Message Count Progress", () => {
+		it("sets isConfidenceReady when user message count reaches threshold (15)", () => {
+			// Simulate a resumed session with 14 user messages + 14 assistant messages
+			const existingMessages = Array.from({ length: 28 }, (_, i) => ({
+				role: i % 2 === 0 ? ("user" as const) : ("assistant" as const),
+				content: `Message ${i + 1}`,
+				timestamp: new Date(Date.now() - (28 - i) * 60000).toISOString(),
+			}));
+
+			mockResumeSession.mockReturnValue({
+				data: {
+					messages: existingMessages,
+					confidence: {
+						openness: 0,
+						conscientiousness: 0,
+						extraversion: 0,
+						agreeableness: 0,
+						neuroticism: 0,
+					},
+				},
+				isLoading: false,
+				error: null,
+				refetch: vi.fn(),
+			});
+
 			mockMutate.mockImplementation(
 				(_input: unknown, callbacks: { onSuccess?: (data: unknown) => void }) => {
-					callbacks?.onSuccess?.({
-						response: "Great!",
-						confidence: {
-							openness: 72,
-							conscientiousness: 68,
-							extraversion: 75,
-							agreeableness: 70,
-							neuroticism: 65,
-						},
-					});
+					callbacks?.onSuccess?.({ response: "Great!" });
 				},
 			);
 
 			const { result } = renderHook(() => useTherapistChat("session-123"));
-			completeGreetingStagger();
 
+			// Already 14 user messages, send one more to reach 15
 			act(() => {
-				result.current.sendMessage("Test message");
+				result.current.sendMessage("15th user message");
 			});
 
-			// Average = (72 + 68 + 75 + 70 + 65) / 5 = 70
 			expect(result.current.isConfidenceReady).toBe(true);
 		});
 
-		it("does not set isConfidenceReady when average confidence is below 70%", () => {
-			mockMutate.mockImplementation(
-				(_input: unknown, callbacks: { onSuccess?: (data: unknown) => void }) => {
-					callbacks?.onSuccess?.({
-						response: "Good!",
-						confidence: {
-							openness: 60,
-							conscientiousness: 65,
-							extraversion: 70,
-							agreeableness: 68,
-							neuroticism: 62,
-						},
-					});
-				},
-			);
-
+		it("does not set isConfidenceReady when user message count is below threshold", () => {
 			const { result } = renderHook(() => useTherapistChat("session-123"));
 			completeGreetingStagger();
+
+			mockMutate.mockImplementation(
+				(_input: unknown, callbacks: { onSuccess?: (data: unknown) => void }) => {
+					callbacks?.onSuccess?.({ response: "Good!" });
+				},
+			);
 
 			act(() => {
 				result.current.sendMessage("Test message");
 			});
 
-			// Average = (60 + 65 + 70 + 68 + 62) / 5 = 65
+			// Only 1 user message — well below threshold of 15
 			expect(result.current.isConfidenceReady).toBe(false);
 		});
 
@@ -582,27 +570,30 @@ describe("useTherapistChat", () => {
 		});
 
 		it("allows dismissing celebration via setHasShownCelebration", () => {
-			mockMutate.mockImplementation(
-				(_input: unknown, callbacks: { onSuccess?: (data: unknown) => void }) => {
-					callbacks?.onSuccess?.({
-						response: "Great!",
-						confidence: {
-							openness: 80,
-							conscientiousness: 75,
-							extraversion: 85,
-							agreeableness: 78,
-							neuroticism: 72,
-						},
-					});
+			// Simulate a resumed session with enough messages to trigger celebration
+			const existingMessages = Array.from({ length: 30 }, (_, i) => ({
+				role: i % 2 === 0 ? ("user" as const) : ("assistant" as const),
+				content: `Message ${i + 1}`,
+				timestamp: new Date(Date.now() - (30 - i) * 60000).toISOString(),
+			}));
+
+			mockResumeSession.mockReturnValue({
+				data: {
+					messages: existingMessages,
+					confidence: {
+						openness: 0,
+						conscientiousness: 0,
+						extraversion: 0,
+						agreeableness: 0,
+						neuroticism: 0,
+					},
 				},
-			);
+				isLoading: false,
+				error: null,
+				refetch: vi.fn(),
+			});
 
 			const { result } = renderHook(() => useTherapistChat("session-123"));
-			completeGreetingStagger();
-
-			act(() => {
-				result.current.sendMessage("Test message");
-			});
 
 			expect(result.current.isConfidenceReady).toBe(true);
 			expect(result.current.hasShownCelebration).toBe(false);
@@ -612,6 +603,14 @@ describe("useTherapistChat", () => {
 			});
 
 			expect(result.current.hasShownCelebration).toBe(true);
+		});
+
+		it("exposes progressPercent based on message count", () => {
+			const { result } = renderHook(() => useTherapistChat("session-123"));
+			completeGreetingStagger();
+
+			// No user messages → 0%
+			expect(result.current.progressPercent).toBe(0);
 		});
 	});
 });

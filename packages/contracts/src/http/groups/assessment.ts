@@ -48,16 +48,12 @@ export const SendMessageRequestSchema = S.Struct({
 
 /**
  * Send Message Response Schema
+ *
+ * Story 2.11: Lean response — confidence removed. Confidence is still
+ * returned by the resume-session endpoint for returning users.
  */
 export const SendMessageResponseSchema = S.Struct({
 	response: S.String,
-	confidence: S.Struct({
-		openness: S.Number,
-		conscientiousness: S.Number,
-		extraversion: S.Number,
-		agreeableness: S.Number,
-		neuroticism: S.Number,
-	}),
 });
 
 /**
@@ -124,6 +120,7 @@ export const ResumeSessionResponseSchema = S.Struct({
 		agreeableness: S.Number,
 		neuroticism: S.Number,
 	}),
+	messageReadyThreshold: S.Number,
 });
 
 /**

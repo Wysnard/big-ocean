@@ -6,6 +6,7 @@
  */
 
 import {
+	AppConfig,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	aggregateFacetScores,
@@ -33,6 +34,7 @@ export interface ResumeSessionOutput {
 		readonly neuroticism: number;
 	};
 	readonly messages: readonly AssessmentMessageEntity[];
+	readonly messageReadyThreshold: number;
 }
 
 /**
@@ -44,6 +46,7 @@ export interface ResumeSessionOutput {
  */
 export const resumeSession = (input: ResumeSessionInput) =>
 	Effect.gen(function* () {
+		const config = yield* AppConfig;
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
 		const evidenceRepo = yield* FacetEvidenceRepository;
@@ -91,5 +94,6 @@ export const resumeSession = (input: ResumeSessionInput) =>
 		return {
 			confidence: traitConfidence,
 			messages,
+			messageReadyThreshold: config.messageReadyThreshold,
 		};
 	});

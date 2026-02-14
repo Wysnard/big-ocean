@@ -139,7 +139,6 @@ export function TherapistChat({
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 	const {
 		messages,
-		traits,
 		isLoading,
 		isCompleted,
 		errorMessage,
@@ -151,6 +150,8 @@ export function TherapistChat({
 		resumeError,
 		isResumeSessionNotFound,
 		isConfidenceReady,
+		progressPercent,
+		messageReadyThreshold,
 		hasShownCelebration,
 		setHasShownCelebration,
 	} = useTherapistChat(sessionId);
@@ -171,17 +172,8 @@ export function TherapistChat({
 		return () => clearInterval(interval);
 	}, []);
 
-	// Calculate average confidence for progress bar
-	const avgConfidence = useMemo(() => {
-		return (
-			(traits.openness +
-				traits.conscientiousness +
-				traits.extraversion +
-				traits.agreeableness +
-				traits.neuroticism) /
-			5
-		);
-	}, [traits]);
+	// Story 2.11: Progress from message count (replaces confidence-based avgConfidence)
+	const avgConfidence = progressPercent;
 
 	// Track milestone crossings — record message count at trigger time for positioning
 	useEffect(() => {
@@ -203,8 +195,8 @@ export function TherapistChat({
 	);
 	const [placeholder, setPlaceholder] = useState(() => getPlaceholder(0));
 	useEffect(() => {
-		setPlaceholder(getPlaceholder(userMessageCount));
-	}, [userMessageCount]);
+		setPlaceholder(getPlaceholder(userMessageCount, messageReadyThreshold));
+	}, [userMessageCount, messageReadyThreshold]);
 
 	// Textarea auto-resize handler
 	const handleTextareaResize = useCallback(() => {
@@ -516,7 +508,7 @@ export function TherapistChat({
 										handleTextareaResize();
 									}}
 									onKeyDown={handleKeyDown}
-									onFocus={() => setPlaceholder(getPlaceholder(userMessageCount))}
+									onFocus={() => setPlaceholder(getPlaceholder(userMessageCount, messageReadyThreshold))}
 									placeholder={inputPlaceholder}
 									disabled={isLoading || isCompleted}
 									rows={1}

@@ -5,13 +5,14 @@
  * Uses inline spy layers (Layer.succeed with vi.fn()) for per-test control:
  * - Session validation
  * - Message persistence
- * - Orchestrator invocation (Nerin + optional Analyzer/Scorer)
- * - Confidence score handling (computed from evidence)
+ * - Orchestrator invocation (Nerin conversational agent)
  * - Cost tracking
  * - Error handling
  *
  * Story 2.4: Tests updated to use OrchestratorRepository instead of NerinAgentRepository.
  * Story 2.9: Confidence computed on-demand from FacetEvidenceRepository.
+ * Story 2.11: Lean response — confidence removed from send-message output.
+ *             Evidence reads moved to router node (offset steering).
  */
 
 import {
@@ -19,11 +20,9 @@ import {
 	AssessmentSessionRepository,
 	type BudgetPausedError,
 	CostGuardRepository,
-	FacetEvidenceRepository,
 	LoggerRepository,
 	OrchestratorRepository,
 	type ProcessMessageOutput,
-	type SavedFacetEvidence,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -51,6 +50,7 @@ const mockLoggerRepo = {
 
 const mockOrchestratorRepo = {
 	processMessage: vi.fn(),
+	processAnalysis: vi.fn(),
 };
 
 const mockCostGuardRepo = {
@@ -60,13 +60,6 @@ const mockCostGuardRepo = {
 	getAssessmentCount: vi.fn(),
 	canStartAssessment: vi.fn(),
 	recordAssessmentStart: vi.fn(),
-};
-
-const mockFacetEvidenceRepo = {
-	saveEvidence: vi.fn(),
-	getEvidenceByMessage: vi.fn(),
-	getEvidenceByFacet: vi.fn(),
-	getEvidenceBySession: vi.fn(),
 };
 
 // Mock data factories
@@ -118,42 +111,9 @@ const mockOrchestratorBatchResponse: ProcessMessageOutput = {
 		total: 270,
 	},
 	costIncurred: 0.0047,
-	facetEvidence: [
-		{
-			assessmentMessageId: "msg_3",
-			facetName: "imagination",
-			score: 16,
-			confidence: 85,
-			quote: "I like to organize",
-			highlightRange: { start: 0, end: 18 },
-		},
-	],
-	// These are optional fields - partial records are intentional for test data
-	facetScores: {
-		imagination: { score: 16.5, confidence: 85 },
-		orderliness: { score: 15.2, confidence: 80 },
-	} as ProcessMessageOutput["facetScores"],
-	traitScores: {
-		openness: { score: 15.8, confidence: 82 },
-		conscientiousness: { score: 14.5, confidence: 78 },
-	} as ProcessMessageOutput["traitScores"],
 	steeringTarget: "orderliness",
 	steeringHint: "Explore how they organize their space, time, or belongings",
 };
-
-// Helper to create mock evidence that produces specific confidence levels
-function createMockEvidence(facetName: string, confidence: number): SavedFacetEvidence {
-	return {
-		id: `evidence_${facetName}`,
-		assessmentMessageId: "msg_3",
-		facetName: facetName as SavedFacetEvidence["facetName"],
-		score: 15,
-		confidence,
-		quote: "Test quote",
-		highlightRange: { start: 0, end: 10 },
-		createdAt: new Date(),
-	};
-}
 
 describe("sendMessage Use Case", () => {
 	beforeEach(() => {
@@ -175,18 +135,13 @@ describe("sendMessage Use Case", () => {
 
 		// Orchestrator Repository mock
 		mockOrchestratorRepo.processMessage.mockReturnValue(Effect.succeed(mockOrchestratorResponse));
+		mockOrchestratorRepo.processAnalysis.mockReturnValue(Effect.void);
 
 		// CostGuard Repository mock
 		mockCostGuardRepo.getDailyCost.mockReturnValue(Effect.succeed(1000)); // 1000 cents = $10
 		mockCostGuardRepo.incrementDailyCost.mockReturnValue(Effect.succeed(1043));
 		mockCostGuardRepo.incrementAssessmentCount.mockReturnValue(Effect.succeed(1));
 		mockCostGuardRepo.getAssessmentCount.mockReturnValue(Effect.succeed(1));
-
-		// FacetEvidence Repository mock - returns empty by default (no evidence)
-		mockFacetEvidenceRepo.getEvidenceBySession.mockReturnValue(Effect.succeed([]));
-		mockFacetEvidenceRepo.saveEvidence.mockReturnValue(Effect.succeed([]));
-		mockFacetEvidenceRepo.getEvidenceByMessage.mockReturnValue(Effect.succeed([]));
-		mockFacetEvidenceRepo.getEvidenceByFacet.mockReturnValue(Effect.succeed([]));
 	});
 
 	afterEach(() => {
@@ -200,7 +155,6 @@ describe("sendMessage Use Case", () => {
 			Layer.succeed(LoggerRepository, mockLoggerRepo),
 			Layer.succeed(OrchestratorRepository, mockOrchestratorRepo),
 			Layer.succeed(CostGuardRepository, mockCostGuardRepo),
-			Layer.succeed(FacetEvidenceRepository, mockFacetEvidenceRepo),
 		);
 
 	describe("Success scenarios", () => {
@@ -214,18 +168,9 @@ describe("sendMessage Use Case", () => {
 
 			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
-			// Response returns trait confidence computed from facet confidence
-			// No evidence → all facets have confidence=0 (from DEFAULT_FACET_SCORE)
-			// The merge spreads { ...defaults(50), ...facetConfidence(0) } = 0 for all
+			// Story 2.11: Lean response — only response string, no confidence
 			expect(result).toEqual({
 				response: mockOrchestratorResponse.nerinResponse,
-				confidence: {
-					openness: 0,
-					conscientiousness: 0,
-					extraversion: 0,
-					agreeableness: 0,
-					neuroticism: 0,
-				},
 			});
 		});
 
@@ -280,12 +225,12 @@ describe("sendMessage Use Case", () => {
 
 			expect(callArg.sessionId).toBe("session_test_123");
 			expect(callArg.userMessage).toBe("Another message");
-			expect(callArg.messageCount).toBe(3);
-			expect(callArg.facetScores).toBeDefined(); // Map of facet scores with confidence
+			// Message cadence is based on user messages only
+			expect(callArg.messageCount).toBe(2);
 			expect(callArg.dailyCostUsed).toBe(10); // 1000 cents = $10
 		});
 
-		it("should include confidence in response", async () => {
+		it("should return lean response without confidence", async () => {
 			const testLayer = createTestLayer();
 
 			const input = {
@@ -295,14 +240,9 @@ describe("sendMessage Use Case", () => {
 
 			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
-			// No evidence → confidence defaults to 0 for all traits
-			expect(result.confidence).toEqual({
-				openness: 0,
-				conscientiousness: 0,
-				extraversion: 0,
-				agreeableness: 0,
-				neuroticism: 0,
-			});
+			// Story 2.11: Lean response — only response string, no confidence
+			expect(result.response).toBeDefined();
+			expect((result as Record<string, unknown>).confidence).toBeUndefined();
 		});
 
 		it("should log message received and processed events", async () => {
@@ -452,7 +392,7 @@ describe("sendMessage Use Case", () => {
 	});
 
 	describe("Batch processing (every 3rd message)", () => {
-		it("should return valid confidence values on batch message", async () => {
+		it("should return lean response on batch message", async () => {
 			mockOrchestratorRepo.processMessage.mockReturnValue(
 				Effect.succeed(mockOrchestratorBatchResponse),
 			);
@@ -467,54 +407,9 @@ describe("sendMessage Use Case", () => {
 
 			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
-			// Verify confidence values are valid numbers between 0-100
-			expect(typeof result.confidence.openness).toBe("number");
-			expect(typeof result.confidence.conscientiousness).toBe("number");
-			expect(typeof result.confidence.extraversion).toBe("number");
-			expect(typeof result.confidence.agreeableness).toBe("number");
-			expect(typeof result.confidence.neuroticism).toBe("number");
-
-			expect(result.confidence.openness).toBeGreaterThanOrEqual(0);
-			expect(result.confidence.openness).toBeLessThanOrEqual(100);
-			expect(result.confidence.conscientiousness).toBeGreaterThanOrEqual(0);
-			expect(result.confidence.conscientiousness).toBeLessThanOrEqual(100);
-		});
-
-		it("should compute confidence from evidence after batch processing", async () => {
-			mockOrchestratorRepo.processMessage.mockReturnValue(
-				Effect.succeed(mockOrchestratorBatchResponse),
-			);
-			mockAssessmentMessageRepo.getMessageCount.mockReturnValue(Effect.succeed(3));
-
-			// Mock evidence that would be returned after orchestrator saves new evidence
-			// The use case calls getEvidenceBySession twice: before and after orchestrator
-			const mockEvidence: SavedFacetEvidence[] = [
-				createMockEvidence("imagination", 85),
-				createMockEvidence("orderliness", 80),
-			];
-
-			// First call returns empty (before orchestrator), second call returns evidence (after)
-			mockFacetEvidenceRepo.getEvidenceBySession
-				.mockReturnValueOnce(Effect.succeed([]))
-				.mockReturnValueOnce(Effect.succeed(mockEvidence));
-
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Batch message",
-			};
-
-			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			// Evidence was fetched twice (before and after orchestrator)
-			expect(mockFacetEvidenceRepo.getEvidenceBySession).toHaveBeenCalledTimes(2);
-			expect(mockFacetEvidenceRepo.getEvidenceBySession).toHaveBeenCalledWith("session_test_123");
-
-			// Confidence should be computed from evidence
-			// With imagination=85 and orderliness=80, other facets default to 50
-			expect(result.confidence.openness).toBeDefined();
-			expect(result.confidence.conscientiousness).toBeDefined();
+			// Story 2.11: Lean response — only response string, no confidence
+			expect(result.response).toBe(mockOrchestratorBatchResponse.nerinResponse);
+			expect((result as Record<string, unknown>).confidence).toBeUndefined();
 		});
 
 		it("should log batch processing info", async () => {
@@ -535,7 +430,6 @@ describe("sendMessage Use Case", () => {
 			expect(mockLoggerRepo.info).toHaveBeenCalledWith(
 				"Message processed",
 				expect.objectContaining({
-					isBatchMessage: true,
 					steeringTarget: "orderliness",
 				}),
 			);
@@ -671,10 +565,7 @@ describe("sendMessage Use Case", () => {
 			);
 		});
 
-		it("should return default confidence when no evidence exists", async () => {
-			// Ensure no evidence is returned (default mock behavior)
-			mockFacetEvidenceRepo.getEvidenceBySession.mockReturnValue(Effect.succeed([]));
-
+		it("should return lean response without confidence", async () => {
 			const testLayer = createTestLayer();
 
 			const input = {
@@ -684,15 +575,9 @@ describe("sendMessage Use Case", () => {
 
 			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
-			// When there's no evidence, confidence defaults to 0 for all traits
-			// (DEFAULT_FACET_SCORE has confidence=0, which overrides the 50 defaults)
-			expect(result.confidence).toEqual({
-				openness: 0,
-				conscientiousness: 0,
-				extraversion: 0,
-				agreeableness: 0,
-				neuroticism: 0,
-			});
+			// Story 2.11: Lean response — no confidence in output
+			expect(result.response).toBe(mockOrchestratorResponse.nerinResponse);
+			expect((result as Record<string, unknown>).confidence).toBeUndefined();
 		});
 
 		it("should handle anonymous user for cost tracking", async () => {

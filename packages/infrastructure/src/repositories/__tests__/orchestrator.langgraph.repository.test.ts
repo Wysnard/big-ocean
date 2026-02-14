@@ -3,21 +3,22 @@
  *
  * Tests for the OrchestratorLangGraphRepositoryLive Effect Layer.
  * Uses pure Effect DI with mock layers for testing.
+ *
+ * Story 2.11: Lean response — no facetEvidence/facetScores/traitScores in output.
+ * Batch decision computed by caller from messageCount.
  */
 
-import { HumanMessage } from "@langchain/core/messages";
 import {
+	AnalyzerRepository,
+	AssessmentMessageRepository,
 	BudgetPausedError,
-	calculateConfidenceFromFacetScores,
 	createInitialFacetScoresMap,
-	createInitialTraitScoresMap,
-	type FacetScoresMap,
+	FacetEvidenceRepository,
 	type GraphOutput,
 	type LoggerMethods,
 	LoggerRepository,
 	OrchestratorGraphRepository,
 	OrchestratorRepository,
-	type TraitScoresMap,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 import { describe, expect, it, vi } from "vitest";
@@ -34,9 +35,6 @@ import {
 // Test Utilities
 // ============================================
 
-/**
- * Creates a mock logger for tests.
- */
 const createMockLogger = (): LoggerMethods => ({
 	info: vi.fn(),
 	warn: vi.fn(),
@@ -44,21 +42,15 @@ const createMockLogger = (): LoggerMethods => ({
 	debug: vi.fn(),
 });
 
-/**
- * Mock graph output for tests.
- */
 interface MockGraphConfig {
 	nerinResponse?: string;
 	tokenUsage?: { input: number; output: number; total: number };
 	costIncurred?: number;
-	facetEvidence?: GraphOutput["facetEvidence"];
-	facetScores?: FacetScoresMap;
-	traitScores?: TraitScoresMap;
 }
 
 /**
  * Creates a mock OrchestratorGraphRepository layer.
- * Simulates the graph behavior (router, nerin, analyzer, scorer) without LangGraph.
+ * Story 2.11: Lean output — no scoring data.
  */
 function createMockGraphLayer(config: MockGraphConfig = {}) {
 	return Layer.succeed(
@@ -68,81 +60,82 @@ function createMockGraphLayer(config: MockGraphConfig = {}) {
 				Effect.gen(function* () {
 					// Simulate router node - budget check
 					if (input.dailyCostUsed + MESSAGE_COST_ESTIMATE > DAILY_COST_LIMIT) {
-						const overallConfidence = input.facetScores
-							? calculateConfidenceFromFacetScores(input.facetScores)
-							: 50;
-
 						return yield* Effect.fail(
 							new BudgetPausedError(
 								input.sessionId,
 								"Your assessment is saved! Come back tomorrow to continue with full accuracy.",
 								getNextDayMidnightUTC(),
-								overallConfidence,
+								50,
 							),
 						);
 					}
 
-					// Calculate steering
-					const steeringTarget = getSteeringTarget(input.facetScores ?? createInitialFacetScoresMap());
+					// Calculate steering (using default scores — real router reads from DB)
+					const facetScores = createInitialFacetScoresMap();
+					const steeringTarget = getSteeringTarget(facetScores);
 					const steeringHint = getSteeringHint(steeringTarget);
 
-					// Determine if batch
-					const isBatchMessage = input.messageCount % 3 === 0;
-
-					// Build base response
-					const baseOutput: GraphOutput = {
+					const output: GraphOutput = {
 						nerinResponse: config.nerinResponse ?? `Response to: ${input.userMessage}`,
 						tokenUsage: config.tokenUsage ?? { input: 100, output: 50, total: 150 },
 						costIncurred: config.costIncurred ?? 0.0043,
-						isBatchMessage,
 						steeringTarget: steeringTarget ?? undefined,
 						steeringHint: steeringHint ?? undefined,
 					};
 
-					// Add batch processing results if batch message
-					if (isBatchMessage) {
-						return {
-							...baseOutput,
-							facetEvidence: config.facetEvidence ?? [
-								{
-									assessmentMessageId: "msg-1",
-									facetName: "imagination" as const,
-									score: 14,
-									confidence: 75,
-									quote: "test",
-									highlightRange: { start: 0, end: 4 },
-								},
-							],
-							facetScores:
-								config.facetScores ??
-								createInitialFacetScoresMap({
-									imagination: { score: 14, confidence: 75 },
-								}),
-							traitScores:
-								config.traitScores ??
-								createInitialTraitScoresMap({
-									openness: { score: 70, confidence: 75 },
-								}),
-						};
-					}
-
-					return baseOutput;
+					return output;
 				}),
 		}),
 	);
 }
 
-/**
- * Creates the test layer stack with mock dependencies.
- */
+const TestAnalyzerLayer = Layer.succeed(
+	AnalyzerRepository,
+	AnalyzerRepository.of({
+		analyzeFacets: () => Effect.succeed([]),
+	}),
+);
+
+const TestFacetEvidenceLayer = Layer.succeed(
+	FacetEvidenceRepository,
+	FacetEvidenceRepository.of({
+		saveEvidence: () => Effect.succeed([]),
+		getEvidenceByMessage: () => Effect.succeed([]),
+		getEvidenceByFacet: () => Effect.succeed([]),
+		getEvidenceBySession: () => Effect.succeed([]),
+	}),
+);
+
+const TestAssessmentMessageLayer = Layer.succeed(
+	AssessmentMessageRepository,
+	AssessmentMessageRepository.of({
+		saveMessage: () =>
+			Effect.succeed({
+				id: "msg_test",
+				sessionId: "test-session",
+				role: "user",
+				content: "",
+				createdAt: new Date(),
+			} as never),
+		getMessages: () => Effect.succeed([]),
+		getMessageCount: () => Effect.succeed(0),
+	}),
+);
+
 function createTestLayers(config: MockGraphConfig = {}) {
 	const loggerLayer = Layer.succeed(LoggerRepository, LoggerRepository.of(createMockLogger()));
-
 	const graphLayer = createMockGraphLayer(config);
 
-	// OrchestratorLangGraphRepositoryLive requires OrchestratorGraphRepository + LoggerRepository
 	return OrchestratorLangGraphRepositoryLive.pipe(
-		Layer.provide(Layer.mergeAll(loggerLayer, graphLayer)),
+		Layer.provide(
+			Layer.mergeAll(
+				loggerLayer,
+				graphLayer,
+				TestAnalyzerLayer,
+				TestFacetEvidenceLayer,
+				TestAssessmentMessageLayer,
+			),
+		),
 	);
 }
 
@@ -170,32 +163,6 @@ describe("OrchestratorLangGraphRepository", () => {
 			expect(result.nerinResponse).toContain("Response to: Hello there!");
 			expect(result.tokenUsage).toBeDefined();
 			expect(result.costIncurred).toBeGreaterThan(0);
-			// Non-batch: no scoring data
-			expect(result.facetEvidence).toBeUndefined();
-			expect(result.facetScores).toBeUndefined();
-		});
-
-		it("processes batch message with scoring", async () => {
-			const result = await Effect.runPromise(
-				Effect.gen(function* () {
-					const orchestrator = yield* OrchestratorRepository;
-
-					return yield* orchestrator.processMessage({
-						sessionId: "test-session",
-						userMessage: "I enjoy creative activities",
-						messages: [new HumanMessage("Previous message")],
-						messageCount: 3, // Batch trigger
-						dailyCostUsed: 10,
-					});
-				}).pipe(Effect.provide(createTestLayers())),
-			);
-
-			expect(result.nerinResponse).toBeDefined();
-			expect(result.facetEvidence).toBeDefined();
-			expect(result.facetEvidence).toHaveLength(1);
-			expect(result.facetScores).toBeDefined();
-			expect(result.traitScores).toBeDefined();
-			// Precision is now a map, check imagination facet
 		});
 
 		it("throws BudgetPausedError when budget exceeded", async () => {
@@ -219,14 +186,13 @@ describe("OrchestratorLangGraphRepository", () => {
 				caughtError = error;
 			}
 
-			// Effect wraps errors in FiberFailure - check the message/cause
 			expect(caughtError).toBeDefined();
 			const errorMessage = String(caughtError);
 			expect(errorMessage).toContain("BudgetPausedError");
 			expect(errorMessage).toContain("saved");
 		});
 
-		it("calculates steering target from existing facet scores", async () => {
+		it("returns steering target and hint", async () => {
 			const result = await Effect.runPromise(
 				Effect.gen(function* () {
 					const orchestrator = yield* OrchestratorRepository;
@@ -237,37 +203,14 @@ describe("OrchestratorLangGraphRepository", () => {
 						messages: [],
 						messageCount: 1,
 						dailyCostUsed: 10,
-						facetScores: createInitialFacetScoresMap({
-							imagination: { score: 16, confidence: 80 },
-							orderliness: { score: 8, confidence: 20 }, // outlier
-							altruism: { score: 14, confidence: 75 },
-						}),
 					});
 				}).pipe(Effect.provide(createTestLayers())),
 			);
 
-			expect(result.steeringTarget).toBe("orderliness");
-			expect(result.steeringHint).toContain("organize");
-		});
-
-		it("processes 6th message as batch", async () => {
-			const result = await Effect.runPromise(
-				Effect.gen(function* () {
-					const orchestrator = yield* OrchestratorRepository;
-
-					return yield* orchestrator.processMessage({
-						sessionId: "test-session",
-						userMessage: "Another message",
-						messages: [],
-						messageCount: 6, // Batch trigger
-						dailyCostUsed: 20,
-					});
-				}).pipe(Effect.provide(createTestLayers())),
-			);
-
-			expect(result.facetEvidence).toBeDefined();
-			expect(result.facetScores).toBeDefined();
-			expect(result.traitScores).toBeDefined();
+			// With default scores, steering target may or may not be set
+			// Just verify the fields exist in the response
+			expect("steeringTarget" in result).toBe(true);
+			expect("steeringHint" in result).toBe(true);
 		});
 
 		it("includes token usage and cost in response", async () => {
@@ -291,6 +234,22 @@ describe("OrchestratorLangGraphRepository", () => {
 				total: 150,
 			});
 			expect(result.costIncurred).toBe(0.0043);
+		});
+	});
+
+	describe("processAnalysis", () => {
+		it("completes without error", async () => {
+			await Effect.runPromise(
+				Effect.gen(function* () {
+					const orchestrator = yield* OrchestratorRepository;
+
+					yield* orchestrator.processAnalysis({
+						sessionId: "test-session",
+						messages: [],
+						messageCount: 3,
+					});
+				}).pipe(Effect.provide(createTestLayers())),
+			);
 		});
 	});
 });
