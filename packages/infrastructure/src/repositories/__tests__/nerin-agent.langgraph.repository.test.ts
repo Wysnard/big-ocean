@@ -13,21 +13,68 @@ describe("buildSystemPrompt", () => {
 	describe("Empathy Patterns", () => {
 		it("includes appreciation pattern instructions", () => {
 			const prompt = buildSystemPrompt();
+			// Verify the section header
 			expect(prompt.toLowerCase()).toContain("appreciation");
-			expect(prompt).toContain("honest");
+			// Verify the core behavioral directive
+			expect(prompt).toContain("actively acknowledge");
+			expect(prompt).toContain("vulnerable or honest");
+			// Verify the variation requirement
+			expect(prompt).toContain("Vary your phrasing");
+			expect(prompt).toContain("never repeat the same appreciation twice");
+			// Verify example phrases are present
+			expect(prompt).toContain("That's really honest of you");
 			expect(prompt).toContain("self-awareness");
 		});
 
 		it("includes positive reframing instructions", () => {
 			const prompt = buildSystemPrompt();
+			// Verify the section header
 			expect(prompt.toLowerCase()).toContain("reframing");
+			// Verify the core behavioral directive
 			expect(prompt).toContain("generous interpretation");
+			expect(prompt).toContain("doesn't contradict their experience");
+			// Verify the "never invalidate" rule
+			expect(prompt).toContain('Never say "you\'re not [negative thing]"');
+			// Verify examples are present
+			expect(prompt).toContain("I'm indecisive");
+			expect(prompt).toContain("You weigh options carefully");
 		});
 
 		it("includes contradiction reconciliation instructions", () => {
 			const prompt = buildSystemPrompt();
+			// Verify the section header
 			expect(prompt.toLowerCase()).toContain("contradiction");
-			expect(prompt).toContain("coherent");
+			// Verify the core behavioral directive
+			expect(prompt).toContain("conflicting signals");
+			expect(prompt).toContain("coherent deeper truth");
+			expect(prompt).toContain("don't ignore them");
+			// Verify example is present
+			expect(prompt).toContain("organized at work but messy at home");
+		});
+	});
+
+	describe("Response Structure", () => {
+		it("includes two-paragraph response format instructions", () => {
+			const prompt = buildSystemPrompt();
+			// Verify the section exists
+			expect(prompt).toContain("Response structure");
+			expect(prompt).toContain("follow this format for every message");
+			// Verify paragraph 1 instruction
+			expect(prompt).toContain("Paragraph 1");
+			expect(prompt).toContain("empathy patterns");
+			expect(prompt).toContain("Acknowledge, reframe, or reconcile");
+			// Verify paragraph 2 instruction
+			expect(prompt).toContain("Paragraph 2");
+			expect(prompt).toContain("natural follow-up question");
+		});
+
+		it("includes example response demonstrating structure", () => {
+			const prompt = buildSystemPrompt();
+			// Verify example header
+			expect(prompt).toContain("Example response:");
+			// Verify example content shows empathy + question pattern
+			expect(prompt).toContain("That's really insightful");
+			expect(prompt).toContain("What helps you decide");
 		});
 	});
 
