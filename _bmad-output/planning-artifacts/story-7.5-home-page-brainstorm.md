@@ -1,3 +1,8 @@
+> **SUPERSEDED (2026-02-14):** This brainstorm was superseded by the Combined Direction
+> prototype developed through UX exploration. See
+> `_bmad-output/ux-explorations/homepage-directions/direction-combined.html` for the
+> final design. Story 7.8 has been rewritten to reflect the conversation-driven homepage.
+
 # Story 7.5: Home Page Redesign - Deep Analysis & Brainstorm
 
 **Date:** 2026-02-11

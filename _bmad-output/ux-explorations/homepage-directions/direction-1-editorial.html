@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction 1 — The Editorial Scroll</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#FFF8F0;--fg:#1A1A2E;--primary:#FF0080;--secondary:#FF6B2B;
+  --tertiary:#00B4A6;--card:#FFF0E8;--muted:#6B6580;--border:#FFD6C4;
+  --deep:#FFD6C4;--shallows:#FFF0E8;
+  --trait-o:#7B2FBE;--trait-c:#D4722A;--trait-e:#E0307B;--trait-a:#00B4A6;--trait-n:#1A1A5E;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--fg);overflow-x:hidden}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;background:rgba(255,248,240,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+nav .logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.2rem;display:flex;align-items:center;gap:8px}
+nav .logo .dot{width:10px;height:10px;border-radius:50%;background:var(--primary)}
+nav a{color:var(--muted);text-decoration:none;font-size:.9rem;transition:color .2s}
+nav a:hover{color:var(--primary)}
+.nav-links{display:flex;gap:24px;align-items:center}
+.back-link{font-size:.8rem;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:4px}
+.back-link:hover{color:var(--primary)}
+
+/* HERO — EDITORIAL SPLIT */
+.hero{min-height:100vh;display:grid;grid-template-columns:1.2fr 1fr;padding:120px 60px 80px;gap:40px;align-items:center}
+.hero-text h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(2.5rem,5.5vw,4.5rem);font-weight:700;line-height:1.05;margin-bottom:24px}
+.hero-text h1 .highlight{background:linear-gradient(120deg,var(--primary),#FF1493,var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-text .tagline{font-size:1.15rem;color:var(--muted);line-height:1.7;max-width:480px;margin-bottom:32px}
+.hero-text .meta{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--muted);letter-spacing:.04em;margin-bottom:40px}
+.hero-text .cta{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(120deg,var(--primary),var(--secondary));color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1rem;padding:16px 36px;border-radius:12px;text-decoration:none;transition:transform .2s,box-shadow .2s}
+.hero-text .cta:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,0,128,.3)}
+.hero-shapes{display:flex;justify-content:center;align-items:center;position:relative;height:400px}
+.shape{position:absolute;opacity:.85;transition:transform 1s ease}
+.shape-circle{width:180px;height:180px;border-radius:50%;background:var(--trait-o);top:20px;left:60px}
+.shape-rect{width:140px;height:200px;border-radius:12px;background:var(--trait-c);top:80px;right:40px;transform:rotate(12deg)}
+.shape-tri{width:0;height:0;border-left:80px solid transparent;border-right:80px solid transparent;border-bottom:160px solid var(--trait-e);bottom:20px;left:120px}
+.shape-half{width:160px;height:80px;border-radius:160px 160px 0 0;background:var(--trait-a);bottom:60px;right:80px}
+.shape-diamond{width:100px;height:100px;background:var(--trait-n);transform:rotate(45deg);top:160px;left:200px}
+
+/* SECTION: EDITORIAL SPREAD */
+.editorial-section{padding:100px 60px;max-width:1200px;margin:0 auto}
+.editorial-section.alt{background:var(--shallows)}
+.editorial-section.deep{background:var(--deep)}
+.spread{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+.spread.reverse{direction:rtl}
+.spread.reverse > *{direction:ltr}
+.spread-text{padding:20px 0}
+.spread-label{font-family:'JetBrains Mono',monospace;font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--primary);margin-bottom:12px}
+.spread-text h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.5rem,3vw,2.5rem);font-weight:700;line-height:1.15;margin-bottom:20px}
+.spread-text p{font-size:1rem;line-height:1.8;color:var(--muted);margin-bottom:16px}
+
+/* PULL QUOTE */
+.pullquote{position:relative;padding:40px 0 40px 32px;border-left:3px solid var(--primary);margin:40px 0}
+.pullquote::before{content:'\201C';font-family:'Space Grotesk',sans-serif;font-size:6rem;color:var(--primary);opacity:.2;position:absolute;top:-20px;left:8px;line-height:1}
+.pullquote p{font-size:1.3rem;font-style:italic;line-height:1.6;color:var(--fg)}
+.pullquote .attr{font-size:.85rem;color:var(--muted);margin-top:12px;font-style:normal}
+
+/* VISUAL PANELS */
+.visual-panel{background:var(--card);border-radius:16px;padding:40px;border:1px solid var(--border);min-height:300px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
+.visual-panel .bg-shape{position:absolute;opacity:.08;right:-20px;bottom:-20px}
+
+/* TRAIT FEATURE STRIP */
+.trait-strip{display:flex;gap:0;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -60px;padding:0 60px}
+.trait-panel{min-width:100vw;scroll-snap-align:start;padding:80px 60px;display:grid;grid-template-columns:200px 1fr 300px;gap:60px;align-items:center}
+.trait-panel:nth-child(1){background:var(--bg)}
+.trait-panel:nth-child(2){background:var(--shallows)}
+.trait-panel:nth-child(3){background:var(--card)}
+.trait-panel:nth-child(4){background:var(--shallows)}
+.trait-panel:nth-child(5){background:var(--deep)}
+.trait-shape-large{display:flex;align-items:center;justify-content:center}
+.trait-name{font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:700;margin-bottom:8px}
+.trait-desc{font-size:1rem;line-height:1.7;color:var(--muted)}
+.facet-sidebar{border-left:2px solid var(--border);padding-left:24px}
+.facet-sidebar h4{font-family:'JetBrains Mono',monospace;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:16px}
+.facet-sidebar ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.facet-sidebar li{font-size:.9rem;color:var(--fg);padding:6px 0;border-bottom:1px solid var(--border)}
+
+/* HORIZONTAL SCROLL HINT */
+.scroll-hint{text-align:center;padding:20px;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted);letter-spacing:.06em}
+
+/* CHAT EXCERPT */
+.chat-excerpt{max-width:700px;margin:0 auto;padding:60px 40px}
+.chat-excerpt .bubble{padding:20px 28px;border-radius:20px;margin-bottom:16px;max-width:80%;font-size:1rem;line-height:1.6}
+.bubble.nerin{background:var(--card);border:1px solid var(--border);border-bottom-left-radius:4px}
+.bubble.user{background:linear-gradient(120deg,var(--primary),var(--secondary));color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+
+/* FINAL CTA */
+.final-cta{text-align:center;padding:120px 40px;background:radial-gradient(ellipse at center,var(--shallows),var(--bg))}
+.final-cta h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(2rem,4vw,3rem);font-weight:700;margin-bottom:16px}
+.final-cta p{color:var(--muted);margin-bottom:32px;font-size:1.05rem}
+.final-cta .cta{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(120deg,var(--primary),var(--secondary));color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1.1rem;padding:18px 44px;border-radius:12px;text-decoration:none;transition:transform .2s,box-shadow .2s}
+.final-cta .cta:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,0,128,.3)}
+
+/* STICKY CTA SIDEBAR */
+.sticky-cta{position:fixed;right:-200px;top:50%;transform:translateY(-50%);z-index:90;transition:right .5s ease}
+.sticky-cta.visible{right:20px}
+.sticky-cta a{display:block;background:linear-gradient(120deg,var(--primary),var(--secondary));color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:.85rem;padding:14px 24px;border-radius:12px;text-decoration:none;box-shadow:0 4px 20px rgba(255,0,128,.25);writing-mode:horizontal-tb}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .hero{grid-template-columns:1fr;padding:100px 24px 60px;text-align:center}
+  .hero-shapes{height:250px;margin-top:40px}
+  .spread{grid-template-columns:1fr;gap:32px}
+  .spread.reverse{direction:ltr}
+  .editorial-section{padding:60px 24px}
+  .trait-panel{grid-template-columns:1fr;min-width:100vw;padding:60px 24px}
+  .facet-sidebar{border-left:0;border-top:2px solid var(--border);padding-left:0;padding-top:16px}
+  nav{padding:16px 20px}
+  .nav-links{gap:16px}
+  .shape-circle{width:120px;height:120px}
+  .shape-rect{width:90px;height:130px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><span class="dot"></span> Big Ocean</div>
+  <div class="nav-links">
+    <a href="index.html" class="back-link">&larr; All Directions</a>
+    <a href="#">Science</a>
+    <a href="#">About</a>
+    <a href="#" style="color:var(--primary);font-weight:600">Begin</a>
+  </div>
+</nav>
+
+<!-- STICKY CTA -->
+<div class="sticky-cta" id="stickyCta">
+  <a href="#">Begin Your Dive &darr;</a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-text">
+    <h1>What if the most <span class="highlight">interesting person</span> in the room is you?</h1>
+    <p class="tagline">A personality deep dive guided by AI, grounded in science, revealed through conversation. Not a quiz. A real exploration of the 30 facets that make you, you.</p>
+    <div class="meta">30 MIN &middot; FREE &middot; NO ACCOUNT NEEDED</div>
+    <a href="#" class="cta">Begin Your Dive &darr;</a>
+  </div>
+  <div class="hero-shapes">
+    <div class="shape shape-circle"></div>
+    <div class="shape shape-rect"></div>
+    <div class="shape shape-tri"></div>
+    <div class="shape shape-half"></div>
+    <div class="shape shape-diamond"></div>
+  </div>
+</section>
+
+<!-- EDITORIAL SPREAD 1: THE APPROACH -->
+<section class="editorial-section alt">
+  <div class="spread">
+    <div class="spread-text">
+      <div class="spread-label">The Approach</div>
+      <h2>Forget everything you know about personality tests.</h2>
+      <p>No bubbles to fill. No scales from 1 to 5. No awkward forced-choice between "strongly agree" and "somewhat disagree."</p>
+      <p>Big Ocean uses a conversational AI named Nerin who talks to you like a perceptive friend&mdash;asking about your life, your preferences, your reactions to real scenarios. Through that conversation, 30 distinct personality facets emerge naturally.</p>
+    </div>
+    <div class="visual-panel">
+      <div class="pullquote">
+        <p>I noticed you mentioned organizing your bookshelf by color rather than author. That tells me something fascinating about how you balance structure with aesthetics.</p>
+        <div class="attr">&mdash; Nerin, mid-conversation</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EDITORIAL SPREAD 2: THE SCIENCE -->
+<section class="editorial-section">
+  <div class="spread reverse">
+    <div class="spread-text">
+      <div class="spread-label">The Science</div>
+      <h2>Five traits. Thirty facets. One you.</h2>
+      <p>The Big Five model is the most empirically validated framework in personality psychology, backed by decades of cross-cultural research.</p>
+      <p>But most tools only scratch the surface with 5 broad scores. Big Ocean goes six times deeper&mdash;mapping each trait across its 6 constituent facets to reveal the nuances that make your personality uniquely yours.</p>
+    </div>
+    <div class="visual-panel" style="text-align:center">
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+        <div style="width:80px;height:80px;border-radius:50%;background:var(--trait-o);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:.8rem">O</div>
+        <div style="width:80px;height:80px;border-radius:8px;background:var(--trait-c);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:.8rem">C</div>
+        <div style="width:80px;height:80px;border-radius:50% 50% 0 50%;background:var(--trait-e);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:.8rem">E</div>
+        <div style="width:80px;height:80px;border-radius:40px 40px 0 0;background:var(--trait-a);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:.8rem">A</div>
+        <div style="width:60px;height:60px;background:var(--trait-n);transform:rotate(45deg);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:.8rem;margin:10px"><span style="transform:rotate(-45deg)">N</span></div>
+      </div>
+      <p style="margin-top:24px;font-size:.9rem;color:var(--muted)">Openness &middot; Conscientiousness &middot; Extraversion &middot; Agreeableness &middot; Neuroticism</p>
+    </div>
+  </div>
+</section>
+
+<!-- TRAIT HORIZONTAL SCROLL -->
+<div class="scroll-hint">&larr; SCROLL HORIZONTALLY TO EXPLORE THE FIVE TRAITS &rarr;</div>
+<section class="trait-strip">
+  <div class="trait-panel">
+    <div class="trait-shape-large"><div style="width:140px;height:140px;border-radius:50%;background:var(--trait-o)"></div></div>
+    <div>
+      <div class="trait-name">Openness</div>
+      <p class="trait-desc">Your appetite for novelty, imagination, and intellectual exploration. High scorers are drawn to abstract ideas, artistic expression, and unconventional experiences. Low scorers prefer the practical, the concrete, and the familiar.</p>
+    </div>
+    <div class="facet-sidebar">
+      <h4>6 Facets</h4>
+      <ul><li>Imagination</li><li>Artistic Interests</li><li>Emotionality</li><li>Adventurousness</li><li>Intellect</li><li>Liberalism</li></ul>
+    </div>
+  </div>
+  <div class="trait-panel">
+    <div class="trait-shape-large"><div style="width:100px;height:140px;border-radius:12px;background:var(--trait-c)"></div></div>
+    <div>
+      <div class="trait-name">Conscientiousness</div>
+      <p class="trait-desc">Your relationship with structure, discipline, and long-term goals. This isn't just about being "organized"&mdash;it's about how you navigate the tension between ambition and spontaneity.</p>
+    </div>
+    <div class="facet-sidebar">
+      <h4>6 Facets</h4>
+      <ul><li>Self-Efficacy</li><li>Orderliness</li><li>Dutifulness</li><li>Achievement-Striving</li><li>Self-Discipline</li><li>Cautiousness</li></ul>
+    </div>
+  </div>
+  <div class="trait-panel">
+    <div class="trait-shape-large"><div style="width:0;height:0;border-left:70px solid transparent;border-right:70px solid transparent;border-bottom:140px solid var(--trait-e)"></div></div>
+    <div>
+      <div class="trait-name">Extraversion</div>
+      <p class="trait-desc">Your energy orientation&mdash;where you draw it from and how you spend it. Beyond "introvert vs extrovert," this reveals your relationship with excitement, assertiveness, and social warmth.</p>
+    </div>
+    <div class="facet-sidebar">
+      <h4>6 Facets</h4>
+      <ul><li>Friendliness</li><li>Gregariousness</li><li>Assertiveness</li><li>Activity Level</li><li>Excitement-Seeking</li><li>Cheerfulness</li></ul>
+    </div>
+  </div>
+  <div class="trait-panel">
+    <div class="trait-shape-large"><div style="width:140px;height:70px;border-radius:140px 140px 0 0;background:var(--trait-a)"></div></div>
+    <div>
+      <div class="trait-name">Agreeableness</div>
+      <p class="trait-desc">How you balance your own needs with others'. This trait maps your capacity for trust, empathy, cooperation, and the strategies you use to navigate conflict and collaboration.</p>
+    </div>
+    <div class="facet-sidebar">
+      <h4>6 Facets</h4>
+      <ul><li>Trust</li><li>Morality</li><li>Altruism</li><li>Cooperation</li><li>Modesty</li><li>Sympathy</li></ul>
+    </div>
+  </div>
+  <div class="trait-panel">
+    <div class="trait-shape-large"><div style="width:90px;height:90px;background:var(--trait-n);transform:rotate(45deg)"></div></div>
+    <div>
+      <div class="trait-name">Neuroticism</div>
+      <p class="trait-desc">Your emotional landscape&mdash;the intensity, frequency, and texture of your negative emotions. Not a weakness score. Understanding this trait is understanding your emotional operating system.</p>
+    </div>
+    <div class="facet-sidebar">
+      <h4>6 Facets</h4>
+      <ul><li>Anxiety</li><li>Anger</li><li>Depression</li><li>Self-Consciousness</li><li>Immoderation</li><li>Vulnerability</li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- CHAT EXCERPT AS PULL-QUOTE -->
+<section class="editorial-section alt" style="padding:100px 60px">
+  <div class="spread-label" style="text-align:center;margin-bottom:40px">A Moment from an Actual Session</div>
+  <div class="chat-excerpt">
+    <div class="bubble nerin">You mentioned you reorganize your workspace every few months. What triggers that urge?</div>
+    <div class="bubble user">Usually when I feel stuck on a project. It's like resetting my brain.</div>
+    <div class="bubble nerin">That's a fascinating pattern. The physical environment becomes a lever for cognitive reset. It suggests your orderliness isn't about control&mdash;it's a creative tool. That nuance is exactly what a standard questionnaire would miss.</div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <h2>Ready to read your own story?</h2>
+  <p>30 minutes. One conversation. A personality portrait you'll recognize.</p>
+  <a href="#" class="cta">Begin Your Dive</a>
+</section>
+
+<script>
+// Sticky CTA appears after 30% scroll
+const sticky = document.getElementById('stickyCta');
+window.addEventListener('scroll', () => {
+  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+  sticky.classList.toggle('visible', pct > 0.15 && pct < 0.9);
+});
+</script>
+</body>
+</html>

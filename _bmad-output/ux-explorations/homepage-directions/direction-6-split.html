@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction 6 — The Split Journey</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#FFF8F0;--fg:#1A1A2E;--primary:#FF0080;--secondary:#FF6B2B;
+  --tertiary:#00B4A6;--card:#FFF0E8;--muted:#6B6580;--border:#FFD6C4;
+  --shallows:#FFF0E8;--deep:#FFD6C4;
+  --trait-o:#7B2FBE;--trait-c:#D4722A;--trait-e:#E0307B;--trait-a:#00B4A6;--trait-n:#1A1A5E;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--fg);overflow-x:hidden}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;background:rgba(255,248,240,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+nav .logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.2rem;display:flex;align-items:center;gap:8px}
+nav .logo .dot{width:10px;height:10px;border-radius:50%;background:var(--primary)}
+.nav-links{display:flex;gap:24px;align-items:center}
+.nav-links a{text-decoration:none;font-size:.9rem;color:var(--muted);transition:color .2s}
+.nav-links a:hover{color:var(--primary)}
+
+/* BREADCRUMB */
+.breadcrumb{position:fixed;top:72px;left:0;right:0;z-index:95;padding:8px 40px;background:rgba(255,248,240,.8);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:none;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.06em}
+.breadcrumb.visible{display:flex;align-items:center;gap:12px}
+.breadcrumb .active-path{color:var(--primary);font-weight:600}
+.breadcrumb .switch-link{color:var(--tertiary);text-decoration:underline;cursor:pointer}
+.breadcrumb .switch-link:hover{color:var(--primary)}
+
+/* HERO */
+.split-hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:100px 24px 60px;text-align:center}
+.split-hero h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:8px}
+.split-hero h1 span{background:linear-gradient(120deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.split-hero .sub{color:var(--muted);font-size:1.05rem;margin-bottom:48px;max-width:500px}
+
+/* PATH CHOICE CARDS */
+.path-choices{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:800px;width:100%}
+.path-card{padding:40px 32px;border-radius:20px;cursor:pointer;text-align:center;transition:all .4s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden;border:2px solid transparent}
+.path-card:hover{transform:translateY(-4px)}
+
+.path-card.curious{background:linear-gradient(135deg,var(--shallows),var(--bg));border-color:var(--border)}
+.path-card.curious:hover{border-color:var(--tertiary);box-shadow:0 8px 32px rgba(0,180,166,.12)}
+
+.path-card.ready{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff}
+.path-card.ready:hover{box-shadow:0 8px 32px rgba(255,0,128,.25);transform:translateY(-4px) scale(1.02)}
+
+.path-icon{font-size:2.5rem;margin-bottom:16px}
+.path-card h2{font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;margin-bottom:8px}
+.path-card p{font-size:.9rem;opacity:.8;line-height:1.5}
+
+.path-shapes{display:flex;gap:8px;justify-content:center;margin-top:20px}
+.path-shapes .s{transition:transform .3s}
+.path-card:hover .path-shapes .s{transform:scale(1.1)}
+
+/* DYNAMIC CONTENT AREA */
+.dynamic-content{max-width:900px;margin:0 auto;padding:0 24px 100px;min-height:60vh}
+
+/* TRANSITION */
+.path-content{display:none;opacity:0;transform:translateY(20px);transition:all .6s cubic-bezier(.16,1,.3,1)}
+.path-content.active{display:block;opacity:1;transform:translateY(0)}
+
+/* === CURIOUS PATH === */
+.curious-content{background:var(--bg)}
+.section-header{text-align:center;margin-bottom:40px;padding-top:40px}
+.section-header h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.5rem,3vw,2.2rem);font-weight:700;margin-bottom:8px}
+.section-header p{color:var(--muted);font-size:1rem}
+
+.trait-explainer{margin-bottom:32px;padding:28px;background:var(--card);border:1px solid var(--border);border-radius:16px;display:grid;grid-template-columns:80px 1fr;gap:24px;align-items:center;transition:all .3s}
+.trait-explainer:hover{border-color:var(--primary);box-shadow:0 4px 20px rgba(255,0,128,.06)}
+.trait-shape-box{display:flex;align-items:center;justify-content:center}
+.trait-explainer h3{font-family:'Space Grotesk',sans-serif;font-size:1.15rem;font-weight:600;margin-bottom:4px}
+.trait-explainer p{font-size:.9rem;color:var(--muted);line-height:1.6}
+.facet-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.facet-tag{font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:4px 10px;border-radius:6px;background:var(--bg);border:1px solid var(--border);color:var(--muted)}
+
+.nerin-intro-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;text-align:center;margin:40px 0}
+.nerin-small{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--tertiary),var(--primary));margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff}
+.nerin-intro-box h3{font-family:'Space Grotesk',sans-serif;font-weight:600;margin-bottom:8px}
+.nerin-intro-box p{color:var(--muted);font-size:.9rem;line-height:1.6;max-width:500px;margin:0 auto}
+
+/* === READY PATH === */
+.ready-content{background:var(--bg)}
+
+.product-preview{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:24px}
+.product-preview .label{font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:12px}
+
+.ocean-display{display:flex;gap:12px;justify-content:center;margin:16px 0}
+.ocean-letter-box{width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.2rem}
+
+.quick-features{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:32px 0}
+.quick-feat{display:flex;align-items:center;gap:10px;padding:16px;border-radius:12px;background:var(--card);border:1px solid var(--border);font-size:.85rem}
+.quick-feat .icon{font-size:1.2rem}
+
+.social-strip{background:var(--shallows);border-radius:12px;padding:24px;text-align:center;margin:32px 0}
+.social-strip p{color:var(--muted);font-size:.85rem}
+.social-strip .count{font-family:'Space Grotesk',sans-serif;font-size:1.8rem;font-weight:700;color:var(--primary)}
+
+/* SHARED CTA */
+.path-cta{text-align:center;padding:40px 0}
+.cta-btn{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(120deg,var(--primary),var(--secondary));color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1.05rem;padding:16px 40px;border-radius:12px;text-decoration:none;border:none;cursor:pointer;transition:all .2s}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,0,128,.3)}
+.cross-ref{margin-top:16px;font-size:.85rem;color:var(--muted)}
+.cross-ref a{color:var(--tertiary);cursor:pointer;text-decoration:underline}
+.cross-ref a:hover{color:var(--primary)}
+
+/* CONVERGENCE FOOTER */
+.convergence{background:var(--shallows);padding:80px 24px;text-align:center}
+.convergence h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.5rem,3vw,2.2rem);font-weight:700;margin-bottom:12px}
+.convergence p{color:var(--muted);margin-bottom:32px}
+
+@media(max-width:768px){
+  .path-choices{grid-template-columns:1fr;max-width:400px}
+  .trait-explainer{grid-template-columns:1fr}
+  .trait-shape-box{margin-bottom:8px}
+  .quick-features{grid-template-columns:1fr}
+  nav{padding:16px 20px}
+  .breadcrumb{padding:8px 20px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><span class="dot"></span> Big Ocean</div>
+  <div class="nav-links">
+    <a href="index.html">&larr; All Directions</a>
+    <a href="#">Science</a>
+    <a href="#" style="color:var(--primary);font-weight:600">Begin</a>
+  </div>
+</nav>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb" id="breadcrumb">
+  <span>Home</span>
+  <span>&rsaquo;</span>
+  <span class="active-path" id="breadcrumbPath">Choose your path</span>
+  <span style="margin-left:auto" class="switch-link" id="switchLink" onclick="resetChoice()">Switch path</span>
+</div>
+
+<!-- HERO -->
+<section class="split-hero" id="heroSection">
+  <h1>Explore the Depths <span>of You</span></h1>
+  <p class="sub">How would you like to begin?</p>
+
+  <div class="path-choices" id="pathChoices">
+    <div class="path-card curious" onclick="choosePath('curious')">
+      <div class="path-icon">&#9734;</div>
+      <h2>I'm Curious</h2>
+      <p>Tell me about the science, the traits, and how this works. I want to understand before I dive in.</p>
+      <div class="path-shapes">
+        <div class="s" style="width:20px;height:20px;border-radius:50%;background:var(--trait-o);opacity:.5"></div>
+        <div class="s" style="width:16px;height:20px;border-radius:3px;background:var(--trait-c);opacity:.5"></div>
+        <div class="s" style="width:20px;height:10px;border-radius:20px 20px 0 0;background:var(--trait-a);opacity:.5"></div>
+      </div>
+    </div>
+    <div class="path-card ready" onclick="choosePath('ready')">
+      <div class="path-icon">&#9889;</div>
+      <h2>I'm Ready</h2>
+      <p>Show me what I'll get. OCEAN code, archetype, 30 facets&mdash;let's go.</p>
+      <div class="path-shapes">
+        <div class="s" style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.3)"></div>
+        <div class="s" style="width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:20px solid rgba(255,255,255,.3)"></div>
+        <div class="s" style="width:14px;height:14px;background:rgba(255,255,255,.3);transform:rotate(45deg)"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DYNAMIC CONTENT -->
+<div class="dynamic-content">
+
+  <!-- CURIOUS PATH -->
+  <div class="path-content" id="curiousContent">
+    <div class="section-header">
+      <h2>The Science of You</h2>
+      <p>The Big Five model is the gold standard in personality psychology. Here's how it works.</p>
+    </div>
+
+    <div class="trait-explainer">
+      <div class="trait-shape-box"><div style="width:56px;height:56px;border-radius:50%;background:var(--trait-o)"></div></div>
+      <div>
+        <h3>Openness</h3>
+        <p>Your appetite for novelty, imagination, and intellectual exploration. High scorers chase ideas and experiences; low scorers prefer the practical and familiar.</p>
+        <div class="facet-tags">
+          <span class="facet-tag">Imagination</span><span class="facet-tag">Artistic Interests</span><span class="facet-tag">Emotionality</span>
+          <span class="facet-tag">Adventurousness</span><span class="facet-tag">Intellect</span><span class="facet-tag">Liberalism</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="trait-explainer">
+      <div class="trait-shape-box"><div style="width:40px;height:56px;border-radius:8px;background:var(--trait-c)"></div></div>
+      <div>
+        <h3>Conscientiousness</h3>
+        <p>Your relationship with structure, discipline, and goals. Not just "organized"&mdash;it's about how you navigate the tension between ambition and spontaneity.</p>
+        <div class="facet-tags">
+          <span class="facet-tag">Self-Efficacy</span><span class="facet-tag">Orderliness</span><span class="facet-tag">Dutifulness</span>
+          <span class="facet-tag">Achievement-Striving</span><span class="facet-tag">Self-Discipline</span><span class="facet-tag">Cautiousness</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="trait-explainer">
+      <div class="trait-shape-box"><div style="width:0;height:0;border-left:28px solid transparent;border-right:28px solid transparent;border-bottom:56px solid var(--trait-e)"></div></div>
+      <div>
+        <h3>Extraversion</h3>
+        <p>Where you draw energy and how you spend it. Beyond introvert/extrovert, this reveals your assertiveness, social warmth, and relationship with excitement.</p>
+        <div class="facet-tags">
+          <span class="facet-tag">Friendliness</span><span class="facet-tag">Gregariousness</span><span class="facet-tag">Assertiveness</span>
+          <span class="facet-tag">Activity Level</span><span class="facet-tag">Excitement-Seeking</span><span class="facet-tag">Cheerfulness</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="trait-explainer">
+      <div class="trait-shape-box"><div style="width:56px;height:28px;border-radius:56px 56px 0 0;background:var(--trait-a)"></div></div>
+      <div>
+        <h3>Agreeableness</h3>
+        <p>How you balance your needs with others'. Maps your trust, empathy, cooperation, and strategies for navigating conflict and collaboration.</p>
+        <div class="facet-tags">
+          <span class="facet-tag">Trust</span><span class="facet-tag">Morality</span><span class="facet-tag">Altruism</span>
+          <span class="facet-tag">Cooperation</span><span class="facet-tag">Modesty</span><span class="facet-tag">Sympathy</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="trait-explainer">
+      <div class="trait-shape-box"><div style="width:40px;height:40px;background:var(--trait-n);transform:rotate(45deg)"></div></div>
+      <div>
+        <h3>Neuroticism</h3>
+        <p>Your emotional landscape&mdash;intensity, frequency, and texture of your negative emotions. Not a weakness. Understanding this is understanding your emotional OS.</p>
+        <div class="facet-tags">
+          <span class="facet-tag">Anxiety</span><span class="facet-tag">Anger</span><span class="facet-tag">Depression</span>
+          <span class="facet-tag">Self-Consciousness</span><span class="facet-tag">Immoderation</span><span class="facet-tag">Vulnerability</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- NERIN INTRO -->
+    <div class="nerin-intro-box">
+      <div class="nerin-small">N</div>
+      <h3>Meet Nerin</h3>
+      <p>Your AI conversation partner. She doesn't use questionnaires&mdash;she has a real conversation with you. Through your stories, preferences, and reactions, she maps all 30 facets of your personality naturally.</p>
+    </div>
+
+    <div class="path-cta">
+      <button class="cta-btn">Begin Your Dive &rarr;</button>
+      <div class="cross-ref">Already convinced? <a onclick="choosePath('ready')">Jump to what you'll get &rarr;</a></div>
+    </div>
+  </div>
+
+  <!-- READY PATH -->
+  <div class="path-content" id="readyContent">
+    <div class="section-header">
+      <h2>What You'll Get</h2>
+      <p>A 30-minute conversation that produces all of this.</p>
+    </div>
+
+    <!-- OCEAN CODE PREVIEW -->
+    <div class="product-preview">
+      <div class="label">Your OCEAN Code</div>
+      <div class="ocean-display">
+        <div class="ocean-letter-box" style="background:var(--trait-o)">H</div>
+        <div class="ocean-letter-box" style="background:var(--trait-c)">H</div>
+        <div class="ocean-letter-box" style="background:var(--trait-e)">M</div>
+        <div class="ocean-letter-box" style="background:var(--trait-a)">H</div>
+        <div class="ocean-letter-box" style="background:var(--trait-n)">M</div>
+      </div>
+      <p style="text-align:center;font-size:.85rem;color:var(--muted)">A 5-letter personality fingerprint unique to you</p>
+    </div>
+
+    <!-- ARCHETYPE -->
+    <div class="product-preview" style="text-align:center">
+      <div class="label">Your Archetype</div>
+      <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));margin:16px auto;display:flex;align-items:center;justify-content:center;font-size:2rem">&#9878;</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700">The Architect</div>
+      <p style="color:var(--muted);font-size:.9rem;margin-top:8px">A memorable character that captures your unique combination of traits</p>
+    </div>
+
+    <!-- QUICK FEATURES -->
+    <div class="quick-features">
+      <div class="quick-feat"><span class="icon">&#9997;</span> Conversational, not a quiz</div>
+      <div class="quick-feat"><span class="icon">&#9881;</span> 30 facets mapped</div>
+      <div class="quick-feat"><span class="icon">&#10024;</span> Evidence-based scores</div>
+    </div>
+
+    <!-- SOCIAL PROOF -->
+    <div class="social-strip">
+      <div class="count">2,847</div>
+      <p>personalities mapped and counting</p>
+    </div>
+
+    <div class="path-cta">
+      <button class="cta-btn">Begin Your Dive &rarr;</button>
+      <div class="cross-ref">Want to learn more first? <a onclick="choosePath('curious')">Explore the science &rarr;</a></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CONVERGENCE -->
+<section class="convergence" id="convergence" style="display:none">
+  <h2>Every journey starts with a single question.</h2>
+  <p>30 minutes &middot; Free &middot; No account needed</p>
+  <button class="cta-btn">Begin Your Dive &rarr;</button>
+</section>
+
+<script>
+const heroSection = document.getElementById('heroSection');
+const pathChoices = document.getElementById('pathChoices');
+const curiousContent = document.getElementById('curiousContent');
+const readyContent = document.getElementById('readyContent');
+const breadcrumb = document.getElementById('breadcrumb');
+const breadcrumbPath = document.getElementById('breadcrumbPath');
+const convergence = document.getElementById('convergence');
+let currentPath = null;
+
+function choosePath(path) {
+  currentPath = path;
+
+  // Shrink hero
+  heroSection.style.minHeight = 'auto';
+  heroSection.style.paddingBottom = '20px';
+
+  // Hide choices, show breadcrumb
+  pathChoices.style.display = 'none';
+  breadcrumb.classList.add('visible');
+  convergence.style.display = 'block';
+
+  if (path === 'curious') {
+    breadcrumbPath.textContent = "I'm Curious";
+    curiousContent.classList.add('active');
+    readyContent.classList.remove('active');
+  } else {
+    breadcrumbPath.textContent = "I'm Ready";
+    readyContent.classList.add('active');
+    curiousContent.classList.remove('active');
+  }
+
+  // Scroll to content
+  setTimeout(() => {
+    document.querySelector('.dynamic-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+function resetChoice() {
+  currentPath = null;
+  heroSection.style.minHeight = '100vh';
+  heroSection.style.paddingBottom = '60px';
+  pathChoices.style.display = 'grid';
+  breadcrumb.classList.remove('visible');
+  curiousContent.classList.remove('active');
+  readyContent.classList.remove('active');
+  convergence.style.display = 'none';
+  heroSection.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

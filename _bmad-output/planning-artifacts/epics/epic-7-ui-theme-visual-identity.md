@@ -654,109 +654,195 @@ apps/front/src/components/
 
 ---
 
-## Story 7.8: Home Page Redesign with Color Block Composition
+## Story 7.8: Conversation-Driven Homepage with Depth Scroll
 
 As a **User**,
-I want **the home page to feature bold geometric color block compositions that instantly communicate big-ocean's psychedelic personality**,
-So that **I immediately understand this is not another corporate personality test — it's vibrant, alive, and celebrates self-discovery**.
+I want **the home page to unfold as a conversation with Nerin — the AI guide — with rich embedded content that scroll-reveals as I descend through depth zones**,
+So that **I experience the product's core value proposition (conversational personality discovery) directly on the landing page, and I'm compelled to start my own assessment**.
 
 **Dependencies:**
-- Story 7.1 (color tokens), 7.2 (typography), 7.4 (OCEAN shapes), 7.5 (trait colors), 7.7 (illustrations)
+- Story 7.1 (color tokens), 7.2 (typography), 7.3 (dark mode toggle), 7.4 (OCEAN shapes), 7.5 (trait colors), 7.6 (global header), 7.7 (illustrations)
+
+**Design Reference:**
+- Prototype: `_bmad-output/ux-explorations/homepage-directions/direction-combined.html`
+- Context: 6 UX direction explorations culminated in a combined direction; see `_bmad-output/ux-explorations/homepage-directions/index.html` for all directions
 
 **Acceptance Criteria:**
 
 **Given** I visit the home page
 **When** the hero section loads
-**Then** I see bold geometric color blocks (not blended gradients):
-  - Hard-edged shapes of Electric Pink, Teal, and Orange
-  - OCEAN geometric shapes serving as the color block forms
-  - Asymmetric layout (dominant 50-60%, secondary 25-30%, accent 10-15%)
-  - "big-[shapes]" logo centered on color blocks
-  - Clear value proposition in Space Grotesk display type
-  - Primary CTA button with brand styling
-**And** the design works in both light and dark modes
-**And** dark mode hero uses Teal dominant, Navy secondary, Gold accent
+**Then** I see a two-column layout:
+  - Left: Headline ("What if the most interesting person in the room is you?"), tagline, meta line ("30 MIN · FREE · NO ACCOUNT NEEDED"), "Begin Your Dive" CTA
+  - Right: 5 OCEAN geometric shapes with breathing animation (6s cycle, staggered)
+  - Bottom: "Scroll to descend" cue with bob animation
+**And** the hero fills the full viewport height
+**And** the design uses brand typography (Space Grotesk headings, DM Sans body, JetBrains Mono meta)
 
 **Given** I scroll past the hero
-**When** I view the value props section
-**Then** I see 3 cards explaining differentiation:
-  - "Conversation, Not Quiz"
-  - "30 Facets, Not 5"
-  - "AI That Adapts"
+**When** the conversation section enters the viewport
+**Then** messages from Nerin and a simulated user scroll-reveal sequentially (Intersection Observer)
+**And** each message group fades in with upward slide (translateY 26px → 0, 0.65s ease)
+**And** a vertical conversation thread line runs along the left side
+**And** Nerin messages have a gradient avatar (Teal → Pink) with "N" initial
+**And** user messages are right-aligned with gradient bubble (Pink → Orange)
 
-**Given** I view the "Meet Nerin" section
-**When** the chat preview appears
-**Then** I see a realistic chat interface mockup with Nerin avatar and sample conversation
+**Given** I scroll in auto or forced-light mode
+**When** the page transitions through depth zones
+**Then** the background interpolates through 5 color zones:
+  - Surface: Warm Cream `rgb(255,248,240)` — dark text
+  - Shallows: Soft Blush `rgb(255,240,232)` — dark text
+  - Mid: Light Peach `rgb(255,232,216)` — dark text
+  - Deep: Dark Purple-Navy `rgb(40,38,65)` — white text
+  - Abyss: Deep Navy `rgb(10,14,39)` — white text
+**And** the nav, bubble styles, facet pills, and input bar dynamically switch between light/dark classes based on current zone darkness
+**And** CSS custom properties update for bubble-bg, bubble-border, embed-bg, muted-dynamic, etc.
 
-**Given** I view the Big Five traits section
-**When** trait cards are displayed
-**Then** each card uses its trait color and geometric shape
-**And** cards are in asymmetric bento layout (Openness card larger)
-**And** hover states reveal trait gradient and facet preview
+**Given** I am in forced dark mode
+**When** I scroll
+**Then** the background remains static Abyss Navy `rgb(14,16,42)` throughout
+**And** all UI elements use dark mode styling regardless of scroll position
 
-**Given** I view the page on mobile
+**Given** the depth meter is visible (desktop only, hidden < 900px)
+**When** I scroll through the conversation
+**Then** a fixed left-side depth meter shows:
+  - A 160px vertical track with fill indicator tracking scroll percentage
+  - 5 labeled pips: Surface, Shallows, Mid, Deep, Abyss
+  - Active pip highlighted in Electric Pink
+  - Current zone name displayed below the track
+**And** the depth meter only appears when the conversation section is in the viewport
+
+**Given** I view the trait carousel embed
+**When** it appears inside a Nerin chat bubble
+**Then** I see a horizontally swipeable carousel with 5 trait cards:
+  - Each card shows: trait geometric shape, trait name (in trait color), description, 6 facet pills
+  - Scroll-snap alignment for clean paging
+  - Dot navigation below (5 dots, active = Electric Pink)
+  - "← swipe →" hint text
+**And** the carousel is contained within an embed container (rounded, bordered, backdrop-blur)
+
+**Given** I view the blurred preview embeds (OCEAN Code, Radar Chart, 30-Facet Bars)
+**When** they appear inside Nerin chat bubbles
+**Then** each shows a realistic but blurred (5px) preview of actual result data
+**And** hovering reduces blur to 2.5px and reveals a CTA pill ("Take assessment to reveal yours →", "See your scores →", "Reveal your 30 facets →")
+**And** the blurred content is non-selectable and non-interactive
+
+**Given** I have scrolled past ~35% of the page
+**When** the chat input bar becomes visible
+**Then** a fixed bottom bar slides up containing:
+  - A readonly text input with placeholder "Type your first message to Nerin..."
+  - A "Start Conversation →" gradient button
+**And** the bar uses glass-morphism (backdrop-blur, semi-transparent background)
+**And** clicking the button navigates to the assessment start flow
+
+**Given** I use the theme toggle
+**When** I click the toggle button
+**Then** the theme cycles: auto → dark → light → dark → ...
+**And** auto mode uses scroll-driven light-to-dark transition
+**And** dark mode uses static dark background
+**And** light mode uses the same light-to-dark transition as auto
+
+**Given** I view the page on mobile (< 900px)
 **When** the layout adapts
-**Then** hero section is full viewport with readable text
-**And** bento grids collapse to single column
-**And** CTA buttons are full-width and prominent (min 44px height)
+**Then** the hero collapses to single column (text above, shapes below)
+**And** the depth meter is hidden
+**And** conversation bubbles use 92% max-width
+**And** facet grid collapses to 2 columns (1 column below 480px)
+**And** trait cards stack vertically with centered text
+**And** all touch targets are minimum 44px
 
 **Technical Details:**
 
-**Page Sections:**
+**Page Structure:**
 ```
-1. HERO — Color block composition with OCEAN shapes as block forms
-2. VALUE PROPS — 3-column bento grid
-3. MEET NERIN — Chat preview mockup
-4. THE FIVE DIMENSIONS — Trait bento cards with shapes
-5. WHAT YOU'LL DISCOVER — Blurred archetype card preview
-6. FINAL CTA — "Takes 30 min . Free . No account needed"
+1. HERO — Two-column: headline + OCEAN shapes with breathing animation
+2. CONVERSATION — Scroll-reveal chat thread:
+   a. Nerin intro (2 messages)
+   b. User question about measurement
+   c. Trait carousel embed (5 swipeable cards)
+   d. User question about results
+   e. Blurred OCEAN Code embed
+   f. Blurred Radar Chart embed
+   g. Blurred 30-Facet Bars embed
+   h. User question about duration
+   i. Nerin closing message with CTA
+3. STICKY CHAT BAR — Fixed bottom input (appears at 35% scroll)
+4. DEPTH METER — Fixed left indicator (desktop only)
 ```
 
 **Component Structure:**
 ```
 apps/front/src/components/home/
-  HeroSection.tsx              # Color block composition
-  ValuePropsSection.tsx        # 3-column bento
-  ChatPreviewSection.tsx       # Nerin demo mockup
-  TraitsSection.tsx            # Trait cards with shapes
-  ResultsTeaserSection.tsx     # Blurred archetype preview
-  FinalCTASection.tsx          # Bottom CTA
-  WaveDivider.tsx              # Section divider with wave pattern
+  HeroSection.tsx              # Two-column: headline + OCEAN shapes
+  ConversationFlow.tsx         # Scroll-reveal conversation container + depth color logic
+  MessageGroup.tsx             # Reusable Nerin/User message bubble group
+  ChatBubble.tsx               # Individual bubble with embed slot
+  TraitCarouselEmbed.tsx       # 5-card swipeable trait carousel
+  BlurredPreviewEmbed.tsx      # Shared blur-wrap with hover reveal CTA
+  OceanCodePreview.tsx         # OCEAN code content for blur embed
+  RadarChartPreview.tsx        # Radar SVG content for blur embed
+  FacetBarsPreview.tsx         # 30-facet bar grid content for blur embed
+  DepthMeter.tsx               # Fixed left-side scroll indicator (desktop)
+  ChatInputBar.tsx             # Sticky bottom chat bar
+  DepthScrollProvider.tsx      # React context: scroll %, zone, isDark, theme mode
 ```
 
-**Color Block Composition (Light Mode Hero):**
-- Dominant: Electric Pink (`#FF0080`) — large circle or organic shape, 50-60%
-- Secondary: Saturated Teal (`#00B4A6`) — triangle or angular shape, 25-30%
-- Accent: Vivid Orange (`#FF6B2B`) — small rectangle, 10-15%
-- Background: Warm Cream visible in negative space
+**Depth Scroll Color System:**
+```typescript
+// Three zone palettes for three theme modes
+const AUTO_ZONES = [
+  { bg: [255,248,240], fg: [26,26,46], dark: false, name: 'Surface' },
+  { bg: [255,240,232], fg: [26,26,46], dark: false, name: 'Shallows' },
+  { bg: [255,232,216], fg: [26,26,46], dark: false, name: 'Mid' },
+  { bg: [40,38,65],    fg: [255,255,255], dark: true, name: 'Deep' },
+  { bg: [10,14,39],    fg: [255,255,255], dark: true, name: 'Abyss' },
+];
+const DARK_ZONES = AUTO_ZONES.map(z => ({
+  ...z, bg: [14,16,42], fg: [255,255,255], dark: true
+})); // Static dark navy
+const LIGHT_ZONES = [...AUTO_ZONES]; // Same transition as auto
+```
 
-**Color Block Composition (Dark Mode Hero):**
-- Dominant: Deep Teal (`#00D4C8`) — large shape, 50-60%
-- Secondary: Abyss Navy (`#141838`) — overlapping shape, 25-30%
-- Accent: Rich Gold (`#FFB830`) — small punctuation shape, 10-15%
-- Background: Abyss Navy (`#0A0E27`)
+**Scroll-Driven Theme Logic:**
+- `DepthScrollProvider` computes scroll percentage, interpolates bg/fg from active zone palette
+- Sets `isDark` flag based on zone darkness (auto/light: zone-based, dark: always true)
+- Updates CSS custom properties for dynamic bubble/embed/nav theming
+- Components read theme state via React context (not direct DOM manipulation)
+
+**Key Implementation Notes:**
+- The prototype uses vanilla JS/CSS; production should use React components with Tailwind + CSS custom properties
+- Scroll listener should be throttled (requestAnimationFrame) for performance
+- Intersection Observer for message reveal (threshold: 0.12, rootMargin: '0px 0px -30px 0px')
+- Trait carousel uses CSS scroll-snap (no carousel library needed)
+- Blurred previews use CSS `filter: blur()` with `user-select: none; pointer-events: none`
+- The chat input bar is decorative on the homepage — clicking navigates to `/assessment`
 
 **Animations (respect `prefers-reduced-motion`):**
-- Scroll indicator bounce
-- Sections fade in on scroll (Intersection Observer)
-- Trait cards have subtle hover transitions
+- OCEAN shapes: breathing scale animation (6s cycle, staggered 1.2s per shape)
+- Scroll cue: vertical bob (2.5s cycle)
+- Message groups: fade + slide on intersection
+- Chat bar: slide up from bottom at 35% scroll
+- Blur reduction on hover (5px → 2.5px)
 
 **Acceptance Checklist:**
-- [ ] Hero uses color block composition with hard-edged geometric shapes
-- [ ] OCEAN shapes serve as color block forms (not just overlaid)
-- [ ] Asymmetric layout (dominant/secondary/accent proportions)
-- [ ] "big-[shapes]" logo centered on hero
-- [ ] Value props communicate differentiation
-- [ ] Chat preview section shows Nerin conversation mockup
-- [ ] Trait cards use trait colors and geometric shapes
-- [ ] Results teaser shows blurred archetype preview
-- [ ] Final CTA: "Takes 30 min . Free . No account needed"
-- [ ] WaveDivider components between major sections
-- [ ] Light and dark modes have distinct hero compositions
-- [ ] Mobile-first responsive layout
+- [ ] Hero section: two-column layout with OCEAN shapes and breathing animation
+- [ ] Conversation thread with vertical line and scroll-reveal messages
+- [ ] Nerin avatar gradient (Teal → Pink), user avatar with theme-aware styling
+- [ ] Trait carousel embed: 5 swipeable cards with dot navigation
+- [ ] Blurred OCEAN Code preview with hover reveal CTA
+- [ ] Blurred Radar Chart preview with hover reveal CTA
+- [ ] Blurred 30-Facet Bars preview with hover reveal CTA
+- [ ] Depth scroll: background color interpolation across 5 zones (auto/light modes)
+- [ ] Dark mode: static Abyss Navy background, no scroll transition
+- [ ] Depth meter: fixed left-side indicator with zone labels (desktop only)
+- [ ] Sticky chat input bar appears at ~35% scroll
+- [ ] Theme toggle cycles auto → dark → light
+- [ ] Dynamic CSS custom properties for bubble/embed/nav theming
+- [ ] DepthScrollProvider React context for scroll state
+- [ ] Mobile responsive: single column hero, hidden depth meter, adapted grids
 - [ ] All touch targets >= 44px
-- [ ] No hard-coded color classes remain
+- [ ] No hard-coded color classes
 - [ ] `prefers-reduced-motion` respected
+- [ ] `data-slot` attributes on all component parts (per FRONTEND.md)
 
 ---
 

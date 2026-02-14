@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction 5 — The Psychedelic Poster</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#FFF8F0;--fg:#1A1A2E;--primary:#FF0080;--secondary:#FF6B2B;
+  --tertiary:#00B4A6;--card:#FFF0E8;--muted:#6B6580;--border:#FFD6C4;
+  --trait-o:#7B2FBE;--trait-c:#D4722A;--trait-e:#E0307B;--trait-a:#00B4A6;--trait-n:#1A1A5E;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--fg);overflow-x:hidden}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;mix-blend-mode:difference}
+nav .logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.2rem;color:#fff;display:flex;align-items:center;gap:8px}
+nav .logo .dot{width:10px;height:10px;border-radius:50%;background:var(--primary)}
+.nav-links{display:flex;gap:24px;align-items:center}
+.nav-links a{text-decoration:none;font-size:.9rem;color:rgba(255,255,255,.7)}
+.nav-links a:hover{color:#fff}
+
+/* THE POSTER */
+.poster{min-height:100vh;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--bg)}
+
+/* BACKGROUND COLOR BLOCKS */
+.color-block{position:absolute;border-radius:32px}
+.cb-1{width:55vw;height:55vh;background:linear-gradient(135deg,rgba(255,0,128,.12),rgba(255,0,128,.03));top:-5vh;right:-10vw;transform:rotate(-15deg)}
+.cb-2{width:40vw;height:40vh;background:linear-gradient(135deg,rgba(255,107,43,.15),rgba(255,107,43,.03));bottom:-5vh;left:-8vw;transform:rotate(8deg)}
+.cb-3{width:30vw;height:50vh;background:linear-gradient(135deg,rgba(0,180,166,.1),rgba(0,180,166,.02));top:10vh;left:5vw;transform:rotate(-5deg)}
+
+/* SHAPES — MASSIVE */
+.poster-shape{position:absolute;z-index:1;transition:transform 2s cubic-bezier(.16,1,.3,1)}
+.ps-circle{width:clamp(180px,22vw,300px);height:clamp(180px,22vw,300px);border-radius:50%;background:var(--trait-o);opacity:.75;top:8vh;left:6vw}
+.ps-rect{width:clamp(120px,14vw,200px);height:clamp(200px,24vw,340px);border-radius:16px;background:var(--trait-c);opacity:.7;top:12vh;right:12vw;transform:rotate(12deg)}
+.ps-tri{width:0;height:0;border-left:clamp(80px,10vw,140px) solid transparent;border-right:clamp(80px,10vw,140px) solid transparent;border-bottom:clamp(160px,20vw,280px) solid var(--trait-e);opacity:.65;bottom:8vh;right:25vw}
+.ps-half{width:clamp(200px,20vw,280px);height:clamp(100px,10vw,140px);border-radius:clamp(200px,20vw,280px) clamp(200px,20vw,280px) 0 0;background:var(--trait-a);opacity:.7;bottom:5vh;left:15vw}
+.ps-diamond{width:clamp(100px,10vw,160px);height:clamp(100px,10vw,160px);background:var(--trait-n);opacity:.8;transform:rotate(45deg);top:45vh;left:42vw}
+
+/* OVERLAP GLOW ZONES */
+.glow-zone{position:absolute;border-radius:50%;filter:blur(60px);z-index:0}
+.gz-1{width:200px;height:200px;background:var(--primary);opacity:.06;top:30vh;left:25vw}
+.gz-2{width:300px;height:300px;background:var(--secondary);opacity:.05;bottom:15vh;right:20vw}
+.gz-3{width:150px;height:150px;background:var(--tertiary);opacity:.07;top:15vh;right:35vw}
+
+/* HEADLINE — MASSIVE */
+.poster-content{position:relative;z-index:10;text-align:center;max-width:800px;padding:0 24px}
+.poster-headline{font-family:'Space Grotesk',sans-serif;font-size:clamp(3.5rem,9vw,8rem);font-weight:700;line-height:.92;letter-spacing:-.03em;text-transform:uppercase;margin-bottom:24px}
+.poster-headline .line1{display:block;background:linear-gradient(120deg,var(--primary),#FF1493,var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.poster-headline .line2{display:block;color:var(--fg)}
+.poster-headline .line3{display:block;background:linear-gradient(120deg,var(--tertiary),var(--trait-o));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.poster-tagline{font-size:clamp(.9rem,1.5vw,1.15rem);color:var(--muted);margin-bottom:40px;letter-spacing:.02em}
+.poster-cta{display:inline-flex;align-items:center;gap:10px;background:var(--fg);color:var(--bg);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(1rem,1.5vw,1.3rem);padding:20px 48px;border-radius:14px;text-decoration:none;text-transform:uppercase;letter-spacing:.06em;transition:all .3s;border:2px solid var(--fg)}
+.poster-cta:hover{background:transparent;color:var(--fg);box-shadow:0 0 0 4px rgba(255,0,128,.2)}
+.poster-meta{margin-top:20px;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+
+/* SECONDARY CONTENT (BELOW FOLD) */
+.below-fold{background:var(--fg);color:var(--bg);padding:100px 60px}
+.below-fold h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.5rem,3vw,2.5rem);font-weight:700;text-align:center;margin-bottom:60px}
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;max-width:900px;margin:0 auto}
+.info-card{padding:32px;border:1px solid rgba(255,255,255,.1);border-radius:16px;transition:border-color .3s}
+.info-card:hover{border-color:var(--primary)}
+.info-card h3{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:600;margin-bottom:8px}
+.info-card p{font-size:.9rem;line-height:1.6;color:rgba(255,255,255,.5)}
+.info-icon{font-size:1.5rem;margin-bottom:12px}
+
+/* TRAIT STRIP */
+.trait-strip-dark{display:flex;gap:32px;justify-content:center;padding:60px 24px;flex-wrap:wrap}
+.trait-mini{text-align:center;transition:transform .3s}
+.trait-mini:hover{transform:scale(1.1)}
+.trait-mini .shape-sm{margin:0 auto 8px}
+.trait-mini .name{font-size:.75rem;color:rgba(255,255,255,.5);font-family:'JetBrains Mono',monospace;letter-spacing:.05em}
+
+/* BOTTOM CTA */
+.bottom-cta{text-align:center;padding:80px 24px;background:var(--fg)}
+.bottom-cta .poster-cta{background:var(--primary);color:#fff;border-color:var(--primary)}
+.bottom-cta .poster-cta:hover{background:transparent;color:var(--primary)}
+
+@media(max-width:768px){
+  nav{padding:16px 20px;mix-blend-mode:normal}
+  nav .logo{color:var(--fg)}
+  .nav-links a{color:var(--muted)}
+  .poster-shape{opacity:.4}
+  .below-fold{padding:60px 24px}
+  .info-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><span class="dot"></span> Big Ocean</div>
+  <div class="nav-links">
+    <a href="index.html">&larr; All Directions</a>
+    <a href="#">Science</a>
+    <a href="#" style="color:var(--primary);font-weight:600">Begin</a>
+  </div>
+</nav>
+
+<!-- THE POSTER -->
+<section class="poster" id="poster">
+  <!-- Color blocks -->
+  <div class="color-block cb-1"></div>
+  <div class="color-block cb-2"></div>
+  <div class="color-block cb-3"></div>
+
+  <!-- Glow zones -->
+  <div class="glow-zone gz-1"></div>
+  <div class="glow-zone gz-2"></div>
+  <div class="glow-zone gz-3"></div>
+
+  <!-- Shapes -->
+  <div class="poster-shape ps-circle"></div>
+  <div class="poster-shape ps-rect"></div>
+  <div class="poster-shape ps-tri"></div>
+  <div class="poster-shape ps-half"></div>
+  <div class="poster-shape ps-diamond"></div>
+
+  <!-- Content -->
+  <div class="poster-content">
+    <h1 class="poster-headline">
+      <span class="line1">Explore</span>
+      <span class="line2">The Depths</span>
+      <span class="line3">Of You</span>
+    </h1>
+    <p class="poster-tagline">AI-guided personality deep dive &middot; 30 facets &middot; One conversation</p>
+    <a href="#" class="poster-cta">Begin Your Dive</a>
+    <div class="poster-meta">Free &middot; 30 min &middot; No account needed</div>
+  </div>
+</section>
+
+<!-- BELOW FOLD -->
+<section class="below-fold">
+  <h2>What You'll Discover</h2>
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-icon">&#9786;</div>
+      <h3>Conversational Assessment</h3>
+      <p>No questionnaires. Nerin, your AI guide, has a real conversation that adapts to your responses in real-time.</p>
+    </div>
+    <div class="info-card">
+      <div class="info-icon">&#9881;</div>
+      <h3>30-Facet Profile</h3>
+      <p>Go 6x deeper than standard Big Five. Map the nuances across all 30 personality facets with evidence-based scoring.</p>
+    </div>
+    <div class="info-card">
+      <div class="info-icon">&#10024;</div>
+      <h3>Your OCEAN Code</h3>
+      <p>A 5-letter personality fingerprint. Unique to you. Shareable with others. The DNA of who you are.</p>
+    </div>
+  </div>
+
+  <!-- TRAIT STRIP -->
+  <div class="trait-strip-dark">
+    <div class="trait-mini">
+      <div class="shape-sm" style="width:40px;height:40px;border-radius:50%;background:var(--trait-o);margin:0 auto 8px"></div>
+      <div class="name">Openness</div>
+    </div>
+    <div class="trait-mini">
+      <div class="shape-sm" style="width:32px;height:40px;border-radius:6px;background:var(--trait-c);margin:0 auto 8px"></div>
+      <div class="name">Conscientiousness</div>
+    </div>
+    <div class="trait-mini">
+      <div style="width:0;height:0;border-left:20px solid transparent;border-right:20px solid transparent;border-bottom:40px solid var(--trait-e);margin:0 auto 8px"></div>
+      <div class="name">Extraversion</div>
+    </div>
+    <div class="trait-mini">
+      <div style="width:40px;height:20px;border-radius:40px 40px 0 0;background:var(--trait-a);margin:10px auto 18px"></div>
+      <div class="name">Agreeableness</div>
+    </div>
+    <div class="trait-mini">
+      <div style="width:28px;height:28px;background:var(--trait-n);transform:rotate(45deg);margin:6px auto 14px"></div>
+      <div class="name">Neuroticism</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM CTA -->
+  <div class="bottom-cta">
+    <a href="#" class="poster-cta">Begin Your Dive</a>
+  </div>
+</section>
+
+<script>
+// Subtle parallax on shapes based on mouse position
+const poster = document.getElementById('poster');
+const shapes = poster.querySelectorAll('.poster-shape');
+
+poster.addEventListener('mousemove', (e) => {
+  const cx = e.clientX / window.innerWidth - 0.5;
+  const cy = e.clientY / window.innerHeight - 0.5;
+
+  shapes.forEach((s, i) => {
+    const speed = (i + 1) * 8;
+    const baseTransform = s.style.transform || '';
+    // Preserve original rotation for rect and diamond
+    let base = '';
+    if (s.classList.contains('ps-rect')) base = 'rotate(12deg)';
+    if (s.classList.contains('ps-diamond')) base = 'rotate(45deg)';
+    s.style.transform = `${base} translate(${cx * speed}px, ${cy * speed}px)`;
+  });
+});
+</script>
+</body>
+</html>

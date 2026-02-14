@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction 4 — The Conversational Reveal</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#FFF8F0;--fg:#1A1A2E;--primary:#FF0080;--secondary:#FF6B2B;
+  --tertiary:#00B4A6;--card:#FFF0E8;--muted:#6B6580;--border:#FFD6C4;
+  --shallows:#FFF0E8;--deep:#FFD6C4;
+  --trait-o:#7B2FBE;--trait-c:#D4722A;--trait-e:#E0307B;--trait-a:#00B4A6;--trait-n:#1A1A5E;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--fg);overflow-x:hidden}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;background:rgba(255,248,240,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+nav .logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.2rem;display:flex;align-items:center;gap:8px}
+nav .logo .dot{width:10px;height:10px;border-radius:50%;background:var(--primary)}
+.nav-links{display:flex;gap:24px;align-items:center}
+.nav-links a{text-decoration:none;font-size:.9rem;color:var(--muted);transition:color .2s}
+.nav-links a:hover{color:var(--primary)}
+
+/* NERIN HERO */
+.nerin-hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:100px 24px 60px;text-align:center}
+.nerin-avatar-large{width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,var(--tertiary),var(--primary));margin-bottom:32px;display:flex;align-items:center;justify-content:center;font-size:3rem;box-shadow:0 8px 40px rgba(0,180,166,.2);position:relative}
+.nerin-avatar-large::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--tertiary);opacity:.3;animation:pulse-ring 3s ease-out infinite}
+@keyframes pulse-ring{0%{transform:scale(1);opacity:.3}100%{transform:scale(1.3);opacity:0}}
+.nerin-speech{max-width:560px}
+.nerin-speech .first-msg{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.6rem,3.5vw,2.5rem);font-weight:600;line-height:1.3;margin-bottom:16px}
+.nerin-speech .first-msg span{background:linear-gradient(120deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nerin-speech .sub{color:var(--muted);font-size:1rem}
+.scroll-cue{margin-top:48px;color:var(--muted);font-size:.85rem;animation:bob 2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* CHAT CONVERSATION LAYOUT */
+.conversation{max-width:680px;margin:0 auto;padding:0 24px 120px;position:relative}
+.conversation::before{content:'';position:absolute;left:32px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--border),transparent);z-index:0}
+
+.msg-group{margin-bottom:48px;opacity:0;transform:translateY(30px);transition:all .7s cubic-bezier(.16,1,.3,1)}
+.msg-group.visible{opacity:1;transform:translateY(0)}
+
+.msg{display:flex;gap:12px;margin-bottom:16px;position:relative;z-index:1}
+.msg.nerin{flex-direction:row}
+.msg.user{flex-direction:row-reverse}
+
+.msg-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.msg.nerin .msg-avatar{background:linear-gradient(135deg,var(--tertiary),var(--primary));color:#fff}
+.msg.user .msg-avatar{background:var(--deep);color:var(--fg)}
+
+.msg-bubble{padding:18px 24px;border-radius:20px;max-width:85%;font-size:.95rem;line-height:1.65}
+.msg.nerin .msg-bubble{background:var(--card);border:1px solid var(--border);border-bottom-left-radius:6px}
+.msg.user .msg-bubble{background:linear-gradient(120deg,var(--primary),var(--secondary));color:#fff;border-bottom-right-radius:6px}
+
+/* RICH MEDIA INSIDE MESSAGES */
+.msg-embed{margin-top:16px;background:rgba(255,255,255,.5);border:1px solid var(--border);border-radius:12px;padding:20px;backdrop-filter:blur(4px)}
+.msg-embed.trait-grid{display:flex;gap:12px;flex-wrap:wrap}
+.trait-chip{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:var(--bg);border:1px solid var(--border);font-size:.8rem;font-weight:500}
+.trait-chip .shape{width:20px;height:20px;flex-shrink:0}
+.trait-chip .circle{border-radius:50%}
+.trait-chip .rect{border-radius:4px}
+.trait-chip .half{border-radius:20px 20px 0 0;height:12px;margin-top:8px}
+.trait-chip .diamond{transform:rotate(45deg);width:14px;height:14px;margin:3px}
+
+.msg-embed.archetype-mini{text-align:center}
+.archetype-mini-icon{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.archetype-mini-name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.1rem}
+.archetype-mini-code{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--muted);margin-top:4px}
+
+.msg-embed.ocean-code-mini{display:flex;gap:8px;justify-content:center}
+.ocean-mini-letter{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:.9rem}
+
+/* TYPING INDICATOR */
+.typing{display:flex;gap:4px;padding:12px 20px;width:fit-content}
+.typing span{width:8px;height:8px;border-radius:50%;background:var(--muted);opacity:.4;animation:typeDot 1.4s ease-in-out infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes typeDot{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
+
+/* FINAL CTA AS CHAT INPUT */
+.chat-cta{position:fixed;bottom:0;left:0;right:0;background:rgba(255,248,240,.95);backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:16px 24px;display:flex;justify-content:center;gap:12px;z-index:90;transform:translateY(100%);transition:transform .5s ease}
+.chat-cta.visible{transform:translateY(0)}
+.chat-input-fake{flex:1;max-width:500px;padding:14px 20px;border-radius:12px;border:1px solid var(--border);background:var(--card);font-family:'DM Sans',sans-serif;font-size:.95rem;color:var(--muted)}
+.chat-send{background:linear-gradient(120deg,var(--primary),var(--secondary));color:#fff;border:none;padding:14px 28px;border-radius:12px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:.95rem;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.chat-send:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,0,128,.3)}
+
+/* SIDEBAR SHAPES (DESKTOP) */
+.shape-sidebar{position:fixed;right:40px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:16px;z-index:80;opacity:.15;transition:opacity .3s}
+.shape-sidebar:hover{opacity:.5}
+.shape-sidebar .ss{transition:transform .3s}
+.shape-sidebar .ss:hover{transform:scale(1.2)}
+
+@media(max-width:768px){
+  nav{padding:16px 20px}
+  .conversation::before{left:18px}
+  .msg-bubble{max-width:90%}
+  .shape-sidebar{display:none}
+  .chat-cta{padding:12px 16px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><span class="dot"></span> Big Ocean</div>
+  <div class="nav-links">
+    <a href="index.html">&larr; All Directions</a>
+    <a href="#">Science</a>
+    <a href="#" style="color:var(--primary);font-weight:600">Begin</a>
+  </div>
+</nav>
+
+<!-- SIDEBAR SHAPES -->
+<div class="shape-sidebar">
+  <div class="ss" style="width:28px;height:28px;border-radius:50%;background:var(--trait-o)"></div>
+  <div class="ss" style="width:22px;height:30px;border-radius:4px;background:var(--trait-c)"></div>
+  <div class="ss" style="width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:28px solid var(--trait-e)"></div>
+  <div class="ss" style="width:28px;height:14px;border-radius:28px 28px 0 0;background:var(--trait-a)"></div>
+  <div class="ss" style="width:20px;height:20px;background:var(--trait-n);transform:rotate(45deg)"></div>
+</div>
+
+<!-- NERIN HERO -->
+<section class="nerin-hero">
+  <div class="nerin-avatar-large">&#9672;</div>
+  <div class="nerin-speech">
+    <div class="first-msg">Hi. I've been <span>waiting</span> for you.<br>Want to know something interesting about yourself?</div>
+    <div class="sub">I'm Nerin. Scroll down and let's talk.</div>
+  </div>
+  <div class="scroll-cue">&darr; scroll to continue</div>
+</section>
+
+<!-- CONVERSATION -->
+<div class="conversation">
+
+  <!-- GROUP 1: INTRODUCTION -->
+  <div class="msg-group" data-reveal>
+    <div class="msg nerin">
+      <div class="msg-avatar">N</div>
+      <div class="msg-bubble">
+        I'm not a questionnaire. I don't do "on a scale of 1 to 5." I have actual conversations&mdash;about your life, your preferences, how you react to the world around you.
+      </div>
+    </div>
+    <div class="msg nerin">
+      <div class="msg-avatar">N</div>
+      <div class="msg-bubble">
+        Through our conversation, I map <strong>30 distinct facets</strong> of your personality. Not just "are you an introvert"&mdash;but the nuances of how you process the world.
+      </div>
+    </div>
+  </div>
+
+  <!-- GROUP 2: USER QUESTION -->
+  <div class="msg-group" data-reveal>
+    <div class="msg user">
+      <div class="msg-avatar">Y</div>
+      <div class="msg-bubble">What exactly will I learn about myself?</div>
+    </div>
+  </div>
+
+  <!-- GROUP 3: TRAITS REVEAL -->
+  <div class="msg-group" data-reveal>
+    <div class="msg nerin">
+      <div class="msg-avatar">N</div>
+      <div class="msg-bubble">
+        Great question. I measure you across five core dimensions of personality. Each has six facets within it:
+        <div class="msg-embed trait-grid">
+          <div class="trait-chip"><div class="shape circle" style="background:var(--trait-o)"></div>Openness</div>
+          <div class="trait-chip"><div class="shape rect" style="background:var(--trait-c)"></div>Conscientiousness</div>
+          <div class="trait-chip"><div class="shape" style="width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:20px solid var(--trait-e)"></div>Extraversion</div>
+          <div class="trait-chip"><div class="shape half" style="background:var(--trait-a)"></div>Agreeableness</div>
+          <div class="trait-chip"><div class="shape diamond" style="background:var(--trait-n)"></div>Neuroticism</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GROUP 4: USER FOLLOW-UP -->
+  <div class="msg-group" data-reveal>
+    <div class="msg user">
+      <div class="msg-avatar">Y</div>
+      <div class="msg-bubble">5 traits? I've seen that before. What's different here?</div>
+    </div>
+  </div>
+
+  <!-- GROUP 5: DEPTH EXPLANATION -->
+  <div class="msg-group" data-reveal>
+    <div class="msg nerin">
+      <div class="msg-avatar">N</div>
+      <div class="msg-bubble">
+        Most tools stop at 5 scores. I go <strong>6x deeper</strong>. Each trait has 6 facets&mdash;that's 30 data points that create your unique personality fingerprint.<br><br>
+        For example, two people can both score "High" on Openness, but one might be high in Imagination and low in Adventurousness, while the other is the opposite. That distinction changes everything.
+      </div>
+    </div>
+  </div>
+
+  <!-- GROUP 6: OCEAN CODE REVEAL -->
+  <div class="msg-group" data-reveal>
+    <div class="msg nerin">
+      <div class="msg-avatar">N</div>
+      <div class="msg-bubble">
+        At the end, you get your <strong>OCEAN Code</strong>&mdash;a 5-letter DNA of your personality:
+        <div class="msg-embed ocean-code-mini">
+          <div class="ocean-mini-letter" style="background:var(--trait-o)">H</div>
+          <div class="ocean-mini-letter" style="background:var(--trait-c)">H</div>
+          <div class="ocean-mini-letter" style="background:var(--trait-e)">M</div>
+          <div class="ocean-mini-letter" style="background:var(--trait-a)">H</div>
+          <div class="ocean-mini-letter" style="background:var(--trait-n)">M</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GROUP 7: ARCHETYPE -->
+  <div class="msg-group" data-reveal>
+    <div class="msg nerin">
+      <div class="msg-avatar">N</div>
+      <div class="msg-bubble">
+        And your code maps to an <strong>archetype</strong>&mdash;a memorable character that captures your unique combination:
+        <div class="msg-embed archetype-mini">
+          <div class="archetype-mini-icon">&#9878;</div>
+          <div class="archetype-mini-name">The Architect</div>
+          <div class="archetype-mini-code">OCEAN: H H M H M</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GROUP 8: FINAL -->
+  <div class="msg-group" data-reveal>
+    <div class="msg user">
+      <div class="msg-avatar">Y</div>
+      <div class="msg-bubble">That sounds fascinating. How long does it take?</div>
+    </div>
+  </div>
+
+  <div class="msg-group" data-reveal>
+    <div class="msg nerin">
+      <div class="msg-avatar">N</div>
+      <div class="msg-bubble">
+        About 30 minutes. It's free. You don't even need an account.<br><br>
+        <strong>Ready? Let's start.</strong>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CHAT CTA -->
+<div class="chat-cta" id="chatCta">
+  <div class="chat-input-fake">Type your first message to Nerin...</div>
+  <button class="chat-send">Start Conversation &rarr;</button>
+</div>
+
+<script>
+// Scroll-triggered message reveals
+const groups = document.querySelectorAll('.msg-group[data-reveal]');
+const chatCta = document.getElementById('chatCta');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+
+groups.forEach(g => observer.observe(g));
+
+// Show CTA after scrolling past 60%
+window.addEventListener('scroll', () => {
+  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+  chatCta.classList.toggle('visible', pct > 0.5);
+});
+</script>
+</body>
+</html>

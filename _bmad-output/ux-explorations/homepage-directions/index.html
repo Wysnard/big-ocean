@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Big Ocean — Homepage Directions</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#FFF8F0;--fg:#1A1A2E;
+    --primary:#FF0080;--secondary:#FF6B2B;--tertiary:#00B4A6;
+    --card:#FFF0E8;--muted:#6B6580;--border:#FFD6C4;
+    --trait-o:oklch(0.55 0.24 293);--trait-c:oklch(0.67 0.20 42);
+    --trait-e:oklch(0.59 0.27 348);--trait-a:oklch(0.67 0.13 181);
+    --trait-n:oklch(0.29 0.19 272);
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(2rem,5vw,3.5rem);font-weight:700;text-align:center;margin-bottom:12px;background:linear-gradient(120deg,var(--primary),#FF1493,var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .subtitle{text-align:center;color:var(--muted);font-size:1.1rem;margin-bottom:60px;max-width:500px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;max-width:1100px;width:100%}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;text-decoration:none;color:var(--fg);transition:all .3s ease;position:relative;overflow:hidden}
+  .card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(255,0,128,.12);border-color:var(--primary)}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:16px 16px 0 0}
+  .card:nth-child(1)::before{background:linear-gradient(90deg,var(--primary),var(--secondary))}
+  .card:nth-child(2)::before{background:linear-gradient(90deg,var(--tertiary),var(--trait-o))}
+  .card:nth-child(3)::before{background:linear-gradient(90deg,var(--secondary),var(--primary))}
+  .card:nth-child(4)::before{background:linear-gradient(90deg,var(--trait-a),var(--tertiary))}
+  .card:nth-child(5)::before{background:linear-gradient(90deg,var(--trait-o),var(--trait-e))}
+  .card:nth-child(6)::before{background:linear-gradient(90deg,var(--trait-n),var(--trait-o))}
+  .num{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--primary);margin-bottom:8px;letter-spacing:.05em}
+  .card h2{font-family:'Space Grotesk',sans-serif;font-size:1.35rem;font-weight:600;margin-bottom:4px}
+  .card .tag{font-size:.8rem;color:var(--muted);margin-bottom:12px;font-style:italic}
+  .card p{font-size:.9rem;line-height:1.6;color:var(--muted)}
+  .card .arrow{position:absolute;bottom:24px;right:24px;width:32px;height:32px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .3s ease}
+  .card:hover .arrow{background:var(--primary);color:#fff}
+  footer{margin-top:60px;text-align:center;color:var(--muted);font-size:.8rem}
+</style>
+</head>
+<body>
+<h1>Big Ocean Homepage Directions</h1>
+<p class="subtitle">6 design explorations + 1 combined direction for the landing page. Each is a self-contained prototype using the existing Big Ocean palette.</p>
+
+<a href="direction-combined.html" style="display:block;max-width:1100px;width:100%;margin-bottom:32px;background:linear-gradient(120deg,var(--primary),#FF1493,var(--secondary));border-radius:16px;padding:36px 40px;text-decoration:none;color:#fff;transition:all .3s;box-shadow:0 4px 24px rgba(255,0,128,.15)">
+  <div style="font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.1em;opacity:.7;margin-bottom:8px">COMBINED DIRECTION</div>
+  <div style="font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;margin-bottom:4px">The Unified Vision</div>
+  <div style="font-size:.9rem;opacity:.85">Editorial breathing hero + depth meter darkening scroll + conversational storytelling + blurred dashboard preview + trait carousel</div>
+</a>
+
+<div class="grid">
+  <a href="direction-1-editorial.html" class="card">
+    <div class="num">DIRECTION 01</div>
+    <h2>The Editorial Scroll</h2>
+    <div class="tag">Magazine-Style Storytelling</div>
+    <p>Asymmetric layouts, pull-quotes, dramatic white space. Like reading a beautifully art-directed feature story about you.</p>
+    <div class="arrow">&rarr;</div>
+  </a>
+  <a href="direction-2-descent.html" class="card">
+    <div class="num">DIRECTION 02</div>
+    <h2>The Immersive Descent</h2>
+    <div class="tag">Parallax Deep Dive</div>
+    <p>The ocean metaphor goes spatial. Scrolling feels like sinking deeper. Content layers move at different speeds.</p>
+    <div class="arrow">&rarr;</div>
+  </a>
+  <a href="direction-3-dashboard.html" class="card">
+    <div class="num">DIRECTION 03</div>
+    <h2>The Dashboard Preview</h2>
+    <div class="tag">Product-Led Homepage</div>
+    <p>Show, don't tell. The homepage IS a demo results dashboard with blurred data. Aspirational and product-first.</p>
+    <div class="arrow">&rarr;</div>
+  </a>
+  <a href="direction-4-conversational.html" class="card">
+    <div class="num">DIRECTION 04</div>
+    <h2>The Conversational Reveal</h2>
+    <div class="tag">Chat-First Experience</div>
+    <p>Nerin takes over. The page unfolds as a conversation between the AI companion and the visitor.</p>
+    <div class="arrow">&rarr;</div>
+  </a>
+  <a href="direction-5-poster.html" class="card">
+    <div class="num">DIRECTION 05</div>
+    <h2>The Psychedelic Poster</h2>
+    <div class="tag">Bold Graphic Statement</div>
+    <p>One frame. One statement. A concert-poster composition with your geometric shapes at massive scale.</p>
+    <div class="arrow">&rarr;</div>
+  </a>
+  <a href="direction-6-split.html" class="card">
+    <div class="num">DIRECTION 06</div>
+    <h2>The Split Journey</h2>
+    <div class="tag">Choose Your Path</div>
+    <p>Two paths: "I'm curious" vs "I'm ready." The homepage mirrors the assessment's choice-driven nature.</p>
+    <div class="arrow">&rarr;</div>
+  </a>
+</div>
+<footer>Big Ocean &mdash; Homepage Design Explorations &mdash; Feb 2026</footer>
+</body>
+</html>
