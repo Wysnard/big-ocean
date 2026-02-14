@@ -143,10 +143,22 @@ export const getResults = (input: GetResultsInput) =>
 
 		logger.info("Assessment results generated", {
 			sessionId: input.sessionId,
+			evidenceCount: evidence.length,
 			oceanCode5,
 			oceanCode4,
 			archetypeName: archetype.name,
 			overallConfidence,
+			traitScores: Object.fromEntries(
+				BIG_FIVE_TRAITS.map((t) => [
+					t,
+					{ score: traitScoresMap[t].score, confidence: traitScoresMap[t].confidence },
+				]),
+			),
+			facetScores: Object.fromEntries(
+				(Object.keys(facetScoresMap) as FacetName[])
+					.filter((f) => facetScoresMap[f].confidence > 0)
+					.map((f) => [f, { score: facetScoresMap[f].score, confidence: facetScoresMap[f].confidence }]),
+			),
 		});
 
 		return {

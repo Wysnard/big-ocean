@@ -480,3 +480,168 @@ So that **I feel genuinely understood and seen — not just assessed — which m
 **Dependencies:** Story 2-2 (Nerin Agent Setup) — extends the existing agent prompt.
 
 ---
+
+## Story 2.11: Async Analyzer with Offset Steering
+
+**Origin:** Party Mode architecture session (2026-02-14). Identified that every 3rd message blocks the HTTP response for 3-5+ seconds while Nerin + Analyzer + Scorer run sequentially in the same LangGraph graph invocation.
+
+As a **User in conversation with Nerin**,
+I want **every message to respond in 2-3 seconds regardless of whether analysis is running**,
+So that **the conversation feels fluid and natural without unexplained pauses every 3rd message**.
+
+**Problem Statement:**
+
+The current orchestrator graph runs `router → nerin → analyzer → scorer → END` as a single synchronous pipeline. On batch messages (every 3rd: messages 3, 6, 9, ...), the HTTP response is blocked 3-5+ seconds waiting for all LLM calls to complete. Non-batch messages take 2-3 seconds (Nerin only). Users experience inconsistent latency that feels broken every 3rd message.
+
+Additionally, the send-message response currently returns `confidence` scores (5 trait values) that the frontend uses for a progress indicator. This couples the response to the scoring pipeline and requires evidence DB reads on every message.
+
+**Design Decisions:**
+
+1. **Decouple analyzer from the HTTP response path** — The user-facing output is Nerin's response. Analyzer produces background data the user doesn't see until the next interaction.
+
+2. **Offset steering from analyzer by +1 message** — Analyzer runs at messages 3, 6, 9... Steering recalculates at messages 4, 7, 10... This guarantees steering always reads fresh evidence (analyzer completes in 1-2s, human types in 10-30s) and reduces evidence DB reads by ~70%.
+
+3. **Remove confidence from send-message response** — Replace with message-count-based progress on the frontend (MVP). Phase 2 will use ElectricSQL for live confidence updates.
+
+**New Message Cadence (3-message cycle, offset by 1):**
+
+```
+[N % 3 === 0] BATCH    → nerin (cached steering) → forkDaemon(analyzer + scorer)
+[N % 3 === 1] STEER    → read evidence → compute steering → nerin (fresh hint)
+[N % 3 === 2] COAST    → nerin (cached steering from previous STEER)
+
+Exception: messages 1-3 → no steering, no analysis (cold start)
+```
+
+| Message | Evidence Read | Analyzer | Steering | Nerin Gets |
+|---------|-------------|----------|----------|------------|
+| 1 | No | No | None | Default exploration |
+| 2 | No | No | None | Default exploration |
+| 3 | No | Background | None | Default exploration |
+| 4 | Yes | No | Fresh | Targeted facet hint |
+| 5 | No | No | Cached | Same hint from msg 4 |
+| 6 | No | Background | Cached | Same hint from msg 4 |
+| 7 | Yes | No | Fresh | New target facet |
+| ... | ... | ... | ... | ... |
+
+**Acceptance Criteria:**
+
+**AC-1: Async Analyzer (Background Daemon)**
+**Given** a batch message (messageCount % 3 === 0)
+**When** the orchestrator processes the message
+**Then** Nerin's response is returned to the client immediately (~2-3s)
+**And** the analyzer + scorer pipeline fires as a background `Effect.forkDaemon`
+**And** analyzer failures are caught and logged (never crash the daemon)
+**And** non-batch messages are unaffected (no analyzer, no fork)
+
+**AC-2: Offset Steering (Fresh Evidence)**
+**Given** a steering message (messageCount % 3 === 1 AND messageCount > 3)
+**When** the router node executes
+**Then** it reads evidence from the DB (fresh from previous batch)
+**And** computes `facetScores` via `aggregateFacetScores(evidence)`
+**And** calculates `steeringTarget` + `steeringHint` from facet outliers
+**And** stores steering in graph state (persisted by checkpointer for reuse)
+
+**AC-3: Cached Steering (Non-Steering Messages)**
+**Given** a coast or batch message (messageCount % 3 !== 1)
+**When** the router node executes
+**Then** it does NOT read evidence from the DB
+**And** Nerin receives cached `facetScores` + `steeringHint` from the checkpointer state
+
+**AC-4: Lean Response Contract**
+**Given** a send-message API call
+**When** the response is returned
+**Then** the response schema is `{ response: string }` (confidence removed)
+**And** the use-case does NOT read evidence post-orchestrator
+**And** the use-case does NOT compute trait confidence for the response
+
+**AC-5: Cold Start Handling**
+**Given** messages 1-3 (no evidence exists yet)
+**When** the router node executes
+**Then** no steering is applied (Nerin uses default exploration patterns)
+**And** no evidence read is attempted
+
+**Technical Details:**
+
+**Backend Changes:**
+
+| File | Change |
+|------|--------|
+| `packages/contracts/src/http/groups/assessment.ts` | Remove `confidence` from `SendMessageResponseSchema` |
+| `apps/api/src/use-cases/send-message.use-case.ts` | Remove post-orchestrator evidence read, confidence computation, `FacetEvidenceRepository` dependency; add `Effect.forkDaemon` for analyzer |
+| `packages/domain/src/repositories/orchestrator.repository.ts` | Simplify `ProcessMessageOutput` (remove facetScores, traitScores) |
+| `packages/domain/src/repositories/orchestrator-graph.repository.ts` | Split `GraphOutput` into conversation vs analysis outputs |
+| `packages/infrastructure/src/repositories/orchestrator-graph.langgraph.repository.ts` | Split graph: conversation graph (router → nerin → END) + analysis pipeline (analyzer → scorer); implement offset steering logic in router |
+| `packages/infrastructure/src/repositories/orchestrator.langgraph.repository.ts` | Return Nerin response immediately; fork analysis pipeline as daemon |
+| `packages/infrastructure/src/repositories/orchestrator.state.ts` | No structural changes (facetScores + steeringHint already persist via checkpointer) |
+| `apps/api/src/handlers/assessment.ts` | Remove confidence from response mapping |
+| `packages/infrastructure/src/repositories/__mocks__/orchestrator*.ts` | Update mocks to match new interfaces |
+
+**Key Implementation Pattern — `Effect.forkDaemon`:**
+
+```typescript
+// send-message.use-case.ts (simplified)
+const result = yield* orchestrator.processMessage({ sessionId, userMessage, messages, messageCount, dailyCostUsed });
+
+yield* messageRepo.saveMessage(sessionId, "assistant", result.nerinResponse);
+yield* costGuard.incrementDailyCost(userId, Math.round(result.costIncurred * 100));
+
+// Fire-and-forget analyzer on batch messages
+if (result.shouldAnalyze) {
+  yield* Effect.forkDaemon(
+    pipe(
+      orchestrator.processAnalysis({ sessionId, messages, messageCount }),
+      Effect.catchAll((error) =>
+        Effect.sync(() => logger.error("Background analyzer failed", { error, sessionId }))
+      )
+    )
+  );
+}
+
+return { response: result.nerinResponse };
+```
+
+**Key Implementation Pattern — Offset Steering in Router:**
+
+```typescript
+// Router node in orchestrator-graph
+const isSteeringMessage = messageCount % 3 === 1 && messageCount > 3;
+
+if (isSteeringMessage) {
+  const evidence = yield* evidenceRepo.getEvidenceBySession(sessionId);
+  const freshFacetScores = aggregateFacetScores(evidence);
+  const steeringTarget = getSteeringTarget(freshFacetScores);
+  const steeringHint = getSteeringHint(steeringTarget);
+  return { facetScores: freshFacetScores, steeringTarget, steeringHint, isBatchMessage: false };
+}
+// Else: use cached facetScores/steeringHint from checkpointer state
+```
+
+**Performance Impact:**
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Batch message latency | 3-5+ seconds | 2-3 seconds (Nerin only) |
+| Non-batch message latency | 2-3 seconds | 2-3 seconds (unchanged) |
+| Evidence DB reads per 30-msg session | 30 | 9 (~70% reduction) |
+| Response payload | `{ response, confidence{5} }` | `{ response }` |
+
+**Dependencies:** Story 2.4 (Orchestrator), Story 2.9 (Evidence-Sourced Scoring)
+
+**Companion Story:** Story 4.7 (Frontend: Message-Count Progress Indicator)
+
+**Acceptance Checklist:**
+- [ ] Graph split into conversation graph + analysis pipeline
+- [ ] `Effect.forkDaemon` fires analyzer on batch messages (3, 6, 9...)
+- [ ] Background analyzer failures logged, never crash response
+- [ ] Steering reads evidence only on offset messages (4, 7, 10...)
+- [ ] Messages 1-3 run without steering (cold start)
+- [ ] Cached steering reused from checkpointer on coast/batch messages
+- [ ] `SendMessageResponseSchema` returns `{ response: string }` only
+- [ ] send-message use-case no longer reads evidence post-orchestrator
+- [ ] send-message use-case no longer computes trait confidence
+- [ ] All existing tests updated and passing
+- [ ] Structured logging for background analyzer (success + failure)
+- [ ] Batch message latency ≤ 3 seconds (Nerin only)
+
+---

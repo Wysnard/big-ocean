@@ -9,7 +9,11 @@ import { Effect, Layer } from "effect";
 export const AnalyzerClaudeRepositoryLive = Layer.succeed(
 	AnalyzerRepository,
 	AnalyzerRepository.of({
-		analyzeFacets: (assessmentMessageId: string, _content: string) =>
+		analyzeFacets: (
+			assessmentMessageId: string,
+			_content: string,
+			_conversationHistory?: ReadonlyArray<{ role: "user" | "assistant"; content: string }>,
+		) =>
 			Effect.succeed([
 				{
 					assessmentMessageId,

@@ -188,10 +188,18 @@ const analyzerNodeEffect = (state: OrchestratorState) =>
 			}
 		}
 
-		// Analyze all unanalyzed messages in parallel
+		// Build conversation history for analyzer context
+		const conversationHistory: Array<{ role: "user" | "assistant"; content: string }> = state.messages
+			.filter((msg) => msg !== undefined)
+			.map((msg) => ({
+				role: (msg instanceof HumanMessage ? "user" : "assistant") as "user" | "assistant",
+				content: typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content),
+			}));
+
+		// Analyze all unanalyzed messages in parallel, passing full history for context
 		const results = yield* Effect.all(
 			unanalyzed.map(({ messageId, content, index }) =>
-				analyzer.analyzeFacets(messageId, content).pipe(
+				analyzer.analyzeFacets(messageId, content, conversationHistory).pipe(
 					Effect.map((evidence) => ({ evidence, index })),
 					Effect.tap(({ evidence }) =>
 						Effect.sync(() =>

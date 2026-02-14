@@ -226,13 +226,13 @@ See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full examples.
 
 ### Multi-Agent System (LangGraph)
 
-**Architecture:** Orchestrator → Nerin (conversational) → Analyzer (batch every 3 msgs) → Scores computed on-demand from evidence
+**Architecture (Story 2.11):** Orchestrator → Nerin (synchronous, returns response) → Analyzer + Scorer (async `Effect.forkDaemon`, every 3rd msg)
 
 **Big Five Framework:** 5 traits × 6 facets = 30 facets total
 - Constants: `packages/domain/src/constants/big-five.ts`
-- Scoring triggers every 3 messages with recency-weighted averaging
+- Analyzer triggers every 3 messages; scoring computed on-demand from evidence
 
-**Orchestrator Repository (Story 2.4):**
+**Orchestrator Repository (Story 2.4 + 2.11):**
 - Interface: `packages/domain/src/repositories/orchestrator.repository.ts`
 - Graph Interface: `packages/domain/src/repositories/orchestrator-graph.repository.ts`
 - Checkpointer Interface: `packages/domain/src/repositories/checkpointer.repository.ts`
@@ -250,13 +250,21 @@ OrchestratorRepository (pure Effect, no bridging)
 - External code only sees Effect-based APIs - no `OrchestratorDependencies` interface exposed
 - Graph compilation happens once during layer construction
 
-**Key Routing Logic:**
+**Key Routing Logic (Story 2.11: Async + Offset Steering):**
 1. **Budget Check FIRST** - Throws `BudgetPausedError` if `dailyCostUsed + MESSAGE_COST >= $75`
-2. **Steering Calculation** - Pure outlier detection: `confidence < (mean - stddev)` identifies weakest facet
-   - Generates natural language `steeringHint` from facet target (e.g., "Explore how they organize their space...")
-   - **Nerin receives both `facetScores` and `steeringHint`** for precise conversation guidance
-3. **Always Route to Nerin** - Every message gets conversational response with facet-level context
-4. **Batch Trigger** - Every 3rd message (`messageCount % 3 === 0`) runs Analyzer → saves evidence → scores computed on-demand
+2. **Offset Steering (msgs 4, 7, 10...)** - Reads fresh evidence from DB, computes `steeringTarget` + `steeringHint` via outlier detection (`confidence < mean - stddev`). Stored in graph state (checkpointer) for reuse.
+3. **Cached Steering (all other msgs)** - Reuses `facetScores` + `steeringHint` from checkpointer state. No DB read.
+4. **Always Route to Nerin** - Every message gets conversational response with facet-level context
+5. **Async Batch Trigger (msgs 3, 6, 9...)** - `Effect.forkDaemon` fires Analyzer → Scorer in background. HTTP response returns Nerin's response immediately.
+6. **Cold Start (msgs 1-3)** - No steering, no analysis. Nerin uses default exploration patterns.
+
+**Message Cadence (3-message cycle, offset by 1):**
+```
+[N % 3 === 0] BATCH  → nerin (cached steering) → forkDaemon(analyzer + scorer)
+[N % 3 === 1] STEER  → read evidence → fresh steering → nerin
+[N % 3 === 2] COAST  → nerin (cached steering)
+Exception: messages 1-3 → cold start, no steering
+```
 
 **Error Types:**
 - `BudgetPausedError` - Assessment paused, resume next day (includes `resumeAfter` timestamp)
@@ -268,34 +276,42 @@ OrchestratorRepository (pure Effect, no bridging)
 Nerin operates at **facet-level** (30 facets) rather than trait-level (5 traits) for precise conversational steering:
 
 ```typescript
-// Router calculates steering from facetScores
+// Router calculates steering from facetScores (only on STEER messages)
 const steeringTarget = getSteeringTarget(facetScores);  // e.g., "orderliness"
 const steeringHint = getSteeringHint(steeringTarget);   // e.g., "Explore how they organize..."
 
-// Nerin receives facet-level data
+// Nerin receives facet-level data (cached or fresh depending on message position)
 nerinAgent.invoke({
   sessionId,
   messages,
   facetScores,      // 30 facets with scores + confidence
   steeringHint,     // Natural language guidance
-  // NOT trait-level precision (deprecated pattern)
 });
 ```
 
 **Data Flow Principle:** Work with primitives (facetScores), derive aggregates (traitScores) on demand.
-- **Input:** Use-case provides `facetScores` (30 facets)
-- **Steering:** Router calculates single weakest outlier facet
+- **Input:** Router reads evidence on steering messages only (msgs 4, 7, 10...)
+- **Steering:** Router calculates single weakest outlier facet, caches in graph state
 - **Nerin:** Receives facet-level context for natural conversation
-- **Output:** Pure functions (`aggregateFacetScores`, `deriveTraitScores`) compute scores from evidence on-demand
+- **Output:** `{ response: string }` — no confidence/scores in HTTP response (Story 2.11)
+- **Background:** Analyzer + Scorer fire as daemon on batch messages (msgs 3, 6, 9...)
 
-**Use-Case Integration:**
+**Use-Case Integration (Story 2.11):**
 ```typescript
-// send-message.use-case.ts uses Orchestrator instead of direct Nerin
+// send-message.use-case.ts — lean response, async analysis
 const result = yield* orchestrator.processMessage({
-  sessionId, userMessage, messages, messageCount,
-  precision, dailyCostUsed, facetScores
+  sessionId, userMessage, messages, messageCount, dailyCostUsed
 });
-// Returns: nerinResponse, tokenUsage, costIncurred, facetEvidence?, facetScores?, traitScores?
+// Returns: { nerinResponse, tokenUsage, costIncurred, shouldAnalyze }
+
+// Fire-and-forget analyzer on batch messages
+if (result.shouldAnalyze) {
+  yield* Effect.forkDaemon(
+    orchestrator.processAnalysis({ sessionId, messages, messageCount })
+  );
+}
+
+return { response: result.nerinResponse };
 ```
 
 See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for agent flow diagrams and scoring algorithm.

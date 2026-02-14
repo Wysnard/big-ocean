@@ -135,6 +135,12 @@ export function useTherapistChat(sessionId: string) {
 		}));
 
 		// Load confidence scores (values are already 0-100, do NOT multiply)
+		console.log("[BigOcean] Session resumed — confidence loaded", {
+			sessionId,
+			confidence: resumeData.confidence,
+			messageCount: resumeData.messages.length,
+		});
+
 		setTraits({
 			openness: resumeData.confidence.openness,
 			conscientiousness: resumeData.confidence.conscientiousness,
@@ -191,7 +197,7 @@ export function useTherapistChat(sessionId: string) {
 			for (const t of timeouts) clearTimeout(t);
 			pendingGreetingsRef.current = [];
 		};
-	}, [resumeData]);
+	}, [resumeData, sessionId]);
 
 	const clearError = useCallback(() => {
 		setErrorMessage(null);
@@ -239,6 +245,19 @@ export function useTherapistChat(sessionId: string) {
 						]);
 
 						// Update trait confidence from API response (values are 0-100 integers)
+						console.log("[BigOcean] Trait confidence updated", {
+							sessionId,
+							confidence: data.confidence,
+							avgConfidence: Math.round(
+								(data.confidence.openness +
+									data.confidence.conscientiousness +
+									data.confidence.extraversion +
+									data.confidence.agreeableness +
+									data.confidence.neuroticism) /
+									5,
+							),
+						});
+
 						setTraits({
 							openness: data.confidence.openness,
 							conscientiousness: data.confidence.conscientiousness,

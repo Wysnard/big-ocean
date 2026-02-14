@@ -128,8 +128,8 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 			temperature: config.analyzerTemperature, // Lower temperature for structured output
 		});
 
-		// Use structured output with JSON Schema from Effect Schema
-		const model = baseModel.withStructuredOutput(AnalyzerResponseJsonSchema);
+		// Use structured output with includeRaw to preserve AIMessage token metadata
+		const model = baseModel.withStructuredOutput(AnalyzerResponseJsonSchema, { includeRaw: true });
 
 		logger.info("Analyzer Claude repository initialized", {
 			model: config.analyzerModelId,
@@ -137,23 +137,42 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 
 		// Return service implementation
 		return AnalyzerRepository.of({
-			analyzeFacets: (assessmentMessageId: string, content: string) =>
+			analyzeFacets: (
+				assessmentMessageId: string,
+				content: string,
+				conversationHistory?: ReadonlyArray<{ role: "user" | "assistant"; content: string }>,
+			) =>
 				Effect.gen(function* () {
 					const startTime = Date.now();
 
-					// Call Claude with system prompt and user message
-					const rawResponse = yield* Effect.tryPromise({
+					// Build messages array: system prompt + optional history + target message
+					const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+						{
+							role: "system" as const,
+							content: ANALYZER_SYSTEM_PROMPT,
+						},
+					];
+
+					// Include conversation history for richer context if provided
+					if (conversationHistory && conversationHistory.length > 0) {
+						for (const msg of conversationHistory) {
+							messages.push({
+								role: msg.role,
+								content: msg.content,
+							});
+						}
+					}
+
+					// Add the target message to analyze
+					messages.push({
+						role: "user" as const,
+						content: `Analyze this message for personality facet signals:\n\n${content}`,
+					});
+
+					// Call Claude with system prompt, history, and user message
+					const invokeResult = yield* Effect.tryPromise({
 						try: async () => {
-							return await model.invoke([
-								{
-									role: "system" as const,
-									content: ANALYZER_SYSTEM_PROMPT,
-								},
-								{
-									role: "user" as const,
-									content: `Analyze this message for personality facet signals:\n\n${content}`,
-								},
-							]);
+							return await model.invoke(messages);
 						},
 						catch: (error) =>
 							new AnalyzerError({
@@ -162,6 +181,17 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 								cause: error instanceof Error ? error.message : String(error),
 							}),
 					});
+
+					// Extract token usage from raw AIMessage metadata
+					const usageMeta = invokeResult.raw?.usage_metadata;
+					const analyzerTokens = {
+						input: usageMeta?.input_tokens ?? 0,
+						output: usageMeta?.output_tokens ?? 0,
+						total: (usageMeta?.input_tokens ?? 0) + (usageMeta?.output_tokens ?? 0),
+					};
+
+					// Use the parsed structured output
+					const rawResponse = invokeResult.parsed;
 
 					// Unwrap .extractions from wrapped response (Anthropic tool use requires object root)
 					const unwrapped = (rawResponse as { extractions?: unknown }).extractions ?? rawResponse;
@@ -225,6 +255,7 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 						evidenceCount: evidence.length,
 						durationMs: duration,
 						facets: evidence.map((e) => e.facetName),
+						tokenUsage: analyzerTokens,
 					});
 
 					return evidence;

@@ -388,44 +388,44 @@ NodeRuntime.runMain(Layer.launch(HttpLive));
 
 The backend uses LangGraph to orchestrate multiple specialized agents via the **Orchestrator Repository** (Story 2.4).
 
-**Agent Architecture:**
+**Agent Architecture (Story 2.11: Async Analyzer with Offset Steering):**
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│ Orchestrator (LangGraph State Machine)                           │
-│                                                                  │
-│ 1. BUDGET CHECK (FIRST) - throws BudgetPausedError if exceeded  │
-│ 2. STEERING - outlier detection (confidence < mean - stddev)    │
-│ 3. NERIN ROUTING - always (with optional steeringHint)          │
-│ 4. BATCH TRIGGER - every 3rd message (messageCount % 3 === 0)   │
-└────────────────┬────────────────────────────────────────────────┘
-                 │ steeringHint + messages
-                 ▼
-┌──────────────────────────────────────────────────────────────────┐
-│ Nerin (Conversational Agent - Claude 3.5 Sonnet)                │
-│ - Handles conversational quality                                 │
-│ - Builds relational safety                                       │
-│ - Operates at FACET-LEVEL (30 facets, not 5 traits)             │
-│ - Receives facetScores + steeringHint for precise guidance       │
-└────────────────┬─────────────────────────────────────────────────┘
-                 │ nerinResponse
-      ┌──────────┴──────────┐
-      │ (batch every 3 msgs)│
-      ▼                     ▼
-┌──────────────┐   ┌──────────────┐
-│ Analyzer     │   │ Pure Scoring │
-│ - Extract    │   │ (on-demand)  │
-│   facet      │   │ - Aggregate  │
-│   evidence   │   │   facet      │
-│ - 30 facets  │   │   scores     │
-│ - Save to    │   │ - Derive     │
-│   DB         │   │   trait      │
-│              │   │   scores     │
-└──────┬───────┘   └───────┬──────┘
-       │                   │
-       └───────┬───────────┘
-               ▼
-      (scores computed from evidence)
+┌──────────────────────────────────────────────────────────────────────┐
+│ Conversation Graph (SYNCHRONOUS — blocks HTTP response)              │
+│                                                                      │
+│ 1. BUDGET CHECK - throws BudgetPausedError if exceeded              │
+│ 2. STEERING (offset msgs 4,7,10...) - read evidence, compute hint  │
+│    OR use cached hint from checkpointer (msgs 2,3,5,6,8,9...)      │
+│ 3. NERIN - always runs with steeringHint                            │
+│ 4. RETURN { response } immediately                                   │
+└────────────────┬─────────────────────────────────────────────────────┘
+                 │ response returned to client (~2-3s)
+                 │
+                 │ if (messageCount % 3 === 0):
+                 │   Effect.forkDaemon ──────────────────────┐
+                 │                                            │
+                 ▼                                            ▼
+        HTTP Response                            ┌────────────────────┐
+        { response: string }                     │ Analysis Pipeline  │
+                                                 │ (ASYNC — daemon)   │
+                                                 │                    │
+                                                 │ Analyzer           │
+                                                 │ - Extract evidence │
+                                                 │ - 30 facets        │
+                                                 │ - Save to DB       │
+                                                 │       ↓            │
+                                                 │ Scorer             │
+                                                 │ - Aggregate scores │
+                                                 │ - Derive traits    │
+                                                 │ - Save to state    │
+                                                 └────────────────────┘
+
+Message Cadence (3-message cycle, offset by 1):
+  [N % 3 === 0] BATCH  → nerin (cached) → forkDaemon(analyzer + scorer)
+  [N % 3 === 1] STEER  → read evidence → fresh steering → nerin
+  [N % 3 === 2] COAST  → nerin (cached steering)
+  Exception: messages 1-3 → cold start, no steering
 ```
 
 **Orchestrator Repository Interface:**
@@ -446,9 +446,10 @@ export class OrchestratorRepository extends Context.Tag("OrchestratorRepository"
 
 1. **Single-Target Steering** - Pure outlier detection (`confidence < mean - stddev`) rather than arbitrary thresholds
 2. **Budget-First Pause** - Assessment pauses gracefully rather than degrading quality
-3. **Batch Processing** - Analyzer runs every 3rd message; scores computed on-demand from evidence via pure functions
-4. **State Preservation** - `BudgetPausedError` includes `resumeAfter` timestamp and `currentPrecision`
-5. **Facet-Level Granularity** - Nerin operates on 30 facets, not 5 traits (traits are derived aggregates)
+3. **Async Batch Processing (Story 2.11)** - Analyzer fires as `Effect.forkDaemon` every 3rd message; scores computed on-demand from evidence via pure functions. Nerin response returns immediately without waiting for analysis.
+4. **Offset Steering (Story 2.11)** - Steering recalculates at messages 4, 7, 10... (one offset from analyzer at 3, 6, 9...). Guarantees fresh evidence data and reduces DB reads by ~70%.
+5. **State Preservation** - `BudgetPausedError` includes `resumeAfter` timestamp and `currentPrecision`
+6. **Facet-Level Granularity** - Nerin operates on 30 facets, not 5 traits (traits are derived aggregates)
 
 **Data Flow Architecture (Facet-Level Primitives):**
 

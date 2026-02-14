@@ -46,6 +46,8 @@ services:
       DATABASE_URL: postgres://dev:devpassword@postgres:5432/bigocean
       REDIS_URL: redis://redis:6379
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      NERIN_MODEL_ID: ${NERIN_MODEL_ID:-claude-haiku-4-5-20251001}
+      ANALYZER_MODEL_ID: ${ANALYZER_MODEL_ID:-claude-sonnet-4-20250514}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: http://localhost:4000
       NODE_ENV: development

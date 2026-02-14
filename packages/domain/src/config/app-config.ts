@@ -56,6 +56,15 @@ export interface AppConfigService {
 	/** Analyzer agent temperature (0-1, lower = more structured) */
 	readonly analyzerTemperature: number;
 
+	/** Nerin agent model ID */
+	readonly nerinModelId: string;
+
+	/** Nerin agent max tokens per request */
+	readonly nerinMaxTokens: number;
+
+	/** Nerin agent temperature (0-1, higher = more conversational) */
+	readonly nerinTemperature: number;
+
 	/** Daily LLM cost limit in dollars (Story 2.5) */
 	readonly dailyCostLimit: number;
 }

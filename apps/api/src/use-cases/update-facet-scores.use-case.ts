@@ -89,29 +89,29 @@ export const updateFacetScores = (
 		const facetScores = aggregateFacetScores(evidence);
 
 		const facetCount = Object.keys(facetScores).length;
+		const assessedFacets = Object.entries(facetScores).filter(([_, v]) => v.confidence > 0);
+
 		logger.info("Facet scores computed", {
 			sessionId: input.sessionId,
 			facetCount,
+			assessedFacetCount: assessedFacets.length,
 			evidenceCount: evidence.length,
+			facetScores: Object.fromEntries(
+				assessedFacets.map(([k, v]) => [k, { score: v.score, confidence: v.confidence }]),
+			),
 		});
 
 		// Derive trait scores from facet scores (pure function)
 		const traitScores = deriveTraitScores(facetScores);
 
-		const traitCount = Object.keys(traitScores).length;
 		logger.info("Trait scores derived", {
 			sessionId: input.sessionId,
-			traitCount,
+			traitScores: Object.fromEntries(
+				Object.entries(traitScores).map(([k, v]) => [k, { score: v.score, confidence: v.confidence }]),
+			),
 		});
 
 		const updatedAt = new Date();
-
-		logger.info("Facet scores computation complete", {
-			sessionId: input.sessionId,
-			facetCount,
-			traitCount,
-			updatedAt: updatedAt.toISOString(),
-		});
 
 		return {
 			facetScores,

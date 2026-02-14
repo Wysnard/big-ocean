@@ -34,6 +34,9 @@ export const defaultTestConfig: AppConfigService = {
 	analyzerModelId: "claude-sonnet-4-20250514",
 	analyzerMaxTokens: 2048,
 	analyzerTemperature: 0.3,
+	nerinModelId: "claude-haiku-4-5-20251001",
+	nerinMaxTokens: 1024,
+	nerinTemperature: 0.7,
 	dailyCostLimit: 75,
 };
 

@@ -30,6 +30,7 @@ export class AnalyzerRepository extends Context.Tag("AnalyzerRepository")<
 		 *
 		 * @param assessmentMessageId - ID of the assessment message being analyzed (for evidence linkage)
 		 * @param content - User message text to analyze for personality signals
+		 * @param conversationHistory - Optional prior conversation messages for richer context
 		 * @returns Effect with array of facet evidence (typically 3-10 facets per message)
 		 * @throws AnalyzerError - Generic LLM invocation failure
 		 * @throws MalformedEvidenceError - JSON parsing, structure validation, or invalid facet name
@@ -39,7 +40,8 @@ export class AnalyzerRepository extends Context.Tag("AnalyzerRepository")<
 		 * const analyzer = yield* AnalyzerRepository;
 		 * const evidence = yield* analyzer.analyzeFacets(
 		 *   "msg_123",
-		 *   "I love exploring new ideas and thinking creatively."
+		 *   "I love exploring new ideas and thinking creatively.",
+		 *   [{ role: "user", content: "..." }, { role: "assistant", content: "..." }]
 		 * );
 		 * // Returns: [
 		 * //   { facet: "imagination", score: 18, confidence: 0.9, quote: "love exploring new ideas", ... },
@@ -50,6 +52,7 @@ export class AnalyzerRepository extends Context.Tag("AnalyzerRepository")<
 		readonly analyzeFacets: (
 			assessmentMessageId: string,
 			content: string,
+			conversationHistory?: ReadonlyArray<{ role: "user" | "assistant"; content: string }>,
 		) => Effect.Effect<FacetEvidence[], AnalyzerError | MalformedEvidenceError, never>;
 	}
 >() {}

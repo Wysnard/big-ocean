@@ -17,6 +17,7 @@ import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 import { AgentInvocationError } from "@workspace/contracts/errors";
 import type { FacetScoresMap } from "@workspace/domain";
 import {
+	AppConfig,
 	buildSystemPrompt,
 	LoggerRepository,
 	type NerinResponse,
@@ -77,15 +78,15 @@ type NerinGraphState = typeof NerinStateAnnotation.State;
 /**
  * Create the ChatAnthropic model instance with structured output
  */
-function createModel() {
+function createModel(config: { modelId: string; maxTokens: number; temperature: number }) {
 	const baseModel = new ChatAnthropic({
-		model: process.env.NERIN_MODEL_ID || "claude-sonnet-4-20250514",
-		maxTokens: Number(process.env.NERIN_MAX_TOKENS) || 1024,
-		temperature: Number(process.env.NERIN_TEMPERATURE) || 0.7,
+		model: config.modelId,
+		maxTokens: config.maxTokens,
+		temperature: config.temperature,
 	});
 
-	// Use structured output with JSON Schema from Effect Schema
-	return baseModel.withStructuredOutput(NerinResponseJsonSchema);
+	// Use structured output with includeRaw to preserve AIMessage token metadata
+	return baseModel.withStructuredOutput(NerinResponseJsonSchema, { includeRaw: true });
 }
 
 /**
@@ -98,6 +99,7 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
 	NerinAgentRepository,
 	Effect.gen(function* () {
 		const logger = yield* LoggerRepository;
+		const config = yield* AppConfig;
 
 		// Initialize PostgresSaver if DATABASE_URL is available
 		const dbUri = process.env.DATABASE_URL;
@@ -124,8 +126,16 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
 			logger.warn("DATABASE_URL not set - Nerin agent state will not persist");
 		}
 
-		// Create the model
-		const model = createModel();
+		// Create the model from config
+		const model = createModel({
+			modelId: config.nerinModelId,
+			maxTokens: config.nerinMaxTokens,
+			temperature: config.nerinTemperature,
+		});
+
+		logger.info("Nerin agent model configured", {
+			model: config.nerinModelId,
+		});
 
 		// Build the LangGraph workflow with typed state
 		const workflow = new StateGraph(NerinStateAnnotation)
@@ -136,29 +146,19 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
 				// Prepare messages with system prompt
 				const allMessages = [new SystemMessage({ content: systemPrompt }), ...state.messages];
 
-				// Track token usage via callback
-				let tokenUsage: TokenUsage = { input: 0, output: 0, total: 0 };
+				// Invoke model with structured output (includeRaw: true returns { raw, parsed })
+				const response = await model.invoke(allMessages);
 
-				// Invoke model with structured output and token tracking
-				const response = await model.invoke(allMessages, {
-					callbacks: [
-						{
-							handleLLMEnd: (output) => {
-								const usage = output.llmOutput?.tokenUsage;
-								if (usage) {
-									tokenUsage = {
-										input: usage.promptTokens || 0,
-										output: usage.completionTokens || 0,
-										total: usage.totalTokens || 0,
-									};
-								}
-							},
-						},
-					],
-				});
+				// Extract token usage from raw AIMessage metadata
+				const usageMeta = response.raw?.usage_metadata;
+				const tokenUsage: TokenUsage = {
+					input: usageMeta?.input_tokens ?? 0,
+					output: usageMeta?.output_tokens ?? 0,
+					total: (usageMeta?.input_tokens ?? 0) + (usageMeta?.output_tokens ?? 0),
+				};
 
-				// Validate response against schema
-				const validationResult = validateNerinResponse(response);
+				// Validate the parsed structured response
+				const validationResult = validateNerinResponse(response.parsed);
 
 				if (Either.isLeft(validationResult)) {
 					// Log validation error but continue with raw response
@@ -166,10 +166,10 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
 						sessionId: state.sessionId,
 						error: String(validationResult.left),
 					});
-					// Use raw response when validation fails
-					const rawResponse = response as NerinResponse;
+					// Use parsed response when validation fails
+					const rawParsed = response.parsed as NerinResponse;
 					return {
-						messages: [new AIMessage({ content: rawResponse.message })],
+						messages: [new AIMessage({ content: rawParsed.message })],
 						tokenCount: tokenUsage,
 					};
 				}

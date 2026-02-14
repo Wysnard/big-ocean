@@ -268,6 +268,22 @@ function ResultsSessionPage() {
 		);
 	}
 
+	console.log("[BigOcean] Results loaded", {
+		sessionId,
+		oceanCode5: results.oceanCode5,
+		archetypeName: results.archetypeName,
+		overallConfidence: results.overallConfidence,
+		traits: results.traits.map((t) => ({
+			name: t.name,
+			score: t.score,
+			level: t.level,
+			confidence: t.confidence,
+		})),
+		facetsWithSignal: results.facets
+			.filter((f) => f.confidence > 0)
+			.map((f) => ({ name: f.name, score: f.score, confidence: f.confidence })),
+	});
+
 	const dominantTrait = getDominantTrait(results.traits);
 
 	return (

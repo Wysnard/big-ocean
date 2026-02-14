@@ -348,3 +348,115 @@ So that **my responses remain authentic and unbiased by partial results**.
 - Full implementation details: `_bmad-output/implementation-artifacts/4-6-hide-scores-during-assessment.md`
 
 ---
+
+## Story 4.7: Message-Count Progress Indicator (Replace Confidence-Based Progress)
+
+**Origin:** Party Mode architecture session (2026-02-14). Companion to Story 2.11 (Async Analyzer). Confidence scores removed from send-message response to decouple the analyzer from the HTTP response path.
+
+As a **User**,
+I want **to see my assessment progress based on how many messages I've exchanged**,
+So that **I know how close I am to seeing my results without waiting for background analysis**.
+
+**Problem Statement:**
+
+The current progress indicator relies on `confidence` scores (5 trait values, 0-100) returned in the send-message response. Story 2.11 removes confidence from this response to enable async analysis. The frontend needs an alternative progress signal.
+
+For MVP, message count is a reliable proxy: assessments typically reach 70%+ confidence at ~15-20 messages. Phase 2 will replace this with ElectricSQL-powered live confidence updates.
+
+**Design Decisions:**
+
+1. **Message count as progress proxy (MVP)** — Simple, no API dependency, deterministic. User messages counted client-side from the `messages` array.
+2. **Keep confidence in resume endpoint** — Returning users with existing evidence still see accurate progress on load.
+3. **Phase 2: ElectricSQL live sync** — Evidence table synced to frontend; client-side `aggregateFacetScores()` computes real-time confidence. Deferred until ElectricSQL implementation.
+
+**Acceptance Criteria:**
+
+**AC-1: Remove Confidence Consumption from send-message**
+**Given** a send-message response arrives
+**When** the `onSuccess` callback executes
+**Then** it does NOT read or set `confidence` (field no longer exists)
+**And** it only extracts `data.response` for the assistant message
+
+**AC-2: Message-Count Progress Indicator**
+**Given** the user is in an active assessment
+**When** they have exchanged N user messages
+**Then** the progress indicator shows progress based on user message count
+**And** thresholds are:
+  - 1-5 messages: "Getting to know you..." (~15-30%)
+  - 6-10 messages: "Building your profile..." (~35-60%)
+  - 11-15 messages: "Refining your personality map..." (~65-85%)
+  - 16+ messages: "Almost ready for results!" (~90-100%)
+**And** the progress value increases monotonically (never decreases)
+
+**AC-3: Celebration Trigger (Message Count)**
+**Given** the user has sent 15+ messages (configurable threshold)
+**When** the progress check runs
+**Then** `isConfidenceReady` becomes true
+**And** the celebration card appears ("Your Personality Profile is Ready!")
+**And** the "View Results" header link appears
+**And** behavior is identical to current confidence-based trigger
+
+**AC-4: Resume Session Retains Confidence**
+**Given** a user resumes an existing session
+**When** the resume endpoint returns
+**Then** confidence scores are still loaded from resume response
+**And** `traits` state is populated from resume data
+**And** if resume confidence >= 70%, celebration triggers immediately
+**And** if resume confidence < 70%, message-count progress takes over
+
+**AC-5: Remove TraitScores State (Cleanup)**
+**Given** the `useTherapistChat` hook
+**When** the `traits` state is evaluated
+**Then** the `TraitScores` interface is simplified or removed
+**And** the duplicate `{trait}Confidence` fields are cleaned up
+**And** `avgConfidence` calculation uses resume data OR message count
+
+**Technical Details:**
+
+| File | Change |
+|------|--------|
+| `apps/front/src/hooks/useTherapistChat.ts` | Remove confidence consumption from `onSuccess`, add message-count progress logic, simplify `TraitScores` |
+| `apps/front/src/hooks/use-assessment.ts` | Update `SendMessageResponse` type (remove confidence) |
+| `apps/front/src/components/TherapistChat.tsx` | Update progress display to use message count, keep celebration card logic |
+
+**Message Count → Progress Mapping:**
+
+```typescript
+const MESSAGE_READY_THRESHOLD = 15; // Configurable
+
+const userMessageCount = messages.filter(m => m.role === "user").length;
+
+const progressPercent = Math.min(
+  Math.round((userMessageCount / MESSAGE_READY_THRESHOLD) * 100),
+  100
+);
+
+const isConfidenceReady = userMessageCount >= MESSAGE_READY_THRESHOLD;
+```
+
+**Phase 2 Note (ElectricSQL):**
+When ElectricSQL is implemented, replace message-count progress with:
+```typescript
+// Phase 2: Live confidence from synced evidence
+const evidence = useLiveQuery(db.facet_evidence.where({ sessionId }));
+const facetScores = aggregateFacetScores(evidence);
+const avgConfidence = calculateConfidenceFromFacetScores(facetScores);
+const isConfidenceReady = avgConfidence >= 70;
+```
+
+**Dependencies:** Story 2.11 (removes confidence from send-message response)
+
+**Acceptance Checklist:**
+- [ ] `onSuccess` callback no longer reads `data.confidence`
+- [ ] Progress indicator uses user message count
+- [ ] Progress thresholds display correct labels
+- [ ] Progress never decreases (monotonic)
+- [ ] Celebration triggers at MESSAGE_READY_THRESHOLD (15)
+- [ ] "View Results" header link appears at threshold
+- [ ] Resume session still loads confidence from resume endpoint
+- [ ] Resume with high confidence triggers celebration immediately
+- [ ] `TraitScores` interface simplified / duplicate fields removed
+- [ ] TypeScript compiles with updated `SendMessageResponse` type
+- [ ] All existing chat tests updated and passing
+
+---

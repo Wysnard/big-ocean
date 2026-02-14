@@ -51,6 +51,13 @@ const configSchema = Config.all({
 	analyzerMaxTokens: Config.number("ANALYZER_MAX_TOKENS").pipe(Config.withDefault(2048)),
 	analyzerTemperature: Config.number("ANALYZER_TEMPERATURE").pipe(Config.withDefault(0.3)),
 
+	// Nerin agent configuration
+	nerinModelId: Config.string("NERIN_MODEL_ID").pipe(
+		Config.withDefault("claude-haiku-4-5-20251001"),
+	),
+	nerinMaxTokens: Config.number("NERIN_MAX_TOKENS").pipe(Config.withDefault(1024)),
+	nerinTemperature: Config.number("NERIN_TEMPERATURE").pipe(Config.withDefault(0.7)),
+
 	// Cost management (Story 2.5)
 	dailyCostLimit: Config.number("DAILY_COST_LIMIT").pipe(Config.withDefault(75)),
 });

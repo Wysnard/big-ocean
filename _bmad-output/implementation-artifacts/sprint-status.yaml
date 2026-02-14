@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-02-13 (refreshed sprint-planning)
+# Generated: 2026-02-14 (refreshed sprint-planning)
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-02-13
+generated: 2026-02-14
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -49,7 +49,7 @@ development_status:
   epic-1-retrospective: optional
 
   # EPIC 2: Assessment Backend Services
-  # Reopened: Story 2-9 added post-completion → reopened again for 2-10
+  # Reopened: Stories 2-9, 2-10, 2-11 added post-original-completion
   epic-2: in-progress
   2-1-session-management-and-persistence: done
   2-2-nerin-agent-setup-and-conversational-quality: done
@@ -59,6 +59,7 @@ development_status:
   2-8-integration-testing-docker-compose: done
   2-9-evidence-sourced-scoring: done
   2-10-nerin-conversational-empathy-patterns: done
+  2-11-async-analyzer-with-offset-steering: backlog
   epic-2-retrospective: done
 
   # EPIC 3: OCEAN Archetype System
@@ -69,7 +70,7 @@ development_status:
   epic-3-retrospective: done
 
   # EPIC 4: Frontend Assessment UI
-  # Reopened: Story 4-6 added (2026-02-11) for UX spec alignment
+  # Reopened: Stories 4-6 (2026-02-11) and 4-7 (2026-02-14) added
   epic-4: in-progress
   4-1-authentication-ui-sign-up-modal: done
   4-2-assessment-conversation-component: done
@@ -77,6 +78,7 @@ development_status:
   4-4-optimistic-updates-progress-indicator: done
   4-5-component-documentation-with-storybook: done
   4-6-hide-scores-during-assessment: ready-for-dev
+  4-7-message-count-progress-indicator: backlog
   epic-4-retrospective: done
 
   # EPIC 5: Results & Profile Sharing
@@ -100,7 +102,6 @@ development_status:
   # Rewritten 2026-02-13 to align with new UX Design Specification
   # Psychedelic-bold visual identity with OCEAN geometric shapes, dual light/dark modes,
   # custom typography, illustration system, auth-gated results, shareable profiles, user dashboard
-  # All stories reset to backlog after epic scope rewrite
   epic-7: in-progress
   7-1-psychedelic-brand-design-tokens: done
   7-2-typography-system: done

@@ -108,6 +108,16 @@ export const sendMessage = (input: SendMessageInput) =>
 		const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
 		const facetScores = aggregateFacetScores(evidence);
 
+		logger.debug("Pre-orchestration facet scores", {
+			sessionId: input.sessionId,
+			evidenceCount: evidence.length,
+			facetScores: Object.fromEntries(
+				Object.entries(facetScores)
+					.filter(([_, v]) => v.confidence > 0)
+					.map(([k, v]) => [k, { score: v.score, confidence: v.confidence }]),
+			),
+		});
+
 		// Invoke Orchestrator (routes to Nerin, optionally triggers Analyzer + Scorer)
 		const result = yield* orchestrator
 			.processMessage({
@@ -163,7 +173,19 @@ export const sendMessage = (input: SendMessageInput) =>
 			responseLength: result.nerinResponse.length,
 			tokenCount: result.tokenUsage,
 			isBatchMessage: messageCount % 3 === 0,
+			messageCount,
 			steeringTarget: result.steeringTarget,
+			traitConfidence: responseConfidence,
+		});
+
+		logger.debug("Post-orchestration facet scores", {
+			sessionId: input.sessionId,
+			updatedEvidenceCount: updatedEvidence.length,
+			facetScores: Object.fromEntries(
+				Object.entries(updatedFacetScores)
+					.filter(([_, v]) => v.confidence > 0)
+					.map(([k, v]) => [k, { score: v.score, confidence: v.confidence }]),
+			),
 		});
 
 		return {
