@@ -78,7 +78,7 @@ development_status:
   4-4-optimistic-updates-progress-indicator: done
   4-5-component-documentation-with-storybook: done
   4-6-hide-scores-during-assessment: done
-  4-7-message-count-progress-indicator: review
+  4-7-message-count-progress-indicator: done
   epic-4-retrospective: done
 
   # EPIC 5: Results & Profile Sharing
@@ -114,7 +114,7 @@ development_status:
   7-9-results-page-visual-redesign-with-archetype-theming: done
   7-10-assessment-chat-ux-polish: done
   7-11-auth-gated-results-reveal-and-sign-up-flow: done
-  7-15-auth-form-psychedelic-brand-redesign: ready-for-dev
+  7-15-auth-form-psychedelic-brand-redesign: done
   7-12-shareable-public-profile-and-share-cards: backlog
   7-13-registered-user-profile-page: backlog
   7-14-component-visual-consistency-and-final-polish: backlog
