@@ -14,11 +14,6 @@ interface TraitScores {
 	extraversion: number;
 	agreeableness: number;
 	neuroticism: number;
-	opennessConfidence: number;
-	conscientiousnessConfidence: number;
-	extraversionConfidence: number;
-	agreeablenessConfidence: number;
-	neuroticismConfidence: number;
 }
 
 /**
@@ -93,11 +88,6 @@ export function useTherapistChat(sessionId: string) {
 		extraversion: 0,
 		agreeableness: 0,
 		neuroticism: 0,
-		opennessConfidence: 0,
-		conscientiousnessConfidence: 0,
-		extraversionConfidence: 0,
-		agreeablenessConfidence: 0,
-		neuroticismConfidence: 0,
 	});
 	const [isLoading, setIsLoading] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -147,11 +137,6 @@ export function useTherapistChat(sessionId: string) {
 			extraversion: resumeData.confidence.extraversion,
 			agreeableness: resumeData.confidence.agreeableness,
 			neuroticism: resumeData.confidence.neuroticism,
-			opennessConfidence: resumeData.confidence.openness,
-			conscientiousnessConfidence: resumeData.confidence.conscientiousness,
-			extraversionConfidence: resumeData.confidence.extraversion,
-			agreeablenessConfidence: resumeData.confidence.agreeableness,
-			neuroticismConfidence: resumeData.confidence.neuroticism,
 		});
 
 		// Detect new session: exactly 3 assistant-only messages (server-persisted greeting)

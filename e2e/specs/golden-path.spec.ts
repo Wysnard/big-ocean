@@ -59,6 +59,13 @@ test("golden path: landing → chat → signup → results → share → public 
 		await expect(chatInput).toBeEnabled({ timeout: 30_000 });
 	});
 
+	await test.step("assert progress bar is visible and updating", async () => {
+		const progressBar = page.getByTestId("progress-track");
+		await expect(progressBar).toBeVisible();
+		// With MESSAGE_READY_THRESHOLD=2, 1 user message = 50% progress
+		await expect(progressBar).toHaveAttribute("aria-valuenow", "50");
+	});
+
 	await test.step("send a second message and wait for response", async () => {
 		const chatInput = page.locator("[data-slot='chat-input']");
 		await chatInput.fill("I tend to be very organized and plan everything in advance.");

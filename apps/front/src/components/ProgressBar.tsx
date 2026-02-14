@@ -19,18 +19,17 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 
 	// Nerin-voice contextual labels based on progress
 	const defaultLabel = useMemo(() => {
-		if (clampedValue >= 80) return "Putting the finishing touches...";
-		if (clampedValue >= 70) return "Almost there...";
-		if (clampedValue >= 50) return "Building your profile...";
-		if (clampedValue >= 25) return "Understanding your patterns...";
+		if (clampedValue >= 85) return "Almost ready for results!";
+		if (clampedValue >= 50) return "Refining your personality map...";
+		if (clampedValue >= 25) return "Building your profile...";
 		return "Getting to know you...";
 	}, [clampedValue]);
 
 	const displayLabel = label ?? defaultLabel;
-	const showPercentageValue = showPercentage && clampedValue <= 80;
+	const showPercentageValue = showPercentage && clampedValue < 85;
 
 	return (
-		<div className={`w-full max-w-md mx-auto px-4 py-2 ${className}`}>
+		<div className={`w-full px-4 py-2 ${className}`}>
 			{/* Label and percentage */}
 			<div className="flex items-center justify-between mb-1 text-sm">
 				<span className="text-foreground">{displayLabel}</span>

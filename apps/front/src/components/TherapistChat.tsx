@@ -457,7 +457,7 @@ export function TherapistChat({
 												Your Personality Profile is Ready!
 											</h2>
 											<p className="text-muted-foreground mt-2">
-												You've reached {Math.round(avgConfidence)}% confidence
+												Your assessment is complete
 											</p>
 											<div className="mt-4 flex gap-3 justify-center">
 												<Button

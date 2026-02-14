@@ -136,7 +136,6 @@ describe("useTherapistChat", () => {
 
 		expect(result.current.traits.openness).toBe(0);
 		expect(result.current.traits.conscientiousness).toBe(0);
-		expect(result.current.traits.opennessConfidence).toBe(0);
 	});
 
 	it("adds user message optimistically before API responds", () => {
@@ -414,7 +413,6 @@ describe("useTherapistChat", () => {
 			expect(result.current.traits.openness).toBe(72);
 			expect(result.current.traits.conscientiousness).toBe(48);
 			expect(result.current.traits.extraversion).toBe(65);
-			expect(result.current.traits.opennessConfidence).toBe(72);
 		});
 
 		it("loads server greeting messages for new session after stagger completes", () => {
