@@ -1,6 +1,6 @@
 import type { BaseMessage } from "@langchain/core/messages";
-import { AgentInvocationError } from "@workspace/contracts/errors";
 import { Context, Effect } from "effect";
+import { AgentInvocationError } from "../errors/http.errors";
 import type { FacetScoresMap } from "../types/facet-evidence";
 
 /**

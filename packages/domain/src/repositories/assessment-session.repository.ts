@@ -1,6 +1,6 @@
-import { DatabaseError, SessionNotFound } from "@workspace/contracts/errors";
 import { AssessmentSessionEntity } from "@workspace/domain/entities/session.entity";
 import { Context, Effect } from "effect";
+import { DatabaseError, SessionNotFound } from "../errors/http.errors";
 
 /**
  * Session Repository Service Tag

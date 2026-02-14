@@ -15,6 +15,7 @@ import {
 	SessionNotFound,
 	Unauthorized,
 } from "../../errors";
+import { OceanCode5Schema } from "../../schemas/ocean-code";
 
 /**
  * Share Profile Request Schema
@@ -45,7 +46,7 @@ export const FacetScoreSchema = S.Struct({
  */
 export const GetPublicProfileResponseSchema = S.Struct({
 	archetypeName: S.String,
-	oceanCode: S.String,
+	oceanCode: OceanCode5Schema,
 	description: S.String,
 	color: S.String,
 	traitSummary: S.Record({ key: S.String, value: S.String }),

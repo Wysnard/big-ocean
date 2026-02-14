@@ -15,12 +15,12 @@
     "./config/*": "./src/config/*.ts",
     "./repositories/*": "./src/repositories/*.ts",
     "./services/*": "./src/services/*.ts",
+    "./schemas/*": "./src/schemas/*.ts",
     "./constants/*": "./src/constants/*.ts",
     "./utils/*": "./src/utils/*.ts"
   },
   "dependencies": {
     "@langchain/core": "^1.1.17",
-    "@workspace/contracts": "workspace:*",
     "effect": "catalog:",
     "@effect/schema": "catalog:"
   },

@@ -1,10 +1,11 @@
+import type { OceanCode4, OceanCode5 } from "@workspace/domain";
 import { cn } from "@workspace/ui/lib/utils";
 import { GeometricSignature } from "../ocean-shapes/GeometricSignature";
 
 export interface ArchetypeCardProps {
 	archetypeName: string;
-	oceanCode4: string;
-	oceanCode5: string;
+	oceanCode4: OceanCode4;
+	oceanCode5: OceanCode5;
 	description: string;
 	color: string;
 	isCurated: boolean;

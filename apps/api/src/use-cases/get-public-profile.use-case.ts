@@ -17,6 +17,8 @@ import {
 	type FacetScoresMap,
 	LoggerRepository,
 	lookupArchetype,
+	type OceanCode5,
+	OceanCode5Schema,
 	PublicProfileRepository,
 } from "@workspace/domain";
 import { Effect } from "effect";
@@ -27,7 +29,7 @@ export interface GetPublicProfileInput {
 
 export interface GetPublicProfileOutput {
 	readonly archetypeName: string;
-	readonly oceanCode: string;
+	readonly oceanCode: OceanCode5;
 	readonly description: string;
 	readonly color: string;
 	readonly traitSummary: Record<string, string>;
@@ -96,7 +98,7 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 
 		return {
 			archetypeName: archetype.name,
-			oceanCode: profile.oceanCode5,
+			oceanCode: OceanCode5Schema.make(profile.oceanCode5),
 			description: archetype.description,
 			color: archetype.color,
 			traitSummary,

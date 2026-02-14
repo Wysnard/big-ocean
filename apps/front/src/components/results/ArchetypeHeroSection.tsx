@@ -1,10 +1,10 @@
-import type { TraitName } from "@workspace/domain";
+import type { OceanCode5, TraitName } from "@workspace/domain";
 import { getTraitColor } from "@workspace/domain";
 import { GeometricSignature } from "../ocean-shapes/GeometricSignature";
 
 interface ArchetypeHeroSectionProps {
 	archetypeName: string;
-	oceanCode5: string;
+	oceanCode5: OceanCode5;
 	archetypeDescription: string;
 	overallConfidence: number;
 	isCurated: boolean;
@@ -79,9 +79,7 @@ export function ArchetypeHeroSection({
 
 				{/* OCEAN code + Confidence */}
 				<div className="flex items-center justify-center gap-4 flex-wrap">
-					<span className="font-mono text-base text-foreground/60">
-						{oceanCode5}
-					</span>
+					<span className="font-mono text-base text-foreground/60">{oceanCode5}</span>
 					<span className="text-xs font-medium text-foreground/50 bg-foreground/10 rounded-full px-3 py-1">
 						{overallConfidence}% confidence
 					</span>

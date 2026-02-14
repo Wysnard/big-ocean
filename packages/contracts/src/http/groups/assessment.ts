@@ -13,6 +13,7 @@ import {
 	RateLimitExceeded,
 	SessionNotFound,
 } from "../../errors";
+import { OceanCode4Schema, OceanCode5Schema } from "../../schemas/ocean-code";
 
 /**
  * Start Assessment Request Schema
@@ -91,8 +92,8 @@ export const FacetResultSchema = S.Struct({
  * Full assessment results including archetype, traits, facets, and confidence.
  */
 export const GetResultsResponseSchema = S.Struct({
-	oceanCode5: S.String,
-	oceanCode4: S.String,
+	oceanCode5: OceanCode5Schema,
+	oceanCode4: OceanCode4Schema,
 	archetypeName: S.String,
 	archetypeDescription: S.String,
 	archetypeColor: S.String,

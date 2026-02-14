@@ -1,7 +1,11 @@
-import { AnalyzerError, InvalidFacetNameError, MalformedEvidenceError } from "@workspace/contracts";
 import { Context, Effect } from "effect";
 import { describe, expect, it } from "vitest";
 import { ALL_FACETS } from "../../constants/big-five";
+import {
+	AnalyzerError,
+	InvalidFacetNameError,
+	MalformedEvidenceError,
+} from "../../errors/http.errors";
 import type { FacetEvidence } from "../../types/facet-evidence";
 import { AnalyzerRepository } from "../analyzer.repository";
 

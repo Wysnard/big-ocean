@@ -1,6 +1,6 @@
-import { DatabaseError } from "@workspace/contracts/errors";
 import { AssessmentMessageEntity } from "@workspace/domain/entities/message.entity";
 import { Context, Effect } from "effect";
+import { DatabaseError } from "../errors/http.errors";
 
 /**
  * Message Repository Service Tag
