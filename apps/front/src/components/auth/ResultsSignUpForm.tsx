@@ -1,5 +1,4 @@
 import { useForm } from "@tanstack/react-form";
-import { Button } from "@workspace/ui/components/button";
 import { Schema as S } from "effect";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -85,7 +84,10 @@ export function ResultsSignUpForm({
 	return (
 		<div className="mx-auto max-w-md">
 			<h1 className="font-heading text-2xl font-semibold text-foreground sm:text-3xl">
-				Create your account
+				Create your{" "}
+				<span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+					account
+				</span>
 			</h1>
 			<p className="mt-2 text-sm text-muted-foreground">
 				Save this assessment to your account and reveal your full profile instantly.
@@ -192,21 +194,25 @@ export function ResultsSignUpForm({
 					selector={(state) => [state.isSubmitting]}
 					// biome-ignore lint/correctness/noChildrenProp: TanStack Form uses render props pattern
 					children={([isSubmitting]) => (
-						<Button
+						<button
 							type="submit"
 							data-testid="auth-gate-signup-submit"
-							className="min-h-11 w-full font-heading"
 							disabled={isSubmitting}
+							className="mt-3 min-h-[52px] w-full rounded-xl bg-foreground font-heading text-base font-bold tracking-tight text-background transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-primary hover:shadow-lg hover:-translate-y-px active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
 						>
-							{isSubmitting && <Loader2 className="mr-2 h-4 w-4 motion-safe:animate-spin" />}
+							{isSubmitting && <Loader2 className="mr-2 inline h-4 w-4 motion-safe:animate-spin" />}
 							Create Account and Reveal Results
-						</Button>
+						</button>
 					)}
 				/>
 
-				<Button type="button" variant="ghost" className="min-h-11 w-full" onClick={onSwitchToSignIn}>
+				<button
+					type="button"
+					onClick={onSwitchToSignIn}
+					className="min-h-11 w-full rounded-xl bg-transparent text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
+				>
 					Already have an account? Sign In
-				</Button>
+				</button>
 			</form>
 		</div>
 	);

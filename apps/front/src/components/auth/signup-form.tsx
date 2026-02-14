@@ -2,12 +2,15 @@
  * Signup Form Component
  *
  * Email/password registration with Better Auth.
+ * Styled with psychedelic brand identity tokens.
  */
 
 import { useNavigate } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../hooks/use-auth";
 import { buildAuthPageHref } from "../../lib/auth-session-linking";
+import { OceanShapeSet } from "../ocean-shapes";
 
 interface SignupFormProps {
 	anonymousSessionId?: string;
@@ -23,6 +26,7 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 	const [confirmPassword, setConfirmPassword] = useState("");
 	const [error, setError] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
+	const errorId = "signup-form-error";
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -66,95 +70,150 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto p-6">
-			<h2 className="text-2xl font-bold mb-6">Create Account</h2>
-
-			{error && (
-				<div className="bg-red-50 text-red-700 p-3 rounded border border-red-200">{error}</div>
-			)}
-
-			<div>
-				<label htmlFor="name" className="block text-sm font-medium mb-1">
-					Name
-				</label>
-				<input
-					id="name"
-					type="text"
-					value={name}
-					onChange={(e) => setName(e.target.value)}
-					className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-					placeholder="Your name"
+		<div className="relative mx-auto max-w-md overflow-hidden rounded-3xl bg-card p-8 shadow-lg sm:p-10">
+			{/* Corner geometric decorations */}
+			<div className="pointer-events-none absolute -right-2.5 -top-2.5" aria-hidden="true">
+				<div className="absolute right-4 top-4 h-11 w-11 rounded-full bg-trait-openness opacity-10" />
+				<div
+					className="absolute right-13 top-1 h-0 w-0 opacity-8"
+					style={{
+						borderLeft: "12px solid transparent",
+						borderRight: "12px solid transparent",
+						borderBottom: "20px solid var(--trait-agreeableness)",
+					}}
 				/>
 			</div>
 
-			<div>
-				<label htmlFor="email" className="block text-sm font-medium mb-1">
-					Email
-				</label>
-				<input
-					id="email"
-					type="email"
-					value={email}
-					onChange={(e) => setEmail(e.target.value)}
-					required
-					className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-					placeholder="you@example.com"
-				/>
+			{/* Brand mark */}
+			<div className="mb-5 flex items-center gap-1">
+				<span className="font-heading text-lg font-bold tracking-tight text-foreground">big-</span>
+				<OceanShapeSet size={12} />
 			</div>
 
-			<div>
-				<label htmlFor="password" className="block text-sm font-medium mb-1">
-					Password
-				</label>
-				<input
-					id="password"
-					type="password"
-					value={password}
-					onChange={(e) => setPassword(e.target.value)}
-					required
-					minLength={12}
-					className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-					placeholder="At least 12 characters"
-				/>
-				<p className="text-xs text-gray-500 mt-1">Minimum 12 characters required (NIST 2025)</p>
-			</div>
-
-			<div>
-				<label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
-					Confirm Password
-				</label>
-				<input
-					id="confirmPassword"
-					type="password"
-					value={confirmPassword}
-					onChange={(e) => setConfirmPassword(e.target.value)}
-					required
-					minLength={12}
-					className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-					placeholder="Confirm password"
-				/>
-			</div>
-
-			<button
-				type="submit"
-				disabled={isLoading}
-				className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-			>
-				{isLoading ? "Creating account..." : "Sign Up"}
-			</button>
-
-			<p className="text-sm text-center text-gray-600">
-				Already have an account?{" "}
-				<a
-					href={buildAuthPageHref("/login", {
-						sessionId: anonymousSessionId,
-						redirectTo,
-					})}
-					className="text-blue-600 hover:underline"
-				>
-					Sign in
-				</a>
+			{/* Heading with gradient accent */}
+			<h2 className="font-heading text-3xl font-bold tracking-tight text-foreground">
+				Start your{" "}
+				<span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+					discovery
+				</span>
+			</h2>
+			<p className="mt-2 mb-6 text-sm text-muted-foreground">
+				Create an account to unlock your personality profile.
 			</p>
-		</form>
+
+			<form onSubmit={handleSubmit} className="space-y-4">
+				{error && (
+					<p
+						id={errorId}
+						role="alert"
+						className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+					>
+						{error}
+					</p>
+				)}
+
+				<div>
+					<label htmlFor="signup-name" className="mb-1 block text-sm font-medium text-foreground">
+						Name
+					</label>
+					<input
+						id="signup-name"
+						type="text"
+						value={name}
+						onChange={(e) => setName(e.target.value)}
+						required
+						autoComplete="name"
+						className="min-h-11 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+						placeholder="Your name"
+						aria-invalid={!!error}
+						aria-describedby={error ? errorId : undefined}
+					/>
+				</div>
+
+				<div>
+					<label htmlFor="signup-email" className="mb-1 block text-sm font-medium text-foreground">
+						Email
+					</label>
+					<input
+						id="signup-email"
+						type="email"
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
+						required
+						autoComplete="email"
+						className="min-h-11 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+						placeholder="you@example.com"
+						aria-invalid={!!error}
+						aria-describedby={error ? errorId : undefined}
+					/>
+				</div>
+
+				<div>
+					<label htmlFor="signup-password" className="mb-1 block text-sm font-medium text-foreground">
+						Password
+					</label>
+					<input
+						id="signup-password"
+						type="password"
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
+						required
+						minLength={12}
+						autoComplete="new-password"
+						className="min-h-11 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+						placeholder="At least 12 characters"
+						aria-invalid={!!error}
+						aria-describedby={error ? errorId : "signup-password-help"}
+					/>
+					<p id="signup-password-help" className="mt-1 text-xs text-muted-foreground">
+						Minimum 12 characters
+					</p>
+				</div>
+
+				<div>
+					<label
+						htmlFor="signup-confirm-password"
+						className="mb-1 block text-sm font-medium text-foreground"
+					>
+						Confirm Password
+					</label>
+					<input
+						id="signup-confirm-password"
+						type="password"
+						value={confirmPassword}
+						onChange={(e) => setConfirmPassword(e.target.value)}
+						required
+						minLength={12}
+						autoComplete="new-password"
+						className="min-h-11 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+						placeholder="Confirm password"
+						aria-invalid={!!error}
+						aria-describedby={error ? errorId : undefined}
+					/>
+				</div>
+
+				<button
+					type="submit"
+					disabled={isLoading}
+					className="mt-3 min-h-[52px] w-full rounded-xl bg-foreground font-heading text-base font-bold tracking-tight text-background transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-primary hover:shadow-lg hover:-translate-y-px active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
+				>
+					{isLoading && <Loader2 className="mr-2 inline h-4 w-4 motion-safe:animate-spin" />}
+					{isLoading ? "Creating account..." : "Create Account"}
+				</button>
+
+				<button
+					type="button"
+					onClick={() => {
+						window.location.href = buildAuthPageHref("/login", {
+							sessionId: anonymousSessionId,
+							redirectTo,
+						});
+					}}
+					className="min-h-11 w-full rounded-xl bg-transparent text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
+				>
+					Already exploring? Sign in
+				</button>
+			</form>
+		</div>
 	);
 }
