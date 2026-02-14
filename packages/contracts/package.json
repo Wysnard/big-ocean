@@ -17,6 +17,7 @@
     "./schemas": "./src/schemas.ts"
   },
   "dependencies": {
+    "@workspace/domain": "workspace:*",
     "effect": "catalog:",
     "@effect/rpc": "catalog:",
     "@effect/schema": "catalog:"

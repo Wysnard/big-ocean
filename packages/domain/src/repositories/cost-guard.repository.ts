@@ -5,8 +5,8 @@
  * Follows official Effect pattern from https://effect.website/docs/requirements-management/services/
  */
 
-import type { RateLimitExceeded } from "@workspace/contracts";
 import { Context, Effect } from "effect";
+import type { RateLimitExceeded } from "../errors/http.errors";
 import type { RedisOperationError } from "./redis.repository";
 
 /**

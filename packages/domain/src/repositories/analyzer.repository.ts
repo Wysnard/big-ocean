@@ -1,5 +1,5 @@
-import type { AnalyzerError, MalformedEvidenceError } from "@workspace/contracts";
 import { Context, Effect } from "effect";
+import type { AnalyzerError, MalformedEvidenceError } from "../errors/http.errors";
 import type { FacetEvidence } from "../types/facet-evidence";
 
 /**

@@ -1,4 +1,4 @@
-import { TEASER_TRAIT_LETTERS } from "@workspace/domain";
+import { type OceanCode5, OceanCode5Schema, TEASER_TRAIT_LETTERS } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
 import { Lock } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -17,15 +17,17 @@ type GateMode = "teaser" | "signup" | "signin";
 
 const TEASER_ARCHETYPE_MASK = "The ••••••••••";
 
-function getTeaserOceanCode(sessionId: string): string {
+function getTeaserOceanCode(sessionId: string): OceanCode5 {
 	const hashSeed = sessionId
 		.split("")
 		.reduce((acc, char, index) => acc + char.charCodeAt(0) * (index + 1), 0);
 
-	return TEASER_TRAIT_LETTERS.map((letters, index) => {
+	const code = TEASER_TRAIT_LETTERS.map((letters, index) => {
 		const value = (hashSeed + index * 7) % letters.length;
 		return letters[value];
 	}).join("");
+
+	return OceanCode5Schema.make(code);
 }
 
 export function ResultsAuthGate({

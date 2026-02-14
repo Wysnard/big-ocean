@@ -26,5 +26,5 @@ export * from "./http/groups/profile";
 export { ProfileGroup } from "./http/groups/profile";
 
 // Shared Schemas & Types
-export * from "./schemas";
 export * from "./schemas/evidence";
+export * from "./schemas/ocean-code";

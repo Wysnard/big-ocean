@@ -1,11 +1,12 @@
 import { render, screen } from "@testing-library/react";
+import { OceanCode4Schema, OceanCode5Schema } from "@workspace/domain";
 import { describe, expect, it } from "vitest";
 import { ArchetypeCard } from "./ArchetypeCard";
 
 const defaultProps = {
 	archetypeName: "The Catalyst",
-	oceanCode4: "HHHH",
-	oceanCode5: "HHHHH",
+	oceanCode4: OceanCode4Schema.make("ODEW"),
+	oceanCode5: OceanCode5Schema.make("ODEWR"),
 	description: "A dynamic force who combines curiosity with execution.",
 	color: "#6B5CE7",
 	isCurated: true,
@@ -20,8 +21,8 @@ describe("ArchetypeCard", () => {
 
 	it("renders OCEAN codes", () => {
 		render(<ArchetypeCard {...defaultProps} />);
-		expect(screen.getByTestId("ocean-code-4")).toHaveTextContent("HHHH");
-		expect(screen.getByTestId("ocean-code-5")).toHaveTextContent("HHHHH");
+		expect(screen.getByTestId("ocean-code-4")).toHaveTextContent("ODEW");
+		expect(screen.getByTestId("ocean-code-5")).toHaveTextContent("ODEWR");
 	});
 
 	it("renders description text", () => {

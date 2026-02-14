@@ -2,15 +2,6 @@
  * Domain Package - Core business types and errors
  */
 
-// Convenience re-exports of contract errors
-export {
-	AnalyzerError,
-	DatabaseError,
-	InvalidFacetNameError,
-	MalformedEvidenceError,
-	RateLimitExceeded,
-	SessionNotFound,
-} from "@workspace/contracts";
 // Configuration service interface (implementation in @workspace/infrastructure)
 export { AppConfig, type AppConfigService } from "./config/index";
 // Archetype constants (Story 3.2)
@@ -41,6 +32,24 @@ export {
 	EvidenceValidationError,
 	FacetEvidencePersistenceError,
 } from "./errors/evidence.errors";
+// HTTP API errors (canonical definitions)
+export {
+	AgentInvocationError,
+	AnalyzerError,
+	CostLimitExceeded,
+	DatabaseError,
+	InvalidCredentials,
+	InvalidFacetNameError,
+	MalformedEvidenceError,
+	ProfileError,
+	ProfileNotFound,
+	ProfilePrivate,
+	RateLimitExceeded,
+	SessionExpired,
+	SessionNotFound,
+	Unauthorized,
+	UserAlreadyExists,
+} from "./errors/http.errors";
 export { AnalyzerRepository } from "./repositories/analyzer.repository";
 export { AssessmentMessageRepository } from "./repositories/assessment-message.repository";
 // Repository interfaces (ports in hexagonal architecture)
@@ -96,6 +105,8 @@ export {
 	validateAnalyzerResponse,
 	validateNerinResponse,
 } from "./schemas/agent-schemas";
+// OCEAN code branded schemas (canonical definitions)
+export { OceanCode4Schema, OceanCode5Schema } from "./schemas/ocean-code";
 // Confidence calculation service
 export {
 	calculateTraitConfidence,

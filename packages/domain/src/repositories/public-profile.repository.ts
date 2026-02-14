@@ -11,8 +11,8 @@
  * @see packages/infrastructure/src/repositories/public-profile.drizzle.repository.ts
  */
 
-import { DatabaseError, ProfileError, ProfileNotFound } from "@workspace/contracts/errors";
 import { Context, Effect } from "effect";
+import { DatabaseError, ProfileError, ProfileNotFound } from "../errors/http.errors";
 
 export interface CreatePublicProfileInput {
 	readonly sessionId: string;
