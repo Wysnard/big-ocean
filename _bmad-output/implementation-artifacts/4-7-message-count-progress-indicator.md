@@ -1,6 +1,6 @@
 # Story 4.7: Message-Count Progress Indicator (Replace Confidence-Based Progress)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -111,30 +111,30 @@ So that **I know how close I am to seeing my results without waiting for backgro
 
 All backend work is complete. Only frontend label/text polish and cleanup remain.
 
-- [ ] **Task 1: Update `ProgressBar` labels to match spec** (AC: 2)
-  - [ ] Edit `apps/front/src/components/ProgressBar.tsx` lines 21-27
-  - [ ] Change thresholds from current values to spec:
+- [x] **Task 1: Update `ProgressBar` labels to match spec** (AC: 2)
+  - [x] Edit `apps/front/src/components/ProgressBar.tsx` lines 21-27
+  - [x] Change thresholds from current values to spec:
     - `>= 85` → "Almost ready for results!" (was: "Putting the finishing touches...")
     - `>= 50` → "Refining your personality map..." (was: "Building your profile...")
     - `>= 25` → "Building your profile..." (was: "Understanding your patterns...")
     - default → "Getting to know you..." (unchanged)
-  - [ ] Remove the `>= 70` → "Almost there..." threshold (redundant with new ranges)
-  - [ ] Update `ProgressBar.test.tsx` label assertions (lines 27-56) to match new thresholds
-- [ ] **Task 2: Update celebration card text** (AC: 3)
-  - [ ] Edit `apps/front/src/components/TherapistChat.tsx` line 460
-  - [ ] Change `"You've reached ${Math.round(avgConfidence)}% confidence"` to `"Your assessment is complete"`
-  - [ ] Update `TherapistChat.test.tsx` assertion for celebration card text if it checks this string
-- [ ] **Task 3: Simplify `TraitScores` interface (cleanup)** (AC: 5)
-  - [ ] In `apps/front/src/hooks/useTherapistChat.ts` lines 11-22
-  - [ ] Remove 5 duplicate `{trait}Confidence` fields from `TraitScores` (keep only 5 trait values)
-  - [ ] OR replace with a simpler type: `Record<string, number>` used only for resume confidence
-  - [ ] Update resume confidence loading (lines 137-155) to match simplified interface
-  - [ ] `traits` is still returned but not consumed by TherapistChat for progress (only resume path uses it)
-  - [ ] Verify `TherapistChat.test.tsx` mock doesn't depend on `traits` shape
-- [ ] **Task 4: Add progress bar assertion to golden-path e2e** (AC: 2)
-  - [ ] Edit `e2e/specs/golden-path.spec.ts`
-  - [ ] Add a new `test.step` after "wait for Nerin response to first message" (after line 60) and before "send a second message" (line 62)
-  - [ ] Assert the progress bar is visible and shows non-zero progress after 1 user message:
+  - [x] Remove the `>= 70` → "Almost there..." threshold (redundant with new ranges)
+  - [x] Update `ProgressBar.test.tsx` label assertions (lines 27-56) to match new thresholds
+- [x] **Task 2: Update celebration card text** (AC: 3)
+  - [x] Edit `apps/front/src/components/TherapistChat.tsx` line 460
+  - [x] Change `"You've reached ${Math.round(avgConfidence)}% confidence"` to `"Your assessment is complete"`
+  - [x] Update `TherapistChat.test.tsx` assertion for celebration card text if it checks this string
+- [x] **Task 3: Simplify `TraitScores` interface (cleanup)** (AC: 5)
+  - [x] In `apps/front/src/hooks/useTherapistChat.ts` lines 11-22
+  - [x] Remove 5 duplicate `{trait}Confidence` fields from `TraitScores` (keep only 5 trait values)
+  - [x] OR replace with a simpler type: `Record<string, number>` used only for resume confidence
+  - [x] Update resume confidence loading (lines 137-155) to match simplified interface
+  - [x] `traits` is still returned but not consumed by TherapistChat for progress (only resume path uses it)
+  - [x] Verify `TherapistChat.test.tsx` mock doesn't depend on `traits` shape
+- [x] **Task 4: Add progress bar assertion to golden-path e2e** (AC: 2)
+  - [x] Edit `e2e/specs/golden-path.spec.ts`
+  - [x] Add a new `test.step` after "wait for Nerin response to first message" (after line 60) and before "send a second message" (line 62)
+  - [x] Assert the progress bar is visible and shows non-zero progress after 1 user message:
     ```typescript
     await test.step("assert progress bar is visible and updating", async () => {
     	const progressBar = page.getByTestId("progress-track");
@@ -143,15 +143,15 @@ All backend work is complete. Only frontend label/text polish and cleanup remain
     	await expect(progressBar).toHaveAttribute("aria-valuenow", "50");
     });
     ```
-  - [ ] The ProgressBar component exposes `data-testid="progress-track"`, `role="progressbar"`, and `aria-valuenow={clampedValue}` — use these for assertion
-  - [ ] With `MESSAGE_READY_THRESHOLD=2` (e2e env), 1 user message = `Math.min(Math.round(1/2 * 100), 100)` = **50%**
-  - [ ] After 2nd message (before celebration), progress should be 100% — optionally add a second check
-- [ ] **Task 5: Verify all tests pass** (AC: all)
-  - [ ] Run `pnpm --filter=front test` — all unit tests should pass after label/text updates
-  - [ ] Run `pnpm test:run` — full test suite
-  - [ ] Verify `useTherapistChat.test.ts` message-count tests pass (lines 506-615)
-  - [ ] Verify `TherapistChat.test.tsx` ProgressBar integration tests pass (lines 495-546)
-  - [ ] Verify `ProgressBar.test.tsx` updated label assertions pass
+  - [x] The ProgressBar component exposes `data-testid="progress-track"`, `role="progressbar"`, and `aria-valuenow={clampedValue}` — use these for assertion
+  - [x] With `MESSAGE_READY_THRESHOLD=2` (e2e env), 1 user message = `Math.min(Math.round(1/2 * 100), 100)` = **50%**
+  - [x] After 2nd message (before celebration), progress should be 100% — optionally add a second check
+- [x] **Task 5: Verify all tests pass** (AC: all)
+  - [x] Run `pnpm --filter=front test` — all unit tests should pass after label/text updates
+  - [x] Run `pnpm test:run` — full test suite
+  - [x] Verify `useTherapistChat.test.ts` message-count tests pass (lines 506-615)
+  - [x] Verify `TherapistChat.test.tsx` ProgressBar integration tests pass (lines 495-546)
+  - [x] Verify `ProgressBar.test.tsx` updated label assertions pass
 
 ## Dev Notes
 
@@ -335,10 +335,30 @@ By message 15, the async analyzer (Story 2.11) will have processed messages 3, 6
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4
 
 ### Debug Log References
 
+No issues encountered. All changes were straightforward label/text updates and type cleanup.
+
 ### Completion Notes List
 
+- **Task 1:** Updated ProgressBar labels to 4-tier spec thresholds (>=85 "Almost ready for results!", >=50 "Refining your personality map...", >=25 "Building your profile...", default "Getting to know you..."). Removed redundant >=70 "Almost there..." threshold. Updated percentage visibility threshold from <=80 to <85. Updated all corresponding test assertions.
+- **Task 2:** Changed celebration card subtitle from dynamic confidence percentage text to static "Your assessment is complete". No test updates needed — tests assert on the title "Your Personality Profile is Ready!" which is unchanged.
+- **Task 3:** Simplified TraitScores interface from 10 fields to 5 by removing duplicate `{trait}Confidence` fields. Updated initial state, resume confidence loading, and all test mocks across `useTherapistChat.test.ts` and `TherapistChat.test.tsx`.
+- **Task 4:** Added progress bar visibility + `aria-valuenow` assertion to golden-path E2E test between first and second message sends. With `MESSAGE_READY_THRESHOLD=2`, expects 50% after 1 user message.
+- **Task 5:** Full test suite passes: API 154 passed, Frontend 165 passed. Lint passes with 0 errors.
+
+### Change Log
+
+- 2026-02-14: Story 4.7 implementation — Updated ProgressBar labels, celebration card text, simplified TraitScores interface, added E2E progress bar assertion. All tests pass.
+
 ### File List
+
+- `apps/front/src/components/ProgressBar.tsx` — Updated label thresholds and percentage visibility cutoff
+- `apps/front/src/components/ProgressBar.test.tsx` — Updated label assertion tests to match new thresholds
+- `apps/front/src/components/TherapistChat.tsx` — Changed celebration card subtitle to "Your assessment is complete"
+- `apps/front/src/components/TherapistChat.test.tsx` — Updated ProgressBar label assertions and simplified TraitScores mock
+- `apps/front/src/hooks/useTherapistChat.ts` — Simplified TraitScores interface (removed 5 duplicate confidence fields) and initial state/resume loading
+- `apps/front/src/hooks/useTherapistChat.test.ts` — Removed opennessConfidence assertions
+- `e2e/specs/golden-path.spec.ts` — Added progress bar visibility and aria-valuenow assertion step

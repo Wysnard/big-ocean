@@ -25,11 +25,6 @@ let mockHookReturn = {
 		extraversion: 0,
 		agreeableness: 0,
 		neuroticism: 0,
-		opennessConfidence: 0,
-		conscientiousnessConfidence: 0,
-		extraversionConfidence: 0,
-		agreeablenessConfidence: 0,
-		neuroticismConfidence: 0,
 	},
 	isLoading: false,
 	isCompleted: false,
@@ -118,11 +113,6 @@ describe("TherapistChat", () => {
 				extraversion: 0,
 				agreeableness: 0,
 				neuroticism: 0,
-				opennessConfidence: 0,
-				conscientiousnessConfidence: 0,
-				extraversionConfidence: 0,
-				agreeablenessConfidence: 0,
-				neuroticismConfidence: 0,
 			},
 			isLoading: false,
 			isCompleted: false,
@@ -503,8 +493,8 @@ describe("TherapistChat", () => {
 
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-			// progressPercent=50 → "Building your profile..." label
-			expect(screen.getByText("Building your profile...")).toBeInTheDocument();
+			// progressPercent=50 → "Refining your personality map..." label
+			expect(screen.getByText("Refining your personality map...")).toBeInTheDocument();
 		});
 
 		it("hides ProgressBar when no messages exist", () => {
@@ -516,14 +506,14 @@ describe("TherapistChat", () => {
 			expect(screen.queryByText("Getting to know you...")).toBeNull();
 		});
 
-		it("updates ProgressBar label to 'Putting the finishing touches...' when progress >= 80%", () => {
+		it("updates ProgressBar label to 'Almost ready for results!' when progress >= 85%", () => {
 			mockHookReturn.messages = [{ id: "1", role: "user", content: "Hi", timestamp: new Date() }];
 			mockHookReturn.progressPercent = 85;
 
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-			// progressPercent=85 → "Putting the finishing touches..." label
-			expect(screen.getByText("Putting the finishing touches...")).toBeInTheDocument();
+			// progressPercent=85 → "Almost ready for results!" label
+			expect(screen.getByText("Almost ready for results!")).toBeInTheDocument();
 		});
 
 		it("hides ProgressBar when isResuming is true", () => {

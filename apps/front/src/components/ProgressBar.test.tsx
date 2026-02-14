@@ -30,36 +30,35 @@ describe("ProgressBar", () => {
 		expect(screen.getByText("Getting to know you...")).toBeInTheDocument();
 	});
 
-	it("shows 'Understanding your patterns...' for values 25-49%", () => {
+	it("shows 'Building your profile...' for values 25-49%", () => {
 		render(<ProgressBar value={30} />);
-
-		expect(screen.getByText("Understanding your patterns...")).toBeInTheDocument();
-	});
-
-	it("shows 'Building your profile...' for values 50-69%", () => {
-		render(<ProgressBar value={60} />);
 
 		expect(screen.getByText("Building your profile...")).toBeInTheDocument();
 	});
 
-	it("shows 'Almost there...' for values 70-79%", () => {
+	it("shows 'Refining your personality map...' for values 50-84%", () => {
+		render(<ProgressBar value={60} />);
+
+		expect(screen.getByText("Refining your personality map...")).toBeInTheDocument();
+	});
+
+	it("shows 'Refining your personality map...' for value 75%", () => {
 		render(<ProgressBar value={75} />);
 
-		expect(screen.getByText("Almost there...")).toBeInTheDocument();
+		expect(screen.getByText("Refining your personality map...")).toBeInTheDocument();
 	});
 
-	it("shows 'Putting the finishing touches...' for values >= 80%", () => {
+	it("shows 'Almost ready for results!' for values >= 85%", () => {
 		render(<ProgressBar value={85} />);
 
-		expect(screen.getByText("Putting the finishing touches...")).toBeInTheDocument();
+		expect(screen.getByText("Almost ready for results!")).toBeInTheDocument();
 	});
 
-	it("does not show percentage when >= 80% (Nerin message only)", () => {
+	it("does not show percentage when >= 85% (final message only)", () => {
 		render(<ProgressBar value={90} />);
 
-		expect(screen.getByText("Putting the finishing touches...")).toBeInTheDocument();
-		// showPercentage default is true, but label changes at this threshold
-		// Percentage should still show since showPercentageValue depends on showPercentage && clampedValue <= 80
+		expect(screen.getByText("Almost ready for results!")).toBeInTheDocument();
+		// showPercentage default is true, but percentage hidden when clampedValue > 80
 		expect(screen.queryByText("90%")).not.toBeInTheDocument();
 	});
 
