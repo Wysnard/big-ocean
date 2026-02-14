@@ -153,6 +153,7 @@ export { getNextDayMidnightUTC, getUTCDateKey } from "./utils/date.utils";
 // Utility functions
 export {
 	aggregateFacetScores,
+	buildSystemPrompt,
 	calculateConfidenceFromFacetScores,
 	calculateOverallConfidence,
 	createInitialFacetScoresMap,

@@ -454,3 +454,29 @@ So that **scoring formula changes are instant code deploys with zero data migrat
 - Architecture/docs updated to reflect evidence-sourced scoring model
 
 ---
+
+## Story 2.10: Nerin Conversational Empathy Patterns (BACKLOG)
+
+**Status:** backlog — to be fleshed out via create-story workflow
+
+**Origin:** Party Mode brainstorm (2026-02-13) during Story 7-10 review. Identified as backend scope, outside Story 7-10's "zero backend changes" constraint.
+
+As a **User in conversation with Nerin**,
+I want **Nerin to actively appreciate my honesty, reframe my self-descriptions positively, and reconcile apparent contradictions in my personality**,
+So that **I feel genuinely understood and seen — not just assessed — which makes me share more openly and produces richer personality insights**.
+
+**Key Behaviors to Codify in Nerin's Agent Prompt:**
+
+1. **Appreciation & validation** — Nerin actively acknowledges vulnerability and honesty with varied phrases (e.g., "That's really honest of you", "Not everyone has that level of self-awareness")
+
+2. **Positive reframing** — Nerin reflects back user statements with clarity and a more generous interpretation without contradicting their reality (e.g., "I'm indecisive" → "You weigh options carefully and consider multiple perspectives")
+
+3. **Contradiction reconciliation** — When Nerin detects conflicting trait signals across the conversation, it finds the coherent deeper truth instead of ignoring the contradiction (e.g., organized at work but messy at home → "You're not unorganized — you value your time and effort to organize what matters to you, not to others")
+
+4. **Two-paragraph response structure** — Every response follows a consistent format: Paragraph 1 demonstrates understanding using empathy patterns (acknowledge/reframe/reconcile), then 2 line breaks (blank line) for visual separation, then Paragraph 2 asks a natural follow-up question. This ensures conversational quality and forward momentum.
+
+**Scope:** Backend-only — Nerin agent system prompt in LangGraph orchestrator. No API contract, schema, or frontend changes.
+
+**Dependencies:** Story 2-2 (Nerin Agent Setup) — extends the existing agent prompt.
+
+---
