@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
 import {
 	DropdownMenu,
@@ -11,6 +11,7 @@ import {
 } from "@workspace/ui/components/dropdown-menu";
 import { LayoutDashboard, LogOut } from "lucide-react";
 import { useAuth } from "../hooks/use-auth";
+import { getActiveAssessmentSessionId } from "../lib/auth-session-linking";
 
 function UserInitial({ name }: { name: string }) {
 	const initial = name.charAt(0).toUpperCase();
@@ -23,6 +24,23 @@ function UserInitial({ name }: { name: string }) {
 
 export function UserNav() {
 	const { user, isAuthenticated, isPending, signOut } = useAuth();
+	const authLinkSearch = useRouterState({
+		select: (state) => {
+			const sessionId = getActiveAssessmentSessionId(
+				state.location.pathname,
+				state.location.search as Record<string, unknown>,
+			);
+
+			if (!sessionId) {
+				return undefined;
+			}
+
+			return {
+				sessionId,
+				redirectTo: state.location.pathname,
+			};
+		},
+	});
 
 	if (isPending) {
 		return (
@@ -36,10 +54,26 @@ export function UserNav() {
 		return (
 			<div data-slot="user-nav" className="flex items-center gap-2">
 				<Button variant="ghost" size="sm" asChild>
-					<Link to="/login">Sign In</Link>
+					<Link
+						to="/login"
+						search={{
+							sessionId: authLinkSearch?.sessionId,
+							redirectTo: authLinkSearch?.redirectTo,
+						}}
+					>
+						Sign In
+					</Link>
 				</Button>
 				<Button size="sm" asChild>
-					<Link to="/signup">Sign Up</Link>
+					<Link
+						to="/signup"
+						search={{
+							sessionId: authLinkSearch?.sessionId,
+							redirectTo: authLinkSearch?.redirectTo,
+						}}
+					>
+						Sign Up
+					</Link>
 				</Button>
 			</div>
 		);

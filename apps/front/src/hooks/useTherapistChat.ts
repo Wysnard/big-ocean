@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useResumeSession, useSendMessage } from "./use-assessment";
+import { AssessmentApiError, useResumeSession, useSendMessage } from "./use-assessment";
 
 interface Message {
 	id: string;
@@ -29,6 +29,29 @@ function parseApiError(error: unknown): {
 	message: string;
 	type: "session" | "budget" | "rate-limit" | "network" | "generic";
 } {
+	if (error instanceof AssessmentApiError) {
+		if (error.status === 404) {
+			return { message: "Session not found. Starting a new session...", type: "session" };
+		}
+		if (error.status === 503) {
+			return {
+				message: "Assessment paused — daily budget reached. You can resume tomorrow.",
+				type: "budget",
+			};
+		}
+		if (error.status === 429) {
+			return {
+				message: "You've already started an assessment today. Come back tomorrow!",
+				type: "rate-limit",
+			};
+		}
+		if (error.status >= 500) {
+			return { message: "Connection lost. Check your internet and try again.", type: "network" };
+		}
+
+		return { message: error.message, type: "generic" };
+	}
+
 	if (error instanceof Error) {
 		const msg = error.message;
 
@@ -93,6 +116,11 @@ export function useTherapistChat(sessionId: string) {
 		isLoading: isResuming,
 		error: resumeError,
 	} = useResumeSession(sessionId);
+	const isResumeSessionNotFound =
+		resumeError instanceof AssessmentApiError
+			? resumeError.status === 404
+			: resumeError instanceof Error &&
+				(resumeError.message.includes("404") || resumeError.message.includes("SessionNotFound"));
 
 	// Initialize from resume data on mount
 	useEffect(() => {
@@ -269,6 +297,7 @@ export function useTherapistChat(sessionId: string) {
 		sendMessage,
 		isResuming,
 		resumeError,
+		isResumeSessionNotFound,
 		isConfidenceReady,
 		hasShownCelebration,
 		setHasShownCelebration,

@@ -55,7 +55,9 @@ export type FacetPrecisionEntity = FacetConfidenceEntity;
 
 export const AssessmentSessionEntitySchema = Schema.Struct({
 	id: Schema.UUID,
-	userId: Schema.NullOr(Schema.UUID),
+	// Better Auth uses non-UUID string IDs by default (e.g. "On7pyu8...")
+	// so assessment session ownership must accept nullable string IDs.
+	userId: Schema.NullOr(Schema.String),
 	createdAt: Schema.DateFromSelf,
 	updatedAt: Schema.DateFromSelf,
 	status: Schema.Literal("active", "paused", "completed", "archived"),

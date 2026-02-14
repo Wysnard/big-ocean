@@ -7,6 +7,55 @@
 import * as S from "@effect/schema/Schema";
 
 /**
+ * Email validation schema
+ * Validates email format using simple regex pattern
+ */
+export const EmailSchema = S.String.pipe(
+	S.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
+	S.annotations({
+		title: "Email",
+		description: "Valid email address",
+		message: () => "Please enter a valid email address.",
+	}),
+);
+
+/**
+ * Password validation schema
+ * Requires minimum 12 characters (NIST 2025 standard)
+ */
+export const PasswordSchema = S.String.pipe(
+	S.minLength(12),
+	S.annotations({
+		title: "Password",
+		description: "Password with at least 12 characters",
+		message: () => "Password must be at least 12 characters.",
+	}),
+);
+
+/**
+ * Sign-up form validation schema
+ */
+export const SignUpFormSchema = S.Struct({
+	email: EmailSchema,
+	password: PasswordSchema,
+});
+
+/**
+ * Sign-in form validation schema
+ */
+export const SignInFormSchema = S.Struct({
+	email: EmailSchema,
+	password: S.String.pipe(
+		S.minLength(1),
+		S.annotations({
+			title: "Password",
+			description: "Your password",
+			message: () => "Please enter your password.",
+		}),
+	),
+});
+
+/**
  * Message schema for conversation history
  */
 export const MessageSchema = S.Struct({

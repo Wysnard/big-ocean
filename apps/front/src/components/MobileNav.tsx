@@ -1,4 +1,4 @@
-import { Link, useRouter } from "@tanstack/react-router";
+import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
 import {
 	Sheet,
@@ -12,6 +12,7 @@ import { type UserTheme, useTheme } from "@workspace/ui/hooks/use-theme";
 import { Home, LayoutDashboard, LogOut, Menu, Monitor, Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/use-auth";
+import { getActiveAssessmentSessionId } from "../lib/auth-session-linking";
 import { OceanShapeSet } from "./ocean-shapes/OceanShapeSet";
 
 export function MobileNav() {
@@ -21,6 +22,23 @@ export function MobileNav() {
 	const { user, isAuthenticated, signOut } = useAuth();
 	const { setTheme, userTheme } = useTheme();
 	const router = useRouter();
+	const authLinkSearch = useRouterState({
+		select: (state) => {
+			// Type-safe extraction of search params - TanStack Router provides these as Record<string, unknown>
+			// which matches the signature expected by getActiveAssessmentSessionId
+			const search: Record<string, unknown> = state.location.search;
+			const sessionId = getActiveAssessmentSessionId(state.location.pathname, search);
+
+			if (!sessionId) {
+				return undefined;
+			}
+
+			return {
+				sessionId,
+				redirectTo: state.location.pathname,
+			};
+		},
+	});
 
 	// Close sheet on navigation
 	useEffect(() => {
@@ -125,12 +143,28 @@ export function MobileNav() {
 						<div className="flex flex-col gap-2">
 							<SheetClose asChild>
 								<Button variant="ghost" className="w-full justify-start min-h-11" asChild>
-									<Link to="/login">Sign In</Link>
+									<Link
+										to="/login"
+										search={{
+											sessionId: authLinkSearch?.sessionId,
+											redirectTo: authLinkSearch?.redirectTo,
+										}}
+									>
+										Sign In
+									</Link>
 								</Button>
 							</SheetClose>
 							<SheetClose asChild>
 								<Button className="w-full min-h-11" asChild>
-									<Link to="/signup">Sign Up</Link>
+									<Link
+										to="/signup"
+										search={{
+											sessionId: authLinkSearch?.sessionId,
+											redirectTo: authLinkSearch?.redirectTo,
+										}}
+									>
+										Sign Up
+									</Link>
 								</Button>
 							</SheetClose>
 						</div>

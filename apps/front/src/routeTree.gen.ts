@@ -8,221 +8,242 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as ResultsRouteImport } from './routes/results'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ChatIndexRouteImport } from './routes/chat/index'
-import { Route as ResultsSessionIdRouteImport } from './routes/results/$sessionId'
-import { Route as ProfilePublicProfileIdRouteImport } from './routes/profile.$publicProfileId'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as R404RouteImport } from "./routes/404";
+import { Route as ChatIndexRouteImport } from "./routes/chat/index";
+import { Route as DashboardRouteImport } from "./routes/dashboard";
+import { Route as IndexRouteImport } from "./routes/index";
+import { Route as LoginRouteImport } from "./routes/login";
+import { Route as ProfilePublicProfileIdRouteImport } from "./routes/profile.$publicProfileId";
+import { Route as ResultsRouteImport } from "./routes/results";
+import { Route as ResultsSessionIdRouteImport } from "./routes/results/$sessionId";
+import { Route as SignupRouteImport } from "./routes/signup";
 
 const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/signup",
+	path: "/signup",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const ResultsRoute = ResultsRouteImport.update({
-  id: '/results',
-  path: '/results',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/results",
+	path: "/results",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/login",
+	path: "/login",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/dashboard",
+	path: "/dashboard",
+	getParentRoute: () => rootRouteImport,
+} as any);
+const R404Route = R404RouteImport.update({
+	id: "/404",
+	path: "/404",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/",
+	path: "/",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const ChatIndexRoute = ChatIndexRouteImport.update({
-  id: '/chat/',
-  path: '/chat/',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/chat/",
+	path: "/chat/",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const ResultsSessionIdRoute = ResultsSessionIdRouteImport.update({
-  id: '/$sessionId',
-  path: '/$sessionId',
-  getParentRoute: () => ResultsRoute,
-} as any)
+	id: "/$sessionId",
+	path: "/$sessionId",
+	getParentRoute: () => ResultsRoute,
+} as any);
 const ProfilePublicProfileIdRoute = ProfilePublicProfileIdRouteImport.update({
-  id: '/profile/$publicProfileId',
-  path: '/profile/$publicProfileId',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/profile/$publicProfileId",
+	path: "/profile/$publicProfileId",
+	getParentRoute: () => rootRouteImport,
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
-  '/results': typeof ResultsRouteWithChildren
-  '/signup': typeof SignupRoute
-  '/profile/$publicProfileId': typeof ProfilePublicProfileIdRoute
-  '/results/$sessionId': typeof ResultsSessionIdRoute
-  '/chat/': typeof ChatIndexRoute
+	"/": typeof IndexRoute;
+	"/404": typeof R404Route;
+	"/dashboard": typeof DashboardRoute;
+	"/login": typeof LoginRoute;
+	"/results": typeof ResultsRouteWithChildren;
+	"/signup": typeof SignupRoute;
+	"/profile/$publicProfileId": typeof ProfilePublicProfileIdRoute;
+	"/results/$sessionId": typeof ResultsSessionIdRoute;
+	"/chat/": typeof ChatIndexRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
-  '/results': typeof ResultsRouteWithChildren
-  '/signup': typeof SignupRoute
-  '/profile/$publicProfileId': typeof ProfilePublicProfileIdRoute
-  '/results/$sessionId': typeof ResultsSessionIdRoute
-  '/chat': typeof ChatIndexRoute
+	"/": typeof IndexRoute;
+	"/404": typeof R404Route;
+	"/dashboard": typeof DashboardRoute;
+	"/login": typeof LoginRoute;
+	"/results": typeof ResultsRouteWithChildren;
+	"/signup": typeof SignupRoute;
+	"/profile/$publicProfileId": typeof ProfilePublicProfileIdRoute;
+	"/results/$sessionId": typeof ResultsSessionIdRoute;
+	"/chat": typeof ChatIndexRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
-  '/results': typeof ResultsRouteWithChildren
-  '/signup': typeof SignupRoute
-  '/profile/$publicProfileId': typeof ProfilePublicProfileIdRoute
-  '/results/$sessionId': typeof ResultsSessionIdRoute
-  '/chat/': typeof ChatIndexRoute
+	__root__: typeof rootRouteImport;
+	"/": typeof IndexRoute;
+	"/404": typeof R404Route;
+	"/dashboard": typeof DashboardRoute;
+	"/login": typeof LoginRoute;
+	"/results": typeof ResultsRouteWithChildren;
+	"/signup": typeof SignupRoute;
+	"/profile/$publicProfileId": typeof ProfilePublicProfileIdRoute;
+	"/results/$sessionId": typeof ResultsSessionIdRoute;
+	"/chat/": typeof ChatIndexRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/dashboard'
-    | '/login'
-    | '/results'
-    | '/signup'
-    | '/profile/$publicProfileId'
-    | '/results/$sessionId'
-    | '/chat/'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/dashboard'
-    | '/login'
-    | '/results'
-    | '/signup'
-    | '/profile/$publicProfileId'
-    | '/results/$sessionId'
-    | '/chat'
-  id:
-    | '__root__'
-    | '/'
-    | '/dashboard'
-    | '/login'
-    | '/results'
-    | '/signup'
-    | '/profile/$publicProfileId'
-    | '/results/$sessionId'
-    | '/chat/'
-  fileRoutesById: FileRoutesById
+	fileRoutesByFullPath: FileRoutesByFullPath;
+	fullPaths:
+		| "/"
+		| "/404"
+		| "/dashboard"
+		| "/login"
+		| "/results"
+		| "/signup"
+		| "/profile/$publicProfileId"
+		| "/results/$sessionId"
+		| "/chat/";
+	fileRoutesByTo: FileRoutesByTo;
+	to:
+		| "/"
+		| "/404"
+		| "/dashboard"
+		| "/login"
+		| "/results"
+		| "/signup"
+		| "/profile/$publicProfileId"
+		| "/results/$sessionId"
+		| "/chat";
+	id:
+		| "__root__"
+		| "/"
+		| "/404"
+		| "/dashboard"
+		| "/login"
+		| "/results"
+		| "/signup"
+		| "/profile/$publicProfileId"
+		| "/results/$sessionId"
+		| "/chat/";
+	fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  DashboardRoute: typeof DashboardRoute
-  LoginRoute: typeof LoginRoute
-  ResultsRoute: typeof ResultsRouteWithChildren
-  SignupRoute: typeof SignupRoute
-  ProfilePublicProfileIdRoute: typeof ProfilePublicProfileIdRoute
-  ChatIndexRoute: typeof ChatIndexRoute
+	IndexRoute: typeof IndexRoute;
+	R404Route: typeof R404Route;
+	DashboardRoute: typeof DashboardRoute;
+	LoginRoute: typeof LoginRoute;
+	ResultsRoute: typeof ResultsRouteWithChildren;
+	SignupRoute: typeof SignupRoute;
+	ProfilePublicProfileIdRoute: typeof ProfilePublicProfileIdRoute;
+	ChatIndexRoute: typeof ChatIndexRoute;
 }
 
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/results': {
-      id: '/results'
-      path: '/results'
-      fullPath: '/results'
-      preLoaderRoute: typeof ResultsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/chat/': {
-      id: '/chat/'
-      path: '/chat'
-      fullPath: '/chat/'
-      preLoaderRoute: typeof ChatIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/results/$sessionId': {
-      id: '/results/$sessionId'
-      path: '/$sessionId'
-      fullPath: '/results/$sessionId'
-      preLoaderRoute: typeof ResultsSessionIdRouteImport
-      parentRoute: typeof ResultsRoute
-    }
-    '/profile/$publicProfileId': {
-      id: '/profile/$publicProfileId'
-      path: '/profile/$publicProfileId'
-      fullPath: '/profile/$publicProfileId'
-      preLoaderRoute: typeof ProfilePublicProfileIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-  }
+declare module "@tanstack/react-router" {
+	interface FileRoutesByPath {
+		"/signup": {
+			id: "/signup";
+			path: "/signup";
+			fullPath: "/signup";
+			preLoaderRoute: typeof SignupRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/results": {
+			id: "/results";
+			path: "/results";
+			fullPath: "/results";
+			preLoaderRoute: typeof ResultsRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/login": {
+			id: "/login";
+			path: "/login";
+			fullPath: "/login";
+			preLoaderRoute: typeof LoginRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/dashboard": {
+			id: "/dashboard";
+			path: "/dashboard";
+			fullPath: "/dashboard";
+			preLoaderRoute: typeof DashboardRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/404": {
+			id: "/404";
+			path: "/404";
+			fullPath: "/404";
+			preLoaderRoute: typeof R404RouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/": {
+			id: "/";
+			path: "/";
+			fullPath: "/";
+			preLoaderRoute: typeof IndexRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/chat/": {
+			id: "/chat/";
+			path: "/chat";
+			fullPath: "/chat/";
+			preLoaderRoute: typeof ChatIndexRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/results/$sessionId": {
+			id: "/results/$sessionId";
+			path: "/$sessionId";
+			fullPath: "/results/$sessionId";
+			preLoaderRoute: typeof ResultsSessionIdRouteImport;
+			parentRoute: typeof ResultsRoute;
+		};
+		"/profile/$publicProfileId": {
+			id: "/profile/$publicProfileId";
+			path: "/profile/$publicProfileId";
+			fullPath: "/profile/$publicProfileId";
+			preLoaderRoute: typeof ProfilePublicProfileIdRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+	}
 }
 
 interface ResultsRouteChildren {
-  ResultsSessionIdRoute: typeof ResultsSessionIdRoute
+	ResultsSessionIdRoute: typeof ResultsSessionIdRoute;
 }
 
 const ResultsRouteChildren: ResultsRouteChildren = {
-  ResultsSessionIdRoute: ResultsSessionIdRoute,
-}
+	ResultsSessionIdRoute: ResultsSessionIdRoute,
+};
 
-const ResultsRouteWithChildren =
-  ResultsRoute._addFileChildren(ResultsRouteChildren)
+const ResultsRouteWithChildren = ResultsRoute._addFileChildren(ResultsRouteChildren);
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  DashboardRoute: DashboardRoute,
-  LoginRoute: LoginRoute,
-  ResultsRoute: ResultsRouteWithChildren,
-  SignupRoute: SignupRoute,
-  ProfilePublicProfileIdRoute: ProfilePublicProfileIdRoute,
-  ChatIndexRoute: ChatIndexRoute,
-}
+	IndexRoute: IndexRoute,
+	R404Route: R404Route,
+	DashboardRoute: DashboardRoute,
+	LoginRoute: LoginRoute,
+	ResultsRoute: ResultsRouteWithChildren,
+	SignupRoute: SignupRoute,
+	ProfilePublicProfileIdRoute: ProfilePublicProfileIdRoute,
+	ChatIndexRoute: ChatIndexRoute,
+};
 export const routeTree = rootRouteImport
-  ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+	._addFileChildren(rootRouteChildren)
+	._addFileTypes<FileRouteTypes>();
 
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
+import type { createStart } from "@tanstack/react-start";
+import type { getRouter } from "./router.tsx";
+
+declare module "@tanstack/react-start" {
+	interface Register {
+		ssr: true;
+		router: Awaited<ReturnType<typeof getRouter>>;
+	}
 }

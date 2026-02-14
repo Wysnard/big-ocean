@@ -15,6 +15,16 @@ const { mockMutate, mockResumeSession } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/hooks/use-assessment", () => ({
+	AssessmentApiError: class AssessmentApiError extends Error {
+		status: number;
+		details: unknown;
+
+		constructor(status: number, message: string, details: unknown) {
+			super(message);
+			this.status = status;
+			this.details = details;
+		}
+	},
 	useSendMessage: () => ({
 		mutate: mockMutate,
 		isPending: false,

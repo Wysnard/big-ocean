@@ -17,7 +17,7 @@ import { AppConfig } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import bcrypt from "bcryptjs";
 import { betterAuth } from "better-auth";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull, or } from "drizzle-orm";
 import { drizzle as drizzleNodePg } from "drizzle-orm/node-postgres";
 import { Context, Effect, Layer, Redacted } from "effect";
 import pg from "pg";
@@ -68,6 +68,72 @@ export const BetterAuthLive = Layer.effect(
 
 		// Determine if using HTTPS for secure cookies
 		const isHttps = config.betterAuthUrl.startsWith("https");
+
+		const getAnonymousSessionId = (
+			context: { body?: unknown } | null | undefined,
+		): string | undefined => {
+			const body = context?.body;
+
+			if (typeof body !== "object" || body === null || !("anonymousSessionId" in body)) {
+				return undefined;
+			}
+
+			const anonymousSessionId = (body as Record<string, unknown>).anonymousSessionId;
+			return typeof anonymousSessionId === "string" ? anonymousSessionId : undefined;
+		};
+
+		const linkAnonymousAssessmentSession = async (
+			userId: string,
+			anonymousSessionId: string,
+			source: "signup" | "signin",
+		): Promise<void> => {
+			try {
+				await plainDb.transaction(async (tx) => {
+					// Allow first-time linking and idempotent relinking by the same user only.
+					const [linkedSession] = await tx
+						.update(authSchema.assessmentSession)
+						.set({ userId, updatedAt: new Date() })
+						.where(
+							and(
+								eq(authSchema.assessmentSession.id, anonymousSessionId),
+								or(
+									isNull(authSchema.assessmentSession.userId),
+									eq(authSchema.assessmentSession.userId, userId),
+								),
+							),
+						)
+						.returning({ id: authSchema.assessmentSession.id });
+
+					if (!linkedSession) {
+						logger.warn(
+							`Anonymous assessment session ${anonymousSessionId} not linked during ${source} (missing or owned by another user)`,
+						);
+						return;
+					}
+
+					// Backfill historical user-authored messages in that session.
+					await tx
+						.update(authSchema.assessmentMessage)
+						.set({ userId })
+						.where(
+							and(
+								eq(authSchema.assessmentMessage.sessionId, anonymousSessionId),
+								eq(authSchema.assessmentMessage.role, "user"),
+								isNull(authSchema.assessmentMessage.userId),
+							),
+						);
+				});
+
+				logger.info(
+					`Linked anonymous assessment session ${anonymousSessionId} to user ${userId} during ${source}`,
+				);
+			} catch (error) {
+				const errorMessage = error instanceof Error ? error.message : String(error);
+				logger.error(
+					`Failed to link anonymous assessment session ${anonymousSessionId} during ${source}: ${errorMessage}`,
+				);
+			}
+		};
 
 		// Create Better Auth with plain node-postgres drizzle instance
 		const auth = betterAuth({
@@ -129,27 +195,26 @@ export const BetterAuthLive = Layer.effect(
 						after: async (user, context) => {
 							logger.info(`User created: ${user.id} (${user.email})`);
 
-							// Link anonymous session to new user account
-							const body = context?.body;
-							const anonymousSessionId =
-								typeof body === "object" && body !== null && "anonymousSessionId" in body
-									? (body as Record<string, unknown>).anonymousSessionId
-									: undefined;
+							const anonymousSessionId = getAnonymousSessionId(context);
+							if (!anonymousSessionId) return;
 
-							if (typeof anonymousSessionId === "string") {
-								try {
-									// Use plain drizzle instance for session linking
-									await plainDb
-										.update(authSchema.session)
-										.set({ userId: user.id, updatedAt: new Date() })
-										.where(eq(authSchema.session.id, anonymousSessionId));
-
-									logger.info(`Linked anonymous session ${anonymousSessionId} to user ${user.id}`);
-								} catch (error) {
-									const errorMessage = error instanceof Error ? error.message : String(error);
-									logger.error(`Failed to link anonymous session: ${errorMessage}`);
-								}
+							await linkAnonymousAssessmentSession(user.id, anonymousSessionId, "signup");
+						},
+					},
+				},
+				session: {
+					create: {
+						after: async (session, context) => {
+							if (typeof context?.path === "string" && context.path.includes("sign-up")) {
+								return;
 							}
+
+							const anonymousSessionId = getAnonymousSessionId(context);
+							const userId = typeof session.userId === "string" ? session.userId : undefined;
+
+							if (!anonymousSessionId || !userId) return;
+
+							await linkAnonymousAssessmentSession(userId, anonymousSessionId, "signin");
 						},
 					},
 				},

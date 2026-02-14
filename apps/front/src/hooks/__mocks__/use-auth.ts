@@ -7,7 +7,7 @@ export const useAuth = fn(() => ({
 	isPending: false,
 	error: null,
 	signIn: {
-		email: fn(async (_email: string, _password: string) => {
+		email: fn(async (_email: string, _password: string, _sessionId?: string) => {
 			await new Promise((resolve) => setTimeout(resolve, 500));
 			return { user: { id: "1", email: _email } };
 		}).mockName("signIn.email"),
@@ -19,6 +19,9 @@ export const useAuth = fn(() => ({
 		}).mockName("signUp.email"),
 	},
 	signOut: fn(async () => {}).mockName("signOut"),
+	refreshSession: fn(async () => ({ user: { id: "1", email: "mock@example.com" } })).mockName(
+		"refreshSession",
+	),
 })).mockName("useAuth");
 
 export const useRequireAuth = fn(() => ({

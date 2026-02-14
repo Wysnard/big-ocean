@@ -14,12 +14,14 @@ import {
 	FacetEvidenceRepository,
 	initializeFacetConfidence,
 	LoggerRepository,
+	SessionNotFound,
 } from "@workspace/domain";
 import type { AssessmentMessageEntity } from "@workspace/domain/entities/message.entity";
 import { Effect } from "effect";
 
 export interface ResumeSessionInput {
 	readonly sessionId: string;
+	readonly authenticatedUserId?: string;
 }
 
 export interface ResumeSessionOutput {
@@ -48,7 +50,17 @@ export const resumeSession = (input: ResumeSessionInput) =>
 		const logger = yield* LoggerRepository;
 
 		// Get session (validates it exists)
-		yield* sessionRepo.getSession(input.sessionId);
+		const session = yield* sessionRepo.getSession(input.sessionId);
+
+		// Linked sessions are private to their owner.
+		if (session.userId != null && session.userId !== input.authenticatedUserId) {
+			return yield* Effect.fail(
+				new SessionNotFound({
+					sessionId: input.sessionId,
+					message: `Session '${input.sessionId}' not found`,
+				}),
+			);
+		}
 
 		// Get all messages
 		const messages = yield* messageRepo.getMessages(input.sessionId);

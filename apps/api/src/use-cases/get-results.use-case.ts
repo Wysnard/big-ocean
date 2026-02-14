@@ -21,12 +21,14 @@ import {
 	generateOceanCode,
 	LoggerRepository,
 	lookupArchetype,
+	SessionNotFound,
 	TRAIT_LETTER_MAP,
 } from "@workspace/domain";
 import { Effect } from "effect";
 
 export interface GetResultsInput {
 	readonly sessionId: string;
+	readonly authenticatedUserId?: string;
 }
 
 export interface TraitResult {
@@ -93,7 +95,17 @@ export const getResults = (input: GetResultsInput) =>
 		const logger = yield* LoggerRepository;
 
 		// 1. Validate session exists (throws SessionNotFound if missing)
-		yield* sessionRepo.getSession(input.sessionId);
+		const session = yield* sessionRepo.getSession(input.sessionId);
+
+		// Linked sessions are private to their owner.
+		if (session.userId != null && session.userId !== input.authenticatedUserId) {
+			return yield* Effect.fail(
+				new SessionNotFound({
+					sessionId: input.sessionId,
+					message: `Session '${input.sessionId}' not found`,
+				}),
+			);
+		}
 
 		// 2. Fetch evidence and compute scores on-demand
 		const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
