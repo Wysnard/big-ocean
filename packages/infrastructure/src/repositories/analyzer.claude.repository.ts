@@ -20,6 +20,7 @@
  */
 
 import { ChatAnthropic } from "@langchain/anthropic";
+import { AIMessage } from "@langchain/core/messages";
 import {
 	ALL_FACETS,
 	AnalyzerError,
@@ -183,7 +184,7 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 					});
 
 					// Extract token usage from raw AIMessage metadata
-					const usageMeta = invokeResult.raw?.usage_metadata;
+					const usageMeta = (invokeResult.raw as AIMessage)?.usage_metadata;
 					const analyzerTokens = {
 						input: usageMeta?.input_tokens ?? 0,
 						output: usageMeta?.output_tokens ?? 0,

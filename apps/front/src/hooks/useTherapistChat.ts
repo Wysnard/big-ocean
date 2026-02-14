@@ -244,32 +244,8 @@ export function useTherapistChat(sessionId: string) {
 							},
 						]);
 
-						// Update trait confidence from API response (values are 0-100 integers)
-						console.log("[BigOcean] Trait confidence updated", {
-							sessionId,
-							confidence: data.confidence,
-							avgConfidence: Math.round(
-								(data.confidence.openness +
-									data.confidence.conscientiousness +
-									data.confidence.extraversion +
-									data.confidence.agreeableness +
-									data.confidence.neuroticism) /
-									5,
-							),
-						});
-
-						setTraits({
-							openness: data.confidence.openness,
-							conscientiousness: data.confidence.conscientiousness,
-							extraversion: data.confidence.extraversion,
-							agreeableness: data.confidence.agreeableness,
-							neuroticism: data.confidence.neuroticism,
-							opennessConfidence: data.confidence.openness,
-							conscientiousnessConfidence: data.confidence.conscientiousness,
-							extraversionConfidence: data.confidence.extraversion,
-							agreeablenessConfidence: data.confidence.agreeableness,
-							neuroticismConfidence: data.confidence.neuroticism,
-						});
+						// Story 2.11: confidence no longer in send-message response.
+						// Traits are only updated from resume-session (which still returns confidence).
 
 						setIsLoading(false);
 					},
@@ -294,15 +270,14 @@ export function useTherapistChat(sessionId: string) {
 		}
 	}, [messages, sendMessage]);
 
-	// Calculate if confidence is ready (70%+ average)
-	const avgConfidence =
-		(traits.openness +
-			traits.conscientiousness +
-			traits.extraversion +
-			traits.agreeableness +
-			traits.neuroticism) /
-		5;
-	const isConfidenceReady = avgConfidence >= 70;
+	// Story 4.7: Message-count-based progress — threshold driven by backend config
+	const MESSAGE_READY_THRESHOLD = resumeData?.messageReadyThreshold ?? 15;
+	const userMessageCount = messages.filter((m) => m.role === "user").length;
+	const progressPercent = Math.min(
+		Math.round((userMessageCount / MESSAGE_READY_THRESHOLD) * 100),
+		100,
+	);
+	const isConfidenceReady = userMessageCount >= MESSAGE_READY_THRESHOLD;
 
 	return {
 		messages,
@@ -318,6 +293,8 @@ export function useTherapistChat(sessionId: string) {
 		resumeError,
 		isResumeSessionNotFound,
 		isConfidenceReady,
+		progressPercent,
+		messageReadyThreshold: MESSAGE_READY_THRESHOLD,
 		hasShownCelebration,
 		setHasShownCelebration,
 	};

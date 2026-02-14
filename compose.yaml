@@ -50,6 +50,7 @@ services:
       ANALYZER_MODEL_ID: ${ANALYZER_MODEL_ID:-claude-sonnet-4-20250514}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: http://localhost:4000
+      MESSAGE_READY_THRESHOLD: ${MESSAGE_READY_THRESHOLD:-15}
       NODE_ENV: development
       PORT: 4000
       HOST: 0.0.0.0

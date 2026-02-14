@@ -67,6 +67,9 @@ export interface AppConfigService {
 
 	/** Daily LLM cost limit in dollars (Story 2.5) */
 	readonly dailyCostLimit: number;
+
+	/** Number of user messages before assessment is considered ready (Story 4.7) */
+	readonly messageReadyThreshold: number;
 }
 
 /**

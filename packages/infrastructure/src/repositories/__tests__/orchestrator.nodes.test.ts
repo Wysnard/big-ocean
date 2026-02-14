@@ -36,7 +36,6 @@ function createTestState(overrides: Partial<OrchestratorState> = {}): Orchestrat
 		messageCount: 1,
 		dailyCostUsed: 10,
 		budgetOk: true,
-		isBatchMessage: false,
 		steeringTarget: undefined,
 		steeringHint: undefined,
 		nerinResponse: "",
@@ -104,45 +103,32 @@ describe("Router Node", () => {
 		});
 	});
 
-	describe("Batch decision", () => {
-		it("sets isBatchMessage true for 3rd message", () => {
-			const state = createTestState({ messageCount: 3 });
-			const result = routerNode(state);
-			expect(result.isBatchMessage).toBe(true);
-		});
-
-		it("sets isBatchMessage true for 6th message", () => {
-			const state = createTestState({ messageCount: 6 });
-			const result = routerNode(state);
-			expect(result.isBatchMessage).toBe(true);
-		});
-
-		it("sets isBatchMessage false for 1st message", () => {
-			const state = createTestState({ messageCount: 1 });
-			const result = routerNode(state);
-			expect(result.isBatchMessage).toBe(false);
-		});
-
-		it("sets isBatchMessage false for 2nd message", () => {
-			const state = createTestState({ messageCount: 2 });
-			const result = routerNode(state);
-			expect(result.isBatchMessage).toBe(false);
-		});
-
-		it("sets isBatchMessage false for 4th message", () => {
-			const state = createTestState({ messageCount: 4 });
-			const result = routerNode(state);
-			expect(result.isBatchMessage).toBe(false);
-		});
-	});
-
-	describe("Steering calculation", () => {
-		it("calculates steeringTarget from facetScores", () => {
+	describe("Offset steering", () => {
+		it("returns no steering on cold start (msgs 1-3)", () => {
 			const state = createTestState({
+				messageCount: 1,
 				facetScores: createInitialFacetScoresMap({
 					imagination: { score: 16, confidence: 80 },
-					orderliness: { score: 8, confidence: 20 }, // outlier
-					altruism: { score: 14, confidence: 75 },
+					orderliness: { score: 8, confidence: 20 }, // would be outlier
+				}),
+			});
+
+			const result = routerNode(state);
+			// Cold start: no steering regardless of facetScores
+			expect(result.steeringTarget).toBeUndefined();
+			expect(result.steeringHint).toBeUndefined();
+		});
+
+		it("calculates steeringTarget on STEER message (msg 4)", () => {
+			// After first batch (msg 3), analyzer extracts ~5 facets from 3 messages
+			const state = createTestState({
+				messageCount: 4, // STEER: 4 % 3 === 1 && 4 > 3
+				facetScores: createInitialFacetScoresMap({
+					imagination: { score: 16, confidence: 75 },
+					artistic_interests: { score: 14, confidence: 65 },
+					orderliness: { score: 8, confidence: 15 }, // outlier
+					altruism: { score: 14, confidence: 70 },
+					gregariousness: { score: 15, confidence: 60 },
 				}),
 			});
 
@@ -150,11 +136,17 @@ describe("Router Node", () => {
 			expect(result.steeringTarget).toBe("orderliness");
 		});
 
-		it("includes steeringHint when target exists", () => {
+		it("includes steeringHint on STEER message", () => {
+			// After 2 batch cycles (msg 7), ~6 facets assessed from conversation
 			const state = createTestState({
+				messageCount: 7, // STEER: 7 % 3 === 1 && 7 > 3
 				facetScores: createInitialFacetScoresMap({
-					imagination: { score: 16, confidence: 80 },
+					imagination: { score: 16, confidence: 75 },
+					artistic_interests: { score: 14, confidence: 65 },
 					orderliness: { score: 8, confidence: 10 }, // clear outlier
+					self_discipline: { score: 12, confidence: 55 },
+					gregariousness: { score: 15, confidence: 70 },
+					trust: { score: 13, confidence: 60 },
 				}),
 			});
 
@@ -163,9 +155,51 @@ describe("Router Node", () => {
 			expect(result.steeringHint).toContain("organize");
 		});
 
-		it("returns undefined steeringTarget when all facets unassessed", () => {
-			// Default initialized map has confidence 0 for all facets
-			const state = createTestState();
+		it("uses cached steering on COAST message (msg 5)", () => {
+			// After first batch (msg 3), ~5 facets assessed
+			const state = createTestState({
+				messageCount: 5, // COAST: 5 % 3 === 2 && 5 > 3
+				facetScores: createInitialFacetScoresMap({
+					imagination: { score: 16, confidence: 75 },
+					artistic_interests: { score: 14, confidence: 65 },
+					orderliness: { score: 8, confidence: 15 }, // outlier
+					self_discipline: { score: 12, confidence: 60 },
+					gregariousness: { score: 15, confidence: 70 },
+				}),
+			});
+
+			const result = routerNode(state);
+			// COAST uses cached steering from state
+			expect(result.steeringTarget).toBe("orderliness");
+		});
+
+		it("uses cached steering on BATCH message (msg 6)", () => {
+			// After first batch (msg 3), ~5 facets assessed
+			const state = createTestState({
+				messageCount: 6, // BATCH: 6 % 3 === 0 && 6 > 3
+				facetScores: createInitialFacetScoresMap({
+					imagination: { score: 16, confidence: 75 },
+					artistic_interests: { score: 14, confidence: 65 },
+					orderliness: { score: 8, confidence: 15 }, // outlier
+					self_discipline: { score: 12, confidence: 60 },
+					gregariousness: { score: 15, confidence: 70 },
+				}),
+			});
+
+			const result = routerNode(state);
+			expect(result.steeringTarget).toBe("orderliness");
+		});
+
+		it("returns undefined steeringTarget when all facets unassessed (non-cold)", () => {
+			const state = createTestState({
+				messageCount: 4, // STEER, but default facets have confidence 0
+			});
+			const result = routerNode(state);
+			expect(result.steeringTarget).toBeUndefined();
+		});
+
+		it("cold start on message 3 has no steering", () => {
+			const state = createTestState({ messageCount: 3 });
 			const result = routerNode(state);
 			expect(result.steeringTarget).toBeUndefined();
 		});
@@ -173,52 +207,65 @@ describe("Router Node", () => {
 });
 
 describe("getSteeringTarget", () => {
-	it("returns null when all facets unassessed", () => {
+	it("returns undefined when all facets unassessed", () => {
 		// Default initialized map has confidence 0 for all facets
-		expect(getSteeringTarget(createInitialFacetScoresMap())).toBeNull();
+		expect(getSteeringTarget(createInitialFacetScoresMap())).toBeUndefined();
 	});
 
-	it("returns null when facets are tightly clustered", () => {
+	it("returns undefined when facets are tightly clustered", () => {
 		const scores = createInitialFacetScoresMap({
 			imagination: { score: 14, confidence: 60 },
 			orderliness: { score: 14, confidence: 60 },
 			altruism: { score: 14, confidence: 60 },
 		});
-		expect(getSteeringTarget(scores)).toBeNull();
+		expect(getSteeringTarget(scores)).toBeUndefined();
 	});
 
 	it("returns weakest outlier when outliers exist", () => {
+		// Realistic: ~5 facets assessed after first batch analysis
 		const scores = createInitialFacetScoresMap({
-			imagination: { score: 16, confidence: 80 },
-			orderliness: { score: 8, confidence: 20 }, // outlier
-			altruism: { score: 14, confidence: 75 },
+			imagination: { score: 16, confidence: 75 },
+			artistic_interests: { score: 14, confidence: 65 },
+			orderliness: { score: 8, confidence: 15 }, // outlier
+			altruism: { score: 14, confidence: 70 },
+			gregariousness: { score: 15, confidence: 60 },
 		});
 		expect(getSteeringTarget(scores)).toBe("orderliness");
 	});
 
 	it("returns single weakest when multiple outliers", () => {
+		// Realistic: ~6 facets assessed, two weak ones
 		const scores = createInitialFacetScoresMap({
-			imagination: { score: 16, confidence: 85 },
-			orderliness: { score: 6, confidence: 15 }, // weakest
-			altruism: { score: 8, confidence: 25 }, // also outlier
-			trust: { score: 15, confidence: 80 },
+			imagination: { score: 16, confidence: 80 },
+			artistic_interests: { score: 14, confidence: 70 },
+			orderliness: { score: 6, confidence: 10 }, // weakest
+			altruism: { score: 8, confidence: 20 }, // also outlier
+			trust: { score: 15, confidence: 75 },
+			gregariousness: { score: 13, confidence: 65 },
 		});
 		expect(getSteeringTarget(scores)).toBe("orderliness");
 	});
 
 	it("self-corrects as data changes", () => {
-		// Early: orderliness weak
+		// After first batch (~5 facets): orderliness weak
 		const early = createInitialFacetScoresMap({
-			imagination: { score: 12, confidence: 60 },
-			orderliness: { score: 8, confidence: 20 },
+			imagination: { score: 12, confidence: 65 },
+			artistic_interests: { score: 14, confidence: 60 },
+			orderliness: { score: 8, confidence: 15 }, // outlier
+			altruism: { score: 13, confidence: 55 },
+			gregariousness: { score: 15, confidence: 70 },
 		});
 		expect(getSteeringTarget(early)).toBe("orderliness");
 
-		// Later: orderliness improved, altruism now weak
+		// After more batches (~7 facets): orderliness improved, altruism now weak
 		const later = createInitialFacetScoresMap({
-			imagination: { score: 14, confidence: 70 },
+			imagination: { score: 14, confidence: 75 },
+			artistic_interests: { score: 15, confidence: 70 },
 			orderliness: { score: 13, confidence: 65 },
-			altruism: { score: 8, confidence: 20 },
+			altruism: { score: 8, confidence: 15 }, // now the outlier
+			gregariousness: { score: 14, confidence: 70 },
+			trust: { score: 12, confidence: 60 },
+			assertiveness: { score: 15, confidence: 65 },
 		});
 		expect(getSteeringTarget(later)).toBe("altruism");
 	});

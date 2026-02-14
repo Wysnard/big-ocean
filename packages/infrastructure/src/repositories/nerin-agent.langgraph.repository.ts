@@ -150,7 +150,7 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
 				const response = await model.invoke(allMessages);
 
 				// Extract token usage from raw AIMessage metadata
-				const usageMeta = response.raw?.usage_metadata;
+				const usageMeta = (response.raw as AIMessage)?.usage_metadata;
 				const tokenUsage: TokenUsage = {
 					input: usageMeta?.input_tokens ?? 0,
 					output: usageMeta?.output_tokens ?? 0,

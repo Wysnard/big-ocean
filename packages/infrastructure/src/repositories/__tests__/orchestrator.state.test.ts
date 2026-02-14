@@ -39,7 +39,6 @@ describe("OrchestratorStateAnnotation", () => {
 			const spec = OrchestratorStateAnnotation.spec;
 
 			expect(spec.budgetOk).toBeDefined();
-			expect(spec.isBatchMessage).toBeDefined();
 			expect(spec.steeringTarget).toBeDefined();
 			expect(spec.steeringHint).toBeDefined();
 		});
@@ -77,7 +76,6 @@ describe("OrchestratorStateAnnotation", () => {
 				messageCount: 1,
 				dailyCostUsed: 10,
 				budgetOk: true,
-				isBatchMessage: false,
 				steeringTarget: undefined,
 				steeringHint: undefined,
 				nerinResponse: "Hi there!",
@@ -185,7 +183,6 @@ describe("OrchestratorStateAnnotation", () => {
 
 			// Routing fields
 			expect(specKeys).toContain("budgetOk");
-			expect(specKeys).toContain("isBatchMessage");
 			expect(specKeys).toContain("steeringTarget");
 			expect(specKeys).toContain("steeringHint");
 
@@ -205,7 +202,7 @@ describe("OrchestratorStateAnnotation", () => {
 
 		it("has correct total number of state fields", () => {
 			const specKeys = Object.keys(OrchestratorStateAnnotation.spec);
-			// 5 input + 4 routing + 3 agent output + 3 batch + 1 error = 16 total
+			// 6 input + 3 routing + 3 agent output + 3 batch + 1 error = 16 total
 			expect(specKeys.length).toBe(16);
 		});
 	});

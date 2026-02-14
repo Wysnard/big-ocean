@@ -60,6 +60,9 @@ const configSchema = Config.all({
 
 	// Cost management (Story 2.5)
 	dailyCostLimit: Config.number("DAILY_COST_LIMIT").pipe(Config.withDefault(75)),
+
+	// Assessment readiness (Story 4.7)
+	messageReadyThreshold: Config.number("MESSAGE_READY_THRESHOLD").pipe(Config.withDefault(15)),
 });
 
 /**

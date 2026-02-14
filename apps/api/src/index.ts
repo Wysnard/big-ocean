@@ -111,9 +111,13 @@ const OrchestratorGraphLayer = OrchestratorGraphLangGraphRepositoryLive.pipe(
 
 /**
  * Orchestrator Layer - high-level orchestration repository
+ *
+ * Story 2.11: processAnalysis needs AnalyzerRepository + FacetEvidenceRepository
  */
 const OrchestratorLayer = OrchestratorLangGraphRepositoryLive.pipe(
 	Layer.provide(OrchestratorGraphLayer),
+	Layer.provide(AgentLayers),
+	Layer.provide(AssessmentMessageDrizzleRepositoryLive),
 	Layer.provide(InfrastructureLayer),
 );
 

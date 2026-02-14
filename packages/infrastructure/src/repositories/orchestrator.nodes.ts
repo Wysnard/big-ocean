@@ -124,10 +124,17 @@ export function getSteeringHint(steeringTarget: FacetName | undefined): string |
 /**
  * Router Node - Decision point for the orchestration pipeline.
  *
- * Responsibilities:
- * 1. Budget check - throws BudgetPausedError if limit exceeded
- * 2. Batch decision - determines if Analyzer/Scorer should run
- * 3. Steering calculation - finds weakest outlier facet for Nerin guidance
+ * Story 2.11: Offset steering — uses message cadence to determine steering behavior.
+ *
+ * Message cadence (3-message cycle, offset by 1):
+ * - COLD START (msgs 1-3): No steering, no evidence read
+ * - STEER (msgs 4, 7, 10...): Fresh steering from facetScores in state
+ * - COAST (msgs 5, 8, 11...): Cached steering from state
+ * - BATCH (msgs 3, 6, 9...): Cached steering, triggers async analysis
+ *
+ * Note: This pure function uses facetScores from state. The Effect-based
+ * routerNodeEffect in orchestrator-graph.langgraph.repository.ts reads
+ * evidence from DB on STEER messages.
  *
  * @param state - Current orchestrator state
  * @returns Partial state updates with routing decisions
@@ -137,10 +144,8 @@ export function routerNode(state: OrchestratorState): Partial<OrchestratorState>
 	const { sessionId, messageCount, dailyCostUsed, facetScores } = state;
 
 	// 1. BUDGET CHECK - First priority
-	// Use > (not >=) so messages are allowed up to exactly $75.00
 	if (dailyCostUsed + MESSAGE_COST_ESTIMATE > DAILY_COST_LIMIT) {
-		// Calculate overall confidence from facetScores
-		const overallConfidence = facetScores ? calculateConfidenceFromFacetScores(facetScores) : 50; // Default if no scores yet
+		const overallConfidence = facetScores ? calculateConfidenceFromFacetScores(facetScores) : 50;
 
 		throw new BudgetPausedError(
 			sessionId,
@@ -150,17 +155,24 @@ export function routerNode(state: OrchestratorState): Partial<OrchestratorState>
 		);
 	}
 
-	// 2. BATCH DECISION
-	const isBatchMessage = messageCount % 3 === 0;
+	// 2. OFFSET STEERING
+	const isColdStart = messageCount <= 3;
 
-	// 3. STEERING CALCULATION
+	if (isColdStart) {
+		// No steering — Nerin uses default exploration
+		return {
+			budgetOk: true,
+			facetScores: createInitialFacetScoresMap(),
+		};
+	}
+
+	// STEER, COAST, or BATCH — calculate steering from state facetScores
 	const normalizedFacetScores = createInitialFacetScoresMap(facetScores);
 	const steeringTarget = getSteeringTarget(normalizedFacetScores);
 	const steeringHint = getSteeringHint(steeringTarget);
 
 	return {
 		budgetOk: true,
-		isBatchMessage,
 		steeringTarget,
 		steeringHint,
 	};

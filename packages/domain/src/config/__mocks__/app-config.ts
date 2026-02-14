@@ -28,6 +28,10 @@ export const mockAppConfig: AppConfigService = {
 	analyzerMaxTokens: 2048,
 	analyzerTemperature: 0.3,
 	dailyCostLimit: 75,
+	nerinModelId: "claude-haiku-4-5-20251001",
+	nerinMaxTokens: 1024,
+	nerinTemperature: 0.7,
+	messageReadyThreshold: 15,
 };
 
 export const createTestAppConfigLayer = () => Layer.succeed(AppConfig, mockAppConfig);

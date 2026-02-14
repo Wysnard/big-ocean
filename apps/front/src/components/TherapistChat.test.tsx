@@ -42,6 +42,7 @@ let mockHookReturn = {
 	resumeError: null as Error | null,
 	isResumeSessionNotFound: false,
 	isConfidenceReady: false,
+	progressPercent: 0,
 	hasShownCelebration: false,
 	setHasShownCelebration: vi.fn(),
 };
@@ -498,22 +499,11 @@ describe("TherapistChat", () => {
 				{ id: "1", role: "assistant", content: "Hi!", timestamp: new Date() },
 				{ id: "2", role: "user", content: "Hello", timestamp: new Date() },
 			];
-			mockHookReturn.traits = {
-				openness: 60,
-				conscientiousness: 50,
-				extraversion: 40,
-				agreeableness: 70,
-				neuroticism: 30,
-				opennessConfidence: 60,
-				conscientiousnessConfidence: 50,
-				extraversionConfidence: 40,
-				agreeablenessConfidence: 70,
-				neuroticismConfidence: 30,
-			};
+			mockHookReturn.progressPercent = 50;
 
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-			// Average = (60 + 50 + 40 + 70 + 30) / 5 = 50 → Nerin-voice label
+			// progressPercent=50 → "Building your profile..." label
 			expect(screen.getByText("Building your profile...")).toBeInTheDocument();
 		});
 
@@ -526,24 +516,13 @@ describe("TherapistChat", () => {
 			expect(screen.queryByText("Getting to know you...")).toBeNull();
 		});
 
-		it("updates ProgressBar label to 'Putting the finishing touches...' when confidence >= 80%", () => {
+		it("updates ProgressBar label to 'Putting the finishing touches...' when progress >= 80%", () => {
 			mockHookReturn.messages = [{ id: "1", role: "user", content: "Hi", timestamp: new Date() }];
-			mockHookReturn.traits = {
-				openness: 85,
-				conscientiousness: 88,
-				extraversion: 90,
-				agreeableness: 82,
-				neuroticism: 80,
-				opennessConfidence: 85,
-				conscientiousnessConfidence: 88,
-				extraversionConfidence: 90,
-				agreeablenessConfidence: 82,
-				neuroticismConfidence: 80,
-			};
+			mockHookReturn.progressPercent = 85;
 
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-			// Average = (85 + 88 + 90 + 82 + 80) / 5 = 85
+			// progressPercent=85 → "Putting the finishing touches..." label
 			expect(screen.getByText("Putting the finishing touches...")).toBeInTheDocument();
 		});
 
