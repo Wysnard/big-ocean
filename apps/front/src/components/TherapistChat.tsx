@@ -149,6 +149,7 @@ export function TherapistChat({
 		sendMessage,
 		isResuming,
 		resumeError,
+		isResumeSessionNotFound,
 		isConfidenceReady,
 		hasShownCelebration,
 		setHasShownCelebration,
@@ -220,12 +221,20 @@ export function TherapistChat({
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [messageCount]);
 
-	// SessionNotFound: redirect to /chat to create new session via router
+	// Session-not-found handling:
+	// - Authenticated users are redirected to 404 (private linked session denied)
+	// - Unauthenticated users are redirected to /chat for recovery
 	useEffect(() => {
 		if (errorType === "session") {
-			navigate({ to: "/chat" });
+			navigate({ to: isAuthenticated ? "/404" : "/chat" });
 		}
-	}, [errorType, navigate]);
+	}, [errorType, isAuthenticated, navigate]);
+
+	useEffect(() => {
+		if (isAuthenticated && !isResuming && isResumeSessionNotFound) {
+			navigate({ to: "/404" });
+		}
+	}, [isAuthenticated, isResuming, isResumeSessionNotFound, navigate]);
 
 	// Trigger sign-up modal after first user message
 	useEffect(() => {
@@ -340,37 +349,32 @@ export function TherapistChat({
 						)}
 
 						{/* SessionNotFound Error */}
-						{!isResuming &&
-							resumeError &&
-							(resumeError.message.includes("404") || resumeError.message.includes("SessionNotFound")) && (
-								<div className="flex-1 flex items-center justify-center">
-									<div className="text-center max-w-md">
-										<p className="text-destructive-foreground text-lg">Session not found</p>
-										<p className="text-muted-foreground mt-2">
-											This session may have expired or doesn't exist.
-										</p>
-										<Button className="mt-4" onClick={() => navigate({ to: "/chat" })}>
-											Start New Assessment
-										</Button>
-									</div>
+						{!isResuming && !isAuthenticated && resumeError && isResumeSessionNotFound && (
+							<div className="flex-1 flex items-center justify-center">
+								<div className="text-center max-w-md">
+									<p className="text-destructive-foreground text-lg">Session not found</p>
+									<p className="text-muted-foreground mt-2">
+										This session may have expired or doesn't exist.
+									</p>
+									<Button className="mt-4" onClick={() => navigate({ to: "/chat" })}>
+										Start New Assessment
+									</Button>
 								</div>
-							)}
+							</div>
+						)}
 
 						{/* Generic Resume Error */}
-						{!isResuming &&
-							resumeError &&
-							!resumeError.message.includes("404") &&
-							!resumeError.message.includes("SessionNotFound") && (
-								<div className="flex-1 flex items-center justify-center">
-									<div className="text-center max-w-md">
-										<p className="text-destructive-foreground text-lg">Something went wrong</p>
-										<p className="text-muted-foreground mt-2">Unable to load your assessment.</p>
-										<Button className="mt-4" onClick={() => window.location.reload()}>
-											Retry
-										</Button>
-									</div>
+						{!isResuming && resumeError && !isResumeSessionNotFound && (
+							<div className="flex-1 flex items-center justify-center">
+								<div className="text-center max-w-md">
+									<p className="text-destructive-foreground text-lg">Something went wrong</p>
+									<p className="text-muted-foreground mt-2">Unable to load your assessment.</p>
+									<Button className="mt-4" onClick={() => window.location.reload()}>
+										Retry
+									</Button>
 								</div>
-							)}
+							</div>
+						)}
 
 						{/* Messages (only show if not loading and no resume error) */}
 						{!isResuming && !resumeError && (

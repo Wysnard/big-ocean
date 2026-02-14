@@ -14,7 +14,7 @@ export {
 // Configuration service interface (implementation in @workspace/infrastructure)
 export { AppConfig, type AppConfigService } from "./config/index";
 // Archetype constants (Story 3.2)
-export { CURATED_ARCHETYPES } from "./constants/archetypes";
+export { CURATED_ARCHETYPES, TEASER_TRAIT_LETTERS } from "./constants/archetypes";
 // Big Five constants and types (Story 2.3)
 export {
 	AGREEABLENESS_FACETS,

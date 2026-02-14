@@ -13,6 +13,25 @@
  */
 
 /**
+ * Teaser trait letter options for generating plausible but randomized OCEAN codes
+ * Used in auth gates to show a teaser code that looks real but doesn't reveal actual results
+ *
+ * Maps trait index to available letters for that trait:
+ * 0: Openness (P/G/O)
+ * 1: Conscientiousness (F/B/D)
+ * 2: Extraversion (I/A/E)
+ * 3: Agreeableness (C/N/W)
+ * 4: Neuroticism (R/T/S) - Note: N is used for Agreeableness
+ */
+export const TEASER_TRAIT_LETTERS = [
+	["P", "G", "O"], // Openness
+	["F", "B", "D"], // Conscientiousness
+	["I", "A", "E"], // Extraversion
+	["C", "N", "W"], // Agreeableness
+	["R", "T", "S"], // Neuroticism
+] as const;
+
+/**
  * Curated archetype entry (without code4 and isCurated, which are derived).
  */
 export interface CuratedArchetypeEntry {

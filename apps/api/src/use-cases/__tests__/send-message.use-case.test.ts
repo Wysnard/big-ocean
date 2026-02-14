@@ -72,7 +72,7 @@ const mockFacetEvidenceRepo = {
 // Mock data factories
 const mockSession = {
 	sessionId: "session_test_123",
-	userId: "user_456",
+	userId: undefined,
 	createdAt: new Date("2026-02-01"),
 };
 
@@ -330,11 +330,18 @@ describe("sendMessage Use Case", () => {
 		});
 
 		it("should update cost tracking", async () => {
+			const linkedSession = {
+				...mockSession,
+				userId: "user_456",
+			};
+			mockAssessmentSessionRepo.getSession.mockReturnValue(Effect.succeed(linkedSession));
+
 			const testLayer = createTestLayer();
 
 			const input = {
 				sessionId: "session_test_123",
 				message: "Track my cost",
+				authenticatedUserId: "user_456",
 			};
 
 			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
@@ -344,6 +351,103 @@ describe("sendMessage Use Case", () => {
 				"user_456",
 				expect.any(Number),
 			);
+		});
+	});
+
+	describe("Ownership guard", () => {
+		it("allows linked session owner to send messages", async () => {
+			mockAssessmentSessionRepo.getSession.mockReturnValue(
+				Effect.succeed({
+					...mockSession,
+					userId: "owner_user",
+				}),
+			);
+
+			const testLayer = createTestLayer();
+			const input = {
+				sessionId: "session_test_123",
+				message: "Owner message",
+				authenticatedUserId: "owner_user",
+				userId: "owner_user",
+			};
+
+			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
+
+			expect(result.response).toBeDefined();
+			expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalled();
+			expect(mockOrchestratorRepo.processMessage).toHaveBeenCalled();
+		});
+
+		it("denies linked session access for non-owner before side effects", async () => {
+			mockAssessmentSessionRepo.getSession.mockReturnValue(
+				Effect.succeed({
+					...mockSession,
+					userId: "owner_user",
+				}),
+			);
+
+			const testLayer = createTestLayer();
+			const input = {
+				sessionId: "session_test_123",
+				message: "Unauthorized message",
+				authenticatedUserId: "different_user",
+			};
+
+			const error = await Effect.runPromise(
+				sendMessage(input).pipe(Effect.provide(testLayer), Effect.flip),
+			);
+
+			expect(error._tag).toBe("SessionNotFound");
+			expect(mockAssessmentMessageRepo.saveMessage).not.toHaveBeenCalled();
+			expect(mockAssessmentMessageRepo.getMessageCount).not.toHaveBeenCalled();
+			expect(mockAssessmentMessageRepo.getMessages).not.toHaveBeenCalled();
+			expect(mockOrchestratorRepo.processMessage).not.toHaveBeenCalled();
+			expect(mockCostGuardRepo.getDailyCost).not.toHaveBeenCalled();
+			expect(mockCostGuardRepo.incrementDailyCost).not.toHaveBeenCalled();
+		});
+
+		it("denies linked session access for unauthenticated requests", async () => {
+			mockAssessmentSessionRepo.getSession.mockReturnValue(
+				Effect.succeed({
+					...mockSession,
+					userId: "owner_user",
+				}),
+			);
+
+			const testLayer = createTestLayer();
+			const input = {
+				sessionId: "session_test_123",
+				message: "Unauthenticated message",
+			};
+
+			const error = await Effect.runPromise(
+				sendMessage(input).pipe(Effect.provide(testLayer), Effect.flip),
+			);
+
+			expect(error._tag).toBe("SessionNotFound");
+			expect(mockAssessmentMessageRepo.saveMessage).not.toHaveBeenCalled();
+			expect(mockOrchestratorRepo.processMessage).not.toHaveBeenCalled();
+		});
+
+		it("keeps anonymous pre-link sessions accessible", async () => {
+			mockAssessmentSessionRepo.getSession.mockReturnValue(
+				Effect.succeed({
+					...mockSession,
+					userId: null,
+				}),
+			);
+
+			const testLayer = createTestLayer();
+			const input = {
+				sessionId: "session_test_123",
+				message: "Anonymous access message",
+			};
+
+			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
+
+			expect(result.response).toBeDefined();
+			expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalled();
+			expect(mockOrchestratorRepo.processMessage).toHaveBeenCalled();
 		});
 	});
 

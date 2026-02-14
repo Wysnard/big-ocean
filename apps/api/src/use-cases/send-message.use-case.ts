@@ -24,12 +24,14 @@ import {
 	initializeFacetConfidence,
 	LoggerRepository,
 	OrchestratorRepository,
+	SessionNotFound,
 } from "@workspace/domain";
 import { Effect } from "effect";
 
 export interface SendMessageInput {
 	readonly sessionId: string;
 	readonly message: string;
+	readonly authenticatedUserId?: string;
 	readonly userId?: string;
 }
 
@@ -66,6 +68,16 @@ export const sendMessage = (input: SendMessageInput) =>
 
 		// Verify session exists
 		const session = yield* sessionRepo.getSession(input.sessionId);
+
+		// Linked sessions are private to their owner.
+		if (session.userId != null && session.userId !== input.authenticatedUserId) {
+			return yield* Effect.fail(
+				new SessionNotFound({
+					sessionId: input.sessionId,
+					message: `Session '${input.sessionId}' not found`,
+				}),
+			);
+		}
 
 		logger.info("Message received", {
 			sessionId: input.sessionId,

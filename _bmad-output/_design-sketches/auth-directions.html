@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>big-ocean Auth Form Design Directions</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  /* ============================================
+     GLOBAL / SKETCH CHROME
+     ============================================ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --pink: #FF0080;
+    --pink-hover: #FF1493;
+    --orange: #FF6B2B;
+    --teal: #00B4A6;
+    --teal-bright: #00D4C8;
+    --gold: #FFB830;
+    --hot-pink: #FF2D9B;
+    --cream: #FFF8F0;
+    --blush: #FFF0E8;
+    --peach: #FFE8D8;
+    --charcoal: #1A1A2E;
+    --warm-gray: #6B6580;
+    --blush-border: #FFD6C4;
+    --coral: #FF3B5C;
+    --navy: #0A0E27;
+    --deep-navy: #141838;
+    --midnight: #1C2148;
+    --navy-edge: #252A52;
+    --warm-white: #F0EDE8;
+    --muted-lav: #8B85A0;
+    --ocean-green: #00C896;
+
+    --trait-o: #A855F7;
+    --trait-c: #FF6B2B;
+    --trait-e: #FF0080;
+    --trait-a: #00B4A6;
+    --trait-n: #1c1c9c;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #f0ece6;
+    color: var(--charcoal);
+    padding: 2rem 1rem;
+  }
+
+  h1.page-title {
+    font-family: 'Space Grotesk', sans-serif;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+    color: var(--charcoal);
+  }
+  .page-subtitle {
+    text-align: center;
+    color: var(--warm-gray);
+    font-size: 0.95rem;
+    margin-bottom: 2.5rem;
+  }
+
+  /* Direction selector tabs */
+  .tab-bar {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.6rem 1.2rem;
+    border: 2px solid var(--blush-border);
+    border-radius: 999px;
+    background: white;
+    color: var(--charcoal);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: -0.01em;
+  }
+  .tab-btn:hover { border-color: var(--pink); color: var(--pink); }
+  .tab-btn.active {
+    background: var(--pink);
+    color: white;
+    border-color: var(--pink);
+  }
+
+  /* Theme toggle */
+  .theme-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 2.5rem;
+  }
+  .theme-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    padding: 0.4rem 1rem;
+    border: 1.5px solid var(--blush-border);
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .theme-btn.active-light { background: var(--cream); border-color: var(--pink); color: var(--pink); }
+  .theme-btn.active-dark { background: var(--navy); border-color: var(--teal-bright); color: var(--teal-bright); }
+
+  /* Panels */
+  .direction { display: none; }
+  .direction.visible { display: block; }
+
+  .panel-row {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+  }
+
+  .panel-label {
+    font-family: 'Space Grotesk', sans-serif;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.3rem;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.02em;
+  }
+  .panel-desc {
+    text-align: center;
+    color: var(--warm-gray);
+    font-size: 0.85rem;
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.5;
+  }
+
+  /* Light / dark mock frames */
+  .mock-frame {
+    width: 420px;
+    min-height: 520px;
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .mock-frame.light { background: var(--cream); }
+  .mock-frame.dark  { background: var(--navy); color: var(--warm-white); }
+
+  /* Shared form elements */
+  .form-heading {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .form-sub {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-top: 0.5rem;
+  }
+  .light .form-sub { color: var(--warm-gray); }
+  .dark .form-sub { color: var(--muted-lav); }
+
+  .field { margin-bottom: 1rem; }
+  .field label {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+  }
+  .field input {
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    border: 1.5px solid;
+    outline: none;
+    transition: all 0.25s ease;
+    min-height: 48px;
+  }
+  .light .field label { color: var(--charcoal); }
+  .dark .field label { color: var(--warm-white); }
+
+  .form-link {
+    text-align: center;
+    font-size: 0.85rem;
+    margin-top: 1rem;
+  }
+  .light .form-link { color: var(--warm-gray); }
+  .dark .form-link { color: var(--muted-lav); }
+  .form-link a { text-decoration: underline; cursor: pointer; }
+
+  .pw-hint {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    opacity: 0.6;
+  }
+
+  /* Error demo */
+  .error-box {
+    padding: 0.65rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  .light .error-box { background: rgba(255,59,92,0.08); border: 1px solid rgba(255,59,92,0.25); color: var(--coral); }
+  .dark .error-box  { background: rgba(255,77,106,0.12); border: 1px solid rgba(255,77,106,0.3); color: #FF6B82; }
+
+
+  /* ============================================
+     DIRECTION 1: GRADIENT PORTAL
+     Warm gradient border + floating glow
+     ============================================ */
+  .d1 .mock-frame {
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    box-shadow: 0 8px 40px rgba(255,0,128,0.08);
+  }
+  .d1 .mock-frame.light {
+    background:
+      linear-gradient(var(--cream), var(--cream)) padding-box,
+      linear-gradient(135deg, var(--pink), var(--teal)) border-box;
+    border: 2px solid transparent;
+  }
+  .d1 .mock-frame.dark {
+    background:
+      linear-gradient(var(--deep-navy), var(--deep-navy)) padding-box,
+      linear-gradient(135deg, var(--teal-bright), var(--gold)) border-box;
+    border: 2px solid transparent;
+    box-shadow: 0 8px 40px rgba(0,212,200,0.12);
+  }
+
+  .d1 .form-heading { font-size: 2rem; }
+  .d1 .light .form-heading { color: var(--charcoal); }
+  .d1 .dark .form-heading { color: var(--warm-white); }
+
+  .d1 .light .field input {
+    background: var(--blush);
+    border-color: var(--blush-border);
+    color: var(--charcoal);
+  }
+  .d1 .light .field input::placeholder { color: var(--warm-gray); opacity: 0.6; }
+  .d1 .light .field input:focus {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 3px rgba(255,0,128,0.12);
+  }
+  .d1 .dark .field input {
+    background: var(--midnight);
+    border-color: var(--navy-edge);
+    color: var(--warm-white);
+  }
+  .d1 .dark .field input::placeholder { color: var(--muted-lav); opacity: 0.5; }
+  .d1 .dark .field input:focus {
+    border-color: var(--teal-bright);
+    box-shadow: 0 0 0 3px rgba(0,212,200,0.18);
+  }
+
+  .d1-btn {
+    width: 100%;
+    min-height: 48px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    letter-spacing: -0.01em;
+    margin-top: 0.5rem;
+  }
+  .d1 .light .d1-btn {
+    background: linear-gradient(120deg, var(--pink), var(--pink-hover), var(--orange));
+    box-shadow: 0 4px 20px rgba(255,0,128,0.25);
+  }
+  .d1 .light .d1-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(255,0,128,0.35);
+  }
+  .d1 .dark .d1-btn {
+    background: linear-gradient(120deg, var(--teal-bright), #00EDE5, var(--gold));
+    color: var(--navy);
+    box-shadow: 0 4px 20px rgba(0,212,200,0.25);
+  }
+  .d1 .dark .d1-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(0,212,200,0.4);
+  }
+
+  .d1 .light .form-link a { color: var(--pink); }
+  .d1 .dark .form-link a { color: var(--teal-bright); }
+
+  /* Glow orb decoration */
+  .d1 .glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(50px);
+    pointer-events: none;
+    animation: float 6s ease-in-out infinite;
+  }
+  .d1 .light .glow-orb { background: var(--pink); opacity: 0.08; }
+  .d1 .dark .glow-orb  { background: var(--teal-bright); opacity: 0.12; }
+  .d1 .glow-orb.orb1 { width: 140px; height: 140px; top: -30px; right: -20px; }
+  .d1 .glow-orb.orb2 { width: 80px; height: 80px; bottom: 20px; left: -10px; animation-delay: -3s; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+
+  /* ============================================
+     DIRECTION 2: SPLIT ACCENT
+     Bold vertical color bar on the left
+     ============================================ */
+  .d2 .mock-frame {
+    padding-left: 3rem;
+    border-radius: 16px;
+  }
+  .d2 .mock-frame::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 6px;
+    border-radius: 16px 0 0 16px;
+  }
+  .d2 .mock-frame.light {
+    background: white;
+    box-shadow: 0 2px 24px rgba(0,0,0,0.06);
+  }
+  .d2 .mock-frame.light::before {
+    background: linear-gradient(180deg, var(--pink), var(--orange), var(--teal));
+  }
+  .d2 .mock-frame.dark {
+    background: var(--deep-navy);
+    box-shadow: 0 2px 24px rgba(0,0,0,0.3);
+  }
+  .d2 .mock-frame.dark::before {
+    background: linear-gradient(180deg, var(--teal-bright), var(--gold), var(--hot-pink));
+  }
+
+  .d2 .form-heading { font-size: 1.75rem; }
+  .d2 .light .form-heading { color: var(--charcoal); }
+  .d2 .dark .form-heading { color: var(--warm-white); }
+
+  .d2 .accent-tag {
+    display: inline-block;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    margin-bottom: 0.75rem;
+  }
+  .d2 .light .accent-tag { background: rgba(255,0,128,0.08); color: var(--pink); }
+  .d2 .dark .accent-tag  { background: rgba(0,212,200,0.12); color: var(--teal-bright); }
+
+  .d2 .light .field input {
+    background: var(--cream);
+    border-color: #e8ddd4;
+    color: var(--charcoal);
+  }
+  .d2 .light .field input::placeholder { color: #b0a898; }
+  .d2 .light .field input:focus {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 3px rgba(255,0,128,0.08);
+    background: white;
+  }
+  .d2 .dark .field input {
+    background: var(--navy);
+    border-color: var(--navy-edge);
+    color: var(--warm-white);
+  }
+  .d2 .dark .field input::placeholder { color: var(--muted-lav); opacity: 0.5; }
+  .d2 .dark .field input:focus {
+    border-color: var(--teal-bright);
+    box-shadow: 0 0 0 3px rgba(0,212,200,0.12);
+  }
+
+  .d2-btn {
+    width: 100%;
+    min-height: 48px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    margin-top: 0.5rem;
+  }
+  .d2 .light .d2-btn {
+    background: var(--pink);
+    color: white;
+    box-shadow: 0 2px 12px rgba(255,0,128,0.2);
+  }
+  .d2 .light .d2-btn:hover { background: var(--pink-hover); transform: translateY(-1px); }
+  .d2 .dark .d2-btn {
+    background: var(--teal-bright);
+    color: var(--navy);
+    box-shadow: 0 2px 12px rgba(0,212,200,0.2);
+  }
+  .d2 .dark .d2-btn:hover { background: #00EDE5; transform: translateY(-1px); }
+
+  .d2 .light .form-link a { color: var(--pink); }
+  .d2 .dark .form-link a { color: var(--teal-bright); }
+
+  /* Divider row */
+  .d2 .or-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.25rem 0;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+  }
+  .d2 .or-divider::before, .d2 .or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+  }
+  .d2 .light .or-divider { color: var(--warm-gray); }
+  .d2 .light .or-divider::before, .d2 .light .or-divider::after { background: var(--blush-border); }
+  .d2 .dark .or-divider { color: var(--muted-lav); }
+  .d2 .dark .or-divider::before, .d2 .dark .or-divider::after { background: var(--navy-edge); }
+
+
+  /* ============================================
+     DIRECTION 3: GEOMETRIC BOLD
+     OCEAN shapes as structural decoration
+     ============================================ */
+  .d3 .mock-frame {
+    border-radius: 24px;
+  }
+  .d3 .mock-frame.light {
+    background: white;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.06);
+  }
+  .d3 .mock-frame.dark {
+    background: var(--deep-navy);
+    box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+  }
+
+  .d3 .form-heading {
+    font-size: 2.25rem;
+    line-height: 1.05;
+  }
+  .d3 .light .form-heading { color: var(--charcoal); }
+  .d3 .dark .form-heading { color: var(--warm-white); }
+
+  .d3 .heading-accent {
+    display: inline;
+  }
+  .d3 .light .heading-accent {
+    background: linear-gradient(120deg, var(--pink), var(--orange));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .d3 .dark .heading-accent {
+    background: linear-gradient(120deg, var(--teal-bright), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* OCEAN shapes */
+  .d3 .shapes-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1.25rem;
+    margin-top: 1rem;
+  }
+  .d3 .shape-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--trait-o);
+  }
+  .d3 .shape-half {
+    width: 10px; height: 10px;
+    background: var(--trait-c);
+    border-radius: 10px 0 0 10px;
+  }
+  .d3 .shape-rect {
+    width: 6px; height: 12px;
+    background: var(--trait-e);
+    border-radius: 2px;
+  }
+  .d3 .shape-tri {
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 10px solid var(--trait-a);
+  }
+  .d3 .shape-diamond {
+    width: 10px; height: 10px;
+    background: var(--trait-n);
+    transform: rotate(45deg);
+    border-radius: 2px;
+  }
+
+  .d3 .light .field input {
+    background: var(--cream);
+    border-color: var(--blush-border);
+    color: var(--charcoal);
+    border-radius: 10px;
+  }
+  .d3 .light .field input::placeholder { color: var(--warm-gray); opacity: 0.5; }
+  .d3 .light .field input:focus {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 4px rgba(255,0,128,0.08);
+  }
+  .d3 .dark .field input {
+    background: var(--navy);
+    border-color: var(--navy-edge);
+    color: var(--warm-white);
+    border-radius: 10px;
+  }
+  .d3 .dark .field input::placeholder { color: var(--muted-lav); opacity: 0.5; }
+  .d3 .dark .field input:focus {
+    border-color: var(--teal-bright);
+    box-shadow: 0 0 0 4px rgba(0,212,200,0.12);
+  }
+
+  .d3-btn {
+    width: 100%;
+    min-height: 52px;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    margin-top: 0.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .d3 .light .d3-btn {
+    background: var(--charcoal);
+    color: white;
+  }
+  .d3 .light .d3-btn:hover {
+    background: var(--pink);
+    box-shadow: 0 6px 24px rgba(255,0,128,0.3);
+    transform: translateY(-1px);
+  }
+  .d3 .dark .d3-btn {
+    background: var(--warm-white);
+    color: var(--navy);
+  }
+  .d3 .dark .d3-btn:hover {
+    background: var(--teal-bright);
+    color: var(--navy);
+    box-shadow: 0 6px 24px rgba(0,212,200,0.3);
+    transform: translateY(-1px);
+  }
+
+  .d3 .light .form-link a { color: var(--pink); }
+  .d3 .dark .form-link a { color: var(--teal-bright); }
+
+  /* Corner decoration */
+  .d3 .corner-shapes {
+    position: absolute;
+    top: -15px; right: -15px;
+    width: 80px; height: 80px;
+    pointer-events: none;
+  }
+  .d3 .light .corner-shapes .cs-circle {
+    position: absolute; top: 20px; right: 20px;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--trait-o); opacity: 0.12;
+  }
+  .d3 .light .corner-shapes .cs-tri {
+    position: absolute; top: 5px; right: 50px;
+    width: 0; height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-bottom: 20px solid var(--trait-a);
+    opacity: 0.1;
+  }
+  .d3 .dark .corner-shapes .cs-circle {
+    position: absolute; top: 20px; right: 20px;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--teal-bright); opacity: 0.15;
+  }
+  .d3 .dark .corner-shapes .cs-tri {
+    position: absolute; top: 5px; right: 50px;
+    width: 0; height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-bottom: 20px solid var(--gold);
+    opacity: 0.12;
+  }
+
+
+  /* ============================================
+     DIRECTION 4: FLOATING CARD
+     Elevated, airy, warm with soft shadows
+     ============================================ */
+  .d4 .mock-frame {
+    border-radius: 20px;
+    padding: 2.5rem;
+  }
+  .d4 .mock-frame.light {
+    background: white;
+    box-shadow:
+      0 0 0 1px rgba(255,0,128,0.06),
+      0 20px 60px -10px rgba(255,0,128,0.1),
+      0 4px 12px rgba(0,0,0,0.03);
+  }
+  .d4 .mock-frame.dark {
+    background: var(--deep-navy);
+    box-shadow:
+      0 0 0 1px rgba(0,212,200,0.1),
+      0 20px 60px -10px rgba(0,212,200,0.08),
+      0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  .d4 .brand-mark {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 1.5rem;
+  }
+  .d4 .brand-mark .text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: -0.03em;
+  }
+  .d4 .light .brand-mark .text { color: var(--charcoal); }
+  .d4 .dark .brand-mark .text { color: var(--warm-white); }
+  .d4 .brand-mark .mini-shapes { display: flex; align-items: center; gap: 2px; }
+  .d4 .brand-mark .ms { display: inline-block; }
+  .d4 .brand-mark .ms-o { width: 8px; height: 8px; border-radius: 50%; background: var(--trait-o); }
+  .d4 .brand-mark .ms-c { width: 8px; height: 8px; border-radius: 8px 0 0 8px; background: var(--trait-c); }
+  .d4 .brand-mark .ms-e { width: 5px; height: 10px; border-radius: 1.5px; background: var(--trait-e); }
+  .d4 .brand-mark .ms-a { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid var(--trait-a); }
+  .d4 .brand-mark .ms-n { width: 7px; height: 7px; background: var(--trait-n); transform: rotate(45deg); border-radius: 1px; }
+
+  .d4 .form-heading { font-size: 1.65rem; margin-bottom: 0.25rem; }
+  .d4 .light .form-heading { color: var(--charcoal); }
+  .d4 .dark .form-heading { color: var(--warm-white); }
+
+  .d4 .light .field input {
+    background: var(--cream);
+    border: 1.5px solid transparent;
+    color: var(--charcoal);
+  }
+  .d4 .light .field input::placeholder { color: var(--warm-gray); opacity: 0.5; }
+  .d4 .light .field input:focus {
+    border-color: var(--pink);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(255,0,128,0.08);
+  }
+  .d4 .dark .field input {
+    background: var(--navy);
+    border: 1.5px solid transparent;
+    color: var(--warm-white);
+  }
+  .d4 .dark .field input::placeholder { color: var(--muted-lav); opacity: 0.4; }
+  .d4 .dark .field input:focus {
+    border-color: var(--teal-bright);
+    background: var(--midnight);
+    box-shadow: 0 0 0 3px rgba(0,212,200,0.12);
+  }
+
+  .d4-btn {
+    width: 100%;
+    min-height: 48px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 0.75rem;
+  }
+  .d4 .light .d4-btn {
+    background: var(--pink);
+    color: white;
+    box-shadow: 0 2px 10px rgba(255,0,128,0.15);
+  }
+  .d4 .light .d4-btn:hover {
+    background: var(--pink-hover);
+    box-shadow: 0 6px 20px rgba(255,0,128,0.25);
+    transform: translateY(-1px);
+  }
+  .d4 .dark .d4-btn {
+    background: var(--teal-bright);
+    color: var(--navy);
+    box-shadow: 0 2px 10px rgba(0,212,200,0.15);
+  }
+  .d4 .dark .d4-btn:hover {
+    background: #00EDE5;
+    box-shadow: 0 6px 20px rgba(0,212,200,0.3);
+    transform: translateY(-1px);
+  }
+
+  .d4-btn-ghost {
+    width: 100%;
+    min-height: 44px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+    background: transparent;
+  }
+  .d4 .light .d4-btn-ghost { color: var(--warm-gray); }
+  .d4 .light .d4-btn-ghost:hover { background: var(--blush); color: var(--pink); }
+  .d4 .dark .d4-btn-ghost { color: var(--muted-lav); }
+  .d4 .dark .d4-btn-ghost:hover { background: var(--midnight); color: var(--teal-bright); }
+
+  .d4 .light .form-link a { color: var(--pink); }
+  .d4 .dark .form-link a { color: var(--teal-bright); }
+
+  /* Subtle bottom wave */
+  .d4 .wave-accent {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: 0 0 20px 20px;
+  }
+  .d4 .wave-accent svg { width: 100%; height: 100%; }
+  .d4 .light .wave-accent svg path { fill: var(--teal); opacity: 0.04; }
+  .d4 .dark .wave-accent svg path { fill: var(--gold); opacity: 0.04; }
+
+  /* Info footnote */
+  .direction-notes {
+    max-width: 700px;
+    margin: 0 auto 3rem;
+    padding: 1.25rem 1.5rem;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e8e2db;
+  }
+  .direction-notes h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--charcoal);
+  }
+  .direction-notes ul {
+    padding-left: 1.2rem;
+    font-size: 0.82rem;
+    color: var(--warm-gray);
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">big-ocean Auth Form Directions</h1>
+<p class="page-subtitle">4 design directions for sign-in / sign-up &mdash; light &amp; dark modes</p>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showDir(1)">1 &middot; Gradient Portal</button>
+  <button class="tab-btn" onclick="showDir(2)">2 &middot; Split Accent</button>
+  <button class="tab-btn" onclick="showDir(3)">3 &middot; Geometric Bold</button>
+  <button class="tab-btn" onclick="showDir(4)">4 &middot; Floating Card</button>
+</div>
+
+<!-- ==============================
+     DIRECTION 1: GRADIENT PORTAL
+     ============================== -->
+<div class="direction d1 visible" id="dir1">
+  <p class="panel-label">Direction 1: Gradient Portal</p>
+  <p class="panel-desc">Gradient border wraps the form in a warm psychedelic glow. Floating color orbs add depth. The CTA button uses the celebration gradient for maximum energy.</p>
+
+  <div class="panel-row">
+    <!-- Light Sign Up -->
+    <div class="mock-frame light">
+      <div class="glow-orb orb1"></div>
+      <div class="glow-orb orb2"></div>
+      <h2 class="form-heading">Create your account</h2>
+      <p class="form-sub">Begin your journey into self-discovery.</p>
+      <div style="margin-top:1.5rem;">
+        <div class="field">
+          <label>Name</label>
+          <input type="text" placeholder="Your name">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" placeholder="At least 12 characters">
+          <div class="pw-hint">Minimum 12 characters</div>
+        </div>
+        <button class="d1-btn">Create Account</button>
+        <p class="form-link">Already have an account? <a>Sign in</a></p>
+      </div>
+    </div>
+
+    <!-- Dark Sign In -->
+    <div class="mock-frame dark">
+      <div class="glow-orb orb1"></div>
+      <div class="glow-orb orb2"></div>
+      <h2 class="form-heading">Welcome back</h2>
+      <p class="form-sub">Continue exploring your depths.</p>
+      <div style="margin-top:1.5rem;">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" placeholder="Your password">
+        </div>
+        <div class="error-box">Invalid email or password. Please try again.</div>
+        <button class="d1-btn">Sign In</button>
+        <p class="form-link">Don't have an account? <a>Sign up</a></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="direction-notes">
+    <h3>Design Notes</h3>
+    <ul>
+      <li><strong>Gradient border</strong> shifts from Pink&rarr;Teal (light) and Teal&rarr;Gold (dark)</li>
+      <li><strong>Floating glow orbs</strong> with subtle animation add atmosphere without distraction</li>
+      <li><strong>Celebration gradient CTA</strong> for sign-up; single-color for sign-in (differentiated energy)</li>
+      <li><strong>Focus states</strong> use primary color ring with soft glow</li>
+      <li>Warm Cream / Deep Navy backgrounds with blush / midnight inputs</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==============================
+     DIRECTION 2: SPLIT ACCENT
+     ============================== -->
+<div class="direction d2" id="dir2">
+  <p class="panel-label">Direction 2: Split Accent</p>
+  <p class="panel-desc">A bold vertical rainbow bar anchors the left edge. Clean, editorial layout. Tags communicate context. The boldness is structural, not decorative.</p>
+
+  <div class="panel-row">
+    <!-- Light Sign Up -->
+    <div class="mock-frame light">
+      <div class="accent-tag">Join the community</div>
+      <h2 class="form-heading">Create account</h2>
+      <p class="form-sub">Discover what makes you, you.</p>
+      <div style="margin-top:1.5rem;">
+        <div class="field">
+          <label>Name</label>
+          <input type="text" placeholder="Your name">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" placeholder="At least 12 characters">
+          <div class="pw-hint">Minimum 12 characters</div>
+        </div>
+        <button class="d2-btn">Create Account</button>
+        <div class="or-divider">or</div>
+        <p class="form-link" style="margin-top:0;">Already have an account? <a>Sign in</a></p>
+      </div>
+    </div>
+
+    <!-- Dark Sign In -->
+    <div class="mock-frame dark">
+      <div class="accent-tag">Welcome back</div>
+      <h2 class="form-heading">Sign in</h2>
+      <p class="form-sub">Pick up where you left off.</p>
+      <div style="margin-top:1.5rem;">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" placeholder="Your password">
+        </div>
+        <div class="error-box">Invalid email or password. Please try again.</div>
+        <button class="d2-btn">Sign In</button>
+        <div class="or-divider">or</div>
+        <p class="form-link" style="margin-top:0;">Need an account? <a>Sign up</a></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="direction-notes">
+    <h3>Design Notes</h3>
+    <ul>
+      <li><strong>Vertical gradient bar</strong> (6px) is the only bold element &mdash; all brand energy concentrated in one line</li>
+      <li><strong>Tag pill</strong> at the top sets context with primary tint</li>
+      <li><strong>White / Deep Navy card</strong> backgrounds for maximum contrast</li>
+      <li><strong>"or" divider</strong> creates clear visual separation</li>
+      <li>Most restrained of the 4 directions &mdash; editorial, clean, professional</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==============================
+     DIRECTION 3: GEOMETRIC BOLD
+     ============================== -->
+<div class="direction d3" id="dir3">
+  <p class="panel-label">Direction 3: Geometric Bold</p>
+  <p class="panel-desc">OCEAN shapes as brand DNA. Gradient text headings. Button reveals brand color on hover. The shapes connect auth to the personality framework itself.</p>
+
+  <div class="panel-row">
+    <!-- Light Sign Up -->
+    <div class="mock-frame light">
+      <div class="corner-shapes">
+        <div class="cs-circle"></div>
+        <div class="cs-tri"></div>
+      </div>
+      <div class="shapes-row">
+        <div class="shape-dot"></div>
+        <div class="shape-half"></div>
+        <div class="shape-rect"></div>
+        <div class="shape-tri"></div>
+        <div class="shape-diamond"></div>
+      </div>
+      <h2 class="form-heading">Start your <span class="heading-accent">discovery</span></h2>
+      <p class="form-sub">Create an account to unlock your personality profile.</p>
+      <div style="margin-top:1.5rem;">
+        <div class="field">
+          <label>Name</label>
+          <input type="text" placeholder="Your name">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" placeholder="At least 12 characters">
+          <div class="pw-hint">Minimum 12 characters</div>
+        </div>
+        <button class="d3-btn">Create Account</button>
+        <p class="form-link">Already exploring? <a>Sign in</a></p>
+      </div>
+    </div>
+
+    <!-- Dark Sign In -->
+    <div class="mock-frame dark">
+      <div class="corner-shapes">
+        <div class="cs-circle"></div>
+        <div class="cs-tri"></div>
+      </div>
+      <div class="shapes-row">
+        <div class="shape-dot"></div>
+        <div class="shape-half"></div>
+        <div class="shape-rect"></div>
+        <div class="shape-tri"></div>
+        <div class="shape-diamond"></div>
+      </div>
+      <h2 class="form-heading">Welcome <span class="heading-accent">back</span></h2>
+      <p class="form-sub">Sign in to continue your journey.</p>
+      <div style="margin-top:1.5rem;">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" placeholder="Your password">
+        </div>
+        <div class="error-box">Invalid email or password. Please try again.</div>
+        <button class="d3-btn">Sign In</button>
+        <p class="form-link">New here? <a>Create account</a></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="direction-notes">
+    <h3>Design Notes</h3>
+    <ul>
+      <li><strong>OCEAN shapes row</strong> (circle, half-circle, rectangle, triangle, diamond) connects auth to the personality framework</li>
+      <li><strong>Gradient text accent</strong> on key word in heading (Pink&rarr;Orange / Teal&rarr;Gold)</li>
+      <li><strong>Dark button with brand reveal on hover</strong> &mdash; neutral at rest, Electric Pink on hover (light) / Teal on hover (dark)</li>
+      <li><strong>Corner shape decorations</strong> at low opacity add depth without clutter</li>
+      <li>Most branded of the 4 directions &mdash; OCEAN identity visible throughout</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==============================
+     DIRECTION 4: FLOATING CARD
+     ============================== -->
+<div class="direction d4" id="dir4">
+  <p class="panel-label">Direction 4: Floating Card</p>
+  <p class="panel-desc">Elevated, airy, warm. The brand mark anchors identity at the top. Borderless inputs feel modern. A subtle wave accent at the bottom hints at the ocean. Ghost buttons for secondary actions.</p>
+
+  <div class="panel-row">
+    <!-- Light Sign Up -->
+    <div class="mock-frame light">
+      <div class="wave-accent">
+        <svg viewBox="0 0 420 60" preserveAspectRatio="none">
+          <path d="M0,30 C70,60 140,0 210,30 C280,60 350,0 420,30 L420,60 L0,60 Z"/>
+        </svg>
+      </div>
+      <div class="brand-mark">
+        <span class="text">big-</span>
+        <span class="mini-shapes">
+          <span class="ms ms-o"></span>
+          <span class="ms ms-c"></span>
+          <span class="ms ms-e"></span>
+          <span class="ms ms-a"></span>
+          <span class="ms ms-n"></span>
+        </span>
+      </div>
+      <h2 class="form-heading">Create your account</h2>
+      <p class="form-sub">Your personality profile awaits.</p>
+      <div style="margin-top:1.5rem;">
+        <div class="field">
+          <label>Name</label>
+          <input type="text" placeholder="Your name">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" placeholder="At least 12 characters">
+          <div class="pw-hint">Minimum 12 characters</div>
+        </div>
+        <button class="d4-btn">Create Account</button>
+        <button class="d4-btn-ghost">Already have an account? Sign in</button>
+      </div>
+    </div>
+
+    <!-- Dark Sign In -->
+    <div class="mock-frame dark">
+      <div class="wave-accent">
+        <svg viewBox="0 0 420 60" preserveAspectRatio="none">
+          <path d="M0,30 C70,60 140,0 210,30 C280,60 350,0 420,30 L420,60 L0,60 Z"/>
+        </svg>
+      </div>
+      <div class="brand-mark">
+        <span class="text">big-</span>
+        <span class="mini-shapes">
+          <span class="ms ms-o"></span>
+          <span class="ms ms-c"></span>
+          <span class="ms ms-e"></span>
+          <span class="ms ms-a"></span>
+          <span class="ms ms-n"></span>
+        </span>
+      </div>
+      <h2 class="form-heading">Welcome back</h2>
+      <p class="form-sub">Continue exploring your depths.</p>
+      <div style="margin-top:1.5rem;">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" placeholder="Your password">
+        </div>
+        <div class="error-box">Invalid email or password. Please try again.</div>
+        <button class="d4-btn">Sign In</button>
+        <button class="d4-btn-ghost">Need an account? Sign up</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="direction-notes">
+    <h3>Design Notes</h3>
+    <ul>
+      <li><strong>big-[shapes] brand mark</strong> anchors identity at the top of the form</li>
+      <li><strong>Borderless inputs</strong> with tinted backgrounds feel clean and modern</li>
+      <li><strong>Colored shadow</strong> (pink tint light / teal tint dark) gives the card warmth</li>
+      <li><strong>Wave SVG accent</strong> at bottom is barely visible (4% opacity) &mdash; subtle ocean reference</li>
+      <li><strong>Ghost button</strong> for secondary action (sign in / sign up toggle) is clean and uncluttered</li>
+      <li>Most balanced of the 4 directions &mdash; warm, branded, approachable</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  function showDir(n) {
+    document.querySelectorAll('.direction').forEach(d => d.classList.remove('visible'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('dir' + n).classList.add('visible');
+    document.querySelectorAll('.tab-btn')[n - 1].classList.add('active');
+  }
+</script>
+
+</body>
+</html>

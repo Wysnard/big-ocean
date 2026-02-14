@@ -4,11 +4,19 @@
  * Email/password login with Better Auth.
  */
 
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuth } from "../../hooks/use-auth";
+import { buildAuthPageHref } from "../../lib/auth-session-linking";
 
-export function LoginForm() {
+interface LoginFormProps {
+	anonymousSessionId?: string;
+	redirectTo?: string;
+}
+
+export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 	const { signIn, isPending } = useAuth();
+	const navigate = useNavigate();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState<string | null>(null);
@@ -20,9 +28,16 @@ export function LoginForm() {
 		setIsLoading(true);
 
 		try {
-			await signIn.email(email, password);
-			// Redirect or update UI on success
-			window.location.href = "/dashboard";
+			await signIn.email(email, password, anonymousSessionId);
+
+			// Navigate using TanStack Router
+			if (redirectTo) {
+				await navigate({ to: redirectTo });
+			} else if (anonymousSessionId) {
+				await navigate({ to: "/results/$sessionId", params: { sessionId: anonymousSessionId } });
+			} else {
+				await navigate({ to: "/dashboard" });
+			}
 		} catch (err) {
 			setError((err instanceof Error ? err.message : String(err)) || "Invalid email or password");
 		} finally {
@@ -83,7 +98,13 @@ export function LoginForm() {
 
 			<p className="text-sm text-center text-gray-600">
 				Don't have an account?{" "}
-				<a href="/signup" className="text-blue-600 hover:underline">
+				<a
+					href={buildAuthPageHref("/signup", {
+						sessionId: anonymousSessionId,
+						redirectTo,
+					})}
+					className="text-blue-600 hover:underline"
+				>
 					Sign up
 				</a>
 			</p>

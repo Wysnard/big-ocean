@@ -976,6 +976,14 @@ So that **my results are saved to my account and I can access them later, while 
 - Teaser screen lives at same route as results, conditionally renders based on auth state
 - Uses Better Auth session check
 - Assessment session ID stored in localStorage for anonymous-to-auth linking
+- Results gate passes `anonymousSessionId` for both sign-up and sign-in submissions
+- Standalone auth routes (`/login`, `/signup`) also accept active assessment context (`sessionId`) and pass `anonymousSessionId` on submit
+- Auth navigation from active assessment contexts preserves safe `redirectTo` and restores `/chat` or `/results` with the same session context post-auth
+- Backend Better Auth hooks link `assessment_session.user_id` for both auth paths:
+  - `databaseHooks.user.create.after` for sign-up
+  - `databaseHooks.session.create.after` for sign-in
+- Backend backfills `assessment_message.user_id` for user-role historical messages in the linked session
+- There is no persisted "results row" to link; results are computed from linked session evidence at read time
 - Geometric signature shows full animation (hook moment), archetype name stays blurred
 - Sign-up form inline on the teaser page (not a separate route) for minimal friction
 - Password validation: 12+ characters per Better Auth config
@@ -993,8 +1001,11 @@ apps/front/src/components/
 - [ ] Sign-up form follows brand identity (tokens, typography)
 - [ ] Successful sign-up redirects to full results
 - [ ] Session linked to new account after sign-up
+- [ ] Successful sign-in redirects to full results
+- [ ] Session linked to existing account after sign-in
 - [ ] Already-authenticated users bypass gate entirely
 - [ ] Session persistence for anonymous users (24h localStorage)
+- [ ] Auth links from active assessment flows preserve `sessionId` and return user to the same assessment context post-auth
 - [ ] Password validation (12+ characters)
 - [ ] Works in both light and dark modes
 - [ ] Mobile-responsive with 44px+ touch targets
@@ -1159,6 +1170,43 @@ apps/front/src/components/
 
 ---
 
+## Story 7.15: Auth Form Psychedelic Brand Redesign
+
+As a **User visiting the sign-up or sign-in page**,
+I want **the authentication forms to match the psychedelic brand identity used throughout the rest of the application**,
+So that **the experience feels cohesive and trustworthy at the critical moment of creating an account or signing in**.
+
+**Dependencies:** Stories 7.1-7.5 (design tokens, typography, dark mode, shapes, colors)
+
+**Acceptance Criteria:**
+
+**Given** I visit the sign-up or sign-in page
+**When** the form renders
+**Then** I see the `big-[shapes]` brand mark, gradient accent headings (Space Grotesk), borderless tinted inputs, dark primary CTA with brand hover, and corner geometric decorations
+**And** no hard-coded blue/gray colors remain
+
+**Given** I toggle between light and dark mode
+**When** the auth forms re-render
+**Then** both themes use appropriate brand gradients (pink→orange light, teal→gold dark)
+**And** all text meets WCAG AA contrast
+
+**Given** I view the forms on mobile
+**When** the layout adapts
+**Then** all touch targets are >= 44px and the form is usable on 375px viewport
+
+**Given** the Results auth forms exist
+**When** comparing all auth forms
+**Then** all four forms share consistent brand styling and semantic token usage
+
+**Technical Details:**
+
+- Replace hard-coded colors in `login-form.tsx` and `signup-form.tsx` with semantic tokens
+- Add brand mark, gradient headings, corner decorations, tinted inputs
+- Align Results auth forms (`ResultsSignUpForm.tsx`, `ResultsSignInForm.tsx`) with same brand pattern
+- Design reference: `apps/front/src/components/auth/_design-sketches/auth-final-direction.html`
+
+---
+
 ## Story 7.14: Component Visual Consistency & Final Polish
 
 As a **User**,
@@ -1244,9 +1292,10 @@ So that **the application feels professional, trustworthy, and visually unified*
 9. **Story 7.9** — Results Page Visual Redesign (needs 7.1, 7.4, 7.5)
 10. **Story 7.10** — Assessment Chat UX Polish (needs 7.1, 7.7)
 11. **Story 7.11** — Auth-Gated Results Reveal (needs 7.1, 7.3, 7.4, 7.9)
-12. **Story 7.12** — Shareable Public Profile & Share Cards (needs 7.9, 7.11)
-13. **Story 7.13** — Registered User Profile Page (needs 7.6, 7.11)
-14. **Story 7.14** — Component Visual Consistency & Final Polish (last)
+12. **Story 7.15** — Auth Form Psychedelic Brand Redesign (needs 7.1-7.5)
+13. **Story 7.12** — Shareable Public Profile & Share Cards (needs 7.9, 7.11)
+14. **Story 7.13** — Registered User Profile Page (needs 7.6, 7.11)
+15. **Story 7.14** — Component Visual Consistency & Final Polish (last)
 
 ---
 

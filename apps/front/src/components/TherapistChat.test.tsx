@@ -40,6 +40,7 @@ let mockHookReturn = {
 	sendMessage: mockSendMessage,
 	isResuming: false,
 	resumeError: null as Error | null,
+	isResumeSessionNotFound: false,
 	isConfidenceReady: false,
 	hasShownCelebration: false,
 	setHasShownCelebration: vi.fn(),
@@ -50,13 +51,9 @@ vi.mock("@/hooks/useTherapistChat", () => ({
 }));
 
 // Mock useAuth
+const mockUseAuth = vi.fn();
 vi.mock("@/hooks/use-auth", () => ({
-	useAuth: () => ({
-		isAuthenticated: true,
-		user: null,
-		session: null,
-		isPending: false,
-	}),
+	useAuth: () => mockUseAuth(),
 }));
 
 // Mock TanStack Router useNavigate and Link
@@ -99,6 +96,12 @@ function renderWithProviders(component: React.ReactElement) {
 describe("TherapistChat", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockUseAuth.mockReturnValue({
+			isAuthenticated: true,
+			user: null,
+			session: null,
+			isPending: false,
+		});
 		mockHookReturn = {
 			messages: [
 				{
@@ -129,6 +132,7 @@ describe("TherapistChat", () => {
 			sendMessage: mockSendMessage,
 			isResuming: false,
 			resumeError: null,
+			isResumeSessionNotFound: false,
 			isConfidenceReady: false,
 			hasShownCelebration: false,
 			setHasShownCelebration: vi.fn(),
@@ -344,14 +348,34 @@ describe("TherapistChat", () => {
 		});
 
 		it("shows SessionNotFound error with redirect button", () => {
+			mockUseAuth.mockReturnValue({
+				isAuthenticated: false,
+				user: null,
+				session: null,
+				isPending: false,
+			});
 			mockHookReturn.isResuming = false;
 			mockHookReturn.resumeError = new Error("HTTP 404: SessionNotFound");
+			mockHookReturn.isResumeSessionNotFound = true;
 			mockHookReturn.messages = [];
 
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
 			expect(screen.getByText("Session not found")).toBeTruthy();
 			expect(screen.getByText("Start New Assessment")).toBeTruthy();
+		});
+
+		it("redirects authenticated users to 404 when resume access is denied", async () => {
+			mockHookReturn.isResuming = false;
+			mockHookReturn.resumeError = new Error("HTTP 404: SessionNotFound");
+			mockHookReturn.isResumeSessionNotFound = true;
+			mockHookReturn.messages = [];
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			await waitFor(() => {
+				expect(mockNavigate).toHaveBeenCalledWith({ to: "/404" });
+			});
 		});
 
 		it("shows generic error state with retry button", () => {

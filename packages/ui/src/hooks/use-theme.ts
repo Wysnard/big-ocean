@@ -35,8 +35,17 @@ function applyTheme(appTheme: AppTheme) {
 }
 
 export function useThemeProvider() {
-	const [userTheme, setUserTheme] = useState<UserTheme>(getStoredTheme);
-	const [appTheme, setAppTheme] = useState<AppTheme>(() => resolveAppTheme(getStoredTheme()));
+	// Keep SSR and initial client render deterministic to avoid hydration mismatch.
+	const [userTheme, setUserTheme] = useState<UserTheme>("system");
+	const [appTheme, setAppTheme] = useState<AppTheme>("light");
+
+	useEffect(() => {
+		const storedTheme = getStoredTheme();
+		const resolvedTheme = resolveAppTheme(storedTheme);
+		setUserTheme(storedTheme);
+		setAppTheme(resolvedTheme);
+		applyTheme(resolvedTheme);
+	}, []);
 
 	const setTheme = useCallback((theme: UserTheme) => {
 		setUserTheme(theme);

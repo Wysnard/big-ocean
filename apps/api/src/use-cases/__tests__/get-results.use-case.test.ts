@@ -173,7 +173,7 @@ describe("getResults Use Case", () => {
 			Effect.succeed({
 				id: TEST_SESSION_ID,
 				sessionId: TEST_SESSION_ID,
-				userId: "user_test",
+				userId: null,
 				createdAt: new Date(),
 				updatedAt: new Date(),
 				status: "active",
@@ -355,6 +355,75 @@ describe("getResults Use Case", () => {
 	});
 
 	describe("Error handling", () => {
+		it("should fail with SessionNotFound when linked session is accessed by non-owner", async () => {
+			mockSessionRepo.getSession.mockImplementation((_sessionId: string) =>
+				Effect.succeed({
+					id: TEST_SESSION_ID,
+					sessionId: TEST_SESSION_ID,
+					userId: "owner_user",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					status: "active",
+					messageCount: 10,
+				}),
+			);
+
+			const error = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "another_user" }).pipe(
+					Effect.provide(createTestLayer()),
+					Effect.flip,
+				),
+			);
+
+			expect(error._tag).toBe("SessionNotFound");
+			expect(mockEvidenceRepo.getEvidenceBySession).not.toHaveBeenCalled();
+		});
+
+		it("should fail with SessionNotFound when linked session is accessed without authentication", async () => {
+			mockSessionRepo.getSession.mockImplementation((_sessionId: string) =>
+				Effect.succeed({
+					id: TEST_SESSION_ID,
+					sessionId: TEST_SESSION_ID,
+					userId: "owner_user",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					status: "active",
+					messageCount: 10,
+				}),
+			);
+
+			const error = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer()), Effect.flip),
+			);
+
+			expect(error._tag).toBe("SessionNotFound");
+			expect(mockEvidenceRepo.getEvidenceBySession).not.toHaveBeenCalled();
+		});
+
+		it("should allow linked session access for owner", async () => {
+			mockSessionRepo.getSession.mockImplementation((_sessionId: string) =>
+				Effect.succeed({
+					id: TEST_SESSION_ID,
+					sessionId: TEST_SESSION_ID,
+					userId: "owner_user",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					status: "active",
+					messageCount: 10,
+				}),
+			);
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
+
+			const result = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+				),
+			);
+
+			expect(result.oceanCode5).toBeDefined();
+			expect(mockEvidenceRepo.getEvidenceBySession).toHaveBeenCalledWith(TEST_SESSION_ID);
+		});
+
 		it("should fail with SessionNotFound when session does not exist", async () => {
 			mockSessionRepo.getSession.mockImplementation((sessionId: string) =>
 				Effect.fail(

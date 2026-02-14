@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>big-ocean Auth — Final Direction</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --pink: #FF0080;
+    --pink-hover: #FF1493;
+    --orange: #FF6B2B;
+    --teal: #00B4A6;
+    --teal-bright: #00D4C8;
+    --gold: #FFB830;
+    --hot-pink: #FF2D9B;
+    --cream: #FFF8F0;
+    --blush: #FFF0E8;
+    --peach: #FFE8D8;
+    --charcoal: #1A1A2E;
+    --warm-gray: #6B6580;
+    --blush-border: #FFD6C4;
+    --coral: #FF3B5C;
+    --navy: #0A0E27;
+    --deep-navy: #141838;
+    --midnight: #1C2148;
+    --navy-edge: #252A52;
+    --warm-white: #F0EDE8;
+    --muted-lav: #8B85A0;
+    --ocean-green: #00C896;
+
+    --trait-o: #A855F7;
+    --trait-c: #FF6B2B;
+    --trait-e: #FF0080;
+    --trait-a: #00B4A6;
+    --trait-n: #1c1c9c;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--charcoal);
+    padding: 2rem 1rem;
+  }
+  body.light-bg { background: #f0ece6; }
+  body.dark-bg  { background: #06081a; }
+
+  h1.page-title {
+    font-family: 'Space Grotesk', sans-serif;
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.3rem;
+  }
+  .light-bg .page-title { color: var(--charcoal); }
+  .dark-bg .page-title { color: var(--warm-white); }
+
+  .page-subtitle {
+    text-align: center;
+    font-size: 0.85rem;
+    margin-bottom: 2rem;
+  }
+  .light-bg .page-subtitle { color: var(--warm-gray); }
+  .dark-bg .page-subtitle { color: var(--muted-lav); }
+
+  /* Toggle bar */
+  .toggle-bar {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 2.5rem;
+  }
+  .toggle-btn {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1.5px solid;
+  }
+  .light-bg .toggle-btn {
+    border-color: var(--blush-border);
+    background: white;
+    color: var(--charcoal);
+  }
+  .light-bg .toggle-btn:hover { border-color: var(--pink); color: var(--pink); }
+  .light-bg .toggle-btn.active { background: var(--pink); color: white; border-color: var(--pink); }
+  .dark-bg .toggle-btn {
+    border-color: var(--navy-edge);
+    background: var(--deep-navy);
+    color: var(--muted-lav);
+  }
+  .dark-bg .toggle-btn:hover { border-color: var(--teal-bright); color: var(--teal-bright); }
+  .dark-bg .toggle-btn.active { background: var(--teal-bright); color: var(--navy); border-color: var(--teal-bright); }
+
+  /* Layout */
+  .panel-row {
+    display: flex;
+    gap: 2.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+
+  /* ============================================
+     HYBRID: Geometric Bold + Floating Card
+     ============================================ */
+  .mock-frame {
+    width: 440px;
+    border-radius: 24px;
+    padding: 2.5rem 2.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .mock-frame.light {
+    background: white;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.06);
+  }
+  .mock-frame.dark {
+    background: var(--deep-navy);
+    color: var(--warm-white);
+    box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+  }
+
+  /* --- Brand mark (from Floating Card) --- */
+  .brand-mark {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-bottom: 1.25rem;
+  }
+  .brand-mark .text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -0.03em;
+  }
+  .light .brand-mark .text { color: var(--charcoal); }
+  .dark .brand-mark .text { color: var(--warm-white); }
+  .brand-mark .mini-shapes { display: flex; align-items: center; gap: 2px; }
+  .brand-mark .ms { display: inline-block; }
+  .brand-mark .ms-o { width: 9px; height: 9px; border-radius: 50%; background: var(--trait-o); }
+  .brand-mark .ms-c { width: 9px; height: 9px; border-radius: 9px 0 0 9px; background: var(--trait-c); }
+  .brand-mark .ms-e { width: 5px; height: 11px; border-radius: 1.5px; background: var(--trait-e); }
+  .brand-mark .ms-a { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 9px solid var(--trait-a); }
+  .brand-mark .ms-n { width: 8px; height: 8px; background: var(--trait-n); transform: rotate(45deg); border-radius: 1px; }
+
+  /* --- OCEAN shapes row (from Geometric Bold) --- */
+  .shapes-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .shape-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--trait-o);
+  }
+  .shape-half {
+    width: 10px; height: 10px;
+    background: var(--trait-c);
+    border-radius: 10px 0 0 10px;
+  }
+  .shape-rect {
+    width: 6px; height: 12px;
+    background: var(--trait-e);
+    border-radius: 2px;
+  }
+  .shape-tri {
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 10px solid var(--trait-a);
+  }
+  .shape-diamond {
+    width: 10px; height: 10px;
+    background: var(--trait-n);
+    transform: rotate(45deg);
+    border-radius: 2px;
+  }
+
+  /* --- Corner decoration (from Geometric Bold) --- */
+  .corner-shapes {
+    position: absolute;
+    top: -10px; right: -10px;
+    width: 90px; height: 90px;
+    pointer-events: none;
+  }
+  .light .corner-shapes .cs-circle {
+    position: absolute; top: 18px; right: 18px;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--trait-o); opacity: 0.1;
+  }
+  .light .corner-shapes .cs-tri {
+    position: absolute; top: 4px; right: 52px;
+    width: 0; height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-bottom: 20px solid var(--trait-a);
+    opacity: 0.08;
+  }
+  .dark .corner-shapes .cs-circle {
+    position: absolute; top: 18px; right: 18px;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--teal-bright); opacity: 0.12;
+  }
+  .dark .corner-shapes .cs-tri {
+    position: absolute; top: 4px; right: 52px;
+    width: 0; height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-bottom: 20px solid var(--gold);
+    opacity: 0.1;
+  }
+
+  /* --- Heading with gradient accent (from Geometric Bold) --- */
+  .form-heading {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 2rem;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+  .light .form-heading { color: var(--charcoal); }
+  .dark .form-heading { color: var(--warm-white); }
+
+  .heading-accent { display: inline; }
+  .light .heading-accent {
+    background: linear-gradient(120deg, var(--pink), var(--orange));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .dark .heading-accent {
+    background: linear-gradient(120deg, var(--teal-bright), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .form-sub {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .light .form-sub { color: var(--warm-gray); }
+  .dark .form-sub { color: var(--muted-lav); }
+
+  /* --- Input fields (from Floating Card — borderless tinted) --- */
+  .field { margin-bottom: 1rem; }
+  .field label {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+  }
+  .light .field label { color: var(--charcoal); }
+  .dark .field label { color: var(--warm-white); }
+
+  .field input {
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    outline: none;
+    transition: all 0.25s ease;
+    min-height: 48px;
+  }
+  .light .field input {
+    background: var(--cream);
+    border: 1.5px solid transparent;
+    color: var(--charcoal);
+  }
+  .light .field input::placeholder { color: var(--warm-gray); opacity: 0.5; }
+  .light .field input:focus {
+    border-color: var(--pink);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(255,0,128,0.08);
+  }
+  .dark .field input {
+    background: var(--navy);
+    border: 1.5px solid transparent;
+    color: var(--warm-white);
+  }
+  .dark .field input::placeholder { color: var(--muted-lav); opacity: 0.4; }
+  .dark .field input:focus {
+    border-color: var(--teal-bright);
+    background: var(--midnight);
+    box-shadow: 0 0 0 3px rgba(0,212,200,0.12);
+  }
+
+  .pw-hint {
+    font-size: 0.75rem;
+    margin-top: 0.3rem;
+  }
+  .light .pw-hint { color: var(--warm-gray); opacity: 0.6; }
+  .dark .pw-hint { color: var(--muted-lav); opacity: 0.5; }
+
+  /* Field-level validation error */
+  .field-error {
+    font-size: 0.78rem;
+    margin-top: 0.25rem;
+    color: var(--coral);
+  }
+  .dark .field-error { color: #FF6B82; }
+
+  /* --- Error box --- */
+  .error-box {
+    padding: 0.65rem 0.85rem;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .light .error-box {
+    background: rgba(255,59,92,0.07);
+    border: 1px solid rgba(255,59,92,0.2);
+    color: var(--coral);
+  }
+  .dark .error-box {
+    background: rgba(255,77,106,0.1);
+    border: 1px solid rgba(255,77,106,0.25);
+    color: #FF6B82;
+  }
+  .error-icon {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: white;
+  }
+  .light .error-icon { background: var(--coral); }
+  .dark .error-icon { background: #FF6B82; }
+
+  /* --- CTA button (from Geometric Bold — dark with brand hover reveal) --- */
+  .btn-primary {
+    width: 100%;
+    min-height: 52px;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    margin-top: 0.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .light .btn-primary {
+    background: var(--charcoal);
+    color: white;
+  }
+  .light .btn-primary:hover {
+    background: var(--pink);
+    box-shadow: 0 6px 24px rgba(255,0,128,0.3);
+    transform: translateY(-1px);
+  }
+  .light .btn-primary:active {
+    transform: translateY(0) scale(0.99);
+  }
+  .dark .btn-primary {
+    background: var(--warm-white);
+    color: var(--navy);
+  }
+  .dark .btn-primary:hover {
+    background: var(--teal-bright);
+    color: var(--navy);
+    box-shadow: 0 6px 24px rgba(0,212,200,0.3);
+    transform: translateY(-1px);
+  }
+  .dark .btn-primary:active {
+    transform: translateY(0) scale(0.99);
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    width: 100%;
+    min-height: 44px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+    background: transparent;
+  }
+  .light .btn-ghost { color: var(--warm-gray); }
+  .light .btn-ghost:hover { background: var(--blush); color: var(--pink); }
+  .dark .btn-ghost { color: var(--muted-lav); }
+  .dark .btn-ghost:hover { background: var(--midnight); color: var(--teal-bright); }
+
+  /* --- Loading state --- */
+  .btn-loading {
+    opacity: 0.85;
+    cursor: wait;
+  }
+  .btn-loading .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+    animation: spin 0.7s linear infinite;
+  }
+  .light .btn-loading .spinner { border-top-color: white; }
+  .dark .btn-loading .spinner { border-top-color: var(--navy); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* --- Success state demo --- */
+  .btn-success {
+    pointer-events: none;
+  }
+  .light .btn-success { background: var(--ocean-green) !important; }
+  .dark .btn-success { background: var(--ocean-green) !important; color: white !important; }
+
+  /* --- Mobile preview frame --- */
+  .mobile-frame {
+    width: 375px;
+    border-radius: 24px;
+    padding: 2rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .mobile-frame.light {
+    background: white;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.06);
+  }
+  .mobile-frame.dark {
+    background: var(--deep-navy);
+    color: var(--warm-white);
+    box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+  }
+  .mobile-frame .form-heading { font-size: 1.75rem; }
+  .mobile-frame .field input { min-height: 52px; padding: 0.9rem 1rem; }
+  .mobile-frame .btn-primary { min-height: 52px; }
+
+  /* Mobile label */
+  .frame-label {
+    text-align: center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+  }
+  .light-bg .frame-label { color: var(--warm-gray); }
+  .dark-bg .frame-label { color: var(--muted-lav); }
+
+  /* Section headers */
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.3rem;
+    margin-top: 2.5rem;
+  }
+  .light-bg .section-title { color: var(--charcoal); }
+  .dark-bg .section-title { color: var(--warm-white); }
+
+  .section-desc {
+    text-align: center;
+    font-size: 0.82rem;
+    margin-bottom: 2rem;
+  }
+  .light-bg .section-desc { color: var(--warm-gray); }
+  .dark-bg .section-desc { color: var(--muted-lav); }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    margin: 1rem auto 0;
+    max-width: 300px;
+  }
+  .light-bg .divider { background: var(--blush-border); }
+  .dark-bg .divider { background: var(--navy-edge); }
+
+  /* Password strength meter */
+  .pw-strength {
+    display: flex;
+    gap: 4px;
+    margin-top: 0.4rem;
+  }
+  .pw-strength .bar {
+    height: 3px;
+    border-radius: 2px;
+    flex: 1;
+    transition: background 0.3s ease;
+  }
+  .pw-strength .bar.empty { background: #e0d8d0; }
+  .dark .pw-strength .bar.empty { background: var(--navy-edge); }
+  .pw-strength .bar.weak { background: var(--coral); }
+  .pw-strength .bar.mid { background: var(--orange); }
+  .pw-strength .bar.strong { background: var(--ocean-green); }
+</style>
+</head>
+<body class="light-bg">
+
+<h1 class="page-title">Final Direction: Geometric Bold + Floating Card</h1>
+<p class="page-subtitle">big-[shapes] brand mark &middot; Gradient accent headings &middot; Borderless tinted inputs</p>
+
+<div class="toggle-bar">
+  <button class="toggle-btn active" onclick="setTheme('light')">Light Mode</button>
+  <button class="toggle-btn" onclick="setTheme('dark')">Dark Mode</button>
+</div>
+
+<!-- ==============================
+     SIGN UP — Desktop
+     ============================== -->
+<p class="section-title">Sign Up</p>
+<p class="section-desc">New user creating an account</p>
+
+<div class="panel-row">
+  <!-- Light -->
+  <div>
+    <p class="frame-label">Desktop &middot; Light</p>
+    <div class="mock-frame light">
+      <div class="corner-shapes">
+        <div class="cs-circle"></div>
+        <div class="cs-tri"></div>
+      </div>
+      <div class="brand-mark">
+        <span class="text">big-</span>
+        <span class="mini-shapes">
+          <span class="ms ms-o"></span>
+          <span class="ms ms-c"></span>
+          <span class="ms ms-e"></span>
+          <span class="ms ms-a"></span>
+          <span class="ms ms-n"></span>
+        </span>
+      </div>
+      <h2 class="form-heading">Start your <span class="heading-accent">discovery</span></h2>
+      <p class="form-sub">Create an account to unlock your personality profile.</p>
+      <div>
+        <div class="field">
+          <label>Name</label>
+          <input type="text" placeholder="Your name">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" placeholder="At least 12 characters">
+          <div class="pw-strength">
+            <div class="bar strong"></div>
+            <div class="bar strong"></div>
+            <div class="bar strong"></div>
+            <div class="bar strong"></div>
+          </div>
+          <div class="pw-hint">Minimum 12 characters</div>
+        </div>
+        <button class="btn-primary">Create Account</button>
+        <button class="btn-ghost">Already exploring? Sign in</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dark -->
+  <div>
+    <p class="frame-label">Desktop &middot; Dark</p>
+    <div class="mock-frame dark">
+      <div class="corner-shapes">
+        <div class="cs-circle"></div>
+        <div class="cs-tri"></div>
+      </div>
+      <div class="brand-mark">
+        <span class="text">big-</span>
+        <span class="mini-shapes">
+          <span class="ms ms-o"></span>
+          <span class="ms ms-c"></span>
+          <span class="ms ms-e"></span>
+          <span class="ms ms-a"></span>
+          <span class="ms ms-n"></span>
+        </span>
+      </div>
+      <h2 class="form-heading">Start your <span class="heading-accent">discovery</span></h2>
+      <p class="form-sub">Create an account to unlock your personality profile.</p>
+      <div>
+        <div class="field">
+          <label>Name</label>
+          <input type="text" placeholder="Your name">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" placeholder="At least 12 characters">
+          <div class="pw-strength">
+            <div class="bar mid"></div>
+            <div class="bar mid"></div>
+            <div class="bar empty"></div>
+            <div class="bar empty"></div>
+          </div>
+          <div class="pw-hint">Minimum 12 characters</div>
+        </div>
+        <button class="btn-primary">Create Account</button>
+        <button class="btn-ghost">Already exploring? Sign in</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ==============================
+     SIGN IN — Desktop
+     ============================== -->
+<p class="section-title">Sign In</p>
+<p class="section-desc">Returning user — clean, confident, quick</p>
+
+<div class="panel-row">
+  <!-- Light -->
+  <div>
+    <p class="frame-label">Desktop &middot; Light</p>
+    <div class="mock-frame light">
+      <div class="corner-shapes">
+        <div class="cs-circle"></div>
+        <div class="cs-tri"></div>
+      </div>
+      <div class="brand-mark">
+        <span class="text">big-</span>
+        <span class="mini-shapes">
+          <span class="ms ms-o"></span>
+          <span class="ms ms-c"></span>
+          <span class="ms ms-e"></span>
+          <span class="ms ms-a"></span>
+          <span class="ms ms-n"></span>
+        </span>
+      </div>
+      <h2 class="form-heading">Welcome <span class="heading-accent">back</span></h2>
+      <p class="form-sub">Sign in to continue your journey.</p>
+      <div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" placeholder="Your password">
+        </div>
+        <button class="btn-primary">Sign In</button>
+        <button class="btn-ghost">New here? Create account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dark -->
+  <div>
+    <p class="frame-label">Desktop &middot; Dark</p>
+    <div class="mock-frame dark">
+      <div class="corner-shapes">
+        <div class="cs-circle"></div>
+        <div class="cs-tri"></div>
+      </div>
+      <div class="brand-mark">
+        <span class="text">big-</span>
+        <span class="mini-shapes">
+          <span class="ms ms-o"></span>
+          <span class="ms ms-c"></span>
+          <span class="ms ms-e"></span>
+          <span class="ms ms-a"></span>
+          <span class="ms ms-n"></span>
+        </span>
+      </div>
+      <h2 class="form-heading">Welcome <span class="heading-accent">back</span></h2>
+      <p class="form-sub">Sign in to continue your journey.</p>
+      <div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" placeholder="Your password">
+        </div>
+        <div class="error-box">
+          <span class="error-icon">!</span>
+          Invalid email or password. Please try again.
+        </div>
+        <button class="btn-primary">Sign In</button>
+        <button class="btn-ghost">New here? Create account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ==============================
+     STATES — Error / Loading / Success
+     ============================== -->
+<p class="section-title">Interactive States</p>
+<p class="section-desc">Error, loading, and success states</p>
+
+<div class="panel-row">
+  <!-- Error state -->
+  <div>
+    <p class="frame-label">Error State</p>
+    <div class="mock-frame light" style="width:360px; padding: 2rem;">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" placeholder="you@example.com" value="bad-email" style="border: 1.5px solid var(--coral); box-shadow: 0 0 0 3px rgba(255,59,92,0.08);">
+        <p class="field-error">Please enter a valid email address.</p>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" placeholder="At least 12 characters" value="short" style="border: 1.5px solid var(--coral); box-shadow: 0 0 0 3px rgba(255,59,92,0.08);">
+        <div class="pw-strength">
+          <div class="bar weak"></div>
+          <div class="bar empty"></div>
+          <div class="bar empty"></div>
+          <div class="bar empty"></div>
+        </div>
+        <p class="field-error">Password must be at least 12 characters.</p>
+      </div>
+      <div class="error-box">
+        <span class="error-icon">!</span>
+        Please fix the errors above.
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div>
+    <p class="frame-label">Loading State</p>
+    <div class="mock-frame light" style="width:360px; padding: 2rem;">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" value="user@ocean.dev" disabled style="opacity: 0.6; background: var(--cream); border: 1.5px solid transparent;">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" value="secretpassword" disabled style="opacity: 0.6; background: var(--cream); border: 1.5px solid transparent;">
+      </div>
+      <button class="btn-primary btn-loading" disabled>
+        <span class="spinner"></span>Creating account...
+      </button>
+    </div>
+  </div>
+
+  <!-- Success -->
+  <div>
+    <p class="frame-label">Success State</p>
+    <div class="mock-frame light" style="width:360px; padding: 2rem;">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" value="user@ocean.dev" disabled style="opacity: 0.5; background: var(--cream); border: 1.5px solid transparent;">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" value="secretpassword" disabled style="opacity: 0.5; background: var(--cream); border: 1.5px solid transparent;">
+      </div>
+      <button class="btn-primary btn-success">
+        &#10003; Account Created
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ==============================
+     MOBILE
+     ============================== -->
+<p class="section-title">Mobile (375px)</p>
+<p class="section-desc">Larger touch targets (52px), wider inputs, tighter spacing</p>
+
+<div class="panel-row">
+  <!-- Mobile Light Sign Up -->
+  <div>
+    <p class="frame-label">Mobile &middot; Light &middot; Sign Up</p>
+    <div class="mobile-frame light">
+      <div class="corner-shapes">
+        <div class="cs-circle" style="width: 32px; height: 32px;"></div>
+        <div class="cs-tri"></div>
+      </div>
+      <div class="brand-mark">
+        <span class="text">big-</span>
+        <span class="mini-shapes">
+          <span class="ms ms-o"></span>
+          <span class="ms ms-c"></span>
+          <span class="ms ms-e"></span>
+          <span class="ms ms-a"></span>
+          <span class="ms ms-n"></span>
+        </span>
+      </div>
+      <h2 class="form-heading">Start your <span class="heading-accent">discovery</span></h2>
+      <p class="form-sub">Create an account to unlock your profile.</p>
+      <div>
+        <div class="field">
+          <label>Name</label>
+          <input type="text" placeholder="Your name">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" placeholder="At least 12 characters">
+          <div class="pw-strength">
+            <div class="bar strong"></div>
+            <div class="bar strong"></div>
+            <div class="bar strong"></div>
+            <div class="bar strong"></div>
+          </div>
+          <div class="pw-hint">Minimum 12 characters</div>
+        </div>
+        <button class="btn-primary" style="min-height: 52px;">Create Account</button>
+        <button class="btn-ghost">Already exploring? Sign in</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Dark Sign In -->
+  <div>
+    <p class="frame-label">Mobile &middot; Dark &middot; Sign In</p>
+    <div class="mobile-frame dark">
+      <div class="corner-shapes">
+        <div class="cs-circle" style="width: 32px; height: 32px;"></div>
+        <div class="cs-tri"></div>
+      </div>
+      <div class="brand-mark">
+        <span class="text">big-</span>
+        <span class="mini-shapes">
+          <span class="ms ms-o"></span>
+          <span class="ms ms-c"></span>
+          <span class="ms ms-e"></span>
+          <span class="ms ms-a"></span>
+          <span class="ms ms-n"></span>
+        </span>
+      </div>
+      <h2 class="form-heading">Welcome <span class="heading-accent">back</span></h2>
+      <p class="form-sub">Sign in to continue your journey.</p>
+      <div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" placeholder="Your password">
+        </div>
+        <button class="btn-primary" style="min-height: 52px;">Sign In</button>
+        <button class="btn-ghost">New here? Create account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setTheme(t) {
+    document.body.className = t === 'dark' ? 'dark-bg' : 'light-bg';
+    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+</script>
+
+</body>
+</html>

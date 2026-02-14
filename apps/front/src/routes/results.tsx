@@ -1,24 +1,25 @@
 /**
- * Results Route
+ * Results Route Shell
  *
- * Displays assessment results with archetype theming, depth zone progression,
- * and share functionality.
- * Route: /results?sessionId=xxx
+ * Canonical behavior:
+ * - /results?sessionId=... -> /results/$sessionId
+ * - /results -> attempts 24h local resume from localStorage
  */
 
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import type { FacetName, TraitName } from "@workspace/domain";
+import {
+	createFileRoute,
+	Outlet,
+	redirect,
+	useNavigate,
+	useRouterState,
+} from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
-import { Loader2, MessageCircle } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { EvidencePanel } from "../components/EvidencePanel";
-import { WaveDivider } from "../components/home/WaveDivider";
-import { ArchetypeHeroSection } from "../components/results/ArchetypeHeroSection";
-import { ShareProfileSection } from "../components/results/ShareProfileSection";
-import { TraitScoresSection } from "../components/results/TraitScoresSection";
-import { useGetResults } from "../hooks/use-assessment";
-import { useFacetEvidence } from "../hooks/use-evidence";
-import { useShareProfile, useToggleVisibility } from "../hooks/use-profile";
+import {
+	clearPendingResultsGateSession,
+	readPendingResultsGateSession,
+} from "@/lib/results-auth-gate-storage";
 
 export const Route = createFileRoute("/results")({
 	validateSearch: (search: Record<string, unknown>) => {
@@ -27,262 +28,104 @@ export const Route = createFileRoute("/results")({
 			scrollToFacet: (search.scrollToFacet as string) || undefined,
 		};
 	},
-	component: ResultsPage,
+	beforeLoad: ({ search }) => {
+		if (search.sessionId) {
+			throw redirect({
+				to: "/results/$sessionId",
+				params: { sessionId: search.sessionId },
+				search: { scrollToFacet: search.scrollToFacet },
+				replace: true,
+			});
+		}
+	},
+	component: ResultsRouteShell,
 });
 
-/** Determine the dominant (highest-scoring) trait from results */
-function getDominantTrait(traits: { name: string; score: number }[]): TraitName {
-	if (traits.length === 0) return "openness";
-	const sorted = [...traits].sort((a, b) => b.score - a.score);
-	return sorted[0].name as TraitName;
-}
-
-function ResultsPage() {
-	const { sessionId, scrollToFacet } = Route.useSearch();
+function ResultsRouteShell() {
 	const navigate = useNavigate();
-	const { data: results, isLoading, error } = useGetResults(sessionId);
-	const shareProfile = useShareProfile();
-	const toggleVisibility = useToggleVisibility();
+	const pathname = useRouterState({ select: (state) => state.location.pathname });
+	const [entryState, setEntryState] = useState<"checking" | "none" | "expired">("checking");
 
-	const [shareState, setShareState] = useState<{
-		publicProfileId: string;
-		shareableUrl: string;
-		isPublic: boolean;
-	} | null>(null);
-	const [copied, setCopied] = useState(false);
-	const [shareError, setShareError] = useState<string | null>(null);
+	const isResultsIndex = pathname === "/results" || pathname === "/results/";
 
-	// Evidence panel state
-	const [selectedFacet, setSelectedFacet] = useState<FacetName | null>(null);
-	const [evidencePanelOpen, setEvidencePanelOpen] = useState(false);
-
-	// Expanded traits state
-	const [expandedTraits, setExpandedTraits] = useState<Set<string>>(new Set());
-
-	// Fetch evidence for selected facet
-	const { data: facetEvidence, isLoading: evidenceLoading } = useFacetEvidence(
-		sessionId,
-		selectedFacet,
-		evidencePanelOpen,
-	);
-
-	// Handle scrollToFacet search param
 	useEffect(() => {
-		if (scrollToFacet && results) {
-			const facet = results.facets.find(
-				(f) => f.name.toLowerCase().replace(/ /g, "_") === scrollToFacet,
-			);
-			if (facet) {
-				setExpandedTraits((prev) => new Set(prev).add(facet.traitName));
-				setTimeout(() => {
-					const element = document.getElementById(`facet-${scrollToFacet}`);
-					element?.scrollIntoView({ behavior: "smooth", block: "center" });
-				}, 100);
-			}
+		if (!isResultsIndex) {
+			return;
 		}
-	}, [scrollToFacet, results]);
 
-	const handleShare = async () => {
-		setShareError(null);
-		try {
-			const result = await shareProfile.mutateAsync(sessionId);
-			setShareState(result);
-		} catch (err) {
-			setShareError(err instanceof Error ? err.message : "Failed to create shareable profile");
-		}
-	};
-
-	const handleCopyLink = async () => {
-		if (!shareState) return;
-		try {
-			await navigator.clipboard.writeText(shareState.shareableUrl);
-			setCopied(true);
-			setTimeout(() => setCopied(false), 2000);
-		} catch {
-			const textarea = document.createElement("textarea");
-			textarea.value = shareState.shareableUrl;
-			document.body.appendChild(textarea);
-			textarea.select();
-			document.execCommand("copy");
-			document.body.removeChild(textarea);
-			setCopied(true);
-			setTimeout(() => setCopied(false), 2000);
-		}
-	};
-
-	const handleToggleVisibility = async () => {
-		if (!shareState) return;
-		try {
-			const result = await toggleVisibility.mutateAsync({
-				publicProfileId: shareState.publicProfileId,
-				isPublic: !shareState.isPublic,
+		const pending = readPendingResultsGateSession();
+		if (pending && !pending.expired) {
+			void navigate({
+				to: "/results/$sessionId",
+				params: { sessionId: pending.sessionId },
+				replace: true,
 			});
-			setShareState((prev) => (prev ? { ...prev, isPublic: result.isPublic } : null));
-		} catch {
-			// Silently fail - user can retry
+			return;
 		}
-	};
 
-	const handleViewEvidence = (facetName: FacetName) => {
-		setSelectedFacet(facetName);
-		setEvidencePanelOpen(true);
-	};
+		if (pending?.expired) {
+			setEntryState("expired");
+			return;
+		}
 
-	const handleCloseEvidence = () => {
-		setEvidencePanelOpen(false);
-		setSelectedFacet(null);
-	};
+		setEntryState("none");
+	}, [isResultsIndex, navigate]);
 
-	const toggleTrait = (trait: string) => {
-		setExpandedTraits((prev) => {
-			const newSet = new Set(prev);
-			if (newSet.has(trait)) {
-				newSet.delete(trait);
-			} else {
-				newSet.add(trait);
-			}
-			return newSet;
-		});
-	};
+	if (!isResultsIndex) {
+		return <Outlet />;
+	}
 
-	// --- Empty / Loading / Error states ---
-
-	if (!sessionId) {
+	if (entryState === "checking") {
 		return (
-			<div className="min-h-screen bg-background flex items-center justify-center px-6">
+			<div className="min-h-[calc(100dvh-3.5rem)] bg-background flex items-center justify-center px-6">
 				<div className="text-center">
-					<h1 className="text-2xl font-bold text-foreground mb-4">No Session Found</h1>
-					<p className="text-muted-foreground mb-6">Start an assessment to see your results.</p>
+					<Loader2 className="h-10 w-10 motion-safe:animate-spin text-primary mx-auto mb-3" />
+					<p className="text-sm text-muted-foreground">Checking for your pending results...</p>
+				</div>
+			</div>
+		);
+	}
+
+	if (entryState === "expired") {
+		return (
+			<div className="min-h-[calc(100dvh-3.5rem)] bg-background flex items-center justify-center px-6">
+				<div className="w-full max-w-xl rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
+					<h1 className="font-heading text-2xl text-foreground">Your previous results unlock expired</h1>
+					<p className="mt-2 text-muted-foreground">
+						For privacy, gated result sessions are kept for 24 hours on this device.
+					</p>
+					<div className="mt-6 flex flex-col gap-3">
+						<Button
+							onClick={() => {
+								clearPendingResultsGateSession();
+								void navigate({ to: "/chat", search: { sessionId: undefined } });
+							}}
+							className="min-h-11"
+						>
+							Start New Assessment
+						</Button>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	return (
+		<div className="min-h-[calc(100dvh-3.5rem)] bg-background flex items-center justify-center px-6">
+			<div className="w-full max-w-xl rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
+				<h1 className="font-heading text-2xl text-foreground">No Session Found</h1>
+				<p className="mt-2 text-muted-foreground">
+					Start an assessment to unlock your personality results.
+				</p>
+				<div className="mt-6">
 					<Button
 						onClick={() => navigate({ to: "/chat", search: { sessionId: undefined } })}
-						className="bg-primary text-primary-foreground hover:bg-primary/90"
+						className="min-h-11"
 					>
 						Start Assessment
 					</Button>
 				</div>
 			</div>
-		);
-	}
-
-	if (isLoading) {
-		return (
-			<div className="min-h-screen bg-background flex items-center justify-center">
-				<div className="text-center">
-					<Loader2 className="h-12 w-12 motion-safe:animate-spin text-primary mx-auto mb-4" />
-					<p className="text-muted-foreground">Calculating your personality profile...</p>
-				</div>
-			</div>
-		);
-	}
-
-	if (error || !results) {
-		return (
-			<div className="min-h-screen bg-background flex items-center justify-center px-6">
-				<div className="text-center">
-					<h1 className="text-2xl font-bold text-foreground mb-4">Could Not Load Results</h1>
-					<p className="text-muted-foreground mb-6">
-						{error?.message || "Your assessment may not be complete yet."}
-					</p>
-					<Button
-						onClick={() => navigate({ to: "/chat", search: { sessionId } })}
-						className="bg-primary text-primary-foreground hover:bg-primary/90"
-					>
-						<MessageCircle className="w-4 h-4 mr-2" />
-						Continue Assessment
-					</Button>
-				</div>
-			</div>
-		);
-	}
-
-	const dominantTrait = getDominantTrait(results.traits);
-
-	return (
-		<div className="min-h-screen">
-			{/* Depth Zone: Surface — Hero (maximum psychedelic) */}
-			<div className="bg-[var(--depth-surface)]">
-				<ArchetypeHeroSection
-					archetypeName={results.archetypeName}
-					oceanCode5={results.oceanCode5}
-					archetypeDescription={results.archetypeDescription}
-					overallConfidence={results.overallConfidence}
-					isCurated={results.isCurated}
-					dominantTrait={dominantTrait}
-				/>
-			</div>
-
-			{/* Wave transition: surface → shallows */}
-			<WaveDivider
-				fromColor="var(--depth-surface)"
-				className="text-[var(--depth-shallows)]"
-			/>
-
-			{/* Depth Zone: Shallows — Trait overview (balanced) */}
-			<div className="bg-[var(--depth-shallows)]">
-				<TraitScoresSection
-					traits={results.traits}
-					facets={results.facets}
-					expandedTraits={expandedTraits}
-					onToggleTrait={toggleTrait}
-					onViewEvidence={handleViewEvidence}
-				/>
-			</div>
-
-			{/* Wave transition: shallows → mid */}
-			<WaveDivider
-				fromColor="var(--depth-shallows)"
-				className="text-[var(--depth-mid)]"
-			/>
-
-			{/* Depth Zone: Mid — Share profile (scientific) */}
-			<div className="bg-[var(--depth-mid)]">
-				<ShareProfileSection
-					shareState={shareState}
-					shareError={shareError}
-					copied={copied}
-					isSharePending={shareProfile.isPending}
-					isTogglePending={toggleVisibility.isPending}
-					onShare={handleShare}
-					onCopyLink={handleCopyLink}
-					onToggleVisibility={handleToggleVisibility}
-				/>
-			</div>
-
-			{/* Wave transition: mid → deep */}
-			<WaveDivider
-				fromColor="var(--depth-mid)"
-				className="text-[var(--depth-deep)]"
-			/>
-
-			{/* Depth Zone: Deep — Actions */}
-			<div className="bg-[var(--depth-deep)] px-6 py-12">
-				<div className="flex flex-wrap gap-3 justify-center">
-					<Button
-						onClick={() => navigate({ to: "/chat", search: { sessionId } })}
-						variant="outline"
-						className="min-h-11"
-					>
-						<MessageCircle className="w-4 h-4 mr-2" />
-						Continue Chat
-					</Button>
-					<Button
-						onClick={() => navigate({ to: "/chat", search: { sessionId: undefined } })}
-						className="bg-primary text-primary-foreground hover:bg-primary/90 min-h-11"
-					>
-						Start New Assessment
-					</Button>
-				</div>
-			</div>
-
-			{/* Evidence Panel */}
-			<EvidencePanel
-				sessionId={sessionId}
-				facetName={selectedFacet}
-				evidence={facetEvidence}
-				isLoading={evidenceLoading}
-				isOpen={evidencePanelOpen}
-				onClose={handleCloseEvidence}
-			/>
 		</div>
 	);
 }

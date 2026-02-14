@@ -5,7 +5,7 @@
  */
 
 import type { Session, User } from "../lib/auth-client";
-import { signIn, signOut, signUp, useSession } from "../lib/auth-client";
+import { getSession, signIn, signOut, signUp, useSession } from "../lib/auth-client";
 
 /**
  * Main Auth Hook
@@ -34,10 +34,11 @@ export function useAuth() {
 
 		// Auth actions
 		signIn: {
-			email: async (email: string, password: string) => {
+			email: async (email: string, password: string, anonymousSessionId?: string) => {
 				const result = await signIn.email({
 					email,
 					password,
+					...(anonymousSessionId && { anonymousSessionId }),
 				});
 
 				if (result.error) {
@@ -67,6 +68,16 @@ export function useAuth() {
 
 		signOut: async () => {
 			await signOut();
+		},
+
+		refreshSession: async () => {
+			const result = await getSession();
+
+			if (result.error) {
+				throw new Error(result.error.message || "Failed to refresh session");
+			}
+
+			return result.data;
 		},
 	};
 }

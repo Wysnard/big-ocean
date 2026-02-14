@@ -8,7 +8,8 @@ import { Schema } from "effect";
 export const AssessmentHumanMessageEntitySchema = Schema.Struct({
 	id: Schema.UUID,
 	sessionId: Schema.UUID,
-	userId: Schema.NullOr(Schema.UUID), // Null for anonymous users
+	// Better Auth user IDs are string-based, not UUID-constrained.
+	userId: Schema.NullOr(Schema.String), // Null for anonymous users
 	role: Schema.Literal("user"),
 	content: Schema.String,
 	createdAt: Schema.DateFromSelf,

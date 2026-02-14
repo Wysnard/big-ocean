@@ -17,6 +17,32 @@ import type {
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
+export class AssessmentApiError extends Error {
+	readonly status: number;
+	readonly details: unknown;
+
+	constructor(status: number, message: string, details: unknown) {
+		super(message);
+		this.name = "AssessmentApiError";
+		this.status = status;
+		this.details = details;
+	}
+}
+
+export const isAssessmentApiError = (error: unknown): error is AssessmentApiError =>
+	error instanceof AssessmentApiError;
+
+const getErrorMessage = (details: unknown, status: number, statusText: string): string => {
+	if (typeof details === "object" && details !== null && "message" in details) {
+		const message = (details as { message?: unknown }).message;
+		if (typeof message === "string" && message.length > 0) {
+			return message;
+		}
+	}
+
+	return `HTTP ${status}: ${statusText}`;
+};
+
 /**
  * HTTP client for assessment endpoints
  */
@@ -31,8 +57,12 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
 	});
 
 	if (!response.ok) {
-		const error = await response.json().catch(() => ({ message: response.statusText }));
-		throw new Error(error.message || `HTTP ${response.status}: ${response.statusText}`);
+		const error = await response.json().catch(() => null);
+		throw new AssessmentApiError(
+			response.status,
+			getErrorMessage(error, response.status, response.statusText),
+			error,
+		);
 	}
 
 	return response.json();

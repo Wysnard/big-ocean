@@ -58,7 +58,7 @@ development_status:
   2-5-llm-cost-tracking-rate-limiting-and-budget-enforcement: done
   2-8-integration-testing-docker-compose: done
   2-9-evidence-sourced-scoring: done
-  2-10-nerin-conversational-empathy-patterns: backlog
+  2-10-nerin-conversational-empathy-patterns: done
   epic-2-retrospective: done
 
   # EPIC 3: OCEAN Archetype System
@@ -111,8 +111,9 @@ development_status:
   7-7-illustration-and-icon-system: done
   7-8-home-page-redesign-with-color-block-composition: done
   7-9-results-page-visual-redesign-with-archetype-theming: done
-  7-10-assessment-chat-ux-polish: review
-  7-11-auth-gated-results-reveal-and-sign-up-flow: ready-for-dev
+  7-10-assessment-chat-ux-polish: done
+  7-11-auth-gated-results-reveal-and-sign-up-flow: done
+  7-15-auth-form-psychedelic-brand-redesign: ready-for-dev
   7-12-shareable-public-profile-and-share-cards: backlog
   7-13-registered-user-profile-page: backlog
   7-14-component-visual-consistency-and-final-polish: backlog

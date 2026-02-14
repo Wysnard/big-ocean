@@ -4,11 +4,19 @@
  * Email/password registration with Better Auth.
  */
 
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuth } from "../../hooks/use-auth";
+import { buildAuthPageHref } from "../../lib/auth-session-linking";
 
-export function SignupForm() {
+interface SignupFormProps {
+	anonymousSessionId?: string;
+	redirectTo?: string;
+}
+
+export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) {
 	const { signUp } = useAuth();
+	const navigate = useNavigate();
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -35,9 +43,16 @@ export function SignupForm() {
 		setIsLoading(true);
 
 		try {
-			await signUp.email(email, password, name);
-			// Redirect or update UI on success
-			window.location.href = "/dashboard";
+			await signUp.email(email, password, name, anonymousSessionId);
+
+			// Navigate using TanStack Router
+			if (redirectTo) {
+				await navigate({ to: redirectTo });
+			} else if (anonymousSessionId) {
+				await navigate({ to: "/results/$sessionId", params: { sessionId: anonymousSessionId } });
+			} else {
+				await navigate({ to: "/dashboard" });
+			}
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : String(err);
 			if (errorMessage.includes("already exists")) {
@@ -130,7 +145,13 @@ export function SignupForm() {
 
 			<p className="text-sm text-center text-gray-600">
 				Already have an account?{" "}
-				<a href="/login" className="text-blue-600 hover:underline">
+				<a
+					href={buildAuthPageHref("/login", {
+						sessionId: anonymousSessionId,
+						redirectTo,
+					})}
+					className="text-blue-600 hover:underline"
+				>
 					Sign in
 				</a>
 			</p>
