@@ -516,6 +516,7 @@ export function TherapistChat({
 									style={{ maxHeight: "120px" }}
 								/>
 								<Button
+									data-testid="chat-send-btn"
 									onClick={handleSendMessage}
 									disabled={!inputValue.trim() || isLoading || isCompleted}
 									size="sm"

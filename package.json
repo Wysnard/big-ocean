@@ -27,9 +27,9 @@
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
 		"seed:test-assessment": "tsx scripts/seed-completed-assessment.ts",
-		"test:e2e": "pnpm --filter=front test:e2e",
-		"test:e2e:ui": "pnpm --filter=front test:e2e:ui",
-		"test:e2e:headed": "pnpm --filter=front test:e2e:headed"
+		"test:e2e": "pnpm --filter=@workspace/e2e test:e2e",
+		"test:e2e:ui": "pnpm --filter=@workspace/e2e test:e2e:ui",
+		"test:e2e:headed": "pnpm --filter=@workspace/e2e test:e2e:headed"
 	},
 	"simple-git-hooks": {
 		"pre-commit": "./.githooks/pre-commit",

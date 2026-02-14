@@ -63,6 +63,9 @@ const configSchema = Config.all({
 
 	// Assessment readiness (Story 4.7)
 	messageReadyThreshold: Config.number("MESSAGE_READY_THRESHOLD").pipe(Config.withDefault(15)),
+
+	// Profile sharing confidence threshold
+	shareMinConfidence: Config.number("SHARE_MIN_CONFIDENCE").pipe(Config.withDefault(70)),
 });
 
 /**

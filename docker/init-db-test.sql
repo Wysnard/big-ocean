@@ -1,13 +1,16 @@
 -- Initialize PostgreSQL Test Database for big-ocean integration testing
 -- This script runs automatically when PostgreSQL container starts
 -- Creates all tables needed for integration tests
+--
+-- IMPORTANT: Keep in sync with Drizzle schema at
+--   packages/infrastructure/src/db/drizzle/schema.ts
 
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ============================================================================
--- Better Auth Tables (from migration 20260131230139)
+-- Better Auth Tables
 -- ============================================================================
 
 CREATE TABLE "user" (
@@ -57,7 +60,7 @@ CREATE TABLE "verification" (
 );
 
 -- ============================================================================
--- Assessment Tables (using correct Drizzle schema names)
+-- Assessment Tables
 -- ============================================================================
 
 CREATE TABLE "assessment_session" (
@@ -66,7 +69,6 @@ CREATE TABLE "assessment_session" (
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"status" text DEFAULT 'active' NOT NULL,
-	"confidence" jsonb NOT NULL,
 	"message_count" integer DEFAULT 0 NOT NULL
 );
 
@@ -80,7 +82,7 @@ CREATE TABLE "assessment_message" (
 );
 
 -- ============================================================================
--- Scoring Tables (from migration 20260202153900, 20260202183500)
+-- Evidence Table
 -- ============================================================================
 
 CREATE TABLE "facet_evidence" (
@@ -95,21 +97,19 @@ CREATE TABLE "facet_evidence" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 
-CREATE TABLE "facet_scores" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-	"session_id" uuid NOT NULL,
-	"facet_name" text NOT NULL,
-	"score" integer NOT NULL DEFAULT 0,
-	"confidence" integer NOT NULL DEFAULT 0,
-	"updated_at" timestamp DEFAULT now() NOT NULL
-);
+-- ============================================================================
+-- Public Profile Table
+-- ============================================================================
 
-CREATE TABLE "trait_scores" (
+CREATE TABLE "public_profile" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"session_id" uuid NOT NULL,
-	"trait_name" text NOT NULL,
-	"score" integer NOT NULL DEFAULT 0,
-	"confidence" integer NOT NULL DEFAULT 0,
+	"user_id" text,
+	"ocean_code_5" text NOT NULL,
+	"ocean_code_4" text NOT NULL,
+	"is_public" boolean DEFAULT false NOT NULL,
+	"view_count" integer DEFAULT 0 NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 
@@ -126,15 +126,13 @@ CREATE INDEX "verification_identifier_idx" ON "verification" ("identifier");
 CREATE INDEX "assessment_session_user_id_idx" ON "assessment_session" ("user_id");
 CREATE INDEX "assessment_message_session_created_idx" ON "assessment_message" ("session_id","created_at");
 
--- Facet/Trait indexes
+-- Evidence indexes
 CREATE INDEX "facet_evidence_assessment_message_id_idx" ON "facet_evidence" ("assessment_message_id");
 CREATE INDEX "facet_evidence_facet_name_idx" ON "facet_evidence" ("facet_name");
-CREATE INDEX "facet_scores_session_id_idx" ON "facet_scores" ("session_id");
-CREATE INDEX "facet_scores_facet_name_idx" ON "facet_scores" ("facet_name");
-CREATE INDEX "facet_scores_session_facet_unique_idx" ON "facet_scores" ("session_id", "facet_name");
-CREATE INDEX "trait_scores_session_id_idx" ON "trait_scores" ("session_id");
-CREATE INDEX "trait_scores_trait_name_idx" ON "trait_scores" ("trait_name");
-CREATE INDEX "trait_scores_session_trait_unique_idx" ON "trait_scores" ("session_id", "trait_name");
+
+-- Public profile indexes
+CREATE INDEX "public_profile_session_id_idx" ON "public_profile" ("session_id");
+CREATE INDEX "public_profile_user_id_idx" ON "public_profile" ("user_id");
 
 -- ============================================================================
 -- Foreign Key Constraints
@@ -157,12 +155,13 @@ ALTER TABLE "assessment_message" ADD CONSTRAINT "assessment_message_session_id_a
 ALTER TABLE "assessment_message" ADD CONSTRAINT "assessment_message_user_id_user_id_fkey"
 	FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE SET NULL;
 
--- Scoring constraints
+-- Evidence constraints
 ALTER TABLE "facet_evidence" ADD CONSTRAINT "facet_evidence_assessment_message_id_assessment_message_id_fkey"
 	FOREIGN KEY ("assessment_message_id") REFERENCES "assessment_message"("id") ON DELETE CASCADE;
 
-ALTER TABLE "facet_scores" ADD CONSTRAINT "facet_scores_session_id_assessment_session_id_fkey"
+-- Public profile constraints
+ALTER TABLE "public_profile" ADD CONSTRAINT "public_profile_session_id_assessment_session_id_fkey"
 	FOREIGN KEY ("session_id") REFERENCES "assessment_session"("id") ON DELETE CASCADE;
 
-ALTER TABLE "trait_scores" ADD CONSTRAINT "trait_scores_session_id_assessment_session_id_fkey"
-	FOREIGN KEY ("session_id") REFERENCES "assessment_session"("id") ON DELETE CASCADE;
+ALTER TABLE "public_profile" ADD CONSTRAINT "public_profile_user_id_user_id_fkey"
+	FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE SET NULL;

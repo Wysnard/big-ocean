@@ -1,0 +1,86 @@
+# Docker Compose E2E Environment
+# ---
+# Purpose: Dedicated environment for Playwright e2e journey tests
+#
+# Key differences from compose.test.yaml (integration tests):
+# - MESSAGE_READY_THRESHOLD=2  → results unlock after 2 user messages
+# - MOCK_LLM=true              → deterministic mock responses, zero cost
+# - Same ports: API 4001, PG 5433, Redis 6380, Frontend 3001
+#
+# Usage:
+#   pnpm test:e2e               # Automatic via globalSetup/globalTeardown
+#   docker compose -f compose.e2e.yaml up -d --build   # Manual start
+#   docker compose -f compose.e2e.yaml down -v          # Manual stop
+
+services:
+  redis-e2e:
+    image: redis:7-alpine
+    container_name: bigocean-redis-e2e
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    networks:
+      - bigocean-e2e-network
+
+  postgres-e2e:
+    image: postgres:16-alpine
+    container_name: bigocean-postgres-e2e
+    environment:
+      POSTGRES_DB: bigocean_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./docker/init-db-test.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d bigocean_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    networks:
+      - bigocean-e2e-network
+
+  api-e2e:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: production
+    container_name: bigocean-api-e2e
+    environment:
+      DATABASE_URL: postgresql://test_user:test_password@postgres-e2e:5432/bigocean_test
+      REDIS_URL: "redis://redis-e2e:6379"
+      MOCK_LLM: "true"
+      MESSAGE_READY_THRESHOLD: "2"
+      SHARE_MIN_CONFIDENCE: "0"
+      ANTHROPIC_API_KEY: "sk-test-dummy-key-for-e2e-tests"
+      BETTER_AUTH_SECRET: test-secret-minimum-32-characters-long-for-security
+      BETTER_AUTH_URL: http://localhost:4001
+      FRONTEND_URL: http://localhost:3001
+      NODE_ENV: test
+      PORT: 4000
+      HOST: 0.0.0.0
+      DATABASE_SSL: "false"
+    ports:
+      - "4001:4000"
+    depends_on:
+      redis-e2e:
+        condition: service_healthy
+      postgres-e2e:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://127.0.0.1:4000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - bigocean-e2e-network
+
+networks:
+  bigocean-e2e-network:
+    driver: bridge

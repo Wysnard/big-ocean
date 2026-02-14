@@ -338,6 +338,7 @@ function ResultsSessionPage() {
 			<div className="bg-[var(--depth-deep)] px-6 py-12">
 				<div className="flex flex-wrap gap-3 justify-center">
 					<Button
+						data-testid="results-continue-chat"
 						onClick={() => navigate({ to: "/chat", search: { sessionId } })}
 						variant="outline"
 						className="min-h-11"
@@ -346,6 +347,7 @@ function ResultsSessionPage() {
 						Continue Chat
 					</Button>
 					<Button
+						data-testid="results-start-new"
 						onClick={() => navigate({ to: "/chat", search: { sessionId: undefined } })}
 						className="bg-primary text-primary-foreground hover:bg-primary/90 min-h-11"
 					>

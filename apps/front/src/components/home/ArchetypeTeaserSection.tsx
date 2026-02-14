@@ -1,5 +1,6 @@
-import { useNavigate } from "@tanstack/react-router";
-import { Button } from "@workspace/ui/components/button";
+import { Link } from "@tanstack/react-router";
+import { buttonVariants } from "@workspace/ui/components/button";
+import { cn } from "@workspace/ui/lib/utils";
 
 const EXAMPLE_ARCHETYPES = [
 	{
@@ -17,8 +18,6 @@ const EXAMPLE_ARCHETYPES = [
 ];
 
 export function ArchetypeTeaserSection() {
-	const navigate = useNavigate();
-
 	return (
 		<section data-slot="archetype-teaser-section" className="px-6 py-16">
 			<div className="mx-auto max-w-3xl text-center">
@@ -57,18 +56,12 @@ export function ArchetypeTeaserSection() {
 
 					{/* CTA overlay */}
 					<div className="absolute inset-0 flex items-center justify-center">
-						<Button
-							onClick={() =>
-								navigate({
-									to: "/chat",
-									search: { sessionId: undefined },
-								})
-							}
-							size="lg"
-							className="min-h-11 bg-primary text-primary-foreground"
+						<Link
+							to="/chat"
+							className={cn(buttonVariants({ size: "lg" }), "min-h-11 bg-primary text-primary-foreground")}
 						>
 							Discover What's Below
-						</Button>
+						</Link>
 					</div>
 				</div>
 			</div>

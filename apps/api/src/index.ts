@@ -16,6 +16,7 @@ import { AppConfig } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import {
 	AnalyzerClaudeRepositoryLive,
+	AnalyzerMockRepositoryLive,
 	AppConfigLive,
 	BetterAuthLive,
 	BetterAuthService,
@@ -77,6 +78,15 @@ const NerinAgentLayer =
 	process.env.MOCK_LLM === "true" ? NerinAgentMockRepositoryLive : NerinAgentLangGraphRepositoryLive;
 
 /**
+ * Analyzer Layer Selection
+ *
+ * Uses mock implementation when MOCK_LLM=true (for integration testing).
+ * Uses real Claude implementation otherwise (production/development).
+ */
+const AnalyzerLayer =
+	process.env.MOCK_LLM === "true" ? AnalyzerMockRepositoryLive : AnalyzerClaudeRepositoryLive;
+
+/**
  * Redis Layer - provides Redis for CostGuard
  */
 const RedisLayer = RedisIoRedisRepositoryLive.pipe(Layer.provide(InfrastructureLayer));
@@ -94,7 +104,7 @@ const CostGuardLayer = CostGuardRedisRepositoryLive.pipe(
  */
 const AgentLayers = Layer.mergeAll(
 	NerinAgentLayer,
-	AnalyzerClaudeRepositoryLive,
+	AnalyzerLayer,
 	FacetEvidenceDrizzleRepositoryLive,
 ).pipe(Layer.provide(InfrastructureLayer));
 

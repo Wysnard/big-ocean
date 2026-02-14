@@ -70,6 +70,9 @@ export interface AppConfigService {
 
 	/** Number of user messages before assessment is considered ready (Story 4.7) */
 	readonly messageReadyThreshold: number;
+
+	/** Minimum facet confidence (0-100) required to allow profile sharing */
+	readonly shareMinConfidence: number;
 }
 
 /**

@@ -20,8 +20,9 @@ export { BetterAuthLive, BetterAuthService } from "./context/better-auth";
 export { Database, DatabaseStack } from "./context/database";
 // Database schema (for Better Auth adapter and migrations)
 export * as dbSchema from "./db/drizzle/schema";
-// Analyzer repository implementation
+// Analyzer repository implementations
 export { AnalyzerClaudeRepositoryLive } from "./repositories/analyzer.claude.repository";
+export { AnalyzerMockRepositoryLive } from "./repositories/analyzer.mock.repository";
 // Message repository implementation
 export { AssessmentMessageDrizzleRepositoryLive } from "./repositories/assessment-message.drizzle.repository";
 // Session repository implementation

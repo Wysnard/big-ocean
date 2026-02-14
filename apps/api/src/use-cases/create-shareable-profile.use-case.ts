@@ -32,7 +32,6 @@ export interface CreateShareableProfileOutput {
 }
 
 const REQUIRED_FACET_COUNT = 30;
-const MIN_CONFIDENCE_THRESHOLD = 70;
 
 /**
  * Create Shareable Profile Use Case
@@ -69,16 +68,15 @@ export const createShareableProfile = (input: CreateShareableProfileInput) =>
 		const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
 		const facetScores = aggregateFacetScores(evidence);
 
-		// 4. Confidence validation (AC #5): ALL 30 facets must have confidence >= 70
+		// 4. Confidence validation (AC #5): ALL 30 facets must have confidence >= threshold
+		const minConfidence = config.shareMinConfidence;
 		const facetsWithData = ALL_FACETS.filter(
-			(facetName) =>
-				facetScores[facetName] && facetScores[facetName].confidence >= MIN_CONFIDENCE_THRESHOLD,
+			(facetName) => facetScores[facetName] && facetScores[facetName].confidence >= minConfidence,
 		);
 
 		if (facetsWithData.length < REQUIRED_FACET_COUNT) {
 			const lowConfidenceFacets = ALL_FACETS.filter(
-				(facetName) =>
-					!facetScores[facetName] || facetScores[facetName].confidence < MIN_CONFIDENCE_THRESHOLD,
+				(facetName) => !facetScores[facetName] || facetScores[facetName].confidence < minConfidence,
 			);
 			logger.warn("Profile share blocked: insufficient confidence", {
 				sessionId: input.sessionId,

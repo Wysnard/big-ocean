@@ -1,0 +1,85 @@
+import { resolve } from "node:path";
+import { defineConfig, devices } from "@playwright/test";
+
+const PROJECT_ROOT = resolve(import.meta.dirname, "..");
+
+/**
+ * Playwright E2E Test Configuration — Chromium Desktop Only
+ *
+ * Projects:
+ *   setup        → creates test users + assessment session (runs first)
+ *   golden-path  → self-contained journey spec
+ *   unauth       → unauthenticated access denial (no storageState)
+ *   auth-other   → other-user access denial (other-user.json)
+ *   auth-owner   → owner access granted (owner.json)
+ *
+ * Docker test containers are managed via globalSetup / globalTeardown.
+ */
+export default defineConfig({
+	globalSetup: "./global-setup.ts",
+	globalTeardown: "./global-teardown.ts",
+	testDir: ".",
+	fullyParallel: true,
+	workers: 4,
+	forbidOnly: !!process.env.CI,
+	retries: process.env.CI ? 1 : 0,
+	timeout: 30_000,
+	reporter: "html",
+	use: {
+		baseURL: "http://localhost:3001",
+		trace: "on-first-retry",
+		screenshot: "only-on-failure",
+		...devices["Desktop Chrome"],
+	},
+
+	projects: [
+		// ── Setup: create auth state before access-control specs ──────────
+		{
+			name: "setup",
+			testMatch: "fixtures/auth.setup.ts",
+		},
+
+		// ── Golden path: self-contained, no auth dependency ──────────────
+		{
+			name: "golden-path",
+			testMatch: "specs/golden-path.spec.ts",
+			dependencies: ["setup"],
+		},
+
+		// ── Access-control: unauthenticated ──────────────────────────────
+		{
+			name: "unauth",
+			testMatch: "specs/access-control/unauth-denied.spec.ts",
+			dependencies: ["setup"],
+		},
+
+		// ── Access-control: authenticated as other user ──────────────────
+		{
+			name: "auth-other",
+			testMatch: "specs/access-control/other-user-denied.spec.ts",
+			dependencies: ["setup"],
+			use: {
+				storageState: ".auth/other-user.json",
+			},
+		},
+
+		// ── Access-control: authenticated as session owner ────────────────
+		{
+			name: "auth-owner",
+			testMatch: "specs/access-control/owner-access.spec.ts",
+			dependencies: ["setup"],
+			use: {
+				storageState: ".auth/owner.json",
+			},
+		},
+	],
+
+	webServer: {
+		command:
+			"cd apps/front && VITE_API_URL=http://localhost:4001 VITE_E2E=true npx vite dev --port 3001",
+		url: "http://localhost:3001",
+		cwd: PROJECT_ROOT,
+		reuseExistingServer: !process.env.CI,
+		timeout: 20_000,
+	},
+});

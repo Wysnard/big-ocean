@@ -39,6 +39,7 @@ export const defaultTestConfig: AppConfigService = {
 	nerinTemperature: 0.7,
 	dailyCostLimit: 75,
 	messageReadyThreshold: 15,
+	shareMinConfidence: 70,
 };
 
 /**

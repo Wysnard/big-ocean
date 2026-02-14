@@ -1,11 +1,10 @@
-import { useNavigate } from "@tanstack/react-router";
-import { Button } from "@workspace/ui/components/button";
+import { Link } from "@tanstack/react-router";
+import { buttonVariants } from "@workspace/ui/components/button";
+import { cn } from "@workspace/ui/lib/utils";
 import { OceanShapeSet } from "../ocean-shapes/OceanShapeSet";
 import { ScrollIndicator } from "./ScrollIndicator";
 
 export function HeroSection() {
-	const navigate = useNavigate();
-
 	return (
 		<section
 			data-slot="hero-section"
@@ -54,18 +53,16 @@ export function HeroSection() {
 				</p>
 
 				<div className="flex flex-col items-center gap-4">
-					<Button
-						onClick={() =>
-							navigate({
-								to: "/chat",
-								search: { sessionId: undefined },
-							})
-						}
-						size="lg"
-						className="min-h-11 w-full bg-primary px-8 py-6 text-lg font-semibold text-primary-foreground transition-all hover:bg-primary/90 sm:w-auto"
+					<Link
+						data-testid="hero-cta"
+						to="/chat"
+						className={cn(
+							buttonVariants({ size: "lg" }),
+							"min-h-11 w-full bg-primary px-8 py-6 text-lg font-semibold text-primary-foreground transition-all hover:bg-primary/90 sm:w-auto",
+						)}
 					>
 						Begin Your Dive
-					</Button>
+					</Link>
 					<p className="mt-2 text-sm text-muted-foreground">Takes 30 min · Free · No account needed</p>
 				</div>
 

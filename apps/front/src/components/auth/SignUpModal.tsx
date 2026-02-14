@@ -88,7 +88,7 @@ export function SignUpModal({ isOpen, sessionId, onClose }: SignUpModalProps) {
 				</DialogHeader>
 
 				{success ? (
-					<div className="py-6 text-center">
+					<div data-testid="modal-signup-success" className="py-6 text-center">
 						<div className="text-green-400 text-lg font-medium mb-2">✓ Your results are being saved!</div>
 						<p className="text-slate-300 text-sm">You can now access them anytime</p>
 					</div>
@@ -105,6 +105,7 @@ export function SignUpModal({ isOpen, sessionId, onClose }: SignUpModalProps) {
 								Email
 							</label>
 							<input
+								data-testid="modal-signup-email"
 								id="modal-email"
 								type="email"
 								value={email}
@@ -120,6 +121,7 @@ export function SignUpModal({ isOpen, sessionId, onClose }: SignUpModalProps) {
 								Password
 							</label>
 							<input
+								data-testid="modal-signup-password"
 								id="modal-password"
 								type="password"
 								value={password}
@@ -134,6 +136,7 @@ export function SignUpModal({ isOpen, sessionId, onClose }: SignUpModalProps) {
 
 						<DialogFooter className="flex flex-col gap-2 sm:flex-col">
 							<Button
+								data-testid="modal-signup-submit"
 								type="submit"
 								disabled={isLoading}
 								className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
@@ -141,6 +144,7 @@ export function SignUpModal({ isOpen, sessionId, onClose }: SignUpModalProps) {
 								{isLoading ? "Signing up..." : "Sign Up"}
 							</Button>
 							<Button
+								data-testid="modal-signup-dismiss"
 								type="button"
 								variant="ghost"
 								onClick={onClose}

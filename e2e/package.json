@@ -1,0 +1,21 @@
+{
+	"name": "@workspace/e2e",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"test:e2e": "playwright test",
+		"test:e2e:ui": "playwright test --ui",
+		"test:e2e:debug": "playwright test --debug",
+		"test:e2e:headed": "playwright test --headed",
+		"lint": "biome lint specs fixtures factories e2e-env.ts"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.3.13",
+		"@playwright/test": "^1.58.1",
+		"@types/pg": "^8.16.0",
+		"@workspace/lint": "workspace:*",
+		"pg": "catalog:",
+		"playwright": "^1.58.1"
+	}
+}

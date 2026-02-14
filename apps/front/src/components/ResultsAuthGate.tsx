@@ -99,6 +99,7 @@ export function ResultsAuthGate({
 							<Button
 								type="button"
 								data-slot="results-auth-gate-signup-cta"
+								data-testid="auth-gate-signup-cta"
 								className="min-h-11 font-heading"
 								onClick={() => setMode("signup")}
 							>
@@ -107,6 +108,7 @@ export function ResultsAuthGate({
 							<Button
 								type="button"
 								data-slot="results-auth-gate-signin-cta"
+								data-testid="auth-gate-signin-cta"
 								variant="ghost"
 								className="min-h-11"
 								onClick={() => setMode("signin")}

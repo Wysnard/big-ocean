@@ -250,7 +250,12 @@ function ProfilePage() {
 						>
 							<Waves className="w-10 h-10" style={{ color: profile.color }} />
 						</div>
-						<h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{profile.archetypeName}</h1>
+						<h1
+							data-testid="public-archetype-name"
+							className="text-3xl md:text-4xl font-bold text-white mb-2"
+						>
+							{profile.archetypeName}
+						</h1>
 						<p className="text-sm font-mono text-slate-400 mb-4">OCEAN Code: {profile.oceanCode}</p>
 						<p className="text-gray-300 leading-relaxed max-w-lg mx-auto">{profile.description}</p>
 					</div>
@@ -339,6 +344,7 @@ function ProfilePage() {
 					</div>
 					<div className="flex flex-wrap gap-3">
 						<Button
+							data-testid="public-copy-link"
 							onClick={handleCopyLink}
 							variant="outline"
 							className="border-slate-600 text-gray-300 hover:bg-slate-700 hover:text-white"
@@ -362,7 +368,10 @@ function ProfilePage() {
 				<div className="text-center">
 					<p className="text-gray-400 mb-4">Want to discover your own personality archetype?</p>
 					<Link to="/chat" search={{ sessionId: undefined }}>
-						<Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 px-8">
+						<Button
+							data-testid="public-cta"
+							className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 px-8"
+						>
 							Take the Assessment
 						</Button>
 					</Link>

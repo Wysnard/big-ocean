@@ -32,6 +32,7 @@ export const mockAppConfig: AppConfigService = {
 	nerinMaxTokens: 1024,
 	nerinTemperature: 0.7,
 	messageReadyThreshold: 15,
+	shareMinConfidence: 70,
 };
 
 export const createTestAppConfigLayer = () => Layer.succeed(AppConfig, mockAppConfig);

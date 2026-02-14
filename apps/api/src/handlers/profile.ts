@@ -15,6 +15,7 @@ import {
 	getPublicProfile,
 	toggleProfileVisibility,
 } from "../use-cases/index";
+import { resolveAuthenticatedUserId } from "./assessment";
 
 export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (handlers) =>
 	Effect.gen(function* () {
@@ -92,9 +93,8 @@ export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (ha
 						);
 					}
 
-					// Extract authenticated user ID from auth context
-					// Better Auth sets x-user-id header
-					const authenticatedUserId = request.headers["x-user-id"] as string;
+					// Extract authenticated user ID from session cookie via Better Auth
+					const authenticatedUserId = yield* resolveAuthenticatedUserId(request);
 
 					if (!authenticatedUserId) {
 						return yield* Effect.fail(

@@ -185,7 +185,12 @@ export function ResultsSignInForm({
 					selector={(state) => [state.isSubmitting]}
 					// biome-ignore lint/correctness/noChildrenProp: TanStack Form uses render props pattern
 					children={([isSubmitting]) => (
-						<Button type="submit" className="min-h-11 w-full font-heading" disabled={isSubmitting}>
+						<Button
+							type="submit"
+							data-testid="auth-gate-signin-submit"
+							className="min-h-11 w-full font-heading"
+							disabled={isSubmitting}
+						>
 							{isSubmitting && <Loader2 className="mr-2 h-4 w-4 motion-safe:animate-spin" />}
 							Sign In and Reveal Results
 						</Button>

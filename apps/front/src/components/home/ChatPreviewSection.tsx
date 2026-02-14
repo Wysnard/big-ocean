@@ -1,5 +1,6 @@
-import { useNavigate } from "@tanstack/react-router";
-import { Button } from "@workspace/ui/components/button";
+import { Link } from "@tanstack/react-router";
+import { buttonVariants } from "@workspace/ui/components/button";
+import { cn } from "@workspace/ui/lib/utils";
 import { NerinAvatar } from "../NerinAvatar";
 import { ChatBubble } from "./ChatBubble";
 
@@ -26,8 +27,6 @@ const CHAT_MESSAGES: { message: string; variant: "ai" | "user" }[] = [
 ];
 
 export function ChatPreviewSection() {
-	const navigate = useNavigate();
-
 	return (
 		<section data-slot="chat-preview-section" className="mx-auto max-w-3xl px-6 py-16">
 			<h2 className="mb-2 text-center text-3xl font-bold text-foreground">Meet Your Dive Companion</h2>
@@ -63,19 +62,9 @@ export function ChatPreviewSection() {
 			</p>
 
 			<div className="mt-6 flex justify-center">
-				<Button
-					onClick={() =>
-						navigate({
-							to: "/chat",
-							search: { sessionId: undefined },
-						})
-					}
-					variant="outline"
-					size="lg"
-					className="min-h-11"
-				>
+				<Link to="/chat" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "min-h-11")}>
 					Start your deep dive
-				</Button>
+				</Link>
 			</div>
 		</section>
 	);

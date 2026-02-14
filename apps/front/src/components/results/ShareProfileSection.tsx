@@ -1,12 +1,5 @@
 import { Button } from "@workspace/ui/components/button";
-import {
-	Check,
-	Copy,
-	Eye,
-	EyeOff,
-	Loader2,
-	Share2,
-} from "lucide-react";
+import { Check, Copy, Eye, EyeOff, Loader2, Share2 } from "lucide-react";
 
 interface ShareState {
 	publicProfileId: string;
@@ -41,9 +34,7 @@ export function ShareProfileSection({
 				<div className="border border-border rounded-xl bg-card p-6">
 					<div className="flex items-center gap-2 mb-4">
 						<Share2 className="w-5 h-5 text-muted-foreground" />
-						<h2 className="text-lg font-semibold text-foreground">
-							Share Your Profile
-						</h2>
+						<h2 className="text-lg font-semibold text-foreground">Share Your Profile</h2>
 					</div>
 
 					{!shareState ? (
@@ -51,10 +42,9 @@ export function ShareProfileSection({
 							<p className="text-muted-foreground text-sm mb-4">
 								Generate a shareable link so others can see your personality archetype.
 							</p>
-							{shareError && (
-								<p className="text-destructive text-sm mb-4">{shareError}</p>
-							)}
+							{shareError && <p className="text-destructive text-sm mb-4">{shareError}</p>}
 							<Button
+								data-testid="share-generate-btn"
 								onClick={onShare}
 								disabled={isSharePending}
 								className="bg-primary text-primary-foreground hover:bg-primary/90"
@@ -76,20 +66,17 @@ export function ShareProfileSection({
 						<div className="space-y-4">
 							{/* Link display */}
 							<div className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
-								<code className="text-sm text-primary flex-1 truncate">
+								<code data-testid="share-url" className="text-sm text-primary flex-1 truncate">
 									{shareState.shareableUrl}
 								</code>
 								<Button
+									data-testid="share-copy-btn"
 									onClick={onCopyLink}
 									size="sm"
 									variant="outline"
 									className="shrink-0"
 								>
-									{copied ? (
-										<Check className="w-4 h-4 text-green-500" />
-									) : (
-										<Copy className="w-4 h-4" />
-									)}
+									{copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
 								</Button>
 							</div>
 
@@ -101,11 +88,12 @@ export function ShareProfileSection({
 									) : (
 										<EyeOff className="w-4 h-4 text-muted-foreground" />
 									)}
-									<span className="text-sm text-foreground">
+									<span data-testid="share-visibility-status" className="text-sm text-foreground">
 										{shareState.isPublic ? "Profile is public" : "Profile is private"}
 									</span>
 								</div>
 								<Button
+									data-testid="share-privacy-toggle"
 									onClick={onToggleVisibility}
 									size="sm"
 									variant="outline"

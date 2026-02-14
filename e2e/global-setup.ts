@@ -1,9 +1,7 @@
 import { execSync } from "node:child_process";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const PROJECT_ROOT = resolve(__dirname, "../../..");
+const PROJECT_ROOT = resolve(import.meta.dirname, "..");
 const HEALTH_URL = "http://localhost:4001/health";
 const POLL_INTERVAL_MS = 2_000;
 const TIMEOUT_MS = 90_000;
@@ -24,15 +22,13 @@ async function waitForHealth(): Promise<void> {
 		await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
 	}
 
-	throw new Error(
-		`[global-setup] API did not become healthy within ${TIMEOUT_MS / 1000}s`,
-	);
+	throw new Error(`[global-setup] API did not become healthy within ${TIMEOUT_MS / 1000}s`);
 }
 
 async function globalSetup(): Promise<void> {
 	console.log("[global-setup] Starting Docker test containers...");
 
-	execSync("docker compose -f compose.test.yaml up -d --build", {
+	execSync("docker compose -f compose.e2e.yaml up -d --build", {
 		cwd: PROJECT_ROOT,
 		stdio: "inherit",
 	});

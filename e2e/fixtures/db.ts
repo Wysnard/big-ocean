@@ -208,6 +208,7 @@ interface DbFixture {
 }
 
 export const test = base.extend<{ db: DbFixture }>({
+	// biome-ignore lint/correctness/noEmptyPattern: Playwright fixture API requires destructured first arg
 	db: async ({}, use) => {
 		const pool = new Pool(TEST_DB_CONFIG);
 		const seededSessionIds: string[] = [];
@@ -271,9 +272,7 @@ export const test = base.extend<{ db: DbFixture }>({
 				await client.query("BEGIN");
 
 				// 1. Insert unique messages first
-				const uniqueMessages = Array.from(
-					new Set(evidence.map((e) => e.messageId)),
-				).map((msgId) => {
+				const uniqueMessages = Array.from(new Set(evidence.map((e) => e.messageId))).map((msgId) => {
 					const ev = evidence.find((e) => e.messageId === msgId);
 					return {
 						tempId: msgId,
