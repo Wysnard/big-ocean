@@ -71,6 +71,7 @@ export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (ha
 						oceanCode: result.oceanCode,
 						description: result.description,
 						color: result.color,
+						displayName: result.displayName,
 						traitSummary: result.traitSummary,
 						facets: result.facets,
 						isPublic: result.isPublic,

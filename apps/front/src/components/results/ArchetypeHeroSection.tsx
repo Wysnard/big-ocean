@@ -6,10 +6,12 @@ interface ArchetypeHeroSectionProps {
 	archetypeName: string;
 	oceanCode5: OceanCode5;
 	archetypeDescription: string;
-	overallConfidence: number;
-	isCurated: boolean;
+	overallConfidence?: number;
+	isCurated?: boolean;
 	/** The dominant trait (highest scoring) used for hero color theming */
 	dominantTrait: TraitName;
+	/** When set, shows "{name}'s Personality Archetype" instead of "Your Personality Archetype" */
+	displayName?: string | null;
 }
 
 export function ArchetypeHeroSection({
@@ -19,6 +21,7 @@ export function ArchetypeHeroSection({
 	overallConfidence,
 	isCurated,
 	dominantTrait,
+	displayName,
 }: ArchetypeHeroSectionProps) {
 	const traitColor = getTraitColor(dominantTrait);
 
@@ -54,7 +57,7 @@ export function ArchetypeHeroSection({
 			<div className="relative z-30 mx-auto max-w-2xl text-center">
 				{/* Subtitle */}
 				<p className="text-sm tracking-wider uppercase font-heading text-foreground/70 mb-4">
-					Your Personality Archetype
+					{displayName ? `${displayName}\u2019s Personality Archetype` : "Your Personality Archetype"}
 				</p>
 
 				{/* Geometric Signature */}
@@ -68,7 +71,10 @@ export function ArchetypeHeroSection({
 				</div>
 
 				{/* Archetype Name — display-hero scale */}
-				<h1 className="font-display text-[2.5rem] md:text-[3.5rem] lg:text-[4rem] font-bold leading-[1.05] text-foreground mb-4">
+				<h1
+					data-testid="archetype-name"
+					className="font-display text-[2.5rem] md:text-[3.5rem] lg:text-[4rem] font-bold leading-[1.05] text-foreground mb-4"
+				>
 					{archetypeName}
 				</h1>
 
@@ -80,9 +86,11 @@ export function ArchetypeHeroSection({
 				{/* OCEAN code + Confidence */}
 				<div className="flex items-center justify-center gap-4 flex-wrap">
 					<span className="font-mono text-base text-foreground/60">{oceanCode5}</span>
-					<span className="text-xs font-medium text-foreground/50 bg-foreground/10 rounded-full px-3 py-1">
-						{overallConfidence}% confidence
-					</span>
+					{overallConfidence != null && (
+						<span className="text-xs font-medium text-foreground/50 bg-foreground/10 rounded-full px-3 py-1">
+							{overallConfidence}% confidence
+						</span>
+					)}
 					{isCurated && (
 						<span className="text-xs font-medium text-foreground/50 bg-foreground/10 rounded-full px-3 py-1">
 							Curated archetype

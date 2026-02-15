@@ -3,7 +3,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockUseParams = vi.fn(() => ({ sessionId: "session-123" }));
+const mockUseParams = vi.fn(() => ({ assessmentSessionId: "session-123" }));
 const mockUseSearch = vi.fn(() => ({ scrollToFacet: undefined }));
 const mockNavigate = vi.fn();
 
@@ -17,6 +17,9 @@ vi.mock("@tanstack/react-router", () => ({
 		useSearch: mockUseSearch,
 	}),
 	useNavigate: () => mockNavigate,
+	Link: ({ children, ...props }: Record<string, unknown>) => (
+		<a href={props.to as string}>{children as React.ReactNode}</a>
+	),
 }));
 
 vi.mock("@/hooks/use-auth", () => ({
@@ -50,8 +53,10 @@ vi.mock("@/components/home/WaveDivider", () => ({
 	WaveDivider: () => <div data-testid="wave-divider" />,
 }));
 
-vi.mock("@/components/results/ArchetypeHeroSection", () => ({
-	ArchetypeHeroSection: () => <div data-testid="results-content" />,
+vi.mock("@/components/results/ProfileView", () => ({
+	ProfileView: ({ children }: { children?: React.ReactNode }) => (
+		<div data-testid="results-content">{children}</div>
+	),
 }));
 
 vi.mock("@/components/results/ShareProfileSection", () => ({
@@ -62,7 +67,7 @@ vi.mock("@/components/results/TraitScoresSection", () => ({
 	TraitScoresSection: () => <div data-testid="trait-scores-section" />,
 }));
 
-describe("results/$sessionId route behavior", () => {
+describe("results/$assessmentSessionId route behavior", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		window.localStorage.clear();
@@ -76,7 +81,7 @@ describe("results/$sessionId route behavior", () => {
 	it("shows auth gate and disables results query for unauthenticated users", async () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: false, isPending: false });
 
-		const { Route } = await import("./results/$sessionId");
+		const { Route } = await import("./results/$assessmentSessionId");
 		const Component = Route.component;
 		render(<Component />);
 
@@ -94,7 +99,7 @@ describe("results/$sessionId route behavior", () => {
 				overallConfidence: 78,
 				isCurated: true,
 				traits: [{ name: "openness", score: 60, level: "O", confidence: 80 }],
-				facets: [{ name: "Ideas", traitName: "openness", score: 60, confidence: 80 }],
+				facets: [{ name: "intellect", traitName: "openness", score: 60, confidence: 80 }],
 				archetypeColor: "#000",
 				oceanCode4: "ODEN",
 			},
@@ -102,7 +107,7 @@ describe("results/$sessionId route behavior", () => {
 			error: null,
 		});
 
-		const { Route } = await import("./results/$sessionId");
+		const { Route } = await import("./results/$assessmentSessionId");
 		const Component = Route.component;
 		render(<Component />);
 
@@ -119,7 +124,7 @@ describe("results/$sessionId route behavior", () => {
 			error: { status: 404, message: "Session not found" },
 		});
 
-		const { Route } = await import("./results/$sessionId");
+		const { Route } = await import("./results/$assessmentSessionId");
 		const Component = Route.component;
 		render(<Component />);
 
@@ -137,7 +142,7 @@ describe("results/$sessionId route behavior", () => {
 			error: new Error("HTTP 404: SessionNotFound"),
 		});
 
-		const { Route } = await import("./results/$sessionId");
+		const { Route } = await import("./results/$assessmentSessionId");
 		const Component = Route.component;
 		render(<Component />);
 

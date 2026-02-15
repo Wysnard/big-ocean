@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import type { FacetName, TraitName } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
 import { Schema as S } from "effect";
@@ -7,9 +7,8 @@ import { useEffect, useState } from "react";
 import { EvidencePanel } from "@/components/EvidencePanel";
 import { WaveDivider } from "@/components/home/WaveDivider";
 import { ResultsAuthGate } from "@/components/ResultsAuthGate";
-import { ArchetypeHeroSection } from "@/components/results/ArchetypeHeroSection";
+import { ProfileView } from "@/components/results/ProfileView";
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
-import { TraitScoresSection } from "@/components/results/TraitScoresSection";
 import { isAssessmentApiError, useGetResults } from "@/hooks/use-assessment";
 import { useAuth } from "@/hooks/use-auth";
 import { useFacetEvidence } from "@/hooks/use-evidence";
@@ -20,29 +19,26 @@ import {
 	readPendingResultsGateSession,
 } from "@/lib/results-auth-gate-storage";
 
-const SessionResultsSearchParams = S.Struct({
-	scrollToFacet: S.optional(S.String),
-});
+const SessionResultsSearchParams = S.Struct({});
 
-export const Route = createFileRoute("/results/$sessionId")({
+export const Route = createFileRoute("/results/$assessmentSessionId")({
 	validateSearch: (search) => S.decodeUnknownSync(SessionResultsSearchParams)(search),
 	component: ResultsSessionPage,
 });
 
 /** Determine the dominant (highest-scoring) trait from results */
-function getDominantTrait(traits: { name: string; score: number }[]): TraitName {
+function getDominantTrait(traits: readonly { name: string; score: number }[]): TraitName {
 	if (traits.length === 0) return "openness";
 	const sorted = [...traits].sort((a, b) => b.score - a.score);
 	return sorted[0].name as TraitName;
 }
 
 function ResultsSessionPage() {
-	const { sessionId } = Route.useParams();
-	const { scrollToFacet } = Route.useSearch();
+	const { assessmentSessionId } = Route.useParams();
 	const navigate = useNavigate();
 	const { isAuthenticated, isPending: isAuthPending } = useAuth();
 	const canLoadResults = isAuthenticated && !isAuthPending;
-	const { data: results, isLoading, error } = useGetResults(sessionId, canLoadResults);
+	const { data: results, isLoading, error } = useGetResults(assessmentSessionId, canLoadResults);
 	const isNotFoundError = (value: unknown): boolean => {
 		if (isAssessmentApiError(value)) {
 			return value.status === 404;
@@ -84,7 +80,7 @@ function ResultsSessionPage() {
 
 	// Fetch evidence for selected facet
 	const { data: facetEvidence, isLoading: evidenceLoading } = useFacetEvidence(
-		sessionId,
+		assessmentSessionId,
 		selectedFacet,
 		evidencePanelOpen && canLoadResults,
 	);
@@ -92,38 +88,20 @@ function ResultsSessionPage() {
 	// Track 24-hour auth-gate session persistence
 	useEffect(() => {
 		if (isAuthenticated) {
-			clearPendingResultsGateSession(sessionId);
+			clearPendingResultsGateSession(assessmentSessionId);
 			setIsGateExpired(false);
 			return;
 		}
 
 		const pending = readPendingResultsGateSession();
-		if (pending && pending.sessionId === sessionId) {
+		if (pending && pending.sessionId === assessmentSessionId) {
 			setIsGateExpired(pending.expired);
 			return;
 		}
 
-		persistPendingResultsGateSession(sessionId);
+		persistPendingResultsGateSession(assessmentSessionId);
 		setIsGateExpired(false);
-	}, [isAuthenticated, sessionId]);
-
-	// Handle scrollToFacet search param
-	useEffect(() => {
-		if (!results || !scrollToFacet) {
-			return;
-		}
-
-		const facet = results.facets.find(
-			(f) => f.name.toLowerCase().replace(/ /g, "_") === scrollToFacet,
-		);
-		if (facet) {
-			setExpandedTraits((prev) => new Set(prev).add(facet.traitName));
-			setTimeout(() => {
-				const element = document.getElementById(`facet-${scrollToFacet}`);
-				element?.scrollIntoView({ behavior: "smooth", block: "center" });
-			}, 100);
-		}
-	}, [scrollToFacet, results]);
+	}, [isAuthenticated, assessmentSessionId]);
 
 	useEffect(() => {
 		if (!shouldRedirectDeniedSession) {
@@ -136,7 +114,7 @@ function ResultsSessionPage() {
 	const handleShare = async () => {
 		setShareError(null);
 		try {
-			const result = await shareProfile.mutateAsync(sessionId);
+			const result = await shareProfile.mutateAsync(assessmentSessionId);
 			setShareState(result);
 		} catch (shareErr) {
 			setShareError(
@@ -199,10 +177,10 @@ function ResultsSessionPage() {
 	};
 
 	const handleAuthSuccess = () => {
-		clearPendingResultsGateSession(sessionId);
+		clearPendingResultsGateSession(assessmentSessionId);
 		void navigate({
-			to: "/results/$sessionId",
-			params: { sessionId },
+			to: "/results/$assessmentSessionId",
+			params: { assessmentSessionId: assessmentSessionId },
 			replace: true,
 		});
 	};
@@ -226,7 +204,7 @@ function ResultsSessionPage() {
 	if (!isAuthenticated) {
 		return (
 			<ResultsAuthGate
-				sessionId={sessionId}
+				sessionId={assessmentSessionId}
 				expired={isGateExpired}
 				onAuthSuccess={handleAuthSuccess}
 				onStartFresh={handleStartFresh}
@@ -257,68 +235,37 @@ function ResultsSessionPage() {
 					<p className="text-muted-foreground mb-6">
 						{error?.message || "Your assessment may not be complete yet."}
 					</p>
-					<Button
-						onClick={() => navigate({ to: "/chat", search: { sessionId } })}
-						className="bg-primary text-primary-foreground hover:bg-primary/90"
-					>
-						<MessageCircle className="w-4 h-4 mr-2" />
-						Continue Assessment
+					<Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+						<Link to="/chat" search={{ sessionId: assessmentSessionId }}>
+							<MessageCircle className="w-4 h-4 mr-2" />
+							Continue Assessment
+						</Link>
 					</Button>
 				</div>
 			</div>
 		);
 	}
 
-	console.log("[BigOcean] Results loaded", {
-		sessionId,
-		oceanCode5: results.oceanCode5,
-		archetypeName: results.archetypeName,
-		overallConfidence: results.overallConfidence,
-		traits: results.traits.map((t) => ({
-			name: t.name,
-			score: t.score,
-			level: t.level,
-			confidence: t.confidence,
-		})),
-		facetsWithSignal: results.facets
-			.filter((f) => f.confidence > 0)
-			.map((f) => ({ name: f.name, score: f.score, confidence: f.confidence })),
-	});
-
 	const dominantTrait = getDominantTrait(results.traits);
 
 	return (
-		<div className="min-h-screen">
-			{/* Depth Zone: Surface — Hero (maximum psychedelic) */}
-			<div className="bg-[var(--depth-surface)]">
-				<ArchetypeHeroSection
-					archetypeName={results.archetypeName}
-					oceanCode5={results.oceanCode5}
-					archetypeDescription={results.archetypeDescription}
-					overallConfidence={results.overallConfidence}
-					isCurated={results.isCurated}
-					dominantTrait={dominantTrait}
-				/>
-			</div>
-
-			{/* Wave transition: surface → shallows */}
-			<WaveDivider fromColor="var(--depth-surface)" className="text-[var(--depth-shallows)]" />
-
-			{/* Depth Zone: Shallows — Trait overview (balanced) */}
-			<div className="bg-[var(--depth-shallows)]">
-				<TraitScoresSection
-					traits={results.traits}
-					facets={results.facets}
-					expandedTraits={expandedTraits}
-					onToggleTrait={toggleTrait}
-					onViewEvidence={handleViewEvidence}
-				/>
-			</div>
-
+		<ProfileView
+			archetypeName={results.archetypeName}
+			oceanCode5={results.oceanCode5}
+			description={results.archetypeDescription}
+			dominantTrait={dominantTrait}
+			traits={results.traits}
+			facets={results.facets}
+			expandedTraits={expandedTraits}
+			onToggleTrait={toggleTrait}
+			onViewEvidence={handleViewEvidence}
+			overallConfidence={results.overallConfidence}
+			isCurated={results.isCurated}
+		>
 			{/* Wave transition: shallows → mid */}
 			<WaveDivider fromColor="var(--depth-shallows)" className="text-[var(--depth-mid)]" />
 
-			{/* Depth Zone: Mid — Share profile (scientific) */}
+			{/* Depth Zone: Mid — Share profile */}
 			<div className="bg-[var(--depth-mid)]">
 				<ShareProfileSection
 					shareState={shareState}
@@ -326,6 +273,7 @@ function ResultsSessionPage() {
 					copied={copied}
 					isSharePending={shareProfile.isPending}
 					isTogglePending={toggleVisibility.isPending}
+					archetypeName={results.archetypeName}
 					onShare={handleShare}
 					onCopyLink={handleCopyLink}
 					onToggleVisibility={handleToggleVisibility}
@@ -338,34 +286,31 @@ function ResultsSessionPage() {
 			{/* Depth Zone: Deep — Actions */}
 			<div className="bg-[var(--depth-deep)] px-6 py-12">
 				<div className="flex flex-wrap gap-3 justify-center">
-					<Button
-						data-testid="results-continue-chat"
-						onClick={() => navigate({ to: "/chat", search: { sessionId } })}
-						variant="outline"
-						className="min-h-11"
-					>
-						<MessageCircle className="w-4 h-4 mr-2" />
-						Continue Chat
+					<Button data-testid="results-continue-chat" asChild variant="outline" className="min-h-11">
+						<Link to="/chat" search={{ sessionId: assessmentSessionId }}>
+							<MessageCircle className="w-4 h-4 mr-2" />
+							Continue Chat
+						</Link>
 					</Button>
 					<Button
 						data-testid="results-start-new"
-						onClick={() => navigate({ to: "/chat", search: { sessionId: undefined } })}
+						asChild
 						className="bg-primary text-primary-foreground hover:bg-primary/90 min-h-11"
 					>
-						Start New Assessment
+						<Link to="/chat">Start New Assessment</Link>
 					</Button>
 				</div>
 			</div>
 
 			{/* Evidence Panel */}
 			<EvidencePanel
-				sessionId={sessionId}
+				sessionId={assessmentSessionId}
 				facetName={selectedFacet}
 				evidence={facetEvidence}
 				isLoading={evidenceLoading}
 				isOpen={evidencePanelOpen}
 				onClose={handleCloseEvidence}
 			/>
-		</div>
+		</ProfileView>
 	);
 }

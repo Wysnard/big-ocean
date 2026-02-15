@@ -183,4 +183,5 @@ export {
 	getTraitGradient,
 	lookupArchetype,
 	type TraitConfidence,
+	toFacetDisplayName,
 } from "./utils/index";

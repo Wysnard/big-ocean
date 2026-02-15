@@ -14,8 +14,9 @@
  * for archetype naming in POC. Phase 2 will extend to all 5 traits (243 combinations).
  */
 
-import type { Brand } from "effect";
+import type { Schema } from "effect";
 import type { TraitName } from "../constants/big-five";
+import type { OceanCode4Schema, OceanCode5Schema } from "../schemas/ocean-code";
 
 /** Openness level letters */
 export type OpennessLevel = "P" | "G" | "O";
@@ -36,15 +37,11 @@ export type TraitLevel =
 	| AgreeablenessLevel
 	| NeuroticismLevel;
 
-/** 4-letter OCEAN code — template literal + branded (e.g., "ODEW") */
-export type OceanCode4 =
-	`${OpennessLevel}${ConscientiousnessLevel}${ExtraversionLevel}${AgreeablenessLevel}` &
-		Brand.Brand<"OceanCode4">;
+/** 4-letter OCEAN code — branded string inferred from schema (e.g., "ODEW") */
+export type OceanCode4 = Schema.Schema.Type<typeof OceanCode4Schema>;
 
-/** 5-letter OCEAN code — template literal + branded (e.g., "ODEWR") */
-export type OceanCode5 =
-	`${OpennessLevel}${ConscientiousnessLevel}${ExtraversionLevel}${AgreeablenessLevel}${NeuroticismLevel}` &
-		Brand.Brand<"OceanCode5">;
+/** 5-letter OCEAN code — branded string inferred from schema (e.g., "ODEWR") */
+export type OceanCode5 = Schema.Schema.Type<typeof OceanCode5Schema>;
 
 /** Trait-specific letter mapping: [Low, Mid, High] per trait */
 export const TRAIT_LETTER_MAP: Record<TraitName, readonly [string, string, string]> = {

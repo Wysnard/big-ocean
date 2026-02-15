@@ -15,10 +15,9 @@
 import { useNavigate } from "@tanstack/react-router";
 import type { SavedFacetEvidence } from "@workspace/contracts";
 import type { FacetName } from "@workspace/domain";
-import { getFacetColor } from "@workspace/domain";
+import { getFacetColor, toFacetDisplayName } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@workspace/ui/components/dialog";
-
 
 interface EvidencePanelProps {
 	sessionId: string;
@@ -48,7 +47,10 @@ interface EvidenceItemProps {
 
 function EvidenceItem({ evidence, facetColor, onJumpToMessage }: EvidenceItemProps) {
 	return (
-		<div className="p-3 border border-l-4 rounded-lg mb-3 bg-card" style={{ borderLeftColor: facetColor }}>
+		<div
+			className="p-3 border border-l-4 rounded-lg mb-3 bg-card"
+			style={{ borderLeftColor: facetColor }}
+		>
 			<p className="text-sm mb-2 text-foreground">"{evidence.quote}"</p>
 			<div className="flex justify-between items-center">
 				<span className="text-xs text-muted-foreground">
@@ -114,7 +116,7 @@ export function EvidencePanel({
 		<Dialog open={isOpen} onOpenChange={onClose}>
 			<DialogContent className="w-[90vw] sm:max-w-md max-h-[80vh]">
 				<DialogHeader>
-					<DialogTitle>Evidence for {facetName ? facetName.replace(/_/g, " ") : "facet"}</DialogTitle>
+					<DialogTitle>Evidence for {facetName ? toFacetDisplayName(facetName) : "facet"}</DialogTitle>
 				</DialogHeader>
 				<div className="overflow-y-auto pr-4 max-h-[calc(80vh-8rem)]">
 					{isLoading && <p className="text-center text-muted-foreground">Loading evidence...</p>}
