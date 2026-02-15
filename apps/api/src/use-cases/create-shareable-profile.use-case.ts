@@ -55,7 +55,7 @@ export const createShareableProfile = (input: CreateShareableProfileInput) =>
 			});
 			return {
 				publicProfileId: existingProfile.id,
-				shareableUrl: `${config.frontendUrl}/profile/${existingProfile.id}`,
+				shareableUrl: `${config.frontendUrl}/public-profile/${existingProfile.id}`,
 				isPublic: existingProfile.isPublic,
 			};
 		}
@@ -95,7 +95,7 @@ export const createShareableProfile = (input: CreateShareableProfileInput) =>
 
 		return {
 			publicProfileId: profile.id,
-			shareableUrl: `${config.frontendUrl}/profile/${profile.id}`,
+			shareableUrl: `${config.frontendUrl}/public-profile/${profile.id}`,
 			isPublic: profile.isPublic,
 		};
 	});

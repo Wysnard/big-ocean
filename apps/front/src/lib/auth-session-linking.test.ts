@@ -58,6 +58,6 @@ describe("auth-session-linking", () => {
 				redirectTo: "https://evil.example",
 				sessionId: "session-123",
 			}),
-		).toBe("/dashboard");
+		).toBe("/profile");
 	});
 });

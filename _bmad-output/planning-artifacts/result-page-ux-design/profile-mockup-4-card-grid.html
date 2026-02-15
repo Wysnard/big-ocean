@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Mockup 4 - Card Grid</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --depth-surface: #FFF8F0;
+      --depth-shallows: #FFF0E8;
+      --depth-mid: #FFE8D8;
+      --depth-deep: #FFD6C4;
+      --primary: #FF0080;
+      --secondary: #FF6B2B;
+      --tertiary: #00B4A6;
+      --trait-openness: oklch(0.55 0.24 293);
+      --trait-conscientiousness: oklch(0.67 0.20 42);
+      --trait-extraversion: oklch(0.59 0.27 348);
+      --trait-agreeableness: oklch(0.67 0.13 181);
+      --trait-neuroticism: oklch(0.29 0.19 272);
+      --font-heading: "Space Grotesk", ui-sans-serif, sans-serif;
+      --font-body: "DM Sans", ui-sans-serif, sans-serif;
+      --font-data: "JetBrains Mono", ui-monospace, monospace;
+      --radius-card: 16px;
+      --radius-button: 12px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--font-body);
+      background: var(--depth-surface);
+      color: #2D1B0E;
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: rgba(255,248,240,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--depth-shallows);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-logo { font-family: var(--font-heading); font-weight: 700; font-size: 1.25rem; color: var(--primary); }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-link { font-size: 0.875rem; color: #6B5344; text-decoration: none; font-weight: 500; }
+    .nav-link.active { color: var(--primary); }
+    .nav-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 0.75rem; font-weight: 600;
+    }
+
+    /* HERO - compact banner */
+    .hero-banner {
+      background: linear-gradient(160deg, oklch(0.55 0.24 293 / 0.08), oklch(0.59 0.27 348 / 0.06), oklch(0.67 0.13 181 / 0.05));
+      padding: 40px 24px;
+    }
+    .hero-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .hero-geo-cluster {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .hero-geo-cluster svg {
+      position: absolute;
+    }
+
+    .hero-text {
+      flex: 1;
+    }
+    .hero-text .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #8B6F5E;
+      margin-bottom: 4px;
+    }
+    .hero-text h1 {
+      font-family: var(--font-heading);
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+    .hero-text .meta {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .hero-text .meta span {
+      font-size: 0.8125rem;
+      color: #8B6F5E;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .hero-text .ocean-badge {
+      font-family: var(--font-data);
+      font-size: 0.8125rem;
+      background: white;
+      border: 1px solid var(--depth-mid);
+      padding: 4px 12px;
+      border-radius: 8px;
+      letter-spacing: 0.12em;
+      color: #5A4436;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .btn {
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: 0.875rem;
+      border: none;
+      cursor: pointer;
+      border-radius: var(--radius-button);
+      padding: 10px 20px;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: #E00070; }
+    .btn-ghost { background: white; color: #6B5344; border: 1px solid var(--depth-mid); }
+    .btn-ghost:hover { background: var(--depth-shallows); }
+
+    @media (max-width: 768px) {
+      .hero-inner { flex-direction: column; text-align: center; }
+      .hero-actions { justify-content: center; }
+      .hero-text .meta { justify-content: center; }
+    }
+
+    /* GRID LAYOUT */
+    .grid-container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 32px 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    /* TRAIT CARDS - Each trait is its own card */
+    .trait-card {
+      background: white;
+      border-radius: var(--radius-card);
+      border: 1px solid var(--depth-mid);
+      overflow: hidden;
+      transition: box-shadow 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+    .trait-card:hover {
+      box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+      transform: translateY(-2px);
+    }
+
+    .trait-card-accent {
+      height: 4px;
+    }
+
+    .trait-card-body {
+      padding: 20px;
+    }
+
+    .trait-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .trait-shape {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+    }
+    .trait-card-title {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 1.125rem;
+      text-transform: capitalize;
+      flex: 1;
+    }
+    .trait-level-badge {
+      font-family: var(--font-data);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 8px;
+      color: white;
+    }
+
+    /* Score display */
+    .trait-score-display {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .trait-score-big {
+      font-family: var(--font-heading);
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    .trait-score-max {
+      font-family: var(--font-data);
+      font-size: 0.875rem;
+      color: #8B6F5E;
+    }
+    .trait-score-pct {
+      font-family: var(--font-data);
+      font-size: 0.875rem;
+      color: #8B6F5E;
+      margin-left: auto;
+    }
+
+    /* Bar */
+    .trait-bar-track {
+      width: 100%;
+      height: 8px;
+      background: var(--depth-shallows);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .trait-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+    }
+
+    /* Mini facet bars */
+    .facets-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 16px;
+    }
+    .facet-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .facet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .facet-name {
+      font-size: 0.75rem;
+      color: #5A4436;
+      text-transform: capitalize;
+    }
+    .facet-score {
+      font-family: var(--font-data);
+      font-size: 0.6875rem;
+      color: #8B6F5E;
+    }
+    .facet-bar-track {
+      width: 100%;
+      height: 4px;
+      background: var(--depth-shallows);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .facet-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
+
+    /* DESCRIPTION CARD */
+    .description-card {
+      background: white;
+      border-radius: var(--radius-card);
+      border: 1px solid var(--depth-mid);
+      padding: 24px;
+      grid-column: 1 / -1;
+    }
+    .description-card h2 {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .description-card p {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #5A4436;
+    }
+
+    /* SHARE CARD */
+    .share-card {
+      background: linear-gradient(135deg, oklch(0.67 0.13 181 / 0.08), oklch(0.55 0.24 293 / 0.06));
+      border-radius: var(--radius-card);
+      border: 1px solid var(--depth-mid);
+      padding: 24px;
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .share-card-text {
+      flex: 1;
+      min-width: 200px;
+    }
+    .share-card-text h3 {
+      font-family: var(--font-heading);
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .share-card-text p {
+      font-size: 0.875rem;
+      color: #8B6F5E;
+    }
+    .share-card-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      border: 1px solid var(--depth-mid);
+      border-radius: var(--radius-button);
+      padding: 8px 12px;
+      flex-shrink: 0;
+    }
+    .share-card-url {
+      font-family: var(--font-data);
+      font-size: 0.75rem;
+      color: #8B6F5E;
+    }
+    .btn-copy {
+      background: var(--tertiary);
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: 0.8125rem;
+      cursor: pointer;
+    }
+
+    .visibility-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8125rem;
+      color: #6B5344;
+    }
+    .toggle-sm {
+      width: 36px;
+      height: 20px;
+      background: var(--tertiary);
+      border-radius: 10px;
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .toggle-sm-thumb {
+      width: 16px; height: 16px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      right: 2px;
+    }
+
+    /* OVERALL CONFIDENCE CARD */
+    .confidence-card {
+      background: white;
+      border-radius: var(--radius-card);
+      border: 1px solid var(--depth-mid);
+      padding: 24px;
+      text-align: center;
+    }
+    .confidence-card h3 {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #5A4436;
+    }
+    .confidence-ring {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 12px;
+      position: relative;
+    }
+    .confidence-ring svg {
+      transform: rotate(-90deg);
+    }
+    .confidence-ring-bg {
+      fill: none;
+      stroke: var(--depth-shallows);
+      stroke-width: 8;
+    }
+    .confidence-ring-fill {
+      fill: none;
+      stroke: var(--tertiary);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 339.3;
+      stroke-dashoffset: 74.6; /* 339.3 * (1 - 0.78) */
+      transition: stroke-dashoffset 1s ease-out;
+    }
+    .confidence-ring-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--tertiary);
+    }
+    .confidence-label {
+      font-size: 0.8125rem;
+      color: #8B6F5E;
+    }
+
+    /* QUICK ACTIONS CARD */
+    .actions-card {
+      background: white;
+      border-radius: var(--radius-card);
+      border: 1px solid var(--depth-mid);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .actions-card h3 {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .action-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: var(--radius-button);
+      border: 1px solid var(--depth-shallows);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .action-item:hover {
+      background: var(--depth-shallows);
+    }
+    .action-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .action-text {
+      flex: 1;
+    }
+    .action-title {
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: 2px;
+    }
+    .action-desc {
+      font-size: 0.75rem;
+      color: #8B6F5E;
+    }
+    .action-arrow {
+      color: #8B6F5E;
+      font-size: 1.25rem;
+    }
+
+    .mockup-label {
+      position: fixed;
+      top: 60px;
+      right: 16px;
+      background: #2D1B0E;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-family: var(--font-data);
+      z-index: 200;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+<div class="mockup-label">Mockup 4: Card Grid</div>
+
+<nav class="nav">
+  <div class="nav-logo">big ocean</div>
+  <div class="nav-links">
+    <a href="#" class="nav-link">Home</a>
+    <a href="#" class="nav-link active">Profile</a>
+    <div class="nav-avatar">VL</div>
+  </div>
+</nav>
+
+<!-- COMPACT HERO BANNER -->
+<section class="hero-banner">
+  <div class="hero-inner">
+    <div class="hero-geo-cluster">
+      <svg width="32" height="32" style="top:0;left:24px"><circle cx="16" cy="16" r="14" fill="oklch(0.55 0.24 293)" opacity="0.8"/></svg>
+      <svg width="28" height="28" style="top:8px;left:0"><path d="M2 14 A12 12 0 0 1 26 14 Z" fill="oklch(0.67 0.20 42)" opacity="0.7"/></svg>
+      <svg width="28" height="28" style="top:12px;left:48px"><rect x="2" y="4" width="24" height="20" rx="3" fill="oklch(0.59 0.27 348)" opacity="0.7"/></svg>
+      <svg width="24" height="24" style="top:38px;left:10px"><polygon points="12,2 22,20 2,20" fill="oklch(0.67 0.13 181)" opacity="0.7"/></svg>
+      <svg width="24" height="24" style="top:36px;left:44px"><polygon points="12,2 22,12 12,22 2,12" fill="oklch(0.29 0.19 272)" opacity="0.7"/></svg>
+    </div>
+    <div class="hero-text">
+      <div class="label">Your Personality Archetype</div>
+      <h1>The Reflective Navigator</h1>
+      <div class="meta">
+        <span class="ocean-badge">ODEWR</span>
+        <span><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#8B6F5E" stroke-width="1.2"><circle cx="7" cy="7" r="6"/><path d="M7 4v3l2 1.5"/></svg> Feb 14, 2026</span>
+        <span>12 messages</span>
+        <span style="color:var(--tertiary)">Complete</span>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-primary">Keep Exploring</button>
+      <button class="btn btn-ghost">Share</button>
+    </div>
+  </div>
+</section>
+
+<!-- CARD GRID -->
+<div class="grid-container">
+
+  <!-- Description -->
+  <div class="description-card">
+    <h2>About Your Archetype</h2>
+    <p>
+      You navigate the world with a rare blend of curiosity and structure.
+      Open to new experiences yet grounded by inner discipline, you tend to explore
+      ideas deeply before committing. Your empathy shapes how you connect with others,
+      and your emotional awareness gives you a nuanced read on social dynamics.
+    </p>
+  </div>
+
+  <!-- Openness Card -->
+  <div class="trait-card">
+    <div class="trait-card-accent" style="background: oklch(0.55 0.24 293);"></div>
+    <div class="trait-card-body">
+      <div class="trait-card-header">
+        <svg class="trait-shape" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="oklch(0.55 0.24 293)"/></svg>
+        <span class="trait-card-title">Openness</span>
+        <span class="trait-level-badge" style="background:oklch(0.55 0.24 293)">H</span>
+      </div>
+      <div class="trait-score-display">
+        <span class="trait-score-big" style="color:oklch(0.55 0.24 293)">88</span>
+        <span class="trait-score-max">/ 120</span>
+        <span class="trait-score-pct">73%</span>
+      </div>
+      <div class="trait-bar-track"><div class="trait-bar-fill" style="width:73%;background:oklch(0.55 0.24 293)"></div></div>
+      <div class="facets-grid">
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Imagination</span><span class="facet-score">16</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:80%;background:oklch(0.55 0.24 293 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Artistic Int.</span><span class="facet-score">14</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:70%;background:oklch(0.55 0.24 293 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Emotionality</span><span class="facet-score">15</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:75%;background:oklch(0.55 0.24 293 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Adventurous.</span><span class="facet-score">13</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:65%;background:oklch(0.55 0.24 293 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Intellect</span><span class="facet-score">17</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:85%;background:oklch(0.55 0.24 293 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Liberalism</span><span class="facet-score">13</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:65%;background:oklch(0.55 0.24 293 / 0.6)"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conscientiousness Card -->
+  <div class="trait-card">
+    <div class="trait-card-accent" style="background: oklch(0.67 0.20 42);"></div>
+    <div class="trait-card-body">
+      <div class="trait-card-header">
+        <svg class="trait-shape" viewBox="0 0 40 40"><path d="M3 20 A17 17 0 0 1 37 20 Z" fill="oklch(0.67 0.20 42)"/></svg>
+        <span class="trait-card-title">Conscientiousness</span>
+        <span class="trait-level-badge" style="background:oklch(0.67 0.20 42)">M</span>
+      </div>
+      <div class="trait-score-display">
+        <span class="trait-score-big" style="color:oklch(0.67 0.20 42)">62</span>
+        <span class="trait-score-max">/ 120</span>
+        <span class="trait-score-pct">52%</span>
+      </div>
+      <div class="trait-bar-track"><div class="trait-bar-fill" style="width:52%;background:oklch(0.67 0.20 42)"></div></div>
+      <div class="facets-grid">
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Self Efficacy</span><span class="facet-score">12</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:60%;background:oklch(0.67 0.20 42 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Orderliness</span><span class="facet-score">9</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:45%;background:oklch(0.67 0.20 42 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Dutifulness</span><span class="facet-score">11</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:55%;background:oklch(0.67 0.20 42 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Achievement</span><span class="facet-score">10</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:50%;background:oklch(0.67 0.20 42 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Self Discipline</span><span class="facet-score">11</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:55%;background:oklch(0.67 0.20 42 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Cautiousness</span><span class="facet-score">9</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:45%;background:oklch(0.67 0.20 42 / 0.6)"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Extraversion Card -->
+  <div class="trait-card">
+    <div class="trait-card-accent" style="background: oklch(0.59 0.27 348);"></div>
+    <div class="trait-card-body">
+      <div class="trait-card-header">
+        <svg class="trait-shape" viewBox="0 0 40 40"><rect x="3" y="8" width="34" height="24" rx="4" fill="oklch(0.59 0.27 348)"/></svg>
+        <span class="trait-card-title">Extraversion</span>
+        <span class="trait-level-badge" style="background:oklch(0.59 0.27 348)">M</span>
+      </div>
+      <div class="trait-score-display">
+        <span class="trait-score-big" style="color:oklch(0.59 0.27 348)">72</span>
+        <span class="trait-score-max">/ 120</span>
+        <span class="trait-score-pct">60%</span>
+      </div>
+      <div class="trait-bar-track"><div class="trait-bar-fill" style="width:60%;background:oklch(0.59 0.27 348)"></div></div>
+      <div class="facets-grid">
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Friendliness</span><span class="facet-score">14</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:70%;background:oklch(0.59 0.27 348 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Gregarious.</span><span class="facet-score">10</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:50%;background:oklch(0.59 0.27 348 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Assertiveness</span><span class="facet-score">12</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:60%;background:oklch(0.59 0.27 348 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Activity Level</span><span class="facet-score">13</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:65%;background:oklch(0.59 0.27 348 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Excitement</span><span class="facet-score">11</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:55%;background:oklch(0.59 0.27 348 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Cheerfulness</span><span class="facet-score">12</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:60%;background:oklch(0.59 0.27 348 / 0.6)"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agreeableness Card -->
+  <div class="trait-card">
+    <div class="trait-card-accent" style="background: oklch(0.67 0.13 181);"></div>
+    <div class="trait-card-body">
+      <div class="trait-card-header">
+        <svg class="trait-shape" viewBox="0 0 40 40"><polygon points="20,3 37,37 3,37" fill="oklch(0.67 0.13 181)"/></svg>
+        <span class="trait-card-title">Agreeableness</span>
+        <span class="trait-level-badge" style="background:oklch(0.67 0.13 181)">H</span>
+      </div>
+      <div class="trait-score-display">
+        <span class="trait-score-big" style="color:oklch(0.67 0.13 181)">95</span>
+        <span class="trait-score-max">/ 120</span>
+        <span class="trait-score-pct">79%</span>
+      </div>
+      <div class="trait-bar-track"><div class="trait-bar-fill" style="width:79%;background:oklch(0.67 0.13 181)"></div></div>
+      <div class="facets-grid">
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Trust</span><span class="facet-score">17</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:85%;background:oklch(0.67 0.13 181 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Morality</span><span class="facet-score">15</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:75%;background:oklch(0.67 0.13 181 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Altruism</span><span class="facet-score">16</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:80%;background:oklch(0.67 0.13 181 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Cooperation</span><span class="facet-score">16</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:80%;background:oklch(0.67 0.13 181 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Modesty</span><span class="facet-score">16</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:80%;background:oklch(0.67 0.13 181 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Sympathy</span><span class="facet-score">15</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:75%;background:oklch(0.67 0.13 181 / 0.6)"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Neuroticism Card -->
+  <div class="trait-card">
+    <div class="trait-card-accent" style="background: oklch(0.29 0.19 272);"></div>
+    <div class="trait-card-body">
+      <div class="trait-card-header">
+        <svg class="trait-shape" viewBox="0 0 40 40"><polygon points="20,3 37,20 20,37 3,20" fill="oklch(0.29 0.19 272)"/></svg>
+        <span class="trait-card-title">Neuroticism</span>
+        <span class="trait-level-badge" style="background:oklch(0.29 0.19 272)">M</span>
+      </div>
+      <div class="trait-score-display">
+        <span class="trait-score-big" style="color:oklch(0.29 0.19 272)">48</span>
+        <span class="trait-score-max">/ 120</span>
+        <span class="trait-score-pct">40%</span>
+      </div>
+      <div class="trait-bar-track"><div class="trait-bar-fill" style="width:40%;background:oklch(0.29 0.19 272)"></div></div>
+      <div class="facets-grid">
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Anxiety</span><span class="facet-score">9</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:45%;background:oklch(0.29 0.19 272 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Anger</span><span class="facet-score">7</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:35%;background:oklch(0.29 0.19 272 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Depression</span><span class="facet-score">8</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:40%;background:oklch(0.29 0.19 272 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Self Consc.</span><span class="facet-score">9</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:45%;background:oklch(0.29 0.19 272 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Immoderation</span><span class="facet-score">8</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:40%;background:oklch(0.29 0.19 272 / 0.6)"></div></div></div>
+        <div class="facet-item"><div class="facet-header"><span class="facet-name">Vulnerability</span><span class="facet-score">7</span></div><div class="facet-bar-track"><div class="facet-bar-fill" style="width:35%;background:oklch(0.29 0.19 272 / 0.6)"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confidence + Actions row -->
+  <div class="confidence-card">
+    <h3>Overall Confidence</h3>
+    <div class="confidence-ring">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="54" class="confidence-ring-bg"/>
+        <circle cx="60" cy="60" r="54" class="confidence-ring-fill"/>
+      </svg>
+      <div class="confidence-ring-text">78%</div>
+    </div>
+    <div class="confidence-label">Based on 12 conversation messages</div>
+  </div>
+
+  <div class="actions-card">
+    <h3>Quick Actions</h3>
+    <div class="action-item">
+      <div class="action-icon" style="background:oklch(0.59 0.27 348 / 0.1)">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.59 0.27 348)" stroke-width="1.5"><path d="M9 2v14M2 9h14"/></svg>
+      </div>
+      <div class="action-text">
+        <div class="action-title">Resume Conversation</div>
+        <div class="action-desc">Deepen your personality insights</div>
+      </div>
+      <span class="action-arrow">&rsaquo;</span>
+    </div>
+    <div class="action-item">
+      <div class="action-icon" style="background:oklch(0.67 0.13 181 / 0.1)">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.67 0.13 181)" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><path d="M9 5v4l2.5 1.5"/></svg>
+      </div>
+      <div class="action-text">
+        <div class="action-title">View Public Profile</div>
+        <div class="action-desc">See how others see you</div>
+      </div>
+      <span class="action-arrow">&rsaquo;</span>
+    </div>
+    <div class="action-item">
+      <div class="action-icon" style="background:oklch(0.55 0.24 293 / 0.1)">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.55 0.24 293)" stroke-width="1.5"><rect x="3" y="3" width="12" height="12" rx="2"/><path d="M3 7h12"/></svg>
+      </div>
+      <div class="action-text">
+        <div class="action-title">Download Report</div>
+        <div class="action-desc">Get a PDF of your results</div>
+      </div>
+      <span class="action-arrow">&rsaquo;</span>
+    </div>
+  </div>
+
+  <!-- Share Card -->
+  <div class="share-card">
+    <div class="share-card-text">
+      <h3>Share your archetype</h3>
+      <p>Let others discover your personality depths</p>
+    </div>
+    <div class="share-card-link">
+      <span class="share-card-url">bigocean.dev/p/reflective-navigator-vl82k</span>
+      <button class="btn-copy">Copy</button>
+    </div>
+    <div class="visibility-row">
+      <div class="toggle-sm"><div class="toggle-sm-thumb"></div></div>
+      <span>Public</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

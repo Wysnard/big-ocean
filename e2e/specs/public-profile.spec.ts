@@ -1,12 +1,14 @@
-import { expect, test } from "@playwright/test";
-import { API_URL } from "../e2e-env.js";
 import {
 	createAssessmentSession,
+	createShareableProfile,
+	getSessionUserId,
 	getUserByEmail,
 	linkSessionToUser,
 	seedSessionForResults,
+	toggleProfileVisibility,
 } from "../factories/assessment.factory.js";
 import { createUser } from "../factories/user.factory.js";
+import { expect, test } from "../fixtures/base.fixture.js";
 
 /**
  * Public Profile — Anonymous Viewer Golden Path
@@ -14,7 +16,7 @@ import { createUser } from "../factories/user.factory.js";
  * Setup: create user + session + evidence + shareable profile (via API)
  * Path:  anonymous browser → public profile URL → verify traits & facets
  *
- * Uses the owner auth state from setup project to generate the share link,
+ * Uses the apiContext fixture from base.fixture to create data via API,
  * then navigates without any auth cookies (anonymous viewer).
  */
 
@@ -32,39 +34,22 @@ const TRAITS = [
 	{ key: "neuroticism", label: "Neuroticism" },
 ];
 
-/**
- * Build a Cookie header string from Set-Cookie response headers.
- */
-function toCookieHeader(setCookieHeaders: string[]): string {
-	return setCookieHeaders
-		.map((h) => {
-			const eqIdx = h.indexOf("=");
-			const semiIdx = h.indexOf(";");
-			const name = h.slice(0, eqIdx);
-			const value = h.slice(eqIdx + 1, semiIdx === -1 ? undefined : semiIdx);
-			return `${name}=${value}`;
-		})
-		.join("; ");
-}
-
-test("anonymous user views public profile with traits and facets", async ({ page }) => {
+test("anonymous user views public profile with traits and facets", async ({ page, apiContext }) => {
 	// ── Setup: create shareable public profile via API ──────────────────
 
 	let profilePath = "";
 
 	await test.step("seed user, session, evidence, and public profile via API", async () => {
 		// 1. Create anonymous session
-		const sessionId = await createAssessmentSession();
+		const sessionId = await createAssessmentSession(apiContext);
 
-		// 2. Sign up user and link session
-		const auth = await createUser({
+		// 2. Sign up user and link session (cookies auto-captured by apiContext)
+		await createUser(apiContext, {
 			...PROFILE_USER,
 			anonymousSessionId: sessionId,
 		});
-		const cookieHeader = toCookieHeader(auth.setCookieHeaders);
 
 		// 3. Verify session linked, fallback to direct DB if needed
-		const { getSessionUserId } = await import("../factories/assessment.factory.js");
 		const linkedUserId = await getSessionUserId(sessionId);
 		if (!linkedUserId) {
 			const user = await getUserByEmail(PROFILE_USER.email);
@@ -75,40 +60,13 @@ test("anonymous user views public profile with traits and facets", async ({ page
 		// 4. Seed evidence data so profile has real scores
 		await seedSessionForResults(sessionId);
 
-		// 5. Create shareable profile (authenticated)
-		const shareRes = await fetch(`${API_URL}/api/profile/share`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Cookie: cookieHeader,
-			},
-			body: JSON.stringify({ sessionId }),
-		});
-		if (!shareRes.ok) {
-			const body = await shareRes.text();
-			throw new Error(`Share profile failed (${shareRes.status}): ${body}`);
-		}
-		const shareData = (await shareRes.json()) as {
-			publicProfileId: string;
-			shareableUrl: string;
-			isPublic: boolean;
-		};
+		// 5. Create shareable profile (apiContext has auth cookies from step 2)
+		const shareData = await createShareableProfile(apiContext, sessionId);
 
 		// 6. Toggle profile to public
-		const toggleRes = await fetch(`${API_URL}/api/profile/${shareData.publicProfileId}/visibility`, {
-			method: "PATCH",
-			headers: {
-				"Content-Type": "application/json",
-				Cookie: cookieHeader,
-			},
-			body: JSON.stringify({ isPublic: true }),
-		});
-		if (!toggleRes.ok) {
-			const body = await toggleRes.text();
-			throw new Error(`Toggle visibility failed (${toggleRes.status}): ${body}`);
-		}
+		await toggleProfileVisibility(apiContext, shareData.publicProfileId, true);
 
-		profilePath = `/profile/${shareData.publicProfileId}`;
+		profilePath = `/public-profile/${shareData.publicProfileId}`;
 	});
 
 	// ── Anonymous viewer journey ────────────────────────────────────────

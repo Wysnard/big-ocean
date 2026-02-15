@@ -112,7 +112,7 @@ describe("createShareableProfile Use Case", () => {
 				const result = yield* createShareableProfile({ sessionId });
 
 				expect(result.publicProfileId).toBeDefined();
-				expect(result.shareableUrl).toContain("/profile/");
+				expect(result.shareableUrl).toContain("/public-profile/");
 				expect(result.shareableUrl).toContain(result.publicProfileId);
 				expect(result.isPublic).toBe(false); // Private by default
 			}).pipe(Effect.provide(HighConfidenceTestLayer)),
@@ -139,7 +139,7 @@ describe("createShareableProfile Use Case", () => {
 
 				const result = yield* createShareableProfile({ sessionId });
 
-				expect(result.shareableUrl).toMatch(/^http:\/\/localhost:3000\/profile\/[0-9a-f-]+$/);
+				expect(result.shareableUrl).toMatch(/^http:\/\/localhost:3000\/public-profile\/[0-9a-f-]+$/);
 			}).pipe(Effect.provide(HighConfidenceTestLayer)),
 		);
 	});

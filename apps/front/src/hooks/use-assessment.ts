@@ -8,6 +8,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
 	GetResultsResponse,
+	ListSessionsResponse,
 	ResumeSessionResponse,
 	SendMessageRequest,
 	SendMessageResponse,
@@ -184,6 +185,34 @@ export function useResumeSession(sessionId: string, enabled = true) {
 			return fetchApi(`/api/assessment/${sessionId}/resume`);
 		},
 		enabled: enabled && !!sessionId,
+	});
+}
+
+/**
+ * List assessment sessions for the authenticated user (Story 7.13)
+ *
+ * Returns all assessment sessions with computed message count and optional archetype data.
+ * Also returns freeTierMessageThreshold for determining completion status on the frontend.
+ *
+ * @param enabled - Whether to enable the query (default: true)
+ *
+ * @example
+ * ```tsx
+ * const { data, isLoading } = useListAssessments();
+ *
+ * {data?.sessions.map((session) => (
+ *   <AssessmentCard key={session.id} session={session} />
+ * ))}
+ * ```
+ */
+export function useListAssessments(enabled = true) {
+	return useQuery({
+		queryKey: ["assessments", "list"],
+		queryFn: async (): Promise<ListSessionsResponse> => {
+			return fetchApi("/api/assessment/sessions");
+		},
+		enabled,
+		staleTime: 5 * 60 * 1000, // 5 minute cache
 	});
 }
 

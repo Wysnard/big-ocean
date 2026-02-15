@@ -42,7 +42,7 @@ export function useShareProfile() {
 	return useMutation({
 		mutationKey: ["profile", "share"],
 		mutationFn: async (sessionId: string): Promise<ShareProfileResponse> => {
-			return fetchApi("/api/profile/share", {
+			return fetchApi("/api/public-profile/share", {
 				method: "POST",
 				body: JSON.stringify({ sessionId }),
 			});
@@ -57,7 +57,7 @@ export function useGetPublicProfile(publicProfileId: string, enabled = true) {
 	return useQuery({
 		queryKey: ["profile", "public", publicProfileId],
 		queryFn: async (): Promise<GetPublicProfileResponse> => {
-			return fetchApi(`/api/profile/${publicProfileId}`);
+			return fetchApi(`/api/public-profile/${publicProfileId}`);
 		},
 		enabled: enabled && !!publicProfileId,
 		retry: false,
@@ -74,7 +74,7 @@ export function useToggleVisibility() {
 			publicProfileId: string;
 			isPublic: boolean;
 		}): Promise<ToggleVisibilityResponse> => {
-			return fetchApi(`/api/profile/${input.publicProfileId}/visibility`, {
+			return fetchApi(`/api/public-profile/${input.publicProfileId}/visibility`, {
 				method: "PATCH",
 				body: JSON.stringify({ isPublic: input.isPublic }),
 			});

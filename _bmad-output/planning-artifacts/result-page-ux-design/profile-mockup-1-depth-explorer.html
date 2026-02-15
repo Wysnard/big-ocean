@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Mockup 1 - Depth Explorer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Depth zone surfaces */
+      --depth-surface: #FFF8F0;
+      --depth-shallows: #FFF0E8;
+      --depth-mid: #FFE8D8;
+      --depth-deep: #FFD6C4;
+
+      /* Brand */
+      --primary: #FF0080;
+      --secondary: #FF6B2B;
+      --tertiary: #00B4A6;
+
+      /* Trait colors */
+      --trait-openness: oklch(0.55 0.24 293);
+      --trait-conscientiousness: oklch(0.67 0.20 42);
+      --trait-extraversion: oklch(0.59 0.27 348);
+      --trait-agreeableness: oklch(0.67 0.13 181);
+      --trait-neuroticism: oklch(0.29 0.19 272);
+
+      /* Typography */
+      --font-heading: "Space Grotesk", ui-sans-serif, sans-serif;
+      --font-body: "DM Sans", ui-sans-serif, sans-serif;
+      --font-data: "JetBrains Mono", ui-monospace, monospace;
+
+      /* Radius */
+      --radius-card: 16px;
+      --radius-hero: 32px;
+      --radius-button: 12px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--depth-surface);
+      color: #2D1B0E;
+      min-height: 100vh;
+    }
+
+    /* ===== NAV ===== */
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: rgba(255,248,240,0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--depth-shallows);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-logo {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--primary);
+    }
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    .nav-link {
+      font-size: 0.875rem;
+      color: #6B5344;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .nav-link.active {
+      color: var(--primary);
+    }
+    .nav-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* ===== HERO ZONE (Surface) ===== */
+    .hero-zone {
+      background: var(--depth-surface);
+      padding: 48px 24px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-greeting {
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      color: #8B6F5E;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .hero-title {
+      font-family: var(--font-heading);
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Geometric Signature */
+    .geometric-sig {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      margin: 24px 0;
+    }
+    .geo-shape {
+      opacity: 0;
+      animation: shapeReveal 0.4s ease-out forwards;
+    }
+    .geo-shape:nth-child(1) { animation-delay: 0ms; }
+    .geo-shape:nth-child(2) { animation-delay: 100ms; }
+    .geo-shape:nth-child(3) { animation-delay: 200ms; }
+    .geo-shape:nth-child(4) { animation-delay: 300ms; }
+    .geo-shape:nth-child(5) { animation-delay: 400ms; }
+
+    @keyframes shapeReveal {
+      from { opacity: 0; transform: scale(0.5); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .ocean-code {
+      font-family: var(--font-data);
+      font-size: 1.125rem;
+      color: #6B5344;
+      letter-spacing: 0.2em;
+      margin-bottom: 8px;
+    }
+    .confidence-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--depth-shallows);
+      border: 1px solid var(--depth-mid);
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 0.75rem;
+      color: #6B5344;
+    }
+    .confidence-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--tertiary);
+    }
+
+    .hero-description {
+      max-width: 560px;
+      margin: 20px auto 0;
+      font-size: 1.0625rem;
+      line-height: 1.6;
+      color: #5A4436;
+    }
+
+    /* Wave divider */
+    .wave-divider {
+      width: 100%;
+      display: block;
+      margin-top: -1px;
+    }
+
+    /* ===== ASSESSMENT CARD ZONE (Shallows) ===== */
+    .assessment-zone {
+      background: var(--depth-shallows);
+      padding: 0 24px 48px;
+    }
+    .assessment-zone h2 {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      padding-top: 32px;
+    }
+
+    .assessment-card {
+      background: white;
+      border-radius: var(--radius-card);
+      border: 1px solid var(--depth-mid);
+      padding: 24px;
+      max-width: 640px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      transition: box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .assessment-card:hover {
+      box-shadow: 0 8px 24px rgba(255,0,128,0.08);
+    }
+
+    .card-geo-mini {
+      flex-shrink: 0;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      gap: 2px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-content {
+      flex: 1;
+    }
+    .card-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .card-archetype {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 1.125rem;
+    }
+    .card-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 10px;
+      border-radius: 999px;
+    }
+    .card-status.completed {
+      background: #E8F5E8;
+      color: #2D7D2D;
+    }
+    .card-status.in-progress {
+      background: #FFF3E0;
+      color: #C77700;
+    }
+    .card-meta {
+      font-size: 0.8125rem;
+      color: #8B6F5E;
+    }
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .btn {
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: 0.875rem;
+      border: none;
+      cursor: pointer;
+      border-radius: var(--radius-button);
+      padding: 10px 20px;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #E00070;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: #6B5344;
+      border: 1px solid var(--depth-mid);
+    }
+    .btn-ghost:hover {
+      background: var(--depth-shallows);
+    }
+
+    /* ===== TRAIT SCORES ZONE (Shallows) ===== */
+    .traits-zone {
+      background: var(--depth-shallows);
+      padding: 0 24px 48px;
+    }
+    .traits-zone h2 {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    .traits-grid {
+      display: grid;
+      gap: 16px;
+      max-width: 640px;
+    }
+    .trait-card {
+      background: white;
+      border-radius: var(--radius-card);
+      border: 1px solid var(--depth-mid);
+      padding: 20px;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+    }
+    .trait-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    }
+    .trait-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .trait-shape {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+    }
+    .trait-name {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 1rem;
+      flex: 1;
+      text-transform: capitalize;
+    }
+    .trait-score-text {
+      font-family: var(--font-data);
+      font-size: 0.875rem;
+      color: #6B5344;
+    }
+    .trait-bar-track {
+      width: 100%;
+      height: 8px;
+      background: var(--depth-shallows);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .trait-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.8s ease-out;
+    }
+
+    /* Facets (expandable) */
+    .trait-facets {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--depth-shallows);
+      display: none;
+    }
+    .trait-card.expanded .trait-facets {
+      display: block;
+    }
+    .facet-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+    }
+    .facet-name {
+      font-size: 0.8125rem;
+      color: #5A4436;
+      width: 140px;
+      flex-shrink: 0;
+      text-transform: capitalize;
+    }
+    .facet-bar-track {
+      flex: 1;
+      height: 4px;
+      background: var(--depth-shallows);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .facet-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
+    .facet-score {
+      font-family: var(--font-data);
+      font-size: 0.75rem;
+      color: #8B6F5E;
+      width: 60px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .expand-hint {
+      font-size: 0.75rem;
+      color: #8B6F5E;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* ===== SHARING ZONE (Mid) ===== */
+    .sharing-zone {
+      background: var(--depth-mid);
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .sharing-zone h2 {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .sharing-zone p {
+      font-size: 0.9375rem;
+      color: #6B5344;
+      margin-bottom: 24px;
+    }
+    .share-card {
+      background: white;
+      border-radius: var(--radius-card);
+      border: 1px solid var(--depth-deep);
+      padding: 24px;
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .share-url {
+      flex: 1;
+      font-family: var(--font-data);
+      font-size: 0.8125rem;
+      color: #8B6F5E;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .btn-copy {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--tertiary);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: var(--radius-button);
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+
+    .visibility-toggle {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 0.8125rem;
+      color: #6B5344;
+    }
+    .toggle-track {
+      width: 40px;
+      height: 22px;
+      background: var(--tertiary);
+      border-radius: 11px;
+      position: relative;
+      cursor: pointer;
+    }
+    .toggle-thumb {
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      transition: 0.2s;
+    }
+
+    /* ===== CTA ZONE (Deep) ===== */
+    .cta-zone {
+      background: var(--depth-deep);
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .cta-zone h2 {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .cta-zone p {
+      font-size: 0.9375rem;
+      color: #6B5344;
+      margin-bottom: 24px;
+    }
+    .btn-cta {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: var(--radius-button);
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .btn-cta:hover {
+      transform: translateY(-2px);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 640px) {
+      .assessment-card {
+        flex-direction: column;
+        text-align: center;
+      }
+      .card-actions {
+        width: 100%;
+        justify-content: center;
+      }
+      .facet-row {
+        flex-wrap: wrap;
+      }
+      .facet-name {
+        width: 100%;
+      }
+    }
+
+    /* Label for mockup */
+    .mockup-label {
+      position: fixed;
+      top: 60px;
+      right: 16px;
+      background: #2D1B0E;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-family: var(--font-data);
+      z-index: 200;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+<div class="mockup-label">Mockup 1: Depth Explorer</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">big ocean</div>
+  <div class="nav-links">
+    <a href="#" class="nav-link">Home</a>
+    <a href="#" class="nav-link active">Profile</a>
+    <div class="nav-avatar">VL</div>
+  </div>
+</nav>
+
+<!-- HERO ZONE (Surface) -->
+<section class="hero-zone">
+  <div class="hero-greeting">Your Personality Archetype</div>
+  <h1 class="hero-title">The Reflective Navigator</h1>
+
+  <!-- Geometric Signature -->
+  <div class="geometric-sig">
+    <svg class="geo-shape" width="48" height="48" viewBox="0 0 48 48">
+      <circle cx="24" cy="24" r="20" fill="oklch(0.55 0.24 293)" opacity="0.85"/>
+    </svg>
+    <svg class="geo-shape" width="48" height="48" viewBox="0 0 48 48">
+      <path d="M4 24 A20 20 0 0 1 44 24 Z" fill="oklch(0.67 0.20 42)" opacity="0.85"/>
+    </svg>
+    <svg class="geo-shape" width="48" height="48" viewBox="0 0 48 48">
+      <rect x="6" y="10" width="36" height="28" rx="4" fill="oklch(0.59 0.27 348)" opacity="0.85"/>
+    </svg>
+    <svg class="geo-shape" width="48" height="48" viewBox="0 0 48 48">
+      <polygon points="24,4 44,44 4,44" fill="oklch(0.67 0.13 181)" opacity="0.85"/>
+    </svg>
+    <svg class="geo-shape" width="48" height="48" viewBox="0 0 48 48">
+      <polygon points="24,4 44,24 24,44 4,24" fill="oklch(0.29 0.19 272)" opacity="0.85"/>
+    </svg>
+  </div>
+
+  <div class="ocean-code">O D E W R</div>
+  <div class="confidence-badge">
+    <span class="confidence-dot"></span>
+    78% confidence
+  </div>
+  <p class="hero-description">
+    You navigate the world with a rare blend of curiosity and structure.
+    Open to new experiences yet grounded by inner discipline, you tend to explore
+    ideas deeply before committing, and your empathy shapes how you connect with others.
+  </p>
+</section>
+
+<!-- Wave Divider -->
+<svg class="wave-divider" viewBox="0 0 1440 80" preserveAspectRatio="none">
+  <path d="M0,0 C360,80 1080,0 1440,80 L1440,80 L0,80 Z" fill="#FFF0E8"/>
+</svg>
+
+<!-- ASSESSMENT ZONE (Shallows) -->
+<section class="assessment-zone">
+  <h2>Your Assessment</h2>
+
+  <div class="assessment-card" data-status="completed">
+    <div class="card-geo-mini">
+      <svg width="20" height="20"><circle cx="10" cy="10" r="8" fill="oklch(0.55 0.24 293)" opacity="0.7"/></svg>
+      <svg width="20" height="20"><path d="M2 10 A8 8 0 0 1 18 10 Z" fill="oklch(0.67 0.20 42)" opacity="0.7"/></svg>
+      <svg width="20" height="20"><rect x="2" y="4" width="16" height="12" rx="2" fill="oklch(0.59 0.27 348)" opacity="0.7"/></svg>
+      <svg width="20" height="20"><polygon points="10,2 18,18 2,18" fill="oklch(0.67 0.13 181)" opacity="0.7"/></svg>
+      <svg width="20" height="20"><polygon points="10,2 18,10 10,18 2,10" fill="oklch(0.29 0.19 272)" opacity="0.7"/></svg>
+    </div>
+    <div class="card-content">
+      <div class="card-top">
+        <span class="card-archetype">The Reflective Navigator</span>
+        <span class="card-status completed">Complete</span>
+      </div>
+      <span class="card-meta">12 messages &middot; Feb 14, 2026</span>
+    </div>
+    <div class="card-actions">
+      <button class="btn btn-primary">View Results</button>
+      <button class="btn btn-ghost">Keep Exploring</button>
+    </div>
+  </div>
+</section>
+
+<!-- TRAIT SCORES (Shallows) -->
+<section class="traits-zone">
+  <h2>Your Trait Scores</h2>
+  <div class="traits-grid">
+
+    <!-- Openness -->
+    <div class="trait-card expanded" data-trait="openness">
+      <div class="trait-header">
+        <svg class="trait-shape" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="oklch(0.55 0.24 293)"/></svg>
+        <span class="trait-name">Openness</span>
+        <span class="trait-score-text">88 / 120 &middot; H</span>
+      </div>
+      <div class="trait-bar-track">
+        <div class="trait-bar-fill" style="width: 73%; background: oklch(0.55 0.24 293);"></div>
+      </div>
+      <div class="trait-facets">
+        <div class="facet-row">
+          <span class="facet-name">Imagination</span>
+          <div class="facet-bar-track"><div class="facet-bar-fill" style="width: 80%; background: oklch(0.55 0.24 293 / 0.7);"></div></div>
+          <span class="facet-score">16/20 (82%)</span>
+        </div>
+        <div class="facet-row">
+          <span class="facet-name">Artistic Interests</span>
+          <div class="facet-bar-track"><div class="facet-bar-fill" style="width: 70%; background: oklch(0.55 0.24 293 / 0.7);"></div></div>
+          <span class="facet-score">14/20 (75%)</span>
+        </div>
+        <div class="facet-row">
+          <span class="facet-name">Emotionality</span>
+          <div class="facet-bar-track"><div class="facet-bar-fill" style="width: 75%; background: oklch(0.55 0.24 293 / 0.7);"></div></div>
+          <span class="facet-score">15/20 (88%)</span>
+        </div>
+        <div class="facet-row">
+          <span class="facet-name">Adventurousness</span>
+          <div class="facet-bar-track"><div class="facet-bar-fill" style="width: 65%; background: oklch(0.55 0.24 293 / 0.7);"></div></div>
+          <span class="facet-score">13/20 (70%)</span>
+        </div>
+        <div class="facet-row">
+          <span class="facet-name">Intellect</span>
+          <div class="facet-bar-track"><div class="facet-bar-fill" style="width: 85%; background: oklch(0.55 0.24 293 / 0.7);"></div></div>
+          <span class="facet-score">17/20 (91%)</span>
+        </div>
+        <div class="facet-row">
+          <span class="facet-name">Liberalism</span>
+          <div class="facet-bar-track"><div class="facet-bar-fill" style="width: 65%; background: oklch(0.55 0.24 293 / 0.7);"></div></div>
+          <span class="facet-score">13/20 (68%)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conscientiousness -->
+    <div class="trait-card" data-trait="conscientiousness">
+      <div class="trait-header">
+        <svg class="trait-shape" viewBox="0 0 32 32"><path d="M2 16 A14 14 0 0 1 30 16 Z" fill="oklch(0.67 0.20 42)"/></svg>
+        <span class="trait-name">Conscientiousness</span>
+        <span class="trait-score-text">62 / 120 &middot; M</span>
+      </div>
+      <div class="trait-bar-track">
+        <div class="trait-bar-fill" style="width: 52%; background: oklch(0.67 0.20 42);"></div>
+      </div>
+      <p class="expand-hint">Click to expand facets</p>
+    </div>
+
+    <!-- Extraversion -->
+    <div class="trait-card" data-trait="extraversion">
+      <div class="trait-header">
+        <svg class="trait-shape" viewBox="0 0 32 32"><rect x="2" y="6" width="28" height="20" rx="3" fill="oklch(0.59 0.27 348)"/></svg>
+        <span class="trait-name">Extraversion</span>
+        <span class="trait-score-text">72 / 120 &middot; M</span>
+      </div>
+      <div class="trait-bar-track">
+        <div class="trait-bar-fill" style="width: 60%; background: oklch(0.59 0.27 348);"></div>
+      </div>
+      <p class="expand-hint">Click to expand facets</p>
+    </div>
+
+    <!-- Agreeableness -->
+    <div class="trait-card" data-trait="agreeableness">
+      <div class="trait-header">
+        <svg class="trait-shape" viewBox="0 0 32 32"><polygon points="16,2 30,28 2,28" fill="oklch(0.67 0.13 181)"/></svg>
+        <span class="trait-name">Agreeableness</span>
+        <span class="trait-score-text">95 / 120 &middot; H</span>
+      </div>
+      <div class="trait-bar-track">
+        <div class="trait-bar-fill" style="width: 79%; background: oklch(0.67 0.13 181);"></div>
+      </div>
+      <p class="expand-hint">Click to expand facets</p>
+    </div>
+
+    <!-- Neuroticism -->
+    <div class="trait-card" data-trait="neuroticism">
+      <div class="trait-header">
+        <svg class="trait-shape" viewBox="0 0 32 32"><polygon points="16,2 30,16 16,30 2,16" fill="oklch(0.29 0.19 272)"/></svg>
+        <span class="trait-name">Neuroticism</span>
+        <span class="trait-score-text">48 / 120 &middot; M</span>
+      </div>
+      <div class="trait-bar-track">
+        <div class="trait-bar-fill" style="width: 40%; background: oklch(0.29 0.19 272);"></div>
+      </div>
+      <p class="expand-hint">Click to expand facets</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- Wave Divider -->
+<svg class="wave-divider" viewBox="0 0 1440 80" preserveAspectRatio="none">
+  <path d="M0,0 C360,80 1080,0 1440,80 L1440,80 L0,80 Z" fill="#FFE8D8"/>
+</svg>
+
+<!-- SHARING ZONE (Mid) -->
+<section class="sharing-zone">
+  <h2>Share Your Profile</h2>
+  <p>Let others discover your archetype</p>
+  <div class="share-card">
+    <span class="share-url">bigocean.dev/p/reflective-navigator-vl82k</span>
+    <button class="btn-copy">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11V3a1.5 1.5 0 0 1 1.5-1.5H11"/></svg>
+      Copy
+    </button>
+  </div>
+  <div class="visibility-toggle">
+    <span>Profile visible</span>
+    <div class="toggle-track">
+      <div class="toggle-thumb"></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA ZONE (Deep) -->
+<section class="cta-zone">
+  <h2>Keep Exploring</h2>
+  <p>Continue your conversation to deepen your personality insights</p>
+  <button class="btn-cta">Resume Conversation</button>
+</section>
+
+<script>
+  // Toggle facet expansion
+  document.querySelectorAll('.trait-card').forEach(card => {
+    card.addEventListener('click', () => {
+      card.classList.toggle('expanded');
+    });
+  });
+</script>
+
+</body>
+</html>

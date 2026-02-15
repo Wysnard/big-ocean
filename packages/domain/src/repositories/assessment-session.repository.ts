@@ -52,5 +52,27 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 			sessionId: string,
 			session: Partial<AssessmentSessionEntity>,
 		) => Effect.Effect<AssessmentSessionEntity, DatabaseError, never>;
+
+		/**
+		 * Get all assessment sessions for a user, ordered by creation date descending.
+		 * Includes computed messageCount from assessment_message table and optional
+		 * archetype data from public_profile join.
+		 *
+		 * @param userId - Authenticated user ID
+		 * @returns Effect with array of session summaries (empty array if none)
+		 */
+		readonly getSessionsByUserId: (userId: string) => Effect.Effect<
+			Array<{
+				id: string;
+				createdAt: Date;
+				updatedAt: Date;
+				status: string;
+				messageCount: number;
+				oceanCode5: string | null;
+				archetypeName: string | null;
+			}>,
+			DatabaseError,
+			never
+		>;
 	}
 >() {}

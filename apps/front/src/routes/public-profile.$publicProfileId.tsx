@@ -4,7 +4,7 @@
  * Displays a shared personality profile with psychedelic brand identity.
  * No auth required. Shows archetype, trait scores, and expandable facet breakdowns.
  * Conversations and evidence are not exposed.
- * Route: /profile/:publicProfileId
+ * Route: /public-profile/:publicProfileId
  */
 
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -29,10 +29,10 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const FALLBACK_TITLE = "Personality Profile | big-ocean";
 const FALLBACK_DESCRIPTION = "Discover your personality archetype with big-ocean.";
 
-export const Route = createFileRoute("/profile/$publicProfileId")({
+export const Route = createFileRoute("/public-profile/$publicProfileId")({
 	loader: async ({ params }) => {
 		try {
-			const response = await fetch(`${API_URL}/api/profile/${params.publicProfileId}`, {
+			const response = await fetch(`${API_URL}/api/public-profile/${params.publicProfileId}`, {
 				headers: { "Content-Type": "application/json" },
 			});
 			if (!response.ok) return { profile: null };
@@ -46,7 +46,7 @@ export const Route = createFileRoute("/profile/$publicProfileId")({
 		const profile = loaderData?.profile;
 		const title = profile ? `${profile.archetypeName} | big-ocean` : FALLBACK_TITLE;
 		const description = profile?.description || FALLBACK_DESCRIPTION;
-		const canonicalUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/profile/${params.publicProfileId}`;
+		const canonicalUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/public-profile/${params.publicProfileId}`;
 
 		return {
 			meta: [

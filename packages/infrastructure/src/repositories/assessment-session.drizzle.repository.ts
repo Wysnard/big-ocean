@@ -15,9 +15,9 @@ import { AssessmentSessionEntitySchema } from "@workspace/domain/entities/sessio
 import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import { Database } from "@workspace/infrastructure/context/database";
-import { and, eq } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import { Effect, Layer, Schema } from "effect";
-import { assessmentSession } from "../db/drizzle/schema";
+import { assessmentMessage, assessmentSession, publicProfile } from "../db/drizzle/schema";
 
 /**
  * Session Repository Layer - Receives database and logger through DI
@@ -306,6 +306,64 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 							});
 						}),
 					);
+				}),
+			getSessionsByUserId: (userId: string) =>
+				Effect.gen(function* () {
+					// Compute messageCount from assessment_message (stored messageCount is always 0)
+					// Only count user messages to match send-message.use-case convention
+					const messageCountSubquery = db
+						.select({
+							sessionId: assessmentMessage.sessionId,
+							messageCount: count().as("message_count"),
+						})
+						.from(assessmentMessage)
+						.where(eq(assessmentMessage.role, "user"))
+						.groupBy(assessmentMessage.sessionId)
+						.as("msg_counts");
+
+					const results = yield* db
+						.select({
+							id: assessmentSession.id,
+							createdAt: assessmentSession.createdAt,
+							updatedAt: assessmentSession.updatedAt,
+							status: assessmentSession.status,
+							messageCount: sql<number>`COALESCE("msg_counts"."message_count", 0)`.mapWith(Number),
+							oceanCode5: publicProfile.oceanCode5,
+							archetypeName: sql<string | null>`NULL`.as("archetype_name"),
+						})
+						.from(assessmentSession)
+						.leftJoin(messageCountSubquery, eq(assessmentSession.id, messageCountSubquery.sessionId))
+						.leftJoin(publicProfile, eq(assessmentSession.id, publicProfile.sessionId))
+						.where(eq(assessmentSession.userId, userId))
+						.orderBy(sql`${assessmentSession.createdAt} DESC`)
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "getSessionsByUserId",
+										userId,
+										error: error instanceof Error ? error.message : String(error),
+										stack: error instanceof Error ? error.stack : undefined,
+									});
+								} catch (logError) {
+									console.error("Logger failed in error handler:", logError);
+								}
+
+								return new DatabaseError({
+									message: "Failed to list user sessions",
+								});
+							}),
+						);
+
+					return results.map((row) => ({
+						id: row.id,
+						createdAt: row.createdAt,
+						updatedAt: row.updatedAt,
+						status: row.status,
+						messageCount: Number(row.messageCount),
+						oceanCode5: row.oceanCode5 ?? null,
+						archetypeName: row.archetypeName ?? null,
+					}));
 				}),
 		});
 	}),
