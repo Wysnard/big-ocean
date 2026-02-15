@@ -83,7 +83,7 @@ export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (ha
 					// Extract publicProfileId from URL path
 					const url = new URL(request.url, "http://localhost");
 					const pathParts = url.pathname.split("/");
-					// Path: /api/profile/:publicProfileId/visibility
+					// Path: /api/public-profile/:publicProfileId/visibility
 					const publicProfileId = pathParts[pathParts.length - 2];
 
 					if (!publicProfileId) {

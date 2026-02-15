@@ -1,9 +1,11 @@
 /**
- * Assessment Factory — session creation via API + DB seeding for results.
+ * Assessment Factory — session creation + message sending via Playwright APIRequestContext,
+ * DB seeding for evidence data (no API endpoint for bulk evidence).
  */
 
+import type { APIRequestContext } from "@playwright/test";
 import pg from "pg";
-import { API_URL, TEST_DB_CONFIG } from "../e2e-env.js";
+import { TEST_DB_CONFIG } from "../e2e-env.js";
 
 const { Pool } = pg;
 
@@ -47,33 +49,77 @@ const ALL_FACETS = Object.keys(FACET_TO_TRAIT);
 // ── API helpers ─────────────────────────────────────────────────────────
 
 /**
- * Start a new anonymous assessment session via the API.
- * Returns the session ID assigned by the backend.
+ * Start a new assessment session via the API.
+ * If the APIRequestContext has auth cookies, the session is owned by that user.
  */
-export async function createAssessmentSession(cookieHeader?: string): Promise<string> {
-	const headers: Record<string, string> = {
-		"Content-Type": "application/json",
-	};
-	if (cookieHeader) {
-		headers.Cookie = cookieHeader;
-	}
+export async function createAssessmentSession(api: APIRequestContext): Promise<string> {
+	const res = await api.post("/api/assessment/start", { data: {} });
 
-	const res = await fetch(`${API_URL}/api/assessment/start`, {
-		method: "POST",
-		headers,
-		body: JSON.stringify({}),
-	});
-
-	if (!res.ok) {
+	if (!res.ok()) {
 		const body = await res.text();
-		throw new Error(`Assessment start failed (${res.status}): ${body}`);
+		throw new Error(`Assessment start failed (${res.status()}): ${body}`);
 	}
 
 	const data = (await res.json()) as { sessionId: string };
 	return data.sessionId;
 }
 
-// ── DB seeding ──────────────────────────────────────────────────────────
+/**
+ * Send a user message to an existing assessment session via the API.
+ */
+export async function sendAssessmentMessage(
+	api: APIRequestContext,
+	sessionId: string,
+	message: string,
+): Promise<void> {
+	const res = await api.post("/api/assessment/message", {
+		data: { sessionId, message },
+	});
+
+	if (!res.ok()) {
+		const body = await res.text();
+		console.warn(`[assessment.factory] send-message returned ${res.status()}: ${body}`);
+	}
+}
+
+/**
+ * Create a shareable public profile for a session.
+ */
+export async function createShareableProfile(
+	api: APIRequestContext,
+	sessionId: string,
+): Promise<{ publicProfileId: string; shareableUrl: string }> {
+	const res = await api.post("/api/public-profile/share", {
+		data: { sessionId },
+	});
+
+	if (!res.ok()) {
+		const body = await res.text();
+		throw new Error(`Share profile failed (${res.status()}): ${body}`);
+	}
+
+	return (await res.json()) as { publicProfileId: string; shareableUrl: string };
+}
+
+/**
+ * Toggle a public profile's visibility.
+ */
+export async function toggleProfileVisibility(
+	api: APIRequestContext,
+	publicProfileId: string,
+	isPublic: boolean,
+): Promise<void> {
+	const res = await api.patch(`/api/public-profile/${publicProfileId}/visibility`, {
+		data: { isPublic },
+	});
+
+	if (!res.ok()) {
+		const body = await res.text();
+		throw new Error(`Toggle visibility failed (${res.status()}): ${body}`);
+	}
+}
+
+// ── DB seeding (no API endpoints for bulk evidence) ─────────────────────
 
 /**
  * Seed a session with enough data for the results page to render:
@@ -97,7 +143,7 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 		);
 		const userMsgId: string = userMsgResult.rows[0].id;
 
-		const assistantMsgResult = await client.query(
+		await client.query(
 			`INSERT INTO assessment_message (session_id, role, content, created_at)
 			 VALUES ($1, 'assistant', $2, NOW())
 			 RETURNING id`,
@@ -106,7 +152,6 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 				"It sounds like you value both connection and curiosity. Tell me more about what excites you.",
 			],
 		);
-		const _assistantMsgId: string = assistantMsgResult.rows[0].id;
 
 		// 2. Insert 30 facet_evidence rows (one per facet, all linked to the user message)
 		const userMsg = "I enjoy spending time with close friends and exploring new ideas.";
@@ -163,7 +208,6 @@ export async function linkSessionToUser(sessionId: string, userId: string): Prom
 
 /**
  * Look up the user_id for an assessment session.
- * Used to verify that the Better Auth hook linked the session.
  */
 export async function getSessionUserId(sessionId: string): Promise<string | null> {
 	const pool = new Pool(TEST_DB_CONFIG);

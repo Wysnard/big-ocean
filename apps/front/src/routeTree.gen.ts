@@ -11,10 +11,10 @@
 import { Route as rootRouteImport } from "./routes/__root";
 import { Route as R404RouteImport } from "./routes/404";
 import { Route as ChatIndexRouteImport } from "./routes/chat/index";
-import { Route as DashboardRouteImport } from "./routes/dashboard";
 import { Route as IndexRouteImport } from "./routes/index";
 import { Route as LoginRouteImport } from "./routes/login";
-import { Route as ProfilePublicProfileIdRouteImport } from "./routes/profile.$publicProfileId";
+import { Route as ProfileRouteImport } from "./routes/profile";
+import { Route as PublicProfilePublicProfileIdRouteImport } from "./routes/public-profile.$publicProfileId";
 import { Route as ResultsRouteImport } from "./routes/results";
 import { Route as ResultsAssessmentSessionIdRouteImport } from "./routes/results/$assessmentSessionId";
 import { Route as SignupRouteImport } from "./routes/signup";
@@ -29,14 +29,14 @@ const ResultsRoute = ResultsRouteImport.update({
 	path: "/results",
 	getParentRoute: () => rootRouteImport,
 } as any);
+const ProfileRoute = ProfileRouteImport.update({
+	id: "/profile",
+	path: "/profile",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const LoginRoute = LoginRouteImport.update({
 	id: "/login",
 	path: "/login",
-	getParentRoute: () => rootRouteImport,
-} as any);
-const DashboardRoute = DashboardRouteImport.update({
-	id: "/dashboard",
-	path: "/dashboard",
 	getParentRoute: () => rootRouteImport,
 } as any);
 const R404Route = R404RouteImport.update({
@@ -59,31 +59,31 @@ const ResultsAssessmentSessionIdRoute = ResultsAssessmentSessionIdRouteImport.up
 	path: "/$assessmentSessionId",
 	getParentRoute: () => ResultsRoute,
 } as any);
-const ProfilePublicProfileIdRoute = ProfilePublicProfileIdRouteImport.update({
-	id: "/profile/$publicProfileId",
-	path: "/profile/$publicProfileId",
+const PublicProfilePublicProfileIdRoute = PublicProfilePublicProfileIdRouteImport.update({
+	id: "/public-profile/$publicProfileId",
+	path: "/public-profile/$publicProfileId",
 	getParentRoute: () => rootRouteImport,
 } as any);
 
 export interface FileRoutesByFullPath {
 	"/": typeof IndexRoute;
 	"/404": typeof R404Route;
-	"/dashboard": typeof DashboardRoute;
 	"/login": typeof LoginRoute;
+	"/profile": typeof ProfileRoute;
 	"/results": typeof ResultsRouteWithChildren;
 	"/signup": typeof SignupRoute;
-	"/profile/$publicProfileId": typeof ProfilePublicProfileIdRoute;
+	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
 }
 export interface FileRoutesByTo {
 	"/": typeof IndexRoute;
 	"/404": typeof R404Route;
-	"/dashboard": typeof DashboardRoute;
 	"/login": typeof LoginRoute;
+	"/profile": typeof ProfileRoute;
 	"/results": typeof ResultsRouteWithChildren;
 	"/signup": typeof SignupRoute;
-	"/profile/$publicProfileId": typeof ProfilePublicProfileIdRoute;
+	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat": typeof ChatIndexRoute;
 }
@@ -91,11 +91,11 @@ export interface FileRoutesById {
 	__root__: typeof rootRouteImport;
 	"/": typeof IndexRoute;
 	"/404": typeof R404Route;
-	"/dashboard": typeof DashboardRoute;
 	"/login": typeof LoginRoute;
+	"/profile": typeof ProfileRoute;
 	"/results": typeof ResultsRouteWithChildren;
 	"/signup": typeof SignupRoute;
-	"/profile/$publicProfileId": typeof ProfilePublicProfileIdRoute;
+	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
 }
@@ -104,33 +104,33 @@ export interface FileRouteTypes {
 	fullPaths:
 		| "/"
 		| "/404"
-		| "/dashboard"
 		| "/login"
+		| "/profile"
 		| "/results"
 		| "/signup"
-		| "/profile/$publicProfileId"
+		| "/public-profile/$publicProfileId"
 		| "/results/$assessmentSessionId"
 		| "/chat/";
 	fileRoutesByTo: FileRoutesByTo;
 	to:
 		| "/"
 		| "/404"
-		| "/dashboard"
 		| "/login"
+		| "/profile"
 		| "/results"
 		| "/signup"
-		| "/profile/$publicProfileId"
+		| "/public-profile/$publicProfileId"
 		| "/results/$assessmentSessionId"
 		| "/chat";
 	id:
 		| "__root__"
 		| "/"
 		| "/404"
-		| "/dashboard"
 		| "/login"
+		| "/profile"
 		| "/results"
 		| "/signup"
-		| "/profile/$publicProfileId"
+		| "/public-profile/$publicProfileId"
 		| "/results/$assessmentSessionId"
 		| "/chat/";
 	fileRoutesById: FileRoutesById;
@@ -138,11 +138,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
 	IndexRoute: typeof IndexRoute;
 	R404Route: typeof R404Route;
-	DashboardRoute: typeof DashboardRoute;
 	LoginRoute: typeof LoginRoute;
+	ProfileRoute: typeof ProfileRoute;
 	ResultsRoute: typeof ResultsRouteWithChildren;
 	SignupRoute: typeof SignupRoute;
-	ProfilePublicProfileIdRoute: typeof ProfilePublicProfileIdRoute;
+	PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute;
 	ChatIndexRoute: typeof ChatIndexRoute;
 }
 
@@ -162,18 +162,18 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof ResultsRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
+		"/profile": {
+			id: "/profile";
+			path: "/profile";
+			fullPath: "/profile";
+			preLoaderRoute: typeof ProfileRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
 		"/login": {
 			id: "/login";
 			path: "/login";
 			fullPath: "/login";
 			preLoaderRoute: typeof LoginRouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
-		"/dashboard": {
-			id: "/dashboard";
-			path: "/dashboard";
-			fullPath: "/dashboard";
-			preLoaderRoute: typeof DashboardRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
 		"/404": {
@@ -204,11 +204,11 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof ResultsAssessmentSessionIdRouteImport;
 			parentRoute: typeof ResultsRoute;
 		};
-		"/profile/$publicProfileId": {
-			id: "/profile/$publicProfileId";
-			path: "/profile/$publicProfileId";
-			fullPath: "/profile/$publicProfileId";
-			preLoaderRoute: typeof ProfilePublicProfileIdRouteImport;
+		"/public-profile/$publicProfileId": {
+			id: "/public-profile/$publicProfileId";
+			path: "/public-profile/$publicProfileId";
+			fullPath: "/public-profile/$publicProfileId";
+			preLoaderRoute: typeof PublicProfilePublicProfileIdRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
 	}
@@ -227,11 +227,11 @@ const ResultsRouteWithChildren = ResultsRoute._addFileChildren(ResultsRouteChild
 const rootRouteChildren: RootRouteChildren = {
 	IndexRoute: IndexRoute,
 	R404Route: R404Route,
-	DashboardRoute: DashboardRoute,
 	LoginRoute: LoginRoute,
+	ProfileRoute: ProfileRoute,
 	ResultsRoute: ResultsRouteWithChildren,
 	SignupRoute: SignupRoute,
-	ProfilePublicProfileIdRoute: ProfilePublicProfileIdRoute,
+	PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,
 	ChatIndexRoute: ChatIndexRoute,
 };
 export const routeTree = rootRouteImport

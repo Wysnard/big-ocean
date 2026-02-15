@@ -20,5 +20,5 @@ import { ProfileGroup } from "./groups/profile";
 export class BigOceanApi extends HttpApi.make("BigOceanApi")
 	.add(HealthGroup) // /health (no prefix)
 	.add(AssessmentGroup.prefix("/api")) // /api/assessment/*
-	.add(ProfileGroup.prefix("/api")) // /api/profile/*
+	.add(ProfileGroup.prefix("/api")) // /api/public-profile/*
 	.add(EvidenceGroup.prefix("/api")) {} // /api/evidence/*

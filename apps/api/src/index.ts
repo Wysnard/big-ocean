@@ -259,10 +259,10 @@ const logStartup = (port: number, frontendUrl: string) =>
 		logger.info("  - GET  /api/assessment/:sessionId/resume");
 		logger.info("  - GET  /api/assessment/:sessionId/results");
 		logger.info("");
-		logger.info("✓ Profile routes (Effect layer):");
-		logger.info("  - POST  /api/profile/share");
-		logger.info("  - GET   /api/profile/:publicProfileId");
-		logger.info("  - PATCH /api/profile/:publicProfileId/visibility");
+		logger.info("✓ Public Profile routes (Effect layer):");
+		logger.info("  - POST  /api/public-profile/share");
+		logger.info("  - GET   /api/public-profile/:publicProfileId");
+		logger.info("  - PATCH /api/public-profile/:publicProfileId/visibility");
 	});
 
 /**

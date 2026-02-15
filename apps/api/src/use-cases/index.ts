@@ -30,6 +30,11 @@ export {
 	getResults,
 } from "./get-results.use-case";
 export {
+	type ListUserSessionsInput,
+	type ListUserSessionsOutput,
+	listUserSessions,
+} from "./list-user-sessions.use-case";
+export {
 	type ResumeSessionInput,
 	type ResumeSessionOutput,
 	resumeSession,

@@ -10,16 +10,29 @@
  */
 
 import { HttpApiBuilder } from "@effect/platform";
-import { AgentInvocationError, BigOceanApi, DatabaseError } from "@workspace/contracts";
+import {
+	AgentInvocationError,
+	BigOceanApi,
+	DatabaseError,
+	Unauthorized,
+} from "@workspace/contracts";
 import {
 	BudgetPausedError,
+	extract4LetterCode,
 	type FacetEvidencePersistenceError,
+	lookupArchetype,
 	OrchestrationError,
 	RedisOperationError,
 } from "@workspace/domain";
 import { BetterAuthService } from "@workspace/infrastructure";
 import { DateTime, Effect } from "effect";
-import { getResults, resumeSession, sendMessage, startAssessment } from "../use-cases/index";
+import {
+	getResults,
+	listUserSessions,
+	resumeSession,
+	sendMessage,
+	startAssessment,
+} from "../use-cases/index";
 
 const toFetchHeaders = (requestHeaders: unknown): Headers => {
 	if (requestHeaders instanceof Headers) {
@@ -102,6 +115,45 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 							content: msg.content,
 							timestamp: DateTime.unsafeMake(msg.createdAt.getTime()),
 						})),
+					};
+				}),
+			)
+			.handle("listSessions", ({ request }) =>
+				Effect.gen(function* () {
+					const userId = yield* resolveAuthenticatedUserId(request);
+					if (!userId) {
+						return yield* Effect.fail(
+							new Unauthorized({ message: "Authentication required to list sessions" }),
+						);
+					}
+
+					const result = yield* listUserSessions({ userId });
+
+					return {
+						sessions: result.sessions.map((s) => {
+							// Derive archetype name from oceanCode5 if available
+							let archetypeName: string | null = null;
+							if (s.oceanCode5) {
+								try {
+									const code4 = extract4LetterCode(s.oceanCode5);
+									const archetype = lookupArchetype(code4);
+									archetypeName = archetype.name;
+								} catch {
+									// Invalid code — leave archetypeName null
+								}
+							}
+
+							return {
+								id: s.id,
+								createdAt: DateTime.unsafeMake(s.createdAt.getTime()),
+								updatedAt: DateTime.unsafeMake(s.updatedAt.getTime()),
+								status: s.status as "active" | "paused" | "completed" | "archived",
+								messageCount: s.messageCount,
+								oceanCode5: s.oceanCode5,
+								archetypeName,
+							};
+						}),
+						freeTierMessageThreshold: result.freeTierMessageThreshold,
 					};
 				}),
 			)

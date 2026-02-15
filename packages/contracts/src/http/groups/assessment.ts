@@ -13,6 +13,7 @@ import {
 	FreeTierLimitReached,
 	RateLimitExceeded,
 	SessionNotFound,
+	Unauthorized,
 } from "../../errors";
 import { OceanCode4Schema, OceanCode5Schema } from "../../schemas/ocean-code";
 
@@ -126,6 +127,31 @@ export const ResumeSessionResponseSchema = S.Struct({
 });
 
 /**
+ * Session Summary Schema (Story 7.13)
+ *
+ * Represents a single assessment session in the user's history.
+ * messageCount is computed from assessment_message table (not stored on session).
+ * oceanCode5/archetypeName are optional — populated via public_profile join for sessions that have one.
+ */
+export const SessionSummarySchema = S.Struct({
+	id: S.String,
+	createdAt: S.DateTimeUtc,
+	updatedAt: S.DateTimeUtc,
+	status: S.Literal("active", "paused", "completed", "archived"),
+	messageCount: S.Number,
+	oceanCode5: S.NullOr(S.String),
+	archetypeName: S.NullOr(S.String),
+});
+
+/**
+ * List Sessions Response Schema (Story 7.13)
+ */
+export const ListSessionsResponseSchema = S.Struct({
+	sessions: S.Array(SessionSummarySchema),
+	freeTierMessageThreshold: S.Number,
+});
+
+/**
  * Assessment API Group
  *
  * Routes:
@@ -133,6 +159,7 @@ export const ResumeSessionResponseSchema = S.Struct({
  * - POST /api/assessment/message - Send message to assessment agent
  * - GET /api/assessment/:sessionId/results - Get assessment results
  * - GET /api/assessment/:sessionId/resume - Resume existing session
+ * - GET /api/assessment/sessions - List user's assessment sessions (Story 7.13)
  */
 export const AssessmentGroup = HttpApiGroup.make("assessment")
 	.add(
@@ -150,6 +177,12 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 			.addError(SessionNotFound, { status: 404 })
 			.addError(DatabaseError, { status: 500 })
 			.addError(AgentInvocationError, { status: 503 }),
+	)
+	.add(
+		HttpApiEndpoint.get("listSessions", "/sessions")
+			.addSuccess(ListSessionsResponseSchema)
+			.addError(Unauthorized, { status: 401 })
+			.addError(DatabaseError, { status: 500 }),
 	)
 	.add(
 		HttpApiEndpoint.get("getResults", "/:sessionId/results")
@@ -174,3 +207,5 @@ export type SendMessageRequest = typeof SendMessageRequestSchema.Type;
 export type SendMessageResponse = typeof SendMessageResponseSchema.Type;
 export type GetResultsResponse = typeof GetResultsResponseSchema.Type;
 export type ResumeSessionResponse = typeof ResumeSessionResponseSchema.Type;
+export type SessionSummary = typeof SessionSummarySchema.Type;
+export type ListSessionsResponse = typeof ListSessionsResponseSchema.Type;

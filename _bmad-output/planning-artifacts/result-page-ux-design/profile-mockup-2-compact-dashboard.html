@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Mockup 2 - Compact Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --depth-surface: #FFF8F0;
+      --depth-shallows: #FFF0E8;
+      --depth-mid: #FFE8D8;
+      --depth-deep: #FFD6C4;
+      --primary: #FF0080;
+      --secondary: #FF6B2B;
+      --tertiary: #00B4A6;
+      --trait-openness: oklch(0.55 0.24 293);
+      --trait-conscientiousness: oklch(0.67 0.20 42);
+      --trait-extraversion: oklch(0.59 0.27 348);
+      --trait-agreeableness: oklch(0.67 0.13 181);
+      --trait-neuroticism: oklch(0.29 0.19 272);
+      --font-heading: "Space Grotesk", ui-sans-serif, sans-serif;
+      --font-body: "DM Sans", ui-sans-serif, sans-serif;
+      --font-data: "JetBrains Mono", ui-monospace, monospace;
+      --radius-card: 16px;
+      --radius-button: 12px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--font-body);
+      background: var(--depth-surface);
+      color: #2D1B0E;
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: rgba(255,248,240,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--depth-shallows);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-logo { font-family: var(--font-heading); font-weight: 700; font-size: 1.25rem; color: var(--primary); }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-link { font-size: 0.875rem; color: #6B5344; text-decoration: none; font-weight: 500; }
+    .nav-link.active { color: var(--primary); }
+    .nav-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 0.75rem; font-weight: 600;
+    }
+
+    /* LAYOUT: Side-by-side dashboard */
+    .dashboard {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 32px 24px;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* LEFT SIDEBAR: Identity Card */
+    .identity-sidebar {
+      position: sticky;
+      top: 80px;
+      align-self: start;
+    }
+
+    .identity-card {
+      background: white;
+      border-radius: 24px;
+      border: 1px solid var(--depth-mid);
+      overflow: hidden;
+    }
+
+    .identity-hero {
+      background: linear-gradient(160deg, oklch(0.55 0.24 293 / 0.15), oklch(0.59 0.27 348 / 0.15), oklch(0.67 0.13 181 / 0.10));
+      padding: 32px 24px;
+      text-align: center;
+      position: relative;
+    }
+
+    .identity-geo {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .identity-archetype {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .identity-ocean {
+      font-family: var(--font-data);
+      font-size: 0.9375rem;
+      color: #6B5344;
+      letter-spacing: 0.15em;
+      margin-bottom: 8px;
+    }
+
+    .identity-confidence {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: #8B6F5E;
+    }
+    .identity-confidence::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--tertiary);
+    }
+
+    .identity-body {
+      padding: 24px;
+    }
+
+    .identity-desc {
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      color: #5A4436;
+      margin-bottom: 20px;
+    }
+
+    .identity-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 16px;
+      border-top: 1px solid var(--depth-shallows);
+    }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8125rem;
+    }
+    .meta-label { color: #8B6F5E; }
+    .meta-value { font-weight: 500; color: #2D1B0E; }
+
+    .identity-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 0 24px 24px;
+    }
+    .btn {
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: 0.875rem;
+      border: none;
+      cursor: pointer;
+      border-radius: var(--radius-button);
+      padding: 12px 20px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: #E00070; }
+    .btn-outline { background: transparent; color: #6B5344; border: 1px solid var(--depth-mid); }
+    .btn-outline:hover { background: var(--depth-shallows); }
+    .btn-teal { background: var(--tertiary); color: white; }
+
+    /* RIGHT CONTENT */
+    .content-area {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .section-header {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    /* RADAR CHART (placeholder) */
+    .radar-section {
+      background: white;
+      border-radius: var(--radius-card);
+      border: 1px solid var(--depth-mid);
+      padding: 24px;
+    }
+    .radar-container {
+      position: relative;
+      width: 100%;
+      max-width: 360px;
+      aspect-ratio: 1;
+      margin: 0 auto;
+    }
+    .radar-svg { width: 100%; height: 100%; }
+    .radar-label {
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      font-weight: 600;
+      fill: #5A4436;
+    }
+    .radar-label-score {
+      font-family: var(--font-data);
+      font-size: 0.6875rem;
+      fill: #8B6F5E;
+    }
+    .radar-grid { fill: none; stroke: var(--depth-shallows); stroke-width: 1; }
+    .radar-area {
+      fill: oklch(0.59 0.27 348 / 0.15);
+      stroke: var(--primary);
+      stroke-width: 2;
+    }
+    .radar-dot { fill: var(--primary); }
+
+    /* TRAIT BARS: Horizontal compact */
+    .traits-section {
+      background: white;
+      border-radius: var(--radius-card);
+      border: 1px solid var(--depth-mid);
+      padding: 24px;
+    }
+    .trait-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--depth-shallows);
+      cursor: pointer;
+    }
+    .trait-row:last-child { border-bottom: none; }
+    .trait-icon {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+    .trait-info {
+      flex: 1;
+    }
+    .trait-name-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .trait-name {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: capitalize;
+    }
+    .trait-score {
+      font-family: var(--font-data);
+      font-size: 0.75rem;
+      color: #8B6F5E;
+    }
+    .trait-bar-track {
+      width: 100%;
+      height: 6px;
+      background: var(--depth-shallows);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .trait-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 1s ease-out;
+    }
+    .trait-level {
+      font-family: var(--font-data);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: white;
+    }
+
+    /* Expandable facets */
+    .trait-facets-panel {
+      display: none;
+      padding: 12px 0 4px 40px;
+    }
+    .trait-row.expanded + .trait-facets-panel {
+      display: block;
+    }
+    .facet-mini {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+    }
+    .facet-name { font-size: 0.8125rem; color: #5A4436; width: 130px; text-transform: capitalize; flex-shrink: 0; }
+    .facet-bar-track { flex: 1; height: 3px; background: var(--depth-shallows); border-radius: 2px; overflow: hidden; }
+    .facet-bar-fill { height: 100%; border-radius: 2px; }
+    .facet-val { font-family: var(--font-data); font-size: 0.6875rem; color: #8B6F5E; width: 32px; text-align: right; flex-shrink: 0; }
+
+    /* SHARE SECTION */
+    .share-section {
+      background: white;
+      border-radius: var(--radius-card);
+      border: 1px solid var(--depth-mid);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .share-section .share-text {
+      flex: 1;
+    }
+    .share-section .share-text h3 {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .share-section .share-text p {
+      font-size: 0.8125rem;
+      color: #8B6F5E;
+    }
+
+    .mockup-label {
+      position: fixed;
+      top: 60px;
+      right: 16px;
+      background: #2D1B0E;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-family: var(--font-data);
+      z-index: 200;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+<div class="mockup-label">Mockup 2: Compact Dashboard</div>
+
+<nav class="nav">
+  <div class="nav-logo">big ocean</div>
+  <div class="nav-links">
+    <a href="#" class="nav-link">Home</a>
+    <a href="#" class="nav-link active">Profile</a>
+    <div class="nav-avatar">VL</div>
+  </div>
+</nav>
+
+<div class="dashboard">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="identity-sidebar">
+    <div class="identity-card">
+      <div class="identity-hero">
+        <div class="identity-geo">
+          <svg width="36" height="36"><circle cx="18" cy="18" r="15" fill="oklch(0.55 0.24 293)" opacity="0.85"/></svg>
+          <svg width="36" height="36"><path d="M3 18 A15 15 0 0 1 33 18 Z" fill="oklch(0.67 0.20 42)" opacity="0.85"/></svg>
+          <svg width="36" height="36"><rect x="4" y="7" width="28" height="22" rx="3" fill="oklch(0.59 0.27 348)" opacity="0.85"/></svg>
+          <svg width="36" height="36"><polygon points="18,3 33,33 3,33" fill="oklch(0.67 0.13 181)" opacity="0.85"/></svg>
+          <svg width="36" height="36"><polygon points="18,3 33,18 18,33 3,18" fill="oklch(0.29 0.19 272)" opacity="0.85"/></svg>
+        </div>
+        <div class="identity-archetype">The Reflective Navigator</div>
+        <div class="identity-ocean">O D E W R</div>
+        <div class="identity-confidence">78% confidence</div>
+      </div>
+      <div class="identity-body">
+        <p class="identity-desc">
+          A rare blend of curiosity and structure. Open to new experiences yet grounded by inner discipline.
+        </p>
+        <div class="identity-meta">
+          <div class="meta-row"><span class="meta-label">Assessment</span><span class="meta-value">Complete</span></div>
+          <div class="meta-row"><span class="meta-label">Messages</span><span class="meta-value">12</span></div>
+          <div class="meta-row"><span class="meta-label">Date</span><span class="meta-value">Feb 14, 2026</span></div>
+        </div>
+      </div>
+      <div class="identity-actions">
+        <button class="btn btn-primary">Keep Exploring</button>
+        <button class="btn btn-teal">Share Profile</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT CONTENT -->
+  <main class="content-area">
+
+    <!-- Radar Chart -->
+    <section class="radar-section">
+      <h2 class="section-header">Personality Overview</h2>
+      <div class="radar-container">
+        <svg class="radar-svg" viewBox="0 0 400 400">
+          <!-- Grid rings -->
+          <circle cx="200" cy="200" r="150" class="radar-grid"/>
+          <circle cx="200" cy="200" r="100" class="radar-grid"/>
+          <circle cx="200" cy="200" r="50" class="radar-grid"/>
+
+          <!-- Axes -->
+          <line x1="200" y1="200" x2="200" y2="50" stroke="#FFD6C4" stroke-width="1"/>
+          <line x1="200" y1="200" x2="343" y2="146" stroke="#FFD6C4" stroke-width="1"/>
+          <line x1="200" y1="200" x2="288" y2="338" stroke="#FFD6C4" stroke-width="1"/>
+          <line x1="200" y1="200" x2="112" y2="338" stroke="#FFD6C4" stroke-width="1"/>
+          <line x1="200" y1="200" x2="57" y2="146" stroke="#FFD6C4" stroke-width="1"/>
+
+          <!-- Data area -->
+          <polygon
+            points="200,90 308,148 270,310 130,280 95,160"
+            class="radar-area"
+          />
+
+          <!-- Data dots -->
+          <circle cx="200" cy="90" r="5" class="radar-dot"/>
+          <circle cx="308" cy="148" r="5" class="radar-dot"/>
+          <circle cx="270" cy="310" r="5" class="radar-dot"/>
+          <circle cx="130" cy="280" r="5" class="radar-dot"/>
+          <circle cx="95" cy="160" r="5" class="radar-dot"/>
+
+          <!-- Labels -->
+          <text x="200" y="35" text-anchor="middle" class="radar-label">Openness</text>
+          <text x="200" y="48" text-anchor="middle" class="radar-label-score">73%</text>
+          <text x="362" y="146" text-anchor="start" class="radar-label">Conscientious.</text>
+          <text x="362" y="159" text-anchor="start" class="radar-label-score">52%</text>
+          <text x="300" y="358" text-anchor="middle" class="radar-label">Extraversion</text>
+          <text x="300" y="371" text-anchor="middle" class="radar-label-score">60%</text>
+          <text x="100" y="358" text-anchor="middle" class="radar-label">Agreeableness</text>
+          <text x="100" y="371" text-anchor="middle" class="radar-label-score">79%</text>
+          <text x="38" y="146" text-anchor="end" class="radar-label">Neuroticism</text>
+          <text x="38" y="159" text-anchor="end" class="radar-label-score">40%</text>
+        </svg>
+      </div>
+    </section>
+
+    <!-- Trait Bars -->
+    <section class="traits-section">
+      <h2 class="section-header">Trait Breakdown</h2>
+
+      <div class="trait-row expanded" data-trait="openness" onclick="this.classList.toggle('expanded')">
+        <svg class="trait-icon" viewBox="0 0 28 28"><circle cx="14" cy="14" r="12" fill="oklch(0.55 0.24 293)"/></svg>
+        <div class="trait-info">
+          <div class="trait-name-row">
+            <span class="trait-name">Openness</span>
+            <span class="trait-score">88 / 120</span>
+          </div>
+          <div class="trait-bar-track"><div class="trait-bar-fill" style="width: 73%; background: oklch(0.55 0.24 293);"></div></div>
+        </div>
+        <div class="trait-level" style="background: oklch(0.55 0.24 293);">H</div>
+      </div>
+      <div class="trait-facets-panel">
+        <div class="facet-mini"><span class="facet-name">Imagination</span><div class="facet-bar-track"><div class="facet-bar-fill" style="width:80%;background:oklch(0.55 0.24 293 / 0.6)"></div></div><span class="facet-val">16</span></div>
+        <div class="facet-mini"><span class="facet-name">Artistic Interests</span><div class="facet-bar-track"><div class="facet-bar-fill" style="width:70%;background:oklch(0.55 0.24 293 / 0.6)"></div></div><span class="facet-val">14</span></div>
+        <div class="facet-mini"><span class="facet-name">Emotionality</span><div class="facet-bar-track"><div class="facet-bar-fill" style="width:75%;background:oklch(0.55 0.24 293 / 0.6)"></div></div><span class="facet-val">15</span></div>
+        <div class="facet-mini"><span class="facet-name">Adventurousness</span><div class="facet-bar-track"><div class="facet-bar-fill" style="width:65%;background:oklch(0.55 0.24 293 / 0.6)"></div></div><span class="facet-val">13</span></div>
+        <div class="facet-mini"><span class="facet-name">Intellect</span><div class="facet-bar-track"><div class="facet-bar-fill" style="width:85%;background:oklch(0.55 0.24 293 / 0.6)"></div></div><span class="facet-val">17</span></div>
+        <div class="facet-mini"><span class="facet-name">Liberalism</span><div class="facet-bar-track"><div class="facet-bar-fill" style="width:65%;background:oklch(0.55 0.24 293 / 0.6)"></div></div><span class="facet-val">13</span></div>
+      </div>
+
+      <div class="trait-row" data-trait="conscientiousness" onclick="this.classList.toggle('expanded')">
+        <svg class="trait-icon" viewBox="0 0 28 28"><path d="M2 14 A12 12 0 0 1 26 14 Z" fill="oklch(0.67 0.20 42)"/></svg>
+        <div class="trait-info">
+          <div class="trait-name-row">
+            <span class="trait-name">Conscientiousness</span>
+            <span class="trait-score">62 / 120</span>
+          </div>
+          <div class="trait-bar-track"><div class="trait-bar-fill" style="width: 52%; background: oklch(0.67 0.20 42);"></div></div>
+        </div>
+        <div class="trait-level" style="background: oklch(0.67 0.20 42);">M</div>
+      </div>
+      <div class="trait-facets-panel"></div>
+
+      <div class="trait-row" data-trait="extraversion" onclick="this.classList.toggle('expanded')">
+        <svg class="trait-icon" viewBox="0 0 28 28"><rect x="2" y="5" width="24" height="18" rx="3" fill="oklch(0.59 0.27 348)"/></svg>
+        <div class="trait-info">
+          <div class="trait-name-row">
+            <span class="trait-name">Extraversion</span>
+            <span class="trait-score">72 / 120</span>
+          </div>
+          <div class="trait-bar-track"><div class="trait-bar-fill" style="width: 60%; background: oklch(0.59 0.27 348);"></div></div>
+        </div>
+        <div class="trait-level" style="background: oklch(0.59 0.27 348);">M</div>
+      </div>
+      <div class="trait-facets-panel"></div>
+
+      <div class="trait-row" data-trait="agreeableness" onclick="this.classList.toggle('expanded')">
+        <svg class="trait-icon" viewBox="0 0 28 28"><polygon points="14,2 26,26 2,26" fill="oklch(0.67 0.13 181)"/></svg>
+        <div class="trait-info">
+          <div class="trait-name-row">
+            <span class="trait-name">Agreeableness</span>
+            <span class="trait-score">95 / 120</span>
+          </div>
+          <div class="trait-bar-track"><div class="trait-bar-fill" style="width: 79%; background: oklch(0.67 0.13 181);"></div></div>
+        </div>
+        <div class="trait-level" style="background: oklch(0.67 0.13 181);">H</div>
+      </div>
+      <div class="trait-facets-panel"></div>
+
+      <div class="trait-row" data-trait="neuroticism" onclick="this.classList.toggle('expanded')">
+        <svg class="trait-icon" viewBox="0 0 28 28"><polygon points="14,2 26,14 14,26 2,14" fill="oklch(0.29 0.19 272)"/></svg>
+        <div class="trait-info">
+          <div class="trait-name-row">
+            <span class="trait-name">Neuroticism</span>
+            <span class="trait-score">48 / 120</span>
+          </div>
+          <div class="trait-bar-track"><div class="trait-bar-fill" style="width: 40%; background: oklch(0.29 0.19 272);"></div></div>
+        </div>
+        <div class="trait-level" style="background: oklch(0.29 0.19 272);">M</div>
+      </div>
+      <div class="trait-facets-panel"></div>
+
+    </section>
+
+    <!-- Share bar -->
+    <section class="share-section">
+      <div class="share-text">
+        <h3>Share your archetype</h3>
+        <p>bigocean.dev/p/reflective-navigator-vl82k</p>
+      </div>
+      <button class="btn btn-teal">Copy Link</button>
+    </section>
+
+  </main>
+</div>
+
+</body>
+</html>

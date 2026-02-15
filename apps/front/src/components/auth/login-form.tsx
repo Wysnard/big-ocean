@@ -43,7 +43,7 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 					params: { assessmentSessionId: anonymousSessionId },
 				});
 			} else {
-				await navigate({ to: "/dashboard" });
+				await navigate({ to: "/profile" });
 			}
 		} catch (err) {
 			setError((err instanceof Error ? err.message : String(err)) || "Invalid email or password");

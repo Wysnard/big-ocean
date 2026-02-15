@@ -73,9 +73,9 @@ export const ToggleVisibilityResponseSchema = S.Struct({
  * Profile API Group
  *
  * Routes:
- * - POST /api/profile/share - Create shareable profile
- * - GET /api/profile/:publicProfileId - View public profile
- * - PATCH /api/profile/:publicProfileId/visibility - Toggle privacy
+ * - POST /api/public-profile/share - Create shareable profile
+ * - GET /api/public-profile/:publicProfileId - View public profile
+ * - PATCH /api/public-profile/:publicProfileId/visibility - Toggle privacy
  */
 export const ProfileGroup = HttpApiGroup.make("profile")
 	.add(
@@ -102,7 +102,7 @@ export const ProfileGroup = HttpApiGroup.make("profile")
 			.addError(Unauthorized, { status: 401 })
 			.addError(DatabaseError, { status: 500 }),
 	)
-	.prefix("/profile");
+	.prefix("/public-profile");
 
 // Export TypeScript types for frontend use
 export type ShareProfileRequest = typeof ShareProfileRequestSchema.Type;

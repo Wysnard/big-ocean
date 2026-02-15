@@ -56,7 +56,7 @@ export function buildPostAuthRedirect(options?: {
 	redirectTo?: string;
 	fallback?: string;
 }): string {
-	const fallback = options?.fallback ?? "/dashboard";
+	const fallback = options?.fallback ?? "/profile";
 	const redirectTo = isSafeInternalPath(options?.redirectTo) ? options?.redirectTo : fallback;
 	const url = new URL(redirectTo, "http://localhost");
 
