@@ -9,14 +9,19 @@
  * - Dependencies resolved during layer construction
  */
 
-import { DatabaseError, ProfileError, ProfileNotFound } from "@workspace/contracts/errors";
+import {
+	DatabaseError,
+	ProfileError,
+	ProfileNotFound,
+	Unauthorized,
+} from "@workspace/contracts/errors";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import type { CreatePublicProfileInput } from "@workspace/domain/repositories/public-profile.repository";
 import { PublicProfileRepository } from "@workspace/domain/repositories/public-profile.repository";
 import { Database } from "@workspace/infrastructure/context/database";
 import { eq, sql } from "drizzle-orm";
 import { Effect, Layer } from "effect";
-import { publicProfile } from "../db/drizzle/schema";
+import { publicProfile, user } from "../db/drizzle/schema";
 
 /**
  * Public Profile Repository Layer
@@ -36,7 +41,7 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 						.insert(publicProfile)
 						.values({
 							sessionId: input.sessionId,
-							...(input.userId ? { userId: input.userId } : {}),
+							userId: input.userId,
 							oceanCode5: input.oceanCode5,
 							oceanCode4: input.oceanCode4,
 						})
@@ -59,10 +64,27 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 						return yield* Effect.fail(new ProfileError({ message: "Failed to create public profile" }));
 					}
 
+					// Fetch user's display name — userId is always present (anonymous users can't create profiles)
+					const users = yield* db
+						.select({ name: user.name })
+						.from(user)
+						.where(eq(user.id, input.userId))
+						.limit(1)
+						.pipe(
+							Effect.mapError(
+								() => new DatabaseError({ message: "Failed to fetch user for display name" }),
+							),
+						);
+
+					if (users.length === 0) {
+						return yield* Effect.fail(new Unauthorized({ message: "User not found" }));
+					}
+
 					return {
 						id: profile.id,
 						sessionId: profile.sessionId,
-						userId: profile.userId,
+						userId: input.userId,
+						displayName: users[0]?.name ?? input.userId,
 						oceanCode5: profile.oceanCode5,
 						oceanCode4: profile.oceanCode4,
 						isPublic: profile.isPublic,
@@ -79,8 +101,19 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 					}
 
 					const results = yield* db
-						.select()
+						.select({
+							id: publicProfile.id,
+							sessionId: publicProfile.sessionId,
+							userId: publicProfile.userId,
+							oceanCode5: publicProfile.oceanCode5,
+							oceanCode4: publicProfile.oceanCode4,
+							isPublic: publicProfile.isPublic,
+							viewCount: publicProfile.viewCount,
+							createdAt: publicProfile.createdAt,
+							userName: user.name,
+						})
 						.from(publicProfile)
+						.leftJoin(user, eq(publicProfile.userId, user.id))
 						.where(eq(publicProfile.id, profileId))
 						.limit(1)
 						.pipe(
@@ -101,10 +134,12 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 					const profile = results[0];
 					if (!profile) return null;
 
+					// userId and userName are always present — anonymous users can't create profiles
 					return {
 						id: profile.id,
 						sessionId: profile.sessionId,
-						userId: profile.userId,
+						userId: profile.userId as string,
+						displayName: (profile.userName ?? profile.userId) as string,
 						oceanCode5: profile.oceanCode5,
 						oceanCode4: profile.oceanCode4,
 						isPublic: profile.isPublic,
@@ -116,8 +151,19 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 			getProfileBySessionId: (sessionId: string) =>
 				Effect.gen(function* () {
 					const results = yield* db
-						.select()
+						.select({
+							id: publicProfile.id,
+							sessionId: publicProfile.sessionId,
+							userId: publicProfile.userId,
+							oceanCode5: publicProfile.oceanCode5,
+							oceanCode4: publicProfile.oceanCode4,
+							isPublic: publicProfile.isPublic,
+							viewCount: publicProfile.viewCount,
+							createdAt: publicProfile.createdAt,
+							userName: user.name,
+						})
 						.from(publicProfile)
+						.leftJoin(user, eq(publicProfile.userId, user.id))
 						.where(eq(publicProfile.sessionId, sessionId))
 						.limit(1)
 						.pipe(
@@ -138,10 +184,12 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 					const profile = results[0];
 					if (!profile) return null;
 
+					// userId and userName are always present — anonymous users can't create profiles
 					return {
 						id: profile.id,
 						sessionId: profile.sessionId,
-						userId: profile.userId,
+						userId: profile.userId as string,
+						displayName: (profile.userName ?? profile.userId) as string,
 						oceanCode5: profile.oceanCode5,
 						oceanCode4: profile.oceanCode4,
 						isPublic: profile.isPublic,

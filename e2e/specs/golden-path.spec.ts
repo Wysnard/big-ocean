@@ -55,10 +55,13 @@ test("golden path: landing → chat → signup → results → share → public 
 		await page.getByTestId("chat-send-btn").click();
 
 		// Wait for Nerin response — either input re-enables or celebration card appears
-		await page.locator("[data-slot='celebration-card'], [data-slot='chat-input']:enabled").first().waitFor({
-			state: "visible",
-			timeout: 30_000,
-		});
+		await page
+			.locator("[data-slot='celebration-card'], [data-slot='chat-input']:enabled")
+			.first()
+			.waitFor({
+				state: "visible",
+				timeout: 30_000,
+			});
 	});
 
 	await test.step("celebration card appears → click View Results", async () => {
@@ -99,16 +102,19 @@ test("golden path: landing → chat → signup → results → share → public 
 		await generateBtn.click();
 	});
 
-	await test.step("assert share URL visible and copy works", async () => {
-		await page.getByTestId("share-url").waitFor({ state: "visible" });
-		await page.getByTestId("share-copy-btn").click();
-	});
-
 	await test.step("toggle privacy to public", async () => {
 		await page.getByTestId("share-privacy-toggle").click();
 		await expect(page.getByTestId("share-visibility-status")).toContainText("public", {
 			timeout: 5_000,
 		});
+	});
+
+	await test.step("copy share link and verify clipboard", async () => {
+		await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+		const shareUrl = await page.getByTestId("share-url").textContent();
+		await page.getByTestId("share-copy-btn").click();
+		const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+		expect(clipboardText).toBe(shareUrl);
 	});
 
 	await test.step("navigate to public profile", async () => {
@@ -121,7 +127,7 @@ test("golden path: landing → chat → signup → results → share → public 
 	});
 
 	await test.step("assert public profile elements", async () => {
-		await page.getByTestId("public-archetype-name").waitFor({ state: "visible" });
+		await page.getByTestId("archetype-name").waitFor({ state: "visible" });
 		await page.getByTestId("public-cta").waitFor({ state: "visible" });
 	});
 });

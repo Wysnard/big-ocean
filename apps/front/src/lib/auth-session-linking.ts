@@ -1,5 +1,3 @@
-const SESSION_ROUTE_PATHS = new Set(["/chat", "/results"]);
-
 function isSafeInternalPath(path: unknown): path is string {
 	return typeof path === "string" && path.startsWith("/") && !path.startsWith("//");
 }
@@ -8,7 +6,6 @@ function isSafeInternalPath(path: unknown): path is string {
  * Resolve the active assessment session id from router location.
  * Supports:
  * - /chat?sessionId=...
- * - /results?sessionId=...
  * - /results/:sessionId
  */
 export function getActiveAssessmentSessionId(
@@ -51,7 +48,8 @@ export function buildAuthPageHref(
 
 /**
  * Build post-auth redirect target.
- * If redirect path is /chat or /results and sessionId exists, ensure sessionId query is present.
+ * - /results + sessionId → /results/{sessionId} (path param)
+ * - /chat + sessionId → /chat?sessionId=... (search param)
  */
 export function buildPostAuthRedirect(options?: {
 	sessionId?: string;
@@ -62,12 +60,13 @@ export function buildPostAuthRedirect(options?: {
 	const redirectTo = isSafeInternalPath(options?.redirectTo) ? options?.redirectTo : fallback;
 	const url = new URL(redirectTo, "http://localhost");
 
-	if (
-		options?.sessionId &&
-		SESSION_ROUTE_PATHS.has(url.pathname) &&
-		!url.searchParams.has("sessionId")
-	) {
-		url.searchParams.set("sessionId", options.sessionId);
+	if (options?.sessionId) {
+		if (url.pathname === "/results") {
+			// Results uses path params: /results/$assessmentSessionId
+			url.pathname = `/results/${encodeURIComponent(options.sessionId)}`;
+		} else if (url.pathname === "/chat" && !url.searchParams.has("sessionId")) {
+			url.searchParams.set("sessionId", options.sessionId);
+		}
 	}
 
 	const query = url.searchParams.toString();

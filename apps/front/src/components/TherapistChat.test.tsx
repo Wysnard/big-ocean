@@ -452,8 +452,8 @@ describe("TherapistChat", () => {
 
 			await waitFor(() => {
 				expect(mockNavigate).toHaveBeenCalledWith({
-					to: "/results/$sessionId",
-					params: { sessionId: "session-123" },
+					to: "/results/$assessmentSessionId",
+					params: { assessmentSessionId: "session-123" },
 				});
 			});
 		});

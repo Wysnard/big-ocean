@@ -14,6 +14,7 @@
 
 import { useNavigate } from "@tanstack/react-router";
 import type { SavedFacetEvidence } from "@workspace/contracts";
+import { toFacetDisplayName } from "@workspace/domain";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@workspace/ui/components/dialog";
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -76,7 +77,7 @@ export function FacetSidePanel({
 								type="button"
 							>
 								<div className="flex justify-between items-center">
-									<span className="capitalize">{item.facetName.replace(/_/g, " ")}</span>
+									<span>{toFacetDisplayName(item.facetName)}</span>
 									<span className={cn("font-bold", getScoreColor(item.score))}>+{item.score}/20</span>
 								</div>
 								<span className="text-xs text-muted-foreground">{item.confidence}% confident</span>

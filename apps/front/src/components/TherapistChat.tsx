@@ -404,8 +404,8 @@ function ChatContent({
 					</div>
 					{isConfidenceReady && (
 						<Link
-							to="/results/$sessionId"
-							params={{ sessionId }}
+							to="/results/$assessmentSessionId"
+							params={{ assessmentSessionId: sessionId }}
 							className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
 							data-testid="view-results-header-link"
 						>
@@ -549,8 +549,8 @@ function ChatContent({
 												<Button
 													onClick={() =>
 														navigate({
-															to: "/results/$sessionId",
-															params: { sessionId },
+															to: "/results/$assessmentSessionId",
+															params: { assessmentSessionId: sessionId },
 														})
 													}
 													data-testid="view-results-btn"

@@ -7,11 +7,12 @@ const PROJECT_ROOT = resolve(import.meta.dirname, "..");
  * Playwright E2E Test Configuration — Chromium Desktop Only
  *
  * Projects:
- *   setup        → creates test users + assessment session (runs first)
- *   golden-path  → self-contained journey spec
- *   unauth       → unauthenticated access denial (no storageState)
- *   auth-other   → other-user access denial (other-user.json)
- *   auth-owner   → owner access granted (owner.json)
+ *   setup          → creates test users + assessment session (runs first)
+ *   golden-path    → self-contained journey spec
+ *   public-profile → anonymous viewer accesses shared profile
+ *   unauth         → unauthenticated access denial (no storageState)
+ *   auth-other     → other-user access denial (other-user.json)
+ *   auth-owner     → owner access granted (owner.json)
  *
  * Docker test containers are managed via globalSetup / globalTeardown.
  */
@@ -43,6 +44,13 @@ export default defineConfig({
 		{
 			name: "golden-path",
 			testMatch: "specs/golden-path.spec.ts",
+			dependencies: ["setup"],
+		},
+
+		// ── Public profile: anonymous viewer accesses shared profile ─────
+		{
+			name: "public-profile",
+			testMatch: "specs/public-profile.spec.ts",
 			dependencies: ["setup"],
 		},
 

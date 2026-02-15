@@ -34,6 +34,15 @@ describe("auth-session-linking", () => {
 		).toBe("/chat?sessionId=session-123");
 	});
 
+	it("builds /results path param for post-auth redirect", () => {
+		expect(
+			buildPostAuthRedirect({
+				redirectTo: "/results",
+				sessionId: "session-123",
+			}),
+		).toBe("/results/session-123");
+	});
+
 	it("keeps explicit session query in redirect unchanged", () => {
 		expect(
 			buildPostAuthRedirect({

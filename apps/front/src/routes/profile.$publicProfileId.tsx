@@ -1,161 +1,121 @@
 /**
  * Public Profile Route
  *
- * Displays a shared personality profile. No auth required.
+ * Displays a shared personality profile with psychedelic brand identity.
+ * No auth required. Shows archetype, trait scores, and expandable facet breakdowns.
+ * Conversations and evidence are not exposed.
  * Route: /profile/:publicProfileId
  */
 
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Button } from "@workspace/ui/components/button";
+import type { GetPublicProfileResponse } from "@workspace/contracts";
+import type { FacetName, TraitName } from "@workspace/domain";
 import {
-	Check,
-	ChevronDown,
-	ChevronUp,
-	Copy,
-	Eye,
-	Handshake,
-	Heart,
-	Lightbulb,
-	Loader2,
-	Lock,
-	ShieldAlert,
-	TrendingUp,
-	Waves,
-	Zap,
-} from "lucide-react";
+	BIG_FIVE_TRAITS,
+	FACET_TO_TRAIT,
+	TRAIT_LETTER_MAP,
+	TRAIT_TO_FACETS,
+} from "@workspace/domain";
+import { Button } from "@workspace/ui/components/button";
+import { Check, Copy, Loader2, Lock, ShieldAlert } from "lucide-react";
 import { useState } from "react";
+import { WaveDivider } from "@/components/home/WaveDivider";
+import { ProfileView } from "@/components/results/ProfileView";
+import type { FacetData, TraitData } from "@/components/results/TraitScoresSection";
 import { useGetPublicProfile } from "../hooks/use-profile";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
+const FALLBACK_TITLE = "Personality Profile | big-ocean";
+const FALLBACK_DESCRIPTION = "Discover your personality archetype with big-ocean.";
+
 export const Route = createFileRoute("/profile/$publicProfileId")({
+	loader: async ({ params }) => {
+		try {
+			const response = await fetch(`${API_URL}/api/profile/${params.publicProfileId}`, {
+				headers: { "Content-Type": "application/json" },
+			});
+			if (!response.ok) return { profile: null };
+			const profile: GetPublicProfileResponse = await response.json();
+			return { profile };
+		} catch {
+			return { profile: null };
+		}
+	},
+	head: ({ loaderData, params }) => {
+		const profile = loaderData?.profile;
+		const title = profile ? `${profile.archetypeName} | big-ocean` : FALLBACK_TITLE;
+		const description = profile?.description || FALLBACK_DESCRIPTION;
+		const canonicalUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/profile/${params.publicProfileId}`;
+
+		return {
+			meta: [
+				{ title },
+				{ name: "description", content: description },
+				{ property: "og:title", content: title },
+				{ property: "og:description", content: description },
+				{ property: "og:url", content: canonicalUrl },
+				{ property: "og:type", content: "profile" },
+				{ property: "og:site_name", content: "big-ocean" },
+				{ name: "twitter:card", content: "summary" },
+				{ name: "twitter:title", content: title },
+				{ name: "twitter:description", content: description },
+			],
+		};
+	},
 	component: ProfilePage,
 });
 
-const TRAIT_CONFIG: Record<
-	string,
-	{ label: string; icon: React.ReactNode; color: string; barColor: string }
-> = {
-	openness: {
-		label: "Openness",
-		icon: <Lightbulb className="w-5 h-5" />,
-		color: "text-amber-400",
-		barColor: "bg-amber-400",
-	},
-	conscientiousness: {
-		label: "Conscientiousness",
-		icon: <Zap className="w-5 h-5" />,
-		color: "text-blue-400",
-		barColor: "bg-blue-400",
-	},
-	extraversion: {
-		label: "Extraversion",
-		icon: <Heart className="w-5 h-5" />,
-		color: "text-rose-400",
-		barColor: "bg-rose-400",
-	},
-	agreeableness: {
-		label: "Agreeableness",
-		icon: <Handshake className="w-5 h-5" />,
-		color: "text-green-400",
-		barColor: "bg-green-400",
-	},
-	neuroticism: {
-		label: "Neuroticism",
-		icon: <TrendingUp className="w-5 h-5" />,
-		color: "text-purple-400",
-		barColor: "bg-purple-400",
-	},
-};
+type ApiFacets = Record<string, { score: number; confidence: number }>;
 
-const LEVEL_LABELS: Record<string, { label: string; width: string }> = {
-	H: { label: "High", width: "85%" },
-	M: { label: "Mid", width: "50%" },
-	L: { label: "Low", width: "15%" },
-};
+/** Convert API facet record to FacetData[] for TraitScoresSection */
+function toFacetData(facets: ApiFacets): FacetData[] {
+	return Object.entries(facets).map(([name, { score, confidence }]) => ({
+		name,
+		traitName: FACET_TO_TRAIT[name as FacetName] ?? "openness",
+		score,
+		confidence,
+	}));
+}
 
-const TRAIT_FACETS: Record<string, { facets: string[]; displayNames: Record<string, string> }> = {
-	openness: {
-		facets: [
-			"imagination",
-			"artistic_interests",
-			"emotionality",
-			"adventurousness",
-			"intellect",
-			"liberalism",
-		],
-		displayNames: {
-			imagination: "Imagination",
-			artistic_interests: "Artistic Interests",
-			emotionality: "Emotionality",
-			adventurousness: "Adventurousness",
-			intellect: "Intellect",
-			liberalism: "Liberalism",
-		},
-	},
-	conscientiousness: {
-		facets: [
-			"self_efficacy",
-			"orderliness",
-			"dutifulness",
-			"achievement_striving",
-			"self_discipline",
-			"cautiousness",
-		],
-		displayNames: {
-			self_efficacy: "Self-Efficacy",
-			orderliness: "Orderliness",
-			dutifulness: "Dutifulness",
-			achievement_striving: "Achievement Striving",
-			self_discipline: "Self-Discipline",
-			cautiousness: "Cautiousness",
-		},
-	},
-	extraversion: {
-		facets: [
-			"friendliness",
-			"gregariousness",
-			"assertiveness",
-			"activity_level",
-			"excitement_seeking",
-			"cheerfulness",
-		],
-		displayNames: {
-			friendliness: "Friendliness",
-			gregariousness: "Gregariousness",
-			assertiveness: "Assertiveness",
-			activity_level: "Activity Level",
-			excitement_seeking: "Excitement Seeking",
-			cheerfulness: "Cheerfulness",
-		},
-	},
-	agreeableness: {
-		facets: ["trust", "morality", "altruism", "cooperation", "modesty", "sympathy"],
-		displayNames: {
-			trust: "Trust",
-			morality: "Morality",
-			altruism: "Altruism",
-			cooperation: "Cooperation",
-			modesty: "Modesty",
-			sympathy: "Sympathy",
-		},
-	},
-	neuroticism: {
-		facets: ["anxiety", "anger", "depression", "self_consciousness", "immoderation", "vulnerability"],
-		displayNames: {
-			anxiety: "Anxiety",
-			anger: "Anger",
-			depression: "Depression",
-			self_consciousness: "Self-Consciousness",
-			immoderation: "Immoderation",
-			vulnerability: "Vulnerability",
-		},
-	},
-};
+/** Derive TraitData[] by aggregating facet scores per trait */
+function deriveTraitData(facets: ApiFacets, traitSummary: Record<string, string>): TraitData[] {
+	return BIG_FIVE_TRAITS.map((trait) => {
+		const traitFacets = TRAIT_TO_FACETS[trait];
+		let totalScore = 0;
+		let totalConfidence = 0;
+		let count = 0;
+
+		for (const facetName of traitFacets) {
+			const facet = facets[facetName];
+			if (facet) {
+				totalScore += facet.score;
+				totalConfidence += facet.confidence;
+				count++;
+			}
+		}
+
+		return {
+			name: trait,
+			score: totalScore,
+			level: traitSummary[trait] ?? TRAIT_LETTER_MAP[trait][1],
+			confidence: count > 0 ? Math.round(totalConfidence / count) : 0,
+		};
+	});
+}
+
+/** Derive dominant trait from trait scores (highest score, first in OCEAN order for ties) */
+function getDominantTrait(traits: TraitData[]): TraitName {
+	if (traits.length === 0) return "openness";
+	const sorted = [...traits].sort((a, b) => b.score - a.score);
+	return sorted[0].name as TraitName;
+}
 
 function ProfilePage() {
 	const { publicProfileId } = Route.useParams();
 	const { data: profile, isLoading, error } = useGetPublicProfile(publicProfileId);
 	const [copied, setCopied] = useState(false);
-	const [expandedTrait, setExpandedTrait] = useState<string | null>(null);
+	const [expandedTraits, setExpandedTraits] = useState<Set<string>>(new Set());
 
 	const handleCopyLink = async () => {
 		try {
@@ -163,7 +123,6 @@ function ProfilePage() {
 			setCopied(true);
 			setTimeout(() => setCopied(false), 2000);
 		} catch {
-			// Fallback for older browsers
 			const textarea = document.createElement("textarea");
 			textarea.value = window.location.href;
 			document.body.appendChild(textarea);
@@ -177,10 +136,13 @@ function ProfilePage() {
 
 	if (isLoading) {
 		return (
-			<div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+			<div
+				data-slot="profile-loading"
+				className="min-h-screen bg-background flex items-center justify-center"
+			>
 				<div className="text-center">
-					<Loader2 className="h-12 w-12 animate-spin text-blue-400 mx-auto mb-4" />
-					<p className="text-gray-400">Loading profile...</p>
+					<Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+					<p className="text-muted-foreground">Loading profile...</p>
 				</div>
 			</div>
 		);
@@ -192,31 +154,43 @@ function ProfilePage() {
 		const isNotFound = errorMessage.includes("not found") || errorMessage.includes("404");
 
 		return (
-			<div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-6">
+			<div
+				data-slot="profile-error"
+				className="min-h-screen bg-background flex items-center justify-center px-6"
+			>
 				<div className="text-center max-w-md">
 					{isPrivate ? (
 						<>
-							<Lock className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-							<h1 className="text-2xl font-bold text-white mb-2">This Profile is Private</h1>
-							<p className="text-gray-400 mb-6">
+							<Lock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+							<h1 className="text-2xl font-bold font-heading text-foreground mb-2">
+								This Profile is Private
+							</h1>
+							<p className="text-muted-foreground mb-6">
 								The owner has set this profile to private. It is not publicly viewable.
 							</p>
 						</>
 					) : isNotFound ? (
 						<>
-							<ShieldAlert className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-							<h1 className="text-2xl font-bold text-white mb-2">Profile Not Found</h1>
-							<p className="text-gray-400 mb-6">This profile doesn't exist or may have been removed.</p>
+							<ShieldAlert className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+							<h1 className="text-2xl font-bold font-heading text-foreground mb-2">Profile Not Found</h1>
+							<p className="text-muted-foreground mb-6">
+								This profile doesn't exist or may have been removed.
+							</p>
 						</>
 					) : (
 						<>
-							<ShieldAlert className="w-16 h-16 text-red-400 mx-auto mb-4" />
-							<h1 className="text-2xl font-bold text-white mb-2">Something Went Wrong</h1>
-							<p className="text-gray-400 mb-6">{errorMessage}</p>
+							<ShieldAlert className="w-16 h-16 text-destructive mx-auto mb-4" />
+							<h1 className="text-2xl font-bold font-heading text-foreground mb-2">
+								Something Went Wrong
+							</h1>
+							<p className="text-muted-foreground mb-6">{errorMessage}</p>
 						</>
 					)}
 					<Link to="/">
-						<Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
+						<Button
+							data-slot="profile-error-cta"
+							className="bg-primary text-primary-foreground hover:bg-primary/90"
+						>
 							Go Home
 						</Button>
 					</Link>
@@ -227,156 +201,84 @@ function ProfilePage() {
 
 	if (!profile) return null;
 
-	const traitOrder = [
-		"openness",
-		"conscientiousness",
-		"extraversion",
-		"agreeableness",
-		"neuroticism",
-	];
+	const traits = deriveTraitData(profile.facets, profile.traitSummary);
+	const facets = toFacetData(profile.facets);
+	const dominantTrait = getDominantTrait(traits);
 
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-8 px-4 md:px-6">
-			<div className="max-w-2xl mx-auto">
-				{/* Archetype Card */}
-				<div
-					className="rounded-2xl border border-slate-700 overflow-hidden mb-8"
-					style={{ background: `linear-gradient(135deg, ${profile.color}22, ${profile.color}08)` }}
-				>
-					<div className="p-8 text-center">
-						<div
-							className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center"
-							style={{ backgroundColor: `${profile.color}33` }}
-						>
-							<Waves className="w-10 h-10" style={{ color: profile.color }} />
-						</div>
-						<h1
-							data-testid="public-archetype-name"
-							className="text-3xl md:text-4xl font-bold text-white mb-2"
-						>
-							{profile.archetypeName}
-						</h1>
-						<p className="text-sm font-mono text-slate-400 mb-4">OCEAN Code: {profile.oceanCode}</p>
-						<p className="text-gray-300 leading-relaxed max-w-lg mx-auto">{profile.description}</p>
-					</div>
-				</div>
+		<ProfileView
+			archetypeName={profile.archetypeName}
+			oceanCode5={profile.oceanCode}
+			description={profile.description}
+			dominantTrait={dominantTrait}
+			traits={traits}
+			facets={facets}
+			displayName={profile.displayName}
+			expandedTraits={expandedTraits}
+			onToggleTrait={(trait) => {
+				setExpandedTraits((prev) => {
+					const next = new Set(prev);
+					if (next.has(trait)) next.delete(trait);
+					else next.add(trait);
+					return next;
+				});
+			}}
+		>
+			{/* Wave transition: shallows → mid */}
+			<WaveDivider fromColor="var(--depth-shallows)" className="text-[var(--depth-mid)]" />
 
-				{/* Trait Summary with Facets */}
-				<div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-8">
-					<h2 className="text-xl font-bold text-white mb-6">Trait Summary</h2>
-					<div className="space-y-5">
-						{traitOrder.map((trait) => {
-							const config = TRAIT_CONFIG[trait];
-							const level = profile.traitSummary[trait] || "M";
-							const levelInfo = LEVEL_LABELS[level] || LEVEL_LABELS.M;
-							const isExpanded = expandedTrait === trait;
-							const traitFacets = TRAIT_FACETS[trait];
-							if (!config) return null;
-
-							return (
-								<div key={trait} className="border border-slate-700/50 rounded-lg p-4">
-									<button
-										type="button"
-										onClick={() => setExpandedTrait(isExpanded ? null : trait)}
-										className="w-full text-left"
-									>
-										<div className="flex items-center justify-between mb-2">
-											<div className={`flex items-center gap-2 ${config.color}`}>
-												{config.icon}
-												<span className="text-sm font-medium text-gray-300">{config.label}</span>
-												{isExpanded ? (
-													<ChevronUp className="w-4 h-4 text-slate-400" />
-												) : (
-													<ChevronDown className="w-4 h-4 text-slate-400" />
-												)}
-											</div>
-											<span className="text-sm font-semibold text-gray-100">{levelInfo.label}</span>
-										</div>
-										<div className="w-full bg-slate-700 rounded-full h-2.5">
-											<div
-												className={`h-2.5 rounded-full transition-all duration-500 ${config.barColor}`}
-												style={{ width: levelInfo.width }}
-											/>
-										</div>
-									</button>
-
-									{/* Facet Insights */}
-									{isExpanded && traitFacets && (
-										<div className="mt-4 pt-4 border-t border-slate-700/50">
-											<p className="text-xs text-slate-400 mb-3 uppercase tracking-wider">Facet Breakdown</p>
-											<div className="space-y-3">
-												{traitFacets.facets.map((facetKey) => {
-													const facetData = profile.facets?.[facetKey];
-													if (!facetData) return null;
-
-													const percentage = Math.round((facetData.score / 20) * 100);
-													const displayName = traitFacets.displayNames[facetKey] || facetKey;
-
-													return (
-														<div key={facetKey}>
-															<div className="flex items-center justify-between mb-1">
-																<span className="text-xs text-gray-400">{displayName}</span>
-																<span className="text-xs text-gray-300 font-mono">{facetData.score}/20</span>
-															</div>
-															<div className="w-full bg-slate-700/50 rounded-full h-1.5">
-																<div
-																	className={`h-1.5 rounded-full ${config.barColor} opacity-70`}
-																	style={{ width: `${percentage}%` }}
-																/>
-															</div>
-														</div>
-													);
-												})}
-											</div>
-										</div>
+			{/* Depth Zone: Mid — Share actions */}
+			<div className="bg-[var(--depth-mid)]">
+				<section data-slot="profile-share-actions" className="px-6 py-12">
+					<div className="mx-auto max-w-2xl">
+						<div className="border border-border rounded-xl bg-card p-6">
+							<div className="flex items-center gap-2 mb-4">
+								<Copy className="w-5 h-5 text-muted-foreground" />
+								<h2 className="text-lg font-semibold font-heading text-foreground">Share This Profile</h2>
+							</div>
+							<div className="flex flex-wrap gap-3">
+								<Button
+									data-slot="profile-copy-link"
+									onClick={handleCopyLink}
+									variant="outline"
+									className="min-h-[44px]"
+								>
+									{copied ? (
+										<>
+											<Check className="w-4 h-4 mr-2 text-success" />
+											Copied!
+										</>
+									) : (
+										<>
+											<Copy className="w-4 h-4 mr-2" />
+											Copy Link
+										</>
 									)}
-								</div>
-							);
-						})}
+								</Button>
+							</div>
+						</div>
 					</div>
-				</div>
+				</section>
+			</div>
 
-				{/* Share Actions */}
-				<div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-8">
-					<div className="flex items-center gap-2 mb-4">
-						<Eye className="w-5 h-5 text-slate-400" />
-						<h2 className="text-lg font-semibold text-white">Share This Profile</h2>
-					</div>
-					<div className="flex flex-wrap gap-3">
-						<Button
-							data-testid="public-copy-link"
-							onClick={handleCopyLink}
-							variant="outline"
-							className="border-slate-600 text-gray-300 hover:bg-slate-700 hover:text-white"
-						>
-							{copied ? (
-								<>
-									<Check className="w-4 h-4 mr-2 text-green-400" />
-									Copied!
-								</>
-							) : (
-								<>
-									<Copy className="w-4 h-4 mr-2" />
-									Copy Link
-								</>
-							)}
-						</Button>
-					</div>
-				</div>
+			{/* Wave transition: mid → deep */}
+			<WaveDivider fromColor="var(--depth-mid)" className="text-[var(--depth-deep)]" />
 
-				{/* CTA */}
+			{/* Depth Zone: Deep — CTA Viral Loop */}
+			<div className="bg-[var(--depth-deep)] px-6 py-12">
 				<div className="text-center">
-					<p className="text-gray-400 mb-4">Want to discover your own personality archetype?</p>
-					<Link to="/chat" search={{ sessionId: undefined }}>
+					<p className="text-muted-foreground mb-4">Want to discover your own personality archetype?</p>
+					<Link to="/">
 						<Button
+							data-slot="profile-discover-cta"
 							data-testid="public-cta"
-							className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 px-8"
+							className="bg-primary text-primary-foreground hover:bg-primary/90 min-h-[44px] px-8 text-base"
 						>
-							Take the Assessment
+							Discover Your Archetype
 						</Button>
 					</Link>
 				</div>
 			</div>
-		</div>
+		</ProfileView>
 	);
 }

@@ -12,11 +12,11 @@
  */
 
 import { Context, Effect } from "effect";
-import { DatabaseError, ProfileError, ProfileNotFound } from "../errors/http.errors";
+import { DatabaseError, ProfileError, ProfileNotFound, Unauthorized } from "../errors/http.errors";
 
 export interface CreatePublicProfileInput {
 	readonly sessionId: string;
-	readonly userId: string | null;
+	readonly userId: string;
 	readonly oceanCode5: string;
 	readonly oceanCode4: string;
 }
@@ -24,7 +24,8 @@ export interface CreatePublicProfileInput {
 export interface PublicProfileData {
 	readonly id: string;
 	readonly sessionId: string;
-	readonly userId: string | null;
+	readonly userId: string;
+	readonly displayName: string;
 	readonly oceanCode5: string;
 	readonly oceanCode4: string;
 	readonly isPublic: boolean;
@@ -42,7 +43,7 @@ export class PublicProfileRepository extends Context.Tag("PublicProfileRepositor
 	{
 		readonly createProfile: (
 			input: CreatePublicProfileInput,
-		) => Effect.Effect<PublicProfileData, DatabaseError | ProfileError>;
+		) => Effect.Effect<PublicProfileData, DatabaseError | ProfileError | Unauthorized>;
 
 		readonly getProfile: (
 			profileId: string,

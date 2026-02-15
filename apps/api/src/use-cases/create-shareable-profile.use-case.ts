@@ -2,13 +2,11 @@
  * Create Shareable Profile Use Case
  *
  * Generates a public profile link from a completed assessment session.
- * Validates that all 30 facets have confidence >= 70 before allowing share.
  * Idempotent: same sessionId always returns the same profile.
  */
 
 import { ProfileError } from "@workspace/contracts/errors";
 import {
-	ALL_FACETS,
 	AppConfig,
 	AssessmentSessionRepository,
 	aggregateFacetScores,
@@ -30,8 +28,6 @@ export interface CreateShareableProfileOutput {
 	readonly shareableUrl: string;
 	readonly isPublic: boolean;
 }
-
-const REQUIRED_FACET_COUNT = 30;
 
 /**
  * Create Shareable Profile Use Case
@@ -68,40 +64,23 @@ export const createShareableProfile = (input: CreateShareableProfileInput) =>
 		const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
 		const facetScores = aggregateFacetScores(evidence);
 
-		// 4. Confidence validation (AC #5): ALL 30 facets must have confidence >= threshold
-		const minConfidence = config.shareMinConfidence;
-		const facetsWithData = ALL_FACETS.filter(
-			(facetName) => facetScores[facetName] && facetScores[facetName].confidence >= minConfidence,
-		);
-
-		if (facetsWithData.length < REQUIRED_FACET_COUNT) {
-			const lowConfidenceFacets = ALL_FACETS.filter(
-				(facetName) => !facetScores[facetName] || facetScores[facetName].confidence < minConfidence,
-			);
-			logger.warn("Profile share blocked: insufficient confidence", {
-				sessionId: input.sessionId,
-				qualifiedFacets: facetsWithData.length,
-				requiredFacets: REQUIRED_FACET_COUNT,
-				lowConfidenceFacets: lowConfidenceFacets.slice(0, 5),
-			});
-			return yield* Effect.fail(
-				new ProfileError({
-					message: "Complete more of the assessment before sharing.",
-				}),
-			);
-		}
-
-		// 5. Generate OCEAN code from facet scores
+		// 4. Generate OCEAN code from facet scores
 		const oceanCode5 = generateOceanCode(facetScores);
 		const oceanCode4 = extract4LetterCode(oceanCode5);
 
-		// 6. Get session to extract userId
+		// 5. Get session to extract userId
 		const session = yield* sessionRepo.getSession(input.sessionId);
 
-		// 7. Create profile (archetype fields derived at read-time)
+		if (!session.userId) {
+			return yield* Effect.fail(
+				new ProfileError({ message: "Cannot create a public profile for an anonymous session" }),
+			);
+		}
+
+		// 6. Create profile (archetype fields derived at read-time)
 		const profile = yield* profileRepo.createProfile({
 			sessionId: input.sessionId,
-			userId: session.userId ?? null,
+			userId: session.userId,
 			oceanCode5,
 			oceanCode4,
 		});

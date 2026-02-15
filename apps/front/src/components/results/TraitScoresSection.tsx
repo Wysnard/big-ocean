@@ -1,5 +1,5 @@
 import type { FacetName, TraitName } from "@workspace/domain";
-import { getFacetColor, getTraitColor } from "@workspace/domain";
+import { getFacetColor, getTraitColor, toFacetDisplayName } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
 import { FileText } from "lucide-react";
 import type { ReactNode } from "react";
@@ -36,14 +36,14 @@ const TRAIT_ORDER: TraitName[] = [
 
 const MAX_TRAIT_SCORE = 120;
 
-interface TraitData {
+export interface TraitData {
 	name: string;
 	score: number;
 	level: string;
 	confidence: number;
 }
 
-interface FacetData {
+export interface FacetData {
 	name: string;
 	traitName: string;
 	score: number;
@@ -51,11 +51,13 @@ interface FacetData {
 }
 
 interface TraitScoresSectionProps {
-	traits: TraitData[];
-	facets: FacetData[];
-	expandedTraits: Set<string>;
-	onToggleTrait: (trait: string) => void;
-	onViewEvidence: (facetName: FacetName) => void;
+	traits: readonly TraitData[];
+	facets: readonly FacetData[];
+	expandedTraits?: Set<string>;
+	onToggleTrait?: (trait: string) => void;
+	onViewEvidence?: (facetName: FacetName) => void;
+	/** When set, shows "{name}'s Trait Scores" instead of "Your Trait Scores" */
+	displayName?: string | null;
 }
 
 export function TraitScoresSection({
@@ -64,12 +66,15 @@ export function TraitScoresSection({
 	expandedTraits,
 	onToggleTrait,
 	onViewEvidence,
+	displayName,
 }: TraitScoresSectionProps) {
+	const hasFacets = facets.length > 0;
+
 	return (
 		<section data-slot="trait-scores-section" className="px-6 py-12">
 			<div className="mx-auto max-w-2xl">
 				<h2 className="text-xl font-bold text-foreground mb-6">
-					Your Trait Scores
+					{displayName ? `${displayName}\u2019s Trait Scores` : "Your Trait Scores"}
 				</h2>
 				<div className="space-y-5">
 					{TRAIT_ORDER.map((trait) => {
@@ -78,25 +83,18 @@ export function TraitScoresSection({
 
 						const traitName = trait as TraitName;
 						const percentage = Math.round((traitData.score / MAX_TRAIT_SCORE) * 100);
-						const traitFacets = facets.filter((f) => f.traitName === trait);
-						const isExpanded = expandedTraits.has(trait);
+						const traitFacets = hasFacets ? facets.filter((f) => f.traitName === trait) : [];
+						const isExpanded = expandedTraits?.has(trait) ?? false;
 						const traitColor = getTraitColor(traitName);
 						const ShapeComponent = TRAIT_SHAPE[traitName];
 
-						return (
-							<div key={trait} className="border border-border rounded-lg p-4 bg-card">
-								{/* Trait Header — clickable to expand */}
-								<button
-									onClick={() => onToggleTrait(trait)}
-									className="w-full text-left"
-									type="button"
-								>
-									<div className="flex items-center justify-between mb-2">
-										<div className="flex items-center gap-2">
-											<ShapeComponent size={20} color={traitColor} />
-											<span className="text-sm font-medium text-foreground">
-												{TRAIT_LABELS[traitName]}
-											</span>
+						const headerContent = (
+							<>
+								<div className="flex items-center justify-between mb-2">
+									<div className="flex items-center gap-2">
+										<ShapeComponent size={20} color={traitColor} />
+										<span className="text-sm font-medium text-foreground">{TRAIT_LABELS[traitName]}</span>
+										{hasFacets && (
 											<svg
 												className={`h-4 w-4 text-muted-foreground motion-safe:transition-transform motion-safe:duration-200 ${isExpanded ? "rotate-180" : ""}`}
 												fill="none"
@@ -107,47 +105,67 @@ export function TraitScoresSection({
 											>
 												<path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
 											</svg>
-										</div>
-										<span className="text-sm font-semibold text-foreground">
-											{percentage}%
-										</span>
+										)}
 									</div>
-									<div className="w-full bg-muted rounded-full h-2.5">
-										<div
-											className="h-2.5 rounded-full motion-safe:transition-all motion-safe:duration-500"
-											style={{
-												width: `${percentage}%`,
-												backgroundColor: traitColor,
-											}}
-										/>
-									</div>
-								</button>
+									<span className="text-sm font-semibold text-foreground">{percentage}%</span>
+								</div>
+								<div className="w-full bg-muted rounded-full h-2.5">
+									<div
+										className="h-2.5 rounded-full motion-safe:transition-all motion-safe:duration-500"
+										style={{
+											width: `${percentage}%`,
+											backgroundColor: traitColor,
+										}}
+									/>
+								</div>
+							</>
+						);
+
+						return (
+							<div
+								key={trait}
+								data-testid={`trait-card-${trait}`}
+								className="border border-border rounded-lg p-4 bg-card"
+							>
+								{hasFacets && onToggleTrait ? (
+									<button
+										onClick={() => onToggleTrait(trait)}
+										data-testid={`trait-toggle-${trait}`}
+										className="w-full text-left"
+										type="button"
+									>
+										{headerContent}
+									</button>
+								) : (
+									<div>{headerContent}</div>
+								)}
 
 								{/* Facets — shown when expanded */}
-								{isExpanded && (
+								{isExpanded && traitFacets.length > 0 && (
 									<div className="mt-4 space-y-3 pl-2 border-l-2 border-border">
 										{traitFacets.map((facet) => {
 											const facetPercentage = Math.round((facet.score / 20) * 100);
-											const facetId = facet.name.toLowerCase().replace(/ /g, "_");
 											return (
-												<div key={facet.name} id={`facet-${facetId}`} className="pl-4">
+												<div key={facet.name} id={`facet-${facet.name}`} className="pl-4">
 													<div className="flex items-center justify-between mb-1">
 														<span className="text-xs text-muted-foreground">
-															{facet.name}
+															{toFacetDisplayName(facet.name)}
 														</span>
 														<div className="flex items-center gap-2">
 															<span className="text-xs text-muted-foreground">
 																{facet.score}/20 ({facet.confidence}%)
 															</span>
-															<Button
-																onClick={() => onViewEvidence(facetId as FacetName)}
-																size="sm"
-																variant="ghost"
-																className="h-7 px-2 text-xs hover:bg-accent"
-															>
-																<FileText className="w-3 h-3 mr-1" />
-																Evidence
-															</Button>
+															{onViewEvidence && (
+																<Button
+																	onClick={() => onViewEvidence(facet.name as FacetName)}
+																	size="sm"
+																	variant="ghost"
+																	className="h-7 px-2 text-xs hover:bg-accent"
+																>
+																	<FileText className="w-3 h-3 mr-1" />
+																	Evidence
+																</Button>
+															)}
 														</div>
 													</div>
 													<div className="w-full bg-muted rounded-full h-1.5">
@@ -155,8 +173,8 @@ export function TraitScoresSection({
 															className="h-1.5 rounded-full opacity-70"
 															style={{
 																width: `${facetPercentage}%`,
-																backgroundColor: getFacetColor(facetId as FacetName),
-														opacity: 0.7,
+																backgroundColor: getFacetColor(facet.name as FacetName),
+																opacity: 0.7,
 															}}
 														/>
 													</div>

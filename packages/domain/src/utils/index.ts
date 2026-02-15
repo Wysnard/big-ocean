@@ -16,6 +16,7 @@ export {
 	type TraitConfidence,
 } from "./confidence";
 export { deriveTraitSummary } from "./derive-trait-summary";
+export { toFacetDisplayName } from "./display-name";
 export { buildSystemPrompt } from "./nerin-system-prompt";
 export { generateOceanCode } from "./ocean-code-generator";
 export { aggregateFacetScores, deriveTraitScores } from "./scoring";

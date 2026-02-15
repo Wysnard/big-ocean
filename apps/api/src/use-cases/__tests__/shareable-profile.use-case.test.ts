@@ -96,15 +96,6 @@ const HighConfidenceTestLayer = Layer.mergeAll(
 	AppConfigTestLive,
 );
 
-// Test layer with low confidence evidence
-const LowConfidenceTestLayer = Layer.mergeAll(
-	AssessmentSessionDrizzleRepositoryLive,
-	LoggerPinoRepositoryLive,
-	PublicProfileDrizzleRepositoryLive,
-	createEvidenceLayer(createEvidenceWithConfidence(10, 50)),
-	AppConfigTestLive,
-);
-
 describe("createShareableProfile Use Case", () => {
 	beforeEach(() => {
 		resetSessionState();
@@ -150,41 +141,6 @@ describe("createShareableProfile Use Case", () => {
 
 				expect(result.shareableUrl).toMatch(/^http:\/\/localhost:3000\/profile\/[0-9a-f-]+$/);
 			}).pipe(Effect.provide(HighConfidenceTestLayer)),
-		);
-	});
-
-	describe("Error scenarios", () => {
-		it.effect("should fail when facet confidence is below threshold", () =>
-			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
-				const { sessionId } = yield* sessionRepo.createSession("user_123");
-
-				// BaseTestLayer uses default evidence mock which returns confidence: 0
-				const exit = yield* Effect.exit(createShareableProfile({ sessionId }));
-
-				expect(exit._tag).toBe("Failure");
-				if (exit._tag === "Failure" && exit.cause._tag === "Fail") {
-					expect(exit.cause.error).toHaveProperty("_tag", "ProfileError");
-					expect(exit.cause.error).toHaveProperty(
-						"message",
-						"Complete more of the assessment before sharing.",
-					);
-				}
-			}).pipe(Effect.provide(BaseTestLayer)),
-		);
-
-		it.effect("should fail when some facets have low confidence (50)", () =>
-			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
-				const { sessionId } = yield* sessionRepo.createSession("user_123");
-
-				const exit = yield* Effect.exit(createShareableProfile({ sessionId }));
-
-				expect(exit._tag).toBe("Failure");
-				if (exit._tag === "Failure" && exit.cause._tag === "Fail") {
-					expect(exit.cause.error).toHaveProperty("_tag", "ProfileError");
-				}
-			}).pipe(Effect.provide(LowConfidenceTestLayer)),
 		);
 	});
 });

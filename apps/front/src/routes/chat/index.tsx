@@ -1,10 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Schema as S } from "effect";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
-import { FacetSidePanel } from "@/components/FacetSidePanel";
 import { TherapistChat } from "@/components/TherapistChat";
-import { useMessageEvidence } from "@/hooks/use-evidence";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
@@ -55,26 +52,6 @@ function RouteComponent() {
 		highlightScore,
 	} = Route.useSearch();
 
-	// Facet side panel state
-	const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
-	const [facetPanelOpen, setFacetPanelOpen] = useState(false);
-
-	// Fetch evidence for selected message
-	const { data: messageEvidence, isLoading: evidenceLoading } = useMessageEvidence(
-		selectedMessageId,
-		facetPanelOpen,
-	);
-
-	const handleMessageClick = (messageId: string) => {
-		setSelectedMessageId(messageId);
-		setFacetPanelOpen(true);
-	};
-
-	const handleCloseFacetPanel = () => {
-		setFacetPanelOpen(false);
-		setSelectedMessageId(null);
-	};
-
 	if (!sessionId) {
 		return (
 			<div className="h-[calc(100dvh-3.5rem)] flex items-center justify-center bg-background">
@@ -87,26 +64,13 @@ function RouteComponent() {
 	}
 
 	return (
-		<>
-			<TherapistChat
-				sessionId={sessionId}
-				onMessageClick={handleMessageClick}
-				highlightMessageId={highlightMessageId}
-				highlightQuote={highlightQuote}
-				highlightStart={highlightStart}
-				highlightEnd={highlightEnd}
-				highlightScore={highlightScore}
-			/>
-
-			{/* Facet Side Panel */}
-			<FacetSidePanel
-				sessionId={sessionId}
-				messageId={selectedMessageId || ""}
-				evidence={messageEvidence}
-				isLoading={evidenceLoading}
-				isOpen={facetPanelOpen}
-				onClose={handleCloseFacetPanel}
-			/>
-		</>
+		<TherapistChat
+			sessionId={sessionId}
+			highlightMessageId={highlightMessageId}
+			highlightQuote={highlightQuote}
+			highlightStart={highlightStart}
+			highlightEnd={highlightEnd}
+			highlightScore={highlightScore}
+		/>
 	);
 }

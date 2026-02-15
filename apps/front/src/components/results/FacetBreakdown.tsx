@@ -1,3 +1,4 @@
+import { toFacetDisplayName } from "@workspace/domain";
 import { cn } from "@workspace/ui/lib/utils";
 
 export interface FacetData {
@@ -60,10 +61,11 @@ export function FacetBreakdown({
 						(Math.min(Math.max(facet.score, 0), MAX_FACET_SCORE) / MAX_FACET_SCORE) * 100,
 					);
 
+					const displayName = toFacetDisplayName(facet.name);
 					return (
 						<li
 							key={facet.name}
-							aria-label={`${facet.name}: ${facet.score} out of ${MAX_FACET_SCORE}, ${facet.confidence}% confidence`}
+							aria-label={`${displayName}: ${facet.score} out of ${MAX_FACET_SCORE}, ${facet.confidence}% confidence`}
 							data-testid={`facet-item-${facet.name}`}
 							className={cn("py-3", isLowConfidence && "opacity-60")}
 						>
@@ -76,7 +78,7 @@ export function FacetBreakdown({
 											isHighScore ? "font-semibold text-foreground" : "text-muted-foreground",
 										)}
 									>
-										{facet.name}
+										{displayName}
 									</span>
 									{isHighScore && (
 										<span

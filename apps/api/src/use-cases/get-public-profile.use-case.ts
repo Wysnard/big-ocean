@@ -32,6 +32,7 @@ export interface GetPublicProfileOutput {
 	readonly oceanCode: OceanCode5;
 	readonly description: string;
 	readonly color: string;
+	readonly displayName: string | null;
 	readonly traitSummary: Record<string, string>;
 	readonly facets: FacetScoresMap;
 	readonly isPublic: boolean;
@@ -101,6 +102,7 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 			oceanCode: OceanCode5Schema.make(profile.oceanCode5),
 			description: archetype.description,
 			color: archetype.color,
+			displayName: profile.displayName,
 			traitSummary,
 			facets,
 			isPublic: profile.isPublic,

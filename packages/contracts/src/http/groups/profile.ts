@@ -49,6 +49,7 @@ export const GetPublicProfileResponseSchema = S.Struct({
 	oceanCode: OceanCode5Schema,
 	description: S.String,
 	color: S.String,
+	displayName: S.NullOr(S.String),
 	traitSummary: S.Record({ key: S.String, value: S.String }),
 	facets: S.Record({ key: S.String, value: FacetScoreSchema }),
 	isPublic: S.Boolean,
@@ -83,6 +84,7 @@ export const ProfileGroup = HttpApiGroup.make("profile")
 			.setPayload(ShareProfileRequestSchema)
 			.addError(SessionNotFound, { status: 404 })
 			.addError(ProfileError, { status: 422 })
+			.addError(Unauthorized, { status: 401 })
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.add(

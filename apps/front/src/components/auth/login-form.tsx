@@ -38,7 +38,10 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 			if (redirectTo) {
 				await navigate({ to: redirectTo });
 			} else if (anonymousSessionId) {
-				await navigate({ to: "/results/$sessionId", params: { sessionId: anonymousSessionId } });
+				await navigate({
+					to: "/results/$assessmentSessionId",
+					params: { assessmentSessionId: anonymousSessionId },
+				});
 			} else {
 				await navigate({ to: "/dashboard" });
 			}

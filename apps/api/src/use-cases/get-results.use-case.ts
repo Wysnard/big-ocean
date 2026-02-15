@@ -68,16 +68,6 @@ const mapScoreToLevel = (traitName: string, score: number): string => {
 };
 
 /**
- * Convert snake_case facet name to display name
- * e.g., "artistic_interests" → "Artistic Interests"
- */
-const toDisplayName = (name: string): string =>
-	name
-		.split("_")
-		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-		.join(" ");
-
-/**
  * Get Assessment Results Use Case
  *
  * 1. Validates session exists
@@ -135,7 +125,7 @@ export const getResults = (input: GetResultsInput) =>
 
 		// 7. Build facet results array
 		const facets: FacetResult[] = (Object.keys(facetScoresMap) as FacetName[]).map((facetName) => ({
-			name: toDisplayName(facetName),
+			name: facetName,
 			traitName: FACET_TO_TRAIT[facetName],
 			score: facetScoresMap[facetName].score,
 			confidence: facetScoresMap[facetName].confidence,
