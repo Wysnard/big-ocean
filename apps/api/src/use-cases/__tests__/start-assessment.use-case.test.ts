@@ -26,6 +26,7 @@ import { startAssessment } from "../start-assessment.use-case";
 // Define mock repo objects locally with vi.fn() for spy access
 const mockAssessmentSessionRepo = {
 	createSession: vi.fn(),
+	getActiveSessionByUserId: vi.fn(),
 	getSession: vi.fn(),
 	updateSession: vi.fn(),
 };
@@ -66,6 +67,7 @@ describe("startAssessment Use Case", () => {
 				createdAt: new Date("2026-02-01T10:00:00Z"),
 			}),
 		);
+		mockAssessmentSessionRepo.getActiveSessionByUserId.mockImplementation(() => Effect.succeed(null));
 		mockAssessmentSessionRepo.getSession.mockImplementation(() => Effect.succeed(undefined));
 		mockAssessmentSessionRepo.updateSession.mockImplementation(() => Effect.succeed(undefined));
 

@@ -34,7 +34,7 @@ export interface ResumeSessionOutput {
 		readonly neuroticism: number;
 	};
 	readonly messages: readonly AssessmentMessageEntity[];
-	readonly messageReadyThreshold: number;
+	readonly freeTierMessageThreshold: number;
 }
 
 /**
@@ -94,6 +94,6 @@ export const resumeSession = (input: ResumeSessionInput) =>
 		return {
 			confidence: traitConfidence,
 			messages,
-			messageReadyThreshold: config.messageReadyThreshold,
+			freeTierMessageThreshold: config.freeTierMessageThreshold,
 		};
 	});

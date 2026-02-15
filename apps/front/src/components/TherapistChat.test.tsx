@@ -317,11 +317,12 @@ describe("TherapistChat", () => {
 		expect(textarea.disabled).toBe(true);
 	});
 
-	it("renders NerinAvatar next to assistant messages", () => {
+	it("renders NerinMessage with avatar next to assistant messages", () => {
 		const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-		const avatars = container.querySelectorAll("[data-slot='nerin-message-avatar']");
-		expect(avatars.length).toBeGreaterThan(0);
+		// NerinMessage renders a chat-bubble wrapper with a gradient avatar containing "N"
+		const bubbles = container.querySelectorAll("[data-slot='chat-bubble']");
+		expect(bubbles.length).toBeGreaterThan(0);
 	});
 
 	// Task 2 Tests: Loading and Error States for Resume
@@ -457,20 +458,14 @@ describe("TherapistChat", () => {
 			});
 		});
 
-		it("dismisses card when Keep Exploring clicked", async () => {
-			const mockSetHasShownCelebration = vi.fn();
+		it("renders Keep Exploring button as disabled (premium feature)", () => {
 			mockHookReturn.isConfidenceReady = true;
 			mockHookReturn.hasShownCelebration = false;
-			mockHookReturn.setHasShownCelebration = mockSetHasShownCelebration;
 
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
 			const keepExploringBtn = screen.getByText("Keep Exploring");
-			fireEvent.click(keepExploringBtn);
-
-			await waitFor(() => {
-				expect(mockSetHasShownCelebration).toHaveBeenCalledWith(true);
-			});
+			expect(keepExploringBtn.closest("button")?.disabled).toBe(true);
 		});
 
 		it("shows 'View Your Results' link in header when isConfidenceReady", () => {
@@ -479,59 +474,6 @@ describe("TherapistChat", () => {
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
 			expect(screen.getByTestId("view-results-header-link")).toBeTruthy();
-		});
-	});
-
-	// Task 3 Tests: ProgressBar Integration
-	describe("ProgressBar Integration", () => {
-		it("displays ProgressBar when messages exist", () => {
-			mockHookReturn.messages = [
-				{ id: "1", role: "assistant", content: "Hi!", timestamp: new Date() },
-				{ id: "2", role: "user", content: "Hello", timestamp: new Date() },
-			];
-			mockHookReturn.progressPercent = 50;
-
-			renderWithProviders(<TherapistChat sessionId="session-123" />);
-
-			// progressPercent=50 → "Refining your personality map..." label
-			expect(screen.getByText("Refining your personality map...")).toBeInTheDocument();
-		});
-
-		it("hides ProgressBar when no messages exist", () => {
-			mockHookReturn.messages = [];
-
-			renderWithProviders(<TherapistChat sessionId="session-123" />);
-
-			expect(screen.queryByText("Building your profile...")).toBeNull();
-			expect(screen.queryByText("Getting to know you...")).toBeNull();
-		});
-
-		it("updates ProgressBar label to 'Almost ready for results!' when progress >= 85%", () => {
-			mockHookReturn.messages = [{ id: "1", role: "user", content: "Hi", timestamp: new Date() }];
-			mockHookReturn.progressPercent = 85;
-
-			renderWithProviders(<TherapistChat sessionId="session-123" />);
-
-			// progressPercent=85 → "Almost ready for results!" label
-			expect(screen.getByText("Almost ready for results!")).toBeInTheDocument();
-		});
-
-		it("hides ProgressBar when isResuming is true", () => {
-			mockHookReturn.messages = [{ id: "1", role: "user", content: "Hi", timestamp: new Date() }];
-			mockHookReturn.isResuming = true;
-
-			renderWithProviders(<TherapistChat sessionId="session-123" />);
-
-			expect(screen.queryByText("Getting to know you...")).toBeNull();
-		});
-
-		it("hides ProgressBar when resumeError exists", () => {
-			mockHookReturn.messages = [{ id: "1", role: "user", content: "Hi", timestamp: new Date() }];
-			mockHookReturn.resumeError = new Error("Session not found");
-
-			renderWithProviders(<TherapistChat sessionId="session-123" />);
-
-			expect(screen.queryByText("Getting to know you...")).toBeNull();
 		});
 	});
 });

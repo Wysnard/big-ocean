@@ -1,14 +1,13 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
+import { NerinMessage } from "@workspace/ui/components/chat";
 import { Loader2, Send } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getPlaceholder } from "@/constants/chat-placeholders";
 import { useAuth } from "@/hooks/use-auth";
 import { useTherapistChat } from "@/hooks/useTherapistChat";
-import { SignUpModal } from "./auth/SignUpModal";
+import { DepthMeter } from "./chat/DepthMeter";
 import { ErrorBanner } from "./ErrorBanner";
-import { NerinAvatar } from "./NerinAvatar";
-import { ProgressBar } from "./ProgressBar";
 
 interface TherapistChatProps {
 	sessionId: string;
@@ -52,30 +51,25 @@ const MILESTONES = [
 	},
 ] as const;
 
-/**
- * Typing indicator bubble shown while waiting for Nerin's response.
- */
-function TypingIndicator({ confidence }: { confidence: number }) {
+/** Typing indicator bubble shown while waiting for Nerin's response. */
+function TypingIndicator() {
 	return (
-		<div className="flex items-end gap-2 justify-start">
-			<NerinAvatar size={32} confidence={confidence} className="shrink-0 mb-1" />
-			<div className="max-w-[85%] lg:max-w-md px-4 py-3 rounded-2xl rounded-bl-sm bg-muted border border-border">
-				<div className="flex gap-1.5 items-center">
-					<span
-						className="w-2 h-2 bg-muted-foreground/50 rounded-full motion-safe:animate-bounce"
-						style={{ animationDelay: "0ms" }}
-					/>
-					<span
-						className="w-2 h-2 bg-muted-foreground/50 rounded-full motion-safe:animate-bounce"
-						style={{ animationDelay: "150ms" }}
-					/>
-					<span
-						className="w-2 h-2 bg-muted-foreground/50 rounded-full motion-safe:animate-bounce"
-						style={{ animationDelay: "300ms" }}
-					/>
-				</div>
+		<NerinMessage className="relative z-[1] mb-9">
+			<div className="flex gap-1.5 items-center">
+				<span
+					className="w-2 h-2 rounded-full bg-muted-foreground/50 motion-safe:animate-bounce"
+					style={{ animationDelay: "0ms" }}
+				/>
+				<span
+					className="w-2 h-2 rounded-full bg-muted-foreground/50 motion-safe:animate-bounce"
+					style={{ animationDelay: "150ms" }}
+				/>
+				<span
+					className="w-2 h-2 rounded-full bg-muted-foreground/50 motion-safe:animate-bounce"
+					style={{ animationDelay: "300ms" }}
+				/>
 			</div>
-		</div>
+		</NerinMessage>
 	);
 }
 
@@ -129,7 +123,7 @@ export function TherapistChat({
 	sessionId,
 	onMessageClick,
 	highlightMessageId,
-	highlightQuote,
+	highlightQuote: _highlightQuote,
 	highlightStart,
 	highlightEnd,
 	highlightScore,
@@ -151,16 +145,12 @@ export function TherapistChat({
 		isResumeSessionNotFound,
 		isConfidenceReady,
 		progressPercent,
-		messageReadyThreshold,
+		freeTierMessageThreshold,
 		hasShownCelebration,
 		setHasShownCelebration,
 	} = useTherapistChat(sessionId);
 	const { isAuthenticated } = useAuth();
 	const navigate = useNavigate();
-
-	// Modal state for sign-up prompt
-	const [showSignUpModal, setShowSignUpModal] = useState(false);
-	const [hasShownModal, setHasShownModal] = useState(false);
 
 	// Milestone tracking — threshold → message index where it triggered
 	const [shownMilestones, setShownMilestones] = useState<Map<number, number>>(new Map());
@@ -195,8 +185,8 @@ export function TherapistChat({
 	);
 	const [placeholder, setPlaceholder] = useState(() => getPlaceholder(0));
 	useEffect(() => {
-		setPlaceholder(getPlaceholder(userMessageCount, messageReadyThreshold));
-	}, [userMessageCount, messageReadyThreshold]);
+		setPlaceholder(getPlaceholder(userMessageCount, freeTierMessageThreshold));
+	}, [userMessageCount, freeTierMessageThreshold]);
 
 	// Textarea auto-resize handler
 	const handleTextareaResize = useCallback(() => {
@@ -227,15 +217,6 @@ export function TherapistChat({
 			navigate({ to: "/404" });
 		}
 	}, [isAuthenticated, isResuming, isResumeSessionNotFound, navigate]);
-
-	// Trigger sign-up modal after first user message
-	useEffect(() => {
-		const userMessages = messages.filter((m) => m.role === "user");
-		if (userMessages.length === 1 && !hasShownModal && !isAuthenticated) {
-			setShowSignUpModal(true);
-			setHasShownModal(true);
-		}
-	}, [messages, hasShownModal, isAuthenticated]);
 
 	// Mobile keyboard handling via visualViewport API
 	useEffect(() => {
@@ -283,28 +264,142 @@ export function TherapistChat({
 
 	// Determine celebration input placeholder
 	const inputPlaceholder = useMemo(() => {
-		if (isCompleted) return "Assessment complete!";
+		if (isCompleted) return "Keep exploring with Premium — unlock deeper conversations";
 		if (isConfidenceReady && !hasShownCelebration) return "Keep chatting to add more depth...";
 		return placeholder;
 	}, [isCompleted, isConfidenceReady, hasShownCelebration, placeholder]);
 
 	return (
-		<>
-			{/* Sign-Up Modal */}
-			<SignUpModal
-				isOpen={showSignUpModal}
-				sessionId={sessionId}
-				onClose={() => setShowSignUpModal(false)}
-			/>
+		<ChatContent
+			sessionId={sessionId}
+			messages={messages}
+			isLoading={isLoading}
+			isCompleted={isCompleted}
+			isResuming={isResuming}
+			resumeError={resumeError}
+			isResumeSessionNotFound={isResumeSessionNotFound}
+			isAuthenticated={isAuthenticated}
+			isConfidenceReady={isConfidenceReady}
+			depthProgress={Math.min(userMessageCount / (freeTierMessageThreshold || 27), 1)}
+			errorMessage={errorMessage}
+			errorType={errorType}
+			clearError={clearError}
+			retryLastMessage={retryLastMessage}
+			hasShownCelebration={hasShownCelebration}
+			setHasShownCelebration={setHasShownCelebration}
+			shownMilestones={shownMilestones}
+			highlightMessageId={highlightMessageId}
+			highlightStart={highlightStart}
+			highlightEnd={highlightEnd}
+			highlightScore={highlightScore}
+			inputValue={inputValue}
+			setInputValue={setInputValue}
+			inputPlaceholder={inputPlaceholder}
+			textareaRef={textareaRef}
+			messagesEndRef={messagesEndRef}
+			handleTextareaResize={handleTextareaResize}
+			handleKeyDown={handleKeyDown}
+			handleSendMessage={handleSendMessage}
+			handleMessageClick={handleMessageClick}
+			navigate={navigate}
+			onInputFocus={() => setPlaceholder(getPlaceholder(userMessageCount, freeTierMessageThreshold))}
+		/>
+	);
+}
 
-			<div className="h-[calc(100dvh-3.5rem)] flex flex-col overflow-hidden overscroll-none bg-background">
-				{/* Header — Nerin-focused minimal */}
+/**
+ * Inner chat component that uses standard theme styling matching the homepage conversation design.
+ */
+function ChatContent({
+	sessionId,
+	messages,
+	isLoading,
+	isCompleted,
+	isResuming,
+	resumeError,
+	isResumeSessionNotFound,
+	isAuthenticated,
+	isConfidenceReady,
+	depthProgress,
+	errorMessage,
+	errorType,
+	clearError,
+	retryLastMessage,
+	hasShownCelebration,
+	setHasShownCelebration,
+	shownMilestones,
+	highlightMessageId,
+	highlightStart,
+	highlightEnd,
+	highlightScore,
+	inputValue,
+	setInputValue,
+	inputPlaceholder,
+	textareaRef,
+	messagesEndRef,
+	handleTextareaResize,
+	handleKeyDown,
+	handleSendMessage,
+	handleMessageClick,
+	navigate,
+	onInputFocus,
+}: {
+	sessionId: string;
+	messages: Array<{
+		id: string;
+		role: string;
+		content: string;
+		timestamp: Date;
+	}>;
+	isLoading: boolean;
+	isCompleted: boolean;
+	isResuming: boolean;
+	resumeError: string | null;
+	isResumeSessionNotFound: boolean;
+	isAuthenticated: boolean;
+	isConfidenceReady: boolean;
+	depthProgress: number;
+	errorMessage: string | null;
+	errorType: string | null;
+	clearError: () => void;
+	retryLastMessage: () => void;
+	hasShownCelebration: boolean;
+	setHasShownCelebration: (v: boolean) => void;
+	shownMilestones: Map<number, number>;
+	highlightMessageId?: string;
+	highlightStart?: number;
+	highlightEnd?: number;
+	highlightScore?: number;
+	inputValue: string;
+	setInputValue: (v: string) => void;
+	inputPlaceholder: string;
+	textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+	messagesEndRef: React.RefObject<HTMLDivElement | null>;
+	handleTextareaResize: () => void;
+	handleKeyDown: (e: React.KeyboardEvent) => void;
+	handleSendMessage: () => void;
+	handleMessageClick: (messageId: string, role: string) => void;
+	navigate: ReturnType<typeof useNavigate>;
+	onInputFocus: () => void;
+}) {
+	return (
+		<>
+			{/* Depth Meter — fixed sidebar, desktop only */}
+			<DepthMeter progress={depthProgress} />
+
+			<div className="h-[calc(100dvh-3.5rem)] flex flex-col overflow-hidden overscroll-none bg-background text-foreground">
+				{/* Header — matches homepage style */}
 				<div
 					data-slot="chat-header"
-					className="border-b border-border px-4 md:px-6 py-3 md:py-4 shadow-sm backdrop-blur-sm bg-card/80 flex items-center justify-between"
+					className="border-b border-border bg-card/80 px-4 md:px-6 py-3 md:py-4 shadow-sm backdrop-blur-sm flex items-center justify-between"
 				>
 					<div className="flex items-center gap-2">
-						<NerinAvatar size={28} confidence={avgConfidence} />
+						<div
+							className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-tertiary to-primary font-heading text-[.75rem] font-bold text-white"
+							aria-hidden="true"
+						>
+							N
+						</div>
 						<span className="text-lg font-heading font-semibold text-foreground">Nerin</span>
 					</div>
 					{isConfidenceReady && (
@@ -319,23 +414,16 @@ export function TherapistChat({
 					)}
 				</div>
 
-				{/* Progress Bar - only show when messages exist */}
-				{messages.length > 0 && !isResuming && !resumeError && (
-					<div className="border-b border-border">
-						<ProgressBar value={avgConfidence} showPercentage={false} />
-					</div>
-				)}
-
 				{/* Main Content */}
-				<div className="flex-1 overflow-hidden flex gap-4 p-4">
-					{/* Messages Area */}
-					<div className="flex-1 flex flex-col">
+				<div className="flex-1 overflow-hidden">
+					{/* Messages Area — centered, matching homepage ConversationFlow spacing */}
+					<div className="h-full flex flex-col mx-auto max-w-[900px] min-[1200px]:max-w-[1000px] min-[1440px]:max-w-[1100px] px-6">
 						{/* Loading State */}
 						{isResuming && (
 							<div className="flex-1 flex items-center justify-center">
 								<div className="text-center">
 									<Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-									<p className="text-muted-foreground mt-4">Loading your assessment...</p>
+									<p className="mt-4 text-muted-foreground">Loading your assessment...</p>
 								</div>
 							</div>
 						)}
@@ -345,7 +433,7 @@ export function TherapistChat({
 							<div className="flex-1 flex items-center justify-center">
 								<div className="text-center max-w-md">
 									<p className="text-destructive-foreground text-lg">Session not found</p>
-									<p className="text-muted-foreground mt-2">
+									<p className="mt-2 text-muted-foreground">
 										This session may have expired or doesn't exist.
 									</p>
 									<Button className="mt-4" onClick={() => navigate({ to: "/chat" })}>
@@ -360,7 +448,7 @@ export function TherapistChat({
 							<div className="flex-1 flex items-center justify-center">
 								<div className="text-center max-w-md">
 									<p className="text-destructive-foreground text-lg">Something went wrong</p>
-									<p className="text-muted-foreground mt-2">Unable to load your assessment.</p>
+									<p className="mt-2 text-muted-foreground">Unable to load your assessment.</p>
 									<Button className="mt-4" onClick={() => window.location.reload()}>
 										Retry
 									</Button>
@@ -370,22 +458,33 @@ export function TherapistChat({
 
 						{/* Messages (only show if not loading and no resume error) */}
 						{!isResuming && !resumeError && (
-							<div className="flex-1 overflow-y-auto space-y-4 mb-4">
+							<div className="flex-1 overflow-y-auto relative pt-10">
+								{/* Vertical thread line — aligns with Nerin avatar center */}
+								<div
+									className="absolute top-0 bottom-0 left-[29px] z-0 w-[1.5px]"
+									style={{ background: "var(--thread-line)" }}
+									aria-hidden="true"
+								/>
 								{messages.length > 0 &&
 									messages.map((msg, index) => (
-										<div key={msg.id} className="motion-safe:animate-fade-in-up">
-											<div
-												className={`flex ${msg.role === "user" ? "justify-end" : "items-end gap-2 justify-start"}`}
-											>
-												{msg.role === "user" ? (
+										<div key={msg.id} className="relative z-[1] mb-9 motion-safe:animate-fade-in-up">
+											{msg.role === "user" ? (
+												<div className="flex flex-row-reverse gap-[11px]">
+													{/* User avatar */}
+													<div
+														className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--user-avatar-bg)] font-heading text-[.75rem] font-bold text-[var(--user-avatar-fg)] transition-[background,color] duration-[350ms]"
+														aria-hidden="true"
+													>
+														Y
+													</div>
 													<button
 														type="button"
 														data-slot="chat-bubble"
 														data-message-id={msg.id}
 														onClick={() => handleMessageClick(msg.id, msg.role)}
-														className="max-w-[90%] lg:max-w-md rounded-2xl rounded-br-sm px-4 py-3 text-left bg-primary text-primary-foreground cursor-pointer hover:ring-2 hover:ring-ring/40 transition-shadow"
+														className="max-w-[88%] rounded-[18px] rounded-br-[5px] bg-gradient-to-br from-primary to-secondary px-[22px] py-4 text-left text-white cursor-pointer hover:ring-2 hover:ring-ring/40 transition-shadow min-[1200px]:max-w-[92%]"
 													>
-														<p className="text-sm leading-relaxed whitespace-pre-line">
+														<p className="text-[.92rem] leading-[1.65] whitespace-pre-line">
 															{renderMessageContent(
 																msg.content,
 																msg.id,
@@ -395,37 +494,26 @@ export function TherapistChat({
 																highlightScore,
 															)}
 														</p>
-														<p className="text-xs mt-1 text-primary-foreground/70">
-															{getRelativeTime(msg.timestamp)}
-														</p>
+														<p className="text-xs mt-1 text-white/70">{getRelativeTime(msg.timestamp)}</p>
 													</button>
-												) : (
-													<>
-														<div data-slot="nerin-message-avatar" className="shrink-0 mb-1">
-															<NerinAvatar size={32} confidence={avgConfidence} />
-														</div>
-														<div
-															data-slot="chat-bubble"
-															data-message-id={msg.id}
-															className="max-w-[90%] lg:max-w-md rounded-2xl rounded-bl-sm px-4 py-3 bg-muted text-foreground"
-														>
-															<p className="text-sm leading-relaxed whitespace-pre-line">
-																{renderMessageContent(
-																	msg.content,
-																	msg.id,
-																	highlightMessageId,
-																	highlightStart,
-																	highlightEnd,
-																	highlightScore,
-																)}
-															</p>
-															<p className="text-xs mt-1 text-muted-foreground">
-																{getRelativeTime(msg.timestamp)}
-															</p>
-														</div>
-													</>
-												)}
-											</div>
+												</div>
+											) : (
+												<NerinMessage messageId={msg.id}>
+													<p className="whitespace-pre-line">
+														{renderMessageContent(
+															msg.content,
+															msg.id,
+															highlightMessageId,
+															highlightStart,
+															highlightEnd,
+															highlightScore,
+														)}
+													</p>
+													<p className="text-xs mt-1 text-[var(--muted-dynamic)]">
+														{getRelativeTime(msg.timestamp)}
+													</p>
+												</NerinMessage>
+											)}
 											{/* Milestone badges triggered at this message position */}
 											{MILESTONES.map((milestone) =>
 												shownMilestones.get(milestone.threshold) === index + 1 ? (
@@ -434,7 +522,7 @@ export function TherapistChat({
 														data-slot="milestone-badge"
 														className="w-full flex justify-center py-2 mt-2"
 													>
-														<div className="bg-accent/50 border border-accent rounded-full px-4 py-2 text-center max-w-sm">
+														<div className="border border-accent rounded-full px-4 py-2 text-center max-w-sm bg-accent/50">
 															<p className="text-sm text-accent-foreground">
 																<span className="mr-1.5">✨</span>
 																{milestone.message}
@@ -450,15 +538,13 @@ export function TherapistChat({
 								{isConfidenceReady && !hasShownCelebration && (
 									<div
 										data-slot="celebration-card"
-										className="w-full px-4 py-2 motion-safe:animate-fade-in-up"
+										className="relative z-[1] w-full py-2 mb-9 motion-safe:animate-fade-in-up"
 									>
 										<div className="bg-card border-2 border-primary rounded-2xl p-6 text-center shadow-lg">
 											<h2 className="text-xl font-heading font-bold text-foreground">
 												Your Personality Profile is Ready!
 											</h2>
-											<p className="text-muted-foreground mt-2">
-												Your assessment is complete
-											</p>
+											<p className="text-muted-foreground mt-2">Your assessment is complete</p>
 											<div className="mt-4 flex gap-3 justify-center">
 												<Button
 													onClick={() =>
@@ -471,7 +557,12 @@ export function TherapistChat({
 												>
 													View Results
 												</Button>
-												<Button variant="outline" onClick={() => setHasShownCelebration(true)}>
+												<Button
+													variant="outline"
+													disabled
+													className="opacity-50 cursor-not-allowed"
+													title="Available in Premium tier"
+												>
 													Keep Exploring
 												</Button>
 											</div>
@@ -480,7 +571,7 @@ export function TherapistChat({
 								)}
 
 								{/* Typing indicator while loading */}
-								{isLoading && <TypingIndicator confidence={avgConfidence} />}
+								{isLoading && <TypingIndicator />}
 
 								<div ref={messagesEndRef} />
 							</div>
@@ -496,8 +587,8 @@ export function TherapistChat({
 							/>
 						)}
 
-						{/* Input Area */}
-						<div className="border-t border-border bg-card/80 backdrop-blur-sm p-3 md:p-4 sticky bottom-0 pb-[env(safe-area-inset-bottom)]">
+						{/* Input Area — matches homepage input bar style */}
+						<div className="border-t border-[var(--input-bar-border)] bg-[var(--input-bar-bg)] backdrop-blur-[14px] px-6 py-4 sticky bottom-0 pb-[env(safe-area-inset-bottom)]">
 							<div className="flex gap-2 items-end">
 								<textarea
 									ref={textareaRef}
@@ -508,11 +599,11 @@ export function TherapistChat({
 										handleTextareaResize();
 									}}
 									onKeyDown={handleKeyDown}
-									onFocus={() => setPlaceholder(getPlaceholder(userMessageCount, messageReadyThreshold))}
+									onFocus={onInputFocus}
 									placeholder={inputPlaceholder}
 									disabled={isLoading || isCompleted}
 									rows={1}
-									className="flex-1 px-4 py-2 bg-muted border border-border text-foreground rounded-lg placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-none overflow-y-auto"
+									className="flex-1 px-4 py-2 rounded-lg border border-[var(--input-field-border)] bg-[var(--input-field-bg)] text-foreground placeholder-[var(--input-field-color)] focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-none overflow-y-auto"
 									style={{ maxHeight: "120px" }}
 								/>
 								<Button

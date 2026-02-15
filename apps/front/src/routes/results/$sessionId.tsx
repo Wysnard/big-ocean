@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { FacetName, TraitName } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
+import { Schema as S } from "effect";
 import { Loader2, MessageCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { EvidencePanel } from "@/components/EvidencePanel";
@@ -19,12 +20,12 @@ import {
 	readPendingResultsGateSession,
 } from "@/lib/results-auth-gate-storage";
 
+const SessionResultsSearchParams = S.Struct({
+	scrollToFacet: S.optional(S.String),
+});
+
 export const Route = createFileRoute("/results/$sessionId")({
-	validateSearch: (search: Record<string, unknown>) => {
-		return {
-			scrollToFacet: (search.scrollToFacet as string) || undefined,
-		};
-	},
+	validateSearch: (search) => S.decodeUnknownSync(SessionResultsSearchParams)(search),
 	component: ResultsSessionPage,
 });
 

@@ -14,6 +14,16 @@ export const _resetMockState = () => sessions.clear();
 export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 	AssessmentSessionRepository,
 	AssessmentSessionRepository.of({
+		getActiveSessionByUserId: (userId: string) =>
+			Effect.sync(() => {
+				for (const session of sessions.values()) {
+					if (session.userId === userId && session.status === "active") {
+						return session;
+					}
+				}
+				return null;
+			}),
+
 		createSession: (userId?: string) =>
 			Effect.sync(() => {
 				const sessionId = `session_${crypto.randomUUID().slice(0, 8)}`;

@@ -10,6 +10,7 @@ export {
 	AnalyzerError,
 	CostLimitExceeded,
 	DatabaseError,
+	FreeTierLimitReached,
 	InvalidCredentials,
 	InvalidFacetNameError,
 	MalformedEvidenceError,

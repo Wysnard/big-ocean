@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 /**
  * Golden Path Journey
  *
- * Landing → Chat → Sign-up → Results → Share → Public Profile
+ * Landing → Chat → Auth Gate Sign-up → Results → Share → Public Profile
  *
  * Single long user journey exercising the core happy path.
  * Uses data-testid and data-slot selectors — never matches on LLM output text.
@@ -38,32 +38,15 @@ test("golden path: landing → chat → signup → results → share → public 
 		await page.getByTestId("chat-send-btn").click();
 	});
 
-	await test.step("sign-up modal appears → fill and submit", async () => {
-		const dialog = page.getByRole("dialog");
-		await dialog.waitFor({ state: "visible" });
-
-		await page.getByTestId("modal-signup-email").fill("e2e-golden@test.bigocean.dev");
-		await page.getByTestId("modal-signup-password").fill("TestPassword123!");
-		await page.getByTestId("modal-signup-submit").click();
-	});
-
-	await test.step("assert success message and modal closes", async () => {
-		await page.getByTestId("modal-signup-success").waitFor({ state: "visible" });
-		// Modal auto-closes after 1.5s delay
-		await page.getByRole("dialog").waitFor({ state: "hidden", timeout: 5_000 });
-	});
-
 	await test.step("wait for Nerin response to first message", async () => {
 		// Response cycle complete when chat input is re-enabled
 		const chatInput = page.locator("[data-slot='chat-input']");
 		await expect(chatInput).toBeEnabled({ timeout: 30_000 });
 	});
 
-	await test.step("assert progress bar is visible and updating", async () => {
-		const progressBar = page.getByTestId("progress-track");
-		await expect(progressBar).toBeVisible();
-		// With MESSAGE_READY_THRESHOLD=2, 1 user message = 50% progress
-		await expect(progressBar).toHaveAttribute("aria-valuenow", "50");
+	await test.step("assert depth meter is visible", async () => {
+		const depthMeter = page.locator("[data-slot='depth-meter']");
+		await expect(depthMeter).toBeVisible();
 	});
 
 	await test.step("send a second message and wait for response", async () => {
@@ -71,18 +54,36 @@ test("golden path: landing → chat → signup → results → share → public 
 		await chatInput.fill("I tend to be very organized and plan everything in advance.");
 		await page.getByTestId("chat-send-btn").click();
 
-		// Wait for response cycle to complete
-		await expect(chatInput).toBeEnabled({ timeout: 30_000 });
+		// Wait for Nerin response — either input re-enables or celebration card appears
+		await page.locator("[data-slot='celebration-card'], [data-slot='chat-input']:enabled").first().waitFor({
+			state: "visible",
+			timeout: 30_000,
+		});
 	});
 
 	await test.step("celebration card appears → click View Results", async () => {
-		// With MESSAGE_READY_THRESHOLD=2, the celebration card appears after 2 user messages
+		// With FREE_TIER_MESSAGE_THRESHOLD=2, the celebration card appears after 2 user messages
 		await page.locator("[data-slot='celebration-card']").waitFor({
 			state: "visible",
 			timeout: 10_000,
 		});
 		await page.getByTestId("view-results-btn").click();
 		await page.waitForURL(/\/results\//);
+	});
+
+	await test.step("auth gate appears → sign up", async () => {
+		// Unauthenticated user sees the auth gate teaser
+		await page.locator("[data-slot='results-auth-gate']").waitFor({
+			state: "visible",
+			timeout: 10_000,
+		});
+		// Click "Sign Up to See Your Results"
+		await page.getByTestId("auth-gate-signup-cta").click();
+
+		// Fill sign-up form
+		await page.locator("#results-signup-email").fill("e2e-golden@test.bigocean.dev");
+		await page.locator("#results-signup-password").fill("TestPassword123!");
+		await page.getByTestId("auth-gate-signup-submit").click();
 	});
 
 	await test.step("assert archetype card is visible", async () => {

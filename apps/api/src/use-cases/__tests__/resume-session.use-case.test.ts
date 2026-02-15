@@ -65,7 +65,8 @@ const createTestLayer = () =>
 			nerinMaxTokens: 1024,
 			nerinTemperature: 0.7,
 			dailyCostLimit: 75,
-			messageReadyThreshold: 15,
+			freeTierMessageThreshold: 15,
+			shareMinConfidence: 70,
 		}),
 	);
 
@@ -107,7 +108,7 @@ describe("resumeSession Use Case", () => {
 		);
 
 		expect(result.messages).toHaveLength(1);
-		expect(result.messageReadyThreshold).toBe(15);
+		expect(result.freeTierMessageThreshold).toBe(15);
 		expect(mockMessageRepo.getMessages).toHaveBeenCalledWith(TEST_SESSION_ID);
 		expect(mockEvidenceRepo.getEvidenceBySession).toHaveBeenCalledWith(TEST_SESSION_ID);
 	});

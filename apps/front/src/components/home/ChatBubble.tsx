@@ -1,4 +1,5 @@
 import type * as React from "react";
+import { NerinMessage } from "@workspace/ui/components/chat";
 
 interface ChatBubbleProps {
 	variant: "nerin" | "user";
@@ -8,19 +9,9 @@ interface ChatBubbleProps {
 export function ChatBubble({ variant, children }: ChatBubbleProps) {
 	if (variant === "nerin") {
 		return (
-			<div data-slot="chat-bubble" className="relative z-[1] mb-3 flex flex-row gap-[11px]">
-				{/* Nerin avatar */}
-				<div
-					className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-tertiary to-primary font-heading text-[.75rem] font-bold text-white"
-					aria-hidden="true"
-				>
-					N
-				</div>
-				{/* Bubble — editorial prose styling via child selectors */}
-				<div className="nerin-prose max-w-[88%] rounded-[18px] rounded-bl-[5px] border border-[var(--bubble-border)] bg-[var(--bubble-bg)] px-[22px] py-4 text-[.92rem] leading-[1.65] text-[var(--bubble-fg)] transition-[background,border-color,color] duration-[350ms] min-[1200px]:max-w-[92%]">
-					{children}
-				</div>
-			</div>
+			<NerinMessage className="relative z-[1] mb-3">
+				{children}
+			</NerinMessage>
 		);
 	}
 

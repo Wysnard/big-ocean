@@ -13,9 +13,11 @@
 
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import {
+	AppConfig,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	CostGuardRepository,
+	FreeTierLimitReached,
 	LoggerRepository,
 	OrchestratorRepository,
 	SessionNotFound,
@@ -45,6 +47,7 @@ export interface SendMessageOutput {
  */
 export const sendMessage = (input: SendMessageInput) =>
 	Effect.gen(function* () {
+		const config = yield* AppConfig;
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
 		const logger = yield* LoggerRepository;
@@ -77,6 +80,17 @@ export const sendMessage = (input: SendMessageInput) =>
 
 		// Message cadence is based on user messages only (assistant greetings should not count)
 		const messageCount = previousMessages.filter((msg) => msg.role === "user").length;
+
+		// Enforce free tier message limit
+		if (messageCount >= config.freeTierMessageThreshold) {
+			return yield* Effect.fail(
+				new FreeTierLimitReached({
+					sessionId: input.sessionId,
+					limit: config.freeTierMessageThreshold,
+					message: "You've reached the message limit for this assessment. View your results!",
+				}),
+			);
+		}
 
 		// Convert to LangChain message format
 		const langchainMessages = previousMessages.map((msg) =>
