@@ -15,7 +15,7 @@ import { AssessmentSessionEntitySchema } from "@workspace/domain/entities/sessio
 import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import { Database } from "@workspace/infrastructure/context/database";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { Effect, Layer, Schema } from "effect";
 import { assessmentSession } from "../db/drizzle/schema";
 
@@ -36,6 +36,55 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 
 		// Return service implementation using .of() pattern
 		return AssessmentSessionRepository.of({
+			getActiveSessionByUserId: (userId: string) =>
+				Effect.gen(function* () {
+					const results = yield* db
+						.select()
+						.from(assessmentSession)
+						.where(and(eq(assessmentSession.userId, userId), eq(assessmentSession.status, "active")))
+						.limit(1)
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "getActiveSessionByUserId",
+										userId,
+										error: error instanceof Error ? error.message : String(error),
+										stack: error instanceof Error ? error.stack : undefined,
+									});
+								} catch (logError) {
+									console.error("Logger failed in error handler:", logError);
+								}
+
+								return new DatabaseError({
+									message: "Failed to find active session",
+								});
+							}),
+						);
+
+					if (results.length === 0 || !results[0]) {
+						return null;
+					}
+
+					return yield* Schema.decodeUnknown(AssessmentSessionEntitySchema)(results[0]).pipe(
+						Effect.mapError((error) => {
+							try {
+								logger.error("Database operation failed", {
+									operation: "getActiveSessionByUserId",
+									userId,
+									error: `Schema parse error: ${error}`,
+								});
+							} catch (logError) {
+								console.error("Logger failed in error handler:", logError);
+							}
+
+							return new DatabaseError({
+								message: "Failed to find active session",
+							});
+						}),
+					);
+				}),
+
 			createSession: (userId?: string) =>
 				Effect.gen(function* () {
 					const [session] = yield* db

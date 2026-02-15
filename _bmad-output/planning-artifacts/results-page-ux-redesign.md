@@ -1,6 +1,6 @@
 ---
-stepsCompleted: [1, 2, 3]
-lastStep: 3
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7]
+lastStep: 7
 inputDocuments:
   - _bmad-output/planning-artifacts/ux-design-specification.md
   - _bmad-output/planning-artifacts/epics/epic-8-results-page-content-enrichment.md
@@ -231,3 +231,318 @@ A return visitor sees their profile has visually evolved — CSS-driven changes 
 5. **Immersive on first visit, efficient on return.** Scroll-triggered reveal creates the emotional payoff on first visit. Quick-jump depth meter serves return visitors. Both modes available via toggle.
 
 6. **Framework once, propositions diverge.** Universal elements (hero, navigation, share, portrait, confidence evolution) are designed once. The 6 propositions differentiate through visualization paradigm, spatial metaphor, interaction model, and concrete mobile strategy.
+
+## Desired Emotional Response
+
+### Primary Emotional Goal: Pride in Self-Understanding
+
+The results page emotional target is **pride in self-understanding** — the user feels genuinely proud of the depth they've reached, and the understanding they've gained feels earned through conversation, not handed to them by a quiz.
+
+This builds on the broader platform goal of "self-acceptance through clarity" but is specific to this moment: the user has just DONE something (30 minutes of vulnerability) and the results page must reflect that back as an achievement worth celebrating and sharing.
+
+**The emotional arc in one sentence:** "I explored who I am, and what I found is worth knowing."
+
+### Emotional Journey Mapping (Scroll-Mapped)
+
+| Page Zone | Target Emotion | Internal Monologue | Design Mechanism |
+|-----------|---------------|-------------------|-----------------|
+| **Pre-landing** (chat → results transition) | Anticipation + Gentle Anxiety | "What did Nerin discover about me?" | Celebration animation in chat, transition that builds suspense before the reveal |
+| **Hero** (first viewport) | Awe + Relief + Recognition | "Oh wow — this is beautiful. And it IS me." | Full-viewport immersion, geometric signature animation, confidence ring as achievement badge |
+| **Portrait** (Epic 8 slot) | Intimacy + Being Known | "Nerin really understood me" | Nerin's voice narrating findings, warm tone, specific references to conversation themes |
+| **Most Distinctive Trait** | Surprise + Curiosity | "Wait, I didn't realize that" | Leading with highest-deviation trait, unexpected framing, "aha" language |
+| **Trait 2** | Emotional color varies by trait | Expansiveness (O), Tenderness (N), Energy (E), Warmth (A), Precision (C) | Each trait section has its own atmosphere, visualization rhythm, and emotional tone |
+| **Traits 3-5** | Layered Understanding | "The more I read, the more accurate it gets" | Visual variety across sections prevents fatigue — different densities, interactions, rhythms |
+| **Facet Details** | Intellectual Satisfaction | "I can see exactly how this was measured" | Evidence connection, precision data, scientific grounding |
+| **Confidence Evolution** | Curiosity + Motivation | "I want to see more — what's still hidden?" | Visual incompleteness at 70%, sketchy outlines, "?" marks inviting exploration |
+| **Continuation CTA** | Empowered Agency | "I'm choosing to go deeper, not being sold to" | Invitation language, not urgency. "Keep exploring" not "Unlock now" |
+| **Showing Someone** (replay mode) | Pride + Vulnerability | "Watch this — this is who I am" | Guided reveal replays, user watches the other person's reaction |
+
+### Micro-Emotions
+
+**Critical emotional tensions on this page:**
+
+1. **Pride vs. Exposure** — The user should feel proud of their profile, not exposed by it. Every trait should be framed as a dimension of who they are, never as a judgment. Language: "You are remarkably..." not "You scored low in..."
+
+2. **Curiosity vs. Completeness** — At 70% confidence, the page should feel complete enough to be valuable AND incomplete enough to spark curiosity. The visual evolution (sketchy → vivid) creates this tension naturally. The user should think "this is mine, and there's more to discover" — not "I didn't get the full thing."
+
+3. **Recognition vs. Surprise** — Some findings should confirm what the user already senses (validation) while at least one should genuinely surprise them (revelation). The balance: ~70% recognition, ~30% surprise. Too much confirmation = boring. Too much surprise = distrust.
+
+4. **Intimacy vs. Shareability** — The portrait and detailed facets feel deeply personal. The archetype and trait summary feel shareable. The page must make both coexist — private depth AND public identity on the same scroll.
+
+5. **Achievement vs. Invitation** — The hero celebrates what's been accomplished (70%+ precision). The continuation CTA invites what's next. These must not conflict: "You've achieved something real, and there's more if you want it" — not "You're not done yet."
+
+6. **Accuracy vs. Flattery** — Users want results that feel accurate AND want to feel good about themselves. Every trait level must feel like a genuine dimension, not a grade. Low Conscientiousness is "spontaneous and adaptive" not "disorganized." High Neuroticism is "emotionally attuned" not "anxious." The framing language transforms potential negativity into neutral self-knowledge. The user should think "this is true" AND "I'm okay with this."
+
+7. **Mine vs. Ours** — Shareable content (archetype, trait summary, geometric signature) should feel visually public — bold, clean, card-like. Intimate content (portrait, facet details, evidence) should feel visually private — softer, more textured, nested deeper. The user intuitively reads the visual hierarchy as "show this" vs. "keep this."
+
+### Design Implications
+
+**Emotion → UX Decision mappings:**
+
+| Target Emotion | UX Approach | Anti-Pattern to Avoid |
+|---------------|------------|----------------------|
+| **Awe** | Full-viewport hero, geometric signature animation, confidence ring as glowing achievement | Generic card layout, small hero, text-heavy first screen |
+| **Being Known** | Nerin's portrait in conversational tone, specific references to what was discussed | Generic personality descriptions, third-person clinical language |
+| **Surprise** | Most distinctive trait first (highest deviation), unexpected framing | Fixed OCEAN order, leading with the most "normal" trait |
+| **Curiosity** | Visual incompleteness at 70% (sketchy outlines, muted colors, "?" facets) | Complete-looking page at all confidence levels, or explicit "locked" labels |
+| **Pride** | "Your profile so far" language, confidence as achievement badge, celebration gradient on hero | "Your results" language, confidence as small metadata pill, clinical presentation |
+| **Agency** | "Keep exploring with Nerin" invitation, "Replay the reveal" toggle, micro-share per section | "Upgrade to unlock" pressure, auto-redirect to payment, hidden share button |
+| **Trust** | Evidence links per facet, methodology badge ("Big Five framework"), precision transparency ("72% from 12 exchanges"), profile mutability signal ("continues to evolve") | Unexplained scores, no methodology visibility, static finality |
+| **Belonging** | Archetype name implies tribe ("The Explorer"), subtle population signal ("12% share your archetype"), share card designed for conversation ("compare with a friend") | Isolated individual report feel, no social context, purely solo experience |
+
+**Emotions to actively prevent:**
+
+- **Judgment** — No trait should feel like a grade. Neuroticism is emotional sensitivity, not a flaw. Every score level has strengths-based descriptive language.
+- **Overwhelm** — 30 facets visible at once is a wall of data. Progressive disclosure (trait → facet → evidence) prevents this.
+- **Paywall resentment** — The 70% page must feel genuinely valuable, not crippled. Visual incompleteness should feel like "there's more to discover" not "you're missing content."
+- **Cringe** — If the Epic 8 portrait reads as generic AI-generated text, it destroys the intimacy. The portrait must reference specific conversation themes, not just rephrase scores.
+- **Anticlimax (energy delta)** — The risk is specifically the energy gap between the chat experience (streaming text, zone-aware backgrounds, depth meter, intimate real-time conversation) and the results page. Results must match or exceed the chat's energy level. A static page after an immersive conversation is a betrayal of the user's investment.
+- **Boredom/Fatigue** — If trait sections 2-5 are visually identical to section 1 with different colors, the user checks out by section 3. Each proposition must create visual variety across trait sections — different rhythms, interactions, and densities, not just palette swaps.
+
+### Emotional Design Principles
+
+1. **Frame every trait as a dimension, never a score.** "Your openness shapes how you..." not "Openness: 87/120." The data exists for those who want it, but the emotional layer leads.
+
+2. **Visual richness is proportional to investment.** At 70%, the page is beautiful but sketchy. At 90%+, it's vivid and alive. The user SEES their investment reflected in the page's completeness. This creates curiosity, not frustration.
+
+3. **Nerin's voice is the emotional anchor.** The portrait, trait introductions, and descriptive text should all feel like Nerin speaking. Third-person clinical voice is forbidden. First/second person: "After everything we discussed, I see someone who..."
+
+4. **Share impulse is an emotional signal, not a feature.** When the user feels "this is SO me," the share action must be RIGHT THERE. Design for the impulse, not for the funnel.
+
+5. **Celebration before invitation.** The hero celebrates what's been achieved. Only after the user feels proud of their profile does the page gently invite continuation. Never lead with "there's more" — lead with "look what you've discovered."
+
+6. **Every trait level is a strength in context.** Low Conscientiousness is adaptability. High Neuroticism is emotional depth. The page never implies a trait level is better or worse — only that it shapes how the user navigates the world. Descriptive language is chosen from a strengths-based vocabulary at every level (Low/Mid/High).
+
+## UX Pattern Analysis & Inspiration
+
+### Inspiring Products Analysis
+
+**1. Headspace — "Breathable Information Density"**
+
+Headspace solves the problem of making complex wellness data feel calm and actionable:
+
+- **Whitespace as a design element, not wasted space.** Dense information (sleep scores, mood tracking, session stats) is surrounded by generous breathing room. The data never feels heavy because the container never feels cramped.
+- **Emotion-first color system.** Warm oranges and soft gradients set a mood before any text is read. The palette communicates "you're safe here" before the brain processes content.
+- **Behavioral triggers embedded in design.** Progress streaks, goal reminders, and "adventure" customization screens turn passive viewing into motivated engagement. They reduced a 38% onboarding drop-off by making week-two retention their design focal point.
+- **Illustrations do the emotional heavy lifting.** Abstract, playful illustrations carry tone where clinical graphs would create distance. The data exists, but the emotional wrapper is what the user remembers.
+- **What keeps users coming back:** Personal progress visualization that compounds over time. Meditation history, sleep trends, and mood patterns become a visual narrative of self-improvement.
+
+**2. 16Personalities — "The Social Object Factory"**
+
+16Personalities turned personality results into viral social currency. Taken over 1 billion times across 45+ languages:
+
+- **Archetype as identity.** "The Architect" is not a type code — it's a character with an avatar, a narrative, a name you want to claim. The personification transforms a test result into a social identity.
+- **Immediate shareability at the result moment.** The results page is designed so the first viewport IS the shareable artifact — type name, avatar, percentage breakdowns. Screenshot-ready by default.
+- **Progressive depth without progressive friction.** Free results are genuinely valuable (strengths, weaknesses, relationships, career). Paid tiers are positioned as "go deeper" — never as "unlock what you're missing."
+- **The MBTI letter code as social shorthand.** "I'm an INTJ" is a conversation starter. The 4-letter code is compact enough for bios, dating profiles, and social media. It spreads because it's easy to transmit. big-ocean's 5-letter OCEAN code (e.g., "HHMHM") serves the same function.
+- **What keeps users coming back:** Identity reinforcement. Users return to re-read their profile when they need validation, when they encounter relationship friction, or when they want to compare with someone new.
+
+**3. Dia — "AI That Disappears Into Design"**
+
+Dia (from The Browser Company, makers of Arc) represents the frontier of AI woven into product design so seamlessly it doesn't feel like "an AI feature":
+
+- **AI as ambient intelligence, not a chatbot.** Dia doesn't put AI in a chat box — it integrates AI into the browsing experience itself. Memory, suggestions, and intelligent navigation happen within the existing interaction paradigm.
+- **Simplicity earned from complexity.** Arc was powerful but complex. Dia takes Arc's best patterns (sidebar, vertical tabs, shortcuts) and strips away everything that created cognitive overhead. The lesson: learn what worked, then simplify ruthlessly.
+- **Design confidence in minimalism.** Dia's UI is sparse by choice — it trusts the AI layer to surface what matters, so the visual layer can stay calm. Less chrome, more content.
+- **What keeps users coming back:** The browser gets smarter over time. Memory and context accumulate, making it genuinely more useful the longer you use it — a compound value proposition.
+
+### Transferable UX Patterns
+
+**Navigation Patterns:**
+
+| Pattern | Source | Application to Results Page |
+|---------|--------|---------------------------|
+| Progressive disclosure with zero friction | 16Personalities | Trait → Facet → Evidence accordion that FEELS like exploration, not drilling into menus |
+| Breathing whitespace between dense sections | Headspace | Full-viewport trait sections with generous padding prevent results from feeling like a data wall |
+| Quick-jump sidebar navigation | Dia (Arc heritage) | Depth meter sidebar for return visitors mirrors the chat sidebar — consistent navigation language |
+
+**Interaction Patterns:**
+
+| Pattern | Source | Application to Results Page |
+|---------|--------|---------------------------|
+| First viewport = complete artifact | 16Personalities | Hero as standalone personality card — archetype, signature, confidence, 5 traits. Screenshot captures meaning. |
+| Behavioral triggers for return | Headspace | Confidence evolution (visual change) and "Replay the reveal" give reasons to return — not just content to re-read |
+| AI woven into the experience, not bolted on | Dia | Epic 8 portrait presented as Nerin's natural voice within the page, not as a separate "AI analysis" section |
+
+**Visual Patterns:**
+
+| Pattern | Source | Application to Results Page |
+|---------|--------|---------------------------|
+| Illustration carries emotional tone | Headspace | Geometric signature and OCEAN shapes carry the emotional weight — data visualization wrapped in identity art |
+| Archetype personification | 16Personalities | "The Explorer" is an identity, not a category. Name + geometric signature create a social object worth sharing |
+| Earned simplicity through intelligent defaults | Dia | First-visit guided reveal shows everything progressively. Return-visit strips away animation — the page adapts to context |
+
+**Content Patterns:**
+
+| Pattern | Source | Application to Results Page |
+|---------|--------|---------------------------|
+| Strengths-first language at every level | 16Personalities | Every trait level described as a dimension, never a grade. "Spontaneous and adaptive" not "low Conscientiousness" |
+| Compound value over time | Headspace + Dia | Profile evolves visually with confidence. Each return visit shows literal visual change — not just the same page |
+| Free results feel genuinely complete | 16Personalities | 70% confidence results must feel valuable on their own. Visual incompleteness invites curiosity, not frustration |
+
+### Anti-Patterns to Avoid
+
+| Anti-Pattern | Source Lesson | Risk for big-ocean |
+|-------------|--------------|-------------------|
+| "AI Generated" label | Dia avoids this entirely | If the Epic 8 portrait feels like "here's what the AI thinks," it kills intimacy. Must feel like Nerin speaking, not a model outputting |
+| Calm's option overload | Headspace competitor analysis | 30 facets + 5 traits + evidence + portrait + share = potential overwhelm. Progressive disclosure is mandatory, not optional |
+| Clinical third-person voice | 16Personalities avoids this | "Your Openness score is 87" is a report. "You see connections where others see chaos" is an identity statement. The latter drives sharing |
+| Locked/gated content signifiers | 16Personalities's subtle upselling | At 70% confidence, sketchy outlines should feel artistic and intentional, not like a paywall. Never use lock icons, grayed-out sections, or "Upgrade to see more" |
+| Static results on return visit | Headspace's streak/progress patterns | If the page looks identical on visit 2 as visit 1, there's no reason to return. CSS-driven confidence evolution solves this |
+| Share as afterthought section | All three apps integrate sharing into the moment | A dedicated "Share" section at the bottom guarantees nobody finds it at the moment of impulse |
+
+### Design Inspiration Strategy
+
+**What to Adopt Directly:**
+
+1. **Hero = social object** (from 16Personalities) — The first viewport must work as a standalone personality card. Archetype name, geometric signature, confidence ring, 5 compact trait indicators. If someone screenshots ONLY this, they have a meaningful shareable artifact.
+
+2. **Breathing whitespace between dense data** (from Headspace) — Full-viewport trait sections with generous padding. The page communicates "you're being cared for" through spatial generosity, matching the calm-yet-insightful tone of the assessment.
+
+3. **Compound visual value on return** (from Headspace + Dia) — CSS-driven confidence evolution means the page is literally different each visit. Combined with "Replay the reveal" toggle, return visits have both new visual state AND re-experienceable moments.
+
+4. **Compression-resistant visual identity** (from 16Personalities) — Their avatars are bold, flat-color illustrations that read clearly at any size and compression level. Our geometric signature must be tested at Instagram Story resolution (1080×1920) and WhatsApp message preview (300×300). Bold strokes, high contrast against background.
+
+5. **Distinction hook above the fold** (from 16Personalities) — 16P shows percentage breakdowns in the hero (e.g., "87% Introverted"). big-ocean should surface ONE distinctive callout — the user's most extreme trait deviation — as a compact badge in the hero. This is the "wait, really?" moment that triggers the share impulse before scrolling.
+
+**What to Adapt for big-ocean:**
+
+1. **Archetype personification** (from 16Personalities → adapt) — 16P uses illustrated avatar characters. big-ocean has something better: geometric signatures made from OCEAN shapes. The signature IS the personification — abstract, mathematical, unique to each profile. No need for illustrated characters when the identity system is already visual.
+
+2. **Emotion-first color system** (from Headspace → adapt) — Headspace uses warm oranges globally. big-ocean should use trait-specific atmospheres — each trait section carries its own oklch color identity from the existing design token system. The emotional tone CHANGES as you scroll through traits, creating a journey, not a static mood.
+
+3. **AI as ambient layer** (from Dia → adapt) — Dia integrates AI into browsing. big-ocean integrates Nerin into results. The portrait isn't a separate "AI analysis" panel — it's woven into the page's narrative voice. Trait descriptions, insights, and the portrait all speak in Nerin's tone without labeling it as AI output.
+
+**What to Avoid:**
+
+1. **Option overload** (Calm's failure, Headspace's learning) — 30 facets visible simultaneously would overwhelm. Progressive disclosure (trait → facet → evidence) is the breathing room mechanism. Each level is opt-in.
+
+2. **Generic AI voice** (Dia's lesson applied inversely) — If Nerin's portrait reads like ChatGPT output, it destroys the relational trust built over 30 minutes. The portrait must reference specific conversation themes, use Nerin's established voice patterns, and feel personal.
+
+3. **Share as a destination** (all three avoid this) — No dedicated share section. Every shareable moment gets an inline micro-action. The impulse and the action are never separated.
+
+### Hero Viewport Requirements (Reverse-Engineered)
+
+Working backwards from the ideal outcome — "user screenshots and shares within 10 seconds of landing" — the hero must satisfy these requirements:
+
+**Visual Hierarchy (viewport proportions):**
+- Geometric signature: ~40% of hero viewport
+- Archetype name + confidence ring: ~25%
+- 5 compact trait indicators + distinction callout: ~25%
+- Brand mark + share action: ~10%
+
+**Screenshot Resilience:**
+- High contrast — readable in compressed JPEG on dark messaging UIs
+- Self-contained meaning — no cropped text, no "see more" below fold
+- Aspect ratio: mobile hero must fit Stories (9:16) or message bubble (3:4)
+- No UI chrome pollution — no browser bars, no navigation overlays in hero zone
+- Test at 50% JPEG quality, 300×300 WhatsApp preview, and 1080×1920 Instagram Story
+
+**Hero Micro-Animation Choreography:**
+- Geometric signature assembles: 0–800ms
+- Archetype name resolves: 800–1200ms
+- Confidence ring fills: 1200–1800ms
+- Trait indicators + distinction badge fade in: 1800–2200ms
+- Total under 2.2 seconds — completes before share impulse fires
+- Skippable (instant render) on return visits
+- Respects `prefers-reduced-motion`
+
+**Chat → Results Transition (Unsolved — No External Reference):**
+None of our three inspiration sources transition from an immersive conversational experience into results. This is unique to big-ocean. The results page must fade in FROM the Abyss atmosphere — no hard page break. The depth zone CSS custom properties carry across the navigation boundary. The hero animation serves double duty: it's the guided reveal's first beat AND the emotional bridge from the chat's Abyss zone. Design from the depth zone system, not external patterns.
+
+### Proposition Pattern Affinity Analysis (Graph of Thoughts)
+
+Mapping inspiration patterns against propositions reveals which designs are pattern-rich and which are pattern-starved:
+
+| Proposition | Pattern Score | Tier | Key Strengths | Critical Gaps |
+|-------------|:------------:|------|---------------|---------------|
+| **The Ascent** | 43/45 | Pattern-dominant | Strong fit across ALL patterns — full-viewport vertical scroll is the native format for Headspace/16P/Dia patterns | None — risk is complacency, not gaps |
+| **Living Shapes** | 38/45 | Strong complement | Matches Ascent on behavioral return (H3), compound progress (H5), compression-resilient identity (P3) — shapes double as data containers | Slightly weaker on minimalism patterns (D2, D3) |
+| **Waveform** | 33/45 | Aesthetic-heavy | Strong on emotion-first color (H2), distinction hook (P4), design minimalism (D3) | Weak on behavioral return (H3) — needs a "your sound evolved" mechanism beyond CSS confidence evolution; the waveform shape itself should change as facet scores refine |
+| **The Gallery** | 27/45 | Share-gap | Strong on whitespace (H1), color (H2), illustration as tone (H4) | Horizontal scroll breaks screenshot conventions. Needs purpose-built share cards that translate the gallery into a vertical hero format |
+| **Constellation** | 25/45 | Viral-gap | Strong on distinction hook (P4), minimalism (D3), illustration as tone (H4) | Weak on compression-resilient identity (P3) — radial map illegible at share-card resolution. Needs alternative share artifact |
+| **Topography** | 21/45 | Highest risk | Strong only on emotion-first color (H2) | Conflicts with nearly every virality and simplicity pattern. Contour map at 300×300 is meaningless. Recommend repositioning as desktop-only deep exploration view, not a primary full-page proposition |
+
+**The Viral Triangle (minimum bar for all propositions):**
+
+```
+         P1 (Hero = social object)
+              /            \
+             /              \
+    P3 (Compression-      P4 (Distinction
+     resilient ID)         hook above fold)
+```
+
+Any proposition scoring weakly on all three of these will fail the 10-second share test. Gallery, Constellation, and Topography need **purpose-built share cards** that translate their spatial metaphors into screenshot-ready hero formats, independent of their main visualization paradigm.
+
+## Design System Foundation
+
+### Design System Choice
+
+**Themeable System: shadcn/ui + Tailwind CSS v4 + Radix UI primitives** — extending the existing big-ocean design system rather than replacing it.
+
+big-ocean already operates a mature, customized design system. The results page redesign adds a new extension layer on top of the existing foundation.
+
+### Rationale for Selection
+
+1. **Already customized for big-ocean's identity** — Trait colors (oklch), OCEAN shapes, depth zones, geometric signatures, and conversation tokens are deeply integrated into the existing token system in `globals.css`. Switching would mean rebuilding all of this.
+
+2. **shadcn/ui's composability** — Components are copied into `packages/ui`, not imported from a package. This gives full control over every component without fighting a framework — essential for the custom visualizations each proposition requires.
+
+3. **Tailwind v4 + oklch** — The existing color system uses oklch for perceptual uniformity across trait palettes. This is essential for the trait-specific atmospheres the redesign requires (each trait section carries its own color identity).
+
+4. **Radix primitives** — Accessibility is built into the foundation (keyboard navigation, ARIA, focus management). The new components (depth meter, share card, reveal animations) will build on Radix patterns and respect `prefers-reduced-motion`.
+
+5. **Depth zone system already exists** — The chat uses 5 depth zones (Surface → Abyss) with CSS custom properties. The results page extends this system rather than inventing a parallel one.
+
+### Implementation Approach
+
+The redesign adds a **Results Page Extension Layer** to the existing system:
+
+```
+Existing Foundation (preserved)
+├── shadcn/ui base components (Button, Card, Badge, etc.)
+├── Design tokens (colors, typography, spacing, radii)
+├── OCEAN shapes + Geometric Signature
+└── Depth zone system (Surface → Abyss)
+
+Results Page Extension Layer (new)
+├── Confidence tier system (data-confidence-tier="emerging|solid|deep")
+├── Trait atmosphere wrapper (full-viewport, trait-colored)
+├── Results depth meter (quick-jump navigation)
+├── Micro-share action component
+├── Hero personality card composition
+├── Guided reveal animation primitives (IntersectionObserver)
+└── Share card generator (screenshot-optimized)
+```
+
+### Customization Strategy
+
+**New components required for the redesign:**
+
+| Component | Purpose | Builds On |
+|-----------|---------|-----------|
+| **Confidence tier system** | CSS custom properties or `data-confidence-tier` attribute that modulates opacity, saturation, filter, border-style across 3 tiers (emerging 70% / solid 80% / deep 90%+) | Existing CSS custom property architecture |
+| **Trait atmosphere wrapper** | Full-viewport section carrying trait-specific oklch color atmosphere, analogous to depth zone wrappers in chat | Existing depth zone system (`--zone-*-bg` pattern) |
+| **Results depth meter** | Sidebar navigation for trait quick-jump, mirroring the chat depth meter | Chat depth meter component |
+| **Micro-share action** | Inline share button co-located with shareable content — uses native share API on mobile, copy-link on desktop | shadcn/ui Button + navigator.share |
+| **Hero personality card** | First-viewport layout with defined proportions: signature ~40%, name+confidence ~25%, traits+distinction ~25%, brand+share ~10% | GeometricSignature + existing trait badge patterns |
+| **Guided reveal primitives** | IntersectionObserver-based scroll-triggered entrance animations with `prefers-reduced-motion` fallback and "Replay the reveal" toggle state | New — no existing equivalent |
+| **Share card generator** | Screenshot-optimized card format tested at 300×300 (WhatsApp), 1080×1920 (Stories), and 50% JPEG quality. Purpose-built for propositions where the main visualization doesn't screenshot well | ShareCardPreview component (existing, needs extension) |
+
+**Design token extensions needed:**
+
+```css
+/* Confidence tier modulation */
+--confidence-opacity: 1;        /* 0.6 → 0.8 → 1.0 */
+--confidence-saturation: 100%;  /* 60% → 80% → 100% */
+--confidence-filter: none;      /* blur(0.5px) → none → none */
+--confidence-border: solid;     /* dashed → solid → solid */
+
+/* Trait atmosphere (per-section) */
+--trait-atmosphere-bg: ...;     /* Derived from --trait-{name} oklch values */
+--trait-atmosphere-fg: ...;
+--trait-atmosphere-accent: ...;
+```
+
+**Convention:** All new results page components follow the existing `data-slot` pattern for styling hooks and `data-state` for interactive states, consistent with `docs/FRONTEND.md`.

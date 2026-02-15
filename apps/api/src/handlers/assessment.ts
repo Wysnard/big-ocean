@@ -76,11 +76,13 @@ export const resolveAuthenticatedUserId = (request: { headers: unknown }) =>
 export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment", (handlers) =>
 	Effect.gen(function* () {
 		return handlers
-			.handle("start", ({ payload }) =>
+			.handle("start", ({ payload, request }) =>
 				Effect.gen(function* () {
+					const authenticatedUserId = yield* resolveAuthenticatedUserId(request);
+
 					// Call use case - map infrastructure errors to contract errors
 					const result = yield* startAssessment({
-						userId: payload.userId,
+						userId: authenticatedUserId ?? payload.userId,
 					}).pipe(
 						Effect.catchTag("RedisOperationError", (error: RedisOperationError) =>
 							Effect.fail(

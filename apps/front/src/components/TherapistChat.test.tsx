@@ -458,20 +458,14 @@ describe("TherapistChat", () => {
 			});
 		});
 
-		it("dismisses card when Keep Exploring clicked", async () => {
-			const mockSetHasShownCelebration = vi.fn();
+		it("renders Keep Exploring button as disabled (premium feature)", () => {
 			mockHookReturn.isConfidenceReady = true;
 			mockHookReturn.hasShownCelebration = false;
-			mockHookReturn.setHasShownCelebration = mockSetHasShownCelebration;
 
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
 			const keepExploringBtn = screen.getByText("Keep Exploring");
-			fireEvent.click(keepExploringBtn);
-
-			await waitFor(() => {
-				expect(mockSetHasShownCelebration).toHaveBeenCalledWith(true);
-			});
+			expect(keepExploringBtn.closest("button")?.disabled).toBe(true);
 		});
 
 		it("shows 'View Your Results' link in header when isConfidenceReady", () => {
@@ -482,5 +476,4 @@ describe("TherapistChat", () => {
 			expect(screen.getByTestId("view-results-header-link")).toBeTruthy();
 		});
 	});
-
 });

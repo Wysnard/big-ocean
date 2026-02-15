@@ -127,6 +127,7 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 				// Create a custom layer with failing repository
 				const failingSessionRepo = {
 					createSession: () => Effect.fail(new Error("Database connection failed")),
+					getActiveSessionByUserId: () => Effect.succeed(null),
 					getSession: () => Effect.fail(new Error("Not implemented")),
 					updateSession: () => Effect.fail(new Error("Not implemented")),
 					resumeSession: () => Effect.fail(new Error("Not implemented")),
@@ -192,23 +193,15 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 			}).pipe(Effect.provide(TestLayer)),
 		);
 
-		it.effect("should enforce rate limit - second call fails for same user", () =>
+		it.effect("should return existing active session for same user instead of creating new one", () =>
 			Effect.gen(function* () {
-				// First call succeeds
+				// First call creates a new session
 				const result1 = yield* startAssessment({ userId: "user_test" });
 				expect(result1.sessionId).toMatch(/^session_/);
 
-				// Second call fails with RateLimitExceeded
-				const exit = yield* Effect.exit(startAssessment({ userId: "user_test" }));
-				expect(exit._tag).toBe("Failure");
-				if (exit._tag === "Failure") {
-					expect(exit.cause._tag).toBe("Fail");
-					if (exit.cause._tag === "Fail") {
-						const error = exit.cause.error;
-						expect(error).toHaveProperty("_tag", "RateLimitExceeded");
-						expect(error).toHaveProperty("message", "You can start a new assessment tomorrow");
-					}
-				}
+				// Second call returns the same active session
+				const result2 = yield* startAssessment({ userId: "user_test" });
+				expect(result2.sessionId).toBe(result1.sessionId);
 			}).pipe(Effect.provide(TestLayer)),
 		);
 	});

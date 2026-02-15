@@ -22,8 +22,8 @@ export interface StartAssessmentInput {
 	readonly userId?: string;
 }
 
-export interface GreetingMessage {
-	readonly role: "assistant";
+export interface StartAssessmentMessage {
+	readonly role: "user" | "assistant";
 	readonly content: string;
 	readonly createdAt: Date;
 }
@@ -31,7 +31,7 @@ export interface GreetingMessage {
 export interface StartAssessmentOutput {
 	readonly sessionId: string;
 	readonly createdAt: Date;
-	readonly messages: GreetingMessage[];
+	readonly messages: StartAssessmentMessage[];
 }
 
 /**
@@ -49,6 +49,30 @@ export const startAssessment = (input: StartAssessmentInput) =>
 		const logger = yield* LoggerRepository;
 
 		const { userId } = input;
+
+		// Check for existing active session (authenticated users only)
+		if (userId) {
+			const existingSession = yield* sessionRepo.getActiveSessionByUserId(userId);
+			if (existingSession) {
+				logger.info("Returning existing active session", {
+					sessionId: existingSession.id,
+					userId,
+				});
+
+				// Load existing messages for the session
+				const existingMessages = yield* messageRepo.getMessages(existingSession.id);
+
+				return {
+					sessionId: existingSession.id,
+					createdAt: existingSession.createdAt,
+					messages: existingMessages.map((msg) => ({
+						role: msg.role,
+						content: msg.content,
+						createdAt: msg.createdAt,
+					})),
+				};
+			}
+		}
 
 		// Skip rate limiting for anonymous users (no userId)
 		if (userId) {
@@ -80,7 +104,7 @@ export const startAssessment = (input: StartAssessmentInput) =>
 		const greetingContents = [...GREETING_MESSAGES, openingQuestion];
 
 		// Persist greeting messages to DB so Nerin has full conversation context
-		const savedMessages: GreetingMessage[] = [];
+		const savedMessages: StartAssessmentMessage[] = [];
 		for (const content of greetingContents) {
 			const saved = yield* messageRepo.saveMessage(result.sessionId, "assistant", content);
 			savedMessages.push({

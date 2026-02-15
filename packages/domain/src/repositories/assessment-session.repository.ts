@@ -22,6 +22,16 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 		) => Effect.Effect<{ sessionId: string }, DatabaseError, never>;
 
 		/**
+		 * Find an active session for a user
+		 *
+		 * @param userId - User ID to look up
+		 * @returns Effect with session entity or null if none found
+		 */
+		readonly getActiveSessionByUserId: (
+			userId: string,
+		) => Effect.Effect<AssessmentSessionEntity | null, DatabaseError, never>;
+
+		/**
 		 * Retrieve full session with message history
 		 *
 		 * @param sessionId - Session identifier
