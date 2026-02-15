@@ -84,7 +84,7 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 						id: profile.id,
 						sessionId: profile.sessionId,
 						userId: input.userId,
-						displayName: users[0]?.name,
+						displayName: users[0]?.name ?? input.userId,
 						oceanCode5: profile.oceanCode5,
 						oceanCode4: profile.oceanCode4,
 						isPublic: profile.isPublic,
