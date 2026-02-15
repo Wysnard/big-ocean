@@ -3,12 +3,12 @@ import { type UserTheme, useTheme } from "@workspace/ui/hooks/use-theme";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const themeOrder: UserTheme[] = ["system", "light", "dark"];
+const themeOrder: UserTheme[] = ["system", "dark", "light"];
 
 const themeLabels: Record<UserTheme, string> = {
-	light: "Light mode (click for dark)",
-	dark: "Dark mode (click for auto)",
-	system: "Auto mode (click for light)",
+	light: "Light mode (click for auto)",
+	dark: "Dark mode (click for light)",
+	system: "Auto mode (click for dark)",
 };
 
 export function ThemeToggle() {

@@ -35,6 +35,30 @@
 
 ### **Phase 1: Invitation to Begin (Before Assessment)**
 
+**Homepage Conversation Flow (8 Emotional Beats):**
+
+The homepage unfolds as a simulated conversation with Nerin, following an emotional arc designed to deliver four feelings: excitement to try, safety to be vulnerable, value in self-understanding, and visual depth worth sharing.
+
+*Arc: Introduction → Safety → Nuance/Hook → Value → Depth → Invitation*
+
+1. **Who we are** — Nerin introduces Big Ocean as a conversation, not a quiz or a box
+2. **Safety + reward** — Vulnerability permission: "I'm here to listen — not to question who or what you are. Everything we talk about is for you. To understand yourself a little better. And maybe, from there, to start living a little more like yourself."
+3. **Nuance reveal** — Relatable pattern example ("loves to organize yet can't stop procrastinating") with "Sound familiar?" hook
+4. **Trait exploration** — Interactive trait stack embed
+5. **Value confrontation** — Single user message: "What can I actually gain from all of this?"
+6. **Value answer** — Clarity about reactions, energy, relationships + science-backed evidence
+7. **Depth preview** — Blurred 30-facet bars showing scientific rigor
+8. **Warm invitation** — "Whenever you're ready. No rush. I'll be here."
+
+**Key Design Decisions:**
+- Only 1 simulated user message (direct, not scripted-sounding)
+- Only 2 embeds: trait stack (interactive) + facet bars (scientific depth)
+- No comparisons to specific tests (MBTI, etc.)
+- Safety beat (Beat 2) is mandatory — the single highest-impact element for conversion
+- Closing is warmth, not logistics (logistics are muted micro-copy below CTA)
+
+**Assessment Start:**
+
 1. **User lands and clicks "Start Assessment"**
    - Visual: Warm, inviting intro (not clinical)
    - Copy: "Discover who you truly are — not through questions, but through conversation"
@@ -106,6 +130,76 @@
    - Precision approaching 70%+
    - Nerin: *"I think I'm getting a solid understanding of you now. How are you feeling about wrapping up?"*
    - User feels: *"Excited for results. I've invested time and it's paid off."*
+
+### **Visual Depth Metaphor During Assessment**
+
+The assessment interface reinforces the psychological journey through a **visual depth progression system** that mirrors the user's descent into self-understanding.
+
+**The Depth Journey Concept:**
+- As the conversation progresses, the visual environment transitions through 5 distinct "zones"
+- Each zone represents a deeper level of psychological exploration
+- Background color shifts from warm surface tones to deep oceanic navy
+- Creates subconscious reinforcement of the "deep dive" metaphor without explicit UI messaging
+
+**5-Zone Progression System:**
+
+| Zone | Progress Range | Background (Light Mode) | Background (Dark Mode) | Psychological Metaphor |
+|------|---------------|------------------------|------------------------|------------------------|
+| **Surface** | 0-20% | `#FFF8F0` (Warm Cream) | `#2A2A3E` (Dark Slate) | Warm-up, establishing trust and rapport |
+| **Shallows** | 20-40% | `#FFF0E8` (Peachy) | `#3A3A52` (Deeper Slate) | Initial trait exploration, surface patterns |
+| **Mid** | 40-60% | `#FFE8D8` (Coral) | `#4A4A66` (Mid Purple) | Deep questioning, nuance mining, contradictions |
+| **Deep** | 60-80% | `#282643` (Deep Purple) | `#1A1A2E` (Dark Navy) | Evidence synthesis, pattern recognition |
+| **Abyss** | 80-100% | `#0A0E27` (Navy Abyss) | `#0A0E27` (Navy Abyss) | Final reflections, completion, revelation |
+
+**Zone Threshold Calculation:**
+- Progress calculated as: `(messageCount / totalMessages) × 100`
+- Zone index derived from progress percentage (0-4)
+- Transitions tied to message count, not scroll position (key difference from homepage)
+
+**Visual Implementation Details:**
+
+1. **Depth Meter (Desktop Only)**
+   - Fixed left sidebar showing current zone
+   - 5 pip indicators representing each zone
+   - Animated progress fill showing conversation completion
+   - Active zone highlighted with accent color
+   - Hidden on mobile (< 768px) to preserve chat focus
+
+2. **Background Color Transitions**
+   - Smooth 600ms ease-in-out transitions between zones
+   - CSS custom properties updated via React state
+   - Text color automatically inverts at Deep zone (60%+) for readability
+   - Dark mode: Custom zone colors optimized for dark backgrounds
+
+3. **Inline Facet Icons**
+   - When Nerin mentions traits/facets, inline SVG icons appear
+   - Icons use OCEAN geometric shapes (circle, half-circle, rectangle, triangle, diamond)
+   - Example: "Tell me about your <icon:circle> creative side..."
+   - Hover states reveal quick facet definitions
+
+4. **Mini Evidence Cards**
+   - Embedded visualizations in Nerin's messages
+   - Show confidence bars for mentioned facets
+   - Example: "I'm noticing patterns in... [Imagination: 78% | Artistic: 65%]"
+   - Provides transparency without disrupting conversation flow
+
+**Accessibility Considerations:**
+- `prefers-reduced-motion` respected: All transitions disabled for instant zone changes
+- WCAG AA contrast ratios maintained across all zones and modes
+- Depth meter purely decorative: Core conversation experience works without it
+- Mobile users receive full experience without depth meter (backgrounds still transition)
+
+**Psychological Impact:**
+- Visual progression creates sense of journey and investment
+- Warm → cool color shift subconsciously signals deepening exploration
+- Reinforces brand positioning: "Deep dive into your personality"
+- Differentiated from clinical assessment feel through immersive design
+
+**Pattern Precedent:**
+- Shares technical approach with Story 7.8 (Homepage Depth Scroll)
+- Homepage uses scroll-based transitions; assessment uses message-based
+- Reusable `DepthZoneProvider` React Context pattern
+- CSS custom properties enable smooth, performant transitions
 
 ### **Phase 4: Results Reveal (28-30 minutes) — THE CELEBRATION**
 

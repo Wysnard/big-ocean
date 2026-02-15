@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { Schema as S } from "effect";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { FacetSidePanel } from "@/components/FacetSidePanel";
@@ -7,17 +8,17 @@ import { useMessageEvidence } from "@/hooks/use-evidence";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
+const ChatSearchParams = S.Struct({
+	sessionId: S.optional(S.String),
+	highlightMessageId: S.optional(S.String),
+	highlightQuote: S.optional(S.String),
+	highlightStart: S.optional(S.Number),
+	highlightEnd: S.optional(S.Number),
+	highlightScore: S.optional(S.Number),
+});
+
 export const Route = createFileRoute("/chat/")({
-	validateSearch: (search: Record<string, unknown>) => {
-		return {
-			sessionId: (search.sessionId as string) || undefined,
-			highlightMessageId: (search.highlightMessageId as string) || undefined,
-			highlightQuote: (search.highlightQuote as string) || undefined,
-			highlightStart: typeof search.highlightStart === "number" ? search.highlightStart : undefined,
-			highlightEnd: typeof search.highlightEnd === "number" ? search.highlightEnd : undefined,
-			highlightScore: typeof search.highlightScore === "number" ? search.highlightScore : undefined,
-		};
-	},
+	validateSearch: (search) => S.decodeUnknownSync(ChatSearchParams)(search),
 	beforeLoad: async (context) => {
 		const { search } = context;
 
