@@ -711,19 +711,21 @@ So that **I experience the product's core value proposition (conversational pers
   - Current zone name displayed below the track
 **And** the depth meter only appears when the conversation section is in the viewport
 
-**Given** I view the trait carousel embed
+**Given** I view the trait stack embed
 **When** it appears inside a Nerin chat bubble
-**Then** I see a horizontally swipeable carousel with 5 trait cards:
-  - Each card shows: trait geometric shape, trait name (in trait color), description, 6 facet pills
-  - Scroll-snap alignment for clean paging
-  - Dot navigation below (5 dots, active = Electric Pink)
-  - "← swipe →" hint text
-**And** the carousel is contained within an embed container (rounded, bordered, backdrop-blur)
+**Then** I see 5 stacked trait cards, each showing: trait geometric shape, trait name (in trait color), conversational description (Nerin voice)
+**And** clicking a trait card spawns a simulated user message ("Tell me more about {Trait}") and a Nerin response below the stack
+**And** the Nerin response shows the trait shape, "Six facets of {Trait}" header, and 6 facets with left accent bars in facet sub-colors
+**And** each facet shows its name in facet color and a conversational description
+**And** only one trait is expanded at a time (clicking another replaces the conversation pair)
+**And** the active card gets a trait-colored border while others dim
+**And** facets cascade in with staggered animation
+**And** the stack is contained within an embed container (rounded, bordered, backdrop-blur)
 
-**Given** I view the blurred preview embeds (OCEAN Code, Radar Chart, 30-Facet Bars)
-**When** they appear inside Nerin chat bubbles
-**Then** each shows a realistic but blurred (5px) preview of actual result data
-**And** hovering reduces blur to 2.5px and reveals a CTA pill ("Take assessment to reveal yours →", "See your scores →", "Reveal your 30 facets →")
+**Given** I view the blurred 30-Facet Bars preview embed
+**When** it appears inside a Nerin chat bubble
+**Then** it shows a realistic but blurred (5px) preview of the facet bar grid
+**And** hovering reduces blur to 2.5px and reveals a CTA pill ("Reveal your 30 facets →")
 **And** the blurred content is non-selectable and non-interactive
 
 **Given** I have scrolled past ~35% of the page
@@ -752,19 +754,47 @@ So that **I experience the product's core value proposition (conversational pers
 
 **Technical Details:**
 
-**Page Structure:**
+**Page Structure (8 Emotional Beats):**
+
+*Emotional arc: Introduction → Safety → Nuance/Hook → Value → Depth → Invitation*
+
 ```
-1. HERO — Two-column: headline + OCEAN shapes with breathing animation
-2. CONVERSATION — Scroll-reveal chat thread:
-   a. Nerin intro (2 messages)
-   b. User question about measurement
-   c. Trait carousel embed (5 swipeable cards)
-   d. User question about results
-   e. Blurred OCEAN Code embed
-   f. Blurred Radar Chart embed
-   g. Blurred 30-Facet Bars embed
-   h. User question about duration
-   i. Nerin closing message with CTA
+1. HERO — Two-column: headline + OCEAN shapes with breathing animation (unchanged)
+2. CONVERSATION — Scroll-reveal chat thread (8 beats):
+   a. Nerin intro — who we are:
+      "Big Ocean is a personality deep dive. Not a quiz with multiple
+      choice answers. Not a test that puts you in a box. It's a
+      conversation — between you and me."
+   b. Nerin safety + reward — vulnerability permission:
+      "I'm here to listen — not to question who or what you are.
+      Everything we talk about is for you. To understand yourself a
+      little better. And maybe, from there, to start living a little
+      more like yourself."
+   c. Nerin nuance reveal (3 messages):
+      "Personality tests tell you broad strokes."
+      "But you might be someone who loves to organize yet can't stop
+      procrastinating. Who wants everything perfect but struggles to
+      even start. Sound familiar?"
+      "That's the kind of nuance I'm listening for. Not labels.
+      Patterns that actually explain how you move through the world."
+   d. Trait stack embed — interactive trait exploration
+   e. User value question:
+      "What can I actually gain from all of this?"
+   f. Nerin value answer (2 messages):
+      "Clarity. About why you react the way you do. Why some things
+      drain you and others light you up. Why certain people feel
+      effortless and others feel like work."
+      "Not vague insights. Precise ones — grounded in decades of
+      personality science and backed by evidence from our actual
+      conversation."
+   g. Blurred 30-Facet Bars embed — depth preview
+      + Nerin: "Every facet backed by moments from our conversation.
+      Not algorithms guessing. Real evidence from the things you
+      actually said."
+   h. Nerin warm closing with CTA:
+      "Whenever you're ready. No rush. I'll be here."
+      [CTA Button: "Start the conversation"]
+      (muted) ~30 min · free · no account needed
 3. STICKY CHAT BAR — Fixed bottom input (appears at 35% scroll)
 4. DEPTH METER — Fixed left indicator (desktop only)
 ```
@@ -776,15 +806,17 @@ apps/front/src/components/home/
   ConversationFlow.tsx         # Scroll-reveal conversation container + depth color logic
   MessageGroup.tsx             # Reusable Nerin/User message bubble group
   ChatBubble.tsx               # Individual bubble with embed slot
-  TraitCarouselEmbed.tsx       # 5-card swipeable trait carousel
+  TraitStackEmbed.tsx          # Interactive conversational trait explorer
   BlurredPreviewEmbed.tsx      # Shared blur-wrap with hover reveal CTA
-  OceanCodePreview.tsx         # OCEAN code content for blur embed
-  RadarChartPreview.tsx        # Radar SVG content for blur embed
   FacetBarsPreview.tsx         # 30-facet bar grid content for blur embed
   DepthMeter.tsx               # Fixed left-side scroll indicator (desktop)
   ChatInputBar.tsx             # Sticky bottom chat bar
   DepthScrollProvider.tsx      # React context: scroll %, zone, isDark, theme mode
 ```
+
+Note: OceanCodePreview, RadarChartPreview, ShareCardPreview, and ComparisonTeaserPreview
+components exist but are NOT used on the homepage. They may be used elsewhere (results page, etc.).
+Homepage uses only TraitStackEmbed and FacetBarsPreview as embedded content.
 
 **Depth Scroll Color System:**
 ```typescript
@@ -827,10 +859,10 @@ const LIGHT_ZONES = [...AUTO_ZONES]; // Same transition as auto
 - [ ] Hero section: two-column layout with OCEAN shapes and breathing animation
 - [ ] Conversation thread with vertical line and scroll-reveal messages
 - [ ] Nerin avatar gradient (Teal → Pink), user avatar with theme-aware styling
-- [ ] Trait carousel embed: 5 swipeable cards with dot navigation
-- [ ] Blurred OCEAN Code preview with hover reveal CTA
-- [ ] Blurred Radar Chart preview with hover reveal CTA
-- [ ] Blurred 30-Facet Bars preview with hover reveal CTA
+- [ ] Trait stack embed: 5 clickable cards with conversational facet reveal
+- [ ] Blurred 30-Facet Bars preview with hover reveal CTA (only blurred embed on homepage)
+- [ ] Vulnerability/safety beat present in conversation flow (Beat 3)
+- [ ] Single user message with direct value question (Beat 5)
 - [ ] Depth scroll: background color interpolation across 5 zones (auto/light modes)
 - [ ] Dark mode: static Abyss Navy background, no scroll transition
 - [ ] Depth meter: fixed left-side indicator with zone labels (desktop only)
@@ -926,91 +958,197 @@ So that **seeing my results feels like a celebration of self-discovery, not a cl
 
 ---
 
-## Story 7.10: Assessment Chat UX Polish
+## Story 7.10: Assessment Chat - Depth Journey Design
 
-As a **User**,
-I want **the assessment chat to feel like a warm, immersive conversation with a distinct personality — the calmest expression of big-ocean's brand — rather than a clinical data-collection interface**,
-So that **I'm more engaged, comfortable, and authentic throughout the 30-minute assessment**.
+As a **User taking the 30-minute assessment**,
+I want **to feel immersed in a visual 'depth journey' that progresses from surface to abyss**,
+So that **the conversation feels like a meaningful exploration rather than a static form**.
 
-**Dependencies:** Story 7.1 (color tokens), Story 7.7 (Nerin avatar/illustrations)
+**Dependencies:** Story 7.1 (psychedelic color tokens), Story 7.7 (Nerin avatar), Story 7.8 (depth scroll pattern precedent)
 
-**Scope:** Frontend-only — zero backend/API changes.
+**Scope:** Frontend-only — zero backend/API changes. Includes reusable chat component architecture for both homepage and assessment.
+
+**Design Reference:** `_bmad-output/ux-explorations/assessment-chat/direction-1-depth-journey.html`
 
 ### Requirements
 
+**5-Zone Depth Progression System:**
+
+| Zone | Progress Range | Background (Light) | Background (Dark) | Visual Metaphor |
+|------|---------------|-------------------|-------------------|----------------|
+| Surface | 0-20% | `#FFF8F0` (Warm Cream) | `#2A2A3E` | Warm-up, establishing rapport |
+| Shallows | 20-40% | `#FFF0E8` (Peachy) | `#3A3A52` | Initial trait exploration |
+| Mid | 40-60% | `#FFE8D8` (Coral) | `#4A4A66` | Deep questioning, nuance mining |
+| Deep | 60-80% | `#282643` (Deep Purple) | `#1A1A2E` | Evidence synthesis, pattern recognition |
+| Abyss | 80-100% | `#0A0E27` (Navy) | `#0A0E27` | Final reflections, completion |
+
+**Zone Thresholds:** Calculated as `(messageCount / totalMessages) * 100` → zone index (0-4)
+
+**Functional Requirements:**
+
 | # | Requirement | Description |
 |---|---|---|
-| FR-7.10.1 | Multi-message auto-greeting | 2-3 staggered messages (0/1200/2000ms delays). Msg 1: intro. Msg 2: context framing. Msg 3: rotating opening question. Client-side only. |
-| FR-7.10.2 | Nerin-focused minimal header | Remove raw session ID and clinical title. Replace with minimal "Nerin" + Diver avatar. |
-| FR-7.10.3 | Nerin Diver avatar in messages | Diver avatar on all assistant messages. Idle/reading/thinking states. Confidence-based CSS tiers (3 levels). |
-| FR-7.10.4 | Progress milestones | In-chat milestone badges at 25%/50%/70% with Nerin-voice notifications. |
-| FR-7.10.5 | In-chat celebration | Full-width milestone message card (not modal). Visually distinct (archetype-colored). CTAs: "View Results" + "Keep Exploring". Input state changes during display. |
-| FR-7.10.6 | Textarea + rotating placeholders | Auto-resizing textarea with Shift+Enter. Two-tier rotating placeholder pool: playful (messages 1-15), calmer (16+). 20+ placeholders. |
-| FR-7.10.7 | Relative timestamps | "just now", "2 min ago" instead of raw `toLocaleTimeString()`. |
-| FR-7.10.8 | Mobile polish | Wider bubbles (90%), larger touch targets (44px+), proper safe-area handling. |
-| FR-7.10.9 | Nerin-voice progress labels | Replace clinical "X% assessed" with: "Getting to know you..." -> "Understanding your patterns..." -> "Almost there..." |
-| FR-7.10.10 | Remove "Start Assessment" button | Auto-greeting + visible inviting input = sufficient CTA. |
-| FR-7.10.11 | Chat-to-results navigation | When user has completed assessment (>= 70%), show "View Your Results" link in chat header. |
+| FR-7.10.1 | Fixed Depth Meter | Left sidebar (desktop) showing current zone, 5 pip indicators, progress fill. Hidden on mobile (< 768px). |
+| FR-7.10.2 | Background Color Transitions | Smooth 600ms ease-in-out transitions tied to message count (not scroll). CSS custom properties updated via React state. |
+| FR-7.10.3 | Zone Pip Indicators | Visual feedback showing which zone user is currently in. Active pip highlighted with accent color. |
+| FR-7.10.4 | Inline Facet Icons | When Nerin mentions traits/facets, inline SVG icons appear (circles, rectangles, triangles matching OCEAN shapes). |
+| FR-7.10.5 | Mini Evidence Cards | Embedded visualizations in message stream showing confidence bars for mentioned facets. |
+| FR-7.10.6 | Dark Mode Support | Zone-appropriate color transitions in dark mode. Text color inverts at Deep zone (60%+). |
+| FR-7.10.7 | Reduced Motion | Respect `prefers-reduced-motion` — disable all transitions, show instant final state. |
+| FR-7.10.8 | Mobile Responsive | Hide depth meter on screens < 768px. Preserve zone background transitions. |
+| FR-7.10.9 | Reusable Chat Components | Extract shared components to `packages/ui`: ChatConversation, Message, MessageBubble, Avatar. |
 
-### Chat Interface Visual Rules (from UX Spec)
+### Component Architecture
 
-The chat screen uses the **calmest expression** of the brand:
-- Background: Warm Cream (`#FFF8F0`) / Abyss Navy (`#0A0E27`) — no color blocks
-- Nerin avatar: Small Diver character, consistent across messages
-- Message bubbles: Clean, rounded (16px radius, 4px sender corner), generous padding
-- User bubbles: Surface color (`--card`), Nerin bubbles: slightly elevated (`--accent`)
-- Ocean accents: Subtle wave pattern at 5-10% opacity on background (not distracting)
-- Psychedelic energy ONLY in: milestone toasts (brief, fades back to calm) and results transition
+**Shared Components (packages/ui):**
+- `<ChatConversation>` — Parent wrapper managing message stream, typing indicators, scroll behavior
+- `<Message>` — Individual message component with bubble, avatar, timestamp
+- `<MessageBubble>` — Styled container for message content with sender-appropriate corners
+- `<Avatar>` — Reusable avatar component with fallback patterns and state support (idle/thinking)
 
-**Technical Details:**
+**Assessment-Specific Components (apps/front):**
+- `<DepthZoneProvider>` — React Context managing current zone based on message count
+- `<DepthMeter>` — Fixed left sidebar with 5 zone pips and animated progress fill
+- `<FacetIcon>` — Inline SVG icons for traits/facets (O=circle, C=half-circle, E=rectangle, A=triangle, N=diamond)
+- `<EvidenceCard>` — Embedded mini-visualization showing facet name + confidence bar
 
-**New Files:**
-- `apps/front/src/constants/nerin-greeting.ts` — greeting messages, opening question pool
-- `apps/front/src/constants/chat-placeholders.ts` — two-tier placeholder pools (20+ entries)
+**Component API Design:**
+```typescript
+// Shared ChatConversation supports both static (homepage) and dynamic (assessment) contexts
+<ChatConversation
+  messages={messages}
+  renderMessage={(msg) => <Message {...msg} />}
+  renderAvatar={(role) => <Avatar role={role} state={state} />}
+  autoScroll={true}
+  typingIndicator={isTyping}
+/>
 
-**Modified Files:**
-- `apps/front/src/components/TherapistChat.tsx` — header, welcome flow, celebration, input, timestamps, mobile, results link
-- `apps/front/src/components/ProgressBar.tsx` — Nerin-voice labels
-
-**Greeting Copy (updated 2026-02-13 — Party Mode insights):**
+// Assessment wraps with DepthZoneProvider
+<DepthZoneProvider messageCount={messages.length} totalMessages={27}>
+  <DepthMeter />
+  <ChatConversation {...props} />
+</DepthZoneProvider>
 ```
-Message 1: "Hey there! I'm Nerin — I'm here to help you understand your personality through conversation. No multiple choice, no right answers, just us talking."
-Message 2: "Here's the thing: the more openly and honestly you share, the more accurate and meaningful your insights will be. This is a judgment-free space — be as real as you'd like. The honest answer, even if it's messy or contradictory, is always more valuable than the polished one."
-Message 3: [Random from pool]:
-  - "If your closest friend described you in three words, what would they say?"
-  - "What's something most people get wrong about you?"
-  - "Picture a perfect Saturday with nothing planned — what does your ideal day look like?"
-  - "Think of a moment recently when you felt most like yourself — what were you doing?"
+
+### Technical Implementation
+
+**Zone Calculation (React Hook):**
+```typescript
+function useDepthZone(messageCount: number, totalMessages: number) {
+  const progress = messageCount / totalMessages;
+  const zoneIndex = Math.floor(progress / 0.2); // 0-4
+  return DEPTH_ZONES[Math.min(zoneIndex, 4)];
+}
 ```
 
-### Implementation Order
+**CSS Custom Properties Pattern:**
+```css
+:root {
+  --zone-bg: #FFF8F0;
+  --zone-fg: #1A1A2E;
+  --zone-transition: background-color 600ms ease-in-out;
+}
 
-1. Identity cluster (FR-7.10.1, 7.10.2, 7.10.3, 7.10.10) — core transformation
-2. Celebration (FR-7.10.5) — climax moment rework
-3. Input (FR-7.10.6) — conversational feel
-4. Progress (FR-7.10.4, 7.10.9) — engagement loop
-5. Polish (FR-7.10.7, 7.10.8) — refinements
-6. Navigation (FR-7.10.11) — chat-to-results link
+body {
+  background-color: var(--zone-bg);
+  color: var(--zone-fg);
+  transition: var(--zone-transition);
+}
 
-**Acceptance Checklist:**
-- [ ] Nerin auto-greets with 2-3 staggered messages (no start button)
-- [ ] Opening question rotates from pool of 3-4 options
-- [ ] Header shows "Nerin" + Diver avatar only (no session ID, no clinical title)
-- [ ] Diver avatar appears on all assistant messages with states
-- [ ] Avatar opacity scales with confidence (3 CSS tiers)
-- [ ] Chat background uses calmest brand expression (Warm Cream / Abyss Navy)
-- [ ] Message bubbles use 16px radius, 4px sender corner
-- [ ] Progress milestones as in-chat badges at 25%/50%/70%
-- [ ] Celebration is in-chat styled card (not modal) with archetype-colored border
-- [ ] Auto-resizing textarea with Shift+Enter and rotating placeholders
-- [ ] Two-tier placeholder pools: playful (1-15), calmer (16+)
-- [ ] Timestamps show relative time ("just now", "2 min ago")
+@media (prefers-reduced-motion: reduce) {
+  body { transition: none; }
+}
+```
+
+**Depth Meter Styling:**
+- Fixed positioning: `position: fixed; left: 24px; top: 50%; transform: translateY(-50%);`
+- Z-index: 90 (above chat, below modals)
+- Width: 48px on desktop
+- Progress fill: CSS `height` interpolation (0-100%)
+- Zone pips: 5 circles with active state indication
+
+**Color Interpolation:**
+- React state updates CSS custom properties on zone change
+- Smooth transitions handled by CSS `transition` property
+- Dark mode: Check `prefers-color-scheme` and apply dark zone colors
+
+**Facet Icon Integration:**
+```typescript
+// Nerin message with inline facet mention
+<MessageBubble>
+  Tell me about your <FacetIcon facet="imagination" /> creative side...
+</MessageBubble>
+```
+
+**Evidence Card Structure:**
+```typescript
+<EvidenceCard facets={[
+  { name: 'Imagination', confidence: 0.78 },
+  { name: 'Artistic Interests', confidence: 0.65 }
+]} />
+```
+
+### Implementation Phases
+
+**Phase 1: Extract Reusable Components** (prerequisite)
+- Create `ChatConversation`, `Message`, `MessageBubble`, `Avatar` in `packages/ui`
+- Design component API to support both static (homepage) and dynamic (assessment) contexts
+- Write Storybook stories for all shared components
+- Document composition patterns and prop contracts
+
+**Phase 2: Build Depth Journey Components** (assessment-specific)
+- Implement `DepthZoneProvider` React Context with zone calculation logic
+- Build `DepthMeter` fixed sidebar with pip indicators and progress fill
+- Create `FacetIcon` components for inline trait/facet mentions (OCEAN shapes)
+- Build `EvidenceCard` mini-visualization with confidence bars
+- Wire up zone transitions with CSS custom properties
+
+**Phase 3: Integrate Shared Components** (composition)
+- Compose `ChatConversation` with depth journey enhancements
+- Ensure message bubbles, avatars, typing states use shared components
+- Test zone transitions with message count progression
+- Validate mobile responsive behavior (depth meter hidden < 768px)
+
+**Phase 4: Homepage Refactoring** (optional, if Story 7.8 needs updates)
+- Migrate homepage conversation UI to use shared components
+- Ensure no regression in homepage depth scroll behavior (scroll-based vs message-based)
+- Validate homepage maintains its existing visual design
+
+### Acceptance Checklist
+
+**Core Depth Journey Features:**
+- [ ] 5-zone depth progression system implemented (Surface → Shallows → Mid → Deep → Abyss)
+- [ ] Fixed depth meter on left sidebar showing current zone and progress
+- [ ] Background color transitions tied to message count (not scroll)
+- [ ] Zone pip indicators update as conversation progresses
+- [ ] Zone thresholds correct: 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
+- [ ] Smooth CSS transitions (600ms ease-in-out) for all zone changes
+- [ ] Inline facet icons appear in Nerin's messages when traits/facets mentioned
+- [ ] Mini evidence cards embedded in message stream showing confidence bars
+
+**Reusable Component Architecture:**
+- [ ] `ChatConversation`, `Message`, `MessageBubble`, `Avatar` components delivered in `packages/ui`
+- [ ] Component API supports both static (homepage) and dynamic (assessment) contexts
+- [ ] Storybook documentation for all shared chat components
+- [ ] No code duplication between homepage and assessment chat UI
+- [ ] Homepage successfully uses shared components (if Phase 4 executed)
+
+**Accessibility & Responsiveness:**
+- [ ] Dark mode support with zone-appropriate theming
+- [ ] Text color inverts to white at Deep zone (60%+) for contrast
+- [ ] `prefers-reduced-motion` respected (disable all transitions)
+- [ ] Mobile responsive: depth meter hidden on screens < 768px
 - [ ] Mobile: wider bubbles (90%), proper safe-area, 44px+ touch targets
-- [ ] Progress bar labels use Nerin-voice contextual text
-- [ ] "View Your Results" link visible when assessment completed (>= 70%)
-- [ ] All existing functionality preserved (error handling, evidence highlighting, facet panel)
+- [ ] WCAG AA contrast ratios maintained across all zones
+
+**Integration & Quality:**
+- [ ] All existing assessment chat functionality preserved
+- [ ] Error handling, evidence highlighting, facet panel work correctly
+- [ ] Visual regression tests pass for all 5 zones
+- [ ] E2E tests updated for new UI elements (depth meter, evidence cards)
 - [ ] Works in both light and dark modes
 - [ ] Zero backend/API changes
+- [ ] Pattern matches Story 7.8 (homepage depth scroll) technical approach
 
 ---
 

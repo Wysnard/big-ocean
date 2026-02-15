@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assessment Chat Redesign — 4 Directions</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#FFF8F0;--fg:#1A1A2E;--primary:#FF0080;--secondary:#FF6B2B;
+  --tertiary:#00B4A6;--card:#FFF0E8;--muted:#6B6580;--border:#FFD6C4;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--fg);padding:40px 24px;min-height:100vh}
+
+/* HEADER */
+header{max-width:1200px;margin:0 auto 60px;text-align:center}
+header h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(2rem,4vw,3rem);font-weight:700;margin-bottom:16px}
+header h1 span{background:linear-gradient(120deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+header p{color:var(--muted);font-size:1.1rem;line-height:1.6;max-width:700px;margin:0 auto 12px}
+header .meta{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted);letter-spacing:.1em}
+
+/* DIRECTIONS GRID */
+.directions{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+.direction-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;text-decoration:none;color:var(--fg);transition:all .3s ease;position:relative;overflow:hidden}
+.direction-card:hover{border-color:var(--primary);box-shadow:0 8px 32px rgba(255,0,128,.12);transform:translateY(-4px)}
+.direction-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--primary),var(--secondary));opacity:0;transition:opacity .3s}
+.direction-card:hover::before{opacity:1}
+
+.direction-num{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.15em;margin-bottom:12px}
+.direction-title{font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:700;margin-bottom:8px}
+.direction-subtitle{font-size:.9rem;color:var(--muted);margin-bottom:20px;font-style:italic}
+.direction-desc{font-size:.9rem;line-height:1.65;margin-bottom:20px}
+
+.features{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.feature{display:flex;align-items:flex-start;gap:8px;font-size:.85rem;color:var(--muted)}
+.feature-icon{flex-shrink:0;width:18px;height:18px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700}
+
+.complexity{display:flex;align-items:center;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.complexity-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.1em}
+.complexity-bar{flex:1;height:4px;background:rgba(0,0,0,.06);border-radius:2px;overflow:hidden}
+.complexity-fill{height:100%;background:linear-gradient(90deg,var(--tertiary),var(--primary));border-radius:2px}
+
+.cta-arrow{font-size:1.2rem;color:var(--primary);transition:transform .3s}
+.direction-card:hover .cta-arrow{transform:translateX(4px)}
+
+/* BACK LINK */
+.back{max-width:1200px;margin:0 auto 24px;display:inline-block;color:var(--muted);text-decoration:none;font-size:.9rem;transition:color .2s}
+.back:hover{color:var(--primary)}
+
+/* FOOTER */
+footer{max-width:1200px;margin:60px auto 0;padding-top:40px;border-top:1px solid var(--border);text-align:center}
+footer p{color:var(--muted);font-size:.85rem;line-height:1.6;margin-bottom:12px}
+footer a{color:var(--primary);text-decoration:none;font-weight:600}
+footer a:hover{text-decoration:underline}
+
+@media(max-width:768px){
+  .directions{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<a href="../homepage-directions/index.html" class="back">&larr; Back to Homepage Directions</a>
+
+<header>
+  <h1>Assessment Chat <span>Redesign</span></h1>
+  <p>Inspired by the conversation-driven homepage, here are 4 distinct directions for redesigning the live assessment chat experience.</p>
+  <div class="meta">INTERACTIVE PROTOTYPES • CLICK TO EXPLORE</div>
+</header>
+
+<div class="directions">
+
+  <!-- DIRECTION 1 -->
+  <a href="direction-1-depth-journey.html" class="direction-card">
+    <div class="direction-num">DIRECTION 01</div>
+    <div class="direction-title">Depth Journey</div>
+    <div class="direction-subtitle">Progressive Revelation</div>
+    <div class="direction-desc">The assessment becomes a literal "deep dive" with visual depth cues tracking progress through 5 conversation zones.</div>
+    <div class="features">
+      <div class="feature"><div class="feature-icon">✓</div> Fixed depth meter with 5 zones (Surface → Abyss)</div>
+      <div class="feature"><div class="feature-icon">✓</div> Background color transitions (warm → deep navy)</div>
+      <div class="feature"><div class="feature-icon">✓</div> Inline facet icons with hover definitions</div>
+      <div class="feature"><div class="feature-icon">✓</div> Mini evidence cards in message stream</div>
+    </div>
+    <div class="complexity">
+      <span class="complexity-label">COMPLEXITY</span>
+      <div class="complexity-bar"><div class="complexity-fill" style="width:35%"></div></div>
+      <span class="complexity-label">LOW-MED</span>
+    </div>
+    <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:.75rem;color:var(--muted)">Best for: Mystery lovers</span>
+      <span class="cta-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- DIRECTION 2 -->
+  <a href="direction-2-evidence-trails.html" class="direction-card">
+    <div class="direction-num">DIRECTION 02</div>
+    <div class="direction-title">Evidence Trails</div>
+    <div class="direction-subtitle">Transparent Reasoning</div>
+    <div class="direction-desc">Make Nerin's analytical process visible through a live facet constellation sidebar showing real-time evidence collection.</div>
+    <div class="features">
+      <div class="feature"><div class="feature-icon">✓</div> Facet constellation sidebar (30 facets as nodes)</div>
+      <div class="feature"><div class="feature-icon">✓</div> Animated lines connecting messages to facets</div>
+      <div class="feature"><div class="feature-icon">✓</div> Real-time confidence bars per facet</div>
+      <div class="feature"><div class="feature-icon">✓</div> Evidence cards showing analytical patterns</div>
+    </div>
+    <div class="complexity">
+      <span class="complexity-label">COMPLEXITY</span>
+      <div class="complexity-bar"><div class="complexity-fill" style="width:65%"></div></div>
+      <span class="complexity-label">MEDIUM-HIGH</span>
+    </div>
+    <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:.75rem;color:var(--muted)">Best for: Data-curious users</span>
+      <span class="cta-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- DIRECTION 3 -->
+  <a href="direction-3-narrative-chapters.html" class="direction-card">
+    <div class="direction-num">DIRECTION 03</div>
+    <div class="direction-title">Narrative Chapters</div>
+    <div class="direction-subtitle">Story Arc Structure</div>
+    <div class="direction-desc">Frame the assessment as a 5-chapter story where each chapter explores one Big Five trait with distinct visual themes.</div>
+    <div class="features">
+      <div class="feature"><div class="feature-icon">✓</div> 5 chapters (one per trait) with unique colors/shapes</div>
+      <div class="feature"><div class="feature-icon">✓</div> Full-bleed chapter title cards with taglines</div>
+      <div class="feature"><div class="feature-icon">✓</div> Progress breadcrumbs at top navigation</div>
+      <div class="feature"><div class="feature-icon">✓</div> Chapter summaries with score previews</div>
+    </div>
+    <div class="complexity">
+      <span class="complexity-label">COMPLEXITY</span>
+      <div class="complexity-bar"><div class="complexity-fill" style="width:50%"></div></div>
+      <span class="complexity-label">MEDIUM</span>
+    </div>
+    <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:.75rem;color:var(--muted)">Best for: Story lovers</span>
+      <span class="cta-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- DIRECTION 4 -->
+  <a href="direction-4-collaborative-canvas.html" class="direction-card">
+    <div class="direction-num">DIRECTION 04</div>
+    <div class="direction-title">Collaborative Canvas</div>
+    <div class="direction-subtitle">Co-Creation Mode</div>
+    <div class="direction-desc">Transform chat into a collaborative workspace with dual-pane interface showing live personality canvas updating in real-time.</div>
+    <div class="features">
+      <div class="feature"><div class="feature-icon">✓</div> Split-screen: chat (left) + live canvas (right)</div>
+      <div class="feature"><div class="feature-icon">✓</div> Interactive radar chart updating in real-time</div>
+      <div class="feature"><div class="feature-icon">✓</div> Facet bubbles showing active evidence areas</div>
+      <div class="feature"><div class="feature-icon">✓</div> Evidence fragments as draggable sticky notes</div>
+    </div>
+    <div class="complexity">
+      <span class="complexity-label">COMPLEXITY</span>
+      <div class="complexity-bar"><div class="complexity-fill" style="width:85%"></div></div>
+      <span class="complexity-label">HIGH</span>
+    </div>
+    <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:.75rem;color:var(--muted)">Best for: Interactive users</span>
+      <span class="cta-arrow">→</span>
+    </div>
+  </a>
+
+</div>
+
+<footer>
+  <p><strong>Design Principles:</strong> Conversational rhythm • Progressive disclosure • Rich embeds • Depth metaphor • Responsive design</p>
+  <p>Created: 2026-02-14 | <a href="../assessment-chat-redesign-directions.md">View Design Doc</a></p>
+</footer>
+
+</body>
+</html>

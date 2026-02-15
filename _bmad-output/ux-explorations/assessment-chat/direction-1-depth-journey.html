@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction 1: Depth Journey — Assessment Chat</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#FFF8F0;--fg:#1A1A2E;--primary:#FF0080;--secondary:#FF6B2B;
+  --tertiary:#00B4A6;--card:#FFF0E8;--muted:#6B6580;--border:#FFD6C4;
+  --trait-o:#7B2FBE;--trait-c:#D4722A;--trait-e:#E0307B;--trait-a:#00B4A6;--trait-n:#1A1A5E;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;color:var(--fg);background:var(--bg);transition:background .6s,color .6s;margin:0;padding:0}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 40px;display:flex;justify-content:space-between;align-items:center;transition:all .35s}
+nav.light{background:rgba(255,248,240,.88);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,214,196,.5)}
+nav.dark{background:rgba(10,14,39,.88);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.05)}
+.logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.1rem;display:flex;align-items:center;gap:8px}
+.logo .dot{width:9px;height:9px;border-radius:50%;background:var(--primary)}
+nav.light .logo{color:var(--fg)}
+nav.dark .logo{color:#fff}
+.nav-links{display:flex;gap:20px;align-items:center}
+.nav-links a{text-decoration:none;font-size:.85rem;transition:color .3s}
+nav.light .nav-links a{color:var(--muted)}
+nav.dark .nav-links a{color:rgba(255,255,255,.45)}
+
+/* DEPTH METER */
+.depth-meter{position:fixed;left:20px;top:50%;transform:translateY(-50%);z-index:90;display:flex;flex-direction:column;align-items:center}
+.depth-track{width:2px;height:200px;border-radius:1px;position:relative;transition:background .35s}
+.depth-track-light{background:rgba(0,0,0,.07)}
+.depth-track-dark{background:rgba(255,255,255,.08)}
+.depth-fill{position:absolute;top:0;left:0;width:100%;border-radius:1px;background:var(--primary);transition:height .3s ease}
+.depth-pips{position:absolute;left:12px;top:0;height:100%;display:flex;flex-direction:column;justify-content:space-between}
+.depth-pip{font-family:'JetBrains Mono',monospace;font-size:.45rem;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;transition:color .35s}
+.depth-pip-light{color:rgba(0,0,0,.2)}
+.depth-pip-dark{color:rgba(255,255,255,.15)}
+.depth-pip.active{color:var(--primary)!important;font-weight:600}
+.depth-zone{font-family:'JetBrains Mono',monospace;font-size:.5rem;letter-spacing:.06em;color:var(--primary);margin-top:10px;text-align:center}
+
+/* CHAT CONTAINER */
+.chat-container{max-width:750px;margin:0 auto;padding:100px 24px 160px;min-height:100vh}
+
+/* MESSAGES */
+.msg{display:flex;gap:11px;margin-bottom:20px;opacity:0;transform:translateY(20px);transition:all .5s cubic-bezier(.16,1,.3,1)}
+.msg.vis{opacity:1;transform:translateY(0)}
+.msg.n{flex-direction:row}
+.msg.u{flex-direction:row-reverse}
+.av{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;font-family:'Space Grotesk',sans-serif}
+.msg.n .av{background:linear-gradient(135deg,var(--tertiary),var(--primary));color:#fff}
+.msg.u .av{background:var(--card);border:1px solid var(--border);transition:background .35s,border-color .35s,color .35s}
+.bub{padding:16px 20px;border-radius:16px;max-width:85%;font-size:.92rem;line-height:1.65;transition:background .35s,border-color .35s,color .35s}
+.msg.n .bub{background:var(--card);border:1px solid var(--border);border-bottom-left-radius:5px}
+.msg.u .bub{background:linear-gradient(120deg,var(--primary),var(--secondary));color:#fff;border-bottom-right-radius:5px}
+
+/* FACET ICON (inline) */
+.facet-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;font-size:.6rem;color:#fff;margin:0 2px;position:relative;cursor:help;vertical-align:middle}
+.facet-icon.o{background:var(--trait-o)}
+.facet-icon.c{background:var(--trait-c)}
+.facet-icon.e{background:var(--trait-e)}
+.facet-icon.a{background:var(--trait-a)}
+.facet-icon.n{background:var(--trait-n)}
+
+/* EMBED */
+.embed{margin-top:14px;border-radius:12px;padding:16px;background:rgba(255,255,255,.4);border:1px solid var(--border);backdrop-filter:blur(4px);transition:background .35s,border-color .35s}
+
+/* FACET BARS MINI */
+.facet-mini{display:flex;flex-direction:column;gap:6px}
+.facet-row{display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--muted);transition:color .35s}
+.facet-bar{height:5px;border-radius:3px;background:rgba(0,0,0,.06);flex:1;overflow:hidden;transition:background .35s}
+.facet-fill{height:100%;border-radius:3px;transition:width .5s ease}
+
+/* CHAT INPUT */
+.chat-input-bar{position:fixed;bottom:0;left:0;right:0;z-index:95;padding:16px 24px;display:flex;justify-content:center;gap:10px;transition:background .35s,border-color .35s}
+.chat-input-bar.light{background:rgba(255,248,240,.92);backdrop-filter:blur(14px);border-top:1px solid var(--border)}
+.chat-input-bar.dark{background:rgba(10,14,39,.92);backdrop-filter:blur(14px);border-top:1px solid rgba(255,255,255,.06)}
+.chat-input{flex:1;max-width:600px;padding:13px 20px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;transition:background .35s,border-color .35s,color .35s}
+.input-light{background:var(--card);border:1px solid var(--border);color:var(--fg)}
+.input-dark{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.9)}
+.send-btn{background:linear-gradient(120deg,var(--primary),var(--secondary));color:#fff;border:none;padding:13px 26px;border-radius:12px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:.9rem;cursor:pointer;transition:transform .2s}
+.send-btn:hover{transform:translateY(-1px)}
+
+/* DARK MODE OVERRIDES */
+body.dark{background:#0A0E27;color:#fff}
+body.dark .msg.u .av{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);color:#fff}
+body.dark .msg.n .bub{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#fff}
+body.dark .embed{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)}
+body.dark .facet-bar{background:rgba(255,255,255,.08)}
+
+/* ZONE TRANSITIONS */
+body.zone-surface{background:#FFF8F0;color:#1A1A2E}
+body.zone-shallows{background:#FFF0E8;color:#1A1A2E}
+body.zone-mid{background:#FFE8D8;color:#1A1A2E}
+body.zone-deep{background:#282643;color:#fff}
+body.zone-abyss{background:#0A0E27;color:#fff}
+
+@media(max-width:768px){
+  .depth-meter{display:none}
+  nav{padding:12px 18px}
+  .chat-container{padding:80px 16px 140px}
+}
+</style>
+</head>
+<body class="zone-surface">
+
+<nav class="light" id="nav">
+  <div class="logo"><span class="dot"></span> Big Ocean</div>
+  <div class="nav-links">
+    <a href="../homepage-directions/index.html">&larr; Directions</a>
+    <a href="#">Progress: <span id="progressPct">0%</span></a>
+  </div>
+</nav>
+
+<!-- DEPTH METER -->
+<div class="depth-meter">
+  <div style="position:relative">
+    <div class="depth-track depth-track-light" id="dTrack">
+      <div class="depth-fill" id="dFill" style="height:0%"></div>
+    </div>
+    <div class="depth-pips" id="dPips">
+      <span class="depth-pip depth-pip-light active">Surface</span>
+      <span class="depth-pip depth-pip-light">Shallows</span>
+      <span class="depth-pip depth-pip-light">Mid</span>
+      <span class="depth-pip depth-pip-light">Deep</span>
+      <span class="depth-pip depth-pip-light">Abyss</span>
+    </div>
+  </div>
+  <div class="depth-zone" id="dZone">Surface</div>
+</div>
+
+<div class="chat-container" id="chat">
+  <!-- Messages will be added here by JavaScript -->
+</div>
+
+<div class="chat-input-bar light" id="inputBar">
+  <input type="text" class="chat-input input-light" id="input" placeholder="Type your response...">
+  <button class="send-btn" onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+const messages = [
+  {type:'n',text:'Hi! I\'m Nerin. Over the next 30 minutes, we\'ll have a real conversation to map your personality across 30 facets.'},
+  {type:'n',text:'No multiple choice. No "on a scale of 1 to 5." Just us talking. Ready to begin?'},
+  {type:'u',text:'Yes, let\'s do this!'},
+  {type:'n',text:'Perfect. Let\'s start with something fun. Tell me about a time you took a creative risk—something that felt uncertain but exciting.'},
+  {type:'u',text:'I quit my stable job to start a design studio. It was terrifying but I knew I had to try.'},
+  {type:'n',text:'That takes serious courage <span class="facet-icon e">E</span>. What drew you to design specifically? Was it the visual art, the problem-solving, or something else?'},
+  {type:'u',text:'Both, honestly. I love when form and function come together beautifully.'},
+  {type:'n',text:'I\'m noticing patterns in your responses. Let me show you what I\'m seeing so far:<div class="embed"><div class="facet-mini"><div class="facet-row">🎨 Artistic Interests <div class="facet-bar"><div class="facet-fill" style="width:75%;background:var(--trait-o)"></div></div></div><div class="facet-row">🧠 Intellect <div class="facet-bar"><div class="facet-fill" style="width:68%;background:var(--trait-o)"></div></div></div><div class="facet-row">🚀 Adventurousness <div class="facet-bar"><div class="facet-fill" style="width:82%;background:var(--trait-o)"></div></div></div></div></div>'},
+  {type:'u',text:'Wow, that\'s already pretty accurate.'},
+  {type:'n',text:'We\'re just getting started. Tell me about how you organize your workspace. Chaos or order?'},
+  {type:'u',text:'Organized chaos. Everything has a place, but it might not make sense to others.'},
+  {type:'n',text:'Interesting <span class="facet-icon c">C</span>. How do you handle deadlines? Do you plan ahead or work best under pressure?'},
+  {type:'u',text:'I plan ahead but often end up doing my best work in the final push.'},
+  {type:'n',text:'That tension between planning and spontaneity is fascinating. Let\'s explore your social energy next...'},
+  {type:'u',text:'Sure, go ahead.'},
+  {type:'n',text:'When you\'re at a party, are you energized by the crowd or do you need to step away and recharge?'},
+  {type:'u',text:'I enjoy being social but definitely need quiet time to recharge after.'},
+  {type:'n',text:'Classic pattern <span class="facet-icon e">E</span>. How about one-on-one conversations versus group settings?'},
+  {type:'u',text:'I much prefer deep one-on-one conversations. Groups can feel overwhelming.'},
+  {type:'n',text:'We\'re going deeper now. I want to understand your emotional landscape. How do you process stress?'},
+  {type:'u',text:'I tend to internalize it initially, then talk it through with someone I trust.'},
+  {type:'n',text:'And when you\'re making important decisions, what role do emotions play versus pure logic?'},
+  {type:'u',text:'Both. I use logic to evaluate options but emotions to make the final call.'},
+  {type:'n',text:'Beautiful integration <span class="facet-icon a">A</span> <span class="facet-icon n">N</span>. Almost done. Final question: What matters most to you when working with others?'},
+  {type:'u',text:'Honesty and mutual respect. I can\'t stand passive-aggressive behavior.'},
+  {type:'n',text:'Perfect. Our conversation is complete. Here\'s your personality profile emerging...'}
+];
+
+const zones = [
+  {name:'Surface',start:0,end:0.2,bg:'#FFF8F0',dark:false},
+  {name:'Shallows',start:0.2,end:0.4,bg:'#FFF0E8',dark:false},
+  {name:'Mid',start:0.4,end:0.6,bg:'#FFE8D8',dark:false},
+  {name:'Deep',start:0.6,end:0.8,bg:'#282643',dark:true},
+  {name:'Abyss',start:0.8,end:1.0,bg:'#0A0E27',dark:true}
+];
+
+let currentIndex = 0;
+const chat = document.getElementById('chat');
+const dFill = document.getElementById('dFill');
+const dZone = document.getElementById('dZone');
+const pips = document.querySelectorAll('.depth-pip');
+const nav = document.getElementById('nav');
+const inputBar = document.getElementById('inputBar');
+const dTrack = document.getElementById('dTrack');
+const progressPct = document.getElementById('progressPct');
+
+function addMessage(msg){
+  const div = document.createElement('div');
+  div.className = `msg ${msg.type}`;
+  div.innerHTML = `
+    <div class="av">${msg.type === 'n' ? 'N' : 'Y'}</div>
+    <div class="bub">${msg.text}</div>
+  `;
+  chat.appendChild(div);
+  setTimeout(()=>div.classList.add('vis'),50);
+}
+
+function updateDepth(){
+  const progress = currentIndex / messages.length;
+  dFill.style.height = `${progress * 100}%`;
+  progressPct.textContent = `${Math.round(progress * 100)}%`;
+
+  // Update zone
+  const zone = zones.find(z => progress >= z.start && progress < z.end) || zones[zones.length-1];
+  dZone.textContent = zone.name;
+  document.body.className = `zone-${zone.name.toLowerCase()}`;
+
+  // Update pips
+  pips.forEach((pip,i)=>{
+    const zoneProgress = progress / (1/zones.length);
+    pip.classList.toggle('active', i <= Math.floor(zoneProgress));
+    if(zone.dark){
+      pip.className = pip.className.replace('depth-pip-light','depth-pip-dark');
+      dTrack.className = 'depth-track depth-track-dark';
+      nav.className = 'dark';
+      inputBar.className = 'chat-input-bar dark';
+      document.getElementById('input').className = 'chat-input input-dark';
+    }else{
+      pip.className = pip.className.replace('depth-pip-dark','depth-pip-light');
+      dTrack.className = 'depth-track depth-track-light';
+      nav.className = 'light';
+      inputBar.className = 'chat-input-bar light';
+      document.getElementById('input').className = 'chat-input input-light';
+    }
+  });
+}
+
+function nextMessage(){
+  if(currentIndex < messages.length){
+    addMessage(messages[currentIndex]);
+    currentIndex++;
+    updateDepth();
+    if(currentIndex < messages.length){
+      const delay = messages[currentIndex-1].type === 'u' ? 1500 : 2000;
+      setTimeout(nextMessage, delay);
+    }
+  }
+}
+
+function sendMessage(){
+  const input = document.getElementById('input');
+  if(input.value.trim()){
+    addMessage({type:'u',text:input.value});
+    input.value = '';
+    setTimeout(()=>{
+      addMessage({type:'n',text:'That\'s a great insight. Tell me more about that...'});
+    },1500);
+  }
+}
+
+// Start conversation
+nextMessage();
+</script>
+
+</body>
+</html>

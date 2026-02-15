@@ -48,7 +48,7 @@ export function MobileNav() {
 		return unsub;
 	}, [router]);
 
-	const themeOrder: UserTheme[] = ["system", "light", "dark"];
+	const themeOrder: UserTheme[] = ["system", "dark", "light"];
 	const themeLabels: Record<UserTheme, string> = {
 		light: "Light",
 		dark: "Dark",

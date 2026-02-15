@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trait Stack — Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FFF8F0;
+    --fg: #1a1a2e;
+    --muted: #8a8a9a;
+    --card-bg: rgba(255,255,255,0.7);
+    --card-border: rgba(0,0,0,0.08);
+    --embed-bg: rgba(255,255,255,0.55);
+    --embed-border: rgba(0,0,0,0.08);
+    --bubble-nerin-bg: rgba(255,255,255,0.65);
+    --bubble-nerin-border: rgba(0,0,0,0.06);
+    --bubble-user-bg: linear-gradient(135deg, #FF0080 0%, #FF6B2B 100%);
+    --bubble-user-fg: #fff;
+
+    /* Trait colors */
+    --trait-openness: #A855F7;
+    --trait-conscientiousness: #FF6B2B;
+    --trait-extraversion: #FF0080;
+    --trait-agreeableness: #00B4A6;
+    --trait-neuroticism: #4040C0;
+
+    /* Facet sub-colors — gradient steps within each trait hue */
+    --facet-imagination: #A855F7;
+    --facet-artistic_interests: #B46CF7;
+    --facet-emotionality: #C084F8;
+    --facet-adventurousness: #CC9BF9;
+    --facet-intellect: #D8B3FA;
+    --facet-liberalism: #E4CAFB;
+
+    --facet-self_efficacy: #FF6B2B;
+    --facet-orderliness: #FF7E45;
+    --facet-dutifulness: #FF905E;
+    --facet-achievement_striving: #FFA278;
+    --facet-self_discipline: #FFB591;
+    --facet-cautiousness: #FFC7AB;
+
+    --facet-friendliness: #FF0080;
+    --facet-gregariousness: #FF2694;
+    --facet-assertiveness: #FF4DA8;
+    --facet-activity_level: #FF73BC;
+    --facet-excitement_seeking: #FF99D0;
+    --facet-cheerfulness: #FFBFE4;
+
+    --facet-trust: #00B4A6;
+    --facet-morality: #1DC0B3;
+    --facet-altruism: #3ACCC0;
+    --facet-cooperation: #57D8CD;
+    --facet-modesty: #74E4DA;
+    --facet-sympathy: #91F0E7;
+
+    --facet-anxiety: #4040C0;
+    --facet-anger: #5555CB;
+    --facet-depression: #6A6AD6;
+    --facet-self_consciousness: #7F7FE1;
+    --facet-immoderation: #9494EC;
+    --facet-vulnerability: #A9A9F7;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    padding: 40px 20px 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .heading { font-family: 'Space Grotesk', sans-serif; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── Conversation container ── */
+  .conversation {
+    max-width: 740px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── Chat bubbles ── */
+  .message {
+    display: flex;
+    gap: 10px;
+    max-width: 88%;
+    animation: msgFadeIn 650ms cubic-bezier(.16,1,.3,1) both;
+  }
+  .message.nerin { align-self: flex-start; }
+  .message.user { align-self: flex-end; flex-direction: row-reverse; }
+
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 13px;
+    flex-shrink: 0;
+  }
+  .nerin .avatar { background: var(--fg); color: var(--bg); }
+  .user .avatar { background: var(--trait-extraversion); color: #fff; }
+
+  .bubble {
+    padding: 14px 18px;
+    border-radius: 18px;
+    line-height: 1.6;
+    font-size: 0.92rem;
+  }
+  .nerin .bubble {
+    background: var(--bubble-nerin-bg);
+    border: 1px solid var(--bubble-nerin-border);
+    border-top-left-radius: 4px;
+    backdrop-filter: blur(4px);
+  }
+  .user .bubble {
+    background: var(--bubble-user-bg);
+    color: var(--bubble-user-fg);
+    border-top-right-radius: 4px;
+  }
+
+  /* ── Trait Stack Embed ── */
+  .trait-stack {
+    margin-top: 14px;
+    display: flex; flex-direction: column; gap: 8px;
+    border-radius: 12px;
+    border: 1px solid var(--embed-border);
+    background: var(--embed-bg);
+    padding: 16px;
+    backdrop-filter: blur(4px);
+  }
+
+  .trait-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: all 280ms cubic-bezier(.16,1,.3,1);
+    position: relative;
+  }
+  .trait-card:hover {
+    background: rgba(0,0,0,0.02);
+  }
+  .trait-card.active {
+    border-color: var(--active-trait-color);
+    background: var(--active-trait-wash);
+  }
+  .trait-card.dimmed {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+  .trait-card.dimmed:hover { background: transparent; }
+
+  .trait-shape {
+    width: 36px; height: 36px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 300ms cubic-bezier(.34,1.56,.64,1);
+  }
+  .trait-card.active .trait-shape {
+    transform: scale(1.15);
+  }
+
+  .trait-info { flex: 1; min-width: 0; }
+  .trait-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 1.05rem;
+    margin-bottom: 2px;
+  }
+  .trait-desc {
+    font-size: 0.82rem; line-height: 1.55;
+    color: var(--muted);
+  }
+
+  .trait-chevron {
+    width: 20px; height: 20px; flex-shrink: 0;
+    color: var(--muted);
+    transition: all 250ms ease;
+    opacity: 0.4;
+  }
+  .trait-card:hover .trait-chevron { opacity: 0.7; }
+  .trait-card.active .trait-chevron {
+    opacity: 0;
+    transform: translateX(4px);
+  }
+
+  /* ── Facet detail conversation pair ── */
+  .facet-pair-container {
+    display: flex; flex-direction: column; gap: 20px;
+    overflow: hidden;
+  }
+
+  .facet-pair-enter {
+    animation: pairEnter 450ms cubic-bezier(.16,1,.3,1) both;
+  }
+  .facet-pair-enter .message.user { animation-delay: 0ms; }
+  .facet-pair-enter .message.nerin { animation-delay: 150ms; }
+
+  .facet-pair-exit {
+    animation: pairExit 200ms ease-in both;
+  }
+
+  /* ── Facet list inside Nerin's response ── */
+  .facet-response-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px;
+  }
+  .facet-response-shape {
+    width: 40px; height: 40px; flex-shrink: 0;
+    animation: shapeReveal 400ms cubic-bezier(.34,1.56,.64,1) both;
+    animation-delay: 300ms;
+  }
+  .facet-response-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600; font-size: 0.95rem;
+  }
+
+  .facet-list {
+    display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .facet-item {
+    padding-left: 14px;
+    border-left: 3px solid var(--facet-color);
+    opacity: 0;
+    transform: translateX(-6px);
+    animation: facetCascade 300ms cubic-bezier(.16,1,.3,1) both;
+  }
+
+  .facet-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600; font-size: 0.85rem;
+    margin-bottom: 2px;
+    color: var(--facet-color);
+  }
+  .facet-desc {
+    font-size: 0.8rem; line-height: 1.55;
+    color: var(--muted);
+  }
+
+  /* ── Animations ── */
+  @keyframes msgFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pairEnter {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pairExit {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-8px); }
+  }
+  @keyframes facetCascade {
+    from { opacity: 0; transform: translateX(-6px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes shapeReveal {
+    from { transform: scale(0.8) rotate(-8deg); opacity: 0; }
+    to { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  /* ── Label ── */
+  .mockup-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 30px;
+    opacity: 0.5;
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 600px) {
+    .trait-card { flex-direction: column; align-items: flex-start; gap: 8px; text-align: left; }
+    .trait-chevron { position: absolute; top: 14px; right: 14px; }
+    .message { max-width: 95%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-label">Trait Stack — Interactive Mockup</div>
+
+<div class="conversation" id="conversation">
+
+  <!-- Previous context messages -->
+  <div class="message nerin" style="animation-delay: 0ms">
+    <div class="avatar">N</div>
+    <div class="bubble">Through our chat, I map <strong>30 distinct facets</strong> of your personality. Not just "are you an introvert" — but the real nuances of how you see and process the world.</div>
+  </div>
+
+  <div class="message user" style="animation-delay: 200ms">
+    <div class="avatar">Y</div>
+    <div class="bubble">What exactly do you measure?</div>
+  </div>
+
+  <!-- TRAIT STACK MESSAGE -->
+  <div class="message nerin" style="animation-delay: 400ms">
+    <div class="avatar">N</div>
+    <div class="bubble">
+      Five core dimensions of personality. Each one has six facets beneath it. Tap any to explore:
+
+      <div class="trait-stack" id="traitStack">
+        <!-- Cards inserted by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Facet detail pair gets inserted here -->
+  <div id="facetPairSlot"></div>
+
+</div>
+
+<script>
+const TRAITS = [
+  {
+    key: 'openness',
+    name: 'Openness',
+    color: '#A855F7',
+    wash: 'rgba(168,85,247,0.06)',
+    desc: 'How hungry your mind is. Some people crave new ideas like oxygen \u2014 others prefer what they already know and trust.',
+    shape: 'circle',
+    facets: [
+      { key: 'imagination', name: 'Imagination', color: '#A855F7', desc: 'How much your mind wanders into \u201cwhat if\u201d territory. The daydreamers, the world-builders.' },
+      { key: 'artistic_interests', name: 'Artistic Interests', color: '#B46CF7', desc: 'Whether beauty stops you in your tracks \u2014 music, art, a particular light. Not talent. Sensitivity.' },
+      { key: 'emotionality', name: 'Emotionality', color: '#C084F8', desc: 'How tuned in you are to your own feelings. Not how emotional you are \u2014 how much you notice it.' },
+      { key: 'adventurousness', name: 'Adventurousness', color: '#CC9BF9', desc: 'The new restaurant or the usual? A different route or the known one? Your comfort with unfamiliar territory.' },
+      { key: 'intellect', name: 'Intellect', color: '#D8B3FA', desc: 'Not IQ \u2014 intellectual hunger. Do abstract ideas energize you, or do you prefer thinking that leads somewhere practical?' },
+      { key: 'liberalism', name: 'Liberalism', color: '#E4CAFB', desc: 'How willing you are to re-examine what you already believe. Your tolerance for having your assumptions challenged.' },
+    ]
+  },
+  {
+    key: 'conscientiousness',
+    name: 'Conscientiousness',
+    color: '#FF6B2B',
+    wash: 'rgba(255,107,43,0.06)',
+    desc: 'Your inner project manager. How you handle deadlines, messy rooms, and the gap between what you planned and what you actually did.',
+    shape: 'halfcircle',
+    facets: [
+      { key: 'self_efficacy', name: 'Self-Efficacy', color: '#FF6B2B', desc: 'Your gut feeling about whether you can handle what\u2019s in front of you. Confidence isn\u2019t personality \u2014 but this kind is.' },
+      { key: 'orderliness', name: 'Orderliness', color: '#FF7E45', desc: 'Whether your desk has a system \u2014 or IS the system. How much chaos costs you energy.' },
+      { key: 'dutifulness', name: 'Dutifulness', color: '#FF905E', desc: 'How heavy the word \u201cshould\u201d sits in your vocabulary. Whether promises keep you up at night.' },
+      { key: 'achievement_striving', name: 'Achievement Striving', color: '#FFA278', desc: 'The gap between \u201cgood enough\u201d and \u201cmy best.\u201d How much that gap bothers you.' },
+      { key: 'self_discipline', name: 'Self-Discipline', color: '#FFB591', desc: 'The boring superpower. Can you stay on task when the task isn\u2019t interesting? That\u2019s this.' },
+      { key: 'cautiousness', name: 'Cautiousness', color: '#FFC7AB', desc: 'How long you sit with a decision before making it. Impulsive vs. deliberate \u2014 and where you land.' },
+    ]
+  },
+  {
+    key: 'extraversion',
+    name: 'Extraversion',
+    color: '#FF0080',
+    wash: 'rgba(255,0,128,0.06)',
+    desc: 'Not \u201care you loud at parties.\u201d It\u2019s where your battery charges \u2014 around people, or away from them \u2014 and what you do with that energy.',
+    shape: 'rectangle',
+    facets: [
+      { key: 'friendliness', name: 'Friendliness', color: '#FF0080', desc: 'How quickly warmth shows up. Some people are warm in 30 seconds, others in 30 days. Both are real.' },
+      { key: 'gregariousness', name: 'Gregariousness', color: '#FF2694', desc: 'Not just \u201cdo you like people\u201d \u2014 do you actively seek the crowd? Or do you pick your three and go deep?' },
+      { key: 'assertiveness', name: 'Assertiveness', color: '#FF4DA8', desc: 'How naturally you take space in a room. Whether influence feels like effort or instinct.' },
+      { key: 'activity_level', name: 'Activity Level', color: '#FF73BC', desc: 'Your idle speed. Some people\u2019s rest looks like other people\u2019s hustle. This measures the engine, not the output.' },
+      { key: 'excitement_seeking', name: 'Excitement Seeking', color: '#FF99D0', desc: 'Where your threshold is for \u201cenough stimulation.\u201d Roller coasters vs. books. Or maybe both.' },
+      { key: 'cheerfulness', name: 'Cheerfulness', color: '#FFBFE4', desc: 'Your emotional default state. Not whether you\u2019re happy right now \u2014 whether happiness is where your mood naturally returns to.' },
+    ]
+  },
+  {
+    key: 'agreeableness',
+    name: 'Agreeableness',
+    color: '#00B4A6',
+    wash: 'rgba(0,180,166,0.06)',
+    desc: 'The tension between being kind and being honest. How you navigate that says more about you than almost anything else.',
+    shape: 'triangle',
+    facets: [
+      { key: 'trust', name: 'Trust', color: '#00B4A6', desc: 'Your default setting with strangers. Some people start at 100 and subtract. Others start at zero and make you earn it.' },
+      { key: 'morality', name: 'Morality', color: '#1DC0B3', desc: 'Your relationship with the straight line between thinking and saying. Some people filter everything. Others can\u2019t.' },
+      { key: 'altruism', name: 'Altruism', color: '#3ACCC0', desc: 'Whether helping feels like a choice or a reflex. The difference matters.' },
+      { key: 'cooperation', name: 'Cooperation', color: '#57D8CD', desc: 'What happens when you disagree. Do you push back, or find the overlap? Your reflex, not your strategy.' },
+      { key: 'modesty', name: 'Modesty', color: '#74E4DA', desc: 'How loudly you take credit. Not low self-esteem \u2014 whether self-promotion feels natural or physically uncomfortable.' },
+      { key: 'sympathy', name: 'Sympathy', color: '#91F0E7', desc: 'How much other people\u2019s pain becomes yours. The spectrum between empathic sponge and emotional Teflon.' },
+    ]
+  },
+  {
+    key: 'neuroticism',
+    name: 'Neuroticism',
+    color: '#4040C0',
+    wash: 'rgba(64,64,192,0.06)',
+    desc: 'How your nervous system is wired. Not a flaw. The people who feel things the most intensely often understand the world the deepest.',
+    shape: 'diamond',
+    facets: [
+      { key: 'anxiety', name: 'Anxiety', color: '#4040C0', desc: 'How loud the \u201cwhat could go wrong\u201d voice is. Everyone has one. This measures the volume.' },
+      { key: 'anger', name: 'Anger', color: '#5555CB', desc: 'How short the fuse is \u2014 and what lights it. Not whether you\u2019re angry now, but how easily you get there.' },
+      { key: 'depression', name: 'Depression', color: '#6A6AD6', desc: 'Your vulnerability to low moods. Not clinical depression \u2014 the tendency to dip into guilt, sadness, or hopelessness when things go sideways.' },
+      { key: 'self_consciousness', name: 'Self-Consciousness', color: '#7F7FE1', desc: 'How aware you are of being watched. The volume knob on \u201cwhat do they think of me?\u201d' },
+      { key: 'immoderation', name: 'Immoderation', color: '#9494EC', desc: 'How hard it is to stop once you\u2019ve started \u2014 food, scrolling, spending, whatever your thing is. Impulse control, unfiltered.' },
+      { key: 'vulnerability', name: 'Vulnerability', color: '#A9A9F7', desc: 'How stress lands on you. Some people absorb impact like a sponge. Others bounce back fast. This measures the absorption rate.' },
+    ]
+  }
+];
+
+function makeSVGShape(shape, color, size) {
+  const s = size;
+  const h = s / 2;
+  switch (shape) {
+    case 'circle':
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}"><circle cx="${h}" cy="${h}" r="${h - 1}" fill="${color}" opacity="0.85"/></svg>`;
+    case 'halfcircle':
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}"><path d="M ${s} ${h} A ${h} ${h} 0 0 1 0 ${h}" fill="${color}" opacity="0.85"/></svg>`;
+    case 'rectangle':
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}"><rect x="2" y="${s*0.2}" width="${s-4}" height="${s*0.6}" rx="3" fill="${color}" opacity="0.85"/></svg>`;
+    case 'triangle':
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}"><polygon points="${h},3 ${s-2},${s-3} 2,${s-3}" fill="${color}" opacity="0.85"/></svg>`;
+    case 'diamond':
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}"><polygon points="${h},2 ${s-2},${h} ${h},${s-2} 2,${h}" fill="${color}" opacity="0.85"/></svg>`;
+  }
+}
+
+// Build trait cards
+const stack = document.getElementById('traitStack');
+TRAITS.forEach((trait, i) => {
+  const card = document.createElement('div');
+  card.className = 'trait-card';
+  card.dataset.trait = trait.key;
+  card.style.setProperty('--active-trait-color', trait.color);
+  card.style.setProperty('--active-trait-wash', trait.wash);
+  card.innerHTML = `
+    <div class="trait-shape">${makeSVGShape(trait.shape, trait.color, 32)}</div>
+    <div class="trait-info">
+      <div class="trait-name heading" style="color: ${trait.color}">${trait.name}</div>
+      <div class="trait-desc">${trait.desc}</div>
+    </div>
+    <svg class="trait-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M7 4l6 6-6 6"/>
+    </svg>
+  `;
+  card.addEventListener('click', () => selectTrait(trait.key));
+  stack.appendChild(card);
+});
+
+let activeTrait = null;
+let isAnimating = false;
+
+function selectTrait(traitKey) {
+  if (isAnimating) return;
+
+  // If clicking the same trait, deselect
+  if (activeTrait === traitKey) {
+    deselect();
+    return;
+  }
+
+  const trait = TRAITS.find(t => t.key === traitKey);
+  if (!trait) return;
+
+  // Update card states
+  document.querySelectorAll('.trait-card').forEach(card => {
+    if (card.dataset.trait === traitKey) {
+      card.classList.add('active');
+      card.classList.remove('dimmed');
+    } else {
+      card.classList.remove('active');
+      card.classList.add('dimmed');
+    }
+  });
+
+  const slot = document.getElementById('facetPairSlot');
+
+  // If there's already content, exit it first
+  if (slot.children.length > 0) {
+    isAnimating = true;
+    const existing = slot.children[0];
+    existing.classList.add('facet-pair-exit');
+    existing.addEventListener('animationend', () => {
+      slot.innerHTML = '';
+      insertFacetPair(trait, slot);
+      isAnimating = false;
+    }, { once: true });
+  } else {
+    insertFacetPair(trait, slot);
+  }
+
+  activeTrait = traitKey;
+}
+
+function deselect() {
+  document.querySelectorAll('.trait-card').forEach(card => {
+    card.classList.remove('active', 'dimmed');
+  });
+  const slot = document.getElementById('facetPairSlot');
+  if (slot.children.length > 0) {
+    isAnimating = true;
+    const existing = slot.children[0];
+    existing.classList.add('facet-pair-exit');
+    existing.addEventListener('animationend', () => {
+      slot.innerHTML = '';
+      isAnimating = false;
+    }, { once: true });
+  }
+  activeTrait = null;
+}
+
+function insertFacetPair(trait, slot) {
+  const container = document.createElement('div');
+  container.className = 'facet-pair-container facet-pair-enter';
+
+  // User message
+  const userMsg = document.createElement('div');
+  userMsg.className = 'message user';
+  userMsg.style.animationDelay = '0ms';
+  userMsg.innerHTML = `
+    <div class="avatar">Y</div>
+    <div class="bubble">Tell me more about ${trait.name}</div>
+  `;
+
+  // Nerin response
+  const nerinMsg = document.createElement('div');
+  nerinMsg.className = 'message nerin';
+  nerinMsg.style.animationDelay = '150ms';
+
+  let facetsHTML = '';
+  trait.facets.forEach((facet, i) => {
+    const delay = 400 + (i * 60);
+    facetsHTML += `
+      <div class="facet-item" style="--facet-color: ${facet.color}; border-left-color: ${facet.color}; animation-delay: ${delay}ms;">
+        <div class="facet-name" style="color: ${facet.color}">${facet.name}</div>
+        <div class="facet-desc">${facet.desc}</div>
+      </div>
+    `;
+  });
+
+  nerinMsg.innerHTML = `
+    <div class="avatar">N</div>
+    <div class="bubble">
+      <div class="facet-response-header">
+        <div class="facet-response-shape">${makeSVGShape(trait.shape, trait.color, 40)}</div>
+        <div class="facet-response-title heading" style="color: ${trait.color}">Six facets of ${trait.name}</div>
+      </div>
+      <div class="facet-list">
+        ${facetsHTML}
+      </div>
+    </div>
+  `;
+
+  container.appendChild(userMsg);
+  container.appendChild(nerinMsg);
+  slot.appendChild(container);
+
+  // Scroll to the user message smoothly
+  setTimeout(() => {
+    userMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 100);
+}
+</script>
+
+</body>
+</html>
