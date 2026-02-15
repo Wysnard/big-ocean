@@ -20,13 +20,16 @@
 import "dotenv/config"; // Load .env file
 import type { FacetName } from "@workspace/domain";
 import { AppConfigLive, Database, DatabaseStack, dbSchema } from "@workspace/infrastructure";
+import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 
-const { assessmentMessage, assessmentSession, facetEvidence, user } = dbSchema;
+const { account, assessmentMessage, assessmentSession, facetEvidence, user } = dbSchema;
 
 const TEST_USER_EMAIL = "test@bigocean.dev";
+const TEST_USER_PASSWORD = "testpassword123";
 const TEST_USER_ID = "00000000-0000-4000-a000-000000000001";
+const TEST_ACCOUNT_ID = "00000000-0000-4000-a000-000000000002";
 
 // Sample conversation messages (12 messages total - triggers 4 scoring rounds)
 const CONVERSATION_MESSAGES: Array<{ role: "user" | "assistant"; content: string }> = [
@@ -266,6 +269,31 @@ const seedProgram = Effect.gen(function* () {
 		console.log(`✓ Created test user: ${TEST_USER_EMAIL}`);
 	}
 
+	// 1b. Create credential account (Better Auth password login)
+	const existingAccounts = yield* db
+		.select()
+		.from(account)
+		.where(eq(account.userId, userId))
+		.limit(1)
+		.pipe(Effect.mapError((error) => new Error(`Failed to query account: ${error}`)));
+
+	if (existingAccounts.length > 0) {
+		console.log("✓ Credential account already exists");
+	} else {
+		const hashedPassword = yield* Effect.promise(() => bcrypt.hash(TEST_USER_PASSWORD, 12));
+		yield* db
+			.insert(account)
+			.values({
+				id: TEST_ACCOUNT_ID,
+				accountId: TEST_USER_ID,
+				providerId: "credential",
+				userId,
+				password: hashedPassword,
+			})
+			.pipe(Effect.mapError((error) => new Error(`Failed to create account: ${error}`)));
+		console.log("✓ Created credential account with password");
+	}
+
 	// 2. Create completed assessment session
 	console.log("\n📊 Creating completed assessment session...");
 	const [session] = yield* db
@@ -336,6 +364,9 @@ const seedProgram = Effect.gen(function* () {
 	console.log(`Messages: ${CONVERSATION_MESSAGES.length}`);
 	console.log(`Evidence Records: ${evidenceCount}`);
 	console.log("=".repeat(60));
+	console.log("\n🔑 Login Credentials:");
+	console.log(`   Email:    ${TEST_USER_EMAIL}`);
+	console.log(`   Password: ${TEST_USER_PASSWORD}`);
 	console.log("\n🔗 Quick Test URLs:");
 	console.log(`   Results Page: http://localhost:3000/results?sessionId=${session.id}`);
 	console.log(`   Chat Page:    http://localhost:3000/chat?sessionId=${session.id}`);
