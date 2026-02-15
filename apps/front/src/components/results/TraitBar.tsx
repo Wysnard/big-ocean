@@ -64,7 +64,7 @@ export function TraitBar({
 			data-testid={`trait-bar-${traitName}`}
 			data-slot="trait-bar"
 			className={cn(
-				"w-full rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent",
+				"w-full rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
 				isExpanded && "border-ring/30",
 				className,
 			)}
@@ -76,10 +76,7 @@ export function TraitBar({
 					{TRAIT_SHAPE[traitName] ? (
 						TRAIT_SHAPE[traitName]({ size: 20, color })
 					) : (
-						<div
-							className="h-3 w-3 shrink-0 rounded-full"
-							style={{ backgroundColor: color }}
-						/>
+						<div className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: color }} />
 					)}
 					<span className="text-sm font-semibold text-foreground truncate">{displayName}</span>
 					{/* Level badge */}

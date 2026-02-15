@@ -15,7 +15,6 @@ describe("FacetSidePanel", () => {
 		render(
 			<FacetSidePanel
 				sessionId="session-123"
-				messageId="msg-1"
 				isOpen
 				isLoading={false}
 				onClose={() => {}}
