@@ -22,9 +22,15 @@ interface TraitScores {
  */
 function parseApiError(error: unknown): {
 	message: string;
-	type: "session" | "budget" | "rate-limit" | "network" | "generic";
+	type: "session" | "budget" | "rate-limit" | "limit-reached" | "network" | "generic";
 } {
 	if (error instanceof AssessmentApiError) {
+		if (error.status === 403) {
+			return {
+				message: "You've reached the message limit. View your results!",
+				type: "limit-reached",
+			};
+		}
 		if (error.status === 404) {
 			return { message: "Session not found. Starting a new session...", type: "session" };
 		}
@@ -92,7 +98,7 @@ export function useTherapistChat(sessionId: string) {
 	const [isLoading, setIsLoading] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [errorType, setErrorType] = useState<
-		"session" | "budget" | "rate-limit" | "network" | "generic" | null
+		"session" | "budget" | "rate-limit" | "limit-reached" | "network" | "generic" | null
 	>(null);
 	const [hasShownCelebration, setHasShownCelebration] = useState(false);
 	const { mutate: sendMessageRpc } = useSendMessage();
@@ -256,19 +262,19 @@ export function useTherapistChat(sessionId: string) {
 	}, [messages, sendMessage]);
 
 	// Story 4.7: Message-count-based progress — threshold driven by backend config
-	const MESSAGE_READY_THRESHOLD = resumeData?.messageReadyThreshold ?? 15;
+	const FREE_TIER_THRESHOLD = resumeData?.freeTierMessageThreshold ?? 15;
 	const userMessageCount = messages.filter((m) => m.role === "user").length;
 	const progressPercent = Math.min(
-		Math.round((userMessageCount / MESSAGE_READY_THRESHOLD) * 100),
+		Math.round((userMessageCount / FREE_TIER_THRESHOLD) * 100),
 		100,
 	);
-	const isConfidenceReady = userMessageCount >= MESSAGE_READY_THRESHOLD;
+	const isConfidenceReady = userMessageCount >= FREE_TIER_THRESHOLD;
 
 	return {
 		messages,
 		traits,
 		isLoading,
-		isCompleted: false,
+		isCompleted: userMessageCount >= FREE_TIER_THRESHOLD,
 		errorMessage,
 		errorType,
 		clearError,
@@ -279,7 +285,7 @@ export function useTherapistChat(sessionId: string) {
 		isResumeSessionNotFound,
 		isConfidenceReady,
 		progressPercent,
-		messageReadyThreshold: MESSAGE_READY_THRESHOLD,
+		freeTierMessageThreshold: FREE_TIER_THRESHOLD,
 		hasShownCelebration,
 		setHasShownCelebration,
 	};

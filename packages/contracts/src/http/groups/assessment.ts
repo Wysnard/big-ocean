@@ -10,6 +10,7 @@ import { Schema as S } from "effect";
 import {
 	AgentInvocationError,
 	DatabaseError,
+	FreeTierLimitReached,
 	RateLimitExceeded,
 	SessionNotFound,
 } from "../../errors";
@@ -121,7 +122,7 @@ export const ResumeSessionResponseSchema = S.Struct({
 		agreeableness: S.Number,
 		neuroticism: S.Number,
 	}),
-	messageReadyThreshold: S.Number,
+	freeTierMessageThreshold: S.Number,
 });
 
 /**
@@ -145,6 +146,7 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 		HttpApiEndpoint.post("sendMessage", "/message")
 			.addSuccess(SendMessageResponseSchema)
 			.setPayload(SendMessageRequestSchema)
+			.addError(FreeTierLimitReached, { status: 403 })
 			.addError(SessionNotFound, { status: 404 })
 			.addError(DatabaseError, { status: 500 })
 			.addError(AgentInvocationError, { status: 503 }),

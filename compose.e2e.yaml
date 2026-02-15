@@ -3,7 +3,7 @@
 # Purpose: Dedicated environment for Playwright e2e journey tests
 #
 # Key differences from compose.test.yaml (integration tests):
-# - MESSAGE_READY_THRESHOLD=2  → results unlock after 2 user messages
+# - FREE_TIER_MESSAGE_THRESHOLD=2  → results unlock after 2 user messages
 # - MOCK_LLM=true              → deterministic mock responses, zero cost
 # - Same ports: API 4001, PG 5433, Redis 6380, Frontend 3001
 #
@@ -55,7 +55,7 @@ services:
       DATABASE_URL: postgresql://test_user:test_password@postgres-e2e:5432/bigocean_test
       REDIS_URL: "redis://redis-e2e:6379"
       MOCK_LLM: "true"
-      MESSAGE_READY_THRESHOLD: "2"
+      FREE_TIER_MESSAGE_THRESHOLD: "2"
       SHARE_MIN_CONFIDENCE: "0"
       ANTHROPIC_API_KEY: "sk-test-dummy-key-for-e2e-tests"
       BETTER_AUTH_SECRET: test-secret-minimum-32-characters-long-for-security

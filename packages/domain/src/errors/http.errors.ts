@@ -142,6 +142,19 @@ export class InvalidFacetNameError extends S.TaggedError<InvalidFacetNameError>(
  * Malformed evidence error (422)
  * JSON parsing or structure validation failure for analyzer output
  */
+/**
+ * Free tier limit reached error (403)
+ * User has sent the maximum number of messages allowed in the free tier
+ */
+export class FreeTierLimitReached extends S.TaggedError<FreeTierLimitReached>()(
+	"FreeTierLimitReached",
+	{
+		sessionId: S.String,
+		limit: S.Number,
+		message: S.String,
+	},
+) {}
+
 export class MalformedEvidenceError extends S.TaggedError<MalformedEvidenceError>()(
 	"MalformedEvidenceError",
 	{

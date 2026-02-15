@@ -39,7 +39,7 @@ export function ShareCardPreview() {
 
 					{/* Geometric Signature */}
 					<GeometricSignature
-						oceanCode="HHMHM"
+						oceanCode="ODAWT"
 						baseSize={24}
 						animated={false}
 					/>

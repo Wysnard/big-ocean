@@ -38,7 +38,7 @@ export const defaultTestConfig: AppConfigService = {
 	nerinMaxTokens: 1024,
 	nerinTemperature: 0.7,
 	dailyCostLimit: 75,
-	messageReadyThreshold: 15,
+	freeTierMessageThreshold: 15,
 	shareMinConfidence: 70,
 };
 

@@ -16,6 +16,7 @@
  */
 
 import {
+	AppConfig,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	type BudgetPausedError,
@@ -24,7 +25,7 @@ import {
 	OrchestratorRepository,
 	type ProcessMessageOutput,
 } from "@workspace/domain";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Redacted } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sendMessage } from "../send-message.use-case";
 
@@ -150,6 +151,25 @@ describe("sendMessage Use Case", () => {
 
 	const createTestLayer = () =>
 		Layer.mergeAll(
+			Layer.succeed(AppConfig, {
+				databaseUrl: "postgres://test:test@localhost:5432/test",
+				redisUrl: "redis://localhost:6379",
+				anthropicApiKey: Redacted.make("test-key"),
+				betterAuthSecret: Redacted.make("test-secret"),
+				betterAuthUrl: "http://localhost:4000",
+				frontendUrl: "http://localhost:3000",
+				port: 4000,
+				nodeEnv: "test",
+				analyzerModelId: "claude-sonnet-4-20250514",
+				analyzerMaxTokens: 2048,
+				analyzerTemperature: 0.3,
+				nerinModelId: "claude-haiku-4-5-20251001",
+				nerinMaxTokens: 1024,
+				nerinTemperature: 0.7,
+				dailyCostLimit: 75,
+				freeTierMessageThreshold: 15,
+				shareMinConfidence: 70,
+			}),
 			Layer.succeed(AssessmentSessionRepository, mockAssessmentSessionRepo),
 			Layer.succeed(AssessmentMessageRepository, mockAssessmentMessageRepo),
 			Layer.succeed(LoggerRepository, mockLoggerRepo),
