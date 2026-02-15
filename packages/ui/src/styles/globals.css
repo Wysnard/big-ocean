@@ -188,6 +188,11 @@
 	--input-field-color: var(--muted-foreground);
 	--share-card-gradient: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(255, 0, 128, 0.05));
 	--share-card-border: var(--border);
+
+	/* ========== SCORE LEVEL TOKENS ========== */
+	--score-high: #22c55e;
+	--score-medium: #eab308;
+	--score-low: #ef4444;
 }
 
 .dark {
@@ -323,6 +328,11 @@
 	--input-field-color: rgba(255, 255, 255, 0.4);
 	--share-card-gradient: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(255, 0, 128, 0.08));
 	--share-card-border: rgba(255, 255, 255, 0.08);
+
+	/* ========== SCORE LEVEL TOKENS ========== */
+	--score-high: #4ade80;
+	--score-medium: #facc15;
+	--score-low: #f87171;
 }
 
 @theme inline {
@@ -355,6 +365,9 @@
 	--color-chart-3: var(--chart-3);
 	--color-chart-4: var(--chart-4);
 	--color-chart-5: var(--chart-5);
+	--color-score-high: var(--score-high);
+	--color-score-medium: var(--score-medium);
+	--color-score-low: var(--score-low);
 	--color-trait-openness: var(--trait-openness);
 	--color-trait-conscientiousness: var(--trait-conscientiousness);
 	--color-trait-extraversion: var(--trait-extraversion);

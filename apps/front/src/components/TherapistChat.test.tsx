@@ -71,11 +71,6 @@ vi.mock("@tanstack/react-router", () => ({
 	),
 }));
 
-// Mock SignUpModal
-vi.mock("./auth/SignUpModal", () => ({
-	SignUpModal: () => null,
-}));
-
 // Mock chat-placeholders
 vi.mock("@/constants/chat-placeholders", () => ({
 	getPlaceholder: () => "What comes to mind first?",

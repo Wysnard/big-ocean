@@ -20,7 +20,6 @@ import { cn } from "@workspace/ui/lib/utils";
 
 interface FacetSidePanelProps {
 	sessionId: string;
-	messageId: string;
 	evidence: SavedFacetEvidence[] | undefined;
 	isLoading: boolean;
 	isOpen: boolean;
@@ -51,14 +50,14 @@ export function FacetSidePanel({
 	};
 
 	const getScoreColor = (score: number) => {
-		if (score >= 15) return "text-green-400 border-green-500/30";
-		if (score >= 8) return "text-yellow-400 border-yellow-500/30";
-		return "text-red-400 border-red-500/30";
+		if (score >= 15) return "text-score-high border-score-high/30";
+		if (score >= 8) return "text-score-medium border-score-medium/30";
+		return "text-score-low border-score-low/30";
 	};
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className="w-[90vw] sm:max-w-md">
+			<DialogContent className="w-[90vw] sm:max-w-md" data-slot="facet-side-panel">
 				<DialogHeader>
 					<DialogTitle>This message contributed to:</DialogTitle>
 				</DialogHeader>
@@ -75,6 +74,7 @@ export function FacetSidePanel({
 								onClick={() => handleFacetClick(item.facetName)}
 								className="w-full text-left p-3 border border-border rounded-lg hover:bg-muted transition-colors min-h-[44px]"
 								type="button"
+								data-slot="facet-button"
 							>
 								<div className="flex justify-between items-center">
 									<span>{toFacetDisplayName(item.facetName)}</span>
