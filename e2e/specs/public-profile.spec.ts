@@ -24,12 +24,12 @@ const PROFILE_USER = {
 	name: "Profile Tester",
 } as const;
 
-const TRAIT_LABELS = [
-	"Openness",
-	"Conscientiousness",
-	"Extraversion",
-	"Agreeableness",
-	"Neuroticism",
+const TRAITS = [
+	{ key: "openness", label: "Openness" },
+	{ key: "conscientiousness", label: "Conscientiousness" },
+	{ key: "extraversion", label: "Extraversion" },
+	{ key: "agreeableness", label: "Agreeableness" },
+	{ key: "neuroticism", label: "Neuroticism" },
 ];
 
 /**
@@ -135,42 +135,33 @@ test("anonymous user views public profile with traits and facets", async ({ page
 		const traitSection = page.locator("[data-slot='trait-scores-section']");
 		await expect(traitSection).toBeVisible();
 
-		// Each trait label should appear
-		for (const trait of TRAIT_LABELS) {
-			await expect(traitSection.getByText(trait, { exact: true })).toBeVisible();
+		for (const { key, label } of TRAITS) {
+			const card = page.getByTestId(`trait-card-${key}`);
+			await expect(card).toBeVisible();
+			await expect(card.getByText(label, { exact: true })).toBeVisible();
 		}
 	});
 
 	await test.step("expand first trait and verify facets are visible", async () => {
-		const traitSection = page.locator("[data-slot='trait-scores-section']");
-
-		// Click the first trait card (Openness) to expand facets
-		const firstTraitCard = traitSection.locator("button").first();
-		await firstTraitCard.click();
+		// Click Openness trait toggle
+		await page.getByTestId("trait-toggle-openness").click();
 
 		// Openness has 6 facets — verify at least one facet row appears
-		// Facet names are Title Case (e.g., "Imagination", "Intellect")
-		const facetRow = traitSection.locator("[id^='facet-']").first();
+		const openCard = page.getByTestId("trait-card-openness");
+		const facetRow = openCard.locator("[id^='facet-']").first();
 		await expect(facetRow).toBeVisible({ timeout: 5_000 });
 
 		// Verify facet score format is present (e.g., "14/20 (72%)")
-		await expect(traitSection.getByText(/\/20/)).toBeVisible();
+		await expect(openCard.getByText(/\/20/).first()).toBeVisible();
 	});
 
 	await test.step("expand all traits and verify facet count", async () => {
 		const traitSection = page.locator("[data-slot='trait-scores-section']");
 
-		// Click all 5 trait buttons to expand them
-		const traitButtons = traitSection.locator("button");
-		const count = await traitButtons.count();
-
-		for (let i = 0; i < count; i++) {
-			const button = traitButtons.nth(i);
-			// Only click if not already expanded (check for chevron rotation)
-			const isExpanded = await button.locator("svg.rotate-180").count();
-			if (!isExpanded) {
-				await button.click();
-			}
+		// Click each trait toggle (skip openness — already expanded)
+		for (const { key } of TRAITS) {
+			if (key === "openness") continue;
+			await page.getByTestId(`trait-toggle-${key}`).click();
 		}
 
 		// All 30 facets should now be visible (5 traits x 6 facets each)

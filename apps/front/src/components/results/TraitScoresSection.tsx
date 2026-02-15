@@ -122,9 +122,18 @@ export function TraitScoresSection({
 						);
 
 						return (
-							<div key={trait} className="border border-border rounded-lg p-4 bg-card">
+							<div
+								key={trait}
+								data-testid={`trait-card-${trait}`}
+								className="border border-border rounded-lg p-4 bg-card"
+							>
 								{hasFacets && onToggleTrait ? (
-									<button onClick={() => onToggleTrait(trait)} className="w-full text-left" type="button">
+									<button
+										onClick={() => onToggleTrait(trait)}
+										data-testid={`trait-toggle-${trait}`}
+										className="w-full text-left"
+										type="button"
+									>
 										{headerContent}
 									</button>
 								) : (
