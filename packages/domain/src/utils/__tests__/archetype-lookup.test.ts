@@ -202,10 +202,10 @@ describe("lookupArchetype", () => {
 			expect(result.name.length).toBeGreaterThan(0);
 		});
 
-		it("generated descriptions are non-empty (50-300 chars)", () => {
+		it("generated descriptions are 1500-2500 chars", () => {
 			const result = lookupArchetype("PFAN");
-			expect(result.description.length).toBeGreaterThanOrEqual(50);
-			expect(result.description.length).toBeLessThanOrEqual(300);
+			expect(result.description.length).toBeGreaterThanOrEqual(1500);
+			expect(result.description.length).toBeLessThanOrEqual(2500);
 		});
 
 		it("generated colors are valid hex", () => {
@@ -229,7 +229,8 @@ describe("lookupArchetype", () => {
 							const result = lookupArchetype(code4);
 							expect(result.code4).toBe(code4);
 							expect(result.name).toBeTruthy();
-							expect(result.description.length).toBeGreaterThan(20);
+							expect(result.description.length).toBeGreaterThanOrEqual(1500);
+							expect(result.description.length).toBeLessThanOrEqual(2500);
 							expect(result.color).toMatch(/^#[0-9A-Fa-f]{6}$/);
 							expect(typeof result.isCurated).toBe("boolean");
 						});

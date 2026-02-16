@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-02-15 (refreshed sprint-planning)
+# Generated: 2026-02-16 (refreshed sprint-planning)
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-02-15
+generated: 2026-02-16
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -47,7 +47,7 @@ development_status:
   1-1-deploy-infrastructure-to-railway: done
   1-2-integrate-better-auth-for-email-password-authentication: done
   1-3-configure-effect-ts-rpc-contracts-and-infrastructure-layer: done
-  1-4-effect-api-auth-middleware: ready-for-dev
+  1-4-effect-api-auth-middleware: review
   epic-1-retrospective: optional
 
   # EPIC 2: Assessment Backend Services
@@ -101,10 +101,10 @@ development_status:
   epic-6-retrospective: optional
 
   # EPIC 7: UI Theme & Visual Identity (PHASE 1 - MVP Visual Identity)
-  # Rewritten 2026-02-13 to align with new UX Design Specification
+  # All 15 stories completed — epic promoted to done (2026-02-16)
   # Psychedelic-bold visual identity with OCEAN geometric shapes, dual light/dark modes,
   # custom typography, illustration system, auth-gated results, shareable profiles, user dashboard
-  epic-7: in-progress
+  epic-7: done
   7-1-psychedelic-brand-design-tokens: done
   7-2-typography-system: done
   7-3-dark-mode-toggle-with-system-preference-detection: done
@@ -116,18 +116,18 @@ development_status:
   7-9-results-page-visual-redesign-with-archetype-theming: done
   7-10-assessment-chat-depth-journey-design: done
   7-11-auth-gated-results-reveal-and-sign-up-flow: done
-  7-15-auth-form-psychedelic-brand-redesign: done
-  7-12-shareable-public-profile-and-share-cards: review
-  7-13-registered-user-profile-page: review
+  7-12-shareable-public-profile-and-share-cards: done
+  7-13-registered-user-profile-page: done
   7-14-component-visual-consistency-and-final-polish: done
-  epic-7-retrospective: optional
+  7-15-auth-form-psychedelic-brand-redesign: done
+  epic-7-retrospective: done
 
   # EPIC 8: Results Page Content Enrichment
   # Phase 1 (Stories 8.1-8.3): Static archetype/trait/facet descriptions
   # Phase 2 (Stories 8.4-8.5): AI-generated personalized portraits + freemium model
-  epic-8: backlog
-  8-1-expand-archetype-descriptions-to-4-5-sentences: backlog
-  8-2-add-level-specific-trait-descriptions: backlog
+  epic-8: in-progress
+  8-1-expand-archetype-descriptions-to-4-5-sentences: done
+  8-2-add-level-specific-trait-descriptions: ready-for-dev
   8-3-add-level-specific-facet-descriptions: backlog
   8-4-pre-generate-personalized-portrait-at-70-percent-confidence: backlog
   8-5-regenerate-personalized-portrait-at-85-percent-confidence-paid-tier: backlog
