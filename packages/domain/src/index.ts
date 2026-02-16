@@ -96,6 +96,11 @@ export {
 	OrchestratorGraphRepository,
 } from "./repositories/orchestrator-graph.repository";
 export {
+	PortraitGenerationError,
+	type PortraitGenerationInput,
+	PortraitGeneratorRepository,
+} from "./repositories/portrait-generator.repository";
+export {
 	type CreatePublicProfileInput,
 	type PublicProfileData,
 	PublicProfileRepository,

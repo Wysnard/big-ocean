@@ -9,6 +9,8 @@
  */
 
 import {
+	AppConfig,
+	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	aggregateFacetScores,
 	BIG_FIVE_TRAITS,
@@ -22,6 +24,7 @@ import {
 	generateOceanCode,
 	LoggerRepository,
 	lookupArchetype,
+	PortraitGeneratorRepository,
 	SessionNotFound,
 	TRAIT_LETTER_MAP,
 	type TraitResult,
@@ -43,6 +46,7 @@ export interface GetResultsOutput {
 	readonly traits: readonly TraitResult[];
 	readonly facets: readonly FacetResult[];
 	readonly overallConfidence: number;
+	readonly personalDescription: string | null;
 }
 
 /**
@@ -70,6 +74,9 @@ export const getResults = (input: GetResultsInput) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const evidenceRepo = yield* FacetEvidenceRepository;
+		const messageRepo = yield* AssessmentMessageRepository;
+		const portraitGenerator = yield* PortraitGeneratorRepository;
+		const config = yield* AppConfig;
 		const logger = yield* LoggerRepository;
 
 		// 1. Validate session exists (throws SessionNotFound if missing)
@@ -119,6 +126,38 @@ export const getResults = (input: GetResultsInput) =>
 			confidence: facetScoresMap[facetName].confidence,
 		}));
 
+		// 8. Portrait generation — lazy, one-time per session
+		const messages = yield* messageRepo.getMessages(input.sessionId);
+		const userMessageCount = messages.filter((m) => m.role === "user").length;
+
+		let personalDescription: string | null = session.personalDescription ?? null;
+
+		if (personalDescription === null && userMessageCount >= config.freeTierMessageThreshold) {
+			const topEvidence = [...evidence].sort((a, b) => b.confidence - a.confidence).slice(0, 10);
+
+			personalDescription = yield* portraitGenerator
+				.generatePortrait({
+					sessionId: input.sessionId,
+					facetScoresMap,
+					topEvidence,
+					archetypeName: archetype.name,
+					archetypeDescription: archetype.description,
+					oceanCode5,
+				})
+				.pipe(
+					Effect.tap((portrait) =>
+						sessionRepo.updateSession(input.sessionId, { personalDescription: portrait }),
+					),
+					Effect.catchAll((err) => {
+						logger.error("Portrait generation failed", {
+							sessionId: input.sessionId,
+							error: String(err),
+						});
+						return Effect.succeed(null);
+					}),
+				);
+		}
+
 		logger.info("Assessment results generated", {
 			sessionId: input.sessionId,
 			evidenceCount: evidence.length,
@@ -126,6 +165,7 @@ export const getResults = (input: GetResultsInput) =>
 			oceanCode4,
 			archetypeName: archetype.name,
 			overallConfidence,
+			hasPortrait: personalDescription !== null,
 			traitScores: Object.fromEntries(
 				BIG_FIVE_TRAITS.map((t) => [
 					t,
@@ -149,5 +189,6 @@ export const getResults = (input: GetResultsInput) =>
 			traits,
 			facets,
 			overallConfidence,
+			personalDescription,
 		} satisfies GetResultsOutput;
 	});

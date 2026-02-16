@@ -233,6 +233,9 @@ describe("GET /api/assessment/:sessionId/results", () => {
 		const { sessionId } = await startResponse.json();
 
 		// Send 3 messages to trigger Analyzer + Scorer batch
+		// FREE_TIER_MESSAGE_THRESHOLD=3 in compose.test.yaml means the 3rd message
+		// is saved but returns 403 (FreeTierLimitReached). This is expected — the
+		// message is persisted and get-results sees 3 user messages, triggering portrait.
 		await postJson("/api/assessment/message", {
 			sessionId,
 			message: "I love exploring new creative ideas and imagining possibilities.",
@@ -241,10 +244,12 @@ describe("GET /api/assessment/:sessionId/results", () => {
 			sessionId,
 			message: "I tend to be organized and like making plans ahead of time.",
 		});
-		await postJson("/api/assessment/message", {
+		const thirdMsgResponse = await postJson("/api/assessment/message", {
 			sessionId,
 			message: "I enjoy social gatherings and meeting new people.",
 		});
+		// 3rd message saved but blocked by free tier limit (threshold=3)
+		expect(thirdMsgResponse.status).toBe(403);
 
 		// Fetch results
 		const resultsResponse = await fetch(`${API_URL}/api/assessment/${sessionId}/results`);
@@ -294,6 +299,12 @@ describe("GET /api/assessment/:sessionId/results", () => {
 		// Overall confidence
 		expect(decoded.overallConfidence).toBeGreaterThanOrEqual(0);
 		expect(decoded.overallConfidence).toBeLessThanOrEqual(100);
+
+		// Portrait generation (FREE_TIER_MESSAGE_THRESHOLD=3, 3 user messages sent)
+		// Mock portrait generator returns deterministic text
+		expect(decoded.personalDescription).toBeDefined();
+		expect(typeof decoded.personalDescription).toBe("string");
+		expect((decoded.personalDescription as string).length).toBeGreaterThan(0);
 	});
 
 	test("returns 404 for non-existent session", async () => {
@@ -322,6 +333,9 @@ describe("GET /api/assessment/:sessionId/results", () => {
 		expect(decoded.traits).toHaveLength(5);
 		expect(decoded.facets).toHaveLength(30);
 		expect(decoded.overallConfidence).toBe(0); // No evidence yet
+
+		// No portrait generated — below free tier message threshold
+		expect(decoded.personalDescription).toBeNull();
 	});
 });
 

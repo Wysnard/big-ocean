@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { EvidencePanel } from "@/components/EvidencePanel";
 import { WaveDivider } from "@/components/home/WaveDivider";
 import { ResultsAuthGate } from "@/components/ResultsAuthGate";
+import { PersonalPortrait } from "@/components/results/PersonalPortrait";
 import { ProfileView } from "@/components/results/ProfileView";
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
 import { isAssessmentApiError, useGetResults } from "@/hooks/use-assessment";
@@ -262,8 +263,23 @@ function ResultsSessionPage() {
 			overallConfidence={results.overallConfidence}
 			isCurated={results.isCurated}
 		>
-			{/* Wave transition: shallows → mid */}
-			<WaveDivider fromColor="var(--depth-shallows)" className="text-[var(--depth-mid)]" />
+			{/* Personal Portrait (Story 8.4) — rendered between traits and share */}
+			{results.personalDescription && (
+				<>
+					<WaveDivider fromColor="var(--depth-shallows)" className="text-[var(--depth-mid)]" />
+					<div className="bg-[var(--depth-mid)]">
+						<PersonalPortrait
+							personalDescription={results.personalDescription}
+							dominantTrait={dominantTrait}
+						/>
+					</div>
+				</>
+			)}
+
+			{/* Wave transition: (shallows|mid) → mid */}
+			{!results.personalDescription && (
+				<WaveDivider fromColor="var(--depth-shallows)" className="text-[var(--depth-mid)]" />
+			)}
 
 			{/* Depth Zone: Mid — Share profile */}
 			<div className="bg-[var(--depth-mid)]">

@@ -107,6 +107,7 @@ export const assessmentSession = pgTable(
 			.notNull(),
 		status: text("status").notNull().default("active"), // 'active' | 'paused' | 'completed'
 		messageCount: integer("message_count").default(0).notNull(),
+		personalDescription: text("personal_description"), // NULL until portrait generated
 	},
 	(table) => [
 		// Index for quick session lookup by user

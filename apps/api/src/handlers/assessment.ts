@@ -187,6 +187,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 							confidence: f.confidence,
 						})),
 						overallConfidence: result.overallConfidence,
+						personalDescription: result.personalDescription,
 					};
 				}),
 			)
