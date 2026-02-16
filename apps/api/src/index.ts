@@ -26,6 +26,8 @@ import {
 	FacetEvidenceDrizzleRepositoryLive,
 	OrchestratorGraphLangGraphRepositoryLive,
 	OrchestratorLangGraphRepositoryLive,
+	PortraitGeneratorClaudeRepositoryLive,
+	PortraitGeneratorMockRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 } from "@workspace/infrastructure";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
@@ -88,6 +90,17 @@ const AnalyzerLayer =
 	process.env.MOCK_LLM === "true" ? AnalyzerMockRepositoryLive : AnalyzerClaudeRepositoryLive;
 
 /**
+ * Portrait Generator Layer Selection
+ *
+ * Uses mock implementation when MOCK_LLM=true (for integration testing).
+ * Uses real Claude implementation otherwise (production/development).
+ */
+const PortraitGeneratorLayer =
+	process.env.MOCK_LLM === "true"
+		? PortraitGeneratorMockRepositoryLive
+		: PortraitGeneratorClaudeRepositoryLive;
+
+/**
  * Redis Layer - provides Redis for CostGuard
  */
 const RedisLayer = RedisIoRedisRepositoryLive.pipe(Layer.provide(InfrastructureLayer));
@@ -143,6 +156,7 @@ const RepositoryLayers = Layer.mergeAll(
 	NerinAgentLayer,
 	CostGuardLayer,
 	OrchestratorLayer,
+	PortraitGeneratorLayer,
 );
 
 /**

@@ -35,6 +35,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 					updatedAt: new Date(),
 					status: "active" as const,
 					messageCount: 0,
+					personalDescription: null,
 				};
 				sessions.set(sessionId, session);
 				// Return full session (superset of { sessionId }) for mock consumers
@@ -53,6 +54,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 						updatedAt: new Date(),
 						status: "active" as const,
 						messageCount: 0,
+						personalDescription: null,
 					};
 				}
 				return session;
@@ -68,6 +70,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 					updatedAt: new Date(),
 					status: "active" as const,
 					messageCount: 0,
+					personalDescription: null,
 				};
 				const updated = { ...existing, ...partial };
 				sessions.set(sessionId, updated);

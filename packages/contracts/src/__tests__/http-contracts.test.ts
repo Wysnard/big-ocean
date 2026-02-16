@@ -148,6 +148,7 @@ describe("Assessment Contracts", () => {
 				],
 				facets: [{ name: "Imagination", traitName: "openness", score: 15, confidence: 85 }],
 				overallConfidence: 68,
+				personalDescription: null,
 			};
 
 			const result = S.decodeUnknownSync(GetResultsResponseSchema)(validResponse);
@@ -158,6 +159,33 @@ describe("Assessment Contracts", () => {
 			expect(result.traits[0]?.level).toBe("H");
 			expect(result.facets).toHaveLength(1);
 			expect(result.overallConfidence).toBe(68);
+		});
+
+		it("should validate get results response with non-null personalDescription", () => {
+			const validResponse = {
+				oceanCode5: "ODEWR",
+				oceanCode4: "ODEW",
+				archetypeName: "The Adventurous Leader",
+				archetypeDescription: "A bold explorer who combines curiosity with determination.",
+				archetypeColor: "#6B5CE7",
+				isCurated: true,
+				traits: [
+					{ name: "openness", score: 90, level: "H" as const, confidence: 85 },
+					{ name: "conscientiousness", score: 30, level: "L" as const, confidence: 70 },
+					{ name: "extraversion", score: 60, level: "M" as const, confidence: 60 },
+					{ name: "agreeableness", score: 90, level: "H" as const, confidence: 75 },
+					{ name: "neuroticism", score: 18, level: "L" as const, confidence: 50 },
+				],
+				facets: [{ name: "Imagination", traitName: "openness", score: 15, confidence: 85 }],
+				overallConfidence: 68,
+				personalDescription:
+					"You bring a rare combination of intellectual depth and curiosity to everything you do.",
+			};
+
+			const result = S.decodeUnknownSync(GetResultsResponseSchema)(validResponse);
+			expect(result.personalDescription).toBe(
+				"You bring a rare combination of intellectual depth and curiosity to everything you do.",
+			);
 		});
 
 		it("should reject get results response with invalid trait level", () => {
@@ -173,6 +201,7 @@ describe("Assessment Contracts", () => {
 				],
 				facets: [],
 				overallConfidence: 50,
+				personalDescription: null,
 			};
 
 			expect(() => S.decodeUnknownSync(GetResultsResponseSchema)(invalidResponse)).toThrow();

@@ -65,6 +65,9 @@ export {
 } from "./repositories/orchestrator.state";
 // Orchestrator graph repository implementation
 export { OrchestratorGraphLangGraphRepositoryLive } from "./repositories/orchestrator-graph.langgraph.repository";
+// Portrait generator repository implementations
+export { PortraitGeneratorClaudeRepositoryLive } from "./repositories/portrait-generator.claude.repository";
+export { PortraitGeneratorMockRepositoryLive } from "./repositories/portrait-generator.mock.repository";
 // Public profile repository implementation
 export { PublicProfileDrizzleRepositoryLive } from "./repositories/public-profile.drizzle.repository";
 // Redis repository implementation

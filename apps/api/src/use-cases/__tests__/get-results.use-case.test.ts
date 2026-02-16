@@ -10,16 +10,20 @@
 
 import {
 	ALL_FACETS,
+	AppConfig,
+	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	BIG_FIVE_TRAITS,
 	type BigFiveTrait,
 	FacetEvidenceRepository,
 	type FacetName,
 	LoggerRepository,
+	PortraitGenerationError,
+	PortraitGeneratorRepository,
 	type SavedFacetEvidence,
 	SessionNotFound,
 } from "@workspace/domain";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Redacted } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getResults } from "../get-results.use-case";
 
@@ -148,6 +152,36 @@ const mockLogger = {
 	debug: vi.fn(),
 };
 
+const mockMessageRepo = {
+	saveMessage: vi.fn(),
+	getMessages: vi.fn(),
+	getMessageCount: vi.fn(),
+};
+
+const mockPortraitGenerator = {
+	generatePortrait: vi.fn(),
+};
+
+const mockConfig = {
+	databaseUrl: "postgres://test",
+	redisUrl: "redis://test",
+	anthropicApiKey: Redacted.make("test-key"),
+	betterAuthSecret: Redacted.make("test-secret"),
+	betterAuthUrl: "http://localhost:4000",
+	frontendUrl: "http://localhost:3000",
+	port: 4000,
+	nodeEnv: "test",
+	analyzerModelId: "claude-sonnet-4-20250514",
+	analyzerMaxTokens: 4096,
+	analyzerTemperature: 0.2,
+	nerinModelId: "claude-sonnet-4-20250514",
+	nerinMaxTokens: 1024,
+	nerinTemperature: 0.7,
+	dailyCostLimit: 75,
+	freeTierMessageThreshold: 12,
+	shareMinConfidence: 30,
+};
+
 // ============================================
 // Test Layer
 // ============================================
@@ -156,6 +190,9 @@ function createTestLayer() {
 	return Layer.mergeAll(
 		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
 		Layer.succeed(FacetEvidenceRepository, mockEvidenceRepo),
+		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
+		Layer.succeed(PortraitGeneratorRepository, mockPortraitGenerator),
+		Layer.succeed(AppConfig, mockConfig),
 		Layer.succeed(LoggerRepository, mockLogger),
 	);
 }
@@ -168,7 +205,7 @@ describe("getResults Use Case", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		// Default: session exists
+		// Default: session exists with no portrait
 		mockSessionRepo.getSession.mockImplementation((_sessionId: string) =>
 			Effect.succeed({
 				id: TEST_SESSION_ID,
@@ -178,7 +215,21 @@ describe("getResults Use Case", () => {
 				updatedAt: new Date(),
 				status: "active",
 				messageCount: 10,
+				personalDescription: null,
 			}),
+		);
+
+		// Default: no messages (portrait won't trigger below threshold)
+		mockMessageRepo.getMessages.mockImplementation(() => Effect.succeed([]));
+
+		// Default: portrait generator returns a string
+		mockPortraitGenerator.generatePortrait.mockImplementation(() =>
+			Effect.succeed("Mock portrait text"),
+		);
+
+		// Default: updateSession succeeds
+		mockSessionRepo.updateSession.mockImplementation(
+			(_id: string, partial: Record<string, unknown>) => Effect.succeed({ id: _id, ...partial }),
 		);
 	});
 
@@ -365,6 +416,7 @@ describe("getResults Use Case", () => {
 					updatedAt: new Date(),
 					status: "active",
 					messageCount: 10,
+					personalDescription: null,
 				}),
 			);
 
@@ -389,6 +441,7 @@ describe("getResults Use Case", () => {
 					updatedAt: new Date(),
 					status: "active",
 					messageCount: 10,
+					personalDescription: null,
 				}),
 			);
 
@@ -410,6 +463,7 @@ describe("getResults Use Case", () => {
 					updatedAt: new Date(),
 					status: "active",
 					messageCount: 10,
+					personalDescription: null,
 				}),
 			);
 			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
@@ -442,6 +496,143 @@ describe("getResults Use Case", () => {
 			);
 
 			expect(error._tag).toBe("SessionNotFound");
+		});
+	});
+
+	describe("Portrait generation", () => {
+		it("should generate portrait on first call when threshold met and personalDescription is null", async () => {
+			const PORTRAIT_TEXT = "You are a thoughtful person...";
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
+				Effect.succeed(createUniformEvidence(15, 80)),
+			);
+
+			// 12 user messages — at threshold
+			mockMessageRepo.getMessages.mockImplementation(() =>
+				Effect.succeed(
+					Array.from({ length: 12 }, (_, i) => ({
+						id: `msg_${i}`,
+						sessionId: TEST_SESSION_ID,
+						role: "user",
+						content: `Message ${i}`,
+						createdAt: new Date(),
+					})),
+				),
+			);
+
+			mockPortraitGenerator.generatePortrait.mockImplementation(() => Effect.succeed(PORTRAIT_TEXT));
+
+			const result = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+			);
+
+			expect(result.personalDescription).toBe(PORTRAIT_TEXT);
+			expect(mockPortraitGenerator.generatePortrait).toHaveBeenCalledTimes(1);
+			expect(mockSessionRepo.updateSession).toHaveBeenCalledWith(TEST_SESSION_ID, {
+				personalDescription: PORTRAIT_TEXT,
+			});
+		});
+
+		it("should return stored portrait without regeneration when personalDescription exists", async () => {
+			const STORED_PORTRAIT = "Previously generated portrait text.";
+			mockSessionRepo.getSession.mockImplementation((_sessionId: string) =>
+				Effect.succeed({
+					id: TEST_SESSION_ID,
+					sessionId: TEST_SESSION_ID,
+					userId: null,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					status: "active",
+					messageCount: 10,
+					personalDescription: STORED_PORTRAIT,
+				}),
+			);
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
+				Effect.succeed(createUniformEvidence(15, 80)),
+			);
+			// Messages above threshold — but portrait already exists, so should NOT regenerate
+			mockMessageRepo.getMessages.mockImplementation(() =>
+				Effect.succeed(
+					Array.from({ length: 15 }, (_, i) => ({
+						id: `msg_${i}`,
+						sessionId: TEST_SESSION_ID,
+						role: "user",
+						content: `Message ${i}`,
+						createdAt: new Date(),
+					})),
+				),
+			);
+
+			const result = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+			);
+
+			expect(result.personalDescription).toBe(STORED_PORTRAIT);
+			expect(mockPortraitGenerator.generatePortrait).not.toHaveBeenCalled();
+		});
+
+		it("should return personalDescription null when below message threshold", async () => {
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
+				Effect.succeed(createUniformEvidence(15, 80)),
+			);
+			// Only 5 user messages — below freeTierMessageThreshold (12)
+			mockMessageRepo.getMessages.mockImplementation(() =>
+				Effect.succeed(
+					Array.from({ length: 5 }, (_, i) => ({
+						id: `msg_${i}`,
+						sessionId: TEST_SESSION_ID,
+						role: "user",
+						content: `Message ${i}`,
+						createdAt: new Date(),
+					})),
+				),
+			);
+
+			const result = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+			);
+
+			expect(result.personalDescription).toBeNull();
+			expect(mockPortraitGenerator.generatePortrait).not.toHaveBeenCalled();
+		});
+
+		it("should return personalDescription null when portrait generation fails (graceful degradation)", async () => {
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
+				Effect.succeed(createUniformEvidence(15, 80)),
+			);
+			mockMessageRepo.getMessages.mockImplementation(() =>
+				Effect.succeed(
+					Array.from({ length: 12 }, (_, i) => ({
+						id: `msg_${i}`,
+						sessionId: TEST_SESSION_ID,
+						role: "user",
+						content: `Message ${i}`,
+						createdAt: new Date(),
+					})),
+				),
+			);
+			// Portrait generator fails
+			mockPortraitGenerator.generatePortrait.mockImplementation(() =>
+				Effect.fail(
+					new PortraitGenerationError({
+						sessionId: TEST_SESSION_ID,
+						message: "Claude API timeout",
+					}),
+				),
+			);
+
+			const result = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+			);
+
+			expect(result.personalDescription).toBeNull();
+			expect(mockPortraitGenerator.generatePortrait).toHaveBeenCalledTimes(1);
+			// updateSession should NOT be called since portrait generation failed
+			expect(mockSessionRepo.updateSession).not.toHaveBeenCalled();
+			// Error should be logged
+			expect(mockLogger.error).toHaveBeenCalledWith(
+				"Portrait generation failed",
+				expect.objectContaining({ sessionId: TEST_SESSION_ID }),
+			);
 		});
 	});
 

@@ -303,6 +303,8 @@ const seedProgram = Effect.gen(function* () {
 			userId,
 			status: "completed",
 			messageCount: CONVERSATION_MESSAGES.length,
+			personalDescription:
+				"You bring a rare combination of intellectual depth and methodical precision to everything you do. When you described color-coding your books and creating detailed filing systems, it was clear that order isn't just a preference for you — it's how you make sense of the world. Your mind naturally gravitates toward structure, yet there's a wonderful restlessness underneath: you're always reading, questioning, and diving deep into ideas that challenge your thinking. In social settings, you conserve your energy for the connections that truly matter, preferring one meaningful conversation over a room full of small talk. When someone you care about is struggling, your instinct is to show up with a plan and a casserole — practical love in its purest form. You imagine futures in vivid detail, complete with three backup plans for every backup plan, which speaks to both your creativity and your need to feel prepared. There's a beautiful tension in you between the dreamer who brainstorms possibilities and the organizer who insists on checklists, and that tension is exactly what makes you effective.",
 		})
 		.returning()
 		.pipe(Effect.mapError((error) => new Error(`Failed to create assessment session: ${error}`)));

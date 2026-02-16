@@ -69,7 +69,8 @@ CREATE TABLE "assessment_session" (
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"status" text DEFAULT 'active' NOT NULL,
-	"message_count" integer DEFAULT 0 NOT NULL
+	"message_count" integer DEFAULT 0 NOT NULL,
+	"personal_description" text
 );
 
 CREATE TABLE "assessment_message" (

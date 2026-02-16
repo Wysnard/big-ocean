@@ -86,6 +86,7 @@ export const GetResultsResponseSchema = S.Struct({
 	traits: S.Array(TraitResultSchema),
 	facets: S.Array(FacetResultSchema),
 	overallConfidence: S.Number,
+	personalDescription: S.NullOr(S.String),
 });
 
 /**
