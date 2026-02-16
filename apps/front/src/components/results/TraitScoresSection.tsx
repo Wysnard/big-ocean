@@ -1,6 +1,7 @@
 import type { FacetName, FacetResult, TraitLevel, TraitName, TraitResult } from "@workspace/domain";
 import {
 	FACET_DESCRIPTIONS,
+	FACET_LEVEL_LABELS,
 	getFacetColor,
 	getFacetLevel,
 	getTraitColor,
@@ -150,9 +151,17 @@ export function TraitScoresSection({
 											return (
 												<div key={facet.name} id={`facet-${facet.name}`} className="pl-4">
 													<div className="flex items-center justify-between mb-1">
-														<span className="text-xs text-muted-foreground">
-															{toFacetDisplayName(facet.name)}
-														</span>
+														<div className="flex items-center gap-1.5">
+															<span className="text-xs text-muted-foreground">
+																{toFacetDisplayName(facet.name)}
+															</span>
+															<span
+																data-slot="facet-level-label"
+																className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+															>
+																{FACET_LEVEL_LABELS[getFacetLevel(facet.name, facet.score)]}
+															</span>
+														</div>
 														<div className="flex items-center gap-2">
 															<span className="text-xs text-muted-foreground">
 																{facet.score}/20 ({facet.confidence}%)
