@@ -18,6 +18,7 @@ export {
 	isTraitName,
 	NEUROTICISM_FACETS,
 	OPENNESS_FACETS,
+	TRAIT_NAMES,
 	TRAIT_TO_FACETS,
 	type TraitName,
 } from "./constants/big-five";
@@ -27,6 +28,8 @@ export {
 	OPENING_QUESTIONS,
 	pickOpeningQuestion,
 } from "./constants/nerin-greeting";
+// Trait descriptions (Story 8.2)
+export { TRAIT_DESCRIPTIONS, type TraitDescriptions } from "./constants/trait-descriptions";
 // Auth context tag (Story 1.4 — populated by AuthMiddleware)
 export { CurrentUser } from "./context/current-user";
 // Evidence errors

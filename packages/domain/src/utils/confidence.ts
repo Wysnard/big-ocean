@@ -9,7 +9,7 @@
  * All confidence values are integers in the range 0-100.
  */
 
-import { ALL_FACETS, type FacetName, type TraitName } from "../constants/big-five";
+import { ALL_FACETS, type FacetName, TRAIT_NAMES, type TraitName } from "../constants/big-five";
 import type {
 	FacetScore,
 	FacetScoresMap,
@@ -45,16 +45,8 @@ export const DEFAULT_TRAIT_SCORE: TraitScore = {
  */
 export const DEFAULT_FACET_CONFIDENCE = 0;
 
-/**
- * All 5 trait names.
- */
-const ALL_TRAITS: TraitName[] = [
-	"openness",
-	"conscientiousness",
-	"extraversion",
-	"agreeableness",
-	"neuroticism",
-];
+/** All 5 trait names (from single source of truth). */
+const ALL_TRAITS = TRAIT_NAMES;
 
 // ============================================
 // Initialization Functions

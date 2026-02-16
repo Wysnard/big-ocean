@@ -9,6 +9,7 @@ import { WaveDivider } from "@/components/home/WaveDivider";
 import { ResultsAuthGate } from "@/components/ResultsAuthGate";
 import { ProfileView } from "@/components/results/ProfileView";
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
+import type { TraitData } from "@/components/results/TraitScoresSection";
 import { isAssessmentApiError, useGetResults } from "@/hooks/use-assessment";
 import { useAuth } from "@/hooks/use-auth";
 import { useFacetEvidence } from "@/hooks/use-evidence";
@@ -27,10 +28,10 @@ export const Route = createFileRoute("/results/$assessmentSessionId")({
 });
 
 /** Determine the dominant (highest-scoring) trait from results */
-function getDominantTrait(traits: readonly { name: string; score: number }[]): TraitName {
+function getDominantTrait(traits: readonly { name: TraitName; score: number }[]): TraitName {
 	if (traits.length === 0) return "openness";
 	const sorted = [...traits].sort((a, b) => b.score - a.score);
-	return sorted[0].name as TraitName;
+	return sorted[0].name;
 }
 
 function ResultsSessionPage() {
@@ -254,7 +255,7 @@ function ResultsSessionPage() {
 			oceanCode5={results.oceanCode5}
 			description={results.archetypeDescription}
 			dominantTrait={dominantTrait}
-			traits={results.traits}
+			traits={results.traits as TraitData[]}
 			facets={results.facets}
 			expandedTraits={expandedTraits}
 			onToggleTrait={toggleTrait}

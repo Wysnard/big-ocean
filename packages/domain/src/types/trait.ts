@@ -7,26 +7,14 @@
  * NOTE: Scores are ALWAYS stored on facets. Trait scores are ALWAYS computed from facet scores.
  */
 
-/**
- * Big Five trait names
- */
-export type BigFiveTrait =
-	| "openness"
-	| "conscientiousness"
-	| "extraversion"
-	| "agreeableness"
-	| "neuroticism";
+import type { TraitName } from "../constants/big-five";
+import { TRAIT_NAMES } from "../constants/big-five";
 
-/**
- * All Big Five traits as an array
- */
-export const BIG_FIVE_TRAITS: readonly BigFiveTrait[] = [
-	"openness",
-	"conscientiousness",
-	"extraversion",
-	"agreeableness",
-	"neuroticism",
-] as const;
+/** @deprecated Use TraitName from constants/big-five instead */
+export type BigFiveTrait = TraitName;
+
+/** @deprecated Use TRAIT_NAMES from constants/big-five instead */
+export const BIG_FIVE_TRAITS = TRAIT_NAMES;
 
 /**
  * Computed confidence scores for Big Five personality traits.
