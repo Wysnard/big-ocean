@@ -24,6 +24,8 @@ export { HealthGroup } from "./http/groups/health";
 // Profile HTTP Schemas and Types
 export * from "./http/groups/profile";
 export { ProfileGroup } from "./http/groups/profile";
+// Auth Middleware (Story 1.4)
+export { AuthMiddleware } from "./middleware/auth";
 
 // Shared Schemas & Types
 export * from "./schemas/evidence";

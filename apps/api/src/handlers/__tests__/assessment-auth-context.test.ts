@@ -1,9 +1,48 @@
+/**
+ * AuthMiddlewareLive Tests (Story 1.4)
+ *
+ * Tests the Effect/Platform middleware layer that extracts authenticated
+ * user ID from Better Auth session cookies. Tests the full middleware
+ * handler including header normalization and error handling.
+ */
+
+import { HttpServerRequest } from "@effect/platform";
+import { AuthMiddleware } from "@workspace/contracts";
 import { BetterAuthService } from "@workspace/infrastructure";
 import { Effect, Layer } from "effect";
 import { describe, expect, it, vi } from "vitest";
-import { resolveAuthenticatedUserId } from "../assessment";
+import { AuthMiddlewareLive } from "../../middleware/auth.middleware";
 
-describe("resolveAuthenticatedUserId", () => {
+/**
+ * Helper: Run the AuthMiddleware sessionCookie handler with mock dependencies.
+ *
+ * Provides a mock BetterAuthService and mock HttpServerRequest,
+ * then extracts the AuthMiddleware service and calls its sessionCookie handler.
+ */
+const runAuthMiddleware = (
+	getSession: (...args: any[]) => Promise<any>,
+	requestHeaders: Record<string, unknown>,
+) => {
+	const authLayer = Layer.succeed(BetterAuthService, {
+		api: { getSession },
+	} as unknown as never);
+
+	const middlewareLayer = AuthMiddlewareLive.pipe(Layer.provide(authLayer));
+
+	return Effect.gen(function* () {
+		const middleware = yield* AuthMiddleware;
+		// sessionCookie handler receives a Redacted token (ignored, uses request headers)
+		return yield* middleware.sessionCookie("" as any);
+	}).pipe(
+		Effect.provide(middlewareLayer),
+		Effect.provideService(HttpServerRequest.HttpServerRequest, {
+			headers: requestHeaders,
+		} as unknown as HttpServerRequest.HttpServerRequest),
+		Effect.runPromise,
+	);
+};
+
+describe("AuthMiddlewareLive", () => {
 	it("returns authenticated user id from Better Auth session", async () => {
 		const getSession = vi.fn(async ({ headers }: { headers: Headers }) => {
 			expect(headers.get("cookie")).toContain("better-auth");
@@ -11,18 +50,10 @@ describe("resolveAuthenticatedUserId", () => {
 			return { user: { id: "user_123" } };
 		});
 
-		const authLayer = Layer.succeed(BetterAuthService, {
-			api: { getSession },
-		} as unknown as never);
-
-		const userId = await Effect.runPromise(
-			resolveAuthenticatedUserId({
-				headers: {
-					cookie: "better-auth=token",
-					"x-forwarded-for": ["10.0.0.1", "10.0.0.2"],
-				},
-			}).pipe(Effect.provide(authLayer)),
-		);
+		const userId = await runAuthMiddleware(getSession, {
+			cookie: "better-auth=token",
+			"x-forwarded-for": ["10.0.0.1", "10.0.0.2"],
+		});
 
 		expect(userId).toBe("user_123");
 		expect(getSession).toHaveBeenCalledTimes(1);
@@ -30,17 +61,10 @@ describe("resolveAuthenticatedUserId", () => {
 
 	it("returns undefined when no authenticated session exists", async () => {
 		const getSession = vi.fn(async () => null);
-		const authLayer = Layer.succeed(BetterAuthService, {
-			api: { getSession },
-		} as unknown as never);
 
-		const userId = await Effect.runPromise(
-			resolveAuthenticatedUserId({
-				headers: {
-					cookie: "",
-				},
-			}).pipe(Effect.provide(authLayer)),
-		);
+		const userId = await runAuthMiddleware(getSession, {
+			cookie: "",
+		});
 
 		expect(userId).toBeUndefined();
 	});
@@ -49,17 +73,10 @@ describe("resolveAuthenticatedUserId", () => {
 		const getSession = vi.fn(async () => {
 			throw new Error("auth service unavailable");
 		});
-		const authLayer = Layer.succeed(BetterAuthService, {
-			api: { getSession },
-		} as unknown as never);
 
-		const userId = await Effect.runPromise(
-			resolveAuthenticatedUserId({
-				headers: {
-					cookie: "better-auth=token",
-				},
-			}).pipe(Effect.provide(authLayer)),
-		);
+		const userId = await runAuthMiddleware(getSession, {
+			cookie: "better-auth=token",
+		});
 
 		expect(userId).toBeUndefined();
 		expect(getSession).toHaveBeenCalledTimes(1);
@@ -74,20 +91,12 @@ describe("resolveAuthenticatedUserId", () => {
 			return { user: { id: "user_from_headers" } };
 		});
 
-		const authLayer = Layer.succeed(BetterAuthService, {
-			api: { getSession },
-		} as unknown as never);
-
-		const userId = await Effect.runPromise(
-			resolveAuthenticatedUserId({
-				headers: {
-					cookie: ["better-auth=token", "theme=dark"],
-					"x-forwarded-port": 443,
-					"x-forwarded-proto": "https",
-					"x-forwarded-for": ["10.0.0.1", "10.0.0.2"],
-				},
-			}).pipe(Effect.provide(authLayer)),
-		);
+		const userId = await runAuthMiddleware(getSession, {
+			cookie: ["better-auth=token", "theme=dark"],
+			"x-forwarded-port": 443,
+			"x-forwarded-proto": "https",
+			"x-forwarded-for": ["10.0.0.1", "10.0.0.2"],
+		});
 
 		expect(userId).toBe("user_from_headers");
 		expect(getSession).toHaveBeenCalledTimes(1);
