@@ -7,15 +7,14 @@
  */
 
 import { HttpApiBuilder } from "@effect/platform";
-import { BigOceanApi, DatabaseError } from "@workspace/contracts";
-import type { FacetEvidencePersistenceError } from "@workspace/domain";
+import { BigOceanApi, DatabaseError, Unauthorized } from "@workspace/contracts";
+import { CurrentUser, type FacetEvidencePersistenceError } from "@workspace/domain";
 import { Effect } from "effect";
 import {
 	createShareableProfile,
 	getPublicProfile,
 	toggleProfileVisibility,
 } from "../use-cases/index";
-import { resolveAuthenticatedUserId } from "./assessment";
 
 export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (handlers) =>
 	Effect.gen(function* () {
@@ -94,12 +93,12 @@ export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (ha
 						);
 					}
 
-					// Extract authenticated user ID from session cookie via Better Auth
-					const authenticatedUserId = yield* resolveAuthenticatedUserId(request);
+					// Extract authenticated user ID from middleware
+					const authenticatedUserId = yield* CurrentUser;
 
 					if (!authenticatedUserId) {
 						return yield* Effect.fail(
-							new DatabaseError({
+							new Unauthorized({
 								message: "Authentication required",
 							}),
 						);

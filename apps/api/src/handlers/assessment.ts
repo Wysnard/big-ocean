@@ -18,13 +18,13 @@ import {
 } from "@workspace/contracts";
 import {
 	BudgetPausedError,
+	CurrentUser,
 	extract4LetterCode,
 	type FacetEvidencePersistenceError,
 	lookupArchetype,
 	OrchestrationError,
 	RedisOperationError,
 } from "@workspace/domain";
-import { BetterAuthService } from "@workspace/infrastructure";
 import { DateTime, Effect } from "effect";
 import {
 	getResults,
@@ -35,64 +35,12 @@ import {
 	startAuthenticatedAssessment,
 } from "../use-cases/index";
 
-const toFetchHeaders = (requestHeaders: unknown): Headers => {
-	if (requestHeaders instanceof Headers) {
-		return requestHeaders;
-	}
-
-	const headers = new Headers();
-
-	if (typeof requestHeaders !== "object" || requestHeaders === null) {
-		return headers;
-	}
-
-	for (const [key, value] of Object.entries(requestHeaders as Record<string, unknown>)) {
-		if (value == null) {
-			continue;
-		}
-
-		if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-			headers.set(key, String(value));
-			continue;
-		}
-
-		if (Array.isArray(value)) {
-			const normalizedValues = value
-				.filter((item): item is string | number | boolean => item != null)
-				.map((item) => String(item));
-			if (normalizedValues.length === 0) {
-				continue;
-			}
-
-			// Cookie header values must remain semicolon-delimited for session parsing.
-			if (key.toLowerCase() === "cookie") {
-				headers.set(key, normalizedValues.join("; "));
-			} else {
-				headers.set(key, normalizedValues.join(", "));
-			}
-		}
-	}
-
-	return headers;
-};
-
-export const resolveAuthenticatedUserId = (request: { headers: unknown }) =>
-	Effect.gen(function* () {
-		const auth = yield* BetterAuthService;
-		const session = (yield* Effect.tryPromise({
-			try: () => auth.api.getSession({ headers: toFetchHeaders(request.headers) }),
-			catch: (error) => error,
-		}).pipe(Effect.catchAll(() => Effect.succeed(null)))) as { user?: { id?: string } } | null;
-
-		return session?.user?.id;
-	});
-
 export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment", (handlers) =>
 	Effect.gen(function* () {
 		return handlers
-			.handle("start", ({ payload, request }) =>
+			.handle("start", ({ payload }) =>
 				Effect.gen(function* () {
-					const authenticatedUserId = yield* resolveAuthenticatedUserId(request);
+					const authenticatedUserId = yield* CurrentUser;
 					const userId = authenticatedUserId ?? payload.userId;
 
 					// Call use case - dispatch to authenticated or anonymous path
@@ -120,9 +68,9 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 					};
 				}),
 			)
-			.handle("listSessions", ({ request }) =>
+			.handle("listSessions", () =>
 				Effect.gen(function* () {
-					const userId = yield* resolveAuthenticatedUserId(request);
+					const userId = yield* CurrentUser;
 					if (!userId) {
 						return yield* Effect.fail(
 							new Unauthorized({ message: "Authentication required to list sessions" }),
@@ -159,9 +107,9 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 					};
 				}),
 			)
-			.handle("sendMessage", ({ payload, request }) =>
+			.handle("sendMessage", ({ payload }) =>
 				Effect.gen(function* () {
-					const authenticatedUserId = yield* resolveAuthenticatedUserId(request);
+					const authenticatedUserId = yield* CurrentUser;
 
 					// Call use case - map domain errors to contract errors
 					const result = yield* sendMessage({
@@ -203,9 +151,9 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 					};
 				}),
 			)
-			.handle("getResults", ({ path: { sessionId }, request }) =>
+			.handle("getResults", ({ path: { sessionId } }) =>
 				Effect.gen(function* () {
-					const authenticatedUserId = yield* resolveAuthenticatedUserId(request);
+					const authenticatedUserId = yield* CurrentUser;
 
 					// Call use case - map infrastructure errors to contract errors
 					const result = yield* getResults({ sessionId, authenticatedUserId }).pipe(
@@ -242,9 +190,9 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 					};
 				}),
 			)
-			.handle("resumeSession", ({ path: { sessionId }, request }) =>
+			.handle("resumeSession", ({ path: { sessionId } }) =>
 				Effect.gen(function* () {
-					const authenticatedUserId = yield* resolveAuthenticatedUserId(request);
+					const authenticatedUserId = yield* CurrentUser;
 
 					// Call use case - map infrastructure errors to contract errors
 					const result = yield* resumeSession({ sessionId, authenticatedUserId }).pipe(

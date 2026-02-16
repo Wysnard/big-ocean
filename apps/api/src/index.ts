@@ -39,6 +39,7 @@ import { AssessmentGroupLive } from "./handlers/assessment";
 import { EvidenceGroupLive } from "./handlers/evidence";
 import { HealthGroupLive } from "./handlers/health";
 import { ProfileGroupLive } from "./handlers/profile";
+import { AuthMiddlewareLive } from "./middleware/auth.middleware";
 import { createBetterAuthHandler } from "./middleware/better-auth";
 
 /**
@@ -152,6 +153,16 @@ const ServiceLayers = RepositoryLayers.pipe(Layer.provide(InfrastructureLayer));
 /**
  * Handler Layers - HTTP API handlers
  */
+/**
+ * Auth Middleware Layer - requires BetterAuthService from InfrastructureLayer
+ *
+ * Provided separately from HttpGroupsLive because HttpApiBuilder.api() pulls
+ * AuthMiddleware into its own R type parameter (from the group contract's
+ * .middleware(AuthMiddleware) declaration). Layer.mergeAll doesn't cross-resolve
+ * dependencies, so we provide AuthMiddleware explicitly to ApiLive.
+ */
+const AuthMiddlewareLayer = AuthMiddlewareLive.pipe(Layer.provide(InfrastructureLayer));
+
 const HttpGroupsLive = Layer.mergeAll(
 	HealthGroupLive,
 	AssessmentGroupLive,
@@ -163,7 +174,10 @@ const HttpGroupsLive = Layer.mergeAll(
 /**
  * API Layer - Builds HTTP API from contracts with handlers
  */
-const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(Layer.provide(HttpGroupsLive));
+const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(
+	Layer.provide(HttpGroupsLive),
+	Layer.provide(AuthMiddlewareLayer),
+);
 
 /**
  * Complete API Layer with Router, Middleware, and Server Context

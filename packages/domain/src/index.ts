@@ -27,6 +27,8 @@ export {
 	OPENING_QUESTIONS,
 	pickOpeningQuestion,
 } from "./constants/nerin-greeting";
+// Auth context tag (Story 1.4 — populated by AuthMiddleware)
+export { CurrentUser } from "./context/current-user";
 // Evidence errors
 export {
 	EvidenceValidationError,
