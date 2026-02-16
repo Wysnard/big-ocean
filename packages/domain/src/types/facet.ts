@@ -7,7 +7,7 @@
  * NOTE: Scores are ALWAYS stored on facets. Trait scores are ALWAYS computed from facet scores.
  */
 
-import type { BigFiveTrait } from "./trait";
+import type { TraitName } from "../constants/big-five";
 
 /**
  * Openness facets - tendency to seek new experiences and ideas
@@ -123,7 +123,7 @@ export interface FacetConfidenceScores {
  * Mapping from Big Five traits to their component facets.
  * Scores are ALWAYS stored on facets. Trait scores are ALWAYS computed from facet scores.
  */
-export const FACETS_BY_TRAIT: Record<BigFiveTrait, Array<keyof FacetConfidenceScores>> = {
+export const FACETS_BY_TRAIT: Record<TraitName, Array<keyof FacetConfidenceScores>> = {
 	openness: [
 		"imagination",
 		"artistic_interests",

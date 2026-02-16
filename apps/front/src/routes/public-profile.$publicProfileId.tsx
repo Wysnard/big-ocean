@@ -9,7 +9,7 @@
 
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { GetPublicProfileResponse } from "@workspace/contracts";
-import type { FacetName, TraitName } from "@workspace/domain";
+import type { FacetName, TraitLevel, TraitName } from "@workspace/domain";
 import {
 	BIG_FIVE_TRAITS,
 	FACET_TO_TRAIT,
@@ -98,7 +98,7 @@ function deriveTraitData(facets: ApiFacets, traitSummary: Record<string, string>
 		return {
 			name: trait,
 			score: totalScore,
-			level: traitSummary[trait] ?? TRAIT_LETTER_MAP[trait][1],
+			level: (traitSummary[trait] ?? TRAIT_LETTER_MAP[trait][1]) as TraitLevel,
 			confidence: count > 0 ? Math.round(totalConfidence / count) : 0,
 		};
 	});
@@ -108,7 +108,7 @@ function deriveTraitData(facets: ApiFacets, traitSummary: Record<string, string>
 function getDominantTrait(traits: TraitData[]): TraitName {
 	if (traits.length === 0) return "openness";
 	const sorted = [...traits].sort((a, b) => b.score - a.score);
-	return sorted[0].name as TraitName;
+	return sorted[0].name;
 }
 
 function ProfilePage() {

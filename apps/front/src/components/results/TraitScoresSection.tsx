@@ -1,5 +1,11 @@
-import type { FacetName, TraitName } from "@workspace/domain";
-import { getFacetColor, getTraitColor, toFacetDisplayName } from "@workspace/domain";
+import type { FacetName, TraitLevel, TraitName } from "@workspace/domain";
+import {
+	getFacetColor,
+	getTraitColor,
+	TRAIT_DESCRIPTIONS,
+	TRAIT_NAMES,
+	toFacetDisplayName,
+} from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
 import { FileText } from "lucide-react";
 import type { ReactNode } from "react";
@@ -26,20 +32,12 @@ const TRAIT_LABELS: Record<TraitName, string> = {
 	neuroticism: "Neuroticism",
 };
 
-const TRAIT_ORDER: TraitName[] = [
-	"openness",
-	"conscientiousness",
-	"extraversion",
-	"agreeableness",
-	"neuroticism",
-];
-
 const MAX_TRAIT_SCORE = 120;
 
 export interface TraitData {
-	name: string;
+	name: TraitName;
 	score: number;
-	level: string;
+	level: TraitLevel;
 	confidence: number;
 }
 
@@ -77,23 +75,22 @@ export function TraitScoresSection({
 					{displayName ? `${displayName}\u2019s Trait Scores` : "Your Trait Scores"}
 				</h2>
 				<div className="space-y-5">
-					{TRAIT_ORDER.map((trait) => {
+					{TRAIT_NAMES.map((trait) => {
 						const traitData = traits.find((t) => t.name === trait);
 						if (!traitData) return null;
 
-						const traitName = trait as TraitName;
 						const percentage = Math.round((traitData.score / MAX_TRAIT_SCORE) * 100);
 						const traitFacets = hasFacets ? facets.filter((f) => f.traitName === trait) : [];
 						const isExpanded = expandedTraits?.has(trait) ?? false;
-						const traitColor = getTraitColor(traitName);
-						const ShapeComponent = TRAIT_SHAPE[traitName];
+						const traitColor = getTraitColor(trait);
+						const ShapeComponent = TRAIT_SHAPE[trait];
 
 						const headerContent = (
 							<>
 								<div className="flex items-center justify-between mb-2">
 									<div className="flex items-center gap-2">
 										<ShapeComponent size={20} color={traitColor} />
-										<span className="text-sm font-medium text-foreground">{TRAIT_LABELS[traitName]}</span>
+										<span className="text-sm font-medium text-foreground">{TRAIT_LABELS[trait]}</span>
 										{hasFacets && (
 											<svg
 												className={`h-4 w-4 text-muted-foreground motion-safe:transition-transform motion-safe:duration-200 ${isExpanded ? "rotate-180" : ""}`}
@@ -138,6 +135,19 @@ export function TraitScoresSection({
 									</button>
 								) : (
 									<div>{headerContent}</div>
+								)}
+
+								{/* Tagline + level description — shown when expanded */}
+								{isExpanded && (
+									<div className="mt-3">
+										<span className="text-xs text-muted-foreground">{TRAIT_DESCRIPTIONS[trait].tagline}</span>
+										<p
+											data-slot="trait-description"
+											className="text-sm text-muted-foreground leading-relaxed mt-3"
+										>
+											{(TRAIT_DESCRIPTIONS[trait].levels as Record<TraitLevel, string>)[traitData.level]}
+										</p>
+									</div>
 								)}
 
 								{/* Facets — shown when expanded */}

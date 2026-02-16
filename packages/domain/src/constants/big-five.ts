@@ -102,16 +102,25 @@ export const ALL_FACETS = [
 export type FacetName = (typeof ALL_FACETS)[number];
 
 /**
+ * Trait Names Array (Single Source of Truth)
+ *
+ * All 5 Big Five trait names as a const tuple.
+ * TraitName is derived from this array — do not duplicate.
+ */
+export const TRAIT_NAMES = [
+	"openness",
+	"conscientiousness",
+	"extraversion",
+	"agreeableness",
+	"neuroticism",
+] as const;
+
+/**
  * Trait Name Union Type (5 values)
  *
- * TypeScript union of the five Big Five trait names.
+ * Derived from TRAIT_NAMES array.
  */
-export type TraitName =
-	| "openness"
-	| "conscientiousness"
-	| "extraversion"
-	| "agreeableness"
-	| "neuroticism";
+export type TraitName = (typeof TRAIT_NAMES)[number];
 
 /**
  * Facet-to-Trait Mapping
@@ -207,7 +216,5 @@ export function isFacetName(name: string): name is FacetName {
  * @returns True if name is a valid trait name
  */
 export function isTraitName(name: string): name is TraitName {
-	return ["openness", "conscientiousness", "extraversion", "agreeableness", "neuroticism"].includes(
-		name,
-	);
+	return (TRAIT_NAMES as readonly string[]).includes(name);
 }

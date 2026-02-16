@@ -127,8 +127,8 @@ development_status:
   # Phase 2 (Stories 8.4-8.5): AI-generated personalized portraits + freemium model
   epic-8: in-progress
   8-1-expand-archetype-descriptions-to-4-5-sentences: done
-  8-2-add-level-specific-trait-descriptions: ready-for-dev
-  8-3-add-level-specific-facet-descriptions: backlog
+  8-2-add-level-specific-trait-descriptions: review
+  8-3-add-level-specific-facet-descriptions: ready-for-dev
   8-4-pre-generate-personalized-portrait-at-70-percent-confidence: backlog
   8-5-regenerate-personalized-portrait-at-85-percent-confidence-paid-tier: backlog
   epic-8-retrospective: optional
