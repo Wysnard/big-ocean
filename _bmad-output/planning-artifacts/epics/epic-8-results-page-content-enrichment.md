@@ -1,8 +1,8 @@
 # Epic 8: Results Page Content Enrichment
 
-**Phase:** 1 (MVP) for static content, Phase 2 for personalized portraits
+**Phase:** 1 (MVP) for static content + personalized portrait, Phase 2 for paid tier portrait regeneration
 
-**Goal:** Transform the results page from a clinical data readout into a meaningful, layered personality narrative that makes users feel understood - with static archetype/trait/facet descriptions (Phase 1) and AI-generated personalized portraits tied to a freemium model (Phase 2).
+**Goal:** Transform the results page from a clinical data readout into a meaningful, layered personality narrative that makes users feel understood - with static archetype/trait/facet descriptions and a personalized AI portrait at the free tier message threshold (Phase 1), and paid tier portrait regeneration with richer evidence (Phase 2).
 
 **Dependencies:**
 - Epic 3 (OCEAN Archetype System) - archetype lookup working
@@ -11,42 +11,86 @@
 
 **Enables:** User retention, shareability, freemium monetization ($10 paid tier)
 
-**User Value:** Users understand their personality results through rich, personally relevant descriptions rather than raw scores. Paid users get AI-generated portraits that reference their actual conversation.
+**User Value:** Users understand their personality results through rich, personally relevant descriptions rather than raw scores. Paid users get AI-generated portraits regenerated with richer evidence from extended conversations.
 
 ---
 
 ## Content Architecture
 
-### Results Page Layout (Post-Implementation)
+### Results Page Layout (Mockup 7: Detail Zone)
+
+Reference mockup: `_bmad-output/planning-artifacts/result-page-ux-design/profile-mockup-7-detail-zone.html`
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  1. ARCHETYPE CARD (existing, enhanced)                      │
-│     - Archetype name (e.g., "The Creative Diplomat")         │
-│     - OCEAN code badges                                      │
-│     - 4-5 sentence archetype description (EXPANDED)          │
-│     - Confidence indicator                                   │
+│  1. HERO SECTION (existing, modified)                        │
+│     - Keep existing ArchetypeHeroSection                     │
+│     - Remove archetype description from hero                 │
+│     - Archetype name, OCEAN code, geometric signature,       │
+│       confidence badge remain                                │
 ├─────────────────────────────────────────────────────────────┤
-│  2. PERSONALIZED PORTRAIT (new, conditional)                 │
-│     - Appears when overallConfidence >= 70%                  │
-│     - AI-generated narrative referencing user's conversation │
-│     - Visual distinction (archetype-colored accent border)   │
-│     - Label: "Your Personal Portrait"                        │
-│     - Regenerated at 85% for paid users (replaces v1)        │
-├─────────────────────────────────────────────────────────────┤
-│  3. TRAIT SECTIONS (enhanced)                                │
-│     Per trait:                                               │
-│     - Trait name + one-line tagline                          │
-│     - Score bar (existing)                                   │
-│     - Level-specific description (4-5 sentences)             │
-│     - Expandable facet breakdown (existing)                  │
-│       Per facet:                                             │
-│       - Facet name + score                                   │
-│       - Level-specific description (2-3 sentences)           │
-├─────────────────────────────────────────────────────────────┤
-│  4. ACTION BUTTONS (existing)                                │
-│     - Continue Assessment / Share My Archetype               │
+│  2. GRID CONTAINER (new layout — max-width 1120px)           │
+│                                                              │
+│  ┌─ Full-width ──────────────────────────────────────────┐   │
+│  │  2a. ABOUT YOUR ARCHETYPE (full-width card)           │   │
+│  │      - Archetype description (4-5 sentences, Story 8.1)│  │
+│  └───────────────────────────────────────────────────────┘   │
+│                                                              │
+│  ┌─ Full-width ──────────────────────────────────────────┐   │
+│  │  2b. PERSONALIZED PORTRAIT (full-width card, conditional)│ │
+│  │      - Rainbow accent bar (5 trait colors)             │  │
+│  │      - Icon + "Your Personality Portrait" header       │  │
+│  │      - 2x2 grid of insight sections:                   │  │
+│  │        [Strengths]    [Tensions]                        │  │
+│  │        [How You Connect] [Resilience]                   │  │
+│  │      - Each section: colored dot + title + paragraph   │  │
+│  │      - Only shown when personalDescription exists       │  │
+│  └───────────────────────────────────────────────────────┘   │
+│                                                              │
+│  ┌─ Side by side ────────────────────────────────────────┐   │
+│  │  2c. RADAR CHART        │  2d. CONFIDENCE RING        │  │
+│  │  "Personality Shape"    │  "Overall Confidence"        │  │
+│  │  shadcn/Recharts        │  Ring with percentage        │  │
+│  │  RadarChart (pentagon)  │  Message count label         │  │
+│  └─────────────────────────┴─────────────────────────────┘   │
+│                                                              │
+│  ┌─ Grid: 3 cards per row (responsive) ──────────────────┐   │
+│  │  2e. TRAIT CARDS (5 cards in auto-fill grid)          │   │
+│  │  Per card:                                             │  │
+│  │  - Color accent bar (4px top)                          │  │
+│  │  - OCEAN shape + trait name + level badge (H/M/L)      │  │
+│  │  - Large score + /120 + percentage                     │  │
+│  │  - Score bar                                           │  │
+│  │  - 2x3 compact facet grid (name + score + mini bar)    │  │
+│  │  - "Tap to see evidence" hint                          │  │
+│  │  - Click → opens DETAIL ZONE below the row             │  │
+│  └───────────────────────────────────────────────────────┘   │
+│                                                              │
+│  ┌─ Full-width, slides open ─────────────────────────────┐   │
+│  │  2f. DETAIL ZONE (inline, replaces modal)             │   │
+│  │  - Header: shape + trait name + score + close button   │  │
+│  │  - 3-column facet detail grid (responsive 3→2→1)       │  │
+│  │  - Per facet: name, score bar, evidence quotes          │  │
+│  │  - Evidence: italic quote, message ref, signal badge    │  │
+│  │  - Animated open/close (max-height transition)          │  │
+│  └───────────────────────────────────────────────────────┘   │
+│                                                              │
+│  ┌─ Side by side ────────────────────────────────────────┐   │
+│  │  2g. QUICK ACTIONS      │                              │  │
+│  │  - Resume Conversation  │                              │  │
+│  │  - View Public Profile  │                              │  │
+│  │  - Download Report      │                              │  │
+│  └─────────────────────────┘                              │  │
+│                                                              │
+│  ┌─ Full-width ──────────────────────────────────────────┐   │
+│  │  2h. SHARE CARD (full-width, gradient bg)             │   │
+│  │  - "Share your archetype" + description                │  │
+│  │  - Shareable link + Copy button                        │  │
+│  │  - Visibility toggle (Public/Private)                  │  │
+│  └───────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
+
+Components: shadcn Card, Button, Switch, Chart (Recharts RadarChart)
 ```
 
 ### Content Tiers
@@ -56,20 +100,20 @@
 | **Static** | Archetype description (4-5 sentences) | `CURATED_ARCHETYPES` constant | Always |
 | **Static** | Trait level descriptions (4-5 sentences per level) | `TRAIT_DESCRIPTIONS` constant | Always |
 | **Static** | Facet level descriptions (2-3 sentences per level) | `FACET_DESCRIPTIONS` constant | Always |
-| **Dynamic** | Personalized portrait | AI-generated, stored in DB | >= 70% confidence |
-| **Dynamic** | Enhanced portrait (paid) | AI-regenerated at 85% | >= 85% confidence, paid tier |
+| **Dynamic** | Personalized portrait | AI-generated, stored in DB | Free tier message threshold reached |
+| **Dynamic** | Enhanced portrait (paid) | AI-regenerated with more evidence | Paid tier, Phase 2 |
 
 ### Freemium Model
 
 **Free tier:**
-- Chat until ~70% confidence (conversation locks)
+- Chat until free tier message threshold (default: 15 user messages, conversation locks)
 - Receive: archetype description, trait/facet level descriptions, ONE personalized portrait
 - Cannot continue chatting with Nerin
 
-**Paid tier ($10):**
-- Unlock continued conversation beyond 70%
-- Chat to 85%+ confidence for sharper scores
-- Personalized portrait regenerated at 85% (replaces the 70% version)
+**Paid tier ($10, Phase 2 — requires tier infrastructure):**
+- Unlock continued conversation beyond free tier threshold
+- More messages = more evidence = sharper scores
+- Personalized portrait regenerated with richer data (replaces free tier version)
 - Richer portrait because more evidence data available
 
 ---
@@ -228,16 +272,16 @@ export const FACET_DESCRIPTIONS: Record<FacetName, {
 
 ---
 
-## Story 8.4: Pre-Generate Personalized Portrait at 70% Confidence
+## Story 8.4: Pre-Generate Personalized Portrait at Free Tier Message Threshold
 
-As a **User who has reached 70% assessment confidence**,
+As a **User who has reached the free tier message threshold**,
 I want **to see a personalized personality portrait that references my actual conversation**,
 So that **I feel genuinely understood in a way no static description can achieve**.
 
 **Acceptance Criteria:**
 
-**Given** my assessment reaches >= 70% overall confidence
-**When** the orchestrator pipeline completes that analysis batch
+**Given** my assessment reaches the free tier message threshold (default: 15 user messages)
+**When** the orchestrator pipeline completes the final analysis batch
 **Then** a personalized portrait is generated via Claude API call
 **And** the portrait is stored in `assessment_sessions.personal_description` (TEXT column)
 **And** the portrait references specific themes from my conversation
@@ -246,11 +290,19 @@ So that **I feel genuinely understood in a way no static description can achieve
 
 **Given** a personalized portrait exists for my session
 **When** I view the results page
-**Then** I see a "Your Personal Portrait" section below the archetype card
-**And** the section has a distinct visual treatment (archetype-colored accent border)
-**And** the content references my actual responses and patterns
+**Then** I see a "Your Personality Portrait" full-width card below the About Archetype section
+**And** the card has a rainbow accent bar (5 trait colors gradient) at the top
+**And** the card header shows an icon + "Your Personality Portrait" + subtitle "Patterns discovered from your conversation with Nerin"
+**And** the content is displayed in a 2x2 grid of insight sections:
+  - "Your Strengths" (Openness color dot) — what makes you distinctive
+  - "Your Tensions" (Extraversion color dot) — interesting contradictions in your profile
+  - "How You Connect" (Agreeableness color dot) — your social and relational patterns
+  - "Your Resilience" (Neuroticism color dot) — how you handle pressure and emotions
+**And** each section has a colored dot, title, and paragraph (2-4 sentences)
+**And** the grid is responsive (2x2 on desktop, 1-column on mobile)
+**And** the content references my actual responses and trait scores
 
-**Given** my confidence is below 70%
+**Given** my message count is below the free tier threshold
 **When** I view the results page
 **Then** the personalized portrait section is not shown
 **And** no placeholder or teaser is shown (clean absence)
@@ -260,84 +312,238 @@ So that **I feel genuinely understood in a way no static description can achieve
 - Add `personal_description TEXT NULL` column to `assessment_sessions` table (migration)
 - Add portrait generation step to orchestrator pipeline:
   ```
-  After analysis batch:
-    IF overallConfidence >= 70% AND personal_description IS NULL:
+  After analysis batch (when messageCount >= freeTierMessageThreshold):
+    IF personal_description IS NULL:
       → Generate portrait via Claude API (one call)
       → Store in assessment_sessions.personal_description
   ```
+- Trigger condition matches the result reveal condition: `messageCount >= config.freeTierMessageThreshold`
+- Uses the same `freeTierMessageThreshold` config from AppConfig (default: 15, env: FREE_TIER_MESSAGE_THRESHOLD)
 - Claude prompt includes: facet scores, evidence summaries, conversation themes
+- Portrait generation prompt instructs Claude to produce JSON-structured output:
+  ```json
+  {
+    "strengths": "paragraph about distinctive trait combinations...",
+    "tensions": "paragraph about interesting contradictions...",
+    "connections": "paragraph about social/relational patterns...",
+    "resilience": "paragraph about emotional handling and pressure..."
+  }
+  ```
+- DB column `personal_description` stores the JSON string (TEXT column, unchanged)
+- Results endpoint returns `personalDescription` as JSON string when non-null
+- Frontend parses JSON and renders `PersonalPortrait` component with 4 sections
+- Fallback: if JSON parsing fails (legacy single-string format), render as single paragraph
 - Portrait tone: warm, insightful, second-person, non-clinical
-- Results endpoint (`get-results` use-case) returns `personalDescription` field when non-null
-- Frontend renders `PersonalPortrait` component conditionally
+- Each section references specific trait scores and conversation themes
+- shadcn Card component for container
 - One API call per session, not per page view
 
 **Acceptance Checklist:**
 - [ ] DB migration adds `personal_description` column to `assessment_sessions`
-- [ ] Orchestrator triggers portrait generation at >= 70% confidence
+- [ ] Orchestrator triggers portrait generation when messageCount >= freeTierMessageThreshold
 - [ ] Portrait generated only once (checks for NULL before generating)
 - [ ] Portrait stored in DB (not regenerated on each visit)
 - [ ] Portrait is 6-10 sentences referencing conversation themes
 - [ ] Results API returns `personalDescription` when non-null
-- [ ] Frontend `PersonalPortrait` component renders with archetype accent
+- [ ] Frontend `PersonalPortrait` component renders 4-section grid with rainbow accent bar
 - [ ] Component hidden when `personalDescription` is null
+- [ ] Each section has trait-colored dot, title, and 2-4 sentence paragraph
+- [ ] JSON parsing with fallback for single-string format
+- [ ] Responsive: 2x2 grid on desktop, 1-column on mobile
+- [ ] Portrait generation prompt produces structured JSON with 4 keys
 - [ ] Cost: one additional Claude API call per completed assessment
-- [ ] Tests: use-case test with mock orchestrator verifying trigger condition
+- [ ] Tests: use-case test with mock orchestrator verifying trigger condition uses message count
 
 ---
 
-## Story 8.5: Regenerate Personalized Portrait at 85% Confidence (Paid Tier)
+## Story 8.5: Regenerate Personalized Portrait for Paid Tier (Phase 2 — Deferred)
 
-As a **Paid user who has continued chatting beyond 70%**,
-I want **my personalized portrait to be regenerated with richer data at 85% confidence**,
-So that **my portrait reflects the deeper understanding from my extended conversation**.
+> **DEFERRED:** This story requires tier infrastructure (free vs premium user distinction) which does not yet exist. Postponed until tier system is implemented. The core concept remains: paid users unlock continued conversation beyond the free tier threshold, accumulate more evidence, and receive a richer regenerated portrait.
+
+As a **Paid user who has continued chatting beyond the free tier threshold**,
+I want **my personalized portrait to be regenerated with richer data from my extended conversation**,
+So that **my portrait reflects the deeper understanding from more evidence**.
+
+**Prerequisites (not yet implemented):**
+- Tier infrastructure: ability to distinguish free vs premium users
+- Payment system: mechanism to unlock paid tier
+- Extended conversation: ability for paid users to send messages beyond free tier threshold
 
 **Acceptance Criteria:**
 
-**Given** I am a paid user and my confidence reaches >= 85%
-**When** the orchestrator pipeline completes that analysis batch
+**Given** I am a paid user and I have continued chatting beyond the free tier message threshold
+**When** the orchestrator pipeline completes a subsequent analysis batch
 **Then** the personalized portrait is regenerated via Claude API call
 **And** the new portrait REPLACES the existing `personal_description` (single column, overwrite)
 **And** the new portrait is noticeably richer (references more specific patterns)
-**And** a subtle indicator shows: "Portrait updated - based on 85% confidence"
+**And** a subtle indicator shows: "Portrait updated — based on extended conversation"
 
 **Given** I am a free user
-**When** my confidence stays at 70% (conversation locked)
+**When** my conversation is locked at the free tier threshold
 **Then** no regeneration occurs
-**And** I keep my original 70% portrait permanently
+**And** I keep my original portrait permanently
 
 **Technical Details:**
 
 - Extend orchestrator trigger:
   ```
-  IF overallConfidence >= 85% AND paid_user AND portrait_not_recently_updated:
+  IF paid_user AND messageCount > freeTierMessageThreshold AND portrait_not_recently_updated:
     → Regenerate portrait, overwrite personal_description
   ```
-- Same `personal_description` column - no v2 column needed
+- Same `personal_description` column — no v2 column needed
 - Optionally add `personal_description_updated_at TIMESTAMP` for tracking
 - Results API returns same field; frontend doesn't need to know which version
 - Paid tier check: query user subscription status before regenerating
 
 **Acceptance Checklist:**
-- [ ] Orchestrator checks for paid user status at 85% threshold
+- [ ] Tier infrastructure exists (prerequisite)
+- [ ] Orchestrator checks for paid user status beyond free tier threshold
 - [ ] Portrait regenerated and overwrites existing `personal_description`
 - [ ] Free users' portraits are never overwritten
 - [ ] Optional: `personal_description_updated_at` tracks when portrait was last generated
-- [ ] Results page shows confidence-based indicator when portrait was updated
-- [ ] Total max API calls for portraits: 2 per user (once at 70%, once at 85%)
+- [ ] Results page shows indicator when portrait was updated from extended conversation
+- [ ] Total max API calls for portraits: 2 per user (once at threshold, once after extended chat)
 - [ ] Tests: verify paid vs free tier behavior
+
+---
+
+## Story 8.6: Results Page Layout Redesign — Mockup 7 Detail Zone
+
+As a **User viewing my results**,
+I want **to see my personality data in an engaging grid layout with clickable trait cards that reveal evidence inline**,
+So that **I can explore my results at my own pace without modal interruptions, with a clear visual hierarchy from overview to detail**.
+
+**Reference:** `_bmad-output/planning-artifacts/result-page-ux-design/profile-mockup-7-detail-zone.html`
+
+**Acceptance Criteria:**
+
+**Hero Section (modified):**
+**Given** I view the results page
+**When** the hero renders
+**Then** the existing ArchetypeHeroSection displays WITHOUT the archetype description
+**And** all other hero elements remain (name, OCEAN code, geometric signature, confidence)
+
+**About Your Archetype (new):**
+**Given** I view the results page
+**When** the grid container renders
+**Then** I see a full-width "About Your Archetype" card as the first element
+**And** it contains the 4-5 sentence archetype description (from Story 8.1)
+
+**Radar Chart (new):**
+**Given** I view the results page
+**When** the data overview section renders
+**Then** I see a "Personality Shape" card with a pentagon radar chart
+**And** each axis represents one OCEAN trait with its name and percentage
+**And** the filled area uses a trait-color gradient with 25% opacity
+**And** dots at each vertex use the individual trait color
+**And** the chart uses shadcn Chart component (Recharts RadarChart)
+
+**Confidence Ring (new):**
+**Given** I view the results page
+**When** the data overview section renders
+**Then** I see an "Overall Confidence" card alongside the radar chart
+**And** it shows a circular progress ring with the confidence percentage
+**And** a label shows "Based on N conversation messages"
+
+**Trait Cards (replaces TraitScoresSection):**
+**Given** I view the results page
+**When** the trait section renders
+**Then** I see 5 trait cards in a responsive grid (3 per row desktop, 1 mobile)
+**And** each card shows:
+  - 4px color accent bar at top (trait color)
+  - OCEAN shape icon + trait name + level badge (H/M/L)
+  - Large score number + /120 + percentage
+  - Score progress bar
+  - 2x3 compact facet grid (name + score + mini bar per facet)
+  - "Tap to see evidence" hint at bottom
+**And** cards have hover effect (shadow + slight lift)
+**And** clicking a card opens the Detail Zone below the row
+
+**Detail Zone (replaces EvidencePanel modal):**
+**Given** I click a trait card
+**When** the detail zone opens
+**Then** a full-width panel slides open below the current row
+**And** the selected card shows a "selected" state (border color, arrow indicator)
+**And** the zone header shows: trait shape + "Trait — Evidence" + score + level + evidence count + close button
+**And** the zone contains a 3-column facet detail grid (responsive 3→2→1)
+**And** each facet detail card shows:
+  - Left border in trait color (3px)
+  - Facet name + score
+  - Score progress bar
+  - Evidence quotes (italic, with message ref and signal badge: Strong/Moderate/Weak)
+**And** clicking the same card again (or close button) collapses the zone
+**And** clicking a different card closes the current zone and opens the new one
+**And** the zone animates open/close (max-height transition, ~400ms)
+**And** the page scrolls smoothly to the opened zone
+
+**Quick Actions (new):**
+**Given** I view the results page
+**When** the actions section renders
+**Then** I see a "Quick Actions" card with 3 action items:
+  - Resume Conversation (deepens personality insights)
+  - View Public Profile (see how others see you)
+  - Download Report (PDF of results)
+**And** each item has an icon, title, description, and arrow indicator
+
+**Share Card (redesigned):**
+**Given** I view the results page
+**When** the share section renders
+**Then** I see a full-width "Share your archetype" card with gradient background
+**And** it shows: title, description, shareable link with Copy button
+**And** a visibility toggle (Public/Private) using shadcn Switch component
+
+**Technical Details:**
+
+- Install shadcn components: `chart` (brings Recharts), `switch`
+- Restructure `ProfileView.tsx` from depth-zone layout to CSS Grid container
+  (max-width 1120px, `grid-template-columns: repeat(auto-fill, minmax(320px, 1fr))`, gap 20px)
+- Modify `ArchetypeHeroSection.tsx` — remove description rendering
+- Create new components:
+  - `AboutArchetypeCard` — full-width card, renders archetype description
+  - `PersonalityRadarChart` — shadcn ChartContainer + Recharts RadarChart with custom PolarAngleAxis tick
+  - `ConfidenceRingCard` — circular SVG ring or Recharts RadialBarChart
+  - `TraitCard` — clickable card with compact facet grid, manages selected state
+  - `DetailZone` — full-width collapsible panel with facet evidence grid
+  - `QuickActionsCard` — action list card
+- Redesign `ShareProfileSection` to match mockup full-width card pattern
+- Remove or deprecate: `TraitScoresSection`, `TraitBar`, `FacetBreakdown` (replaced by TraitCard + DetailZone)
+- `EvidencePanel` (Dialog modal) replaced by inline DetailZone — can be removed
+- Detail zone row mapping: O/C/E share zone 1, A/N share zone 2 (grid position logic)
+- All data flows unchanged — same hooks (useGetResults, useFacetEvidence), same API
+
+**Acceptance Checklist:**
+- [ ] Hero section renders without archetype description
+- [ ] About Your Archetype full-width card renders description
+- [ ] Radar chart renders 5-axis pentagon with trait colors and scores
+- [ ] Confidence ring renders with percentage and message count
+- [ ] 5 trait cards render in responsive grid
+- [ ] Trait card click opens detail zone below the row
+- [ ] Detail zone shows facet evidence in 3-column grid
+- [ ] Detail zone animates open/close smoothly
+- [ ] Only one detail zone open at a time
+- [ ] Quick Actions card renders 3 action items
+- [ ] Share card renders with link, copy, and visibility toggle
+- [ ] shadcn Chart component used for radar chart
+- [ ] shadcn Switch component used for visibility toggle
+- [ ] Responsive: all sections adapt to mobile (single column)
+- [ ] Removed components cleaned up (no dead code)
+- [ ] All existing tests updated for new component structure
 
 ---
 
 ## Implementation Sequence
 
-1. **Story 8.1** - Expand archetype descriptions (pure content, no code changes except constants)
-2. **Story 8.2** - Trait level descriptions (new constant file + frontend rendering)
-3. **Story 8.3** - Facet level descriptions (new constant file + frontend rendering)
-4. **Story 8.4** - Personalized portrait at 70% (DB migration + orchestrator + frontend)
-5. **Story 8.5** - Portrait regeneration at 85% (paid tier integration + orchestrator extension)
+1. **Story 8.1** ✅ - Expand archetype descriptions (pure content, no code changes except constants)
+2. **Story 8.2** ✅ - Trait level descriptions (new constant file + frontend rendering)
+3. **Story 8.3** ✅ - Facet level descriptions (new constant file + frontend rendering)
+4. **Story 8.6** - Results page layout redesign — Mockup 7 Detail Zone (frontend restructure, shadcn Chart + Switch)
+5. **Story 8.4** - Personalized portrait at free tier message threshold (DB migration + orchestrator + frontend component within new layout)
+6. **Story 8.5** (Phase 2, DEFERRED) - Portrait regeneration for paid tier (requires tier infrastructure + payment system)
 
-**Stories 8.1-8.3** are Phase 1 (MVP) - pure static content, zero API cost, immediate impact.
-**Stories 8.4-8.5** are Phase 2 - require orchestrator integration, API cost, and payment system.
+**Stories 8.1-8.3** are Phase 1 (MVP) — pure static content, zero API cost, immediate impact.
+**Story 8.6** is Phase 1 (MVP) — pure frontend layout restructure. Must land BEFORE 8.4 so the portrait component renders in the new grid layout.
+**Story 8.4** is Phase 1 (MVP) — triggers at message threshold, one Claude API call per completed assessment. Portrait frontend renders within the layout established by 8.6.
+**Story 8.5** is Phase 2 — requires tier infrastructure (free vs premium), payment system, and extended conversation unlock.
 
 ---
 
@@ -369,7 +575,7 @@ So that **my portrait reflects the deeper understanding from my extended convers
 ## Key Technical Decisions
 
 1. **No generic trait/facet descriptions** - Jump straight to level-specific content. Users care about THEIR level, not abstract psychology.
-2. **Single `personal_description` column** - Overwrite at 85% rather than maintaining v1/v2 columns.
+2. **Single `personal_description` column** - Overwrite for paid tier regeneration rather than maintaining v1/v2 columns.
 3. **Pre-generate portraits in orchestrator pipeline** - No loading spinners on results page. Portrait is just *there*.
 4. **Static content in domain package** - Trait/facet descriptions are pure domain knowledge, belong alongside Big Five constants.
 5. **Facet descriptions are 2-3 sentences** (shorter than traits) - 30 facets x 3 levels = 90 entries; keep them punchy.

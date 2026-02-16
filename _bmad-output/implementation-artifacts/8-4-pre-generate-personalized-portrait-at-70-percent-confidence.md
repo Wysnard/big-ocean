@@ -45,7 +45,7 @@ So that **I feel genuinely understood in a way no static description can achieve
   - [ ] 3.2 Define `PortraitInput` type: `{ sessionId, archetypeName, oceanCode5, facetScores: FacetScoresMap, topEvidence: SavedFacetEvidence[] }`
   - [ ] 3.3 Define `PortraitOutput` type: `{ portrait: string, tokenUsage: TokenUsage, costIncurred: number }`
   - [ ] 3.4 Define `PortraitGenerationError` in `packages/domain/src/errors/http.errors.ts` — tagged error, non-fatal (portrait failure should NOT break the pipeline)
-  - [ ] 3.5 Create live implementation in `packages/infrastructure/src/repositories/portrait-generator.anthropic.repository.ts` — uses Anthropic SDK (Claude Sonnet 4.5), constructs portrait prompt, returns structured output
+  - [ ] 3.5 Create live implementation in `packages/infrastructure/src/repositories/portrait-generator.anthropic.repository.ts` — uses Anthropic SDK (Claude Sonnet 4.5), constructs portrait prompt, returns structured output. **FMA-3:** Validate `portrait.trim().length >= 100` before returning; throw `PortraitGenerationError` if response is empty/malformed
   - [ ] 3.6 Create mock implementation in `packages/infrastructure/src/repositories/__mocks__/portrait-generator.anthropic.repository.ts` — returns deterministic portrait string
   - [ ] 3.7 Export `PortraitGeneratorRepository` from `packages/domain/src/index.ts`
   - [ ] 3.8 Export `PortraitGeneratorAnthropicRepositoryLive` from `packages/infrastructure/src/index.ts`
@@ -67,9 +67,9 @@ So that **I feel genuinely understood in a way no static description can achieve
         → IF overallConfidence >= 70 AND session.personalDescription IS NULL:
             → forkDaemon(generateAndStorePortrait)
     ```
-  - [ ] 5.2 Create `generate-portrait.use-case.ts` in `apps/api/src/use-cases/` — orchestrates: fetch evidence → compute scores → select top evidence → call PortraitGeneratorRepository → store in session → track cost
+  - [ ] 5.2 Create `generate-portrait.use-case.ts` in `apps/api/src/use-cases/` — orchestrates: fetch evidence → compute scores → select top evidence → call PortraitGeneratorRepository → store in session → track cost. **FMA-1:** Use atomic DB update `UPDATE ... SET personal_description = $1 WHERE personal_description IS NULL` as the idempotent guard (not a separate SELECT + UPDATE)
   - [ ] 5.3 Portrait generation runs as `Effect.forkDaemon` (fire-and-forget, non-blocking)
-  - [ ] 5.4 Wrap portrait generation in `Effect.catchAll` — portrait failure logs error but does NOT fail the message pipeline
+  - [ ] 5.4 Wrap portrait generation in `Effect.catchAllCause` (NOT `catchAll`) — captures both expected errors AND defects (die/interrupt). Portrait failure logs error but does NOT fail the message pipeline. **FMA-2:** `catchAll` misses defects; `catchAllCause` is comprehensive
   - [ ] 5.5 Track portrait generation cost via `CostGuardRepository.incrementDailyCost()`
 
 - [ ] Task 6: Update `get-results` use-case and contract (AC: #5)
@@ -93,7 +93,7 @@ So that **I feel genuinely understood in a way no static description can achieve
   - [ ] 8.3 Render `<PersonalPortrait>` conditionally in `ProfileView.tsx` — only when `personalDescription` is non-null
   - [ ] 8.4 Position: after `ArchetypeHeroSection`, before `WaveDivider` to Shallows (within Surface depth zone)
   - [ ] 8.5 Update `results/$assessmentSessionId.tsx` route to pass `personalDescription` and `archetypeColor` from API response
-  - [ ] 8.6 **Do NOT render portrait on public profile route** (`public-profile.$publicProfileId.tsx`) — portraits are private, owner-only
+  - [ ] 8.6 **Do NOT render portrait on public profile route** (`public-profile.$publicProfileId.tsx`) — portraits are private, owner-only. **FMA-4:** Verify public profile API/use-case strips `personalDescription` from response
   - [ ] 8.7 Update `useGetResults` hook (or fetch function) to include `personalDescription` in response handling
 
 - [ ] Task 9: Write tests (AC: #1, #4, #5, #6)
@@ -101,8 +101,11 @@ So that **I feel genuinely understood in a way no static description can achieve
   - [ ] 9.2 Update `apps/api/src/__tests__/get-results.use-case.test.ts` — verify `personalDescription` returned when present, `null` when absent
   - [ ] 9.3 Create `packages/domain/src/utils/__tests__/portrait-system-prompt.test.ts` — verify prompt includes evidence, respects length constraints, uses correct tone instruction
   - [ ] 9.4 Test `generate-portrait` use-case with mock PortraitGeneratorRepository — verify it checks `personalDescription IS NULL` before generating
-  - [ ] 9.5 Test that portrait generation failure does NOT propagate to send-message response
-  - [ ] 9.6 Run `pnpm test:run` — verify no regressions
+  - [ ] 9.5 Test that portrait generation failure does NOT propagate to send-message response (test both expected errors AND defects per **FMA-2**)
+  - [ ] 9.6 **FMA-4:** Add explicit test asserting public profile route/component does NOT receive or render `personalDescription`
+  - [ ] 9.7 **FMA-1:** Test concurrent portrait generation attempts — verify atomic update prevents double-write
+  - [ ] 9.8 **FMA-3:** Test that empty/short Claude responses are rejected and do NOT persist to DB
+  - [ ] 9.9 Run `pnpm test:run` — verify no regressions
 
 ## Dev Notes
 
@@ -114,6 +117,23 @@ So that **I feel genuinely understood in a way no static description can achieve
 - **ADR-5 compliance** — Portrait text is stored in the DB (`personal_description` column) because it's AI-generated and unique per session, NOT a derivable constant like archetype descriptions.
 - **Single API call per session** — Portrait is generated once (idempotent check: `personalDescription IS NULL`). Cost is one Claude call per completed assessment.
 - **Existing cost tracking** — Use the existing `CostGuardRepository.incrementDailyCost()` and `calculateCostFromTokens()` patterns from Story 2.5.
+
+### Failure Mode Mitigations (FMA)
+
+**FMA-1: TOCTOU race on idempotent guard (HIGH)**
+The `personalDescription IS NULL` check in the use-case has a time-of-check-to-time-of-use window if two batch messages trigger simultaneously. Use an atomic DB update as the guard: `UPDATE assessment_session SET personal_description = $1 WHERE id = $sessionId AND personal_description IS NULL` — if `rowsAffected === 0`, another daemon already wrote the portrait. This eliminates the race entirely.
+
+**FMA-2: Daemon swallows defects silently (MEDIUM)**
+`Effect.catchAll` only catches expected (typed) errors. If a defect (`die`) occurs (e.g., null pointer, JSON parse failure), it escapes the catch and kills the fiber silently. Use `Effect.catchAllCause` instead to capture both expected errors and defects, ensuring all failures are logged.
+
+**FMA-3: Empty/malformed portrait stored (HIGH)**
+If the Claude API returns an empty string or truncated response, it would be stored as the portrait and the idempotent guard would prevent regeneration — permanently broken for that session. Add validation before storing: `portrait.trim().length >= 100` (a 6-sentence portrait should be at least ~400 chars). If validation fails, do NOT store, log a warning, and allow future retries.
+
+**FMA-4: Portrait leaks to public profiles (HIGH)**
+AC #7 mandates portraits are private/owner-only. The public profile route (`public-profile.$publicProfileId.tsx`) must never receive `personalDescription`. Add an explicit unit test asserting the public profile API response or component props do NOT include portrait data. The `get-public-profile` use-case (if it exists) should strip `personalDescription` from the response.
+
+**FMA-5: Analysis daemon not finished when portrait reads evidence (MEDIUM)**
+The story chains portrait generation AFTER `processAnalysis` within the same `forkDaemon`. Verify that `processAnalysis` is fully synchronous within its Effect pipeline (no nested `forkDaemon` calls that would cause it to return before analysis writes complete). If `processAnalysis` uses internal forks, the portrait check may read stale evidence.
 
 ### Story 8.3 Relationship
 
@@ -160,11 +180,11 @@ if (messageCount % 3 === 0) {
         userId: session.userId ?? "anonymous",
       });
     }).pipe(
-      Effect.catchAll((error) =>
+      Effect.catchAllCause((cause) =>
         Effect.sync(() =>
           logger.error("Background analysis/portrait failed", {
             sessionId: input.sessionId,
-            error: String(error),
+            cause: Cause.pretty(cause),
           }),
         ),
       ),

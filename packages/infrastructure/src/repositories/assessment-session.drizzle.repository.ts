@@ -284,6 +284,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 						updatedAt: updatedSession.updatedAt,
 						status: updatedSession.status,
 						messageCount: updatedSession.messageCount,
+						personalDescription: updatedSession.personalDescription,
 					};
 
 					// Parse with SessionEntitySchema
