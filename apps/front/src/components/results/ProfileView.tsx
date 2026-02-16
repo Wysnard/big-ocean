@@ -1,8 +1,7 @@
-import type { FacetName, OceanCode5, TraitName } from "@workspace/domain";
+import type { FacetName, FacetResult, OceanCode5, TraitName, TraitResult } from "@workspace/domain";
 import type { ReactNode } from "react";
 import { WaveDivider } from "../home/WaveDivider";
 import { ArchetypeHeroSection } from "./ArchetypeHeroSection";
-import type { FacetData, TraitData } from "./TraitScoresSection";
 import { TraitScoresSection } from "./TraitScoresSection";
 
 interface ProfileViewProps {
@@ -10,8 +9,8 @@ interface ProfileViewProps {
 	oceanCode5: OceanCode5;
 	description: string;
 	dominantTrait: TraitName;
-	traits: readonly TraitData[];
-	facets: readonly FacetData[];
+	traits: readonly TraitResult[];
+	facets: readonly FacetResult[];
 	expandedTraits?: Set<string>;
 	onToggleTrait?: (trait: string) => void;
 	onViewEvidence?: (facetName: FacetName) => void;

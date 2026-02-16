@@ -1,15 +1,10 @@
+import type { FacetResult } from "@workspace/domain";
 import { toFacetDisplayName } from "@workspace/domain";
 import { cn } from "@workspace/ui/lib/utils";
 
-export interface FacetData {
-	name: string;
-	score: number;
-	confidence: number;
-}
-
 export interface FacetBreakdownProps {
 	traitName: string;
-	facets: FacetData[];
+	facets: Pick<FacetResult, "name" | "score" | "confidence">[];
 	traitScore: number;
 	id: string;
 	className?: string;

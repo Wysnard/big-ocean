@@ -1,6 +1,6 @@
 # Story 1.4: Effect API Auth Middleware
 
-Status: review
+Status: done
 
 ## Story
 

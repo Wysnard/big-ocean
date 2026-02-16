@@ -9,7 +9,7 @@
 
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { GetPublicProfileResponse } from "@workspace/contracts";
-import type { FacetName, TraitLevel, TraitName } from "@workspace/domain";
+import type { FacetName, FacetResult, TraitLevel, TraitName, TraitResult } from "@workspace/domain";
 import {
 	BIG_FIVE_TRAITS,
 	FACET_TO_TRAIT,
@@ -21,7 +21,6 @@ import { Check, Copy, Loader2, Lock, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { WaveDivider } from "@/components/home/WaveDivider";
 import { ProfileView } from "@/components/results/ProfileView";
-import type { FacetData, TraitData } from "@/components/results/TraitScoresSection";
 import { useGetPublicProfile } from "../hooks/use-profile";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
@@ -68,18 +67,18 @@ export const Route = createFileRoute("/public-profile/$publicProfileId")({
 
 type ApiFacets = Record<string, { score: number; confidence: number }>;
 
-/** Convert API facet record to FacetData[] for TraitScoresSection */
-function toFacetData(facets: ApiFacets): FacetData[] {
+/** Convert API facet record to FacetResult[] for TraitScoresSection */
+function toFacetData(facets: ApiFacets): FacetResult[] {
 	return Object.entries(facets).map(([name, { score, confidence }]) => ({
-		name,
+		name: name as FacetName,
 		traitName: FACET_TO_TRAIT[name as FacetName] ?? "openness",
 		score,
 		confidence,
 	}));
 }
 
-/** Derive TraitData[] by aggregating facet scores per trait */
-function deriveTraitData(facets: ApiFacets, traitSummary: Record<string, string>): TraitData[] {
+/** Derive TraitResult[] by aggregating facet scores per trait */
+function deriveTraitData(facets: ApiFacets, traitSummary: Record<string, string>): TraitResult[] {
 	return BIG_FIVE_TRAITS.map((trait) => {
 		const traitFacets = TRAIT_TO_FACETS[trait];
 		let totalScore = 0;
@@ -105,7 +104,7 @@ function deriveTraitData(facets: ApiFacets, traitSummary: Record<string, string>
 }
 
 /** Derive dominant trait from trait scores (highest score, first in OCEAN order for ties) */
-function getDominantTrait(traits: TraitData[]): TraitName {
+function getDominantTrait(traits: TraitResult[]): TraitName {
 	if (traits.length === 0) return "openness";
 	const sorted = [...traits].sort((a, b) => b.score - a.score);
 	return sorted[0].name;
