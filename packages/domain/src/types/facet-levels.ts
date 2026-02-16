@@ -190,3 +190,6 @@ export const FACET_LEVEL_LABELS = {
 
 /** Derived type — preserves literal code→label mappings for type-safe lookups */
 export type FacetLevelLabels = typeof FACET_LEVEL_LABELS;
+
+/** Union of all valid two-letter facet level codes */
+export type FacetLevelCode = keyof FacetLevelLabels;

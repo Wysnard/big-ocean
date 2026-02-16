@@ -8,9 +8,9 @@
  */
 
 import type { FacetName } from "../constants/big-five";
-import { FACET_LETTER_MAP } from "../types/facet-levels";
+import { FACET_LETTER_MAP, type FacetLevelCode } from "../types/facet-levels";
 
-export function getFacetLevel(facetName: FacetName, score: number): string {
+export function getFacetLevel(facetName: FacetName, score: number): FacetLevelCode {
 	const [low, high] = FACET_LETTER_MAP[facetName];
-	return score <= 10 ? low : high;
+	return (score <= 10 ? low : high) as FacetLevelCode;
 }
