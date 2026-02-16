@@ -10,8 +10,9 @@
  */
 
 import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
-import { AppConfig, CheckpointerRepository, LoggerRepository } from "@workspace/domain";
+import { AppConfig, LoggerRepository } from "@workspace/domain";
 import { Effect, Layer, Schedule } from "effect";
+import { CheckpointerRepository } from "./checkpointer.repository";
 
 /**
  * PostgreSQL Checkpointer Repository Live Layer

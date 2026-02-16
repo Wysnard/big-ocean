@@ -8,6 +8,7 @@
 export {
 	AgentInvocationError,
 	AnalyzerError,
+	AssessmentAlreadyExists,
 	CostLimitExceeded,
 	DatabaseError,
 	FreeTierLimitReached,

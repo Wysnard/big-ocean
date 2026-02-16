@@ -3,32 +3,34 @@
  *
  * Pure Effect DI implementation of the OrchestratorGraphRepository.
  * Node functions are defined as Effects with yield* for DI.
- * Graph nodes use Effect.runPromise with provided services.
+ * Graph nodes use runNodeEffect() which encodes domain errors into state
+ * rather than throwing through Effect.runPromise.
  *
  * Graph Flow:
  * ```
- * START -> router (budget check, steering calculation)
- *   -> nerin (always runs)
- *   -> analyzer (if batch: messageCount % 3 === 0)
- *   -> scorer (after analyzer)
- *   -> END
+ * START -> router -> (error check) -> nerin -> END
+ *                         |
+ *                         +-> END  (if state.error is set)
  * ```
+ *
+ * Error-in-State Pattern:
+ * - Graph nodes catch domain errors and encode them as SerializableGraphError in state
+ * - Conditional edge after router skips nerin when error is present
+ * - invoke() checks state.error and deserializes back to domain errors via Effect.fail
+ * - No more `instanceof` checks in catch blocks
  *
  * @see Story 2-4: LangGraph State Machine and Orchestration
  * @see Story 2-9: Evidence-sourced scoring (pure functions, no score tables)
  */
 
-import { HumanMessage } from "@langchain/core/messages";
 import { END, START, StateGraph } from "@langchain/langgraph";
 import {
-	AnalyzerRepository,
 	AppConfig,
 	aggregateFacetScores,
 	BudgetPausedError,
-	CheckpointerRepository,
+	ConfidenceGapError,
 	calculateConfidenceFromFacetScores,
 	createInitialFacetScoresMap,
-	deriveTraitScores,
 	FacetEvidenceRepository,
 	type GraphInput,
 	type GraphOutput,
@@ -38,6 +40,7 @@ import {
 	OrchestratorGraphRepository,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
+import { CheckpointerRepository } from "./checkpointer.repository";
 import {
 	calculateCostFromTokens,
 	getNextDayMidnightUTC,
@@ -45,7 +48,102 @@ import {
 	getSteeringTarget,
 	MESSAGE_COST_ESTIMATE,
 } from "./orchestrator.nodes";
-import { type OrchestratorState, OrchestratorStateAnnotation } from "./orchestrator.state";
+import {
+	type OrchestratorState,
+	OrchestratorStateAnnotation,
+	type SerializableGraphError,
+} from "./orchestrator.state";
+
+// ============================================
+// Error Serialization (Error-in-State Pattern)
+// ============================================
+
+/**
+ * Serialize a domain error into a JSON-safe format for graph state.
+ *
+ * LangGraph checkpointers require state to be JSON-serializable.
+ * Domain errors extend Error (not serializable), so we encode them
+ * as discriminated unions with plain data fields.
+ */
+function serializeError(error: unknown): SerializableGraphError {
+	if (error instanceof BudgetPausedError) {
+		return {
+			_tag: "BudgetPausedError",
+			sessionId: error.sessionId,
+			message: error.message,
+			resumeAfter: error.resumeAfter.toISOString(),
+			currentConfidence: error.currentConfidence,
+		};
+	}
+	if (error instanceof ConfidenceGapError) {
+		return {
+			_tag: "ConfidenceGapError",
+			sessionId: error.sessionId,
+			message: error.message,
+			cause: error.cause,
+		};
+	}
+	// Default: wrap as OrchestrationError
+	if (error instanceof OrchestrationError) {
+		return {
+			_tag: "OrchestrationError",
+			sessionId: error.sessionId,
+			message: error.message,
+			cause: error.cause,
+		};
+	}
+	return {
+		_tag: "OrchestrationError",
+		sessionId: "unknown",
+		message: error instanceof Error ? error.message : String(error),
+		cause: error instanceof Error ? error.stack : undefined,
+	};
+}
+
+/**
+ * Deserialize a SerializableGraphError back into a domain error instance.
+ *
+ * Reconstructs the original domain error class from the serialized data,
+ * preserving _tag for Effect's typed error channel.
+ */
+function deserializeError(error: SerializableGraphError): BudgetPausedError | OrchestrationError {
+	switch (error._tag) {
+		case "BudgetPausedError":
+			return new BudgetPausedError(
+				error.sessionId,
+				error.message,
+				new Date(error.resumeAfter),
+				error.currentConfidence,
+			);
+		case "ConfidenceGapError":
+			return new OrchestrationError(error.sessionId, error.message, error.cause);
+		case "OrchestrationError":
+			return new OrchestrationError(error.sessionId, error.message, error.cause);
+	}
+}
+
+/**
+ * Run a node Effect and encode any domain error into the state's error field.
+ *
+ * Instead of letting Effect.runPromise throw domain errors (which requires
+ * fragile `instanceof` catch blocks), this helper:
+ * 1. Runs the node effect with provided services
+ * 2. On success: returns the partial state update
+ * 3. On failure: serializes the error into `{ error: SerializableGraphError }`
+ *
+ * The graph's conditional edge then checks `state.error` to skip downstream nodes.
+ */
+function runNodeEffect<R>(
+	effect: Effect.Effect<Partial<OrchestratorState>, unknown, R>,
+	layer: Layer.Layer<R>,
+): Promise<Partial<OrchestratorState>> {
+	return Effect.runPromise(
+		effect.pipe(
+			Effect.provide(layer),
+			Effect.catchAll((err) => Effect.succeed({ error: serializeError(err) })),
+		),
+	);
+}
 
 // ============================================
 // Node Effects (pure Effect with yield* DI)
@@ -194,117 +292,6 @@ const nerinNodeEffect = (state: OrchestratorState) =>
 		};
 	});
 
-/**
- * Analyzer Node Effect - Facet evidence extraction.
- * Uses yield* for DI of AnalyzerRepository and LoggerRepository.
- *
- * Analyzes only unanalyzed user messages to avoid duplicate processing.
- * Tracks which messages have been analyzed via analyzedMessageIndices.
- */
-const _analyzerNodeEffect = (state: OrchestratorState) =>
-	Effect.gen(function* () {
-		const logger = yield* LoggerRepository;
-		const analyzer = yield* AnalyzerRepository;
-
-		logger.debug("Analyzer node executing", {
-			sessionId: state.sessionId,
-			messageCount: state.messageCount,
-		});
-
-		// Collect unanalyzed user messages
-		const analyzedSet = new Set(state.analyzedMessageIndices ?? []);
-		const unanalyzed: { index: number; messageId: string; content: string }[] = [];
-
-		for (let i = 0; i < state.messages.length; i++) {
-			const message = state.messages[i];
-			if (!message) continue;
-
-			if (message instanceof HumanMessage && !analyzedSet.has(i)) {
-				unanalyzed.push({
-					index: i,
-					messageId: `msg_${state.sessionId}_${i + 1}`,
-					content:
-						typeof message.content === "string" ? message.content : JSON.stringify(message.content),
-				});
-			}
-		}
-
-		// Build conversation history for analyzer context
-		const conversationHistory: Array<{ role: "user" | "assistant"; content: string }> = state.messages
-			.filter((msg) => msg !== undefined)
-			.map((msg) => ({
-				role: (msg instanceof HumanMessage ? "user" : "assistant") as "user" | "assistant",
-				content: typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content),
-			}));
-
-		// Analyze all unanalyzed messages in parallel, passing full history for context
-		const results = yield* Effect.all(
-			unanalyzed.map(({ messageId, content, index }) =>
-				analyzer.analyzeFacets(messageId, content, conversationHistory).pipe(
-					Effect.map((evidence) => ({ evidence, index })),
-					Effect.tap(({ evidence }) =>
-						Effect.sync(() =>
-							logger.debug("Analyzed message", {
-								messageIndex: index,
-								messageId,
-								evidenceCount: evidence.length,
-							}),
-						),
-					),
-				),
-			),
-			{ concurrency: 3 },
-		);
-
-		const allEvidence = results.flatMap((r) => r.evidence);
-		const newlyAnalyzedIndices = results.map((r) => r.index);
-
-		logger.debug("Analyzer evidence extraction complete", {
-			sessionId: state.sessionId,
-			totalEvidence: allEvidence.length,
-			newlyAnalyzedCount: newlyAnalyzedIndices.length,
-		});
-
-		return {
-			facetEvidence: allEvidence,
-			analyzedMessageIndices: newlyAnalyzedIndices,
-		};
-	});
-
-/**
- * Scorer Node Effect - Score aggregation from evidence.
- * Uses FacetEvidenceRepository + pure domain functions (no score tables).
- */
-const _scorerNodeEffect = (state: OrchestratorState) =>
-	Effect.gen(function* () {
-		const logger = yield* LoggerRepository;
-		const evidenceRepo = yield* FacetEvidenceRepository;
-
-		logger.debug("Scorer node executing", {
-			sessionId: state.sessionId,
-		});
-
-		// Fetch evidence and compute scores on-demand (pure functions)
-		const evidence = yield* evidenceRepo.getEvidenceBySession(state.sessionId);
-		const facetScores = aggregateFacetScores(evidence);
-		const traitScores = deriveTraitScores(facetScores);
-
-		// Calculate overall confidence from facet scores
-		const overallConfidence = calculateConfidenceFromFacetScores(facetScores);
-
-		logger.debug("Scorer aggregation complete", {
-			sessionId: state.sessionId,
-			facetCount: Object.keys(facetScores ?? {}).length,
-			traitCount: Object.keys(traitScores ?? {}).length,
-			overallConfidence,
-		});
-
-		return {
-			facetScores,
-			traitScores,
-		};
-	});
-
 // ============================================
 // Production Layer
 // ============================================
@@ -313,12 +300,11 @@ const _scorerNodeEffect = (state: OrchestratorState) =>
  * Production Layer for OrchestratorGraphRepository.
  *
  * Node functions are pure Effects with yield* DI.
- * Graph nodes use Effect.runPromise with provided services.
+ * Graph nodes use runNodeEffect() which catches errors into state.
  *
  * Dependencies:
  * - LoggerRepository: Structured logging
  * - NerinAgentRepository: Conversational agent
- * - AnalyzerRepository: Facet evidence extraction
  * - FacetEvidenceRepository: Evidence data access for scoring
  * - CheckpointerRepository: State persistence
  */
@@ -329,7 +315,6 @@ export const OrchestratorGraphLangGraphRepositoryLive = Layer.effect(
 		const logger = yield* LoggerRepository;
 		const config = yield* AppConfig;
 		const nerinAgent = yield* NerinAgentRepository;
-		const analyzer = yield* AnalyzerRepository;
 		const evidenceRepo = yield* FacetEvidenceRepository;
 		const { checkpointer } = yield* CheckpointerRepository;
 
@@ -340,24 +325,23 @@ export const OrchestratorGraphLangGraphRepositoryLive = Layer.effect(
 			Layer.succeed(LoggerRepository, logger),
 			Layer.succeed(AppConfig, config),
 			Layer.succeed(NerinAgentRepository, nerinAgent),
-			Layer.succeed(AnalyzerRepository, analyzer),
 			Layer.succeed(FacetEvidenceRepository, evidenceRepo),
 		);
 
 		// ============================================
-		// Build Conversation Graph: router → nerin → END
+		// Build Conversation Graph: router → (error?) → nerin → END
 		// Story 2.11: Analyzer/scorer removed from graph, run as separate pipeline
+		// Error-in-State: Conditional edge skips nerin when router sets error
 		// ============================================
 
 		const workflow = new StateGraph(OrchestratorStateAnnotation)
-			.addNode("router", (state) =>
-				Effect.runPromise(routerNodeEffect(state).pipe(Effect.provide(nodeServicesLayer))),
-			)
-			.addNode("nerin", (state) =>
-				Effect.runPromise(nerinNodeEffect(state).pipe(Effect.provide(nodeServicesLayer))),
-			)
+			.addNode("router", (state) => runNodeEffect(routerNodeEffect(state), nodeServicesLayer))
+			.addNode("nerin", (state) => runNodeEffect(nerinNodeEffect(state), nodeServicesLayer))
 			.addEdge(START, "router")
-			.addEdge("router", "nerin")
+			.addConditionalEdges("router", (state) => (state.error ? "end" : "nerin"), {
+				nerin: "nerin",
+				end: END,
+			})
 			.addEdge("nerin", END);
 
 		// Compile with checkpointer
@@ -375,43 +359,45 @@ export const OrchestratorGraphLangGraphRepositoryLive = Layer.effect(
 
 		return OrchestratorGraphRepository.of({
 			invoke: (input: GraphInput, threadId: string) =>
-				Effect.tryPromise({
-					try: async () => {
-						const result = await graph.invoke(
-							{
-								sessionId: input.sessionId,
-								userMessage: input.userMessage,
-								messages: input.messages,
-								messageCount: input.messageCount,
-								dailyCostUsed: input.dailyCostUsed,
-							},
-							{ configurable: { thread_id: threadId } },
-						);
+				Effect.gen(function* () {
+					const result = yield* Effect.tryPromise({
+						try: () =>
+							graph.invoke(
+								{
+									sessionId: input.sessionId,
+									userMessage: input.userMessage,
+									messages: input.messages,
+									messageCount: input.messageCount,
+									dailyCostUsed: input.dailyCostUsed,
+								},
+								{ configurable: { thread_id: threadId } },
+							),
+						catch: (error) => {
+							logger.error("Graph invocation error", {
+								error: error instanceof Error ? error.message : String(error),
+							});
+							return new OrchestrationError(
+								input.sessionId,
+								"Graph invocation failed",
+								error instanceof Error ? error.message : String(error),
+							);
+						},
+					});
 
-						const output: GraphOutput = {
-							nerinResponse: result.nerinResponse ?? "",
-							tokenUsage: result.tokenUsage ?? { input: 0, output: 0, total: 0 },
-							costIncurred: result.costIncurred ?? 0,
-							steeringTarget: result.steeringTarget,
-							steeringHint: result.steeringHint,
-						};
+					// Error-in-State: check if a node encoded an error into state
+					if (result.error) {
+						return yield* Effect.fail(deserializeError(result.error));
+					}
 
-						return output;
-					},
-					catch: (error) => {
-						// Re-throw domain errors (like BudgetPausedError)
-						if (error instanceof BudgetPausedError) {
-							throw error;
-						}
-						logger.error("Graph invocation error", {
-							error: error instanceof Error ? error.message : String(error),
-						});
-						return new OrchestrationError(
-							input.sessionId,
-							"Graph invocation failed",
-							error instanceof Error ? error.message : String(error),
-						);
-					},
+					const output: GraphOutput = {
+						nerinResponse: result.nerinResponse ?? "",
+						tokenUsage: result.tokenUsage ?? { input: 0, output: 0, total: 0 },
+						costIncurred: result.costIncurred ?? 0,
+						steeringTarget: result.steeringTarget,
+						steeringHint: result.steeringHint,
+					};
+
+					return output;
 				}),
 		});
 	}),

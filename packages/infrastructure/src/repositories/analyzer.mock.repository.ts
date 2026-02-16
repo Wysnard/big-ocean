@@ -11,7 +11,7 @@
  * - Pattern-based responses that mimic real analyzer behavior
  */
 
-import type { FacetEvidence, FacetName } from "@workspace/domain";
+import type { ConversationMessage, FacetEvidence, FacetName } from "@workspace/domain";
 import { AnalyzerRepository } from "@workspace/domain/repositories/analyzer.repository";
 import { Effect, Layer } from "effect";
 
@@ -141,7 +141,7 @@ export const AnalyzerMockRepositoryLive = Layer.succeed(
 		analyzeFacets: (
 			assessmentMessageId: string,
 			content: string,
-			_conversationHistory?: ReadonlyArray<{ role: "user" | "assistant"; content: string }>,
+			_conversationHistory?: ReadonlyArray<ConversationMessage>,
 		) =>
 			Effect.gen(function* () {
 				const evidence = extractMockEvidence(assessmentMessageId, content);
@@ -156,6 +156,28 @@ export const AnalyzerMockRepositoryLive = Layer.succeed(
 				yield* Effect.sleep(`${delay} millis`);
 
 				return evidence;
+			}),
+
+		analyzeFacetsBatch: (
+			targets: ReadonlyArray<{ assessmentMessageId: string; content: string }>,
+			_conversationHistory?: ReadonlyArray<ConversationMessage>,
+		) =>
+			Effect.gen(function* () {
+				const resultMap = new Map<string, FacetEvidence[]>();
+
+				for (const target of targets) {
+					const evidence = extractMockEvidence(target.assessmentMessageId, target.content);
+					resultMap.set(target.assessmentMessageId, evidence);
+
+					console.log(`[MockAnalyzer:Batch] Message: ${target.assessmentMessageId}`);
+					console.log(`[MockAnalyzer:Batch] Evidence count: ${evidence.length}`);
+				}
+
+				// Simulate batch analysis latency (single call)
+				const delay = Math.floor(Math.random() * 600) + 300;
+				yield* Effect.sleep(`${delay} millis`);
+
+				return resultMap;
 			}),
 	}),
 );

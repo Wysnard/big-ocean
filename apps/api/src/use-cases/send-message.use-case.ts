@@ -11,12 +11,12 @@
  *             moved to router node (offset steering). Analyzer fires as background daemon.
  */
 
-import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import {
 	AppConfig,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	CostGuardRepository,
+	type DomainMessage,
 	FreeTierLimitReached,
 	LoggerRepository,
 	OrchestratorRepository,
@@ -92,12 +92,12 @@ export const sendMessage = (input: SendMessageInput) =>
 			);
 		}
 
-		// Convert to LangChain message format
-		const langchainMessages = previousMessages.map((msg) =>
-			msg.role === "user"
-				? new HumanMessage({ content: msg.content })
-				: new AIMessage({ content: msg.content }),
-		);
+		// Map DB entities to domain messages (preserving IDs for downstream analysis)
+		const domainMessages: DomainMessage[] = previousMessages.map((msg) => ({
+			id: msg.id,
+			role: msg.role,
+			content: msg.content,
+		}));
 
 		// Get current daily cost for budget check
 		const dailyCostCents = yield* costGuard.getDailyCost(session.userId ?? "anonymous");
@@ -108,7 +108,7 @@ export const sendMessage = (input: SendMessageInput) =>
 			.processMessage({
 				sessionId: input.sessionId,
 				userMessage: input.message,
-				messages: langchainMessages,
+				messages: domainMessages,
 				messageCount,
 				dailyCostUsed,
 			})
@@ -139,7 +139,7 @@ export const sendMessage = (input: SendMessageInput) =>
 				orchestrator
 					.processAnalysis({
 						sessionId: input.sessionId,
-						messages: langchainMessages,
+						messages: domainMessages,
 						messageCount,
 					})
 					.pipe(

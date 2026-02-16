@@ -307,6 +307,67 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 						}),
 					);
 				}),
+			findSessionByUserId: (userId: string) =>
+				Effect.gen(function* () {
+					const messageCountSubquery = db
+						.select({
+							sessionId: assessmentMessage.sessionId,
+							messageCount: count().as("message_count"),
+						})
+						.from(assessmentMessage)
+						.where(eq(assessmentMessage.role, "user"))
+						.groupBy(assessmentMessage.sessionId)
+						.as("msg_counts");
+
+					const results = yield* db
+						.select({
+							id: assessmentSession.id,
+							createdAt: assessmentSession.createdAt,
+							updatedAt: assessmentSession.updatedAt,
+							status: assessmentSession.status,
+							messageCount: sql<number>`COALESCE("msg_counts"."message_count", 0)`.mapWith(Number),
+							oceanCode5: publicProfile.oceanCode5,
+							archetypeName: sql<string | null>`NULL`.as("archetype_name"),
+						})
+						.from(assessmentSession)
+						.leftJoin(messageCountSubquery, eq(assessmentSession.id, messageCountSubquery.sessionId))
+						.leftJoin(publicProfile, eq(assessmentSession.id, publicProfile.sessionId))
+						.where(eq(assessmentSession.userId, userId))
+						.orderBy(sql`${assessmentSession.createdAt} DESC`)
+						.limit(1)
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "findSessionByUserId",
+										userId,
+										error: error instanceof Error ? error.message : String(error),
+										stack: error instanceof Error ? error.stack : undefined,
+									});
+								} catch (logError) {
+									console.error("Logger failed in error handler:", logError);
+								}
+
+								return new DatabaseError({
+									message: "Failed to find user session",
+								});
+							}),
+						);
+
+					const row = results[0];
+					if (!row) return null;
+
+					return {
+						id: row.id,
+						createdAt: row.createdAt,
+						updatedAt: row.updatedAt,
+						status: row.status,
+						messageCount: Number(row.messageCount),
+						oceanCode5: row.oceanCode5 ?? null,
+						archetypeName: row.archetypeName ?? null,
+					};
+				}),
+
 			getSessionsByUserId: (userId: string) =>
 				Effect.gen(function* () {
 					// Compute messageCount from assessment_message (stored messageCount is always 0)

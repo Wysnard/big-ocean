@@ -138,3 +138,50 @@ export const validateNerinResponse = S.decodeUnknownEither(NerinResponseSchema);
  * @returns Either with validated response or validation error
  */
 export const validateAnalyzerResponse = S.decodeUnknownEither(AnalyzerResponseSchema);
+
+// ============================================================================
+// Batch Analyzer Agent Response Schema
+// ============================================================================
+
+/**
+ * Single facet extraction with source message ID for batch analysis.
+ * Extends FacetExtractionSchema with a message_id field to tag which
+ * user message the extraction came from.
+ */
+export const BatchFacetExtractionSchema = S.Struct({
+	/** The source user message ID this extraction came from */
+	message_id: S.String.pipe(S.minLength(1)),
+
+	/** The facet name (must be one of 30 Big Five facets) */
+	facet: S.Literal(...(ALL_FACETS as readonly [string, ...string[]])),
+
+	/** Evidence quote from user message */
+	evidence: S.String.pipe(S.minLength(1)),
+
+	/** Score 0-20: Higher = stronger signal for that facet */
+	score: S.Number.pipe(S.between(0, 20)),
+
+	/** Confidence score 0-100 (higher = more certain interpretation) */
+	confidence: S.Number.pipe(S.between(0, 100)),
+
+	/** Character range in original message */
+	highlightRange: HighlightRangeSchema,
+});
+
+/** Type inference for batch facet extraction */
+export type BatchFacetExtraction = S.Schema.Type<typeof BatchFacetExtractionSchema>;
+
+/**
+ * Batch Analyzer Response Schema (wrapped)
+ *
+ * Wraps batch extractions in { extractions: [...] } for Anthropic tool use compatibility.
+ */
+export const BatchAnalyzerResponseWrappedSchema = S.Struct({
+	extractions: S.Array(BatchFacetExtractionSchema),
+});
+
+/**
+ * JSON Schema for LangChain batch analysis integration
+ * Used with: model.withStructuredOutput(BatchAnalyzerResponseJsonSchema)
+ */
+export const BatchAnalyzerResponseJsonSchema = JSONSchema.make(BatchAnalyzerResponseWrappedSchema);

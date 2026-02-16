@@ -292,13 +292,6 @@ function ResultsSessionPage() {
 							Continue Chat
 						</Link>
 					</Button>
-					<Button
-						data-testid="results-start-new"
-						asChild
-						className="bg-primary text-primary-foreground hover:bg-primary/90 min-h-11"
-					>
-						<Link to="/chat">Start New Assessment</Link>
-					</Button>
 				</div>
 			</div>
 

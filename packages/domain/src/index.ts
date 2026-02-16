@@ -36,6 +36,7 @@ export {
 export {
 	AgentInvocationError,
 	AnalyzerError,
+	AssessmentAlreadyExists,
 	CostLimitExceeded,
 	DatabaseError,
 	FreeTierLimitReached,
@@ -51,11 +52,16 @@ export {
 	Unauthorized,
 	UserAlreadyExists,
 } from "./errors/http.errors";
-export { AnalyzerRepository } from "./repositories/analyzer.repository";
+export {
+	type AnalysisTarget,
+	AnalyzerRepository,
+	type AssistantMessage,
+	type ConversationMessage,
+	type UserMessage,
+} from "./repositories/analyzer.repository";
 export { AssessmentMessageRepository } from "./repositories/assessment-message.repository";
 // Repository interfaces (ports in hexagonal architecture)
 export { AssessmentSessionRepository } from "./repositories/assessment-session.repository";
-export { CheckpointerRepository } from "./repositories/checkpointer.repository";
 export { CostGuardRepository } from "./repositories/cost-guard.repository";
 export { FacetEvidenceRepository } from "./repositories/facet-evidence.repository";
 export {
@@ -97,6 +103,10 @@ export {
 	type AnalyzerResponse,
 	AnalyzerResponseJsonSchema,
 	AnalyzerResponseSchema,
+	BatchAnalyzerResponseJsonSchema,
+	BatchAnalyzerResponseWrappedSchema,
+	type BatchFacetExtraction,
+	BatchFacetExtractionSchema,
 	EmotionalTone,
 	FacetExtractionSchema,
 	HighlightRangeSchema,
@@ -156,6 +166,8 @@ export type {
 	TraitScore,
 	TraitScoresMap,
 } from "./types/facet-evidence";
+// Domain message type (framework-agnostic conversation messages)
+export type { DomainMessage } from "./types/message";
 // Session types
 export type { MessageRole, Session, SessionStatus } from "./types/session";
 // Trait types (Big Five)

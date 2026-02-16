@@ -1,7 +1,7 @@
-import type { BaseMessage } from "@langchain/core/messages";
 import { Context, Effect } from "effect";
 import { AgentInvocationError } from "../errors/http.errors";
 import type { FacetScoresMap } from "../types/facet-evidence";
+import type { DomainMessage } from "../types/message";
 
 /**
  * Token usage metrics from agent invocation
@@ -24,7 +24,7 @@ export interface NerinInvokeInput {
 	readonly sessionId: string;
 
 	/** Message history for conversational context */
-	readonly messages: readonly BaseMessage[];
+	readonly messages: readonly DomainMessage[];
 
 	/** Current facet scores for assessment context (optional, may be empty early in conversation) */
 	readonly facetScores?: FacetScoresMap;
@@ -45,7 +45,7 @@ export interface NerinInvokeOutput {
  * Nerin Agent Repository Service Tag
  *
  * Defines the contract for the Nerin conversational AI agent.
- * Implementation uses LangGraph with PostgreSQL state persistence.
+ * Implementation uses direct Claude invocation with structured output.
  *
  * Following hexagonal architecture:
  * - This is the PORT (interface) in domain layer

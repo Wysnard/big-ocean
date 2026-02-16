@@ -183,13 +183,9 @@ export const NerinAgentMockRepositoryLive = Layer.succeed(
 	NerinAgentRepository.of({
 		invoke: (input: NerinInvokeInput): Effect.Effect<NerinInvokeOutput, never, never> =>
 			Effect.gen(function* () {
-				// Get the last user message for pattern matching
+				// Get the last user message for pattern matching (DomainMessage format)
 				const lastMessage = input.messages.at(-1);
-				const messageContent = lastMessage
-					? typeof lastMessage.content === "string"
-						? lastMessage.content
-						: String(lastMessage.content)
-					: "";
+				const messageContent = lastMessage?.content ?? "";
 
 				// Generate structured mock response
 				const mockResponse = generateMockResponse(messageContent);

@@ -9,6 +9,7 @@ import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema as S } from "effect";
 import {
 	AgentInvocationError,
+	AssessmentAlreadyExists,
 	DatabaseError,
 	FreeTierLimitReached,
 	RateLimitExceeded,
@@ -166,6 +167,7 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 		HttpApiEndpoint.post("start", "/start")
 			.addSuccess(StartAssessmentResponseSchema)
 			.setPayload(StartAssessmentRequestSchema)
+			.addError(AssessmentAlreadyExists, { status: 409 })
 			.addError(RateLimitExceeded, { status: 429 })
 			.addError(DatabaseError, { status: 500 }),
 	)

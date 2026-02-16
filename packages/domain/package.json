@@ -20,7 +20,6 @@
     "./utils/*": "./src/utils/*.ts"
   },
   "dependencies": {
-    "@langchain/core": "^1.1.17",
     "effect": "catalog:",
     "@effect/schema": "catalog:"
   },

@@ -5,9 +5,8 @@
  * Enables conversation state to persist across server restarts
  * and multiple instances via shared storage (PostgreSQL, memory, etc.)
  *
- * Following hexagonal architecture:
- * - This is the PORT (interface) in domain layer
- * - Implementation (ADAPTER) lives in infrastructure layer
+ * This lives in infrastructure (not domain) because it wraps a
+ * LangGraph-specific type (BaseCheckpointSaver) — an implementation detail.
  *
  * @see packages/infrastructure/src/repositories/checkpointer.*.repository.ts
  */

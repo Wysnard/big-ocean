@@ -24,7 +24,6 @@ import { MemorySaver } from "@langchain/langgraph";
 import {
 	AnalyzerRepository,
 	AssessmentMessageRepository,
-	CheckpointerRepository,
 	FacetEvidenceRepository,
 	LoggerRepository,
 	NerinAgentRepository,
@@ -35,6 +34,7 @@ import {
 // @ts-expect-error -- TS sees the real module (no createTestAppConfigLayer), Vitest resolves the mock
 import { createTestAppConfigLayer } from "@workspace/domain/config/app-config";
 import {
+	CheckpointerRepository,
 	OrchestratorGraphLangGraphRepositoryLive,
 	OrchestratorLangGraphRepositoryLive,
 } from "@workspace/infrastructure";
@@ -55,6 +55,8 @@ const TestAnalyzerLayer = Layer.succeed(
 	AnalyzerRepository,
 	AnalyzerRepository.of({
 		analyzeFacets: () => Effect.succeed([]),
+		analyzeFacetsBatch: (targets) =>
+			Effect.succeed(new Map(targets.map((t) => [t.assessmentMessageId, []]))),
 	}),
 );
 

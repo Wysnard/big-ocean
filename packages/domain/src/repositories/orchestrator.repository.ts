@@ -1,6 +1,6 @@
-import type { BaseMessage } from "@langchain/core/messages";
 import { Context, Effect } from "effect";
 import type { FacetName } from "../types/facet-evidence";
+import type { DomainMessage } from "../types/message";
 import type { TokenUsage } from "./nerin-agent.repository";
 
 /**
@@ -21,7 +21,7 @@ export interface ProcessMessageInput {
 	readonly userMessage: string;
 
 	/** Previous message history (optional) */
-	readonly messages?: BaseMessage[];
+	readonly messages?: DomainMessage[];
 
 	/** Current message count in session (1-indexed) */
 	readonly messageCount: number;
@@ -63,7 +63,7 @@ export interface ProcessAnalysisInput {
 	readonly sessionId: string;
 
 	/** Full message history for analysis context */
-	readonly messages: BaseMessage[];
+	readonly messages: DomainMessage[];
 
 	/** Current message count (triggers batch at multiples of 3) */
 	readonly messageCount: number;

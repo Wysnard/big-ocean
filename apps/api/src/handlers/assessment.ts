@@ -31,7 +31,8 @@ import {
 	listUserSessions,
 	resumeSession,
 	sendMessage,
-	startAssessment,
+	startAnonymousAssessment,
+	startAuthenticatedAssessment,
 } from "../use-cases/index";
 
 const toFetchHeaders = (requestHeaders: unknown): Headers => {
@@ -92,19 +93,20 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 			.handle("start", ({ payload, request }) =>
 				Effect.gen(function* () {
 					const authenticatedUserId = yield* resolveAuthenticatedUserId(request);
+					const userId = authenticatedUserId ?? payload.userId;
 
-					// Call use case - map infrastructure errors to contract errors
-					const result = yield* startAssessment({
-						userId: authenticatedUserId ?? payload.userId,
-					}).pipe(
-						Effect.catchTag("RedisOperationError", (error: RedisOperationError) =>
-							Effect.fail(
-								new DatabaseError({
-									message: `Rate limiting check failed: ${error.message}`,
-								}),
-							),
-						),
-					);
+					// Call use case - dispatch to authenticated or anonymous path
+					const result = userId
+						? yield* startAuthenticatedAssessment({ userId }).pipe(
+								Effect.catchTag("RedisOperationError", (error: RedisOperationError) =>
+									Effect.fail(
+										new DatabaseError({
+											message: `Rate limiting check failed: ${error.message}`,
+										}),
+									),
+								),
+							)
+						: yield* startAnonymousAssessment();
 
 					// Format HTTP response
 					return {

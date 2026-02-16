@@ -1,93 +1,50 @@
 {
 	"workflow_version": "1.2.0",
 	"timestamps": {
-		"started": "2026-02-12T14:58:14Z",
-		"last_updated": "2026-02-12T15:12:00Z"
+		"started": "2026-02-16T10:00:00Z",
+		"last_updated": "2026-02-16T10:15:00Z"
 	},
-	"mode": "initial_scan",
+	"mode": "full_rescan",
 	"scan_level": "deep",
-	"yolo_mode": true,
 	"project_root": "/Users/vincentlay/Projects/big-ocean",
 	"output_folder": "/Users/vincentlay/Projects/big-ocean/docs",
 	"completed_steps": [
 		{
 			"step": "step_1",
 			"status": "completed",
-			"timestamp": "2026-02-12T15:02:00Z",
-			"summary": "Classified as monorepo with 8 parts"
+			"timestamp": "2026-02-16T10:02:00Z",
+			"summary": "Classified as monorepo with 9 parts (2 apps + 6 packages + 1 e2e suite)"
 		},
 		{
 			"step": "step_2",
 			"status": "completed",
-			"timestamp": "2026-02-12T15:05:00Z",
-			"summary": "Found 21 existing docs, user wants BMAD artifacts included"
+			"timestamp": "2026-02-16T10:05:00Z",
+			"summary": "Found 65+ existing docs across root, docs/, apps/, packages/, _bmad-output/"
 		},
 		{
 			"step": "step_3",
 			"status": "completed",
-			"timestamp": "2026-02-12T15:08:00Z",
-			"summary": "Tech stack: Effect-ts + LangGraph backend, React 19 + TanStack Start frontend, Drizzle + PostgreSQL DB"
+			"timestamp": "2026-02-16T10:10:00Z",
+			"summary": "Tech stack: Effect-ts 3.19, React 19, TanStack Start 1.132, Vite 7.1, Drizzle 1.0-beta.12, LangGraph 1.1, PostgreSQL 16, Redis 7, Better Auth 1.5-beta.11"
 		},
 		{
 			"step": "step_4",
 			"status": "completed",
-			"timestamp": "2026-02-12T15:08:30Z",
-			"summary": "Deep scan completed: 5 parallel agents scanned API/backend, frontend/UI, domain/infra, CI/CD, and BMAD artifacts"
-		},
-		{
-			"step": "step_5",
-			"status": "completed",
-			"timestamp": "2026-02-12T15:09:12Z",
-			"summary": "Generated project-overview.md - executive summary, architecture, tech stack, deployment"
-		},
-		{
-			"step": "step_6",
-			"status": "completed",
-			"timestamp": "2026-02-12T15:11:33Z",
-			"summary": "Generated source-tree-analysis.md - full annotated directory tree, critical folders, entry points, integration points"
-		},
-		{
-			"step": "step_7",
-			"status": "completed",
-			"timestamp": "2026-02-12T15:10:02Z",
-			"summary": "Generated data-models.md - 8 PostgreSQL tables, ER diagram, DDL, indexes, Redis keys, migration strategy"
-		},
-		{
-			"step": "step_8",
-			"status": "completed",
-			"timestamp": "2026-02-12T15:09:51Z",
-			"summary": "Generated api-reference.md - 14 endpoints (10 Effect + 4 Better Auth), error types, CORS config"
-		},
-		{
-			"step": "step_9",
-			"status": "completed",
-			"timestamp": "2026-02-12T15:09:32Z",
-			"summary": "Generated index.md - master documentation index with project overview, data models, epic roadmap, navigation"
-		},
-		{
-			"step": "step_10",
-			"status": "skipped",
-			"timestamp": "2026-02-12T15:12:00Z",
-			"summary": "Existing docs (ARCHITECTURE.md, COMMANDS.md, DEPLOYMENT.md, FRONTEND.md, etc.) already comprehensive - no additional generation needed"
-		},
-		{
-			"step": "step_11",
-			"status": "completed",
-			"timestamp": "2026-02-12T15:12:00Z",
-			"summary": "Validation passed: no incomplete markers, no TODOs, no placeholders found in generated docs"
-		},
-		{
-			"step": "step_12",
-			"status": "completed",
-			"timestamp": "2026-02-12T15:12:00Z",
-			"summary": "Workflow finalized - 5 new documents generated, 21 existing docs preserved"
+			"timestamp": "2026-02-16T10:15:00Z",
+			"summary": "Deep scan completed: 4 parallel agents scanned API/backend (14 endpoints, 8 use-cases, multi-agent system), frontend (9 routes, 60+ components), domain/infra (11 repo interfaces, 8 DB tables), CI/CD (GitHub Actions, 3 Docker environments, Playwright E2E)"
 		}
 	],
-	"current_step": "completed",
+	"current_step": "step_5",
 	"findings": {
-		"project_classification": "Monorepo with 8 parts (2 apps + 6 packages), pnpm workspaces + Turbo",
-		"existing_docs_count": 21,
-		"technology_stack": "Effect-ts 3.19, React 19, TanStack Start, Vite 7.1, Drizzle ORM, LangGraph 1.1, PostgreSQL, Redis, Better Auth"
+		"project_classification": "Monorepo with 9 parts (2 apps + 6 packages + 1 e2e), pnpm workspaces + Turbo",
+		"existing_docs_count": 65,
+		"technology_stack": "Effect-ts 3.19, React 19, TanStack Start 1.132, Vite 7.1, Drizzle ORM 1.0-beta.12, LangGraph 1.1, PostgreSQL 16, Redis 7, Better Auth 1.5-beta.11, Pino 9.6, Biome 2.3",
+		"api_endpoints": 14,
+		"use_cases": 8,
+		"db_tables": 8,
+		"frontend_routes": 9,
+		"frontend_components": 60,
+		"repository_interfaces": 11
 	},
 	"project_types": [
 		{
@@ -98,7 +55,7 @@
 		{
 			"part_id": "front",
 			"project_type_id": "web",
-			"display_name": "Frontend Web App (React 19 + TanStack Start)"
+			"display_name": "Frontend Web (React 19 + TanStack Start)"
 		},
 		{
 			"part_id": "domain",
@@ -113,7 +70,7 @@
 		{
 			"part_id": "infrastructure",
 			"project_type_id": "library",
-			"display_name": "Infrastructure Package (repository implementations)"
+			"display_name": "Infrastructure Package (implementations)"
 		},
 		{
 			"part_id": "ui",
@@ -129,16 +86,9 @@
 			"part_id": "typescript-config",
 			"project_type_id": "library",
 			"display_name": "TypeScript Configuration"
-		}
+		},
+		{ "part_id": "e2e", "project_type_id": "cli", "display_name": "Playwright E2E Tests" }
 	],
-	"user_context": "Include _bmad-output/ planning artifacts (PRD, epics, architecture decisions) in documentation",
-	"outputs_generated": [
-		"project-scan-report.json",
-		"project-overview.md",
-		"source-tree-analysis.md",
-		"data-models.md",
-		"api-reference.md",
-		"index.md"
-	],
-	"resume_instructions": "Workflow complete. Use deep-dive mode to regenerate individual documents."
+	"outputs_generated": ["project-scan-report.json"],
+	"resume_instructions": "Resuming from step 5 - generating documentation files"
 }

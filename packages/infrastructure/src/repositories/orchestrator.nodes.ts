@@ -13,11 +13,11 @@
  * @see Story 2-4: LangGraph State Machine and Orchestration
  */
 
-import { HumanMessage } from "@langchain/core/messages";
 import {
 	BudgetPausedError,
 	calculateConfidenceFromFacetScores,
 	createInitialFacetScoresMap,
+	type DomainMessage,
 	type FacetName,
 	type FacetScoresMap,
 } from "@workspace/domain";
@@ -287,12 +287,13 @@ export function shouldTriggerBatch(messageCount: number): boolean {
 /**
  * Creates the message array for Nerin invocation.
  *
- * Appends the current user message to the existing message history.
+ * Appends the current user message to the existing message history
+ * as a DomainMessage. LangChain conversion happens in the nerin node.
  *
  * @param state - Current orchestrator state
  * @returns Message array including current user message
  */
-export function prepareMessagesForNerin(state: OrchestratorState) {
+export function prepareMessagesForNerin(state: OrchestratorState): DomainMessage[] {
 	const { messages, userMessage } = state;
-	return [...messages, new HumanMessage(userMessage)];
+	return [...messages, { id: `msg_${Date.now()}`, role: "user" as const, content: userMessage }];
 }

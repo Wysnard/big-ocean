@@ -45,6 +45,19 @@ export class RateLimitExceeded extends S.TaggedError<RateLimitExceeded>()("RateL
 }) {}
 
 /**
+ * Assessment already exists error (409)
+ * User already has an assessment and cannot create another one
+ */
+export class AssessmentAlreadyExists extends S.TaggedError<AssessmentAlreadyExists>()(
+	"AssessmentAlreadyExists",
+	{
+		userId: S.String,
+		existingSessionId: S.String,
+		message: S.String,
+	},
+) {}
+
+/**
  * Cost limit error (503)
  */
 export class CostLimitExceeded extends S.TaggedError<CostLimitExceeded>()("CostLimitExceeded", {

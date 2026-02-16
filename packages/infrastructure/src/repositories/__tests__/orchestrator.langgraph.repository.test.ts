@@ -93,6 +93,8 @@ const TestAnalyzerLayer = Layer.succeed(
 	AnalyzerRepository,
 	AnalyzerRepository.of({
 		analyzeFacets: () => Effect.succeed([]),
+		analyzeFacetsBatch: (targets) =>
+			Effect.succeed(new Map(targets.map((t) => [t.assessmentMessageId, []]))),
 	}),
 );
 

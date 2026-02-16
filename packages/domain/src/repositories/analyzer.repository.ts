@@ -1,6 +1,23 @@
 import { Context, Effect } from "effect";
 import type { AnalyzerError, MalformedEvidenceError } from "../errors/http.errors";
 import type { FacetEvidence } from "../types/facet-evidence";
+import type { DomainMessage } from "../types/message";
+
+/**
+ * Conversation message type for the analyzer pipeline.
+ * Alias for DomainMessage — kept for backwards compatibility with callers.
+ */
+export type ConversationMessage = DomainMessage;
+
+/** Re-export component types for consumers that destructure */
+export type UserMessage = DomainMessage & { role: "user" };
+export type AssistantMessage = DomainMessage & { role: "assistant" };
+
+/** A DB-persisted user message targeted for facet analysis */
+export type AnalysisTarget = {
+	readonly assessmentMessageId: string;
+	readonly content: string;
+};
 
 /**
  * Analyzer Repository Service Tag
@@ -18,15 +35,10 @@ export class AnalyzerRepository extends Context.Tag("AnalyzerRepository")<
 	AnalyzerRepository,
 	{
 		/**
-		 * Analyze a user message and extract facet evidence
+		 * Analyze a single user message and extract facet evidence
 		 *
 		 * Uses LLM to identify signals for all 30 Big Five facets across 5 traits.
 		 * Returns structured evidence with scores, confidence, quotes, and highlight ranges.
-		 *
-		 * Algorithm: Single JSON call with Claude Sonnet 4.5 (Path 2 from Tree of Thoughts)
-		 * - Cost: ~$0.003 per message
-		 * - Latency: 1-2 seconds
-		 * - Output: Array of FacetEvidence with assessmentMessageId, facet, score (0-20), confidence (0-1), quote, highlightRange
 		 *
 		 * @param assessmentMessageId - ID of the assessment message being analyzed (for evidence linkage)
 		 * @param content - User message text to analyze for personality signals
@@ -34,25 +46,28 @@ export class AnalyzerRepository extends Context.Tag("AnalyzerRepository")<
 		 * @returns Effect with array of facet evidence (typically 3-10 facets per message)
 		 * @throws AnalyzerError - Generic LLM invocation failure
 		 * @throws MalformedEvidenceError - JSON parsing, structure validation, or invalid facet name
-		 *
-		 * @example
-		 * ```typescript
-		 * const analyzer = yield* AnalyzerRepository;
-		 * const evidence = yield* analyzer.analyzeFacets(
-		 *   "msg_123",
-		 *   "I love exploring new ideas and thinking creatively.",
-		 *   [{ role: "user", content: "..." }, { role: "assistant", content: "..." }]
-		 * );
-		 * // Returns: [
-		 * //   { facet: "imagination", score: 18, confidence: 0.9, quote: "love exploring new ideas", ... },
-		 * //   { facet: "intellect", score: 16, confidence: 0.8, quote: "thinking creatively", ... }
-		 * // ]
-		 * ```
 		 */
 		readonly analyzeFacets: (
 			assessmentMessageId: string,
 			content: string,
-			conversationHistory?: ReadonlyArray<{ role: "user" | "assistant"; content: string }>,
+			conversationHistory?: ReadonlyArray<ConversationMessage>,
 		) => Effect.Effect<FacetEvidence[], AnalyzerError | MalformedEvidenceError, never>;
+
+		/**
+		 * Analyze multiple user messages in a single LLM call (batch mode)
+		 *
+		 * Consolidates multiple analyzeFacets calls into one LLM invocation to reduce
+		 * input token costs by ~60-65% (system prompt + conversation history sent once).
+		 *
+		 * @param targets - Array of messages to analyze, each with DB message ID and content
+		 * @param conversationHistory - Full conversation history with optional IDs on user messages
+		 * @returns Effect with Map<assessmentMessageId, FacetEvidence[]>
+		 * @throws AnalyzerError - Generic LLM invocation failure
+		 * @throws MalformedEvidenceError - JSON parsing, structure validation, or invalid facet name
+		 */
+		readonly analyzeFacetsBatch: (
+			targets: ReadonlyArray<AnalysisTarget>,
+			conversationHistory?: ReadonlyArray<ConversationMessage>,
+		) => Effect.Effect<Map<string, FacetEvidence[]>, AnalyzerError | MalformedEvidenceError, never>;
 	}
 >() {}

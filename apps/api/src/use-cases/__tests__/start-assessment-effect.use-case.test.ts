@@ -1,7 +1,8 @@
 /**
  * Start Assessment Use Case Tests (Migrated to @effect/vitest)
  *
- * Tests for the startAssessment business logic using @effect/vitest.
+ * Tests for startAuthenticatedAssessment, startAnonymousAssessment, and
+ * the backward-compat startAssessment wrapper using @effect/vitest.
  * Demonstrates proper Effect testing patterns with test Layers.
  */
 
@@ -43,7 +44,11 @@ const TestLayer = Layer.mergeAll(
 	CostGuardRedisRepositoryLive,
 );
 
-import { startAssessment } from "../../use-cases/start-assessment.use-case";
+import {
+	startAnonymousAssessment,
+	startAssessment,
+	startAuthenticatedAssessment,
+} from "../../use-cases/start-assessment.use-case";
 
 describe("startAssessment Use Case (@effect/vitest)", () => {
 	beforeEach(() => {
@@ -52,21 +57,21 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 		resetCostGuardState();
 	});
 
-	describe("Success scenarios", () => {
+	describe("startAuthenticatedAssessment", () => {
 		it.effect("should create a new assessment session", () =>
 			Effect.gen(function* () {
-				const result = yield* startAssessment({});
+				const result = yield* startAuthenticatedAssessment({ userId: "user_auth_1" });
 
 				expect(result.sessionId).toMatch(/^session_/);
 				expect(result.createdAt).toBeInstanceOf(Date);
 			}).pipe(Effect.provide(TestLayer)),
 		);
 
-		it.effect("should create session with user ID when provided", () =>
+		it.effect("should create session with correct user ID", () =>
 			Effect.gen(function* () {
 				const sessionRepo = yield* AssessmentSessionRepository;
 
-				const result = yield* startAssessment({ userId: "user_123" });
+				const result = yield* startAuthenticatedAssessment({ userId: "user_123" });
 
 				expect(result.sessionId).toBeDefined();
 
@@ -76,22 +81,10 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 			}).pipe(Effect.provide(TestLayer)),
 		);
 
-		it.effect("should create session without user ID when not provided", () =>
-			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
-
-				const result = yield* startAssessment({});
-
-				// Verify session was created without user ID
-				const session = yield* sessionRepo.getSession(result.sessionId);
-				expect(session.userId).toBeUndefined();
-			}).pipe(Effect.provide(TestLayer)),
-		);
-
 		it.effect("should return session ID, creation timestamp, and greeting messages", () =>
 			Effect.gen(function* () {
 				const beforeTime = new Date();
-				const result = yield* startAssessment({});
+				const result = yield* startAuthenticatedAssessment({ userId: "user_greet" });
 				const afterTime = new Date();
 
 				expect(result).toHaveProperty("sessionId");
@@ -113,10 +106,83 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 
 		it.effect("should handle multiple session creations independently", () =>
 			Effect.gen(function* () {
-				const result1 = yield* startAssessment({ userId: "user_1" });
-				const result2 = yield* startAssessment({ userId: "user_2" });
+				const result1 = yield* startAuthenticatedAssessment({ userId: "user_1" });
+				const result2 = yield* startAuthenticatedAssessment({ userId: "user_2" });
 
 				expect(result1.sessionId).not.toBe(result2.sessionId);
+			}).pipe(Effect.provide(TestLayer)),
+		);
+
+		it.effect("should return existing active session for same user instead of creating new one", () =>
+			Effect.gen(function* () {
+				// First call creates a new session
+				const result1 = yield* startAuthenticatedAssessment({ userId: "user_test" });
+				expect(result1.sessionId).toMatch(/^session_/);
+
+				// Second call returns the same active session
+				const result2 = yield* startAuthenticatedAssessment({ userId: "user_test" });
+				expect(result2.sessionId).toBe(result1.sessionId);
+			}).pipe(Effect.provide(TestLayer)),
+		);
+	});
+
+	describe("startAnonymousAssessment", () => {
+		it.effect("should create a new assessment session", () =>
+			Effect.gen(function* () {
+				const result = yield* startAnonymousAssessment();
+
+				expect(result.sessionId).toMatch(/^session_/);
+				expect(result.createdAt).toBeInstanceOf(Date);
+			}).pipe(Effect.provide(TestLayer)),
+		);
+
+		it.effect("should create session without user ID", () =>
+			Effect.gen(function* () {
+				const sessionRepo = yield* AssessmentSessionRepository;
+
+				const result = yield* startAnonymousAssessment();
+
+				// Verify session was created without user ID
+				const session = yield* sessionRepo.getSession(result.sessionId);
+				expect(session.userId).toBeUndefined();
+			}).pipe(Effect.provide(TestLayer)),
+		);
+
+		it.effect("should return greeting messages", () =>
+			Effect.gen(function* () {
+				const result = yield* startAnonymousAssessment();
+
+				expect(result.messages).toHaveLength(3);
+				expect(result.messages[0].content).toBe(GREETING_MESSAGES[0]);
+				expect(result.messages[1].content).toBe(GREETING_MESSAGES[1]);
+				expect(OPENING_QUESTIONS).toContain(result.messages[2].content);
+				for (const msg of result.messages) {
+					expect(msg.role).toBe("assistant");
+				}
+			}).pipe(Effect.provide(TestLayer)),
+		);
+	});
+
+	describe("startAssessment wrapper", () => {
+		it.effect("should dispatch to authenticated path with userId", () =>
+			Effect.gen(function* () {
+				const sessionRepo = yield* AssessmentSessionRepository;
+
+				const result = yield* startAssessment({ userId: "user_wrap" });
+
+				const session = yield* sessionRepo.getSession(result.sessionId);
+				expect(session.userId).toBe("user_wrap");
+			}).pipe(Effect.provide(TestLayer)),
+		);
+
+		it.effect("should dispatch to anonymous path without userId", () =>
+			Effect.gen(function* () {
+				const sessionRepo = yield* AssessmentSessionRepository;
+
+				const result = yield* startAssessment({});
+
+				const session = yield* sessionRepo.getSession(result.sessionId);
+				expect(session.userId).toBeUndefined();
 			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
@@ -134,7 +200,7 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 				};
 
 				const failingLayer = Effect.provideService(
-					startAssessment({}),
+					startAnonymousAssessment(),
 					AssessmentSessionRepository,
 					failingSessionRepo,
 				);
@@ -147,23 +213,12 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 	});
 
 	describe("Edge cases", () => {
-		it.effect("should handle empty user ID string", () =>
-			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
-
-				const result = yield* startAssessment({ userId: "" });
-
-				const session = yield* sessionRepo.getSession(result.sessionId);
-				expect(session.userId).toBe("");
-			}).pipe(Effect.provide(TestLayer)),
-		);
-
 		it.effect("should handle special characters in user ID", () =>
 			Effect.gen(function* () {
 				const specialUserId = "user+test@example.com";
 				const sessionRepo = yield* AssessmentSessionRepository;
 
-				const result = yield* startAssessment({ userId: specialUserId });
+				const result = yield* startAuthenticatedAssessment({ userId: specialUserId });
 
 				const session = yield* sessionRepo.getSession(result.sessionId);
 				expect(session.userId).toBe(specialUserId);
@@ -175,33 +230,10 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 				const longUserId = "a".repeat(1000);
 				const sessionRepo = yield* AssessmentSessionRepository;
 
-				const result = yield* startAssessment({ userId: longUserId });
+				const result = yield* startAuthenticatedAssessment({ userId: longUserId });
 
 				const session = yield* sessionRepo.getSession(result.sessionId);
 				expect(session.userId).toBe(longUserId);
-			}).pipe(Effect.provide(TestLayer)),
-		);
-	});
-
-	describe("Integration scenarios", () => {
-		it.effect("should create session for anonymous user", () =>
-			Effect.gen(function* () {
-				const result = yield* startAssessment({ userId: undefined });
-
-				expect(result).toHaveProperty("sessionId");
-				expect(result.sessionId).toBeDefined();
-			}).pipe(Effect.provide(TestLayer)),
-		);
-
-		it.effect("should return existing active session for same user instead of creating new one", () =>
-			Effect.gen(function* () {
-				// First call creates a new session
-				const result1 = yield* startAssessment({ userId: "user_test" });
-				expect(result1.sessionId).toMatch(/^session_/);
-
-				// Second call returns the same active session
-				const result2 = yield* startAssessment({ userId: "user_test" });
-				expect(result2.sessionId).toBe(result1.sessionId);
 			}).pipe(Effect.provide(TestLayer)),
 		);
 	});

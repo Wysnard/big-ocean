@@ -8,8 +8,8 @@
  */
 
 import { MemorySaver } from "@langchain/langgraph";
-import { CheckpointerRepository } from "@workspace/domain";
 import { Layer } from "effect";
+import { CheckpointerRepository } from "./checkpointer.repository";
 
 /**
  * Memory Checkpointer Layer for tests and development.

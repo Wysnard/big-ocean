@@ -30,6 +30,8 @@ export { AssessmentSessionDrizzleRepositoryLive } from "./repositories/assessmen
 // Checkpointer repository implementations
 export { CheckpointerMemoryRepositoryLive } from "./repositories/checkpointer.memory.repository";
 export { CheckpointerPostgresRepositoryLive } from "./repositories/checkpointer.postgres.repository";
+// Checkpointer repository interface (lives in infrastructure — wraps LangGraph-specific type)
+export { CheckpointerRepository } from "./repositories/checkpointer.repository";
 // CostGuard repository implementation
 export { CostGuardRedisRepositoryLive } from "./repositories/cost-guard.redis.repository";
 // Facet evidence repository implementation
@@ -59,6 +61,7 @@ export {
 	type OrchestratorOutput,
 	type OrchestratorState,
 	OrchestratorStateAnnotation,
+	type SerializableGraphError,
 } from "./repositories/orchestrator.state";
 // Orchestrator graph repository implementation
 export { OrchestratorGraphLangGraphRepositoryLive } from "./repositories/orchestrator-graph.langgraph.repository";

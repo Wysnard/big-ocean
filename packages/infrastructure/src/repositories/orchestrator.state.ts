@@ -2,7 +2,7 @@
  * Orchestrator State Definition for LangGraph
  *
  * Defines the state annotation for the multi-agent orchestration pipeline.
- * This state flows through: Router → Nerin → (conditionally) Analyzer → Scorer
+ * This state flows through: Router → Nerin → END
  *
  * Uses LangGraph's Annotation.Root pattern for type-safe state management
  * with reducers for accumulating messages and evidence.
@@ -10,17 +10,48 @@
  * @see Story 2-4: LangGraph State Machine and Orchestration
  */
 
-import type { BaseMessage } from "@langchain/core/messages";
 import { Annotation } from "@langchain/langgraph";
 import {
 	createInitialFacetScoresMap,
 	createInitialTraitScoresMap,
+	type DomainMessage,
 	type FacetEvidence,
 	type FacetName,
 	type FacetScoresMap,
 	type TraitScoresMap,
 } from "@workspace/domain";
 import type { TokenUsage } from "@workspace/domain/repositories/nerin-agent.repository";
+
+/**
+ * Serializable error type for graph state.
+ *
+ * LangGraph state must be JSON-serializable for checkpointing.
+ * Domain errors (which extend Error) cannot be stored directly in state.
+ * This discriminated union encodes all possible graph errors as plain data
+ * that survives serialization round-trips through the checkpointer.
+ *
+ * Flow: domain error → serializeError() → state.error → deserializeError() → Effect.fail
+ */
+export type SerializableGraphError =
+	| {
+			readonly _tag: "BudgetPausedError";
+			readonly sessionId: string;
+			readonly message: string;
+			readonly resumeAfter: string;
+			readonly currentConfidence: number;
+	  }
+	| {
+			readonly _tag: "OrchestrationError";
+			readonly sessionId: string;
+			readonly message: string;
+			readonly cause?: string;
+	  }
+	| {
+			readonly _tag: "ConfidenceGapError";
+			readonly sessionId: string;
+			readonly message: string;
+			readonly cause?: string;
+	  };
 
 /**
  * Orchestrator State Annotation
@@ -54,11 +85,14 @@ export const OrchestratorStateAnnotation = Annotation.Root({
 
 	/**
 	 * Message history from the assessment session.
+	 * Uses DomainMessage (framework-agnostic) — LangChain conversion
+	 * happens at the infrastructure boundary (nerin node).
+	 *
 	 * Reducer appends new messages to maintain chronological order.
 	 */
-	messages: Annotation<BaseMessage[]>({
+	messages: Annotation<DomainMessage[]>({
 		reducer: (prev, next) => [...(prev ?? []), ...(next ?? [])],
-		default: () => [] as BaseMessage[],
+		default: () => [] as DomainMessage[],
 	}),
 
 	/**
@@ -187,10 +221,12 @@ export const OrchestratorStateAnnotation = Annotation.Root({
 	// ============================================
 
 	/**
-	 * Error message if any agent fails.
-	 * Set by agents on failure, checked by router for early exit.
+	 * Serializable error if a graph node fails.
+	 * Set by runNodeEffect when a domain error occurs (e.g., BudgetPausedError).
+	 * Checked by conditional edge to skip remaining nodes and exit early.
+	 * Deserialized back into domain errors by the invoke method.
 	 */
-	error: Annotation<string | undefined>,
+	error: Annotation<SerializableGraphError | undefined>,
 });
 
 /**
@@ -205,7 +241,7 @@ export type OrchestratorState = typeof OrchestratorStateAnnotation.State;
 export interface OrchestratorInput {
 	sessionId: string;
 	userMessage: string;
-	messages: BaseMessage[];
+	messages: DomainMessage[];
 	messageCount: number;
 	dailyCostUsed: number;
 	facetScores?: FacetScoresMap;

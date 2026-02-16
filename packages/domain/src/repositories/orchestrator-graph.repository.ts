@@ -17,9 +17,9 @@
  * @see packages/infrastructure/src/repositories/orchestrator-graph.langgraph.repository.ts
  */
 
-import type { BaseMessage } from "@langchain/core/messages";
 import { Context, Effect } from "effect";
 import type { FacetName } from "../types/facet-evidence";
+import type { DomainMessage } from "../types/message";
 import type { TokenUsage } from "./nerin-agent.repository";
 import type { BudgetPausedError, OrchestrationError } from "./orchestrator.repository";
 
@@ -31,7 +31,7 @@ import type { BudgetPausedError, OrchestrationError } from "./orchestrator.repos
 export interface GraphInput {
 	readonly sessionId: string;
 	readonly userMessage: string;
-	readonly messages: BaseMessage[];
+	readonly messages: DomainMessage[];
 	readonly messageCount: number;
 	readonly dailyCostUsed: number;
 }

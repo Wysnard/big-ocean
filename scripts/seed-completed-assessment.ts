@@ -24,7 +24,8 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 
-const { account, assessmentMessage, assessmentSession, facetEvidence, user } = dbSchema;
+const { account, assessmentMessage, assessmentSession, facetEvidence, publicProfile, user } =
+	dbSchema;
 
 const TEST_USER_EMAIL = "test@bigocean.dev";
 const TEST_USER_PASSWORD = "testpassword123";
@@ -353,7 +354,23 @@ const seedProgram = Effect.gen(function* () {
 	}
 	console.log(`✓ Inserted ${evidenceCount} pieces of facet evidence`);
 
-	// 5. Print summary
+	// 5. Create public profile with OCEAN codes
+	// Computed from FACET_SCORE_MAP: O=94(O), C=102(D), E=45(A), A=71(N), N=60(T)
+	console.log("\n🌊 Creating public profile...");
+	const [profile] = yield* db
+		.insert(publicProfile)
+		.values({
+			sessionId: session.id,
+			userId,
+			oceanCode5: "ODANT",
+			oceanCode4: "ODAN",
+			isPublic: false,
+		})
+		.returning()
+		.pipe(Effect.mapError((error) => new Error(`Failed to create public profile: ${error}`)));
+	console.log(`✓ Created public profile: ${profile.id} (OCEAN: ODANT)`);
+
+	// 6. Print summary
 	console.log("\n✨ Seed completed successfully!\n");
 	console.log("=".repeat(60));
 	console.log("SESSION DETAILS");
@@ -363,14 +380,17 @@ const seedProgram = Effect.gen(function* () {
 	console.log(`Status: ${session.status}`);
 	console.log(`Messages: ${CONVERSATION_MESSAGES.length}`);
 	console.log(`Evidence Records: ${evidenceCount}`);
+	console.log(`OCEAN Code: ODANT`);
+	console.log(`Public Profile ID: ${profile.id}`);
 	console.log("=".repeat(60));
 	console.log("\n🔑 Login Credentials:");
 	console.log(`   Email:    ${TEST_USER_EMAIL}`);
 	console.log(`   Password: ${TEST_USER_PASSWORD}`);
 	console.log("\n🔗 Quick Test URLs:");
-	console.log(`   Results Page: http://localhost:3000/results?sessionId=${session.id}`);
+	console.log(`   Profile Page: http://localhost:3000/profile`);
+	console.log(`   Results Page: http://localhost:3000/results/${session.id}`);
 	console.log(`   Chat Page:    http://localhost:3000/chat?sessionId=${session.id}`);
-	console.log("\n💡 Tip: Copy the session ID to test different UI states!\n");
+	console.log("\n💡 Tip: Log in as test@bigocean.dev to see the assessment on /profile\n");
 
 	return session.id;
 });

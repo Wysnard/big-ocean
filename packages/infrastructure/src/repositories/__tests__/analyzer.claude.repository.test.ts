@@ -29,6 +29,8 @@ function createMockAnalyzerLayer(mockResponse: string) {
 					highlightRange: e.highlightRange,
 				}));
 			}),
+		analyzeFacetsBatch: (targets) =>
+			Effect.succeed(new Map(targets.map((t) => [t.assessmentMessageId, []]))),
 	});
 }
 
@@ -289,6 +291,8 @@ describe("AnalyzerClaudeRepository - Error Handling", () => {
 								message: "Failed to parse analyzer JSON response",
 							}),
 						),
+					analyzeFacetsBatch: (targets) =>
+						Effect.succeed(new Map(targets.map((t) => [t.assessmentMessageId, []]))),
 				}),
 			),
 		),
@@ -316,6 +320,8 @@ describe("AnalyzerClaudeRepository - Error Handling", () => {
 								message: "Invalid facet name in analyzer response",
 							}),
 						),
+					analyzeFacetsBatch: (targets) =>
+						Effect.succeed(new Map(targets.map((t) => [t.assessmentMessageId, []]))),
 				}),
 			),
 		),
@@ -353,6 +359,8 @@ describe("AnalyzerClaudeRepository - Error Handling", () => {
 								message: "Response structure validation failed",
 							}),
 						),
+					analyzeFacetsBatch: (targets) =>
+						Effect.succeed(new Map(targets.map((t) => [t.assessmentMessageId, []]))),
 				}),
 			),
 		);
@@ -390,6 +398,8 @@ describe("AnalyzerClaudeRepository - Error Handling", () => {
 								message: "Response structure validation failed",
 							}),
 						),
+					analyzeFacetsBatch: (targets) =>
+						Effect.succeed(new Map(targets.map((t) => [t.assessmentMessageId, []]))),
 				}),
 			),
 		);
@@ -472,6 +482,8 @@ describe("AnalyzerClaudeRepository - Edge Cases", () => {
 								highlightRange: e.highlightRange,
 							}));
 						}),
+					analyzeFacetsBatch: (targets) =>
+						Effect.succeed(new Map(targets.map((t) => [t.assessmentMessageId, []]))),
 				}),
 			),
 		);

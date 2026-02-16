@@ -2,11 +2,13 @@
  * Start Assessment Use Case
  *
  * Business logic for starting a new assessment session.
- * Creates a new session with baseline confidence scores and
- * persists 3 Nerin greeting messages (the 3rd randomly picked from a pool).
+ * Split into authenticated vs anonymous paths:
+ * - startAuthenticatedAssessment: existing session check, rate limiting, cost guard
+ * - startAnonymousAssessment: direct session creation, no guards
+ * - startAssessment: backward-compat wrapper that dispatches based on userId
  */
 
-import { RateLimitExceeded } from "@workspace/contracts";
+import { AssessmentAlreadyExists, RateLimitExceeded } from "@workspace/contracts";
 import {
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
@@ -35,69 +37,16 @@ export interface StartAssessmentOutput {
 }
 
 /**
- * Start Assessment Use Case
- *
- * Dependencies: AssessmentSessionRepository, AssessmentMessageRepository, CostGuardRepository, LoggerRepository
- * Returns: Session ID, creation timestamp, and 3 persisted greeting messages
- * Throws: RateLimitExceeded if user already started assessment today
+ * Shared helper: create a new session and persist 3 greeting messages.
+ * Used by both authenticated and anonymous paths.
  */
-export const startAssessment = (input: StartAssessmentInput) =>
+const createSessionWithGreetings = (userId?: string) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
-		const costGuard = yield* CostGuardRepository;
 		const logger = yield* LoggerRepository;
 
-		const { userId } = input;
-
-		// Check for existing active session (authenticated users only)
-		if (userId) {
-			const existingSession = yield* sessionRepo.getActiveSessionByUserId(userId);
-			if (existingSession) {
-				logger.info("Returning existing active session", {
-					sessionId: existingSession.id,
-					userId,
-				});
-
-				// Load existing messages for the session
-				const existingMessages = yield* messageRepo.getMessages(existingSession.id);
-
-				return {
-					sessionId: existingSession.id,
-					createdAt: existingSession.createdAt,
-					messages: existingMessages.map((msg) => ({
-						role: msg.role,
-						content: msg.content,
-						createdAt: msg.createdAt,
-					})),
-				};
-			}
-		}
-
-		// Skip rate limiting for anonymous users (no userId)
-		if (userId) {
-			// Check rate limit
-			const canStart = yield* costGuard.canStartAssessment(userId);
-			if (!canStart) {
-				logger.warn("Rate limit exceeded for assessment start", { userId });
-
-				return yield* Effect.fail(
-					new RateLimitExceeded({
-						userId,
-						message: "You can start a new assessment tomorrow",
-						resetAt: DateTime.unsafeMake(getNextDayMidnightUTC().getTime()),
-					}),
-				);
-			}
-		}
-
-		// Create new session
-		const result = yield* sessionRepo.createSession(input.userId);
-
-		// Record assessment start for rate limiting (only for authenticated users)
-		if (userId) {
-			yield* costGuard.recordAssessmentStart(userId);
-		}
+		const result = yield* sessionRepo.createSession(userId);
 
 		// Build the 3 greeting messages (2 fixed + 1 random opening question)
 		const openingQuestion = pickOpeningQuestion();
@@ -116,7 +65,7 @@ export const startAssessment = (input: StartAssessmentInput) =>
 
 		logger.info("Assessment session started", {
 			sessionId: result.sessionId,
-			userId: input.userId,
+			userId,
 			greetingCount: savedMessages.length,
 		});
 
@@ -126,3 +75,99 @@ export const startAssessment = (input: StartAssessmentInput) =>
 			messages: savedMessages,
 		};
 	});
+
+/**
+ * Start Authenticated Assessment
+ *
+ * For logged-in users: checks for existing session, enforces rate limits,
+ * records assessment start, then creates session with greetings.
+ *
+ * Errors: AssessmentAlreadyExists, RateLimitExceeded, RedisOperationError
+ */
+export const startAuthenticatedAssessment = (input: { userId: string }) =>
+	Effect.gen(function* () {
+		const sessionRepo = yield* AssessmentSessionRepository;
+		const messageRepo = yield* AssessmentMessageRepository;
+		const costGuard = yield* CostGuardRepository;
+		const logger = yield* LoggerRepository;
+
+		const { userId } = input;
+
+		// Check for existing session
+		const existing = yield* sessionRepo.findSessionByUserId(userId);
+
+		if (existing) {
+			// If active session exists, return it so the user can resume
+			if (existing.status === "active") {
+				logger.info("Returning existing active session", {
+					sessionId: existing.id,
+					userId,
+				});
+
+				const existingMessages = yield* messageRepo.getMessages(existing.id);
+
+				return {
+					sessionId: existing.id,
+					createdAt: existing.createdAt,
+					messages: existingMessages.map((msg) => ({
+						role: msg.role,
+						content: msg.content,
+						createdAt: msg.createdAt,
+					})),
+				};
+			}
+
+			// If a completed/paused session exists, block new assessment creation
+			logger.warn("User already has an assessment", {
+				userId,
+				existingSessionId: existing.id,
+				status: existing.status,
+			});
+
+			return yield* Effect.fail(
+				new AssessmentAlreadyExists({
+					userId,
+					existingSessionId: existing.id,
+					message: "You already have an assessment. Only one assessment per account is allowed.",
+				}),
+			);
+		}
+
+		// Check rate limit
+		const canStart = yield* costGuard.canStartAssessment(userId);
+		if (!canStart) {
+			logger.warn("Rate limit exceeded for assessment start", { userId });
+
+			return yield* Effect.fail(
+				new RateLimitExceeded({
+					userId,
+					message: "You can start a new assessment tomorrow",
+					resetAt: DateTime.unsafeMake(getNextDayMidnightUTC().getTime()),
+				}),
+			);
+		}
+
+		// Create session with greetings
+		const result = yield* createSessionWithGreetings(userId);
+
+		// Record assessment start for rate limiting
+		yield* costGuard.recordAssessmentStart(userId);
+
+		return result;
+	});
+
+/**
+ * Start Anonymous Assessment
+ *
+ * For unauthenticated users: creates session with greetings directly.
+ * No existing-session check, no rate limiting, no cost guard.
+ */
+export const startAnonymousAssessment = () => createSessionWithGreetings(undefined);
+
+/**
+ * Start Assessment (backward-compat wrapper)
+ *
+ * Dispatches to authenticated or anonymous path based on userId presence.
+ */
+export const startAssessment = (input: StartAssessmentInput) =>
+	input.userId ? startAuthenticatedAssessment({ userId: input.userId }) : startAnonymousAssessment();

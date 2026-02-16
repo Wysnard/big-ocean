@@ -20,18 +20,34 @@
  */
 
 import { ChatAnthropic } from "@langchain/anthropic";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import {
 	ALL_FACETS,
+	type AnalysisTarget,
 	AnalyzerError,
 	AnalyzerRepository,
 	AnalyzerResponseJsonSchema,
 	AppConfig,
+	BatchAnalyzerResponseJsonSchema,
+	type ConversationMessage,
 	type FacetEvidence,
 	LoggerRepository,
 	MalformedEvidenceError,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
+
+/**
+ * LangChain-specific message types used only within this file.
+ * Moved from domain to keep @langchain/core out of the domain package.
+ */
+
+/** HumanMessage subclass that preserves message ID for batch analysis */
+class IdentifiedHumanMessage extends HumanMessage {
+	declare id?: string;
+}
+
+/** Union type for messages sent to the analyzer LLM */
+type AnalyzerMessage = SystemMessage | AIMessage | IdentifiedHumanMessage;
 
 /**
  * System prompt for facet analysis
@@ -102,11 +118,19 @@ Each item in the extractions array must have:
 - highlightRange: Object with start and end character indices`;
 
 /**
- * Effect Schema for FacetEvidence validation and transformation
- *
- * Validates JSON response from Claude and transforms to FacetEvidence.
- * Follows Effect Schema naming convention: AFromB (output from input).
+ * Additional instructions appended to the system prompt for batch analysis mode.
+ * Instructs the LLM to tag extractions with the source message ID.
  */
+const BATCH_ANALYZER_INSTRUCTIONS = `
+
+**BATCH ANALYSIS MODE:**
+You are analyzing multiple user messages in a single call.
+User messages in the conversation history are annotated with their ID in the format [id: <message_id>].
+- Tag every extraction with the \`message_id\` of the source user message
+- Analyze each target message INDEPENDENTLY — do not combine signals across messages
+- \`highlightRange\` uses 0-based character indices relative to that message's original text (not including the [id: ...] prefix)
+- Return approximately the same number of extractions per message as you would individually
+- Only analyze user messages whose IDs are listed in the final instruction`;
 
 /**
  * Analyzer Repository Layer (Production)
@@ -131,6 +155,9 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 
 		// Use structured output with includeRaw to preserve AIMessage token metadata
 		const model = baseModel.withStructuredOutput(AnalyzerResponseJsonSchema, { includeRaw: true });
+		const batchModel = baseModel.withStructuredOutput(BatchAnalyzerResponseJsonSchema, {
+			includeRaw: true,
+		});
 
 		logger.info("Analyzer Claude repository initialized", {
 			model: config.analyzerModelId,
@@ -141,7 +168,7 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 			analyzeFacets: (
 				assessmentMessageId: string,
 				content: string,
-				conversationHistory?: ReadonlyArray<{ role: "user" | "assistant"; content: string }>,
+				conversationHistory?: ReadonlyArray<ConversationMessage>,
 			) =>
 				Effect.gen(function* () {
 					const startTime = Date.now();
@@ -260,6 +287,133 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 					});
 
 					return evidence;
+				}),
+
+			analyzeFacetsBatch: (
+				targets: ReadonlyArray<AnalysisTarget>,
+				conversationHistory?: ReadonlyArray<ConversationMessage>,
+			) =>
+				Effect.gen(function* () {
+					const startTime = Date.now();
+					const targetIds = targets.map((t) => t.assessmentMessageId);
+
+					// Build LangChain message array with IDs on user messages
+					const langchainMessages: AnalyzerMessage[] = [
+						new SystemMessage(ANALYZER_SYSTEM_PROMPT + BATCH_ANALYZER_INSTRUCTIONS),
+					];
+
+					if (conversationHistory?.length) {
+						for (const msg of conversationHistory) {
+							if (msg.role === "user") {
+								langchainMessages.push(
+									new IdentifiedHumanMessage({ content: `[id: ${msg.id}] ${msg.content}`, id: msg.id }),
+								);
+							} else {
+								langchainMessages.push(new AIMessage(msg.content));
+							}
+						}
+					}
+
+					// Final instruction: trigger the batch analysis
+					langchainMessages.push(
+						new IdentifiedHumanMessage({
+							content: `Analyze the user messages marked with the following IDs for personality facet signals:\n${targetIds.map((id) => `- ${id}`).join("\n")}`,
+							id: "batch-instruction",
+						}),
+					);
+
+					// Single LLM call for all targets
+					const invokeResult = yield* Effect.tryPromise({
+						try: () => batchModel.invoke(langchainMessages),
+						catch: (error) =>
+							new AnalyzerError({
+								assessmentMessageId: targetIds.join(","),
+								message: "Failed to invoke Claude for batch facet analysis",
+								cause: error instanceof Error ? error.message : String(error),
+							}),
+					});
+
+					// Extract token usage
+					const usageMeta = (invokeResult.raw as AIMessage)?.usage_metadata;
+					const batchTokens = {
+						input: usageMeta?.input_tokens ?? 0,
+						output: usageMeta?.output_tokens ?? 0,
+						total: (usageMeta?.input_tokens ?? 0) + (usageMeta?.output_tokens ?? 0),
+					};
+
+					const rawResponse = invokeResult.parsed;
+					const unwrapped = (rawResponse as { extractions?: unknown }).extractions ?? rawResponse;
+					const items = Array.isArray(unwrapped) ? unwrapped : [];
+
+					if (items.length === 0) {
+						return yield* Effect.fail(
+							new MalformedEvidenceError({
+								assessmentMessageId: targetIds.join(","),
+								rawOutput: JSON.stringify(rawResponse).substring(0, 500),
+								parseError: "Empty or non-array response from batch analyzer",
+								message: "Schema validation failed - no extractions returned",
+							}),
+						);
+					}
+
+					// Group extractions by message_id
+					const validFacetSet = new Set<string>(ALL_FACETS);
+					const targetIdSet = new Set(targetIds);
+					const evidenceMap = new Map<string, FacetEvidence[]>();
+					for (const id of targetIds) {
+						evidenceMap.set(id, []);
+					}
+
+					let skippedCount = 0;
+					for (const item of items) {
+						if (!item || typeof item.facet !== "string" || !validFacetSet.has(item.facet)) {
+							skippedCount++;
+							continue;
+						}
+						const messageId = item.message_id as string;
+						if (!messageId || !targetIdSet.has(messageId)) {
+							skippedCount++;
+							logger.warn("Skipping extraction with unknown message_id", {
+								messageId,
+								facet: item.facet,
+							});
+							continue;
+						}
+
+						const bucket = evidenceMap.get(messageId);
+						if (!bucket) continue;
+						bucket.push({
+							assessmentMessageId: messageId,
+							facetName: item.facet as FacetEvidence["facetName"],
+							score: Math.max(0, Math.min(20, Number(item.score) || 0)),
+							confidence: Math.max(0, Math.min(100, Number(item.confidence) || 0)),
+							quote: String(item.evidence || ""),
+							highlightRange: {
+								start: Math.max(0, Number(item.highlightRange?.start) || 0),
+								end: Math.max(1, Number(item.highlightRange?.end) || 1),
+							},
+						});
+					}
+
+					if (skippedCount > 0) {
+						logger.warn("Some batch extractions were invalid", {
+							skippedCount,
+							validCount: items.length - skippedCount,
+							totalCount: items.length,
+						});
+					}
+
+					const totalEvidence = [...evidenceMap.values()].reduce((sum, arr) => sum + arr.length, 0);
+					const duration = Date.now() - startTime;
+
+					logger.info("Batch facet analysis completed", {
+						targetCount: targets.length,
+						totalEvidence,
+						durationMs: duration,
+						tokenUsage: batchTokens,
+					});
+
+					return evidenceMap;
 				}),
 		});
 	}),

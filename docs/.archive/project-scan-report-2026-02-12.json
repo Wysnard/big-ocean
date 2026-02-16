@@ -1,0 +1,144 @@
+{
+	"workflow_version": "1.2.0",
+	"timestamps": {
+		"started": "2026-02-12T14:58:14Z",
+		"last_updated": "2026-02-12T15:12:00Z"
+	},
+	"mode": "initial_scan",
+	"scan_level": "deep",
+	"yolo_mode": true,
+	"project_root": "/Users/vincentlay/Projects/big-ocean",
+	"output_folder": "/Users/vincentlay/Projects/big-ocean/docs",
+	"completed_steps": [
+		{
+			"step": "step_1",
+			"status": "completed",
+			"timestamp": "2026-02-12T15:02:00Z",
+			"summary": "Classified as monorepo with 8 parts"
+		},
+		{
+			"step": "step_2",
+			"status": "completed",
+			"timestamp": "2026-02-12T15:05:00Z",
+			"summary": "Found 21 existing docs, user wants BMAD artifacts included"
+		},
+		{
+			"step": "step_3",
+			"status": "completed",
+			"timestamp": "2026-02-12T15:08:00Z",
+			"summary": "Tech stack: Effect-ts + LangGraph backend, React 19 + TanStack Start frontend, Drizzle + PostgreSQL DB"
+		},
+		{
+			"step": "step_4",
+			"status": "completed",
+			"timestamp": "2026-02-12T15:08:30Z",
+			"summary": "Deep scan completed: 5 parallel agents scanned API/backend, frontend/UI, domain/infra, CI/CD, and BMAD artifacts"
+		},
+		{
+			"step": "step_5",
+			"status": "completed",
+			"timestamp": "2026-02-12T15:09:12Z",
+			"summary": "Generated project-overview.md - executive summary, architecture, tech stack, deployment"
+		},
+		{
+			"step": "step_6",
+			"status": "completed",
+			"timestamp": "2026-02-12T15:11:33Z",
+			"summary": "Generated source-tree-analysis.md - full annotated directory tree, critical folders, entry points, integration points"
+		},
+		{
+			"step": "step_7",
+			"status": "completed",
+			"timestamp": "2026-02-12T15:10:02Z",
+			"summary": "Generated data-models.md - 8 PostgreSQL tables, ER diagram, DDL, indexes, Redis keys, migration strategy"
+		},
+		{
+			"step": "step_8",
+			"status": "completed",
+			"timestamp": "2026-02-12T15:09:51Z",
+			"summary": "Generated api-reference.md - 14 endpoints (10 Effect + 4 Better Auth), error types, CORS config"
+		},
+		{
+			"step": "step_9",
+			"status": "completed",
+			"timestamp": "2026-02-12T15:09:32Z",
+			"summary": "Generated index.md - master documentation index with project overview, data models, epic roadmap, navigation"
+		},
+		{
+			"step": "step_10",
+			"status": "skipped",
+			"timestamp": "2026-02-12T15:12:00Z",
+			"summary": "Existing docs (ARCHITECTURE.md, COMMANDS.md, DEPLOYMENT.md, FRONTEND.md, etc.) already comprehensive - no additional generation needed"
+		},
+		{
+			"step": "step_11",
+			"status": "completed",
+			"timestamp": "2026-02-12T15:12:00Z",
+			"summary": "Validation passed: no incomplete markers, no TODOs, no placeholders found in generated docs"
+		},
+		{
+			"step": "step_12",
+			"status": "completed",
+			"timestamp": "2026-02-12T15:12:00Z",
+			"summary": "Workflow finalized - 5 new documents generated, 21 existing docs preserved"
+		}
+	],
+	"current_step": "completed",
+	"findings": {
+		"project_classification": "Monorepo with 8 parts (2 apps + 6 packages), pnpm workspaces + Turbo",
+		"existing_docs_count": 21,
+		"technology_stack": "Effect-ts 3.19, React 19, TanStack Start, Vite 7.1, Drizzle ORM, LangGraph 1.1, PostgreSQL, Redis, Better Auth"
+	},
+	"project_types": [
+		{
+			"part_id": "api",
+			"project_type_id": "backend",
+			"display_name": "Backend API (Effect-ts + LangGraph)"
+		},
+		{
+			"part_id": "front",
+			"project_type_id": "web",
+			"display_name": "Frontend Web App (React 19 + TanStack Start)"
+		},
+		{
+			"part_id": "domain",
+			"project_type_id": "library",
+			"display_name": "Domain Package (pure abstractions)"
+		},
+		{
+			"part_id": "contracts",
+			"project_type_id": "library",
+			"display_name": "Contracts Package (HTTP API definitions)"
+		},
+		{
+			"part_id": "infrastructure",
+			"project_type_id": "library",
+			"display_name": "Infrastructure Package (repository implementations)"
+		},
+		{
+			"part_id": "ui",
+			"project_type_id": "library",
+			"display_name": "UI Component Library (shadcn/ui)"
+		},
+		{
+			"part_id": "lint",
+			"project_type_id": "library",
+			"display_name": "Lint Configuration (Biome)"
+		},
+		{
+			"part_id": "typescript-config",
+			"project_type_id": "library",
+			"display_name": "TypeScript Configuration"
+		}
+	],
+	"user_context": "Include _bmad-output/ planning artifacts (PRD, epics, architecture decisions) in documentation",
+	"outputs_generated": [
+		"project-scan-report.json",
+		"project-overview.md",
+		"source-tree-analysis.md",
+		"data-models.md",
+		"api-reference.md",
+		"index.md"
+	],
+	"resume_instructions": "Workflow complete. Use deep-dive mode to regenerate individual documents."
+}

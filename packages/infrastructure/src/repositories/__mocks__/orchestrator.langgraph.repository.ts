@@ -28,7 +28,7 @@ export const OrchestratorLangGraphRepositoryLive = Layer.succeed(
 	OrchestratorRepository.of({
 		processMessage: (input) =>
 			Effect.gen(function* () {
-				const { sessionId, messageCount, dailyCostUsed } = input;
+				const { sessionId, dailyCostUsed } = input;
 
 				// 1. BUDGET CHECK
 				if (dailyCostUsed + MESSAGE_COST_ESTIMATE > DAILY_COST_LIMIT) {

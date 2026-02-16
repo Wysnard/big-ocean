@@ -74,5 +74,26 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 			DatabaseError,
 			never
 		>;
+
+		/**
+		 * Find the most recent assessment session for a user.
+		 * Returns the newest session or null if the user has no sessions.
+		 *
+		 * @param userId - Authenticated user ID
+		 * @returns Effect with session summary or null
+		 */
+		readonly findSessionByUserId: (userId: string) => Effect.Effect<
+			{
+				id: string;
+				createdAt: Date;
+				updatedAt: Date;
+				status: string;
+				messageCount: number;
+				oceanCode5: string | null;
+				archetypeName: string | null;
+			} | null,
+			DatabaseError,
+			never
+		>;
 	}
 >() {}

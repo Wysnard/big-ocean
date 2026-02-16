@@ -74,6 +74,37 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 				return updated;
 			}),
 
+		findSessionByUserId: (userId: string) =>
+			Effect.sync(() => {
+				const userSessions: Array<{
+					id: string;
+					createdAt: Date;
+					updatedAt: Date;
+					status: string;
+					messageCount: number;
+					oceanCode5: string | null;
+					archetypeName: string | null;
+				}> = [];
+
+				for (const session of sessions.values()) {
+					if (session.userId === userId) {
+						userSessions.push({
+							id: session.id as string,
+							createdAt: session.createdAt as Date,
+							updatedAt: session.updatedAt as Date,
+							status: session.status as string,
+							messageCount: (session.messageCount as number) ?? 0,
+							oceanCode5: (session.oceanCode5 as string) ?? null,
+							archetypeName: (session.archetypeName as string) ?? null,
+						});
+					}
+				}
+
+				// Sort by createdAt descending (newest first), return first or null
+				userSessions.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+				return userSessions[0] ?? null;
+			}),
+
 		getSessionsByUserId: (userId: string) =>
 			Effect.sync(() => {
 				const userSessions: Array<{

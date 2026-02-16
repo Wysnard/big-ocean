@@ -47,7 +47,9 @@ export {
 export {
 	type StartAssessmentInput,
 	type StartAssessmentOutput,
+	startAnonymousAssessment,
 	startAssessment,
+	startAuthenticatedAssessment,
 } from "./start-assessment.use-case";
 export {
 	type ToggleProfileVisibilityInput,

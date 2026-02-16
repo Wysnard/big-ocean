@@ -27,6 +27,24 @@ const createMockAnalyzerRepository = (): Context.Tag.Service<typeof AnalyzerRepo
 				highlightRange: { start: 0, end: 20 },
 			},
 		] as FacetEvidence[]),
+	analyzeFacetsBatch: (targets) =>
+		Effect.succeed(
+			new Map(
+				targets.map((t) => [
+					t.assessmentMessageId,
+					[
+						{
+							assessmentMessageId: t.assessmentMessageId,
+							facetName: "imagination" as FacetEvidence["facetName"],
+							score: 15,
+							confidence: 0.8,
+							quote: t.content.substring(0, 20),
+							highlightRange: { start: 0, end: 20 },
+						},
+					],
+				]),
+			),
+		),
 });
 
 describe("AnalyzerRepository Interface", () => {
