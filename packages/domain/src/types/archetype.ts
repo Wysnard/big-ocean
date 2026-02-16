@@ -95,7 +95,7 @@ export interface Archetype {
 	readonly code4: OceanCode4;
 	/** Memorable personality name (e.g., "Thoughtful Collaborator") */
 	readonly name: string;
-	/** 2-3 sentence description explaining the trait combination */
+	/** Rich description (1500-2500 characters) explaining the trait combination */
 	readonly description: string;
 	/** Hex color code for visual representation (e.g., "#4A90D9") */
 	readonly color: string;
