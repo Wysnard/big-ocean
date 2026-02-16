@@ -183,7 +183,7 @@ export type {
 	TraitScoresMap,
 } from "./types/facet-evidence";
 // Facet level types and mappings (Story 8.3)
-export { FACET_LETTER_MAP, FACET_LEVEL_LABELS } from "./types/facet-levels";
+export { FACET_LETTER_MAP, FACET_LEVEL_LABELS, type FacetLevelLabels } from "./types/facet-levels";
 // Domain message type (framework-agnostic conversation messages)
 export type { DomainMessage } from "./types/message";
 // Session types

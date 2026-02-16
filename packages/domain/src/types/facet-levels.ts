@@ -100,11 +100,9 @@ export const FACET_LETTER_MAP: Record<FacetName, readonly [string, string]> = {
 	vulnerability: ["NR", "NV"],
 } as const;
 
-// ─── Facet Level Labels ──────────────────────────────────────────────────────
+// ─── Per-Trait Facet Level Labels ───────────────────────────────────────────
 
-/** Human-readable label for every two-letter facet code — globally unique flat map */
-export const FACET_LEVEL_LABELS: Record<string, string> = {
-	// Openness facets
+const OPENNESS_FACET_LEVEL_LABELS = {
 	OP: "Concrete",
 	OV: "Visionary",
 	OL: "Utilitarian",
@@ -117,8 +115,9 @@ export const FACET_LEVEL_LABELS: Record<string, string> = {
 	OI: "Inquisitive",
 	OT: "Traditional",
 	OR: "Progressive",
+} as const;
 
-	// Conscientiousness facets
+const CONSCIENTIOUSNESS_FACET_LEVEL_LABELS = {
 	CD: "Tentative",
 	CA: "Capable",
 	CS: "Spontaneous",
@@ -131,8 +130,9 @@ export const FACET_LEVEL_LABELS: Record<string, string> = {
 	CP: "Persistent",
 	CB: "Decisive",
 	CL: "Deliberate",
+} as const;
 
-	// Extraversion facets
+const EXTRAVERSION_FACET_LEVEL_LABELS = {
 	ER: "Reserved",
 	EW: "Welcoming",
 	ES: "Solitary",
@@ -145,8 +145,9 @@ export const FACET_LEVEL_LABELS: Record<string, string> = {
 	ET: "Adventurous",
 	EM: "Reflective",
 	EL: "Radiant",
+} as const;
 
-	// Agreeableness facets
+const AGREEABLENESS_FACET_LEVEL_LABELS = {
 	AS: "Guarded",
 	AT: "Trusting",
 	AD: "Shrewd",
@@ -159,8 +160,9 @@ export const FACET_LEVEL_LABELS: Record<string, string> = {
 	AU: "Unassuming",
 	AL: "Objective",
 	AE: "Compassionate",
+} as const;
 
-	// Neuroticism facets
+const NEUROTICISM_FACET_LEVEL_LABELS = {
 	NC: "Composed",
 	NA: "Vigilant",
 	NP: "Patient",
@@ -174,3 +176,17 @@ export const FACET_LEVEL_LABELS: Record<string, string> = {
 	NR: "Sturdy",
 	NV: "Tender",
 } as const;
+
+// ─── Merged Facet Level Labels ──────────────────────────────────────────────
+
+/** Human-readable label for every two-letter facet code — globally unique flat map */
+export const FACET_LEVEL_LABELS = {
+	...OPENNESS_FACET_LEVEL_LABELS,
+	...CONSCIENTIOUSNESS_FACET_LEVEL_LABELS,
+	...EXTRAVERSION_FACET_LEVEL_LABELS,
+	...AGREEABLENESS_FACET_LEVEL_LABELS,
+	...NEUROTICISM_FACET_LEVEL_LABELS,
+} as const;
+
+/** Derived type — preserves literal code→label mappings for type-safe lookups */
+export type FacetLevelLabels = typeof FACET_LEVEL_LABELS;
