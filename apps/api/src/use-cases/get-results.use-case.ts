@@ -18,31 +18,19 @@ import {
 	FACET_TO_TRAIT,
 	FacetEvidenceRepository,
 	type FacetName,
+	type FacetResult,
 	generateOceanCode,
 	LoggerRepository,
 	lookupArchetype,
 	SessionNotFound,
 	TRAIT_LETTER_MAP,
+	type TraitResult,
 } from "@workspace/domain";
 import { Effect } from "effect";
 
 export interface GetResultsInput {
 	readonly sessionId: string;
 	readonly authenticatedUserId?: string;
-}
-
-export interface TraitResult {
-	readonly name: string;
-	readonly score: number;
-	readonly level: string;
-	readonly confidence: number;
-}
-
-export interface FacetResult {
-	readonly name: string;
-	readonly traitName: string;
-	readonly score: number;
-	readonly confidence: number;
 }
 
 export interface GetResultsOutput {

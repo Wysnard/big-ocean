@@ -22,6 +22,8 @@ export {
 	TRAIT_TO_FACETS,
 	type TraitName,
 } from "./constants/big-five";
+// Facet descriptions (Story 8.3)
+export { FACET_DESCRIPTIONS, type FacetDescriptions } from "./constants/facet-descriptions";
 // Nerin greeting constants (Story 7.10)
 export {
 	GREETING_MESSAGES,
@@ -121,8 +123,17 @@ export {
 	validateAnalyzerResponse,
 	validateNerinResponse,
 } from "./schemas/agent-schemas";
+// Big Five name schemas — typed literal schemas for TraitName and FacetName
+export { FacetNameSchema, TraitNameSchema } from "./schemas/big-five-schemas";
 // OCEAN code branded schemas (canonical definitions)
 export { OceanCode4Schema, OceanCode5Schema } from "./schemas/ocean-code";
+// Result schemas — canonical FacetResult and TraitResult types
+export {
+	type FacetResult,
+	FacetResultSchema,
+	type TraitResult,
+	TraitResultSchema,
+} from "./schemas/result-schemas";
 // Confidence calculation service
 export {
 	calculateTraitConfidence,
@@ -171,6 +182,13 @@ export type {
 	TraitScore,
 	TraitScoresMap,
 } from "./types/facet-evidence";
+// Facet level types and mappings (Story 8.3)
+export {
+	FACET_LETTER_MAP,
+	FACET_LEVEL_LABELS,
+	type FacetLevelCode,
+	type FacetLevelLabels,
+} from "./types/facet-levels";
 // Domain message type (framework-agnostic conversation messages)
 export type { DomainMessage } from "./types/message";
 // Session types
@@ -196,6 +214,7 @@ export {
 	extract4LetterCode,
 	generateOceanCode,
 	getFacetColor,
+	getFacetLevel,
 	getTraitColor,
 	getTraitGradient,
 	lookupArchetype,

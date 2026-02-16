@@ -1,6 +1,9 @@
-import type { FacetName, TraitLevel, TraitName } from "@workspace/domain";
+import type { FacetName, FacetResult, TraitLevel, TraitName, TraitResult } from "@workspace/domain";
 import {
+	FACET_DESCRIPTIONS,
+	FACET_LEVEL_LABELS,
 	getFacetColor,
+	getFacetLevel,
 	getTraitColor,
 	TRAIT_DESCRIPTIONS,
 	TRAIT_NAMES,
@@ -34,23 +37,9 @@ const TRAIT_LABELS: Record<TraitName, string> = {
 
 const MAX_TRAIT_SCORE = 120;
 
-export interface TraitData {
-	name: TraitName;
-	score: number;
-	level: TraitLevel;
-	confidence: number;
-}
-
-export interface FacetData {
-	name: string;
-	traitName: string;
-	score: number;
-	confidence: number;
-}
-
 interface TraitScoresSectionProps {
-	traits: readonly TraitData[];
-	facets: readonly FacetData[];
+	traits: readonly TraitResult[];
+	facets: readonly FacetResult[];
 	expandedTraits?: Set<string>;
 	onToggleTrait?: (trait: string) => void;
 	onViewEvidence?: (facetName: FacetName) => void;
@@ -145,7 +134,11 @@ export function TraitScoresSection({
 											data-slot="trait-description"
 											className="text-sm text-muted-foreground leading-relaxed mt-3"
 										>
-											{(TRAIT_DESCRIPTIONS[trait].levels as Record<TraitLevel, string>)[traitData.level]}
+											{
+												(TRAIT_DESCRIPTIONS[trait].levels as Record<TraitLevel, string>)[
+													traitData.level as TraitLevel
+												]
+											}
 										</p>
 									</div>
 								)}
@@ -158,16 +151,24 @@ export function TraitScoresSection({
 											return (
 												<div key={facet.name} id={`facet-${facet.name}`} className="pl-4">
 													<div className="flex items-center justify-between mb-1">
-														<span className="text-xs text-muted-foreground">
-															{toFacetDisplayName(facet.name)}
-														</span>
+														<div className="flex items-center gap-1.5">
+															<span className="text-xs text-muted-foreground">
+																{toFacetDisplayName(facet.name)}
+															</span>
+															<span
+																data-slot="facet-level-label"
+																className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+															>
+																{FACET_LEVEL_LABELS[getFacetLevel(facet.name, facet.score)]}
+															</span>
+														</div>
 														<div className="flex items-center gap-2">
 															<span className="text-xs text-muted-foreground">
 																{facet.score}/20 ({facet.confidence}%)
 															</span>
 															{onViewEvidence && (
 																<Button
-																	onClick={() => onViewEvidence(facet.name as FacetName)}
+																	onClick={() => onViewEvidence(facet.name)}
 																	size="sm"
 																	variant="ghost"
 																	className="h-7 px-2 text-xs hover:bg-accent"
@@ -183,11 +184,21 @@ export function TraitScoresSection({
 															className="h-1.5 rounded-full opacity-70"
 															style={{
 																width: `${facetPercentage}%`,
-																backgroundColor: getFacetColor(facet.name as FacetName),
+																backgroundColor: getFacetColor(facet.name),
 																opacity: 0.7,
 															}}
 														/>
 													</div>
+													<p
+														data-slot="facet-description"
+														className="text-xs text-muted-foreground leading-relaxed mt-1.5"
+													>
+														{
+															(FACET_DESCRIPTIONS[facet.name].levels as Record<string, string>)[
+																getFacetLevel(facet.name, facet.score)
+															]
+														}
+													</p>
 												</div>
 											);
 										})}

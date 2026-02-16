@@ -6,6 +6,7 @@
  */
 
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
+import { FacetResultSchema, TraitResultSchema } from "@workspace/domain";
 import { Schema as S } from "effect";
 import {
 	AgentInvocationError,
@@ -68,27 +69,7 @@ export const GetResultsPathSchema = S.Struct({
 	sessionId: S.String,
 });
 
-/**
- * Trait Result Schema
- * Each of the 5 Big Five traits with score (0-120), level (H/M/L), confidence (0-100)
- */
-export const TraitResultSchema = S.Struct({
-	name: S.String,
-	score: S.Number,
-	level: S.String,
-	confidence: S.Number,
-});
-
-/**
- * Facet Result Schema
- * Each of the 30 facets with score (0-20), confidence (0-100), and parent trait
- */
-export const FacetResultSchema = S.Struct({
-	name: S.String,
-	traitName: S.String,
-	score: S.Number,
-	confidence: S.Number,
-});
+// TraitResultSchema and FacetResultSchema imported from @workspace/domain
 
 /**
  * Get Results Response Schema (AC-5)
