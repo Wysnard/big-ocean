@@ -29,6 +29,15 @@ export const Route = createFileRoute("/chat/")({
 
 			if (!response.ok) {
 				const error = await response.json().catch(() => ({ message: response.statusText }));
+
+				// 409 = user already has an assessment — redirect to existing session
+				if (response.status === 409 && error.existingSessionId) {
+					throw redirect({
+						to: "/chat",
+						search: { sessionId: error.existingSessionId },
+					});
+				}
+
 				throw new Error(error.message || `Failed to start assessment: ${response.status}`);
 			}
 

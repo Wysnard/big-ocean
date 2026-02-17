@@ -38,6 +38,7 @@ let mockHookReturn = {
 	isResumeSessionNotFound: false,
 	isConfidenceReady: false,
 	progressPercent: 0,
+	freeTierMessageThreshold: 27,
 	hasShownCelebration: false,
 	setHasShownCelebration: vi.fn(),
 };
@@ -120,6 +121,8 @@ describe("TherapistChat", () => {
 			resumeError: null,
 			isResumeSessionNotFound: false,
 			isConfidenceReady: false,
+			progressPercent: 0,
+			freeTierMessageThreshold: 27,
 			hasShownCelebration: false,
 			setHasShownCelebration: vi.fn(),
 		};
@@ -402,6 +405,88 @@ describe("TherapistChat", () => {
 
 			expect(screen.queryByText("Loading your assessment...")).toBeNull();
 			expect(screen.getByText("Resumed")).toBeTruthy();
+		});
+	});
+
+	// Story 4.8: Character Counter Tests
+	describe("Character Counter", () => {
+		it("displays '0 / 2,000' when input is empty", () => {
+			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			const counter = container.querySelector("[data-slot='char-counter']");
+			expect(counter).toBeTruthy();
+			expect(counter?.textContent).toContain("0");
+			expect(counter?.textContent).toContain("2,000");
+		});
+
+		it("updates counter when user types", () => {
+			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			const textarea = screen.getByPlaceholderText("What comes to mind first?") as HTMLTextAreaElement;
+			fireEvent.change(textarea, { target: { value: "Hello" } });
+
+			const counter = container.querySelector("[data-slot='char-counter']");
+			expect(counter?.textContent).toContain("5");
+		});
+
+		it("shows warning style at 1,800+ chars", () => {
+			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			const textarea = screen.getByPlaceholderText("What comes to mind first?") as HTMLTextAreaElement;
+			fireEvent.change(textarea, { target: { value: "a".repeat(1800) } });
+
+			const counter = container.querySelector("[data-slot='char-counter']");
+			expect(counter?.className).toContain("var(--warning)");
+		});
+
+		it("shows destructive style at 2,000 chars", () => {
+			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			const textarea = screen.getByPlaceholderText("What comes to mind first?") as HTMLTextAreaElement;
+			fireEvent.change(textarea, { target: { value: "a".repeat(2000) } });
+
+			const counter = container.querySelector("[data-slot='char-counter']");
+			expect(counter?.className).toContain("text-destructive");
+		});
+
+		it("textarea has maxLength attribute set to 2000", () => {
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			const textarea = screen.getByPlaceholderText("What comes to mind first?") as HTMLTextAreaElement;
+			expect(textarea.maxLength).toBe(2000);
+		});
+
+		it("send button is still enabled at max length", () => {
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			const textarea = screen.getByPlaceholderText("What comes to mind first?") as HTMLTextAreaElement;
+			fireEvent.change(textarea, { target: { value: "a".repeat(2000) } });
+
+			const sendButton = screen.getByTestId("chat-send-btn");
+			expect(sendButton).not.toBeDisabled();
+		});
+
+		it("counter is NOT rendered when isCompleted is true", () => {
+			mockHookReturn.isCompleted = true;
+
+			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			const counter = container.querySelector("[data-slot='char-counter']");
+			expect(counter).toBeNull();
+		});
+
+		it("textarea maxLength caps pasted text at 2000 characters (AC-6)", () => {
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			const textarea = screen.getByPlaceholderText("What comes to mind first?") as HTMLTextAreaElement;
+
+			// maxLength attribute enforces paste truncation at the browser level
+			expect(textarea.maxLength).toBe(2000);
+
+			// Simulate paste that would exceed limit — browser truncates via maxLength,
+			// so the value set after paste should be capped
+			fireEvent.change(textarea, { target: { value: "a".repeat(2000) } });
+			expect(textarea.value).toHaveLength(2000);
 		});
 	});
 

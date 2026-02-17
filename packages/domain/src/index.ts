@@ -128,6 +128,11 @@ export {
 	validateAnalyzerResponse,
 	validateNerinResponse,
 } from "./schemas/agent-schemas";
+// Assessment message schema — character limit enforcement (Story 4.8)
+export {
+	ASSESSMENT_MESSAGE_MAX_LENGTH,
+	AssessmentMessageContentSchema,
+} from "./schemas/assessment-message";
 // Big Five name schemas — typed literal schemas for TraitName and FacetName
 export { FacetNameSchema, TraitNameSchema } from "./schemas/big-five-schemas";
 // OCEAN code branded schemas (canonical definitions)
