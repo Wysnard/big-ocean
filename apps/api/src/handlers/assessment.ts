@@ -188,6 +188,10 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 						})),
 						overallConfidence: result.overallConfidence,
 						personalDescription: result.personalDescription,
+						messageCount: result.messageCount,
+						publicProfileId: result.publicProfileId,
+						shareableUrl: result.shareableUrl,
+						isPublic: result.isPublic,
 					};
 				}),
 			)

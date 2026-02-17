@@ -18,9 +18,9 @@ describe("TRAIT_DESCRIPTIONS", () => {
 		}
 	});
 
-	it("should have taglines under 80 characters", () => {
+	it("should have taglines between 10 and 200 characters", () => {
 		for (const trait of TRAITS) {
-			expect(TRAIT_DESCRIPTIONS[trait].tagline.length).toBeLessThan(80);
+			expect(TRAIT_DESCRIPTIONS[trait].tagline.length).toBeLessThan(200);
 			expect(TRAIT_DESCRIPTIONS[trait].tagline.length).toBeGreaterThan(10);
 		}
 	});

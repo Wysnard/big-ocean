@@ -22,12 +22,25 @@ vi.mock("@tanstack/react-router", () => ({
 	),
 }));
 
+vi.mock("@tanstack/react-start", () => ({
+	createServerFn: () => ({ handler: (fn: unknown) => fn }),
+}));
+
+vi.mock("@tanstack/react-start/server", () => ({
+	getRequestHeader: () => "",
+}));
+
 vi.mock("@/hooks/use-auth", () => ({
 	useAuth: () => mockUseAuth(),
 }));
 
 vi.mock("@/hooks/use-assessment", () => ({
 	useGetResults: (...args: unknown[]) => mockUseGetResults(...args),
+	getResultsQueryOptions: (sessionId: string) => ({
+		queryKey: ["assessment", "results", sessionId],
+		queryFn: vi.fn(),
+		staleTime: 5 * 60 * 1000,
+	}),
 	isAssessmentApiError: (error: unknown) =>
 		typeof error === "object" && error !== null && "status" in error,
 }));
@@ -37,7 +50,6 @@ vi.mock("@/hooks/use-evidence", () => ({
 }));
 
 vi.mock("@/hooks/use-profile", () => ({
-	useShareProfile: () => ({ isPending: false, mutateAsync: vi.fn() }),
 	useToggleVisibility: () => ({ isPending: false, mutateAsync: vi.fn() }),
 }));
 
@@ -45,12 +57,8 @@ vi.mock("@/components/ResultsAuthGate", () => ({
 	ResultsAuthGate: () => <div data-testid="mock-auth-gate">Mock Auth Gate</div>,
 }));
 
-vi.mock("@/components/EvidencePanel", () => ({
-	EvidencePanel: () => null,
-}));
-
-vi.mock("@/components/home/WaveDivider", () => ({
-	WaveDivider: () => <div data-testid="wave-divider" />,
+vi.mock("@/components/results/useTraitEvidence", () => ({
+	useTraitEvidence: () => ({ data: [], isLoading: false }),
 }));
 
 vi.mock("@/components/results/ProfileView", () => ({
@@ -63,8 +71,12 @@ vi.mock("@/components/results/ShareProfileSection", () => ({
 	ShareProfileSection: () => <div data-testid="share-section" />,
 }));
 
-vi.mock("@/components/results/TraitScoresSection", () => ({
-	TraitScoresSection: () => <div data-testid="trait-scores-section" />,
+vi.mock("@/components/results/DetailZone", () => ({
+	DetailZone: () => <div data-testid="detail-zone" />,
+}));
+
+vi.mock("@/components/results/QuickActionsCard", () => ({
+	QuickActionsCard: () => <div data-testid="quick-actions" />,
 }));
 
 describe("results/$assessmentSessionId route behavior", () => {
@@ -102,6 +114,7 @@ describe("results/$assessmentSessionId route behavior", () => {
 				facets: [{ name: "intellect", traitName: "openness", score: 60, confidence: 80 }],
 				archetypeColor: "#000",
 				oceanCode4: "ODEN",
+				messageCount: 24,
 			},
 			isLoading: false,
 			error: null,

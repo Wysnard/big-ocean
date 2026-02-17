@@ -87,6 +87,10 @@ export const GetResultsResponseSchema = S.Struct({
 	facets: S.Array(FacetResultSchema),
 	overallConfidence: S.Number,
 	personalDescription: S.NullOr(S.String),
+	messageCount: S.Number,
+	publicProfileId: S.NullOr(S.String),
+	shareableUrl: S.NullOr(S.String),
+	isPublic: S.NullOr(S.Boolean),
 });
 
 /**

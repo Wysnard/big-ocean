@@ -25,6 +25,7 @@ import {
 	LoggerRepository,
 	lookupArchetype,
 	PortraitGeneratorRepository,
+	PublicProfileRepository,
 	SessionNotFound,
 	TRAIT_LETTER_MAP,
 	type TraitResult,
@@ -47,6 +48,10 @@ export interface GetResultsOutput {
 	readonly facets: readonly FacetResult[];
 	readonly overallConfidence: number;
 	readonly personalDescription: string | null;
+	readonly messageCount: number;
+	readonly publicProfileId: string | null;
+	readonly shareableUrl: string | null;
+	readonly isPublic: boolean | null;
 }
 
 /**
@@ -76,6 +81,7 @@ export const getResults = (input: GetResultsInput) =>
 		const evidenceRepo = yield* FacetEvidenceRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
 		const portraitGenerator = yield* PortraitGeneratorRepository;
+		const profileRepo = yield* PublicProfileRepository;
 		const config = yield* AppConfig;
 		const logger = yield* LoggerRepository;
 
@@ -143,6 +149,7 @@ export const getResults = (input: GetResultsInput) =>
 					archetypeName: archetype.name,
 					archetypeDescription: archetype.description,
 					oceanCode5,
+					messages: messages.map((m) => ({ role: m.role, content: m.content })),
 				})
 				.pipe(
 					Effect.tap((portrait) =>
@@ -156,6 +163,22 @@ export const getResults = (input: GetResultsInput) =>
 						return Effect.succeed(null);
 					}),
 				);
+		}
+
+		// 9. Ensure public profile exists for authenticated users (private by default)
+		let existingProfile = yield* profileRepo
+			.getProfileBySessionId(input.sessionId)
+			.pipe(Effect.catchAll(() => Effect.succeed(null)));
+
+		if (existingProfile === null && input.authenticatedUserId != null) {
+			existingProfile = yield* profileRepo
+				.createProfile({
+					sessionId: input.sessionId,
+					userId: input.authenticatedUserId,
+					oceanCode5,
+					oceanCode4,
+				})
+				.pipe(Effect.catchAll(() => Effect.succeed(null)));
 		}
 
 		logger.info("Assessment results generated", {
@@ -190,5 +213,11 @@ export const getResults = (input: GetResultsInput) =>
 			facets,
 			overallConfidence,
 			personalDescription,
+			messageCount: messages.length,
+			publicProfileId: existingProfile?.id ?? null,
+			shareableUrl: existingProfile
+				? `${config.frontendUrl}/public-profile/${existingProfile.id}`
+				: null,
+			isPublic: existingProfile?.isPublic ?? null,
 		} satisfies GetResultsOutput;
 	});

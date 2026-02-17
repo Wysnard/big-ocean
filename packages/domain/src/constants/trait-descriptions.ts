@@ -37,7 +37,8 @@ type TraitDescriptionsType = {
 
 export const TRAIT_DESCRIPTIONS = {
 	openness: {
-		tagline: "How you engage with new ideas and experiences",
+		tagline:
+			"Measures intellectual curiosity, imagination, and preference for novelty. High scorers seek out new experiences and abstract thinking; low scorers favor routine and the concrete.",
 		levels: {
 			P: "Proven methods and concrete results guide your decisions. You trust direct experience over abstract theories and bring a grounded, no-nonsense perspective others rely on.",
 			G: "New ideas catch your attention when they make sense, but passing trends rarely pull you off course. You blend curiosity with pragmatism and adapt without losing your bearings.",
@@ -45,7 +46,8 @@ export const TRAIT_DESCRIPTIONS = {
 		},
 	},
 	conscientiousness: {
-		tagline: "How you organize your life and pursue goals",
+		tagline:
+			"Reflects self-discipline, organization, and goal-directed behavior. High scorers are deliberate planners; low scorers are more spontaneous and flexible in their approach.",
 		levels: {
 			F: "Keeping your options open feels more natural than rigid plans. You pivot easily when things change, trust your instincts, and do your best work with room to improvise.",
 			B: "Structure and flexibility blend in how you get things done. You follow through on commitments but know when to adjust course, handling deadlines and open-ended challenges alike.",
@@ -53,7 +55,8 @@ export const TRAIT_DESCRIPTIONS = {
 		},
 	},
 	extraversion: {
-		tagline: "How you direct your energy and engage socially",
+		tagline:
+			"Captures sociability, assertiveness, and positive emotionality. High scorers draw energy from social interaction; low scorers recharge through solitude and quiet reflection.",
 		levels: {
 			I: "Quiet reflection and one-on-one conversations recharge you. Depth matters more than breadth — a small circle of close friends suits you better than a wide social network.",
 			A: "Social energy and solitude both have a place in your life. A lively gathering one evening, a quiet night in the next — you shift between them with ease.",
@@ -61,7 +64,8 @@ export const TRAIT_DESCRIPTIONS = {
 		},
 	},
 	agreeableness: {
-		tagline: "How you relate to others and handle conflict",
+		tagline:
+			"Gauges cooperativeness, empathy, and interpersonal trust. High scorers prioritize harmony and others' needs; low scorers value directness and independent judgment.",
 		levels: {
 			C: "Directness sits at the center of how you interact. You speak your mind respectfully but firmly, valuing candor over smoothing things over. People know where they stand.",
 			N: "Reading the room is second nature. You hold firm when it matters and compromise when it serves the greater good — people often look to you to find common ground.",
@@ -69,7 +73,8 @@ export const TRAIT_DESCRIPTIONS = {
 		},
 	},
 	neuroticism: {
-		tagline: "How you experience and process emotions",
+		tagline:
+			"Indicates emotional reactivity and vulnerability to stress. High scorers experience feelings intensely and are more prone to anxiety; low scorers remain calm under pressure.",
 		levels: {
 			R: "A steady emotional baseline carries you through pressure and setbacks. You stay calm, recover quickly, and make clear-headed decisions even when the stakes are high.",
 			T: "Highs and lows both register genuinely, but a solid internal process keeps you moving forward. Self-awareness helps you handle what comes up without getting stuck.",

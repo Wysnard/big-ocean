@@ -1,31 +1,80 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeader } from "@tanstack/react-start/server";
 import type { FacetName, TraitName } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
 import { Schema as S } from "effect";
 import { Loader2, MessageCircle } from "lucide-react";
-import { useEffect, useState } from "react";
-import { EvidencePanel } from "@/components/EvidencePanel";
-import { WaveDivider } from "@/components/home/WaveDivider";
+import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
 import { ResultsAuthGate } from "@/components/ResultsAuthGate";
-import { PersonalPortrait } from "@/components/results/PersonalPortrait";
+import { DetailZone } from "@/components/results/DetailZone";
 import { ProfileView } from "@/components/results/ProfileView";
+import { QuickActionsCard } from "@/components/results/QuickActionsCard";
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
-import { isAssessmentApiError, useGetResults } from "@/hooks/use-assessment";
+import { useTraitEvidence } from "@/components/results/useTraitEvidence";
+import {
+	getResultsQueryOptions,
+	isAssessmentApiError,
+	useGetResults,
+} from "@/hooks/use-assessment";
 import { useAuth } from "@/hooks/use-auth";
-import { useFacetEvidence } from "@/hooks/use-evidence";
-import { useShareProfile, useToggleVisibility } from "@/hooks/use-profile";
+import { useToggleVisibility } from "@/hooks/use-profile";
 import {
 	clearPendingResultsGateSession,
 	persistPendingResultsGateSession,
 	readPendingResultsGateSession,
 } from "@/lib/results-auth-gate-storage";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
+/** Server function that checks auth by forwarding cookies from the incoming request */
+const checkAuthSession = createServerFn({ method: "GET" }).handler(async () => {
+	try {
+		const cookie = getRequestHeader("cookie") ?? "";
+		const response = await fetch(`${API_URL}/api/auth/get-session`, {
+			headers: { "Content-Type": "application/json", cookie },
+		});
+		if (!response.ok) return { isAuthenticated: false as const };
+		const session = await response.json();
+		return { isAuthenticated: !!session?.session?.id };
+	} catch {
+		return { isAuthenticated: false as const };
+	}
+});
+
 const SessionResultsSearchParams = S.Struct({});
 
 export const Route = createFileRoute("/results/$assessmentSessionId")({
 	validateSearch: (search) => S.decodeUnknownSync(SessionResultsSearchParams)(search),
+	beforeLoad: async () => {
+		try {
+			return await checkAuthSession();
+		} catch {
+			return { isAuthenticated: false };
+		}
+	},
+	loader: async ({ params, context }) => {
+		if (!context.isAuthenticated) return;
+		try {
+			await context.queryClient.ensureQueryData(getResultsQueryOptions(params.assessmentSessionId));
+		} catch {
+			// Graceful degradation: client-side useGetResults will retry
+		}
+	},
+	pendingComponent: ResultsLoading,
 	component: ResultsSessionPage,
 });
+
+function ResultsLoading() {
+	return (
+		<div className="min-h-screen bg-background flex items-center justify-center">
+			<div className="text-center">
+				<Loader2 className="h-12 w-12 motion-safe:animate-spin text-primary mx-auto mb-4" />
+				<p className="text-muted-foreground">Calculating your personality profile...</p>
+			</div>
+		</div>
+	);
+}
 
 /** Determine the dominant (highest-scoring) trait from results */
 function getDominantTrait(traits: readonly { name: TraitName; score: number }[]): TraitName {
@@ -60,7 +109,6 @@ function ResultsSessionPage() {
 	};
 
 	const shouldRedirectDeniedSession = isAuthenticated && error != null && isNotFoundError(error);
-	const shareProfile = useShareProfile();
 	const toggleVisibility = useToggleVisibility();
 
 	const [isGateExpired, setIsGateExpired] = useState(false);
@@ -70,20 +118,27 @@ function ResultsSessionPage() {
 		isPublic: boolean;
 	} | null>(null);
 	const [copied, setCopied] = useState(false);
-	const [shareError, setShareError] = useState<string | null>(null);
 
-	// Evidence panel state
-	const [selectedFacet, setSelectedFacet] = useState<FacetName | null>(null);
-	const [evidencePanelOpen, setEvidencePanelOpen] = useState(false);
+	// Trait selection state
+	const [selectedTrait, setSelectedTrait] = useState<TraitName | null>(null);
 
-	// Expanded traits state
-	const [expandedTraits, setExpandedTraits] = useState<Set<string>>(new Set());
+	// Build a facet score map for useTraitEvidence
+	const facetScoreMap = useMemo(() => {
+		const map = new Map<FacetName, number>();
+		if (results) {
+			for (const facet of results.facets) {
+				map.set(facet.name, facet.score);
+			}
+		}
+		return map;
+	}, [results]);
 
-	// Fetch evidence for selected facet
-	const { data: facetEvidence, isLoading: evidenceLoading } = useFacetEvidence(
+	// Load evidence for selected trait
+	const { data: facetDetails, isLoading: evidenceLoading } = useTraitEvidence(
 		assessmentSessionId,
-		selectedFacet,
-		evidencePanelOpen && canLoadResults,
+		selectedTrait,
+		facetScoreMap,
+		canLoadResults,
 	);
 
 	// Track 24-hour auth-gate session persistence
@@ -112,17 +167,17 @@ function ResultsSessionPage() {
 		void navigate({ to: "/404" });
 	}, [navigate, shouldRedirectDeniedSession]);
 
-	const handleShare = async () => {
-		setShareError(null);
-		try {
-			const result = await shareProfile.mutateAsync(assessmentSessionId);
-			setShareState(result);
-		} catch (shareErr) {
-			setShareError(
-				shareErr instanceof Error ? shareErr.message : "Failed to create shareable profile",
-			);
+	// Initialize share state from results data (profile created eagerly by backend)
+	useEffect(() => {
+		if (!results || !isAuthenticated || shareState) return;
+		if (results.publicProfileId && results.shareableUrl && results.isPublic !== null) {
+			setShareState({
+				publicProfileId: results.publicProfileId,
+				shareableUrl: results.shareableUrl,
+				isPublic: results.isPublic,
+			});
 		}
-	};
+	}, [results, isAuthenticated, shareState]);
 
 	const handleCopyLink = async () => {
 		if (!shareState) return;
@@ -155,27 +210,15 @@ function ResultsSessionPage() {
 		}
 	};
 
-	const handleViewEvidence = (facetName: FacetName) => {
-		setSelectedFacet(facetName);
-		setEvidencePanelOpen(true);
-	};
-
-	const handleCloseEvidence = () => {
-		setEvidencePanelOpen(false);
-		setSelectedFacet(null);
-	};
-
-	const toggleTrait = (trait: string) => {
-		setExpandedTraits((prev) => {
-			const newSet = new Set(prev);
-			if (newSet.has(trait)) {
-				newSet.delete(trait);
-			} else {
-				newSet.add(trait);
-			}
-			return newSet;
+	const handleToggleTrait = useCallback((trait: string) => {
+		startTransition(() => {
+			setSelectedTrait((prev) => (prev === trait ? null : (trait as TraitName)));
 		});
-	};
+	}, []);
+
+	const handleCloseDetailZone = useCallback(() => {
+		setSelectedTrait(null);
+	}, []);
 
 	const handleAuthSuccess = () => {
 		clearPendingResultsGateSession(assessmentSessionId);
@@ -214,14 +257,7 @@ function ResultsSessionPage() {
 	}
 
 	if (isLoading) {
-		return (
-			<div className="min-h-screen bg-background flex items-center justify-center">
-				<div className="text-center">
-					<Loader2 className="h-12 w-12 motion-safe:animate-spin text-primary mx-auto mb-4" />
-					<p className="text-muted-foreground">Calculating your personality profile...</p>
-				</div>
-			</div>
-		);
+		return <ResultsLoading />;
 	}
 
 	if (shouldRedirectDeniedSession) {
@@ -248,6 +284,9 @@ function ResultsSessionPage() {
 	}
 
 	const dominantTrait = getDominantTrait(results.traits);
+	const selectedTraitData = selectedTrait
+		? results.traits.find((t) => t.name === selectedTrait)
+		: null;
 
 	return (
 		<ProfileView
@@ -257,69 +296,52 @@ function ResultsSessionPage() {
 			dominantTrait={dominantTrait}
 			traits={results.traits}
 			facets={results.facets}
-			expandedTraits={expandedTraits}
-			onToggleTrait={toggleTrait}
-			onViewEvidence={handleViewEvidence}
+			onToggleTrait={handleToggleTrait}
 			overallConfidence={results.overallConfidence}
 			isCurated={results.isCurated}
-		>
-			{/* Personal Portrait (Story 8.4) — rendered between traits and share */}
-			{results.personalDescription && (
-				<>
-					<WaveDivider fromColor="var(--depth-shallows)" className="text-[var(--depth-mid)]" />
-					<div className="bg-[var(--depth-mid)]">
-						<PersonalPortrait
-							personalDescription={results.personalDescription}
-							dominantTrait={dominantTrait}
-						/>
-					</div>
-				</>
-			)}
-
-			{/* Wave transition: (shallows|mid) → mid */}
-			{!results.personalDescription && (
-				<WaveDivider fromColor="var(--depth-shallows)" className="text-[var(--depth-mid)]" />
-			)}
-
-			{/* Depth Zone: Mid — Share profile */}
-			<div className="bg-[var(--depth-mid)]">
-				<ShareProfileSection
-					shareState={shareState}
-					shareError={shareError}
-					copied={copied}
-					isSharePending={shareProfile.isPending}
-					isTogglePending={toggleVisibility.isPending}
-					archetypeName={results.archetypeName}
-					onShare={handleShare}
-					onCopyLink={handleCopyLink}
-					onToggleVisibility={handleToggleVisibility}
+			personalDescription={results.personalDescription}
+			selectedTrait={selectedTrait}
+			messageCount={results.messageCount}
+			detailZone={
+				selectedTraitData && (
+					<DetailZone
+						trait={selectedTraitData}
+						facetDetails={facetDetails ?? []}
+						isOpen={!!selectedTrait}
+						onClose={handleCloseDetailZone}
+						isLoading={evidenceLoading}
+					/>
+				)
+			}
+			quickActions={
+				<QuickActionsCard
+					sessionId={assessmentSessionId}
+					publicProfileId={shareState?.publicProfileId}
 				/>
-			</div>
+			}
+		>
+			{/* Grid children: Share + Continue Chat */}
+			<div className="mx-auto max-w-[1120px] px-5 pb-10">
+				<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
+					<ShareProfileSection
+						shareState={shareState}
+						copied={copied}
+						isTogglePending={toggleVisibility.isPending}
+						onCopyLink={handleCopyLink}
+						onToggleVisibility={handleToggleVisibility}
+					/>
 
-			{/* Wave transition: mid → deep */}
-			<WaveDivider fromColor="var(--depth-mid)" className="text-[var(--depth-deep)]" />
-
-			{/* Depth Zone: Deep — Actions */}
-			<div className="bg-[var(--depth-deep)] px-6 py-12">
-				<div className="flex flex-wrap gap-3 justify-center">
-					<Button data-testid="results-continue-chat" asChild variant="outline" className="min-h-11">
-						<Link to="/chat" search={{ sessionId: assessmentSessionId }}>
-							<MessageCircle className="w-4 h-4 mr-2" />
-							Continue Chat
-						</Link>
-					</Button>
+					{/* Continue Chat CTA — full-width */}
+					<div className="col-span-full flex justify-center py-4">
+						<Button data-testid="results-continue-chat" asChild variant="outline" className="min-h-11">
+							<Link to="/chat" search={{ sessionId: assessmentSessionId }}>
+								<MessageCircle className="w-4 h-4 mr-2" />
+								Continue Chat
+							</Link>
+						</Button>
+					</div>
 				</div>
 			</div>
-
-			{/* Evidence Panel */}
-			<EvidencePanel
-				sessionId={assessmentSessionId}
-				facetName={selectedFacet}
-				evidence={facetEvidence}
-				isLoading={evidenceLoading}
-				isOpen={evidencePanelOpen}
-				onClose={handleCloseEvidence}
-			/>
 		</ProfileView>
 	);
 }

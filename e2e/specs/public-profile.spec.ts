@@ -90,41 +90,22 @@ test("anonymous user views public profile with traits and facets", async ({ page
 	});
 
 	await test.step("verify all 5 Big Five traits are displayed", async () => {
-		const traitSection = page.locator("[data-slot='trait-scores-section']");
-		await expect(traitSection).toBeVisible();
+		const profileView = page.locator("[data-slot='profile-view']");
+		await expect(profileView).toBeVisible();
 
 		for (const { key, label } of TRAITS) {
-			const card = page.getByTestId(`trait-card-${key}`);
+			const card = page.locator(`[data-slot='trait-card'][data-trait='${key}']`);
 			await expect(card).toBeVisible();
 			await expect(card.getByText(label, { exact: true })).toBeVisible();
 		}
 	});
 
-	await test.step("expand first trait and verify facets are visible", async () => {
-		// Click Openness trait toggle
-		await page.getByTestId("trait-toggle-openness").click();
-
-		// Openness has 6 facets — verify at least one facet row appears
-		const openCard = page.getByTestId("trait-card-openness");
-		const facetRow = openCard.locator("[id^='facet-']").first();
-		await expect(facetRow).toBeVisible({ timeout: 5_000 });
-
-		// Verify facet score format is present (e.g., "14/20 (72%)")
-		await expect(openCard.getByText(/\/20/).first()).toBeVisible();
-	});
-
-	await test.step("expand all traits and verify facet count", async () => {
-		const traitSection = page.locator("[data-slot='trait-scores-section']");
-
-		// Click each trait toggle (skip openness — already expanded)
-		for (const { key } of TRAITS) {
-			if (key === "openness") continue;
-			await page.getByTestId(`trait-toggle-${key}`).click();
-		}
-
-		// All 30 facets should now be visible (5 traits x 6 facets each)
-		const facetRows = traitSection.locator("[id^='facet-']");
-		await expect(facetRows).toHaveCount(30, { timeout: 5_000 });
+	await test.step("verify trait cards show facet scores inline", async () => {
+		// The redesigned TraitCard shows all 6 facets inline per card (no expand/collapse).
+		// Verify the Openness card has facet names visible.
+		const openCard = page.locator("[data-slot='trait-card'][data-trait='openness']");
+		await expect(openCard.getByText("Imagination")).toBeVisible();
+		await expect(openCard.getByText("Artistic Interests")).toBeVisible();
 	});
 
 	await test.step("verify viral loop CTA is visible and links home", async () => {

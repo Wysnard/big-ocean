@@ -93,21 +93,24 @@ The core big-ocean experience is fundamentally different from traditional person
 
 **Moment 3: Reaching 70%+ Precision**
 - Transition from "gathering information" to "revealing insights"
-- Archetype reveal should feel surprising and meaningful
+- Archetype name revealed as the emotional anchor (e.g., "The Idealist") — the h1, display scale, the first thing that makes the user feel understood
+- OCEAN code displayed as strong secondary below the name (e.g., "ODEWR") — monochrome, typographic, wide-tracked. Minimal and premium, no per-letter colors in the hero
+- Full-color OCEAN breakdown (interactive letters, level gauges, trait descriptions) available in the OceanCodeStrand card below the hero — the color payoff comes as users scroll deeper
 - Celebration tone (not clinical) acknowledges the user's investment
-- Success signal: User feels their time investment was worthwhile
+- Success signal: User feels their time investment was worthwhile, identifies with their archetype name emotionally, and registers their OCEAN code as their shareable identity
 
 **Moment 4: The Share Decision**
-- User sees public archetype and share option
-- Must understand instantly: "This shares only the archetype, not my private details"
+- User sees their OCEAN code + archetype name and the share option
+- Must understand instantly: "This shares only the code and archetype, not my private details"
+- The code enables social discovery — "I'm an ODEWR, what's yours?" becomes the shareable unit
 - Should feel safe and empowering, not risky
-- Success signal: User generates and shares link, feels proud of their archetype
+- Success signal: User generates and shares link, uses their OCEAN code in the caption
 
 **Moment 5: Link Recipient Experience**
-- Friend clicks shared link, sees public archetype (cool, not invasive)
-- Recipient feels intrigued, not surveilled
-- Recipient wants to take the assessment themselves
-- Success signal: Viral loop activates
+- Friend clicks shared link, sees OCEAN code + archetype name (cool, not invasive)
+- Recipient compares codes: "Oh, we're both O but I'm probably more I than E" — sparks curiosity
+- Recipient feels intrigued, wants to discover their own code
+- Success signal: Viral loop activates through code comparison desire
 
 ## Experience Principles
 
@@ -129,9 +132,11 @@ The core big-ocean experience is fundamentally different from traditional person
 - Silent engagement tracking (no notifications to create sharing anxiety)
 
 **4. Meaningful Insights Over Data Overload**
-- Focus on archetype + Big Five summary, not all 30 facets
-- Private profile contains depth; shareable profile shows essence
-- Beautiful visuals + memorable archetype names beat complex data
+- Focus on archetype name (emotional anchor) + OCEAN code (social identity) as the dual identity, not all 30 facets upfront
+- The archetype name anchors the reveal moment; the 5-letter code anchors the sharing moment — each letter self-explains
+- Hero is monochrome and typographic (premium feel); color payoff deferred to OceanCodeStrand card and trait cards below
+- Private profile contains depth; shareable profile shows code + archetype + essence
+- Beautiful visuals + archetype-first reveal + code-first social identity beat complex data tables
 - Every UI element earns its space
 
 **5. Real-Time Responsiveness Over Perfection**

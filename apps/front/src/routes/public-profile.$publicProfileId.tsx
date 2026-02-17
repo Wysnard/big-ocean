@@ -19,7 +19,6 @@ import {
 import { Button } from "@workspace/ui/components/button";
 import { Check, Copy, Loader2, Lock, ShieldAlert } from "lucide-react";
 import { useState } from "react";
-import { WaveDivider } from "@/components/home/WaveDivider";
 import { ProfileView } from "@/components/results/ProfileView";
 import { useGetPublicProfile } from "../hooks/use-profile";
 
@@ -114,7 +113,7 @@ function ProfilePage() {
 	const { publicProfileId } = Route.useParams();
 	const { data: profile, isLoading, error } = useGetPublicProfile(publicProfileId);
 	const [copied, setCopied] = useState(false);
-	const [expandedTraits, setExpandedTraits] = useState<Set<string>>(new Set());
+	const [selectedTrait, setSelectedTrait] = useState<TraitName | null>(null);
 
 	const handleCopyLink = async () => {
 		try {
@@ -213,69 +212,55 @@ function ProfilePage() {
 			traits={traits}
 			facets={facets}
 			displayName={profile.displayName}
-			expandedTraits={expandedTraits}
+			selectedTrait={selectedTrait}
 			onToggleTrait={(trait) => {
-				setExpandedTraits((prev) => {
-					const next = new Set(prev);
-					if (next.has(trait)) next.delete(trait);
-					else next.add(trait);
-					return next;
-				});
+				setSelectedTrait((prev) => (prev === trait ? null : (trait as TraitName)));
 			}}
 		>
-			{/* Wave transition: shallows → mid */}
-			<WaveDivider fromColor="var(--depth-shallows)" className="text-[var(--depth-mid)]" />
-
-			{/* Depth Zone: Mid — Share actions */}
-			<div className="bg-[var(--depth-mid)]">
-				<section data-slot="profile-share-actions" className="px-6 py-12">
-					<div className="mx-auto max-w-2xl">
-						<div className="border border-border rounded-xl bg-card p-6">
-							<div className="flex items-center gap-2 mb-4">
-								<Copy className="w-5 h-5 text-muted-foreground" />
-								<h2 className="text-lg font-semibold font-heading text-foreground">Share This Profile</h2>
-							</div>
-							<div className="flex flex-wrap gap-3">
-								<Button
-									data-slot="profile-copy-link"
-									onClick={handleCopyLink}
-									variant="outline"
-									className="min-h-[44px]"
-								>
-									{copied ? (
-										<>
-											<Check className="w-4 h-4 mr-2 text-success" />
-											Copied!
-										</>
-									) : (
-										<>
-											<Copy className="w-4 h-4 mr-2" />
-											Copy Link
-										</>
-									)}
-								</Button>
-							</div>
+			{/* Grid children: Share + CTA */}
+			<div className="mx-auto max-w-[1120px] px-5 pb-10">
+				<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
+					{/* Share this profile card */}
+					<div data-slot="profile-share-actions" className="col-span-full rounded-xl border bg-card p-6">
+						<div className="flex items-center gap-2 mb-4">
+							<Copy className="w-5 h-5 text-muted-foreground" />
+							<h2 className="text-lg font-semibold font-heading text-foreground">Share This Profile</h2>
+						</div>
+						<div className="flex flex-wrap gap-3">
+							<Button
+								data-slot="profile-copy-link"
+								onClick={handleCopyLink}
+								variant="outline"
+								className="min-h-[44px]"
+							>
+								{copied ? (
+									<>
+										<Check className="w-4 h-4 mr-2 text-success" />
+										Copied!
+									</>
+								) : (
+									<>
+										<Copy className="w-4 h-4 mr-2" />
+										Copy Link
+									</>
+								)}
+							</Button>
 						</div>
 					</div>
-				</section>
-			</div>
 
-			{/* Wave transition: mid → deep */}
-			<WaveDivider fromColor="var(--depth-mid)" className="text-[var(--depth-deep)]" />
-
-			{/* Depth Zone: Deep — CTA Viral Loop */}
-			<div className="bg-[var(--depth-deep)] px-6 py-12">
-				<div className="text-center">
-					<p className="text-muted-foreground mb-4">Want to discover your own personality archetype?</p>
-					<Link to="/">
-						<Button
-							data-slot="profile-discover-cta"
-							data-testid="public-cta"
-							className="bg-primary text-primary-foreground hover:bg-primary/90 min-h-[44px] px-8 text-base"
-						>
-							Discover Your Archetype
-						</Button>
-					</Link>
+					{/* CTA Viral Loop */}
+					<div className="col-span-full text-center py-4">
+						<p className="text-muted-foreground mb-4">Want to discover your own personality archetype?</p>
+						<Link to="/">
+							<Button
+								data-slot="profile-discover-cta"
+								data-testid="public-cta"
+								className="bg-primary text-primary-foreground hover:bg-primary/90 min-h-[44px] px-8 text-base"
+							>
+								Discover Your Archetype
+							</Button>
+						</Link>
+					</div>
 				</div>
 			</div>
 		</ProfileView>

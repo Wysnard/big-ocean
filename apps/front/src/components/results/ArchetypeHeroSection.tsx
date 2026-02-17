@@ -5,7 +5,6 @@ import { GeometricSignature } from "../ocean-shapes/GeometricSignature";
 interface ArchetypeHeroSectionProps {
 	archetypeName: string;
 	oceanCode5: OceanCode5;
-	archetypeDescription: string;
 	overallConfidence?: number;
 	isCurated?: boolean;
 	/** The dominant trait (highest scoring) used for hero color theming */
@@ -17,9 +16,7 @@ interface ArchetypeHeroSectionProps {
 export function ArchetypeHeroSection({
 	archetypeName,
 	oceanCode5,
-	archetypeDescription,
 	overallConfidence,
-	isCurated,
 	dominantTrait,
 	displayName,
 }: ArchetypeHeroSectionProps) {
@@ -73,30 +70,26 @@ export function ArchetypeHeroSection({
 				{/* Archetype Name — display-hero scale */}
 				<h1
 					data-testid="archetype-name"
-					className="font-display text-[2.5rem] md:text-[3.5rem] lg:text-[4rem] font-bold leading-[1.05] text-foreground mb-4"
+					className="font-display text-[2.5rem] md:text-[3.5rem] lg:text-[4rem] font-bold leading-[1.05] text-foreground mb-2"
 				>
 					{archetypeName}
 				</h1>
 
-				{/* Description */}
-				<p className="text-base md:text-lg text-foreground/80 mb-6 max-w-xl mx-auto">
-					{archetypeDescription}
+				{/* OCEAN code — promoted secondary headline */}
+				<p
+					data-testid="ocean-code"
+					title={`OCEAN personality code: ${oceanCode5}`}
+					className="font-mono text-3xl md:text-4xl lg:text-5xl tracking-[0.3em] text-foreground/80"
+				>
+					{oceanCode5}
 				</p>
 
-				{/* OCEAN code + Confidence */}
-				<div className="flex items-center justify-center gap-4 flex-wrap">
-					<span className="font-mono text-base text-foreground/60">{oceanCode5}</span>
-					{overallConfidence != null && (
-						<span className="text-xs font-medium text-foreground/50 bg-foreground/10 rounded-full px-3 py-1">
-							{overallConfidence}% confidence
-						</span>
-					)}
-					{isCurated && (
-						<span className="text-xs font-medium text-foreground/50 bg-foreground/10 rounded-full px-3 py-1">
-							Curated archetype
-						</span>
-					)}
-				</div>
+				{/* Confidence — tertiary metadata pill */}
+				{overallConfidence != null && (
+					<p className="mt-4 text-xs font-medium text-foreground/60 bg-foreground/8 rounded-full px-3 py-1 inline-block">
+						{overallConfidence}% confidence
+					</p>
+				)}
 			</div>
 		</section>
 	);

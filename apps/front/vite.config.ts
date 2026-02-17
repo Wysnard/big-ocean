@@ -8,6 +8,8 @@ import { fileURLToPath, URL } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import { nitro } from 'nitro/vite'
 
+const isE2E = process.env.VITE_E2E === 'true'
+
 const config = defineConfig({
   resolve: {
     alias: {
@@ -15,7 +17,7 @@ const config = defineConfig({
     },
   },
   plugins: [
-    devtools(),
+    ...isE2E ? [] : [devtools()],
     nitro(),
     // this is the plugin that enables path aliases
     viteTsConfigPaths({

@@ -33,9 +33,9 @@ The core differentiation: **Conversational depth** captures the complexity and n
 
 1. **Progress as Motivation:** Visual progress indicator during assessment reduces "how much longer?" anxiety and increases completion rate beyond 50%.
 
-2. **Archetype as Emotional Anchor:** Memorable archetype names + compelling visuals make profiles inherently shareable (vs. generic trait percentages that feel clinical).
+2. **Dual Identity System — Archetype-First Reveal, Code-First Social:** The archetype name (e.g., "The Idealist") is the emotional anchor at the reveal moment — the h1, the first thing users connect with. The 5-letter OCEAN code (e.g., "ODEWR") is the primary *social* identity — what users say in conversation, share on social media, and compare with friends (like MBTI's "INTP"). In the hero, the code is displayed as a strong monochrome secondary (typographic, no per-letter colors — premium feel). Full-color exploration lives in the OceanCodeStrand card below. Codes enable **partial-match tribalism** ("we're both OD!") that isolated archetype names cannot achieve. Each letter is semantic and self-explaining (O=Open-minded).
 
-3. **Privacy Clarity Through Design:** Obvious visual distinction between "My Private Profile" (detailed, personal) and "Share Archetype" (broad, public) builds user confidence in privacy model.
+3. **Privacy Clarity Through Design:** Obvious visual distinction between "My Private Profile" (detailed, personal) and "Share OCEAN Code" (broad, public) builds user confidence in privacy model.
 
 4. **Guided Sharing Experience:** Simple 3-step share flow: (1) preview what shareable link shows, (2) confirm before generating, (3) easy copy/send. Reassurance reduces sharing anxiety.
 

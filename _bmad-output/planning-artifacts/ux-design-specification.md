@@ -16,6 +16,7 @@ inputDocuments:
   - _bmad-output/planning-artifacts/ux-design-specification/design-system-foundation.md
   - _bmad-output/planning-artifacts/ux-design-specification/core-experience-the-30-minute-conversation-with-nerin.md
   - _bmad-output/planning-artifacts/ux-design-specification/visual-design-foundation.md
+  - _bmad-output/planning-artifacts/ux-design-specification/geometric-ocean-ambient-system.md
 ---
 
 # UX Design Specification big-ocean

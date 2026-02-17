@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Archetype Card — OCEAN Code Explained — 6 Mockups</title>
+  <style>
+    /* ========================================
+       GLOBAL RESET & THEME TOKENS
+    ======================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #FFF8F0;
+      --fg: #1A1A2E;
+      --card: #FFF0E8;
+      --card-fg: #1A1A2E;
+      --muted: #6B6580;
+      --accent: #FFE8D8;
+      --border: rgba(26,26,46,0.08);
+      --primary: #FF0080;
+      --ring: rgba(255,0,128,0.12);
+
+      /* Trait colors (oklch approximated to hex for static HTML) */
+      --trait-o: #8B5CF6;      /* Openness — purple */
+      --trait-o-accent: #D4A840; /* gold */
+      --trait-c: #E08040;      /* Conscientiousness — orange */
+      --trait-c-accent: #44B8A8; /* teal */
+      --trait-e: #E0369A;      /* Extraversion — electric pink */
+      --trait-e-accent: #E08040; /* orange */
+      --trait-a: #44B8A8;      /* Agreeableness — teal */
+      --trait-a-accent: #D49040; /* warm orange */
+      --trait-n: #2D2D80;      /* Neuroticism — navy */
+      --trait-n-accent: #50C8B8; /* teal */
+
+      --radius: 16px;
+      --radius-sm: 8px;
+      --radius-pill: 999px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+
+    /* ========================================
+       PAGE LAYOUT
+    ======================================== */
+    .page-header {
+      max-width: 720px;
+      margin: 0 auto 60px;
+      text-align: center;
+    }
+    .page-header h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .page-header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .mockup-section {
+      max-width: 540px;
+      margin: 0 auto 80px;
+    }
+    .mockup-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 16px;
+      padding-left: 4px;
+    }
+
+    /* Shared card shell */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    /* ========================================
+       MOCKUP 1 — VERTICAL STACK / LETTER PILLS
+       Each letter = pill with trait color + label + description
+    ======================================== */
+    .m1-header {
+      padding: 24px 28px 16px;
+    }
+    .m1-header h2 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .m1-code-display {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: 0.25em;
+      color: var(--fg);
+    }
+    .m1-stack {
+      padding: 0 28px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .m1-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .m1-pill {
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .m1-text { flex: 1; }
+    .m1-text .label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--fg);
+      line-height: 1.3;
+    }
+    .m1-text .desc {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.45;
+      margin-top: 2px;
+    }
+
+    /* ========================================
+       MOCKUP 2 — HORIZONTAL CODE BAR + ACCORDION
+       Compact code bar at top, expand each letter for detail
+    ======================================== */
+    .m2-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+    .m2-bar-item {
+      flex: 1;
+      padding: 20px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.2s;
+      position: relative;
+    }
+    .m2-bar-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 20%;
+      height: 60%;
+      width: 1px;
+      background: var(--border);
+    }
+    .m2-bar-item:hover { background: rgba(0,0,0,0.02); }
+    .m2-bar-item[data-active="true"] {
+      background: rgba(0,0,0,0.04);
+    }
+    .m2-letter {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .m2-trait-name {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    .m2-label-below {
+      font-size: 0.72rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    .m2-panel {
+      padding: 20px 24px;
+      display: none;
+    }
+    .m2-panel[data-visible="true"] {
+      display: block;
+    }
+    .m2-panel-trait {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+    .m2-panel-label {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .m2-panel-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* ========================================
+       MOCKUP 3 — DNA STRAND / CONNECTED DOTS
+       Vertical line with trait dots connected
+    ======================================== */
+    .m3-header {
+      padding: 24px 28px 12px;
+    }
+    .m3-header h2 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--fg);
+    }
+    .m3-header p {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .m3-strand {
+      padding: 8px 28px 28px;
+      position: relative;
+    }
+    .m3-line {
+      position: absolute;
+      left: 48px;
+      top: 8px;
+      bottom: 28px;
+      width: 3px;
+      background: linear-gradient(
+        to bottom,
+        var(--trait-o),
+        var(--trait-c),
+        var(--trait-e),
+        var(--trait-a),
+        var(--trait-n)
+      );
+      border-radius: 2px;
+      opacity: 0.25;
+    }
+    .m3-node {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 0;
+      position: relative;
+    }
+    .m3-dot {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 0 0 4px var(--card);
+    }
+    .m3-info { flex: 1; }
+    .m3-info .trait-name {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    .m3-info .level-label {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--fg);
+      margin: 1px 0;
+    }
+    .m3-info .level-desc {
+      font-size: 0.76rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    /* ========================================
+       MOCKUP 4 — COMPACT TABLE / LEGEND CARD
+       Minimal, scannable table with color chips
+    ======================================== */
+    .m4-top {
+      padding: 24px 24px 8px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .m4-top h2 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    .m4-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+    }
+    .m4-table {
+      padding: 8px 24px 24px;
+    }
+    .m4-row {
+      display: grid;
+      grid-template-columns: 8px 1fr 40px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .m4-row:last-child { border-bottom: none; }
+    .m4-chip {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .m4-trait-col {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .m4-letter-col {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 800;
+      text-align: center;
+    }
+    .m4-label-col {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--fg);
+    }
+
+    /* ========================================
+       MOCKUP 5 — SPLIT CARD: CODE LEFT + DESCRIPTIONS RIGHT
+       Two-column layout with emphasis on readability
+    ======================================== */
+    .m5-split {
+      display: flex;
+      min-height: 380px;
+    }
+    .m5-left {
+      width: 160px;
+      flex-shrink: 0;
+      background: linear-gradient(160deg, var(--trait-o), var(--trait-e));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 32px 16px;
+    }
+    .m5-left-letter {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: rgba(255,255,255,0.95);
+      line-height: 1;
+    }
+    .m5-left-sub {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 12px;
+    }
+    .m5-right {
+      flex: 1;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .m5-right h2 {
+      font-size: 1rem;
+      font-weight: 800;
+    }
+    .m5-item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .m5-item-bar {
+      width: 3px;
+      border-radius: 2px;
+      min-height: 36px;
+      flex-shrink: 0;
+      align-self: stretch;
+    }
+    .m5-item-content {}
+    .m5-item-top {
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .m5-item-top .trait {
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .m5-item-desc {
+      font-size: 0.76rem;
+      color: var(--muted);
+      line-height: 1.45;
+      margin-top: 1px;
+    }
+
+    /* ========================================
+       MOCKUP 6 — RADIAL / PENTAGON BADGE STYLE
+       Central code display with satellite trait badges
+    ======================================== */
+    .m6-container {
+      padding: 32px 28px;
+      text-align: center;
+    }
+    .m6-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+    .m6-ring {
+      width: 300px;
+      height: 300px;
+      margin: 0 auto 24px;
+      position: relative;
+    }
+    .m6-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    .m6-center-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.6rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      color: var(--fg);
+      margin-bottom: 2px;
+    }
+    .m6-center-name {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .m6-badge {
+      position: absolute;
+      width: 80px;
+      text-align: center;
+      transform: translate(-50%, -50%);
+    }
+    .m6-badge-dot {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .m6-badge-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--fg);
+      line-height: 1.2;
+    }
+    .m6-badge-trait {
+      font-size: 0.6rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    /* Connecting lines from center to badges */
+    .m6-ring::before {
+      content: '';
+      position: absolute;
+      inset: 40px;
+      border: 2px dashed var(--border);
+      border-radius: 50%;
+    }
+    .m6-bottom-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <h1>Archetype Card — OCEAN Code Explained</h1>
+    <p>6 design explorations for telling users what each letter in their code means.<br>
+    Example: <strong>The Idealist</strong> — <code>ODEWR</code></p>
+  </div>
+
+  <!-- ====================================
+       MOCKUP 1 — VERTICAL PILL STACK
+  ===================================== -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 1 — Vertical Pill Stack</div>
+    <div class="card">
+      <div class="m1-header">
+        <h2>Your OCEAN Code</h2>
+        <div class="m1-code-display">ODEWR</div>
+      </div>
+      <div class="m1-stack">
+        <!-- O -->
+        <div class="m1-row">
+          <div class="m1-pill" style="background:var(--trait-o);">O</div>
+          <div class="m1-text">
+            <div class="label">Open-minded</div>
+            <div class="desc">Novel experiences and unconventional thinking draw you in naturally. You question the status quo and thrive on curiosity.</div>
+          </div>
+        </div>
+        <!-- D -->
+        <div class="m1-row">
+          <div class="m1-pill" style="background:var(--trait-c);">D</div>
+          <div class="m1-text">
+            <div class="label">Disciplined</div>
+            <div class="desc">Thoroughness defines your approach. You set clear goals, plan ahead, and hold yourself to high standards.</div>
+          </div>
+        </div>
+        <!-- E -->
+        <div class="m1-row">
+          <div class="m1-pill" style="background:var(--trait-e);">E</div>
+          <div class="m1-text">
+            <div class="label">Extravert</div>
+            <div class="desc">Being around people is what charges your batteries. You bring others together naturally and put people at ease.</div>
+          </div>
+        </div>
+        <!-- W -->
+        <div class="m1-row">
+          <div class="m1-pill" style="background:var(--trait-a);">W</div>
+          <div class="m1-text">
+            <div class="label">Warm</div>
+            <div class="desc">Empathy and care shape your relationships. You go out of your way to make others feel supported and build deep trust.</div>
+          </div>
+        </div>
+        <!-- R -->
+        <div class="m1-row">
+          <div class="m1-pill" style="background:var(--trait-n);">R</div>
+          <div class="m1-text">
+            <div class="label">Resilient</div>
+            <div class="desc">A steady emotional baseline carries you through pressure. You stay calm, recover quickly, and make clear-headed decisions.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================
+       MOCKUP 2 — HORIZONTAL BAR + PANEL
+  ===================================== -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 2 — Interactive Code Bar</div>
+    <div class="card">
+      <div class="m2-bar">
+        <div class="m2-bar-item" data-active="true" onclick="showPanel(this, 0)" style="border-bottom: 3px solid var(--trait-o);">
+          <div class="m2-letter" style="color:var(--trait-o);">O</div>
+          <div class="m2-trait-name">Openness</div>
+          <div class="m2-label-below" style="color:var(--trait-o);">Open-minded</div>
+        </div>
+        <div class="m2-bar-item" onclick="showPanel(this, 1)">
+          <div class="m2-letter" style="color:var(--trait-c);">D</div>
+          <div class="m2-trait-name">Conscient.</div>
+          <div class="m2-label-below" style="color:var(--trait-c);">Disciplined</div>
+        </div>
+        <div class="m2-bar-item" onclick="showPanel(this, 2)">
+          <div class="m2-letter" style="color:var(--trait-e);">E</div>
+          <div class="m2-trait-name">Extraversion</div>
+          <div class="m2-label-below" style="color:var(--trait-e);">Extravert</div>
+        </div>
+        <div class="m2-bar-item" onclick="showPanel(this, 3)">
+          <div class="m2-letter" style="color:var(--trait-a);">W</div>
+          <div class="m2-trait-name">Agreeable.</div>
+          <div class="m2-label-below" style="color:var(--trait-a);">Warm</div>
+        </div>
+        <div class="m2-bar-item" onclick="showPanel(this, 4)">
+          <div class="m2-letter" style="color:var(--trait-n);">R</div>
+          <div class="m2-trait-name">Neuroticism</div>
+          <div class="m2-label-below" style="color:var(--trait-n);">Resilient</div>
+        </div>
+      </div>
+      <!-- Panels -->
+      <div class="m2-panel" data-visible="true" style="border-left: 3px solid var(--trait-o);">
+        <div class="m2-panel-trait" style="color:var(--trait-o);">Openness</div>
+        <div class="m2-panel-label">Open-minded</div>
+        <div class="m2-panel-desc">Novel experiences and unconventional thinking draw you in naturally. You question the status quo, spot possibilities where others see limits, and thrive on curiosity.</div>
+      </div>
+      <div class="m2-panel" style="border-left: 3px solid var(--trait-c);">
+        <div class="m2-panel-trait" style="color:var(--trait-c);">Conscientiousness</div>
+        <div class="m2-panel-label">Disciplined</div>
+        <div class="m2-panel-desc">Thoroughness defines your approach. You set clear goals, plan ahead, and hold yourself to high standards — others rely on you because they know the job will get done.</div>
+      </div>
+      <div class="m2-panel" style="border-left: 3px solid var(--trait-e);">
+        <div class="m2-panel-trait" style="color:var(--trait-e);">Extraversion</div>
+        <div class="m2-panel-label">Extravert</div>
+        <div class="m2-panel-desc">Being around people is what charges your batteries. You bring others together naturally, keep conversations alive, and put people at ease with your warmth.</div>
+      </div>
+      <div class="m2-panel" style="border-left: 3px solid var(--trait-a);">
+        <div class="m2-panel-trait" style="color:var(--trait-a);">Agreeableness</div>
+        <div class="m2-panel-label">Warm</div>
+        <div class="m2-panel-desc">Empathy and care shape your relationships. You go out of your way to make others feel supported, give people the benefit of the doubt, and build deep, lasting trust.</div>
+      </div>
+      <div class="m2-panel" style="border-left: 3px solid var(--trait-n);">
+        <div class="m2-panel-trait" style="color:var(--trait-n);">Neuroticism</div>
+        <div class="m2-panel-label">Resilient</div>
+        <div class="m2-panel-desc">A steady emotional baseline carries you through pressure and setbacks. You stay calm, recover quickly, and make clear-headed decisions even when the stakes are high.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================
+       MOCKUP 3 — DNA STRAND / CONNECTED DOTS
+  ===================================== -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 3 — Connected Strand</div>
+    <div class="card">
+      <div class="m3-header">
+        <h2>Your Personality DNA</h2>
+        <p>Five dimensions that make you <em>The Idealist</em></p>
+      </div>
+      <div class="m3-strand">
+        <div class="m3-line"></div>
+        <div class="m3-node">
+          <div class="m3-dot" style="background:var(--trait-o);">O</div>
+          <div class="m3-info">
+            <div class="trait-name">Openness</div>
+            <div class="level-label">Open-minded</div>
+            <div class="level-desc">Curiosity-driven, drawn to unconventional ideas</div>
+          </div>
+        </div>
+        <div class="m3-node">
+          <div class="m3-dot" style="background:var(--trait-c);">D</div>
+          <div class="m3-info">
+            <div class="trait-name">Conscientiousness</div>
+            <div class="level-label">Disciplined</div>
+            <div class="level-desc">Thorough, goal-oriented, high personal standards</div>
+          </div>
+        </div>
+        <div class="m3-node">
+          <div class="m3-dot" style="background:var(--trait-e);">E</div>
+          <div class="m3-info">
+            <div class="trait-name">Extraversion</div>
+            <div class="level-label">Extravert</div>
+            <div class="level-desc">Energized by people, naturally brings others together</div>
+          </div>
+        </div>
+        <div class="m3-node">
+          <div class="m3-dot" style="background:var(--trait-a);">W</div>
+          <div class="m3-info">
+            <div class="trait-name">Agreeableness</div>
+            <div class="level-label">Warm</div>
+            <div class="level-desc">Empathetic, supportive, builds deep trust</div>
+          </div>
+        </div>
+        <div class="m3-node">
+          <div class="m3-dot" style="background:var(--trait-n);">R</div>
+          <div class="m3-info">
+            <div class="trait-name">Neuroticism</div>
+            <div class="level-label">Resilient</div>
+            <div class="level-desc">Emotionally steady, calm under pressure</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================
+       MOCKUP 4 — COMPACT TABLE / LEGEND
+  ===================================== -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 4 — Compact Legend Table</div>
+    <div class="card">
+      <div class="m4-top">
+        <h2>Code Breakdown</h2>
+        <div class="m4-code">ODEWR</div>
+      </div>
+      <div class="m4-table">
+        <div class="m4-row">
+          <div class="m4-chip" style="background:var(--trait-o);"></div>
+          <div class="m4-trait-col">Openness</div>
+          <div class="m4-letter-col" style="color:var(--trait-o);">O</div>
+          <div class="m4-label-col">Open-minded</div>
+        </div>
+        <div class="m4-row">
+          <div class="m4-chip" style="background:var(--trait-c);"></div>
+          <div class="m4-trait-col">Conscientiousness</div>
+          <div class="m4-letter-col" style="color:var(--trait-c);">D</div>
+          <div class="m4-label-col">Disciplined</div>
+        </div>
+        <div class="m4-row">
+          <div class="m4-chip" style="background:var(--trait-e);"></div>
+          <div class="m4-trait-col">Extraversion</div>
+          <div class="m4-letter-col" style="color:var(--trait-e);">E</div>
+          <div class="m4-label-col">Extravert</div>
+        </div>
+        <div class="m4-row">
+          <div class="m4-chip" style="background:var(--trait-a);"></div>
+          <div class="m4-trait-col">Agreeableness</div>
+          <div class="m4-letter-col" style="color:var(--trait-a);">W</div>
+          <div class="m4-label-col">Warm</div>
+        </div>
+        <div class="m4-row">
+          <div class="m4-chip" style="background:var(--trait-n);"></div>
+          <div class="m4-trait-col">Neuroticism</div>
+          <div class="m4-letter-col" style="color:var(--trait-n);">R</div>
+          <div class="m4-label-col">Resilient</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================
+       MOCKUP 5 — SPLIT CARD: GRADIENT LEFT + DESCRIPTIONS RIGHT
+  ===================================== -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 5 — Split Gradient Card</div>
+    <div class="card" style="overflow:hidden;">
+      <div class="m5-split">
+        <div class="m5-left">
+          <div class="m5-left-sub">Your Code</div>
+          <div class="m5-left-letter">O</div>
+          <div class="m5-left-letter">D</div>
+          <div class="m5-left-letter">E</div>
+          <div class="m5-left-letter">W</div>
+          <div class="m5-left-letter">R</div>
+        </div>
+        <div class="m5-right">
+          <h2>What Your Code Means</h2>
+          <!-- O -->
+          <div class="m5-item">
+            <div class="m5-item-bar" style="background:var(--trait-o);"></div>
+            <div class="m5-item-content">
+              <div class="m5-item-top"><strong>Open-minded</strong> <span class="trait">· Openness</span></div>
+              <div class="m5-item-desc">You question the status quo, spot possibilities where others see limits, and thrive on curiosity.</div>
+            </div>
+          </div>
+          <!-- D -->
+          <div class="m5-item">
+            <div class="m5-item-bar" style="background:var(--trait-c);"></div>
+            <div class="m5-item-content">
+              <div class="m5-item-top"><strong>Disciplined</strong> <span class="trait">· Conscientiousness</span></div>
+              <div class="m5-item-desc">You set clear goals, plan ahead, and hold yourself to high standards others rely on.</div>
+            </div>
+          </div>
+          <!-- E -->
+          <div class="m5-item">
+            <div class="m5-item-bar" style="background:var(--trait-e);"></div>
+            <div class="m5-item-content">
+              <div class="m5-item-top"><strong>Extravert</strong> <span class="trait">· Extraversion</span></div>
+              <div class="m5-item-desc">Being around people charges your batteries. You bring others together naturally.</div>
+            </div>
+          </div>
+          <!-- W -->
+          <div class="m5-item">
+            <div class="m5-item-bar" style="background:var(--trait-a);"></div>
+            <div class="m5-item-content">
+              <div class="m5-item-top"><strong>Warm</strong> <span class="trait">· Agreeableness</span></div>
+              <div class="m5-item-desc">Empathy shapes your relationships. You build deep, lasting trust with others.</div>
+            </div>
+          </div>
+          <!-- R -->
+          <div class="m5-item">
+            <div class="m5-item-bar" style="background:var(--trait-n);"></div>
+            <div class="m5-item-content">
+              <div class="m5-item-top"><strong>Resilient</strong> <span class="trait">· Neuroticism</span></div>
+              <div class="m5-item-desc">Steady under pressure. You stay calm and make clear-headed decisions.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================
+       MOCKUP 6 — RADIAL BADGE LAYOUT
+  ===================================== -->
+  <div class="mockup-section">
+    <div class="mockup-label">Mockup 6 — Radial Badge Layout</div>
+    <div class="card">
+      <div class="m6-container">
+        <div class="m6-title">Your Personality Code</div>
+        <div class="m6-ring">
+          <!-- Center -->
+          <div class="m6-center">
+            <div class="m6-center-code">ODEWR</div>
+            <div class="m6-center-name">The Idealist</div>
+          </div>
+          <!-- 5 badges positioned around a circle (r=120px from center) -->
+          <!-- O — top -->
+          <div class="m6-badge" style="top:12%; left:50%;">
+            <div class="m6-badge-dot" style="background:var(--trait-o);">O</div>
+            <div class="m6-badge-label">Open-minded</div>
+            <div class="m6-badge-trait">Openness</div>
+          </div>
+          <!-- D — top-right -->
+          <div class="m6-badge" style="top:35%; left:92%;">
+            <div class="m6-badge-dot" style="background:var(--trait-c);">D</div>
+            <div class="m6-badge-label">Disciplined</div>
+            <div class="m6-badge-trait">Conscientiousness</div>
+          </div>
+          <!-- E — bottom-right -->
+          <div class="m6-badge" style="top:78%; left:80%;">
+            <div class="m6-badge-dot" style="background:var(--trait-e);">E</div>
+            <div class="m6-badge-label">Extravert</div>
+            <div class="m6-badge-trait">Extraversion</div>
+          </div>
+          <!-- W — bottom-left -->
+          <div class="m6-badge" style="top:78%; left:20%;">
+            <div class="m6-badge-dot" style="background:var(--trait-a);">W</div>
+            <div class="m6-badge-label">Warm</div>
+            <div class="m6-badge-trait">Agreeableness</div>
+          </div>
+          <!-- R — top-left -->
+          <div class="m6-badge" style="top:35%; left:8%;">
+            <div class="m6-badge-dot" style="background:var(--trait-n);">R</div>
+            <div class="m6-badge-label">Resilient</div>
+            <div class="m6-badge-trait">Neuroticism</div>
+          </div>
+        </div>
+        <div class="m6-bottom-desc">
+          Each letter represents where you fall on one of five personality dimensions. Together they form your unique archetype — a pattern that captures how you think, connect, and navigate the world.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================
+       INTERACTIVITY (Mockup 2 only)
+  ======================================== -->
+  <script>
+    function showPanel(el, index) {
+      const card = el.closest('.card');
+      // Reset all bar items
+      card.querySelectorAll('.m2-bar-item').forEach(item => {
+        item.dataset.active = 'false';
+        item.style.borderBottom = 'none';
+      });
+      // Activate clicked
+      el.dataset.active = 'true';
+      const colors = [
+        'var(--trait-o)', 'var(--trait-c)', 'var(--trait-e)',
+        'var(--trait-a)', 'var(--trait-n)'
+      ];
+      el.style.borderBottom = '3px solid ' + colors[index];
+      // Show matching panel
+      card.querySelectorAll('.m2-panel').forEach((p, i) => {
+        p.dataset.visible = (i === index) ? 'true' : 'false';
+      });
+    }
+  </script>
+
+</body>
+</html>
