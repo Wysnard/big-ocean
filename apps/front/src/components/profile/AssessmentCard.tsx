@@ -20,9 +20,7 @@ import {
 	CardTitle,
 } from "@workspace/ui/components/card";
 import { cn } from "@workspace/ui/lib/utils";
-import { BarChart3, Check, Copy, Loader2, MessageCircle, Share2 } from "lucide-react";
-import { useState } from "react";
-import { useShareProfile } from "../../hooks/use-profile";
+import { BarChart3, MessageCircle } from "lucide-react";
 import { GeometricSignature } from "../ocean-shapes/GeometricSignature";
 
 interface AssessmentCardProps {
@@ -55,39 +53,6 @@ export function AssessmentCard({
 }: AssessmentCardProps) {
 	const isCompleted = messageCount >= freeTierMessageThreshold;
 	const progress = Math.min(Math.round((messageCount / freeTierMessageThreshold) * 100), 100);
-
-	const shareProfile = useShareProfile();
-	const [shareUrl, setShareUrl] = useState<string | null>(null);
-	const [shareError, setShareError] = useState<string | null>(null);
-	const [copied, setCopied] = useState(false);
-
-	const handleShare = async () => {
-		setShareError(null);
-		try {
-			const result = await shareProfile.mutateAsync(id);
-			setShareUrl(result.shareableUrl);
-		} catch (err) {
-			setShareError(err instanceof Error ? err.message : "Failed to create shareable link");
-		}
-	};
-
-	const handleCopyLink = async () => {
-		if (!shareUrl) return;
-		try {
-			await navigator.clipboard.writeText(shareUrl);
-			setCopied(true);
-			setTimeout(() => setCopied(false), 2000);
-		} catch {
-			const textarea = document.createElement("textarea");
-			textarea.value = shareUrl;
-			document.body.appendChild(textarea);
-			textarea.select();
-			document.execCommand("copy");
-			document.body.removeChild(textarea);
-			setCopied(true);
-			setTimeout(() => setCopied(false), 2000);
-		}
-	};
 
 	return (
 		<Card
@@ -160,52 +125,6 @@ export function AssessmentCard({
 								Keep Exploring
 							</Link>
 						</Button>
-
-						{/* Share My Archetype (AC-2) */}
-						{!shareUrl ? (
-							<>
-								{shareError && <p className="text-xs text-destructive w-full text-center">{shareError}</p>}
-								<Button
-									data-slot="share-archetype-btn"
-									variant="outline"
-									size="sm"
-									className="w-full"
-									onClick={handleShare}
-									disabled={shareProfile.isPending}
-								>
-									{shareProfile.isPending ? (
-										<>
-											<Loader2 className="h-4 w-4 motion-safe:animate-spin" />
-											Generating Link...
-										</>
-									) : (
-										<>
-											<Share2 className="h-4 w-4" />
-											Share My Archetype
-										</>
-									)}
-								</Button>
-							</>
-						) : (
-							<div data-slot="share-link-display" className="w-full space-y-2">
-								<div className="flex items-center gap-2 rounded-lg bg-muted/50 p-2">
-									<code className="text-xs text-primary flex-1 truncate">{shareUrl}</code>
-									<Button
-										data-slot="share-copy-btn"
-										onClick={handleCopyLink}
-										size="sm"
-										variant="ghost"
-										className="shrink-0 h-7 w-7 p-0"
-									>
-										{copied ? (
-											<Check className="h-3.5 w-3.5 text-success" />
-										) : (
-											<Copy className="h-3.5 w-3.5" />
-										)}
-									</Button>
-								</div>
-							</div>
-						)}
 					</>
 				) : (
 					<Button asChild size="sm" className="w-full">

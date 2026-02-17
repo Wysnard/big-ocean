@@ -149,6 +149,7 @@ describe("Assessment Contracts", () => {
 				facets: [{ name: "Imagination", traitName: "openness", score: 15, confidence: 85 }],
 				overallConfidence: 68,
 				personalDescription: null,
+				messageCount: 24,
 			};
 
 			const result = S.decodeUnknownSync(GetResultsResponseSchema)(validResponse);
@@ -180,6 +181,7 @@ describe("Assessment Contracts", () => {
 				overallConfidence: 68,
 				personalDescription:
 					"You bring a rare combination of intellectual depth and curiosity to everything you do.",
+				messageCount: 18,
 			};
 
 			const result = S.decodeUnknownSync(GetResultsResponseSchema)(validResponse);
@@ -202,6 +204,7 @@ describe("Assessment Contracts", () => {
 				facets: [],
 				overallConfidence: 50,
 				personalDescription: null,
+				messageCount: 10,
 			};
 
 			expect(() => S.decodeUnknownSync(GetResultsResponseSchema)(invalidResponse)).toThrow();

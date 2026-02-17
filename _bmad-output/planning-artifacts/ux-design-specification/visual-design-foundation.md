@@ -296,18 +296,20 @@ To ship a cohesive visual identity without requiring a full illustration pipelin
 - **Consistency:** All illustrations share same line weight, color saturation, and proportions
 - **Format:** SVG for scalability, with optional Lottie animations (Phase 2)
 
-### Chat Interface Visual Calm
+### Chat Interface Atmosphere
 
-The chat screen — where users spend 30 minutes — uses the **calmest expression** of the brand identity:
+> **See [Geometric Ocean — Ambient Sea Life System](./geometric-ocean-ambient-system.md)** for the complete specification of the chat assessment's visual atmosphere.
 
-- **Background:** Warm Cream / Abyss Navy (no color blocks, no bold patterns)
+The chat screen — where users spend 30 minutes — is immersed in a **living geometric ocean**. Sea creatures built from simple primitives (rectangles, diamonds, circles, triangles) drift, swim, and sway around and behind the conversation. This creates a calm yet alive atmosphere without competing with message content.
+
+- **Background:** Warm Cream / Abyss Navy with geometric sea creatures at very low opacity
 - **Nerin avatar:** Small diver character, consistent across all messages
 - **Message bubbles:** Clean, rounded, generous padding. User = surface color, Nerin = slightly elevated surface-alt
-- **Ocean accents:** Subtle wave pattern at very low opacity (5-10%) on background. Not distracting.
-- **Decorative elements:** Minimal. No coral, no floating characters, no background illustrations during conversation.
-- **Psychedelic energy appears ONLY in:** Precision milestone toasts (glowing teal/gold with trait shape animation, brief, fades back to calm) and the transition to results reveal.
+- **Ocean creatures:** Seaweed, fish, jellyfish, and bubbles — all geometric, all decorative, all `aria-hidden`
+- **No data visualization during assessment:** Creatures are completely decoupled from personality data to avoid influencing user responses
+- **Psychedelic energy appears ONLY in:** Precision milestone toasts and the transition to results reveal
 
-The conversation content IS the experience. Let it breathe.
+The conversation content IS the experience. The ocean makes the space feel alive while the content breathes.
 
 ---
 

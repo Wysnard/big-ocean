@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Strand Detail Layer — 6 Propositions</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #FFF8F0;
+      --fg: #1A1A2E;
+      --card: #FFF0E8;
+      --muted: #6B6580;
+      --border: rgba(26,26,46,0.08);
+      --border-strong: rgba(26,26,46,0.14);
+
+      --trait-o: #8B5CF6;
+      --trait-o-10: rgba(139,92,246,0.10);
+      --trait-o-15: rgba(139,92,246,0.15);
+      --trait-c: #E08040;
+      --trait-c-10: rgba(224,128,64,0.10);
+      --trait-c-15: rgba(224,128,64,0.15);
+      --trait-e: #E0369A;
+      --trait-e-10: rgba(224,54,154,0.10);
+      --trait-e-15: rgba(224,54,154,0.15);
+      --trait-a: #44B8A8;
+      --trait-a-10: rgba(68,184,168,0.10);
+      --trait-a-15: rgba(68,184,168,0.15);
+      --trait-n: #4040A0;
+      --trait-n-10: rgba(64,64,160,0.10);
+      --trait-n-15: rgba(64,64,160,0.15);
+
+      --radius: 16px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--fg);
+      padding: 40px 20px; line-height: 1.6;
+    }
+    .mono { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace; }
+
+    .page-header { max-width: 720px; margin: 0 auto 60px; text-align: center; }
+    .page-header h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+    .page-header p { color: var(--muted); font-size: 0.95rem; }
+
+    .mockup-section { max-width: 560px; margin: 0 auto 90px; }
+    .mockup-label {
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px; padding-left: 4px;
+    }
+    .mockup-rationale {
+      font-size: 0.82rem; color: var(--muted); margin-bottom: 16px; padding-left: 4px;
+      line-height: 1.5;
+    }
+    .card {
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid var(--border); overflow: hidden;
+    }
+
+    /* ========================================
+       SHARED STRAND BASE (reused in all mockups)
+    ======================================== */
+    .strand-header { padding: 24px 28px 4px; }
+    .strand-header h2 { font-size: 1.1rem; font-weight: 800; }
+    .strand-header p { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+    .strand { padding: 8px 28px 28px; position: relative; }
+    .strand-line {
+      position: absolute; left: 48px; top: 8px; bottom: 28px; width: 3px;
+      background: linear-gradient(to bottom, var(--trait-o), var(--trait-c), var(--trait-e), var(--trait-a), var(--trait-n));
+      border-radius: 2px; opacity: 0.2;
+    }
+    .node { display: flex; align-items: flex-start; gap: 16px; padding: 16px 0; position: relative; }
+    .dot {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; font-weight: 800; color: #fff; flex-shrink: 0;
+      position: relative; z-index: 1; box-shadow: 0 0 0 4px var(--card);
+    }
+    .node-info { flex: 1; min-width: 0; }
+    .trait-name {
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--muted);
+    }
+    .level-label { font-size: 0.92rem; font-weight: 700; margin: 2px 0; }
+
+    /* 3-dot gauge (same as v2 mockup 3) */
+    .gauge { display: flex; gap: 2px; width: 100%; max-width: 260px; margin-top: 4px; }
+    .gauge-seg { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .gauge-track {
+      width: 100%; height: 4px; background: var(--border-strong); border-radius: 2px; position: relative;
+    }
+    .gauge-dot-mark {
+      width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--border-strong); background: var(--card);
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    }
+    .gauge-seg[data-active="true"] .gauge-dot-mark { width: 14px; height: 14px; border-width: 3px; z-index: 1; }
+    .gauge-lbl { font-size: 0.6rem; font-weight: 600; color: var(--muted); opacity: 0.5; }
+    .gauge-seg[data-active="true"] .gauge-lbl { opacity: 1; font-weight: 700; }
+
+    /* ========================================
+       PROP 1 — INLINE DESCRIPTION
+       Description text sits directly under the gauge,
+       always visible. Simplest possible approach.
+    ======================================== */
+    .p1-desc {
+      font-size: 0.78rem; color: var(--muted); line-height: 1.5;
+      margin-top: 10px; padding-left: 2px;
+    }
+
+    /* ========================================
+       PROP 2 — ACCORDION EXPAND
+       Nodes are compact by default. Tap chevron to
+       reveal description + tagline with smooth expand.
+    ======================================== */
+    .p2-node { cursor: pointer; }
+    .p2-node .node-top { display: flex; align-items: flex-start; gap: 16px; }
+    .p2-chevron {
+      width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 0.8rem; flex-shrink: 0; margin-top: 2px;
+      transition: transform 0.2s;
+    }
+    .p2-node[data-open="true"] .p2-chevron { transform: rotate(180deg); }
+    .p2-detail {
+      max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+      margin-left: 56px;
+    }
+    .p2-node[data-open="true"] .p2-detail { max-height: 200px; }
+    .p2-tagline {
+      font-size: 0.7rem; font-weight: 600; color: var(--muted);
+      font-style: italic; margin-top: 10px; margin-bottom: 4px;
+    }
+    .p2-desc {
+      font-size: 0.78rem; color: var(--muted); line-height: 1.5;
+      padding-bottom: 4px;
+    }
+
+    /* ========================================
+       PROP 3 — CARD INSET / HIGHLIGHT BOX
+       Description lives in a tinted inset card
+       below the gauge, visually separated.
+    ======================================== */
+    .p3-inset {
+      margin-top: 10px; padding: 10px 14px;
+      border-radius: 10px; border-left: 3px solid;
+    }
+    .p3-tagline {
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 3px;
+    }
+    .p3-desc {
+      font-size: 0.78rem; line-height: 1.5;
+    }
+
+    /* ========================================
+       PROP 4 — DETAIL ZONE BELOW STRAND
+       Strand stays compact (no descriptions inline).
+       A separate "Detail Zone" section below the strand
+       lists each trait's description in full.
+    ======================================== */
+    .p4-strand .node { padding: 12px 0; } /* tighter nodes */
+    .p4-divider {
+      height: 1px; background: var(--border); margin: 8px 28px 0;
+    }
+    .p4-detail-zone { padding: 20px 28px 28px; }
+    .p4-detail-zone h3 {
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); margin-bottom: 16px;
+    }
+    .p4-detail-item {
+      display: flex; gap: 12px; align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .p4-detail-item:last-child { margin-bottom: 0; }
+    .p4-detail-bar {
+      width: 3px; border-radius: 2px; align-self: stretch; flex-shrink: 0;
+    }
+    .p4-detail-content { flex: 1; }
+    .p4-detail-top {
+      display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px;
+    }
+    .p4-detail-letter {
+      font-size: 0.82rem; font-weight: 800;
+    }
+    .p4-detail-label { font-size: 0.82rem; font-weight: 700; }
+    .p4-detail-trait { font-size: 0.68rem; color: var(--muted); font-weight: 500; }
+    .p4-detail-tagline {
+      font-size: 0.68rem; color: var(--muted); font-style: italic; margin-bottom: 3px;
+    }
+    .p4-detail-desc {
+      font-size: 0.78rem; color: var(--muted); line-height: 1.5;
+    }
+
+    /* ========================================
+       PROP 5 — TOOLTIP / POPOVER ON TAP
+       Strand is clean. Tapping a node shows a
+       floating tooltip with the detail.
+    ======================================== */
+    .p5-node { position: relative; cursor: pointer; }
+    .p5-tooltip {
+      display: none; position: absolute;
+      left: 56px; top: 0; right: 0; z-index: 10;
+      background: var(--fg); color: #fff; border-radius: 12px;
+      padding: 14px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+    .p5-node[data-show="true"] .p5-tooltip { display: block; }
+    .p5-tooltip::before {
+      content: ''; position: absolute; left: -6px; top: 16px;
+      width: 12px; height: 12px; background: var(--fg);
+      transform: rotate(45deg); border-radius: 2px;
+    }
+    .p5-tip-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; }
+    .p5-tip-letter { font-size: 0.8rem; font-weight: 800; }
+    .p5-tip-label { font-size: 0.82rem; font-weight: 700; }
+    .p5-tip-trait { font-size: 0.65rem; opacity: 0.6; }
+    .p5-tip-tagline { font-size: 0.68rem; opacity: 0.7; font-style: italic; margin-bottom: 4px; }
+    .p5-tip-desc { font-size: 0.76rem; line-height: 1.5; opacity: 0.9; }
+    /* Tap instruction */
+    .p5-hint {
+      text-align: center; font-size: 0.72rem; color: var(--muted);
+      padding: 0 28px 20px; font-style: italic;
+    }
+
+    /* ========================================
+       PROP 6 — DUAL-LAYER: STRAND TOP + SCROLLABLE DETAIL CARDS
+       Strand is fixed/compact at top of card.
+       Below, a horizontal scroll of mini detail cards,
+       one per trait, with full description.
+    ======================================== */
+    .p6-strand-compact .node { padding: 10px 0; }
+    .p6-scroll-zone {
+      padding: 0 0 20px;
+      overflow-x: auto; scroll-snap-type: x mandatory;
+      display: flex; gap: 12px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .p6-scroll-zone::-webkit-scrollbar { display: none; }
+    .p6-scroll-zone::before,
+    .p6-scroll-zone::after {
+      content: ''; flex-shrink: 0; width: 20px;
+    }
+    .p6-detail-card {
+      flex-shrink: 0; width: 260px; scroll-snap-align: center;
+      border-radius: 14px; padding: 18px 20px;
+      border: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .p6-card-header { display: flex; align-items: center; gap: 10px; }
+    .p6-card-dot {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 800; color: #fff; flex-shrink: 0;
+    }
+    .p6-card-titles { flex: 1; }
+    .p6-card-label { font-size: 0.82rem; font-weight: 700; }
+    .p6-card-trait { font-size: 0.65rem; color: var(--muted); }
+    .p6-card-tagline {
+      font-size: 0.68rem; color: var(--muted); font-style: italic;
+    }
+    .p6-card-desc {
+      font-size: 0.76rem; color: var(--muted); line-height: 1.5;
+    }
+    .p6-card-gauge {
+      display: flex; gap: 4px; margin-top: 2px;
+    }
+    .p6-card-gauge-seg {
+      flex: 1; height: 4px; border-radius: 2px; background: var(--border-strong);
+    }
+    .p6-scroll-hint {
+      text-align: center; font-size: 0.68rem; color: var(--muted);
+      padding: 4px 28px 0; margin-bottom: -4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <h1>Trait Level Details — 6 Propositions</h1>
+    <p>How to display the description for each trait level alongside the Strand layout.<br>
+    All use the same base: <strong>Connected Strand + 3-Level Gauge</strong> (Mockup 3 from v2).</p>
+  </div>
+
+  <!-- ====================================
+       PROP 1 — INLINE DESCRIPTION (always visible)
+  ===================================== -->
+  <div class="mockup-section">
+    <div class="mockup-label">Proposition 1 — Inline Description</div>
+    <div class="mockup-rationale">Description text sits directly under the gauge, always visible. No interaction needed. Straightforward but takes vertical space.</div>
+    <div class="card">
+      <div class="strand-header">
+        <h2>Your Personality DNA</h2>
+        <p>Each trait sits on a spectrum of three levels. The highlighted level is yours.</p>
+      </div>
+      <div class="strand">
+        <div class="strand-line"></div>
+        <!-- O -->
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-o);">O</div>
+          <div class="node-info">
+            <div class="trait-name">Openness</div>
+            <div class="level-label">Open-minded</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">P</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">G</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-o);"><div class="gauge-dot-mark" style="border-color:var(--trait-o);background:var(--trait-o);"></div></div><div class="gauge-lbl" style="color:var(--trait-o);">O</div></div>
+            </div>
+            <div class="p1-desc">Novel experiences and unconventional thinking draw you in naturally. You question the status quo, spot possibilities where others see limits, and thrive on curiosity.</div>
+          </div>
+        </div>
+        <!-- D -->
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-c);">D</div>
+          <div class="node-info">
+            <div class="trait-name">Conscientiousness</div>
+            <div class="level-label">Disciplined</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">F</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">B</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-c);"><div class="gauge-dot-mark" style="border-color:var(--trait-c);background:var(--trait-c);"></div></div><div class="gauge-lbl" style="color:var(--trait-c);">D</div></div>
+            </div>
+            <div class="p1-desc">Thoroughness defines your approach. You set clear goals, plan ahead, and hold yourself to high standards — others rely on you because they know the job will get done.</div>
+          </div>
+        </div>
+        <!-- E -->
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-e);">E</div>
+          <div class="node-info">
+            <div class="trait-name">Extraversion</div>
+            <div class="level-label">Extravert</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">I</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">A</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-e);"><div class="gauge-dot-mark" style="border-color:var(--trait-e);background:var(--trait-e);"></div></div><div class="gauge-lbl" style="color:var(--trait-e);">E</div></div>
+            </div>
+            <div class="p1-desc">Being around people is what charges your batteries. You bring others together naturally, keep conversations alive, and put people at ease with your warmth.</div>
+          </div>
+        </div>
+        <!-- W -->
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-a);">W</div>
+          <div class="node-info">
+            <div class="trait-name">Agreeableness</div>
+            <div class="level-label">Warm</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">C</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">N</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-a);"><div class="gauge-dot-mark" style="border-color:var(--trait-a);background:var(--trait-a);"></div></div><div class="gauge-lbl" style="color:var(--trait-a);">W</div></div>
+            </div>
+            <div class="p1-desc">Empathy and care shape your relationships. You go out of your way to make others feel supported, give people the benefit of the doubt, and build deep, lasting trust.</div>
+          </div>
+        </div>
+        <!-- R -->
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-n);">R</div>
+          <div class="node-info">
+            <div class="trait-name">Neuroticism</div>
+            <div class="level-label">Resilient</div>
+            <div class="gauge">
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-n);"><div class="gauge-dot-mark" style="border-color:var(--trait-n);background:var(--trait-n);"></div></div><div class="gauge-lbl" style="color:var(--trait-n);">R</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">T</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">S</div></div>
+            </div>
+            <div class="p1-desc">A steady emotional baseline carries you through pressure and setbacks. You stay calm, recover quickly, and make clear-headed decisions even when the stakes are high.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================
+       PROP 2 — ACCORDION EXPAND
+  ===================================== -->
+  <div class="mockup-section">
+    <div class="mockup-label">Proposition 2 — Accordion Expand</div>
+    <div class="mockup-rationale">Strand stays compact by default. Tap a node's chevron to reveal the tagline + description. Only one open at a time keeps the card manageable.</div>
+    <div class="card">
+      <div class="strand-header">
+        <h2>Your Personality DNA</h2>
+        <p>Each trait sits on a spectrum of three levels. The highlighted level is yours.</p>
+      </div>
+      <div class="strand" id="p2-strand">
+        <div class="strand-line"></div>
+        <!-- O — open by default to show the pattern -->
+        <div class="p2-node node" data-open="true" onclick="toggleAccordion(this)">
+          <div class="dot mono" style="background:var(--trait-o);">O</div>
+          <div class="node-info">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div>
+                <div class="trait-name">Openness</div>
+                <div class="level-label">Open-minded</div>
+              </div>
+              <div class="p2-chevron">▼</div>
+            </div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">P</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">G</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-o);"><div class="gauge-dot-mark" style="border-color:var(--trait-o);background:var(--trait-o);"></div></div><div class="gauge-lbl" style="color:var(--trait-o);">O</div></div>
+            </div>
+            <div class="p2-detail">
+              <div class="p2-tagline">How you engage with new ideas and experiences</div>
+              <div class="p2-desc">Novel experiences and unconventional thinking draw you in naturally. You question the status quo, spot possibilities where others see limits, and thrive on curiosity.</div>
+            </div>
+          </div>
+        </div>
+        <!-- D — closed -->
+        <div class="p2-node node" data-open="false" onclick="toggleAccordion(this)">
+          <div class="dot mono" style="background:var(--trait-c);">D</div>
+          <div class="node-info">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div>
+                <div class="trait-name">Conscientiousness</div>
+                <div class="level-label">Disciplined</div>
+              </div>
+              <div class="p2-chevron">▼</div>
+            </div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">F</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">B</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-c);"><div class="gauge-dot-mark" style="border-color:var(--trait-c);background:var(--trait-c);"></div></div><div class="gauge-lbl" style="color:var(--trait-c);">D</div></div>
+            </div>
+            <div class="p2-detail">
+              <div class="p2-tagline">How you organize your life and pursue goals</div>
+              <div class="p2-desc">Thoroughness defines your approach. You set clear goals, plan ahead, and hold yourself to high standards — others rely on you because they know the job will get done.</div>
+            </div>
+          </div>
+        </div>
+        <!-- E -->
+        <div class="p2-node node" data-open="false" onclick="toggleAccordion(this)">
+          <div class="dot mono" style="background:var(--trait-e);">E</div>
+          <div class="node-info">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div>
+                <div class="trait-name">Extraversion</div>
+                <div class="level-label">Extravert</div>
+              </div>
+              <div class="p2-chevron">▼</div>
+            </div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">I</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">A</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-e);"><div class="gauge-dot-mark" style="border-color:var(--trait-e);background:var(--trait-e);"></div></div><div class="gauge-lbl" style="color:var(--trait-e);">E</div></div>
+            </div>
+            <div class="p2-detail">
+              <div class="p2-tagline">How you direct your energy and engage socially</div>
+              <div class="p2-desc">Being around people is what charges your batteries. You bring others together naturally, keep conversations alive, and put people at ease with your warmth.</div>
+            </div>
+          </div>
+        </div>
+        <!-- W -->
+        <div class="p2-node node" data-open="false" onclick="toggleAccordion(this)">
+          <div class="dot mono" style="background:var(--trait-a);">W</div>
+          <div class="node-info">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div>
+                <div class="trait-name">Agreeableness</div>
+                <div class="level-label">Warm</div>
+              </div>
+              <div class="p2-chevron">▼</div>
+            </div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">C</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">N</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-a);"><div class="gauge-dot-mark" style="border-color:var(--trait-a);background:var(--trait-a);"></div></div><div class="gauge-lbl" style="color:var(--trait-a);">W</div></div>
+            </div>
+            <div class="p2-detail">
+              <div class="p2-tagline">How you relate to others and handle conflict</div>
+              <div class="p2-desc">Empathy and care shape your relationships. You go out of your way to make others feel supported, give people the benefit of the doubt, and build deep, lasting trust.</div>
+            </div>
+          </div>
+        </div>
+        <!-- R -->
+        <div class="p2-node node" data-open="false" onclick="toggleAccordion(this)">
+          <div class="dot mono" style="background:var(--trait-n);">R</div>
+          <div class="node-info">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div>
+                <div class="trait-name">Neuroticism</div>
+                <div class="level-label">Resilient</div>
+              </div>
+              <div class="p2-chevron">▼</div>
+            </div>
+            <div class="gauge">
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-n);"><div class="gauge-dot-mark" style="border-color:var(--trait-n);background:var(--trait-n);"></div></div><div class="gauge-lbl" style="color:var(--trait-n);">R</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">T</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">S</div></div>
+            </div>
+            <div class="p2-detail">
+              <div class="p2-tagline">How you experience and process emotions</div>
+              <div class="p2-desc">A steady emotional baseline carries you through pressure and setbacks. You stay calm, recover quickly, and make clear-headed decisions even when the stakes are high.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================
+       PROP 3 — TINTED INSET CARD
+  ===================================== -->
+  <div class="mockup-section">
+    <div class="mockup-label">Proposition 3 — Tinted Inset Card</div>
+    <div class="mockup-rationale">Description lives in a trait-tinted inset box below each gauge. Tagline as a small header, then the description. Visually grouped with clear trait ownership.</div>
+    <div class="card">
+      <div class="strand-header">
+        <h2>Your Personality DNA</h2>
+        <p>Each trait sits on a spectrum of three levels. The highlighted level is yours.</p>
+      </div>
+      <div class="strand">
+        <div class="strand-line"></div>
+        <!-- O -->
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-o);">O</div>
+          <div class="node-info">
+            <div class="trait-name">Openness</div>
+            <div class="level-label">Open-minded</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">P</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">G</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-o);"><div class="gauge-dot-mark" style="border-color:var(--trait-o);background:var(--trait-o);"></div></div><div class="gauge-lbl" style="color:var(--trait-o);">O</div></div>
+            </div>
+            <div class="p3-inset" style="background:var(--trait-o-10);border-color:var(--trait-o);">
+              <div class="p3-tagline" style="color:var(--trait-o);">How you engage with new ideas</div>
+              <div class="p3-desc" style="color:var(--muted);">Novel experiences and unconventional thinking draw you in naturally. You question the status quo, spot possibilities where others see limits, and thrive on curiosity.</div>
+            </div>
+          </div>
+        </div>
+        <!-- D -->
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-c);">D</div>
+          <div class="node-info">
+            <div class="trait-name">Conscientiousness</div>
+            <div class="level-label">Disciplined</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">F</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">B</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-c);"><div class="gauge-dot-mark" style="border-color:var(--trait-c);background:var(--trait-c);"></div></div><div class="gauge-lbl" style="color:var(--trait-c);">D</div></div>
+            </div>
+            <div class="p3-inset" style="background:var(--trait-c-10);border-color:var(--trait-c);">
+              <div class="p3-tagline" style="color:var(--trait-c);">How you organize your life</div>
+              <div class="p3-desc" style="color:var(--muted);">Thoroughness defines your approach. You set clear goals, plan ahead, and hold yourself to high standards — others rely on you because they know the job will get done.</div>
+            </div>
+          </div>
+        </div>
+        <!-- E -->
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-e);">E</div>
+          <div class="node-info">
+            <div class="trait-name">Extraversion</div>
+            <div class="level-label">Extravert</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">I</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">A</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-e);"><div class="gauge-dot-mark" style="border-color:var(--trait-e);background:var(--trait-e);"></div></div><div class="gauge-lbl" style="color:var(--trait-e);">E</div></div>
+            </div>
+            <div class="p3-inset" style="background:var(--trait-e-10);border-color:var(--trait-e);">
+              <div class="p3-tagline" style="color:var(--trait-e);">How you direct your energy</div>
+              <div class="p3-desc" style="color:var(--muted);">Being around people is what charges your batteries. You bring others together naturally, keep conversations alive, and put people at ease with your warmth.</div>
+            </div>
+          </div>
+        </div>
+        <!-- W -->
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-a);">W</div>
+          <div class="node-info">
+            <div class="trait-name">Agreeableness</div>
+            <div class="level-label">Warm</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">C</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">N</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-a);"><div class="gauge-dot-mark" style="border-color:var(--trait-a);background:var(--trait-a);"></div></div><div class="gauge-lbl" style="color:var(--trait-a);">W</div></div>
+            </div>
+            <div class="p3-inset" style="background:var(--trait-a-10);border-color:var(--trait-a);">
+              <div class="p3-tagline" style="color:var(--trait-a);">How you relate to others</div>
+              <div class="p3-desc" style="color:var(--muted);">Empathy and care shape your relationships. You go out of your way to make others feel supported, give people the benefit of the doubt, and build deep, lasting trust.</div>
+            </div>
+          </div>
+        </div>
+        <!-- R -->
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-n);">R</div>
+          <div class="node-info">
+            <div class="trait-name">Neuroticism</div>
+            <div class="level-label">Resilient</div>
+            <div class="gauge">
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-n);"><div class="gauge-dot-mark" style="border-color:var(--trait-n);background:var(--trait-n);"></div></div><div class="gauge-lbl" style="color:var(--trait-n);">R</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">T</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">S</div></div>
+            </div>
+            <div class="p3-inset" style="background:var(--trait-n-10);border-color:var(--trait-n);">
+              <div class="p3-tagline" style="color:var(--trait-n);">How you process emotions</div>
+              <div class="p3-desc" style="color:var(--muted);">A steady emotional baseline carries you through pressure and setbacks. You stay calm, recover quickly, and make clear-headed decisions even when the stakes are high.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================
+       PROP 4 — DETAIL ZONE BELOW STRAND
+  ===================================== -->
+  <div class="mockup-section">
+    <div class="mockup-label">Proposition 4 — Detail Zone Below Strand</div>
+    <div class="mockup-rationale">Strand stays compact and scannable (no descriptions inline). Below the strand, a separate "Trait Details" section lists each trait with its tagline and full description. Two distinct reading passes: overview first, details second.</div>
+    <div class="card">
+      <div class="strand-header">
+        <h2>Your Personality DNA</h2>
+        <p>Each trait sits on a spectrum of three levels. The highlighted level is yours.</p>
+      </div>
+      <div class="strand p4-strand">
+        <div class="strand-line"></div>
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-o);">O</div>
+          <div class="node-info">
+            <div class="trait-name">Openness</div>
+            <div class="level-label">Open-minded</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">P</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">G</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-o);"><div class="gauge-dot-mark" style="border-color:var(--trait-o);background:var(--trait-o);"></div></div><div class="gauge-lbl" style="color:var(--trait-o);">O</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-c);">D</div>
+          <div class="node-info">
+            <div class="trait-name">Conscientiousness</div>
+            <div class="level-label">Disciplined</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">F</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">B</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-c);"><div class="gauge-dot-mark" style="border-color:var(--trait-c);background:var(--trait-c);"></div></div><div class="gauge-lbl" style="color:var(--trait-c);">D</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-e);">E</div>
+          <div class="node-info">
+            <div class="trait-name">Extraversion</div>
+            <div class="level-label">Extravert</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">I</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">A</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-e);"><div class="gauge-dot-mark" style="border-color:var(--trait-e);background:var(--trait-e);"></div></div><div class="gauge-lbl" style="color:var(--trait-e);">E</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-a);">W</div>
+          <div class="node-info">
+            <div class="trait-name">Agreeableness</div>
+            <div class="level-label">Warm</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">C</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">N</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-a);"><div class="gauge-dot-mark" style="border-color:var(--trait-a);background:var(--trait-a);"></div></div><div class="gauge-lbl" style="color:var(--trait-a);">W</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-n);">R</div>
+          <div class="node-info">
+            <div class="trait-name">Neuroticism</div>
+            <div class="level-label">Resilient</div>
+            <div class="gauge">
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-n);"><div class="gauge-dot-mark" style="border-color:var(--trait-n);background:var(--trait-n);"></div></div><div class="gauge-lbl" style="color:var(--trait-n);">R</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">T</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">S</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="p4-divider"></div>
+      <div class="p4-detail-zone">
+        <h3>Trait Details</h3>
+        <div class="p4-detail-item">
+          <div class="p4-detail-bar" style="background:var(--trait-o);"></div>
+          <div class="p4-detail-content">
+            <div class="p4-detail-top">
+              <div class="p4-detail-letter mono" style="color:var(--trait-o);">O</div>
+              <div class="p4-detail-label">Open-minded</div>
+              <div class="p4-detail-trait">· Openness</div>
+            </div>
+            <div class="p4-detail-tagline">How you engage with new ideas and experiences</div>
+            <div class="p4-detail-desc">Novel experiences and unconventional thinking draw you in naturally. You question the status quo, spot possibilities where others see limits, and thrive on curiosity.</div>
+          </div>
+        </div>
+        <div class="p4-detail-item">
+          <div class="p4-detail-bar" style="background:var(--trait-c);"></div>
+          <div class="p4-detail-content">
+            <div class="p4-detail-top">
+              <div class="p4-detail-letter mono" style="color:var(--trait-c);">D</div>
+              <div class="p4-detail-label">Disciplined</div>
+              <div class="p4-detail-trait">· Conscientiousness</div>
+            </div>
+            <div class="p4-detail-tagline">How you organize your life and pursue goals</div>
+            <div class="p4-detail-desc">Thoroughness defines your approach. You set clear goals, plan ahead, and hold yourself to high standards — others rely on you because they know the job will get done.</div>
+          </div>
+        </div>
+        <div class="p4-detail-item">
+          <div class="p4-detail-bar" style="background:var(--trait-e);"></div>
+          <div class="p4-detail-content">
+            <div class="p4-detail-top">
+              <div class="p4-detail-letter mono" style="color:var(--trait-e);">E</div>
+              <div class="p4-detail-label">Extravert</div>
+              <div class="p4-detail-trait">· Extraversion</div>
+            </div>
+            <div class="p4-detail-tagline">How you direct your energy and engage socially</div>
+            <div class="p4-detail-desc">Being around people is what charges your batteries. You bring others together naturally, keep conversations alive, and put people at ease with your warmth.</div>
+          </div>
+        </div>
+        <div class="p4-detail-item">
+          <div class="p4-detail-bar" style="background:var(--trait-a);"></div>
+          <div class="p4-detail-content">
+            <div class="p4-detail-top">
+              <div class="p4-detail-letter mono" style="color:var(--trait-a);">W</div>
+              <div class="p4-detail-label">Warm</div>
+              <div class="p4-detail-trait">· Agreeableness</div>
+            </div>
+            <div class="p4-detail-tagline">How you relate to others and handle conflict</div>
+            <div class="p4-detail-desc">Empathy and care shape your relationships. You go out of your way to make others feel supported, give people the benefit of the doubt, and build deep, lasting trust.</div>
+          </div>
+        </div>
+        <div class="p4-detail-item">
+          <div class="p4-detail-bar" style="background:var(--trait-n);"></div>
+          <div class="p4-detail-content">
+            <div class="p4-detail-top">
+              <div class="p4-detail-letter mono" style="color:var(--trait-n);">R</div>
+              <div class="p4-detail-label">Resilient</div>
+              <div class="p4-detail-trait">· Neuroticism</div>
+            </div>
+            <div class="p4-detail-tagline">How you experience and process emotions</div>
+            <div class="p4-detail-desc">A steady emotional baseline carries you through pressure and setbacks. You stay calm, recover quickly, and make clear-headed decisions even when the stakes are high.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================
+       PROP 5 — DARK TOOLTIP / POPOVER
+  ===================================== -->
+  <div class="mockup-section">
+    <div class="mockup-label">Proposition 5 — Dark Tooltip on Tap</div>
+    <div class="mockup-rationale">Strand stays pristine. Tapping a node pops a dark floating card with the tagline + description. Disappears on next tap. Zero visual noise when closed. (First node shown open as demo.)</div>
+    <div class="card">
+      <div class="strand-header">
+        <h2>Your Personality DNA</h2>
+        <p>Each trait sits on a spectrum of three levels. The highlighted level is yours.</p>
+      </div>
+      <div class="strand">
+        <div class="strand-line"></div>
+        <!-- O — tooltip shown -->
+        <div class="p5-node node" data-show="true" onclick="toggleTooltip(this)">
+          <div class="dot mono" style="background:var(--trait-o);">O</div>
+          <div class="node-info">
+            <div class="trait-name">Openness</div>
+            <div class="level-label">Open-minded</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">P</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">G</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-o);"><div class="gauge-dot-mark" style="border-color:var(--trait-o);background:var(--trait-o);"></div></div><div class="gauge-lbl" style="color:var(--trait-o);">O</div></div>
+            </div>
+            <div class="p5-tooltip">
+              <div class="p5-tip-header">
+                <div class="p5-tip-letter mono" style="color:var(--trait-o);">O</div>
+                <div class="p5-tip-label">Open-minded</div>
+              </div>
+              <div class="p5-tip-tagline">How you engage with new ideas and experiences</div>
+              <div class="p5-tip-desc">Novel experiences and unconventional thinking draw you in naturally. You question the status quo, spot possibilities where others see limits, and thrive on curiosity.</div>
+            </div>
+          </div>
+        </div>
+        <!-- D -->
+        <div class="p5-node node" data-show="false" onclick="toggleTooltip(this)">
+          <div class="dot mono" style="background:var(--trait-c);">D</div>
+          <div class="node-info">
+            <div class="trait-name">Conscientiousness</div>
+            <div class="level-label">Disciplined</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">F</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">B</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-c);"><div class="gauge-dot-mark" style="border-color:var(--trait-c);background:var(--trait-c);"></div></div><div class="gauge-lbl" style="color:var(--trait-c);">D</div></div>
+            </div>
+            <div class="p5-tooltip">
+              <div class="p5-tip-header">
+                <div class="p5-tip-letter mono" style="color:var(--trait-c);">D</div>
+                <div class="p5-tip-label">Disciplined</div>
+              </div>
+              <div class="p5-tip-tagline">How you organize your life and pursue goals</div>
+              <div class="p5-tip-desc">Thoroughness defines your approach. You set clear goals, plan ahead, and hold yourself to high standards — others rely on you because they know the job will get done.</div>
+            </div>
+          </div>
+        </div>
+        <!-- E -->
+        <div class="p5-node node" data-show="false" onclick="toggleTooltip(this)">
+          <div class="dot mono" style="background:var(--trait-e);">E</div>
+          <div class="node-info">
+            <div class="trait-name">Extraversion</div>
+            <div class="level-label">Extravert</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">I</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">A</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-e);"><div class="gauge-dot-mark" style="border-color:var(--trait-e);background:var(--trait-e);"></div></div><div class="gauge-lbl" style="color:var(--trait-e);">E</div></div>
+            </div>
+            <div class="p5-tooltip">
+              <div class="p5-tip-header">
+                <div class="p5-tip-letter mono" style="color:var(--trait-e);">E</div>
+                <div class="p5-tip-label">Extravert</div>
+              </div>
+              <div class="p5-tip-tagline">How you direct your energy and engage socially</div>
+              <div class="p5-tip-desc">Being around people is what charges your batteries. You bring others together naturally, keep conversations alive, and put people at ease with your warmth.</div>
+            </div>
+          </div>
+        </div>
+        <!-- W -->
+        <div class="p5-node node" data-show="false" onclick="toggleTooltip(this)">
+          <div class="dot mono" style="background:var(--trait-a);">W</div>
+          <div class="node-info">
+            <div class="trait-name">Agreeableness</div>
+            <div class="level-label">Warm</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">C</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">N</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-a);"><div class="gauge-dot-mark" style="border-color:var(--trait-a);background:var(--trait-a);"></div></div><div class="gauge-lbl" style="color:var(--trait-a);">W</div></div>
+            </div>
+            <div class="p5-tooltip">
+              <div class="p5-tip-header">
+                <div class="p5-tip-letter mono" style="color:var(--trait-a);">W</div>
+                <div class="p5-tip-label">Warm</div>
+              </div>
+              <div class="p5-tip-tagline">How you relate to others and handle conflict</div>
+              <div class="p5-tip-desc">Empathy and care shape your relationships. You go out of your way to make others feel supported, give people the benefit of the doubt, and build deep, lasting trust.</div>
+            </div>
+          </div>
+        </div>
+        <!-- R -->
+        <div class="p5-node node" data-show="false" onclick="toggleTooltip(this)">
+          <div class="dot mono" style="background:var(--trait-n);">R</div>
+          <div class="node-info">
+            <div class="trait-name">Neuroticism</div>
+            <div class="level-label">Resilient</div>
+            <div class="gauge">
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-n);"><div class="gauge-dot-mark" style="border-color:var(--trait-n);background:var(--trait-n);"></div></div><div class="gauge-lbl" style="color:var(--trait-n);">R</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">T</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">S</div></div>
+            </div>
+            <div class="p5-tooltip">
+              <div class="p5-tip-header">
+                <div class="p5-tip-letter mono" style="color:var(--trait-n);">R</div>
+                <div class="p5-tip-label">Resilient</div>
+              </div>
+              <div class="p5-tip-tagline">How you experience and process emotions</div>
+              <div class="p5-tip-desc">A steady emotional baseline carries you through pressure and setbacks. You stay calm, recover quickly, and make clear-headed decisions even when the stakes are high.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="p5-hint">Tap any trait to see its details</div>
+    </div>
+  </div>
+
+  <!-- ====================================
+       PROP 6 — STRAND + HORIZONTAL SCROLL CARDS
+  ===================================== -->
+  <div class="mockup-section">
+    <div class="mockup-label">Proposition 6 — Strand + Swipeable Detail Cards</div>
+    <div class="mockup-rationale">Compact strand on top for the overview. Below, a horizontal swipeable carousel of mini trait cards — each with the dot, label, tagline, description, and its own 3-segment gauge. Two layers, each self-contained.</div>
+    <div class="card">
+      <div class="strand-header">
+        <h2>Your Personality DNA</h2>
+        <p>Each trait sits on a spectrum of three levels. The highlighted level is yours.</p>
+      </div>
+      <div class="strand p6-strand-compact">
+        <div class="strand-line"></div>
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-o);">O</div>
+          <div class="node-info">
+            <div class="trait-name">Openness</div>
+            <div class="level-label">Open-minded</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">P</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">G</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-o);"><div class="gauge-dot-mark" style="border-color:var(--trait-o);background:var(--trait-o);"></div></div><div class="gauge-lbl" style="color:var(--trait-o);">O</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-c);">D</div>
+          <div class="node-info"><div class="trait-name">Conscientiousness</div><div class="level-label">Disciplined</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">F</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">B</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-c);"><div class="gauge-dot-mark" style="border-color:var(--trait-c);background:var(--trait-c);"></div></div><div class="gauge-lbl" style="color:var(--trait-c);">D</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-e);">E</div>
+          <div class="node-info"><div class="trait-name">Extraversion</div><div class="level-label">Extravert</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">I</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">A</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-e);"><div class="gauge-dot-mark" style="border-color:var(--trait-e);background:var(--trait-e);"></div></div><div class="gauge-lbl" style="color:var(--trait-e);">E</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-a);">W</div>
+          <div class="node-info"><div class="trait-name">Agreeableness</div><div class="level-label">Warm</div>
+            <div class="gauge">
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">C</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">N</div></div>
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-a);"><div class="gauge-dot-mark" style="border-color:var(--trait-a);background:var(--trait-a);"></div></div><div class="gauge-lbl" style="color:var(--trait-a);">W</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="node">
+          <div class="dot mono" style="background:var(--trait-n);">R</div>
+          <div class="node-info"><div class="trait-name">Neuroticism</div><div class="level-label">Resilient</div>
+            <div class="gauge">
+              <div class="gauge-seg" data-active="true"><div class="gauge-track" style="background:var(--trait-n);"><div class="gauge-dot-mark" style="border-color:var(--trait-n);background:var(--trait-n);"></div></div><div class="gauge-lbl" style="color:var(--trait-n);">R</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">T</div></div>
+              <div class="gauge-seg"><div class="gauge-track"><div class="gauge-dot-mark"></div></div><div class="gauge-lbl">S</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="p6-scroll-hint">Swipe for trait details →</div>
+      <div class="p6-scroll-zone">
+        <!-- O card -->
+        <div class="p6-detail-card" style="background:var(--trait-o-10);">
+          <div class="p6-card-header">
+            <div class="p6-card-dot mono" style="background:var(--trait-o);">O</div>
+            <div class="p6-card-titles">
+              <div class="p6-card-label">Open-minded</div>
+              <div class="p6-card-trait">Openness</div>
+            </div>
+          </div>
+          <div class="p6-card-gauge">
+            <div class="p6-card-gauge-seg"></div>
+            <div class="p6-card-gauge-seg"></div>
+            <div class="p6-card-gauge-seg" style="background:var(--trait-o);"></div>
+          </div>
+          <div class="p6-card-tagline">How you engage with new ideas and experiences</div>
+          <div class="p6-card-desc">Novel experiences and unconventional thinking draw you in naturally. You question the status quo, spot possibilities where others see limits, and thrive on curiosity.</div>
+        </div>
+        <!-- D card -->
+        <div class="p6-detail-card" style="background:var(--trait-c-10);">
+          <div class="p6-card-header">
+            <div class="p6-card-dot mono" style="background:var(--trait-c);">D</div>
+            <div class="p6-card-titles">
+              <div class="p6-card-label">Disciplined</div>
+              <div class="p6-card-trait">Conscientiousness</div>
+            </div>
+          </div>
+          <div class="p6-card-gauge">
+            <div class="p6-card-gauge-seg"></div>
+            <div class="p6-card-gauge-seg"></div>
+            <div class="p6-card-gauge-seg" style="background:var(--trait-c);"></div>
+          </div>
+          <div class="p6-card-tagline">How you organize your life and pursue goals</div>
+          <div class="p6-card-desc">Thoroughness defines your approach. You set clear goals, plan ahead, and hold yourself to high standards — others rely on you because they know the job will get done.</div>
+        </div>
+        <!-- E card -->
+        <div class="p6-detail-card" style="background:var(--trait-e-10);">
+          <div class="p6-card-header">
+            <div class="p6-card-dot mono" style="background:var(--trait-e);">E</div>
+            <div class="p6-card-titles">
+              <div class="p6-card-label">Extravert</div>
+              <div class="p6-card-trait">Extraversion</div>
+            </div>
+          </div>
+          <div class="p6-card-gauge">
+            <div class="p6-card-gauge-seg"></div>
+            <div class="p6-card-gauge-seg"></div>
+            <div class="p6-card-gauge-seg" style="background:var(--trait-e);"></div>
+          </div>
+          <div class="p6-card-tagline">How you direct your energy and engage socially</div>
+          <div class="p6-card-desc">Being around people is what charges your batteries. You bring others together naturally, keep conversations alive, and put people at ease with your warmth.</div>
+        </div>
+        <!-- W card -->
+        <div class="p6-detail-card" style="background:var(--trait-a-10);">
+          <div class="p6-card-header">
+            <div class="p6-card-dot mono" style="background:var(--trait-a);">W</div>
+            <div class="p6-card-titles">
+              <div class="p6-card-label">Warm</div>
+              <div class="p6-card-trait">Agreeableness</div>
+            </div>
+          </div>
+          <div class="p6-card-gauge">
+            <div class="p6-card-gauge-seg"></div>
+            <div class="p6-card-gauge-seg"></div>
+            <div class="p6-card-gauge-seg" style="background:var(--trait-a);"></div>
+          </div>
+          <div class="p6-card-tagline">How you relate to others and handle conflict</div>
+          <div class="p6-card-desc">Empathy and care shape your relationships. You go out of your way to make others feel supported, give people the benefit of the doubt, and build deep, lasting trust.</div>
+        </div>
+        <!-- R card -->
+        <div class="p6-detail-card" style="background:var(--trait-n-10);">
+          <div class="p6-card-header">
+            <div class="p6-card-dot mono" style="background:var(--trait-n);">R</div>
+            <div class="p6-card-titles">
+              <div class="p6-card-label">Resilient</div>
+              <div class="p6-card-trait">Neuroticism</div>
+            </div>
+          </div>
+          <div class="p6-card-gauge">
+            <div class="p6-card-gauge-seg" style="background:var(--trait-n);"></div>
+            <div class="p6-card-gauge-seg"></div>
+            <div class="p6-card-gauge-seg"></div>
+          </div>
+          <div class="p6-card-tagline">How you experience and process emotions</div>
+          <div class="p6-card-desc">A steady emotional baseline carries you through pressure and setbacks. You stay calm, recover quickly, and make clear-headed decisions even when the stakes are high.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleAccordion(node) {
+      const isOpen = node.dataset.open === 'true';
+      // Close all siblings
+      node.parentElement.querySelectorAll('.p2-node').forEach(n => n.dataset.open = 'false');
+      // Toggle clicked
+      if (!isOpen) node.dataset.open = 'true';
+    }
+    function toggleTooltip(node) {
+      const isShow = node.dataset.show === 'true';
+      // Close all siblings
+      node.closest('.strand').querySelectorAll('.p5-node').forEach(n => n.dataset.show = 'false');
+      // Toggle clicked
+      if (!isShow) node.dataset.show = 'true';
+    }
+  </script>
+
+</body>
+</html>

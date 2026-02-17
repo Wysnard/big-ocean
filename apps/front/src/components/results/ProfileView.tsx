@@ -1,23 +1,39 @@
-import type { FacetName, FacetResult, OceanCode5, TraitName, TraitResult } from "@workspace/domain";
+import type { FacetResult, OceanCode5, TraitName, TraitResult } from "@workspace/domain";
 import type { ReactNode } from "react";
-import { WaveDivider } from "../home/WaveDivider";
 import { ArchetypeHeroSection } from "./ArchetypeHeroSection";
-import { TraitScoresSection } from "./TraitScoresSection";
+import { ConfidenceRingCard } from "./ConfidenceRingCard";
+import { OceanCodeStrand } from "./OceanCodeStrand";
+import { PersonalityRadarChart } from "./PersonalityRadarChart";
+import { PersonalPortrait } from "./PersonalPortrait";
+import { TraitCard } from "./TraitCard";
+
+/** Row 1 traits (3-up on desktop) — detail zone inserts after this row */
+const ROW_1_TRAITS: TraitName[] = ["openness", "conscientiousness", "extraversion"];
+/** Row 2 traits (2-up on desktop) — detail zone inserts after this row */
+const ROW_2_TRAITS: TraitName[] = ["agreeableness", "neuroticism"];
 
 interface ProfileViewProps {
 	archetypeName: string;
 	oceanCode5: OceanCode5;
-	description: string;
+	description?: string | null;
 	dominantTrait: TraitName;
 	traits: readonly TraitResult[];
 	facets: readonly FacetResult[];
-	expandedTraits?: Set<string>;
 	onToggleTrait?: (trait: string) => void;
-	onViewEvidence?: (facetName: FacetName) => void;
 	overallConfidence?: number;
 	isCurated?: boolean;
 	/** When set, shows the profile owner's name instead of "Your" */
 	displayName?: string | null;
+	/** Personal portrait markdown (Nerin's dive-master voice, ## sections) */
+	personalDescription?: string | null;
+	/** Current selected trait for DetailZone */
+	selectedTrait?: TraitName | null;
+	/** Total message count for confidence ring */
+	messageCount?: number;
+	/** Detail zone content (rendered below the correct trait row when a trait is selected) */
+	detailZone?: ReactNode;
+	/** Quick actions card (rendered after all trait cards + detail zone, inside the grid) */
+	quickActions?: ReactNode;
 	children?: ReactNode;
 }
 
@@ -28,45 +44,81 @@ export function ProfileView({
 	dominantTrait,
 	traits,
 	facets,
-	expandedTraits,
 	onToggleTrait,
-	onViewEvidence,
 	overallConfidence,
 	isCurated,
 	displayName,
+	personalDescription,
+	selectedTrait,
+	messageCount,
+	detailZone,
+	quickActions,
 	children,
 }: ProfileViewProps) {
+	const renderTraitCards = (traitNames: TraitName[]) =>
+		traitNames.map((traitName) => {
+			const traitData = traits.find((t) => t.name === traitName);
+			if (!traitData) return null;
+			const traitFacets = facets.filter((f) => f.traitName === traitName);
+			return (
+				<TraitCard
+					key={traitName}
+					trait={traitData}
+					facets={traitFacets}
+					isSelected={selectedTrait === traitName}
+					onToggle={onToggleTrait ?? (() => {})}
+				/>
+			);
+		});
+
 	return (
-		<div className="min-h-screen">
-			{/* Depth Zone: Surface — Hero */}
-			<div className="bg-[var(--depth-surface)]">
-				<ArchetypeHeroSection
-					archetypeName={archetypeName}
-					oceanCode5={oceanCode5}
-					archetypeDescription={description}
-					overallConfidence={overallConfidence}
-					isCurated={isCurated}
-					dominantTrait={dominantTrait}
-					displayName={displayName}
-				/>
+		<div data-slot="profile-view" className="min-h-screen bg-depth-surface">
+			{/* Hero — full width above grid */}
+			<ArchetypeHeroSection
+				archetypeName={archetypeName}
+				oceanCode5={oceanCode5}
+				overallConfidence={overallConfidence}
+				isCurated={isCurated}
+				dominantTrait={dominantTrait}
+				displayName={displayName}
+			/>
+
+			{/* Single CSS Grid container */}
+			<div className="mx-auto max-w-[1120px] px-5 py-10">
+				<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
+					{/* Personal Portrait — full width, conditional (AC #3) */}
+					{personalDescription && (
+						<PersonalPortrait personalDescription={personalDescription} displayName={displayName} />
+					)}
+
+					{/* Ocean Code Strand — full width */}
+					<OceanCodeStrand oceanCode5={oceanCode5} displayName={displayName} description={description} />
+
+					{/* Radar + Confidence side-by-side (AC #4, #5) */}
+					<div className="col-span-full grid grid-cols-1 sm:grid-cols-2 gap-5">
+						<PersonalityRadarChart traits={traits} />
+						{overallConfidence != null && (
+							<ConfidenceRingCard confidence={overallConfidence} messageCount={messageCount ?? 0} />
+						)}
+					</div>
+
+					{/* Trait Cards Row 1: O, C, E (AC #6) */}
+					{renderTraitCards(ROW_1_TRAITS)}
+
+					{/* Detail Zone for Row 1 — inserted after 3rd card (AC #7) */}
+					{selectedTrait && ROW_1_TRAITS.includes(selectedTrait) && detailZone}
+
+					{/* Trait Cards Row 2: A, N (AC #6) */}
+					{renderTraitCards(ROW_2_TRAITS)}
+
+					{/* Detail Zone for Row 2 — inserted after 5th card (AC #7) */}
+					{selectedTrait && ROW_2_TRAITS.includes(selectedTrait) && detailZone}
+
+					{/* Quick Actions (AC #8) */}
+					{quickActions && <div className="col-span-full">{quickActions}</div>}
+				</div>
 			</div>
 
-			{/* Wave transition: surface → shallows */}
-			<WaveDivider fromColor="var(--depth-surface)" className="text-[var(--depth-shallows)]" />
-
-			{/* Depth Zone: Shallows — Trait scores */}
-			<div className="bg-[var(--depth-shallows)]">
-				<TraitScoresSection
-					traits={traits}
-					facets={facets}
-					expandedTraits={expandedTraits}
-					onToggleTrait={onToggleTrait}
-					onViewEvidence={onViewEvidence}
-					displayName={displayName}
-				/>
-			</div>
-
-			{/* Page-specific sections */}
 			{children}
 		</div>
 	);

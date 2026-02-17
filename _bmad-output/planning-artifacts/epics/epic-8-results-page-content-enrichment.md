@@ -23,11 +23,13 @@ Reference mockup: `_bmad-output/planning-artifacts/result-page-ux-design/profile
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  1. HERO SECTION (existing, modified)                        │
-│     - Keep existing ArchetypeHeroSection                     │
+│  1. HERO SECTION (existing, modified — ARCHETYPE-FIRST)       │
+│     - Keep archetype name as PRIMARY heading (h1, display)   │
+│     - OCEAN code as STRONG SECONDARY below name (font-mono,  │
+│       text-2xl, wide tracking, monochrome text-foreground/50)│
+│     - No per-letter trait colors — minimal, typographic      │
 │     - Remove archetype description from hero                 │
-│     - Archetype name, OCEAN code, geometric signature,       │
-│       confidence badge remain                                │
+│     - Geometric signature, confidence badge remain           │
 ├─────────────────────────────────────────────────────────────┤
 │  2. GRID CONTAINER (new layout — max-width 1120px)           │
 │                                                              │
@@ -40,10 +42,11 @@ Reference mockup: `_bmad-output/planning-artifacts/result-page-ux-design/profile
 │  │  2b. PERSONALIZED PORTRAIT (full-width card, conditional)│ │
 │  │      - Rainbow accent bar (5 trait colors)             │  │
 │  │      - Icon + "Your Personality Portrait" header       │  │
-│  │      - 2x2 grid of insight sections:                   │  │
-│  │        [Strengths]    [Tensions]                        │  │
-│  │        [How You Connect] [Resilience]                   │  │
-│  │      - Each section: colored dot + title + paragraph   │  │
+│  │      - Rendered markdown, split on ## for section styling│ │
+│  │      - 6 sections in Nerin's dive-master voice:        │  │
+│  │        The Dive, What Sets You Apart, Your Depths,     │  │
+│  │        Undercurrents, Murky Waters, The Ceiling         │  │
+│  │      - Evidence-first pattern throughout               │  │
 │  │      - Only shown when personalDescription exists       │  │
 │  └───────────────────────────────────────────────────────┘   │
 │                                                              │
@@ -84,7 +87,7 @@ Reference mockup: `_bmad-output/planning-artifacts/result-page-ux-design/profile
 │                                                              │
 │  ┌─ Full-width ──────────────────────────────────────────┐   │
 │  │  2h. SHARE CARD (full-width, gradient bg)             │   │
-│  │  - "Share your archetype" + description                │  │
+│  │  - "Share your OCEAN code" + description               │  │
 │  │  - Shareable link + Copy button                        │  │
 │  │  - Visibility toggle (Public/Private)                  │  │
 │  └───────────────────────────────────────────────────────┘   │
@@ -284,8 +287,9 @@ So that **I feel genuinely understood in a way no static description can achieve
 **When** the orchestrator pipeline completes the final analysis batch
 **Then** a personalized portrait is generated via Claude API call
 **And** the portrait is stored in `assessment_sessions.personal_description` (TEXT column)
-**And** the portrait references specific themes from my conversation
-**And** the portrait is 6-10 sentences long
+**And** the portrait is written in Nerin's dive-master voice (experienced, calm, empathic, mentoring)
+**And** the portrait is a single flowing markdown document with 6 sections using `##` headers
+**And** the portrait uses evidence-first patterns (conversation reference → revelation → insight)
 **And** the generation happens in the background (no user wait)
 
 **Given** a personalized portrait exists for my session
@@ -293,14 +297,15 @@ So that **I feel genuinely understood in a way no static description can achieve
 **Then** I see a "Your Personality Portrait" full-width card below the About Archetype section
 **And** the card has a rainbow accent bar (5 trait colors gradient) at the top
 **And** the card header shows an icon + "Your Personality Portrait" + subtitle "Patterns discovered from your conversation with Nerin"
-**And** the content is displayed in a 2x2 grid of insight sections:
-  - "Your Strengths" (Openness color dot) — what makes you distinctive
-  - "Your Tensions" (Extraversion color dot) — interesting contradictions in your profile
-  - "How You Connect" (Agreeableness color dot) — your social and relational patterns
-  - "Your Resilience" (Neuroticism color dot) — how you handle pressure and emotions
-**And** each section has a colored dot, title, and paragraph (2-4 sentences)
-**And** the grid is responsive (2x2 on desktop, 1-column on mobile)
-**And** the content references my actual responses and trait scores
+**And** the content renders markdown, optionally split on `##` headers for per-section visual treatment
+**And** the portrait contains up to 6 sections (trust LLM output, no guaranteed count):
+  1. "The Dive" — dynamic greeting + global personality summary (300-500 chars)
+  2. "What Sets You Apart" — top 3 defining traits, evidence-anchored
+  3. "Your Depths" — top 3 strengths with mentoring voice
+  4. "Undercurrents" — top 3 weaknesses (compassionate but unflinching)
+  5. "Murky Waters" — 2-5 hints based on low-confidence data (never padded)
+  6. "The Ceiling" — limiting factor, ends with question or possibility
+**And** the content references my actual conversation moments and trait scores
 
 **Given** my message count is below the free tier threshold
 **When** I view the results page
@@ -319,22 +324,23 @@ So that **I feel genuinely understood in a way no static description can achieve
   ```
 - Trigger condition matches the result reveal condition: `messageCount >= config.freeTierMessageThreshold`
 - Uses the same `freeTierMessageThreshold` config from AppConfig (default: 15, env: FREE_TIER_MESSAGE_THRESHOLD)
-- Claude prompt includes: facet scores, evidence summaries, conversation themes
-- Portrait generation prompt instructs Claude to produce JSON-structured output:
-  ```json
-  {
-    "strengths": "paragraph about distinctive trait combinations...",
-    "tensions": "paragraph about interesting contradictions...",
-    "connections": "paragraph about social/relational patterns...",
-    "resilience": "paragraph about emotional handling and pressure..."
-  }
-  ```
-- DB column `personal_description` stores the JSON string (TEXT column, unchanged)
-- Results endpoint returns `personalDescription` as JSON string when non-null
-- Frontend parses JSON and renders `PersonalPortrait` component with 4 sections
-- Fallback: if JSON parsing fails (legacy single-string format), render as single paragraph
-- Portrait tone: warm, insightful, second-person, non-clinical
-- Each section references specific trait scores and conversation themes
+- **Portrait spec:** `_bmad-output/implementation-artifacts/personalized-portrait-spec.md` is the source of truth for the prompt
+- Portrait generation prompt includes:
+  - **System prompt:** Nerin's dive-master voice spec (identity, pronoun flow, temporal modes, evidence-first pattern, metaphor density gradient, section structure, formatting rules, guardrails)
+  - **Validated example:** Few-shot reference from the spec for consistent quality
+  - **User prompt:** 30 facet scores with confidence levels, top evidence records with confidence, archetype name/description, OCEAN code
+- Output format: **single markdown string** with `##` headers and emojis — no JSON structure
+- `maxTokens`: 2048 (6 sections need more room than the previous 1024)
+- DB column `personal_description` stores the markdown string (TEXT column, unchanged)
+- Results endpoint returns `personalDescription` as string when non-null
+- Frontend `PersonalPortrait` component renders markdown, splits on `##` for per-section styling
+- No guaranteed 6 sections — frontend trusts LLM output
+- Portrait voice: Nerin dive-master — NOT generic warm prose, NOT clinical, NOT horoscope
+- Evidence-first pattern: conversation reference → what it revealed → insight (evidence BEFORE analysis)
+- Metaphor density gradient: heavy in opening (~80%), fading through middle (~20-30%), plain in closing (~10%)
+- Strengths (Part 3) must fully land before weaknesses (Part 4) — emotional arc matters
+- Part 6 always ends with a question or possibility, never bleak
+- Privacy: portrait is private-only, not shown on public profiles
 - shadcn Card component for container
 - One API call per session, not per page view
 
@@ -343,16 +349,18 @@ So that **I feel genuinely understood in a way no static description can achieve
 - [ ] Orchestrator triggers portrait generation when messageCount >= freeTierMessageThreshold
 - [ ] Portrait generated only once (checks for NULL before generating)
 - [ ] Portrait stored in DB (not regenerated on each visit)
-- [ ] Portrait is 6-10 sentences referencing conversation themes
+- [ ] Portrait prompt includes Nerin's dive-master voice spec and validated example from `personalized-portrait-spec.md`
+- [ ] Portrait output is single markdown string with `##` headers (not JSON)
+- [ ] Portrait uses evidence-first pattern (conversation reference → revelation → insight)
 - [ ] Results API returns `personalDescription` when non-null
-- [ ] Frontend `PersonalPortrait` component renders 4-section grid with rainbow accent bar
+- [ ] Frontend `PersonalPortrait` component renders markdown with per-section styling (split on `##`)
 - [ ] Component hidden when `personalDescription` is null
-- [ ] Each section has trait-colored dot, title, and 2-4 sentence paragraph
-- [ ] JSON parsing with fallback for single-string format
-- [ ] Responsive: 2x2 grid on desktop, 1-column on mobile
-- [ ] Portrait generation prompt produces structured JSON with 4 keys
-- [ ] Cost: one additional Claude API call per completed assessment
-- [ ] Tests: use-case test with mock orchestrator verifying trigger condition uses message count
+- [ ] Rainbow accent bar preserved on portrait card
+- [ ] No guaranteed section count — frontend trusts LLM output
+- [ ] Responsive layout for portrait sections
+- [ ] Cost: one additional Claude API call per completed assessment (maxTokens: 2048)
+- [ ] Mock updated to return markdown format with `##` headers
+- [ ] Tests: use-case test verifying trigger condition + updated PersonalPortrait component tests for markdown rendering
 
 ---
 
@@ -417,11 +425,14 @@ So that **I can explore my results at my own pace without modal interruptions, w
 
 **Acceptance Criteria:**
 
-**Hero Section (modified):**
+**Hero Section (modified — Archetype-First with Strong Code Secondary):**
 **Given** I view the results page
 **When** the hero renders
-**Then** the existing ArchetypeHeroSection displays WITHOUT the archetype description
-**And** all other hero elements remain (name, OCEAN code, geometric signature, confidence)
+**Then** the ArchetypeHeroSection displays the archetype name as the PRIMARY heading (display scale, emotional anchor)
+**And** the OCEAN code is displayed as a STRONG SECONDARY below the name (font-mono, ~text-2xl, wide letter-spacing, monochrome text-foreground/50 — no per-letter trait colors, no hover interaction in hero)
+**And** the OCEAN code and confidence badge are visually separated (code on its own line, confidence as small pill below)
+**And** the archetype description is NOT shown in the hero (moved to About card below)
+**And** geometric signature remains
 
 **About Your Archetype (new):**
 **Given** I view the results page
@@ -488,7 +499,7 @@ So that **I can explore my results at my own pace without modal interruptions, w
 **Share Card (redesigned):**
 **Given** I view the results page
 **When** the share section renders
-**Then** I see a full-width "Share your archetype" card with gradient background
+**Then** I see a full-width "Share your OCEAN code" card with gradient background
 **And** it shows: title, description, shareable link with Copy button
 **And** a visibility toggle (Public/Private) using shadcn Switch component
 
@@ -497,7 +508,7 @@ So that **I can explore my results at my own pace without modal interruptions, w
 - Install shadcn components: `chart` (brings Recharts), `switch`
 - Restructure `ProfileView.tsx` from depth-zone layout to CSS Grid container
   (max-width 1120px, `grid-template-columns: repeat(auto-fill, minmax(320px, 1fr))`, gap 20px)
-- Modify `ArchetypeHeroSection.tsx` — remove description rendering
+- Modify `ArchetypeHeroSection.tsx` — promote OCEAN code to strong secondary (own line below archetype name, font-mono text-2xl tracking-[0.3em] text-foreground/50, monochrome), remove description rendering
 - Create new components:
   - `AboutArchetypeCard` — full-width card, renders archetype description
   - `PersonalityRadarChart` — shadcn ChartContainer + Recharts RadarChart with custom PolarAngleAxis tick
@@ -505,7 +516,7 @@ So that **I can explore my results at my own pace without modal interruptions, w
   - `TraitCard` — clickable card with compact facet grid, manages selected state
   - `DetailZone` — full-width collapsible panel with facet evidence grid
   - `QuickActionsCard` — action list card
-- Redesign `ShareProfileSection` to match mockup full-width card pattern
+- Redesign `ShareProfileSection` to match mockup full-width card pattern ("Share your OCEAN code")
 - Remove or deprecate: `TraitScoresSection`, `TraitBar`, `FacetBreakdown` (replaced by TraitCard + DetailZone)
 - `EvidencePanel` (Dialog modal) replaced by inline DetailZone — can be removed
 - Detail zone row mapping: O/C/E share zone 1, A/N share zone 2 (grid position logic)
@@ -579,5 +590,8 @@ So that **I can explore my results at my own pace without modal interruptions, w
 3. **Pre-generate portraits in orchestrator pipeline** - No loading spinners on results page. Portrait is just *there*.
 4. **Static content in domain package** - Trait/facet descriptions are pure domain knowledge, belong alongside Big Five constants.
 5. **Facet descriptions are 2-3 sentences** (shorter than traits) - 30 facets x 3 levels = 90 entries; keep them punchy.
+6. **Portrait output is markdown, not JSON** - Single flowing document in Nerin's dive-master voice. LLM manages structure, headers, emojis. Frontend splits on `##` for styling. See `personalized-portrait-spec.md` for full spec.
+7. **Evidence-first pattern** - Portrait anchors traits/strengths/weaknesses to actual conversation moments. Evidence BEFORE analysis — feels like discovery, not labeling.
+8. **No guaranteed section count** - Frontend trusts LLM output. Spec defines 6 sections but doesn't enforce them programmatically.
 
 ---

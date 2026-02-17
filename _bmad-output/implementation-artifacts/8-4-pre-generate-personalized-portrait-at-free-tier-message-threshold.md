@@ -1,6 +1,6 @@
 # Story 8.4: Pre-Generate Personalized Portrait at Free Tier Message Threshold
 
-Status: done
+Status: review
 
 ## Story
 
@@ -341,10 +341,38 @@ export const PortraitGeneratorClaudeRepositoryLive = Layer.succeed(
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4 (claude-opus-4-6)
+
+### Rework Context
+
+Story 8.4 was originally implemented (done) and merged via PR #55. A brainstorming session on 2026-02-16 (Sprint Change Proposal #3) redesigned the portrait to use Nerin's dive-master voice with structured markdown output instead of the generic warm-prose JSON format. This record documents the rework implementation.
 
 ### Debug Log References
 
+- All 153 frontend tests pass (including 8 PersonalPortrait tests)
+- All 170 API tests pass (1 pre-existing skip)
+- Lint passes (5 pre-existing warnings, none from changes)
+- TypeScript type checking passes
+
 ### Completion Notes List
 
+1. **Portrait prompt rewritten** — Full Nerin dive-master voice specification with 6-section structure, evidence-first pattern, metaphor density gradient, temporal modes, and validated example as few-shot reference
+2. **formatTraitSummary() enriched** — Now includes per-facet confidence levels alongside trait-level scores
+3. **formatEvidence() enriched** — Now includes numbered list with confidence percentages per evidence record
+4. **maxTokens increased** — 1024 → 2048 to accommodate 6-section markdown output
+5. **PersonalPortrait.tsx refactored** — Removed JSON parsing (PortraitSections interface, SECTION_CONFIG, tryParsePortrait), replaced with `splitMarkdownSections()` that splits on `##` headers. Renders per-section with dividers. Fallback to raw text if no `##` headers found.
+6. **dominantTrait prop removed** — No longer needed since JSON grid with trait-colored dots is gone. ProfileView updated to not pass it.
+7. **Mock updated** — Returns markdown with 6 `##` sections matching the validated example structure
+8. **Domain interface JSDoc updated** — `@returns` updated from "6-10 sentences" to "markdown string (6 sections with ## headers)"
+9. **Tests rewritten** — 8 tests covering: 6 section headers, body content, displayName, default title, plain text fallback, no headers for plain text, data-slot, section dividers
+
 ### File List
+
+| File | Action | Description |
+|------|--------|-------------|
+| `packages/infrastructure/src/repositories/portrait-generator.claude.repository.ts` | MODIFIED | Rewrote PORTRAIT_SYSTEM_PROMPT to Nerin dive-master voice, enriched formatTraitSummary() with per-facet confidence, enriched formatEvidence() with confidence %, increased maxTokens to 2048, updated user prompt format |
+| `packages/infrastructure/src/repositories/__mocks__/portrait-generator.claude.repository.ts` | MODIFIED | Replaced plain text mock with 6-section markdown mock |
+| `apps/front/src/components/results/PersonalPortrait.tsx` | MODIFIED | Removed JSON parsing, added splitMarkdownSections(), renders markdown with per-section styling, removed dominantTrait prop |
+| `apps/front/src/components/results/PersonalPortrait.test.tsx` | MODIFIED | Rewrote all tests for markdown format (8 tests) |
+| `apps/front/src/components/results/ProfileView.tsx` | MODIFIED | Removed dominantTrait prop from PersonalPortrait call, updated comment |
+| `packages/domain/src/repositories/portrait-generator.repository.ts` | MODIFIED | Updated JSDoc @returns to describe markdown output |

@@ -18,9 +18,10 @@ test("golden path: landing → chat → signup → results → share → public 
 	});
 
 	await test.step("navigate to /chat and create session", async () => {
-		// Use full navigation so beforeLoad runs server-side (SSR) for session creation
-		await page.goto("/chat");
-		await page.waitForURL(/\/chat\?sessionId=/);
+		// beforeLoad throws a redirect after creating the session (SSR),
+		// which aborts the initial navigation — ignore the abort and wait for the final URL.
+		await page.goto("/chat").catch(() => {});
+		await page.waitForURL(/\/chat\?sessionId=/, { timeout: 15_000 });
 	});
 
 	const sessionId = new URL(page.url()).searchParams.get("sessionId") ?? "";
@@ -96,15 +97,16 @@ test("golden path: landing → chat → signup → results → share → public 
 		});
 	});
 
-	await test.step("generate share link", async () => {
-		const generateBtn = page.getByTestId("share-generate-btn");
-		await generateBtn.scrollIntoViewIfNeeded();
-		await generateBtn.click();
+	await test.step("wait for auto-generated share link", async () => {
+		// Share link is auto-generated when results load — wait for the URL to appear
+		const shareUrl = page.getByTestId("share-url");
+		await shareUrl.scrollIntoViewIfNeeded();
+		await expect(shareUrl).toBeVisible({ timeout: 10_000 });
 	});
 
 	await test.step("toggle privacy to public", async () => {
 		await page.getByTestId("share-privacy-toggle").click();
-		await expect(page.getByTestId("share-visibility-status")).toContainText("public", {
+		await expect(page.getByTestId("share-visibility-status")).toContainText("Public", {
 			timeout: 5_000,
 		});
 	});

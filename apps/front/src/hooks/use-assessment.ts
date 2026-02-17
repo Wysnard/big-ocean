@@ -5,7 +5,7 @@
  * Uses direct HTTP calls to backend assessment endpoints.
  */
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import type {
 	GetResultsResponse,
 	ListSessionsResponse,
@@ -125,31 +125,39 @@ export function useSendMessage() {
 }
 
 /**
+ * Fetch assessment results (non-hook)
+ *
+ * Standalone function for use in route loaders and other non-React contexts.
+ */
+export function fetchResults(sessionId: string): Promise<GetResultsResponse> {
+	return fetchApi(`/api/assessment/${sessionId}/results`);
+}
+
+/**
+ * Query options for assessment results
+ *
+ * Shared between useGetResults hook and route loader to ensure consistent
+ * query key, function, and staleTime for SSR hydration.
+ */
+export function getResultsQueryOptions(sessionId: string) {
+	return queryOptions({
+		queryKey: ["assessment", "results", sessionId],
+		queryFn: () => fetchResults(sessionId),
+		staleTime: 5 * 60 * 1000,
+	});
+}
+
+/**
  * Get assessment results
  *
  * Retrieves final personality assessment results including OCEAN code and archetype.
  *
  * @param sessionId - The session ID to get results for
  * @param enabled - Whether to enable the query (default: true)
- *
- * @example
- * ```tsx
- * const { data, isLoading } = useGetResults("session-123");
- *
- * {data && (
- *   <div>
- *     <h2>{data.archetypeName}</h2>
- *     <p>OCEAN Code: {data.oceanCode4Letter}</p>
- *   </div>
- * )}
- * ```
  */
 export function useGetResults(sessionId: string, enabled = true) {
 	return useQuery({
-		queryKey: ["assessment", "results", sessionId],
-		queryFn: async (): Promise<GetResultsResponse> => {
-			return fetchApi(`/api/assessment/${sessionId}/results`);
-		},
+		...getResultsQueryOptions(sessionId),
 		enabled: enabled && !!sessionId,
 	});
 }

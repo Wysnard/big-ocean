@@ -64,9 +64,9 @@
 
 	/* ========== DEPTH ZONES (warm cream progression) ========== */
 	--depth-surface: var(--background);
-	--depth-shallows: #FFF0E8;
-	--depth-mid: #FFE8D8;
-	--depth-deep: #FFD6C4;
+	--depth-shallows: #FFECDB;
+	--depth-mid: #FFE0CA;
+	--depth-deep: #FFD4B9;
 
 	/* ========== SPACING SCALE ========== */
 	--space-1: 4px;
@@ -250,9 +250,9 @@
 
 	/* ========== DEPTH ZONES (abyss navy progression) ========== */
 	--depth-surface: #0A0E27;
-	--depth-shallows: #0E1230;
-	--depth-mid: #141838;
-	--depth-deep: #1C2148;
+	--depth-shallows: #101432;
+	--depth-mid: #171C40;
+	--depth-deep: #1E244E;
 
 	/* ========== BIG FIVE TRAIT TOKENS (dark mode — brighter for dark backgrounds) ========== */
 	--trait-openness: oklch(0.67 0.20 293);           /* spec: #C084FC Brighter purple */

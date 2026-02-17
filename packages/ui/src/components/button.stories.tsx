@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ChevronRight, Loader2, Mail } from "lucide-react";
+import { ChevronRight, Download, Loader2, Mail, MessageCircle, User } from "lucide-react";
 import { fn } from "storybook/test";
 
 import { Button } from "./button";
@@ -118,4 +118,78 @@ export const Disabled: Story = {
 		disabled: true,
 		children: "Disabled",
 	},
+};
+
+// --- Action Variant ---
+
+export const Action: Story = {
+	args: {
+		variant: "action",
+		size: "action",
+		children: (
+			<>
+				<div className="flex-shrink-0 rounded-lg p-2 bg-primary/10 text-primary">
+					<MessageCircle className="size-4" />
+				</div>
+				<div className="flex-1 min-w-0 text-left">
+					<p className="text-sm font-medium text-foreground">Resume Conversation</p>
+					<p className="text-xs text-muted-foreground font-normal">
+						Continue exploring your personality
+					</p>
+				</div>
+				<ChevronRight className="size-4 text-muted-foreground flex-shrink-0" />
+			</>
+		),
+	},
+	decorators: [
+		(Story) => (
+			<div className="w-[320px]">
+				<Story />
+			</div>
+		),
+	],
+};
+
+export const ActionGroup: Story = {
+	args: { variant: "action", size: "action" },
+	decorators: [
+		() => (
+			<div className="w-[320px] space-y-2">
+				<Button variant="action" size="action" onClick={fn()}>
+					<div className="flex-shrink-0 rounded-lg p-2 bg-primary/10 text-primary">
+						<MessageCircle className="size-4" />
+					</div>
+					<div className="flex-1 min-w-0 text-left">
+						<p className="text-sm font-medium text-foreground">Resume Conversation</p>
+						<p className="text-xs text-muted-foreground font-normal">
+							Continue exploring your personality
+						</p>
+					</div>
+					<ChevronRight className="size-4 text-muted-foreground flex-shrink-0" />
+				</Button>
+				<Button variant="action" size="action" onClick={fn()}>
+					<div className="flex-shrink-0 rounded-lg p-2 bg-[oklch(0.67_0.13_181/0.10)] text-[oklch(0.45_0.13_181)]">
+						<User className="size-4" />
+					</div>
+					<div className="flex-1 min-w-0 text-left">
+						<p className="text-sm font-medium text-foreground">View Public Profile</p>
+						<p className="text-xs text-muted-foreground font-normal">
+							See how others view your archetype
+						</p>
+					</div>
+					<ChevronRight className="size-4 text-muted-foreground flex-shrink-0" />
+				</Button>
+				<Button variant="action" size="action" disabled onClick={fn()}>
+					<div className="flex-shrink-0 rounded-lg p-2 bg-muted text-muted-foreground">
+						<Download className="size-4" />
+					</div>
+					<div className="flex-1 min-w-0 text-left">
+						<p className="text-sm font-medium text-foreground">Download Report</p>
+						<p className="text-xs text-muted-foreground font-normal">Get a PDF summary of your results</p>
+					</div>
+					<ChevronRight className="size-4 text-muted-foreground flex-shrink-0" />
+				</Button>
+			</div>
+		),
+	],
 };

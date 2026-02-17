@@ -131,75 +131,21 @@ The homepage unfolds as a simulated conversation with Nerin, following an emotio
    - Nerin: *"I think I'm getting a solid understanding of you now. How are you feeling about wrapping up?"*
    - User feels: *"Excited for results. I've invested time and it's paid off."*
 
-### **Visual Depth Metaphor During Assessment**
+### **Visual Atmosphere During Assessment**
 
-The assessment interface reinforces the psychological journey through a **visual depth progression system** that mirrors the user's descent into self-understanding.
+> **See [Geometric Ocean — Ambient Sea Life System](./geometric-ocean-ambient-system.md)** for the complete specification.
 
-**The Depth Journey Concept:**
-- As the conversation progresses, the visual environment transitions through 5 distinct "zones"
-- Each zone represents a deeper level of psychological exploration
-- Background color shifts from warm surface tones to deep oceanic navy
-- Creates subconscious reinforcement of the "deep dive" metaphor without explicit UI messaging
+The assessment interface is immersed in a **living geometric ocean** — sea creatures built from simple primitives (rectangles, diamonds, circles, triangles) that drift, swim, and sway around the conversation. This creates an atmospheric sense of being underwater — reinforcing the Big Ocean brand and the "deep dive" metaphor — without revealing any assessment data to the user.
 
-**5-Zone Progression System:**
+**Key Design Decisions:**
+- **No data visualization during assessment.** No inline facet icons, no mini evidence cards, no confidence bars in Nerin's messages. Showing personality data during the conversation could influence user responses and compromise assessment integrity. All data visualization is reserved for the results page.
+- **Creatures are decorative only.** The geometric ocean is completely decoupled from personality scores, trait levels, or confidence. Movement responds to conversation rhythm (message events), not conversation content.
+- **Background remains constant.** Warm Cream (light) / Abyss Navy (dark). No 5-zone color progression. The atmosphere evolves through a subtle 2-stage dive narrative (creature movement slows slightly after message 8) rather than background color changes.
 
-| Zone | Progress Range | Background (Light Mode) | Background (Dark Mode) | Psychological Metaphor |
-|------|---------------|------------------------|------------------------|------------------------|
-| **Surface** | 0-20% | `#FFF8F0` (Warm Cream) | `#2A2A3E` (Dark Slate) | Warm-up, establishing trust and rapport |
-| **Shallows** | 20-40% | `#FFF0E8` (Peachy) | `#3A3A52` (Deeper Slate) | Initial trait exploration, surface patterns |
-| **Mid** | 40-60% | `#FFE8D8` (Coral) | `#4A4A66` (Mid Purple) | Deep questioning, nuance mining, contradictions |
-| **Deep** | 60-80% | `#282643` (Deep Purple) | `#1A1A2E` (Dark Navy) | Evidence synthesis, pattern recognition |
-| **Abyss** | 80-100% | `#0A0E27` (Navy Abyss) | `#0A0E27` (Navy Abyss) | Final reflections, completion, revelation |
-
-**Zone Threshold Calculation:**
-- Progress calculated as: `(messageCount / totalMessages) × 100`
-- Zone index derived from progress percentage (0-4)
-- Transitions tied to message count, not scroll position (key difference from homepage)
-
-**Visual Implementation Details:**
-
-1. **Depth Meter (Desktop Only)**
-   - Fixed left sidebar showing current zone
-   - 5 pip indicators representing each zone
-   - Animated progress fill showing conversation completion
-   - Active zone highlighted with accent color
-   - Hidden on mobile (< 768px) to preserve chat focus
-
-2. **Background Color Transitions**
-   - Smooth 600ms ease-in-out transitions between zones
-   - CSS custom properties updated via React state
-   - Text color automatically inverts at Deep zone (60%+) for readability
-   - Dark mode: Custom zone colors optimized for dark backgrounds
-
-3. **Inline Facet Icons**
-   - When Nerin mentions traits/facets, inline SVG icons appear
-   - Icons use OCEAN geometric shapes (circle, half-circle, rectangle, triangle, diamond)
-   - Example: "Tell me about your <icon:circle> creative side..."
-   - Hover states reveal quick facet definitions
-
-4. **Mini Evidence Cards**
-   - Embedded visualizations in Nerin's messages
-   - Show confidence bars for mentioned facets
-   - Example: "I'm noticing patterns in... [Imagination: 78% | Artistic: 65%]"
-   - Provides transparency without disrupting conversation flow
-
-**Accessibility Considerations:**
-- `prefers-reduced-motion` respected: All transitions disabled for instant zone changes
-- WCAG AA contrast ratios maintained across all zones and modes
-- Depth meter purely decorative: Core conversation experience works without it
-- Mobile users receive full experience without depth meter (backgrounds still transition)
-
-**Psychological Impact:**
-- Visual progression creates sense of journey and investment
-- Warm → cool color shift subconsciously signals deepening exploration
-- Reinforces brand positioning: "Deep dive into your personality"
-- Differentiated from clinical assessment feel through immersive design
-
-**Pattern Precedent:**
-- Shares technical approach with Story 7.8 (Homepage Depth Scroll)
-- Homepage uses scroll-based transitions; assessment uses message-based
-- Reusable `DepthZoneProvider` React Context pattern
-- CSS custom properties enable smooth, performant transitions
+**What remains:**
+- **Depth Meter (Desktop Only):** Fixed left sidebar progress indicator, unchanged
+- **Milestone badges** at 25%, 50%, 70% progress — unchanged
+- **In-chat celebration card** when profile is ready — unchanged
 
 ### **Phase 4: Results Reveal (28-30 minutes) — THE CELEBRATION**
 

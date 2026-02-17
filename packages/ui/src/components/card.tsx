@@ -1,12 +1,12 @@
 import { cn } from "@workspace/ui/lib/utils";
-import type * as React from "react";
+import * as React from "react";
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
 	return (
 		<div
 			data-slot="card"
 			className={cn(
-				"bg-card text-card-foreground flex flex-col gap-6 rounded-2xl border py-6 shadow-sm",
+				"bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
 				className,
 			)}
 			{...props}
@@ -67,4 +67,46 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
 	);
 }
 
-export { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent };
+type AccentPosition = "top" | "left" | "right" | "bottom";
+
+const ACCENT_POSITION_CLASSES: Record<AccentPosition, string> = {
+	top: "h-1 w-full shrink-0",
+	bottom: "h-1 w-full shrink-0",
+	left: "w-[3px] shrink-0 self-stretch",
+	right: "w-[3px] shrink-0 self-stretch",
+};
+
+function CardAccent({
+	position = "top",
+	className,
+	...props
+}: React.ComponentProps<"div"> & {
+	position?: AccentPosition;
+}) {
+	return (
+		<div
+			data-slot="card-accent"
+			data-position={position}
+			aria-hidden="true"
+			role="presentation"
+			className={cn(ACCENT_POSITION_CLASSES[position], className)}
+			{...props}
+		/>
+	);
+}
+
+function AccentCard({ className, ...props }: React.ComponentProps<"div">) {
+	return <Card className={cn("overflow-hidden gap-0 p-0", className)} {...props} />;
+}
+
+export {
+	Card,
+	CardHeader,
+	CardFooter,
+	CardTitle,
+	CardAction,
+	CardDescription,
+	CardContent,
+	CardAccent,
+	AccentCard,
+};

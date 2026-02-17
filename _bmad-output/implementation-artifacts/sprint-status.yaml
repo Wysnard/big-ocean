@@ -126,11 +126,12 @@ development_status:
   # Phase 1 (Stories 8.1-8.4, 8.6): Static descriptions + layout redesign + personalized portrait
   # Phase 2 (Story 8.5): Portrait regeneration for paid tier (DEFERRED — requires tier infrastructure)
   # Story 8.6 added via correct-course (2026-02-16): Results page redesign to Mockup 7 Detail Zone
+  # Story 8.4 rework via correct-course #3 (2026-02-16): Portrait redesign — Nerin dive-master voice, markdown output
   epic-8: in-progress
   8-1-expand-archetype-descriptions-to-4-5-sentences: done
   8-2-add-level-specific-trait-descriptions: done
   8-3-add-level-specific-facet-descriptions: done
-  8-6-results-page-layout-redesign-mockup-7-detail-zone: ready-for-dev
-  8-4-pre-generate-personalized-portrait-at-free-tier-message-threshold: done
+  8-6-results-page-layout-redesign-mockup-7-detail-zone: review
+  8-4-pre-generate-personalized-portrait-at-free-tier-message-threshold: review
   8-5-regenerate-personalized-portrait-paid-tier: backlog
   epic-8-retrospective: optional

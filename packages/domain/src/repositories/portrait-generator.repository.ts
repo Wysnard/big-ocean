@@ -13,6 +13,7 @@ export interface PortraitGenerationInput {
 	readonly archetypeName: string;
 	readonly archetypeDescription: string;
 	readonly oceanCode5: string;
+	readonly messages: ReadonlyArray<{ role: "user" | "assistant"; content: string }>;
 }
 
 /**
@@ -38,7 +39,7 @@ export class PortraitGeneratorRepository extends Context.Tag("PortraitGeneratorR
 		 * Generate a personalized portrait for a completed assessment.
 		 *
 		 * @param input - Pre-computed personality data and evidence
-		 * @returns Effect with portrait text (6-10 sentences)
+		 * @returns Effect with portrait as markdown string (6 sections with ## headers)
 		 */
 		readonly generatePortrait: (
 			input: PortraitGenerationInput,

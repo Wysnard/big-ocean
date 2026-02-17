@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geometric Ocean — Chat Assessment Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #FFF8F0;
+    --surface: #FFF0E8;
+    --surface-alt: #FFE8D8;
+    --fg: #1A1A2E;
+    --muted: #6B6580;
+    --border: #FFD6C4;
+    --primary: #FF0080;
+    --secondary: #FF6B2B;
+    --tertiary: #00B4A6;
+    --accent: #FFE8D8;
+    --purple: #A855F7;
+    --navy: #1c1c9c;
+
+    /* Each creature has its own distinct color */
+    --seaweed-color: #00B4A6;          /* Teal */
+    --fish-body-color: #FF6B2B;        /* Orange */
+    --fish-tail-color: #FF8F5E;        /* Light orange */
+    --school-color: #FF0080;           /* Pink */
+    --jelly-bell-color: #A855F7;       /* Purple */
+    --jelly-tentacle-color: #A855F7;
+    --bubble-border-color: #FFD6C4;    /* Peach border */
+    --bubble-fill-color: rgba(255, 232, 216, 0.06);
+
+    --seaweed-opacity: 0.18;
+    --fish-opacity: 0.14;
+    --fish-crossing-opacity: 0.05;
+    --school-opacity: 0.14;
+    --school-crossing-opacity: 0.05;
+    --jelly-opacity: 0.12;
+    --jelly-tentacle-opacity: 0.08;
+    --bubble-opacity: 0.22;
+  }
+
+  .dark {
+    --bg: #0A0E27;
+    --surface: #141838;
+    --surface-alt: #1C2148;
+    --fg: #F0EDE8;
+    --muted: #8B85A0;
+    --border: #252A52;
+    --primary: #00D4C8;
+    --secondary: #FFB830;
+    --tertiary: #FF2D9B;
+    --accent: #252A52;
+
+    /* Dark mode: bioluminescent palette */
+    --seaweed-color: #00D4C8;          /* Bright Teal */
+    --fish-body-color: #FFB830;        /* Gold */
+    --fish-tail-color: #FFD060;        /* Light gold */
+    --school-color: #FF2D9B;           /* Hot Pink */
+    --jelly-bell-color: #A855F7;       /* Purple stays */
+    --jelly-tentacle-color: #C084FC;   /* Lighter purple */
+    --bubble-border-color: #F0EDE8;
+    --bubble-fill-color: rgba(240, 237, 232, 0.04);
+
+    --seaweed-opacity: 0.22;
+    --fish-opacity: 0.20;
+    --fish-crossing-opacity: 0.07;
+    --school-opacity: 0.18;
+    --school-crossing-opacity: 0.07;
+    --jelly-opacity: 0.18;
+    --jelly-tentacle-opacity: 0.12;
+    --bubble-opacity: 0.18;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    height: 100dvh;
+    overflow: hidden;
+    transition: background 0.4s, color 0.4s;
+  }
+
+  /* ── Controls ── */
+  .controls {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 100;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .controls button {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--fg);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .controls button:hover {
+    border-color: var(--primary);
+    background: var(--surface-alt);
+  }
+
+  /* ── Header ── */
+  .header {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: relative;
+    z-index: 20;
+    transition: background 0.4s, border-color 0.4s;
+  }
+  .header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  /* ── Chat Layout ── */
+  .chat-container {
+    height: calc(100dvh - 56px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .chat-content {
+    position: relative;
+    z-index: 10;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 16px 140px;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* Thread line */
+  .messages::before {
+    content: '';
+    position: absolute;
+    left: calc(50% - 450px + 29px);
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--border) 0%, transparent 100%);
+    opacity: 0.4;
+    z-index: -1;
+  }
+
+  @media (max-width: 900px) {
+    .messages::before { left: 29px; }
+  }
+
+  /* ── Messages ── */
+  .message {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    max-width: 88%;
+    animation: fadeInUp 0.3s ease-out both;
+  }
+  .message.user {
+    flex-direction: row-reverse;
+    margin-left: auto;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .nerin-avatar {
+    background: linear-gradient(135deg, var(--tertiary), var(--primary));
+    color: #fff;
+  }
+  .user-avatar {
+    background: var(--accent);
+    color: var(--fg);
+  }
+
+  .bubble {
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .message:not(.user) .bubble {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+  }
+  .message.user .bubble {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .timestamp {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .message.user .timestamp {
+    color: rgba(255,255,255,0.6);
+    text-align: right;
+  }
+
+  /* ── Input Bar ── */
+  .input-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    padding: 16px;
+    background: linear-gradient(to top, var(--bg) 60%, transparent);
+  }
+  .input-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+  }
+  .input-field {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--fg);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-field::placeholder { color: var(--muted); }
+  .input-field:focus { border-color: var(--primary); }
+  .send-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s;
+  }
+  .send-btn:hover { transform: scale(1.05); }
+
+  /* ══════════════════════════════════════
+     GEOMETRIC OCEAN
+     ══════════════════════════════════════ */
+  .geometric-ocean {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  /* ── SEAWEED (Teal) ── */
+  .seaweed-group {
+    position: absolute;
+    bottom: 0;
+    display: flex;
+    gap: 6px;
+    align-items: flex-end;
+  }
+  .seaweed-group.left { left: 24px; }
+  .seaweed-group.right { right: 24px; }
+  .seaweed-group.center-left { left: 15%; }
+  .seaweed-group.center-right { right: 15%; }
+
+  @media (max-width: 900px) {
+    .seaweed-group.left { left: 6px; }
+    .seaweed-group.right { right: 6px; }
+    .seaweed-group.center-left,
+    .seaweed-group.center-right { display: none; }
+  }
+
+  .seaweed-stalk {
+    width: var(--stalk-width, 8px);
+    background: var(--seaweed-color);
+    opacity: var(--seaweed-opacity);
+    border-radius: 3px 3px 0 0;
+    transform-origin: bottom center;
+    animation: seaweedSway var(--sway-duration, 5s) ease-in-out infinite;
+    animation-delay: var(--sway-delay, 0s);
+  }
+
+  @keyframes seaweedSway {
+    0%, 100% { transform: rotate(-4deg) translateX(-6px); }
+    50% { transform: rotate(4deg) translateX(6px); }
+  }
+
+  /* ── DIAMOND FISH (Orange) ── */
+  .diamond-fish {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .diamond-fish.fish-a {
+    animation: fishSwimA var(--swim-speed, 35s) linear infinite;
+    animation-delay: var(--swim-delay, 0s);
+  }
+  .diamond-fish.fish-b {
+    animation: fishSwimB var(--swim-speed, 40s) linear infinite;
+    animation-delay: var(--swim-delay, 0s);
+  }
+  .diamond-fish.fish-c {
+    animation: fishSwimC var(--swim-speed, 45s) linear infinite;
+    animation-delay: var(--swim-delay, 0s);
+  }
+  .diamond-fish .body {
+    width: var(--body-size, 24px);
+    height: var(--body-size, 24px);
+    background: var(--fish-body-color);
+    opacity: var(--fish-opacity);
+    transform: rotate(45deg);
+    border-radius: 2px;
+    animation: fishBob 4s ease-in-out infinite;
+  }
+  .diamond-fish .tail {
+    width: var(--tail-size, 12px);
+    height: var(--tail-size, 12px);
+    background: var(--fish-tail-color);
+    opacity: var(--fish-opacity);
+    transform: rotate(45deg);
+    border-radius: 1px;
+    animation: fishBob 4s ease-in-out infinite;
+    animation-delay: 0.2s;
+  }
+
+  /* Fish A: left to right, upper third */
+  @keyframes fishSwimA {
+    0% { left: -60px; top: 28%; }
+    10% { top: 24%; }
+    25% { top: 30%; }
+    35% { opacity: 1; }
+    40% { opacity: 0.3; }
+    60% { opacity: 0.3; }
+    65% { opacity: 1; }
+    75% { top: 26%; }
+    90% { top: 29%; }
+    100% { left: calc(100% + 60px); top: 27%; }
+  }
+  /* Fish B: right to left, middle */
+  @keyframes fishSwimB {
+    0% { right: -60px; top: 48%; }
+    12% { top: 44%; }
+    28% { top: 50%; }
+    35% { opacity: 1; }
+    40% { opacity: 0.3; }
+    60% { opacity: 0.3; }
+    65% { opacity: 1; }
+    72% { top: 46%; }
+    88% { top: 49%; }
+    100% { right: calc(100% + 60px); top: 47%; }
+  }
+  /* Fish C: left to right, lower */
+  @keyframes fishSwimC {
+    0% { left: -50px; top: 68%; }
+    15% { top: 64%; }
+    30% { top: 70%; }
+    35% { opacity: 1; }
+    40% { opacity: 0.3; }
+    60% { opacity: 0.3; }
+    65% { opacity: 1; }
+    78% { top: 66%; }
+    92% { top: 69%; }
+    100% { left: calc(100% + 50px); top: 67%; }
+  }
+
+  @keyframes fishBob {
+    0%, 100% { transform: rotate(45deg) translateY(0); }
+    50% { transform: rotate(45deg) translateY(-5px); }
+  }
+
+  /* ── SCHOOL FISH (Pink) ── */
+  .school-fish {
+    position: absolute;
+    animation: schoolSwim var(--school-speed, 38s) linear infinite;
+    animation-delay: var(--school-delay, 3s);
+  }
+  .school-fish .fish-individual {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-top: var(--tri-h, 5px) solid transparent;
+    border-bottom: var(--tri-h, 5px) solid transparent;
+    border-left: var(--tri-w, 10px) solid var(--school-color);
+    opacity: var(--school-opacity);
+    animation: individualDrift var(--drift-speed, 2.5s) ease-in-out infinite;
+    animation-delay: var(--drift-delay, 0s);
+  }
+
+  @keyframes schoolSwim {
+    0% { right: -120px; top: 40%; }
+    12% { top: 36%; }
+    28% { top: 43%; }
+    35% { opacity: 1; }
+    40% { opacity: 0.3; }
+    60% { opacity: 0.3; }
+    65% { opacity: 1; }
+    72% { top: 38%; }
+    88% { top: 41%; }
+    100% { right: calc(100% + 120px); top: 39%; }
+  }
+
+  @keyframes individualDrift {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(3px, -4px); }
+    50% { transform: translate(-2px, 3px); }
+    75% { transform: translate(4px, 1px); }
+  }
+
+  /* ── JELLYFISH (Purple) ── */
+  .jellyfish {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .jellyfish.jelly-a {
+    animation: jellyDriftA 55s linear infinite;
+  }
+  .jellyfish.jelly-b {
+    animation: jellyDriftB 65s linear infinite;
+    animation-delay: 20s;
+  }
+  .jellyfish .bell {
+    width: var(--bell-size, 32px);
+    height: var(--bell-size, 32px);
+    border-radius: 50%;
+    background: var(--jelly-bell-color);
+    opacity: var(--jelly-opacity);
+    animation: jellyPulse 4s ease-in-out infinite;
+  }
+  .jellyfish .tentacles {
+    display: flex;
+    gap: 5px;
+    margin-top: 2px;
+  }
+  .jellyfish .tentacle {
+    width: 1.5px;
+    background: var(--jelly-tentacle-color);
+    opacity: var(--jelly-tentacle-opacity);
+    border-radius: 0 0 2px 2px;
+    animation: tentacleSway var(--tent-speed, 4s) ease-in-out infinite;
+    animation-delay: var(--tent-delay, 0s);
+    transform-origin: top center;
+  }
+
+  @keyframes jellyDriftA {
+    0% { top: 110%; right: 10%; transform: translateX(0); }
+    20% { transform: translateX(12px); }
+    40% { transform: translateX(-10px); }
+    60% { transform: translateX(14px); }
+    80% { transform: translateX(-8px); }
+    100% { top: -18%; right: 10%; transform: translateX(0); }
+  }
+  @keyframes jellyDriftB {
+    0% { top: 115%; left: 8%; transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    50% { transform: translateX(8px); }
+    75% { transform: translateX(-12px); }
+    100% { top: -18%; left: 8%; transform: translateX(0); }
+  }
+
+  @keyframes jellyPulse {
+    0%, 100% { transform: scaleY(1) scaleX(1); }
+    35% { transform: scaleY(0.80) scaleX(1.10); }
+    55% { transform: scaleY(1.06) scaleX(0.95); }
+  }
+
+  @keyframes tentacleSway {
+    0%, 100% { transform: rotate(0deg) scaleY(1); }
+    30% { transform: rotate(5deg) scaleY(0.90); }
+    70% { transform: rotate(-4deg) scaleY(1.06); }
+  }
+
+  /* ── BUBBLES (Peach / Warm White) ── */
+  .bubble-particle {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid var(--bubble-border-color);
+    background: var(--bubble-fill-color);
+    opacity: var(--bubble-opacity);
+    animation: bubbleRise var(--rise-duration, 10s) linear infinite;
+    animation-delay: var(--rise-delay, 0s);
+  }
+
+  @keyframes bubbleRise {
+    0% { bottom: -20px; opacity: var(--bubble-opacity); transform: translateX(0) scale(0.95); }
+    10% { transform: translateX(4px) scale(1); }
+    25% { transform: translateX(-3px) scale(1.04); }
+    40% { transform: translateX(5px) scale(0.97); }
+    55% { transform: translateX(-2px) scale(1.03); }
+    70% { transform: translateX(3px) scale(0.98); }
+    85% { opacity: var(--bubble-opacity); transform: translateX(-1px) scale(1); }
+    100% { bottom: 110%; opacity: 0; transform: translateX(0) scale(0.96); }
+  }
+
+  /* ── Pulse effect (message arrives) ── */
+  .geometric-ocean.pulse .seaweed-stalk {
+    animation-name: seaweedSwayPulse;
+  }
+  @keyframes seaweedSwayPulse {
+    0%, 100% { transform: rotate(-6deg) translateX(-10px); }
+    50% { transform: rotate(6deg) translateX(10px); }
+  }
+
+  .geometric-ocean.pulse .diamond-fish.fish-a { animation-duration: 28s; }
+  .geometric-ocean.pulse .diamond-fish.fish-b { animation-duration: 32s; }
+  .geometric-ocean.pulse .diamond-fish.fish-c { animation-duration: 36s; }
+
+  .geometric-ocean.pulse .school-fish .fish-individual {
+    animation-name: individualScatter;
+  }
+  @keyframes individualScatter {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(8px, -8px); }
+    40% { transform: translate(-6px, 5px); }
+    60% { transform: translate(5px, 7px); }
+    80% { transform: translate(-4px, -5px); }
+  }
+
+  .geometric-ocean.pulse .jellyfish .bell {
+    animation-name: jellyPulseBurst;
+  }
+  @keyframes jellyPulseBurst {
+    0%, 100% { transform: scaleY(1) scaleX(1); }
+    20% { transform: scaleY(0.72) scaleX(1.15); }
+    40% { transform: scaleY(1.08) scaleX(0.92); }
+    60% { transform: scaleY(0.85) scaleX(1.06); }
+    80% { transform: scaleY(1.03) scaleX(0.98); }
+  }
+
+  /* ── Depth state (deep = slower) ── */
+  .geometric-ocean[data-depth="deep"] .seaweed-stalk {
+    animation-duration: 7s;
+  }
+  .geometric-ocean[data-depth="deep"] .diamond-fish.fish-a { animation-duration: 45s; }
+  .geometric-ocean[data-depth="deep"] .diamond-fish.fish-b { animation-duration: 50s; }
+  .geometric-ocean[data-depth="deep"] .diamond-fish.fish-c { animation-duration: 55s; }
+  .geometric-ocean[data-depth="deep"] .school-fish { animation-duration: 48s; }
+  .geometric-ocean[data-depth="deep"] .jellyfish.jelly-a { animation-duration: 70s; }
+  .geometric-ocean[data-depth="deep"] .jellyfish.jelly-b { animation-duration: 80s; }
+
+  /* ── fadeInUp ── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Milestone badge ── */
+  .milestone {
+    text-align: center;
+    padding: 8px 16px;
+    margin: 8px auto 20px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--surface);
+    max-width: 420px;
+    animation: fadeInUp 0.4s ease-out both;
+  }
+
+  /* ── Depth Meter (desktop) ── */
+  .depth-meter {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 160px;
+    background: var(--border);
+    border-radius: 3px;
+    z-index: 15;
+    overflow: hidden;
+  }
+  .depth-meter-fill {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: var(--primary);
+    border-radius: 3px;
+    transition: height 0.8s ease-out;
+  }
+  @media (max-width: 900px) {
+    .depth-meter { display: none; }
+  }
+
+  /* ── Info label ── */
+  .info-label {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+    transition: opacity 0.3s;
+  }
+</style>
+</head>
+<body>
+  <!-- Controls -->
+  <div class="controls">
+    <button id="toggleMode">Dark Mode</button>
+    <button id="pulseBtn">Simulate Message</button>
+    <button id="depthBtn">Toggle Deep</button>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <h1>big-ocean</h1>
+  </div>
+
+  <!-- Chat Container -->
+  <div class="chat-container">
+    <!-- Depth Meter -->
+    <div class="depth-meter">
+      <div class="depth-meter-fill" id="depthFill" style="height: 45%"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         GEOMETRIC OCEAN LAYER
+         ══════════════════════════════════════ -->
+    <div class="geometric-ocean" id="ocean" data-depth="surface">
+
+      <!-- ── SEAWEED (Teal) ── -->
+      <!-- Left group: tall -->
+      <div class="seaweed-group left">
+        <div class="seaweed-stalk" style="height: 150px; --stalk-width: 9px; --sway-duration: 5.2s; --sway-delay: 0s;"></div>
+        <div class="seaweed-stalk" style="height: 120px; --stalk-width: 7px; --sway-duration: 4.6s; --sway-delay: 0.25s;"></div>
+        <div class="seaweed-stalk" style="height: 170px; --stalk-width: 10px; --sway-duration: 5.8s; --sway-delay: 0.45s;"></div>
+        <div class="seaweed-stalk" style="height: 100px; --stalk-width: 6px; --sway-duration: 4.3s; --sway-delay: 0.15s;"></div>
+      </div>
+
+      <!-- Right group: tall -->
+      <div class="seaweed-group right">
+        <div class="seaweed-stalk" style="height: 130px; --stalk-width: 8px; --sway-duration: 5.0s; --sway-delay: 0.1s;"></div>
+        <div class="seaweed-stalk" style="height: 160px; --stalk-width: 10px; --sway-duration: 5.5s; --sway-delay: 0.35s;"></div>
+        <div class="seaweed-stalk" style="height: 110px; --stalk-width: 7px; --sway-duration: 4.8s; --sway-delay: 0.55s;"></div>
+        <div class="seaweed-stalk" style="height: 140px; --stalk-width: 9px; --sway-duration: 5.3s; --sway-delay: 0.2s;"></div>
+      </div>
+
+      <!-- Center-left group (desktop only): smaller accent -->
+      <div class="seaweed-group center-left">
+        <div class="seaweed-stalk" style="height: 80px; --stalk-width: 5px; --sway-duration: 4.5s; --sway-delay: 0.3s;"></div>
+        <div class="seaweed-stalk" style="height: 100px; --stalk-width: 6px; --sway-duration: 5.1s; --sway-delay: 0.5s;"></div>
+      </div>
+
+      <!-- Center-right group (desktop only): smaller accent -->
+      <div class="seaweed-group center-right">
+        <div class="seaweed-stalk" style="height: 90px; --stalk-width: 5px; --sway-duration: 4.7s; --sway-delay: 0.2s;"></div>
+        <div class="seaweed-stalk" style="height: 70px; --stalk-width: 4px; --sway-duration: 5.4s; --sway-delay: 0.4s;"></div>
+      </div>
+
+      <!-- ── DIAMOND FISH (Orange) — 3 fish, slow ── -->
+      <!-- Fish A: upper, left-to-right -->
+      <div class="diamond-fish fish-a" style="--swim-speed: 35s; --swim-delay: 0s; --body-size: 22px; --tail-size: 11px;">
+        <div class="body"></div>
+        <div class="tail"></div>
+      </div>
+
+      <!-- Fish B: mid, right-to-left -->
+      <div class="diamond-fish fish-b" style="--swim-speed: 42s; --swim-delay: 12s; --body-size: 18px; --tail-size: 9px;">
+        <div class="body"></div>
+        <div class="tail"></div>
+      </div>
+
+      <!-- Fish C: lower, left-to-right, smaller -->
+      <div class="diamond-fish fish-c" style="--swim-speed: 48s; --swim-delay: 24s; --body-size: 16px; --tail-size: 8px;">
+        <div class="body"></div>
+        <div class="tail"></div>
+      </div>
+
+      <!-- ── SCHOOL FISH (Pink) — 9 triangles ── -->
+      <div class="school-fish" style="--school-speed: 38s; --school-delay: 6s;">
+        <div class="fish-individual" style="top: 0; left: 0; --tri-w: 10px; --tri-h: 5px; --drift-speed: 2.8s; --drift-delay: 0s;"></div>
+        <div class="fish-individual" style="top: -14px; left: 22px; --tri-w: 9px; --tri-h: 4px; --drift-speed: 3.1s; --drift-delay: 0.08s;"></div>
+        <div class="fish-individual" style="top: 8px; left: 35px; --tri-w: 11px; --tri-h: 5px; --drift-speed: 2.5s; --drift-delay: 0.04s;"></div>
+        <div class="fish-individual" style="top: -6px; left: 52px; --tri-w: 9px; --tri-h: 4px; --drift-speed: 2.9s; --drift-delay: 0.12s;"></div>
+        <div class="fish-individual" style="top: 14px; left: 18px; --tri-w: 10px; --tri-h: 5px; --drift-speed: 2.6s; --drift-delay: 0.06s;"></div>
+        <div class="fish-individual" style="top: -16px; left: 65px; --tri-w: 8px; --tri-h: 4px; --drift-speed: 3.0s; --drift-delay: 0.16s;"></div>
+        <div class="fish-individual" style="top: 4px; left: 78px; --tri-w: 10px; --tri-h: 5px; --drift-speed: 2.4s; --drift-delay: 0.10s;"></div>
+        <div class="fish-individual" style="top: -10px; left: 42px; --tri-w: 8px; --tri-h: 4px; --drift-speed: 2.7s; --drift-delay: 0.14s;"></div>
+        <div class="fish-individual" style="top: 10px; left: 58px; --tri-w: 9px; --tri-h: 4px; --drift-speed: 3.2s; --drift-delay: 0.02s;"></div>
+      </div>
+
+      <!-- ── JELLYFISH (Purple) — 2 jellies ── -->
+      <!-- Jelly A: right side -->
+      <div class="jellyfish jelly-a" style="--bell-size: 34px;">
+        <div class="bell"></div>
+        <div class="tentacles">
+          <div class="tentacle" style="height: 40px; --tent-speed: 4s; --tent-delay: 0s;"></div>
+          <div class="tentacle" style="height: 34px; --tent-speed: 4.3s; --tent-delay: 0.15s;"></div>
+          <div class="tentacle" style="height: 42px; --tent-speed: 3.7s; --tent-delay: 0.3s;"></div>
+          <div class="tentacle" style="height: 36px; --tent-speed: 4.1s; --tent-delay: 0.1s;"></div>
+        </div>
+      </div>
+
+      <!-- Jelly B: left side, smaller -->
+      <div class="jellyfish jelly-b" style="--bell-size: 24px;">
+        <div class="bell"></div>
+        <div class="tentacles">
+          <div class="tentacle" style="height: 28px; --tent-speed: 4.2s; --tent-delay: 0.05s;"></div>
+          <div class="tentacle" style="height: 24px; --tent-speed: 3.9s; --tent-delay: 0.2s;"></div>
+          <div class="tentacle" style="height: 30px; --tent-speed: 4.4s; --tent-delay: 0.35s;"></div>
+        </div>
+      </div>
+
+      <!-- ── BUBBLES (Peach / Warm white) ── -->
+      <!-- Left bubbles -->
+      <div class="bubble-particle" style="left: 32px; width: 7px; height: 7px; --rise-duration: 11s; --rise-delay: 0s;"></div>
+      <div class="bubble-particle" style="left: 22px; width: 12px; height: 12px; --rise-duration: 14s; --rise-delay: 3s;"></div>
+      <div class="bubble-particle" style="left: 42px; width: 5px; height: 5px; --rise-duration: 9s; --rise-delay: 7s;"></div>
+      <div class="bubble-particle" style="left: 50px; width: 8px; height: 8px; --rise-duration: 12s; --rise-delay: 5s;"></div>
+
+      <!-- Right bubbles -->
+      <div class="bubble-particle" style="right: 34px; width: 9px; height: 9px; --rise-duration: 12s; --rise-delay: 2s;"></div>
+      <div class="bubble-particle" style="right: 26px; width: 6px; height: 6px; --rise-duration: 10s; --rise-delay: 6s;"></div>
+      <div class="bubble-particle" style="right: 44px; width: 13px; height: 13px; --rise-duration: 15s; --rise-delay: 9s;"></div>
+      <div class="bubble-particle" style="right: 38px; width: 5px; height: 5px; --rise-duration: 8s; --rise-delay: 4s;"></div>
+    </div>
+
+    <!-- Chat Content -->
+    <div class="chat-content">
+      <div class="messages" id="messages">
+        <!-- Nerin greeting 1 -->
+        <div class="message" style="animation-delay: 0s;">
+          <div class="avatar nerin-avatar">N</div>
+          <div>
+            <div class="bubble">Hi there. I'm Nerin, and I'm genuinely curious to understand you better. There's no right or wrong here — just you, being you.</div>
+            <div class="timestamp">just now</div>
+          </div>
+        </div>
+
+        <!-- Nerin greeting 2 -->
+        <div class="message" style="animation-delay: 0.3s;">
+          <div class="avatar nerin-avatar">N</div>
+          <div>
+            <div class="bubble">Think of this as a conversation, not a test. I'll listen, ask questions, and together we'll explore what makes you... well, you.</div>
+            <div class="timestamp">just now</div>
+          </div>
+        </div>
+
+        <!-- Nerin greeting 3 -->
+        <div class="message" style="animation-delay: 0.6s;">
+          <div class="avatar nerin-avatar">N</div>
+          <div>
+            <div class="bubble">So — what's been on your mind lately?</div>
+            <div class="timestamp">just now</div>
+          </div>
+        </div>
+
+        <!-- User message -->
+        <div class="message user" style="animation-delay: 0.9s;">
+          <div class="avatar user-avatar">V</div>
+          <div>
+            <div class="bubble">Honestly, I've been thinking a lot about whether I'm doing the right things with my time. Like, I have all these projects going on but I'm not sure any of them are really what I want.</div>
+            <div class="timestamp">2 min ago</div>
+          </div>
+        </div>
+
+        <!-- Nerin response -->
+        <div class="message" style="animation-delay: 1.2s;">
+          <div class="avatar nerin-avatar">N</div>
+          <div>
+            <div class="bubble">That tension between having many things going and questioning if any of them truly fit — that's a really common experience for people who are both ambitious and introspective. What does "right things" look like for you? Is it about passion, impact, or something else entirely?</div>
+            <div class="timestamp">1 min ago</div>
+          </div>
+        </div>
+
+        <!-- User message -->
+        <div class="message user" style="animation-delay: 1.5s;">
+          <div class="avatar user-avatar">V</div>
+          <div>
+            <div class="bubble">I think it's about feeling like I'm building something that matters. Not just staying busy. I want to look back and feel like the time meant something.</div>
+            <div class="timestamp">1 min ago</div>
+          </div>
+        </div>
+
+        <!-- Milestone -->
+        <div class="milestone" style="animation-delay: 1.8s;">
+          ✨ We're off to a great start — I'm already seeing some interesting patterns.
+        </div>
+
+        <!-- Nerin response -->
+        <div class="message" style="animation-delay: 2.1s;">
+          <div class="avatar nerin-avatar">N</div>
+          <div>
+            <div class="bubble">So meaning and legacy matter to you — not just productivity. That's interesting because you started by talking about having many projects, which suggests you're not lacking in drive. The question for you is more about <em>direction</em> than motivation. What's the project that keeps pulling you back even when you try to step away?</div>
+            <div class="timestamp">just now</div>
+          </div>
+        </div>
+
+        <!-- User message -->
+        <div class="message user" style="animation-delay: 2.4s;">
+          <div class="avatar user-avatar">V</div>
+          <div>
+            <div class="bubble">That's actually a great question. There's this one thing I keep coming back to — designing experiences for people. Like, making something that changes how someone feels about themselves.</div>
+            <div class="timestamp">just now</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Bar -->
+      <div class="input-bar">
+        <div class="input-inner">
+          <input class="input-field" type="text" placeholder="What comes to mind first?" />
+          <button class="send-btn">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-label">
+    Geometric Ocean Mockup — use controls top-right to toggle mode, simulate messages, change depth
+  </div>
+
+  <script>
+    const body = document.body;
+    const ocean = document.getElementById('ocean');
+    const modeBtn = document.getElementById('toggleMode');
+    const pulseBtn = document.getElementById('pulseBtn');
+    const depthBtn = document.getElementById('depthBtn');
+    const depthFill = document.getElementById('depthFill');
+
+    let isDark = false;
+    let isDeep = false;
+    let progress = 45;
+
+    modeBtn.addEventListener('click', () => {
+      isDark = !isDark;
+      body.classList.toggle('dark', isDark);
+      modeBtn.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+    });
+
+    pulseBtn.addEventListener('click', () => {
+      ocean.classList.add('pulse');
+      progress = Math.min(100, progress + 8);
+      depthFill.style.height = progress + '%';
+
+      const messages = document.getElementById('messages');
+      const msg = document.createElement('div');
+      msg.className = 'message user';
+      msg.style.animation = 'fadeInUp 0.3s ease-out both';
+      msg.innerHTML = `
+        <div class="avatar user-avatar">V</div>
+        <div>
+          <div class="bubble">That's something I keep thinking about...</div>
+          <div class="timestamp">just now</div>
+        </div>
+      `;
+      messages.appendChild(msg);
+      messages.scrollTop = messages.scrollHeight;
+
+      setTimeout(() => ocean.classList.remove('pulse'), 3000);
+    });
+
+    depthBtn.addEventListener('click', () => {
+      isDeep = !isDeep;
+      ocean.setAttribute('data-depth', isDeep ? 'deep' : 'surface');
+      depthBtn.textContent = isDeep ? 'Surface Mode' : 'Toggle Deep';
+    });
+  </script>
+</body>
+</html>

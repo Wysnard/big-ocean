@@ -20,6 +20,7 @@ import {
 	LoggerRepository,
 	PortraitGenerationError,
 	PortraitGeneratorRepository,
+	PublicProfileRepository,
 	type SavedFacetEvidence,
 	SessionNotFound,
 } from "@workspace/domain";
@@ -162,6 +163,14 @@ const mockPortraitGenerator = {
 	generatePortrait: vi.fn(),
 };
 
+const mockProfileRepo = {
+	createProfile: vi.fn(),
+	getProfile: vi.fn(),
+	getProfileBySessionId: vi.fn(),
+	toggleVisibility: vi.fn(),
+	incrementViewCount: vi.fn(),
+};
+
 const mockConfig = {
 	databaseUrl: "postgres://test",
 	redisUrl: "redis://test",
@@ -192,6 +201,7 @@ function createTestLayer() {
 		Layer.succeed(FacetEvidenceRepository, mockEvidenceRepo),
 		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
 		Layer.succeed(PortraitGeneratorRepository, mockPortraitGenerator),
+		Layer.succeed(PublicProfileRepository, mockProfileRepo),
 		Layer.succeed(AppConfig, mockConfig),
 		Layer.succeed(LoggerRepository, mockLogger),
 	);
@@ -217,6 +227,23 @@ describe("getResults Use Case", () => {
 				messageCount: 10,
 				personalDescription: null,
 			}),
+		);
+
+		// Default: no public profile exists; createProfile returns a new profile
+		mockProfileRepo.getProfileBySessionId.mockImplementation(() => Effect.succeed(null));
+		mockProfileRepo.createProfile.mockImplementation(
+			(input: { sessionId: string; userId: string; oceanCode5: string; oceanCode4: string }) =>
+				Effect.succeed({
+					id: `profile_${input.sessionId}`,
+					sessionId: input.sessionId,
+					userId: input.userId,
+					displayName: "Test User",
+					oceanCode5: input.oceanCode5,
+					oceanCode4: input.oceanCode4,
+					isPublic: false,
+					viewCount: 0,
+					createdAt: new Date(),
+				}),
 		);
 
 		// Default: no messages (portrait won't trigger below threshold)
@@ -376,6 +403,94 @@ describe("getResults Use Case", () => {
 			expect(traitMap.extraversion.level).toBe("A");
 			expect(traitMap.agreeableness.level).toBe("W");
 			expect(traitMap.neuroticism.level).toBe("S");
+		});
+
+		it("should return null profile fields for anonymous users", async () => {
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
+
+			const result = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+			);
+
+			expect(result.publicProfileId).toBeNull();
+			expect(result.shareableUrl).toBeNull();
+			expect(result.isPublic).toBeNull();
+			expect(mockProfileRepo.createProfile).not.toHaveBeenCalled();
+		});
+
+		it("should eagerly create profile for authenticated users when none exists", async () => {
+			mockSessionRepo.getSession.mockImplementation((_sessionId: string) =>
+				Effect.succeed({
+					id: TEST_SESSION_ID,
+					sessionId: TEST_SESSION_ID,
+					userId: "owner_user",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					status: "active",
+					messageCount: 10,
+					personalDescription: null,
+				}),
+			);
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
+
+			const result = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+				),
+			);
+
+			expect(result.publicProfileId).toBe(`profile_${TEST_SESSION_ID}`);
+			expect(result.shareableUrl).toBe(
+				`http://localhost:3000/public-profile/profile_${TEST_SESSION_ID}`,
+			);
+			expect(result.isPublic).toBe(false);
+			expect(mockProfileRepo.createProfile).toHaveBeenCalledWith(
+				expect.objectContaining({
+					sessionId: TEST_SESSION_ID,
+					userId: "owner_user",
+				}),
+			);
+		});
+
+		it("should return existing profile without creating for authenticated users", async () => {
+			const PROFILE_ID = "profile_abc123";
+			mockSessionRepo.getSession.mockImplementation((_sessionId: string) =>
+				Effect.succeed({
+					id: TEST_SESSION_ID,
+					sessionId: TEST_SESSION_ID,
+					userId: "owner_user",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					status: "active",
+					messageCount: 10,
+					personalDescription: null,
+				}),
+			);
+			mockProfileRepo.getProfileBySessionId.mockImplementation(() =>
+				Effect.succeed({
+					id: PROFILE_ID,
+					sessionId: TEST_SESSION_ID,
+					userId: "owner_user",
+					displayName: "Test User",
+					oceanCode5: "GBANT",
+					oceanCode4: "GBAN",
+					isPublic: true,
+					viewCount: 5,
+					createdAt: new Date(),
+				}),
+			);
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
+
+			const result = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+				),
+			);
+
+			expect(result.publicProfileId).toBe(PROFILE_ID);
+			expect(result.shareableUrl).toBe(`http://localhost:3000/public-profile/${PROFILE_ID}`);
+			expect(result.isPublic).toBe(true);
+			expect(mockProfileRepo.createProfile).not.toHaveBeenCalled();
 		});
 
 		it("should return curated archetype when available", async () => {

@@ -256,13 +256,14 @@ Based on Pre-mortem Analysis, these requirements are **non-negotiable** for plat
 - But "fundamentally different category" (conversational depth)
 - This justifies 15% sharing rate target (vs. 5% if you were just a competitor to MBTI)
 
-**OCEAN Archetype System (Second Layer of Differentiation):**
+**OCEAN Code System (Second Layer of Differentiation):**
 - **MBTI:** 16 fixed personality types (forced categorization)
 - **big-ocean OCEAN (POC):** 81 unique personality combinations (4 traits × 3 levels), expandable to 243 post-validation
-- **User outcome:** Instead of "I'm an INTJ" (1 of 16 boxes), users get "I'm The Strategist" with a unique 4-letter code + trait description capturing their specific personality
-- **Shareability:** Memorable character archetypes (The Catalyst, The Architect, The Maverick) are inherently more shareable than "INTJ" codes
-- **Scientific integrity:** Grounded in Big Five research with detailed trait descriptions (not arbitrary personality mythology)
+- **User outcome:** Instead of "I'm an INTJ" (1 of 16 boxes), users get a unique 5-letter OCEAN code (e.g., "ODEWR") as their primary identity, with a poetic archetype name (e.g., "The Idealist") as flavor text
+- **Shareability — Code-First Identity:** OCEAN codes enable **partial-match tribalism** — "I'm ODEWR, you're ODANT, we're both OD!" creates social discovery moments that archetype names alone cannot. People say "I'm an INTP," not "I'm a Logician." The code IS the social currency. Archetype names add emotional color but the code drives social interaction.
+- **Scientific integrity:** Grounded in Big Five research with semantic letters (O=Open-minded, D=Disciplined) that self-explain, unlike MBTI's opaque J/P axis
 - **Pragmatic POC approach:** Validate concept with 81 combinations + ~30 hand-curated names; expand to full 243 if metrics justify post-launch curation effort
+- **Superior social protocol:** 5 axes × 3 levels enables richer comparisons than MBTI's binary same/different — exact matches ("we're both O!"), adjacent matches ("you're G, I'm O — we're close"), and polar opposites ("you're P, I'm O — interesting tension")
 
 ---
 
@@ -403,19 +404,21 @@ POC includes all facets for 4 traits (24 facets total). Full table maintained in
 2. **Code Calculation:** Trait scores (4 traits) map to levels, creating 4-letter OCEAN code
 3. **Name Lookup:** Code queries archetype registry (~25 curated + component-based fallback for remaining 56)
 4. **Description Retrieval:** Full trait description loaded and displayed with archetype name
-5. **User Presentation:** Profile displays "You are **The Catalyst**" + 4-letter code + description + optional facet breakdown
-6. **Sharing:** User shares archetype name + code (e.g., "I'm The Catalyst - IDEC") with shareable profile link
+5. **User Presentation:** Profile displays archetype name as the emotional anchor (e.g., *"The Idealist"*) with OCEAN code as strong secondary identity (e.g., "ODEWR" — monochrome, typographic in hero; full-color exploration in OceanCodeStrand card below) + description + optional facet breakdown
+6. **Sharing:** User shares OCEAN code + archetype name (e.g., "I'm an ODEWR — The Idealist") with shareable profile link. The code enables partial-match discovery with other users.
 
 **Performance:** Code calculation + name lookup + description retrieval completes in <100ms.
 
-#### Why OCEAN Drives Engagement & Sharing
+#### Why OCEAN Codes Drive Engagement & Sharing
 
+- **Dual identity system** → Archetype name anchors the reveal moment (emotional, "The Idealist" is the h1), OCEAN code anchors the social moment (shareable, "I'm an ODEWR" like "I'm an INTP"). Hero shows code as monochrome secondary; full-color exploration in OceanCodeStrand card
+- **Partial-match tribalism** → "I'm ODEWR, you're ODANT — we're both OD!" creates social discovery and tribal bonding that isolated archetype names cannot enable
+- **Semantic letters** → Each letter self-explains (O=Open-minded, D=Disciplined, E=Extravert) — more intuitive than MBTI's opaque axes
 - **81 unique combinations (POC)** → Users feel individually recognized, not forced into predefined boxes
-- **Memorable character names** (The Catalyst, The Architect) → Natural social proof on LinkedIn—users want to be these archetypes
-- **Name + Description separation** → We can validate the concept with simpler naming, iterate on language post-POC
+- **Archetype names as emotional anchors** → "The Idealist" is the primary *reveal* identity (h1, display scale in hero), adding warmth and recognition. The code is the primary *social* identity (what users say, share, and compare)
 - **Scientific foundation** (Big Five) → Maintains credibility for B2B use cases (recruitment, team analysis)
 - **Expandable to 243** → POC proves the concept; Phase 2 adds full nuance if metrics justify the effort
-- **Component-based system** → Scales naming to all combinations without hand-curation bottleneck
+- **Composable identity DNA** → Unlike isolated archetype names, codes let users discover shared traits, compare letter-by-letter, and form sub-communities around shared trait combos
 
 ---
 
@@ -785,8 +788,10 @@ The BMAD expert team reviewed your success criteria and provided refinements:
 | **NPS (Completers)** | ≥ 40 | ≥ 50 | "Would recommend to friends?" survey |
 | **Exit Sentiment (Dropouts)** | Capture via survey | Improve engagement | Exit survey: "Why did you leave?" |
 | **Drop-off Analysis** | Identify WHERE users abandon | Optimize pacing | Cohort analysis by conversation length |
-| **Archetype Name Resonance** | ≥ 75% of users feel their archetype name is memorable + want to share it | ≥ 80% | Post-assessment survey: "Does your archetype name feel worth sharing?" |
-| **Archetype Code Consistency** | Same trait scores always produce identical 4-letter OCEAN code (deterministic) | 100% | Automated testing of code generation |
+| **OCEAN Code + Archetype Resonance** | ≥ 75% of users remember their OCEAN code + feel it represents them | ≥ 80% | Post-assessment survey: "Do you remember your OCEAN code?" + "Does your code + archetype feel worth sharing?" |
+| **OCEAN Code Social Usage** | ≥ 50% of users who share use their OCEAN code (not just archetype name) in social posts | ≥ 60% | Content analysis of shared posts + profile link captions |
+| **Partial-Match Discovery** | Users who compare codes report "tribal connection" moments | Qualitative | Follow-up interviews: "Did you discover shared traits with someone?" |
+| **OCEAN Code Consistency** | Same trait scores always produce identical 5-letter OCEAN code (deterministic) | 100% | Automated testing of code generation |
 | **Trait Description Accuracy** | ≥ 80% of users find their trait description accurate + insightful | ≥ 85% | Post-assessment survey: "Does this description capture your personality?" |
 | **LLM Cost/User** | ≤ $0.15 (realistic) | ≤ $0.12 | API cost monitoring (optimization target: $0.10) |
 | **Nerin Response Time (P95)** | < 2 seconds | < 1.5 seconds | Real User Monitoring |
@@ -971,9 +976,9 @@ User journeys map how target users interact with the platform from discovery thr
 2. **Start Assessment:** Clicks "Take Your Assessment" → Lands on homepage → Reads "30-min conversation" promise
 3. **Engage with Nerin:** Begins conversational assessment → Nerin asks open-ended questions → Maya responds naturally → Progress indicator shows 35% complete
 4. **Continue Conversation:** Nerin adapts questions based on responses → Explores values, work style, social preferences → No repetitive or generic questions → 25 minutes elapsed
-5. **Receive Results:** Assessment complete → System displays 4-letter OCEAN code → Archetype name revealed: "The Catalyst" → Reads 2-sentence archetype description
-6. **Explore Profile:** Views trait breakdown (5 Big Five traits with scores 0-20) → Reads facet-level details (6 facets per trait) → Precision score shows 85% confidence
-7. **Share:** Clicks "Share Profile" → Generates unique URL → Copies link → Posts to LinkedIn with caption "Just discovered I'm 'The Catalyst' 🔥"
+5. **Receive Results:** Assessment complete → OCEAN code revealed prominently (e.g., "ODEWR") → Archetype name shown as subtitle ("The Catalyst") → Reads archetype description
+6. **Explore Profile:** Views trait breakdown (5 Big Five traits with scores) → Each OCEAN letter explored individually → Reads facet-level details (6 facets per trait) → Precision score shows 85% confidence
+7. **Share:** Clicks "Share Profile" → Generates unique URL → Copies link → Posts to LinkedIn with caption "I'm an ODEWR — The Catalyst. What's your code?"
 
 **Success Criteria:** Completion rate ≥50%, Sharing rate ≥15%, User sentiment ≥7/10
 
@@ -1103,7 +1108,7 @@ Non-functional requirements specify HOW WELL the system performs—quality attri
 
 **Vision:** Transform personality assessment through conversational AI that provides engaging, scientifically-grounded Big Five personality profiles with memorable archetypes and privacy-first sharing.
 
-**Product:** big-ocean delivers a 30-minute conversational assessment via Nerin (AI agent) that analyzes 30 Big Five facets, generates a unique 4-letter OCEAN archetype code with memorable character name, and creates shareable profiles for social discovery—while maintaining user privacy control.
+**Product:** big-ocean delivers a 30-minute conversational assessment via Nerin (AI agent) that analyzes 30 Big Five facets, reveals a memorable archetype name as the emotional anchor (e.g., "The Idealist") with a unique 5-letter OCEAN code as the shareable social identity (e.g., "ODEWR"), and creates shareable profiles that enable partial-match tribal discovery between users—while maintaining user privacy control.
 
 **Target Users:** B2C individuals globally seeking authentic personality insight beyond MBTI's oversimplification, particularly professionals interested in self-awareness, team dynamics, and personal growth.
 
@@ -1119,5 +1124,5 @@ Non-functional requirements specify HOW WELL the system performs—quality attri
 - Technical Performance: <2 sec response time (P95), zero data breaches
 - Business Viability: Cost ≤$0.15/user, CAC payback <6 months (post-MVP)
 
-**Differentiation:** Conversational depth + memorable archetypes + privacy-first + scientific credibility (vs. questionnaire-based assessments with generic results)
+**Differentiation:** Conversational depth + dual identity system (archetype-first reveal, code-first social sharing) with partial-match tribalism + privacy-first + scientific credibility (vs. questionnaire-based assessments with generic results)
 
