@@ -460,3 +460,71 @@ const isConfidenceReady = avgConfidence >= 70;
 - [ ] All existing chat tests updated and passing
 
 ---
+
+## Story 4.8: Message Character Limit with Counter
+
+**Origin:** Correct-course sprint change (2026-02-17). UX improvement to prevent excessively long messages.
+
+As a **User taking the assessment**,
+I want **to see a character counter on the message input showing usage out of 2,000 characters**,
+So that **I know when I'm approaching the limit and my messages stay at a reasonable length for Nerin to process effectively**.
+
+**Acceptance Criteria:**
+
+**Given** I type in the message input
+**When** the character count updates
+**Then** I see a counter below/inside the input: e.g., `0 / 2,000`
+**And** the counter updates in real-time as I type
+
+**Given** I've typed 1,800+ characters (90% threshold)
+**When** I continue typing
+**Then** the counter turns to a warning color (`--warning` / amber)
+
+**Given** I've typed exactly 2,000 characters
+**When** I try to type more
+**Then** additional characters are not accepted (input is capped)
+**And** the counter shows `2,000 / 2,000` in destructive/red color
+**And** the send button remains enabled (can still send the full message)
+
+**Given** I paste text that would exceed 2,000 characters
+**When** the paste event fires
+**Then** the text is truncated to 2,000 characters
+**And** the counter reflects the truncated length
+
+**Given** I'm on mobile
+**When** the counter renders
+**Then** it's visible and doesn't obscure the input or keyboard
+
+**Technical Details:**
+
+| File | Change |
+|------|--------|
+| Chat input component (TherapistChat.tsx or equivalent) | Add `maxLength={2000}` to textarea, add counter display |
+| Counter styling | Semantic tokens: `--muted-foreground` default, `--warning` at 90%, `--destructive` at 100% |
+
+**Implementation:**
+
+```typescript
+const MAX_CHARS = 2000;
+const WARNING_THRESHOLD = 0.9; // 90%
+
+const charCount = message.length;
+const isWarning = charCount >= MAX_CHARS * WARNING_THRESHOLD;
+const isMax = charCount >= MAX_CHARS;
+```
+
+**Counter Display:** Bottom-right of input area, `body-sm` (14px), muted by default.
+
+**Acceptance Checklist:**
+- [ ] Counter displays current/max characters (e.g., "142 / 2,000")
+- [ ] Counter updates in real-time
+- [ ] Warning color at 90%+ (1,800+ chars)
+- [ ] Destructive color at 100% (2,000 chars)
+- [ ] Input capped at 2,000 characters (no overflow)
+- [ ] Paste truncation works correctly
+- [ ] Send button works at max length
+- [ ] Mobile-responsive (counter visible, doesn't obscure input)
+- [ ] Uses semantic color tokens
+- [ ] `data-slot="char-counter"` attribute on counter element
+
+---

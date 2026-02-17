@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-02-16 (refreshed sprint-planning, auto-detected status updates)
+# Generated: 2026-02-17 (refreshed sprint-planning, auto-detected status updates)
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-02-16
+generated: 2026-02-17
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -72,8 +72,8 @@ development_status:
   epic-3-retrospective: done
 
   # EPIC 4: Frontend Assessment UI
-  # All stories completed — epic promoted to done (2026-02-14)
-  epic-4: done
+  # 7 stories completed, Story 4.8 added via correct-course (2026-02-17)
+  epic-4: in-progress
   4-1-authentication-ui-sign-up-modal: done
   4-2-assessment-conversation-component: done
   4-3-session-resumption-device-switching: done
@@ -81,6 +81,7 @@ development_status:
   4-5-component-documentation-with-storybook: done
   4-6-hide-scores-during-assessment: done
   4-7-message-count-progress-indicator: done
+  4-8-message-character-limit-with-counter: ready-for-dev
   epic-4-retrospective: done
 
   # EPIC 5: Results & Profile Sharing
@@ -101,10 +102,10 @@ development_status:
   epic-6-retrospective: optional
 
   # EPIC 7: UI Theme & Visual Identity (PHASE 1 - MVP Visual Identity)
-  # All 15 stories completed — epic promoted to done (2026-02-16)
+  # 15 stories completed, Story 7.16 added via correct-course (2026-02-17)
   # Psychedelic-bold visual identity with OCEAN geometric shapes, dual light/dark modes,
   # custom typography, illustration system, auth-gated results, shareable profiles, user dashboard
-  epic-7: done
+  epic-7: in-progress
   7-1-psychedelic-brand-design-tokens: done
   7-2-typography-system: done
   7-3-dark-mode-toggle-with-system-preference-detection: done
@@ -120,6 +121,7 @@ development_status:
   7-13-registered-user-profile-page: done
   7-14-component-visual-consistency-and-final-polish: done
   7-15-auth-form-psychedelic-brand-redesign: done
+  7-16-geometric-ocean-sea-life-ambient-layer: ready-for-dev
   epic-7-retrospective: done
 
   # EPIC 8: Results Page Content Enrichment
@@ -131,7 +133,7 @@ development_status:
   8-1-expand-archetype-descriptions-to-4-5-sentences: done
   8-2-add-level-specific-trait-descriptions: done
   8-3-add-level-specific-facet-descriptions: done
-  8-6-results-page-layout-redesign-mockup-7-detail-zone: review
-  8-4-pre-generate-personalized-portrait-at-free-tier-message-threshold: review
+  8-6-results-page-layout-redesign-mockup-7-detail-zone: done
+  8-4-pre-generate-personalized-portrait-at-free-tier-message-threshold: done
   8-5-regenerate-personalized-portrait-paid-tier: backlog
   epic-8-retrospective: optional

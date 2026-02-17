@@ -1586,6 +1586,165 @@ So that **the application feels professional, trustworthy, and visually unified*
 
 ---
 
-**Document Status:** Rewritten 2026-02-13 to align with new UX Design Specification. Includes 3 new stories (7.11 Auth Gate, 7.12 Share Profile, 7.13 User Dashboard) and updated Story 7.10 with chat-results navigation. Ready for review and implementation.
+**Document Status:** Rewritten 2026-02-13 to align with new UX Design Specification. Includes 3 new stories (7.11 Auth Gate, 7.12 Share Profile, 7.13 User Dashboard) and updated Story 7.10 with chat-results navigation. Story 7.16 added via correct-course (2026-02-17).
+
+---
+
+## Story 7.16: Geometric Ocean Sea Life Ambient Layer
+
+**Origin:** Correct-course sprint change (2026-02-17). Design mockup: `apps/front/geometric-ocean-mockup.html`.
+
+**Dependencies:** Story 7.1 (color tokens)
+
+As a **User taking the 30-minute assessment**,
+I want **to see subtle, animated geometric sea life creatures behind the chat conversation**,
+So that **the assessment feels immersive and alive — like exploring an underwater world — without distracting from the conversation**.
+
+### Creature Specifications
+
+| Creature | Shape | Color (Light) | Color (Dark) | Animation | Count |
+|----------|-------|--------------|--------------|-----------|-------|
+| Seaweed | Rounded stalks | Teal `#00B4A6` | Bright Teal `#00D4C8` | Sway ~5s | 4 groups (2 edge, 2 center) |
+| Diamond Fish | Diamond body + tail | Orange `#FF6B2B` | Gold `#FFB830` | Swim across 35-48s + bob 4s | 3 |
+| School Fish | Triangle formation | Pink `#FF0080` | Hot Pink `#FF2D9B` | School swim 38s + individual drift | 9 individuals |
+| Jellyfish | Circle bell + tentacles | Purple `#A855F7` | Purple `#A855F7` / Light `#C084FC` | Vertical drift 55-65s + pulse 4s | 2 |
+| Bubbles | Circle, hollow | Peach border `#FFD6C4` | Warm White `#F0EDE8` | Rise 8-15s with sway | 8 |
+
+### Opacity (Ambient, Non-Distracting)
+
+| Creature | Light Mode | Dark Mode |
+|----------|-----------|-----------|
+| Seaweed | 0.18 | 0.22 |
+| Fish | 0.14 (body), 0.05 (crossing chat) | 0.20, 0.07 |
+| School | 0.14, 0.05 (crossing) | 0.18, 0.07 |
+| Jellyfish bell | 0.12 | 0.18 |
+| Jellyfish tentacles | 0.08 | 0.12 |
+| Bubbles | 0.22 | 0.18 |
+
+### Acceptance Criteria
+
+**Given** I'm in the chat assessment page
+**When** the page loads
+**Then** I see subtle geometric sea life animating behind the conversation:
+  - Teal seaweed stalks swaying at edges
+  - Orange diamond fish swimming slowly across
+  - Pink triangle school fish in formation
+  - Purple jellyfish drifting upward
+  - Peach bubbles rising gently
+**And** all creatures are at low opacity (5-22%) and non-distracting
+**And** the ocean layer is `aria-hidden` (decorative only)
+**And** the ocean layer has `pointer-events: none` (no interaction)
+
+**Given** a new message arrives
+**When** the pulse state activates
+**Then** seaweed sways wider, fish speed up briefly, school scatters, jellyfish pulses harder
+**And** the pulse reverts after 3 seconds
+
+**Given** the conversation reaches 60%+ progress (via `depthProgress` prop)
+**When** the depth threshold is crossed
+**Then** all animations slow down (~30% longer duration)
+
+**Given** I toggle dark mode
+**When** the theme switches
+**Then** creatures shift to bioluminescent palette (gold fish, bright teal seaweed, hot pink school)
+
+**Given** I have `prefers-reduced-motion` enabled
+**When** the page loads
+**Then** all animations are disabled — creatures show at final static positions
+
+**Given** I'm on mobile (< 900px)
+**When** the layout adapts
+**Then** center seaweed groups are hidden
+**And** all other creatures remain visible
+
+### Component Structure
+
+```
+apps/front/src/components/sea-life/
+  GeometricOcean.tsx          # Full scene container (absolute, inset-0, z-0, pointer-events-none)
+  Seaweed.tsx                 # Teal stalks with sway animation
+  DiamondFish.tsx             # Orange diamond body + tail, swim paths
+  SchoolFish.tsx              # Pink triangle formation with individual drift
+  Jellyfish.tsx               # Purple bell + tentacles, vertical drift
+  Bubbles.tsx                 # Rising peach/warm bubbles
+  sea-life.stories.tsx        # Storybook stories for all creatures
+```
+
+### CSS Variables
+
+Creature-specific tokens (add to globals.css or scope within component):
+
+```css
+:root {
+  --seaweed-color: #00B4A6;
+  --fish-body-color: #FF6B2B;
+  --fish-tail-color: #FF8F5E;
+  --school-color: #FF0080;
+  --jelly-bell-color: #A855F7;
+  --jelly-tentacle-color: #A855F7;
+  --bubble-border-color: #FFD6C4;
+  --bubble-fill-color: rgba(255, 232, 216, 0.06);
+
+  --seaweed-opacity: 0.18;
+  --fish-opacity: 0.14;
+  --fish-crossing-opacity: 0.05;
+  --school-opacity: 0.14;
+  --school-crossing-opacity: 0.05;
+  --jelly-opacity: 0.12;
+  --jelly-tentacle-opacity: 0.08;
+  --bubble-opacity: 0.22;
+}
+
+.dark {
+  --seaweed-color: #00D4C8;
+  --fish-body-color: #FFB830;
+  --fish-tail-color: #FFD060;
+  --school-color: #FF2D9B;
+  --jelly-bell-color: #A855F7;
+  --jelly-tentacle-color: #C084FC;
+  --bubble-border-color: #F0EDE8;
+  --bubble-fill-color: rgba(240, 237, 232, 0.04);
+
+  --seaweed-opacity: 0.22;
+  --fish-opacity: 0.20;
+  --fish-crossing-opacity: 0.07;
+  --school-opacity: 0.18;
+  --school-crossing-opacity: 0.07;
+  --jelly-opacity: 0.18;
+  --jelly-tentacle-opacity: 0.12;
+  --bubble-opacity: 0.18;
+}
+```
+
+### Storybook Stories
+
+- **GeometricOcean** — Full scene with controls: pulse toggle, depth toggle, dark mode toggle
+- **Seaweed** — Isolated seaweed group with sway
+- **DiamondFish** — Single fish with swim path
+- **SchoolFish** — Formation with individual drift
+- **Jellyfish** — Bell pulse + tentacle sway
+- **Bubbles** — Rising bubble particles
+
+### Acceptance Checklist
+
+- [ ] All 5 creature types rendering with correct animations
+- [ ] Seaweed: 4 groups (left, right, center-left, center-right), sway animation
+- [ ] Diamond Fish: 3 fish, different heights/speeds, bob animation
+- [ ] School Fish: 9 triangles in formation, individual drift
+- [ ] Jellyfish: 2 jellies, vertical drift, bell pulse, tentacle sway
+- [ ] Bubbles: 8 particles, rising with horizontal sway
+- [ ] Pulse state reacts to message arrival (3s duration)
+- [ ] Depth state slows animations (~30%)
+- [ ] Dark mode bioluminescent palette applied
+- [ ] Low opacity (5-22%) — ambient, not distracting
+- [ ] `prefers-reduced-motion` disables all animations
+- [ ] `aria-hidden` on entire ocean layer
+- [ ] `pointer-events: none` on ocean layer
+- [ ] Mobile responsive (center groups hidden < 900px)
+- [ ] Storybook stories for full scene + individual creatures
+- [ ] `data-slot` attributes on all component parts
+- [ ] Uses semantic color tokens / CSS custom properties
+- [ ] Zero new npm dependencies
+- [ ] Accepts `depthProgress` prop (0-1) for depth state — same prop used by DepthMeter
 
 ---
