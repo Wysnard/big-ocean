@@ -6,7 +6,11 @@
  */
 
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
-import { FacetResultSchema, TraitResultSchema } from "@workspace/domain";
+import {
+	AssessmentMessageContentSchema,
+	FacetResultSchema,
+	TraitResultSchema,
+} from "@workspace/domain";
 import { Schema as S } from "effect";
 import {
 	AgentInvocationError,
@@ -49,7 +53,7 @@ export const StartAssessmentResponseSchema = S.Struct({
  */
 export const SendMessageRequestSchema = S.Struct({
 	sessionId: S.String,
-	message: S.String,
+	message: AssessmentMessageContentSchema,
 });
 
 /**

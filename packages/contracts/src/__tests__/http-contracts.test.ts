@@ -97,6 +97,25 @@ describe("Assessment Contracts", () => {
 			expect(() => S.decodeUnknownSync(SendMessageRequestSchema)(invalidRequest)).toThrow();
 		});
 
+		it("should reject send message request with message exceeding 2000 characters", () => {
+			const oversizedRequest = {
+				sessionId: "session_123",
+				message: "a".repeat(2001),
+			};
+
+			expect(() => S.decodeUnknownSync(SendMessageRequestSchema)(oversizedRequest)).toThrow();
+		});
+
+		it("should accept send message request with exactly 2000 character message", () => {
+			const maxLengthRequest = {
+				sessionId: "session_123",
+				message: "a".repeat(2000),
+			};
+
+			const result = S.decodeUnknownSync(SendMessageRequestSchema)(maxLengthRequest);
+			expect(result.message).toHaveLength(2000);
+		});
+
 		it("should validate send message response schema", () => {
 			const validResponse = {
 				response: "That's interesting! Tell me more about what draws you to outdoor activities.",

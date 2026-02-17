@@ -1,6 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { ASSESSMENT_MESSAGE_MAX_LENGTH } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
 import { NerinMessage } from "@workspace/ui/components/chat";
+import { cn } from "@workspace/ui/lib/utils";
 import { Loader2, Send } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getPlaceholder } from "@/constants/chat-placeholders";
@@ -33,6 +35,9 @@ function getRelativeTime(date: Date): string {
 	if (diffHr < 24) return `${diffHr} hr ago`;
 	return date.toLocaleDateString();
 }
+
+/** Character counter warning threshold (90% of max) */
+const WARNING_THRESHOLD = 0.9;
 
 /** Milestone thresholds and their Nerin-voice messages */
 const MILESTONES = [
@@ -588,7 +593,7 @@ function ChatContent({
 						)}
 
 						{/* Input Area — matches homepage input bar style */}
-						<div className="border-t border-[var(--input-bar-border)] bg-[var(--input-bar-bg)] backdrop-blur-[14px] px-6 py-4 sticky bottom-0 pb-[env(safe-area-inset-bottom)]">
+						<div className="border-t border-[var(--input-bar-border)] bg-[var(--input-bar-bg)] backdrop-blur-[14px] px-6 py-4 sticky bottom-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
 							<div className="flex gap-2 items-end">
 								<textarea
 									ref={textareaRef}
@@ -602,6 +607,7 @@ function ChatContent({
 									onFocus={onInputFocus}
 									placeholder={inputPlaceholder}
 									disabled={isLoading || isCompleted}
+									maxLength={ASSESSMENT_MESSAGE_MAX_LENGTH}
 									rows={1}
 									className="flex-1 px-4 py-2 rounded-lg border border-[var(--input-field-border)] bg-[var(--input-field-bg)] text-foreground placeholder-[var(--input-field-color)] focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-none overflow-y-auto"
 									style={{ maxHeight: "120px" }}
@@ -616,6 +622,22 @@ function ChatContent({
 									{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
 								</Button>
 							</div>
+							{!isCompleted && (
+								<span
+									data-slot="char-counter"
+									className={cn(
+										"text-sm text-right block mt-1",
+										inputValue.length >= ASSESSMENT_MESSAGE_MAX_LENGTH
+											? "text-destructive"
+											: inputValue.length >= ASSESSMENT_MESSAGE_MAX_LENGTH * WARNING_THRESHOLD
+												? "text-[var(--warning)]"
+												: "text-muted-foreground",
+									)}
+								>
+									{inputValue.length.toLocaleString("en-US")} /{" "}
+									{ASSESSMENT_MESSAGE_MAX_LENGTH.toLocaleString("en-US")}
+								</span>
+							)}
 						</div>
 					</div>
 				</div>
