@@ -62,7 +62,9 @@ const configSchema = Config.all({
 	dailyCostLimit: Config.number("DAILY_COST_LIMIT").pipe(Config.withDefault(75)),
 
 	// Free tier message limit (Story 4.7)
-	freeTierMessageThreshold: Config.number("FREE_TIER_MESSAGE_THRESHOLD").pipe(Config.withDefault(15)),
+	freeTierMessageThreshold: Config.number("FREE_TIER_MESSAGE_THRESHOLD").pipe(
+		Config.withDefault(25),
+	),
 
 	// Profile sharing confidence threshold
 	shareMinConfidence: Config.number("SHARE_MIN_CONFIDENCE").pipe(Config.withDefault(70)),

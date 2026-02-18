@@ -81,6 +81,7 @@
 
 	/* ========== TYPOGRAPHY ========== */
 	--font-heading: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+	--font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
 	--font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
 	--font-data: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
@@ -412,6 +413,7 @@
 	--color-facet-vulnerability: var(--facet-vulnerability);
 	/* Font family mappings */
 	--font-heading: var(--font-heading);
+	--font-display: var(--font-display);
 	--font-body: var(--font-body);
 	--font-data: var(--font-data);
 
@@ -493,6 +495,30 @@
 }
 
 .nerin-prose p:last-child {
+	margin-bottom: 0;
+}
+
+.nerin-prose ul,
+.nerin-prose ol {
+	margin-top: 6px;
+	margin-bottom: 10px;
+	padding-left: 1.4em;
+}
+
+.nerin-prose ul {
+	list-style-type: disc;
+}
+
+.nerin-prose ol {
+	list-style-type: decimal;
+}
+
+.nerin-prose li {
+	margin-bottom: 4px;
+	line-height: 1.55;
+}
+
+.nerin-prose li:last-child {
 	margin-bottom: 0;
 }
 

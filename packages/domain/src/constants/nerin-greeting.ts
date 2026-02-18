@@ -6,18 +6,20 @@
  */
 
 export const GREETING_MESSAGES = [
-	"Hey there! I'm Nerin — I'm here to help you understand your personality through conversation. No multiple choice, no right answers, just us talking.",
-	"Here's the thing: the more openly and honestly you share, the more accurate and meaningful your insights will be. This is a judgment-free space — be as real as you'd like. The honest answer, even if it's messy or contradictory, is always more valuable than the polished one.",
+	"Hey 👋 I'm Nerin — think of me as your personality dive master. We're going to have a conversation, and by the end you'll see yourself in ways that might surprise you. No quizzes, no right answers — just a good conversation 🤿",
+	"There's no good or bad answers here — just *true* ones. And honestly, the messy, contradictory stuff? That's usually where the most interesting patterns are hiding 🐙",
 ] as const;
 
 /**
  * Pool of opening questions. One is randomly selected per session as message 3.
  */
 export const OPENING_QUESTIONS = [
-	"If your closest friend described you in three words, what would they say?",
-	"What's something most people get wrong about you?",
-	"Picture a perfect Saturday with nothing planned — what does your ideal day look like?",
-	"Think of a moment recently when you felt most like yourself — what were you doing?",
+	"If someone followed you around for a week, what would surprise them most about how you actually live?",
+	"When you've got a free weekend — are you the type to fill every hour with plans, or do you need it completely open? What happens when you get the opposite?",
+	"If you had to send someone to explain *you* to a stranger — who are you sending, and what are they getting wrong?",
+	"You're at the beach — are you the one diving straight into the waves, testing the water with your toes first, or watching from the shore with a book? 🌊",
+	"What's a rule you always break — and one you'd never break?",
+	"If you had to wear a sign around your neck for a day that said one true thing about you — what would it say?",
 ] as const;
 
 /**

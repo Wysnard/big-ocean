@@ -30,6 +30,8 @@ export {
 	OPENING_QUESTIONS,
 	pickOpeningQuestion,
 } from "./constants/nerin-greeting";
+// Nerin persona constant (Story 2.12)
+export { NERIN_PERSONA } from "./constants/nerin-persona";
 // Trait descriptions (Story 8.2)
 export { TRAIT_DESCRIPTIONS, type TraitDescriptions } from "./constants/trait-descriptions";
 // Auth context tag (Story 1.4 — populated by AuthMiddleware)
@@ -211,7 +213,7 @@ export { getNextDayMidnightUTC, getUTCDateKey } from "./utils/date.utils";
 // Utility functions
 export {
 	aggregateFacetScores,
-	buildSystemPrompt,
+	buildChatSystemPrompt,
 	calculateConfidenceFromFacetScores,
 	calculateOverallConfidence,
 	createInitialFacetScoresMap,
