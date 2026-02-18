@@ -6,6 +6,7 @@ import { NerinMessage } from "@workspace/ui/components/chat";
 import { cn } from "@workspace/ui/lib/utils";
 import { Loader2, Send } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Markdown from "react-markdown";
 import { getPlaceholder } from "@/constants/chat-placeholders";
 import { useTherapistChat } from "@/hooks/useTherapistChat";
 import { DepthMeter } from "./chat/DepthMeter";
@@ -42,20 +43,15 @@ function getRelativeTime(date: Date): string {
 /** Character counter warning threshold (90% of max) */
 const WARNING_THRESHOLD = 0.9;
 
-/** Milestone thresholds and their Nerin-voice messages */
+/** Milestone thresholds and their app-voiced progress messages */
 const MILESTONES = [
 	{
-		threshold: 25,
-		message: "We're off to a great start — I'm already seeing some interesting patterns.",
-	},
-	{
 		threshold: 50,
-		message: "Halfway there! Your personality profile is really taking shape.",
+		message: "Halfway there — your personality portrait is taking shape.",
 	},
 	{
-		threshold: 70,
-		message:
-			"Your profile is ready! You can view your results anytime, or keep chatting to add more depth.",
+		threshold: 75,
+		message: "Almost there — just a few more exchanges to complete your portrait.",
 	},
 ] as const;
 
@@ -138,9 +134,7 @@ export function TherapistChat({
 	highlightEnd,
 	highlightScore,
 }: TherapistChatProps) {
-	const [inputValue, setInputValue] = useState("");
 	const messagesEndRef = useRef<HTMLDivElement>(null);
-	const textareaRef = useRef<HTMLTextAreaElement>(null);
 	const {
 		messages,
 		isLoading,
@@ -245,31 +239,12 @@ export function TherapistChat({
 		setPlaceholder(getPlaceholder(userMessageCount, freeTierMessageThreshold));
 	}, [userMessageCount, freeTierMessageThreshold]);
 
-	// Textarea auto-resize handler
-	const handleTextareaResize = useCallback(() => {
-		const textarea = textareaRef.current;
-		if (!textarea) return;
-		textarea.style.height = "auto";
-		textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
-	}, []);
-
 	// Auto-scroll to the latest message when message count changes
 	const messageCount = messages.length;
 	// biome-ignore lint/correctness/useExhaustiveDependencies: messageCount triggers scroll on new messages
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [messageCount]);
-
-	// Mobile keyboard handling via visualViewport API
-	useEffect(() => {
-		const viewport = window.visualViewport;
-		if (!viewport) return;
-		const onResize = () => {
-			textareaRef.current?.scrollIntoView({ block: "nearest" });
-		};
-		viewport.addEventListener("resize", onResize);
-		return () => viewport.removeEventListener("resize", onResize);
-	}, []);
 
 	// Scroll to highlighted message
 	useEffect(() => {
@@ -280,23 +255,6 @@ export function TherapistChat({
 			}, 300); // Delay to ensure DOM is ready
 		}
 	}, [highlightMessageId, messages.length]);
-
-	const handleSendMessage = async () => {
-		if (!inputValue.trim() || isLoading) return;
-		await sendMessage(inputValue);
-		setInputValue("");
-		// Reset textarea height after sending
-		if (textareaRef.current) {
-			textareaRef.current.style.height = "auto";
-		}
-	};
-
-	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter" && !e.shiftKey) {
-			e.preventDefault();
-			handleSendMessage();
-		}
-	};
 
 	// Determine celebration input placeholder
 	const inputPlaceholder = useMemo(() => {
@@ -328,18 +286,116 @@ export function TherapistChat({
 			highlightStart={highlightStart}
 			highlightEnd={highlightEnd}
 			highlightScore={highlightScore}
-			inputValue={inputValue}
-			setInputValue={setInputValue}
 			inputPlaceholder={inputPlaceholder}
-			textareaRef={textareaRef}
 			messagesEndRef={messagesEndRef}
-			handleTextareaResize={handleTextareaResize}
-			handleKeyDown={handleKeyDown}
-			handleSendMessage={handleSendMessage}
+			onSend={sendMessage}
 			oceanPulse={oceanPulse}
 			navigate={navigate}
 			onInputFocus={() => setPlaceholder(getPlaceholder(userMessageCount, freeTierMessageThreshold))}
 		/>
+	);
+}
+
+/** Input bar with character counter — owns input state to isolate re-renders from message list */
+function ChatInputBar({
+	onSend,
+	isLoading,
+	isCompleted,
+	placeholder,
+	onFocus,
+}: {
+	onSend: (message: string) => Promise<void>;
+	isLoading: boolean;
+	isCompleted: boolean;
+	placeholder: string;
+	onFocus: () => void;
+}) {
+	const [inputValue, setInputValue] = useState("");
+	const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+	const handleTextareaResize = useCallback(() => {
+		const textarea = textareaRef.current;
+		if (!textarea) return;
+		textarea.style.height = "auto";
+		textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+	}, []);
+
+	const handleSendMessage = async () => {
+		if (!inputValue.trim() || isLoading) return;
+		await onSend(inputValue);
+		setInputValue("");
+		if (textareaRef.current) {
+			textareaRef.current.style.height = "auto";
+		}
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "Enter" && !e.shiftKey) {
+			e.preventDefault();
+			handleSendMessage();
+		}
+	};
+
+	// Mobile keyboard handling via visualViewport API
+	useEffect(() => {
+		const viewport = window.visualViewport;
+		if (!viewport) return;
+		const onResize = () => {
+			textareaRef.current?.scrollIntoView({ block: "nearest" });
+		};
+		viewport.addEventListener("resize", onResize);
+		return () => viewport.removeEventListener("resize", onResize);
+	}, []);
+
+	return (
+		<div className="relative z-10 border-t border-[var(--input-bar-border)] bg-[var(--input-bar-bg)] backdrop-blur-[14px] px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+			<div className="mx-auto max-w-[900px] min-[1200px]:max-w-[1000px] min-[1440px]:max-w-[1100px]">
+				<div className="flex gap-2 items-end">
+					<textarea
+						ref={textareaRef}
+						data-slot="chat-input"
+						value={inputValue}
+						onChange={(e) => {
+							setInputValue(e.target.value);
+							handleTextareaResize();
+						}}
+						onKeyDown={handleKeyDown}
+						onFocus={onFocus}
+						placeholder={placeholder}
+						disabled={isLoading || isCompleted}
+						maxLength={ASSESSMENT_MESSAGE_MAX_LENGTH}
+						rows={1}
+						className="flex-1 px-4 py-2 rounded-lg border border-[var(--input-field-border)] bg-[var(--input-field-bg)] text-foreground placeholder-[var(--input-field-color)] focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-none overflow-y-auto"
+						style={{ maxHeight: "120px" }}
+					/>
+					<Button
+						data-testid="chat-send-btn"
+						onClick={handleSendMessage}
+						disabled={!inputValue.trim() || isLoading || isCompleted}
+						size="sm"
+						className="min-h-11 min-w-11 dark:shadow-[0_0_8px_rgba(0,212,200,0.3)] dark:disabled:opacity-65"
+					>
+						{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+					</Button>
+				</div>
+				{!isCompleted && (
+					<span
+						data-slot="char-counter"
+						className={cn(
+							"text-sm text-right block mt-1",
+							inputValue.length >= ASSESSMENT_MESSAGE_MAX_LENGTH
+								? "text-destructive"
+								: inputValue.length >= ASSESSMENT_MESSAGE_MAX_LENGTH * WARNING_THRESHOLD
+									? "text-[var(--warning)]"
+									: "text-muted-foreground",
+						)}
+					>
+						{inputValue.length.toLocaleString("en-US")} /{" "}
+						{ASSESSMENT_MESSAGE_MAX_LENGTH.toLocaleString("en-US")}
+					</span>
+				)}
+			</div>
+		</div>
 	);
 }
 
@@ -368,14 +424,9 @@ function ChatContent({
 	highlightStart,
 	highlightEnd,
 	highlightScore,
-	inputValue,
-	setInputValue,
 	inputPlaceholder,
-	textareaRef,
 	messagesEndRef,
-	handleTextareaResize,
-	handleKeyDown,
-	handleSendMessage,
+	onSend,
 	oceanPulse,
 	navigate,
 	onInputFocus,
@@ -406,14 +457,9 @@ function ChatContent({
 	highlightStart?: number;
 	highlightEnd?: number;
 	highlightScore?: number;
-	inputValue: string;
-	setInputValue: (v: string) => void;
 	inputPlaceholder: string;
-	textareaRef: React.RefObject<HTMLTextAreaElement | null>;
 	messagesEndRef: React.RefObject<HTMLDivElement | null>;
-	handleTextareaResize: () => void;
-	handleKeyDown: (e: React.KeyboardEvent) => void;
-	handleSendMessage: () => void;
+	onSend: (message: string) => Promise<void>;
 	oceanPulse: boolean;
 	navigate: ReturnType<typeof useNavigate>;
 	onInputFocus: () => void;
@@ -521,16 +567,20 @@ function ChatContent({
 											</div>
 										) : (
 											<NerinMessage messageId={msg.id}>
-												<p className="whitespace-pre-line">
-													{renderMessageContent(
-														msg.content,
-														msg.id,
-														highlightMessageId,
-														highlightStart,
-														highlightEnd,
-														highlightScore,
-													)}
-												</p>
+												{msg.id === highlightMessageId ? (
+													<p className="whitespace-pre-line">
+														{renderMessageContent(
+															msg.content,
+															msg.id,
+															highlightMessageId,
+															highlightStart,
+															highlightEnd,
+															highlightScore,
+														)}
+													</p>
+												) : (
+													<Markdown>{msg.content}</Markdown>
+												)}
 												<p className="text-xs mt-1 text-[var(--muted-dynamic)]">
 													{getRelativeTime(msg.timestamp)}
 												</p>
@@ -610,55 +660,14 @@ function ChatContent({
 					)}
 				</div>
 
-				{/* Input Area — outside scroll container, always visible at bottom */}
-				<div className="relative z-10 border-t border-[var(--input-bar-border)] bg-[var(--input-bar-bg)] backdrop-blur-[14px] px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-					<div className="mx-auto max-w-[900px] min-[1200px]:max-w-[1000px] min-[1440px]:max-w-[1100px]">
-						<div className="flex gap-2 items-end">
-							<textarea
-								ref={textareaRef}
-								data-slot="chat-input"
-								value={inputValue}
-								onChange={(e) => {
-									setInputValue(e.target.value);
-									handleTextareaResize();
-								}}
-								onKeyDown={handleKeyDown}
-								onFocus={onInputFocus}
-								placeholder={inputPlaceholder}
-								disabled={isLoading || isCompleted}
-								maxLength={ASSESSMENT_MESSAGE_MAX_LENGTH}
-								rows={1}
-								className="flex-1 px-4 py-2 rounded-lg border border-[var(--input-field-border)] bg-[var(--input-field-bg)] text-foreground placeholder-[var(--input-field-color)] focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-none overflow-y-auto"
-								style={{ maxHeight: "120px" }}
-							/>
-							<Button
-								data-testid="chat-send-btn"
-								onClick={handleSendMessage}
-								disabled={!inputValue.trim() || isLoading || isCompleted}
-								size="sm"
-								className="min-h-11 min-w-11 dark:shadow-[0_0_8px_rgba(0,212,200,0.3)] dark:disabled:opacity-65"
-							>
-								{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-							</Button>
-						</div>
-						{!isCompleted && (
-							<span
-								data-slot="char-counter"
-								className={cn(
-									"text-sm text-right block mt-1",
-									inputValue.length >= ASSESSMENT_MESSAGE_MAX_LENGTH
-										? "text-destructive"
-										: inputValue.length >= ASSESSMENT_MESSAGE_MAX_LENGTH * WARNING_THRESHOLD
-											? "text-[var(--warning)]"
-											: "text-muted-foreground",
-								)}
-							>
-								{inputValue.length.toLocaleString("en-US")} /{" "}
-								{ASSESSMENT_MESSAGE_MAX_LENGTH.toLocaleString("en-US")}
-							</span>
-						)}
-					</div>
-				</div>
+				{/* Input Area — isolated component to prevent message list re-renders on typing */}
+				<ChatInputBar
+					onSend={onSend}
+					isLoading={isLoading}
+					isCompleted={isCompleted}
+					placeholder={inputPlaceholder}
+					onFocus={onInputFocus}
+				/>
 			</div>
 		</>
 	);

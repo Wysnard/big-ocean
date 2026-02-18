@@ -2,12 +2,15 @@
  * Nerin Agent Repository Implementation
  *
  * Direct Claude invocation implementation of the Nerin conversational agent.
- * Uses ChatAnthropic.withStructuredOutput for typed responses.
+ * Returns plain text/markdown responses (no structured output).
  *
  * Fix 1: Flattened from StateGraph to plain model.invoke() — the graph had
  * a single node (START → nerin → END) with no routing benefit, and its
  * checkpointer was redundant since the orchestrator already passes full
  * message history.
+ *
+ * Story 2.12: Removed withStructuredOutput() — Nerin now returns natural
+ * text/markdown to support rich rendering in chat UI.
  *
  * Follows Effect Service Pattern:
  * - Context.Tag for service definition (in domain)
@@ -18,20 +21,13 @@
 import { ChatAnthropic } from "@langchain/anthropic";
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { AgentInvocationError } from "@workspace/contracts/errors";
-import {
-	AppConfig,
-	buildSystemPrompt,
-	LoggerRepository,
-	type NerinResponse,
-	NerinResponseJsonSchema,
-	validateNerinResponse,
-} from "@workspace/domain";
+import { AppConfig, buildChatSystemPrompt, LoggerRepository } from "@workspace/domain";
 import {
 	NerinAgentRepository,
 	type NerinInvokeInput,
 	type TokenUsage,
 } from "@workspace/domain/repositories/nerin-agent.repository";
-import { Effect, Either, Layer } from "effect";
+import { Effect, Layer } from "effect";
 
 /**
  * Pricing constants for Claude Sonnet 4.5
@@ -58,17 +54,14 @@ function calculateCost(usage: TokenUsage): {
 }
 
 /**
- * Create the ChatAnthropic model instance with structured output
+ * Create the ChatAnthropic model instance (plain text output, no structured output)
  */
 function createModel(config: { modelId: string; maxTokens: number; temperature: number }) {
-	const baseModel = new ChatAnthropic({
+	return new ChatAnthropic({
 		model: config.modelId,
 		maxTokens: config.maxTokens,
 		temperature: config.temperature,
 	});
-
-	// Use structured output with includeRaw to preserve AIMessage token metadata
-	return baseModel.withStructuredOutput(NerinResponseJsonSchema, { includeRaw: true });
 }
 
 /**
@@ -94,7 +87,7 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
 		const logger = yield* LoggerRepository;
 		const config = yield* AppConfig;
 
-		// Create the model from config
+		// Create the model from config (plain text, no structured output)
 		const model = createModel({
 			modelId: config.nerinModelId,
 			maxTokens: config.nerinMaxTokens,
@@ -111,38 +104,28 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
 				Effect.tryPromise({
 					try: async () => {
 						// Build system prompt with facet scores and steering hint
-						const systemPrompt = buildSystemPrompt(input.facetScores, input.steeringHint);
+						const systemPrompt = buildChatSystemPrompt(input.steeringHint);
 
 						// Convert domain messages to LangChain format and prepend system prompt
 						const langchainMessages = domainToLangChain(input.messages);
 						const allMessages = [new SystemMessage({ content: systemPrompt }), ...langchainMessages];
 
-						// Invoke model with structured output (includeRaw: true returns { raw, parsed })
+						// Invoke model — returns AIMessage with plain text content
 						const response = await model.invoke(allMessages);
 
-						// Extract token usage from raw AIMessage metadata
-						const usageMeta = (response.raw as AIMessage)?.usage_metadata;
+						// Extract token usage from AIMessage metadata
+						const usageMeta = response.usage_metadata;
 						const tokenCount: TokenUsage = {
 							input: usageMeta?.input_tokens ?? 0,
 							output: usageMeta?.output_tokens ?? 0,
 							total: (usageMeta?.input_tokens ?? 0) + (usageMeta?.output_tokens ?? 0),
 						};
 
-						// Validate the parsed structured response
-						const validationResult = validateNerinResponse(response.parsed);
-
-						let responseText: string;
-						if (Either.isLeft(validationResult)) {
-							// Log validation error but continue with raw response
-							logger.warn("Nerin response validation failed, using raw response", {
-								sessionId: input.sessionId,
-								error: String(validationResult.left),
-							});
-							const rawParsed = response.parsed as NerinResponse;
-							responseText = rawParsed.message;
-						} else {
-							responseText = validationResult.right.message;
-						}
+						// Extract plain text content from response
+						const responseText =
+							typeof response.content === "string"
+								? response.content
+								: ((response.content[0] as { text: string })?.text ?? "");
 
 						// Log cost
 						const cost = calculateCost(tokenCount);

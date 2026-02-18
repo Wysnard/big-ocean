@@ -31,7 +31,7 @@ export const mockAppConfig: AppConfigService = {
 	nerinModelId: "claude-haiku-4-5-20251001",
 	nerinMaxTokens: 1024,
 	nerinTemperature: 0.7,
-	freeTierMessageThreshold: 15,
+	freeTierMessageThreshold: 25,
 	shareMinConfidence: 70,
 };
 
