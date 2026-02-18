@@ -30,6 +30,7 @@ async function fetchFacetEvidence(
 export interface FacetDetailData {
 	name: FacetName;
 	score: number;
+	confidence: number;
 	evidence: SavedFacetEvidence[];
 }
 
@@ -41,6 +42,7 @@ export function useTraitEvidence(
 	sessionId: string,
 	traitName: TraitName | null,
 	facetScores: ReadonlyMap<FacetName, number>,
+	facetConfidences: ReadonlyMap<FacetName, number>,
 	enabled = true,
 ) {
 	const facetNames = traitName ? TRAIT_TO_FACETS[traitName] : [];
@@ -56,6 +58,7 @@ export function useTraitEvidence(
 					return {
 						name: facetName,
 						score: facetScores.get(facetName) ?? 0,
+						confidence: facetConfidences.get(facetName) ?? 0,
 						evidence,
 					};
 				}),

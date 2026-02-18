@@ -4,8 +4,12 @@ import type { SavedFacetEvidence } from "@workspace/contracts";
 import type { FacetName, TraitName, TraitResult } from "@workspace/domain";
 import { getTraitColor, TRAIT_TO_FACETS, toFacetDisplayName } from "@workspace/domain";
 import { AccentCard, Card, CardAccent, CardContent } from "@workspace/ui/components/card";
+import type { ChartConfig } from "@workspace/ui/components/chart";
+import { ChartContainer } from "@workspace/ui/components/chart";
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
+import { useMemo } from "react";
+import { Label, PolarGrid, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
 import { OceanCircle } from "../ocean-shapes/OceanCircle";
 import { OceanDiamond } from "../ocean-shapes/OceanDiamond";
 import { OceanHalfCircle } from "../ocean-shapes/OceanHalfCircle";
@@ -47,9 +51,55 @@ function getSignalBadge(confidence: number): { label: string; className: string 
 	};
 }
 
+const confidenceChartConfig: ChartConfig = {
+	confidence: { label: "Confidence", color: "var(--primary)" },
+};
+
+function FacetConfidenceRing({ confidence }: { confidence: number }) {
+	const endAngle = (confidence / 100) * 360;
+	const chartData = useMemo(() => [{ confidence, fill: "var(--color-confidence)" }], [confidence]);
+
+	return (
+		<ChartContainer config={confidenceChartConfig} className="size-10">
+			<RadialBarChart
+				data={chartData}
+				startAngle={0}
+				endAngle={endAngle}
+				innerRadius={14}
+				outerRadius={20}
+			>
+				<PolarGrid
+					gridType="circle"
+					radialLines={false}
+					stroke="none"
+					className="first:fill-muted last:fill-background"
+					polarRadius={[17, 11]}
+				/>
+				<RadialBar dataKey="confidence" background cornerRadius={10} />
+				<PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
+					<Label
+						content={({ viewBox }) => {
+							if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+								return (
+									<text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
+										<tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-[8px] font-semibold">
+											{Math.round(confidence)}
+										</tspan>
+									</text>
+								);
+							}
+						}}
+					/>
+				</PolarRadiusAxis>
+			</RadialBarChart>
+		</ChartContainer>
+	);
+}
+
 interface FacetDetail {
 	name: FacetName;
 	score: number;
+	confidence: number;
 	evidence: SavedFacetEvidence[];
 }
 
@@ -83,10 +133,10 @@ export function DetailZone({ trait, facetDetails, isOpen, onClose, isLoading }: 
 					<div className="flex items-center gap-3">
 						<ShapeComponent size={24} color={traitColor} />
 						<div>
-							<h3 className="text-base font-semibold text-foreground">
+							<h3 className="text-lg font-display font-semibold text-foreground">
 								{TRAIT_LABELS[trait.name]} — Evidence
 							</h3>
-							<p className="text-xs text-muted-foreground">
+							<p className="text-sm text-muted-foreground">
 								Score: {trait.score}/120 · {levelLetter} · {totalEvidence} evidence items
 							</p>
 						</div>
@@ -136,7 +186,10 @@ export function DetailZone({ trait, facetDetails, isOpen, onClose, isLoading }: 
 											<span className="text-sm font-medium text-foreground">
 												{toFacetDisplayName(facet.name)}
 											</span>
-											<span className="text-xs text-muted-foreground">{facet.score}/20</span>
+											<div className="flex items-center gap-1">
+												<span className="text-xs text-muted-foreground">{facet.score}/20</span>
+												<FacetConfidenceRing confidence={facet.confidence} />
+											</div>
 										</div>
 
 										{/* Score bar */}

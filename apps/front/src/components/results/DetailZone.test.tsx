@@ -2,8 +2,17 @@
 
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { TraitResult } from "@workspace/domain";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { DetailZone } from "./DetailZone";
+
+beforeAll(() => {
+	// Recharts ResponsiveContainer requires ResizeObserver in jsdom
+	global.ResizeObserver = class {
+		observe() {}
+		unobserve() {}
+		disconnect() {}
+	} as unknown as typeof ResizeObserver;
+});
 
 const mockTrait: TraitResult = {
 	name: "openness",
@@ -16,6 +25,7 @@ const mockFacetDetails = [
 	{
 		name: "imagination" as const,
 		score: 15,
+		confidence: 85,
 		evidence: [
 			{
 				id: "ev-1",
@@ -32,6 +42,7 @@ const mockFacetDetails = [
 	{
 		name: "artistic_interests" as const,
 		score: 12,
+		confidence: 45,
 		evidence: [],
 	},
 ];

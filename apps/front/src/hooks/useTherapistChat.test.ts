@@ -503,12 +503,12 @@ describe("useTherapistChat", () => {
 
 	// Story 2.11: Message-count-based progress (replaces confidence-based celebration)
 	describe("Message Count Progress", () => {
-		it("sets isConfidenceReady when user message count reaches threshold (15)", () => {
-			// Simulate a resumed session with 14 user messages + 14 assistant messages
-			const existingMessages = Array.from({ length: 28 }, (_, i) => ({
+		it("sets isConfidenceReady when user message count reaches threshold (25)", () => {
+			// Simulate a resumed session with 24 user messages + 24 assistant messages
+			const existingMessages = Array.from({ length: 48 }, (_, i) => ({
 				role: i % 2 === 0 ? ("user" as const) : ("assistant" as const),
 				content: `Message ${i + 1}`,
-				timestamp: new Date(Date.now() - (28 - i) * 60000).toISOString(),
+				timestamp: new Date(Date.now() - (48 - i) * 60000).toISOString(),
 			}));
 
 			mockResumeSession.mockReturnValue({
@@ -535,9 +535,9 @@ describe("useTherapistChat", () => {
 
 			const { result } = renderHook(() => useTherapistChat("session-123"));
 
-			// Already 14 user messages, send one more to reach 15
+			// Already 24 user messages, send one more to reach 25
 			act(() => {
-				result.current.sendMessage("15th user message");
+				result.current.sendMessage("25th user message");
 			});
 
 			expect(result.current.isConfidenceReady).toBe(true);
@@ -557,7 +557,7 @@ describe("useTherapistChat", () => {
 				result.current.sendMessage("Test message");
 			});
 
-			// Only 1 user message — well below threshold of 15
+			// Only 1 user message — well below threshold of 25
 			expect(result.current.isConfidenceReady).toBe(false);
 		});
 
@@ -569,10 +569,10 @@ describe("useTherapistChat", () => {
 
 		it("allows dismissing celebration via setHasShownCelebration", () => {
 			// Simulate a resumed session with enough messages to trigger celebration
-			const existingMessages = Array.from({ length: 30 }, (_, i) => ({
+			const existingMessages = Array.from({ length: 50 }, (_, i) => ({
 				role: i % 2 === 0 ? ("user" as const) : ("assistant" as const),
 				content: `Message ${i + 1}`,
-				timestamp: new Date(Date.now() - (30 - i) * 60000).toISOString(),
+				timestamp: new Date(Date.now() - (50 - i) * 60000).toISOString(),
 			}));
 
 			mockResumeSession.mockReturnValue({

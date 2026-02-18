@@ -118,7 +118,7 @@ export const PersonalPortrait = memo(function PersonalPortrait({
 						<CardTitle className="text-lg font-display">
 							{displayName ? `${displayName}\u2019s Personality Portrait` : "Your Personality Portrait"}
 						</CardTitle>
-						<p className="text-xs text-muted-foreground mt-1">
+						<p className="text-sm text-muted-foreground mt-1">
 							Patterns discovered from your conversation with Nerin
 						</p>
 					</div>

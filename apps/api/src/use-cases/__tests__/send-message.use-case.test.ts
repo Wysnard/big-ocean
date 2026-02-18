@@ -167,7 +167,7 @@ describe("sendMessage Use Case", () => {
 				nerinMaxTokens: 1024,
 				nerinTemperature: 0.7,
 				dailyCostLimit: 75,
-				freeTierMessageThreshold: 15,
+				freeTierMessageThreshold: 25,
 				shareMinConfidence: 70,
 			}),
 			Layer.succeed(AssessmentSessionRepository, mockAssessmentSessionRepo),

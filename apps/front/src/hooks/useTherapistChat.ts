@@ -262,12 +262,9 @@ export function useTherapistChat(sessionId: string) {
 	}, [messages, sendMessage]);
 
 	// Story 4.7: Message-count-based progress — threshold driven by backend config
-	const FREE_TIER_THRESHOLD = resumeData?.freeTierMessageThreshold ?? 15;
+	const FREE_TIER_THRESHOLD = resumeData?.freeTierMessageThreshold ?? 25;
 	const userMessageCount = messages.filter((m) => m.role === "user").length;
-	const progressPercent = Math.min(
-		Math.round((userMessageCount / FREE_TIER_THRESHOLD) * 100),
-		100,
-	);
+	const progressPercent = Math.min(Math.round((userMessageCount / FREE_TIER_THRESHOLD) * 100), 100);
 	const isConfidenceReady = userMessageCount >= FREE_TIER_THRESHOLD;
 
 	return {

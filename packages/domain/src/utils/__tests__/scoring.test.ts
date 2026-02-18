@@ -62,12 +62,13 @@ describe("aggregateFacetScores", () => {
 	});
 
 	describe("single facet evidence", () => {
-		it("returns the evidence score for a single record", () => {
+		it("returns the evidence score but reduced confidence for a single record", () => {
 			const evidence = [createEvidence("imagination", 16, 80)];
 			const result = aggregateFacetScores(evidence);
 
 			expect(result.imagination.score).toBe(16);
-			expect(result.imagination.confidence).toBe(80);
+			// Single evidence at 80% → saturation curve produces ~39, NOT 80
+			expect(result.imagination.confidence).toBe(39);
 		});
 
 		it("returns defaults for facets without evidence", () => {
@@ -96,23 +97,60 @@ describe("aggregateFacetScores", () => {
 		});
 	});
 
-	describe("variance and contradiction detection", () => {
-		it("penalizes confidence for high variance scores", () => {
-			// Highly contradictory scores: 0 and 20 (variance = 100)
-			const evidence = createEvidenceSequence("imagination", [
-				{ score: 0, confidence: 80 },
-				{ score: 20, confidence: 80 },
-			]);
-
+	describe("saturation curve confidence", () => {
+		it("single evidence produces moderate confidence, not the evidence's own confidence", () => {
+			const evidence = [createEvidence("imagination", 16, 90)];
 			const result = aggregateFacetScores(evidence);
 
-			// High variance should reduce confidence by 30 points
-			// Average confidence: 80, adjusted: 80 - 30 = 50
-			expect(result.imagination.confidence).toBe(50);
+			// 1 evidence at 90% → E_eff = 0.9 → C = 90 * (1 - e^(-0.63)) ≈ 42
+			expect(result.imagination.confidence).toBe(42);
 		});
 
-		it("does not penalize confidence for consistent scores", () => {
-			// Consistent scores: 15 and 16 (variance < 15)
+		it("confidence increases monotonically with more evidence", () => {
+			const evidence1 = [createEvidence("imagination", 15, 80)];
+			const evidence3 = createEvidenceSequence("imagination", [
+				{ score: 15, confidence: 80 },
+				{ score: 14, confidence: 75 },
+				{ score: 16, confidence: 85 },
+			]);
+			const evidence6 = createEvidenceSequence("imagination", [
+				{ score: 15, confidence: 80 },
+				{ score: 14, confidence: 75 },
+				{ score: 16, confidence: 85 },
+				{ score: 15, confidence: 70 },
+				{ score: 14, confidence: 80 },
+				{ score: 16, confidence: 75 },
+			]);
+
+			const r1 = aggregateFacetScores(evidence1);
+			const r3 = aggregateFacetScores(evidence3);
+			const r6 = aggregateFacetScores(evidence6);
+
+			expect(r3.imagination.confidence).toBeGreaterThan(r1.imagination.confidence);
+			expect(r6.imagination.confidence).toBeGreaterThan(r3.imagination.confidence);
+		});
+
+		it("confidence never exceeds C_MAX (90)", () => {
+			// 20 evidence items at max confidence
+			const evidence = createEvidenceSequence(
+				"imagination",
+				Array.from({ length: 20 }, () => ({ score: 15, confidence: 100 })),
+			);
+			const result = aggregateFacetScores(evidence);
+
+			expect(result.imagination.confidence).toBeLessThanOrEqual(90);
+		});
+
+		it("low individual confidence produces lower facet confidence", () => {
+			const highConf = [createEvidence("imagination", 15, 90)];
+			const lowConf = [createEvidence("artistic_interests", 15, 30)];
+
+			const result = aggregateFacetScores([...highConf, ...lowConf]);
+
+			expect(result.imagination.confidence).toBeGreaterThan(result.artistic_interests.confidence);
+		});
+
+		it("two evidence items produce higher confidence than one", () => {
 			const evidence = createEvidenceSequence("imagination", [
 				{ score: 15, confidence: 80 },
 				{ score: 16, confidence: 80 },
@@ -120,21 +158,38 @@ describe("aggregateFacetScores", () => {
 
 			const result = aggregateFacetScores(evidence);
 
-			// No variance penalty, confidence stays at average
-			expect(result.imagination.confidence).toBe(80);
+			// 2 evidence at 80% → ~47 (higher than single evidence at 80% → 39)
+			expect(result.imagination.confidence).toBe(47);
 		});
 
-		it("clamps confidence to 0 when penalty exceeds average", () => {
-			// Low confidence + high variance
-			const evidence = createEvidenceSequence("imagination", [
-				{ score: 0, confidence: 20 },
-				{ score: 20, confidence: 20 },
-			]);
+		it("confidence grows progressively as evidence accumulates", () => {
+			// Simulate an assessment session: each new evidence at 80% confidence
+			// should increase facet confidence, with diminishing returns
+			const confidences: number[] = [];
 
-			const result = aggregateFacetScores(evidence);
+			for (let count = 1; count <= 10; count++) {
+				const evidence = createEvidenceSequence(
+					"imagination",
+					Array.from({ length: count }, () => ({ score: 15, confidence: 80 })),
+				);
+				const result = aggregateFacetScores(evidence);
+				confidences.push(result.imagination.confidence);
+			}
 
-			// Average confidence: 20, adjusted: 20 - 30 = -10, clamped to 0
-			expect(result.imagination.confidence).toBe(0);
+			// Each step must be >= the previous (rounding can make adjacent steps equal)
+			for (let i = 1; i < confidences.length; i++) {
+				expect(confidences[i]).toBeGreaterThanOrEqual(confidences[i - 1]!);
+			}
+
+			// 1 evidence should be low (not enough data to be confident)
+			expect(confidences[0]).toBeLessThan(45);
+
+			// 10 evidence should be substantially higher than 1 evidence
+			expect(confidences[9]).toBeGreaterThan(confidences[0]! + 15);
+
+			// Verify clear growth across larger intervals (not affected by rounding)
+			expect(confidences[4]).toBeGreaterThan(confidences[0]!); // 5 > 1
+			expect(confidences[9]).toBeGreaterThan(confidences[4]!); // 10 > 5
 		});
 	});
 
@@ -145,9 +200,11 @@ describe("aggregateFacetScores", () => {
 			const result = aggregateFacetScores(evidence);
 
 			expect(result.imagination.score).toBe(18);
-			expect(result.imagination.confidence).toBe(90);
+			// Single evidence at 90% → ~42 via saturation curve
+			expect(result.imagination.confidence).toBe(42);
 			expect(result.altruism.score).toBe(5);
-			expect(result.altruism.confidence).toBe(70);
+			// Single evidence at 70% → ~35 via saturation curve
+			expect(result.altruism.confidence).toBe(35);
 		});
 	});
 
@@ -173,13 +230,13 @@ describe("aggregateFacetScores", () => {
 			}
 		});
 
-		it("confidences are in valid range 0-100", () => {
+		it("confidences are in valid range 0-90 (C_MAX)", () => {
 			const evidence = ALL_FACETS.map((facet) => createEvidence(facet, 15, 80));
 			const result = aggregateFacetScores(evidence);
 
 			for (const facet of ALL_FACETS) {
 				expect(result[facet].confidence).toBeGreaterThanOrEqual(0);
-				expect(result[facet].confidence).toBeLessThanOrEqual(100);
+				expect(result[facet].confidence).toBeLessThanOrEqual(90);
 			}
 		});
 	});
@@ -269,10 +326,10 @@ describe("deriveTraitScores", () => {
 	});
 
 	describe("confidence calculation", () => {
-		it("trait confidence is minimum of its 6 facet confidences", () => {
+		it("trait confidence is mean of assessed facet confidences (unchanged by saturation curve)", () => {
 			const facetScores = {} as Record<FacetName, { score: number; confidence: number }>;
 			for (const facet of ALL_FACETS) {
-				facetScores[facet] = { score: 10, confidence: 90 };
+				facetScores[facet] = { score: 10, confidence: 70 };
 			}
 
 			// Set one openness facet to low confidence
@@ -280,12 +337,31 @@ describe("deriveTraitScores", () => {
 
 			const result = deriveTraitScores(facetScores);
 
-			expect(result.openness.confidence).toBe(30);
+			// Mean of [30, 70, 70, 70, 70, 70] = 63 (rounded)
+			expect(result.openness.confidence).toBe(63);
 			// Other traits unaffected
-			expect(result.conscientiousness.confidence).toBe(90);
+			expect(result.conscientiousness.confidence).toBe(70);
 		});
 
-		it("handles zero confidence", () => {
+		it("excludes unassessed facets (confidence 0) from mean", () => {
+			const facetScores = {} as Record<FacetName, { score: number; confidence: number }>;
+			for (const facet of ALL_FACETS) {
+				facetScores[facet] = { score: 10, confidence: 0 };
+			}
+
+			// Only 2 of 6 openness facets have evidence
+			facetScores.imagination = { score: 15, confidence: 80 };
+			facetScores.artistic_interests = { score: 12, confidence: 60 };
+
+			const result = deriveTraitScores(facetScores);
+
+			// Mean of assessed only: (80 + 60) / 2 = 70
+			expect(result.openness.confidence).toBe(70);
+			// Traits with no assessed facets remain at 0
+			expect(result.conscientiousness.confidence).toBe(0);
+		});
+
+		it("returns zero confidence when all facets are unassessed", () => {
 			const facetScores = {} as Record<FacetName, { score: number; confidence: number }>;
 			for (const facet of ALL_FACETS) {
 				facetScores[facet] = { score: 10, confidence: 0 };

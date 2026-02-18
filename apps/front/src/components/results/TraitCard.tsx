@@ -85,7 +85,9 @@ export const TraitCard = memo(function TraitCard({
 				{/* Header: shape + name + level badge + confidence ring */}
 				<div className="flex items-center gap-2 mb-3">
 					<ShapeComponent size={20} color={traitColor} />
-					<span className="text-sm font-semibold text-foreground">{TRAIT_LABELS[trait.name]}</span>
+					<span className="text-sm font-display font-semibold text-foreground">
+						{TRAIT_LABELS[trait.name]}
+					</span>
 					<span
 						className="rounded-md px-2 py-0.5 text-[10px] font-bold uppercase"
 						style={{

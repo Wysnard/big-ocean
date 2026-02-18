@@ -326,6 +326,8 @@ describe("getResults Use Case", () => {
 
 		it("should compute overall confidence as mean of all facet confidences", async () => {
 			// Set specific confidence pattern: 30 facets with uniform confidence
+			// Each facet gets 1 evidence at confidence 60 → saturation curve produces ~31 per facet
+			// Overall = mean(all 30 facet confidences) = 31
 			const uniformEvidence = createUniformEvidence(10, 60);
 
 			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed(uniformEvidence));
@@ -334,7 +336,7 @@ describe("getResults Use Case", () => {
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
 			);
 
-			expect(result.overallConfidence).toBe(60);
+			expect(result.overallConfidence).toBe(31);
 		});
 
 		it("should return 5 traits with correct structure", async () => {

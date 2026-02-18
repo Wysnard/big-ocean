@@ -8,7 +8,7 @@
  * 1. Group evidence by facetName
  * 2. Calculate weighted average: confidence x (1 + position x 0.1) for recency bias
  * 3. Detect contradictions via variance (>15 = confidence penalty)
- * 4. Derive trait scores: sum of 6 facets (0-120 scale), minimum confidence
+ * 4. Derive trait scores: sum of 6 facets (0-120 scale), mean confidence of assessed facets
  *
  * @see packages/domain/src/types/facet-evidence.ts
  */
@@ -40,7 +40,7 @@ function mean(values: number[]): number {
 /**
  * Calculate variance (measure of spread/contradiction)
  */
-function variance(values: number[]): number {
+function _variance(values: number[]): number {
 	if (values.length < 2) return 0;
 	const avg = mean(values);
 	const squaredDiffs = values.map((val) => (val - avg) ** 2);
@@ -50,7 +50,7 @@ function variance(values: number[]): number {
 /**
  * Clamp value to range
  */
-function clamp(value: number, min: number, max: number): number {
+function _clamp(value: number, min: number, max: number): number {
 	return Math.max(min, Math.min(max, value));
 }
 
@@ -82,28 +82,34 @@ function aggregateFacet(evidence: SavedFacetEvidence[]): FacetScore {
 
 	const aggregatedScore = weightTotal > 0 ? weightedSum / weightTotal : 0;
 
-	// Calculate variance for contradiction detection
-	const scores = sorted.map((e) => e.score);
-	const varianceValue = variance(scores);
+	// --- Confidence via redundancy-adjusted saturation curve ---
+	// See confidence-algo.md for derivation and properties.
+	//
+	// Properties:
+	// - Monotonic: more evidence → confidence always increases
+	// - Diminishing returns: each additional signal contributes less
+	// - Capped: confidence never reaches C_MAX (no absolute certainty)
+	// - Redundancy-aware: correlated signals contribute less than diverse ones
+	//
+	// Note: this applies ONLY to facet confidence (evidence → facet).
+	// Trait confidence remains mean(assessed facet confidences) in deriveTraitScores.
+	const RHO = 0.5; // Redundancy coefficient (0 = independent, 1 = fully redundant)
+	const C_MAX = 90; // Maximum reachable confidence (0-100 scale)
+	const K = 0.7; // Saturation speed (well-covered ≈ 3 effective evidence)
 
-	// Calculate average confidence (work with 0-100 integers)
-	const confidences = sorted.map((e) => e.confidence);
-	const avgConfidence = mean(confidences);
+	// Step 1: Sum individual evidence confidences (normalized to 0-1)
+	const rawEvidenceMass = sorted.reduce((acc, e) => acc + e.confidence / 100, 0);
 
-	// Adjust confidence based on variance and sample size (0-100 scale)
-	let adjustedConfidence = avgConfidence;
+	// Step 2: Adjust for redundancy — additional similar signals contribute less
+	// First evidence has full impact; each additional is discounted by ρ
+	const effectiveEvidence = rawEvidenceMass / (1 + RHO * (sorted.length - 1));
 
-	// High variance (>15) indicates contradictions -> lower confidence
-	if (varianceValue > 15) {
-		adjustedConfidence -= 30; // -30 points on 0-100 scale
-	}
-
-	// Clamp to 0-100 integer range
-	adjustedConfidence = Math.round(clamp(adjustedConfidence, 0, 100));
+	// Step 3: Map to confidence via saturating exponential
+	const adjustedConfidence = Math.round(C_MAX * (1 - Math.exp(-K * effectiveEvidence)));
 
 	return {
 		score: Math.round(aggregatedScore * 10) / 10, // Round to 1 decimal
-		confidence: adjustedConfidence, // Already 0-100 integer
+		confidence: adjustedConfidence,
 	};
 }
 
@@ -172,8 +178,11 @@ export function deriveTraitScores(facetScores: FacetScoresMap): TraitScoresMap {
 		// Trait score = sum of facet scores (0-120 scale for stacked visualization)
 		const traitScore = sum(facetsForTrait.map((f) => f.score));
 
-		// Trait confidence = minimum confidence (conservative estimate)
-		const traitConfidence = Math.min(...facetsForTrait.map((f) => f.confidence));
+		// Trait confidence = mean of assessed facets (confidence > 0)
+		// Using Math.min was too conservative: a single unassessed facet (confidence 0)
+		// would zero out the entire trait. Instead, average only facets with evidence.
+		const assessedConfidences = facetsForTrait.map((f) => f.confidence).filter((c) => c > 0);
+		const traitConfidence = assessedConfidences.length > 0 ? mean(assessedConfidences) : 0;
 
 		traitScores[traitName] = {
 			score: Math.round(traitScore * 10) / 10, // Round to 1 decimal

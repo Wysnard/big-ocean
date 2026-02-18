@@ -35,7 +35,7 @@ export function ShareProfileSection({
 			<div className="flex flex-col gap-4">
 				<div className="flex flex-wrap items-center justify-between gap-3">
 					<div className="min-w-0">
-						<h3 className="font-heading text-lg font-semibold text-foreground">Share your OCEAN code</h3>
+						<h3 className="font-display text-lg font-semibold text-foreground">Share your OCEAN code</h3>
 						<p className="text-sm text-muted-foreground">Let others discover your personality depths</p>
 					</div>
 					<div className="flex items-center gap-2 text-sm text-muted-foreground">

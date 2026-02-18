@@ -547,20 +547,14 @@ export class NerinAgentRepository extends Context.Tag("NerinAgentRepository")<
 **System Prompt Construction:**
 
 ```typescript
-// packages/infrastructure/src/repositories/nerin-agent.langgraph.repository.ts
-function buildSystemPrompt(facetScores?: FacetScoresMap, steeringHint?: string): string {
-  let prompt = `You are Nerin, a warm and curious conversational partner...`;
+// packages/domain/src/utils/nerin-system-prompt.ts
+function buildChatSystemPrompt(steeringHint?: string): string {
+  let prompt = `${NERIN_PERSONA}\n\n${CHAT_CONTEXT}`;
 
   // Add facet-level steering hint if provided
   if (steeringHint) {
-    prompt += `\n\nCurrent conversation focus:\n${steeringHint}`;
-    prompt += `\nNaturally guide the conversation to explore this area...`;
-  }
-
-  // Add assessment progress context
-  if (facetScores) {
-    const assessedCount = Object.keys(facetScores).length;
-    prompt += `\n\nAssessment progress: ${assessedCount} personality facets explored so far.`;
+    prompt += `\n\nSTEERING PRIORITY:\n${steeringHint}`;
+    prompt += `\nTransition to this territory within your next 1-2 responses...`;
   }
 
   return prompt;
@@ -569,9 +563,10 @@ function buildSystemPrompt(facetScores?: FacetScoresMap, steeringHint?: string):
 
 **Key Changes from Previous Implementation:**
 - ❌ **REMOVED**: `PrecisionScores` (trait-level object with 5 duplicated values)
-- ✅ **ADDED**: `facetScores` (30 facets with individual scores + confidence)
+- ❌ **REMOVED**: `facetScores` / `assessedCount` from prompt (unnecessary context)
 - ✅ **ADDED**: `steeringHint` (natural language guidance from router)
-- ✅ **EFFECT**: System prompt now includes precise facet-level steering
+- ✅ **ADDED**: `NERIN_PERSONA` shared constant + `CHAT_CONTEXT` (Story 2.12)
+- ✅ **EFFECT**: System prompt now includes precise facet-level steering via hint
 
 **Architecture Overview (with Orchestrator integration):**
 

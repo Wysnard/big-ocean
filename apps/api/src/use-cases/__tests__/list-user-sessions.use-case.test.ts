@@ -38,7 +38,7 @@ const createTestLayer = () =>
 			nerinMaxTokens: 1024,
 			nerinTemperature: 0.7,
 			dailyCostLimit: 75,
-			freeTierMessageThreshold: 15,
+			freeTierMessageThreshold: 25,
 			shareMinConfidence: 70,
 		}),
 	);
@@ -80,7 +80,7 @@ describe("listUserSessions Use Case", () => {
 		expect(result.sessions[0]?.id).toBe("session-1");
 		expect(result.sessions[0]?.messageCount).toBe(5);
 		expect(result.sessions[1]?.oceanCode5).toBe("ODEWR");
-		expect(result.freeTierMessageThreshold).toBe(15);
+		expect(result.freeTierMessageThreshold).toBe(25);
 		expect(mockSessionRepo.getSessionsByUserId).toHaveBeenCalledWith(TEST_USER_ID);
 	});
 
@@ -92,7 +92,7 @@ describe("listUserSessions Use Case", () => {
 		);
 
 		expect(result.sessions).toHaveLength(0);
-		expect(result.freeTierMessageThreshold).toBe(15);
+		expect(result.freeTierMessageThreshold).toBe(25);
 	});
 
 	it("should propagate database errors", async () => {

@@ -122,7 +122,7 @@ function ResultsSessionPage() {
 	// Trait selection state
 	const [selectedTrait, setSelectedTrait] = useState<TraitName | null>(null);
 
-	// Build a facet score map for useTraitEvidence
+	// Build facet score and confidence maps for useTraitEvidence
 	const facetScoreMap = useMemo(() => {
 		const map = new Map<FacetName, number>();
 		if (results) {
@@ -133,11 +133,22 @@ function ResultsSessionPage() {
 		return map;
 	}, [results]);
 
+	const facetConfidenceMap = useMemo(() => {
+		const map = new Map<FacetName, number>();
+		if (results) {
+			for (const facet of results.facets) {
+				map.set(facet.name, facet.confidence);
+			}
+		}
+		return map;
+	}, [results]);
+
 	// Load evidence for selected trait
 	const { data: facetDetails, isLoading: evidenceLoading } = useTraitEvidence(
 		assessmentSessionId,
 		selectedTrait,
 		facetScoreMap,
+		facetConfidenceMap,
 		canLoadResults,
 	);
 
