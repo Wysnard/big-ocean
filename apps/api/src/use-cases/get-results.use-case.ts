@@ -5,7 +5,7 @@
  * Fetches evidence, computes scores on-demand via pure domain functions,
  * generates OCEAN code, looks up archetype, and computes overall confidence.
  *
- * Dependencies: AssessmentSessionRepository, FacetEvidenceRepository, LoggerRepository
+ * Dependencies: AssessmentSessionRepository, FacetEvidenceRepository, LoggerRepository, OrchestratorRepository
  */
 
 import {
@@ -15,6 +15,7 @@ import {
 	aggregateFacetScores,
 	BIG_FIVE_TRAITS,
 	calculateConfidenceFromFacetScores,
+	type DomainMessage,
 	deriveTraitScores,
 	extract4LetterCode,
 	FACET_TO_TRAIT,
@@ -24,6 +25,7 @@ import {
 	generateOceanCode,
 	LoggerRepository,
 	lookupArchetype,
+	OrchestratorRepository,
 	PortraitGeneratorRepository,
 	PublicProfileRepository,
 	SessionNotFound,
@@ -68,11 +70,11 @@ const mapScoreToLevel = (traitName: string, score: number): string => {
  * Get Assessment Results Use Case
  *
  * 1. Validates session exists
- * 2. Fetches evidence via FacetEvidenceRepository
- * 3. Computes facet scores on-demand via pure aggregateFacetScores()
- * 4. Derives trait scores via pure deriveTraitScores()
- * 5. Generates 5-letter OCEAN code from facet scores
- * 6. Extracts 4-letter code, looks up archetype
+ * 2. Fetches messages for finalization
+ * 3. Runs synchronous processAnalysis to ensure all messages have evidence
+ * 4. Fetches evidence via FacetEvidenceRepository
+ * 5. Computes facet/trait scores on-demand via pure domain functions
+ * 6. Generates OCEAN codes, looks up archetype
  * 7. Computes overall confidence (mean of all facet confidences)
  */
 export const getResults = (input: GetResultsInput) =>
@@ -80,6 +82,7 @@ export const getResults = (input: GetResultsInput) =>
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const evidenceRepo = yield* FacetEvidenceRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
+		const orchestrator = yield* OrchestratorRepository;
 		const portraitGenerator = yield* PortraitGeneratorRepository;
 		const profileRepo = yield* PublicProfileRepository;
 		const config = yield* AppConfig;
@@ -98,22 +101,52 @@ export const getResults = (input: GetResultsInput) =>
 			);
 		}
 
-		// 2. Fetch evidence and compute scores on-demand
+		// 2. Fetch messages (needed for finalization analysis and portrait generation)
+		const messages = yield* messageRepo.getMessages(input.sessionId);
+		const userMessageCount = messages.filter((m) => m.role === "user").length;
+
+		// 3. Synchronous finalization analysis — ensure all messages have evidence
+		// before computing scores. processAnalysis is idempotent: it diffs evidence DB
+		// vs message list and short-circuits if no unanalyzed messages exist.
+		const domainMessages: DomainMessage[] = messages.map((m) => ({
+			id: m.id,
+			role: m.role,
+			content: m.content,
+		}));
+
+		yield* orchestrator
+			.processAnalysis({
+				sessionId: input.sessionId,
+				messages: domainMessages,
+				messageCount: userMessageCount,
+			})
+			.pipe(
+				Effect.catchAll((err) =>
+					Effect.sync(() =>
+						logger.error("Finalization analysis failed", {
+							sessionId: input.sessionId,
+							error: String(err),
+						}),
+					),
+				),
+			);
+
+		// 4. Fetch evidence and compute scores on-demand (now reflects all messages)
 		const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
 		const facetScoresMap = aggregateFacetScores(evidence);
 		const traitScoresMap = deriveTraitScores(facetScoresMap);
 
-		// 3. Generate OCEAN codes
+		// 5. Generate OCEAN codes
 		const oceanCode5 = generateOceanCode(facetScoresMap);
 		const oceanCode4 = extract4LetterCode(oceanCode5);
 
-		// 4. Lookup archetype
+		// 6. Lookup archetype
 		const archetype = lookupArchetype(oceanCode4);
 
-		// 5. Compute overall confidence (mean of all 30 facet confidences)
+		// 7. Compute overall confidence (mean of all 30 facet confidences)
 		const overallConfidence = calculateConfidenceFromFacetScores(facetScoresMap);
 
-		// 6. Build trait results array
+		// 8. Build trait results array
 		const traits: TraitResult[] = BIG_FIVE_TRAITS.map((traitName) => {
 			const traitScore = traitScoresMap[traitName];
 			return {
@@ -124,7 +157,7 @@ export const getResults = (input: GetResultsInput) =>
 			};
 		});
 
-		// 7. Build facet results array
+		// 9. Build facet results array
 		const facets: FacetResult[] = (Object.keys(facetScoresMap) as FacetName[]).map((facetName) => ({
 			name: facetName,
 			traitName: FACET_TO_TRAIT[facetName],
@@ -132,10 +165,7 @@ export const getResults = (input: GetResultsInput) =>
 			confidence: facetScoresMap[facetName].confidence,
 		}));
 
-		// 8. Portrait generation — lazy, one-time per session
-		const messages = yield* messageRepo.getMessages(input.sessionId);
-		const userMessageCount = messages.filter((m) => m.role === "user").length;
-
+		// 10. Portrait generation — lazy, one-time per session
 		let personalDescription: string | null = session.personalDescription ?? null;
 
 		if (personalDescription === null && userMessageCount >= config.freeTierMessageThreshold) {
@@ -165,7 +195,7 @@ export const getResults = (input: GetResultsInput) =>
 				);
 		}
 
-		// 9. Ensure public profile exists for authenticated users (private by default)
+		// 11. Ensure public profile exists for authenticated users (private by default)
 		let existingProfile = yield* profileRepo
 			.getProfileBySessionId(input.sessionId)
 			.pipe(Effect.catchAll(() => Effect.succeed(null)));

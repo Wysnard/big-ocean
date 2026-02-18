@@ -1,5 +1,5 @@
-import type * as React from "react";
 import { NerinMessage } from "@workspace/ui/components/chat";
+import type * as React from "react";
 
 interface ChatBubbleProps {
 	variant: "nerin" | "user";
@@ -8,18 +8,14 @@ interface ChatBubbleProps {
 
 export function ChatBubble({ variant, children }: ChatBubbleProps) {
 	if (variant === "nerin") {
-		return (
-			<NerinMessage className="relative z-[1] mb-3">
-				{children}
-			</NerinMessage>
-		);
+		return <NerinMessage className="relative z-[1] mb-3">{children}</NerinMessage>;
 	}
 
 	return (
 		<div data-slot="chat-bubble" className="relative z-[1] mb-3 flex flex-row-reverse gap-[11px]">
 			{/* User avatar */}
 			<div
-				className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--user-avatar-bg)] font-heading text-[.75rem] font-bold text-[var(--user-avatar-fg)] transition-[background,color] duration-[350ms]"
+				className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--user-avatar-from)] to-[var(--user-avatar-to)] font-heading text-[.75rem] font-bold text-[var(--user-avatar-fg)] transition-[background,color] duration-[350ms]"
 				aria-hidden="true"
 			>
 				Y

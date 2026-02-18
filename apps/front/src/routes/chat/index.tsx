@@ -1,7 +1,9 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { Schema as S } from "effect";
 import { Loader2 } from "lucide-react";
+import { useCallback } from "react";
 import { TherapistChat } from "@/components/TherapistChat";
+import { useAuth } from "@/hooks/use-auth";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
@@ -60,6 +62,22 @@ function RouteComponent() {
 		highlightEnd,
 		highlightScore,
 	} = Route.useSearch();
+	const { user, isAuthenticated } = useAuth();
+	const navigate = useNavigate();
+
+	// Session error handling — redirect based on auth status
+	// Authenticated users hitting a missing session → 404 (private session denied)
+	// Unauthenticated users → /chat for recovery (start fresh)
+	const handleSessionError = useCallback(
+		(_error: { type: "not-found" | "session"; isResumeError: boolean }) => {
+			if (isAuthenticated) {
+				navigate({ to: "/404" });
+			} else {
+				navigate({ to: "/chat" });
+			}
+		},
+		[isAuthenticated, navigate],
+	);
 
 	if (!sessionId) {
 		return (
@@ -75,6 +93,9 @@ function RouteComponent() {
 	return (
 		<TherapistChat
 			sessionId={sessionId}
+			onSessionError={handleSessionError}
+			userName={user?.name}
+			userImage={user?.image}
 			highlightMessageId={highlightMessageId}
 			highlightQuote={highlightQuote}
 			highlightStart={highlightStart}

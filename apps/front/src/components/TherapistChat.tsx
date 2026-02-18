@@ -1,19 +1,22 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ASSESSMENT_MESSAGE_MAX_LENGTH } from "@workspace/domain";
+import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import { Button } from "@workspace/ui/components/button";
 import { NerinMessage } from "@workspace/ui/components/chat";
 import { cn } from "@workspace/ui/lib/utils";
 import { Loader2, Send } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getPlaceholder } from "@/constants/chat-placeholders";
-import { useAuth } from "@/hooks/use-auth";
 import { useTherapistChat } from "@/hooks/useTherapistChat";
 import { DepthMeter } from "./chat/DepthMeter";
 import { ErrorBanner } from "./ErrorBanner";
+import { GeometricOcean } from "./sea-life/GeometricOcean";
 
 interface TherapistChatProps {
 	sessionId: string;
-	onMessageClick?: (messageId: string) => void;
+	onSessionError?: (error: { type: "not-found" | "session"; isResumeError: boolean }) => void;
+	userName?: string | null;
+	userImage?: string | null;
 	highlightMessageId?: string;
 	highlightQuote?: string;
 	highlightStart?: number;
@@ -126,7 +129,9 @@ function renderMessageContent(
 
 export function TherapistChat({
 	sessionId,
-	onMessageClick,
+	onSessionError,
+	userName,
+	userImage,
 	highlightMessageId,
 	highlightQuote: _highlightQuote,
 	highlightStart,
@@ -149,16 +154,31 @@ export function TherapistChat({
 		resumeError,
 		isResumeSessionNotFound,
 		isConfidenceReady,
-		progressPercent,
 		freeTierMessageThreshold,
 		hasShownCelebration,
 		setHasShownCelebration,
 	} = useTherapistChat(sessionId);
-	const { isAuthenticated } = useAuth();
 	const navigate = useNavigate();
 
-	// Milestone tracking — threshold → message index where it triggered
+	// Notify parent (route) of session errors for auth-based redirect decisions
+	useEffect(() => {
+		if (!onSessionError) return;
+		if (errorType === "session") {
+			onSessionError({ type: "session", isResumeError: false });
+		}
+	}, [errorType, onSessionError]);
+
+	useEffect(() => {
+		if (!onSessionError) return;
+		if (!isResuming && isResumeSessionNotFound) {
+			onSessionError({ type: "not-found", isResumeError: true });
+		}
+	}, [isResuming, isResumeSessionNotFound, onSessionError]);
+
+	// Milestone tracking — threshold → message index where it should render
 	const [shownMilestones, setShownMilestones] = useState<Map<number, number>>(new Map());
+	// Tracks the message count at which milestones were last computed (for resume)
+	const milestonesComputedForRef = useRef(0);
 
 	// Timestamp re-render ticker (updates every 60s)
 	const [, setTimeTick] = useState(0);
@@ -167,21 +187,53 @@ export function TherapistChat({
 		return () => clearInterval(interval);
 	}, []);
 
-	// Story 2.11: Progress from message count (replaces confidence-based avgConfidence)
-	const avgConfidence = progressPercent;
-
-	// Track milestone crossings — record message count at trigger time for positioning
+	// Unified milestone tracking — handles both resume (historical) and live messages
+	// Uses a single effect to avoid race conditions between init and live tracking.
 	useEffect(() => {
-		for (const milestone of MILESTONES) {
-			if (avgConfidence >= milestone.threshold && !shownMilestones.has(milestone.threshold)) {
-				setShownMilestones((prev) => {
-					const next = new Map(prev);
-					next.set(milestone.threshold, messages.length);
-					return next;
-				});
+		if (messages.length === 0 || !freeTierMessageThreshold) return;
+
+		const threshold = freeTierMessageThreshold;
+		const isFirstComputation = milestonesComputedForRef.current === 0;
+		const scanFrom = isFirstComputation ? 0 : milestonesComputedForRef.current;
+
+		setShownMilestones((prev) => {
+			const next = new Map(prev);
+			let userCount = 0;
+
+			// Count user messages up to our scan start point
+			for (let i = 0; i < scanFrom && i < messages.length; i++) {
+				if (messages[i].role === "user") userCount++;
 			}
+
+			// Scan new messages for milestone crossings
+			for (let i = scanFrom; i < messages.length; i++) {
+				if (messages[i].role === "user") userCount++;
+				const pct = Math.min(Math.round((userCount / threshold) * 100), 100);
+				for (const m of MILESTONES) {
+					if (pct >= m.threshold && !next.has(m.threshold)) {
+						next.set(m.threshold, i + 1);
+					}
+				}
+			}
+
+			milestonesComputedForRef.current = messages.length;
+
+			// Only update state if something changed
+			if (next.size === prev.size) return prev;
+			return next;
+		});
+	}, [messages, freeTierMessageThreshold]);
+
+	// Ocean pulse — fires when a new assistant message arrives
+	const [oceanPulse, setOceanPulse] = useState(false);
+	const prevAssistantCountRef = useRef(0);
+	useEffect(() => {
+		const assistantCount = messages.filter((m) => m.role === "assistant").length;
+		if (assistantCount > prevAssistantCountRef.current && prevAssistantCountRef.current > 0) {
+			setOceanPulse(true);
 		}
-	}, [avgConfidence, shownMilestones, messages.length]);
+		prevAssistantCountRef.current = assistantCount;
+	}, [messages]);
 
 	// Placeholder rotation based on user message count
 	const userMessageCount = useMemo(
@@ -207,21 +259,6 @@ export function TherapistChat({
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [messageCount]);
-
-	// Session-not-found handling:
-	// - Authenticated users are redirected to 404 (private linked session denied)
-	// - Unauthenticated users are redirected to /chat for recovery
-	useEffect(() => {
-		if (errorType === "session") {
-			navigate({ to: isAuthenticated ? "/404" : "/chat" });
-		}
-	}, [errorType, isAuthenticated, navigate]);
-
-	useEffect(() => {
-		if (isAuthenticated && !isResuming && isResumeSessionNotFound) {
-			navigate({ to: "/404" });
-		}
-	}, [isAuthenticated, isResuming, isResumeSessionNotFound, navigate]);
 
 	// Mobile keyboard handling via visualViewport API
 	useEffect(() => {
@@ -261,12 +298,6 @@ export function TherapistChat({
 		}
 	};
 
-	const handleMessageClick = (messageId: string, role: string) => {
-		if (role === "user" && onMessageClick) {
-			onMessageClick(messageId);
-		}
-	};
-
 	// Determine celebration input placeholder
 	const inputPlaceholder = useMemo(() => {
 		if (isCompleted) return "Keep exploring with Premium — unlock deeper conversations";
@@ -282,9 +313,9 @@ export function TherapistChat({
 			isCompleted={isCompleted}
 			isResuming={isResuming}
 			resumeError={resumeError}
-			isResumeSessionNotFound={isResumeSessionNotFound}
-			isAuthenticated={isAuthenticated}
 			isConfidenceReady={isConfidenceReady}
+			userName={userName}
+			userImage={userImage}
 			depthProgress={Math.min(userMessageCount / (freeTierMessageThreshold || 27), 1)}
 			errorMessage={errorMessage}
 			errorType={errorType}
@@ -305,7 +336,7 @@ export function TherapistChat({
 			handleTextareaResize={handleTextareaResize}
 			handleKeyDown={handleKeyDown}
 			handleSendMessage={handleSendMessage}
-			handleMessageClick={handleMessageClick}
+			oceanPulse={oceanPulse}
 			navigate={navigate}
 			onInputFocus={() => setPlaceholder(getPlaceholder(userMessageCount, freeTierMessageThreshold))}
 		/>
@@ -322,9 +353,9 @@ function ChatContent({
 	isCompleted,
 	isResuming,
 	resumeError,
-	isResumeSessionNotFound,
-	isAuthenticated,
 	isConfidenceReady,
+	userName,
+	userImage,
 	depthProgress,
 	errorMessage,
 	errorType,
@@ -345,7 +376,7 @@ function ChatContent({
 	handleTextareaResize,
 	handleKeyDown,
 	handleSendMessage,
-	handleMessageClick,
+	oceanPulse,
 	navigate,
 	onInputFocus,
 }: {
@@ -360,9 +391,9 @@ function ChatContent({
 	isCompleted: boolean;
 	isResuming: boolean;
 	resumeError: string | null;
-	isResumeSessionNotFound: boolean;
-	isAuthenticated: boolean;
 	isConfidenceReady: boolean;
+	userName?: string | null;
+	userImage?: string | null;
 	depthProgress: number;
 	errorMessage: string | null;
 	errorType: string | null;
@@ -383,7 +414,7 @@ function ChatContent({
 	handleTextareaResize: () => void;
 	handleKeyDown: (e: React.KeyboardEvent) => void;
 	handleSendMessage: () => void;
-	handleMessageClick: (messageId: string, role: string) => void;
+	oceanPulse: boolean;
 	navigate: ReturnType<typeof useNavigate>;
 	onInputFocus: () => void;
 }) {
@@ -392,19 +423,21 @@ function ChatContent({
 			{/* Depth Meter — fixed sidebar, desktop only */}
 			<DepthMeter progress={depthProgress} />
 
-			<div className="h-[calc(100dvh-3.5rem)] flex flex-col overflow-hidden overscroll-none bg-background text-foreground">
+			<div className="h-[calc(100dvh-3.5rem)] flex flex-col overflow-hidden overscroll-none bg-background text-foreground relative">
+				{/* Geometric Ocean — ambient sea life layer behind chat */}
+				<GeometricOcean depthProgress={depthProgress} pulse={oceanPulse} />
+
 				{/* Header — matches homepage style */}
 				<div
 					data-slot="chat-header"
-					className="border-b border-border bg-card/80 px-4 md:px-6 py-3 md:py-4 shadow-sm backdrop-blur-sm flex items-center justify-between"
+					className="relative z-10 border-b border-border bg-card/80 px-4 md:px-6 py-3 md:py-4 shadow-sm backdrop-blur-sm flex items-center justify-between"
 				>
 					<div className="flex items-center gap-2">
-						<div
-							className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-tertiary to-primary font-heading text-[.75rem] font-bold text-white"
-							aria-hidden="true"
-						>
-							N
-						</div>
+						<Avatar className="bg-gradient-to-br from-tertiary to-primary" aria-hidden="true">
+							<AvatarFallback className="bg-gradient-to-br from-tertiary to-primary font-heading text-[.75rem] font-bold text-white">
+								N
+							</AvatarFallback>
+						</Avatar>
 						<span className="text-lg font-heading font-semibold text-foreground">Nerin</span>
 					</div>
 					{isConfidenceReady && (
@@ -419,92 +452,61 @@ function ChatContent({
 					)}
 				</div>
 
-				{/* Main Content */}
-				<div className="flex-1 overflow-hidden">
+				{/* Main Content — scrollable area, input bar is outside this container */}
+				<div className="flex-1 overflow-y-auto relative z-10">
+					{/* Loading State */}
+					{isResuming && (
+						<div className="h-full flex items-center justify-center">
+							<div className="text-center">
+								<Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+								<p className="mt-4 text-muted-foreground">Loading your assessment...</p>
+							</div>
+						</div>
+					)}
+
+					{/* Resume Error — session-not-found redirects are handled at the route level */}
+					{!isResuming && resumeError && (
+						<div className="h-full flex items-center justify-center">
+							<div className="text-center max-w-md">
+								<p className="text-destructive-foreground text-lg">Something went wrong</p>
+								<p className="mt-2 text-muted-foreground">Unable to load your assessment.</p>
+								<Button className="mt-4" onClick={() => window.location.reload()}>
+									Retry
+								</Button>
+							</div>
+						</div>
+					)}
+
 					{/* Messages Area — centered, matching homepage ConversationFlow spacing */}
-					<div className="h-full flex flex-col mx-auto max-w-[900px] min-[1200px]:max-w-[1000px] min-[1440px]:max-w-[1100px] px-6">
-						{/* Loading State */}
-						{isResuming && (
-							<div className="flex-1 flex items-center justify-center">
-								<div className="text-center">
-									<Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-									<p className="mt-4 text-muted-foreground">Loading your assessment...</p>
-								</div>
-							</div>
-						)}
-
-						{/* SessionNotFound Error */}
-						{!isResuming && !isAuthenticated && resumeError && isResumeSessionNotFound && (
-							<div className="flex-1 flex items-center justify-center">
-								<div className="text-center max-w-md">
-									<p className="text-destructive-foreground text-lg">Session not found</p>
-									<p className="mt-2 text-muted-foreground">
-										This session may have expired or doesn't exist.
-									</p>
-									<Button className="mt-4" onClick={() => navigate({ to: "/chat" })}>
-										Start New Assessment
-									</Button>
-								</div>
-							</div>
-						)}
-
-						{/* Generic Resume Error */}
-						{!isResuming && resumeError && !isResumeSessionNotFound && (
-							<div className="flex-1 flex items-center justify-center">
-								<div className="text-center max-w-md">
-									<p className="text-destructive-foreground text-lg">Something went wrong</p>
-									<p className="mt-2 text-muted-foreground">Unable to load your assessment.</p>
-									<Button className="mt-4" onClick={() => window.location.reload()}>
-										Retry
-									</Button>
-								</div>
-							</div>
-						)}
-
-						{/* Messages (only show if not loading and no resume error) */}
-						{!isResuming && !resumeError && (
-							<div className="flex-1 overflow-y-auto relative pt-10">
-								{/* Vertical thread line — aligns with Nerin avatar center */}
-								<div
-									className="absolute top-0 bottom-0 left-[29px] z-0 w-[1.5px]"
-									style={{ background: "var(--thread-line)" }}
-									aria-hidden="true"
-								/>
-								{messages.length > 0 &&
-									messages.map((msg, index) => (
-										<div key={msg.id} className="relative z-[1] mb-9 motion-safe:animate-fade-in-up">
-											{msg.role === "user" ? (
-												<div className="flex flex-row-reverse gap-[11px]">
-													{/* User avatar */}
-													<div
-														className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--user-avatar-bg)] font-heading text-[.75rem] font-bold text-[var(--user-avatar-fg)] transition-[background,color] duration-[350ms]"
-														aria-hidden="true"
-													>
-														Y
-													</div>
-													<button
-														type="button"
-														data-slot="chat-bubble"
-														data-message-id={msg.id}
-														onClick={() => handleMessageClick(msg.id, msg.role)}
-														className="max-w-[88%] rounded-[18px] rounded-br-[5px] bg-gradient-to-br from-primary to-secondary px-[22px] py-4 text-left text-white cursor-pointer hover:ring-2 hover:ring-ring/40 transition-shadow min-[1200px]:max-w-[92%]"
-													>
-														<p className="text-[.92rem] leading-[1.65] whitespace-pre-line">
-															{renderMessageContent(
-																msg.content,
-																msg.id,
-																highlightMessageId,
-																highlightStart,
-																highlightEnd,
-																highlightScore,
-															)}
-														</p>
-														<p className="text-xs mt-1 text-white/70">{getRelativeTime(msg.timestamp)}</p>
-													</button>
-												</div>
-											) : (
-												<NerinMessage messageId={msg.id}>
-													<p className="whitespace-pre-line">
+					{!isResuming && !resumeError && (
+						<div className="relative mx-auto max-w-[900px] min-[1200px]:max-w-[1000px] min-[1440px]:max-w-[1100px] px-6 pt-10 pb-6">
+							{/* Vertical thread line — aligns with Nerin avatar center */}
+							<div
+								className="absolute top-0 bottom-0 left-[29px] z-0 w-[1.5px]"
+								style={{ background: "var(--thread-line)" }}
+								aria-hidden="true"
+							/>
+							{messages.length > 0 &&
+								messages.map((msg, index) => (
+									<div key={msg.id} className="relative z-[1] mb-9 motion-safe:animate-fade-in-up">
+										{msg.role === "user" ? (
+											<div className="flex flex-row-reverse gap-[11px]">
+												{/* User avatar */}
+												<Avatar
+													className="bg-gradient-to-br from-[var(--user-avatar-from)] to-[var(--user-avatar-to)] transition-[background,color] duration-[350ms]"
+													aria-hidden="true"
+												>
+													{userImage && <AvatarImage src={userImage} alt={userName || "User"} />}
+													<AvatarFallback className="bg-gradient-to-br from-[var(--user-avatar-from)] to-[var(--user-avatar-to)] font-heading text-[.75rem] font-bold text-[var(--user-avatar-fg)]">
+														{userName ? userName.charAt(0).toUpperCase() : "A"}
+													</AvatarFallback>
+												</Avatar>
+												<div
+													data-slot="chat-bubble"
+													data-message-id={msg.id}
+													className="max-w-[88%] rounded-[18px] rounded-br-[5px] bg-gradient-to-br from-primary to-secondary px-[22px] py-4 text-left text-white min-[1200px]:max-w-[92%]"
+												>
+													<p className="text-[.92rem] leading-[1.65] whitespace-pre-line">
 														{renderMessageContent(
 															msg.content,
 															msg.id,
@@ -514,131 +516,147 @@ function ChatContent({
 															highlightScore,
 														)}
 													</p>
-													<p className="text-xs mt-1 text-[var(--muted-dynamic)]">
-														{getRelativeTime(msg.timestamp)}
-													</p>
-												</NerinMessage>
-											)}
-											{/* Milestone badges triggered at this message position */}
-											{MILESTONES.map((milestone) =>
-												shownMilestones.get(milestone.threshold) === index + 1 ? (
-													<div
-														key={`milestone-${milestone.threshold}`}
-														data-slot="milestone-badge"
-														className="w-full flex justify-center py-2 mt-2"
-													>
-														<div className="border border-accent rounded-full px-4 py-2 text-center max-w-sm bg-accent/50">
-															<p className="text-sm text-accent-foreground">
-																<span className="mr-1.5">✨</span>
-																{milestone.message}
-															</p>
-														</div>
-													</div>
-												) : null,
-											)}
-										</div>
-									))}
-
-								{/* In-chat celebration card (replaces modal overlay) */}
-								{isConfidenceReady && !hasShownCelebration && (
-									<div
-										data-slot="celebration-card"
-										className="relative z-[1] w-full py-2 mb-9 motion-safe:animate-fade-in-up"
-									>
-										<div className="bg-card border-2 border-primary rounded-2xl p-6 text-center shadow-lg">
-											<h2 className="text-xl font-heading font-bold text-foreground">
-												Your Personality Profile is Ready!
-											</h2>
-											<p className="text-muted-foreground mt-2">Your assessment is complete</p>
-											<div className="mt-4 flex gap-3 justify-center">
-												<Button
-													onClick={() =>
-														navigate({
-															to: "/results/$assessmentSessionId",
-															params: { assessmentSessionId: sessionId },
-														})
-													}
-													data-testid="view-results-btn"
-												>
-													View Results
-												</Button>
-												<Button
-													variant="outline"
-													disabled
-													className="opacity-50 cursor-not-allowed"
-													title="Available in Premium tier"
-												>
-													Keep Exploring
-												</Button>
+													<p className="text-xs mt-1 text-white/70">{getRelativeTime(msg.timestamp)}</p>
+												</div>
 											</div>
+										) : (
+											<NerinMessage messageId={msg.id}>
+												<p className="whitespace-pre-line">
+													{renderMessageContent(
+														msg.content,
+														msg.id,
+														highlightMessageId,
+														highlightStart,
+														highlightEnd,
+														highlightScore,
+													)}
+												</p>
+												<p className="text-xs mt-1 text-[var(--muted-dynamic)]">
+													{getRelativeTime(msg.timestamp)}
+												</p>
+											</NerinMessage>
+										)}
+										{/* Milestone badges triggered at this message position */}
+										{MILESTONES.map((milestone) =>
+											shownMilestones.get(milestone.threshold) === index + 1 ? (
+												<div
+													key={`milestone-${milestone.threshold}`}
+													data-slot="milestone-badge"
+													className="w-full flex justify-center py-2 mt-2"
+												>
+													<div className="border border-accent rounded-full px-4 py-2 text-center max-w-sm bg-accent/50">
+														<p className="text-sm text-accent-foreground">
+															<span className="mr-1.5">✨</span>
+															{milestone.message}
+														</p>
+													</div>
+												</div>
+											) : null,
+										)}
+									</div>
+								))}
+
+							{/* In-chat celebration card (replaces modal overlay) */}
+							{isConfidenceReady && !hasShownCelebration && (
+								<div
+									data-slot="celebration-card"
+									className="relative z-[1] w-full py-2 mb-9 motion-safe:animate-fade-in-up"
+								>
+									<div className="bg-card border-2 border-primary rounded-2xl p-6 text-center shadow-lg">
+										<h2 className="text-xl font-heading font-bold text-foreground">
+											Your Personality Profile is Ready!
+										</h2>
+										<p className="text-muted-foreground mt-2">Your assessment is complete</p>
+										<div className="mt-4 flex gap-3 justify-center">
+											<Button
+												onClick={() =>
+													navigate({
+														to: "/results/$assessmentSessionId",
+														params: { assessmentSessionId: sessionId },
+													})
+												}
+												data-testid="view-results-btn"
+											>
+												View Results
+											</Button>
+											<Button
+												variant="outline"
+												disabled
+												className="opacity-50 cursor-not-allowed"
+												title="Available in Premium tier"
+											>
+												Keep Exploring
+											</Button>
 										</div>
 									</div>
-								)}
-
-								{/* Typing indicator while loading */}
-								{isLoading && <TypingIndicator />}
-
-								<div ref={messagesEndRef} />
-							</div>
-						)}
-
-						{/* Error Banner */}
-						{errorMessage && (
-							<ErrorBanner
-								message={errorMessage}
-								onRetry={errorType === "network" || errorType === "generic" ? retryLastMessage : undefined}
-								onDismiss={clearError}
-								autoDismissMs={errorType === "budget" || errorType === "rate-limit" ? 0 : 5000}
-							/>
-						)}
-
-						{/* Input Area — matches homepage input bar style */}
-						<div className="border-t border-[var(--input-bar-border)] bg-[var(--input-bar-bg)] backdrop-blur-[14px] px-6 py-4 sticky bottom-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
-							<div className="flex gap-2 items-end">
-								<textarea
-									ref={textareaRef}
-									data-slot="chat-input"
-									value={inputValue}
-									onChange={(e) => {
-										setInputValue(e.target.value);
-										handleTextareaResize();
-									}}
-									onKeyDown={handleKeyDown}
-									onFocus={onInputFocus}
-									placeholder={inputPlaceholder}
-									disabled={isLoading || isCompleted}
-									maxLength={ASSESSMENT_MESSAGE_MAX_LENGTH}
-									rows={1}
-									className="flex-1 px-4 py-2 rounded-lg border border-[var(--input-field-border)] bg-[var(--input-field-bg)] text-foreground placeholder-[var(--input-field-color)] focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-none overflow-y-auto"
-									style={{ maxHeight: "120px" }}
-								/>
-								<Button
-									data-testid="chat-send-btn"
-									onClick={handleSendMessage}
-									disabled={!inputValue.trim() || isLoading || isCompleted}
-									size="sm"
-									className="min-h-11 min-w-11"
-								>
-									{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-								</Button>
-							</div>
-							{!isCompleted && (
-								<span
-									data-slot="char-counter"
-									className={cn(
-										"text-sm text-right block mt-1",
-										inputValue.length >= ASSESSMENT_MESSAGE_MAX_LENGTH
-											? "text-destructive"
-											: inputValue.length >= ASSESSMENT_MESSAGE_MAX_LENGTH * WARNING_THRESHOLD
-												? "text-[var(--warning)]"
-												: "text-muted-foreground",
-									)}
-								>
-									{inputValue.length.toLocaleString("en-US")} /{" "}
-									{ASSESSMENT_MESSAGE_MAX_LENGTH.toLocaleString("en-US")}
-								</span>
+								</div>
 							)}
+
+							{/* Typing indicator while loading */}
+							{isLoading && <TypingIndicator />}
+
+							<div ref={messagesEndRef} />
 						</div>
+					)}
+
+					{/* Error Banner */}
+					{errorMessage && (
+						<ErrorBanner
+							message={errorMessage}
+							onRetry={errorType === "network" || errorType === "generic" ? retryLastMessage : undefined}
+							onDismiss={clearError}
+							autoDismissMs={errorType === "budget" || errorType === "rate-limit" ? 0 : 5000}
+						/>
+					)}
+				</div>
+
+				{/* Input Area — outside scroll container, always visible at bottom */}
+				<div className="relative z-10 border-t border-[var(--input-bar-border)] bg-[var(--input-bar-bg)] backdrop-blur-[14px] px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+					<div className="mx-auto max-w-[900px] min-[1200px]:max-w-[1000px] min-[1440px]:max-w-[1100px]">
+						<div className="flex gap-2 items-end">
+							<textarea
+								ref={textareaRef}
+								data-slot="chat-input"
+								value={inputValue}
+								onChange={(e) => {
+									setInputValue(e.target.value);
+									handleTextareaResize();
+								}}
+								onKeyDown={handleKeyDown}
+								onFocus={onInputFocus}
+								placeholder={inputPlaceholder}
+								disabled={isLoading || isCompleted}
+								maxLength={ASSESSMENT_MESSAGE_MAX_LENGTH}
+								rows={1}
+								className="flex-1 px-4 py-2 rounded-lg border border-[var(--input-field-border)] bg-[var(--input-field-bg)] text-foreground placeholder-[var(--input-field-color)] focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-none overflow-y-auto"
+								style={{ maxHeight: "120px" }}
+							/>
+							<Button
+								data-testid="chat-send-btn"
+								onClick={handleSendMessage}
+								disabled={!inputValue.trim() || isLoading || isCompleted}
+								size="sm"
+								className="min-h-11 min-w-11 dark:shadow-[0_0_8px_rgba(0,212,200,0.3)] dark:disabled:opacity-65"
+							>
+								{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+							</Button>
+						</div>
+						{!isCompleted && (
+							<span
+								data-slot="char-counter"
+								className={cn(
+									"text-sm text-right block mt-1",
+									inputValue.length >= ASSESSMENT_MESSAGE_MAX_LENGTH
+										? "text-destructive"
+										: inputValue.length >= ASSESSMENT_MESSAGE_MAX_LENGTH * WARNING_THRESHOLD
+											? "text-[var(--warning)]"
+											: "text-muted-foreground",
+								)}
+							>
+								{inputValue.length.toLocaleString("en-US")} /{" "}
+								{ASSESSMENT_MESSAGE_MAX_LENGTH.toLocaleString("en-US")}
+							</span>
+						)}
 					</div>
 				</div>
 			</div>

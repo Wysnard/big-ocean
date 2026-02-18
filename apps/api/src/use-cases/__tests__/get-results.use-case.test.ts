@@ -18,6 +18,7 @@ import {
 	FacetEvidenceRepository,
 	type FacetName,
 	LoggerRepository,
+	OrchestratorRepository,
 	PortraitGenerationError,
 	PortraitGeneratorRepository,
 	PublicProfileRepository,
@@ -171,6 +172,11 @@ const mockProfileRepo = {
 	incrementViewCount: vi.fn(),
 };
 
+const mockOrchestrator = {
+	processMessage: vi.fn(),
+	processAnalysis: vi.fn(),
+};
+
 const mockConfig = {
 	databaseUrl: "postgres://test",
 	redisUrl: "redis://test",
@@ -200,6 +206,7 @@ function createTestLayer() {
 		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
 		Layer.succeed(FacetEvidenceRepository, mockEvidenceRepo),
 		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
+		Layer.succeed(OrchestratorRepository, mockOrchestrator),
 		Layer.succeed(PortraitGeneratorRepository, mockPortraitGenerator),
 		Layer.succeed(PublicProfileRepository, mockProfileRepo),
 		Layer.succeed(AppConfig, mockConfig),
@@ -248,6 +255,9 @@ describe("getResults Use Case", () => {
 
 		// Default: no messages (portrait won't trigger below threshold)
 		mockMessageRepo.getMessages.mockImplementation(() => Effect.succeed([]));
+
+		// Default: processAnalysis succeeds (idempotent finalization)
+		mockOrchestrator.processAnalysis.mockReturnValue(Effect.void);
 
 		// Default: portrait generator returns a string
 		mockPortraitGenerator.generatePortrait.mockImplementation(() =>
@@ -517,6 +527,92 @@ describe("getResults Use Case", () => {
 			expect(result.archetypeName).toBeDefined();
 			expect(result.archetypeDescription).toBeDefined();
 			expect(result.archetypeColor).toBeDefined();
+		});
+	});
+
+	describe("Finalization analysis", () => {
+		it("should call processAnalysis synchronously before fetching evidence", async () => {
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
+
+			await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+			);
+
+			expect(mockOrchestrator.processAnalysis).toHaveBeenCalledTimes(1);
+			expect(mockOrchestrator.processAnalysis).toHaveBeenCalledWith(
+				expect.objectContaining({
+					sessionId: TEST_SESSION_ID,
+					messages: [],
+					messageCount: 0,
+				}),
+			);
+
+			// Verify ordering: processAnalysis must complete before evidence is fetched
+			const analysisOrder = mockOrchestrator.processAnalysis.mock.invocationCallOrder[0];
+			const evidenceOrder = mockEvidenceRepo.getEvidenceBySession.mock.invocationCallOrder[0];
+			expect(analysisOrder).toBeLessThan(evidenceOrder);
+		});
+
+		it("should pass domain messages to processAnalysis with correct message count", async () => {
+			const testMessages = [
+				{
+					id: "msg_1",
+					sessionId: TEST_SESSION_ID,
+					role: "user" as const,
+					content: "Hello",
+					createdAt: new Date(),
+				},
+				{
+					id: "msg_2",
+					sessionId: TEST_SESSION_ID,
+					role: "assistant" as const,
+					content: "Hi!",
+					createdAt: new Date(),
+				},
+				{
+					id: "msg_3",
+					sessionId: TEST_SESSION_ID,
+					role: "user" as const,
+					content: "How?",
+					createdAt: new Date(),
+				},
+			];
+			mockMessageRepo.getMessages.mockImplementation(() => Effect.succeed(testMessages));
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
+
+			await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+			);
+
+			expect(mockOrchestrator.processAnalysis).toHaveBeenCalledWith(
+				expect.objectContaining({
+					sessionId: TEST_SESSION_ID,
+					messages: [
+						{ id: "msg_1", role: "user", content: "Hello" },
+						{ id: "msg_2", role: "assistant", content: "Hi!" },
+						{ id: "msg_3", role: "user", content: "How?" },
+					],
+					messageCount: 2, // Only user messages counted
+				}),
+			);
+		});
+
+		it("should gracefully handle processAnalysis failure without blocking results", async () => {
+			mockOrchestrator.processAnalysis.mockReturnValue(
+				Effect.fail({ _tag: "OrchestrationError", message: "Analysis failed" }),
+			);
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
+
+			const result = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+			);
+
+			// Results should still be returned despite analysis failure
+			expect(result.oceanCode5).toBeDefined();
+			expect(mockLogger.error).toHaveBeenCalledWith(
+				"Finalization analysis failed",
+				expect.objectContaining({ sessionId: TEST_SESSION_ID }),
+			);
 		});
 	});
 

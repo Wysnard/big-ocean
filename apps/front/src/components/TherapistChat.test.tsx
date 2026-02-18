@@ -47,12 +47,6 @@ vi.mock("@/hooks/useTherapistChat", () => ({
 	useTherapistChat: () => mockHookReturn,
 }));
 
-// Mock useAuth
-const mockUseAuth = vi.fn();
-vi.mock("@/hooks/use-auth", () => ({
-	useAuth: () => mockUseAuth(),
-}));
-
 // Mock TanStack Router useNavigate and Link
 const mockNavigate = vi.fn();
 vi.mock("@tanstack/react-router", () => ({
@@ -88,12 +82,6 @@ function renderWithProviders(component: React.ReactElement) {
 describe("TherapistChat", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		mockUseAuth.mockReturnValue({
-			isAuthenticated: true,
-			user: null,
-			session: null,
-			isPending: false,
-		});
 		mockHookReturn = {
 			messages: [
 				{
@@ -243,52 +231,7 @@ describe("TherapistChat", () => {
 		expect(messageEl).toBeTruthy();
 	});
 
-	it("fires onMessageClick when user message is clicked", () => {
-		const onMessageClick = vi.fn();
-
-		mockHookReturn.messages = [
-			{
-				id: "msg_1",
-				role: "assistant",
-				content: "Hello!",
-				timestamp: new Date(),
-			},
-			{
-				id: "msg_2",
-				role: "user",
-				content: "Hi there",
-				timestamp: new Date(),
-			},
-		];
-
-		const { container } = renderWithProviders(
-			<TherapistChat sessionId="session-123" onMessageClick={onMessageClick} />,
-		);
-
-		const userMessage = container.querySelector("[data-message-id='msg_2']");
-		if (userMessage) {
-			fireEvent.click(userMessage);
-		}
-
-		expect(onMessageClick).toHaveBeenCalledWith("msg_2");
-	});
-
-	it("does not fire onMessageClick for assistant messages", () => {
-		const onMessageClick = vi.fn();
-
-		const { container } = renderWithProviders(
-			<TherapistChat sessionId="session-123" onMessageClick={onMessageClick} />,
-		);
-
-		const assistantMessage = container.querySelector("[data-message-id='msg_1']");
-		if (assistantMessage) {
-			fireEvent.click(assistantMessage);
-		}
-
-		expect(onMessageClick).not.toHaveBeenCalled();
-	});
-
-	it("user messages render as button elements for accessibility", () => {
+	it("user messages render as non-interactive div elements", () => {
 		mockHookReturn.messages = [
 			{
 				id: "msg_user",
@@ -298,12 +241,10 @@ describe("TherapistChat", () => {
 			},
 		];
 
-		const { container } = renderWithProviders(
-			<TherapistChat sessionId="session-123" onMessageClick={() => {}} />,
-		);
+		const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
 
 		const userMessage = container.querySelector("[data-message-id='msg_user']");
-		expect(userMessage?.tagName.toLowerCase()).toBe("button");
+		expect(userMessage?.tagName.toLowerCase()).toBe("div");
 	});
 
 	it("disables textarea when loading", () => {
@@ -337,35 +278,34 @@ describe("TherapistChat", () => {
 			expect(container.querySelector(".animate-spin")).toBeTruthy();
 		});
 
-		it("shows SessionNotFound error with redirect button", () => {
-			mockUseAuth.mockReturnValue({
-				isAuthenticated: false,
-				user: null,
-				session: null,
-				isPending: false,
-			});
+		it("calls onSessionError when session is not found on resume", async () => {
+			const mockOnSessionError = vi.fn();
 			mockHookReturn.isResuming = false;
 			mockHookReturn.resumeError = new Error("HTTP 404: SessionNotFound");
 			mockHookReturn.isResumeSessionNotFound = true;
 			mockHookReturn.messages = [];
 
-			renderWithProviders(<TherapistChat sessionId="session-123" />);
-
-			expect(screen.getByText("Session not found")).toBeTruthy();
-			expect(screen.getByText("Start New Assessment")).toBeTruthy();
-		});
-
-		it("redirects authenticated users to 404 when resume access is denied", async () => {
-			mockHookReturn.isResuming = false;
-			mockHookReturn.resumeError = new Error("HTTP 404: SessionNotFound");
-			mockHookReturn.isResumeSessionNotFound = true;
-			mockHookReturn.messages = [];
-
-			renderWithProviders(<TherapistChat sessionId="session-123" />);
+			renderWithProviders(
+				<TherapistChat sessionId="session-123" onSessionError={mockOnSessionError} />,
+			);
 
 			await waitFor(() => {
-				expect(mockNavigate).toHaveBeenCalledWith({ to: "/404" });
+				expect(mockOnSessionError).toHaveBeenCalledWith({
+					type: "not-found",
+					isResumeError: true,
+				});
 			});
+		});
+
+		it("shows generic error UI when resume fails with session not found", () => {
+			mockHookReturn.isResuming = false;
+			mockHookReturn.resumeError = new Error("HTTP 404: SessionNotFound");
+			mockHookReturn.isResumeSessionNotFound = true;
+			mockHookReturn.messages = [];
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			expect(screen.getByText(/went wrong/)).toBeTruthy();
 		});
 
 		it("shows generic error state with retry button", () => {
