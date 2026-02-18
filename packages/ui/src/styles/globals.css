@@ -174,8 +174,9 @@
 	--bubble-fg: var(--foreground);
 	--embed-bg: rgba(255, 255, 255, 0.55);
 	--embed-border: var(--border);
-	--user-avatar-bg: var(--accent);
-	--user-avatar-fg: var(--foreground);
+	--user-avatar-from: var(--primary);
+	--user-avatar-to: var(--secondary);
+	--user-avatar-fg: #fff;
 	--muted-dynamic: var(--muted-foreground);
 	--radar-fill: rgba(255, 0, 128, 0.1);
 	--radar-fill-you: rgba(255, 0, 128, 0.15);
@@ -314,7 +315,8 @@
 	--bubble-fg: rgba(255, 255, 255, 0.85);
 	--embed-bg: rgba(255, 255, 255, 0.04);
 	--embed-border: rgba(255, 255, 255, 0.06);
-	--user-avatar-bg: rgba(255, 255, 255, 0.08);
+	--user-avatar-from: var(--primary);
+	--user-avatar-to: var(--secondary);
 	--user-avatar-fg: #fff;
 	--muted-dynamic: rgba(255, 255, 255, 0.45);
 	--radar-fill: rgba(0, 212, 200, 0.1);
@@ -586,4 +588,40 @@
 @keyframes shapeReveal {
 	from { transform: scale(0.8) rotate(-8deg); opacity: 0; }
 	to { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* ══════════════════════════════════════
+   GEOMETRIC OCEAN SEA LIFE — Creature tokens & keyframes
+   Scoped to [data-slot="geometric-ocean-layer"] to avoid :root pollution
+   ══════════════════════════════════════ */
+
+[data-slot="geometric-ocean-layer"] {
+	--bubble-border-color: rgba(0, 180, 166, 0.45);
+	--bubble-fill-color: rgba(0, 180, 166, 0.04);
+	--bubble-opacity: 0.22;
+}
+
+.dark [data-slot="geometric-ocean-layer"] {
+	--bubble-border-color: #F0EDE8;
+	--bubble-fill-color: rgba(240, 237, 232, 0.04);
+	--bubble-opacity: 0.18;
+}
+
+/* ── Bubbles ── */
+@keyframes bubbleRise {
+	0% { bottom: -20px; opacity: var(--bubble-opacity); transform: translateX(0) scale(0.95); }
+	10% { transform: translateX(4px) scale(1); }
+	25% { transform: translateX(-3px) scale(1.04); }
+	40% { transform: translateX(5px) scale(0.97); }
+	55% { transform: translateX(-2px) scale(1.03); }
+	70% { transform: translateX(3px) scale(0.98); }
+	85% { opacity: var(--bubble-opacity); transform: translateX(-1px) scale(1); }
+	100% { bottom: 110%; opacity: 0; transform: translateX(0) scale(0.96); }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+	.geometric-ocean * {
+		animation: none !important;
+	}
 }

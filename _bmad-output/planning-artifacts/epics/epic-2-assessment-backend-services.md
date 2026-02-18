@@ -601,6 +601,10 @@ if (result.shouldAnalyze) {
 return { response: result.nerinResponse };
 ```
 
+**Finalization Exception — Synchronous Analysis:**
+
+When generating results (scores, portrait), `processAnalysis` is called synchronously before computing the final profile. This closes the blind window where the last 0-2 messages may not have been analyzed by the async batch cadence. The call is unconditional — `processAnalysis` internally short-circuits if all messages already have evidence (queries evidence DB, diffs against message list, only analyzes the gap).
+
 **Key Implementation Pattern — Offset Steering in Router:**
 
 ```typescript

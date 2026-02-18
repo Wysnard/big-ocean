@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-02-17 (refreshed sprint-planning, auto-detected status updates)
+# Generated: 2026-02-17 (refreshed sprint-planning, promoted epic-4 to done)
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -72,8 +72,8 @@ development_status:
   epic-3-retrospective: done
 
   # EPIC 4: Frontend Assessment UI
-  # 7 stories completed, Story 4.8 added via correct-course (2026-02-17)
-  epic-4: in-progress
+  # All stories completed (8/8) — epic promoted to done (2026-02-17)
+  epic-4: done
   4-1-authentication-ui-sign-up-modal: done
   4-2-assessment-conversation-component: done
   4-3-session-resumption-device-switching: done
@@ -81,7 +81,7 @@ development_status:
   4-5-component-documentation-with-storybook: done
   4-6-hide-scores-during-assessment: done
   4-7-message-count-progress-indicator: done
-  4-8-message-character-limit-with-counter: ready-for-dev
+  4-8-message-character-limit-with-counter: done
   epic-4-retrospective: done
 
   # EPIC 5: Results & Profile Sharing
@@ -121,7 +121,7 @@ development_status:
   7-13-registered-user-profile-page: done
   7-14-component-visual-consistency-and-final-polish: done
   7-15-auth-form-psychedelic-brand-redesign: done
-  7-16-geometric-ocean-sea-life-ambient-layer: ready-for-dev
+  7-16-geometric-ocean-sea-life-ambient-layer: review
   epic-7-retrospective: done
 
   # EPIC 8: Results Page Content Enrichment

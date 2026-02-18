@@ -266,6 +266,8 @@ OrchestratorRepository (pure Effect, no bridging)
 Exception: messages 1-3 → cold start, no steering
 ```
 
+**Finalization:** When generating results, `processAnalysis` runs synchronously before score computation and portrait generation, ensuring all messages have evidence regardless of where in the cadence the session ended. This call is idempotent — it short-circuits if no unanalyzed messages exist.
+
 **Error Types:**
 - `BudgetPausedError` - Assessment paused, resume next day (includes `resumeAfter` timestamp)
 - `OrchestrationError` - Generic routing/pipeline failure
