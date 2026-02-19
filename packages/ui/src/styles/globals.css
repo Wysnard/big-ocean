@@ -178,6 +178,9 @@
 	--user-avatar-from: var(--primary);
 	--user-avatar-to: var(--secondary);
 	--user-avatar-fg: #fff;
+	--vincent-bubble-from: #f59e0b;
+	--vincent-bubble-to: var(--tertiary);
+	--vincent-ring: var(--tertiary);
 	--muted-dynamic: var(--muted-foreground);
 	--radar-fill: rgba(255, 0, 128, 0.1);
 	--radar-fill-you: rgba(255, 0, 128, 0.15);
@@ -190,6 +193,18 @@
 	--input-field-color: var(--muted-foreground);
 	--share-card-gradient: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(255, 0, 128, 0.05));
 	--share-card-border: var(--border);
+
+	/* ========== HOROSCOPE PANEL TOKENS ========== */
+	--horoscope-bg: linear-gradient(160deg, #f3e8ff 0%, #fce7f3 40%, #e8d5ff 80%, #dbeafe 100%);
+	--horoscope-sign: #7c3aed;
+	--horoscope-date: #a78bcc;
+	--horoscope-description: #8b6da0;
+	--horoscope-label: #9b7abf;
+	--horoscope-body: #6b4c8a;
+	--horoscope-star: #c084fc;
+	--horoscope-card-bg: rgba(255, 255, 255, 0.6);
+	--horoscope-card-border: rgba(168, 85, 247, 0.08);
+	--horoscope-badge-bg: rgba(255, 255, 255, 0.7);
 
 	/* ========== SCORE LEVEL TOKENS ========== */
 	--score-high: #22c55e;
@@ -206,11 +221,11 @@
 	--popover: #141838;
 	--popover-foreground: #F0EDE8;
 
-	/* ========== CORE SEMANTIC (abyss deep-ocean) ========== */
-	--primary: #00D4C8;
-	--primary-hover: #00EDE5;
+	/* ========== CORE SEMANTIC (midnight aurora) ========== */
+	--primary: #A78BFA;
+	--primary-hover: #C4B5FD;
 	--primary-foreground: #0A0E27;
-	--secondary: #FFB830;
+	--secondary: #34D399;
 	--secondary-foreground: #0A0E27;
 	--tertiary: #FF2D9B;
 	--tertiary-foreground: #FFFFFF;
@@ -218,7 +233,7 @@
 	--accent-foreground: #F0EDE8;
 	--muted: #141838;
 	--muted-foreground: #8B85A0;
-	--ring: #00D4C8;
+	--ring: #A78BFA;
 
 	/* ========== STATUS & FEEDBACK ========== */
 	--destructive: #FF4D6A;
@@ -228,26 +243,26 @@
 	--border: #252A52;
 	--input: #252A52;
 
-	/* ========== CHARTS (deep-ocean palette) ========== */
-	--chart-1: #00D4C8;
-	--chart-2: #FFB830;
+	/* ========== CHARTS (midnight aurora palette) ========== */
+	--chart-1: #A78BFA;
+	--chart-2: #34D399;
 	--chart-3: #FF2D9B;
-	--chart-4: #00EDE5;
+	--chart-4: #C4B5FD;
 	--chart-5: #FF4D6A;
 
-	/* ========== SIDEBAR (abyss deep-ocean) ========== */
+	/* ========== SIDEBAR (midnight aurora) ========== */
 	--sidebar: #0A0E27;
 	--sidebar-foreground: #F0EDE8;
-	--sidebar-primary: #00D4C8;
+	--sidebar-primary: #A78BFA;
 	--sidebar-primary-foreground: #0A0E27;
 	--sidebar-accent: #1C2148;
 	--sidebar-accent-foreground: #F0EDE8;
 	--sidebar-border: #252A52;
-	--sidebar-ring: #00D4C8;
+	--sidebar-ring: #A78BFA;
 
-	/* ========== GRADIENTS (deep-ocean) ========== */
-	--gradient-celebration: linear-gradient(120deg, #00D4C8, #FFB830, #FF2D9B);
-	--gradient-progress: linear-gradient(90deg, #00D4C8, #00EDE5);
+	/* ========== GRADIENTS (midnight aurora) ========== */
+	--gradient-celebration: linear-gradient(120deg, #A78BFA, #34D399, #FF2D9B);
+	--gradient-progress: linear-gradient(90deg, #A78BFA, #C4B5FD);
 	--gradient-surface-glow: radial-gradient(circle, #1C2148, #0A0E27);
 
 	/* ========== DEPTH ZONES (abyss navy progression) ========== */
@@ -319,9 +334,12 @@
 	--user-avatar-from: var(--primary);
 	--user-avatar-to: var(--secondary);
 	--user-avatar-fg: #fff;
+	--vincent-bubble-from: #d97706;
+	--vincent-bubble-to: var(--trait-neuroticism);
+	--vincent-ring: var(--trait-neuroticism);
 	--muted-dynamic: rgba(255, 255, 255, 0.45);
-	--radar-fill: rgba(0, 212, 200, 0.1);
-	--radar-fill-you: rgba(0, 212, 200, 0.15);
+	--radar-fill: rgba(167, 139, 250, 0.1);
+	--radar-fill-you: rgba(167, 139, 250, 0.15);
 	--bar-track: rgba(255, 255, 255, 0.06);
 	--thread-line: linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 0%, transparent 100%);
 	--input-bar-bg: rgba(10, 14, 39, 0.92);
@@ -331,6 +349,18 @@
 	--input-field-color: rgba(255, 255, 255, 0.4);
 	--share-card-gradient: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(255, 0, 128, 0.08));
 	--share-card-border: rgba(255, 255, 255, 0.08);
+
+	/* ========== HOROSCOPE PANEL TOKENS ========== */
+	--horoscope-bg: linear-gradient(160deg, rgba(88, 28, 135, 0.3) 0%, rgba(131, 24, 67, 0.25) 40%, rgba(76, 29, 149, 0.3) 80%, rgba(30, 58, 138, 0.25) 100%);
+	--horoscope-sign: #c4b5fd;
+	--horoscope-date: #a78bcc;
+	--horoscope-description: #b8a0cc;
+	--horoscope-label: #c4a8e0;
+	--horoscope-body: #d4c0e8;
+	--horoscope-star: #d8b4fe;
+	--horoscope-card-bg: rgba(255, 255, 255, 0.06);
+	--horoscope-card-border: rgba(168, 139, 250, 0.12);
+	--horoscope-badge-bg: rgba(255, 255, 255, 0.08);
 
 	/* ========== SCORE LEVEL TOKENS ========== */
 	--score-high: #4ade80;
@@ -411,6 +441,16 @@
 	--color-facet-self_consciousness: var(--facet-self_consciousness);
 	--color-facet-immoderation: var(--facet-immoderation);
 	--color-facet-vulnerability: var(--facet-vulnerability);
+	/* Horoscope panel color mappings */
+	--color-horoscope-sign: var(--horoscope-sign);
+	--color-horoscope-date: var(--horoscope-date);
+	--color-horoscope-description: var(--horoscope-description);
+	--color-horoscope-label: var(--horoscope-label);
+	--color-horoscope-body: var(--horoscope-body);
+	--color-horoscope-star: var(--horoscope-star);
+	--color-horoscope-card-bg: var(--horoscope-card-bg);
+	--color-horoscope-card-border: var(--horoscope-card-border);
+	--color-horoscope-badge-bg: var(--horoscope-badge-bg);
 	/* Font family mappings */
 	--font-heading: var(--font-heading);
 	--font-display: var(--font-display);

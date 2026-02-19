@@ -4,20 +4,9 @@ export function ComparisonTeaserPreview() {
 	return (
 		<ResultPreviewEmbed ctaText="Discover how you compare">
 			<div data-slot="comparison-teaser-preview" className="relative">
-				{/* "Coming soon" badge */}
-				<div className="absolute right-0 top-0 z-[2] rounded-md bg-secondary/90 px-2 py-1 font-mono text-[.6rem] text-white">
-					Coming soon
-				</div>
-
 				{/* Overlaid radar charts */}
 				<div className="flex flex-wrap items-center justify-center gap-5 max-[900px]:flex-col">
-					<svg
-						width="160"
-						height="160"
-						viewBox="0 0 200 200"
-						aria-hidden="true"
-						className="shrink-0"
-					>
+					<svg width="160" height="160" viewBox="0 0 200 200" aria-hidden="true" className="shrink-0">
 						{/* Grid pentagons */}
 						<polygon
 							points="100,20 175,65 155,155 45,155 25,65"
@@ -58,13 +47,7 @@ export function ComparisonTeaserPreview() {
 							{ cx: 55, cy: 135 },
 							{ cx: 35, cy: 70 },
 						].map((p) => (
-							<circle
-								key={`you-${p.cx}-${p.cy}`}
-								cx={p.cx}
-								cy={p.cy}
-								r="4"
-								fill="var(--primary)"
-							/>
+							<circle key={`you-${p.cx}-${p.cy}`} cx={p.cx} cy={p.cy} r="4" fill="var(--primary)" />
 						))}
 
 						{/* Score dots — "Friend" */}
@@ -75,13 +58,7 @@ export function ComparisonTeaserPreview() {
 							{ cx: 65, cy: 130 },
 							{ cx: 50, cy: 75 },
 						].map((p) => (
-							<circle
-								key={`friend-${p.cx}-${p.cy}`}
-								cx={p.cx}
-								cy={p.cy}
-								r="4"
-								fill="var(--tertiary)"
-							/>
+							<circle key={`friend-${p.cx}-${p.cy}`} cx={p.cx} cy={p.cy} r="4" fill="var(--tertiary)" />
 						))}
 					</svg>
 
@@ -92,8 +69,7 @@ export function ComparisonTeaserPreview() {
 							You
 						</div>
 						<div className="flex items-center gap-[7px] text-[.75rem] text-[var(--muted-dynamic)] transition-colors duration-[350ms]">
-							<div className="h-[7px] w-[7px] shrink-0 rounded-full bg-tertiary" />
-							A Friend
+							<div className="h-[7px] w-[7px] shrink-0 rounded-full bg-tertiary" />A Friend
 						</div>
 					</div>
 				</div>
