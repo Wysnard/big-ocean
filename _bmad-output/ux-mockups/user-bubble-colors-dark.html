@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>User Bubble Gradients — Dark Mode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0A0E27;
+    color: #F0EDE8;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    padding: 40px 24px 80px;
+    min-height: 100vh;
+  }
+
+  h1 {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, #00D4C8, #FFB830);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: rgba(255,255,255,0.45);
+    font-size: 0.875rem;
+    margin-bottom: 48px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .option {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    padding: 28px 24px 24px;
+  }
+
+  .option-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .option-number {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #00D4C8;
+    background: rgba(0,212,200,0.1);
+    border-radius: 6px;
+    padding: 2px 8px;
+    flex-shrink: 0;
+  }
+
+  .option-name {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #F0EDE8;
+  }
+
+  .option-vibe {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 18px;
+    font-style: italic;
+  }
+
+  /* Chat mockup area */
+  .chat-area {
+    background: #0A0E27;
+    border-radius: 16px;
+    padding: 20px 16px;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  /* Nerin bubble (consistent across all options) */
+  .nerin-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .nerin-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00D4C8, #FFB830);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #0A0E27;
+    flex-shrink: 0;
+  }
+
+  .nerin-bubble {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    border-top-left-radius: 5px;
+    padding: 14px 18px;
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.85);
+    max-width: 85%;
+  }
+
+  /* User bubble row */
+  .user-row {
+    display: flex;
+    flex-direction: row-reverse;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00D4C8, #FFB830);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .user-bubble {
+    border-radius: 18px;
+    border-bottom-right-radius: 5px;
+    padding: 14px 20px;
+    font-size: 0.92rem;
+    line-height: 1.65;
+    max-width: 85%;
+  }
+
+  /* ========== 8 GRADIENT VARIANTS ========== */
+
+  /* 1 — Abyssal Teal */
+  .variant-1 .user-bubble {
+    background: linear-gradient(135deg, #0D3D3A, #0A2E40);
+    color: #B8F0EC;
+  }
+
+  /* 2 — Neon Reef */
+  .variant-2 .user-bubble {
+    background: linear-gradient(135deg, #00D4C8, #00A89E);
+    color: #0A0E27;
+  }
+
+  /* 3 — Twilight Indigo */
+  .variant-3 .user-bubble {
+    background: linear-gradient(135deg, #1E244E, #2A1F5E);
+    color: #C4C0FF;
+  }
+
+  /* 4 — Gold Ember */
+  .variant-4 .user-bubble {
+    background: linear-gradient(135deg, rgba(255, 184, 48, 0.20), rgba(255, 107, 43, 0.14));
+    color: #FFD580;
+  }
+
+  /* 5 — Pink Aurora */
+  .variant-5 .user-bubble {
+    background: linear-gradient(135deg, rgba(255, 45, 155, 0.18), rgba(168, 85, 247, 0.12));
+    color: #FF8DC7;
+  }
+
+  /* 6 — Teal Glass */
+  .variant-6 .user-bubble {
+    background: linear-gradient(135deg, rgba(0, 212, 200, 0.14), rgba(0, 180, 166, 0.06));
+    color: rgba(255, 255, 255, 0.88);
+  }
+
+  /* 7 — Deep Navy Drift */
+  .variant-7 .user-bubble {
+    background: linear-gradient(135deg, #1A2040, #141838);
+    color: #E0DDD8;
+  }
+
+  /* 8 — Coral Blaze */
+  .variant-8 .user-bubble {
+    background: linear-gradient(135deg, #FF2D9B, #FF6B2B);
+    color: #FFFFFF;
+  }
+
+  /* Color swatch bar */
+  .swatches {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    align-items: center;
+  }
+
+  .swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+    position: relative;
+  }
+
+  .swatch-label {
+    font-size: 0.68rem;
+    color: rgba(255,255,255,0.35);
+    margin-left: 4px;
+  }
+
+  .swatch-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .css-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.30);
+    margin-top: 8px;
+    word-break: break-all;
+    line-height: 1.5;
+  }
+
+  .recommended {
+    border-color: #00D4C8;
+    box-shadow: 0 0 0 1px #00D4C8, 0 0 20px rgba(0,212,200,0.15);
+  }
+
+  .rec-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #0A0E27;
+    background: #00D4C8;
+    border-radius: 6px;
+    padding: 2px 8px;
+    margin-left: auto;
+  }
+</style>
+</head>
+<body>
+
+<h1>User Bubble Gradients</h1>
+<p class="subtitle">Dark mode &middot; Background #0A0E27 &middot; All 8 options with gradient backgrounds</p>
+
+<div class="grid">
+
+  <!-- 1 — Abyssal Teal -->
+  <div class="option variant-1">
+    <div class="option-header">
+      <span class="option-number">01</span>
+      <span class="option-name">Abyssal Teal</span>
+    </div>
+    <p class="option-vibe">Deep ocean floor — teal fading into midnight blue</p>
+    <div class="chat-area">
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">What's something that truly lights you up — something you could talk about for hours?</div>
+      </div>
+      <div class="user-row">
+        <div class="user-avatar">Y</div>
+        <div class="user-bubble">I lose all sense of time when I'm deep into designing systems — like seeing how all the puzzle pieces connect.</div>
+      </div>
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">That resonance with systems thinking tells me a lot about how your mind works.</div>
+      </div>
+    </div>
+    <div class="swatches">
+      <div class="swatch-group"><div class="swatch" style="background:#0D3D3A"></div><span class="swatch-label">from</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:#0A2E40"></div><span class="swatch-label">to</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:#B8F0EC"></div><span class="swatch-label">text</span></div>
+    </div>
+    <p class="css-value">linear-gradient(135deg, #0D3D3A, #0A2E40)</p>
+  </div>
+
+  <!-- 2 — Neon Reef -->
+  <div class="option variant-2">
+    <div class="option-header">
+      <span class="option-number">02</span>
+      <span class="option-name">Neon Reef</span>
+    </div>
+    <p class="option-vibe">Bold bioluminescent — bright teal shifting darker</p>
+    <div class="chat-area">
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">What's something that truly lights you up — something you could talk about for hours?</div>
+      </div>
+      <div class="user-row">
+        <div class="user-avatar">Y</div>
+        <div class="user-bubble">I lose all sense of time when I'm deep into designing systems — like seeing how all the puzzle pieces connect.</div>
+      </div>
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">That resonance with systems thinking tells me a lot about how your mind works.</div>
+      </div>
+    </div>
+    <div class="swatches">
+      <div class="swatch-group"><div class="swatch" style="background:#00D4C8"></div><span class="swatch-label">from</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:#00A89E"></div><span class="swatch-label">to</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:#0A0E27"></div><span class="swatch-label">text</span></div>
+    </div>
+    <p class="css-value">linear-gradient(135deg, #00D4C8, #00A89E)</p>
+  </div>
+
+  <!-- 3 — Twilight Indigo -->
+  <div class="option variant-3">
+    <div class="option-header">
+      <span class="option-number">03</span>
+      <span class="option-name">Twilight Indigo</span>
+    </div>
+    <p class="option-vibe">Night sky — navy bleeding into deep violet</p>
+    <div class="chat-area">
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">What's something that truly lights you up — something you could talk about for hours?</div>
+      </div>
+      <div class="user-row">
+        <div class="user-avatar">Y</div>
+        <div class="user-bubble">I lose all sense of time when I'm deep into designing systems — like seeing how all the puzzle pieces connect.</div>
+      </div>
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">That resonance with systems thinking tells me a lot about how your mind works.</div>
+      </div>
+    </div>
+    <div class="swatches">
+      <div class="swatch-group"><div class="swatch" style="background:#1E244E"></div><span class="swatch-label">from</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:#2A1F5E"></div><span class="swatch-label">to</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:#C4C0FF"></div><span class="swatch-label">text</span></div>
+    </div>
+    <p class="css-value">linear-gradient(135deg, #1E244E, #2A1F5E)</p>
+  </div>
+
+  <!-- 4 — Gold Ember -->
+  <div class="option variant-4">
+    <div class="option-header">
+      <span class="option-number">04</span>
+      <span class="option-name">Gold Ember</span>
+    </div>
+    <p class="option-vibe">Warm glow — amber fading into soft coral glass</p>
+    <div class="chat-area">
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">What's something that truly lights you up — something you could talk about for hours?</div>
+      </div>
+      <div class="user-row">
+        <div class="user-avatar">Y</div>
+        <div class="user-bubble">I lose all sense of time when I'm deep into designing systems — like seeing how all the puzzle pieces connect.</div>
+      </div>
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">That resonance with systems thinking tells me a lot about how your mind works.</div>
+      </div>
+    </div>
+    <div class="swatches">
+      <div class="swatch-group"><div class="swatch" style="background:rgba(255,184,48,0.20)"></div><span class="swatch-label">from</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:rgba(255,107,43,0.14)"></div><span class="swatch-label">to</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:#FFD580"></div><span class="swatch-label">text</span></div>
+    </div>
+    <p class="css-value">linear-gradient(135deg, rgba(255,184,48,0.20), rgba(255,107,43,0.14))</p>
+  </div>
+
+  <!-- 5 — Pink Aurora -->
+  <div class="option variant-5">
+    <div class="option-header">
+      <span class="option-number">05</span>
+      <span class="option-name">Pink Aurora</span>
+    </div>
+    <p class="option-vibe">Expressive — electric pink melting into purple mist</p>
+    <div class="chat-area">
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">What's something that truly lights you up — something you could talk about for hours?</div>
+      </div>
+      <div class="user-row">
+        <div class="user-avatar">Y</div>
+        <div class="user-bubble">I lose all sense of time when I'm deep into designing systems — like seeing how all the puzzle pieces connect.</div>
+      </div>
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">That resonance with systems thinking tells me a lot about how your mind works.</div>
+      </div>
+    </div>
+    <div class="swatches">
+      <div class="swatch-group"><div class="swatch" style="background:rgba(255,45,155,0.18)"></div><span class="swatch-label">from</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:rgba(168,85,247,0.12)"></div><span class="swatch-label">to</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:#FF8DC7"></div><span class="swatch-label">text</span></div>
+    </div>
+    <p class="css-value">linear-gradient(135deg, rgba(255,45,155,0.18), rgba(168,85,247,0.12))</p>
+  </div>
+
+  <!-- 6 — Teal Glass (RECOMMENDED) -->
+  <div class="option variant-6 recommended">
+    <div class="option-header">
+      <span class="option-number">06</span>
+      <span class="option-name">Teal Glass</span>
+      <span class="rec-badge">RECOMMENDED</span>
+    </div>
+    <p class="option-vibe">Whisper gradient — primary teal fading to near-invisible</p>
+    <div class="chat-area">
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">What's something that truly lights you up — something you could talk about for hours?</div>
+      </div>
+      <div class="user-row">
+        <div class="user-avatar">Y</div>
+        <div class="user-bubble">I lose all sense of time when I'm deep into designing systems — like seeing how all the puzzle pieces connect.</div>
+      </div>
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">That resonance with systems thinking tells me a lot about how your mind works.</div>
+      </div>
+    </div>
+    <div class="swatches">
+      <div class="swatch-group"><div class="swatch" style="background:rgba(0,212,200,0.14)"></div><span class="swatch-label">from</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:rgba(0,180,166,0.06)"></div><span class="swatch-label">to</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:rgba(255,255,255,0.88)"></div><span class="swatch-label">text</span></div>
+    </div>
+    <p class="css-value">linear-gradient(135deg, rgba(0,212,200,0.14), rgba(0,180,166,0.06))</p>
+  </div>
+
+  <!-- 7 — Deep Navy Drift -->
+  <div class="option variant-7">
+    <div class="option-header">
+      <span class="option-number">07</span>
+      <span class="option-name">Deep Navy Drift</span>
+    </div>
+    <p class="option-vibe">Stealth — dark navy dissolving into the abyss</p>
+    <div class="chat-area">
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">What's something that truly lights you up — something you could talk about for hours?</div>
+      </div>
+      <div class="user-row">
+        <div class="user-avatar">Y</div>
+        <div class="user-bubble">I lose all sense of time when I'm deep into designing systems — like seeing how all the puzzle pieces connect.</div>
+      </div>
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">That resonance with systems thinking tells me a lot about how your mind works.</div>
+      </div>
+    </div>
+    <div class="swatches">
+      <div class="swatch-group"><div class="swatch" style="background:#1A2040"></div><span class="swatch-label">from</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:#141838"></div><span class="swatch-label">to</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:#E0DDD8"></div><span class="swatch-label">text</span></div>
+    </div>
+    <p class="css-value">linear-gradient(135deg, #1A2040, #141838)</p>
+  </div>
+
+  <!-- 8 — Coral Blaze -->
+  <div class="option variant-8">
+    <div class="option-header">
+      <span class="option-number">08</span>
+      <span class="option-name">Coral Blaze</span>
+    </div>
+    <p class="option-vibe">Celebration energy — hot pink into warm orange</p>
+    <div class="chat-area">
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">What's something that truly lights you up — something you could talk about for hours?</div>
+      </div>
+      <div class="user-row">
+        <div class="user-avatar">Y</div>
+        <div class="user-bubble">I lose all sense of time when I'm deep into designing systems — like seeing how all the puzzle pieces connect.</div>
+      </div>
+      <div class="nerin-row">
+        <div class="nerin-avatar">N</div>
+        <div class="nerin-bubble">That resonance with systems thinking tells me a lot about how your mind works.</div>
+      </div>
+    </div>
+    <div class="swatches">
+      <div class="swatch-group"><div class="swatch" style="background:#FF2D9B"></div><span class="swatch-label">from</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:#FF6B2B"></div><span class="swatch-label">to</span></div>
+      <div class="swatch-group"><div class="swatch" style="background:#FFFFFF"></div><span class="swatch-label">text</span></div>
+    </div>
+    <p class="css-value">linear-gradient(135deg, #FF2D9B, #FF6B2B)</p>
+  </div>
+
+</div>
+
+</body>
+</html>

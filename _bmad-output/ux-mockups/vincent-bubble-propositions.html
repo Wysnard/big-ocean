@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vincent Bubble — Light Mode Gradients</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --font-heading: 'Georgia', serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --amber-400: #fbbf24;
+      --amber-500: #f59e0b;
+      --amber-600: #d97706;
+      --amber-800: #92400e;
+      --light-card: #FFF0E8;
+      --light-border: #FFD6C4;
+      --light-muted-fg: #6B6580;
+    }
+
+    body {
+      background: #111;
+      color: #e6edf3;
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      padding: 40px 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 { font-family: var(--font-heading); font-size: 1.8rem; margin-bottom: 12px; }
+    .intro { color: #8b949e; font-size: .88rem; margin-bottom: 48px; line-height: 1.6; }
+
+    .section-header {
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .section-desc {
+      color: #8b949e;
+      font-size: .82rem;
+      margin-bottom: 32px;
+      line-height: 1.55;
+    }
+
+    .proposition { margin-bottom: 56px; }
+
+    .proposition-label {
+      font-family: var(--font-heading);
+      font-size: .72rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--amber-500);
+      margin-bottom: 6px;
+    }
+    .proposition-title {
+      font-family: var(--font-heading);
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .palette-tokens {
+      font-family: monospace;
+      font-size: .7rem;
+      color: #8b949e;
+      margin-bottom: 6px;
+    }
+    .proposition-desc {
+      color: #8b949e;
+      font-size: .82rem;
+      margin-bottom: 20px;
+      line-height: 1.55;
+    }
+
+    /* ── Mockup frames ── */
+    .mockup-frame {
+      border-radius: 16px;
+      padding: 32px 28px;
+    }
+    .mockup-frame--dark {
+      background: #141838;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .mockup-frame--light {
+      background: var(--light-card);
+      border: 1px solid var(--light-border);
+    }
+
+    /* ── Shared bubble layout ── */
+    .v-wrapper { display: flex; gap: 11px; }
+    .v-avatar-group {
+      display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0;
+    }
+    .v-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading); font-size: .78rem; font-weight: 700; color: white;
+    }
+    .v-avatar-label { font-size: .62rem; font-weight: 500; color: var(--amber-500); }
+    .v-content { max-width: 88%; }
+    .v-name { display: block; font-size: .7rem; font-weight: 500; margin-bottom: 4px; }
+    .v-name--dark { color: #8B85A0; }
+    .v-name--light { color: var(--light-muted-fg); }
+    .v-bubble {
+      border-radius: 18px; border-top-left-radius: 5px;
+      padding: 18px 22px; font-size: .92rem; line-height: 1.65; color: white;
+    }
+    .v-bubble p + p { margin-top: 12px; }
+
+    /* ── DARK MODE — Amber Depth (locked) ── */
+    .avatar--dark {
+      background: linear-gradient(135deg, var(--amber-400), #6366F1);
+      box-shadow: 0 0 0 2px #141838, 0 0 0 3.5px #6366F1;
+    }
+    .bubble--dark {
+      background: linear-gradient(135deg, var(--amber-600), #6366F1);
+    }
+
+    /* ── LIGHT 1: Amber → Pink (primary #FF0080) ── */
+    .avatar--l1 {
+      background: linear-gradient(135deg, var(--amber-400), #FF0080);
+      box-shadow: 0 0 0 2px var(--light-card), 0 0 0 3.5px #FF0080;
+    }
+    .bubble--l1 {
+      background: linear-gradient(135deg, var(--amber-500), #FF0080);
+    }
+
+    /* ── LIGHT 2: Amber → Orange (secondary #FF6B2B) ── */
+    .avatar--l2 {
+      background: linear-gradient(135deg, var(--amber-400), #FF6B2B);
+      box-shadow: 0 0 0 2px var(--light-card), 0 0 0 3.5px #FF6B2B;
+    }
+    .bubble--l2 {
+      background: linear-gradient(135deg, var(--amber-500), #FF6B2B);
+    }
+
+    /* ── LIGHT 3: Amber → Teal (tertiary #00B4A6) ── */
+    .avatar--l3 {
+      background: linear-gradient(135deg, var(--amber-400), #00B4A6);
+      box-shadow: 0 0 0 2px var(--light-card), 0 0 0 3.5px #00B4A6;
+    }
+    .bubble--l3 {
+      background: linear-gradient(135deg, var(--amber-500), #00B4A6);
+    }
+
+    /* ── LIGHT 4: Amber → Purple (openness #A855F7) ── */
+    .avatar--l4 {
+      background: linear-gradient(135deg, var(--amber-400), #A855F7);
+      box-shadow: 0 0 0 2px var(--light-card), 0 0 0 3.5px #A855F7;
+    }
+    .bubble--l4 {
+      background: linear-gradient(135deg, var(--amber-500), #A855F7);
+    }
+
+    /* ── LIGHT 5: Amber → Deep Amber (pure warm #92400e) ── */
+    .avatar--l5 {
+      background: linear-gradient(135deg, var(--amber-400), var(--amber-800));
+      box-shadow: 0 0 0 2px var(--light-card), 0 0 0 3.5px var(--amber-800);
+    }
+    .bubble--l5 {
+      background: linear-gradient(135deg, var(--amber-500), var(--amber-800));
+    }
+
+    /* ── LIGHT 6: Amber → Hot Pink (tertiary-dark #FF2D9B) ── */
+    .avatar--l6 {
+      background: linear-gradient(135deg, var(--amber-400), #FF2D9B);
+      box-shadow: 0 0 0 2px var(--light-card), 0 0 0 3.5px #FF2D9B;
+    }
+    .bubble--l6 {
+      background: linear-gradient(135deg, var(--amber-500), #FF2D9B);
+    }
+
+    .divider {
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+      margin: 48px 0;
+    }
+
+    .msg-text {
+      font-size: .92rem; line-height: 1.65;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Vincent Bubble — Light Mode Gradients</h1>
+  <p class="intro">
+    Dark mode is locked as <strong>Amber Depth</strong> (amber-600 → indigo #6366F1).
+    <br>Below: the dark reference, then 6 light-mode gradient proposals using the Celebration palette from <code>globals.css</code>.
+  </p>
+
+  <!-- ═══════════ DARK REFERENCE ═══════════ -->
+  <div class="section-header">Dark Mode — Amber Depth (locked)</div>
+  <div class="section-desc">amber-600 → #6366F1 (dark neuroticism). This stays as-is.</div>
+
+  <div class="proposition">
+    <div class="mockup-frame mockup-frame--dark">
+      <div class="v-wrapper">
+        <div class="v-avatar-group">
+          <div class="v-avatar avatar--dark">V</div>
+          <span class="v-avatar-label">Founder</span>
+        </div>
+        <div class="v-content">
+          <span class="v-name v-name--dark">Vincent</span>
+          <div class="v-bubble bubble--dark">
+            <p>I'd taken every test out there. MBTI, Enneagram, even a few I'm embarrassed to admit. They'd tell me things that were true on the surface but never felt complete. When I first read what Nerin wrote about me, I sat with it for a long time. Not because it told me something I didn't know&nbsp;&mdash;&nbsp;but because it named things I'd been carrying without words for them.</p>
+            <p>That's why I built this.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section-header">Light Mode — 6 Propositions</div>
+  <div class="section-desc">Each gradient starts from amber and ends at a different Celebration palette color. Shown against the actual light <code>--card: #FFF0E8</code> background.</div>
+
+  <!-- ═══ LIGHT 1 — Amber → Pink ═══ -->
+  <div class="proposition">
+    <div class="proposition-label">Light 1</div>
+    <div class="proposition-title">Amber Bloom</div>
+    <div class="palette-tokens">from: amber-500 (#f59e0b) → to: primary (#FF0080)</div>
+    <p class="proposition-desc">
+      Amber into the hero pink. Mirrors the user bubble's primary→secondary energy but from the warm side. Bold and brand-forward — says "the founder is the heartbeat of this product."
+    </p>
+    <div class="mockup-frame mockup-frame--light">
+      <div class="v-wrapper">
+        <div class="v-avatar-group">
+          <div class="v-avatar avatar--l1">V</div>
+          <span class="v-avatar-label">Founder</span>
+        </div>
+        <div class="v-content">
+          <span class="v-name v-name--light">Vincent</span>
+          <div class="v-bubble bubble--l1">
+            <p>I'd taken every test out there. MBTI, Enneagram, even a few I'm embarrassed to admit. They'd tell me things that were true on the surface but never felt complete. When I first read what Nerin wrote about me, I sat with it for a long time. Not because it told me something I didn't know&nbsp;&mdash;&nbsp;but because it named things I'd been carrying without words for them.</p>
+            <p>That's why I built this.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ LIGHT 2 — Amber → Orange ═══ -->
+  <div class="proposition">
+    <div class="proposition-label">Light 2</div>
+    <div class="proposition-title">Amber Fire</div>
+    <div class="palette-tokens">from: amber-500 (#f59e0b) → to: secondary (#FF6B2B)</div>
+    <p class="proposition-desc">
+      Pure warm spectrum — amber melting into secondary orange. The most cohesive with the Celebration theme's warm tones. Feels natural against the cream card. Low risk, high warmth.
+    </p>
+    <div class="mockup-frame mockup-frame--light">
+      <div class="v-wrapper">
+        <div class="v-avatar-group">
+          <div class="v-avatar avatar--l2">V</div>
+          <span class="v-avatar-label">Founder</span>
+        </div>
+        <div class="v-content">
+          <span class="v-name v-name--light">Vincent</span>
+          <div class="v-bubble bubble--l2">
+            <p>I'd taken every test out there. MBTI, Enneagram, even a few I'm embarrassed to admit. They'd tell me things that were true on the surface but never felt complete. When I first read what Nerin wrote about me, I sat with it for a long time. Not because it told me something I didn't know&nbsp;&mdash;&nbsp;but because it named things I'd been carrying without words for them.</p>
+            <p>That's why I built this.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ LIGHT 3 — Amber → Teal ═══ -->
+  <div class="proposition">
+    <div class="proposition-label">Light 3</div>
+    <div class="proposition-title">Amber Reef</div>
+    <div class="palette-tokens">from: amber-500 (#f59e0b) → to: tertiary (#00B4A6)</div>
+    <p class="proposition-desc">
+      Warm-to-cool crossfade — the most visually distinctive option. The teal endpoint is the light-mode tertiary, so it echoes Nerin's avatar palette without being the same. Creates the "sunlight hitting the ocean" metaphor.
+    </p>
+    <div class="mockup-frame mockup-frame--light">
+      <div class="v-wrapper">
+        <div class="v-avatar-group">
+          <div class="v-avatar avatar--l3">V</div>
+          <span class="v-avatar-label">Founder</span>
+        </div>
+        <div class="v-content">
+          <span class="v-name v-name--light">Vincent</span>
+          <div class="v-bubble bubble--l3">
+            <p>I'd taken every test out there. MBTI, Enneagram, even a few I'm embarrassed to admit. They'd tell me things that were true on the surface but never felt complete. When I first read what Nerin wrote about me, I sat with it for a long time. Not because it told me something I didn't know&nbsp;&mdash;&nbsp;but because it named things I'd been carrying without words for them.</p>
+            <p>That's why I built this.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ LIGHT 4 — Amber → Purple ═══ -->
+  <div class="proposition">
+    <div class="proposition-label">Light 4</div>
+    <div class="proposition-title">Amber Cosmos</div>
+    <div class="palette-tokens">from: amber-500 (#f59e0b) → to: openness (#A855F7)</div>
+    <p class="proposition-desc">
+      Amber dissolving into the openness purple. The closest spiritual cousin to the dark-mode Amber Depth — both gradients end in a purple/indigo family, creating a sense of "same identity, different mood" across themes.
+    </p>
+    <div class="mockup-frame mockup-frame--light">
+      <div class="v-wrapper">
+        <div class="v-avatar-group">
+          <div class="v-avatar avatar--l4">V</div>
+          <span class="v-avatar-label">Founder</span>
+        </div>
+        <div class="v-content">
+          <span class="v-name v-name--light">Vincent</span>
+          <div class="v-bubble bubble--l4">
+            <p>I'd taken every test out there. MBTI, Enneagram, even a few I'm embarrassed to admit. They'd tell me things that were true on the surface but never felt complete. When I first read what Nerin wrote about me, I sat with it for a long time. Not because it told me something I didn't know&nbsp;&mdash;&nbsp;but because it named things I'd been carrying without words for them.</p>
+            <p>That's why I built this.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ LIGHT 5 — Amber → Deep Amber ═══ -->
+  <div class="proposition">
+    <div class="proposition-label">Light 5</div>
+    <div class="proposition-title">Amber Warmth</div>
+    <div class="palette-tokens">from: amber-500 (#f59e0b) → to: amber-800 (#92400e)</div>
+    <p class="proposition-desc">
+      Stays entirely in the amber lane — golden to burnt sienna. The safest, most "human" option. Strong contrast against the cream background. Doesn't borrow from any trait or brand color so it can't clash with anything.
+    </p>
+    <div class="mockup-frame mockup-frame--light">
+      <div class="v-wrapper">
+        <div class="v-avatar-group">
+          <div class="v-avatar avatar--l5">V</div>
+          <span class="v-avatar-label">Founder</span>
+        </div>
+        <div class="v-content">
+          <span class="v-name v-name--light">Vincent</span>
+          <div class="v-bubble bubble--l5">
+            <p>I'd taken every test out there. MBTI, Enneagram, even a few I'm embarrassed to admit. They'd tell me things that were true on the surface but never felt complete. When I first read what Nerin wrote about me, I sat with it for a long time. Not because it told me something I didn't know&nbsp;&mdash;&nbsp;but because it named things I'd been carrying without words for them.</p>
+            <p>That's why I built this.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ LIGHT 6 — Amber → Hot Pink ═══ -->
+  <div class="proposition">
+    <div class="proposition-label">Light 6</div>
+    <div class="proposition-title">Amber Flare</div>
+    <div class="palette-tokens">from: amber-500 (#f59e0b) → to: dark-tertiary (#FF2D9B)</div>
+    <p class="proposition-desc">
+      Amber into the dark-mode tertiary hot pink — which in light mode becomes a playful, energetic accent. Brighter and more electric than Amber Bloom. Feels festive and "Celebration"-themed. The most fun option.
+    </p>
+    <div class="mockup-frame mockup-frame--light">
+      <div class="v-wrapper">
+        <div class="v-avatar-group">
+          <div class="v-avatar avatar--l6">V</div>
+          <span class="v-avatar-label">Founder</span>
+        </div>
+        <div class="v-content">
+          <span class="v-name v-name--light">Vincent</span>
+          <div class="v-bubble bubble--l6">
+            <p>I'd taken every test out there. MBTI, Enneagram, even a few I'm embarrassed to admit. They'd tell me things that were true on the surface but never felt complete. When I first read what Nerin wrote about me, I sat with it for a long time. Not because it told me something I didn't know&nbsp;&mdash;&nbsp;but because it named things I'd been carrying without words for them.</p>
+            <p>That's why I built this.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <p style="color: #8b949e; font-size: .78rem; text-align: center;">
+    big-ocean &middot; Vincent Bubble &middot; Light Mode Gradients &middot; UX Mockups
+  </p>
+
+</body>
+</html>

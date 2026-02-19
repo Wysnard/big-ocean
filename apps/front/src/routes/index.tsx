@@ -7,8 +7,8 @@ import { ConversationFlow } from "../components/home/ConversationFlow";
 import { DepthMeter } from "../components/home/DepthMeter";
 import { DepthScrollProvider } from "../components/home/DepthScrollProvider";
 import { HeroSection } from "../components/home/HeroSection";
+import { HoroscopeVsPortraitComparison } from "../components/home/HoroscopeVsPortraitComparison";
 import { MessageGroup } from "../components/home/MessageGroup";
-import { ShareCardPreview } from "../components/home/ShareCardPreview";
 import {
 	TraitFacetPair,
 	TraitStackEmbed,
@@ -29,164 +29,185 @@ function HomePage() {
 
 			{/* Conversation flow — the heart of the homepage */}
 			<ConversationFlow>
-				{/* 1. Nerin — Hook: genuine observation about human contradictions */}
+				{/* Beat 1 — Nerin: Hook */}
 				<MessageGroup>
 					<ChatBubble variant="nerin">
-						<h3>The Contradiction Is the Clue</h3>
 						<p>
-							Ever notice how you can be the most patient person in one room and completely lose it in
-							another?
+							You know that thing where a test tells you you&rsquo;re &ldquo;introverted&rdquo; and you
+							think <em>yeah, but I&rsquo;m the loudest person at dinner with my friends</em>?
 						</p>
-						<p>Or how you'll overthink a restaurant choice but make a career move on gut instinct?</p>
 						<p>
-							That's not random. That's <strong>personality</strong>&nbsp;&mdash; and it's way more layered
-							than any quiz can capture.
+							Or it says you&rsquo;re &ldquo;organized&rdquo; but your desk looks like a crime scene and
+							somehow you still never miss a deadline?
+						</p>
+						<p>
+							That &ldquo;but&rdquo;&nbsp;&mdash;&nbsp;that&rsquo;s the part no test captures. That&rsquo;s
+							the part I&rsquo;m interested in.
 						</p>
 					</ChatBubble>
 				</MessageGroup>
 
-				{/* 2. User — Skepticism */}
+				{/* Beat 2 — User: Skeptic reveals wound */}
 				<MessageGroup>
-					<ChatBubble variant="user">So like Myers-Briggs but... not surface level?</ChatBubble>
+					<ChatBubble variant="user">
+						I&rsquo;ve done a few of these. They never really got it right. I&rsquo;d read the result and
+						think &ldquo;that&rsquo;s... someone, but not me.&rdquo;
+					</ChatBubble>
 				</MessageGroup>
 
-				{/* 2b. Nerin — Comparison card (inside bubble) */}
+				{/* Beat 3 — Nerin: Acknowledges wound */}
 				<MessageGroup>
 					<ChatBubble variant="nerin">
-						<p>Here&nbsp;&mdash; same question, two approaches.</p>
+						<h3>That&rsquo;s Not a Bug. That&rsquo;s the Problem.</h3>
+						<p>
+							Those tests aren&rsquo;t broken&nbsp;&mdash;&nbsp;they&rsquo;re just measuring the wrong way.
+							They ask you to rate yourself on a scale, average out the answers, and hand you a type.
+						</p>
+						<p>
+							But you&rsquo;re not an average. You&rsquo;re a pattern of
+							contradictions&nbsp;&mdash;&nbsp;and that&rsquo;s what makes you interesting. A scale of 1 to
+							7 can&rsquo;t hold that. A conversation can.
+						</p>
+					</ChatBubble>
+				</MessageGroup>
+
+				{/* Beat 4 — Nerin: Traditional vs Conversational comparison */}
+				<MessageGroup>
+					<ChatBubble variant="nerin">
+						<p>Same question. Two approaches.</p>
 						<ComparisonCard />
 					</ChatBubble>
 				</MessageGroup>
 
-				{/* 3. Nerin — Differentiation + science credit */}
-				<MessageGroup>
-					<ChatBubble variant="nerin">
-						<h3>Not a Label. A Map.</h3>
-						<h4>Built on the Big Five&nbsp;&mdash; the framework actual researchers use</h4>
-						<p>
-							Myers-Briggs gives you four letters and a label. I go after the{" "}
-							<strong>contradictions</strong>&nbsp;&mdash; the stuff a label can't hold.
-						</p>
-						<p>
-							You might score high on agreeableness overall, but fiercely competitive about specific
-							things. Most tests call that noise.
-						</p>
-						<p>
-							I call it a <strong>facet</strong>. You have <strong>thirty</strong> of them.
-						</p>
-					</ChatBubble>
-				</MessageGroup>
-
-				{/* 4. User — Curiosity + weight of it */}
-				<MessageGroup>
-					<ChatBubble variant="user">Thirty. That's... a lot.</ChatBubble>
-				</MessageGroup>
-
-				{/* 4b. Nerin — Brief response (rhythm break) */}
-				<MessageGroup>
-					<ChatBubble variant="nerin">Want to see them?</ChatBubble>
-				</MessageGroup>
-
-				{/* 5. Nerin — Trait Stack + aside + rhetorical question */}
-				<MessageGroup>
-					<ChatBubble variant="nerin">
-						<h3>Five Traits. Six Facets Each.</h3>
-						<h4>Tap a trait to explore what's underneath</h4>
-						<p>
-							"Openness" isn't just <em>creative or not creative</em>. It's
-							<strong> Adventurousness</strong>, <strong>Artistic Interests</strong>,
-							<strong> Emotionality</strong>, <strong>Imagination</strong>,<strong> Intellect</strong>,{" "}
-							<strong>Liberalism</strong>. Six flavors of one trait. And every trait works this way.
-						</p>
-						<TraitStackEmbed activeTrait={activeTrait} onTraitSelect={handleTraitSelect} />
-						<p>
-							Which one surprised you? Most people think they know themselves&nbsp;&mdash; and then they
-							see what's underneath.
-						</p>
-						<aside>Honestly, the Neuroticism facets make everyone a little nervous. That's normal.</aside>
-					</ChatBubble>
-				</MessageGroup>
-
-				{/* 5b. Spawned conversation pair — inserted into the flow */}
-				{activeTrait && <TraitFacetPair trait={activeTrait} isAnimating={isAnimating} />}
-
-				{/* 6. User — Surprise + vulnerability */}
-				<MessageGroup>
-					<ChatBubble variant="user">That's... a lot. Is this going to psychoanalyze me?</ChatBubble>
-				</MessageGroup>
-
-				{/* 7. Nerin — Callback + reassure + humility + result reveal */}
-				<MessageGroup>
-					<ChatBubble variant="nerin">
-						<h3>No Couch. No Judgment.</h3>
-						<h4>What you get at the end</h4>
-						<p>
-							Remember the patience thing&nbsp;&mdash; different in different rooms? That's the kind of
-							stuff we'd talk about. Not diagnosing anything, just mapping how you're wired.
-						</p>
-						<p>
-							It won't capture everything&nbsp;&mdash; nothing can. But at the end, you get a profile like
-							this&nbsp;&mdash; your own
-							<strong> archetype</strong>, your <strong>OCEAN code</strong>, and a breakdown of all{" "}
-							<strong>thirty facets</strong>:
-						</p>
-						<ShareCardPreview />
-						<p>You'll probably recognize yourself in ways that surprise you.</p>
-					</ChatBubble>
-				</MessageGroup>
-
-				{/* 8. User — Social instinct + insight (status flip) */}
+				{/* Beat 5 — User: Bridges */}
 				<MessageGroup>
 					<ChatBubble variant="user">
-						I already know who I'd send this to. We're so similar it drives us both crazy&nbsp;&mdash; but
-						I bet the facets would show exactly where we split.
+						Okay I get how that&rsquo;s different. But that&rsquo;s just how you ask the questions.
 					</ChatBubble>
 				</MessageGroup>
 
-				{/* 8b. Nerin — Acknowledges user insight */}
+				{/* Beat 6 — Nerin: Trait explorer */}
 				<MessageGroup>
 					<ChatBubble variant="nerin">
-						<p>See&nbsp;&mdash; you're already thinking in facets. That's exactly how this works.</p>
+						<h3>What I&rsquo;m Actually Listening For</h3>
+						<p>
+							While we talk, I&rsquo;m mapping the texture underneath. Not five
+							labels&nbsp;&mdash;&nbsp;five landscapes. Take Openness&nbsp;&mdash;&nbsp;it&rsquo;s not just
+							&ldquo;creative or not creative.&rdquo; It&rsquo;s Adventurousness, Artistic Interests,
+							Emotionality, Imagination, Intellect, Liberalism. Six flavors of one trait.
+						</p>
+						<p>Tap one and see what&rsquo;s underneath.</p>
+						<TraitStackEmbed activeTrait={activeTrait} onTraitSelect={handleTraitSelect} />
+						<p>You don&rsquo;t get a type. You get a landscape.</p>
 					</ChatBubble>
 				</MessageGroup>
 
-				{/* 9. Nerin — Social features + anecdote + privacy */}
+				{/* Beat 6b — Conditional: Spawned conversation pair */}
+				{activeTrait && <TraitFacetPair trait={activeTrait} isAnimating={isAnimating} />}
+
+				{/* Beat 7 — User: Challenges output */}
+				<MessageGroup>
+					<ChatBubble variant="user">
+						That&rsquo;s a lot of detail. But personality descriptions always end up saying the same
+						thing. &ldquo;You&rsquo;re creative but also value stability.&rdquo; That could be anyone.
+					</ChatBubble>
+				</MessageGroup>
+
+				{/* Beat 8 — Nerin: Horoscope vs Portrait comparison (climax) */}
+				<MessageGroup>
+					<ChatBubble variant="nerin">
+						<p>
+							You&rsquo;re not wrong. Two descriptions of the same person. One from a horoscope app. One
+							from a conversation with me.
+						</p>
+						<HoroscopeVsPortraitComparison />
+					</ChatBubble>
+				</MessageGroup>
+
+				{/* Beat 9 — User: Reacts to portrait quality */}
+				<MessageGroup>
+					<ChatBubble variant="user">
+						That right side doesn&rsquo;t read like a test result. It reads like someone who actually
+						knows them.
+					</ChatBubble>
+				</MessageGroup>
+
+				{/* Beat 10 — Nerin: The reveal */}
+				<MessageGroup>
+					<ChatBubble variant="nerin">That&rsquo;s actually the person who built big-ocean.</ChatBubble>
+				</MessageGroup>
+
+				{/* Beat 10b — Vincent: Founder's personal share */}
+				<MessageGroup>
+					<ChatBubble variant="vincent">
+						I&rsquo;d taken every test out there. MBTI, Enneagram, even a few I&rsquo;m embarrassed to
+						admit. They&rsquo;d tell me things that were true on the surface but never felt complete. When
+						I first read what Nerin wrote about me, I sat with it for a long time. Not because it told me
+						something I didn&rsquo;t know&nbsp;&mdash;&nbsp;but because it named things I&rsquo;d been
+						carrying without words for them.
+						<br />
+						<br />
+						That&rsquo;s why I built this.
+					</ChatBubble>
+				</MessageGroup>
+
+				{/* Beat 11 — User: "I'd be scared to read mine" */}
+				<MessageGroup>
+					<ChatBubble variant="user">...I think I&rsquo;d be scared to read mine.</ChatBubble>
+				</MessageGroup>
+
+				{/* Beat 11b — Nerin: Privacy + control */}
+				<MessageGroup>
+					<ChatBubble variant="nerin">
+						<h3>Your Portrait. Your Rules.</h3>
+						<p>
+							That&rsquo;s a fair reaction&nbsp;&mdash;&nbsp;and it&rsquo;s why your results are private by
+							default. No one sees your portrait unless you decide to share it. No public profile. No
+							leaderboard. No data sold.
+						</p>
+						<p>You own what comes out of this conversation. Always.</p>
+					</ChatBubble>
+				</MessageGroup>
+
+				{/* Beat 11c — User: Asks about sharing */}
+				<MessageGroup>
+					<ChatBubble variant="user">
+						And if I want to share it? Or compare it with someone close to me?
+					</ChatBubble>
+				</MessageGroup>
+
+				{/* Beat 12 — Nerin: Social comparison */}
 				<MessageGroup>
 					<ChatBubble variant="nerin">
 						<h3>See How You Connect</h3>
-						<h4>Share, compare, discover the differences</h4>
 						<p>
-							Your results are shareable&nbsp;&mdash; and when someone else takes it, you can{" "}
-							<strong>overlay your profiles side by side</strong>. See exactly where you align and where
-							you don't.
+							And if you <em>do</em> decide to share&nbsp;&mdash;&nbsp;you can invite someone to take their
+							own dive and overlay your profiles side by side. See exactly where you align and where you
+							don&rsquo;t.
 						</p>
 						<ComparisonTeaserPreview />
 						<p>
 							One couple told me they finally understood why they fight about every vacation. One scores
 							sky-high on <strong>Adventurousness</strong>, the other is all <strong>Orderliness</strong>.
-							Neither was wrong&nbsp;&mdash; they just literally see "a good trip" as opposite things.
+							Neither was wrong&nbsp;&mdash;&nbsp;they just literally see &ldquo;a good trip&rdquo; as
+							opposite things.
 						</p>
-						<aside>
-							Your results stay yours&nbsp;&mdash; private by default. You decide who sees what, always.
-						</aside>
 					</ChatBubble>
 				</MessageGroup>
 
-				{/* 10. User + Nerin — Close (open loop) */}
+				{/* Beat 13 — User: The converting line */}
 				<MessageGroup>
-					<ChatBubble variant="user">Alright. What's the catch?</ChatBubble>
+					<ChatBubble variant="user">...I wonder what mine would say.</ChatBubble>
 				</MessageGroup>
 
+				{/* Beat 14 — Nerin: CTA close */}
 				<MessageGroup>
 					<ChatBubble variant="nerin">
 						<h3>Just a Conversation</h3>
-						<p>Thirty minutes. Free. No account. No wrong answers.</p>
+						<p>Thirty minutes. No account. No wrong answers.</p>
 						<p>
-							Just talking&nbsp;&mdash; about things you probably think about anyway. You just don't
-							usually say them out loud.
-						</p>
-						<p>
-							<strong>I already have a hunch about you, actually. Want to find out if I'm right?</strong>
+							Just talking&nbsp;&mdash;&nbsp;about things you probably think about anyway. You just
+							don&rsquo;t usually say them out loud.
 						</p>
 					</ChatBubble>
 				</MessageGroup>

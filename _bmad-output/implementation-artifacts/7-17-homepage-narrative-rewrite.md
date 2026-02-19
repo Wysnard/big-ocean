@@ -1,6 +1,6 @@
 # Story 7.17: Homepage Narrative Rewrite
 
-Status: ready-for-dev
+Status: review
 
 <!-- Added via correct-course (2026-02-19): Storytelling workshop produced new homepage narrative -->
 <!-- Source: _bmad-output/story-2026-02-19.md -->
@@ -64,24 +64,24 @@ So that **I'm emotionally convinced that big-ocean is fundamentally different fr
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Update HeroSection copy (AC: #1)
-  - [ ] Change h1 to "Not a personality quiz. A conversation." with gradient on "A conversation."
-  - [ ] Change subtitle to "A portrait of who you are that no test has ever given you."
-  - [ ] Change micro-text to "30 MIN · NO ACCOUNT · JUST TALKING"
-  - [ ] Keep brand mark, CTA button, OCEAN shapes, scroll cue unchanged
+- [x] Task 1: Update HeroSection copy (AC: #1)
+  - [x] Change h1 to "Not a personality quiz. A conversation." with gradient on "A conversation."
+  - [x] Change subtitle to "A portrait of who you are that no test has ever given you."
+  - [x] Change micro-text to "30 MIN · NO ACCOUNT · JUST TALKING"
+  - [x] Keep brand mark, CTA button, OCEAN shapes, scroll cue unchanged
 
-- [ ] Task 2: Add `vincent` variant to ChatBubble (AC: #3)
-  - [ ] Add `"vincent"` to the `variant` union type
-  - [ ] Design Vincent's avatar: "V" initial with warm gradient (e.g., `from-amber-500 to-orange-400`) to distinguish from Nerin's teal→pink
-  - [ ] Left-aligned layout (like Nerin) but with distinct bubble styling:
+- [x] Task 2: Add `vincent` variant to ChatBubble (AC: #3)
+  - [x] Add `"vincent"` to the `variant` union type
+  - [x] Design Vincent's avatar: "V" initial with warm gradient (e.g., `from-amber-500 to-orange-400`) to distinguish from Nerin's teal→pink
+  - [x] Left-aligned layout (like Nerin) but with distinct bubble styling:
     - Slightly different background or faint warm border accent
     - Name "Vincent" shown as a label above or beside the bubble (small, muted text)
-  - [ ] Uses existing depth scroll CSS tokens for theme compatibility
-  - [ ] `data-slot="chat-bubble"` preserved
+  - [x] Uses existing depth scroll CSS tokens for theme compatibility
+  - [x] `data-slot="chat-bubble"` preserved
 
-- [ ] Task 3: Create HoroscopeVsPortraitComparison component (AC: #6)
-  - [ ] Create `apps/front/src/components/home/HoroscopeVsPortraitComparison.tsx`
-  - [ ] Two-column layout (side-by-side > 640px, stacked on mobile):
+- [x] Task 3: Create HoroscopeVsPortraitComparison component (AC: #6)
+  - [x] Create `apps/front/src/components/home/HoroscopeVsPortraitComparison.tsx`
+  - [x] Two-column layout (side-by-side > 640px, stacked on mobile):
     - **Left — Horoscope side:**
       - Pastel/softer background to mimic astrology-app aesthetic (e.g., `bg-purple-50/60 dark:bg-purple-900/10`)
       - Header: "Horoscope" or star/zodiac icon
@@ -92,24 +92,24 @@ So that **I'm emotionally convinced that big-ocean is fundamentally different fr
       - Header: "big-ocean" or Nerin avatar indicator
       - Text: "You have this selective relationship with uncertainty that I don't see often. Most people either love unpredictability or they don't. But you? You actively seek it in some areas and freeze up in others. That's not contradictory — it's strategic. You've learned where uncertainty serves you and where it doesn't."
       - Standard big-ocean typography (direct, specific)
-  - [ ] Container: rounded, bordered, uses `bg-[var(--embed-bg)]` and `border-[var(--embed-border)]`
-  - [ ] Bottom text: "Which one feels like someone was actually paying attention?" (italic, muted, centered)
-  - [ ] IntersectionObserver for scroll-reveal animation (fade + slide, same pattern as ComparisonCard)
-  - [ ] `data-slot="horoscope-portrait-comparison"`
-  - [ ] Mobile: stack vertically, maintain readability
-  - [ ] `motion-reduce` respected
+  - [x] Container: rounded, bordered, uses `bg-[var(--embed-bg)]` and `border-[var(--embed-border)]`
+  - [x] Bottom text: "Which one feels like someone was actually paying attention?" (italic, muted, centered)
+  - [x] IntersectionObserver for scroll-reveal animation (fade + slide, same pattern as ComparisonCard)
+  - [x] `data-slot="horoscope-portrait-comparison"`
+  - [x] Mobile: stack vertically, maintain readability
+  - [x] `motion-reduce` respected
 
-- [ ] Task 4: Remove "Coming soon" badge from ComparisonTeaserPreview (AC: #8)
-  - [ ] Delete the "Coming soon" badge `<div>` from `ComparisonTeaserPreview.tsx`
-  - [ ] No other changes to the component
+- [x] Task 4: Remove "Coming soon" badge from ComparisonTeaserPreview (AC: #8)
+  - [x] Delete the "Coming soon" badge `<div>` from `ComparisonTeaserPreview.tsx`
+  - [x] No other changes to the component
 
-- [ ] Task 5: Rewrite conversation content in index.tsx (AC: #2, #4, #5, #7, #8, #9)
-  - [ ] Replace all content between `<ConversationFlow>` and `</ConversationFlow>` with 14 beats
-  - [ ] Import `HoroscopeVsPortraitComparison` component
-  - [ ] Remove unused imports: `ShareCardPreview`, `ResultPreviewEmbed` (if no longer used)
-  - [ ] Keep imports: `ComparisonCard`, `TraitStackEmbed`, `useTraitSelection`, `ComparisonTeaserPreview`
-  - [ ] Keep imports: `ChatBubble`, `ChatInputBar`, `ConversationFlow`, `DepthMeter`, `DepthScrollProvider`, `HeroSection`, `MessageGroup`
-  - [ ] Beat content (copy from `_bmad-output/story-2026-02-19.md`):
+- [x] Task 5: Rewrite conversation content in index.tsx (AC: #2, #4, #5, #7, #8, #9)
+  - [x] Replace all content between `<ConversationFlow>` and `</ConversationFlow>` with 14 beats
+  - [x] Import `HoroscopeVsPortraitComparison` component
+  - [x] Remove unused imports: `ShareCardPreview`, `ResultPreviewEmbed` (if no longer used)
+  - [x] Keep imports: `ComparisonCard`, `TraitStackEmbed`, `useTraitSelection`, `ComparisonTeaserPreview`
+  - [x] Keep imports: `ChatBubble`, `ChatInputBar`, `ConversationFlow`, `DepthMeter`, `DepthScrollProvider`, `HeroSection`, `MessageGroup`
+  - [x] Beat content (copy from `_bmad-output/story-2026-02-19.md`):
     - **Beat 1** [Nerin]: Hook — "You know that thing where a test tells you you're 'introverted'..."
     - **Beat 2** [User]: "I've done a few of these. They never really got it right..."
     - **Beat 3** [Nerin]: "That's Not a Bug. That's the Problem." — h3 header, paragraph about scales/averages/types
@@ -124,14 +124,15 @@ So that **I'm emotionally convinced that big-ocean is fundamentally different fr
     - **Beat 10b** [Vincent]: Founder's personal share (expanded paragraph from story)
     - **Beat 11** [User]: "...I think I'd be scared to read mine."
     - **Beat 11b** [Nerin]: "Your Portrait. Your Rules." — h3 header, privacy messaging
+    - **Beat 11c** [User]: "And if I want to share it? Or compare it with someone close to me?"
     - **Beat 12** [Nerin]: "See How You Connect" — h3 header + `<ComparisonTeaserPreview />` + vacation couple anecdote + privacy aside
     - **Beat 13** [User]: "...I wonder what mine would say."
     - **Beat 14** [Nerin]: "Just a Conversation" — h3 header, "Thirty minutes. No account. No wrong answers." + closing line
 
-- [ ] Task 6: Build verification (AC: #10)
-  - [ ] `pnpm build` — 0 errors
-  - [ ] `pnpm lint` — no new warnings
-  - [ ] `pnpm test:run` — no regressions
+- [x] Task 6: Build verification (AC: #10)
+  - [x] `pnpm build` — 0 errors
+  - [x] `pnpm lint` — no new warnings
+  - [x] `pnpm test:run` — no regressions
 
 ## Dev Notes
 
@@ -263,3 +264,37 @@ apps/front/src/
 - [Story 7.8 Implementation](/_bmad-output/implementation-artifacts/7-8-conversation-driven-homepage-with-depth-scroll.md) — Component infrastructure reference
 - [FRONTEND.md](/docs/FRONTEND.md) — data-slot conventions, component patterns
 - [globals.css](/packages/ui/src/styles/globals.css) — Token system and depth scroll tokens
+
+## Dev Agent Record
+
+### Implementation Notes
+
+- **Approach:** Pure copy + component update as specified. No infrastructure changes. All 14 beats implemented verbatim from `_bmad-output/story-2026-02-19.md`.
+- **Vincent variant:** Left-aligned like Nerin with `from-amber-500 to-orange-400` gradient avatar, `border-amber-500/20` warm border accent, "Vincent" name label above bubble, `bg-[var(--embed-bg)]` background for theme compatibility.
+- **HoroscopeVsPortraitComparison:** Follows exact same IntersectionObserver pattern as ComparisonCard. Staggered fade+slide animation (200ms horoscope, 500ms portrait, 900ms bottom text). Uses `sm:grid-cols-2` for responsive breakpoint. Horoscope side: purple-50/60 pastel bg, italic text. Portrait side: standard foreground text.
+- **Anti-patterns respected:** No playful tease at end (Beat 14 closes quietly), no "FREE" in micro-text, no taxonomy framing, no modifications to infrastructure components, no new npm packages.
+- **Removed from page:** `ShareCardPreview` and `ResultPreviewEmbed` imports removed from index.tsx. Component files preserved in codebase.
+
+### Completion Notes
+
+All 6 tasks implemented and verified:
+- Hero copy updated (3 text changes)
+- Vincent ChatBubble variant added with warm amber/gold visual identity
+- HoroscopeVsPortraitComparison component created with scroll-reveal, responsive layout, motion-reduce support
+- "Coming soon" badge removed from ComparisonTeaserPreview
+- All 14 conversation beats rewritten with three speakers (Nerin, User, Vincent)
+- Build: 0 errors | Lint: no new warnings | Tests: all passing (389 total, 0 failures)
+
+## File List
+
+- `apps/front/src/routes/index.tsx` — MODIFIED: Complete conversation rewrite (14 beats, 3 speakers), removed ShareCardPreview import, added HoroscopeVsPortraitComparison import
+- `apps/front/src/components/home/HeroSection.tsx` — MODIFIED: Updated h1, subtitle, and micro-text copy
+- `apps/front/src/components/home/ChatBubble.tsx` — MODIFIED: Added "vincent" variant with warm amber avatar, name label, distinct bubble styling
+- `apps/front/src/components/home/ComparisonTeaserPreview.tsx` — MODIFIED: Removed "Coming soon" badge
+- `apps/front/src/components/home/HoroscopeVsPortraitComparison.tsx` — NEW: Side-by-side horoscope vs portrait comparison with scroll-reveal animation
+
+## Change Log
+
+- **2026-02-19:** Story 7.17 implemented — Complete homepage narrative rewrite with 14-beat conversation flow, Vincent founder bubble variant, HoroscopeVsPortraitComparison component, updated hero copy, removed "Coming soon" badge. All builds, lint, and tests pass.
+- **2026-02-19:** Added Beat 11c — User message "And if I want to share it? Or compare it with someone close to me?" between privacy (11b) and social comparison (12) for a natural narrative transition. Build verified.
+- **2026-02-19:** Fix dark mode visibility of agree/disagree scale dots in ComparisonCard. Changed `border-border` (#252A52, invisible on dark embed background) to `border-muted-foreground/30` for visible contrast in both themes. Build, lint, tests verified.

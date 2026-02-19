@@ -11,29 +11,24 @@ export function HeroSection() {
 			<div>
 				{/* Brand mark */}
 				<div className="mb-6 flex items-center gap-2 max-[900px]:justify-center">
-					<span className="font-heading text-4xl font-bold tracking-tight text-foreground">
-						big-
-					</span>
+					<span className="font-heading text-4xl font-bold tracking-tight text-foreground">big-</span>
 					<OceanShapeSet size={36} className="sm:hidden" />
 					<OceanShapeSet size={44} className="hidden sm:inline-flex" />
 				</div>
 
 				<h1 className="mb-[18px] font-heading text-[clamp(2.4rem,5vw,4rem)] font-bold leading-[1.06]">
-					What if the most{" "}
+					Not a personality quiz.{" "}
 					<span className="bg-gradient-to-r from-primary via-[#FF1493] to-secondary bg-clip-text text-transparent">
-						interesting person
-					</span>{" "}
-					in the room is you?
+						A conversation.
+					</span>
 				</h1>
 
 				<p className="mb-6 max-w-[440px] text-[1.05rem] leading-[1.7] text-muted-foreground max-[900px]:mx-auto">
-					A personality deep dive guided by AI, grounded in science, revealed
-					through conversation. Not a quiz. A real exploration of the 30 facets
-					that make you, you.
+					A portrait of who you are that no test has ever given you.
 				</p>
 
 				<div className="mb-8 font-mono text-[.72rem] tracking-[.05em] text-muted-foreground">
-					30 MIN &middot; FREE &middot; NO ACCOUNT NEEDED
+					30 MIN &middot; NO ACCOUNT &middot; JUST TALKING
 				</div>
 
 				<Link
@@ -59,7 +54,11 @@ export function HeroSection() {
 				{/* Conscientiousness Rectangle */}
 				<div
 					className="absolute top-[60px] right-[30px] h-[165px] w-[110px] rotate-12 rounded-[11px] motion-safe:animate-[breathe_6s_ease-in-out_infinite] max-[900px]:top-[30px] max-[900px]:right-[15px] max-[900px]:h-[110px] max-[900px]:w-[70px]"
-					style={{ backgroundColor: "var(--trait-conscientiousness)", opacity: 0.75, animationDelay: "-1.2s" }}
+					style={{
+						backgroundColor: "var(--trait-conscientiousness)",
+						opacity: 0.75,
+						animationDelay: "-1.2s",
+					}}
 				/>
 
 				{/* Extraversion Triangle */}
@@ -79,7 +78,11 @@ export function HeroSection() {
 				{/* Agreeableness Half-circle */}
 				<div
 					className="absolute right-[55px] bottom-[45px] h-[70px] w-[140px] rounded-t-full motion-safe:animate-[breathe_6s_ease-in-out_infinite] max-[900px]:right-[35px] max-[900px]:bottom-[25px] max-[900px]:h-[50px] max-[900px]:w-[100px]"
-					style={{ backgroundColor: "var(--trait-agreeableness)", opacity: 0.75, animationDelay: "-3.6s" }}
+					style={{
+						backgroundColor: "var(--trait-agreeableness)",
+						opacity: 0.75,
+						animationDelay: "-3.6s",
+					}}
 				/>
 
 				{/* Neuroticism Diamond */}

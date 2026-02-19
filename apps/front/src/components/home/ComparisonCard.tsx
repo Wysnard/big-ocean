@@ -99,7 +99,7 @@ function TraditionalSide({ visible }: { visible: boolean }) {
 					{SCALE_DOTS.map((dot) => (
 						<div
 							key={dot.id}
-							className="flex h-[16px] w-[16px] items-center justify-center rounded-full border border-border transition-colors"
+							className="flex h-[16px] w-[16px] items-center justify-center rounded-full border border-muted-foreground/30 transition-colors"
 							style={
 								dot.selected
 									? { backgroundColor: "var(--muted-foreground)", borderColor: "var(--muted-foreground)" }
