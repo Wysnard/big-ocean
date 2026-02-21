@@ -12,7 +12,7 @@
 
 import { PgClient } from "@effect/sql-pg";
 import { AppConfig } from "@workspace/domain";
-import { drizzle } from "drizzle-orm/effect-postgres";
+import { makeWithDefaults } from "drizzle-orm/effect-postgres";
 import { Context, Effect, Layer, Redacted } from "effect";
 import { types } from "pg";
 import * as authSchema from "../db/drizzle/schema";
@@ -62,7 +62,10 @@ export const PgClientLive = Layer.unwrapEffect(
  *
  * Using Context.Tag for proper Effect dependency injection.
  */
-export class Database extends Context.Tag("Database")<Database, ReturnType<typeof drizzle>>() {}
+export class Database extends Context.Tag("Database")<
+	Database,
+	Effect.Effect.Success<ReturnType<typeof makeWithDefaults>>
+>() {}
 
 /**
  * Extract service shape using Context.Tag.Service utility
@@ -80,14 +83,11 @@ export type DatabaseShape = Context.Tag.Service<Database>;
 export const DatabaseLive = Layer.effect(
 	Database,
 	Effect.gen(function* () {
-		const config = yield* AppConfig;
-		// Dependency: PgClient resolved during layer construction
-		const client = yield* PgClient.PgClient;
-
 		// Create Drizzle instance with Effect Postgres driver
-		const db = drizzle(client, {
+		// makeWithDefaults provides default (no-op) logger and cache,
+		// and resolves PgClient from context during layer construction
+		const db = yield* makeWithDefaults({
 			schema: authSchema,
-			logger: config.nodeEnv === "development",
 		});
 
 		return db;
