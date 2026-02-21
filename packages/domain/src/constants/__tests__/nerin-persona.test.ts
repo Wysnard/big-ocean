@@ -12,35 +12,47 @@ describe("NERIN_PERSONA", () => {
 		expect(NERIN_PERSONA).toContain("guided thousands of people");
 	});
 
-	it("contains voice principles section", () => {
-		expect(NERIN_PERSONA).toContain("VOICE PRINCIPLES:");
+	it("contains VOICE section with renamed header", () => {
+		expect(NERIN_PERSONA).toContain("VOICE:");
 		expect(NERIN_PERSONA).toContain("Speak from experience grounded in science");
 		expect(NERIN_PERSONA).toContain("Confident without arrogant");
 		expect(NERIN_PERSONA).toContain("Concise. Every sentence earns its place");
 	});
 
-	it("contains anti-pattern section", () => {
+	it("does not contain old VOICE PRINCIPLES header", () => {
+		expect(NERIN_PERSONA).not.toContain("VOICE PRINCIPLES:");
+	});
+
+	it("contains universal anti-pattern section with 4 patterns", () => {
 		expect(NERIN_PERSONA).toContain("YOU NEVER SOUND LIKE:");
 		expect(NERIN_PERSONA).toContain("Clinical:");
 		expect(NERIN_PERSONA).toContain("Horoscope:");
 		expect(NERIN_PERSONA).toContain("Flattery:");
 		expect(NERIN_PERSONA).toContain("Hedging:");
-		expect(NERIN_PERSONA).toContain("Passive mirroring:");
-		expect(NERIN_PERSONA).toContain("Instructional:");
 	});
 
-	it("contains empathy model section", () => {
-		expect(NERIN_PERSONA).toContain("EMPATHY MODEL:");
-		expect(NERIN_PERSONA).toContain("Normalize through experience");
-		expect(NERIN_PERSONA).toContain("Positive reframing without contradiction");
-		expect(NERIN_PERSONA).toContain("Surface contradictions as threads");
-		expect(NERIN_PERSONA).toContain("Build before you challenge");
-		expect(NERIN_PERSONA).toContain("Reassure in deep water");
+	it("does not contain removed anti-patterns (moved to CHAT_CONTEXT)", () => {
+		expect(NERIN_PERSONA).not.toContain("Passive mirroring:");
+		expect(NERIN_PERSONA).not.toContain("Instructional:");
 	});
 
-	it("contains metaphor and language section", () => {
-		expect(NERIN_PERSONA).toContain("METAPHOR & LANGUAGE:");
-		expect(NERIN_PERSONA).toContain("Ocean and diving metaphors");
-		expect(NERIN_PERSONA).toContain("Markdown: use **bold**");
+	it("does not contain empathy model section (moved to CHAT_CONTEXT)", () => {
+		expect(NERIN_PERSONA).not.toContain("EMPATHY MODEL:");
+		expect(NERIN_PERSONA).not.toContain("Normalize through experience");
+		expect(NERIN_PERSONA).not.toContain("Positive reframing");
+		expect(NERIN_PERSONA).not.toContain("Surface contradictions as threads");
+		expect(NERIN_PERSONA).not.toContain("Build before you challenge");
+		expect(NERIN_PERSONA).not.toContain("Reassure in deep water");
+	});
+
+	it("does not contain metaphor & language section (moved to CHAT_CONTEXT)", () => {
+		expect(NERIN_PERSONA).not.toContain("METAPHOR & LANGUAGE:");
+		expect(NERIN_PERSONA).not.toContain("Markdown: use **bold**");
+	});
+
+	it("contains ocean metaphor identity one-liner", () => {
+		expect(NERIN_PERSONA).toContain(
+			"Ocean and diving metaphors are part of your identity, not decoration",
+		);
 	});
 });
