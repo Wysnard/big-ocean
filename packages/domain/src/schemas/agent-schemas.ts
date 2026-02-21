@@ -69,10 +69,16 @@ export const NerinResponseJsonSchema = JSONSchema.make(NerinResponseSchema);
  */
 export const HighlightRangeSchema = S.Struct({
 	/** Start character index (0-based, inclusive) */
-	start: S.Number.pipe(S.int(), S.greaterThanOrEqualTo(0)),
+	start: S.Number.pipe(S.int(), S.greaterThanOrEqualTo(0)).annotations({
+		description: "Start character index (0-based, inclusive) in the original user message text",
+	}),
 
 	/** End character index (exclusive) */
-	end: S.Number.pipe(S.int(), S.greaterThan(0)),
+	end: S.Number.pipe(S.int(), S.greaterThan(0)).annotations({
+		description: "End character index (exclusive) in the original user message text",
+	}),
+}).annotations({
+	description: "Character range in the original user message that contains the evidence quote",
 });
 
 /**
@@ -80,19 +86,32 @@ export const HighlightRangeSchema = S.Struct({
  */
 export const FacetExtractionSchema = S.Struct({
 	/** The facet name (must be one of 30 Big Five facets) */
-	facet: S.Literal(...(ALL_FACETS as readonly [string, ...string[]])),
+	facet: S.Literal(...(ALL_FACETS as readonly [string, ...string[]])).annotations({
+		description:
+			"One of the 30 Big Five personality facets (e.g. 'imagination', 'orderliness', 'cheerfulness'). Use clean facet names without trait prefixes.",
+	}),
 
 	/** Evidence quote from user message */
-	evidence: S.String.pipe(S.minLength(1)),
+	evidence: S.String.pipe(S.minLength(1)).annotations({
+		description:
+			"Exact quote from the user message that reveals this personality signal. Preserve original formatting.",
+	}),
 
 	/** Score 0-20: Higher = stronger signal for that facet */
-	score: S.Number.pipe(S.between(0, 20)),
+	score: S.Number.pipe(S.between(0, 20)).annotations({
+		description: "Signal strength for this facet (0 = no signal, 20 = very strong signal)",
+	}),
 
 	/** Confidence score 0-100 (higher = more certain interpretation) */
-	confidence: S.Number.pipe(S.between(0, 100)),
+	confidence: S.Number.pipe(S.between(0, 100)).annotations({
+		description:
+			"How certain you are that this quote genuinely reflects this facet (0 = guessing, 100 = unmistakable)",
+	}),
 
 	/** Character range in original message */
 	highlightRange: HighlightRangeSchema,
+}).annotations({
+	description: "A single personality facet signal extracted from a user message",
 });
 
 /**
@@ -114,7 +133,12 @@ export type AnalyzerResponse = S.Schema.Type<typeof AnalyzerResponseSchema>;
  * The repository unwraps .extractions before validation.
  */
 export const AnalyzerResponseWrappedSchema = S.Struct({
-	extractions: S.Array(FacetExtractionSchema),
+	extractions: S.Array(FacetExtractionSchema).annotations({
+		description:
+			"Array of personality facet signals found in the user message. Include only facets with clear evidence (typically 3-10 per message). Return an empty array if no personality signals are present.",
+	}),
+}).annotations({
+	description: "Personality facet extraction results from analyzing a user message",
 });
 
 /**
@@ -150,22 +174,39 @@ export const validateAnalyzerResponse = S.decodeUnknownEither(AnalyzerResponseSc
  */
 export const BatchFacetExtractionSchema = S.Struct({
 	/** The source user message ID this extraction came from */
-	message_id: S.String.pipe(S.minLength(1)),
+	message_id: S.String.pipe(S.minLength(1)).annotations({
+		description:
+			"The ID of the user message this extraction came from (matches the [id: ...] annotation in the conversation)",
+	}),
 
 	/** The facet name (must be one of 30 Big Five facets) */
-	facet: S.Literal(...(ALL_FACETS as readonly [string, ...string[]])),
+	facet: S.Literal(...(ALL_FACETS as readonly [string, ...string[]])).annotations({
+		description:
+			"One of the 30 Big Five personality facets (e.g. 'imagination', 'orderliness', 'cheerfulness'). Use clean facet names without trait prefixes.",
+	}),
 
 	/** Evidence quote from user message */
-	evidence: S.String.pipe(S.minLength(1)),
+	evidence: S.String.pipe(S.minLength(1)).annotations({
+		description:
+			"Exact quote from the user message that reveals this personality signal. Preserve original formatting.",
+	}),
 
 	/** Score 0-20: Higher = stronger signal for that facet */
-	score: S.Number.pipe(S.between(0, 20)),
+	score: S.Number.pipe(S.between(0, 20)).annotations({
+		description: "Signal strength for this facet (0 = no signal, 20 = very strong signal)",
+	}),
 
 	/** Confidence score 0-100 (higher = more certain interpretation) */
-	confidence: S.Number.pipe(S.between(0, 100)),
+	confidence: S.Number.pipe(S.between(0, 100)).annotations({
+		description:
+			"How certain you are that this quote genuinely reflects this facet (0 = guessing, 100 = unmistakable)",
+	}),
 
 	/** Character range in original message */
 	highlightRange: HighlightRangeSchema,
+}).annotations({
+	description:
+		"A single personality facet signal extracted from a specific user message in the batch",
 });
 
 /** Type inference for batch facet extraction */
@@ -177,7 +218,12 @@ export type BatchFacetExtraction = S.Schema.Type<typeof BatchFacetExtractionSche
  * Wraps batch extractions in { extractions: [...] } for Anthropic tool use compatibility.
  */
 export const BatchAnalyzerResponseWrappedSchema = S.Struct({
-	extractions: S.Array(BatchFacetExtractionSchema),
+	extractions: S.Array(BatchFacetExtractionSchema).annotations({
+		description:
+			"Array of personality facet signals found across the analyzed user messages. Tag each extraction with the source message_id. Return an empty array if no personality signals are present in any of the target messages.",
+	}),
+}).annotations({
+	description: "Batch personality facet extraction results from analyzing multiple user messages",
 });
 
 /**

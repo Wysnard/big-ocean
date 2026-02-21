@@ -56,6 +56,15 @@ export interface AppConfigService {
 	/** Analyzer agent temperature (0-1, lower = more structured) */
 	readonly analyzerTemperature: number;
 
+	/** Portrait generator model ID */
+	readonly portraitModelId: string;
+
+	/** Portrait generator max tokens per request (includes thinking + response) */
+	readonly portraitMaxTokens: number;
+
+	/** Portrait generator temperature (0-1) */
+	readonly portraitTemperature: number;
+
 	/** Nerin agent model ID */
 	readonly nerinModelId: string;
 

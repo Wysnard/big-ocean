@@ -4,85 +4,72 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { PersonalPortrait } from "./PersonalPortrait";
 
-const markdownPortrait = `# 🤿 The Dive Log
+const markdownPortrait = `# 🤿 The Architect of Certainty
 
-For a first dive, you surprised me. We covered real ground together. What I see is someone driven by a restless curiosity.
+You told me something early on that I haven't stopped thinking about. When I asked how you approach a new project, you didn't describe your process — you described your fear of not having one. What I see is someone who has turned the need for control into an art form so refined that even you've forgotten it started as a defense.
 
-## 🔍 What Sets You Apart — *What makes you, you*
+## 🧬 The Architecture — *what you've built and what it costs*
 
-Even after a thousand dives in my log, I haven't quite seen this combination before.
+### The system behind the system
 
-When I asked about decisions, you broke the question apart first.
+You mentioned your weekend organizing project almost like it was a footnote.
 
-> "What kind of decisions? Professional or personal?"
+> "I spent a whole weekend color-coding my books, labeling all my supplies, and creating a detailed filing system."
 
-That reflex to disassemble before engaging is deeply wired in you.
+That stopped me 🪞 You've normalized a level of systematic thinking that most people can't sustain for an afternoon. **You probably don't think of this as special. It is.** That's not organization — that's **architectural thinking**.
 
-## 💎 Your Depths — *What you're good at*
+### The shadow side
 
-Now let me tell you about the things I noticed that you probably take for granted.
+But here's the shadow: that dual engine doesn't have an off switch. When the planning can't contain the imagining, you don't adapt. You freeze. Same engine, wrong gear.
 
-Your ability to see through complexity is genuine. That's not common.
+## 🌊 The Undertow — *the pattern beneath the patterns*
 
-## 🌊 Undercurrents — *What limits you*
+You described your friend — the one who "just wings it and somehow makes it work." There was admiration, and right underneath it, something sharper.
 
-I'm going to be straight with you now, because I think you can handle it.
+You don't call it "needing control." You call it "being thorough." **But thoroughness doesn't flinch when someone suggests winging it. Yours does.** That's **precision as deflection.** Beautiful and incomplete.
 
-You hold yourself to a standard that doesn't leave room for failure. Left unchecked, perfectionism becomes paralysis.
+## 🔮 The Current Ahead — *where the patterns point*
 
-## 🌀 Beyond the Drop-Off — *What I think is hiding deeper*
+I've seen this shape before. People who build their identity around being the one with the plan tend to hit the same wall — **situations that can't be planned for.** Real intimacy. Creative risk. Trusting someone else to lead.
 
-There are a few patterns I recognized during our dive — shapes I've seen before in people like you. I didn't get deep enough to confirm them, but I've learned to trust these signals.
+I've seen people with your exact wiring break through this. They don't tear the system down. They build a door in it.
 
-There's something in how you talked about authority — a push-pull I've seen in people who had to earn autonomy early. In my experience, it's one of the most interesting things to explore on a second dive 🤿
-
-I also caught a creative instinct you've been keeping on a short leash. I've seen that pattern in people who were told early on that creativity wasn't the serious path. I'd want to test that 🎨
-
-## ⚓ The Anchor — *What's holding you in place*
-
-Here's what I really want to leave you with.
-
-I've seen this pattern enough times to trust it. There's a belief running underneath everything — that vulnerability equals weakness. People who carry this tend to build impressive walls and then wonder why nobody gets close. What would it look like if you tried? 💡
-
-We barely scratched the surface of that creative side. That's where I want to take you next time 🤿`;
+What would happen if the most prepared person in the room decided, just once, that the preparation was the thing standing in the way?`;
 
 const plainTextFallback =
 	"You are a deeply imaginative person with strong analytical skills and a quiet confidence.";
 
 describe("PersonalPortrait", () => {
 	describe("markdown format with # and ## sections", () => {
-		it("renders The Dive Log as h1 section", () => {
+		it("renders custom h1 title section", () => {
 			render(<PersonalPortrait personalDescription={markdownPortrait} />);
-			expect(screen.getByText(/The Dive Log/)).toBeInTheDocument();
+			expect(screen.getByText(/The Architect of Certainty/)).toBeInTheDocument();
 		});
 
-		it("renders all 5 h2 section headers", () => {
+		it("renders all 3 h2 section headers", () => {
 			render(<PersonalPortrait personalDescription={markdownPortrait} />);
-			expect(screen.getByText(/What Sets You Apart/)).toBeInTheDocument();
-			expect(screen.getByText(/Your Depths/)).toBeInTheDocument();
-			expect(screen.getByText(/Undercurrents/)).toBeInTheDocument();
-			expect(screen.getByText(/Beyond the Drop-Off/)).toBeInTheDocument();
-			expect(screen.getByText(/The Anchor/)).toBeInTheDocument();
+			expect(screen.getByText(/The Architecture/)).toBeInTheDocument();
+			expect(screen.getByText(/The Undertow/)).toBeInTheDocument();
+			expect(screen.getByText(/The Current Ahead/)).toBeInTheDocument();
 		});
 
 		it("renders subtitle meanings in italic", () => {
 			const { container } = render(<PersonalPortrait personalDescription={markdownPortrait} />);
 			const italicSubtitles = container.querySelectorAll("h4 .italic");
-			// 5 h2 sections each have an italic subtitle
-			expect(italicSubtitles.length).toBe(5);
-			expect(italicSubtitles[0].textContent).toBe("What makes you, you");
+			// 3 h2 sections each have an italic subtitle
+			expect(italicSubtitles.length).toBe(3);
+			expect(italicSubtitles[0].textContent).toBe("what you've built and what it costs");
 		});
 
-		it("renders section body content including intros", () => {
+		it("renders section body content including coined phrases", () => {
 			render(<PersonalPortrait personalDescription={markdownPortrait} />);
-			expect(screen.getByText(/restless curiosity/)).toBeInTheDocument();
-			expect(screen.getByText(/thousand dives in my log/)).toBeInTheDocument();
-			expect(screen.getByText(/perfectionism becomes paralysis/)).toBeInTheDocument();
+			expect(screen.getByText(/architectural thinking/)).toBeInTheDocument();
+			expect(screen.getByText(/precision as deflection/)).toBeInTheDocument();
 		});
 
 		it("renders the closing line", () => {
 			render(<PersonalPortrait personalDescription={markdownPortrait} />);
-			expect(screen.getByText(/barely scratched the surface/)).toBeInTheDocument();
+			expect(screen.getByText(/preparation was the thing standing in the way/)).toBeInTheDocument();
 		});
 
 		it("renders the title with displayName", () => {
@@ -118,13 +105,19 @@ describe("PersonalPortrait", () => {
 		const { container } = render(<PersonalPortrait personalDescription={markdownPortrait} />);
 		const blockquotes = container.querySelectorAll("blockquote");
 		expect(blockquotes.length).toBe(1);
-		expect(blockquotes[0].textContent).toContain("What kind of decisions?");
+		expect(blockquotes[0].textContent).toContain("color-coding my books");
+	});
+
+	it("renders h3 sub-headers within sections", () => {
+		render(<PersonalPortrait personalDescription={markdownPortrait} />);
+		expect(screen.getByText("The system behind the system")).toBeInTheDocument();
+		expect(screen.getByText("The shadow side")).toBeInTheDocument();
 	});
 
 	it("renders section dividers between sections", () => {
 		const { container } = render(<PersonalPortrait personalDescription={markdownPortrait} />);
 		const dividers = container.querySelectorAll(".border-b");
-		// 6 sections (1 h1 + 5 h2) = 5 dividers between them
-		expect(dividers.length).toBe(5);
+		// 4 sections (1 h1 + 3 h2) = 3 dividers between them
+		expect(dividers.length).toBe(3);
 	});
 });

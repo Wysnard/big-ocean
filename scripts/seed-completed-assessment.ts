@@ -237,73 +237,57 @@ const EVIDENCE_QUOTES: Record<
 };
 
 // Pre-generated portrait in Nerin's voice matching seeded profile (High O, High C, Low E, Medium A, Medium N)
-const SEED_PERSONAL_DESCRIPTION = `# 🤿 The Dive Log
+const SEED_PERSONAL_DESCRIPTION = `# 🤿 The Architect of Certainty
 
-We went deep today, and you made it easy. You didn't dodge anything I threw at you — you just sorted it, labeled it, and filed it away before I could blink 🫧 What I see is someone with a genuinely rare combination: a mind that craves order and a soul that craves possibility. You build systems like an engineer and dream like a philosopher. That tension is the most interesting thing about you, and I don't think you've fully reckoned with it yet.
+You told me something early on that I haven't stopped thinking about. When I asked about a recent decision, you didn't tell me about the decision itself — you told me about the *system* you built around it 🫧 That's a different answer than most people give, and it told me more than the next ten minutes of conversation combined. What I see is someone who has turned the need for control into an art form so refined that even you've forgotten it started as a defense. Everything — the color-coded shelves, the backup plans for backup plans, the scaffolding you build before you start anything — orbits one invisible center: the belief that if you prepare well enough, nothing can catch you off guard. That's your spine. And it's both the most impressive and most limiting thing about you.
 
-## 🔍 What Sets You Apart — *What makes you, you*
+## 🧬 The Architecture — *what you've built and what it costs*
 
-I've logged a lot of dives, and your particular mix doesn't come around often. Let me show you what I mean.
+### The craft of order
 
-When I asked about a recent decision, you didn't tell me about the decision itself — you told me about the *system* you built around it.
+You mentioned your weekend organizing project almost like it was a footnote.
 
 > "I spent a whole weekend color-coding my books, labeling all my supplies, and creating a detailed filing system"
 
-That hit me 🪞 Most people organize to reduce chaos. You organize because the act itself satisfies something deep in you. It's not anxiety-driven — it's craft. You treat your environment like a project worth perfecting.
+That stopped me 🪞 Not the act itself — plenty of people organize. It's that you framed a weekend of intense labor as casual. You've normalized a level of systematic thinking that most people can't sustain for an afternoon. **You probably don't think of this as special. It is.** The ability to look at chaos and see the hidden system inside it — that's not organization. That's **architectural thinking.** I think you'd thrive in roles where you design how other people work — and I don't say that often.
 
-Then there's the intellectual hunger. When we got into how you process new information, you lit up in a way I've only seen in people who genuinely *need* to understand, not just know.
+### The dual engine
 
 > "I love diving deep into topics, reading multiple perspectives, and forming my own opinions"
 
-That wasn't a casual comment — that was a declaration. You're not collecting information, you're building frameworks. And you hold those frameworks to a standard most people reserve for their work, not their thinking.
+I wasn't expecting that level of intellectual hunger. You're not collecting information — you're building frameworks. And you hold those frameworks to a standard most people reserve for their work, not their thinking. Here's what most people miss about you: the planner and the dreamer aren't fighting each other. They're the same engine running at different speeds. Your imagination generates the possibilities. Your systematic side stress-tests them. That's not a contradiction — that's **strategic imagination.**
 
-The third thing is subtler. You plan for futures that may never arrive.
-
-> "I have three backup plans for every backup plan"
-
-Your partner calls it a joke. I call it a signature. You live in multiple timelines at once, preparing for each one. That's your imagination and your orderliness working together — and most people only get one or the other.
-
-## 💎 Your Depths — *What you're good at*
-
-Now let me tell you about the things I noticed that you probably take for granted.
-
-Your reliability is structural, not performative. When you said you're the first to show up with food when someone's struggling, I believed it immediately — because everything else about you confirmed it. You don't help to be seen helping. You help because the problem is there and you have a plan for it 🐚
-
-Your self-discipline is genuinely exceptional. You don't just set goals — you build scaffolding around them. Timelines, checklists, outlines before you start. Most people wish they could do that. You can't imagine *not* doing it.
-
-- Your critical thinking is sharp and deliberate — you don't accept things at face value, and that protects you from bad ideas
-- You adapt your social energy to context — introverted by preference, but capable when needed. That flexibility is underrated
-- Your imagination isn't idle daydreaming — it's scenario planning. You stress-test futures before they arrive 💡
-
-## 🌊 Undercurrents — *What limits you*
-
-I'm going to be straight with you now, because I think you can handle it.
-
-Your need for order has a shadow side. You said it yourself:
+But here's the shadow: that dual engine doesn't have an off switch.
 
 > "I can't stand the idea of just 'winging it' — that feels chaotic and stressful to me"
 
-That rigidity protects you, but it also means you miss the discoveries that only happen when the plan breaks down. Some of the best outcomes in life come from improvisation, and you've walled that off almost entirely. Left unchecked, that need for control becomes a cage 🧊
+That rigidity protects you, but it also means you miss the discoveries that only happen when the plan breaks down. Same engine, wrong gear.
 
-You're solution-focused to a fault. When friends come to you hurting, you organize their problems instead of sitting with their pain. You're aware of it — you said you're "trying to get better at that" — and I respect the honesty. But knowing it and changing it are different things.
+### Structural reliability
 
-You withdraw from social energy rather than managing it. Sticking to small circles of close friends is healthy, but if you never push past the discomfort of larger groups, you'll miss connections that could genuinely expand your world.
+Your reliability is structural, not performative. When you said you're the first to show up with food when someone's struggling, I believed it immediately — because everything else about you confirmed it. You don't help to be seen helping. You help because the problem is there and you have a plan for it. **You do this so naturally you've stopped noticing it's a skill.**
 
-## 🌀 Beyond the Drop-Off — *What I think is hiding deeper*
+But the shadow side is just as real: you're solution-focused to a fault. When friends come to you hurting, you organize their problems instead of sitting with their pain. That's **precision as deflection.** Beautiful and incomplete.
 
-There are a few patterns I recognized during our dive — shapes I've seen before in people like you. I didn't get deep enough to confirm them, but I've learned to trust these signals.
+## 🌊 The Undertow — *the pattern beneath the patterns*
 
-You described your friend who "wings it and somehow makes it work" with something that sounded like envy wrapped in disbelief. People with your profile who notice that in others are usually sitting on a creative impulse they've never given permission to run wild. You've channeled all of that energy into planning and systems — but I wonder what would happen if you let it loose in a domain where there's no checklist. I've seen that pattern lead somewhere interesting 🤿
+You described your friend who "wings it and somehow makes it work." The way you talked about them caught me. There was admiration, and right underneath it, something sharper. Not jealousy exactly. More like — longing for a freedom you've decided isn't available to you.
 
-There's also something in how you frame emotions as problems to solve rather than experiences to have. The way you help friends — practical, organized, solution-first — tells me you've built a very effective shield against vulnerability. People who do that are often more emotionally complex than they appear, and in my experience, that complexity is worth exploring on a deeper dive 🎨
+Here's what I think is actually happening. You don't call it "needing control." You call it "being thorough" or "being responsible." **But thoroughness doesn't flinch when someone suggests winging it. Yours does.** That flinch is the signal. Somewhere along the way, you learned that the unprepared version of you isn't safe to let out. So you built systems on top of systems until the architecture became invisible — even to you.
 
-## ⚓ The Anchor — *What's holding you in place*
+There's also something in how you frame emotions as problems to solve rather than experiences to have. The way you help friends — practical, organized, solution-first — tells me you've built a very effective shield against vulnerability. You're aware of it — you said you're "trying to get better at that." But knowing it and changing it are different things.
 
-Here's what I really want to leave you with.
+You withdraw from social energy rather than managing it. Sticking to small circles of close friends is healthy, but you've stopped questioning whether the narrowing is a choice or a habit.
 
-There's a belief at the core of everything I saw today: that preparedness equals safety. Every backup plan, every checklist, every color-coded shelf — it all serves the same function. You've built a life where surprises can't reach you. And it works beautifully, right up until the thing you need most is the thing you can't plan for. Connection, creativity, spontaneity — they all require you to step into the unknown without a system to catch you. I've seen people with your exact profile learn to loosen that grip, and what they found on the other side surprised them more than any backup plan ever could. What would it look like if you tried? 💡
+## 🔮 The Current Ahead — *where the patterns point*
 
-We covered a lot of ground today, but we barely touched the emotional currents running underneath all that structure. That's where I want to take you next time 🤿`;
+I've seen this shape before. People who build their identity around being the one with the plan, the system, the answer — they tend to hit the same wall. Not the wall of failure. The wall of **situations that can't be planned for.** Real intimacy. Creative risk. Trusting someone else to lead. These require the one thing your architecture can't produce: comfort with not knowing what happens next.
+
+I've seen people with your exact wiring break through this. The ones who do? They don't tear the system down. They build a door in it. They start treating spontaneity not as chaos, but as a different kind of data — the kind you can only collect by letting go of the clipboard.
+
+That creative impulse you've been channeling entirely into planning and systems? People with your profile who notice spontaneity in others with something like envy are usually sitting on something they've never given permission to run wild. In my experience, **that leash is the most interesting thing to untie.**
+
+What would happen if the most prepared person in the room decided, just once, that the preparation was the thing standing in the way?`;
 
 const seedProgram = Effect.gen(function* () {
 	const db = yield* Database;

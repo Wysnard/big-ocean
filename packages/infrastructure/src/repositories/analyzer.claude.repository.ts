@@ -30,9 +30,10 @@ import {
 	AppConfig,
 	BatchAnalyzerResponseJsonSchema,
 	type ConversationMessage,
+	FACET_PROMPT_DEFINITIONS,
 	type FacetEvidence,
 	LoggerRepository,
-	MalformedEvidenceError,
+	TRAIT_TO_FACETS,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
@@ -49,55 +50,43 @@ class IdentifiedHumanMessage extends HumanMessage {
 /** Union type for messages sent to the analyzer LLM */
 type AnalyzerMessage = SystemMessage | AIMessage | IdentifiedHumanMessage;
 
+/** Trait display names for prompt formatting */
+const TRAIT_DISPLAY_NAMES: Record<string, string> = {
+	openness: "Openness",
+	conscientiousness: "Conscientiousness",
+	extraversion: "Extraversion",
+	agreeableness: "Agreeableness",
+	neuroticism: "Neuroticism",
+};
+
+/**
+ * Build the facet definitions block for the analyzer prompt from
+ * the shared FACET_PROMPT_DEFINITIONS constant.
+ */
+function buildFacetDefinitionsBlock(): string {
+	const sections: string[] = [];
+
+	for (const [traitName, facets] of Object.entries(TRAIT_TO_FACETS)) {
+		const displayName = TRAIT_DISPLAY_NAMES[traitName] ?? traitName;
+		const facetLines = facets.map((f) => `- ${f}: ${FACET_PROMPT_DEFINITIONS[f]}`).join("\n");
+		sections.push(`**${displayName} (6 facets):**\n${facetLines}`);
+	}
+
+	return sections.join("\n\n");
+}
+
 /**
  * System prompt for facet analysis
  *
  * Instructs Claude to return structured JSON with evidence for all 30 Big Five facets.
  * Uses clean facet names (no trait prefixes) for consistency.
+ * Facet definitions are sourced from the shared FACET_PROMPT_DEFINITIONS constant.
  */
 const ANALYZER_SYSTEM_PROMPT = `You are a personality assessment analyzer using the Big Five framework.
 
 For each user message, identify signals for all 30 facets across 5 traits:
 
-**Openness (6 facets):**
-- imagination: Fantasy, daydreaming, creative thinking
-- artistic_interests: Appreciation for art, beauty, poetry
-- emotionality: Experiencing emotions deeply
-- adventurousness: Willingness to try new activities
-- intellect: Intellectual curiosity, love of learning
-- liberalism: Challenge authority, embrace unconventional values
-
-**Conscientiousness (6 facets):**
-- self_efficacy: Confidence in one's ability to accomplish things
-- orderliness: Personal organization, tidiness
-- dutifulness: Governed by conscience, adherence to principles
-- achievement_striving: Need for achievement
-- self_discipline: Ability to motivate oneself
-- cautiousness: Tendency to think through before acting
-
-**Extraversion (6 facets):**
-- friendliness: Genuine liking for others
-- gregariousness: Preference for company of others
-- assertiveness: Tendency to speak up, take charge
-- activity_level: Pace of living, energy level
-- excitement_seeking: Need for stimulation
-- cheerfulness: Positive emotions, optimism
-
-**Agreeableness (6 facets):**
-- trust: Assume best intentions of others
-- morality: Straightforwardness, sincerity
-- altruism: Active concern for others' welfare
-- cooperation: Dislike confrontations, prefer compromise
-- modesty: Humble, self-effacing
-- sympathy: Compassion, tender-mindedness
-
-**Neuroticism (6 facets):**
-- anxiety: Worry, fear, nervousness
-- anger: Tendency to feel angry, frustrated
-- depression: Tendency toward guilt, sadness, hopelessness
-- self_consciousness: Sensitive to what others think
-- immoderation: Inability to resist cravings, urges
-- vulnerability: Difficulty coping with stress
+${buildFacetDefinitionsBlock()}
 
 **CRITICAL RULES:**
 1. Use clean facet names (e.g., "imagination" NOT "openness_imagination")
@@ -150,7 +139,7 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 		const baseModel = new ChatAnthropic({
 			model: config.analyzerModelId,
 			maxTokens: config.analyzerMaxTokens,
-			temperature: config.analyzerTemperature, // Lower temperature for structured output
+			temperature: config.analyzerTemperature,
 		});
 
 		// Use structured output with includeRaw to preserve AIMessage token metadata
@@ -229,14 +218,10 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 					const items = Array.isArray(unwrapped) ? unwrapped : [];
 
 					if (items.length === 0) {
-						return yield* Effect.fail(
-							new MalformedEvidenceError({
-								assessmentMessageId,
-								rawOutput: JSON.stringify(rawResponse).substring(0, 500),
-								parseError: "Empty or non-array response from analyzer",
-								message: "Schema validation failed - no extractions returned",
-							}),
-						);
+						logger.debug("No personality signals found in message", {
+							assessmentMessageId,
+						});
+						return [];
 					}
 
 					const evidence: FacetEvidence[] = [];
@@ -346,14 +331,15 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 					const items = Array.isArray(unwrapped) ? unwrapped : [];
 
 					if (items.length === 0) {
-						return yield* Effect.fail(
-							new MalformedEvidenceError({
-								assessmentMessageId: targetIds.join(","),
-								rawOutput: JSON.stringify(rawResponse).substring(0, 500),
-								parseError: "Empty or non-array response from batch analyzer",
-								message: "Schema validation failed - no extractions returned",
-							}),
-						);
+						logger.debug("No personality signals found in batch", {
+							targetCount: targets.length,
+							targetIds,
+						});
+						const emptyMap = new Map<string, FacetEvidence[]>();
+						for (const id of targetIds) {
+							emptyMap.set(id, []);
+						}
+						return emptyMap;
 					}
 
 					// Group extractions by message_id

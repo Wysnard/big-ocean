@@ -24,6 +24,11 @@ export {
 } from "./constants/big-five";
 // Facet descriptions (Story 8.3)
 export { FACET_DESCRIPTIONS, type FacetDescriptions } from "./constants/facet-descriptions";
+// Facet prompt definitions — single source of truth for analyzer & portrait prompts
+export {
+	FACET_PROMPT_DEFINITIONS,
+	type FacetPromptDefinitions,
+} from "./constants/facet-prompt-definitions";
 // Nerin greeting constants (Story 7.10)
 export {
 	GREETING_MESSAGES,
@@ -64,9 +69,6 @@ export {
 export {
 	type AnalysisTarget,
 	AnalyzerRepository,
-	type AssistantMessage,
-	type ConversationMessage,
-	type UserMessage,
 } from "./repositories/analyzer.repository";
 export { AssessmentMessageRepository } from "./repositories/assessment-message.repository";
 // Repository interfaces (ports in hexagonal architecture)
@@ -202,7 +204,12 @@ export {
 	type FacetLevelLabels,
 } from "./types/facet-levels";
 // Domain message type (framework-agnostic conversation messages)
-export type { DomainMessage } from "./types/message";
+export type {
+	AssistantMessage,
+	ConversationMessage,
+	DomainMessage,
+	UserMessage,
+} from "./types/message";
 // Session types
 export type { MessageRole, Session, SessionStatus } from "./types/session";
 // Trait types (Big Five)

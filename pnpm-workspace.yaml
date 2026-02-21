@@ -21,7 +21,7 @@ catalog:
   "@vitest/coverage-v8": "^4.0.18"
 
   # Database
-  drizzle-orm: "1.0.0-beta.12-a5629fb"
+  drizzle-orm: "1.0.0-beta.15-859cf75"
   postgres: "^3.4.8"
   pg: "^8.18.0"
 

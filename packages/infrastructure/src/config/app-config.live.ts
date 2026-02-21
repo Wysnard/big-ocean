@@ -49,7 +49,12 @@ const configSchema = Config.all({
 		Config.withDefault("claude-sonnet-4-20250514"),
 	),
 	analyzerMaxTokens: Config.number("ANALYZER_MAX_TOKENS").pipe(Config.withDefault(2048)),
-	analyzerTemperature: Config.number("ANALYZER_TEMPERATURE").pipe(Config.withDefault(0.3)),
+	analyzerTemperature: Config.number("ANALYZER_TEMPERATURE").pipe(Config.withDefault(0)),
+
+	// Portrait generator configuration
+	portraitModelId: Config.string("PORTRAIT_MODEL_ID").pipe(Config.withDefault("claude-sonnet-4-6")),
+	portraitMaxTokens: Config.number("PORTRAIT_MAX_TOKENS").pipe(Config.withDefault(8000)),
+	portraitTemperature: Config.number("PORTRAIT_TEMPERATURE").pipe(Config.withDefault(0.7)),
 
 	// Nerin agent configuration
 	nerinModelId: Config.string("NERIN_MODEL_ID").pipe(

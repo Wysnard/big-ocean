@@ -1,5 +1,6 @@
 import { Context, Data, Effect } from "effect";
 import type { FacetScoresMap, SavedFacetEvidence } from "../types/facet-evidence";
+import type { DomainMessage } from "../types/message";
 
 /**
  * Input for portrait generation
@@ -13,7 +14,7 @@ export interface PortraitGenerationInput {
 	readonly archetypeName: string;
 	readonly archetypeDescription: string;
 	readonly oceanCode5: string;
-	readonly messages: ReadonlyArray<{ role: "user" | "assistant"; content: string }>;
+	readonly messages: ReadonlyArray<DomainMessage>;
 }
 
 /**
@@ -39,7 +40,7 @@ export class PortraitGeneratorRepository extends Context.Tag("PortraitGeneratorR
 		 * Generate a personalized portrait for a completed assessment.
 		 *
 		 * @param input - Pre-computed personality data and evidence
-		 * @returns Effect with portrait as markdown string (6 sections with ## headers)
+		 * @returns Effect with portrait as markdown string (4 sections: 1 h1 + 3 h2)
 		 */
 		readonly generatePortrait: (
 			input: PortraitGenerationInput,

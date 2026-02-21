@@ -29,7 +29,7 @@ import {
 	type ProcessMessageInput,
 	type ProcessMessageOutput,
 } from "@workspace/domain";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Schedule } from "effect";
 
 // ============================================
 // Production Layer
@@ -117,8 +117,22 @@ export const OrchestratorLangGraphRepositoryLive = Layer.effect(
 						return;
 					}
 
-					// Step 2: Single batch LLM call for all unanalyzed messages
-					const evidenceMap = yield* analyzer.analyzeFacetsBatch(analysisTargets, enrichedHistory);
+					// Step 2: Single batch LLM call for all unanalyzed messages (retry up to 2x on transient LLM failures)
+					const evidenceMap = yield* analyzer.analyzeFacetsBatch(analysisTargets, enrichedHistory).pipe(
+						Effect.retry(
+							Schedule.exponential("1 seconds").pipe(
+								Schedule.compose(Schedule.recurs(2)),
+								Schedule.tapOutput((duration) =>
+									Effect.sync(() =>
+										logger.warn("Retrying batch analysis", {
+											sessionId: input.sessionId,
+											retryDelay: String(duration),
+										}),
+									),
+								),
+							),
+						),
+					);
 
 					const totalEvidence = [...evidenceMap.values()].reduce((sum, arr) => sum + arr.length, 0);
 
@@ -148,11 +162,18 @@ export const OrchestratorLangGraphRepositoryLive = Layer.effect(
 						traitCount: Object.keys(traitScores).length,
 					});
 				}).pipe(
-					Effect.catchAll((error) =>
-						Effect.fail(
-							new OrchestrationError(input.sessionId, `Background analysis failed: ${String(error)}`),
-						),
-					),
+					Effect.catchAll((error) => {
+						const cause =
+							error && typeof error === "object" && "cause" in error
+								? String((error as { cause?: unknown }).cause)
+								: undefined;
+						return Effect.fail(
+							new OrchestrationError(
+								input.sessionId,
+								`Background analysis failed: ${String(error)}${cause ? ` | cause: ${cause}` : ""}`,
+							),
+						);
+					}),
 				),
 		});
 	}),

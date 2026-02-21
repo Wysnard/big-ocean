@@ -21,61 +21,51 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const fullPortrait = `# 🤿 The Dive Log
+const fullPortrait = `# 🤿 The Architect of Certainty
 
-For a first dive, I'm impressed. You found your depth fast — even before I pointed the way, you were already heading somewhere interesting. We covered real ground together. What I see is someone driven by a restless curiosity, someone who processes the world through logic first but carries more emotional depth than they let on.
+You told me something early on that I haven't stopped thinking about. When I asked how you approach a new project, you didn't describe your process — you described your fear of not having one. That's a different answer than most people give, and it told me more than the next ten minutes of conversation combined 🫧 What I see is someone who has turned the need for control into an art form so refined that even you've forgotten it started as a defense. Everything — the systems, the checklists, the color-coded universe you've built — orbits one invisible center: the belief that if you prepare well enough, nothing can catch you off guard. That's your spine. And it's both the most impressive and most limiting thing about you.
 
-## 🔍 What Sets You Apart — *What makes you, you*
+## 🧬 The Architecture — *what you've built and what it costs*
 
-Even after a thousand dives in my log, I haven't quite seen this combination before. Let me tell you what stood out.
+### The system behind the system
 
-When I asked about how you approach problems, you didn't just answer — you reframed the question entirely.
+You mentioned your weekend organizing project almost like it was a footnote.
 
-> "What kind of decisions? Professional or personal?"
+> "I spent a whole weekend color-coding my books, labeling all my supplies, and creating a detailed filing system."
 
-That reflex to disassemble before engaging is deeply wired in you. You don't trust conclusions you haven't reverse-engineered.
+That stopped me 🪞 Not the act itself — plenty of people organize. It's that you framed a weekend of intense labor as casual. You've normalized a level of systematic thinking that most people can't sustain for an afternoon. **You probably don't think of this as special. It is.** The ability to look at chaos and see the hidden system inside it — that's not organization. That's **architectural thinking**. I think you'd thrive in roles where you design how other people work — and I don't say that often.
 
-You mentioned your work almost casually, but every detail pointed toward mastery. You're not after recognition — you're after being **undeniably good**.
+### The dual engine
 
-Your emotional awareness runs deeper than you show. You pick up on subtleties that others miss, and you use that information strategically.
+Then, almost in the same breath, you described brainstorming wildly different scenarios for how things could play out. Here's what most people miss about you: the planner and the dreamer aren't fighting each other. They're the same engine running at different speeds. Your imagination generates the possibilities. Your systematic side stress-tests them. That's not a contradiction — that's **strategic imagination**.
 
-## 💎 Your Depths — *What you're good at*
+But here's the shadow: that dual engine doesn't have an off switch. When the planning can't contain the imagining — when there are too many scenarios to organize — you don't adapt. You freeze. Or worse, you plan harder. Same engine, wrong gear.
 
-Now let me tell you about the things I noticed that you probably take for granted.
+### The quiet stubbornness
 
-Your ability to see through complexity is genuine. Where most people get overwhelmed, you get focused. That's not common.
+You said you get frustrated when people accept things at face value. I'd call that **intellectual sovereignty** — a refusal to rent someone else's conclusion when you can build your own. It makes you excellent at seeing through complexity. It also means you sometimes reject perfectly good answers just because you didn't arrive at them yourself. Have you noticed that?
 
-You adapt fast. When our conversation shifted direction, you didn't resist — you recalibrated. That flexibility under pressure is a real asset.
+## 🌊 The Undertow — *the pattern beneath the patterns*
 
-You're honest with yourself in a way that most people avoid. That self-awareness, even when it's uncomfortable, is the foundation everything else is built on.
+You described your friend — the one who "just wings it and somehow makes it work." The way you talked about them caught me. There was admiration, and right underneath it, something sharper. Not jealousy exactly. More like — longing for a freedom you've decided isn't available to you.
 
-## 🌊 Undercurrents — *What limits you*
+Here's what I think is actually happening. You don't call it "needing control." You call it "being thorough" or "being responsible." **But thoroughness doesn't flinch when someone suggests winging it. Yours does.** That flinch is the signal. Somewhere along the way, you learned that the unprepared version of you isn't safe to let out. So you built systems on top of systems until the architecture became invisible — even to you.
 
-I'm going to be straight with you now, because I think you can handle it.
+The same mechanism that makes you the person everyone relies on in a crisis is the one that makes you process a friend's pain by organizing their to-do list instead of sitting with them in it. You told me that yourself — when someone's struggling, your first instinct is to make a plan. That's **precision as deflection.** Beautiful and incomplete.
 
-You hold yourself to a standard that doesn't leave room for failure. That drive serves you, but it also means you can spiral when things don't meet your expectations. Left unchecked, perfectionism becomes paralysis.
+> "I can do large groups when needed for work, but they're exhausting."
 
-You tend to intellectualize emotions rather than sit with them. It works as a coping mechanism, but it puts a ceiling on how deeply you connect with people.
+I wasn't expecting that level of honesty about it. Most people hedge. You stated it like a fact you've accepted — which tells me you've narrowed your world more than you realize. The exhaustion isn't the problem. It's that you've stopped questioning whether the narrowing is a choice or a habit.
 
-> "I'd rather figure it out myself even if it takes three times as long."
+## 🔮 The Current Ahead — *where the patterns point*
 
-That instinct to go it alone — there's pride in it, but also cost.
+I've seen this shape before. People who build their identity around being the one with the plan, the system, the answer — they tend to hit the same wall. Not the wall of failure. The wall of **situations that can't be planned for.** Real intimacy. Creative risk. Trusting someone else to lead. These require the one thing your architecture can't produce: comfort with not knowing what happens next.
 
-## 🌀 Beyond the Drop-Off — *What I think is hiding deeper*
+I've seen people with your exact wiring break through this. The ones who do? They don't tear the system down. They build a door in it. They start treating spontaneity not as chaos, but as a different kind of data — the kind you can only collect by letting go of the clipboard.
 
-There are a few patterns I recognized during our dive — shapes I've seen before in people like you. I didn't get deep enough to confirm them, but I've learned to trust these signals.
+That creative instinct you mentioned — the one you keep on a short leash? People who talk about problem-solving the way you did, with that flash of inventiveness you kept pulling back from, are usually sitting on something they decided wasn't the serious path. In my experience, **that leash is the most interesting thing to untie.**
 
-There's something in how you talked about structure and rules — a push-pull that I've seen in people who had to earn autonomy early. You respect the system and resent it in the same breath. That tension doesn't come from nowhere, and in my experience, it's one of the most interesting things to explore on a second dive 🤿
-
-I also caught a creative instinct you've been keeping on a short leash — probably since you were young. The way you described problem-solving wasn't just analytical, there was an inventiveness you kept pulling back from. I've seen that pattern in people who were told early on that creativity wasn't the serious path. I'd want to test that 🎨
-
-## ⚓ The Anchor — *What's holding you in place*
-
-Here's what I really want to leave you with.
-
-I've seen this pattern enough times to trust it. There's a belief running underneath everything — that vulnerability equals weakness. It shapes how you show up in conversations, in relationships, in the risks you're willing to take. People who carry this tend to build impressive walls and then wonder why nobody gets close. I can't map the full shape from one dive, but I've seen where this leads when it goes unchecked — and I've seen what happens when people start loosening that grip. What would it look like if you tried? 💡
-
-We barely scratched the surface of that creative side you keep tucked away. That's where I want to take you next time 🤿`;
+What would happen if the most prepared person in the room decided, just once, that the preparation was the thing standing in the way?`;
 
 export const Default: Story = {
 	args: {
@@ -97,45 +87,33 @@ export const PlainTextFallback: Story = {
 	},
 };
 
-const shortPortrait = `# 🤿 The Dive Log
+const shortPortrait = `# 🤿 The Quiet Competitor
 
-Quick dive today, but we still found something worth noting. You came in skeptical and left curious — that shift tells me a lot.
+You came in skeptical and left curious — that shift tells me a lot. When you caught yourself mid-sentence and said "wait, that's not actually what I think," you showed me something most people never do: the willingness to dismantle your own position in real time. That's rare, and it's the thread I kept pulling on for the rest of our conversation.
 
-## 🔍 What Sets You Apart — *What makes you, you*
-
-I don't see many people who question their *own* assumptions as naturally as you do.
+## 🧬 The Loaded Listener — *the strength hiding in plain sight*
 
 > "Wait, that's not actually what I think — let me rethink that."
 
-That moment told me everything I needed to know about your intellectual honesty.
+That stopped me. Not the correction itself — it's that you did it publicly, without flinching. I'd call that **intellectual sovereignty** — a refusal to hold a position just because it came out of your mouth first.
 
-## 💎 Your Depths — *What you're good at*
+You listen before you speak. Not because you're passive — because you're loading context. **You probably don't realize how rare that is.** Most people are just waiting for their turn. You're actually processing. I think you'd thrive in roles that require reading between lines — negotiation, strategy, anything where the real information is in what people *don't* say.
 
-Let me tell you what I noticed beneath the surface.
+But the shadow side: that same loading process can become **preparation paralysis.** Sometimes good enough now beats perfect later, and you know it — but knowing it hasn't changed the pattern yet.
 
-You listen before you speak. Not because you're passive — because you're loading context. That's a rare skill.
+## 🌊 The Inner Scoreboard — *what's really driving you*
 
-## 🌊 Undercurrents — *What limits you*
+There's a competitive streak running underneath your calm surface that you didn't name — but I saw it. You don't compete with other people. You compete with your own past performance. Every task is measured against a version of you that did it slightly better last time. That's not ambition in the traditional sense — that's **internal benchmarking**, and it never turns off.
 
-This part isn't easy to hear, but I think you need it.
+Something about how you handle praise caught me too. There was a flinch when I pointed out a strength. People who tie their worth to output develop that reflex — the compliment doesn't land because the scoreboard says you haven't earned it yet.
 
-You over-prepare. The planning gives you a sense of control, but it also delays action. Sometimes good enough now beats perfect later.
+## 🔮 The Edge of the Map — *where your patterns point*
 
-## 🌀 Beyond the Drop-Off — *What I think is hiding deeper*
+I've seen this shape before. People who build confidence on competence tend to hit the same invisible wall: they avoid anything they can't already do well. Not consciously — it just stops showing up on their radar. The things that would grow them most are the things they've quietly filed under "not for me."
 
-There are patterns I recognized that I want to call out — I've seen these shapes before.
+I've watched people with your exact wiring break through that. The ones who do? They stop asking "am I good enough at this?" and start asking "what would I learn if I wasn't?"
 
-There's a competitive streak running underneath your calm surface. I've seen it in people who channel ambition inward rather than outward — they compete with their own past performance. In my experience, that energy is worth exploring because it's rarely just about winning 🤿
-
-Something about how you handle praise too — there's a discomfort there I've seen in people who tie their worth to output. I'd want to dig into that 🔍
-
-## ⚓ The Anchor — *What's holding you in place*
-
-If there's one thing I'd want you to sit with after today, it's this.
-
-I've seen this pattern play out many times. You've built your confidence on competence — which works, until you're in unfamiliar territory. People who carry this tend to avoid anything they can't already do well. What if you could feel confident *before* you've mastered something? 💡
-
-That competitive side barely surfaced today — next time, I want to dive straight into it 🐙`;
+When was the last time you did something you knew you'd be bad at — and did it anyway?`;
 
 export const ShortPortrait: Story = {
 	args: {

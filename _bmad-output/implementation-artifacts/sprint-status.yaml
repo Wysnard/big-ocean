@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-02-19 (correct-course: added Story 7.17 homepage narrative rewrite)
+# Generated: 2026-02-21 (sprint-planning: Story 7.17 → done)
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-02-18
+generated: 2026-02-21
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -51,8 +51,9 @@ development_status:
   epic-1-retrospective: optional
 
   # EPIC 2: Assessment Backend Services
-  # All stories completed — epic promoted to done
-  # Story 2.12 added via correct-course (2026-02-18): Nerin persona coherence & conversational redesign
+  # All original stories completed. Story 2.12 added via correct-course (2026-02-18).
+  # Design thinking 2026-02-20 identifies Priority 1 (chat foundation) and Priority 3 (greeting)
+  # as new work in this domain — stories to be created via create-story workflow.
   epic-2: in-progress
   2-1-session-management-and-persistence: done
   2-2-nerin-agent-setup-and-conversational-quality: done
@@ -64,6 +65,7 @@ development_status:
   2-10-nerin-conversational-empathy-patterns: done
   2-11-async-analyzer-with-offset-steering: done
   2-12-nerin-persona-coherence-conversational-redesign: done
+  2-13-nerin-chat-foundation-redesign: ready-for-dev
   epic-2-retrospective: done
 
   # EPIC 3: OCEAN Archetype System
@@ -104,9 +106,8 @@ development_status:
   epic-6-retrospective: optional
 
   # EPIC 7: UI Theme & Visual Identity (PHASE 1 - MVP Visual Identity)
-  # 16 stories completed, Story 7.17 added via correct-course (2026-02-19): homepage narrative rewrite
-  # Psychedelic-bold visual identity with OCEAN geometric shapes, dual light/dark modes,
-  # custom typography, illustration system, auth-gated results, shareable profiles, user dashboard
+  # 17/17 stories completed. Design thinking 2026-02-20 identifies Priority 4 (transition UX)
+  # as new work — Story 7.18 pending creation. Epic stays in-progress until resolved.
   epic-7: in-progress
   7-1-psychedelic-brand-design-tokens: done
   7-2-typography-system: done
@@ -124,7 +125,7 @@ development_status:
   7-14-component-visual-consistency-and-final-polish: done
   7-15-auth-form-psychedelic-brand-redesign: done
   7-16-geometric-ocean-sea-life-ambient-layer: done
-  7-17-homepage-narrative-rewrite: review
+  7-17-homepage-narrative-rewrite: done
   epic-7-retrospective: done
 
   # EPIC 8: Results Page Content Enrichment
@@ -132,6 +133,9 @@ development_status:
   # Phase 2 (Story 8.5): Portrait regeneration for paid tier (DEFERRED — requires tier infrastructure)
   # Story 8.6 added via correct-course (2026-02-16): Results page redesign to Mockup 7 Detail Zone
   # Story 8.4 rework via correct-course #3 (2026-02-16): Portrait redesign — Nerin dive-master voice, markdown output
+  # Design thinking 2026-02-20 identifies Priority 2 (portrait) as new work:
+  #   - Revised PORTRAIT_CONTEXT, move scaffold computation, MoveScaffold interface
+  #   - Stories to be created via create-story workflow
   epic-8: in-progress
   8-1-expand-archetype-descriptions-to-4-5-sentences: done
   8-2-add-level-specific-trait-descriptions: done
@@ -140,3 +144,46 @@ development_status:
   8-4-pre-generate-personalized-portrait-at-free-tier-message-threshold: done
   8-5-regenerate-personalized-portrait-paid-tier: backlog
   epic-8-retrospective: optional
+
+# ─────────────────────────────────────────────────────────────────
+# DESIGN THINKING 2026-02-20: Pending Story Creation
+# ─────────────────────────────────────────────────────────────────
+# The following work items were identified in design-thinking-2026-02-20.md
+# and need to be converted into formal stories via the create-story workflow.
+# Prototypes A-M complete. Implementation ordered by testing priority.
+#
+# PRIORITY 1 — Chat Foundation (Prototypes F, L, M, G):
+#   Scope: Trimmed NERIN_PERSONA (~780→~350 tokens), revised CHAT_CONTEXT
+#     with beliefs/threading/depth/mirrors, mirror library injection (13 mirrors),
+#     edge case handling, emoji palette, anti-patterns
+#   Files: nerin-persona.ts, nerin-system-prompt.ts + tests
+#   Suggested: Epic 2, Story 2.13
+#   Test: A/B prompt comparison (3 scenarios, score ≥10/14), edge cases, limits
+#
+# PRIORITY 2 — Portrait (Prototypes D, J):
+#   Scope: Revised PORTRAIT_CONTEXT (letter framing, confidant voice, 4-section
+#     architecture, depth adaptation), move scaffold computation (5 move types),
+#     MoveScaffold interface, depth/tone signals, finalization integration
+#   Files: portrait-generator.claude.repository.ts, get-results.use-case.ts, domain types
+#   Suggested: Epic 8, Story 8.7
+#   Test: A/B portrait comparison (3 runs, score ≥16/23)
+#
+# PRIORITY 3 — Greeting (Prototype K):
+#   Scope: Combine greeting 1+2 (3→2 messages), replace beach question,
+#     add "boring true thing" question, investigate cadence impact, update seeds
+#   Files: nerin-greeting.ts + tests, seed scripts
+#   Suggested: Epic 2, Story 2.14
+#   Test: Greeting preference test (3-5 people)
+#
+# PRIORITY 4 — Transition UX (Prototype I):
+#   Scope: Nerin farewell generation (agent final turn), auth gate redesign
+#     on chat page (hybrid approach), wait screen with rotating Nerin lines
+#     (10s minimum), portrait-first reveal layout
+#   Files: frontend components, routes, use-cases
+#   Suggested: Epic 7, Story 7.18
+#   Test: Full self-test session (score ≥4/5)
+#
+# PRIORITY 5 — Full Validation:
+#   Scope: End-to-end testing with trusted testers (2-3 sessions),
+#     feedback collection, key learnings documentation
+#   Not a formal story — manual testing phase after Priority 1-4

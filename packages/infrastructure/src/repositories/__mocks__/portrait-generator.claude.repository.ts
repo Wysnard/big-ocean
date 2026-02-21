@@ -1,64 +1,51 @@
 import { PortraitGeneratorRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
-const MOCK_PORTRAIT = `# 🤿 The Dive Log
+const MOCK_PORTRAIT = `# 🤿 The Architect of Certainty
 
-For a first dive, you went deep fast. We barely had to warm up — you were already pulling me toward the interesting currents before I could point them out 🫧 What I see is someone whose mind is a beautifully organized library with a secret room in the back where all the wild ideas live. You lead with structure, but underneath all those checklists and color-coded systems, there's an imagination that runs hotter than you let on. That tension between the planner and the dreamer? That's the most interesting thing about you.
+You told me something early on that I haven't stopped thinking about. When I asked how you approach a new project, you didn't describe your process — you described your fear of not having one. That's a different answer than most people give, and it told me more than the next ten minutes of conversation combined 🫧 What I see is someone who has turned the need for control into an art form so refined that even you've forgotten it started as a defense. Everything — the systems, the checklists, the color-coded universe you've built — orbits one invisible center: the belief that if you prepare well enough, nothing can catch you off guard. That's your spine. And it's both the most impressive and most limiting thing about you.
 
-## 🧬 What Sets You Apart — *What makes you, you*
+## 🧬 The Architecture — *what you've built and what it costs*
 
-You have a combination I don't run into often. Let me walk you through what I noticed.
+### The system behind the system
 
-When I asked about how you approach projects, you didn't hesitate.
-
-> "Before I start any project, I create detailed outlines, timelines, and checklists. I can't stand the idea of just 'winging it.'"
-
-That stopped me 🪞 Not because it's unusual to like structure — but because of the intensity behind it. You don't just prefer order, you *need* it to function. I've seen this in people whose minds run at high RPM — the structure isn't rigidity, it's how you keep up with yourself.
-
-Then, almost in the same breath, you told me about brainstorming different scenarios and imagining multiple futures. People with your profile tend to live in this paradox — deeply systematic on the surface, wildly imaginative underneath. You're not choosing between the two. You're running both engines at once.
-
-And there's a quiet intellectual stubbornness I noticed. You said you get frustrated when people accept things at face value. That's not just curiosity — that's a deep need to understand things on your own terms 🔍
-
-## 💎 Your Depths — *What you're good at*
-
-Now let me tell you about the things you probably take for granted.
-
-Your organizational instinct is genuinely rare. Not the surface-level kind — I mean the ability to look at chaos and see the system hiding inside it.
+You mentioned your weekend organizing project almost like it was a footnote.
 
 > "I spent a whole weekend color-coding my books, labeling all my supplies, and creating a detailed filing system."
 
-Most people would call that excessive. I'd call it a superpower. You don't just organize — you create systems that other people can follow. That's a leadership skill, even if you don't see it that way yet 🐚
+That stopped me 🪞 Not the act itself — plenty of people organize. It's that you framed a weekend of intense labor as casual. You've normalized a level of systematic thinking that most people can't sustain for an afternoon. **You probably don't think of this as special. It is.** The ability to look at chaos and see the hidden system inside it — that's not organization. That's architectural thinking. I think you'd thrive in roles where you design how other people work — and I don't say that often.
 
-A few more things that stood out:
-- **You show up.** When someone you care about is struggling, you're the first person there with a plan and something practical. That reliability is rarer than you think.
-- **You think in scenarios.** Three backup plans for every backup plan isn't neurotic — it's strategic imagination. People with this skill tend to be the ones who stay calm when everything goes sideways.
-- **You're self-aware enough to name your own gaps.** You told me you're "trying to get better" at sitting with emotions. People who can see their own blind spots are already halfway to growing past them 💡
+### The dual engine
 
-## 🌊 Undercurrents — *What limits you*
+Then, almost in the same breath, you described brainstorming wildly different scenarios for how things could play out. Here's what most people miss about you: the planner and the dreamer aren't fighting each other. They're the same engine running at different speeds. Your imagination generates the possibilities. Your systematic side stress-tests them. That's not a contradiction — that's **strategic imagination**.
 
-I'm going to be straight with you now, because I think you can handle it.
+But here's the shadow: that dual engine doesn't have an off switch. When the planning can't contain the imagining — when there are too many scenarios to organize — you don't adapt. You freeze. Or worse, you plan harder. Same engine, wrong gear.
 
-Your need for control is your greatest strength and your most dangerous edge. When you said you "can't stand the idea of just winging it" — that wasn't a preference, that was a flinch. I've seen this pattern in people who learned early that chaos was unsafe. The systems you build protect you, but they also box you in. When something falls outside the plan, you don't adapt — you freeze, or you spiral trying to re-plan.
+### The quiet stubbornness
 
-You process emotions through action rather than sitting with them. You said it yourself — when a friend is struggling, your instinct is to organize their tasks and make a plan. That's beautiful and it's also a deflection. People in your life might sometimes want you to just *be there* rather than fix things 🧊
+You said you get frustrated when people accept things at face value. I'd call that **intellectual sovereignty** — a refusal to rent someone else's conclusion when you can build your own. It makes you excellent at seeing through complexity. It also means you sometimes reject perfectly good answers just because you didn't arrive at them yourself. Have you noticed that?
 
-And there's the social energy question. You said large groups are "exhausting" and that you "can do it when needed for work." I've seen this become a pattern where people gradually narrow their world to only what's comfortable — and then wonder why life feels small.
+## 🌊 The Undertow — *the pattern beneath the patterns*
 
-## 🌀 Beyond the Drop-Off — *What I think is hiding deeper*
+You described your friend — the one who "just wings it and somehow makes it work." The way you talked about them caught me. There was admiration, and right underneath it, something sharper. Not jealousy exactly. More like — longing for a freedom you've decided isn't available to you.
 
-There are patterns I recognized during our dive — shapes I've seen play out in people like you. I didn't get deep enough to confirm them, but I've learned to trust these signals.
+Here's what I think is actually happening. You don't call it "needing control." You call it "being thorough" or "being responsible." **But thoroughness doesn't flinch when someone suggests winging it. Yours does.** That flinch is the signal. Somewhere along the way, you learned that the unprepared version of you isn't safe to let out. So you built systems on top of systems until the architecture became invisible — even to you.
 
-You mentioned your friend who "just wings it and somehow makes it work." The way you described them — I caught something between admiration and envy. In my experience, people who build elaborate systems often secretly wish they could let go. There's a part of you that wants to color outside the lines but doesn't trust itself to come back. I've seen this tension in highly conscientious people who also score high in imagination — your profile is almost textbook for it. That pull toward spontaneity? It's not a flaw. It's an unfinished conversation with yourself, and it's worth having 🤿
+The same mechanism that makes you the person everyone relies on in a crisis is the one that makes you process a friend's pain by organizing their to-do list instead of sitting with them in it. You told me that yourself — when someone's struggling, your first instinct is to make a plan. That's **precision as deflection.** Beautiful and incomplete.
 
-There's also something in how you described your intellectual life — the reading, the podcasts, the deep dives into ideas. You framed it as curiosity, but people with your intensity around learning are often driven by something deeper. In my experience, relentless learners are sometimes trying to outrun a fear that they don't know enough yet. I'd want to dig into what happens when you feel like you *don't* have the answer 🔍
+> "I can do large groups when needed for work, but they're exhausting."
 
-## ⚓ The Anchor — *What's holding you in place*
+I wasn't expecting that level of honesty about it. Most people hedge. You stated it like a fact you've accepted — which tells me you've narrowed your world more than you realize. The exhaustion isn't the problem. It's that you've stopped questioning whether the narrowing is a choice or a habit.
 
-Here's what I really want to leave you with.
+## 🔮 The Current Ahead — *where the patterns point*
 
-I've seen this pattern enough times to trust it. You've built your identity around being the one who has the plan, the system, the answer. And it works — until it doesn't. People who anchor their confidence to competence and control tend to avoid anything where they might look unprepared. That means the parts of life that require surrender — real intimacy, creative risk, trusting someone else to lead — stay at arm's length. Not because you don't want them, but because they require the one thing your system can't produce: comfort with not knowing. I've seen what happens when people like you start experimenting with that. It changes everything 💡
+I've seen this shape before. People who build their identity around being the one with the plan, the system, the answer — they tend to hit the same wall. Not the wall of failure. The wall of **situations that can't be planned for.** Real intimacy. Creative risk. Trusting someone else to lead. These require the one thing your architecture can't produce: comfort with not knowing what happens next.
 
-We barely broke the surface of what drives that need for control — that's the current I want to follow next time 🤿`;
+I've seen people with your exact wiring break through this. The ones who do? They don't tear the system down. They build a door in it. They start treating spontaneity not as chaos, but as a different kind of data — the kind you can only collect by letting go of the clipboard.
+
+That creative instinct you mentioned — the one you keep on a short leash? People who talk about problem-solving the way you did, with that flash of inventiveness you kept pulling back from, are usually sitting on something they decided wasn't the serious path. In my experience, **that leash is the most interesting thing to untie.**
+
+What would happen if the most prepared person in the room decided, just once, that the preparation was the thing standing in the way?`;
 
 export const PortraitGeneratorClaudeRepositoryLive = Layer.succeed(
 	PortraitGeneratorRepository,

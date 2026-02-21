@@ -179,7 +179,7 @@ export const getResults = (input: GetResultsInput) =>
 					archetypeName: archetype.name,
 					archetypeDescription: archetype.description,
 					oceanCode5,
-					messages: messages.map((m) => ({ role: m.role, content: m.content })),
+					messages: domainMessages,
 				})
 				.pipe(
 					Effect.tap((portrait) =>

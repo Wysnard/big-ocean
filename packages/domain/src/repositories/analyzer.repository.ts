@@ -1,17 +1,7 @@
 import { Context, Effect } from "effect";
 import type { AnalyzerError, MalformedEvidenceError } from "../errors/http.errors";
 import type { FacetEvidence } from "../types/facet-evidence";
-import type { DomainMessage } from "../types/message";
-
-/**
- * Conversation message type for the analyzer pipeline.
- * Alias for DomainMessage — kept for backwards compatibility with callers.
- */
-export type ConversationMessage = DomainMessage;
-
-/** Re-export component types for consumers that destructure */
-export type UserMessage = DomainMessage & { role: "user" };
-export type AssistantMessage = DomainMessage & { role: "assistant" };
+import type { ConversationMessage } from "../types/message";
 
 /** A DB-persisted user message targeted for facet analysis */
 export type AnalysisTarget = {

@@ -3,13 +3,13 @@ import type { Components } from "react-markdown";
 export interface PortraitSection {
 	header: string;
 	body: string;
-	/** h1 = The Dive Log title, h2 = body sections */
+	/** h1 = portrait title, h2 = body sections */
 	level: 1 | 2;
 }
 
 /**
  * Split markdown content on # and ## headers into individual sections.
- * # (h1) is used for "The Dive Log" title, ## (h2) for body sections.
+ * # (h1) is used for the portrait title, ## (h2) for body sections.
  */
 export function splitMarkdownSections(markdown: string): PortraitSection[] {
 	const sections: PortraitSection[] = [];
@@ -66,6 +66,9 @@ export function renderHeader(header: string) {
 
 /** Custom react-markdown components styled for the portrait card. */
 export const markdownComponents: Components = {
+	h3: ({ children }) => (
+		<h5 className="text-[0.85rem] font-semibold text-foreground/90 mt-4 mb-1">{children}</h5>
+	),
 	p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
 	blockquote: ({ children }) => (
 		<blockquote className="border-l-2 border-primary/40 pl-3 my-3 italic text-foreground/70">

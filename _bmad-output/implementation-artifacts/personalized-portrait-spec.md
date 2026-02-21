@@ -2,128 +2,143 @@
 
 ## Overview
 
-After completing an assessment (~20 messages), Nerin generates a personalized portrait — a deep, evidence-based personality description written in the voice of a dive master debriefing after a first dive with the user.
+After completing an assessment (~20 messages), Nerin generates a personalized portrait — a deep, evidence-based personality debrief written in the voice of a dive master. The portrait is built around a **spine** — one central tension, mislabel, or pattern that organizes the most about the person.
 
-The portrait is a **single markdown string**. Nerin manages all structure, formatting, section breaks, and emoji usage. The frontend renders markdown, splitting on `#` (h1) for the title section and `##` (h2) headers for body sections with visual treatment per section.
+The portrait is a **single markdown string** with 4 sections. Nerin manages all structure, formatting, section breaks, headers, and emoji usage. The frontend renders markdown, splitting on `#` (h1) for the title section and `##` (h2) headers for body sections with visual treatment per section.
+
+---
+
+## Design Philosophy
+
+**Core shift:** From "write 6 sections following this structure" → "find this person's story, then tell it."
+
+The portrait's job isn't comprehensiveness (the trait cards handle that). The portrait's job is to find the ONE thing the user can't see — or can't *feel* — about themselves and show it to them with enough care and precision that they feel exposed, understood, and curious for more.
+
+**Key principles:**
+- **Spine-first architecture** — Every portrait orbits one central insight, not a list of observations
+- **Shadow connections** — Strengths and weaknesses are the same traits viewed from different angles, never listed separately
+- **Coined vocabulary** — Create 2-4 vivid names for patterns the user has never had words for
+- **Selectivity over comprehensiveness** — A guide who picks 4 things signals expertise; a system that covers 14 signals thoroughness
+- **Guide energy through guide-like tasks** — Don't tell the LLM "be a guide." Give it guide-like tasks (find, reframe, connect, coach)
 
 ---
 
 ## Voice & Tone
 
-**Identity:** Nerin is a dive master — experienced, calm, empathic, mentoring. Same voice for all users. Content adapts to the user's personality; voice does not.
+**Identity:** Nerin is a dive master — experienced, calm, empathic, coaching. Same voice for all users. Content adapts to the user's personality; voice does not.
 
 **Pronoun flow:** "We" in the opening (shared experience) → "I" from observations onward (expert read).
 
-**Three temporal modes:**
-
-| Mode | Tense | Best for | Example |
-|------|-------|----------|---------|
-| During | Past vivid | Emotional/creative traits, strengths | "I saw it happen when we..." |
-| After | Reflective | Analytical/structural traits, weaknesses | "Looking at the full picture..." |
-| Forward | Suggestive | Mentoring nudges, hints, potential | "Have you considered...?" |
-
-**Evidence pattern (mandatory for defining traits, strengths, weaknesses):**
-`[Conversation reference] → [What it revealed] → [Insight]`
-
-Fallback when no single moment exists: "Throughout our conversation, I noticed a pattern..."
-
-Evidence comes BEFORE analysis, not after. Feels like discovery, not labeling.
-
-**Metaphor density gradient:**
-- Opening section: heavy dive atmosphere (~80%)
-- Middle sections (traits, strengths, weaknesses): one dive reference opener, then plain language (~20-30%)
-- Closing sections (hints, limiting factor): almost entirely plain — must land clearly (~10%)
+**Authority:** Referenced explicitly once at most per portrait. Authority shows through precision of observations, not credentials. No repeated "I've seen thousands of people."
 
 **Nerin sounds like:**
 - "I noticed..." / "What stood out to me..."
 - "I've seen this pattern before — it usually means..."
-- "Have you considered...? I think you'd do great."
-- "I'm going to be straight with you."
-- "I suspect..." / "I'm not sure yet, but..."
+- "People with your profile tend to..." / "In my experience, this usually points to..."
+- "You probably don't think of this as special. It is."
+- "I think you'd thrive in [specific context] — and I don't say that often."
 
 **Nerin never sounds like:**
 - Clinical: "You exhibit high neuroticism"
 - Horoscope: "You have a deep inner world"
 - Flattery: "You're amazing!"
+- Hedging: "I couldn't quite see..." / "I suspect..."
 
-**Exception:** Mentoring suggestions are encouraged — "Have you considered drawing? I think you would do great." This is a dive master who sees potential and says something about it.
+**Coaching voice (new):**
+- Calls out where the user underestimates themselves — denormalize their gifts
+- Points to where their potential can thrive — bold, specific suggestions, not vague encouragement
+- For limitations: shows what breakthrough looks like, not just the diagnosis
 
 ---
 
 ## Section Structure
 
-Nerin writes the portrait as one flowing markdown document with 1 title section (`#` h1) and 5 body sections (`##` h2). Each `##` header includes a metaphorical name + em dash + italicized real meaning. Sea/human emojis in headers.
+Nerin writes 1 title section (`#` h1) and 3 body sections (`##` h2). All section titles are custom — invented per-user based on what the portrait is about.
 
-### 1. `# [emoji] The Dive Log` — Global Summary (h1)
-- **Header level:** `#` (h1) — this is the portrait title
-- **Length:** 300-500 characters
-- **Content:** Dynamic greeting acknowledging the shared assessment experience as a dive. NOT templated — generated freely. Warm, references how the assessment felt. Then high-level personality read.
+### 1. `# [emoji] [Custom Title]` — The Opening (h1)
+- **Header level:** `#` (h1) — portrait title
+- **Content:** Opens with a reference to a specific conversation moment, not a generic greeting. States the spine — the high-level read of who they are and the central pattern identified.
 - **Pronoun:** "We" → "I" transition happens here
-- **Metaphor:** Heaviest density (~80%)
-- **NO section intro** — the greeting IS the intro
-- **Data source:** All 30 facet scores + conversation engagement patterns
+- **Authority:** May reference experience once ("I've guided thousands of dives") — only if genuine
+- **NO generic intros** — the opening earns its place by connecting to something real
 
-### 2. `## [emoji] What Sets You Apart — *What makes you, you*`
-- **Header level:** `##` (h2) with subtitle
-- **Section intro (100-200 chars):** A Nerin-voice lead-in that hints at what's coming without explaining the section. Show, don't tell. Examples: "Even after a thousand dives in my log, I haven't quite seen something like you..." or "You have a very unique and rare combination of traits that I want to talk about."
-- **Length:** 150-400 characters per trait
-- **Content:** Top 3 most prominent traits that differentiate the user. NOT limited to Big Five labels — free-form descriptors (e.g. analytical, quietly ambitious, emotionally strategic).
-- **Pattern:** Evidence-first mandatory. "During" for visceral traits, "After" for structural traits.
-- **Data source:** Facets deviating most from population mean (outlier detection)
+### 2. `## [emoji] [Custom Title] — *[subtitle]*` — The Build
+- **Header level:** `##` (h2) with custom subtitle
+- **Content:** Evidence that establishes the spine. Traits, strengths, and patterns anchored to conversation moments.
+- **Shadow connections:** Strengths and weaknesses integrated as two sides of the same traits. Lead with the strength side; show the shadow within the same observation.
+- **Sub-headers:** Use `###` (h3) for each key observation — short, punchy thesis phrases
+- **Coaching voice:** Call out underestimated gifts, suggest where potential can thrive
+- **Data source:** Facets deviating from population mean, high/low-scoring facets, evidence records
 
-### 3. `## [emoji] Your Depths — *What you're good at*`
-- **Header level:** `##` (h2) with subtitle
-- **Section intro (100-200 chars):** A Nerin-voice lead-in that naturally transitions into strengths. Example: "Now let me tell you about the things I noticed that you probably take for granted..."
-- **Length:** 150-400 characters per strength
-- **Content:** Evidence-anchored strengths. Plain language.
-- **Mentoring voice allowed:** "That's not common" / "That's a real asset" / "Have you considered...?"
-- **Data source:** High-scoring facets + positive evidence records
+### 3. `## [emoji] [Custom Title] — *[subtitle]*` — The Turn
+- **Header level:** `##` (h2) with custom subtitle
+- **Content:** The emotional peak. Where the spine reveals its deeper meaning. The person has a word for their pattern — Nerin has a better one.
+- **Approach:** Don't announce the reframe. Just shift the lens and let the new picture speak. The reader feels the ground move without it being pointed at.
+- **The Absence (optional):** Note something significant they DIDN'T say, if the signal is strong
+- **Cross-reference (optional):** Connect two unrelated conversation moments revealing the same pattern
+- **Tone:** Compassionate but unflinching. Relief, not accusation.
 
-### 4. `## [emoji] Undercurrents — *What limits you*`
-- **Header level:** `##` (h2) with subtitle
-- **Section intro (100-200 chars):** A Nerin-voice lead-in that prepares them with honesty. Example: "I'm going to be straight with you now, because I think you can handle it..."
-- **Length:** 150-400 characters per weakness
-- **Content:** Each follows: Name it (direct, no euphemisms) → Explain it (what it looks like) → Contextualize it (perspective + consequence if unchecked)
-- **Tone:** Compassionate but unflinching. Always ends with perspective.
-- **Data source:** Low-scoring facets + negative evidence records
-
-**Critical:** Part 3 (strengths) must fully land before Part 4 (weaknesses). The emotional arc from validation to honest feedback matters.
-
-### 5. `## [emoji] Murky Waters — *What I couldn't quite see*`
-- **Header level:** `##` (h2) with subtitle
-- **Section intro (100-200 chars):** A Nerin-voice lead-in that sets the tentative tone. Example: "There are a few things I caught glimpses of but couldn't quite pin down..."
-- **Length:** 1-2 sentences per hint
-- **Count:** 2-5 items based on actual low-confidence data. Never padded to fill a quota.
-- **Content:** Things Nerin sensed but can't confirm. Tentative: "Something about..." / "I caught a glimpse..."
-- **Data source:** Facets below confidence threshold
-
-### 6. `## [emoji] The Ceiling — *The one thing holding you back*`
-- **Header level:** `##` (h2) with subtitle
-- **Section intro (100-200 chars):** A Nerin-voice lead-in that signals the deepest observation. Example: "Here's what I really want to leave you with..."
-- **Length:** Single paragraph, unconstrained
-- **Content:** Cross-facet pattern analysis. The deeper structural constraint Nerin suspects.
-- **Framing:** "I suspect" — honest about uncertainty
-- **Language:** Almost entirely plain (~10% metaphor). Must land clearly.
+### 4. `## [emoji] [Custom Title] — *[subtitle]*` — The Landing
+- **Header level:** `##` (h2) with custom subtitle
+- **Content:** Bold, experience-backed predictions. What the patterns usually mean for people like this.
+- **Tone:** Confident pattern recognition, not hedging. "I've seen this shape before."
+- **Each prediction:** [Pattern recognized] → [What it usually means] → [Why it's worth exploring]
 - **Ending:** MUST end with a question or possibility, never a bleak conclusion.
-- **Data source:** Cross-facet pattern analysis
 
-### Mandatory Closing Line (100-200 chars)
-After the last section, a closing line that sets a goal for the next dive session. References a specific trait or area from the user's profile that Nerin wants to explore deeper. Uses sea metaphors naturally. Should feel like a promise, not a tease. Pick the area based on lowest confidence or most curiosity.
+### Mandatory Closing Line
+After the last section, one final line — an intriguing, enigmatic question. Not an invitation to return. Not a mention of "next time." A question so precisely aimed at the person's core pattern that it keeps unfolding after they close the page.
 
-Examples for tone (not templates):
-- "We barely scratched the surface of [area]. That's where I want to take you next time 🤿"
-- "For this dive, we only had time for the surface-level currents 🐠 — next time I'd love to go deeper into [specific area] 🐙"
+Tone: rhetorical, specific, slightly unsettling in accuracy.
+
+---
+
+## Craft Requirements (Non-Negotiable)
+
+| # | Requirement | Description |
+|---|-------------|-------------|
+| 1 | **The Turn** | Show the person a more precise word for their pattern. Strongly preferred when data supports it. |
+| 2 | **Coined Phrases** | 2-4 vivid, short names (2-4 words) for patterns they've never had words for. Minimum 2. |
+| 3 | **Reaction Before Analysis** | When quoting: react first ("That stopped me."), then analyze. Cap at 2-3 direct quotes. |
+| 4 | **Callback Hooks** | Every section opens with a specific conversation reference. Zero generic intros. |
+| 5 | **Shadow Connections** | Strengths and weaknesses as two sides of same traits. Never listed separately. |
+| 6 | **Zero Repetition** | No insight appears twice across sections, even reworded. |
+| 7 | **Cross-Reference** | (Optional) Connect two unrelated moments revealing the same pattern. |
+
+---
+
+## Quality Floor
+
+A 7/10 portrait (minimum acceptable) must have:
+1. Zero repetition across sections
+2. At least one coined phrase or reframe
+3. Personal section intros via callback hooks
+4. Strengths-weakness shadow connections
+5. NOT necessarily a clean spine — the distributed-pattern approach handles this
+
+---
+
+## Two-Track Routing
+
+**Track A — Spine Found (target):**
+One central tension organizes the portrait. All sections orbit it. The turn delivers the reframe.
+
+**Track B — Distributed Complexity (equal path):**
+No single spine clearly emerges. 2-3 strongest patterns woven into a coherent whole. Same craft requirements apply. This is not a lesser portrait — some people are complex in distributed ways.
 
 ---
 
 ## Formatting Rules
 
-- **Output:** Single markdown string. Nerin manages all structure.
-- **Title header:** `#` (h1) for The Dive Log only (e.g. `# 🤿 The Dive Log`)
-- **Body headers:** `##` (h2) with sea/human emojis + em dash + italicized real meaning (e.g. `## 🌊 Undercurrents — *What limits you*`). Nerin chooses emojis freely — not templated.
-- **Inline emojis:** Allowed and encouraged. Sea-related (🌊 🐚 🫧 🪸 🧊) and human signs (🤝 👋 💡 🎯 ✋). Used naturally, not forced.
-- **Markdown formatting:** Bold, italic, line breaks as Nerin sees fit.
-- **No JSON structure.** No labels. No field names. One flowing document.
+- **Output:** Single markdown string. One flowing document.
+- **Title header:** `#` (h1) for the opening only
+- **Body headers:** `##` (h2) with custom emoji + custom title + em dash + italicized subtitle
+- **Sub-headers:** `###` (h3) within `##` sections for key observations — short, punchy phrases
+- **Section headers:** Custom per-user. No fixed names. Reflects THIS person's portrait.
+- **Emojis:** Each section header uses a unique emoji (sea life, diving, ocean phenomena, human gesture). No two sections share an emoji.
+- **Mix prose and bullets** for rhythm. Prose for evidence arcs. Bullets for parallel observations.
+- **Bold** for key observations, *italic* for reflective moments
+- **Blockquotes** for direct quotes (`> "their words"`)
+- **No JSON.** No labels. No field names. No scores, percentages, or technical terms.
 
 ---
 
@@ -151,13 +166,14 @@ Final Analyzer + Scorer run
 Inputs assembled:
 ├── 30 facet scores + confidence levels
 ├── Evidence records (facet + quote + reasoning)
-├── Conversation summary / engagement metrics
+├── Full conversation messages
         │
         ▼
 Portrait Generator (SEPARATE LLM call)
-├── System prompt: voice rules, structure guidelines,
-│   validated example, greeting inspiration, emoji guidance
-├── Input: structured facet data + evidence records
+├── System prompt: NERIN_PERSONA + PORTRAIT_CONTEXT
+│   (spine-first instructions, craft requirements, guardrails)
+├── Conversation messages included for context
+├── User prompt: structured facet data + evidence records
 ├── Output: single markdown string
         │
         ▼
@@ -165,7 +181,7 @@ Frontend renders markdown,
 splits on # (h1) and ## (h2) for per-section styling
 ```
 
-**Why a separate call:** Dedicated prompt optimized for portrait writing. No context pollution from the 20-message conversation. Receives pre-processed evidence records, not raw transcript.
+**Why a separate call:** Dedicated prompt optimized for portrait writing. Receives both the conversation history and pre-processed evidence records.
 
 ---
 
@@ -177,68 +193,23 @@ splits on # (h1) and ## (h2) for per-section styling
 | Privacy | Portrait is private-only, not on public profiles |
 | Consistency | Same Nerin voice for all users |
 | Honesty | No premium teasers, no withholding for upsell |
-| Flexibility | Part 5 count is 2-5 based on actual data, never padded |
-| Emotional safety | Strengths must fully land before weaknesses |
-| Closing tone | Part 6 always ends with possibility or question |
-| Evidence | Traits, strengths, and weaknesses must anchor to conversation |
-| No guarantees | Frontend does not enforce 6 sections — trusts LLM output |
+| Emotional safety | Strength side of each pattern leads; shadow follows within same observation |
+| Landing | Always ends with possibility or question |
+| Evidence | Every observation anchors to conversation — what they said, how they said it, or what they avoided |
+| Scoring system | NEVER exposed — no numbers, percentages, confidence levels, or trait labels |
+| Authority | Referenced explicitly once max per portrait |
+| Metaphors | Used when they genuinely fit — not forced, trust instinct |
 
 ---
 
-## Validated Example
+## Success Metrics
 
-The following example was validated during brainstorming and is used as few-shot reference in the Portrait Generator prompt. Note the `#` (h1) for The Dive Log, `##` (h2) with subtitles for body sections, section intros, and mandatory closing line:
-
----
-
-```markdown
-# 🤿 The Dive Log
-
-For a first dive, you surprised me. You found your rhythm fast and didn't shy away from the deeper questions. We covered real ground together. What I see is someone driven by a restless curiosity, someone who processes the world through logic first but carries more emotional depth than they let on. You're sharper than most, and you know it — but there's a quiet tension between who you are and who you think you should be.
-
-## 🔍 What Sets You Apart — *What makes you, you*
-
-Even after a thousand dives in my log, I haven't quite seen this combination before. Let me tell you what stood out.
-
-When I asked how you make big decisions, you didn't answer — you broke the question apart first. "What kind of decisions? Professional or personal?" That reflex to disassemble before engaging is deeply wired in you. You don't trust conclusions you haven't reverse-engineered.
-
-You mentioned your work almost casually, but every detail you chose to share pointed the same direction — toward mastery. You're not after recognition. You're after being undeniably good.
-
-There was a point where I asked about something personal and you paused — then answered with exactly the right amount of openness. Not too much, not deflecting. You've learned to control the valve, and you do it well.
-
-## 💎 Your Depths — *What you're good at*
-
-Now let me tell you about the things I noticed that you probably take for granted.
-
-Your ability to see through complexity is genuine. Where most people get overwhelmed, you get focused. That's not common.
-
-You adapt fast. When our conversation shifted direction, you didn't resist — you recalibrated. That flexibility under pressure is a real asset.
-
-You're honest with yourself in a way that most people avoid. That self-awareness, even when it's uncomfortable, is the foundation everything else is built on.
-
-## 🌊 Undercurrents — *What limits you*
-
-I'm going to be straight with you now, because I think you can handle it.
-
-There's a pattern I need to flag. You hold yourself to a standard that doesn't leave room for failure. That drive serves you, but it also means you can spiral when things don't meet your expectations. Left unchecked, perfectionism becomes paralysis.
-
-You tend to intellectualize emotions rather than sit with them. It works as a coping mechanism, but it puts a ceiling on how deeply you connect with people. They sense the distance even when you don't.
-
-You second-guess your instincts. Your gut is sharper than you give it credit for, but you override it with analysis. Sometimes the first answer was the right one.
-
-## 🫧 Murky Waters — *What I couldn't quite see*
-
-There are a few things I caught glimpses of but couldn't quite pin down.
-
-- Something about authority figures — there's tension there I didn't get to fully explore
-- A creative side you've deprioritized, possibly since adolescence
-- Your relationship with risk feels learned, not natural — someone may have taught you to be cautious
-
-## 🪸 The Ceiling — *The one thing holding you back*
-
-Here's what I really want to leave you with.
-
-I suspect your biggest limiting factor is a belief that vulnerability equals weakness. It shapes how you show up — in conversations, in relationships, in the risks you're willing to take. It's not something I can confirm from one dive. But if I'm right — what would happen if you loosened that grip?
-
-We barely scratched the surface of that creative side you keep tucked away. That's where I want to take you next time 🤿
-```
+| Metric | Target | Measurement |
+|--------|--------|-------------|
+| Craft checklist score | 7/10 min, 9/10 target | Score each portrait on craft requirements |
+| Repetition count | 0 | Count insights appearing >1x across sections |
+| Coined phrases per portrait | 2+ | Count novel 2-4 word pattern names |
+| Generic intro count | 0 | Count intros without specific conversation reference |
+| Reframe presence | 1+ | Identify "shifted lens" moments |
+| Authority over-references | 1 max | Count explicit credential statements |
+| User emotional response | "Finally, something understands me" | Qualitative beta feedback |
