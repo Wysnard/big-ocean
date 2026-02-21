@@ -52,7 +52,9 @@ const configSchema = Config.all({
 	analyzerTemperature: Config.number("ANALYZER_TEMPERATURE").pipe(Config.withDefault(0)),
 
 	// Portrait generator configuration
-	portraitModelId: Config.string("PORTRAIT_MODEL_ID").pipe(Config.withDefault("claude-sonnet-4-6")),
+	portraitModelId: Config.string("PORTRAIT_MODEL_ID").pipe(
+		Config.withDefault("claude-haiku-4-5-20251001"),
+	),
 	portraitMaxTokens: Config.number("PORTRAIT_MAX_TOKENS").pipe(Config.withDefault(8000)),
 	portraitTemperature: Config.number("PORTRAIT_TEMPERATURE").pipe(Config.withDefault(0.7)),
 

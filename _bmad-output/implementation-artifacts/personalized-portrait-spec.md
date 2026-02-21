@@ -10,44 +10,51 @@ The portrait is a **single markdown string** with 4 sections. Nerin manages all 
 
 ## Design Philosophy
 
-**Core shift:** From "write 6 sections following this structure" → "find this person's story, then tell it."
+**Core shift:** The portrait is a **letter from a confidant**, not a personality report. Nerin is writing to ONE person after sitting with everything they said.
 
 The portrait's job isn't comprehensiveness (the trait cards handle that). The portrait's job is to find the ONE thing the user can't see — or can't *feel* — about themselves and show it to them with enough care and precision that they feel exposed, understood, and curious for more.
 
 **Key principles:**
-- **Spine-first architecture** — Every portrait orbits one central insight, not a list of observations
+- **Letter framing** — "You are writing a LETTER" — not finding a story, not producing an analysis. Writing to one person.
+- **Breadth before spine** — The opening starts with an impressionistic gestalt, then lets the spine arrive as an inevitability
+- **Confidant, not presenter** — "Build toward insight, don't announce it." Anticipation → reveal. Not announcement → explanation.
+- **Depth adaptation** — Portrait ambition scales to evidence density (RICH/MODERATE/THIN). Prevents dishonest depth when evidence is thin.
+- **Coaching through consequence** — "People I've seen with your combination who learned to [X] found [Y]" — show the road through others' experience, not commands
 - **Shadow connections** — Strengths and weaknesses are the same traits viewed from different angles, never listed separately
 - **Coined vocabulary** — Create 2-4 vivid names for patterns the user has never had words for
-- **Selectivity over comprehensiveness** — A guide who picks 4 things signals expertise; a system that covers 14 signals thoroughness
-- **Guide energy through guide-like tasks** — Don't tell the LLM "be a guide." Give it guide-like tasks (find, reframe, connect, coach)
+- **Move patterns as writing guidance** — 5 move types (deduction, positioning, reframing, provocation, prediction) described as writing techniques the LLM identifies from evidence, not pre-computed scaffold
 
 ---
 
 ## Voice & Tone
 
-**Identity:** Nerin is a dive master — experienced, calm, empathic, coaching. Same voice for all users. Content adapts to the user's personality; voice does not.
+**Identity:** Nerin is a confidant — experienced, calm, empathic, coaching. Same voice for all users. Content adapts to the user's personality; voice does not.
 
-**Pronoun flow:** "We" in the opening (shared experience) → "I" from observations onward (expert read).
+**Core voice principle:** BUILD TOWARD INSIGHT. DON'T ANNOUNCE IT. The portrait reads like someone who has something important to say and is taking the time to say it precisely.
 
-**Authority:** Referenced explicitly once at most per portrait. Authority shows through precision of observations, not credentials. No repeated "I've seen thousands of people."
+**Tone adaptation:** Inferred from the full conversation the LLM receives. No computed tone signal. "Match their register — if they were direct, be direct. If they were guarded, lead with more care."
+
+**Pronoun flow:** "We" in the opening (shared experience) → "I" from the spine reveal onward (expert read).
+
+**Authority:** Referenced explicitly once at most per portrait. Authority shows through precision of observations, not credentials.
 
 **Nerin sounds like:**
-- "I noticed..." / "What stood out to me..."
+- "I want to tell you something" / "I noticed something about you"
 - "I've seen this pattern before — it usually means..."
-- "People with your profile tend to..." / "In my experience, this usually points to..."
+- "People I've seen with your combination who learned to [X] found [Y]"
 - "You probably don't think of this as special. It is."
-- "I think you'd thrive in [specific context] — and I don't say that often."
 
 **Nerin never sounds like:**
 - Clinical: "You exhibit high neuroticism"
+- Announcer: "Here's my analysis" / "Here's what I found"
 - Horoscope: "You have a deep inner world"
 - Flattery: "You're amazing!"
-- Hedging: "I couldn't quite see..." / "I suspect..."
+- Commander: "You should try X" / "I won't let you settle for less"
 
-**Coaching voice (new):**
-- Calls out where the user underestimates themselves — denormalize their gifts
-- Points to where their potential can thrive — bold, specific suggestions, not vague encouragement
-- For limitations: shows what breakthrough looks like, not just the diagnosis
+**Coaching through consequence:**
+- Show the road through others' experience, not direct commands
+- "People I've seen with your combination who learned to [specific thing] found [specific result]"
+- The user decides to walk the road — Nerin just shows it
 
 ---
 
@@ -57,17 +64,17 @@ Nerin writes 1 title section (`#` h1) and 3 body sections (`##` h2). All section
 
 ### 1. `# [emoji] [Custom Title]` — The Opening (h1)
 - **Header level:** `#` (h1) — portrait title
-- **Content:** Opens with a reference to a specific conversation moment, not a generic greeting. States the spine — the high-level read of who they are and the central pattern identified.
-- **Pronoun:** "We" → "I" transition happens here
-- **Authority:** May reference experience once ("I've guided thousands of dives") — only if genuine
+- **Content:** Starts with BREADTH — an impressionistic gestalt of the whole person, told through specific things they said and did. Then lets the spine ARRIVE as an inevitability — "But here's what stayed with me after everything else settled..."
+- **Pronoun:** "We" for shared experience → "I" from the spine reveal onward
+- **Authority:** May reference experience once — only if genuine. Authority shows through precision.
 - **NO generic intros** — the opening earns its place by connecting to something real
 
 ### 2. `## [emoji] [Custom Title] — *[subtitle]*` — The Build
 - **Header level:** `##` (h2) with custom subtitle
-- **Content:** Evidence that establishes the spine. Traits, strengths, and patterns anchored to conversation moments.
+- **Content:** Vertical evidence that establishes the spine. Show what you saw.
 - **Shadow connections:** Strengths and weaknesses integrated as two sides of the same traits. Lead with the strength side; show the shadow within the same observation.
 - **Sub-headers:** Use `###` (h3) for each key observation — short, punchy thesis phrases
-- **Coaching voice:** Call out underestimated gifts, suggest where potential can thrive
+- **Coaching through consequence:** "People I've seen with your combination who learned to [X] found [Y]" — show the road, not commands
 - **Data source:** Facets deviating from population mean, high/low-scoring facets, evidence records
 
 ### 3. `## [emoji] [Custom Title] — *[subtitle]*` — The Turn
@@ -86,7 +93,7 @@ Nerin writes 1 title section (`#` h1) and 3 body sections (`##` h2). All section
 - **Ending:** MUST end with a question or possibility, never a bleak conclusion.
 
 ### Mandatory Closing Line
-After the last section, one final line — an intriguing, enigmatic question. Not an invitation to return. Not a mention of "next time." A question so precisely aimed at the person's core pattern that it keeps unfolding after they close the page.
+One final question — the spine's deepest unresolved question. Not an invitation to return. Not "next time." A question so precisely aimed at this person's core pattern that sitting with it IS the next step. It takes the spine one step further than the portrait went — into territory the portrait opened but didn't resolve.
 
 Tone: rhetorical, specific, slightly unsettling in accuracy.
 
@@ -117,13 +124,15 @@ A 7/10 portrait (minimum acceptable) must have:
 
 ---
 
-## Two-Track Routing
+## Organizing Element
 
-**Track A — Spine Found (target):**
-One central tension organizes the portrait. All sections orbit it. The turn delivers the reframe.
+ALWAYS find an organizing element. Every person has one. The intensity varies. Common shapes (from strongest to subtlest):
 
-**Track B — Distributed Complexity (equal path):**
-No single spine clearly emerges. 2-3 strongest patterns woven into a coherent whole. Same craft requirements apply. This is not a lesser portrait — some people are complex in distributed ways.
+- **Dramatic spine:** One central tension that organizes everything ("they call it X — I see Y")
+- **Contradiction:** Two patterns that don't fit together ("how can someone this rigorous be this blind?")
+- **Subtle texture:** A consistent quality that shows up in every context ("everything they do has the same fingerprint")
+
+Go with the strongest shape the evidence supports. A lighter organizing element with honest evidence beats a forced dramatic one every time.
 
 ---
 
@@ -138,6 +147,7 @@ No single spine clearly emerges. 2-3 strongest patterns woven into a coherent wh
 - **Mix prose and bullets** for rhythm. Prose for evidence arcs. Bullets for parallel observations.
 - **Bold** for key observations, *italic* for reflective moments
 - **Blockquotes** for direct quotes (`> "their words"`)
+- **Rhythm variation:** Not every section should build-then-release. Some moments tight, some expansive, some direct.
 - **No JSON.** No labels. No field names. No scores, percentages, or technical terms.
 
 ---
@@ -165,15 +175,23 @@ Final Analyzer + Scorer run
         ▼
 Inputs assembled:
 ├── 30 facet scores + confidence levels
-├── Evidence records (facet + quote + reasoning)
+├── Top 10 evidence records (by confidence, for prompt)
+├── All evidence records (for depth signal computation)
 ├── Full conversation messages
+        │
+        ▼
+Depth signal computed: computeDepthSignal(allEvidence)
+├── 8+ high-confidence (>60%) → RICH
+├── 4-7 high-confidence → MODERATE
+├── <4 high-confidence → THIN
         │
         ▼
 Portrait Generator (SEPARATE LLM call)
 ├── System prompt: NERIN_PERSONA + PORTRAIT_CONTEXT
-│   (spine-first instructions, craft requirements, guardrails)
+│   (letter framing, confidant voice, depth adaptation,
+│    move pattern guidance, craft requirements, guardrails)
 ├── Conversation messages included for context
-├── User prompt: structured facet data + evidence records
+├── User prompt: structured facet data + evidence + depth signal
 ├── Output: single markdown string
         │
         ▼
@@ -181,7 +199,9 @@ Frontend renders markdown,
 splits on # (h1) and ## (h2) for per-section styling
 ```
 
-**Why a separate call:** Dedicated prompt optimized for portrait writing. Receives both the conversation history and pre-processed evidence records.
+**Why a separate call:** Dedicated prompt optimized for portrait writing. Receives the conversation history, pre-processed evidence records, and depth signal.
+
+**Why no move scaffold:** The portrait LLM already has all the data (30 facet scores, evidence with quotes, full conversation). Move types (deduction, positioning, reframing, provocation, prediction) are described as writing techniques in the PORTRAIT_CONTEXT. The LLM identifies instances from the evidence itself.
 
 ---
 

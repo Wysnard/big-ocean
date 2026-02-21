@@ -715,9 +715,8 @@ describe("getResults Use Case", () => {
 	describe("Portrait generation", () => {
 		it("should generate portrait on first call when threshold met and personalDescription is null", async () => {
 			const PORTRAIT_TEXT = "You are a thoughtful person...";
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
-				Effect.succeed(createUniformEvidence(15, 80)),
-			);
+			const uniformEvidence = createUniformEvidence(15, 80);
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed(uniformEvidence));
 
 			// 12 user messages — at threshold
 			mockMessageRepo.getMessages.mockImplementation(() =>
@@ -740,6 +739,12 @@ describe("getResults Use Case", () => {
 
 			expect(result.personalDescription).toBe(PORTRAIT_TEXT);
 			expect(mockPortraitGenerator.generatePortrait).toHaveBeenCalledTimes(1);
+			expect(mockPortraitGenerator.generatePortrait).toHaveBeenCalledWith(
+				expect.objectContaining({
+					sessionId: TEST_SESSION_ID,
+					allEvidence: uniformEvidence,
+				}),
+			);
 			expect(mockSessionRepo.updateSession).toHaveBeenCalledWith(TEST_SESSION_ID, {
 				personalDescription: PORTRAIT_TEXT,
 			});

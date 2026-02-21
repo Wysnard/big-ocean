@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-02-21 (sprint-planning: Story 7.17 → done)
+# Generated: 2026-02-21
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -51,9 +51,8 @@ development_status:
   epic-1-retrospective: optional
 
   # EPIC 2: Assessment Backend Services
-  # All original stories completed. Story 2.12 added via correct-course (2026-02-18).
-  # Design thinking 2026-02-20 identifies Priority 1 (chat foundation) and Priority 3 (greeting)
-  # as new work in this domain — stories to be created via create-story workflow.
+  # All original stories completed. Stories 2.12, 2.13 added via correct-course/create-story.
+  # Design thinking 2026-02-20 identifies pending work: Priority 1 (chat foundation), Priority 3 (greeting).
   epic-2: in-progress
   2-1-session-management-and-persistence: done
   2-2-nerin-agent-setup-and-conversational-quality: done
@@ -97,7 +96,6 @@ development_status:
 
   # EPIC 6: Privacy & Data Management (PHASE 2 - EU Launch)
   # Moved to Phase 2 on 2026-02-10 to accelerate Phase 1 MVP
-  # Rationale: US-only launch with basic privacy foundation (TLS, Better Auth, default-private profiles)
   # Phase 2 will add full GDPR compliance (encryption at rest, data deletion/portability, audit logging)
   epic-6: backlog
   6-1-server-side-encryption-at-rest-and-tls-in-transit: backlog
@@ -129,19 +127,16 @@ development_status:
   epic-7-retrospective: done
 
   # EPIC 8: Results Page Content Enrichment
-  # Phase 1 (Stories 8.1-8.4, 8.6): Static descriptions + layout redesign + personalized portrait
+  # Phase 1 (Stories 8.1-8.4, 8.6): Static descriptions + layout redesign + personalized portrait — all done
   # Phase 2 (Story 8.5): Portrait regeneration for paid tier (DEFERRED — requires tier infrastructure)
-  # Story 8.6 added via correct-course (2026-02-16): Results page redesign to Mockup 7 Detail Zone
-  # Story 8.4 rework via correct-course #3 (2026-02-16): Portrait redesign — Nerin dive-master voice, markdown output
-  # Design thinking 2026-02-20 identifies Priority 2 (portrait) as new work:
-  #   - Revised PORTRAIT_CONTEXT, move scaffold computation, MoveScaffold interface
-  #   - Stories to be created via create-story workflow
+  # Design thinking 2026-02-20: Story 8.7 (portrait rework) created from Priority 2
   epic-8: in-progress
   8-1-expand-archetype-descriptions-to-4-5-sentences: done
   8-2-add-level-specific-trait-descriptions: done
   8-3-add-level-specific-facet-descriptions: done
   8-6-results-page-layout-redesign-mockup-7-detail-zone: done
   8-4-pre-generate-personalized-portrait-at-free-tier-message-threshold: done
+  8-7-portrait-prompt-rework: done
   8-5-regenerate-personalized-portrait-paid-tier: backlog
   epic-8-retrospective: optional
 
@@ -158,7 +153,7 @@ development_status:
 #     edge case handling, emoji palette, anti-patterns
 #   Files: nerin-persona.ts, nerin-system-prompt.ts + tests
 #   Suggested: Epic 2, Story 2.13
-#   Test: A/B prompt comparison (3 scenarios, score ≥10/14), edge cases, limits
+#   Status: DONE (Story 2.13 completed)
 #
 # PRIORITY 2 — Portrait (Prototypes D, J):
 #   Scope: Revised PORTRAIT_CONTEXT (letter framing, confidant voice, 4-section
@@ -166,6 +161,7 @@ development_status:
 #     MoveScaffold interface, depth/tone signals, finalization integration
 #   Files: portrait-generator.claude.repository.ts, get-results.use-case.ts, domain types
 #   Suggested: Epic 8, Story 8.7
+#   Status: STORY CREATED (8-7-portrait-prompt-rework)
 #   Test: A/B portrait comparison (3 runs, score ≥16/23)
 #
 # PRIORITY 3 — Greeting (Prototype K):

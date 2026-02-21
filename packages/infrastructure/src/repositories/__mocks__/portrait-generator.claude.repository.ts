@@ -50,6 +50,7 @@ What would happen if the most prepared person in the room decided, just once, th
 export const PortraitGeneratorClaudeRepositoryLive = Layer.succeed(
 	PortraitGeneratorRepository,
 	PortraitGeneratorRepository.of({
-		generatePortrait: (_input) => Effect.succeed(MOCK_PORTRAIT),
+		generatePortrait: (_input: import("@workspace/domain").PortraitGenerationInput) =>
+			Effect.succeed(MOCK_PORTRAIT),
 	}),
 );

@@ -166,16 +166,17 @@ export const getResults = (input: GetResultsInput) =>
 		}));
 
 		// 10. Portrait generation — lazy, one-time per session
-		let personalDescription: string | null = session.personalDescription ?? null;
+		// Treat empty strings as null so portrait re-triggers on next visit
+		let personalDescription: string | null = session.personalDescription?.trim()
+			? session.personalDescription
+			: null;
 
 		if (personalDescription === null && userMessageCount >= config.freeTierMessageThreshold) {
-			const topEvidence = [...evidence].sort((a, b) => b.confidence - a.confidence).slice(0, 10);
-
 			personalDescription = yield* portraitGenerator
 				.generatePortrait({
 					sessionId: input.sessionId,
 					facetScoresMap,
-					topEvidence,
+					allEvidence: evidence,
 					archetypeName: archetype.name,
 					archetypeDescription: archetype.description,
 					oceanCode5,

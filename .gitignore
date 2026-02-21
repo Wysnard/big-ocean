@@ -39,3 +39,5 @@ storybook-static
 
 .nitro
 .output
+_llm-test-output/
+_eval-output/

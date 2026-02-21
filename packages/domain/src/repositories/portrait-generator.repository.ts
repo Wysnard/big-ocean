@@ -10,7 +10,7 @@ import type { DomainMessage } from "../types/message";
 export interface PortraitGenerationInput {
 	readonly sessionId: string;
 	readonly facetScoresMap: FacetScoresMap;
-	readonly topEvidence: ReadonlyArray<SavedFacetEvidence>;
+	readonly allEvidence: ReadonlyArray<SavedFacetEvidence>;
 	readonly archetypeName: string;
 	readonly archetypeDescription: string;
 	readonly oceanCode5: string;
