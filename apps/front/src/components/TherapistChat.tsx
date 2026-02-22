@@ -1,4 +1,3 @@
-import { Link, useNavigate } from "@tanstack/react-router";
 import { ASSESSMENT_MESSAGE_MAX_LENGTH } from "@workspace/domain";
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import { Button } from "@workspace/ui/components/button";
@@ -9,8 +8,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import { getPlaceholder } from "@/constants/chat-placeholders";
 import { useTherapistChat } from "@/hooks/useTherapistChat";
+import { ChatAuthGate } from "./ChatAuthGate";
 import { DepthMeter } from "./chat/DepthMeter";
 import { ErrorBanner } from "./ErrorBanner";
+import { PortraitWaitScreen } from "./PortraitWaitScreen";
 import { GeometricOcean } from "./sea-life/GeometricOcean";
 
 interface TherapistChatProps {
@@ -18,6 +19,8 @@ interface TherapistChatProps {
 	onSessionError?: (error: { type: "not-found" | "session"; isResumeError: boolean }) => void;
 	userName?: string | null;
 	userImage?: string | null;
+	isAuthenticated?: boolean;
+	onPortraitReveal?: () => void;
 	highlightMessageId?: string;
 	highlightQuote?: string;
 	highlightStart?: number;
@@ -128,6 +131,8 @@ export function TherapistChat({
 	onSessionError,
 	userName,
 	userImage,
+	isAuthenticated = false,
+	onPortraitReveal,
 	highlightMessageId,
 	highlightQuote: _highlightQuote,
 	highlightStart,
@@ -147,12 +152,11 @@ export function TherapistChat({
 		isResuming,
 		resumeError,
 		isResumeSessionNotFound,
-		isConfidenceReady,
 		freeTierMessageThreshold,
-		hasShownCelebration,
-		setHasShownCelebration,
+		// Story 7.18: Farewell transition state
+		isFarewellReceived,
+		portraitWaitMinMs,
 	} = useTherapistChat(sessionId);
-	const navigate = useNavigate();
 
 	// Notify parent (route) of session errors for auth-based redirect decisions
 	useEffect(() => {
@@ -256,12 +260,22 @@ export function TherapistChat({
 		}
 	}, [highlightMessageId, messages.length]);
 
-	// Determine celebration input placeholder
+	// Input placeholder — fades away on farewell/completion, so this is mostly cosmetic
 	const inputPlaceholder = useMemo(() => {
-		if (isCompleted) return "Keep exploring with Premium — unlock deeper conversations";
-		if (isConfidenceReady && !hasShownCelebration) return "Keep chatting to add more depth...";
+		if (isCompleted || isFarewellReceived) return "";
 		return placeholder;
-	}, [isCompleted, isConfidenceReady, hasShownCelebration, placeholder]);
+	}, [isCompleted, isFarewellReceived, placeholder]);
+
+	// Story 7.18: Show wait screen when farewell received and authenticated
+	if (isFarewellReceived && isAuthenticated) {
+		return (
+			<PortraitWaitScreen
+				sessionId={sessionId}
+				portraitWaitMinMs={portraitWaitMinMs}
+				onRevealClick={onPortraitReveal ?? (() => {})}
+			/>
+		);
+	}
 
 	return (
 		<ChatContent
@@ -269,9 +283,10 @@ export function TherapistChat({
 			messages={messages}
 			isLoading={isLoading}
 			isCompleted={isCompleted}
+			isFarewellReceived={isFarewellReceived}
+			isAuthenticated={isAuthenticated}
 			isResuming={isResuming}
 			resumeError={resumeError}
-			isConfidenceReady={isConfidenceReady}
 			userName={userName}
 			userImage={userImage}
 			depthProgress={Math.min(userMessageCount / (freeTierMessageThreshold || 27), 1)}
@@ -279,8 +294,6 @@ export function TherapistChat({
 			errorType={errorType}
 			clearError={clearError}
 			retryLastMessage={retryLastMessage}
-			hasShownCelebration={hasShownCelebration}
-			setHasShownCelebration={setHasShownCelebration}
 			shownMilestones={shownMilestones}
 			highlightMessageId={highlightMessageId}
 			highlightStart={highlightStart}
@@ -290,7 +303,6 @@ export function TherapistChat({
 			messagesEndRef={messagesEndRef}
 			onSend={sendMessage}
 			oceanPulse={oceanPulse}
-			navigate={navigate}
 			onInputFocus={() => setPlaceholder(getPlaceholder(userMessageCount, freeTierMessageThreshold))}
 		/>
 	);
@@ -407,9 +419,10 @@ function ChatContent({
 	messages,
 	isLoading,
 	isCompleted,
+	isFarewellReceived,
+	isAuthenticated,
 	isResuming,
 	resumeError,
-	isConfidenceReady,
 	userName,
 	userImage,
 	depthProgress,
@@ -417,8 +430,6 @@ function ChatContent({
 	errorType,
 	clearError,
 	retryLastMessage,
-	hasShownCelebration,
-	setHasShownCelebration,
 	shownMilestones,
 	highlightMessageId,
 	highlightStart,
@@ -428,7 +439,6 @@ function ChatContent({
 	messagesEndRef,
 	onSend,
 	oceanPulse,
-	navigate,
 	onInputFocus,
 }: {
 	sessionId: string;
@@ -440,9 +450,10 @@ function ChatContent({
 	}>;
 	isLoading: boolean;
 	isCompleted: boolean;
+	isFarewellReceived: boolean;
+	isAuthenticated: boolean;
 	isResuming: boolean;
 	resumeError: string | null;
-	isConfidenceReady: boolean;
 	userName?: string | null;
 	userImage?: string | null;
 	depthProgress: number;
@@ -450,8 +461,6 @@ function ChatContent({
 	errorType: string | null;
 	clearError: () => void;
 	retryLastMessage: () => void;
-	hasShownCelebration: boolean;
-	setHasShownCelebration: (v: boolean) => void;
 	shownMilestones: Map<number, number>;
 	highlightMessageId?: string;
 	highlightStart?: number;
@@ -461,7 +470,6 @@ function ChatContent({
 	messagesEndRef: React.RefObject<HTMLDivElement | null>;
 	onSend: (message: string) => Promise<void>;
 	oceanPulse: boolean;
-	navigate: ReturnType<typeof useNavigate>;
 	onInputFocus: () => void;
 }) {
 	return (
@@ -486,16 +494,6 @@ function ChatContent({
 						</Avatar>
 						<span className="text-lg font-heading font-semibold text-foreground">Nerin</span>
 					</div>
-					{isConfidenceReady && (
-						<Link
-							to="/results/$assessmentSessionId"
-							params={{ assessmentSessionId: sessionId }}
-							className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-							data-testid="view-results-header-link"
-						>
-							View Your Results
-						</Link>
-					)}
 				</div>
 
 				{/* Main Content — scrollable area, input bar is outside this container */}
@@ -606,44 +604,20 @@ function ChatContent({
 									</div>
 								))}
 
-							{/* In-chat celebration card (replaces modal overlay) */}
-							{isConfidenceReady && !hasShownCelebration && (
-								<div
-									data-slot="celebration-card"
-									className="relative z-[1] w-full py-2 mb-9 motion-safe:animate-fade-in-up"
-								>
-									<div className="bg-card border-2 border-primary rounded-2xl p-6 text-center shadow-lg">
-										<h2 className="text-xl font-heading font-bold text-foreground">
-											Your Personality Profile is Ready!
-										</h2>
-										<p className="text-muted-foreground mt-2">Your assessment is complete</p>
-										<div className="mt-4 flex gap-3 justify-center">
-											<Button
-												onClick={() =>
-													navigate({
-														to: "/results/$assessmentSessionId",
-														params: { assessmentSessionId: sessionId },
-													})
-												}
-												data-testid="view-results-btn"
-											>
-												View Results
-											</Button>
-											<Button
-												variant="outline"
-												disabled
-												className="opacity-50 cursor-not-allowed"
-												title="Available in Premium tier"
-											>
-												Keep Exploring
-											</Button>
-										</div>
-									</div>
-								</div>
-							)}
-
 							{/* Typing indicator while loading */}
 							{isLoading && <TypingIndicator />}
+
+							{/* Story 7.18: Auth gate for anonymous users after farewell */}
+							{isFarewellReceived && !isAuthenticated && (
+								<ChatAuthGate
+									sessionId={sessionId}
+									onAuthSuccess={() => {
+										/* No action needed here — Better Auth's useSession() reactively
+										   updates isAuthenticated in the parent route, causing TherapistChat
+										   to re-render with isAuthenticated=true and show PortraitWaitScreen. */
+									}}
+								/>
+							)}
 
 							<div ref={messagesEndRef} />
 						</div>
@@ -660,14 +634,21 @@ function ChatContent({
 					)}
 				</div>
 
-				{/* Input Area — isolated component to prevent message list re-renders on typing */}
-				<ChatInputBar
-					onSend={onSend}
-					isLoading={isLoading}
-					isCompleted={isCompleted}
-					placeholder={inputPlaceholder}
-					onFocus={onInputFocus}
-				/>
+				{/* Input Area — fades on farewell / completion (Story 7.18) */}
+				<div
+					className={cn(
+						(isFarewellReceived || isCompleted) && "opacity-0 pointer-events-none",
+						isFarewellReceived && "motion-safe:transition-opacity motion-safe:duration-300",
+					)}
+				>
+					<ChatInputBar
+						onSend={onSend}
+						isLoading={isLoading}
+						isCompleted={isCompleted}
+						placeholder={inputPlaceholder}
+						onFocus={onInputFocus}
+					/>
+				</div>
 			</div>
 		</>
 	);

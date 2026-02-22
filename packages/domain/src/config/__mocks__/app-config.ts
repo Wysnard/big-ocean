@@ -35,6 +35,7 @@ export const mockAppConfig: AppConfigService = {
 	nerinMaxTokens: 1024,
 	nerinTemperature: 0.7,
 	freeTierMessageThreshold: 25,
+	portraitWaitMinMs: 2000,
 	shareMinConfidence: 70,
 };
 

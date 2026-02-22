@@ -13,6 +13,7 @@
  * Story 2.9: Confidence computed on-demand from FacetEvidenceRepository.
  * Story 2.11: Lean response — confidence removed from send-message output.
  *             Evidence reads moved to router node (offset steering).
+ * Story 7.18: Final turn detection — farewell message at threshold, isFinalTurn flag.
  */
 
 import {
@@ -22,6 +23,7 @@ import {
 	type BudgetPausedError,
 	CostGuardRepository,
 	LoggerRepository,
+	NERIN_FAREWELL_MESSAGES,
 	OrchestratorRepository,
 	type ProcessMessageOutput,
 } from "@workspace/domain";
@@ -168,6 +170,7 @@ describe("sendMessage Use Case", () => {
 				nerinTemperature: 0.7,
 				dailyCostLimit: 75,
 				freeTierMessageThreshold: 25,
+				portraitWaitMinMs: 2000,
 				shareMinConfidence: 70,
 			}),
 			Layer.succeed(AssessmentSessionRepository, mockAssessmentSessionRepo),
@@ -188,9 +191,10 @@ describe("sendMessage Use Case", () => {
 
 			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
 
-			// Story 2.11: Lean response — only response string, no confidence
+			// Story 7.18: includes isFinalTurn flag
 			expect(result).toEqual({
 				response: mockOrchestratorResponse.nerinResponse,
+				isFinalTurn: false,
 			});
 		});
 
@@ -622,6 +626,196 @@ describe("sendMessage Use Case", () => {
 				"anonymous",
 				expect.any(Number),
 			);
+		});
+	});
+
+	describe("Final turn detection (Story 7.18)", () => {
+		/**
+		 * Helper: create N user messages + some assistant messages to simulate
+		 * a conversation with exactly `userCount` user messages.
+		 */
+		const createMessagesWithUserCount = (userCount: number) => {
+			const messages = [];
+			for (let i = 0; i < userCount; i++) {
+				messages.push({
+					id: `msg_user_${i}`,
+					sessionId: "session_test_123",
+					role: "user" as const,
+					content: `User message ${i + 1}`,
+					createdAt: new Date(),
+				});
+				messages.push({
+					id: `msg_assistant_${i}`,
+					sessionId: "session_test_123",
+					role: "assistant" as const,
+					content: `Nerin response ${i + 1}`,
+					createdAt: new Date(),
+				});
+			}
+			return messages;
+		};
+
+		it("should return isFinalTurn: true when messageCount equals threshold", async () => {
+			// 25 user messages = threshold
+			const thresholdMessages = createMessagesWithUserCount(25);
+			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(thresholdMessages));
+
+			const testLayer = createTestLayer();
+
+			const input = {
+				sessionId: "session_test_123",
+				message: "Final message",
+			};
+
+			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
+
+			expect(result.isFinalTurn).toBe(true);
+		});
+
+		it("should include farewellMessage from the pool at threshold", async () => {
+			const thresholdMessages = createMessagesWithUserCount(25);
+			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(thresholdMessages));
+
+			const testLayer = createTestLayer();
+
+			const input = {
+				sessionId: "session_test_123",
+				message: "Final message",
+			};
+
+			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
+
+			expect(result.farewellMessage).toBeDefined();
+			expect(NERIN_FAREWELL_MESSAGES).toContain(result.farewellMessage);
+			// response should also be the farewell
+			expect(result.response).toBe(result.farewellMessage);
+		});
+
+		it("should include portraitWaitMinMs from config at threshold", async () => {
+			const thresholdMessages = createMessagesWithUserCount(25);
+			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(thresholdMessages));
+
+			const testLayer = createTestLayer();
+
+			const input = {
+				sessionId: "session_test_123",
+				message: "Final message",
+			};
+
+			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
+
+			expect(result.portraitWaitMinMs).toBe(2000);
+		});
+
+		it("should NOT call orchestrator on final turn (no LLM cost)", async () => {
+			const thresholdMessages = createMessagesWithUserCount(25);
+			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(thresholdMessages));
+
+			const testLayer = createTestLayer();
+
+			const input = {
+				sessionId: "session_test_123",
+				message: "Final message",
+			};
+
+			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
+
+			expect(mockOrchestratorRepo.processMessage).not.toHaveBeenCalled();
+		});
+
+		it("should save farewell as assistant message on final turn", async () => {
+			const thresholdMessages = createMessagesWithUserCount(25);
+			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(thresholdMessages));
+
+			const testLayer = createTestLayer();
+
+			const input = {
+				sessionId: "session_test_123",
+				message: "Final message",
+			};
+
+			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
+
+			// Should save farewell as second saveMessage call (first is user message)
+			expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledTimes(2);
+			expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledWith(
+				"session_test_123",
+				"assistant",
+				result.farewellMessage,
+			);
+		});
+
+		it("should return isFinalTurn: false for messages before threshold", async () => {
+			// 2 user messages (from default mockMessages) — well below threshold
+			const testLayer = createTestLayer();
+
+			const input = {
+				sessionId: "session_test_123",
+				message: "Normal message",
+			};
+
+			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
+
+			expect(result.isFinalTurn).toBe(false);
+			expect(result.farewellMessage).toBeUndefined();
+			expect(result.portraitWaitMinMs).toBeUndefined();
+		});
+
+		it("should throw FreeTierLimitReached for messages past threshold", async () => {
+			// 26 user messages = past threshold
+			const pastThresholdMessages = createMessagesWithUserCount(26);
+			mockAssessmentMessageRepo.getMessages.mockReturnValue(
+				Effect.succeed(pastThresholdMessages),
+			);
+
+			const testLayer = createTestLayer();
+
+			const input = {
+				sessionId: "session_test_123",
+				message: "Past limit message",
+			};
+
+			const error = await Effect.runPromise(
+				sendMessage(input).pipe(Effect.provide(testLayer), Effect.flip),
+			);
+
+			expect(error._tag).toBe("FreeTierLimitReached");
+		});
+
+		it("should NOT increment cost tracking on final turn", async () => {
+			const thresholdMessages = createMessagesWithUserCount(25);
+			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(thresholdMessages));
+
+			const testLayer = createTestLayer();
+
+			const input = {
+				sessionId: "session_test_123",
+				message: "Final message",
+			};
+
+			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
+
+			expect(mockCostGuardRepo.incrementDailyCost).not.toHaveBeenCalled();
+			expect(mockCostGuardRepo.getDailyCost).not.toHaveBeenCalled();
+		});
+
+		it("should log final turn event", async () => {
+			const thresholdMessages = createMessagesWithUserCount(25);
+			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(thresholdMessages));
+
+			const testLayer = createTestLayer();
+
+			const input = {
+				sessionId: "session_test_123",
+				message: "Final message",
+			};
+
+			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
+
+			expect(mockLoggerRepo.info).toHaveBeenCalledWith("Final turn - farewell sent", {
+				sessionId: "session_test_123",
+				messageCount: 25,
+			});
 		});
 	});
 });

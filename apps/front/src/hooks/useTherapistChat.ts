@@ -100,7 +100,10 @@ export function useTherapistChat(sessionId: string) {
 	const [errorType, setErrorType] = useState<
 		"session" | "budget" | "rate-limit" | "limit-reached" | "network" | "generic" | null
 	>(null);
-	const [hasShownCelebration, setHasShownCelebration] = useState(false);
+	// Story 7.18: Farewell transition state
+	const [isFarewellReceived, setIsFarewellReceived] = useState(false);
+	const [farewellMessage, setFarewellMessage] = useState<string | null>(null);
+	const [portraitWaitMinMs, setPortraitWaitMinMs] = useState<number | undefined>(undefined);
 	const { mutate: sendMessageRpc } = useSendMessage();
 
 	// Pending greeting messages not yet displayed (for stagger flush on early send)
@@ -235,6 +238,13 @@ export function useTherapistChat(sessionId: string) {
 							},
 						]);
 
+						// Story 7.18: Handle final turn — trigger farewell transition
+						if (data.isFinalTurn) {
+							setIsFarewellReceived(true);
+							setFarewellMessage(data.farewellMessage ?? null);
+							setPortraitWaitMinMs(data.portraitWaitMinMs);
+						}
+
 						// Story 2.11: confidence no longer in send-message response.
 						// Traits are only updated from resume-session (which still returns confidence).
 
@@ -283,7 +293,9 @@ export function useTherapistChat(sessionId: string) {
 		isConfidenceReady,
 		progressPercent,
 		freeTierMessageThreshold: FREE_TIER_THRESHOLD,
-		hasShownCelebration,
-		setHasShownCelebration,
+		// Story 7.18: Farewell transition state
+		isFarewellReceived,
+		farewellMessage,
+		portraitWaitMinMs,
 	};
 }

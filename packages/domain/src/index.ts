@@ -29,6 +29,11 @@ export {
 	FACET_PROMPT_DEFINITIONS,
 	type FacetPromptDefinitions,
 } from "./constants/facet-prompt-definitions";
+// Nerin farewell constants (Story 7.18)
+export {
+	NERIN_FAREWELL_MESSAGES,
+	pickFarewellMessage,
+} from "./constants/nerin-farewell";
 // Nerin greeting constants (Story 7.10)
 export {
 	GREETING_MESSAGES,

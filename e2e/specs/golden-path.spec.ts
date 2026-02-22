@@ -3,10 +3,13 @@ import { expect, test } from "@playwright/test";
 /**
  * Golden Path Journey
  *
- * Landing → Chat → Auth Gate Sign-up → Results → Share → Public Profile
+ * Landing → Chat → Farewell → Auth Gate Sign-up → Wait Screen → Portrait → Full Results → Share → Public Profile
  *
  * Single long user journey exercising the core happy path.
  * Uses data-testid and data-slot selectors — never matches on LLM output text.
+ *
+ * Story 7.18: Updated flow — farewell replaces celebration card, auth gate is inline in chat,
+ * wait screen leads to portrait-first reading view before full results.
  */
 test("golden path: landing → chat → signup → results → share → public profile", async ({
 	page,
@@ -50,44 +53,54 @@ test("golden path: landing → chat → signup → results → share → public 
 		await expect(depthMeter).toBeVisible();
 	});
 
-	await test.step("send a second message and wait for response", async () => {
+	await test.step("send second message — triggers farewell", async () => {
 		const chatInput = page.locator("[data-slot='chat-input']");
 		await chatInput.fill("I tend to be very organized and plan everything in advance.");
 		await page.getByTestId("chat-send-btn").click();
 
-		// Wait for Nerin response — either input re-enables or celebration card appears
-		await page
-			.locator("[data-slot='celebration-card'], [data-slot='chat-input']:enabled")
-			.first()
-			.waitFor({
-				state: "visible",
-				timeout: 30_000,
-			});
+		// Story 7.18: With FREE_TIER_MESSAGE_THRESHOLD=2, the 2nd message triggers farewell.
+		// Wait for the auth gate to appear (anonymous user) — farewell + auth gate render together.
+		await page.locator("[data-slot='chat-auth-gate']").waitFor({
+			state: "visible",
+			timeout: 30_000,
+		});
 	});
 
-	await test.step("celebration card appears → click View Results", async () => {
-		// With FREE_TIER_MESSAGE_THRESHOLD=2, the celebration card appears after 2 user messages
-		await page.locator("[data-slot='celebration-card']").waitFor({
-			state: "visible",
-			timeout: 10_000,
-		});
-		await page.getByTestId("view-results-btn").click();
-		await page.waitForURL(/\/results\//);
-	});
-
-	await test.step("auth gate appears → sign up", async () => {
-		// Unauthenticated user sees the auth gate teaser
-		await page.locator("[data-slot='results-auth-gate']").waitFor({
-			state: "visible",
-			timeout: 10_000,
-		});
-		// Click "Sign Up to See Your Results"
-		await page.getByTestId("auth-gate-signup-cta").click();
+	await test.step("auth gate appears inline → sign up", async () => {
+		// Story 7.18: Auth gate is now inline in chat after farewell (not on results page)
+		await page.getByTestId("chat-auth-gate-signup-btn").click();
 
 		// Fill sign-up form
 		await page.locator("#results-signup-email").fill("e2e-golden@test.bigocean.dev");
 		await page.locator("#results-signup-password").fill("TestPassword123!");
 		await page.getByTestId("auth-gate-signup-submit").click();
+	});
+
+	await test.step("wait screen appears → click Read what Nerin wrote", async () => {
+		// Story 7.18: After auth, wait screen appears with rotating Nerin-voiced lines
+		await page.locator("[data-slot='portrait-wait-screen']").waitFor({
+			state: "visible",
+			timeout: 15_000,
+		});
+
+		// Wait for portrait to be ready (min wait + API)
+		await page.getByTestId("read-portrait-btn").waitFor({
+			state: "visible",
+			timeout: 30_000,
+		});
+		await page.getByTestId("read-portrait-btn").click();
+	});
+
+	await test.step("portrait reading view → navigate to full results", async () => {
+		// Story 7.18: Portrait-first reading view
+		await page.locator("[data-slot='portrait-reading-view']").waitFor({
+			state: "visible",
+			timeout: 15_000,
+		});
+
+		// Click "See your full personality profile →"
+		await page.getByTestId("view-full-profile-btn").click();
+		await page.waitForURL(/\/results\/[^?]+$/);
 	});
 
 	await test.step("assert archetype card is visible", async () => {

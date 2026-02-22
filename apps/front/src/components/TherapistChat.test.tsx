@@ -39,8 +39,10 @@ let mockHookReturn = {
 	isConfidenceReady: false,
 	progressPercent: 0,
 	freeTierMessageThreshold: 27,
-	hasShownCelebration: false,
-	setHasShownCelebration: vi.fn(),
+	// Story 7.18: Farewell transition state
+	isFarewellReceived: false,
+	farewellMessage: null as string | null,
+	portraitWaitMinMs: undefined as number | undefined,
 };
 
 vi.mock("@/hooks/useTherapistChat", () => ({
@@ -71,6 +73,15 @@ vi.mock("@/constants/chat-placeholders", () => ({
 	getPlaceholder: () => "What comes to mind first?",
 }));
 
+// Mock auth hook (used by ChatAuthGate)
+vi.mock("@/hooks/use-auth", () => ({
+	useAuth: () => ({
+		signUp: { email: vi.fn() },
+		signIn: { email: vi.fn() },
+		refreshSession: vi.fn(),
+	}),
+}));
+
 const queryClient = new QueryClient({
 	defaultOptions: { queries: { retry: false } },
 });
@@ -82,6 +93,20 @@ function renderWithProviders(component: React.ReactElement) {
 describe("TherapistChat", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		// Mock matchMedia for PortraitWaitScreen's reduced-motion check
+		Object.defineProperty(window, "matchMedia", {
+			writable: true,
+			value: vi.fn().mockImplementation((query: string) => ({
+				matches: false,
+				media: query,
+				onchange: null,
+				addListener: vi.fn(),
+				removeListener: vi.fn(),
+				addEventListener: vi.fn(),
+				removeEventListener: vi.fn(),
+				dispatchEvent: vi.fn(),
+			})),
+		});
 		mockHookReturn = {
 			messages: [
 				{
@@ -113,6 +138,9 @@ describe("TherapistChat", () => {
 			freeTierMessageThreshold: 27,
 			hasShownCelebration: false,
 			setHasShownCelebration: vi.fn(),
+			isFarewellReceived: false,
+			farewellMessage: null,
+			portraitWaitMinMs: undefined,
 		};
 	});
 
@@ -430,70 +458,86 @@ describe("TherapistChat", () => {
 		});
 	});
 
-	// Task 4 Tests: In-Chat Celebration Card
-	describe("70% Celebration Card", () => {
-		it("shows celebration card when isConfidenceReady and not hasShownCelebration", () => {
-			mockHookReturn.isConfidenceReady = true;
-			mockHookReturn.hasShownCelebration = false;
+	// Story 7.18: Farewell transition — input fade
+	describe("Farewell Transition (Story 7.18)", () => {
+		it("fades input area when isFarewellReceived is true", () => {
+			mockHookReturn.isFarewellReceived = true;
 
-			renderWithProviders(<TherapistChat sessionId="session-123" />);
+			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-			expect(screen.getByText("Your Personality Profile is Ready!")).toBeTruthy();
-			expect(screen.getByText("View Results")).toBeTruthy();
-			expect(screen.getByText("Keep Exploring")).toBeTruthy();
+			const textarea = container.querySelector("[data-slot='chat-input']") as HTMLElement;
+			const fadeWrapper = textarea?.closest("[class*='opacity-0']");
+			expect(fadeWrapper).toBeTruthy();
+			expect(fadeWrapper?.className).toContain("pointer-events-none");
 		});
 
-		it("hides celebration card if hasShownCelebration is true", () => {
-			mockHookReturn.isConfidenceReady = true;
-			mockHookReturn.hasShownCelebration = true;
+		it("fades input area when isCompleted is true", () => {
+			mockHookReturn.isCompleted = true;
 
-			renderWithProviders(<TherapistChat sessionId="session-123" />);
+			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
 
+			const textarea = container.querySelector("[data-slot='chat-input']") as HTMLElement;
+			const fadeWrapper = textarea?.closest("[class*='opacity-0']");
+			expect(fadeWrapper).toBeTruthy();
+		});
+
+		it("does not fade input area during normal chat", () => {
+			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			const textarea = container.querySelector("[data-slot='chat-input']") as HTMLElement;
+			const fadeWrapper = textarea?.closest("[class*='opacity-0']");
+			expect(fadeWrapper).toBeNull();
+		});
+
+		it("does not show celebration card (removed in Story 7.18)", () => {
+			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			expect(container.querySelector("[data-slot='celebration-card']")).toBeNull();
 			expect(screen.queryByText("Your Personality Profile is Ready!")).toBeNull();
 		});
 
-		it("hides celebration card if isConfidenceReady is false", () => {
-			mockHookReturn.isConfidenceReady = false;
-			mockHookReturn.hasShownCelebration = false;
-
-			renderWithProviders(<TherapistChat sessionId="session-123" />);
-
-			expect(screen.queryByText("Your Personality Profile is Ready!")).toBeNull();
-		});
-
-		it("navigates to results page when View Results clicked", async () => {
-			mockHookReturn.isConfidenceReady = true;
-			mockHookReturn.hasShownCelebration = false;
-
-			renderWithProviders(<TherapistChat sessionId="session-123" />);
-
-			const viewResultsBtn = screen.getByText("View Results");
-			fireEvent.click(viewResultsBtn);
-
-			await waitFor(() => {
-				expect(mockNavigate).toHaveBeenCalledWith({
-					to: "/results/$assessmentSessionId",
-					params: { assessmentSessionId: "session-123" },
-				});
-			});
-		});
-
-		it("renders Keep Exploring button as disabled (premium feature)", () => {
-			mockHookReturn.isConfidenceReady = true;
-			mockHookReturn.hasShownCelebration = false;
-
-			renderWithProviders(<TherapistChat sessionId="session-123" />);
-
-			const keepExploringBtn = screen.getByText("Keep Exploring");
-			expect(keepExploringBtn.closest("button")?.disabled).toBe(true);
-		});
-
-		it("shows 'View Your Results' link in header when isConfidenceReady", () => {
+		it("does not show header results link (removed in Story 7.18)", () => {
 			mockHookReturn.isConfidenceReady = true;
 
 			renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-			expect(screen.getByTestId("view-results-header-link")).toBeTruthy();
+			expect(screen.queryByTestId("view-results-header-link")).toBeNull();
+		});
+	});
+
+	// Story 7.18: Auth Gate on Chat Page
+	describe("Chat Auth Gate (Story 7.18)", () => {
+		it("shows auth gate when farewell received and not authenticated", () => {
+			mockHookReturn.isFarewellReceived = true;
+
+			const { container } = renderWithProviders(
+				<TherapistChat sessionId="session-123" isAuthenticated={false} />,
+			);
+
+			expect(container.querySelector("[data-slot='chat-auth-gate']")).toBeTruthy();
+			expect(
+				screen.getByText("Create an account so your portrait is here when it's ready."),
+			).toBeTruthy();
+		});
+
+		it("does not show auth gate when authenticated (AC #4)", () => {
+			mockHookReturn.isFarewellReceived = true;
+
+			const { container } = renderWithProviders(
+				<TherapistChat sessionId="session-123" isAuthenticated={true} />,
+			);
+
+			expect(container.querySelector("[data-slot='chat-auth-gate']")).toBeNull();
+		});
+
+		it("does not show auth gate before farewell", () => {
+			mockHookReturn.isFarewellReceived = false;
+
+			const { container } = renderWithProviders(
+				<TherapistChat sessionId="session-123" isAuthenticated={false} />,
+			);
+
+			expect(container.querySelector("[data-slot='chat-auth-gate']")).toBeNull();
 		});
 	});
 });

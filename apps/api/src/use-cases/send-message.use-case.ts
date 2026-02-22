@@ -20,6 +20,7 @@ import {
 	FreeTierLimitReached,
 	LoggerRepository,
 	OrchestratorRepository,
+	pickFarewellMessage,
 	SessionNotFound,
 } from "@workspace/domain";
 import { Effect } from "effect";
@@ -33,6 +34,9 @@ export interface SendMessageInput {
 
 export interface SendMessageOutput {
 	readonly response: string;
+	readonly isFinalTurn: boolean;
+	readonly farewellMessage?: string;
+	readonly portraitWaitMinMs?: number;
 }
 
 /**
@@ -81,8 +85,8 @@ export const sendMessage = (input: SendMessageInput) =>
 		// Message cadence is based on user messages only (assistant greetings should not count)
 		const messageCount = previousMessages.filter((msg) => msg.role === "user").length;
 
-		// Enforce free tier message limit
-		if (messageCount >= config.freeTierMessageThreshold) {
+		// Block past threshold (26th+ message)
+		if (messageCount > config.freeTierMessageThreshold) {
 			return yield* Effect.fail(
 				new FreeTierLimitReached({
 					sessionId: input.sessionId,
@@ -90,6 +94,28 @@ export const sendMessage = (input: SendMessageInput) =>
 					message: "You've reached the message limit for this assessment. View your results!",
 				}),
 			);
+		}
+
+		// Story 7.18: Final turn — skip LLM call, use farewell from pool
+		const isFinalTurn = messageCount >= config.freeTierMessageThreshold;
+
+		if (isFinalTurn) {
+			const farewellMessage = pickFarewellMessage();
+
+			// Save farewell as assistant message
+			yield* messageRepo.saveMessage(input.sessionId, "assistant", farewellMessage);
+
+			logger.info("Final turn - farewell sent", {
+				sessionId: input.sessionId,
+				messageCount,
+			});
+
+			return {
+				response: farewellMessage,
+				isFinalTurn: true,
+				farewellMessage,
+				portraitWaitMinMs: config.portraitWaitMinMs,
+			};
 		}
 
 		// Map DB entities to domain messages (preserving IDs for downstream analysis)
@@ -165,5 +191,6 @@ export const sendMessage = (input: SendMessageInput) =>
 
 		return {
 			response: result.nerinResponse,
+			isFinalTurn: false,
 		};
 	});
