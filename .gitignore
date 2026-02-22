@@ -15,6 +15,10 @@ node_modules
 # Testing
 coverage
 
+# E2E
+e2e/test-results/
+e2e/playwright-report/
+
 # Turbo
 .turbo
 

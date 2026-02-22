@@ -50,12 +50,19 @@ export function useAuth() {
 		},
 
 		signUp: {
-			email: async (email: string, password: string, name?: string, anonymousSessionId?: string) => {
+			email: async (
+				email: string,
+				password: string,
+				name?: string,
+				anonymousSessionId?: string,
+				callbackURL?: string | false,
+			) => {
 				const result = await signUp.email({
 					email,
 					password,
 					name: name || email.split("@")[0],
 					...(anonymousSessionId && { anonymousSessionId }),
+					callbackURL: callbackURL ?? false,
 				});
 
 				if (result.error) {

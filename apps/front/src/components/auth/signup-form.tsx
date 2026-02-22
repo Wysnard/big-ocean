@@ -19,7 +19,7 @@ interface SignupFormProps {
 
 export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) {
 	const { signUp } = useAuth();
-	const navigate = useNavigate();
+	const _navigate = useNavigate();
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -47,19 +47,12 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 		setIsLoading(true);
 
 		try {
-			await signUp.email(email, password, name, anonymousSessionId);
+			const targetUrl =
+				redirectTo || (anonymousSessionId ? `/results/${anonymousSessionId}` : "/profile");
+			await signUp.email(email, password, name, anonymousSessionId, targetUrl);
 
-			// Navigate using TanStack Router
-			if (redirectTo) {
-				await navigate({ to: redirectTo });
-			} else if (anonymousSessionId) {
-				await navigate({
-					to: "/results/$assessmentSessionId",
-					params: { assessmentSessionId: anonymousSessionId },
-				});
-			} else {
-				await navigate({ to: "/profile" });
-			}
+			// Navigate after successful signup
+			window.location.href = targetUrl;
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : String(err);
 			if (errorMessage.includes("already exists")) {

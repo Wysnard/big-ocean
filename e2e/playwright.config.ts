@@ -58,6 +58,12 @@ export default defineConfig({
 			testMatch: "specs/public-profile.spec.ts",
 		},
 
+		// ── Signup redirect: standalone signup page redirect flow ────────
+		{
+			name: "signup-redirect",
+			testMatch: "specs/signup-redirect.spec.ts",
+		},
+
 		// ── Access-control: unauthenticated ──────────────────────────────
 		{
 			name: "unauth",
