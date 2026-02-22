@@ -3,17 +3,24 @@ import { GREETING_MESSAGES, OPENING_QUESTIONS, pickOpeningQuestion } from "../ne
 
 describe("nerin-greeting", () => {
 	describe("GREETING_MESSAGES", () => {
-		it("has exactly 2 fixed messages", () => {
-			expect(GREETING_MESSAGES).toHaveLength(2);
+		it("has exactly 1 fixed message", () => {
+			expect(GREETING_MESSAGES).toHaveLength(1);
 		});
 
-		it("message 1 introduces Nerin as a personality dive master", () => {
+		it("message 1 is the exact Prototype K verbatim text", () => {
+			expect(GREETING_MESSAGES[0]).toBe(
+				"Hey — I'm Nerin 👋 We're about to have a conversation, and by the end I'll write you something about what I noticed. No quizzes, no right answers — just talk honestly and the messy, contradictory stuff is welcome 🤿",
+			);
+		});
+
+		it("message 1 introduces Nerin and creates portrait anticipation", () => {
 			expect(GREETING_MESSAGES[0]).toContain("Nerin");
-			expect(GREETING_MESSAGES[0]).toContain("personality dive master");
+			expect(GREETING_MESSAGES[0]).toContain("write you something");
+			expect(GREETING_MESSAGES[0]).not.toContain("personality dive master");
 		});
 
-		it("message 2 encourages messy/contradictory answers", () => {
-			expect(GREETING_MESSAGES[1]).toContain("messy, contradictory");
+		it("message 1 includes messy/contradictory permission", () => {
+			expect(GREETING_MESSAGES[0]).toContain("messy, contradictory");
 		});
 
 		it("does not contain instructional language", () => {
@@ -34,6 +41,24 @@ describe("nerin-greeting", () => {
 			for (const q of OPENING_QUESTIONS) {
 				expect(q).toContain("?");
 			}
+		});
+
+		it("does not contain the beach question", () => {
+			for (const q of OPENING_QUESTIONS) {
+				expect(q).not.toContain("at the beach");
+				expect(q).not.toContain("🌊");
+			}
+		});
+
+		it("question 2 uses Prototype K wording (Free weekend ahead)", () => {
+			expect(OPENING_QUESTIONS[1]).toContain("Free weekend ahead");
+			expect(OPENING_QUESTIONS[1]).not.toContain("When you've got a free weekend");
+		});
+
+		it("contains the boring true thing question (belief #3 primer)", () => {
+			const boringQuestion = OPENING_QUESTIONS.find((q) => q.includes("boring true thing"));
+			expect(boringQuestion).toBeDefined();
+			expect(boringQuestion).toContain("most interesting");
 		});
 	});
 

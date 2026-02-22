@@ -37,7 +37,7 @@ export interface StartAssessmentOutput {
 }
 
 /**
- * Shared helper: create a new session and persist 3 greeting messages.
+ * Shared helper: create a new session and persist 2 greeting messages.
  * Used by both authenticated and anonymous paths.
  */
 const createSessionWithGreetings = (userId?: string) =>
@@ -48,7 +48,7 @@ const createSessionWithGreetings = (userId?: string) =>
 
 		const result = yield* sessionRepo.createSession(userId);
 
-		// Build the 3 greeting messages (2 fixed + 1 random opening question)
+		// Build the 2 greeting messages (1 fixed + 1 random opening question)
 		const openingQuestion = pickOpeningQuestion();
 		const greetingContents = [...GREETING_MESSAGES, openingQuestion];
 

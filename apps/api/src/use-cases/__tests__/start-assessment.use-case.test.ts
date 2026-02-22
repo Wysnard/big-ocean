@@ -137,7 +137,7 @@ describe("startAssessment Use Case", () => {
 			expect(mockLoggerRepo.info).toHaveBeenCalledWith("Assessment session started", {
 				sessionId: "session_new_789",
 				userId: "user_456",
-				greetingCount: 3,
+				greetingCount: 2,
 			});
 		});
 
@@ -309,14 +309,14 @@ describe("startAssessment Use Case", () => {
 		});
 
 		describe("Greeting message persistence", () => {
-			it("should save exactly 3 greeting messages to the database", async () => {
+			it("should save exactly 2 greeting messages to the database", async () => {
 				const testLayer = createTestLayer();
 
 				await Effect.runPromise(
 					startAuthenticatedAssessment({ userId: "user_greet" }).pipe(Effect.provide(testLayer)),
 				);
 
-				expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledTimes(3);
+				expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledTimes(2);
 			});
 
 			it("should save messages with role 'assistant' and correct session ID", async () => {
@@ -326,7 +326,7 @@ describe("startAssessment Use Case", () => {
 					startAuthenticatedAssessment({ userId: "user_msg" }).pipe(Effect.provide(testLayer)),
 				);
 
-				for (let i = 1; i <= 3; i++) {
+				for (let i = 1; i <= 2; i++) {
 					const call = mockAssessmentMessageRepo.saveMessage.mock.calls[i - 1];
 					expect(call[0]).toBe("session_new_789"); // sessionId
 					expect(call[1]).toBe("assistant"); // role
@@ -334,7 +334,7 @@ describe("startAssessment Use Case", () => {
 				}
 			});
 
-			it("should save the 2 fixed greeting messages in order", async () => {
+			it("should save the fixed greeting message and opening question in order", async () => {
 				const testLayer = createTestLayer();
 
 				await Effect.runPromise(
@@ -345,30 +345,17 @@ describe("startAssessment Use Case", () => {
 				const secondCall = mockAssessmentMessageRepo.saveMessage.mock.calls[1];
 
 				expect(firstCall[2]).toBe(GREETING_MESSAGES[0]);
-				expect(secondCall[2]).toBe(GREETING_MESSAGES[1]);
+				expect(OPENING_QUESTIONS).toContain(secondCall[2]);
 			});
 
-			it("should save a 3rd message from the OPENING_QUESTIONS pool", async () => {
-				const testLayer = createTestLayer();
-
-				await Effect.runPromise(
-					startAuthenticatedAssessment({ userId: "user_pool" }).pipe(Effect.provide(testLayer)),
-				);
-
-				const thirdCall = mockAssessmentMessageRepo.saveMessage.mock.calls[2];
-				const thirdContent = thirdCall[2] as string;
-
-				expect(OPENING_QUESTIONS).toContain(thirdContent);
-			});
-
-			it("should return 3 messages with role and content in the response", async () => {
+			it("should return 2 messages with role and content in the response", async () => {
 				const testLayer = createTestLayer();
 
 				const result = await Effect.runPromise(
 					startAuthenticatedAssessment({ userId: "user_resp" }).pipe(Effect.provide(testLayer)),
 				);
 
-				expect(result.messages).toHaveLength(3);
+				expect(result.messages).toHaveLength(2);
 				for (const msg of result.messages) {
 					expect(msg.role).toBe("assistant");
 					expect(typeof msg.content).toBe("string");
@@ -468,20 +455,20 @@ describe("startAssessment Use Case", () => {
 			expect(mockLoggerRepo.info).toHaveBeenCalledWith("Assessment session started", {
 				sessionId: "session_new_789",
 				userId: undefined,
-				greetingCount: 3,
+				greetingCount: 2,
 			});
 		});
 
 		describe("Greeting message persistence", () => {
-			it("should save exactly 3 greeting messages to the database", async () => {
+			it("should save exactly 2 greeting messages to the database", async () => {
 				const testLayer = createTestLayer();
 
 				await Effect.runPromise(startAnonymousAssessment().pipe(Effect.provide(testLayer)));
 
-				expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledTimes(3);
+				expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledTimes(2);
 			});
 
-			it("should save the 2 fixed greeting messages in order", async () => {
+			it("should save the fixed greeting message and opening question in order", async () => {
 				const testLayer = createTestLayer();
 
 				await Effect.runPromise(startAnonymousAssessment().pipe(Effect.provide(testLayer)));
@@ -490,28 +477,17 @@ describe("startAssessment Use Case", () => {
 				const secondCall = mockAssessmentMessageRepo.saveMessage.mock.calls[1];
 
 				expect(firstCall[2]).toBe(GREETING_MESSAGES[0]);
-				expect(secondCall[2]).toBe(GREETING_MESSAGES[1]);
+				expect(OPENING_QUESTIONS).toContain(secondCall[2]);
 			});
 
-			it("should save a 3rd message from the OPENING_QUESTIONS pool", async () => {
-				const testLayer = createTestLayer();
-
-				await Effect.runPromise(startAnonymousAssessment().pipe(Effect.provide(testLayer)));
-
-				const thirdCall = mockAssessmentMessageRepo.saveMessage.mock.calls[2];
-				const thirdContent = thirdCall[2] as string;
-
-				expect(OPENING_QUESTIONS).toContain(thirdContent);
-			});
-
-			it("should return 3 messages with role and content in the response", async () => {
+			it("should return 2 messages with role and content in the response", async () => {
 				const testLayer = createTestLayer();
 
 				const result = await Effect.runPromise(
 					startAnonymousAssessment().pipe(Effect.provide(testLayer)),
 				);
 
-				expect(result.messages).toHaveLength(3);
+				expect(result.messages).toHaveLength(2);
 				for (const msg of result.messages) {
 					expect(msg.role).toBe("assistant");
 					expect(typeof msg.content).toBe("string");
@@ -527,8 +503,7 @@ describe("startAssessment Use Case", () => {
 				);
 
 				expect(result.messages[0].content).toBe(GREETING_MESSAGES[0]);
-				expect(result.messages[1].content).toBe(GREETING_MESSAGES[1]);
-				expect(OPENING_QUESTIONS).toContain(result.messages[2].content);
+				expect(OPENING_QUESTIONS).toContain(result.messages[1].content);
 			});
 		});
 

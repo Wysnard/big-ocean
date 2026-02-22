@@ -93,11 +93,10 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 				expect(result.createdAt.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
 				expect(result.createdAt.getTime()).toBeLessThanOrEqual(afterTime.getTime());
 
-				// Verify 3 greeting messages
-				expect(result.messages).toHaveLength(3);
+				// Verify 2 greeting messages (1 fixed + 1 opening question)
+				expect(result.messages).toHaveLength(2);
 				expect(result.messages[0].content).toBe(GREETING_MESSAGES[0]);
-				expect(result.messages[1].content).toBe(GREETING_MESSAGES[1]);
-				expect(OPENING_QUESTIONS).toContain(result.messages[2].content);
+				expect(OPENING_QUESTIONS).toContain(result.messages[1].content);
 				for (const msg of result.messages) {
 					expect(msg.role).toBe("assistant");
 				}
@@ -152,10 +151,9 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 			Effect.gen(function* () {
 				const result = yield* startAnonymousAssessment();
 
-				expect(result.messages).toHaveLength(3);
+				expect(result.messages).toHaveLength(2);
 				expect(result.messages[0].content).toBe(GREETING_MESSAGES[0]);
-				expect(result.messages[1].content).toBe(GREETING_MESSAGES[1]);
-				expect(OPENING_QUESTIONS).toContain(result.messages[2].content);
+				expect(OPENING_QUESTIONS).toContain(result.messages[1].content);
 				for (const msg of result.messages) {
 					expect(msg.role).toBe("assistant");
 				}
@@ -196,7 +194,8 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 					getActiveSessionByUserId: () => Effect.succeed(null),
 					getSession: () => Effect.fail(new Error("Not implemented")),
 					updateSession: () => Effect.fail(new Error("Not implemented")),
-					resumeSession: () => Effect.fail(new Error("Not implemented")),
+					getSessionsByUserId: () => Effect.succeed([]),
+					findSessionByUserId: () => Effect.succeed(null),
 				};
 
 				const failingLayer = Effect.provideService(
