@@ -30,6 +30,10 @@ const mockAssessmentSessionRepo = {
 	updateSession: vi.fn(),
 	getSessionsByUserId: vi.fn(),
 	findSessionByUserId: vi.fn(),
+	createAnonymousSession: vi.fn(),
+	findByToken: vi.fn(),
+	assignUserId: vi.fn(),
+	rotateToken: vi.fn(),
 };
 
 const mockAssessmentMessageRepo = {
@@ -81,6 +85,17 @@ describe("startAssessment Use Case", () => {
 		mockAssessmentSessionRepo.findSessionByUserId.mockImplementation(() => Effect.succeed(null));
 		mockAssessmentSessionRepo.getSession.mockImplementation(() => Effect.succeed(undefined));
 		mockAssessmentSessionRepo.updateSession.mockImplementation(() => Effect.succeed(undefined));
+		mockAssessmentSessionRepo.createAnonymousSession.mockImplementation(() =>
+			Effect.succeed({
+				sessionId: "session_anon_123",
+				sessionToken: "mock_token_abc123def456",
+			}),
+		);
+		mockAssessmentSessionRepo.findByToken.mockImplementation(() => Effect.succeed(null));
+		mockAssessmentSessionRepo.assignUserId.mockImplementation(() => Effect.succeed(undefined));
+		mockAssessmentSessionRepo.rotateToken.mockImplementation(() =>
+			Effect.succeed({ sessionToken: "new_token" }),
+		);
 
 		mockAssessmentMessageRepo.saveMessage.mockImplementation(
 			(sessionId: string, role: string, content: string) => {
@@ -418,16 +433,17 @@ describe("startAssessment Use Case", () => {
 	});
 
 	describe("startAnonymousAssessment", () => {
-		it("should create a new session without userId", async () => {
+		it("should create an anonymous session with token", async () => {
 			const testLayer = createTestLayer();
 
 			const result = await Effect.runPromise(
 				startAnonymousAssessment().pipe(Effect.provide(testLayer)),
 			);
 
-			expect(result.sessionId).toBe("session_new_789");
+			expect(result.sessionId).toBe("session_anon_123");
+			expect(result.sessionToken).toBe("mock_token_abc123def456");
 			expect(result.createdAt).toBeInstanceOf(Date);
-			expect(mockAssessmentSessionRepo.createSession).toHaveBeenCalledWith(undefined);
+			expect(mockAssessmentSessionRepo.createAnonymousSession).toHaveBeenCalled();
 		});
 
 		it("should not call CostGuard at all", async () => {
@@ -447,14 +463,13 @@ describe("startAssessment Use Case", () => {
 			expect(mockAssessmentSessionRepo.findSessionByUserId).not.toHaveBeenCalled();
 		});
 
-		it("should log session creation with userId undefined", async () => {
+		it("should log anonymous session creation", async () => {
 			const testLayer = createTestLayer();
 
 			await Effect.runPromise(startAnonymousAssessment().pipe(Effect.provide(testLayer)));
 
-			expect(mockLoggerRepo.info).toHaveBeenCalledWith("Assessment session started", {
-				sessionId: "session_new_789",
-				userId: undefined,
+			expect(mockLoggerRepo.info).toHaveBeenCalledWith("Anonymous assessment started", {
+				sessionId: "session_anon_123",
 				greetingCount: 2,
 			});
 		});
@@ -508,9 +523,9 @@ describe("startAssessment Use Case", () => {
 		});
 
 		describe("Error handling", () => {
-			it("should fail when session creation fails", async () => {
+			it("should fail when anonymous session creation fails", async () => {
 				const creationError = new Error("Database connection failed");
-				mockAssessmentSessionRepo.createSession.mockReturnValue(Effect.fail(creationError));
+				mockAssessmentSessionRepo.createAnonymousSession.mockReturnValue(Effect.fail(creationError));
 
 				const testLayer = createTestLayer();
 
@@ -541,7 +556,7 @@ describe("startAssessment Use Case", () => {
 				startAssessment({ userId: undefined }).pipe(Effect.provide(testLayer)),
 			);
 
-			expect(result.sessionId).toBe("session_new_789");
+			expect(result.sessionId).toBe("session_anon_123");
 			expect(mockAssessmentSessionRepo.findSessionByUserId).not.toHaveBeenCalled();
 			expect(mockCostGuardRepo.canStartAssessment).not.toHaveBeenCalled();
 		});
@@ -551,21 +566,12 @@ describe("startAssessment Use Case", () => {
 
 			const result = await Effect.runPromise(startAssessment({}).pipe(Effect.provide(testLayer)));
 
-			expect(result.sessionId).toBe("session_new_789");
+			expect(result.sessionId).toBe("session_anon_123");
 			expect(mockAssessmentSessionRepo.findSessionByUserId).not.toHaveBeenCalled();
 			expect(mockCostGuardRepo.canStartAssessment).not.toHaveBeenCalled();
 		});
 
 		it("should return current time, not repository creation time", async () => {
-			const repositoryTime = new Date("2025-01-01T00:00:00Z");
-			mockAssessmentSessionRepo.createSession.mockReturnValue(
-				Effect.succeed({
-					sessionId: "session_test_old",
-					userId: undefined,
-					createdAt: repositoryTime,
-				}),
-			);
-
 			const testLayer = createTestLayer();
 			const beforeTime = new Date();
 

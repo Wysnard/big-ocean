@@ -58,9 +58,11 @@ export const AssessmentSessionEntitySchema = Schema.Struct({
 	// Better Auth uses non-UUID string IDs by default (e.g. "On7pyu8...")
 	// so assessment session ownership must accept nullable string IDs.
 	userId: Schema.NullOr(Schema.String),
+	sessionToken: Schema.NullOr(Schema.String),
 	createdAt: Schema.DateFromSelf,
 	updatedAt: Schema.DateFromSelf,
-	status: Schema.Literal("active", "paused", "completed", "archived"),
+	status: Schema.Literal("active", "paused", "finalizing", "completed", "archived"),
+	finalizationProgress: Schema.NullOr(Schema.String),
 	messageCount: Schema.Number,
 	personalDescription: Schema.NullOr(Schema.String),
 });

@@ -26,7 +26,8 @@ export * from "./http/groups/profile";
 export { ProfileGroup } from "./http/groups/profile";
 // Auth Middleware (Story 1.4)
 export { AuthMiddleware } from "./middleware/auth";
-
 // Shared Schemas & Types
 export * from "./schemas/evidence";
 export * from "./schemas/ocean-code";
+// Assessment Token Security (Story 9.1)
+export { AssessmentTokenSecurity } from "./security/assessment-token";

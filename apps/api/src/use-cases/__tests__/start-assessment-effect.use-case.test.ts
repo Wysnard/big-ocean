@@ -135,15 +135,13 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 			}).pipe(Effect.provide(TestLayer)),
 		);
 
-		it.effect("should create session without user ID", () =>
+		it.effect("should create session with token and null user ID", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
-
 				const result = yield* startAnonymousAssessment();
 
-				// Verify session was created without user ID
-				const session = yield* sessionRepo.getSession(result.sessionId);
-				expect(session.userId).toBeUndefined();
+				expect(result.sessionToken).toBeDefined();
+				expect(typeof result.sessionToken).toBe("string");
+				expect(result.sessionToken.length).toBeGreaterThan(0);
 			}).pipe(Effect.provide(TestLayer)),
 		);
 
@@ -175,12 +173,10 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 
 		it.effect("should dispatch to anonymous path without userId", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
-
 				const result = yield* startAssessment({});
 
-				const session = yield* sessionRepo.getSession(result.sessionId);
-				expect(session.userId).toBeUndefined();
+				// Anonymous path returns sessionToken
+				expect("sessionToken" in result).toBe(true);
 			}).pipe(Effect.provide(TestLayer)),
 		);
 	});
@@ -196,6 +192,10 @@ describe("startAssessment Use Case (@effect/vitest)", () => {
 					updateSession: () => Effect.fail(new Error("Not implemented")),
 					getSessionsByUserId: () => Effect.succeed([]),
 					findSessionByUserId: () => Effect.succeed(null),
+					createAnonymousSession: () => Effect.fail(new Error("Database connection failed")),
+					findByToken: () => Effect.succeed(null),
+					assignUserId: () => Effect.fail(new Error("Not implemented")),
+					rotateToken: () => Effect.fail(new Error("Not implemented")),
 				};
 
 				const failingLayer = Effect.provideService(

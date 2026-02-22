@@ -1,12 +1,15 @@
 /**
  * Analyzer and Scorer Integration Tests
  *
- * Tests the full flow: message → analyze → save evidence → aggregate → derive traits
- * Verifies all components work together correctly.
+ * SKIPPED: Story 9.1 dropped facet_evidence table in clean-slate migration.
+ * These tests will be replaced by conversanalyzer/finanalyzer tests in Epic 10.
  *
  * @see Story 2.3: Evidence-Based Analyzer and Scorer Implementation
  * @see Story 2.9: Evidence-Sourced Scoring (pure functions, no score tables)
  */
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck — file references removed facet_evidence infrastructure
 
 import { it } from "@effect/vitest";
 import {
@@ -20,22 +23,17 @@ import { Effect, Layer } from "effect";
 import { beforeEach, describe, expect, vi } from "vitest";
 
 vi.mock("@workspace/infrastructure/repositories/analyzer.claude.repository");
-vi.mock("@workspace/infrastructure/repositories/facet-evidence.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 
 import { AnalyzerClaudeRepositoryLive } from "@workspace/infrastructure/repositories/analyzer.claude.repository";
-import {
-	FacetEvidenceDrizzleRepositoryLive,
-	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
-	_resetMockState as resetEvidenceState,
-} from "@workspace/infrastructure/repositories/facet-evidence.drizzle.repository";
+import { FacetEvidenceNoopRepositoryLive } from "@workspace/infrastructure/repositories/facet-evidence.noop.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 
 // vi.mock() replaces real layers (which have DB/config deps) with __mocks__ versions (no deps).
 // TypeScript still sees the real module types, so we assert the actual runtime type.
 const TestLayer = Layer.mergeAll(
 	AnalyzerClaudeRepositoryLive,
-	FacetEvidenceDrizzleRepositoryLive,
+	FacetEvidenceNoopRepositoryLive,
 	LoggerPinoRepositoryLive,
 ) as Layer.Layer<AnalyzerRepository | FacetEvidenceRepository | LoggerRepository>;
 
@@ -43,9 +41,9 @@ import { calculateConfidenceFromFacets } from "../calculate-confidence.use-case"
 import { saveFacetEvidence } from "../save-facet-evidence.use-case";
 import { shouldTriggerScoring, updateFacetScores } from "../update-facet-scores.use-case";
 
-describe("Analyzer and Scorer Integration", () => {
+describe.skip("Analyzer and Scorer Integration — SKIPPED: facet_evidence table dropped (Story 9.1)", () => {
 	beforeEach(() => {
-		resetEvidenceState();
+		vi.clearAllMocks();
 	});
 
 	describe("full flow: message → analyze → save → aggregate → derive", () => {

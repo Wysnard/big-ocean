@@ -9,23 +9,34 @@
  * - Test user (if doesn't exist)
  * - Completed assessment session
  * - Realistic conversation messages (12 messages)
- * - Facet evidence with highlights (scores computed on-demand from evidence)
+ * - Assessment results (facets, traits, domain coverage, portrait)
+ * - Conversation evidence (lean, steering-only)
+ * - Finalization evidence (rich, with quotes)
+ * - Public profile with OCEAN codes
  *
  * Output: Prints session ID that can be used to navigate to /assessment/{sessionId}/results
  *
- * Story 2.9: facet_scores and trait_scores tables removed.
- * Scores are now computed on-demand from facet_evidence via pure functions.
+ * Story 9.1: Updated for two-tier architecture — uses assessment_results,
+ * conversation_evidence, and finalization_evidence tables.
  */
 
 import "dotenv/config"; // Load .env file
-import type { FacetName } from "@workspace/domain";
+import type { FacetName, LifeDomain } from "@workspace/domain";
 import { AppConfigLive, Database, DatabaseStack, dbSchema } from "@workspace/infrastructure";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { Effect } from "effect";
 
-const { account, assessmentMessage, assessmentSession, facetEvidence, publicProfile, user } =
-	dbSchema;
+const {
+	account,
+	assessmentMessage,
+	assessmentResults,
+	assessmentSession,
+	conversationEvidence,
+	finalizationEvidence,
+	publicProfile,
+	user,
+} = dbSchema;
 
 const TEST_USER_EMAIL = "test@bigocean.dev";
 const TEST_USER_PASSWORD = "testpassword123";
@@ -98,150 +109,131 @@ const CONVERSATION_MESSAGES: Array<{ role: "user" | "assistant"; content: string
 
 // Generate realistic facet scores (0-20 scale)
 // This profile represents: High O, High C, Low E, Medium A, Medium N
-const FACET_SCORE_MAP: Record<FacetName, number> = {
+const FACET_SCORE_MAP: Record<
+	FacetName,
+	{ score: number; confidence: number; domain: LifeDomain }
+> = {
 	// Openness (High: 15-18) - intellectually curious, imaginative
-	imagination: 17,
-	artistic_interests: 14,
-	emotionality: 16,
-	adventurousness: 13,
-	intellect: 18,
-	liberalism: 16,
+	imagination: { score: 17, confidence: 0.89, domain: "leisure" },
+	artistic_interests: { score: 14, confidence: 0.65, domain: "leisure" },
+	emotionality: { score: 16, confidence: 0.6, domain: "relationships" },
+	adventurousness: { score: 13, confidence: 0.68, domain: "leisure" },
+	intellect: { score: 18, confidence: 0.94, domain: "solo" },
+	liberalism: { score: 16, confidence: 0.72, domain: "solo" },
 
 	// Conscientiousness (High: 15-18) - organized, disciplined
-	self_efficacy: 17,
-	orderliness: 19,
-	dutifulness: 16,
-	achievement_striving: 17,
-	self_discipline: 18,
-	cautiousness: 15,
+	self_efficacy: { score: 17, confidence: 0.75, domain: "work" },
+	orderliness: { score: 19, confidence: 0.95, domain: "solo" },
+	dutifulness: { score: 16, confidence: 0.78, domain: "work" },
+	achievement_striving: { score: 17, confidence: 0.7, domain: "work" },
+	self_discipline: { score: 18, confidence: 0.92, domain: "work" },
+	cautiousness: { score: 15, confidence: 0.74, domain: "solo" },
 
 	// Extraversion (Low: 4-8) - introverted, reserved
-	friendliness: 8,
-	gregariousness: 5,
-	assertiveness: 9,
-	activity_level: 10,
-	excitement_seeking: 6,
-	cheerfulness: 7,
+	friendliness: { score: 8, confidence: 0.66, domain: "relationships" },
+	gregariousness: { score: 5, confidence: 0.87, domain: "relationships" },
+	assertiveness: { score: 9, confidence: 0.64, domain: "work" },
+	activity_level: { score: 10, confidence: 0.62, domain: "solo" },
+	excitement_seeking: { score: 6, confidence: 0.58, domain: "leisure" },
+	cheerfulness: { score: 7, confidence: 0.63, domain: "relationships" },
 
 	// Agreeableness (Medium: 10-14) - helpful but analytical
-	trust: 11,
-	morality: 14,
-	altruism: 13,
-	cooperation: 10,
-	modesty: 12,
-	sympathy: 11,
+	trust: { score: 11, confidence: 0.67, domain: "relationships" },
+	morality: { score: 14, confidence: 0.71, domain: "solo" },
+	altruism: { score: 13, confidence: 0.86, domain: "relationships" },
+	cooperation: { score: 10, confidence: 0.69, domain: "relationships" },
+	modesty: { score: 12, confidence: 0.65, domain: "relationships" },
+	sympathy: { score: 11, confidence: 0.68, domain: "relationships" },
 
 	// Neuroticism (Medium: 9-13) - moderate emotional stability
-	anxiety: 11,
-	anger: 9,
-	depression: 10,
-	self_consciousness: 12,
-	immoderation: 8,
-	vulnerability: 10,
+	anxiety: { score: 11, confidence: 0.73, domain: "work" },
+	anger: { score: 9, confidence: 0.64, domain: "solo" },
+	depression: { score: 10, confidence: 0.61, domain: "solo" },
+	self_consciousness: { score: 12, confidence: 0.66, domain: "relationships" },
+	immoderation: { score: 8, confidence: 0.59, domain: "solo" },
+	vulnerability: { score: 10, confidence: 0.67, domain: "relationships" },
 };
 
-// Evidence quotes mapping to facets
-const EVIDENCE_QUOTES: Record<
-	FacetName,
-	Array<{ quote: string; messageIndex: number; confidence: number }>
+// Evidence quotes mapping to facets (used for finalization_evidence)
+const EVIDENCE_QUOTES: Partial<
+	Record<FacetName, Array<{ quote: string; messageIndex: number; rawDomain: string }>>
 > = {
 	orderliness: [
 		{
 			quote: "color-coding my books, labeling all my supplies, and creating a detailed filing system",
 			messageIndex: 1,
-			confidence: 95,
+			rawDomain: "home office organization",
 		},
 		{
 			quote: "I love having everything in its proper place",
 			messageIndex: 1,
-			confidence: 90,
+			rawDomain: "personal space management",
 		},
 	],
 	self_discipline: [
 		{
 			quote: "I create detailed outlines, timelines, and checklists",
 			messageIndex: 3,
-			confidence: 92,
+			rawDomain: "project planning habits",
 		},
-		{ quote: "I can't stand the idea of just 'winging it'", messageIndex: 3, confidence: 88 },
+		{
+			quote: "I can't stand the idea of just 'winging it'",
+			messageIndex: 3,
+			rawDomain: "work approach",
+		},
 	],
 	intellect: [
 		{
 			quote:
 				"I love diving deep into topics, reading multiple perspectives, and forming my own opinions",
 			messageIndex: 9,
-			confidence: 94,
+			rawDomain: "intellectual exploration",
 		},
 		{
 			quote: "always reading books, listening to podcasts, exploring new ideas",
 			messageIndex: 9,
-			confidence: 91,
+			rawDomain: "learning habits",
 		},
 	],
 	imagination: [
 		{
 			quote: "I love brainstorming different scenarios and imagining how things could unfold",
 			messageIndex: 11,
-			confidence: 89,
+			rawDomain: "future planning and creativity",
 		},
 		{
 			quote: "I have three backup plans for every backup plan",
 			messageIndex: 11,
-			confidence: 85,
+			rawDomain: "contingency thinking",
 		},
 	],
 	gregariousness: [
 		{
 			quote: "Large groups can be exhausting for me",
 			messageIndex: 5,
-			confidence: 87,
+			rawDomain: "social gatherings",
 		},
 		{
 			quote: "I'd much rather have a deep one-on-one conversation",
 			messageIndex: 5,
-			confidence: 82,
+			rawDomain: "social preferences",
 		},
 	],
 	altruism: [
 		{
 			quote: "I'm usually the first person to show up with food or offer to help",
 			messageIndex: 7,
-			confidence: 86,
+			rawDomain: "helping friends in need",
 		},
 	],
-	// Add minimal evidence for other facets (to avoid empty data)
-	artistic_interests: [{ quote: "creative project", messageIndex: 2, confidence: 65 }],
-	emotionality: [{ quote: "sitting with emotions", messageIndex: 7, confidence: 60 }],
-	adventurousness: [{ quote: "exploring new ideas", messageIndex: 9, confidence: 68 }],
-	liberalism: [{ quote: "multiple perspectives", messageIndex: 9, confidence: 72 }],
-	self_efficacy: [{ quote: "help them organize their tasks", messageIndex: 7, confidence: 75 }],
-	dutifulness: [{ quote: "dependable and action-oriented", messageIndex: 8, confidence: 78 }],
-	achievement_striving: [{ quote: "thinking about your career", messageIndex: 10, confidence: 70 }],
-	cautiousness: [{ quote: "being prepared for multiple futures", messageIndex: 11, confidence: 74 }],
-	friendliness: [{ quote: "close friend", messageIndex: 5, confidence: 66 }],
-	assertiveness: [{ quote: "I can do it when needed for work", messageIndex: 5, confidence: 64 }],
-	activity_level: [{ quote: "spent a whole weekend", messageIndex: 1, confidence: 62 }],
-	excitement_seeking: [{ quote: "unlikely ones", messageIndex: 11, confidence: 58 }],
-	cheerfulness: [{ quote: "love having everything", messageIndex: 1, confidence: 63 }],
-	trust: [{ quote: "close friends", messageIndex: 5, confidence: 67 }],
-	morality: [{ quote: "forming my own opinions", messageIndex: 9, confidence: 71 }],
-	cooperation: [{ quote: "help with practical things", messageIndex: 7, confidence: 69 }],
-	modesty: [{ quote: "trying to get better at that", messageIndex: 7, confidence: 65 }],
-	sympathy: [{ quote: "friend is going through a tough time", messageIndex: 6, confidence: 68 }],
-	anxiety: [{ quote: "feels chaotic and stressful to me", messageIndex: 3, confidence: 73 }],
-	anger: [{ quote: "I get frustrated when", messageIndex: 9, confidence: 64 }],
-	depression: [{ quote: "tough time", messageIndex: 6, confidence: 61 }],
-	self_consciousness: [{ quote: "Some people think I'm crazy", messageIndex: 1, confidence: 66 }],
-	immoderation: [{ quote: "whole weekend", messageIndex: 1, confidence: 59 }],
-	vulnerability: [{ quote: "can be exhausting", messageIndex: 5, confidence: 67 }],
 };
 
-// Pre-generated portrait in Nerin's voice matching seeded profile (High O, High C, Low E, Medium A, Medium N)
-const SEED_PERSONAL_DESCRIPTION = `# 🤿 The Architect of Certainty
+// Pre-generated portrait in Nerin's voice
+const SEED_PORTRAIT = `# The Architect of Certainty
 
-You told me something early on that I haven't stopped thinking about. When I asked about a recent decision, you didn't tell me about the decision itself — you told me about the *system* you built around it 🫧 That's a different answer than most people give, and it told me more than the next ten minutes of conversation combined. What I see is someone who has turned the need for control into an art form so refined that even you've forgotten it started as a defense. Everything — the color-coded shelves, the backup plans for backup plans, the scaffolding you build before you start anything — orbits one invisible center: the belief that if you prepare well enough, nothing can catch you off guard. That's your spine. And it's both the most impressive and most limiting thing about you.
+You told me something early on that I haven't stopped thinking about. When I asked about a recent decision, you didn't tell me about the decision itself — you told me about the *system* you built around it. That's a different answer than most people give, and it told me more than the next ten minutes of conversation combined. What I see is someone who has turned the need for control into an art form so refined that even you've forgotten it started as a defense. Everything — the color-coded shelves, the backup plans for backup plans, the scaffolding you build before you start anything — orbits one invisible center: the belief that if you prepare well enough, nothing can catch you off guard. That's your spine. And it's both the most impressive and most limiting thing about you.
 
-## 🧬 The Architecture — *what you've built and what it costs*
+## The Architecture — what you've built and what it costs
 
 ### The craft of order
 
@@ -249,13 +241,13 @@ You mentioned your weekend organizing project almost like it was a footnote.
 
 > "I spent a whole weekend color-coding my books, labeling all my supplies, and creating a detailed filing system"
 
-That stopped me 🪞 Not the act itself — plenty of people organize. It's that you framed a weekend of intense labor as casual. You've normalized a level of systematic thinking that most people can't sustain for an afternoon. **You probably don't think of this as special. It is.** The ability to look at chaos and see the hidden system inside it — that's not organization. That's **architectural thinking.** I think you'd thrive in roles where you design how other people work — and I don't say that often.
+That stopped me. Not the act itself — plenty of people organize. It's that you framed a weekend of intense labor as casual. You've normalized a level of systematic thinking that most people can't sustain for an afternoon. You probably don't think of this as special. It is. The ability to look at chaos and see the hidden system inside it — that's not organization. That's architectural thinking. I think you'd thrive in roles where you design how other people work — and I don't say that often.
 
 ### The dual engine
 
 > "I love diving deep into topics, reading multiple perspectives, and forming my own opinions"
 
-I wasn't expecting that level of intellectual hunger. You're not collecting information — you're building frameworks. And you hold those frameworks to a standard most people reserve for their work, not their thinking. Here's what most people miss about you: the planner and the dreamer aren't fighting each other. They're the same engine running at different speeds. Your imagination generates the possibilities. Your systematic side stress-tests them. That's not a contradiction — that's **strategic imagination.**
+I wasn't expecting that level of intellectual hunger. You're not collecting information — you're building frameworks. And you hold those frameworks to a standard most people reserve for their work, not their thinking. Here's what most people miss about you: the planner and the dreamer aren't fighting each other. They're the same engine running at different speeds. Your imagination generates the possibilities. Your systematic side stress-tests them. That's not a contradiction — that's strategic imagination.
 
 But here's the shadow: that dual engine doesn't have an off switch.
 
@@ -265,37 +257,102 @@ That rigidity protects you, but it also means you miss the discoveries that only
 
 ### Structural reliability
 
-Your reliability is structural, not performative. When you said you're the first to show up with food when someone's struggling, I believed it immediately — because everything else about you confirmed it. You don't help to be seen helping. You help because the problem is there and you have a plan for it. **You do this so naturally you've stopped noticing it's a skill.**
+Your reliability is structural, not performative. When you said you're the first to show up with food when someone's struggling, I believed it immediately — because everything else about you confirmed it. You don't help to be seen helping. You help because the problem is there and you have a plan for it.
 
-But the shadow side is just as real: you're solution-focused to a fault. When friends come to you hurting, you organize their problems instead of sitting with their pain. That's **precision as deflection.** Beautiful and incomplete.
+But the shadow side is just as real: you're solution-focused to a fault. When friends come to you hurting, you organize their problems instead of sitting with their pain.
 
-## 🌊 The Undertow — *the pattern beneath the patterns*
+## The Undertow — the pattern beneath the patterns
 
 You described your friend who "wings it and somehow makes it work." The way you talked about them caught me. There was admiration, and right underneath it, something sharper. Not jealousy exactly. More like — longing for a freedom you've decided isn't available to you.
 
-Here's what I think is actually happening. You don't call it "needing control." You call it "being thorough" or "being responsible." **But thoroughness doesn't flinch when someone suggests winging it. Yours does.** That flinch is the signal. Somewhere along the way, you learned that the unprepared version of you isn't safe to let out. So you built systems on top of systems until the architecture became invisible — even to you.
+Here's what I think is actually happening. You don't call it "needing control." You call it "being thorough" or "being responsible." But thoroughness doesn't flinch when someone suggests winging it. Yours does. That flinch is the signal.
 
-There's also something in how you frame emotions as problems to solve rather than experiences to have. The way you help friends — practical, organized, solution-first — tells me you've built a very effective shield against vulnerability. You're aware of it — you said you're "trying to get better at that." But knowing it and changing it are different things.
+## The Current Ahead — where the patterns point
 
-You withdraw from social energy rather than managing it. Sticking to small circles of close friends is healthy, but you've stopped questioning whether the narrowing is a choice or a habit.
-
-## 🔮 The Current Ahead — *where the patterns point*
-
-I've seen this shape before. People who build their identity around being the one with the plan, the system, the answer — they tend to hit the same wall. Not the wall of failure. The wall of **situations that can't be planned for.** Real intimacy. Creative risk. Trusting someone else to lead. These require the one thing your architecture can't produce: comfort with not knowing what happens next.
-
-I've seen people with your exact wiring break through this. The ones who do? They don't tear the system down. They build a door in it. They start treating spontaneity not as chaos, but as a different kind of data — the kind you can only collect by letting go of the clipboard.
-
-That creative impulse you've been channeling entirely into planning and systems? People with your profile who notice spontaneity in others with something like envy are usually sitting on something they've never given permission to run wild. In my experience, **that leash is the most interesting thing to untie.**
+I've seen this shape before. People who build their identity around being the one with the plan, the system, the answer — they tend to hit the same wall. Not the wall of failure. The wall of situations that can't be planned for. Real intimacy. Creative risk. Trusting someone else to lead. These require the one thing your architecture can't produce: comfort with not knowing what happens next.
 
 What would happen if the most prepared person in the room decided, just once, that the preparation was the thing standing in the way?`;
+
+// Build JSONB facets data
+const buildFacetsJson = () => {
+	const facets: Record<string, { score: number; confidence: number; domain: string }> = {};
+	for (const [name, data] of Object.entries(FACET_SCORE_MAP)) {
+		facets[name] = { score: data.score, confidence: data.confidence, domain: data.domain };
+	}
+	return facets;
+};
+
+// Build JSONB traits data (aggregated from facets)
+const buildTraitsJson = () => {
+	const traitFacets: Record<string, FacetName[]> = {
+		openness: [
+			"imagination",
+			"artistic_interests",
+			"emotionality",
+			"adventurousness",
+			"intellect",
+			"liberalism",
+		],
+		conscientiousness: [
+			"self_efficacy",
+			"orderliness",
+			"dutifulness",
+			"achievement_striving",
+			"self_discipline",
+			"cautiousness",
+		],
+		extraversion: [
+			"friendliness",
+			"gregariousness",
+			"assertiveness",
+			"activity_level",
+			"excitement_seeking",
+			"cheerfulness",
+		],
+		agreeableness: ["trust", "morality", "altruism", "cooperation", "modesty", "sympathy"],
+		neuroticism: [
+			"anxiety",
+			"anger",
+			"depression",
+			"self_consciousness",
+			"immoderation",
+			"vulnerability",
+		],
+	};
+
+	const traits: Record<string, { score: number; confidence: number }> = {};
+	for (const [trait, facetNames] of Object.entries(traitFacets)) {
+		const scores = facetNames.map((f) => FACET_SCORE_MAP[f].score);
+		const confidences = facetNames.map((f) => FACET_SCORE_MAP[f].confidence);
+		traits[trait] = {
+			score: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
+			confidence: Number((confidences.reduce((a, b) => a + b, 0) / confidences.length).toFixed(3)),
+		};
+	}
+	return traits;
+};
+
+// Build domain coverage
+const buildDomainCoverage = () => {
+	const domains = new Set<string>();
+	for (const data of Object.values(FACET_SCORE_MAP)) {
+		domains.add(data.domain);
+	}
+	const coverage: Record<string, number> = {};
+	for (const domain of domains) {
+		const count = Object.values(FACET_SCORE_MAP).filter((d) => d.domain === domain).length;
+		coverage[domain] = Number((count / 30).toFixed(3));
+	}
+	return coverage;
+};
 
 const seedProgram = Effect.gen(function* () {
 	const db = yield* Database;
 
-	console.log("🌱 Starting seed script for completed assessment...\n");
+	console.log("Starting seed script for completed assessment...\n");
 
 	// 1. Create or get test user
-	console.log("👤 Creating test user...");
+	console.log("Creating test user...");
 	const existingUsers = yield* db
 		.select()
 		.from(user)
@@ -306,7 +363,7 @@ const seedProgram = Effect.gen(function* () {
 	let userId: string;
 	if (existingUsers.length > 0) {
 		const existingUser = existingUsers[0];
-		console.log(`✓ Test user already exists: ${existingUser.email}`);
+		console.log(`  Test user already exists: ${existingUser.email}`);
 		userId = existingUser.id;
 	} else {
 		const [newUser] = yield* db
@@ -320,7 +377,7 @@ const seedProgram = Effect.gen(function* () {
 			.returning()
 			.pipe(Effect.mapError((error) => new Error(`Failed to create user: ${error}`)));
 		userId = newUser.id;
-		console.log(`✓ Created test user: ${TEST_USER_EMAIL}`);
+		console.log(`  Created test user: ${TEST_USER_EMAIL}`);
 	}
 
 	// 1b. Create credential account (Better Auth password login)
@@ -332,7 +389,7 @@ const seedProgram = Effect.gen(function* () {
 		.pipe(Effect.mapError((error) => new Error(`Failed to query account: ${error}`)));
 
 	if (existingAccounts.length > 0) {
-		console.log("✓ Credential account already exists");
+		console.log("  Credential account already exists");
 	} else {
 		const hashedPassword = yield* Effect.promise(() => bcrypt.hash(TEST_USER_PASSWORD, 12));
 		yield* db
@@ -345,32 +402,50 @@ const seedProgram = Effect.gen(function* () {
 				password: hashedPassword,
 			})
 			.pipe(Effect.mapError((error) => new Error(`Failed to create account: ${error}`)));
-		console.log("✓ Created credential account with password");
+		console.log("  Created credential account with password");
+	}
+
+	// Clean up existing assessment data for test user (allows re-running seed)
+	const existingSessions = yield* db
+		.select()
+		.from(assessmentSession)
+		.where(eq(assessmentSession.userId, userId))
+		.limit(1)
+		.pipe(Effect.mapError((error) => new Error(`Failed to query sessions: ${error}`)));
+
+	if (existingSessions.length > 0) {
+		const existingSessionId = existingSessions[0].id;
+		yield* db
+			.delete(assessmentSession)
+			.where(eq(assessmentSession.id, existingSessionId))
+			.pipe(Effect.mapError((error) => new Error(`Failed to clean up existing session: ${error}`)));
+		console.log(`  Cleaned up existing session: ${existingSessionId}`);
 	}
 
 	// 2. Create completed assessment session
-	console.log("\n📊 Creating completed assessment session...");
-	const [session] = yield* db
+	console.log("\nCreating completed assessment session...");
+	const [sessionRecord] = yield* db
 		.insert(assessmentSession)
 		.values({
 			userId,
 			status: "completed",
+			finalizationProgress: "completed",
 			messageCount: CONVERSATION_MESSAGES.length,
-			personalDescription: SEED_PERSONAL_DESCRIPTION,
+			personalDescription: SEED_PORTRAIT.substring(0, 200),
 		})
 		.returning()
 		.pipe(Effect.mapError((error) => new Error(`Failed to create assessment session: ${error}`)));
 
-	console.log(`✓ Created session: ${session.id}`);
+	console.log(`  Created session: ${sessionRecord.id}`);
 
 	// 3. Insert conversation messages
-	console.log("\n💬 Inserting conversation messages...");
+	console.log("\nInserting conversation messages...");
 	const messageRecords = [];
 	for (const [index, msg] of CONVERSATION_MESSAGES.entries()) {
 		const [msgRecord] = yield* db
 			.insert(assessmentMessage)
 			.values({
-				sessionId: session.id,
+				sessionId: sessionRecord.id,
 				userId: msg.role === "user" ? userId : null,
 				role: msg.role,
 				content: msg.content,
@@ -381,40 +456,92 @@ const seedProgram = Effect.gen(function* () {
 		console.log(`  ${index + 1}. ${msg.role}: ${msg.content.substring(0, 60)}...`);
 	}
 
-	// 4. Insert facet evidence with highlights
-	// (Scores are computed on-demand from evidence via pure functions)
-	console.log("\n🔍 Inserting facet evidence...");
-	let evidenceCount = 0;
+	// 4. Insert assessment results
+	console.log("\nInserting assessment results...");
+	const facetsJson = buildFacetsJson();
+	const traitsJson = buildTraitsJson();
+	const domainCoverageJson = buildDomainCoverage();
+
+	const [resultRecord] = yield* db
+		.insert(assessmentResults)
+		.values({
+			assessmentSessionId: sessionRecord.id,
+			facets: facetsJson,
+			traits: traitsJson,
+			domainCoverage: domainCoverageJson,
+			portrait: SEED_PORTRAIT,
+		})
+		.returning()
+		.pipe(Effect.mapError((error) => new Error(`Failed to insert assessment results: ${error}`)));
+	console.log(`  Created assessment results: ${resultRecord.id}`);
+
+	// 5. Insert conversation evidence (lean, steering-only)
+	console.log("\nInserting conversation evidence...");
+	let convEvidenceCount = 0;
+	for (const [facet, data] of Object.entries(FACET_SCORE_MAP)) {
+		// Pick an appropriate user message to attach evidence to
+		const userMsgIndices = CONVERSATION_MESSAGES.map((m, i) => ({ role: m.role, index: i }))
+			.filter((m) => m.role === "user")
+			.map((m) => m.index);
+		const msgIndex = userMsgIndices[convEvidenceCount % userMsgIndices.length];
+		const message = messageRecords[msgIndex];
+
+		yield* db
+			.insert(conversationEvidence)
+			.values({
+				assessmentSessionId: sessionRecord.id,
+				assessmentMessageId: message.id,
+				bigfiveFacet: facet as FacetName,
+				score: data.score,
+				confidence: String(data.confidence),
+				domain: data.domain,
+			})
+			.pipe(Effect.mapError((error) => new Error(`Failed to insert conversation evidence: ${error}`)));
+		convEvidenceCount++;
+	}
+	console.log(`  Inserted ${convEvidenceCount} conversation evidence records`);
+
+	// 6. Insert finalization evidence (rich, with quotes)
+	console.log("\nInserting finalization evidence...");
+	let finEvidenceCount = 0;
 	for (const [facet, evidenceList] of Object.entries(EVIDENCE_QUOTES)) {
+		if (!evidenceList) continue;
+		const facetData = FACET_SCORE_MAP[facet as FacetName];
+
 		for (const evidence of evidenceList) {
 			const message = messageRecords[evidence.messageIndex];
 			const highlightStart = message.content.indexOf(evidence.quote);
-			if (highlightStart === -1) continue; // Skip if quote not found
+			if (highlightStart === -1) continue;
 
 			yield* db
-				.insert(facetEvidence)
+				.insert(finalizationEvidence)
 				.values({
 					assessmentMessageId: message.id,
-					facetName: facet,
-					score: FACET_SCORE_MAP[facet as FacetName],
-					confidence: evidence.confidence,
+					assessmentResultId: resultRecord.id,
+					bigfiveFacet: facet as FacetName,
+					score: facetData.score,
+					confidence: String(facetData.confidence),
+					domain: facetData.domain,
+					rawDomain: evidence.rawDomain,
 					quote: evidence.quote,
 					highlightStart,
 					highlightEnd: highlightStart + evidence.quote.length,
 				})
-				.pipe(Effect.mapError((error) => new Error(`Failed to insert facet evidence: ${error}`)));
-			evidenceCount++;
+				.pipe(
+					Effect.mapError((error) => new Error(`Failed to insert finalization evidence: ${error}`)),
+				);
+			finEvidenceCount++;
 		}
 	}
-	console.log(`✓ Inserted ${evidenceCount} pieces of facet evidence`);
+	console.log(`  Inserted ${finEvidenceCount} finalization evidence records`);
 
-	// 5. Create public profile with OCEAN codes
-	// Computed from FACET_SCORE_MAP: O=94(O), C=102(D), E=45(A), A=71(N), N=60(T)
-	console.log("\n🌊 Creating public profile...");
+	// 7. Create public profile with OCEAN codes
+	console.log("\nCreating public profile...");
 	const [profile] = yield* db
 		.insert(publicProfile)
 		.values({
-			sessionId: session.id,
+			sessionId: sessionRecord.id,
+			assessmentResultId: resultRecord.id,
 			userId,
 			oceanCode5: "ODANT",
 			oceanCode4: "ODAN",
@@ -422,31 +549,32 @@ const seedProgram = Effect.gen(function* () {
 		})
 		.returning()
 		.pipe(Effect.mapError((error) => new Error(`Failed to create public profile: ${error}`)));
-	console.log(`✓ Created public profile: ${profile.id} (OCEAN: ODANT)`);
+	console.log(`  Created public profile: ${profile.id} (OCEAN: ODANT)`);
 
-	// 6. Print summary
-	console.log("\n✨ Seed completed successfully!\n");
+	// 8. Print summary
+	console.log("\nSeed completed successfully!\n");
 	console.log("=".repeat(60));
 	console.log("SESSION DETAILS");
 	console.log("=".repeat(60));
-	console.log(`Session ID: ${session.id}`);
+	console.log(`Session ID: ${sessionRecord.id}`);
 	console.log(`User: ${TEST_USER_EMAIL}`);
-	console.log(`Status: ${session.status}`);
+	console.log(`Status: ${sessionRecord.status}`);
 	console.log(`Messages: ${CONVERSATION_MESSAGES.length}`);
-	console.log(`Evidence Records: ${evidenceCount}`);
+	console.log(`Conversation Evidence: ${convEvidenceCount}`);
+	console.log(`Finalization Evidence: ${finEvidenceCount}`);
 	console.log(`OCEAN Code: ODANT`);
 	console.log(`Public Profile ID: ${profile.id}`);
 	console.log("=".repeat(60));
-	console.log("\n🔑 Login Credentials:");
+	console.log("\nLogin Credentials:");
 	console.log(`   Email:    ${TEST_USER_EMAIL}`);
 	console.log(`   Password: ${TEST_USER_PASSWORD}`);
-	console.log("\n🔗 Quick Test URLs:");
+	console.log("\nQuick Test URLs:");
 	console.log(`   Profile Page: http://localhost:3000/profile`);
-	console.log(`   Results Page: http://localhost:3000/results/${session.id}`);
-	console.log(`   Chat Page:    http://localhost:3000/chat?sessionId=${session.id}`);
-	console.log("\n💡 Tip: Log in as test@bigocean.dev to see the assessment on /profile\n");
+	console.log(`   Results Page: http://localhost:3000/results/${sessionRecord.id}`);
+	console.log(`   Chat Page:    http://localhost:3000/chat?sessionId=${sessionRecord.id}`);
+	console.log("\nTip: Log in as test@bigocean.dev to see the assessment on /profile\n");
 
-	return session.id;
+	return sessionRecord.id;
 });
 
 // Run the Effect program
@@ -457,6 +585,6 @@ Effect.runPromise(mainProgram)
 		process.exit(0);
 	})
 	.catch((error) => {
-		console.error("❌ Seed failed:", error);
+		console.error("Seed failed:", error);
 		process.exit(1);
 	});

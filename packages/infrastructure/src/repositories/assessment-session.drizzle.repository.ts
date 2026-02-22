@@ -10,6 +10,7 @@
  * - Uses AssessmentSessionRepository.of({...}) for proper service implementation
  */
 
+import { randomBytes } from "node:crypto";
 import { DatabaseError, SessionNotFound } from "@workspace/contracts/errors";
 import { AssessmentSessionEntitySchema } from "@workspace/domain/entities/session.entity";
 import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
@@ -280,9 +281,11 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 					const sessionData = {
 						id: updatedSession.id,
 						userId: updatedSession.userId,
+						sessionToken: updatedSession.sessionToken,
 						createdAt: updatedSession.createdAt,
 						updatedAt: updatedSession.updatedAt,
 						status: updatedSession.status,
+						finalizationProgress: updatedSession.finalizationProgress,
 						messageCount: updatedSession.messageCount,
 						personalDescription: updatedSession.personalDescription,
 					};
@@ -426,6 +429,145 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 						oceanCode5: row.oceanCode5 ?? null,
 						archetypeName: row.archetypeName ?? null,
 					}));
+				}),
+
+			createAnonymousSession: () =>
+				Effect.gen(function* () {
+					const sessionToken = randomBytes(32).toString("hex");
+
+					const [session] = yield* db
+						.insert(assessmentSession)
+						.values({
+							sessionToken,
+							status: "active",
+							messageCount: 0,
+							createdAt: new Date(),
+							updatedAt: new Date(),
+						})
+						.returning()
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "createAnonymousSession",
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed in error handler:", logError);
+								}
+								return new DatabaseError({ message: "Failed to create anonymous session" });
+							}),
+						);
+
+					if (!session) {
+						return yield* Effect.fail(
+							new DatabaseError({ message: "Failed to create anonymous session" }),
+						);
+					}
+
+					logger.info("Anonymous session created", { sessionId: session.id });
+					return { sessionId: session.id, sessionToken };
+				}),
+
+			findByToken: (token: string) =>
+				Effect.gen(function* () {
+					const results = yield* db
+						.select()
+						.from(assessmentSession)
+						.where(and(eq(assessmentSession.sessionToken, token), eq(assessmentSession.status, "active")))
+						.limit(1)
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "findByToken",
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed in error handler:", logError);
+								}
+								return new DatabaseError({ message: "Failed to find session by token" });
+							}),
+						);
+
+					if (results.length === 0 || !results[0]) {
+						return null;
+					}
+
+					return yield* Schema.decodeUnknown(AssessmentSessionEntitySchema)(results[0]).pipe(
+						Effect.mapError((error) => {
+							try {
+								logger.error("Schema parse error in findByToken", { error: String(error) });
+							} catch (logError) {
+								console.error("Logger failed:", logError);
+							}
+							return new DatabaseError({ message: "Failed to parse session from token" });
+						}),
+					);
+				}),
+
+			assignUserId: (sessionId: string, userId: string) =>
+				Effect.gen(function* () {
+					const [updated] = yield* db
+						.update(assessmentSession)
+						.set({ userId, sessionToken: null, updatedAt: new Date() })
+						.where(eq(assessmentSession.id, sessionId))
+						.returning()
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "assignUserId",
+										sessionId,
+										userId,
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({ message: "Failed to assign user to session" });
+							}),
+						);
+
+					if (!updated) {
+						return yield* Effect.fail(new DatabaseError({ message: "Failed to assign user to session" }));
+					}
+
+					return yield* Schema.decodeUnknown(AssessmentSessionEntitySchema)(updated).pipe(
+						Effect.mapError(() => new DatabaseError({ message: "Failed to parse updated session" })),
+					);
+				}),
+
+			rotateToken: (sessionId: string) =>
+				Effect.gen(function* () {
+					const sessionToken = randomBytes(32).toString("hex");
+
+					const [updated] = yield* db
+						.update(assessmentSession)
+						.set({ sessionToken, updatedAt: new Date() })
+						.where(eq(assessmentSession.id, sessionId))
+						.returning()
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "rotateToken",
+										sessionId,
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({ message: "Failed to rotate session token" });
+							}),
+						);
+
+					if (!updated) {
+						return yield* Effect.fail(new DatabaseError({ message: "Failed to rotate session token" }));
+					}
+
+					logger.info("Session token rotated", { sessionId });
+					return { sessionToken };
 				}),
 		});
 	}),

@@ -78,6 +78,18 @@ const configSchema = Config.all({
 
 	// Profile sharing confidence threshold
 	shareMinConfidence: Config.number("SHARE_MIN_CONFIDENCE").pipe(Config.withDefault(70)),
+
+	// Two-tier architecture model configuration (Story 9.1)
+	messageThreshold: Config.number("MESSAGE_THRESHOLD").pipe(Config.withDefault(25)),
+	conversanalyzerModelId: Config.string("CONVERSANALYZER_MODEL_ID").pipe(
+		Config.withDefault("claude-haiku-4-5-20251001"),
+	),
+	finanalyzerModelId: Config.string("FINANALYZER_MODEL_ID").pipe(
+		Config.withDefault("claude-sonnet-4-6"),
+	),
+	portraitGeneratorModelId: Config.string("PORTRAIT_GENERATOR_MODEL_ID").pipe(
+		Config.withDefault("claude-sonnet-4-6"),
+	),
 });
 
 /**

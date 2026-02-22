@@ -11,13 +11,12 @@ import { it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { describe, expect, vi } from "vitest";
 
-vi.mock("@workspace/infrastructure/repositories/facet-evidence.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 
-import { FacetEvidenceDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/facet-evidence.drizzle.repository";
+import { FacetEvidenceNoopRepositoryLive } from "@workspace/infrastructure/repositories/facet-evidence.noop.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 
-const TestLayer = Layer.mergeAll(FacetEvidenceDrizzleRepositoryLive, LoggerPinoRepositoryLive);
+const TestLayer = Layer.mergeAll(FacetEvidenceNoopRepositoryLive, LoggerPinoRepositoryLive);
 
 import {
 	shouldTriggerScoring,

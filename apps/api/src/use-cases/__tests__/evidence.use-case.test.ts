@@ -10,16 +10,12 @@
 import { it } from "@effect/vitest";
 import type { FacetName, SavedFacetEvidence } from "@workspace/domain";
 import { FacetEvidenceRepository, LoggerRepository } from "@workspace/domain";
+// Import noop layer (Story 9.1: facet_evidence table removed in clean-slate migration)
+import { FacetEvidenceNoopRepositoryLive } from "@workspace/infrastructure/repositories/facet-evidence.noop.repository";
 import { Effect, Layer } from "effect";
 import { afterEach, beforeEach, describe, expect, vi } from "vitest";
 import { getFacetEvidence } from "../get-facet-evidence.use-case";
 import { getMessageEvidence } from "../get-message-evidence.use-case";
-
-// Activate mocking
-vi.mock("@workspace/infrastructure/repositories/facet-evidence.drizzle.repository");
-
-// Import mocked layer - Vitest auto-resolves to __mocks__ version
-import { FacetEvidenceDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/facet-evidence.drizzle.repository";
 
 // ============================================
 // Mock Data
@@ -56,7 +52,7 @@ const mockLogger = {
 // ============================================
 
 const createTestLayer = () =>
-	Layer.mergeAll(FacetEvidenceDrizzleRepositoryLive, Layer.succeed(LoggerRepository, mockLogger));
+	Layer.mergeAll(FacetEvidenceNoopRepositoryLive, Layer.succeed(LoggerRepository, mockLogger));
 
 // ============================================
 // Tests

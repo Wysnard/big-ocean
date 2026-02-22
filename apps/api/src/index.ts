@@ -23,7 +23,7 @@ import {
 	CheckpointerPostgresRepositoryLive,
 	CostGuardRedisRepositoryLive,
 	DatabaseStack,
-	FacetEvidenceDrizzleRepositoryLive,
+	FacetEvidenceNoopRepositoryLive,
 	OrchestratorGraphLangGraphRepositoryLive,
 	OrchestratorLangGraphRepositoryLive,
 	PortraitGeneratorClaudeRepositoryLive,
@@ -119,7 +119,7 @@ const CostGuardLayer = CostGuardRedisRepositoryLive.pipe(
 const AgentLayers = Layer.mergeAll(
 	NerinAgentLayer,
 	AnalyzerLayer,
-	FacetEvidenceDrizzleRepositoryLive,
+	FacetEvidenceNoopRepositoryLive,
 ).pipe(Layer.provide(InfrastructureLayer));
 
 /**
@@ -152,7 +152,7 @@ const RepositoryLayers = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
 	AssessmentMessageDrizzleRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
-	FacetEvidenceDrizzleRepositoryLive,
+	FacetEvidenceNoopRepositoryLive,
 	NerinAgentLayer,
 	CostGuardLayer,
 	OrchestratorLayer,

@@ -23,18 +23,13 @@ import { beforeEach, describe, expect, vi } from "vitest";
 vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 vi.mock("@workspace/infrastructure/repositories/public-profile.drizzle.repository");
-vi.mock("@workspace/infrastructure/repositories/facet-evidence.drizzle.repository");
 
 import {
 	AssessmentSessionDrizzleRepositoryLive,
 	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
 	_resetMockState as resetSessionState,
 } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
-import {
-	FacetEvidenceDrizzleRepositoryLive,
-	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
-	_resetMockState as resetEvidenceState,
-} from "@workspace/infrastructure/repositories/facet-evidence.drizzle.repository";
+import { FacetEvidenceNoopRepositoryLive } from "@workspace/infrastructure/repositories/facet-evidence.noop.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 import {
 	PublicProfileDrizzleRepositoryLive,
@@ -83,7 +78,7 @@ const BaseTestLayer = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
 	LoggerPinoRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
-	FacetEvidenceDrizzleRepositoryLive,
+	FacetEvidenceNoopRepositoryLive,
 	AppConfigTestLive,
 );
 
@@ -100,7 +95,6 @@ describe("createShareableProfile Use Case", () => {
 	beforeEach(() => {
 		resetSessionState();
 		resetProfileState();
-		resetEvidenceState();
 	});
 
 	describe("Success scenarios", () => {
@@ -149,7 +143,6 @@ describe("getPublicProfile Use Case", () => {
 	beforeEach(() => {
 		resetSessionState();
 		resetProfileState();
-		resetEvidenceState();
 	});
 
 	// Derive expected values from lookupArchetype for "ODAW"
@@ -231,7 +224,6 @@ describe("toggleProfileVisibility Use Case", () => {
 	beforeEach(() => {
 		resetSessionState();
 		resetProfileState();
-		resetEvidenceState();
 	});
 
 	describe("Success scenarios", () => {

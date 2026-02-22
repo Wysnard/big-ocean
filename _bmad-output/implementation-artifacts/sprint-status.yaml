@@ -104,8 +104,8 @@ development_status:
   epic-6-retrospective: optional
 
   # EPIC 7: UI Theme & Visual Identity (PHASE 1 - MVP Visual Identity)
-  # 17/17 original stories completed. Story 7.18 added via design-thinking-2026-02-20 (Priority 4 — Transition UX).
-  epic-7: in-progress
+  # All stories completed (18/18) — epic promoted to done (2026-02-22)
+  epic-7: done
   7-1-psychedelic-brand-design-tokens: done
   7-2-typography-system: done
   7-3-dark-mode-toggle-with-system-preference-detection: done
@@ -123,12 +123,13 @@ development_status:
   7-15-auth-form-psychedelic-brand-redesign: done
   7-16-geometric-ocean-sea-life-ambient-layer: done
   7-17-homepage-narrative-rewrite: done
-  7-18-conversation-to-portrait-transition-ux: in-progress
+  7-18-conversation-to-portrait-transition-ux: done
   epic-7-retrospective: done
 
   # EPIC 8: Results Page Content Enrichment
   # Phase 1 (Stories 8.1-8.4, 8.6, 8.7): Static descriptions + layout redesign + personalized portrait — all done
   # Phase 2 (Story 8.5): Portrait regeneration for paid tier (DEFERRED — requires tier infrastructure)
+  # Note: Epic remains in-progress due to deferred Story 8.5. All Phase 1 stories done.
   epic-8: in-progress
   8-1-expand-archetype-descriptions-to-4-5-sentences: done
   8-2-add-level-specific-trait-descriptions: done
@@ -140,46 +141,60 @@ development_status:
   epic-8-retrospective: optional
 
 # ─────────────────────────────────────────────────────────────────
-# DESIGN THINKING 2026-02-20: Pending Story Creation
+# DESIGN THINKING 2026-02-20: All Priorities Complete
 # ─────────────────────────────────────────────────────────────────
-# The following work items were identified in design-thinking-2026-02-20.md
-# and need to be converted into formal stories via the create-story workflow.
-# Prototypes A-M complete. Implementation ordered by testing priority.
-#
-# PRIORITY 1 — Chat Foundation (Prototypes F, L, M, G):
-#   Scope: Trimmed NERIN_PERSONA (~780→~350 tokens), revised CHAT_CONTEXT
-#     with beliefs/threading/depth/mirrors, mirror library injection (13 mirrors),
-#     edge case handling, emoji palette, anti-patterns
-#   Files: nerin-persona.ts, nerin-system-prompt.ts + tests
-#   Suggested: Epic 2, Story 2.13
-#   Status: DONE (Story 2.13 completed)
-#
-# PRIORITY 2 — Portrait (Prototypes D, J):
-#   Scope: Revised PORTRAIT_CONTEXT (letter framing, confidant voice, 4-section
-#     architecture, depth adaptation), move scaffold computation (5 move types),
-#     MoveScaffold interface, depth/tone signals, finalization integration
-#   Files: portrait-generator.claude.repository.ts, get-results.use-case.ts, domain types
-#   Suggested: Epic 8, Story 8.7
-#   Status: DONE (Story 8.7 completed)
-#
-# PRIORITY 3 — Greeting (Prototype K):
-#   Scope: Combine greeting 1+2 (3→2 messages), replace beach question,
-#     add "boring true thing" question, investigate cadence impact, update seeds
-#   Files: nerin-greeting.ts + tests, seed scripts
-#   Suggested: Epic 2, Story 2.14
-#   Status: DONE (Story 2.14 code review complete)
-#   Test: Greeting preference test (3-5 people)
-#
-# PRIORITY 4 — Transition UX (Prototype I):
-#   Scope: Nerin farewell generation (agent final turn), auth gate redesign
-#     on chat page (hybrid approach), wait screen with rotating Nerin lines
-#     (10s minimum), portrait-first reveal layout
-#   Files: frontend components, routes, use-cases
-#   Suggested: Epic 7, Story 7.18
-#   Status: CREATED (Story 7.18 ready-for-dev, 2026-02-22)
-#   Test: Full self-test session (score ≥4/5)
-#
-# PRIORITY 5 — Full Validation:
-#   Scope: End-to-end testing with trusted testers (2-3 sessions),
-#     feedback collection, key learnings documentation
-#   Not a formal story — manual testing phase after Priority 1-4
+# Prototypes A-M complete. All 4 implementation priorities delivered:
+#   Priority 1 (Chat Foundation): DONE — Story 2.13
+#   Priority 2 (Portrait): DONE — Story 8.7
+#   Priority 3 (Greeting): DONE — Story 2.14
+#   Priority 4 (Transition UX): DONE — Story 7.18
+#   Priority 5 (Full Validation): Manual testing phase — not a formal story
+
+# ─────────────────────────────────────────────────────────────────
+# PHASE 2: Two-Tier Architecture Redesign
+# ─────────────────────────────────────────────────────────────────
+# Architecture: _bmad-output/planning-artifacts/architecture.md
+# Epics/Stories: _bmad-output/planning-artifacts/epics.md
+# Sprint Change Proposal: _bmad-output/planning-artifacts/sprint-change-proposal-2026-02-22.md
+# Replaces LangGraph pipeline with conversanalyzer (Haiku) + finanalyzer (Sonnet)
+# + formula-driven context steering + two evidence tables
+
+  # EPIC 9 (New Epic 1): Start a Conversation with Nerin
+  # Auth, anonymous sessions, Nerin chat, cold start greeting, streaming responses
+  epic-9: in-progress
+  9-1-anonymous-assessment-start: done
+  9-2-send-message-and-nerin-response: backlog
+  9-3-user-registration-and-login: backlog
+  9-4-anonymous-to-authenticated-transition: backlog
+  9-5-chat-interface-and-conversation-ux: backlog
+  epic-9-retrospective: optional
+
+  # EPIC 10 (New Epic 2): Conversation Intelligence
+  # Conversanalyzer (Haiku), formula functions, steering, cost guards
+  epic-10: backlog
+  10-1-conversation-evidence-schema-and-repository: backlog
+  10-2-conversanalyzer-haiku-analysis-on-every-message: backlog
+  10-3-formula-functions-facet-metrics-and-steering-target: backlog
+  10-4-steering-integration-smart-nerin-responses: backlog
+  10-5-message-count-progress-and-session-guards: backlog
+  10-6-cost-tracking-and-rate-limiting: backlog
+  epic-10-retrospective: optional
+
+  # EPIC 11 (New Epic 3): Personality Portrait & Results
+  # Finanalyzer (Sonnet), scoring, OCEAN code, portrait generation, results page
+  epic-11: backlog
+  11-1-finalization-evidence-schema-and-repository: backlog
+  11-2-assessment-results-schema-and-repository: backlog
+  11-3-finanalyzer-full-re-analysis-at-finalization: backlog
+  11-4-score-computation-and-ocean-code-generation: backlog
+  11-5-portrait-generation: backlog
+  11-6-generate-results-endpoint-and-finalization-pipeline: backlog
+  11-7-results-page-and-profile-viewing: backlog
+  epic-11-retrospective: optional
+
+  # EPIC 12 (New Epic 4): Sharing & Public Profile
+  # Shareable links, public archetype view, viral loop CTA
+  epic-12: backlog
+  12-1-shareable-link-generation: backlog
+  12-2-public-archetype-view: backlog
+  epic-12-retrospective: optional

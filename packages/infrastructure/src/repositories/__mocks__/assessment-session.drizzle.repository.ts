@@ -43,19 +43,14 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 			}),
 
 		getSession: (sessionId: string) =>
-			Effect.sync(() => {
+			Effect.gen(function* () {
 				const session = sessions.get(sessionId);
 				if (!session) {
-					return {
-						id: sessionId,
+					return yield* Effect.fail({
+						_tag: "SessionNotFound",
 						sessionId,
-						userId: undefined,
-						createdAt: new Date(),
-						updatedAt: new Date(),
-						status: "active" as const,
-						messageCount: 0,
-						personalDescription: null,
-					};
+						message: `Session '${sessionId}' not found`,
+					});
 				}
 				return session;
 			}),
@@ -136,6 +131,63 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 
 				// Sort by createdAt descending (newest first)
 				return userSessions.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+			}),
+
+		createAnonymousSession: () =>
+			Effect.sync(() => {
+				const sessionId = `session_${crypto.randomUUID().slice(0, 8)}`;
+				const sessionToken = `mock_token_${crypto.randomUUID().slice(0, 16)}`;
+				const session = {
+					id: sessionId,
+					userId: null,
+					sessionToken,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					status: "active" as const,
+					finalizationProgress: null,
+					messageCount: 0,
+					personalDescription: null,
+				};
+				sessions.set(sessionId, session);
+				return { sessionId, sessionToken };
+			}),
+
+		findByToken: (token: string) =>
+			Effect.sync(() => {
+				for (const session of sessions.values()) {
+					if (session.sessionToken === token && session.status === "active") {
+						return session;
+					}
+				}
+				return null;
+			}),
+
+		assignUserId: (sessionId: string, userId: string) =>
+			Effect.gen(function* () {
+				const session = sessions.get(sessionId);
+				if (!session) {
+					return yield* Effect.fail({
+						_tag: "DatabaseError",
+						message: "Failed to assign user to session",
+					});
+				}
+				const updated = { ...session, userId, sessionToken: null, updatedAt: new Date() };
+				sessions.set(sessionId, updated);
+				return updated;
+			}),
+
+		rotateToken: (sessionId: string) =>
+			Effect.gen(function* () {
+				const sessionToken = `mock_token_${crypto.randomUUID().slice(0, 16)}`;
+				const session = sessions.get(sessionId);
+				if (!session) {
+					return yield* Effect.fail({
+						_tag: "DatabaseError",
+						message: "Failed to rotate session token",
+					});
+				}
+				sessions.set(sessionId, { ...session, sessionToken, updatedAt: new Date() });
+				return { sessionToken };
 			}),
 	}),
 );
