@@ -19,11 +19,16 @@ test.describe("unauthenticated access denial", () => {
 			.waitFor({ state: "visible", timeout: 10_000 });
 	});
 
-	test("chat resume shows session-not-found error", async ({ page }) => {
+	test("chat resume denies unauth access to linked session", async ({ page }) => {
+		// Intercept the resume API call to verify 404 access denial
+		const resumePromise = page.waitForResponse(
+			(response) => response.url().includes(`${testSessionId}/resume`),
+			{ timeout: 15_000 },
+		);
+
 		await page.goto(`/chat?sessionId=${testSessionId}`);
 
-		// Resume fails → inline error message appears (no auto-redirect for unauth users)
-		await expect(page.getByText("Session not found")).toBeVisible({ timeout: 30_000 });
-		await expect(page.getByText("Start New Assessment")).toBeVisible();
+		const resumeResponse = await resumePromise;
+		expect(resumeResponse.status()).toBe(404);
 	});
 });

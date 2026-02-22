@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-02-21
+# Generated: 2026-02-22
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-02-21
+generated: 2026-02-22
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -51,8 +51,8 @@ development_status:
   epic-1-retrospective: optional
 
   # EPIC 2: Assessment Backend Services
-  # All original stories completed. Stories 2.12, 2.13 added via correct-course/create-story.
-  # Design thinking 2026-02-20 identifies pending work: Priority 3 (greeting, Story 2.14 not yet created).
+  # All original stories completed. Stories 2.12-2.14 added via correct-course/create-story.
+  # Story 2.14 (greeting redesign) in code review. Epic stays in-progress until 2.14 completes.
   epic-2: in-progress
   2-1-session-management-and-persistence: done
   2-2-nerin-agent-setup-and-conversational-quality: done
@@ -168,7 +168,7 @@ development_status:
 #     add "boring true thing" question, investigate cadence impact, update seeds
 #   Files: nerin-greeting.ts + tests, seed scripts
 #   Suggested: Epic 2, Story 2.14
-#   Status: CREATED (Story 2.14 ready-for-dev)
+#   Status: IN REVIEW (Story 2.14 in code review)
 #   Test: Greeting preference test (3-5 people)
 #
 # PRIORITY 4 — Transition UX (Prototype I):

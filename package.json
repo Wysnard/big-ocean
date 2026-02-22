@@ -29,7 +29,8 @@
 		"seed:test-assessment": "tsx scripts/seed-completed-assessment.ts",
 		"test:e2e": "pnpm --filter=@workspace/e2e test:e2e",
 		"test:e2e:ui": "pnpm --filter=@workspace/e2e test:e2e:ui",
-		"test:e2e:headed": "pnpm --filter=@workspace/e2e test:e2e:headed"
+		"test:e2e:headed": "pnpm --filter=@workspace/e2e test:e2e:headed",
+		"eval:portrait": "tsx scripts/eval-portrait.ts"
 	},
 	"simple-git-hooks": {
 		"pre-commit": "./.githooks/pre-commit",
