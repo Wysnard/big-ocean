@@ -277,7 +277,23 @@ describe("GET /api/assessment/:sessionId/results", () => {
 		expect(typeof decoded.isCurated).toBe("boolean");
 
 		// Traits — levels are trait-specific letters (e.g., P/G/O for openness, not H/M/L)
-		const VALID_TRAIT_LEVELS = ["P", "G", "O", "F", "B", "D", "I", "A", "E", "C", "N", "W", "R", "T", "S"];
+		const VALID_TRAIT_LEVELS = [
+			"P",
+			"G",
+			"O",
+			"F",
+			"B",
+			"D",
+			"I",
+			"A",
+			"E",
+			"C",
+			"N",
+			"W",
+			"R",
+			"T",
+			"S",
+		];
 		expect(decoded.traits).toHaveLength(5);
 		for (const trait of decoded.traits) {
 			expect(typeof trait.name).toBe("string");
@@ -340,6 +356,136 @@ describe("GET /api/assessment/:sessionId/results", () => {
 
 		// No portrait generated — below free tier message threshold
 		expect(decoded.personalDescription).toBeNull();
+	});
+});
+
+describe("Anonymous session cookie (Story 9.1)", () => {
+	/**
+	 * Helper: extract the assessment_token Set-Cookie header from a response.
+	 * Returns the raw header string or null.
+	 */
+	function getAssessmentCookie(response: Response): string | null {
+		// getSetCookie() returns all Set-Cookie headers as an array
+		const cookies = response.headers.getSetCookie();
+		return cookies.find((c) => c.startsWith("assessment_token=")) ?? null;
+	}
+
+	/**
+	 * Helper: extract just the cookie value (for forwarding in subsequent requests).
+	 */
+	function extractCookieValue(setCookieHeader: string): string {
+		// "assessment_token=abc123; HttpOnly; Secure; ..."
+		const match = setCookieHeader.match(/^assessment_token=([^;]+)/);
+		return match?.[1] ?? "";
+	}
+
+	test("anonymous start sets httpOnly cookie with correct attributes", async () => {
+		const response = await postJson("/api/assessment/start", {});
+		expect(response.status).toBe(200);
+
+		const cookie = getAssessmentCookie(response);
+		expect(cookie).not.toBeNull();
+
+		// Verify cookie attributes (case-insensitive check)
+		const lowerCookie = cookie?.toLowerCase();
+		expect(lowerCookie).toContain("httponly");
+		expect(lowerCookie).toContain("secure");
+		expect(lowerCookie).toContain("samesite=lax");
+		expect(lowerCookie).toContain("path=/api/assessment");
+		expect(lowerCookie).toContain("max-age=");
+
+		// Verify token is a non-empty cryptographic string
+		const tokenValue = extractCookieValue(cookie!);
+		expect(tokenValue.length).toBeGreaterThanOrEqual(32);
+	});
+
+	test("cookie-based session resumption returns same session", async () => {
+		// Step 1: Create anonymous session
+		const startResponse = await postJson("/api/assessment/start", {});
+		expect(startResponse.status).toBe(200);
+
+		const startData = await startResponse.json();
+		const originalSessionId = startData.sessionId;
+
+		// Extract the cookie from Set-Cookie header
+		const cookie = getAssessmentCookie(startResponse);
+		expect(cookie).not.toBeNull();
+		const tokenValue = extractCookieValue(cookie!);
+
+		// Step 2: Call start again WITH the cookie — should resume, not create new
+		const resumeResponse = await fetch(`${API_URL}/api/assessment/start`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Cookie: `assessment_token=${tokenValue}`,
+			},
+			body: JSON.stringify({}),
+		});
+
+		expect(resumeResponse.status).toBe(200);
+
+		const resumeData = await resumeResponse.json();
+
+		// Same session is returned
+		expect(resumeData.sessionId).toBe(originalSessionId);
+
+		// Should also refresh the cookie
+		const refreshedCookie = getAssessmentCookie(resumeResponse);
+		expect(refreshedCookie).not.toBeNull();
+		expect(refreshedCookie?.toLowerCase()).toContain("httponly");
+	});
+
+	test("cookie-based resumption preserves greeting messages", async () => {
+		// Step 1: Create anonymous session
+		const startResponse = await postJson("/api/assessment/start", {});
+		const startData = await startResponse.json();
+		const originalMessages = startData.messages;
+
+		// Extract cookie
+		const cookie = getAssessmentCookie(startResponse);
+		const tokenValue = extractCookieValue(cookie!);
+
+		// Step 2: Resume via cookie
+		const resumeResponse = await fetch(`${API_URL}/api/assessment/start`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Cookie: `assessment_token=${tokenValue}`,
+			},
+			body: JSON.stringify({}),
+		});
+
+		const resumeData = await resumeResponse.json();
+
+		// Greeting messages should be returned on resume
+		expect(resumeData.messages).toBeDefined();
+		expect(resumeData.messages.length).toBe(originalMessages.length);
+		// Content should match
+		for (let i = 0; i < originalMessages.length; i++) {
+			expect(resumeData.messages[i].content).toBe(originalMessages[i].content);
+			expect(resumeData.messages[i].role).toBe("assistant");
+		}
+	});
+
+	test("invalid cookie creates a new session instead of failing", async () => {
+		// Send request with a bogus cookie — should not 500, should create fresh session
+		const response = await fetch(`${API_URL}/api/assessment/start`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Cookie: "assessment_token=invalid-token-that-does-not-exist",
+			},
+			body: JSON.stringify({}),
+		});
+
+		expect(response.status).toBe(200);
+
+		const data = await response.json();
+		expect(data.sessionId).toBeDefined();
+
+		// Should set a new valid cookie
+		const cookie = getAssessmentCookie(response);
+		expect(cookie).not.toBeNull();
 	});
 });
 
