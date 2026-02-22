@@ -1,44 +1,41 @@
 /**
  * Send Message Use Case Tests
  *
- * Tests for the sendMessage business logic.
- * Uses inline spy layers (Layer.succeed with vi.fn()) for per-test control:
- * - Session validation
- * - Message persistence
- * - Orchestrator invocation (Nerin conversational agent)
- * - Cost tracking
- * - Error handling
+ * Story 9.2: Rewritten test suite for the new sequential Effect pipeline.
+ * Tests direct Nerin invocation, dual auth, isFinalTurn threshold,
+ * session status guard, and message_count increment.
  *
- * Story 2.4: Tests updated to use OrchestratorRepository instead of NerinAgentRepository.
- * Story 2.9: Confidence computed on-demand from FacetEvidenceRepository.
- * Story 2.11: Lean response — confidence removed from send-message output.
- *             Evidence reads moved to router node (offset steering).
- * Story 7.18: Final turn detection — farewell message at threshold, isFinalTurn flag.
+ * Uses @effect/vitest it.effect() pattern per project conventions.
  */
 
+import { afterEach, beforeEach, describe, expect, it, vi } from "@effect/vitest";
 import {
+	AgentInvocationError,
 	AppConfig,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
-	type BudgetPausedError,
-	CostGuardRepository,
 	LoggerRepository,
-	NERIN_FAREWELL_MESSAGES,
-	OrchestratorRepository,
-	type ProcessMessageOutput,
+	NerinAgentRepository,
 } from "@workspace/domain";
 import { Effect, Layer, Redacted } from "effect";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sendMessage } from "../send-message.use-case";
 
-// Define mock repo objects locally with vi.fn() for spy access
-const mockAssessmentSessionRepo = {
+// Mock repo objects with vi.fn() for spy access
+const mockSessionRepo = {
 	createSession: vi.fn(),
 	getSession: vi.fn(),
 	updateSession: vi.fn(),
+	getActiveSessionByUserId: vi.fn(),
+	getSessionsByUserId: vi.fn(),
+	findSessionByUserId: vi.fn(),
+	createAnonymousSession: vi.fn(),
+	findByToken: vi.fn(),
+	assignUserId: vi.fn(),
+	rotateToken: vi.fn(),
+	incrementMessageCount: vi.fn(),
 };
 
-const mockAssessmentMessageRepo = {
+const mockMessageRepo = {
 	saveMessage: vi.fn(),
 	getMessages: vi.fn(),
 	getMessageCount: vi.fn(),
@@ -51,100 +48,69 @@ const mockLoggerRepo = {
 	debug: vi.fn(),
 };
 
-const mockOrchestratorRepo = {
-	processMessage: vi.fn(),
-	processAnalysis: vi.fn(),
+const mockNerinRepo = {
+	invoke: vi.fn(),
 };
 
-const mockCostGuardRepo = {
-	incrementDailyCost: vi.fn(),
-	getDailyCost: vi.fn(),
-	incrementAssessmentCount: vi.fn(),
-	getAssessmentCount: vi.fn(),
-	canStartAssessment: vi.fn(),
-	recordAssessmentStart: vi.fn(),
-};
-
-// Mock data factories
-const mockSession = {
-	sessionId: "session_test_123",
-	userId: undefined,
+// Mock data
+const mockActiveSession = {
+	id: "session_test_123",
+	userId: null,
+	sessionToken: "mock_token",
 	createdAt: new Date("2026-02-01"),
+	updatedAt: new Date("2026-02-01"),
+	status: "active",
+	messageCount: 0,
+	finalizationProgress: null,
+	personalDescription: null,
 };
 
 const mockMessages = [
 	{
 		id: "msg_1",
 		sessionId: "session_test_123",
-		role: "user" as const,
-		content: "Tell me about yourself",
+		role: "assistant" as const,
+		content: "Hi! I'm Nerin.",
 		createdAt: new Date(),
 	},
 	{
 		id: "msg_2",
 		sessionId: "session_test_123",
 		role: "assistant" as const,
-		content: "Hi! I'm Nerin, nice to meet you.",
+		content: "What brings you here today?",
 		createdAt: new Date(),
 	},
 	{
 		id: "msg_3",
 		sessionId: "session_test_123",
 		role: "user" as const,
-		content: "What do you do?",
+		content: "Tell me about yourself",
 		createdAt: new Date(),
 	},
 ];
 
-const mockOrchestratorResponse: ProcessMessageOutput = {
-	nerinResponse: "I help you explore your personality through conversation.",
-	tokenUsage: {
-		input: 150,
-		output: 80,
-		total: 230,
-	},
-	costIncurred: 0.0043,
+const mockNerinResponse = {
+	response: "I help you explore your personality through conversation.",
+	tokenCount: { input: 150, output: 80, total: 230 },
 };
 
-const mockOrchestratorBatchResponse: ProcessMessageOutput = {
-	nerinResponse: "Interesting! Tell me more about that.",
-	tokenUsage: {
-		input: 180,
-		output: 90,
-		total: 270,
-	},
-	costIncurred: 0.0047,
-	steeringTarget: "orderliness",
-	steeringHint: "Explore how they organize their space, time, or belongings",
-};
+/** Matches production default in app-config.live.ts */
+const MESSAGE_THRESHOLD = 25;
 
-describe("sendMessage Use Case", () => {
+describe("sendMessage Use Case (Story 9.2)", () => {
 	beforeEach(() => {
-		// Session Repository mock
-		mockAssessmentSessionRepo.getSession.mockReturnValue(Effect.succeed(mockSession));
-		mockAssessmentSessionRepo.updateSession.mockReturnValue(Effect.succeed(mockSession));
-		mockAssessmentSessionRepo.createSession.mockImplementation(() => Effect.succeed(undefined));
+		mockSessionRepo.getSession.mockReturnValue(Effect.succeed(mockActiveSession));
+		mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(1));
 
-		// Message Repository mock
-		mockAssessmentMessageRepo.saveMessage.mockReturnValue(Effect.succeed(undefined));
-		mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(mockMessages));
-		mockAssessmentMessageRepo.getMessageCount.mockReturnValue(Effect.succeed(3));
+		mockMessageRepo.saveMessage.mockReturnValue(Effect.succeed(undefined));
+		mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(mockMessages));
 
-		// Logger Repository mock
 		mockLoggerRepo.info.mockImplementation(() => {});
 		mockLoggerRepo.error.mockImplementation(() => {});
 		mockLoggerRepo.warn.mockImplementation(() => {});
 		mockLoggerRepo.debug.mockImplementation(() => {});
 
-		// Orchestrator Repository mock
-		mockOrchestratorRepo.processMessage.mockReturnValue(Effect.succeed(mockOrchestratorResponse));
-		mockOrchestratorRepo.processAnalysis.mockReturnValue(Effect.void);
-
-		// CostGuard Repository mock
-		mockCostGuardRepo.getDailyCost.mockReturnValue(Effect.succeed(1000)); // 1000 cents = $10
-		mockCostGuardRepo.incrementDailyCost.mockReturnValue(Effect.succeed(1043));
-		mockCostGuardRepo.incrementAssessmentCount.mockReturnValue(Effect.succeed(1));
-		mockCostGuardRepo.getAssessmentCount.mockReturnValue(Effect.succeed(1));
+		mockNerinRepo.invoke.mockReturnValue(Effect.succeed(mockNerinResponse));
 	});
 
 	afterEach(() => {
@@ -165,6 +131,9 @@ describe("sendMessage Use Case", () => {
 				analyzerModelId: "claude-sonnet-4-20250514",
 				analyzerMaxTokens: 2048,
 				analyzerTemperature: 0.3,
+				portraitModelId: "claude-sonnet-4-20250514",
+				portraitMaxTokens: 4096,
+				portraitTemperature: 0.5,
 				nerinModelId: "claude-haiku-4-5-20251001",
 				nerinMaxTokens: 1024,
 				nerinTemperature: 0.7,
@@ -172,650 +141,371 @@ describe("sendMessage Use Case", () => {
 				freeTierMessageThreshold: 25,
 				portraitWaitMinMs: 2000,
 				shareMinConfidence: 70,
+				messageThreshold: MESSAGE_THRESHOLD,
+				conversanalyzerModelId: "claude-haiku-4-5-20251001",
+				finanalyzerModelId: "claude-sonnet-4-20250514",
+				portraitGeneratorModelId: "claude-sonnet-4-20250514",
 			}),
-			Layer.succeed(AssessmentSessionRepository, mockAssessmentSessionRepo),
-			Layer.succeed(AssessmentMessageRepository, mockAssessmentMessageRepo),
+			Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
+			Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
 			Layer.succeed(LoggerRepository, mockLoggerRepo),
-			Layer.succeed(OrchestratorRepository, mockOrchestratorRepo),
-			Layer.succeed(CostGuardRepository, mockCostGuardRepo),
+			Layer.succeed(NerinAgentRepository, mockNerinRepo),
 		);
 
-	describe("Success scenarios", () => {
-		it("should send a message and get orchestrator response", async () => {
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "What do you do?",
-			};
-
-			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			// Story 7.18: includes isFinalTurn flag
-			expect(result).toEqual({
-				response: mockOrchestratorResponse.nerinResponse,
-				isFinalTurn: false,
-			});
-		});
-
-		it("should save user message to repository", async () => {
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Tell me something interesting",
-				userId: "user_456",
-			};
-
-			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledWith(
-				"session_test_123",
-				"user",
-				"Tell me something interesting",
-				"user_456",
-			);
-		});
-
-		it("should save assistant response to repository", async () => {
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "What's your purpose?",
-			};
-
-			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledWith(
-				"session_test_123",
-				"assistant",
-				mockOrchestratorResponse.nerinResponse,
-			);
-		});
-
-		it("should invoke orchestrator with correct parameters", async () => {
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Another message",
-			};
-
-			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			expect(mockOrchestratorRepo.processMessage).toHaveBeenCalled();
-			const callArg = mockOrchestratorRepo.processMessage.mock.calls[0]?.[0];
-
-			expect(callArg.sessionId).toBe("session_test_123");
-			expect(callArg.userMessage).toBe("Another message");
-			// Message cadence is based on user messages only
-			expect(callArg.messageCount).toBe(2);
-			expect(callArg.dailyCostUsed).toBe(10); // 1000 cents = $10
-		});
-
-		it("should return lean response without confidence", async () => {
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Message content",
-			};
-
-			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			// Story 2.11: Lean response — only response string, no confidence
-			expect(result.response).toBeDefined();
-			expect((result as Record<string, unknown>).confidence).toBeUndefined();
-		});
-
-		it("should log message received and processed events", async () => {
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Test message",
-			};
-
-			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			expect(mockLoggerRepo.info).toHaveBeenCalledWith("Message received", {
-				sessionId: "session_test_123",
-				messageLength: 12,
-			});
-
-			expect(mockLoggerRepo.info).toHaveBeenCalledWith(
-				"Message processed",
-				expect.objectContaining({
+	describe("Success scenarios (AC: #1, #2, #3)", () => {
+		it.effect("should send a message and get Nerin response", () =>
+			Effect.gen(function* () {
+				const result = yield* sendMessage({
 					sessionId: "session_test_123",
-					responseLength: mockOrchestratorResponse.nerinResponse.length,
-				}),
-			);
-		});
+					message: "What do you do?",
+				});
 
-		it("should update cost tracking", async () => {
-			const linkedSession = {
-				...mockSession,
-				userId: "user_456",
-			};
-			mockAssessmentSessionRepo.getSession.mockReturnValue(Effect.succeed(linkedSession));
+				expect(result).toEqual({
+					response: mockNerinResponse.response,
+					isFinalTurn: false,
+				});
+			}).pipe(Effect.provide(createTestLayer())),
+		);
 
-			const testLayer = createTestLayer();
+		it.effect("should save user message to repository", () =>
+			Effect.gen(function* () {
+				yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Tell me something",
+					userId: "user_456",
+				});
 
-			const input = {
-				sessionId: "session_test_123",
-				message: "Track my cost",
-				authenticatedUserId: "user_456",
-			};
+				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
+					"session_test_123",
+					"user",
+					"Tell me something",
+					"user_456",
+				);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
 
-			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
+		it.effect("should save assistant message with response content (AC: #1)", () =>
+			Effect.gen(function* () {
+				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
 
-			// Cost should be incremented (0.0043 dollars = 0.43 cents, rounded)
-			expect(mockCostGuardRepo.incrementDailyCost).toHaveBeenCalledWith(
-				"user_456",
-				expect.any(Number),
-			);
-		});
+				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
+					"session_test_123",
+					"assistant",
+					mockNerinResponse.response,
+				);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("should invoke Nerin with correct message history (AC: #2)", () =>
+			Effect.gen(function* () {
+				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
+
+				expect(mockNerinRepo.invoke).toHaveBeenCalledWith({
+					sessionId: "session_test_123",
+					messages: mockMessages.map((m) => ({
+						id: m.id,
+						role: m.role,
+						content: m.content,
+					})),
+				});
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("should increment message_count atomically (AC: #1)", () =>
+			Effect.gen(function* () {
+				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
+
+				expect(mockSessionRepo.incrementMessageCount).toHaveBeenCalledWith("session_test_123");
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("should log message received and processed events", () =>
+			Effect.gen(function* () {
+				yield* sendMessage({ sessionId: "session_test_123", message: "Test message" });
+
+				expect(mockLoggerRepo.info).toHaveBeenCalledWith("Message received", {
+					sessionId: "session_test_123",
+					messageLength: 12,
+				});
+
+				expect(mockLoggerRepo.info).toHaveBeenCalledWith(
+					"Message processed",
+					expect.objectContaining({
+						sessionId: "session_test_123",
+						responseLength: mockNerinResponse.response.length,
+						isFinalTurn: false,
+					}),
+				);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
 	});
 
-	describe("Ownership guard", () => {
-		it("allows linked session owner to send messages", async () => {
-			mockAssessmentSessionRepo.getSession.mockReturnValue(
-				Effect.succeed({
-					...mockSession,
-					userId: "owner_user",
-				}),
-			);
+	describe("Anonymous session access (AC: #4)", () => {
+		it.effect("should allow anonymous session access (no userId on session)", () =>
+			Effect.gen(function* () {
+				const result = yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Anonymous",
+				});
 
-			const testLayer = createTestLayer();
-			const input = {
-				sessionId: "session_test_123",
-				message: "Owner message",
-				authenticatedUserId: "owner_user",
-				userId: "owner_user",
-			};
-
-			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			expect(result.response).toBeDefined();
-			expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalled();
-			expect(mockOrchestratorRepo.processMessage).toHaveBeenCalled();
-		});
-
-		it("denies linked session access for non-owner before side effects", async () => {
-			mockAssessmentSessionRepo.getSession.mockReturnValue(
-				Effect.succeed({
-					...mockSession,
-					userId: "owner_user",
-				}),
-			);
-
-			const testLayer = createTestLayer();
-			const input = {
-				sessionId: "session_test_123",
-				message: "Unauthorized message",
-				authenticatedUserId: "different_user",
-			};
-
-			const error = await Effect.runPromise(
-				sendMessage(input).pipe(Effect.provide(testLayer), Effect.flip),
-			);
-
-			expect(error._tag).toBe("SessionNotFound");
-			expect(mockAssessmentMessageRepo.saveMessage).not.toHaveBeenCalled();
-			expect(mockAssessmentMessageRepo.getMessageCount).not.toHaveBeenCalled();
-			expect(mockAssessmentMessageRepo.getMessages).not.toHaveBeenCalled();
-			expect(mockOrchestratorRepo.processMessage).not.toHaveBeenCalled();
-			expect(mockCostGuardRepo.getDailyCost).not.toHaveBeenCalled();
-			expect(mockCostGuardRepo.incrementDailyCost).not.toHaveBeenCalled();
-		});
-
-		it("denies linked session access for unauthenticated requests", async () => {
-			mockAssessmentSessionRepo.getSession.mockReturnValue(
-				Effect.succeed({
-					...mockSession,
-					userId: "owner_user",
-				}),
-			);
-
-			const testLayer = createTestLayer();
-			const input = {
-				sessionId: "session_test_123",
-				message: "Unauthenticated message",
-			};
-
-			const error = await Effect.runPromise(
-				sendMessage(input).pipe(Effect.provide(testLayer), Effect.flip),
-			);
-
-			expect(error._tag).toBe("SessionNotFound");
-			expect(mockAssessmentMessageRepo.saveMessage).not.toHaveBeenCalled();
-			expect(mockOrchestratorRepo.processMessage).not.toHaveBeenCalled();
-		});
-
-		it("keeps anonymous pre-link sessions accessible", async () => {
-			mockAssessmentSessionRepo.getSession.mockReturnValue(
-				Effect.succeed({
-					...mockSession,
-					userId: null,
-				}),
-			);
-
-			const testLayer = createTestLayer();
-			const input = {
-				sessionId: "session_test_123",
-				message: "Anonymous access message",
-			};
-
-			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			expect(result.response).toBeDefined();
-			expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalled();
-			expect(mockOrchestratorRepo.processMessage).toHaveBeenCalled();
-		});
+				expect(result.response).toBeDefined();
+				expect(mockNerinRepo.invoke).toHaveBeenCalled();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
 	});
 
-	describe("Batch processing (every 3rd message)", () => {
-		it("should return lean response on batch message", async () => {
-			mockOrchestratorRepo.processMessage.mockReturnValue(
-				Effect.succeed(mockOrchestratorBatchResponse),
-			);
-			mockAssessmentMessageRepo.getMessageCount.mockReturnValue(Effect.succeed(3)); // Batch trigger
+	describe("Ownership guard (AC: #5)", () => {
+		it.effect("should allow linked session owner to send messages", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({ ...mockActiveSession, userId: "owner_user" }),
+				);
 
-			const testLayer = createTestLayer();
+				const result = yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Owner message",
+					userId: "owner_user",
+				});
 
-			const input = {
-				sessionId: "session_test_123",
-				message: "Batch message",
-			};
+				expect(result.response).toBeDefined();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
 
-			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
+		it.effect("should deny non-owner access before side effects", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({ ...mockActiveSession, userId: "owner_user" }),
+				);
 
-			// Story 2.11: Lean response — only response string, no confidence
-			expect(result.response).toBe(mockOrchestratorBatchResponse.nerinResponse);
-			expect((result as Record<string, unknown>).confidence).toBeUndefined();
-		});
+				const exit = yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Unauthorized",
+					userId: "different_user",
+				}).pipe(Effect.exit);
 
-		it("should log batch processing info", async () => {
-			mockOrchestratorRepo.processMessage.mockReturnValue(
-				Effect.succeed(mockOrchestratorBatchResponse),
-			);
-			mockAssessmentMessageRepo.getMessageCount.mockReturnValue(Effect.succeed(3));
+				expect(exit._tag).toBe("Failure");
+				if (exit._tag === "Failure") {
+					const error = exit.cause;
+					expect(String(error)).toContain("SessionNotFound");
+				}
+				expect(mockMessageRepo.saveMessage).not.toHaveBeenCalled();
+				expect(mockNerinRepo.invoke).not.toHaveBeenCalled();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
 
-			const testLayer = createTestLayer();
+		it.effect("should deny unauthenticated access to linked sessions", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({ ...mockActiveSession, userId: "owner_user" }),
+				);
 
-			const input = {
-				sessionId: "session_test_123",
-				message: "Batch message",
-			};
+				const exit = yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "No user",
+				}).pipe(Effect.exit);
 
-			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
+				expect(exit._tag).toBe("Failure");
+				if (exit._tag === "Failure") {
+					expect(String(exit.cause)).toContain("SessionNotFound");
+				}
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
 
-			expect(mockLoggerRepo.info).toHaveBeenCalledWith(
-				"Message processed",
-				expect.objectContaining({
-					steeringTarget: "orderliness",
-				}),
-			);
-		});
+	describe("Session status guard", () => {
+		it.effect("should reject messages to completed sessions", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({ ...mockActiveSession, status: "completed" }),
+				);
+
+				const exit = yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Test",
+				}).pipe(Effect.exit);
+
+				expect(exit._tag).toBe("Failure");
+				if (exit._tag === "Failure") {
+					expect(String(exit.cause)).toContain("SessionCompletedError");
+				}
+				expect(mockMessageRepo.saveMessage).not.toHaveBeenCalled();
+				expect(mockNerinRepo.invoke).not.toHaveBeenCalled();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("should reject messages to finalizing sessions", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({ ...mockActiveSession, status: "finalizing" }),
+				);
+
+				const exit = yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Test",
+				}).pipe(Effect.exit);
+
+				expect(exit._tag).toBe("Failure");
+				if (exit._tag === "Failure") {
+					expect(String(exit.cause)).toContain("SessionCompletedError");
+				}
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("isFinalTurn threshold (AC: #3, #6)", () => {
+		it.effect("should return isFinalTurn: true when message_count >= MESSAGE_THRESHOLD", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(MESSAGE_THRESHOLD));
+
+				const result = yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Message at threshold",
+				});
+
+				expect(result.isFinalTurn).toBe(true);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("should return isFinalTurn: false when below threshold", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(MESSAGE_THRESHOLD - 1));
+
+				const result = yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Normal message",
+				});
+
+				expect(result.isFinalTurn).toBe(false);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("should still call Nerin on final turn (soft threshold)", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(MESSAGE_THRESHOLD));
+
+				yield* sendMessage({ sessionId: "session_test_123", message: "Final msg" });
+
+				expect(mockNerinRepo.invoke).toHaveBeenCalled();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("should return isFinalTurn: true when above threshold (can still continue)", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(MESSAGE_THRESHOLD + 5));
+
+				const result = yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Past threshold",
+				});
+
+				expect(result.isFinalTurn).toBe(true);
+				expect(result.response).toBeDefined();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
 	});
 
 	describe("Error handling", () => {
-		it("should fail when session not found", async () => {
-			const sessionNotFoundError = new Error("Session not found");
-			mockAssessmentSessionRepo.getSession.mockReturnValue(Effect.fail(sessionNotFoundError));
+		it.effect("should fail when session not found", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.fail({
+						_tag: "SessionNotFound",
+						sessionId: "nonexistent",
+						message: "Session 'nonexistent' not found",
+					}),
+				);
 
-			const testLayer = createTestLayer();
+				const exit = yield* sendMessage({
+					sessionId: "nonexistent",
+					message: "Test",
+				}).pipe(Effect.exit);
 
-			const input = {
-				sessionId: "nonexistent_session",
-				message: "Test",
-			};
+				expect(exit._tag).toBe("Failure");
+				if (exit._tag === "Failure") {
+					expect(String(exit.cause)).toContain("SessionNotFound");
+				}
+			}).pipe(Effect.provide(createTestLayer())),
+		);
 
-			await expect(
-				Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer))),
-			).rejects.toThrow("Session not found");
-		});
+		it.effect("should handle Nerin invocation failure", () =>
+			Effect.gen(function* () {
+				mockNerinRepo.invoke.mockReturnValue(
+					Effect.fail(
+						new AgentInvocationError({
+							agentName: "Nerin",
+							sessionId: "session_test_123",
+							message: "Claude API error",
+						}),
+					),
+				);
 
-		it("should handle orchestrator failure gracefully", async () => {
-			const orchestratorError = {
-				_tag: "OrchestrationError" as const,
-				sessionId: "session_test_123",
-				message: "Orchestrator pipeline failed",
-			};
-			mockOrchestratorRepo.processMessage.mockReturnValue(Effect.fail(orchestratorError));
+				const exit = yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Test",
+				}).pipe(Effect.exit);
 
-			const testLayer = createTestLayer();
+				expect(exit._tag).toBe("Failure");
+				if (exit._tag === "Failure") {
+					expect(String(exit.cause)).toContain("AgentInvocationError");
+				}
+				expect(mockLoggerRepo.error).toHaveBeenCalled();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
 
-			const input = {
-				sessionId: "session_test_123",
-				message: "Test message",
-			};
+		it.effect("should handle message save failure", () =>
+			Effect.gen(function* () {
+				mockMessageRepo.saveMessage.mockReturnValue(
+					Effect.fail({ _tag: "DatabaseError", message: "DB write failed" }),
+				);
 
-			// Use Effect.flip to capture the error directly
-			const error = await Effect.runPromise(
-				sendMessage(input).pipe(Effect.provide(testLayer), Effect.flip),
-			);
+				const exit = yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Test",
+				}).pipe(Effect.exit);
 
-			expect(error._tag).toBe("OrchestrationError");
-
-			// Should log the error
-			expect(mockLoggerRepo.error).toHaveBeenCalled();
-		});
-
-		it("should handle BudgetPausedError", async () => {
-			const budgetError: BudgetPausedError = {
-				_tag: "BudgetPausedError",
-				name: "BudgetPausedError",
-				sessionId: "session_test_123",
-				message: "Your assessment is saved! Come back tomorrow.",
-				resumeAfter: new Date("2026-02-04T00:00:00Z"),
-				currentConfidence: 50,
-			};
-			mockOrchestratorRepo.processMessage.mockReturnValue(Effect.fail(budgetError));
-
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Test message",
-			};
-
-			// Use Effect.flip to capture the error directly
-			const error = await Effect.runPromise(
-				sendMessage(input).pipe(Effect.provide(testLayer), Effect.flip),
-			);
-
-			expect(error._tag).toBe("BudgetPausedError");
-			expect((error as BudgetPausedError).sessionId).toBe("session_test_123");
-		});
-
-		it("should handle message save failure", async () => {
-			const saveError = new Error("Database error");
-			mockAssessmentMessageRepo.saveMessage.mockReturnValue(Effect.fail(saveError));
-
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Test message",
-			};
-
-			await expect(
-				Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer))),
-			).rejects.toThrow("Database error");
-		});
+				expect(exit._tag).toBe("Failure");
+				if (exit._tag === "Failure") {
+					expect(String(exit.cause)).toContain("DatabaseError");
+				}
+			}).pipe(Effect.provide(createTestLayer())),
+		);
 	});
 
 	describe("Edge cases", () => {
-		it("should handle empty message history", async () => {
-			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed([]));
-			mockAssessmentMessageRepo.getMessageCount.mockReturnValue(Effect.succeed(1));
+		it.effect("should handle empty message history", () =>
+			Effect.gen(function* () {
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed([]));
 
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "First message",
-			};
-
-			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			expect(result.response).toBe(mockOrchestratorResponse.nerinResponse);
-			expect(mockOrchestratorRepo.processMessage).toHaveBeenCalled();
-			const callArg = mockOrchestratorRepo.processMessage.mock.calls[0]?.[0];
-			expect(callArg.messages).toEqual([]);
-			expect(callArg.sessionId).toBe("session_test_123");
-		});
-
-		it("should handle very long messages", async () => {
-			const longMessage = "a".repeat(5000);
-
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: longMessage,
-			};
-
-			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			expect(result.response).toBe(mockOrchestratorResponse.nerinResponse);
-			expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledWith(
-				"session_test_123",
-				"user",
-				longMessage,
-				undefined,
-			);
-		});
-
-		it("should return lean response without confidence", async () => {
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Test",
-			};
-
-			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			// Story 2.11: Lean response — no confidence in output
-			expect(result.response).toBe(mockOrchestratorResponse.nerinResponse);
-			expect((result as Record<string, unknown>).confidence).toBeUndefined();
-		});
-
-		it("should handle anonymous user for cost tracking", async () => {
-			const sessionWithoutUser = {
-				...mockSession,
-				userId: undefined,
-			};
-			mockAssessmentSessionRepo.getSession.mockReturnValue(Effect.succeed(sessionWithoutUser));
-
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Anonymous message",
-			};
-
-			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			// Should use "anonymous" as userId for cost tracking
-			expect(mockCostGuardRepo.getDailyCost).toHaveBeenCalledWith("anonymous");
-			expect(mockCostGuardRepo.incrementDailyCost).toHaveBeenCalledWith(
-				"anonymous",
-				expect.any(Number),
-			);
-		});
-	});
-
-	describe("Final turn detection (Story 7.18)", () => {
-		/**
-		 * Helper: create N user messages + some assistant messages to simulate
-		 * a conversation with exactly `userCount` user messages.
-		 */
-		const createMessagesWithUserCount = (userCount: number) => {
-			const messages = [];
-			for (let i = 0; i < userCount; i++) {
-				messages.push({
-					id: `msg_user_${i}`,
+				const result = yield* sendMessage({
 					sessionId: "session_test_123",
-					role: "user" as const,
-					content: `User message ${i + 1}`,
-					createdAt: new Date(),
+					message: "First message",
 				});
-				messages.push({
-					id: `msg_assistant_${i}`,
+
+				expect(result.response).toBeDefined();
+				expect(mockNerinRepo.invoke).toHaveBeenCalledWith({
 					sessionId: "session_test_123",
-					role: "assistant" as const,
-					content: `Nerin response ${i + 1}`,
-					createdAt: new Date(),
+					messages: [],
 				});
-			}
-			return messages;
-		};
+			}).pipe(Effect.provide(createTestLayer())),
+		);
 
-		it("should return isFinalTurn: true when messageCount equals threshold", async () => {
-			// 25 user messages = threshold
-			const thresholdMessages = createMessagesWithUserCount(25);
-			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(thresholdMessages));
+		it.effect("should handle very long messages", () =>
+			Effect.gen(function* () {
+				const longMessage = "a".repeat(5000);
 
-			const testLayer = createTestLayer();
+				const result = yield* sendMessage({
+					sessionId: "session_test_123",
+					message: longMessage,
+				});
 
-			const input = {
-				sessionId: "session_test_123",
-				message: "Final message",
-			};
-
-			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			expect(result.isFinalTurn).toBe(true);
-		});
-
-		it("should include farewellMessage from the pool at threshold", async () => {
-			const thresholdMessages = createMessagesWithUserCount(25);
-			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(thresholdMessages));
-
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Final message",
-			};
-
-			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			expect(result.farewellMessage).toBeDefined();
-			expect(NERIN_FAREWELL_MESSAGES).toContain(result.farewellMessage);
-			// response should also be the farewell
-			expect(result.response).toBe(result.farewellMessage);
-		});
-
-		it("should include portraitWaitMinMs from config at threshold", async () => {
-			const thresholdMessages = createMessagesWithUserCount(25);
-			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(thresholdMessages));
-
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Final message",
-			};
-
-			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			expect(result.portraitWaitMinMs).toBe(2000);
-		});
-
-		it("should NOT call orchestrator on final turn (no LLM cost)", async () => {
-			const thresholdMessages = createMessagesWithUserCount(25);
-			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(thresholdMessages));
-
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Final message",
-			};
-
-			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			expect(mockOrchestratorRepo.processMessage).not.toHaveBeenCalled();
-		});
-
-		it("should save farewell as assistant message on final turn", async () => {
-			const thresholdMessages = createMessagesWithUserCount(25);
-			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(thresholdMessages));
-
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Final message",
-			};
-
-			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			// Should save farewell as second saveMessage call (first is user message)
-			expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledTimes(2);
-			expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledWith(
-				"session_test_123",
-				"assistant",
-				result.farewellMessage,
-			);
-		});
-
-		it("should return isFinalTurn: false for messages before threshold", async () => {
-			// 2 user messages (from default mockMessages) — well below threshold
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Normal message",
-			};
-
-			const result = await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			expect(result.isFinalTurn).toBe(false);
-			expect(result.farewellMessage).toBeUndefined();
-			expect(result.portraitWaitMinMs).toBeUndefined();
-		});
-
-		it("should throw FreeTierLimitReached for messages past threshold", async () => {
-			// 26 user messages = past threshold
-			const pastThresholdMessages = createMessagesWithUserCount(26);
-			mockAssessmentMessageRepo.getMessages.mockReturnValue(
-				Effect.succeed(pastThresholdMessages),
-			);
-
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Past limit message",
-			};
-
-			const error = await Effect.runPromise(
-				sendMessage(input).pipe(Effect.provide(testLayer), Effect.flip),
-			);
-
-			expect(error._tag).toBe("FreeTierLimitReached");
-		});
-
-		it("should NOT increment cost tracking on final turn", async () => {
-			const thresholdMessages = createMessagesWithUserCount(25);
-			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(thresholdMessages));
-
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Final message",
-			};
-
-			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			expect(mockCostGuardRepo.incrementDailyCost).not.toHaveBeenCalled();
-			expect(mockCostGuardRepo.getDailyCost).not.toHaveBeenCalled();
-		});
-
-		it("should log final turn event", async () => {
-			const thresholdMessages = createMessagesWithUserCount(25);
-			mockAssessmentMessageRepo.getMessages.mockReturnValue(Effect.succeed(thresholdMessages));
-
-			const testLayer = createTestLayer();
-
-			const input = {
-				sessionId: "session_test_123",
-				message: "Final message",
-			};
-
-			await Effect.runPromise(sendMessage(input).pipe(Effect.provide(testLayer)));
-
-			expect(mockLoggerRepo.info).toHaveBeenCalledWith("Final turn - farewell sent", {
-				sessionId: "session_test_123",
-				messageCount: 25,
-			});
-		});
+				expect(result.response).toBeDefined();
+				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
+					"session_test_123",
+					"user",
+					longMessage,
+					undefined,
+				);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
 	});
 });

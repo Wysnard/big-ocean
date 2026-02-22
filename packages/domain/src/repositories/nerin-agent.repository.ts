@@ -1,6 +1,7 @@
 import { Context, Effect } from "effect";
+import type { FacetName } from "../constants/big-five";
+import type { LifeDomain } from "../constants/life-domain";
 import { AgentInvocationError } from "../errors/http.errors";
-import type { FacetScoresMap } from "../types/facet-evidence";
 import type { DomainMessage } from "../types/message";
 
 /**
@@ -15,9 +16,9 @@ export interface TokenUsage {
 /**
  * Input for Nerin agent invocation
  *
- * Nerin operates at facet-level granularity for personality assessment.
- * Receives facet scores (30 facets) rather than trait scores (5 traits)
- * for more precise conversational steering.
+ * Two-tier architecture (Story 9.2): Simplified interface for direct invocation.
+ * Optional targetDomain/targetFacet enable structured steering (Story 10.4).
+ * For cold start (this story), both are undefined.
  */
 export interface NerinInvokeInput {
 	/** Session identifier for state persistence */
@@ -26,11 +27,11 @@ export interface NerinInvokeInput {
 	/** Message history for conversational context */
 	readonly messages: readonly DomainMessage[];
 
-	/** Current facet scores for assessment context (optional, may be empty early in conversation) */
-	readonly facetScores?: FacetScoresMap;
+	/** Life domain to steer conversation toward (from steering formula, undefined for cold start) */
+	readonly targetDomain?: LifeDomain;
 
-	/** Natural language steering hint to guide conversation toward low-confidence facets (optional) */
-	readonly steeringHint?: string;
+	/** Big Five facet to steer conversation toward (from steering formula, undefined for cold start) */
+	readonly targetFacet?: FacetName;
 }
 
 /**

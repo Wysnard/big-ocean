@@ -569,6 +569,41 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 					logger.info("Session token rotated", { sessionId });
 					return { sessionToken };
 				}),
+
+			incrementMessageCount: (sessionId: string) =>
+				Effect.gen(function* () {
+					const results = yield* db
+						.update(assessmentSession)
+						.set({
+							messageCount: sql`${assessmentSession.messageCount} + 1`,
+							updatedAt: new Date(),
+						})
+						.where(eq(assessmentSession.id, sessionId))
+						.returning({ messageCount: assessmentSession.messageCount })
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "incrementMessageCount",
+										sessionId,
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({ message: "Failed to increment message count" });
+							}),
+						);
+
+					const result = results[0];
+					if (!result) {
+						return yield* Effect.fail(
+							new DatabaseError({ message: "Failed to increment message count" }),
+						);
+					}
+
+					return result.messageCount;
+				}),
 		});
 	}),
 );

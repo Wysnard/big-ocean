@@ -13,11 +13,11 @@ import {
 } from "@workspace/domain";
 import { Schema as S } from "effect";
 import {
-	AgentInvocationError,
 	AssessmentAlreadyExists,
 	DatabaseError,
-	FreeTierLimitReached,
+	NerinError,
 	RateLimitExceeded,
+	SessionCompletedError,
 	SessionNotFound,
 	Unauthorized,
 } from "../../errors";
@@ -59,15 +59,12 @@ export const SendMessageRequestSchema = S.Struct({
 /**
  * Send Message Response Schema
  *
- * Story 2.11: Lean response — confidence removed. Confidence is still
- * returned by the resume-session endpoint for returning users.
- * Story 7.18: Added isFinalTurn flag and farewell fields for transition UX.
+ * Story 9.2: Simplified response — response + isFinalTurn only.
+ * Farewell and portrait fields removed (obsolete with two-tier architecture).
  */
 export const SendMessageResponseSchema = S.Struct({
 	response: S.String,
 	isFinalTurn: S.Boolean,
-	farewellMessage: S.optional(S.String),
-	portraitWaitMinMs: S.optional(S.Number),
 });
 
 /**
@@ -170,10 +167,10 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 		HttpApiEndpoint.post("sendMessage", "/message")
 			.addSuccess(SendMessageResponseSchema)
 			.setPayload(SendMessageRequestSchema)
-			.addError(FreeTierLimitReached, { status: 403 })
 			.addError(SessionNotFound, { status: 404 })
+			.addError(SessionCompletedError, { status: 409 })
 			.addError(DatabaseError, { status: 500 })
-			.addError(AgentInvocationError, { status: 503 }),
+			.addError(NerinError, { status: 503 }),
 	)
 	.add(
 		HttpApiEndpoint.get("listSessions", "/sessions")
