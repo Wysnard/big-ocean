@@ -36,6 +36,10 @@ export interface StartAssessmentOutput {
 	readonly messages: StartAssessmentMessage[];
 }
 
+export interface StartAnonymousAssessmentOutput extends StartAssessmentOutput {
+	readonly sessionToken: string;
+}
+
 /**
  * Shared helper: create a new session and persist 2 greeting messages.
  * Used by both authenticated and anonymous paths.
@@ -157,12 +161,48 @@ export const startAuthenticatedAssessment = (input: { userId: string }) =>
 	});
 
 /**
- * Start Anonymous Assessment
+ * Start Anonymous Assessment (Story 9.1)
  *
- * For unauthenticated users: creates session with greetings directly.
+ * Creates an anonymous session with a cryptographic token for cookie-based auth.
+ * Persists greeting messages and returns sessionId + sessionToken.
  * No existing-session check, no rate limiting, no cost guard.
  */
-export const startAnonymousAssessment = () => createSessionWithGreetings(undefined);
+export const startAnonymousAssessment = () =>
+	Effect.gen(function* () {
+		const sessionRepo = yield* AssessmentSessionRepository;
+		const messageRepo = yield* AssessmentMessageRepository;
+		const logger = yield* LoggerRepository;
+
+		// Create anonymous session with token
+		const { sessionId, sessionToken } = yield* sessionRepo.createAnonymousSession();
+
+		// Build the 2 greeting messages (1 fixed + 1 random opening question)
+		const openingQuestion = pickOpeningQuestion();
+		const greetingContents = [...GREETING_MESSAGES, openingQuestion];
+
+		// Persist greeting messages
+		const savedMessages: StartAssessmentMessage[] = [];
+		for (const content of greetingContents) {
+			const saved = yield* messageRepo.saveMessage(sessionId, "assistant", content);
+			savedMessages.push({
+				role: "assistant",
+				content: saved.content,
+				createdAt: saved.createdAt,
+			});
+		}
+
+		logger.info("Anonymous assessment started", {
+			sessionId,
+			greetingCount: savedMessages.length,
+		});
+
+		return {
+			sessionId,
+			sessionToken,
+			createdAt: new Date(),
+			messages: savedMessages,
+		} satisfies StartAnonymousAssessmentOutput;
+	});
 
 /**
  * Start Assessment (backward-compat wrapper)

@@ -13,23 +13,18 @@ import type { FacetEvidence } from "@workspace/domain";
 import { Effect, Exit, Layer } from "effect";
 import { beforeEach, describe, expect, vi } from "vitest";
 
-vi.mock("@workspace/infrastructure/repositories/facet-evidence.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 
-import {
-	FacetEvidenceDrizzleRepositoryLive,
-	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
-	_resetMockState as resetEvidenceState,
-} from "@workspace/infrastructure/repositories/facet-evidence.drizzle.repository";
+import { FacetEvidenceNoopRepositoryLive } from "@workspace/infrastructure/repositories/facet-evidence.noop.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 
-const TestLayer = Layer.mergeAll(FacetEvidenceDrizzleRepositoryLive, LoggerPinoRepositoryLive);
+const TestLayer = Layer.mergeAll(FacetEvidenceNoopRepositoryLive, LoggerPinoRepositoryLive);
 
 import { type SaveFacetEvidenceInput, saveFacetEvidence } from "../save-facet-evidence.use-case";
 
-describe("saveFacetEvidence use-case", () => {
+describe.skip("saveFacetEvidence use-case — SKIPPED: facet_evidence table dropped (Story 9.1)", () => {
 	beforeEach(() => {
-		resetEvidenceState();
+		vi.clearAllMocks();
 	});
 
 	const mockEvidence: FacetEvidence[] = [

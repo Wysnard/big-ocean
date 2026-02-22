@@ -85,6 +85,18 @@ export interface AppConfigService {
 
 	/** Minimum facet confidence (0-100) required to allow profile sharing */
 	readonly shareMinConfidence: number;
+
+	/** Number of user messages that triggers finalization (Story 9.1) */
+	readonly messageThreshold: number;
+
+	/** Model ID for conversanalyzer (Haiku-tier, runs on every message) */
+	readonly conversanalyzerModelId: string;
+
+	/** Model ID for finanalyzer (Sonnet-tier, runs at finalization) */
+	readonly finanalyzerModelId: string;
+
+	/** Model ID for portrait generation */
+	readonly portraitGeneratorModelId: string;
 }
 
 /**

@@ -34,8 +34,8 @@ export { CheckpointerPostgresRepositoryLive } from "./repositories/checkpointer.
 export { CheckpointerRepository } from "./repositories/checkpointer.repository";
 // CostGuard repository implementation
 export { CostGuardRedisRepositoryLive } from "./repositories/cost-guard.redis.repository";
-// Facet evidence repository implementation
-export { FacetEvidenceDrizzleRepositoryLive } from "./repositories/facet-evidence.drizzle.repository";
+// Facet evidence no-op repository (Story 9.1 — old table dropped, stub for orchestrator compat)
+export { FacetEvidenceNoopRepositoryLive } from "./repositories/facet-evidence.noop.repository";
 // Facet steering hints
 export { FACET_STEERING_HINTS } from "./repositories/facet-steering";
 // Logger repository implementation

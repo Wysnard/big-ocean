@@ -29,6 +29,19 @@ export {
 	FACET_PROMPT_DEFINITIONS,
 	type FacetPromptDefinitions,
 } from "./constants/facet-prompt-definitions";
+// Finalization progress constants (Story 9.1)
+export {
+	FINALIZATION_PROGRESS,
+	type FinalizationProgress,
+	FinalizationProgressSchema,
+} from "./constants/finalization";
+// Life domain constants (Story 9.1)
+export {
+	LIFE_DOMAINS,
+	type LifeDomain,
+	LifeDomainSchema,
+	STEERABLE_DOMAINS,
+} from "./constants/life-domain";
 // Nerin farewell constants (Story 7.18)
 export {
 	NERIN_FAREWELL_MESSAGES,
@@ -44,6 +57,13 @@ export {
 export { NERIN_PERSONA } from "./constants/nerin-persona";
 // Trait descriptions (Story 8.2)
 export { TRAIT_DESCRIPTIONS, type TraitDescriptions } from "./constants/trait-descriptions";
+// Validation constants (Story 9.1)
+export {
+	CONFIDENCE_MAX,
+	CONFIDENCE_MIN,
+	SCORE_MAX,
+	SCORE_MIN,
+} from "./constants/validation";
 // Auth context tag (Story 1.4 — populated by AuthMiddleware)
 export { CurrentUser } from "./context/current-user";
 // Evidence errors
@@ -180,6 +200,8 @@ export type {
 	TraitLevel,
 } from "./types/archetype";
 export { TRAIT_LETTER_MAP, TRAIT_LEVEL_LABELS } from "./types/archetype";
+// Evidence input type (Story 9.1)
+export type { EvidenceInput } from "./types/evidence";
 // Facet types
 export type {
 	AgreeableFacet,

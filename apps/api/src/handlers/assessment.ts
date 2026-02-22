@@ -12,11 +12,14 @@
 import { HttpApiBuilder } from "@effect/platform";
 import {
 	AgentInvocationError,
+	AssessmentTokenSecurity,
 	BigOceanApi,
 	DatabaseError,
 	Unauthorized,
 } from "@workspace/contracts";
 import {
+	AssessmentMessageRepository,
+	AssessmentSessionRepository,
 	BudgetPausedError,
 	CurrentUser,
 	extract4LetterCode,
@@ -25,7 +28,7 @@ import {
 	OrchestrationError,
 	RedisOperationError,
 } from "@workspace/domain";
-import { DateTime, Effect } from "effect";
+import { DateTime, Effect, Redacted } from "effect";
 import {
 	getResults,
 	listUserSessions,
@@ -43,6 +46,47 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 					const authenticatedUserId = yield* CurrentUser;
 					const userId = authenticatedUserId ?? payload.userId;
 
+					// Story 9.1: If anonymous (no userId), check for existing session via cookie
+					if (!userId) {
+						const token = yield* HttpApiBuilder.securityDecode(AssessmentTokenSecurity).pipe(
+							Effect.map((redacted) => Redacted.value(redacted)),
+							Effect.catchAll(() => Effect.succeed("")),
+						);
+
+						if (token) {
+							const sessionRepo = yield* AssessmentSessionRepository;
+							const session = yield* sessionRepo.findByToken(token);
+
+							if (session) {
+								const messageRepo = yield* AssessmentMessageRepository;
+								const messages = yield* messageRepo.getMessages(session.id);
+
+								// Refresh cookie on successful resumption
+								yield* HttpApiBuilder.securitySetCookie(
+									AssessmentTokenSecurity,
+									session.sessionToken ?? token,
+									{
+										httpOnly: true,
+										secure: true,
+										sameSite: "lax",
+										path: "/api/assessment",
+										maxAge: "30 days",
+									},
+								);
+
+								return {
+									sessionId: session.id,
+									createdAt: DateTime.unsafeMake(session.createdAt.getTime()),
+									messages: messages.map((msg) => ({
+										role: msg.role as "user" | "assistant",
+										content: msg.content,
+										timestamp: DateTime.unsafeMake(msg.createdAt.getTime()),
+									})),
+								};
+							}
+						}
+					}
+
 					// Call use case - dispatch to authenticated or anonymous path
 					const result = userId
 						? yield* startAuthenticatedAssessment({ userId }).pipe(
@@ -55,6 +99,19 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 								),
 							)
 						: yield* startAnonymousAssessment();
+
+					// Set httpOnly cookie for anonymous sessions (Story 9.1)
+					const sessionToken =
+						"sessionToken" in result ? (result as { sessionToken: string }).sessionToken : undefined;
+					if (sessionToken) {
+						yield* HttpApiBuilder.securitySetCookie(AssessmentTokenSecurity, sessionToken, {
+							httpOnly: true,
+							secure: true,
+							sameSite: "lax",
+							path: "/api/assessment",
+							maxAge: "30 days",
+						});
+					}
 
 					// Format HTTP response
 					return {
@@ -150,7 +207,9 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 						response: result.response,
 						isFinalTurn: result.isFinalTurn,
 						...(result.farewellMessage !== undefined && { farewellMessage: result.farewellMessage }),
-						...(result.portraitWaitMinMs !== undefined && { portraitWaitMinMs: result.portraitWaitMinMs }),
+						...(result.portraitWaitMinMs !== undefined && {
+							portraitWaitMinMs: result.portraitWaitMinMs,
+						}),
 					};
 				}),
 			)

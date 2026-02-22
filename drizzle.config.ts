@@ -13,5 +13,4 @@ export default defineConfig({
 	dbCredentials: {
 		url: process.env.DATABASE_URL || "postgresql://dev:devpassword@localhost:5432/bigocean",
 	},
-	tablesFilter: ["!checkpoint_*"],
 });
