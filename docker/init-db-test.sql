@@ -4,10 +4,19 @@
 --
 -- IMPORTANT: Keep in sync with Drizzle schema at
 --   packages/infrastructure/src/db/drizzle/schema.ts
+-- and migration at
+--   drizzle/20260222190000_story_9_1_clean_slate/migration.sql
 
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- ============================================================================
+-- pgEnums (Story 9.1)
+-- ============================================================================
+
+CREATE TYPE "public"."evidence_domain" AS ENUM('work', 'relationships', 'family', 'leisure', 'solo', 'other');
+CREATE TYPE "public"."bigfive_facet_name" AS ENUM('imagination', 'artistic_interests', 'emotionality', 'adventurousness', 'intellect', 'liberalism', 'self_efficacy', 'orderliness', 'dutifulness', 'achievement_striving', 'self_discipline', 'cautiousness', 'friendliness', 'gregariousness', 'assertiveness', 'activity_level', 'excitement_seeking', 'cheerfulness', 'trust', 'morality', 'altruism', 'cooperation', 'modesty', 'sympathy', 'anxiety', 'anger', 'depression', 'self_consciousness', 'immoderation', 'vulnerability');
 
 -- ============================================================================
 -- Better Auth Tables
@@ -60,42 +69,70 @@ CREATE TABLE "verification" (
 );
 
 -- ============================================================================
--- Assessment Tables
+-- Assessment Tables (Story 9.1 — two-tier architecture)
 -- ============================================================================
 
 CREATE TABLE "assessment_session" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" text,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"session_token" text,
 	"status" text DEFAULT 'active' NOT NULL,
+	"finalization_progress" text,
 	"message_count" integer DEFAULT 0 NOT NULL,
-	"personal_description" text
+	"personal_description" text,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 
 CREATE TABLE "assessment_message" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"session_id" uuid NOT NULL,
 	"user_id" text,
 	"role" text NOT NULL,
 	"content" text NOT NULL,
+	"target_domain" "evidence_domain",
+	"target_bigfive_facet" "bigfive_facet_name",
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 
+CREATE TABLE "assessment_results" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"assessment_session_id" uuid NOT NULL,
+	"facets" jsonb NOT NULL,
+	"traits" jsonb NOT NULL,
+	"domain_coverage" jsonb NOT NULL,
+	"portrait" text NOT NULL,
+	"created_at" timestamp DEFAULT now()
+);
+
 -- ============================================================================
--- Evidence Table
+-- Evidence Tables (Story 9.1 — two-tier: conversation + finalization)
 -- ============================================================================
 
-CREATE TABLE "facet_evidence" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE TABLE "conversation_evidence" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"assessment_session_id" uuid NOT NULL,
 	"assessment_message_id" uuid NOT NULL,
-	"facet_name" text NOT NULL,
-	"score" integer NOT NULL,
-	"confidence" integer NOT NULL,
+	"bigfive_facet" "bigfive_facet_name" NOT NULL,
+	"score" smallint NOT NULL CHECK (score >= 0 AND score <= 20),
+	"confidence" numeric(4,3) NOT NULL CHECK (confidence >= 0 AND confidence <= 1),
+	"domain" "evidence_domain" NOT NULL,
+	"created_at" timestamp DEFAULT now()
+);
+
+CREATE TABLE "finalization_evidence" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"assessment_message_id" uuid NOT NULL,
+	"assessment_result_id" uuid NOT NULL,
+	"bigfive_facet" "bigfive_facet_name" NOT NULL,
+	"score" smallint NOT NULL CHECK (score >= 0 AND score <= 20),
+	"confidence" numeric(4,3) NOT NULL CHECK (confidence >= 0 AND confidence <= 1),
+	"domain" "evidence_domain" NOT NULL,
+	"raw_domain" text NOT NULL,
 	"quote" text NOT NULL,
-	"highlight_start" integer NOT NULL,
-	"highlight_end" integer NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL
+	"highlight_start" integer,
+	"highlight_end" integer,
+	"created_at" timestamp DEFAULT now()
 );
 
 -- ============================================================================
@@ -103,8 +140,9 @@ CREATE TABLE "facet_evidence" (
 -- ============================================================================
 
 CREATE TABLE "public_profile" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"session_id" uuid NOT NULL,
+	"assessment_result_id" uuid,
 	"user_id" text,
 	"ocean_code_5" text NOT NULL,
 	"ocean_code_4" text NOT NULL,
@@ -125,11 +163,13 @@ CREATE INDEX "verification_identifier_idx" ON "verification" ("identifier");
 
 -- Assessment indexes
 CREATE INDEX "assessment_session_user_id_idx" ON "assessment_session" ("user_id");
-CREATE INDEX "assessment_message_session_created_idx" ON "assessment_message" ("session_id","created_at");
+CREATE UNIQUE INDEX "assessment_session_user_id_unique" ON "assessment_session" ("user_id") WHERE user_id IS NOT NULL;
+CREATE UNIQUE INDEX "assessment_session_token_unique" ON "assessment_session" ("session_token") WHERE session_token IS NOT NULL;
+CREATE INDEX "assessment_message_session_created_idx" ON "assessment_message" ("session_id", "created_at");
 
 -- Evidence indexes
-CREATE INDEX "facet_evidence_assessment_message_id_idx" ON "facet_evidence" ("assessment_message_id");
-CREATE INDEX "facet_evidence_facet_name_idx" ON "facet_evidence" ("facet_name");
+CREATE INDEX "conversation_evidence_session_id_idx" ON "conversation_evidence" ("assessment_session_id");
+CREATE INDEX "finalization_evidence_result_id_idx" ON "finalization_evidence" ("assessment_result_id");
 
 -- Public profile indexes
 CREATE INDEX "public_profile_session_id_idx" ON "public_profile" ("session_id");
@@ -156,13 +196,29 @@ ALTER TABLE "assessment_message" ADD CONSTRAINT "assessment_message_session_id_a
 ALTER TABLE "assessment_message" ADD CONSTRAINT "assessment_message_user_id_user_id_fkey"
 	FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE SET NULL;
 
+-- Assessment results constraints
+ALTER TABLE "assessment_results" ADD CONSTRAINT "assessment_results_session_id_assessment_session_id_fkey"
+	FOREIGN KEY ("assessment_session_id") REFERENCES "assessment_session"("id") ON DELETE CASCADE;
+
 -- Evidence constraints
-ALTER TABLE "facet_evidence" ADD CONSTRAINT "facet_evidence_assessment_message_id_assessment_message_id_fkey"
+ALTER TABLE "conversation_evidence" ADD CONSTRAINT "conversation_evidence_session_id_assessment_session_id_fkey"
+	FOREIGN KEY ("assessment_session_id") REFERENCES "assessment_session"("id") ON DELETE CASCADE;
+
+ALTER TABLE "conversation_evidence" ADD CONSTRAINT "conversation_evidence_message_id_assessment_message_id_fkey"
 	FOREIGN KEY ("assessment_message_id") REFERENCES "assessment_message"("id") ON DELETE CASCADE;
+
+ALTER TABLE "finalization_evidence" ADD CONSTRAINT "finalization_evidence_message_id_assessment_message_id_fkey"
+	FOREIGN KEY ("assessment_message_id") REFERENCES "assessment_message"("id") ON DELETE CASCADE;
+
+ALTER TABLE "finalization_evidence" ADD CONSTRAINT "finalization_evidence_result_id_assessment_results_id_fkey"
+	FOREIGN KEY ("assessment_result_id") REFERENCES "assessment_results"("id") ON DELETE CASCADE;
 
 -- Public profile constraints
 ALTER TABLE "public_profile" ADD CONSTRAINT "public_profile_session_id_assessment_session_id_fkey"
 	FOREIGN KEY ("session_id") REFERENCES "assessment_session"("id") ON DELETE CASCADE;
+
+ALTER TABLE "public_profile" ADD CONSTRAINT "public_profile_result_id_assessment_results_id_fkey"
+	FOREIGN KEY ("assessment_result_id") REFERENCES "assessment_results"("id") ON DELETE CASCADE;
 
 ALTER TABLE "public_profile" ADD CONSTRAINT "public_profile_user_id_user_id_fkey"
 	FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE SET NULL;
