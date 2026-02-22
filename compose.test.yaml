@@ -73,6 +73,8 @@ services:
       MOCK_LLM: "true"
       # Low threshold so integration tests can trigger portrait generation with 3 messages
       FREE_TIER_MESSAGE_THRESHOLD: "3"
+      # Short wait so integration tests don't wait 10s for portrait reveal (Story 7.18)
+      PORTRAIT_WAIT_MIN_MS: "2000"
       # Dummy API key (required for env validation, but MOCK_LLM=true prevents actual usage)
       ANTHROPIC_API_KEY: "sk-test-dummy-key-for-integration-tests"
       # Better Auth configuration

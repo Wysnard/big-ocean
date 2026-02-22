@@ -41,6 +41,9 @@ export default defineConfig({
 		{
 			name: "golden-path",
 			testMatch: "specs/golden-path.spec.ts",
+			use: {
+				video: "on",
+			},
 		},
 
 		// ── Profile page: auth user journeys (manages own storageState) ─

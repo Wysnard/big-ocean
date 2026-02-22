@@ -43,6 +43,7 @@ export const defaultTestConfig: AppConfigService = {
 	dailyCostLimit: 75,
 	freeTierMessageThreshold: 25,
 	shareMinConfidence: 70,
+	portraitWaitMinMs: 2000,
 };
 
 /**

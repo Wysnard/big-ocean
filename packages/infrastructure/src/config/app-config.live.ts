@@ -73,6 +73,9 @@ const configSchema = Config.all({
 		Config.withDefault(25),
 	),
 
+	// Portrait wait screen minimum duration in ms (Story 7.18)
+	portraitWaitMinMs: Config.number("PORTRAIT_WAIT_MIN_MS").pipe(Config.withDefault(10000)),
+
 	// Profile sharing confidence threshold
 	shareMinConfidence: Config.number("SHARE_MIN_CONFIDENCE").pipe(Config.withDefault(70)),
 });

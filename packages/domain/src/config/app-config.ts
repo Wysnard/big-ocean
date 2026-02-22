@@ -80,6 +80,9 @@ export interface AppConfigService {
 	/** Number of user messages allowed in the free tier before chat is blocked (Story 4.7) */
 	readonly freeTierMessageThreshold: number;
 
+	/** Minimum wait time (ms) before portrait reveal on frontend (Story 7.18) */
+	readonly portraitWaitMinMs: number;
+
 	/** Minimum facet confidence (0-100) required to allow profile sharing */
 	readonly shareMinConfidence: number;
 }

@@ -145,9 +145,12 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 						),
 					);
 
-					// Format HTTP response (lean: response only, no confidence)
+					// Format HTTP response (Story 7.18: includes farewell transition fields)
 					return {
 						response: result.response,
+						isFinalTurn: result.isFinalTurn,
+						...(result.farewellMessage !== undefined && { farewellMessage: result.farewellMessage }),
+						...(result.portraitWaitMinMs !== undefined && { portraitWaitMinMs: result.portraitWaitMinMs }),
 					};
 				}),
 			)

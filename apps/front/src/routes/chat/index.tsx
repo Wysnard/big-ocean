@@ -4,11 +4,16 @@ import { Loader2 } from "lucide-react";
 import { useCallback } from "react";
 import { TherapistChat } from "@/components/TherapistChat";
 import { useAuth } from "@/hooks/use-auth";
+import {
+	clearPendingResultsGateSession,
+	readPendingResultsGateSession,
+} from "@/lib/results-auth-gate-storage";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 const ChatSearchParams = S.Struct({
 	sessionId: S.optional(S.String),
+	expired: S.optional(S.Boolean),
 	highlightMessageId: S.optional(S.String),
 	highlightQuote: S.optional(S.String),
 	highlightStart: S.optional(S.Number),
@@ -22,6 +27,23 @@ export const Route = createFileRoute("/chat/")({
 		const { search } = context;
 
 		if (!search.sessionId) {
+			// Story 7.18 AC #6: Recover pending session from localStorage (anonymous user returning)
+			const pending = readPendingResultsGateSession();
+			if (pending) {
+				if (!pending.expired) {
+					throw redirect({
+						to: "/chat",
+						search: { sessionId: pending.sessionId },
+					});
+				}
+				// Expired session — show Nerin-themed message (Task 3.4)
+				clearPendingResultsGateSession();
+				throw redirect({
+					to: "/chat",
+					search: { expired: true },
+				});
+			}
+
 			const response = await fetch(`${API_URL}/api/assessment/start`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -56,6 +78,7 @@ export const Route = createFileRoute("/chat/")({
 function RouteComponent() {
 	const {
 		sessionId,
+		expired,
 		highlightMessageId,
 		highlightQuote,
 		highlightStart,
@@ -79,6 +102,40 @@ function RouteComponent() {
 		[isAuthenticated, navigate],
 	);
 
+	// Story 7.18: Navigate to portrait reading view when user clicks "Read what Nerin wrote"
+	const handlePortraitReveal = useCallback(() => {
+		if (sessionId) {
+			navigate({
+				to: "/results/$assessmentSessionId",
+				params: { assessmentSessionId: sessionId },
+				search: { view: "portrait" },
+			});
+		}
+	}, [sessionId, navigate]);
+
+	// Story 7.18 Task 3.4: Expired session — Nerin-themed message
+	if (expired) {
+		return (
+			<div className="h-[calc(100dvh-3.5rem)] flex items-center justify-center bg-background">
+				<div className="text-center max-w-md px-6">
+					<p className="text-lg text-foreground font-heading">
+						This dive session has ended.
+					</p>
+					<p className="mt-2 text-muted-foreground">
+						Sign up to start a new one.
+					</p>
+					<button
+						type="button"
+						onClick={() => navigate({ to: "/chat", search: {} })}
+						className="mt-6 min-h-[48px] rounded-xl bg-foreground px-8 font-heading text-base font-bold text-background transition-all hover:bg-primary hover:shadow-lg"
+					>
+						Start a new dive
+					</button>
+				</div>
+			</div>
+		);
+	}
+
 	if (!sessionId) {
 		return (
 			<div className="h-[calc(100dvh-3.5rem)] flex items-center justify-center bg-background">
@@ -96,6 +153,8 @@ function RouteComponent() {
 			onSessionError={handleSessionError}
 			userName={user?.name}
 			userImage={user?.image}
+			isAuthenticated={isAuthenticated}
+			onPortraitReveal={handlePortraitReveal}
 			highlightMessageId={highlightMessageId}
 			highlightQuote={highlightQuote}
 			highlightStart={highlightStart}

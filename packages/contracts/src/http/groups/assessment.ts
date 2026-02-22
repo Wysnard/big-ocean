@@ -61,9 +61,13 @@ export const SendMessageRequestSchema = S.Struct({
  *
  * Story 2.11: Lean response — confidence removed. Confidence is still
  * returned by the resume-session endpoint for returning users.
+ * Story 7.18: Added isFinalTurn flag and farewell fields for transition UX.
  */
 export const SendMessageResponseSchema = S.Struct({
 	response: S.String,
+	isFinalTurn: S.Boolean,
+	farewellMessage: S.optional(S.String),
+	portraitWaitMinMs: S.optional(S.Number),
 });
 
 /**

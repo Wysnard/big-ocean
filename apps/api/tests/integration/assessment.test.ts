@@ -124,13 +124,11 @@ describe("POST /api/assessment/message", () => {
 		expect(typeof decoded.response).toBe("string");
 		expect(decoded.response.length).toBeGreaterThan(0);
 
-		// Assert confidence scores are present and valid numbers
-		expect(decoded.confidence).toBeDefined();
-		expect(typeof decoded.confidence.openness).toBe("number");
-		expect(typeof decoded.confidence.conscientiousness).toBe("number");
-		expect(typeof decoded.confidence.extraversion).toBe("number");
-		expect(typeof decoded.confidence.agreeableness).toBe("number");
-		expect(typeof decoded.confidence.neuroticism).toBe("number");
+		// Story 7.18: Assert isFinalTurn is false for normal messages
+		expect(decoded.isFinalTurn).toBe(false);
+
+		// Story 2.11: Confidence removed from send-message lean response
+		// Confidence is only available via resume endpoint
 	});
 
 	test("returns 404 for non-existent session", async () => {
@@ -232,10 +230,10 @@ describe("GET /api/assessment/:sessionId/results", () => {
 		const startResponse = await postJson("/api/assessment/start", {});
 		const { sessionId } = await startResponse.json();
 
-		// Send 3 messages to trigger Analyzer + Scorer batch
-		// FREE_TIER_MESSAGE_THRESHOLD=3 in compose.test.yaml means the 3rd message
-		// is saved but returns 403 (FreeTierLimitReached). This is expected — the
-		// message is persisted and get-results sees 3 user messages, triggering portrait.
+		// Send 3 messages to reach FREE_TIER_MESSAGE_THRESHOLD=3
+		// Story 7.18: The 3rd message (at threshold) returns farewell with isFinalTurn: true
+		// instead of 403 (FreeTierLimitReached). The farewell message is saved and
+		// get-results sees 3 user messages, triggering portrait generation.
 		await postJson("/api/assessment/message", {
 			sessionId,
 			message: "I love exploring new creative ideas and imagining possibilities.",
@@ -248,8 +246,12 @@ describe("GET /api/assessment/:sessionId/results", () => {
 			sessionId,
 			message: "I enjoy social gatherings and meeting new people.",
 		});
-		// 3rd message saved but blocked by free tier limit (threshold=3)
-		expect(thirdMsgResponse.status).toBe(403);
+		// Story 7.18: 3rd message triggers farewell (isFinalTurn: true), not free tier block
+		expect(thirdMsgResponse.status).toBe(200);
+		const thirdMsgData = await thirdMsgResponse.json();
+		const thirdDecoded = Schema.decodeUnknownSync(SendMessageResponseSchema)(thirdMsgData);
+		expect(thirdDecoded.isFinalTurn).toBe(true);
+		expect(thirdDecoded.farewellMessage).toBeDefined();
 
 		// Fetch results
 		const resultsResponse = await fetch(`${API_URL}/api/assessment/${sessionId}/results`);
@@ -274,13 +276,14 @@ describe("GET /api/assessment/:sessionId/results", () => {
 		expect(decoded.archetypeColor).toMatch(/^#[0-9A-Fa-f]{6}$/);
 		expect(typeof decoded.isCurated).toBe("boolean");
 
-		// Traits
+		// Traits — levels are trait-specific letters (e.g., P/G/O for openness, not H/M/L)
+		const VALID_TRAIT_LEVELS = ["P", "G", "O", "F", "B", "D", "I", "A", "E", "C", "N", "W", "R", "T", "S"];
 		expect(decoded.traits).toHaveLength(5);
 		for (const trait of decoded.traits) {
 			expect(typeof trait.name).toBe("string");
 			expect(trait.score).toBeGreaterThanOrEqual(0);
 			expect(trait.score).toBeLessThanOrEqual(120);
-			expect(["H", "M", "L"]).toContain(trait.level);
+			expect(VALID_TRAIT_LEVELS).toContain(trait.level);
 			expect(trait.confidence).toBeGreaterThanOrEqual(0);
 			expect(trait.confidence).toBeLessThanOrEqual(100);
 		}
@@ -329,7 +332,8 @@ describe("GET /api/assessment/:sessionId/results", () => {
 		const decoded = Schema.decodeUnknownSync(GetResultsResponseSchema)(data);
 
 		// Default scores: all facets at 10/20, all traits at 60/120 = Mid
-		expect(decoded.oceanCode5).toBe("MMMMM");
+		// Trait-specific mid-level letters: G(openness), B(conscientiousness), A(extraversion), N(agreeableness), T(neuroticism)
+		expect(decoded.oceanCode5).toBe("GBANT");
 		expect(decoded.traits).toHaveLength(5);
 		expect(decoded.facets).toHaveLength(30);
 		expect(decoded.overallConfidence).toBe(0); // No evidence yet

@@ -116,36 +116,48 @@ describe("Assessment Contracts", () => {
 			expect(result.message).toHaveLength(2000);
 		});
 
-		it("should validate send message response schema", () => {
+		it("should validate send message response schema (normal turn)", () => {
 			const validResponse = {
 				response: "That's interesting! Tell me more about what draws you to outdoor activities.",
-				confidence: {
-					openness: 0.75,
-					conscientiousness: 0.5,
-					extraversion: 0.8,
-					agreeableness: 0.6,
-					neuroticism: 0.3,
-				},
+				isFinalTurn: false,
 			};
 
 			const result = S.decodeUnknownSync(SendMessageResponseSchema)(validResponse);
 			expect(result.response).toBeTruthy();
-			expect(result.confidence.extraversion).toBe(0.8);
+			expect(result.isFinalTurn).toBe(false);
 		});
 
-		it("should reject send message response with invalid confidence values", () => {
+		it("should validate send message response schema (final turn)", () => {
+			const validResponse = {
+				response: "We've gone somewhere real today...",
+				isFinalTurn: true,
+				farewellMessage: "We've gone somewhere real today...",
+				portraitWaitMinMs: 10000,
+			};
+
+			const result = S.decodeUnknownSync(SendMessageResponseSchema)(validResponse);
+			expect(result.isFinalTurn).toBe(true);
+			expect(result.farewellMessage).toBe("We've gone somewhere real today...");
+			expect(result.portraitWaitMinMs).toBe(10000);
+		});
+
+		it("should reject send message response with missing isFinalTurn", () => {
 			const invalidResponse = {
 				response: "Response text",
-				confidence: {
-					openness: "invalid", // Should be number
-					conscientiousness: 0.5,
-					extraversion: 0.8,
-					agreeableness: 0.6,
-					neuroticism: 0.3,
-				},
 			};
 
 			expect(() => S.decodeUnknownSync(SendMessageResponseSchema)(invalidResponse)).toThrow();
+		});
+
+		it("should accept send message response without optional fields", () => {
+			const minimalResponse = {
+				response: "Response text",
+				isFinalTurn: false,
+			};
+
+			const result = S.decodeUnknownSync(SendMessageResponseSchema)(minimalResponse);
+			expect(result.farewellMessage).toBeUndefined();
+			expect(result.portraitWaitMinMs).toBeUndefined();
 		});
 	});
 

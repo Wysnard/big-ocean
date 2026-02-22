@@ -561,48 +561,6 @@ describe("useTherapistChat", () => {
 			expect(result.current.isConfidenceReady).toBe(false);
 		});
 
-		it("exposes hasShownCelebration state", () => {
-			const { result } = renderHook(() => useTherapistChat("session-123"));
-
-			expect(result.current.hasShownCelebration).toBe(false);
-		});
-
-		it("allows dismissing celebration via setHasShownCelebration", () => {
-			// Simulate a resumed session with enough messages to trigger celebration
-			const existingMessages = Array.from({ length: 50 }, (_, i) => ({
-				role: i % 2 === 0 ? ("user" as const) : ("assistant" as const),
-				content: `Message ${i + 1}`,
-				timestamp: new Date(Date.now() - (50 - i) * 60000).toISOString(),
-			}));
-
-			mockResumeSession.mockReturnValue({
-				data: {
-					messages: existingMessages,
-					confidence: {
-						openness: 0,
-						conscientiousness: 0,
-						extraversion: 0,
-						agreeableness: 0,
-						neuroticism: 0,
-					},
-				},
-				isLoading: false,
-				error: null,
-				refetch: vi.fn(),
-			});
-
-			const { result } = renderHook(() => useTherapistChat("session-123"));
-
-			expect(result.current.isConfidenceReady).toBe(true);
-			expect(result.current.hasShownCelebration).toBe(false);
-
-			act(() => {
-				result.current.setHasShownCelebration(true);
-			});
-
-			expect(result.current.hasShownCelebration).toBe(true);
-		});
-
 		it("exposes progressPercent based on message count", () => {
 			const { result } = renderHook(() => useTherapistChat("session-123"));
 			completeGreetingStagger();

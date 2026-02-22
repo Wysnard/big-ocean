@@ -4,10 +4,11 @@ import { getRequestHeader } from "@tanstack/react-start/server";
 import type { FacetName, TraitName } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
 import { Schema as S } from "effect";
-import { Loader2, MessageCircle } from "lucide-react";
+import { BookOpen, Loader2, MessageCircle } from "lucide-react";
 import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
 import { ResultsAuthGate } from "@/components/ResultsAuthGate";
 import { DetailZone } from "@/components/results/DetailZone";
+import { PortraitReadingView } from "@/components/results/PortraitReadingView";
 import { ProfileView } from "@/components/results/ProfileView";
 import { QuickActionsCard } from "@/components/results/QuickActionsCard";
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
@@ -42,7 +43,9 @@ const checkAuthSession = createServerFn({ method: "GET" }).handler(async () => {
 	}
 });
 
-const SessionResultsSearchParams = S.Struct({});
+const SessionResultsSearchParams = S.Struct({
+	view: S.optional(S.String),
+});
 
 export const Route = createFileRoute("/results/$assessmentSessionId")({
 	validateSearch: (search) => S.decodeUnknownSync(SessionResultsSearchParams)(search),
@@ -70,7 +73,7 @@ function ResultsLoading() {
 		<div className="min-h-screen bg-background flex items-center justify-center">
 			<div className="text-center">
 				<Loader2 className="h-12 w-12 motion-safe:animate-spin text-primary mx-auto mb-4" />
-				<p className="text-muted-foreground">Calculating your personality profile...</p>
+				<p className="text-muted-foreground">Loading your results...</p>
 			</div>
 		</div>
 	);
@@ -85,6 +88,7 @@ function getDominantTrait(traits: readonly { name: TraitName; score: number }[])
 
 function ResultsSessionPage() {
 	const { assessmentSessionId } = Route.useParams();
+	const { view } = Route.useSearch();
 	const navigate = useNavigate();
 	const { isAuthenticated, isPending: isAuthPending } = useAuth();
 	const canLoadResults = isAuthenticated && !isAuthPending;
@@ -299,6 +303,22 @@ function ResultsSessionPage() {
 		? results.traits.find((t) => t.name === selectedTrait)
 		: null;
 
+	// Story 7.18: Portrait-first reading view
+	if (view === "portrait" && results.personalDescription) {
+		return (
+			<PortraitReadingView
+				personalDescription={results.personalDescription}
+				onViewFullProfile={() =>
+					navigate({
+						to: "/results/$assessmentSessionId",
+						params: { assessmentSessionId },
+						search: {},
+					})
+				}
+			/>
+		);
+	}
+
 	return (
 		<ProfileView
 			archetypeName={results.archetypeName}
@@ -342,8 +362,25 @@ function ResultsSessionPage() {
 						onToggleVisibility={handleToggleVisibility}
 					/>
 
-					{/* Continue Chat CTA — full-width */}
-					<div className="col-span-full flex justify-center py-4">
+					{/* Action CTAs — full-width */}
+					<div className="col-span-full flex flex-wrap justify-center gap-3 py-4">
+						{results.personalDescription && (
+							<Button
+								data-testid="results-read-portrait"
+								asChild
+								variant="outline"
+								className="min-h-11"
+							>
+								<Link
+									to="/results/$assessmentSessionId"
+									params={{ assessmentSessionId }}
+									search={{ view: "portrait" }}
+								>
+									<BookOpen className="w-4 h-4 mr-2" />
+									Read your portrait again
+								</Link>
+							</Button>
+						)}
 						<Button data-testid="results-continue-chat" asChild variant="outline" className="min-h-11">
 							<Link to="/chat" search={{ sessionId: assessmentSessionId }}>
 								<MessageCircle className="w-4 h-4 mr-2" />
