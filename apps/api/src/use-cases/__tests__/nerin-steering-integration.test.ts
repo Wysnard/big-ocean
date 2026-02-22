@@ -1,8 +1,8 @@
 /**
  * Nerin Steering Integration Test
  *
- * Verifies that the Orchestrator Router calculates steering internally
- * and passes steeringHint + facetScores to Nerin Agent.
+ * Verifies that the Orchestrator Router processes messages and
+ * passes sessionId + messages to Nerin Agent.
  *
  * Uses a spy Nerin layer to capture and verify input parameters.
  * Uses inline test layers for dependencies (logger, config, analyzer)
@@ -10,8 +10,8 @@
  *
  * Story 2.9: ScorerRepository removed — scorer node uses FacetEvidenceRepository + pure functions.
  * Story 2.11: facetScores removed from ProcessMessageInput — router reads evidence internally.
- * With default (empty) evidence, steering is always undefined. Steering with real data
- * will be tested in Task 4 when router reads from FacetEvidenceRepository.
+ * Story 9.2: NerinInvokeInput simplified to { sessionId, messages, targetDomain?, targetFacet? }.
+ *            facetScores and steeringHint no longer part of NerinInvokeInput.
  */
 
 import { vi } from "vitest";
@@ -93,12 +93,10 @@ const TestCheckpointerLayer = Layer.succeed(CheckpointerRepository, {
 
 describe("Nerin Steering Integration", () => {
 	/**
-	 * Story 2.11: facetScores are no longer passed via ProcessMessageInput.
-	 * Router uses internal defaults (all zero confidence) → no outliers → no steering.
-	 * This test verifies the pipeline works end-to-end with default steering (undefined).
-	 * Steering with real evidence data will be tested in Task 4.
+	 * Story 9.2: NerinInvokeInput now only contains sessionId, messages,
+	 * and optional targetDomain/targetFacet. No facetScores or steeringHint.
 	 */
-	it.effect("passes facetScores and undefined steeringHint with default evidence", () =>
+	it.effect("passes sessionId and messages to Nerin via orchestrator", () =>
 		Effect.gen(function* () {
 			// Capture what Nerin receives
 			let capturedInput: NerinInvokeInput | null = null;
@@ -108,7 +106,7 @@ describe("Nerin Steering Integration", () => {
 				invoke: (input: NerinInvokeInput) => {
 					capturedInput = input;
 					return Effect.succeed({
-						response: `Spy response - steeringHint received: ${!!input.steeringHint}`,
+						response: "Spy response",
 						tokenCount: { input: 100, output: 50, total: 150 },
 					});
 				},
@@ -140,7 +138,6 @@ describe("Nerin Steering Integration", () => {
 
 			const orchestrator = yield* OrchestratorRepository.pipe(Effect.provide(OrchestratorLayer));
 
-			// Story 2.11: No facetScores in input — router uses defaults internally
 			const result = yield* orchestrator.processMessage({
 				sessionId: "test-steering-session",
 				userMessage: "I prefer working alone in quiet spaces.",
@@ -151,18 +148,15 @@ describe("Nerin Steering Integration", () => {
 
 			// VERIFY: Nerin received the input
 			expect(capturedInput).not.toBeNull();
+			expect(capturedInput?.sessionId).toBe("test-steering-session");
+			expect(capturedInput?.messages).toBeDefined();
 
-			// VERIFY: facetScores were passed to Nerin (all 30 facets initialized internally)
-			expect(capturedInput?.facetScores).toBeDefined();
-			expect(Object.keys(capturedInput?.facetScores ?? {}).length).toBe(30);
-
-			// VERIFY: With default scores (all zero confidence), no steering outlier exists
-			expect(result.steeringTarget).toBeUndefined();
-			expect(result.steeringHint).toBeUndefined();
+			// VERIFY: Response came through
+			expect(result.nerinResponse).toBeDefined();
 		}),
 	);
 
-	it.effect("passes undefined steeringHint when no outliers exist", () =>
+	it.effect("passes messages to Nerin without steering on first message", () =>
 		Effect.gen(function* () {
 			let capturedInput: NerinInvokeInput | null = null;
 
@@ -182,6 +176,7 @@ describe("Nerin Steering Integration", () => {
 				SpyNerinLayer,
 				TestAnalyzerLayer,
 				TestFacetEvidenceLayer,
+				TestAssessmentMessageLayer,
 				TestCheckpointerLayer,
 			);
 
@@ -196,7 +191,6 @@ describe("Nerin Steering Integration", () => {
 
 			const orchestrator = yield* OrchestratorRepository.pipe(Effect.provide(OrchestratorLayer));
 
-			// Story 2.11: No facetScores in input
 			const result = yield* orchestrator.processMessage({
 				sessionId: "test-no-steering-session",
 				userMessage: "Just a normal conversation.",
@@ -205,13 +199,13 @@ describe("Nerin Steering Integration", () => {
 				dailyCostUsed: 5,
 			});
 
-			// VERIFY: Nerin received input but no steering hint
+			// VERIFY: Nerin received input
 			expect(capturedInput).not.toBeNull();
-			expect(capturedInput?.steeringHint).toBeUndefined();
+			expect(capturedInput?.sessionId).toBe("test-no-steering-session");
 
-			// VERIFY: facetScores still passed (for context) - now has all 30 facets
-			expect(capturedInput?.facetScores).toBeDefined();
-			expect(Object.keys(capturedInput?.facetScores ?? {}).length).toBe(30);
+			// VERIFY: No steering on first message (targetDomain/targetFacet undefined)
+			expect(capturedInput?.targetDomain).toBeUndefined();
+			expect(capturedInput?.targetFacet).toBeUndefined();
 
 			// VERIFY: Output also has no steering
 			expect(result.steeringTarget).toBeUndefined();
@@ -219,7 +213,7 @@ describe("Nerin Steering Integration", () => {
 		}),
 	);
 
-	it.effect("passes empty facetScores on first message", () =>
+	it.effect("invokes Nerin with correct sessionId on first message", () =>
 		Effect.gen(function* () {
 			let capturedInput: NerinInvokeInput | null = null;
 
@@ -239,6 +233,7 @@ describe("Nerin Steering Integration", () => {
 				SpyNerinLayer,
 				TestAnalyzerLayer,
 				TestFacetEvidenceLayer,
+				TestAssessmentMessageLayer,
 				TestCheckpointerLayer,
 			);
 
@@ -253,7 +248,7 @@ describe("Nerin Steering Integration", () => {
 
 			const orchestrator = yield* OrchestratorRepository.pipe(Effect.provide(OrchestratorLayer));
 
-			// First message — no facetScores in input (Story 2.11)
+			// First message
 			const result = yield* orchestrator.processMessage({
 				sessionId: "test-first-message",
 				userMessage: "Hello, I'm excited to start!",
@@ -262,16 +257,16 @@ describe("Nerin Steering Integration", () => {
 				dailyCostUsed: 0,
 			});
 
-			// VERIFY: Nerin received input
+			// VERIFY: Nerin received input with correct sessionId
 			expect(capturedInput).not.toBeNull();
-
-			// VERIFY: facetScores are initialized (all 30 facets with confidence 0)
-			expect(capturedInput?.facetScores).toBeDefined();
-			expect(Object.keys(capturedInput?.facetScores ?? {}).length).toBe(30);
+			expect(capturedInput?.sessionId).toBe("test-first-message");
 
 			// VERIFY: No steering on first message
-			expect(capturedInput?.steeringHint).toBeUndefined();
-			expect(result.steeringTarget).toBeUndefined();
+			expect(capturedInput?.targetDomain).toBeUndefined();
+			expect(capturedInput?.targetFacet).toBeUndefined();
+
+			// VERIFY: Response exists
+			expect(result.nerinResponse).toBeDefined();
 		}),
 	);
 });

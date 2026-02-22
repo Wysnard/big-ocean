@@ -1,26 +1,21 @@
 /**
  * Send Message Use Case
  *
- * Business logic for sending a message in an assessment conversation.
- * Saves user message, orchestrates AI response via Nerin conversational agent,
- * and returns lean response (response only, no confidence).
+ * Story 9.2: Rewritten as simple sequential Effect pipeline.
+ * Replaces old orchestrator-based flow with direct Nerin invocation.
  *
- * Story 2.4: Replaces direct Nerin calls with Orchestrator for multi-agent coordination.
- * Story 2.9: Scores computed on-demand from evidence instead of materialized tables.
- * Story 2.11: Lean response — confidence removed from send-message. Evidence reads
- *             moved to router node (offset steering). Analyzer fires as background daemon.
+ * Pipeline: validate session → save user message → get messages → call Nerin
+ *           → save assistant message → increment message_count → return response
  */
 
 import {
 	AppConfig,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
-	CostGuardRepository,
 	type DomainMessage,
-	FreeTierLimitReached,
 	LoggerRepository,
-	OrchestratorRepository,
-	pickFarewellMessage,
+	NerinAgentRepository,
+	SessionCompletedError,
 	SessionNotFound,
 } from "@workspace/domain";
 import { Effect } from "effect";
@@ -28,26 +23,24 @@ import { Effect } from "effect";
 export interface SendMessageInput {
 	readonly sessionId: string;
 	readonly message: string;
-	readonly authenticatedUserId?: string;
 	readonly userId?: string;
 }
 
 export interface SendMessageOutput {
 	readonly response: string;
 	readonly isFinalTurn: boolean;
-	readonly farewellMessage?: string;
-	readonly portraitWaitMinMs?: number;
 }
 
 /**
  * Send Message Use Case
  *
  * Dependencies: AssessmentSessionRepository, AssessmentMessageRepository,
- *               LoggerRepository, OrchestratorRepository, CostGuardRepository
- * Returns: AI response string (lean response, no confidence)
+ *               LoggerRepository, NerinAgentRepository, AppConfig
  *
- * @throws BudgetPausedError - Daily cost limit reached, assessment paused
- * @throws OrchestrationError - Generic routing/pipeline failure
+ * @throws SessionNotFound - Invalid session or access denied
+ * @throws SessionCompletedError - Session is finalizing or completed
+ * @throws AgentInvocationError - Nerin LLM call failure
+ * @throws DatabaseError - DB operation failure
  */
 export const sendMessage = (input: SendMessageInput) =>
 	Effect.gen(function* () {
@@ -55,18 +48,28 @@ export const sendMessage = (input: SendMessageInput) =>
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
 		const logger = yield* LoggerRepository;
-		const orchestrator = yield* OrchestratorRepository;
-		const costGuard = yield* CostGuardRepository;
+		const nerin = yield* NerinAgentRepository;
 
-		// Verify session exists
+		// 1. Resolve session
 		const session = yield* sessionRepo.getSession(input.sessionId);
 
-		// Linked sessions are private to their owner.
-		if (session.userId != null && session.userId !== input.authenticatedUserId) {
+		// 2. Ownership guard — linked sessions are private to their owner
+		if (session.userId != null && session.userId !== input.userId) {
 			return yield* Effect.fail(
 				new SessionNotFound({
 					sessionId: input.sessionId,
 					message: `Session '${input.sessionId}' not found`,
+				}),
+			);
+		}
+
+		// 3. Session status guard — reject if not active
+		if (session.status !== "active") {
+			return yield* Effect.fail(
+				new SessionCompletedError({
+					sessionId: input.sessionId,
+					status: session.status,
+					message: `Session is ${session.status} — cannot send messages`,
 				}),
 			);
 		}
@@ -76,72 +79,29 @@ export const sendMessage = (input: SendMessageInput) =>
 			messageLength: input.message.length,
 		});
 
-		// Save user message
+		// 4. Save user message
 		yield* messageRepo.saveMessage(input.sessionId, "user", input.message, input.userId);
 
-		// Get all previous messages for context
+		// 5. Get all messages for context
 		const previousMessages = yield* messageRepo.getMessages(input.sessionId);
 
-		// Message cadence is based on user messages only (assistant greetings should not count)
-		const messageCount = previousMessages.filter((msg) => msg.role === "user").length;
-
-		// Block past threshold (26th+ message)
-		if (messageCount > config.freeTierMessageThreshold) {
-			return yield* Effect.fail(
-				new FreeTierLimitReached({
-					sessionId: input.sessionId,
-					limit: config.freeTierMessageThreshold,
-					message: "You've reached the message limit for this assessment. View your results!",
-				}),
-			);
-		}
-
-		// Story 7.18: Final turn — skip LLM call, use farewell from pool
-		const isFinalTurn = messageCount >= config.freeTierMessageThreshold;
-
-		if (isFinalTurn) {
-			const farewellMessage = pickFarewellMessage();
-
-			// Save farewell as assistant message
-			yield* messageRepo.saveMessage(input.sessionId, "assistant", farewellMessage);
-
-			logger.info("Final turn - farewell sent", {
-				sessionId: input.sessionId,
-				messageCount,
-			});
-
-			return {
-				response: farewellMessage,
-				isFinalTurn: true,
-				farewellMessage,
-				portraitWaitMinMs: config.portraitWaitMinMs,
-			};
-		}
-
-		// Map DB entities to domain messages (preserving IDs for downstream analysis)
+		// 6. Map DB entities to domain messages
 		const domainMessages: DomainMessage[] = previousMessages.map((msg) => ({
 			id: msg.id,
 			role: msg.role,
 			content: msg.content,
 		}));
 
-		// Get current daily cost for budget check
-		const dailyCostCents = yield* costGuard.getDailyCost(session.userId ?? "anonymous");
-		const dailyCostUsed = dailyCostCents / 100; // Convert cents to dollars
-
-		// Invoke Orchestrator (routes to Nerin; router handles evidence reads internally on STEER messages)
-		const result = yield* orchestrator
-			.processMessage({
+		// 7. Call Nerin (cold start — no steering in this story)
+		const result = yield* nerin
+			.invoke({
 				sessionId: input.sessionId,
-				userMessage: input.message,
 				messages: domainMessages,
-				messageCount,
-				dailyCostUsed,
 			})
 			.pipe(
 				Effect.tapError((error) =>
 					Effect.sync(() =>
-						logger.error("Orchestrator invocation failed", {
+						logger.error("Nerin invocation failed", {
 							errorTag: error._tag,
 							sessionId: input.sessionId,
 							message: error.message,
@@ -150,47 +110,25 @@ export const sendMessage = (input: SendMessageInput) =>
 				),
 			);
 
-		// Save AI message
-		yield* messageRepo.saveMessage(input.sessionId, "assistant", result.nerinResponse);
+		// 8. Save assistant message (targetDomain/targetBigfiveFacet = undefined for cold start)
+		yield* messageRepo.saveMessage(input.sessionId, "assistant", result.response);
 
-		// Update cost tracking (convert dollars to cents)
-		yield* costGuard.incrementDailyCost(
-			session.userId ?? "anonymous",
-			Math.round(result.costIncurred * 100),
-		);
+		// 9. Increment message_count atomically and get new count
+		const messageCount = yield* sessionRepo.incrementMessageCount(input.sessionId);
 
-		// Fire-and-forget background analysis on batch messages (every 3rd message)
-		if (messageCount % 3 === 0) {
-			yield* Effect.forkDaemon(
-				orchestrator
-					.processAnalysis({
-						sessionId: input.sessionId,
-						messages: domainMessages,
-						messageCount,
-					})
-					.pipe(
-						Effect.catchAll((error) =>
-							Effect.sync(() =>
-								logger.error("Background analysis failed", {
-									sessionId: input.sessionId,
-									error: String(error),
-								}),
-							),
-						),
-					),
-			);
-		}
+		// 10. Compute isFinalTurn
+		const isFinalTurn = messageCount >= config.messageThreshold;
 
 		logger.info("Message processed", {
 			sessionId: input.sessionId,
-			responseLength: result.nerinResponse.length,
-			tokenCount: result.tokenUsage,
+			responseLength: result.response.length,
+			tokenCount: result.tokenCount,
 			messageCount,
-			steeringTarget: result.steeringTarget,
+			isFinalTurn,
 		});
 
 		return {
-			response: result.nerinResponse,
-			isFinalTurn: false,
+			response: result.response,
+			isFinalTurn,
 		};
 	});

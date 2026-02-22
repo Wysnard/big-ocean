@@ -1,3 +1,5 @@
+import type { FacetName } from "@workspace/domain/constants/big-five";
+import type { LifeDomain } from "@workspace/domain/constants/life-domain";
 import { AssessmentMessageEntity } from "@workspace/domain/entities/message.entity";
 import { Context, Effect } from "effect";
 import { DatabaseError } from "../errors/http.errors";
@@ -18,6 +20,8 @@ export class AssessmentMessageRepository extends Context.Tag("AssessmentMessageR
 		 * @param role - Message sender role ('user' | 'assistant')
 		 * @param content - Message content
 		 * @param userId - Optional user ID for user messages
+		 * @param targetDomain - Optional life domain for steering (assistant messages, Story 9.2)
+		 * @param targetBigfiveFacet - Optional facet for steering (assistant messages, Story 9.2)
 		 * @returns Effect with created message entity
 		 */
 		readonly saveMessage: (
@@ -25,6 +29,8 @@ export class AssessmentMessageRepository extends Context.Tag("AssessmentMessageR
 			role: "user" | "assistant",
 			content: string,
 			userId?: string,
+			targetDomain?: LifeDomain,
+			targetBigfiveFacet?: FacetName,
 		) => Effect.Effect<AssessmentMessageEntity, DatabaseError, never>;
 
 		/**

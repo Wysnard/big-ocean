@@ -189,5 +189,19 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 				sessions.set(sessionId, { ...session, sessionToken, updatedAt: new Date() });
 				return { sessionToken };
 			}),
+
+		incrementMessageCount: (sessionId: string) =>
+			Effect.gen(function* () {
+				const session = sessions.get(sessionId);
+				if (!session) {
+					return yield* Effect.fail({
+						_tag: "DatabaseError",
+						message: "Failed to increment message count",
+					});
+				}
+				const newCount = ((session.messageCount as number) ?? 0) + 1;
+				sessions.set(sessionId, { ...session, messageCount: newCount, updatedAt: new Date() });
+				return newCount;
+			}),
 	}),
 );

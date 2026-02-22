@@ -163,7 +163,7 @@ development_status:
   # Auth, anonymous sessions, Nerin chat, cold start greeting, streaming responses
   epic-9: in-progress
   9-1-anonymous-assessment-start: done
-  9-2-send-message-and-nerin-response: backlog
+  9-2-send-message-and-nerin-response: done
   9-3-user-registration-and-login: backlog
   9-4-anonymous-to-authenticated-transition: backlog
   9-5-chat-interface-and-conversation-ux: backlog

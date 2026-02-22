@@ -5,27 +5,25 @@
  * Handles HTTP request/response transformation only.
  * Business logic lives in use cases.
  *
- * Domain errors are mapped to contract errors for HTTP responses.
- * Effect/Platform automatically handles HTTP status codes via .addError() declarations.
+ * Story 9.2: sendMessage supports dual auth (anonymous cookie + Better Auth).
  */
 
 import { HttpApiBuilder } from "@effect/platform";
 import {
-	AgentInvocationError,
 	AssessmentTokenSecurity,
 	BigOceanApi,
 	DatabaseError,
+	NerinError,
 	Unauthorized,
 } from "@workspace/contracts";
 import {
+	AgentInvocationError,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
-	BudgetPausedError,
 	CurrentUser,
 	extract4LetterCode,
 	type FacetEvidencePersistenceError,
 	lookupArchetype,
-	OrchestrationError,
 	RedisOperationError,
 } from "@workspace/domain";
 import { DateTime, Effect, Redacted } from "effect";
@@ -166,50 +164,46 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 			)
 			.handle("sendMessage", ({ payload }) =>
 				Effect.gen(function* () {
+					// Story 9.2: Dual auth — try anonymous cookie first, fall back to Better Auth
+					const token = yield* HttpApiBuilder.securityDecode(AssessmentTokenSecurity).pipe(
+						Effect.map((redacted) => Redacted.value(redacted)),
+						Effect.catchAll(() => Effect.succeed("")),
+					);
+
 					const authenticatedUserId = yield* CurrentUser;
 
-					// Call use case - map domain errors to contract errors
+					// Determine userId for ownership guard
+					let userId: string | undefined = authenticatedUserId ?? undefined;
+
+					// For anonymous sessions, validate token belongs to the requested session
+					if (token && !authenticatedUserId) {
+						const sessionRepo = yield* AssessmentSessionRepository;
+						const tokenSession = yield* sessionRepo.findByToken(token);
+						if (!tokenSession || tokenSession.id !== payload.sessionId) {
+							return yield* Effect.fail(new DatabaseError({ message: "Session not found" }));
+						}
+						// Anonymous sessions have no userId — pass undefined
+						userId = tokenSession.userId ?? undefined;
+					}
+
 					const result = yield* sendMessage({
 						sessionId: payload.sessionId,
 						message: payload.message,
-						authenticatedUserId,
-						userId: authenticatedUserId,
+						userId,
 					}).pipe(
-						Effect.catchTag("BudgetPausedError", (error: BudgetPausedError) =>
+						Effect.catchTag("AgentInvocationError", (error: AgentInvocationError) =>
 							Effect.fail(
-								new AgentInvocationError({
-									agentName: "orchestrator",
+								new NerinError({
 									sessionId: error.sessionId,
 									message: error.message,
-								}),
-							),
-						),
-						Effect.catchTag("OrchestrationError", (error: OrchestrationError) =>
-							Effect.fail(
-								new AgentInvocationError({
-									agentName: "orchestrator",
-									sessionId: error.sessionId,
-									message: error.message,
-								}),
-							),
-						),
-						Effect.catchTag("RedisOperationError", (error: RedisOperationError) =>
-							Effect.fail(
-								new DatabaseError({
-									message: `Redis operation failed: ${error.message}`,
 								}),
 							),
 						),
 					);
 
-					// Format HTTP response (Story 7.18: includes farewell transition fields)
 					return {
 						response: result.response,
 						isFinalTurn: result.isFinalTurn,
-						...(result.farewellMessage !== undefined && { farewellMessage: result.farewellMessage }),
-						...(result.portraitWaitMinMs !== undefined && {
-							portraitWaitMinMs: result.portraitWaitMinMs,
-						}),
 					};
 				}),
 			)

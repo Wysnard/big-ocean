@@ -271,8 +271,7 @@ const nerinNodeEffect = (state: OrchestratorState) =>
 		const result = yield* nerinAgent.invoke({
 			sessionId: state.sessionId,
 			messages: state.messages,
-			facetScores: state.facetScores,
-			steeringHint: state.steeringHint,
+			targetFacet: state.steeringTarget,
 		});
 
 		const costIncurred = calculateCostFromTokens(result.tokenCount);

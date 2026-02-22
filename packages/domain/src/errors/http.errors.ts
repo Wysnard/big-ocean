@@ -168,6 +168,28 @@ export class FreeTierLimitReached extends S.TaggedError<FreeTierLimitReached>()(
 	},
 ) {}
 
+/**
+ * Session completed error (409)
+ * Attempt to send a message to a session that is finalizing or completed
+ */
+export class SessionCompletedError extends S.TaggedError<SessionCompletedError>()(
+	"SessionCompletedError",
+	{
+		sessionId: S.String,
+		status: S.String,
+		message: S.String,
+	},
+) {}
+
+/**
+ * Nerin error (503)
+ * LLM call failure when invoking the Nerin agent
+ */
+export class NerinError extends S.TaggedError<NerinError>()("NerinError", {
+	sessionId: S.String,
+	message: S.String,
+}) {}
+
 export class MalformedEvidenceError extends S.TaggedError<MalformedEvidenceError>()(
 	"MalformedEvidenceError",
 	{

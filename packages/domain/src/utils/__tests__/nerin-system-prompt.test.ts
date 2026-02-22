@@ -122,30 +122,32 @@ describe("buildChatSystemPrompt", () => {
 		expect(prompt).toContain("USE CAREFULLY: implies nobody sees their contribution");
 	});
 
-	it("appends steering hint with strengthened priority text when provided", () => {
-		const prompt = buildChatSystemPrompt("Explore how they handle conflict");
+	it("appends steering section with domain and facet when provided (Story 9.2)", () => {
+		const prompt = buildChatSystemPrompt("relationships", "trust");
 		expect(prompt).toContain("STEERING PRIORITY:");
-		expect(prompt).toContain("Explore how they handle conflict");
+		expect(prompt).toContain('"trust"');
+		expect(prompt).toContain('"relationships"');
 		expect(prompt).toContain("This is your next exploration target");
 		expect(prompt).toContain("Transition to this territory within your next 1-2 responses");
 	});
 
 	it("does not contain old steering text format", () => {
-		const prompt = buildChatSystemPrompt("Explore empathy patterns");
+		const prompt = buildChatSystemPrompt("work", "orderliness");
 		expect(prompt).not.toContain("Current conversation focus:");
 		expect(prompt).not.toContain("Naturally guide the conversation");
 	});
 
-	it("does not include steering section when no hint provided", () => {
+	it("does not include steering section when no domain/facet provided", () => {
 		const prompt = buildChatSystemPrompt();
 		expect(prompt).not.toContain("STEERING PRIORITY:");
 	});
 
-	it("combines persona, chat context, and steering hint when provided", () => {
-		const prompt = buildChatSystemPrompt("Explore orderliness");
+	it("combines persona, chat context, and steering when domain+facet provided", () => {
+		const prompt = buildChatSystemPrompt("work", "orderliness");
 		expect(prompt).toContain(NERIN_PERSONA);
 		expect(prompt).toContain("CONVERSATION MODE:");
 		expect(prompt).toContain("STEERING PRIORITY:");
-		expect(prompt).toContain("Explore orderliness");
+		expect(prompt).toContain('"orderliness"');
+		expect(prompt).toContain('"work"');
 	});
 });

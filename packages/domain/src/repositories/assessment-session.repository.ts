@@ -138,5 +138,15 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 		readonly rotateToken: (
 			sessionId: string,
 		) => Effect.Effect<{ sessionToken: string }, DatabaseError, never>;
+
+		/**
+		 * Atomically increment message_count and return the new value (Story 9.2)
+		 *
+		 * @param sessionId - Session identifier
+		 * @returns Effect with the new message_count after increment
+		 */
+		readonly incrementMessageCount: (
+			sessionId: string,
+		) => Effect.Effect<number, DatabaseError, never>;
 	}
 >() {}
