@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-02-22
+# Generated: 2026-02-23
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-02-22
+generated: 2026-02-23
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -163,19 +163,19 @@ development_status:
 # + formula-driven context steering + two evidence tables
 
   # EPIC 9 (New Epic 1): Start a Conversation with Nerin
-  # Auth, anonymous sessions, Nerin chat, cold start greeting, streaming responses
-  epic-9: in-progress
+  # All stories completed (5/5) — epic promoted to done (2026-02-23)
+  epic-9: done
   9-1-anonymous-assessment-start: done
   9-2-send-message-and-nerin-response: done
   9-3-user-registration-and-login: done
   9-4-anonymous-to-authenticated-transition: done
-  9-5-chat-interface-and-conversation-ux: backlog
+  9-5-chat-interface-and-conversation-ux: done
   epic-9-retrospective: optional
 
   # EPIC 10 (New Epic 2): Conversation Intelligence
   # Conversanalyzer (Haiku), formula functions, steering, cost guards
-  epic-10: backlog
-  10-1-conversation-evidence-schema-and-repository: backlog
+  epic-10: in-progress
+  10-1-conversation-evidence-schema-and-repository: done
   10-2-conversanalyzer-haiku-analysis-on-every-message: backlog
   10-3-formula-functions-facet-metrics-and-steering-target: backlog
   10-4-steering-integration-smart-nerin-responses: backlog

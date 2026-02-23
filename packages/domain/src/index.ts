@@ -100,6 +100,13 @@ export {
 export { AssessmentMessageRepository } from "./repositories/assessment-message.repository";
 // Repository interfaces (ports in hexagonal architecture)
 export { AssessmentSessionRepository } from "./repositories/assessment-session.repository";
+// Conversation evidence repository (Story 10.1)
+export {
+	ConversationEvidenceError,
+	type ConversationEvidenceInput,
+	type ConversationEvidenceRecord,
+	ConversationEvidenceRepository,
+} from "./repositories/conversation-evidence.repository";
 export { CostGuardRepository } from "./repositories/cost-guard.repository";
 export { FacetEvidenceRepository } from "./repositories/facet-evidence.repository";
 export {
