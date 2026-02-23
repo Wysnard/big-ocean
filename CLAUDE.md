@@ -376,6 +376,24 @@ All cost events logged with Pino for analytics:
 - `BudgetPausedError` (503) - Daily cost budget exceeded
 - `RedisOperationError` (500) - Redis connectivity/operation failure
 
+### Route Loader Auth Pattern
+
+Check auth state in `beforeLoad` using `getSession()` from `@/lib/auth-client`:
+```typescript
+import { getSession } from "@/lib/auth-client";
+import { isRedirect } from "@tanstack/react-router";
+
+beforeLoad: async ({ search }) => {
+  const { data: session } = await getSession();
+  if (session?.user) {
+    // authenticated — verify ownership, redirect, etc.
+  }
+}
+```
+Use `isRedirect()` in catch blocks within `beforeLoad` to re-throw TanStack Router redirects.
+
+**Session ownership verification** (Story 9.4): Lives in `/chat` route's `beforeLoad`, not in `ChatAuthGate`. After auth, ChatAuthGate navigates to `/chat?sessionId=...` which triggers the loader to verify the session belongs to the user.
+
 ### Database & Sync
 
 - **Backend:** Drizzle ORM + PostgreSQL (`packages/infrastructure/src/db/drizzle/schema.ts`)
@@ -468,6 +486,13 @@ const TestLayer = Layer.mergeAll(CostGuardRedisRepositoryLive, LoggerPinoReposit
 ```
 
 **Important:** Never import directly from `__mocks__/` paths. Always use `vi.mock()` + original paths.
+
+**Import ordering with `@effect/vitest`:** When combining `vi.mock()` with `@effect/vitest`, import `vi` from `vitest` on its own line **before** any `@effect/vitest` imports. Otherwise you get `"Cannot access '__vi_import_0__' before initialization"`:
+```typescript
+import { vi } from "vitest";                    // FIRST — vi.mock() hoisting needs this
+vi.mock("@workspace/infrastructure/repositories/...");
+import { describe, expect, it } from "@effect/vitest"; // AFTER vi.mock calls
+```
 
 **No centralized `TestRepositoriesLayer`** — each test file declares its own `vi.mock()` calls and composes a minimal local `TestLayer` with only the services it needs via `Layer.mergeAll(...)`.
 
