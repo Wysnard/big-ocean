@@ -177,7 +177,7 @@ development_status:
   epic-10: in-progress
   10-1-conversation-evidence-schema-and-repository: done
   10-2-conversanalyzer-haiku-analysis-on-every-message: done
-  10-3-formula-functions-facet-metrics-and-steering-target: backlog
+  10-3-formula-functions-facet-metrics-and-steering-target: done
   10-4-steering-integration-smart-nerin-responses: backlog
   10-5-message-count-progress-and-session-guards: backlog
   10-6-cost-tracking-and-rate-limiting: backlog
