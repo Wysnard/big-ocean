@@ -1,128 +1,27 @@
 /**
- * Start Assessment Use Case Tests
+ * Start Assessment Use Case Tests — startAuthenticatedAssessment
  *
- * Tests for startAuthenticatedAssessment, startAnonymousAssessment, and
- * the backward-compat startAssessment wrapper.
+ * Tests for authenticated assessment creation, existing session handling,
+ * rate limiting, greeting persistence, error handling, and edge cases.
  * Uses inline spy layers (Layer.succeed with vi.fn()) for per-test control.
  */
 
-import {
-	AssessmentMessageRepository,
-	AssessmentSessionRepository,
-	CostGuardRepository,
-	GREETING_MESSAGES,
-	LoggerRepository,
-	OPENING_QUESTIONS,
-} from "@workspace/domain";
-import { Effect, Layer } from "effect";
+import { GREETING_MESSAGES, OPENING_QUESTIONS } from "@workspace/domain";
+import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { startAuthenticatedAssessment } from "../start-assessment.use-case";
 import {
-	startAnonymousAssessment,
-	startAssessment,
-	startAuthenticatedAssessment,
-} from "../start-assessment.use-case";
-
-// Define mock repo objects locally with vi.fn() for spy access
-const mockAssessmentSessionRepo = {
-	createSession: vi.fn(),
-	getActiveSessionByUserId: vi.fn(),
-	getSession: vi.fn(),
-	updateSession: vi.fn(),
-	getSessionsByUserId: vi.fn(),
-	findSessionByUserId: vi.fn(),
-	createAnonymousSession: vi.fn(),
-	findByToken: vi.fn(),
-	assignUserId: vi.fn(),
-	rotateToken: vi.fn(),
-};
-
-const mockAssessmentMessageRepo = {
-	saveMessage: vi.fn(),
-	getMessages: vi.fn(),
-	getMessageCount: vi.fn(),
-};
-
-const mockLoggerRepo = {
-	info: vi.fn(),
-	error: vi.fn(),
-	warn: vi.fn(),
-	debug: vi.fn(),
-};
-
-const mockCostGuardRepo = {
-	incrementDailyCost: vi.fn(),
-	getDailyCost: vi.fn(),
-	incrementAssessmentCount: vi.fn(),
-	getAssessmentCount: vi.fn(),
-	canStartAssessment: vi.fn(),
-	recordAssessmentStart: vi.fn(),
-};
-
-let saveMessageCallCount = 0;
-
-const createTestLayer = () =>
-	Layer.mergeAll(
-		Layer.succeed(AssessmentSessionRepository, mockAssessmentSessionRepo),
-		Layer.succeed(AssessmentMessageRepository, mockAssessmentMessageRepo),
-		Layer.succeed(LoggerRepository, mockLoggerRepo),
-		Layer.succeed(CostGuardRepository, mockCostGuardRepo),
-	);
+	createTestLayer,
+	mockAssessmentMessageRepo,
+	mockAssessmentSessionRepo,
+	mockCostGuardRepo,
+	mockLoggerRepo,
+	setupDefaultMocks,
+} from "./__fixtures__/start-assessment.fixtures";
 
 describe("startAssessment Use Case", () => {
 	beforeEach(() => {
-		saveMessageCallCount = 0;
-
-		// Reset mocks to default behavior before each test
-		mockAssessmentSessionRepo.createSession.mockImplementation((userId?: string) =>
-			Effect.succeed({
-				sessionId: "session_new_789",
-				userId,
-				createdAt: new Date("2026-02-01T10:00:00Z"),
-			}),
-		);
-		mockAssessmentSessionRepo.getActiveSessionByUserId.mockImplementation(() => Effect.succeed(null));
-		mockAssessmentSessionRepo.getSessionsByUserId.mockImplementation(() => Effect.succeed([]));
-		mockAssessmentSessionRepo.findSessionByUserId.mockImplementation(() => Effect.succeed(null));
-		mockAssessmentSessionRepo.getSession.mockImplementation(() => Effect.succeed(undefined));
-		mockAssessmentSessionRepo.updateSession.mockImplementation(() => Effect.succeed(undefined));
-		mockAssessmentSessionRepo.createAnonymousSession.mockImplementation(() =>
-			Effect.succeed({
-				sessionId: "session_anon_123",
-				sessionToken: "mock_token_abc123def456",
-			}),
-		);
-		mockAssessmentSessionRepo.findByToken.mockImplementation(() => Effect.succeed(null));
-		mockAssessmentSessionRepo.assignUserId.mockImplementation(() => Effect.succeed(undefined));
-		mockAssessmentSessionRepo.rotateToken.mockImplementation(() =>
-			Effect.succeed({ sessionToken: "new_token" }),
-		);
-
-		mockAssessmentMessageRepo.saveMessage.mockImplementation(
-			(sessionId: string, role: string, content: string) => {
-				saveMessageCallCount++;
-				return Effect.succeed({
-					id: `msg-${saveMessageCallCount}`,
-					sessionId,
-					role,
-					content,
-					createdAt: new Date("2026-02-01T10:00:00Z"),
-				});
-			},
-		);
-		mockAssessmentMessageRepo.getMessages.mockImplementation(() => Effect.succeed([]));
-		mockAssessmentMessageRepo.getMessageCount.mockImplementation(() => Effect.succeed(0));
-
-		mockLoggerRepo.info.mockImplementation(() => {});
-		mockLoggerRepo.error.mockImplementation(() => {});
-		mockLoggerRepo.warn.mockImplementation(() => {});
-		mockLoggerRepo.debug.mockImplementation(() => {});
-
-		mockCostGuardRepo.canStartAssessment.mockImplementation(() => Effect.succeed(true));
-		mockCostGuardRepo.recordAssessmentStart.mockImplementation(() => Effect.succeed(undefined));
-		mockCostGuardRepo.incrementDailyCost.mockImplementation(() => Effect.succeed(0));
-		mockCostGuardRepo.getDailyCost.mockImplementation(() => Effect.succeed(0));
-		mockCostGuardRepo.incrementAssessmentCount.mockImplementation(() => Effect.succeed(0));
-		mockCostGuardRepo.getAssessmentCount.mockImplementation(() => Effect.succeed(0));
+		setupDefaultMocks();
 	});
 
 	afterEach(() => {
@@ -461,158 +360,6 @@ describe("startAssessment Use Case", () => {
 
 				expect(mockAssessmentSessionRepo.createSession).toHaveBeenCalledWith(longUserId);
 			});
-		});
-	});
-
-	describe("startAnonymousAssessment", () => {
-		it("should create an anonymous session with token", async () => {
-			const testLayer = createTestLayer();
-
-			const result = await Effect.runPromise(
-				startAnonymousAssessment().pipe(Effect.provide(testLayer)),
-			);
-
-			expect(result.sessionId).toBe("session_anon_123");
-			expect(result.sessionToken).toBe("mock_token_abc123def456");
-			expect(result.createdAt).toBeInstanceOf(Date);
-			expect(mockAssessmentSessionRepo.createAnonymousSession).toHaveBeenCalled();
-		});
-
-		it("should not call CostGuard at all", async () => {
-			const testLayer = createTestLayer();
-
-			await Effect.runPromise(startAnonymousAssessment().pipe(Effect.provide(testLayer)));
-
-			expect(mockCostGuardRepo.canStartAssessment).not.toHaveBeenCalled();
-			expect(mockCostGuardRepo.recordAssessmentStart).not.toHaveBeenCalled();
-		});
-
-		it("should not check for existing sessions", async () => {
-			const testLayer = createTestLayer();
-
-			await Effect.runPromise(startAnonymousAssessment().pipe(Effect.provide(testLayer)));
-
-			expect(mockAssessmentSessionRepo.findSessionByUserId).not.toHaveBeenCalled();
-		});
-
-		it("should log anonymous session creation", async () => {
-			const testLayer = createTestLayer();
-
-			await Effect.runPromise(startAnonymousAssessment().pipe(Effect.provide(testLayer)));
-
-			expect(mockLoggerRepo.info).toHaveBeenCalledWith("Anonymous assessment started", {
-				sessionId: "session_anon_123",
-				greetingCount: 2,
-			});
-		});
-
-		describe("Greeting message persistence", () => {
-			it("should save exactly 2 greeting messages to the database", async () => {
-				const testLayer = createTestLayer();
-
-				await Effect.runPromise(startAnonymousAssessment().pipe(Effect.provide(testLayer)));
-
-				expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledTimes(2);
-			});
-
-			it("should save the fixed greeting message and opening question in order", async () => {
-				const testLayer = createTestLayer();
-
-				await Effect.runPromise(startAnonymousAssessment().pipe(Effect.provide(testLayer)));
-
-				const firstCall = mockAssessmentMessageRepo.saveMessage.mock.calls[0];
-				const secondCall = mockAssessmentMessageRepo.saveMessage.mock.calls[1];
-
-				expect(firstCall[2]).toBe(GREETING_MESSAGES[0]);
-				expect(OPENING_QUESTIONS).toContain(secondCall[2]);
-			});
-
-			it("should return 2 messages with role and content in the response", async () => {
-				const testLayer = createTestLayer();
-
-				const result = await Effect.runPromise(
-					startAnonymousAssessment().pipe(Effect.provide(testLayer)),
-				);
-
-				expect(result.messages).toHaveLength(2);
-				for (const msg of result.messages) {
-					expect(msg.role).toBe("assistant");
-					expect(typeof msg.content).toBe("string");
-					expect(msg.createdAt).toBeInstanceOf(Date);
-				}
-			});
-
-			it("should return messages with content matching what was saved", async () => {
-				const testLayer = createTestLayer();
-
-				const result = await Effect.runPromise(
-					startAnonymousAssessment().pipe(Effect.provide(testLayer)),
-				);
-
-				expect(result.messages[0].content).toBe(GREETING_MESSAGES[0]);
-				expect(OPENING_QUESTIONS).toContain(result.messages[1].content);
-			});
-		});
-
-		describe("Error handling", () => {
-			it("should fail when anonymous session creation fails", async () => {
-				const creationError = new Error("Database connection failed");
-				mockAssessmentSessionRepo.createAnonymousSession.mockReturnValue(Effect.fail(creationError));
-
-				const testLayer = createTestLayer();
-
-				await expect(
-					Effect.runPromise(startAnonymousAssessment().pipe(Effect.provide(testLayer))),
-				).rejects.toThrow("Database connection failed");
-			});
-		});
-	});
-
-	describe("startAssessment wrapper", () => {
-		it("should dispatch to authenticated path when userId is provided", async () => {
-			const testLayer = createTestLayer();
-
-			const result = await Effect.runPromise(
-				startAssessment({ userId: "user_wrapper" }).pipe(Effect.provide(testLayer)),
-			);
-
-			expect(result.sessionId).toBe("session_new_789");
-			expect(mockAssessmentSessionRepo.findSessionByUserId).toHaveBeenCalledWith("user_wrapper");
-			expect(mockCostGuardRepo.canStartAssessment).toHaveBeenCalledWith("user_wrapper");
-		});
-
-		it("should dispatch to anonymous path when userId is undefined", async () => {
-			const testLayer = createTestLayer();
-
-			const result = await Effect.runPromise(
-				startAssessment({ userId: undefined }).pipe(Effect.provide(testLayer)),
-			);
-
-			expect(result.sessionId).toBe("session_anon_123");
-			expect(mockAssessmentSessionRepo.findSessionByUserId).not.toHaveBeenCalled();
-			expect(mockCostGuardRepo.canStartAssessment).not.toHaveBeenCalled();
-		});
-
-		it("should dispatch to anonymous path when no userId key", async () => {
-			const testLayer = createTestLayer();
-
-			const result = await Effect.runPromise(startAssessment({}).pipe(Effect.provide(testLayer)));
-
-			expect(result.sessionId).toBe("session_anon_123");
-			expect(mockAssessmentSessionRepo.findSessionByUserId).not.toHaveBeenCalled();
-			expect(mockCostGuardRepo.canStartAssessment).not.toHaveBeenCalled();
-		});
-
-		it("should return current time, not repository creation time", async () => {
-			const testLayer = createTestLayer();
-			const beforeTime = new Date();
-
-			const result = await Effect.runPromise(startAssessment({}).pipe(Effect.provide(testLayer)));
-
-			const afterTime = new Date();
-
-			expect(result.createdAt.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
-			expect(result.createdAt.getTime()).toBeLessThanOrEqual(afterTime.getTime());
 		});
 	});
 });
