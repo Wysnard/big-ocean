@@ -395,24 +395,24 @@ describe("TherapistChat", () => {
 			expect(counter?.textContent).toContain("5");
 		});
 
-		it("shows warning style at 1,800+ chars", () => {
+		it("shows warning state at 1,800+ chars", () => {
 			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
 
 			const textarea = screen.getByPlaceholderText("What comes to mind first?") as HTMLTextAreaElement;
 			fireEvent.change(textarea, { target: { value: "a".repeat(1800) } });
 
 			const counter = container.querySelector("[data-slot='char-counter']");
-			expect(counter?.className).toContain("var(--warning)");
+			expect(counter?.getAttribute("data-state")).toBe("warning");
 		});
 
-		it("shows destructive style at 2,000 chars", () => {
+		it("shows error state at 2,000 chars", () => {
 			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
 
 			const textarea = screen.getByPlaceholderText("What comes to mind first?") as HTMLTextAreaElement;
 			fireEvent.change(textarea, { target: { value: "a".repeat(2000) } });
 
 			const counter = container.querySelector("[data-slot='char-counter']");
-			expect(counter?.className).toContain("text-destructive");
+			expect(counter?.getAttribute("data-state")).toBe("error");
 		});
 
 		it("textarea has maxLength attribute set to 2000", () => {
@@ -428,8 +428,8 @@ describe("TherapistChat", () => {
 			const textarea = screen.getByPlaceholderText("What comes to mind first?") as HTMLTextAreaElement;
 			fireEvent.change(textarea, { target: { value: "a".repeat(2000) } });
 
-			const sendButton = screen.getByTestId("chat-send-btn");
-			expect(sendButton).not.toBeDisabled();
+			const sendButton = screen.getByTestId("chat-send-btn") as HTMLButtonElement;
+			expect(sendButton.disabled).toBe(false);
 		});
 
 		it("counter is NOT rendered when isCompleted is true", () => {
@@ -536,6 +536,112 @@ describe("TherapistChat", () => {
 			);
 
 			expect(container.querySelector("[data-slot='chat-auth-gate']")).toBeNull();
+		});
+	});
+
+	// Story 9.5: Auto-focus and input behavior
+	describe("Auto-focus (Story 9.5)", () => {
+		it("textarea receives focus after mount when not resuming", () => {
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			const textarea = screen.getByPlaceholderText("What comes to mind first?");
+			expect(document.activeElement).toBe(textarea);
+		});
+
+		it("textarea receives focus after resume data loads", () => {
+			// Start with resuming state — textarea is rendered but should NOT be focused
+			mockHookReturn.isResuming = true;
+			mockHookReturn.messages = [];
+
+			const { rerender } = renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			const textarea = screen.getByPlaceholderText("What comes to mind first?");
+			expect(document.activeElement).not.toBe(textarea);
+
+			// Simulate resume completing
+			mockHookReturn.isResuming = false;
+			mockHookReturn.messages = [
+				{ id: "msg_1", role: "assistant", content: "Welcome back!", timestamp: new Date() },
+			];
+
+			rerender(
+				<QueryClientProvider client={queryClient}>
+					<TherapistChat sessionId="session-123" />
+				</QueryClientProvider>,
+			);
+
+			const focusedTextarea = screen.getByPlaceholderText("What comes to mind first?");
+			expect(document.activeElement).toBe(focusedTextarea);
+		});
+
+		it("textarea is NOT focused when isCompleted is true", () => {
+			mockHookReturn.isCompleted = true;
+
+			renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			const textarea = screen.getByPlaceholderText("") as HTMLTextAreaElement;
+			expect(document.activeElement).not.toBe(textarea);
+		});
+
+		it("textarea is NOT focused when isFarewellReceived is true (unauthenticated)", () => {
+			mockHookReturn.isFarewellReceived = true;
+
+			renderWithProviders(<TherapistChat sessionId="session-123" isAuthenticated={false} />);
+
+			// Input should be faded — verify focus was not applied
+			const textarea = screen.getByPlaceholderText("") as HTMLTextAreaElement;
+			expect(document.activeElement).not.toBe(textarea);
+		});
+
+		it("auto-scroll triggers when new messages arrive", async () => {
+			Element.prototype.scrollIntoView = vi.fn();
+
+			mockHookReturn.messages = [
+				{ id: "msg_1", role: "assistant", content: "Hello", timestamp: new Date() },
+			];
+
+			const { rerender } = renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			// Add a new message
+			mockHookReturn.messages = [
+				{ id: "msg_1", role: "assistant", content: "Hello", timestamp: new Date() },
+				{ id: "msg_2", role: "user", content: "Hi there", timestamp: new Date() },
+			];
+
+			rerender(
+				<QueryClientProvider client={queryClient}>
+					<TherapistChat sessionId="session-123" />
+				</QueryClientProvider>,
+			);
+
+			await waitFor(() => {
+				expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth" });
+			});
+		});
+
+		it("highlight scroll triggers when highlightMessageId URL param present", async () => {
+			const scrollIntoViewMock = vi.fn();
+			document.querySelector = vi.fn().mockReturnValue({
+				scrollIntoView: scrollIntoViewMock,
+			});
+
+			mockHookReturn.messages = [
+				{ id: "msg_highlight", role: "user", content: "Highlighted message", timestamp: new Date() },
+			];
+
+			renderWithProviders(
+				<TherapistChat sessionId="session-123" highlightMessageId="msg_highlight" />,
+			);
+
+			await waitFor(() => {
+				expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: "smooth", block: "center" });
+			});
+		});
+
+		it("input bar has data-slot='chat-input-bar' for E2E targeting", () => {
+			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+			expect(container.querySelector("[data-slot='chat-input-bar']")).toBeTruthy();
 		});
 	});
 });

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
+import { ChatInputBarShell } from "../chat/ChatInputBarShell";
 import { useDepthScroll } from "./DepthScrollProvider";
 
 export function ChatInputBar() {
@@ -7,18 +8,14 @@ export function ChatInputBar() {
 	const visible = scrollPercent > 0.35;
 
 	return (
-		<div
-			data-slot="chat-input-bar"
-			className="fixed right-0 bottom-0 left-0 z-[95] px-6 py-[14px] backdrop-blur-[14px] transition-[transform,background,border-color] duration-500 [transition-timing-function:cubic-bezier(.16,1,.3,1)] max-[900px]:px-3 max-[900px]:py-2"
+		<ChatInputBarShell
+			className="fixed right-0 bottom-0 left-0 z-[95] py-[14px] transition-[transform,background,border-color] duration-500 [transition-timing-function:cubic-bezier(.16,1,.3,1)] max-[900px]:px-3 max-[900px]:py-2"
 			style={{
 				transform: visible ? "translateY(0)" : "translateY(100%)",
-				background: "var(--input-bar-bg)",
-				borderTop: "1px solid var(--input-bar-border)",
 			}}
 			aria-hidden={!visible}
 		>
-			{/* Inner wrapper — matches ConversationFlow max-widths */}
-			<div className="mx-auto flex max-w-[900px] gap-[10px] min-[1200px]:max-w-[1000px] min-[1440px]:max-w-[1100px] max-[900px]:gap-2">
+			<div className="flex gap-[10px] max-[900px]:gap-2">
 				{/* Fake input — clicking navigates to chat */}
 				<Link
 					to="/chat"
@@ -42,6 +39,6 @@ export function ChatInputBar() {
 					<ArrowRight className="hidden size-5 max-[900px]:block" />
 				</Link>
 			</div>
-		</div>
+		</ChatInputBarShell>
 	);
 }

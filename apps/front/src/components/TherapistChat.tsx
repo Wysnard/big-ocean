@@ -9,6 +9,7 @@ import Markdown from "react-markdown";
 import { getPlaceholder } from "@/constants/chat-placeholders";
 import { useTherapistChat } from "@/hooks/useTherapistChat";
 import { ChatAuthGate } from "./ChatAuthGate";
+import { ChatInputBarShell } from "./chat/ChatInputBarShell";
 import { DepthMeter } from "./chat/DepthMeter";
 import { ErrorBanner } from "./ErrorBanner";
 import { PortraitWaitScreen } from "./PortraitWaitScreen";
@@ -313,17 +314,32 @@ function ChatInputBar({
 	onSend,
 	isLoading,
 	isCompleted,
+	isFarewellReceived,
+	isResuming,
 	placeholder,
 	onFocus,
 }: {
 	onSend: (message: string) => Promise<void>;
 	isLoading: boolean;
 	isCompleted: boolean;
+	isFarewellReceived: boolean;
+	isResuming: boolean;
 	placeholder: string;
 	onFocus: () => void;
 }) {
 	const [inputValue, setInputValue] = useState("");
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+	// Auto-focus textarea on mount and after resume completes (Task 1.1, 1.2, 1.3)
+	// Uses autoFocus for initial load; programmatic .focus() for post-resume.
+	// Skips focus when farewell/completed (input is faded/disabled).
+	const hasAutoFocusedRef = useRef(false);
+	useEffect(() => {
+		if (isFarewellReceived || isCompleted || isResuming) return;
+		if (hasAutoFocusedRef.current) return;
+		hasAutoFocusedRef.current = true;
+		textareaRef.current?.focus();
+	}, [isFarewellReceived, isCompleted, isResuming]);
 
 	const handleTextareaResize = useCallback(() => {
 		const textarea = textareaRef.current;
@@ -334,10 +350,16 @@ function ChatInputBar({
 
 	const handleSendMessage = async () => {
 		if (!inputValue.trim() || isLoading) return;
-		await onSend(inputValue);
+		const message = inputValue;
 		setInputValue("");
 		if (textareaRef.current) {
 			textareaRef.current.style.height = "auto";
+		}
+		try {
+			await onSend(message);
+		} catch {
+			// Error handling lives in useTherapistChat; input is already cleared
+			// (optimistic UX — message appears immediately in the chat)
 		}
 	};
 
@@ -360,54 +382,52 @@ function ChatInputBar({
 	}, []);
 
 	return (
-		<div className="relative z-10 border-t border-[var(--input-bar-border)] bg-[var(--input-bar-bg)] backdrop-blur-[14px] px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-			<div className="mx-auto max-w-[900px] min-[1200px]:max-w-[1000px] min-[1440px]:max-w-[1100px]">
-				<div className="flex gap-2 items-end">
-					<textarea
-						ref={textareaRef}
-						data-slot="chat-input"
-						value={inputValue}
-						onChange={(e) => {
-							setInputValue(e.target.value);
-							handleTextareaResize();
-						}}
-						onKeyDown={handleKeyDown}
-						onFocus={onFocus}
-						placeholder={placeholder}
-						disabled={isLoading || isCompleted}
-						maxLength={ASSESSMENT_MESSAGE_MAX_LENGTH}
-						rows={1}
-						className="flex-1 px-4 py-2 rounded-lg border border-[var(--input-field-border)] bg-[var(--input-field-bg)] text-foreground placeholder-[var(--input-field-color)] focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-none overflow-y-auto"
-						style={{ maxHeight: "120px" }}
-					/>
-					<Button
-						data-testid="chat-send-btn"
-						onClick={handleSendMessage}
-						disabled={!inputValue.trim() || isLoading || isCompleted}
-						size="sm"
-						className="min-h-11 min-w-11 dark:shadow-[0_0_8px_rgba(0,212,200,0.3)] dark:disabled:opacity-65"
-					>
-						{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-					</Button>
-				</div>
-				{!isCompleted && (
-					<span
-						data-slot="char-counter"
-						className={cn(
-							"text-sm text-right block mt-1",
-							inputValue.length >= ASSESSMENT_MESSAGE_MAX_LENGTH
-								? "text-destructive"
-								: inputValue.length >= ASSESSMENT_MESSAGE_MAX_LENGTH * WARNING_THRESHOLD
-									? "text-[var(--warning)]"
-									: "text-muted-foreground",
-						)}
-					>
-						{inputValue.length.toLocaleString("en-US")} /{" "}
-						{ASSESSMENT_MESSAGE_MAX_LENGTH.toLocaleString("en-US")}
-					</span>
-				)}
+		<ChatInputBarShell className="relative z-10 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+			<div className="flex gap-2 items-end">
+				<textarea
+					ref={textareaRef}
+					data-slot="chat-input"
+					value={inputValue}
+					onChange={(e) => {
+						setInputValue(e.target.value);
+						handleTextareaResize();
+					}}
+					onKeyDown={handleKeyDown}
+					onFocus={onFocus}
+					placeholder={placeholder}
+					disabled={isLoading || isCompleted}
+					maxLength={ASSESSMENT_MESSAGE_MAX_LENGTH}
+					rows={1}
+					className="flex-1 px-4 py-2 rounded-lg border border-[var(--input-field-border)] bg-[var(--input-field-bg)] text-foreground placeholder-[var(--input-field-color)] focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-none overflow-y-auto"
+					style={{ maxHeight: "120px" }}
+				/>
+				<Button
+					data-testid="chat-send-btn"
+					onClick={handleSendMessage}
+					disabled={!inputValue.trim() || isLoading || isCompleted}
+					size="sm"
+					className="min-h-11 min-w-11 dark:shadow-[0_0_8px_rgba(0,212,200,0.3)] dark:disabled:opacity-65"
+				>
+					{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+				</Button>
 			</div>
-		</div>
+			{!isCompleted && (
+				<span
+					data-slot="char-counter"
+					data-state={
+						inputValue.length >= ASSESSMENT_MESSAGE_MAX_LENGTH
+							? "error"
+							: inputValue.length >= ASSESSMENT_MESSAGE_MAX_LENGTH * WARNING_THRESHOLD
+								? "warning"
+								: "normal"
+					}
+					className="text-sm text-right block mt-1 text-muted-foreground data-[state=warning]:text-[var(--warning)] data-[state=error]:text-destructive"
+				>
+					{inputValue.length.toLocaleString("en-US")} /{" "}
+					{ASSESSMENT_MESSAGE_MAX_LENGTH.toLocaleString("en-US")}
+				</span>
+			)}
+		</ChatInputBarShell>
 	);
 }
 
@@ -453,7 +473,7 @@ function ChatContent({
 	isFarewellReceived: boolean;
 	isAuthenticated: boolean;
 	isResuming: boolean;
-	resumeError: string | null;
+	resumeError: Error | null;
 	userName?: string | null;
 	userImage?: string | null;
 	depthProgress: number;
@@ -530,6 +550,8 @@ function ChatContent({
 								style={{ background: "var(--thread-line)" }}
 								aria-hidden="true"
 							/>
+							{/* Story 9.5: Flat render verified acceptable for MESSAGE_THRESHOLD=25 (~50 messages).
+							    Reconsider @tanstack/react-virtual if threshold increases above 30 (60+ DOM nodes). */}
 							{messages.length > 0 &&
 								messages.map((msg, index) => (
 									<div key={msg.id} className="relative z-[1] mb-9 motion-safe:animate-fade-in-up">
@@ -636,6 +658,8 @@ function ChatContent({
 						onSend={onSend}
 						isLoading={isLoading}
 						isCompleted={isCompleted}
+						isFarewellReceived={isFarewellReceived}
+						isResuming={isResuming}
 						placeholder={inputPlaceholder}
 						onFocus={onInputFocus}
 					/>
