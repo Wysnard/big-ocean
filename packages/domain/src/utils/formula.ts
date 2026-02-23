@@ -77,13 +77,15 @@ export function computeContextWeight(confidences: number[]): number {
 export function computeContextMean(
 	scores: number[],
 	confidences: number[],
-	epsilon = FORMULA_DEFAULTS.epsilon,
+	epsilon: number = FORMULA_DEFAULTS.epsilon,
 ): number {
 	let num = 0;
 	let den = 0;
 	for (let i = 0; i < scores.length; i++) {
-		num += confidences[i] * scores[i];
-		den += confidences[i];
+		const c = confidences[i] ?? 0;
+		const s = scores[i] ?? 0;
+		num += c * s;
+		den += c;
 	}
 	return num / (den + epsilon);
 }
@@ -208,7 +210,7 @@ export function computeSteeringTarget(
 	// Cold start: no evidence
 	if (metrics.size === 0) {
 		const idx = (seedIndex ?? 0) % GREETING_SEED_POOL.length;
-		const seed = GREETING_SEED_POOL[idx];
+		const seed = GREETING_SEED_POOL[idx]!;
 		return {
 			targetFacet: seed.facet,
 			targetDomain: seed.domain,
@@ -246,7 +248,7 @@ export function computeSteeringTarget(
 	const targetFacet = bestFacet as FacetName;
 	const facetMetrics = metrics.get(targetFacet);
 	if (!facetMetrics) {
-		const seed = GREETING_SEED_POOL[0];
+		const seed = GREETING_SEED_POOL[0]!;
 		return {
 			targetFacet: seed.facet,
 			targetDomain: seed.domain,
@@ -255,7 +257,8 @@ export function computeSteeringTarget(
 	}
 
 	// Step 2: Domain selection via expected signal power gain (exact weights)
-	let bestDomain: LifeDomain = STEERABLE_DOMAINS[0];
+	// biome-ignore lint/style/noNonNullAssertion: STEERABLE_DOMAINS is a compile-time constant with 5 elements
+	let bestDomain: LifeDomain = STEERABLE_DOMAINS[0]!;
 	let bestScore = Number.NEGATIVE_INFINITY;
 
 	const currentP = facetMetrics.signalPower;
