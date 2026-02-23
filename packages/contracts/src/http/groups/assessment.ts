@@ -14,6 +14,7 @@ import {
 import { Schema as S } from "effect";
 import {
 	AssessmentAlreadyExists,
+	ConversationEvidenceError,
 	DatabaseError,
 	NerinError,
 	RateLimitExceeded,
@@ -169,6 +170,7 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 			.setPayload(SendMessageRequestSchema)
 			.addError(SessionNotFound, { status: 404 })
 			.addError(SessionCompletedError, { status: 409 })
+			.addError(ConversationEvidenceError, { status: 500 })
 			.addError(DatabaseError, { status: 500 })
 			.addError(NerinError, { status: 503 }),
 	)

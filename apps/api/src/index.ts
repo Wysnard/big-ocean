@@ -21,6 +21,8 @@ import {
 	BetterAuthLive,
 	BetterAuthService,
 	CheckpointerPostgresRepositoryLive,
+	ConversanalyzerAnthropicRepositoryLive,
+	ConversationEvidenceDrizzleRepositoryLive,
 	CostGuardRedisRepositoryLive,
 	DatabaseStack,
 	FacetEvidenceNoopRepositoryLive,
@@ -151,6 +153,8 @@ const OrchestratorLayer = OrchestratorLangGraphRepositoryLive.pipe(
 const RepositoryLayers = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
 	AssessmentMessageDrizzleRepositoryLive,
+	ConversationEvidenceDrizzleRepositoryLive,
+	ConversanalyzerAnthropicRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 	FacetEvidenceNoopRepositoryLive,
 	NerinAgentLayer,

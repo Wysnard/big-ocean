@@ -2,23 +2,34 @@
  * Send Message Use Case
  *
  * Story 9.2: Rewritten as simple sequential Effect pipeline.
- * Replaces old orchestrator-based flow with direct Nerin invocation.
+ * Story 10.2: Added conversanalyzer pipeline (post-cold-start).
  *
- * Pipeline: validate session → save user message → get messages → call Nerin
- *           → save assistant message → increment message_count → return response
+ * Pipeline: validate session → save user msg (capture messageId) → get messages
+ *           → query evidence → compute domain distribution
+ *           → [cold start check: user msg count ≤ greeting count]
+ *           → if post-cold-start: conversanalyzer → cap 3 → save evidence
+ *           → call Nerin (no steering yet) → save assistant msg → increment count → return
  */
 
 import {
 	AppConfig,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
+	aggregateDomainDistribution,
+	type ConversanalyzerOutput,
+	ConversanalyzerRepository,
+	ConversationEvidenceRepository,
 	type DomainMessage,
+	GREETING_MESSAGES,
 	LoggerRepository,
 	NerinAgentRepository,
 	SessionCompletedError,
 	SessionNotFound,
 } from "@workspace/domain";
-import { Effect } from "effect";
+import { Effect, Schedule } from "effect";
+
+/** Cold start threshold: greeting messages + 1 opening question = 2 assistant greetings */
+const COLD_START_GREETING_COUNT = GREETING_MESSAGES.length + 1;
 
 export interface SendMessageInput {
 	readonly sessionId: string;
@@ -35,7 +46,8 @@ export interface SendMessageOutput {
  * Send Message Use Case
  *
  * Dependencies: AssessmentSessionRepository, AssessmentMessageRepository,
- *               LoggerRepository, NerinAgentRepository, AppConfig
+ *               LoggerRepository, NerinAgentRepository, AppConfig,
+ *               ConversanalyzerRepository, ConversationEvidenceRepository
  *
  * @throws SessionNotFound - Invalid session or access denied
  * @throws SessionCompletedError - Session is finalizing or completed
@@ -49,6 +61,8 @@ export const sendMessage = (input: SendMessageInput) =>
 		const messageRepo = yield* AssessmentMessageRepository;
 		const logger = yield* LoggerRepository;
 		const nerin = yield* NerinAgentRepository;
+		const conversanalyzer = yield* ConversanalyzerRepository;
+		const evidenceRepo = yield* ConversationEvidenceRepository;
 
 		// 1. Resolve session
 		const session = yield* sessionRepo.getSession(input.sessionId);
@@ -79,10 +93,16 @@ export const sendMessage = (input: SendMessageInput) =>
 			messageLength: input.message.length,
 		});
 
-		// 4. Save user message
-		yield* messageRepo.saveMessage(input.sessionId, "user", input.message, input.userId);
+		// 4. Save user message (capture messageId for evidence FK)
+		const savedUserMessage = yield* messageRepo.saveMessage(
+			input.sessionId,
+			"user",
+			input.message,
+			input.userId,
+		);
+		const messageId = savedUserMessage.id;
 
-		// 5. Get all messages for context
+		// 5. Get all messages for context (includes the just-saved user message)
 		const previousMessages = yield* messageRepo.getMessages(input.sessionId);
 
 		// 6. Map DB entities to domain messages
@@ -92,7 +112,61 @@ export const sendMessage = (input: SendMessageInput) =>
 			content: msg.content,
 		}));
 
-		// 7. Call Nerin (cold start — no steering in this story)
+		// 7. Conversanalyzer pipeline (post-cold-start only)
+		const userMessageCount = previousMessages.filter((m) => m.role === "user").length;
+
+		if (userMessageCount > COLD_START_GREETING_COUNT) {
+			// Query existing evidence for domain distribution
+			const existingEvidence = yield* evidenceRepo.findBySession(input.sessionId);
+			const domainDistribution = aggregateDomainDistribution(existingEvidence);
+
+			// Build recent messages (last 6)
+			const recentMessages: DomainMessage[] = domainMessages.slice(-6);
+
+			// Conversanalyzer call — non-fatal (retry once, then skip per AC #6)
+			const evidenceResult = yield* conversanalyzer
+				.analyze({
+					message: input.message,
+					recentMessages,
+					domainDistribution,
+				})
+				.pipe(
+					Effect.retry(Schedule.once),
+					Effect.catchAll((error) =>
+						Effect.sync(() => {
+							logger.error("Conversanalyzer failed, skipping", {
+								error: error.message,
+								sessionId: input.sessionId,
+							});
+							return { evidence: [], tokenUsage: { input: 0, output: 0 } } as ConversanalyzerOutput;
+						}),
+					),
+				);
+
+			// Cap evidence to 3 records (business rule)
+			const cappedEvidence = evidenceResult.evidence.slice(0, 3);
+
+			// Save evidence if non-empty
+			if (cappedEvidence.length > 0) {
+				yield* evidenceRepo.save(
+					cappedEvidence.map((e) => ({
+						...e,
+						sessionId: input.sessionId,
+						messageId,
+					})),
+				);
+			}
+
+			if (cappedEvidence.length > 0) {
+				logger.info("Conversanalyzer complete", {
+					sessionId: input.sessionId,
+					evidenceCount: cappedEvidence.length,
+					tokenUsage: evidenceResult.tokenUsage,
+				});
+			}
+		}
+
+		// 8. Call Nerin (no steering yet — Story 10.4)
 		const result = yield* nerin
 			.invoke({
 				sessionId: input.sessionId,
@@ -110,13 +184,13 @@ export const sendMessage = (input: SendMessageInput) =>
 				),
 			);
 
-		// 8. Save assistant message (targetDomain/targetBigfiveFacet = undefined for cold start)
+		// 9. Save assistant message
 		yield* messageRepo.saveMessage(input.sessionId, "assistant", result.response);
 
-		// 9. Increment message_count atomically and get new count
+		// 10. Increment message_count atomically and get new count
 		const messageCount = yield* sessionRepo.incrementMessageCount(input.sessionId);
 
-		// 10. Compute isFinalTurn
+		// 11. Compute isFinalTurn
 		const isFinalTurn = messageCount >= config.messageThreshold;
 
 		logger.info("Message processed", {
