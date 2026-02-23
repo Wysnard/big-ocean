@@ -142,26 +142,41 @@ export const startAssessment = (input: StartAssessmentInput) =>
   });
 ```
 
-### Error Mapping Pattern
+### Error Propagation Rule
 
-When infrastructure errors need to be exposed via HTTP, handlers map them to contract errors:
+**Use-cases and handlers must NOT remap errors.** Errors thrown at the lowest appropriate layer (repository, domain service) propagate unchanged through the use-case and handler to the HTTP contract, where `.addError()` declarations handle serialization and status code mapping automatically.
 
 ```typescript
-// Handler maps infrastructure error → contract error
-.handle("start", ({ payload }) =>
+// ✅ CORRECT: Handler lets errors propagate
+.handle("sendMessage", ({ payload }) =>
   Effect.gen(function* () {
-    const result = yield* startAssessment({ userId: payload.userId }).pipe(
-      Effect.catchTag("RedisOperationError", (error: RedisOperationError) =>
-        Effect.fail(
-          new DatabaseError({
-            message: `Rate limiting check failed: ${error.message}`,
-          }),
-        ),
-      ),
-    );
-    return result;
+    return yield* sendMessage({ sessionId: payload.sessionId, message: payload.message });
   }),
 )
+
+// ❌ WRONG: Handler remaps domain error to a different error
+.handle("sendMessage", ({ payload }) =>
+  Effect.gen(function* () {
+    return yield* sendMessage({ ... }).pipe(
+      Effect.catchTag("AgentInvocationError", (e) =>
+        Effect.fail(new NerinError({ message: e.message })),  // ❌ Don't remap
+      ),
+    );
+  }),
+)
+```
+
+**Allowed exception:** `catchTag` for fail-open resilience — catching infrastructure errors (e.g., `RedisOperationError`) to allow degraded operation rather than failing the request:
+
+```typescript
+// ✅ OK: Fail-open — catch infrastructure error, log, continue
+yield* costGuard.checkDailyBudget(costKey, limit).pipe(
+  Effect.catchTag("RedisOperationError", (err) =>
+    Effect.sync(() => {
+      logger.error("Redis unavailable for budget check, allowing message", { error: err.message });
+    }),
+  ),
+);
 ```
 
 ### Common Mistakes to Avoid

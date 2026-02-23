@@ -13,11 +13,9 @@ import {
 	AssessmentTokenSecurity,
 	BigOceanApi,
 	DatabaseError,
-	NerinError,
 	Unauthorized,
 } from "@workspace/contracts";
 import {
-	AgentInvocationError,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	CurrentUser,
@@ -190,16 +188,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 						sessionId: payload.sessionId,
 						message: payload.message,
 						userId,
-					}).pipe(
-						Effect.catchTag("AgentInvocationError", (error: AgentInvocationError) =>
-							Effect.fail(
-								new NerinError({
-									sessionId: error.sessionId,
-									message: error.message,
-								}),
-							),
-						),
-					);
+					});
 
 					return {
 						response: result.response,

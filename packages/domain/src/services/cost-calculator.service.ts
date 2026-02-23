@@ -2,20 +2,20 @@
  * Cost Calculator Service
  *
  * Pure function for calculating LLM API costs based on token usage.
- * Uses Anthropic Claude Sonnet 4.5 pricing (as of 2026-02-01).
+ * Uses Anthropic Claude Haiku 4.5 pricing (claude-haiku-4-5-20251001).
  *
  * @module cost-calculator
  */
 
 /**
- * Anthropic Claude pricing constants
- * These are the per-million-token rates for Claude Sonnet 4.5
+ * Anthropic Claude Haiku 4.5 pricing constants
+ * $1.00 per 1M input tokens, $5.00 per 1M output tokens
  */
 export const PRICING = {
-	/** $0.003 per 1 million input tokens */
-	INPUT_PER_MILLION: 0.003,
-	/** $0.015 per 1 million output tokens */
-	OUTPUT_PER_MILLION: 0.015,
+	/** $1.00 per 1 million input tokens */
+	INPUT_PER_MILLION: 1.0,
+	/** $5.00 per 1 million output tokens */
+	OUTPUT_PER_MILLION: 5.0,
 } as const;
 
 /**
@@ -36,8 +36,8 @@ export interface CostResult {
  * Calculate the cost of an LLM API call based on token usage.
  *
  * Formula:
- * - Input cost: (inputTokens / 1,000,000) * $0.003
- * - Output cost: (outputTokens / 1,000,000) * $0.015
+ * - Input cost: (inputTokens / 1,000,000) * $1.00
+ * - Output cost: (outputTokens / 1,000,000) * $5.00
  * - Total: inputCost + outputCost
  * - Cents: Math.ceil(totalCost * 100)
  *
@@ -48,10 +48,10 @@ export interface CostResult {
  * @example
  * ```typescript
  * const result = calculateCost(12000, 3000);
- * // result.inputCost ≈ 0.000036
- * // result.outputCost ≈ 0.000045
- * // result.totalCost ≈ 0.000081
- * // result.totalCents = 1 (rounded up)
+ * // result.inputCost = 0.012
+ * // result.outputCost = 0.015
+ * // result.totalCost = 0.027
+ * // result.totalCents = 3 (rounded up)
  * ```
  */
 export function calculateCost(inputTokens: number, outputTokens: number): CostResult {

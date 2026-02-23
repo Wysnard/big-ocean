@@ -168,6 +168,8 @@ Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
 
 **Error Location Rules:** HTTP-facing errors MUST be in `contracts/src/errors.ts` (Schema.TaggedError). Infrastructure errors are co-located with repository interfaces in `domain/src/repositories/`. Use-cases throw contract errors directly. See [Error Architecture](./docs/ARCHITECTURE.md#error-architecture--location-rules) for complete rules.
 
+**Error Propagation Rule:** Use-cases and handlers must NOT remap errors (`catchTag`/`catchAll` to transform one error into another). Errors propagate unchanged from repositories through use-cases to the HTTP contract layer, where `.addError()` handles serialization. The only allowed `catchTag` is fail-open resilience (e.g., catching `RedisOperationError` to allow degraded operation).
+
 See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full examples and ADR-6 details.
 
 ### Workspace Dependencies

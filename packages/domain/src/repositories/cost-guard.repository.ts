@@ -6,7 +6,11 @@
  */
 
 import { Context, Effect } from "effect";
-import type { RateLimitExceeded } from "../errors/http.errors";
+import type {
+	CostLimitExceeded,
+	MessageRateLimitError,
+	RateLimitExceeded,
+} from "../errors/http.errors";
 import type { RedisOperationError } from "./redis.repository";
 
 /**
@@ -63,6 +67,26 @@ export interface CostGuardMethods {
 	readonly recordAssessmentStart: (
 		userId: string,
 	) => Effect.Effect<void, RedisOperationError | RateLimitExceeded>;
+
+	/**
+	 * Check daily budget — fails with CostLimitExceeded if limit reached
+	 * @param key - Cost key (userId or sessionId for anonymous)
+	 * @param limitCents - Daily budget in cents
+	 */
+	readonly checkDailyBudget: (
+		key: string,
+		limitCents: number,
+	) => Effect.Effect<void, RedisOperationError | CostLimitExceeded>;
+
+	/**
+	 * Check per-user message rate limit (2 messages/minute fixed-window)
+	 * @param key - Cost key (userId or sessionId for anonymous)
+	 * @throws MessageRateLimitError if rate limit exceeded
+	 * @throws RedisOperationError if Redis operation fails
+	 */
+	readonly checkMessageRateLimit: (
+		key: string,
+	) => Effect.Effect<void, RedisOperationError | MessageRateLimitError>;
 }
 
 /**

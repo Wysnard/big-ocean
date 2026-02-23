@@ -20,11 +20,14 @@ import {
 	type ConversanalyzerOutput,
 	ConversanalyzerRepository,
 	ConversationEvidenceRepository,
+	CostGuardRepository,
+	calculateCost,
 	computeFacetMetrics,
 	computeSteeringTarget,
 	type DomainMessage,
 	type FacetName,
 	GREETING_MESSAGES,
+	getUTCDateKey,
 	type LifeDomain,
 	LoggerRepository,
 	NerinAgentRepository,
@@ -69,6 +72,7 @@ export const sendMessage = (input: SendMessageInput) =>
 		const nerin = yield* NerinAgentRepository;
 		const conversanalyzer = yield* ConversanalyzerRepository;
 		const evidenceRepo = yield* ConversationEvidenceRepository;
+		const costGuard = yield* CostGuardRepository;
 
 		// 1. Acquire advisory lock FIRST — prevents concurrent messages and TOCTOU races (Story 10.5)
 		const lockResource = Effect.acquireRelease(sessionRepo.acquireSessionLock(input.sessionId), () =>
@@ -102,6 +106,33 @@ export const sendMessage = (input: SendMessageInput) =>
 						}),
 					);
 				}
+
+				// 4a. Cost key: userId if authenticated, sessionId for anonymous
+				const costKey = input.userId ?? input.sessionId;
+
+				// 4b. Budget check — fail-open if Redis is down (Story 10.6)
+				yield* costGuard.checkDailyBudget(costKey, config.dailyCostLimit * 100).pipe(
+					Effect.catchTag("RedisOperationError", (err) =>
+						Effect.sync(() => {
+							logger.error("Redis unavailable for budget check, allowing message", {
+								error: err.message,
+								sessionId: input.sessionId,
+							});
+						}),
+					),
+				);
+
+				// 4c. Message rate limit — fail-open if Redis is down
+				yield* costGuard.checkMessageRateLimit(costKey).pipe(
+					Effect.catchTag("RedisOperationError", (err) =>
+						Effect.sync(() => {
+							logger.error("Redis unavailable for rate limit check, allowing message", {
+								error: err.message,
+								sessionId: input.sessionId,
+							});
+						}),
+					),
+				);
 
 				logger.info("Message received", {
 					sessionId: input.sessionId,
@@ -141,6 +172,7 @@ export const sendMessage = (input: SendMessageInput) =>
 				// 9. Steering computation — runs on every message (cold start + post-cold-start)
 				let targetDomain: LifeDomain;
 				let targetFacet: FacetName;
+				let analyzerTokenUsage: { input: number; output: number } | null = null;
 
 				if (userMessageCount > COLD_START_USER_MSG_THRESHOLD) {
 					// Post-cold-start: conversanalyzer → save evidence → re-fetch → compute metrics → steering
@@ -171,6 +203,9 @@ export const sendMessage = (input: SendMessageInput) =>
 								}),
 							),
 						);
+
+					// Capture analyzer token usage for cost tracking (Story 10.6)
+					analyzerTokenUsage = evidenceResult.tokenUsage;
 
 					// Cap evidence to 3 records (business rule)
 					const cappedEvidence = evidenceResult.evidence.slice(0, 3);
@@ -237,6 +272,36 @@ export const sendMessage = (input: SendMessageInput) =>
 							),
 						),
 					);
+
+				// 11a. Cost tracking — compute and record cost (Story 10.6)
+				const nerinCost = calculateCost(result.tokenCount.input, result.tokenCount.output);
+				const analyzerCost = analyzerTokenUsage
+					? calculateCost(analyzerTokenUsage.input, analyzerTokenUsage.output)
+					: { totalCents: 0 };
+				const totalCostCents = nerinCost.totalCents + analyzerCost.totalCents;
+
+				if (totalCostCents > 0) {
+					yield* costGuard.incrementDailyCost(costKey, totalCostCents).pipe(
+						Effect.catchAll((err) =>
+							Effect.sync(() => {
+								logger.error("Failed to increment daily cost (non-fatal)", {
+									error: err.message,
+									sessionId: input.sessionId,
+									totalCostCents,
+								});
+							}),
+						),
+					);
+				}
+
+				logger.info("Cost tracked", {
+					sessionId: input.sessionId,
+					costKey,
+					nerinCostCents: nerinCost.totalCents,
+					analyzerCostCents: analyzerCost.totalCents,
+					totalCostCents,
+					dateKey: getUTCDateKey(),
+				});
 
 				// 12. Save assistant message with steering targets
 				yield* messageRepo.saveMessage(

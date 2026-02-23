@@ -18,6 +18,7 @@ export {
 	InvalidCredentials,
 	InvalidFacetNameError,
 	MalformedEvidenceError,
+	MessageRateLimitError,
 	NerinError,
 	ProfileError,
 	ProfileNotFound,
