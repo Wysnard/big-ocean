@@ -11,7 +11,11 @@
  */
 
 import { randomBytes } from "node:crypto";
-import { DatabaseError, SessionNotFound } from "@workspace/contracts/errors";
+import {
+	ConcurrentMessageError,
+	DatabaseError,
+	SessionNotFound,
+} from "@workspace/contracts/errors";
 import { AssessmentSessionEntitySchema } from "@workspace/domain/entities/session.entity";
 import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
@@ -603,6 +607,60 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 					}
 
 					return result.messageCount;
+				}),
+
+			acquireSessionLock: (sessionId: string) =>
+				Effect.gen(function* () {
+					const results = yield* db
+						.execute(sql`SELECT pg_try_advisory_lock(hashtext(${sessionId})) AS locked`)
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "acquireSessionLock",
+										sessionId,
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({
+									message: "Failed to acquire session lock",
+								});
+							}),
+						);
+
+					const row = results[0] as { locked: boolean } | undefined;
+					if (!row?.locked) {
+						logger.warn("Advisory lock contention", {
+							sessionId,
+							event: "advisory_lock_contention",
+						});
+						return yield* Effect.fail(
+							new ConcurrentMessageError({
+								sessionId,
+								message: "Another message is being processed",
+							}),
+						);
+					}
+				}),
+
+			releaseSessionLock: (sessionId: string) =>
+				Effect.gen(function* () {
+					yield* db.execute(sql`SELECT pg_advisory_unlock(hashtext(${sessionId}))`).pipe(
+						Effect.mapError((error) => {
+							try {
+								logger.error("Database operation failed", {
+									operation: "releaseSessionLock",
+									sessionId,
+									error: error instanceof Error ? error.message : String(error),
+								});
+							} catch (logError) {
+								console.error("Logger failed:", logError);
+							}
+							return new DatabaseError({ message: "Failed to release session lock" });
+						}),
+					);
 				}),
 		});
 	}),

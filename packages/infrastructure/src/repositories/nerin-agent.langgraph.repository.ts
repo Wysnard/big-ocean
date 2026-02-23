@@ -103,8 +103,12 @@ export const NerinAgentLangGraphRepositoryLive = Layer.effect(
 			invoke: (input: NerinInvokeInput) =>
 				Effect.tryPromise({
 					try: async () => {
-						// Build system prompt with optional structured steering (Story 9.2)
-						const systemPrompt = buildChatSystemPrompt(input.targetDomain, input.targetFacet);
+						// Build system prompt with optional structured steering (Story 9.2) + nearingEnd (Story 10.5)
+						const systemPrompt = buildChatSystemPrompt({
+							targetDomain: input.targetDomain,
+							targetFacet: input.targetFacet,
+							nearingEnd: input.nearingEnd,
+						});
 
 						// Convert domain messages to LangChain format and prepend system prompt
 						const langchainMessages = domainToLangChain(input.messages);

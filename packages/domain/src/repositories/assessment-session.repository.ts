@@ -1,6 +1,6 @@
 import { AssessmentSessionEntity } from "@workspace/domain/entities/session.entity";
 import { Context, Effect } from "effect";
-import { DatabaseError, SessionNotFound } from "../errors/http.errors";
+import { ConcurrentMessageError, DatabaseError, SessionNotFound } from "../errors/http.errors";
 
 /**
  * Session Repository Service Tag
@@ -148,5 +148,26 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 		readonly incrementMessageCount: (
 			sessionId: string,
 		) => Effect.Effect<number, DatabaseError, never>;
+
+		/**
+		 * Acquire a session-level advisory lock for concurrent message prevention (Story 10.5)
+		 *
+		 * Uses pg_try_advisory_lock(hashtext(sessionId)). Non-blocking — fails immediately
+		 * with ConcurrentMessageError if the lock is already held.
+		 *
+		 * @param sessionId - Session identifier to lock
+		 * @returns Effect that succeeds if lock acquired, fails with ConcurrentMessageError if contended
+		 */
+		readonly acquireSessionLock: (
+			sessionId: string,
+		) => Effect.Effect<void, ConcurrentMessageError | DatabaseError, never>;
+
+		/**
+		 * Release a session-level advisory lock (Story 10.5)
+		 *
+		 * @param sessionId - Session identifier to unlock
+		 * @returns Effect that succeeds when lock is released
+		 */
+		readonly releaseSessionLock: (sessionId: string) => Effect.Effect<void, DatabaseError, never>;
 	}
 >() {}

@@ -18,7 +18,7 @@ export {
 export { deriveTraitSummary } from "./derive-trait-summary";
 export { toFacetDisplayName } from "./display-name";
 export { getFacetLevel } from "./facet-level";
-export { buildChatSystemPrompt } from "./nerin-system-prompt";
+export { buildChatSystemPrompt, type ChatSystemPromptParams } from "./nerin-system-prompt";
 export { generateOceanCode } from "./ocean-code-generator";
 export { aggregateFacetScores, deriveTraitScores } from "./scoring";
 export {

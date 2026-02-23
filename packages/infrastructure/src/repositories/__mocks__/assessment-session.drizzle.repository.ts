@@ -203,5 +203,9 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 				sessions.set(sessionId, { ...session, messageCount: newCount, updatedAt: new Date() });
 				return newCount;
 			}),
+
+		acquireSessionLock: (_sessionId: string) => Effect.void,
+
+		releaseSessionLock: (_sessionId: string) => Effect.void,
 	}),
 );

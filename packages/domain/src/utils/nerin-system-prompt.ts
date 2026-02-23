@@ -5,6 +5,7 @@
  * Composes NERIN_PERSONA (shared identity) + CHAT_CONTEXT (conversation-specific rules).
  *
  * Story 9.2: Updated to accept structured (targetDomain, targetFacet) instead of free-text steeringHint.
+ * Story 10.5: Refactored to params object with nearingEnd for farewell winding-down.
  */
 
 import type { FacetName } from "../constants/big-five";
@@ -14,17 +15,34 @@ import { CHAT_CONTEXT } from "../constants/nerin-chat-context";
 import { NERIN_PERSONA } from "../constants/nerin-persona";
 
 /**
- * Build dynamic system prompt with optional structured steering
+ * Parameters for building the chat system prompt
+ */
+export interface ChatSystemPromptParams {
+	targetDomain?: LifeDomain;
+	targetFacet?: FacetName;
+	nearingEnd?: boolean;
+}
+
+/**
+ * Build dynamic system prompt with optional structured steering and farewell winding-down
  *
- * @param targetDomain - Life domain to steer toward (optional, undefined for cold start)
- * @param targetFacet - Big Five facet to steer toward (optional, undefined for cold start)
+ * @param params - Steering and conversation state parameters
  * @returns System prompt for Nerin agent
  */
-export function buildChatSystemPrompt(targetDomain?: LifeDomain, targetFacet?: FacetName): string {
+export function buildChatSystemPrompt(params: ChatSystemPromptParams = {}): string {
+	const { targetDomain, targetFacet, nearingEnd } = params;
 	let prompt = `${NERIN_PERSONA}\n\n${CHAT_CONTEXT}`;
 
-	// Add steering section when both domain and facet are provided
-	if (targetDomain && targetFacet) {
+	// When nearingEnd, CONVERSATION CLOSING overrides STEERING PRIORITY to avoid contradictory instructions
+	if (nearingEnd) {
+		prompt += `
+
+CONVERSATION CLOSING:
+The conversation is nearing its natural end. Begin weaving your responses toward a warm, reflective closing.
+Acknowledge what you've learned about the person and express genuine appreciation for the conversation.
+Do NOT mention any assessment, scores, or results — just naturally wind down.`;
+	} else if (targetDomain && targetFacet) {
+		// Add steering section when both domain and facet are provided (suppressed during closing)
 		const facetDefinition = FACET_PROMPT_DEFINITIONS[targetFacet];
 		prompt += `
 
