@@ -3,13 +3,13 @@ import { expect, test } from "@playwright/test";
 /**
  * Golden Path Journey
  *
- * Landing → Chat → Farewell → Auth Gate Sign-up → Wait Screen → Portrait → Full Results → Share → Public Profile
+ * Landing → Chat → Farewell → Auth Gate Sign-up → Finalization Wait Screen → Results → Share → Public Profile
  *
  * Single long user journey exercising the core happy path.
  * Uses data-testid and data-slot selectors — never matches on LLM output text.
  *
- * Story 7.18: Updated flow — farewell replaces celebration card, auth gate is inline in chat,
- * wait screen leads to portrait-first reading view before full results.
+ * Story 11.1: After auth gate signup, redirects to /finalize/$sessionId wait screen
+ * which triggers generate-results and auto-redirects to results on completion.
  */
 test("golden path: landing → chat → signup → results → share → public profile", async ({
 	page,
@@ -69,31 +69,25 @@ test("golden path: landing → chat → signup → results → share → public 
 		await page.getByTestId("auth-gate-signup-submit").click();
 	});
 
-	await test.step("wait screen appears → click Read what Nerin wrote", async () => {
-		// Story 7.18: After auth, wait screen appears with rotating Nerin-voiced lines
-		await page.locator("[data-slot='portrait-wait-screen']").waitFor({
-			state: "visible",
-			timeout: 15_000,
-		});
+	await test.step("finalization wait screen → auto-redirect to results", async () => {
+		// Story 11.1: After auth, ChatAuthGate redirects to /finalize/$sessionId
+		// The wait screen fires POST /generate-results and polls /finalization-status
+		// With placeholder pipeline, it completes instantly and auto-redirects to /results
 
-		// Wait for portrait to be ready (min wait + API)
-		await page.getByTestId("read-portrait-btn").waitFor({
-			state: "visible",
-			timeout: 30_000,
-		});
-		await page.getByTestId("read-portrait-btn").click();
-	});
+		// Wait for either the finalization wait screen or direct redirect to results
+		// (placeholder pipeline completes so fast it may skip the wait screen entirely)
+		await Promise.race([
+			page.locator("[data-slot='finalization-wait-screen']").waitFor({
+				state: "visible",
+				timeout: 15_000,
+			}),
+			page.waitForURL(/\/results\//, { timeout: 15_000 }),
+		]);
 
-	await test.step("portrait reading view → navigate to full results", async () => {
-		// Story 7.18: Portrait-first reading view
-		await page.locator("[data-slot='portrait-reading-view']").waitFor({
-			state: "visible",
-			timeout: 15_000,
-		});
-
-		// Click "See your full personality profile →"
-		await page.getByTestId("view-full-profile-btn").click();
-		await page.waitForURL(/\/results\/[^?]+$/);
+		// If we're on the wait screen, wait for auto-redirect to results
+		if (!page.url().includes("/results/")) {
+			await page.waitForURL(/\/results\//, { timeout: 30_000 });
+		}
 	});
 
 	await test.step("assert archetype card is visible", async () => {
