@@ -64,7 +64,6 @@ const MockConfigLive = Layer.succeed(AppConfig, {
 	port: 4000,
 	nodeEnv: "test",
 	dailyCostLimit: 75,
-	messageThreshold: 25,
 	anthropicApiKey: Redacted.make("test-key"),
 	nerinModelId: "mock",
 	nerinMaxTokens: 1024,

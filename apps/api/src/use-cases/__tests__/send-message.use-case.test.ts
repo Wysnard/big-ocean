@@ -14,6 +14,7 @@ import {
 	AppConfig,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
+	ConcurrentMessageError,
 	ConversanalyzerError,
 	ConversanalyzerRepository,
 	ConversationEvidenceRepository,
@@ -36,6 +37,8 @@ const mockSessionRepo = {
 	assignUserId: vi.fn(),
 	rotateToken: vi.fn(),
 	incrementMessageCount: vi.fn(),
+	acquireSessionLock: vi.fn(),
+	releaseSessionLock: vi.fn(),
 };
 
 const mockMessageRepo = {
@@ -178,7 +181,7 @@ const mockConversanalyzerOutput = {
 };
 
 /** Matches production default in app-config.live.ts */
-const MESSAGE_THRESHOLD = 25;
+const FREE_TIER_MESSAGE_THRESHOLD = 25;
 
 const mockConfig = {
 	databaseUrl: "postgres://test:test@localhost:5432/test",
@@ -202,7 +205,6 @@ const mockConfig = {
 	freeTierMessageThreshold: 25,
 	portraitWaitMinMs: 2000,
 	shareMinConfidence: 70,
-	messageThreshold: MESSAGE_THRESHOLD,
 	conversanalyzerModelId: "claude-haiku-4-5-20251001",
 	finanalyzerModelId: "claude-sonnet-4-20250514",
 	portraitGeneratorModelId: "claude-sonnet-4-20250514",
@@ -212,6 +214,8 @@ describe("sendMessage Use Case", () => {
 	beforeEach(() => {
 		mockSessionRepo.getSession.mockReturnValue(Effect.succeed(mockActiveSession));
 		mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(1));
+		mockSessionRepo.acquireSessionLock.mockReturnValue(Effect.void);
+		mockSessionRepo.releaseSessionLock.mockReturnValue(Effect.void);
 
 		mockMessageRepo.saveMessage.mockReturnValue(
 			Effect.succeed({
@@ -314,6 +318,7 @@ describe("sendMessage Use Case", () => {
 					})),
 					targetDomain: "relationships",
 					targetFacet: "gregariousness",
+					nearingEnd: false,
 				});
 			}).pipe(Effect.provide(createTestLayer())),
 		);
@@ -390,7 +395,9 @@ describe("sendMessage Use Case", () => {
 	describe("isFinalTurn threshold", () => {
 		it.effect("should return isFinalTurn: true at threshold", () =>
 			Effect.gen(function* () {
-				mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(MESSAGE_THRESHOLD));
+				mockSessionRepo.incrementMessageCount.mockReturnValue(
+					Effect.succeed(FREE_TIER_MESSAGE_THRESHOLD),
+				);
 
 				const result = yield* sendMessage({
 					sessionId: "session_test_123",
@@ -403,7 +410,9 @@ describe("sendMessage Use Case", () => {
 
 		it.effect("should return isFinalTurn: false below threshold", () =>
 			Effect.gen(function* () {
-				mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(MESSAGE_THRESHOLD - 1));
+				mockSessionRepo.incrementMessageCount.mockReturnValue(
+					Effect.succeed(FREE_TIER_MESSAGE_THRESHOLD - 1),
+				);
 
 				const result = yield* sendMessage({
 					sessionId: "session_test_123",
@@ -887,6 +896,120 @@ describe("sendMessage Use Case", () => {
 				if (exit._tag === "Failure") {
 					expect(String(exit.cause)).toContain("AgentInvocationError");
 				}
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("Advisory lock — unit tests with mock repos (Story 10.5)", () => {
+		it.effect("should acquire and release advisory lock on successful pipeline", () =>
+			Effect.gen(function* () {
+				yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Test",
+				});
+
+				expect(mockSessionRepo.acquireSessionLock).toHaveBeenCalledWith("session_test_123");
+				expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_test_123");
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("should return ConcurrentMessageError when lock is contended", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.acquireSessionLock.mockReturnValue(
+					Effect.fail(
+						new ConcurrentMessageError({
+							sessionId: "session_test_123",
+							message: "Another message is being processed",
+						}),
+					),
+				);
+
+				const exit = yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Test",
+				}).pipe(Effect.exit);
+
+				expect(exit._tag).toBe("Failure");
+				if (exit._tag === "Failure") {
+					expect(String(exit.cause)).toContain("ConcurrentMessageError");
+				}
+				// No side effects should have occurred
+				expect(mockMessageRepo.saveMessage).not.toHaveBeenCalled();
+				expect(mockNerinRepo.invoke).not.toHaveBeenCalled();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("should release lock even when pipeline fails (Nerin error)", () =>
+			Effect.gen(function* () {
+				mockNerinRepo.invoke.mockReturnValue(
+					Effect.fail(
+						new AgentInvocationError({
+							agentName: "Nerin",
+							sessionId: "session_test_123",
+							message: "Claude API error",
+						}),
+					),
+				);
+
+				yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Test",
+				}).pipe(Effect.exit);
+
+				expect(mockSessionRepo.acquireSessionLock).toHaveBeenCalledWith("session_test_123");
+				expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_test_123");
+				// Verify acquire happens before release (ordering guarantee)
+				const acquireOrder = mockSessionRepo.acquireSessionLock.mock.invocationCallOrder[0] ?? 0;
+				const releaseOrder = mockSessionRepo.releaseSessionLock.mock.invocationCallOrder[0] ?? 0;
+				expect(acquireOrder).toBeLessThan(releaseOrder);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("Farewell winding-down (Story 10.5)", () => {
+		it.effect("should pass nearingEnd to Nerin when user messages >= threshold - 3", () =>
+			Effect.gen(function* () {
+				// Simulate many user messages (threshold - 3 = 22 user messages)
+				const manyUserMessages = Array.from({ length: FREE_TIER_MESSAGE_THRESHOLD - 3 }, (_, i) => [
+					{
+						id: `msg_a_${i}`,
+						sessionId: "session_test_123",
+						role: "assistant" as const,
+						content: `Response ${i}`,
+						createdAt: new Date(),
+					},
+					{
+						id: `msg_u_${i}`,
+						sessionId: "session_test_123",
+						role: "user" as const,
+						content: `Message ${i}`,
+						createdAt: new Date(),
+					},
+				]).flat();
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(manyUserMessages));
+
+				yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Late message",
+				});
+
+				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
+				expect(nerinCall.nearingEnd).toBe(true);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("should NOT pass nearingEnd when user messages < threshold - 3", () =>
+			Effect.gen(function* () {
+				// Cold start: 1 user message — well below threshold - 3
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
+
+				yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Early message",
+				});
+
+				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
+				expect(nerinCall.nearingEnd).toBe(false);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});

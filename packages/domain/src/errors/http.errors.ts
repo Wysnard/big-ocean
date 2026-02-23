@@ -152,10 +152,6 @@ export class InvalidFacetNameError extends S.TaggedError<InvalidFacetNameError>(
 ) {}
 
 /**
- * Malformed evidence error (422)
- * JSON parsing or structure validation failure for analyzer output
- */
-/**
  * Free tier limit reached error (403)
  * User has sent the maximum number of messages allowed in the free tier
  */
@@ -199,6 +195,34 @@ export class ConversationEvidenceError extends S.TaggedError<ConversationEvidenc
 	{ message: S.String },
 ) {}
 
+/**
+ * Concurrent message error (409)
+ * Another message is already being processed for this session
+ */
+export class ConcurrentMessageError extends S.TaggedError<ConcurrentMessageError>()(
+	"ConcurrentMessageError",
+	{
+		sessionId: S.String,
+		message: S.String,
+	},
+) {}
+
+/**
+ * Finalization in progress error (409)
+ * Assessment finalization is already running for this session
+ */
+export class FinalizationInProgressError extends S.TaggedError<FinalizationInProgressError>()(
+	"FinalizationInProgressError",
+	{
+		sessionId: S.String,
+		message: S.String,
+	},
+) {}
+
+/**
+ * Malformed evidence error (422)
+ * JSON parsing or structure validation failure for analyzer output
+ */
 export class MalformedEvidenceError extends S.TaggedError<MalformedEvidenceError>()(
 	"MalformedEvidenceError",
 	{

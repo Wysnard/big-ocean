@@ -80,7 +80,6 @@ const configSchema = Config.all({
 	shareMinConfidence: Config.number("SHARE_MIN_CONFIDENCE").pipe(Config.withDefault(70)),
 
 	// Two-tier architecture model configuration (Story 9.1)
-	messageThreshold: Config.number("MESSAGE_THRESHOLD").pipe(Config.withDefault(25)),
 	conversanalyzerModelId: Config.string("CONVERSANALYZER_MODEL_ID").pipe(
 		Config.withDefault("claude-haiku-4-5-20251001"),
 	),
