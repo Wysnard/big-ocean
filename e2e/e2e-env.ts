@@ -9,13 +9,13 @@ export const FRONTEND_URL = "http://localhost:3001";
 
 export const OWNER_USER = {
 	email: "e2e-owner@test.bigocean.dev",
-	password: "TestPassword123!",
+	password: "OceanDepth#Nerin42xQ",
 	name: "E2E Owner",
 } as const;
 
 export const OTHER_USER = {
 	email: "e2e-other@test.bigocean.dev",
-	password: "TestPassword456!",
+	password: "CoralReef$Trait78zW",
 	name: "E2E Other",
 } as const;
 

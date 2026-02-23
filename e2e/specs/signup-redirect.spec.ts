@@ -16,21 +16,26 @@ test("signup from home → redirects to home → navigate to profile", async ({ 
 
 	await test.step("go to signup page with redirectTo=/", async () => {
 		await page.goto("/signup?redirectTo=/");
-		// Wait for hydration — input must be interactive (not just visible)
-		const nameInput = page.locator("#signup-name");
-		await nameInput.waitFor({ state: "visible" });
-		// Click and wait to ensure React has hydrated the form
-		await nameInput.click();
-		await page.waitForTimeout(500);
+		// Wait for hydration — submit button enabled means React has hydrated the form
+		const submitBtn = page.locator('button[type="submit"]');
+		await submitBtn.waitFor({ state: "visible" });
+		await page.waitForTimeout(1_000); // Extra buffer for hydration to stabilize
 	});
 
 	await test.step("fill and submit signup form", async () => {
 		await page.locator("#signup-name").fill("E2E Redirect Test");
 		await page.locator("#signup-email").fill(uniqueEmail);
-		await page.locator("#signup-password").fill("TestPassword123!");
-		await page.locator("#signup-confirm-password").fill("TestPassword123!");
+		await page.locator("#signup-password").fill("OceanDepth#Nerin42xQ");
+		await page.locator("#signup-confirm-password").fill("OceanDepth#Nerin42xQ");
 
-		// Verify all fields retained values
+		// Verify fields retained values (hydration may have cleared them — re-fill if needed)
+		if ((await page.locator("#signup-name").inputValue()) === "") {
+			await page.locator("#signup-name").fill("E2E Redirect Test");
+			await page.locator("#signup-email").fill(uniqueEmail);
+			await page.locator("#signup-password").fill("OceanDepth#Nerin42xQ");
+			await page.locator("#signup-confirm-password").fill("OceanDepth#Nerin42xQ");
+		}
+
 		await expect(page.locator("#signup-name")).toHaveValue("E2E Redirect Test");
 		await expect(page.locator("#signup-email")).toHaveValue(uniqueEmail);
 

@@ -608,16 +608,7 @@ function ChatContent({
 							{isLoading && <TypingIndicator />}
 
 							{/* Story 7.18: Auth gate for anonymous users after farewell */}
-							{isFarewellReceived && !isAuthenticated && (
-								<ChatAuthGate
-									sessionId={sessionId}
-									onAuthSuccess={() => {
-										/* No action needed here — Better Auth's useSession() reactively
-										   updates isAuthenticated in the parent route, causing TherapistChat
-										   to re-render with isAuthenticated=true and show PortraitWaitScreen. */
-									}}
-								/>
-							)}
+							{isFarewellReceived && !isAuthenticated && <ChatAuthGate sessionId={sessionId} />}
 
 							<div ref={messagesEndRef} />
 						</div>

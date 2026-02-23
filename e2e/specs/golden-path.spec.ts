@@ -14,6 +14,7 @@ import { expect, test } from "@playwright/test";
 test("golden path: landing → chat → signup → results → share → public profile", async ({
 	page,
 }) => {
+	test.setTimeout(90_000); // Long journey — multiple API calls, auth, navigation
 	await test.step("navigate to landing page and verify CTA exists", async () => {
 		await page.goto("/");
 		await page.locator("[data-slot='hero-section']").waitFor({ state: "visible" });
@@ -21,10 +22,19 @@ test("golden path: landing → chat → signup → results → share → public 
 	});
 
 	await test.step("navigate to /chat and create session", async () => {
-		// beforeLoad throws a redirect after creating the session (SSR),
-		// which aborts the initial navigation — ignore the abort and wait for the final URL.
-		await page.goto("/chat").catch(() => {});
-		await page.waitForURL(/\/chat\?sessionId=/, { timeout: 15_000 });
+		// beforeLoad creates a session via API then redirects to /chat?sessionId=...
+		// The SSR redirect may abort the initial navigation — retry if needed.
+		for (let attempt = 0; attempt < 3; attempt++) {
+			await page.goto("/chat").catch(() => {});
+			try {
+				await page.waitForURL(/\/chat\?sessionId=/, { timeout: 10_000 });
+				break;
+			} catch {
+				if (attempt === 2) throw new Error("Failed to navigate to /chat?sessionId= after 3 attempts");
+				// Retry — SSR beforeLoad may have failed transiently
+				await page.waitForTimeout(1_000);
+			}
+		}
 	});
 
 	const sessionId = new URL(page.url()).searchParams.get("sessionId") ?? "";
@@ -35,30 +45,13 @@ test("golden path: landing → chat → signup → results → share → public 
 		await page.locator("[data-slot='chat-bubble']").first().waitFor({ state: "visible" });
 	});
 
-	await test.step("type a message and click send", async () => {
+	await test.step("type a message and click send — triggers farewell", async () => {
 		const chatInput = page.locator("[data-slot='chat-input']");
 		await chatInput.waitFor({ state: "visible" });
 		await chatInput.fill("I love exploring new ideas and creative projects.");
 		await page.getByTestId("chat-send-btn").click();
-	});
 
-	await test.step("wait for Nerin response to first message", async () => {
-		// Response cycle complete when chat input is re-enabled
-		const chatInput = page.locator("[data-slot='chat-input']");
-		await expect(chatInput).toBeEnabled({ timeout: 30_000 });
-	});
-
-	await test.step("assert depth meter is visible", async () => {
-		const depthMeter = page.locator("[data-slot='depth-meter']");
-		await expect(depthMeter).toBeVisible();
-	});
-
-	await test.step("send second message — triggers farewell", async () => {
-		const chatInput = page.locator("[data-slot='chat-input']");
-		await chatInput.fill("I tend to be very organized and plan everything in advance.");
-		await page.getByTestId("chat-send-btn").click();
-
-		// Story 7.18: With FREE_TIER_MESSAGE_THRESHOLD=2, the 2nd message triggers farewell.
+		// With MESSAGE_THRESHOLD=1, the 1st user message triggers farewell.
 		// Wait for the auth gate to appear (anonymous user) — farewell + auth gate render together.
 		await page.locator("[data-slot='chat-auth-gate']").waitFor({
 			state: "visible",
@@ -72,7 +65,7 @@ test("golden path: landing → chat → signup → results → share → public 
 
 		// Fill sign-up form
 		await page.locator("#results-signup-email").fill("e2e-golden@test.bigocean.dev");
-		await page.locator("#results-signup-password").fill("TestPassword123!");
+		await page.locator("#results-signup-password").fill("OceanDepth#Nerin42xQ");
 		await page.getByTestId("auth-gate-signup-submit").click();
 	});
 

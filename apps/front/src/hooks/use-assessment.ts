@@ -213,14 +213,22 @@ export function useResumeSession(sessionId: string, enabled = true) {
  * ))}
  * ```
  */
+/**
+ * Query options factory for listing assessments.
+ * Use with queryClient.fetchQuery() for imperative fetching (e.g., post-auth verification).
+ */
+export function listAssessmentsQueryOptions() {
+	return queryOptions<ListSessionsResponse>({
+		queryKey: ["assessments", "list"],
+		queryFn: async () => fetchApi("/api/assessment/sessions"),
+		staleTime: 5 * 60 * 1000,
+	});
+}
+
 export function useListAssessments(enabled = true) {
 	return useQuery({
-		queryKey: ["assessments", "list"],
-		queryFn: async (): Promise<ListSessionsResponse> => {
-			return fetchApi("/api/assessment/sessions");
-		},
+		...listAssessmentsQueryOptions(),
 		enabled,
-		staleTime: 5 * 60 * 1000, // 5 minute cache
 	});
 }
 

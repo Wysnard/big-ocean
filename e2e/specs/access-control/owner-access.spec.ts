@@ -20,16 +20,16 @@ test.describe("owner access granted", () => {
 		});
 	});
 
-	test("chat resume loads existing conversation", async ({ page }) => {
+	test("chat resume loads existing conversation or shows completed state", async ({ page }) => {
 		await page.goto(`/chat?sessionId=${testSessionId}`);
 
-		// Chat bubbles should be visible (existing conversation loads)
-		await page
-			.locator("[data-slot='chat-bubble']")
-			.first()
-			.waitFor({ state: "visible", timeout: 15_000 });
+		// Session may be completed (messageCount >= threshold) → portrait wait screen or chat bubbles
+		const chatBubble = page.locator("[data-slot='chat-bubble']").first();
+		const portraitWait = page.locator("[data-slot='portrait-wait-screen']");
 
-		// URL should still contain the same sessionId
+		await expect(chatBubble.or(portraitWait)).toBeVisible({ timeout: 15_000 });
+
+		// URL should still reference the same sessionId
 		const currentSessionId = new URL(page.url()).searchParams.get("sessionId");
 		expect(currentSessionId).toBe(testSessionId);
 	});

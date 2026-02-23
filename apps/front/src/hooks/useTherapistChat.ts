@@ -102,8 +102,6 @@ export function useTherapistChat(sessionId: string) {
 	>(null);
 	// Story 7.18: Farewell transition state
 	const [isFarewellReceived, setIsFarewellReceived] = useState(false);
-	const [farewellMessage, setFarewellMessage] = useState<string | null>(null);
-	const [portraitWaitMinMs, setPortraitWaitMinMs] = useState<number | undefined>(undefined);
 	const { mutate: sendMessageRpc } = useSendMessage();
 
 	// Pending greeting messages not yet displayed (for stagger flush on early send)
@@ -147,6 +145,13 @@ export function useTherapistChat(sessionId: string) {
 			agreeableness: resumeData.confidence.agreeableness,
 			neuroticism: resumeData.confidence.neuroticism,
 		});
+
+		// Re-derive farewell state from resumed data (lost on post-auth navigation re-mount)
+		const threshold = resumeData.freeTierMessageThreshold ?? 25;
+		const resumedUserCount = mappedMessages.filter((m) => m.role === "user").length;
+		if (resumedUserCount >= threshold) {
+			setIsFarewellReceived(true);
+		}
 
 		// Detect new session: exactly 3 assistant-only messages (server-persisted greeting)
 		const isNewSession =
@@ -241,8 +246,6 @@ export function useTherapistChat(sessionId: string) {
 						// Story 7.18: Handle final turn — trigger farewell transition
 						if (data.isFinalTurn) {
 							setIsFarewellReceived(true);
-							setFarewellMessage(data.farewellMessage ?? null);
-							setPortraitWaitMinMs(data.portraitWaitMinMs);
 						}
 
 						// Story 2.11: confidence no longer in send-message response.
@@ -295,7 +298,7 @@ export function useTherapistChat(sessionId: string) {
 		freeTierMessageThreshold: FREE_TIER_THRESHOLD,
 		// Story 7.18: Farewell transition state
 		isFarewellReceived,
-		farewellMessage,
-		portraitWaitMinMs,
+		farewellMessage: null as string | null,
+		portraitWaitMinMs: undefined as number | undefined,
 	};
 }
