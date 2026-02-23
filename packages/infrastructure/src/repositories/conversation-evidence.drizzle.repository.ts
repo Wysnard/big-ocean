@@ -7,6 +7,7 @@
  */
 import {
 	ConversationEvidenceError,
+	type ConversationEvidenceRecord,
 	ConversationEvidenceRepository,
 } from "@workspace/domain/repositories/conversation-evidence.repository";
 import { eq, sql } from "drizzle-orm";
@@ -65,10 +66,10 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 						id: row.id,
 						sessionId: row.assessmentSessionId,
 						messageId: row.assessmentMessageId,
-						bigfiveFacet: row.bigfiveFacet,
+						bigfiveFacet: row.bigfiveFacet as ConversationEvidenceRecord["bigfiveFacet"],
 						score: row.score,
 						confidence: Number(row.confidence),
-						domain: row.domain,
+						domain: row.domain as ConversationEvidenceRecord["domain"],
 						createdAt: row.createdAt as Date,
 					}));
 				}),
