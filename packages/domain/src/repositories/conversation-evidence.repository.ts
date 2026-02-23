@@ -7,15 +7,12 @@
  * Story 10.1
  */
 import { Context, Effect } from "effect";
-import * as S from "effect/Schema";
 import type { FacetName } from "../constants/big-five";
 import type { LifeDomain } from "../constants/life-domain";
+import { ConversationEvidenceError } from "../errors/http.errors";
 import type { EvidenceInput } from "../types/evidence";
 
-export class ConversationEvidenceError extends S.TaggedError<ConversationEvidenceError>()(
-	"ConversationEvidenceError",
-	{ message: S.String },
-) {}
+export { ConversationEvidenceError };
 
 /** Input for saving conversation evidence — EvidenceInput + FK context */
 export type ConversationEvidenceInput = EvidenceInput & {

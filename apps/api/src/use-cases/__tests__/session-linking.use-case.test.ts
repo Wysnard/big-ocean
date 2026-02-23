@@ -16,18 +16,23 @@ import { vi } from "vitest";
 // Mock repos — must be before any imports that reference them
 vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/assessment-message.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/conversanalyzer.anthropic.repository");
+vi.mock("@workspace/infrastructure/repositories/conversation-evidence.drizzle.repository");
 
 import { describe, expect, it } from "@effect/vitest";
 import {
 	AppConfig,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
+	ConversanalyzerRepository,
+	ConversationEvidenceRepository,
 	LoggerRepository,
 	NerinAgentRepository,
 } from "@workspace/domain";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
-
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+import { ConversanalyzerAnthropicRepositoryLive } from "@workspace/infrastructure/repositories/conversanalyzer.anthropic.repository";
+import { ConversationEvidenceDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/conversation-evidence.drizzle.repository";
 import { Effect, Exit, Layer, Redacted } from "effect";
 import { sendMessage } from "../send-message.use-case";
 
@@ -49,27 +54,55 @@ const MockNerinLive = Layer.succeed(NerinAgentRepository, {
 	),
 });
 
-// Minimal config
+// Minimal config — must match real AppConfig shape (no LLM calls — all repos are mocked)
 const MockConfigLive = Layer.succeed(AppConfig, {
 	databaseUrl: "mock",
 	redisUrl: "mock",
 	betterAuthUrl: "http://localhost:4000",
 	betterAuthSecret: Redacted.make("test-secret"),
 	frontendUrl: "http://localhost:3000",
-	dailyCostLimitCents: 7500,
+	port: 4000,
+	nodeEnv: "test",
+	dailyCostLimit: 75,
 	messageThreshold: 25,
 	anthropicApiKey: Redacted.make("test-key"),
-	nerinModelId: "claude-3-haiku-20240307",
-	environment: "test",
+	nerinModelId: "mock",
+	nerinMaxTokens: 1024,
+	nerinTemperature: 0.7,
+	analyzerModelId: "mock",
+	analyzerMaxTokens: 2048,
+	analyzerTemperature: 0.3,
+	portraitModelId: "mock",
+	portraitMaxTokens: 4096,
+	portraitTemperature: 0.5,
+	freeTierMessageThreshold: 25,
+	portraitWaitMinMs: 2000,
+	shareMinConfidence: 70,
+	conversanalyzerModelId: "mock",
+	finanalyzerModelId: "mock",
+	portraitGeneratorModelId: "mock",
 });
 
+type TestServices =
+	| AssessmentSessionRepository
+	| AssessmentMessageRepository
+	| ConversanalyzerRepository
+	| ConversationEvidenceRepository
+	| LoggerRepository
+	| NerinAgentRepository
+	| AppConfig;
+
+// vi.mock() swaps production layers with __mocks__/ Layer.succeed (no deps),
+// but TS still infers the production RIn types. Cast is safe here.
 const TestLayer = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
 	AssessmentMessageDrizzleRepositoryLive,
+	ConversanalyzerAnthropicRepositoryLive,
+	ConversationEvidenceDrizzleRepositoryLive,
 	MockLoggerLive,
 	MockNerinLive,
 	MockConfigLive,
-);
+) as Layer.Layer<TestServices>;
 
 describe("Session Linking (Story 9.4, Task 5)", () => {
 	describe("assignUserId clears session_token (AC #2)", () => {

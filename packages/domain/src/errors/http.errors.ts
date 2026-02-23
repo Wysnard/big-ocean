@@ -190,6 +190,15 @@ export class NerinError extends S.TaggedError<NerinError>()("NerinError", {
 	message: S.String,
 }) {}
 
+/**
+ * Conversation evidence error (500)
+ * Database operation failure when reading/writing conversation evidence
+ */
+export class ConversationEvidenceError extends S.TaggedError<ConversationEvidenceError>()(
+	"ConversationEvidenceError",
+	{ message: S.String },
+) {}
+
 export class MalformedEvidenceError extends S.TaggedError<MalformedEvidenceError>()(
 	"MalformedEvidenceError",
 	{

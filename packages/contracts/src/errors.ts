@@ -9,6 +9,7 @@ export {
 	AgentInvocationError,
 	AnalyzerError,
 	AssessmentAlreadyExists,
+	ConversationEvidenceError,
 	CostLimitExceeded,
 	DatabaseError,
 	FreeTierLimitReached,

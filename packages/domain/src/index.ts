@@ -100,6 +100,13 @@ export {
 export { AssessmentMessageRepository } from "./repositories/assessment-message.repository";
 // Repository interfaces (ports in hexagonal architecture)
 export { AssessmentSessionRepository } from "./repositories/assessment-session.repository";
+// Conversanalyzer repository (Story 10.2)
+export {
+	ConversanalyzerError,
+	type ConversanalyzerInput,
+	type ConversanalyzerOutput,
+	ConversanalyzerRepository,
+} from "./repositories/conversanalyzer.repository";
 // Conversation evidence repository (Story 10.1)
 export {
 	ConversationEvidenceError,
@@ -253,6 +260,8 @@ export type { BigFiveTrait, TraitConfidenceScores } from "./types/trait";
 export { BIG_FIVE_TRAITS } from "./types/trait";
 // Date utilities for cost tracking and rate limiting
 export { getNextDayMidnightUTC, getUTCDateKey } from "./utils/date.utils";
+// Domain distribution utility (Story 10.2)
+export { aggregateDomainDistribution, type DomainDistribution } from "./utils/domain-distribution";
 // Utility functions
 export {
 	aggregateFacetScores,

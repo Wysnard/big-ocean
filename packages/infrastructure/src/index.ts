@@ -32,6 +32,8 @@ export { CheckpointerMemoryRepositoryLive } from "./repositories/checkpointer.me
 export { CheckpointerPostgresRepositoryLive } from "./repositories/checkpointer.postgres.repository";
 // Checkpointer repository interface (lives in infrastructure — wraps LangGraph-specific type)
 export { CheckpointerRepository } from "./repositories/checkpointer.repository";
+// Conversanalyzer repository implementation (Story 10.2)
+export { ConversanalyzerAnthropicRepositoryLive } from "./repositories/conversanalyzer.anthropic.repository";
 // Conversation evidence repository implementation (Story 10.1)
 export { ConversationEvidenceDrizzleRepositoryLive } from "./repositories/conversation-evidence.drizzle.repository";
 // CostGuard repository implementation
