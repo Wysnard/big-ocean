@@ -55,14 +55,14 @@ export function useAuth() {
 				password: string,
 				name?: string,
 				anonymousSessionId?: string,
-				callbackURL?: string | false,
+				callbackURL?: string,
 			) => {
 				const result = await signUp.email({
 					email,
 					password,
 					name: name || email.split("@")[0],
 					...(anonymousSessionId && { anonymousSessionId }),
-					callbackURL: callbackURL ?? false,
+					...(callbackURL !== undefined && { callbackURL }),
 				});
 
 				if (result.error) {

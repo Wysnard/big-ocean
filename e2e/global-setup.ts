@@ -78,17 +78,24 @@ async function createAuthState(): Promise<void> {
 	}
 
 	// 4. Seed facet_evidence so results page renders
-	await seedSessionForResults(sessionId);
-	console.log("[global-setup] Seeded evidence data for results");
+	// Non-fatal: facet_evidence table may not exist in Phase 2 schema (Epic 10+)
+	try {
+		await seedSessionForResults(sessionId);
+		console.log("[global-setup] Seeded evidence data for results");
+	} catch (err) {
+		console.warn(
+			`[global-setup] Skipping evidence seed (table may not exist): ${err instanceof Error ? err.message : err}`,
+		);
+	}
 
-	// 5. Send a second user message via the API so messageCount reaches
-	//    FREE_TIER_MESSAGE_THRESHOLD=2 and the profile assessment card shows "completed"
+	// 5. Send a user message via the API so messageCount reaches
+	//    MESSAGE_THRESHOLD and the profile assessment card shows "completed"
 	await sendAssessmentMessage(
 		ownerApi,
 		sessionId,
 		"I also enjoy trying new cuisines and traveling to new places.",
 	);
-	console.log("[global-setup] Sent second message for completed assessment threshold");
+	console.log("[global-setup] Sent user message to reach assessment threshold");
 
 	// 6. Save owner storage state (cookies auto-captured by Playwright request context)
 	await ownerApi.storageState({ path: AUTH_FILES.owner });

@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
 import { NerinMessage } from "@workspace/ui/components/chat";
 import { useEffect, useState } from "react";
@@ -10,7 +11,6 @@ import { ResultsSignUpForm } from "./auth/ResultsSignUpForm";
 
 interface ChatAuthGateProps {
 	sessionId: string;
-	onAuthSuccess: () => void;
 }
 
 /**
@@ -19,8 +19,9 @@ interface ChatAuthGateProps {
  * Shows sign-up/sign-in forms that link the anonymous session to the new/existing account.
  * Persists sessionId to localStorage so anonymous users can return within 24h (AC #6).
  */
-export function ChatAuthGate({ sessionId, onAuthSuccess }: ChatAuthGateProps) {
+export function ChatAuthGate({ sessionId }: ChatAuthGateProps) {
 	const [mode, setMode] = useState<"gate" | "signup" | "signin">("gate");
+	const navigate = useNavigate();
 
 	// AC #6: Persist sessionId so anonymous users can return within 24h
 	useEffect(() => {
@@ -29,11 +30,14 @@ export function ChatAuthGate({ sessionId, onAuthSuccess }: ChatAuthGateProps) {
 
 	const handleAuthSuccess = () => {
 		clearPendingResultsGateSession(sessionId);
-		onAuthSuccess();
+
+		// Story 9.4: Navigate to /chat with sessionId — beforeLoad verifies session
+		// ownership and redirects to the user's real session if linking failed (conflict).
+		navigate({ to: "/chat", search: { sessionId } });
 	};
 
 	return (
-		<div data-slot="chat-auth-gate" className="relative z-[1] mb-9 motion-safe:animate-fade-in-up">
+		<div data-slot="chat-auth-gate" className="relative z-1 mb-9 motion-safe:animate-fade-in-up">
 			<NerinMessage>
 				<p>Create an account so your portrait is here when it's ready.</p>
 			</NerinMessage>

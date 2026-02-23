@@ -1,9 +1,10 @@
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, isRedirect, redirect, useNavigate } from "@tanstack/react-router";
 import { Schema as S } from "effect";
 import { Loader2 } from "lucide-react";
 import { useCallback } from "react";
 import { TherapistChat } from "@/components/TherapistChat";
 import { useAuth } from "@/hooks/use-auth";
+import { getSession } from "@/lib/auth-client";
 import {
 	clearPendingResultsGateSession,
 	readPendingResultsGateSession,
@@ -71,6 +72,31 @@ export const Route = createFileRoute("/chat/")({
 				search: { sessionId: data.sessionId },
 			});
 		}
+
+		// Story 9.4: Verify session ownership after anonymous-to-authenticated transition.
+		// When an authenticated user navigates here with a sessionId (e.g., post-auth redirect
+		// from ChatAuthGate), verify the session was actually linked to their account.
+		// If not (conflict — user already had a different session), redirect to their real session.
+		const { data: session } = await getSession();
+		if (session?.user && search.sessionId) {
+			try {
+				const res = await fetch(`${API_URL}/api/assessment/sessions`, {
+					credentials: "include",
+				});
+				if (res.ok) {
+					const data = await res.json();
+					const linked = data.sessions?.some((s: { id: string }) => s.id === search.sessionId);
+					if (!linked && data.sessions?.length > 0) {
+						throw redirect({
+							to: "/chat",
+							search: { sessionId: data.sessions[0].id },
+						});
+					}
+				}
+			} catch (e) {
+				if (isRedirect(e)) throw e;
+			}
+		}
 	},
 	component: RouteComponent,
 });
@@ -118,12 +144,8 @@ function RouteComponent() {
 		return (
 			<div className="h-[calc(100dvh-3.5rem)] flex items-center justify-center bg-background">
 				<div className="text-center max-w-md px-6">
-					<p className="text-lg text-foreground font-heading">
-						This dive session has ended.
-					</p>
-					<p className="mt-2 text-muted-foreground">
-						Sign up to start a new one.
-					</p>
+					<p className="text-lg text-foreground font-heading">This dive session has ended.</p>
+					<p className="mt-2 text-muted-foreground">Sign up to start a new one.</p>
 					<button
 						type="button"
 						onClick={() => navigate({ to: "/chat", search: {} })}

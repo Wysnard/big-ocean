@@ -93,7 +93,7 @@ export const BetterAuthLive = Layer.effect(
 					// Allow first-time linking and idempotent relinking by the same user only.
 					const [linkedSession] = await tx
 						.update(authSchema.assessmentSession)
-						.set({ userId, updatedAt: new Date() })
+						.set({ userId, sessionToken: null, updatedAt: new Date() })
 						.where(
 							and(
 								eq(authSchema.assessmentSession.id, anonymousSessionId),
