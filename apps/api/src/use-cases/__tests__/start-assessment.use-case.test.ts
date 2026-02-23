@@ -226,6 +226,38 @@ describe("startAssessment Use Case", () => {
 				expect(mockAssessmentSessionRepo.createSession).not.toHaveBeenCalled();
 			});
 
+			it("should block new assessment when user has a finalizing session (Story 11.1)", async () => {
+				mockAssessmentSessionRepo.findSessionByUserId.mockReturnValue(
+					Effect.succeed({
+						id: "session_finalizing",
+						createdAt: new Date("2026-02-01T10:00:00Z"),
+						updatedAt: new Date("2026-02-01T10:00:00Z"),
+						status: "finalizing",
+						messageCount: 25,
+						oceanCode5: null,
+						archetypeName: null,
+					}),
+				);
+
+				const testLayer = createTestLayer();
+
+				try {
+					await Effect.runPromise(
+						startAuthenticatedAssessment({ userId: "user_finalizing" }).pipe(Effect.provide(testLayer)),
+					);
+					expect.fail("Expected AssessmentAlreadyExists to be thrown");
+				} catch (error) {
+					expect(error).toHaveProperty(
+						"message",
+						"You already have an assessment. Only one assessment per account is allowed.",
+					);
+					// biome-ignore lint/suspicious/noExplicitAny: error type narrowing in test
+					expect((error as any).name).toContain("AssessmentAlreadyExists");
+				}
+
+				expect(mockAssessmentSessionRepo.createSession).not.toHaveBeenCalled();
+			});
+
 			it("should block new assessment when user has a completed session", async () => {
 				mockAssessmentSessionRepo.findSessionByUserId.mockReturnValue(
 					Effect.succeed({

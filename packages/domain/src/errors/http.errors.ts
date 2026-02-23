@@ -233,6 +233,32 @@ export class FinalizationInProgressError extends S.TaggedError<FinalizationInPro
 ) {}
 
 /**
+ * Session not finalizing error (409)
+ * generate-results called on a session not in "finalizing" or "completed" status
+ */
+export class SessionNotFinalizing extends S.TaggedError<SessionNotFinalizing>()(
+	"SessionNotFinalizing",
+	{
+		sessionId: S.String,
+		currentStatus: S.String,
+		message: S.String,
+	},
+) {}
+
+/**
+ * Session not completed error (409)
+ * get-results called on a session that hasn't completed finalization
+ */
+export class SessionNotCompleted extends S.TaggedError<SessionNotCompleted>()(
+	"SessionNotCompleted",
+	{
+		sessionId: S.String,
+		currentStatus: S.String,
+		message: S.String,
+	},
+) {}
+
+/**
  * Malformed evidence error (422)
  * JSON parsing or structure validation failure for analyzer output
  */

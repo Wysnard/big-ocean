@@ -150,7 +150,9 @@ export const assessmentSession = pgTable(
 	},
 	(table) => [
 		index("assessment_session_user_id_idx").on(table.userId),
-		uniqueIndex("assessment_session_user_id_unique").on(table.userId).where(sql`user_id IS NOT NULL`),
+		uniqueIndex("assessment_session_user_lifetime_unique")
+			.on(table.userId)
+			.where(sql`user_id IS NOT NULL AND status IN ('finalizing', 'completed')`),
 		uniqueIndex("assessment_session_token_unique")
 			.on(table.sessionToken)
 			.where(sql`session_token IS NOT NULL`),

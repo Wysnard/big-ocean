@@ -26,6 +26,8 @@ import {
 } from "@workspace/domain";
 import { DateTime, Effect, Redacted } from "effect";
 import {
+	generateResults,
+	getFinalizationStatus,
 	getResults,
 	listUserSessions,
 	resumeSession,
@@ -150,7 +152,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 								id: s.id,
 								createdAt: DateTime.unsafeMake(s.createdAt.getTime()),
 								updatedAt: DateTime.unsafeMake(s.updatedAt.getTime()),
-								status: s.status as "active" | "paused" | "completed" | "archived",
+								status: s.status as "active" | "paused" | "finalizing" | "completed" | "archived",
 								messageCount: s.messageCount,
 								oceanCode5: s.oceanCode5,
 								archetypeName,
@@ -238,6 +240,28 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 						shareableUrl: result.shareableUrl,
 						isPublic: result.isPublic,
 					};
+				}),
+			)
+			.handle("generateResults", ({ path: { sessionId } }) =>
+				Effect.gen(function* () {
+					const authenticatedUserId = yield* CurrentUser;
+					if (!authenticatedUserId) {
+						return yield* Effect.fail(
+							new Unauthorized({ message: "Authentication required to generate results" }),
+						);
+					}
+					return yield* generateResults({ sessionId, authenticatedUserId });
+				}),
+			)
+			.handle("getFinalizationStatus", ({ path: { sessionId } }) =>
+				Effect.gen(function* () {
+					const authenticatedUserId = yield* CurrentUser;
+					if (!authenticatedUserId) {
+						return yield* Effect.fail(
+							new Unauthorized({ message: "Authentication required to check finalization status" }),
+						);
+					}
+					return yield* getFinalizationStatus({ sessionId, authenticatedUserId });
 				}),
 			)
 			.handle("resumeSession", ({ path: { sessionId } }) =>

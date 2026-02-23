@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import { ASSESSMENT_MESSAGE_MAX_LENGTH } from "@workspace/domain";
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import { Button } from "@workspace/ui/components/button";
@@ -12,7 +13,6 @@ import { ChatAuthGate } from "./ChatAuthGate";
 import { ChatInputBarShell } from "./chat/ChatInputBarShell";
 import { DepthMeter } from "./chat/DepthMeter";
 import { ErrorBanner } from "./ErrorBanner";
-import { PortraitWaitScreen } from "./PortraitWaitScreen";
 import { GeometricOcean } from "./sea-life/GeometricOcean";
 
 interface TherapistChatProps {
@@ -267,16 +267,19 @@ export function TherapistChat({
 		return placeholder;
 	}, [isCompleted, isFarewellReceived, placeholder]);
 
-	// Story 7.18: Show wait screen when farewell received and authenticated
-	if (isFarewellReceived && isAuthenticated) {
-		return (
-			<PortraitWaitScreen
-				sessionId={sessionId}
-				portraitWaitMinMs={portraitWaitMinMs}
-				onRevealClick={onPortraitReveal ?? (() => {})}
-			/>
-		);
-	}
+	// Story 11.1: Navigate to finalize route when farewell received and authenticated.
+	// Delay navigation so the farewell message from Nerin renders and can be read (Story 7.18 UX).
+	const navigateToFinalize = useNavigate();
+	useEffect(() => {
+		if (!isFarewellReceived || !isAuthenticated) return;
+		const timer = setTimeout(() => {
+			navigateToFinalize({
+				to: "/finalize/$assessmentSessionId",
+				params: { assessmentSessionId: sessionId },
+			});
+		}, 2000);
+		return () => clearTimeout(timer);
+	}, [isFarewellReceived, isAuthenticated, sessionId, navigateToFinalize]);
 
 	return (
 		<ChatContent

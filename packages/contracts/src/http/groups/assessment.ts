@@ -22,6 +22,8 @@ import {
 	MessageRateLimitError,
 	RateLimitExceeded,
 	SessionCompletedError,
+	SessionNotCompleted,
+	SessionNotFinalizing,
 	SessionNotFound,
 	Unauthorized,
 } from "../../errors";
@@ -134,7 +136,7 @@ export const SessionSummarySchema = S.Struct({
 	id: S.String,
 	createdAt: S.DateTimeUtc,
 	updatedAt: S.DateTimeUtc,
-	status: S.Literal("active", "paused", "completed", "archived"),
+	status: S.Literal("active", "paused", "finalizing", "completed", "archived"),
 	messageCount: S.Number,
 	oceanCode5: S.NullOr(S.String),
 	archetypeName: S.NullOr(S.String),
@@ -146,6 +148,28 @@ export const SessionSummarySchema = S.Struct({
 export const ListSessionsResponseSchema = S.Struct({
 	sessions: S.Array(SessionSummarySchema),
 	freeTierMessageThreshold: S.Number,
+});
+
+/**
+ * Generate Results Response Schema (Story 11.1)
+ */
+export const GenerateResultsResponseSchema = S.Struct({
+	status: S.Literal("analyzing", "generating_portrait", "completed"),
+});
+
+/**
+ * Generate Results Path Schema (Story 11.1)
+ */
+export const GenerateResultsPathSchema = S.Struct({
+	sessionId: S.String,
+});
+
+/**
+ * Finalization Status Response Schema (Story 11.1)
+ */
+export const FinalizationStatusResponseSchema = S.Struct({
+	status: S.Literal("analyzing", "generating_portrait", "completed"),
+	progress: S.Number,
 });
 
 /**
@@ -191,6 +215,7 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 			.setPath(GetResultsPathSchema)
 			.addSuccess(GetResultsResponseSchema)
 			.addError(SessionNotFound, { status: 404 })
+			.addError(SessionNotCompleted, { status: 409 })
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.add(
@@ -198,6 +223,24 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 			.setPath(GetResultsPathSchema)
 			.addSuccess(ResumeSessionResponseSchema)
 			.addError(SessionNotFound, { status: 404 })
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
+		HttpApiEndpoint.post("generateResults", "/:sessionId/generate-results")
+			.setPath(GenerateResultsPathSchema)
+			.addSuccess(GenerateResultsResponseSchema)
+			.addError(SessionNotFound, { status: 404 })
+			.addError(Unauthorized, { status: 401 })
+			.addError(SessionNotFinalizing, { status: 409 })
+			.addError(ConcurrentMessageError, { status: 409 })
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
+		HttpApiEndpoint.get("getFinalizationStatus", "/:sessionId/finalization-status")
+			.setPath(GenerateResultsPathSchema)
+			.addSuccess(FinalizationStatusResponseSchema)
+			.addError(SessionNotFound, { status: 404 })
+			.addError(Unauthorized, { status: 401 })
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.middleware(AuthMiddleware)
@@ -212,3 +255,5 @@ export type GetResultsResponse = typeof GetResultsResponseSchema.Type;
 export type ResumeSessionResponse = typeof ResumeSessionResponseSchema.Type;
 export type SessionSummary = typeof SessionSummarySchema.Type;
 export type ListSessionsResponse = typeof ListSessionsResponseSchema.Type;
+export type GenerateResultsResponse = typeof GenerateResultsResponseSchema.Type;
+export type FinalizationStatusResponse = typeof FinalizationStatusResponseSchema.Type;

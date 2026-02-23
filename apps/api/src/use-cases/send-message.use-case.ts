@@ -319,6 +319,11 @@ export const sendMessage = (input: SendMessageInput) =>
 				// 14. Compute isFinalTurn using freeTierMessageThreshold (single source of truth)
 				const isFinalTurn = messageCount >= config.freeTierMessageThreshold;
 
+				// 15. Transition session to "finalizing" on final turn (Story 11.1)
+				if (isFinalTurn) {
+					yield* sessionRepo.updateSession(input.sessionId, { status: "finalizing" });
+				}
+
 				logger.info("Message processed", {
 					sessionId: input.sessionId,
 					responseLength: result.response.length,
