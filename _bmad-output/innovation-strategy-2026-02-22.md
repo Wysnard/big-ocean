@@ -757,8 +757,8 @@ Polar.sh, Lemon Squeezy handle EU VAT, invoicing, and CNIL compliance automatica
 **5. AI-normalized culture**
 ChatGPT (2022-2024) normalized long conversations with AI. Users are comfortable sharing personal information with an AI in a way they weren't 3 years ago. This cultural shift is the precondition for Big Ocean's entire model — without it, "talk to an AI about your personality for 25 minutes" would feel alien.
 
-**6. Voice-mode LLMs (6-12 month horizon)**
-When Claude or competitors ship real-time voice, Nerin becomes a spoken conversation — not typing into a chat box. Category shift: competing with "talking to a wise friend" rather than personality quizzes. Intimacy and data quality both increase. The portrait delivery moment transforms: Nerin *reads your portrait to you* after 25 minutes of conversation. Sharing becomes 60-second audio clips — a completely different viral mechanic. UX principle: don't chase voice early, but architect for it.
+**6. Voice-mode LLMs (distant future, NOT MVP)**
+When voice-mode LLMs mature, Nerin could become a spoken conversation. However, voice is a **distraction for MVP**, not an enabler: it shifts the competitive set toward therapy apps and AI companions (Replika), introduces regulatory complexity in France (digital health), and requires significant architecture rework (transcription, analysis pipeline). Voice stays on the radar for Phase 3+ but is deliberately excluded from near-term planning.
 
 **7. Expanding context windows**
 200K+ token windows mean Nerin could hold entire relationship histories in context. Year-over-year personality evolution becomes possible without architecture changes. Big Ocean's hexagonal architecture (Effect-ts repository pattern) is accidentally future-proof — swapping LLM providers or adding voice is an infrastructure layer change, not a rewrite.
@@ -778,7 +778,11 @@ No product occupies the intersection of:
 
 This white space exists not because nobody thought of it, but because it required three simultaneous enablers that only recently converged: (1) LLMs capable of sustained emotional conversation, (2) cost structures that make free conversation tiers viable, (3) cultural acceptance of AI as a conversation partner for personal topics.
 
-**The window to claim this space: 12-18 months.** After that, LLM commoditization enables fast followers. The moat must be built during this window: accumulated conversation data, relationship graph density, archetype brand recognition, and portrait quality that can't be replicated without the same volume of real conversational data.
+**The window to claim this space: 12-18 months.** After that, LLM commoditization enables fast followers. No structural barrier prevents a well-funded team from shipping a conversational personality MVP in months. The honest bet: the product must be good enough that data moat (conversation corpus, relationship graph density) and brand recognition build before anyone copies. This is a quality-and-speed bet, not a defensibility bet.
+
+**ChatGPT as overlapping white space:** ChatGPT with memory occupies a similar experiential quadrant for *some* users — those who converse extensively. Big Ocean's differentiation: intentional exploration across all life domains (work, relationships, solo, under stress) via structured probing. ChatGPT has conversational data passively and unevenly; Big Ocean creates the space and the structure for comprehensive personality emergence.
+
+**Fallback acquisition if organic sharing is slow:** Psychology-focused influencer partnerships — low cost, high credibility, aligned audience. Not ads, but creator collaborations that demonstrate the product through their own portraits.
 
 **Competitive white space grid:**
 
@@ -800,8 +804,8 @@ This white space exists not because nobody thought of it, but because it require
 
 Three out of four quadrants are unoccupied. The entire existing industry lives in top-left (static, individual, quiz-based). Big Ocean sits in the bottom row — experiential — where no competitor plays.
 
-**The "Read Together" ritual as white space:**
-No product in any adjacent category creates a designed moment where two people sit together and read something true about their relationship. This isn't a feature — it's a ritual. Rituals create emotional anchors that no competitor can replicate with better technology. The relationship analysis nudge ("we recommend reading together") is a moat that lives in people's living rooms, not in the code.
+**The "Read Together" ritual as white space (hypothesis — to be validated):**
+No product in any adjacent category creates a designed moment where two people sit together and read something true about their relationship. If validated, this becomes a ritual-based moat that lives in people's living rooms, not in the code. The investment is low (a nudge: "we recommend reading together") and the potential return is high. Risks to test: users may read alone first, or a slightly inaccurate insight could trigger argument rather than bonding. Priority: test with real couples during soft launch before building strategy around it.
 
 **Category positioning:**
 Don't be "a better personality test." The existing players are playing a different sport. Let the product define the category — the founder portrait on the homepage IS category naming. When someone reads it and thinks "this is nothing like the personality tests I've taken," the positioning is done. Don't over-market the category label at small scale — let users name the experience. Listen to what they say after reading their portrait. That phrase is the category.
@@ -818,47 +822,253 @@ Don't be "a better personality test." The existing players are playing a differe
 
 ### Innovation Initiatives
 
-{{innovation_initiatives}}
+**Three Horizons Portfolio — sequenced for a solo dev with $500/month LLM budget:**
+
+**Horizon 1 — Core (ship now, revenue within weeks):**
+
+| # | Initiative | Revenue Model | Build Effort | Dependencies |
+|---|---|---|---|---|
+| H1.1 | Portrait unlock (PWYW, min €1, suggested €5) | Per-portrait, Polar.sh | Low — paywall + Polar integration | Results page exists |
+| H1.2 | Extended conversation (+25 msgs, €10 with portrait) | Bundle with portrait | Low — message counter logic | Nerin conversation exists |
+| H1.3 | Relationship analysis pack (1 free, then €5/single or €15/5-pack) | Per-analysis credits | Medium — relationship analysis feature | Both users must complete assessment |
+| H1.4 | Archetype card sharing | Free — viral acquisition channel | Low — card generation exists | Portrait/archetype complete |
+
+**Horizon 2 — Growth (build next, revenue within months):**
+
+| # | Initiative | Revenue Model | Build Effort | Dependencies |
+|---|---|---|---|---|
+| H2.1 | Gift a Portrait (buy a token, send to someone) | Gift tokens via Polar.sh | Medium — token system, recipient flow | Payment infrastructure from H1. **Priority elevated** — if organic gifting emerges at launch, accelerate to H1. |
+| H2.2 | Full Pack bundle (extended + portrait + 5 relationships, €20) | Bundle discount | Low — combines H1 items | H1.1 + H1.2 + H1.3 live |
+| H2.3 | 6-month check-in with Nerin | Retention — drives repeat portrait purchases | Medium — longitudinal comparison UX | Enough time elapsed + portrait spine exists |
+| H2.4 | Psychology influencer partnerships | Acquisition channel, not direct revenue | Low — outreach + free accounts | Product quality validated |
+
+**Horizon 3 — Transform (explore later, revenue within 6-12 months):**
+
+| # | Initiative | Revenue Model | Build Effort | Dependencies |
+|---|---|---|---|---|
+| H3.1 | Group Ocean (friend groups, families) | Tiered: free for friends, paid for professional teams | High — N-way analysis architecture | Relationship analysis validated |
+| H3.2 | PWYW social anchor (show average + last 3 contributions) | Increases PWYW average by ~€1 | Low — display component | Enough PWYW transactions for meaningful average |
+| H3.3 | Nerin extended conversations (standalone, beyond assessment) | Subscription or per-session | High — new conversation mode | Core assessment proven |
+| H3.4 | Personality-annotated social graph features | Discovery, matching, constellation view | Very High — graph infrastructure | 2,000+ users with relationship data |
 
 ### Business Model Innovation
 
-{{business_model_innovation}}
+**The "One Product, Three Revenue Moments" model:**
+
+Big Ocean's innovation is that a single conversation generates three distinct monetization opportunities, each serving a different user job:
+
+1. **The Self-Understanding Moment** (portrait unlock) — "I want to understand myself deeper." Triggered at results page. PWYW with gratitude framing. Revenue per user: €1-10.
+
+2. **The Relationship Curiosity Moment** (relationship analysis) — "I want to understand us." Triggered when user explores relationship features. Credit-based. Revenue per relationship: €5. Repeat purchase potential: 3-5 relationships per engaged user.
+
+3. **The Gift Moment** (gift a portrait) — "Someone I love should experience this." Triggered by emotional impact of own portrait. Token-based. Revenue per gift: €5-10. Viral: every gift creates a new user.
+
+**Why this works as a solo dev model:**
+- No subscription fatigue — users pay when they feel value, not on a schedule
+- Each moment is independently viable — if gifts don't work, portraits and relationships still generate revenue
+- The free tier (25 messages + teaser + 1 relationship + archetype card) is generous enough that no user feels tricked, and cheap enough (~€0.15-0.30) that 1,600+ free assessments fit within the $500/month budget
+
+**PWYW as founder-brand alignment:**
+The PWYW model for portraits isn't just pricing — it's a statement consistent with the founder's origin story. The homepage shows part of the founder's portrait with the message: "this changed how I see myself." The payment asks: "if this did the same for you, what's that worth?" Tiers as gratitude response: "thanks" (€1), "this meant something" (€5), "I need to support this" (€10+). Even €1 covers Sonnet/Opus cost (~€0.60-0.70 tested). The model works because the product's emotional impact creates natural willingness to pay. Monitor PWYW average closely — if it drifts to €1 flat, introduce social anchor (show average contribution) or raise minimum to €3.
+
+**Relationship → Portrait upsell funnel:**
+If relationship analysis becomes more popular than standalone portraits (likely), lean into it rather than fight it. The relationship results page is a natural upsell surface: "You've seen what Nerin sees between you two — imagine what it sees about you alone." Satisfied relationship users have already experienced the quality of the tech and are primed for deeper self-exploration.
+
+**Viral spike circuit breaker:**
+If an influencer partnership or organic sharing creates a sudden traffic spike (10,000+ users/week), LLM costs could exceed monthly budget in days. Mitigation: implement a waitlist as circuit breaker. Personal savings can absorb a peak but not sustain it. The waitlist also creates scarcity signal and protects conversation quality.
+
+**Extended conversation quality — validated:**
+Testing confirms that longer conversations (50 msgs) consistently produce better portraits. Users notice immediately when Nerin is missing life domains they didn't mention. The extra 25 messages aren't redundant — they fill blind spots. The promise is genuinely better output, not just more time with Nerin.
 
 ### Value Chain Opportunities
 
-{{value_chain_opportunities}}
+**What Big Ocean owns vs outsources — the lean value chain:**
+
+| Activity | Own or Outsource | Rationale |
+|---|---|---|
+| Conversation design (Nerin prompts) | ✅ OWN — core IP | The personality exploration structure IS the product |
+| Analysis pipeline (Haiku/Sonnet/Opus) | ✅ OWN — core IP | Prompt engineering + scoring algorithm = portrait quality |
+| Portrait narrative generation | ✅ OWN — core IP | Spine architecture, paradox detection, domain patterns |
+| Payment processing | ❌ OUTSOURCE — Polar.sh | EU VAT, CNIL compliance, PWYW support |
+| Infrastructure | ❌ OUTSOURCE — Railway | Deployment, scaling, monitoring |
+| Auth | ❌ OUTSOURCE — Better Auth | Session management, anonymous-to-auth transition |
+| LLM inference | ❌ OUTSOURCE — Anthropic (Claude) | Model provider, not a differentiator to own |
+| Frontend framework | ❌ OUTSOURCE — TanStack ecosystem | SSR, routing, state — commodity |
+
+**Key value chain insight:** Everything Big Ocean owns is **content and intelligence** (prompts, algorithms, narrative structure). Everything outsourced is **infrastructure.** This is the correct split for a solo dev — own the brain, rent the body.
+
+**Value chain innovation opportunity — the conversation data flywheel:**
+Each conversation doesn't just serve one user — it improves the system. More conversations = better understanding of which facets are hardest to assess = better steering prompts = higher portrait quality = more sharing = more conversations. This is a data-driven value chain loop that competitors starting from zero can't shortcut.
 
 ### Partnership and Ecosystem Plays
 
-{{partnership_opportunities}}
+**Tier 1 — Launch partnerships (immediate):**
+
+- **Psychology influencers (YouTube, Instagram, TikTok)** — Offer free full portraits in exchange for honest content. The portrait itself IS the content — a creator reading their portrait on camera is compelling viewing. Low cost (1 Sonnet/Opus assessment ~€1.50), high reach. Target: French-speaking psychology/self-development creators first.
+
+- **Polar.sh** — Already confirmed as merchant-of-record. Enables PWYW, EU compliance, and clean payment UX. Relationship is transactional but critical.
+
+**Tier 2 — Growth partnerships (3-6 months post-launch):**
+
+- **Couples/relationship coaches** — Offer relationship analysis as a tool in their practice. They get deeper insight into client dynamics; Big Ocean gets credibility and a professional use case. Revenue share or white-label potential.
+
+- **Life coaches and career counselors** — Portrait as intake tool. "Before our first session, talk to Nerin for 25 minutes." Saves them discovery time, gives the client an experience, drives paid portrait upgrades.
+
+**Tier 3 — Ecosystem plays (6-12 months, only if traction validates):**
+
+- **Dating apps** — Personality-verified profiles. "Big Ocean assessed" as a trust signal. API integration for personality compatibility. Revenue: per-verification fee or data partnership.
+
+- **HR/team platforms** — Group Ocean for professional teams. "Understand your team's personality dynamics." Higher price point, different buyer (company vs individual). Requires Group Ocean feature (H3.1).
+
+- **Academic research** — Anonymized conversational personality data is gold for psychology researchers. Partnership with universities for credibility + potential grant funding. Long-term brand play.
 
 ---
 
 ## STRATEGIC OPTIONS
 
-### Option A: {{option_a_name}}
+### Option A: Portrait-First — "The Mirror"
 
-{{option_a_description}}
+**Strategic direction:** Lead with the individual portrait as the hero product. PWYW portrait is the primary revenue moment. Relationship analysis exists but is secondary — a retention and viral feature, not the revenue driver.
 
-**Pros:** {{option_a_pros}}
+**Sequencing:**
+1. Launch with free tier (25 msgs + Haiku teaser) → PWYW portrait unlock → archetype card sharing
+2. Relationship analysis as free viral hook (1 free credit per user)
+3. Extended conversation bundle (€10) as upsell for engaged users
+4. Gifts and packs added once portrait quality is validated
 
-**Cons:** {{option_a_cons}}
+**Business model:** Per-portrait PWYW is the core. Average revenue per paying user: €3-7. Conversion target: 15-25% of completed assessments.
 
-### Option B: {{option_b_name}}
+**Competitive positioning:** "The deepest personality portrait on the internet." Category = conversational personality platform. The portrait quality IS the moat.
 
-{{option_b_description}}
+**Resource requirements:** Low — portrait infrastructure is nearly built. Polar.sh integration + paywall + teaser/full split.
 
-**Pros:** {{option_b_pros}}
+**Key risks:**
+- Portrait is a one-time purchase per user. No natural repeat revenue unless check-ins or relationships drive return visits.
+- PWYW average could settle at €1, making margins thin.
+- If sharing rates are low, growth depends entirely on the founder portrait homepage + influencer outreach.
 
-**Cons:** {{option_b_cons}}
+**Evaluation:**
 
-### Option C: {{option_c_name}}
+| Criteria | Score (1-5) |
+|---|---|
+| Strategic fit with capabilities | ⭐⭐⭐⭐⭐ — already built |
+| Market timing | ⭐⭐⭐⭐ — LLM window open |
+| Competitive defensibility | ⭐⭐⭐ — portrait quality is defensible but format is replicable |
+| Resource feasibility | ⭐⭐⭐⭐⭐ — minimal additional build |
+| Risk vs reward | ⭐⭐⭐ — low risk, moderate reward ceiling |
 
-{{option_c_description}}
+---
 
-**Pros:** {{option_c_pros}}
+### Option B: Relationship-First — "The Bridge"
 
-**Cons:** {{option_c_cons}}
+**Strategic direction:** Lead with the relationship analysis as the hero product. The individual portrait exists and is valuable, but it's positioned as the *prerequisite* for the real product: understanding the space between two people. Revenue comes primarily from relationship analysis credits.
+
+**Sequencing:**
+1. Launch with free tier (25 msgs + teaser) + 1 free relationship analysis (the hook)
+2. Relationship credit packs (€5/single, €15/5-pack) as primary revenue
+3. Portrait upgrade marketed FROM the relationship results page ("see what Nerin sees about you alone")
+4. Group Ocean (friends, families) as the natural evolution
+
+**Business model:** Credit-based relationship analyses. Average revenue per engaged user: €10-20 (2-4 relationships over time). Higher repeat potential than portraits. Portrait PWYW becomes secondary income.
+
+**Competitive positioning:** "The only platform that understands what happens when two personalities meet." Category = relational intelligence. The paired-data moat is structurally unreplicable by quiz-based competitors.
+
+**Resource requirements:** Medium — relationship analysis feature needs to be built and polished. Invitation flow, consent mechanism, dual-data portrait generation.
+
+**Key risks:**
+- Chicken-and-egg: relationship analysis requires TWO completed assessments. If invited user doesn't complete theirs, the inviter gets nothing.
+- Heavier per-analysis cost (analyzing two users' conversation data).
+- More complex UX — explaining what a relationship analysis is and why both people need to participate.
+- Slower initial traction — requires network density before value compounds.
+
+**Evaluation:**
+
+| Criteria | Score (1-5) |
+|---|---|
+| Strategic fit with capabilities | ⭐⭐⭐⭐ — architecture supports it, but feature needs work |
+| Market timing | ⭐⭐⭐⭐⭐ — nobody else is here, window wide open |
+| Competitive defensibility | ⭐⭐⭐⭐⭐ — paired conversation data is unreplicable |
+| Resource feasibility | ⭐⭐⭐ — more build required than Option A |
+| Risk vs reward | ⭐⭐⭐⭐ — higher risk, much higher reward ceiling |
+
+---
+
+### Option C: Flywheel-First — "The Current"
+
+**Strategic direction:** Don't pick a hero product. Instead, optimize the full loop: conversation → portrait → share → invite → relationship → upsell → gift. Every feature exists to serve the flywheel. Revenue is distributed across all three moments (portrait, relationships, gifts). The product IS the loop, not any single output.
+
+**Sequencing:**
+1. Launch with the complete free tier (25 msgs + teaser + 1 free relationship + archetype card)
+2. All three revenue moments available simultaneously: PWYW portrait, relationship credits, extended conversation
+3. Monitor which moment converts best → double down on the winner
+4. Gift feature accelerated if organic gifting signals emerge
+
+**Business model:** Diversified micro-transactions. No single revenue moment dominates. Average revenue per user: €5-15 across all moments. Lower dependency on any single feature succeeding.
+
+**Competitive positioning:** "Discover who you are. Then discover what happens when two personalities collide." The platform positioning — not a single product but an ecosystem of self-discovery.
+
+**Resource requirements:** High — all three revenue moments need to work at launch. Payment integration, relationship flow, extended conversation logic, sharing infrastructure.
+
+**Key risks:**
+- Scope creep for a solo dev — shipping three revenue paths simultaneously means none gets full attention.
+- Decision fatigue for users — too many options on the results page can reduce conversion.
+- Harder to communicate a clear value proposition. "We do everything" is weaker than "we do THIS one thing brilliantly."
+- Metrics are harder to read — which moment is working? Attribution becomes muddy.
+
+**Evaluation:**
+
+| Criteria | Score (1-5) |
+|---|---|
+| Strategic fit with capabilities | ⭐⭐⭐ — ambitious for solo dev |
+| Market timing | ⭐⭐⭐⭐ — captures all opportunities simultaneously |
+| Competitive defensibility | ⭐⭐⭐⭐ — flywheel itself is defensible once spinning |
+| Resource feasibility | ⭐⭐ — high build burden, risk of shipping nothing well |
+| Risk vs reward | ⭐⭐⭐ — highest potential ceiling but highest execution risk |
+
+---
+
+### Comparative Summary
+
+| Dimension | A: Mirror | B: Bridge | C: Current |
+|---|---|---|---|
+| Hero product | Portrait | Relationship analysis | The loop itself |
+| Primary revenue | PWYW portrait | Relationship credits | Diversified |
+| Time to first € | Days | Weeks | Weeks |
+| Repeat revenue | Low (one-time) | High (3-5 relationships) | Medium |
+| Viral mechanism | Archetype sharing | Relationship invitation | Both |
+| Build effort | Low | Medium | High |
+| Defensibility | Moderate | Very high | High (once spinning) |
+| Solo dev feasibility | ✅ Easy | ⚠️ Manageable | ❌ Risky |
+| Revenue ceiling (year 1) | €5K-15K | €10K-30K | €15K-40K |
+
+### First Principles Collapse: The Three Options Are One Sequence
+
+The three options are not mutually exclusive alternatives — they are **phases of the same strategy**, dictated by a practical constraint: relationship analysis requires real conversation data to develop and test, while portraits can be tested on the founder alone.
+
+**The sequence:**
+
+```
+Phase 1 (launch):     Option A — portrait-first
+                      Ship free tier + PWYW portrait unlock
+                      Collect conversation data from early users
+                      Begin relationship analysis development in parallel
+
+Phase 2 (weeks later): Option B emerges — relationship ships
+                       Real conversation data enables relationship simulation + testing
+                       Relationship credits become the growth engine + viral loop
+                       Portrait upsell from relationship results page
+
+Phase 3 (organic):     Option C emerges — flywheel spins
+                       Both channels feed each other
+                       Gift feature added if organic gifting signals appear
+                       Revenue diversified across all three moments
+```
+
+**Why this isn't a compromise — it's the only honest answer:**
+- You can't ship what you can't test. Relationship analysis needs data you don't have yet.
+- You're employed. Revenue speed matters less than product quality.
+- Portrait-first lets you validate the core emotional impact with real users before layering complexity.
+- The strategy isn't "pick A." It's "start at A, let B and C emerge as data and traction allow."
 
 ---
 
@@ -866,59 +1076,250 @@ Don't be "a better personality test." The existing players are playing a differe
 
 ### Strategic Direction
 
-{{recommended_strategy}}
+**Recommended: Sequential Emergence — A → B → C**
+
+The three strategic options (Portrait-First, Relationship-First, Flywheel) are not alternatives. They are phases of a single strategy, unlocked sequentially by data availability, user traction, and build capacity.
+
+**Phase A: "The Mirror" (launch)**
+Ship the individual portrait experience with PWYW monetization. Validate the core emotional promise: "finally, something understood me." Collect conversation data. Begin relationship analysis development in parallel.
+
+**Phase B: "The Bridge" (weeks after launch)**
+Ship relationship analysis using real conversation data accumulated from Phase A users. The free relationship credit becomes the viral growth engine. Portrait upsell surfaces on relationship results pages. Revenue shifts toward relationship credits as repeat purchase behavior emerges.
+
+**Phase C: "The Current" (organic emergence)**
+The flywheel spins as portrait sharing and relationship invitations feed each other. Gift feature added when organic gifting signals appear. Group Ocean explored if relationship traction validates multi-person dynamics.
+
+**Why this direction over alternatives:**
+- It's the only honest sequence — relationship analysis can't be built or tested without real conversation data, and you can test portraits on yourself.
+- It matches resource reality — solo dev, employed, $500/month budget. Ship the simplest revenue path first, layer complexity as traction validates.
+- Each phase de-risks the next — portrait quality validation in Phase A gives confidence to ship relationships in Phase B. Relationship traction in Phase B gives confidence to expand in Phase C.
+- No decision is irreversible — if portraits don't convert, the free tier still generates data and relationships. If relationships don't take off, portraits still generate revenue.
+
+**What makes me confident:** The teaser-to-portrait gap has been tested and the quality difference is real. PWYW economics work (€1 min covers €0.60-0.70 Sonnet/Opus cost). The product's emotional impact — validated through personal testing — is the kind that drives organic sharing.
+
+**What scares me:** The entire acquisition strategy depends on portrait quality being consistently high across diverse users, not just the founder. If portrait quality is inconsistent, sharing collapses, relationships never get invited, and the flywheel never starts. The founder portrait on the homepage is a single point of failure for top-of-funnel.
+
+**What would cause a pivot or abandon:**
+- If PWYW conversion is <5% after 200+ completed assessments → rethink pricing model
+- If relationship invitation acceptance rate is <20% → the viral loop doesn't work, pivot to content/influencer acquisition
+- If LLM costs spike (Anthropic pricing change) → compress free tier or add waitlist
+- If portrait quality variance is too high → invest in prompt engineering before expanding features
 
 ### Key Hypotheses to Validate
 
-{{key_hypotheses}}
+**H1: The teaser-to-portrait gap drives payment (CRITICAL)**
+Users who read the Haiku teaser will want the full Sonnet/Opus portrait badly enough to pay. The teaser must be good enough to build trust but incomplete enough to create pull. If the teaser satisfies fully → no conversion. If the teaser feels thin → no trust.
+*Validation: PWYW conversion rate >10% within first 100 completed assessments.*
+
+**H2: Portrait quality is consistent across diverse users (CRITICAL)**
+The founder's portrait is excellent. But does Nerin produce equally compelling portraits for people with different communication styles, cultural backgrounds, education levels, and emotional openness?
+*Validation: 4/5 early users report recognition ("it gets me") in post-portrait feedback.*
+
+**H3: Users share their archetype card without being prompted**
+The viral loop depends on organic sharing. If users need to be nudged, reminded, or incentivized to share, the acquisition cost is non-zero.
+*Validation: >30% of completed assessments result in at least one share within 48 hours.*
+
+**H4: Invited users complete their assessment at a high enough rate**
+The relationship analysis requires both people to complete 25-message conversations. If the invited user drops off, the inviter gets nothing — and the viral loop breaks.
+*Validation: >50% of relationship invitees complete their assessment within 7 days.*
+
+**H5: PWYW average stays above cost**
+If 80%+ of paying users choose the €1 minimum, margins are razor-thin. The gratitude framing and social anchor must push averages to €3-5.
+*Validation: PWYW average ≥€3 after 50+ transactions. If <€2, raise minimum or add anchor.*
+
+**H6: Relationship analysis creates repeat engagement**
+The relationship credit model assumes users want multiple analyses (3-5 over time). If users do one and stop, repeat revenue collapses.
+*Validation: >30% of users who use their free credit purchase at least one additional credit within 30 days.*
 
 ### Critical Success Factors
 
-{{success_factors}}
+**1. Portrait quality is non-negotiable.**
+Everything depends on the portrait landing emotionally. If the portrait feels generic, templated, or wrong — sharing stops, invitations stop, payment stops. Investment in prompt engineering (Nerin steering, finalization prompts, spine architecture) has the highest ROI of any activity.
+
+**2. The teaser calibration is a razor-edge art.**
+Too good → no conversion. Too thin → no trust. The teaser must name specific threads without pulling them. It must feel like the beginning of a conversation, not a summary. Testing this with 10-20 diverse users before launch is essential.
+
+**3. Polar.sh integration must be frictionless.**
+Any friction in the payment moment kills PWYW impulse purchases. The modal must load instantly, the PWYW slider must feel natural, and the "thank you" confirmation must reinforce the emotional moment — not feel transactional.
+
+**4. The founder portrait on the homepage must convert skeptics.**
+This is the single most important piece of content on the platform. It must make someone who has never heard of Big Ocean pause, read, and think "I want this for myself." Test it ruthlessly with strangers, not friends.
+
+**5. Conversation quality at 25 messages must cover enough life domains.**
+If Nerin spends too many messages on one domain (e.g., work), the portrait has blind spots users notice immediately. Steering must ensure breadth before depth. The first 25 messages need to touch at least 3-4 life domains (work, relationships, solo/creative, stress/conflict).
+
+**6. Waitlist circuit breaker must be ready before influencer outreach.**
+If an influencer partnership generates a traffic spike, the system needs a graceful way to throttle signups without killing momentum. Build the waitlist mechanism before doing any outreach.
 
 ---
 
 ## EXECUTION ROADMAP
 
-### Phase 1: Immediate Impact
+### Phase 1: Immediate Impact — "Ship the Mirror"
 
-{{phase_1}}
+**Goal:** Launch portrait-first, validate emotional impact, generate first revenue, collect conversation data for relationship analysis development.
 
-### Phase 2: Foundation Building
+**Key Initiatives:**
 
-{{phase_2}}
+| # | Initiative | Deliverable | Success Metric |
+|---|---|---|---|
+| 1.1 | Polar.sh PWYW integration | Payment modal on results page with min €1, suggested €5 | Integration live, payment flow <3 clicks |
+| 1.2 | Teaser/full portrait split | Haiku teaser for free tier, Sonnet/Opus full portrait behind paywall | Teaser conversion rate >10% |
+| 1.3 | Archetype card sharing | Shareable card with archetype name, OCEAN code, visual identity | >30% of completers share within 48h |
+| 1.4 | Founder portrait on homepage | Polished partial portrait that converts skeptics | Test with 10+ strangers before launch |
+| 1.5 | Waitlist circuit breaker | Graceful throttle mechanism for traffic spikes | Can activate within minutes |
+| 1.6 | Soft launch with friends/family | 50-100 real assessments from diverse users | Portrait recognition rate ≥4/5 users |
+| 1.7 | Begin relationship analysis development | Architecture + data model, using accumulated conversation data | Feature skeleton ready for Phase 2 |
 
-### Phase 3: Scale & Optimization
+**Resource Requirements:**
+- Dev time: Polar.sh integration, paywall logic, teaser/full split, sharing card generation
+- LLM budget: ~€15-30 for 100 soft-launch assessments (free tier)
+- No external hires, no paid acquisition
 
-{{phase_3}}
+**Decision Gate → Phase 2:**
+- ✅ 50+ completed assessments with consistent portrait quality
+- ✅ PWYW conversion >5% (stretch: >10%)
+- ✅ At least some organic sharing observed
+- ✅ Relationship analysis data model validated against real conversation data
+- ❌ If portrait quality is inconsistent → stay in Phase 1, invest in prompt engineering
+
+### Phase 2: Foundation Building — "Launch the Bridge"
+
+**Goal:** Ship relationship analysis, activate the viral loop, establish repeat revenue, begin influencer outreach.
+
+**Key Initiatives:**
+
+| # | Initiative | Deliverable | Success Metric |
+|---|---|---|---|
+| 2.1 | Relationship analysis feature | Invitation flow, consent, dual-data analysis, results page | Feature live with 1 free credit per user |
+| 2.2 | Relationship credit packs | €5/single, €15/5-pack via Polar.sh | >30% of free credit users purchase more |
+| 2.3 | Portrait upsell from relationship page | "See what Nerin sees about you alone" CTA on relationship results | >10% click-through to portrait purchase |
+| 2.4 | Extended conversation bundle | +25 messages + full portrait for €10 | Offer shown at message 22, >5% uptake |
+| 2.5 | "Read together" nudge (hypothesis test) | Subtle suggestion on relationship results: "we recommend reading together" | Track if mentioned in user feedback |
+| 2.6 | Psychology influencer outreach | 3-5 French-speaking creators, free full portrait in exchange for content | At least 1 partnership generating >200 new users |
+| 2.7 | Monitoring dashboard | PWYW average, conversion rates, sharing rates, invitation acceptance | Real-time visibility into all key metrics |
+
+**Resource Requirements:**
+- Dev time: Relationship analysis feature (biggest build), credit system, extended conversation logic
+- LLM budget: Scales with user growth — monitor weekly against $500 ceiling
+- Influencer cost: ~€10-15 per creator (1 full assessment each)
+
+**Decision Gate → Phase 3:**
+- ✅ Relationship invitation acceptance rate >50%
+- ✅ Viral coefficient measurable (each user invites ≥1.2 people on average)
+- ✅ Revenue from relationship credits exceeds portrait PWYW
+- ✅ LLM costs sustainable within budget at current growth rate
+- ❌ If invitation acceptance <20% → pivot acquisition strategy to content/SEO/influencer-heavy
+- ❌ If LLM costs exceed budget → activate waitlist, compress free tier, or raise prices
+
+### Phase 3: Scale & Optimization — "Let the Current Flow"
+
+**Goal:** Flywheel spinning autonomously. Diversify revenue, explore group features, optimize unit economics, let the social graph emerge.
+
+**Key Initiatives:**
+
+| # | Initiative | Deliverable | Success Metric |
+|---|---|---|---|
+| 3.1 | Gift a Portrait | Buy a token, send to someone — full gifting flow | Gift purchases >5% of total transactions |
+| 3.2 | PWYW social anchor | Show average contribution + last 3 amounts on payment modal | PWYW average increases by ≥€1 |
+| 3.3 | 6-month check-in with Nerin | Longitudinal comparison: "here's how you've changed" | >20% of 6-month-old users return for check-in |
+| 3.4 | Full Pack bundle | Extended + portrait + 5 relationships for €20 | Bundle accounts for >15% of revenue |
+| 3.5 | Group Ocean exploration | Friend group or family analysis (3-5 people) | Prototype tested with 5+ groups |
+| 3.6 | LLM cost optimization | Monitor cost deflation, adjust free tier generosity as margins improve | Cost per free assessment drops below €0.10 |
+| 3.7 | Graph metrics (silent) | Track connections per user, cluster density, invitation chains | Data collected, not surfaced to users |
+
+**Resource Requirements:**
+- Dev time: Gift flow, check-in feature, Group Ocean prototype
+- LLM budget: Should be self-sustaining from revenue by this phase — if not, reassess pricing
+- Potential: first hire consideration if revenue supports it (community manager or part-time designer)
+
+**Decision Gate — Strategic Reassessment:**
+- If revenue covers LLM costs + generates surplus → consider quitting day job to go full-time
+- If Group Ocean shows demand from professional teams → evaluate B2B pivot or parallel track
+- If social graph density reaches meaningful levels (1,000+ connected users) → begin designing constellation/discovery features
+- If growth plateaus → evaluate paid acquisition, expand to English-speaking market, or explore API/platform model
 
 ---
 
 ## SUCCESS METRICS
 
-### Leading Indicators
+### The Solo Dev Dashboard (check weekly)
 
-{{leading_indicators}}
+A solo dev with a day job cannot track 17 metrics. Five numbers tell you everything:
 
-### Lagging Indicators
+| # | Metric | Source | Action Trigger |
+|---|---|---|---|
+| 1 | Assessments completed this week | DB count | If 0 for 2 weeks → something's broken |
+| 2 | "It gets me" rate | Post-portrait prompt (yes/no/kinda) | If <60% → stop everything, fix prompts |
+| 3 | Shares this week | Share button clicks | If 0 → check UX friction, then portrait quality |
+| 4 | Revenue this week (€) | Polar.sh dashboard | Just watch the trend |
+| 5 | LLM spend this week (€) | Anthropic dashboard | If approaching $125/week → activate waitlist |
 
-{{lagging_indicators}}
+Everything else — conversion rates, viral coefficients, retention curves — is derived from these five and only matters when volume makes the math meaningful. At 50 users, a "conversion rate" is a single-digit number of people. It's an anecdote, not a metric.
 
-### Decision Gates
+### The One Decision Gate
 
-{{decision_gates}}
+> **After 100 real users: "Do I still believe this matters?"**
+
+If yes → keep going regardless of metrics. At this scale, belief matters more than data.
+If no → stop, and no decision gate framework will make that easier.
+
+**Secondary checkpoints (sanity checks, not hard gates):**
+- After 50 assessments: is "it gets me" rate holding above 60%? If not → pause features, fix prompts.
+- After relationship launches: are invitees actually completing? If <20% → simplify the invited user flow.
+- After 500 users: does revenue cover LLM costs? If not → raise prices or accept this is a passion project.
+- After 2,000 users: is the revenue trend suggesting full-time viability? No rush — you have a salary.
 
 ---
 
 ## RISKS AND MITIGATION
 
-### Key Risks
+### The Two Real Risks
 
-{{key_risks}}
+Most risks are variants of two fundamental concerns. Keeping it simple:
 
-### Mitigation Strategies
+**Risk 1: Quality — "Is the portrait consistently good enough?"**
 
-{{risk_mitigation}}
+This single risk encompasses portrait inconsistency, teaser calibration, relationship analysis accuracy, and the invisible killer: **indifference** (users think "huh, interesting" and close the tab).
+
+| Signal | Response |
+|---|---|
+| "It gets me" rate drops below 60% | Pause all feature work. Fix prompts. This is the only priority. |
+| Shares are zero despite completions | Portrait isn't hitting hard enough. Rework the closing line, the paradox detection, the specificity. |
+| Relationship analysis causes conflict | Reframe as exploration ("here's what Nerin observed"), add disclaimer, review prompts. Pause feature if repeated. |
+| Teaser converts <5% | Either too good (satisfies fully) or too thin (no trust). A/B test two variants, iterate in first 2 weeks. |
+
+**Quality mitigations:**
+- Test with 20+ diverse users before public launch
+- Conversation quality gate: Nerin offers 5 free extra messages when evidence is thin at message 20
+- Post-portrait feedback prompt: "did this resonate?" → flag low-resonance portraits for review
+- The portrait must make someone stop breathing for a second. That's craft, not metrics.
+
+**Risk 2: Economics — "Do the numbers work?"**
+
+This covers PWYW race to bottom, Anthropic pricing changes, traffic spikes, and LLM budget sustainability.
+
+| Signal | Response |
+|---|---|
+| PWYW average <€2 after 50 transactions | Add social anchor (show average), or raise minimum to €3 |
+| Weekly LLM spend approaching $125 | Activate waitlist circuit breaker |
+| Anthropic raises prices >2x | Hexagonal architecture supports model swap. Evaluate Gemini, open-source alternatives. |
+| Revenue < LLM costs for 3 consecutive months at 500+ users | Raise prices, compress free tier, or accept it's a passion project |
+
+**Economics mitigations:**
+- €1 min PWYW still covers Sonnet/Opus cost (~€0.60-0.70). Thin but not a loss.
+- Waitlist ready before any influencer outreach. Savings can absorb one spike.
+- LLM cost deflation trend works in your favor — unit economics improve automatically over time.
+- You're employed. No financial pressure. This is a feature, not a bug.
+
+**Risks that are real but not actionable today:**
+- **CNIL/GDPR** — basic privacy controls in Phase 1 are sufficient. Epic 6 exists for full compliance. Polar.sh handles payment data.
+- **Fast followers** — can't prevent them. Build the data moat (conversation corpus, relationship graph) as fast as quality allows.
+- **Burnout** — no strategy document prevents this. Pace yourself. The product doesn't die if development pauses.
+
+### The Biggest Risk Not On Any List
+
+**Indifference.** Not rejection — indifference. Users complete the assessment, read their portrait, think "interesting," and leave. The portrait doesn't offend. It doesn't excite. It just exists. This is invisible in metrics (completion looks fine, recognition is "3.5/5 yeah OK") but fatal for sharing and payment. The mitigation isn't a strategy — it's making the portrait hit harder. The observation they've never heard anyone articulate but have felt their whole life. That's the craft that makes everything else work.
 
 ---
 
