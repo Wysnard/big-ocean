@@ -35,7 +35,7 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 			await signIn.email(email, password, anonymousSessionId);
 
 			// Navigate using TanStack Router
-			if (redirectTo) {
+			if (redirectTo?.startsWith("/")) {
 				await navigate({ to: redirectTo });
 			} else if (anonymousSessionId) {
 				await navigate({
@@ -45,8 +45,9 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 			} else {
 				await navigate({ to: "/profile" });
 			}
-		} catch (err) {
-			setError((err instanceof Error ? err.message : String(err)) || "Invalid email or password");
+		} catch (_err) {
+			// Always show generic message to avoid revealing whether email exists (AC #3)
+			setError("Invalid email or password");
 		} finally {
 			setIsLoading(false);
 		}

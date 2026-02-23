@@ -19,7 +19,7 @@ interface SignupFormProps {
 
 export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) {
 	const { signUp } = useAuth();
-	const _navigate = useNavigate();
+	const navigate = useNavigate();
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -47,16 +47,29 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 		setIsLoading(true);
 
 		try {
-			const targetUrl =
-				redirectTo || (anonymousSessionId ? `/results/${anonymousSessionId}` : "/profile");
-			await signUp.email(email, password, name, anonymousSessionId, targetUrl);
+			await signUp.email(email, password, name, anonymousSessionId);
 
-			// Navigate after successful signup
-			window.location.href = targetUrl;
+			// Navigate using TanStack Router (matching login form pattern)
+			if (redirectTo?.startsWith("/")) {
+				await navigate({ to: redirectTo });
+			} else if (anonymousSessionId) {
+				await navigate({
+					to: "/results/$assessmentSessionId",
+					params: { assessmentSessionId: anonymousSessionId },
+				});
+			} else {
+				await navigate({ to: "/profile" });
+			}
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : String(err);
 			if (errorMessage.includes("already exists")) {
 				setError("An account with this email already exists");
+			} else if (
+				errorMessage.includes("data breach") ||
+				errorMessage.includes("compromised") ||
+				errorMessage.includes("PASSWORD_COMPROMISED")
+			) {
+				setError("This password has appeared in a data breach. Please choose a different password.");
 			} else {
 				setError(errorMessage || "Sign up failed. Please try again.");
 			}

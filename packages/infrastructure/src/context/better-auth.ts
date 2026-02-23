@@ -17,6 +17,7 @@ import { AppConfig } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import bcrypt from "bcryptjs";
 import { betterAuth } from "better-auth";
+import { haveIBeenPwned } from "better-auth/plugins";
 import { and, eq, isNull, or } from "drizzle-orm";
 import { drizzle as drizzleNodePg } from "drizzle-orm/node-postgres";
 import { Context, Effect, Layer, Redacted } from "effect";
@@ -142,6 +143,13 @@ export const BetterAuthLive = Layer.effect(
 				schema: authSchema,
 			}),
 
+			plugins: [
+				haveIBeenPwned({
+					customPasswordCompromisedMessage:
+						"This password has appeared in a data breach. Please choose a different password.",
+				}),
+			],
+
 			trustedOrigins: [
 				"http://localhost:3000",
 				"http://localhost:3001",
@@ -221,6 +229,6 @@ export const BetterAuthLive = Layer.effect(
 			},
 		});
 
-		return auth as BetterAuthInstance;
+		return auth as unknown as BetterAuthInstance;
 	}),
 );
