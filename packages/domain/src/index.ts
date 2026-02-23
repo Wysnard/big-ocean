@@ -262,6 +262,20 @@ export { BIG_FIVE_TRAITS } from "./types/trait";
 export { getNextDayMidnightUTC, getUTCDateKey } from "./utils/date.utils";
 // Domain distribution utility (Story 10.2)
 export { aggregateDomainDistribution, type DomainDistribution } from "./utils/domain-distribution";
+// Formula functions (Story 10.3)
+export {
+	computeContextMean,
+	computeContextWeight,
+	computeFacetMetrics,
+	computeNormalizedEntropy,
+	computeProjectedEntropy,
+	computeSteeringTarget,
+	type FacetMetrics,
+	FORMULA_DEFAULTS,
+	type FormulaConfig,
+	GREETING_SEED_POOL,
+	type SteeringTarget,
+} from "./utils/formula";
 // Utility functions
 export {
 	aggregateFacetScores,
