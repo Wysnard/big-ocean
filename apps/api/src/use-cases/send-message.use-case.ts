@@ -3,12 +3,12 @@
  *
  * Story 9.2: Rewritten as simple sequential Effect pipeline.
  * Story 10.2: Added conversanalyzer pipeline (post-cold-start).
+ * Story 10.4: Integrated steering — computeFacetMetrics + computeSteeringTarget on every message.
  *
- * Pipeline: validate session → save user msg (capture messageId) → get messages
- *           → query evidence → compute domain distribution
- *           → [cold start check: user msg count ≤ greeting count]
- *           → if post-cold-start: conversanalyzer → cap 3 → save evidence
- *           → call Nerin (no steering yet) → save assistant msg → increment count → return
+ * Pipeline: validate session → save user msg → get messages → extract previousDomain
+ *           → [cold start?] compute steering from greeting seed or evidence metrics
+ *           → [post-cold-start] conversanalyzer → save evidence → re-fetch evidence → compute metrics → compute steering
+ *           → call Nerin with targetDomain + targetFacet → save assistant msg with steering → increment count → return
  */
 
 import {
@@ -19,8 +19,12 @@ import {
 	type ConversanalyzerOutput,
 	ConversanalyzerRepository,
 	ConversationEvidenceRepository,
+	computeFacetMetrics,
+	computeSteeringTarget,
 	type DomainMessage,
+	type FacetName,
 	GREETING_MESSAGES,
+	type LifeDomain,
 	LoggerRepository,
 	NerinAgentRepository,
 	SessionCompletedError,
@@ -28,8 +32,8 @@ import {
 } from "@workspace/domain";
 import { Effect, Schedule } from "effect";
 
-/** Cold start threshold: greeting messages + 1 opening question = 2 assistant greetings */
-const COLD_START_GREETING_COUNT = GREETING_MESSAGES.length + 1;
+/** Max user messages that count as cold start: 1 greeting + 1 opening question = 2 assistant msgs before user replies */
+const COLD_START_USER_MSG_THRESHOLD = GREETING_MESSAGES.length + 1;
 
 export interface SendMessageInput {
 	readonly sessionId: string;
@@ -112,10 +116,24 @@ export const sendMessage = (input: SendMessageInput) =>
 			content: msg.content,
 		}));
 
-		// 7. Conversanalyzer pipeline (post-cold-start only)
+		// 7. Extract previousDomain from raw DB entities (before mapping to DomainMessage)
 		const userMessageCount = previousMessages.filter((m) => m.role === "user").length;
+		let previousDomain: LifeDomain | null = null;
+		for (let i = previousMessages.length - 1; i >= 0; i--) {
+			const msg = previousMessages[i];
+			if (msg !== undefined && msg.role === "assistant" && msg.targetDomain != null) {
+				previousDomain = msg.targetDomain;
+				break;
+			}
+		}
 
-		if (userMessageCount > COLD_START_GREETING_COUNT) {
+		// 8. Steering computation — runs on every message (cold start + post-cold-start)
+		let targetDomain: LifeDomain;
+		let targetFacet: FacetName;
+
+		if (userMessageCount > COLD_START_USER_MSG_THRESHOLD) {
+			// Post-cold-start: conversanalyzer → save evidence → re-fetch → compute metrics → steering
+
 			// Query existing evidence for domain distribution
 			const existingEvidence = yield* evidenceRepo.findBySession(input.sessionId);
 			const domainDistribution = aggregateDomainDistribution(existingEvidence);
@@ -146,7 +164,8 @@ export const sendMessage = (input: SendMessageInput) =>
 			// Cap evidence to 3 records (business rule)
 			const cappedEvidence = evidenceResult.evidence.slice(0, 3);
 
-			// Save evidence if non-empty
+			// Re-fetch ALL evidence only when new evidence was saved; else reuse existing
+			let allEvidence = existingEvidence;
 			if (cappedEvidence.length > 0) {
 				yield* evidenceRepo.save(
 					cappedEvidence.map((e) => ({
@@ -155,22 +174,42 @@ export const sendMessage = (input: SendMessageInput) =>
 						messageId,
 					})),
 				);
-			}
 
-			if (cappedEvidence.length > 0) {
 				logger.info("Conversanalyzer complete", {
 					sessionId: input.sessionId,
 					evidenceCount: cappedEvidence.length,
 					tokenUsage: evidenceResult.tokenUsage,
 				});
+
+				allEvidence = yield* evidenceRepo.findBySession(input.sessionId);
 			}
+
+			const metrics = computeFacetMetrics(allEvidence);
+			const steering = computeSteeringTarget(metrics, previousDomain);
+			targetDomain = steering.targetDomain;
+			targetFacet = steering.targetFacet;
+		} else {
+			// Cold start: greeting seed from pool
+			const steering = computeSteeringTarget(new Map(), null, undefined, GREETING_MESSAGES.length);
+			targetDomain = steering.targetDomain;
+			targetFacet = steering.targetFacet;
 		}
 
-		// 8. Call Nerin (no steering yet — Story 10.4)
+		logger.info("Steering computed", {
+			sessionId: input.sessionId,
+			targetFacet,
+			targetDomain,
+			previousDomain,
+			userMessageCount,
+		});
+
+		// 9. Call Nerin with steering
 		const result = yield* nerin
 			.invoke({
 				sessionId: input.sessionId,
 				messages: domainMessages,
+				targetDomain,
+				targetFacet,
 			})
 			.pipe(
 				Effect.tapError((error) =>
@@ -184,13 +223,20 @@ export const sendMessage = (input: SendMessageInput) =>
 				),
 			);
 
-		// 9. Save assistant message
-		yield* messageRepo.saveMessage(input.sessionId, "assistant", result.response);
+		// 10. Save assistant message with steering targets
+		yield* messageRepo.saveMessage(
+			input.sessionId,
+			"assistant",
+			result.response,
+			undefined,
+			targetDomain,
+			targetFacet,
+		);
 
-		// 10. Increment message_count atomically and get new count
+		// 11. Increment message_count atomically and get new count
 		const messageCount = yield* sessionRepo.incrementMessageCount(input.sessionId);
 
-		// 11. Compute isFinalTurn
+		// 12. Compute isFinalTurn
 		const isFinalTurn = messageCount >= config.messageThreshold;
 
 		logger.info("Message processed", {

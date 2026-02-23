@@ -1,3 +1,5 @@
+import { LifeDomainSchema } from "@workspace/domain/constants/life-domain";
+import { FacetNameSchema } from "@workspace/domain/schemas/big-five-schemas";
 import { Schema } from "effect";
 
 /**
@@ -24,6 +26,8 @@ export const AssessmentAssistantMessageEntitySchema = Schema.Struct({
 	sessionId: Schema.UUID,
 	role: Schema.Literal("assistant"),
 	content: Schema.String,
+	targetDomain: Schema.NullOr(LifeDomainSchema),
+	targetBigfiveFacet: Schema.NullOr(FacetNameSchema),
 	createdAt: Schema.DateFromSelf,
 });
 

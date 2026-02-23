@@ -14,8 +14,8 @@ const messages = new Map<
 		role: string;
 		content: string;
 		userId?: string;
-		targetDomain?: string;
-		targetBigfiveFacet?: string;
+		targetDomain?: string | null;
+		targetBigfiveFacet?: string | null;
 		createdAt: Date;
 	}>
 >();
@@ -42,8 +42,8 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.succeed(
 					role,
 					content,
 					userId,
-					targetDomain,
-					targetBigfiveFacet,
+					targetDomain: targetDomain ?? null,
+					targetBigfiveFacet: targetBigfiveFacet ?? null,
 					createdAt: new Date(),
 				};
 				const existing = messages.get(sessionId) || [];
