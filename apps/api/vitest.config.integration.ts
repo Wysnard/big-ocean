@@ -21,8 +21,8 @@ export default defineConfig({
 		// Global setup/teardown for Docker lifecycle
 		globalSetup: ["./scripts/integration-setup.ts"],
 		globalTeardown: ["./scripts/integration-teardown.ts"],
-		// Longer timeout for Docker operations (60 seconds per test)
-		testTimeout: 60_000,
+		// Timeout for Docker-based tests (30 seconds per test)
+		testTimeout: 30_000,
 		// Environment variables for tests
 		env: {
 			// API URL for integration tests (matches compose.test.yaml port mapping)
