@@ -32,6 +32,8 @@ export { CheckpointerMemoryRepositoryLive } from "./repositories/checkpointer.me
 export { CheckpointerPostgresRepositoryLive } from "./repositories/checkpointer.postgres.repository";
 // Checkpointer repository interface (lives in infrastructure — wraps LangGraph-specific type)
 export { CheckpointerRepository } from "./repositories/checkpointer.repository";
+// Conversation evidence repository implementation (Story 10.1)
+export { ConversationEvidenceDrizzleRepositoryLive } from "./repositories/conversation-evidence.drizzle.repository";
 // CostGuard repository implementation
 export { CostGuardRedisRepositoryLive } from "./repositories/cost-guard.redis.repository";
 // Facet evidence no-op repository (Story 9.1 — old table dropped, stub for orchestrator compat)
