@@ -2,16 +2,24 @@
  * Signup Page
  *
  * User registration with Better Auth.
+ * Redirects authenticated users to /assessment or /profile (AC #5).
  */
 
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { SignupForm } from "../components/auth";
+import { getSession } from "../lib/auth-client";
 
 export const Route = createFileRoute("/signup")({
 	validateSearch: (search: Record<string, unknown>) => ({
 		sessionId: typeof search.sessionId === "string" ? search.sessionId : undefined,
 		redirectTo: typeof search.redirectTo === "string" ? search.redirectTo : undefined,
 	}),
+	beforeLoad: async () => {
+		const { data: session } = await getSession();
+		if (session?.user) {
+			throw redirect({ to: "/profile" });
+		}
+	},
 	component: SignupPage,
 });
 

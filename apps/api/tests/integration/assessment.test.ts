@@ -230,10 +230,8 @@ describe("GET /api/assessment/:sessionId/results", () => {
 		const startResponse = await postJson("/api/assessment/start", {});
 		const { sessionId } = await startResponse.json();
 
-		// Send 3 messages to reach FREE_TIER_MESSAGE_THRESHOLD=3
-		// Story 7.18: The 3rd message (at threshold) returns farewell with isFinalTurn: true
-		// instead of 403 (FreeTierLimitReached). The farewell message is saved and
-		// get-results sees 3 user messages, triggering portrait generation.
+		// Send 3 messages to reach MESSAGE_THRESHOLD=3
+		// Story 9.2: The 3rd message (at threshold) returns isFinalTurn: true.
 		await postJson("/api/assessment/message", {
 			sessionId,
 			message: "I love exploring new creative ideas and imagining possibilities.",
@@ -246,12 +244,11 @@ describe("GET /api/assessment/:sessionId/results", () => {
 			sessionId,
 			message: "I enjoy social gatherings and meeting new people.",
 		});
-		// Story 7.18: 3rd message triggers farewell (isFinalTurn: true), not free tier block
+		// Story 9.2: 3rd message triggers isFinalTurn: true at MESSAGE_THRESHOLD=3
 		expect(thirdMsgResponse.status).toBe(200);
 		const thirdMsgData = await thirdMsgResponse.json();
 		const thirdDecoded = Schema.decodeUnknownSync(SendMessageResponseSchema)(thirdMsgData);
 		expect(thirdDecoded.isFinalTurn).toBe(true);
-		expect(thirdDecoded.farewellMessage).toBeDefined();
 
 		// Fetch results
 		const resultsResponse = await fetch(`${API_URL}/api/assessment/${sessionId}/results`);
