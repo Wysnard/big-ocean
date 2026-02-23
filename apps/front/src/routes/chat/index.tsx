@@ -95,6 +95,9 @@ export const Route = createFileRoute("/chat/")({
 				}
 			} catch (e) {
 				if (isRedirect(e)) throw e;
+				// Fail-open: if ownership check fails (network error, API down), allow through.
+				// The session itself validates ownership server-side on each message send.
+				console.warn("[chat/beforeLoad] Session ownership check failed, allowing through:", e);
 			}
 		}
 	},

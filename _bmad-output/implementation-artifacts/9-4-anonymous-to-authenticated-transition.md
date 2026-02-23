@@ -1,6 +1,6 @@
 # Story 9.4: Anonymous-to-Authenticated Transition
 
-Status: review
+Status: done
 
 ## Story
 
@@ -211,6 +211,7 @@ None — no critical debugging required.
 
 - 2026-02-23: Story 9.4 implementation — session linking hardening, conflict resolution, post-auth verification, comprehensive tests
 - 2026-02-23: Refactor — moved post-auth session verification from ChatAuthGate component to `/chat` route `beforeLoad` loader
+- 2026-02-23: Code review fixes — added console.warn for fail-open ownership check (H1), fixed trivially-passing schema test to verify actual schema source (H2), removed dead `farewellMessage` state from useTherapistChat (M1), updated File List with 11 missing files (M2), untracked e2e artifacts from git (M4)
 
 ### File List
 
@@ -219,9 +220,18 @@ None — no critical debugging required.
 - `apps/front/src/components/ChatAuthGate.tsx` — Simplified: removed `onAuthSuccess` prop, React Query dependency; post-auth navigates to `/chat?sessionId=...` triggering loader verification
 - `apps/front/src/components/ChatAuthGate.test.tsx` — Simplified: removed QueryClientProvider wrapper, removed `onAuthSuccess` prop
 - `apps/front/src/components/TherapistChat.tsx` — Removed `onAuthSuccess` prop from ChatAuthGate usage
-- `apps/front/src/routes/chat/index.tsx` — Added session ownership verification in `beforeLoad` (getSession + /api/assessment/sessions)
+- `apps/front/src/routes/chat/index.tsx` — Added session ownership verification in `beforeLoad` (getSession + /api/assessment/sessions); fail-open with console.warn on verification failure
 - `apps/front/src/hooks/use-assessment.ts` — Extracted `listAssessmentsQueryOptions()` factory for imperative React Query usage
+- `apps/front/src/hooks/use-auth.ts` — Fixed `callbackURL` type from `string | false` to `string`; conditional spread instead of `?? false`
+- `apps/front/src/hooks/useTherapistChat.ts` — Re-derive farewell state from resumed data on post-auth re-mount; removed dead `farewellMessage`/`portraitWaitMinMs` state
+- `e2e/e2e-env.ts` — Strengthened e2e test passwords (NIST-compliant: 12+ chars, mixed case, symbols)
+- `e2e/global-setup.ts` — Made evidence seeding non-fatal (Phase 2 schema forward-compat); updated threshold comment
+- `e2e/specs/access-control/owner-access.spec.ts` — Handle portrait wait screen as alternative to chat bubble visibility
+- `e2e/specs/golden-path.spec.ts` — Adapted for MESSAGE_THRESHOLD=1; added retry loop for SSR redirect; increased timeout
+- `e2e/specs/public-profile.spec.ts` — Made evidence seeding non-fatal; updated password
+- `e2e/specs/signup-redirect.spec.ts` — Updated password; added hydration re-fill guard
+- `compose.e2e.yaml` — E2E environment configuration updates
 
 **New:**
-- `apps/api/src/handlers/__tests__/session-linking.test.ts` — 18 source-reading verification tests for session linking (Tasks 1-2)
+- `apps/api/src/handlers/__tests__/session-linking.test.ts` — 18 source-reading verification tests for session linking (Tasks 1-2). Note: these verify code patterns, not behavior.
 - `apps/api/src/use-cases/__tests__/session-linking.use-case.test.ts` — 7 behavioral unit tests for session linking (Task 5)

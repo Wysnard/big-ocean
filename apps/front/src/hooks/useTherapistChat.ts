@@ -298,7 +298,6 @@ export function useTherapistChat(sessionId: string) {
 		freeTierMessageThreshold: FREE_TIER_THRESHOLD,
 		// Story 7.18: Farewell transition state
 		isFarewellReceived,
-		farewellMessage: null as string | null,
 		portraitWaitMinMs: undefined as number | undefined,
 	};
 }

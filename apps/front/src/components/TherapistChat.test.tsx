@@ -41,7 +41,6 @@ let mockHookReturn = {
 	freeTierMessageThreshold: 27,
 	// Story 7.18: Farewell transition state
 	isFarewellReceived: false,
-	farewellMessage: null as string | null,
 	portraitWaitMinMs: undefined as number | undefined,
 };
 
@@ -139,7 +138,6 @@ describe("TherapistChat", () => {
 			hasShownCelebration: false,
 			setHasShownCelebration: vi.fn(),
 			isFarewellReceived: false,
-			farewellMessage: null,
 			portraitWaitMinMs: undefined,
 		};
 	});

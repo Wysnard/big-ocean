@@ -168,7 +168,7 @@ development_status:
   9-1-anonymous-assessment-start: done
   9-2-send-message-and-nerin-response: done
   9-3-user-registration-and-login: done
-  9-4-anonymous-to-authenticated-transition: review
+  9-4-anonymous-to-authenticated-transition: done
   9-5-chat-interface-and-conversation-ux: backlog
   epic-9-retrospective: optional
 
