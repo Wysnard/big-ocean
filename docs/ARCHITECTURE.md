@@ -18,15 +18,15 @@ Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
 2. **Handlers** (`apps/api/src/handlers`): Thin HTTP adapters (controllers/presenters) - no business logic
 3. **Use-Cases** (`apps/api/src/use-cases`): Pure business logic - **main unit test target**
 4. **Domain** (`packages/domain`): Repository interfaces (Context.Tag), entities, types
-5. **Infrastructure** (`packages/infrastructure`): Repository implementations (Drizzle, Pino, etc.)
+5. **Infrastructure** (`packages/infrastructure`): Repository implementations (Drizzle, Anthropic, Pino, Redis, etc.)
 
 **Hard Rule:** Handlers extract request data and call use-cases. No conditional logic, validation, or orchestration in handlers. All business logic belongs in use-cases.
 
 **Quick Discovery Pattern:**
 
 - Need a repository interface? Check `packages/domain/src/repositories/{name}.repository.ts` - this is the source of truth
-- Once you have the interface, find the implementation (Drizzle, LangGraph, etc.) in `packages/infrastructure/src/repositories/`
-- Test implementations live in `*.test.ts` files next to the production implementations
+- Once you have the interface, find the implementation (Drizzle, Anthropic, Redis, etc.) in `packages/infrastructure/src/repositories/`
+- Mock implementations live in `packages/infrastructure/src/repositories/__mocks__/`
 
 **Key Benefits:**
 
@@ -35,7 +35,125 @@ Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
 - **Clarity**: Each layer has single responsibility
 - **Effect-ts native**: Context.Tag and Layer system for DI
 
-For complete architecture details, see `_bmad-output/planning-artifacts/architecture.md` (ADR-6).
+## Key Files Inventory
+
+**Use-Cases** (`apps/api/src/use-cases/` — 14 files):
+- `start-assessment.use-case.ts` — Session creation + cost reservation
+- `send-message.use-case.ts` — Core message pipeline (ConversAnalyzer → formulas → steering → Nerin)
+- `get-results.use-case.ts` — Assessment results retrieval
+- `create-shareable-profile.use-case.ts` / `toggle-profile-visibility.use-case.ts` — Public profiles
+- `get-public-profile.use-case.ts` — Profile viewing with archetype derivation
+- `save-facet-evidence.use-case.ts` / `get-facet-evidence.use-case.ts` / `get-message-evidence.use-case.ts` — Evidence CRUD
+- `calculate-confidence.use-case.ts` / `update-facet-scores.use-case.ts` — Score computation
+- `list-user-sessions.use-case.ts` / `resume-session.use-case.ts` — Session management
+
+**Domain Repository Interfaces** (`packages/domain/src/repositories/` — 14 files):
+- `assessment-session.repository.ts` / `assessment-message.repository.ts` — Core session data
+- `conversanalyzer.repository.ts` — Haiku analysis (Phase 2)
+- `conversation-evidence.repository.ts` — Lean per-message evidence (Phase 2)
+- `nerin-agent.repository.ts` — Nerin AI agent
+- `cost-guard.repository.ts` — Rate limiting + budget enforcement
+- `redis.repository.ts` — Redis operations
+- `public-profile.repository.ts` — Shareable profiles
+- `logger.repository.ts` — Structured logging
+- Legacy (pending removal in Epic 11): several Phase 1 interfaces — see `packages/domain/src/repositories/` for full list
+
+**Infrastructure Implementations** (`packages/infrastructure/src/repositories/` — 23 files):
+- Drizzle repositories for all DB-backed domains
+- `conversanalyzer.anthropic.repository.ts` — Haiku LLM calls (Phase 2)
+- `conversation-evidence.drizzle.repository.ts` — Evidence persistence (Phase 2)
+- `cost-guard.redis.repository.ts` — Redis-based cost tracking
+- `nerin-agent.mock.repository.ts` — Nerin agent (mock for testing)
+- Legacy (pending removal in Epic 11): several Phase 1 implementations — see directory for full list
+
+**Handlers** (`apps/api/src/handlers/`):
+- `health.ts` — Health check endpoint
+- `assessment.ts` — Assessment endpoints (start, send-message)
+- `evidence.ts` — Evidence endpoints
+- `profile.ts` — Public profile endpoints
+
+**DB Schema:** `packages/infrastructure/src/db/drizzle/schema.ts`
+
+## Assessment Pipeline (LLM Architecture)
+
+The assessment uses a sequential Effect pipeline for message processing. No graph-based routing — the use-case directly composes the pipeline.
+
+### Message Flow (Current — Phase 2)
+
+```
+User message arrives
+  → Save user message to DB
+  → Query conversation_evidence for session
+  → ConversAnalyzer (Haiku) — extracts facet signals + domain tags
+  → Save conversation_evidence rows (max 3 per message)
+  → computeFacetMetrics(allEvidence) — pure domain function
+  → computeSteeringTarget(metrics, previousDomain, config) — entropy-based domain selection
+  → Nerin (Claude) responds with steering hint
+  → Save AI message with target_domain + target_bigfive_facet
+  → Return { response, messageCount, isFinalTurn }
+```
+
+### ConversAnalyzer (Haiku — runs on every message)
+
+- **Purpose:** Extract basic facet signals + domain tags for formula-driven steering
+- **Model:** Claude Haiku (fast, <1s)
+- **Output:** `{ bigfiveFacet, score, confidence, domain }[]` — max 3 records per message
+- **Repository:** `ConversanalyzerRepository` → `conversanalyzer.anthropic.repository.ts`
+- **Use-case:** `analyzeMessage` (called within `sendMessage` pipeline)
+- **Error handling:** Non-fatal. Retry once, then skip. Nerin responds with stale steering. ConversAnalyzer is a steering optimization — finalization re-analyzes ALL messages regardless.
+
+### Formula-Driven Steering
+
+Pure domain functions in `packages/domain/src/utils/formula.ts`:
+- `computeFacetMetrics(evidence[])` — context-weighted scores, confidence (exponential saturation), signal power (cross-context entropy)
+- `computeSteeringTarget(metrics, previousDomain, config)` — selects facet with lowest confidence/power gap, then picks domain that maximizes expected signal power gain with switch-cost penalty
+
+No hand-crafted domain-to-facet mapping. The formula computes which domain would help which facet based on actual evidence distribution.
+
+### FinAnalyzer (Sonnet — Epic 11, not yet implemented)
+
+- **Purpose:** Re-analyze ALL messages at assessment end with full conversation context
+- **Produces:** Portrait-quality `finalization_evidence` — the single source of truth for results
+- **Architecture:** Will run during finalization flow, producing rich evidence (quotes, rawDomain, highlights)
+
+### Two-Tier Evidence Model
+
+| Table | Purpose | Schema | Lifecycle |
+|-------|---------|--------|-----------|
+| `conversation_evidence` | Steering (Haiku output) | Lean: `bigfive_facet, score, confidence, domain` | Kept for analytics |
+| `finalization_evidence` | Results + portrait (Sonnet output) | Rich: + `raw_domain, quote, highlight_start, highlight_end` | Authoritative, linked to `assessment_results` |
+
+**`conversation_evidence`** exists today (Epic 10). **`finalization_evidence`** will be added in Epic 11.
+
+### Session Flow
+
+```
+Anonymous start → /api/assessment/start (no auth required)
+  → Chat with Nerin (ConversAnalyzer on every message)
+  → Message count reaches MESSAGE_THRESHOLD (30)
+  → Frontend shows auth gate
+  → POST /api/assessment/generate-results (auth required, Epic 11)
+  → FinAnalyzer + portrait generation → assessment_results
+  → Redirect to results page
+```
+
+## Cost Tracking & Rate Limiting
+
+Redis fixed-window pattern with fail-open resilience.
+
+**Redis Key Patterns:**
+- Cost tracking: `cost:{userId}:{YYYY-MM-DD}` (TTL: 48 hours)
+- Rate limiting: `assessments:{userId}:{YYYY-MM-DD}` (TTL: 48 hours)
+- Daily reset: Keys automatically expire, new day = fresh counters
+
+**Fail-Open Pattern:** If Redis is unavailable, the system allows the request and logs the failure. Cost tracking is advisory, not a hard gate. This prevents Redis outages from blocking all conversations.
+
+**Concurrency Control:** `pg_try_advisory_lock(session_id)` — non-blocking. Prevents concurrent message processing on the same session. Returns 409 if lock held.
+
+**Per-user limits:**
+- Daily assessment count limit (configurable via `AppConfig`)
+- Daily cost budget (configurable via `AppConfig`)
+- Message rate limit: 2 messages/minute
 
 ## Workspace Dependencies
 
@@ -62,23 +180,10 @@ packages/domain/src/
 ├── schemas/       # Effect Schema definitions for domain types
 ├── errors/        # Tagged Error types
 ├── types/         # Branded types (userId, sessionId, etc.)
-├── constants/     # Domain constants (trait names, facets, etc.)
+├── constants/     # Domain constants (traits, facets, life domains, validation bounds)
+├── utils/         # Pure domain functions (OCEAN code gen, formula, confidence calc)
+├── config/        # AppConfig interface + defaults
 └── repositories/  # Context.Tag interfaces (ports)
-```
-
-**Example Domain Export:**
-
-```typescript
-// packages/domain/src/schemas/index.ts
-import { Schema as S } from "effect";
-
-export const UserProfileSchema = S.Struct({
-  id: S.String,
-  name: S.String,
-  traits: PersonalityTraitsSchema,
-});
-
-export type UserProfile = typeof UserProfileSchema.Type;
 ```
 
 ## Error Architecture & Location Rules
@@ -226,469 +331,51 @@ When adding a new error, ask:
 
 The `@workspace/contracts` package defines type-safe HTTP API contracts using @effect/platform and @effect/schema following the official effect-worker-mono pattern.
 
-<details>
-<summary><b>HTTP Contract Implementation Example</b></summary>
+**Pattern:** `HttpApiGroup.make()` → `HttpApiEndpoint` → `HttpApiBuilder.group()` handlers
 
-**HTTP Contract Structure** (in `packages/contracts/src/http/groups/assessment.ts`):
-
-```typescript
-import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
-import { Schema as S } from "effect";
-
-// Request/Response schemas
-export const StartAssessmentRequestSchema = S.Struct({
-  userId: S.optional(S.String),
-});
-
-export const StartAssessmentResponseSchema = S.Struct({
-  sessionId: S.String,
-  createdAt: S.DateTimeUtc,
-});
-
-export const SendMessageRequestSchema = S.Struct({
-  sessionId: S.String,
-  message: S.String,
-});
-
-export const SendMessageResponseSchema = S.Struct({
-  response: S.String,
-  precision: S.Struct({
-    openness: S.Number,
-    conscientiousness: S.Number,
-    extraversion: S.Number,
-    agreeableness: S.Number,
-    neuroticism: S.Number,
-  }),
-});
-
-// HTTP API Group combines endpoints
-export const AssessmentGroup = HttpApiGroup.make("assessment")
-  .add(
-    HttpApiEndpoint.post("start", "/start")
-      .addSuccess(StartAssessmentResponseSchema)
-      .setPayload(StartAssessmentRequestSchema)
-  )
-  .add(
-    HttpApiEndpoint.post("sendMessage", "/message")
-      .addSuccess(SendMessageResponseSchema)
-      .setPayload(SendMessageRequestSchema)
-  )
-  .prefix("/assessment");
-```
-
-**Handler Implementation** (in `apps/api/src/handlers/assessment.ts`):
-
-```typescript
-import { HttpApiBuilder } from "@effect/platform";
-import { DateTime, Effect } from "effect";
-import { BigOceanApi } from "@workspace/contracts";
-import { LoggerService } from "../services/logger.js";
-
-// Handlers use HttpApiBuilder.group pattern
-export const AssessmentGroupLive = HttpApiBuilder.group(
-  BigOceanApi,
-  "assessment",
-  (handlers) =>
-    Effect.gen(function* () {
-      return handlers
-        .handle("start", ({ payload }) =>
-          Effect.gen(function* () {
-            const logger = yield* LoggerService;
-
-            const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-            const createdAt = DateTime.unsafeMake(Date.now());
-
-            logger.info("Assessment session started", {
-              sessionId,
-              userId: payload.userId,
-            });
-
-            return { sessionId, createdAt };
-          })
-        )
-        .handle("sendMessage", ({ payload }) =>
-          Effect.gen(function* () {
-            const logger = yield* LoggerService;
-
-            logger.info("Message received", {
-              sessionId: payload.sessionId,
-              messageLength: payload.message.length,
-            });
-
-            // Placeholder response (real Nerin logic in Epic 2)
-            return {
-              response: "Thank you for sharing that...",
-              precision: {
-                openness: 0.5,
-                conscientiousness: 0.4,
-                extraversion: 0.6,
-                agreeableness: 0.7,
-                neuroticism: 0.3,
-              },
-            };
-          })
-        );
-    })
-);
-```
-
-**Server Setup** (in `apps/api/src/index.ts`):
-
-```typescript
-import { Effect, Layer } from "effect";
-import { HttpApiBuilder, HttpMiddleware } from "@effect/platform";
-import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
-import { createServer } from "node:http";
-import { BigOceanApi } from "@workspace/contracts";
-import { HealthGroupLive } from "./handlers/health.js";
-import { AssessmentGroupLive } from "./handlers/assessment.js";
-import { LoggerServiceLive } from "./services/logger.js";
-import { betterAuthHandler } from "./middleware/better-auth.js";
-
-// Merge all handler groups with services
-const HttpGroupsLive = Layer.mergeAll(
-  HealthGroupLive,
-  AssessmentGroupLive,
-  LoggerServiceLive
-);
-
-// Build API from contracts with handlers
-const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(
-  Layer.provide(HttpGroupsLive)
-);
-
-// Complete API with router and middleware
-const ApiLayer = Layer.mergeAll(
-  ApiLive,
-  HttpApiBuilder.Router.Live,
-  HttpApiBuilder.Middleware.layer
-);
-
-// Hybrid server: Better Auth (node:http) → Effect (remaining routes)
-const createCustomServer = () => {
-  const server = createServer();
-  let effectHandler: any = null;
-
-  server.on("newListener", (event, listener) => {
-    if (event === "request") {
-      effectHandler = listener;
-      server.removeListener("request", listener as any);
-    }
-  });
-
-  server.on("request", async (req, res) => {
-    await betterAuthHandler(req, res);
-    if (!res.writableEnded && effectHandler) {
-      effectHandler(req, res);
-    }
-  });
-
-  return server;
-};
-
-// HTTP Server with Better Auth integration
-const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
-  Layer.provide(ApiLayer),
-  Layer.provide(NodeHttpServer.layer(createCustomServer, { port: 4000 })),
-  Layer.provide(LoggerServiceLive)
-);
-
-// Launch server
-NodeRuntime.runMain(Layer.launch(HttpLive));
-```
-
-</details>
-
-## Multi-Agent System (LangGraph)
-
-The backend uses LangGraph to orchestrate multiple specialized agents via the **Orchestrator Repository** (Story 2.4).
-
-**Agent Architecture (Story 2.11: Async Analyzer with Offset Steering):**
-
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│ Conversation Graph (SYNCHRONOUS — blocks HTTP response)              │
-│                                                                      │
-│ 1. BUDGET CHECK - throws BudgetPausedError if exceeded              │
-│ 2. STEERING (offset msgs 4,7,10...) - read evidence, compute hint  │
-│    OR use cached hint from checkpointer (msgs 2,3,5,6,8,9...)      │
-│ 3. NERIN - always runs with steeringHint                            │
-│ 4. RETURN { response } immediately                                   │
-└────────────────┬─────────────────────────────────────────────────────┘
-                 │ response returned to client (~2-3s)
-                 │
-                 │ if (messageCount % 3 === 0):
-                 │   Effect.forkDaemon ──────────────────────┐
-                 │                                            │
-                 ▼                                            ▼
-        HTTP Response                            ┌────────────────────┐
-        { response: string }                     │ Analysis Pipeline  │
-                                                 │ (ASYNC — daemon)   │
-                                                 │                    │
-                                                 │ Analyzer           │
-                                                 │ - Extract evidence │
-                                                 │ - 30 facets        │
-                                                 │ - Save to DB       │
-                                                 │       ↓            │
-                                                 │ Scorer             │
-                                                 │ - Aggregate scores │
-                                                 │ - Derive traits    │
-                                                 │ - Save to state    │
-                                                 └────────────────────┘
-
-Message Cadence (3-message cycle, offset by 1):
-  [N % 3 === 0] BATCH  → nerin (cached) → forkDaemon(analyzer + scorer)
-  [N % 3 === 1] STEER  → read evidence → fresh steering → nerin
-  [N % 3 === 2] COAST  → nerin (cached steering)
-  Exception: messages 1-3 → cold start, no steering
-```
-
-**Orchestrator Repository Interface:**
-
-```typescript
-// packages/domain/src/repositories/orchestrator.repository.ts
-export class OrchestratorRepository extends Context.Tag("OrchestratorRepository")<
-  OrchestratorRepository,
-  {
-    readonly processMessage: (
-      input: ProcessMessageInput,
-    ) => Effect.Effect<ProcessMessageOutput, OrchestrationError | BudgetPausedError, never>;
-  }
->() {}
-```
-
-**Key Design Decisions:**
-
-1. **Single-Target Steering** - Pure outlier detection (`confidence < mean - stddev`) rather than arbitrary thresholds
-2. **Budget-First Pause** - Assessment pauses gracefully rather than degrading quality
-3. **Async Batch Processing (Story 2.11)** - Analyzer fires as `Effect.forkDaemon` every 3rd message; scores computed on-demand from evidence via pure functions. Nerin response returns immediately without waiting for analysis.
-4. **Offset Steering (Story 2.11)** - Steering recalculates at messages 4, 7, 10... (one offset from analyzer at 3, 6, 9...). Guarantees fresh evidence data and reduces DB reads by ~70%.
-5. **State Preservation** - `BudgetPausedError` includes `resumeAfter` timestamp and `currentPrecision`
-6. **Facet-Level Granularity** - Nerin operates on 30 facets, not 5 traits (traits are derived aggregates)
-
-**Data Flow Architecture (Facet-Level Primitives):**
-
-The system follows a **"primitives first, aggregates on demand"** pattern:
-
-```typescript
-// INPUT: Use-case provides facet-level data (30 facets)
-orchestrator.processMessage({
-  sessionId,
-  userMessage,
-  messageCount,
-  precision,          // Single overall precision score (0-100)
-  dailyCostUsed,
-  facetScores,        // FacetScoresMap - 30 facets with score + confidence
-});
-
-// ROUTER: Calculates steering from facet outliers
-const steeringTarget = getSteeringTarget(facetScores);
-// Example: "orderliness" (confidence 0.2, below mean - stddev)
-
-const steeringHint = getSteeringHint(steeringTarget);
-// Example: "Explore how they organize their space, time, or belongings"
-
-// NERIN: Receives facet-level data for precise conversation steering
-nerinAgent.invoke({
-  sessionId,
-  messages,
-  facetScores,        // All 30 facets for context
-  steeringHint,       // Natural language guidance toward weak facet
-  // NO trait-level precision (deprecated pattern - was duplicated across all 5 traits)
-});
-
-// System prompt includes steering:
-// "Current conversation focus:
-//  Explore how they organize their space, time, or belongings
-//  Naturally guide the conversation to explore this area..."
-
-// SCORER: Transforms facets → traits for OUTPUT only
-const traitScores = deriveTraitScores(facetScores);
-// Openness = mean(imagination, artistic_interests, ...) with min(confidence)
-
-// OUTPUT: Return both facets (internal) and traits (user-facing)
-return {
-  nerinResponse,
-  tokenUsage,
-  costIncurred,
-  facetScores,        // Granular data for next iteration
-  traitScores,        // Aggregated for user display
-  steeringTarget,     // Which facet was targeted
-  steeringHint,       // What guidance was given
-};
-```
-
-**Why Facet-Level?**
-- **Precision**: 30 facets provide finer steering than 5 traits
-- **No Duplication**: Single source of truth (facetScores), traits derived on demand
-- **Proper Abstraction**: Nerin operates at the granularity it needs
-- **Debugging**: Can trace which specific facet was targeted each turn
-
-**Error Types:**
-- `BudgetPausedError` - Daily $75 limit reached, session paused (resume next day)
-- `OrchestrationError` - Generic routing/pipeline failure
-- `PrecisionGapError` - Precision calculation failure (422)
-
-## Nerin Agent Implementation
-
-The Nerin conversational agent follows **hexagonal architecture** (ports & adapters) with Effect-ts dependency injection.
-
-**Nerin Repository Interface (Facet-Level):**
-
-```typescript
-// packages/domain/src/repositories/nerin-agent.repository.ts
-export interface NerinInvokeInput {
-  /** Session identifier for state persistence */
-  readonly sessionId: string;
-
-  /** Message history for conversational context */
-  readonly messages: readonly BaseMessage[];
-
-  /** Current facet scores (30 facets) - NOT trait-level precision */
-  readonly facetScores?: FacetScoresMap;
-
-  /** Natural language steering hint from orchestrator outlier detection */
-  readonly steeringHint?: string;
-}
-
-export class NerinAgentRepository extends Context.Tag("NerinAgentRepository")<
-  NerinAgentRepository,
-  {
-    readonly invoke: (input: NerinInvokeInput) => Effect.Effect<NerinInvokeOutput, AgentInvocationError, never>;
-  }
->() {}
-```
-
-**System Prompt Construction:**
-
-```typescript
-// packages/domain/src/utils/nerin-system-prompt.ts
-function buildChatSystemPrompt(steeringHint?: string): string {
-  let prompt = `${NERIN_PERSONA}\n\n${CHAT_CONTEXT}`;
-
-  // Add facet-level steering hint if provided
-  if (steeringHint) {
-    prompt += `\n\nSTEERING PRIORITY:\n${steeringHint}`;
-    prompt += `\nTransition to this territory within your next 1-2 responses...`;
-  }
-
-  return prompt;
-}
-```
-
-**Key Changes from Previous Implementation:**
-- ❌ **REMOVED**: `PrecisionScores` (trait-level object with 5 duplicated values)
-- ❌ **REMOVED**: `facetScores` / `assessedCount` from prompt (unnecessary context)
-- ✅ **ADDED**: `steeringHint` (natural language guidance from router)
-- ✅ **ADDED**: `NERIN_PERSONA` shared constant + `CHAT_CONTEXT` (Story 2.12)
-- ✅ **EFFECT**: System prompt now includes precise facet-level steering via hint
-
-**Architecture Overview (with Orchestrator integration):**
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│ packages/domain (PORTS - Interfaces)                                 │
-│   └─ repositories/orchestrator.repository.ts (Story 2.4)           │
-│       - OrchestratorRepository (Context.Tag)                        │
-│       - ProcessMessageInput, ProcessMessageOutput types             │
-│       - BudgetPausedError, OrchestrationError                       │
-│   └─ repositories/nerin-agent.repository.ts                         │
-│       - NerinAgentRepository (used internally by Orchestrator)      │
-│   └─ repositories/analyzer.repository.ts                            │
-└─────────────────────────────────────────────────────────────────────┘
-                              ▲
-                              │ implements
-                              │
-┌─────────────────────────────────────────────────────────────────────┐
-│ packages/infrastructure (ADAPTERS - Implementations)                 │
-│   └─ repositories/orchestrator.langgraph.repository.ts              │
-│       - OrchestratorLangGraphRepositoryLive (Layer)                 │
-│       - LangGraph StateGraph for routing                            │
-│   └─ repositories/nerin-agent.langgraph.repository.ts               │
-│   └─ repositories/analyzer.claude.repository.ts                     │
-└─────────────────────────────────────────────────────────────────────┘
-                              ▲
-                              │ injected via Layer
-                              │
-┌─────────────────────────────────────────────────────────────────────┐
-│ apps/api/src/use-cases (Business Logic)                             │
-│   └─ send-message.use-case.ts                                       │
-│       - Pure Effect, no direct LangGraph import                     │
-│       - Accesses OrchestratorRepository via Context.Tag             │
-│       - Handles BudgetPausedError for graceful session pause        │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-**Critical Note on thread_id:** The `configurable.thread_id` passed to `graph.invoke()` is required for checkpointer persistence. Use `sessionId` as the thread_id to maintain conversation history across requests. Omitting this breaks state persistence and each invocation will start fresh.
+See `packages/contracts/src/http/groups/` for contract definitions and `apps/api/src/handlers/` for implementations.
 
 ## Use-Case Pattern
 
-<details>
-<summary><b>Use-Case Implementation Example</b></summary>
-
 ```typescript
-// apps/api/src/use-cases/send-message.use-case.ts
-import { Effect } from "effect";
-import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
-import { AssessmentMessageRepository } from "@workspace/domain/repositories/assessment-message.repository";
-import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
-
-export const sendMessage = (
-  input: SendMessageInput
-): Effect.Effect<
-  SendMessageOutput,
-  DatabaseError | SessionNotFound,
-  AssessmentSessionRepository | AssessmentMessageRepository | LoggerRepository
-> =>
+export const sendMessage = (input: SendMessageInput) =>
   Effect.gen(function* () {
-    // Access injected dependencies
     const sessionRepo = yield* AssessmentSessionRepository;
     const messageRepo = yield* AssessmentMessageRepository;
     const logger = yield* LoggerRepository;
 
-    // Business logic orchestrates domain operations
     const session = yield* sessionRepo.getSession(input.sessionId);
     yield* messageRepo.saveMessage(input.sessionId, "user", input.message);
-
-    // ... more business logic
-
+    // ... business logic
     return { response, precision };
   });
 ```
 
-</details>
+**Key Pattern:** `Effect.gen` + `yield*` to access repositories → return typed result with errors in signature.
 
 ## Testing Pattern
 
-<details>
-<summary><b>Unit Testing with Test Implementations</b></summary>
+Uses `@effect/vitest` with `__mocks__/` co-location pattern. Each test file declares its own `vi.mock()` calls and composes a minimal local `TestLayer` with only the services it needs.
 
 ```typescript
-// Unit test with test implementations
-const TestLayer = Layer.mergeAll(
-  Layer.succeed(AssessmentSessionRepository, TestSessionRepo),
-  Layer.succeed(AssessmentMessageRepository, TestMessageRepo),
-  Layer.succeed(LoggerRepository, TestLogger)
-);
+import { vi } from "vitest";
+vi.mock("@workspace/infrastructure/repositories/cost-guard.redis.repository");
 
-const result = await Effect.runPromise(
-  sendMessage({ sessionId: "test", message: "Hello" }).pipe(
-    Effect.provide(TestLayer)
-  )
-);
+import { describe, expect, it } from "@effect/vitest";
+import { CostGuardRedisRepositoryLive } from "@workspace/infrastructure/repositories/cost-guard.redis.repository";
+
+const TestLayer = Layer.mergeAll(CostGuardRedisRepositoryLive, LoggerPinoRepositoryLive);
 ```
-
-**Key Pattern:** Each test double must implement the same interface as the production layer. Create test implementations in `*.test.ts` files alongside production code. Use `Layer.succeed(RepositoryTag, mockImplementation)` to inject test doubles.
-
-</details>
 
 ## Database (Drizzle ORM + PostgreSQL)
 
-Type-safe database access using Drizzle ORM with PostgreSQL. Schema lives in `packages/infrastructure/src/db/schema.ts`.
+Type-safe database access using Drizzle ORM with PostgreSQL. Schema lives in `packages/infrastructure/src/db/drizzle/schema.ts`.
 
-**Key Tables:** `assessment_session`, `assessment_message`, `facet_evidence`
+**Key Tables:** `assessment_sessions`, `assessment_messages`, `conversation_evidence`, `public_profiles`, `users`
 
-> **Note (Story 2-9):** `facet_scores` and `trait_scores` tables were removed. Scores are now computed on-demand from `facet_evidence` via pure functions (`aggregateFacetScores`, `deriveTraitScores`).
+**Key pgEnums:** `evidence_domain` (work, relationships, family, leisure, solo, other), `bigfive_facet_name` (30 facets)
+
+> **Note (Story 2-9):** `facet_scores` and `trait_scores` tables were removed. Scores are now computed on-demand from evidence via pure functions.
 
 See actual schema file for current table definitions.
 

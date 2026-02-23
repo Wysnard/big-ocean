@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-02-23T12:00
+generated: 2026-02-23T22:20
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -188,7 +188,7 @@ development_status:
   10-4-steering-integration-smart-nerin-responses: done
   10-5-message-count-progress-and-session-guards: done
   10-6-cost-tracking-and-rate-limiting: done
-  epic-10-retrospective: optional
+  epic-10-retrospective: done
 
   # ───────────────────────────────────────────────────────────────
   # NEW EPIC 2: Finalization & Scoring (Epic 11)

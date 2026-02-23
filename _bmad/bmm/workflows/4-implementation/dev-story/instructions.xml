@@ -221,17 +221,23 @@
     </check>
   </step>
 
-  <step n="5" goal="Implement task following red-green-refactor cycle">
+  <step n="5" goal="Implement task following TDD-first red-green-refactor cycle">
     <critical>FOLLOW THE STORY FILE TASKS/SUBTASKS SEQUENCE EXACTLY AS WRITTEN - NO DEVIATION</critical>
+    <critical>TDD-FIRST: Always read the story's Anti-Patterns section BEFORE writing any code</critical>
 
     <action>Review the current task/subtask from the story file - this is your authoritative implementation guide</action>
-    <action>Plan implementation following red-green-refactor cycle</action>
+    <action>Read the story's Anti-Patterns section and keep it in mind throughout implementation</action>
+    <action>Plan implementation following TDD red-green-refactor cycle</action>
 
-    <!-- RED PHASE -->
-    <action>Write FAILING tests first for the task/subtask functionality</action>
+    <!-- RED PHASE — Tests FIRST -->
+    <action>Write FAILING tests first for the task/subtask functionality:
+      - Concrete assertions (not placeholder `expect(true).toBe(true)`)
+      - Proper mock typing matching live repository interfaces
+      - Cover happy path, error cases, and edge cases specified in the task
+    </action>
     <action>Confirm tests fail before implementation - this validates test correctness</action>
 
-    <!-- GREEN PHASE -->
+    <!-- GREEN PHASE — Minimal implementation -->
     <action>Implement MINIMAL code to make tests pass</action>
     <action>Run tests to confirm they now pass</action>
     <action>Handle error conditions and edge cases as specified in task/subtask</action>
@@ -318,6 +324,23 @@
     <action if="no tasks remain">
       <goto step="9">Completion</goto>
     </action>
+  </step>
+
+  <step n="8b" goal="Self-check before declaring done">
+    <critical>🔍 SELF-CHECK CHECKLIST — Run these checks before marking the story complete</critical>
+
+    <action>Run all tests: `pnpm test:run` — verify ALL pass (zero failures)</action>
+    <action>Run lint: `pnpm lint` — verify clean output</action>
+    <action>Grep for broad error handling: search for `catchAll` and `catchTag` in modified files — verify each is scoped correctly (only fail-open resilience allowed)</action>
+    <action>Grep for unsafe casts: search for `as any` and `as unknown` in modified files — verify each has a justifying comment or is unnecessary</action>
+    <action>Verify mocks match live interfaces: for each modified `__mocks__/` file, compare method signatures against the real implementation</action>
+    <action>Verify no cross-layer imports: check that domain files don't import from infrastructure, infrastructure doesn't import from use-cases</action>
+    <action>Verify files touched match story scope: review the File List against story tasks — flag any drift (files changed that aren't in scope)</action>
+
+    <check if="any self-check fails">
+      <action>Fix the issue before proceeding to story completion</action>
+      <action>Re-run the failing check to confirm the fix</action>
+    </check>
   </step>
 
   <step n="9" goal="Story completion and mark for review" tag="sprint-status">

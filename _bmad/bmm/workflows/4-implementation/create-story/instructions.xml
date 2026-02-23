@@ -309,6 +309,32 @@
     context engine analysis completed - comprehensive developer guide created"</action>
   </step>
 
+  <step n="5b" goal="Adversarial self-review and user clarification">
+    <critical>🔍 INLINE ADVERSARIAL REVIEW — Challenge your own story before shipping!</critical>
+
+    <action>Re-read the complete story you just wrote and challenge it adversarially:</action>
+    <action>For each task/subtask, ask:
+      - Is this task specific enough that a dev agent can implement it without guessing?
+      - Are there ambiguous requirements that could lead to wrong implementations?
+      - Does any task implicitly require knowledge not written in the story?
+      - Could a dev agent accidentally introduce anti-patterns (broad catchAll, unsafe casts, cross-layer imports)?
+    </action>
+    <action>Fix any ambiguities, missing context, or vague tasks found during self-review</action>
+
+    <!-- User clarification for remaining ambiguities -->
+    <check if="any requirements remain genuinely ambiguous after self-review">
+      <output>🤔 **Clarification Needed Before Marking Ready**
+
+        The following points are ambiguous and could lead to incorrect implementation:
+        {{list_ambiguities}}
+
+        Please clarify so the story is unambiguous for the dev agent.
+      </output>
+      <ask>Please clarify the above points (or say "proceed as-is" to skip):</ask>
+      <action>Incorporate user clarifications into the story</action>
+    </check>
+  </step>
+
   <step n="6" goal="Update sprint status and finalize">
     <invoke-task>Validate against checklist at {installed_path}/checklist.md using _bmad/core/tasks/validate-workflow.xml</invoke-task>
     <action>Save story document unconditionally</action>

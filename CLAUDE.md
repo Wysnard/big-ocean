@@ -8,7 +8,7 @@ Always use Context7 MCP when I need library/API documentation, code generation, 
 
 When working on frontend code (`apps/front` or `packages/ui`), consult [FRONTEND.md](./docs/FRONTEND.md) for styling patterns, component conventions, and data attribute usage.
 
-**Related docs:** [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | [COMMANDS.md](./docs/COMMANDS.md) | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) | [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md) | [API-CONTRACT-SPECIFICATION.md](./docs/API-CONTRACT-SPECIFICATION.md) | [FRONTEND.md](./docs/FRONTEND.md)
+**Related docs:** [ARCHITECTURE.md](./docs/ARCHITECTURE.md) (current-state) | [Aspirational Architecture](./_bmad-output/planning-artifacts/architecture-aspirational.md) (future plans) | [COMMANDS.md](./docs/COMMANDS.md) | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) | [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md) | [API-CONTRACT-SPECIFICATION.md](./docs/API-CONTRACT-SPECIFICATION.md) | [FRONTEND.md](./docs/FRONTEND.md)
 
 ## Repository Overview
 
@@ -37,25 +37,10 @@ Full GDPR compliance required for EU market expansion:
 
 **Rationale:** Epic 6 (Privacy & Data Management) was moved from Phase 1 to Phase 2 on 2026-02-10 to accelerate MVP delivery. Basic privacy controls in Phase 1 are sufficient for US launch and PMF validation. Full GDPR compliance is deferred to Phase 2 when expanding to EU market.
 
-## Monorepo Structure
-
-```
-apps/
-  ├── front/          # TanStack Start frontend (React 19, full-stack SSR)
-  └── api/            # Node.js backend with Effect-ts and LangGraph
-packages/
-  ├── domain/         # Core types, schemas, repository interfaces
-  ├── contracts/      # Effect/HTTP contracts and schema definitions
-  ├── infrastructure/ # Repository implementations, DB schema (Drizzle)
-  ├── ui/             # Shared React components (shadcn/ui based)
-  ├── lint/           # Shared Biome linting configuration
-  └── typescript-config/
-```
-
 ### Apps
 
 - **front** (`port 3000`): TanStack Start SSR frontend - React 19, TanStack Router/Query/Form/DB, ElectricSQL, shadcn/ui, Tailwind v4
-- **api** (`port 4000`): Effect-ts backend - hexagonal architecture, LangGraph multi-agent, Drizzle + PostgreSQL, Better Auth
+- **api** (`port 4000`): Effect-ts backend - hexagonal architecture, ConversAnalyzer + formula steering pipeline, Drizzle + PostgreSQL, Better Auth
   - Health: `GET /health` | API: `/api/*`
   - Structure: `src/handlers/` (HTTP adapters) → `src/use-cases/` (business logic)
 
@@ -148,7 +133,7 @@ Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
 1. **Contracts** (`packages/contracts`): HTTP API definitions shared between frontend and backend
 2. **Handlers** (`apps/api/src/handlers`): Thin HTTP adapters (controllers/presenters) - no business logic
 3. **Use-Cases** (`apps/api/src/use-cases`): Pure business logic - **main unit test target**
-4. **Domain** (`packages/domain`): Repository interfaces (Context.Tag), entities, types
+4. **Domain** (`packages/domain`): Repository interfaces (Context.Tag), entities, types, errors
 5. **Infrastructure** (`packages/infrastructure`): Repository implementations (Drizzle, Pino, etc.)
 
 **Naming Conventions:**
@@ -226,114 +211,6 @@ Type-safe HTTP API contracts using @effect/platform and @effect/schema.
 
 See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full examples.
 
-### Multi-Agent System (LangGraph)
-
-**Architecture (Story 2.11):** Orchestrator → Nerin (synchronous, returns response) → Analyzer + Scorer (async `Effect.forkDaemon`, every 3rd msg)
-
-**Big Five Framework:** 5 traits × 6 facets = 30 facets total
-- Constants: `packages/domain/src/constants/big-five.ts`
-- Analyzer triggers every 3 messages; scoring computed on-demand from evidence
-
-**Orchestrator Repository (Story 2.4 + 2.11):**
-- Interface: `packages/domain/src/repositories/orchestrator.repository.ts`
-- Graph Interface: `packages/domain/src/repositories/orchestrator-graph.repository.ts`
-- Checkpointer Interface: `packages/domain/src/repositories/checkpointer.repository.ts`
-- Production Layer: `packages/infrastructure/src/repositories/orchestrator.langgraph.repository.ts`
-- Graph Layer: `packages/infrastructure/src/repositories/orchestrator-graph.langgraph.repository.ts`
-
-**LangGraph Effect DI Pattern:**
-```
-OrchestratorRepository (pure Effect, no bridging)
-    └── OrchestratorGraphRepository (bridges Effect → LangGraph async internally)
-            └── CheckpointerRepository (PostgresSaver or MemorySaver)
-            └── NerinAgentRepository, AnalyzerRepository, FacetEvidenceRepository
-```
-- Bridge logic (Effect.runPromise) is **internal** to `OrchestratorGraphLangGraphRepositoryLive`
-- External code only sees Effect-based APIs - no `OrchestratorDependencies` interface exposed
-- Graph compilation happens once during layer construction
-
-**Key Routing Logic (Story 2.11: Async + Offset Steering):**
-1. **Budget Check FIRST** - Throws `BudgetPausedError` if `dailyCostUsed + MESSAGE_COST >= $75`
-2. **Offset Steering (msgs 4, 7, 10...)** - Reads fresh evidence from DB, computes `steeringTarget` + `steeringHint` via outlier detection (`confidence < mean - stddev`). Stored in graph state (checkpointer) for reuse.
-3. **Cached Steering (all other msgs)** - Reuses `facetScores` + `steeringHint` from checkpointer state. No DB read.
-4. **Always Route to Nerin** - Every message gets conversational response with facet-level context
-5. **Async Batch Trigger (msgs 3, 6, 9...)** - `Effect.forkDaemon` fires Analyzer → Scorer in background. HTTP response returns Nerin's response immediately.
-6. **Cold Start (msgs 1-3)** - No steering, no analysis. Nerin uses default exploration patterns.
-
-**Message Cadence (3-message cycle, offset by 1):**
-```
-[N % 3 === 0] BATCH  → nerin (cached steering) → forkDaemon(analyzer + scorer)
-[N % 3 === 1] STEER  → read evidence → fresh steering → nerin
-[N % 3 === 2] COAST  → nerin (cached steering)
-Exception: messages 1-3 → cold start, no steering
-```
-
-**Finalization:** When generating results, `processAnalysis` runs synchronously before score computation and portrait generation, ensuring all messages have evidence regardless of where in the cadence the session ended. This call is idempotent — it short-circuits if no unanalyzed messages exist.
-
-**Error Types:**
-- `BudgetPausedError` - Assessment paused, resume next day (includes `resumeAfter` timestamp)
-- `OrchestrationError` - Generic routing/pipeline failure
-- `PrecisionGapError` - Precision calculation failure (422)
-
-**Nerin Data Flow (Facet-Level Granularity):**
-
-Nerin operates at **facet-level** (30 facets) rather than trait-level (5 traits) for precise conversational steering:
-
-```typescript
-// Router calculates steering from facetScores (only on STEER messages)
-const steeringTarget = getSteeringTarget(facetScores);  // e.g., "orderliness"
-const steeringHint = getSteeringHint(steeringTarget);   // e.g., "Explore how they organize..."
-
-// Nerin receives facet-level data (cached or fresh depending on message position)
-nerinAgent.invoke({
-  sessionId,
-  messages,
-  facetScores,      // 30 facets with scores + confidence
-  steeringHint,     // Natural language guidance
-});
-```
-
-**Data Flow Principle:** Work with primitives (facetScores), derive aggregates (traitScores) on demand.
-- **Input:** Router reads evidence on steering messages only (msgs 4, 7, 10...)
-- **Steering:** Router calculates single weakest outlier facet, caches in graph state
-- **Nerin:** Receives facet-level context for natural conversation
-- **Output:** `{ response: string }` — no confidence/scores in HTTP response (Story 2.11)
-- **Background:** Analyzer + Scorer fire as daemon on batch messages (msgs 3, 6, 9...)
-
-**Use-Case Integration (Story 2.11):**
-```typescript
-// send-message.use-case.ts — lean response, async analysis
-const result = yield* orchestrator.processMessage({
-  sessionId, userMessage, messages, messageCount, dailyCostUsed
-});
-// Returns: { nerinResponse, tokenUsage, costIncurred, shouldAnalyze }
-
-// Fire-and-forget analyzer on batch messages
-if (result.shouldAnalyze) {
-  yield* Effect.forkDaemon(
-    orchestrator.processAnalysis({ sessionId, messages, messageCount })
-  );
-}
-
-return { response: result.nerinResponse };
-```
-
-See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for agent flow diagrams and scoring algorithm.
-
-### Cost Tracking & Rate Limiting (Story 2.5)
-
-**Budget Enforcement:** $75 daily cost limit (configurable via `DAILY_COST_LIMIT` env var)
-**Rate Limiting:** 1 new assessment per user per day (unlimited message resumption)
-
-**CostGuard Repository (Story 2.2.5 + 2.5):**
-- Interface: `packages/domain/src/repositories/cost-guard.repository.ts`
-- Implementation: `packages/infrastructure/src/repositories/cost-guard.redis.repository.ts`
-- Methods:
-  - `incrementDailyCost(userId, costCents)` - Atomic cost tracking
-  - `getDailyCost(userId)` - Get current daily spend (cents)
-  - `canStartAssessment(userId)` - Check if user can start new assessment
-  - `recordAssessmentStart(userId)` - Atomically record assessment start with overflow protection
-
 **Redis Key Patterns:**
 - Cost tracking: `cost:{userId}:{YYYY-MM-DD}` (TTL: 48 hours)
 - Rate limiting: `assessments:{userId}:{YYYY-MM-DD}` (TTL: 48 hours)
@@ -347,31 +224,6 @@ const costCents = Math.ceil(
   (outputTokens / 1_000_000) * 0.015    // $15 per 1M output tokens
 ) * 100;
 ```
-
-**Budget Check Flow (Story 2.4):**
-1. Router node checks: `dailyCostUsed + MESSAGE_COST_ESTIMATE > dailyCostLimit`
-2. If exceeded: Throw `BudgetPausedError` with `resumeAfter` = next day midnight UTC
-3. Session state preserved for resumption
-4. HTTP 503 response with countdown timer
-
-**Rate Limiting Flow (Story 2.5):**
-1. `start-assessment` use-case checks `canStartAssessment(userId)`
-2. If limit exceeded: Throw `RateLimitExceeded` with `resetAt` = next day midnight UTC
-3. HTTP 429 response with retry-after header
-4. Users can resume existing assessments (no rate limit on resume)
-5. Anonymous users bypass rate limiting
-
-**Date Utilities:**
-- `getUTCDateKey()` - Returns `YYYY-MM-DD` for Redis keys
-- `getNextDayMidnightUTC()` - Returns next day 00:00:00 UTC Date object
-- Location: `packages/domain/src/utils/date.utils.ts`
-
-**Structured Logging (Story 2.5):**
-All cost events logged with Pino for analytics:
-- Assessment start: `{ userId, count, dateKey }`
-- Cost increment: `{ userId, costCents, newDailyTotal, dateKey }`
-- Rate limit check: `{ userId, currentCount, limit, canStart, dateKey }`
-- Rate limit exceeded: `{ userId, currentCount, limit, resetAt, dateKey }`
 
 **Error Types:**
 - `RateLimitExceeded` (429) - Daily assessment limit reached
@@ -402,7 +254,7 @@ Use `isRedirect()` in catch blocks within `beforeLoad` to re-throw TanStack Rout
 - **Frontend:** ElectricSQL + TanStack DB for local-first reactive sync
 - **Migrations:** Managed by `drizzle-kit` — run `pnpm db:migrate` to apply, `pnpm db:generate` to create new migrations
 - **Docker:** Migrations run automatically on backend startup via `docker-entrypoint.sh`
-- **Config:** `drizzle.config.ts` at repo root (uses `tablesFilter` to ignore LangGraph `checkpoint_*` tables)
+- **Config:** `drizzle.config.ts` at repo root
 
 **Hard Rule:** No business logic in handlers - all logic belongs in use-cases.
 
@@ -412,7 +264,7 @@ Use `isRedirect()` in catch blocks within `beforeLoad` to re-throw TanStack Rout
 - **Effect-ts**: Functional programming and error handling (latest)
 - **@effect/platform**: Type-safe HTTP contracts and server
 - **@effect/schema**: Runtime validation and serialization
-- **LangGraph + Anthropic SDK**: Multi-agent orchestration and Claude integration
+- **Anthropic SDK**: Claude integration (ConversAnalyzer Haiku + Nerin agent)
 - **Drizzle ORM**: Type-safe database queries with PostgreSQL
 - **Pino**: High-performance structured logging
 - **React 19 + TanStack**: Frontend with SSR, routing, forms, state
@@ -455,12 +307,12 @@ Mock implementations are co-located with their repository implementations using 
 ```
 packages/infrastructure/src/repositories/
 ├── assessment-session.drizzle.repository.ts    # Production implementation
-├── orchestrator.langgraph.repository.ts
+├── conversanalyzer.anthropic.repository.ts
 ├── ...
 └── __mocks__/
     ├── assessment-session.drizzle.repository.ts  # In-memory mock Layer
-    ├── orchestrator.langgraph.repository.ts      # Deterministic mock with business logic
-    └── ...                                       # 11 mock files total
+    ├── conversanalyzer.anthropic.repository.ts   # Deterministic mock with business logic
+    └── ...
 
 packages/domain/src/config/
 ├── app-config.ts                           # Interface
@@ -525,32 +377,6 @@ pnpm docker:test:down       # Manual: stop and clean
 
 See `apps/api/tests/integration/README.md` for details.
 
-## Production Deployment (Story 1.3 ✅)
-
-Railway deployment with automatic CI/CD, Docker multi-stage builds, and health checks.
-
-**Production:** https://api-production-f7de.up.railway.app/health
-
-**Key Features:**
-- Automatic deployment on `master` branch
-- Docker containers with workspace resolution
-- Health check validation endpoint
-- Environment variable configuration in Railway dashboard
-
-For complete deployment guide, see [DEPLOYMENT.md](./docs/DEPLOYMENT.md)
-
-## Completed Stories ✅
-
-Stories that are fully implemented and deployed:
-
-- **Story 1.3**: Production Deployment (Railway + Docker)
-- **Story 1.4**: Docker Compose Development
-- **Story 1.6**: Effect/Platform HTTP Contracts
-- **Story 2.1.1**: CI/CD Pipeline
-- **Story 2.2**: Nerin Agent Implementation (Hexagonal Architecture)
-
-For details on each completed story, see [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md)
-
 ## Git Conventions
 
 Branch naming, commit messages, and component naming follow consistent patterns.
@@ -578,7 +404,7 @@ See [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) for:
 - **Workspace imports** - `@workspace/domain`, `@workspace/contracts`, etc.
 - **Type imports** - Use `import type` for type-only imports (Biome enforced)
 
-**Avoid `as any`** - Use type guards, typed arrays, or `unknown` instead. Acceptable with comment for: test mocks, complex generics (LangGraph), generated files, external library compat.
+**Avoid `as any`** - Use type guards, typed arrays, or `unknown` instead. Acceptable with comment for: test mocks, complex generics, generated files, external library compat.
 
 **Key patterns:**
 - **Branded types** - Type-safe IDs (`UserId`, `SessionId`) prevent accidental mixing
@@ -612,29 +438,3 @@ Components are imported across apps as:
 ```tsx
 import { Button } from "@workspace/ui/components/button";
 ```
-
-## Key Dependencies & Versions
-
-**Requirements:**
-- Node.js >= 20
-- pnpm 10.4.1
-- TypeScript 5.7.3+
-
-**Frontend Stack:**
-- React 19, TanStack Start, TanStack Router, TanStack Query, TanStack Form
-- ElectricSQL, Tailwind CSS 4+, shadcn/ui
-- Effect for error handling
-
-**Backend Stack:**
-- Effect, @effect/platform (HTTP contracts)
-- @effect/schema (runtime validation)
-- LangGraph + Anthropic SDK (multi-agent AI)
-- Drizzle ORM + PostgreSQL (database)
-- Pino (structured logging)
-- Better Auth (authentication)
-
-**Catalog Configuration:**
-
-Versions are centralized in `pnpm-workspace.yaml` to ensure consistency across packages. Always reference the catalog when updating dependencies.
-
-See [ARCHITECTURE.md](./docs/ARCHITECTURE.md#catalog-dependencies) for the complete catalog configuration.
