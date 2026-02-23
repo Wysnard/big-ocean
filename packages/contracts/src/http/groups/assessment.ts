@@ -13,11 +13,13 @@ import {
 } from "@workspace/domain";
 import { Schema as S } from "effect";
 import {
+	AgentInvocationError,
 	AssessmentAlreadyExists,
 	ConcurrentMessageError,
 	ConversationEvidenceError,
+	CostLimitExceeded,
 	DatabaseError,
-	NerinError,
+	MessageRateLimitError,
 	RateLimitExceeded,
 	SessionCompletedError,
 	SessionNotFound,
@@ -174,7 +176,9 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 			.addError(SessionCompletedError, { status: 409 })
 			.addError(ConversationEvidenceError, { status: 500 })
 			.addError(DatabaseError, { status: 500 })
-			.addError(NerinError, { status: 503 }),
+			.addError(AgentInvocationError, { status: 503 })
+			.addError(CostLimitExceeded, { status: 503 })
+			.addError(MessageRateLimitError, { status: 429 }),
 	)
 	.add(
 		HttpApiEndpoint.get("listSessions", "/sessions")

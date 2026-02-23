@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-02-23
+generated: 2026-02-23T12:00
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -46,7 +46,6 @@ development_status:
   # ═══════════════════════════════════════════════════════════════
 
   # EPIC 1: Infrastructure & Auth Setup
-  # All stories completed — epic promoted to done (2026-02-16)
   epic-1: done
   1-1-deploy-infrastructure-to-railway: done
   1-2-integrate-better-auth-for-email-password-authentication: done
@@ -55,7 +54,6 @@ development_status:
   epic-1-retrospective: optional
 
   # EPIC 2: Assessment Backend Services
-  # All stories completed (14/14) — epic promoted to done (2026-02-22)
   epic-2: done
   2-1-session-management-and-persistence: done
   2-2-nerin-agent-setup-and-conversational-quality: done
@@ -79,7 +77,6 @@ development_status:
   epic-3-retrospective: done
 
   # EPIC 4: Frontend Assessment UI
-  # All stories completed (8/8) — epic promoted to done (2026-02-17)
   epic-4: done
   4-1-authentication-ui-sign-up-modal: done
   4-2-assessment-conversation-component: done
@@ -98,17 +95,15 @@ development_status:
   5-3-bidirectional-evidence-highlighting-and-transparency: done
   epic-5-retrospective: done
 
-  # EPIC 6: Privacy & Data Management (PHASE 2 - EU Launch)
-  # Moved to Phase 2 on 2026-02-10 to accelerate Phase 1 MVP
-  # Phase 2 will add full GDPR compliance (encryption at rest, data deletion/portability, audit logging)
+  # EPIC 6: Privacy & Data Management (EU Launch — deferred)
+  # Now tracked as New Epic 7 in epics.md. Kept here for continuity.
   epic-6: backlog
   6-1-server-side-encryption-at-rest-and-tls-in-transit: backlog
   6-2-gdpr-compliance-data-deletion-portability: backlog
   6-3-audit-logging-and-access-control: backlog
   epic-6-retrospective: optional
 
-  # EPIC 7: UI Theme & Visual Identity (PHASE 1 - MVP Visual Identity)
-  # All stories completed (18/18) — epic promoted to done (2026-02-22)
+  # EPIC 7: UI Theme & Visual Identity
   epic-7: done
   7-1-psychedelic-brand-design-tokens: done
   7-2-typography-system: done
@@ -131,9 +126,7 @@ development_status:
   epic-7-retrospective: done
 
   # EPIC 8: Results Page Content Enrichment
-  # Phase 1 (Stories 8.1-8.4, 8.6, 8.7): Static descriptions + layout redesign + personalized portrait — all done
-  # Phase 2 (Story 8.5): Portrait regeneration for paid tier (DEFERRED — requires tier infrastructure)
-  # Note: Epic remains in-progress due to deferred Story 8.5. All Phase 1 stories done.
+  # Story 8.5 deferred — requires tier infrastructure from New Epic 4 (Monetization)
   epic-8: in-progress
   8-1-expand-archetype-descriptions-to-4-5-sentences: done
   8-2-add-level-specific-trait-descriptions: done
@@ -155,15 +148,30 @@ development_status:
 #   Priority 5 (Full Validation): Manual testing phase — not a formal story
 
 # ═══════════════════════════════════════════════════════════════
-# PHASE 2: Two-Tier Architecture Redesign
+# PHASE 2: Two-Tier Architecture + Innovation Strategy
 # ═══════════════════════════════════════════════════════════════
 # Architecture: _bmad-output/planning-artifacts/architecture.md
-# Epics/Stories: _bmad-output/planning-artifacts/epics.md
-# Replaces LangGraph pipeline with conversanalyzer (Haiku) + finanalyzer (Sonnet)
-# + formula-driven context steering + two evidence tables
+# Architecture (pipeline): _bmad-output/planning-artifacts/architecture-assessment-pipeline.md
+# Epics/Stories: _bmad-output/planning-artifacts/epics.md (7 new epics, 29 stories)
+# Replaces LangGraph with conversanalyzer (Haiku) + finanalyzer (Sonnet)
+# + formula-driven steering + monetization + relationships + viral mechanics
+#
+# NUMBERING: Phase 2 epics continue from Phase 1 numbering (9+).
+# Cross-reference: epics.md "New Epic N" = sprint-status "Epic N+8"
+#   New Epic 1 (Conversational Assessment) = Epics 9+10 (done)
+#   New Epic 2 (Finalization & Scoring) = Epic 11
+#   New Epic 3 (Results Experience) = Epic 12
+#   New Epic 4 (Monetization & Full Portrait) = Epic 13
+#   New Epic 5 (Relationship Analysis) = Epic 14
+#   New Epic 6 (Growth & Operational Safety) = Epic 15
+#   New Epic 7 (Privacy & Compliance) = Epic 6 (already tracked above)
 
-  # EPIC 9 (New Epic 1): Start a Conversation with Nerin
-  # All stories completed (5/5) — epic promoted to done (2026-02-23)
+  # ───────────────────────────────────────────────────────────────
+  # NEW EPIC 1: Conversational Assessment (DONE)
+  # Session/auth/chat/ConversAnalyzer/steering/cost — split across Epics 9+10
+  # ───────────────────────────────────────────────────────────────
+
+  # Epic 9: Start a Conversation with Nerin (Stories 1.1-1.4 scope)
   epic-9: done
   9-1-anonymous-assessment-start: done
   9-2-send-message-and-nerin-response: done
@@ -172,32 +180,77 @@ development_status:
   9-5-chat-interface-and-conversation-ux: done
   epic-9-retrospective: optional
 
-  # EPIC 10 (New Epic 2): Conversation Intelligence
-  # Conversanalyzer (Haiku), formula functions, steering, cost guards
-  epic-10: in-progress
+  # Epic 10: Conversation Intelligence (Stories 1.5-1.8 scope)
+  epic-10: done
   10-1-conversation-evidence-schema-and-repository: done
   10-2-conversanalyzer-haiku-analysis-on-every-message: done
   10-3-formula-functions-facet-metrics-and-steering-target: done
   10-4-steering-integration-smart-nerin-responses: done
   10-5-message-count-progress-and-session-guards: done
-  10-6-cost-tracking-and-rate-limiting: backlog
+  10-6-cost-tracking-and-rate-limiting: done
   epic-10-retrospective: optional
 
-  # EPIC 11 (New Epic 3): Personality Portrait & Results
-  # Finanalyzer (Sonnet), scoring, OCEAN code, portrait generation, results page
+  # ───────────────────────────────────────────────────────────────
+  # NEW EPIC 2: Finalization & Scoring (Epic 11)
+  # FinAnalyzer (Sonnet), score computation, OCEAN code, archetype, pipeline
+  # Stories: 2.1-2.5 in epics.md
+  # ───────────────────────────────────────────────────────────────
   epic-11: backlog
-  11-1-finalization-evidence-schema-and-repository: backlog
-  11-2-assessment-results-schema-and-repository: backlog
-  11-3-finanalyzer-full-re-analysis-at-finalization: backlog
-  11-4-score-computation-and-ocean-code-generation: backlog
-  11-5-portrait-generation: backlog
-  11-6-generate-results-endpoint-and-finalization-pipeline: backlog
-  11-7-results-page-and-profile-viewing: backlog
+  11-1-finalization-trigger-and-auth-gate: backlog
+  11-2-finanalyzer-sonnet-integration: backlog
+  11-3-score-computation-and-ocean-code-generation: backlog
+  11-4-archetype-system: backlog
+  11-5-finalization-pipeline-orchestration: backlog
   epic-11-retrospective: optional
 
-  # EPIC 12 (New Epic 4): Sharing & Public Profile
-  # Shareable links, public archetype view, viral loop CTA
+  # ───────────────────────────────────────────────────────────────
+  # NEW EPIC 3: Results Experience (Epic 12)
+  # Results page, evidence highlighting, teaser portrait
+  # Stories: 3.1-3.3 in epics.md
+  # ───────────────────────────────────────────────────────────────
   epic-12: backlog
-  12-1-shareable-link-generation: backlog
-  12-2-public-archetype-view: backlog
+  12-1-results-page-and-trait-display: backlog
+  12-2-bidirectional-evidence-highlighting: backlog
+  12-3-teaser-portrait-generation-and-display: backlog
   epic-12-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # NEW EPIC 4: Monetization & Full Portrait (Epic 13)
+  # Polar.sh, PWYW, purchase events, full portrait async generation
+  # Stories: 4.1-4.3 in epics.md
+  # ───────────────────────────────────────────────────────────────
+  epic-13: backlog
+  13-1-purchase-events-schema-and-capability-derivation: backlog
+  13-2-polar-sh-checkout-and-webhook-integration: backlog
+  13-3-full-portrait-async-generation: backlog
+  epic-13-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # NEW EPIC 5: Relationship Analysis (Epic 14)
+  # Credits, invitations, invitee flow, pair analysis
+  # Stories: 5.1-5.4 in epics.md
+  # ───────────────────────────────────────────────────────────────
+  epic-14: backlog
+  14-1-relationship-credits-and-purchase-flow: backlog
+  14-2-invitation-system: backlog
+  14-3-invitee-assessment-flow: backlog
+  14-4-relationship-analysis-generation: backlog
+  epic-14-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # NEW EPIC 6: Growth & Operational Safety (Epic 15)
+  # Shareable profile, archetype cards, waitlist, circuit breaker
+  # Stories: 6.1-6.3 in epics.md
+  # ───────────────────────────────────────────────────────────────
+  epic-15: backlog
+  15-1-shareable-profile-and-public-url: backlog
+  15-2-archetype-card-generation: backlog
+  15-3-waitlist-and-circuit-breaker: backlog
+  epic-15-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # NEW EPIC 7: Privacy & Compliance (EU Launch)
+  # GDPR, encryption at rest, audit logging
+  # Stories: 7.1-7.3 in epics.md — tracked under Epic 6 above
+  # ───────────────────────────────────────────────────────────────
+  # See epic-6 section above (stories 6-1, 6-2, 6-3)

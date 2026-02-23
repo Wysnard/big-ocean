@@ -77,5 +77,9 @@ export const CostGuardRedisRepositoryLive = Layer.succeed(
 					);
 				}
 			}),
+
+		checkDailyBudget: (_key: string, _limitCents: number) => Effect.void,
+
+		checkMessageRateLimit: (_key: string) => Effect.void,
 	}),
 );

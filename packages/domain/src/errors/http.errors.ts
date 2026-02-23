@@ -63,8 +63,21 @@ export class AssessmentAlreadyExists extends S.TaggedError<AssessmentAlreadyExis
 export class CostLimitExceeded extends S.TaggedError<CostLimitExceeded>()("CostLimitExceeded", {
 	dailySpend: S.Number,
 	limit: S.Number,
+	resumeAfter: S.DateTimeUtc,
 	message: S.String,
 }) {}
+
+/**
+ * Message rate limit error (429)
+ * Per-user message rate limit exceeded (2 messages/minute)
+ */
+export class MessageRateLimitError extends S.TaggedError<MessageRateLimitError>()(
+	"MessageRateLimitError",
+	{
+		retryAfter: S.Number,
+		message: S.String,
+	},
+) {}
 
 /**
  * Profile not found error (404)

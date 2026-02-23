@@ -18,6 +18,7 @@ vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repos
 vi.mock("@workspace/infrastructure/repositories/assessment-message.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/conversanalyzer.anthropic.repository");
 vi.mock("@workspace/infrastructure/repositories/conversation-evidence.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/cost-guard.redis.repository");
 
 import { describe, expect, it } from "@effect/vitest";
 import {
@@ -26,6 +27,7 @@ import {
 	AssessmentSessionRepository,
 	ConversanalyzerRepository,
 	ConversationEvidenceRepository,
+	CostGuardRepository,
 	LoggerRepository,
 	NerinAgentRepository,
 } from "@workspace/domain";
@@ -33,6 +35,7 @@ import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructur
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
 import { ConversanalyzerAnthropicRepositoryLive } from "@workspace/infrastructure/repositories/conversanalyzer.anthropic.repository";
 import { ConversationEvidenceDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/conversation-evidence.drizzle.repository";
+import { CostGuardRedisRepositoryLive } from "@workspace/infrastructure/repositories/cost-guard.redis.repository";
 import { Effect, Exit, Layer, Redacted } from "effect";
 import { sendMessage } from "../send-message.use-case";
 
@@ -87,6 +90,7 @@ type TestServices =
 	| AssessmentMessageRepository
 	| ConversanalyzerRepository
 	| ConversationEvidenceRepository
+	| CostGuardRepository
 	| LoggerRepository
 	| NerinAgentRepository
 	| AppConfig;
@@ -98,6 +102,7 @@ const TestLayer = Layer.mergeAll(
 	AssessmentMessageDrizzleRepositoryLive,
 	ConversanalyzerAnthropicRepositoryLive,
 	ConversationEvidenceDrizzleRepositoryLive,
+	CostGuardRedisRepositoryLive,
 	MockLoggerLive,
 	MockNerinLive,
 	MockConfigLive,

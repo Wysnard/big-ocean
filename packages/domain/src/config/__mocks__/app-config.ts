@@ -40,6 +40,7 @@ export const mockAppConfig: AppConfigService = {
 	conversanalyzerModelId: "claude-haiku-4-5-20251001",
 	finanalyzerModelId: "claude-sonnet-4-6",
 	portraitGeneratorModelId: "claude-sonnet-4-6",
+	messageRateLimit: 2,
 };
 
 export const createTestAppConfigLayer = () => Layer.succeed(AppConfig, mockAppConfig);

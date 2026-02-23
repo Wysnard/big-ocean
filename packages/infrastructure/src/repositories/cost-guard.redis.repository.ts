@@ -11,8 +11,8 @@
  * TTL: 48 hours (auto-cleanup after day expires)
  */
 
-import { RateLimitExceeded } from "@workspace/contracts";
 import {
+	AppConfig,
 	CostGuardRepository,
 	getNextDayMidnightUTC,
 	getUTCDateKey,
@@ -20,6 +20,11 @@ import {
 	RedisOperationError,
 	RedisRepository,
 } from "@workspace/domain";
+import {
+	CostLimitExceeded,
+	MessageRateLimitError,
+	RateLimitExceeded,
+} from "@workspace/domain/errors/http.errors";
 import { DateTime, Effect, Layer } from "effect";
 
 /**
@@ -37,13 +42,15 @@ const DAILY_ASSESSMENT_LIMIT = 1;
 /**
  * CostGuard Repository Layer - Uses Redis for storage
  *
- * Layer type: Layer<CostGuardRepository, never, RedisRepository | LoggerRepository>
+ * Layer type: Layer<CostGuardRepository, never, RedisRepository | LoggerRepository | AppConfig>
  */
 export const CostGuardRedisRepositoryLive = Layer.effect(
 	CostGuardRepository,
 	Effect.gen(function* () {
 		const redis = yield* RedisRepository;
 		const logger = yield* LoggerRepository;
+		const config = yield* AppConfig;
+		const messageRateLimit = config.messageRateLimit;
 
 		return CostGuardRepository.of({
 			incrementDailyCost: (userId: string, costCents: number) =>
@@ -213,6 +220,59 @@ export const CostGuardRedisRepositoryLive = Layer.effect(
 						dateKey,
 					});
 				}),
+
+			checkDailyBudget: (key: string, limitCents: number) =>
+				Effect.gen(function* () {
+					if (!key || key.trim() === "") {
+						return yield* Effect.fail(new RedisOperationError("key is required for checkDailyBudget"));
+					}
+
+					const dateKey = getUTCDateKey();
+					const redisKey = `cost:${key}:${dateKey}`;
+					const value = yield* redis.get(redisKey);
+					const dailyCostCents = value ? parseInt(value, 10) : 0;
+
+					if (dailyCostCents >= limitCents) {
+						return yield* Effect.fail(
+							new CostLimitExceeded({
+								dailySpend: dailyCostCents,
+								limit: limitCents,
+								resumeAfter: DateTime.unsafeFromDate(getNextDayMidnightUTC()),
+								message: "Daily cost limit exceeded",
+							}),
+						);
+					}
+				}),
+
+			checkMessageRateLimit: (key: string) =>
+				Effect.gen(function* () {
+					const bucket = Math.floor(Date.now() / 60000);
+					const redisKey = `msgrate:${key}:${bucket}`;
+					const count = yield* redis.incr(redisKey);
+
+					// Set TTL on first increment (2min safety margin)
+					if (count === 1) {
+						yield* redis.expire(redisKey, 120);
+					}
+
+					if (count > messageRateLimit) {
+						const secondsUntilExpiry = 60 - (Math.floor(Date.now() / 1000) % 60);
+
+						logger.warn("Message rate limit exceeded", {
+							key,
+							event: "message_rate_limited",
+							count,
+							limit: messageRateLimit,
+						});
+
+						return yield* Effect.fail(
+							new MessageRateLimitError({
+								retryAfter: secondsUntilExpiry,
+								message: "Rate limit exceeded: maximum 2 messages per minute",
+							}),
+						);
+					}
+				}),
 		});
 	}),
 );
@@ -282,6 +342,10 @@ export const createTestCostGuardRepository = () => {
 					);
 				}
 			}),
+
+		checkDailyBudget: (_key: string, _limitCents: number) => Effect.void,
+
+		checkMessageRateLimit: (_key: string) => Effect.void,
 	});
 };
 
