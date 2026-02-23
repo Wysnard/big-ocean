@@ -77,6 +77,8 @@ services:
       MESSAGE_THRESHOLD: "3"
       # Short wait so integration tests don't wait 10s for portrait reveal (Story 7.18)
       PORTRAIT_WAIT_MIN_MS: "2000"
+      # High message rate limit so integration tests can send multiple messages quickly
+      MESSAGE_RATE_LIMIT: "100"
       # Dummy API key (required for env validation, but MOCK_LLM=true prevents actual usage)
       ANTHROPIC_API_KEY: "sk-test-dummy-key-for-integration-tests"
       # Better Auth configuration

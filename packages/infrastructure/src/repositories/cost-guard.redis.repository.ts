@@ -12,6 +12,7 @@
  */
 
 import {
+	AppConfig,
 	CostGuardRepository,
 	getNextDayMidnightUTC,
 	getUTCDateKey,
@@ -39,20 +40,17 @@ const TTL_SECONDS = 48 * 60 * 60;
 const DAILY_ASSESSMENT_LIMIT = 1;
 
 /**
- * Per-user message rate limit: 2 messages per minute (fixed-window)
- */
-const MESSAGE_RATE_LIMIT = 2;
-
-/**
  * CostGuard Repository Layer - Uses Redis for storage
  *
- * Layer type: Layer<CostGuardRepository, never, RedisRepository | LoggerRepository>
+ * Layer type: Layer<CostGuardRepository, never, RedisRepository | LoggerRepository | AppConfig>
  */
 export const CostGuardRedisRepositoryLive = Layer.effect(
 	CostGuardRepository,
 	Effect.gen(function* () {
 		const redis = yield* RedisRepository;
 		const logger = yield* LoggerRepository;
+		const config = yield* AppConfig;
+		const messageRateLimit = config.messageRateLimit;
 
 		return CostGuardRepository.of({
 			incrementDailyCost: (userId: string, costCents: number) =>
@@ -257,14 +255,14 @@ export const CostGuardRedisRepositoryLive = Layer.effect(
 						yield* redis.expire(redisKey, 120);
 					}
 
-					if (count > MESSAGE_RATE_LIMIT) {
+					if (count > messageRateLimit) {
 						const secondsUntilExpiry = 60 - (Math.floor(Date.now() / 1000) % 60);
 
 						logger.warn("Message rate limit exceeded", {
 							key,
 							event: "message_rate_limited",
 							count,
-							limit: MESSAGE_RATE_LIMIT,
+							limit: messageRateLimit,
 						});
 
 						return yield* Effect.fail(

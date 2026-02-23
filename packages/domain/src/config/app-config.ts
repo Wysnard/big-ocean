@@ -94,6 +94,9 @@ export interface AppConfigService {
 
 	/** Model ID for portrait generation */
 	readonly portraitGeneratorModelId: string;
+
+	/** Per-user message rate limit per minute (Story 2.5) */
+	readonly messageRateLimit: number;
 }
 
 /**
