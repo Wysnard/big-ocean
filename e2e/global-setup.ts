@@ -77,16 +77,9 @@ async function createAuthState(): Promise<void> {
 		console.log(`[global-setup] Session linked to user ${linkedUserId} via hook`);
 	}
 
-	// 4. Seed facet_evidence so results page renders
-	// Non-fatal: facet_evidence table may not exist in Phase 2 schema (Epic 10+)
-	try {
-		await seedSessionForResults(sessionId);
-		console.log("[global-setup] Seeded evidence data for results");
-	} catch (err) {
-		console.warn(
-			`[global-setup] Skipping evidence seed (table may not exist): ${err instanceof Error ? err.message : err}`,
-		);
-	}
+	// 4. Seed conversation_evidence so results page renders
+	await seedSessionForResults(sessionId);
+	console.log("[global-setup] Seeded evidence data for results");
 
 	// 5. Send a user message via the API so messageCount reaches
 	//    MESSAGE_THRESHOLD and the profile assessment card shows "completed"

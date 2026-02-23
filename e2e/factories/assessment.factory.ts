@@ -124,12 +124,14 @@ export async function toggleProfileVisibility(
 /**
  * Seed a session with enough data for the results page to render:
  * - 2 assessment_message rows (user + assistant)
- * - 30 facet_evidence rows (one per facet)
+ * - 30 conversation_evidence rows (one per facet, Story 9.1 schema)
  * - Updates session to status=completed, message_count=2
  */
 export async function seedSessionForResults(sessionId: string): Promise<void> {
 	const pool = new Pool(TEST_DB_CONFIG);
 	const client = await pool.connect();
+
+	const domains = ["work", "relationships", "family", "leisure", "solo", "other"];
 
 	try {
 		await client.query("BEGIN");
@@ -153,19 +155,18 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 			],
 		);
 
-		// 2. Insert 30 facet_evidence rows (one per facet, all linked to the user message)
-		const userMsg = "I enjoy spending time with close friends and exploring new ideas.";
-
-		for (const facet of ALL_FACETS) {
-			const score = 12 + Math.floor(Math.random() * 6); // 12-17 range
-			const confidence = 60 + Math.floor(Math.random() * 30); // 60-89 range
-			const quote = userMsg.slice(0, 20);
+		// 2. Insert 30 conversation_evidence rows (one per facet, Story 9.1 schema)
+		for (let i = 0; i < ALL_FACETS.length; i++) {
+			const facet = ALL_FACETS[i];
+			const score = 10 + Math.floor(Math.random() * 8); // 10-17 range (0-20 scale)
+			const confidence = (0.6 + Math.random() * 0.3).toFixed(3); // 0.600-0.899
+			const domain = domains[i % domains.length];
 
 			await client.query(
-				`INSERT INTO facet_evidence
-				 (assessment_message_id, facet_name, score, confidence, quote, highlight_start, highlight_end, created_at)
-				 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-				[userMsgId, facet, score, confidence, quote, 0, 20],
+				`INSERT INTO conversation_evidence
+				 (assessment_session_id, assessment_message_id, bigfive_facet, score, confidence, domain, created_at)
+				 VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+				[sessionId, userMsgId, facet, score, confidence, domain],
 			);
 		}
 
