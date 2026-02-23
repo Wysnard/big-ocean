@@ -229,6 +229,7 @@ describe("sendMessage Use Case", () => {
 	beforeEach(() => {
 		mockSessionRepo.getSession.mockReturnValue(Effect.succeed(mockActiveSession));
 		mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(1));
+		mockSessionRepo.updateSession.mockReturnValue(Effect.succeed(mockActiveSession));
 		mockSessionRepo.acquireSessionLock.mockReturnValue(Effect.void);
 		mockSessionRepo.releaseSessionLock.mockReturnValue(Effect.void);
 
@@ -1209,6 +1210,63 @@ describe("sendMessage Use Case", () => {
 				}).pipe(Effect.provide(createTestLayer())),
 			);
 		});
+	});
+
+	describe("Finalization trigger (Story 11.1)", () => {
+		it.effect("should update session status to 'finalizing' when isFinalTurn is true", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.incrementMessageCount.mockReturnValue(
+					Effect.succeed(FREE_TIER_MESSAGE_THRESHOLD),
+				);
+				mockSessionRepo.updateSession.mockReturnValue(
+					Effect.succeed({ ...mockActiveSession, status: "finalizing" }),
+				);
+
+				const result = yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Final message",
+				});
+
+				expect(result.isFinalTurn).toBe(true);
+				expect(mockSessionRepo.updateSession).toHaveBeenCalledWith("session_test_123", {
+					status: "finalizing",
+				});
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("should NOT update session status when isFinalTurn is false", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.incrementMessageCount.mockReturnValue(
+					Effect.succeed(FREE_TIER_MESSAGE_THRESHOLD - 1),
+				);
+
+				yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Normal message",
+				});
+
+				expect(mockSessionRepo.updateSession).not.toHaveBeenCalled();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("should reject messages when session status is 'finalizing'", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({ ...mockActiveSession, status: "finalizing" }),
+				);
+
+				const exit = yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "Test",
+				}).pipe(Effect.exit);
+
+				expect(exit._tag).toBe("Failure");
+				if (exit._tag === "Failure") {
+					expect(String(exit.cause)).toContain("SessionCompletedError");
+				}
+				expect(mockMessageRepo.saveMessage).not.toHaveBeenCalled();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
 	});
 
 	describe("Farewell winding-down (Story 10.5)", () => {

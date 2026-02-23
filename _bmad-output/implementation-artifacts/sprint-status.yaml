@@ -195,8 +195,8 @@ development_status:
   # FinAnalyzer (Sonnet), score computation, OCEAN code, archetype, pipeline
   # Stories: 2.1-2.5 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-11: backlog
-  11-1-finalization-trigger-and-auth-gate: backlog
+  epic-11: in-progress
+  11-1-finalization-trigger-and-auth-gate: done
   11-2-finanalyzer-sonnet-integration: backlog
   11-3-score-computation-and-ocean-code-generation: backlog
   11-4-archetype-system: backlog

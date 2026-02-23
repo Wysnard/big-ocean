@@ -20,17 +20,12 @@ test.describe("owner access granted", () => {
 		});
 	});
 
-	test("chat resume loads existing conversation or shows completed state", async ({ page }) => {
+	test("chat resume redirects completed session to results", async ({ page }) => {
+		// Story 11.1: Completed sessions at /chat are redirected to /results
 		await page.goto(`/chat?sessionId=${testSessionId}`);
 
-		// Session may be completed (messageCount >= threshold) → portrait wait screen or chat bubbles
-		const chatBubble = page.locator("[data-slot='chat-bubble']").first();
-		const portraitWait = page.locator("[data-slot='portrait-wait-screen']");
-
-		await expect(chatBubble.or(portraitWait)).toBeVisible({ timeout: 15_000 });
-
-		// URL should still reference the same sessionId
-		const currentSessionId = new URL(page.url()).searchParams.get("sessionId");
-		expect(currentSessionId).toBe(testSessionId);
+		// Re-entry routing: completed session → redirect to /results/$sessionId
+		await page.waitForURL(/\/results\//, { timeout: 15_000 });
+		expect(page.url()).toContain(testSessionId);
 	});
 });

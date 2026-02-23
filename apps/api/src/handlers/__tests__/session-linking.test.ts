@@ -144,7 +144,7 @@ describe("Session Linking (Story 9.4)", () => {
 		it("partial unique index exists in schema (user_id WHERE NOT NULL)", () => {
 			// The database schema enforces one session per user via partial unique index
 			// This is the ultimate enforcement — even if linking logic has bugs, DB prevents duplicate assignments
-			expect(schemaSource).toContain("assessment_session_user_id_unique");
+			expect(schemaSource).toContain("assessment_session_user_lifetime_unique");
 			expect(schemaSource).toContain("user_id IS NOT NULL");
 		});
 

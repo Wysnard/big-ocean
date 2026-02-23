@@ -2,10 +2,13 @@
  * Get Assessment Results Use Case
  *
  * Business logic for retrieving final assessment results.
+ * Read-only after Story 11.1 — no lazy finalization. If session is not
+ * "completed", returns SessionNotCompleted error.
+ *
  * Fetches evidence, computes scores on-demand via pure domain functions,
  * generates OCEAN code, looks up archetype, and computes overall confidence.
  *
- * Dependencies: AssessmentSessionRepository, FacetEvidenceRepository, LoggerRepository, OrchestratorRepository
+ * Dependencies: AssessmentSessionRepository, FacetEvidenceRepository, LoggerRepository
  */
 
 import {
@@ -15,7 +18,6 @@ import {
 	aggregateFacetScores,
 	BIG_FIVE_TRAITS,
 	calculateConfidenceFromFacetScores,
-	type DomainMessage,
 	deriveTraitScores,
 	extract4LetterCode,
 	FACET_TO_TRAIT,
@@ -25,9 +27,8 @@ import {
 	generateOceanCode,
 	LoggerRepository,
 	lookupArchetype,
-	OrchestratorRepository,
-	PortraitGeneratorRepository,
 	PublicProfileRepository,
+	SessionNotCompleted,
 	SessionNotFound,
 	TRAIT_LETTER_MAP,
 	type TraitResult,
@@ -67,31 +68,27 @@ const mapScoreToLevel = (traitName: string, score: number): string => {
 };
 
 /**
- * Get Assessment Results Use Case
+ * Get Assessment Results Use Case (read-only after Story 11.1)
  *
- * 1. Validates session exists
- * 2. Fetches messages for finalization
- * 3. Runs synchronous processAnalysis to ensure all messages have evidence
- * 4. Fetches evidence via FacetEvidenceRepository
- * 5. Computes facet/trait scores on-demand via pure domain functions
- * 6. Generates OCEAN codes, looks up archetype
- * 7. Computes overall confidence (mean of all facet confidences)
+ * 1. Validates session exists and is completed
+ * 2. Fetches evidence via FacetEvidenceRepository
+ * 3. Computes facet/trait scores on-demand via pure domain functions
+ * 4. Generates OCEAN codes, looks up archetype
+ * 5. Computes overall confidence (mean of all facet confidences)
  */
 export const getResults = (input: GetResultsInput) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const evidenceRepo = yield* FacetEvidenceRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
-		const orchestrator = yield* OrchestratorRepository;
-		const portraitGenerator = yield* PortraitGeneratorRepository;
 		const profileRepo = yield* PublicProfileRepository;
 		const config = yield* AppConfig;
 		const logger = yield* LoggerRepository;
 
-		// 1. Validate session exists (throws SessionNotFound if missing)
+		// 1. Validate session exists
 		const session = yield* sessionRepo.getSession(input.sessionId);
 
-		// Linked sessions are private to their owner.
+		// Ownership guard
 		if (session.userId != null && session.userId !== input.authenticatedUserId) {
 			return yield* Effect.fail(
 				new SessionNotFound({
@@ -101,37 +98,21 @@ export const getResults = (input: GetResultsInput) =>
 			);
 		}
 
-		// 2. Fetch messages (needed for finalization analysis and portrait generation)
-		const messages = yield* messageRepo.getMessages(input.sessionId);
-		const userMessageCount = messages.filter((m) => m.role === "user").length;
-
-		// 3. Synchronous finalization analysis — ensure all messages have evidence
-		// before computing scores. processAnalysis is idempotent: it diffs evidence DB
-		// vs message list and short-circuits if no unanalyzed messages exist.
-		const domainMessages: DomainMessage[] = messages.map((m) => ({
-			id: m.id,
-			role: m.role,
-			content: m.content,
-		}));
-
-		yield* orchestrator
-			.processAnalysis({
-				sessionId: input.sessionId,
-				messages: domainMessages,
-				messageCount: userMessageCount,
-			})
-			.pipe(
-				Effect.catchAll((err) =>
-					Effect.sync(() =>
-						logger.error("Finalization analysis failed", {
-							sessionId: input.sessionId,
-							error: String(err),
-						}),
-					),
-				),
+		// 2. Guard: session must be completed (Story 11.1 — no lazy finalization)
+		if (session.status !== "completed") {
+			return yield* Effect.fail(
+				new SessionNotCompleted({
+					sessionId: input.sessionId,
+					currentStatus: session.status,
+					message: `Session is '${session.status}', results are not ready yet`,
+				}),
 			);
+		}
 
-		// 4. Fetch evidence and compute scores on-demand (now reflects all messages)
+		// 3. Fetch messages for count
+		const messages = yield* messageRepo.getMessages(input.sessionId);
+
+		// 4. Fetch evidence and compute scores on-demand
 		const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
 		const facetScoresMap = aggregateFacetScores(evidence);
 		const traitScoresMap = deriveTraitScores(facetScoresMap);
@@ -165,36 +146,10 @@ export const getResults = (input: GetResultsInput) =>
 			confidence: facetScoresMap[facetName].confidence,
 		}));
 
-		// 10. Portrait generation — lazy, one-time per session
-		// Treat empty strings as null so portrait re-triggers on next visit
-		let personalDescription: string | null = session.personalDescription?.trim()
+		// 10. Read stored portrait description
+		const personalDescription = session.personalDescription?.trim()
 			? session.personalDescription
 			: null;
-
-		if (personalDescription === null && userMessageCount >= config.freeTierMessageThreshold) {
-			personalDescription = yield* portraitGenerator
-				.generatePortrait({
-					sessionId: input.sessionId,
-					facetScoresMap,
-					allEvidence: evidence,
-					archetypeName: archetype.name,
-					archetypeDescription: archetype.description,
-					oceanCode5,
-					messages: domainMessages,
-				})
-				.pipe(
-					Effect.tap((portrait) =>
-						sessionRepo.updateSession(input.sessionId, { personalDescription: portrait }),
-					),
-					Effect.catchAll((err) => {
-						logger.error("Portrait generation failed", {
-							sessionId: input.sessionId,
-							error: String(err),
-						});
-						return Effect.succeed(null);
-					}),
-				);
-		}
 
 		// 11. Ensure public profile exists for authenticated users (private by default)
 		let existingProfile = yield* profileRepo
@@ -212,7 +167,7 @@ export const getResults = (input: GetResultsInput) =>
 				.pipe(Effect.catchAll(() => Effect.succeed(null)));
 		}
 
-		logger.info("Assessment results generated", {
+		logger.info("Assessment results retrieved", {
 			sessionId: input.sessionId,
 			evidenceCount: evidence.length,
 			oceanCode5,
@@ -220,17 +175,6 @@ export const getResults = (input: GetResultsInput) =>
 			archetypeName: archetype.name,
 			overallConfidence,
 			hasPortrait: personalDescription !== null,
-			traitScores: Object.fromEntries(
-				BIG_FIVE_TRAITS.map((t) => [
-					t,
-					{ score: traitScoresMap[t].score, confidence: traitScoresMap[t].confidence },
-				]),
-			),
-			facetScores: Object.fromEntries(
-				(Object.keys(facetScoresMap) as FacetName[])
-					.filter((f) => facetScoresMap[f].confidence > 0)
-					.map((f) => [f, { score: facetScoresMap[f].score, confidence: facetScoresMap[f].confidence }]),
-			),
 		});
 
 		return {

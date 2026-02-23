@@ -31,9 +31,11 @@ export function ChatAuthGate({ sessionId }: ChatAuthGateProps) {
 	const handleAuthSuccess = () => {
 		clearPendingResultsGateSession(sessionId);
 
-		// Story 9.4: Navigate to /chat with sessionId — beforeLoad verifies session
-		// ownership and redirects to the user's real session if linking failed (conflict).
-		navigate({ to: "/chat", search: { sessionId } });
+		// Story 11.1: Navigate to finalize route after auth — triggers generate-results
+		navigate({
+			to: "/finalize/$assessmentSessionId",
+			params: { assessmentSessionId: sessionId },
+		});
 	};
 
 	return (

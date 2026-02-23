@@ -19,11 +19,32 @@ import {
 	StartAssessmentResponseSchema,
 } from "@workspace/contracts";
 import { Schema } from "effect";
+import pg from "pg";
 import { describe, expect, test } from "vitest";
 
 // API URL from environment (set by vitest.config.integration.ts)
 const API_URL = process.env.API_URL || "http://localhost:4001";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+
+// Test DB config — matches compose.test.yaml postgres-test service
+const TEST_DB_URL = "postgresql://test_user:test_password@localhost:5433/bigocean_test";
+
+/**
+ * Story 11.1: Complete a finalizing session via direct DB update.
+ * Used in integration tests where generate-results requires auth
+ * but the test uses anonymous sessions.
+ */
+async function completeSessionViaDb(sessionId: string): Promise<void> {
+	const pool = new pg.Pool({ connectionString: TEST_DB_URL });
+	try {
+		await pool.query(
+			`UPDATE assessment_session SET status = 'completed', finalization_progress = 'completed', updated_at = NOW() WHERE id = $1`,
+			[sessionId],
+		);
+	} finally {
+		await pool.end();
+	}
+}
 
 /**
  * Helper to make JSON POST requests
@@ -250,6 +271,10 @@ describe("GET /api/assessment/:sessionId/results", () => {
 		const thirdDecoded = Schema.decodeUnknownSync(SendMessageResponseSchema)(thirdMsgData);
 		expect(thirdDecoded.isFinalTurn).toBe(true);
 
+		// Story 11.1: Session is now "finalizing". generate-results requires auth,
+		// so for this anonymous integration test we complete the session via DB directly.
+		await completeSessionViaDb(sessionId);
+
 		// Fetch results
 		const resultsResponse = await fetch(`${API_URL}/api/assessment/${sessionId}/results`);
 
@@ -316,11 +341,11 @@ describe("GET /api/assessment/:sessionId/results", () => {
 		expect(decoded.overallConfidence).toBeGreaterThanOrEqual(0);
 		expect(decoded.overallConfidence).toBeLessThanOrEqual(100);
 
-		// Portrait generation (FREE_TIER_MESSAGE_THRESHOLD=3, 3 user messages sent)
-		// Mock portrait generator returns deterministic text
-		expect(decoded.personalDescription).toBeDefined();
-		expect(typeof decoded.personalDescription).toBe("string");
-		expect((decoded.personalDescription as string).length).toBeGreaterThan(0);
+		// Story 11.1: Portrait generation is now handled by the finalization pipeline
+		// (Stories 11.2-11.5). The placeholder pipeline doesn't generate portraits,
+		// so personalDescription is null when session is completed via DB seeding.
+		// This assertion will be updated when real portrait generation is implemented.
+		expect(decoded.personalDescription).toBeNull();
 	});
 
 	test("returns 404 for non-existent session", async () => {
@@ -331,28 +356,16 @@ describe("GET /api/assessment/:sessionId/results", () => {
 		expect(data._tag).toBe("SessionNotFound");
 	});
 
-	test("returns valid results even with default scores (no messages sent)", async () => {
-		// Create session but don't send any messages
+	test("returns 409 SessionNotCompleted for non-completed session (Story 11.1)", async () => {
+		// Story 11.1: get-results is read-only — only works on completed sessions
 		const startResponse = await postJson("/api/assessment/start", {});
 		const { sessionId } = await startResponse.json();
 
 		const resultsResponse = await fetch(`${API_URL}/api/assessment/${sessionId}/results`);
 
-		expect(resultsResponse.status).toBe(200);
+		expect(resultsResponse.status).toBe(409);
 		const data = await resultsResponse.json();
-
-		// Should still validate against schema with default values
-		const decoded = Schema.decodeUnknownSync(GetResultsResponseSchema)(data);
-
-		// Default scores: all facets at 10/20, all traits at 60/120 = Mid
-		// Trait-specific mid-level letters: G(openness), B(conscientiousness), A(extraversion), N(agreeableness), T(neuroticism)
-		expect(decoded.oceanCode5).toBe("GBANT");
-		expect(decoded.traits).toHaveLength(5);
-		expect(decoded.facets).toHaveLength(30);
-		expect(decoded.overallConfidence).toBe(0); // No evidence yet
-
-		// No portrait generated — below free tier message threshold
-		expect(decoded.personalDescription).toBeNull();
+		expect(data._tag).toBe("SessionNotCompleted");
 	});
 });
 

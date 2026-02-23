@@ -26,6 +26,8 @@ export {
 	RateLimitExceeded,
 	SessionCompletedError,
 	SessionExpired,
+	SessionNotCompleted,
+	SessionNotFinalizing,
 	SessionNotFound,
 	Unauthorized,
 	UserAlreadyExists,
