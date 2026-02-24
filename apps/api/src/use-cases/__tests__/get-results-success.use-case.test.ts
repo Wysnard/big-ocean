@@ -389,5 +389,45 @@ describe("getResults Use Case", () => {
 			expect(selfEfficacy?.level).toBe("CA");
 			expect(selfEfficacy?.levelLabel).toBe("Capable");
 		});
+
+		it("should verify threshold boundary behavior (10 = Low, 11 = High)", async () => {
+			// Boundary verification: score ≤ 10 → Low level code, score > 10 → High level code
+			// Tests exact boundary with integer values (aggregation preserves these)
+			const boundaryScores = {
+				openness: { facetScore: 10, confidence: 80 }, // Exactly 10 = Low
+				conscientiousness: { facetScore: 11, confidence: 80 }, // Just above 10 = High
+				extraversion: { facetScore: 9, confidence: 80 }, // Below 10 = Low
+				agreeableness: { facetScore: 12, confidence: 80 }, // Above 10 = High
+				neuroticism: { facetScore: 0, confidence: 80 }, // Minimum = Low
+			};
+
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
+				Effect.succeed(createEvidenceForUniformScores(boundaryScores)),
+			);
+
+			const result = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+			);
+
+			// imagination (openness): 10 → Low code "OP"
+			const imagination = result.facets.find((f) => f.name === "imagination");
+			expect(imagination?.level).toBe("OP");
+
+			// self_efficacy (conscientiousness): 11 → High code "CA"
+			const selfEfficacy = result.facets.find((f) => f.name === "self_efficacy");
+			expect(selfEfficacy?.level).toBe("CA");
+
+			// friendliness (extraversion): 9 → Low code "ER"
+			const friendliness = result.facets.find((f) => f.name === "friendliness");
+			expect(friendliness?.level).toBe("ER");
+
+			// trust (agreeableness): 12 → High code "AT"
+			const trust = result.facets.find((f) => f.name === "trust");
+			expect(trust?.level).toBe("AT");
+
+			// anxiety (neuroticism): 0 → Low code "NC"
+			const anxiety = result.facets.find((f) => f.name === "anxiety");
+			expect(anxiety?.level).toBe("NC");
+		});
 	});
 });

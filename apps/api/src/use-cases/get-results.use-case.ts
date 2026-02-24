@@ -146,7 +146,11 @@ export const getResults = (input: GetResultsInput) =>
 			const facetData = facetScoresMap[facetName];
 			const level = getFacetLevel(facetName, facetData.score);
 			const levelLabel = FACET_LEVEL_LABELS[level];
-			const levelDescription = FACET_DESCRIPTIONS[facetName].levels[level] as string;
+			const levelDescription = FACET_DESCRIPTIONS[facetName].levels[level];
+			// Type guard: getFacetLevel guarantees valid level code for this facet
+			if (levelDescription === undefined) {
+				throw new Error(`Missing facet description for ${facetName}:${level}`);
+			}
 			return {
 				name: facetName,
 				traitName: FACET_TO_TRAIT[facetName],
