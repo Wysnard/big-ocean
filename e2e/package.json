@@ -15,6 +15,7 @@
 		"@playwright/test": "^1.58.1",
 		"@types/pg": "^8.16.0",
 		"@workspace/lint": "workspace:*",
+		"dotenv": "^16.4.5",
 		"pg": "catalog:",
 		"playwright": "^1.58.1"
 	}

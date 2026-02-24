@@ -423,6 +423,9 @@ importers:
       '@workspace/lint':
         specifier: workspace:*
         version: link:../packages/lint
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.6.1
       pg:
         specifier: 'catalog:'
         version: 8.18.0
