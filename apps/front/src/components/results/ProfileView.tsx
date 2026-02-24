@@ -1,3 +1,4 @@
+import type { PortraitStatus } from "@workspace/contracts";
 import type { FacetResult, OceanCode5, TraitName, TraitResult } from "@workspace/domain";
 import type { ReactNode } from "react";
 import { ArchetypeHeroSection } from "./ArchetypeHeroSection";
@@ -26,6 +27,12 @@ interface ProfileViewProps {
 	displayName?: string | null;
 	/** Personal portrait markdown (Nerin's dive-master voice, ## sections) */
 	personalDescription?: string | null;
+	/** Full portrait content when available (Story 13.3) */
+	fullPortraitContent?: string | null;
+	/** Full portrait generation status (Story 13.3) */
+	fullPortraitStatus?: PortraitStatus;
+	/** Callback to retry failed portrait generation (Story 13.3) */
+	onRetryPortrait?: () => void;
 	/** Current selected trait for DetailZone */
 	selectedTrait?: TraitName | null;
 	/** Total message count for confidence ring */
@@ -49,6 +56,9 @@ export function ProfileView({
 	isCurated,
 	displayName,
 	personalDescription,
+	fullPortraitContent,
+	fullPortraitStatus,
+	onRetryPortrait,
 	selectedTrait,
 	messageCount,
 	detailZone,
@@ -86,9 +96,18 @@ export function ProfileView({
 			{/* Single CSS Grid container */}
 			<div className="mx-auto max-w-[1120px] px-5 py-10">
 				<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
-					{/* Personal Portrait — full width, conditional (AC #3) */}
-					{personalDescription && (
-						<PersonalPortrait personalDescription={personalDescription} displayName={displayName} />
+					{/* Personal Portrait — full width (AC #3, Story 13.3) */}
+					{/* Show portrait if: we have content OR generation is in progress/failed */}
+					{(personalDescription ||
+						fullPortraitStatus === "generating" ||
+						fullPortraitStatus === "failed") && (
+						<PersonalPortrait
+							personalDescription={personalDescription ?? ""}
+							displayName={displayName}
+							fullPortraitContent={fullPortraitContent}
+							fullPortraitStatus={fullPortraitStatus}
+							onRetryPortrait={onRetryPortrait}
+						/>
 					)}
 
 					{/* Ocean Code Strand — full width */}

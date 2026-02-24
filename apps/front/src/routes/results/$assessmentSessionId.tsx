@@ -21,6 +21,7 @@ import {
 } from "@/hooks/use-assessment";
 import { useAuth } from "@/hooks/use-auth";
 import { useToggleVisibility } from "@/hooks/use-profile";
+import { usePortraitStatus } from "@/hooks/usePortraitStatus";
 import {
 	clearPendingResultsGateSession,
 	persistPendingResultsGateSession,
@@ -115,6 +116,11 @@ function ResultsSessionPage() {
 
 	const shouldRedirectDeniedSession = isAuthenticated && error != null && isNotFoundError(error);
 	const toggleVisibility = useToggleVisibility();
+
+	// Story 13.3: Poll portrait status when authenticated
+	const { data: portraitStatusData, refetch: refetchPortraitStatus } = usePortraitStatus(
+		canLoadResults ? assessmentSessionId : "",
+	);
 
 	const [isGateExpired, setIsGateExpired] = useState(false);
 	const [shareState, setShareState] = useState<{
@@ -304,11 +310,14 @@ function ResultsSessionPage() {
 		? results.traits.find((t) => t.name === selectedTrait)
 		: null;
 
-	// Story 7.18: Portrait-first reading view
-	if (view === "portrait" && results.personalDescription) {
+	// Story 7.18 + 13.3: Portrait-first reading view
+	// Use full portrait content when available, fall back to teaser personalDescription
+	const portraitContentForReading =
+		portraitStatusData?.portrait?.content ?? results.personalDescription;
+	if (view === "portrait" && portraitContentForReading) {
 		return (
 			<PortraitReadingView
-				personalDescription={results.personalDescription}
+				personalDescription={portraitContentForReading}
 				onViewFullProfile={() =>
 					navigate({
 						to: "/results/$assessmentSessionId",
@@ -332,6 +341,9 @@ function ResultsSessionPage() {
 			overallConfidence={results.overallConfidence}
 			isCurated={results.isCurated}
 			personalDescription={results.personalDescription}
+			fullPortraitContent={portraitStatusData?.portrait?.content}
+			fullPortraitStatus={portraitStatusData?.status}
+			onRetryPortrait={() => void refetchPortraitStatus()}
 			selectedTrait={selectedTrait}
 			messageCount={results.messageCount}
 			detailZone={
@@ -372,7 +384,8 @@ function ResultsSessionPage() {
 
 					{/* Action CTAs — full-width */}
 					<div className="col-span-full flex flex-wrap justify-center gap-3 py-4">
-						{results.personalDescription && (
+						{/* Show "Read portrait" button if teaser OR full portrait content is available */}
+						{(results.personalDescription || portraitStatusData?.portrait?.content) && (
 							<Button data-testid="results-read-portrait" asChild variant="outline" className="min-h-11">
 								<Link
 									to="/results/$assessmentSessionId"
