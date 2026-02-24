@@ -1,8 +1,9 @@
 /**
- * Generate Results Use Case Tests (Story 11.1 + 11.2 + 11.3)
+ * Generate Results Use Case Tests (Story 11.1 + 11.2 + 11.3 + 11.5)
  *
  * Tests idempotency tiers, session validation, FinAnalyzer integration,
- * highlight computation, evidence persistence, and score computation.
+ * highlight computation, evidence persistence, score computation,
+ * teaser portrait generation, and progress status transitions.
  */
 
 import { vi } from "vitest";

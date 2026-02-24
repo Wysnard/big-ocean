@@ -1,5 +1,5 @@
 /**
- * Generate Results Use Case (Story 11.1 + 11.2 + 11.3)
+ * Generate Results Use Case (Story 11.1 + 11.2 + 11.3 + 11.5)
  *
  * Triggers the finalization pipeline for a completed assessment.
  * Implements three-tier idempotency:
@@ -8,7 +8,7 @@
  *   Guard 2: Finalization evidence exists → skip FinAnalyzer, reuse evidence
  *
  * Phase 1: FinAnalyzer (Sonnet) → finalization_evidence + assessment_results placeholder
- * Phase 2: Score computation → facets, traits, domainCoverage populated
+ * Phase 2: Score computation + teaser portrait (Haiku) → assessment_results populated
  */
 
 import type { EvidenceInput, FinalizationEvidenceInput } from "@workspace/domain";
@@ -228,7 +228,7 @@ export const generateResults = (input: GenerateResultsInput) =>
 			});
 
 			// ═══════════════════════════════════════════════════════════════
-			// PHASE 2: Score computation (Story 11.3)
+			// PHASE 2: Score computation + teaser portrait (Story 11.3 + 11.5)
 			// ═══════════════════════════════════════════════════════════════
 			const phase2Start = Date.now();
 
