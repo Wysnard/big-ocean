@@ -179,6 +179,58 @@ development_status:
 
 </step>
 
+<step n="6" goal="Generate or update sprint parallelism plan">
+<action>Read {status_file} and identify all stories with status NOT equal to "done"</action>
+<action>Group remaining stories into ordered execution steps using these rules:</action>
+
+**Step construction rules:**
+
+1. **Identify dependencies** — A story depends on another if:
+   - The epic file lists it as a dependency
+   - It modifies shared infrastructure files that another story also modifies (barrel exports, schema files, shared configs)
+   - It builds on functionality delivered by another story (e.g., story 11-3 needs 11-2's output)
+
+2. **Build steps bottom-up:**
+   - Step 1 contains all stories with zero unresolved dependencies (can all run in parallel)
+   - Step 2 contains stories whose dependencies are all satisfied by Step 1 completion
+   - Continue until all stories are assigned to a step
+
+3. **Within a step**, mark stories as:
+   - `parallel` — no shared file conflicts, can run concurrently
+   - `sequential(after: X)` — must wait for story X within the same step due to shared file conflicts
+
+4. **Gate rule** — ALL stories in a step must reach "done" before any story in the next step begins
+
+<action>Write or update `{implementation_artifacts}/sprint-parallelism-plan.md` with this format:</action>
+
+```markdown
+# Sprint Parallelism Plan
+Generated: {date}
+
+## Step 1: [short description of what this batch delivers]
+| Story | Mode | Notes |
+|-------|------|-------|
+| 12-1-results-page | parallel | — |
+| 13-1-purchase-events | parallel | — |
+
+**Gate:** All stories above must be done before proceeding.
+
+## Step 2: [short description]
+| Story | Mode | Notes |
+|-------|------|-------|
+| 12-2-evidence-highlighting | parallel | depends on 12-1 |
+| 13-2-polar-checkout | sequential(after: 13-1) | shares webhook schema |
+
+**Gate:** All stories above must be done before proceeding.
+
+## Conflict Notes
+- List shared files affected per step and merge order if needed
+```
+
+<action>If `sprint-parallelism-plan.md` already exists, replace its contents entirely with the fresh plan (only forward-looking stories)</action>
+<action>Report the plan summary to {user_name}: number of steps, stories per step, any flagged conflicts</action>
+</step>
+
 </workflow>
 
 ## Additional Documentation
