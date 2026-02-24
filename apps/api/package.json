@@ -26,7 +26,6 @@
     "@langchain/core": "^1.1.17",
     "@langchain/langgraph": "^1.1.2",
     "@langchain/langgraph-checkpoint-postgres": "^1.0.0",
-    "@resvg/resvg-js": "^2.6.2",
     "@workspace/contracts": "workspace:*",
     "@workspace/domain": "workspace:*",
     "@workspace/infrastructure": "workspace:*",

@@ -58,6 +58,12 @@ export default defineConfig({
 			testMatch: "specs/public-profile.spec.ts",
 		},
 
+		// ── Archetype card & OG image generation ─────────────────────────
+		{
+			name: "archetype-card",
+			testMatch: "specs/archetype-card.spec.ts",
+		},
+
 		// ── Signup redirect: standalone signup page redirect flow ────────
 		{
 			name: "signup-redirect",
