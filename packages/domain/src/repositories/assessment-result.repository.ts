@@ -20,8 +20,12 @@ export class AssessmentResultError extends S.TaggedError<AssessmentResultError>(
 export interface AssessmentResultRecord {
 	readonly id: string;
 	readonly assessmentSessionId: string;
-	readonly facets: Record<FacetName, { score: number; confidence: number }> | Record<string, never>;
-	readonly traits: Record<TraitName, { score: number; confidence: number }> | Record<string, never>;
+	readonly facets:
+		| Record<FacetName, { score: number; confidence: number; signalPower: number }>
+		| Record<string, never>;
+	readonly traits:
+		| Record<TraitName, { score: number; confidence: number; signalPower: number }>
+		| Record<string, never>;
 	readonly domainCoverage: Record<LifeDomain, number> | Record<string, never>;
 	readonly portrait: string;
 	readonly createdAt: Date;
@@ -29,11 +33,19 @@ export interface AssessmentResultRecord {
 
 export interface AssessmentResultInput {
 	readonly assessmentSessionId: string;
-	readonly facets: Record<FacetName, { score: number; confidence: number }> | Record<string, never>;
-	readonly traits: Record<TraitName, { score: number; confidence: number }> | Record<string, never>;
+	readonly facets:
+		| Record<FacetName, { score: number; confidence: number; signalPower: number }>
+		| Record<string, never>;
+	readonly traits:
+		| Record<TraitName, { score: number; confidence: number; signalPower: number }>
+		| Record<string, never>;
 	readonly domainCoverage: Record<LifeDomain, number> | Record<string, never>;
 	readonly portrait: string;
 }
+
+export type AssessmentResultUpdateInput = Partial<
+	Pick<AssessmentResultInput, "facets" | "traits" | "domainCoverage" | "portrait">
+>;
 
 export class AssessmentResultRepository extends Context.Tag("AssessmentResultRepository")<
 	AssessmentResultRepository,
@@ -44,5 +56,9 @@ export class AssessmentResultRepository extends Context.Tag("AssessmentResultRep
 		readonly getBySessionId: (
 			sessionId: string,
 		) => Effect.Effect<AssessmentResultRecord | null, AssessmentResultError>;
+		readonly update: (
+			id: string,
+			input: AssessmentResultUpdateInput,
+		) => Effect.Effect<AssessmentResultRecord, AssessmentResultError>;
 	}
 >() {}

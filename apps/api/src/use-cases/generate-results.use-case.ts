@@ -1,5 +1,5 @@
 /**
- * Generate Results Use Case (Story 11.1 + 11.2)
+ * Generate Results Use Case (Story 11.1 + 11.2 + 11.3)
  *
  * Triggers the finalization pipeline for a completed assessment.
  * Implements three-tier idempotency:
@@ -8,17 +8,21 @@
  *   Guard 2: Finalization evidence exists → skip FinAnalyzer, reuse evidence
  *
  * Phase 1: FinAnalyzer (Sonnet) → finalization_evidence + assessment_results placeholder
- * Phase 2: Score computation (Story 11.3 — placeholder)
+ * Phase 2: Score computation → facets, traits, domainCoverage populated
  */
 
-import type { FinalizationEvidenceInput } from "@workspace/domain";
+import type { EvidenceInput, FinalizationEvidenceInput } from "@workspace/domain";
 import {
 	AssessmentMessageRepository,
+	AssessmentResultError,
 	AssessmentResultRepository,
 	AssessmentSessionRepository,
 	CostGuardRepository,
 	calculateCost,
+	computeAllFacetResults,
+	computeDomainCoverage,
 	computeHighlightPositions,
+	computeTraitResults,
 	FinalizationEvidenceRepository,
 	FinanalyzerRepository,
 	LoggerRepository,
@@ -105,6 +109,7 @@ export const generateResults = (input: GenerateResultsInput) =>
 
 			// Guard 2: Check if finalization evidence already exists (idempotency)
 			const evidenceExists = yield* finalizationEvidenceRepo.existsForSession(input.sessionId);
+			let phase1ResultId: string | null = null;
 			if (evidenceExists) {
 				logger.info("Idempotency Guard 2: finalization evidence exists, skipping FinAnalyzer", {
 					sessionId: input.sessionId,
@@ -138,6 +143,7 @@ export const generateResults = (input: GenerateResultsInput) =>
 					domainCoverage: {},
 					portrait: "",
 				});
+				phase1ResultId = assessmentResult.id;
 
 				// Build message content map for highlight computation
 				const messageContentMap = new Map<string, string>();
@@ -211,15 +217,62 @@ export const generateResults = (input: GenerateResultsInput) =>
 			}
 
 			// ═══════════════════════════════════════════════════════════════
-			// PHASE 2: Score computation (Story 11.3 — placeholder)
+			// PHASE 2: Score computation (Story 11.3)
 			// ═══════════════════════════════════════════════════════════════
 
 			// 6. Update progress to "generating_portrait"
 			yield* sessionRepo.updateSession(input.sessionId, {
 				finalizationProgress: "generating_portrait",
 			});
-			logger.info("Phase 2: Scoring + portrait — not yet implemented (Stories 11.3-11.5)", {
+
+			// Resolve the assessmentResultId — depends on whether Phase 1 ran
+			let assessmentResultId: string;
+			if (phase1ResultId) {
+				// Normal path: Phase 1 created the result
+				assessmentResultId = phase1ResultId;
+			} else {
+				// Guard 2 path: Phase 1 was skipped, fetch existing result
+				const existingResult = yield* assessmentResultRepo.getBySessionId(input.sessionId);
+				if (!existingResult) {
+					return yield* Effect.fail(
+						new AssessmentResultError({
+							message: `Assessment result not found for session '${input.sessionId}' (data corruption)`,
+						}),
+					);
+				}
+				assessmentResultId = existingResult.id;
+			}
+
+			// Fetch finalization evidence
+			const finalizationEvidence = yield* finalizationEvidenceRepo.getByResultId(assessmentResultId);
+
+			// Map to EvidenceInput for formula functions
+			const scoringInputs: EvidenceInput[] = finalizationEvidence.map((ev) => ({
+				bigfiveFacet: ev.bigfiveFacet,
+				score: ev.score,
+				confidence: ev.confidence,
+				domain: ev.domain,
+			}));
+
+			// Compute scores
+			const facets = computeAllFacetResults(scoringInputs);
+			const traits = computeTraitResults(facets);
+			const domainCoverage = computeDomainCoverage(scoringInputs);
+
+			// Update the placeholder row with real scores
+			yield* assessmentResultRepo.update(assessmentResultId, {
+				facets,
+				traits,
+				domainCoverage,
+			});
+
+			const facetsWithEvidence = Object.values(facets).filter((f) => f.confidence > 0).length;
+			logger.info("Phase 2 complete: scores computed", {
 				sessionId: input.sessionId,
+				facetsWithEvidence,
+				traitScores: Object.fromEntries(
+					Object.entries(traits).map(([t, v]) => [t, v.score.toFixed(2)]),
+				),
 			});
 
 			// 7. Mark completed

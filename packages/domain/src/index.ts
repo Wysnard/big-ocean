@@ -110,6 +110,7 @@ export {
 	type AssessmentResultInput,
 	type AssessmentResultRecord,
 	AssessmentResultRepository,
+	type AssessmentResultUpdateInput,
 } from "./repositories/assessment-result.repository";
 // Repository interfaces (ports in hexagonal architecture)
 export { AssessmentSessionRepository } from "./repositories/assessment-session.repository";
@@ -343,3 +344,9 @@ export {
 	type TraitConfidence,
 	toFacetDisplayName,
 } from "./utils/index";
+// Score computation (Story 11.3)
+export {
+	computeAllFacetResults,
+	computeDomainCoverage,
+	computeTraitResults,
+} from "./utils/score-computation";

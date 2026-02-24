@@ -1,8 +1,8 @@
 /**
- * Generate Results Use Case Tests (Story 11.1 + 11.2)
+ * Generate Results Use Case Tests (Story 11.1 + 11.2 + 11.3)
  *
  * Tests idempotency tiers, session validation, FinAnalyzer integration,
- * highlight computation, and evidence persistence.
+ * highlight computation, evidence persistence, and score computation.
  */
 
 import { vi } from "vitest";
@@ -16,9 +16,14 @@ vi.mock("@workspace/infrastructure/repositories/cost-guard.redis.repository");
 
 import { describe, expect, it } from "@effect/vitest";
 import {
+	ALL_FACETS,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
+	type FinalizationEvidenceRecord,
+	FORMULA_DEFAULTS,
+	LIFE_DOMAINS,
 	LoggerRepository,
+	TRAIT_NAMES,
 } from "@workspace/domain";
 import {
 	AssessmentMessageDrizzleRepositoryLive,
@@ -28,6 +33,7 @@ import {
 	AssessmentResultDrizzleRepositoryLive,
 	_getStoredResults as getStoredResults,
 	_resetMockState as resetResults,
+	_seedResult as seedResult,
 } from "@workspace/infrastructure/repositories/assessment-result.drizzle.repository";
 import {
 	CostGuardRedisRepositoryLive,
@@ -37,6 +43,7 @@ import {
 	FinalizationEvidenceDrizzleRepositoryLive,
 	_getStoredEvidence as getStoredEvidence,
 	_resetMockState as resetEvidence,
+	_seedEvidence as seedEvidence,
 	_setExistsOverride as setEvidenceExists,
 } from "@workspace/infrastructure/repositories/finalization-evidence.drizzle.repository";
 // Import mock layers (Vitest replaces with __mocks__ versions)
@@ -267,40 +274,68 @@ describe("generateResults Use Case", () => {
 				expect(evidence[0].bigfiveFacet).toBe("imagination");
 				expect(evidence[1].bigfiveFacet).toBe("trust");
 
-				// Assessment result placeholder was created
+				// Assessment result was created and updated with Phase 2 scores
 				const results = getStoredResults();
 				expect(results.size).toBe(1);
 				const resultRecord = results.get("session_123");
 				expect(resultRecord).toBeDefined();
 				expect(resultRecord?.portrait).toBe("");
-				expect(resultRecord?.facets).toEqual({});
+				// Phase 2 populated facets/traits (no longer empty)
+				expect(Object.keys(resultRecord?.facets ?? {})).toHaveLength(30);
 
 				// Lock was released
 				expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("idempotency Guard 2: evidence exists, FinAnalyzer NOT called", () =>
-			Effect.gen(function* () {
-				setEvidenceExists(true);
+		it.effect(
+			"idempotency Guard 2: evidence exists, FinAnalyzer NOT called, scores still computed",
+			() =>
+				Effect.gen(function* () {
+					setEvidenceExists(true);
+					// Pre-seed assessment result (Phase 1 ran in a previous attempt)
+					const seededResult = seedResult("session_123", { id: "ar-guard2" });
+					// Pre-seed finalization evidence linked to that result
+					seedEvidence([
+						{
+							id: "fe-1",
+							assessmentMessageId: "msg-1",
+							assessmentResultId: seededResult.id,
+							bigfiveFacet: "imagination",
+							score: 14,
+							confidence: 0.7,
+							domain: "work",
+							rawDomain: "creative work",
+							quote: "test",
+							highlightStart: 0,
+							highlightEnd: 4,
+							createdAt: new Date(),
+						} as FinalizationEvidenceRecord,
+					]);
 
-				const result = yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
+					const result = yield* generateResults({
+						sessionId: "session_123",
+						authenticatedUserId: "user_456",
+					});
 
-				expect(result).toEqual({ status: "completed" });
+					expect(result).toEqual({ status: "completed" });
 
-				// FinAnalyzer was NOT called
-				const calls = getFinanalyzerCalls();
-				expect(calls).toHaveLength(0);
+					// FinAnalyzer was NOT called
+					const calls = getFinanalyzerCalls();
+					expect(calls).toHaveLength(0);
 
-				// Logger recorded the skip
-				expect(mockLoggerRepo.info).toHaveBeenCalledWith(
-					expect.stringContaining("Idempotency Guard 2"),
-					expect.any(Object),
-				);
-			}).pipe(Effect.provide(createTestLayer())),
+					// But Phase 2 still computed scores
+					const results = getStoredResults();
+					const resultRecord = results.get("session_123");
+					expect(Object.keys(resultRecord?.facets ?? {})).toHaveLength(30);
+					expect(Object.keys(resultRecord?.traits ?? {})).toHaveLength(5);
+
+					// Logger recorded the skip
+					expect(mockLoggerRepo.info).toHaveBeenCalledWith(
+						expect.stringContaining("Idempotency Guard 2"),
+						expect.any(Object),
+					);
+				}).pipe(Effect.provide(createTestLayer())),
 		);
 
 		it.effect("FinAnalyzer failure after retry: error propagates, lock released", () =>
@@ -519,7 +554,7 @@ describe("generateResults Use Case", () => {
 				expect(calls).toHaveLength(1);
 				expect(calls[0].messages).toHaveLength(0);
 
-				// Assessment result placeholder still created
+				// Assessment result created and updated with defaults (Phase 2 ran)
 				const results = getStoredResults();
 				expect(results.size).toBe(1);
 
@@ -529,6 +564,294 @@ describe("generateResults Use Case", () => {
 
 				// Lock was released
 				expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("Phase 2: Score computation (Story 11.3)", () => {
+		it.effect("happy path: evidence → scores computed → assessment_results updated", () =>
+			Effect.gen(function* () {
+				const ids = yield* seedMessages("session_123", [
+					{ role: "user", content: "I love brainstorming new things" },
+					{ role: "assistant", content: "That sounds creative!" },
+				]);
+
+				setFinanalyzerOutput({
+					evidence: [
+						{
+							messageId: ids[0],
+							bigfiveFacet: "imagination",
+							score: 14,
+							confidence: 0.7,
+							domain: "work",
+							rawDomain: "creative work",
+							quote: "brainstorming",
+						},
+						{
+							messageId: ids[1],
+							bigfiveFacet: "trust",
+							score: 13,
+							confidence: 0.6,
+							domain: "relationships",
+							rawDomain: "friends",
+							quote: "sounds creative",
+						},
+					],
+					tokenUsage: { input: 3000, output: 1500 },
+				});
+
+				yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				const results = getStoredResults();
+				const record = results.get("session_123");
+				expect(record).toBeDefined();
+
+				// All 30 facets populated
+				const facetKeys = Object.keys(record?.facets);
+				expect(facetKeys).toHaveLength(30);
+
+				// All 5 traits populated
+				const traitKeys = Object.keys(record?.traits);
+				expect(traitKeys).toHaveLength(5);
+
+				// Domain coverage populated
+				const dcKeys = Object.keys(record?.domainCoverage);
+				expect(dcKeys).toHaveLength(6);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("all 30 facets populated including defaults for missing evidence", () =>
+			Effect.gen(function* () {
+				const ids = yield* seedMessages("session_123", [
+					{ role: "user", content: "I like to explore" },
+				]);
+
+				// Only 1 facet has evidence
+				setFinanalyzerOutput({
+					evidence: [
+						{
+							messageId: ids[0],
+							bigfiveFacet: "imagination",
+							score: 16,
+							confidence: 0.9,
+							domain: "leisure",
+							rawDomain: "hobbies",
+							quote: "explore",
+						},
+					],
+					tokenUsage: { input: 1000, output: 500 },
+				});
+
+				yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				const results = getStoredResults();
+				const record = results.get("session_123");
+				const facets = record?.facets as Record<
+					string,
+					{ score: number; confidence: number; signalPower: number }
+				>;
+
+				// All 30 facets present
+				for (const facet of ALL_FACETS) {
+					expect(facets[facet]).toBeDefined();
+				}
+
+				// imagination has real evidence
+				expect(facets.imagination.confidence).toBeGreaterThan(0);
+
+				// Other 29 facets have defaults
+				expect(facets.artistic_interests.score).toBe(FORMULA_DEFAULTS.SCORE_MIDPOINT);
+				expect(facets.artistic_interests.confidence).toBe(0);
+				expect(facets.artistic_interests.signalPower).toBe(0);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("trait derivation: each trait score is mean of its 6 facets", () =>
+			Effect.gen(function* () {
+				// Use empty evidence → all facets at defaults → all traits = SCORE_MIDPOINT
+				setFinanalyzerOutput({
+					evidence: [],
+					tokenUsage: { input: 500, output: 100 },
+				});
+
+				yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				const results = getStoredResults();
+				const record = results.get("session_123");
+				const traits = record?.traits as Record<
+					string,
+					{ score: number; confidence: number; signalPower: number }
+				>;
+
+				for (const trait of TRAIT_NAMES) {
+					expect(traits[trait].score).toBeCloseTo(FORMULA_DEFAULTS.SCORE_MIDPOINT);
+					expect(traits[trait].confidence).toBe(0);
+					expect(traits[trait].signalPower).toBe(0);
+				}
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("domain coverage normalization: values sum to ~1.0", () =>
+			Effect.gen(function* () {
+				const ids = yield* seedMessages("session_123", [
+					{ role: "user", content: "I love work and family" },
+					{ role: "assistant", content: "Tell me more" },
+				]);
+
+				setFinanalyzerOutput({
+					evidence: [
+						{
+							messageId: ids[0],
+							bigfiveFacet: "imagination",
+							score: 14,
+							confidence: 0.7,
+							domain: "work",
+							rawDomain: "career",
+							quote: "work",
+						},
+						{
+							messageId: ids[0],
+							bigfiveFacet: "altruism",
+							score: 16,
+							confidence: 0.8,
+							domain: "family",
+							rawDomain: "kids",
+							quote: "family",
+						},
+						{
+							messageId: ids[0],
+							bigfiveFacet: "trust",
+							score: 12,
+							confidence: 0.6,
+							domain: "work",
+							rawDomain: "office",
+							quote: "love",
+						},
+					],
+					tokenUsage: { input: 2000, output: 1000 },
+				});
+
+				yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				const results = getStoredResults();
+				const record = results.get("session_123");
+				const dc = record?.domainCoverage as Record<string, number>;
+
+				const sum = LIFE_DOMAINS.reduce((acc, d) => acc + (dc[d] ?? 0), 0);
+				expect(sum).toBeCloseTo(1.0);
+				// 2 work + 1 family = 2/3 work, 1/3 family
+				expect(dc.work).toBeCloseTo(2 / 3);
+				expect(dc.family).toBeCloseTo(1 / 3);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("empty evidence edge case: all defaults, domainCoverage all zeros", () =>
+			Effect.gen(function* () {
+				setFinanalyzerOutput({
+					evidence: [],
+					tokenUsage: { input: 500, output: 100 },
+				});
+
+				yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				const results = getStoredResults();
+				const record = results.get("session_123");
+				const facets = record?.facets as Record<
+					string,
+					{ score: number; confidence: number; signalPower: number }
+				>;
+				const traits = record?.traits as Record<
+					string,
+					{ score: number; confidence: number; signalPower: number }
+				>;
+				const dc = record?.domainCoverage as Record<string, number>;
+
+				// All 30 facets at defaults
+				for (const facet of ALL_FACETS) {
+					expect(facets[facet].score).toBe(FORMULA_DEFAULTS.SCORE_MIDPOINT);
+					expect(facets[facet].confidence).toBe(0);
+				}
+
+				// All traits at defaults
+				for (const trait of TRAIT_NAMES) {
+					expect(traits[trait].score).toBeCloseTo(FORMULA_DEFAULTS.SCORE_MIDPOINT);
+				}
+
+				// Domain coverage all zeros
+				for (const domain of LIFE_DOMAINS) {
+					expect(dc[domain]).toBe(0);
+				}
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("Guard 2 path: scores computed from pre-existing evidence", () =>
+			Effect.gen(function* () {
+				setEvidenceExists(true);
+				const seededResult = seedResult("session_123", { id: "ar-g2-scores" });
+				seedEvidence([
+					{
+						id: "fe-g2-1",
+						assessmentMessageId: "msg-1",
+						assessmentResultId: seededResult.id,
+						bigfiveFacet: "intellect",
+						score: 18,
+						confidence: 0.9,
+						domain: "work",
+						rawDomain: "research",
+						quote: "test",
+						highlightStart: 0,
+						highlightEnd: 4,
+						createdAt: new Date(),
+					} as FinalizationEvidenceRecord,
+					{
+						id: "fe-g2-2",
+						assessmentMessageId: "msg-2",
+						assessmentResultId: seededResult.id,
+						bigfiveFacet: "adventurousness",
+						score: 12,
+						confidence: 0.5,
+						domain: "leisure",
+						rawDomain: "travel",
+						quote: "test2",
+						highlightStart: 0,
+						highlightEnd: 5,
+						createdAt: new Date(),
+					} as FinalizationEvidenceRecord,
+				]);
+
+				yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				const results = getStoredResults();
+				const record = results.get("session_123");
+				const facets = record?.facets as Record<
+					string,
+					{ score: number; confidence: number; signalPower: number }
+				>;
+
+				// intellect should have real evidence
+				expect(facets.intellect.confidence).toBeGreaterThan(0);
+				// adventurousness should have real evidence
+				expect(facets.adventurousness.confidence).toBeGreaterThan(0);
+				// Other facets at defaults
+				expect(facets.imagination.score).toBe(FORMULA_DEFAULTS.SCORE_MIDPOINT);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});

@@ -76,6 +76,34 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 
 					return mapRow(row);
 				}),
+
+			update: (id, input) =>
+				Effect.gen(function* () {
+					const rows = yield* db
+						.update(assessmentResults)
+						.set(input)
+						.where(eq(assessmentResults.id, id))
+						.returning()
+						.pipe(
+							Effect.mapError(
+								(error) =>
+									new AssessmentResultError({
+										message: `Failed to update assessment result: ${error instanceof Error ? error.message : String(error)}`,
+									}),
+							),
+						);
+
+					const row = rows[0];
+					if (!row) {
+						return yield* Effect.fail(
+							new AssessmentResultError({
+								message: `Assessment result not found: ${id}`,
+							}),
+						);
+					}
+
+					return mapRow(row);
+				}),
 		});
 	}),
 );

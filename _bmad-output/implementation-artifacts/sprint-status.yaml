@@ -198,7 +198,7 @@ development_status:
   epic-11: in-progress
   11-1-finalization-trigger-and-auth-gate: done
   11-2-finanalyzer-sonnet-integration: done
-  11-3-score-computation-and-ocean-code-generation: backlog
+  11-3-score-computation-and-ocean-code-generation: done
   11-4-archetype-system: backlog
   11-5-finalization-pipeline-orchestration: backlog
   epic-11-retrospective: optional

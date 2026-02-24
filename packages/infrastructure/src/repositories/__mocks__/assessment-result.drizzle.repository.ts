@@ -6,8 +6,12 @@
  * In-memory Map storage for assessment results.
  * Story 11.2
  */
-import type { AssessmentResultInput, AssessmentResultRecord } from "@workspace/domain";
-import { AssessmentResultRepository } from "@workspace/domain";
+import type {
+	AssessmentResultInput,
+	AssessmentResultRecord,
+	AssessmentResultUpdateInput,
+} from "@workspace/domain";
+import { AssessmentResultError, AssessmentResultRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
 const storedResults = new Map<string, AssessmentResultRecord>();
@@ -17,6 +21,23 @@ export const _resetMockState = () => {
 };
 
 export const _getStoredResults = () => new Map(storedResults);
+
+export const _seedResult = (
+	sessionId: string,
+	overrides?: Partial<AssessmentResultRecord>,
+): AssessmentResultRecord => {
+	const record: AssessmentResultRecord = {
+		id: overrides?.id ?? `ar-${crypto.randomUUID()}`,
+		assessmentSessionId: sessionId,
+		facets: overrides?.facets ?? ({} as AssessmentResultRecord["facets"]),
+		traits: overrides?.traits ?? ({} as AssessmentResultRecord["traits"]),
+		domainCoverage: overrides?.domainCoverage ?? ({} as AssessmentResultRecord["domainCoverage"]),
+		portrait: overrides?.portrait ?? "",
+		createdAt: overrides?.createdAt ?? new Date(),
+	};
+	storedResults.set(sessionId, record);
+	return record;
+};
 
 export const AssessmentResultDrizzleRepositoryLive = Layer.succeed(
 	AssessmentResultRepository,
@@ -34,6 +55,18 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.succeed(
 		getBySessionId: (sessionId: string) => {
 			const result = storedResults.get(sessionId) ?? null;
 			return Effect.succeed(result);
+		},
+
+		update: (id: string, input: AssessmentResultUpdateInput) => {
+			// Find by id (stored by sessionId, so search values)
+			for (const [key, record] of storedResults) {
+				if (record.id === id) {
+					const updated: AssessmentResultRecord = { ...record, ...input };
+					storedResults.set(key, updated);
+					return Effect.succeed(updated);
+				}
+			}
+			return Effect.fail(new AssessmentResultError({ message: `Assessment result not found: ${id}` }));
 		},
 	}),
 );

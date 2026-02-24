@@ -32,6 +32,12 @@ export const _setExistsOverride = (value: boolean) => {
 	existsOverride = value;
 };
 
+export const _seedEvidence = (records: FinalizationEvidenceRecord[]) => {
+	for (const r of records) {
+		storedEvidence.push(r);
+	}
+};
+
 export const FinalizationEvidenceDrizzleRepositoryLive = Layer.succeed(
 	FinalizationEvidenceRepository,
 	FinalizationEvidenceRepository.of({
