@@ -25,6 +25,9 @@ export const mockAssessmentSessionRepo = {
 	findByToken: vi.fn(),
 	assignUserId: vi.fn(),
 	rotateToken: vi.fn(),
+	incrementMessageCount: vi.fn(),
+	acquireSessionLock: vi.fn(),
+	releaseSessionLock: vi.fn(),
 };
 
 export const mockAssessmentMessageRepo = {
@@ -47,6 +50,8 @@ export const mockCostGuardRepo = {
 	getAssessmentCount: vi.fn(),
 	canStartAssessment: vi.fn(),
 	recordAssessmentStart: vi.fn(),
+	checkDailyBudget: vi.fn(),
+	checkMessageRateLimit: vi.fn(),
 };
 
 export let saveMessageCallCount = 0;
@@ -92,6 +97,9 @@ export function setupDefaultMocks() {
 	mockAssessmentSessionRepo.rotateToken.mockImplementation(() =>
 		Effect.succeed({ sessionToken: "new_token" }),
 	);
+	mockAssessmentSessionRepo.incrementMessageCount.mockImplementation(() => Effect.succeed(1));
+	mockAssessmentSessionRepo.acquireSessionLock.mockImplementation(() => Effect.succeed(undefined));
+	mockAssessmentSessionRepo.releaseSessionLock.mockImplementation(() => Effect.succeed(undefined));
 
 	mockAssessmentMessageRepo.saveMessage.mockImplementation(
 		(sessionId: string, role: string, content: string) => {
@@ -119,4 +127,6 @@ export function setupDefaultMocks() {
 	mockCostGuardRepo.getDailyCost.mockImplementation(() => Effect.succeed(0));
 	mockCostGuardRepo.incrementAssessmentCount.mockImplementation(() => Effect.succeed(0));
 	mockCostGuardRepo.getAssessmentCount.mockImplementation(() => Effect.succeed(0));
+	mockCostGuardRepo.checkDailyBudget.mockImplementation(() => Effect.succeed(undefined));
+	mockCostGuardRepo.checkMessageRateLimit.mockImplementation(() => Effect.succeed(undefined));
 }

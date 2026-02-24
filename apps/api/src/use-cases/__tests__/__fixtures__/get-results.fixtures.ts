@@ -120,6 +120,16 @@ export const mockSessionRepo = {
 	createSession: vi.fn(),
 	getSession: vi.fn(),
 	updateSession: vi.fn(),
+	getActiveSessionByUserId: vi.fn(),
+	getSessionsByUserId: vi.fn(),
+	findSessionByUserId: vi.fn(),
+	createAnonymousSession: vi.fn(),
+	findByToken: vi.fn(),
+	assignUserId: vi.fn(),
+	rotateToken: vi.fn(),
+	incrementMessageCount: vi.fn(),
+	acquireSessionLock: vi.fn(),
+	releaseSessionLock: vi.fn(),
 };
 
 export const mockEvidenceRepo = {
@@ -168,6 +178,14 @@ export const mockConfig = {
 	dailyCostLimit: 75,
 	freeTierMessageThreshold: 12,
 	shareMinConfidence: 30,
+	portraitModelId: "claude-sonnet-4-20250514",
+	portraitMaxTokens: 4096,
+	portraitTemperature: 0.5,
+	portraitWaitMinMs: 2000,
+	conversanalyzerModelId: "claude-haiku-4-5-20251001",
+	finanalyzerModelId: "claude-sonnet-4-20250514",
+	portraitGeneratorModelId: "claude-sonnet-4-20250514",
+	messageRateLimit: 2,
 };
 
 // ============================================
