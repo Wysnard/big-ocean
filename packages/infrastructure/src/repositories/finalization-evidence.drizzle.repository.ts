@@ -87,6 +87,7 @@ export const FinalizationEvidenceDrizzleRepositoryLive = Layer.effect(
 
 			existsForSession: (sessionId) =>
 				Effect.gen(function* () {
+					// Drizzle's sql`` tagged template parameterizes ${sessionId} as a bind variable (safe from injection)
 					const result = yield* db
 						.select({
 							exists: sql<boolean>`exists(

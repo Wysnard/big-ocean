@@ -202,7 +202,7 @@ So that personality evidence is comprehensive, richly detailed, and suitable for
 | `SCORE_MIN/MAX`, `CONFIDENCE_MIN/MAX` validation constants | Done | `packages/domain/src/constants/validation.ts` |
 | Assessment handler with generateResults endpoint | Done | `apps/api/src/handlers/assessment.ts:245-254` |
 | Cost tracking via `CostGuardRepository` | Done | `packages/domain/src/repositories/cost-guard.repository.ts` |
-| `getMessagesBySession` on message repository | Done | `packages/domain/src/repositories/assessment-message.repository.ts` |
+| `getMessages` on message repository | Done | `packages/domain/src/repositories/assessment-message.repository.ts` |
 
 ### Critical Architecture Constraints
 
@@ -259,10 +259,12 @@ The frontend already:
 - `apps/api/src/use-cases/__tests__/generate-results.use-case.test.ts` — Add Phase 1 tests
 - `apps/api/src/index.ts` — Wire new Layers into assessment handler group
 - `packages/domain/src/index.ts` — Export new repositories, types, utils
-- `packages/domain/src/config/app-config.ts` — Add `finanalyzerModel` field
-- `packages/infrastructure/src/config/app-config.live.ts` — Add env var mapping
-- `packages/domain/src/config/__mocks__/app-config.ts` — Add test default
 - `packages/infrastructure/src/index.ts` — Export new Live layers
+
+**Verified pre-existing (no changes needed — already present from Story 9.1):**
+- `packages/domain/src/config/app-config.ts` — `finanalyzerModelId` field
+- `packages/infrastructure/src/config/app-config.live.ts` — env var mapping
+- `packages/domain/src/config/__mocks__/app-config.ts` — test default
 
 ### References
 
@@ -328,6 +330,9 @@ None — clean implementation, no debugging required.
   - Fixed deep imports in Drizzle repos and mocks to use barrel `@workspace/domain` (L1)
   - Added test for message ordering preservation passed to FinAnalyzer (M3)
   - Added justifying comment for `as` cast on JSON schema (H1)
+- 2026-02-24: Code review #3 fixes applied:
+  - Added SQL injection safety comment on `existsForSession` raw SQL (M1)
+  - Added lock release assertion to empty conversation test (M2)
 
 ### File List
 

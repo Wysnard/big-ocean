@@ -523,9 +523,12 @@ describe("generateResults Use Case", () => {
 				const results = getStoredResults();
 				expect(results.size).toBe(1);
 
-				// No evidence saved (empty batch)
+				// No evidence saved (empty batch — saveBatch([]) is a no-op)
 				const evidence = getStoredEvidence();
 				expect(evidence).toHaveLength(0);
+
+				// Lock was released
+				expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
