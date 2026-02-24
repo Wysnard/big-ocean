@@ -223,7 +223,7 @@ development_status:
   epic-13: in-progress
   13-1-purchase-events-schema-and-capability-derivation: done
   13-2-polar-sh-checkout-and-webhook-integration: backlog
-  13-3-full-portrait-async-generation: backlog
+  13-3-full-portrait-async-generation: ready-for-dev
   epic-13-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
