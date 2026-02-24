@@ -69,6 +69,13 @@ services:
       BETTER_AUTH_SECRET: test-secret-minimum-32-characters-long-for-security
       BETTER_AUTH_URL: http://localhost:4001
       FRONTEND_URL: http://localhost:3001
+      # Polar.sh test values (Story 13.2/13.3)
+      POLAR_ACCESS_TOKEN: not-configured
+      POLAR_WEBHOOK_SECRET: test-webhook-secret-for-e2e
+      POLAR_PRODUCT_PORTRAIT_UNLOCK: test-product-portrait
+      POLAR_PRODUCT_RELATIONSHIP_SINGLE: test-product-single
+      POLAR_PRODUCT_RELATIONSHIP_5PACK: test-product-5pack
+      POLAR_PRODUCT_EXTENDED_CONVERSATION: test-product-extended
       NODE_ENV: test
       PORT: 4000
       HOST: 0.0.0.0
