@@ -242,7 +242,7 @@ function wrapServerWithCorsAndAuth(
 
 			// OG image route — handle before auth/Effect layers
 			const ogMatch = req.url?.match(/^\/api\/og\/public-profile\/([^/?]+)/);
-			if (ogMatch && req.method === "GET") {
+			if (ogMatch?.[1] && req.method === "GET") {
 				handleOgImage(req, res, ogMatch[1]);
 				return true;
 			}

@@ -17,17 +17,19 @@ export const ProfileAccessLogDrizzleRepositoryLive = Layer.effect(
 
 		return {
 			logAccess: (input) =>
-				Effect.gen(function* () {
-					yield* Effect.tryPromise(() =>
-						db.insert(profileAccessLog).values({
-							profileId: input.profileId,
-							accessorUserId: input.accessorUserId ?? null,
-							accessorIp: input.accessorIp ?? null,
-							accessorUserAgent: input.accessorUserAgent ?? null,
-							action: input.action,
-						}),
-					);
-				}).pipe(Effect.catchAll(() => Effect.void)),
+				db
+					.insert(profileAccessLog)
+					.values({
+						profileId: input.profileId,
+						accessorUserId: input.accessorUserId ?? null,
+						accessorIp: input.accessorIp ?? null,
+						accessorUserAgent: input.accessorUserAgent ?? null,
+						action: input.action,
+					})
+					.pipe(
+						Effect.asVoid,
+						Effect.catchAll(() => Effect.void),
+					),
 		};
 	}),
 );
