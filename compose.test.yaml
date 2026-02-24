@@ -81,6 +81,13 @@ services:
       MESSAGE_RATE_LIMIT: "100"
       # Dummy API key (required for env validation, but MOCK_LLM=true prevents actual usage)
       ANTHROPIC_API_KEY: "sk-test-dummy-key-for-integration-tests"
+      # Polar.sh integration (Story 13.2)
+      POLAR_ACCESS_TOKEN: "pol_test_access_token"
+      POLAR_WEBHOOK_SECRET: "pol_test_webhook_secret"
+      POLAR_PRODUCT_PORTRAIT_UNLOCK: "pol_test_portrait"
+      POLAR_PRODUCT_RELATIONSHIP_SINGLE: "pol_test_rel_single"
+      POLAR_PRODUCT_RELATIONSHIP_5PACK: "pol_test_rel_5pack"
+      POLAR_PRODUCT_EXTENDED_CONVERSATION: "pol_test_extended"
       # Better Auth configuration
       BETTER_AUTH_SECRET: test-secret-minimum-32-characters-long-for-security
       BETTER_AUTH_URL: http://localhost:4000

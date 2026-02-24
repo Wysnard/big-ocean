@@ -92,6 +92,16 @@ const configSchema = Config.all({
 
 	// Message rate limit per minute (Story 2.5)
 	messageRateLimit: Config.number("MESSAGE_RATE_LIMIT").pipe(Config.withDefault(2)),
+
+	// Polar.sh integration (Story 13.2)
+	polarAccessToken: Config.redacted("POLAR_ACCESS_TOKEN").pipe(
+		Config.withDefault("not-configured" as any),
+	),
+	polarWebhookSecret: Config.redacted("POLAR_WEBHOOK_SECRET"),
+	polarProductPortraitUnlock: Config.string("POLAR_PRODUCT_PORTRAIT_UNLOCK"),
+	polarProductRelationshipSingle: Config.string("POLAR_PRODUCT_RELATIONSHIP_SINGLE"),
+	polarProductRelationship5Pack: Config.string("POLAR_PRODUCT_RELATIONSHIP_5PACK"),
+	polarProductExtendedConversation: Config.string("POLAR_PRODUCT_EXTENDED_CONVERSATION"),
 });
 
 /**

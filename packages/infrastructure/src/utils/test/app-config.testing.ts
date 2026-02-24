@@ -48,6 +48,12 @@ export const defaultTestConfig: AppConfigService = {
 	finanalyzerModelId: "claude-sonnet-4-6",
 	portraitGeneratorModelId: "claude-sonnet-4-6",
 	messageRateLimit: 2,
+	polarAccessToken: Redacted.make("test-polar-access-token"),
+	polarWebhookSecret: Redacted.make("test-polar-webhook-secret"),
+	polarProductPortraitUnlock: "polar_product_portrait",
+	polarProductRelationshipSingle: "polar_product_single",
+	polarProductRelationship5Pack: "polar_product_5pack",
+	polarProductExtendedConversation: "polar_product_extended",
 };
 
 /**

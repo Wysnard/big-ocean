@@ -31,10 +31,12 @@ import {
 	FinanalyzerAnthropicRepositoryLive,
 	OrchestratorGraphLangGraphRepositoryLive,
 	OrchestratorLangGraphRepositoryLive,
+	PaymentGatewayPolarRepositoryLive,
 	PortraitGeneratorClaudeRepositoryLive,
 	PortraitGeneratorMockRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
+	PurchaseEventDrizzleRepositoryLive,
 } from "@workspace/infrastructure";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
@@ -48,6 +50,7 @@ import { EvidenceGroupLive } from "./handlers/evidence";
 import { HealthGroupLive } from "./handlers/health";
 import { handleOgImage } from "./handlers/og";
 import { ProfileGroupLive } from "./handlers/profile";
+import { PurchaseGroupLive, PurchaseWebhookGroupLive } from "./handlers/purchase";
 import { AuthMiddlewareLive } from "./middleware/auth.middleware";
 import { createBetterAuthHandler } from "./middleware/better-auth";
 
@@ -170,6 +173,8 @@ const RepositoryLayers = Layer.mergeAll(
 	CostGuardLayer,
 	OrchestratorLayer,
 	PortraitGeneratorLayer,
+	PaymentGatewayPolarRepositoryLive,
+	PurchaseEventDrizzleRepositoryLive,
 );
 
 /**
@@ -195,6 +200,8 @@ const HttpGroupsLive = Layer.mergeAll(
 	AssessmentGroupLive,
 	ProfileGroupLive,
 	EvidenceGroupLive,
+	PurchaseWebhookGroupLive,
+	PurchaseGroupLive,
 	LoggerPinoRepositoryLive,
 );
 

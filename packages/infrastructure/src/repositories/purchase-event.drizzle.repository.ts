@@ -9,7 +9,7 @@ import { DatabaseError, DuplicateCheckoutError } from "@workspace/domain/errors/
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import type { InsertPurchaseEvent } from "@workspace/domain/repositories/purchase-event.repository";
 import { PurchaseEventRepository } from "@workspace/domain/repositories/purchase-event.repository";
-import type { PurchaseEvent } from "@workspace/domain/types/purchase.types";
+import type { PurchaseEvent, PurchaseEventType } from "@workspace/domain/types/purchase.types";
 import { deriveCapabilities } from "@workspace/domain/utils/derive-capabilities";
 import { Database } from "@workspace/infrastructure/context/database";
 import { asc, eq } from "drizzle-orm";
@@ -25,7 +25,7 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.effect(
 		const mapRow = (row: typeof purchaseEvents.$inferSelect): PurchaseEvent => ({
 			id: row.id,
 			userId: row.userId,
-			eventType: row.eventType,
+			eventType: row.eventType as PurchaseEventType,
 			polarCheckoutId: row.polarCheckoutId,
 			polarProductId: row.polarProductId,
 			amountCents: row.amountCents,
@@ -68,25 +68,27 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.effect(
 						})
 						.returning()
 						.pipe(
-							Effect.catchAll((error) => {
+							Effect.mapError((error) => {
 								const message = error instanceof Error ? error.message : String(error);
 								// Catch unique constraint violation on polar_checkout_id
 								if (message.includes("purchase_events_polar_checkout_id_unique")) {
-									return Effect.fail(
-										new DuplicateCheckoutError({
-											polarCheckoutId: event.polarCheckoutId ?? "",
-											message: `Duplicate checkout: ${event.polarCheckoutId}`,
-										}),
-									);
+									return new DuplicateCheckoutError({
+										polarCheckoutId: event.polarCheckoutId ?? "",
+										message: `Duplicate checkout: ${event.polarCheckoutId}`,
+									});
 								}
 								logger.error("Database operation failed", {
 									operation: "insertEvent",
 									error: message,
 								});
-								return Effect.fail(new DatabaseError({ message: "Failed to insert purchase event" }));
+								return new DatabaseError({ message: "Failed to insert purchase event" });
 							}),
 						);
-					return mapRow(rows[0]);
+					const row = rows[0];
+					if (!row) {
+						return yield* Effect.fail(new DatabaseError({ message: "Insert returned no rows" }));
+					}
+					return mapRow(row);
 				}),
 
 			getEventsByUserId,

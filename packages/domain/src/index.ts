@@ -97,7 +97,9 @@ export {
 	SessionNotFinalizing,
 	SessionNotFound,
 	Unauthorized,
+	UnknownProductError,
 	UserAlreadyExists,
+	WebhookVerificationError,
 } from "./errors/http.errors";
 export {
 	type AnalysisTarget,
@@ -169,6 +171,8 @@ export {
 	type GraphOutput,
 	OrchestratorGraphRepository,
 } from "./repositories/orchestrator-graph.repository";
+// Payment gateway repository (Story 13.2)
+export { PaymentGatewayRepository } from "./repositories/payment-gateway.repository";
 export {
 	PortraitGenerationError,
 	type PortraitGenerationInput,
@@ -290,6 +294,7 @@ export type {
 	UserMessage,
 } from "./types/message";
 export type {
+	PolarWebhookEvent,
 	PurchaseEvent,
 	PurchaseEventType,
 	UserCapabilities,

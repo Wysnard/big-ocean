@@ -97,6 +97,24 @@ export interface AppConfigService {
 
 	/** Per-user message rate limit per minute (Story 2.5) */
 	readonly messageRateLimit: number;
+
+	/** Polar.sh access token for API calls (secret) */
+	readonly polarAccessToken: Redacted.Redacted<string>;
+
+	/** Polar.sh webhook secret for HMAC verification (secret) */
+	readonly polarWebhookSecret: Redacted.Redacted<string>;
+
+	/** Polar product ID for portrait unlock */
+	readonly polarProductPortraitUnlock: string;
+
+	/** Polar product ID for single relationship credit */
+	readonly polarProductRelationshipSingle: string;
+
+	/** Polar product ID for 5-pack relationship credits */
+	readonly polarProductRelationship5Pack: string;
+
+	/** Polar product ID for extended conversation */
+	readonly polarProductExtendedConversation: string;
 }
 
 /**

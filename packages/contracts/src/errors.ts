@@ -30,5 +30,7 @@ export {
 	SessionNotFinalizing,
 	SessionNotFound,
 	Unauthorized,
+	UnknownProductError,
 	UserAlreadyExists,
+	WebhookVerificationError,
 } from "@workspace/domain/errors/http.errors";
