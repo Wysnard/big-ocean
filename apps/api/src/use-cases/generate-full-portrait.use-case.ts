@@ -75,16 +75,16 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 		// 4. Convert evidence records to SavedFacetEvidence format
 		const allEvidence: SavedFacetEvidence[] = evidenceRecords.map((e) => ({
 			id: e.id,
-			bigfiveFacet: e.bigfiveFacet,
+			assessmentMessageId: e.assessmentMessageId,
+			facetName: e.bigfiveFacet,
 			score: e.score,
 			confidence: e.confidence,
-			domain: e.domain,
-			rawDomain: e.rawDomain,
 			quote: e.quote,
 			highlightRange:
 				e.highlightStart !== null && e.highlightEnd !== null
 					? { start: e.highlightStart, end: e.highlightEnd }
-					: null,
+					: { start: 0, end: e.quote.length }, // Default to full quote if no range
+			createdAt: e.createdAt,
 		}));
 
 		// 5. Build facet scores map from result
@@ -113,6 +113,7 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 				archetypeDescription: archetype.description,
 				oceanCode5,
 				messages: messages.map((m) => ({
+					id: m.id,
 					role: m.role,
 					content: m.content,
 				})),

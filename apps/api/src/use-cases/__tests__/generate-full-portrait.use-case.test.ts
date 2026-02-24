@@ -92,6 +92,8 @@ const mockResult = {
 const mockEvidence = [
 	{
 		id: "ev_1",
+		assessmentMessageId: "msg_1",
+		assessmentResultId: "result_456",
 		bigfiveFacet: "imagination",
 		score: 15,
 		confidence: 0.8,
@@ -100,6 +102,7 @@ const mockEvidence = [
 		quote: "I love painting",
 		highlightStart: 0,
 		highlightEnd: 15,
+		createdAt: new Date(),
 	},
 ];
 
@@ -233,11 +236,12 @@ describe("generateFullPortrait Use Case (Story 13.3)", () => {
 			expect(mockMessageRepo.getMessages).toHaveBeenCalledWith("session_123");
 
 			// Verify portrait generator received all evidence
+			// Note: FinalizationEvidenceRecord.bigfiveFacet is mapped to SavedFacetEvidence.facetName
 			expect(mockPortraitGen.generatePortrait).toHaveBeenCalledWith(
 				expect.objectContaining({
 					allEvidence: expect.arrayContaining([
 						expect.objectContaining({
-							bigfiveFacet: "imagination",
+							facetName: "imagination",
 							quote: "I love painting",
 						}),
 					]),

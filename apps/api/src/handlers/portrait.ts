@@ -7,20 +7,20 @@
 
 import { HttpApiBuilder } from "@effect/platform";
 import { BigOceanApi } from "@workspace/contracts";
-import { Effect } from "effect";
+import { DateTime, Effect } from "effect";
 import { getPortraitStatus } from "../use-cases/get-portrait-status.use-case";
 
 export const PortraitGroupLive = HttpApiBuilder.group(BigOceanApi, "portrait", (handlers) =>
 	Effect.gen(function* () {
-		return handlers.handle("getPortraitStatus", ({ path }) =>
+		return handlers.handle("getPortraitStatus", ({ path: { sessionId } }) =>
 			Effect.gen(function* () {
-				const result = yield* getPortraitStatus(path.sessionId);
+				const result = yield* getPortraitStatus(sessionId);
 
-				// Transform portrait dates for JSON serialization
+				// Transform portrait dates for DateTimeUtc serialization
 				const portrait = result.portrait
 					? {
 							...result.portrait,
-							createdAt: result.portrait.createdAt.toISOString(),
+							createdAt: DateTime.unsafeMake(result.portrait.createdAt.getTime()),
 						}
 					: null;
 

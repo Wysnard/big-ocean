@@ -42,6 +42,13 @@ export const GetPortraitStatusResponseSchema = S.Struct({
 });
 
 /**
+ * Path schema for portrait status endpoint
+ */
+const PortraitStatusPathSchema = S.Struct({
+	sessionId: S.String,
+});
+
+/**
  * Portrait API Group
  *
  * Routes:
@@ -52,6 +59,7 @@ export const GetPortraitStatusResponseSchema = S.Struct({
 export const PortraitGroup = HttpApiGroup.make("portrait")
 	.add(
 		HttpApiEndpoint.get("getPortraitStatus", "/:sessionId/status")
+			.setPath(PortraitStatusPathSchema)
 			.addSuccess(GetPortraitStatusResponseSchema)
 			.addError(DatabaseError, { status: 500 }),
 	)

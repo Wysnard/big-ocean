@@ -141,12 +141,12 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.effect(
 				portraitPlaceholder: InsertPortraitPlaceholder | null,
 			) =>
 				Effect.gen(function* () {
-					// Use Drizzle transaction for atomicity
-					const result = yield* Effect.tryPromise({
-						try: async () => {
-							return await db.drizzle.transaction(async (tx) => {
+					// Use Drizzle Effect transaction for atomicity
+					const result = yield* db
+						.transaction((tx) =>
+							Effect.gen(function* () {
 								// 1. Insert purchase event
-								const [purchaseEventRow] = await tx
+								const purchaseRows = yield* tx
 									.insert(purchaseEvents)
 									.values({
 										userId: event.userId,
@@ -158,11 +158,12 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.effect(
 										metadata: event.metadata ?? null,
 									})
 									.returning();
+								const purchaseEventRow = purchaseRows[0];
 
 								// 2. Insert portrait placeholder if provided (idempotent with onConflictDoNothing)
 								let portraitRow: typeof portraits.$inferSelect | null = null;
 								if (portraitPlaceholder) {
-									const [inserted] = await tx
+									const portraitRows = yield* tx
 										.insert(portraits)
 										.values({
 											assessmentResultId: portraitPlaceholder.assessmentResultId,
@@ -171,28 +172,29 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.effect(
 										})
 										.onConflictDoNothing()
 										.returning();
-									portraitRow = inserted ?? null;
+									portraitRow = portraitRows[0] ?? null;
 								}
 
 								return { purchaseEventRow, portraitRow };
-							});
-						},
-						catch: (error) => {
-							const message = error instanceof Error ? error.message : String(error);
-							// Check for duplicate checkout error
-							if (message.includes("purchase_events_polar_checkout_id_unique")) {
-								return new DuplicateCheckoutError({
-									polarCheckoutId: event.polarCheckoutId ?? "",
-									message: `Duplicate checkout: ${event.polarCheckoutId}`,
+							}),
+						)
+						.pipe(
+							Effect.mapError((error) => {
+								const message = error instanceof Error ? error.message : String(error);
+								// Check for duplicate checkout error
+								if (message.includes("purchase_events_polar_checkout_id_unique")) {
+									return new DuplicateCheckoutError({
+										polarCheckoutId: event.polarCheckoutId ?? "",
+										message: `Duplicate checkout: ${event.polarCheckoutId}`,
+									});
+								}
+								logger.error("Database transaction failed", {
+									operation: "insertEventWithPortraitPlaceholder",
+									error: message,
 								});
-							}
-							logger.error("Database transaction failed", {
-								operation: "insertEventWithPortraitPlaceholder",
-								error: message,
-							});
-							return new DatabaseError({ message: "Failed to insert purchase event with portrait" });
-						},
-					});
+								return new DatabaseError({ message: "Failed to insert purchase event with portrait" });
+							}),
+						);
 
 					if (!result.purchaseEventRow) {
 						return yield* Effect.fail(

@@ -79,6 +79,15 @@ export const PurchaseWebhookGroupLive = HttpApiBuilder.group(
 								});
 							}),
 						),
+						// Catch assessment result errors (user has no completed assessment yet)
+						Effect.catchTag("AssessmentResultError", (err) =>
+							Effect.sync(() => {
+								logger.warn("Assessment result error during purchase processing", {
+									userId,
+									message: err.message,
+								});
+							}),
+						),
 					);
 
 					return { received: true };
