@@ -91,7 +91,7 @@ test("golden path: landing → chat → signup → results → share → public 
 	});
 
 	await test.step("assert archetype card is visible", async () => {
-		await page.locator("[data-slot='archetype-hero-section']").waitFor({
+		await page.getByTestId("archetype-hero-section").waitFor({
 			state: "visible",
 			timeout: 15_000,
 		});

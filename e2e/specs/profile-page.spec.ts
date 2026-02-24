@@ -84,7 +84,7 @@ test.describe("profile page: auth user with completed assessment", () => {
 		});
 
 		await test.step("verify results page renders archetype hero", async () => {
-			await page.locator("[data-slot='archetype-hero-section']").waitFor({
+			await page.getByTestId("archetype-hero-section").waitFor({
 				state: "visible",
 				timeout: 15_000,
 			});

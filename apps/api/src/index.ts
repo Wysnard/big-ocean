@@ -51,7 +51,6 @@ import { Context, Effect, Layer } from "effect";
 import { AssessmentGroupLive } from "./handlers/assessment";
 import { EvidenceGroupLive } from "./handlers/evidence";
 import { HealthGroupLive } from "./handlers/health";
-import { handleOgImage } from "./handlers/og";
 import { PortraitGroupLive } from "./handlers/portrait";
 import { ProfileGroupLive } from "./handlers/profile";
 import { PurchaseGroupLive, PurchaseWebhookGroupLive } from "./handlers/purchase";

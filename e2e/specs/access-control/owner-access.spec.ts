@@ -14,7 +14,7 @@ test.beforeAll(() => {
 test.describe("owner access granted", () => {
 	test("results page shows archetype hero section", async ({ page }) => {
 		await page.goto(`/results/${testSessionId}`);
-		await page.locator("[data-slot='archetype-hero-section']").waitFor({
+		await page.getByTestId("archetype-hero-section").waitFor({
 			state: "visible",
 			timeout: 15_000,
 		});
