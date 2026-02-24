@@ -115,7 +115,10 @@ export const Route = createFileRoute("/public-profile/$publicProfileId")({
 		const profile = loaderData?.profile;
 		const title = profile ? `${profile.archetypeName} | big-ocean` : FALLBACK_TITLE;
 		const description = profile?.description || FALLBACK_DESCRIPTION;
-		const origin = typeof window !== "undefined" ? window.location.origin : "";
+		const origin =
+			typeof window !== "undefined"
+				? window.location.origin
+				: (import.meta.env.VITE_APP_URL ?? "https://bigocean.dev");
 		const canonicalUrl = `${origin}/public-profile/${params.publicProfileId}`;
 		const ogImageUrl = `${origin}/api/og/public-profile/${params.publicProfileId}`;
 
