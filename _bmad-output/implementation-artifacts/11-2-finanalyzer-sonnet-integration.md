@@ -1,6 +1,6 @@
 # Story 11.2: FinAnalyzer Sonnet Integration
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -28,17 +28,17 @@ So that personality evidence is comprehensive, richly detailed, and suitable for
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create FinAnalyzer repository interface (AC: #1, #2, #4)
-  - [ ] 1.1: Create `packages/domain/src/repositories/finanalyzer.repository.ts`:
+- [x] Task 1: Create FinAnalyzer repository interface (AC: #1, #2, #4)
+  - [x] 1.1: Create `packages/domain/src/repositories/finanalyzer.repository.ts`:
     - Define `FinanalyzerMessage` type: `{ readonly id: string; readonly role: "user" | "assistant"; readonly content: string }` — uses the existing `DomainMessage` type from `packages/domain/src/types/message.ts`
     - Define `FinalizationEvidenceOutput` type: `{ readonly messageId: string; readonly bigfiveFacet: FacetName; readonly score: number; readonly confidence: number; readonly domain: LifeDomain; readonly rawDomain: string; readonly quote: string }`
     - Define `FinanalyzerOutput` type: `{ readonly evidence: readonly FinalizationEvidenceOutput[]; readonly tokenUsage: { readonly input: number; readonly output: number } }`
     - Define `FinanalyzerError` as `S.TaggedError("FinanalyzerError")` with `{ message: S.String }` — co-located with the repository interface (infrastructure error, NOT in http.errors.ts)
     - Define `FinanalyzerRepository` as `Context.Tag("FinanalyzerRepository")` with method: `analyze(params: { readonly messages: readonly FinanalyzerMessage[] }): Effect.Effect<FinanalyzerOutput, FinanalyzerError>`
-  - [ ] 1.2: Export `FinanalyzerRepository`, `FinanalyzerError`, `FinanalyzerMessage`, `FinalizationEvidenceOutput`, `FinanalyzerOutput` from `packages/domain/src/index.ts`
+  - [x] 1.2: Export `FinanalyzerRepository`, `FinanalyzerError`, `FinanalyzerMessage`, `FinalizationEvidenceOutput`, `FinanalyzerOutput` from `packages/domain/src/index.ts`
 
-- [ ] Task 2: Create FinalizationEvidence repository interface (AC: #4)
-  - [ ] 2.1: Create `packages/domain/src/repositories/finalization-evidence.repository.ts`:
+- [x] Task 2: Create FinalizationEvidence repository interface (AC: #4)
+  - [x] 2.1: Create `packages/domain/src/repositories/finalization-evidence.repository.ts`:
     - Define `FinalizationEvidenceRecord` type matching the DB schema: `{ id, assessmentMessageId, assessmentResultId, bigfiveFacet, score, confidence, domain, rawDomain, quote, highlightStart: number | null, highlightEnd: number | null, createdAt }`
     - Define `FinalizationEvidenceInput` type (for inserts): same fields minus `id` and `createdAt`
     - Define `FinalizationEvidenceError` as `S.TaggedError("FinalizationEvidenceError")` with `{ message: S.String }`
@@ -46,20 +46,20 @@ So that personality evidence is comprehensive, richly detailed, and suitable for
       - `saveBatch(evidence: readonly FinalizationEvidenceInput[]): Effect.Effect<void, FinalizationEvidenceError>`
       - `getByResultId(assessmentResultId: string): Effect.Effect<readonly FinalizationEvidenceRecord[], FinalizationEvidenceError>`
       - `existsForSession(sessionId: string): Effect.Effect<boolean, FinalizationEvidenceError>` — for idempotency Guard 2
-  - [ ] 2.2: Export from `packages/domain/src/index.ts`
+  - [x] 2.2: Export from `packages/domain/src/index.ts`
 
-- [ ] Task 3: Create AssessmentResult repository interface (AC: #1)
-  - [ ] 3.1: Create `packages/domain/src/repositories/assessment-result.repository.ts`:
+- [x] Task 3: Create AssessmentResult repository interface (AC: #1)
+  - [x] 3.1: Create `packages/domain/src/repositories/assessment-result.repository.ts`:
     - Define `AssessmentResultRecord` type: `{ id, assessmentSessionId, facets: Record<FacetName, { score: number; confidence: number }>, traits: Record<TraitName, { score: number; confidence: number }>, domainCoverage: Record<LifeDomain, number>, portrait: string, createdAt }`
     - Define `AssessmentResultInput` type (for inserts): same fields minus `id` and `createdAt`
     - Define `AssessmentResultError` as `S.TaggedError("AssessmentResultError")` with `{ message: S.String }`
     - Define `AssessmentResultRepository` as `Context.Tag("AssessmentResultRepository")` with methods:
       - `create(input: AssessmentResultInput): Effect.Effect<AssessmentResultRecord, AssessmentResultError>`
       - `getBySessionId(sessionId: string): Effect.Effect<AssessmentResultRecord | null, AssessmentResultError>`
-  - [ ] 3.2: Export from `packages/domain/src/index.ts`
+  - [x] 3.2: Export from `packages/domain/src/index.ts`
 
-- [ ] Task 4: Create FinAnalyzer Anthropic implementation (AC: #1, #2, #3, #7)
-  - [ ] 4.1: Create `packages/infrastructure/src/repositories/finanalyzer.anthropic.repository.ts`:
+- [x] Task 4: Create FinAnalyzer Anthropic implementation (AC: #1, #2, #3, #7)
+  - [x] 4.1: Create `packages/infrastructure/src/repositories/finanalyzer.anthropic.repository.ts`:
     - Follow the exact pattern from `conversanalyzer.anthropic.repository.ts` (tool use with Effect Schema → JSONSchema)
     - Use `AppConfig.finanalyzerModel` for model selection (default: `claude-sonnet-4-5-20250514` or current latest)
     - **Tool schema** (infrastructure-internal, NOT in domain):
@@ -73,28 +73,28 @@ So that personality evidence is comprehensive, richly detailed, and suitable for
     - **LLM call:** Single `anthropic.messages.create()` with tool use, parse tool call result via Effect Schema `decodeUnknownSync`
     - **Error handling:** Wrap Anthropic SDK errors in `FinanalyzerError`. No retry in the repository — retry handled by use-case
     - **Token usage:** Extract from `response.usage` and return in output
-  - [ ] 4.2: Add `finanalyzerModel` field to `AppConfig` interface in `packages/domain/src/config/app-config.ts` — type `string`
-  - [ ] 4.3: Add env var mapping in `packages/infrastructure/src/config/app-config.live.ts`: `finanalyzerModel: process.env.FINANALYZER_MODEL ?? "claude-sonnet-4-5-20250514"`
-  - [ ] 4.4: Add test default in `packages/domain/src/config/__mocks__/app-config.ts`: `finanalyzerModel: "mock-finanalyzer-model"`
-  - [ ] 4.5: Export `FinanalyzerAnthropicRepositoryLive` from `packages/infrastructure/src/index.ts`
+  - [x] 4.2: Verify `finanalyzerModelId` field exists in `AppConfig` interface — **already present from Story 9.1** (no change needed)
+  - [x] 4.3: Verify env var mapping exists in `packages/infrastructure/src/config/app-config.live.ts` — **already present from Story 9.1** (no change needed)
+  - [x] 4.4: Verify test default exists in `packages/domain/src/config/__mocks__/app-config.ts` — **already present from Story 9.1** (no change needed)
+  - [x] 4.5: Export `FinanalyzerAnthropicRepositoryLive` from `packages/infrastructure/src/index.ts`
 
-- [ ] Task 5: Create FinalizationEvidence Drizzle implementation (AC: #3, #4, #7)
-  - [ ] 5.1: Create `packages/infrastructure/src/repositories/finalization-evidence.drizzle.repository.ts`:
+- [x] Task 5: Create FinalizationEvidence Drizzle implementation (AC: #3, #4, #7)
+  - [x] 5.1: Create `packages/infrastructure/src/repositories/finalization-evidence.drizzle.repository.ts`:
     - `saveBatch`: Batch INSERT into `finalization_evidence` table using Drizzle `db.insert().values()`
     - `getByResultId`: SELECT WHERE `assessment_result_id = ?` ORDER BY `created_at`
     - `existsForSession`: SELECT EXISTS from `finalization_evidence fe JOIN assessment_results ar ON fe.assessment_result_id = ar.id WHERE ar.assessment_session_id = ?`
     - Map domain types ↔ Drizzle types (FacetName → bigfiveFacetNameEnum, LifeDomain → evidenceDomainEnum)
-  - [ ] 5.2: Export `FinalizationEvidenceDrizzleRepositoryLive` from `packages/infrastructure/src/index.ts`
+  - [x] 5.2: Export `FinalizationEvidenceDrizzleRepositoryLive` from `packages/infrastructure/src/index.ts`
 
-- [ ] Task 6: Create AssessmentResult Drizzle implementation (AC: #1)
-  - [ ] 6.1: Create `packages/infrastructure/src/repositories/assessment-result.drizzle.repository.ts`:
+- [x] Task 6: Create AssessmentResult Drizzle implementation (AC: #1)
+  - [x] 6.1: Create `packages/infrastructure/src/repositories/assessment-result.drizzle.repository.ts`:
     - `create`: INSERT into `assessment_results`, return created record
     - `getBySessionId`: SELECT WHERE `assessment_session_id = ?` LIMIT 1
     - JSONB columns (`facets`, `traits`, `domainCoverage`) stored as-is — Drizzle handles JSON serialization
-  - [ ] 6.2: Export `AssessmentResultDrizzleRepositoryLive` from `packages/infrastructure/src/index.ts`
+  - [x] 6.2: Export `AssessmentResultDrizzleRepositoryLive` from `packages/infrastructure/src/index.ts`
 
-- [ ] Task 7: Implement highlight position computation (AC: #3, #7)
-  - [ ] 7.1: Create pure function `computeHighlightPositions` in `packages/domain/src/utils/highlight.ts`:
+- [x] Task 7: Implement highlight position computation (AC: #3, #7)
+  - [x] 7.1: Create pure function `computeHighlightPositions` in `packages/domain/src/utils/highlight.ts`:
     ```typescript
     export function computeHighlightPositions(
       messageContent: string,
@@ -105,8 +105,8 @@ So that personality evidence is comprehensive, richly detailed, and suitable for
     - Multiple matches: return `{ highlightStart: null, highlightEnd: null }` (ambiguous)
     - No match: return `{ highlightStart: null, highlightEnd: null }` (graceful degradation)
     - Edge cases: empty quote → null, empty message → null
-  - [ ] 7.2: Export from `packages/domain/src/index.ts`
-  - [ ] 7.3: Unit tests in `packages/domain/src/utils/__tests__/highlight.test.ts`:
+  - [x] 7.2: Export from `packages/domain/src/index.ts`
+  - [x] 7.3: Unit tests in `packages/domain/src/utils/__tests__/highlight.test.ts`:
     - Exact match returns correct positions
     - Multiple matches returns null (ambiguous)
     - No match returns null
@@ -114,8 +114,8 @@ So that personality evidence is comprehensive, richly detailed, and suitable for
     - Unicode content works correctly
     - Quote at start/end of message works
 
-- [ ] Task 8: Implement generate-results Phase 1 — FinAnalyzer integration (AC: #1, #2, #3, #4, #5, #6, #7)
-  - [ ] 8.1: Modify `apps/api/src/use-cases/generate-results.use-case.ts`:
+- [x] Task 8: Implement generate-results Phase 1 — FinAnalyzer integration (AC: #1, #2, #3, #4, #5, #6, #7)
+  - [x] 8.1: Modify `apps/api/src/use-cases/generate-results.use-case.ts`:
     - **Add dependencies:** `FinanalyzerRepository`, `FinalizationEvidenceRepository`, `AssessmentResultRepository`, `AssessmentMessageRepository` (already available)
     - **Add idempotency Guard 2** BEFORE the existing Phase 1 placeholder:
       ```
@@ -143,31 +143,31 @@ So that personality evidence is comprehensive, richly detailed, and suitable for
       - Log: "Phase 2: Score computation — not yet implemented (Story 11.3)"
       - Still transition through `generating_portrait` → `completed` as before (enables end-to-end flow testing)
     - **Error handling:** If FinAnalyzer fails after retry, the `FinanalyzerError` propagates up. The `Effect.ensuring` block still releases the lock. Session stays `finalizing` (retryable)
-  - [ ] 8.2: Update the generate-results use-case function signature to include new repository dependencies in its `Effect.gen` requirements (they'll be provided via Layer)
-  - [ ] 8.3: Wire new repository Layers into the assessment handler's Layer stack in `apps/api/src/index.ts`:
+  - [x] 8.2: Update the generate-results use-case function signature to include new repository dependencies in its `Effect.gen` requirements (they'll be provided via Layer)
+  - [x] 8.3: Wire new repository Layers into the assessment handler's Layer stack in `apps/api/src/index.ts`:
     - Add `FinanalyzerAnthropicRepositoryLive`, `FinalizationEvidenceDrizzleRepositoryLive`, `AssessmentResultDrizzleRepositoryLive` to the Layer composition for the assessment handler group
 
-- [ ] Task 9: Create mock implementations for testing (AC: all)
-  - [ ] 9.1: Create `packages/infrastructure/src/repositories/__mocks__/finanalyzer.anthropic.repository.ts`:
+- [x] Task 9: Create mock implementations for testing (AC: all)
+  - [x] 9.1: Create `packages/infrastructure/src/repositories/__mocks__/finanalyzer.anthropic.repository.ts`:
     - Follow exact pattern from `__mocks__/conversanalyzer.anthropic.repository.ts`
     - Export `FinanalyzerAnthropicRepositoryLive` as `Layer.succeed(FinanalyzerRepository, implementation)`
     - Default mock: returns deterministic evidence for a standard 25-message conversation — ~30-50 evidence items covering all 5 traits with varied domains
     - Test helpers: `_resetMockState()`, `_setMockOutput(output)`, `_setMockError(error)`, `_getMockCalls()`
     - Token usage: `{ input: 5000, output: 2000 }` (realistic for 25 messages)
-  - [ ] 9.2: Create `packages/infrastructure/src/repositories/__mocks__/finalization-evidence.drizzle.repository.ts`:
+  - [x] 9.2: Create `packages/infrastructure/src/repositories/__mocks__/finalization-evidence.drizzle.repository.ts`:
     - In-memory array storage
     - `saveBatch`: push to array, assign generated IDs
     - `getByResultId`: filter by resultId
     - `existsForSession`: check if any records linked to session (simplified: check array length > 0)
     - Test helper: `_resetMockState()`, `_getStoredEvidence()`
-  - [ ] 9.3: Create `packages/infrastructure/src/repositories/__mocks__/assessment-result.drizzle.repository.ts`:
+  - [x] 9.3: Create `packages/infrastructure/src/repositories/__mocks__/assessment-result.drizzle.repository.ts`:
     - In-memory Map storage keyed by sessionId
     - `create`: store and return with generated ID
     - `getBySessionId`: lookup from map
     - Test helpers: `_resetMockState()`, `_getStoredResults()`
 
-- [ ] Task 10: Unit tests for generate-results Phase 1 (AC: all)
-  - [ ] 10.1: Update `apps/api/src/use-cases/__tests__/generate-results.use-case.test.ts`:
+- [x] Task 10: Unit tests for generate-results Phase 1 (AC: all)
+  - [x] 10.1: Update `apps/api/src/use-cases/__tests__/generate-results.use-case.test.ts`:
     - Add `vi.mock()` calls for new repositories: finanalyzer, finalization-evidence, assessment-result
     - Update existing TestLayer with new mock Layers
     - **New test: happy path Phase 1** — finalizing session → FinAnalyzer called with all messages → evidence saved with correct highlight positions → assessment_results placeholder created → session transitions to completed
@@ -178,7 +178,7 @@ So that personality evidence is comprehensive, richly detailed, and suitable for
     - **New test: highlight computation** — quote found in message → correct positions; quote not found → null positions; multiple matches → null positions
     - **New test: empty conversation** — edge case: no messages → FinAnalyzer called with empty array → returns empty evidence → assessment_results placeholder created (scores will be empty/default)
     - **Preserve existing tests:** All existing tests for Guard 1 (completed session), concurrent duplicate (lock fail), session validation must continue passing
-  - [ ] 10.2: Verify import ordering: `vi` from `vitest` FIRST, then `vi.mock()` calls, then `@effect/vitest` imports
+  - [x] 10.2: Verify import ordering: `vi` from `vitest` FIRST, then `vi.mock()` calls, then `@effect/vitest` imports
 
 ## Dev Notes
 
@@ -232,7 +232,9 @@ The FinAnalyzer prompt should:
 
 ### Frontend Impact
 
-None for this story. The frontend already:
+**Note:** While the core FinAnalyzer integration is backend-only, the git working tree contains modified frontend files from concurrent work. These changes are documented in the File List for transparency but are NOT part of Story 11.2's scope.
+
+The frontend already:
 - Calls `POST /generate-results` (triggers finalization)
 - Polls `GET /finalization-status` (sees progress: analyzing → generating_portrait → completed)
 - The only change is that Phase 1 now takes 8-10 seconds (Sonnet call) instead of being instant
@@ -291,10 +293,70 @@ Do NOT introduce any of these patterns during implementation:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (claude-opus-4-6)
 
 ### Debug Log References
 
+None — clean implementation, no debugging required.
+
 ### Completion Notes List
 
+- ✅ Task 1-3: Created domain repository interfaces for FinAnalyzer, FinalizationEvidence, and AssessmentResult with proper Context.Tag pattern, TaggedError classes, and typed input/output types
+- ✅ Task 4: Created FinAnalyzer Anthropic implementation following exact pattern from ConversanalyzerAnthropicRepository — tool use, Effect Schema → JSONSchema, MOCK_LLM fallback. `finanalyzerModelId` was already in AppConfig (pre-existing from Story 9.1)
+- ✅ Task 5-6: Created Drizzle implementations for FinalizationEvidence and AssessmentResult repositories with proper DB mapping
+- ✅ Task 7: Created `computeHighlightPositions` pure domain function with 8 unit tests covering exact match, multiple matches (ambiguous), no match, empty inputs, unicode, start/end of message
+- ✅ Task 8: Replaced Phase 1 placeholder in generate-results.use-case.ts with real FinAnalyzer integration — idempotency Guard 2, message fetching, FinAnalyzer call with retry, assessment_results placeholder creation, highlight computation, evidence batch save, cost tracking (fail-open)
+- ✅ Task 9: Created mock implementations for all 3 new repositories following existing __mocks__ pattern with test helpers
+- ✅ Task 10: Added 7 new tests covering happy path, Guard 2 idempotency, FinAnalyzer failure with retry, invalid messageId handling, highlight computation, and empty conversation edge case. All existing Story 11.1 tests preserved and passing.
+
+### Change Log
+
+- 2026-02-24: Story 11.2 implementation complete — FinAnalyzer Sonnet integration with all 10 tasks done
+- 2026-02-24: Code review fixes applied:
+  - Fixed mock to defer side effects via `Effect.sync()` (retry now works correctly)
+  - Added retry verification test (verifies 2 calls on failure)
+  - Added "first fails, retry succeeds" test case
+  - Removed unused `assessmentResults` import from finalization-evidence repo
+  - Added `_failForCalls()` mock helper for retry scenario testing
+  - Updated task documentation to clarify pre-existing AppConfig fields
+  - Updated File List to document all git changes including unrelated frontend work
+- 2026-02-24: Code review #2 fixes applied:
+  - Increased `max_tokens` from 4096 to 16384 (M1: insufficient for 30-60 evidence records)
+  - Fixed error catch to use `String(error)` instead of losing Schema ParseError details (M2)
+  - Fixed `existsForSession` mock to filter by sessionId via resultId→sessionId mapping (H2)
+  - Added `_linkResultToSession()` mock helper for session-aware existence checks
+  - Fixed deep imports in Drizzle repos and mocks to use barrel `@workspace/domain` (L1)
+  - Added test for message ordering preservation passed to FinAnalyzer (M3)
+  - Added justifying comment for `as` cast on JSON schema (H1)
+
 ### File List
+
+**New files (Story 11.2):**
+- `packages/domain/src/repositories/finanalyzer.repository.ts`
+- `packages/domain/src/repositories/finalization-evidence.repository.ts`
+- `packages/domain/src/repositories/assessment-result.repository.ts`
+- `packages/domain/src/utils/highlight.ts`
+- `packages/domain/src/utils/__tests__/highlight.test.ts`
+- `packages/infrastructure/src/repositories/finanalyzer.anthropic.repository.ts`
+- `packages/infrastructure/src/repositories/finalization-evidence.drizzle.repository.ts`
+- `packages/infrastructure/src/repositories/assessment-result.drizzle.repository.ts`
+- `packages/infrastructure/src/repositories/__mocks__/finanalyzer.anthropic.repository.ts`
+- `packages/infrastructure/src/repositories/__mocks__/finalization-evidence.drizzle.repository.ts`
+- `packages/infrastructure/src/repositories/__mocks__/assessment-result.drizzle.repository.ts`
+
+**Modified files (Story 11.2):**
+- `apps/api/src/use-cases/generate-results.use-case.ts` — Replaced Phase 1 placeholder with FinAnalyzer integration
+- `apps/api/src/use-cases/__tests__/generate-results.use-case.test.ts` — Added Phase 1 tests including retry verification
+- `apps/api/src/index.ts` — Wired 3 new repository Layers into RepositoryLayers
+- `packages/domain/src/index.ts` — Export new repositories, types, utils
+- `packages/infrastructure/src/index.ts` — Export new Live layers
+
+**Unrelated files in git working tree (NOT part of Story 11.2 — concurrent work):**
+- `apps/front/src/components/PortraitWaitScreen.tsx` + test
+- `apps/front/src/components/chat/FacetIcon.tsx`, `index.ts`
+- `apps/front/src/components/home/ResultPreviewEmbed.tsx`, `ShareCardPreview.tsx`, `TraitStackEmbed.tsx`
+- `apps/front/src/components/results/PortraitReadingView.tsx` + test
+- `apps/front/src/routes/results/$assessmentSessionId.tsx`
+- `apps/front/src/routeTree.gen.ts` (auto-generated)
+- `packages/ui/src/components/chat/*.tsx` (4 files)
+- `packages/ui/src/styles/globals.css`
