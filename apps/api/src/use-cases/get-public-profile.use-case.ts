@@ -19,6 +19,7 @@ import {
 	lookupArchetype,
 	type OceanCode5,
 	OceanCode5Schema,
+	ProfileAccessLogRepository,
 	PublicProfileRepository,
 } from "@workspace/domain";
 import { Effect } from "effect";
@@ -72,7 +73,16 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 			);
 		}
 
-		// 4. Fire-and-forget view count increment — never fail the GET
+		// 4a. Fire-and-forget audit log — never fail the GET
+		const accessLogRepo = yield* ProfileAccessLogRepository;
+		yield* accessLogRepo
+			.logAccess({
+				profileId: profile.id,
+				action: "profile_view",
+			})
+			.pipe(Effect.fork);
+
+		// 4b. Fire-and-forget view count increment — never fail the GET
 		yield* profileRepo.incrementViewCount(profile.id).pipe(
 			Effect.catchAll((error) => {
 				logger.warn("Failed to increment view count (non-blocking)", {

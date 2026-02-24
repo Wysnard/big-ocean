@@ -5,6 +5,7 @@ import { getTraitColor, TRAIT_NAMES } from "@workspace/domain";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import type { ChartConfig } from "@workspace/ui/components/chart";
 import { ChartContainer } from "@workspace/ui/components/chart";
+import { cn } from "@workspace/ui/lib/utils";
 import { memo, useCallback, useMemo } from "react";
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart } from "recharts";
 
@@ -38,10 +39,22 @@ interface ChartDataItem {
 
 interface PersonalityRadarChartProps {
 	traits: readonly TraitResult[];
+	/** Override chart width in px. Default uses ChartContainer responsive sizing. */
+	width?: number;
+	/** Override chart height in px. Default uses ChartContainer responsive sizing. */
+	height?: number;
+	/** Show large external score labels at each vertex (e.g. "O: 87"). Default false. */
+	showExternalLabels?: boolean;
+	/** When true, renders without Card wrapper (for embedded use). Default false. */
+	standalone?: boolean;
 }
 
 export const PersonalityRadarChart = memo(function PersonalityRadarChart({
 	traits,
+	width,
+	height,
+	showExternalLabels = false,
+	standalone = false,
 }: PersonalityRadarChartProps) {
 	const chartData = useMemo<ChartDataItem[]>(
 		() =>
@@ -89,6 +102,22 @@ export const PersonalityRadarChart = memo(function PersonalityRadarChart({
 	const renderTick = useCallback(
 		({ x, y, payload }: { x: number; y: number; payload: { value: TraitName } }) => {
 			const item = chartData.find((d) => d.trait === payload.value);
+
+			if (showExternalLabels) {
+				return (
+					<g key={payload.value} transform={`translate(${x},${y})`}>
+						<text
+							textAnchor="middle"
+							className="font-data font-bold"
+							style={{ fill: item?.fill ?? "currentColor", fontSize: "18px" }}
+							dy={-6}
+						>
+							{item?.label?.charAt(0) ?? ""}: {item?.score ?? 0}
+						</text>
+					</g>
+				);
+			}
+
 			return (
 				<g key={payload.value} transform={`translate(${x},${y})`}>
 					<text
@@ -110,7 +139,7 @@ export const PersonalityRadarChart = memo(function PersonalityRadarChart({
 				</g>
 			);
 		},
-		[chartData],
+		[chartData, showExternalLabels],
 	);
 
 	const renderDot = useCallback(
@@ -132,27 +161,33 @@ export const PersonalityRadarChart = memo(function PersonalityRadarChart({
 		[chartData],
 	);
 
+	const hasExplicitSize = width != null && height != null;
+
+	const chart = (
+		<ChartContainer
+			config={chartConfig}
+			className={cn("mx-auto", !hasExplicitSize && "aspect-square max-h-[280px]")}
+			style={hasExplicitSize ? { width, height } : undefined}
+		>
+			<RadarChart data={chartData}>
+				<PolarGrid />
+				<PolarRadiusAxis domain={[0, MAX_TRAIT_SCORE]} tick={false} axisLine={false} />
+				<PolarAngleAxis dataKey="trait" tick={renderTick} />
+				<Radar dataKey="score" fill="none" stroke="none" shape={renderGradientShape} dot={renderDot} />
+			</RadarChart>
+		</ChartContainer>
+	);
+
+	if (standalone) {
+		return <div data-slot="personality-radar-chart">{chart}</div>;
+	}
+
 	return (
 		<Card data-slot="personality-radar-chart">
 			<CardHeader>
 				<CardTitle className="text-lg font-display">Personality Shape</CardTitle>
 			</CardHeader>
-			<CardContent>
-				<ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[280px]">
-					<RadarChart data={chartData}>
-						<PolarGrid />
-						<PolarRadiusAxis domain={[0, MAX_TRAIT_SCORE]} tick={false} axisLine={false} />
-						<PolarAngleAxis dataKey="trait" tick={renderTick} />
-						<Radar
-							dataKey="score"
-							fill="none"
-							stroke="none"
-							shape={renderGradientShape}
-							dot={renderDot}
-						/>
-					</RadarChart>
-				</ChartContainer>
-			</CardContent>
+			<CardContent>{chart}</CardContent>
 		</Card>
 	);
 });

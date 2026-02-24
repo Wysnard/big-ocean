@@ -78,6 +78,8 @@ export { OrchestratorGraphLangGraphRepositoryLive } from "./repositories/orchest
 // Portrait generator repository implementations
 export { PortraitGeneratorClaudeRepositoryLive } from "./repositories/portrait-generator.claude.repository";
 export { PortraitGeneratorMockRepositoryLive } from "./repositories/portrait-generator.mock.repository";
+// Profile access log repository implementation (Story 15.1)
+export { ProfileAccessLogDrizzleRepositoryLive } from "./repositories/profile-access-log.drizzle.repository";
 // Public profile repository implementation
 export { PublicProfileDrizzleRepositoryLive } from "./repositories/public-profile.drizzle.repository";
 // Redis repository implementation
