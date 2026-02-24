@@ -271,3 +271,15 @@ export class MalformedEvidenceError extends S.TaggedError<MalformedEvidenceError
 		message: S.String,
 	},
 ) {}
+
+/**
+ * Duplicate checkout error (409)
+ * Webhook delivered a polar_checkout_id that already exists in purchase_events
+ */
+export class DuplicateCheckoutError extends S.TaggedError<DuplicateCheckoutError>()(
+	"DuplicateCheckoutError",
+	{
+		polarCheckoutId: S.String,
+		message: S.String,
+	},
+) {}
