@@ -21,6 +21,9 @@ export { EvidenceGroup } from "./http/groups/evidence";
 export * from "./http/groups/health";
 // HTTP API Groups
 export { HealthGroup } from "./http/groups/health";
+// Portrait HTTP Schemas and Types (Story 13.3)
+export * from "./http/groups/portrait";
+export { PortraitGroup } from "./http/groups/portrait";
 // Profile HTTP Schemas and Types
 export * from "./http/groups/profile";
 export { ProfileGroup } from "./http/groups/profile";

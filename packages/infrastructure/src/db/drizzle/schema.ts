@@ -333,6 +333,35 @@ export const purchaseEvents = pgTable(
 	],
 );
 
+// ─── Portraits (Story 13.3 — two-tier portrait system) ───────────────────
+
+/**
+ * Portraits
+ *
+ * Two-tier portrait system (teaser/full).
+ * Placeholder row pattern: content=NULL means generating.
+ * Status derived from data, not stored column.
+ */
+export const portraits = pgTable(
+	"portraits",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		assessmentResultId: uuid("assessment_result_id")
+			.notNull()
+			.references(() => assessmentResults.id, { onDelete: "cascade" }),
+		tier: text("tier").notNull().$type<"teaser" | "full">(),
+		content: text("content"), // nullable — NULL = generating
+		lockedSectionTitles: jsonb("locked_section_titles").$type<string[]>(), // nullable — only for teaser
+		modelUsed: text("model_used").notNull(),
+		retryCount: integer("retry_count").notNull().default(0),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		uniqueIndex("portraits_result_tier_unique").on(table.assessmentResultId, table.tier),
+		index("portraits_assessment_result_id_idx").on(table.assessmentResultId),
+	],
+);
+
 // ─── Profile Access Log (Story 15.1 — audit logging for profile views) ──
 
 /**
@@ -372,6 +401,7 @@ export const relations = defineRelations(
 		assessmentResults,
 		publicProfile,
 		purchaseEvents,
+		portraits,
 		profileAccessLog,
 	},
 	(r) => ({
@@ -444,6 +474,13 @@ export const relations = defineRelations(
 			}),
 			finalizationEvidence: r.many.finalizationEvidence(),
 			publicProfile: r.many.publicProfile(),
+			portraits: r.many.portraits(),
+		},
+		portraits: {
+			result: r.one.assessmentResults({
+				from: r.portraits.assessmentResultId,
+				to: r.assessmentResults.id,
+			}),
 		},
 		publicProfile: {
 			session: r.one.assessmentSession({

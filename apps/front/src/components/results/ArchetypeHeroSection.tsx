@@ -57,7 +57,7 @@ export function ArchetypeHeroSection({
 
 	return (
 		<section
-			data-slot="archetype-hero-section"
+			data-testid="archetype-hero-section"
 			className={`relative overflow-hidden px-6 py-16 md:py-24 ${showScrollIndicator ? "min-h-[70vh] flex items-center justify-center" : ""}`}
 		>
 			{/* Color block composition — decorative geometric shapes */}

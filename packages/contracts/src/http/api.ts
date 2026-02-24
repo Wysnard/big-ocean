@@ -9,6 +9,7 @@ import { HttpApi } from "@effect/platform";
 import { AssessmentGroup } from "./groups/assessment";
 import { EvidenceGroup } from "./groups/evidence";
 import { HealthGroup } from "./groups/health";
+import { PortraitGroup } from "./groups/portrait";
 import { ProfileGroup } from "./groups/profile";
 import { PurchaseGroup, PurchaseWebhookGroup } from "./groups/purchase";
 
@@ -23,5 +24,6 @@ export class BigOceanApi extends HttpApi.make("BigOceanApi")
 	.add(AssessmentGroup.prefix("/api")) // /api/assessment/*
 	.add(ProfileGroup.prefix("/api")) // /api/public-profile/*
 	.add(EvidenceGroup.prefix("/api")) // /api/evidence/*
+	.add(PortraitGroup.prefix("/api")) // /api/portrait/:sessionId/status
 	.add(PurchaseWebhookGroup.prefix("/api")) // /api/purchase/polar-webhook (public)
 	.add(PurchaseGroup.prefix("/api")) {} // /api/purchase/verify (authenticated)

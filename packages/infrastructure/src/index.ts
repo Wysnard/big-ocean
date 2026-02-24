@@ -77,6 +77,8 @@ export {
 export { OrchestratorGraphLangGraphRepositoryLive } from "./repositories/orchestrator-graph.langgraph.repository";
 // Payment gateway repository implementation (Story 13.2)
 export { PaymentGatewayPolarRepositoryLive } from "./repositories/payment-gateway.polar.repository";
+// Portrait repository implementation (Story 13.3)
+export { PortraitDrizzleRepositoryLive } from "./repositories/portrait.drizzle.repository";
 // Portrait generator repository implementations
 export { PortraitGeneratorClaudeRepositoryLive } from "./repositories/portrait-generator.claude.repository";
 export { PortraitGeneratorMockRepositoryLive } from "./repositories/portrait-generator.mock.repository";

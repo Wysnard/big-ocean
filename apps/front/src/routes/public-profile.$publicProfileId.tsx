@@ -347,7 +347,7 @@ function ProfilePage() {
 
 			{/* Section 3: Trait Strata — 5 colored bands */}
 			<section
-				data-slot="trait-strata"
+				data-testid="trait-strata"
 				className="max-w-[1120px] mx-auto px-5 py-10 flex flex-col gap-[1px]"
 			>
 				{BIG_FIVE_TRAITS.map((traitName) => {

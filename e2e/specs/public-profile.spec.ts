@@ -85,7 +85,7 @@ test("anonymous user views public profile with traits and facets", async ({ page
 	});
 
 	await test.step("verify archetype hero section is visible", async () => {
-		await page.locator("[data-slot='archetype-hero-section']").waitFor({
+		await page.getByTestId("archetype-hero-section").waitFor({
 			state: "visible",
 			timeout: 10_000,
 		});
@@ -97,20 +97,21 @@ test("anonymous user views public profile with traits and facets", async ({ page
 	});
 
 	await test.step("verify all 5 Big Five traits are displayed", async () => {
-		const traitStrata = page.locator("[data-slot='trait-strata']");
+		// Story 15-1 redesign uses TraitBand components in a "trait-strata" section
+		const traitStrata = page.getByTestId("trait-strata");
 		await expect(traitStrata).toBeVisible();
 
 		for (const { key, label } of TRAITS) {
-			const band = page.locator(`[data-slot='trait-band'][data-trait='${key}']`);
+			const band = page.getByTestId(`trait-band-${key}`);
 			await expect(band).toBeVisible();
 			await expect(band.getByText(label, { exact: true })).toBeVisible();
 		}
 	});
 
 	await test.step("verify trait bands show facet scores inline", async () => {
-		// The TraitBand component shows all 6 facets inline via FacetScoreBar.
+		// TraitBand shows all 6 facets inline via FacetScoreBar.
 		// Verify the Openness band has facet names visible.
-		const openBand = page.locator("[data-slot='trait-band'][data-trait='openness']");
+		const openBand = page.getByTestId("trait-band-openness");
 		await expect(openBand.getByText("Imagination")).toBeVisible();
 		await expect(openBand.getByText("Artistic Interests")).toBeVisible();
 	});

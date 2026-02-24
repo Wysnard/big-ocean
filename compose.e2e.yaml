@@ -7,9 +7,13 @@
 # - MOCK_LLM=true              → deterministic mock responses, zero cost
 # - Same ports: API 4001, PG 5433, Redis 6380, Frontend 3001
 #
+# Polar.sh config:
+#   Copy .env.e2e.example to .env.e2e and fill in sandbox credentials.
+#   Docker Compose will auto-load .env.e2e if present.
+#
 # Usage:
 #   pnpm test:e2e               # Automatic via globalSetup/globalTeardown
-#   docker compose -f compose.e2e.yaml up -d --build   # Manual start
+#   docker compose -f compose.e2e.yaml --env-file .env.e2e up -d --build   # Manual with sandbox
 #   docker compose -f compose.e2e.yaml down -v          # Manual stop
 
 services:
@@ -60,15 +64,16 @@ services:
       PORTRAIT_WAIT_MIN_MS: "500"
       SHARE_MIN_CONFIDENCE: "0"
       ANTHROPIC_API_KEY: "sk-test-dummy-key-for-e2e-tests"
-      POLAR_ACCESS_TOKEN: "pol_test_access_token"
-      POLAR_WEBHOOK_SECRET: "pol_test_webhook_secret"
-      POLAR_PRODUCT_PORTRAIT_UNLOCK: "pol_test_portrait"
-      POLAR_PRODUCT_RELATIONSHIP_SINGLE: "pol_test_rel_single"
-      POLAR_PRODUCT_RELATIONSHIP_5PACK: "pol_test_rel_5pack"
-      POLAR_PRODUCT_EXTENDED_CONVERSATION: "pol_test_extended"
       BETTER_AUTH_SECRET: test-secret-minimum-32-characters-long-for-security
       BETTER_AUTH_URL: http://localhost:4001
       FRONTEND_URL: http://localhost:3001
+      # Polar.sh config — uses .env.e2e if present, otherwise test placeholders
+      POLAR_ACCESS_TOKEN: ${POLAR_ACCESS_TOKEN:-not-configured}
+      POLAR_WEBHOOK_SECRET: ${POLAR_WEBHOOK_SECRET:-test-webhook-secret-for-e2e}
+      POLAR_PRODUCT_PORTRAIT_UNLOCK: ${POLAR_PRODUCT_PORTRAIT_UNLOCK:-test-product-portrait}
+      POLAR_PRODUCT_RELATIONSHIP_SINGLE: ${POLAR_PRODUCT_RELATIONSHIP_SINGLE:-test-product-single}
+      POLAR_PRODUCT_RELATIONSHIP_5PACK: ${POLAR_PRODUCT_RELATIONSHIP_5PACK:-test-product-5pack}
+      POLAR_PRODUCT_EXTENDED_CONVERSATION: ${POLAR_PRODUCT_EXTENDED_CONVERSATION:-test-product-extended}
       NODE_ENV: test
       PORT: 4000
       HOST: 0.0.0.0

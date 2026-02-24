@@ -53,6 +53,10 @@ vi.mock("@/hooks/use-profile", () => ({
 	useToggleVisibility: () => ({ isPending: false, mutateAsync: vi.fn() }),
 }));
 
+vi.mock("@/hooks/usePortraitStatus", () => ({
+	usePortraitStatus: () => ({ data: null, refetch: vi.fn() }),
+}));
+
 vi.mock("@/components/ResultsAuthGate", () => ({
 	ResultsAuthGate: () => <div data-testid="mock-auth-gate">Mock Auth Gate</div>,
 }));

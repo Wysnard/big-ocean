@@ -18,6 +18,7 @@ coverage
 # E2E
 e2e/test-results/
 e2e/playwright-report/
+.env.e2e
 
 # Turbo
 .turbo

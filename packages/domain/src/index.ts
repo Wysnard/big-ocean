@@ -173,6 +173,16 @@ export {
 } from "./repositories/orchestrator-graph.repository";
 // Payment gateway repository (Story 13.2)
 export { PaymentGatewayRepository } from "./repositories/payment-gateway.repository";
+// Portrait repository (Story 13.3 — two-tier portrait system)
+export {
+	DuplicatePortraitError,
+	type InsertPortraitPlaceholder,
+	type Portrait,
+	PortraitNotFoundError,
+	PortraitRepository,
+	type PortraitStatus,
+	type PortraitTier,
+} from "./repositories/portrait.repository";
 export {
 	PortraitGenerationError,
 	type PortraitGenerationInput,
@@ -187,8 +197,11 @@ export {
 	type PublicProfileData,
 	PublicProfileRepository,
 } from "./repositories/public-profile.repository";
-export type { InsertPurchaseEvent } from "./repositories/purchase-event.repository";
-// Purchase event repository (Story 13.1)
+export type {
+	InsertEventWithPortraitResult,
+	InsertPurchaseEvent,
+} from "./repositories/purchase-event.repository";
+// Purchase event repository (Story 13.1, extended Story 13.3)
 export { PurchaseEventRepository } from "./repositories/purchase-event.repository";
 export {
 	RedisConnectionError,

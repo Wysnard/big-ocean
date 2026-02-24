@@ -7,7 +7,7 @@
  */
 
 import { execSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { AUTH_FILES, OTHER_USER, OWNER_USER } from "./e2e-env.js";
 import {
@@ -114,7 +114,14 @@ async function createAuthState(): Promise<void> {
 async function globalSetup(): Promise<void> {
 	console.log("[global-setup] Starting Docker test containers...");
 
-	execSync("docker compose -f compose.e2e.yaml up -d --build", {
+	// Use .env.e2e if it exists (for Polar.sh sandbox credentials)
+	const envFile = resolve(PROJECT_ROOT, ".env.e2e");
+	const envFileFlag = existsSync(envFile) ? "--env-file .env.e2e" : "";
+	if (envFileFlag) {
+		console.log("[global-setup] Loading Polar.sh config from .env.e2e");
+	}
+
+	execSync(`docker compose -f compose.e2e.yaml ${envFileFlag} up -d --build`, {
 		cwd: PROJECT_ROOT,
 		stdio: "inherit",
 	});

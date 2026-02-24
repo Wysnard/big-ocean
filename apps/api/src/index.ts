@@ -32,6 +32,7 @@ import {
 	OrchestratorGraphLangGraphRepositoryLive,
 	OrchestratorLangGraphRepositoryLive,
 	PaymentGatewayPolarRepositoryLive,
+	PortraitDrizzleRepositoryLive,
 	PortraitGeneratorClaudeRepositoryLive,
 	PortraitGeneratorMockRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
@@ -50,6 +51,7 @@ import { Context, Effect, Layer } from "effect";
 import { AssessmentGroupLive } from "./handlers/assessment";
 import { EvidenceGroupLive } from "./handlers/evidence";
 import { HealthGroupLive } from "./handlers/health";
+import { PortraitGroupLive } from "./handlers/portrait";
 import { ProfileGroupLive } from "./handlers/profile";
 import { PurchaseGroupLive, PurchaseWebhookGroupLive } from "./handlers/purchase";
 import { AuthMiddlewareLive } from "./middleware/auth.middleware";
@@ -185,6 +187,7 @@ const RepositoryLayers = Layer.mergeAll(
 	CostGuardLayer,
 	OrchestratorLayer,
 	PortraitGeneratorLayer,
+	PortraitDrizzleRepositoryLive,
 	PaymentGatewayPolarRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
 	TeaserPortraitLayer,
@@ -212,6 +215,7 @@ const HttpGroupsLive = Layer.mergeAll(
 	HealthGroupLive,
 	AssessmentGroupLive,
 	ProfileGroupLive,
+	PortraitGroupLive,
 	EvidenceGroupLive,
 	PurchaseWebhookGroupLive,
 	PurchaseGroupLive,
