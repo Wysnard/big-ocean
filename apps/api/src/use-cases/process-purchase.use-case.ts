@@ -27,7 +27,13 @@ export interface ProcessPurchaseInput {
  */
 const mapProductToEventType = (
 	productId: string,
-	config: { readonly [K in `polarProduct${string}`]: string },
+	config: Pick<
+		import("@workspace/domain").AppConfigService,
+		| "polarProductPortraitUnlock"
+		| "polarProductRelationshipSingle"
+		| "polarProductRelationship5Pack"
+		| "polarProductExtendedConversation"
+	>,
 ): PurchaseEventType | null => {
 	if (productId === config.polarProductPortraitUnlock) return "portrait_unlocked";
 	if (productId === config.polarProductRelationshipSingle) return "credit_purchased";
