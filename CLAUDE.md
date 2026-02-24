@@ -279,6 +279,8 @@ See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for production details.
 
 ## Testing
 
+**`data-testid` rule:** NEVER remove, replace, or rename `data-testid` attributes. They are used exclusively by e2e tests (Playwright). `data-slot` is a separate shadcn/ui concern — they coexist. See [FRONTEND.md](./docs/FRONTEND.md#testing-with-data-attributes) for details.
+
 Uses [@effect/vitest](https://github.com/Effect-TS/effect/tree/main/packages/vitest) with dependency injection via Test Layers.
 
 **Commands:**

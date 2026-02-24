@@ -265,19 +265,31 @@ Radix UI primitives automatically provide `data-state` and `data-disabled` attri
 
 ### Testing with Data Attributes
 
-**Use `data-testid` for E2E and integration tests.** This is the standard convention and provides stable selectors:
+#### `data-testid` vs `data-slot` — Two Separate Concerns
+
+| Attribute | Purpose | Who uses it | Managed by |
+|-----------|---------|-------------|------------|
+| `data-testid` | E2E test selectors (Playwright) | QA / test automation | Developers — added explicitly |
+| `data-slot` | Component structural identification | shadcn/ui internals, CSS targeting | shadcn/ui — auto-generated |
+
+**Hard rule: NEVER remove, replace, or rename `data-testid` attributes.** They coexist with `data-slot` — they serve different purposes. E2E tests use `data-testid` exclusively.
 
 ```tsx
-// Component
-<Dialog data-testid="assessment-dialog">
-  <DialogTitle data-testid="assessment-dialog-title">Title</DialogTitle>
-</Dialog>
+// ✅ Correct — both attributes coexist
+<DialogTitle data-slot="dialog-title" data-testid="assessment-dialog-title">
+  Title
+</DialogTitle>
 
-// Test (Playwright) - PREFERRED: Use getByTestId
+// ❌ WRONG — replacing data-testid with data-slot breaks e2e tests
+<DialogTitle data-slot="assessment-dialog-title">Title</DialogTitle>
+```
+
+```tsx
+// E2E test (Playwright) — PREFERRED: use getByTestId
 await page.getByTestId("assessment-dialog").waitFor();
 await expect(page.getByTestId("assessment-dialog-title")).toHaveText('Title');
 
-// Test (Testing Library)
+// Unit test (Testing Library) — prefer semantic queries first, then data-testid
 const dialog = screen.getByRole('dialog', { name: /assessment/i });
 const title = within(dialog).getByText('Title');
 ```
