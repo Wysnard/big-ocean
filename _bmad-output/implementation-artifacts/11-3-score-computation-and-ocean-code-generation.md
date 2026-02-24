@@ -1,6 +1,6 @@
 # Story 11.3: Score Computation & OCEAN Code Generation
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -28,18 +28,18 @@ So that my Big Five profile reflects the full assessment and I receive my OCEAN 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `update` method to AssessmentResultRepository (AC: #5)
-  - [ ] 1.1: Add to `packages/domain/src/repositories/assessment-result.repository.ts`:
+- [x] Task 1: Add `update` method to AssessmentResultRepository (AC: #5)
+  - [x] 1.1: Add to `packages/domain/src/repositories/assessment-result.repository.ts`:
     - Add `AssessmentResultUpdateInput` type: `Partial<Pick<AssessmentResultInput, "facets" | "traits" | "domainCoverage" | "portrait">>` — allows updating any subset of computed fields
     - Add `update(id: string, input: AssessmentResultUpdateInput): Effect.Effect<AssessmentResultRecord, AssessmentResultError>` to the repository interface
-  - [ ] 1.2: Implement in `packages/infrastructure/src/repositories/assessment-result.drizzle.repository.ts`:
+  - [x] 1.2: Implement in `packages/infrastructure/src/repositories/assessment-result.drizzle.repository.ts`:
     - `UPDATE assessment_results SET ... WHERE id = ?` using Drizzle's `.set()` — only update provided fields
     - Return the updated record
-  - [ ] 1.3: Update mock `packages/infrastructure/src/repositories/__mocks__/assessment-result.drizzle.repository.ts`:
+  - [x] 1.3: Update mock `packages/infrastructure/src/repositories/__mocks__/assessment-result.drizzle.repository.ts`:
     - Add `update` to the in-memory mock — merge input into stored record, return updated
 
-- [ ] Task 2: Create score computation pure functions (AC: #1, #2, #4, #6)
-  - [ ] 2.1: Create `packages/domain/src/utils/score-computation.ts`:
+- [x] Task 2: Create score computation pure functions (AC: #1, #2, #4, #6)
+  - [x] 2.1: Create `packages/domain/src/utils/score-computation.ts`:
     - `computeAllFacetResults(evidence: EvidenceInput[]): Record<FacetName, { score: number; confidence: number; signalPower: number }>`:
       - Call `computeFacetMetrics(evidence)` from existing `formula.ts`
       - For ALL 30 facets (iterate `ALL_FACETS`): if metrics exist, extract score/confidence/signalPower; if missing, use defaults (SCORE_MIDPOINT, 0, 0)
@@ -51,16 +51,16 @@ So that my Big Five profile reflects the full assessment and I receive my OCEAN 
       - Count evidence records per domain
       - Normalize to sum = 1.0 (each domain / total)
       - If zero evidence, return all zeros
-  - [ ] 2.2: Export from `packages/domain/src/index.ts`
+  - [x] 2.2: Export from `packages/domain/src/index.ts`
 
-- [ ] Task 3: Unit tests for score computation (AC: #1, #2, #4, #6)
-  - [ ] 3.1: Create `packages/domain/src/utils/__tests__/score-computation.test.ts`:
+- [x] Task 3: Unit tests for score computation (AC: #1, #2, #4, #6)
+  - [x] 3.1: Create `packages/domain/src/utils/__tests__/score-computation.test.ts`:
     - **computeAllFacetResults:** empty evidence → all 30 facets at defaults; single-facet evidence → correct score + defaults for other 29; multi-domain evidence → correctly weighted scores
     - **computeTraitResults:** uniform facets → trait score = facet score; mixed facets → trait = average; zero-confidence facets → trait confidence = 0
     - **computeDomainCoverage:** empty → all zeros; single domain → 1.0; balanced 3 domains → ~0.33 each; includes "other" domain
 
-- [ ] Task 4: Implement Phase 2 in generate-results use-case (AC: #1-7)
-  - [ ] 4.1: Replace the Phase 2 placeholder in `apps/api/src/use-cases/generate-results.use-case.ts`:
+- [x] Task 4: Implement Phase 2 in generate-results use-case (AC: #1-7)
+  - [x] 4.1: Replace the Phase 2 placeholder in `apps/api/src/use-cases/generate-results.use-case.ts`:
     - After Phase 1 (evidence saved or Guard 2 skipped):
     - Fetch finalization evidence: `yield* finalizationEvidenceRepo.getByResultId(assessmentResultId)`
       - **Note:** Need the `assessmentResultId` — in the happy path it's `assessmentResult.id` from Phase 1. In the Guard 2 path (evidence exists), fetch it via `yield* assessmentResultRepo.getBySessionId(input.sessionId)` and use that id
@@ -70,18 +70,18 @@ So that my Big Five profile reflects the full assessment and I receive my OCEAN 
     - Call `computeDomainCoverage(evidenceInputs)` → domainCoverage
     - Update the assessment_results row: `yield* assessmentResultRepo.update(assessmentResultId, { facets, traits, domainCoverage })`
     - Log: "Phase 2 complete: scores computed", including facet count with evidence, trait scores summary
-  - [ ] 4.2: Fix the assessmentResultId flow for the Guard 2 path:
+  - [x] 4.2: Fix the assessmentResultId flow for the Guard 2 path:
     - When Guard 2 fires (evidence exists, FinAnalyzer skipped), the `assessmentResult` variable doesn't exist yet
     - Fetch it: `const existingResult = yield* assessmentResultRepo.getBySessionId(input.sessionId)`
     - Use `existingResult.id` as `assessmentResultId` for Phase 2
     - If somehow no result exists (data corruption), fail with `AssessmentResultError`
-  - [ ] 4.3: Keep progress updates:
+  - [x] 4.3: Keep progress updates:
     - `finalizationProgress = "generating_portrait"` set BEFORE Phase 2 scoring (already in code)
     - Phase 2 scoring happens between "generating_portrait" and "completed"
     - After scoring: session status → "completed", finalizationProgress → "completed" (already in code)
 
-- [ ] Task 5: Unit tests for Phase 2 in generate-results (AC: all)
-  - [ ] 5.1: Update `apps/api/src/use-cases/__tests__/generate-results.use-case.test.ts`:
+- [x] Task 5: Unit tests for Phase 2 in generate-results (AC: all)
+  - [x] 5.1: Update `apps/api/src/use-cases/__tests__/generate-results.use-case.test.ts`:
     - **New test: Phase 2 happy path** — evidence exists → scores computed → assessment_results updated with facets/traits/domainCoverage → session completed
     - **New test: Phase 2 with Guard 2** — evidence pre-exists from previous attempt → FinAnalyzer skipped → scores still computed correctly from existing evidence → assessment_results updated
     - **New test: all 30 facets populated** — verify the assessment_results.facets has entries for all 30 facets from `ALL_FACETS`, even if only a subset have real evidence (rest are defaults)
@@ -194,10 +194,36 @@ Do NOT introduce any of these patterns during implementation:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+None.
+
 ### Completion Notes List
 
+- Task 1: Added `update` method + `AssessmentResultUpdateInput` type to domain interface, Drizzle implementation, and mock. Also added `signalPower` to facets/traits JSONB types (JSONB — no DB migration needed). Added `_seedResult` helper to mock for testing Guard 2 path.
+- Task 2: Created `score-computation.ts` with `computeAllFacetResults`, `computeTraitResults`, `computeDomainCoverage` — pure domain functions wrapping existing `computeFacetMetrics()`. Exported from domain barrel.
+- Task 3: 11 unit tests covering all 3 functions: empty evidence, single-facet, multi-domain, uniform/mixed traits, domain normalization, "other" domain inclusion.
+- Task 4: Replaced Phase 2 placeholder in `generate-results.use-case.ts`. Fetches finalization evidence, computes scores via domain functions, updates assessment_results row. Handles both normal path (Phase 1 result) and Guard 2 path (pre-existing evidence, fetches result by sessionId).
+- Task 5: 6 new Phase 2 tests + updated 2 existing tests to account for Phase 2 scoring. All 238 API tests pass, all 733 domain tests pass. Zero regressions.
+
+### Change Log
+
+- 2026-02-24: Story 11.3 implementation complete — score computation & OCEAN code generation
+- 2026-02-24: Code review fixes — removed unused import, improved type usage in mock, updated header comment
+
 ### File List
+
+**New files:**
+- `packages/domain/src/utils/score-computation.ts`
+- `packages/domain/src/utils/__tests__/score-computation.test.ts`
+
+**Modified files:**
+- `packages/domain/src/repositories/assessment-result.repository.ts` — added `update` method, `AssessmentResultUpdateInput` type, `signalPower` to facets/traits types
+- `packages/domain/src/index.ts` — exported new score-computation functions + `AssessmentResultUpdateInput`
+- `packages/infrastructure/src/repositories/assessment-result.drizzle.repository.ts` — implemented `update`
+- `packages/infrastructure/src/repositories/__mocks__/assessment-result.drizzle.repository.ts` — added `update`, `_seedResult` helper
+- `packages/infrastructure/src/repositories/__mocks__/finalization-evidence.drizzle.repository.ts` — added `_seedEvidence` helper
+- `apps/api/src/use-cases/generate-results.use-case.ts` — replaced Phase 2 placeholder with real score computation
+- `apps/api/src/use-cases/__tests__/generate-results.use-case.test.ts` — added 6 Phase 2 tests, updated 2 existing tests
