@@ -48,6 +48,7 @@ import { NerinAgentMockRepositoryLive } from "@workspace/infrastructure/reposito
 import { RedisIoRedisRepositoryLive } from "@workspace/infrastructure/repositories/redis.ioredis.repository";
 import { Context, Effect, Layer } from "effect";
 import { AssessmentGroupLive } from "./handlers/assessment";
+import { handleArchetypeCard } from "./handlers/card";
 import { EvidenceGroupLive } from "./handlers/evidence";
 import { HealthGroupLive } from "./handlers/health";
 import { handleOgImage } from "./handlers/og";
@@ -268,6 +269,16 @@ function wrapServerWithCorsAndAuth(
 				return true;
 			}
 
+			// Archetype card route — handle before auth/Effect layers (Story 15.2)
+			const cardMatch = req.url?.match(/^\/api\/archetype-card\/([^/?]+)/);
+			if (cardMatch?.[1] && req.method === "GET") {
+				const cardUrl = new URL(req.url ?? "", "http://localhost");
+				const format =
+					cardUrl.searchParams.get("format") === "1:1" ? ("1:1" as const) : ("9:16" as const);
+				handleArchetypeCard(req, res, cardMatch[1], format);
+				return true;
+			}
+
 			// Run our handler first (async, but we can't await in emit)
 			betterAuthHandler(req, res).then(() => {
 				// If response wasn't ended by our handler, let Effect handle it
@@ -330,6 +341,9 @@ const logStartup = (port: number, frontendUrl: string) =>
 		logger.info("");
 		logger.info("✓ OG Image routes (node:http layer):");
 		logger.info("  - GET  /api/og/public-profile/:publicProfileId");
+		logger.info("");
+		logger.info("✓ Archetype Card routes (node:http layer):");
+		logger.info("  - GET  /api/archetype-card/:publicProfileId?format=9:16|1:1");
 		logger.info("");
 		logger.info("✓ Public Profile routes (Effect layer):");
 		logger.info("  - POST  /api/public-profile/share");

@@ -116,6 +116,12 @@ export {
 } from "./repositories/assessment-result.repository";
 // Repository interfaces (ports in hexagonal architecture)
 export { AssessmentSessionRepository } from "./repositories/assessment-session.repository";
+// Card generator repository (Story 15.2)
+export {
+	CardGenerationError,
+	type CardGenerationInput,
+	CardGeneratorRepository,
+} from "./repositories/card-generator.repository";
 // Conversanalyzer repository (Story 10.2)
 export {
 	ConversanalyzerError,

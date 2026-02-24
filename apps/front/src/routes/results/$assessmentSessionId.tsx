@@ -13,6 +13,7 @@ import { ProfileView } from "@/components/results/ProfileView";
 import { QuickActionsCard } from "@/components/results/QuickActionsCard";
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
 import { useTraitEvidence } from "@/components/results/useTraitEvidence";
+import { ArchetypeShareCard } from "@/components/sharing/archetype-share-card";
 import {
 	getResultsQueryOptions,
 	isAssessmentApiError,
@@ -362,15 +363,17 @@ function ResultsSessionPage() {
 						onToggleVisibility={handleToggleVisibility}
 					/>
 
+					{shareState?.publicProfileId && (
+						<ArchetypeShareCard
+							publicProfileId={shareState.publicProfileId}
+							archetypeName={results.archetypeName}
+						/>
+					)}
+
 					{/* Action CTAs — full-width */}
 					<div className="col-span-full flex flex-wrap justify-center gap-3 py-4">
 						{results.personalDescription && (
-							<Button
-								data-testid="results-read-portrait"
-								asChild
-								variant="outline"
-								className="min-h-11"
-							>
+							<Button data-testid="results-read-portrait" asChild variant="outline" className="min-h-11">
 								<Link
 									to="/results/$assessmentSessionId"
 									params={{ assessmentSessionId }}
