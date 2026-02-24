@@ -25,6 +25,8 @@ export { AnalyzerClaudeRepositoryLive } from "./repositories/analyzer.claude.rep
 export { AnalyzerMockRepositoryLive } from "./repositories/analyzer.mock.repository";
 // Message repository implementation
 export { AssessmentMessageDrizzleRepositoryLive } from "./repositories/assessment-message.drizzle.repository";
+// Assessment result repository implementation (Story 11.2)
+export { AssessmentResultDrizzleRepositoryLive } from "./repositories/assessment-result.drizzle.repository";
 // Session repository implementation
 export { AssessmentSessionDrizzleRepositoryLive } from "./repositories/assessment-session.drizzle.repository";
 // Checkpointer repository implementations
@@ -42,6 +44,10 @@ export { CostGuardRedisRepositoryLive } from "./repositories/cost-guard.redis.re
 export { FacetEvidenceNoopRepositoryLive } from "./repositories/facet-evidence.noop.repository";
 // Facet steering hints
 export { FACET_STEERING_HINTS } from "./repositories/facet-steering";
+// Finalization evidence repository implementation (Story 11.2)
+export { FinalizationEvidenceDrizzleRepositoryLive } from "./repositories/finalization-evidence.drizzle.repository";
+// FinAnalyzer repository implementation (Story 11.2)
+export { FinanalyzerAnthropicRepositoryLive } from "./repositories/finanalyzer.anthropic.repository";
 // Logger repository implementation
 export { LoggerPinoRepositoryLive } from "./repositories/logger.pino.repository";
 // Nerin agent repository implementations

@@ -1,22 +1,31 @@
 /**
- * Generate Results Use Case (Story 11.1)
+ * Generate Results Use Case (Story 11.1 + 11.2)
  *
  * Triggers the finalization pipeline for a completed assessment.
- * Implements two-tier idempotency:
+ * Implements three-tier idempotency:
  *   Tier 1: Already completed → return immediately
  *   Tier 2: Lock contention → return current progress (not an error)
+ *   Guard 2: Finalization evidence exists → skip FinAnalyzer, reuse evidence
  *
- * Phase 1 placeholder: Transitions through analyzing → generating_portrait → completed
- * synchronously. Stories 11.2-11.5 will replace with real async work.
+ * Phase 1: FinAnalyzer (Sonnet) → finalization_evidence + assessment_results placeholder
+ * Phase 2: Score computation (Story 11.3 — placeholder)
  */
 
+import type { FinalizationEvidenceInput } from "@workspace/domain";
 import {
+	AssessmentMessageRepository,
+	AssessmentResultRepository,
 	AssessmentSessionRepository,
+	CostGuardRepository,
+	calculateCost,
+	computeHighlightPositions,
+	FinalizationEvidenceRepository,
+	FinanalyzerRepository,
 	LoggerRepository,
 	SessionNotFinalizing,
 	SessionNotFound,
 } from "@workspace/domain";
-import { Effect } from "effect";
+import { Effect, Schedule } from "effect";
 
 export interface GenerateResultsInput {
 	readonly sessionId: string;
@@ -29,6 +38,11 @@ export const generateResults = (input: GenerateResultsInput) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const logger = yield* LoggerRepository;
+		const messageRepo = yield* AssessmentMessageRepository;
+		const finanalyzerRepo = yield* FinanalyzerRepository;
+		const finalizationEvidenceRepo = yield* FinalizationEvidenceRepository;
+		const assessmentResultRepo = yield* AssessmentResultRepository;
+		const costGuardRepo = yield* CostGuardRepository;
 
 		// 1. Validate session exists and user owns it
 		const session = yield* sessionRepo.getSession(input.sessionId);
@@ -82,11 +96,123 @@ export const generateResults = (input: GenerateResultsInput) =>
 
 		// Lock acquired — run the pipeline with guaranteed lock release
 		return yield* Effect.gen(function* () {
+			// ═══════════════════════════════════════════════════════════════
+			// PHASE 1: FinAnalyzer (Sonnet) → finalization_evidence
+			// ═══════════════════════════════════════════════════════════════
+
 			// 5. Update progress to "analyzing"
 			yield* sessionRepo.updateSession(input.sessionId, { finalizationProgress: "analyzing" });
-			logger.info("Phase 1: FinAnalyzer — not yet implemented (Story 11.2)", {
-				sessionId: input.sessionId,
-			});
+
+			// Guard 2: Check if finalization evidence already exists (idempotency)
+			const evidenceExists = yield* finalizationEvidenceRepo.existsForSession(input.sessionId);
+			if (evidenceExists) {
+				logger.info("Idempotency Guard 2: finalization evidence exists, skipping FinAnalyzer", {
+					sessionId: input.sessionId,
+				});
+			} else {
+				// Fetch ALL messages for the session
+				const messages = yield* messageRepo.getMessages(input.sessionId);
+
+				// Map to FinanalyzerMessage format
+				const finanalyzerMessages = messages.map((m) => ({
+					id: m.id,
+					role: m.role as "user" | "assistant",
+					content: m.content,
+				}));
+
+				logger.info("Phase 1: Calling FinAnalyzer (Sonnet)", {
+					sessionId: input.sessionId,
+					messageCount: finanalyzerMessages.length,
+				});
+
+				// Call FinAnalyzer with retry once
+				const finanalyzerOutput = yield* finanalyzerRepo
+					.analyze({ messages: finanalyzerMessages })
+					.pipe(Effect.retry(Schedule.once));
+
+				// Create assessment_results placeholder row (FK target for finalization_evidence)
+				const assessmentResult = yield* assessmentResultRepo.create({
+					assessmentSessionId: input.sessionId,
+					facets: {},
+					traits: {},
+					domainCoverage: {},
+					portrait: "",
+				});
+
+				// Build message content map for highlight computation
+				const messageContentMap = new Map<string, string>();
+				for (const m of messages) {
+					messageContentMap.set(m.id, m.content);
+				}
+
+				// Process evidence: validate messageIds, compute highlights
+				const evidenceInputs: FinalizationEvidenceInput[] = [];
+				let skippedCount = 0;
+
+				for (const ev of finanalyzerOutput.evidence) {
+					const messageContent = messageContentMap.get(ev.messageId);
+					if (messageContent === undefined) {
+						logger.warn("FinAnalyzer returned invalid messageId, skipping evidence item", {
+							messageId: ev.messageId,
+							sessionId: input.sessionId,
+						});
+						skippedCount++;
+						continue;
+					}
+
+					const { highlightStart, highlightEnd } = computeHighlightPositions(messageContent, ev.quote);
+
+					evidenceInputs.push({
+						assessmentMessageId: ev.messageId,
+						assessmentResultId: assessmentResult.id,
+						bigfiveFacet: ev.bigfiveFacet,
+						score: ev.score,
+						confidence: ev.confidence,
+						domain: ev.domain,
+						rawDomain: ev.rawDomain,
+						quote: ev.quote,
+						highlightStart,
+						highlightEnd,
+					});
+				}
+
+				if (skippedCount > 0) {
+					logger.warn("FinAnalyzer evidence items skipped due to invalid messageIds", {
+						skippedCount,
+						totalCount: finanalyzerOutput.evidence.length,
+						sessionId: input.sessionId,
+					});
+				}
+
+				// Batch save evidence
+				yield* finalizationEvidenceRepo.saveBatch(evidenceInputs);
+
+				logger.info("Phase 1 complete: finalization evidence saved", {
+					sessionId: input.sessionId,
+					evidenceCount: evidenceInputs.length,
+					tokenUsage: finanalyzerOutput.tokenUsage,
+				});
+
+				// Track cost (fail-open — Redis errors don't block finalization)
+				const costKey = session.userId ?? input.sessionId;
+				const cost = calculateCost(
+					finanalyzerOutput.tokenUsage.input,
+					finanalyzerOutput.tokenUsage.output,
+				);
+				yield* costGuardRepo.incrementDailyCost(costKey, cost.totalCents).pipe(
+					Effect.catchTag("RedisOperationError", (err) => {
+						logger.warn("Failed to track FinAnalyzer cost (non-blocking)", {
+							error: err.message,
+							sessionId: input.sessionId,
+						});
+						return Effect.succeed(0);
+					}),
+				);
+			}
+
+			// ═══════════════════════════════════════════════════════════════
+			// PHASE 2: Score computation (Story 11.3 — placeholder)
+			// ═══════════════════════════════════════════════════════════════
 
 			// 6. Update progress to "generating_portrait"
 			yield* sessionRepo.updateSession(input.sessionId, {
