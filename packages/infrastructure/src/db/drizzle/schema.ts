@@ -18,6 +18,7 @@
 
 import { ALL_FACETS } from "@workspace/domain/constants/big-five";
 import { LIFE_DOMAINS } from "@workspace/domain/constants/life-domain";
+import { PURCHASE_EVENT_TYPES } from "@workspace/domain/types/purchase.types";
 import { defineRelations, sql } from "drizzle-orm";
 import {
 	boolean,
@@ -45,6 +46,11 @@ export const evidenceDomainEnum = pgEnum(
 export const bigfiveFacetNameEnum = pgEnum(
 	"bigfive_facet_name",
 	ALL_FACETS as unknown as [string, ...string[]],
+);
+
+export const purchaseEventTypeEnum = pgEnum(
+	"purchase_event_type",
+	PURCHASE_EVENT_TYPES as unknown as [string, ...string[]],
 );
 
 // ─── Better Auth tables ───────────────────────────────────────────────────
@@ -295,6 +301,38 @@ export const publicProfile = pgTable(
 	],
 );
 
+// ─── Purchase Events (Story 13.1 — append-only event log) ────────────────
+
+/**
+ * Purchase Events
+ *
+ * Append-only event log for all purchase/refund actions.
+ * User capabilities derived from events, not mutable counters.
+ * No UPDATE or DELETE — corrections via compensating events (refunds).
+ */
+export const purchaseEvents = pgTable(
+	"purchase_events",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "restrict" }),
+		eventType: purchaseEventTypeEnum("event_type").notNull(),
+		polarCheckoutId: text("polar_checkout_id"),
+		polarProductId: text("polar_product_id"),
+		amountCents: integer("amount_cents"),
+		currency: text("currency"),
+		metadata: jsonb("metadata"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("purchase_events_user_id_idx").on(table.userId),
+		uniqueIndex("purchase_events_polar_checkout_id_unique")
+			.on(table.polarCheckoutId)
+			.where(sql`polar_checkout_id IS NOT NULL`),
+	],
+);
+
 // ─── Relations (Drizzle v2 syntax) ───────────────────────────────────────
 
 export const relations = defineRelations(
@@ -309,6 +347,7 @@ export const relations = defineRelations(
 		finalizationEvidence,
 		assessmentResults,
 		publicProfile,
+		purchaseEvents,
 	},
 	(r) => ({
 		user: {
@@ -317,6 +356,7 @@ export const relations = defineRelations(
 			assessmentSession: r.many.assessmentSession(),
 			assessmentMessage: r.many.assessmentMessage(),
 			publicProfiles: r.many.publicProfile(),
+			purchaseEvents: r.many.purchaseEvents(),
 		},
 		session: {
 			user: r.one.user({
@@ -391,6 +431,12 @@ export const relations = defineRelations(
 			}),
 			user: r.one.user({
 				from: r.publicProfile.userId,
+				to: r.user.id,
+			}),
+		},
+		purchaseEvents: {
+			user: r.one.user({
+				from: r.purchaseEvents.userId,
 				to: r.user.id,
 			}),
 		},

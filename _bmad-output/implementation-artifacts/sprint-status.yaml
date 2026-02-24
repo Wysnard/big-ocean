@@ -219,8 +219,8 @@ development_status:
   # Polar.sh, PWYW, purchase events, full portrait async generation
   # Stories: 4.1-4.3 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-13: backlog
-  13-1-purchase-events-schema-and-capability-derivation: backlog
+  epic-13: in-progress
+  13-1-purchase-events-schema-and-capability-derivation: done
   13-2-polar-sh-checkout-and-webhook-integration: backlog
   13-3-full-portrait-async-generation: backlog
   epic-13-retrospective: optional

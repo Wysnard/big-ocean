@@ -79,6 +79,7 @@ export {
 	ConcurrentMessageError,
 	CostLimitExceeded,
 	DatabaseError,
+	DuplicateCheckoutError,
 	FinalizationInProgressError,
 	FreeTierLimitReached,
 	InvalidCredentials,
@@ -177,6 +178,9 @@ export {
 	type PublicProfileData,
 	PublicProfileRepository,
 } from "./repositories/public-profile.repository";
+export type { InsertPurchaseEvent } from "./repositories/purchase-event.repository";
+// Purchase event repository (Story 13.1)
+export { PurchaseEventRepository } from "./repositories/purchase-event.repository";
 export {
 	RedisConnectionError,
 	RedisOperationError,
@@ -280,6 +284,16 @@ export type {
 	DomainMessage,
 	UserMessage,
 } from "./types/message";
+export type {
+	PurchaseEvent,
+	PurchaseEventType,
+	UserCapabilities,
+} from "./types/purchase.types";
+// Purchase event types (Story 13.1)
+export {
+	PURCHASE_EVENT_TYPES,
+	parseMetadata,
+} from "./types/purchase.types";
 // Session types
 export type { MessageRole, Session, SessionStatus } from "./types/session";
 // Trait types (Big Five)
@@ -316,6 +330,7 @@ export {
 	DEFAULT_FACET_CONFIDENCE,
 	DEFAULT_FACET_SCORE,
 	DEFAULT_TRAIT_SCORE,
+	deriveCapabilities,
 	deriveTraitScores,
 	deriveTraitSummary,
 	extract4LetterCode,
