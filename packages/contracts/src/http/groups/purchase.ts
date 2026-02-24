@@ -39,7 +39,7 @@ export const PurchaseWebhookGroup = HttpApiGroup.make("purchaseWebhook")
 	.add(
 		HttpApiEndpoint.post("polarWebhook", "/polar-webhook")
 			.addSuccess(WebhookResponseSchema)
-			.setPayload(S.String)
+			// No setPayload - we read raw body in handler for HMAC verification
 			.addError(WebhookVerificationError, { status: 400 })
 			.addError(DatabaseError, { status: 500 }),
 	)
