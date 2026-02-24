@@ -97,28 +97,28 @@ test("anonymous user views public profile with traits and facets", async ({ page
 	});
 
 	await test.step("verify all 5 Big Five traits are displayed", async () => {
-		const profileView = page.locator("[data-slot='profile-view']");
-		await expect(profileView).toBeVisible();
+		const traitStrata = page.locator("[data-slot='trait-strata']");
+		await expect(traitStrata).toBeVisible();
 
 		for (const { key, label } of TRAITS) {
-			const card = page.locator(`[data-slot='trait-card'][data-trait='${key}']`);
-			await expect(card).toBeVisible();
-			await expect(card.getByText(label, { exact: true })).toBeVisible();
+			const band = page.locator(`[data-slot='trait-band'][data-trait='${key}']`);
+			await expect(band).toBeVisible();
+			await expect(band.getByText(label, { exact: true })).toBeVisible();
 		}
 	});
 
-	await test.step("verify trait cards show facet scores inline", async () => {
-		// The redesigned TraitCard shows all 6 facets inline per card (no expand/collapse).
-		// Verify the Openness card has facet names visible.
-		const openCard = page.locator("[data-slot='trait-card'][data-trait='openness']");
-		await expect(openCard.getByText("Imagination")).toBeVisible();
-		await expect(openCard.getByText("Artistic Interests")).toBeVisible();
+	await test.step("verify trait bands show facet scores inline", async () => {
+		// The TraitBand component shows all 6 facets inline via FacetScoreBar.
+		// Verify the Openness band has facet names visible.
+		const openBand = page.locator("[data-slot='trait-band'][data-trait='openness']");
+		await expect(openBand.getByText("Imagination")).toBeVisible();
+		await expect(openBand.getByText("Artistic Interests")).toBeVisible();
 	});
 
-	await test.step("verify viral loop CTA is visible and links home", async () => {
-		const cta = page.getByTestId("public-cta");
+	await test.step("verify viral loop CTA is visible", async () => {
+		const cta = page.getByTestId("public-profile-cta");
 		await cta.scrollIntoViewIfNeeded();
 		await expect(cta).toBeVisible();
-		await expect(cta).toContainText("Discover Your Archetype");
+		await expect(cta).toContainText("Discover Your Personality");
 	});
 });
