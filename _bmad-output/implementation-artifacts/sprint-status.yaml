@@ -135,6 +135,7 @@ development_status:
   8-4-pre-generate-personalized-portrait-at-free-tier-message-threshold: done
   8-7-portrait-prompt-rework: done
   8-5-regenerate-personalized-portrait-paid-tier: backlog
+  8-8-complete-archetype-library: backlog
   epic-8-retrospective: optional
 
 # ═══════════════════════════════════════════════════════════════
@@ -199,7 +200,7 @@ development_status:
   11-1-finalization-trigger-and-auth-gate: done
   11-2-finanalyzer-sonnet-integration: done
   11-3-score-computation-and-ocean-code-generation: done
-  11-4-archetype-system: backlog
+  11-4-archetype-system: done
   11-5-finalization-pipeline-orchestration: backlog
   epic-11-retrospective: optional
 
