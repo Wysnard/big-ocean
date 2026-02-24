@@ -55,8 +55,7 @@ export function TraitBand({ trait, facets }: TraitBandProps) {
 	return (
 		<div
 			ref={ref}
-			data-slot="trait-band"
-			data-trait={trait.name}
+			data-testid={`trait-band-${trait.name}`}
 			className="p-6 motion-safe:transition-all motion-safe:duration-500"
 			style={{
 				borderLeft: `4px solid ${traitColor}`,

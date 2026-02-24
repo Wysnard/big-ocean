@@ -265,24 +265,28 @@ Radix UI primitives automatically provide `data-state` and `data-disabled` attri
 
 ### Testing with Data Attributes
 
-Data attributes provide stable selectors for E2E tests:
+**Use `data-testid` for E2E and integration tests.** This is the standard convention and provides stable selectors:
 
 ```tsx
 // Component
-<Dialog data-slot="assessment-dialog">
-  <DialogTitle data-slot="assessment-dialog-title">Title</DialogTitle>
+<Dialog data-testid="assessment-dialog">
+  <DialogTitle data-testid="assessment-dialog-title">Title</DialogTitle>
 </Dialog>
 
-// Test (Playwright)
-await page.locator('[data-slot="assessment-dialog"]').waitFor();
-await expect(page.locator('[data-slot="assessment-dialog-title"]')).toHaveText('Title');
+// Test (Playwright) - PREFERRED: Use getByTestId
+await page.getByTestId("assessment-dialog").waitFor();
+await expect(page.getByTestId("assessment-dialog-title")).toHaveText('Title');
 
 // Test (Testing Library)
 const dialog = screen.getByRole('dialog', { name: /assessment/i });
 const title = within(dialog).getByText('Title');
 ```
 
-**Guideline:** Use `data-slot` for structural identification, test with semantic queries (role, label) first, then `data-slot` if needed.
+**Guidelines:**
+- ✅ **Use `data-testid`** for E2E test selectors — `page.getByTestId("element-name")`
+- ✅ Use semantic queries first (role, label), then `data-testid` when needed
+- ❌ **Do NOT use `data-slot` for testing** — it's for styling/CSS targeting only
+- ❌ Do NOT use CSS selector syntax like `[data-slot='...']` in tests
 
 ---
 
@@ -397,12 +401,14 @@ packages/ui/
 
 ### Data Attributes
 
-1. ✅ **Use `data-slot`** on all component primitives for structural identification
-2. ✅ **Use `data-state`** for binary runtime states (open/closed, active/inactive)
-3. ✅ **Use custom `data-*`** for app-specific states (status, validation, loading)
-4. ✅ **Stack with other variants** (hover, dark, responsive)
-5. ❌ **Don't use for visual variants** (use CVA + variant props)
-6. ❌ **Don't duplicate CSS pseudo-classes** (use Tailwind variants)
+1. ✅ **Use `data-testid`** for E2E/integration test selectors — `page.getByTestId("name")`
+2. ✅ **Use `data-slot`** for CSS styling and structural identification (NOT for testing)
+3. ✅ **Use `data-state`** for binary runtime states (open/closed, active/inactive)
+4. ✅ **Use custom `data-*`** for app-specific states (status, validation, loading)
+5. ✅ **Stack with other variants** (hover, dark, responsive)
+6. ❌ **Don't use `data-slot` for tests** — use `data-testid` instead
+7. ❌ **Don't use for visual variants** (use CVA + variant props)
+8. ❌ **Don't duplicate CSS pseudo-classes** (use Tailwind variants)
 
 ### Components
 
