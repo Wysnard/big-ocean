@@ -13,6 +13,9 @@ export const FacetResultSchema = S.Struct({
 	traitName: TraitNameSchema,
 	score: S.Number,
 	confidence: S.Number,
+	level: S.String, // Two-letter code like "OV"
+	levelLabel: S.String, // Human-readable like "Visionary"
+	levelDescription: S.String, // Description from FACET_DESCRIPTIONS
 });
 export type FacetResult = typeof FacetResultSchema.Type;
 

@@ -55,6 +55,38 @@ describe("lookupArchetype", () => {
 	});
 });
 
+describe("archetype lookup performance (NFR9 - Story 11.4)", () => {
+	it("should complete all 81 lookups in < 100ms", () => {
+		const oLevels = ["P", "G", "O"] as const;
+		const cLevels = ["F", "B", "D"] as const;
+		const eLevels = ["I", "A", "E"] as const;
+		const aLevels = ["C", "N", "W"] as const;
+
+		// Warmup: JIT compile the function before timing
+		lookupArchetype("GBAN");
+
+		const startTime = performance.now();
+
+		for (const O of oLevels) {
+			for (const C of cLevels) {
+				for (const E of eLevels) {
+					for (const A of aLevels) {
+						const code4 = `${O}${C}${E}${A}`;
+						lookupArchetype(code4);
+					}
+				}
+			}
+		}
+
+		const endTime = performance.now();
+		const totalTime = endTime - startTime;
+
+		// NFR9: Archetype lookup should complete in < 100ms for all 81 codes
+		// Using 100ms threshold; actual execution is typically < 5ms
+		expect(totalTime).toBeLessThan(100);
+	});
+});
+
 describe("extract4LetterCode", () => {
 	it('extracts "ODAW" from "ODAWT"', () => {
 		expect(extract4LetterCode("ODAWT")).toBe("ODAW");

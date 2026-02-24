@@ -20,11 +20,14 @@ import {
 	calculateConfidenceFromFacetScores,
 	deriveTraitScores,
 	extract4LetterCode,
+	FACET_DESCRIPTIONS,
+	FACET_LEVEL_LABELS,
 	FACET_TO_TRAIT,
 	FacetEvidenceRepository,
 	type FacetName,
 	type FacetResult,
 	generateOceanCode,
+	getFacetLevel,
 	LoggerRepository,
 	lookupArchetype,
 	PublicProfileRepository,
@@ -138,13 +141,30 @@ export const getResults = (input: GetResultsInput) =>
 			};
 		});
 
-		// 9. Build facet results array
-		const facets: FacetResult[] = (Object.keys(facetScoresMap) as FacetName[]).map((facetName) => ({
-			name: facetName,
-			traitName: FACET_TO_TRAIT[facetName],
-			score: facetScoresMap[facetName].score,
-			confidence: facetScoresMap[facetName].confidence,
-		}));
+		// 9. Build facet results array with level fields (Story 11.4)
+		const facets: FacetResult[] = (Object.keys(facetScoresMap) as FacetName[]).map((facetName) => {
+			const facetData = facetScoresMap[facetName];
+			const level = getFacetLevel(facetName, facetData.score);
+			const levelLabel = FACET_LEVEL_LABELS[level];
+			// Cast needed: TS can't narrow level to specific facet's valid codes
+			const levelDescription =
+				FACET_DESCRIPTIONS[facetName].levels[
+					level as keyof (typeof FACET_DESCRIPTIONS)[typeof facetName]["levels"]
+				];
+			// Type guard: getFacetLevel guarantees valid level code for this facet
+			if (levelDescription === undefined) {
+				throw new Error(`Missing facet description for ${facetName}:${level}`);
+			}
+			return {
+				name: facetName,
+				traitName: FACET_TO_TRAIT[facetName],
+				score: facetData.score,
+				confidence: facetData.confidence,
+				level,
+				levelLabel,
+				levelDescription,
+			};
+		});
 
 		// 10. Read stored portrait description
 		const personalDescription = session.personalDescription?.trim()
