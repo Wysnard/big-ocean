@@ -198,11 +198,13 @@ None required — implementation was straightforward with no debugging needed.
 - `apps/api/src/use-cases/get-results.use-case.ts` — Import utilities, populate level fields in facet mapping
 - `apps/api/src/use-cases/__tests__/get-results-success.use-case.test.ts` — Added level field assertions and threshold tests
 - `packages/domain/src/utils/__tests__/archetype-lookup-exhaustive.test.ts` — Added performance test
+- `apps/api/src/handlers/assessment.ts` — Added level fields to facets mapping in getResults handler
 
 ### Change Log
 
 - 2026-02-24: Story 11.4 implemented — Extended FacetResult with level fields, updated get-results use-case, added tests
 - 2026-02-24: Senior Developer Review — 3 MEDIUM issues found and fixed, all tests pass
+- 2026-02-24: Handler fix — Added missing level fields to getResults handler facets mapping (discovered during integration testing)
 
 ## Senior Developer Review (AI)
 
@@ -255,4 +257,5 @@ front:test: Tests      200 passed (200)
 - `apps/api/src/use-cases/get-results.use-case.ts` — Added type guard for levelDescription lookup
 - `apps/api/src/use-cases/__tests__/get-results-success.use-case.test.ts` — Added boundary verification test
 - `packages/domain/src/utils/__tests__/archetype-lookup-exhaustive.test.ts` — Added JIT warmup for performance test
+- `apps/api/src/handlers/assessment.ts` — Added level fields to facets mapping in getResults handler
 
