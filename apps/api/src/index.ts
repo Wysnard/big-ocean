@@ -37,6 +37,8 @@ import {
 	ProfileAccessLogDrizzleRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
+	TeaserPortraitAnthropicRepositoryLive,
+	TeaserPortraitMockRepositoryLive,
 } from "@workspace/infrastructure";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
@@ -111,6 +113,17 @@ const PortraitGeneratorLayer =
 		: PortraitGeneratorClaudeRepositoryLive;
 
 /**
+ * Teaser Portrait Layer Selection
+ *
+ * Uses mock implementation when MOCK_LLM=true (for integration testing).
+ * Uses real Haiku implementation otherwise (production/development).
+ */
+const TeaserPortraitLayer =
+	process.env.MOCK_LLM === "true"
+		? TeaserPortraitMockRepositoryLive
+		: TeaserPortraitAnthropicRepositoryLive;
+
+/**
  * Redis Layer - provides Redis for CostGuard
  */
 const RedisLayer = RedisIoRedisRepositoryLive.pipe(Layer.provide(InfrastructureLayer));
@@ -175,6 +188,7 @@ const RepositoryLayers = Layer.mergeAll(
 	PortraitGeneratorLayer,
 	PaymentGatewayPolarRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
+	TeaserPortraitLayer,
 );
 
 /**

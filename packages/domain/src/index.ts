@@ -195,6 +195,13 @@ export {
 	RedisOperationError,
 	RedisRepository,
 } from "./repositories/redis.repository";
+// Teaser portrait repository (Story 11.5)
+export {
+	TeaserPortraitError,
+	type TeaserPortraitInput,
+	type TeaserPortraitOutput,
+	TeaserPortraitRepository,
+} from "./repositories/teaser-portrait.repository";
 // Agent response schemas for structured LLM output (Story 2.4, Task 13)
 export {
 	type AnalyzerResponse,

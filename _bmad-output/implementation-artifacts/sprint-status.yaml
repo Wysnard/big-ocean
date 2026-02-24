@@ -201,7 +201,7 @@ development_status:
   11-2-finanalyzer-sonnet-integration: done
   11-3-score-computation-and-ocean-code-generation: done
   11-4-archetype-system: done
-  11-5-finalization-pipeline-orchestration: backlog
+  11-5-finalization-pipeline-orchestration: done
   epic-11-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────

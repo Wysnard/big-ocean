@@ -12,7 +12,7 @@
 
 import type { SavedFacetEvidence } from "@workspace/domain";
 import { describe, expect, it } from "vitest";
-import { computeDepthSignal } from "../portrait-generator.claude.repository";
+import { computeDepthSignal } from "../portrait-prompt.utils";
 
 /**
  * Create a SavedFacetEvidence record with a given confidence.

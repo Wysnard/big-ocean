@@ -18,89 +18,19 @@
 import { ChatAnthropic } from "@langchain/anthropic";
 import {
 	AppConfig,
-	deriveTraitScores,
-	FACET_PROMPT_DEFINITIONS,
-	FACET_TO_TRAIT,
-	type FacetName,
 	LoggerRepository,
 	NERIN_PERSONA,
 	PortraitGenerationError,
 	type PortraitGenerationInput,
 	PortraitGeneratorRepository,
-	type SavedFacetEvidence,
-	TRAIT_LETTER_MAP,
-	TRAIT_LEVEL_LABELS,
 } from "@workspace/domain";
 import { Effect, Layer, Redacted } from "effect";
-
-/**
- * Build a trait summary with per-facet confidence for the prompt.
- */
-function formatTraitSummary(input: PortraitGenerationInput): string {
-	const traitScores = deriveTraitScores(input.facetScoresMap);
-	const lines: string[] = [];
-
-	for (const [traitName, traitScore] of Object.entries(traitScores)) {
-		const letters = TRAIT_LETTER_MAP[traitName as keyof typeof TRAIT_LETTER_MAP];
-		let levelIndex: 0 | 1 | 2;
-		if (traitScore.score <= 40) levelIndex = 0;
-		else if (traitScore.score <= 80) levelIndex = 1;
-		else levelIndex = 2;
-		const letter = letters[levelIndex];
-		const traitLabel = TRAIT_LEVEL_LABELS[letter] ?? letter;
-
-		// Collect facets for this trait with their confidence levels
-		const facetDetails: string[] = [];
-		for (const [facetName, facetScore] of Object.entries(input.facetScoresMap)) {
-			if (FACET_TO_TRAIT[facetName as FacetName] === traitName) {
-				facetDetails.push(
-					`    ${facetName}: ${facetScore.score}/20 (confidence: ${facetScore.confidence}%)`,
-				);
-			}
-		}
-
-		lines.push(
-			`${traitName}: ${traitScore.score}/120 (${traitLabel}, confidence: ${traitScore.confidence}%)`,
-		);
-		lines.push(...facetDetails);
-	}
-
-	return lines.join("\n");
-}
-
-/**
- * Static glossary of facet definitions for the portrait prompt.
- * Built once — no per-request computation needed.
- */
-const FACET_GLOSSARY = Object.entries(FACET_PROMPT_DEFINITIONS)
-	.map(([name, def]) => `- ${name}: ${def}`)
-	.join("\n");
-
-/**
- * Format top evidence for the prompt, including confidence levels.
- */
-function formatEvidence(input: PortraitGenerationInput): string {
-	return input.allEvidence
-		.map((e, i) => {
-			const trait = FACET_TO_TRAIT[e.facetName as FacetName] ?? "Unknown";
-			return `${i + 1}. [${trait} → ${e.facetName}, score: ${e.score}/20, confidence: ${e.confidence}%] "${e.quote}"`;
-		})
-		.join("\n");
-}
-
-/**
- * Compute evidence density signal for depth adaptation.
- * RICH (8+ high-confidence), MODERATE (4-7), THIN (<4).
- */
-export function computeDepthSignal(evidence: ReadonlyArray<SavedFacetEvidence>): string {
-	const strongCount = evidence.filter((e) => e.confidence > 60).length;
-	const total = evidence.length;
-	if (strongCount >= 8)
-		return `EVIDENCE DENSITY: RICH (${total} records, ${strongCount} high-confidence)`;
-	if (strongCount >= 4)
-		return `EVIDENCE DENSITY: MODERATE (${total} records, ${strongCount} high-confidence)`;
-	return `EVIDENCE DENSITY: THIN (${total} records, ${strongCount} high-confidence) — scale ambition to evidence`;
-}
+import {
+	computeDepthSignal,
+	FACET_GLOSSARY,
+	formatEvidence,
+	formatTraitSummary,
+} from "./portrait-prompt.utils";
 
 /**
  * Portrait-specific context appended to the shared NERIN_PERSONA.
@@ -701,8 +631,8 @@ export const PortraitGeneratorClaudeRepositoryLive = Layer.effect(
 						sessionId: input.sessionId,
 					});
 
-					const traitSummary = formatTraitSummary(input);
-					const evidenceFormatted = formatEvidence(input);
+					const traitSummary = formatTraitSummary(input.facetScoresMap);
+					const evidenceFormatted = formatEvidence(input.allEvidence);
 					const depthSignal = computeDepthSignal(input.allEvidence);
 
 					const userPrompt = `PERSONALITY DATA:

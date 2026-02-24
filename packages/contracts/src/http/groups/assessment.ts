@@ -12,6 +12,7 @@ import {
 	FacetResultSchema,
 	FinalizationEvidenceError,
 	FinanalyzerError,
+	TeaserPortraitError,
 	TraitResultSchema,
 } from "@workspace/domain";
 import { Schema as S } from "effect";
@@ -239,6 +240,7 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 			.addError(AssessmentResultError, { status: 500 })
 			.addError(FinalizationEvidenceError, { status: 500 })
 			.addError(FinanalyzerError, { status: 500 })
+			.addError(TeaserPortraitError, { status: 500 })
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.add(
