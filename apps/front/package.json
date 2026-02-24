@@ -17,6 +17,7 @@
     "@effect/platform": "catalog:",
     "@effect/rpc": "catalog:",
     "@faker-js/faker": "^10.0.0",
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/match-sorter-utils": "^8.19.4",
     "@tanstack/query-db-collection": "^1.0.8",
@@ -41,6 +42,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",
+    "satori": "^0.19.2",
     "tailwindcss": "^4.0.6",
     "vite-tsconfig-paths": "^6.0.2"
   },

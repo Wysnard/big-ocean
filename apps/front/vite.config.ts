@@ -16,9 +16,20 @@ const config = defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  ssr: {
+    external: ['@resvg/resvg-js', 'satori'],
+  },
+  optimizeDeps: {
+    exclude: ['@resvg/resvg-js', 'satori'],
+  },
   plugins: [
     ...isE2E ? [] : [devtools()],
-    nitro(),
+    nitro({
+      externals: {
+        inline: [],
+        external: ['@resvg/resvg-js', 'satori'],
+      },
+    }),
     // this is the plugin that enables path aliases
     viteTsConfigPaths({
       projects: ['./tsconfig.json'],

@@ -29,8 +29,6 @@ export { AssessmentMessageDrizzleRepositoryLive } from "./repositories/assessmen
 export { AssessmentResultDrizzleRepositoryLive } from "./repositories/assessment-result.drizzle.repository";
 // Session repository implementation
 export { AssessmentSessionDrizzleRepositoryLive } from "./repositories/assessment-session.drizzle.repository";
-// Card generator repository implementation (Story 15.2)
-export { CardGeneratorSatoriRepositoryLive } from "./repositories/card-generator.satori.repository";
 // Checkpointer repository implementations
 export { CheckpointerMemoryRepositoryLive } from "./repositories/checkpointer.memory.repository";
 export { CheckpointerPostgresRepositoryLive } from "./repositories/checkpointer.postgres.repository";

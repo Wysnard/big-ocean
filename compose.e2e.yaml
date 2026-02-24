@@ -60,6 +60,11 @@ services:
       PORTRAIT_WAIT_MIN_MS: "500"
       SHARE_MIN_CONFIDENCE: "0"
       ANTHROPIC_API_KEY: "sk-test-dummy-key-for-e2e-tests"
+      POLAR_WEBHOOK_SECRET: "e2e-dummy-polar-webhook-secret"
+      POLAR_PRODUCT_PORTRAIT_UNLOCK: "e2e-dummy-portrait-unlock"
+      POLAR_PRODUCT_RELATIONSHIP_SINGLE: "e2e-dummy-relationship-single"
+      POLAR_PRODUCT_RELATIONSHIP_5PACK: "e2e-dummy-relationship-5pack"
+      POLAR_PRODUCT_EXTENDED_CONVERSATION: "e2e-dummy-extended-conversation"
       BETTER_AUTH_SECRET: test-secret-minimum-32-characters-long-for-security
       BETTER_AUTH_URL: http://localhost:4001
       FRONTEND_URL: http://localhost:3001

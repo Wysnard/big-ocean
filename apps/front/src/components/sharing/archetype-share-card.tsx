@@ -12,14 +12,12 @@ interface ArchetypeShareCardProps {
 	archetypeName: string;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
-
 export function ArchetypeShareCard({ publicProfileId, archetypeName }: ArchetypeShareCardProps) {
 	const [activeFormat, setActiveFormat] = useState<"9:16" | "1:1">("1:1");
 
 	const getCardUrl = useCallback(
 		(format: "9:16" | "1:1") =>
-			`${API_BASE}/api/archetype-card/${publicProfileId}?format=${encodeURIComponent(format)}`,
+			`/api/archetype-card/${publicProfileId}?format=${encodeURIComponent(format)}`,
 		[publicProfileId],
 	);
 
