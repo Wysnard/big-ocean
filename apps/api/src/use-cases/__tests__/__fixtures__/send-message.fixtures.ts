@@ -213,6 +213,12 @@ export const mockConfig = {
 	finanalyzerModelId: "claude-sonnet-4-20250514",
 	portraitGeneratorModelId: "claude-sonnet-4-20250514",
 	messageRateLimit: 2,
+	polarAccessToken: Redacted.make("test-polar-access-token"),
+	polarWebhookSecret: Redacted.make("test-polar-webhook-secret"),
+	polarProductPortraitUnlock: "polar_product_portrait",
+	polarProductRelationshipSingle: "polar_product_single",
+	polarProductRelationship5Pack: "polar_product_5pack",
+	polarProductExtendedConversation: "polar_product_extended",
 };
 
 export const createTestLayer = () =>

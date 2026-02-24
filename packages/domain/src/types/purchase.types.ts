@@ -49,6 +49,23 @@ export const PurchaseEventMetadata = S.Struct({
 	invitationId: S.optional(S.String),
 });
 
+// ─── Polar Webhook Event (Story 13.2) ───────────────────────────────────
+
+export interface PolarWebhookEvent {
+	readonly type: string;
+	readonly data: {
+		readonly id: string;
+		readonly productId: string | null;
+		readonly checkoutId: string;
+		readonly amount: number;
+		readonly currency: string;
+		readonly customerId?: string;
+		readonly metadata?: Record<string, unknown>;
+	};
+}
+
+// ─── Metadata Schema (safe jsonb parsing) ────────────────────────────────
+
 /**
  * Safely parse jsonb metadata with fallback to { units: 1 } on any failure.
  */

@@ -283,3 +283,26 @@ export class DuplicateCheckoutError extends S.TaggedError<DuplicateCheckoutError
 		message: S.String,
 	},
 ) {}
+
+/**
+ * Unknown product error (422)
+ * Polar webhook received a product ID that doesn't match any configured product
+ */
+export class UnknownProductError extends S.TaggedError<UnknownProductError>()(
+	"UnknownProductError",
+	{
+		productId: S.String,
+		message: S.String,
+	},
+) {}
+
+/**
+ * Webhook verification error (400)
+ * HMAC signature verification failed for incoming webhook payload
+ */
+export class WebhookVerificationError extends S.TaggedError<WebhookVerificationError>()(
+	"WebhookVerificationError",
+	{
+		message: S.String,
+	},
+) {}

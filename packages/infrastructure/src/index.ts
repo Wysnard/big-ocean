@@ -69,10 +69,14 @@ export {
 } from "./repositories/orchestrator.state";
 // Orchestrator graph repository implementation
 export { OrchestratorGraphLangGraphRepositoryLive } from "./repositories/orchestrator-graph.langgraph.repository";
+// Payment gateway repository implementation (Story 13.2)
+export { PaymentGatewayPolarRepositoryLive } from "./repositories/payment-gateway.polar.repository";
 // Portrait generator repository implementations
 export { PortraitGeneratorClaudeRepositoryLive } from "./repositories/portrait-generator.claude.repository";
 export { PortraitGeneratorMockRepositoryLive } from "./repositories/portrait-generator.mock.repository";
 // Public profile repository implementation
 export { PublicProfileDrizzleRepositoryLive } from "./repositories/public-profile.drizzle.repository";
+// Purchase event repository implementation (Story 13.1)
+export { PurchaseEventDrizzleRepositoryLive } from "./repositories/purchase-event.drizzle.repository";
 // Redis repository implementation
 export { RedisIoRedisRepositoryLive } from "./repositories/redis.ioredis.repository";
