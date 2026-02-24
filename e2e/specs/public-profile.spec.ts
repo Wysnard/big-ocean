@@ -97,6 +97,7 @@ test("anonymous user views public profile with traits and facets", async ({ page
 	});
 
 	await test.step("verify all 5 Big Five traits are displayed", async () => {
+		// Story 15-1 redesign uses TraitBand components in a "trait-strata" section
 		const traitStrata = page.locator("[data-slot='trait-strata']");
 		await expect(traitStrata).toBeVisible();
 
@@ -108,7 +109,7 @@ test("anonymous user views public profile with traits and facets", async ({ page
 	});
 
 	await test.step("verify trait bands show facet scores inline", async () => {
-		// The TraitBand component shows all 6 facets inline via FacetScoreBar.
+		// TraitBand shows all 6 facets inline via FacetScoreBar.
 		// Verify the Openness band has facet names visible.
 		const openBand = page.locator("[data-slot='trait-band'][data-trait='openness']");
 		await expect(openBand.getByText("Imagination")).toBeVisible();
