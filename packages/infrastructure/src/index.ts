@@ -88,3 +88,6 @@ export { PublicProfileDrizzleRepositoryLive } from "./repositories/public-profil
 export { PurchaseEventDrizzleRepositoryLive } from "./repositories/purchase-event.drizzle.repository";
 // Redis repository implementation
 export { RedisIoRedisRepositoryLive } from "./repositories/redis.ioredis.repository";
+// Teaser portrait repository implementations (Story 11.5)
+export { TeaserPortraitAnthropicRepositoryLive } from "./repositories/teaser-portrait.anthropic.repository";
+export { TeaserPortraitMockRepositoryLive } from "./repositories/teaser-portrait.mock.repository";

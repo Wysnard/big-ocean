@@ -50,6 +50,7 @@ export function PublicProfileCTA({
 
 	return (
 		<section
+			data-testid="public-profile-cta"
 			data-slot="public-profile-cta"
 			data-auth-state={authState}
 			className="py-16 md:py-24"

@@ -95,6 +95,9 @@ export interface AppConfigService {
 	/** Model ID for portrait generation */
 	readonly portraitGeneratorModelId: string;
 
+	/** Model ID for teaser portrait generation (Haiku-tier, runs at finalization) */
+	readonly teaserModelId: string;
+
 	/** Per-user message rate limit per minute (Story 2.5) */
 	readonly messageRateLimit: number;
 

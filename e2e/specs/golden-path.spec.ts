@@ -130,6 +130,6 @@ test("golden path: landing → chat → signup → results → share → public 
 
 	await test.step("assert public profile elements", async () => {
 		await page.getByTestId("archetype-name").waitFor({ state: "visible" });
-		await page.getByTestId("public-cta").waitFor({ state: "visible" });
+		await page.getByTestId("public-profile-cta").waitFor({ state: "visible" });
 	});
 });

@@ -89,6 +89,9 @@ const configSchema = Config.all({
 	portraitGeneratorModelId: Config.string("PORTRAIT_GENERATOR_MODEL_ID").pipe(
 		Config.withDefault("claude-sonnet-4-6"),
 	),
+	teaserModelId: Config.string("TEASER_MODEL_ID").pipe(
+		Config.withDefault("claude-haiku-4-5-20251001"),
+	),
 
 	// Message rate limit per minute (Story 2.5)
 	messageRateLimit: Config.number("MESSAGE_RATE_LIMIT").pipe(Config.withDefault(2)),

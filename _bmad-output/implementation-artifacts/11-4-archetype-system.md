@@ -20,6 +20,7 @@ So that my personality profile feels personal and understandable.
 
 ## Tasks / Subtasks
 
+<<<<<<< HEAD
 - [x] Task 1: Extend FacetResultSchema with level fields (AC: #3)
   - [x] 1.1: Update `packages/domain/src/schemas/result-schemas.ts`:
     - Add `level: S.String` — the two-letter facet level code (e.g., "OV", "CP")
@@ -258,4 +259,3 @@ front:test: Tests      200 passed (200)
 - `apps/api/src/use-cases/__tests__/get-results-success.use-case.test.ts` — Added boundary verification test
 - `packages/domain/src/utils/__tests__/archetype-lookup-exhaustive.test.ts` — Added JIT warmup for performance test
 - `apps/api/src/handlers/assessment.ts` — Added level fields to facets mapping in getResults handler
-

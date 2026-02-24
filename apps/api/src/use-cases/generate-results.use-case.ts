@@ -1,5 +1,5 @@
 /**
- * Generate Results Use Case (Story 11.1 + 11.2 + 11.3)
+ * Generate Results Use Case (Story 11.1 + 11.2 + 11.3 + 11.5)
  *
  * Triggers the finalization pipeline for a completed assessment.
  * Implements three-tier idempotency:
@@ -8,7 +8,7 @@
  *   Guard 2: Finalization evidence exists → skip FinAnalyzer, reuse evidence
  *
  * Phase 1: FinAnalyzer (Sonnet) → finalization_evidence + assessment_results placeholder
- * Phase 2: Score computation → facets, traits, domainCoverage populated
+ * Phase 2: Score computation + teaser portrait (Haiku) → assessment_results populated
  */
 
 import type { EvidenceInput, FinalizationEvidenceInput } from "@workspace/domain";
@@ -28,6 +28,7 @@ import {
 	LoggerRepository,
 	SessionNotFinalizing,
 	SessionNotFound,
+	TeaserPortraitRepository,
 } from "@workspace/domain";
 import { Effect, Schedule } from "effect";
 
@@ -47,6 +48,7 @@ export const generateResults = (input: GenerateResultsInput) =>
 		const finalizationEvidenceRepo = yield* FinalizationEvidenceRepository;
 		const assessmentResultRepo = yield* AssessmentResultRepository;
 		const costGuardRepo = yield* CostGuardRepository;
+		const teaserPortraitRepo = yield* TeaserPortraitRepository;
 
 		// 1. Validate session exists and user owns it
 		const session = yield* sessionRepo.getSession(input.sessionId);
@@ -100,6 +102,8 @@ export const generateResults = (input: GenerateResultsInput) =>
 
 		// Lock acquired — run the pipeline with guaranteed lock release
 		return yield* Effect.gen(function* () {
+			const pipelineStart = Date.now();
+
 			// ═══════════════════════════════════════════════════════════════
 			// PHASE 1: FinAnalyzer (Sonnet) → finalization_evidence
 			// ═══════════════════════════════════════════════════════════════
@@ -216,9 +220,17 @@ export const generateResults = (input: GenerateResultsInput) =>
 				);
 			}
 
+			const phase1Duration = Date.now() - pipelineStart;
+			logger.info("Phase 1 timing", {
+				sessionId: input.sessionId,
+				phase1DurationMs: phase1Duration,
+				skipped: evidenceExists,
+			});
+
 			// ═══════════════════════════════════════════════════════════════
-			// PHASE 2: Score computation (Story 11.3)
+			// PHASE 2: Score computation + teaser portrait (Story 11.3 + 11.5)
 			// ═══════════════════════════════════════════════════════════════
+			const phase2Start = Date.now();
 
 			// 6. Update progress to "generating_portrait"
 			yield* sessionRepo.updateSession(input.sessionId, {
@@ -259,21 +271,55 @@ export const generateResults = (input: GenerateResultsInput) =>
 			const traits = computeTraitResults(facets);
 			const domainCoverage = computeDomainCoverage(scoringInputs);
 
-			// Update the placeholder row with real scores
+			// Generate teaser portrait (~2-3s)
+			const teaserOutput = yield* teaserPortraitRepo
+				.generateTeaser({ sessionId: input.sessionId, evidence: finalizationEvidence })
+				.pipe(Effect.retry(Schedule.once));
+
+			// Track teaser cost (fail-open)
+			const teaserCostKey = session.userId ?? input.sessionId;
+			const teaserCost = calculateCost(teaserOutput.tokenUsage.input, teaserOutput.tokenUsage.output);
+			yield* costGuardRepo.incrementDailyCost(teaserCostKey, teaserCost.totalCents).pipe(
+				Effect.catchTag("RedisOperationError", (err) => {
+					logger.warn("Failed to track teaser portrait cost (non-blocking)", {
+						error: err.message,
+						sessionId: input.sessionId,
+					});
+					return Effect.succeed(0);
+				}),
+			);
+
+			// Update the placeholder row with real scores and teaser portrait
 			yield* assessmentResultRepo.update(assessmentResultId, {
 				facets,
 				traits,
 				domainCoverage,
+				portrait: teaserOutput.portrait,
 			});
 
+			const phase2Duration = Date.now() - phase2Start;
+			const totalDuration = Date.now() - pipelineStart;
+
 			const facetsWithEvidence = Object.values(facets).filter((f) => f.confidence > 0).length;
-			logger.info("Phase 2 complete: scores computed", {
+			logger.info("Phase 2 complete: scores computed and teaser generated", {
 				sessionId: input.sessionId,
 				facetsWithEvidence,
+				phase2DurationMs: phase2Duration,
+				totalDurationMs: totalDuration,
+				teaserLength: teaserOutput.portrait.length,
 				traitScores: Object.fromEntries(
 					Object.entries(traits).map(([t, v]) => [t, v.score.toFixed(2)]),
 				),
 			});
+
+			if (totalDuration > 20000) {
+				logger.warn("Finalization exceeded 20s target", {
+					sessionId: input.sessionId,
+					totalDurationMs: totalDuration,
+					phase1DurationMs: phase1Duration,
+					phase2DurationMs: phase2Duration,
+				});
+			}
 
 			// 7. Mark completed
 			yield* sessionRepo.updateSession(input.sessionId, {

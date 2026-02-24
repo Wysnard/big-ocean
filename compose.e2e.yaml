@@ -67,6 +67,12 @@ services:
       PORT: 4000
       HOST: 0.0.0.0
       DATABASE_SSL: "false"
+      POLAR_ACCESS_TOKEN: "pol_test_access_token"
+      POLAR_WEBHOOK_SECRET: "pol_test_webhook_secret"
+      POLAR_PRODUCT_PORTRAIT_UNLOCK: "pol_test_portrait"
+      POLAR_PRODUCT_RELATIONSHIP_SINGLE: "pol_test_rel_single"
+      POLAR_PRODUCT_RELATIONSHIP_5PACK: "pol_test_rel_5pack"
+      POLAR_PRODUCT_EXTENDED_CONVERSATION: "pol_test_extended"
     ports:
       - "4001:4000"
     depends_on:

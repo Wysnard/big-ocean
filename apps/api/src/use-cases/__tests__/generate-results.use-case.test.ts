@@ -1,8 +1,9 @@
 /**
- * Generate Results Use Case Tests (Story 11.1 + 11.2 + 11.3)
+ * Generate Results Use Case Tests (Story 11.1 + 11.2 + 11.3 + 11.5)
  *
  * Tests idempotency tiers, session validation, FinAnalyzer integration,
- * highlight computation, evidence persistence, and score computation.
+ * highlight computation, evidence persistence, score computation,
+ * teaser portrait generation, and progress status transitions.
  */
 
 import { vi } from "vitest";
@@ -13,6 +14,7 @@ vi.mock("@workspace/infrastructure/repositories/finalization-evidence.drizzle.re
 vi.mock("@workspace/infrastructure/repositories/assessment-result.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/assessment-message.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/cost-guard.redis.repository");
+vi.mock("@workspace/infrastructure/repositories/teaser-portrait.anthropic.repository");
 
 import { describe, expect, it } from "@effect/vitest";
 import {
@@ -56,6 +58,11 @@ import {
 	_setMockError as setFinanalyzerError,
 	_setMockOutput as setFinanalyzerOutput,
 } from "@workspace/infrastructure/repositories/finanalyzer.anthropic.repository";
+import {
+	_resetMockState as resetTeaserPortrait,
+	_setMockError as setTeaserError,
+	TeaserPortraitAnthropicRepositoryLive,
+} from "@workspace/infrastructure/repositories/teaser-portrait.anthropic.repository";
 import { Effect, Layer } from "effect";
 import { generateResults } from "../generate-results.use-case";
 
@@ -103,6 +110,7 @@ const createTestLayer = () =>
 		AssessmentResultDrizzleRepositoryLive,
 		AssessmentMessageDrizzleRepositoryLive,
 		CostGuardRedisRepositoryLive,
+		TeaserPortraitAnthropicRepositoryLive,
 	);
 
 /** Helper: seed messages and return their IDs */
@@ -133,6 +141,7 @@ describe("generateResults Use Case", () => {
 		resetResults();
 		resetMessages();
 		resetCostGuard();
+		resetTeaserPortrait();
 		mockSessionRepo.getSession.mockReturnValue(Effect.succeed(mockFinalizingSession));
 		mockSessionRepo.updateSession.mockReturnValue(Effect.succeed(mockFinalizingSession));
 		mockSessionRepo.acquireSessionLock.mockReturnValue(Effect.void);
@@ -279,7 +288,7 @@ describe("generateResults Use Case", () => {
 				expect(results.size).toBe(1);
 				const resultRecord = results.get("session_123");
 				expect(resultRecord).toBeDefined();
-				expect(resultRecord?.portrait).toBe("");
+				expect(resultRecord?.portrait).toContain("The Quiet Architecture");
 				// Phase 2 populated facets/traits (no longer empty)
 				expect(Object.keys(resultRecord?.facets ?? {})).toHaveLength(30);
 
@@ -852,6 +861,334 @@ describe("generateResults Use Case", () => {
 				expect(facets.adventurousness.confidence).toBeGreaterThan(0);
 				// Other facets at defaults
 				expect(facets.imagination.score).toBe(FORMULA_DEFAULTS.SCORE_MIDPOINT);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("Teaser portrait generation (Story 11.5)", () => {
+		it.effect("happy path: teaser portrait included in final result", () =>
+			Effect.gen(function* () {
+				const ids = yield* seedMessages("session_123", [
+					{ role: "user", content: "I love brainstorming new things" },
+				]);
+
+				setFinanalyzerOutput({
+					evidence: [
+						{
+							messageId: ids[0],
+							bigfiveFacet: "imagination",
+							score: 14,
+							confidence: 0.7,
+							domain: "work",
+							rawDomain: "creative work",
+							quote: "brainstorming",
+						},
+					],
+					tokenUsage: { input: 3000, output: 1500 },
+				});
+
+				const result = yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				expect(result).toEqual({ status: "completed" });
+
+				// Portrait should contain teaser content
+				const results = getStoredResults();
+				const record = results.get("session_123");
+				expect(record?.portrait).toContain("The Quiet Architecture");
+				expect(record?.portrait).toContain("stayed with me");
+				expect(record?.portrait.length).toBeGreaterThan(0);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("teaser portrait generates during Guard 2 path (Phase 1 skipped)", () =>
+			Effect.gen(function* () {
+				setEvidenceExists(true);
+				const seededResult = seedResult("session_123", { id: "ar-teaser-g2" });
+				seedEvidence([
+					{
+						id: "fe-teaser-1",
+						assessmentMessageId: "msg-1",
+						assessmentResultId: seededResult.id,
+						bigfiveFacet: "imagination",
+						score: 16,
+						confidence: 0.8,
+						domain: "work",
+						rawDomain: "creative work",
+						quote: "test",
+						highlightStart: 0,
+						highlightEnd: 4,
+						createdAt: new Date(),
+					} as FinalizationEvidenceRecord,
+				]);
+
+				yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				// Portrait populated even when Phase 1 skipped
+				const results = getStoredResults();
+				const record = results.get("session_123");
+				expect(record?.portrait).toContain("The Quiet Architecture");
+
+				// FinAnalyzer was NOT called (Guard 2)
+				expect(getFinanalyzerCalls()).toHaveLength(0);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("Comprehensive idempotency (Story 11.5, Task 3)", () => {
+		it.effect("3.1: Tier 1 - already completed returns result without LLM calls", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({ ...mockFinalizingSession, status: "completed" }),
+				);
+
+				const result = yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				expect(result).toEqual({ status: "completed" });
+				// No lock attempted
+				expect(mockSessionRepo.acquireSessionLock).not.toHaveBeenCalled();
+				// No FinAnalyzer calls
+				expect(getFinanalyzerCalls()).toHaveLength(0);
+				// No progress updates
+				expect(mockSessionRepo.updateSession).not.toHaveBeenCalled();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("3.2: Tier 2 - concurrent request returns progress (not error)", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({
+						...mockFinalizingSession,
+						finalizationProgress: "generating_portrait",
+					}),
+				);
+				mockSessionRepo.acquireSessionLock.mockReturnValue(
+					Effect.fail({
+						_tag: "ConcurrentMessageError",
+						sessionId: "session_123",
+						message: "Lock held",
+					}),
+				);
+
+				const result = yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				// Returns current progress, NOT an error
+				expect(result).toEqual({ status: "generating_portrait" });
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("3.3: Guard 2 - evidence exists skips FinAnalyzer", () =>
+			Effect.gen(function* () {
+				setEvidenceExists(true);
+				const seededResult = seedResult("session_123", { id: "ar-g2-idem" });
+				seedEvidence([
+					{
+						id: "fe-g2-idem",
+						assessmentMessageId: "msg-1",
+						assessmentResultId: seededResult.id,
+						bigfiveFacet: "imagination",
+						score: 14,
+						confidence: 0.7,
+						domain: "work",
+						rawDomain: "creative work",
+						quote: "test",
+						highlightStart: 0,
+						highlightEnd: 4,
+						createdAt: new Date(),
+					} as FinalizationEvidenceRecord,
+				]);
+
+				yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				// FinAnalyzer NOT called
+				expect(getFinanalyzerCalls()).toHaveLength(0);
+				// But scores still computed
+				const results = getStoredResults();
+				expect(Object.keys(results.get("session_123")?.facets ?? {})).toHaveLength(30);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("3.4: Phase 1 failure → retry re-runs from scratch (no evidence)", () =>
+			Effect.gen(function* () {
+				yield* seedMessages("session_123", [{ role: "user", content: "test message" }]);
+
+				setFinanalyzerError("API timeout");
+
+				const exit = yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				}).pipe(Effect.exit);
+
+				expect(exit._tag).toBe("Failure");
+				// Lock was released even on failure
+				expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
+				// No evidence was saved (Phase 1 failed)
+				expect(getStoredEvidence()).toHaveLength(0);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("3.5: Phase 2 failure with evidence → retry skips Phase 1", () =>
+			Effect.gen(function* () {
+				// Pre-seed evidence (Phase 1 already completed)
+				setEvidenceExists(true);
+				const seededResult = seedResult("session_123", { id: "ar-p2-fail" });
+				seedEvidence([
+					{
+						id: "fe-p2-1",
+						assessmentMessageId: "msg-1",
+						assessmentResultId: seededResult.id,
+						bigfiveFacet: "imagination",
+						score: 14,
+						confidence: 0.7,
+						domain: "work",
+						rawDomain: "creative work",
+						quote: "test",
+						highlightStart: 0,
+						highlightEnd: 4,
+						createdAt: new Date(),
+					} as FinalizationEvidenceRecord,
+				]);
+
+				// Make teaser generation fail
+				setTeaserError("Haiku API timeout");
+
+				const exit = yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				}).pipe(Effect.exit);
+
+				expect(exit._tag).toBe("Failure");
+				if (exit._tag === "Failure") {
+					expect(String(exit.cause)).toContain("TeaserPortraitError");
+				}
+
+				// FinAnalyzer was NOT called (Guard 2 — evidence exists)
+				expect(getFinanalyzerCalls()).toHaveLength(0);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("3.6: cost tracking is idempotent (no double-charge on retry path)", () =>
+			Effect.gen(function* () {
+				// Guard 2 path: evidence exists, Phase 1 skipped
+				setEvidenceExists(true);
+				const seededResult = seedResult("session_123", { id: "ar-cost-idem" });
+				seedEvidence([
+					{
+						id: "fe-cost-1",
+						assessmentMessageId: "msg-1",
+						assessmentResultId: seededResult.id,
+						bigfiveFacet: "imagination",
+						score: 14,
+						confidence: 0.7,
+						domain: "work",
+						rawDomain: "creative work",
+						quote: "test",
+						highlightStart: 0,
+						highlightEnd: 4,
+						createdAt: new Date(),
+					} as FinalizationEvidenceRecord,
+				]);
+
+				yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				// Phase 1 cost NOT tracked (Guard 2 skipped FinAnalyzer)
+				// Only teaser cost should be tracked
+				expect(getFinanalyzerCalls()).toHaveLength(0);
+
+				// Result completed successfully
+				const results = getStoredResults();
+				expect(results.get("session_123")).toBeDefined();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("Progress status validation (Story 11.5, Task 4)", () => {
+		it.effect("4.2: progress transitions - analyzing → generating_portrait → completed", () =>
+			Effect.gen(function* () {
+				const ids = yield* seedMessages("session_123", [{ role: "user", content: "test progress" }]);
+
+				setFinanalyzerOutput({
+					evidence: [
+						{
+							messageId: ids[0],
+							bigfiveFacet: "imagination",
+							score: 14,
+							confidence: 0.7,
+							domain: "work",
+							rawDomain: "creative work",
+							quote: "test progress",
+						},
+					],
+					tokenUsage: { input: 1000, output: 500 },
+				});
+
+				yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				// Verify progress update calls in order
+				const updateCalls = mockSessionRepo.updateSession.mock.calls;
+				const progressUpdates = updateCalls
+					.filter(
+						([, update]: [string, Record<string, unknown>]) => update.finalizationProgress !== undefined,
+					)
+					.map(([, update]: [string, Record<string, unknown>]) => update.finalizationProgress);
+
+				expect(progressUpdates).toEqual(["analyzing", "generating_portrait", "completed"]);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("4.1: progress updates visible immediately (outside critical path)", () =>
+			Effect.gen(function* () {
+				const ids = yield* seedMessages("session_123", [{ role: "user", content: "test visibility" }]);
+
+				setFinanalyzerOutput({
+					evidence: [
+						{
+							messageId: ids[0],
+							bigfiveFacet: "imagination",
+							score: 14,
+							confidence: 0.7,
+							domain: "work",
+							rawDomain: "creative work",
+							quote: "test visibility",
+						},
+					],
+					tokenUsage: { input: 1000, output: 500 },
+				});
+
+				yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				// Progress updates are called directly on session repo (not batched)
+				expect(mockSessionRepo.updateSession).toHaveBeenCalledWith(
+					"session_123",
+					expect.objectContaining({ finalizationProgress: "analyzing" }),
+				);
+				expect(mockSessionRepo.updateSession).toHaveBeenCalledWith(
+					"session_123",
+					expect.objectContaining({ finalizationProgress: "generating_portrait" }),
+				);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
