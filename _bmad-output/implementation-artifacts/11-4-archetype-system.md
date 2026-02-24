@@ -20,6 +20,7 @@ So that my personality profile feels personal and understandable.
 
 ## Tasks / Subtasks
 
+<<<<<<< HEAD
 - [x] Task 1: Extend FacetResultSchema with level fields (AC: #3)
   - [x] 1.1: Update `packages/domain/src/schemas/result-schemas.ts`:
     - Add `level: S.String` — the two-letter facet level code (e.g., "OV", "CP")
@@ -61,6 +62,7 @@ So that my personality profile feels personal and understandable.
     - Verify level codes match expected pattern (two uppercase letters, first is O/C/E/A/N)
     - Verify levelLabel is non-empty string
     - Verify levelDescription is non-empty string
+<<<<<<< HEAD
   - [x] 3.2: Add test: "facet level is computed correctly based on score threshold":
     - Score ≤ 10 → Low level code (first element in FACET_LETTER_MAP tuple)
     - Score > 10 → High level code (second element in FACET_LETTER_MAP tuple)
@@ -141,6 +143,7 @@ export const FacetResultSchema = S.Struct({
 
 **No new files needed** — all infrastructure exists, this is pure integration work.
 
+<<<<<<< HEAD
 ### Frontend Impact
 
 The 3 new fields (`level`, `levelLabel`, `levelDescription`) added to `FacetResultSchema` will automatically appear in the API response consumed by `apps/front`. **Frontend changes are out of scope for this story** — the results page already renders facet data and will simply ignore the new fields until a future story updates the UI to display them. No coordination required for this backend-only change.
@@ -148,6 +151,11 @@ The 3 new fields (`level`, `levelLabel`, `levelDescription`) added to `FacetResu
 ### References
 
 - [Source: _bmad-output/planning-artifacts/epics.md#Story 11.4: Archetype System]
+=======
+### References
+
+- [Source: _bmad-output/planning-artifacts/epics.md#Story 2.4: Archetype System]
+>>>>>>> 3a91bef (docs(story-11-4): archetype system story)
 - [Source: packages/domain/src/utils/archetype-lookup.ts] (lookupArchetype, extract4LetterCode)
 - [Source: packages/domain/src/constants/archetypes.ts] (CURATED_ARCHETYPES, 25 entries)
 - [Source: packages/domain/src/utils/facet-level.ts] (getFacetLevel)
@@ -173,6 +181,7 @@ Do NOT introduce any of these patterns during implementation:
 
 ### Agent Model Used
 
+<<<<<<< HEAD
 Claude Opus 4.5 (claude-opus-4-5)
 
 ### Debug Log References
@@ -259,3 +268,13 @@ front:test: Tests      200 passed (200)
 - `packages/domain/src/utils/__tests__/archetype-lookup-exhaustive.test.ts` — Added JIT warmup for performance test
 - `apps/api/src/handlers/assessment.ts` — Added level fields to facets mapping in getResults handler
 
+=======
+{{agent_model_name_version}}
+
+### Debug Log References
+
+### Completion Notes List
+
+### File List
+
+>>>>>>> 3a91bef (docs(story-11-4): archetype system story)
