@@ -36,9 +36,13 @@ So that my personality profile feels personal and understandable.
     ```typescript
     const facets: FacetResult[] = (Object.keys(facetScoresMap) as FacetName[]).map((facetName) => {
       const facetData = facetScoresMap[facetName];
+      if (!facetData) {
+        // Should never happen — facetScoresMap is built from ALL_FACETS
+        throw new Error(`Missing facet data for ${facetName}`);
+      }
       const level = getFacetLevel(facetName, facetData.score);
       const levelLabel = FACET_LEVEL_LABELS[level];
-      const levelDescription = FACET_DESCRIPTIONS[facetName].levels[level];
+      const levelDescription = FACET_DESCRIPTIONS[facetName].levels[level] as string;
       return {
         name: facetName,
         traitName: FACET_TO_TRAIT[facetName],
@@ -58,8 +62,9 @@ So that my personality profile feels personal and understandable.
     - Verify levelLabel is non-empty string
     - Verify levelDescription is non-empty string
   - [ ] 3.2: Add test: "facet level is computed correctly based on score threshold":
-    - Score 0-10 → Low level code (first letter in FACET_LETTER_MAP tuple)
-    - Score 11-20 → High level code (second letter in FACET_LETTER_MAP tuple)
+    - Score ≤ 10 → Low level code (first element in FACET_LETTER_MAP tuple)
+    - Score > 10 → High level code (second element in FACET_LETTER_MAP tuple)
+    - Note: Threshold uses `score <= 10` comparison, so 10.0 = Low, 10.1 = High
 
 - [ ] Task 4: Verify archetype performance meets NFR9 (AC: #2)
   - [ ] 4.1: Add performance test in `packages/domain/src/utils/__tests__/archetype-lookup.test.ts`:
@@ -136,9 +141,13 @@ export const FacetResultSchema = S.Struct({
 
 **No new files needed** — all infrastructure exists, this is pure integration work.
 
+### Frontend Impact
+
+The 3 new fields (`level`, `levelLabel`, `levelDescription`) added to `FacetResultSchema` will automatically appear in the API response consumed by `apps/front`. **Frontend changes are out of scope for this story** — the results page already renders facet data and will simply ignore the new fields until a future story updates the UI to display them. No coordination required for this backend-only change.
+
 ### References
 
-- [Source: _bmad-output/planning-artifacts/epics.md#Story 2.4: Archetype System]
+- [Source: _bmad-output/planning-artifacts/epics.md#Story 11.4: Archetype System]
 - [Source: packages/domain/src/utils/archetype-lookup.ts] (lookupArchetype, extract4LetterCode)
 - [Source: packages/domain/src/constants/archetypes.ts] (CURATED_ARCHETYPES, 25 entries)
 - [Source: packages/domain/src/utils/facet-level.ts] (getFacetLevel)
@@ -164,7 +173,7 @@ Do NOT introduce any of these patterns during implementation:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+<!-- Filled by dev agent upon completion -->
 
 ### Debug Log References
 
