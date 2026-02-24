@@ -333,6 +333,30 @@ export const purchaseEvents = pgTable(
 	],
 );
 
+// ─── Profile Access Log (Story 15.1 — audit logging for profile views) ──
+
+/**
+ * Profile Access Log
+ *
+ * Append-only audit log recording public profile access events.
+ * Fire-and-forget — failures never block user-facing responses.
+ */
+export const profileAccessLog = pgTable(
+	"profile_access_log",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		profileId: uuid("profile_id")
+			.notNull()
+			.references(() => publicProfile.id, { onDelete: "cascade" }),
+		accessorUserId: text("accessor_user_id"),
+		accessorIp: text("accessor_ip"),
+		accessorUserAgent: text("accessor_user_agent"),
+		action: text("action").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [index("profile_access_log_profile_created_idx").on(table.profileId, table.createdAt)],
+);
+
 // ─── Relations (Drizzle v2 syntax) ───────────────────────────────────────
 
 export const relations = defineRelations(
@@ -348,6 +372,7 @@ export const relations = defineRelations(
 		assessmentResults,
 		publicProfile,
 		purchaseEvents,
+		profileAccessLog,
 	},
 	(r) => ({
 		user: {
@@ -438,6 +463,12 @@ export const relations = defineRelations(
 			user: r.one.user({
 				from: r.purchaseEvents.userId,
 				to: r.user.id,
+			}),
+		},
+		profileAccessLog: {
+			profile: r.one.publicProfile({
+				from: r.profileAccessLog.profileId,
+				to: r.publicProfile.id,
 			}),
 		},
 	}),

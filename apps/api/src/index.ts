@@ -33,6 +33,7 @@ import {
 	OrchestratorLangGraphRepositoryLive,
 	PortraitGeneratorClaudeRepositoryLive,
 	PortraitGeneratorMockRepositoryLive,
+	ProfileAccessLogDrizzleRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 } from "@workspace/infrastructure";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
@@ -45,6 +46,7 @@ import { Context, Effect, Layer } from "effect";
 import { AssessmentGroupLive } from "./handlers/assessment";
 import { EvidenceGroupLive } from "./handlers/evidence";
 import { HealthGroupLive } from "./handlers/health";
+import { handleOgImage } from "./handlers/og";
 import { ProfileGroupLive } from "./handlers/profile";
 import { AuthMiddlewareLive } from "./middleware/auth.middleware";
 import { createBetterAuthHandler } from "./middleware/better-auth";
@@ -162,6 +164,7 @@ const RepositoryLayers = Layer.mergeAll(
 	FinanalyzerAnthropicRepositoryLive,
 	FinalizationEvidenceDrizzleRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
+	ProfileAccessLogDrizzleRepositoryLive,
 	FacetEvidenceNoopRepositoryLive,
 	NerinAgentLayer,
 	CostGuardLayer,
@@ -237,6 +240,13 @@ function wrapServerWithCorsAndAuth(
 		if (event === "request") {
 			const [req, res] = args as [IncomingMessage, ServerResponse];
 
+			// OG image route — handle before auth/Effect layers
+			const ogMatch = req.url?.match(/^\/api\/og\/public-profile\/([^/?]+)/);
+			if (ogMatch?.[1] && req.method === "GET") {
+				handleOgImage(req, res, ogMatch[1]);
+				return true;
+			}
+
 			// Run our handler first (async, but we can't await in emit)
 			betterAuthHandler(req, res).then(() => {
 				// If response wasn't ended by our handler, let Effect handle it
@@ -296,6 +306,9 @@ const logStartup = (port: number, frontendUrl: string) =>
 		logger.info("  - POST /api/assessment/message");
 		logger.info("  - GET  /api/assessment/:sessionId/resume");
 		logger.info("  - GET  /api/assessment/:sessionId/results");
+		logger.info("");
+		logger.info("✓ OG Image routes (node:http layer):");
+		logger.info("  - GET  /api/og/public-profile/:publicProfileId");
 		logger.info("");
 		logger.info("✓ Public Profile routes (Effect layer):");
 		logger.info("  - POST  /api/public-profile/share");

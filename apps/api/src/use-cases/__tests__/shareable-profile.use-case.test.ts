@@ -7,6 +7,13 @@
  * Story 2.9: Uses FacetEvidenceRepository + pure functions instead of ScorerRepository.
  */
 
+import { vi } from "vitest";
+
+vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
+vi.mock("@workspace/infrastructure/repositories/public-profile.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/profile-access-log.drizzle.repository");
+
 import { it } from "@effect/vitest";
 import {
 	ALL_FACETS,
@@ -17,13 +24,6 @@ import {
 	type SavedFacetEvidence,
 } from "@workspace/domain";
 import { AppConfigTestLive } from "@workspace/infrastructure";
-import { Effect, Layer } from "effect";
-import { beforeEach, describe, expect, vi } from "vitest";
-
-vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
-vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
-vi.mock("@workspace/infrastructure/repositories/public-profile.drizzle.repository");
-
 import {
 	AssessmentSessionDrizzleRepositoryLive,
 	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
@@ -31,11 +31,14 @@ import {
 } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
 import { FacetEvidenceNoopRepositoryLive } from "@workspace/infrastructure/repositories/facet-evidence.noop.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
+import { ProfileAccessLogDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/profile-access-log.drizzle.repository";
 import {
 	PublicProfileDrizzleRepositoryLive,
 	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
 	_resetMockState as resetProfileState,
 } from "@workspace/infrastructure/repositories/public-profile.drizzle.repository";
+import { Effect, Layer } from "effect";
+import { beforeEach, describe, expect } from "vitest";
 
 import { createShareableProfile } from "../create-shareable-profile.use-case";
 import { getPublicProfile } from "../get-public-profile.use-case";
@@ -78,6 +81,7 @@ const BaseTestLayer = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
 	LoggerPinoRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
+	ProfileAccessLogDrizzleRepositoryLive,
 	FacetEvidenceNoopRepositoryLive,
 	AppConfigTestLive,
 );
@@ -87,6 +91,7 @@ const HighConfidenceTestLayer = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
 	LoggerPinoRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
+	ProfileAccessLogDrizzleRepositoryLive,
 	createEvidenceLayer(createEvidenceWithConfidence(15, 85)),
 	AppConfigTestLive,
 );

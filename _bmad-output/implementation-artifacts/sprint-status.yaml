@@ -242,8 +242,8 @@ development_status:
   # Shareable profile, archetype cards, waitlist, circuit breaker
   # Stories: 6.1-6.3 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-15: backlog
-  15-1-shareable-profile-and-public-url: backlog
+  epic-15: in-progress
+  15-1-shareable-profile-and-public-url: done
   15-2-archetype-card-generation: backlog
   15-3-waitlist-and-circuit-breaker: backlog
   epic-15-retrospective: optional

@@ -1,5 +1,7 @@
 import type { OceanCode5, TraitName } from "@workspace/domain";
-import { getTraitColor } from "@workspace/domain";
+import { BIG_FIVE_TRAITS, getTraitColor } from "@workspace/domain";
+import { ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
 import { GeometricSignature } from "../ocean-shapes/GeometricSignature";
 
 interface ArchetypeHeroSectionProps {
@@ -11,6 +13,31 @@ interface ArchetypeHeroSectionProps {
 	dominantTrait: TraitName;
 	/** When set, shows "{name}'s Personality Archetype" instead of "Your Personality Archetype" */
 	displayName?: string | null;
+	/** Override the subtitle text entirely */
+	subtitle?: string;
+	/** Show animated scroll indicator chevron at bottom. Fades on first scroll. */
+	showScrollIndicator?: boolean;
+}
+
+function ScrollIndicator() {
+	const [visible, setVisible] = useState(true);
+	useEffect(() => {
+		const onScroll = () => {
+			if (window.scrollY > 50) setVisible(false);
+		};
+		window.addEventListener("scroll", onScroll, { passive: true });
+		return () => window.removeEventListener("scroll", onScroll);
+	}, []);
+
+	return (
+		<div
+			aria-hidden="true"
+			className="absolute bottom-8 left-1/2 -translate-x-1/2 motion-safe:transition-opacity motion-safe:duration-300 motion-reduce:hidden"
+			style={{ opacity: visible ? 1 : 0 }}
+		>
+			<ChevronDown className="w-6 h-6 text-muted-foreground motion-safe:animate-bounce" />
+		</div>
+	);
 }
 
 export function ArchetypeHeroSection({
@@ -19,13 +46,19 @@ export function ArchetypeHeroSection({
 	overallConfidence,
 	dominantTrait,
 	displayName,
+	subtitle,
+	showScrollIndicator,
 }: ArchetypeHeroSectionProps) {
 	const traitColor = getTraitColor(dominantTrait);
+
+	const resolvedSubtitle =
+		subtitle ??
+		(displayName ? `${displayName}\u2019s Personality Archetype` : "Your Personality Archetype");
 
 	return (
 		<section
 			data-slot="archetype-hero-section"
-			className="relative overflow-hidden px-6 py-16 md:py-24"
+			className={`relative overflow-hidden px-6 py-16 md:py-24 ${showScrollIndicator ? "min-h-[70vh] flex items-center justify-center" : ""}`}
 		>
 			{/* Color block composition — decorative geometric shapes */}
 			<div className="absolute inset-0 overflow-hidden" aria-hidden="true">
@@ -54,7 +87,7 @@ export function ArchetypeHeroSection({
 			<div className="relative z-30 mx-auto max-w-2xl text-center">
 				{/* Subtitle */}
 				<p className="text-sm tracking-wider uppercase font-heading text-foreground/70 mb-4">
-					{displayName ? `${displayName}\u2019s Personality Archetype` : "Your Personality Archetype"}
+					{resolvedSubtitle}
 				</p>
 
 				{/* Geometric Signature */}
@@ -75,13 +108,17 @@ export function ArchetypeHeroSection({
 					{archetypeName}
 				</h1>
 
-				{/* OCEAN code — promoted secondary headline */}
+				{/* OCEAN code — each letter colored by its trait */}
 				<p
 					data-testid="ocean-code"
 					title={`OCEAN personality code: ${oceanCode5}`}
-					className="font-mono text-3xl md:text-4xl lg:text-5xl tracking-[0.3em] text-foreground/80"
+					className="font-mono text-3xl md:text-4xl lg:text-5xl tracking-[0.3em]"
 				>
-					{oceanCode5}
+					{oceanCode5.split("").map((letter, i) => (
+						<span key={BIG_FIVE_TRAITS[i]} style={{ color: getTraitColor(BIG_FIVE_TRAITS[i]) }}>
+							{letter}
+						</span>
+					))}
 				</p>
 
 				{/* Confidence — tertiary metadata pill */}
@@ -91,6 +128,8 @@ export function ArchetypeHeroSection({
 					</p>
 				)}
 			</div>
+
+			{showScrollIndicator && <ScrollIndicator />}
 		</section>
 	);
 }

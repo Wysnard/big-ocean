@@ -175,6 +175,10 @@ export {
 	PortraitGeneratorRepository,
 } from "./repositories/portrait-generator.repository";
 export {
+	type ProfileAccessLogInput,
+	ProfileAccessLogRepository,
+} from "./repositories/profile-access-log.repository";
+export {
 	type CreatePublicProfileInput,
 	type PublicProfileData,
 	PublicProfileRepository,

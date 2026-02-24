@@ -1,10 +1,5 @@
 import type { FacetResult, TraitName, TraitResult } from "@workspace/domain";
-import {
-	getTraitColor,
-	TRAIT_LETTER_MAP,
-	TRAIT_LEVEL_LABELS,
-	toFacetDisplayName,
-} from "@workspace/domain";
+import { getTraitColor, TRAIT_LETTER_MAP, TRAIT_LEVEL_LABELS } from "@workspace/domain";
 import { CardAccent } from "@workspace/ui/components/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
 import { ChevronDown } from "lucide-react";
@@ -15,6 +10,7 @@ import { OceanDiamond } from "../ocean-shapes/OceanDiamond";
 import { OceanHalfCircle } from "../ocean-shapes/OceanHalfCircle";
 import { OceanRectangle } from "../ocean-shapes/OceanRectangle";
 import { OceanTriangle } from "../ocean-shapes/OceanTriangle";
+import { FacetScoreBar } from "./FacetScoreBar";
 
 const TRAIT_SHAPE: Record<TraitName, (props: { size?: number; color?: string }) => ReactNode> = {
 	openness: OceanCircle,
@@ -156,27 +152,9 @@ export const TraitCard = memo(function TraitCard({
 
 				{/* Compact 2x3 facet grid */}
 				<div className="grid grid-cols-2 gap-x-3 gap-y-2 mb-3">
-					{facets.map((facet) => {
-						const facetPct = Math.round((facet.score / 20) * 100);
-						return (
-							<div key={facet.name} className="flex items-center gap-1.5">
-								<div className="flex-1 min-w-0">
-									<div className="flex items-center justify-between">
-										<span className="text-[10px] text-muted-foreground truncate">
-											{toFacetDisplayName(facet.name)}
-										</span>
-										<span className="text-[10px] font-medium text-muted-foreground ml-1">{facet.score}</span>
-									</div>
-									<div className="w-full bg-muted rounded-full h-1 mt-0.5">
-										<div
-											className="h-1 rounded-full"
-											style={{ width: `${facetPct}%`, backgroundColor: traitColor, opacity: 0.6 }}
-										/>
-									</div>
-								</div>
-							</div>
-						);
-					})}
+					{facets.map((facet) => (
+						<FacetScoreBar key={facet.name} facet={facet} size="compact" />
+					))}
 				</div>
 
 				{/* Hint — anchored at bottom */}
