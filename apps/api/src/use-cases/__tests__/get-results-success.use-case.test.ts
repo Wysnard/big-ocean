@@ -119,7 +119,7 @@ describe("getResults Use Case", () => {
 			}
 		});
 
-		it("should return 30 facets with correct structure", async () => {
+		it("should return 30 facets with correct structure including level fields", async () => {
 			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
 
 			const result = await Effect.runPromise(
@@ -137,6 +137,14 @@ describe("getResults Use Case", () => {
 				expect(facet.score).toBeGreaterThanOrEqual(0);
 				expect(facet.score).toBeLessThanOrEqual(20);
 				expect(typeof facet.confidence).toBe("number");
+
+				// Story 11.4: Level fields
+				expect(facet.level).toBeDefined();
+				expect(facet.level).toMatch(/^[OCEAN][A-Z]$/); // Two-letter code: trait prefix + facet letter
+				expect(facet.levelLabel).toBeDefined();
+				expect(facet.levelLabel.length).toBeGreaterThan(0);
+				expect(facet.levelDescription).toBeDefined();
+				expect(facet.levelDescription.length).toBeGreaterThan(0);
 			}
 		});
 
@@ -320,6 +328,66 @@ describe("getResults Use Case", () => {
 
 			expect(result.oceanCode5).toBe("GBANT");
 			expect(result.overallConfidence).toBe(0);
+		});
+	});
+
+	describe("Facet level computation (Story 11.4)", () => {
+		it("should compute facet level correctly based on score threshold", async () => {
+			// Low scores (≤10) → Low level code (first element in FACET_LETTER_MAP tuple)
+			const lowScores = {
+				openness: { facetScore: 5, confidence: 80 },
+				conscientiousness: { facetScore: 10, confidence: 80 }, // Exactly 10 = Low
+				extraversion: { facetScore: 0, confidence: 80 },
+				agreeableness: { facetScore: 3, confidence: 80 },
+				neuroticism: { facetScore: 8, confidence: 80 },
+			};
+
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
+				Effect.succeed(createEvidenceForUniformScores(lowScores)),
+			);
+
+			const result = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+			);
+
+			// Check imagination facet (openness): score 5 → Low code "OP"
+			const imagination = result.facets.find((f) => f.name === "imagination");
+			expect(imagination?.level).toBe("OP");
+			expect(imagination?.levelLabel).toBe("Concrete");
+
+			// Check self_efficacy facet (conscientiousness): score 10 → Low code "CD"
+			const selfEfficacy = result.facets.find((f) => f.name === "self_efficacy");
+			expect(selfEfficacy?.level).toBe("CD");
+			expect(selfEfficacy?.levelLabel).toBe("Tentative");
+		});
+
+		it("should compute high facet level for scores above threshold", async () => {
+			// High scores (>10) → High level code (second element in FACET_LETTER_MAP tuple)
+			const highScores = {
+				openness: { facetScore: 15, confidence: 80 },
+				conscientiousness: { facetScore: 11, confidence: 80 }, // Just above 10 = High
+				extraversion: { facetScore: 20, confidence: 80 },
+				agreeableness: { facetScore: 18, confidence: 80 },
+				neuroticism: { facetScore: 12, confidence: 80 },
+			};
+
+			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
+				Effect.succeed(createEvidenceForUniformScores(highScores)),
+			);
+
+			const result = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+			);
+
+			// Check imagination facet (openness): score 15 → High code "OV"
+			const imagination = result.facets.find((f) => f.name === "imagination");
+			expect(imagination?.level).toBe("OV");
+			expect(imagination?.levelLabel).toBe("Visionary");
+
+			// Check self_efficacy facet (conscientiousness): score 11 → High code "CA"
+			const selfEfficacy = result.facets.find((f) => f.name === "self_efficacy");
+			expect(selfEfficacy?.level).toBe("CA");
+			expect(selfEfficacy?.levelLabel).toBe("Capable");
 		});
 	});
 });

@@ -1,6 +1,6 @@
 # Story 11.4: Archetype System
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -20,19 +20,19 @@ So that my personality profile feels personal and understandable.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Extend FacetResultSchema with level fields (AC: #3)
-  - [ ] 1.1: Update `packages/domain/src/schemas/result-schemas.ts`:
+- [x] Task 1: Extend FacetResultSchema with level fields (AC: #3)
+  - [x] 1.1: Update `packages/domain/src/schemas/result-schemas.ts`:
     - Add `level: S.String` — the two-letter facet level code (e.g., "OV", "CP")
     - Add `levelLabel: S.String` — human-readable label (e.g., "Visionary", "Persistent")
     - Add `levelDescription: S.String` — the level-specific description from `FACET_DESCRIPTIONS`
-  - [ ] 1.2: Verify `FacetResult` type propagates correctly to:
+  - [x] 1.2: Verify `FacetResult` type propagates correctly to:
     - `GetResultsOutput` in `get-results.use-case.ts`
     - Contract definitions in `packages/contracts/` (if any directly reference FacetResult)
 
-- [ ] Task 2: Update get-results.use-case.ts to populate level fields (AC: #3)
-  - [ ] 2.1: Import required utilities at top of file:
+- [x] Task 2: Update get-results.use-case.ts to populate level fields (AC: #3)
+  - [x] 2.1: Import required utilities at top of file:
     - `import { getFacetLevel, FACET_LEVEL_LABELS, FACET_DESCRIPTIONS } from "@workspace/domain";`
-  - [ ] 2.2: Update facet results mapping (around line 142) to include level fields:
+  - [x] 2.2: Update facet results mapping (around line 142) to include level fields:
     ```typescript
     const facets: FacetResult[] = (Object.keys(facetScoresMap) as FacetName[]).map((facetName) => {
       const facetData = facetScoresMap[facetName];
@@ -55,22 +55,22 @@ So that my personality profile feels personal and understandable.
     });
     ```
 
-- [ ] Task 3: Update tests for get-results use-case (AC: #3)
-  - [ ] 3.1: Update `apps/api/src/use-cases/__tests__/get-results-success.use-case.test.ts`:
+- [x] Task 3: Update tests for get-results use-case (AC: #3)
+  - [x] 3.1: Update `apps/api/src/use-cases/__tests__/get-results-success.use-case.test.ts`:
     - Add assertions that each facet in result has `level`, `levelLabel`, `levelDescription`
     - Verify level codes match expected pattern (two uppercase letters, first is O/C/E/A/N)
     - Verify levelLabel is non-empty string
     - Verify levelDescription is non-empty string
-  - [ ] 3.2: Add test: "facet level is computed correctly based on score threshold":
+  - [x] 3.2: Add test: "facet level is computed correctly based on score threshold":
     - Score ≤ 10 → Low level code (first element in FACET_LETTER_MAP tuple)
     - Score > 10 → High level code (second element in FACET_LETTER_MAP tuple)
     - Note: Threshold uses `score <= 10` comparison, so 10.0 = Low, 10.1 = High
 
-- [ ] Task 4: Verify archetype performance meets NFR9 (AC: #2)
-  - [ ] 4.1: Add performance test in `packages/domain/src/utils/__tests__/archetype-lookup.test.ts`:
+- [x] Task 4: Verify archetype performance meets NFR9 (AC: #2)
+  - [x] 4.1: Add performance test in `packages/domain/src/utils/__tests__/archetype-lookup-exhaustive.test.ts`:
     - Call `lookupArchetype()` for all 81 possible codes
     - Assert total time < 100ms (should be < 1ms per lookup)
-  - [ ] 4.2: Verify existing curated archetype tests still pass
+  - [x] 4.2: Verify existing curated archetype tests still pass
 
 ## Dev Notes
 
@@ -173,11 +173,33 @@ Do NOT introduce any of these patterns during implementation:
 
 ### Agent Model Used
 
-<!-- Filled by dev agent upon completion -->
+Claude Opus 4.5 (claude-opus-4-5)
 
 ### Debug Log References
 
+None required — implementation was straightforward with no debugging needed.
+
 ### Completion Notes List
 
+1. **Task 1**: Extended `FacetResultSchema` with 3 new fields: `level`, `levelLabel`, `levelDescription`. Type propagates automatically to contracts via shared schema import.
+
+2. **Task 2**: Updated `get-results.use-case.ts` to populate level fields using existing domain utilities (`getFacetLevel`, `FACET_LEVEL_LABELS`, `FACET_DESCRIPTIONS`). No new dependencies added — all utilities already existed in `@workspace/domain`.
+
+3. **Task 3**: Added 3 new test cases:
+   - Updated facet structure test to verify level fields presence and format
+   - Added low score threshold test (score ≤ 10 → Low level code)
+   - Added high score threshold test (score > 10 → High level code)
+
+4. **Task 4**: Added performance test in `archetype-lookup-exhaustive.test.ts` that verifies all 81 archetype lookups complete in < 100ms (NFR9). Test passes consistently.
+
 ### File List
+
+- `packages/domain/src/schemas/result-schemas.ts` — Added 3 fields to FacetResultSchema
+- `apps/api/src/use-cases/get-results.use-case.ts` — Import utilities, populate level fields in facet mapping
+- `apps/api/src/use-cases/__tests__/get-results-success.use-case.test.ts` — Added level field assertions and threshold tests
+- `packages/domain/src/utils/__tests__/archetype-lookup-exhaustive.test.ts` — Added performance test
+
+### Change Log
+
+- 2026-02-24: Story 11.4 implemented — Extended FacetResult with level fields, updated get-results use-case, added tests
 
