@@ -129,6 +129,27 @@ services:
     networks:
       - bigocean-network
 
+  # Ngrok Tunnel (for Polar.sh webhook development)
+  # Enable with: docker compose --profile ngrok up
+  ngrok:
+    profiles: ["ngrok"]
+    image: ngrok/ngrok:latest
+    container_name: bigocean-ngrok
+    restart: unless-stopped
+    command:
+      - "http"
+      - "http://backend:4000"
+      - "--log=stdout"
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    ports:
+      - "4040:4040"  # Ngrok web interface
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - bigocean-network
+
   # Frontend Application
   frontend:
     build:

@@ -7,7 +7,7 @@
  */
 
 import { HttpApiBuilder, HttpServerRequest } from "@effect/platform";
-import { BigOceanApi, DatabaseError } from "@workspace/contracts";
+import { BigOceanApi, DatabaseError, WebhookVerificationError } from "@workspace/contracts";
 import {
 	CurrentUser,
 	PaymentGatewayRepository,
@@ -28,16 +28,26 @@ export const PurchaseWebhookGroupLive = HttpApiBuilder.group(
 		Effect.gen(function* () {
 			const logger = yield* LoggerRepository;
 
-			return handlers.handle("polarWebhook", ({ payload }) =>
+			return handlers.handle("polarWebhook", () =>
 				Effect.gen(function* () {
 					const gateway = yield* PaymentGatewayRepository;
 					const request = yield* HttpServerRequest.HttpServerRequest;
+
+					// Read raw body for HMAC verification (must be exact bytes, not parsed JSON)
+					const rawBody = yield* request.text.pipe(
+						Effect.catchTag("RequestError", (err) =>
+							Effect.fail(
+								new WebhookVerificationError({ message: `Failed to read request body: ${err.message}` }),
+							),
+						),
+					);
+
 					const headers = Object.fromEntries(
 						Object.entries(request.headers).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v]),
 					) as Record<string, string>;
 
 					// 1. Verify webhook HMAC
-					const event = yield* gateway.verifyWebhook(payload, headers);
+					const event = yield* gateway.verifyWebhook(rawBody, headers);
 
 					// 2. Only handle order.created (payment confirmed)
 					if (event.type !== "order.created") {
