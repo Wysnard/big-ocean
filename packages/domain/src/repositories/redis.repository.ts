@@ -49,6 +49,13 @@ export interface RedisRepositoryMethods {
 	readonly incr: (key: string) => Effect.Effect<number, RedisOperationError>;
 
 	/**
+	 * Decrement a key by 1 atomically
+	 * @param key - Redis key
+	 * @returns New value after decrement
+	 */
+	readonly decr: (key: string) => Effect.Effect<number, RedisOperationError>;
+
+	/**
 	 * Get a string value
 	 * @param key - Redis key
 	 * @returns Value or null if not exists

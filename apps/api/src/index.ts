@@ -40,6 +40,7 @@ import {
 	PurchaseEventDrizzleRepositoryLive,
 	TeaserPortraitAnthropicRepositoryLive,
 	TeaserPortraitMockRepositoryLive,
+	WaitlistDrizzleRepositoryLive,
 } from "@workspace/infrastructure";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
@@ -54,6 +55,7 @@ import { HealthGroupLive } from "./handlers/health";
 import { PortraitGroupLive } from "./handlers/portrait";
 import { ProfileGroupLive } from "./handlers/profile";
 import { PurchaseGroupLive, PurchaseWebhookGroupLive } from "./handlers/purchase";
+import { WaitlistGroupLive } from "./handlers/waitlist";
 import { AuthMiddlewareLive } from "./middleware/auth.middleware";
 import { createBetterAuthHandler } from "./middleware/better-auth";
 
@@ -191,6 +193,7 @@ const RepositoryLayers = Layer.mergeAll(
 	PaymentGatewayPolarRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
 	TeaserPortraitLayer,
+	WaitlistDrizzleRepositoryLive,
 );
 
 /**
@@ -219,6 +222,7 @@ const HttpGroupsLive = Layer.mergeAll(
 	EvidenceGroupLive,
 	PurchaseWebhookGroupLive,
 	PurchaseGroupLive,
+	WaitlistGroupLive,
 	LoggerPinoRepositoryLive,
 );
 

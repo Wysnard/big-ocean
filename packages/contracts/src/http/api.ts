@@ -12,6 +12,7 @@ import { HealthGroup } from "./groups/health";
 import { PortraitGroup } from "./groups/portrait";
 import { ProfileGroup } from "./groups/profile";
 import { PurchaseGroup, PurchaseWebhookGroup } from "./groups/purchase";
+import { WaitlistGroup } from "./groups/waitlist";
 
 /**
  * Big Ocean API
@@ -26,4 +27,5 @@ export class BigOceanApi extends HttpApi.make("BigOceanApi")
 	.add(EvidenceGroup.prefix("/api")) // /api/evidence/*
 	.add(PortraitGroup.prefix("/api")) // /api/portrait/:sessionId/status
 	.add(PurchaseWebhookGroup.prefix("/api")) // /api/purchase/polar-webhook (public)
-	.add(PurchaseGroup.prefix("/api")) {} // /api/purchase/verify (authenticated)
+	.add(PurchaseGroup.prefix("/api")) // /api/purchase/verify (authenticated)
+	.add(WaitlistGroup.prefix("/api")) {} // /api/waitlist/signup (public)

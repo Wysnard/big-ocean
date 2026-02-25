@@ -3,6 +3,7 @@ import { Schema as S } from "effect";
 import { Loader2 } from "lucide-react";
 import { useCallback } from "react";
 import { TherapistChat } from "@/components/TherapistChat";
+import { WaitlistForm } from "@/components/waitlist/waitlist-form";
 import { useAuth } from "@/hooks/use-auth";
 import { getSession } from "@/lib/auth-client";
 import {
@@ -12,9 +13,19 @@ import {
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
+// URL search params arrive as strings; accept both "true"/"false" and native booleans
+const BooleanFromSearch = S.Union(
+	S.Boolean,
+	S.transform(S.Literal("true", "false"), S.Boolean, {
+		decode: (s) => s === "true",
+		encode: (b) => (b ? ("true" as const) : ("false" as const)),
+	}),
+);
+
 const ChatSearchParams = S.Struct({
 	sessionId: S.optional(S.String),
-	expired: S.optional(S.Boolean),
+	expired: S.optional(BooleanFromSearch),
+	waitlist: S.optional(BooleanFromSearch),
 	highlightMessageId: S.optional(S.String),
 	highlightQuote: S.optional(S.String),
 	highlightStart: S.optional(S.Number),
@@ -27,7 +38,7 @@ export const Route = createFileRoute("/chat/")({
 	beforeLoad: async (context) => {
 		const { search } = context;
 
-		if (!search.sessionId) {
+		if (!search.sessionId && !search.waitlist && !search.expired) {
 			// Story 7.18 AC #6: Recover pending session from localStorage (anonymous user returning)
 			const pending = readPendingResultsGateSession();
 			if (pending) {
@@ -54,6 +65,14 @@ export const Route = createFileRoute("/chat/")({
 
 			if (!response.ok) {
 				const error = await response.json().catch(() => ({ message: response.statusText }));
+
+				// 503 + GlobalAssessmentLimitReached = circuit breaker active — show waitlist
+				if (response.status === 503 && error._tag === "GlobalAssessmentLimitReached") {
+					throw redirect({
+						to: "/chat",
+						search: { waitlist: true },
+					});
+				}
 
 				// 409 = user already has an assessment — redirect to existing session
 				if (response.status === 409 && error.existingSessionId) {
@@ -126,6 +145,7 @@ function RouteComponent() {
 	const {
 		sessionId,
 		expired,
+		waitlist,
 		highlightMessageId,
 		highlightQuote,
 		highlightStart,
@@ -159,6 +179,11 @@ function RouteComponent() {
 			});
 		}
 	}, [sessionId, navigate]);
+
+	// Story 15.3: Circuit breaker active — show waitlist form
+	if (waitlist) {
+		return <WaitlistForm />;
+	}
 
 	// Story 7.18 Task 3.4: Expired session — Nerin-themed message
 	if (expired) {

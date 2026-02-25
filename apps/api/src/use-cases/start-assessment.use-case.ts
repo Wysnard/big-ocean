@@ -137,6 +137,17 @@ export const startAuthenticatedAssessment = (input: { userId: string }) =>
 			);
 		}
 
+		// Global circuit breaker check (Story 15.3) — fail-open on Redis errors
+		yield* costGuard.checkAndRecordGlobalAssessmentStart().pipe(
+			Effect.catchTag("RedisOperationError", (err) =>
+				Effect.sync(() => {
+					logger.warn("Redis unavailable for global limit check, allowing", {
+						error: err.message,
+					});
+				}),
+			),
+		);
+
 		// Check rate limit
 		const canStart = yield* costGuard.canStartAssessment(userId);
 		if (!canStart) {
@@ -171,7 +182,19 @@ export const startAnonymousAssessment = () =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
+		const costGuard = yield* CostGuardRepository;
 		const logger = yield* LoggerRepository;
+
+		// Global circuit breaker check (Story 15.3) — fail-open on Redis errors
+		yield* costGuard.checkAndRecordGlobalAssessmentStart().pipe(
+			Effect.catchTag("RedisOperationError", (err) =>
+				Effect.sync(() => {
+					logger.warn("Redis unavailable for global limit check, allowing", {
+						error: err.message,
+					});
+				}),
+			),
+		);
 
 		// Create anonymous session with token
 		const { sessionId, sessionToken } = yield* sessionRepo.createAnonymousSession();

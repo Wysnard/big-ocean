@@ -15,6 +15,7 @@ export {
 	DatabaseError,
 	FinalizationInProgressError,
 	FreeTierLimitReached,
+	GlobalAssessmentLimitReached,
 	InvalidCredentials,
 	InvalidFacetNameError,
 	MalformedEvidenceError,

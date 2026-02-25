@@ -118,6 +118,9 @@ export interface AppConfigService {
 
 	/** Polar product ID for extended conversation */
 	readonly polarProductExtendedConversation: string;
+
+	/** Global daily assessment limit (circuit breaker) — Story 15.3 */
+	readonly globalDailyAssessmentLimit: number;
 }
 
 /**

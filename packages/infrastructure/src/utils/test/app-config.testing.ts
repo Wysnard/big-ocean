@@ -55,6 +55,7 @@ export const defaultTestConfig: AppConfigService = {
 	polarProductRelationshipSingle: "polar_product_single",
 	polarProductRelationship5Pack: "polar_product_5pack",
 	polarProductExtendedConversation: "polar_product_extended",
+	globalDailyAssessmentLimit: 100,
 };
 
 /**

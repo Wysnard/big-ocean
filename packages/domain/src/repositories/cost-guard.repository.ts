@@ -8,6 +8,7 @@
 import { Context, Effect } from "effect";
 import type {
 	CostLimitExceeded,
+	GlobalAssessmentLimitReached,
 	MessageRateLimitError,
 	RateLimitExceeded,
 } from "../errors/http.errors";
@@ -87,6 +88,17 @@ export interface CostGuardMethods {
 	readonly checkMessageRateLimit: (
 		key: string,
 	) => Effect.Effect<void, RedisOperationError | MessageRateLimitError>;
+
+	/**
+	 * Atomically check and record a global assessment start (Story 15.3)
+	 * INCR → compare → DECR-on-fail pattern to prevent TOCTOU race conditions.
+	 * @throws GlobalAssessmentLimitReached if global daily limit exceeded
+	 * @throws RedisOperationError if Redis operation fails
+	 */
+	readonly checkAndRecordGlobalAssessmentStart: () => Effect.Effect<
+		void,
+		RedisOperationError | GlobalAssessmentLimitReached
+	>;
 }
 
 /**

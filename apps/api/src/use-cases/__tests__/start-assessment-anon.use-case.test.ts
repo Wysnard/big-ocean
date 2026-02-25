@@ -41,11 +41,14 @@ describe("startAssessment Use Case", () => {
 			expect(mockAssessmentSessionRepo.createAnonymousSession).toHaveBeenCalled();
 		});
 
-		it("should not call CostGuard at all", async () => {
+		it("should call global limit check but not per-user CostGuard", async () => {
 			const testLayer = createTestLayer();
 
 			await Effect.runPromise(startAnonymousAssessment().pipe(Effect.provide(testLayer)));
 
+			// Global circuit breaker IS checked for anonymous users (Story 15.3)
+			expect(mockCostGuardRepo.checkAndRecordGlobalAssessmentStart).toHaveBeenCalled();
+			// Per-user rate limit is NOT checked for anonymous users
 			expect(mockCostGuardRepo.canStartAssessment).not.toHaveBeenCalled();
 			expect(mockCostGuardRepo.recordAssessmentStart).not.toHaveBeenCalled();
 		});

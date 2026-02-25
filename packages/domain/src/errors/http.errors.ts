@@ -306,3 +306,15 @@ export class WebhookVerificationError extends S.TaggedError<WebhookVerificationE
 		message: S.String,
 	},
 ) {}
+
+/**
+ * Global assessment limit reached error (503)
+ * Platform-wide daily assessment circuit breaker is active
+ */
+export class GlobalAssessmentLimitReached extends S.TaggedError<GlobalAssessmentLimitReached>()(
+	"GlobalAssessmentLimitReached",
+	{
+		message: S.String,
+		resumeAfter: S.DateTimeUtc,
+	},
+) {}
