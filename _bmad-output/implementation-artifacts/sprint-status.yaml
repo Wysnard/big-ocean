@@ -230,8 +230,8 @@ development_status:
   # Credits, invitations, invitee flow, pair analysis
   # Stories: 5.1-5.4 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-14: backlog
-  14-1-relationship-credits-and-purchase-flow: backlog
+  epic-14: in-progress
+  14-1-relationship-credits-and-purchase-flow: done
   14-2-invitation-system: backlog
   14-3-invitee-assessment-flow: backlog
   14-4-relationship-analysis-generation: backlog

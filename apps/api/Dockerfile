@@ -22,6 +22,9 @@ RUN pnpm install --frozen-lockfile
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
 
+# Copy Drizzle migration files (needed by production stage)
+COPY drizzle/ ./drizzle/
+
 # Development stage (hot reload with tsx watch)
 FROM node:20-alpine AS development
 WORKDIR /app
@@ -84,6 +87,10 @@ WORKDIR /app
 # Copy deployed package from deploy stage (includes isolated node_modules)
 COPY --from=deploy /app/prod .
 
+# Copy Drizzle migration SQL files for runtime migration
+# migrate.ts resolves these relative to its own location: ../../drizzle
+COPY --from=deploy /app/drizzle ./drizzle
+
 # Set NODE_ENV to production
 ENV NODE_ENV=production
 
@@ -98,5 +105,5 @@ RUN apk add --no-cache wget
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:${PORT:-8080}/health || exit 1
 
-# Start backend using tsx (handles TypeScript imports from workspace packages)
-CMD ["tsx", "src/index.ts"]
+# Run migrations then start the API server
+CMD ["sh", "-c", "tsx src/migrate.ts && tsx src/index.ts"]

@@ -76,6 +76,12 @@ export default defineConfig({
 			testMatch: "specs/waitlist.spec.ts",
 		},
 
+		// ── Purchase credits: free credit grant, credits endpoint, UI ────
+		{
+			name: "purchase-credits",
+			testMatch: "specs/purchase-credits.spec.ts",
+		},
+
 		// ── Access-control: unauthenticated ──────────────────────────────
 		{
 			name: "unauth",

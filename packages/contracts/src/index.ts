@@ -27,6 +27,9 @@ export { PortraitGroup } from "./http/groups/portrait";
 // Profile HTTP Schemas and Types
 export * from "./http/groups/profile";
 export { ProfileGroup } from "./http/groups/profile";
+// Purchase HTTP Schemas and Types (Story 14.1)
+export * from "./http/groups/purchase";
+export { PurchaseGroup, PurchaseWebhookGroup } from "./http/groups/purchase";
 // Auth Middleware (Story 1.4)
 export { AuthMiddleware } from "./middleware/auth";
 // Shared Schemas & Types

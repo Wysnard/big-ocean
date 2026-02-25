@@ -11,6 +11,7 @@ import { DetailZone } from "@/components/results/DetailZone";
 import { PortraitReadingView } from "@/components/results/PortraitReadingView";
 import { ProfileView } from "@/components/results/ProfileView";
 import { QuickActionsCard } from "@/components/results/QuickActionsCard";
+import { RelationshipCreditsSection } from "@/components/results/RelationshipCreditsSection";
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
 import { useTraitEvidence } from "@/components/results/useTraitEvidence";
 import { ArchetypeShareCard } from "@/components/sharing/archetype-share-card";
@@ -374,6 +375,8 @@ function ResultsSessionPage() {
 						onCopyLink={handleCopyLink}
 						onToggleVisibility={handleToggleVisibility}
 					/>
+
+					<RelationshipCreditsSection />
 
 					{shareState?.publicProfileId && (
 						<ArchetypeShareCard
