@@ -83,6 +83,10 @@ vi.mock("@/components/results/QuickActionsCard", () => ({
 	QuickActionsCard: () => <div data-testid="quick-actions" />,
 }));
 
+vi.mock("@/components/results/RelationshipCreditsSection", () => ({
+	RelationshipCreditsSection: () => <div data-testid="relationship-credits-section" />,
+}));
+
 describe("results/$assessmentSessionId route behavior", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();

@@ -203,6 +203,23 @@ export const BetterAuthLive = Layer.effect(
 						after: async (user, context) => {
 							logger.info(`User created: ${user.id} (${user.email})`);
 
+							// Grant 1 free relationship credit (Story 14.1)
+							// Idempotent: deterministic polarCheckoutId + onConflictDoNothing
+							try {
+								await plainDb
+									.insert(authSchema.purchaseEvents)
+									.values({
+										id: crypto.randomUUID(),
+										userId: user.id,
+										eventType: "free_credit_granted",
+										polarCheckoutId: `free-credit-${user.id}`,
+									})
+									.onConflictDoNothing();
+							} catch (error) {
+								const msg = error instanceof Error ? error.message : String(error);
+								logger.error(`Failed to grant free credit for user ${user.id}: ${msg}`);
+							}
+
 							const anonymousSessionId = getAnonymousSessionId(context);
 							if (!anonymousSessionId) return;
 

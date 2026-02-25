@@ -16,6 +16,7 @@ import {
 } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import { Effect } from "effect";
+import { getCredits } from "../use-cases/get-credits.use-case";
 import { processPurchase } from "../use-cases/process-purchase.use-case";
 
 /**
@@ -101,42 +102,52 @@ export const PurchaseWebhookGroupLive = HttpApiBuilder.group(
  */
 export const PurchaseGroupLive = HttpApiBuilder.group(BigOceanApi, "purchase", (handlers) =>
 	Effect.gen(function* () {
-		return handlers.handle("verifyPurchase", ({ urlParams }) =>
-			Effect.gen(function* () {
-				const userId = yield* CurrentUser;
-				if (!userId) {
-					return { verified: false };
-				}
+		return handlers
+			.handle("getCredits", () =>
+				Effect.gen(function* () {
+					const userId = yield* CurrentUser;
+					if (!userId) {
+						return { availableCredits: 0, hasCompletedAssessment: false };
+					}
+					return yield* getCredits(userId);
+				}),
+			)
+			.handle("verifyPurchase", ({ urlParams }) =>
+				Effect.gen(function* () {
+					const userId = yield* CurrentUser;
+					if (!userId) {
+						return { verified: false };
+					}
 
-				const purchaseRepo = yield* PurchaseEventRepository;
-				const events = yield* purchaseRepo
-					.getEventsByUserId(userId)
-					.pipe(Effect.catchTag("DatabaseError", () => Effect.succeed([] as never[])));
-				const matchingEvent = events.find(
-					(e: { polarCheckoutId: string | null }) => e.polarCheckoutId === urlParams.checkoutId,
-				);
-
-				if (!matchingEvent) {
-					return { verified: false };
-				}
-
-				const capabilities = yield* purchaseRepo
-					.getCapabilities(userId)
-					.pipe(
-						Effect.catchTag("DatabaseError", () =>
-							Effect.fail(new DatabaseError({ message: "Failed to get capabilities" })),
-						),
+					const purchaseRepo = yield* PurchaseEventRepository;
+					const events = yield* purchaseRepo
+						.getEventsByUserId(userId)
+						.pipe(Effect.catchTag("DatabaseError", () => Effect.succeed([] as never[])));
+					const matchingEvent = events.find(
+						(e: { polarCheckoutId: string | null }) => e.polarCheckoutId === urlParams.checkoutId,
 					);
 
-				return {
-					verified: true,
-					capabilities: {
-						availableCredits: capabilities.availableCredits,
-						hasFullPortrait: capabilities.hasFullPortrait,
-						hasExtendedConversation: capabilities.hasExtendedConversation,
-					},
-				};
-			}),
-		);
+					if (!matchingEvent) {
+						return { verified: false };
+					}
+
+					const capabilities = yield* purchaseRepo
+						.getCapabilities(userId)
+						.pipe(
+							Effect.catchTag("DatabaseError", () =>
+								Effect.fail(new DatabaseError({ message: "Failed to get capabilities" })),
+							),
+						);
+
+					return {
+						verified: true,
+						capabilities: {
+							availableCredits: capabilities.availableCredits,
+							hasFullPortrait: capabilities.hasFullPortrait,
+							hasExtendedConversation: capabilities.hasExtendedConversation,
+						},
+					};
+				}),
+			);
 	}),
 );

@@ -46,9 +46,18 @@ export const PurchaseWebhookGroup = HttpApiGroup.make("purchaseWebhook")
 	.prefix("/purchase");
 
 /**
+ * Get Credits Response Schema (Story 14.1)
+ */
+const GetCreditsResponseSchema = S.Struct({
+	availableCredits: S.Number,
+	hasCompletedAssessment: S.Boolean,
+});
+
+/**
  * Purchase Group (authenticated)
  *
  * GET /api/purchase/verify?checkoutId=X
+ * GET /api/purchase/credits
  */
 export const PurchaseGroup = HttpApiGroup.make("purchase")
 	.add(
@@ -57,8 +66,14 @@ export const PurchaseGroup = HttpApiGroup.make("purchase")
 			.setUrlParams(S.Struct({ checkoutId: S.String }))
 			.addError(DatabaseError, { status: 500 }),
 	)
+	.add(
+		HttpApiEndpoint.get("getCredits", "/credits")
+			.addSuccess(GetCreditsResponseSchema)
+			.addError(DatabaseError, { status: 500 }),
+	)
 	.middleware(AuthMiddleware)
 	.prefix("/purchase");
 
 // Export TypeScript types for frontend use
 export type VerifyPurchaseResponse = typeof VerifyPurchaseResponseSchema.Type;
+export type GetCreditsResponse = typeof GetCreditsResponseSchema.Type;
