@@ -133,8 +133,8 @@ development_status:
   8-6-results-page-layout-redesign-mockup-7-detail-zone: done
   8-4-pre-generate-personalized-portrait-at-free-tier-message-threshold: done
   8-7-portrait-prompt-rework: done
-
-  8-8-complete-archetype-library: backlog
+  8-5-regenerate-personalized-portrait-paid-tier: backlog
+  8-8-complete-archetype-library: ready-for-dev
   epic-8-retrospective: optional
 
 # ═══════════════════════════════════════════════════════════════
