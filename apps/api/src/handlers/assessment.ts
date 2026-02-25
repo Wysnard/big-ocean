@@ -29,6 +29,7 @@ import {
 	generateResults,
 	getFinalizationStatus,
 	getResults,
+	getTranscript,
 	listUserSessions,
 	resumeSession,
 	sendMessage,
@@ -265,6 +266,25 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 						);
 					}
 					return yield* getFinalizationStatus({ sessionId, authenticatedUserId });
+				}),
+			)
+			.handle("getTranscript", ({ path: { sessionId } }) =>
+				Effect.gen(function* () {
+					const authenticatedUserId = yield* CurrentUser;
+					if (!authenticatedUserId) {
+						return yield* Effect.fail(
+							new Unauthorized({ message: "Authentication required to view transcript" }),
+						);
+					}
+					const result = yield* getTranscript({ sessionId, authenticatedUserId });
+					return {
+						messages: result.messages.map((msg) => ({
+							id: msg.id,
+							role: msg.role,
+							content: msg.content,
+							timestamp: DateTime.unsafeMake(msg.createdAt.getTime()),
+						})),
+					};
 				}),
 			)
 			.handle("resumeSession", ({ path: { sessionId } }) =>

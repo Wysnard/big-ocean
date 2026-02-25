@@ -38,6 +38,11 @@ export {
 	getResults,
 } from "./get-results.use-case";
 export {
+	type GetTranscriptInput,
+	type GetTranscriptOutput,
+	getTranscript,
+} from "./get-transcript.use-case";
+export {
 	type ListUserSessionsInput,
 	type ListUserSessionsOutput,
 	listUserSessions,

@@ -109,9 +109,17 @@ interface DetailZoneProps {
 	isOpen: boolean;
 	onClose: () => void;
 	isLoading: boolean;
+	onFacetClick?: (facetName: FacetName) => void;
 }
 
-export function DetailZone({ trait, facetDetails, isOpen, onClose, isLoading }: DetailZoneProps) {
+export function DetailZone({
+	trait,
+	facetDetails,
+	isOpen,
+	onClose,
+	isLoading,
+	onFacetClick,
+}: DetailZoneProps) {
 	const traitColor = getTraitColor(trait.name);
 	const ShapeComponent = TRAIT_SHAPE[trait.name];
 	const levelLetter = trait.score < 40 ? "Low" : trait.score < 80 ? "Mid" : "High";
@@ -177,7 +185,8 @@ export function DetailZone({ trait, facetDetails, isOpen, onClose, isLoading }: 
 									key={facet.name}
 									data-slot="facet-detail-card"
 									data-facet={facet.name}
-									className="flex-row"
+									className={`flex-row${onFacetClick ? " cursor-pointer hover:ring-1 hover:ring-primary/30 motion-safe:transition-shadow" : ""}`}
+									onClick={onFacetClick ? () => onFacetClick(facet.name) : undefined}
 								>
 									<CardAccent position="left" style={{ backgroundColor: traitColor }} />
 									<CardContent className="flex-1 p-4">

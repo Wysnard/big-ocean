@@ -4,10 +4,12 @@ import { getRequestHeader } from "@tanstack/react-start/server";
 import type { FacetName, TraitName } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
 import { Schema as S } from "effect";
-import { BookOpen, Loader2, MessageCircle } from "lucide-react";
+import { BookOpen, Loader2, MessageCircle, X } from "lucide-react";
 import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
 import { ResultsAuthGate } from "@/components/ResultsAuthGate";
+import { ConversationTranscript } from "@/components/results/ConversationTranscript";
 import { DetailZone } from "@/components/results/DetailZone";
+import { EvidencePanel, type HighlightRange } from "@/components/results/EvidencePanel";
 import { PortraitReadingView } from "@/components/results/PortraitReadingView";
 import { ProfileView } from "@/components/results/ProfileView";
 import { QuickActionsCard } from "@/components/results/QuickActionsCard";
@@ -18,9 +20,11 @@ import { ArchetypeShareCard } from "@/components/sharing/archetype-share-card";
 import {
 	getResultsQueryOptions,
 	isAssessmentApiError,
+	useConversationTranscript,
 	useGetResults,
 } from "@/hooks/use-assessment";
 import { useAuth } from "@/hooks/use-auth";
+import { useFacetEvidence } from "@/hooks/use-evidence";
 import { useToggleVisibility } from "@/hooks/use-profile";
 import { usePortraitStatus } from "@/hooks/usePortraitStatus";
 import {
@@ -134,6 +138,30 @@ function ResultsSessionPage() {
 	// Trait selection state
 	const [selectedTrait, setSelectedTrait] = useState<TraitName | null>(null);
 
+	// Story 12.2: Evidence highlighting state
+	const [selectedFacet, setSelectedFacet] = useState<FacetName | null>(null);
+	const [scrollToMessageId, setScrollToMessageId] = useState<string | null>(null);
+	const [showTranscript, setShowTranscript] = useState(false);
+	const [activeHighlight, setActiveHighlight] = useState<{
+		messageId: string;
+		range: HighlightRange;
+		color: string;
+		confidence: number;
+	} | null>(null);
+
+	// Transcript data
+	const { data: transcriptData } = useConversationTranscript(
+		assessmentSessionId,
+		canLoadResults && showTranscript,
+	);
+
+	// Facet evidence for the selected facet (evidence panel)
+	const { data: selectedFacetEvidence } = useFacetEvidence(
+		assessmentSessionId,
+		selectedFacet,
+		canLoadResults && !!selectedFacet,
+	);
+
 	// Build facet score and confidence maps for useTraitEvidence
 	const facetScoreMap = useMemo(() => {
 		const map = new Map<FacetName, number>();
@@ -241,6 +269,30 @@ function ResultsSessionPage() {
 
 	const handleCloseDetailZone = useCallback(() => {
 		setSelectedTrait(null);
+		setSelectedFacet(null);
+	}, []);
+
+	// Story 12.2: Facet click handler — opens evidence panel
+	const handleFacetClick = useCallback((facetName: FacetName) => {
+		setSelectedFacet((prev) => (prev === facetName ? null : facetName));
+	}, []);
+
+	const handleCloseEvidencePanel = useCallback(() => {
+		setSelectedFacet(null);
+	}, []);
+
+	// Story 12.2: Jump to message in transcript
+	const handleJumpToMessage = useCallback(
+		(messageId: string, range: HighlightRange, color: string, confidence: number) => {
+			setShowTranscript(true);
+			setScrollToMessageId(messageId);
+			setActiveHighlight({ messageId, range, color, confidence });
+		},
+		[],
+	);
+
+	const handleScrollComplete = useCallback(() => {
+		setScrollToMessageId(null);
 	}, []);
 
 	const handleAuthSuccess = () => {
@@ -331,84 +383,148 @@ function ResultsSessionPage() {
 	}
 
 	return (
-		<ProfileView
-			archetypeName={results.archetypeName}
-			oceanCode5={results.oceanCode5}
-			description={results.archetypeDescription}
-			dominantTrait={dominantTrait}
-			traits={results.traits}
-			facets={results.facets}
-			onToggleTrait={handleToggleTrait}
-			overallConfidence={results.overallConfidence}
-			isCurated={results.isCurated}
-			personalDescription={results.personalDescription}
-			fullPortraitContent={portraitStatusData?.portrait?.content}
-			fullPortraitStatus={portraitStatusData?.status}
-			onRetryPortrait={() => void refetchPortraitStatus()}
-			selectedTrait={selectedTrait}
-			messageCount={results.messageCount}
-			detailZone={
-				selectedTraitData && (
-					<DetailZone
-						trait={selectedTraitData}
-						facetDetails={facetDetails ?? []}
-						isOpen={!!selectedTrait}
-						onClose={handleCloseDetailZone}
-						isLoading={evidenceLoading}
+		<>
+			<ProfileView
+				archetypeName={results.archetypeName}
+				oceanCode5={results.oceanCode5}
+				description={results.archetypeDescription}
+				dominantTrait={dominantTrait}
+				traits={results.traits}
+				facets={results.facets}
+				onToggleTrait={handleToggleTrait}
+				overallConfidence={results.overallConfidence}
+				isCurated={results.isCurated}
+				personalDescription={results.personalDescription}
+				fullPortraitContent={portraitStatusData?.portrait?.content}
+				fullPortraitStatus={portraitStatusData?.status}
+				onRetryPortrait={() => void refetchPortraitStatus()}
+				selectedTrait={selectedTrait}
+				messageCount={results.messageCount}
+				detailZone={
+					selectedTraitData && (
+						<>
+							<DetailZone
+								trait={selectedTraitData}
+								facetDetails={facetDetails ?? []}
+								isOpen={!!selectedTrait}
+								onClose={handleCloseDetailZone}
+								isLoading={evidenceLoading}
+								onFacetClick={handleFacetClick}
+							/>
+							{selectedFacet && selectedFacetEvidence && (
+								<EvidencePanel
+									facetName={selectedFacet}
+									evidence={selectedFacetEvidence}
+									onJumpToMessage={handleJumpToMessage}
+									onClose={handleCloseEvidencePanel}
+								/>
+							)}
+						</>
+					)
+				}
+				quickActions={
+					<QuickActionsCard
+						sessionId={assessmentSessionId}
+						publicProfileId={shareState?.publicProfileId}
 					/>
-				)
-			}
-			quickActions={
-				<QuickActionsCard
-					sessionId={assessmentSessionId}
-					publicProfileId={shareState?.publicProfileId}
-				/>
-			}
-		>
-			{/* Grid children: Share + Continue Chat */}
-			<div className="mx-auto max-w-[1120px] px-5 pb-10">
-				<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
-					<ShareProfileSection
-						shareState={shareState}
-						copied={copied}
-						isTogglePending={toggleVisibility.isPending}
-						onCopyLink={handleCopyLink}
-						onToggleVisibility={handleToggleVisibility}
-					/>
-
-					<RelationshipCreditsSection />
-
-					{shareState?.publicProfileId && (
-						<ArchetypeShareCard
-							publicProfileId={shareState.publicProfileId}
-							archetypeName={results.archetypeName}
+				}
+			>
+				{/* Grid children: Share + Continue Chat */}
+				<div className="mx-auto max-w-[1120px] px-5 pb-10">
+					<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
+						<ShareProfileSection
+							shareState={shareState}
+							copied={copied}
+							isTogglePending={toggleVisibility.isPending}
+							onCopyLink={handleCopyLink}
+							onToggleVisibility={handleToggleVisibility}
 						/>
-					)}
 
-					{/* Action CTAs — full-width */}
-					<div className="col-span-full flex flex-wrap justify-center gap-3 py-4">
-						{/* Show "Read portrait" button if teaser OR full portrait content is available */}
-						{(results.personalDescription || portraitStatusData?.portrait?.content) && (
-							<Button data-testid="results-read-portrait" asChild variant="outline" className="min-h-11">
-								<Link
-									to="/results/$assessmentSessionId"
-									params={{ assessmentSessionId }}
-									search={{ view: "portrait" }}
-								>
-									<BookOpen className="w-4 h-4 mr-2" />
-									Read your portrait again
+						<RelationshipCreditsSection />
+
+						{shareState?.publicProfileId && (
+							<ArchetypeShareCard
+								publicProfileId={shareState.publicProfileId}
+								archetypeName={results.archetypeName}
+							/>
+						)}
+
+						{/* Action CTAs — full-width */}
+						<div className="col-span-full flex flex-wrap justify-center gap-3 py-4">
+							{/* Show "Read portrait" button if teaser OR full portrait content is available */}
+							{(results.personalDescription || portraitStatusData?.portrait?.content) && (
+								<Button data-testid="results-read-portrait" asChild variant="outline" className="min-h-11">
+									<Link
+										to="/results/$assessmentSessionId"
+										params={{ assessmentSessionId }}
+										search={{ view: "portrait" }}
+									>
+										<BookOpen className="w-4 h-4 mr-2" />
+										Read your portrait again
+									</Link>
+								</Button>
+							)}
+							<Button
+								data-testid="results-view-conversation"
+								variant="outline"
+								className="min-h-11"
+								onClick={() => setShowTranscript((prev) => !prev)}
+							>
+								<MessageCircle className="w-4 h-4 mr-2" />
+								{showTranscript ? "Hide Conversation" : "View Conversation"}
+							</Button>
+							<Button data-testid="results-continue-chat" asChild variant="outline" className="min-h-11">
+								<Link to="/chat" search={{ sessionId: assessmentSessionId }}>
+									<MessageCircle className="w-4 h-4 mr-2" />
+									Continue Chat
 								</Link>
 							</Button>
-						)}
-						<Button data-testid="results-continue-chat" asChild variant="outline" className="min-h-11">
-							<Link to="/chat" search={{ sessionId: assessmentSessionId }}>
-								<MessageCircle className="w-4 h-4 mr-2" />
-								Continue Chat
-							</Link>
-						</Button>
+						</div>
 					</div>
 				</div>
-			</div>
-		</ProfileView>
+			</ProfileView>
+
+			{/* Story 12.2: Conversation transcript side panel */}
+			{showTranscript && (
+				<>
+					{/* Mobile: full-screen overlay */}
+					<div
+						className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden"
+						onClick={() => setShowTranscript(false)}
+					/>
+					<div
+						data-testid="transcript-panel"
+						className="fixed right-0 top-0 z-50 h-full w-full max-w-md bg-card border-l shadow-xl motion-safe:animate-in motion-safe:slide-in-from-right"
+					>
+						<div className="flex items-center justify-between border-b px-4 py-3">
+							<h3 className="text-sm font-semibold text-foreground">Conversation Transcript</h3>
+							<button
+								type="button"
+								onClick={() => setShowTranscript(false)}
+								className="rounded-full p-1.5 hover:bg-muted motion-safe:transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+								aria-label="Close transcript"
+							>
+								<X className="w-4 h-4 text-muted-foreground" />
+							</button>
+						</div>
+						{transcriptData?.messages ? (
+							<ConversationTranscript
+								messages={transcriptData.messages.map((m) => ({
+									...m,
+									timestamp: String(m.timestamp),
+								}))}
+								scrollToMessageId={scrollToMessageId}
+								activeHighlight={activeHighlight}
+								onScrollComplete={handleScrollComplete}
+							/>
+						) : (
+							<div className="flex items-center justify-center h-32">
+								<Loader2 className="h-6 w-6 motion-safe:animate-spin text-muted-foreground" />
+							</div>
+						)}
+					</div>
+				</>
+			)}
+		</>
 	);
 }

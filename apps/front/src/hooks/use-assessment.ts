@@ -8,6 +8,7 @@
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import type {
 	GetResultsResponse,
+	GetTranscriptResponse,
 	ListSessionsResponse,
 	ResumeSessionResponse,
 	SendMessageRequest,
@@ -229,6 +230,26 @@ export function useListAssessments(enabled = true) {
 	return useQuery({
 		...listAssessmentsQueryOptions(),
 		enabled,
+	});
+}
+
+/**
+ * Get conversation transcript for a completed assessment session (Story 12.2)
+ *
+ * Returns all messages with IDs for evidence linking in the transcript panel.
+ * Cached with staleTime: Infinity since transcripts are immutable for completed sessions.
+ *
+ * @param sessionId - The completed session ID
+ * @param enabled - Whether to enable the query (default: true)
+ */
+export function useConversationTranscript(sessionId: string, enabled = true) {
+	return useQuery({
+		queryKey: ["assessment", "transcript", sessionId],
+		queryFn: async (): Promise<GetTranscriptResponse> => {
+			return fetchApi(`/api/assessment/${sessionId}/transcript`);
+		},
+		enabled: enabled && !!sessionId,
+		staleTime: Number.POSITIVE_INFINITY,
 	});
 }
 

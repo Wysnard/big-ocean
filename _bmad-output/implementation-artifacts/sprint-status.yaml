@@ -210,7 +210,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-12: in-progress
   12-1-results-page-and-trait-display: done
-  12-2-bidirectional-evidence-highlighting: backlog
+  12-2-bidirectional-evidence-highlighting: review
   12-3-teaser-portrait-generation-and-display: backlog
   epic-12-retrospective: optional
 
