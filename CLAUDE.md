@@ -8,6 +8,8 @@ Always use Context7 MCP when I need library/API documentation, code generation, 
 
 When working on frontend code (`apps/front` or `packages/ui`), consult [FRONTEND.md](./docs/FRONTEND.md) for styling patterns, component conventions, and data attribute usage.
 
+**Worktree isolation rule:** When running in a git worktree (e.g., spawned via `isolation: "worktree"`), ONLY read and modify files within the worktree directory. Do NOT access the main repository working tree unless the user explicitly asks you to.
+
 **Related docs:** [ARCHITECTURE.md](./docs/ARCHITECTURE.md) (current-state) | [Aspirational Architecture](./_bmad-output/planning-artifacts/architecture-aspirational.md) (future plans) | [COMMANDS.md](./docs/COMMANDS.md) | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) | [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md) | [API-CONTRACT-SPECIFICATION.md](./docs/API-CONTRACT-SPECIFICATION.md) | [FRONTEND.md](./docs/FRONTEND.md)
 
 ## Repository Overview
