@@ -488,8 +488,8 @@ function ResultsSessionPage() {
 			{showTranscript && (
 				<>
 					{/* Mobile: full-screen overlay */}
-					<div
-						role="button"
+					<button
+						type="button"
 						tabIndex={0}
 						className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden"
 						onClick={() => setShowTranscript(false)}
