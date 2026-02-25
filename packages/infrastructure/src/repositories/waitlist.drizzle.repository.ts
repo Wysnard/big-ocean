@@ -4,7 +4,7 @@
  * Simple email capture with ON CONFLICT DO NOTHING for duplicate handling.
  */
 
-import { LoggerRepository, WaitlistRepository } from "@workspace/domain";
+import { DatabaseError, LoggerRepository, WaitlistRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 import { Database } from "../context/database";
 import { waitlistEmails } from "../db/drizzle/schema";
@@ -27,7 +27,7 @@ export const WaitlistDrizzleRepositoryLive = Layer.effect(
 						.onConflictDoNothing({ target: waitlistEmails.email });
 
 					logger.info("Waitlist email captured", { email });
-				}),
+				}).pipe(Effect.mapError(() => new DatabaseError({ message: "Failed to add waitlist email" }))),
 		});
 	}),
 );
