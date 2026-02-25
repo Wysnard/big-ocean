@@ -5,19 +5,23 @@
  *
  * In-memory CostGuard implementation for testing.
  */
-import { RateLimitExceeded } from "@workspace/contracts";
+import { GlobalAssessmentLimitReached, RateLimitExceeded } from "@workspace/contracts";
 import { CostGuardRepository, getNextDayMidnightUTC, getUTCDateKey } from "@workspace/domain";
 import { DateTime, Effect, Layer } from "effect";
 
 const DAILY_ASSESSMENT_LIMIT = 1;
 
+const GLOBAL_DAILY_ASSESSMENT_LIMIT = 100;
+
 const costs = new Map<string, number>();
 const assessments = new Map<string, number>();
+let globalAssessmentCount = 0;
 
 /** Clear in-memory state between tests. Call in `beforeEach` or `afterEach`. */
 export const _resetMockState = () => {
 	costs.clear();
 	assessments.clear();
+	globalAssessmentCount = 0;
 };
 
 export const CostGuardRedisRepositoryLive = Layer.succeed(
@@ -81,5 +85,19 @@ export const CostGuardRedisRepositoryLive = Layer.succeed(
 		checkDailyBudget: (_key: string, _limitCents: number) => Effect.void,
 
 		checkMessageRateLimit: (_key: string) => Effect.void,
+
+		checkAndRecordGlobalAssessmentStart: () =>
+			Effect.gen(function* () {
+				globalAssessmentCount += 1;
+				if (globalAssessmentCount > GLOBAL_DAILY_ASSESSMENT_LIMIT) {
+					globalAssessmentCount -= 1;
+					return yield* Effect.fail(
+						new GlobalAssessmentLimitReached({
+							message: "We've reached our daily assessment limit. Please try again tomorrow!",
+							resumeAfter: DateTime.unsafeFromDate(getNextDayMidnightUTC()),
+						}),
+					);
+				}
+			}),
 	}),
 );

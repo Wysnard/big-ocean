@@ -48,6 +48,7 @@ export const mockAppConfig: AppConfigService = {
 	polarProductRelationshipSingle: "polar_product_single",
 	polarProductRelationship5Pack: "polar_product_5pack",
 	polarProductExtendedConversation: "polar_product_extended",
+	globalDailyAssessmentLimit: 100,
 };
 
 export const createTestAppConfigLayer = () => Layer.succeed(AppConfig, mockAppConfig);

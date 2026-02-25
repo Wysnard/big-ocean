@@ -23,6 +23,7 @@ import {
 	ConversationEvidenceError,
 	CostLimitExceeded,
 	DatabaseError,
+	GlobalAssessmentLimitReached,
 	MessageRateLimitError,
 	RateLimitExceeded,
 	SessionCompletedError,
@@ -193,7 +194,8 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 			.setPayload(StartAssessmentRequestSchema)
 			.addError(AssessmentAlreadyExists, { status: 409 })
 			.addError(RateLimitExceeded, { status: 429 })
-			.addError(DatabaseError, { status: 500 }),
+			.addError(DatabaseError, { status: 500 })
+			.addError(GlobalAssessmentLimitReached, { status: 503 }),
 	)
 	.add(
 		HttpApiEndpoint.post("sendMessage", "/message")

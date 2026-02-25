@@ -93,3 +93,5 @@ export { RedisIoRedisRepositoryLive } from "./repositories/redis.ioredis.reposit
 // Teaser portrait repository implementations (Story 11.5)
 export { TeaserPortraitAnthropicRepositoryLive } from "./repositories/teaser-portrait.anthropic.repository";
 export { TeaserPortraitMockRepositoryLive } from "./repositories/teaser-portrait.mock.repository";
+// Waitlist repository implementation (Story 15.3)
+export { WaitlistDrizzleRepositoryLive } from "./repositories/waitlist.drizzle.repository";

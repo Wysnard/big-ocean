@@ -70,6 +70,12 @@ export default defineConfig({
 			testMatch: "specs/signup-redirect.spec.ts",
 		},
 
+		// ── Waitlist: circuit breaker UI + API ────────────────────────────
+		{
+			name: "waitlist",
+			testMatch: "specs/waitlist.spec.ts",
+		},
+
 		// ── Access-control: unauthenticated ──────────────────────────────
 		{
 			name: "unauth",

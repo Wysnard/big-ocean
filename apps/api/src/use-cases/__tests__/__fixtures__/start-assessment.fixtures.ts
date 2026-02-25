@@ -52,6 +52,7 @@ export const mockCostGuardRepo = {
 	recordAssessmentStart: vi.fn(),
 	checkDailyBudget: vi.fn(),
 	checkMessageRateLimit: vi.fn(),
+	checkAndRecordGlobalAssessmentStart: vi.fn(),
 };
 
 export let saveMessageCallCount = 0;
@@ -129,4 +130,7 @@ export function setupDefaultMocks() {
 	mockCostGuardRepo.getAssessmentCount.mockImplementation(() => Effect.succeed(0));
 	mockCostGuardRepo.checkDailyBudget.mockImplementation(() => Effect.succeed(undefined));
 	mockCostGuardRepo.checkMessageRateLimit.mockImplementation(() => Effect.succeed(undefined));
+	mockCostGuardRepo.checkAndRecordGlobalAssessmentStart.mockImplementation(() =>
+		Effect.succeed(undefined),
+	);
 }

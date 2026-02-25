@@ -386,6 +386,20 @@ export const profileAccessLog = pgTable(
 	(table) => [index("profile_access_log_profile_created_idx").on(table.profileId, table.createdAt)],
 );
 
+// ─── Waitlist (Story 15.3 — circuit breaker email capture) ────────────────
+
+/**
+ * Waitlist Emails
+ *
+ * Simple email capture for users who hit the global assessment limit.
+ * Duplicate emails silently accepted via UNIQUE constraint + ON CONFLICT DO NOTHING.
+ */
+export const waitlistEmails = pgTable("waitlist_emails", {
+	id: uuid("id").primaryKey().defaultRandom(),
+	email: text("email").notNull().unique(),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // ─── Relations (Drizzle v2 syntax) ───────────────────────────────────────
 
 export const relations = defineRelations(

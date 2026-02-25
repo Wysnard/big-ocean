@@ -73,6 +73,15 @@ export const RedisIoRedisRepositoryLive = Layer.effect(
 						),
 				}),
 
+			decr: (key: string) =>
+				Effect.tryPromise({
+					try: () => redis.decr(key),
+					catch: (error) =>
+						new RedisOperationError(
+							`DECR failed for key ${key}: ${error instanceof Error ? error.message : String(error)}`,
+						),
+				}),
+
 			get: (key: string) =>
 				Effect.tryPromise({
 					try: () => redis.get(key),
@@ -142,6 +151,14 @@ export const createTestRedisRepository = () => {
 			Effect.sync(() => {
 				const current = parseInt(store.get(key) || "0", 10);
 				const newValue = current + 1;
+				store.set(key, String(newValue));
+				return newValue;
+			}),
+
+		decr: (key: string) =>
+			Effect.sync(() => {
+				const current = parseInt(store.get(key) || "0", 10);
+				const newValue = current - 1;
 				store.set(key, String(newValue));
 				return newValue;
 			}),

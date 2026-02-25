@@ -22,6 +22,7 @@ import {
 } from "@workspace/domain";
 import {
 	CostLimitExceeded,
+	GlobalAssessmentLimitReached,
 	MessageRateLimitError,
 	RateLimitExceeded,
 } from "@workspace/domain/errors/http.errors";
@@ -51,6 +52,7 @@ export const CostGuardRedisRepositoryLive = Layer.effect(
 		const logger = yield* LoggerRepository;
 		const config = yield* AppConfig;
 		const messageRateLimit = config.messageRateLimit;
+		const globalDailyAssessmentLimit = config.globalDailyAssessmentLimit;
 
 		return CostGuardRepository.of({
 			incrementDailyCost: (userId: string, costCents: number) =>
@@ -273,6 +275,46 @@ export const CostGuardRedisRepositoryLive = Layer.effect(
 						);
 					}
 				}),
+
+			checkAndRecordGlobalAssessmentStart: () =>
+				Effect.gen(function* () {
+					const dateKey = getUTCDateKey();
+					const key = `global_assessments:${dateKey}`;
+
+					// Atomic INCR-then-compare (same pattern as recordAssessmentStart)
+					const newCount = yield* redis.incr(key);
+
+					// Set TTL on new key
+					const existingTTL = yield* redis.ttl(key);
+					if (existingTTL === -1) {
+						yield* redis.expire(key, TTL_SECONDS);
+					}
+
+					if (newCount > globalDailyAssessmentLimit) {
+						// DECR back — this request doesn't count
+						yield* redis.decr(key);
+
+						logger.warn("Global assessment limit reached", {
+							event: "global_assessment_limit_reached",
+							currentCount: newCount,
+							limit: globalDailyAssessmentLimit,
+							dateKey,
+						});
+
+						return yield* Effect.fail(
+							new GlobalAssessmentLimitReached({
+								message: "We've reached our daily assessment limit. Please try again tomorrow!",
+								resumeAfter: DateTime.unsafeFromDate(getNextDayMidnightUTC()),
+							}),
+						);
+					}
+
+					logger.info("Global assessment count incremented", {
+						count: newCount,
+						limit: globalDailyAssessmentLimit,
+						dateKey,
+					});
+				}),
 		});
 	}),
 );
@@ -346,6 +388,8 @@ export const createTestCostGuardRepository = () => {
 		checkDailyBudget: (_key: string, _limitCents: number) => Effect.void,
 
 		checkMessageRateLimit: (_key: string) => Effect.void,
+
+		checkAndRecordGlobalAssessmentStart: () => Effect.void,
 	});
 };
 

@@ -82,6 +82,7 @@ export {
 	DuplicateCheckoutError,
 	FinalizationInProgressError,
 	FreeTierLimitReached,
+	GlobalAssessmentLimitReached,
 	InvalidCredentials,
 	InvalidFacetNameError,
 	MalformedEvidenceError,
@@ -215,6 +216,8 @@ export {
 	type TeaserPortraitOutput,
 	TeaserPortraitRepository,
 } from "./repositories/teaser-portrait.repository";
+// Waitlist repository (Story 15.3)
+export { WaitlistRepository } from "./repositories/waitlist.repository";
 // Agent response schemas for structured LLM output (Story 2.4, Task 13)
 export {
 	type AnalyzerResponse,

@@ -1,11 +1,11 @@
 # Sprint Parallelism Plan
 
-**Last Updated:** 2026-02-24
-**Sprint:** Post-Epic 11 — remaining stories across Epics 8, 12, 14, 15
+**Last Updated:** 2026-02-25
+**Sprint:** Post-Epic 15 — remaining stories across Epics 6, 8, 12, 14
 
 ---
 
-## Remaining Stories
+## Remaining Stories (11 stories across 4 epics)
 
 | Story | Name | Blocked By | Domain |
 |-------|------|------------|--------|
@@ -14,107 +14,107 @@
 | 12-1 | Results Page & Trait Display | — (Epic 11 done) | frontend + backend results |
 | 12-2 | Bidirectional Evidence Highlighting | 12-1 | frontend results |
 | 12-3 | Teaser Portrait Generation & Display | 12-1 | frontend + backend portrait |
-| 14-1 | Relationship Credits & Purchase Flow | — | backend monetization |
+| 14-1 | Relationship Credits & Purchase Flow | — (Epic 13 done) | backend monetization |
 | 14-2 | Invitation System | 14-1 | backend + frontend |
 | 14-3 | Invitee Assessment Flow | 14-2 | full-stack |
 | 14-4 | Relationship Analysis Generation | 14-3 | backend LLM |
-| 15-3 | Waitlist & Circuit Breaker | — | backend Redis + frontend |
 
-**Phase 2 deferred (EU launch):** 6-1, 6-2, 6-3 — not included in this plan.
+**Phase 2 deferred (EU launch):** 6-1, 6-2, 6-3 — not included in active plan (requires all core epics complete first).
 
 ---
 
-## Recommended Schedule
+## Step 1: Foundation (3 stories, all parallel)
+
+| Story | Mode | Notes |
+|-------|------|-------|
+| 8-8 Complete Archetype Library | parallel | Domain content only, no shared files |
+| 12-1 Results Page & Trait Display | parallel | Frontend + backend results; needs archetype data from 8-8 ideally but not blocking |
+| 14-1 Relationship Credits & Purchase Flow | parallel | Backend monetization, extends purchase_events |
+
+**Gate:** All stories above must be done before proceeding to Step 2.
+
+## Step 2: Core Features (3 stories, all parallel)
+
+| Story | Mode | Notes |
+|-------|------|-------|
+| 12-2 Bidirectional Evidence Highlighting | parallel | Depends on 12-1 results page |
+| 12-3 Teaser Portrait Generation & Display | parallel | Depends on 12-1 results page |
+| 14-2 Invitation System | parallel | Depends on 14-1 credits |
+
+**Gate:** All stories above must be done before proceeding to Step 3.
+
+## Step 3: Advanced Features (3 stories, mixed)
+
+| Story | Mode | Notes |
+|-------|------|-------|
+| 8-5 Regenerate Portrait — Paid Tier | parallel | Builds on portrait infrastructure from 12-3 |
+| 14-3 Invitee Assessment Flow | parallel | Depends on 14-2 invitations |
+| — | — | 8-5 and 14-3 have zero shared files |
+
+**Gate:** All stories above must be done before proceeding to Step 4.
+
+## Step 4: Capstone (1 story)
+
+| Story | Mode | Notes |
+|-------|------|-------|
+| 14-4 Relationship Analysis Generation | sequential | Depends on 14-3 invitee flow; LLM-heavy |
+
+**Gate:** Epic 14 complete.
+
+---
+
+## Lane View
 
 ```
-LANE A (Results)          LANE B (Relationships)     LANE C (Infra/Content)
-────────────────          ──────────────────────     ──────────────────────
+LANE A (Results)          LANE B (Relationships)     LANE C (Content)
+────────────────          ──────────────────────     ──────────────────
 
-8-8  Archetype library    14-1 Credits & purchase    15-3 Waitlist+breaker
-  │  (domain content)       │  (backend monetize)      │  (Redis+frontend)
-  ▼                         ▼                          ▼
-12-1 Results page         14-2 Invitation system     8-5  Portrait regen paid
-  │  (frontend+backend)     │  (backend+frontend)     │  (backend portrait)
-  ▼                         ▼                          ▼
-12-2 Evidence highlight   14-3 Invitee flow          ─── done ───
-  │  (frontend)             │  (full-stack)
-  ▼                         ▼
-12-3 Teaser portrait      14-4 Relationship analysis
-  │  (frontend+backend)     │  (backend LLM)
-  ▼                         ▼
-─── done ───              ─── done ───
+12-1 Results page         14-1 Credits & purchase    8-8  Archetype library
+  │  (frontend+backend)     │  (backend monetize)      │  (domain content)
+  ├───────────┐              ▼                          ▼
+  ▼           ▼           14-2 Invitation system     ─── done ───
+12-2 Evidence 12-3 Teaser    │  (backend+frontend)
+  │  highlight   │  portrait   ▼
+  ▼              ▼          14-3 Invitee flow
+─── done ──── 8-5 Regen      │  (full-stack)
+              paid tier       ▼
+                ▼           14-4 Relationship analysis
+              ─── done ───    │  (backend LLM)
+                              ▼
+                            ─── done ───
 ```
-
-**Lane A rationale:** 8-8 first because 12-1 needs archetype data. Then 12-1→12-2→12-3 is a natural dependency chain.
-
-**Lane B rationale:** 14-1→14-2→14-3→14-4 is strictly sequential — each story depends on the previous.
-
-**Lane C rationale:** 15-3 and 8-5 are independent of each other but both small. Group them to free up a lane.
-
----
-
-## Safety Indicators
-
-- 🟢 No shared file conflicts between lanes
-- 🟡 Minor overlap — coordinate merge order
-- 🔴 Blocking dependency — must sequence
-
-| Pair | Risk | Detail |
-|------|------|--------|
-| 8-8 ↔ 14-1 | 🟢 | Separate domains (archetype content vs payment) |
-| 8-8 ↔ 15-3 | 🟢 | Separate domains (content vs Redis/waitlist) |
-| 12-1 ↔ 14-1 | 🟡 | Both add contracts + handler routes — merge 12-1 first |
-| 12-1 ↔ 15-3 | 🟡 | Both touch `api/src/index.ts` routes — last merger rebases |
-| 12-3 ↔ 8-5 | 🟡 | Both touch portrait infrastructure — merge 12-3 first |
-| 14-1 ↔ 15-3 | 🟢 | Separate domains (credits vs waitlist) |
-
----
-
-## Merge Queue
-
-Order matters — merge earlier items first to reduce rebase pain.
-
-| # | Story | Branch | Rebase After |
-|---|-------|--------|--------------|
-| 1 | 8-8 Archetype library | `feat/story-8-8-*` | master |
-| 2 | 15-3 Waitlist & breaker | `feat/story-15-3-*` | master |
-| 3 | 14-1 Credits & purchase | `feat/story-14-1-*` | master |
-| 4 | 12-1 Results page | `feat/story-12-1-*` | after 8-8 merge |
-| 5 | 8-5 Portrait regen paid | `feat/story-8-5-*` | after 8-8 merge |
-| 6 | 12-2 Evidence highlight | `feat/story-12-2-*` | after 12-1 merge |
-| 7 | 14-2 Invitation system | `feat/story-14-2-*` | after 14-1 merge |
-| 8 | 12-3 Teaser portrait | `feat/story-12-3-*` | after 12-2 merge |
-| 9 | 14-3 Invitee flow | `feat/story-14-3-*` | after 14-2 merge |
-| 10 | 14-4 Relationship analysis | `feat/story-14-4-*` | after 14-3 merge |
 
 ---
 
 ## Conflict Matrix
 
-Files likely modified by multiple stories (check before parallel work):
+Files likely modified by multiple stories:
 
-| Shared File | 8-8 | 8-5 | 12-1 | 12-2 | 12-3 | 14-1 | 14-2 | 14-3 | 14-4 | 15-3 |
-|-------------|-----|-----|------|------|------|------|------|------|------|------|
-| `domain/src/constants/archetypes.ts` | ✏️ | | | | | | | | | |
-| `contracts/src/http/groups/` | | | ✏️ | | | ✏️ | ✏️ | | | ✏️ |
-| `api/src/index.ts` (routes) | | | ✏️ | | | ✏️ | | | | ✏️ |
-| `api/src/handlers/` | | ✏️ | ✏️ | | ✏️ | ✏️ | ✏️ | | ✏️ | ✏️ |
-| `infrastructure/src/repositories/` | | ✏️ | ✏️ | | ✏️ | ✏️ | ✏️ | ✏️ | ✏️ | ✏️ |
-| `infrastructure/src/db/drizzle/schema.ts` | | | | | | ✏️ | ✏️ | | | ✏️ |
-| `front/src/routeTree.gen.ts` | | | ✏️ | ✏️ | ✏️ | | ✏️ | ✏️ | ✏️ | ✏️ |
-| Portrait components | | ✏️ | | | ✏️ | | | | | |
+| Shared File | 8-8 | 8-5 | 12-1 | 12-2 | 12-3 | 14-1 | 14-2 | 14-3 | 14-4 |
+|-------------|-----|-----|------|------|------|------|------|------|------|
+| `contracts/src/http/groups/` | | | ✏️ | | | ✏️ | ✏️ | | |
+| `api/src/index.ts` (routes) | | | ✏️ | | | ✏️ | | | |
+| `api/src/handlers/` | | ✏️ | ✏️ | | ✏️ | ✏️ | ✏️ | | ✏️ |
+| `infrastructure/src/repositories/` | | ✏️ | ✏️ | | ✏️ | ✏️ | ✏️ | ✏️ | ✏️ |
+| `infrastructure/src/db/drizzle/schema.ts` | | | | | | ✏️ | ✏️ | | |
+| `front/src/routeTree.gen.ts` | | | ✏️ | ✏️ | ✏️ | | ✏️ | ✏️ | ✏️ |
+| Portrait components | | ✏️ | | | ✏️ | | | | |
 
 ---
 
-## Bottlenecks
+## Merge Queue
 
-| Bottleneck | Impact | Mitigation |
-|------------|--------|------------|
-| `contracts/` + `api/src/index.ts` barrel | 🟡 Multi-story route additions | Last merger rebases; barrel conflicts are trivial |
-| `routeTree.gen.ts` auto-generated | 🟢 Auto-resolves | Regenerate after merge (`pnpm dev`) |
-| Portrait infra (8-5 vs 12-3) | 🟡 Both touch portrait generation | Merge 12-3 first (teaser), then 8-5 (regen) |
-| Epic 14 strict chain | 🟡 No parallelism within lane B | Accept sequential; focus parallel effort on A+C |
-| `drizzle/schema.ts` new tables | 🟡 14-1, 14-2, 15-3 add tables | Merge 15-3 first (simplest), then 14-x in order |
+| # | Story | Branch | Rebase After |
+|---|-------|--------|--------------|
+| 1 | 8-8 Archetype library | `feat/story-8-8-*` | master |
+| 2 | 14-1 Credits & purchase | `feat/story-14-1-*` | master |
+| 3 | 12-1 Results page | `feat/story-12-1-*` | after 8-8 merge |
+| 4 | 12-2 Evidence highlight | `feat/story-12-2-*` | after 12-1 merge |
+| 5 | 12-3 Teaser portrait | `feat/story-12-3-*` | after 12-1 merge |
+| 6 | 14-2 Invitation system | `feat/story-14-2-*` | after 14-1 merge |
+| 7 | 8-5 Portrait regen paid | `feat/story-8-5-*` | after 12-3 merge |
+| 8 | 14-3 Invitee flow | `feat/story-14-3-*` | after 14-2 merge |
+| 9 | 14-4 Relationship analysis | `feat/story-14-4-*` | after 14-3 merge |
 
 ---
 
