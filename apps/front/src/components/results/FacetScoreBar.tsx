@@ -20,6 +20,7 @@ export function FacetScoreBar({ facet, size = "compact", showScore = true }: Fac
 				<div className="flex items-center justify-between">
 					<span className={`${isCompact ? "text-[10px]" : "text-sm"} text-muted-foreground truncate`}>
 						{toFacetDisplayName(facet.name)}
+						{facet.levelLabel && <span className="text-muted-foreground/70"> · {facet.levelLabel}</span>}
 					</span>
 					{showScore && (
 						<span

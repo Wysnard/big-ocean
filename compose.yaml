@@ -105,6 +105,7 @@ services:
       dockerfile: apps/api/Dockerfile
       target: development
     container_name: bigocean-seeder
+    env_file: .env
     environment:
       DATABASE_URL: postgres://dev:devpassword@postgres:5432/bigocean
       REDIS_URL: redis://redis:6379
@@ -157,6 +158,8 @@ services:
       dockerfile: apps/front/Dockerfile
       target: development
     container_name: bigocean-frontend
+    extra_hosts:
+      - "localhost:host-gateway"
     environment:
       NODE_ENV: development
       VITE_API_URL: http://localhost:4000
