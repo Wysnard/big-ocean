@@ -90,6 +90,7 @@ export function ProfileView({
 				overallConfidence={overallConfidence}
 				isCurated={isCurated}
 				dominantTrait={dominantTrait}
+				description={description}
 				displayName={displayName}
 			/>
 

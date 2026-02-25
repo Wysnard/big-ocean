@@ -11,6 +11,8 @@ interface ArchetypeHeroSectionProps {
 	isCurated?: boolean;
 	/** The dominant trait (highest scoring) used for hero color theming */
 	dominantTrait: TraitName;
+	/** 2-3 sentence archetype description displayed prominently below the name */
+	description?: string | null;
 	/** When set, shows "{name}'s Personality Archetype" instead of "Your Personality Archetype" */
 	displayName?: string | null;
 	/** Override the subtitle text entirely */
@@ -45,6 +47,7 @@ export function ArchetypeHeroSection({
 	oceanCode5,
 	overallConfidence,
 	dominantTrait,
+	description,
 	displayName,
 	subtitle,
 	showScrollIndicator,
@@ -125,6 +128,13 @@ export function ArchetypeHeroSection({
 				{overallConfidence != null && (
 					<p className="mt-4 text-xs font-medium text-foreground/60 bg-foreground/8 rounded-full px-3 py-1 inline-block">
 						{overallConfidence}% confidence
+					</p>
+				)}
+
+				{/* Archetype description — 2-3 sentences (AC #2) */}
+				{description && (
+					<p className="mt-6 text-base md:text-lg text-foreground/80 leading-relaxed max-w-xl mx-auto">
+						{description}
 					</p>
 				)}
 			</div>

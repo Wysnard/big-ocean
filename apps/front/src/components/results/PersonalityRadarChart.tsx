@@ -183,7 +183,11 @@ export const PersonalityRadarChart = memo(function PersonalityRadarChart({
 	}
 
 	return (
-		<Card data-slot="personality-radar-chart">
+		<Card
+			data-slot="personality-radar-chart"
+			role="img"
+			aria-label="Personality radar chart showing Big Five trait scores"
+		>
 			<CardHeader>
 				<CardTitle className="text-lg font-display">Personality Shape</CardTitle>
 			</CardHeader>

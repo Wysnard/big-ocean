@@ -97,6 +97,30 @@ test("golden path: landing → chat → signup → results → share → public 
 		});
 	});
 
+	await test.step("assert results page trait display (Story 12-1)", async () => {
+		// Profile view container is rendered
+		await page.locator("[data-slot='profile-view']").waitFor({ state: "visible" });
+
+		// All 5 trait cards are visible
+		const traitCards = page.locator("[data-slot='trait-card']");
+		await expect(traitCards).toHaveCount(5);
+		for (const trait of [
+			"openness",
+			"conscientiousness",
+			"extraversion",
+			"agreeableness",
+			"neuroticism",
+		]) {
+			await expect(page.locator(`[data-slot='trait-card'][data-trait='${trait}']`)).toBeVisible();
+		}
+
+		// Radar chart is visible
+		await expect(page.locator("[data-slot='personality-radar-chart']")).toBeVisible();
+
+		// OCEAN code is displayed
+		await expect(page.getByTestId("ocean-code")).toBeVisible();
+	});
+
 	await test.step("wait for auto-generated share link", async () => {
 		// Share link is auto-generated when results load — wait for the URL to appear
 		const shareUrl = page.getByTestId("share-url");

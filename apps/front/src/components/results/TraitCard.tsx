@@ -65,6 +65,8 @@ export const TraitCard = memo(function TraitCard({
 			data-slot="trait-card"
 			data-trait={trait.name}
 			data-selected={isSelected || undefined}
+			aria-label={`${TRAIT_LABELS[trait.name]}: ${trait.score} out of 120, ${levelLabel}, ${confidence}% confidence`}
+			aria-expanded={isSelected}
 			onClick={() => onToggle(trait.name)}
 			className="relative flex flex-col h-full text-left rounded-xl border bg-card p-0 overflow-hidden cursor-pointer motion-safe:transition-all motion-safe:duration-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 data-selected:shadow-none data-selected:translate-y-0"
 			style={
