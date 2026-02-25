@@ -53,6 +53,7 @@ export const getTranscript = (input: GetTranscriptInput) =>
 				new SessionNotCompleted({
 					sessionId: input.sessionId,
 					message: `Session '${input.sessionId}' is not yet completed`,
+					currentStatus: session.status,
 				}),
 			);
 		}
