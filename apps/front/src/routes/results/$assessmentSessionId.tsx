@@ -489,8 +489,13 @@ function ResultsSessionPage() {
 				<>
 					{/* Mobile: full-screen overlay */}
 					<div
+						role="button"
+						tabIndex={0}
 						className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden"
 						onClick={() => setShowTranscript(false)}
+						onKeyDown={(e) => {
+							if (e.key === "Escape" || e.key === "Enter") setShowTranscript(false);
+						}}
 					/>
 					<div
 						data-testid="transcript-panel"
