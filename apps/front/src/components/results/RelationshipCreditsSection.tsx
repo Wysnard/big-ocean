@@ -9,7 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { GetCreditsResponse } from "@workspace/contracts";
 import { Button } from "@workspace/ui/components/button";
 import { Heart, Loader2, Users } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { openPolarCheckout } from "@/lib/polar-checkout";
 
@@ -17,7 +17,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const POLAR_LINK_SINGLE = import.meta.env.VITE_POLAR_CHECKOUT_RELATIONSHIP_SINGLE || "";
 const POLAR_LINK_5PACK = import.meta.env.VITE_POLAR_CHECKOUT_RELATIONSHIP_5PACK || "";
 
-function useCredits() {
+function useCredits(enabled: boolean) {
 	return useQuery<GetCreditsResponse>({
 		queryKey: ["purchase", "credits"],
 		queryFn: async () => {
@@ -30,30 +30,49 @@ function useCredits() {
 			return response.json();
 		},
 		staleTime: 30_000,
+		enabled,
 	});
 }
 
 export function RelationshipCreditsSection() {
 	const { user } = useAuth();
-	const { data, isLoading } = useCredits();
+	const { data, isLoading } = useCredits(!!user);
 	const queryClient = useQueryClient();
 	const [isPurchasing, setIsPurchasing] = useState(false);
 	const pollTimerRef = useRef<ReturnType<typeof setInterval>>();
+	const creditsBefore = useRef<number | null>(null);
+
+	// Cleanup polling on unmount
+	useEffect(() => {
+		return () => {
+			if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+		};
+	}, []);
+
+	const stopPolling = useCallback(() => {
+		if (pollTimerRef.current) {
+			clearInterval(pollTimerRef.current);
+			pollTimerRef.current = undefined;
+		}
+		setIsPurchasing(false);
+	}, []);
 
 	const pollAndRefresh = useCallback(() => {
+		// Snapshot current credits to detect change
+		creditsBefore.current = data?.availableCredits ?? null;
+
 		// Poll credits endpoint to pick up webhook-processed purchase
 		let attempts = 0;
 		const maxAttempts = 15; // 30s at 2s interval
 		pollTimerRef.current = setInterval(async () => {
 			attempts++;
 			if (attempts >= maxAttempts) {
-				clearInterval(pollTimerRef.current);
-				setIsPurchasing(false);
+				stopPolling();
 				return;
 			}
 			await queryClient.invalidateQueries({ queryKey: ["purchase", "credits"] });
 		}, 2000);
-	}, [queryClient]);
+	}, [queryClient, data?.availableCredits, stopPolling]);
 
 	const handlePurchase = useCallback(
 		async (checkoutLink: string) => {
@@ -73,6 +92,18 @@ export function RelationshipCreditsSection() {
 		},
 		[user?.id, pollAndRefresh],
 	);
+
+	// Stop polling once credits increase after purchase
+	useEffect(() => {
+		if (
+			isPurchasing &&
+			creditsBefore.current !== null &&
+			data?.availableCredits !== undefined &&
+			data.availableCredits > creditsBefore.current
+		) {
+			stopPolling();
+		}
+	}, [isPurchasing, data?.availableCredits, stopPolling]);
 
 	// Hidden when loading, no data, or no completed assessment
 	if (isLoading) {

@@ -39,8 +39,6 @@ services:
       POSTGRES_PASSWORD: test_password
     ports:
       - "5433:5432"
-    volumes:
-      - ./docker/init-db-test.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U test_user -d bigocean_test"]
       interval: 5s

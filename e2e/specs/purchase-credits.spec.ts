@@ -97,21 +97,20 @@ test.describe("Purchase Credits", () => {
 		apiContext,
 	}) => {
 		let sessionId: string;
+		const uiTestEmail = `e2e-credits-ui-${Date.now()}@test.bigocean.dev`;
 
 		await test.step("setup: create user with completed assessment", async () => {
 			sessionId = await createAssessmentSession(apiContext);
 			await createUser(apiContext, {
-				...{
-					email: `e2e-credits-ui-${Date.now()}@test.bigocean.dev`,
-					password: "OceanDepth#Nerin42xQ",
-					name: "Credits UI Tester",
-				},
+				email: uiTestEmail,
+				password: "OceanDepth#Nerin42xQ",
+				name: "Credits UI Tester",
 				anonymousSessionId: sessionId!,
 			});
 
 			const linkedUserId = await getSessionUserId(sessionId!);
 			if (!linkedUserId) {
-				const user = await getUserByEmail(`e2e-credits-ui-${Date.now()}@test.bigocean.dev`);
+				const user = await getUserByEmail(uiTestEmail);
 				if (user) await linkSessionToUser(sessionId!, user.id);
 			}
 

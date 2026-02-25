@@ -1,6 +1,6 @@
 # Story 14.1: Relationship Credits & Purchase Flow
 
-Status: review
+Status: done
 
 ## Story
 
@@ -247,4 +247,6 @@ Claude Opus 4.6
 - apps/front/src/routes/results/$assessmentSessionId.tsx (RelationshipCreditsSection integration)
 - apps/front/src/routes/results-session-route.test.tsx (mock for RelationshipCreditsSection)
 - apps/front/package.json (added @polar-sh/checkout dependency)
+- e2e/playwright.config.ts (added purchase-credits project)
+- docker/init-db-test.sql (added purchase_events, portraits, profile_access_log tables)
 - pnpm-lock.yaml (lockfile update)
