@@ -267,6 +267,7 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 			.setPath(GetResultsPathSchema)
 			.addSuccess(GetTranscriptResponseSchema)
 			.addError(SessionNotFound, { status: 404 })
+			.addError(SessionNotCompleted, { status: 409 })
 			.addError(Unauthorized, { status: 401 })
 			.addError(DatabaseError, { status: 500 }),
 	)

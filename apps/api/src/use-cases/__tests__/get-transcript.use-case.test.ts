@@ -2,7 +2,7 @@
  * Get Transcript Use Case Tests (Story 12.2)
  */
 
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { AssessmentMessageRepository, AssessmentSessionRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 import { vi } from "vitest";

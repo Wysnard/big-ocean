@@ -293,6 +293,8 @@ function ResultsSessionPage() {
 
 	const handleScrollComplete = useCallback(() => {
 		setScrollToMessageId(null);
+		// Clear highlight after brief delay so user can see it
+		setTimeout(() => setActiveHighlight(null), 2000);
 	}, []);
 
 	const handleAuthSuccess = () => {

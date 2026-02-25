@@ -9,6 +9,7 @@
 import {
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
+	SessionNotCompleted,
 	SessionNotFound,
 } from "@workspace/domain";
 import { Effect } from "effect";
@@ -49,9 +50,9 @@ export const getTranscript = (input: GetTranscriptInput) =>
 		// Verify session is completed
 		if (session.status !== "completed") {
 			return yield* Effect.fail(
-				new SessionNotFound({
+				new SessionNotCompleted({
 					sessionId: input.sessionId,
-					message: `Session '${input.sessionId}' not found`,
+					message: `Session '${input.sessionId}' is not yet completed`,
 				}),
 			);
 		}

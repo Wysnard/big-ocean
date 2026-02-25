@@ -86,15 +86,19 @@ export function HighlightedText({ text, highlights }: HighlightedTextProps) {
 					return <span key={seg.start}>{content}</span>;
 				}
 
-				// Layer highlights via nested marks
+				// Layer highlights via nested marks — use background alpha, NOT element opacity
+				// (element opacity compounds multiplicatively and makes text unreadable)
 				let element = <>{content}</>;
 				for (const h of seg.highlights) {
-					const opacity = highlightOpacity(h.confidence);
+					const alpha = highlightOpacity(h.confidence);
+					// Convert hex color + alpha to rgba for semi-transparent background only
+					const r = Number.parseInt(h.color.slice(1, 3), 16);
+					const g = Number.parseInt(h.color.slice(3, 5), 16);
+					const b = Number.parseInt(h.color.slice(5, 7), 16);
 					element = (
 						<mark
 							style={{
-								backgroundColor: h.color,
-								opacity,
+								backgroundColor: `rgba(${r}, ${g}, ${b}, ${alpha})`,
 								borderRadius: "2px",
 								padding: 0,
 							}}

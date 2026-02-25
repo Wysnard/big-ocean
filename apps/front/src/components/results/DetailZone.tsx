@@ -15,6 +15,7 @@ import { OceanDiamond } from "../ocean-shapes/OceanDiamond";
 import { OceanHalfCircle } from "../ocean-shapes/OceanHalfCircle";
 import { OceanRectangle } from "../ocean-shapes/OceanRectangle";
 import { OceanTriangle } from "../ocean-shapes/OceanTriangle";
+import { getSignalBadge } from "./evidence-utils";
 
 const TRAIT_SHAPE: Record<TraitName, (props: { size?: number; color?: string }) => ReactNode> = {
 	openness: OceanCircle,
@@ -31,25 +32,6 @@ const TRAIT_LABELS: Record<TraitName, string> = {
 	agreeableness: "Agreeableness",
 	neuroticism: "Neuroticism",
 };
-
-function getSignalBadge(confidence: number): { label: string; className: string } {
-	if (confidence >= 70) {
-		return {
-			label: "Strong",
-			className: "bg-[oklch(0.67_0.13_181/0.15)] text-[oklch(0.45_0.13_181)]",
-		};
-	}
-	if (confidence >= 40) {
-		return {
-			label: "Moderate",
-			className: "bg-[oklch(0.67_0.20_42/0.15)] text-[oklch(0.50_0.20_42)]",
-		};
-	}
-	return {
-		label: "Weak",
-		className: "bg-[oklch(0.29_0.19_272/0.10)] text-[oklch(0.40_0.10_272)]",
-	};
-}
 
 const confidenceChartConfig: ChartConfig = {
 	confidence: { label: "Confidence", color: "var(--primary)" },

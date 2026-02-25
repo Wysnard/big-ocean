@@ -65,15 +65,18 @@ describe("HighlightedText", () => {
 		expect(marks[0].textContent).toBe("Hi");
 	});
 
-	it("maps confidence to opacity correctly", () => {
+	it("maps confidence to background alpha correctly", () => {
 		const { container } = render(
 			<HighlightedText
 				text="Test"
-				highlights={[{ start: 0, end: 4, color: "green", confidence: 100 }]}
+				highlights={[{ start: 0, end: 4, color: "#00ff00", confidence: 100 }]}
 			/>,
 		);
 		const mark = container.querySelector("mark");
-		// opacity = 0.15 + (100/100) * 0.45 = 0.6
-		expect(mark?.style.opacity).toBe("0.6");
+		// alpha = 0.15 + (100/100) * 0.45 = 0.6
+		// Background should use rgba with alpha, NOT element opacity
+		expect(mark?.style.backgroundColor).toContain("rgba");
+		expect(mark?.style.backgroundColor).toContain("0.6");
+		expect(mark?.style.opacity).toBe("");
 	});
 });

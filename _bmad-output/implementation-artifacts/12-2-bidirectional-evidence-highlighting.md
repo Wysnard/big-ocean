@@ -1,6 +1,6 @@
 # Story 12.2: Evidence Highlighting
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -156,6 +156,7 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-02-25: Story 12.2 implementation complete — all 6 tasks done
+- 2026-02-25: Code review — fixed 7 issues (3 HIGH, 4 MEDIUM): H1 test import ordering, H2 opacity→rgba for layered highlights, H3 SessionNotCompleted error for non-completed sessions, M1 stale activeHighlight cleared, M2 selectedFacet cleared on DetailZone close, M3 getSignalBadge extracted to shared utility, M4 pulse-highlight CSS animation defined
 
 ### File List
 
@@ -166,12 +167,14 @@ Claude Opus 4.6
 - apps/front/src/components/results/HighlightedText.test.tsx
 - apps/front/src/components/results/ConversationTranscript.tsx
 - apps/front/src/components/results/EvidencePanel.tsx
+- apps/front/src/components/results/evidence-utils.ts
 
 **Modified files:**
-- packages/contracts/src/http/groups/assessment.ts (added getTranscript endpoint + schema)
+- packages/contracts/src/http/groups/assessment.ts (added getTranscript endpoint + schema, added SessionNotCompleted error)
 - apps/api/src/handlers/assessment.ts (added getTranscript handler)
 - apps/api/src/use-cases/index.ts (export getTranscript)
 - apps/front/src/hooks/use-assessment.ts (added useConversationTranscript hook)
-- apps/front/src/components/results/DetailZone.tsx (added onFacetClick prop)
-- apps/front/src/routes/results/$assessmentSessionId.tsx (evidence highlighting state + transcript panel)
+- apps/front/src/components/results/DetailZone.tsx (added onFacetClick prop, extracted getSignalBadge)
+- apps/front/src/routes/results/$assessmentSessionId.tsx (evidence highlighting state + transcript panel, review fixes)
 - apps/front/src/routes/results-session-route.test.tsx (added mock for useConversationTranscript)
+- apps/front/src/styles.css (added pulse-highlight animation)
