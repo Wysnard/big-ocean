@@ -24,7 +24,7 @@ import { createApiContext } from "./utils/api-client.js";
 const PROJECT_ROOT = resolve(import.meta.dirname, "..");
 const HEALTH_URL = "http://localhost:4001/health";
 const POLL_INTERVAL_MS = 2_000;
-const TIMEOUT_MS = 90_000;
+const TIMEOUT_MS = 60_000;
 
 async function waitForHealth(): Promise<void> {
 	const start = Date.now();
