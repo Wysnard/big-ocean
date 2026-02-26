@@ -2,15 +2,14 @@
  * TeaserPortraitReadingView Component (Story 12.3)
  *
  * Focused reading view for teaser portrait — shows teaser content
- * followed by locked sections and CTA. No trait scores or evidence.
+ * followed by a warm CTA to reveal the full portrait. No trait scores or evidence.
  */
 
 import { Button } from "@workspace/ui/components/button";
-import { ArrowRight, Lock, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { memo, useMemo } from "react";
 import Markdown from "react-markdown";
 import {
-	LOCKED_SECTION_PLACEHOLDER_LINES,
 	readingMarkdownComponents,
 	renderHeader,
 	splitMarkdownSections,
@@ -18,14 +17,12 @@ import {
 
 interface TeaserPortraitReadingViewProps {
 	teaserContent: string;
-	lockedSectionTitles: string[];
 	onUnlock: () => void;
 	onViewFullProfile: () => void;
 }
 
 export const TeaserPortraitReadingView = memo(function TeaserPortraitReadingView({
 	teaserContent,
-	lockedSectionTitles,
 	onUnlock,
 	onViewFullProfile,
 }: TeaserPortraitReadingViewProps) {
@@ -64,30 +61,11 @@ export const TeaserPortraitReadingView = memo(function TeaserPortraitReadingView
 					</div>
 				)}
 
-				{/* Locked sections */}
-				<div className="mt-12 space-y-4">
-					{lockedSectionTitles.map((title, i) => (
-						<div
-							key={title}
-							data-testid="locked-section"
-							className="relative rounded-lg border border-border/40 bg-muted/30 backdrop-blur-sm p-6 overflow-hidden"
-						>
-							<div className="flex items-center gap-2 mb-3">
-								<Lock className="w-4 h-4 text-muted-foreground/60" />
-								<h3 className="text-base font-heading font-semibold text-foreground/70">{title}</h3>
-							</div>
-							<div className="select-none" aria-hidden="true">
-								<p className="text-sm text-foreground/40 blur-[6px] leading-relaxed">
-									{LOCKED_SECTION_PLACEHOLDER_LINES[i % LOCKED_SECTION_PLACEHOLDER_LINES.length]}
-								</p>
-							</div>
-							<div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-muted/60 pointer-events-none" />
-						</div>
-					))}
-				</div>
-
 				{/* CTA */}
-				<div className="mt-10 flex justify-center">
+				<div className="mt-12 flex flex-col items-center gap-3">
+					<p className="text-base text-muted-foreground text-center max-w-md">
+						There's more Nerin wants to tell you — the full portrait goes deeper.
+					</p>
 					<Button
 						data-testid="reveal-portrait-cta"
 						onClick={onUnlock}

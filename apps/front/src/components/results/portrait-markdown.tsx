@@ -64,13 +64,6 @@ export function renderHeader(header: string) {
 	);
 }
 
-/** Blurred placeholder text for locked sections in teaser views */
-export const LOCKED_SECTION_PLACEHOLDER_LINES = [
-	"There's something about the way you navigate contradiction that most people never notice about themselves...",
-	"The pattern underneath isn't what you'd expect. It connects threads you thought were separate...",
-	"What emerges when you stop performing competence is more interesting than the performance itself...",
-] as const;
-
 /** Custom react-markdown components styled for the portrait card. */
 export const markdownComponents: Components = {
 	h3: ({ children }) => (

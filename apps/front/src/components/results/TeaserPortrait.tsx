@@ -2,8 +2,7 @@
  * TeaserPortrait Component (Story 12.3)
  *
  * Renders the teaser Opening section as readable markdown followed by
- * locked section placeholders showing personalized titles with a lock icon
- * and blurred preview text. Includes a "Reveal Full Portrait" CTA.
+ * a warm "Reveal Full Portrait" CTA — presented as a gift, not a gate.
  */
 
 import { Button } from "@workspace/ui/components/button";
@@ -14,25 +13,18 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@workspace/ui/components/card";
-import { Lock, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { memo, useMemo } from "react";
 import Markdown from "react-markdown";
-import {
-	LOCKED_SECTION_PLACEHOLDER_LINES,
-	markdownComponents,
-	renderHeader,
-	splitMarkdownSections,
-} from "./portrait-markdown";
+import { markdownComponents, renderHeader, splitMarkdownSections } from "./portrait-markdown";
 
 interface TeaserPortraitProps {
 	teaserContent: string;
-	lockedSectionTitles: string[];
 	onUnlock: () => void;
 }
 
 export const TeaserPortrait = memo(function TeaserPortrait({
 	teaserContent,
-	lockedSectionTitles,
 	onUnlock,
 }: TeaserPortraitProps) {
 	const sections = useMemo(() => splitMarkdownSections(teaserContent), [teaserContent]);
@@ -83,36 +75,11 @@ export const TeaserPortrait = memo(function TeaserPortrait({
 					</div>
 				)}
 
-				{/* Divider before locked sections */}
-				<div className="border-b border-border/30 pt-2" />
-
-				{/* Locked section placeholders */}
-				{lockedSectionTitles.map((title, i) => (
-					<div
-						key={title}
-						data-testid="locked-section"
-						className="relative rounded-lg border border-border/40 bg-muted/30 backdrop-blur-sm p-5 overflow-hidden"
-					>
-						{/* Section title with lock icon */}
-						<div className="flex items-center gap-2 mb-3">
-							<Lock className="w-4 h-4 text-muted-foreground/60" />
-							<h4 className="text-sm font-semibold text-foreground/70">{title}</h4>
-						</div>
-
-						{/* Blurred placeholder text */}
-						<div className="select-none" aria-hidden="true">
-							<p className="text-sm text-foreground/40 blur-[6px] leading-relaxed">
-								{LOCKED_SECTION_PLACEHOLDER_LINES[i % LOCKED_SECTION_PLACEHOLDER_LINES.length]}
-							</p>
-						</div>
-
-						{/* Gradient mask overlay */}
-						<div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-muted/60 pointer-events-none" />
-					</div>
-				))}
-
 				{/* Reveal Full Portrait CTA */}
-				<div className="flex justify-center pt-4">
+				<div className="flex flex-col items-center gap-3 pt-6">
+					<p className="text-sm text-muted-foreground text-center max-w-sm">
+						There's more Nerin wants to tell you — the full portrait goes deeper.
+					</p>
 					<Button
 						data-testid="reveal-portrait-cta"
 						onClick={onUnlock}

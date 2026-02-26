@@ -407,7 +407,6 @@ function ResultsSessionPage() {
 			return (
 				<TeaserPortraitReadingView
 					teaserContent={teaserData.content}
-					lockedSectionTitles={teaserData.lockedSectionTitles}
 					onUnlock={handleUnlockPortrait}
 					onViewFullProfile={handleBackToProfile}
 				/>

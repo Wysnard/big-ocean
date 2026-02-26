@@ -36,8 +36,6 @@ interface ProfileViewProps {
 	onRetryPortrait?: () => void;
 	/** Teaser portrait data (Story 12.3) */
 	teaserContent?: string | null;
-	/** Locked section titles for teaser (Story 12.3) */
-	teaserLockedSectionTitles?: string[] | null;
 	/** Callback to unlock full portrait (Story 12.3) */
 	onUnlockPortrait?: () => void;
 	/** Current selected trait for DetailZone */
@@ -67,7 +65,6 @@ export function ProfileView({
 	fullPortraitStatus,
 	onRetryPortrait,
 	teaserContent,
-	teaserLockedSectionTitles,
 	onUnlockPortrait,
 	selectedTrait,
 	messageCount,
@@ -117,13 +114,9 @@ export function ProfileView({
 							fullPortraitStatus={fullPortraitStatus}
 							onRetryPortrait={onRetryPortrait}
 						/>
-					) : teaserContent && teaserLockedSectionTitles && onUnlockPortrait ? (
-						/* Teaser only → TeaserPortrait with locked sections */
-						<TeaserPortrait
-							teaserContent={teaserContent}
-							lockedSectionTitles={teaserLockedSectionTitles}
-							onUnlock={onUnlockPortrait}
-						/>
+					) : teaserContent && onUnlockPortrait ? (
+						/* Teaser only → TeaserPortrait with gift CTA */
+						<TeaserPortrait teaserContent={teaserContent} onUnlock={onUnlockPortrait} />
 					) : personalDescription ||
 						fullPortraitStatus === "generating" ||
 						fullPortraitStatus === "failed" ? (
