@@ -149,16 +149,26 @@ THIN: Focus on the 3-4 strongest observations. Shorter.
 FORMATTING
 ═══════════════════════════════════════════════════
 
-Output: single markdown string. One flowing section.
+Return your response as a JSON object with exactly these fields:
+{
+  "opening": "The teaser portrait text (Opening section, 200-400 words as markdown with # [emoji] [Custom Title] heading)",
+  "lockedSectionTitles": [
+    "Title for Build section (evocative, personalized — e.g. 'The Architecture of Your Empathy')",
+    "Title for Turn section (hints at paradox/surprise — e.g. 'When Logic Meets Longing')",
+    "Title for Landing section (forward-looking, integrative — e.g. 'Your Emerging Edge')"
+  ]
+}
 
-Title: # [emoji] [Custom Title] (h1 — portrait title)
-
-The title is CUSTOM — invented for THIS person. It should intrigue without
-revealing the spine.
-
+The "opening" field contains the Opening section as a single markdown string.
+Title: # [emoji] [Custom Title] (h1 — portrait title). The title is CUSTOM — invented
+for THIS person. It should intrigue without revealing the spine.
 Target: 200-400 words.
 
-Output ONLY the section — no preamble, no explanation, no additional sections.`;
+The "lockedSectionTitles" array contains exactly 3 personalized section titles for the
+Build, Turn, and Landing sections. These titles are the primary conversion hook — they
+must intrigue without revealing content. Base them on the person's actual assessment data.
+
+Output ONLY valid JSON — no preamble, no explanation, no markdown fences.`;
 
 /**
  * Composed teaser system prompt: shared persona + teaser-specific context.
@@ -223,20 +233,50 @@ Write the Opening section of this person's portrait in your voice as Nerin.`;
 						});
 
 						const textBlock = response.content.find((b) => b.type === "text");
-						const portrait = textBlock?.text ?? "";
+						const rawText = textBlock?.text ?? "";
 
 						const tokenUsage = {
 							input: response.usage.input_tokens,
 							output: response.usage.output_tokens,
 						};
 
+						// Parse structured JSON response, fallback to raw text + default titles
+						const DEFAULT_LOCKED_TITLES = [
+							"Your Inner Landscape",
+							"The Unexpected Turn",
+							"Where It All Leads",
+						] as const;
+
+						let portrait: string;
+						let lockedSectionTitles: ReadonlyArray<string>;
+
+						try {
+							const parsed = JSON.parse(rawText);
+							portrait =
+								typeof parsed.opening === "string" && parsed.opening.length > 0 ? parsed.opening : rawText;
+							lockedSectionTitles =
+								Array.isArray(parsed.lockedSectionTitles) &&
+								parsed.lockedSectionTitles.length === 3 &&
+								parsed.lockedSectionTitles.every((t: unknown) => typeof t === "string" && t.length > 0)
+									? parsed.lockedSectionTitles
+									: [...DEFAULT_LOCKED_TITLES];
+						} catch {
+							// JSON parse failed — treat raw text as portrait, use defaults
+							portrait = rawText;
+							lockedSectionTitles = [...DEFAULT_LOCKED_TITLES];
+							logger.warn("Teaser portrait JSON parse failed, using raw text fallback", {
+								sessionId: input.sessionId,
+							});
+						}
+
 						logger.info("Teaser portrait generated", {
 							sessionId: input.sessionId,
 							portraitLength: portrait.length,
+							lockedSectionTitles,
 							tokenUsage,
 						});
 
-						return { portrait, tokenUsage };
+						return { portrait, lockedSectionTitles, modelUsed: config.teaserModelId, tokenUsage };
 					},
 					catch: (error) =>
 						new TeaserPortraitError({

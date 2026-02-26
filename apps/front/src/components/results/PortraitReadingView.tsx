@@ -1,7 +1,11 @@
 import { ArrowRight } from "lucide-react";
 import { memo, useMemo } from "react";
 import Markdown from "react-markdown";
-import { markdownComponents, renderHeader, splitMarkdownSections } from "./portrait-markdown";
+import {
+	readingMarkdownComponents,
+	renderHeader,
+	splitMarkdownSections,
+} from "./portrait-markdown";
 
 interface PortraitReadingViewProps {
 	personalDescription: string;
@@ -21,6 +25,7 @@ export const PortraitReadingView = memo(function PortraitReadingView({
 
 	return (
 		<div
+			data-testid="portrait-reading-mode"
 			data-slot="portrait-reading-view"
 			className="min-h-[calc(100dvh-3.5rem)] bg-background"
 		>
@@ -42,9 +47,7 @@ export const PortraitReadingView = memo(function PortraitReadingView({
 									<Markdown components={readingMarkdownComponents}>{section.body}</Markdown>
 								</div>
 							)}
-							{i < sections.length - 1 && (
-								<div className="border-b border-border/20 mt-8" />
-							)}
+							{i < sections.length - 1 && <div className="border-b border-border/20 mt-8" />}
 						</div>
 					))
 				) : (
@@ -69,16 +72,3 @@ export const PortraitReadingView = memo(function PortraitReadingView({
 		</div>
 	);
 });
-
-/** Relaxed markdown components styled for comfortable reading. */
-const readingMarkdownComponents = {
-	...markdownComponents,
-	p: ({ children }: { children?: React.ReactNode }) => (
-		<p className="mb-4 last:mb-0">{children}</p>
-	),
-	blockquote: ({ children }: { children?: React.ReactNode }) => (
-		<blockquote className="border-l-2 border-primary/30 pl-4 my-4 italic text-foreground/60">
-			{children}
-		</blockquote>
-	),
-};

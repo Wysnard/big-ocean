@@ -94,6 +94,16 @@ export class PortraitRepository extends Context.Tag("PortraitRepository")<
 		) => Effect.Effect<Portrait | null, DatabaseError>;
 
 		/**
+		 * Update locked section titles on a portrait row.
+		 *
+		 * @throws PortraitNotFoundError if no row with matching id
+		 */
+		readonly updateLockedSectionTitles: (
+			id: string,
+			titles: ReadonlyArray<string>,
+		) => Effect.Effect<Portrait, DatabaseError | PortraitNotFoundError>;
+
+		/**
 		 * Get full portrait by session ID.
 		 * Joins through assessment_sessions → assessment_results → portraits.
 		 * Returns null if no full portrait exists (no completed assessment or no portrait row).

@@ -129,6 +129,31 @@ export const PortraitDrizzleRepositoryLive = Layer.effect(
 					return mapRow(row);
 				}),
 
+			updateLockedSectionTitles: (id: string, titles: ReadonlyArray<string>) =>
+				Effect.gen(function* () {
+					const rows = yield* db
+						.update(portraits)
+						.set({ lockedSectionTitles: [...titles] })
+						.where(eq(portraits.id, id))
+						.returning()
+						.pipe(
+							Effect.mapError((error) => {
+								logger.error("Database operation failed", {
+									operation: "updateLockedSectionTitles",
+									portraitId: id,
+									error: error instanceof Error ? error.message : String(error),
+								});
+								return new DatabaseError({ message: "Failed to update locked section titles" });
+							}),
+						);
+
+					const row = rows[0];
+					if (!row) {
+						return yield* Effect.fail(new PortraitNotFoundError({ portraitId: id }));
+					}
+					return mapRow(row);
+				}),
+
 			getByResultIdAndTier: (assessmentResultId: string, tier: PortraitTier) =>
 				db
 					.select()

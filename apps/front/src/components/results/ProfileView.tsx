@@ -6,6 +6,7 @@ import { ConfidenceRingCard } from "./ConfidenceRingCard";
 import { OceanCodeStrand } from "./OceanCodeStrand";
 import { PersonalityRadarChart } from "./PersonalityRadarChart";
 import { PersonalPortrait } from "./PersonalPortrait";
+import { TeaserPortrait } from "./TeaserPortrait";
 import { TraitCard } from "./TraitCard";
 
 /** Row 1 traits (3-up on desktop) — detail zone inserts after this row */
@@ -33,6 +34,12 @@ interface ProfileViewProps {
 	fullPortraitStatus?: PortraitStatus;
 	/** Callback to retry failed portrait generation (Story 13.3) */
 	onRetryPortrait?: () => void;
+	/** Teaser portrait data (Story 12.3) */
+	teaserContent?: string | null;
+	/** Locked section titles for teaser (Story 12.3) */
+	teaserLockedSectionTitles?: string[] | null;
+	/** Callback to unlock full portrait (Story 12.3) */
+	onUnlockPortrait?: () => void;
 	/** Current selected trait for DetailZone */
 	selectedTrait?: TraitName | null;
 	/** Total message count for confidence ring */
@@ -59,6 +66,9 @@ export function ProfileView({
 	fullPortraitContent,
 	fullPortraitStatus,
 	onRetryPortrait,
+	teaserContent,
+	teaserLockedSectionTitles,
+	onUnlockPortrait,
 	selectedTrait,
 	messageCount,
 	detailZone,
@@ -97,11 +107,9 @@ export function ProfileView({
 			{/* Single CSS Grid container */}
 			<div className="mx-auto max-w-[1120px] px-5 py-10">
 				<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
-					{/* Personal Portrait — full width (AC #3, Story 13.3) */}
-					{/* Show portrait if: we have content OR generation is in progress/failed */}
-					{(personalDescription ||
-						fullPortraitStatus === "generating" ||
-						fullPortraitStatus === "failed") && (
+					{/* Portrait section — full width (Story 12.3 + 13.3) */}
+					{/* Full portrait available → PersonalPortrait */}
+					{fullPortraitContent ? (
 						<PersonalPortrait
 							personalDescription={personalDescription ?? ""}
 							displayName={displayName}
@@ -109,7 +117,25 @@ export function ProfileView({
 							fullPortraitStatus={fullPortraitStatus}
 							onRetryPortrait={onRetryPortrait}
 						/>
-					)}
+					) : teaserContent && teaserLockedSectionTitles && onUnlockPortrait ? (
+						/* Teaser only → TeaserPortrait with locked sections */
+						<TeaserPortrait
+							teaserContent={teaserContent}
+							lockedSectionTitles={teaserLockedSectionTitles}
+							onUnlock={onUnlockPortrait}
+						/>
+					) : personalDescription ||
+						fullPortraitStatus === "generating" ||
+						fullPortraitStatus === "failed" ? (
+						/* Fallback: personalDescription or generating/failed states */
+						<PersonalPortrait
+							personalDescription={personalDescription ?? ""}
+							displayName={displayName}
+							fullPortraitContent={fullPortraitContent}
+							fullPortraitStatus={fullPortraitStatus}
+							onRetryPortrait={onRetryPortrait}
+						/>
+					) : null}
 
 					{/* Ocean Code Strand — full width */}
 					<OceanCodeStrand oceanCode5={oceanCode5} displayName={displayName} description={description} />

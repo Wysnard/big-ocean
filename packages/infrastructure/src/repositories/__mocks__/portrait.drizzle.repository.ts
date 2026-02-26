@@ -37,6 +37,9 @@ export const _setSessionResultMapping = (sessionId: string, assessmentResultId: 
 /** Get stored portrait by ID (for test assertions) */
 export const _getPortraitById = (id: string): Portrait | undefined => portraitStore.get(id);
 
+/** Get all stored portraits (for test assertions) */
+export const _getAllPortraits = (): Portrait[] => [...portraitStore.values()];
+
 const makeIndexKey = (assessmentResultId: string, tier: PortraitTier): string =>
 	`${assessmentResultId}:${tier}`;
 
@@ -106,6 +109,26 @@ export const PortraitDrizzleRepositoryLive = Layer.succeed(
 				const updated: Portrait = {
 					...existing,
 					retryCount: existing.retryCount + 1,
+				};
+
+				portraitStore.set(id, updated);
+				const indexKey = makeIndexKey(existing.assessmentResultId, existing.tier);
+				resultTierIndex.set(indexKey, updated);
+
+				return updated;
+			}),
+
+		updateLockedSectionTitles: (id: string, titles: ReadonlyArray<string>) =>
+			Effect.gen(function* () {
+				const existing = portraitStore.get(id);
+
+				if (!existing) {
+					return yield* Effect.fail(new PortraitNotFoundError({ portraitId: id }));
+				}
+
+				const updated: Portrait = {
+					...existing,
+					lockedSectionTitles: titles,
 				};
 
 				portraitStore.set(id, updated);
