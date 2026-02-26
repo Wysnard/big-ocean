@@ -15,6 +15,7 @@ import { OceanDiamond } from "../ocean-shapes/OceanDiamond";
 import { OceanHalfCircle } from "../ocean-shapes/OceanHalfCircle";
 import { OceanRectangle } from "../ocean-shapes/OceanRectangle";
 import { OceanTriangle } from "../ocean-shapes/OceanTriangle";
+import { getSignalBadge } from "./evidence-utils";
 
 const TRAIT_SHAPE: Record<TraitName, (props: { size?: number; color?: string }) => ReactNode> = {
 	openness: OceanCircle,
@@ -31,25 +32,6 @@ const TRAIT_LABELS: Record<TraitName, string> = {
 	agreeableness: "Agreeableness",
 	neuroticism: "Neuroticism",
 };
-
-function getSignalBadge(confidence: number): { label: string; className: string } {
-	if (confidence >= 70) {
-		return {
-			label: "Strong",
-			className: "bg-[oklch(0.67_0.13_181/0.15)] text-[oklch(0.45_0.13_181)]",
-		};
-	}
-	if (confidence >= 40) {
-		return {
-			label: "Moderate",
-			className: "bg-[oklch(0.67_0.20_42/0.15)] text-[oklch(0.50_0.20_42)]",
-		};
-	}
-	return {
-		label: "Weak",
-		className: "bg-[oklch(0.29_0.19_272/0.10)] text-[oklch(0.40_0.10_272)]",
-	};
-}
 
 const confidenceChartConfig: ChartConfig = {
 	confidence: { label: "Confidence", color: "var(--primary)" },
@@ -109,9 +91,17 @@ interface DetailZoneProps {
 	isOpen: boolean;
 	onClose: () => void;
 	isLoading: boolean;
+	onFacetClick?: (facetName: FacetName) => void;
 }
 
-export function DetailZone({ trait, facetDetails, isOpen, onClose, isLoading }: DetailZoneProps) {
+export function DetailZone({
+	trait,
+	facetDetails,
+	isOpen,
+	onClose,
+	isLoading,
+	onFacetClick,
+}: DetailZoneProps) {
 	const traitColor = getTraitColor(trait.name);
 	const ShapeComponent = TRAIT_SHAPE[trait.name];
 	const levelLetter = trait.score < 40 ? "Low" : trait.score < 80 ? "Mid" : "High";
@@ -177,7 +167,8 @@ export function DetailZone({ trait, facetDetails, isOpen, onClose, isLoading }: 
 									key={facet.name}
 									data-slot="facet-detail-card"
 									data-facet={facet.name}
-									className="flex-row"
+									className={`flex-row${onFacetClick ? " cursor-pointer hover:ring-1 hover:ring-primary/30 motion-safe:transition-shadow" : ""}`}
+									onClick={onFacetClick ? () => onFacetClick(facet.name) : undefined}
 								>
 									<CardAccent position="left" style={{ backgroundColor: traitColor }} />
 									<CardContent className="flex-1 p-4">

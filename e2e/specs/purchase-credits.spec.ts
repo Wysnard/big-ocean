@@ -7,6 +7,7 @@
  * - RelationshipCreditsSection renders on results page (AC5, AC7)
  */
 
+import { execSync } from "node:child_process";
 import {
 	createAssessmentSession,
 	getSessionUserId,
@@ -31,6 +32,14 @@ const NO_ASSESSMENT_USER = {
 
 test.describe("Purchase Credits", () => {
 	test.setTimeout(60_000);
+
+	// Reset the global assessment counter so tests aren't blocked by prior runs
+	const todayKey = new Date().toISOString().slice(0, 10);
+	const redisKey = `global_assessments:${todayKey}`;
+
+	test.beforeAll(() => {
+		execSync(`docker exec bigocean-redis-e2e redis-cli DEL ${redisKey}`);
+	});
 
 	test("free credit granted on signup and credits endpoint returns correct state", async ({
 		apiContext,

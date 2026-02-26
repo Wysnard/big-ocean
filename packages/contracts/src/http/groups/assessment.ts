@@ -178,6 +178,22 @@ export const FinalizationStatusResponseSchema = S.Struct({
 });
 
 /**
+ * Get Conversation Transcript Response Schema (Story 12.2)
+ *
+ * Returns all messages with IDs for evidence linking in the transcript panel.
+ */
+export const GetTranscriptResponseSchema = S.Struct({
+	messages: S.Array(
+		S.Struct({
+			id: S.String,
+			role: S.Literal("user", "assistant"),
+			content: S.String,
+			timestamp: S.DateTimeUtc,
+		}),
+	),
+});
+
+/**
  * Assessment API Group
  *
  * Routes:
@@ -185,6 +201,7 @@ export const FinalizationStatusResponseSchema = S.Struct({
  * - POST /api/assessment/message - Send message to assessment agent
  * - GET /api/assessment/:sessionId/results - Get assessment results
  * - GET /api/assessment/:sessionId/resume - Resume existing session
+ * - GET /api/assessment/:sessionId/transcript - Get conversation transcript (Story 12.2)
  * - GET /api/assessment/sessions - List user's assessment sessions (Story 7.13)
  */
 export const AssessmentGroup = HttpApiGroup.make("assessment")
@@ -246,6 +263,15 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.add(
+		HttpApiEndpoint.get("getTranscript", "/:sessionId/transcript")
+			.setPath(GetResultsPathSchema)
+			.addSuccess(GetTranscriptResponseSchema)
+			.addError(SessionNotFound, { status: 404 })
+			.addError(SessionNotCompleted, { status: 409 })
+			.addError(Unauthorized, { status: 401 })
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
 		HttpApiEndpoint.get("getFinalizationStatus", "/:sessionId/finalization-status")
 			.setPath(GenerateResultsPathSchema)
 			.addSuccess(FinalizationStatusResponseSchema)
@@ -267,3 +293,4 @@ export type SessionSummary = typeof SessionSummarySchema.Type;
 export type ListSessionsResponse = typeof ListSessionsResponseSchema.Type;
 export type GenerateResultsResponse = typeof GenerateResultsResponseSchema.Type;
 export type FinalizationStatusResponse = typeof FinalizationStatusResponseSchema.Type;
+export type GetTranscriptResponse = typeof GetTranscriptResponseSchema.Type;
