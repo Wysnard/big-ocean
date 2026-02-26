@@ -46,6 +46,18 @@ export default defineConfig({
 			},
 		},
 
+		// ── Golden path + evidence: full journey with evidence highlighting ─
+		// Runs after evidence-highlighting to avoid DB lock contention during
+		// finalization (CASCADE deletes on assessment_session block concurrent inserts)
+		{
+			name: "golden-path-evidence",
+			testMatch: "specs/golden-path-evidence.spec.ts",
+			dependencies: ["evidence-highlighting"],
+			use: {
+				video: "on",
+			},
+		},
+
 		// ── Profile page: auth user journeys (manages own storageState) ─
 		{
 			name: "profile-page",
@@ -77,9 +89,20 @@ export default defineConfig({
 		},
 
 		// ── Purchase credits: free credit grant, credits endpoint, UI ────
+		// Runs after waitlist to avoid Redis counter contention (waitlist sets counter to 999)
 		{
 			name: "purchase-credits",
 			testMatch: "specs/purchase-credits.spec.ts",
+			dependencies: ["waitlist"],
+		},
+
+		// ── Evidence highlighting: authed owner with seeded evidence ─────
+		// Runs after auth-owner because seedResultsData deletes the owner's
+		// completed session (unique constraint), which auth-owner tests depend on
+		{
+			name: "evidence-highlighting",
+			testMatch: "specs/evidence-highlighting.spec.ts",
+			dependencies: ["auth-owner"],
 		},
 
 		// ── Access-control: unauthenticated ──────────────────────────────

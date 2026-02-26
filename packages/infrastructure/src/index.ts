@@ -40,7 +40,9 @@ export { ConversanalyzerAnthropicRepositoryLive } from "./repositories/conversan
 export { ConversationEvidenceDrizzleRepositoryLive } from "./repositories/conversation-evidence.drizzle.repository";
 // CostGuard repository implementation
 export { CostGuardRedisRepositoryLive } from "./repositories/cost-guard.redis.repository";
-// Facet evidence no-op repository (Story 9.1 — old table dropped, stub for orchestrator compat)
+// Facet evidence repository — queries finalization_evidence, maps to SavedFacetEvidence contract
+export { FacetEvidenceDrizzleRepositoryLive } from "./repositories/facet-evidence.drizzle.repository";
+// Facet evidence no-op repository (Story 9.1 — stub for orchestrator compat, write path only)
 export { FacetEvidenceNoopRepositoryLive } from "./repositories/facet-evidence.noop.repository";
 // Facet steering hints
 export { FACET_STEERING_HINTS } from "./repositories/facet-steering";

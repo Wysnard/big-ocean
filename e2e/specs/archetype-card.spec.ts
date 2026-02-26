@@ -114,7 +114,7 @@ test("archetype card and OG image routes return valid PNGs", async ({
 	await test.step("public profile page OG meta tags reference same-origin image URL", async () => {
 		await page.goto(`/public-profile/${profileId}`);
 
-		const ogImage = await page.locator('meta[property="og:image"]').getAttribute("content");
+		const ogImage = await page.locator('meta[property="og:image"]').first().getAttribute("content");
 		expect(ogImage).toContain(`/api/og/public-profile/${profileId}`);
 
 		const twitterImage = await page.locator('meta[name="twitter:image"]').getAttribute("content");

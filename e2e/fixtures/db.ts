@@ -82,6 +82,8 @@ interface TraitSeed {
 interface SeedProfile {
 	status?: string;
 	messageCount?: number;
+	/** Link the session to an existing user (optional) */
+	userId?: string;
 	facets: FacetSeed[];
 	traits: TraitSeed[];
 	/** JSONB confidence map for assessment_session.confidence column */
@@ -205,6 +207,7 @@ interface DbFixture {
 		sessionId: string,
 		evidence: EvidenceSeed[],
 	) => Promise<{ sessionId: string; messageIds: string[] }>;
+	getUserIdByEmail: (email: string) => Promise<string | null>;
 }
 
 export const test = base.extend<{ db: DbFixture }>({
@@ -218,37 +221,44 @@ export const test = base.extend<{ db: DbFixture }>({
 			try {
 				await client.query("BEGIN");
 
-				// 1. Insert assessment_session
+				// 1. Remove existing completed/finalizing session for this user (unique constraint)
+				if (profile.userId) {
+					await client.query(
+						`DELETE FROM assessment_session WHERE user_id = $1 AND status IN ('finalizing', 'completed')`,
+						[profile.userId],
+					);
+				}
+
+				// 2. Insert assessment_session (clean-slate schema — no confidence column)
 				const sessionResult = await client.query(
-					`INSERT INTO assessment_session (status, confidence, message_count)
+					`INSERT INTO assessment_session (status, message_count, user_id)
 					 VALUES ($1, $2, $3)
 					 RETURNING id`,
-					[
-						profile.status ?? "completed",
-						JSON.stringify(profile.confidenceMap),
-						profile.messageCount ?? 12,
-					],
+					[profile.status ?? "completed", profile.messageCount ?? 12, profile.userId ?? null],
 				);
 				const sessionId: string = sessionResult.rows[0].id;
 				seededSessionIds.push(sessionId);
 
-				// 2. Insert facet_scores (30 rows)
+				// 3. Insert assessment_results row with facets/traits as JSONB
+				const facetsJson: Record<string, { score: number; confidence: number }> = {};
 				for (const facet of profile.facets) {
-					await client.query(
-						`INSERT INTO facet_scores (session_id, facet_name, score, confidence)
-						 VALUES ($1, $2, $3, $4)`,
-						[sessionId, facet.facetName, facet.score, facet.confidence],
-					);
+					facetsJson[facet.facetName] = { score: facet.score, confidence: facet.confidence };
 				}
-
-				// 3. Insert trait_scores (5 rows)
+				const traitsJson: Record<string, { score: number; confidence: number }> = {};
 				for (const trait of profile.traits) {
-					await client.query(
-						`INSERT INTO trait_scores (session_id, trait_name, score, confidence)
-						 VALUES ($1, $2, $3, $4)`,
-						[sessionId, trait.traitName, trait.score, trait.confidence],
-					);
+					traitsJson[trait.traitName] = { score: trait.score, confidence: trait.confidence };
 				}
+				await client.query(
+					`INSERT INTO assessment_results (assessment_session_id, facets, traits, domain_coverage, portrait)
+					 VALUES ($1, $2, $3, $4, $5)`,
+					[
+						sessionId,
+						JSON.stringify(facetsJson),
+						JSON.stringify(traitsJson),
+						JSON.stringify({}),
+						"Seeded portrait for e2e test",
+					],
+				);
 
 				await client.query("COMMIT");
 				return sessionId;
@@ -283,7 +293,7 @@ export const test = base.extend<{ db: DbFixture }>({
 
 				for (const msg of uniqueMessages) {
 					const msgResult = await client.query(
-						`INSERT INTO assessment_message (session_id, message, role, created_at)
+						`INSERT INTO assessment_message (session_id, content, role, created_at)
 						 VALUES ($1, $2, $3, NOW())
 						 RETURNING id`,
 						[sessionId, msg.content, msg.role],
@@ -293,20 +303,50 @@ export const test = base.extend<{ db: DbFixture }>({
 					messageIds.push(realId);
 				}
 
-				// 2. Insert facet_evidence rows
+				// 2. Find or create assessment_results row (required FK for finalization_evidence)
+				let assessmentResultId: string;
+				const existingResult = await client.query(
+					`SELECT id FROM assessment_results WHERE assessment_session_id = $1 LIMIT 1`,
+					[sessionId],
+				);
+				if (existingResult.rows.length > 0) {
+					assessmentResultId = existingResult.rows[0].id;
+				} else {
+					const resultRow = await client.query(
+						`INSERT INTO assessment_results (assessment_session_id, facets, traits, domain_coverage, portrait)
+						 VALUES ($1, $2, $3, $4, $5)
+						 RETURNING id`,
+						[
+							sessionId,
+							JSON.stringify({}),
+							JSON.stringify({}),
+							JSON.stringify({}),
+							"Seeded portrait for e2e test",
+						],
+					);
+					assessmentResultId = resultRow.rows[0].id;
+				}
+
+				// 3. Insert finalization_evidence rows
 				for (const ev of evidence) {
 					const realMessageId = messageIdMap.get(ev.messageId);
 					if (!realMessageId) continue;
 
+					// Confidence: EvidenceSeed uses 0-100 integer, DB stores as numeric(4,3) 0-1
+					const confidenceDecimal = ev.confidence / 100;
+
 					await client.query(
-						`INSERT INTO facet_evidence
-						 (assessment_message_id, facet_name, score, confidence, quote, highlight_start, highlight_end, created_at)
-						 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+						`INSERT INTO finalization_evidence
+						 (assessment_message_id, assessment_result_id, bigfive_facet, score, confidence, domain, raw_domain, quote, highlight_start, highlight_end, created_at)
+						 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`,
 						[
 							realMessageId,
+							assessmentResultId,
 							ev.facetName,
 							ev.score,
-							ev.confidence,
+							confidenceDecimal,
+							"leisure", // default domain for seeded evidence
+							"leisure", // raw_domain matches domain
 							ev.quote,
 							ev.highlightStart,
 							ev.highlightEnd,
@@ -324,7 +364,17 @@ export const test = base.extend<{ db: DbFixture }>({
 			}
 		};
 
-		await use({ seedResultsData, seedEvidenceData });
+		const getUserIdByEmail = async (email: string): Promise<string | null> => {
+			const client = await pool.connect();
+			try {
+				const result = await client.query(`SELECT id FROM "user" WHERE email = $1`, [email]);
+				return result.rows[0]?.id ?? null;
+			} finally {
+				client.release();
+			}
+		};
+
+		await use({ seedResultsData, seedEvidenceData, getUserIdByEmail });
 
 		// Cleanup: delete all seeded sessions (CASCADE handles child rows)
 		if (seededSessionIds.length > 0) {
