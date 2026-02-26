@@ -56,7 +56,9 @@ function toSavedFacetEvidence(row: {
 
 const mapDbError = (e: unknown) =>
 	new FacetEvidencePersistenceError({
-		message: `Database error: ${e instanceof Error ? e.message : String(e)}`,
+		assessmentMessageId: "unknown",
+		reason: `Database error: ${e instanceof Error ? e.message : String(e)}`,
+		evidenceCount: 0,
 	});
 
 export const FacetEvidenceDrizzleRepositoryLive = Layer.effect(
@@ -91,9 +93,10 @@ export const FacetEvidenceDrizzleRepositoryLive = Layer.effect(
 						.limit(1)
 						.pipe(Effect.mapError(mapDbError));
 
-					if (results.length === 0) return [];
+					const first = results[0];
+					if (!first) return [];
 
-					const resultId = results[0].id;
+					const resultId = first.id;
 
 					// Fetch finalization evidence filtered by result + facet
 					const rows = yield* db
@@ -121,9 +124,10 @@ export const FacetEvidenceDrizzleRepositoryLive = Layer.effect(
 						.limit(1)
 						.pipe(Effect.mapError(mapDbError));
 
-					if (results.length === 0) return [];
+					const first = results[0];
+					if (!first) return [];
 
-					const resultId = results[0].id;
+					const resultId = first.id;
 
 					const rows = yield* db
 						.select()
