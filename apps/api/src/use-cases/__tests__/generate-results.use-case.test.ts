@@ -15,6 +15,7 @@ vi.mock("@workspace/infrastructure/repositories/assessment-result.drizzle.reposi
 vi.mock("@workspace/infrastructure/repositories/assessment-message.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/cost-guard.redis.repository");
 vi.mock("@workspace/infrastructure/repositories/teaser-portrait.anthropic.repository");
+vi.mock("@workspace/infrastructure/repositories/portrait.drizzle.repository");
 
 import { describe, expect, it } from "@effect/vitest";
 import {
@@ -58,6 +59,11 @@ import {
 	_setMockError as setFinanalyzerError,
 	_setMockOutput as setFinanalyzerOutput,
 } from "@workspace/infrastructure/repositories/finanalyzer.anthropic.repository";
+import {
+	_getAllPortraits as getAllPortraits,
+	PortraitDrizzleRepositoryLive,
+	_resetMockState as resetPortrait,
+} from "@workspace/infrastructure/repositories/portrait.drizzle.repository";
 import {
 	_resetMockState as resetTeaserPortrait,
 	_setMockError as setTeaserError,
@@ -111,6 +117,7 @@ const createTestLayer = () =>
 		AssessmentMessageDrizzleRepositoryLive,
 		CostGuardRedisRepositoryLive,
 		TeaserPortraitAnthropicRepositoryLive,
+		PortraitDrizzleRepositoryLive,
 	);
 
 /** Helper: seed messages and return their IDs */
@@ -142,6 +149,7 @@ describe("generateResults Use Case", () => {
 		resetMessages();
 		resetCostGuard();
 		resetTeaserPortrait();
+		resetPortrait();
 		mockSessionRepo.getSession.mockReturnValue(Effect.succeed(mockFinalizingSession));
 		mockSessionRepo.updateSession.mockReturnValue(Effect.succeed(mockFinalizingSession));
 		mockSessionRepo.acquireSessionLock.mockReturnValue(Effect.void);
@@ -1189,6 +1197,118 @@ describe("generateResults Use Case", () => {
 					"session_123",
 					expect.objectContaining({ finalizationProgress: "generating_portrait" }),
 				);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("Teaser portrait stored in portraits table (Story 12.3)", () => {
+		it.effect("teaser is stored in portraits table with tier='teaser' and lockedSectionTitles", () =>
+			Effect.gen(function* () {
+				const ids = yield* seedMessages("session_123", [
+					{ role: "user", content: "I love brainstorming new things" },
+				]);
+
+				setFinanalyzerOutput({
+					evidence: [
+						{
+							messageId: ids[0],
+							bigfiveFacet: "imagination",
+							score: 14,
+							confidence: 0.7,
+							domain: "work",
+							rawDomain: "creative work",
+							quote: "brainstorming",
+						},
+					],
+					tokenUsage: { input: 3000, output: 1500 },
+				});
+
+				const result = yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				expect(result).toEqual({ status: "completed" });
+
+				// assessment_results.portrait is still populated (backward compat)
+				const results = getStoredResults();
+				const record = results.get("session_123");
+				expect(record?.portrait).toContain("The Quiet Architecture");
+
+				// Portraits table should have a teaser row
+				const allPortraits = getAllPortraits();
+				const teaserPortrait = allPortraits.find((p) => p.tier === "teaser");
+				expect(teaserPortrait).toBeDefined();
+				expect(teaserPortrait?.content).toContain("The Quiet Architecture");
+				expect(teaserPortrait?.lockedSectionTitles).toEqual([
+					"The Architecture of Your Empathy",
+					"When Logic Meets Longing",
+					"Your Emerging Edge",
+				]);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("DuplicatePortraitError is caught (idempotent re-run)", () =>
+			Effect.gen(function* () {
+				const ids = yield* seedMessages("session_123", [
+					{ role: "user", content: "I love brainstorming" },
+				]);
+
+				setFinanalyzerOutput({
+					evidence: [
+						{
+							messageId: ids[0],
+							bigfiveFacet: "imagination",
+							score: 14,
+							confidence: 0.7,
+							domain: "work",
+							rawDomain: "creative work",
+							quote: "brainstorming",
+						},
+					],
+					tokenUsage: { input: 3000, output: 1500 },
+				});
+
+				// First run — populates portraits table
+				yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				// Reset session state for second run
+				mockSessionRepo.getSession.mockReturnValue(Effect.succeed(mockFinalizingSession));
+				mockSessionRepo.acquireSessionLock.mockReturnValue(Effect.void);
+
+				// Pre-seed evidence for Guard 2 path
+				setEvidenceExists(true);
+				const results = getStoredResults();
+				const record = results.get("session_123");
+				if (record) {
+					seedEvidence([
+						{
+							id: "fe-dup-1",
+							assessmentMessageId: ids[0],
+							assessmentResultId: record.id,
+							bigfiveFacet: "imagination",
+							score: 14,
+							confidence: 0.7,
+							domain: "work",
+							rawDomain: "creative work",
+							quote: "brainstorming",
+							highlightStart: 7,
+							highlightEnd: 20,
+							createdAt: new Date(),
+						} as FinalizationEvidenceRecord,
+					]);
+				}
+
+				// Second run — should not fail on DuplicatePortraitError
+				const result2 = yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				expect(result2).toEqual({ status: "completed" });
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});

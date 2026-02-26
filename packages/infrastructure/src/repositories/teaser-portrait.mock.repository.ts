@@ -30,6 +30,12 @@ export const TeaserPortraitMockRepositoryLive = Layer.effect(
 				logger.info("Mock teaser portrait generated", { sessionId: input.sessionId });
 				return Effect.succeed({
 					portrait: MOCK_TEASER,
+					lockedSectionTitles: [
+						"The Architecture of Your Empathy",
+						"When Logic Meets Longing",
+						"Your Emerging Edge",
+					] as ReadonlyArray<string>,
+					modelUsed: "mock-teaser-model",
 					tokenUsage: { input: 0, output: 0 },
 				});
 			},

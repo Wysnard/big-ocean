@@ -15,6 +15,7 @@ import { ProfileView } from "@/components/results/ProfileView";
 import { QuickActionsCard } from "@/components/results/QuickActionsCard";
 import { RelationshipCreditsSection } from "@/components/results/RelationshipCreditsSection";
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
+import { TeaserPortraitReadingView } from "@/components/results/TeaserPortraitReadingView";
 import { useTraitEvidence } from "@/components/results/useTraitEvidence";
 import { ArchetypeShareCard } from "@/components/sharing/archetype-share-card";
 import {
@@ -27,6 +28,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useFacetEvidence } from "@/hooks/use-evidence";
 import { useToggleVisibility } from "@/hooks/use-profile";
 import { usePortraitStatus } from "@/hooks/usePortraitStatus";
+import { openPolarCheckout } from "@/lib/polar-checkout";
 import {
 	clearPendingResultsGateSession,
 	persistPendingResultsGateSession,
@@ -97,7 +99,7 @@ function ResultsSessionPage() {
 	const { assessmentSessionId } = Route.useParams();
 	const { view } = Route.useSearch();
 	const navigate = useNavigate();
-	const { isAuthenticated, isPending: isAuthPending } = useAuth();
+	const { isAuthenticated, isPending: isAuthPending, user } = useAuth();
 	const canLoadResults = isAuthenticated && !isAuthPending;
 	const { data: results, isLoading, error } = useGetResults(assessmentSessionId, canLoadResults);
 	const isNotFoundError = (value: unknown): boolean => {
@@ -311,6 +313,28 @@ function ResultsSessionPage() {
 		void navigate({ to: "/chat", search: { sessionId: undefined } });
 	};
 
+	// Story 12.3: Unlock full portrait via Polar checkout
+	const handleUnlockPortrait = useCallback(() => {
+		const checkoutUrl = import.meta.env.VITE_POLAR_PORTRAIT_CHECKOUT_URL;
+		if (!checkoutUrl || !user?.id) return;
+		void openPolarCheckout({
+			checkoutLinkUrl: checkoutUrl,
+			userId: user.id,
+			theme: document.documentElement.classList.contains("dark") ? "dark" : "light",
+		});
+	}, [user?.id]);
+
+	// Story 7.18 + 12.3 + 13.3: Back to profile from reading view
+	const handleBackToProfile = useCallback(
+		() =>
+			navigate({
+				to: "/results/$assessmentSessionId",
+				params: { assessmentSessionId },
+				search: {},
+			}),
+		[navigate, assessmentSessionId],
+	);
+
 	if (isAuthPending) {
 		return (
 			<div className="min-h-[calc(100dvh-3.5rem)] bg-background flex items-center justify-center px-6">
@@ -365,23 +389,39 @@ function ResultsSessionPage() {
 		? results.traits.find((t) => t.name === selectedTrait)
 		: null;
 
-	// Story 7.18 + 13.3: Portrait-first reading view
-	// Use full portrait content when available, fall back to teaser personalDescription
-	const portraitContentForReading =
-		portraitStatusData?.portrait?.content ?? results.personalDescription;
-	if (view === "portrait" && portraitContentForReading) {
-		return (
-			<PortraitReadingView
-				personalDescription={portraitContentForReading}
-				onViewFullProfile={() =>
-					navigate({
-						to: "/results/$assessmentSessionId",
-						params: { assessmentSessionId },
-						search: {},
-					})
-				}
-			/>
-		);
+	if (view === "portrait") {
+		// Full portrait available → full reading view
+		const fullContent = portraitStatusData?.portrait?.content;
+		if (fullContent) {
+			return (
+				<PortraitReadingView
+					personalDescription={fullContent}
+					onViewFullProfile={handleBackToProfile}
+				/>
+			);
+		}
+
+		// Teaser available → teaser reading view with locked sections + CTA
+		const teaserData = portraitStatusData?.teaser;
+		if (teaserData) {
+			return (
+				<TeaserPortraitReadingView
+					teaserContent={teaserData.content}
+					onUnlock={handleUnlockPortrait}
+					onViewFullProfile={handleBackToProfile}
+				/>
+			);
+		}
+
+		// Fallback to personalDescription
+		if (results.personalDescription) {
+			return (
+				<PortraitReadingView
+					personalDescription={results.personalDescription}
+					onViewFullProfile={handleBackToProfile}
+				/>
+			);
+		}
 	}
 
 	return (
@@ -400,6 +440,8 @@ function ResultsSessionPage() {
 				fullPortraitContent={portraitStatusData?.portrait?.content}
 				fullPortraitStatus={portraitStatusData?.status}
 				onRetryPortrait={() => void refetchPortraitStatus()}
+				teaserContent={portraitStatusData?.teaser?.content}
+				onUnlockPortrait={handleUnlockPortrait}
 				selectedTrait={selectedTrait}
 				messageCount={results.messageCount}
 				detailZone={
@@ -454,7 +496,9 @@ function ResultsSessionPage() {
 						{/* Action CTAs — full-width */}
 						<div className="col-span-full flex flex-wrap justify-center gap-3 py-4">
 							{/* Show "Read portrait" button if teaser OR full portrait content is available */}
-							{(results.personalDescription || portraitStatusData?.portrait?.content) && (
+							{(results.personalDescription ||
+								portraitStatusData?.portrait?.content ||
+								portraitStatusData?.teaser) && (
 								<Button data-testid="results-read-portrait" asChild variant="outline" className="min-h-11">
 									<Link
 										to="/results/$assessmentSessionId"

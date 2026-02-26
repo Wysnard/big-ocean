@@ -20,8 +20,16 @@ You told me about the spreadsheet — the one you built to track your moods. The
 
 But here's what stayed with me after everything else settled. That precision you trust so completely? It has a cost you've stopped counting.`;
 
+const MOCK_LOCKED_TITLES = [
+	"The Architecture of Your Empathy",
+	"When Logic Meets Longing",
+	"Your Emerging Edge",
+] as const;
+
 let mockOutput: TeaserPortraitOutput = {
 	portrait: MOCK_TEASER,
+	lockedSectionTitles: [...MOCK_LOCKED_TITLES],
+	modelUsed: "claude-haiku-4-5-20251001",
 	tokenUsage: { input: 500, output: 300 },
 };
 
@@ -31,6 +39,8 @@ let callCount = 0;
 export function _resetMockState(): void {
 	mockOutput = {
 		portrait: MOCK_TEASER,
+		lockedSectionTitles: [...MOCK_LOCKED_TITLES],
+		modelUsed: "claude-haiku-4-5-20251001",
 		tokenUsage: { input: 500, output: 300 },
 	};
 	mockError = null;

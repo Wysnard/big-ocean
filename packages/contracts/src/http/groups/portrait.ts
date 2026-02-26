@@ -34,11 +34,20 @@ export const PortraitSchema = S.Struct({
 });
 
 /**
+ * Teaser Portrait Data Schema (Story 12.3)
+ */
+export const TeaserPortraitDataSchema = S.Struct({
+	content: S.String,
+	lockedSectionTitles: S.Array(S.String),
+});
+
+/**
  * Get Portrait Status Response Schema
  */
 export const GetPortraitStatusResponseSchema = S.Struct({
 	status: PortraitStatusSchema,
 	portrait: S.NullOr(PortraitSchema),
+	teaser: S.NullOr(TeaserPortraitDataSchema),
 });
 
 /**

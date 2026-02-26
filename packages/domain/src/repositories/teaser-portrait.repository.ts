@@ -28,6 +28,8 @@ export interface TeaserPortraitInput {
 
 export interface TeaserPortraitOutput {
 	readonly portrait: string;
+	readonly lockedSectionTitles: ReadonlyArray<string>;
+	readonly modelUsed: string;
 	readonly tokenUsage: { readonly input: number; readonly output: number };
 }
 

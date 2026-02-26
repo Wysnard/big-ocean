@@ -9,7 +9,11 @@
  */
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { LoggerRepository, PortraitRepository } from "@workspace/domain";
+import {
+	AssessmentResultRepository,
+	LoggerRepository,
+	PortraitRepository,
+} from "@workspace/domain";
 import type { Portrait } from "@workspace/domain/repositories/portrait.repository";
 import { Effect, Layer } from "effect";
 import { vi } from "vitest";
@@ -26,6 +30,16 @@ const mockPortraitRepo = {
 	incrementRetryCount: vi.fn(),
 	getByResultIdAndTier: vi.fn(),
 	getFullPortraitBySessionId: vi.fn(),
+	updateLockedSectionTitles: vi.fn(),
+};
+
+const mockAssessmentResultRepo = {
+	create: vi.fn(),
+	update: vi.fn(),
+	getBySessionId: vi.fn(() => Effect.succeed(null)),
+	getBySessionIdWithMessages: vi.fn(),
+	getPublicProfile: vi.fn(),
+	getPublicProfileByIdOrUrl: vi.fn(),
 };
 
 const mockLogger = {
@@ -39,6 +53,7 @@ const createTestLayer = () =>
 	Layer.mergeAll(
 		Layer.succeed(PortraitRepository, mockPortraitRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
+		Layer.succeed(AssessmentResultRepository, mockAssessmentResultRepo),
 	);
 
 const createMockPortrait = (overrides: Partial<Portrait> = {}): Portrait => ({
@@ -217,6 +232,52 @@ describe("getPortraitStatus Use Case (Story 13.3)", () => {
 				"Triggering lazy retry for stale portrait",
 				expect.anything(),
 			);
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+
+	it.effect("includes teaser data when teaser portrait exists (Story 12.3)", () =>
+		Effect.gen(function* () {
+			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
+			mockAssessmentResultRepo.getBySessionId.mockReturnValue(Effect.succeed({ id: "result_456" }));
+			mockPortraitRepo.getByResultIdAndTier.mockReturnValue(
+				Effect.succeed(
+					createMockPortrait({
+						tier: "teaser",
+						content: "Your teaser portrait...",
+						lockedSectionTitles: ["Title A", "Title B", "Title C"],
+					}),
+				),
+			);
+
+			const result = yield* getPortraitStatus("session_123");
+
+			expect(result.teaser).toEqual({
+				content: "Your teaser portrait...",
+				lockedSectionTitles: ["Title A", "Title B", "Title C"],
+			});
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+
+	it.effect("teaser is null when no teaser portrait exists (Story 12.3)", () =>
+		Effect.gen(function* () {
+			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
+			mockAssessmentResultRepo.getBySessionId.mockReturnValue(Effect.succeed(null));
+
+			const result = yield* getPortraitStatus("session_123");
+
+			expect(result.teaser).toBeNull();
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+
+	it.effect("teaser is null when no assessment result exists (Story 12.3)", () =>
+		Effect.gen(function* () {
+			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
+			mockAssessmentResultRepo.getBySessionId.mockReturnValue(Effect.succeed(null));
+
+			const result = yield* getPortraitStatus("session_123");
+
+			expect(result.status).toBe("none");
+			expect(result.teaser).toBeNull();
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 });

@@ -1,4 +1,12 @@
-import { ArrowRight } from "lucide-react";
+/**
+ * TeaserPortraitReadingView Component (Story 12.3)
+ *
+ * Focused reading view for teaser portrait — shows teaser content
+ * followed by a warm CTA to reveal the full portrait. No trait scores or evidence.
+ */
+
+import { Button } from "@workspace/ui/components/button";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { memo, useMemo } from "react";
 import Markdown from "react-markdown";
 import {
@@ -7,21 +15,18 @@ import {
 	splitMarkdownSections,
 } from "./portrait-markdown";
 
-interface PortraitReadingViewProps {
-	personalDescription: string;
+interface TeaserPortraitReadingViewProps {
+	teaserContent: string;
+	onUnlock: () => void;
 	onViewFullProfile: () => void;
 }
 
-/**
- * Full-screen, immersive reading experience for the personality portrait.
- * Shows only the portrait content — no trait cards, radar, OCEAN code, or geometric signature.
- * Story 7.18 AC #10: Portrait-first reveal layout.
- */
-export const PortraitReadingView = memo(function PortraitReadingView({
-	personalDescription,
+export const TeaserPortraitReadingView = memo(function TeaserPortraitReadingView({
+	teaserContent,
+	onUnlock,
 	onViewFullProfile,
-}: PortraitReadingViewProps) {
-	const sections = useMemo(() => splitMarkdownSections(personalDescription), [personalDescription]);
+}: TeaserPortraitReadingViewProps) {
+	const sections = useMemo(() => splitMarkdownSections(teaserContent), [teaserContent]);
 
 	return (
 		<div
@@ -30,6 +35,7 @@ export const PortraitReadingView = memo(function PortraitReadingView({
 			className="min-h-[calc(100dvh-3.5rem)] bg-background"
 		>
 			<article className="mx-auto max-w-[720px] px-6 py-12 sm:py-16">
+				{/* Opening section */}
 				{sections.length > 0 ? (
 					sections.map((section, i) => (
 						<div key={section.header} className={i > 0 ? "mt-8" : ""}>
@@ -47,16 +53,31 @@ export const PortraitReadingView = memo(function PortraitReadingView({
 									<Markdown components={readingMarkdownComponents}>{section.body}</Markdown>
 								</div>
 							)}
-							{i < sections.length - 1 && <div className="border-b border-border/20 mt-8" />}
 						</div>
 					))
 				) : (
 					<div className="text-base leading-[1.7] text-foreground/80 whitespace-pre-line">
-						{personalDescription}
+						{teaserContent}
 					</div>
 				)}
 
-				{/* Transition to full profile */}
+				{/* CTA */}
+				<div className="mt-12 flex flex-col items-center gap-3">
+					<p className="text-base text-muted-foreground text-center max-w-md">
+						There's more Nerin wants to tell you — the full portrait goes deeper.
+					</p>
+					<Button
+						data-testid="reveal-portrait-cta"
+						onClick={onUnlock}
+						size="lg"
+						className="bg-primary text-primary-foreground hover:bg-primary/90 font-display"
+					>
+						<Sparkles className="w-4 h-4 mr-2" />
+						Reveal Full Portrait
+					</Button>
+				</div>
+
+				{/* Back to profile */}
 				<div className="mt-16 pt-8 border-t border-border/20 text-center">
 					<button
 						type="button"

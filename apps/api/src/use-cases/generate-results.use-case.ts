@@ -26,6 +26,7 @@ import {
 	FinalizationEvidenceRepository,
 	FinanalyzerRepository,
 	LoggerRepository,
+	PortraitRepository,
 	SessionNotFinalizing,
 	SessionNotFound,
 	TeaserPortraitRepository,
@@ -49,6 +50,7 @@ export const generateResults = (input: GenerateResultsInput) =>
 		const assessmentResultRepo = yield* AssessmentResultRepository;
 		const costGuardRepo = yield* CostGuardRepository;
 		const teaserPortraitRepo = yield* TeaserPortraitRepository;
+		const portraitRepo = yield* PortraitRepository;
 
 		// 1. Validate session exists and user owns it
 		const session = yield* sessionRepo.getSession(input.sessionId);
@@ -296,6 +298,25 @@ export const generateResults = (input: GenerateResultsInput) =>
 				domainCoverage,
 				portrait: teaserOutput.portrait,
 			});
+
+			// Store teaser in portraits table (additive — assessment_results.portrait stays)
+			const teaserPlaceholder = yield* portraitRepo
+				.insertPlaceholder({
+					assessmentResultId,
+					tier: "teaser" as const,
+					modelUsed: teaserOutput.modelUsed,
+				})
+				.pipe(Effect.catchTag("DuplicatePortraitError", () => Effect.succeed(null)));
+
+			if (teaserPlaceholder) {
+				yield* portraitRepo
+					.updateContent(teaserPlaceholder.id, teaserOutput.portrait)
+					.pipe(Effect.catchTag("PortraitNotFoundError", () => Effect.void));
+				// Store locked section titles by updating the portrait row
+				yield* portraitRepo
+					.updateLockedSectionTitles(teaserPlaceholder.id, teaserOutput.lockedSectionTitles)
+					.pipe(Effect.catchTag("PortraitNotFoundError", () => Effect.void));
+			}
 
 			const phase2Duration = Date.now() - phase2Start;
 			const totalDuration = Date.now() - pipelineStart;
