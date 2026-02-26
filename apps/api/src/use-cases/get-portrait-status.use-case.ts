@@ -91,7 +91,9 @@ export const getPortraitStatus = (sessionId: string) =>
 
 		// Fetch teaser portrait data (Story 12.3)
 		let teaser: TeaserData | null = null;
-		const existingResult = yield* assessmentResultRepo.getBySessionId(sessionId);
+		const existingResult = yield* assessmentResultRepo
+			.getBySessionId(sessionId)
+			.pipe(Effect.catchAll(() => Effect.succeed(null)));
 		if (existingResult) {
 			const teaserPortrait = yield* portraitRepo.getByResultIdAndTier(existingResult.id, "teaser");
 			if (teaserPortrait?.content && teaserPortrait.lockedSectionTitles) {

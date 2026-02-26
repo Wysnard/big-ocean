@@ -309,12 +309,13 @@ export const generateResults = (input: GenerateResultsInput) =>
 				.pipe(Effect.catchTag("DuplicatePortraitError", () => Effect.succeed(null)));
 
 			if (teaserPlaceholder) {
-				yield* portraitRepo.updateContent(teaserPlaceholder.id, teaserOutput.portrait);
+				yield* portraitRepo
+					.updateContent(teaserPlaceholder.id, teaserOutput.portrait)
+					.pipe(Effect.catchTag("PortraitNotFoundError", () => Effect.void));
 				// Store locked section titles by updating the portrait row
-				yield* portraitRepo.updateLockedSectionTitles(
-					teaserPlaceholder.id,
-					teaserOutput.lockedSectionTitles,
-				);
+				yield* portraitRepo
+					.updateLockedSectionTitles(teaserPlaceholder.id, teaserOutput.lockedSectionTitles)
+					.pipe(Effect.catchTag("PortraitNotFoundError", () => Effect.void));
 			}
 
 			const phase2Duration = Date.now() - phase2Start;
