@@ -318,3 +318,25 @@ export class GlobalAssessmentLimitReached extends S.TaggedError<GlobalAssessment
 		resumeAfter: S.DateTimeUtc,
 	},
 ) {}
+
+/**
+ * Insufficient credits error (402)
+ * User does not have enough relationship credits to create an invitation
+ */
+export class InsufficientCreditsError extends S.TaggedError<InsufficientCreditsError>()(
+	"InsufficientCreditsError",
+	{
+		message: S.String,
+	},
+) {}
+
+/**
+ * Invitation not found error (404)
+ * Invitation token is invalid or has expired
+ */
+export class InvitationNotFoundError extends S.TaggedError<InvitationNotFoundError>()(
+	"InvitationNotFoundError",
+	{
+		message: S.String,
+	},
+) {}

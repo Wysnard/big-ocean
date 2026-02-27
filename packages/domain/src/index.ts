@@ -83,8 +83,10 @@ export {
 	FinalizationInProgressError,
 	FreeTierLimitReached,
 	GlobalAssessmentLimitReached,
+	InsufficientCreditsError,
 	InvalidCredentials,
 	InvalidFacetNameError,
+	InvitationNotFoundError,
 	MalformedEvidenceError,
 	MessageRateLimitError,
 	NerinError,
@@ -209,6 +211,8 @@ export {
 	RedisOperationError,
 	RedisRepository,
 } from "./repositories/redis.repository";
+// Relationship invitation repository (Story 14.2)
+export { RelationshipInvitationRepository } from "./repositories/relationship-invitation.repository";
 // Teaser portrait repository (Story 11.5)
 export {
 	TeaserPortraitError,
@@ -327,6 +331,13 @@ export {
 	PURCHASE_EVENT_TYPES,
 	parseMetadata,
 } from "./types/purchase.types";
+// Relationship invitation types (Story 14.2)
+export type {
+	CreateInvitationInput,
+	InvitationStatus,
+	RelationshipInvitation,
+} from "./types/relationship.types";
+export { INVITATION_EXPIRY_DAYS } from "./types/relationship.types";
 // Session types
 export type { MessageRole, Session, SessionStatus } from "./types/session";
 // Trait types (Big Five)

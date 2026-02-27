@@ -71,22 +71,20 @@ test("golden path: landing → chat → signup → results → share → public 
 
 	await test.step("finalization wait screen → auto-redirect to results", async () => {
 		// Story 11.1: After auth, ChatAuthGate redirects to /finalize/$sessionId
-		// The wait screen fires POST /generate-results and polls /finalization-status
-		// With placeholder pipeline, it completes instantly and auto-redirects to /results
-
-		// Wait for either the finalization wait screen or direct redirect to results
-		// (placeholder pipeline completes so fast it may skip the wait screen entirely)
-		await Promise.race([
-			page.locator("[data-slot='finalization-wait-screen']").waitFor({
-				state: "visible",
-				timeout: 15_000,
-			}),
-			page.waitForURL(/\/results\//, { timeout: 15_000 }),
+		// With mock LLM the pipeline completes in ms; the 2s polling interval is the bottleneck.
+		// Wait for either the wait screen or a direct results redirect (mock may skip it).
+		const reachedResults = await Promise.race([
+			page
+				.locator("[data-slot='finalization-wait-screen']")
+				.waitFor({ state: "visible", timeout: 15_000 })
+				.then(() => false),
+			page.waitForURL(/\/results\//, { timeout: 15_000 }).then(() => true),
 		]);
 
-		// If we're on the wait screen, wait for auto-redirect to results
-		if (!page.url().includes("/results/")) {
-			await page.waitForURL(/\/results\//, { timeout: 30_000 });
+		if (!reachedResults) {
+			// Wait screen appeared — mock pipeline + one poll cycle ≈ 3-4s
+			await expect(page.locator("[data-slot='finalization-wait-screen']")).toBeVisible();
+			await page.waitForURL(/\/results\//, { timeout: 15_000 });
 		}
 	});
 

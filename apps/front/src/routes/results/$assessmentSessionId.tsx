@@ -7,6 +7,7 @@ import { Schema as S } from "effect";
 import { BookOpen, Loader2, MessageCircle, X } from "lucide-react";
 import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
 import { ResultsAuthGate } from "@/components/ResultsAuthGate";
+import { SentInvitationsList } from "@/components/relationship/SentInvitationsList";
 import { ConversationTranscript } from "@/components/results/ConversationTranscript";
 import { DetailZone } from "@/components/results/DetailZone";
 import { EvidencePanel, type HighlightRange } from "@/components/results/EvidencePanel";
@@ -485,6 +486,7 @@ function ResultsSessionPage() {
 						/>
 
 						<RelationshipCreditsSection />
+						<SentInvitationsList enabled={!!user} />
 
 						{shareState?.publicProfileId && (
 							<ArchetypeShareCard

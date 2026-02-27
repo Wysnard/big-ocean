@@ -400,6 +400,68 @@ export const waitlistEmails = pgTable("waitlist_emails", {
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ─── Invitation Status Enum (Story 14.2) ──────────────────────────────────
+
+export const invitationStatusEnum = pgEnum("invitation_status", [
+	"pending",
+	"accepted",
+	"refused",
+	"expired",
+]);
+
+// ─── Relationship Invitations (Story 14.2) ────────────────────────────────
+
+/**
+ * Relationship Invitations
+ *
+ * Tracks invitation links sent by users with relationship credits.
+ * Credit consumption + invitation creation happen in a single transaction.
+ * Expiry derived at query time — no background cron needed.
+ */
+export const relationshipInvitations = pgTable(
+	"relationship_invitations",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		inviterUserId: text("inviter_user_id")
+			.notNull()
+			.references(() => user.id),
+		inviteeUserId: text("invitee_user_id").references(() => user.id),
+		invitationToken: uuid("invitation_token").notNull().unique(),
+		personalMessage: text("personal_message"),
+		status: invitationStatusEnum("status").notNull().default("pending"),
+		expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [index("relationship_invitations_inviter_idx").on(table.inviterUserId)],
+);
+
+// ─── Relationship Analyses (Story 14.2 placeholder, used in 14.4) ────────
+
+/**
+ * Relationship Analyses
+ *
+ * Stores generated pair analysis content.
+ * Placeholder row pattern: content=NULL means generating (same as portraits).
+ */
+export const relationshipAnalyses = pgTable("relationship_analyses", {
+	id: uuid("id").primaryKey().defaultRandom(),
+	invitationId: uuid("invitation_id")
+		.notNull()
+		.unique()
+		.references(() => relationshipInvitations.id),
+	userAId: text("user_a_id")
+		.notNull()
+		.references(() => user.id),
+	userBId: text("user_b_id")
+		.notNull()
+		.references(() => user.id),
+	content: text("content"),
+	modelUsed: text("model_used"),
+	retryCount: integer("retry_count").notNull().default(0),
+	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // ─── Relations (Drizzle v2 syntax) ───────────────────────────────────────
 
 export const relations = defineRelations(
@@ -417,6 +479,8 @@ export const relations = defineRelations(
 		purchaseEvents,
 		portraits,
 		profileAccessLog,
+		relationshipInvitations,
+		relationshipAnalyses,
 	},
 	(r) => ({
 		user: {
@@ -426,6 +490,10 @@ export const relations = defineRelations(
 			assessmentMessage: r.many.assessmentMessage(),
 			publicProfiles: r.many.publicProfile(),
 			purchaseEvents: r.many.purchaseEvents(),
+			sentInvitations: r.many.relationshipInvitations({
+				from: r.user.id,
+				to: r.relationshipInvitations.inviterUserId,
+			}),
 		},
 		session: {
 			user: r.one.user({
@@ -520,6 +588,34 @@ export const relations = defineRelations(
 			profile: r.one.publicProfile({
 				from: r.profileAccessLog.profileId,
 				to: r.publicProfile.id,
+			}),
+		},
+		relationshipInvitations: {
+			inviter: r.one.user({
+				from: r.relationshipInvitations.inviterUserId,
+				to: r.user.id,
+			}),
+			invitee: r.one.user({
+				from: r.relationshipInvitations.inviteeUserId,
+				to: r.user.id,
+			}),
+			analysis: r.one.relationshipAnalyses({
+				from: r.relationshipInvitations.id,
+				to: r.relationshipAnalyses.invitationId,
+			}),
+		},
+		relationshipAnalyses: {
+			invitation: r.one.relationshipInvitations({
+				from: r.relationshipAnalyses.invitationId,
+				to: r.relationshipInvitations.id,
+			}),
+			userA: r.one.user({
+				from: r.relationshipAnalyses.userAId,
+				to: r.user.id,
+			}),
+			userB: r.one.user({
+				from: r.relationshipAnalyses.userBId,
+				to: r.user.id,
 			}),
 		},
 	}),

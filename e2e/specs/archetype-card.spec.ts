@@ -117,7 +117,10 @@ test("archetype card and OG image routes return valid PNGs", async ({
 		const ogImage = await page.locator('meta[property="og:image"]').first().getAttribute("content");
 		expect(ogImage).toContain(`/api/og/public-profile/${profileId}`);
 
-		const twitterImage = await page.locator('meta[name="twitter:image"]').getAttribute("content");
+		const twitterImage = await page
+			.locator('meta[name="twitter:image"]')
+			.first()
+			.getAttribute("content");
 		expect(twitterImage).toContain(`/api/og/public-profile/${profileId}`);
 	});
 });
