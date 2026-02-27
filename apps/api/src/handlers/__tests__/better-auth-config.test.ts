@@ -115,12 +115,16 @@ describe("Better Auth Configuration Verification (Story 9.3)", () => {
 
 		it("calls tryAcceptInvitationFromCookie in user.create.after hook (signup)", () => {
 			// Verify the cookie accept is called in the signup hook
-			expect(betterAuthSource).toContain("tryAcceptInvitationFromCookie(user.id, context)");
+			expect(betterAuthSource).toContain(
+				"tryAcceptInvitationFromCookie(user.id, context ?? undefined)",
+			);
 		});
 
 		it("calls tryAcceptInvitationFromCookie in session.create.after hook (signin)", () => {
 			// Verify the cookie accept is called in the signin hook
-			expect(betterAuthSource).toContain("tryAcceptInvitationFromCookie(userId, context)");
+			expect(betterAuthSource).toContain(
+				"tryAcceptInvitationFromCookie(userId, context ?? undefined)",
+			);
 		});
 	});
 
