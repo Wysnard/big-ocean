@@ -4,6 +4,8 @@
  * Browser-driven tests for the invitation landing page and accept/refuse flows:
  * - Landing page shows inviter info and personal message
  * - Existing user with completed assessment can accept directly
+ * - Anonymous invitee: full chat flow → signup → finalization → auto-accept via cookie
+ * - Logged-in invitee (no assessment): full chat flow → finalization → auto-accept
  * - Refuse flow updates invitation status
  */
 
@@ -12,6 +14,7 @@ import {
 	createAssessmentSession,
 	getSessionUserId,
 	getUserByEmail,
+	grantCredits,
 	linkSessionToUser,
 	seedSessionForResults,
 } from "../factories/assessment.factory.js";
@@ -154,25 +157,217 @@ test.describe
 			expect(statusBody.invitation.status).toBe("accepted");
 		});
 
-		test("authenticated user refuses invitation", async ({ page, apiContext }) => {
-			// Need a new invitation for the refuse test (previous one was accepted)
-			// Re-sign in as inviter to create a new invitation
-			await signInUser(apiContext, INVITER);
+		test("anonymous invitee completes assessment and invitation is auto-accepted via cookie", async ({
+			page,
+			apiContext,
+		}) => {
+			test.setTimeout(90_000);
 
-			const res = await apiContext.post("/api/relationship/invitations", {
-				data: { personalMessage: "Another invitation" },
+			let anonInviteToken: string;
+
+			await test.step("create new invitation for anonymous invitee", async () => {
+				// Sign in as inviter and grant extra credits
+				await signInUser(apiContext, INVITER);
+				const inviterUser = await getUserByEmail(INVITER.email);
+				if (inviterUser) await grantCredits(inviterUser.id, 1);
+
+				const res = await apiContext.post("/api/relationship/invitations", {
+					data: { personalMessage: "Anonymous flow test" },
+				});
+				expect(res.ok()).toBe(true);
+				const body = await res.json();
+				anonInviteToken = body.invitation.invitationToken;
 			});
 
-			// If no credits left, skip this test
-			if (!res.ok()) {
-				test.skip();
-				return;
-			}
+			await test.step("navigate to invite page as anonymous user", async () => {
+				// Clear cookies for anonymous context
+				await page.context().clearCookies();
+				await page.goto(`/invite/${anonInviteToken}`);
+				await page.waitForLoadState("networkidle");
 
-			const body = await res.json();
-			const refuseToken = body.invitation.invitationToken;
+				const landingPage = page.getByTestId("invite-landing-page");
+				await expect(landingPage).toBeVisible({ timeout: 15_000 });
 
-			// Create and sign in as refuse-user
+				const startButton = page.getByTestId("start-assessment-button");
+				await expect(startButton).toBeVisible();
+			});
+
+			await test.step("click Start Your Assessment → claims cookie → redirects to /chat", async () => {
+				await page.getByTestId("start-assessment-button").click();
+
+				// Retry /chat navigation (SSR redirect may fail transiently)
+				for (let attempt = 0; attempt < 3; attempt++) {
+					try {
+						await page.waitForURL(/\/chat\?sessionId=/, { timeout: 10_000 });
+						break;
+					} catch {
+						if (attempt === 2) throw new Error("Failed to reach /chat?sessionId= after 3 attempts");
+						await page.waitForTimeout(1_000);
+					}
+				}
+			});
+
+			await test.step("wait for Nerin greeting", async () => {
+				await page.getByTestId("chat-bubble").first().waitFor({ state: "visible" });
+			});
+
+			await test.step("send message → triggers farewell + auth gate", async () => {
+				const chatInput = page.getByTestId("chat-input");
+				await chatInput.waitFor({ state: "visible" });
+				await chatInput.fill("I love exploring new ideas and creative projects.");
+				await page.getByTestId("chat-send-btn").click();
+
+				// MESSAGE_THRESHOLD=1 → farewell + auth gate
+				await page.getByTestId("chat-auth-gate").waitFor({
+					state: "visible",
+					timeout: 30_000,
+				});
+			});
+
+			const anonEmail = `e2e-anon-invitee-${Date.now()}@test.bigocean.dev`;
+
+			await test.step("sign up via auth gate", async () => {
+				await page.getByTestId("chat-auth-gate-signup-btn").click();
+				await page.locator("#results-signup-email").fill(anonEmail);
+				await page.locator("#results-signup-password").fill("OceanDepth#Nerin42xQ");
+				await page.getByTestId("auth-gate-signup-submit").click();
+			});
+
+			await test.step("finalization → results page", async () => {
+				const reachedResults = await Promise.race([
+					page
+						.getByTestId("finalization-wait-screen")
+						.waitFor({ state: "visible", timeout: 15_000 })
+						.then(() => false),
+					page.waitForURL(/\/results\//, { timeout: 15_000 }).then(() => true),
+				]);
+
+				if (!reachedResults) {
+					await page.waitForURL(/\/results\//, { timeout: 15_000 });
+				}
+			});
+
+			await test.step("verify invitation was auto-accepted via cookie", async () => {
+				// Sign in as inviter to check invitation status
+				await signInUser(apiContext, INVITER);
+				const statusRes = await apiContext.get(
+					`/api/relationship/public/invitations/${anonInviteToken}`,
+				);
+				expect(statusRes.ok()).toBe(true);
+				const statusBody = await statusRes.json();
+				expect(statusBody.invitation.status).toBe("accepted");
+			});
+		});
+
+		test("logged-in invitee without assessment completes assessment via invite link", async ({
+			page,
+			apiContext,
+		}) => {
+			test.setTimeout(90_000);
+
+			const INVITEE_NO_ASSESSMENT = {
+				email: `e2e-invitee-noassess-${Date.now()}@test.bigocean.dev`,
+				password: "OceanDepth#Nerin42xQ",
+				name: "Invitee No Assessment",
+			} as const;
+
+			let loggedInInviteToken: string;
+
+			await test.step("create new invitation", async () => {
+				await signInUser(apiContext, INVITER);
+				const inviterUser = await getUserByEmail(INVITER.email);
+				if (inviterUser) await grantCredits(inviterUser.id, 1);
+
+				const res = await apiContext.post("/api/relationship/invitations", {
+					data: { personalMessage: "Logged-in flow test" },
+				});
+				expect(res.ok()).toBe(true);
+				const body = await res.json();
+				loggedInInviteToken = body.invitation.invitationToken;
+			});
+
+			await test.step("create user with no assessment and transfer cookies", async () => {
+				// Create a fresh user (no assessment session)
+				await createUser(apiContext, INVITEE_NO_ASSESSMENT);
+				const storageState = await apiContext.storageState();
+				await page.context().clearCookies();
+				await page.context().addCookies(storageState.cookies);
+			});
+
+			await test.step("navigate to invite page — shows Start Assessment", async () => {
+				await page.goto(`/invite/${loggedInInviteToken}`);
+				await page.waitForLoadState("networkidle");
+
+				const landingPage = page.getByTestId("invite-landing-page");
+				await expect(landingPage).toBeVisible({ timeout: 15_000 });
+
+				const startButton = page.getByTestId("start-assessment-button");
+				await expect(startButton).toBeVisible();
+			});
+
+			await test.step("click Start Your Assessment → claims cookie → /chat", async () => {
+				await page.getByTestId("start-assessment-button").click();
+
+				for (let attempt = 0; attempt < 3; attempt++) {
+					try {
+						await page.waitForURL(/\/chat\?sessionId=/, { timeout: 10_000 });
+						break;
+					} catch {
+						if (attempt === 2) throw new Error("Failed to reach /chat?sessionId= after 3 attempts");
+						await page.waitForTimeout(1_000);
+					}
+				}
+			});
+
+			await test.step("wait for Nerin greeting", async () => {
+				await page.getByTestId("chat-bubble").first().waitFor({ state: "visible" });
+			});
+
+			await test.step("send message → triggers farewell (already authenticated)", async () => {
+				const chatInput = page.getByTestId("chat-input");
+				await chatInput.waitFor({ state: "visible" });
+				await chatInput.fill("I enjoy deep conversations about philosophy.");
+				await page.getByTestId("chat-send-btn").click();
+			});
+
+			await test.step("finalization → results page (no auth gate for logged-in user)", async () => {
+				const reachedResults = await Promise.race([
+					page
+						.getByTestId("finalization-wait-screen")
+						.waitFor({ state: "visible", timeout: 15_000 })
+						.then(() => false),
+					page.waitForURL(/\/results\//, { timeout: 15_000 }).then(() => true),
+				]);
+
+				if (!reachedResults) {
+					await page.waitForURL(/\/results\//, { timeout: 15_000 });
+				}
+			});
+
+			await test.step("navigate back to invite page and accept via UI", async () => {
+				// Now the user has a completed assessment — invite page should show "Accept Invitation"
+				await page.goto(`/invite/${loggedInInviteToken}`);
+				await page.waitForLoadState("networkidle");
+
+				const acceptButton = page.getByTestId("accept-invitation-button");
+				await expect(acceptButton).toBeVisible({ timeout: 15_000 });
+				await acceptButton.click();
+				await page.waitForLoadState("networkidle");
+			});
+
+			await test.step("verify invitation was accepted", async () => {
+				await signInUser(apiContext, INVITER);
+				const statusRes = await apiContext.get(
+					`/api/relationship/public/invitations/${loggedInInviteToken}`,
+				);
+				expect(statusRes.ok()).toBe(true);
+				const statusBody = await statusRes.json();
+				expect(statusBody.invitation.status).toBe("accepted");
+			});
+		});
+
+		test("authenticated user refuses invitation", async ({ page, apiContext }) => {
+			// Create refuse-user first (apiContext is fresh/unauthenticated)
 			const refuseSessionId = await createAssessmentSession(apiContext);
 			await createUser(apiContext, {
 				...INVITEE_REFUSE,
@@ -193,7 +388,21 @@ test.describe
 				);
 			}
 
-			// Transfer cookies to browser
+			// Sign in as inviter, grant a credit, and create a new invitation
+			await signInUser(apiContext, INVITER);
+			const inviterUser = await getUserByEmail(INVITER.email);
+			if (inviterUser) await grantCredits(inviterUser.id, 1);
+
+			const res = await apiContext.post("/api/relationship/invitations", {
+				data: { personalMessage: "Another invitation" },
+			});
+			expect(res.ok()).toBe(true);
+
+			const body = await res.json();
+			const refuseToken = body.invitation.invitationToken;
+
+			// Sign back in as refuse-user and transfer cookies to browser
+			await signInUser(apiContext, INVITEE_REFUSE);
 			const storageState = await apiContext.storageState();
 			await page.context().addCookies(storageState.cookies);
 
@@ -201,11 +410,12 @@ test.describe
 			await page.goto(`/invite/${refuseToken}`);
 			await page.waitForLoadState("networkidle");
 
-			// Click refuse
+			// Click refuse — on success, navigates to /
 			const refuseLink = page.getByTestId("refuse-invitation-link");
 			await expect(refuseLink).toBeVisible({ timeout: 15_000 });
 			await refuseLink.click();
-			await page.waitForLoadState("networkidle");
+			// Refuse navigates to / — wait for the landing page hero
+			await page.getByTestId("hero-section").waitFor({ state: "visible", timeout: 15_000 });
 
 			// Verify invitation status is refused
 			const statusRes = await apiContext.get(`/api/relationship/public/invitations/${refuseToken}`);

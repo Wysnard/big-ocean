@@ -390,6 +390,7 @@ function ChatInputBar({
 				<textarea
 					ref={textareaRef}
 					data-slot="chat-input"
+					data-testid="chat-input"
 					value={inputValue}
 					onChange={(e) => {
 						setInputValue(e.target.value);
@@ -572,6 +573,7 @@ function ChatContent({
 												</Avatar>
 												<div
 													data-slot="chat-bubble"
+													data-testid="chat-bubble"
 													data-message-id={msg.id}
 													className="max-w-[88%] rounded-[18px] rounded-br-[5px] bg-gradient-to-br from-primary to-secondary px-[22px] py-4 text-left text-white min-[1200px]:max-w-[92%]"
 												>

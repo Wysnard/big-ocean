@@ -39,7 +39,11 @@ export function ChatAuthGate({ sessionId }: ChatAuthGateProps) {
 	};
 
 	return (
-		<div data-slot="chat-auth-gate" className="relative z-1 mb-9 motion-safe:animate-fade-in-up">
+		<div
+			data-slot="chat-auth-gate"
+			data-testid="chat-auth-gate"
+			className="relative z-1 mb-9 motion-safe:animate-fade-in-up"
+		>
 			<NerinMessage>
 				<p>Create an account so your portrait is here when it's ready.</p>
 			</NerinMessage>

@@ -5,6 +5,7 @@ export function HeroSection() {
 	return (
 		<section
 			data-slot="hero-section"
+			data-testid="hero-section"
 			className="relative grid min-h-screen items-center gap-11 px-6 py-24 max-[900px]:grid-cols-1 max-[900px]:text-center min-[900px]:grid-cols-[1.1fr_1fr] min-[900px]:px-20 min-[900px]:py-[100px]"
 		>
 			{/* Left: Text content */}

@@ -8,11 +8,11 @@
  *   - Anonymous → claim cookie, redirect to /chat
  */
 
-import { createFileRoute, isRedirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { InvitationDetailResponse } from "@workspace/contracts";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
 	InvitationApiError,
 	useAcceptInvitation,
@@ -29,20 +29,12 @@ type ErrorState = {
 };
 
 type LoaderData =
-	| {
-			invitation: InvitationDetailResponse;
-			userState: "anonymous" | "authenticated-no-assessment" | "authenticated-with-assessment";
-			errorState?: never;
-	  }
-	| {
-			errorState: ErrorState;
-			invitation?: never;
-			userState?: never;
-	  };
+	| { invitation: InvitationDetailResponse; errorState?: never }
+	| { errorState: ErrorState; invitation?: never };
 
 export const Route = createFileRoute("/invite/$token")({
-	beforeLoad: async ({ params }): Promise<LoaderData> => {
-		// Validate token via API
+	loader: async ({ params }): Promise<LoaderData> => {
+		// Validate token via API (public endpoint, no auth needed)
 		const res = await fetch(`${API_URL}/api/relationship/public/invitations/${params.token}`, {
 			credentials: "include",
 		});
@@ -58,7 +50,6 @@ export const Route = createFileRoute("/invite/$token")({
 
 		const invitation: InvitationDetailResponse = await res.json();
 
-		// Check if invitation is expired or already responded
 		if (invitation.invitation.status !== "pending") {
 			return {
 				errorState: {
@@ -68,40 +59,23 @@ export const Route = createFileRoute("/invite/$token")({
 			};
 		}
 
-		// Determine user state
-		const { data: session } = await getSession();
-
-		if (!session?.user) {
-			return { invitation, userState: "anonymous" as const };
-		}
-
-		// Check if user has a completed assessment
-		try {
-			const sessionsRes = await fetch(`${API_URL}/api/assessment/sessions`, {
-				credentials: "include",
-			});
-			if (sessionsRes.ok) {
-				const data = await sessionsRes.json();
-				const hasCompleted = data.sessions?.some((s: { status: string }) => s.status === "completed");
-				if (hasCompleted) {
-					return { invitation, userState: "authenticated-with-assessment" as const };
-				}
-			}
-		} catch (e) {
-			if (isRedirect(e)) throw e;
-			// Fail-open: treat as no assessment
-		}
-
-		return { invitation, userState: "authenticated-no-assessment" as const };
+		return { invitation };
 	},
 	component: InviteLandingPage,
 });
+
+type UserState =
+	| "loading"
+	| "anonymous"
+	| "authenticated-no-assessment"
+	| "authenticated-with-assessment";
 
 function InviteLandingPage() {
 	const data = Route.useLoaderData();
 	const params = Route.useParams();
 	const navigate = useNavigate();
 	const [actionError, setActionError] = useState<string | null>(null);
+	const [userState, setUserState] = useState<UserState>("loading");
 
 	const claimMutation = useClaimInvitation();
 	const acceptMutation = useAcceptInvitation();
@@ -110,9 +84,50 @@ function InviteLandingPage() {
 	const loading = claimMutation.isPending || acceptMutation.isPending || refuseMutation.isPending;
 
 	const isError = "errorState" in data && !!data.errorState;
+
+	// Determine user state client-side (cookies available in browser)
+	useEffect(() => {
+		if (isError) return;
+
+		let cancelled = false;
+		(async () => {
+			const { data: session } = await getSession();
+
+			if (cancelled) return;
+			if (!session?.user) {
+				setUserState("anonymous");
+				return;
+			}
+
+			try {
+				const sessionsRes = await fetch(`${API_URL}/api/assessment/sessions`, {
+					credentials: "include",
+				});
+				if (cancelled) return;
+				if (sessionsRes.ok) {
+					const sessionsData = await sessionsRes.json();
+					const hasCompleted = sessionsData.sessions?.some(
+						(s: { status: string }) => s.status === "completed",
+					);
+					if (hasCompleted) {
+						setUserState("authenticated-with-assessment");
+						return;
+					}
+				}
+			} catch {
+				// Fail-open: treat as no assessment
+			}
+
+			if (!cancelled) setUserState("authenticated-no-assessment");
+		})();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [isError]);
+
 	const inviterName = !isError ? data.invitation.inviterDisplayName || "Someone" : "Someone";
 	const personalMessage = !isError ? (data.invitation.invitation.personalMessage ?? null) : null;
-	const userState = !isError ? data.userState : "anonymous";
 
 	const claimCookieAndRedirect = useCallback(() => {
 		setActionError(null);
@@ -195,7 +210,11 @@ function InviteLandingPage() {
 					{actionError && <p className="text-destructive text-sm">{actionError}</p>}
 
 					<div className="space-y-3">
-						{userState === "authenticated-with-assessment" ? (
+						{userState === "loading" ? (
+							<Button className="w-full" size="lg" disabled>
+								Loading...
+							</Button>
+						) : userState === "authenticated-with-assessment" ? (
 							<Button
 								data-testid="accept-invitation-button"
 								className="w-full"
@@ -217,7 +236,7 @@ function InviteLandingPage() {
 							</Button>
 						)}
 
-						{userState !== "anonymous" && (
+						{userState !== "anonymous" && userState !== "loading" && (
 							<button
 								data-testid="refuse-invitation-link"
 								type="button"

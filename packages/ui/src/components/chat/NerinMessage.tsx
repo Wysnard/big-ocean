@@ -10,7 +10,12 @@ interface NerinMessageProps {
 /** Shared Nerin message layout — avatar at top-left with styled bubble. */
 export function NerinMessage({ children, className, messageId }: NerinMessageProps) {
 	return (
-		<div data-slot="chat-bubble" data-message-id={messageId} className={className}>
+		<div
+			data-slot="chat-bubble"
+			data-testid="chat-bubble"
+			data-message-id={messageId}
+			className={className}
+		>
 			<div className="flex flex-row gap-[11px]">
 				{/* Nerin avatar */}
 				<Avatar className="bg-gradient-to-br from-tertiary to-primary" aria-hidden="true">

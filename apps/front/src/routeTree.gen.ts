@@ -13,6 +13,7 @@ import { Route as R404RouteImport } from "./routes/404";
 import { Route as ChatIndexRouteImport } from "./routes/chat/index";
 import { Route as FinalizeAssessmentSessionIdRouteImport } from "./routes/finalize/$assessmentSessionId";
 import { Route as IndexRouteImport } from "./routes/index";
+import { Route as InviteTokenRouteImport } from "./routes/invite/$token";
 import { Route as LoginRouteImport } from "./routes/login";
 import { Route as ProfileRouteImport } from "./routes/profile";
 import { Route as PublicProfilePublicProfileIdRouteImport } from "./routes/public-profile.$publicProfileId";
@@ -65,6 +66,11 @@ const PublicProfilePublicProfileIdRoute = PublicProfilePublicProfileIdRouteImpor
 	path: "/public-profile/$publicProfileId",
 	getParentRoute: () => rootRouteImport,
 } as any);
+const InviteTokenRoute = InviteTokenRouteImport.update({
+	id: "/invite/$token",
+	path: "/invite/$token",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const FinalizeAssessmentSessionIdRoute = FinalizeAssessmentSessionIdRouteImport.update({
 	id: "/finalize/$assessmentSessionId",
 	path: "/finalize/$assessmentSessionId",
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
 	"/results": typeof ResultsRouteWithChildren;
 	"/signup": typeof SignupRoute;
 	"/finalize/$assessmentSessionId": typeof FinalizeAssessmentSessionIdRoute;
+	"/invite/$token": typeof InviteTokenRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
 	"/results": typeof ResultsRouteWithChildren;
 	"/signup": typeof SignupRoute;
 	"/finalize/$assessmentSessionId": typeof FinalizeAssessmentSessionIdRoute;
+	"/invite/$token": typeof InviteTokenRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat": typeof ChatIndexRoute;
@@ -104,6 +112,7 @@ export interface FileRoutesById {
 	"/results": typeof ResultsRouteWithChildren;
 	"/signup": typeof SignupRoute;
 	"/finalize/$assessmentSessionId": typeof FinalizeAssessmentSessionIdRoute;
+	"/invite/$token": typeof InviteTokenRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
 		| "/results"
 		| "/signup"
 		| "/finalize/$assessmentSessionId"
+		| "/invite/$token"
 		| "/public-profile/$publicProfileId"
 		| "/results/$assessmentSessionId"
 		| "/chat/";
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
 		| "/results"
 		| "/signup"
 		| "/finalize/$assessmentSessionId"
+		| "/invite/$token"
 		| "/public-profile/$publicProfileId"
 		| "/results/$assessmentSessionId"
 		| "/chat";
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
 		| "/results"
 		| "/signup"
 		| "/finalize/$assessmentSessionId"
+		| "/invite/$token"
 		| "/public-profile/$publicProfileId"
 		| "/results/$assessmentSessionId"
 		| "/chat/";
@@ -155,6 +167,7 @@ export interface RootRouteChildren {
 	ResultsRoute: typeof ResultsRouteWithChildren;
 	SignupRoute: typeof SignupRoute;
 	FinalizeAssessmentSessionIdRoute: typeof FinalizeAssessmentSessionIdRoute;
+	InviteTokenRoute: typeof InviteTokenRoute;
 	PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute;
 	ChatIndexRoute: typeof ChatIndexRoute;
 }
@@ -224,6 +237,13 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof PublicProfilePublicProfileIdRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
+		"/invite/$token": {
+			id: "/invite/$token";
+			path: "/invite/$token";
+			fullPath: "/invite/$token";
+			preLoaderRoute: typeof InviteTokenRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
 		"/finalize/$assessmentSessionId": {
 			id: "/finalize/$assessmentSessionId";
 			path: "/finalize/$assessmentSessionId";
@@ -252,6 +272,7 @@ const rootRouteChildren: RootRouteChildren = {
 	ResultsRoute: ResultsRouteWithChildren,
 	SignupRoute: SignupRoute,
 	FinalizeAssessmentSessionIdRoute: FinalizeAssessmentSessionIdRoute,
+	InviteTokenRoute: InviteTokenRoute,
 	PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,
 	ChatIndexRoute: ChatIndexRoute,
 };
