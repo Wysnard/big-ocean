@@ -40,3 +40,5 @@ export * from "./schemas/evidence";
 export * from "./schemas/ocean-code";
 // Assessment Token Security (Story 9.1)
 export { AssessmentTokenSecurity } from "./security/assessment-token";
+// Invite Token Security (Story 14.3)
+export { InviteTokenSecurity } from "./security/invite-token";

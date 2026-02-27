@@ -8,7 +8,13 @@
 
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema as S } from "effect";
-import { DatabaseError, InsufficientCreditsError, InvitationNotFoundError } from "../../errors";
+import {
+	DatabaseError,
+	InsufficientCreditsError,
+	InvitationAlreadyRespondedError,
+	InvitationNotFoundError,
+	SelfInvitationError,
+} from "../../errors";
 import { AuthMiddleware } from "../../middleware/auth";
 
 // ─── Schemas ──────────────────────────────────────────────────────────────
@@ -43,6 +49,14 @@ const InvitationDetailResponseSchema = S.Struct({
 	inviterDisplayName: S.optional(S.String),
 });
 
+const AcceptInvitationResponseSchema = S.Struct({
+	invitation: InvitationSchema,
+});
+
+const RefuseInvitationResponseSchema = S.Struct({
+	invitation: InvitationSchema,
+});
+
 // ─── Authenticated Group ──────────────────────────────────────────────────
 
 export const RelationshipGroup = HttpApiGroup.make("relationship")
@@ -58,6 +72,23 @@ export const RelationshipGroup = HttpApiGroup.make("relationship")
 			.addSuccess(ListInvitationsResponseSchema)
 			.addError(DatabaseError, { status: 500 }),
 	)
+	.add(
+		HttpApiEndpoint.post("acceptInvitation", "/invitations/:token/accept")
+			.setPath(S.Struct({ token: S.String }))
+			.addSuccess(AcceptInvitationResponseSchema)
+			.addError(InvitationNotFoundError, { status: 404 })
+			.addError(InvitationAlreadyRespondedError, { status: 409 })
+			.addError(SelfInvitationError, { status: 400 })
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
+		HttpApiEndpoint.post("refuseInvitation", "/invitations/:token/refuse")
+			.setPath(S.Struct({ token: S.String }))
+			.addSuccess(RefuseInvitationResponseSchema)
+			.addError(InvitationNotFoundError, { status: 404 })
+			.addError(InvitationAlreadyRespondedError, { status: 409 })
+			.addError(DatabaseError, { status: 500 }),
+	)
 	.middleware(AuthMiddleware)
 	.prefix("/relationship");
 
@@ -71,6 +102,13 @@ export const RelationshipPublicGroup = HttpApiGroup.make("relationshipPublic")
 			.addError(InvitationNotFoundError, { status: 404 })
 			.addError(DatabaseError, { status: 500 }),
 	)
+	.add(
+		HttpApiEndpoint.post("claimInvitation", "/invitations/:token/claim")
+			.setPath(S.Struct({ token: S.String }))
+			.addSuccess(S.Struct({ ok: S.Literal(true) }))
+			.addError(InvitationNotFoundError, { status: 404 })
+			.addError(DatabaseError, { status: 500 }),
+	)
 	.prefix("/relationship/public");
 
 // Export TypeScript types for frontend use
@@ -78,3 +116,5 @@ export type CreateInvitationPayload = typeof CreateInvitationPayloadSchema.Type;
 export type CreateInvitationResponse = typeof CreateInvitationResponseSchema.Type;
 export type ListInvitationsResponse = typeof ListInvitationsResponseSchema.Type;
 export type InvitationDetailResponse = typeof InvitationDetailResponseSchema.Type;
+export type AcceptInvitationResponse = typeof AcceptInvitationResponseSchema.Type;
+export type RefuseInvitationResponse = typeof RefuseInvitationResponseSchema.Type;

@@ -340,3 +340,25 @@ export class InvitationNotFoundError extends S.TaggedError<InvitationNotFoundErr
 		message: S.String,
 	},
 ) {}
+
+/**
+ * Invitation already responded error (409)
+ * Invitation has already been accepted or refused
+ */
+export class InvitationAlreadyRespondedError extends S.TaggedError<InvitationAlreadyRespondedError>()(
+	"InvitationAlreadyRespondedError",
+	{
+		message: S.String,
+	},
+) {}
+
+/**
+ * Self-invitation error (400)
+ * A user cannot accept their own invitation
+ */
+export class SelfInvitationError extends S.TaggedError<SelfInvitationError>()(
+	"SelfInvitationError",
+	{
+		message: S.String,
+	},
+) {}

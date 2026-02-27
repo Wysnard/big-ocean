@@ -18,7 +18,7 @@ import { LoggerRepository } from "@workspace/domain/repositories/logger.reposito
 import bcrypt from "bcryptjs";
 import { betterAuth } from "better-auth";
 import { haveIBeenPwned } from "better-auth/plugins";
-import { and, eq, isNull, or } from "drizzle-orm";
+import { and, eq, gt, isNull, ne, or, sql } from "drizzle-orm";
 import { drizzle as drizzleNodePg } from "drizzle-orm/node-postgres";
 import { Context, Effect, Layer, Redacted } from "effect";
 import pg from "pg";
@@ -81,6 +81,59 @@ export const BetterAuthLive = Layer.effect(
 
 			const anonymousSessionId = (body as Record<string, unknown>).anonymousSessionId;
 			return typeof anonymousSessionId === "string" ? anonymousSessionId : undefined;
+		};
+
+		/**
+		 * Read invite_token from request cookie header (Story 14.3)
+		 */
+		const getInviteToken = (context: Record<string, unknown> | undefined): string | undefined => {
+			if (!context) return undefined;
+			const headers = context.headers as Headers | undefined;
+			if (!headers) return undefined;
+			const cookieHeader = typeof headers.get === "function" ? headers.get("cookie") : undefined;
+			if (!cookieHeader) return undefined;
+			const match = cookieHeader.match(/(?:^|;\s*)invite_token=([^;]+)/);
+			return match?.[1];
+		};
+
+		/**
+		 * Accept invitation via raw Drizzle if invite_token cookie present (Story 14.3)
+		 * Silently swallows errors — the user retains their assessment regardless.
+		 */
+		const tryAcceptInvitationFromCookie = async (
+			userId: string,
+			context: Record<string, unknown> | undefined,
+		): Promise<void> => {
+			const inviteToken = getInviteToken(context);
+			if (!inviteToken) return;
+
+			try {
+				// Atomic accept: only updates if status=pending, not expired, not self
+				const result = await plainDb
+					.update(authSchema.relationshipInvitations)
+					.set({ inviteeUserId: userId, status: "accepted", updatedAt: new Date() })
+					.where(
+						and(
+							eq(authSchema.relationshipInvitations.invitationToken, inviteToken),
+							eq(authSchema.relationshipInvitations.status, "pending"),
+							gt(authSchema.relationshipInvitations.expiresAt, sql`NOW()`),
+							ne(authSchema.relationshipInvitations.inviterUserId, userId),
+						),
+					)
+					.returning({ id: authSchema.relationshipInvitations.id });
+
+				if (result.length > 0) {
+					logger.info(`Accepted invitation via cookie for user ${userId}`);
+				}
+			} catch (error) {
+				const msg = error instanceof Error ? error.message : String(error);
+				logger.error(`Failed to accept invitation from cookie for user ${userId}: ${msg}`);
+			}
+
+			// Clear the invite_token cookie via response headers
+			// Note: Better Auth hooks don't provide direct response header access,
+			// so the cookie will be cleared on the next claim or accept endpoint call.
+			// The frontend should call the accept endpoint explicitly for the AC5 path.
 		};
 
 		const linkAnonymousAssessmentSession = async (
@@ -221,9 +274,12 @@ export const BetterAuthLive = Layer.effect(
 							}
 
 							const anonymousSessionId = getAnonymousSessionId(context);
-							if (!anonymousSessionId) return;
+							if (anonymousSessionId) {
+								await linkAnonymousAssessmentSession(user.id, anonymousSessionId, "signup");
+							}
 
-							await linkAnonymousAssessmentSession(user.id, anonymousSessionId, "signup");
+							// Story 14.3: Accept invitation if invite_token cookie present
+							await tryAcceptInvitationFromCookie(user.id, context);
 						},
 					},
 				},
@@ -240,6 +296,9 @@ export const BetterAuthLive = Layer.effect(
 							if (!anonymousSessionId || !userId) return;
 
 							await linkAnonymousAssessmentSession(userId, anonymousSessionId, "signin");
+
+							// Story 14.3: Accept invitation if invite_token cookie present
+							await tryAcceptInvitationFromCookie(userId, context);
 						},
 					},
 				},

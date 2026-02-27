@@ -7,7 +7,12 @@
  */
 
 import { Context, Effect } from "effect";
-import { DatabaseError, InvitationNotFoundError } from "../errors/http.errors";
+import {
+	DatabaseError,
+	InvitationAlreadyRespondedError,
+	InvitationNotFoundError,
+	SelfInvitationError,
+} from "../errors/http.errors";
 import type { InvitationStatus, RelationshipInvitation } from "../types/relationship.types";
 
 export class RelationshipInvitationRepository extends Context.Tag(
@@ -34,5 +39,27 @@ export class RelationshipInvitationRepository extends Context.Tag(
 			id: string,
 			status: InvitationStatus,
 		) => Effect.Effect<RelationshipInvitation, DatabaseError | InvitationNotFoundError>;
+
+		readonly acceptInvitation: (input: {
+			token: string;
+			inviteeUserId: string;
+		}) => Effect.Effect<
+			RelationshipInvitation,
+			DatabaseError | InvitationNotFoundError | InvitationAlreadyRespondedError | SelfInvitationError
+		>;
+
+		readonly refuseInvitation: (input: {
+			token: string;
+		}) => Effect.Effect<
+			RelationshipInvitation,
+			DatabaseError | InvitationNotFoundError | InvitationAlreadyRespondedError
+		>;
+
+		readonly getByTokenWithInviterName: (
+			token: string,
+		) => Effect.Effect<
+			{ invitation: RelationshipInvitation; inviterDisplayName: string | undefined },
+			DatabaseError | InvitationNotFoundError
+		>;
 	}
 >() {}

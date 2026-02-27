@@ -5,7 +5,12 @@
  */
 
 import type { RelationshipInvitation } from "@workspace/domain";
-import { InvitationNotFoundError, RelationshipInvitationRepository } from "@workspace/domain";
+import {
+	InvitationAlreadyRespondedError,
+	InvitationNotFoundError,
+	RelationshipInvitationRepository,
+	SelfInvitationError,
+} from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
 const store = new Map<string, RelationshipInvitation>();
@@ -89,6 +94,96 @@ export const RelationshipInvitationDrizzleRepositoryLive = Layer.succeed(
 				const updated = { ...invitation, status, updatedAt: new Date() };
 				store.set(id, updated);
 				return updated;
+			}),
+
+		acceptInvitation: (input) =>
+			Effect.gen(function* () {
+				const id = tokenIndex.get(input.token);
+				if (!id) {
+					return yield* Effect.fail(
+						new InvitationNotFoundError({ message: "Invitation not found or expired" }),
+					);
+				}
+				const invitation = store.get(id);
+				if (!invitation || invitation.expiresAt < new Date()) {
+					return yield* Effect.fail(
+						new InvitationNotFoundError({ message: "Invitation not found or expired" }),
+					);
+				}
+				if (invitation.inviterUserId === input.inviteeUserId) {
+					return yield* Effect.fail(
+						new SelfInvitationError({ message: "You cannot accept your own invitation" }),
+					);
+				}
+				if (invitation.status !== "pending") {
+					return yield* Effect.fail(
+						new InvitationAlreadyRespondedError({
+							message: `Invitation has already been ${invitation.status}`,
+						}),
+					);
+				}
+				const updated: RelationshipInvitation = {
+					...invitation,
+					inviteeUserId: input.inviteeUserId,
+					status: "accepted",
+					updatedAt: new Date(),
+				};
+				store.set(id, updated);
+				return updated;
+			}),
+
+		refuseInvitation: (input) =>
+			Effect.gen(function* () {
+				const id = tokenIndex.get(input.token);
+				if (!id) {
+					return yield* Effect.fail(
+						new InvitationNotFoundError({ message: "Invitation not found or expired" }),
+					);
+				}
+				const invitation = store.get(id);
+				if (!invitation || invitation.expiresAt < new Date()) {
+					return yield* Effect.fail(
+						new InvitationNotFoundError({ message: "Invitation not found or expired" }),
+					);
+				}
+				if (invitation.status !== "pending") {
+					return yield* Effect.fail(
+						new InvitationAlreadyRespondedError({
+							message: `Invitation has already been ${invitation.status}`,
+						}),
+					);
+				}
+				const updated: RelationshipInvitation = {
+					...invitation,
+					status: "refused",
+					updatedAt: new Date(),
+				};
+				store.set(id, updated);
+				return updated;
+			}),
+
+		getByTokenWithInviterName: (token) =>
+			Effect.gen(function* () {
+				const id = tokenIndex.get(token);
+				if (!id) {
+					return yield* Effect.fail(
+						new InvitationNotFoundError({ message: `Invitation not found: ${token}` }),
+					);
+				}
+				const invitation = store.get(id);
+				if (!invitation) {
+					return yield* Effect.fail(
+						new InvitationNotFoundError({ message: `Invitation not found: ${token}` }),
+					);
+				}
+				const mapped =
+					invitation.status === "pending" && invitation.expiresAt < new Date()
+						? { ...invitation, status: "expired" as const }
+						: invitation;
+				return {
+					invitation: mapped,
+					inviterDisplayName: "Test User" as string | undefined,
+				};
 			}),
 	}),
 );
