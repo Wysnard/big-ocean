@@ -32,7 +32,7 @@ import {
 	SessionNotFound,
 	Unauthorized,
 } from "../../errors";
-import { AuthMiddleware } from "../../middleware/auth";
+import { OptionalAuthMiddleware } from "../../middleware/auth";
 import { OceanCode4Schema, OceanCode5Schema } from "../../schemas/ocean-code";
 
 /**
@@ -279,7 +279,7 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 			.addError(Unauthorized, { status: 401 })
 			.addError(DatabaseError, { status: 500 }),
 	)
-	.middleware(AuthMiddleware)
+	.middleware(OptionalAuthMiddleware)
 	.prefix("/assessment");
 
 // Export TypeScript types for frontend use

@@ -15,7 +15,7 @@ import {
 	SessionNotFound,
 	Unauthorized,
 } from "../../errors";
-import { AuthMiddleware } from "../../middleware/auth";
+import { OptionalAuthMiddleware } from "../../middleware/auth";
 import { OceanCode5Schema } from "../../schemas/ocean-code";
 
 /**
@@ -103,7 +103,7 @@ export const ProfileGroup = HttpApiGroup.make("profile")
 			.addError(Unauthorized, { status: 401 })
 			.addError(DatabaseError, { status: 500 }),
 	)
-	.middleware(AuthMiddleware)
+	.middleware(OptionalAuthMiddleware)
 	.prefix("/public-profile");
 
 // Export TypeScript types for frontend use

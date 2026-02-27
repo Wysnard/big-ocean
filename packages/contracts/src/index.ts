@@ -30,8 +30,11 @@ export { ProfileGroup } from "./http/groups/profile";
 // Purchase HTTP Schemas and Types (Story 14.1)
 export * from "./http/groups/purchase";
 export { PurchaseGroup, PurchaseWebhookGroup } from "./http/groups/purchase";
+// Relationship HTTP Schemas and Types (Story 14.2)
+export * from "./http/groups/relationship";
+export { RelationshipGroup, RelationshipPublicGroup } from "./http/groups/relationship";
 // Auth Middleware (Story 1.4)
-export { AuthMiddleware } from "./middleware/auth";
+export { AuthMiddleware, OptionalAuthMiddleware } from "./middleware/auth";
 // Shared Schemas & Types
 export * from "./schemas/evidence";
 export * from "./schemas/ocean-code";

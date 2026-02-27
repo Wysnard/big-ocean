@@ -30,6 +30,7 @@ import {
 	FacetEvidenceNoopRepositoryLive,
 	FinalizationEvidenceDrizzleRepositoryLive,
 	FinanalyzerAnthropicRepositoryLive,
+	FinanalyzerMockRepositoryLive,
 	OrchestratorGraphLangGraphRepositoryLive,
 	OrchestratorLangGraphRepositoryLive,
 	PaymentGatewayPolarRepositoryLive,
@@ -39,6 +40,7 @@ import {
 	ProfileAccessLogDrizzleRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
+	RelationshipInvitationDrizzleRepositoryLive,
 	TeaserPortraitAnthropicRepositoryLive,
 	TeaserPortraitMockRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
@@ -56,8 +58,9 @@ import { HealthGroupLive } from "./handlers/health";
 import { PortraitGroupLive } from "./handlers/portrait";
 import { ProfileGroupLive } from "./handlers/profile";
 import { PurchaseGroupLive, PurchaseWebhookGroupLive } from "./handlers/purchase";
+import { RelationshipGroupLive, RelationshipPublicGroupLive } from "./handlers/relationship";
 import { WaitlistGroupLive } from "./handlers/waitlist";
-import { AuthMiddlewareLive } from "./middleware/auth.middleware";
+import { AuthMiddlewareLive, OptionalAuthMiddlewareLive } from "./middleware/auth.middleware";
 import { createBetterAuthHandler } from "./middleware/better-auth";
 
 /**
@@ -128,6 +131,17 @@ const TeaserPortraitLayer =
 		: TeaserPortraitAnthropicRepositoryLive;
 
 /**
+ * FinAnalyzer Layer Selection
+ *
+ * Uses mock implementation when MOCK_LLM=true (for integration testing).
+ * Uses real Anthropic Sonnet implementation otherwise (production/development).
+ */
+const FinanalyzerLayer =
+	process.env.MOCK_LLM === "true"
+		? FinanalyzerMockRepositoryLive
+		: FinanalyzerAnthropicRepositoryLive;
+
+/**
  * Redis Layer - provides Redis for CostGuard
  */
 const RedisLayer = RedisIoRedisRepositoryLive.pipe(Layer.provide(InfrastructureLayer));
@@ -181,7 +195,7 @@ const RepositoryLayers = Layer.mergeAll(
 	AssessmentResultDrizzleRepositoryLive,
 	ConversationEvidenceDrizzleRepositoryLive,
 	ConversanalyzerAnthropicRepositoryLive,
-	FinanalyzerAnthropicRepositoryLive,
+	FinanalyzerLayer,
 	FinalizationEvidenceDrizzleRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
@@ -193,6 +207,7 @@ const RepositoryLayers = Layer.mergeAll(
 	PortraitDrizzleRepositoryLive,
 	PaymentGatewayPolarRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
+	RelationshipInvitationDrizzleRepositoryLive,
 	TeaserPortraitLayer,
 	WaitlistDrizzleRepositoryLive,
 );
@@ -213,7 +228,9 @@ const ServiceLayers = RepositoryLayers.pipe(Layer.provide(InfrastructureLayer));
  * .middleware(AuthMiddleware) declaration). Layer.mergeAll doesn't cross-resolve
  * dependencies, so we provide AuthMiddleware explicitly to ApiLive.
  */
-const AuthMiddlewareLayer = AuthMiddlewareLive.pipe(Layer.provide(InfrastructureLayer));
+const AuthMiddlewareLayer = Layer.mergeAll(AuthMiddlewareLive, OptionalAuthMiddlewareLive).pipe(
+	Layer.provide(InfrastructureLayer),
+);
 
 const HttpGroupsLive = Layer.mergeAll(
 	HealthGroupLive,
@@ -223,6 +240,8 @@ const HttpGroupsLive = Layer.mergeAll(
 	EvidenceGroupLive,
 	PurchaseWebhookGroupLive,
 	PurchaseGroupLive,
+	RelationshipGroupLive,
+	RelationshipPublicGroupLive,
 	WaitlistGroupLive,
 	LoggerPinoRepositoryLive,
 );

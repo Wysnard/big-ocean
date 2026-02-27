@@ -50,6 +50,7 @@ export { FACET_STEERING_HINTS } from "./repositories/facet-steering";
 export { FinalizationEvidenceDrizzleRepositoryLive } from "./repositories/finalization-evidence.drizzle.repository";
 // FinAnalyzer repository implementation (Story 11.2)
 export { FinanalyzerAnthropicRepositoryLive } from "./repositories/finanalyzer.anthropic.repository";
+export { FinanalyzerMockRepositoryLive } from "./repositories/finanalyzer.mock.repository";
 // Logger repository implementation
 export { LoggerPinoRepositoryLive } from "./repositories/logger.pino.repository";
 // Nerin agent repository implementations
@@ -92,6 +93,8 @@ export { PublicProfileDrizzleRepositoryLive } from "./repositories/public-profil
 export { PurchaseEventDrizzleRepositoryLive } from "./repositories/purchase-event.drizzle.repository";
 // Redis repository implementation
 export { RedisIoRedisRepositoryLive } from "./repositories/redis.ioredis.repository";
+// Relationship invitation repository implementation (Story 14.2)
+export { RelationshipInvitationDrizzleRepositoryLive } from "./repositories/relationship-invitation.drizzle.repository";
 // Teaser portrait repository implementations (Story 11.5)
 export { TeaserPortraitAnthropicRepositoryLive } from "./repositories/teaser-portrait.anthropic.repository";
 export { TeaserPortraitMockRepositoryLive } from "./repositories/teaser-portrait.mock.repository";

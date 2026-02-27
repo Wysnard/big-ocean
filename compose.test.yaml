@@ -44,9 +44,6 @@ services:
       POSTGRES_PASSWORD: test_password
     ports:
       - "5433:5432"  # Host port 5433 → Container port 5432 (avoids conflict with dev)
-    volumes:
-      # Initialize database with test schema (includes all tables)
-      - ./docker/init-db-test.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       # Validates PostgreSQL is ready to accept connections
       test: ["CMD-SHELL", "pg_isready -U test_user -d bigocean_test"]

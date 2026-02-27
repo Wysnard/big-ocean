@@ -17,3 +17,8 @@
 import { Context } from "effect";
 
 export class CurrentUser extends Context.Tag("CurrentUser")<CurrentUser, string | undefined>() {}
+
+export class AuthenticatedUser extends Context.Tag("AuthenticatedUser")<
+	AuthenticatedUser,
+	string
+>() {}

@@ -9,7 +9,7 @@
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema as S } from "effect";
 import { DatabaseError, WebhookVerificationError } from "../../errors";
-import { AuthMiddleware } from "../../middleware/auth";
+import { OptionalAuthMiddleware } from "../../middleware/auth";
 
 /**
  * Webhook Response Schema
@@ -71,7 +71,7 @@ export const PurchaseGroup = HttpApiGroup.make("purchase")
 			.addSuccess(GetCreditsResponseSchema)
 			.addError(DatabaseError, { status: 500 }),
 	)
-	.middleware(AuthMiddleware)
+	.middleware(OptionalAuthMiddleware)
 	.prefix("/purchase");
 
 // Export TypeScript types for frontend use

@@ -96,6 +96,14 @@ export default defineConfig({
 			dependencies: ["waitlist"],
 		},
 
+		// ── Invitation system: create, list, token lookup, credit guard ──
+		// Runs after waitlist to avoid Redis counter contention
+		{
+			name: "invitation-system",
+			testMatch: "specs/invitation-system.spec.ts",
+			dependencies: ["waitlist"],
+		},
+
 		// ── Evidence highlighting: authed owner with seeded evidence ─────
 		// Runs after auth-owner because seedResultsData deletes the owner's
 		// completed session (unique constraint), which auth-owner tests depend on

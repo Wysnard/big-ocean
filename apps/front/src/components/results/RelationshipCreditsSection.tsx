@@ -1,15 +1,17 @@
 /**
- * Relationship Credits Section (Story 14.1)
+ * Relationship Credits Section (Story 14.1, extended Story 14.2)
  *
- * Displays available relationship credits and purchase options
- * on the results page for authenticated users with completed assessments.
+ * Displays available relationship credits, purchase options,
+ * and invitation creation flow on the results page.
  */
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { GetCreditsResponse } from "@workspace/contracts";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { CreateInvitationResponse, GetCreditsResponse } from "@workspace/contracts";
 import { Button } from "@workspace/ui/components/button";
-import { Heart, Loader2, Users } from "lucide-react";
+import { Input } from "@workspace/ui/components/input";
+import { Heart, Loader2, Send, Users } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { InvitationBottomSheet } from "@/components/relationship/InvitationBottomSheet";
 import { useAuth } from "@/hooks/use-auth";
 import { openPolarCheckout } from "@/lib/polar-checkout";
 
@@ -34,6 +36,29 @@ function useCredits(enabled: boolean) {
 	});
 }
 
+function useCreateInvitation() {
+	const queryClient = useQueryClient();
+	return useMutation<CreateInvitationResponse, Error, { personalMessage?: string }>({
+		mutationFn: async ({ personalMessage }) => {
+			const response = await fetch(`${API_URL}/api/relationship/invitations`, {
+				method: "POST",
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ personalMessage }),
+			});
+			if (!response.ok) {
+				const errBody = await response.json().catch(() => ({}));
+				throw new Error(errBody.message || `HTTP ${response.status}`);
+			}
+			return response.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["purchase", "credits"] });
+			queryClient.invalidateQueries({ queryKey: ["relationship", "invitations"] });
+		},
+	});
+}
+
 export function RelationshipCreditsSection() {
 	const { user } = useAuth();
 	const { data, isLoading } = useCredits(!!user);
@@ -41,6 +66,12 @@ export function RelationshipCreditsSection() {
 	const [isPurchasing, setIsPurchasing] = useState(false);
 	const pollTimerRef = useRef<ReturnType<typeof setInterval>>();
 	const creditsBefore = useRef<number | null>(null);
+
+	// Invitation creation state
+	const [personalMessage, setPersonalMessage] = useState("");
+	const [showMessageInput, setShowMessageInput] = useState(false);
+	const [invitationResult, setInvitationResult] = useState<CreateInvitationResponse | null>(null);
+	const createInvitation = useCreateInvitation();
 
 	// Cleanup polling on unmount
 	useEffect(() => {
@@ -58,12 +89,9 @@ export function RelationshipCreditsSection() {
 	}, []);
 
 	const pollAndRefresh = useCallback(() => {
-		// Snapshot current credits to detect change
 		creditsBefore.current = data?.availableCredits ?? null;
-
-		// Poll credits endpoint to pick up webhook-processed purchase
 		let attempts = 0;
-		const maxAttempts = 15; // 30s at 2s interval
+		const maxAttempts = 15;
 		pollTimerRef.current = setInterval(async () => {
 			attempts++;
 			if (attempts >= maxAttempts) {
@@ -78,12 +106,10 @@ export function RelationshipCreditsSection() {
 		async (checkoutLink: string) => {
 			if (!user?.id || !checkoutLink) return;
 			setIsPurchasing(true);
-
 			const result = await openPolarCheckout({
 				checkoutLinkUrl: checkoutLink,
 				userId: user.id,
 			});
-
 			if (result.success) {
 				pollAndRefresh();
 			} else {
@@ -93,7 +119,6 @@ export function RelationshipCreditsSection() {
 		[user?.id, pollAndRefresh],
 	);
 
-	// Stop polling once credits increase after purchase
 	useEffect(() => {
 		if (
 			isPurchasing &&
@@ -105,7 +130,6 @@ export function RelationshipCreditsSection() {
 		}
 	}, [isPurchasing, data?.availableCredits, stopPolling]);
 
-	// Hidden when loading, no data, or no completed assessment
 	if (isLoading) {
 		return (
 			<div
@@ -148,15 +172,55 @@ export function RelationshipCreditsSection() {
 			</div>
 
 			{hasCredits ? (
-				<Button
-					data-testid="invite-button"
-					className="w-full min-h-11"
-					disabled
-					title="Coming soon in Story 14-2"
-				>
-					<Users className="h-4 w-4 mr-2" />
-					Invite Someone
-				</Button>
+				<div className="space-y-2">
+					{showMessageInput ? (
+						<div className="space-y-2">
+							<Input
+								data-testid="personal-message-input"
+								placeholder="Add a personal message (optional)"
+								value={personalMessage}
+								onChange={(e) => setPersonalMessage(e.target.value)}
+								maxLength={500}
+							/>
+							<Button
+								data-testid="send-invitation-button"
+								className="w-full min-h-11"
+								disabled={createInvitation.isPending}
+								onClick={() => {
+									createInvitation.mutate(
+										{ personalMessage: personalMessage || undefined },
+										{
+											onSuccess: (result) => {
+												setInvitationResult(result);
+												setShowMessageInput(false);
+												setPersonalMessage("");
+											},
+										},
+									);
+								}}
+							>
+								{createInvitation.isPending ? (
+									<Loader2 className="h-4 w-4 mr-2 motion-safe:animate-spin" />
+								) : (
+									<Send className="h-4 w-4 mr-2" />
+								)}
+								Send Invitation
+							</Button>
+						</div>
+					) : (
+						<Button
+							data-testid="invite-button"
+							className="w-full min-h-11"
+							onClick={() => setShowMessageInput(true)}
+						>
+							<Users className="h-4 w-4 mr-2" />
+							Invite Someone
+						</Button>
+					)}
+					{createInvitation.isError && (
+						<p className="text-sm text-destructive">{createInvitation.error.message}</p>
+					)}
+				</div>
 			) : (
 				<div className="space-y-2">
 					<Button
@@ -187,6 +251,17 @@ export function RelationshipCreditsSection() {
 						Get 5 Credits — €15
 					</Button>
 				</div>
+			)}
+
+			{/* Invitation share sheet */}
+			{invitationResult && (
+				<InvitationBottomSheet
+					open={!!invitationResult}
+					shareUrl={invitationResult.shareUrl}
+					invitationToken={invitationResult.invitation.invitationToken}
+					personalMessage={invitationResult.invitation.personalMessage ?? undefined}
+					onClose={() => setInvitationResult(null)}
+				/>
 			)}
 		</div>
 	);
