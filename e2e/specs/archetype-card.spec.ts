@@ -104,7 +104,7 @@ test("archetype share card renders preview and supports download", async ({ page
 
 		const [download] = await Promise.all([
 			page.waitForEvent("download", { timeout: 10_000 }),
-			shareCard.getByText("Download").click(),
+			shareCard.getByRole("button", { name: "Download", exact: true }).click(),
 		]);
 
 		expect(download.suggestedFilename()).toMatch(/\.png$/);
