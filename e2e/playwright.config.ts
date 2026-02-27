@@ -104,10 +104,10 @@ export default defineConfig({
 			dependencies: ["waitlist"],
 		},
 
-		// ── Invitee assessment flow: landing page, accept, refuse, full chat flows ──
+		// ── Relationship analysis: invitation flows + analysis generation & viewing ──
 		{
-			name: "invitee-flow",
-			testMatch: "specs/invitee-flow.spec.ts",
+			name: "relationship-analysis",
+			testMatch: "specs/relationship-analysis.spec.ts",
 			dependencies: ["waitlist"],
 		},
 

@@ -1,12 +1,13 @@
 /**
- * Invitee Assessment Flow E2E Tests (Story 14.3)
+ * Relationship Analysis Flow E2E Tests (Stories 14.3 + 14.4)
  *
- * Browser-driven tests for the invitation landing page and accept/refuse flows:
+ * Browser-driven tests for the invitation and relationship analysis flows:
  * - Landing page shows inviter info and personal message
  * - Existing user with completed assessment can accept directly
  * - Anonymous invitee: full chat flow → signup → finalization → auto-accept via cookie
  * - Logged-in invitee (no assessment): full chat flow → finalization → auto-accept
  * - Refuse flow updates invitation status
+ * - Accepted invitation triggers analysis generation → both users can view analysis
  */
 
 import { execSync } from "node:child_process";
@@ -42,7 +43,7 @@ const INVITEE_REFUSE = {
 const PERSONAL_MESSAGE = "Let's see how we compare!";
 
 test.describe
-	.serial("Invitee Assessment Flow", () => {
+	.serial("Relationship Analysis Flow", () => {
 		test.setTimeout(60_000);
 
 		const todayKey = new Date().toISOString().slice(0, 10);
@@ -50,6 +51,7 @@ test.describe
 
 		let invitationToken: string;
 		let inviterSessionId: string;
+		let inviteeAcceptSessionId: string;
 
 		test.beforeAll(() => {
 			execSync(`docker exec bigocean-redis-e2e redis-cli DEL ${redisKey}`);
@@ -112,7 +114,8 @@ test.describe
 			apiContext,
 		}) => {
 			// Create invitee with completed assessment
-			const inviteeSessionId = await createAssessmentSession(apiContext);
+			inviteeAcceptSessionId = await createAssessmentSession(apiContext);
+			const inviteeSessionId = inviteeAcceptSessionId;
 			await createUser(apiContext, {
 				...INVITEE_ACCEPT,
 				anonymousSessionId: inviteeSessionId,
@@ -363,6 +366,65 @@ test.describe
 				expect(statusRes.ok()).toBe(true);
 				const statusBody = await statusRes.json();
 				expect(statusBody.invitation.status).toBe("accepted");
+			});
+		});
+
+		test("existing user accepts invitation and views relationship analysis", async ({
+			page,
+			apiContext,
+		}) => {
+			test.setTimeout(60_000);
+
+			await test.step("sign in as invitee and navigate to results", async () => {
+				await signInUser(apiContext, INVITEE_ACCEPT);
+				const storageState = await apiContext.storageState();
+				await page.context().clearCookies();
+				await page.context().addCookies(storageState.cookies);
+				await page.goto(`/results/${inviteeAcceptSessionId}`);
+				await page.waitForLoadState("networkidle");
+			});
+
+			await test.step("wait for RelationshipCard ready state", async () => {
+				const readyCard = page.getByTestId("relationship-card-state-ready");
+				await expect(readyCard).toBeVisible({ timeout: 30_000 });
+			});
+
+			await test.step("click Read Analysis and verify page loads", async () => {
+				await page.getByRole("link", { name: "Read Analysis" }).click();
+				await page.waitForURL(/\/relationship\//, { timeout: 10_000 });
+
+				const analysisPage = page.getByTestId("relationship-analysis-page");
+				await expect(analysisPage).toBeVisible({ timeout: 15_000 });
+
+				// Verify mock analysis content rendered
+				await expect(page.getByText("The Dynamic Between You")).toBeVisible({ timeout: 10_000 });
+			});
+
+			await test.step("verify inviter can also view the analysis", async () => {
+				// Capture the analysis URL
+				const analysisUrl = page.url();
+
+				// Sign in as inviter
+				await signInUser(apiContext, INVITER);
+				const storageState = await apiContext.storageState();
+				await page.context().clearCookies();
+				await page.context().addCookies(storageState.cookies);
+
+				// Navigate to same analysis page
+				await page.goto(analysisUrl);
+				await page.waitForLoadState("networkidle");
+
+				const analysisPage = page.getByTestId("relationship-analysis-page");
+				await expect(analysisPage).toBeVisible({ timeout: 15_000 });
+				await expect(page.getByText("The Dynamic Between You")).toBeVisible({ timeout: 10_000 });
+			});
+
+			await test.step("verify inviter results page also shows ready card", async () => {
+				await page.goto(`/results/${inviterSessionId}`);
+				await page.waitForLoadState("networkidle");
+
+				const readyCard = page.getByTestId("relationship-card-state-ready");
+				await expect(readyCard).toBeVisible({ timeout: 30_000 });
 			});
 		});
 
