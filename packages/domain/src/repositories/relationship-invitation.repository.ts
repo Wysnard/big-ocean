@@ -55,6 +55,10 @@ export class RelationshipInvitationRepository extends Context.Tag(
 			DatabaseError | InvitationNotFoundError | InvitationAlreadyRespondedError
 		>;
 
+		readonly listByInvitee: (
+			userId: string,
+		) => Effect.Effect<ReadonlyArray<RelationshipInvitation>, DatabaseError>;
+
 		readonly getByTokenWithInviterName: (
 			token: string,
 		) => Effect.Effect<

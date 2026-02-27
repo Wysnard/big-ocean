@@ -28,6 +28,8 @@ export {
 	ProfileNotFound,
 	ProfilePrivate,
 	RateLimitExceeded,
+	RelationshipAnalysisNotFoundError,
+	RelationshipAnalysisUnauthorizedError,
 	SelfInvitationError,
 	SessionCompletedError,
 	SessionExpired,

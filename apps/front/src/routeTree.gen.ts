@@ -17,6 +17,7 @@ import { Route as InviteTokenRouteImport } from "./routes/invite/$token";
 import { Route as LoginRouteImport } from "./routes/login";
 import { Route as ProfileRouteImport } from "./routes/profile";
 import { Route as PublicProfilePublicProfileIdRouteImport } from "./routes/public-profile.$publicProfileId";
+import { Route as RelationshipAnalysisIdRouteImport } from "./routes/relationship/$analysisId";
 import { Route as ResultsRouteImport } from "./routes/results";
 import { Route as ResultsAssessmentSessionIdRouteImport } from "./routes/results/$assessmentSessionId";
 import { Route as SignupRouteImport } from "./routes/signup";
@@ -71,6 +72,11 @@ const InviteTokenRoute = InviteTokenRouteImport.update({
 	path: "/invite/$token",
 	getParentRoute: () => rootRouteImport,
 } as any);
+const RelationshipAnalysisIdRoute = RelationshipAnalysisIdRouteImport.update({
+	id: "/relationship/$analysisId",
+	path: "/relationship/$analysisId",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const FinalizeAssessmentSessionIdRoute = FinalizeAssessmentSessionIdRouteImport.update({
 	id: "/finalize/$assessmentSessionId",
 	path: "/finalize/$assessmentSessionId",
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
 	"/finalize/$assessmentSessionId": typeof FinalizeAssessmentSessionIdRoute;
 	"/invite/$token": typeof InviteTokenRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
+	"/relationship/$analysisId": typeof RelationshipAnalysisIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
 }
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
 	"/finalize/$assessmentSessionId": typeof FinalizeAssessmentSessionIdRoute;
 	"/invite/$token": typeof InviteTokenRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
+	"/relationship/$analysisId": typeof RelationshipAnalysisIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat": typeof ChatIndexRoute;
 }
@@ -114,6 +122,7 @@ export interface FileRoutesById {
 	"/finalize/$assessmentSessionId": typeof FinalizeAssessmentSessionIdRoute;
 	"/invite/$token": typeof InviteTokenRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
+	"/relationship/$analysisId": typeof RelationshipAnalysisIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
 }
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
 		| "/finalize/$assessmentSessionId"
 		| "/invite/$token"
 		| "/public-profile/$publicProfileId"
+		| "/relationship/$analysisId"
 		| "/results/$assessmentSessionId"
 		| "/chat/";
 	fileRoutesByTo: FileRoutesByTo;
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
 		| "/finalize/$assessmentSessionId"
 		| "/invite/$token"
 		| "/public-profile/$publicProfileId"
+		| "/relationship/$analysisId"
 		| "/results/$assessmentSessionId"
 		| "/chat";
 	id:
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
 		| "/finalize/$assessmentSessionId"
 		| "/invite/$token"
 		| "/public-profile/$publicProfileId"
+		| "/relationship/$analysisId"
 		| "/results/$assessmentSessionId"
 		| "/chat/";
 	fileRoutesById: FileRoutesById;
@@ -169,6 +181,7 @@ export interface RootRouteChildren {
 	FinalizeAssessmentSessionIdRoute: typeof FinalizeAssessmentSessionIdRoute;
 	InviteTokenRoute: typeof InviteTokenRoute;
 	PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute;
+	RelationshipAnalysisIdRoute: typeof RelationshipAnalysisIdRoute;
 	ChatIndexRoute: typeof ChatIndexRoute;
 }
 
@@ -244,6 +257,13 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof InviteTokenRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
+		"/relationship/$analysisId": {
+			id: "/relationship/$analysisId";
+			path: "/relationship/$analysisId";
+			fullPath: "/relationship/$analysisId";
+			preLoaderRoute: typeof RelationshipAnalysisIdRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
 		"/finalize/$assessmentSessionId": {
 			id: "/finalize/$assessmentSessionId";
 			path: "/finalize/$assessmentSessionId";
@@ -274,6 +294,7 @@ const rootRouteChildren: RootRouteChildren = {
 	FinalizeAssessmentSessionIdRoute: FinalizeAssessmentSessionIdRoute,
 	InviteTokenRoute: InviteTokenRoute,
 	PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,
+	RelationshipAnalysisIdRoute: RelationshipAnalysisIdRoute,
 	ChatIndexRoute: ChatIndexRoute,
 };
 export const routeTree = rootRouteImport

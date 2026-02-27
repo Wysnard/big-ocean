@@ -40,6 +40,9 @@ import {
 	ProfileAccessLogDrizzleRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
+	RelationshipAnalysisDrizzleRepositoryLive,
+	RelationshipAnalysisGeneratorAnthropicRepositoryLive,
+	RelationshipAnalysisGeneratorMockRepositoryLive,
 	RelationshipInvitationDrizzleRepositoryLive,
 	TeaserPortraitAnthropicRepositoryLive,
 	TeaserPortraitMockRepositoryLive,
@@ -142,6 +145,17 @@ const FinanalyzerLayer =
 		: FinanalyzerAnthropicRepositoryLive;
 
 /**
+ * Relationship Analysis Generator Layer Selection
+ *
+ * Uses mock implementation when MOCK_LLM=true (for integration testing).
+ * Uses real Anthropic Sonnet implementation otherwise (production/development).
+ */
+const RelationshipAnalysisGeneratorLayer =
+	process.env.MOCK_LLM === "true"
+		? RelationshipAnalysisGeneratorMockRepositoryLive
+		: RelationshipAnalysisGeneratorAnthropicRepositoryLive;
+
+/**
  * Redis Layer - provides Redis for CostGuard
  */
 const RedisLayer = RedisIoRedisRepositoryLive.pipe(Layer.provide(InfrastructureLayer));
@@ -207,6 +221,8 @@ const RepositoryLayers = Layer.mergeAll(
 	PortraitDrizzleRepositoryLive,
 	PaymentGatewayPolarRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
+	RelationshipAnalysisDrizzleRepositoryLive,
+	RelationshipAnalysisGeneratorLayer,
 	RelationshipInvitationDrizzleRepositoryLive,
 	TeaserPortraitLayer,
 	WaitlistDrizzleRepositoryLive,

@@ -94,6 +94,10 @@ vi.mock("@/components/results/RelationshipCreditsSection", () => ({
 	RelationshipCreditsSection: () => <div data-testid="relationship-credits-section" />,
 }));
 
+vi.mock("@/components/relationship/RelationshipCard", () => ({
+	RelationshipCard: () => null,
+}));
+
 vi.mock("@/components/relationship/SentInvitationsList", () => ({
 	SentInvitationsList: () => null,
 }));

@@ -95,6 +95,8 @@ export {
 	ProfileNotFound,
 	ProfilePrivate,
 	RateLimitExceeded,
+	RelationshipAnalysisNotFoundError,
+	RelationshipAnalysisUnauthorizedError,
 	SelfInvitationError,
 	SessionCompletedError,
 	SessionExpired,
@@ -106,6 +108,11 @@ export {
 	UserAlreadyExists,
 	WebhookVerificationError,
 } from "./errors/http.errors";
+// Relationship analysis prompt (Story 14.4)
+export {
+	buildRelationshipAnalysisPrompt,
+	type RelationshipAnalysisPromptInput,
+} from "./prompts/relationship-analysis.prompt";
 export {
 	type AnalysisTarget,
 	AnalyzerRepository,
@@ -213,6 +220,18 @@ export {
 	RedisOperationError,
 	RedisRepository,
 } from "./repositories/redis.repository";
+// Relationship analysis repository (Story 14.4)
+export {
+	AnalysisNotFoundError,
+	RelationshipAnalysisRepository,
+} from "./repositories/relationship-analysis.repository";
+// Relationship analysis generator repository (Story 14.4)
+export {
+	RelationshipAnalysisGenerationError,
+	type RelationshipAnalysisGenerationInput,
+	type RelationshipAnalysisGenerationOutput,
+	RelationshipAnalysisGeneratorRepository,
+} from "./repositories/relationship-analysis-generator.repository";
 // Relationship invitation repository (Story 14.2)
 export { RelationshipInvitationRepository } from "./repositories/relationship-invitation.repository";
 // Teaser portrait repository (Story 11.5)
@@ -333,10 +352,11 @@ export {
 	PURCHASE_EVENT_TYPES,
 	parseMetadata,
 } from "./types/purchase.types";
-// Relationship invitation types (Story 14.2)
+// Relationship types (Story 14.2, 14.4)
 export type {
 	CreateInvitationInput,
 	InvitationStatus,
+	RelationshipAnalysis,
 	RelationshipInvitation,
 } from "./types/relationship.types";
 export { INVITATION_EXPIRY_DAYS } from "./types/relationship.types";

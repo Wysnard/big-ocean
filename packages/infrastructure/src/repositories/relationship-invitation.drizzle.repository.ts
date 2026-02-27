@@ -144,6 +144,31 @@ export const RelationshipInvitationDrizzleRepositoryLive = Layer.effect(
 						}),
 					),
 
+			listByInvitee: (userId) =>
+				db
+					.select()
+					.from(relationshipInvitations)
+					.where(eq(relationshipInvitations.inviteeUserId, userId))
+					.orderBy(desc(relationshipInvitations.createdAt))
+					.pipe(
+						Effect.map((rows) =>
+							rows.map((row) => {
+								const mapped = mapRow(row);
+								if (mapped.status === "pending" && mapped.expiresAt < new Date()) {
+									return { ...mapped, status: "expired" as const };
+								}
+								return mapped;
+							}),
+						),
+						Effect.mapError((error) => {
+							logger.error("Database operation failed", {
+								operation: "listByInvitee",
+								error: error instanceof Error ? error.message : String(error),
+							});
+							return new DatabaseError({ message: "Failed to list invitations by invitee" });
+						}),
+					),
+
 			updateStatus: (id, status) =>
 				Effect.gen(function* () {
 					const rows = yield* db
