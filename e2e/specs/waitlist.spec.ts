@@ -1,5 +1,4 @@
 import { execSync } from "node:child_process";
-import { API_URL } from "../e2e-env.js";
 import { expect, test } from "../fixtures/base.fixture.js";
 
 /**
@@ -14,10 +13,10 @@ import { expect, test } from "../fixtures/base.fixture.js";
  */
 
 test.describe("Waitlist API", () => {
-	test("POST /api/waitlist/signup — valid email returns ok", async ({ apiContext }) => {
+	test("POST /api/waitlist/signup — valid email returns ok", async ({ apiContext, apiUrl }) => {
 		const uniqueEmail = `e2e-waitlist-${Date.now()}@test.bigocean.dev`;
 
-		const res = await apiContext.post(`${API_URL}/api/waitlist/signup`, {
+		const res = await apiContext.post(`${apiUrl}/api/waitlist/signup`, {
 			data: { email: uniqueEmail },
 		});
 
@@ -31,17 +30,18 @@ test.describe("Waitlist API", () => {
 
 	test("POST /api/waitlist/signup — duplicate email succeeds (idempotent)", async ({
 		apiContext,
+		apiUrl,
 	}) => {
 		const uniqueEmail = `e2e-waitlist-dup-${Date.now()}@test.bigocean.dev`;
 
 		// First signup
-		const res1 = await apiContext.post(`${API_URL}/api/waitlist/signup`, {
+		const res1 = await apiContext.post(`${apiUrl}/api/waitlist/signup`, {
 			data: { email: uniqueEmail },
 		});
 		expect(res1.status()).toBe(200);
 
 		// Same email again — should still succeed
-		const res2 = await apiContext.post(`${API_URL}/api/waitlist/signup`, {
+		const res2 = await apiContext.post(`${apiUrl}/api/waitlist/signup`, {
 			data: { email: uniqueEmail },
 		});
 		expect(res2.status()).toBe(200);
@@ -49,8 +49,8 @@ test.describe("Waitlist API", () => {
 		expect(body).toEqual({ ok: true });
 	});
 
-	test("POST /api/waitlist/signup — invalid email rejected", async ({ apiContext }) => {
-		const res = await apiContext.post(`${API_URL}/api/waitlist/signup`, {
+	test("POST /api/waitlist/signup — invalid email rejected", async ({ apiContext, apiUrl }) => {
+		const res = await apiContext.post(`${apiUrl}/api/waitlist/signup`, {
 			data: { email: "not-an-email" },
 		});
 

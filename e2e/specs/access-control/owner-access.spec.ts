@@ -1,18 +1,7 @@
-import { readFileSync } from "node:fs";
-import { expect, test } from "@playwright/test";
-import { AUTH_FILES } from "../../e2e-env.js";
-
-let testSessionId: string;
-
-test.beforeAll(() => {
-	const data = JSON.parse(readFileSync(AUTH_FILES.testSession, "utf-8")) as {
-		sessionId: string;
-	};
-	testSessionId = data.sessionId;
-});
+import { expect, test } from "../../fixtures/env.fixture.js";
 
 test.describe("owner access granted", () => {
-	test("results page shows archetype hero section", async ({ page }) => {
+	test("results page shows archetype hero section", async ({ page, testSessionId }) => {
 		await page.goto(`/results/${testSessionId}`);
 		await page.getByTestId("archetype-hero-section").waitFor({
 			state: "visible",
@@ -20,7 +9,7 @@ test.describe("owner access granted", () => {
 		});
 	});
 
-	test("chat resume redirects completed session to results", async ({ page }) => {
+	test("chat resume redirects completed session to results", async ({ page, testSessionId }) => {
 		// Story 11.1: Completed sessions at /chat are redirected to /results
 		await page.goto(`/chat?sessionId=${testSessionId}`);
 

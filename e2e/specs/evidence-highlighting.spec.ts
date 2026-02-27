@@ -8,10 +8,7 @@
  * 4. Clicks "Jump to Message" → transcript panel slides in with highlighted text
  */
 
-import { AUTH_FILES, OWNER_USER } from "../e2e-env.js";
 import { type EvidenceSeed, expect, highConfidenceProfile, test } from "../fixtures/db.js";
-
-test.use({ storageState: AUTH_FILES.owner });
 
 const MESSAGE_CONTENT =
 	"I really enjoy exploring new ideas and reading about philosophy and science.";
@@ -36,9 +33,9 @@ function buildEvidenceSeeds(): EvidenceSeed[] {
 test.describe("evidence highlighting (Story 12.2)", () => {
 	let sessionId: string;
 
-	test.beforeEach(async ({ db }) => {
+	test.beforeEach(async ({ db, ownerUser }) => {
 		// Look up the owner user ID so the session is linked (auth required for results)
-		const userId = await db.getUserIdByEmail(OWNER_USER.email);
+		const userId = await db.getUserIdByEmail(ownerUser.email);
 		if (!userId) throw new Error("Owner user not found — did global-setup run?");
 
 		const profile = highConfidenceProfile();

@@ -1,6 +1,5 @@
-import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
-import { AUTH_FILES } from "../e2e-env.js";
 
 /**
  * Profile Page E2E Tests
@@ -14,15 +13,10 @@ import { AUTH_FILES } from "../e2e-env.js";
  * a second via the API, so messageCount=2 → card shows "completed".
  */
 
-function readTestSessionId(): string {
-	const data = JSON.parse(readFileSync(AUTH_FILES.testSession, "utf-8")) as {
-		sessionId: string;
-	};
-	return data.sessionId;
-}
+const AUTH_DIR = resolve(import.meta.dirname, "../.auth");
 
 test.describe("profile page: auth user without assessment", () => {
-	test.use({ storageState: AUTH_FILES.otherUser });
+	test.use({ storageState: resolve(AUTH_DIR, "other-user.json") });
 
 	test("home → header avatar → profile shows empty state", async ({ page }) => {
 		await test.step("navigate to home page", async () => {
@@ -54,11 +48,9 @@ test.describe("profile page: auth user without assessment", () => {
 });
 
 test.describe("profile page: auth user with completed assessment", () => {
-	test.use({ storageState: AUTH_FILES.owner });
+	test.use({ storageState: resolve(AUTH_DIR, "owner.json") });
 
 	test("profile shows assessment card → click View Results → results page", async ({ page }) => {
-		const _testSessionId = readTestSessionId();
-
 		await test.step("navigate to profile page", async () => {
 			await page.goto("/profile");
 			await page.locator("[data-slot='profile-page']").waitFor({

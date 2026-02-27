@@ -118,6 +118,9 @@ export default defineConfig({
 			name: "evidence-highlighting",
 			testMatch: "specs/evidence-highlighting.spec.ts",
 			dependencies: ["auth-owner"],
+			use: {
+				storageState: ".auth/owner.json",
+			},
 		},
 
 		// ── Access-control: unauthenticated ──────────────────────────────

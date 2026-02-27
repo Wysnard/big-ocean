@@ -5,8 +5,8 @@
  * assessment data (e.g., results page). Connects to the test Docker database.
  */
 
-import { test as base, expect } from "@playwright/test";
 import pg from "pg";
+import { test as base, expect } from "./env.fixture.js";
 
 const { Pool } = pg;
 

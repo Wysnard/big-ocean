@@ -12,6 +12,6 @@ import { API_URL } from "../e2e-env.js";
  * Create a new Playwright API request context pointed at the test API.
  * Caller is responsible for calling `dispose()` when done.
  */
-export async function createApiContext(): Promise<APIRequestContext> {
-	return request.newContext({ baseURL: API_URL });
+export async function createApiContext(baseURL: string = API_URL): Promise<APIRequestContext> {
+	return request.newContext({ baseURL });
 }

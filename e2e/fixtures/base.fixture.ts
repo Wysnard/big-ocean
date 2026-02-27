@@ -1,5 +1,5 @@
 /**
- * Base Fixture — extends Playwright `test` with a shared `apiContext` fixture.
+ * Base Fixture — extends env fixture with a shared `apiContext` fixture.
  *
  * Usage:
  *   import { test, expect } from "../fixtures/base.fixture.js";
@@ -7,17 +7,16 @@
  */
 
 import type { APIRequestContext } from "@playwright/test";
-import { test as base, expect } from "@playwright/test";
-import { createApiContext } from "../utils/api-client.js";
+import { request } from "@playwright/test";
+import { test as envTest, expect } from "./env.fixture.js";
 
 interface Fixtures {
 	apiContext: APIRequestContext;
 }
 
-export const test = base.extend<Fixtures>({
-	// biome-ignore lint/correctness/noEmptyPattern: Playwright fixture API requires destructured first arg
-	apiContext: async ({}, use) => {
-		const ctx = await createApiContext();
+export const test = envTest.extend<Fixtures>({
+	apiContext: async ({ apiUrl }, use) => {
+		const ctx = await request.newContext({ baseURL: apiUrl });
 		await use(ctx);
 		await ctx.dispose();
 	},
