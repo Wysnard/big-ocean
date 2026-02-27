@@ -279,7 +279,7 @@ export const BetterAuthLive = Layer.effect(
 							}
 
 							// Story 14.3: Accept invitation if invite_token cookie present
-							await tryAcceptInvitationFromCookie(user.id, context);
+							await tryAcceptInvitationFromCookie(user.id, context ?? undefined);
 						},
 					},
 				},
@@ -298,7 +298,7 @@ export const BetterAuthLive = Layer.effect(
 							await linkAnonymousAssessmentSession(userId, anonymousSessionId, "signin");
 
 							// Story 14.3: Accept invitation if invite_token cookie present
-							await tryAcceptInvitationFromCookie(userId, context);
+							await tryAcceptInvitationFromCookie(userId, context ?? undefined);
 						},
 					},
 				},
