@@ -1,18 +1,81 @@
 import { vi } from "vitest";
 
 vi.mock("@workspace/infrastructure/repositories/relationship-invitation.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/relationship-analysis.drizzle.repository");
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 
-import { RelationshipInvitationRepository } from "@workspace/domain";
+import {
+	AssessmentResultRepository,
+	AssessmentSessionRepository,
+	FinalizationEvidenceRepository,
+	LoggerRepository,
+	RelationshipAnalysisGeneratorRepository,
+	RelationshipAnalysisRepository,
+	RelationshipInvitationRepository,
+} from "@workspace/domain";
+import { _resetMockState as resetAnalysisMock } from "@workspace/infrastructure/repositories/__mocks__/relationship-analysis.drizzle.repository";
 import { _resetMockState as resetInvitationMock } from "@workspace/infrastructure/repositories/__mocks__/relationship-invitation.drizzle.repository";
+import { RelationshipAnalysisDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/relationship-analysis.drizzle.repository";
 import { RelationshipInvitationDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/relationship-invitation.drizzle.repository";
 import { Effect, Exit, Layer } from "effect";
 import { acceptInvitation } from "../accept-invitation.use-case";
 
+// Stub dependencies needed by the forked daemon (won't actually run in tests due to Effect.forkDaemon)
+const mockLogger = {
+	info: vi.fn(),
+	error: vi.fn(),
+	warn: vi.fn(),
+	debug: vi.fn(),
+};
+
+const mockSessionRepo = {
+	create: vi.fn(),
+	getById: vi.fn(),
+	updateStatus: vi.fn(),
+	updateMessageCount: vi.fn(),
+	updateUserId: vi.fn(),
+	findSessionByUserId: vi.fn(),
+	createAnonymousSession: vi.fn(),
+	getByAnonymousToken: vi.fn(),
+	updateOceanCodeAndArchetype: vi.fn(),
+};
+
+const mockResultsRepo = {
+	getBySessionId: vi.fn(),
+	getByUserId: vi.fn(),
+	upsert: vi.fn(),
+	getById: vi.fn(),
+	delete: vi.fn(),
+};
+
+const mockEvidenceRepo = {
+	getByResultId: vi.fn(),
+	saveBatch: vi.fn(),
+	existsForSession: vi.fn(),
+};
+
+const mockAnalysisGen = {
+	generateAnalysis: vi.fn(),
+};
+
 const TestLayer = Layer.mergeAll(
 	RelationshipInvitationDrizzleRepositoryLive,
-) as Layer.Layer<RelationshipInvitationRepository>;
+	RelationshipAnalysisDrizzleRepositoryLive,
+	Layer.succeed(LoggerRepository, mockLogger),
+	Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
+	Layer.succeed(AssessmentResultRepository, mockResultsRepo),
+	Layer.succeed(FinalizationEvidenceRepository, mockEvidenceRepo),
+	Layer.succeed(RelationshipAnalysisGeneratorRepository, mockAnalysisGen),
+) as Layer.Layer<
+	| RelationshipInvitationRepository
+	| RelationshipAnalysisRepository
+	| LoggerRepository
+	| AssessmentSessionRepository
+	| AssessmentResultRepository
+	| FinalizationEvidenceRepository
+	| RelationshipAnalysisGeneratorRepository
+>;
 
 const INVITER_ID = "inviter-user-1";
 const INVITEE_ID = "invitee-user-2";
@@ -43,9 +106,11 @@ const seedExpiredInvitation = () =>
 describe("acceptInvitation use-case", () => {
 	beforeEach(() => {
 		resetInvitationMock();
+		resetAnalysisMock();
+		vi.clearAllMocks();
 	});
 
-	it.effect("accepts invitation for existing user (happy path)", () =>
+	it.effect("accepts invitation and creates analysis placeholder (happy path)", () =>
 		Effect.gen(function* () {
 			yield* seedPendingInvitation();
 

@@ -1,8 +1,8 @@
 /**
- * Relationship HTTP API Groups (Story 14.2)
+ * Relationship HTTP API Groups (Story 14.2, extended Story 14.4)
  *
  * Split into two groups:
- * - RelationshipGroup: Authenticated invitation endpoints
+ * - RelationshipGroup: Authenticated invitation + analysis endpoints
  * - RelationshipPublicGroup: Unauthenticated token lookup (for invitee landing page)
  */
 
@@ -13,6 +13,8 @@ import {
 	InsufficientCreditsError,
 	InvitationAlreadyRespondedError,
 	InvitationNotFoundError,
+	RelationshipAnalysisNotFoundError,
+	RelationshipAnalysisUnauthorizedError,
 	SelfInvitationError,
 } from "../../errors";
 import { AuthMiddleware } from "../../middleware/auth";
@@ -57,6 +59,27 @@ const RefuseInvitationResponseSchema = S.Struct({
 	invitation: InvitationSchema,
 });
 
+// ─── Relationship Card State (Story 14.4) ─────────────────────────────────
+
+export const RelationshipCardStateSchema = S.Union(
+	S.Struct({ _tag: S.Literal("invite-prompt"), availableCredits: S.Number }),
+	S.Struct({ _tag: S.Literal("pending-sent"), inviteeName: S.String }),
+	S.Struct({ _tag: S.Literal("pending-received"), inviterName: S.String, invitationId: S.String }),
+	S.Struct({ _tag: S.Literal("generating") }),
+	S.Struct({ _tag: S.Literal("ready"), analysisId: S.String, partnerName: S.String }),
+	S.Struct({ _tag: S.Literal("declined"), inviteeName: S.String }),
+	S.Struct({ _tag: S.Literal("no-credits") }),
+);
+
+export type RelationshipCardState = typeof RelationshipCardStateSchema.Type;
+
+const RelationshipAnalysisResponseSchema = S.Struct({
+	analysisId: S.String,
+	content: S.String,
+});
+
+export type RelationshipAnalysisResponse = typeof RelationshipAnalysisResponseSchema.Type;
+
 // ─── Authenticated Group ──────────────────────────────────────────────────
 
 export const RelationshipGroup = HttpApiGroup.make("relationship")
@@ -87,6 +110,19 @@ export const RelationshipGroup = HttpApiGroup.make("relationship")
 			.addSuccess(RefuseInvitationResponseSchema)
 			.addError(InvitationNotFoundError, { status: 404 })
 			.addError(InvitationAlreadyRespondedError, { status: 409 })
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
+		HttpApiEndpoint.get("getRelationshipState", "/state")
+			.addSuccess(RelationshipCardStateSchema)
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
+		HttpApiEndpoint.get("getRelationshipAnalysis", "/analysis/:analysisId")
+			.setPath(S.Struct({ analysisId: S.String }))
+			.addSuccess(RelationshipAnalysisResponseSchema)
+			.addError(RelationshipAnalysisNotFoundError, { status: 404 })
+			.addError(RelationshipAnalysisUnauthorizedError, { status: 403 })
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.middleware(AuthMiddleware)

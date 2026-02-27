@@ -83,6 +83,19 @@ export const RelationshipInvitationDrizzleRepositoryLive = Layer.succeed(
 					}),
 			),
 
+		listByInvitee: (userId) =>
+			Effect.sync(() =>
+				[...store.values()]
+					.filter((inv) => inv.inviteeUserId === userId)
+					.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+					.map((inv) => {
+						if (inv.status === "pending" && inv.expiresAt < new Date()) {
+							return { ...inv, status: "expired" as const };
+						}
+						return inv;
+					}),
+			),
+
 		updateStatus: (id, status) =>
 			Effect.gen(function* () {
 				const invitation = store.get(id);

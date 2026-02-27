@@ -7,6 +7,7 @@ import { Schema as S } from "effect";
 import { BookOpen, Loader2, MessageCircle, X } from "lucide-react";
 import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
 import { ResultsAuthGate } from "@/components/ResultsAuthGate";
+import { RelationshipCard } from "@/components/relationship/RelationshipCard";
 import { SentInvitationsList } from "@/components/relationship/SentInvitationsList";
 import { ConversationTranscript } from "@/components/results/ConversationTranscript";
 import { DetailZone } from "@/components/results/DetailZone";
@@ -485,6 +486,7 @@ function ResultsSessionPage() {
 							onToggleVisibility={handleToggleVisibility}
 						/>
 
+						<RelationshipCard />
 						<RelationshipCreditsSection />
 						<SentInvitationsList enabled={!!user} />
 

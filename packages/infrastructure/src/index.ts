@@ -93,6 +93,10 @@ export { PublicProfileDrizzleRepositoryLive } from "./repositories/public-profil
 export { PurchaseEventDrizzleRepositoryLive } from "./repositories/purchase-event.drizzle.repository";
 // Redis repository implementation
 export { RedisIoRedisRepositoryLive } from "./repositories/redis.ioredis.repository";
+// Relationship analysis repositories (Story 14.4)
+export { RelationshipAnalysisDrizzleRepositoryLive } from "./repositories/relationship-analysis.drizzle.repository";
+export { RelationshipAnalysisGeneratorAnthropicRepositoryLive } from "./repositories/relationship-analysis-generator.anthropic.repository";
+export { RelationshipAnalysisGeneratorMockRepositoryLive } from "./repositories/relationship-analysis-generator.mock.repository";
 // Relationship invitation repository implementation (Story 14.2)
 export { RelationshipInvitationDrizzleRepositoryLive } from "./repositories/relationship-invitation.drizzle.repository";
 // Teaser portrait repository implementations (Story 11.5)

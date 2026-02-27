@@ -22,3 +22,17 @@ export interface CreateInvitationInput {
 }
 
 export const INVITATION_EXPIRY_DAYS = 30;
+
+/**
+ * Relationship Analysis Record (Story 14.4)
+ */
+export interface RelationshipAnalysis {
+	readonly id: string;
+	readonly invitationId: string;
+	readonly userAId: string;
+	readonly userBId: string;
+	readonly content: string | null;
+	readonly modelUsed: string | null;
+	readonly retryCount: number;
+	readonly createdAt: Date;
+}

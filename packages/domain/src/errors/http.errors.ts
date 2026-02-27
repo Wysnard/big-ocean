@@ -362,3 +362,24 @@ export class SelfInvitationError extends S.TaggedError<SelfInvitationError>()(
 		message: S.String,
 	},
 ) {}
+
+/**
+ * Relationship analysis not found error (404)
+ */
+export class RelationshipAnalysisNotFoundError extends S.TaggedError<RelationshipAnalysisNotFoundError>()(
+	"RelationshipAnalysisNotFoundError",
+	{
+		message: S.String,
+	},
+) {}
+
+/**
+ * Relationship analysis unauthorized error (403)
+ * Requesting user is neither userA nor userB
+ */
+export class RelationshipAnalysisUnauthorizedError extends S.TaggedError<RelationshipAnalysisUnauthorizedError>()(
+	"RelationshipAnalysisUnauthorizedError",
+	{
+		message: S.String,
+	},
+) {}

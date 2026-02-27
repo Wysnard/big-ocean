@@ -1,8 +1,8 @@
 /**
- * Relationship Presenters (HTTP Handlers) — Story 14.2
+ * Relationship Presenters (HTTP Handlers) — Story 14.2, extended Story 14.4
  *
  * Two handler groups:
- * - RelationshipGroupLive: Authenticated — create invitation, list invitations
+ * - RelationshipGroupLive: Authenticated — invitations, state, analysis
  * - RelationshipPublicGroupLive: Public — get invitation by token
  */
 
@@ -15,6 +15,8 @@ import { DateTime, Effect } from "effect";
 import { acceptInvitation } from "../use-cases/accept-invitation.use-case";
 import { createInvitation } from "../use-cases/create-invitation.use-case";
 import { getInvitationByToken } from "../use-cases/get-invitation-by-token.use-case";
+import { getRelationshipAnalysis } from "../use-cases/get-relationship-analysis.use-case";
+import { getRelationshipState } from "../use-cases/get-relationship-state.use-case";
 import { listInvitations } from "../use-cases/list-invitations.use-case";
 import { refuseInvitation } from "../use-cases/refuse-invitation.use-case";
 
@@ -69,6 +71,21 @@ export const RelationshipGroupLive = HttpApiBuilder.group(BigOceanApi, "relation
 					yield* AuthenticatedUser;
 					const result = yield* refuseInvitation(path.token);
 					return { invitation: toApiInvitation(result.invitation) };
+				}),
+			)
+			.handle("getRelationshipState", () =>
+				Effect.gen(function* () {
+					const userId = yield* AuthenticatedUser;
+					return yield* getRelationshipState(userId);
+				}),
+			)
+			.handle("getRelationshipAnalysis", ({ path }) =>
+				Effect.gen(function* () {
+					const userId = yield* AuthenticatedUser;
+					return yield* getRelationshipAnalysis({
+						analysisId: path.analysisId,
+						userId,
+					});
 				}),
 			);
 	}),
