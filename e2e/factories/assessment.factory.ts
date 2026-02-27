@@ -156,11 +156,13 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 		);
 
 		// 2. Insert 30 conversation_evidence rows (one per facet, Story 9.1 schema)
+		const facetScores: { facet: string; score: number; confidence: string }[] = [];
 		for (let i = 0; i < ALL_FACETS.length; i++) {
 			const facet = ALL_FACETS[i];
 			const score = 10 + Math.floor(Math.random() * 8); // 10-17 range (0-20 scale)
 			const confidence = (0.6 + Math.random() * 0.3).toFixed(3); // 0.600-0.899
 			const domain = domains[i % domains.length];
+			facetScores.push({ facet, score, confidence });
 
 			await client.query(
 				`INSERT INTO conversation_evidence
@@ -170,7 +172,51 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 			);
 		}
 
-		// 3. Update session to completed with message_count >= 2
+		// 3. Insert assessment_results row (needed by relationship analysis daemon)
+		const facetsJson: Record<string, { score: number; confidence: number }> = {};
+		const traitSums: Record<string, { total: number; count: number; confSum: number }> = {};
+		for (const { facet, score, confidence } of facetScores) {
+			facetsJson[facet] = { score, confidence: Number.parseFloat(confidence) };
+			const trait = FACET_TO_TRAIT[facet];
+			if (!traitSums[trait]) traitSums[trait] = { total: 0, count: 0, confSum: 0 };
+			traitSums[trait].total += score;
+			traitSums[trait].count += 1;
+			traitSums[trait].confSum += Number.parseFloat(confidence);
+		}
+		const traitsJson: Record<string, { score: number; confidence: number }> = {};
+		for (const [trait, sums] of Object.entries(traitSums)) {
+			traitsJson[trait] = {
+				score: sums.total,
+				confidence: Number.parseFloat((sums.confSum / sums.count).toFixed(3)),
+			};
+		}
+		const resultRow = await client.query(
+			`INSERT INTO assessment_results (assessment_session_id, facets, traits, domain_coverage, portrait)
+			 VALUES ($1, $2, $3, $4, $5)
+			 RETURNING id`,
+			[
+				sessionId,
+				JSON.stringify(facetsJson),
+				JSON.stringify(traitsJson),
+				JSON.stringify({}),
+				"Seeded portrait",
+			],
+		);
+		const resultId: string = resultRow.rows[0].id;
+
+		// 4. Insert finalization_evidence rows (needed by relationship analysis daemon)
+		for (let i = 0; i < facetScores.length; i++) {
+			const { facet, score, confidence } = facetScores[i];
+			const domain = domains[i % domains.length];
+			await client.query(
+				`INSERT INTO finalization_evidence
+				 (assessment_result_id, assessment_message_id, bigfive_facet, score, confidence, domain, raw_domain, quote, highlight_start, highlight_end, created_at)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`,
+				[resultId, userMsgId, facet, score, confidence, domain, domain, "Seeded evidence quote", 0, 22],
+			);
+		}
+
+		// 5. Update session to completed with message_count >= 2
 		await client.query(
 			`UPDATE assessment_session
 			 SET status = 'completed', message_count = 2, updated_at = NOW()
