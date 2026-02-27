@@ -1,6 +1,6 @@
 # Story 8.8: Complete Archetype Library
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,17 +26,17 @@ So that **my archetype feels uniquely crafted and personally meaningful rather t
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Write all 81 curated archetype entries (AC: #1, #3, #4)
-  - [ ] 1.1 In `packages/domain/src/constants/archetypes.ts`, **replace the entire `CURATED_ARCHETYPES` record** with a fresh set of all 81 entries. This includes rewriting the existing 25 entries with new names, descriptions, and colors to ensure consistent voice and quality across the full library. All combinations of `[P,G,O] × [F,B,D] × [I,A,E] × [C,N,W]` must be present.
-  - [ ] 1.2 **Use the exact names and essences from the Archetype Reference Table below.** Each code has a pre-defined name and essence (personality summary). The name MUST match exactly. The essence guides the description — the description expands the essence into 1500-2500 characters.
-  - [ ] 1.3 **Naming rules (already applied in reference table):** Metaphorical function names — objects, forces, or roles that describe what this personality *does in the world*. 1-2 words after "The". Open and relational (implies connection, not isolation). Quietly powerful (no aggressive metaphors). Tangible and visual. No trait words (no "Creative", "Disciplined", etc.). Draws from nature, tools, navigation, craft, elements.
-  - [ ] 1.4 **Description guidelines:** Each description must be 1500-2500 characters, written in second-person voice ("you"), and explore how the 4 traits interact — not just describe each trait independently. Start from the essence in the reference table, then expand with specific behavioral examples. Conversational, insightful. Descriptions should feel like they were written by someone who genuinely understands this personality combination, not assembled from fragments.
-  - [ ] 1.5 **Color guidelines:** Each color should be a unique hex code that feels representative of the archetype's energy. Avoid pure primaries or neon colors.
-  - [ ] 1.6 Organize entries by Openness group (O-codes, then G-codes, then P-codes), matching the existing file's comment style (e.g., `// HHHH → ODEW`). Use the L/M/H → letter mapping from the file header for comments.
+- [x] Task 1: Write all 81 curated archetype entries (AC: #1, #3, #4)
+  - [x] 1.1 In `packages/domain/src/constants/archetypes.ts`, **replace the entire `CURATED_ARCHETYPES` record** with a fresh set of all 81 entries. This includes rewriting the existing 25 entries with new names, descriptions, and colors to ensure consistent voice and quality across the full library. All combinations of `[P,G,O] × [F,B,D] × [I,A,E] × [C,N,W]` must be present.
+  - [x] 1.2 **Use the exact names and essences from the Archetype Reference Table below.** Each code has a pre-defined name and essence (personality summary). The name MUST match exactly. The essence guides the description — the description expands the essence into 1500-2500 characters.
+  - [x] 1.3 **Naming rules (already applied in reference table):** Metaphorical function names — objects, forces, or roles that describe what this personality *does in the world*. 1-2 words after "The". Open and relational (implies connection, not isolation). Quietly powerful (no aggressive metaphors). Tangible and visual. No trait words (no "Creative", "Disciplined", etc.). Draws from nature, tools, navigation, craft, elements.
+  - [x] 1.4 **Description guidelines:** Each description must be 1500-2500 characters, written in second-person voice ("you"), and explore how the 4 traits interact — not just describe each trait independently. Start from the essence in the reference table, then expand with specific behavioral examples. Conversational, insightful. Descriptions should feel like they were written by someone who genuinely understands this personality combination, not assembled from fragments.
+  - [x] 1.5 **Color guidelines:** Each color should be a unique hex code that feels representative of the archetype's energy. Avoid pure primaries or neon colors.
+  - [x] 1.6 Organize entries by Openness group (O-codes, then G-codes, then P-codes), matching the existing file's comment style (e.g., `// HHHH → ODEW`). Use the L/M/H → letter mapping from the file header for comments.
 
-- [ ] Task 2: Remove fallback generator code (AC: #2)
-  - [ ] 2.1 In `packages/domain/src/utils/archetype-lookup.ts`, remove the fallback generator branch from `lookupArchetype()`. The function should: validate code4 with regex → look up in `CURATED_ARCHETYPES` → return with `isCurated: true` → throw if not found (should never happen with complete library).
-  - [ ] 2.2 Remove these now-unused private constants and functions from `archetype-lookup.ts`:
+- [x] Task 2: Remove fallback generator code (AC: #2)
+  - [x] 2.1 In `packages/domain/src/utils/archetype-lookup.ts`, remove the fallback generator branch from `lookupArchetype()`. The function should: validate code4 with regex → look up in `CURATED_ARCHETYPES` → return with `isCurated: true` → throw if not found (should never happen with complete library).
+  - [x] 2.2 Remove these now-unused private constants and functions from `archetype-lookup.ts`:
     - `TRAIT_ADJECTIVES`
     - `AGREEABLENESS_NOUNS`
     - `TRAIT_DESCRIPTIONS` (the private fallback version — NOT the separate exported `packages/domain/src/constants/trait-descriptions.ts` from Story 8.2)
@@ -49,14 +49,14 @@ So that **my archetype feels uniquely crafted and personally meaningful rather t
     - `generateColor()`
     - `parseCode4()`
     - Types: `TraitKey`, `Code4Letter`, `OpennessLetter`, `ConscientiousnessLetter`, `ExtraversionLetter`, `AgreeablenessLetter`, `LevelLookup`, `Code4Tuple`
-  - [ ] 2.3 Keep `lookupArchetype()`, `extract4LetterCode()`, `VALID_CODE4_REGEX`, `VALID_CODE5_REGEX`, and the import of `CURATED_ARCHETYPES`.
-  - [ ] 2.4 Update the module JSDoc comment to reflect that all archetypes are now hand-curated (remove references to "fallback generator" and "component-based").
-  - [ ] 2.5 Update the JSDoc comment at the top of `archetypes.ts` to say "all 81 combinations" instead of "the 25 most common/meaningful combinations".
+  - [x] 2.3 Keep `lookupArchetype()`, `extract4LetterCode()`, `VALID_CODE4_REGEX`, `VALID_CODE5_REGEX`, and the import of `CURATED_ARCHETYPES`.
+  - [x] 2.4 Update the module JSDoc comment to reflect that all archetypes are now hand-curated (remove references to "fallback generator" and "component-based").
+  - [x] 2.5 Update the JSDoc comment at the top of `archetypes.ts` to say "all 81 combinations" instead of "the 25 most common/meaningful combinations".
 
-- [ ] Task 3: Update tests (AC: #5, #6)
-  - [ ] 3.1 In `archetype-lookup-curated.test.ts`: Replace all 25 existing name assertions and add the remaining 56 — all 81 entries must have individual name assertion tests.
-  - [ ] 3.2 In `archetype-lookup-exhaustive.test.ts`: Update the test that checks `isCurated` — all 81 should now return `true`. Remove or update any test that specifically tested the fallback generator behavior (e.g., tests asserting `isCurated: false`).
-  - [ ] 3.3 Run `pnpm test:run` — ensure zero regressions across all packages.
+- [x] Task 3: Update tests (AC: #5, #6)
+  - [x] 3.1 In `archetype-lookup-curated.test.ts`: Replace all 25 existing name assertions and add the remaining 56 — all 81 entries must have individual name assertion tests.
+  - [x] 3.2 In `archetype-lookup-exhaustive.test.ts`: Update the test that checks `isCurated` — all 81 should now return `true`. Remove or update any test that specifically tested the fallback generator behavior (e.g., tests asserting `isCurated: false`).
+  - [x] 3.3 Run `pnpm test:run` — ensure zero regressions across all packages.
 
 ## Dev Notes
 
@@ -396,10 +396,31 @@ Do NOT introduce any of these patterns during implementation:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+None required — straightforward implementation.
+
 ### Completion Notes List
 
+- Wrote all 81 curated archetype descriptions (1500-2500 chars each, second-person voice, trait-interaction focus)
+- Used exact names from the reference table for all 81 entries
+- Removed ~300 lines of fallback generator code from archetype-lookup.ts (TRAIT_ADJECTIVES, AGREEABLENESS_NOUNS, TRAIT_DESCRIPTIONS, TRAIT_COLORS, TRAIT_ORDER, MID_LETTERS, extremeness(), generateArchetypeName(), generateDescription(), generateColor(), parseCode4(), and all associated types)
+- Simplified lookupArchetype() to pure lookup with throw on missing entry
+- Rewrote curated test file with all 81 individual name assertions
+- Updated exhaustive test to expect isCurated: true for all 81 entries, removed fallback generator tests
+- All 797 domain tests pass, full suite (4 packages) green, lint clean
+
+### Change Log
+
+- 2026-02-27: Implemented Story 8.8 — Complete Archetype Library (all 81 curated, fallback removed, tests updated)
+
 ### File List
+
+- `packages/domain/src/constants/archetypes.ts` — REWRITTEN: 25 → 81 curated entries, all new names/descriptions/colors
+- `packages/domain/src/utils/archetype-lookup.ts` — SIMPLIFIED: removed ~300 lines of fallback generator code
+- `packages/domain/src/utils/__tests__/archetype-lookup-curated.test.ts` — REWRITTEN: 81 individual name assertions + validation tests
+- `packages/domain/src/utils/__tests__/archetype-lookup-exhaustive.test.ts` — UPDATED: all 81 expect isCurated: true, removed fallback tests
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Status updated
+- `_bmad-output/implementation-artifacts/8-8-complete-archetype-library.md` — Story file updated

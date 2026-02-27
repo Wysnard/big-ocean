@@ -13,14 +13,14 @@ describe("lookupArchetype", () => {
 				for (const E of eLevels) {
 					for (const A of aLevels) {
 						const code4 = `${O}${C}${E}${A}`;
-						it(`lookupArchetype("${code4}") returns valid archetype`, () => {
+						it(`lookupArchetype("${code4}") returns valid curated archetype`, () => {
 							const result = lookupArchetype(code4);
 							expect(result.code4).toBe(code4);
 							expect(result.name).toBeTruthy();
 							expect(result.description.length).toBeGreaterThanOrEqual(1500);
 							expect(result.description.length).toBeLessThanOrEqual(2500);
 							expect(result.color).toMatch(/^#[0-9A-Fa-f]{6}$/);
-							expect(typeof result.isCurated).toBe("boolean");
+							expect(result.isCurated).toBe(true);
 						});
 					}
 				}
