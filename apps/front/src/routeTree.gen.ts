@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from "./routes/__root";
 import { Route as R404RouteImport } from "./routes/404";
-import { Route as ApiArchetypeCardPublicProfileIdRouteImport } from "./routes/api/archetype-card.$publicProfileId";
 import { Route as ApiOgPublicProfilePublicProfileIdRouteImport } from "./routes/api/og.public-profile.$publicProfileId";
 import { Route as ChatIndexRouteImport } from "./routes/chat/index";
 import { Route as FinalizeAssessmentSessionIdRouteImport } from "./routes/finalize/$assessmentSessionId";
@@ -72,11 +71,6 @@ const FinalizeAssessmentSessionIdRoute = FinalizeAssessmentSessionIdRouteImport.
 	path: "/finalize/$assessmentSessionId",
 	getParentRoute: () => rootRouteImport,
 } as any);
-const ApiArchetypeCardPublicProfileIdRoute = ApiArchetypeCardPublicProfileIdRouteImport.update({
-	id: "/api/archetype-card/$publicProfileId",
-	path: "/api/archetype-card/$publicProfileId",
-	getParentRoute: () => rootRouteImport,
-} as any);
 const ApiOgPublicProfilePublicProfileIdRoute = ApiOgPublicProfilePublicProfileIdRouteImport.update({
 	id: "/api/og/public-profile/$publicProfileId",
 	path: "/api/og/public-profile/$publicProfileId",
@@ -94,7 +88,6 @@ export interface FileRoutesByFullPath {
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
-	"/api/archetype-card/$publicProfileId": typeof ApiArchetypeCardPublicProfileIdRoute;
 	"/api/og/public-profile/$publicProfileId": typeof ApiOgPublicProfilePublicProfileIdRoute;
 }
 export interface FileRoutesByTo {
@@ -108,7 +101,6 @@ export interface FileRoutesByTo {
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat": typeof ChatIndexRoute;
-	"/api/archetype-card/$publicProfileId": typeof ApiArchetypeCardPublicProfileIdRoute;
 	"/api/og/public-profile/$publicProfileId": typeof ApiOgPublicProfilePublicProfileIdRoute;
 }
 export interface FileRoutesById {
@@ -123,7 +115,6 @@ export interface FileRoutesById {
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
-	"/api/archetype-card/$publicProfileId": typeof ApiArchetypeCardPublicProfileIdRoute;
 	"/api/og/public-profile/$publicProfileId": typeof ApiOgPublicProfilePublicProfileIdRoute;
 }
 export interface FileRouteTypes {
@@ -139,7 +130,6 @@ export interface FileRouteTypes {
 		| "/public-profile/$publicProfileId"
 		| "/results/$assessmentSessionId"
 		| "/chat/"
-		| "/api/archetype-card/$publicProfileId"
 		| "/api/og/public-profile/$publicProfileId";
 	fileRoutesByTo: FileRoutesByTo;
 	to:
@@ -153,7 +143,6 @@ export interface FileRouteTypes {
 		| "/public-profile/$publicProfileId"
 		| "/results/$assessmentSessionId"
 		| "/chat"
-		| "/api/archetype-card/$publicProfileId"
 		| "/api/og/public-profile/$publicProfileId";
 	id:
 		| "__root__"
@@ -167,7 +156,6 @@ export interface FileRouteTypes {
 		| "/public-profile/$publicProfileId"
 		| "/results/$assessmentSessionId"
 		| "/chat/"
-		| "/api/archetype-card/$publicProfileId"
 		| "/api/og/public-profile/$publicProfileId";
 	fileRoutesById: FileRoutesById;
 }
@@ -181,7 +169,6 @@ export interface RootRouteChildren {
 	FinalizeAssessmentSessionIdRoute: typeof FinalizeAssessmentSessionIdRoute;
 	PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute;
 	ChatIndexRoute: typeof ChatIndexRoute;
-	ApiArchetypeCardPublicProfileIdRoute: typeof ApiArchetypeCardPublicProfileIdRoute;
 	ApiOgPublicProfilePublicProfileIdRoute: typeof ApiOgPublicProfilePublicProfileIdRoute;
 }
 
@@ -257,13 +244,6 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof FinalizeAssessmentSessionIdRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
-		"/api/archetype-card/$publicProfileId": {
-			id: "/api/archetype-card/$publicProfileId";
-			path: "/api/archetype-card/$publicProfileId";
-			fullPath: "/api/archetype-card/$publicProfileId";
-			preLoaderRoute: typeof ApiArchetypeCardPublicProfileIdRouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
 		"/api/og/public-profile/$publicProfileId": {
 			id: "/api/og/public-profile/$publicProfileId";
 			path: "/api/og/public-profile/$publicProfileId";
@@ -294,7 +274,6 @@ const rootRouteChildren: RootRouteChildren = {
 	FinalizeAssessmentSessionIdRoute: FinalizeAssessmentSessionIdRoute,
 	PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,
 	ChatIndexRoute: ChatIndexRoute,
-	ApiArchetypeCardPublicProfileIdRoute: ApiArchetypeCardPublicProfileIdRoute,
 	ApiOgPublicProfilePublicProfileIdRoute: ApiOgPublicProfilePublicProfileIdRoute,
 };
 export const routeTree = rootRouteImport
