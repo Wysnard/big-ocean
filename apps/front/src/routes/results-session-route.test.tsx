@@ -23,7 +23,13 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 vi.mock("@tanstack/react-start", () => ({
-	createServerFn: () => ({ handler: (fn: unknown) => fn }),
+	createServerFn: () => {
+		const chain = {
+			handler: (fn: unknown) => fn,
+			inputValidator: () => chain,
+		};
+		return chain;
+	},
 }));
 
 vi.mock("@tanstack/react-start/server", () => ({
