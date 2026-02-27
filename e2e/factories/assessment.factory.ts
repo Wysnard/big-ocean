@@ -226,6 +226,28 @@ export async function getSessionUserId(sessionId: string): Promise<string | null
 }
 
 /**
+ * Grant extra invitation credits to a user via direct DB insert.
+ * Inserts a `free_credit_granted` purchase event.
+ */
+export async function grantCredits(userId: string, count = 1): Promise<void> {
+	const pool = new Pool(TEST_DB_CONFIG);
+	const client = await pool.connect();
+
+	try {
+		for (let i = 0; i < count; i++) {
+			await client.query(
+				`INSERT INTO purchase_events (user_id, event_type, created_at)
+				 VALUES ($1, 'free_credit_granted', NOW())`,
+				[userId],
+			);
+		}
+	} finally {
+		client.release();
+		await pool.end();
+	}
+}
+
+/**
  * Look up a user by email in the Better Auth user table.
  */
 export async function getUserByEmail(email: string): Promise<{ id: string } | null> {

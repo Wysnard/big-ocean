@@ -11,6 +11,6 @@ import { Effect } from "effect";
 export const getInvitationByToken = (token: string) =>
 	Effect.gen(function* () {
 		const repo = yield* RelationshipInvitationRepository;
-		const invitation = yield* repo.getByToken(token);
-		return { invitation };
+		const { invitation, inviterDisplayName } = yield* repo.getByTokenWithInviterName(token);
+		return { invitation, inviterDisplayName };
 	});

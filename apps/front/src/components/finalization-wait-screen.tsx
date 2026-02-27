@@ -45,6 +45,7 @@ export function FinalizationWaitScreen({ status, progress }: FinalizationWaitScr
 	return (
 		<div
 			data-slot="finalization-wait-screen"
+			data-testid="finalization-wait-screen"
 			className="h-[calc(100dvh-3.5rem)] flex flex-col items-center justify-center bg-background relative overflow-hidden"
 		>
 			{/* Breathing background */}

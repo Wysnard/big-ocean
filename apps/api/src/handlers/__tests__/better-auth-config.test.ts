@@ -76,6 +76,58 @@ describe("Better Auth Configuration Verification (Story 9.3)", () => {
 		});
 	});
 
+	describe("Invite Token Cookie Acceptance (Story 14.3)", () => {
+		it("defines getInviteToken helper to read invite_token from cookie header", () => {
+			expect(betterAuthSource).toContain("getInviteToken");
+			expect(betterAuthSource).toContain("invite_token=");
+		});
+
+		it("defines tryAcceptInvitationFromCookie function", () => {
+			expect(betterAuthSource).toContain("tryAcceptInvitationFromCookie");
+		});
+
+		it("performs atomic UPDATE with status=pending guard", () => {
+			expect(betterAuthSource).toContain('eq(authSchema.relationshipInvitations.status, "pending")');
+		});
+
+		it("checks invitation not expired (gt expiresAt NOW)", () => {
+			expect(betterAuthSource).toContain("gt(authSchema.relationshipInvitations.expiresAt");
+		});
+
+		it("rejects self-invitations (ne inviterUserId userId)", () => {
+			expect(betterAuthSource).toContain(
+				"ne(authSchema.relationshipInvitations.inviterUserId, userId)",
+			);
+		});
+
+		it("sets inviteeUserId and status=accepted atomically", () => {
+			expect(betterAuthSource).toContain("inviteeUserId: userId");
+			expect(betterAuthSource).toContain('status: "accepted"');
+		});
+
+		it("silently swallows errors and logs them", () => {
+			expect(betterAuthSource).toContain("Failed to accept invitation from cookie");
+		});
+
+		it("logs success when invitation accepted via cookie", () => {
+			expect(betterAuthSource).toContain("Accepted invitation via cookie");
+		});
+
+		it("calls tryAcceptInvitationFromCookie in user.create.after hook (signup)", () => {
+			// Verify the cookie accept is called in the signup hook
+			expect(betterAuthSource).toContain(
+				"tryAcceptInvitationFromCookie(user.id, context ?? undefined)",
+			);
+		});
+
+		it("calls tryAcceptInvitationFromCookie in session.create.after hook (signin)", () => {
+			// Verify the cookie accept is called in the signin hook
+			expect(betterAuthSource).toContain(
+				"tryAcceptInvitationFromCookie(userId, context ?? undefined)",
+			);
+		});
+	});
+
 	describe("Session Linking Hooks", () => {
 		it("has user.create.after hook", () => {
 			expect(betterAuthSource).toMatch(/databaseHooks.*user.*create.*after/s);

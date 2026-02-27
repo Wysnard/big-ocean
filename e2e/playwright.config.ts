@@ -104,6 +104,13 @@ export default defineConfig({
 			dependencies: ["waitlist"],
 		},
 
+		// ── Invitee assessment flow: landing page, accept, refuse, full chat flows ──
+		{
+			name: "invitee-flow",
+			testMatch: "specs/invitee-flow.spec.ts",
+			dependencies: ["waitlist"],
+		},
+
 		// ── Evidence highlighting: authed owner with seeded evidence ─────
 		// Runs after auth-owner because seedResultsData deletes the owner's
 		// completed session (unique constraint), which auth-owner tests depend on
