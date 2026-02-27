@@ -40,6 +40,7 @@ const config = defineConfig({
     ...isE2E ? [] : [devtools()],
     nitro({
       config: {
+        scanDirs: ['server'],
         externals: {
           external: ['@resvg/resvg-js', /^@resvg\/resvg-js-/, 'satori'],
         },

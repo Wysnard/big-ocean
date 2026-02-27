@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from "./routes/__root";
 import { Route as R404RouteImport } from "./routes/404";
-import { Route as ApiOgPublicProfilePublicProfileIdRouteImport } from "./routes/api/og.public-profile.$publicProfileId";
 import { Route as ChatIndexRouteImport } from "./routes/chat/index";
 import { Route as FinalizeAssessmentSessionIdRouteImport } from "./routes/finalize/$assessmentSessionId";
 import { Route as IndexRouteImport } from "./routes/index";
@@ -71,11 +70,6 @@ const FinalizeAssessmentSessionIdRoute = FinalizeAssessmentSessionIdRouteImport.
 	path: "/finalize/$assessmentSessionId",
 	getParentRoute: () => rootRouteImport,
 } as any);
-const ApiOgPublicProfilePublicProfileIdRoute = ApiOgPublicProfilePublicProfileIdRouteImport.update({
-	id: "/api/og/public-profile/$publicProfileId",
-	path: "/api/og/public-profile/$publicProfileId",
-	getParentRoute: () => rootRouteImport,
-} as any);
 
 export interface FileRoutesByFullPath {
 	"/": typeof IndexRoute;
@@ -88,7 +82,6 @@ export interface FileRoutesByFullPath {
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
-	"/api/og/public-profile/$publicProfileId": typeof ApiOgPublicProfilePublicProfileIdRoute;
 }
 export interface FileRoutesByTo {
 	"/": typeof IndexRoute;
@@ -101,7 +94,6 @@ export interface FileRoutesByTo {
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat": typeof ChatIndexRoute;
-	"/api/og/public-profile/$publicProfileId": typeof ApiOgPublicProfilePublicProfileIdRoute;
 }
 export interface FileRoutesById {
 	__root__: typeof rootRouteImport;
@@ -115,7 +107,6 @@ export interface FileRoutesById {
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
-	"/api/og/public-profile/$publicProfileId": typeof ApiOgPublicProfilePublicProfileIdRoute;
 }
 export interface FileRouteTypes {
 	fileRoutesByFullPath: FileRoutesByFullPath;
@@ -129,8 +120,7 @@ export interface FileRouteTypes {
 		| "/finalize/$assessmentSessionId"
 		| "/public-profile/$publicProfileId"
 		| "/results/$assessmentSessionId"
-		| "/chat/"
-		| "/api/og/public-profile/$publicProfileId";
+		| "/chat/";
 	fileRoutesByTo: FileRoutesByTo;
 	to:
 		| "/"
@@ -142,8 +132,7 @@ export interface FileRouteTypes {
 		| "/finalize/$assessmentSessionId"
 		| "/public-profile/$publicProfileId"
 		| "/results/$assessmentSessionId"
-		| "/chat"
-		| "/api/og/public-profile/$publicProfileId";
+		| "/chat";
 	id:
 		| "__root__"
 		| "/"
@@ -155,8 +144,7 @@ export interface FileRouteTypes {
 		| "/finalize/$assessmentSessionId"
 		| "/public-profile/$publicProfileId"
 		| "/results/$assessmentSessionId"
-		| "/chat/"
-		| "/api/og/public-profile/$publicProfileId";
+		| "/chat/";
 	fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
@@ -169,7 +157,6 @@ export interface RootRouteChildren {
 	FinalizeAssessmentSessionIdRoute: typeof FinalizeAssessmentSessionIdRoute;
 	PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute;
 	ChatIndexRoute: typeof ChatIndexRoute;
-	ApiOgPublicProfilePublicProfileIdRoute: typeof ApiOgPublicProfilePublicProfileIdRoute;
 }
 
 declare module "@tanstack/react-router" {
@@ -244,13 +231,6 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof FinalizeAssessmentSessionIdRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
-		"/api/og/public-profile/$publicProfileId": {
-			id: "/api/og/public-profile/$publicProfileId";
-			path: "/api/og/public-profile/$publicProfileId";
-			fullPath: "/api/og/public-profile/$publicProfileId";
-			preLoaderRoute: typeof ApiOgPublicProfilePublicProfileIdRouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
 	}
 }
 
@@ -274,7 +254,6 @@ const rootRouteChildren: RootRouteChildren = {
 	FinalizeAssessmentSessionIdRoute: FinalizeAssessmentSessionIdRoute,
 	PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,
 	ChatIndexRoute: ChatIndexRoute,
-	ApiOgPublicProfilePublicProfileIdRoute: ApiOgPublicProfilePublicProfileIdRoute,
 };
 export const routeTree = rootRouteImport
 	._addFileChildren(rootRouteChildren)
