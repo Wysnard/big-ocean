@@ -9,7 +9,7 @@
 import { HttpApiBuilder } from "@effect/platform";
 import { BigOceanApi } from "@workspace/contracts";
 import type { RelationshipInvitation } from "@workspace/domain";
-import { CurrentUser } from "@workspace/domain";
+import { AuthenticatedUser } from "@workspace/domain";
 import { DateTime, Effect } from "effect";
 import { createInvitation } from "../use-cases/create-invitation.use-case";
 import { getInvitationByToken } from "../use-cases/get-invitation-by-token.use-case";
@@ -34,7 +34,7 @@ export const RelationshipGroupLive = HttpApiBuilder.group(BigOceanApi, "relation
 		return handlers
 			.handle("createInvitation", ({ payload }) =>
 				Effect.gen(function* () {
-					const userId = (yield* CurrentUser)!;
+					const userId = yield* AuthenticatedUser;
 					const result = yield* createInvitation({
 						userId,
 						personalMessage: payload.personalMessage,
@@ -47,7 +47,7 @@ export const RelationshipGroupLive = HttpApiBuilder.group(BigOceanApi, "relation
 			)
 			.handle("listInvitations", () =>
 				Effect.gen(function* () {
-					const userId = (yield* CurrentUser)!;
+					const userId = yield* AuthenticatedUser;
 					const invitations = yield* listInvitations(userId);
 					return {
 						invitations: invitations.map(toApiInvitation),

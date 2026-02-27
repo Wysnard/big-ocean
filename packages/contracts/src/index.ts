@@ -34,7 +34,7 @@ export { PurchaseGroup, PurchaseWebhookGroup } from "./http/groups/purchase";
 export * from "./http/groups/relationship";
 export { RelationshipGroup, RelationshipPublicGroup } from "./http/groups/relationship";
 // Auth Middleware (Story 1.4)
-export { AuthMiddleware } from "./middleware/auth";
+export { AuthMiddleware, OptionalAuthMiddleware } from "./middleware/auth";
 // Shared Schemas & Types
 export * from "./schemas/evidence";
 export * from "./schemas/ocean-code";

@@ -8,8 +8,9 @@
 
 import { HttpServerRequest } from "@effect/platform";
 import { AuthMiddleware } from "@workspace/contracts";
+import { Unauthorized } from "@workspace/domain";
 import { BetterAuthService } from "@workspace/infrastructure";
-import { Effect, Layer } from "effect";
+import { Cause, Effect, Exit, Layer } from "effect";
 import { describe, expect, it, vi } from "vitest";
 import { AuthMiddlewareLive } from "../../middleware/auth.middleware";
 
@@ -59,26 +60,59 @@ describe("AuthMiddlewareLive", () => {
 		expect(getSession).toHaveBeenCalledTimes(1);
 	});
 
-	it("returns undefined when no authenticated session exists", async () => {
+	it("fails with Unauthorized when no authenticated session exists", async () => {
 		const getSession = vi.fn(async () => null);
 
-		const userId = await runAuthMiddleware(getSession, {
-			cookie: "",
-		});
+		const authLayer = Layer.succeed(BetterAuthService, {
+			api: { getSession },
+		} as unknown as never);
 
-		expect(userId).toBeUndefined();
+		const middlewareLayer = AuthMiddlewareLive.pipe(Layer.provide(authLayer));
+
+		const exit = await Effect.gen(function* () {
+			const middleware = yield* AuthMiddleware;
+			return yield* middleware.sessionCookie("" as any);
+		}).pipe(
+			Effect.provide(middlewareLayer),
+			Effect.provideService(HttpServerRequest.HttpServerRequest, {
+				headers: { cookie: "" },
+			} as unknown as HttpServerRequest.HttpServerRequest),
+			Effect.exit,
+			Effect.runPromise,
+		);
+
+		expect(Exit.isFailure(exit)).toBe(true);
+		if (Exit.isFailure(exit)) {
+			const error = Cause.failureOption(exit.cause);
+			expect(error._tag).toBe("Some");
+			expect((error as any).value).toBeInstanceOf(Unauthorized);
+		}
 	});
 
-	it("returns undefined when Better Auth session lookup throws", async () => {
+	it("fails with Unauthorized when Better Auth session lookup throws", async () => {
 		const getSession = vi.fn(async () => {
 			throw new Error("auth service unavailable");
 		});
 
-		const userId = await runAuthMiddleware(getSession, {
-			cookie: "better-auth=token",
-		});
+		const authLayer = Layer.succeed(BetterAuthService, {
+			api: { getSession },
+		} as unknown as never);
 
-		expect(userId).toBeUndefined();
+		const middlewareLayer = AuthMiddlewareLive.pipe(Layer.provide(authLayer));
+
+		const exit = await Effect.gen(function* () {
+			const middleware = yield* AuthMiddleware;
+			return yield* middleware.sessionCookie("" as any);
+		}).pipe(
+			Effect.provide(middlewareLayer),
+			Effect.provideService(HttpServerRequest.HttpServerRequest, {
+				headers: { cookie: "better-auth=token" },
+			} as unknown as HttpServerRequest.HttpServerRequest),
+			Effect.exit,
+			Effect.runPromise,
+		);
+
+		expect(Exit.isFailure(exit)).toBe(true);
 		expect(getSession).toHaveBeenCalledTimes(1);
 	});
 

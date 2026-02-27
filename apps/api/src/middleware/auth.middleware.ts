@@ -1,17 +1,13 @@
 /**
- * AuthMiddleware Implementation
+ * Auth Middleware Implementations
  *
- * Effect/Platform middleware that extracts the authenticated user ID
- * from the Better Auth session cookie. Always succeeds — provides
- * `string | undefined` via CurrentUser Context.Tag.
- *
- * The security handler receives the cookie token via HttpApiSecurity,
- * but we use the full request headers from HttpServerRequest to call
- * Better Auth's getSession() (which needs all headers for CSRF/origin checks).
+ * - AuthMiddlewareLive: Strict — fails with Unauthorized when no session.
+ * - OptionalAuthMiddlewareLive: Lenient — returns undefined for anonymous users.
  */
 
 import { HttpServerRequest } from "@effect/platform";
-import { AuthMiddleware } from "@workspace/contracts";
+import { AuthMiddleware, OptionalAuthMiddleware } from "@workspace/contracts";
+import { Unauthorized } from "@workspace/domain";
 import { BetterAuthService } from "@workspace/infrastructure";
 import { Effect, Layer } from "effect";
 
@@ -66,12 +62,24 @@ const toFetchHeaders = (requestHeaders: unknown): Headers => {
 	return headers;
 };
 
+/** Resolve session user ID from request headers via Better Auth */
+const resolveUserId = (auth: {
+	api: { getSession: (opts: { headers: Headers }) => Promise<unknown> };
+}) =>
+	Effect.gen(function* () {
+		const request = yield* HttpServerRequest.HttpServerRequest;
+		const session = (yield* Effect.tryPromise({
+			try: () => auth.api.getSession({ headers: toFetchHeaders(request.headers) }),
+			catch: (error) => error,
+		}).pipe(Effect.catchAll(() => Effect.succeed(null)))) as {
+			user?: { id?: string };
+		} | null;
+
+		return session?.user?.id;
+	});
+
 /**
- * AuthMiddlewareLive - Layer implementation for AuthMiddleware
- *
- * Security handler receives the cookie value via HttpApiSecurity.apiKey,
- * but ignores it in favor of full request headers for Better Auth session lookup.
- * Always succeeds — returns user ID or undefined.
+ * AuthMiddlewareLive — Strict: fails with Unauthorized when no session
  */
 export const AuthMiddlewareLive = Layer.effect(
 	AuthMiddleware,
@@ -81,16 +89,26 @@ export const AuthMiddlewareLive = Layer.effect(
 		return AuthMiddleware.of({
 			sessionCookie: (_token) =>
 				Effect.gen(function* () {
-					const request = yield* HttpServerRequest.HttpServerRequest;
-					const session = (yield* Effect.tryPromise({
-						try: () => auth.api.getSession({ headers: toFetchHeaders(request.headers) }),
-						catch: (error) => error,
-					}).pipe(Effect.catchAll(() => Effect.succeed(null)))) as {
-						user?: { id?: string };
-					} | null;
-
-					return session?.user?.id;
+					const userId = yield* resolveUserId(auth);
+					if (!userId) {
+						return yield* Effect.fail(new Unauthorized({ message: "Authentication required" }));
+					}
+					return userId;
 				}),
+		});
+	}),
+);
+
+/**
+ * OptionalAuthMiddlewareLive — Always succeeds, returns userId or undefined
+ */
+export const OptionalAuthMiddlewareLive = Layer.effect(
+	OptionalAuthMiddleware,
+	Effect.gen(function* () {
+		const auth = yield* BetterAuthService;
+
+		return OptionalAuthMiddleware.of({
+			sessionCookie: (_token) => resolveUserId(auth),
 		});
 	}),
 );

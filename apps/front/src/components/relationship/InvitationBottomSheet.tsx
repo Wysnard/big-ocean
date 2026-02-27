@@ -2,16 +2,17 @@
  * Invitation Bottom Sheet (Story 14.2)
  *
  * Displays QR code, copy-link, and native share for a created invitation.
+ * Uses shadcn/ui Drawer (vaul) for a swipe-to-dismiss bottom sheet.
  */
 
 import { Button } from "@workspace/ui/components/button";
 import {
-	Sheet,
-	SheetContent,
-	SheetDescription,
-	SheetHeader,
-	SheetTitle,
-} from "@workspace/ui/components/sheet";
+	Drawer,
+	DrawerContent,
+	DrawerDescription,
+	DrawerHeader,
+	DrawerTitle,
+} from "@workspace/ui/components/drawer";
 import { Check, Copy, Share2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useCallback, useState } from "react";
@@ -64,14 +65,16 @@ export function InvitationBottomSheet({
 	}, [shareUrl, personalMessage]);
 
 	return (
-		<Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-			<SheetContent side="bottom" data-testid="invitation-bottom-sheet" className="rounded-t-2xl">
-				<SheetHeader className="text-center">
-					<SheetTitle>Share Your Invitation</SheetTitle>
-					<SheetDescription>Share this link with someone to compare your personalities</SheetDescription>
-				</SheetHeader>
+		<Drawer open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+			<DrawerContent data-testid="invitation-bottom-sheet">
+				<DrawerHeader className="text-center">
+					<DrawerTitle>Share Your Invitation</DrawerTitle>
+					<DrawerDescription>
+						Share this link with someone to compare your personalities
+					</DrawerDescription>
+				</DrawerHeader>
 
-				<div className="flex flex-col items-center gap-5 py-5">
+				<div className="flex flex-col items-center gap-5 px-4 pb-6">
 					{/* QR Code */}
 					<div data-testid="qr-code" className="rounded-xl bg-white p-4 shadow-sm">
 						<QRCodeSVG value={shareUrl} size={180} />
@@ -104,7 +107,7 @@ export function InvitationBottomSheet({
 						)}
 					</div>
 				</div>
-			</SheetContent>
-		</Sheet>
+			</DrawerContent>
+		</Drawer>
 	);
 }

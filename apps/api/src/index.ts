@@ -60,7 +60,7 @@ import { ProfileGroupLive } from "./handlers/profile";
 import { PurchaseGroupLive, PurchaseWebhookGroupLive } from "./handlers/purchase";
 import { RelationshipGroupLive, RelationshipPublicGroupLive } from "./handlers/relationship";
 import { WaitlistGroupLive } from "./handlers/waitlist";
-import { AuthMiddlewareLive } from "./middleware/auth.middleware";
+import { AuthMiddlewareLive, OptionalAuthMiddlewareLive } from "./middleware/auth.middleware";
 import { createBetterAuthHandler } from "./middleware/better-auth";
 
 /**
@@ -228,7 +228,9 @@ const ServiceLayers = RepositoryLayers.pipe(Layer.provide(InfrastructureLayer));
  * .middleware(AuthMiddleware) declaration). Layer.mergeAll doesn't cross-resolve
  * dependencies, so we provide AuthMiddleware explicitly to ApiLive.
  */
-const AuthMiddlewareLayer = AuthMiddlewareLive.pipe(Layer.provide(InfrastructureLayer));
+const AuthMiddlewareLayer = Layer.mergeAll(AuthMiddlewareLive, OptionalAuthMiddlewareLive).pipe(
+	Layer.provide(InfrastructureLayer),
+);
 
 const HttpGroupsLive = Layer.mergeAll(
 	HealthGroupLive,

@@ -1,23 +1,34 @@
 /**
- * AuthMiddleware - Effect/Platform HTTP API Middleware Tag
+ * Auth Middleware Contracts
  *
- * Defines a non-optional middleware that extracts the authenticated user ID
- * from the Better Auth session cookie. Always succeeds — provides
- * `string | undefined` via `CurrentUser` Context.Tag.
+ * Two middleware variants:
+ * - AuthMiddleware (strict): Fails with Unauthorized when no session. Provides `AuthenticatedUser` (string).
+ * - OptionalAuthMiddleware: Always succeeds. Provides `CurrentUser` (string | undefined).
  *
- * Contract definition only — implementation is `AuthMiddlewareLive` in @workspace/api.
+ * Contract definitions only — implementations are in @workspace/api.
  *
  * @see https://github.com/Effect-TS/effect/blob/main/packages/platform/README.md#middlewares
  */
 import { HttpApiMiddleware, HttpApiSecurity } from "@effect/platform";
-import { CurrentUser } from "@workspace/domain";
+import { AuthenticatedUser, CurrentUser, Unauthorized } from "@workspace/domain";
+
+const sessionCookieSecurity = {
+	sessionCookie: HttpApiSecurity.apiKey({
+		in: "cookie",
+		key: "better-auth.session_token",
+	}),
+} as const;
 
 export class AuthMiddleware extends HttpApiMiddleware.Tag<AuthMiddleware>()("AuthMiddleware", {
-	provides: CurrentUser,
-	security: {
-		sessionCookie: HttpApiSecurity.apiKey({
-			in: "cookie",
-			key: "better-auth.session_token",
-		}),
-	},
+	provides: AuthenticatedUser,
+	failure: Unauthorized,
+	security: sessionCookieSecurity,
 }) {}
+
+export class OptionalAuthMiddleware extends HttpApiMiddleware.Tag<OptionalAuthMiddleware>()(
+	"OptionalAuthMiddleware",
+	{
+		provides: CurrentUser,
+		security: sessionCookieSecurity,
+	},
+) {}

@@ -65,7 +65,7 @@ export {
 	SCORE_MIN,
 } from "./constants/validation";
 // Auth context tag (Story 1.4 — populated by AuthMiddleware)
-export { CurrentUser } from "./context/current-user";
+export { AuthenticatedUser, CurrentUser } from "./context/current-user";
 // Evidence errors
 export {
 	EvidenceValidationError,
