@@ -303,6 +303,7 @@ export function computeSteeringTarget(
 		targetFacet,
 		targetDomain: bestDomain,
 		steeringHint,
+		bestPriority,
 	};
 }
 
