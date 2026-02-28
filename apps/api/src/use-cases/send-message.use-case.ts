@@ -172,7 +172,9 @@ export const sendMessage = (input: SendMessageInput) =>
 				// 9. Steering computation — runs on every message (cold start + post-cold-start)
 				let targetDomain: LifeDomain;
 				let targetFacet: FacetName;
-				let analyzerTokenUsage: { input: number; output: number } | null = null;
+				let bestPriority = 0;
+				let coveredFacets = "0/30";
+				let metricsMapSize = 0;				let analyzerTokenUsage: { input: number; output: number } | null = null;
 
 				if (userMessageCount > COLD_START_USER_MSG_THRESHOLD) {
 					// Post-cold-start: conversanalyzer → save evidence → re-fetch → compute metrics → steering
@@ -234,6 +236,13 @@ export const sendMessage = (input: SendMessageInput) =>
 					const steering = computeSteeringTarget(metrics, previousDomain);
 					targetDomain = steering.targetDomain;
 					targetFacet = steering.targetFacet;
+					bestPriority = steering.bestPriority;
+					metricsMapSize = metrics.size;
+					let coveredCount = 0;
+					for (const [, m] of metrics) {
+						if (m.confidence > 0.3) coveredCount++;
+					}
+					coveredFacets = `${coveredCount}/30`;
 				} else {
 					// Cold start: greeting seed from pool
 					const steering = computeSteeringTarget(new Map(), null, undefined, GREETING_MESSAGES.length);
