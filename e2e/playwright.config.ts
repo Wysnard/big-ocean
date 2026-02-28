@@ -46,18 +46,6 @@ export default defineConfig({
 			},
 		},
 
-		// ── Golden path + evidence: full journey with evidence highlighting ─
-		// Runs after evidence-highlighting to avoid DB lock contention during
-		// finalization (CASCADE deletes on assessment_session block concurrent inserts)
-		{
-			name: "golden-path-evidence",
-			testMatch: "specs/golden-path-evidence.spec.ts",
-			dependencies: ["evidence-highlighting"],
-			use: {
-				video: "on",
-			},
-		},
-
 		// ── Profile page: auth user journeys (manages own storageState) ─
 		{
 			name: "profile-page",

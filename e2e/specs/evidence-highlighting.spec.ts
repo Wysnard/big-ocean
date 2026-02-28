@@ -100,5 +100,22 @@ test.describe("evidence highlighting (Story 12.2)", () => {
 			// Highlighted text marker should be present
 			await expect(page.getByTestId("highlighted-text")).toBeVisible();
 		});
+
+		await test.step("close transcript and verify results page is intact", async () => {
+			await page.getByLabel("Close transcript").click();
+
+			await page.getByTestId("transcript-panel").waitFor({
+				state: "hidden",
+				timeout: 10_000,
+			});
+
+			// Results page should still be on the same URL
+			expect(page.url()).toContain("/results/");
+
+			// Core results elements should still be visible
+			await page.getByTestId("archetype-hero-section").waitFor({ state: "visible" });
+			await page.locator("[data-slot='profile-view']").waitFor({ state: "visible" });
+			await expect(page.locator("[data-slot='trait-card']")).toHaveCount(5);
+		});
 	});
 });
