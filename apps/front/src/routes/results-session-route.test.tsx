@@ -98,10 +98,6 @@ vi.mock("@/components/relationship/RelationshipCard", () => ({
 	RelationshipCard: () => null,
 }));
 
-vi.mock("@/components/relationship/SentInvitationsList", () => ({
-	SentInvitationsList: () => null,
-}));
-
 describe("results/$assessmentSessionId route behavior", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
