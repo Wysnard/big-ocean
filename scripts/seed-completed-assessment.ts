@@ -9,7 +9,7 @@
  * - Test user (if doesn't exist)
  * - Completed assessment session
  * - Realistic conversation messages (12 messages)
- * - Assessment results (facets, traits, domain coverage, portrait)
+ * - Assessment results (facets, traits, domain coverage, teaser portrait)
  * - Conversation evidence (lean, steering-only)
  * - Finalization evidence (rich, with quotes)
  * - Public profile with OCEAN codes
@@ -34,6 +34,7 @@ const {
 	assessmentSession,
 	conversationEvidence,
 	finalizationEvidence,
+	portraits,
 	publicProfile,
 	user,
 } = dbSchema;
@@ -228,50 +229,20 @@ const EVIDENCE_QUOTES: Partial<
 	],
 };
 
-// Pre-generated portrait in Nerin's voice
-const SEED_PORTRAIT = `# The Architect of Certainty
+// Pre-generated teaser portrait in Nerin's voice (Opening section only)
+const SEED_TEASER_PORTRAIT = `# 🏗️ The Architect of Certainty
 
-You told me something early on that I haven't stopped thinking about. When I asked about a recent decision, you didn't tell me about the decision itself — you told me about the *system* you built around it. That's a different answer than most people give, and it told me more than the next ten minutes of conversation combined. What I see is someone who has turned the need for control into an art form so refined that even you've forgotten it started as a defense. Everything — the color-coded shelves, the backup plans for backup plans, the scaffolding you build before you start anything — orbits one invisible center: the belief that if you prepare well enough, nothing can catch you off guard. That's your spine. And it's both the most impressive and most limiting thing about you.
+You told me something early on that I haven't stopped thinking about. When I asked about a recent decision, you didn't tell me about the decision itself — you told me about the *system* you built around it. That's a different answer than most people give, and it told me more than the next ten minutes of conversation combined.
 
-## The Architecture — what you've built and what it costs
+What I see is someone who has turned the need for control into an art form so refined that even you've forgotten it started as a defense. Everything — the color-coded shelves, the backup plans for backup plans, the scaffolding you build before you start anything — orbits one invisible center: the belief that if you prepare well enough, nothing can catch you off guard. That's your spine. And it's both the most impressive and most limiting thing about you.
 
-### The craft of order
+But here's what stayed with me after everything else settled. That systematic precision you trust so completely? It has a cost you've stopped counting.`;
 
-You mentioned your weekend organizing project almost like it was a footnote.
-
-> "I spent a whole weekend color-coding my books, labeling all my supplies, and creating a detailed filing system"
-
-That stopped me. Not the act itself — plenty of people organize. It's that you framed a weekend of intense labor as casual. You've normalized a level of systematic thinking that most people can't sustain for an afternoon. You probably don't think of this as special. It is. The ability to look at chaos and see the hidden system inside it — that's not organization. That's architectural thinking. I think you'd thrive in roles where you design how other people work — and I don't say that often.
-
-### The dual engine
-
-> "I love diving deep into topics, reading multiple perspectives, and forming my own opinions"
-
-I wasn't expecting that level of intellectual hunger. You're not collecting information — you're building frameworks. And you hold those frameworks to a standard most people reserve for their work, not their thinking. Here's what most people miss about you: the planner and the dreamer aren't fighting each other. They're the same engine running at different speeds. Your imagination generates the possibilities. Your systematic side stress-tests them. That's not a contradiction — that's strategic imagination.
-
-But here's the shadow: that dual engine doesn't have an off switch.
-
-> "I can't stand the idea of just 'winging it' — that feels chaotic and stressful to me"
-
-That rigidity protects you, but it also means you miss the discoveries that only happen when the plan breaks down. Same engine, wrong gear.
-
-### Structural reliability
-
-Your reliability is structural, not performative. When you said you're the first to show up with food when someone's struggling, I believed it immediately — because everything else about you confirmed it. You don't help to be seen helping. You help because the problem is there and you have a plan for it.
-
-But the shadow side is just as real: you're solution-focused to a fault. When friends come to you hurting, you organize their problems instead of sitting with their pain.
-
-## The Undertow — the pattern beneath the patterns
-
-You described your friend who "wings it and somehow makes it work." The way you talked about them caught me. There was admiration, and right underneath it, something sharper. Not jealousy exactly. More like — longing for a freedom you've decided isn't available to you.
-
-Here's what I think is actually happening. You don't call it "needing control." You call it "being thorough" or "being responsible." But thoroughness doesn't flinch when someone suggests winging it. Yours does. That flinch is the signal.
-
-## The Current Ahead — where the patterns point
-
-I've seen this shape before. People who build their identity around being the one with the plan, the system, the answer — they tend to hit the same wall. Not the wall of failure. The wall of situations that can't be planned for. Real intimacy. Creative risk. Trusting someone else to lead. These require the one thing your architecture can't produce: comfort with not knowing what happens next.
-
-What would happen if the most prepared person in the room decided, just once, that the preparation was the thing standing in the way?`;
+const SEED_LOCKED_SECTION_TITLES = [
+	"The Architecture of Your Certainty",
+	"The Undertow — When the Plan Breaks Down",
+	"The Current Ahead",
+];
 
 // Build JSONB facets data
 const buildFacetsJson = () => {
@@ -469,11 +440,26 @@ const seedProgram = Effect.gen(function* () {
 			facets: facetsJson,
 			traits: traitsJson,
 			domainCoverage: domainCoverageJson,
-			portrait: SEED_PORTRAIT,
+			portrait: SEED_TEASER_PORTRAIT,
 		})
 		.returning()
 		.pipe(Effect.mapError((error) => new Error(`Failed to insert assessment results: ${error}`)));
 	console.log(`  Created assessment results: ${resultRecord.id}`);
+
+	// 4b. Insert teaser portrait row
+	console.log("\nInserting teaser portrait...");
+	const [portraitRecord] = yield* db
+		.insert(portraits)
+		.values({
+			assessmentResultId: resultRecord.id,
+			tier: "teaser" as const,
+			content: SEED_TEASER_PORTRAIT,
+			lockedSectionTitles: SEED_LOCKED_SECTION_TITLES,
+			modelUsed: "seed-script",
+		})
+		.returning()
+		.pipe(Effect.mapError((error) => new Error(`Failed to insert teaser portrait: ${error}`)));
+	console.log(`  Created teaser portrait: ${portraitRecord.id}`);
 
 	// 5. Insert conversation evidence (lean, steering-only)
 	console.log("\nInserting conversation evidence...");
