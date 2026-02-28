@@ -5,27 +5,26 @@
  * Read-only after Story 11.1 — no lazy finalization. If session is not
  * "completed", returns SessionNotCompleted error.
  *
- * Fetches evidence, computes scores on-demand via pure domain functions,
- * generates OCEAN code, looks up archetype, and computes overall confidence.
+ * Reads persisted scores from assessment_results, generates OCEAN code,
+ * looks up archetype, and computes overall confidence.
  *
- * Dependencies: AssessmentSessionRepository, FacetEvidenceRepository, LoggerRepository
+ * Dependencies: AssessmentSessionRepository, AssessmentResultRepository, LoggerRepository
  */
 
 import {
 	AppConfig,
 	AssessmentMessageRepository,
+	AssessmentResultRepository,
 	AssessmentSessionRepository,
-	aggregateFacetScores,
 	BIG_FIVE_TRAITS,
 	calculateConfidenceFromFacetScores,
-	deriveTraitScores,
 	extract4LetterCode,
 	FACET_DESCRIPTIONS,
 	FACET_LEVEL_LABELS,
 	FACET_TO_TRAIT,
-	FacetEvidenceRepository,
 	type FacetName,
 	type FacetResult,
+	type FacetScoresMap,
 	generateOceanCode,
 	getFacetLevel,
 	LoggerRepository,
@@ -74,15 +73,14 @@ const mapScoreToLevel = (traitName: string, score: number): string => {
  * Get Assessment Results Use Case (read-only after Story 11.1)
  *
  * 1. Validates session exists and is completed
- * 2. Fetches evidence via FacetEvidenceRepository
- * 3. Computes facet/trait scores on-demand via pure domain functions
- * 4. Generates OCEAN codes, looks up archetype
- * 5. Computes overall confidence (mean of all facet confidences)
+ * 2. Reads persisted facet/trait scores from AssessmentResultRepository
+ * 3. Generates OCEAN codes, looks up archetype
+ * 4. Computes overall confidence (mean of all facet confidences)
  */
 export const getResults = (input: GetResultsInput) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* AssessmentSessionRepository;
-		const evidenceRepo = yield* FacetEvidenceRepository;
+		const resultRepo = yield* AssessmentResultRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
 		const profileRepo = yield* PublicProfileRepository;
 		const config = yield* AppConfig;
@@ -115,10 +113,29 @@ export const getResults = (input: GetResultsInput) =>
 		// 3. Fetch messages for count
 		const messages = yield* messageRepo.getMessages(input.sessionId);
 
-		// 4. Fetch evidence and compute scores on-demand
-		const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
-		const facetScoresMap = aggregateFacetScores(evidence);
-		const traitScoresMap = deriveTraitScores(facetScoresMap);
+		// 4. Read persisted scores from assessment_results
+		const result = yield* resultRepo.getBySessionId(input.sessionId);
+		if (!result || Object.keys(result.facets).length === 0) {
+			return yield* Effect.fail(
+				new SessionNotCompleted({
+					sessionId: input.sessionId,
+					currentStatus: "completed",
+					message: "Assessment results not yet persisted",
+				}),
+			);
+		}
+
+		// Extract FacetScoresMap (score + confidence, ignoring signalPower)
+		const facetScoresMap: FacetScoresMap = {} as FacetScoresMap;
+		for (const [facetName, data] of Object.entries(result.facets)) {
+			facetScoresMap[facetName as FacetName] = {
+				score: data.score,
+				confidence: data.confidence,
+			};
+		}
+
+		// Extract TraitScoresMap from persisted traits
+		const traitScoresMap = result.traits;
 
 		// 5. Generate OCEAN codes
 		const oceanCode5 = generateOceanCode(facetScoresMap);
@@ -189,7 +206,6 @@ export const getResults = (input: GetResultsInput) =>
 
 		logger.info("Assessment results retrieved", {
 			sessionId: input.sessionId,
-			evidenceCount: evidence.length,
 			oceanCode5,
 			oceanCode4,
 			archetypeName: archetype.name,

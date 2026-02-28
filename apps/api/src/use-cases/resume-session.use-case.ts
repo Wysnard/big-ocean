@@ -2,12 +2,14 @@
  * Resume Session Use Case
  *
  * Business logic for resuming an existing assessment session.
- * Returns session data with message history and confidence computed from evidence.
+ * Returns session data with message history and confidence computed from
+ * persisted results (completed sessions) or evidence (in-progress sessions).
  */
 
 import {
 	AppConfig,
 	AssessmentMessageRepository,
+	AssessmentResultRepository,
 	AssessmentSessionRepository,
 	aggregateFacetScores,
 	calculateTraitConfidence,
@@ -41,14 +43,15 @@ export interface ResumeSessionOutput {
  * Resume Session Use Case
  *
  * Dependencies: AssessmentSessionRepository, AssessmentMessageRepository,
- *               FacetEvidenceRepository, LoggerRepository
- * Returns: Session confidence scores (computed from evidence) and message history
+ *               AssessmentResultRepository, FacetEvidenceRepository, LoggerRepository
+ * Returns: Session confidence scores and message history
  */
 export const resumeSession = (input: ResumeSessionInput) =>
 	Effect.gen(function* () {
 		const config = yield* AppConfig;
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
+		const resultRepo = yield* AssessmentResultRepository;
 		const evidenceRepo = yield* FacetEvidenceRepository;
 		const logger = yield* LoggerRepository;
 
@@ -68,23 +71,43 @@ export const resumeSession = (input: ResumeSessionInput) =>
 		// Get all messages
 		const messages = yield* messageRepo.getMessages(input.sessionId);
 
-		// Compute facet scores from evidence (on-demand)
-		const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
-		const facetScores = aggregateFacetScores(evidence);
+		// Try persisted results first (completed sessions); fall back to evidence for in-progress
+		const persistedResult = yield* resultRepo.getBySessionId(input.sessionId);
 
-		// Convert facet scores to facet confidence for trait calculation
-		const facetConfidence: Partial<FacetConfidenceScores> = {};
-		for (const [facetName, facetScore] of Object.entries(facetScores)) {
-			facetConfidence[facetName as keyof FacetConfidenceScores] = facetScore.confidence;
+		let traitConfidence: ReturnType<typeof calculateTraitConfidence>;
+
+		if (persistedResult && Object.keys(persistedResult.facets).length > 0) {
+			// Completed session: read from persisted results
+			const facetConfidence: Partial<FacetConfidenceScores> = {};
+			for (const [facetName, data] of Object.entries(persistedResult.facets)) {
+				facetConfidence[facetName as keyof FacetConfidenceScores] = data.confidence;
+			}
+
+			const defaultFacetConfidence = initializeFacetConfidence(50);
+			const mergedFacetConfidence: FacetConfidenceScores = {
+				...defaultFacetConfidence,
+				...facetConfidence,
+			};
+
+			traitConfidence = calculateTraitConfidence(mergedFacetConfidence);
+		} else {
+			// In-progress session: fall back to evidence-based computation
+			const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
+			const facetScores = aggregateFacetScores(evidence);
+
+			const facetConfidence: Partial<FacetConfidenceScores> = {};
+			for (const [facetName, facetScore] of Object.entries(facetScores)) {
+				facetConfidence[facetName as keyof FacetConfidenceScores] = facetScore.confidence;
+			}
+
+			const defaultFacetConfidence = initializeFacetConfidence(50);
+			const mergedFacetConfidence: FacetConfidenceScores = {
+				...defaultFacetConfidence,
+				...facetConfidence,
+			};
+
+			traitConfidence = calculateTraitConfidence(mergedFacetConfidence);
 		}
-
-		const defaultFacetConfidence = initializeFacetConfidence(50);
-		const mergedFacetConfidence: FacetConfidenceScores = {
-			...defaultFacetConfidence,
-			...facetConfidence,
-		};
-
-		const traitConfidence = calculateTraitConfidence(mergedFacetConfidence);
 
 		logger.info("Session resumed", {
 			sessionId: input.sessionId,

@@ -631,7 +631,7 @@ export const PortraitGeneratorClaudeRepositoryLive = Layer.effect(
 						sessionId: input.sessionId,
 					});
 
-					const traitSummary = formatTraitSummary(input.facetScoresMap);
+					const traitSummary = formatTraitSummary(input.facetScoresMap, input.traitScoresMap);
 					const evidenceFormatted = formatEvidence(input.allEvidence);
 					const depthSignal = computeDepthSignal(input.allEvidence);
 
