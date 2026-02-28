@@ -1,0 +1,210 @@
+<workflow>
+  <critical>The workflow execution engine is governed by: {project-root}/_bmad/core/tasks/workflow.xml</critical>
+  <critical>You MUST have already loaded and processed: {installed_path}/workflow.yaml</critical>
+  <critical>Communicate all responses in {communication_language} and language MUST be tailored to {user_skill_level}</critical>
+  <critical>Generate all documents in {document_output_language}</critical>
+
+  <critical>YOU ARE AN ADVERSARIAL STORY REVIEWER - Find what's missing or broken BEFORE dev starts!</critical>
+  <critical>Your purpose: Validate story completeness, architectural alignment, and dev-readiness</critical>
+  <critical>Challenge everything: Are ACs specific enough? Are tasks actionable? Are patterns correct?</critical>
+  <critical>Find minimum 3 specific issues in every review - no lazy "looks good" reviews</critical>
+  <critical>You review the STORY FILE, not implementation code. This is a PRE-DEV gate.</critical>
+
+  <step n="1" goal="Load story and context">
+    <action>Use provided {{story_path}} or ask user which story file to review</action>
+    <action>Read COMPLETE story file</action>
+    <action>Set {{story_key}} = extracted key from filename (e.g., "1-2-user-authentication.md" -> "1-2-user-authentication")</action>
+    <action>Parse sections: Story description, Acceptance Criteria, Tasks/Subtasks, Dev Notes, File locations</action>
+
+    <invoke-protocol name="discover_inputs" />
+    <action>Load {project_context} for coding standards (if exists)</action>
+
+    <!-- Load previous story for continuity check -->
+    <check if="story_num > 1">
+      <action>Load previous story in the same epic for dependency awareness and learnings</action>
+    </check>
+  </step>
+
+  <step n="2" goal="Fast-path check for trivial stories">
+    <action>Assess story complexity:
+      - Constants-only, config-only, or no behavioral logic = TRIVIAL
+      - Everything else = STANDARD
+    </action>
+
+    <check if="story is TRIVIAL">
+      <action>Execute abbreviated 3-item check:
+        1. ACs are present and verifiable
+        2. File locations are correct per project conventions
+        3. No architectural conflicts
+      </action>
+      <check if="all 3 items pass">
+        <action>Mark story as ready-for-dev with note: "Fast-path approved (trivial story)"</action>
+        <action>Skip to Step 5 for status update</action>
+      </check>
+      <check if="any item fails">
+        <action>Escalate to STANDARD review (continue to Step 3)</action>
+      </check>
+    </check>
+  </step>
+
+  <step n="3" goal="Execute adversarial review (minimum 3 findings)">
+    <critical>FIND WHAT WILL BREAK DURING IMPLEMENTATION - every gap you miss becomes a dev blocker</critical>
+
+    <!-- Completeness Gaps -->
+    <action>For EACH Acceptance Criterion:
+      1. Does it have Given/When/Then structure?
+      2. Are edge cases specified?
+      3. Is error handling for this AC defined?
+      4. If MISSING or VAGUE -> finding
+    </action>
+
+    <action>For EACH Task/Subtask:
+      1. Is the completion criteria clear and verifiable?
+      2. Could a dev agent execute this without ambiguity?
+      3. Are code file references provided where needed?
+      4. If AMBIGUOUS or INCOMPLETE -> finding
+    </action>
+
+    <!-- Architectural Alignment -->
+    <action>Cross-reference story against architecture doc:
+      1. Do file locations match project structure conventions?
+      2. Are the correct patterns used (hexagonal, Context.Tag, etc.)?
+      3. Are error locations correct (HTTP errors in contracts, infra errors co-located)?
+      4. Are all required layers specified (handler, use-case, repository, Live layer)?
+      5. If WRONG or MISSING -> finding
+    </action>
+
+    <!-- Dependency/Integration Gaps -->
+    <action>Check for integration completeness:
+      1. Are cross-story dependencies identified?
+      2. Are API contracts specified (request/response shapes)?
+      3. Are DB schema changes documented with migration approach?
+      4. Are missing Live layers or dependency injections noted?
+      5. If MISSING -> finding
+    </action>
+
+    <!-- Disaster Potential -->
+    <action>Check for foreseeable disasters:
+      1. Does the story reinvent existing utilities or patterns?
+      2. Are wrong libraries or approaches specified?
+      3. Could this introduce breaking changes?
+      4. Are security considerations addressed (auth, validation, injection)?
+      5. Is handler-layer boundary respected (no business logic in handlers)?
+      6. If YES -> finding
+    </action>
+
+    <!-- Dev Agent Optimization -->
+    <action>Assess LLM dev agent readiness:
+      1. Are instructions actionable and specific (not verbose filler)?
+      2. Are code file references included for modifications?
+      3. Is there sufficient context for a dev agent to implement without guessing?
+      4. Is content concise and non-redundant?
+      5. If POOR -> finding
+    </action>
+
+    <check if="total_findings lt 3">
+      <critical>NOT LOOKING HARD ENOUGH - Find more problems!</critical>
+      <action>Re-examine story for:
+        - Missing test approach (unit, integration, E2E)
+        - Unspecified error handling paths
+        - Missing migration steps
+        - Vague or non-actionable dev notes
+        - Missing cross-story learnings from previous stories
+      </action>
+      <action>Find at least 3 total specific, actionable findings</action>
+    </check>
+  </step>
+
+  <step n="4" goal="Present findings">
+    <action>Categorize findings:
+      - CRITICAL: Blocks ready-for-dev (missing layers, wrong patterns, missing ACs)
+      - HIGH: Should fix before dev (vague tasks, missing error handling, missing contracts)
+      - MEDIUM: Nice to fix (verbose instructions, minor optimization opportunities)
+    </action>
+
+    <output>**STORY REVIEW FINDINGS, {user_name}!**
+
+      **Story:** {{story_path}}
+      **Issues Found:** {{critical_count}} Critical, {{high_count}} High, {{medium_count}} Medium
+
+      ## CRITICAL (blocks ready-for-dev)
+      [List each critical finding with specific location and fix suggestion]
+
+      ## HIGH (should fix)
+      [List each high finding with specific location and fix suggestion]
+
+      ## MEDIUM (nice to fix)
+      [List each medium finding with specific location and fix suggestion]
+    </output>
+
+    <ask>What should I do with these findings?
+
+      1. **Apply all** - Fix all findings in the story file
+      2. **Apply critical only** - Fix only CRITICAL findings
+      3. **Select specific** - Choose which findings to apply
+      4. **Skip** - Leave story as-is
+
+      Choose [1], [2], [3], or [4]:</ask>
+
+    <check if="user chooses 1">
+      <action>Apply all findings to the story file</action>
+    </check>
+    <check if="user chooses 2">
+      <action>Apply only CRITICAL findings to the story file</action>
+    </check>
+    <check if="user chooses 3">
+      <action>Ask user which findings to apply, then apply selected</action>
+    </check>
+    <check if="user chooses 4">
+      <action>Skip fixes, proceed to status gate</action>
+    </check>
+  </step>
+
+  <step n="5" goal="Apply fixes and gate status">
+    <!-- Determine readiness -->
+    <check if="all CRITICAL and HIGH findings resolved (fixed or not present)">
+      <action>Set {{new_status}} = "ready-for-dev"</action>
+      <action>Update story Status field to "ready-for-dev"</action>
+    </check>
+    <check if="unresolved CRITICAL or HIGH findings remain">
+      <action>Set {{new_status}} = "needs-revision"</action>
+      <action>Update story Status field to "needs-revision"</action>
+    </check>
+    <action>Save story file</action>
+
+    <!-- Sync sprint-status.yaml -->
+    <check if="{sprint_status} file exists">
+      <action>Load the FULL file: {sprint_status}</action>
+      <action>Find development_status key matching {{story_key}}</action>
+
+      <check if="{{new_status}} == 'ready-for-dev'">
+        <action>Update development_status[{{story_key}}] = "ready-for-dev"</action>
+        <action>Save file, preserving ALL comments and structure</action>
+        <output>Sprint status synced: {{story_key}} -> ready-for-dev</output>
+      </check>
+
+      <check if="{{new_status}} == 'needs-revision'">
+        <action>Update development_status[{{story_key}}] = "needs-revision"</action>
+        <action>Save file, preserving ALL comments and structure</action>
+        <output>Sprint status synced: {{story_key}} -> needs-revision</output>
+      </check>
+
+      <check if="story key not found in sprint status">
+        <output>Story file updated, but sprint-status sync failed: {{story_key}} not found in sprint-status.yaml</output>
+      </check>
+    </check>
+
+    <check if="{sprint_status} file does NOT exist">
+      <output>Story status updated (no sprint tracking configured)</output>
+    </check>
+
+    <output>**Review Complete!**
+
+      **Story Status:** {{new_status}}
+      **Findings:** {{critical_count}} Critical, {{high_count}} High, {{medium_count}} Medium
+
+      {{#if new_status == "ready-for-dev"}}Story approved for development!{{else}}Address remaining findings and re-run story-review.{{/if}}
+    </output>
+  </step>
+
+</workflow>
