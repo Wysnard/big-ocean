@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-02-27 (refreshed)
+generated: 2026-02-27
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -126,7 +126,7 @@ development_status:
   epic-7-retrospective: done
 
   # EPIC 8: Results Page Content Enrichment
-  epic-8: in-progress
+  epic-8: done
   8-1-expand-archetype-descriptions-to-4-5-sentences: done
   8-2-add-level-specific-trait-descriptions: done
   8-3-add-level-specific-facet-descriptions: done
@@ -213,7 +213,7 @@ development_status:
   12-1-results-page-and-trait-display: done
   12-2-bidirectional-evidence-highlighting: done
   12-3-teaser-portrait-generation-and-display: done
-  epic-12-retrospective: optional
+  epic-12-retrospective: done
 
   # ───────────────────────────────────────────────────────────────
   # NEW EPIC 4: Monetization & Full Portrait (Epic 13)
@@ -224,19 +224,19 @@ development_status:
   13-1-purchase-events-schema-and-capability-derivation: done
   13-2-polar-sh-checkout-and-webhook-integration: done
   13-3-full-portrait-async-generation: done
-  epic-13-retrospective: optional
+  epic-13-retrospective: done
 
   # ───────────────────────────────────────────────────────────────
   # NEW EPIC 5: Relationship Analysis (Epic 14)
   # Credits, invitations, invitee flow, pair analysis
   # Stories: 5.1-5.4 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-14: in-progress
+  epic-14: done
   14-1-relationship-credits-and-purchase-flow: done
   14-2-invitation-system: done
   14-3-invitee-assessment-flow: done
   14-4-relationship-analysis-generation: done
-  epic-14-retrospective: optional
+  epic-14-retrospective: done
 
   # ───────────────────────────────────────────────────────────────
   # NEW EPIC 6: Growth & Operational Safety (Epic 15)
@@ -247,7 +247,7 @@ development_status:
   15-1-shareable-profile-and-public-url: done
   15-2-archetype-card-generation: done
   15-3-waitlist-and-circuit-breaker: done
-  epic-15-retrospective: optional
+  epic-15-retrospective: done
 
   # ───────────────────────────────────────────────────────────────
   # NEW EPIC 7: Privacy & Compliance (EU Launch)

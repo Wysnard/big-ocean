@@ -62,6 +62,11 @@ const ResultsAssessmentSessionIdRoute = ResultsAssessmentSessionIdRouteImport.up
 	path: "/$assessmentSessionId",
 	getParentRoute: () => ResultsRoute,
 } as any);
+const RelationshipAnalysisIdRoute = RelationshipAnalysisIdRouteImport.update({
+	id: "/relationship/$analysisId",
+	path: "/relationship/$analysisId",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const PublicProfilePublicProfileIdRoute = PublicProfilePublicProfileIdRouteImport.update({
 	id: "/public-profile/$publicProfileId",
 	path: "/public-profile/$publicProfileId",
@@ -70,11 +75,6 @@ const PublicProfilePublicProfileIdRoute = PublicProfilePublicProfileIdRouteImpor
 const InviteTokenRoute = InviteTokenRouteImport.update({
 	id: "/invite/$token",
 	path: "/invite/$token",
-	getParentRoute: () => rootRouteImport,
-} as any);
-const RelationshipAnalysisIdRoute = RelationshipAnalysisIdRouteImport.update({
-	id: "/relationship/$analysisId",
-	path: "/relationship/$analysisId",
 	getParentRoute: () => rootRouteImport,
 } as any);
 const FinalizeAssessmentSessionIdRoute = FinalizeAssessmentSessionIdRouteImport.update({
@@ -243,6 +243,13 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof ResultsAssessmentSessionIdRouteImport;
 			parentRoute: typeof ResultsRoute;
 		};
+		"/relationship/$analysisId": {
+			id: "/relationship/$analysisId";
+			path: "/relationship/$analysisId";
+			fullPath: "/relationship/$analysisId";
+			preLoaderRoute: typeof RelationshipAnalysisIdRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
 		"/public-profile/$publicProfileId": {
 			id: "/public-profile/$publicProfileId";
 			path: "/public-profile/$publicProfileId";
@@ -255,13 +262,6 @@ declare module "@tanstack/react-router" {
 			path: "/invite/$token";
 			fullPath: "/invite/$token";
 			preLoaderRoute: typeof InviteTokenRouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
-		"/relationship/$analysisId": {
-			id: "/relationship/$analysisId";
-			path: "/relationship/$analysisId";
-			fullPath: "/relationship/$analysisId";
-			preLoaderRoute: typeof RelationshipAnalysisIdRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
 		"/finalize/$assessmentSessionId": {

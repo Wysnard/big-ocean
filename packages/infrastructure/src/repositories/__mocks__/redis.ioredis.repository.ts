@@ -36,6 +36,14 @@ export const RedisIoRedisRepositoryLive = Layer.succeed(
 				return newValue;
 			}),
 
+		decr: (key: string) =>
+			Effect.sync(() => {
+				const current = parseInt(store.get(key) || "0", 10);
+				const newValue = current - 1;
+				store.set(key, String(newValue));
+				return newValue;
+			}),
+
 		get: (key: string) => Effect.sync(() => store.get(key) || null),
 
 		expire: (key: string, seconds: number) =>
