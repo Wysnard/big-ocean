@@ -61,7 +61,7 @@
 
 ### planning-artifacts/
 
-- **[epics.md](./planning-artifacts/epics.md)** - Epic definitions and user story breakdown
+- **[epics-innovation-strategy.md](./planning-artifacts/epics-innovation-strategy.md)** - Epic definitions and user story breakdown (innovation strategy)
 - **[implementation-readiness-report-2026-02-02.md](./planning-artifacts/implementation-readiness-report-2026-02-02.md)** - Implementation readiness assessment across all artifacts
 - **[prd.md](./planning-artifacts/prd.md)** - Product Requirements Document for big-ocean
 - **[prd-validation-report-2026-02-02.md](./planning-artifacts/prd-validation-report-2026-02-02.md)** - PRD validation report (initial)

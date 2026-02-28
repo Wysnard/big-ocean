@@ -185,7 +185,7 @@ No hand-crafted domain-to-facet mapping. The formula computes which domain would
 ```
 Anonymous start → /api/assessment/start (no auth required)
   → Chat with Nerin (ConversAnalyzer on every message)
-  → Message count reaches MESSAGE_THRESHOLD (30)
+  → Message count reaches freeTierMessageThreshold (25 user messages)
   → Frontend shows auth gate
   → POST /api/assessment/generate-results (auth required)
   → FinAnalyzer + portrait generation → assessment_results

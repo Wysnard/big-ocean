@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-02-25
+# Generated: 2026-03-01
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-02-27
+generated: 2026-03-01
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -255,3 +255,76 @@ development_status:
   # Stories: 7.1-7.3 in epics.md — tracked under Epic 6 above
   # ───────────────────────────────────────────────────────────────
   # See epic-6 section above (stories 6-1, 6-2, 6-3)
+
+# ═══════════════════════════════════════════════════════════════
+# PHASE 3: Conversation Pipeline V1 Rewrite
+# ═══════════════════════════════════════════════════════════════
+# Source: _bmad-output/planning-artifacts/epics-conversation-pipeline.md
+# Replaces legacy scoring with persisted results, improves steering,
+# upgrades evidence system, polishes portraits, adds evidence review UI
+#
+# NUMBERING: Continues from Phase 2 (16+).
+# Cross-reference: epics-conversation-pipeline.md "Epic N" = sprint-status "Epic N+15"
+#   Pipeline Epic 1 (Consistent Scoring) = Epic 16
+#   Pipeline Epic 2 (Natural Steering) = Epic 17
+#   Pipeline Epic 3 (Smarter Evidence) = Epic 18
+#   Pipeline Epic 4 (Portrait Quality) = Epic 19
+#   Pipeline Epic 5 (Evidence Review) = Epic 20
+
+  # ───────────────────────────────────────────────────────────────
+  # PIPELINE EPIC 1: Consistent Scoring & Results Accuracy (Epic 16)
+  # Migrate display to persisted results, delete legacy scoring, tune steering
+  # Stories: 1.1-1.4 in epics-conversation-pipeline.md
+  # ───────────────────────────────────────────────────────────────
+  epic-16: backlog
+  16-1-migrate-display-use-cases-to-read-persisted-results: backlog
+  16-2-delete-legacy-scoring-system: backlog
+  16-3-tune-steering-parameters-and-add-observability: backlog
+  16-4-dead-code-cleanup: backlog
+  epic-16-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # PIPELINE EPIC 2: Natural Conversation Steering (Epic 17)
+  # All-30-facets steering, micro-intent realizer, domain streak
+  # Stories: 2.1-2.3 in epics-conversation-pipeline.md
+  # ───────────────────────────────────────────────────────────────
+  epic-17: backlog
+  17-1-all-30-facets-steering-with-ocean-round-robin-tiebreaker: backlog
+  17-2-micro-intent-realizer: backlog
+  17-3-domain-streak-computation-and-conversanalyzer-retry-bump: backlog
+  epic-17-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # PIPELINE EPIC 3: Smarter Evidence, Better Scores (Epic 18)
+  # Evidence v2 schema, rewrite facet metrics, rolling budget, finalization rewrite
+  # Stories: 3.1-3.6 in epics-conversation-pipeline.md
+  # ───────────────────────────────────────────────────────────────
+  epic-18: backlog
+  18-1-evidence-v2-schema-and-conversanalyzer-prompt-update: backlog
+  18-2-rewrite-compute-facet-metrics-for-evidence-v2: backlog
+  18-3-rolling-evidence-budget-and-cap-enforcement: backlog
+  18-4-rewrite-finalization-pipeline-with-staged-idempotency: backlog
+  18-5-delete-finanalyzer-infrastructure: backlog
+  18-6-update-portrait-generators-to-use-conversation-evidence: backlog
+  epic-18-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # PIPELINE EPIC 4: Portrait Quality & Recognition (Epic 19)
+  # Remove quote constraint, portrait telemetry
+  # Stories: 4.1-4.2 in epics-conversation-pipeline.md
+  # ───────────────────────────────────────────────────────────────
+  epic-19: backlog
+  19-1-remove-quote-constraint-from-portrait-prompts: backlog
+  19-2-portrait-telemetry-placeholder: backlog
+  epic-19-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # PIPELINE EPIC 5: Conversation Evidence Review (Epic 20)
+  # Evidence annotations API, conversation review UI, evidence panel
+  # Stories: 5.1-5.3 in epics-conversation-pipeline.md
+  # ───────────────────────────────────────────────────────────────
+  epic-20: backlog
+  20-1-evidence-annotations-api-endpoint: backlog
+  20-2-conversation-review-ui-with-inline-annotations: backlog
+  20-3-evidence-panel-with-bidirectional-navigation: backlog
+  epic-20-retrospective: optional
