@@ -1,3 +1,4 @@
+import type { OceanCode5 } from "@workspace/domain";
 import { GeometricSignature } from "../ocean-shapes/GeometricSignature";
 import { OceanShapeSet } from "../ocean-shapes/OceanShapeSet";
 import { ResultPreviewEmbed } from "./ResultPreviewEmbed";
@@ -26,23 +27,15 @@ export function ShareCardPreview() {
 				<div className="flex h-full flex-col items-center justify-center gap-3 p-6">
 					{/* Brand mark */}
 					<div className="flex items-center gap-1">
-						<span className="font-heading text-sm font-bold text-foreground">
-							big-
-						</span>
+						<span className="font-heading text-sm font-bold text-foreground">big-</span>
 						<OceanShapeSet size={16} />
 					</div>
 
 					{/* Archetype name */}
-					<h3 className="font-heading text-xl font-bold text-foreground">
-						The Explorer
-					</h3>
+					<h3 className="font-heading text-xl font-bold text-foreground">The Explorer</h3>
 
 					{/* Geometric Signature */}
-					<GeometricSignature
-						oceanCode="ODAWT"
-						baseSize={24}
-						animated={false}
-					/>
+					<GeometricSignature oceanCode={"ODAWT" as OceanCode5} baseSize={24} animate={false} />
 
 					{/* Trait summary row */}
 					<div className="flex flex-wrap justify-center gap-1">

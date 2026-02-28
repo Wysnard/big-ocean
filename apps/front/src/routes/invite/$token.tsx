@@ -28,8 +28,17 @@ type ErrorState = {
 	errorMessage: string;
 };
 
+/** Serializable version of InvitationDetailResponse (Utc → string) */
+type SerializedInvitationDetail = {
+	invitation: Omit<InvitationDetailResponse["invitation"], "createdAt" | "expiresAt"> & {
+		createdAt: string;
+		expiresAt: string;
+	};
+	inviterDisplayName?: string;
+};
+
 type LoaderData =
-	| { invitation: InvitationDetailResponse; errorState?: never }
+	| { invitation: SerializedInvitationDetail; errorState?: never }
 	| { errorState: ErrorState; invitation?: never };
 
 export const Route = createFileRoute("/invite/$token")({
@@ -48,9 +57,9 @@ export const Route = createFileRoute("/invite/$token")({
 			};
 		}
 
-		const invitation: InvitationDetailResponse = await res.json();
+		const raw: InvitationDetailResponse = await res.json();
 
-		if (invitation.invitation.status !== "pending") {
+		if (raw.invitation.status !== "pending") {
 			return {
 				errorState: {
 					errorStatus: 410,
@@ -58,6 +67,16 @@ export const Route = createFileRoute("/invite/$token")({
 				},
 			};
 		}
+
+		// Convert Utc fields to ISO strings for serialization
+		const invitation: SerializedInvitationDetail = {
+			...raw,
+			invitation: {
+				...raw.invitation,
+				createdAt: String(raw.invitation.createdAt),
+				expiresAt: String(raw.invitation.expiresAt),
+			},
+		};
 
 		return { invitation };
 	},
@@ -71,7 +90,7 @@ type UserState =
 	| "authenticated-with-assessment";
 
 function InviteLandingPage() {
-	const data = Route.useLoaderData();
+	const data = Route.useLoaderData() as LoaderData;
 	const params = Route.useParams();
 	const navigate = useNavigate();
 	const [actionError, setActionError] = useState<string | null>(null);
@@ -126,8 +145,9 @@ function InviteLandingPage() {
 		};
 	}, [isError]);
 
-	const inviterName = !isError ? data.invitation.inviterDisplayName || "Someone" : "Someone";
-	const personalMessage = !isError ? (data.invitation.invitation.personalMessage ?? null) : null;
+	const invitationData = !isError && data.invitation ? data : null;
+	const inviterName = invitationData?.invitation.inviterDisplayName || "Someone";
+	const personalMessage = invitationData?.invitation.invitation.personalMessage ?? null;
 
 	const claimCookieAndRedirect = useCallback(() => {
 		setActionError(null);
@@ -176,7 +196,9 @@ function InviteLandingPage() {
 				<Card className="max-w-md w-full">
 					<CardContent className="pt-6 text-center">
 						<h1 className="text-2xl font-bold mb-4">Invitation Unavailable</h1>
-						<p className="text-muted-foreground">{data.errorState.errorMessage}</p>
+						<p className="text-muted-foreground">
+							{data.errorState?.errorMessage ?? "An unexpected error occurred."}
+						</p>
 						<Button className="mt-6" onClick={() => navigate({ to: "/" })}>
 							Go Home
 						</Button>

@@ -34,7 +34,6 @@ export const {
 	updateUser,
 	changeEmail,
 	changePassword,
-	forgetPassword,
 	resetPassword,
 	sendVerificationEmail,
 	verifyEmail,

@@ -34,7 +34,7 @@ export const openPolarCheckout = ({
 		const url = new URL(checkoutLinkUrl);
 		url.searchParams.set("metadata[userId]", userId);
 
-		PolarEmbedCheckout.create(url.toString(), theme)
+		PolarEmbedCheckout.create(url.toString(), { theme })
 			.then((checkout) => {
 				checkout.addEventListener("success", () => {
 					resolve({ success: true });

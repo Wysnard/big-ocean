@@ -55,7 +55,6 @@ export function SentInvitationsList({ enabled }: SentInvitationsListProps) {
 			{data.invitations.map((inv) => {
 				const config = STATUS_CONFIG[inv.status];
 				const Icon = config.icon;
-				const _shareUrl = `${window.location.origin}/invite/${inv.invitationToken}`;
 
 				return (
 					<div
@@ -68,7 +67,7 @@ export function SentInvitationsList({ enabled }: SentInvitationsListProps) {
 								<p className="text-sm text-foreground truncate">{inv.personalMessage}</p>
 							)}
 							<p className="text-xs text-muted-foreground">
-								{new Date(inv.createdAt).toLocaleDateString()}
+								{new Date(inv.createdAt.epochMillis).toLocaleDateString()}
 							</p>
 						</div>
 

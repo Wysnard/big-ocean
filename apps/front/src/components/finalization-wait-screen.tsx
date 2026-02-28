@@ -30,7 +30,7 @@ interface FinalizationWaitScreenProps {
 
 export function FinalizationWaitScreen({ status, progress }: FinalizationWaitScreenProps) {
 	const [currentLineIndex, setCurrentLineIndex] = useState(0);
-	const lineTimerRef = useRef<ReturnType<typeof setInterval>>();
+	const lineTimerRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
 	useEffect(() => {
 		lineTimerRef.current = setInterval(() => {

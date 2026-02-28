@@ -64,7 +64,7 @@ export function RelationshipCreditsSection() {
 	const { data, isLoading } = useCredits(!!user);
 	const queryClient = useQueryClient();
 	const [isPurchasing, setIsPurchasing] = useState(false);
-	const pollTimerRef = useRef<ReturnType<typeof setInterval>>();
+	const pollTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 	const creditsBefore = useRef<number | null>(null);
 
 	// Invitation creation state

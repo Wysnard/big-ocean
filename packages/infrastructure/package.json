@@ -28,6 +28,7 @@
     "@workspace/domain": "workspace:*",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
+    "@effect/sql": "catalog:",
     "effect": "catalog:",
     "ioredis": "catalog:",
     "pg": "catalog:",

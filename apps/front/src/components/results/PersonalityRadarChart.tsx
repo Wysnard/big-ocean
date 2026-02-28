@@ -75,7 +75,7 @@ export const PersonalityRadarChart = memo(function PersonalityRadarChart({
 	const renderGradientShape = useCallback(
 		(props: { points?: RadarShapePoint[] }) => {
 			const { points } = props;
-			if (!points || points.length === 0) return null;
+			if (!points || points.length === 0) return <g />;
 
 			const pointsStr = points.map((p) => `${p.x},${p.y}`).join(" ");
 

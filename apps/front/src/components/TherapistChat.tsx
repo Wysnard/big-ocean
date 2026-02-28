@@ -133,7 +133,7 @@ export function TherapistChat({
 	userName,
 	userImage,
 	isAuthenticated = false,
-	onPortraitReveal,
+	onPortraitReveal: _onPortraitReveal,
 	highlightMessageId,
 	highlightQuote: _highlightQuote,
 	highlightStart,
@@ -156,7 +156,7 @@ export function TherapistChat({
 		freeTierMessageThreshold,
 		// Story 7.18: Farewell transition state
 		isFarewellReceived,
-		portraitWaitMinMs,
+		portraitWaitMinMs: _portraitWaitMinMs,
 	} = useTherapistChat(sessionId);
 
 	// Notify parent (route) of session errors for auth-based redirect decisions

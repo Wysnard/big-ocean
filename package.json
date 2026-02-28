@@ -8,6 +8,7 @@
 		"build:front": "turbo run build --filter=front",
 		"dev": "./scripts/dev.sh",
 		"lint": "turbo lint",
+		"typecheck": "turbo typecheck",
 		"lint:fix": "biome check --write apps packages",
 		"format": "prettier --write \"**/*.{ts,tsx,md}\"",
 		"prepare": "simple-git-hooks",

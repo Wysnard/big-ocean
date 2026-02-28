@@ -21,4 +21,16 @@ echo "$STAGED_FILES" | xargs pnpm biome check --write --unsafe
 echo "$STAGED_FILES" | xargs git add
 
 echo "✅ Biome auto-fix complete!"
+
+# Run TypeScript type-checking across the monorepo
+echo "🔎 Running typecheck..."
+pnpm turbo typecheck
+TYPECHECK_EXIT=$?
+
+if [ $TYPECHECK_EXIT -ne 0 ]; then
+  echo "❌ Typecheck failed. Fix type errors before committing."
+  exit 1
+fi
+
+echo "✅ All pre-commit checks passed!"
 exit 0

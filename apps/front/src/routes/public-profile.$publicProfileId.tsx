@@ -13,7 +13,9 @@ import type { GetPublicProfileResponse } from "@workspace/contracts";
 import type { FacetName, FacetResult, TraitLevel, TraitName, TraitResult } from "@workspace/domain";
 import {
 	BIG_FIVE_TRAITS,
+	FACET_DESCRIPTIONS,
 	FACET_TO_TRAIT,
+	getFacetLevel,
 	getTraitColor,
 	TRAIT_LETTER_MAP,
 	TRAIT_TO_FACETS,
@@ -152,12 +154,21 @@ export const Route = createFileRoute("/public-profile/$publicProfileId")({
 type ApiFacets = Record<string, { score: number; confidence: number }>;
 
 function toFacetData(facets: ApiFacets): FacetResult[] {
-	return Object.entries(facets).map(([name, { score, confidence }]) => ({
-		name: name as FacetName,
-		traitName: FACET_TO_TRAIT[name as FacetName] ?? "openness",
-		score,
-		confidence,
-	}));
+	return Object.entries(facets).map(([name, { score, confidence }]) => {
+		const facetName = name as FacetName;
+		const levelCode = getFacetLevel(facetName, score);
+		const levels = FACET_DESCRIPTIONS[facetName]?.levels as Record<string, string> | undefined;
+		const description = levels?.[levelCode] ?? "";
+		return {
+			name: facetName,
+			traitName: FACET_TO_TRAIT[facetName] ?? "openness",
+			score,
+			confidence,
+			level: levelCode,
+			levelLabel: levelCode,
+			levelDescription: description,
+		};
+	});
 }
 
 function deriveTraitData(facets: ApiFacets, traitSummary: Record<string, string>): TraitResult[] {

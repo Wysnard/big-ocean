@@ -88,9 +88,9 @@ function ProfilePage() {
 					<div className="mx-auto max-w-md">
 						<AssessmentCard
 							id={session.id}
-							createdAt={session.createdAt}
+							createdAt={String(session.createdAt)}
 							messageCount={session.messageCount}
-							freeTierMessageThreshold={data.freeTierMessageThreshold}
+							freeTierMessageThreshold={data?.freeTierMessageThreshold ?? 0}
 							oceanCode5={session.oceanCode5}
 							archetypeName={session.archetypeName}
 						/>

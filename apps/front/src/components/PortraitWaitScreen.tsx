@@ -34,7 +34,7 @@ export function PortraitWaitScreen({
 	const [currentLineIndex, setCurrentLineIndex] = useState(0);
 	const [isMinWaitElapsed, setIsMinWaitElapsed] = useState(false);
 	const [showReveal, setShowReveal] = useState(false);
-	const lineTimerRef = useRef<ReturnType<typeof setInterval>>();
+	const lineTimerRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
 	// Fetch results (triggers finalization on first call)
 	const { data: results, isError, refetch } = useGetResults(sessionId);
@@ -66,8 +66,7 @@ export function PortraitWaitScreen({
 
 	const prefersReducedMotion = useMemo(
 		() =>
-			typeof window !== "undefined" &&
-			window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+			typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
 		[],
 	);
 
@@ -88,9 +87,7 @@ export function PortraitWaitScreen({
 			<div className="relative z-10 text-center px-6 max-w-md">
 				{showReveal ? (
 					<div className={cn(!prefersReducedMotion && "motion-safe:animate-fade-in-up")}>
-						<p className="text-xl font-heading font-semibold text-foreground">
-							Your portrait is ready.
-						</p>
+						<p className="text-xl font-heading font-semibold text-foreground">Your portrait is ready.</p>
 						<button
 							type="button"
 							onClick={onRevealClick}
@@ -102,12 +99,8 @@ export function PortraitWaitScreen({
 					</div>
 				) : isError ? (
 					<div>
-						<p className="text-lg text-foreground font-heading">
-							Something got tangled.
-						</p>
-						<p className="mt-2 text-muted-foreground">
-							Let me try again.
-						</p>
+						<p className="text-lg text-foreground font-heading">Something got tangled.</p>
+						<p className="mt-2 text-muted-foreground">Let me try again.</p>
 						<button
 							type="button"
 							onClick={() => refetch()}
@@ -122,8 +115,7 @@ export function PortraitWaitScreen({
 						key={currentLineIndex}
 						className={cn(
 							"text-lg text-muted-foreground font-heading italic",
-							!prefersReducedMotion &&
-								"motion-safe:animate-[fade-in_400ms_ease-in-out]",
+							!prefersReducedMotion && "motion-safe:animate-[fade-in_400ms_ease-in-out]",
 						)}
 					>
 						{WAIT_LINES[currentLineIndex]}

@@ -38,23 +38,6 @@ function mean(values: number[]): number {
 }
 
 /**
- * Calculate variance (measure of spread/contradiction)
- */
-function _variance(values: number[]): number {
-	if (values.length < 2) return 0;
-	const avg = mean(values);
-	const squaredDiffs = values.map((val) => (val - avg) ** 2);
-	return mean(squaredDiffs);
-}
-
-/**
- * Clamp value to range
- */
-function _clamp(value: number, min: number, max: number): number {
-	return Math.max(min, Math.min(max, value));
-}
-
-/**
  * Aggregate evidence for a single facet into a score.
  *
  * @param evidence - Array of evidence records for one facet, sorted oldest-first
