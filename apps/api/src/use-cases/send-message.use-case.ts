@@ -174,7 +174,8 @@ export const sendMessage = (input: SendMessageInput) =>
 				let targetFacet: FacetName;
 				let bestPriority = 0;
 				let coveredFacets = "0/30";
-				let metricsMapSize = 0;				let analyzerTokenUsage: { input: number; output: number } | null = null;
+				let metricsMapSize = 0;
+				let analyzerTokenUsage: { input: number; output: number } | null = null;
 
 				if (userMessageCount > COLD_START_USER_MSG_THRESHOLD) {
 					// Post-cold-start: conversanalyzer → save evidence → re-fetch → compute metrics → steering
@@ -250,16 +251,37 @@ export const sendMessage = (input: SendMessageInput) =>
 					targetFacet = steering.targetFacet;
 				}
 
+				// 10. Compute nearingEnd for farewell winding-down (Story 10.5)
+				const nearingEnd = userMessageCount >= config.freeTierMessageThreshold - 3;
+
+				// Compute topicTransitionsPerFiveTurns from recent assistant messages
+				const recentDomains: LifeDomain[] = [];
+				for (const msg of previousMessages) {
+					if (msg.role === "assistant" && msg.targetDomain != null) {
+						recentDomains.push(msg.targetDomain);
+					}
+				}
+				const lastFiveDomains = recentDomains.slice(-5);
+				let topicTransitionsPerFiveTurns = 0;
+				for (let i = 1; i < lastFiveDomains.length; i++) {
+					if (lastFiveDomains[i] !== lastFiveDomains[i - 1]) {
+						topicTransitionsPerFiveTurns++;
+					}
+				}
+
 				logger.info("Steering computed", {
 					sessionId: input.sessionId,
 					targetFacet,
 					targetDomain,
 					previousDomain,
 					userMessageCount,
+					coveredFacets,
+					metricsMapSize,
+					bestPriority,
+					nearingEnd,
+					topicTransitionsPerFiveTurns,
+					questionsPerAssistantTurn: 1,
 				});
-
-				// 10. Compute nearingEnd for farewell winding-down (Story 10.5)
-				const nearingEnd = userMessageCount >= config.freeTierMessageThreshold - 3;
 
 				// 11. Call Nerin with steering + nearingEnd
 				const result = yield* nerin
