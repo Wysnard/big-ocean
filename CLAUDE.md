@@ -44,13 +44,13 @@ Full GDPR compliance required for EU market expansion:
 - **front** (`port 3000`): TanStack Start SSR frontend - React 19, TanStack Router/Query/Form/DB, ElectricSQL, shadcn/ui, Tailwind v4
 - **api** (`port 4000`): Effect-ts backend - hexagonal architecture, ConversAnalyzer + formula steering pipeline, Drizzle + PostgreSQL, Better Auth
   - Health: `GET /health` | API: `/api/*`
-  - Structure: `src/handlers/` (HTTP adapters) → `src/use-cases/` (business logic)
+  - Structure: `src/handlers/` (8 handlers) → `src/use-cases/` (29 use-cases)
 
 ### Packages
 
-- **domain**: Repository interfaces (Context.Tag), schemas, branded types, domain errors - pure abstractions
+- **domain**: Repository interfaces (Context.Tag), schemas, branded types, domain errors - pure abstractions (26 repo interfaces)
 - **contracts**: HTTP API definitions (HttpApiGroup/HttpApiEndpoint) shared frontend ↔ backend
-- **infrastructure**: Repository implementations (`*RepositoryLive`), Drizzle DB schema, Pino logger
+- **infrastructure**: Repository implementations (`*RepositoryLive`), Drizzle DB schema, Pino logger (40 repo files)
 - **ui**: shadcn/ui component library
 - **lint** / **typescript-config**: Shared configurations
 
@@ -92,8 +92,6 @@ pnpm seed:test-assessment  # Run seed script directly
 
 **What gets seeded:** Test user (`test@bigocean.dev`), completed assessment with 12 messages, 30 facet scores, 5 trait scores, ~40 evidence records.
 
-See [QUICK-TESTING-GUIDE.md](./QUICK-TESTING-GUIDE.md) for full documentation.
-
 ### Git Hooks (Local Enforcement)
 
 Git hooks ensure code quality before commits and pushes:
@@ -118,25 +116,18 @@ Hooks are managed by `simple-git-hooks` (installed automatically via `pnpm insta
 
 ## Architecture & Key Patterns
 
-### Hexagonal Architecture (Ports & Adapters)
+The codebase follows **hexagonal architecture** (ports & adapters) with Effect-ts Context.Tag for dependency injection. See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full details including:
+- Layer responsibilities and dependency graph
+- Complete file inventory (use-cases, repos, handlers, DB tables)
+- Assessment pipeline and LLM architecture
+- Error architecture and location rules
+- Architectural patterns (placeholder-row, append-only events, fail-open, fire-and-forget)
 
-The codebase follows **hexagonal architecture** with clear layer separation and dependency inversion using Effect-ts Context.Tag pattern.
+**Key rules (also in ARCHITECTURE.md):**
 
-**Architecture Layers:**
-
-```
-Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
-                                         ↑
-                                  Infrastructure (injected)
-```
-
-**Layer Responsibilities:**
-
-1. **Contracts** (`packages/contracts`): HTTP API definitions shared between frontend and backend
-2. **Handlers** (`apps/api/src/handlers`): Thin HTTP adapters (controllers/presenters) - no business logic
-3. **Use-Cases** (`apps/api/src/use-cases`): Pure business logic - **main unit test target**
-4. **Domain** (`packages/domain`): Repository interfaces (Context.Tag), entities, types, errors
-5. **Infrastructure** (`packages/infrastructure`): Repository implementations (Drizzle, Pino, etc.)
+- **Hard Rule:** No business logic in handlers — all logic belongs in use-cases
+- **Error Location:** HTTP errors in `contracts/src/errors.ts`, infrastructure errors co-located with repo interfaces in `domain/src/repositories/`
+- **Error Propagation:** Use-cases and handlers must NOT remap errors. Only allowed `catchTag` is fail-open resilience.
 
 **Naming Conventions:**
 
@@ -145,45 +136,8 @@ Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
 | Repository Interface | `packages/domain/src/repositories/` | `assessment-message.repository.ts` | Context.Tag definition |
 | Repository Implementation | `packages/infrastructure/src/repositories/` | `assessment-message.drizzle.repository.ts` | Layer.effect implementation |
 | Live Layer Export | Same as implementation | `AssessmentMessageDrizzleRepositoryLive` | Production Layer |
-| Test Layer Export | Test files | `AssessmentMessageTestRepositoryLive` | Testing Layer |
 | Use-Case | `apps/api/src/use-cases/` | `send-message.use-case.ts` | Pure business logic |
 | Handler | `apps/api/src/handlers/` | `assessment.ts` | HTTP adapter |
-
-**Use-Case Pattern:** `Effect.gen` + `yield*` to access repositories → return typed result with errors in signature.
-
-**Testing:** Provide `TestLayer` with mock implementations via `Effect.provide()`.
-
-**Error Location Rules:** HTTP-facing errors MUST be in `contracts/src/errors.ts` (Schema.TaggedError). Infrastructure errors are co-located with repository interfaces in `domain/src/repositories/`. Use-cases throw contract errors directly. See [Error Architecture](./docs/ARCHITECTURE.md#error-architecture--location-rules) for complete rules.
-
-**Error Propagation Rule:** Use-cases and handlers must NOT remap errors (`catchTag`/`catchAll` to transform one error into another). Errors propagate unchanged from repositories through use-cases to the HTTP contract layer, where `.addError()` handles serialization. The only allowed `catchTag` is fail-open resilience (e.g., catching `RedisOperationError` to allow degraded operation).
-
-See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full examples and ADR-6 details.
-
-### Workspace Dependencies
-
-Packages use `workspace:*` and `workspace:^` to reference other packages in the monorepo. This ensures they're always in sync with local versions.
-
-**Dependency Graph:**
-
-```
-apps/front     → contracts, domain, ui
-apps/api       → contracts, domain, infrastructure
-contracts      → domain (schema imports)
-infrastructure → domain (DB schema lives here)
-ui             → (independent component library)
-```
-
-### Domain Package Structure
-
-```
-packages/domain/src/
-├── schemas/      # Effect Schema definitions
-├── errors/       # Tagged Error types
-├── types/        # Branded types (userId, sessionId)
-├── constants/    # Big Five traits, facets
-├── utils/        # Pure domain functions (OCEAN code gen, confidence calc)
-└── repositories/ # Context.Tag interfaces
-```
 
 ### OCEAN Code Generation (Story 3.1)
 
@@ -199,38 +153,6 @@ Pure function that deterministically maps 30 facet scores to a 5-letter OCEAN co
 import { generateOceanCode } from "@workspace/domain";
 const code = generateOceanCode(facetScoresMap); // → "HHMHM"
 ```
-
-### Effect/Platform HTTP Contracts (Story 1.6 ✅)
-
-Type-safe HTTP API contracts using @effect/platform and @effect/schema.
-
-**Key Files:**
-- Contract definitions: `packages/contracts/src/http/groups/*.ts`
-- Handler implementations: `apps/api/src/handlers/*.ts`
-- Server setup: `apps/api/src/index.ts`
-
-**Pattern:** `HttpApiGroup.make()` → `HttpApiEndpoint` → `HttpApiBuilder.group()` handlers
-
-See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full examples.
-
-**Redis Key Patterns:**
-- Cost tracking: `cost:{userId}:{YYYY-MM-DD}` (TTL: 48 hours)
-- Rate limiting: `assessments:{userId}:{YYYY-MM-DD}` (TTL: 48 hours)
-- Daily reset: Keys automatically expire, new day = fresh counters
-
-**Cost Calculation Formula:**
-```typescript
-// Story 2.2.5: Anthropic Claude pricing
-const costCents = Math.ceil(
-  (inputTokens / 1_000_000) * 0.003 +  // $3 per 1M input tokens
-  (outputTokens / 1_000_000) * 0.015    // $15 per 1M output tokens
-) * 100;
-```
-
-**Error Types:**
-- `RateLimitExceeded` (429) - Daily assessment limit reached
-- `BudgetPausedError` (503) - Daily cost budget exceeded
-- `RedisOperationError` (500) - Redis connectivity/operation failure
 
 ### Route Loader Auth Pattern
 
@@ -257,8 +179,6 @@ Use `isRedirect()` in catch blocks within `beforeLoad` to re-throw TanStack Rout
 - **Migrations:** Managed by `drizzle-kit` — run `pnpm db:migrate` to apply, `pnpm db:generate` to create new migrations
 - **Docker:** Migrations run automatically on backend startup via `docker-entrypoint.sh`
 - **Config:** `drizzle.config.ts` at repo root
-
-**Hard Rule:** No business logic in handlers - all logic belongs in use-cases.
 
 ### Tech Stack Summary
 
@@ -291,17 +211,6 @@ pnpm test:run          # Run all tests
 pnpm test:watch        # Watch mode
 pnpm --filter=api test # API tests only
 pnpm test:coverage     # With coverage
-```
-
-**Key Pattern:** Provide `TestRepositoriesLayer` (in `apps/api/src/test-utils/test-layers.ts`) to all use-case tests:
-
-```typescript
-it.effect('should work', () =>
-  Effect.gen(function* () {
-    const result = yield* myUseCase({ input: 'test' })
-    expect(result).toBeDefined()
-  }).pipe(Effect.provide(TestRepositoriesLayer))
-)
 ```
 
 ### Mock Architecture (`__mocks__` + `vi.mock()` Pattern)

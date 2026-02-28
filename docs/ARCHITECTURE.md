@@ -37,48 +37,107 @@ Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
 
 ## Key Files Inventory
 
-**Use-Cases** (`apps/api/src/use-cases/` — 14 files):
+**Use-Cases** (`apps/api/src/use-cases/` — 29 files):
+
+*Core Assessment:*
 - `start-assessment.use-case.ts` — Session creation + cost reservation
 - `send-message.use-case.ts` — Core message pipeline (ConversAnalyzer → formulas → steering → Nerin)
 - `get-results.use-case.ts` — Assessment results retrieval
+- `get-transcript.use-case.ts` — Conversation transcript retrieval
+
+*Finalization (Epic 11):*
+- `generate-results.use-case.ts` — Triggers FinAnalyzer + result generation
+- `get-finalization-status.use-case.ts` — Poll finalization progress
+- `calculate-confidence.use-case.ts` / `update-facet-scores.use-case.ts` — Score computation
+
+*Evidence:*
+- `save-facet-evidence.use-case.ts` / `get-facet-evidence.use-case.ts` / `get-message-evidence.use-case.ts` — Evidence CRUD
+
+*Profiles & Portraits (Epic 12):*
 - `create-shareable-profile.use-case.ts` / `toggle-profile-visibility.use-case.ts` — Public profiles
 - `get-public-profile.use-case.ts` — Profile viewing with archetype derivation
-- `save-facet-evidence.use-case.ts` / `get-facet-evidence.use-case.ts` / `get-message-evidence.use-case.ts` — Evidence CRUD
-- `calculate-confidence.use-case.ts` / `update-facet-scores.use-case.ts` — Score computation
+- `generate-full-portrait.use-case.ts` / `get-portrait-status.use-case.ts` — Portrait generation
+
+*Monetization (Epic 13):*
+- `process-purchase.use-case.ts` / `get-credits.use-case.ts` — Purchase + credit tracking
+
+*Relationships (Epic 14):*
+- `create-invitation.use-case.ts` / `accept-invitation.use-case.ts` / `refuse-invitation.use-case.ts` — Invitation flow
+- `get-invitation-by-token.use-case.ts` / `list-invitations.use-case.ts` — Invitation queries
+- `generate-relationship-analysis.use-case.ts` / `get-relationship-analysis.use-case.ts` / `get-relationship-state.use-case.ts` — Analysis
+
+*Growth (Epic 15):*
+- `join-waitlist.use-case.ts` — Waitlist signup
+
+*Session Management:*
 - `list-user-sessions.use-case.ts` / `resume-session.use-case.ts` — Session management
 
-**Domain Repository Interfaces** (`packages/domain/src/repositories/` — 14 files):
-- `assessment-session.repository.ts` / `assessment-message.repository.ts` — Core session data
-- `conversanalyzer.repository.ts` — Haiku analysis (Phase 2)
-- `conversation-evidence.repository.ts` — Lean per-message evidence (Phase 2)
+**Domain Repository Interfaces** (`packages/domain/src/repositories/` — 26 files):
+
+*Core:*
+- `assessment-session.repository.ts` / `assessment-message.repository.ts` — Session data
+- `conversanalyzer.repository.ts` — Haiku analysis
+- `conversation-evidence.repository.ts` — Lean per-message evidence
 - `nerin-agent.repository.ts` — Nerin AI agent
-- `cost-guard.repository.ts` — Rate limiting + budget enforcement
-- `redis.repository.ts` — Redis operations
-- `public-profile.repository.ts` — Shareable profiles
+- `cost-guard.repository.ts` / `redis.repository.ts` — Rate limiting + budget
 - `logger.repository.ts` — Structured logging
-- Legacy (pending removal in Epic 11): several Phase 1 interfaces — see `packages/domain/src/repositories/` for full list
 
-**Infrastructure Implementations** (`packages/infrastructure/src/repositories/` — 23 files):
+*Finalization & Results (Epic 11):*
+- `assessment-result.repository.ts` — Final assessment results
+- `finalization-evidence.repository.ts` — Rich evidence for portraits
+- `finanalyzer.repository.ts` / `analyzer.repository.ts` — LLM analysis
+- `facet-evidence.repository.ts` — Legacy facet evidence
+
+*Profiles & Portraits (Epic 12):*
+- `public-profile.repository.ts` — Shareable profiles
+- `portrait.repository.ts` / `portrait-generator.repository.ts` / `teaser-portrait.repository.ts` — Portrait generation & storage
+- `profile-access-log.repository.ts` — Access audit trail
+
+*Monetization (Epic 13):*
+- `purchase-event.repository.ts` / `payment-gateway.repository.ts` — Purchases
+
+*Relationships (Epic 14):*
+- `relationship-invitation.repository.ts` / `relationship-analysis.repository.ts` / `relationship-analysis-generator.repository.ts` — Relationship flow
+
+*Growth (Epic 15):*
+- `waitlist.repository.ts` — Waitlist
+
+*Legacy (wired but unused by any handler):*
+- `orchestrator.repository.ts` / `orchestrator-graph.repository.ts` — StateGraph orchestrator composed in `index.ts` but unreachable from any HTTP path
+
+**Infrastructure Implementations** (`packages/infrastructure/src/repositories/` — 40 files):
 - Drizzle repositories for all DB-backed domains
-- `conversanalyzer.anthropic.repository.ts` — Haiku LLM calls (Phase 2)
-- `conversation-evidence.drizzle.repository.ts` — Evidence persistence (Phase 2)
-- `cost-guard.redis.repository.ts` — Redis-based cost tracking
-- `nerin-agent.mock.repository.ts` — Nerin agent (mock for testing)
-- Legacy (pending removal in Epic 11): several Phase 1 implementations — see directory for full list
+- `conversanalyzer.anthropic.repository.ts` — Haiku LLM calls
+- `finanalyzer.anthropic.repository.ts` / `finanalyzer.mock.repository.ts` — Sonnet finalization
+- `nerin-agent.langgraph.repository.ts` — Nerin agent (LangGraph-based chat)
+- `portrait-generator.claude.repository.ts` / `teaser-portrait.anthropic.repository.ts` — Portrait LLM
+- `relationship-analysis-generator.anthropic.repository.ts` — Relationship analysis LLM
+- `payment-gateway.polar.repository.ts` — Polar payment integration
+- `cost-guard.redis.repository.ts` / `redis.ioredis.repository.ts` — Redis
+- `logger.pino.repository.ts` — Pino logger
+- Mock variants (`*.mock.repository.ts`) for testing
 
-**Handlers** (`apps/api/src/handlers/`):
+**Handlers** (`apps/api/src/handlers/` — 8 files):
 - `health.ts` — Health check endpoint
-- `assessment.ts` — Assessment endpoints (start, send-message)
+- `assessment.ts` — Assessment endpoints (start, send-message, generate-results, finalization-status)
 - `evidence.ts` — Evidence endpoints
 - `profile.ts` — Public profile endpoints
+- `portrait.ts` — Portrait generation & status
+- `purchase.ts` — Purchase processing & credits
+- `relationship.ts` — Invitations & relationship analysis
+- `waitlist.ts` — Waitlist signup
 
 **DB Schema:** `packages/infrastructure/src/db/drizzle/schema.ts`
+
+**Key Tables:** `user`, `session`, `account`, `verification`, `assessment_sessions`, `assessment_messages`, `conversation_evidence`, `finalization_evidence`, `assessment_results`, `public_profiles`, `portraits`, `purchase_events`, `profile_access_log`, `waitlist_emails`, `relationship_invitations`, `relationship_analyses`
+
+**Key pgEnums:** `evidence_domain` (work, relationships, family, leisure, solo, other), `bigfive_facet_name` (30 facets)
 
 ## Assessment Pipeline (LLM Architecture)
 
 The assessment uses a sequential Effect pipeline for message processing. No graph-based routing — the use-case directly composes the pipeline.
 
-### Message Flow (Current — Phase 2)
+### Message Flow
 
 ```
 User message arrives
@@ -88,7 +147,7 @@ User message arrives
   → Save conversation_evidence rows (max 3 per message)
   → computeFacetMetrics(allEvidence) — pure domain function
   → computeSteeringTarget(metrics, previousDomain, config) — entropy-based domain selection
-  → Nerin (Claude) responds with steering hint
+  → Nerin (Claude via LangGraph) responds with steering hint
   → Save AI message with target_domain + target_bigfive_facet
   → Return { response, messageCount, isFinalTurn }
 ```
@@ -110,11 +169,12 @@ Pure domain functions in `packages/domain/src/utils/formula.ts`:
 
 No hand-crafted domain-to-facet mapping. The formula computes which domain would help which facet based on actual evidence distribution.
 
-### FinAnalyzer (Sonnet — Epic 11, not yet implemented)
+### FinAnalyzer (Sonnet — Epic 11)
 
 - **Purpose:** Re-analyze ALL messages at assessment end with full conversation context
 - **Produces:** Portrait-quality `finalization_evidence` — the single source of truth for results
-- **Architecture:** Will run during finalization flow, producing rich evidence (quotes, rawDomain, highlights)
+- **Architecture:** Runs during finalization flow, producing rich evidence (quotes, rawDomain, highlights)
+- **Repository:** `FinanalyzerRepository` → `finanalyzer.anthropic.repository.ts`
 
 ### Two-Tier Evidence Model
 
@@ -123,8 +183,6 @@ No hand-crafted domain-to-facet mapping. The formula computes which domain would
 | `conversation_evidence` | Steering (Haiku output) | Lean: `bigfive_facet, score, confidence, domain` | Kept for analytics |
 | `finalization_evidence` | Results + portrait (Sonnet output) | Rich: + `raw_domain, quote, highlight_start, highlight_end` | Authoritative, linked to `assessment_results` |
 
-**`conversation_evidence`** exists today (Epic 10). **`finalization_evidence`** will be added in Epic 11.
-
 ### Session Flow
 
 ```
@@ -132,10 +190,33 @@ Anonymous start → /api/assessment/start (no auth required)
   → Chat with Nerin (ConversAnalyzer on every message)
   → Message count reaches MESSAGE_THRESHOLD (30)
   → Frontend shows auth gate
-  → POST /api/assessment/generate-results (auth required, Epic 11)
+  → POST /api/assessment/generate-results (auth required)
   → FinAnalyzer + portrait generation → assessment_results
   → Redirect to results page
 ```
+
+### LangGraph Status
+
+- **Nerin agent** (`nerin-agent.langgraph.repository.ts`): Actively used for conversational responses via LangGraph
+- **Orchestrator** (`orchestrator-graph.langgraph.repository.ts`, `orchestrator.langgraph.repository.ts`, `orchestrator.state.ts`, `orchestrator.nodes.ts`, `facet-steering.ts`, `checkpointer.*.repository.ts`): Composed in `index.ts` but **not called by any handler or use-case**. Legacy from Phase 1 graph-based routing. Candidate for removal.
+
+## Architectural Patterns
+
+### Placeholder-Row Pattern (Async Generation)
+
+Used by portraits and relationship analyses. Insert a DB row with `status: "generating"` immediately, return 202 to client, then generate asynchronously. Client polls a status endpoint until `status: "completed"`.
+
+### Append-Only Purchase Events + Capability Derivation
+
+Purchase events are append-only (`purchase_events` table). User capabilities (credits, unlocked features) are derived by aggregating events rather than maintaining mutable state.
+
+### Circuit Breaker with Fail-Open Resilience
+
+Redis-dependent features (cost tracking, rate limiting) use fail-open: if Redis is unavailable, the request proceeds and the failure is logged. Prevents Redis outages from blocking conversations.
+
+### Fire-and-Forget Audit Logging
+
+Profile access logging (`profile_access_log`) is fire-and-forget — failures don't block the response.
 
 ## Cost Tracking & Rate Limiting
 
@@ -370,10 +451,6 @@ const TestLayer = Layer.mergeAll(CostGuardRedisRepositoryLive, LoggerPinoReposit
 ## Database (Drizzle ORM + PostgreSQL)
 
 Type-safe database access using Drizzle ORM with PostgreSQL. Schema lives in `packages/infrastructure/src/db/drizzle/schema.ts`.
-
-**Key Tables:** `assessment_sessions`, `assessment_messages`, `conversation_evidence`, `public_profiles`, `users`
-
-**Key pgEnums:** `evidence_domain` (work, relationships, family, leisure, solo, other), `bigfive_facet_name` (30 facets)
 
 > **Note (Story 2-9):** `facet_scores` and `trait_scores` tables were removed. Scores are now computed on-demand from evidence via pure functions.
 
