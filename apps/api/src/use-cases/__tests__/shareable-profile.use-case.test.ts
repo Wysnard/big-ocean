@@ -13,6 +13,7 @@ vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repos
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 vi.mock("@workspace/infrastructure/repositories/public-profile.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/profile-access-log.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/facet-evidence.drizzle.repository");
 
 import { it } from "@effect/vitest";
 import {
@@ -29,7 +30,7 @@ import {
 	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
 	_resetMockState as resetSessionState,
 } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
-import { FacetEvidenceNoopRepositoryLive } from "@workspace/infrastructure/repositories/facet-evidence.noop.repository";
+import { FacetEvidenceDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/facet-evidence.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 import { ProfileAccessLogDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/profile-access-log.drizzle.repository";
 import {
@@ -82,7 +83,7 @@ const BaseTestLayer = Layer.mergeAll(
 	LoggerPinoRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
-	FacetEvidenceNoopRepositoryLive,
+	FacetEvidenceDrizzleRepositoryLive,
 	AppConfigTestLive,
 );
 
