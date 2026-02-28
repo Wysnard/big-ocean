@@ -38,8 +38,8 @@ const seedPublicProfile = (isPublic = true) =>
 		const profile = yield* repo.createProfile({
 			sessionId: "session-1",
 			userId: USER_ID,
-			oceanCode5: "HHMHM",
-			oceanCode4: "HHMH",
+			oceanCode5: "GDANR",
+			oceanCode4: "GDAN",
 		});
 		if (isPublic) {
 			yield* repo.toggleVisibility(profile.id, true);
@@ -86,7 +86,7 @@ describe("getPublicProfile", () => {
 			const result = yield* getPublicProfile({ publicProfileId: profile.id });
 
 			expect(result.archetypeName).toBeDefined();
-			expect(result.oceanCode).toBe("HHMHM");
+			expect(result.oceanCode).toBe("GDANR");
 			expect(result.description).toBeDefined();
 			expect(result.color).toBeDefined();
 			expect(result.traitSummary).toBeDefined();
