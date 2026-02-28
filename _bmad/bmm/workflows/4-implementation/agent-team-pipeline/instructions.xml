@@ -1,0 +1,375 @@
+<workflow>
+  <critical>The workflow execution engine is governed by: {project-root}/_bmad/core/tasks/workflow.xml</critical>
+  <critical>You MUST have already loaded and processed: {installed_path}/workflow.yaml</critical>
+  <critical>Communicate all responses in {communication_language} and language MUST be tailored to {user_skill_level}</critical>
+  <critical>Generate all documents in {document_output_language}</critical>
+  <critical>This workflow uses Claude Code agent teams. Requires CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 in settings.</critical>
+  <critical>Execute ALL steps in exact order; do NOT skip steps</critical>
+  <critical>Reference doc with full pipeline design: {installed_path}/workflow.md</critical>
+
+  <!-- ============================================================ -->
+  <!-- STAGE 1: Find or create the next ready story                 -->
+  <!-- ============================================================ -->
+  <step n="1" goal="Find next ready story and prepare for pipeline">
+    <check if="{{story_file}} is provided">
+      <action>Use {{story_file}} directly</action>
+      <action>Read COMPLETE story file</action>
+      <action>Extract story_key from filename or metadata</action>
+      <goto anchor="story_loaded" />
+    </check>
+
+    <check if="{{sprint_status}} file exists">
+      <action>Load the FULL file: {{sprint_status}}</action>
+      <action>Find the FIRST story where status equals "ready-for-dev" (reading top to bottom)</action>
+      <action>Story keys match pattern: number-number-name (e.g., "5-1-profile-page")</action>
+      <action>Skip epic keys (epic-X) and retrospectives</action>
+
+      <check if="no ready-for-dev story found">
+        <output>No ready-for-dev stories in sprint-status.yaml. Run create-story first or provide a story path.</output>
+        <ask>Provide story file path or type "create" to run create-story:</ask>
+        <check if="user says create">
+          <action>HALT - Run create-story workflow first, then re-run this orchestration</action>
+        </check>
+        <check if="user provides path">
+          <action>Store as {{story_file}}</action>
+          <action>Read COMPLETE story file</action>
+          <action>Extract story_key</action>
+          <goto anchor="story_loaded" />
+        </check>
+      </check>
+    </check>
+
+    <action>Store story_key and derive story file path: {story_dir}/{{story_key}}.md</action>
+    <action>Read COMPLETE story file</action>
+
+    <anchor id="story_loaded" />
+
+    <action>Record baseline_commit = current HEAD SHA via `git rev-parse HEAD`</action>
+    <action>Verify story has Status: ready-for-dev</action>
+    <action>Derive team_name from story_key: "story-{{story_key}}"</action>
+
+    <output>📋 **Story Loaded for Orchestration**
+      Story: {{story_key}}
+      Baseline: {{baseline_commit}}
+      Team: {{team_name}}
+    </output>
+  </step>
+
+  <!-- ============================================================ -->
+  <!-- STAGE 2: Create team and task list                           -->
+  <!-- ============================================================ -->
+  <step n="2" goal="Create agent team and define all pipeline tasks">
+    <action>Use TeamCreate tool:
+      - team_name: "{{team_name}}"
+      - description: "Story pipeline for {{story_key}}"
+    </action>
+
+    <action>Create tasks via TaskCreate (all start as pending):
+      1. "Adversarial review of story {{story_key}}" — description includes story_path, baseline_commit
+      2. "Architect filter review findings" — addBlockedBy: [task-1]
+      3. "Implement story {{story_key}}" — addBlockedBy: [task-2] (or task-1 if no critical findings)
+      4. "Code review implementation" — addBlockedBy: [task-3]
+      5. "Fix code review findings" — addBlockedBy: [task-4]
+      6. "E2E validation" — addBlockedBy: [task-5] (or task-4 if no fix needed)
+      7. "Push and create PR" — addBlockedBy: [task-6]
+    </action>
+
+    <output>🏗️ **Team Created:** {{team_name}}
+      7 pipeline tasks created with dependency chain.
+    </output>
+  </step>
+
+  <!-- ============================================================ -->
+  <!-- STAGE 3: Adversarial Review (worktree)                      -->
+  <!-- ============================================================ -->
+  <step n="3" goal="Spawn reviewer agent for adversarial review of the story">
+    <action>Update task 1 status to in_progress</action>
+
+    <action>Spawn Agent:
+      - subagent_type: "general-purpose"
+      - team_name: "{{team_name}}"
+      - name: "reviewer"
+      - isolation: "worktree"
+      - prompt: |
+          You are an adversarial reviewer. Read the story file at {{story_path}}.
+          Execute a thorough adversarial review looking for:
+          - Missing acceptance criteria or ambiguous requirements
+          - Technical risks, missing error handling, security concerns
+          - Inconsistencies between story tasks and acceptance criteria
+          - Missing edge cases
+
+          Produce a numbered findings list. Each finding must have:
+          - Number, Severity (critical/major/minor/nit), Description
+
+          If you find ZERO critical or major findings, state "NO CRITICAL FINDINGS".
+          Return the complete findings list.
+    </action>
+
+    <action>Receive findings from reviewer agent</action>
+    <action>Update task 1 status to completed</action>
+
+    <check if="findings contain critical or major items">
+      <action>Store findings_list for Stage 4</action>
+      <goto step="4">Architect filter needed</goto>
+    </check>
+
+    <check if="no critical or major findings">
+      <output>✅ Adversarial review passed — no critical/major findings. Skipping architect filter.</output>
+      <action>Update task 2 status to completed (skipped — no critical findings)</action>
+      <goto step="5">Skip to dev</goto>
+    </check>
+  </step>
+
+  <!-- ============================================================ -->
+  <!-- STAGE 4: Architect Filter (main branch)                     -->
+  <!-- ============================================================ -->
+  <step n="4" goal="Spawn architect to filter and apply review findings">
+    <action>Update task 2 status to in_progress</action>
+
+    <action>Spawn Agent:
+      - subagent_type: "general-purpose"
+      - team_name: "{{team_name}}"
+      - name: "architect"
+      - prompt: |
+          You are the project architect. Review these adversarial findings against story {{story_path}}:
+
+          {{findings_list}}
+
+          For each finding decide:
+          - KEEP: Critical issue that will cause implementation failure — apply fix to story file
+          - DROP: Style preference, low-risk, or not actionable
+
+          Apply all KEEP findings directly to the story file at {{story_path}}.
+          Save the updated story file. Report which findings were kept vs dropped.
+    </action>
+
+    <action>Receive architect's report</action>
+    <action>Update task 2 status to completed</action>
+  </step>
+
+  <!-- ============================================================ -->
+  <!-- STAGE 5: Dev Implementation (worktree)                      -->
+  <!-- ============================================================ -->
+  <step n="5" goal="Spawn dev agent to implement the story in a worktree">
+    <action>Update task 3 status to in_progress</action>
+
+    <action>Spawn Agent:
+      - subagent_type: "general-purpose"
+      - team_name: "{{team_name}}"
+      - name: "dev"
+      - isolation: "worktree"
+      - prompt: |
+          You are the developer. Implement story {{story_key}}.
+
+          1. Read the story file at {{story_path}} for full context
+          2. Read CLAUDE.md and relevant docs for project conventions
+          3. Create feature branch: feat/story-{{story_key}}
+          4. Implement ALL tasks/subtasks from the story following TDD red-green-refactor
+          5. After implementation, run: pnpm turbo typecheck
+          6. If typecheck fails, fix and retry (max {{max_typecheck_retries}} attempts)
+          7. Commit with conventional commit messages
+
+          HALT if 3 consecutive typecheck failures.
+
+          When done, report:
+          - worktree_path (your current working directory)
+          - dev_branch name
+          - commit SHA
+          - typecheck status (pass/fail)
+    </action>
+
+    <action>Receive dev agent results: worktree_path, dev_branch, commit SHA</action>
+    <action>Update task 3 status to completed</action>
+
+    <check if="dev agent reported HALT (3 typecheck failures)">
+      <output>🛑 **Pipeline Halted:** Dev failed typecheck 3 times.
+        Review the worktree at {{worktree_path}} and fix manually.
+      </output>
+      <action>HALT - Manual intervention required</action>
+    </check>
+
+    <output>✅ **Implementation Complete**
+      Branch: {{dev_branch}}
+      Worktree: {{worktree_path}}
+    </output>
+  </step>
+
+  <!-- ============================================================ -->
+  <!-- STAGE 6: Code Review (same worktree)                        -->
+  <!-- ============================================================ -->
+  <step n="6" goal="Spawn code reviewer in the dev worktree">
+    <action>Update task 4 status to in_progress</action>
+
+    <action>Spawn Agent:
+      - subagent_type: "feature-dev:code-reviewer"
+      - team_name: "{{team_name}}"
+      - name: "code-reviewer"
+      - prompt: |
+          Review all changes on branch {{dev_branch}} vs baseline {{baseline_commit}}
+          in the worktree at {{worktree_path}}.
+
+          Run: cd {{worktree_path}} && git diff {{baseline_commit}}...HEAD
+
+          Produce a numbered findings list with:
+          - Number, Severity (critical/high/medium/low), Confidence (high/medium/low), Description, File:Line
+
+          Also run: cd {{worktree_path}} && pnpm turbo typecheck
+          to verify your understanding of the code.
+
+          Return the complete findings list.
+    </action>
+
+    <action>Receive review_findings from code reviewer</action>
+    <action>Update task 4 status to completed</action>
+
+    <check if="review has critical or high-confidence findings">
+      <action>Store review_findings for fix stage</action>
+      <goto step="7">Fixes needed</goto>
+    </check>
+
+    <check if="no critical/high findings">
+      <output>✅ Code review passed — no critical findings. Skipping fix stage.</output>
+      <action>Update task 5 status to completed (skipped — no fixes needed)</action>
+      <goto step="8">Skip to E2E</goto>
+    </check>
+  </step>
+
+  <!-- ============================================================ -->
+  <!-- STAGE 7: Fix Review Findings (same worktree)                -->
+  <!-- ============================================================ -->
+  <step n="7" goal="Spawn dev to fix code review findings">
+    <action>Update task 5 status to in_progress</action>
+
+    <action>Spawn Agent:
+      - subagent_type: "general-purpose"
+      - team_name: "{{team_name}}"
+      - name: "dev-fix"
+      - prompt: |
+          You are the developer fixing code review findings in worktree {{worktree_path}}.
+
+          cd {{worktree_path}}
+
+          Address these findings (critical and high-confidence only):
+          {{review_findings}}
+
+          1. Fix each finding
+          2. Commit fixes with: fix: address code review findings
+          3. Run: pnpm turbo typecheck — must pass
+          4. If typecheck fails, fix and retry (max {{max_typecheck_retries}} attempts)
+
+          HALT if 3 consecutive typecheck failures.
+          Report fix commit SHA and typecheck status.
+    </action>
+
+    <action>Receive fix results</action>
+    <action>Update task 5 status to completed</action>
+
+    <check if="fix agent reported HALT">
+      <output>🛑 **Pipeline Halted:** Fix stage failed typecheck 3 times.</output>
+      <action>HALT - Manual intervention required</action>
+    </check>
+  </step>
+
+  <!-- ============================================================ -->
+  <!-- STAGE 8: E2E Validation (same worktree)                     -->
+  <!-- ============================================================ -->
+  <step n="8" goal="Spawn QA agent for E2E validation">
+    <action>Update task 6 status to in_progress</action>
+
+    <action>Spawn Agent:
+      - subagent_type: "general-purpose"
+      - team_name: "{{team_name}}"
+      - name: "qa"
+      - prompt: |
+          You are QA validating story {{story_key}} in worktree {{worktree_path}}.
+
+          cd {{worktree_path}}
+
+          1. Read the story file at {{story_path}} — focus on Acceptance Criteria
+          2. Write or extend Playwright E2E tests that validate user-facing behavior
+          3. Tests MUST use actual UI interactions (clicks, forms, navigation) — NOT direct API calls
+          4. Extend existing test files before creating new ones
+          5. Run: pnpm test:e2e (or the relevant Playwright command)
+          6. If tests fail, fix and retry (max {{max_e2e_retries}} attempts)
+
+          HALT if 3 consecutive E2E failures.
+          Report: test file paths, pass/fail, commit SHA.
+    </action>
+
+    <action>Receive QA results</action>
+    <action>Update task 6 status to completed</action>
+
+    <check if="QA agent reported HALT">
+      <output>🛑 **Pipeline Halted:** E2E validation failed 3 times.</output>
+      <action>HALT - Manual intervention required</action>
+    </check>
+  </step>
+
+  <!-- ============================================================ -->
+  <!-- STAGE 9: Push and Create PR (same worktree)                 -->
+  <!-- ============================================================ -->
+  <step n="9" goal="Push branch and create PR">
+    <action>Update task 7 status to in_progress</action>
+
+    <action>Spawn Agent:
+      - subagent_type: "general-purpose"
+      - team_name: "{{team_name}}"
+      - name: "pr-creator"
+      - prompt: |
+          You are creating the PR for story {{story_key}} from worktree {{worktree_path}}.
+
+          cd {{worktree_path}}
+
+          1. Verify all commits are on branch {{dev_branch}}
+          2. Push: git push -u origin {{dev_branch}}
+          3. Create PR via gh pr create:
+             - Title: story title from {{story_path}}
+             - Body: summary of changes, link to story file, test plan
+             - Base: master
+          4. Return the PR URL
+    </action>
+
+    <action>Receive PR URL from agent</action>
+    <action>Update task 7 status to completed</action>
+  </step>
+
+  <!-- ============================================================ -->
+  <!-- STAGE 10: Cleanup and report                                -->
+  <!-- ============================================================ -->
+  <step n="10" goal="Shutdown team, update sprint status, report">
+    <action>Send shutdown_request to all remaining teammates via SendMessage</action>
+    <action>Wait for shutdown confirmations</action>
+    <action>Use TeamDelete to clean up team resources</action>
+
+    <!-- Update sprint status -->
+    <check if="{{sprint_status}} file exists">
+      <action>Load {{sprint_status}}</action>
+      <action>Update development_status[{{story_key}}] = "review"</action>
+      <action>Save file preserving all comments and structure</action>
+    </check>
+
+    <!-- Update story file status -->
+    <action>Update story file Status to "review"</action>
+
+    <output>🎉 **Pipeline Complete for {{story_key}}**
+
+      **PR:** {{pr_url}}
+      **Branch:** {{dev_branch}}
+      **Status:** review
+
+      **Pipeline Summary:**
+      - ✅ Story loaded and reviewed
+      - ✅ Implementation complete
+      - ✅ Code review passed
+      - ✅ E2E validation passed
+      - ✅ PR created
+      - ✅ Team cleaned up
+
+      **Next steps:**
+      - Review the PR at {{pr_url}}
+      - Merge when satisfied
+      - Run sprint-status to update tracking
+    </output>
+  </step>
+
+</workflow>
