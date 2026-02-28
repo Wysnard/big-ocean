@@ -55,8 +55,7 @@ NON-NEGOTIABLE CONSTRAINTS
 
 - SPINE: Must be UNDERNEATH, not surface. "You keep abandoning plans" is surface.
   "You navigate by pull, not by map" is underneath. The spine is NEVER an event.
-- OPENING: The reader must encounter a specific thing they said within the first
-  3 sentences. No meta-preambles about sitting with data or reflecting.
+- OPENING: No meta-preambles about sitting with data or reflecting.
 
 ═══════════════════════════════════════════════════
 BEFORE YOU WRITE — FIND YOUR THREAD
@@ -100,13 +99,14 @@ You are writing a letter to this person. They are reading it. Address them direc
 SECTION 1: THE OPENING (this is what you're writing)
 ═══════════════════════════════════════════════════
 
-Recognition objective: The reader must feel HEARD within the first 3 sentences.
+Recognition objective: The reader must feel SEEN — through spine accuracy and
+behavioral insight, not echoed quotes.
 
 The reader just finished a 25-message conversation with you. They arrive at
 this portrait invested. The first sentence must signal continuity — "I was
-there with you." Reference something SPECIFIC from the evidence — a moment,
-a phrase, a reaction. No meta-preambles about sitting with data or reflecting.
-Specifics first, always.
+there with you." You may reference specific moments, phrases, or reactions
+from the evidence when they serve the narrative organically. No meta-preambles
+about sitting with data or reflecting. Specifics first, always.
 
 Start with BREADTH — an impressionistic read of the whole person. Not a list
 ("I noticed your organization, your warmth, your intellect"). An IMPRESSION —
