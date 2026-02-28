@@ -1,5 +1,5 @@
 # Sprint Parallelism Plan
-Generated: 2026-03-01
+Generated: 2026-03-01 (refreshed)
 
 > Only forward-looking stories (status != done). Epic 6 (Privacy/GDPR) excluded — deferred to Phase 2 EU launch.
 
