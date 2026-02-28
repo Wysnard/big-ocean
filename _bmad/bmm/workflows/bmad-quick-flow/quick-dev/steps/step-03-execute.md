@@ -46,8 +46,9 @@ For each task:
 - Follow conventions observed in codebase
 - Add appropriate comments where non-obvious
 
-### 3. Test
+### 3. Typecheck + Test
 
+- **Run `pnpm turbo typecheck` — this is a mandatory gate.** If typecheck fails, fix all type errors before proceeding. Do not skip.
 - Write tests if appropriate for the change
 - Run existing tests to catch regressions
 - Verify the specific AC for this task
@@ -98,6 +99,7 @@ When ALL tasks are complete (or halted on blocker), read fully and follow: `step
 - All tasks attempted
 - Code follows existing patterns
 - Error handling appropriate
+- **Typecheck passes (`pnpm turbo typecheck`)**
 - Tests written where appropriate
 - Tests passing
 - No unnecessary halts

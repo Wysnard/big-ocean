@@ -1,6 +1,8 @@
 ---
 name: 'step-06-resolve-findings'
 description: 'Handle review findings interactively, apply fixes, update tech-spec with final status'
+
+nextStepFile: './step-07-e2e-validation.md'
 ---
 
 # Step 6: Resolve Findings
@@ -62,7 +64,8 @@ After all findings processed, summarize what was fixed/skipped.
 
 1. Filter findings to only those classified as "real"
 2. Apply fixes for each real finding
-3. Report what was fixed:
+3. **Run `pnpm turbo typecheck` — mandatory gate. If fixes introduced type errors, fix them before proceeding.**
+4. Report what was fixed:
 
 ```
 **Auto-fix Applied:**
@@ -116,15 +119,9 @@ If `{execution_mode}` is "tech-spec":
 
 ---
 
-## WORKFLOW COMPLETE
+## NEXT STEP
 
-This is the final step. The Quick Dev workflow is now complete.
-
-User can:
-
-- Commit changes
-- Run additional tests
-- Start new Quick Dev session
+Proceed to `step-07-e2e-validation.md` for Playwright E2E validation.
 
 ---
 

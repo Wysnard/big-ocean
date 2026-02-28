@@ -32,7 +32,11 @@ Verify all tasks are marked complete:
 - [ ] No tasks skipped without documented reason
 - [ ] Any blocked tasks have clear explanation
 
-### 2. Tests Passing
+### 2. Typecheck Passing
+
+- [ ] **`pnpm turbo typecheck` passes with zero errors** — mandatory gate, do not proceed if failing
+
+### 3. Tests Passing
 
 Verify test status:
 
@@ -40,7 +44,7 @@ Verify test status:
 - [ ] New tests written for new functionality
 - [ ] No test warnings or skipped tests without reason
 
-### 3. Acceptance Criteria Satisfied
+### 4. Acceptance Criteria Satisfied
 
 For each AC:
 
@@ -48,7 +52,7 @@ For each AC:
 - [ ] Can explain how implementation satisfies AC
 - [ ] Edge cases considered
 
-### 4. Patterns Followed
+### 5. Patterns Followed
 
 Verify code quality:
 
@@ -96,6 +100,7 @@ Proceed immediately to `step-05-adversarial-review.md`.
 ## SUCCESS METRICS
 
 - All tasks verified complete
+- **Typecheck passes (`pnpm turbo typecheck`)**
 - All tests passing
 - All AC satisfied
 - Patterns followed

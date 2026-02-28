@@ -2,7 +2,7 @@
 name: 'step-05-adversarial-review'
 description: 'Construct diff and invoke adversarial review task'
 
-nextStepFile: './step-06-resolve-findings.md'
+nextStepFile: './step-05b-architect-filter.md'
 ---
 
 # Step 5: Adversarial Code Review
@@ -83,7 +83,7 @@ If TodoWrite or similar tool is available, turn each finding into a TODO, includ
 
 ## NEXT STEP
 
-With findings in hand, read fully and follow: `step-06-resolve-findings.md` for user to choose resolution approach.
+With findings in hand, read fully and follow: `step-05b-architect-filter.md` for architect to filter to critical-only findings.
 
 ---
 

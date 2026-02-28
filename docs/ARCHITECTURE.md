@@ -200,7 +200,27 @@ Anonymous start → /api/assessment/start (no auth required)
 
 ### Placeholder-Row Pattern (Async Generation)
 
-Used by portraits and relationship analyses. Insert a DB row with `status: "generating"` immediately, return 202 to client, then generate asynchronously. Client polls a status endpoint until `status: "completed"`.
+Used for any resource that requires slow LLM generation (portraits, relationship analyses). The pattern has four parts:
+
+**1. Insert placeholder row** — The triggering use-case inserts a DB row with `status: "generating"` and `updated_at` timestamp, then returns 202 immediately.
+
+**2. Fork async generation** — The same use-case spawns the generation via `Effect.forkDaemon(generateX(...))`. The daemon runs independently; if it fails, the row stays in "generating" state.
+
+**3. Client polls status endpoint** — A separate status use-case derives status from the row:
+- Row missing → `"not_started"`
+- `status: "generating"` and not stale → `"generating"`
+- `status: "completed"` → `"completed"` (return content)
+- `status: "generating"` and stale (age > threshold) → trigger lazy retry
+
+**4. Lazy retry via staleness** — If the row has been "generating" too long (stale) and `retry_count < max_retries`, the status endpoint itself spawns a new `forkDaemon` and increments `retry_count`. This self-heals silently without requiring the original trigger.
+
+**Used by:**
+- `process-purchase.use-case.ts` → `generate-full-portrait.use-case.ts` (portraits table)
+- `accept-invitation.use-case.ts` → `generate-relationship-analysis.use-case.ts` (relationship_analyses table)
+- `get-portrait-status.use-case.ts` — status polling + lazy retry
+- `get-relationship-state.use-case.ts` — status polling
+
+**Key rule:** The triggering use-case (e.g., `process-purchase`) owns the placeholder insert + initial `forkDaemon`. The status use-case (e.g., `get-portrait-status`) owns staleness detection + retry. Generation use-cases (e.g., `generate-full-portrait`) are pure — they receive the row ID and update it on completion.
 
 ### Append-Only Purchase Events + Capability Derivation
 
