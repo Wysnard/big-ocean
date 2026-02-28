@@ -172,9 +172,6 @@ export const sendMessage = (input: SendMessageInput) =>
 				// 9. Steering computation — runs on every message (cold start + post-cold-start)
 				let targetDomain: LifeDomain;
 				let targetFacet: FacetName;
-				let bestPriority = 0;
-				let coveredFacets = "0/30";
-				let metricsMapSize = 0;
 				let analyzerTokenUsage: { input: number; output: number } | null = null;
 
 				if (userMessageCount > COLD_START_USER_MSG_THRESHOLD) {
@@ -237,36 +234,11 @@ export const sendMessage = (input: SendMessageInput) =>
 					const steering = computeSteeringTarget(metrics, previousDomain);
 					targetDomain = steering.targetDomain;
 					targetFacet = steering.targetFacet;
-					bestPriority = steering.bestPriority;
-					metricsMapSize = metrics.size;
-					let coveredCount = 0;
-					for (const [, m] of metrics) {
-						if (m.confidence > 0.3) coveredCount++;
-					}
-					coveredFacets = `${coveredCount}/30`;
 				} else {
 					// Cold start: greeting seed from pool
 					const steering = computeSteeringTarget(new Map(), null, undefined, GREETING_MESSAGES.length);
 					targetDomain = steering.targetDomain;
 					targetFacet = steering.targetFacet;
-				}
-
-				// 10. Compute nearingEnd for farewell winding-down (Story 10.5)
-				const nearingEnd = userMessageCount >= config.freeTierMessageThreshold - 3;
-
-				// Compute topicTransitionsPerFiveTurns from recent assistant messages
-				const recentDomains: LifeDomain[] = [];
-				for (const msg of previousMessages) {
-					if (msg.role === "assistant" && msg.targetDomain != null) {
-						recentDomains.push(msg.targetDomain);
-					}
-				}
-				const lastFiveDomains = recentDomains.slice(-5);
-				let topicTransitionsPerFiveTurns = 0;
-				for (let i = 1; i < lastFiveDomains.length; i++) {
-					if (lastFiveDomains[i] !== lastFiveDomains[i - 1]) {
-						topicTransitionsPerFiveTurns++;
-					}
 				}
 
 				logger.info("Steering computed", {
@@ -275,13 +247,10 @@ export const sendMessage = (input: SendMessageInput) =>
 					targetDomain,
 					previousDomain,
 					userMessageCount,
-					coveredFacets,
-					metricsMapSize,
-					bestPriority,
-					nearingEnd,
-					topicTransitionsPerFiveTurns,
-					questionsPerAssistantTurn: 1,
 				});
+
+				// 10. Compute nearingEnd for farewell winding-down (Story 10.5)
+				const nearingEnd = userMessageCount >= config.freeTierMessageThreshold - 3;
 
 				// 11. Call Nerin with steering + nearingEnd
 				const result = yield* nerin

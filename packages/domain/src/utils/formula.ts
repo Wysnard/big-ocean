@@ -38,7 +38,6 @@ export interface SteeringTarget {
 	readonly targetFacet: FacetName;
 	readonly targetDomain: LifeDomain;
 	readonly steeringHint: string;
-	readonly bestPriority: number;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────
@@ -52,7 +51,7 @@ export const FORMULA_DEFAULTS = Object.freeze({
 	beta: 0.8,
 	betaVolume: 0.7,
 	eta: 0.3,
-	lambda: 0.3,
+	lambda: 0.1,
 	cBar: 0.5,
 	epsilon: 1e-10,
 	SCORE_MIDPOINT: 10,
@@ -216,7 +215,6 @@ export function computeSteeringTarget(
 			targetFacet: seed.facet,
 			targetDomain: seed.domain,
 			steeringHint: `Start exploring ${seed.domain} — discover their ${formatFacetName(seed.facet)}`,
-			bestPriority: 0,
 		};
 	}
 
@@ -255,7 +253,6 @@ export function computeSteeringTarget(
 			targetFacet: seed.facet,
 			targetDomain: seed.domain,
 			steeringHint: `Start exploring ${seed.domain} — discover their ${formatFacetName(seed.facet)}`,
-			bestPriority: 0,
 		};
 	}
 
