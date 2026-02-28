@@ -29,11 +29,6 @@ export { AssessmentMessageDrizzleRepositoryLive } from "./repositories/assessmen
 export { AssessmentResultDrizzleRepositoryLive } from "./repositories/assessment-result.drizzle.repository";
 // Session repository implementation
 export { AssessmentSessionDrizzleRepositoryLive } from "./repositories/assessment-session.drizzle.repository";
-// Checkpointer repository implementations
-export { CheckpointerMemoryRepositoryLive } from "./repositories/checkpointer.memory.repository";
-export { CheckpointerPostgresRepositoryLive } from "./repositories/checkpointer.postgres.repository";
-// Checkpointer repository interface (lives in infrastructure — wraps LangGraph-specific type)
-export { CheckpointerRepository } from "./repositories/checkpointer.repository";
 // Conversanalyzer repository implementation (Story 10.2)
 export { ConversanalyzerAnthropicRepositoryLive } from "./repositories/conversanalyzer.anthropic.repository";
 // Conversation evidence repository implementation (Story 10.1)
@@ -44,8 +39,6 @@ export { CostGuardRedisRepositoryLive } from "./repositories/cost-guard.redis.re
 export { FacetEvidenceDrizzleRepositoryLive } from "./repositories/facet-evidence.drizzle.repository";
 // Facet evidence no-op repository (Story 9.1 — stub for orchestrator compat, write path only)
 export { FacetEvidenceNoopRepositoryLive } from "./repositories/facet-evidence.noop.repository";
-// Facet steering hints
-export { FACET_STEERING_HINTS } from "./repositories/facet-steering";
 // Finalization evidence repository implementation (Story 11.2)
 export { FinalizationEvidenceDrizzleRepositoryLive } from "./repositories/finalization-evidence.drizzle.repository";
 // FinAnalyzer repository implementation (Story 11.2)
@@ -53,31 +46,9 @@ export { FinanalyzerAnthropicRepositoryLive } from "./repositories/finanalyzer.a
 export { FinanalyzerMockRepositoryLive } from "./repositories/finanalyzer.mock.repository";
 // Logger repository implementation
 export { LoggerPinoRepositoryLive } from "./repositories/logger.pino.repository";
-// Nerin agent repository implementations
-export { NerinAgentLangGraphRepositoryLive } from "./repositories/nerin-agent.langgraph.repository";
+// Nerin agent repository implementations (direct ChatAnthropic invocation)
+export { NerinAgentAnthropicRepositoryLive } from "./repositories/nerin-agent.anthropic.repository";
 export { NerinAgentMockRepositoryLive } from "./repositories/nerin-agent.mock.repository";
-// Orchestrator repository implementation
-export { OrchestratorLangGraphRepositoryLive } from "./repositories/orchestrator.langgraph.repository";
-// Orchestrator nodes and helpers
-export {
-	calculateCostFromTokens,
-	DAILY_COST_LIMIT,
-	getNextDayMidnightUTC,
-	getSteeringHint,
-	getSteeringTarget,
-	MESSAGE_COST_ESTIMATE,
-	routerNode,
-	shouldTriggerBatch,
-} from "./repositories/orchestrator.nodes";
-export {
-	type OrchestratorInput,
-	type OrchestratorOutput,
-	type OrchestratorState,
-	OrchestratorStateAnnotation,
-	type SerializableGraphError,
-} from "./repositories/orchestrator.state";
-// Orchestrator graph repository implementation
-export { OrchestratorGraphLangGraphRepositoryLive } from "./repositories/orchestrator-graph.langgraph.repository";
 // Payment gateway repository implementation (Story 13.2)
 export { PaymentGatewayPolarRepositoryLive } from "./repositories/payment-gateway.polar.repository";
 // Portrait repository implementation (Story 13.3)

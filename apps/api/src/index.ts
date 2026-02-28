@@ -21,18 +21,14 @@ import {
 	AssessmentResultDrizzleRepositoryLive,
 	BetterAuthLive,
 	BetterAuthService,
-	CheckpointerPostgresRepositoryLive,
 	ConversanalyzerAnthropicRepositoryLive,
 	ConversationEvidenceDrizzleRepositoryLive,
 	CostGuardRedisRepositoryLive,
 	DatabaseStack,
 	FacetEvidenceDrizzleRepositoryLive,
-	FacetEvidenceNoopRepositoryLive,
 	FinalizationEvidenceDrizzleRepositoryLive,
 	FinanalyzerAnthropicRepositoryLive,
 	FinanalyzerMockRepositoryLive,
-	OrchestratorGraphLangGraphRepositoryLive,
-	OrchestratorLangGraphRepositoryLive,
 	PaymentGatewayPolarRepositoryLive,
 	PortraitDrizzleRepositoryLive,
 	PortraitGeneratorClaudeRepositoryLive,
@@ -51,7 +47,7 @@ import {
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
-import { NerinAgentLangGraphRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.langgraph.repository";
+import { NerinAgentAnthropicRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.anthropic.repository";
 import { NerinAgentMockRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.mock.repository";
 import { RedisIoRedisRepositoryLive } from "@workspace/infrastructure/repositories/redis.ioredis.repository";
 import { Context, Effect, Layer } from "effect";
@@ -100,7 +96,7 @@ const InfrastructureLayer = Layer.mergeAll(BaseServices, DatabaseServices, AuthS
  * - Same Layer interface for both mock and real implementations
  */
 const NerinAgentLayer =
-	process.env.MOCK_LLM === "true" ? NerinAgentMockRepositoryLive : NerinAgentLangGraphRepositoryLive;
+	process.env.MOCK_LLM === "true" ? NerinAgentMockRepositoryLive : NerinAgentAnthropicRepositoryLive;
 
 /**
  * Analyzer Layer Selection
@@ -108,7 +104,7 @@ const NerinAgentLayer =
  * Uses mock implementation when MOCK_LLM=true (for integration testing).
  * Uses real Claude implementation otherwise (production/development).
  */
-const AnalyzerLayer =
+const _AnalyzerLayer =
 	process.env.MOCK_LLM === "true" ? AnalyzerMockRepositoryLive : AnalyzerClaudeRepositoryLive;
 
 /**
@@ -169,38 +165,6 @@ const CostGuardLayer = CostGuardRedisRepositoryLive.pipe(
 );
 
 /**
- * Agent Layers - Nerin, Analyzer, Evidence for orchestration
- */
-const AgentLayers = Layer.mergeAll(
-	NerinAgentLayer,
-	AnalyzerLayer,
-	FacetEvidenceNoopRepositoryLive,
-).pipe(Layer.provide(InfrastructureLayer));
-
-/**
- * Orchestrator Graph Layer - LangGraph graph with all agent dependencies
- *
- * Uses PostgreSQL checkpointer for durable conversation state persistence.
- */
-const OrchestratorGraphLayer = OrchestratorGraphLangGraphRepositoryLive.pipe(
-	Layer.provide(AgentLayers),
-	Layer.provide(CheckpointerPostgresRepositoryLive),
-	Layer.provide(InfrastructureLayer),
-);
-
-/**
- * Orchestrator Layer - high-level orchestration repository
- *
- * Story 2.11: processAnalysis needs AnalyzerRepository + FacetEvidenceRepository
- */
-const OrchestratorLayer = OrchestratorLangGraphRepositoryLive.pipe(
-	Layer.provide(OrchestratorGraphLayer),
-	Layer.provide(AgentLayers),
-	Layer.provide(AssessmentMessageDrizzleRepositoryLive),
-	Layer.provide(InfrastructureLayer),
-);
-
-/**
  * Repository Layers - require Database and Logger
  */
 const RepositoryLayers = Layer.mergeAll(
@@ -216,7 +180,6 @@ const RepositoryLayers = Layer.mergeAll(
 	FacetEvidenceDrizzleRepositoryLive,
 	NerinAgentLayer,
 	CostGuardLayer,
-	OrchestratorLayer,
 	PortraitGeneratorLayer,
 	PortraitDrizzleRepositoryLive,
 	PaymentGatewayPolarRepositoryLive,

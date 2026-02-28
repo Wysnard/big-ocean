@@ -168,21 +168,6 @@ export {
 	type NerinInvokeInput,
 	type NerinInvokeOutput,
 } from "./repositories/nerin-agent.repository";
-export {
-	BudgetPausedError,
-	ConfidenceGapError,
-	OrchestrationError,
-	OrchestratorRepository,
-	PrecisionGapError,
-	type ProcessAnalysisInput,
-	type ProcessMessageInput,
-	type ProcessMessageOutput,
-} from "./repositories/orchestrator.repository";
-export {
-	type GraphInput,
-	type GraphOutput,
-	OrchestratorGraphRepository,
-} from "./repositories/orchestrator-graph.repository";
 // Payment gateway repository (Story 13.2)
 export { PaymentGatewayRepository } from "./repositories/payment-gateway.repository";
 // Portrait repository (Story 13.3 — two-tier portrait system)

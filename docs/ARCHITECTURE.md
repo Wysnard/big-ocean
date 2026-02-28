@@ -102,14 +102,11 @@ Contracts ─→ Handlers ─→ Use-Cases ─→ Domain (interfaces)
 *Growth (Epic 15):*
 - `waitlist.repository.ts` — Waitlist
 
-*Legacy (wired but unused by any handler):*
-- `orchestrator.repository.ts` / `orchestrator-graph.repository.ts` — StateGraph orchestrator composed in `index.ts` but unreachable from any HTTP path
-
 **Infrastructure Implementations** (`packages/infrastructure/src/repositories/` — 40 files):
 - Drizzle repositories for all DB-backed domains
 - `conversanalyzer.anthropic.repository.ts` — Haiku LLM calls
 - `finanalyzer.anthropic.repository.ts` / `finanalyzer.mock.repository.ts` — Sonnet finalization
-- `nerin-agent.langgraph.repository.ts` — Nerin agent (LangGraph-based chat)
+- `nerin-agent.anthropic.repository.ts` — Nerin agent (LangGraph-based chat)
 - `portrait-generator.claude.repository.ts` / `teaser-portrait.anthropic.repository.ts` — Portrait LLM
 - `relationship-analysis-generator.anthropic.repository.ts` — Relationship analysis LLM
 - `payment-gateway.polar.repository.ts` — Polar payment integration
@@ -197,8 +194,7 @@ Anonymous start → /api/assessment/start (no auth required)
 
 ### LangGraph Status
 
-- **Nerin agent** (`nerin-agent.langgraph.repository.ts`): Actively used for conversational responses via LangGraph
-- **Orchestrator** (`orchestrator-graph.langgraph.repository.ts`, `orchestrator.langgraph.repository.ts`, `orchestrator.state.ts`, `orchestrator.nodes.ts`, `facet-steering.ts`, `checkpointer.*.repository.ts`): Composed in `index.ts` but **not called by any handler or use-case**. Legacy from Phase 1 graph-based routing. Candidate for removal.
+- **Nerin agent** (`nerin-agent.anthropic.repository.ts`): Actively used for conversational responses via LangGraph
 
 ## Architectural Patterns
 

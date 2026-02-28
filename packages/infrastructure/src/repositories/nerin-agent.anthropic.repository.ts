@@ -81,7 +81,7 @@ function domainToLangChain(messages: NerinInvokeInput["messages"]) {
  * Layer type: Layer<NerinAgentRepository, never, LoggerRepository>
  * Direct model invocation — no graph overhead.
  */
-export const NerinAgentLangGraphRepositoryLive = Layer.effect(
+export const NerinAgentAnthropicRepositoryLive = Layer.effect(
 	NerinAgentRepository,
 	Effect.gen(function* () {
 		const logger = yield* LoggerRepository;
