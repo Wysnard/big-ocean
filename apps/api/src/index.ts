@@ -15,8 +15,6 @@ import { BigOceanApi } from "@workspace/contracts";
 import { AppConfig } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import {
-	AnalyzerClaudeRepositoryLive,
-	AnalyzerMockRepositoryLive,
 	AppConfigLive,
 	AssessmentResultDrizzleRepositoryLive,
 	BetterAuthLive,
@@ -97,15 +95,6 @@ const InfrastructureLayer = Layer.mergeAll(BaseServices, DatabaseServices, AuthS
  */
 const NerinAgentLayer =
 	process.env.MOCK_LLM === "true" ? NerinAgentMockRepositoryLive : NerinAgentAnthropicRepositoryLive;
-
-/**
- * Analyzer Layer Selection
- *
- * Uses mock implementation when MOCK_LLM=true (for integration testing).
- * Uses real Claude implementation otherwise (production/development).
- */
-const _AnalyzerLayer =
-	process.env.MOCK_LLM === "true" ? AnalyzerMockRepositoryLive : AnalyzerClaudeRepositoryLive;
 
 /**
  * Portrait Generator Layer Selection
