@@ -256,6 +256,32 @@
     </action>
   </step>
 
+  <step n="4b" goal="Parallelism and dependency analysis">
+    <critical>🔗 PARALLELISM METADATA — Enable safe parallel execution of stories!</critical>
+
+    <action>From {epics_content}, list ALL stories in Epic {{epic_num}}</action>
+    <action>For each sibling story, determine:
+      - Does our story ({{epic_num}}.{{story_num}}) depend on artifacts, schemas, APIs, or patterns created by that story? → blocked-by
+      - Does that story depend on artifacts our story creates? → blocks
+      - What file domains does each story touch? (e.g., "backend monetization", "frontend results", "full-stack auth")
+    </action>
+
+    <action>Classify parallelism mode:
+      - "parallel" — no blocking dependencies on incomplete stories; can run concurrently
+      - "sequential" — blocked by at least one incomplete story
+    </action>
+
+    <action>Identify shared files — key files this story will create or modify that sibling parallel stories might also touch (potential merge conflicts)</action>
+
+    <action>Store results for inclusion in story template's Parallelism section:
+      - blocked_by: list of story IDs or "none"
+      - blocks: list of story IDs or "none"
+      - mode: "parallel" or "sequential"
+      - domain: short label for the file domain
+      - shared_files: list of key files at risk of merge conflict
+    </action>
+  </step>
+
   <step n="5" goal="Create comprehensive story file">
     <critical>📝 CREATE ULTIMATE STORY FILE - The developer's master implementation guide!</critical>
 

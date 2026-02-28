@@ -21,6 +21,14 @@ so that {{benefit}}.
 - [ ] Task 2 (AC: #)
   - [ ] Subtask 2.1
 
+## Parallelism
+
+- **Blocked by:** (none | list of story IDs)
+- **Blocks:** (list of story IDs)
+- **Mode:** parallel | sequential
+- **Domain:** (e.g., "backend monetization", "frontend results", "full-stack")
+- **Shared files:** (key files this story touches that other parallel stories might also touch)
+
 ## Dev Notes
 
 - Relevant architecture patterns and constraints
