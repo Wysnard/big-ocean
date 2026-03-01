@@ -10,11 +10,10 @@ import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getResults } from "../get-results.use-case";
 import {
-	createEvidenceForUniformScores,
+	buildResultFromEvidence,
 	createTestLayer,
-	createUniformEvidence,
-	mockEvidenceRepo,
 	mockProfileRepo,
+	mockResultRepo,
 	mockSessionRepo,
 	setupDefaultMocks,
 	TEST_SESSION_ID,
@@ -39,8 +38,8 @@ describe("getResults Use Case", () => {
 				neuroticism: { facetScore: 15, confidence: 80 },
 			};
 
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
-				Effect.succeed(createEvidenceForUniformScores(allHigh)),
+			mockResultRepo.getBySessionId.mockImplementation(() =>
+				Effect.succeed(buildResultFromEvidence(allHigh)),
 			);
 
 			const result = await Effect.runPromise(
@@ -65,8 +64,8 @@ describe("getResults Use Case", () => {
 				neuroticism: { facetScore: 3, confidence: 50 },
 			};
 
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
-				Effect.succeed(createEvidenceForUniformScores(mixed)),
+			mockResultRepo.getBySessionId.mockImplementation(() =>
+				Effect.succeed(buildResultFromEvidence(mixed)),
 			);
 
 			const result = await Effect.runPromise(
@@ -78,15 +77,24 @@ describe("getResults Use Case", () => {
 		});
 
 		it("should compute overall confidence as mean of all facet confidences", async () => {
-			const uniformEvidence = createUniformEvidence(10, 60);
+			const uniform = {
+				openness: { facetScore: 10, confidence: 60 },
+				conscientiousness: { facetScore: 10, confidence: 60 },
+				extraversion: { facetScore: 10, confidence: 60 },
+				agreeableness: { facetScore: 10, confidence: 60 },
+				neuroticism: { facetScore: 10, confidence: 60 },
+			};
 
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed(uniformEvidence));
+			mockResultRepo.getBySessionId.mockImplementation(() =>
+				Effect.succeed(buildResultFromEvidence(uniform)),
+			);
 
 			const result = await Effect.runPromise(
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
 			);
 
-			expect(result.overallConfidence).toBe(31);
+			// With persisted facet confidence 60, mean is 60
+			expect(result.overallConfidence).toBe(60);
 		});
 
 		it("should return 5 traits with correct structure", async () => {
@@ -98,8 +106,8 @@ describe("getResults Use Case", () => {
 				neuroticism: { facetScore: 10, confidence: 50 },
 			};
 
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
-				Effect.succeed(createEvidenceForUniformScores(allMid)),
+			mockResultRepo.getBySessionId.mockImplementation(() =>
+				Effect.succeed(buildResultFromEvidence(allMid)),
 			);
 
 			const result = await Effect.runPromise(
@@ -120,7 +128,7 @@ describe("getResults Use Case", () => {
 		});
 
 		it("should return 30 facets with correct structure including level fields", async () => {
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
+			// Use default result (score 10 per facet)
 
 			const result = await Effect.runPromise(
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
@@ -157,8 +165,8 @@ describe("getResults Use Case", () => {
 				neuroticism: { facetScore: 20, confidence: 80 },
 			};
 
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
-				Effect.succeed(createEvidenceForUniformScores(boundaries)),
+			mockResultRepo.getBySessionId.mockImplementation(() =>
+				Effect.succeed(buildResultFromEvidence(boundaries)),
 			);
 
 			const result = await Effect.runPromise(
@@ -174,7 +182,7 @@ describe("getResults Use Case", () => {
 		});
 
 		it("should return null profile fields for anonymous users", async () => {
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
+			// Use default result
 
 			const result = await Effect.runPromise(
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
@@ -199,7 +207,6 @@ describe("getResults Use Case", () => {
 					personalDescription: null,
 				}),
 			);
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
 
 			const result = await Effect.runPromise(
 				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
@@ -247,7 +254,6 @@ describe("getResults Use Case", () => {
 					createdAt: new Date(),
 				}),
 			);
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
 
 			const result = await Effect.runPromise(
 				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
@@ -270,8 +276,8 @@ describe("getResults Use Case", () => {
 				neuroticism: { facetScore: 15, confidence: 80 },
 			};
 
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
-				Effect.succeed(createEvidenceForUniformScores(allHigh)),
+			mockResultRepo.getBySessionId.mockImplementation(() =>
+				Effect.succeed(buildResultFromEvidence(allHigh)),
 			);
 
 			const result = await Effect.runPromise(
@@ -298,7 +304,6 @@ describe("getResults Use Case", () => {
 					personalDescription: STORED_PORTRAIT,
 				}),
 			);
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
 
 			const result = await Effect.runPromise(
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
@@ -308,7 +313,7 @@ describe("getResults Use Case", () => {
 		});
 
 		it("should return null personalDescription when not set", async () => {
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
+			// Use default result
 
 			const result = await Effect.runPromise(
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
@@ -320,7 +325,7 @@ describe("getResults Use Case", () => {
 
 	describe("Default scores", () => {
 		it("should handle default facet scores (no evidence yet)", async () => {
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
+			// Default result has score 10 per facet, confidence 0
 
 			const result = await Effect.runPromise(
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
@@ -342,8 +347,8 @@ describe("getResults Use Case", () => {
 				neuroticism: { facetScore: 8, confidence: 80 },
 			};
 
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
-				Effect.succeed(createEvidenceForUniformScores(lowScores)),
+			mockResultRepo.getBySessionId.mockImplementation(() =>
+				Effect.succeed(buildResultFromEvidence(lowScores)),
 			);
 
 			const result = await Effect.runPromise(
@@ -371,8 +376,8 @@ describe("getResults Use Case", () => {
 				neuroticism: { facetScore: 12, confidence: 80 },
 			};
 
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
-				Effect.succeed(createEvidenceForUniformScores(highScores)),
+			mockResultRepo.getBySessionId.mockImplementation(() =>
+				Effect.succeed(buildResultFromEvidence(highScores)),
 			);
 
 			const result = await Effect.runPromise(
@@ -401,8 +406,8 @@ describe("getResults Use Case", () => {
 				neuroticism: { facetScore: 0, confidence: 80 }, // Minimum = Low
 			};
 
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() =>
-				Effect.succeed(createEvidenceForUniformScores(boundaryScores)),
+			mockResultRepo.getBySessionId.mockImplementation(() =>
+				Effect.succeed(buildResultFromEvidence(boundaryScores)),
 			);
 
 			const result = await Effect.runPromise(

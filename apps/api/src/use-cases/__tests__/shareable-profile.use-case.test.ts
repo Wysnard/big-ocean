@@ -14,17 +14,28 @@ vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 vi.mock("@workspace/infrastructure/repositories/public-profile.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/profile-access-log.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/facet-evidence.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/assessment-result.drizzle.repository");
 
 import { it } from "@effect/vitest";
 import {
 	ALL_FACETS,
 	AssessmentSessionRepository,
 	FacetEvidenceRepository,
+	type FacetName,
 	lookupArchetype,
 	PublicProfileRepository,
 	type SavedFacetEvidence,
+	type TraitName,
 } from "@workspace/domain";
+import { TRAIT_TO_FACETS } from "@workspace/domain/constants/big-five";
 import { AppConfigTestLive } from "@workspace/infrastructure";
+import {
+	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__
+	_seedResult,
+	AssessmentResultDrizzleRepositoryLive,
+	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__
+	_resetMockState as resetResultState,
+} from "@workspace/infrastructure/repositories/assessment-result.drizzle.repository";
 import {
 	AssessmentSessionDrizzleRepositoryLive,
 	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
@@ -77,6 +88,25 @@ function createEvidenceLayer(evidence: SavedFacetEvidence[]) {
 	);
 }
 
+/** Build facets and traits seed data */
+function buildFacetsAndTraits(score: number, confidence: number) {
+	const facets: Record<string, { score: number; confidence: number; signalPower: number }> = {};
+	for (const facet of ALL_FACETS) {
+		facets[facet] = { score, confidence, signalPower: 1 };
+	}
+	const traits: Record<string, { score: number; confidence: number; signalPower: number }> = {};
+	for (const [trait, traitFacets] of Object.entries(TRAIT_TO_FACETS)) {
+		const totalScore = traitFacets.reduce((sum, f) => sum + (facets[f]?.score ?? 0), 0);
+		const avgConf =
+			traitFacets.reduce((sum, f) => sum + (facets[f]?.confidence ?? 0), 0) / traitFacets.length;
+		traits[trait] = { score: totalScore, confidence: avgConf, signalPower: 1 };
+	}
+	return {
+		facets: facets as Record<FacetName, { score: number; confidence: number; signalPower: number }>,
+		traits: traits as Record<TraitName, { score: number; confidence: number; signalPower: number }>,
+	};
+}
+
 // Base test layer with default mock evidence (low confidence from mock)
 const BaseTestLayer = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
@@ -84,6 +114,7 @@ const BaseTestLayer = Layer.mergeAll(
 	PublicProfileDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
 	FacetEvidenceDrizzleRepositoryLive,
+	AssessmentResultDrizzleRepositoryLive,
 	AppConfigTestLive,
 );
 
@@ -94,6 +125,7 @@ const HighConfidenceTestLayer = Layer.mergeAll(
 	PublicProfileDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
 	createEvidenceLayer(createEvidenceWithConfidence(15, 85)),
+	AssessmentResultDrizzleRepositoryLive,
 	AppConfigTestLive,
 );
 
@@ -101,6 +133,7 @@ describe("createShareableProfile Use Case", () => {
 	beforeEach(() => {
 		resetSessionState();
 		resetProfileState();
+		resetResultState();
 	});
 
 	describe("Success scenarios", () => {
@@ -108,6 +141,8 @@ describe("createShareableProfile Use Case", () => {
 			Effect.gen(function* () {
 				const sessionRepo = yield* AssessmentSessionRepository;
 				const { sessionId } = yield* sessionRepo.createSession("user_123");
+				const { facets, traits } = buildFacetsAndTraits(15, 85);
+				_seedResult(sessionId, { facets, traits });
 
 				const result = yield* createShareableProfile({ sessionId });
 
@@ -122,6 +157,8 @@ describe("createShareableProfile Use Case", () => {
 			Effect.gen(function* () {
 				const sessionRepo = yield* AssessmentSessionRepository;
 				const { sessionId } = yield* sessionRepo.createSession("user_123");
+				const { facets, traits } = buildFacetsAndTraits(15, 85);
+				_seedResult(sessionId, { facets, traits });
 
 				// Create profile twice
 				const result1 = yield* createShareableProfile({ sessionId });
@@ -136,6 +173,8 @@ describe("createShareableProfile Use Case", () => {
 			Effect.gen(function* () {
 				const sessionRepo = yield* AssessmentSessionRepository;
 				const { sessionId } = yield* sessionRepo.createSession("user_123");
+				const { facets, traits } = buildFacetsAndTraits(15, 85);
+				_seedResult(sessionId, { facets, traits });
 
 				const result = yield* createShareableProfile({ sessionId });
 
@@ -149,6 +188,7 @@ describe("getPublicProfile Use Case", () => {
 	beforeEach(() => {
 		resetSessionState();
 		resetProfileState();
+		resetResultState();
 	});
 
 	// Derive expected values from lookupArchetype for "ODAW"
@@ -160,6 +200,8 @@ describe("getPublicProfile Use Case", () => {
 				const sessionRepo = yield* AssessmentSessionRepository;
 				const profileRepo = yield* PublicProfileRepository;
 				const { sessionId } = yield* sessionRepo.createSession("user_123");
+				const { facets, traits } = buildFacetsAndTraits(15, 85);
+				_seedResult(sessionId, { facets, traits });
 
 				// Create profile directly via repo and make it public
 				const profile = yield* profileRepo.createProfile({
@@ -230,6 +272,7 @@ describe("toggleProfileVisibility Use Case", () => {
 	beforeEach(() => {
 		resetSessionState();
 		resetProfileState();
+		resetResultState();
 	});
 
 	describe("Success scenarios", () => {

@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getResults } from "../get-results.use-case";
 import {
 	createTestLayer,
-	mockEvidenceRepo,
+	mockResultRepo,
 	mockSessionRepo,
 	setupDefaultMocks,
 	TEST_SESSION_ID,
@@ -46,7 +46,7 @@ describe("getResults Use Case", () => {
 			);
 
 			expect(error._tag).toBe("SessionNotCompleted");
-			expect(mockEvidenceRepo.getEvidenceBySession).not.toHaveBeenCalled();
+			expect(mockResultRepo.getBySessionId).not.toHaveBeenCalled();
 		});
 
 		it("should fail with SessionNotCompleted when session is finalizing", async () => {
@@ -92,7 +92,7 @@ describe("getResults Use Case", () => {
 			);
 
 			expect(error._tag).toBe("SessionNotFound");
-			expect(mockEvidenceRepo.getEvidenceBySession).not.toHaveBeenCalled();
+			expect(mockResultRepo.getBySessionId).not.toHaveBeenCalled();
 		});
 
 		it("should fail with SessionNotFound when linked session is accessed without authentication", async () => {
@@ -114,7 +114,7 @@ describe("getResults Use Case", () => {
 			);
 
 			expect(error._tag).toBe("SessionNotFound");
-			expect(mockEvidenceRepo.getEvidenceBySession).not.toHaveBeenCalled();
+			expect(mockResultRepo.getBySessionId).not.toHaveBeenCalled();
 		});
 
 		it("should allow linked session access for owner", async () => {
@@ -130,8 +130,6 @@ describe("getResults Use Case", () => {
 					personalDescription: null,
 				}),
 			);
-			mockEvidenceRepo.getEvidenceBySession.mockImplementation(() => Effect.succeed([]));
-
 			const result = await Effect.runPromise(
 				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
 					Effect.provide(createTestLayer()),
@@ -139,7 +137,7 @@ describe("getResults Use Case", () => {
 			);
 
 			expect(result.oceanCode5).toBeDefined();
-			expect(mockEvidenceRepo.getEvidenceBySession).toHaveBeenCalledWith(TEST_SESSION_ID);
+			expect(mockResultRepo.getBySessionId).toHaveBeenCalledWith(TEST_SESSION_ID);
 		});
 
 		it("should fail with SessionNotFound when session does not exist", async () => {

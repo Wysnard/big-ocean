@@ -14,18 +14,29 @@ vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repos
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 vi.mock("@workspace/infrastructure/repositories/public-profile.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/profile-access-log.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/assessment-result.drizzle.repository");
 
 import { it } from "@effect/vitest";
 import {
 	ALL_FACETS,
 	AssessmentSessionRepository,
 	FacetEvidenceRepository,
+	type FacetName,
 	type ProfileAccessLogInput,
 	ProfileAccessLogRepository,
 	PublicProfileRepository,
 	type SavedFacetEvidence,
+	type TraitName,
 } from "@workspace/domain";
+import { TRAIT_TO_FACETS } from "@workspace/domain/constants/big-five";
 import { AppConfigTestLive } from "@workspace/infrastructure";
+import {
+	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__
+	_seedResult,
+	AssessmentResultDrizzleRepositoryLive,
+	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__
+	_resetMockState as resetResultState,
+} from "@workspace/infrastructure/repositories/assessment-result.drizzle.repository";
 import {
 	AssessmentSessionDrizzleRepositoryLive,
 	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__
@@ -77,9 +88,29 @@ const TestLayer = Layer.mergeAll(
 	LoggerPinoRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
+	AssessmentResultDrizzleRepositoryLive,
 	createEvidenceLayer(createTestEvidence(15, 85)),
 	AppConfigTestLive,
 );
+
+/** Build facets and traits seed data */
+function buildFacetsAndTraits(score: number, confidence: number) {
+	const facets: Record<string, { score: number; confidence: number; signalPower: number }> = {};
+	for (const facet of ALL_FACETS) {
+		facets[facet] = { score, confidence, signalPower: 1 };
+	}
+	const traits: Record<string, { score: number; confidence: number; signalPower: number }> = {};
+	for (const [trait, traitFacets] of Object.entries(TRAIT_TO_FACETS)) {
+		const totalScore = traitFacets.reduce((sum, f) => sum + (facets[f]?.score ?? 0), 0);
+		const avgConf =
+			traitFacets.reduce((sum, f) => sum + (facets[f]?.confidence ?? 0), 0) / traitFacets.length;
+		traits[trait] = { score: totalScore, confidence: avgConf, signalPower: 1 };
+	}
+	return {
+		facets: facets as Record<FacetName, { score: number; confidence: number; signalPower: number }>,
+		traits: traits as Record<TraitName, { score: number; confidence: number; signalPower: number }>,
+	};
+}
 
 /** Helper: create a public profile via repo APIs */
 function createPublicProfile() {
@@ -87,6 +118,8 @@ function createPublicProfile() {
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const profileRepo = yield* PublicProfileRepository;
 		const { sessionId } = yield* sessionRepo.createSession("user_test");
+		const { facets, traits } = buildFacetsAndTraits(15, 85);
+		_seedResult(sessionId, { facets, traits });
 		const profile = yield* profileRepo.createProfile({
 			sessionId,
 			userId: "user_test",
@@ -118,6 +151,7 @@ describe("Profile Access Log (Story 15.1)", () => {
 	beforeEach(() => {
 		resetSessionState();
 		resetProfileState();
+		resetResultState();
 		(accessLogEntries as ProfileAccessLogInput[]).length = 0;
 	});
 
@@ -179,6 +213,7 @@ describe("Profile Access Log (Story 15.1)", () => {
 				LoggerPinoRepositoryLive,
 				PublicProfileDrizzleRepositoryLive,
 				FailingLogLayer,
+				AssessmentResultDrizzleRepositoryLive,
 				createEvidenceLayer(createTestEvidence(15, 85)),
 				AppConfigTestLive,
 			);

@@ -7,6 +7,7 @@
 import {
 	AppConfig,
 	AssessmentMessageRepository,
+	AssessmentResultRepository,
 	AssessmentSessionRepository,
 	FacetEvidenceRepository,
 	LoggerRepository,
@@ -36,6 +37,12 @@ const mockEvidenceRepo = {
 	getEvidenceBySession: vi.fn(),
 };
 
+const mockResultRepo = {
+	create: vi.fn(),
+	getBySessionId: vi.fn(),
+	update: vi.fn(),
+};
+
 const mockLogger = {
 	info: vi.fn(),
 	warn: vi.fn(),
@@ -48,6 +55,7 @@ const createTestLayer = () =>
 		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
 		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
 		Layer.succeed(FacetEvidenceRepository, mockEvidenceRepo),
+		Layer.succeed(AssessmentResultRepository, mockResultRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
 		Layer.succeed(AppConfig, {
 			databaseUrl: "postgres://test:test@localhost:5432/test",
@@ -96,6 +104,7 @@ describe("resumeSession Use Case", () => {
 			]),
 		);
 		mockEvidenceRepo.getEvidenceBySession.mockReturnValue(Effect.succeed([]));
+		mockResultRepo.getBySessionId.mockReturnValue(Effect.succeed(null));
 		mockLogger.info.mockImplementation(() => {});
 		mockLogger.warn.mockImplementation(() => {});
 		mockLogger.error.mockImplementation(() => {});

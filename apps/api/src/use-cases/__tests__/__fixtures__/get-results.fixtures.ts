@@ -8,6 +8,7 @@ import {
 	ALL_FACETS,
 	AppConfig,
 	AssessmentMessageRepository,
+	AssessmentResultRepository,
 	AssessmentSessionRepository,
 	type BigFiveTrait,
 	FacetEvidenceRepository,
@@ -160,6 +161,12 @@ export const mockProfileRepo = {
 	incrementViewCount: vi.fn(),
 };
 
+export const mockResultRepo = {
+	create: vi.fn(),
+	getBySessionId: vi.fn(),
+	update: vi.fn(),
+};
+
 export const mockConfig = {
 	databaseUrl: "postgres://test",
 	redisUrl: "redis://test",
@@ -204,10 +211,54 @@ export function createTestLayer() {
 		Layer.succeed(FacetEvidenceRepository, mockEvidenceRepo),
 		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
 		Layer.succeed(PublicProfileRepository, mockProfileRepo),
+		Layer.succeed(AssessmentResultRepository, mockResultRepo),
 		Layer.succeed(AppConfig, mockConfig),
 		Layer.succeed(LoggerRepository, mockLogger),
 	);
 }
+
+/**
+ * Build an AssessmentResultRecord from uniform per-trait facet scores.
+ * Each facet in a trait gets the same score and confidence.
+ */
+export function buildResultFromEvidence(
+	traitScores: Record<BigFiveTrait, { facetScore: number; confidence: number }>,
+) {
+	const facets: Record<string, { score: number; confidence: number; signalPower: number }> = {};
+	const traits: Record<string, { score: number; confidence: number; signalPower: number }> = {};
+
+	for (const [trait, config] of Object.entries(traitScores)) {
+		const traitFacets = TRAIT_FACETS[trait as BigFiveTrait];
+		let traitTotal = 0;
+		for (const facet of traitFacets) {
+			facets[facet] = { score: config.facetScore, confidence: config.confidence, signalPower: 1 };
+			traitTotal += config.facetScore;
+		}
+		traits[trait] = { score: traitTotal, confidence: config.confidence, signalPower: 1 };
+	}
+
+	return {
+		id: `ar-${TEST_SESSION_ID}`,
+		assessmentSessionId: TEST_SESSION_ID,
+		facets,
+		traits,
+		domainCoverage: {},
+		portrait: "",
+		createdAt: new Date(),
+	};
+}
+
+/** Default result with all facets at score 10, confidence 0 (matches "no evidence" default OCEAN code GBANT) */
+const DEFAULT_RESULT = (() => {
+	const defaultScores: Record<BigFiveTrait, { facetScore: number; confidence: number }> = {
+		openness: { facetScore: 10, confidence: 0 },
+		conscientiousness: { facetScore: 10, confidence: 0 },
+		extraversion: { facetScore: 10, confidence: 0 },
+		agreeableness: { facetScore: 10, confidence: 0 },
+		neuroticism: { facetScore: 10, confidence: 0 },
+	};
+	return buildResultFromEvidence(defaultScores);
+})();
 
 /**
  * Set up default mock behaviors. Call in beforeEach().
@@ -245,6 +296,8 @@ export function setupDefaultMocks() {
 	);
 
 	mockMessageRepo.getMessages.mockImplementation(() => Effect.succeed([]));
+
+	mockResultRepo.getBySessionId.mockImplementation(() => Effect.succeed(DEFAULT_RESULT));
 
 	mockSessionRepo.updateSession.mockImplementation((_id: string, partial: Record<string, unknown>) =>
 		Effect.succeed({ id: _id, ...partial }),
