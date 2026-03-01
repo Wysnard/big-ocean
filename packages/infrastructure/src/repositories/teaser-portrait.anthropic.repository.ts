@@ -218,11 +218,23 @@ export const TeaserPortraitAnthropicRepositoryLive = Layer.effect(
 			generateTeaser: (input) =>
 				Effect.tryPromise({
 					try: async () => {
-						// Compute scores from evidence for the prompt
+						// Map finalization evidence (v1) to EvidenceInput (v2) for formula functions
+						// TODO: Story 18-4 (kill FinAnalyzer) will remove this adapter
 						const scoringInputs: EvidenceInput[] = input.evidence.map((ev) => ({
 							bigfiveFacet: ev.bigfiveFacet,
-							score: ev.score,
-							confidence: ev.confidence,
+							deviation: Math.round(((ev.score - 10) / 10) * 3) as -3 | -2 | -1 | 0 | 1 | 2 | 3,
+							strength:
+								ev.confidence >= 0.7
+									? ("strong" as const)
+									: ev.confidence >= 0.4
+										? ("moderate" as const)
+										: ("weak" as const),
+							confidence:
+								ev.confidence >= 0.7
+									? ("high" as const)
+									: ev.confidence >= 0.4
+										? ("medium" as const)
+										: ("low" as const),
 							domain: ev.domain,
 						}));
 						const facets = computeAllFacetResults(scoringInputs);

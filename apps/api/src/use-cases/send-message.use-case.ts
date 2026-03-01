@@ -218,8 +218,8 @@ export const sendMessage = (input: SendMessageInput) =>
 					// Capture analyzer token usage for cost tracking (Story 10.6)
 					analyzerTokenUsage = evidenceResult.tokenUsage;
 
-					// Cap evidence to 3 records (business rule)
-					const cappedEvidence = evidenceResult.evidence.slice(0, 3);
+					// Cap evidence to 5 records (v2 per-message cap — Story 18-1)
+					const cappedEvidence = evidenceResult.evidence.slice(0, 5);
 
 					// Re-fetch ALL evidence only when new evidence was saved; else reuse existing
 					let allEvidence = existingEvidence;

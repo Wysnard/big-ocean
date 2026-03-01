@@ -48,6 +48,10 @@ export const bigfiveFacetNameEnum = pgEnum(
 	ALL_FACETS as unknown as [string, ...string[]],
 );
 
+export const evidenceStrengthEnum = pgEnum("evidence_strength", ["weak", "moderate", "strong"]);
+
+export const evidenceConfidenceEnum = pgEnum("evidence_confidence", ["low", "medium", "high"]);
+
 export const purchaseEventTypeEnum = pgEnum(
 	"purchase_event_type",
 	PURCHASE_EVENT_TYPES as unknown as [string, ...string[]],
@@ -189,10 +193,11 @@ export const assessmentMessage = pgTable(
 );
 
 /**
- * Conversation Evidence (Lean, steering-only)
+ * Conversation Evidence (v2 — Decision D4)
  *
  * Produced by conversanalyzer (Haiku) on every user message.
- * Used for formula-based steering calculations. No quotes — just scores.
+ * v2: deviation/strength/confidence enums replace noisy 0-20 scores.
+ * Story 18-1: Drop + recreate (Decision D7 — no migration, fresh start).
  */
 export const conversationEvidence = pgTable(
 	"conversation_evidence",
@@ -205,15 +210,16 @@ export const conversationEvidence = pgTable(
 			.notNull()
 			.references(() => assessmentMessage.id, { onDelete: "cascade" }),
 		bigfiveFacet: bigfiveFacetNameEnum("bigfive_facet").notNull(),
-		score: smallint("score").notNull(),
-		confidence: numeric("confidence", { precision: 4, scale: 3 }).notNull(),
+		deviation: smallint("deviation").notNull(),
+		strength: evidenceStrengthEnum("strength").notNull(),
+		confidence: evidenceConfidenceEnum("confidence").notNull(),
 		domain: evidenceDomainEnum("domain").notNull(),
+		note: text("note").notNull(),
 		createdAt: timestamp("created_at").defaultNow(),
 	},
 	(table) => [
 		index("conversation_evidence_session_id_idx").on(table.assessmentSessionId),
-		check("conversation_evidence_score_check", sql`score >= 0 AND score <= 20`),
-		check("conversation_evidence_confidence_check", sql`confidence >= 0 AND confidence <= 1`),
+		check("conversation_evidence_deviation_check", sql`deviation >= -3 AND deviation <= 3`),
 	],
 );
 

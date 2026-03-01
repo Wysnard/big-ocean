@@ -120,17 +120,68 @@ describe("sendMessage Use Case", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should cap evidence to 3 records (AC: #9)", () =>
+		it.effect("should cap evidence to 5 records (AC: #9)", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockConversanalyzerRepo.analyze.mockReturnValue(
 					Effect.succeed({
 						evidence: [
-							{ bigfiveFacet: "imagination", score: 14, confidence: 0.6, domain: "work" },
-							{ bigfiveFacet: "trust", score: 12, confidence: 0.5, domain: "relationships" },
-							{ bigfiveFacet: "orderliness", score: 16, confidence: 0.7, domain: "work" },
-							{ bigfiveFacet: "cheerfulness", score: 18, confidence: 0.8, domain: "leisure" },
-							{ bigfiveFacet: "anxiety", score: 5, confidence: 0.4, domain: "solo" },
+							{
+								bigfiveFacet: "imagination",
+								deviation: 2,
+								strength: "strong",
+								confidence: "high",
+								domain: "work",
+								note: "Creative",
+							},
+							{
+								bigfiveFacet: "trust",
+								deviation: 1,
+								strength: "moderate",
+								confidence: "medium",
+								domain: "relationships",
+								note: "Trusting",
+							},
+							{
+								bigfiveFacet: "orderliness",
+								deviation: -1,
+								strength: "moderate",
+								confidence: "high",
+								domain: "work",
+								note: "Structured",
+							},
+							{
+								bigfiveFacet: "cheerfulness",
+								deviation: 2,
+								strength: "strong",
+								confidence: "medium",
+								domain: "leisure",
+								note: "Joyful",
+							},
+							{
+								bigfiveFacet: "anxiety",
+								deviation: -2,
+								strength: "weak",
+								confidence: "low",
+								domain: "solo",
+								note: "Calm",
+							},
+							{
+								bigfiveFacet: "intellect",
+								deviation: 1,
+								strength: "moderate",
+								confidence: "medium",
+								domain: "work",
+								note: "Curious",
+							},
+							{
+								bigfiveFacet: "altruism",
+								deviation: 3,
+								strength: "strong",
+								confidence: "high",
+								domain: "family",
+								note: "Giving",
+							},
 						],
 						tokenUsage: { input: 200, output: 50 },
 					}),
@@ -141,10 +192,10 @@ describe("sendMessage Use Case", () => {
 					message: "I work in tech",
 				});
 
-				// Only 3 records saved (capped from 5)
+				// Only 5 records saved (capped from 7)
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
 				const savedRecords = mockEvidenceRepo.save.mock.calls[0][0];
-				expect(savedRecords).toHaveLength(3);
+				expect(savedRecords).toHaveLength(5);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 

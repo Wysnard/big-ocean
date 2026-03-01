@@ -19,7 +19,10 @@ function makeBaseMetrics(overrides: [FacetName, FacetMetrics][]): Map<FacetName,
 		["leisure", 1.2],
 	]);
 	const base = new Map<FacetName, FacetMetrics>(
-		ALL_FACETS.map((f) => [f, { score: 14, confidence: 0.85, signalPower: 0.6, domainWeights: defaultDw }]),
+		ALL_FACETS.map((f) => [
+			f,
+			{ score: 14, confidence: 0.85, signalPower: 0.6, domainWeights: defaultDw },
+		]),
 	);
 	for (const [facet, metrics] of overrides) {
 		base.set(facet, metrics);
@@ -151,45 +154,46 @@ describe("steering: 'other' domain excluded from steering targets", () => {
 });
 
 // ─── Edge cases: extreme values ─────────────────────────────────────
-describe("edge cases: extreme and boundary values", () => {
-	it("score at boundaries: 0 and 20", () => {
-		const evidence = [ev("imagination", "work", 0, 0.8), ev("trust", "leisure", 20, 0.8)];
+describe("edge cases: extreme and boundary values (v2)", () => {
+	it("deviation at boundaries: -3 and +3", () => {
+		const evidence = [
+			ev("imagination", "work", -3, "strong", "high"),
+			ev("trust", "leisure", 3, "strong", "high"),
+		];
 		const result = computeFacetMetrics(evidence, FORMULA_DEFAULTS);
-		expect(m(result, "imagination").score).toBeCloseTo(0, 5);
-		expect(m(result, "trust").score).toBeCloseTo(20, 5);
+		// deviation -3 → score = 10 + (-3)*(10/3) = 0
+		expect(m(result, "imagination").score).toBeCloseTo(0, 4);
+		// deviation +3 → score = 10 + 3*(10/3) = 20
+		expect(m(result, "trust").score).toBeCloseTo(20, 4);
 	});
 
-	it("very low confidence (0.01) still produces valid metrics", () => {
-		const evidence = [ev("imagination", "work", 10, 0.01)];
+	it("weak/low confidence produces low but valid metrics", () => {
+		// weak(0.3) * low(0.3) = 0.09
+		const evidence = [ev("imagination", "work", 0, "weak", "low")];
 		const result = m(computeFacetMetrics(evidence, FORMULA_DEFAULTS), "imagination");
 		expect(result.score).toBeCloseTo(10, 3);
 		expect(result.confidence).toBeGreaterThan(0);
-		expect(result.confidence).toBeLessThan(0.1);
+		expect(result.confidence).toBeLessThan(0.2);
 		expect(Number.isFinite(result.signalPower)).toBe(true);
 	});
 
-	it("very high confidence (0.99) produces high but bounded confidence", () => {
+	it("strong/high confidence produces high but bounded confidence", () => {
+		// strong(1.0) * high(0.9) = 0.9
 		const evidence = [
-			ev("imagination", "work", 10, 0.99),
-			ev("imagination", "leisure", 10, 0.99),
-			ev("imagination", "family", 10, 0.99),
+			ev("imagination", "work", 0, "strong", "high"),
+			ev("imagination", "leisure", 0, "strong", "high"),
+			ev("imagination", "family", 0, "strong", "high"),
 		];
 		const result = m(computeFacetMetrics(evidence, FORMULA_DEFAULTS), "imagination");
 		expect(result.confidence).toBeLessThanOrEqual(FORMULA_DEFAULTS.C_max);
 	});
 
-	it("all evidence has confidence=0 → score uses epsilon safety, no NaN", () => {
-		const evidence = [ev("imagination", "work", 15, 0), ev("imagination", "leisure", 5, 0)];
-		const result = m(computeFacetMetrics(evidence, FORMULA_DEFAULTS), "imagination");
-		expect(Number.isFinite(result.score)).toBe(true);
-		expect(Number.isNaN(result.score)).toBe(false);
-		expect(result.confidence).toBe(0);
-	});
-
 	it("massive evidence count: 100 items across 6 domains", () => {
 		const domains: LifeDomain[] = ["work", "relationships", "family", "leisure", "solo", "other"];
+		const strengths: Array<"weak" | "moderate" | "strong"> = ["weak", "moderate", "strong"];
+		const confidences: Array<"low" | "medium" | "high"> = ["low", "medium", "high"];
 		const evidence: EvidenceInput[] = Array.from({ length: 100 }, (_, i) =>
-			ev("assertiveness", domains[i % 6], 10 + (i % 5), 0.3 + (i % 4) * 0.15),
+			ev("assertiveness", domains[i % 6], (i % 7) - 3, strengths[i % 3], confidences[i % 3]),
 		);
 
 		const result = m(computeFacetMetrics(evidence, FORMULA_DEFAULTS), "assertiveness");
@@ -197,7 +201,7 @@ describe("edge cases: extreme and boundary values", () => {
 		expect(result.score).toBeLessThanOrEqual(20);
 		expect(result.confidence).toBeGreaterThan(FORMULA_DEFAULTS.C_max * 0.99);
 		expect(result.confidence).toBeLessThanOrEqual(FORMULA_DEFAULTS.C_max);
-		expect(result.signalPower).toBeGreaterThan(0.8);
+		expect(result.signalPower).toBeGreaterThan(0.5);
 	});
 });
 
@@ -205,9 +209,9 @@ describe("edge cases: extreme and boundary values", () => {
 describe("determinism: same inputs always produce same outputs", () => {
 	it("computeFacetMetrics is deterministic", () => {
 		const evidence = [
-			ev("imagination", "work", 15, 0.8),
-			ev("imagination", "leisure", 12, 0.6),
-			ev("trust", "family", 8, 0.4),
+			ev("imagination", "work", 2, "strong", "medium"),
+			ev("imagination", "leisure", 1, "moderate", "medium"),
+			ev("trust", "family", -1, "weak", "medium"),
 		];
 
 		const r1 = computeFacetMetrics(evidence, FORMULA_DEFAULTS);

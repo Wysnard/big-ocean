@@ -32,7 +32,7 @@ describe("computeFacetMetrics", () => {
 	});
 
 	it("5.4: handles single evidence item without division by zero", () => {
-		const evidence = [makeEvidence("imagination", "work", 15, 0.8)];
+		const evidence = [makeEvidence("imagination", "work", 2, "strong", "medium")];
 		const result = computeFacetMetrics(evidence, FORMULA_DEFAULTS);
 		const m = getMetrics(result, "imagination");
 		expect(m).toBeDefined();
@@ -40,14 +40,15 @@ describe("computeFacetMetrics", () => {
 		expect(Number.isFinite(m.confidence)).toBe(true);
 		expect(Number.isFinite(m.signalPower)).toBe(true);
 		expect(m.domainWeights).toBeDefined();
-		expect(m.domainWeights.get("work")).toBeCloseTo(Math.sqrt(0.8), 10);
+		// strength=strong(1.0) * confidence=medium(0.6) = 0.6 → √0.6
+		expect(m.domainWeights.get("work")).toBeCloseTo(Math.sqrt(0.6), 5);
 	});
 
 	it("5.1: all outputs within documented ranges", () => {
 		const evidence = [
-			makeEvidence("imagination", "work", 18, 0.9),
-			makeEvidence("imagination", "leisure", 12, 0.7),
-			makeEvidence("imagination", "family", 14, 0.6),
+			makeEvidence("imagination", "work", 3, "strong", "high"),
+			makeEvidence("imagination", "leisure", 1, "moderate", "high"),
+			makeEvidence("imagination", "family", 1, "moderate", "medium"),
 		];
 		const result = computeFacetMetrics(evidence, FORMULA_DEFAULTS);
 		const m = getMetrics(result, "imagination");
@@ -60,12 +61,15 @@ describe("computeFacetMetrics", () => {
 	});
 
 	it("5.2: more evidence → higher confidence (monotonic)", () => {
-		const ev1 = [makeEvidence("trust", "work", 10, 0.8)];
-		const ev2 = [makeEvidence("trust", "work", 10, 0.8), makeEvidence("trust", "leisure", 10, 0.7)];
+		const ev1 = [makeEvidence("trust", "work", 0, "strong", "medium")];
+		const ev2 = [
+			makeEvidence("trust", "work", 0, "strong", "medium"),
+			makeEvidence("trust", "leisure", 0, "moderate", "high"),
+		];
 		const ev3 = [
-			makeEvidence("trust", "work", 10, 0.8),
-			makeEvidence("trust", "leisure", 10, 0.7),
-			makeEvidence("trust", "family", 10, 0.6),
+			makeEvidence("trust", "work", 0, "strong", "medium"),
+			makeEvidence("trust", "leisure", 0, "moderate", "high"),
+			makeEvidence("trust", "family", 0, "moderate", "medium"),
 		];
 		const c1 = getMetrics(computeFacetMetrics(ev1, FORMULA_DEFAULTS), "trust").confidence;
 		const c2 = getMetrics(computeFacetMetrics(ev2, FORMULA_DEFAULTS), "trust").confidence;
@@ -78,7 +82,7 @@ describe("computeFacetMetrics", () => {
 		const evidence: EvidenceInput[] = [];
 		const domains: LifeDomain[] = ["work", "leisure", "family", "relationships", "solo", "other"];
 		for (let i = 0; i < 50; i++) {
-			evidence.push(makeEvidence("altruism", domains[i % 6], 15, 0.9));
+			evidence.push(makeEvidence("altruism", domains[i % 6], 2, "strong", "high"));
 		}
 		const m = getMetrics(computeFacetMetrics(evidence, FORMULA_DEFAULTS), "altruism");
 		expect(m.confidence).toBeLessThanOrEqual(FORMULA_DEFAULTS.C_max);
@@ -87,21 +91,23 @@ describe("computeFacetMetrics", () => {
 
 	it("populates domainWeights correctly for multi-domain evidence", () => {
 		const evidence = [
-			makeEvidence("imagination", "work", 15, 0.8),
-			makeEvidence("imagination", "work", 12, 0.6),
-			makeEvidence("imagination", "leisure", 14, 0.7),
+			makeEvidence("imagination", "work", 2, "strong", "medium"),
+			makeEvidence("imagination", "work", 1, "moderate", "medium"),
+			makeEvidence("imagination", "leisure", 1, "moderate", "high"),
 		];
 		const m = getMetrics(computeFacetMetrics(evidence, FORMULA_DEFAULTS), "imagination");
-		expect(m.domainWeights.get("work")).toBeCloseTo(Math.sqrt(1.4), 10);
-		expect(m.domainWeights.get("leisure")).toBeCloseTo(Math.sqrt(0.7), 10);
+		// work: two records with finalWeights 0.6, 0.36 → √(0.96)
+		expect(m.domainWeights.get("work")).toBeCloseTo(Math.sqrt(0.6 + 0.36), 5);
+		// leisure: one record with finalWeight 0.54 → √(0.54)
+		expect(m.domainWeights.get("leisure")).toBeCloseTo(Math.sqrt(0.54), 5);
 		expect(m.domainWeights.has("family")).toBe(false);
 	});
 
 	it("5.6: all-same-domain → signal power low (entropy ≈ 0)", () => {
 		const evidence = [
-			makeEvidence("orderliness", "work", 12, 0.8),
-			makeEvidence("orderliness", "work", 14, 0.7),
-			makeEvidence("orderliness", "work", 11, 0.6),
+			makeEvidence("orderliness", "work", 1, "strong", "medium"),
+			makeEvidence("orderliness", "work", 1, "moderate", "high"),
+			makeEvidence("orderliness", "work", 0, "moderate", "medium"),
 		];
 		const m = getMetrics(computeFacetMetrics(evidence, FORMULA_DEFAULTS), "orderliness");
 		expect(m.signalPower).toBeCloseTo(0, 5);
@@ -109,11 +115,11 @@ describe("computeFacetMetrics", () => {
 
 	it("5.7: perfectly balanced domains → signal power high", () => {
 		const evidence = [
-			makeEvidence("assertiveness", "work", 14, 0.8),
-			makeEvidence("assertiveness", "leisure", 14, 0.8),
-			makeEvidence("assertiveness", "family", 14, 0.8),
-			makeEvidence("assertiveness", "relationships", 14, 0.8),
-			makeEvidence("assertiveness", "solo", 14, 0.8),
+			makeEvidence("assertiveness", "work", 1, "strong", "medium"),
+			makeEvidence("assertiveness", "leisure", 1, "strong", "medium"),
+			makeEvidence("assertiveness", "family", 1, "strong", "medium"),
+			makeEvidence("assertiveness", "relationships", 1, "strong", "medium"),
+			makeEvidence("assertiveness", "solo", 1, "strong", "medium"),
 		];
 		const m = getMetrics(computeFacetMetrics(evidence, FORMULA_DEFAULTS), "assertiveness");
 		expect(m.signalPower).toBeGreaterThan(0.3);
@@ -121,17 +127,17 @@ describe("computeFacetMetrics", () => {
 
 	it("5.12: multi-facet scenario with 10+ evidence records", () => {
 		const evidence: EvidenceInput[] = [
-			makeEvidence("imagination", "work", 16, 0.8),
-			makeEvidence("imagination", "leisure", 18, 0.9),
-			makeEvidence("imagination", "family", 14, 0.6),
-			makeEvidence("trust", "relationships", 12, 0.7),
-			makeEvidence("trust", "work", 10, 0.5),
-			makeEvidence("orderliness", "work", 8, 0.8),
-			makeEvidence("orderliness", "solo", 6, 0.6),
-			makeEvidence("assertiveness", "work", 15, 0.7),
-			makeEvidence("assertiveness", "relationships", 17, 0.9),
-			makeEvidence("assertiveness", "leisure", 13, 0.5),
-			makeEvidence("anxiety", "solo", 11, 0.6),
+			makeEvidence("imagination", "work", 2, "strong", "medium"),
+			makeEvidence("imagination", "leisure", 3, "strong", "high"),
+			makeEvidence("imagination", "family", 1, "moderate", "medium"),
+			makeEvidence("trust", "relationships", 1, "moderate", "high"),
+			makeEvidence("trust", "work", 0, "weak", "medium"),
+			makeEvidence("orderliness", "work", -1, "strong", "medium"),
+			makeEvidence("orderliness", "solo", -1, "moderate", "medium"),
+			makeEvidence("assertiveness", "work", 2, "moderate", "high"),
+			makeEvidence("assertiveness", "relationships", 2, "strong", "high"),
+			makeEvidence("assertiveness", "leisure", 1, "weak", "medium"),
+			makeEvidence("anxiety", "solo", 0, "moderate", "medium"),
 		];
 		const result = computeFacetMetrics(evidence, FORMULA_DEFAULTS);
 		expect(result.size).toBe(5);
@@ -147,8 +153,8 @@ describe("computeFacetMetrics", () => {
 
 	it("5.13: custom config values produce different results", () => {
 		const evidence = [
-			makeEvidence("imagination", "work", 15, 0.8),
-			makeEvidence("imagination", "leisure", 12, 0.6),
+			makeEvidence("imagination", "work", 2, "strong", "medium"),
+			makeEvidence("imagination", "leisure", 1, "moderate", "medium"),
 		];
 		const defaultResult = computeFacetMetrics(evidence, FORMULA_DEFAULTS);
 		const customConfig: FormulaConfig = { ...FORMULA_DEFAULTS, C_max: 0.5, k: 1.5, betaVolume: 1.5 };
@@ -198,7 +204,10 @@ describe("computeSteeringTarget", () => {
 	});
 
 	it("unexplored facets get maximum priority (1.15)", () => {
-		const dw = new Map<LifeDomain, number>([["work", 1.5], ["leisure", 1.2]]);
+		const dw = new Map<LifeDomain, number>([
+			["work", 1.5],
+			["leisure", 1.2],
+		]);
 		const metrics = new Map<FacetName, FacetMetrics>([
 			["imagination", { score: 14, confidence: 0.85, signalPower: 0.6, domainWeights: dw }],
 			["self_efficacy", { score: 14, confidence: 0.85, signalPower: 0.6, domainWeights: dw }],
@@ -214,7 +223,10 @@ describe("computeSteeringTarget", () => {
 	});
 
 	it("OCEAN interleaving ensures trait spread", () => {
-		const dw = new Map<LifeDomain, number>([["work", 1.5], ["leisure", 1.2]]);
+		const dw = new Map<LifeDomain, number>([
+			["work", 1.5],
+			["leisure", 1.2],
+		]);
 		const metrics = new Map<FacetName, FacetMetrics>([
 			["imagination", { score: 14, confidence: 0.85, signalPower: 0.6, domainWeights: dw }],
 		]);
@@ -250,8 +262,18 @@ describe("computeSteeringTarget", () => {
 
 	it("returns valid SteeringTarget shape", () => {
 		const metrics = makeAllFacetsAboveTarget();
-		metrics.set("orderliness", { score: 8, confidence: 0.4, signalPower: 0.2, domainWeights: new Map([["work", 0.8]]) });
-		metrics.set("imagination", { score: 16, confidence: 0.6, signalPower: 0.3, domainWeights: new Map([["leisure", 0.7]]) });
+		metrics.set("orderliness", {
+			score: 8,
+			confidence: 0.4,
+			signalPower: 0.2,
+			domainWeights: new Map([["work", 0.8]]),
+		});
+		metrics.set("imagination", {
+			score: 16,
+			confidence: 0.6,
+			signalPower: 0.3,
+			domainWeights: new Map([["leisure", 0.7]]),
+		});
 		const result = computeSteeringTarget(metrics, "work", FORMULA_DEFAULTS);
 		expect(result).toHaveProperty("targetFacet");
 		expect(result).toHaveProperty("targetDomain");

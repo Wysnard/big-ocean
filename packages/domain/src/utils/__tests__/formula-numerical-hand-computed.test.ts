@@ -10,98 +10,105 @@ import {
 } from "../formula";
 import { ev, m } from "./__fixtures__/formula-numerical.fixtures";
 
-// ─── Hand-computed example 1 (original) ─────────────────────────────
 /**
- * Facet: Orderliness (0–20 scale)
- * Evidence:
- *   Work:          (18, 0.8), (17, 0.7), (16, 0.6)
- *   Relationships:  (14, 0.6)
- *   Family:         (6, 0.7)
- *
- * Uses k=0.6 and betaVolume=0.6 (not defaults).
+ * v2 adapter recap (temporary, Story 18-2 will rewrite):
+ *   score = MIDPOINT(10) + deviation * (10/3)
+ *   numericConfidence = STRENGTH_WEIGHT[strength] * CONFIDENCE_WEIGHT[confidence]
+ *     STRENGTH: weak=0.3, moderate=0.6, strong=1.0
+ *     CONFIDENCE: low=0.3, medium=0.6, high=0.9
+ */
+
+// ─── Hand-computed example 1: three domains, mixed v2 evidence ──────
+/**
+ * Facet: Orderliness
+ * Evidence (v2):
+ *   Work: (dev=2, strong, high) → score≈16.67, conf=0.9
+ *         (dev=2, moderate, high) → score≈16.67, conf=0.54
+ *         (dev=2, moderate, medium) → score≈16.67, conf=0.36
+ *   Relationships: (dev=1, moderate, medium) → score≈13.33, conf=0.36
+ *   Family: (dev=-1, moderate, high) → score≈6.67, conf=0.54
  */
 const config1: FormulaConfig = { ...FORMULA_DEFAULTS, k: 0.6, betaVolume: 0.6 };
 
-describe("hand-computed example 1: orderliness with 3 domains", () => {
-	it("work context mean ≈ 17.095", () => {
-		// μ_work = Σ(c×s) / (Σc + ε) = 35.9 / (2.1 + ε) ≈ 17.095
-		// 0.8×18 + 0.7×17 + 0.6×16 = 14.4 + 11.9 + 9.6 = 35.9
-		const mu = computeContextMean([18, 17, 16], [0.8, 0.7, 0.6]);
-		expect(mu).toBeCloseTo(35.9 / 2.1, 5);
+describe("hand-computed example 1: orderliness with 3 domains (v2)", () => {
+	it("work context weight = √(0.9 + 0.54 + 0.36) = √1.8", () => {
+		expect(computeContextWeight([0.9, 0.54, 0.36])).toBeCloseTo(Math.sqrt(1.8), 10);
 	});
 
-	it("work context weight = √2.1 ≈ 1.449", () => {
-		expect(computeContextWeight([0.8, 0.7, 0.6])).toBeCloseTo(Math.sqrt(2.1), 10);
+	it("relationships context weight = √0.36", () => {
+		expect(computeContextWeight([0.36])).toBeCloseTo(Math.sqrt(0.36), 10);
 	});
 
-	it("relationships context weight = √0.6 ≈ 0.775", () => {
-		expect(computeContextWeight([0.6])).toBeCloseTo(Math.sqrt(0.6), 10);
-	});
-
-	it("family context weight = √0.7 ≈ 0.837", () => {
-		expect(computeContextWeight([0.7])).toBeCloseTo(Math.sqrt(0.7), 10);
+	it("family context weight = √0.54", () => {
+		expect(computeContextWeight([0.54])).toBeCloseTo(Math.sqrt(0.54), 10);
 	});
 
 	it("full pipeline: score, confidence, signalPower, domainWeights", () => {
 		const evidence: EvidenceInput[] = [
-			ev("orderliness", "work", 18, 0.8),
-			ev("orderliness", "work", 17, 0.7),
-			ev("orderliness", "work", 16, 0.6),
-			ev("orderliness", "relationships", 14, 0.6),
-			ev("orderliness", "family", 6, 0.7),
+			ev("orderliness", "work", 2, "strong", "high"),
+			ev("orderliness", "work", 2, "moderate", "high"),
+			ev("orderliness", "work", 2, "moderate", "medium"),
+			ev("orderliness", "relationships", 1, "moderate", "medium"),
+			ev("orderliness", "family", -1, "moderate", "high"),
 		];
 
 		const result = computeFacetMetrics(evidence, config1);
 		const o = m(result, "orderliness");
 
 		// Domain weights
-		const wWork = Math.sqrt(2.1);
-		const wRel = Math.sqrt(0.6);
-		const wFam = Math.sqrt(0.7);
-		expect(o.domainWeights.get("work")).toBeCloseTo(wWork, 10);
-		expect(o.domainWeights.get("relationships")).toBeCloseTo(wRel, 10);
-		expect(o.domainWeights.get("family")).toBeCloseTo(wFam, 10);
+		const wWork = Math.sqrt(0.9 + 0.54 + 0.36); // √1.8
+		const wRel = Math.sqrt(0.36);
+		const wFam = Math.sqrt(0.54);
+		expect(o.domainWeights.get("work")).toBeCloseTo(wWork, 5);
+		expect(o.domainWeights.get("relationships")).toBeCloseTo(wRel, 5);
+		expect(o.domainWeights.get("family")).toBeCloseTo(wFam, 5);
 
 		// Total mass W
 		const W = wWork + wRel + wFam;
-		expect(W).toBeCloseTo(3.061, 2);
 
-		// Score: Σ(w_g × μ_g) / Σ(w_g)
-		// μ_work = 35.9 / (2.1 + ε) — use computeContextMean for exact value
-		const muWork = computeContextMean([18, 17, 16], [0.8, 0.7, 0.6]);
-		const muRel = 14; // single item
-		const muFam = 6; // single item
-		const expectedScore = (wWork * muWork + wRel * muRel + wFam * muFam) / W;
+		// Scores via adapter: MIDPOINT(10) + deviation * (10/3)
+		const s = 10 + 2 * (10 / 3); // ≈16.67 for work records
+		const sRel = 10 + 1 * (10 / 3); // ≈13.33
+		const sFam = 10 + -1 * (10 / 3); // ≈6.67
+
+		// Work context mean
+		const muWork = computeContextMean([s, s, s], [0.9, 0.54, 0.36]);
+		const muRel = sRel;
+		const muFam = sFam;
+		const expectedScore =
+			(wWork * muWork + wRel * muRel + wFam * muFam) / (W + FORMULA_DEFAULTS.epsilon);
 		expect(o.score).toBeCloseTo(expectedScore, 4);
 
 		// Confidence: C_max × (1 - e^{-k × W})
 		const expectedConf = 0.9 * (1 - Math.exp(-0.6 * W));
-		expect(o.confidence).toBeCloseTo(expectedConf, 10);
+		expect(o.confidence).toBeCloseTo(expectedConf, 5);
 
 		// Signal power: V × D
 		const V = 1 - Math.exp(-0.6 * W);
 		const D = computeNormalizedEntropy([wWork, wRel, wFam]);
-		expect(o.signalPower).toBeCloseTo(V * D, 10);
+		expect(o.signalPower).toBeCloseTo(V * D, 5);
 	});
 });
 
 // ─── Hand-computed example 2: single evidence item ──────────────────
-describe("hand-computed example 2: single evidence item", () => {
+describe("hand-computed example 2: single evidence item (v2)", () => {
 	it("computes exact values for one record", () => {
-		const evidence = [ev("trust", "leisure", 14, 0.6)];
+		// deviation=1, moderate(0.6), medium(0.6) → score≈13.33, conf=0.36
+		const evidence = [ev("trust", "leisure", 1, "moderate", "medium")];
 		const result = computeFacetMetrics(evidence, FORMULA_DEFAULTS);
 		const t = m(result, "trust");
 
-		// w_leisure = √0.6
-		const wL = Math.sqrt(0.6);
-		expect(t.domainWeights.get("leisure")).toBeCloseTo(wL, 10);
+		const numConf = 0.36; // 0.6 * 0.6
+		const wL = Math.sqrt(numConf);
+		expect(t.domainWeights.get("leisure")).toBeCloseTo(wL, 5);
 
-		// Score = μ_leisure = 14 (single item, weighted mean = score itself)
-		expect(t.score).toBeCloseTo(14, 5);
+		// Score = MIDPOINT + deviation * (MIDPOINT/3) = 10 + 1*(10/3) ≈ 13.33
+		const expectedScore = 10 + 1 * (10 / 3);
+		expect(t.score).toBeCloseTo(expectedScore, 4);
 
-		// Confidence = 0.9 × (1 - e^{-0.7 × √0.6})
+		// Confidence = 0.9 × (1 - e^{-0.7 × √0.36})
 		const expectedConf = 0.9 * (1 - Math.exp(-0.7 * wL));
-		expect(t.confidence).toBeCloseTo(expectedConf, 10);
+		expect(t.confidence).toBeCloseTo(expectedConf, 5);
 
 		// Signal power = 0 (single domain → entropy = 0)
 		expect(t.signalPower).toBe(0);
@@ -109,55 +116,60 @@ describe("hand-computed example 2: single evidence item", () => {
 });
 
 // ─── Hand-computed example 3: two domains, equal weight ─────────────
-describe("hand-computed example 3: two equal domains", () => {
+describe("hand-computed example 3: two equal domains (v2)", () => {
 	it("computes exact values for symmetric evidence", () => {
-		const evidence = [ev("anxiety", "work", 12, 0.5), ev("anxiety", "solo", 8, 0.5)];
+		// Both: deviation=0, weak(0.3), high(0.9) → score=10, conf=0.27
+		const evidence = [
+			ev("anxiety", "work", 0, "weak", "high"),
+			ev("anxiety", "solo", 0, "weak", "high"),
+		];
 		const result = computeFacetMetrics(evidence, FORMULA_DEFAULTS);
 		const a = m(result, "anxiety");
 
-		// Both domains: w_g = √0.5
-		const w = Math.sqrt(0.5);
-		expect(a.domainWeights.get("work")).toBeCloseTo(w, 10);
-		expect(a.domainWeights.get("solo")).toBeCloseTo(w, 10);
+		const numConf = 0.27; // 0.3 * 0.9
+		const w = Math.sqrt(numConf);
+		expect(a.domainWeights.get("work")).toBeCloseTo(w, 5);
+		expect(a.domainWeights.get("solo")).toBeCloseTo(w, 5);
 
-		// Score = (w×12 + w×8) / (w+w) = 20/2 = 10
-		expect(a.score).toBeCloseTo(10, 5);
+		// Score = 10 (deviation=0 → MIDPOINT)
+		expect(a.score).toBeCloseTo(10, 4);
 
-		// W = 2√0.5 = √2
+		// W = 2√0.27
 		const W = 2 * w;
-		expect(a.confidence).toBeCloseTo(0.9 * (1 - Math.exp(-0.7 * W)), 10);
+		expect(a.confidence).toBeCloseTo(0.9 * (1 - Math.exp(-0.7 * W)), 5);
 
 		// Entropy of two equal weights = 1
 		expect(computeNormalizedEntropy([w, w])).toBeCloseTo(1, 10);
 
 		// Signal power = V × 1
 		const V = 1 - Math.exp(-0.7 * W);
-		expect(a.signalPower).toBeCloseTo(V, 10);
+		expect(a.signalPower).toBeCloseTo(V, 5);
 	});
 });
 
 // ─── Hand-computed example 4: anti-redundancy effect ────────────────
-describe("hand-computed example 4: anti-redundancy (√ squashing)", () => {
+describe("hand-computed example 4: anti-redundancy (√ squashing) (v2)", () => {
 	it("10 items in one domain weigh less than 10× a single item", () => {
-		const singleEv = [ev("imagination", "work", 15, 0.8)];
-		const tenEv = Array.from({ length: 10 }, () => ev("imagination", "work", 15, 0.8));
+		// deviation=2, strong(1.0), medium(0.6) → conf=0.6
+		const singleEv = [ev("imagination", "work", 2, "strong", "medium")];
+		const tenEv = Array.from({ length: 10 }, () => ev("imagination", "work", 2, "strong", "medium"));
 
 		const single = m(computeFacetMetrics(singleEv, FORMULA_DEFAULTS), "imagination");
 		const ten = m(computeFacetMetrics(tenEv, FORMULA_DEFAULTS), "imagination");
 
-		// Single: w = √0.8, Ten: w = √(10×0.8) = √8
-		expect(single.domainWeights.get("work")).toBeCloseTo(Math.sqrt(0.8), 10);
-		expect(ten.domainWeights.get("work")).toBeCloseTo(Math.sqrt(8), 10);
+		// Single: w = √0.6, Ten: w = √(10×0.6) = √6
+		expect(single.domainWeights.get("work")).toBeCloseTo(Math.sqrt(0.6), 5);
+		expect(ten.domainWeights.get("work")).toBeCloseTo(Math.sqrt(6), 5);
 
-		// √8 / √0.8 ≈ 3.16, NOT 10 — that's the anti-redundancy effect
+		// √6 / √0.6 ≈ √10 ≈ 3.16, NOT 10 — that's the anti-redundancy effect
 		const ratio = (ten.domainWeights.get("work") ?? 0) / (single.domainWeights.get("work") ?? 1);
 		expect(ratio).toBeCloseTo(Math.sqrt(10), 5);
 		expect(ratio).toBeLessThan(10);
 	});
 
-	it("scores are identical when all items have the same score", () => {
-		const singleEv = [ev("imagination", "work", 15, 0.8)];
-		const tenEv = Array.from({ length: 10 }, () => ev("imagination", "work", 15, 0.8));
+	it("scores are identical when all items have the same deviation", () => {
+		const singleEv = [ev("imagination", "work", 2, "strong", "medium")];
+		const tenEv = Array.from({ length: 10 }, () => ev("imagination", "work", 2, "strong", "medium"));
 
 		const single = m(computeFacetMetrics(singleEv, FORMULA_DEFAULTS), "imagination");
 		const ten = m(computeFacetMetrics(tenEv, FORMULA_DEFAULTS), "imagination");

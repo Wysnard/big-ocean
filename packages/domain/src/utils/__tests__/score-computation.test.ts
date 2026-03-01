@@ -1,5 +1,6 @@
 /**
  * Score Computation Tests (Story 11.3, Task 3)
+ * Updated for Evidence v2 (Story 18-1)
  */
 import { describe, expect, it } from "vitest";
 import { ALL_FACETS, TRAIT_NAMES, TRAIT_TO_FACETS } from "../../constants/big-five";
@@ -28,8 +29,20 @@ describe("computeAllFacetResults", () => {
 
 	it("computes correct score for single-facet evidence and defaults for other 29", () => {
 		const evidence: EvidenceInput[] = [
-			{ bigfiveFacet: "imagination", score: 15, confidence: 0.8, domain: "leisure" },
-			{ bigfiveFacet: "imagination", score: 17, confidence: 0.9, domain: "work" },
+			{
+				bigfiveFacet: "imagination",
+				deviation: 2,
+				strength: "strong",
+				confidence: "medium",
+				domain: "leisure",
+			},
+			{
+				bigfiveFacet: "imagination",
+				deviation: 2,
+				strength: "strong",
+				confidence: "high",
+				domain: "work",
+			},
 		];
 
 		const result = computeAllFacetResults(evidence);
@@ -48,9 +61,27 @@ describe("computeAllFacetResults", () => {
 
 	it("computes scores for multi-domain evidence across multiple facets", () => {
 		const evidence: EvidenceInput[] = [
-			{ bigfiveFacet: "imagination", score: 15, confidence: 0.8, domain: "leisure" },
-			{ bigfiveFacet: "trust", score: 12, confidence: 0.7, domain: "relationships" },
-			{ bigfiveFacet: "anxiety", score: 5, confidence: 0.6, domain: "work" },
+			{
+				bigfiveFacet: "imagination",
+				deviation: 2,
+				strength: "strong",
+				confidence: "medium",
+				domain: "leisure",
+			},
+			{
+				bigfiveFacet: "trust",
+				deviation: 1,
+				strength: "moderate",
+				confidence: "high",
+				domain: "relationships",
+			},
+			{
+				bigfiveFacet: "anxiety",
+				deviation: -2,
+				strength: "moderate",
+				confidence: "medium",
+				domain: "work",
+			},
 		];
 
 		const result = computeAllFacetResults(evidence);
@@ -123,8 +154,20 @@ describe("computeDomainCoverage", () => {
 
 	it("returns 1.0 for single domain", () => {
 		const evidence: EvidenceInput[] = [
-			{ bigfiveFacet: "imagination", score: 10, confidence: 0.5, domain: "work" },
-			{ bigfiveFacet: "trust", score: 10, confidence: 0.5, domain: "work" },
+			{
+				bigfiveFacet: "imagination",
+				deviation: 0,
+				strength: "moderate",
+				confidence: "medium",
+				domain: "work",
+			},
+			{
+				bigfiveFacet: "trust",
+				deviation: 0,
+				strength: "moderate",
+				confidence: "medium",
+				domain: "work",
+			},
 		];
 
 		const result = computeDomainCoverage(evidence);
@@ -136,9 +179,27 @@ describe("computeDomainCoverage", () => {
 
 	it("returns ~0.33 each for balanced 3 domains", () => {
 		const evidence: EvidenceInput[] = [
-			{ bigfiveFacet: "imagination", score: 10, confidence: 0.5, domain: "work" },
-			{ bigfiveFacet: "trust", score: 10, confidence: 0.5, domain: "relationships" },
-			{ bigfiveFacet: "anxiety", score: 10, confidence: 0.5, domain: "family" },
+			{
+				bigfiveFacet: "imagination",
+				deviation: 0,
+				strength: "moderate",
+				confidence: "medium",
+				domain: "work",
+			},
+			{
+				bigfiveFacet: "trust",
+				deviation: 0,
+				strength: "moderate",
+				confidence: "medium",
+				domain: "relationships",
+			},
+			{
+				bigfiveFacet: "anxiety",
+				deviation: 0,
+				strength: "moderate",
+				confidence: "medium",
+				domain: "family",
+			},
 		];
 
 		const result = computeDomainCoverage(evidence);
@@ -151,7 +212,13 @@ describe("computeDomainCoverage", () => {
 
 	it("includes 'other' domain", () => {
 		const evidence: EvidenceInput[] = [
-			{ bigfiveFacet: "imagination", score: 10, confidence: 0.5, domain: "other" },
+			{
+				bigfiveFacet: "imagination",
+				deviation: 0,
+				strength: "moderate",
+				confidence: "medium",
+				domain: "other",
+			},
 		];
 
 		const result = computeDomainCoverage(evidence);
@@ -160,11 +227,41 @@ describe("computeDomainCoverage", () => {
 
 	it("sums to approximately 1.0 for mixed evidence", () => {
 		const evidence: EvidenceInput[] = [
-			{ bigfiveFacet: "imagination", score: 10, confidence: 0.5, domain: "work" },
-			{ bigfiveFacet: "trust", score: 10, confidence: 0.5, domain: "work" },
-			{ bigfiveFacet: "anxiety", score: 10, confidence: 0.5, domain: "relationships" },
-			{ bigfiveFacet: "altruism", score: 10, confidence: 0.5, domain: "family" },
-			{ bigfiveFacet: "intellect", score: 10, confidence: 0.5, domain: "leisure" },
+			{
+				bigfiveFacet: "imagination",
+				deviation: 0,
+				strength: "moderate",
+				confidence: "medium",
+				domain: "work",
+			},
+			{
+				bigfiveFacet: "trust",
+				deviation: 0,
+				strength: "moderate",
+				confidence: "medium",
+				domain: "work",
+			},
+			{
+				bigfiveFacet: "anxiety",
+				deviation: 0,
+				strength: "moderate",
+				confidence: "medium",
+				domain: "relationships",
+			},
+			{
+				bigfiveFacet: "altruism",
+				deviation: 0,
+				strength: "moderate",
+				confidence: "medium",
+				domain: "family",
+			},
+			{
+				bigfiveFacet: "intellect",
+				deviation: 0,
+				strength: "moderate",
+				confidence: "medium",
+				domain: "leisure",
+			},
 		];
 
 		const result = computeDomainCoverage(evidence);

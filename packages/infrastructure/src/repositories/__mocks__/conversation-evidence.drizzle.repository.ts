@@ -31,9 +31,11 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.succeed(
 						sessionId: input.sessionId,
 						messageId: input.messageId,
 						bigfiveFacet: input.bigfiveFacet,
-						score: input.score,
+						deviation: input.deviation,
+						strength: input.strength,
 						confidence: input.confidence,
 						domain: input.domain,
+						note: input.note,
 						createdAt: new Date(),
 					});
 				}

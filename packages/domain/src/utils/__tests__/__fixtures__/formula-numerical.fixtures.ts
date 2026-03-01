@@ -1,15 +1,16 @@
 import type { FacetName } from "../../../constants/big-five";
 import type { LifeDomain } from "../../../constants/life-domain";
-import type { EvidenceInput } from "../../../types/evidence";
+import type { EvidenceConfidence, EvidenceInput, EvidenceStrength } from "../../../types/evidence";
 import type { FacetMetrics } from "../../formula";
 
 export function ev(
 	facet: FacetName,
 	domain: LifeDomain,
-	score: number,
-	confidence: number,
+	deviation: number,
+	strength: EvidenceStrength,
+	confidence: EvidenceConfidence,
 ): EvidenceInput {
-	return { bigfiveFacet: facet, domain, score, confidence };
+	return { bigfiveFacet: facet, domain, deviation, strength, confidence };
 }
 
 export function m(result: Map<FacetName, FacetMetrics>, facet: FacetName): FacetMetrics {

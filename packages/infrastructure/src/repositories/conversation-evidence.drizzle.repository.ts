@@ -32,9 +32,11 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 								assessmentSessionId: r.sessionId,
 								assessmentMessageId: r.messageId,
 								bigfiveFacet: r.bigfiveFacet,
-								score: r.score,
-								confidence: String(r.confidence),
+								deviation: r.deviation,
+								strength: r.strength,
+								confidence: r.confidence,
 								domain: r.domain,
+								note: r.note,
 							})),
 						)
 						.pipe(
@@ -67,9 +69,11 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 						sessionId: row.assessmentSessionId,
 						messageId: row.assessmentMessageId,
 						bigfiveFacet: row.bigfiveFacet as ConversationEvidenceRecord["bigfiveFacet"],
-						score: row.score,
-						confidence: Number(row.confidence),
+						deviation: row.deviation,
+						strength: row.strength as ConversationEvidenceRecord["strength"],
+						confidence: row.confidence as ConversationEvidenceRecord["confidence"],
 						domain: row.domain as ConversationEvidenceRecord["domain"],
+						note: row.note,
 						createdAt: row.createdAt as Date,
 					}));
 				}),

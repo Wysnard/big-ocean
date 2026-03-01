@@ -7,7 +7,7 @@
 import { type FacetName, OCEAN_INTERLEAVED_ORDER } from "../constants/big-five";
 import type { LifeDomain } from "../constants/life-domain";
 import { STEERABLE_DOMAINS } from "../constants/life-domain";
-import type { EvidenceInput } from "../types/evidence";
+import type { EvidenceConfidence, EvidenceInput, EvidenceStrength } from "../types/evidence";
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -125,6 +125,32 @@ export function computeProjectedEntropy(
 	return computeNormalizedEntropy(projected);
 }
 
+// ─── v2 Evidence Adapters (temporary — Story 18-2 will rewrite computeFacetMetrics natively) ──
+
+/** Map strength enum → numeric weight for formula compatibility */
+const STRENGTH_WEIGHT: Record<EvidenceStrength, number> = {
+	weak: 0.3,
+	moderate: 0.6,
+	strong: 1.0,
+};
+
+/** Map confidence enum → numeric weight for formula compatibility */
+const CONFIDENCE_WEIGHT: Record<EvidenceConfidence, number> = {
+	low: 0.3,
+	medium: 0.6,
+	high: 0.9,
+};
+
+/** Convert v2 deviation to v1-compatible 0-20 score. TODO: Story 18-2 will remove this. */
+function deviationToScore(deviation: number, midpoint: number): number {
+	return midpoint + deviation * (midpoint / 3);
+}
+
+/** Convert v2 enums to v1-compatible numeric confidence. TODO: Story 18-2 will remove this. */
+function v2ToNumericConfidence(strength: EvidenceStrength, confidence: EvidenceConfidence): number {
+	return STRENGTH_WEIGHT[strength] * CONFIDENCE_WEIGHT[confidence];
+}
+
 // ─── Core Functions ──────────────────────────────────────────────────
 
 /**
@@ -153,8 +179,11 @@ export function computeFacetMetrics(
 			domainGroup = { scores: [], confidences: [] };
 			facetMap.set(e.domain, domainGroup);
 		}
-		domainGroup.scores.push(e.score);
-		domainGroup.confidences.push(e.confidence);
+		// TODO: Story 18-2 will rewrite formula to consume v2 natively
+		const score = deviationToScore(e.deviation, config.SCORE_MIDPOINT);
+		const confidence = v2ToNumericConfidence(e.strength, e.confidence);
+		domainGroup.scores.push(score);
+		domainGroup.confidences.push(confidence);
 	}
 
 	for (const [facet, domainMap] of byFacet) {

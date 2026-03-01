@@ -10,14 +10,15 @@ import { Context, Effect } from "effect";
 import type { FacetName } from "../constants/big-five";
 import type { LifeDomain } from "../constants/life-domain";
 import { ConversationEvidenceError } from "../errors/http.errors";
-import type { EvidenceInput } from "../types/evidence";
+import type { EvidenceConfidence, EvidenceInput, EvidenceStrength } from "../types/evidence";
 
 export { ConversationEvidenceError };
 
-/** Input for saving conversation evidence — EvidenceInput + FK context */
+/** Input for saving conversation evidence — EvidenceInput + FK context + required note */
 export type ConversationEvidenceInput = EvidenceInput & {
 	readonly sessionId: string;
 	readonly messageId: string;
+	readonly note: string;
 };
 
 /** Full DB row returned from queries */
@@ -26,9 +27,11 @@ export interface ConversationEvidenceRecord {
 	readonly sessionId: string;
 	readonly messageId: string;
 	readonly bigfiveFacet: FacetName;
-	readonly score: number;
-	readonly confidence: number;
+	readonly deviation: number;
+	readonly strength: EvidenceStrength;
+	readonly confidence: EvidenceConfidence;
 	readonly domain: LifeDomain;
+	readonly note: string;
 	readonly createdAt: Date;
 }
 

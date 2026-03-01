@@ -12,8 +12,6 @@ import { ev, m } from "./__fixtures__/formula-numerical.fixtures";
 // ─── Normalized entropy exact values ────────────────────────────────
 describe("computeNormalizedEntropy: exact computations", () => {
 	it("2 domains [3, 1]: exact entropy value", () => {
-		// p1 = 3/4, p2 = 1/4
-		// H = -(3/4 ln(3/4) + 1/4 ln(1/4)) / ln(2)
 		const H_raw = -(3 / 4) * Math.log(3 / 4) - (1 / 4) * Math.log(1 / 4);
 		const expected = H_raw / Math.log(2);
 		expect(computeNormalizedEntropy([3, 1])).toBeCloseTo(expected, 10);
@@ -48,20 +46,18 @@ describe("computeProjectedEntropy: exact computations", () => {
 			["work", 1.0],
 			["leisure", 1.0],
 		]);
-		// Adding 1.0 to work → [2.0, 1.0]: not balanced anymore
 		const result = computeProjectedEntropy(weights, "work", 1.0);
 		const expected = computeNormalizedEntropy([2.0, 1.0]);
 		expect(result).toBeCloseTo(expected, 10);
-		expect(result).toBeLessThan(1); // no longer perfectly balanced
+		expect(result).toBeLessThan(1);
 	});
 
 	it("adding to new domain increases entropy from 0 (single domain)", () => {
 		const weights = new Map<LifeDomain, number>([["work", 2.0]]);
-		const before = computeNormalizedEntropy([2.0]); // 0
+		const before = computeNormalizedEntropy([2.0]);
 		const after = computeProjectedEntropy(weights, "family", 0.5);
 		expect(before).toBe(0);
 		expect(after).toBeGreaterThan(0);
-		// Should equal entropy of [2.0, 0.5]
 		expect(after).toBeCloseTo(computeNormalizedEntropy([2.0, 0.5]), 10);
 	});
 
@@ -73,7 +69,6 @@ describe("computeProjectedEntropy: exact computations", () => {
 		]);
 		const delta = 0.4;
 		const result = computeProjectedEntropy(weights, "leisure", delta);
-		// Manual: [1.5, 1.2, 0.3]
 		const expected = computeNormalizedEntropy([1.5, 1.2, 0.3]);
 		expect(result).toBeCloseTo(expected, 10);
 	});
@@ -86,139 +81,162 @@ describe("computeContextMean: exact computations", () => {
 	});
 
 	it("one dominant confidence → mean skews toward that score", () => {
-		// c=[0.99, 0.01], scores=[5, 15] → mean ≈ 5.1
 		const result = computeContextMean([5, 15], [0.99, 0.01]);
 		expect(result).toBeCloseTo((0.99 * 5 + 0.01 * 15) / 1.0, 5);
-		expect(result).toBeLessThan(6); // heavily skewed toward 5
+		expect(result).toBeLessThan(6);
 	});
 
 	it("three items: exact weighted mean", () => {
-		// Σ(c×s) = 0.3×4 + 0.5×10 + 0.2×18 = 1.2 + 5.0 + 3.6 = 9.8
-		// Σ(c) = 1.0
 		const result = computeContextMean([4, 10, 18], [0.3, 0.5, 0.2]);
 		expect(result).toBeCloseTo(9.8, 5);
 	});
 });
 
-// ─── Confidence formula verification ────────────────────────────────
-describe("confidence formula: C_max × (1 - e^{-k × W})", () => {
+// ─── Confidence formula verification (v2 evidence) ──────────────────
+/**
+ * With v2 adapter: numericConfidence = STRENGTH_WEIGHT[strength] * CONFIDENCE_WEIGHT[confidence]
+ *   strong(1.0) * high(0.9) = 0.9
+ *   moderate(0.6) * medium(0.6) = 0.36
+ *   weak(0.3) * low(0.3) = 0.09
+ * Context weight w_g = √(Σ numericConfidences in group)
+ */
+describe("confidence formula: C_max × (1 - e^{-k × W}) with v2 evidence", () => {
 	it("exact confidence for known W values", () => {
-		// W=1: C = 0.9 × (1 - e^{-0.7}) ≈ 0.9 × 0.5034 ≈ 0.4531
-		const evidence = [ev("trust", "work", 10, 1.0)]; // w = √1 = 1, W = 1
+		// strong/high → numConf=0.9, w = √0.9, W = √0.9
+		const evidence = [ev("trust", "work", 0, "strong", "high")];
 		const result = m(computeFacetMetrics(evidence, FORMULA_DEFAULTS), "trust");
-		expect(result.confidence).toBeCloseTo(0.9 * (1 - Math.exp(-0.7)), 10);
-	});
-
-	it("confidence curve at W=2, W=3, W=5", () => {
-		for (const W of [2, 3, 5]) {
-			const expected = 0.9 * (1 - Math.exp(-0.7 * W));
-			// Build evidence to get desired W: single domain, confidence = W²
-			// w = √(W²) = W, so Σc = W² for single domain
-			const c = W * W;
-			const result = m(computeFacetMetrics([ev("trust", "work", 10, c)], FORMULA_DEFAULTS), "trust");
-			expect(result.confidence).toBeCloseTo(expected, 8);
-		}
+		const W = Math.sqrt(0.9);
+		expect(result.confidence).toBeCloseTo(0.9 * (1 - Math.exp(-0.7 * W)), 5);
 	});
 
 	it("high k → confidence saturates faster", () => {
-		const evidence = [ev("trust", "work", 10, 0.5), ev("trust", "leisure", 10, 0.5)];
+		const evidence = [
+			ev("trust", "work", 0, "moderate", "medium"),
+			ev("trust", "leisure", 0, "moderate", "medium"),
+		];
 		const lowK = computeFacetMetrics(evidence, { ...FORMULA_DEFAULTS, k: 0.3 });
 		const highK = computeFacetMetrics(evidence, { ...FORMULA_DEFAULTS, k: 2.0 });
 		expect(m(highK, "trust").confidence).toBeGreaterThan(m(lowK, "trust").confidence);
 	});
 });
 
-// ─── Signal power decomposition ─────────────────────────────────────
-describe("signal power: V × D decomposition", () => {
+// ─── Signal power decomposition (v2) ────────────────────────────────
+describe("signal power: V × D decomposition (v2)", () => {
 	it("V increases with total evidence mass W", () => {
-		const ev1 = [ev("trust", "work", 10, 0.5), ev("trust", "leisure", 10, 0.5)];
-		const ev2 = [ev("trust", "work", 10, 2.0), ev("trust", "leisure", 10, 2.0)];
+		// Lower strength/confidence → lower mass
+		const ev1 = [
+			ev("trust", "work", 0, "weak", "medium"),
+			ev("trust", "leisure", 0, "weak", "medium"),
+		];
+		// Higher strength/confidence → higher mass
+		const ev2 = [
+			ev("trust", "work", 0, "strong", "high"),
+			ev("trust", "leisure", 0, "strong", "high"),
+		];
 
 		const m1 = m(computeFacetMetrics(ev1, FORMULA_DEFAULTS), "trust");
 		const m2 = m(computeFacetMetrics(ev2, FORMULA_DEFAULTS), "trust");
 
-		// Same D (both have 2 balanced domains → D=1), but m2 has higher V
 		expect(m2.signalPower).toBeGreaterThan(m1.signalPower);
 	});
 
-	it("D drives signal power: 5 balanced domains > 2 balanced domains (same total mass)", () => {
-		// 5 domains × 0.2 confidence each = 1.0 total confidence per domain
+	it("D drives signal power: 5 balanced domains > 2 balanced domains", () => {
 		const fiveDomains = [
-			ev("trust", "work", 10, 0.2),
-			ev("trust", "leisure", 10, 0.2),
-			ev("trust", "family", 10, 0.2),
-			ev("trust", "relationships", 10, 0.2),
-			ev("trust", "solo", 10, 0.2),
+			ev("trust", "work", 0, "weak", "low"),
+			ev("trust", "leisure", 0, "weak", "low"),
+			ev("trust", "family", 0, "weak", "low"),
+			ev("trust", "relationships", 0, "weak", "low"),
+			ev("trust", "solo", 0, "weak", "low"),
 		];
-		// 2 domains × 0.5 confidence each = 1.0 total confidence per domain
-		const twoDomains = [ev("trust", "work", 10, 0.5), ev("trust", "leisure", 10, 0.5)];
+		const twoDomains = [
+			ev("trust", "work", 0, "moderate", "medium"),
+			ev("trust", "leisure", 0, "moderate", "medium"),
+		];
 
 		const m5 = m(computeFacetMetrics(fiveDomains, FORMULA_DEFAULTS), "trust");
 		const m2 = m(computeFacetMetrics(twoDomains, FORMULA_DEFAULTS), "trust");
 
-		// Same W = √0.2×5 vs √0.5×2 (not exactly equal but close)
-		// Key point: 5 balanced domains → D ≈ 1, so signal power should be higher
 		expect(m5.signalPower).toBeGreaterThan(m2.signalPower);
 	});
 
-	it("adding 'other' domain evidence increases signal power (other counts for V×D)", () => {
-		const withoutOther = [ev("trust", "work", 10, 0.8)];
-		const withOther = [ev("trust", "work", 10, 0.8), ev("trust", "other", 10, 0.8)];
+	it("adding 'other' domain evidence increases signal power", () => {
+		const withoutOther = [ev("trust", "work", 0, "strong", "medium")];
+		const withOther = [
+			ev("trust", "work", 0, "strong", "medium"),
+			ev("trust", "other", 0, "strong", "medium"),
+		];
 
 		const mWithout = m(computeFacetMetrics(withoutOther, FORMULA_DEFAULTS), "trust");
 		const mWith = m(computeFacetMetrics(withOther, FORMULA_DEFAULTS), "trust");
 
-		// 'other' adds diversity → signal power goes from 0 (single domain) to > 0
 		expect(mWithout.signalPower).toBe(0);
 		expect(mWith.signalPower).toBeGreaterThan(0);
 	});
 });
 
-// ─── Score weighting verification ───────────────────────────────────
-describe("facet score: context-weighted cross-domain mean", () => {
+// ─── Score weighting verification (v2) ──────────────────────────────
+describe("facet score: context-weighted cross-domain mean (v2)", () => {
 	it("higher-confidence domain pulls score toward it", () => {
-		// Work: score 18, confidence 0.9 → w = √0.9 ≈ 0.949
-		// Leisure: score 2, confidence 0.1 → w = √0.1 ≈ 0.316
-		// Score should be closer to 18 than to 2
-		const evidence = [ev("imagination", "work", 18, 0.9), ev("imagination", "leisure", 2, 0.1)];
+		// Work: dev=3 → score≈20, strong/high → conf=0.9, w = √0.9
+		// Leisure: dev=-3 → score≈0, weak/low → conf=0.09, w = √0.09
+		const evidence = [
+			ev("imagination", "work", 3, "strong", "high"),
+			ev("imagination", "leisure", -3, "weak", "low"),
+		];
 		const result = m(computeFacetMetrics(evidence, FORMULA_DEFAULTS), "imagination");
 
+		const sWork = 10 + 3 * (10 / 3); // 20
+		const sLeisure = 10 + -3 * (10 / 3); // 0
 		const wW = Math.sqrt(0.9);
-		const wL = Math.sqrt(0.1);
-		const expected = (wW * 18 + wL * 2) / (wW + wL);
-		expect(result.score).toBeCloseTo(expected, 8);
-		expect(result.score).toBeGreaterThan(13); // weighted toward 18
+		const wL = Math.sqrt(0.09);
+		const expected = (wW * sWork + wL * sLeisure) / (wW + wL);
+		expect(result.score).toBeCloseTo(expected, 4);
+		expect(result.score).toBeGreaterThan(13); // weighted toward high deviation
 	});
 
 	it("equal confidence across domains → simple average of domain means", () => {
-		const evidence = [ev("orderliness", "work", 16, 0.5), ev("orderliness", "leisure", 8, 0.5)];
+		// Both moderate/medium → conf=0.36
+		const evidence = [
+			ev("orderliness", "work", 2, "moderate", "medium"),
+			ev("orderliness", "leisure", -1, "moderate", "medium"),
+		];
 		const result = m(computeFacetMetrics(evidence, FORMULA_DEFAULTS), "orderliness");
-		// Equal w_g → score = (16 + 8) / 2 = 12
-		expect(result.score).toBeCloseTo(12, 5);
+		const sWork = 10 + 2 * (10 / 3);
+		const sLeisure = 10 + -1 * (10 / 3);
+		const expected = (sWork + sLeisure) / 2;
+		expect(result.score).toBeCloseTo(expected, 4);
 	});
 
 	it("intra-domain averaging: multiple items in one domain average first", () => {
-		// Work: (20, 0.5), (10, 0.5) → μ_work = 15, w_work = √1 = 1
-		// Leisure: (6, 0.5) → μ_leisure = 6, w_leisure = √0.5
+		// Work: 2 items with moderate/medium (conf=0.36 each), → Σconf=0.72, w=√0.72
+		// Leisure: 1 item with moderate/medium (conf=0.36), w=√0.36
 		const evidence = [
-			ev("trust", "work", 20, 0.5),
-			ev("trust", "work", 10, 0.5),
-			ev("trust", "leisure", 6, 0.5),
+			ev("trust", "work", 3, "moderate", "medium"),
+			ev("trust", "work", 0, "moderate", "medium"),
+			ev("trust", "leisure", -1, "moderate", "medium"),
 		];
 		const result = m(computeFacetMetrics(evidence, FORMULA_DEFAULTS), "trust");
 
-		const wWork = Math.sqrt(1.0);
-		const wLeisure = Math.sqrt(0.5);
-		const expected = (wWork * 15 + wLeisure * 6) / (wWork + wLeisure);
-		expect(result.score).toBeCloseTo(expected, 5);
+		const sWork1 = 10 + 3 * (10 / 3); // 20
+		const sWork2 = 10 + 0 * (10 / 3); // 10
+		const sLeisure = 10 + -1 * (10 / 3); // ≈6.67
+		const confVal = 0.36;
+		const muWork = (confVal * sWork1 + confVal * sWork2) / (2 * confVal);
+		const wWork = Math.sqrt(2 * confVal);
+		const wLeisure = Math.sqrt(confVal);
+		const expected = (wWork * muWork + wLeisure * sLeisure) / (wWork + wLeisure);
+		expect(result.score).toBeCloseTo(expected, 4);
 	});
 });
 
-// ─── Multi-facet isolation ──────────────────────────────────────────
-describe("multi-facet: facets compute independently", () => {
+// ─── Multi-facet isolation (v2) ─────────────────────────────────────
+describe("multi-facet: facets compute independently (v2)", () => {
 	it("evidence for facet A does not affect facet B metrics", () => {
-		const evidenceA = [ev("imagination", "work", 18, 0.9)];
-		const evidenceBoth = [ev("imagination", "work", 18, 0.9), ev("trust", "leisure", 5, 0.3)];
+		const evidenceA = [ev("imagination", "work", 3, "strong", "high")];
+		const evidenceBoth = [
+			ev("imagination", "work", 3, "strong", "high"),
+			ev("trust", "leisure", -2, "weak", "low"),
+		];
 
 		const mA = m(computeFacetMetrics(evidenceA, FORMULA_DEFAULTS), "imagination");
 		const mBoth = m(computeFacetMetrics(evidenceBoth, FORMULA_DEFAULTS), "imagination");

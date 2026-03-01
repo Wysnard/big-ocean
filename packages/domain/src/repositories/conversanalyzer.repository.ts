@@ -27,8 +27,8 @@ export interface ConversanalyzerInput {
 }
 
 export interface ConversanalyzerOutput {
-	/** Extracted facet evidence (0-3 records) */
-	readonly evidence: EvidenceInput[];
+	/** Extracted facet evidence (0-5 records, v2 format) */
+	readonly evidence: (EvidenceInput & { readonly note: string })[];
 	/** Token usage for cost tracking */
 	readonly tokenUsage: { readonly input: number; readonly output: number };
 }
