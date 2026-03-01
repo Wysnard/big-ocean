@@ -100,14 +100,20 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 
 		// 6. Read persisted facet scores from assessment_results
 		const result = yield* resultRepo.getBySessionId(profile.sessionId);
+		if (!result || Object.keys(result.facets).length === 0) {
+			return yield* Effect.fail(
+				new ProfileNotFound({
+					publicProfileId: input.publicProfileId,
+					message: "Assessment results not found for this profile",
+				}),
+			);
+		}
 		const facets: FacetScoresMap = {} as FacetScoresMap;
-		if (result && Object.keys(result.facets).length > 0) {
-			for (const [facetName, data] of Object.entries(result.facets)) {
-				facets[facetName as FacetName] = {
-					score: data.score,
-					confidence: data.confidence,
-				};
-			}
+		for (const [facetName, data] of Object.entries(result.facets)) {
+			facets[facetName as FacetName] = {
+				score: data.score,
+				confidence: data.confidence,
+			};
 		}
 
 		logger.info("Public profile viewed", {

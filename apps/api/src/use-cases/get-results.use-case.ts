@@ -14,6 +14,7 @@
 import {
 	AppConfig,
 	AssessmentMessageRepository,
+	AssessmentResultError,
 	AssessmentResultRepository,
 	AssessmentSessionRepository,
 	BIG_FIVE_TRAITS,
@@ -117,10 +118,8 @@ export const getResults = (input: GetResultsInput) =>
 		const result = yield* resultRepo.getBySessionId(input.sessionId);
 		if (!result || Object.keys(result.facets).length === 0) {
 			return yield* Effect.fail(
-				new SessionNotCompleted({
-					sessionId: input.sessionId,
-					currentStatus: "completed",
-					message: "Assessment results not yet persisted",
+				new AssessmentResultError({
+					message: `Assessment results not found for completed session '${input.sessionId}'`,
 				}),
 			);
 		}
@@ -134,8 +133,14 @@ export const getResults = (input: GetResultsInput) =>
 			};
 		}
 
-		// Extract TraitScoresMap from persisted traits
-		const traitScoresMap = result.traits;
+		// Extract TraitScoresMap (score + confidence, ignoring signalPower)
+		const traitScoresMap: Record<string, { score: number; confidence: number }> = {};
+		for (const [traitName, data] of Object.entries(result.traits)) {
+			traitScoresMap[traitName] = {
+				score: data.score,
+				confidence: data.confidence,
+			};
+		}
 
 		// 5. Generate OCEAN codes
 		const oceanCode5 = generateOceanCode(facetScoresMap);
@@ -149,7 +154,7 @@ export const getResults = (input: GetResultsInput) =>
 
 		// 8. Build trait results array
 		const traits: TraitResult[] = BIG_FIVE_TRAITS.map((traitName) => {
-			const traitScore = traitScoresMap[traitName];
+			const traitScore = traitScoresMap[traitName]!;
 			return {
 				name: traitName,
 				score: traitScore.score,
