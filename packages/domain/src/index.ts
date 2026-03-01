@@ -386,8 +386,15 @@ export {
 } from "./utils/formula";
 // Highlight position computation (Story 11.2)
 export { computeHighlightPositions } from "./utils/highlight";
-// Steering utilities (Story 2.3)
+// Steering utilities (Story 2.3, 17.2)
 export { computeDomainStreak } from "./utils/steering";
+export {
+	type IntentType,
+	INTENT_TYPES,
+	type MicroIntent,
+	type RealizeMicroIntentInput,
+	realizeMicroIntent,
+} from "./utils/steering";
 // Utility functions
 export {
 	buildChatSystemPrompt,

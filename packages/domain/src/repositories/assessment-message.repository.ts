@@ -22,6 +22,7 @@ export class AssessmentMessageRepository extends Context.Tag("AssessmentMessageR
 		 * @param userId - Optional user ID for user messages
 		 * @param targetDomain - Optional life domain for steering (assistant messages, Story 9.2)
 		 * @param targetBigfiveFacet - Optional facet for steering (assistant messages, Story 9.2)
+		 * @param intentType - Optional micro-intent type (assistant messages, Story 17.2)
 		 * @returns Effect with created message entity
 		 */
 		readonly saveMessage: (
@@ -31,6 +32,7 @@ export class AssessmentMessageRepository extends Context.Tag("AssessmentMessageR
 			userId?: string,
 			targetDomain?: LifeDomain,
 			targetBigfiveFacet?: FacetName,
+			intentType?: string,
 		) => Effect.Effect<AssessmentMessageEntity, DatabaseError, never>;
 
 		/**

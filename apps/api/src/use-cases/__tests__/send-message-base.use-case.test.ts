@@ -61,11 +61,12 @@ describe("sendMessage Use Case", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should save assistant message with response content and steering targets", () =>
+		it.effect("should save assistant message with response content, steering targets, and intentType", () =>
 			Effect.gen(function* () {
 				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
 
 				// Cold start: greeting seed → "relationships" / "gregariousness" (index 1 from GREETING_MESSAGES.length)
+				// Story 17.2: intentType is now passed as 7th argument
 				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
 					"session_test_123",
 					"assistant",
@@ -73,25 +74,32 @@ describe("sendMessage Use Case", () => {
 					undefined,
 					"relationships",
 					"gregariousness",
+					expect.any(String), // intentType from realizeMicroIntent
 				);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should invoke Nerin with correct message history and steering", () =>
+		it.effect("should invoke Nerin with correct message history, steering, and microIntent", () =>
 			Effect.gen(function* () {
 				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
 
-				expect(mockNerinRepo.invoke).toHaveBeenCalledWith({
-					sessionId: "session_test_123",
-					messages: coldStartMessages.map((m) => ({
-						id: m.id,
-						role: m.role,
-						content: m.content,
-					})),
-					targetDomain: "relationships",
-					targetFacet: "gregariousness",
-					nearingEnd: false,
-				});
+				expect(mockNerinRepo.invoke).toHaveBeenCalledWith(
+					expect.objectContaining({
+						sessionId: "session_test_123",
+						messages: coldStartMessages.map((m) => ({
+							id: m.id,
+							role: m.role,
+							content: m.content,
+						})),
+						targetDomain: "relationships",
+						targetFacet: "gregariousness",
+						nearingEnd: false,
+						microIntent: expect.objectContaining({
+							intent: expect.any(String),
+							domain: expect.any(String),
+						}),
+					}),
+				);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 

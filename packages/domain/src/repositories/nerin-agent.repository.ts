@@ -3,6 +3,7 @@ import type { FacetName } from "../constants/big-five";
 import type { LifeDomain } from "../constants/life-domain";
 import { AgentInvocationError } from "../errors/http.errors";
 import type { DomainMessage } from "../types/message";
+import type { MicroIntent } from "../utils/steering/realize-micro-intent";
 
 /**
  * Token usage metrics from agent invocation
@@ -35,6 +36,9 @@ export interface NerinInvokeInput {
 
 	/** Whether the conversation is nearing the message threshold (Story 10.5) */
 	readonly nearingEnd?: boolean;
+
+	/** Structured micro-intent for natural steering (Story 17.2) */
+	readonly microIntent?: MicroIntent;
 }
 
 /**

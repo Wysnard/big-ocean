@@ -16,6 +16,7 @@ const messages = new Map<
 		userId?: string;
 		targetDomain?: string | null;
 		targetBigfiveFacet?: string | null;
+		intentType?: string | null;
 		createdAt: Date;
 	}>
 >();
@@ -33,6 +34,7 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.succeed(
 			userId?: string,
 			targetDomain?: string,
 			targetBigfiveFacet?: string,
+			intentType?: string,
 		) =>
 			Effect.sync(() => {
 				const id = `msg_${crypto.randomUUID().slice(0, 8)}`;
@@ -44,6 +46,7 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.succeed(
 					userId,
 					targetDomain: targetDomain ?? null,
 					targetBigfiveFacet: targetBigfiveFacet ?? null,
+					intentType: intentType ?? null,
 					createdAt: new Date(),
 				};
 				const existing = messages.get(sessionId) || [];
