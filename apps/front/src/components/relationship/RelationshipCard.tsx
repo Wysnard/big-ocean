@@ -96,7 +96,7 @@ function SentInvitationsInline({ invitations }: { invitations: readonly Invitati
 
 	return (
 		<>
-			<div className="space-y-2 pt-1">
+			<div data-testid="sent-invitations-list" className="space-y-2 pt-1">
 				{invitations.map((inv) => {
 					const config = STATUS_CONFIG[inv.status];
 					const Icon = config.icon;
