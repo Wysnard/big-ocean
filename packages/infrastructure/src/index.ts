@@ -51,6 +51,8 @@ export { NerinAgentMockRepositoryLive } from "./repositories/nerin-agent.mock.re
 export { PaymentGatewayPolarRepositoryLive } from "./repositories/payment-gateway.polar.repository";
 // Portrait repository implementation (Story 13.3)
 export { PortraitDrizzleRepositoryLive } from "./repositories/portrait.drizzle.repository";
+// Portrait rating repository implementation (Story 19-2)
+export { PortraitRatingDrizzleRepositoryLive } from "./repositories/portrait-rating.drizzle.repository";
 // Portrait generator repository implementations
 export { PortraitGeneratorClaudeRepositoryLive } from "./repositories/portrait-generator.claude.repository";
 export { PortraitGeneratorMockRepositoryLive } from "./repositories/portrait-generator.mock.repository";

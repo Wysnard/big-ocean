@@ -181,6 +181,9 @@ export {
 	type PortraitStatus,
 	type PortraitTier,
 } from "./repositories/portrait.repository";
+// Portrait rating repository (Story 19-2)
+export type { InsertPortraitRating } from "./repositories/portrait-rating.repository";
+export { PortraitRatingRepository } from "./repositories/portrait-rating.repository";
 export {
 	PortraitGenerationError,
 	type PortraitGenerationInput,
@@ -333,6 +336,18 @@ export type {
 	PurchaseEventType,
 	UserCapabilities,
 } from "./types/purchase.types";
+// Portrait rating types (Story 19-2)
+export type {
+	DepthSignalLevel,
+	PortraitRating,
+	PortraitRatingRecord,
+	PortraitType,
+} from "./types/portrait-rating.types";
+export {
+	DEPTH_SIGNAL_LEVELS,
+	PORTRAIT_RATINGS,
+	PORTRAIT_TYPES,
+} from "./types/portrait-rating.types";
 // Purchase event types (Story 13.1)
 export {
 	PURCHASE_EVENT_TYPES,

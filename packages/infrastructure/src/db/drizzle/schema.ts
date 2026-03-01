@@ -18,6 +18,11 @@
 
 import { ALL_FACETS } from "@workspace/domain/constants/big-five";
 import { LIFE_DOMAINS } from "@workspace/domain/constants/life-domain";
+import {
+	DEPTH_SIGNAL_LEVELS,
+	PORTRAIT_RATINGS,
+	PORTRAIT_TYPES,
+} from "@workspace/domain/types/portrait-rating.types";
 import { PURCHASE_EVENT_TYPES } from "@workspace/domain/types/purchase.types";
 import { defineRelations, sql } from "drizzle-orm";
 import {
@@ -51,6 +56,21 @@ export const bigfiveFacetNameEnum = pgEnum(
 export const evidenceStrengthEnum = pgEnum("evidence_strength", ["weak", "moderate", "strong"]);
 
 export const evidenceConfidenceEnum = pgEnum("evidence_confidence", ["low", "medium", "high"]);
+
+export const portraitTypeEnum = pgEnum(
+	"portrait_type",
+	PORTRAIT_TYPES as unknown as [string, ...string[]],
+);
+
+export const portraitRatingEnum = pgEnum(
+	"portrait_rating",
+	PORTRAIT_RATINGS as unknown as [string, ...string[]],
+);
+
+export const depthSignalEnum = pgEnum(
+	"depth_signal",
+	DEPTH_SIGNAL_LEVELS as unknown as [string, ...string[]],
+);
 
 export const purchaseEventTypeEnum = pgEnum(
 	"purchase_event_type",
@@ -468,6 +488,33 @@ export const relationshipAnalyses = pgTable("relationship_analyses", {
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// ─── Portrait Ratings (Story 19-2 — portrait quality telemetry) ───────────
+
+/**
+ * Portrait Ratings
+ *
+ * Captures user feedback on portrait quality (thumbs up/down).
+ * Placeholder for future quality evaluation — no UI yet.
+ */
+export const portraitRatings = pgTable(
+	"portrait_ratings",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		assessmentSessionId: uuid("assessment_session_id")
+			.notNull()
+			.references(() => assessmentSession.id, { onDelete: "cascade" }),
+		portraitType: portraitTypeEnum("portrait_type").notNull(),
+		rating: portraitRatingEnum("rating").notNull(),
+		depthSignal: depthSignalEnum("depth_signal").notNull(),
+		evidenceCount: integer("evidence_count").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [index("portrait_ratings_session_id_idx").on(table.assessmentSessionId)],
+);
+
 // ─── Relations (Drizzle v2 syntax) ───────────────────────────────────────
 
 export const relations = defineRelations(
@@ -487,6 +534,7 @@ export const relations = defineRelations(
 		profileAccessLog,
 		relationshipInvitations,
 		relationshipAnalyses,
+		portraitRatings,
 	},
 	(r) => ({
 		user: {
@@ -622,6 +670,16 @@ export const relations = defineRelations(
 			userB: r.one.user({
 				from: r.relationshipAnalyses.userBId,
 				to: r.user.id,
+			}),
+		},
+		portraitRatings: {
+			user: r.one.user({
+				from: r.portraitRatings.userId,
+				to: r.user.id,
+			}),
+			session: r.one.assessmentSession({
+				from: r.portraitRatings.assessmentSessionId,
+				to: r.assessmentSession.id,
 			}),
 		},
 	}),
