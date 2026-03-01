@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { FacetName } from "../../constants/big-five";
+import { ALL_FACETS, type FacetName, OCEAN_INTERLEAVED_ORDER } from "../../constants/big-five";
 import type { LifeDomain } from "../../constants/life-domain";
 import type { EvidenceInput } from "../../types/evidence";
 import {
@@ -11,6 +11,17 @@ import {
 	GREETING_SEED_POOL,
 } from "../formula";
 import { getMetrics, makeEvidence } from "./__fixtures__/formula.fixtures";
+
+/** Helper: create a metrics map with all 30 facets above target (priority=0) */
+function makeAllFacetsAboveTarget(): Map<FacetName, FacetMetrics> {
+	const dw = new Map<LifeDomain, number>([
+		["work", 1.5],
+		["leisure", 1.2],
+	]);
+	return new Map<FacetName, FacetMetrics>(
+		ALL_FACETS.map((f) => [f, { score: 14, confidence: 0.85, signalPower: 0.6, domainWeights: dw }]),
+	);
+}
 
 // ─── computeFacetMetrics tests ───────────────────────────────────────
 
@@ -24,7 +35,6 @@ describe("computeFacetMetrics", () => {
 		const evidence = [makeEvidence("imagination", "work", 15, 0.8)];
 		const result = computeFacetMetrics(evidence, FORMULA_DEFAULTS);
 		const m = getMetrics(result, "imagination");
-
 		expect(m).toBeDefined();
 		expect(Number.isFinite(m.score)).toBe(true);
 		expect(Number.isFinite(m.confidence)).toBe(true);
@@ -41,7 +51,6 @@ describe("computeFacetMetrics", () => {
 		];
 		const result = computeFacetMetrics(evidence, FORMULA_DEFAULTS);
 		const m = getMetrics(result, "imagination");
-
 		expect(m.score).toBeGreaterThanOrEqual(0);
 		expect(m.score).toBeLessThanOrEqual(20);
 		expect(m.confidence).toBeGreaterThanOrEqual(0);
@@ -58,11 +67,9 @@ describe("computeFacetMetrics", () => {
 			makeEvidence("trust", "leisure", 10, 0.7),
 			makeEvidence("trust", "family", 10, 0.6),
 		];
-
 		const c1 = getMetrics(computeFacetMetrics(ev1, FORMULA_DEFAULTS), "trust").confidence;
 		const c2 = getMetrics(computeFacetMetrics(ev2, FORMULA_DEFAULTS), "trust").confidence;
 		const c3 = getMetrics(computeFacetMetrics(ev3, FORMULA_DEFAULTS), "trust").confidence;
-
 		expect(c2).toBeGreaterThan(c1);
 		expect(c3).toBeGreaterThan(c2);
 	});
@@ -85,7 +92,6 @@ describe("computeFacetMetrics", () => {
 			makeEvidence("imagination", "leisure", 14, 0.7),
 		];
 		const m = getMetrics(computeFacetMetrics(evidence, FORMULA_DEFAULTS), "imagination");
-		// work: √(0.8 + 0.6) = √1.4, leisure: √0.7
 		expect(m.domainWeights.get("work")).toBeCloseTo(Math.sqrt(1.4), 10);
 		expect(m.domainWeights.get("leisure")).toBeCloseTo(Math.sqrt(0.7), 10);
 		expect(m.domainWeights.has("family")).toBe(false);
@@ -127,10 +133,8 @@ describe("computeFacetMetrics", () => {
 			makeEvidence("assertiveness", "leisure", 13, 0.5),
 			makeEvidence("anxiety", "solo", 11, 0.6),
 		];
-
 		const result = computeFacetMetrics(evidence, FORMULA_DEFAULTS);
 		expect(result.size).toBe(5);
-
 		for (const [, m] of result) {
 			expect(m.score).toBeGreaterThanOrEqual(0);
 			expect(m.score).toBeLessThanOrEqual(20);
@@ -146,20 +150,11 @@ describe("computeFacetMetrics", () => {
 			makeEvidence("imagination", "work", 15, 0.8),
 			makeEvidence("imagination", "leisure", 12, 0.6),
 		];
-
 		const defaultResult = computeFacetMetrics(evidence, FORMULA_DEFAULTS);
-		const customConfig: FormulaConfig = {
-			...FORMULA_DEFAULTS,
-			C_max: 0.5,
-			k: 1.5,
-			betaVolume: 1.5,
-		};
+		const customConfig: FormulaConfig = { ...FORMULA_DEFAULTS, C_max: 0.5, k: 1.5, betaVolume: 1.5 };
 		const customResult = computeFacetMetrics(evidence, customConfig);
-
 		const dm = getMetrics(defaultResult, "imagination");
 		const cm = getMetrics(customResult, "imagination");
-
-		// Different C_max should produce different confidence
 		expect(dm.confidence).not.toBeCloseTo(cm.confidence, 2);
 	});
 });
@@ -180,84 +175,116 @@ describe("computeSteeringTarget", () => {
 		const r0 = computeSteeringTarget(metrics, null, FORMULA_DEFAULTS, 0);
 		const r1 = computeSteeringTarget(metrics, null, FORMULA_DEFAULTS, 1);
 		const r5 = computeSteeringTarget(metrics, null, FORMULA_DEFAULTS, 5);
-
 		expect(r0.targetFacet).toBe("imagination");
 		expect(r1.targetFacet).toBe("gregariousness");
-		expect(r5.targetFacet).toBe("imagination"); // wraps
+		expect(r5.targetFacet).toBe("imagination");
 	});
 
 	it("5.8: switch cost — same domain penalized less", () => {
+		const metrics = makeAllFacetsAboveTarget();
 		const dw = new Map<LifeDomain, number>([["work", 0.9]]);
-		const metrics = new Map<FacetName, FacetMetrics>([
-			["imagination", { score: 10, confidence: 0.3, signalPower: 0.1, domainWeights: dw }],
-		]);
-
+		metrics.set("imagination", { score: 10, confidence: 0.3, signalPower: 0.1, domainWeights: dw });
 		const sameDomain = computeSteeringTarget(metrics, "work", FORMULA_DEFAULTS);
 		const diffDomain = computeSteeringTarget(metrics, "solo", FORMULA_DEFAULTS);
-
-		// Both should select the same target facet (imagination)
 		expect(sameDomain.targetFacet).toBe("imagination");
 		expect(diffDomain.targetFacet).toBe("imagination");
 	});
 
-	it("5.10: facet priority tiebreaker — lowest confidence wins when all above target", () => {
-		const dwIm = new Map<LifeDomain, number>([
-			["work", 1.5],
-			["leisure", 1.2],
-		]);
-		const dwTr = new Map<LifeDomain, number>([
-			["relationships", 1.3],
-			["work", 1.0],
-		]);
-		const metrics = new Map<FacetName, FacetMetrics>([
-			["imagination", { score: 15, confidence: 0.85, signalPower: 0.6, domainWeights: dwIm }],
-			["trust", { score: 12, confidence: 0.78, signalPower: 0.55, domainWeights: dwTr }],
-		]);
-
+	it("5.10: OCEAN-interleaved tiebreaker — first in OCEAN order wins when all priorities equal", () => {
+		const metrics = makeAllFacetsAboveTarget();
 		const result = computeSteeringTarget(metrics, null, FORMULA_DEFAULTS);
-		// Both above C_target (0.75) and P_target (0.5) → priority = 0
-		// Tiebreaker: lowest confidence → trust (0.78 < 0.85)
-		expect(result.targetFacet).toBe("trust");
+		expect(result.targetFacet).toBe(OCEAN_INTERLEAVED_ORDER[0]);
+		expect(result.bestPriority).toBe(0);
+	});
+
+	it("unexplored facets get maximum priority (1.15)", () => {
+		const dw = new Map<LifeDomain, number>([["work", 1.5], ["leisure", 1.2]]);
+		const metrics = new Map<FacetName, FacetMetrics>([
+			["imagination", { score: 14, confidence: 0.85, signalPower: 0.6, domainWeights: dw }],
+			["self_efficacy", { score: 14, confidence: 0.85, signalPower: 0.6, domainWeights: dw }],
+			["friendliness", { score: 14, confidence: 0.85, signalPower: 0.6, domainWeights: dw }],
+			["trust", { score: 14, confidence: 0.85, signalPower: 0.6, domainWeights: dw }],
+			["anxiety", { score: 14, confidence: 0.85, signalPower: 0.6, domainWeights: dw }],
+		]);
+		const result = computeSteeringTarget(metrics, null, FORMULA_DEFAULTS);
+		expect(result.bestPriority).toBeCloseTo(1.15);
+		expect(metrics.has(result.targetFacet)).toBe(false);
+		// First unexplored in OCEAN order: rank 5 = artistic_interests (O[1])
+		expect(result.targetFacet).toBe("artistic_interests");
+	});
+
+	it("OCEAN interleaving ensures trait spread", () => {
+		const dw = new Map<LifeDomain, number>([["work", 1.5], ["leisure", 1.2]]);
+		const metrics = new Map<FacetName, FacetMetrics>([
+			["imagination", { score: 14, confidence: 0.85, signalPower: 0.6, domainWeights: dw }],
+		]);
+		const result = computeSteeringTarget(metrics, null, FORMULA_DEFAULTS);
+		// First unexplored in OCEAN order: self_efficacy (C[0], rank 1)
+		expect(result.targetFacet).toBe("self_efficacy");
+	});
+
+	it("all 30 facets explored — tiebreaker selects by OCEAN order", () => {
+		const metrics = makeAllFacetsAboveTarget();
+		const result = computeSteeringTarget(metrics, null, FORMULA_DEFAULTS);
+		expect(result.targetFacet).toBe("imagination");
 	});
 
 	it("5.11: domain gain — empty domain has higher ΔP than saturated", () => {
-		// All evidence from work only → steering should pick a different domain
+		const metrics = makeAllFacetsAboveTarget();
 		const dw = new Map<LifeDomain, number>([["work", 1.2]]);
-		const metrics = new Map<FacetName, FacetMetrics>([
-			["imagination", { score: 10, confidence: 0.2, signalPower: 0.0, domainWeights: dw }],
-		]);
-
+		metrics.set("imagination", { score: 10, confidence: 0.2, signalPower: 0.0, domainWeights: dw });
 		const result = computeSteeringTarget(metrics, null, FORMULA_DEFAULTS);
 		expect(result.targetFacet).toBe("imagination");
-		// With exact weights, steering knows work is the only domain → picks a different one
 		expect(result.targetDomain).not.toBe("work");
 		expect(typeof result.steeringHint).toBe("string");
 		expect(result.steeringHint.length).toBeGreaterThan(0);
 	});
 
 	it("steers away from saturated domain using exact weights", () => {
-		// All evidence from work only → steering should NOT pick work
+		const metrics = makeAllFacetsAboveTarget();
 		const dw = new Map<LifeDomain, number>([["work", 2.5]]);
-		const metrics = new Map<FacetName, FacetMetrics>([
-			["orderliness", { score: 14, confidence: 0.5, signalPower: 0.0, domainWeights: dw }],
-		]);
-
+		metrics.set("orderliness", { score: 14, confidence: 0.5, signalPower: 0.0, domainWeights: dw });
 		const result = computeSteeringTarget(metrics, null, FORMULA_DEFAULTS);
-		// work is the only domain with evidence → adding to any other domain improves entropy more
 		expect(result.targetDomain).not.toBe("work");
 	});
 
 	it("returns valid SteeringTarget shape", () => {
-		const dw1 = new Map<LifeDomain, number>([["work", 0.8]]);
-		const dw2 = new Map<LifeDomain, number>([["leisure", 0.7]]);
-		const metrics = new Map<FacetName, FacetMetrics>([
-			["orderliness", { score: 8, confidence: 0.4, signalPower: 0.2, domainWeights: dw1 }],
-			["imagination", { score: 16, confidence: 0.6, signalPower: 0.3, domainWeights: dw2 }],
-		]);
-
+		const metrics = makeAllFacetsAboveTarget();
+		metrics.set("orderliness", { score: 8, confidence: 0.4, signalPower: 0.2, domainWeights: new Map([["work", 0.8]]) });
+		metrics.set("imagination", { score: 16, confidence: 0.6, signalPower: 0.3, domainWeights: new Map([["leisure", 0.7]]) });
 		const result = computeSteeringTarget(metrics, "work", FORMULA_DEFAULTS);
 		expect(result).toHaveProperty("targetFacet");
 		expect(result).toHaveProperty("targetDomain");
 		expect(result).toHaveProperty("steeringHint");
+		expect(result).toHaveProperty("bestPriority");
+	});
+});
+
+// ─── OCEAN_INTERLEAVED_ORDER constant tests ──────────────────────────
+
+describe("OCEAN_INTERLEAVED_ORDER", () => {
+	it("has exactly 30 facets", () => {
+		expect(OCEAN_INTERLEAVED_ORDER.length).toBe(30);
+	});
+
+	it("first 5 elements are one from each trait (O, C, E, A, N)", () => {
+		const first5 = OCEAN_INTERLEAVED_ORDER.slice(0, 5);
+		expect(first5[0]).toBe("imagination");
+		expect(first5[1]).toBe("self_efficacy");
+		expect(first5[2]).toBe("friendliness");
+		expect(first5[3]).toBe("trust");
+		expect(first5[4]).toBe("anxiety");
+	});
+
+	it("contains no duplicates", () => {
+		const unique = new Set(OCEAN_INTERLEAVED_ORDER);
+		expect(unique.size).toBe(30);
+	});
+
+	it("contains all facets from ALL_FACETS", () => {
+		const ordered = new Set(OCEAN_INTERLEAVED_ORDER);
+		for (const facet of ALL_FACETS) {
+			expect(ordered.has(facet)).toBe(true);
+		}
 	});
 });
