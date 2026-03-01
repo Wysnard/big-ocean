@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-01
+generated: 2026-03-01 (refreshed)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -291,7 +291,7 @@ development_status:
   epic-17: in-progress
   17-1-all-30-facets-steering-with-ocean-round-robin-tiebreaker: done
   17-2-micro-intent-realizer: backlog
-  17-3-domain-streak-computation-and-conversanalyzer-retry-bump: backlog
+  17-3-domain-streak-computation-and-conversanalyzer-retry-bump: ready-for-dev
   epic-17-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -299,8 +299,8 @@ development_status:
   # Evidence v2 schema, rewrite facet metrics, rolling budget, finalization rewrite
   # Stories: 3.1-3.6 in epics-conversation-pipeline.md
   # ───────────────────────────────────────────────────────────────
-  epic-18: backlog
-  18-1-evidence-v2-schema-and-conversanalyzer-prompt-update: backlog
+  epic-18: in-progress
+  18-1-evidence-v2-schema-and-conversanalyzer-prompt-update: ready-for-dev
   18-2-rewrite-compute-facet-metrics-for-evidence-v2: backlog
   18-3-rolling-evidence-budget-and-cap-enforcement: backlog
   18-4-rewrite-finalization-pipeline-with-staged-idempotency: backlog
