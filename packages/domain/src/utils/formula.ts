@@ -52,7 +52,7 @@ export const FORMULA_DEFAULTS = Object.freeze({
 	beta: 0.8,
 	betaVolume: 0.7,
 	eta: 0.3,
-	lambda: 0.3,
+	lambda: 0.1,
 	cBar: 0.5,
 	epsilon: 1e-10,
 	SCORE_MIDPOINT: 10,
