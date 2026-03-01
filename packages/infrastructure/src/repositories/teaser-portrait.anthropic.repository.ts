@@ -14,16 +14,18 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
+import type { FacetName, TraitScoresMap } from "@workspace/domain";
 import {
 	AppConfig,
 	computeAllFacetResults,
-	deriveTraitScores,
 	type EvidenceInput,
 	type FacetScoresMap,
 	LoggerRepository,
 	NERIN_PERSONA,
 	TeaserPortraitError,
 	TeaserPortraitRepository,
+	TRAIT_TO_FACETS,
+	type TraitName,
 } from "@workspace/domain";
 import { Effect, Layer, Redacted } from "effect";
 import {
@@ -32,6 +34,30 @@ import {
 	formatEvidence,
 	formatTraitSummary,
 } from "./portrait-prompt.utils";
+
+/**
+ * Derive trait scores from facet scores.
+ * Each trait score = sum of its 6 facet scores (0-120 scale).
+ * Trait confidence = mean of assessed facet confidences (confidence > 0).
+ */
+function deriveTraitScores(facetScores: FacetScoresMap): TraitScoresMap {
+	const traitScores = {} as TraitScoresMap;
+	for (const traitName of Object.keys(TRAIT_TO_FACETS) as TraitName[]) {
+		const facetNames = TRAIT_TO_FACETS[traitName];
+		const facetsForTrait = facetNames.map((fn: FacetName) => facetScores[fn]);
+		const traitScore = facetsForTrait.reduce((acc, f) => acc + f.score, 0);
+		const assessedConfidences = facetsForTrait.map((f) => f.confidence).filter((c) => c > 0);
+		const traitConfidence =
+			assessedConfidences.length > 0
+				? assessedConfidences.reduce((a, b) => a + b, 0) / assessedConfidences.length
+				: 0;
+		traitScores[traitName] = {
+			score: Math.round(traitScore * 10) / 10,
+			confidence: Math.round(traitConfidence),
+		};
+	}
+	return traitScores;
+}
 
 /**
  * Teaser-specific context appended to the shared NERIN_PERSONA.

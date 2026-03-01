@@ -19,7 +19,6 @@ export interface FormulaConfig {
 	readonly alpha: number;
 	readonly beta: number;
 	readonly betaVolume: number;
-	readonly eta: number;
 	readonly lambda: number;
 	readonly cBar: number;
 	readonly epsilon: number;
@@ -51,7 +50,6 @@ export const FORMULA_DEFAULTS = Object.freeze({
 	alpha: 1.0,
 	beta: 0.8,
 	betaVolume: 0.7,
-	eta: 0.3,
 	lambda: 0.1,
 	cBar: 0.5,
 	epsilon: 1e-10,

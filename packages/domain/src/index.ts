@@ -373,7 +373,6 @@ export {
 export { computeHighlightPositions } from "./utils/highlight";
 // Utility functions
 export {
-	aggregateFacetScores,
 	buildChatSystemPrompt,
 	calculateConfidenceFromFacetScores,
 	calculateOverallConfidence,
@@ -383,7 +382,6 @@ export {
 	DEFAULT_FACET_SCORE,
 	DEFAULT_TRAIT_SCORE,
 	deriveCapabilities,
-	deriveTraitScores,
 	deriveTraitSummary,
 	extract4LetterCode,
 	generateOceanCode,

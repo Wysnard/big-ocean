@@ -7,14 +7,16 @@
  */
 
 import {
+	ALL_FACETS,
 	AppConfig,
 	AssessmentMessageRepository,
 	AssessmentResultRepository,
 	AssessmentSessionRepository,
-	aggregateFacetScores,
 	calculateTraitConfidence,
+	DEFAULT_FACET_SCORE,
 	type FacetConfidenceScores,
 	FacetEvidenceRepository,
+	type FacetName,
 	initializeFacetConfidence,
 	LoggerRepository,
 	SessionNotFound,
@@ -91,13 +93,22 @@ export const resumeSession = (input: ResumeSessionInput) =>
 
 			traitConfidence = calculateTraitConfidence(mergedFacetConfidence);
 		} else {
-			// In-progress session: fall back to evidence-based computation
+			// In-progress session: fall back to evidence-based confidence extraction
 			const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
-			const facetScores = aggregateFacetScores(evidence);
+
+			// Group evidence by facet and use the max confidence per facet as a simple approximation
+			const confidenceByFacet = new Map<FacetName, number>();
+			for (const ev of evidence) {
+				const current = confidenceByFacet.get(ev.facetName) ?? 0;
+				if (ev.confidence > current) {
+					confidenceByFacet.set(ev.facetName, ev.confidence);
+				}
+			}
 
 			const facetConfidence: Partial<FacetConfidenceScores> = {};
-			for (const [facetName, facetScore] of Object.entries(facetScores)) {
-				facetConfidence[facetName as keyof FacetConfidenceScores] = facetScore.confidence;
+			for (const facet of ALL_FACETS) {
+				facetConfidence[facet as keyof FacetConfidenceScores] =
+					confidenceByFacet.get(facet) ?? DEFAULT_FACET_SCORE.confidence;
 			}
 
 			const defaultFacetConfidence = initializeFacetConfidence(50);
