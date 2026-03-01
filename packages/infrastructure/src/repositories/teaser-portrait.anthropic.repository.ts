@@ -17,6 +17,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import {
 	AppConfig,
 	computeAllFacetResults,
+	deriveTraitScores,
 	type EvidenceInput,
 	type FacetScoresMap,
 	LoggerRepository,
@@ -206,7 +207,8 @@ export const TeaserPortraitAnthropicRepositoryLive = Layer.effect(
 							]),
 						) as FacetScoresMap;
 
-						const traitSummary = formatTraitSummary(facetScoresMap);
+						const traitScoresMap = deriveTraitScores(facetScoresMap);
+						const traitSummary = formatTraitSummary(facetScoresMap, traitScoresMap);
 						const evidenceFormatted = formatEvidence(input.evidence);
 						const depthSignal = computeDepthSignal(input.evidence);
 

@@ -291,6 +291,7 @@ async function generatePortraits(
 	const portraitInput: PortraitGenerationInput = {
 		sessionId: crypto.randomUUID(),
 		facetScoresMap: scores.facetScores,
+		traitScoresMap: scores.traitScores,
 		allEvidence: evidence,
 		archetypeName: scores.archetype.name,
 		archetypeDescription: scores.archetype.description,

@@ -8,7 +8,7 @@
 
 import { HttpApiBuilder } from "@effect/platform";
 import { BigOceanApi, DatabaseError, Unauthorized } from "@workspace/contracts";
-import { CurrentUser, type FacetEvidencePersistenceError } from "@workspace/domain";
+import { type AssessmentResultError, CurrentUser } from "@workspace/domain";
 import { Effect } from "effect";
 import {
 	createShareableProfile,
@@ -24,10 +24,10 @@ export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (ha
 					const result = yield* createShareableProfile({
 						sessionId: payload.sessionId,
 					}).pipe(
-						Effect.catchTag("FacetEvidencePersistenceError", (error: FacetEvidencePersistenceError) =>
+						Effect.catchTag("AssessmentResultError", (error: AssessmentResultError) =>
 							Effect.fail(
 								new DatabaseError({
-									message: `Evidence retrieval failed: ${error.message}`,
+									message: `Result retrieval failed: ${error.message}`,
 								}),
 							),
 						),
@@ -56,10 +56,10 @@ export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (ha
 					}
 
 					const result = yield* getPublicProfile({ publicProfileId }).pipe(
-						Effect.catchTag("FacetEvidencePersistenceError", (error: FacetEvidencePersistenceError) =>
+						Effect.catchTag("AssessmentResultError", (error: AssessmentResultError) =>
 							Effect.fail(
 								new DatabaseError({
-									message: `Evidence retrieval failed: ${error.message}`,
+									message: `Result retrieval failed: ${error.message}`,
 								}),
 							),
 						),

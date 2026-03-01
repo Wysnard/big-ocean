@@ -1,15 +1,16 @@
 import { Context, Data, Effect } from "effect";
-import type { FacetScoresMap, SavedFacetEvidence } from "../types/facet-evidence";
+import type { FacetScoresMap, SavedFacetEvidence, TraitScoresMap } from "../types/facet-evidence";
 import type { DomainMessage } from "../types/message";
 
 /**
  * Input for portrait generation
  *
- * Pre-computed data from get-results use-case — generator only produces text.
+ * Pre-computed data from persisted assessment results — generator only produces text.
  */
 export interface PortraitGenerationInput {
 	readonly sessionId: string;
 	readonly facetScoresMap: FacetScoresMap;
+	readonly traitScoresMap: TraitScoresMap;
 	readonly allEvidence: ReadonlyArray<SavedFacetEvidence>;
 	readonly archetypeName: string;
 	readonly archetypeDescription: string;

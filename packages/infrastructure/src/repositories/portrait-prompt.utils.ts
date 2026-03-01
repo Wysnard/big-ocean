@@ -10,13 +10,13 @@
  */
 
 import {
-	deriveTraitScores,
 	FACET_PROMPT_DEFINITIONS,
 	FACET_TO_TRAIT,
 	type FacetName,
 	type FacetScoresMap,
 	TRAIT_LETTER_MAP,
 	TRAIT_LEVEL_LABELS,
+	type TraitScoresMap,
 } from "@workspace/domain";
 
 /**
@@ -29,9 +29,14 @@ export const FACET_GLOSSARY = Object.entries(FACET_PROMPT_DEFINITIONS)
 
 /**
  * Build a trait summary with per-facet confidence for the prompt.
+ *
+ * Accepts pre-computed trait scores (from persisted results) and facet scores
+ * for per-facet detail lines.
  */
-export function formatTraitSummary(facetScoresMap: FacetScoresMap): string {
-	const traitScores = deriveTraitScores(facetScoresMap);
+export function formatTraitSummary(
+	facetScoresMap: FacetScoresMap,
+	traitScores: TraitScoresMap,
+): string {
 	const lines: string[] = [];
 
 	for (const [traitName, traitScore] of Object.entries(traitScores)) {

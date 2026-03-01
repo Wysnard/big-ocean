@@ -17,6 +17,7 @@ import {
 } from "@workspace/contracts";
 import {
 	AssessmentMessageRepository,
+	type AssessmentResultError,
 	AssessmentSessionRepository,
 	CurrentUser,
 	extract4LetterCode,
@@ -205,10 +206,10 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 
 					// Call use case - map infrastructure errors to contract errors
 					const result = yield* getResults({ sessionId, authenticatedUserId }).pipe(
-						Effect.catchTag("FacetEvidencePersistenceError", (error: FacetEvidencePersistenceError) =>
+						Effect.catchTag("AssessmentResultError", (error: AssessmentResultError) =>
 							Effect.fail(
 								new DatabaseError({
-									message: `Evidence retrieval failed: ${error.message}`,
+									message: `Result retrieval failed: ${error.message}`,
 								}),
 							),
 						),
@@ -297,6 +298,13 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 							Effect.fail(
 								new DatabaseError({
 									message: `Evidence retrieval failed: ${error.message}`,
+								}),
+							),
+						),
+						Effect.catchTag("AssessmentResultError", (error: AssessmentResultError) =>
+							Effect.fail(
+								new DatabaseError({
+									message: `Result retrieval failed: ${error.message}`,
 								}),
 							),
 						),

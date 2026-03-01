@@ -21,6 +21,8 @@ import {
 	PortraitGeneratorRepository,
 	PortraitRepository,
 	type SavedFacetEvidence,
+	type TraitName,
+	type TraitScoresMap,
 } from "@workspace/domain";
 import { Effect, Schedule } from "effect";
 
@@ -98,6 +100,17 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 			}
 		}
 
+		// 5b. Build trait scores map from result
+		const traitScoresMap: TraitScoresMap = {} as TraitScoresMap;
+		for (const [traitName, data] of Object.entries(result.traits)) {
+			if (typeof data === "object" && data !== null && "score" in data && "confidence" in data) {
+				traitScoresMap[traitName as TraitName] = {
+					score: data.score,
+					confidence: data.confidence,
+				};
+			}
+		}
+
 		// 6. Generate OCEAN code and lookup archetype
 		const oceanCode5 = generateOceanCode(facetScoresMap);
 		const oceanCode4 = extract4LetterCode(oceanCode5);
@@ -108,6 +121,7 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 			.generatePortrait({
 				sessionId: input.sessionId,
 				facetScoresMap,
+				traitScoresMap,
 				allEvidence,
 				archetypeName: archetype.name,
 				archetypeDescription: archetype.description,

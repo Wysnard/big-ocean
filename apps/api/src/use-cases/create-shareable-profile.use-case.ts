@@ -8,10 +8,11 @@
 import { ProfileError } from "@workspace/contracts/errors";
 import {
 	AppConfig,
+	AssessmentResultRepository,
 	AssessmentSessionRepository,
-	aggregateFacetScores,
 	extract4LetterCode,
-	FacetEvidenceRepository,
+	type FacetName,
+	type FacetScoresMap,
 	generateOceanCode,
 	LoggerRepository,
 	lookupArchetype,
@@ -33,18 +34,18 @@ export interface CreateShareableProfileOutput {
  * Create Shareable Profile Use Case
  *
  * Dependencies: AssessmentSessionRepository, PublicProfileRepository,
- *               FacetEvidenceRepository, LoggerRepository, AppConfig
+ *               AssessmentResultRepository, LoggerRepository, AppConfig
  */
 export const createShareableProfile = (input: CreateShareableProfileInput) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const profileRepo = yield* PublicProfileRepository;
-		const evidenceRepo = yield* FacetEvidenceRepository;
+		const resultRepo = yield* AssessmentResultRepository;
 		const logger = yield* LoggerRepository;
 		const config = yield* AppConfig;
 
-		// 1. Get session to validate it exists
-		yield* sessionRepo.getSession(input.sessionId);
+		// 1. Get session to validate it exists and extract userId
+		const session = yield* sessionRepo.getSession(input.sessionId);
 
 		// 2. Check if profile already exists (idempotent)
 		const existingProfile = yield* profileRepo.getProfileBySessionId(input.sessionId);
@@ -60,17 +61,26 @@ export const createShareableProfile = (input: CreateShareableProfileInput) =>
 			};
 		}
 
-		// 3. Compute facet scores from evidence (on-demand)
-		const evidence = yield* evidenceRepo.getEvidenceBySession(input.sessionId);
-		const facetScores = aggregateFacetScores(evidence);
+		// 3. Read persisted facet scores from assessment_results
+		const result = yield* resultRepo.getBySessionId(input.sessionId);
+		if (!result || Object.keys(result.facets).length === 0) {
+			return yield* Effect.fail(
+				new ProfileError({ message: "Assessment results not found for this session" }),
+			);
+		}
+		const facetScores: FacetScoresMap = {} as FacetScoresMap;
+		for (const [facetName, data] of Object.entries(result.facets)) {
+			facetScores[facetName as FacetName] = {
+				score: data.score,
+				confidence: data.confidence,
+			};
+		}
 
 		// 4. Generate OCEAN code from facet scores
 		const oceanCode5 = generateOceanCode(facetScores);
 		const oceanCode4 = extract4LetterCode(oceanCode5);
 
-		// 5. Get session to extract userId
-		const session = yield* sessionRepo.getSession(input.sessionId);
-
+		// 5. Validate session has userId
 		if (!session.userId) {
 			return yield* Effect.fail(
 				new ProfileError({ message: "Cannot create a public profile for an anonymous session" }),
