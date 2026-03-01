@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { FacetName } from "../../constants/big-five";
+import { ALL_FACETS, type FacetName } from "../../constants/big-five";
 import type { LifeDomain } from "../../constants/life-domain";
 import { STEERABLE_DOMAINS } from "../../constants/life-domain";
 import type { EvidenceInput } from "../../types/evidence";
@@ -12,54 +12,53 @@ import {
 } from "../formula";
 import { ev, m } from "./__fixtures__/formula-numerical.fixtures";
 
+/** Helper: create all 30 facets above target, then override specific ones */
+function makeBaseMetrics(overrides: [FacetName, FacetMetrics][]): Map<FacetName, FacetMetrics> {
+	const defaultDw = new Map<LifeDomain, number>([
+		["work", 1.5],
+		["leisure", 1.2],
+	]);
+	const base = new Map<FacetName, FacetMetrics>(
+		ALL_FACETS.map((f) => [f, { score: 14, confidence: 0.85, signalPower: 0.6, domainWeights: defaultDw }]),
+	);
+	for (const [facet, metrics] of overrides) {
+		base.set(facet, metrics);
+	}
+	return base;
+}
+
 // ─── Steering: exact ΔP computation ─────────────────────────────────
 describe("steering: exact ΔP domain selection", () => {
 	it("with single saturated domain, all other domains have equal ΔP", () => {
 		const dw = new Map<LifeDomain, number>([["work", 2.0]]);
-		const metrics = new Map<FacetName, FacetMetrics>([
+		const metrics = makeBaseMetrics([
 			["imagination", { score: 10, confidence: 0.3, signalPower: 0, domainWeights: dw }],
 		]);
 
-		// With previousDomain = null (no switch cost), all non-work domains
-		// should have identical ΔP since they all start at w=0
 		const result = computeSteeringTarget(metrics, null, FORMULA_DEFAULTS);
+		expect(result.targetFacet).toBe("imagination");
 		expect(result.targetDomain).not.toBe("work");
-		// Any of the 4 other steerable domains is valid (first wins on tie)
 	});
 
 	it("switch cost can flip domain choice when ΔP values are close", () => {
-		// Build scenario where two domains have similar ΔP
-		// but one matches previousDomain (no switch cost) while other doesn't
 		const dw = new Map<LifeDomain, number>([
 			["work", 0.8],
 			["leisure", 0.7],
 		]);
-		const metrics = new Map<FacetName, FacetMetrics>([
-			[
-				"imagination",
-				{
-					score: 10,
-					confidence: 0.3,
-					signalPower: 0.2,
-					domainWeights: dw,
-				},
-			],
+		const metrics = makeBaseMetrics([
+			["imagination", { score: 10, confidence: 0.3, signalPower: 0.2, domainWeights: dw }],
 		]);
 
 		const fromWork = computeSteeringTarget(metrics, "work", FORMULA_DEFAULTS);
 		const fromSolo = computeSteeringTarget(metrics, "solo", FORMULA_DEFAULTS);
 
-		// When previousDomain="work", work has 0 switch cost → may be preferred
-		// When previousDomain="solo", work has switch cost → may lose to others
-		// The exact outcome depends on ΔP magnitudes, but at minimum
-		// the results should be deterministic and valid steerable domains
 		expect(STEERABLE_DOMAINS).toContain(fromWork.targetDomain);
 		expect(STEERABLE_DOMAINS).toContain(fromSolo.targetDomain);
 	});
 
 	it("lambda=0 eliminates switch cost entirely", () => {
 		const dw = new Map<LifeDomain, number>([["work", 1.0]]);
-		const metrics = new Map<FacetName, FacetMetrics>([
+		const metrics = makeBaseMetrics([
 			["imagination", { score: 10, confidence: 0.3, signalPower: 0, domainWeights: dw }],
 		]);
 
@@ -67,32 +66,21 @@ describe("steering: exact ΔP domain selection", () => {
 		const fromWork = computeSteeringTarget(metrics, "work", noLambda);
 		const fromSolo = computeSteeringTarget(metrics, "solo", noLambda);
 
-		// Without switch cost, previousDomain shouldn't matter
 		expect(fromWork.targetDomain).toBe(fromSolo.targetDomain);
 	});
 
 	it("high lambda makes domain switching very expensive", () => {
-		// Two domains with evidence, previousDomain is work
 		const dw = new Map<LifeDomain, number>([
 			["work", 0.5],
 			["leisure", 0.5],
 		]);
-		const metrics = new Map<FacetName, FacetMetrics>([
-			[
-				"imagination",
-				{
-					score: 10,
-					confidence: 0.3,
-					signalPower: 0.3,
-					domainWeights: dw,
-				},
-			],
+		const metrics = makeBaseMetrics([
+			["imagination", { score: 10, confidence: 0.3, signalPower: 0.3, domainWeights: dw }],
 		]);
 
 		const highLambda: FormulaConfig = { ...FORMULA_DEFAULTS, lambda: 10 };
 		const result = computeSteeringTarget(metrics, "work", highLambda);
 
-		// With extreme switch cost, should strongly prefer staying on work
 		expect(result.targetDomain).toBe("work");
 	});
 });
@@ -106,15 +94,12 @@ describe("steering: facet priority α(C_target - C_f)+ + β(P_target - P_f)+", (
 			["leisure", 1.0],
 		]);
 
-		const metrics = new Map<FacetName, FacetMetrics>([
-			// Low confidence, high signal power
+		const metrics = makeBaseMetrics([
 			["imagination", { score: 10, confidence: 0.1, signalPower: 0.8, domainWeights: dw }],
-			// High confidence, low signal power
 			["trust", { score: 10, confidence: 0.7, signalPower: 0.1, domainWeights: dw }],
 		]);
 
 		const result = computeSteeringTarget(metrics, null, config);
-		// With alpha=2, confidence gap dominates → imagination (conf=0.1) wins
 		expect(result.targetFacet).toBe("imagination");
 	});
 
@@ -125,15 +110,12 @@ describe("steering: facet priority α(C_target - C_f)+ + β(P_target - P_f)+", (
 			["leisure", 1.0],
 		]);
 
-		const metrics = new Map<FacetName, FacetMetrics>([
-			// High confidence, low signal power
+		const metrics = makeBaseMetrics([
 			["imagination", { score: 10, confidence: 0.7, signalPower: 0.05, domainWeights: dw }],
-			// Low confidence, high signal power
 			["trust", { score: 10, confidence: 0.1, signalPower: 0.45, domainWeights: dw }],
 		]);
 
 		const result = computeSteeringTarget(metrics, null, config);
-		// With beta=2, signal power gap dominates → imagination (power=0.05) has bigger gap
 		// imagination priority = 0.5×(0.75-0.7) + 2.0×(0.5-0.05) = 0.025 + 0.9 = 0.925
 		// trust priority = 0.5×(0.75-0.1) + 2.0×(0.5-0.45) = 0.325 + 0.1 = 0.425
 		expect(result.targetFacet).toBe("imagination");
@@ -142,14 +124,13 @@ describe("steering: facet priority α(C_target - C_f)+ + β(P_target - P_f)+", (
 	it("exact priority calculation with known values", () => {
 		const dw = new Map<LifeDomain, number>([["work", 1.0]]);
 
-		const metrics = new Map<FacetName, FacetMetrics>([
+		const metrics = makeBaseMetrics([
 			["imagination", { score: 10, confidence: 0.5, signalPower: 0.3, domainWeights: dw }],
 			["trust", { score: 10, confidence: 0.6, signalPower: 0.2, domainWeights: dw }],
 		]);
 
 		// imagination: 1.0×(0.75-0.5) + 0.8×(0.5-0.3) = 0.25 + 0.16 = 0.41
 		// trust:       1.0×(0.75-0.6) + 0.8×(0.5-0.2) = 0.15 + 0.24 = 0.39
-		// imagination wins (0.41 > 0.39)
 		const result = computeSteeringTarget(metrics, null, FORMULA_DEFAULTS);
 		expect(result.targetFacet).toBe("imagination");
 	});
@@ -158,9 +139,8 @@ describe("steering: facet priority α(C_target - C_f)+ + β(P_target - P_f)+", (
 // ─── Steering: "other" domain excluded from target ──────────────────
 describe("steering: 'other' domain excluded from steering targets", () => {
 	it("never selects 'other' as targetDomain", () => {
-		// Evidence only in 'other' domain
 		const dw = new Map<LifeDomain, number>([["other", 2.0]]);
-		const metrics = new Map<FacetName, FacetMetrics>([
+		const metrics = makeBaseMetrics([
 			["imagination", { score: 10, confidence: 0.3, signalPower: 0, domainWeights: dw }],
 		]);
 
@@ -217,7 +197,6 @@ describe("edge cases: extreme and boundary values", () => {
 		expect(result.score).toBeLessThanOrEqual(20);
 		expect(result.confidence).toBeGreaterThan(FORMULA_DEFAULTS.C_max * 0.99);
 		expect(result.confidence).toBeLessThanOrEqual(FORMULA_DEFAULTS.C_max);
-		// 6 balanced domains → high signal power
 		expect(result.signalPower).toBeGreaterThan(0.8);
 	});
 });
@@ -248,7 +227,7 @@ describe("determinism: same inputs always produce same outputs", () => {
 			["work", 0.8],
 			["leisure", 0.5],
 		]);
-		const metrics = new Map<FacetName, FacetMetrics>([
+		const metrics = makeBaseMetrics([
 			["imagination", { score: 10, confidence: 0.3, signalPower: 0.2, domainWeights: dw }],
 			["trust", { score: 12, confidence: 0.5, signalPower: 0.1, domainWeights: dw }],
 		]);

@@ -4,7 +4,7 @@
  * Pure domain functions that compute facet metrics and steering targets
  * from evidence. Deterministic, testable, zero-LLM-cost.
  */
-import type { FacetName } from "../constants/big-five";
+import { type FacetName, OCEAN_INTERLEAVED_ORDER } from "../constants/big-five";
 import type { LifeDomain } from "../constants/life-domain";
 import { STEERABLE_DOMAINS } from "../constants/life-domain";
 import type { EvidenceInput } from "../types/evidence";
@@ -52,7 +52,7 @@ export const FORMULA_DEFAULTS = Object.freeze({
 	beta: 0.8,
 	betaVolume: 0.7,
 	eta: 0.3,
-	lambda: 0.3,
+	lambda: 0.1,
 	cBar: 0.5,
 	epsilon: 1e-10,
 	SCORE_MIDPOINT: 10,
@@ -211,6 +211,7 @@ export function computeSteeringTarget(
 	// Cold start: no evidence
 	if (metrics.size === 0) {
 		const idx = (seedIndex ?? 0) % GREETING_SEED_POOL.length;
+		// biome-ignore lint/style/noNonNullAssertion: GREETING_SEED_POOL is a compile-time constant
 		const seed = GREETING_SEED_POOL[idx]!;
 		return {
 			targetFacet: seed.facet,
@@ -220,53 +221,44 @@ export function computeSteeringTarget(
 		};
 	}
 
-	// Step 1: Facet Priority
-	let bestFacet: FacetName | null = null;
+	// Step 1: Facet Priority — iterate ALL 30 facets in OCEAN-interleaved order
+	// biome-ignore lint/style/noNonNullAssertion: OCEAN_INTERLEAVED_ORDER is a compile-time constant with 30 elements
+	let bestFacet: FacetName = OCEAN_INTERLEAVED_ORDER[0]!;
 	let bestPriority = -1;
-	let lowestConfidence = Number.POSITIVE_INFINITY;
-	let lowestConfidenceFacet: FacetName | null = null;
+	let bestTiebreakerRank = Number.POSITIVE_INFINITY;
 
-	for (const [facet, m] of metrics) {
+	for (let rank = 0; rank < OCEAN_INTERLEAVED_ORDER.length; rank++) {
+		// biome-ignore lint/style/noNonNullAssertion: iterating within bounds
+		const facet = OCEAN_INTERLEAVED_ORDER[rank]!;
+		const m = metrics.get(facet);
+		const confidence = m ? m.confidence : 0;
+		const signalPower = m ? m.signalPower : 0;
+
 		const priority =
-			config.alpha * Math.max(0, config.C_target - m.confidence) +
-			config.beta * Math.max(0, config.P_target - m.signalPower);
+			config.alpha * Math.max(0, config.C_target - confidence) +
+			config.beta * Math.max(0, config.P_target - signalPower);
 
-		if (m.confidence < lowestConfidence) {
-			lowestConfidence = m.confidence;
-			lowestConfidenceFacet = facet;
-		}
-
-		if (priority > bestPriority) {
+		if (priority > bestPriority || (priority === bestPriority && rank < bestTiebreakerRank)) {
 			bestPriority = priority;
 			bestFacet = facet;
+			bestTiebreakerRank = rank;
 		}
 	}
 
-	// Tiebreaker: if all priorities are 0, pick lowest confidence
-	if (bestPriority === 0 && lowestConfidenceFacet) {
-		bestFacet = lowestConfidenceFacet;
-	}
-
-	const targetFacet = bestFacet as FacetName;
+	const targetFacet = bestFacet;
 	const facetMetrics = metrics.get(targetFacet);
-	if (!facetMetrics) {
-		const seed = GREETING_SEED_POOL[0]!;
-		return {
-			targetFacet: seed.facet,
-			targetDomain: seed.domain,
-			steeringHint: `Start exploring ${seed.domain} — discover their ${formatFacetName(seed.facet)}`,
-			bestPriority: 0,
-		};
-	}
 
 	// Step 2: Domain selection via expected signal power gain (exact weights)
+	// For unexplored facets (no metrics), use empty domain weights — all domains have equal projected gain
+	const currentP = facetMetrics ? facetMetrics.signalPower : 0;
+	const dw: ReadonlyMap<LifeDomain, number> = facetMetrics
+		? facetMetrics.domainWeights
+		: new Map<LifeDomain, number>();
+	const W = Array.from(dw.values()).reduce((a, b) => a + b, 0);
+
 	// biome-ignore lint/style/noNonNullAssertion: STEERABLE_DOMAINS is a compile-time constant with 5 elements
 	let bestDomain: LifeDomain = STEERABLE_DOMAINS[0]!;
 	let bestScore = Number.NEGATIVE_INFINITY;
-
-	const currentP = facetMetrics.signalPower;
-	const dw = facetMetrics.domainWeights;
-	const W = Array.from(dw.values()).reduce((a, b) => a + b, 0);
 
 	for (const domain of STEERABLE_DOMAINS) {
 		// Exact current weight for this domain (0 if no evidence)
