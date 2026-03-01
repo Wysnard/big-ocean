@@ -37,6 +37,8 @@ export { ConversationEvidenceDrizzleRepositoryLive } from "./repositories/conver
 export { CostGuardRedisRepositoryLive } from "./repositories/cost-guard.redis.repository";
 // Facet evidence repository — queries finalization_evidence, maps to SavedFacetEvidence contract
 export { FacetEvidenceDrizzleRepositoryLive } from "./repositories/facet-evidence.drizzle.repository";
+// Facet evidence no-op repository (Story 9.1 — stub for orchestrator compat, write path only)
+export { FacetEvidenceNoopRepositoryLive } from "./repositories/facet-evidence.noop.repository";
 // Finalization evidence repository implementation (Story 11.2)
 export { FinalizationEvidenceDrizzleRepositoryLive } from "./repositories/finalization-evidence.drizzle.repository";
 // FinAnalyzer repository implementation (Story 11.2)
