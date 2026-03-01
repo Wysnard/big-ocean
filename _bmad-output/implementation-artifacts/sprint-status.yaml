@@ -277,10 +277,10 @@ development_status:
   # Stories: 1.1-1.4 in epics-conversation-pipeline.md
   # ───────────────────────────────────────────────────────────────
   epic-16: in-progress
-  16-1-migrate-display-use-cases-to-read-persisted-results: ready-for-dev
+  16-1-migrate-display-use-cases-to-read-persisted-results: done
   16-2-delete-legacy-scoring-system: backlog
-  16-3-tune-steering-parameters-and-add-observability: ready-for-dev
-  16-4-dead-code-cleanup: ready-for-dev
+  16-3-tune-steering-parameters-and-add-observability: done
+  16-4-dead-code-cleanup: done
   epic-16-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -289,7 +289,7 @@ development_status:
   # Stories: 2.1-2.3 in epics-conversation-pipeline.md
   # ───────────────────────────────────────────────────────────────
   epic-17: in-progress
-  17-1-all-30-facets-steering-with-ocean-round-robin-tiebreaker: ready-for-dev
+  17-1-all-30-facets-steering-with-ocean-round-robin-tiebreaker: done
   17-2-micro-intent-realizer: backlog
   17-3-domain-streak-computation-and-conversanalyzer-retry-bump: backlog
   epic-17-retrospective: optional
@@ -314,7 +314,7 @@ development_status:
   # Stories: 4.1-4.2 in epics-conversation-pipeline.md
   # ───────────────────────────────────────────────────────────────
   epic-19: in-progress
-  19-1-remove-quote-constraint-from-portrait-prompts: ready-for-dev
+  19-1-remove-quote-constraint-from-portrait-prompts: done
   19-2-portrait-telemetry-placeholder: backlog
   epic-19-retrospective: optional
 
