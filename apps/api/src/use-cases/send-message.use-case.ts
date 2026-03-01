@@ -18,6 +18,7 @@ import {
 	AssessmentSessionRepository,
 	aggregateDomainDistribution,
 	type ConversanalyzerOutput,
+	computeDomainStreak,
 	ConversanalyzerRepository,
 	ConversationEvidenceRepository,
 	CostGuardRepository,
@@ -169,6 +170,12 @@ export const sendMessage = (input: SendMessageInput) =>
 					}
 				}
 
+				// 8a. Compute domain streak from assistant messages (Story 2.3 / IC-2)
+				const assistantMessages = previousMessages
+					.filter((m) => m.role === "assistant")
+					.map((m) => ({ targetDomain: m.targetDomain ?? null }));
+				const domainStreak = computeDomainStreak(assistantMessages);
+
 				// 9. Steering computation — runs on every message (cold start + post-cold-start)
 				let targetDomain: LifeDomain;
 				let targetFacet: FacetName;
@@ -195,12 +202,13 @@ export const sendMessage = (input: SendMessageInput) =>
 							domainDistribution,
 						})
 						.pipe(
-							Effect.retry(Schedule.once),
+							Effect.retry(Schedule.recurs(2)),
 							Effect.catchAll((error) =>
 								Effect.sync(() => {
-									logger.error("Conversanalyzer failed, skipping", {
+									logger.warn("ConversAnalyzer failed after 3 attempts, skipping", {
 										error: error.message,
 										sessionId: input.sessionId,
+										messageId,
 									});
 									return { evidence: [], tokenUsage: { input: 0, output: 0 } } as ConversanalyzerOutput;
 								}),
@@ -279,6 +287,7 @@ export const sendMessage = (input: SendMessageInput) =>
 					metricsMapSize,
 					bestPriority,
 					nearingEnd,
+					domainStreak,
 					topicTransitionsPerFiveTurns,
 					questionsPerAssistantTurn: 1,
 				});

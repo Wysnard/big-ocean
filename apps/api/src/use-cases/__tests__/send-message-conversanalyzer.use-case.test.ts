@@ -110,10 +110,10 @@ describe("sendMessage Use Case", () => {
 				// Nerin should still respond normally despite conversanalyzer failure
 				expect(result.response).toBe(mockNerinResponse.response);
 				expect(mockNerinRepo.invoke).toHaveBeenCalled();
-				// Error was logged (after retry exhausted per AC #6)
-				expect(mockLoggerRepo.error).toHaveBeenCalledWith(
-					"Conversanalyzer failed, skipping",
-					expect.objectContaining({ sessionId: "session_test_123" }),
+				// Warning was logged (after retry exhausted per AC #6 — Story 2.3 bumped to 3 attempts)
+				expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
+					"ConversAnalyzer failed after 3 attempts, skipping",
+					expect.objectContaining({ sessionId: "session_test_123", messageId: expect.any(String) }),
 				);
 				// Evidence not saved
 				expect(mockEvidenceRepo.save).not.toHaveBeenCalled();
