@@ -326,5 +326,5 @@ development_status:
   epic-20: backlog
   20-1-evidence-annotations-api-endpoint: backlog
   20-2-conversation-review-ui-with-inline-annotations: backlog
-  20-3-evidence-panel-with-bidirectional-navigation: backlog
+  # 20-3 removed — replaced by navigation in 20-2 (correct-course 2026-03-02)
   epic-20-retrospective: optional

@@ -36,7 +36,10 @@ export const openPolarCheckout = ({
 
 		PolarEmbedCheckout.create(url.toString(), { theme })
 			.then((checkout) => {
-				checkout.addEventListener("success", () => {
+				checkout.addEventListener("success", (event) => {
+					// Prevent Polar's automatic redirect to success_url —
+					// we stay on the page and poll for portrait status instead.
+					event.preventDefault();
 					resolve({ success: true });
 				});
 

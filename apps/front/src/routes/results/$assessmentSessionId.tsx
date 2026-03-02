@@ -123,10 +123,21 @@ function ResultsSessionPage() {
 	const shouldRedirectDeniedSession = isAuthenticated && error != null && isNotFoundError(error);
 	const toggleVisibility = useToggleVisibility();
 
+	// Story 12.3: Track whether we're waiting for portrait unlock after checkout
+	const [waitingForUnlock, setWaitingForUnlock] = useState(false);
+
 	// Story 13.3: Poll portrait status when authenticated
 	const { data: portraitStatusData, refetch: refetchPortraitStatus } = usePortraitStatus(
 		canLoadResults ? assessmentSessionId : "",
+		{ waitingForUnlock },
 	);
+
+	// Stop waiting once full portrait is ready
+	useEffect(() => {
+		if (waitingForUnlock && portraitStatusData?.status === "ready") {
+			setWaitingForUnlock(false);
+		}
+	}, [waitingForUnlock, portraitStatusData?.status]);
 
 	const [isGateExpired, setIsGateExpired] = useState(false);
 	const [shareState, setShareState] = useState<{
@@ -283,14 +294,17 @@ function ResultsSessionPage() {
 	};
 
 	// Story 12.3: Unlock full portrait via Polar checkout
-	const handleUnlockPortrait = useCallback(() => {
+	const handleUnlockPortrait = useCallback(async () => {
 		const checkoutUrl = import.meta.env.VITE_POLAR_PORTRAIT_CHECKOUT_URL;
 		if (!checkoutUrl || !user?.id) return;
-		void openPolarCheckout({
+		const result = await openPolarCheckout({
 			checkoutLinkUrl: checkoutUrl,
 			userId: user.id,
 			theme: document.documentElement.classList.contains("dark") ? "dark" : "light",
 		});
+		if (result.success) {
+			setWaitingForUnlock(true);
+		}
 	}, [user?.id]);
 
 	// Story 7.18 + 12.3 + 13.3: Back to profile from reading view
