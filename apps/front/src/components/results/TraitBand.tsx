@@ -71,7 +71,7 @@ export function TraitBand({ trait, facets }: TraitBandProps) {
 					{TRAIT_LABELS[trait.name]}
 				</h2>
 				<span className="font-data text-2xl font-bold" style={{ color: traitColor }}>
-					{trait.score}
+					{Math.round(trait.score)}
 					<span className="text-sm text-muted-foreground font-normal">/120</span>
 				</span>
 			</div>
