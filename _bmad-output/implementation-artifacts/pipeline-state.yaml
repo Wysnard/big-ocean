@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
 parallelism_step: 1
-parallelism_step_name: "Evidence Budget & Cap"
-baseline_commit: "80dea3c14ecdc8da7920166ea26bfbc2226879a9"
+parallelism_step_name: "Finalization Pipeline Rewrite"
+baseline_commit: "d72234155a191d1c5ab4b3716bc9c34852cabb62"
 created: "2026-03-02"
-last_updated: "2026-03-02T2"
+last_updated: "2026-03-02T3"
 
 # Optional context documents discovered
 context_docs:
@@ -14,10 +14,10 @@ context_docs:
 
 # Stories in this step
 stories:
-  18-3-rolling-evidence-budget-and-cap-enforcement:
+  18-4-rewrite-finalization-pipeline-with-staged-idempotency:
     status: done
     mode: "parallel"
-    notes: "depends on 18-2 (done) — READY"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/107"
-    dev_branch: "feat/story-18-3-rolling-evidence-budget-and-cap-enforcement"
+    notes: "depends on 18-3 (done) — READY"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/108"
+    dev_branch: "feat/story-18-4-rewrite-finalization-pipeline-with-staged-idempotency"
     error: null
