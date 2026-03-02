@@ -304,8 +304,8 @@ development_status:
   18-2-rewrite-compute-facet-metrics-for-evidence-v2: done
   18-3-rolling-evidence-budget-and-cap-enforcement: done
   18-4-rewrite-finalization-pipeline-with-staged-idempotency: done
-  18-5-delete-finanalyzer-infrastructure: backlog
-  18-6-update-portrait-generators-to-use-conversation-evidence: backlog
+  18-5-delete-finanalyzer-infrastructure: pr-ready
+  18-6-update-portrait-generators-to-use-conversation-evidence: pr-ready
   epic-18-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
