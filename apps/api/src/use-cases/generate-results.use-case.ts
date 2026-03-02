@@ -260,11 +260,23 @@ export const generateResults = (input: GenerateResultsInput) =>
 			// Fetch finalization evidence
 			const finalizationEvidence = yield* finalizationEvidenceRepo.getByResultId(assessmentResultId);
 
-			// Map to EvidenceInput for formula functions
+			// Map finalization evidence (v1 format) to EvidenceInput (v2 format)
+			// TODO: Story 18-4 (kill FinAnalyzer) will remove this adapter — conversation_evidence becomes authoritative
 			const scoringInputs: EvidenceInput[] = finalizationEvidence.map((ev) => ({
 				bigfiveFacet: ev.bigfiveFacet,
-				score: ev.score,
-				confidence: ev.confidence,
+				deviation: Math.round(((ev.score - 10) / 10) * 3) as -3 | -2 | -1 | 0 | 1 | 2 | 3,
+				strength:
+					ev.confidence >= 0.7
+						? ("strong" as const)
+						: ev.confidence >= 0.4
+							? ("moderate" as const)
+							: ("weak" as const),
+				confidence:
+					ev.confidence >= 0.7
+						? ("high" as const)
+						: ev.confidence >= 0.4
+							? ("medium" as const)
+							: ("low" as const),
 				domain: ev.domain,
 			}));
 

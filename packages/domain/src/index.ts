@@ -290,8 +290,8 @@ export type {
 	TraitLevel,
 } from "./types/archetype";
 export { TRAIT_LETTER_MAP, TRAIT_LEVEL_LABELS } from "./types/archetype";
-// Evidence input type (Story 9.1)
-export type { EvidenceInput } from "./types/evidence";
+// Evidence input type (Story 9.1, v2 Story 18-1)
+export type { EvidenceConfidence, EvidenceInput, EvidenceStrength } from "./types/evidence";
 // Facet types
 export type {
 	AgreeableFacet,

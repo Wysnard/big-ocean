@@ -17,8 +17,20 @@ describe("aggregateDomainDistribution", () => {
 
 	it("counts single domain correctly", () => {
 		const evidence: EvidenceInput[] = [
-			{ bigfiveFacet: "imagination", score: 15, confidence: 0.8, domain: "work" },
-			{ bigfiveFacet: "orderliness", score: 10, confidence: 0.6, domain: "work" },
+			{
+				bigfiveFacet: "imagination",
+				deviation: 2,
+				strength: "strong",
+				confidence: "medium",
+				domain: "work",
+			},
+			{
+				bigfiveFacet: "orderliness",
+				deviation: 0,
+				strength: "moderate",
+				confidence: "medium",
+				domain: "work",
+			},
 		];
 		const result = aggregateDomainDistribution(evidence);
 		expect(result.work).toBe(2);
@@ -31,10 +43,34 @@ describe("aggregateDomainDistribution", () => {
 
 	it("counts multiple domains correctly", () => {
 		const evidence: EvidenceInput[] = [
-			{ bigfiveFacet: "imagination", score: 15, confidence: 0.8, domain: "work" },
-			{ bigfiveFacet: "trust", score: 12, confidence: 0.7, domain: "relationships" },
-			{ bigfiveFacet: "cheerfulness", score: 18, confidence: 0.9, domain: "leisure" },
-			{ bigfiveFacet: "orderliness", score: 10, confidence: 0.6, domain: "work" },
+			{
+				bigfiveFacet: "imagination",
+				deviation: 2,
+				strength: "strong",
+				confidence: "medium",
+				domain: "work",
+			},
+			{
+				bigfiveFacet: "trust",
+				deviation: 1,
+				strength: "moderate",
+				confidence: "high",
+				domain: "relationships",
+			},
+			{
+				bigfiveFacet: "cheerfulness",
+				deviation: 3,
+				strength: "strong",
+				confidence: "high",
+				domain: "leisure",
+			},
+			{
+				bigfiveFacet: "orderliness",
+				deviation: 0,
+				strength: "moderate",
+				confidence: "medium",
+				domain: "work",
+			},
 		];
 		const result = aggregateDomainDistribution(evidence);
 		expect(result.work).toBe(2);
@@ -47,7 +83,7 @@ describe("aggregateDomainDistribution", () => {
 
 	it("always returns all 6 domain keys", () => {
 		const evidence: EvidenceInput[] = [
-			{ bigfiveFacet: "anxiety", score: 5, confidence: 0.3, domain: "solo" },
+			{ bigfiveFacet: "anxiety", deviation: -2, strength: "weak", confidence: "low", domain: "solo" },
 		];
 		const result = aggregateDomainDistribution(evidence);
 		const keys = Object.keys(result).sort();

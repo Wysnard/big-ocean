@@ -64,15 +64,17 @@ describe("Assessment Message Schema", () => {
 	});
 });
 
-describe("Conversation Evidence Schema", () => {
+describe("Conversation Evidence Schema (v2 — Story 18-1)", () => {
 	it("should have all required columns", () => {
 		expect(conversationEvidence.id).toBeDefined();
 		expect(conversationEvidence.assessmentSessionId).toBeDefined();
 		expect(conversationEvidence.assessmentMessageId).toBeDefined();
 		expect(conversationEvidence.bigfiveFacet).toBeDefined();
-		expect(conversationEvidence.score).toBeDefined();
+		expect(conversationEvidence.deviation).toBeDefined();
+		expect(conversationEvidence.strength).toBeDefined();
 		expect(conversationEvidence.confidence).toBeDefined();
 		expect(conversationEvidence.domain).toBeDefined();
+		expect(conversationEvidence.note).toBeDefined();
 		expect(conversationEvidence.createdAt).toBeDefined();
 	});
 });

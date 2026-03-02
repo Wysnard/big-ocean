@@ -472,15 +472,21 @@ const seedProgram = Effect.gen(function* () {
 		const msgIndex = userMsgIndices[convEvidenceCount % userMsgIndices.length];
 		const message = messageRecords[msgIndex];
 
+		// Convert v1 seed data to v2 format for conversation_evidence (Story 18-1)
+		const deviation = Math.round(((data.score - 10) / 10) * 3);
+		const strength = data.confidence >= 0.7 ? "strong" : data.confidence >= 0.4 ? "moderate" : "weak";
+		const confidence = data.confidence >= 0.7 ? "high" : data.confidence >= 0.4 ? "medium" : "low";
 		yield* db
 			.insert(conversationEvidence)
 			.values({
 				assessmentSessionId: sessionRecord.id,
 				assessmentMessageId: message.id,
 				bigfiveFacet: facet as FacetName,
-				score: data.score,
-				confidence: String(data.confidence),
+				deviation,
+				strength,
+				confidence,
 				domain: data.domain,
+				note: `Seed evidence for ${facet}`,
 			})
 			.pipe(Effect.mapError((error) => new Error(`Failed to insert conversation evidence: ${error}`)));
 		convEvidenceCount++;

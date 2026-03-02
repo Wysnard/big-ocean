@@ -2,7 +2,7 @@
  * Conversation Evidence Repository Tests
  *
  * Tests save, findBySession, and countByMessage using the in-memory mock.
- * Story 10.1
+ * Story 10.1, updated for Evidence v2 (Story 18-1)
  */
 import { vi } from "vitest";
 
@@ -28,9 +28,11 @@ describe("ConversationEvidenceRepository", () => {
 		sessionId: "session-1",
 		messageId: "msg-1",
 		bigfiveFacet: "imagination",
-		score: 15,
-		confidence: 0.8,
+		deviation: 2,
+		strength: "moderate",
+		confidence: "medium",
 		domain: "work",
+		note: "Shows creative thinking",
 		...overrides,
 	});
 
@@ -42,9 +44,11 @@ describe("ConversationEvidenceRepository", () => {
 				const records = yield* repo.findBySession("session-1");
 				expect(records).toHaveLength(1);
 				expect(records[0]?.bigfiveFacet).toBe("imagination");
-				expect(records[0]?.score).toBe(15);
-				expect(records[0]?.confidence).toBe(0.8);
+				expect(records[0]?.deviation).toBe(2);
+				expect(records[0]?.strength).toBe("moderate");
+				expect(records[0]?.confidence).toBe("medium");
 				expect(records[0]?.domain).toBe("work");
+				expect(records[0]?.note).toBe("Shows creative thinking");
 			}).pipe(Effect.provide(TestLayer)),
 		);
 
@@ -53,8 +57,8 @@ describe("ConversationEvidenceRepository", () => {
 				const repo = yield* ConversationEvidenceRepository;
 				yield* repo.save([
 					makeInput({ bigfiveFacet: "imagination" }),
-					makeInput({ bigfiveFacet: "intellect", score: 12 }),
-					makeInput({ bigfiveFacet: "orderliness", score: 8, domain: "family" }),
+					makeInput({ bigfiveFacet: "intellect", deviation: 1 }),
+					makeInput({ bigfiveFacet: "orderliness", deviation: -1, domain: "family" }),
 				]);
 				const records = yield* repo.findBySession("session-1");
 				expect(records).toHaveLength(3);

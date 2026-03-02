@@ -28,11 +28,25 @@ export const _resetMockState = () => {
 /** Read-only access for test assertions */
 export const _getMockCalls = () => [...calls];
 
-/** Default deterministic evidence — 2 balanced records, zero token usage */
+/** Default deterministic evidence — 2 balanced records, zero token usage (v2 format) */
 const defaultOutput: ConversanalyzerOutput = {
 	evidence: [
-		{ bigfiveFacet: "imagination", score: 14, confidence: 0.6, domain: "work" },
-		{ bigfiveFacet: "trust", score: 12, confidence: 0.5, domain: "relationships" },
+		{
+			bigfiveFacet: "imagination",
+			deviation: 1,
+			strength: "moderate",
+			confidence: "medium",
+			domain: "work",
+			note: "Shows creative thinking in professional context",
+		},
+		{
+			bigfiveFacet: "trust",
+			deviation: 1,
+			strength: "weak",
+			confidence: "medium",
+			domain: "relationships",
+			note: "Indicates baseline trust in social interactions",
+		},
 	],
 	tokenUsage: { input: 0, output: 0 },
 };

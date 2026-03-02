@@ -13,16 +13,12 @@ import Anthropic from "@anthropic-ai/sdk";
 import {
 	ALL_FACETS,
 	AppConfig,
-	CONFIDENCE_MAX,
-	CONFIDENCE_MIN,
 	ConversanalyzerError,
 	type ConversanalyzerInput,
 	ConversanalyzerRepository,
 	FACET_PROMPT_DEFINITIONS,
 	LIFE_DOMAINS,
 	LoggerRepository,
-	SCORE_MAX,
-	SCORE_MIN,
 } from "@workspace/domain";
 import { Effect, JSONSchema, Layer, Redacted } from "effect";
 import * as S from "effect/Schema";
@@ -31,9 +27,11 @@ import * as S from "effect/Schema";
 
 const EvidenceItemSchema = S.Struct({
 	bigfiveFacet: S.Literal(...ALL_FACETS),
-	score: S.Int.pipe(S.between(SCORE_MIN, SCORE_MAX)),
-	confidence: S.Number.pipe(S.between(CONFIDENCE_MIN, CONFIDENCE_MAX)),
+	deviation: S.Int.pipe(S.between(-3, 3)),
+	strength: S.Literal("weak", "moderate", "strong"),
+	confidence: S.Literal("low", "medium", "high"),
 	domain: S.Literal(...LIFE_DOMAINS),
+	note: S.String.pipe(S.maxLength(200)),
 });
 
 const EvidenceExtractionSchema = S.Struct({
@@ -83,23 +81,49 @@ ${recentText}
 1. Focus ONLY on the latest user message for evidence extraction
 2. Extract personality-relevant signals — behavioral patterns, preferences, values, emotional responses
 3. Return an empty evidence array [] if the message has no personality signal (e.g., "hello", "thanks", "ok")
-4. Each evidence record needs: bigfiveFacet (one of the 30 facets), score (0-20, where 10=average), confidence (0-1), domain (one of the 6 domains)
-5. You may extract 0-3 evidence records per message
+4. Each evidence record needs:
+   - bigfiveFacet: one of the 30 facets listed above
+   - deviation: integer from -3 to +3, where 0 = population average, +3 = far above average, -3 = far below average
+   - strength: "weak" | "moderate" | "strong" — how diagnostic is this signal? (weak = passing mention, moderate = clear behavioral pattern, strong = deeply revealing)
+   - confidence: "low" | "medium" | "high" — how certain are you about this signal? (low = ambiguous, medium = likely, high = unambiguous)
+   - domain: one of the 6 life domains listed above
+   - note: brief behavioral paraphrase (max 200 chars, no direct quotes from the user)
+5. You may extract up to 5 evidence records per message
 6. If the same observation reveals personality in different domain contexts, create separate records with different domains
-7. Prefer specific domains over "other" — most messages fit work, relationships, family, leisure, or solo
-8. Be conservative with confidence — use 0.3-0.5 for weak signals, 0.6-0.8 for moderate, 0.8-1.0 for strong behavioral evidence`;
+7. Prefer specific domains over "other" — most messages fit work, relationships, family, leisure, or solo`;
 }
 
 // ─── MOCK_LLM fallback for Docker integration tests ──────────────────────────
 
 function mockAnalyze(): {
-	evidence: Array<{ bigfiveFacet: string; score: number; confidence: number; domain: string }>;
+	evidence: Array<{
+		bigfiveFacet: string;
+		deviation: number;
+		strength: string;
+		confidence: string;
+		domain: string;
+		note: string;
+	}>;
 	tokenUsage: { input: number; output: number };
 } {
 	return {
 		evidence: [
-			{ bigfiveFacet: "imagination", score: 14, confidence: 0.6, domain: "work" },
-			{ bigfiveFacet: "trust", score: 12, confidence: 0.5, domain: "relationships" },
+			{
+				bigfiveFacet: "imagination",
+				deviation: 1,
+				strength: "moderate",
+				confidence: "medium",
+				domain: "work",
+				note: "Shows creative thinking in professional context",
+			},
+			{
+				bigfiveFacet: "trust",
+				deviation: 1,
+				strength: "weak",
+				confidence: "medium",
+				domain: "relationships",
+				note: "Indicates baseline trust in social interactions",
+			},
 		],
 		tokenUsage: { input: 0, output: 0 },
 	};
@@ -134,9 +158,11 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 							return {
 								evidence: mock.evidence.map((e) => ({
 									bigfiveFacet: e.bigfiveFacet as (typeof ALL_FACETS)[number],
-									score: e.score,
-									confidence: e.confidence,
+									deviation: e.deviation,
+									strength: e.strength as "weak" | "moderate" | "strong",
+									confidence: e.confidence as "low" | "medium" | "high",
 									domain: e.domain as (typeof LIFE_DOMAINS)[number],
+									note: e.note,
 								})),
 								tokenUsage: mock.tokenUsage,
 							};
@@ -180,9 +206,11 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 						return {
 							evidence: parsed.evidence.map((e) => ({
 								bigfiveFacet: e.bigfiveFacet,
-								score: e.score,
+								deviation: e.deviation,
+								strength: e.strength,
 								confidence: e.confidence,
 								domain: e.domain,
+								note: e.note,
 							})),
 							tokenUsage,
 						};
