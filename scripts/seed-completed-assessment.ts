@@ -402,7 +402,8 @@ const seedProgram = Effect.gen(function* () {
 			status: "completed",
 			finalizationProgress: "completed",
 			messageCount: CONVERSATION_MESSAGES.length,
-			personalDescription: SEED_PORTRAIT.substring(0, 200),
+			personalDescription:
+				"A thoughtful and curious individual who balances openness to new experiences with a grounded sense of responsibility.",
 		})
 		.returning()
 		.pipe(Effect.mapError((error) => new Error(`Failed to create assessment session: ${error}`)));
@@ -417,7 +418,7 @@ const seedProgram = Effect.gen(function* () {
 			.insert(assessmentMessage)
 			.values({
 				sessionId: sessionRecord.id,
-				userId: msg.role === "user" ? userId : null,
+				userId,
 				role: msg.role,
 				content: msg.content,
 			})
