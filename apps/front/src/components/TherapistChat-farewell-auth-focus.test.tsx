@@ -32,14 +32,14 @@ describe("TherapistChat", () => {
 			expect(fadeWrapper?.className).toContain("pointer-events-none");
 		});
 
-		it("fades input area when isCompleted is true", () => {
+		it("removes input area when isCompleted is true (replaced by View Results)", () => {
 			mockHookReturn.isCompleted = true;
 
 			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-			const textarea = container.querySelector("[data-slot='chat-input']") as HTMLElement;
-			const fadeWrapper = textarea?.closest("[class*='opacity-0']");
-			expect(fadeWrapper).toBeTruthy();
+			const textarea = container.querySelector("[data-slot='chat-input']");
+			expect(textarea).toBeNull();
+			expect(screen.getByText("View Results")).toBeTruthy();
 		});
 
 		it("does not fade input area during normal chat", () => {
@@ -137,22 +137,25 @@ describe("TherapistChat", () => {
 			expect(document.activeElement).toBe(focusedTextarea);
 		});
 
-		it("textarea is NOT focused when isCompleted is true", () => {
+		it("textarea is NOT rendered when isCompleted is true", () => {
 			mockHookReturn.isCompleted = true;
 
-			renderWithProviders(<TherapistChat sessionId="session-123" />);
+			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
 
-			const textarea = screen.getByPlaceholderText("") as HTMLTextAreaElement;
-			expect(document.activeElement).not.toBe(textarea);
+			const textarea = container.querySelector("[data-slot='chat-input']");
+			expect(textarea).toBeNull();
 		});
 
 		it("textarea is NOT focused when isFarewellReceived is true (unauthenticated)", () => {
 			mockHookReturn.isFarewellReceived = true;
 
-			renderWithProviders(<TherapistChat sessionId="session-123" isAuthenticated={false} />);
+			const { container } = renderWithProviders(
+				<TherapistChat sessionId="session-123" isAuthenticated={false} />,
+			);
 
 			// Input should be faded — verify focus was not applied
-			const textarea = screen.getByPlaceholderText("") as HTMLTextAreaElement;
+			const textarea = container.querySelector("[data-slot='chat-input']");
+			expect(textarea).toBeTruthy();
 			expect(document.activeElement).not.toBe(textarea);
 		});
 

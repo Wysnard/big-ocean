@@ -11,22 +11,25 @@ import {
 import { ev, m } from "./__fixtures__/formula-numerical.fixtures";
 
 /**
- * v2 adapter recap (temporary, Story 18-2 will rewrite):
- *   score = MIDPOINT(10) + deviation * (10/3)
- *   numericConfidence = STRENGTH_WEIGHT[strength] * CONFIDENCE_WEIGHT[confidence]
+ * Native v2 formula:
+ *   finalWeight = STRENGTH_WEIGHT[strength] * CONFIDENCE_WEIGHT[confidence]
  *     STRENGTH: weak=0.3, moderate=0.6, strong=1.0
  *     CONFIDENCE: low=0.3, medium=0.6, high=0.9
+ *   Weighted mean deviation per domain: mu_g = sum(w_i * d_i) / sum(w_i)
+ *   Context weight per domain: w_g = sqrt(sum(w_i))
+ *   Facet deviation: D_f = sum(w_g * mu_g) / sum(w_g)
+ *   Facet score: S_f = MIDPOINT(10) + D_f * SCALE_FACTOR(10/3)
  */
 
 // ─── Hand-computed example 1: three domains, mixed v2 evidence ──────
 /**
  * Facet: Orderliness
  * Evidence (v2):
- *   Work: (dev=2, strong, high) → score≈16.67, conf=0.9
- *         (dev=2, moderate, high) → score≈16.67, conf=0.54
- *         (dev=2, moderate, medium) → score≈16.67, conf=0.36
- *   Relationships: (dev=1, moderate, medium) → score≈13.33, conf=0.36
- *   Family: (dev=-1, moderate, high) → score≈6.67, conf=0.54
+ *   Work: (dev=2, strong, high) → finalWeight=0.9
+ *         (dev=2, moderate, high) → finalWeight=0.54
+ *         (dev=2, moderate, medium) → finalWeight=0.36
+ *   Relationships: (dev=1, moderate, medium) → finalWeight=0.36
+ *   Family: (dev=-1, moderate, high) → finalWeight=0.54
  */
 const config1: FormulaConfig = { ...FORMULA_DEFAULTS, k: 0.6, betaVolume: 0.6 };
 
@@ -66,17 +69,17 @@ describe("hand-computed example 1: orderliness with 3 domains (v2)", () => {
 		// Total mass W
 		const W = wWork + wRel + wFam;
 
-		// Scores via adapter: MIDPOINT(10) + deviation * (10/3)
-		const s = 10 + 2 * (10 / 3); // ≈16.67 for work records
-		const sRel = 10 + 1 * (10 / 3); // ≈13.33
-		const sFam = 10 + -1 * (10 / 3); // ≈6.67
+		// Weighted mean deviation per domain (native v2)
+		const muDevWork = computeContextMean([2, 2, 2], [0.9, 0.54, 0.36]); // all deviations = 2
+		const muDevRel = 1; // single record, deviation = 1
+		const muDevFam = -1; // single record, deviation = -1
 
-		// Work context mean
-		const muWork = computeContextMean([s, s, s], [0.9, 0.54, 0.36]);
-		const muRel = sRel;
-		const muFam = sFam;
-		const expectedScore =
-			(wWork * muWork + wRel * muRel + wFam * muFam) / (W + FORMULA_DEFAULTS.epsilon);
+		// Facet deviation: D_f = sum(w_g * mu_g) / sum(w_g)
+		const D_f =
+			(wWork * muDevWork + wRel * muDevRel + wFam * muDevFam) / (W + FORMULA_DEFAULTS.epsilon);
+
+		// Score: S_f = MIDPOINT + D_f * SCALE_FACTOR(10/3)
+		const expectedScore = 10 + D_f * (10 / 3);
 		expect(o.score).toBeCloseTo(expectedScore, 4);
 
 		// Confidence: C_max × (1 - e^{-k × W})
@@ -93,16 +96,16 @@ describe("hand-computed example 1: orderliness with 3 domains (v2)", () => {
 // ─── Hand-computed example 2: single evidence item ──────────────────
 describe("hand-computed example 2: single evidence item (v2)", () => {
 	it("computes exact values for one record", () => {
-		// deviation=1, moderate(0.6), medium(0.6) → score≈13.33, conf=0.36
+		// deviation=1, moderate(0.6), medium(0.6) → finalWeight=0.36
 		const evidence = [ev("trust", "leisure", 1, "moderate", "medium")];
 		const result = computeFacetMetrics(evidence, FORMULA_DEFAULTS);
 		const t = m(result, "trust");
 
-		const numConf = 0.36; // 0.6 * 0.6
-		const wL = Math.sqrt(numConf);
+		const finalWeight = 0.36; // 0.6 * 0.6
+		const wL = Math.sqrt(finalWeight);
 		expect(t.domainWeights.get("leisure")).toBeCloseTo(wL, 5);
 
-		// Score = MIDPOINT + deviation * (MIDPOINT/3) = 10 + 1*(10/3) ≈ 13.33
+		// D_f = 1 (single record), S_f = 10 + 1*(10/3) ≈ 13.33
 		const expectedScore = 10 + 1 * (10 / 3);
 		expect(t.score).toBeCloseTo(expectedScore, 4);
 

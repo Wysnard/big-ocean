@@ -24,6 +24,7 @@ import {
 	type TraitName,
 	type TraitScoresMap,
 } from "@workspace/domain";
+import type { EvidenceInput } from "@workspace/domain/types/evidence";
 import { Effect, Schedule } from "effect";
 
 export interface GenerateFullPortraitInput {
@@ -116,13 +117,34 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 		const oceanCode4 = extract4LetterCode(oceanCode5);
 		const archetype = lookupArchetype(oceanCode4);
 
-		// 7. Generate portrait with retry (3 total LLM attempts)
+		// 7. Map finalization evidence to v2 format for depth signal
+		// TODO: Story 18-4 (kill FinAnalyzer) will remove this adapter — conversation_evidence becomes authoritative
+		const scoringEvidence: EvidenceInput[] = evidenceRecords.map((ev) => ({
+			bigfiveFacet: ev.bigfiveFacet,
+			deviation: Math.round(((ev.score - 10) / 10) * 3) as -3 | -2 | -1 | 0 | 1 | 2 | 3,
+			strength:
+				ev.confidence >= 0.7
+					? ("strong" as const)
+					: ev.confidence >= 0.4
+						? ("moderate" as const)
+						: ("weak" as const),
+			confidence:
+				ev.confidence >= 0.7
+					? ("high" as const)
+					: ev.confidence >= 0.4
+						? ("medium" as const)
+						: ("low" as const),
+			domain: ev.domain,
+		}));
+
+		// 8. Generate portrait with retry (3 total LLM attempts)
 		const content = yield* portraitGen
 			.generatePortrait({
 				sessionId: input.sessionId,
 				facetScoresMap,
 				traitScoresMap,
 				allEvidence,
+				scoringEvidence,
 				archetypeName: archetype.name,
 				archetypeDescription: archetype.description,
 				oceanCode5,

@@ -1,4 +1,5 @@
 import { Context, Data, Effect } from "effect";
+import type { EvidenceInput } from "../types/evidence";
 import type { FacetScoresMap, SavedFacetEvidence, TraitScoresMap } from "../types/facet-evidence";
 import type { DomainMessage } from "../types/message";
 
@@ -12,6 +13,8 @@ export interface PortraitGenerationInput {
 	readonly facetScoresMap: FacetScoresMap;
 	readonly traitScoresMap: TraitScoresMap;
 	readonly allEvidence: ReadonlyArray<SavedFacetEvidence>;
+	/** v2 evidence for depth signal computation (Story 18-2) */
+	readonly scoringEvidence: ReadonlyArray<EvidenceInput>;
 	readonly archetypeName: string;
 	readonly archetypeDescription: string;
 	readonly oceanCode5: string;

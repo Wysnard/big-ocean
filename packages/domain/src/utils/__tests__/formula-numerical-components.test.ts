@@ -1,13 +1,50 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { LifeDomain } from "../../constants/life-domain";
+import type { EvidenceConfidence, EvidenceStrength } from "../../types/evidence";
 import {
+	CONFIDENCE_WEIGHT,
 	computeContextMean,
 	computeFacetMetrics,
+	computeFinalWeight,
 	computeNormalizedEntropy,
 	computeProjectedEntropy,
 	FORMULA_DEFAULTS,
+	STRENGTH_WEIGHT,
 } from "../formula";
 import { ev, m } from "./__fixtures__/formula-numerical.fixtures";
+
+// ─── computeFinalWeight: all 9 enum combinations ────────────────────
+describe("computeFinalWeight: all 9 strength × confidence combinations", () => {
+	const cases: [EvidenceStrength, EvidenceConfidence, number][] = [
+		["weak", "low", 0.09],
+		["weak", "medium", 0.18],
+		["weak", "high", 0.27],
+		["moderate", "low", 0.18],
+		["moderate", "medium", 0.36],
+		["moderate", "high", 0.54],
+		["strong", "low", 0.3],
+		["strong", "medium", 0.6],
+		["strong", "high", 0.9],
+	];
+
+	for (const [strength, confidence, expected] of cases) {
+		it(`${strength}/${confidence} = ${expected}`, () => {
+			expect(computeFinalWeight(strength, confidence)).toBeCloseTo(expected, 10);
+		});
+	}
+
+	it("STRENGTH_WEIGHT is exported correctly", () => {
+		expect(STRENGTH_WEIGHT.weak).toBe(0.3);
+		expect(STRENGTH_WEIGHT.moderate).toBe(0.6);
+		expect(STRENGTH_WEIGHT.strong).toBe(1.0);
+	});
+
+	it("CONFIDENCE_WEIGHT is exported correctly", () => {
+		expect(CONFIDENCE_WEIGHT.low).toBe(0.3);
+		expect(CONFIDENCE_WEIGHT.medium).toBe(0.6);
+		expect(CONFIDENCE_WEIGHT.high).toBe(0.9);
+	});
+});
 
 // ─── Normalized entropy exact values ────────────────────────────────
 describe("computeNormalizedEntropy: exact computations", () => {
@@ -94,15 +131,15 @@ describe("computeContextMean: exact computations", () => {
 
 // ─── Confidence formula verification (v2 evidence) ──────────────────
 /**
- * With v2 adapter: numericConfidence = STRENGTH_WEIGHT[strength] * CONFIDENCE_WEIGHT[confidence]
+ * finalWeight = STRENGTH_WEIGHT[strength] * CONFIDENCE_WEIGHT[confidence]
  *   strong(1.0) * high(0.9) = 0.9
  *   moderate(0.6) * medium(0.6) = 0.36
  *   weak(0.3) * low(0.3) = 0.09
- * Context weight w_g = √(Σ numericConfidences in group)
+ * Context weight w_g = √(Σ finalWeights in group)
  */
 describe("confidence formula: C_max × (1 - e^{-k × W}) with v2 evidence", () => {
 	it("exact confidence for known W values", () => {
-		// strong/high → numConf=0.9, w = √0.9, W = √0.9
+		// strong/high → finalWeight=0.9, w = √0.9, W = √0.9
 		const evidence = [ev("trust", "work", 0, "strong", "high")];
 		const result = m(computeFacetMetrics(evidence, FORMULA_DEFAULTS), "trust");
 		const W = Math.sqrt(0.9);
@@ -176,9 +213,9 @@ describe("signal power: V × D decomposition (v2)", () => {
 
 // ─── Score weighting verification (v2) ──────────────────────────────
 describe("facet score: context-weighted cross-domain mean (v2)", () => {
-	it("higher-confidence domain pulls score toward it", () => {
-		// Work: dev=3 → score≈20, strong/high → conf=0.9, w = √0.9
-		// Leisure: dev=-3 → score≈0, weak/low → conf=0.09, w = √0.09
+	it("higher-weight domain pulls score toward it", () => {
+		// Work: dev=3, strong/high → finalWeight=0.9, w = √0.9
+		// Leisure: dev=-3, weak/low → finalWeight=0.09, w = √0.09
 		const evidence = [
 			ev("imagination", "work", 3, "strong", "high"),
 			ev("imagination", "leisure", -3, "weak", "low"),
