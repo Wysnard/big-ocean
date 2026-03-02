@@ -66,25 +66,25 @@ export const GREETING_SEED_POOL = [
 
 // ─── Helper Functions ────────────────────────────────────────────────
 
-/** Anti-redundancy context weight: √(Σ c_i) for a domain group */
-export function computeContextWeight(confidences: number[]): number {
-	const sum = confidences.reduce((acc, c) => acc + c, 0);
+/** Anti-redundancy context weight: √(Σ w_i) for a domain group */
+export function computeContextWeight(weights: number[]): number {
+	const sum = weights.reduce((acc, w) => acc + w, 0);
 	return Math.sqrt(sum);
 }
 
-/** Weighted mean: Σ(c_i × x_i) / Σ(c_i) with epsilon safety */
+/** Weighted mean: Σ(w_i × v_i) / Σ(w_i) with epsilon safety */
 export function computeContextMean(
-	scores: number[],
-	confidences: number[],
+	values: number[],
+	weights: number[],
 	epsilon: number = FORMULA_DEFAULTS.epsilon,
 ): number {
 	let num = 0;
 	let den = 0;
-	for (let i = 0; i < scores.length; i++) {
-		const c = confidences[i] ?? 0;
-		const s = scores[i] ?? 0;
-		num += c * s;
-		den += c;
+	for (let i = 0; i < values.length; i++) {
+		const w = weights[i] ?? 0;
+		const v = values[i] ?? 0;
+		num += w * v;
+		den += w;
 	}
 	return num / (den + epsilon);
 }
@@ -125,31 +125,32 @@ export function computeProjectedEntropy(
 	return computeNormalizedEntropy(projected);
 }
 
-// ─── v2 Evidence Adapters (temporary — Story 18-2 will rewrite computeFacetMetrics natively) ──
+// ─── Weight Maps (exported for reuse by annotation API — Story 20-1) ──
 
-/** Map strength enum → numeric weight for formula compatibility */
-const STRENGTH_WEIGHT: Record<EvidenceStrength, number> = {
+/** Map strength enum → numeric weight */
+export const STRENGTH_WEIGHT: Record<EvidenceStrength, number> = {
 	weak: 0.3,
 	moderate: 0.6,
 	strong: 1.0,
 };
 
-/** Map confidence enum → numeric weight for formula compatibility */
-const CONFIDENCE_WEIGHT: Record<EvidenceConfidence, number> = {
+/** Map confidence enum → numeric weight */
+export const CONFIDENCE_WEIGHT: Record<EvidenceConfidence, number> = {
 	low: 0.3,
 	medium: 0.6,
 	high: 0.9,
 };
 
-/** Convert v2 deviation to v1-compatible 0-20 score. TODO: Story 18-2 will remove this. */
-function deviationToScore(deviation: number, midpoint: number): number {
-	return midpoint + deviation * (midpoint / 3);
-}
-
-/** Convert v2 enums to v1-compatible numeric confidence. TODO: Story 18-2 will remove this. */
-function v2ToNumericConfidence(strength: EvidenceStrength, confidence: EvidenceConfidence): number {
+/** Compute combined weight from strength and confidence enums */
+export function computeFinalWeight(
+	strength: EvidenceStrength,
+	confidence: EvidenceConfidence,
+): number {
 	return STRENGTH_WEIGHT[strength] * CONFIDENCE_WEIGHT[confidence];
 }
+
+/** Scale factor for mapping deviation (-3..+3) to score (0..20) */
+const SCALE_FACTOR = 10 / 3;
 
 // ─── Core Functions ──────────────────────────────────────────────────
 
@@ -166,7 +167,7 @@ export function computeFacetMetrics(
 	if (evidence.length === 0) return result;
 
 	// Group by facet → domain
-	const byFacet = new Map<FacetName, Map<LifeDomain, { scores: number[]; confidences: number[] }>>();
+	const byFacet = new Map<FacetName, Map<LifeDomain, { deviations: number[]; weights: number[] }>>();
 
 	for (const e of evidence) {
 		let facetMap = byFacet.get(e.bigfiveFacet);
@@ -176,36 +177,36 @@ export function computeFacetMetrics(
 		}
 		let domainGroup = facetMap.get(e.domain);
 		if (!domainGroup) {
-			domainGroup = { scores: [], confidences: [] };
+			domainGroup = { deviations: [], weights: [] };
 			facetMap.set(e.domain, domainGroup);
 		}
-		// TODO: Story 18-2 will rewrite formula to consume v2 natively
-		const score = deviationToScore(e.deviation, config.SCORE_MIDPOINT);
-		const confidence = v2ToNumericConfidence(e.strength, e.confidence);
-		domainGroup.scores.push(score);
-		domainGroup.confidences.push(confidence);
+		domainGroup.deviations.push(e.deviation);
+		domainGroup.weights.push(computeFinalWeight(e.strength, e.confidence));
 	}
 
 	for (const [facet, domainMap] of byFacet) {
-		// Per-domain: weighted mean and context weight
+		// Per-domain: weighted mean deviation and context weight
 		const domainWeights = new Map<LifeDomain, number>();
 		const domainMeans: { weight: number; mean: number }[] = [];
 
 		for (const [domain, group] of domainMap) {
-			const wg = computeContextWeight(group.confidences);
-			const mu = computeContextMean(group.scores, group.confidences, config.epsilon);
+			const wg = computeContextWeight(group.weights);
+			const mu = computeContextMean(group.deviations, group.weights, config.epsilon);
 			domainWeights.set(domain, wg);
 			domainMeans.push({ weight: wg, mean: mu });
 		}
 
-		// Facet score: Σ(w_g × μ_g) / Σ(w_g)
-		let scoreNum = 0;
-		let scoreDen = 0;
+		// Facet deviation: D_f = Σ(w_g × μ_g) / Σ(w_g)
+		let devNum = 0;
+		let devDen = 0;
 		for (const { weight, mean } of domainMeans) {
-			scoreNum += weight * mean;
-			scoreDen += weight;
+			devNum += weight * mean;
+			devDen += weight;
 		}
-		const score = scoreNum / (scoreDen + config.epsilon);
+		const D_f = devNum / (devDen + config.epsilon);
+
+		// Map deviation to 0-20 score scale
+		const score = config.SCORE_MIDPOINT + D_f * SCALE_FACTOR;
 
 		// Total diversified evidence mass
 		const W = Array.from(domainWeights.values()).reduce((a, b) => a + b, 0);

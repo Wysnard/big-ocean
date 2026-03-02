@@ -287,7 +287,11 @@ export const generateResults = (input: GenerateResultsInput) =>
 
 			// Generate teaser portrait (~2-3s)
 			const teaserOutput = yield* teaserPortraitRepo
-				.generateTeaser({ sessionId: input.sessionId, evidence: finalizationEvidence })
+				.generateTeaser({
+					sessionId: input.sessionId,
+					evidence: finalizationEvidence,
+					scoringEvidence: scoringInputs,
+				})
 				.pipe(Effect.retry(Schedule.once));
 
 			// Track teaser cost (fail-open)

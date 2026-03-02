@@ -18,6 +18,14 @@ import {
 	TRAIT_LEVEL_LABELS,
 	type TraitScoresMap,
 } from "@workspace/domain";
+import type { EvidenceConfidence, EvidenceStrength } from "@workspace/domain/types/evidence";
+import { computeFinalWeight } from "@workspace/domain/utils/formula";
+
+/** Evidence shape for v2 depth signal computation */
+export type DepthSignalEvidence = {
+	readonly strength: EvidenceStrength;
+	readonly confidence: EvidenceConfidence;
+};
 
 /**
  * Static glossary of facet definitions for the portrait prompt.
@@ -92,16 +100,16 @@ export function formatEvidence(
 
 /**
  * Compute evidence density signal for depth adaptation.
- * RICH (8+ high-confidence), MODERATE (4-7), THIN (<4).
+ * RICH (8+ high-quality), MODERATE (4-7), THIN (<4).
+ * Uses finalWeight (strength × confidence) >= 0.36 as the quality threshold.
  */
-export function computeDepthSignal(
-	evidence: ReadonlyArray<{ readonly confidence: number }>,
-): string {
-	const strongCount = evidence.filter((e) => e.confidence > 60).length;
+export function computeDepthSignal(evidence: ReadonlyArray<DepthSignalEvidence>): string {
+	const hqCount = evidence.filter(
+		(e) => computeFinalWeight(e.strength, e.confidence) >= 0.36,
+	).length;
 	const total = evidence.length;
-	if (strongCount >= 8)
-		return `EVIDENCE DENSITY: RICH (${total} records, ${strongCount} high-confidence)`;
-	if (strongCount >= 4)
-		return `EVIDENCE DENSITY: MODERATE (${total} records, ${strongCount} high-confidence)`;
-	return `EVIDENCE DENSITY: THIN (${total} records, ${strongCount} high-confidence) — scale ambition to evidence`;
+	if (hqCount >= 8) return `EVIDENCE DENSITY: RICH (${total} records, ${hqCount} high-confidence)`;
+	if (hqCount >= 4)
+		return `EVIDENCE DENSITY: MODERATE (${total} records, ${hqCount} high-confidence)`;
+	return `EVIDENCE DENSITY: THIN (${total} records, ${hqCount} high-confidence) — scale ambition to evidence`;
 }

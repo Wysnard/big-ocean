@@ -633,7 +633,7 @@ export const PortraitGeneratorClaudeRepositoryLive = Layer.effect(
 
 					const traitSummary = formatTraitSummary(input.facetScoresMap, input.traitScoresMap);
 					const evidenceFormatted = formatEvidence(input.allEvidence);
-					const depthSignal = computeDepthSignal(input.allEvidence);
+					const depthSignal = computeDepthSignal(input.scoringEvidence);
 
 					const userPrompt = `PERSONALITY DATA:
 

@@ -12,6 +12,7 @@
 
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
+import type { EvidenceInput } from "../types/evidence";
 import type { FinalizationEvidenceRecord } from "./finalization-evidence.repository";
 
 export class TeaserPortraitError extends S.TaggedError<TeaserPortraitError>()(
@@ -24,6 +25,8 @@ export class TeaserPortraitError extends S.TaggedError<TeaserPortraitError>()(
 export interface TeaserPortraitInput {
 	readonly sessionId: string;
 	readonly evidence: ReadonlyArray<FinalizationEvidenceRecord>;
+	/** v2 evidence for depth signal computation (Story 18-2) */
+	readonly scoringEvidence: ReadonlyArray<EvidenceInput>;
 }
 
 export interface TeaserPortraitOutput {

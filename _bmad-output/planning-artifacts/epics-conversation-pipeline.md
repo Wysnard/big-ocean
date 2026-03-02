@@ -124,11 +124,11 @@ This document provides the complete epic and story breakdown for the big-ocean c
 | FR13 | Epic 1, 4 | Shareable profile generation |
 | FR14 | Epic 1 | Unique profile URL |
 | FR15 | Epic 1 | Private by default |
-| FR17 | Epic 5 | Show Evidence panel |
-| FR17.1 | Epic 5 | Jump to Message navigation |
+| FR17 | Epic 5 | Facet click → navigate to conversation with annotations |
+| FR17.1 | Epic 5 | Scroll to contributing message in conversation |
 | FR17.2 | Epic 5 | Color-coded highlighting |
-| FR18 | Epic 5 | Message → facet contributions panel |
-| FR18.1 | Epic 5 | Bidirectional navigation |
+| FR18 | Epic 5 | Message annotations show facet contributions inline |
+| FR18.1 | Epic 5 | Results → Conversation navigation (facet click) |
 | FR19 | Epic 5 | Character-level highlight range |
 | FR20.1 | Epic 5 | Evidence records with messageId |
 | FR23 | Epic 2 | Session state with URL resumption |
@@ -579,26 +579,14 @@ So that I can understand which personality signals were detected in each message
 **When** displayed
 **Then** positive deviation (+1 to +3) shows green, neutral (0) shows yellow, negative deviation (-1 to -3) shows red, with opacity scaled by `finalWeight`
 
-**Parallelism:** `parallelizable_with: [4.1, 4.2]` | `depends_on: [5.1]` | `blocks: [5.3]`
+**Parallelism:** `parallelizable_with: [4.1, 4.2]` | `depends_on: [5.1]` | `blocks: []`
 
-### Story 5.3: Evidence Panel with Bidirectional Navigation
+**Given** a user clicks a facet score on their results profile page
+**When** the action triggers
+**Then** the app navigates to `/chat?sessionId={id}` showing the conversation review with annotations, scrolled to the first message that contributed to that facet
 
-As a user exploring my personality profile,
-I want to navigate between my facet scores and the conversation messages that contributed to them,
-So that I can trace exactly how my profile was derived and build trust in the results.
+**Given** the conversation review page is opened via facet navigation
+**When** the page loads
+**Then** messages contributing to the selected facet are visually highlighted and the first one is scrolled into view
 
-**Acceptance Criteria:**
-
-**Given** a user clicks a facet score in their profile
-**When** the "Show Evidence" panel opens
-**Then** it lists all supporting message annotations for that facet, showing the `note` text and `strength`/`confidence` indicators
-
-**Given** a user clicks "Jump to Message" on an annotation in the evidence panel
-**When** navigating
-**Then** the conversation scrolls to that message and visually highlights it
-
-**Given** a user clicks a message in conversation history
-**When** the side panel opens
-**Then** it shows which facets that message contributed to with their deviation and weight
-
-**Parallelism:** `parallelizable_with: [4.1, 4.2]` | `depends_on: [5.2]` | `blocks: []`
+> **Note:** Story 5.3 (Evidence Panel with Bidirectional Navigation) was removed on 2026-03-02 via correct-course. Facet-to-evidence navigation is handled by redirecting to the conversation page (above ACs) instead of a separate panel. See `sprint-change-proposal-2026-03-02.md`.

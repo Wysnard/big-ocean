@@ -248,7 +248,7 @@ export const TeaserPortraitAnthropicRepositoryLive = Layer.effect(
 						const traitScoresMap = deriveTraitScores(facetScoresMap);
 						const traitSummary = formatTraitSummary(facetScoresMap, traitScoresMap);
 						const evidenceFormatted = formatEvidence(input.evidence);
-						const depthSignal = computeDepthSignal(input.evidence);
+						const depthSignal = computeDepthSignal(input.scoringEvidence);
 
 						const userPrompt = `PERSONALITY DATA:
 
