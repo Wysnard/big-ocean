@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
 	AssessmentResultRepository,
 	AssessmentSessionRepository,
-	FinalizationEvidenceRepository,
+	ConversationEvidenceRepository,
 	LoggerRepository,
 	RelationshipAnalysisGeneratorRepository,
 	RelationshipAnalysisRepository,
@@ -50,9 +50,9 @@ const mockResultsRepo = {
 };
 
 const mockEvidenceRepo = {
-	getByResultId: vi.fn(),
-	saveBatch: vi.fn(),
-	existsForSession: vi.fn(),
+	save: vi.fn(),
+	findBySession: vi.fn(),
+	countByMessage: vi.fn(),
 };
 
 const mockAnalysisGen = {
@@ -65,7 +65,7 @@ const TestLayer = Layer.mergeAll(
 	Layer.succeed(LoggerRepository, mockLogger),
 	Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
 	Layer.succeed(AssessmentResultRepository, mockResultsRepo),
-	Layer.succeed(FinalizationEvidenceRepository, mockEvidenceRepo),
+	Layer.succeed(ConversationEvidenceRepository, mockEvidenceRepo),
 	Layer.succeed(RelationshipAnalysisGeneratorRepository, mockAnalysisGen),
 ) as Layer.Layer<
 	| RelationshipInvitationRepository
@@ -73,7 +73,7 @@ const TestLayer = Layer.mergeAll(
 	| LoggerRepository
 	| AssessmentSessionRepository
 	| AssessmentResultRepository
-	| FinalizationEvidenceRepository
+	| ConversationEvidenceRepository
 	| RelationshipAnalysisGeneratorRepository
 >;
 

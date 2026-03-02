@@ -6,14 +6,15 @@
  */
 
 import { Context, Data, Effect } from "effect";
-import type { FacetScoresMap, SavedFacetEvidence } from "../types/facet-evidence";
+import type { FacetScoresMap } from "../types/facet-evidence";
+import type { ConversationEvidenceRecord } from "./conversation-evidence.repository";
 
 export interface RelationshipAnalysisGenerationInput {
 	readonly userAFacetScores: FacetScoresMap;
-	readonly userAEvidence: ReadonlyArray<SavedFacetEvidence>;
+	readonly userAEvidence: ReadonlyArray<ConversationEvidenceRecord>;
 	readonly userAName: string;
 	readonly userBFacetScores: FacetScoresMap;
-	readonly userBEvidence: ReadonlyArray<SavedFacetEvidence>;
+	readonly userBEvidence: ReadonlyArray<ConversationEvidenceRecord>;
 	readonly userBName: string;
 }
 

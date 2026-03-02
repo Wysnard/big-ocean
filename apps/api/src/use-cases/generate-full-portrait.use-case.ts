@@ -11,16 +11,15 @@
 import {
 	AssessmentMessageRepository,
 	AssessmentResultRepository,
+	ConversationEvidenceRepository,
 	extract4LetterCode,
 	type FacetName,
 	type FacetScoresMap,
-	FinalizationEvidenceRepository,
 	generateOceanCode,
 	LoggerRepository,
 	lookupArchetype,
 	PortraitGeneratorRepository,
 	PortraitRepository,
-	type SavedFacetEvidence,
 	type TraitName,
 	type TraitScoresMap,
 } from "@workspace/domain";
@@ -50,7 +49,7 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 		const portraitRepo = yield* PortraitRepository;
 		const portraitGen = yield* PortraitGeneratorRepository;
 		const resultsRepo = yield* AssessmentResultRepository;
-		const evidenceRepo = yield* FinalizationEvidenceRepository;
+		const conversationEvidenceRepo = yield* ConversationEvidenceRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
 		const logger = yield* LoggerRepository;
 
@@ -69,26 +68,11 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 			return { success: false };
 		}
 
-		// 2. Load finalization evidence
-		const evidenceRecords = yield* evidenceRepo.getByResultId(result.id);
+		// 2. Load conversation evidence (authoritative source — Story 18-6)
+		const conversationEvidence = yield* conversationEvidenceRepo.findBySession(input.sessionId);
 
 		// 3. Load messages for portrait context
 		const messages = yield* messageRepo.getMessages(input.sessionId);
-
-		// 4. Convert evidence records to SavedFacetEvidence format
-		const allEvidence: SavedFacetEvidence[] = evidenceRecords.map((e) => ({
-			id: e.id,
-			assessmentMessageId: e.assessmentMessageId,
-			facetName: e.bigfiveFacet,
-			score: e.score,
-			confidence: e.confidence,
-			quote: e.quote,
-			highlightRange:
-				e.highlightStart !== null && e.highlightEnd !== null
-					? { start: e.highlightStart, end: e.highlightEnd }
-					: { start: 0, end: e.quote.length }, // Default to full quote if no range
-			createdAt: e.createdAt,
-		}));
 
 		// 5. Build facet scores map from result
 		const facetScoresMap: FacetScoresMap = {} as FacetScoresMap;
@@ -117,23 +101,12 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 		const oceanCode4 = extract4LetterCode(oceanCode5);
 		const archetype = lookupArchetype(oceanCode4);
 
-		// 7. Map finalization evidence to v2 format for depth signal
-		// TODO: Story 18-4 (kill FinAnalyzer) will remove this adapter — conversation_evidence becomes authoritative
-		const scoringEvidence: EvidenceInput[] = evidenceRecords.map((ev) => ({
+		// 7. Map conversation evidence to EvidenceInput for depth signal
+		const scoringEvidence: EvidenceInput[] = conversationEvidence.map((ev) => ({
 			bigfiveFacet: ev.bigfiveFacet,
-			deviation: Math.round(((ev.score - 10) / 10) * 3) as -3 | -2 | -1 | 0 | 1 | 2 | 3,
-			strength:
-				ev.confidence >= 0.7
-					? ("strong" as const)
-					: ev.confidence >= 0.4
-						? ("moderate" as const)
-						: ("weak" as const),
-			confidence:
-				ev.confidence >= 0.7
-					? ("high" as const)
-					: ev.confidence >= 0.4
-						? ("medium" as const)
-						: ("low" as const),
+			deviation: ev.deviation as -3 | -2 | -1 | 0 | 1 | 2 | 3,
+			strength: ev.strength,
+			confidence: ev.confidence,
 			domain: ev.domain,
 		}));
 
@@ -143,7 +116,7 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 				sessionId: input.sessionId,
 				facetScoresMap,
 				traitScoresMap,
-				allEvidence,
+				allEvidence: conversationEvidence,
 				scoringEvidence,
 				archetypeName: archetype.name,
 				archetypeDescription: archetype.description,

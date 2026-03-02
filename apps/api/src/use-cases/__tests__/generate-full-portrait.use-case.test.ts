@@ -1,17 +1,18 @@
 /**
- * Generate Full Portrait Use Case Tests (Story 13.3)
+ * Generate Full Portrait Use Case Tests (Story 18-6)
  *
  * Tests:
  * - Successful generation updates placeholder
  * - Retry on failure increments retry_count
  * - Idempotent update (already has content)
+ * - Uses ConversationEvidenceRepository (not FinalizationEvidenceRepository)
  */
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
 	AssessmentMessageRepository,
 	AssessmentResultRepository,
-	FinalizationEvidenceRepository,
+	ConversationEvidenceRepository,
 	LoggerRepository,
 	PortraitGeneratorRepository,
 	PortraitRepository,
@@ -42,10 +43,10 @@ const mockResultsRepo = {
 	delete: vi.fn(),
 };
 
-const mockEvidenceRepo = {
-	getByResultId: vi.fn(),
+const mockConversationEvidenceRepo = {
 	save: vi.fn(),
-	delete: vi.fn(),
+	findBySession: vi.fn(),
+	countByMessage: vi.fn(),
 };
 
 const mockMessageRepo = {
@@ -68,7 +69,7 @@ const createTestLayer = () =>
 		Layer.succeed(PortraitRepository, mockPortraitRepo),
 		Layer.succeed(PortraitGeneratorRepository, mockPortraitGen),
 		Layer.succeed(AssessmentResultRepository, mockResultsRepo),
-		Layer.succeed(FinalizationEvidenceRepository, mockEvidenceRepo),
+		Layer.succeed(ConversationEvidenceRepository, mockConversationEvidenceRepo),
 		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
 	);
@@ -96,19 +97,17 @@ const mockResult = {
 	updatedAt: new Date(),
 };
 
-const mockEvidence = [
+const mockConversationEvidence = [
 	{
 		id: "ev_1",
-		assessmentMessageId: "msg_1",
-		assessmentResultId: "result_456",
+		sessionId: "session_123",
+		messageId: "msg_1",
 		bigfiveFacet: "imagination",
-		score: 15,
-		confidence: 0.8,
-		domain: "creativity",
-		rawDomain: "artistic expression",
-		quote: "I love painting",
-		highlightStart: 0,
-		highlightEnd: 15,
+		deviation: 2,
+		strength: "strong",
+		confidence: "high",
+		domain: "work",
+		note: "Shows vivid creative thinking when describing projects",
 		createdAt: new Date(),
 	},
 ];
@@ -118,13 +117,15 @@ const mockMessages = [
 	{ id: "msg_2", role: "assistant", content: "Hi there!" },
 ];
 
-describe("generateFullPortrait Use Case (Story 13.3)", () => {
+describe("generateFullPortrait Use Case (Story 18-6)", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
 		// Default successful mocks
 		mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(mockResult));
-		mockEvidenceRepo.getByResultId.mockReturnValue(Effect.succeed(mockEvidence));
+		mockConversationEvidenceRepo.findBySession.mockReturnValue(
+			Effect.succeed(mockConversationEvidence),
+		);
 		mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(mockMessages));
 		mockPortraitGen.generatePortrait.mockReturnValue(
 			Effect.succeed("Your full personality portrait..."),
@@ -188,8 +189,6 @@ describe("generateFullPortrait Use Case (Story 13.3)", () => {
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	// Note: Retry behavior with exponential backoff is tested in integration tests.
-	// Unit test verifies that LLM generator is called with correct data.
 	it.effect("should call portrait generator with correct input shape", () =>
 		Effect.gen(function* () {
 			yield* generateFullPortrait({
@@ -229,31 +228,35 @@ describe("generateFullPortrait Use Case (Story 13.3)", () => {
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("should load evidence and messages for portrait context", () =>
-		Effect.gen(function* () {
-			yield* generateFullPortrait({
-				portraitId: "portrait_123",
-				sessionId: "session_123",
-			});
+	it.effect(
+		"should load conversation evidence by session (not finalization evidence by result)",
+		() =>
+			Effect.gen(function* () {
+				yield* generateFullPortrait({
+					portraitId: "portrait_123",
+					sessionId: "session_123",
+				});
 
-			// Verify evidence was loaded
-			expect(mockEvidenceRepo.getByResultId).toHaveBeenCalledWith(mockResult.id);
+				// Verify conversation evidence was loaded by session
+				expect(mockConversationEvidenceRepo.findBySession).toHaveBeenCalledWith("session_123");
 
-			// Verify messages were loaded
-			expect(mockMessageRepo.getMessages).toHaveBeenCalledWith("session_123");
+				// Verify messages were loaded
+				expect(mockMessageRepo.getMessages).toHaveBeenCalledWith("session_123");
 
-			// Verify portrait generator received all evidence
-			// Note: FinalizationEvidenceRecord.bigfiveFacet is mapped to SavedFacetEvidence.facetName
-			expect(mockPortraitGen.generatePortrait).toHaveBeenCalledWith(
-				expect.objectContaining({
-					allEvidence: expect.arrayContaining([
-						expect.objectContaining({
-							facetName: "imagination",
-							quote: "I love painting",
-						}),
-					]),
-				}),
-			);
-		}).pipe(Effect.provide(createTestLayer())),
+				// Verify portrait generator received conversation evidence directly
+				expect(mockPortraitGen.generatePortrait).toHaveBeenCalledWith(
+					expect.objectContaining({
+						allEvidence: expect.arrayContaining([
+							expect.objectContaining({
+								bigfiveFacet: "imagination",
+								deviation: 2,
+								strength: "strong",
+								confidence: "high",
+								note: "Shows vivid creative thinking when describing projects",
+							}),
+						]),
+					}),
+				);
+			}).pipe(Effect.provide(createTestLayer())),
 	);
 });

@@ -1,7 +1,8 @@
 import { Context, Data, Effect } from "effect";
 import type { EvidenceInput } from "../types/evidence";
-import type { FacetScoresMap, SavedFacetEvidence, TraitScoresMap } from "../types/facet-evidence";
+import type { FacetScoresMap, TraitScoresMap } from "../types/facet-evidence";
 import type { DomainMessage } from "../types/message";
+import type { ConversationEvidenceRecord } from "./conversation-evidence.repository";
 
 /**
  * Input for portrait generation
@@ -12,7 +13,7 @@ export interface PortraitGenerationInput {
 	readonly sessionId: string;
 	readonly facetScoresMap: FacetScoresMap;
 	readonly traitScoresMap: TraitScoresMap;
-	readonly allEvidence: ReadonlyArray<SavedFacetEvidence>;
+	readonly allEvidence: ReadonlyArray<ConversationEvidenceRecord>;
 	/** v2 evidence for depth signal computation (Story 18-2) */
 	readonly scoringEvidence: ReadonlyArray<EvidenceInput>;
 	readonly archetypeName: string;

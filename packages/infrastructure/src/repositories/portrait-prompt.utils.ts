@@ -75,25 +75,22 @@ export function formatTraitSummary(
 }
 
 /**
- * Format evidence for the prompt, including confidence levels.
- *
- * Accepts any array of objects with the common evidence shape
- * (works with both SavedFacetEvidence and FinalizationEvidenceRecord).
+ * Format conversation evidence (v2) for the portrait prompt.
+ * Uses deviation/strength/confidence enums instead of legacy score/confidence/quote.
  */
 export function formatEvidence(
 	evidence: ReadonlyArray<{
-		readonly facetName?: string;
-		readonly bigfiveFacet?: string;
-		readonly score: number;
-		readonly confidence: number;
-		readonly quote: string;
+		readonly bigfiveFacet: string;
+		readonly deviation: number;
+		readonly strength: string;
+		readonly confidence: string;
+		readonly note: string;
 	}>,
 ): string {
 	return evidence
 		.map((e, i) => {
-			const facet = e.facetName ?? e.bigfiveFacet ?? "Unknown";
-			const trait = FACET_TO_TRAIT[facet as FacetName] ?? "Unknown";
-			return `${i + 1}. [${trait} → ${facet}, score: ${e.score}/20, confidence: ${e.confidence}%] "${e.quote}"`;
+			const trait = FACET_TO_TRAIT[e.bigfiveFacet as FacetName] ?? "Unknown";
+			return `${i + 1}. [${trait} → ${e.bigfiveFacet}, deviation: ${e.deviation}, strength: ${e.strength}, confidence: ${e.confidence}] "${e.note}"`;
 		})
 		.join("\n");
 }

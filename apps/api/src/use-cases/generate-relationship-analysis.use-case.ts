@@ -10,14 +10,14 @@
 import {
 	AssessmentResultRepository,
 	AssessmentSessionRepository,
+	ConversationEvidenceRepository,
 	type FacetName,
 	type FacetScoresMap,
-	FinalizationEvidenceRepository,
 	LoggerRepository,
 	RelationshipAnalysisGeneratorRepository,
 	RelationshipAnalysisRepository,
-	type SavedFacetEvidence,
 } from "@workspace/domain";
+import type { ConversationEvidenceRecord } from "@workspace/domain/repositories/conversation-evidence.repository";
 import { Effect, Schedule } from "effect";
 
 export interface GenerateRelationshipAnalysisInput {
@@ -38,7 +38,7 @@ const loadUserAssessmentData = (userId: string) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const resultsRepo = yield* AssessmentResultRepository;
-		const evidenceRepo = yield* FinalizationEvidenceRepository;
+		const conversationEvidenceRepo = yield* ConversationEvidenceRepository;
 
 		const session = yield* sessionRepo.findSessionByUserId(userId);
 		if (!session) return null;
@@ -46,21 +46,10 @@ const loadUserAssessmentData = (userId: string) =>
 		const result = yield* resultsRepo.getBySessionId(session.id);
 		if (!result) return null;
 
-		const evidenceRecords = yield* evidenceRepo.getByResultId(result.id);
-
-		const allEvidence: SavedFacetEvidence[] = evidenceRecords.map((e) => ({
-			id: e.id,
-			assessmentMessageId: e.assessmentMessageId,
-			facetName: e.bigfiveFacet,
-			score: e.score,
-			confidence: e.confidence,
-			quote: e.quote,
-			highlightRange:
-				e.highlightStart !== null && e.highlightEnd !== null
-					? { start: e.highlightStart, end: e.highlightEnd }
-					: { start: 0, end: e.quote.length },
-			createdAt: e.createdAt,
-		}));
+		// Load conversation evidence (authoritative source — Story 18-6)
+		const evidence: ConversationEvidenceRecord[] = yield* conversationEvidenceRepo.findBySession(
+			session.id,
+		);
 
 		const facetScoresMap: FacetScoresMap = {} as FacetScoresMap;
 		for (const [facetName, data] of Object.entries(result.facets)) {
@@ -72,7 +61,7 @@ const loadUserAssessmentData = (userId: string) =>
 			}
 		}
 
-		return { facetScoresMap, evidence: allEvidence };
+		return { facetScoresMap, evidence };
 	});
 
 export const generateRelationshipAnalysis = (input: GenerateRelationshipAnalysisInput) =>
