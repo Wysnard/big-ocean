@@ -181,14 +181,14 @@ export {
 	type PortraitStatus,
 	type PortraitTier,
 } from "./repositories/portrait.repository";
-// Portrait rating repository (Story 19-2)
-export type { InsertPortraitRating } from "./repositories/portrait-rating.repository";
-export { PortraitRatingRepository } from "./repositories/portrait-rating.repository";
 export {
 	PortraitGenerationError,
 	type PortraitGenerationInput,
 	PortraitGeneratorRepository,
 } from "./repositories/portrait-generator.repository";
+// Portrait rating repository (Story 19-2)
+export type { InsertPortraitRating } from "./repositories/portrait-rating.repository";
+export { PortraitRatingRepository } from "./repositories/portrait-rating.repository";
 export {
 	type ProfileAccessLogInput,
 	ProfileAccessLogRepository,
@@ -330,12 +330,6 @@ export type {
 	DomainMessage,
 	UserMessage,
 } from "./types/message";
-export type {
-	PolarWebhookEvent,
-	PurchaseEvent,
-	PurchaseEventType,
-	UserCapabilities,
-} from "./types/purchase.types";
 // Portrait rating types (Story 19-2)
 export type {
 	DepthSignalLevel,
@@ -348,6 +342,12 @@ export {
 	PORTRAIT_RATINGS,
 	PORTRAIT_TYPES,
 } from "./types/portrait-rating.types";
+export type {
+	PolarWebhookEvent,
+	PurchaseEvent,
+	PurchaseEventType,
+	UserCapabilities,
+} from "./types/purchase.types";
 // Purchase event types (Story 13.1)
 export {
 	PURCHASE_EVENT_TYPES,
@@ -375,6 +375,7 @@ export {
 	computeContextMean,
 	computeContextWeight,
 	computeFacetMetrics,
+	computeFinalWeight,
 	computeNormalizedEntropy,
 	computeProjectedEntropy,
 	computeSteeringTarget,
@@ -386,15 +387,6 @@ export {
 } from "./utils/formula";
 // Highlight position computation (Story 11.2)
 export { computeHighlightPositions } from "./utils/highlight";
-// Steering utilities (Story 2.3, 17.2)
-export { computeDomainStreak } from "./utils/steering";
-export {
-	type IntentType,
-	INTENT_TYPES,
-	type MicroIntent,
-	type RealizeMicroIntentInput,
-	realizeMicroIntent,
-} from "./utils/steering";
 // Utility functions
 export {
 	buildChatSystemPrompt,
@@ -423,3 +415,12 @@ export {
 	computeDomainCoverage,
 	computeTraitResults,
 } from "./utils/score-computation";
+// Steering utilities (Story 2.3, 17.2)
+export {
+	computeDomainStreak,
+	INTENT_TYPES,
+	type IntentType,
+	type MicroIntent,
+	type RealizeMicroIntentInput,
+	realizeMicroIntent,
+} from "./utils/steering";

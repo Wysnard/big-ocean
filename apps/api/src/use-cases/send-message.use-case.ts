@@ -18,12 +18,13 @@ import {
 	AssessmentSessionRepository,
 	aggregateDomainDistribution,
 	type ConversanalyzerOutput,
-	computeDomainStreak,
 	ConversanalyzerRepository,
 	ConversationEvidenceRepository,
 	CostGuardRepository,
 	calculateCost,
+	computeDomainStreak,
 	computeFacetMetrics,
+	computeFinalWeight,
 	computeSteeringTarget,
 	type DomainMessage,
 	type FacetName,
@@ -42,6 +43,12 @@ import { Effect, Schedule } from "effect";
 
 /** Max user messages that count as cold start: 1 greeting + 1 opening question = 2 assistant msgs before user replies */
 const COLD_START_USER_MSG_THRESHOLD = GREETING_MESSAGES.length + 1;
+
+/** Per-message evidence cap — keep top 5 by finalWeight (Story 18-3, Pattern 6) */
+export const PER_MESSAGE_EVIDENCE_CAP = 5;
+
+/** Session-level evidence cap — skip ConversAnalyzer when reached (Story 18-3) */
+export const SESSION_EVIDENCE_CAP = 80;
 
 export interface SendMessageInput {
 	readonly sessionId: string;
@@ -192,56 +199,70 @@ export const sendMessage = (input: SendMessageInput) =>
 
 					// Query existing evidence for domain distribution
 					const existingEvidence = yield* evidenceRepo.findBySession(input.sessionId);
-					const domainDistribution = aggregateDomainDistribution(existingEvidence);
 
-					// Build recent messages (last 6)
-					const recentMessages: DomainMessage[] = domainMessages.slice(-6);
-
-					// Conversanalyzer call — non-fatal (retry once, then skip per AC #6)
-					const evidenceResult = yield* conversanalyzer
-						.analyze({
-							message: input.message,
-							recentMessages,
-							domainDistribution,
-						})
-						.pipe(
-							Effect.retry(Schedule.recurs(2)),
-							Effect.catchAll((error) =>
-								Effect.sync(() => {
-									logger.warn("ConversAnalyzer failed after 3 attempts, skipping", {
-										error: error.message,
-										sessionId: input.sessionId,
-										messageId,
-									});
-									return { evidence: [], tokenUsage: { input: 0, output: 0 } } as ConversanalyzerOutput;
-								}),
-							),
-						);
-
-					// Capture analyzer token usage for cost tracking (Story 10.6)
-					analyzerTokenUsage = evidenceResult.tokenUsage;
-
-					// Cap evidence to 5 records (v2 per-message cap — Story 18-1)
-					const cappedEvidence = evidenceResult.evidence.slice(0, 5);
-
-					// Re-fetch ALL evidence only when new evidence was saved; else reuse existing
+					// Session-level evidence cap — skip ConversAnalyzer when reached (Story 18-3)
 					let allEvidence = existingEvidence;
-					if (cappedEvidence.length > 0) {
-						yield* evidenceRepo.save(
-							cappedEvidence.map((e) => ({
-								...e,
-								sessionId: input.sessionId,
-								messageId,
-							})),
-						);
-
-						logger.info("Conversanalyzer complete", {
+					if (existingEvidence.length >= SESSION_EVIDENCE_CAP) {
+						logger.info("Session evidence cap reached, skipping ConversAnalyzer", {
 							sessionId: input.sessionId,
-							evidenceCount: cappedEvidence.length,
-							tokenUsage: evidenceResult.tokenUsage,
+							evidenceCount: existingEvidence.length,
+							cap: SESSION_EVIDENCE_CAP,
 						});
+					} else {
+						const domainDistribution = aggregateDomainDistribution(existingEvidence);
 
-						allEvidence = yield* evidenceRepo.findBySession(input.sessionId);
+						// Build recent messages (last 6)
+						const recentMessages: DomainMessage[] = domainMessages.slice(-6);
+
+						// Conversanalyzer call — non-fatal (retry once, then skip per AC #6)
+						const evidenceResult = yield* conversanalyzer
+							.analyze({
+								message: input.message,
+								recentMessages,
+								domainDistribution,
+							})
+							.pipe(
+								Effect.retry(Schedule.recurs(2)),
+								Effect.catchAll((error) =>
+									Effect.sync(() => {
+										logger.warn("ConversAnalyzer failed after 3 attempts, skipping", {
+											error: error.message,
+											sessionId: input.sessionId,
+											messageId,
+										});
+										return { evidence: [], tokenUsage: { input: 0, output: 0 } } as ConversanalyzerOutput;
+									}),
+								),
+							);
+
+						// Capture analyzer token usage for cost tracking (Story 10.6)
+						analyzerTokenUsage = evidenceResult.tokenUsage;
+
+						// Per-message cap: sort by finalWeight descending, keep top 5 (Story 18-3, Pattern 6)
+						const sortedEvidence = [...evidenceResult.evidence].sort(
+							(a, b) =>
+								computeFinalWeight(b.strength, b.confidence) - computeFinalWeight(a.strength, a.confidence),
+						);
+						const cappedEvidence = sortedEvidence.slice(0, PER_MESSAGE_EVIDENCE_CAP);
+
+						// Re-fetch ALL evidence only when new evidence was saved; else reuse existing
+						if (cappedEvidence.length > 0) {
+							yield* evidenceRepo.save(
+								cappedEvidence.map((e) => ({
+									...e,
+									sessionId: input.sessionId,
+									messageId,
+								})),
+							);
+
+							logger.info("Conversanalyzer complete", {
+								sessionId: input.sessionId,
+								evidenceCount: cappedEvidence.length,
+								tokenUsage: evidenceResult.tokenUsage,
+							});
+
+							allEvidence = yield* evidenceRepo.findBySession(input.sessionId);
+						}
 					}
 
 					const metrics = computeFacetMetrics(allEvidence);
@@ -269,7 +290,12 @@ export const sendMessage = (input: SendMessageInput) =>
 				const recentIntentTypes: IntentType[] = [];
 				for (let i = previousMessages.length - 1; i >= 0 && recentIntentTypes.length < 3; i--) {
 					const msg = previousMessages[i];
-					if (msg !== undefined && msg.role === "assistant" && "intentType" in msg && msg.intentType != null) {
+					if (
+						msg !== undefined &&
+						msg.role === "assistant" &&
+						"intentType" in msg &&
+						msg.intentType != null
+					) {
 						recentIntentTypes.unshift(msg.intentType as IntentType);
 					}
 				}
