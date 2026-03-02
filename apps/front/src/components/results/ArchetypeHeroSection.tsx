@@ -127,7 +127,7 @@ export function ArchetypeHeroSection({
 				{/* Confidence — tertiary metadata pill */}
 				{overallConfidence != null && (
 					<p className="mt-4 text-xs font-medium text-foreground/60 bg-foreground/8 rounded-full px-3 py-1 inline-block">
-						{overallConfidence}% confidence
+						{Math.round(overallConfidence * 100)}% confidence
 					</p>
 				)}
 
