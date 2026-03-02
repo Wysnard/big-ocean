@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
+import { createElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setupDefaultMocks } from "./__fixtures__/use-therapist-chat.fixtures";
 
@@ -34,6 +36,10 @@ vi.mock("@/hooks/use-assessment", () => ({
 }));
 
 import { useTherapistChat } from "./useTherapistChat";
+
+const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+const wrapper = ({ children }: { children: ReactNode }) =>
+	createElement(QueryClientProvider, { client: queryClient }, children);
 
 describe("useTherapistChat", () => {
 	// Advance timers past all greeting stagger delays (0 + 1200 + 2000ms)
@@ -75,7 +81,7 @@ describe("useTherapistChat", () => {
 				refetch: vi.fn(),
 			});
 
-			const { result } = renderHook(() => useTherapistChat("session-123"));
+			const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
 			// Should load messages from resume response
 			expect(result.current.messages).toHaveLength(2);
@@ -102,7 +108,7 @@ describe("useTherapistChat", () => {
 				refetch: vi.fn(),
 			});
 
-			const { result } = renderHook(() => useTherapistChat("session-123"));
+			const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
 			// Should have generated ID from index
 			expect(result.current.messages[0].id).toBe("msg-resume-0");
@@ -126,7 +132,7 @@ describe("useTherapistChat", () => {
 				refetch: vi.fn(),
 			});
 
-			const { result } = renderHook(() => useTherapistChat("session-123"));
+			const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
 			// Confidence values are already 0-100, do NOT multiply
 			expect(result.current.traits.openness).toBe(72);
@@ -136,7 +142,7 @@ describe("useTherapistChat", () => {
 
 		it("loads server greeting messages for new session after stagger completes", () => {
 			// Default mock already has greeting messages — verify they all load after stagger
-			const { result } = renderHook(() => useTherapistChat("session-123"));
+			const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 			completeGreetingStagger();
 
 			expect(result.current.messages).toHaveLength(3);
@@ -160,7 +166,7 @@ describe("useTherapistChat", () => {
 				refetch: vi.fn(),
 			});
 
-			const { result } = renderHook(() => useTherapistChat("session-123"));
+			const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
 			// With server-side greetings, empty means empty (edge case — shouldn't happen in practice)
 			expect(result.current.messages).toHaveLength(0);
@@ -185,7 +191,7 @@ describe("useTherapistChat", () => {
 				refetch: vi.fn(),
 			});
 
-			const { result } = renderHook(() => useTherapistChat("session-123"));
+			const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
 			// Should NOT show default greeting, use server messages
 			expect(result.current.messages).toHaveLength(1);
@@ -201,7 +207,7 @@ describe("useTherapistChat", () => {
 				refetch: vi.fn(),
 			});
 
-			const { result } = renderHook(() => useTherapistChat("session-123"));
+			const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
 			expect(result.current.isResuming).toBe(true);
 		});
@@ -214,7 +220,7 @@ describe("useTherapistChat", () => {
 				refetch: vi.fn(),
 			});
 
-			const { result } = renderHook(() => useTherapistChat("session-123"));
+			const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
 			expect(result.current.resumeError).toEqual(new Error("HTTP 404: SessionNotFound"));
 		});

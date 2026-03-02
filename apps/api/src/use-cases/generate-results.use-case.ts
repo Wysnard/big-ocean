@@ -94,10 +94,9 @@ export const generateResults = (input: GenerateResultsInput) =>
 		);
 
 		if (!lockAcquired) {
-			logger.info(
-				"Generate results: concurrent request, returning current progress",
-				{ sessionId: input.sessionId },
-			);
+			logger.info("Generate results: concurrent request, returning current progress", {
+				sessionId: input.sessionId,
+			});
 			const currentProgress = (session.finalizationProgress ?? "analyzing") as GenerateResultsStatus;
 			return { status: currentProgress };
 		}
@@ -139,6 +138,35 @@ export const generateResults = (input: GenerateResultsInput) =>
 				const facets = computeAllFacetResults(scoringInputs);
 				const traits = computeTraitResults(facets);
 				const domainCoverage = computeDomainCoverage(scoringInputs);
+
+				logger.info("Finalization facet scores", {
+					sessionId: input.sessionId,
+					facets: Object.fromEntries(
+						Object.entries(facets).map(([f, v]) => [
+							f,
+							{
+								score: +v.score.toFixed(2),
+								confidence: +v.confidence.toFixed(3),
+								signalPower: +v.signalPower.toFixed(3),
+							},
+						]),
+					),
+				});
+
+				logger.info("Finalization trait scores", {
+					sessionId: input.sessionId,
+					traits: Object.fromEntries(
+						Object.entries(traits).map(([t, v]) => [
+							t,
+							{
+								score: +v.score.toFixed(2),
+								confidence: +v.confidence.toFixed(3),
+								signalPower: +v.signalPower.toFixed(3),
+							},
+						]),
+					),
+					domainCoverage,
+				});
 
 				// Update progress to generating portrait
 				yield* sessionRepo.updateSession(input.sessionId, {

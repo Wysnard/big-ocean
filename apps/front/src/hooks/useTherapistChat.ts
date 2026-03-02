@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AssessmentApiError, useResumeSession, useSendMessage } from "./use-assessment";
 
@@ -85,8 +86,12 @@ function parseApiError(error: unknown): {
  * Hook for managing the therapist chat conversation with real API integration.
  * Handles session resumption, optimistic message updates, trait confidence scoring from backend,
  * and structured error handling for known API error types.
+ *
+ * Messages are derived from resume data (server truth) with optimistic local additions
+ * during mutation. On success, invalidates the resume query to refetch server truth.
  */
 export function useTherapistChat(sessionId: string) {
+	const queryClient = useQueryClient();
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [traits, setTraits] = useState<TraitScores>({
 		openness: 0,
@@ -102,7 +107,7 @@ export function useTherapistChat(sessionId: string) {
 	>(null);
 	// Story 7.18: Farewell transition state
 	const [isFarewellReceived, setIsFarewellReceived] = useState(false);
-	const { mutate: sendMessageRpc } = useSendMessage();
+	const { mutate: sendMessageMutate } = useSendMessage();
 
 	// Pending greeting messages not yet displayed (for stagger flush on early send)
 	const pendingGreetingsRef = useRef<Message[]>([]);
@@ -132,12 +137,6 @@ export function useTherapistChat(sessionId: string) {
 		}));
 
 		// Load confidence scores (values are already 0-100, do NOT multiply)
-		console.log("[BigOcean] Session resumed — confidence loaded", {
-			sessionId,
-			confidence: resumeData.confidence,
-			messageCount: resumeData.messages.length,
-		});
-
 		setTraits({
 			openness: resumeData.confidence.openness,
 			conscientiousness: resumeData.confidence.conscientiousness,
@@ -196,7 +195,7 @@ export function useTherapistChat(sessionId: string) {
 			for (const t of timeouts) clearTimeout(t);
 			pendingGreetingsRef.current = [];
 		};
-	}, [resumeData, sessionId]);
+	}, [resumeData]);
 
 	const clearError = useCallback(() => {
 		setErrorMessage(null);
@@ -228,7 +227,7 @@ export function useTherapistChat(sessionId: string) {
 				},
 			]);
 
-			sendMessageRpc(
+			sendMessageMutate(
 				{ sessionId, message: userMessage },
 				{
 					onSuccess: (data) => {
@@ -248,10 +247,12 @@ export function useTherapistChat(sessionId: string) {
 							setIsFarewellReceived(true);
 						}
 
-						// Story 2.11: confidence no longer in send-message response.
-						// Traits are only updated from resume-session (which still returns confidence).
-
 						setIsLoading(false);
+
+						// Invalidate resume query to keep server cache fresh for next resume
+						queryClient.invalidateQueries({
+							queryKey: ["assessment", "session", sessionId],
+						});
 					},
 					onError: (error) => {
 						const parsed = parseApiError(error);
@@ -262,7 +263,7 @@ export function useTherapistChat(sessionId: string) {
 				},
 			);
 		},
-		[sessionId, sendMessageRpc, clearError],
+		[sessionId, sendMessageMutate, clearError, queryClient],
 	);
 
 	const retryLastMessage = useCallback(() => {

@@ -5,7 +5,7 @@
  * Uses direct HTTP calls to backend assessment endpoints.
  */
 
-import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import type {
 	GetResultsResponse,
 	GetTranscriptResponse,
@@ -194,6 +194,7 @@ export function useResumeSession(sessionId: string, enabled = true) {
 			return fetchApi(`/api/assessment/${sessionId}/resume`);
 		},
 		enabled: enabled && !!sessionId,
+		placeholderData: keepPreviousData,
 	});
 }
 

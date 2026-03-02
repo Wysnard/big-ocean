@@ -48,6 +48,11 @@ export {
 	listUserSessions,
 } from "./list-user-sessions.use-case";
 export {
+	type NerinPipelineInput,
+	type NerinPipelineOutput,
+	runNerinPipeline,
+} from "./nerin-pipeline";
+export {
 	type ResumeSessionInput,
 	type ResumeSessionOutput,
 	resumeSession,

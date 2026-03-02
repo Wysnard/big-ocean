@@ -66,8 +66,9 @@ describe("sendMessage Use Case", () => {
 
 		it.effect("should skip conversanalyzer at exactly greeting count (boundary)", () =>
 			Effect.gen(function* () {
-				// Exactly 2 user messages = greeting count → still cold start
-				const twoUserMessages = [
+				// DB has 1 user message (cold start history). Current user message is not yet saved
+				// (atomic write). Total user messages = 1 in DB → 1 >= 2 = false → still cold start.
+				const oneUserMessageHistory = [
 					...coldStartMessages,
 					{
 						id: "msg_4",
@@ -76,15 +77,8 @@ describe("sendMessage Use Case", () => {
 						content: "Cool",
 						createdAt: new Date(),
 					},
-					{
-						id: "msg_5",
-						sessionId: "session_test_123",
-						role: "user" as const,
-						content: "More",
-						createdAt: new Date(),
-					},
 				];
-				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(twoUserMessages));
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(oneUserMessageHistory));
 
 				yield* sendMessage({
 					sessionId: "session_test_123",

@@ -44,7 +44,7 @@ describe("sendMessage Use Case", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should save user message and capture messageId", () =>
+		it.effect("should save user message atomically inside the pipeline (after LLM success)", () =>
 			Effect.gen(function* () {
 				yield* sendMessage({
 					sessionId: "session_test_123",
@@ -52,6 +52,7 @@ describe("sendMessage Use Case", () => {
 					userId: "user_456",
 				});
 
+				// User message is now saved inside the pipeline, after Nerin succeeds
 				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
 					"session_test_123",
 					"user",
@@ -61,22 +62,24 @@ describe("sendMessage Use Case", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should save assistant message with response content, steering targets, and intentType", () =>
-			Effect.gen(function* () {
-				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
+		it.effect(
+			"should save assistant message with response content, steering targets, and intentType",
+			() =>
+				Effect.gen(function* () {
+					yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
 
-				// Cold start: greeting seed → "relationships" / "gregariousness" (index 1 from GREETING_MESSAGES.length)
-				// Story 17.2: intentType is now passed as 7th argument
-				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
-					"session_test_123",
-					"assistant",
-					mockNerinResponse.response,
-					undefined,
-					"relationships",
-					"gregariousness",
-					expect.any(String), // intentType from realizeMicroIntent
-				);
-			}).pipe(Effect.provide(createTestLayer())),
+					// Cold start: greeting seed → "relationships" / "gregariousness" (index 1 from GREETING_MESSAGES.length)
+					// Story 17.2: intentType is now passed as 7th argument
+					expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
+						"session_test_123",
+						"assistant",
+						mockNerinResponse.response,
+						undefined,
+						"relationships",
+						"gregariousness",
+						expect.any(String), // intentType from realizeMicroIntent
+					);
+				}).pipe(Effect.provide(createTestLayer())),
 		);
 
 		it.effect("should invoke Nerin with correct message history, steering, and microIntent", () =>
@@ -86,11 +89,15 @@ describe("sendMessage Use Case", () => {
 				expect(mockNerinRepo.invoke).toHaveBeenCalledWith(
 					expect.objectContaining({
 						sessionId: "session_test_123",
-						messages: coldStartMessages.map((m) => ({
-							id: m.id,
-							role: m.role,
-							content: m.content,
-						})),
+						messages: [
+							...coldStartMessages.map((m) => ({
+								id: m.id,
+								role: m.role,
+								content: m.content,
+							})),
+							// Current user message appended in-memory by pipeline
+							expect.objectContaining({ role: "user", content: "Test" }),
+						],
 						targetDomain: "relationships",
 						targetFacet: "gregariousness",
 						nearingEnd: false,

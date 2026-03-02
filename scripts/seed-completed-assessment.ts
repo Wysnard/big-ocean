@@ -518,7 +518,6 @@ const seedProgram = Effect.gen(function* () {
 	console.log(`Status: ${sessionRecord.status}`);
 	console.log(`Messages: ${CONVERSATION_MESSAGES.length}`);
 	console.log(`Conversation Evidence: ${convEvidenceCount}`);
-	console.log(`Finalization Evidence: ${finEvidenceCount}`);
 	console.log(`OCEAN Code: ODANT`);
 	console.log(`Public Profile ID: ${profile.id}`);
 	console.log("=".repeat(60));

@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
+import { createElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setupDefaultMocks } from "./__fixtures__/use-therapist-chat.fixtures";
 
@@ -35,6 +37,10 @@ vi.mock("@/hooks/use-assessment", () => ({
 
 import { useTherapistChat } from "./useTherapistChat";
 
+const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+const wrapper = ({ children }: { children: ReactNode }) =>
+	createElement(QueryClientProvider, { client: queryClient }, children);
+
 describe("useTherapistChat", () => {
 	// Advance timers past all greeting stagger delays (0 + 1200 + 2000ms)
 	function completeGreetingStagger() {
@@ -54,7 +60,7 @@ describe("useTherapistChat", () => {
 	});
 
 	it("staggers greeting messages for new sessions (0ms / 1200ms / 2000ms)", () => {
-		const { result } = renderHook(() => useTherapistChat("session-123"));
+		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
 		// First greeting message appears immediately (0ms)
 		expect(result.current.messages).toHaveLength(1);
@@ -77,7 +83,7 @@ describe("useTherapistChat", () => {
 	});
 
 	it("initializes trait scores at zero", () => {
-		const { result } = renderHook(() => useTherapistChat("session-123"));
+		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 		completeGreetingStagger();
 
 		expect(result.current.traits.openness).toBe(0);
@@ -85,7 +91,7 @@ describe("useTherapistChat", () => {
 	});
 
 	it("adds user message optimistically before API responds", () => {
-		const { result } = renderHook(() => useTherapistChat("session-123"));
+		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 		completeGreetingStagger();
 
 		act(() => {
@@ -108,7 +114,7 @@ describe("useTherapistChat", () => {
 			},
 		);
 
-		const { result } = renderHook(() => useTherapistChat("session-123"));
+		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 		completeGreetingStagger();
 
 		act(() => {
@@ -133,7 +139,7 @@ describe("useTherapistChat", () => {
 			},
 		);
 
-		const { result } = renderHook(() => useTherapistChat("session-123"));
+		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 		completeGreetingStagger();
 
 		act(() => {
@@ -152,7 +158,7 @@ describe("useTherapistChat", () => {
 			},
 		);
 
-		const { result } = renderHook(() => useTherapistChat("session-123"));
+		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 		completeGreetingStagger();
 
 		act(() => {
@@ -171,7 +177,7 @@ describe("useTherapistChat", () => {
 			},
 		);
 
-		const { result } = renderHook(() => useTherapistChat("session-123"));
+		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 		completeGreetingStagger();
 
 		act(() => {
@@ -189,7 +195,7 @@ describe("useTherapistChat", () => {
 			},
 		);
 
-		const { result } = renderHook(() => useTherapistChat("session-123"));
+		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 		completeGreetingStagger();
 
 		act(() => {
@@ -207,7 +213,7 @@ describe("useTherapistChat", () => {
 			},
 		);
 
-		const { result } = renderHook(() => useTherapistChat("session-123"));
+		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 		completeGreetingStagger();
 
 		act(() => {
@@ -225,7 +231,7 @@ describe("useTherapistChat", () => {
 			},
 		);
 
-		const { result } = renderHook(() => useTherapistChat("session-123"));
+		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 		completeGreetingStagger();
 
 		act(() => {
@@ -243,7 +249,7 @@ describe("useTherapistChat", () => {
 			},
 		);
 
-		const { result } = renderHook(() => useTherapistChat("session-123"));
+		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 		completeGreetingStagger();
 
 		act(() => {
@@ -261,7 +267,7 @@ describe("useTherapistChat", () => {
 	});
 
 	it("does not send when sessionId is empty", () => {
-		const { result } = renderHook(() => useTherapistChat(""));
+		const { result } = renderHook(() => useTherapistChat(""), { wrapper });
 
 		act(() => {
 			result.current.sendMessage("Hello");
@@ -271,7 +277,7 @@ describe("useTherapistChat", () => {
 	});
 
 	it("does not send when message is empty", () => {
-		const { result } = renderHook(() => useTherapistChat("session-123"));
+		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
 		act(() => {
 			result.current.sendMessage(undefined);
@@ -312,7 +318,7 @@ describe("useTherapistChat", () => {
 				},
 			);
 
-			const { result } = renderHook(() => useTherapistChat("session-123"));
+			const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
 			// Already 24 user messages, send one more to reach 25
 			act(() => {
@@ -323,7 +329,7 @@ describe("useTherapistChat", () => {
 		});
 
 		it("does not set isConfidenceReady when user message count is below threshold", () => {
-			const { result } = renderHook(() => useTherapistChat("session-123"));
+			const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 			completeGreetingStagger();
 
 			mockMutate.mockImplementation(
@@ -341,7 +347,7 @@ describe("useTherapistChat", () => {
 		});
 
 		it("exposes progressPercent based on message count", () => {
-			const { result } = renderHook(() => useTherapistChat("session-123"));
+			const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 			completeGreetingStagger();
 
 			// No user messages → 0%

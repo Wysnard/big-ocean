@@ -6,49 +6,23 @@
  * Story 10.4: Integrated steering — computeFacetMetrics + computeSteeringTarget on every message.
  * Story 10.5: Advisory lock for concurrent message prevention, threshold consolidation, nearingEnd flag.
  *
- * Pipeline: acquire advisory lock → validate session (inside lock) → save user msg → get messages → extract previousDomain
- *           → [cold start?] compute steering from greeting seed or evidence metrics
- *           → [post-cold-start] conversanalyzer → save evidence → re-fetch evidence → compute metrics → compute steering
- *           → call Nerin with targetDomain + targetFacet + nearingEnd → save assistant msg with steering → increment count → release lock → return
+ * Pipeline: acquire advisory lock → validate session (inside lock) → save user msg
+ *           → runNerinPipeline (ConversAnalyzer → evidence → steering → Nerin → save assistant msg → increment count)
+ *           → release lock → return
  */
 
 import {
 	AppConfig,
-	AssessmentMessageRepository,
 	AssessmentSessionRepository,
-	aggregateDomainDistribution,
-	type ConversanalyzerOutput,
-	ConversanalyzerRepository,
-	ConversationEvidenceRepository,
 	CostGuardRepository,
-	calculateCost,
-	computeDomainStreak,
-	computeFacetMetrics,
-	computeFinalWeight,
-	computeSteeringTarget,
-	type DomainMessage,
-	type FacetName,
-	GREETING_MESSAGES,
-	getUTCDateKey,
-	type IntentType,
-	type LifeDomain,
 	LoggerRepository,
-	type MicroIntent,
-	NerinAgentRepository,
-	realizeMicroIntent,
 	SessionCompletedError,
 	SessionNotFound,
 } from "@workspace/domain";
-import { Effect, Schedule } from "effect";
+import { Effect } from "effect";
+import { runNerinPipeline } from "./nerin-pipeline";
 
-/** Max user messages that count as cold start: 1 greeting + 1 opening question = 2 assistant msgs before user replies */
-const COLD_START_USER_MSG_THRESHOLD = GREETING_MESSAGES.length + 1;
-
-/** Per-message evidence cap — keep top 5 by finalWeight (Story 18-3, Pattern 6) */
-export const PER_MESSAGE_EVIDENCE_CAP = 5;
-
-/** Session-level evidence cap — skip ConversAnalyzer when reached (Story 18-3) */
-export const SESSION_EVIDENCE_CAP = 80;
+export { PER_MESSAGE_EVIDENCE_CAP, SESSION_EVIDENCE_CAP } from "./nerin-pipeline";
 
 export interface SendMessageInput {
 	readonly sessionId: string;
@@ -78,11 +52,7 @@ export const sendMessage = (input: SendMessageInput) =>
 	Effect.gen(function* () {
 		const config = yield* AppConfig;
 		const sessionRepo = yield* AssessmentSessionRepository;
-		const messageRepo = yield* AssessmentMessageRepository;
 		const logger = yield* LoggerRepository;
-		const nerin = yield* NerinAgentRepository;
-		const conversanalyzer = yield* ConversanalyzerRepository;
-		const evidenceRepo = yield* ConversationEvidenceRepository;
 		const costGuard = yield* CostGuardRepository;
 
 		// 1. Acquire advisory lock FIRST — prevents concurrent messages and TOCTOU races (Story 10.5)
@@ -150,284 +120,12 @@ export const sendMessage = (input: SendMessageInput) =>
 					messageLength: input.message.length,
 				});
 
-				// 5. Save user message (capture messageId for evidence FK)
-				const savedUserMessage = yield* messageRepo.saveMessage(
-					input.sessionId,
-					"user",
-					input.message,
-					input.userId,
-				);
-				const messageId = savedUserMessage.id;
-
-				// 6. Get all messages for context (includes the just-saved user message)
-				const previousMessages = yield* messageRepo.getMessages(input.sessionId);
-
-				// 7. Map DB entities to domain messages
-				const domainMessages: DomainMessage[] = previousMessages.map((msg) => ({
-					id: msg.id,
-					role: msg.role,
-					content: msg.content,
-				}));
-
-				// 8. Extract previousDomain from raw DB entities (before mapping to DomainMessage)
-				const userMessageCount = previousMessages.filter((m) => m.role === "user").length;
-				let previousDomain: LifeDomain | null = null;
-				for (let i = previousMessages.length - 1; i >= 0; i--) {
-					const msg = previousMessages[i];
-					if (msg !== undefined && msg.role === "assistant" && msg.targetDomain != null) {
-						previousDomain = msg.targetDomain;
-						break;
-					}
-				}
-
-				// 8a. Compute domain streak from assistant messages (Story 2.3 / IC-2)
-				const assistantMessages = previousMessages
-					.filter((m) => m.role === "assistant")
-					.map((m) => ({ targetDomain: m.targetDomain ?? null }));
-				const domainStreak = computeDomainStreak(assistantMessages);
-
-				// 9. Steering computation — runs on every message (cold start + post-cold-start)
-				let targetDomain: LifeDomain;
-				let targetFacet: FacetName;
-				let bestPriority = 0;
-				let coveredFacets = "0/30";
-				let metricsMapSize = 0;
-				let analyzerTokenUsage: { input: number; output: number } | null = null;
-
-				if (userMessageCount > COLD_START_USER_MSG_THRESHOLD) {
-					// Post-cold-start: conversanalyzer → save evidence → re-fetch → compute metrics → steering
-
-					// Query existing evidence for domain distribution
-					const existingEvidence = yield* evidenceRepo.findBySession(input.sessionId);
-
-					// Session-level evidence cap — skip ConversAnalyzer when reached (Story 18-3)
-					let allEvidence = existingEvidence;
-					if (existingEvidence.length >= SESSION_EVIDENCE_CAP) {
-						logger.info("Session evidence cap reached, skipping ConversAnalyzer", {
-							sessionId: input.sessionId,
-							evidenceCount: existingEvidence.length,
-							cap: SESSION_EVIDENCE_CAP,
-						});
-					} else {
-						const domainDistribution = aggregateDomainDistribution(existingEvidence);
-
-						// Build recent messages (last 6)
-						const recentMessages: DomainMessage[] = domainMessages.slice(-6);
-
-						// Conversanalyzer call — non-fatal (retry once, then skip per AC #6)
-						const evidenceResult = yield* conversanalyzer
-							.analyze({
-								message: input.message,
-								recentMessages,
-								domainDistribution,
-							})
-							.pipe(
-								Effect.retry(Schedule.recurs(2)),
-								Effect.catchAll((error) =>
-									Effect.sync(() => {
-										logger.warn("ConversAnalyzer failed after 3 attempts, skipping", {
-											error: error.message,
-											sessionId: input.sessionId,
-											messageId,
-										});
-										return { evidence: [], tokenUsage: { input: 0, output: 0 } } as ConversanalyzerOutput;
-									}),
-								),
-							);
-
-						// Capture analyzer token usage for cost tracking (Story 10.6)
-						analyzerTokenUsage = evidenceResult.tokenUsage;
-
-						// Per-message cap: sort by finalWeight descending, keep top 5 (Story 18-3, Pattern 6)
-						const sortedEvidence = [...evidenceResult.evidence].sort(
-							(a, b) =>
-								computeFinalWeight(b.strength, b.confidence) - computeFinalWeight(a.strength, a.confidence),
-						);
-						const cappedEvidence = sortedEvidence.slice(0, PER_MESSAGE_EVIDENCE_CAP);
-
-						// Re-fetch ALL evidence only when new evidence was saved; else reuse existing
-						if (cappedEvidence.length > 0) {
-							yield* evidenceRepo.save(
-								cappedEvidence.map((e) => ({
-									...e,
-									sessionId: input.sessionId,
-									messageId,
-								})),
-							);
-
-							logger.info("Conversanalyzer complete", {
-								sessionId: input.sessionId,
-								evidenceCount: cappedEvidence.length,
-								tokenUsage: evidenceResult.tokenUsage,
-							});
-
-							allEvidence = yield* evidenceRepo.findBySession(input.sessionId);
-						}
-					}
-
-					const metrics = computeFacetMetrics(allEvidence);
-					const steering = computeSteeringTarget(metrics, previousDomain);
-					targetDomain = steering.targetDomain;
-					targetFacet = steering.targetFacet;
-					bestPriority = steering.bestPriority;
-					metricsMapSize = metrics.size;
-					let coveredCount = 0;
-					for (const [, m] of metrics) {
-						if (m.confidence > 0.3) coveredCount++;
-					}
-					coveredFacets = `${coveredCount}/30`;
-				} else {
-					// Cold start: greeting seed from pool
-					const steering = computeSteeringTarget(new Map(), null, undefined, GREETING_MESSAGES.length);
-					targetDomain = steering.targetDomain;
-					targetFacet = steering.targetFacet;
-				}
-
-				// 10. Compute nearingEnd for farewell winding-down (Story 10.5)
-				const nearingEnd = userMessageCount >= config.freeTierMessageThreshold - 3;
-
-				// 10a. Extract recent intent types from last 3 assistant messages (Story 17.2)
-				const recentIntentTypes: IntentType[] = [];
-				for (let i = previousMessages.length - 1; i >= 0 && recentIntentTypes.length < 3; i--) {
-					const msg = previousMessages[i];
-					if (
-						msg !== undefined &&
-						msg.role === "assistant" &&
-						"intentType" in msg &&
-						msg.intentType != null
-					) {
-						recentIntentTypes.unshift(msg.intentType as IntentType);
-					}
-				}
-
-				// 10b. Realize micro-intent from steering target (Story 17.2)
-				const microIntent: MicroIntent = realizeMicroIntent({
-					targetFacet,
-					targetDomain,
-					previousDomain,
-					domainStreak,
-					turnIndex: userMessageCount,
-					nearingEnd,
-					recentIntentTypes,
-				});
-
-				// Compute topicTransitionsPerFiveTurns from recent assistant messages
-				const recentDomains: LifeDomain[] = [];
-				for (const msg of previousMessages) {
-					if (msg.role === "assistant" && msg.targetDomain != null) {
-						recentDomains.push(msg.targetDomain);
-					}
-				}
-				const lastFiveDomains = recentDomains.slice(-5);
-				let topicTransitionsPerFiveTurns = 0;
-				for (let i = 1; i < lastFiveDomains.length; i++) {
-					if (lastFiveDomains[i] !== lastFiveDomains[i - 1]) {
-						topicTransitionsPerFiveTurns++;
-					}
-				}
-
-				logger.info("Steering computed", {
+				// 5. Run the shared Nerin pipeline (ConversAnalyzer → steering → Nerin → atomic save both messages → increment)
+				return yield* runNerinPipeline({
 					sessionId: input.sessionId,
-					targetFacet,
-					targetDomain,
-					previousDomain,
-					userMessageCount,
-					coveredFacets,
-					metricsMapSize,
-					bestPriority,
-					nearingEnd,
-					domainStreak,
-					intentType: microIntent.intent,
-					topicTransitionsPerFiveTurns,
-					questionsPerAssistantTurn: 1,
+					userId: input.userId,
+					userMessage: input.message,
 				});
-
-				// 11. Call Nerin with steering + microIntent + nearingEnd (Story 17.2)
-				const result = yield* nerin
-					.invoke({
-						sessionId: input.sessionId,
-						messages: domainMessages,
-						targetDomain,
-						targetFacet,
-						nearingEnd,
-						microIntent,
-					})
-					.pipe(
-						Effect.tapError((error) =>
-							Effect.sync(() =>
-								logger.error("Nerin invocation failed", {
-									errorTag: error._tag,
-									sessionId: input.sessionId,
-									message: error.message,
-								}),
-							),
-						),
-					);
-
-				// 11a. Cost tracking — compute and record cost (Story 10.6)
-				const nerinCost = calculateCost(result.tokenCount.input, result.tokenCount.output);
-				const analyzerCost = analyzerTokenUsage
-					? calculateCost(analyzerTokenUsage.input, analyzerTokenUsage.output)
-					: { totalCents: 0 };
-				const totalCostCents = nerinCost.totalCents + analyzerCost.totalCents;
-
-				if (totalCostCents > 0) {
-					yield* costGuard.incrementDailyCost(costKey, totalCostCents).pipe(
-						Effect.catchAll((err) =>
-							Effect.sync(() => {
-								logger.error("Failed to increment daily cost (non-fatal)", {
-									error: err.message,
-									sessionId: input.sessionId,
-									totalCostCents,
-								});
-							}),
-						),
-					);
-				}
-
-				logger.info("Cost tracked", {
-					sessionId: input.sessionId,
-					costKey,
-					nerinCostCents: nerinCost.totalCents,
-					analyzerCostCents: analyzerCost.totalCents,
-					totalCostCents,
-					dateKey: getUTCDateKey(),
-				});
-
-				// 12. Save assistant message with steering targets + intentType (Story 17.2)
-				yield* messageRepo.saveMessage(
-					input.sessionId,
-					"assistant",
-					result.response,
-					undefined,
-					targetDomain,
-					targetFacet,
-					microIntent.intent,
-				);
-
-				// 13. Increment message_count atomically and get new count
-				const messageCount = yield* sessionRepo.incrementMessageCount(input.sessionId);
-
-				// 14. Compute isFinalTurn using freeTierMessageThreshold (single source of truth)
-				const isFinalTurn = messageCount >= config.freeTierMessageThreshold;
-
-				// 15. Transition session to "finalizing" on final turn (Story 11.1)
-				if (isFinalTurn) {
-					yield* sessionRepo.updateSession(input.sessionId, { status: "finalizing" });
-				}
-
-				logger.info("Message processed", {
-					sessionId: input.sessionId,
-					responseLength: result.response.length,
-					tokenCount: result.tokenCount,
-					messageCount,
-					isFinalTurn,
-				});
-
-				return {
-					response: result.response,
-					isFinalTurn,
-				};
 			}),
 		);
 	});

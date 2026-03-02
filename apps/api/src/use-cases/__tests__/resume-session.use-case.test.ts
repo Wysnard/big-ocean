@@ -1,7 +1,8 @@
 /**
  * Resume Session Use Case Tests
  *
- * Verifies session ownership behavior for linked vs anonymous sessions.
+ * Verifies session ownership behavior for linked vs anonymous sessions,
+ * and orphan user message retry via Nerin pipeline.
  */
 
 import {
@@ -22,6 +23,9 @@ const mockSessionRepo = {
 	createSession: vi.fn(),
 	getSession: vi.fn(),
 	updateSession: vi.fn(),
+	incrementMessageCount: vi.fn(),
+	acquireSessionLock: vi.fn(),
+	releaseSessionLock: vi.fn(),
 };
 
 const mockMessageRepo = {
