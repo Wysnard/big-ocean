@@ -55,6 +55,7 @@ export const ResumeSessionResponseSchema = S.Struct({
 		agreeableness: S.Number,
 		neuroticism: S.Number,
 	}),
+	status: S.Literal("active", "paused", "finalizing", "completed"),
 });
 
 /**

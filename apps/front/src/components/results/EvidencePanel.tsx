@@ -4,13 +4,13 @@
  * EvidencePanel Component (Story 12.2)
  *
  * Panel showing all evidence quotes for a selected facet.
- * Each quote displays highlighted text, confidence badge, and "Jump to Message" button.
+ * Each quote displays highlighted text and confidence badge.
  */
 
 import type { SavedFacetEvidence } from "@workspace/contracts";
 import type { FacetName, TraitName } from "@workspace/domain";
 import { getTraitColor, TRAIT_TO_FACETS, toFacetDisplayName } from "@workspace/domain";
-import { MessageCircle, X } from "lucide-react";
+import { X } from "lucide-react";
 import { getSignalBadge } from "./evidence-utils";
 
 export interface HighlightRange {
@@ -31,21 +31,10 @@ function getParentTrait(facetName: FacetName): TraitName | undefined {
 interface EvidencePanelProps {
 	facetName: FacetName;
 	evidence: SavedFacetEvidence[];
-	onJumpToMessage: (
-		messageId: string,
-		range: HighlightRange,
-		color: string,
-		confidence: number,
-	) => void;
 	onClose: () => void;
 }
 
-export function EvidencePanel({
-	facetName,
-	evidence,
-	onJumpToMessage,
-	onClose,
-}: EvidencePanelProps) {
+export function EvidencePanel({ facetName, evidence, onClose }: EvidencePanelProps) {
 	const parentTrait = getParentTrait(facetName);
 	const traitColor = parentTrait ? getTraitColor(parentTrait) : "var(--primary)";
 
@@ -81,24 +70,11 @@ export function EvidencePanel({
 					return (
 						<div key={ev.id} className="rounded-lg bg-muted/50 p-3">
 							<p className="text-xs italic text-foreground/80 mb-2">&ldquo;{ev.quote}&rdquo;</p>
-							<div className="flex items-center justify-between">
-								<span
-									className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${badge.className}`}
-								>
-									{badge.label}
-								</span>
-								<button
-									type="button"
-									data-testid="jump-to-message"
-									onClick={() =>
-										onJumpToMessage(ev.assessmentMessageId, ev.highlightRange, traitColor, ev.confidence)
-									}
-									className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground motion-safe:transition-colors min-h-[44px] min-w-[44px] justify-center"
-								>
-									<MessageCircle className="w-3.5 h-3.5" />
-									<span>Jump to Message</span>
-								</button>
-							</div>
+							<span
+								className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${badge.className}`}
+							>
+								{badge.label}
+							</span>
 						</div>
 					);
 				})}

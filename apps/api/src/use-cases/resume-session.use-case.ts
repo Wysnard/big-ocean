@@ -39,6 +39,7 @@ export interface ResumeSessionOutput {
 	};
 	readonly messages: readonly AssessmentMessageEntity[];
 	readonly freeTierMessageThreshold: number;
+	readonly status: string;
 }
 
 /**
@@ -129,5 +130,6 @@ export const resumeSession = (input: ResumeSessionInput) =>
 			confidence: traitConfidence,
 			messages,
 			freeTierMessageThreshold: config.freeTierMessageThreshold,
+			status: session.status,
 		};
 	});

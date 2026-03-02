@@ -128,6 +128,7 @@ export const ResumeSessionResponseSchema = S.Struct({
 		neuroticism: S.Number,
 	}),
 	freeTierMessageThreshold: S.Number,
+	status: S.Literal("active", "paused", "finalizing", "completed"),
 });
 
 /**

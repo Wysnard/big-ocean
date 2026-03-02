@@ -2,8 +2,7 @@
  * Assessment Card Component (Story 7.13)
  *
  * Displays a single assessment session summary.
- * Completion status is derived from messageCount >= freeTierMessageThreshold,
- * NOT from the stored status field (which is never set to "completed").
+ * Completion status is derived from the session's business status field.
  *
  * Even completed assessments show "Keep Exploring" — users can always
  * continue the conversation with Nerin.
@@ -26,6 +25,7 @@ import { GeometricSignature } from "../ocean-shapes/GeometricSignature";
 interface AssessmentCardProps {
 	id: string;
 	createdAt: string;
+	status: string;
 	messageCount: number;
 	freeTierMessageThreshold: number;
 	oceanCode5: string | null;
@@ -45,13 +45,14 @@ function formatDate(dateString: string): string {
 export function AssessmentCard({
 	id,
 	createdAt,
+	status,
 	messageCount,
 	freeTierMessageThreshold,
 	oceanCode5,
 	archetypeName,
 	className,
 }: AssessmentCardProps) {
-	const isCompleted = messageCount >= freeTierMessageThreshold;
+	const isCompleted = status === "completed";
 	const progress = Math.min(Math.round((messageCount / freeTierMessageThreshold) * 100), 100);
 
 	return (

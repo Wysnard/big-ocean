@@ -92,6 +92,7 @@ CREATE TABLE "assessment_message" (
 	"content" text NOT NULL,
 	"target_domain" "evidence_domain",
 	"target_bigfive_facet" "bigfive_facet_name",
+	"intent_type" text,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 
@@ -106,17 +107,22 @@ CREATE TABLE "assessment_results" (
 );
 
 -- ============================================================================
--- Evidence Tables (Story 9.1 — two-tier: conversation + finalization)
+-- Evidence Tables (Story 18-1 — v2: deviation/strength/confidence enums)
 -- ============================================================================
+
+CREATE TYPE "public"."evidence_strength" AS ENUM ('weak', 'moderate', 'strong');
+CREATE TYPE "public"."evidence_confidence" AS ENUM ('low', 'medium', 'high');
 
 CREATE TABLE "conversation_evidence" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"assessment_session_id" uuid NOT NULL,
 	"assessment_message_id" uuid NOT NULL,
 	"bigfive_facet" "bigfive_facet_name" NOT NULL,
-	"score" smallint NOT NULL CHECK (score >= 0 AND score <= 20),
-	"confidence" numeric(4,3) NOT NULL CHECK (confidence >= 0 AND confidence <= 1),
+	"deviation" smallint NOT NULL CHECK (deviation >= -3 AND deviation <= 3),
+	"strength" "evidence_strength" NOT NULL,
+	"confidence" "evidence_confidence" NOT NULL,
 	"domain" "evidence_domain" NOT NULL,
+	"note" text NOT NULL,
 	"created_at" timestamp DEFAULT now()
 );
 
@@ -197,6 +203,25 @@ CREATE TABLE "portraits" (
 );
 
 -- ============================================================================
+-- Portrait Rating Enums & Table (Story 19-2)
+-- ============================================================================
+
+CREATE TYPE "public"."portrait_type" AS ENUM('teaser', 'full');
+CREATE TYPE "public"."portrait_rating" AS ENUM('up', 'down');
+CREATE TYPE "public"."depth_signal" AS ENUM('rich', 'moderate', 'thin');
+
+CREATE TABLE "portrait_ratings" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" text NOT NULL,
+	"assessment_session_id" uuid NOT NULL,
+	"portrait_type" "portrait_type" NOT NULL,
+	"rating" "portrait_rating" NOT NULL,
+	"depth_signal" "depth_signal" NOT NULL,
+	"evidence_count" integer NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL
+);
+
+-- ============================================================================
 -- Profile Access Log Table (Story 15.1)
 -- ============================================================================
 
@@ -240,6 +265,9 @@ CREATE UNIQUE INDEX "purchase_events_polar_checkout_id_unique" ON "purchase_even
 -- Portraits indexes (Story 13.3)
 CREATE INDEX "portraits_assessment_result_id_idx" ON "portraits" ("assessment_result_id");
 CREATE UNIQUE INDEX "portraits_result_tier_unique" ON "portraits" ("assessment_result_id", "tier");
+
+-- Portrait ratings indexes (Story 19-2)
+CREATE INDEX "portrait_ratings_session_id_idx" ON "portrait_ratings" ("assessment_session_id");
 
 -- Profile access log indexes (Story 15.1)
 CREATE INDEX "profile_access_log_profile_created_idx" ON "profile_access_log" ("profile_id", "created_at");
@@ -361,3 +389,10 @@ ALTER TABLE "relationship_analyses" ADD CONSTRAINT "relationship_analyses_user_a
 
 ALTER TABLE "relationship_analyses" ADD CONSTRAINT "relationship_analyses_user_b_id_user_id_fk"
 	FOREIGN KEY ("user_b_id") REFERENCES "user"("id");
+
+-- Portrait ratings constraints (Story 19-2)
+ALTER TABLE "portrait_ratings" ADD CONSTRAINT "portrait_ratings_user_id_user_id_fk"
+	FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE;
+
+ALTER TABLE "portrait_ratings" ADD CONSTRAINT "portrait_ratings_assessment_session_id_assessment_session_id_fk"
+	FOREIGN KEY ("assessment_session_id") REFERENCES "assessment_session"("id") ON DELETE CASCADE;

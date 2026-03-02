@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ASSESSMENT_MESSAGE_MAX_LENGTH } from "@workspace/domain";
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import { Button } from "@workspace/ui/components/button";
@@ -653,22 +653,32 @@ function ChatContent({
 				</div>
 
 				{/* Input Area — fades on farewell / completion (Story 7.18) */}
-				<div
-					className={cn(
-						(isFarewellReceived || isCompleted) && "opacity-0 pointer-events-none",
-						isFarewellReceived && "motion-safe:transition-opacity motion-safe:duration-300",
-					)}
-				>
-					<ChatInputBar
-						onSend={onSend}
-						isLoading={isLoading}
-						isCompleted={isCompleted}
-						isFarewellReceived={isFarewellReceived}
-						isResuming={isResuming}
-						placeholder={inputPlaceholder}
-						onFocus={onInputFocus}
-					/>
-				</div>
+				{isCompleted ? (
+					<div className="flex justify-center py-4 px-4">
+						<Button asChild variant="outline" className="min-h-11">
+							<Link to="/results/$assessmentSessionId" params={{ assessmentSessionId: sessionId }}>
+								View Results
+							</Link>
+						</Button>
+					</div>
+				) : (
+					<div
+						className={cn(
+							isFarewellReceived &&
+								"opacity-0 pointer-events-none motion-safe:transition-opacity motion-safe:duration-300",
+						)}
+					>
+						<ChatInputBar
+							onSend={onSend}
+							isLoading={isLoading}
+							isCompleted={isCompleted}
+							isFarewellReceived={isFarewellReceived}
+							isResuming={isResuming}
+							placeholder={inputPlaceholder}
+							onFocus={onInputFocus}
+						/>
+					</div>
+				)}
 			</div>
 		</>
 	);

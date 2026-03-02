@@ -89,6 +89,7 @@ function ProfilePage() {
 						<AssessmentCard
 							id={session.id}
 							createdAt={String(session.createdAt)}
+							status={session.status}
 							messageCount={session.messageCount}
 							freeTierMessageThreshold={data?.freeTierMessageThreshold ?? 0}
 							oceanCode5={session.oceanCode5}

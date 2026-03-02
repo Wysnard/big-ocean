@@ -321,6 +321,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 						),
 						confidence: result.confidence,
 						freeTierMessageThreshold: result.freeTierMessageThreshold,
+						status: result.status as "active" | "paused" | "finalizing" | "completed",
 					};
 				}),
 			);

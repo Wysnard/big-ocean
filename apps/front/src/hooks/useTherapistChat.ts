@@ -284,7 +284,7 @@ export function useTherapistChat(sessionId: string) {
 		messages,
 		traits,
 		isLoading,
-		isCompleted: userMessageCount >= FREE_TIER_THRESHOLD,
+		isCompleted: resumeData?.status === "completed",
 		errorMessage,
 		errorType,
 		clearError,

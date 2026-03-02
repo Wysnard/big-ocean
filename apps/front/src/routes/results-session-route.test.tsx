@@ -42,7 +42,6 @@ vi.mock("@/hooks/use-auth", () => ({
 
 vi.mock("@/hooks/use-assessment", () => ({
 	useGetResults: (...args: unknown[]) => mockUseGetResults(...args),
-	useConversationTranscript: () => ({ data: null, isLoading: false }),
 	getResultsQueryOptions: (sessionId: string) => ({
 		queryKey: ["assessment", "results", sessionId],
 		queryFn: vi.fn(),

@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 /**
  * Golden Path Journey
  *
- * Landing → Chat → Farewell → Auth Gate Sign-up → Finalization Wait Screen → Results → Share → Public Profile
+ * Landing → Chat → Farewell → Auth Gate Sign-up → Finalization Wait Screen → Results → Share → Public Profile → Continue Chat (read-only) → View Results → Profile
  *
  * Single long user journey exercising the core happy path.
  * Uses data-testid and data-slot selectors — never matches on LLM output text.
@@ -11,7 +11,7 @@ import { expect, test } from "@playwright/test";
  * Story 11.1: After auth gate signup, redirects to /finalize/$sessionId wait screen
  * which triggers generate-results and auto-redirects to results on completion.
  */
-test("golden path: landing → chat → signup → results → share → public profile", async ({
+test("golden path: landing → chat → signup → results → share → public profile → continue chat → profile", async ({
 	page,
 }) => {
 	test.setTimeout(90_000); // Long journey — multiple API calls, auth, navigation
@@ -153,5 +153,48 @@ test("golden path: landing → chat → signup → results → share → public 
 	await test.step("assert public profile elements", async () => {
 		await page.getByTestId("archetype-name").waitFor({ state: "visible" });
 		await page.getByTestId("public-profile-cta").waitFor({ state: "visible" });
+	});
+
+	await test.step("navigate back to results and click Continue Chat", async () => {
+		await page.goto(`/results/${sessionId}`);
+		await page.getByTestId("archetype-hero-section").waitFor({
+			state: "visible",
+			timeout: 15_000,
+		});
+		await page.getByTestId("results-continue-chat").scrollIntoViewIfNeeded();
+		await page.getByTestId("results-continue-chat").click();
+		await page.waitForURL(/\/chat\?sessionId=/, { timeout: 10_000 });
+	});
+
+	await test.step("chat page shows read-only conversation with View Results link", async () => {
+		// Conversation messages are visible
+		await page.locator("[data-slot='chat-bubble']").first().waitFor({ state: "visible" });
+
+		// Input bar is NOT visible (replaced by View Results link for completed sessions)
+		await expect(page.locator("[data-slot='chat-input']")).not.toBeVisible();
+
+		// View Results link is visible
+		const viewResultsLink = page.getByRole("link", { name: "View Results" });
+		await expect(viewResultsLink).toBeVisible();
+
+		// Click View Results to navigate back to results
+		await viewResultsLink.click();
+		await page.waitForURL(/\/results\//, { timeout: 10_000 });
+		await page.getByTestId("archetype-hero-section").waitFor({
+			state: "visible",
+			timeout: 15_000,
+		});
+	});
+
+	await test.step("profile page shows completed assessment card", async () => {
+		await page.goto("/profile");
+		await page.locator("[data-slot='assessment-card']").waitFor({
+			state: "visible",
+			timeout: 10_000,
+		});
+		await expect(
+			page.locator("[data-slot='assessment-card'][data-status='completed']"),
+		).toBeVisible();
+		await expect(page.locator("[data-slot='status-badge']")).toContainText("Complete");
 	});
 });

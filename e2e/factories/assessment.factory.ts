@@ -155,20 +155,38 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 			],
 		);
 
-		// 2. Insert 30 conversation_evidence rows (one per facet, Story 9.1 schema)
+		// 2. Insert 30 conversation_evidence rows (one per facet, v2 schema)
+		const strengths = ["weak", "moderate", "strong"] as const;
+		const confidences = ["low", "medium", "high"] as const;
 		const facetScores: { facet: string; score: number; confidence: string }[] = [];
 		for (let i = 0; i < ALL_FACETS.length; i++) {
 			const facet = ALL_FACETS[i];
-			const score = 10 + Math.floor(Math.random() * 8); // 10-17 range (0-20 scale)
-			const confidence = (0.6 + Math.random() * 0.3).toFixed(3); // 0.600-0.899
+			const deviation = Math.floor(Math.random() * 5) - 2; // -2 to 2
+			const strength = strengths[i % 3];
+			const confidence = confidences[Math.min(2, Math.floor(i / 10))];
 			const domain = domains[i % domains.length];
-			facetScores.push({ facet, score, confidence });
+			// Keep facetScores for downstream assessment_results computation
+			const score = 10 + deviation + 2; // map deviation to 0-20ish range
+			facetScores.push({
+				facet,
+				score,
+				confidence: confidence === "high" ? "0.850" : confidence === "medium" ? "0.700" : "0.550",
+			});
 
 			await client.query(
 				`INSERT INTO conversation_evidence
-				 (assessment_session_id, assessment_message_id, bigfive_facet, score, confidence, domain, created_at)
-				 VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-				[sessionId, userMsgId, facet, score, confidence, domain],
+				 (assessment_session_id, assessment_message_id, bigfive_facet, deviation, strength, confidence, domain, note, created_at)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
+				[
+					sessionId,
+					userMsgId,
+					facet,
+					deviation,
+					strength,
+					confidence,
+					domain,
+					`Seed evidence for ${facet}`,
+				],
 			);
 		}
 

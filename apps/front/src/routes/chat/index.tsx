@@ -113,18 +113,12 @@ export const Route = createFileRoute("/chat/")({
 					}
 
 					// Story 11.1: Re-entry routing based on session status
-					// AC5: active/paused → stay on /chat (fallthrough), finalizing → wait screen, completed → results
+					// AC5: active/paused/completed → stay on /chat (fallthrough), finalizing → wait screen
 					const currentSession = data.sessions?.find((s: { id: string }) => s.id === search.sessionId);
 					if (currentSession) {
 						if (currentSession.status === "finalizing") {
 							throw redirect({
 								to: "/finalize/$assessmentSessionId",
-								params: { assessmentSessionId: search.sessionId },
-							});
-						}
-						if (currentSession.status === "completed") {
-							throw redirect({
-								to: "/results/$assessmentSessionId",
 								params: { assessmentSessionId: search.sessionId },
 							});
 						}

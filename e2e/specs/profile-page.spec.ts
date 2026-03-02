@@ -9,8 +9,8 @@ import { expect, test } from "@playwright/test";
  * 2. Auth user with completed assessment → profile → results page
  *
  * The E2E Docker compose sets FREE_TIER_MESSAGE_THRESHOLD=2.
- * Global setup seeds 1 user message via seedSessionForResults and sends
- * a second via the API, so messageCount=2 → card shows "completed".
+ * Global setup seeds a completed session via seedSessionForResults.
+ * Assessment card completion is derived from session status, not message count.
  */
 
 const AUTH_DIR = resolve(import.meta.dirname, "../.auth");
