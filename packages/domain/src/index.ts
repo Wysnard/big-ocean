@@ -371,6 +371,8 @@ export {
 } from "./utils/formula";
 // Highlight position computation (Story 11.2)
 export { computeHighlightPositions } from "./utils/highlight";
+// Steering utilities (Story 2.3)
+export { computeDomainStreak } from "./utils/steering";
 // Utility functions
 export {
 	buildChatSystemPrompt,
