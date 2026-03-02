@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-02 (refreshed)
+generated: 2026-03-02 (refreshed 3 — post 18-2 merge)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -301,7 +301,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-18: in-progress
   18-1-evidence-v2-schema-and-conversanalyzer-prompt-update: done
-  18-2-rewrite-compute-facet-metrics-for-evidence-v2: review
+  18-2-rewrite-compute-facet-metrics-for-evidence-v2: done
   18-3-rolling-evidence-budget-and-cap-enforcement: backlog
   18-4-rewrite-finalization-pipeline-with-staged-idempotency: backlog
   18-5-delete-finanalyzer-infrastructure: backlog
