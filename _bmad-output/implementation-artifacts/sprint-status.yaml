@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-02 (refreshed 4 — post 18-4 merge)
+generated: 2026-03-02 (refreshed 5 — post 18-5 & 18-6 merge, epic 18 complete)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -299,7 +299,7 @@ development_status:
   # Evidence v2 schema, rewrite facet metrics, rolling budget, finalization rewrite
   # Stories: 3.1-3.6 in epics-conversation-pipeline.md
   # ───────────────────────────────────────────────────────────────
-  epic-18: in-progress
+  epic-18: done
   18-1-evidence-v2-schema-and-conversanalyzer-prompt-update: done
   18-2-rewrite-compute-facet-metrics-for-evidence-v2: done
   18-3-rolling-evidence-budget-and-cap-enforcement: done
@@ -320,11 +320,11 @@ development_status:
 
   # ───────────────────────────────────────────────────────────────
   # PIPELINE EPIC 5: Conversation Evidence Review (Epic 20)
-  # Evidence annotations API, conversation review UI, evidence panel
+  # DEFERRED 2026-03-02 — evidence already has messageId FK;
+  # transparency UI can be built later with minimal effort.
   # Stories: 5.1-5.3 in epics-conversation-pipeline.md
   # ───────────────────────────────────────────────────────────────
-  epic-20: backlog
-  20-1-evidence-annotations-api-endpoint: backlog
-  20-2-conversation-review-ui-with-inline-annotations: backlog
-  # 20-3 removed — replaced by navigation in 20-2 (correct-course 2026-03-02)
-  epic-20-retrospective: optional
+  # epic-20: deferred
+  # 20-1-evidence-annotations-api-endpoint: deferred
+  # 20-2-conversation-review-ui-with-inline-annotations: deferred
+  # epic-20-retrospective: optional

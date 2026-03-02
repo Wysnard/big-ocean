@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
 parallelism_step: 1
-parallelism_step_name: "Finalization Pipeline Rewrite"
-baseline_commit: "d72234155a191d1c5ab4b3716bc9c34852cabb62"
+parallelism_step_name: "Kill FinAnalyzer & Portrait Update"
+baseline_commit: "e6817cdffa64cb40aa88e96d1c408ff2915d01d1"
 created: "2026-03-02"
-last_updated: "2026-03-02T3"
+last_updated: "2026-03-02"
 
 # Optional context documents discovered
 context_docs:
@@ -14,10 +14,17 @@ context_docs:
 
 # Stories in this step
 stories:
-  18-4-rewrite-finalization-pipeline-with-staged-idempotency:
+  18-5-delete-finanalyzer-infrastructure:
     status: done
     mode: "parallel"
-    notes: "depends on 18-3 (done) — READY"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/108"
-    dev_branch: "feat/story-18-4-rewrite-finalization-pipeline-with-staged-idempotency"
+    notes: "depends on 18-4 (done), blocks 20-1 — READY"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/110"
+    dev_branch: "feat/story-18-5-delete-finanalyzer-infrastructure"
+    error: null
+  18-6-update-portrait-generators-to-use-conversation-evidence:
+    status: done
+    mode: "parallel"
+    notes: "depends on 18-4 (done) — READY"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/109"
+    dev_branch: "feat/story-18-6-update-portrait-generators-to-use-conversation-evidence"
     error: null
