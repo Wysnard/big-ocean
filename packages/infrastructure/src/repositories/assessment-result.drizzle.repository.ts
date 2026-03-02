@@ -2,9 +2,9 @@
  * Assessment Result Repository Implementation (Drizzle)
  *
  * Persists final scored results from the finalization pipeline.
- * Phase 1 creates placeholder rows; Story 11.3 fills in real scores.
+ * Supports staged idempotency (scored → completed) via Story 18-4.
  *
- * Story 11.2
+ * Story 11.2, 18-4
  */
 import {
 	AssessmentResultError,
@@ -32,6 +32,7 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 							traits: input.traits,
 							domainCoverage: input.domainCoverage,
 							portrait: input.portrait,
+							stage: input.stage ?? null,
 						})
 						.returning()
 						.pipe(
@@ -104,6 +105,78 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 
 					return mapRow(row);
 				}),
+
+			upsert: (input) =>
+				Effect.gen(function* () {
+					const rows = yield* db
+						.insert(assessmentResults)
+						.values({
+							assessmentSessionId: input.assessmentSessionId,
+							facets: input.facets,
+							traits: input.traits,
+							domainCoverage: input.domainCoverage,
+							portrait: input.portrait,
+							stage: input.stage ?? null,
+						})
+						.onConflictDoUpdate({
+							target: assessmentResults.assessmentSessionId,
+							set: {
+								facets: input.facets,
+								traits: input.traits,
+								domainCoverage: input.domainCoverage,
+								portrait: input.portrait,
+								stage: input.stage ?? null,
+							},
+						})
+						.returning()
+						.pipe(
+							Effect.mapError(
+								(error) =>
+									new AssessmentResultError({
+										message: `Failed to upsert assessment result: ${error instanceof Error ? error.message : String(error)}`,
+									}),
+							),
+						);
+
+					const row = rows[0];
+					if (!row) {
+						return yield* Effect.fail(
+							new AssessmentResultError({
+								message: "No row returned from assessment result upsert",
+							}),
+						);
+					}
+
+					return mapRow(row);
+				}),
+
+			updateStage: (sessionId, stage) =>
+				Effect.gen(function* () {
+					const rows = yield* db
+						.update(assessmentResults)
+						.set({ stage })
+						.where(eq(assessmentResults.assessmentSessionId, sessionId))
+						.returning()
+						.pipe(
+							Effect.mapError(
+								(error) =>
+									new AssessmentResultError({
+										message: `Failed to update stage: ${error instanceof Error ? error.message : String(error)}`,
+									}),
+							),
+						);
+
+					const row = rows[0];
+					if (!row) {
+						return yield* Effect.fail(
+							new AssessmentResultError({
+								message: `Assessment result not found for session: ${sessionId}`,
+							}),
+						);
+					}
+
+					return mapRow(row);
+				}),
 		});
 	}),
 );
@@ -116,6 +189,7 @@ function mapRow(row: typeof assessmentResults.$inferSelect): AssessmentResultRec
 		traits: row.traits as AssessmentResultRecord["traits"],
 		domainCoverage: row.domainCoverage as AssessmentResultRecord["domainCoverage"],
 		portrait: row.portrait,
+		stage: row.stage as AssessmentResultRecord["stage"],
 		createdAt: row.createdAt as Date,
 	};
 }

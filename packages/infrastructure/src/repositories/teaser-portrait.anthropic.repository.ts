@@ -7,7 +7,7 @@
  *
  * Architecture mirrors the full portrait implementation:
  * - Prompt lives inline (not in domain)
- * - Uses FinalizationEvidenceRecord directly
+ * - Uses ConversationEvidenceRecord (Story 18-4)
  * - Shares formatting utils via portrait-prompt.utils.ts
  *
  * Story 11.5
@@ -15,10 +15,11 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import type { FacetName, TraitScoresMap } from "@workspace/domain";
+import type { ConversationEvidenceRecord } from "@workspace/domain";
 import {
 	AppConfig,
 	computeAllFacetResults,
-	type EvidenceInput,
+	FACET_TO_TRAIT,
 	type FacetScoresMap,
 	LoggerRepository,
 	NERIN_PERSONA,
@@ -31,9 +32,21 @@ import { Effect, Layer, Redacted } from "effect";
 import {
 	computeDepthSignal,
 	FACET_GLOSSARY,
-	formatEvidence,
 	formatTraitSummary,
 } from "./portrait-prompt.utils";
+
+/**
+ * Format conversation evidence (v2) for portrait prompt.
+ * Uses deviation/strength/confidence enums instead of raw score/confidence.
+ */
+function formatEvidenceV2(evidence: ReadonlyArray<ConversationEvidenceRecord>): string {
+	return evidence
+		.map((e, i) => {
+			const trait = FACET_TO_TRAIT[e.bigfiveFacet] ?? "Unknown";
+			return `${i + 1}. [${trait} → ${e.bigfiveFacet}, deviation: ${e.deviation}, strength: ${e.strength}, confidence: ${e.confidence}] "${e.note}"`;
+		})
+		.join("\n");
+}
 
 /**
  * Derive trait scores from facet scores.
@@ -218,26 +231,8 @@ export const TeaserPortraitAnthropicRepositoryLive = Layer.effect(
 			generateTeaser: (input) =>
 				Effect.tryPromise({
 					try: async () => {
-						// Map finalization evidence (v1) to EvidenceInput (v2) for formula functions
-						// TODO: Story 18-4 (kill FinAnalyzer) will remove this adapter
-						const scoringInputs: EvidenceInput[] = input.evidence.map((ev) => ({
-							bigfiveFacet: ev.bigfiveFacet,
-							deviation: Math.round(((ev.score - 10) / 10) * 3) as -3 | -2 | -1 | 0 | 1 | 2 | 3,
-							strength:
-								ev.confidence >= 0.7
-									? ("strong" as const)
-									: ev.confidence >= 0.4
-										? ("moderate" as const)
-										: ("weak" as const),
-							confidence:
-								ev.confidence >= 0.7
-									? ("high" as const)
-									: ev.confidence >= 0.4
-										? ("medium" as const)
-										: ("low" as const),
-							domain: ev.domain,
-						}));
-						const facets = computeAllFacetResults(scoringInputs);
+						// Use v2 scoring evidence directly (Story 18-4: conversation evidence is authoritative)
+						const facets = computeAllFacetResults([...input.scoringEvidence]);
 						const facetScoresMap = Object.fromEntries(
 							Object.entries(facets).map(([name, f]) => [
 								name,
@@ -247,7 +242,7 @@ export const TeaserPortraitAnthropicRepositoryLive = Layer.effect(
 
 						const traitScoresMap = deriveTraitScores(facetScoresMap);
 						const traitSummary = formatTraitSummary(facetScoresMap, traitScoresMap);
-						const evidenceFormatted = formatEvidence(input.evidence);
+						const evidenceFormatted = formatEvidenceV2(input.evidence);
 						const depthSignal = computeDepthSignal(input.scoringEvidence);
 
 						const userPrompt = `PERSONALITY DATA:

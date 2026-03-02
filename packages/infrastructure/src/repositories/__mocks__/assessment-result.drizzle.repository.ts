@@ -4,12 +4,13 @@
  *   vi.mock('@workspace/infrastructure/repositories/assessment-result.drizzle.repository')
  *
  * In-memory Map storage for assessment results.
- * Story 11.2
+ * Story 11.2, 18-4
  */
 import type {
 	AssessmentResultInput,
 	AssessmentResultRecord,
 	AssessmentResultUpdateInput,
+	ResultStage,
 } from "@workspace/domain";
 import { AssessmentResultError, AssessmentResultRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
@@ -33,6 +34,7 @@ export const _seedResult = (
 		traits: overrides?.traits ?? ({} as AssessmentResultRecord["traits"]),
 		domainCoverage: overrides?.domainCoverage ?? ({} as AssessmentResultRecord["domainCoverage"]),
 		portrait: overrides?.portrait ?? "",
+		stage: overrides?.stage ?? null,
 		createdAt: overrides?.createdAt ?? new Date(),
 	};
 	storedResults.set(sessionId, record);
@@ -46,6 +48,7 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.succeed(
 			const record: AssessmentResultRecord = {
 				...input,
 				id: `ar-${crypto.randomUUID()}`,
+				stage: input.stage ?? null,
 				createdAt: new Date(),
 			};
 			storedResults.set(input.assessmentSessionId, record);
@@ -58,7 +61,6 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.succeed(
 		},
 
 		update: (id: string, input: AssessmentResultUpdateInput) => {
-			// Find by id (stored by sessionId, so search values)
 			for (const [key, record] of storedResults) {
 				if (record.id === id) {
 					const updated: AssessmentResultRecord = { ...record, ...input };
@@ -67,6 +69,42 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.succeed(
 				}
 			}
 			return Effect.fail(new AssessmentResultError({ message: `Assessment result not found: ${id}` }));
+		},
+
+		upsert: (input: AssessmentResultInput) => {
+			const existing = storedResults.get(input.assessmentSessionId);
+			if (existing) {
+				const updated: AssessmentResultRecord = {
+					...existing,
+					facets: input.facets,
+					traits: input.traits,
+					domainCoverage: input.domainCoverage,
+					portrait: input.portrait,
+					stage: input.stage ?? null,
+				};
+				storedResults.set(input.assessmentSessionId, updated);
+				return Effect.succeed(updated);
+			}
+			const record: AssessmentResultRecord = {
+				...input,
+				id: `ar-${crypto.randomUUID()}`,
+				stage: input.stage ?? null,
+				createdAt: new Date(),
+			};
+			storedResults.set(input.assessmentSessionId, record);
+			return Effect.succeed(record);
+		},
+
+		updateStage: (sessionId: string, stage: ResultStage) => {
+			const record = storedResults.get(sessionId);
+			if (!record) {
+				return Effect.fail(
+					new AssessmentResultError({ message: `Assessment result not found for session: ${sessionId}` }),
+				);
+			}
+			const updated: AssessmentResultRecord = { ...record, stage };
+			storedResults.set(sessionId, updated);
+			return Effect.succeed(updated);
 		},
 	}),
 );

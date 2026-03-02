@@ -1,18 +1,16 @@
 /**
- * Generate Results Use Case Tests (Story 11.1 + 11.2 + 11.3 + 11.5)
+ * Generate Results Use Case Tests (Story 18-4: Staged Idempotency Rewrite)
  *
- * Tests idempotency tiers, session validation, FinAnalyzer integration,
- * highlight computation, evidence persistence, score computation,
+ * Tests staged idempotency (scored → completed), session validation,
+ * conversation evidence as authoritative source, score computation,
  * teaser portrait generation, and progress status transitions.
  */
 
 import { vi } from "vitest";
 
 // Activate mocking — Vitest auto-resolves to __mocks__ siblings
-vi.mock("@workspace/infrastructure/repositories/finanalyzer.anthropic.repository");
-vi.mock("@workspace/infrastructure/repositories/finalization-evidence.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/assessment-result.drizzle.repository");
-vi.mock("@workspace/infrastructure/repositories/assessment-message.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/conversation-evidence.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/cost-guard.redis.repository");
 vi.mock("@workspace/infrastructure/repositories/teaser-portrait.anthropic.repository");
 vi.mock("@workspace/infrastructure/repositories/portrait.drizzle.repository");
@@ -20,18 +18,13 @@ vi.mock("@workspace/infrastructure/repositories/portrait.drizzle.repository");
 import { describe, expect, it } from "@effect/vitest";
 import {
 	ALL_FACETS,
-	AssessmentMessageRepository,
 	AssessmentSessionRepository,
-	type FinalizationEvidenceRecord,
+	type ConversationEvidenceRecord,
 	FORMULA_DEFAULTS,
 	LIFE_DOMAINS,
 	LoggerRepository,
 	TRAIT_NAMES,
 } from "@workspace/domain";
-import {
-	AssessmentMessageDrizzleRepositoryLive,
-	_resetMockState as resetMessages,
-} from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
 import {
 	AssessmentResultDrizzleRepositoryLive,
 	_getStoredResults as getStoredResults,
@@ -39,26 +32,15 @@ import {
 	_seedResult as seedResult,
 } from "@workspace/infrastructure/repositories/assessment-result.drizzle.repository";
 import {
+	ConversationEvidenceDrizzleRepositoryLive,
+	_getMockRecords as getMockEvidenceRecords,
+	_resetMockState as resetConversationEvidence,
+	_seedEvidence as seedConversationEvidence,
+} from "@workspace/infrastructure/repositories/conversation-evidence.drizzle.repository";
+import {
 	CostGuardRedisRepositoryLive,
 	_resetMockState as resetCostGuard,
 } from "@workspace/infrastructure/repositories/cost-guard.redis.repository";
-import {
-	FinalizationEvidenceDrizzleRepositoryLive,
-	_getStoredEvidence as getStoredEvidence,
-	_resetMockState as resetEvidence,
-	_seedEvidence as seedEvidence,
-	_setExistsOverride as setEvidenceExists,
-} from "@workspace/infrastructure/repositories/finalization-evidence.drizzle.repository";
-// Import mock layers (Vitest replaces with __mocks__ versions)
-// Import mock helpers
-import {
-	FinanalyzerAnthropicRepositoryLive,
-	_failForCalls as failFinanalyzerForCalls,
-	_getMockCalls as getFinanalyzerCalls,
-	_resetMockState as resetFinanalyzer,
-	_setMockError as setFinanalyzerError,
-	_setMockOutput as setFinanalyzerOutput,
-} from "@workspace/infrastructure/repositories/finanalyzer.anthropic.repository";
 import {
 	_getAllPortraits as getAllPortraits,
 	PortraitDrizzleRepositoryLive,
@@ -111,42 +93,43 @@ const createTestLayer = () =>
 	Layer.mergeAll(
 		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
-		FinanalyzerAnthropicRepositoryLive,
-		FinalizationEvidenceDrizzleRepositoryLive,
 		AssessmentResultDrizzleRepositoryLive,
-		AssessmentMessageDrizzleRepositoryLive,
+		ConversationEvidenceDrizzleRepositoryLive,
 		CostGuardRedisRepositoryLive,
 		TeaserPortraitAnthropicRepositoryLive,
 		PortraitDrizzleRepositoryLive,
 	);
 
-/** Helper: seed messages and return their IDs */
-const seedMessages = (
+/** Helper: create conversation evidence records for seeding */
+const makeConversationEvidence = (
 	sessionId: string,
-	msgs: Array<{ role: "user" | "assistant"; content: string }>,
-) =>
-	Effect.gen(function* () {
-		const messageRepo = yield* AssessmentMessageRepository;
-		const savedIds: string[] = [];
-		for (const msg of msgs) {
-			const saved = yield* messageRepo.saveMessage(
-				sessionId,
-				msg.role,
-				msg.content,
-				msg.role === "user" ? "user_456" : undefined,
-			);
-			savedIds.push(saved.id);
-		}
-		return savedIds;
-	});
+	records: Array<{
+		facet: string;
+		deviation: number;
+		strength: "weak" | "moderate" | "strong";
+		confidence: "low" | "medium" | "high";
+		domain: string;
+		note: string;
+	}>,
+): ConversationEvidenceRecord[] =>
+	records.map((r) => ({
+		id: crypto.randomUUID(),
+		sessionId,
+		messageId: `msg-${crypto.randomUUID()}`,
+		bigfiveFacet: r.facet as ConversationEvidenceRecord["bigfiveFacet"],
+		deviation: r.deviation,
+		strength: r.strength,
+		confidence: r.confidence,
+		domain: r.domain as ConversationEvidenceRecord["domain"],
+		note: r.note,
+		createdAt: new Date(),
+	}));
 
-describe("generateResults Use Case", () => {
+describe("generateResults Use Case (Story 18-4)", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		resetFinanalyzer();
-		resetEvidence();
 		resetResults();
-		resetMessages();
+		resetConversationEvidence();
 		resetCostGuard();
 		resetTeaserPortrait();
 		resetPortrait();
@@ -158,7 +141,7 @@ describe("generateResults Use Case", () => {
 		mockLoggerRepo.warn.mockImplementation(() => {});
 	});
 
-	describe("Session validation (Story 11.1)", () => {
+	describe("Session validation", () => {
 		it.effect("should fail with SessionNotFound when userId doesn't match", () =>
 			Effect.gen(function* () {
 				const exit = yield* generateResults({
@@ -192,7 +175,7 @@ describe("generateResults Use Case", () => {
 		);
 	});
 
-	describe("Idempotency tier 1: already completed (Story 11.1)", () => {
+	describe("Idempotency: session already completed", () => {
 		it.effect("should return completed without side effects", () =>
 			Effect.gen(function* () {
 				mockSessionRepo.getSession.mockReturnValue(
@@ -211,67 +194,10 @@ describe("generateResults Use Case", () => {
 		);
 	});
 
-	describe("Idempotency tier 2: concurrent duplicate (Story 11.1)", () => {
-		it.effect("should return current progress when lock fails", () =>
+	describe("Idempotency: result at stage=completed", () => {
+		it.effect("should return immediately when result already at completed stage", () =>
 			Effect.gen(function* () {
-				mockSessionRepo.getSession.mockReturnValue(
-					Effect.succeed({
-						...mockFinalizingSession,
-						finalizationProgress: "analyzing",
-					}),
-				);
-				mockSessionRepo.acquireSessionLock.mockReturnValue(
-					Effect.fail({
-						_tag: "ConcurrentMessageError",
-						sessionId: "session_123",
-						message: "Lock held",
-					}),
-				);
-
-				const result = yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				expect(result).toEqual({ status: "analyzing" });
-				expect(mockSessionRepo.updateSession).not.toHaveBeenCalled();
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-	});
-
-	describe("Phase 1: FinAnalyzer integration (Story 11.2)", () => {
-		it.effect("happy path: FinAnalyzer called, evidence saved, result placeholder created", () =>
-			Effect.gen(function* () {
-				// Seed messages
-				const ids = yield* seedMessages("session_123", [
-					{ role: "user", content: "I love brainstorming new things" },
-					{ role: "assistant", content: "That sounds creative!" },
-				]);
-
-				// Configure finanalyzer to reference real message IDs
-				setFinanalyzerOutput({
-					evidence: [
-						{
-							messageId: ids[0],
-							bigfiveFacet: "imagination",
-							score: 14,
-							confidence: 0.7,
-							domain: "work",
-							rawDomain: "creative work",
-							quote: "I love brainstorming",
-						},
-						{
-							messageId: ids[1],
-							bigfiveFacet: "trust",
-							score: 13,
-							confidence: 0.6,
-							domain: "relationships",
-							rawDomain: "friends",
-							quote: "sounds creative",
-						},
-					],
-					tokenUsage: { input: 3000, output: 1500 },
-				});
+				seedResult("session_123", { stage: "completed" });
 
 				const result = yield* generateResults({
 					sessionId: "session_123",
@@ -279,698 +205,42 @@ describe("generateResults Use Case", () => {
 				});
 
 				expect(result).toEqual({ status: "completed" });
-
-				// FinAnalyzer was called with messages
-				const calls = getFinanalyzerCalls();
-				expect(calls).toHaveLength(1);
-				expect(calls[0].messages).toHaveLength(2);
-
-				// Evidence was saved
-				const evidence = getStoredEvidence();
-				expect(evidence).toHaveLength(2);
-				expect(evidence[0].bigfiveFacet).toBe("imagination");
-				expect(evidence[1].bigfiveFacet).toBe("trust");
-
-				// Assessment result was created and updated with Phase 2 scores
-				const results = getStoredResults();
-				expect(results.size).toBe(1);
-				const resultRecord = results.get("session_123");
-				expect(resultRecord).toBeDefined();
-				expect(resultRecord?.portrait).toContain("The Quiet Architecture");
-				// Phase 2 populated facets/traits (no longer empty)
-				expect(Object.keys(resultRecord?.facets ?? {})).toHaveLength(30);
-
-				// Lock was released
-				expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect(
-			"idempotency Guard 2: evidence exists, FinAnalyzer NOT called, scores still computed",
-			() =>
-				Effect.gen(function* () {
-					setEvidenceExists(true);
-					// Pre-seed assessment result (Phase 1 ran in a previous attempt)
-					const seededResult = seedResult("session_123", { id: "ar-guard2" });
-					// Pre-seed finalization evidence linked to that result
-					seedEvidence([
-						{
-							id: "fe-1",
-							assessmentMessageId: "msg-1",
-							assessmentResultId: seededResult.id,
-							bigfiveFacet: "imagination",
-							score: 14,
-							confidence: 0.7,
-							domain: "work",
-							rawDomain: "creative work",
-							quote: "test",
-							highlightStart: 0,
-							highlightEnd: 4,
-							createdAt: new Date(),
-						} as FinalizationEvidenceRecord,
-					]);
-
-					const result = yield* generateResults({
-						sessionId: "session_123",
-						authenticatedUserId: "user_456",
-					});
-
-					expect(result).toEqual({ status: "completed" });
-
-					// FinAnalyzer was NOT called
-					const calls = getFinanalyzerCalls();
-					expect(calls).toHaveLength(0);
-
-					// But Phase 2 still computed scores
-					const results = getStoredResults();
-					const resultRecord = results.get("session_123");
-					expect(Object.keys(resultRecord?.facets ?? {})).toHaveLength(30);
-					expect(Object.keys(resultRecord?.traits ?? {})).toHaveLength(5);
-
-					// Logger recorded the skip
-					expect(mockLoggerRepo.info).toHaveBeenCalledWith(
-						expect.stringContaining("Idempotency Guard 2"),
-						expect.any(Object),
-					);
-				}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("FinAnalyzer failure after retry: error propagates, lock released", () =>
-			Effect.gen(function* () {
-				yield* seedMessages("session_123", [{ role: "user", content: "test message" }]);
-
-				setFinanalyzerError("Anthropic API timeout");
-
-				const exit = yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				}).pipe(Effect.exit);
-
-				expect(exit._tag).toBe("Failure");
-				if (exit._tag === "Failure") {
-					expect(String(exit.cause)).toContain("FinanalyzerError");
-				}
-
-				// Verify retry was attempted (AC#6: retries once)
-				const calls = getFinanalyzerCalls();
-				expect(calls).toHaveLength(2); // initial call + 1 retry
-
-				// Lock was still released
-				expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("FinAnalyzer first call fails, retry succeeds: evidence saved correctly", () =>
-			Effect.gen(function* () {
-				const ids = yield* seedMessages("session_123", [
-					{ role: "user", content: "I enjoy creative problem solving" },
-				]);
-
-				// Configure: first call fails, retry succeeds
-				failFinanalyzerForCalls(1, "Transient network error");
-				setFinanalyzerOutput({
-					evidence: [
-						{
-							messageId: ids[0],
-							bigfiveFacet: "intellect",
-							score: 15,
-							confidence: 0.8,
-							domain: "work",
-							rawDomain: "engineering",
-							quote: "creative problem solving",
-						},
-					],
-					tokenUsage: { input: 2000, output: 1000 },
-				});
-
-				const result = yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				expect(result).toEqual({ status: "completed" });
-
-				// Verify 2 calls (initial failed + successful retry)
-				const calls = getFinanalyzerCalls();
-				expect(calls).toHaveLength(2);
-
-				// Evidence was saved from the successful retry
-				const evidence = getStoredEvidence();
-				expect(evidence).toHaveLength(1);
-				expect(evidence[0].bigfiveFacet).toBe("intellect");
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("invalid messageId from LLM: evidence item skipped, others saved", () =>
-			Effect.gen(function* () {
-				const ids = yield* seedMessages("session_123", [
-					{ role: "user", content: "I love problem solving" },
-				]);
-
-				setFinanalyzerOutput({
-					evidence: [
-						{
-							messageId: ids[0],
-							bigfiveFacet: "intellect",
-							score: 15,
-							confidence: 0.8,
-							domain: "work",
-							rawDomain: "engineering",
-							quote: "I love problem solving",
-						},
-						{
-							messageId: "nonexistent-id",
-							bigfiveFacet: "trust",
-							score: 12,
-							confidence: 0.5,
-							domain: "relationships",
-							rawDomain: "friends",
-							quote: "some quote",
-						},
-					],
-					tokenUsage: { input: 2000, output: 1000 },
-				});
-
-				const result = yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				expect(result).toEqual({ status: "completed" });
-
-				// Only valid evidence saved
-				const evidence = getStoredEvidence();
-				expect(evidence).toHaveLength(1);
-				expect(evidence[0].bigfiveFacet).toBe("intellect");
-
-				// Warning logged
-				expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
-					expect.stringContaining("invalid messageId"),
-					expect.objectContaining({ messageId: "nonexistent-id" }),
-				);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("highlight computation: found → positions, not found → null", () =>
-			Effect.gen(function* () {
-				const ids = yield* seedMessages("session_123", [
-					{ role: "user", content: "I really enjoy solving complex problems at work" },
-				]);
-
-				setFinanalyzerOutput({
-					evidence: [
-						{
-							messageId: ids[0],
-							bigfiveFacet: "intellect",
-							score: 16,
-							confidence: 0.8,
-							domain: "work",
-							rawDomain: "engineering",
-							quote: "solving complex problems",
-						},
-						{
-							messageId: ids[0],
-							bigfiveFacet: "achievement_striving",
-							score: 14,
-							confidence: 0.6,
-							domain: "work",
-							rawDomain: "career",
-							quote: "nonexistent quote text",
-						},
-					],
-					tokenUsage: { input: 2000, output: 1000 },
-				});
-
-				yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				const evidence = getStoredEvidence();
-				expect(evidence).toHaveLength(2);
-
-				// Quote found → positions set
-				const found = evidence.find((e) => e.bigfiveFacet === "intellect");
-				expect(found?.highlightStart).toBe(15);
-				expect(found?.highlightEnd).toBe(39);
-
-				// Quote not found → null
-				const notFound = evidence.find((e) => e.bigfiveFacet === "achievement_striving");
-				expect(notFound?.highlightStart).toBeNull();
-				expect(notFound?.highlightEnd).toBeNull();
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("messages are passed to FinAnalyzer in insertion order", () =>
-			Effect.gen(function* () {
-				const ids = yield* seedMessages("session_123", [
-					{ role: "user", content: "First message" },
-					{ role: "assistant", content: "Second message" },
-					{ role: "user", content: "Third message" },
-				]);
-
-				setFinanalyzerOutput({
-					evidence: [],
-					tokenUsage: { input: 1000, output: 500 },
-				});
-
-				yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				const calls = getFinanalyzerCalls();
-				expect(calls).toHaveLength(1);
-				const msgs = calls[0].messages;
-				expect(msgs).toHaveLength(3);
-				expect(msgs[0].content).toBe("First message");
-				expect(msgs[1].content).toBe("Second message");
-				expect(msgs[2].content).toBe("Third message");
-				expect(msgs[0].id).toBe(ids[0]);
-				expect(msgs[1].id).toBe(ids[1]);
-				expect(msgs[2].id).toBe(ids[2]);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("empty conversation: FinAnalyzer called with empty array, placeholder created", () =>
-			Effect.gen(function* () {
-				setFinanalyzerOutput({
-					evidence: [],
-					tokenUsage: { input: 500, output: 100 },
-				});
-
-				const result = yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				expect(result).toEqual({ status: "completed" });
-
-				// FinAnalyzer called with empty messages
-				const calls = getFinanalyzerCalls();
-				expect(calls).toHaveLength(1);
-				expect(calls[0].messages).toHaveLength(0);
-
-				// Assessment result created and updated with defaults (Phase 2 ran)
-				const results = getStoredResults();
-				expect(results.size).toBe(1);
-
-				// No evidence saved (empty batch — saveBatch([]) is a no-op)
-				const evidence = getStoredEvidence();
-				expect(evidence).toHaveLength(0);
-
-				// Lock was released
-				expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-	});
-
-	describe("Phase 2: Score computation (Story 11.3)", () => {
-		it.effect("happy path: evidence → scores computed → assessment_results updated", () =>
-			Effect.gen(function* () {
-				const ids = yield* seedMessages("session_123", [
-					{ role: "user", content: "I love brainstorming new things" },
-					{ role: "assistant", content: "That sounds creative!" },
-				]);
-
-				setFinanalyzerOutput({
-					evidence: [
-						{
-							messageId: ids[0],
-							bigfiveFacet: "imagination",
-							score: 14,
-							confidence: 0.7,
-							domain: "work",
-							rawDomain: "creative work",
-							quote: "brainstorming",
-						},
-						{
-							messageId: ids[1],
-							bigfiveFacet: "trust",
-							score: 13,
-							confidence: 0.6,
-							domain: "relationships",
-							rawDomain: "friends",
-							quote: "sounds creative",
-						},
-					],
-					tokenUsage: { input: 3000, output: 1500 },
-				});
-
-				yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				const results = getStoredResults();
-				const record = results.get("session_123");
-				expect(record).toBeDefined();
-
-				// All 30 facets populated
-				const facetKeys = Object.keys(record?.facets);
-				expect(facetKeys).toHaveLength(30);
-
-				// All 5 traits populated
-				const traitKeys = Object.keys(record?.traits);
-				expect(traitKeys).toHaveLength(5);
-
-				// Domain coverage populated
-				const dcKeys = Object.keys(record?.domainCoverage);
-				expect(dcKeys).toHaveLength(6);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("all 30 facets populated including defaults for missing evidence", () =>
-			Effect.gen(function* () {
-				const ids = yield* seedMessages("session_123", [
-					{ role: "user", content: "I like to explore" },
-				]);
-
-				// Only 1 facet has evidence
-				setFinanalyzerOutput({
-					evidence: [
-						{
-							messageId: ids[0],
-							bigfiveFacet: "imagination",
-							score: 16,
-							confidence: 0.9,
-							domain: "leisure",
-							rawDomain: "hobbies",
-							quote: "explore",
-						},
-					],
-					tokenUsage: { input: 1000, output: 500 },
-				});
-
-				yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				const results = getStoredResults();
-				const record = results.get("session_123");
-				const facets = record?.facets as Record<
-					string,
-					{ score: number; confidence: number; signalPower: number }
-				>;
-
-				// All 30 facets present
-				for (const facet of ALL_FACETS) {
-					expect(facets[facet]).toBeDefined();
-				}
-
-				// imagination has real evidence
-				expect(facets.imagination.confidence).toBeGreaterThan(0);
-
-				// Other 29 facets have defaults
-				expect(facets.artistic_interests.score).toBe(FORMULA_DEFAULTS.SCORE_MIDPOINT);
-				expect(facets.artistic_interests.confidence).toBe(0);
-				expect(facets.artistic_interests.signalPower).toBe(0);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("trait derivation: each trait score is mean of its 6 facets", () =>
-			Effect.gen(function* () {
-				// Use empty evidence → all facets at defaults → all traits = SCORE_MIDPOINT
-				setFinanalyzerOutput({
-					evidence: [],
-					tokenUsage: { input: 500, output: 100 },
-				});
-
-				yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				const results = getStoredResults();
-				const record = results.get("session_123");
-				const traits = record?.traits as Record<
-					string,
-					{ score: number; confidence: number; signalPower: number }
-				>;
-
-				for (const trait of TRAIT_NAMES) {
-					expect(traits[trait].score).toBeCloseTo(FORMULA_DEFAULTS.SCORE_MIDPOINT);
-					expect(traits[trait].confidence).toBe(0);
-					expect(traits[trait].signalPower).toBe(0);
-				}
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("domain coverage normalization: values sum to ~1.0", () =>
-			Effect.gen(function* () {
-				const ids = yield* seedMessages("session_123", [
-					{ role: "user", content: "I love work and family" },
-					{ role: "assistant", content: "Tell me more" },
-				]);
-
-				setFinanalyzerOutput({
-					evidence: [
-						{
-							messageId: ids[0],
-							bigfiveFacet: "imagination",
-							score: 14,
-							confidence: 0.7,
-							domain: "work",
-							rawDomain: "career",
-							quote: "work",
-						},
-						{
-							messageId: ids[0],
-							bigfiveFacet: "altruism",
-							score: 16,
-							confidence: 0.8,
-							domain: "family",
-							rawDomain: "kids",
-							quote: "family",
-						},
-						{
-							messageId: ids[0],
-							bigfiveFacet: "trust",
-							score: 12,
-							confidence: 0.6,
-							domain: "work",
-							rawDomain: "office",
-							quote: "love",
-						},
-					],
-					tokenUsage: { input: 2000, output: 1000 },
-				});
-
-				yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				const results = getStoredResults();
-				const record = results.get("session_123");
-				const dc = record?.domainCoverage as Record<string, number>;
-
-				const sum = LIFE_DOMAINS.reduce((acc, d) => acc + (dc[d] ?? 0), 0);
-				expect(sum).toBeCloseTo(1.0);
-				// 2 work + 1 family = 2/3 work, 1/3 family
-				expect(dc.work).toBeCloseTo(2 / 3);
-				expect(dc.family).toBeCloseTo(1 / 3);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("empty evidence edge case: all defaults, domainCoverage all zeros", () =>
-			Effect.gen(function* () {
-				setFinanalyzerOutput({
-					evidence: [],
-					tokenUsage: { input: 500, output: 100 },
-				});
-
-				yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				const results = getStoredResults();
-				const record = results.get("session_123");
-				const facets = record?.facets as Record<
-					string,
-					{ score: number; confidence: number; signalPower: number }
-				>;
-				const traits = record?.traits as Record<
-					string,
-					{ score: number; confidence: number; signalPower: number }
-				>;
-				const dc = record?.domainCoverage as Record<string, number>;
-
-				// All 30 facets at defaults
-				for (const facet of ALL_FACETS) {
-					expect(facets[facet].score).toBe(FORMULA_DEFAULTS.SCORE_MIDPOINT);
-					expect(facets[facet].confidence).toBe(0);
-				}
-
-				// All traits at defaults
-				for (const trait of TRAIT_NAMES) {
-					expect(traits[trait].score).toBeCloseTo(FORMULA_DEFAULTS.SCORE_MIDPOINT);
-				}
-
-				// Domain coverage all zeros
-				for (const domain of LIFE_DOMAINS) {
-					expect(dc[domain]).toBe(0);
-				}
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("Guard 2 path: scores computed from pre-existing evidence", () =>
-			Effect.gen(function* () {
-				setEvidenceExists(true);
-				const seededResult = seedResult("session_123", { id: "ar-g2-scores" });
-				seedEvidence([
-					{
-						id: "fe-g2-1",
-						assessmentMessageId: "msg-1",
-						assessmentResultId: seededResult.id,
-						bigfiveFacet: "intellect",
-						score: 18,
-						confidence: 0.9,
-						domain: "work",
-						rawDomain: "research",
-						quote: "test",
-						highlightStart: 0,
-						highlightEnd: 4,
-						createdAt: new Date(),
-					} as FinalizationEvidenceRecord,
-					{
-						id: "fe-g2-2",
-						assessmentMessageId: "msg-2",
-						assessmentResultId: seededResult.id,
-						bigfiveFacet: "adventurousness",
-						score: 12,
-						confidence: 0.5,
-						domain: "leisure",
-						rawDomain: "travel",
-						quote: "test2",
-						highlightStart: 0,
-						highlightEnd: 5,
-						createdAt: new Date(),
-					} as FinalizationEvidenceRecord,
-				]);
-
-				yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				const results = getStoredResults();
-				const record = results.get("session_123");
-				const facets = record?.facets as Record<
-					string,
-					{ score: number; confidence: number; signalPower: number }
-				>;
-
-				// intellect should have real evidence
-				expect(facets.intellect.confidence).toBeGreaterThan(0);
-				// adventurousness should have real evidence
-				expect(facets.adventurousness.confidence).toBeGreaterThan(0);
-				// Other facets at defaults
-				expect(facets.imagination.score).toBe(FORMULA_DEFAULTS.SCORE_MIDPOINT);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-	});
-
-	describe("Teaser portrait generation (Story 11.5)", () => {
-		it.effect("happy path: teaser portrait included in final result", () =>
-			Effect.gen(function* () {
-				const ids = yield* seedMessages("session_123", [
-					{ role: "user", content: "I love brainstorming new things" },
-				]);
-
-				setFinanalyzerOutput({
-					evidence: [
-						{
-							messageId: ids[0],
-							bigfiveFacet: "imagination",
-							score: 14,
-							confidence: 0.7,
-							domain: "work",
-							rawDomain: "creative work",
-							quote: "brainstorming",
-						},
-					],
-					tokenUsage: { input: 3000, output: 1500 },
-				});
-
-				const result = yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				expect(result).toEqual({ status: "completed" });
-
-				// Portrait should contain teaser content
-				const results = getStoredResults();
-				const record = results.get("session_123");
-				expect(record?.portrait).toContain("The Quiet Architecture");
-				expect(record?.portrait).toContain("stayed with me");
-				expect(record?.portrait.length).toBeGreaterThan(0);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("teaser portrait generates during Guard 2 path (Phase 1 skipped)", () =>
-			Effect.gen(function* () {
-				setEvidenceExists(true);
-				const seededResult = seedResult("session_123", { id: "ar-teaser-g2" });
-				seedEvidence([
-					{
-						id: "fe-teaser-1",
-						assessmentMessageId: "msg-1",
-						assessmentResultId: seededResult.id,
-						bigfiveFacet: "imagination",
-						score: 16,
-						confidence: 0.8,
-						domain: "work",
-						rawDomain: "creative work",
-						quote: "test",
-						highlightStart: 0,
-						highlightEnd: 4,
-						createdAt: new Date(),
-					} as FinalizationEvidenceRecord,
-				]);
-
-				yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				// Portrait populated even when Phase 1 skipped
-				const results = getStoredResults();
-				const record = results.get("session_123");
-				expect(record?.portrait).toContain("The Quiet Architecture");
-
-				// FinAnalyzer was NOT called (Guard 2)
-				expect(getFinanalyzerCalls()).toHaveLength(0);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-	});
-
-	describe("Comprehensive idempotency (Story 11.5, Task 3)", () => {
-		it.effect("3.1: Tier 1 - already completed returns result without LLM calls", () =>
-			Effect.gen(function* () {
-				mockSessionRepo.getSession.mockReturnValue(
-					Effect.succeed({ ...mockFinalizingSession, status: "completed" }),
-				);
-
-				const result = yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				expect(result).toEqual({ status: "completed" });
-				// No lock attempted
 				expect(mockSessionRepo.acquireSessionLock).not.toHaveBeenCalled();
-				// No FinAnalyzer calls
-				expect(getFinanalyzerCalls()).toHaveLength(0);
-				// No progress updates
-				expect(mockSessionRepo.updateSession).not.toHaveBeenCalled();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
+	});
 
-		it.effect("3.2: Tier 2 - concurrent request returns progress (not error)", () =>
+	describe("Idempotency: result at stage=scored → skip scoring, complete", () => {
+		it.effect("should skip scoring and proceed to completion when stage=scored", () =>
+			Effect.gen(function* () {
+				seedResult("session_123", { stage: "scored" });
+
+				const result = yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				expect(result).toEqual({ status: "completed" });
+
+				// Verify stage was updated to completed
+				const results = getStoredResults();
+				const record = results.get("session_123");
+				expect(record?.stage).toBe("completed");
+
+				// Session marked completed
+				expect(mockSessionRepo.updateSession).toHaveBeenCalledWith(
+					"session_123",
+					expect.objectContaining({ status: "completed", finalizationProgress: "completed" }),
+				);
+
+				// Lock released
+				expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("Concurrent duplicate", () => {
+		it.effect("should return current progress when lock fails", () =>
 			Effect.gen(function* () {
 				mockSessionRepo.getSession.mockReturnValue(
 					Effect.succeed({
@@ -991,87 +261,188 @@ describe("generateResults Use Case", () => {
 					authenticatedUserId: "user_456",
 				});
 
-				// Returns current progress, NOT an error
 				expect(result).toEqual({ status: "generating_portrait" });
 			}).pipe(Effect.provide(createTestLayer())),
 		);
+	});
 
-		it.effect("3.3: Guard 2 - evidence exists skips FinAnalyzer", () =>
+	describe("Full pipeline: conversation evidence → scores → portrait → completed", () => {
+		it.effect("happy path: reads conversation evidence, computes scores, generates portrait", () =>
 			Effect.gen(function* () {
-				setEvidenceExists(true);
-				const seededResult = seedResult("session_123", { id: "ar-g2-idem" });
-				seedEvidence([
-					{
-						id: "fe-g2-idem",
-						assessmentMessageId: "msg-1",
-						assessmentResultId: seededResult.id,
-						bigfiveFacet: "imagination",
-						score: 14,
-						confidence: 0.7,
-						domain: "work",
-						rawDomain: "creative work",
-						quote: "test",
-						highlightStart: 0,
-						highlightEnd: 4,
-						createdAt: new Date(),
-					} as FinalizationEvidenceRecord,
+				// Seed conversation evidence
+				const evidence = makeConversationEvidence("session_123", [
+					{ facet: "imagination", deviation: 2, strength: "strong", confidence: "high", domain: "work", note: "loves brainstorming" },
+					{ facet: "trust", deviation: 1, strength: "moderate", confidence: "medium", domain: "relationships", note: "open with friends" },
 				]);
+				seedConversationEvidence(evidence);
+
+				const result = yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				expect(result).toEqual({ status: "completed" });
+
+				// Assessment result created with scores and portrait
+				const results = getStoredResults();
+				expect(results.size).toBe(1);
+				const record = results.get("session_123");
+				expect(record).toBeDefined();
+				expect(record?.stage).toBe("completed");
+				expect(Object.keys(record?.facets ?? {})).toHaveLength(30);
+				expect(Object.keys(record?.traits ?? {})).toHaveLength(5);
+				expect(record?.portrait).toContain("The Quiet Architecture");
+
+				// Lock released
+				expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("all 30 facets populated including defaults for missing evidence", () =>
+			Effect.gen(function* () {
+				// Only 1 facet has evidence
+				const evidence = makeConversationEvidence("session_123", [
+					{ facet: "imagination", deviation: 3, strength: "strong", confidence: "high", domain: "leisure", note: "very creative" },
+				]);
+				seedConversationEvidence(evidence);
 
 				yield* generateResults({
 					sessionId: "session_123",
 					authenticatedUserId: "user_456",
 				});
 
-				// FinAnalyzer NOT called
-				expect(getFinanalyzerCalls()).toHaveLength(0);
-				// But scores still computed
 				const results = getStoredResults();
-				expect(Object.keys(results.get("session_123")?.facets ?? {})).toHaveLength(30);
+				const record = results.get("session_123");
+				const facets = record?.facets as Record<
+					string,
+					{ score: number; confidence: number; signalPower: number }
+				>;
+
+				for (const facet of ALL_FACETS) {
+					expect(facets[facet]).toBeDefined();
+				}
+
+				// imagination has real evidence
+				expect(facets.imagination.confidence).toBeGreaterThan(0);
+				// Other facets at defaults
+				expect(facets.artistic_interests.score).toBe(FORMULA_DEFAULTS.SCORE_MIDPOINT);
+				expect(facets.artistic_interests.confidence).toBe(0);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("3.4: Phase 1 failure → retry re-runs from scratch (no evidence)", () =>
+		it.effect("trait derivation: each trait score is mean of its 6 facets", () =>
 			Effect.gen(function* () {
-				yield* seedMessages("session_123", [{ role: "user", content: "test message" }]);
-
-				setFinanalyzerError("API timeout");
-
-				const exit = yield* generateResults({
+				// No evidence → all defaults
+				yield* generateResults({
 					sessionId: "session_123",
 					authenticatedUserId: "user_456",
-				}).pipe(Effect.exit);
+				});
 
-				expect(exit._tag).toBe("Failure");
-				// Lock was released even on failure
-				expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
-				// No evidence was saved (Phase 1 failed)
-				expect(getStoredEvidence()).toHaveLength(0);
+				const results = getStoredResults();
+				const record = results.get("session_123");
+				const traits = record?.traits as Record<
+					string,
+					{ score: number; confidence: number; signalPower: number }
+				>;
+
+				for (const trait of TRAIT_NAMES) {
+					expect(traits[trait].score).toBeCloseTo(FORMULA_DEFAULTS.SCORE_MIDPOINT);
+					expect(traits[trait].confidence).toBe(0);
+				}
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("3.5: Phase 2 failure with evidence → retry skips Phase 1", () =>
+		it.effect("domain coverage normalization: values sum to ~1.0", () =>
 			Effect.gen(function* () {
-				// Pre-seed evidence (Phase 1 already completed)
-				setEvidenceExists(true);
-				const seededResult = seedResult("session_123", { id: "ar-p2-fail" });
-				seedEvidence([
-					{
-						id: "fe-p2-1",
-						assessmentMessageId: "msg-1",
-						assessmentResultId: seededResult.id,
-						bigfiveFacet: "imagination",
-						score: 14,
-						confidence: 0.7,
-						domain: "work",
-						rawDomain: "creative work",
-						quote: "test",
-						highlightStart: 0,
-						highlightEnd: 4,
-						createdAt: new Date(),
-					} as FinalizationEvidenceRecord,
+				const evidence = makeConversationEvidence("session_123", [
+					{ facet: "imagination", deviation: 1, strength: "moderate", confidence: "medium", domain: "work", note: "test" },
+					{ facet: "altruism", deviation: 2, strength: "strong", confidence: "high", domain: "family", note: "test" },
+					{ facet: "trust", deviation: 1, strength: "moderate", confidence: "medium", domain: "work", note: "test" },
 				]);
+				seedConversationEvidence(evidence);
 
-				// Make teaser generation fail
+				yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				const results = getStoredResults();
+				const record = results.get("session_123");
+				const dc = record?.domainCoverage as Record<string, number>;
+
+				const sum = LIFE_DOMAINS.reduce((acc, d) => acc + (dc[d] ?? 0), 0);
+				expect(sum).toBeCloseTo(1.0);
+				expect(dc.work).toBeCloseTo(2 / 3);
+				expect(dc.family).toBeCloseTo(1 / 3);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("empty evidence: all defaults, domainCoverage all zeros", () =>
+			Effect.gen(function* () {
+				yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				const results = getStoredResults();
+				const record = results.get("session_123");
+				const facets = record?.facets as Record<
+					string,
+					{ score: number; confidence: number; signalPower: number }
+				>;
+				const traits = record?.traits as Record<
+					string,
+					{ score: number; confidence: number; signalPower: number }
+				>;
+				const dc = record?.domainCoverage as Record<string, number>;
+
+				for (const facet of ALL_FACETS) {
+					expect(facets[facet].score).toBe(FORMULA_DEFAULTS.SCORE_MIDPOINT);
+					expect(facets[facet].confidence).toBe(0);
+				}
+				for (const trait of TRAIT_NAMES) {
+					expect(traits[trait].score).toBeCloseTo(FORMULA_DEFAULTS.SCORE_MIDPOINT);
+				}
+				for (const domain of LIFE_DOMAINS) {
+					expect(dc[domain]).toBe(0);
+				}
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("Teaser portrait", () => {
+		it.effect("portrait included in final result and stored in portraits table", () =>
+			Effect.gen(function* () {
+				const evidence = makeConversationEvidence("session_123", [
+					{ facet: "imagination", deviation: 2, strength: "strong", confidence: "high", domain: "work", note: "brainstorming" },
+				]);
+				seedConversationEvidence(evidence);
+
+				const result = yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				expect(result).toEqual({ status: "completed" });
+
+				const results = getStoredResults();
+				const record = results.get("session_123");
+				expect(record?.portrait).toContain("The Quiet Architecture");
+
+				const allPortraits = getAllPortraits();
+				const teaserPortrait = allPortraits.find((p) => p.tier === "teaser");
+				expect(teaserPortrait).toBeDefined();
+				expect(teaserPortrait?.content).toContain("The Quiet Architecture");
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("teaser failure propagates, lock released", () =>
+			Effect.gen(function* () {
+				const evidence = makeConversationEvidence("session_123", [
+					{ facet: "imagination", deviation: 1, strength: "moderate", confidence: "medium", domain: "work", note: "test" },
+				]);
+				seedConversationEvidence(evidence);
+
 				setTeaserError("Haiku API timeout");
 
 				const exit = yield* generateResults({
@@ -1084,75 +455,25 @@ describe("generateResults Use Case", () => {
 					expect(String(exit.cause)).toContain("TeaserPortraitError");
 				}
 
-				// FinAnalyzer was NOT called (Guard 2 — evidence exists)
-				expect(getFinanalyzerCalls()).toHaveLength(0);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("3.6: cost tracking is idempotent (no double-charge on retry path)", () =>
-			Effect.gen(function* () {
-				// Guard 2 path: evidence exists, Phase 1 skipped
-				setEvidenceExists(true);
-				const seededResult = seedResult("session_123", { id: "ar-cost-idem" });
-				seedEvidence([
-					{
-						id: "fe-cost-1",
-						assessmentMessageId: "msg-1",
-						assessmentResultId: seededResult.id,
-						bigfiveFacet: "imagination",
-						score: 14,
-						confidence: 0.7,
-						domain: "work",
-						rawDomain: "creative work",
-						quote: "test",
-						highlightStart: 0,
-						highlightEnd: 4,
-						createdAt: new Date(),
-					} as FinalizationEvidenceRecord,
-				]);
-
-				yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				// Phase 1 cost NOT tracked (Guard 2 skipped FinAnalyzer)
-				// Only teaser cost should be tracked
-				expect(getFinanalyzerCalls()).toHaveLength(0);
-
-				// Result completed successfully
-				const results = getStoredResults();
-				expect(results.get("session_123")).toBeDefined();
+				// Lock released even on failure
+				expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
-	describe("Progress status validation (Story 11.5, Task 4)", () => {
-		it.effect("4.2: progress transitions - analyzing → generating_portrait → completed", () =>
+	describe("Progress transitions", () => {
+		it.effect("analyzing → generating_portrait → completed", () =>
 			Effect.gen(function* () {
-				const ids = yield* seedMessages("session_123", [{ role: "user", content: "test progress" }]);
-
-				setFinanalyzerOutput({
-					evidence: [
-						{
-							messageId: ids[0],
-							bigfiveFacet: "imagination",
-							score: 14,
-							confidence: 0.7,
-							domain: "work",
-							rawDomain: "creative work",
-							quote: "test progress",
-						},
-					],
-					tokenUsage: { input: 1000, output: 500 },
-				});
+				const evidence = makeConversationEvidence("session_123", [
+					{ facet: "imagination", deviation: 1, strength: "moderate", confidence: "medium", domain: "work", note: "test" },
+				]);
+				seedConversationEvidence(evidence);
 
 				yield* generateResults({
 					sessionId: "session_123",
 					authenticatedUserId: "user_456",
 				});
 
-				// Verify progress update calls in order
 				const updateCalls = mockSessionRepo.updateSession.mock.calls;
 				const progressUpdates = updateCalls
 					.filter(
@@ -1163,152 +484,25 @@ describe("generateResults Use Case", () => {
 				expect(progressUpdates).toEqual(["analyzing", "generating_portrait", "completed"]);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
-
-		it.effect("4.1: progress updates visible immediately (outside critical path)", () =>
-			Effect.gen(function* () {
-				const ids = yield* seedMessages("session_123", [{ role: "user", content: "test visibility" }]);
-
-				setFinanalyzerOutput({
-					evidence: [
-						{
-							messageId: ids[0],
-							bigfiveFacet: "imagination",
-							score: 14,
-							confidence: 0.7,
-							domain: "work",
-							rawDomain: "creative work",
-							quote: "test visibility",
-						},
-					],
-					tokenUsage: { input: 1000, output: 500 },
-				});
-
-				yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				// Progress updates are called directly on session repo (not batched)
-				expect(mockSessionRepo.updateSession).toHaveBeenCalledWith(
-					"session_123",
-					expect.objectContaining({ finalizationProgress: "analyzing" }),
-				);
-				expect(mockSessionRepo.updateSession).toHaveBeenCalledWith(
-					"session_123",
-					expect.objectContaining({ finalizationProgress: "generating_portrait" }),
-				);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
 	});
 
-	describe("Teaser portrait stored in portraits table (Story 12.3)", () => {
-		it.effect("teaser is stored in portraits table with tier='teaser' and lockedSectionTitles", () =>
+	describe("Stage transitions", () => {
+		it.effect("full pipeline: null → scored → completed", () =>
 			Effect.gen(function* () {
-				const ids = yield* seedMessages("session_123", [
-					{ role: "user", content: "I love brainstorming new things" },
+				const evidence = makeConversationEvidence("session_123", [
+					{ facet: "imagination", deviation: 1, strength: "moderate", confidence: "medium", domain: "work", note: "test" },
 				]);
+				seedConversationEvidence(evidence);
 
-				setFinanalyzerOutput({
-					evidence: [
-						{
-							messageId: ids[0],
-							bigfiveFacet: "imagination",
-							score: 14,
-							confidence: 0.7,
-							domain: "work",
-							rawDomain: "creative work",
-							quote: "brainstorming",
-						},
-					],
-					tokenUsage: { input: 3000, output: 1500 },
-				});
-
-				const result = yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				expect(result).toEqual({ status: "completed" });
-
-				// assessment_results.portrait is still populated (backward compat)
-				const results = getStoredResults();
-				const record = results.get("session_123");
-				expect(record?.portrait).toContain("The Quiet Architecture");
-
-				// Portraits table should have a teaser row
-				const allPortraits = getAllPortraits();
-				const teaserPortrait = allPortraits.find((p) => p.tier === "teaser");
-				expect(teaserPortrait).toBeDefined();
-				expect(teaserPortrait?.content).toContain("The Quiet Architecture");
-				expect(teaserPortrait?.lockedSectionTitles).toEqual([
-					"The Architecture of Your Empathy",
-					"When Logic Meets Longing",
-					"Your Emerging Edge",
-				]);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("DuplicatePortraitError is caught (idempotent re-run)", () =>
-			Effect.gen(function* () {
-				const ids = yield* seedMessages("session_123", [
-					{ role: "user", content: "I love brainstorming" },
-				]);
-
-				setFinanalyzerOutput({
-					evidence: [
-						{
-							messageId: ids[0],
-							bigfiveFacet: "imagination",
-							score: 14,
-							confidence: 0.7,
-							domain: "work",
-							rawDomain: "creative work",
-							quote: "brainstorming",
-						},
-					],
-					tokenUsage: { input: 3000, output: 1500 },
-				});
-
-				// First run — populates portraits table
 				yield* generateResults({
 					sessionId: "session_123",
 					authenticatedUserId: "user_456",
 				});
 
-				// Reset session state for second run
-				mockSessionRepo.getSession.mockReturnValue(Effect.succeed(mockFinalizingSession));
-				mockSessionRepo.acquireSessionLock.mockReturnValue(Effect.void);
-
-				// Pre-seed evidence for Guard 2 path
-				setEvidenceExists(true);
 				const results = getStoredResults();
 				const record = results.get("session_123");
-				if (record) {
-					seedEvidence([
-						{
-							id: "fe-dup-1",
-							assessmentMessageId: ids[0],
-							assessmentResultId: record.id,
-							bigfiveFacet: "imagination",
-							score: 14,
-							confidence: 0.7,
-							domain: "work",
-							rawDomain: "creative work",
-							quote: "brainstorming",
-							highlightStart: 7,
-							highlightEnd: 20,
-							createdAt: new Date(),
-						} as FinalizationEvidenceRecord,
-					]);
-				}
-
-				// Second run — should not fail on DuplicatePortraitError
-				const result2 = yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				expect(result2).toEqual({ status: "completed" });
+				// Final stage should be completed
+				expect(record?.stage).toBe("completed");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});

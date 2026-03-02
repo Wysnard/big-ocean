@@ -13,7 +13,7 @@
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 import type { EvidenceInput } from "../types/evidence";
-import type { FinalizationEvidenceRecord } from "./finalization-evidence.repository";
+import type { ConversationEvidenceRecord } from "./conversation-evidence.repository";
 
 export class TeaserPortraitError extends S.TaggedError<TeaserPortraitError>()(
 	"TeaserPortraitError",
@@ -24,8 +24,8 @@ export class TeaserPortraitError extends S.TaggedError<TeaserPortraitError>()(
 
 export interface TeaserPortraitInput {
 	readonly sessionId: string;
-	readonly evidence: ReadonlyArray<FinalizationEvidenceRecord>;
-	/** v2 evidence for depth signal computation (Story 18-2) */
+	readonly evidence: ReadonlyArray<ConversationEvidenceRecord>;
+	/** v2 evidence for scoring and depth signal computation */
 	readonly scoringEvidence: ReadonlyArray<EvidenceInput>;
 }
 

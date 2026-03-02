@@ -20,6 +20,11 @@ export const _resetMockState = () => {
 /** Read-only access for test assertions */
 export const _getMockRecords = () => [...records];
 
+/** Seed pre-existing evidence records for test setup */
+export const _seedEvidence = (seed: ConversationEvidenceRecord[]) => {
+	records.push(...seed);
+};
+
 export const ConversationEvidenceDrizzleRepositoryLive = Layer.succeed(
 	ConversationEvidenceRepository,
 	ConversationEvidenceRepository.of({
