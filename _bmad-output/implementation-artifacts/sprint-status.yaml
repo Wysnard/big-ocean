@@ -302,7 +302,7 @@ development_status:
   epic-18: in-progress
   18-1-evidence-v2-schema-and-conversanalyzer-prompt-update: done
   18-2-rewrite-compute-facet-metrics-for-evidence-v2: done
-  18-3-rolling-evidence-budget-and-cap-enforcement: backlog
+  18-3-rolling-evidence-budget-and-cap-enforcement: pr-ready
   18-4-rewrite-finalization-pipeline-with-staged-idempotency: backlog
   18-5-delete-finanalyzer-infrastructure: backlog
   18-6-update-portrait-generators-to-use-conversation-evidence: backlog

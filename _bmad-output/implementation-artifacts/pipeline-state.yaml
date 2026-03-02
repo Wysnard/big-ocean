@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
 parallelism_step: 1
-parallelism_step_name: "Remaining Epic 16 + Independent Starts"
-baseline_commit: "6130a353512f28be0c5d0984ce9f504ceca788a1"
-created: "2026-03-01"
-last_updated: "2026-03-01"
+parallelism_step_name: "Evidence Budget & Cap"
+baseline_commit: "80dea3c14ecdc8da7920166ea26bfbc2226879a9"
+created: "2026-03-02"
+last_updated: "2026-03-02T2"
 
 # Optional context documents discovered
 context_docs:
@@ -14,38 +14,10 @@ context_docs:
 
 # Stories in this step
 stories:
-  16-2-delete-legacy-scoring-system:
+  18-3-rolling-evidence-budget-and-cap-enforcement:
     status: done
     mode: "parallel"
-    notes: "depends on 16-1 (done) — blocks nothing"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/102"
-    dev_branch: "feat/story-16-2-delete-legacy-scoring-system"
-    error: null
-  17-2-micro-intent-realizer:
-    status: done
-    mode: "sequential(after: 17-3)"
-    notes: "depends on 17-1 (done) + 17-3"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/105"
-    dev_branch: "feat/story-17-2-micro-intent-realizer"
-    error: null
-  17-3-domain-streak-computation-and-conversanalyzer-retry-bump:
-    status: done
-    mode: "parallel"
-    notes: "ready-for-dev, no blocking deps"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/101"
-    dev_branch: "feat/story-17-3-domain-streak-computation-and-conversanalyzer-retry-bump"
-    error: null
-  18-1-evidence-v2-schema-and-conversanalyzer-prompt-update:
-    status: done
-    mode: "parallel"
-    notes: "ready-for-dev, blocks 18-2"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/104"
-    dev_branch: "feat/story-18-1-evidence-v2-schema-and-conversanalyzer-prompt-update"
-    error: null
-  19-2-portrait-telemetry-placeholder:
-    status: done
-    mode: "parallel"
-    notes: "depends on 19-1 (done) — ready to execute"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/103"
-    dev_branch: "feat/story-19-2-portrait-telemetry-placeholder"
+    notes: "depends on 18-2 (done) — READY"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/107"
+    dev_branch: "feat/story-18-3-rolling-evidence-budget-and-cap-enforcement"
     error: null
