@@ -6,6 +6,7 @@
  *
  * Story 9.2: Updated to accept structured (targetDomain, targetFacet) instead of free-text steeringHint.
  * Story 10.5: Refactored to params object with nearingEnd for farewell winding-down.
+ * Story 17.2: Added MicroIntent support for natural steering via micro-intents.
  */
 
 import type { FacetName } from "../constants/big-five";
@@ -13,6 +14,7 @@ import { FACET_PROMPT_DEFINITIONS } from "../constants/facet-prompt-definitions"
 import type { LifeDomain } from "../constants/life-domain";
 import { CHAT_CONTEXT } from "../constants/nerin-chat-context";
 import { NERIN_PERSONA } from "../constants/nerin-persona";
+import type { MicroIntent } from "./steering/realize-micro-intent";
 
 /**
  * Parameters for building the chat system prompt
@@ -21,6 +23,62 @@ export interface ChatSystemPromptParams {
 	targetDomain?: LifeDomain;
 	targetFacet?: FacetName;
 	nearingEnd?: boolean;
+	/** Structured micro-intent (Story 17.2) — when provided, replaces raw steering format */
+	microIntent?: MicroIntent;
+}
+
+/** Intent descriptions for Nerin prompt injection */
+const INTENT_DESCRIPTIONS: Record<MicroIntent["intent"], string> = {
+	story_pull:
+		"Draw out a specific story or experience. Ask them to walk you through a moment, a decision, a day. Concrete narrative reveals personality naturally.",
+	tradeoff_probe:
+		"Present a tradeoff or tension relevant to this facet. 'Would you rather X or Y?' or 'What wins when A conflicts with B?' Choices reveal priorities.",
+	contradiction_surface:
+		"You've noticed a tension or contradiction in what they've shared. Surface it gently — not as a gotcha, but as genuine curiosity about their complexity.",
+	domain_shift:
+		"Shift the conversation to a new life domain. Bridge naturally from the current topic — find a thread that connects both domains.",
+	depth_push:
+		"Go deeper in the current territory. They've given you something interesting — push on it. Why does it matter? What does it mean to them?",
+};
+
+const BRIDGE_DESCRIPTIONS: Record<NonNullable<MicroIntent["bridgeHint"]>, string> = {
+	map_same_theme: "Find the same theme in the new domain — 'You mentioned X at work, I'm curious how that plays out in...'",
+	confirm_scope: "Confirm the shift — 'We've been talking about X, I want to zoom out to...'",
+	contrast_domains: "Use contrast — 'That's how you are at work. Are you different when it comes to...'",
+};
+
+const STYLE_DESCRIPTIONS: Record<NonNullable<MicroIntent["questionStyle"]>, string> = {
+	open: "Use an open-ended question — invite them to explore freely.",
+	choice: "Offer a choice or comparison — 'Are you more X or Y?' Give them something concrete to react to.",
+};
+
+/**
+ * Build the micro-intent steering section for Nerin's prompt.
+ */
+function buildMicroIntentSection(microIntent: MicroIntent, targetFacet: FacetName): string {
+	const facetDefinition = FACET_PROMPT_DEFINITIONS[targetFacet];
+	const intentDesc = INTENT_DESCRIPTIONS[microIntent.intent];
+
+	let section = `
+
+STEERING PRIORITY:
+Intent: ${microIntent.intent}
+Domain: ${microIntent.domain}
+Facet target: ${targetFacet} — ${facetDefinition}
+
+${intentDesc}`;
+
+	if (microIntent.bridgeHint) {
+		section += `\nBridge approach: ${BRIDGE_DESCRIPTIONS[microIntent.bridgeHint]}`;
+	}
+
+	if (microIntent.questionStyle) {
+		section += `\nQuestion style: ${STYLE_DESCRIPTIONS[microIntent.questionStyle]}`;
+	}
+
+	section += "\n\nAt most one direct question per response.";
+
+	return section;
 }
 
 /**
@@ -30,7 +88,7 @@ export interface ChatSystemPromptParams {
  * @returns System prompt for Nerin agent
  */
 export function buildChatSystemPrompt(params: ChatSystemPromptParams = {}): string {
-	const { targetDomain, targetFacet, nearingEnd } = params;
+	const { targetDomain, targetFacet, nearingEnd, microIntent } = params;
 	let prompt = `${NERIN_PERSONA}\n\n${CHAT_CONTEXT}`;
 
 	// When nearingEnd, CONVERSATION CLOSING overrides STEERING PRIORITY to avoid contradictory instructions
@@ -41,8 +99,11 @@ CONVERSATION CLOSING:
 The conversation is nearing its natural end. Begin weaving your responses toward a warm, reflective closing.
 Acknowledge what you've learned about the person and express genuine appreciation for the conversation.
 Do NOT mention any assessment, scores, or results — just naturally wind down.`;
+	} else if (microIntent && targetFacet) {
+		// Story 17.2: Structured micro-intent format
+		prompt += buildMicroIntentSection(microIntent, targetFacet);
 	} else if (targetDomain && targetFacet) {
-		// Add steering section when both domain and facet are provided (suppressed during closing)
+		// Legacy: raw steering format (backward compatibility)
 		const facetDefinition = FACET_PROMPT_DEFINITIONS[targetFacet];
 		prompt += `
 

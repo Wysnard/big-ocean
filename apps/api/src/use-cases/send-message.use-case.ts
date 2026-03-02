@@ -29,9 +29,12 @@ import {
 	type FacetName,
 	GREETING_MESSAGES,
 	getUTCDateKey,
+	type IntentType,
 	type LifeDomain,
 	LoggerRepository,
+	type MicroIntent,
 	NerinAgentRepository,
+	realizeMicroIntent,
 	SessionCompletedError,
 	SessionNotFound,
 } from "@workspace/domain";
@@ -262,6 +265,26 @@ export const sendMessage = (input: SendMessageInput) =>
 				// 10. Compute nearingEnd for farewell winding-down (Story 10.5)
 				const nearingEnd = userMessageCount >= config.freeTierMessageThreshold - 3;
 
+				// 10a. Extract recent intent types from last 3 assistant messages (Story 17.2)
+				const recentIntentTypes: IntentType[] = [];
+				for (let i = previousMessages.length - 1; i >= 0 && recentIntentTypes.length < 3; i--) {
+					const msg = previousMessages[i];
+					if (msg !== undefined && msg.role === "assistant" && "intentType" in msg && msg.intentType != null) {
+						recentIntentTypes.unshift(msg.intentType as IntentType);
+					}
+				}
+
+				// 10b. Realize micro-intent from steering target (Story 17.2)
+				const microIntent: MicroIntent = realizeMicroIntent({
+					targetFacet,
+					targetDomain,
+					previousDomain,
+					domainStreak,
+					turnIndex: userMessageCount,
+					nearingEnd,
+					recentIntentTypes,
+				});
+
 				// Compute topicTransitionsPerFiveTurns from recent assistant messages
 				const recentDomains: LifeDomain[] = [];
 				for (const msg of previousMessages) {
@@ -288,11 +311,12 @@ export const sendMessage = (input: SendMessageInput) =>
 					bestPriority,
 					nearingEnd,
 					domainStreak,
+					intentType: microIntent.intent,
 					topicTransitionsPerFiveTurns,
 					questionsPerAssistantTurn: 1,
 				});
 
-				// 11. Call Nerin with steering + nearingEnd
+				// 11. Call Nerin with steering + microIntent + nearingEnd (Story 17.2)
 				const result = yield* nerin
 					.invoke({
 						sessionId: input.sessionId,
@@ -300,6 +324,7 @@ export const sendMessage = (input: SendMessageInput) =>
 						targetDomain,
 						targetFacet,
 						nearingEnd,
+						microIntent,
 					})
 					.pipe(
 						Effect.tapError((error) =>
@@ -343,7 +368,7 @@ export const sendMessage = (input: SendMessageInput) =>
 					dateKey: getUTCDateKey(),
 				});
 
-				// 12. Save assistant message with steering targets
+				// 12. Save assistant message with steering targets + intentType (Story 17.2)
 				yield* messageRepo.saveMessage(
 					input.sessionId,
 					"assistant",
@@ -351,6 +376,7 @@ export const sendMessage = (input: SendMessageInput) =>
 					undefined,
 					targetDomain,
 					targetFacet,
+					microIntent.intent,
 				);
 
 				// 13. Increment message_count atomically and get new count

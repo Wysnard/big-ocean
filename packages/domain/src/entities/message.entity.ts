@@ -28,6 +28,7 @@ export const AssessmentAssistantMessageEntitySchema = Schema.Struct({
 	content: Schema.String,
 	targetDomain: Schema.NullOr(LifeDomainSchema),
 	targetBigfiveFacet: Schema.NullOr(FacetNameSchema),
+	intentType: Schema.optionalWith(Schema.NullOr(Schema.String), { default: () => null }),
 	createdAt: Schema.DateFromSelf,
 });
 
