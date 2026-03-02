@@ -2,7 +2,7 @@
  * Score Computation — Pure domain functions (Story 11.3)
  *
  * Computes facet results, trait results, and domain coverage
- * from finalization evidence. Wraps computeFacetMetrics() to
+ * from conversation evidence. Wraps computeFacetMetrics() to
  * ensure all 30 facets are present (defaulting missing ones).
  */
 import {

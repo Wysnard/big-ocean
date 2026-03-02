@@ -24,14 +24,11 @@ import {
 	CostGuardRedisRepositoryLive,
 	DatabaseStack,
 	FacetEvidenceDrizzleRepositoryLive,
-	FinalizationEvidenceDrizzleRepositoryLive,
-	FinanalyzerAnthropicRepositoryLive,
-	FinanalyzerMockRepositoryLive,
 	PaymentGatewayPolarRepositoryLive,
 	PortraitDrizzleRepositoryLive,
-	PortraitRatingDrizzleRepositoryLive,
 	PortraitGeneratorClaudeRepositoryLive,
 	PortraitGeneratorMockRepositoryLive,
+	PortraitRatingDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
@@ -120,17 +117,6 @@ const TeaserPortraitLayer =
 		: TeaserPortraitAnthropicRepositoryLive;
 
 /**
- * FinAnalyzer Layer Selection
- *
- * Uses mock implementation when MOCK_LLM=true (for integration testing).
- * Uses real Anthropic Sonnet implementation otherwise (production/development).
- */
-const FinanalyzerLayer =
-	process.env.MOCK_LLM === "true"
-		? FinanalyzerMockRepositoryLive
-		: FinanalyzerAnthropicRepositoryLive;
-
-/**
  * Relationship Analysis Generator Layer Selection
  *
  * Uses mock implementation when MOCK_LLM=true (for integration testing).
@@ -163,8 +149,6 @@ const RepositoryLayers = Layer.mergeAll(
 	AssessmentResultDrizzleRepositoryLive,
 	ConversationEvidenceDrizzleRepositoryLive,
 	ConversanalyzerAnthropicRepositoryLive,
-	FinanalyzerLayer,
-	FinalizationEvidenceDrizzleRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
 	FacetEvidenceDrizzleRepositoryLive,

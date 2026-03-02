@@ -89,9 +89,6 @@ export interface AppConfigService {
 	/** Model ID for conversanalyzer (Haiku-tier, runs on every message) */
 	readonly conversanalyzerModelId: string;
 
-	/** Model ID for finanalyzer (Sonnet-tier, runs at finalization) */
-	readonly finanalyzerModelId: string;
-
 	/** Model ID for portrait generation */
 	readonly portraitGeneratorModelId: string;
 

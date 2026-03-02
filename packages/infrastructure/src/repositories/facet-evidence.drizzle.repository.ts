@@ -1,12 +1,10 @@
 /**
  * Facet Evidence Repository Implementation (Drizzle)
  *
- * Queries `finalization_evidence` table and maps results to the
+ * Queries `conversation_evidence` table and maps results to the
  * `SavedFacetEvidence` contract type used by the evidence API endpoints.
  *
- * Replaces the noop stub that was created when `facet_evidence` was dropped
- * in the clean-slate migration (Story 9.1). The finalization_evidence table
- * (Story 11.2) now serves both finalization and evidence-highlighting flows.
+ * Story 18-5: Migrated from finalization_evidence to conversation_evidence.
  */
 
 import {
@@ -18,38 +16,37 @@ import type { FacetName } from "@workspace/domain/constants/big-five";
 import { and, eq } from "drizzle-orm";
 import { Effect, Layer } from "effect";
 import { Database } from "../context/database";
-import { assessmentResults, finalizationEvidence } from "../db/drizzle/schema";
+import { conversationEvidence } from "../db/drizzle/schema";
+
+/** Confidence enum → numeric 0-100 */
+const CONFIDENCE_MAP = { low: 30, medium: 60, high: 90 } as const;
+
+/** Deviation → 0-20 score (midpoint 10, scale 10/3) */
+function deviationToScore(deviation: number): number {
+	return Math.round(10 + deviation * (10 / 3));
+}
 
 /**
- * Map a finalization_evidence DB row to SavedFacetEvidence contract type.
- *
- * Key differences:
- * - bigfiveFacet → facetName
- * - confidence: numeric(4,3) 0-1 → integer 0-100
- * - highlightStart/highlightEnd → highlightRange: { start, end }
+ * Map a conversation_evidence DB row to SavedFacetEvidence contract type.
  */
 function toSavedFacetEvidence(row: {
 	id: string;
 	assessmentMessageId: string;
 	bigfiveFacet: string;
-	score: number;
+	deviation: number;
+	strength: string;
 	confidence: string;
-	quote: string;
-	highlightStart: number | null;
-	highlightEnd: number | null;
+	note: string;
 	createdAt: Date | null;
 }): SavedFacetEvidence {
 	return {
 		id: row.id,
 		assessmentMessageId: row.assessmentMessageId,
 		facetName: row.bigfiveFacet as FacetName,
-		score: row.score,
-		confidence: Math.round(Number(row.confidence) * 100),
-		quote: row.quote,
-		highlightRange: {
-			start: row.highlightStart ?? 0,
-			end: row.highlightEnd ?? 0,
-		},
+		score: deviationToScore(row.deviation),
+		confidence: CONFIDENCE_MAP[row.confidence as keyof typeof CONFIDENCE_MAP] ?? 50,
+		quote: row.note,
+		highlightRange: { start: 0, end: row.note.length },
 		createdAt: row.createdAt ?? new Date(),
 	};
 }
@@ -68,16 +65,16 @@ export const FacetEvidenceDrizzleRepositoryLive = Layer.effect(
 
 		return FacetEvidenceRepository.of({
 			saveEvidence: (_assessmentMessageId, _evidence) =>
-				// Write path not used — finalization pipeline writes via FinalizationEvidenceRepository
+				// Write path not used — conversation evidence written via ConversationEvidenceRepository
 				Effect.succeed([]),
 
 			getEvidenceByMessage: (assessmentMessageId) =>
 				Effect.gen(function* () {
 					const rows = yield* db
 						.select()
-						.from(finalizationEvidence)
-						.where(eq(finalizationEvidence.assessmentMessageId, assessmentMessageId))
-						.orderBy(finalizationEvidence.createdAt)
+						.from(conversationEvidence)
+						.where(eq(conversationEvidence.assessmentMessageId, assessmentMessageId))
+						.orderBy(conversationEvidence.createdAt)
 						.pipe(Effect.mapError(mapDbError));
 
 					return rows.map(toSavedFacetEvidence);
@@ -85,30 +82,16 @@ export const FacetEvidenceDrizzleRepositoryLive = Layer.effect(
 
 			getEvidenceByFacet: (sessionId, facetName) =>
 				Effect.gen(function* () {
-					// Find the assessment_results row for this session
-					const results = yield* db
-						.select({ id: assessmentResults.id })
-						.from(assessmentResults)
-						.where(eq(assessmentResults.assessmentSessionId, sessionId))
-						.limit(1)
-						.pipe(Effect.mapError(mapDbError));
-
-					const first = results[0];
-					if (!first) return [];
-
-					const resultId = first.id;
-
-					// Fetch finalization evidence filtered by result + facet
 					const rows = yield* db
 						.select()
-						.from(finalizationEvidence)
+						.from(conversationEvidence)
 						.where(
 							and(
-								eq(finalizationEvidence.assessmentResultId, resultId),
-								eq(finalizationEvidence.bigfiveFacet, facetName),
+								eq(conversationEvidence.assessmentSessionId, sessionId),
+								eq(conversationEvidence.bigfiveFacet, facetName),
 							),
 						)
-						.orderBy(finalizationEvidence.createdAt)
+						.orderBy(conversationEvidence.createdAt)
 						.pipe(Effect.mapError(mapDbError));
 
 					return rows.map(toSavedFacetEvidence);
@@ -116,24 +99,11 @@ export const FacetEvidenceDrizzleRepositoryLive = Layer.effect(
 
 			getEvidenceBySession: (sessionId) =>
 				Effect.gen(function* () {
-					// Find the assessment_results row for this session
-					const results = yield* db
-						.select({ id: assessmentResults.id })
-						.from(assessmentResults)
-						.where(eq(assessmentResults.assessmentSessionId, sessionId))
-						.limit(1)
-						.pipe(Effect.mapError(mapDbError));
-
-					const first = results[0];
-					if (!first) return [];
-
-					const resultId = first.id;
-
 					const rows = yield* db
 						.select()
-						.from(finalizationEvidence)
-						.where(eq(finalizationEvidence.assessmentResultId, resultId))
-						.orderBy(finalizationEvidence.createdAt)
+						.from(conversationEvidence)
+						.where(eq(conversationEvidence.assessmentSessionId, sessionId))
+						.orderBy(conversationEvidence.createdAt)
 						.pipe(Effect.mapError(mapDbError));
 
 					return rows.map(toSavedFacetEvidence);

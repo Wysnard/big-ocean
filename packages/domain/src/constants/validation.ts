@@ -2,7 +2,7 @@
  * Validation Constants
  *
  * Score and confidence boundaries for evidence scoring.
- * Used by conversanalyzer, finanalyzer, and formula functions.
+ * Used by conversanalyzer and formula functions.
  */
 
 /** Minimum facet score (0-20 scale) */

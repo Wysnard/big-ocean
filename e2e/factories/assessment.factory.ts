@@ -220,17 +220,21 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 				"Seeded portrait",
 			],
 		);
-		const resultId: string = resultRow.rows[0].id;
+		const _resultId: string = resultRow.rows[0].id;
 
-		// 4. Insert finalization_evidence rows (needed by relationship analysis daemon)
+		// 4. Insert conversation_evidence rows (needed by portrait/relationship analysis)
 		for (let i = 0; i < facetScores.length; i++) {
 			const { facet, score, confidence } = facetScores[i];
 			const domain = domains[i % domains.length];
+			// Map legacy score/confidence to v2 format
+			const deviation = Math.round(((score - 10) / 10) * 3);
+			const strength = confidence >= 0.7 ? "strong" : confidence >= 0.4 ? "moderate" : "weak";
+			const confEnum = confidence >= 0.7 ? "high" : confidence >= 0.4 ? "medium" : "low";
 			await client.query(
-				`INSERT INTO finalization_evidence
-				 (assessment_result_id, assessment_message_id, bigfive_facet, score, confidence, domain, raw_domain, quote, highlight_start, highlight_end, created_at)
-				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`,
-				[resultId, userMsgId, facet, score, confidence, domain, domain, "Seeded evidence quote", 0, 22],
+				`INSERT INTO conversation_evidence
+				 (assessment_session_id, assessment_message_id, bigfive_facet, deviation, strength, confidence, domain, note, created_at)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
+				[sessionId, userMsgId, facet, deviation, strength, confEnum, domain, "Seeded evidence note"],
 			);
 		}
 
