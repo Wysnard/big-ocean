@@ -31,7 +31,6 @@ export const PortraitDrizzleRepositoryLive = Layer.effect(
 			assessmentResultId: row.assessmentResultId,
 			tier: row.tier as PortraitTier,
 			content: row.content,
-			lockedSectionTitles: row.lockedSectionTitles as ReadonlyArray<string> | null,
 			modelUsed: row.modelUsed,
 			retryCount: row.retryCount,
 			createdAt: row.createdAt,
@@ -119,31 +118,6 @@ export const PortraitDrizzleRepositoryLive = Layer.effect(
 									error: error instanceof Error ? error.message : String(error),
 								});
 								return new DatabaseError({ message: "Failed to increment retry count" });
-							}),
-						);
-
-					const row = rows[0];
-					if (!row) {
-						return yield* Effect.fail(new PortraitNotFoundError({ portraitId: id }));
-					}
-					return mapRow(row);
-				}),
-
-			updateLockedSectionTitles: (id: string, titles: ReadonlyArray<string>) =>
-				Effect.gen(function* () {
-					const rows = yield* db
-						.update(portraits)
-						.set({ lockedSectionTitles: [...titles] })
-						.where(eq(portraits.id, id))
-						.returning()
-						.pipe(
-							Effect.mapError((error) => {
-								logger.error("Database operation failed", {
-									operation: "updateLockedSectionTitles",
-									portraitId: id,
-									error: error instanceof Error ? error.message : String(error),
-								});
-								return new DatabaseError({ message: "Failed to update locked section titles" });
 							}),
 						);
 

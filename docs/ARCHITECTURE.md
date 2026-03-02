@@ -226,6 +226,16 @@ Used for any resource that requires slow LLM generation (portraits, relationship
 
 Purchase events are append-only (`purchase_events` table). User capabilities (credits, unlocked features) are derived by aggregating events rather than maintaining mutable state.
 
+### Derive-at-Read for Aggregated Scores
+
+Trait-level scores (0-120), OCEAN codes, and archetype lookups are **recomputed from facet scores at read time** — never read from stored aggregations. Facet scores (30 individual 0-20 values) are the single source of truth for all derived metrics.
+
+**Rule:** If a value can be computed from facet scores, compute it in the read path (`get-results.use-case.ts`). Do not store pre-aggregated values and read them back. The `traits` column in `assessment_results` exists for auditability but is not used at read time.
+
+**Why:** Storing both raw facets and pre-aggregated traits creates dual sources of truth. If the aggregation logic changes (e.g., sum vs average), stored aggregations become stale while facets remain correct.
+
+**Applies to:** `get-results.use-case.ts`, `get-public-profile.use-case.ts`, and any future use-case that returns trait scores or OCEAN codes.
+
 ### Circuit Breaker with Fail-Open Resilience
 
 Redis-dependent features (cost tracking, rate limiting) use fail-open: if Redis is unavailable, the request proceeds and the failure is logged. Prevents Redis outages from blocking conversations.

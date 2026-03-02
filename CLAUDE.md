@@ -128,6 +128,7 @@ The codebase follows **hexagonal architecture** (ports & adapters) with Effect-t
 - **Hard Rule:** No business logic in handlers — all logic belongs in use-cases
 - **Error Location:** HTTP errors in `contracts/src/errors.ts`, infrastructure errors co-located with repo interfaces in `domain/src/repositories/`
 - **Error Propagation:** Use-cases and handlers must NOT remap errors. Only allowed `catchTag` is fail-open resilience.
+- **Derive-at-Read:** Trait scores, OCEAN codes, and archetypes are recomputed from facet scores at read time — never read stored aggregations. Facet scores are the single source of truth. See ARCHITECTURE.md for details.
 
 **Naming Conventions:**
 

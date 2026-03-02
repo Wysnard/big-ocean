@@ -79,12 +79,41 @@ const mockResult = {
 	sessionId: "session_123",
 	userId: "user_789",
 	facets: {
+		// Openness
 		imagination: { score: 15, confidence: 0.8, signalPower: 1 },
 		artistic_interests: { score: 12, confidence: 0.7, signalPower: 1 },
 		emotionality: { score: 18, confidence: 0.9, signalPower: 1 },
 		adventurousness: { score: 10, confidence: 0.6, signalPower: 1 },
 		intellect: { score: 14, confidence: 0.8, signalPower: 1 },
 		liberalism: { score: 16, confidence: 0.7, signalPower: 1 },
+		// Conscientiousness
+		self_efficacy: { score: 12, confidence: 0.7, signalPower: 1 },
+		orderliness: { score: 10, confidence: 0.6, signalPower: 1 },
+		dutifulness: { score: 11, confidence: 0.7, signalPower: 1 },
+		achievement_striving: { score: 13, confidence: 0.7, signalPower: 1 },
+		self_discipline: { score: 9, confidence: 0.6, signalPower: 1 },
+		cautiousness: { score: 10, confidence: 0.7, signalPower: 1 },
+		// Extraversion
+		friendliness: { score: 10, confidence: 0.6, signalPower: 1 },
+		gregariousness: { score: 8, confidence: 0.5, signalPower: 1 },
+		assertiveness: { score: 9, confidence: 0.6, signalPower: 1 },
+		activity_level: { score: 11, confidence: 0.6, signalPower: 1 },
+		excitement_seeking: { score: 7, confidence: 0.5, signalPower: 1 },
+		cheerfulness: { score: 10, confidence: 0.6, signalPower: 1 },
+		// Agreeableness
+		trust: { score: 12, confidence: 0.7, signalPower: 1 },
+		morality: { score: 13, confidence: 0.7, signalPower: 1 },
+		altruism: { score: 11, confidence: 0.7, signalPower: 1 },
+		cooperation: { score: 12, confidence: 0.7, signalPower: 1 },
+		modesty: { score: 10, confidence: 0.6, signalPower: 1 },
+		sympathy: { score: 14, confidence: 0.7, signalPower: 1 },
+		// Neuroticism
+		anxiety: { score: 8, confidence: 0.5, signalPower: 1 },
+		anger: { score: 6, confidence: 0.5, signalPower: 1 },
+		depression: { score: 7, confidence: 0.5, signalPower: 1 },
+		self_consciousness: { score: 9, confidence: 0.5, signalPower: 1 },
+		immoderation: { score: 5, confidence: 0.4, signalPower: 1 },
+		vulnerability: { score: 7, confidence: 0.5, signalPower: 1 },
 	},
 	traits: {
 		openness: { score: 85, confidence: 0.75, signalPower: 1 },

@@ -43,7 +43,6 @@ export const isStale = (createdAt: Date): boolean =>
 
 export interface TeaserData {
 	readonly content: string;
-	readonly lockedSectionTitles: ReadonlyArray<string>;
 }
 
 export interface GetPortraitStatusOutput {
@@ -96,10 +95,9 @@ export const getPortraitStatus = (sessionId: string) =>
 			.pipe(Effect.catchAll(() => Effect.succeed(null)));
 		if (existingResult) {
 			const teaserPortrait = yield* portraitRepo.getByResultIdAndTier(existingResult.id, "teaser");
-			if (teaserPortrait?.content && teaserPortrait.lockedSectionTitles) {
+			if (teaserPortrait?.content) {
 				teaser = {
 					content: teaserPortrait.content,
-					lockedSectionTitles: teaserPortrait.lockedSectionTitles,
 				};
 			}
 		}

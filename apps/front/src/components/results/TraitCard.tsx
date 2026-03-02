@@ -48,7 +48,7 @@ export const TraitCard = memo(function TraitCard({
 	const traitColor = getTraitColor(trait.name);
 	const scorePercent = Math.round((trait.score / MAX_TRAIT_SCORE) * 100);
 	const ShapeComponent = TRAIT_SHAPE[trait.name];
-	const confidence = Math.min(Math.max(Math.round(trait.confidence), 0), 100);
+	const confidence = Math.min(Math.max(Math.round(trait.confidence * 100), 0), 100);
 	const isLowConfidence = confidence < 40;
 
 	// Determine trait-specific level letter and human-readable name
@@ -136,7 +136,7 @@ export const TraitCard = memo(function TraitCard({
 
 				{/* Score display */}
 				<div className="flex items-baseline gap-1.5 mb-2">
-					<span className="text-3xl font-bold text-foreground">{trait.score}</span>
+					<span className="text-3xl font-bold text-foreground">{Math.round(trait.score)}</span>
 					<span className="text-sm text-muted-foreground">/120</span>
 				</div>
 

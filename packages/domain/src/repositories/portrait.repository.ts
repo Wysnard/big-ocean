@@ -20,7 +20,6 @@ export interface Portrait {
 	readonly assessmentResultId: string;
 	readonly tier: PortraitTier;
 	readonly content: string | null;
-	readonly lockedSectionTitles: ReadonlyArray<string> | null;
 	readonly modelUsed: string;
 	readonly retryCount: number;
 	readonly createdAt: Date;
@@ -92,16 +91,6 @@ export class PortraitRepository extends Context.Tag("PortraitRepository")<
 			assessmentResultId: string,
 			tier: PortraitTier,
 		) => Effect.Effect<Portrait | null, DatabaseError>;
-
-		/**
-		 * Update locked section titles on a portrait row.
-		 *
-		 * @throws PortraitNotFoundError if no row with matching id
-		 */
-		readonly updateLockedSectionTitles: (
-			id: string,
-			titles: ReadonlyArray<string>,
-		) => Effect.Effect<Portrait, DatabaseError | PortraitNotFoundError>;
 
 		/**
 		 * Get full portrait by session ID.

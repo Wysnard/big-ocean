@@ -66,7 +66,6 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.effect(
 			assessmentResultId: row.assessmentResultId,
 			tier: row.tier as PortraitTier,
 			content: row.content,
-			lockedSectionTitles: row.lockedSectionTitles as ReadonlyArray<string> | null,
 			modelUsed: row.modelUsed,
 			retryCount: row.retryCount,
 			createdAt: row.createdAt,

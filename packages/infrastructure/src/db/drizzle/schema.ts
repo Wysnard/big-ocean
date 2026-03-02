@@ -351,7 +351,6 @@ export const portraits = pgTable(
 			.references(() => assessmentResults.id, { onDelete: "cascade" }),
 		tier: text("tier").notNull().$type<"teaser" | "full">(),
 		content: text("content"), // nullable — NULL = generating
-		lockedSectionTitles: jsonb("locked_section_titles").$type<string[]>(), // nullable — only for teaser
 		modelUsed: text("model_used").notNull(),
 		retryCount: integer("retry_count").notNull().default(0),
 		createdAt: timestamp("created_at").defaultNow().notNull(),

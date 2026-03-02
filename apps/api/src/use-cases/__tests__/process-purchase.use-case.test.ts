@@ -303,7 +303,7 @@ describe("processPurchase Portrait Generation (Story 13.3)", () => {
 					assessmentResultId: "result_789",
 					tier: "full" as const,
 					content: null, // Still generating
-					lockedSectionTitles: null,
+
 					modelUsed: "claude-sonnet-4-6",
 					retryCount: 1,
 					createdAt: new Date(),

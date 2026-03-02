@@ -104,7 +104,7 @@ describe("computeTraitResults", () => {
 		const result = computeTraitResults(facets as ReturnType<typeof computeAllFacetResults>);
 
 		for (const trait of TRAIT_NAMES) {
-			expect(result[trait].score).toBeCloseTo(12);
+			expect(result[trait].score).toBeCloseTo(72);
 			expect(result[trait].confidence).toBeCloseTo(0.5);
 			expect(result[trait].signalPower).toBeCloseTo(0.3);
 		}
@@ -123,7 +123,7 @@ describe("computeTraitResults", () => {
 
 		const result = computeTraitResults(facets as ReturnType<typeof computeAllFacetResults>);
 
-		const expectedScore = (18 + 6 + 10 + 10 + 10 + 10) / 6;
+		const expectedScore = 18 + 6 + 10 + 10 + 10 + 10;
 		expect(result.openness.score).toBeCloseTo(expectedScore);
 		expect(result.openness.confidence).toBeCloseTo((0.9 + 0.3 + 0 + 0 + 0 + 0) / 6);
 	});

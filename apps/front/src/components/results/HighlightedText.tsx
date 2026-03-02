@@ -5,7 +5,7 @@
  *
  * Renders text with highlighted ranges using <mark> elements.
  * Handles overlapping ranges by layering semi-transparent backgrounds.
- * Confidence maps to opacity: 0.15 + (confidence / 100) * 0.45.
+ * Confidence maps to opacity: 0.15 + confidence * 0.45 (confidence is 0-1).
  */
 
 interface Highlight {
@@ -71,7 +71,7 @@ function buildSegments(text: string, highlights: Highlight[]): Segment[] {
 }
 
 function highlightOpacity(confidence: number): number {
-	return 0.15 + (confidence / 100) * 0.45;
+	return 0.15 + confidence * 0.45;
 }
 
 export function HighlightedText({ text, highlights }: HighlightedTextProps) {

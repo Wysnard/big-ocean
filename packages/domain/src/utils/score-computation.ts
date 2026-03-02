@@ -53,7 +53,7 @@ export function computeAllFacetResults(evidence: EvidenceInput[]): Record<FacetN
  * Each trait = average of its 6 facets' score, confidence, signalPower.
  */
 export function computeTraitResults(
-	facets: Record<FacetName, FacetResult>,
+	facets: Record<FacetName, Pick<FacetResult, "score" | "confidence"> & { signalPower?: number }>,
 ): Record<TraitName, TraitResult> {
 	const result = {} as Record<TraitName, TraitResult>;
 
@@ -67,12 +67,12 @@ export function computeTraitResults(
 			const f = facets[facet];
 			scoreSum += f.score;
 			confidenceSum += f.confidence;
-			signalPowerSum += f.signalPower;
+			signalPowerSum += f.signalPower ?? 0;
 		}
 
 		const count = traitFacets.length;
 		result[trait] = {
-			score: scoreSum / count,
+			score: scoreSum,
 			confidence: confidenceSum / count,
 			signalPower: signalPowerSum / count,
 		};

@@ -19,6 +19,7 @@ import {
 	AssessmentSessionRepository,
 	BIG_FIVE_TRAITS,
 	calculateConfidenceFromFacetScores,
+	computeTraitResults,
 	extract4LetterCode,
 	FACET_DESCRIPTIONS,
 	FACET_LEVEL_LABELS,
@@ -133,14 +134,8 @@ export const getResults = (input: GetResultsInput) =>
 			};
 		}
 
-		// Extract TraitScoresMap (score + confidence, ignoring signalPower)
-		const traitScoresMap: Record<string, { score: number; confidence: number }> = {};
-		for (const [traitName, data] of Object.entries(result.traits)) {
-			traitScoresMap[traitName] = {
-				score: data.score,
-				confidence: data.confidence,
-			};
-		}
+		// Recompute trait scores from facets (single source of truth)
+		const computedTraits = computeTraitResults(facetScoresMap);
 
 		// 5. Generate OCEAN codes
 		const oceanCode5 = generateOceanCode(facetScoresMap);
@@ -154,7 +149,7 @@ export const getResults = (input: GetResultsInput) =>
 
 		// 8. Build trait results array
 		const traits: TraitResult[] = BIG_FIVE_TRAITS.map((traitName) => {
-			const traitScore = traitScoresMap[traitName]!;
+			const traitScore = computedTraits[traitName];
 			return {
 				name: traitName,
 				score: traitScore.score,

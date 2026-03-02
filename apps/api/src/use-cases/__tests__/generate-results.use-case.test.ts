@@ -33,7 +33,6 @@ import {
 } from "@workspace/infrastructure/repositories/assessment-result.drizzle.repository";
 import {
 	ConversationEvidenceDrizzleRepositoryLive,
-	_getMockRecords as getMockEvidenceRecords,
 	_resetMockState as resetConversationEvidence,
 	_seedEvidence as seedConversationEvidence,
 } from "@workspace/infrastructure/repositories/conversation-evidence.drizzle.repository";
@@ -271,8 +270,22 @@ describe("generateResults Use Case (Story 18-4)", () => {
 			Effect.gen(function* () {
 				// Seed conversation evidence
 				const evidence = makeConversationEvidence("session_123", [
-					{ facet: "imagination", deviation: 2, strength: "strong", confidence: "high", domain: "work", note: "loves brainstorming" },
-					{ facet: "trust", deviation: 1, strength: "moderate", confidence: "medium", domain: "relationships", note: "open with friends" },
+					{
+						facet: "imagination",
+						deviation: 2,
+						strength: "strong",
+						confidence: "high",
+						domain: "work",
+						note: "loves brainstorming",
+					},
+					{
+						facet: "trust",
+						deviation: 1,
+						strength: "moderate",
+						confidence: "medium",
+						domain: "relationships",
+						note: "open with friends",
+					},
 				]);
 				seedConversationEvidence(evidence);
 
@@ -302,7 +315,14 @@ describe("generateResults Use Case (Story 18-4)", () => {
 			Effect.gen(function* () {
 				// Only 1 facet has evidence
 				const evidence = makeConversationEvidence("session_123", [
-					{ facet: "imagination", deviation: 3, strength: "strong", confidence: "high", domain: "leisure", note: "very creative" },
+					{
+						facet: "imagination",
+						deviation: 3,
+						strength: "strong",
+						confidence: "high",
+						domain: "leisure",
+						note: "very creative",
+					},
 				]);
 				seedConversationEvidence(evidence);
 
@@ -346,7 +366,7 @@ describe("generateResults Use Case (Story 18-4)", () => {
 				>;
 
 				for (const trait of TRAIT_NAMES) {
-					expect(traits[trait].score).toBeCloseTo(FORMULA_DEFAULTS.SCORE_MIDPOINT);
+					expect(traits[trait].score).toBeCloseTo(FORMULA_DEFAULTS.SCORE_MIDPOINT * 6);
 					expect(traits[trait].confidence).toBe(0);
 				}
 			}).pipe(Effect.provide(createTestLayer())),
@@ -355,9 +375,30 @@ describe("generateResults Use Case (Story 18-4)", () => {
 		it.effect("domain coverage normalization: values sum to ~1.0", () =>
 			Effect.gen(function* () {
 				const evidence = makeConversationEvidence("session_123", [
-					{ facet: "imagination", deviation: 1, strength: "moderate", confidence: "medium", domain: "work", note: "test" },
-					{ facet: "altruism", deviation: 2, strength: "strong", confidence: "high", domain: "family", note: "test" },
-					{ facet: "trust", deviation: 1, strength: "moderate", confidence: "medium", domain: "work", note: "test" },
+					{
+						facet: "imagination",
+						deviation: 1,
+						strength: "moderate",
+						confidence: "medium",
+						domain: "work",
+						note: "test",
+					},
+					{
+						facet: "altruism",
+						deviation: 2,
+						strength: "strong",
+						confidence: "high",
+						domain: "family",
+						note: "test",
+					},
+					{
+						facet: "trust",
+						deviation: 1,
+						strength: "moderate",
+						confidence: "medium",
+						domain: "work",
+						note: "test",
+					},
 				]);
 				seedConversationEvidence(evidence);
 
@@ -401,7 +442,7 @@ describe("generateResults Use Case (Story 18-4)", () => {
 					expect(facets[facet].confidence).toBe(0);
 				}
 				for (const trait of TRAIT_NAMES) {
-					expect(traits[trait].score).toBeCloseTo(FORMULA_DEFAULTS.SCORE_MIDPOINT);
+					expect(traits[trait].score).toBeCloseTo(FORMULA_DEFAULTS.SCORE_MIDPOINT * 6);
 				}
 				for (const domain of LIFE_DOMAINS) {
 					expect(dc[domain]).toBe(0);
@@ -414,7 +455,14 @@ describe("generateResults Use Case (Story 18-4)", () => {
 		it.effect("portrait included in final result and stored in portraits table", () =>
 			Effect.gen(function* () {
 				const evidence = makeConversationEvidence("session_123", [
-					{ facet: "imagination", deviation: 2, strength: "strong", confidence: "high", domain: "work", note: "brainstorming" },
+					{
+						facet: "imagination",
+						deviation: 2,
+						strength: "strong",
+						confidence: "high",
+						domain: "work",
+						note: "brainstorming",
+					},
 				]);
 				seedConversationEvidence(evidence);
 
@@ -439,7 +487,14 @@ describe("generateResults Use Case (Story 18-4)", () => {
 		it.effect("teaser failure propagates, lock released", () =>
 			Effect.gen(function* () {
 				const evidence = makeConversationEvidence("session_123", [
-					{ facet: "imagination", deviation: 1, strength: "moderate", confidence: "medium", domain: "work", note: "test" },
+					{
+						facet: "imagination",
+						deviation: 1,
+						strength: "moderate",
+						confidence: "medium",
+						domain: "work",
+						note: "test",
+					},
 				]);
 				seedConversationEvidence(evidence);
 
@@ -465,7 +520,14 @@ describe("generateResults Use Case (Story 18-4)", () => {
 		it.effect("analyzing → generating_portrait → completed", () =>
 			Effect.gen(function* () {
 				const evidence = makeConversationEvidence("session_123", [
-					{ facet: "imagination", deviation: 1, strength: "moderate", confidence: "medium", domain: "work", note: "test" },
+					{
+						facet: "imagination",
+						deviation: 1,
+						strength: "moderate",
+						confidence: "medium",
+						domain: "work",
+						note: "test",
+					},
 				]);
 				seedConversationEvidence(evidence);
 
@@ -490,7 +552,14 @@ describe("generateResults Use Case (Story 18-4)", () => {
 		it.effect("full pipeline: null → scored → completed", () =>
 			Effect.gen(function* () {
 				const evidence = makeConversationEvidence("session_123", [
-					{ facet: "imagination", deviation: 1, strength: "moderate", confidence: "medium", domain: "work", note: "test" },
+					{
+						facet: "imagination",
+						deviation: 1,
+						strength: "moderate",
+						confidence: "medium",
+						domain: "work",
+						note: "test",
+					},
 				]);
 				seedConversationEvidence(evidence);
 

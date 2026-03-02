@@ -143,7 +143,6 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.succeed(
 							assessmentResultId: portraitPlaceholder.assessmentResultId,
 							tier: portraitPlaceholder.tier,
 							content: null,
-							lockedSectionTitles: null,
 							modelUsed: portraitPlaceholder.modelUsed,
 							retryCount: 0,
 							createdAt: new Date(),

@@ -25,8 +25,12 @@ export const ConfidenceRingCard = memo(function ConfidenceRingCard({
 	confidence,
 	messageCount,
 }: ConfidenceRingCardProps) {
-	const endAngle = (confidence / 100) * 360;
-	const chartData = useMemo(() => [{ confidence, fill: "var(--color-confidence)" }], [confidence]);
+	const displayConfidence = Math.round(confidence * 100);
+	const endAngle = confidence * 360;
+	const chartData = useMemo(
+		() => [{ confidence: displayConfidence, fill: "var(--color-confidence)" }],
+		[displayConfidence],
+	);
 
 	return (
 		<Card data-slot="confidence-ring-card">
@@ -57,7 +61,7 @@ export const ConfidenceRingCard = memo(function ConfidenceRingCard({
 										return (
 											<text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
 												<tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-3xl font-bold">
-													{confidence}%
+													{displayConfidence}%
 												</tspan>
 											</text>
 										);

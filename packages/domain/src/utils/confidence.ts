@@ -2,11 +2,11 @@
  * Confidence Calculation and Initialization Utilities
  *
  * Provides functions for:
- * 1. Calculating assessment confidence scores (0-100 integers)
+ * 1. Calculating assessment confidence scores (0-1 decimals)
  * 2. Initializing facet/trait score maps with defaults
  *
  * Confidence is a measure of certainty in personality trait estimates.
- * All confidence values are integers in the range 0-100.
+ * All confidence values are decimals in the range 0-1.
  */
 
 import { ALL_FACETS, type FacetName, TRAIT_NAMES, type TraitName } from "../constants/big-five";
@@ -149,12 +149,10 @@ export function calculateOverallConfidence(confidence: TraitConfidence | undefin
  * Averages the confidence values across all 30 facets.
  * Used after batch scoring to get updated confidence from new facet data.
  *
- * @param facetScores - Complete map of all 30 facet scores with confidence (0-100 integers)
- * @returns Overall confidence value (0-100 integer)
+ * @param facetScores - Complete map of all 30 facet scores with confidence (0-1 decimals)
+ * @returns Overall confidence value (0-1 decimal)
  */
 export function calculateConfidenceFromFacetScores(facetScores: FacetScoresMap): number {
 	const values = Object.values(facetScores);
-	const avgConfidence = values.reduce((sum, s) => sum + s.confidence, 0) / values.length;
-
-	return Math.round(avgConfidence);
+	return values.reduce((sum, s) => sum + s.confidence, 0) / values.length;
 }

@@ -14,7 +14,7 @@ describe("HighlightedText", () => {
 		const { container } = render(
 			<HighlightedText
 				text="Hello world"
-				highlights={[{ start: 0, end: 5, color: "green", confidence: 80 }]}
+				highlights={[{ start: 0, end: 5, color: "green", confidence: 0.8 }]}
 			/>,
 		);
 		const marks = container.querySelectorAll("mark");
@@ -27,8 +27,8 @@ describe("HighlightedText", () => {
 			<HighlightedText
 				text="Hello beautiful world"
 				highlights={[
-					{ start: 0, end: 5, color: "green", confidence: 80 },
-					{ start: 16, end: 21, color: "blue", confidence: 60 },
+					{ start: 0, end: 5, color: "green", confidence: 0.8 },
+					{ start: 16, end: 21, color: "blue", confidence: 0.6 },
 				]}
 			/>,
 		);
@@ -43,8 +43,8 @@ describe("HighlightedText", () => {
 			<HighlightedText
 				text="Hello world"
 				highlights={[
-					{ start: 0, end: 8, color: "green", confidence: 80 },
-					{ start: 3, end: 11, color: "blue", confidence: 60 },
+					{ start: 0, end: 8, color: "green", confidence: 0.8 },
+					{ start: 3, end: 11, color: "blue", confidence: 0.6 },
 				]}
 			/>,
 		);
@@ -57,7 +57,7 @@ describe("HighlightedText", () => {
 		const { container } = render(
 			<HighlightedText
 				text="Hi"
-				highlights={[{ start: -5, end: 100, color: "red", confidence: 50 }]}
+				highlights={[{ start: -5, end: 100, color: "red", confidence: 0.5 }]}
 			/>,
 		);
 		const marks = container.querySelectorAll("mark");
@@ -69,11 +69,11 @@ describe("HighlightedText", () => {
 		const { container } = render(
 			<HighlightedText
 				text="Test"
-				highlights={[{ start: 0, end: 4, color: "#00ff00", confidence: 100 }]}
+				highlights={[{ start: 0, end: 4, color: "#00ff00", confidence: 1.0 }]}
 			/>,
 		);
 		const mark = container.querySelector("mark");
-		// alpha = 0.15 + (100/100) * 0.45 = 0.6
+		// alpha = 0.15 + 1.0 * 0.45 = 0.6
 		// Background should use rgba with alpha, NOT element opacity
 		expect(mark?.style.backgroundColor).toContain("rgba");
 		expect(mark?.style.backgroundColor).toContain("0.6");

@@ -18,14 +18,14 @@ const mockTrait: TraitResult = {
 	name: "openness",
 	score: 90,
 	level: "O",
-	confidence: 85,
+	confidence: 0.85,
 };
 
 const mockFacetDetails = [
 	{
 		name: "imagination" as const,
 		score: 15,
-		confidence: 85,
+		confidence: 0.85,
 		evidence: [
 			{
 				id: "ev-1",

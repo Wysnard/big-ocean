@@ -15,11 +15,11 @@ beforeAll(() => {
 });
 
 const mockTraits: TraitResult[] = [
-	{ name: "openness", score: 90, level: "O", confidence: 85 },
-	{ name: "conscientiousness", score: 60, level: "B", confidence: 70 },
-	{ name: "extraversion", score: 40, level: "E", confidence: 65 },
-	{ name: "agreeableness", score: 80, level: "W", confidence: 75 },
-	{ name: "neuroticism", score: 30, level: "C", confidence: 60 },
+	{ name: "openness", score: 90, level: "O", confidence: 0.85 },
+	{ name: "conscientiousness", score: 60, level: "B", confidence: 0.7 },
+	{ name: "extraversion", score: 40, level: "E", confidence: 0.65 },
+	{ name: "agreeableness", score: 80, level: "W", confidence: 0.75 },
+	{ name: "neuroticism", score: 30, level: "C", confidence: 0.6 },
 ];
 
 describe("PersonalityRadarChart", () => {

@@ -10,16 +10,16 @@ const mockTrait: TraitResult = {
 	name: "openness",
 	score: 90,
 	level: "O",
-	confidence: 85,
+	confidence: 0.85,
 };
 
 const mockFacets: FacetResult[] = [
-	{ name: "imagination", traitName: "openness", score: 15, confidence: 80 },
-	{ name: "artistic_interests", traitName: "openness", score: 12, confidence: 75 },
-	{ name: "emotionality", traitName: "openness", score: 18, confidence: 90 },
-	{ name: "adventurousness", traitName: "openness", score: 10, confidence: 70 },
-	{ name: "intellect", traitName: "openness", score: 17, confidence: 85 },
-	{ name: "liberalism", traitName: "openness", score: 16, confidence: 80 },
+	{ name: "imagination", traitName: "openness", score: 15, confidence: 0.8 },
+	{ name: "artistic_interests", traitName: "openness", score: 12, confidence: 0.75 },
+	{ name: "emotionality", traitName: "openness", score: 18, confidence: 0.9 },
+	{ name: "adventurousness", traitName: "openness", score: 10, confidence: 0.7 },
+	{ name: "intellect", traitName: "openness", score: 17, confidence: 0.85 },
+	{ name: "liberalism", traitName: "openness", score: 16, confidence: 0.8 },
 ];
 
 function renderTraitCard(props?: Partial<Parameters<typeof TraitCard>[0]>) {
@@ -69,7 +69,7 @@ describe("TraitCard", () => {
 
 	it("displays confidence percentage in mini ring", () => {
 		renderTraitCard();
-		// confidence: 85 → "85%"
+		// confidence: 0.85 → "85%"
 		expect(screen.getByText("85%")).toBeInTheDocument();
 	});
 
@@ -87,7 +87,7 @@ describe("TraitCard", () => {
 
 	it("shows correct level name for mid-range score", () => {
 		renderTraitCard({
-			trait: { name: "conscientiousness", score: 60, level: "B", confidence: 70 },
+			trait: { name: "conscientiousness", score: 60, level: "B", confidence: 0.7 },
 		});
 		// Conscientiousness + score 60 (Mid band) → letter "B" → "Balanced"
 		expect(screen.getByText("Balanced")).toBeInTheDocument();
@@ -95,7 +95,7 @@ describe("TraitCard", () => {
 
 	it("shows correct level name for low-range score", () => {
 		renderTraitCard({
-			trait: { name: "neuroticism", score: 25, level: "R", confidence: 50 },
+			trait: { name: "neuroticism", score: 25, level: "R", confidence: 0.5 },
 		});
 		// Neuroticism + score 25 (Low band) → letter "R" → "Resilient"
 		expect(screen.getByText("Resilient")).toBeInTheDocument();

@@ -28,7 +28,6 @@ export const PortraitSchema = S.Struct({
 	assessmentResultId: S.String,
 	tier: S.Literal("teaser", "full"),
 	content: S.NullOr(S.String),
-	lockedSectionTitles: S.NullOr(S.Array(S.String)),
 	modelUsed: S.String,
 	retryCount: S.Number,
 	createdAt: S.DateTimeUtc,
@@ -39,7 +38,6 @@ export const PortraitSchema = S.Struct({
  */
 export const TeaserPortraitDataSchema = S.Struct({
 	content: S.String,
-	lockedSectionTitles: S.Array(S.String),
 });
 
 /**

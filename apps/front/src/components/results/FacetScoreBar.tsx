@@ -27,7 +27,7 @@ export function FacetScoreBar({ facet, size = "compact", showScore = true }: Fac
 							className={`${isCompact ? "text-[10px] font-medium text-muted-foreground" : "text-sm font-data"} ml-1 shrink-0`}
 							style={isCompact ? undefined : { color: traitColor }}
 						>
-							{facet.score}
+							{Math.round(facet.score)}
 						</span>
 					)}
 				</div>

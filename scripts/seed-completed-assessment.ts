@@ -236,12 +236,6 @@ What I see is someone who has turned the need for control into an art form so re
 
 But here's what stayed with me after everything else settled. That systematic precision you trust so completely? It has a cost you've stopped counting.`;
 
-const SEED_LOCKED_SECTION_TITLES = [
-	"The Architecture of Your Certainty",
-	"The Undertow — When the Plan Breaks Down",
-	"The Current Ahead",
-];
-
 // Build JSONB facets data
 const buildFacetsJson = () => {
 	const facets: Record<string, { score: number; confidence: number; domain: string }> = {};
@@ -294,7 +288,7 @@ const buildTraitsJson = () => {
 		const scores = facetNames.map((f) => FACET_SCORE_MAP[f].score);
 		const confidences = facetNames.map((f) => FACET_SCORE_MAP[f].confidence);
 		traits[trait] = {
-			score: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
+			score: scores.reduce((a, b) => a + b, 0),
 			confidence: Number((confidences.reduce((a, b) => a + b, 0) / confidences.length).toFixed(3)),
 		};
 	}
@@ -453,7 +447,6 @@ const seedProgram = Effect.gen(function* () {
 			assessmentResultId: resultRecord.id,
 			tier: "teaser" as const,
 			content: SEED_TEASER_PORTRAIT,
-			lockedSectionTitles: SEED_LOCKED_SECTION_TITLES,
 			modelUsed: "seed-script",
 		})
 		.returning()

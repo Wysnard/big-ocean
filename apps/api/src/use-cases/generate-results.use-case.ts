@@ -218,9 +218,6 @@ export const generateResults = (input: GenerateResultsInput) =>
 					yield* portraitRepo
 						.updateContent(teaserPlaceholder.id, teaserOutput.portrait)
 						.pipe(Effect.catchTag("PortraitNotFoundError", () => Effect.void));
-					yield* portraitRepo
-						.updateLockedSectionTitles(teaserPlaceholder.id, teaserOutput.lockedSectionTitles)
-						.pipe(Effect.catchTag("PortraitNotFoundError", () => Effect.void));
 				}
 
 				const scoringDuration = Date.now() - pipelineStart;

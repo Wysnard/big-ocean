@@ -181,7 +181,6 @@ CREATE TABLE "portraits" (
 	"assessment_result_id" uuid NOT NULL,
 	"tier" text NOT NULL,
 	"content" text,
-	"locked_section_titles" jsonb,
 	"model_used" text NOT NULL,
 	"retry_count" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL

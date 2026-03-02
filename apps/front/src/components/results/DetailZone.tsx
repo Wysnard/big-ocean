@@ -38,8 +38,12 @@ const confidenceChartConfig: ChartConfig = {
 };
 
 function FacetConfidenceRing({ confidence }: { confidence: number }) {
-	const endAngle = (confidence / 100) * 360;
-	const chartData = useMemo(() => [{ confidence, fill: "var(--color-confidence)" }], [confidence]);
+	const displayConfidence = Math.round(confidence * 100);
+	const endAngle = confidence * 360;
+	const chartData = useMemo(
+		() => [{ confidence: displayConfidence, fill: "var(--color-confidence)" }],
+		[displayConfidence],
+	);
 
 	return (
 		<ChartContainer config={confidenceChartConfig} className="size-10">
@@ -65,7 +69,7 @@ function FacetConfidenceRing({ confidence }: { confidence: number }) {
 								return (
 									<text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
 										<tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-[8px] font-semibold">
-											{Math.round(confidence)}
+											{displayConfidence}
 										</tspan>
 									</text>
 								);

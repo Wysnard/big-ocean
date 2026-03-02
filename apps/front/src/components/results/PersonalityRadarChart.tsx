@@ -112,7 +112,7 @@ export const PersonalityRadarChart = memo(function PersonalityRadarChart({
 							style={{ fill: item?.fill ?? "currentColor", fontSize: "18px" }}
 							dy={-6}
 						>
-							{item?.label?.charAt(0) ?? ""}: {item?.score ?? 0}
+							{item?.label?.charAt(0) ?? ""}: {Math.round(item?.score ?? 0)}
 						</text>
 					</g>
 				);
@@ -134,7 +134,7 @@ export const PersonalityRadarChart = memo(function PersonalityRadarChart({
 						className="text-[10px] fill-muted-foreground"
 						dy={10}
 					>
-						{item?.score ?? 0}/{MAX_TRAIT_SCORE}
+						{Math.round(item?.score ?? 0)}/{MAX_TRAIT_SCORE}
 					</text>
 				</g>
 			);

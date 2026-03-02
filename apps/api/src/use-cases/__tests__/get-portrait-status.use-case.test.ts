@@ -30,7 +30,6 @@ const mockPortraitRepo = {
 	incrementRetryCount: vi.fn(),
 	getByResultIdAndTier: vi.fn(),
 	getFullPortraitBySessionId: vi.fn(),
-	updateLockedSectionTitles: vi.fn(),
 };
 
 const mockAssessmentResultRepo = {
@@ -61,7 +60,6 @@ const createMockPortrait = (overrides: Partial<Portrait> = {}): Portrait => ({
 	assessmentResultId: "result_456",
 	tier: "full",
 	content: null,
-	lockedSectionTitles: null,
 	modelUsed: "claude-sonnet-4-6",
 	retryCount: 0,
 	createdAt: new Date(),
@@ -244,7 +242,6 @@ describe("getPortraitStatus Use Case (Story 13.3)", () => {
 					createMockPortrait({
 						tier: "teaser",
 						content: "Your teaser portrait...",
-						lockedSectionTitles: ["Title A", "Title B", "Title C"],
 					}),
 				),
 			);
@@ -253,7 +250,6 @@ describe("getPortraitStatus Use Case (Story 13.3)", () => {
 
 			expect(result.teaser).toEqual({
 				content: "Your teaser portrait...",
-				lockedSectionTitles: ["Title A", "Title B", "Title C"],
 			});
 		}).pipe(Effect.provide(createTestLayer())),
 	);
