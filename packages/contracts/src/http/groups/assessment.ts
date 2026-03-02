@@ -10,8 +10,6 @@ import {
 	AssessmentMessageContentSchema,
 	AssessmentResultError,
 	FacetResultSchema,
-	FinalizationEvidenceError,
-	FinanalyzerError,
 	TeaserPortraitError,
 	TraitResultSchema,
 } from "@workspace/domain";
@@ -258,8 +256,7 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 			.addError(SessionNotFinalizing, { status: 409 })
 			.addError(ConcurrentMessageError, { status: 409 })
 			.addError(AssessmentResultError, { status: 500 })
-			.addError(FinalizationEvidenceError, { status: 500 })
-			.addError(FinanalyzerError, { status: 500 })
+			.addError(ConversationEvidenceError, { status: 500 })
 			.addError(TeaserPortraitError, { status: 500 })
 			.addError(DatabaseError, { status: 500 }),
 	)

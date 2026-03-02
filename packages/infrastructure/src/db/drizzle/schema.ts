@@ -57,6 +57,8 @@ export const evidenceStrengthEnum = pgEnum("evidence_strength", ["weak", "modera
 
 export const evidenceConfidenceEnum = pgEnum("evidence_confidence", ["low", "medium", "high"]);
 
+export const resultStageEnum = pgEnum("result_stage", ["scored", "completed"]);
+
 export const portraitTypeEnum = pgEnum(
 	"portrait_type",
 	PORTRAIT_TYPES as unknown as [string, ...string[]],
@@ -284,17 +286,22 @@ export const finalizationEvidence = pgTable(
  * JSONB for facets/traits/domainCoverage, TEXT for portrait.
  * ocean_code is NOT stored — derived from traits via generateOceanCode().
  */
-export const assessmentResults = pgTable("assessment_results", {
-	id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-	assessmentSessionId: uuid("assessment_session_id")
-		.notNull()
-		.references(() => assessmentSession.id, { onDelete: "cascade" }),
-	facets: jsonb("facets").notNull(),
-	traits: jsonb("traits").notNull(),
-	domainCoverage: jsonb("domain_coverage").notNull(),
-	portrait: text("portrait").notNull(),
-	createdAt: timestamp("created_at").defaultNow(),
-});
+export const assessmentResults = pgTable(
+	"assessment_results",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		assessmentSessionId: uuid("assessment_session_id")
+			.notNull()
+			.references(() => assessmentSession.id, { onDelete: "cascade" }),
+		facets: jsonb("facets").notNull(),
+		traits: jsonb("traits").notNull(),
+		domainCoverage: jsonb("domain_coverage").notNull(),
+		portrait: text("portrait").notNull(),
+		stage: resultStageEnum("stage"),
+		createdAt: timestamp("created_at").defaultNow(),
+	},
+	(table) => [uniqueIndex("assessment_results_session_id_unique").on(table.assessmentSessionId)],
+);
 
 /**
  * Public Profile (Shareable Profile Links)

@@ -126,6 +126,7 @@ export {
 	type AssessmentResultRecord,
 	AssessmentResultRepository,
 	type AssessmentResultUpdateInput,
+	type ResultStage,
 } from "./repositories/assessment-result.repository";
 // Repository interfaces (ports in hexagonal architecture)
 export { AssessmentSessionRepository } from "./repositories/assessment-session.repository";

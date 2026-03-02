@@ -17,6 +17,8 @@ export class AssessmentResultError extends S.TaggedError<AssessmentResultError>(
 	{ message: S.String },
 ) {}
 
+export type ResultStage = "scored" | "completed";
+
 export interface AssessmentResultRecord {
 	readonly id: string;
 	readonly assessmentSessionId: string;
@@ -28,6 +30,7 @@ export interface AssessmentResultRecord {
 		| Record<string, never>;
 	readonly domainCoverage: Record<LifeDomain, number> | Record<string, never>;
 	readonly portrait: string;
+	readonly stage: ResultStage | null;
 	readonly createdAt: Date;
 }
 
@@ -41,6 +44,7 @@ export interface AssessmentResultInput {
 		| Record<string, never>;
 	readonly domainCoverage: Record<LifeDomain, number> | Record<string, never>;
 	readonly portrait: string;
+	readonly stage?: ResultStage | null;
 }
 
 export type AssessmentResultUpdateInput = Partial<
@@ -59,6 +63,13 @@ export class AssessmentResultRepository extends Context.Tag("AssessmentResultRep
 		readonly update: (
 			id: string,
 			input: AssessmentResultUpdateInput,
+		) => Effect.Effect<AssessmentResultRecord, AssessmentResultError>;
+		readonly upsert: (
+			input: AssessmentResultInput,
+		) => Effect.Effect<AssessmentResultRecord, AssessmentResultError>;
+		readonly updateStage: (
+			sessionId: string,
+			stage: ResultStage,
 		) => Effect.Effect<AssessmentResultRecord, AssessmentResultError>;
 	}
 >() {}
