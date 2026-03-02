@@ -8,7 +8,6 @@ import {
 	bigfiveFacetNameEnum,
 	conversationEvidence,
 	evidenceDomainEnum,
-	finalizationEvidence,
 	publicProfile,
 } from "../drizzle/schema";
 
@@ -76,23 +75,6 @@ describe("Conversation Evidence Schema (v2 — Story 18-1)", () => {
 		expect(conversationEvidence.domain).toBeDefined();
 		expect(conversationEvidence.note).toBeDefined();
 		expect(conversationEvidence.createdAt).toBeDefined();
-	});
-});
-
-describe("Finalization Evidence Schema", () => {
-	it("should have all required columns including quotes", () => {
-		expect(finalizationEvidence.id).toBeDefined();
-		expect(finalizationEvidence.assessmentMessageId).toBeDefined();
-		expect(finalizationEvidence.assessmentResultId).toBeDefined();
-		expect(finalizationEvidence.bigfiveFacet).toBeDefined();
-		expect(finalizationEvidence.score).toBeDefined();
-		expect(finalizationEvidence.confidence).toBeDefined();
-		expect(finalizationEvidence.domain).toBeDefined();
-		expect(finalizationEvidence.rawDomain).toBeDefined();
-		expect(finalizationEvidence.quote).toBeDefined();
-		expect(finalizationEvidence.highlightStart).toBeDefined();
-		expect(finalizationEvidence.highlightEnd).toBeDefined();
-		expect(finalizationEvidence.createdAt).toBeDefined();
 	});
 });
 

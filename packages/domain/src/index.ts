@@ -146,21 +146,6 @@ export {
 } from "./repositories/conversation-evidence.repository";
 export { CostGuardRepository } from "./repositories/cost-guard.repository";
 export { FacetEvidenceRepository } from "./repositories/facet-evidence.repository";
-// Finalization evidence repository (Story 11.2)
-export {
-	FinalizationEvidenceError,
-	type FinalizationEvidenceInput,
-	type FinalizationEvidenceRecord,
-	FinalizationEvidenceRepository,
-} from "./repositories/finalization-evidence.repository";
-// FinAnalyzer repository (Story 11.2)
-export {
-	type FinalizationEvidenceOutput,
-	FinanalyzerError,
-	type FinanalyzerMessage,
-	type FinanalyzerOutput,
-	FinanalyzerRepository,
-} from "./repositories/finanalyzer.repository";
 export {
 	type LoggerMethods,
 	LoggerRepository,
@@ -386,8 +371,6 @@ export {
 	GREETING_SEED_POOL,
 	type SteeringTarget,
 } from "./utils/formula";
-// Highlight position computation (Story 11.2)
-export { computeHighlightPositions } from "./utils/highlight";
 // Utility functions
 export {
 	buildChatSystemPrompt,

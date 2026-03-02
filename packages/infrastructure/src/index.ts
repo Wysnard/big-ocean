@@ -35,13 +35,8 @@ export { ConversanalyzerAnthropicRepositoryLive } from "./repositories/conversan
 export { ConversationEvidenceDrizzleRepositoryLive } from "./repositories/conversation-evidence.drizzle.repository";
 // CostGuard repository implementation
 export { CostGuardRedisRepositoryLive } from "./repositories/cost-guard.redis.repository";
-// Facet evidence repository — queries finalization_evidence, maps to SavedFacetEvidence contract
+// Facet evidence repository — queries conversation_evidence, maps to SavedFacetEvidence contract
 export { FacetEvidenceDrizzleRepositoryLive } from "./repositories/facet-evidence.drizzle.repository";
-// Finalization evidence repository implementation (Story 11.2)
-export { FinalizationEvidenceDrizzleRepositoryLive } from "./repositories/finalization-evidence.drizzle.repository";
-// FinAnalyzer repository implementation (Story 11.2)
-export { FinanalyzerAnthropicRepositoryLive } from "./repositories/finanalyzer.anthropic.repository";
-export { FinanalyzerMockRepositoryLive } from "./repositories/finanalyzer.mock.repository";
 // Logger repository implementation
 export { LoggerPinoRepositoryLive } from "./repositories/logger.pino.repository";
 // Nerin agent repository implementations (direct ChatAnthropic invocation)
@@ -51,11 +46,11 @@ export { NerinAgentMockRepositoryLive } from "./repositories/nerin-agent.mock.re
 export { PaymentGatewayPolarRepositoryLive } from "./repositories/payment-gateway.polar.repository";
 // Portrait repository implementation (Story 13.3)
 export { PortraitDrizzleRepositoryLive } from "./repositories/portrait.drizzle.repository";
-// Portrait rating repository implementation (Story 19-2)
-export { PortraitRatingDrizzleRepositoryLive } from "./repositories/portrait-rating.drizzle.repository";
 // Portrait generator repository implementations
 export { PortraitGeneratorClaudeRepositoryLive } from "./repositories/portrait-generator.claude.repository";
 export { PortraitGeneratorMockRepositoryLive } from "./repositories/portrait-generator.mock.repository";
+// Portrait rating repository implementation (Story 19-2)
+export { PortraitRatingDrizzleRepositoryLive } from "./repositories/portrait-rating.drizzle.repository";
 // Profile access log repository implementation (Story 15.1)
 export { ProfileAccessLogDrizzleRepositoryLive } from "./repositories/profile-access-log.drizzle.repository";
 // Public profile repository implementation

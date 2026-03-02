@@ -126,21 +126,6 @@ CREATE TABLE "conversation_evidence" (
 	"created_at" timestamp DEFAULT now()
 );
 
-CREATE TABLE "finalization_evidence" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"assessment_message_id" uuid NOT NULL,
-	"assessment_result_id" uuid NOT NULL,
-	"bigfive_facet" "bigfive_facet_name" NOT NULL,
-	"score" smallint NOT NULL CHECK (score >= 0 AND score <= 20),
-	"confidence" numeric(4,3) NOT NULL CHECK (confidence >= 0 AND confidence <= 1),
-	"domain" "evidence_domain" NOT NULL,
-	"raw_domain" text NOT NULL,
-	"quote" text NOT NULL,
-	"highlight_start" integer,
-	"highlight_end" integer,
-	"created_at" timestamp DEFAULT now()
-);
-
 -- ============================================================================
 -- Public Profile Table
 -- ============================================================================
@@ -252,7 +237,6 @@ CREATE INDEX "assessment_message_session_created_idx" ON "assessment_message" ("
 
 -- Evidence indexes
 CREATE INDEX "conversation_evidence_session_id_idx" ON "conversation_evidence" ("assessment_session_id");
-CREATE INDEX "finalization_evidence_result_id_idx" ON "finalization_evidence" ("assessment_result_id");
 
 -- Public profile indexes
 CREATE INDEX "public_profile_session_id_idx" ON "public_profile" ("session_id");
@@ -303,12 +287,6 @@ ALTER TABLE "conversation_evidence" ADD CONSTRAINT "conversation_evidence_sessio
 
 ALTER TABLE "conversation_evidence" ADD CONSTRAINT "conversation_evidence_message_id_assessment_message_id_fkey"
 	FOREIGN KEY ("assessment_message_id") REFERENCES "assessment_message"("id") ON DELETE CASCADE;
-
-ALTER TABLE "finalization_evidence" ADD CONSTRAINT "finalization_evidence_message_id_assessment_message_id_fkey"
-	FOREIGN KEY ("assessment_message_id") REFERENCES "assessment_message"("id") ON DELETE CASCADE;
-
-ALTER TABLE "finalization_evidence" ADD CONSTRAINT "finalization_evidence_result_id_assessment_results_id_fkey"
-	FOREIGN KEY ("assessment_result_id") REFERENCES "assessment_results"("id") ON DELETE CASCADE;
 
 -- Public profile constraints
 ALTER TABLE "public_profile" ADD CONSTRAINT "public_profile_session_id_assessment_session_id_fkey"

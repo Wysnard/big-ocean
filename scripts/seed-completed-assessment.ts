@@ -10,14 +10,13 @@
  * - Completed assessment session
  * - Realistic conversation messages (12 messages)
  * - Assessment results (facets, traits, domain coverage, teaser portrait)
- * - Conversation evidence (lean, steering-only)
- * - Finalization evidence (rich, with quotes)
+ * - Conversation evidence
  * - Public profile with OCEAN codes
  *
  * Output: Prints session ID that can be used to navigate to /assessment/{sessionId}/results
  *
- * Story 9.1: Updated for two-tier architecture — uses assessment_results,
- * conversation_evidence, and finalization_evidence tables.
+ * Story 9.1: Updated for two-tier architecture — uses assessment_results
+ * and conversation_evidence tables.
  */
 
 import "dotenv/config"; // Load .env file
@@ -33,7 +32,6 @@ const {
 	assessmentResults,
 	assessmentSession,
 	conversationEvidence,
-	finalizationEvidence,
 	portraits,
 	publicProfile,
 	user,
@@ -155,8 +153,8 @@ const FACET_SCORE_MAP: Record<
 	vulnerability: { score: 10, confidence: 0.67, domain: "relationships" },
 };
 
-// Evidence quotes mapping to facets (used for finalization_evidence)
-const EVIDENCE_QUOTES: Partial<
+// Evidence quotes mapping to facets (used for conversation evidence notes)
+const _EVIDENCE_QUOTES: Partial<
 	Record<FacetName, Array<{ quote: string; messageIndex: number; rawDomain: string }>>
 > = {
 	orderliness: [
@@ -494,41 +492,7 @@ const seedProgram = Effect.gen(function* () {
 	}
 	console.log(`  Inserted ${convEvidenceCount} conversation evidence records`);
 
-	// 6. Insert finalization evidence (rich, with quotes)
-	console.log("\nInserting finalization evidence...");
-	let finEvidenceCount = 0;
-	for (const [facet, evidenceList] of Object.entries(EVIDENCE_QUOTES)) {
-		if (!evidenceList) continue;
-		const facetData = FACET_SCORE_MAP[facet as FacetName];
-
-		for (const evidence of evidenceList) {
-			const message = messageRecords[evidence.messageIndex];
-			const highlightStart = message.content.indexOf(evidence.quote);
-			if (highlightStart === -1) continue;
-
-			yield* db
-				.insert(finalizationEvidence)
-				.values({
-					assessmentMessageId: message.id,
-					assessmentResultId: resultRecord.id,
-					bigfiveFacet: facet as FacetName,
-					score: facetData.score,
-					confidence: String(facetData.confidence),
-					domain: facetData.domain,
-					rawDomain: evidence.rawDomain,
-					quote: evidence.quote,
-					highlightStart,
-					highlightEnd: highlightStart + evidence.quote.length,
-				})
-				.pipe(
-					Effect.mapError((error) => new Error(`Failed to insert finalization evidence: ${error}`)),
-				);
-			finEvidenceCount++;
-		}
-	}
-	console.log(`  Inserted ${finEvidenceCount} finalization evidence records`);
-
-	// 7. Create public profile with OCEAN codes
+	// 6. Create public profile with OCEAN codes
 	console.log("\nCreating public profile...");
 	const [profile] = yield* db
 		.insert(publicProfile)

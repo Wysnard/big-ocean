@@ -83,9 +83,6 @@ const configSchema = Config.all({
 	conversanalyzerModelId: Config.string("CONVERSANALYZER_MODEL_ID").pipe(
 		Config.withDefault("claude-haiku-4-5-20251001"),
 	),
-	finanalyzerModelId: Config.string("FINANALYZER_MODEL_ID").pipe(
-		Config.withDefault("claude-sonnet-4-6"),
-	),
 	portraitGeneratorModelId: Config.string("PORTRAIT_GENERATOR_MODEL_ID").pipe(
 		Config.withDefault("claude-sonnet-4-6"),
 	),

@@ -303,53 +303,29 @@ export const test = base.extend<{ db: DbFixture }>({
 					messageIds.push(realId);
 				}
 
-				// 2. Find or create assessment_results row (required FK for finalization_evidence)
-				let assessmentResultId: string;
-				const existingResult = await client.query(
-					`SELECT id FROM assessment_results WHERE assessment_session_id = $1 LIMIT 1`,
-					[sessionId],
-				);
-				if (existingResult.rows.length > 0) {
-					assessmentResultId = existingResult.rows[0].id;
-				} else {
-					const resultRow = await client.query(
-						`INSERT INTO assessment_results (assessment_session_id, facets, traits, domain_coverage, portrait)
-						 VALUES ($1, $2, $3, $4, $5)
-						 RETURNING id`,
-						[
-							sessionId,
-							JSON.stringify({}),
-							JSON.stringify({}),
-							JSON.stringify({}),
-							"Seeded portrait for e2e test",
-						],
-					);
-					assessmentResultId = resultRow.rows[0].id;
-				}
-
-				// 3. Insert finalization_evidence rows
+				// 2. Insert conversation_evidence rows
 				for (const ev of evidence) {
 					const realMessageId = messageIdMap.get(ev.messageId);
 					if (!realMessageId) continue;
 
-					// Confidence: EvidenceSeed uses 0-100 integer, DB stores as numeric(4,3) 0-1
-					const confidenceDecimal = ev.confidence / 100;
+					// Map legacy score/confidence to v2 format
+					const deviation = Math.round(((ev.score - 10) / 10) * 3);
+					const strength = ev.confidence >= 70 ? "strong" : ev.confidence >= 40 ? "moderate" : "weak";
+					const confEnum = ev.confidence >= 70 ? "high" : ev.confidence >= 40 ? "medium" : "low";
 
 					await client.query(
-						`INSERT INTO finalization_evidence
-						 (assessment_message_id, assessment_result_id, bigfive_facet, score, confidence, domain, raw_domain, quote, highlight_start, highlight_end, created_at)
-						 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`,
+						`INSERT INTO conversation_evidence
+						 (assessment_session_id, assessment_message_id, bigfive_facet, deviation, strength, confidence, domain, note, created_at)
+						 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
 						[
+							sessionId,
 							realMessageId,
-							assessmentResultId,
 							ev.facetName,
-							ev.score,
-							confidenceDecimal,
+							deviation,
+							strength,
+							confEnum,
 							"leisure", // default domain for seeded evidence
-							"leisure", // raw_domain matches domain
 							ev.quote,
-							ev.highlightStart,
-							ev.highlightEnd,
 						],
 					);
 				}

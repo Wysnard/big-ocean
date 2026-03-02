@@ -38,7 +38,6 @@ export const mockAppConfig: AppConfigService = {
 	portraitWaitMinMs: 2000,
 	shareMinConfidence: 70,
 	conversanalyzerModelId: "claude-haiku-4-5-20251001",
-	finanalyzerModelId: "claude-sonnet-4-6",
 	portraitGeneratorModelId: "claude-sonnet-4-6",
 	teaserModelId: "claude-haiku-4-5-20251001",
 	messageRateLimit: 2,

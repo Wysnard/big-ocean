@@ -11,7 +11,7 @@
  * - assessmentSession: Assessment conversation sessions
  * - assessmentMessage: Conversation messages in sessions
  * - conversationEvidence: Lean evidence for steering (conversanalyzer)
- * - finalizationEvidence: Rich evidence for portrait (finanalyzer)
+ * - conversationEvidence: Evidence extracted by ConversAnalyzer on every message
  * - assessmentResults: Final scored results with portrait
  * - publicProfile: Shareable profile links
  */
@@ -31,7 +31,6 @@ import {
 	index,
 	integer,
 	jsonb,
-	numeric,
 	pgEnum,
 	pgTable,
 	smallint,
@@ -243,39 +242,6 @@ export const conversationEvidence = pgTable(
 	(table) => [
 		index("conversation_evidence_session_id_idx").on(table.assessmentSessionId),
 		check("conversation_evidence_deviation_check", sql`deviation >= -3 AND deviation <= 3`),
-	],
-);
-
-/**
- * Finalization Evidence (Rich, portrait-quality)
- *
- * Produced by finanalyzer (Sonnet) during finalization.
- * Re-analyzes ALL messages for comprehensive evidence with quotes.
- */
-export const finalizationEvidence = pgTable(
-	"finalization_evidence",
-	{
-		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-		assessmentMessageId: uuid("assessment_message_id")
-			.notNull()
-			.references(() => assessmentMessage.id, { onDelete: "cascade" }),
-		assessmentResultId: uuid("assessment_result_id")
-			.notNull()
-			.references(() => assessmentResults.id, { onDelete: "cascade" }),
-		bigfiveFacet: bigfiveFacetNameEnum("bigfive_facet").notNull(),
-		score: smallint("score").notNull(),
-		confidence: numeric("confidence", { precision: 4, scale: 3 }).notNull(),
-		domain: evidenceDomainEnum("domain").notNull(),
-		rawDomain: text("raw_domain").notNull(),
-		quote: text("quote").notNull(),
-		highlightStart: integer("highlight_start"),
-		highlightEnd: integer("highlight_end"),
-		createdAt: timestamp("created_at").defaultNow(),
-	},
-	(table) => [
-		index("finalization_evidence_result_id_idx").on(table.assessmentResultId),
-		check("finalization_evidence_score_check", sql`score >= 0 AND score <= 20`),
-		check("finalization_evidence_confidence_check", sql`confidence >= 0 AND confidence <= 1`),
 	],
 );
 
@@ -534,7 +500,6 @@ export const relations = defineRelations(
 		assessmentSession,
 		assessmentMessage,
 		conversationEvidence,
-		finalizationEvidence,
 		assessmentResults,
 		publicProfile,
 		purchaseEvents,
@@ -589,7 +554,6 @@ export const relations = defineRelations(
 				to: r.user.id,
 			}),
 			conversationEvidence: r.many.conversationEvidence(),
-			finalizationEvidence: r.many.finalizationEvidence(),
 		},
 		conversationEvidence: {
 			session: r.one.assessmentSession({
@@ -601,22 +565,11 @@ export const relations = defineRelations(
 				to: r.assessmentMessage.id,
 			}),
 		},
-		finalizationEvidence: {
-			message: r.one.assessmentMessage({
-				from: r.finalizationEvidence.assessmentMessageId,
-				to: r.assessmentMessage.id,
-			}),
-			result: r.one.assessmentResults({
-				from: r.finalizationEvidence.assessmentResultId,
-				to: r.assessmentResults.id,
-			}),
-		},
 		assessmentResults: {
 			session: r.one.assessmentSession({
 				from: r.assessmentResults.assessmentSessionId,
 				to: r.assessmentSession.id,
 			}),
-			finalizationEvidence: r.many.finalizationEvidence(),
 			publicProfile: r.many.publicProfile(),
 			portraits: r.many.portraits(),
 		},

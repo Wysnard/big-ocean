@@ -81,7 +81,6 @@ const MockConfigLive = Layer.succeed(AppConfig, {
 	portraitWaitMinMs: 2000,
 	shareMinConfidence: 70,
 	conversanalyzerModelId: "mock",
-	finanalyzerModelId: "mock",
 	portraitGeneratorModelId: "mock",
 });
 
