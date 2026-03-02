@@ -6,7 +6,8 @@
  */
 
 import { FACET_TO_TRAIT, TRAIT_NAMES } from "../constants/big-five";
-import type { FacetName, FacetScoresMap, SavedFacetEvidence } from "../types/facet-evidence";
+import type { ConversationEvidenceRecord } from "../repositories/conversation-evidence.repository";
+import type { FacetName, FacetScoresMap } from "../types/facet-evidence";
 
 const SYSTEM_PROMPT = `You are Nerin, a perceptive personality analyst who has observed two people through deep conversations. You're writing a relationship comparison that reveals how two personalities interact, complement, and challenge each other.
 
@@ -44,7 +45,7 @@ Keep the total analysis between 800-1200 words. Write in second person, addressi
 function formatUserProfile(
 	label: string,
 	facetScoresMap: FacetScoresMap,
-	evidence: ReadonlyArray<SavedFacetEvidence>,
+	evidence: ReadonlyArray<ConversationEvidenceRecord>,
 ): string {
 	const traitSummaries: string[] = [];
 
@@ -60,7 +61,10 @@ function formatUserProfile(
 
 	const evidenceLines = evidence
 		.slice(0, 20) // Cap evidence to avoid prompt bloat
-		.map((e) => `- [${e.facetName}] "${e.quote}" (score: ${e.score}, confidence: ${e.confidence})`)
+		.map(
+			(e) =>
+				`- [${e.bigfiveFacet}] "${e.note}" (deviation: ${e.deviation}, strength: ${e.strength}, confidence: ${e.confidence})`,
+		)
 		.join("\n");
 
 	return `=== ${label} ===
@@ -73,10 +77,10 @@ ${evidenceLines || "(no evidence available)"}`;
 
 export interface RelationshipAnalysisPromptInput {
 	readonly userAFacetScores: FacetScoresMap;
-	readonly userAEvidence: ReadonlyArray<SavedFacetEvidence>;
+	readonly userAEvidence: ReadonlyArray<ConversationEvidenceRecord>;
 	readonly userAName: string;
 	readonly userBFacetScores: FacetScoresMap;
-	readonly userBEvidence: ReadonlyArray<SavedFacetEvidence>;
+	readonly userBEvidence: ReadonlyArray<ConversationEvidenceRecord>;
 	readonly userBName: string;
 }
 

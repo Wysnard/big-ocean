@@ -1,18 +1,19 @@
 /**
- * Generate Relationship Analysis Use Case Tests (Story 14.4)
+ * Generate Relationship Analysis Use Case Tests (Story 18-6)
  *
  * Tests:
  * - Successful generation updates placeholder
  * - Retry when inviter data not found
  * - Retry when invitee data not found
  * - Idempotent update (already has content)
+ * - Uses ConversationEvidenceRepository (not FinalizationEvidenceRepository)
  */
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
 	AssessmentResultRepository,
 	AssessmentSessionRepository,
-	FinalizationEvidenceRepository,
+	ConversationEvidenceRepository,
 	LoggerRepository,
 	RelationshipAnalysisGeneratorRepository,
 	RelationshipAnalysisRepository,
@@ -55,10 +56,10 @@ const mockResultsRepo = {
 	delete: vi.fn(),
 };
 
-const mockEvidenceRepo = {
-	getByResultId: vi.fn(),
-	saveBatch: vi.fn(),
-	existsForSession: vi.fn(),
+const mockConversationEvidenceRepo = {
+	save: vi.fn(),
+	findBySession: vi.fn(),
+	countByMessage: vi.fn(),
 };
 
 const mockLogger = {
@@ -74,7 +75,7 @@ const createTestLayer = () =>
 		Layer.succeed(RelationshipAnalysisGeneratorRepository, mockAnalysisGen),
 		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
 		Layer.succeed(AssessmentResultRepository, mockResultsRepo),
-		Layer.succeed(FinalizationEvidenceRepository, mockEvidenceRepo),
+		Layer.succeed(ConversationEvidenceRepository, mockConversationEvidenceRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
 	);
 
@@ -104,24 +105,22 @@ const mockResult = (sessionId: string) => ({
 	updatedAt: new Date(),
 });
 
-const mockEvidence = [
+const mockConversationEvidence = [
 	{
 		id: "ev_1",
-		assessmentMessageId: "msg_1",
-		assessmentResultId: "result_1",
+		sessionId: "session-inviter-user-1",
+		messageId: "msg_1",
 		bigfiveFacet: "imagination",
-		score: 15,
-		confidence: 0.8,
-		domain: "creativity",
-		rawDomain: "artistic expression",
-		quote: "I love creating things",
-		highlightStart: 0,
-		highlightEnd: 21,
+		deviation: 2,
+		strength: "strong",
+		confidence: "high",
+		domain: "work",
+		note: "Shows vivid creative thinking",
 		createdAt: new Date(),
 	},
 ];
 
-describe("generateRelationshipAnalysis Use Case (Story 14.4)", () => {
+describe("generateRelationshipAnalysis Use Case (Story 18-6)", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
@@ -132,7 +131,9 @@ describe("generateRelationshipAnalysis Use Case (Story 14.4)", () => {
 		mockResultsRepo.getBySessionId.mockImplementation((sessionId: string) =>
 			Effect.succeed(mockResult(sessionId)),
 		);
-		mockEvidenceRepo.getByResultId.mockReturnValue(Effect.succeed(mockEvidence));
+		mockConversationEvidenceRepo.findBySession.mockReturnValue(
+			Effect.succeed(mockConversationEvidence),
+		);
 		mockAnalysisGen.generateAnalysis.mockReturnValue(
 			Effect.succeed({
 				content: "# Relationship Analysis\n\nYour dynamic is fascinating...",
@@ -222,7 +223,7 @@ describe("generateRelationshipAnalysis Use Case (Story 14.4)", () => {
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("should load both users' data from session → result → evidence chain", () =>
+	it.effect("should load conversation evidence by session for both users", () =>
 		Effect.gen(function* () {
 			yield* generateRelationshipAnalysis({
 				analysisId: ANALYSIS_ID,
@@ -237,8 +238,8 @@ describe("generateRelationshipAnalysis Use Case (Story 14.4)", () => {
 			// Results loaded for both sessions
 			expect(mockResultsRepo.getBySessionId).toHaveBeenCalledTimes(2);
 
-			// Evidence loaded for both results
-			expect(mockEvidenceRepo.getByResultId).toHaveBeenCalledTimes(2);
+			// Conversation evidence loaded by session for both users
+			expect(mockConversationEvidenceRepo.findBySession).toHaveBeenCalledTimes(2);
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 });
