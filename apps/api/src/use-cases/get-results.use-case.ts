@@ -144,15 +144,16 @@ export const getResults = (input: GetResultsInput) =>
 		// 6. Lookup archetype
 		const archetype = lookupArchetype(oceanCode4);
 
-		// 7. Compute overall confidence (mean of all 30 facet confidences)
-		const overallConfidence = calculateConfidenceFromFacetScores(facetScoresMap);
+		// 7. Compute overall confidence (mean of all 30 facet confidences, 0-1 scale)
+		const overallConfidence =
+			Math.round(calculateConfidenceFromFacetScores(facetScoresMap) * 100) / 100;
 
 		// 8. Build trait results array
 		const traits: TraitResult[] = BIG_FIVE_TRAITS.map((traitName) => {
 			const traitScore = computedTraits[traitName];
 			return {
 				name: traitName,
-				score: traitScore.score,
+				score: Math.round(traitScore.score),
 				level: mapScoreToLevel(traitName, traitScore.score),
 				confidence: traitScore.confidence,
 			};
@@ -175,7 +176,7 @@ export const getResults = (input: GetResultsInput) =>
 			return {
 				name: facetName,
 				traitName: FACET_TO_TRAIT[facetName],
-				score: facetData.score,
+				score: Math.round(facetData.score),
 				confidence: facetData.confidence,
 				level,
 				levelLabel,

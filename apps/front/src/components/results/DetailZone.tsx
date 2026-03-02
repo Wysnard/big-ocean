@@ -131,7 +131,7 @@ export function DetailZone({
 								{TRAIT_LABELS[trait.name]} — Evidence
 							</h3>
 							<p className="text-sm text-muted-foreground">
-								Score: {Math.round(trait.score)}/120 · {levelLetter} · {totalEvidence} evidence items
+								Score: {trait.score}/120 · {levelLetter} · {totalEvidence} evidence items
 							</p>
 						</div>
 					</div>
@@ -182,7 +182,7 @@ export function DetailZone({
 												{toFacetDisplayName(facet.name)}
 											</span>
 											<div className="flex items-center gap-1">
-												<span className="text-xs text-muted-foreground">{Math.round(facet.score)}/20</span>
+												<span className="text-xs text-muted-foreground">{facet.score}/20</span>
 												<FacetConfidenceRing confidence={facet.confidence} />
 											</div>
 										</div>
