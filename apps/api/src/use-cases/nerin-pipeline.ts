@@ -217,10 +217,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			targetFacet = steering.targetFacet;
 		}
 
-		// 5. Compute nearingEnd
-		const nearingEnd = userMessageCount >= config.freeTierMessageThreshold - 3;
-
-		// 5a. Extract recent intent types from last 3 assistant messages
+		// 5. Extract recent intent types from last 3 assistant messages
 		const recentIntentTypes: IntentType[] = [];
 		for (let i = previousMessages.length - 1; i >= 0 && recentIntentTypes.length < 3; i--) {
 			const msg = previousMessages[i];
@@ -241,7 +238,6 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			previousDomain,
 			domainStreak,
 			turnIndex: userMessageCount,
-			nearingEnd,
 			recentIntentTypes,
 		});
 
@@ -269,7 +265,6 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			coveredFacets,
 			metricsMapSize,
 			bestPriority,
-			nearingEnd,
 			domainStreak,
 			intentType: microIntent.intent,
 			topicTransitionsPerFiveTurns,
@@ -283,7 +278,6 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				messages: domainMessages,
 				targetDomain,
 				targetFacet,
-				nearingEnd,
 				microIntent,
 			})
 			.pipe(

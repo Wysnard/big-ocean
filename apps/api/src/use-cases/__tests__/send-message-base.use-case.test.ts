@@ -100,7 +100,6 @@ describe("sendMessage Use Case", () => {
 						],
 						targetDomain: "relationships",
 						targetFacet: "gregariousness",
-						nearingEnd: false,
 						microIntent: expect.objectContaining({
 							intent: expect.any(String),
 							domain: expect.any(String),

@@ -6,9 +6,9 @@
  */
 
 export const NERIN_FAREWELL_MESSAGES = [
-	"We've gone somewhere real today. I'm going to sit with everything you've told me — and I want to write something for you. Give me a moment.",
-	"This was a good dive. I've been quietly building a picture of you this whole time — and I think you'll find it interesting. Let me put it together.",
-	"Thank you for going there with me. There's a thread running through everything you've said today — I want to take a moment to trace it properly. I'll have something for you soon.",
+	"We're running low on oxygen — time to head back up 🤿 I've been building something in my head this whole dive. Give me a moment to put it on paper.",
+	"That's our oxygen for today — gotta surface 🤿 I've been quietly tracing a thread through everything you've said. Let me write it down for you.",
+	"Tank's almost empty — we need to come up 🤿 There's more I wanted to explore, but what I've got is enough to write you something real. Hold tight.",
 ] as const;
 
 /**

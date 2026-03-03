@@ -5,7 +5,6 @@
  * Composes NERIN_PERSONA (shared identity) + CHAT_CONTEXT (conversation-specific rules).
  *
  * Story 9.2: Updated to accept structured (targetDomain, targetFacet) instead of free-text steeringHint.
- * Story 10.5: Refactored to params object with nearingEnd for farewell winding-down.
  * Story 17.2: Added MicroIntent support for natural steering via micro-intents.
  */
 
@@ -22,7 +21,6 @@ import type { MicroIntent } from "./steering/realize-micro-intent";
 export interface ChatSystemPromptParams {
 	targetDomain?: LifeDomain;
 	targetFacet?: FacetName;
-	nearingEnd?: boolean;
 	/** Structured micro-intent (Story 17.2) — when provided, replaces raw steering format */
 	microIntent?: MicroIntent;
 }
@@ -42,14 +40,17 @@ const INTENT_DESCRIPTIONS: Record<MicroIntent["intent"], string> = {
 };
 
 const BRIDGE_DESCRIPTIONS: Record<NonNullable<MicroIntent["bridgeHint"]>, string> = {
-	map_same_theme: "Find the same theme in the new domain — 'You mentioned X at work, I'm curious how that plays out in...'",
+	map_same_theme:
+		"Find the same theme in the new domain — 'You mentioned X at work, I'm curious how that plays out in...'",
 	confirm_scope: "Confirm the shift — 'We've been talking about X, I want to zoom out to...'",
-	contrast_domains: "Use contrast — 'That's how you are at work. Are you different when it comes to...'",
+	contrast_domains:
+		"Use contrast — 'That's how you are at work. Are you different when it comes to...'",
 };
 
 const STYLE_DESCRIPTIONS: Record<NonNullable<MicroIntent["questionStyle"]>, string> = {
 	open: "Use an open-ended question — invite them to explore freely.",
-	choice: "Offer a choice or comparison — 'Are you more X or Y?' Give them something concrete to react to.",
+	choice:
+		"Offer a choice or comparison — 'Are you more X or Y?' Give them something concrete to react to.",
 };
 
 /**
@@ -88,18 +89,10 @@ ${intentDesc}`;
  * @returns System prompt for Nerin agent
  */
 export function buildChatSystemPrompt(params: ChatSystemPromptParams = {}): string {
-	const { targetDomain, targetFacet, nearingEnd, microIntent } = params;
+	const { targetDomain, targetFacet, microIntent } = params;
 	let prompt = `${NERIN_PERSONA}\n\n${CHAT_CONTEXT}`;
 
-	// When nearingEnd, CONVERSATION CLOSING overrides STEERING PRIORITY to avoid contradictory instructions
-	if (nearingEnd) {
-		prompt += `
-
-CONVERSATION CLOSING:
-The conversation is nearing its natural end. Begin weaving your responses toward a warm, reflective closing.
-Acknowledge what you've learned about the person and express genuine appreciation for the conversation.
-Do NOT mention any assessment, scores, or results — just naturally wind down.`;
-	} else if (microIntent && targetFacet) {
+	if (microIntent && targetFacet) {
 		// Story 17.2: Structured micro-intent format
 		prompt += buildMicroIntentSection(microIntent, targetFacet);
 	} else if (targetDomain && targetFacet) {

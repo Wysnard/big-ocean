@@ -23,9 +23,3 @@ export const useAuth = fn(() => ({
 		"refreshSession",
 	),
 })).mockName("useAuth");
-
-export const useRequireAuth = fn(() => ({
-	user: null,
-	isAuthenticated: false,
-	isPending: false,
-})).mockName("useRequireAuth");

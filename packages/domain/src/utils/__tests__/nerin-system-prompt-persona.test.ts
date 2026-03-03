@@ -59,7 +59,7 @@ describe("buildChatSystemPrompt — persona and structure", () => {
 
 	it("contains breadth-first exploration instructions", () => {
 		const prompt = buildChatSystemPrompt();
-		expect(prompt).toContain("Explore breadth through connected threads");
+		expect(prompt).toContain("Cover ground across their life");
 		expect(prompt).toContain("Don't exhaust a topic");
 	});
 

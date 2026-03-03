@@ -6,15 +6,21 @@
  * Only one assessment per user — no grid layout needed.
  */
 
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Card, CardContent, CardFooter, CardHeader } from "@workspace/ui/components/card";
-import { Loader2 } from "lucide-react";
 import { AssessmentCard } from "../components/profile/AssessmentCard";
 import { EmptyProfile } from "../components/profile/EmptyProfile";
 import { useListAssessments } from "../hooks/use-assessment";
-import { useRequireAuth } from "../hooks/use-auth";
+import { useAuth } from "../hooks/use-auth";
+import { getSession } from "../lib/auth-client";
 
 export const Route = createFileRoute("/profile")({
+	beforeLoad: async () => {
+		const { data: session } = await getSession();
+		if (!session?.user) {
+			throw redirect({ to: "/login", search: { sessionId: undefined, redirectTo: undefined } });
+		}
+	},
 	component: ProfilePage,
 });
 
@@ -44,19 +50,8 @@ function ProfileSkeleton() {
 }
 
 function ProfilePage() {
-	const { user, isPending: isAuthPending } = useRequireAuth("/login");
-	const { data, isLoading: isAssessmentsLoading, error } = useListAssessments(!!user);
-
-	if (isAuthPending) {
-		return (
-			<div className="min-h-[calc(100dvh-3.5rem)] flex items-center justify-center bg-background">
-				<div className="text-center">
-					<Loader2 className="h-10 w-10 motion-safe:animate-spin text-primary mx-auto mb-3" />
-					<p className="text-sm text-muted-foreground">Loading...</p>
-				</div>
-			</div>
-		);
-	}
+	const { user } = useAuth();
+	const { data, isLoading: isAssessmentsLoading, error } = useListAssessments(true);
 
 	if (!user) {
 		return null;

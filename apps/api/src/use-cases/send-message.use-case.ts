@@ -4,7 +4,7 @@
  * Story 9.2: Rewritten as simple sequential Effect pipeline.
  * Story 10.2: Added conversanalyzer pipeline (post-cold-start).
  * Story 10.4: Integrated steering — computeFacetMetrics + computeSteeringTarget on every message.
- * Story 10.5: Advisory lock for concurrent message prevention, threshold consolidation, nearingEnd flag.
+ * Story 10.5: Advisory lock for concurrent message prevention, threshold consolidation.
  *
  * Pipeline: acquire advisory lock → validate session (inside lock) → save user msg
  *           → runNerinPipeline (ConversAnalyzer → evidence → steering → Nerin → save assistant msg → increment count)

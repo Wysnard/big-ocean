@@ -7,21 +7,21 @@ describe("nerin-farewell", () => {
 			expect(NERIN_FAREWELL_MESSAGES).toHaveLength(3);
 		});
 
-		it("message 1 matches AC #2 verbatim", () => {
+		it("message 1 uses diving oxygen theme", () => {
 			expect(NERIN_FAREWELL_MESSAGES[0]).toBe(
-				"We've gone somewhere real today. I'm going to sit with everything you've told me — and I want to write something for you. Give me a moment.",
+				"We're running low on oxygen — time to head back up 🤿 I've been building something in my head this whole dive. Give me a moment to put it on paper.",
 			);
 		});
 
-		it("message 2 matches AC #2 verbatim", () => {
+		it("message 2 uses diving oxygen theme", () => {
 			expect(NERIN_FAREWELL_MESSAGES[1]).toBe(
-				"This was a good dive. I've been quietly building a picture of you this whole time — and I think you'll find it interesting. Let me put it together.",
+				"That's our oxygen for today — gotta surface 🤿 I've been quietly tracing a thread through everything you've said. Let me write it down for you.",
 			);
 		});
 
-		it("message 3 matches AC #2 verbatim", () => {
+		it("message 3 uses diving oxygen theme and implies more to explore", () => {
 			expect(NERIN_FAREWELL_MESSAGES[2]).toBe(
-				"Thank you for going there with me. There's a thread running through everything you've said today — I want to take a moment to trace it properly. I'll have something for you soon.",
+				"Tank's almost empty — we need to come up 🤿 There's more I wanted to explore, but what I've got is enough to write you something real. Hold tight.",
 			);
 		});
 

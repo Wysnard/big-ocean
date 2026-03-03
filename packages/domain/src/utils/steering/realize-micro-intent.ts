@@ -33,7 +33,6 @@ export interface RealizeMicroIntentInput {
 	readonly previousDomain: LifeDomain | null;
 	readonly domainStreak: number;
 	readonly turnIndex: number;
-	readonly nearingEnd: boolean;
 	readonly recentIntentTypes: readonly IntentType[];
 }
 
@@ -57,7 +56,11 @@ const BRIDGE_HINTS = ["map_same_theme", "confirm_scope", "contrast_domains"] as 
 /**
  * Checks if the last N recent intents are all the same type.
  */
-function hasConsecutiveIntents(recent: readonly IntentType[], type: IntentType, count: number): boolean {
+function hasConsecutiveIntents(
+	recent: readonly IntentType[],
+	type: IntentType,
+	count: number,
+): boolean {
 	if (recent.length < count) return false;
 	const lastN = recent.slice(-count);
 	return lastN.every((t) => t === type);
@@ -81,25 +84,19 @@ function selectQuestionStyle(turnIndex: number): MicroIntent["questionStyle"] {
  * Realize a micro-intent from steering target and conversation context.
  *
  * Intent selection priority:
- * 1. nearingEnd → depth_push (wind down with depth)
- * 2. domain shift needed → domain_shift (with bridge hint)
- * 3. deep in same domain (streak >= 3) → depth_push
- * 4. early conversation (turnIndex < 6) → story_pull
- * 5. mid/late conversation → cycle between tradeoff_probe, contradiction_surface, story_pull
+ * 1. domain shift needed → domain_shift (with bridge hint)
+ * 2. deep in same domain (streak >= 3) → domain_shift
+ * 3. early conversation (turnIndex < 6) → story_pull
+ * 4. mid/late conversation → cycle between tradeoff_probe, contradiction_surface, story_pull
  *
  * Guardrail: max 2 consecutive tradeoff_probes.
  */
 export function realizeMicroIntent(input: RealizeMicroIntentInput): MicroIntent {
-	const { targetDomain, previousDomain, domainStreak, turnIndex, nearingEnd, recentIntentTypes } = input;
+	const { targetDomain, previousDomain, domainStreak, turnIndex, recentIntentTypes } = input;
 
 	const questionStyle = selectQuestionStyle(turnIndex);
 
-	// 1. Nearing end → depth_push to wind down reflectively
-	if (nearingEnd) {
-		return { intent: "depth_push", domain: targetDomain, questionStyle };
-	}
-
-	// 2. Domain shift needed
+	// 1. Domain shift needed
 	if (previousDomain !== null && targetDomain !== previousDomain) {
 		return {
 			intent: "domain_shift",
@@ -109,17 +106,22 @@ export function realizeMicroIntent(input: RealizeMicroIntentInput): MicroIntent 
 		};
 	}
 
-	// 3. Deep in same domain → depth_push
+	// 2. Deep in same domain → bridge to new territory
 	if (domainStreak >= DEPTH_PUSH_STREAK_THRESHOLD) {
-		return { intent: "depth_push", domain: targetDomain, questionStyle };
+		return {
+			intent: "domain_shift",
+			domain: targetDomain,
+			bridgeHint: selectBridgeHint(turnIndex),
+			questionStyle,
+		};
 	}
 
-	// 4. Early conversation → story_pull
+	// 3. Early conversation → story_pull
 	if (turnIndex < EARLY_TURN_THRESHOLD) {
 		return { intent: "story_pull", domain: targetDomain, questionStyle };
 	}
 
-	// 5. Mid/late conversation → cycle through intents
+	// 4. Mid/late conversation → cycle through intents
 	const cycleIntents: IntentType[] = ["tradeoff_probe", "contradiction_surface", "story_pull"];
 	let selectedIntent = cycleIntents[turnIndex % cycleIntents.length] as IntentType;
 

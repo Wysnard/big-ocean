@@ -34,9 +34,6 @@ export interface NerinInvokeInput {
 	/** Big Five facet to steer conversation toward (from steering formula, undefined for cold start) */
 	readonly targetFacet?: FacetName;
 
-	/** Whether the conversation is nearing the message threshold (Story 10.5) */
-	readonly nearingEnd?: boolean;
-
 	/** Structured micro-intent for natural steering (Story 17.2) */
 	readonly microIntent?: MicroIntent;
 }

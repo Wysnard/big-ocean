@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { FacetName } from "../../../constants/big-five";
 import type { LifeDomain } from "../../../constants/life-domain";
-import { type IntentType, type RealizeMicroIntentInput, realizeMicroIntent } from "../realize-micro-intent";
+import {
+	type IntentType,
+	type RealizeMicroIntentInput,
+	realizeMicroIntent,
+} from "../realize-micro-intent";
 
 const baseInput: RealizeMicroIntentInput = {
 	targetFacet: "achievement_striving" as FacetName,
@@ -9,7 +13,6 @@ const baseInput: RealizeMicroIntentInput = {
 	previousDomain: "work" as LifeDomain,
 	domainStreak: 1,
 	turnIndex: 10,
-	nearingEnd: false,
 	recentIntentTypes: [],
 };
 
@@ -25,9 +28,10 @@ describe("realizeMicroIntent", () => {
 		expect(result.bridgeHint).toBeDefined();
 	});
 
-	it("returns depth_push when domainStreak >= 3", () => {
+	it("returns domain_shift when domainStreak >= 3", () => {
 		const result = realizeMicroIntent(input({ domainStreak: 3 }));
-		expect(result.intent).toBe("depth_push");
+		expect(result.intent).toBe("domain_shift");
+		expect(result.bridgeHint).toBeDefined();
 	});
 
 	it("returns story_pull for early turns (turnIndex < 6)", () => {
@@ -58,15 +62,8 @@ describe("realizeMicroIntent", () => {
 		expect(result.intent).toBe("tradeoff_probe");
 	});
 
-	it("returns depth_push when nearingEnd", () => {
-		const result = realizeMicroIntent(input({ nearingEnd: true }));
-		expect(result.intent).toBe("depth_push");
-	});
-
 	it("includes bridgeHint on domain shifts", () => {
-		const result = realizeMicroIntent(
-			input({ targetDomain: "family", previousDomain: "work" }),
-		);
+		const result = realizeMicroIntent(input({ targetDomain: "family", previousDomain: "work" }));
 		expect(result.bridgeHint).toBeDefined();
 		expect(["map_same_theme", "confirm_scope", "contrast_domains"]).toContain(result.bridgeHint);
 	});
@@ -81,13 +78,6 @@ describe("realizeMicroIntent", () => {
 		const odd = realizeMicroIntent(input({ turnIndex: 11 }));
 		expect(even.questionStyle).toBe("open");
 		expect(odd.questionStyle).toBe("choice");
-	});
-
-	it("nearingEnd takes priority over domain_shift", () => {
-		const result = realizeMicroIntent(
-			input({ nearingEnd: true, targetDomain: "leisure", previousDomain: "work" }),
-		);
-		expect(result.intent).toBe("depth_push");
 	});
 
 	it("domain_shift takes priority over depth_push from streak", () => {

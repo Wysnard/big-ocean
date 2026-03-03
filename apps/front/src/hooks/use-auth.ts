@@ -89,28 +89,4 @@ export function useAuth() {
 	};
 }
 
-/**
- * Require Auth Hook
- *
- * Redirects to login if not authenticated.
- * Use in protected routes.
- *
- * @example
- * ```tsx
- * function ProtectedPage() {
- *   const { user } = useRequireAuth();
- *   return <div>Welcome {user.email}</div>;
- * }
- * ```
- */
-export function useRequireAuth(redirectTo = "/login") {
-	const { user, isAuthenticated, isPending } = useAuth();
-
-	if (!isPending && !isAuthenticated && typeof window !== "undefined") {
-		window.location.href = redirectTo;
-	}
-
-	return { user, isAuthenticated, isPending };
-}
-
 export type { Session, User };

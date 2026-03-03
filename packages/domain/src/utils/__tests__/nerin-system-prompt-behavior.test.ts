@@ -56,27 +56,4 @@ describe("buildChatSystemPrompt — behavior and steering", () => {
 		expect(prompt).toContain('"orderliness"');
 		expect(prompt).toContain('"work"');
 	});
-
-	it("appends CONVERSATION CLOSING section when nearingEnd is true (Story 10.5)", () => {
-		const prompt = buildChatSystemPrompt({ nearingEnd: true });
-		expect(prompt).toContain("CONVERSATION CLOSING:");
-		expect(prompt).toContain("nearing its natural end");
-		expect(prompt).toContain("warm, reflective closing");
-		expect(prompt).not.toContain("STEERING PRIORITY:");
-	});
-
-	it("does not include CONVERSATION CLOSING when nearingEnd is false or absent", () => {
-		const prompt = buildChatSystemPrompt({});
-		expect(prompt).not.toContain("CONVERSATION CLOSING:");
-	});
-
-	it("suppresses steering when nearingEnd is true (closing overrides steering)", () => {
-		const prompt = buildChatSystemPrompt({
-			targetDomain: "relationships",
-			targetFacet: "trust",
-			nearingEnd: true,
-		});
-		expect(prompt).not.toContain("STEERING PRIORITY:");
-		expect(prompt).toContain("CONVERSATION CLOSING:");
-	});
 });

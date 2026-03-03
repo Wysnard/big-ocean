@@ -11,7 +11,6 @@ import { AgentInvocationError, ConcurrentMessageError } from "@workspace/domain"
 import { Effect } from "effect";
 import { sendMessage } from "../send-message.use-case";
 import {
-	coldStartMessages,
 	createTestLayer,
 	FREE_TIER_MESSAGE_THRESHOLD,
 	mockActiveSession,
@@ -194,54 +193,6 @@ describe("sendMessage Use Case", () => {
 					expect(String(exit.cause)).toContain("SessionCompletedError");
 				}
 				expect(mockMessageRepo.saveMessage).not.toHaveBeenCalled();
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-	});
-
-	describe("Farewell winding-down (Story 10.5)", () => {
-		it.effect("should pass nearingEnd to Nerin when user messages >= threshold - 3", () =>
-			Effect.gen(function* () {
-				// Simulate many user messages (threshold - 3 = 22 user messages)
-				const manyUserMessages = Array.from({ length: FREE_TIER_MESSAGE_THRESHOLD - 3 }, (_, i) => [
-					{
-						id: `msg_a_${i}`,
-						sessionId: "session_test_123",
-						role: "assistant" as const,
-						content: `Response ${i}`,
-						createdAt: new Date(),
-					},
-					{
-						id: `msg_u_${i}`,
-						sessionId: "session_test_123",
-						role: "user" as const,
-						content: `Message ${i}`,
-						createdAt: new Date(),
-					},
-				]).flat();
-				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(manyUserMessages));
-
-				yield* sendMessage({
-					sessionId: "session_test_123",
-					message: "Late message",
-				});
-
-				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
-				expect(nerinCall.nearingEnd).toBe(true);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("should NOT pass nearingEnd when user messages < threshold - 3", () =>
-			Effect.gen(function* () {
-				// Cold start: 1 user message — well below threshold - 3
-				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
-
-				yield* sendMessage({
-					sessionId: "session_test_123",
-					message: "Early message",
-				});
-
-				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
-				expect(nerinCall.nearingEnd).toBe(false);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
