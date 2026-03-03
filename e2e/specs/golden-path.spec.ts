@@ -69,23 +69,11 @@ test("golden path: landing → chat → signup → results → share → public 
 		await page.getByTestId("auth-gate-signup-submit").click();
 	});
 
-	await test.step("finalization wait screen → auto-redirect to results", async () => {
-		// Story 11.1: After auth, ChatAuthGate redirects to /finalize/$sessionId
-		// With mock LLM the pipeline completes in ms; the 2s polling interval is the bottleneck.
-		// Wait for either the wait screen or a direct results redirect (mock may skip it).
-		const reachedResults = await Promise.race([
-			page
-				.locator("[data-slot='finalization-wait-screen']")
-				.waitFor({ state: "visible", timeout: 15_000 })
-				.then(() => false),
-			page.waitForURL(/\/results\//, { timeout: 15_000 }).then(() => true),
-		]);
-
-		if (!reachedResults) {
-			// Wait screen appeared — mock pipeline + one poll cycle ≈ 3-4s
-			await expect(page.locator("[data-slot='finalization-wait-screen']")).toBeVisible();
-			await page.waitForURL(/\/results\//, { timeout: 15_000 });
-		}
+	await test.step("click View Results to navigate to results page", async () => {
+		const viewResultsLink = page.getByRole("link", { name: "View Results" });
+		await viewResultsLink.waitFor({ state: "visible", timeout: 15_000 });
+		await viewResultsLink.click();
+		await page.waitForURL(/\/results\//, { timeout: 15_000 });
 	});
 
 	await test.step("assert archetype card is visible", async () => {

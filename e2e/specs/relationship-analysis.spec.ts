@@ -236,18 +236,11 @@ test.describe
 				await page.getByTestId("auth-gate-signup-submit").click();
 			});
 
-			await test.step("finalization → results page", async () => {
-				const reachedResults = await Promise.race([
-					page
-						.getByTestId("finalization-wait-screen")
-						.waitFor({ state: "visible", timeout: 15_000 })
-						.then(() => false),
-					page.waitForURL(/\/results\//, { timeout: 15_000 }).then(() => true),
-				]);
-
-				if (!reachedResults) {
-					await page.waitForURL(/\/results\//, { timeout: 15_000 });
-				}
+			await test.step("click View Results to navigate to results page", async () => {
+				const viewResultsLink = page.getByRole("link", { name: "View Results" });
+				await viewResultsLink.waitFor({ state: "visible", timeout: 15_000 });
+				await viewResultsLink.click();
+				await page.waitForURL(/\/results\//, { timeout: 15_000 });
 			});
 
 			await test.step("verify invitation was auto-accepted via cookie", async () => {
@@ -333,18 +326,11 @@ test.describe
 				await page.getByTestId("chat-send-btn").click();
 			});
 
-			await test.step("finalization → results page (no auth gate for logged-in user)", async () => {
-				const reachedResults = await Promise.race([
-					page
-						.getByTestId("finalization-wait-screen")
-						.waitFor({ state: "visible", timeout: 15_000 })
-						.then(() => false),
-					page.waitForURL(/\/results\//, { timeout: 15_000 }).then(() => true),
-				]);
-
-				if (!reachedResults) {
-					await page.waitForURL(/\/results\//, { timeout: 15_000 });
-				}
+			await test.step("click View Results to navigate to results page", async () => {
+				const viewResultsLink = page.getByRole("link", { name: "View Results" });
+				await viewResultsLink.waitFor({ state: "visible", timeout: 15_000 });
+				await viewResultsLink.click();
+				await page.waitForURL(/\/results\//, { timeout: 15_000 });
 			});
 
 			await test.step("navigate back to invite page and accept via UI", async () => {
