@@ -97,6 +97,11 @@ vi.mock("@/components/relationship/RelationshipCard", () => ({
 	RelationshipCard: () => null,
 }));
 
+vi.mock("@workspace/ui/hooks/use-theme", () => ({
+	useTheme: () => ({ userTheme: "system", appTheme: "light", setTheme: vi.fn() }),
+	ThemeContext: { Provider: ({ children }: { children: React.ReactNode }) => children },
+}));
+
 describe("results/$assessmentSessionId route behavior", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -124,14 +129,14 @@ describe("results/$assessmentSessionId route behavior", () => {
 		mockUseGetResults.mockReturnValue({
 			data: {
 				archetypeName: "Navigator",
-				oceanCode5: "ODENT",
+				oceanCode5: "OCEAT",
 				archetypeDescription: "Description",
 				overallConfidence: 0.78,
 				isCurated: true,
 				traits: [{ name: "openness", score: 60, level: "O", confidence: 0.8 }],
 				facets: [{ name: "intellect", traitName: "openness", score: 60, confidence: 0.8 }],
 				archetypeColor: "#000",
-				oceanCode4: "ODEN",
+				oceanCode4: "OCEA",
 				messageCount: 24,
 			},
 			isLoading: false,

@@ -87,10 +87,10 @@ describe("TraitCard", () => {
 
 	it("shows correct level name for mid-range score", () => {
 		renderTraitCard({
-			trait: { name: "conscientiousness", score: 60, level: "B", confidence: 0.7 },
+			trait: { name: "conscientiousness", score: 60, level: "S", confidence: 0.7 },
 		});
-		// Conscientiousness + score 60 (Mid band) → letter "B" → "Balanced"
-		expect(screen.getByText("Balanced")).toBeInTheDocument();
+		// Conscientiousness + score 60 (Mid band) → letter "S" → "Steady"
+		expect(screen.getByText("Steady")).toBeInTheDocument();
 	});
 
 	it("shows correct level name for low-range score", () => {

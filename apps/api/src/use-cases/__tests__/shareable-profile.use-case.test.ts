@@ -191,8 +191,8 @@ describe("getPublicProfile Use Case", () => {
 		resetResultState();
 	});
 
-	// Derive expected values from lookupArchetype for "OCBA"
-	const expectedArchetype = lookupArchetype("OCBA");
+	// All facets score=15 → trait sum=90 → High for all → "OCEA" (4-letter) / "OCEAN" (5-letter)
+	const expectedArchetype = lookupArchetype("OCEA");
 
 	describe("Success scenarios", () => {
 		it.effect("should return profile data for a public profile", () =>
@@ -217,7 +217,7 @@ describe("getPublicProfile Use Case", () => {
 				const result = yield* getPublicProfile({ publicProfileId: profile.id });
 
 				expect(result.archetypeName).toBe(expectedArchetype.name);
-				expect(result.oceanCode).toBe("OCBAT");
+				expect(result.oceanCode).toBe("OCEAN");
 				expect(result.description).toBe(expectedArchetype.description);
 				expect(result.color).toBe(expectedArchetype.color);
 				expect(result.traitSummary.openness).toBe("O");

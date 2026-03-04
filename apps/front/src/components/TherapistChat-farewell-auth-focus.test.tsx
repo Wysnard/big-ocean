@@ -35,7 +35,9 @@ describe("TherapistChat", () => {
 		it("removes input area when isCompleted is true (replaced by View Results)", () => {
 			mockHookReturn.isCompleted = true;
 
-			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
+			const { container } = renderWithProviders(
+				<TherapistChat sessionId="session-123" isAuthenticated={true} />,
+			);
 
 			const textarea = container.querySelector("[data-slot='chat-input']");
 			expect(textarea).toBeNull();
@@ -140,7 +142,9 @@ describe("TherapistChat", () => {
 		it("textarea is NOT rendered when isCompleted is true", () => {
 			mockHookReturn.isCompleted = true;
 
-			const { container } = renderWithProviders(<TherapistChat sessionId="session-123" />);
+			const { container } = renderWithProviders(
+				<TherapistChat sessionId="session-123" isAuthenticated={true} />,
+			);
 
 			const textarea = container.querySelector("[data-slot='chat-input']");
 			expect(textarea).toBeNull();

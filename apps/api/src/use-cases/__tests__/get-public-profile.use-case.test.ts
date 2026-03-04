@@ -136,7 +136,8 @@ describe("getPublicProfile", () => {
 			const result = yield* getPublicProfile({ publicProfileId: profile.id });
 
 			expect(result.archetypeName).toBeDefined();
-			expect(result.oceanCode).toBe("MCBPR");
+			// Derived from facets (all score=15 → trait sum=90 → High for each trait)
+			expect(result.oceanCode).toBe("OCEAN");
 			expect(result.description).toBeDefined();
 			expect(result.color).toBeDefined();
 			expect(result.traitSummary).toBeDefined();

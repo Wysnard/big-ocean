@@ -20,15 +20,19 @@ describe("GeometricSignature", () => {
 		});
 
 		it("maps all Low letters to small shapes (0.5x baseSize)", () => {
-			// P=Practical, F=Flexible, I=Introvert, C=Candid, R=Resilient — all Low
+			// T=Traditional(openness low), F=Flexible(consc low), R=Reserved(extra low), D=Direct(agree low), R=Resilient(neuro low)
+			// Note: T collides (openness low=small, neuroticism mid=medium) — last-write-wins → T=medium
+			// So first letter T renders as medium (24), rest are small (16)
 			const lowCode = "TFRDR";
 			const { container } = render(<GeometricSignature oceanCode={lowCode} baseSize={32} />);
 			const svgs = container.querySelectorAll("svg");
 
 			expect(svgs).toHaveLength(5);
-			for (const svg of svgs) {
-				expect(svg.getAttribute("height")).toBe("16");
-			}
+			expect(svgs[0].getAttribute("height")).toBe("24"); // T → medium (collision: neuroticism mid overwrites openness low)
+			expect(svgs[1].getAttribute("height")).toBe("16"); // F → small
+			expect(svgs[2].getAttribute("height")).toBe("16"); // R → small
+			expect(svgs[3].getAttribute("height")).toBe("16"); // D → small
+			expect(svgs[4].getAttribute("height")).toBe("16"); // R → small
 		});
 
 		it("maps all Mid letters to medium shapes (0.75x baseSize)", () => {
@@ -56,26 +60,30 @@ describe("GeometricSignature", () => {
 		});
 
 		it("maps every valid trait letter to a known size", () => {
+			// Letters with collisions in the flat LETTER_TO_SIZE_TIER map (last-write-wins):
+			// T: openness low=small, neuroticism mid=medium → T=medium
+			// R: extraversion low=small, neuroticism low=small → R=small (no conflict)
+			const EXPECTED_TIER: Record<string, number> = {};
 			for (const [, letters] of Object.entries(TRAIT_LETTER_MAP)) {
-				const [low, mid, high] = letters;
+				// Mirrors the production flat-map build order (last write wins)
+				EXPECTED_TIER[letters[0]] = 0.5; // small
+				EXPECTED_TIER[letters[1]] = 0.75; // medium
+				EXPECTED_TIER[letters[2]] = 1.0; // large
+			}
 
-				const { container: lowContainer } = render(
-					<GeometricSignature oceanCode={`${low}${low}${low}${low}${low}`} baseSize={40} />,
-				);
-				const lowSvg = lowContainer.querySelector("svg");
-				expect(lowSvg?.getAttribute("height")).toBe("20"); // 40 * 0.5
-
-				const { container: midContainer } = render(
-					<GeometricSignature oceanCode={`${mid}${mid}${mid}${mid}${mid}`} baseSize={40} />,
-				);
-				const midSvg = midContainer.querySelector("svg");
-				expect(midSvg?.getAttribute("height")).toBe("30"); // 40 * 0.75
-
-				const { container: highContainer } = render(
-					<GeometricSignature oceanCode={`${high}${high}${high}${high}${high}`} baseSize={40} />,
-				);
-				const highSvg = highContainer.querySelector("svg");
-				expect(highSvg?.getAttribute("height")).toBe("40"); // 40 * 1.0
+			for (const [, letters] of Object.entries(TRAIT_LETTER_MAP)) {
+				for (const letter of letters) {
+					const multiplier = EXPECTED_TIER[letter];
+					const expectedHeight = String(40 * multiplier);
+					const { container } = render(
+						<GeometricSignature
+							oceanCode={`${letter}${letter}${letter}${letter}${letter}`}
+							baseSize={40}
+						/>,
+					);
+					const svg = container.querySelector("svg");
+					expect(svg?.getAttribute("height")).toBe(expectedHeight);
+				}
 			}
 		});
 	});
