@@ -9,7 +9,7 @@ describe("GeometricSignature", () => {
 	describe("letter-to-size mapping", () => {
 		it("maps all High letters to large shapes (1.0x baseSize)", () => {
 			// O=Open-minded, D=Disciplined, E=Extravert, W=Warm, S=Sensitive — all High
-			const highCode = "ODEWS";
+			const highCode = "OCEAN";
 			const { container } = render(<GeometricSignature oceanCode={highCode} baseSize={32} />);
 			const svgs = container.querySelectorAll("svg");
 
@@ -21,7 +21,7 @@ describe("GeometricSignature", () => {
 
 		it("maps all Low letters to small shapes (0.5x baseSize)", () => {
 			// P=Practical, F=Flexible, I=Introvert, C=Candid, R=Resilient — all Low
-			const lowCode = "PFICR";
+			const lowCode = "TFRDR";
 			const { container } = render(<GeometricSignature oceanCode={lowCode} baseSize={32} />);
 			const svgs = container.querySelectorAll("svg");
 
@@ -33,7 +33,7 @@ describe("GeometricSignature", () => {
 
 		it("maps all Mid letters to medium shapes (0.75x baseSize)", () => {
 			// G=Grounded, B=Balanced, A=Ambivert, N=Negotiator, T=Temperate — all Mid
-			const midCode = "GBANT";
+			const midCode = "MSBPT";
 			const { container } = render(<GeometricSignature oceanCode={midCode} baseSize={32} />);
 			const svgs = container.querySelectorAll("svg");
 
@@ -45,7 +45,7 @@ describe("GeometricSignature", () => {
 
 		it("maps mixed codes to correct size tiers", () => {
 			// O=High(32), B=Mid(24), I=Low(16), W=High(32), T=Mid(24)
-			const { container } = render(<GeometricSignature oceanCode="OBIWT" baseSize={32} />);
+			const { container } = render(<GeometricSignature oceanCode="OSRAT" baseSize={32} />);
 			const svgs = container.querySelectorAll("svg");
 
 			expect(svgs[0].getAttribute("height")).toBe("32"); // O → large
@@ -82,7 +82,7 @@ describe("GeometricSignature", () => {
 
 	describe("rendering", () => {
 		it("renders 5 shapes in OCEAN order", () => {
-			const { container } = render(<GeometricSignature oceanCode="ODEWS" />);
+			const { container } = render(<GeometricSignature oceanCode="OCEAN" />);
 			const slots = container.querySelectorAll("[data-slot]");
 			const shapeSlots = Array.from(slots)
 				.map((el) => el.getAttribute("data-slot"))
@@ -98,12 +98,12 @@ describe("GeometricSignature", () => {
 		});
 
 		it("renders with data-slot='geometric-signature'", () => {
-			const { container } = render(<GeometricSignature oceanCode="ODEWS" />);
+			const { container } = render(<GeometricSignature oceanCode="OCEAN" />);
 			expect(container.querySelector("[data-slot='geometric-signature']")).not.toBeNull();
 		});
 
 		it("uses trait CSS variables for colors", () => {
-			const { container } = render(<GeometricSignature oceanCode="ODEWS" />);
+			const { container } = render(<GeometricSignature oceanCode="OCEAN" />);
 			const svgs = container.querySelectorAll("svg");
 
 			expect(svgs[0].getAttribute("fill")).toBe("var(--trait-openness)");
@@ -115,20 +115,20 @@ describe("GeometricSignature", () => {
 
 		it("uses default baseSize of 32", () => {
 			// ODEWS = all High → baseSize * 1.0 = 32
-			const { container } = render(<GeometricSignature oceanCode="ODEWS" />);
+			const { container } = render(<GeometricSignature oceanCode="OCEAN" />);
 			const svg = container.querySelector("svg");
 			expect(svg?.getAttribute("height")).toBe("32");
 		});
 
 		it("renders archetype name when provided", () => {
 			const { container } = render(
-				<GeometricSignature oceanCode="ODEWS" archetypeName="Creative Diplomat" />,
+				<GeometricSignature oceanCode="OCEAN" archetypeName="Creative Diplomat" />,
 			);
 			expect(container.textContent).toContain("Creative Diplomat");
 		});
 
 		it("does not render archetype name when omitted", () => {
-			const { container } = render(<GeometricSignature oceanCode="ODEWS" />);
+			const { container } = render(<GeometricSignature oceanCode="OCEAN" />);
 			const nameSpans = container.querySelectorAll("span.font-heading");
 			expect(nameSpans).toHaveLength(0);
 		});
@@ -136,19 +136,19 @@ describe("GeometricSignature", () => {
 
 	describe("animation", () => {
 		it("does not apply animation classes when animate is false", () => {
-			const { container } = render(<GeometricSignature oceanCode="ODEWS" animate={false} />);
+			const { container } = render(<GeometricSignature oceanCode="OCEAN" animate={false} />);
 			const animatedElements = container.querySelectorAll("[class*='animate-shape-reveal']");
 			expect(animatedElements).toHaveLength(0);
 		});
 
 		it("applies animation classes when animate is true", () => {
-			const { container } = render(<GeometricSignature oceanCode="ODEWS" animate />);
+			const { container } = render(<GeometricSignature oceanCode="OCEAN" animate />);
 			const animatedElements = container.querySelectorAll("[class*='animate-shape-reveal']");
 			expect(animatedElements).toHaveLength(5);
 		});
 
 		it("sets staggered animation delays when animate is true", () => {
-			const { container } = render(<GeometricSignature oceanCode="ODEWS" animate />);
+			const { container } = render(<GeometricSignature oceanCode="OCEAN" animate />);
 			const shapeWrappers = container.querySelectorAll(
 				"[data-slot='geometric-signature'] > div > span",
 			);
@@ -162,7 +162,7 @@ describe("GeometricSignature", () => {
 
 		it("applies fade-in animation delay to archetype name when animate is true", () => {
 			const { container } = render(
-				<GeometricSignature oceanCode="ODEWS" animate archetypeName="Creative Diplomat" />,
+				<GeometricSignature oceanCode="OCEAN" animate archetypeName="Creative Diplomat" />,
 			);
 			const nameSpan = container.querySelector("span.font-heading");
 			expect(nameSpan).not.toBeNull();

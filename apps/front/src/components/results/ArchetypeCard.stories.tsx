@@ -25,8 +25,8 @@ type Story = StoryObj<typeof meta>;
 export const CuratedArchetype: Story = {
 	args: {
 		archetypeName: "The Catalyst",
-		oceanCode4: OceanCode4Schema.make("ODEW"),
-		oceanCode5: OceanCode5Schema.make("ODEWR"),
+		oceanCode4: OceanCode4Schema.make("OCEA"),
+		oceanCode5: OceanCode5Schema.make("OCEAR"),
 		description:
 			"A dynamic force who combines boundless curiosity with disciplined execution. You thrive in social settings and build deep connections through genuine empathy.",
 		color: "#6B5CE7",
@@ -38,8 +38,8 @@ export const CuratedArchetype: Story = {
 export const GeneratedArchetype: Story = {
 	args: {
 		archetypeName: "Creative Collaborator",
-		oceanCode4: OceanCode4Schema.make("OFAW"),
-		oceanCode5: OceanCode5Schema.make("OFAWR"),
+		oceanCode4: OceanCode4Schema.make("OFBA"),
+		oceanCode5: OceanCode5Schema.make("OFBAR"),
 		description:
 			"An imaginative free spirit who values harmony and connection. Your creativity flows naturally, though structure may feel constraining at times.",
 		color: "#7A8B9C",
@@ -51,8 +51,8 @@ export const GeneratedArchetype: Story = {
 export const LowConfidence: Story = {
 	args: {
 		archetypeName: "The Explorer",
-		oceanCode4: OceanCode4Schema.make("OBAN"),
-		oceanCode5: OceanCode5Schema.make("OBANT"),
+		oceanCode4: OceanCode4Schema.make("OSBP"),
+		oceanCode5: OceanCode5Schema.make("OSBPT"),
 		description:
 			"Driven by curiosity and a desire to understand the world. You balance exploration with a steady, grounded approach to relationships.",
 		color: "#E87B35",
@@ -64,8 +64,8 @@ export const LowConfidence: Story = {
 export const HighConfidence: Story = {
 	args: {
 		archetypeName: "The Architect",
-		oceanCode4: OceanCode4Schema.make("GDEN"),
-		oceanCode5: OceanCode5Schema.make("GDENT"),
+		oceanCode4: OceanCode4Schema.make("MCEP"),
+		oceanCode5: OceanCode5Schema.make("MCEPT"),
 		description:
 			"A methodical builder who brings order to complexity. Your strong conscientiousness and extraversion make you a natural leader in structured environments.",
 		color: "#4CAF6E",

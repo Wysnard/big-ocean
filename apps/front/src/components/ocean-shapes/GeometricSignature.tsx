@@ -31,7 +31,7 @@ function getShapeSize(letter: string, baseSize: number): number {
 const VALID_LETTERS = new Set(Object.keys(LETTER_TO_SIZE_TIER));
 
 interface GeometricSignatureProps {
-	/** 5-letter OCEAN code (e.g., "ODEWR") */
+	/** 5-letter OCEAN code (e.g., "OCEAR") */
 	oceanCode: OceanCode5;
 	/** Base size in px — Large shapes use this, Medium = 0.75x, Small = 0.5x */
 	baseSize?: number;

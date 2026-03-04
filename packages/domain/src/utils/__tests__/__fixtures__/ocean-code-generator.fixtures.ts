@@ -10,11 +10,11 @@ export type InternalLevel = "L" | "M" | "H";
  * Maps each trait to its [Low, Mid, High] letters for test assertions.
  */
 export const TRAIT_LETTERS: Record<TraitName, [string, string, string]> = {
-	openness: ["P", "G", "O"],
-	conscientiousness: ["F", "B", "D"],
-	extraversion: ["I", "A", "E"],
-	agreeableness: ["C", "N", "W"],
-	neuroticism: ["R", "T", "S"],
+	openness: ["T", "M", "O"],
+	conscientiousness: ["F", "S", "C"],
+	extraversion: ["R", "B", "E"],
+	agreeableness: ["D", "P", "A"],
+	neuroticism: ["R", "T", "N"],
 };
 
 const LEVEL_INDEX: Record<InternalLevel, number> = { L: 0, M: 1, H: 2 };

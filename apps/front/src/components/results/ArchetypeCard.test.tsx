@@ -5,8 +5,8 @@ import { ArchetypeCard } from "./ArchetypeCard";
 
 const defaultProps = {
 	archetypeName: "The Catalyst",
-	oceanCode4: OceanCode4Schema.make("ODEW"),
-	oceanCode5: OceanCode5Schema.make("ODEWR"),
+	oceanCode4: OceanCode4Schema.make("OCEA"),
+	oceanCode5: OceanCode5Schema.make("OCEAR"),
 	description: "A dynamic force who combines curiosity with execution.",
 	color: "#6B5CE7",
 	isCurated: true,
@@ -21,8 +21,8 @@ describe("ArchetypeCard", () => {
 
 	it("renders OCEAN codes", () => {
 		render(<ArchetypeCard {...defaultProps} />);
-		expect(screen.getByTestId("ocean-code-4")).toHaveTextContent("ODEW");
-		expect(screen.getByTestId("ocean-code-5")).toHaveTextContent("ODEWR");
+		expect(screen.getByTestId("ocean-code-4")).toHaveTextContent("OCEA");
+		expect(screen.getByTestId("ocean-code-5")).toHaveTextContent("OCEAR");
 	});
 
 	it("renders description text", () => {

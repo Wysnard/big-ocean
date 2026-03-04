@@ -4,11 +4,11 @@
  * Maps 4-letter OCEAN codes (O,C,E,A trait levels) to memorable personality archetypes.
  * Each trait uses unique, semantically meaningful letters instead of generic L/M/H:
  *
- * Openness:          P (Practical)     G (Grounded)     O (Open-minded)
- * Conscientiousness:  F (Flexible)      B (Balanced)     D (Disciplined)
- * Extraversion:       I (Introvert)     A (Ambivert)     E (Extravert)
- * Agreeableness:      C (Candid)        N (Negotiator)   W (Warm)
- * Neuroticism:        R (Resilient)     T (Temperate)    S (Sensitive)
+ * Openness:          T (Traditional)   M (Moderate)     O (Open-minded)
+ * Conscientiousness:  F (Flexible)      S (Steady)       C (Conscientious)
+ * Extraversion:       R (Reserved)      B (Balanced)     E (Extravert)
+ * Agreeableness:      D (Direct)        P (Pragmatic)    A (Agreeable)
+ * Neuroticism:        R (Resilient)     T (Tempered)     N (Neurotic)
  *
  * Full 5-letter codes (including Neuroticism) are stored but only 4 letters are used
  * for archetype naming in POC. Phase 2 will extend to all 5 traits (243 combinations).
@@ -19,15 +19,15 @@ import type { TraitName } from "../constants/big-five";
 import type { OceanCode4Schema, OceanCode5Schema } from "../schemas/ocean-code";
 
 /** Openness level letters */
-export type OpennessLevel = "P" | "G" | "O";
+export type OpennessLevel = "T" | "M" | "O";
 /** Conscientiousness level letters */
-export type ConscientiousnessLevel = "F" | "B" | "D";
+export type ConscientiousnessLevel = "F" | "S" | "C";
 /** Extraversion level letters */
-export type ExtraversionLevel = "I" | "A" | "E";
+export type ExtraversionLevel = "R" | "B" | "E";
 /** Agreeableness level letters */
-export type AgreeablenessLevel = "C" | "N" | "W";
+export type AgreeablenessLevel = "D" | "P" | "A";
 /** Neuroticism level letters */
-export type NeuroticismLevel = "R" | "T" | "S";
+export type NeuroticismLevel = "R" | "T" | "N";
 
 /** Union of all possible trait-level letters */
 export type TraitLevel =
@@ -37,44 +37,33 @@ export type TraitLevel =
 	| AgreeablenessLevel
 	| NeuroticismLevel;
 
-/** 4-letter OCEAN code — branded string inferred from schema (e.g., "ODEW") */
+/** 4-letter OCEAN code — branded string inferred from schema (e.g., "OCEA") */
 export type OceanCode4 = Schema.Schema.Type<typeof OceanCode4Schema>;
 
-/** 5-letter OCEAN code — branded string inferred from schema (e.g., "ODEWR") */
+/** 5-letter OCEAN code — branded string inferred from schema (e.g., "OCEAR") */
 export type OceanCode5 = Schema.Schema.Type<typeof OceanCode5Schema>;
 
 /** Trait-specific letter mapping: [Low, Mid, High] per trait */
 export const TRAIT_LETTER_MAP: Record<TraitName, readonly [string, string, string]> = {
-	openness: ["P", "G", "O"],
-	conscientiousness: ["F", "B", "D"],
-	extraversion: ["I", "A", "E"],
-	agreeableness: ["C", "N", "W"],
-	neuroticism: ["R", "T", "S"],
+	openness: ["T", "M", "O"],
+	conscientiousness: ["F", "S", "C"],
+	extraversion: ["R", "B", "E"],
+	agreeableness: ["D", "P", "A"],
+	neuroticism: ["R", "T", "N"],
 } as const;
 
-/** Human-readable label for each trait-level letter */
-export const TRAIT_LEVEL_LABELS: Record<string, string> = {
-	// Openness
-	P: "Practical",
-	G: "Grounded",
-	O: "Open-minded",
-	// Conscientiousness
-	F: "Flexible",
-	B: "Balanced",
-	D: "Disciplined",
-	// Extraversion
-	I: "Introvert",
-	A: "Ambivert",
-	E: "Extravert",
-	// Agreeableness
-	C: "Candid",
-	N: "Negotiator",
-	W: "Warm",
-	// Neuroticism
-	R: "Resilient",
-	T: "Temperate",
-	S: "Sensitive",
+/** Human-readable label for each trait-level letter, keyed by trait then letter */
+export const TRAIT_LEVEL_LABELS: Record<TraitName, Record<string, string>> = {
+	openness: { T: "Traditional", M: "Moderate", O: "Open-minded" },
+	conscientiousness: { F: "Flexible", S: "Steady", C: "Conscientious" },
+	extraversion: { R: "Reserved", B: "Balanced", E: "Extravert" },
+	agreeableness: { D: "Direct", P: "Pragmatic", A: "Agreeable" },
+	neuroticism: { R: "Resilient", T: "Tempered", N: "Neurotic" },
 } as const;
+
+/** Resolve a trait-level letter to its human-readable label */
+export const getTraitLevelLabel = (trait: TraitName, letter: string): string =>
+	TRAIT_LEVEL_LABELS[trait][letter] ?? letter;
 
 /**
  * Personality archetype derived from a 4-letter OCEAN code.
@@ -82,7 +71,7 @@ export const TRAIT_LEVEL_LABELS: Record<string, string> = {
  * @example
  * ```typescript
  * const archetype: Archetype = {
- *   code4: "ODAW",
+ *   code4: "OCBA",
  *   name: "Creative Diplomat",
  *   description: "Open-minded and organized with a reserved nature...",
  *   color: "#4A90D9",

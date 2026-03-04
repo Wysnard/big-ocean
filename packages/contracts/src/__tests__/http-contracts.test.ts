@@ -164,8 +164,8 @@ describe("Assessment Contracts", () => {
 	describe("GetResults", () => {
 		it("should validate get results response schema", () => {
 			const validResponse = {
-				oceanCode5: "ODEWR",
-				oceanCode4: "ODEW",
+				oceanCode5: "OCEAR",
+				oceanCode4: "OCEA",
 				archetypeName: "The Adventurous Leader",
 				archetypeDescription: "A bold explorer who combines curiosity with determination.",
 				archetypeColor: "#6B5CE7",
@@ -183,8 +183,8 @@ describe("Assessment Contracts", () => {
 			};
 
 			const result = S.decodeUnknownSync(GetResultsResponseSchema)(validResponse);
-			expect(result.oceanCode5).toBe("ODEWR");
-			expect(result.oceanCode4).toBe("ODEW");
+			expect(result.oceanCode5).toBe("OCEAR");
+			expect(result.oceanCode4).toBe("OCEA");
 			expect(result.archetypeName).toBe("The Adventurous Leader");
 			expect(result.traits).toHaveLength(5);
 			expect(result.traits[0]?.level).toBe("H");
@@ -194,8 +194,8 @@ describe("Assessment Contracts", () => {
 
 		it("should reject get results response with invalid trait level", () => {
 			const invalidResponse = {
-				oceanCode5: "ODEWR",
-				oceanCode4: "ODEW",
+				oceanCode5: "OCEAR",
+				oceanCode4: "OCEA",
 				archetypeName: "Test",
 				archetypeDescription: "Test",
 				archetypeColor: "#000000",

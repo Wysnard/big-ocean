@@ -20,7 +20,6 @@ describe("buildChatSystemPrompt — persona and structure", () => {
 		expect(prompt).toContain("OBSERVATION + QUESTION FORMAT");
 		expect(prompt).toContain("THREADING");
 		expect(prompt).toContain("NATURAL WORLD MIRRORS");
-		expect(prompt).toContain("EXPLORING BREADTH");
 		expect(prompt).toContain("QUESTIONING STYLE:");
 		expect(prompt).toContain("RESPONSE FORMAT");
 		expect(prompt).toContain("CONVERSATION AWARENESS");
@@ -57,10 +56,10 @@ describe("buildChatSystemPrompt — persona and structure", () => {
 		expect(prompt).toContain("Save your reads for the portrait");
 	});
 
-	it("contains breadth-first exploration instructions", () => {
+	it("contains conversation awareness and depth progression instructions", () => {
 		const prompt = buildChatSystemPrompt();
-		expect(prompt).toContain("Cover ground across their life");
-		expect(prompt).toContain("Don't exhaust a topic");
+		expect(prompt).toContain("CONVERSATION AWARENESS");
+		expect(prompt).toContain("DEPTH PROGRESSION");
 	});
 
 	it("contains mirror library reference (AC3)", () => {

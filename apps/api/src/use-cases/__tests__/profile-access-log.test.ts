@@ -123,8 +123,8 @@ function createPublicProfile() {
 		const profile = yield* profileRepo.createProfile({
 			sessionId,
 			userId: "user_test",
-			oceanCode5: "ODAWT",
-			oceanCode4: "ODAW",
+			oceanCode5: "OCBAT",
+			oceanCode4: "OCBA",
 		});
 		yield* profileRepo.toggleVisibility(profile.id, true);
 		return profile;

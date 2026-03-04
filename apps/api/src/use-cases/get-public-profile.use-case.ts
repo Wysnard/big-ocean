@@ -13,8 +13,10 @@ import { ProfileNotFound, ProfilePrivate } from "@workspace/contracts/errors";
 import {
 	AssessmentResultRepository,
 	deriveTraitSummary,
+	extract4LetterCode,
 	type FacetName,
 	type FacetScoresMap,
+	generateOceanCode,
 	LoggerRepository,
 	lookupArchetype,
 	type OceanCode5,
@@ -94,11 +96,7 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 			Effect.fork,
 		);
 
-		// 5. Derive archetype fields at read-time
-		const archetype = lookupArchetype(profile.oceanCode4);
-		const traitSummary = deriveTraitSummary(profile.oceanCode5);
-
-		// 6. Read persisted facet scores from assessment_results
+		// 5. Read persisted facet scores from assessment_results
 		const result = yield* resultRepo.getBySessionId(profile.sessionId);
 		if (!result || Object.keys(result.facets).length === 0) {
 			return yield* Effect.fail(
@@ -116,6 +114,12 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 			};
 		}
 
+		// 6. Derive ocean codes from facet scores (single source of truth)
+		const oceanCode5 = generateOceanCode(facets);
+		const oceanCode4 = extract4LetterCode(oceanCode5);
+		const archetype = lookupArchetype(oceanCode4);
+		const traitSummary = deriveTraitSummary(oceanCode5);
+
 		logger.info("Public profile viewed", {
 			profileId: profile.id,
 			archetypeName: archetype.name,
@@ -123,7 +127,7 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 
 		return {
 			archetypeName: archetype.name,
-			oceanCode: OceanCode5Schema.make(profile.oceanCode5),
+			oceanCode: OceanCode5Schema.make(oceanCode5),
 			description: archetype.description,
 			color: archetype.color,
 			displayName: profile.displayName,

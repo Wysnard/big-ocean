@@ -2,9 +2,9 @@ import type { OceanCode5, TraitName } from "@workspace/domain";
 import {
 	BIG_FIVE_TRAITS,
 	getTraitColor,
+	getTraitLevelLabel,
 	TRAIT_DESCRIPTIONS,
 	TRAIT_LETTER_MAP,
-	TRAIT_LEVEL_LABELS,
 } from "@workspace/domain";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
@@ -71,7 +71,7 @@ export const OceanCodeStrand = memo(function OceanCodeStrand({
 					{BIG_FIVE_TRAITS.map((traitName, i) => {
 						const letter = oceanCode5[i];
 						const traitColor = getTraitColor(traitName);
-						const levelLabel = TRAIT_LEVEL_LABELS[letter] ?? letter;
+						const levelLabel = getTraitLevelLabel(traitName, letter);
 						const letters = TRAIT_LETTER_MAP[traitName];
 
 						return (
@@ -138,7 +138,7 @@ function LevelGauge({ letters, activeLetter, traitColor, traitName }: LevelGauge
 		<div className="flex items-start gap-0.5 max-w-[260px]">
 			{letters.map((l) => {
 				const isActive = l === activeLetter;
-				const label = TRAIT_LEVEL_LABELS[l] ?? l;
+				const label = getTraitLevelLabel(traitName, l);
 
 				return (
 					<div key={l} className="flex-1 flex flex-col items-center gap-1">

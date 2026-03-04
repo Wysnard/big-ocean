@@ -38,14 +38,6 @@ const config = defineConfig({
   plugins: [
     resvgExternalPlugin,
     ...isE2E ? [] : [devtools()],
-    nitro({
-      config: {
-        scanDirs: ['server'],
-        externals: {
-          external: ['@resvg/resvg-js', /^@resvg\/resvg-js-/, 'satori'],
-        },
-      },
-    }),
     // this is the plugin that enables path aliases
     viteTsConfigPaths({
       projects: ['./tsconfig.json'],
@@ -58,6 +50,14 @@ const config = defineConfig({
       },
     }),
     viteReact(),
+    nitro({
+      config: {
+        scanDirs: ['server'],
+        externals: {
+          external: ['@resvg/resvg-js', /^@resvg\/resvg-js-/, 'satori'],
+        },
+      },
+    }),
   ],
 })
 

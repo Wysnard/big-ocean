@@ -35,7 +35,7 @@ export function ShareCardPreview() {
 					<h3 className="font-heading text-xl font-bold text-foreground">The Explorer</h3>
 
 					{/* Geometric Signature */}
-					<GeometricSignature oceanCode={"ODAWT" as OceanCode5} baseSize={24} animate={false} />
+					<GeometricSignature oceanCode={"OCBAT" as OceanCode5} baseSize={24} animate={false} />
 
 					{/* Trait summary row */}
 					<div className="flex flex-wrap justify-center gap-1">

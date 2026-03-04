@@ -3,11 +3,11 @@ import { GeometricSignature } from "./GeometricSignature";
 
 function SignatureShowcase() {
 	const codes = [
-		{ code: "ODEWR", label: "All High" },
-		{ code: "PFICR", label: "All Low" },
-		{ code: "GBANT", label: "All Mid" },
-		{ code: "ODAWS", label: "Mixed (Open Diplomat)" },
-		{ code: "PFIWR", label: "Mixed (Quiet Helper)" },
+		{ code: "OCEAR", label: "All High" },
+		{ code: "TFRDR", label: "All Low" },
+		{ code: "MSBPT", label: "All Mid" },
+		{ code: "OCBAN", label: "Mixed (Open Diplomat)" },
+		{ code: "TFRAR", label: "Mixed (Quiet Helper)" },
 	];
 
 	return (
@@ -39,13 +39,13 @@ type Story = StoryObj<typeof meta>;
 export const VariousCodes: Story = {
 	name: "Various OCEAN Codes",
 	render: () => <SignatureShowcase />,
-	args: { oceanCode: "ODEWR" },
+	args: { oceanCode: "OCEAR" },
 };
 
 export const WithArchetype: Story = {
 	name: "With Archetype Name",
 	args: {
-		oceanCode: "ODEWR",
+		oceanCode: "OCEAR",
 		baseSize: 64,
 		archetypeName: "Creative Diplomat",
 	},
@@ -58,8 +58,8 @@ export const RevealAnimation: Story = {
 			<div style={{ fontSize: 14, color: "var(--muted-foreground)" }}>
 				Reload this story to replay the animation
 			</div>
-			<GeometricSignature oceanCode="ODEWR" baseSize={64} animate archetypeName="Creative Diplomat" />
+			<GeometricSignature oceanCode="OCEAR" baseSize={64} animate archetypeName="Creative Diplomat" />
 		</div>
 	),
-	args: { oceanCode: "ODEWR" },
+	args: { oceanCode: "OCEAR" },
 };

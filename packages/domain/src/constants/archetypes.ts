@@ -5,10 +5,10 @@
  * descriptions, and colors. All 81 combinations are hand-curated.
  *
  * Letter system:
- *   Openness:          P (Practical)  G (Grounded)    O (Open-minded)
- *   Conscientiousness: F (Flexible)   B (Balanced)    D (Disciplined)
- *   Extraversion:      I (Introvert)  A (Ambivert)    E (Extravert)
- *   Agreeableness:     C (Candid)     N (Negotiator)  W (Warm)
+ *   Openness:          T (Traditional)  M (Moderate)    O (Open-minded)
+ *   Conscientiousness: F (Flexible)   S (Steady)    C (Conscientious)
+ *   Extraversion:      R (Reserved)  B (Balanced)    E (Extravert)
+ *   Agreeableness:     D (Direct)     P (Pragmatic)  A (Agreeable)
  */
 
 /**
@@ -23,11 +23,11 @@
  * 4: Neuroticism (R/T/S) - Note: N is used for Agreeableness
  */
 export const TEASER_TRAIT_LETTERS = [
-	["P", "G", "O"], // Openness
-	["F", "B", "D"], // Conscientiousness
-	["I", "A", "E"], // Extraversion
-	["C", "N", "W"], // Agreeableness
-	["R", "T", "S"], // Neuroticism
+	["T", "M", "O"], // Openness
+	["F", "S", "C"], // Conscientiousness
+	["R", "B", "E"], // Extraversion
+	["D", "P", "A"], // Agreeableness
+	["R", "T", "N"], // Neuroticism
 ] as const;
 
 /**
@@ -53,22 +53,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// ODE — Visionary leader (Open + Disciplined + Extravert)
 
-	// HHHH → ODEW
-	ODEW: {
+	// HHHH → OCEA
+	OCEA: {
 		name: "The Beacon",
 		description:
 			"You have a way of seeing what could be and making others believe in it too — not through force or persuasion tricks, but through the sheer warmth and clarity of your conviction. Creative ideas don't stay ideas for long in your hands; they become plans, movements, shared projects that pull people together around something meaningful. Your discipline gives structure to your imagination, turning abstract visions into step-by-step realities that others can follow and contribute to without ever feeling lost or left behind. Social settings aren't just enjoyable for you — they're where your purpose comes alive, where the spark of a new idea meets the fuel of collective energy and catches fire in ways that surprise even you. Friends describe you as the person who makes the impossible feel inevitable, who can articulate a vision so vividly that people start seeing themselves inside it before you've even finished speaking. That warmth you carry isn't performative or strategic; it comes from a genuine belief that the people around you have gifts worth drawing out, and your leadership style reflects that belief at every turn. You organize not to control but to create conditions where everyone can do their best work and feel genuinely invested in the outcome. The movements you build tend to outlast the initial excitement because they're rooted in real care and real follow-through, not just charisma or the momentum of a single passionate speech. When purpose and people align under your guidance, the result is something that feels less like a project and more like a community finding its voice together.",
 		color: "#6B5CE7",
 	},
-	// HHHL → ODEN
-	ODEN: {
+	// HHHL → OCEP
+	OCEP: {
 		name: "The Architect",
 		description:
 			"You build coalitions the way others build houses — with careful attention to load-bearing relationships and the structural integrity of every agreement you broker. Your creative mind generates bold visions, but what sets you apart is the diplomatic instinct that helps you bring the right people together to make those visions real and lasting. Ambition runs strong in you, yet it never turns ruthless because fairness is woven into how you negotiate, plan, and lead — every deal you make leaves room for everyone to walk away feeling respected. Social settings are where your strategic mind does its best work: reading the room, identifying shared interests, and constructing frameworks that let different perspectives coexist productively rather than cancelling each other out. Discipline keeps your creativity grounded — you don't just dream big, you map out the path from here to there with milestones, contingencies, and realistic timelines that earn trust from even the most skeptical collaborators. People notice that your approach to conflict is unusually constructive; where others see impasses, you see design problems waiting for an elegant solution that nobody had considered yet. Your ability to hold multiple stakeholders' needs in mind simultaneously makes you invaluable in complex projects where competing priorities could easily derail progress. That blend of creative vision and diplomatic precision means the things you build — teams, strategies, organizations — tend to be both innovative and surprisingly durable, outlasting the circumstances that created them. You're ambitious, but your ambition always has room for the people walking alongside you.",
 		color: "#4A7FC7",
 	},
-	// HHHC → ODEC
-	ODEC: {
+	// HHHC → OCED
+	OCED: {
 		name: "The Forge",
 		description:
 			"You take raw, bold ideas and hammer them into reality through sheer force of conviction and meticulous execution, and the results consistently reflect both the heat of your creative ambition and the precision of your disciplined process. There's nothing tentative about how you pursue a vision — when you see what something could become, you commit fully, and the discipline to follow through means your creative output isn't just inspiring, it's built to last long after the initial excitement has faded. Social confidence comes naturally; you speak with a directness that cuts through ambiguity and rallies people who are tired of vague promises and half-measures that waste everyone's time. That directness isn't cruelty — it's clarity, born from respecting others enough to tell them what you actually think rather than what they want to hear. Your creative process is intense and methodical: ideas get stress-tested, refined, and pushed until they reach a standard that satisfies your exacting internal bar, and no amount of external pressure changes where that bar sits. Compromise on vision feels physically uncomfortable to you, and the people who work alongside you learn quickly that you won't dilute a concept just because the easy path suggests it. That uncompromising quality can be demanding, but it produces work of remarkable originality and craftsmanship that speaks for itself. You lead from the front, absorbing the heat of criticism because you trust the process that got you there. The things you forge — projects, creative works, teams aligned around a bold purpose — carry your unmistakable signature: ambitious in scope, precise in execution, and unapologetically direct in how they meet the world.",
@@ -77,22 +77,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// ODA — Thoughtful visionary (Open + Disciplined + Ambivert)
 
-	// HHMW → ODAW
-	ODAW: {
+	// HHMW → OCBA
+	OCBA: {
 		name: "The Tapestry",
 		description:
 			"You weave together creative depth and genuine care for the people close to you, producing something intricate and beautiful that couldn't exist if either thread were missing. Your inner world is rich — ideas, patterns, connections that most people would need weeks to notice reveal themselves to you in quiet moments of focused attention. Discipline gives those ideas structure without strangling them; you know intuitively when to plan carefully and when to let inspiration lead. Social energy gets invested selectively — large crowds don't appeal the way a deep conversation with someone you trust does, and that selectivity means the relationships you build carry unusual depth and loyalty. The people in your inner circle know something that casual acquaintances might miss: beneath the thoughtful, measured exterior lives a fierce devotion to the people and projects that matter to you, expressed not through grand gestures but through the steady, consistent showing-up that real care requires. Your creative work reflects the same quality — it's layered, considered, and reveals new details on closer inspection, like a tapestry that looks beautiful from across the room but astonishes when you see the individual threads up close. You don't rush the process because you understand that the best work requires patience and that the people you love deserve the same unhurried attention. That combination of creative vision and quiet devotion is rare, and the people who experience it never quite forget it.",
 		color: "#7B6FA0",
 	},
-	// HHMN → ODAN
-	ODAN: {
+	// HHMN → OCBP
+	OCBP: {
 		name: "The Compass",
 		description:
 			"You orient the people and projects around you with a steady, fair-minded sense of direction that others find both reassuring and inspiring in equal measure. Creative ideas flow through a filter of careful planning in your world — you're imaginative enough to see unconventional paths forward and disciplined enough to chart a realistic course through them without losing the creative spark that made them worth pursuing. Social engagement happens with intention: you choose when to step forward and when to observe, and that selectivity means your presence carries more weight than people who are always in the middle of everything demanding attention. Fairness matters deeply to you in how you navigate competing priorities, and colleagues notice that your judgments tend to be measured, well-reasoned, and considerate of perspectives that might otherwise go unheard in the rush to decide. Ambition lives in you, but it's the kind that wants to get things right rather than the kind that wants to get there first at any cost. Your planning process has a creative elegance to it — you don't just organize tasks, you design systems that bring out the best in the people using them and adapt gracefully when circumstances shift. That combination of creative vision and balanced judgment makes you the person others trust to make the call when the path isn't clear and the stakes are high. You measure twice and cut once, but the cuts you make are informed by an imagination that sees beyond the obvious options. Projects under your guidance tend to arrive at destinations that feel both surprising and inevitable — the hallmark of a compass that knows true north and doesn't lose its bearing under pressure.",
 		color: "#5B8FA8",
 	},
-	// HHMC → ODAC
-	ODAC: {
+	// HHMC → OCBD
+	OCBD: {
 		name: "The Prism",
 		description:
 			"You take in the full spectrum of ideas and refract them into new angles that nobody else saw coming, and you do it with a fierce independence that refuses to bend to consensus when your own analysis says otherwise. Creative strategy is your natural mode — not the scattershot kind that generates ideas endlessly without follow-through, but the focused, disciplined kind that takes a bold concept and builds it into something real and lasting. Social engagement happens on your terms; you participate when the conversation is worth having and step back without apology when it isn't. That independence isn't coldness — it's intellectual honesty, a refusal to pretend agreement where none exists just to keep the peace. Your creative process benefits enormously from this self-trust: where others second-guess themselves into safe territory, you push into the uncomfortable space where truly original work lives. Discipline ensures those explorations don't become aimless wandering; every creative leap is followed by rigorous testing, refinement, and the kind of honest self-assessment that most people find too painful to endure. The work you produce carries a distinctive signature — it's inventive, precise, and carries the unmistakable mark of someone who trusts their own vision enough to let it be different. People who appreciate original thinking seek you out; people who need constant agreement learn to look elsewhere. That clarity about who you are and how you work is itself a kind of gift — it saves everyone time and lets the right collaborations happen naturally.",
@@ -101,22 +101,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// ODI — Quiet architect (Open + Disciplined + Introvert)
 
-	// HHLW → ODIW
-	ODIW: {
+	// HHLW → OCRA
+	OCRA: {
 		name: "The Lantern",
 		description:
 			"You carry a quiet creative light that illuminates the path for the people closest to you, offering insight and care without demanding attention or recognition in return. Deep, focused work is where you thrive — the kind of sustained concentration that produces ideas others describe as beautiful in their precision and surprising in their originality. Solitude isn't loneliness for you; it's the workshop where your best thinking happens, the quiet space where imagination and discipline collaborate without interruption. The people in your inner circle experience something rare: a creative mind paired with genuine devotion, someone who notices what they need before they ask and offers support that feels custom-designed rather than generic. Your discipline shows in the finish quality of everything you touch — projects aren't done when they work, they're done when they work elegantly, and that standard applies whether anyone else will see the effort or not. Social energy gets invested in depth rather than breadth; a single meaningful conversation satisfies you more than an evening of small talk ever could. There's a generosity in how you share your creative gifts — not broadcast to the crowd but offered carefully, specifically, to the people who will appreciate them most. The lantern metaphor fits because your light doesn't demand to be seen from miles away; it serves the people walking alongside you, exactly where they need it, exactly when they need it. That combination of creative depth and quiet service leaves a lasting impression on everyone fortunate enough to be in your circle.",
 		color: "#5A8B7A",
 	},
-	// HHLN → ODIN
-	ODIN: {
+	// HHLN → OCRP
+	OCRP: {
 		name: "The Lens",
 		description:
 			"You bring ideas into focus with a precision that most people can't match, combining reflective depth with fair-minded analysis to produce insights that are both original and rigorously sound. Quiet environments are where your best work happens — not because you can't handle people, but because the depth of processing you bring to creative and intellectual problems requires the kind of unbroken concentration that social settings tend to disrupt. Fairness in judgment matters deeply to you; when you evaluate ideas or make decisions, every perspective gets weighed with genuine care, and the conclusions you reach carry weight precisely because people know they weren't arrived at carelessly. Your creative process is meticulous — ideas don't just get generated, they get examined from multiple angles, tested against evidence, and refined until they achieve a clarity that satisfies your internal standards. That combination of imaginative thinking and analytical rigor produces work that stands up to scrutiny in ways that more impulsive creative output rarely does. Social connections are fewer but deeper, built on mutual respect for intellectual honesty and the kind of thoughtful exchange where both parties actually learn something. You don't need to be the loudest voice in the room because the quality of your thinking speaks for itself, and the people who matter have learned to listen carefully when you do choose to share. There's a quiet confidence in knowing that your process is thorough and your judgments are fair — it doesn't need external validation because it's built on a foundation you trust completely.",
 		color: "#4A6FA5",
 	},
-	// HHLC → ODIC
-	ODIC: {
+	// HHLC → OCRD
+	OCRD: {
 		name: "The Clockwork",
 		description:
 			"You operate with an intricate internal precision that produces creative work of remarkable originality and craftsmanship, all powered by a self-contained engine that needs nothing from the outside world to keep running. Independence isn't a preference for you — it's a requirement, the condition under which your best thinking and most disciplined execution become possible. Solitary work environments suit you perfectly because the quality of your output depends on the kind of deep, uninterrupted focus that social settings inevitably compromise. Your creative process has a mechanical elegance to it: ideas get generated, examined, refined, tested, and polished through a systematic approach that might look rigid from the outside but produces genuinely innovative results from the inside. That discipline means your work carries a finish quality that others admire but struggle to replicate, because they don't have the patience or the tolerance for solitude that your process demands. Self-trust runs deep — you've learned that your own judgment, refined through careful analysis and honest self-assessment, is more reliable than consensus or popular opinion. The things you build, whether they're creative projects, analytical frameworks, or personal systems, share a common quality: they work beautifully and they work reliably, because every component was placed with intention and tested before it was trusted. Social engagement happens rarely and on your terms, reserved for conversations that meet the same standard of substance you apply to everything else. The clockwork metaphor captures something essential about you: intricate, self-sustaining, and producing results that seem effortless precisely because the underlying mechanism is so well-designed.",
@@ -125,22 +125,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// OBE — Social explorer (Open + Balanced + Extravert)
 
-	// HMHW → OBEW
-	OBEW: {
+	// HMHW → OSEA
+	OSEA: {
 		name: "The Catalyst",
 		description:
 			"Your curiosity is contagious — it spreads through rooms and conversations like warmth from a fire, making everyone around you a little more willing to explore, question, and try something new. That's not a deliberate strategy; it's just what happens when genuine enthusiasm for ideas meets genuine care for people. Social settings are your natural habitat, but not because you need attention — it's because the collision of different perspectives in a group is where your best thinking happens, where one person's throwaway comment becomes the seed of your next big idea. Flexibility keeps you responsive to whatever the moment offers; you adapt your approach without losing your essential curiosity or the warmth that makes people trust you with their thoughts. Friends and colleagues describe you as the person who makes the unknown feel less frightening, who transforms 'what if' from a source of anxiety into a source of excitement. You spark change not by pushing people but by showing them what's possible and making it look genuinely appealing rather than risky. The connections you build tend to be both wide and warm — you move between different circles easily, carrying ideas and enthusiasm from one to the next like cross-pollination between gardens. There's a generosity in how you share your discoveries; you don't hoard insight or use knowledge as currency, you give it away freely because seeing others light up is its own reward. That combination of social warmth and intellectual curiosity makes you the kind of catalyst that transforms not just conversations but the people having them.",
 		color: "#E8A04C",
 	},
-	// HMHN → OBEN
-	OBEN: {
+	// HMHN → OSEP
+	OSEP: {
 		name: "The Bridge",
 		description:
 			"You connect ideas and people across divides that others treat as permanent, building pathways where most see only gaps. Curiosity pulls you toward unfamiliar territory — new perspectives, different ways of thinking, people whose backgrounds have nothing in common with yours — and a natural diplomatic instinct helps you make those connections productive rather than chaotic. Social settings energize you, but you're drawn less to the center of attention and more to the spaces between groups, the conversations where someone from one world meets someone from another and discovers unexpected common ground. Your flexibility is a genuine asset here: you don't impose a single framework on every situation but adjust your approach to fit the people and the context, which is why such different types of people feel comfortable around you. Bridge-building isn't just a social skill for you — it's how you think, constantly looking for the connections between seemingly unrelated ideas and creating synthesis where others see only contradiction. That diplomatic quality means conflicts in your presence tend to de-escalate rather than intensify, not because you suppress disagreement but because you help people hear each other more clearly. Your social curiosity runs deep enough that you genuinely want to understand why people think what they think, not just what they think, and that depth of interest earns a trust that surface-level charm never could. The bridges you build — between people, between ideas, between communities — tend to be surprisingly durable because they're founded on real understanding rather than polite avoidance of difference.",
 		color: "#4ECDC4",
 	},
-	// HMHC → OBEC
-	OBEC: {
+	// HMHC → OSED
+	OSED: {
 		name: "The Spark",
 		description:
 			"You ignite energy in every room you enter — not by demanding attention but by bringing a combination of curiosity and independence that makes people sit up and take notice. Social settings are your playground, but you play by your own rules; you engage enthusiastically with new ideas and new people, yet you never lose yourself in the crowd or compromise your perspective just to fit in. That independent streak gives your curiosity a particular edge: you explore not just what's popular or accepted but what's genuinely interesting, even when — especially when — it makes people uncomfortable or challenges the consensus. Flexibility keeps you light on your feet; when a conversation takes an unexpected turn or a plan falls apart, you pivot with an ease that makes more rigid personalities wonder how you do it. Your social energy has a sparkplug quality — brief, intense bursts that catalyze action and excitement without requiring sustained management or follow-up from you. People are drawn to your combination of openness and directness: you're curious enough to listen genuinely and honest enough to say what you actually think, a combination that feels refreshingly rare in a world full of people who do one or the other but rarely both. The spark you carry isn't just social — it's intellectual, creative, and deeply personal, the expression of a mind that refuses to be bored and a spirit that refuses to be tamed. You don't need anyone's approval to follow your curiosity, and that freedom is exactly what makes your presence so energizing for everyone around you.",
@@ -149,22 +149,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// OBA — Selective explorer (Open + Balanced + Ambivert)
 
-	// HMMW → OBAW
-	OBAW: {
+	// HMMW → OSBA
+	OSBA: {
 		name: "The Garden",
 		description:
 			"You cultivate growth with the patience of someone who knows that the most beautiful things take time and the right conditions, not force. Your curiosity draws you toward new ideas and experiences, but you're selective about where you plant your attention, preferring to go deep in a few chosen areas rather than skimming the surface of everything. Social energy gets invested in chosen circles — the people you've decided are worth your time receive a warmth and attentiveness that makes them feel genuinely nurtured, while larger gatherings get a polite but measured version of you that conserves energy for what matters most. That selectivity isn't aloofness; it's a gardener's instinct for knowing where effort will actually bear fruit. Flexibility in your approach means you don't force things to grow in directions they weren't meant to go — you observe, adapt, and work with what's naturally present rather than imposing an artificial design. The things you tend, whether they're relationships, creative projects, or personal interests, share a common quality: they're thriving because someone cared enough to give them exactly what they needed without overdoing it. There's a nurturing quality to your curiosity itself — you don't just consume ideas, you cultivate them, letting them develop at their own pace until they're ready to bloom. The people closest to you feel this instinctively; they know that your attention isn't casual or automatic, it's chosen, and that makes it all the more valuable. Your garden may not be the largest, but everything in it is genuinely alive.",
 		color: "#7CB342",
 	},
-	// HMMN → OBAN
-	OBAN: {
+	// HMMN → OSBP
+	OSBP: {
 		name: "The Current",
 		description:
 			"You move forward with a quiet, steady momentum that carries ideas and people along without anyone quite noticing the force at work. Curiosity keeps you open to whatever the world puts in front of you, but there's nothing frantic about how you explore — it's an unhurried flow, taking in new perspectives at a pace that allows for real understanding rather than superficial sampling. Social engagement happens naturally and without drama; you move between conversation and solitude with equal ease, adjusting your presence to whatever the moment calls for without losing your center or feeling depleted by the shift. Balance defines your approach to almost everything: you don't swing to extremes in how you think, feel, or relate to others, which gives you a stability that people find calming without quite being able to name what it is about you. That moderation isn't indifference or passivity — it's a genuine capacity to hold complexity, to see merit in opposing viewpoints without feeling obligated to choose sides before you're ready. Your curiosity has a particular quality: it's patient, allowing ideas to develop fully before you form judgments, which means your conclusions tend to be unusually well-considered when they finally arrive. People around you sense that you carry things forward — insights from one conversation reappear, refined, in another weeks later, because your mind processes continuously even when it appears still. The current metaphor captures your essence: always moving, always carrying something worthwhile, never needing to announce itself to be powerful.",
 		color: "#6A8CAF",
 	},
-	// HMMC → OBAC
-	OBAC: {
+	// HMMC → OSBD
+	OSBD: {
 		name: "The Drifter",
 		description:
 			"You follow curiosity wherever it leads, untethered by the expectations and social pressures that keep most people on well-worn paths. That freedom isn't irresponsible — it's a deliberate orientation toward experience and discovery that comes from trusting your own judgment over external validation. Social engagement happens when something genuinely interests you, not because of obligation or fear of missing out; you drift toward the conversations and people that spark real curiosity and away from the ones that don't, without much guilt about the difference. Flexibility is your default mode: plans are starting points rather than contracts, and you pivot with an ease that would give more structured personalities genuine anxiety. That self-direction means the path you've taken looks nothing like anyone else's, which suits you perfectly because replicating someone else's journey was never the point. Your curiosity is broad but your social energy is selective, creating a particular pattern: you explore widely in the world of ideas and experiences but invest interpersonally only where the connection feels authentic and unforced. There's an honesty in that selectivity — people always know where they stand with you because your attention can't be bought with social convention alone. The drifter label might sound aimless, but people who know you understand it differently: you're following a current that only you can feel, trusting it to carry you somewhere meaningful even when the destination isn't visible yet. That trust in your own trajectory is quiet and unshakeable, and the life it produces is genuinely your own in a way that most people only dream about.",
@@ -173,22 +173,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// OBI — Deep diver (Open + Balanced + Introvert)
 
-	// HMLW → OBIW
-	OBIW: {
+	// HMLW → OSRA
+	OSRA: {
 		name: "The Well",
 		description:
 			"You hold a depth that nourishes everyone who takes the time to approach, but you don't advertise what's down there — the richness of your inner world is a reward reserved for those who show up with genuine curiosity and patience. Solitude is where your creative and intellectual life flourishes, giving you the uninterrupted space to explore ideas with a thoroughness that social environments simply can't support. The few people you let in discover something remarkable: a warmth and generosity of spirit that feels all the more precious for being so selectively shared. Your curiosity runs deep rather than wide, diving into subjects and experiences with a sustained attention that produces genuine understanding rather than surface familiarity. Balanced in temperament, you don't swing between emotional extremes — there's a steadiness to your inner weather that makes your presence feel safe and grounding for the people lucky enough to be close to you. Flexibility keeps you responsive to life's changes without disrupting your essential nature; you adapt quietly, absorbing new information and incorporating it into your understanding at your own unhurried pace. The well metaphor captures something fundamental: you're deep, still, and life-sustaining for those who draw from you, but you can't be rushed or forced to give more than the moment allows. Your reflective nature means the insights you offer carry unusual weight — they've been processed, considered, and refined in solitude before they ever reach another person's ears. That depth of processing makes every interaction with you feel substantive, and the people who value substance over volume know exactly what they have in you.",
 		color: "#4A7C6F",
 	},
-	// HMLN → OBIN
-	OBIN: {
+	// HMLN → OSRP
+	OSRP: {
 		name: "The Pendulum",
 		description:
 			"You swing thoughtfully between perspectives, never rushing to land on one side when both have something genuine to offer. Quiet contemplation is your natural mode — you need solitude not to escape the world but to understand it properly, to give ideas the space to develop fully before you share them with anyone else. Fair-mindedness runs deep in everything you do; when you encounter disagreement, your first instinct is to understand rather than to choose sides, which gives your eventual conclusions a credibility that more impulsive judgments rarely earn. Curiosity fuels the pendulum's motion — you're drawn to new ideas and different perspectives not to collect them as trophies but to genuinely understand what they look like from the inside. That balanced, measured quality means you're unusually comfortable with ambiguity, sitting with unresolved questions for as long as they need rather than forcing premature closure for the sake of comfort. Social engagement happens in focused doses; you prefer conversations where depth is possible to gatherings where it's not, and you invest your limited social energy where it will produce real understanding rather than pleasant noise. Your reflective nature gives you an uncommon ability to see the hidden connections between ideas that appear contradictory on the surface, synthesizing perspectives that others treat as incompatible. The pendulum doesn't rush — it swings at its own pace, covering the full range of a question before settling into the position that honest examination supports. People who value thoughtful analysis over quick opinions learn to wait for your perspective, because it's almost always worth the patience.",
 		color: "#6B7FA0",
 	},
-	// HMLC → OBIC
-	OBIC: {
+	// HMLC → OSRD
+	OSRD: {
 		name: "The Telescope",
 		description:
 			"You see far and with remarkable clarity, but you prefer to do your looking from a quiet distance that gives you the perspective most people sacrifice for the sake of being in the middle of things. Solitary observation is where your mind does its most original work — scanning horizons that others don't even know exist, connecting patterns across disciplines and domains that most people treat as entirely separate. Independence defines your relationship with the world: you trust your own perception over received wisdom, and that self-reliance has been validated often enough that it feels like common sense rather than arrogance. Curiosity drives you toward the edges of what's known, the territories where questions haven't been fully formed yet, let alone answered — and you're comfortable staying there, in the uncertainty, for as long as the exploration requires. Social engagement is selective and purposeful; you don't avoid people, but you require a reason to engage that goes beyond mere convention or the expectation that showing up is what normal people do. Flexibility in your thinking means you can adjust your lens rapidly when new evidence appears, pivoting from one framework to another without the ego attachment that makes most people cling to their first interpretation. The telescope metaphor captures your essential quality: powerful vision that requires distance to function properly. Up close, the details blur; from your preferred vantage point, patterns emerge that no one else can see. That combination of independent thinking and far-sighted observation makes your insights genuinely unique — the product of a mind that chose to look where no one else was looking.",
@@ -197,22 +197,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// OFE — Live wire (Open + Flexible + Extravert)
 
-	// HLHW → OFEW
-	OFEW: {
+	// HLHW → OFEA
+	OFEA: {
 		name: "The Bonfire",
 		description:
 			"You burn bright and warm, drawing everyone within reach into your orbit with a combination of creative energy and spontaneous generosity that's impossible to fake or resist. Plans exist loosely in your world — starting points that get cheerfully abandoned the moment something more interesting appears, because trusting the moment has always served you better than trusting the schedule. Social gatherings light up when you arrive, not because you perform but because your enthusiasm is genuinely contagious and your warmth makes people feel welcome enough to drop their guard and be themselves. That generosity of spirit isn't strategic; it's instinctive, flowing from a deep belief that life is better shared and that the best experiences are the ones that happen spontaneously with people you care about. Creativity and chaos coexist comfortably in your world — you thrive in the unstructured spaces where unexpected connections happen and brilliant ideas emerge from playful conversation rather than formal brainstorming. The people closest to you have learned to expect the unexpected: impromptu road trips, midnight creative sessions, conversations that start about dinner and end up redesigning someone's career. Your flexibility means you're almost impossible to throw off balance; when plans collapse, you simply build something new from the wreckage, often something better than what was originally intended. The bonfire metaphor fits because your energy is wild, warm, and communal — it draws people together, it defies containment, and it turns whatever it touches into something more alive than it was before.",
 		color: "#FF8C42",
 	},
-	// HLHN → OFEN
-	OFEN: {
+	// HLHN → OFEP
+	OFEP: {
 		name: "The Kite",
 		description:
 			"You fly freely through social and creative landscapes, tugged by curiosity in one direction and balanced by a diplomatic instinct that keeps you connected to the people holding the string. Spontaneity is your natural mode — you follow interests wherever they lead, pivoting with an ease that makes more structured people genuinely envious — but there's a social grace to your movements that prevents the freedom from becoming recklessness. People enjoy your company because you bring energy and novelty without the sharp edges that sometimes come with strong independence; you're fun and you're fair, a combination that opens doors most people have to knock harder on. That diplomatic streak means you navigate social complexity with surprising skill for someone who doesn't plan ahead — you read rooms intuitively, adjust your approach to fit the audience, and leave people feeling heard even when the conversation was brief and spontaneous. Creative exploration and social connection fuel each other in your life: a new idea becomes more interesting when you can share it with someone, and a good conversation often becomes the source of your next creative pursuit. Flexibility keeps you light — you carry ideas rather than burdens, possibilities rather than obligations — and that lightness is genuinely refreshing for the people who spend time with you. The kite metaphor captures your essence: free-flying but not untethered, responsive to the wind but connected to something grounding. You soar because you've figured out how to let go without letting go of the people who matter.",
 		color: "#7EC8E3",
 	},
-	// HLHC → OFEC
-	OFEC: {
+	// HLHC → OFED
+	OFED: {
 		name: "The Lightning",
 		description:
 			"You strike with a sudden brilliance that nobody saw coming and nobody quite knows how to replicate — a creative energy that refuses to be tamed, scheduled, or made to wait for permission. Social settings feel the charge when you walk in: there's an intensity to your presence that comes from the combination of bold creative thinking and complete disregard for the unspoken rules everyone else follows automatically. Plans bore you, conventions constrain you, and the expectation that you should temper your ideas to make them more palatable strikes you as a waste of everyone's time. That directness isn't aggressive — it's efficient, cutting through the noise to get to what's actually interesting or important while others are still navigating social pleasantries. Spontaneity is where your genius lives; the moments when inspiration strikes without warning and you act on it immediately, without the filtering process that dilutes most people's creative impulses into something safe and forgettable. Your independence means you're comfortable being the only person in the room who sees things differently, and you don't need consensus to move forward when your instincts are firing. That can be disorienting for people who prefer predictability, but for those who appreciate raw creative energy, your presence is electrifying. The lightning metaphor fits because you can't be controlled or predicted — you appear when conditions are right, you illuminate things that were invisible a moment ago, and you leave a lasting impression on everything you touch. You don't wait for the storm; you are the storm.",
@@ -221,22 +221,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// OFA — Gentle wanderer (Open + Flexible + Ambivert)
 
-	// HLMW → OFAW
-	OFAW: {
+	// HLMW → OFBA
+	OFBA: {
 		name: "The Meadow",
 		description:
 			"You create a space where things grow at their own pace, offering warmth and openness without imposing direction or demanding that growth follow a particular schedule. Creative energy flows gently through you — not in dramatic bursts but in a sustained, unhurried way that produces surprisingly original results over time, the way a meadow full of wildflowers outperforms a carefully planned garden without anyone tending it. Social engagement has an easy, come-as-you-are quality; people feel welcome in your presence precisely because you don't evaluate, judge, or try to steer the conversation toward some predetermined destination. That gentleness isn't weakness — it's a form of creative confidence, a trust that interesting things will emerge if you give them enough space and warmth to develop on their own terms. Flexibility means you adapt to whatever the day brings without resistance or resentment, finding possibility in disruption where others find only frustration. Your nurturing instinct is subtle but unmistakable: friends notice that they feel more like themselves around you, more willing to take creative risks, more comfortable with uncertainty, as if your presence creates a microclimate where experimentation is safe. Ideas get cultivated in your world rather than manufactured — you don't force creativity, you make conditions for it, and the results have an organic quality that planned approaches rarely achieve. The meadow metaphor captures your spirit: open, gentle, rich with hidden variety, and beautiful not because someone designed it to be but because it was given the freedom to become whatever it naturally wanted to be.",
 		color: "#A8D5BA",
 	},
-	// HLMN → OFAN
-	OFAN: {
+	// HLMN → OFBP
+	OFBP: {
 		name: "The Breeze",
 		description:
 			"You move through life with a lightness that touches everything without clinging to anything, carrying ideas and warmth from place to place with an ease that makes complexity look simple. Social engagement has a fluid, unhurried quality — you're present when you're there, genuinely interested in whoever is in front of you, but you don't create the kind of relational gravity that makes departures feel heavy or arrivals feel obligatory. That balance extends to how you think: you hold opinions without gripping them, staying open to revision when new information arrives and adjusting your perspective with a flexibility that more rigid minds find enviable. Curiosity keeps you moving — not restlessly but rhythmically, like wind that follows its own invisible currents without needing to justify the direction to anyone watching from the ground. People describe your presence as refreshing, and the word fits better than they realize: you bring fresh perspective, fresh energy, and a fresh willingness to see things differently that breaks up the stale patterns of everyday thinking. Diplomacy comes naturally because you don't carry the weight of strong positions that need defending; your lightness lets you navigate between opposing viewpoints without triggering the defensiveness that heavier approaches provoke. The breeze metaphor captures something essential about your nature: you're felt more than seen, you change the atmosphere simply by passing through, and your influence is gentle but genuine. Nothing about you feels forced, and in a world that often rewards intensity, your effortless quality is quietly revolutionary.",
 		color: "#87CEEB",
 	},
-	// HLMC → OFAC
-	OFAC: {
+	// HLMC → OFBD
+	OFBD: {
 		name: "The Comet",
 		description:
 			"You follow your own orbit with a brilliance and independence that most people can only admire from a distance, burning through the sky on a trajectory that answers to nothing except the forces that have always guided you. Creative energy and spontaneity combine in you to produce a life that looks nothing like anyone else's, and that's exactly the point — replicating someone else's path was never interesting enough to even consider. Social engagement happens when your orbit brings you close to others, and those moments can be intensely charming and memorable, but you don't rearrange your trajectory to maintain proximity to anyone who isn't heading somewhere equally fascinating. That independence isn't loneliness; it's the natural outcome of following a creative vision that most people wouldn't dare pursue because it demands too much freedom and tolerates too little compromise. Flexibility keeps you responsive to whatever the universe puts in your path — you can change direction with a speed and grace that would destabilize a less self-possessed personality, using disruption as creative fuel rather than treating it as a threat to be managed. The people who've been fortunate enough to share a stretch of your orbit remember it vividly: your presence was exciting, your perspective was unlike anything they'd encountered before, and your departure left them changed in ways they're still discovering. The comet metaphor captures your essence perfectly: bright, independent, following your own orbit, and leaving a trail that others look up at in wonder. You don't need to be permanent to be unforgettable.",
@@ -245,22 +245,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// OFI — Quiet dreamer (Open + Flexible + Introvert)
 
-	// HLLW → OFIW
-	OFIW: {
+	// HLLW → OFRA
+	OFRA: {
 		name: "The Ember",
 		description:
 			"You carry a quiet creative warmth that glows steadily within, shared only with the trusted few who've proven they can sit beside the fire without trying to stoke it into something louder than it wants to be. Your inner world is rich, imaginative, and deeply felt — a private landscape of ideas, impressions, and half-formed creative visions that would overwhelm most people if they could see it all at once. Solitude is where that inner fire gets its oxygen, the quiet space where creativity develops at its own pace without the pressure of external expectations or the distortion of performing for an audience. The people you let in experience a warmth that feels all the more valuable for being so carefully guarded — your affection isn't given to just anyone, but when it is, it comes with a depth and steadiness that fair-weather warmth can never match. Flexibility keeps your creative process organic; you don't force ideas into shape on someone else's timeline, trusting instead that the right form will emerge when the conditions are right and the ember has had enough time to glow at its own temperature. That patience extends to relationships — you build trust slowly, reveal yourself gradually, and the connections you form have the resilience that only unhurried, genuine intimacy can create. There's a protective quality to how you manage your creative energy: you know instinctively that the flame needs guarding, that not everyone deserves access, and that the warmth you offer has to come from a place of genuine feeling rather than social obligation. The ember's glow may be quiet, but for those who sit close enough to feel it, there's nothing in the world quite like it.",
 		color: "#9B59B6",
 	},
-	// HLLN → OFIN
-	OFIN: {
+	// HLLN → OFRP
+	OFRP: {
 		name: "The Tributary",
 		description:
 			"You follow your own quiet, reflective path through life, carrying ideas and insights that eventually feed into something larger than yourself — though the journey there is entirely your own and proceeds at a pace that you alone determine. Solitude is where your thinking deepens and your creativity takes root; without the noise of social obligation, your mind is free to wander through connections and patterns that a busier life would never allow time to discover. Fairness in how you see the world means you hold your own perspectives lightly enough to be genuinely changed by evidence, adjusting your course when honest reflection tells you that yesterday's direction was slightly off. That flexibility isn't uncertainty — it's intellectual honesty combined with the creative confidence to know that changing your mind when warranted is a sign of strength, not weakness. Your contributions to the larger world tend to arrive quietly and unexpectedly, appearing in conversations or projects as insights that seem simple on the surface but reveal extraordinary depth on closer examination. Social connection happens naturally when your path crosses someone else's in a meaningful way; you don't seek it aggressively, but you recognize it when it arrives and honor it with genuine attention. The tributary metaphor captures how you move through life: independently, at your own pace, following the terrain that interests you most, yet ultimately contributing to currents much larger than yourself. People downstream may not know where the water came from, but its quality speaks for itself. There's a patient confidence in trusting that the path you're on will lead somewhere worthwhile, even when you can't see the river yet.",
 		color: "#6A7F9A",
 	},
-	// HLLC → OFIC
-	OFIC: {
+	// HLLC → OFRD
+	OFRD: {
 		name: "The Lone Flame",
 		description:
 			"You burn on your own fuel, a self-sustaining creative fire that needs nothing from the outside world to keep going — no audience, no approval, no collaborative spark to ignite what was always burning perfectly well on its own. Solitude isn't a compromise for you; it's the optimal condition for the kind of unfettered creative and intellectual exploration that defines your inner life. Independence runs so deep it barely registers as a trait anymore — it's simply how you're built, the default setting from which every decision, creative impulse, and life choice naturally flows. Your curiosity is fierce and entirely self-directed: you pursue what interests you with the kind of sustained focus that social obligations and collaborative compromises would only disrupt. That flexibility in how you think means you're genuinely free to follow ideas wherever they lead, unencumbered by the need to negotiate your creative direction with anyone else or explain your process to people who wouldn't understand it anyway. The work you produce in solitude carries a distinctive signature — it's original in ways that collaborative work rarely achieves, because it was never diluted by consensus or steered toward palatability. People who encounter your output sense something different about it without necessarily being able to articulate what: it's the unmistakable mark of a mind that created without compromise. Social connection is rare and highly selective, reserved for the few individuals who can appreciate the flame without trying to manage, direct, or contain it. The lone flame metaphor isn't about loneliness — it's about a creative autonomy so complete that it becomes its own form of freedom. You don't burn for anyone else; you burn because it's what you are.",
@@ -273,22 +273,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// GDE — The captain (Grounded + Disciplined + Extravert)
 
-	// MHHW → GDEW
-	GDEW: {
+	// MHHW → MCEA
+	MCEA: {
 		name: "The Anchor",
 		description:
 			"You hold things together with a combination of organizational skill and genuine warmth that makes you the reliable center everyone gravitates toward when the waters get rough. People and projects organize naturally around you — not because you demand it, but because your steady presence creates a gravitational field of trust and competence that others find irresistible. Discipline shows in everything you touch: plans are thorough, commitments are kept, and the follow-through that most people struggle with comes as naturally to you as breathing. But what transforms your reliability from merely competent to genuinely magnetic is the warmth that runs through it — your organization isn't cold efficiency, it's care expressed through structure, a way of showing people that you thought about what they'd need before they had to ask. Social settings bring out your natural leadership: you read groups instinctively, sense when someone needs to be drawn into the conversation, and manage the dynamics of a room with an ease that looks effortless but reflects years of genuine attentiveness. Your grounded perspective means ideas earn adoption based on practical merit rather than novelty, which keeps your projects stable while others chase trends that don't survive first contact with reality. The anchor metaphor captures your essence: you provide stability without rigidity, holding things in place while still allowing for the natural movement that healthy systems require. People don't feel trapped by your steadiness — they feel freed by it, able to take risks and explore because they know something solid is holding the center.",
 		color: "#4CAF7B",
 	},
-	// MHHN → GDEN
-	GDEN: {
+	// MHHN → MCEP
+	MCEP: {
 		name: "The Helm",
 		description:
 			"You steer groups toward their destination with a pragmatic confidence that doesn't need to shout to be effective, adjusting course smoothly when conditions change without ever losing sight of where you're headed. Leadership comes naturally to you, but it's the kind that operates through influence rather than authority — people follow your lead because your judgments are consistently sound and your diplomatic instinct ensures that direction-setting feels collaborative rather than dictatorial. Discipline keeps your approach organized and your commitments reliable, qualities that earn the kind of deep trust that more charismatic but less consistent leaders never quite achieve. Your grounded perspective acts as a natural filter for ideas: innovations that serve a clear practical purpose get incorporated; novelty for its own sake gets politely redirected toward conversations where it might find a better home. Social settings are where your navigational instinct shines brightest — you read currents of opinion, identify productive directions, and guide discussions toward conclusions that leave most people feeling heard even when the final decision wasn't what they originally proposed. There's a quiet diplomacy in how you handle disagreement: you don't suppress it or avoid it, but you channel it toward constructive outcomes with a skill that makes complex group dynamics look simple. The helm metaphor fits because you're not the engine or the destination — you're the point of contact between intention and direction, the place where collective will gets translated into actual movement. People trust your hands on the wheel because they've seen where careful navigation leads, and it's always been somewhere worth going.",
 		color: "#3A7CA5",
 	},
-	// MHHC → GDEC
-	GDEC: {
+	// MHHC → MCED
+	MCED: {
 		name: "The Mast",
 		description:
 			"You stand visible and direct at the center of organized effort, the fixed point around which everything else rotates and the standard by which progress gets measured. There's nothing hidden about your leadership style — clear expectations, honest assessments, and consistent follow-through create an environment where people know exactly where they stand and what's expected of them, and that clarity is its own form of respect. Discipline and directness work together in you to produce results through sheer force of organized conviction: when you commit to a direction, the people around you can feel the certainty in it, and that confidence is contagious even when the path ahead is challenging. Your grounded nature means you build on proven foundations rather than chasing theoretical improvements, which gives your projects a stability that more experimental approaches often lack. Social confidence is innate — you speak plainly, lead visibly, and handle confrontation without flinching, qualities that some find intimidating but that everyone eventually recognizes as trustworthy precisely because they're so consistent. The mast metaphor captures your function: you're the tall, visible structure that holds everything up and lets everyone know which direction the wind is blowing. You don't bend in the storm — you stand firm, giving the people around you a fixed reference point when everything else is in motion. That kind of visible, organized authority isn't about ego; it's about creating conditions where everyone can do their job because someone is holding the standard high enough for everyone to see it clearly.",
@@ -297,22 +297,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// GDA — Project lead (Grounded + Disciplined + Ambivert)
 
-	// MHMW → GDAW
-	GDAW: {
+	// MHMW → MCBA
+	MCBA: {
 		name: "The Hearthstone",
 		description:
 			"Your organization is an expression of love — the kind of love that shows up as a warm meal on the table before anyone mentioned they were hungry, as a schedule that somehow accounts for everyone's needs without making anyone feel managed. Discipline and devotion are so tightly woven in you that it's impossible to tell where one ends and the other begins; your plans aren't just efficient, they're thoughtful, designed with genuine care for the humans who have to live within them. Social energy gets invested selectively — you're not the loudest presence in a room, but in the spaces you choose to inhabit, your warmth and reliability create an atmosphere that people instinctively want to be part of. Thinking ahead for others comes naturally: you anticipate needs, prepare for contingencies, and do it all so seamlessly that the people around you might not even realize how much invisible work goes into the stability they enjoy. Your grounded perspective keeps you practical about what's achievable, but that pragmatism is always tempered by genuine compassion, ensuring that efficiency never comes at the cost of the people it's supposed to serve. The hearthstone metaphor captures your essence perfectly: the warm, solid center around which domestic life organizes itself, providing heat and stability without demanding attention or credit. People gather around you because your presence makes everything feel more secure, more cared-for, more like home. That combination of practical organization and deep emotional warmth is genuinely rare, and the people who benefit from it know — even if they don't always say it — that you're the reason everything works as well as it does.",
 		color: "#B85C38",
 	},
-	// MHMN → GDAN
-	GDAN: {
+	// MHMN → MCBP
+	MCBP: {
 		name: "The Keystone",
 		description:
 			"You're the piece that holds everything together — quietly essential, structurally vital, and doing the kind of work that only becomes visible when it's absent and everything collapses. Pragmatic discipline shapes how you approach every responsibility, bringing a methodical thoroughness to tasks that less organized minds would handle haphazardly. But what makes you a keystone rather than just a competent organizer is the balanced judgment you bring to everything: you see all sides of a question, weigh them fairly, and make decisions that people trust because they know the process behind them was honest and thorough. Social engagement is measured and intentional — you show up where you're needed, contribute substance rather than noise, and create an impression of reliability so deep that people build their own plans around the assumption that you'll deliver on yours. Your grounded nature means you don't get swept up in excitement or panic; the same steady hand that organizes Tuesday's tasks handles Friday's crisis, and that consistency is more valuable than people realize until they've experienced what happens without it. There's nothing flashy about the keystone role — it's not the crown of the arch or the decorative facade. It's the invisible structural element that makes the beautiful parts possible, and you've made peace with that position because you understand that the most important contributions don't always come with recognition. The people who work closely with you know what they have: someone whose balanced, disciplined, pragmatic presence makes everyone else's work better by quietly ensuring that the foundation underneath it all is solid.",
 		color: "#6D8B74",
 	},
-	// MHMC → GDAC
-	GDAC: {
+	// MHMC → MCBD
+	MCBD: {
 		name: "The Bulwark",
 		description:
 			"You build strong structures and defend them with a pragmatic independence that refuses to compromise on what you know works, even when the trendy alternative is getting all the attention. Discipline and self-reliance combine in you to create someone who can design, execute, and maintain complex projects without needing a committee's approval or a crowd's encouragement. Your grounded perspective means the things you build are practical, tested, and resilient — you don't over-engineer for hypothetical scenarios, but you don't cut corners either, because your personal standards are the bar you're measured against, and those standards are higher than most. Social engagement happens on your terms and for your reasons, which means the interactions you do invest in tend to be substantive and efficient rather than performative. There's a directness to how you communicate that some people find bracing and others find refreshing — you say what you mean, back it up with evidence, and move on without the social padding that consumes so much of other people's communicative energy. That candor is part of what makes your structures so reliable: no one has to guess what you're thinking or worry that you're harboring private objections that will surface at the worst possible moment. The bulwark metaphor captures your protective, structural quality: you're the defense that holds when everything else is under pressure, the solid wall that people shelter behind when the situation gets difficult. You don't build bulwarks for glory — you build them because things need protecting, and you're the person with the skills, the discipline, and the independence to do it right.",
@@ -321,22 +321,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// GDI — Craftsman (Grounded + Disciplined + Introvert)
 
-	// MHLW → GDIW
-	GDIW: {
+	// MHLW → MCRA
+	MCRA: {
 		name: "The Root",
 		description:
 			"You hold everything up from below the surface, providing the kind of quiet, structural support that nobody sees but everybody depends on. Meticulous care defines your work — not the showy kind that draws attention to itself, but the invisible kind that ensures everything above ground stands straight and strong because someone down here got every detail right. Solitude is your workshop: the focused, uninterrupted space where discipline and devotion combine to produce work of exceptional quality for the people you serve and care about. That combination of introversion and warmth creates a distinctive pattern — you don't broadcast your care through social performance, you embed it in the quality of your work and the reliability of your presence, and the people paying attention know exactly what that means. Your grounded perspective keeps you practical and realistic; you don't chase ambitious fantasies when steady, proven approaches serve the people around you better. There's a particular satisfaction in getting the invisible things right — the preparation nobody notices, the contingency plan nobody needs to use, the quiet accommodation that makes someone's day easier without them ever knowing you were the reason. Discipline ensures that your care isn't sporadic or mood-dependent; it shows up consistently, day after day, in the small acts of thoughtful preparation that accumulate into something genuinely extraordinary over time. The root metaphor captures your role perfectly: unseen, essential, and drawing nourishment from the deep soil of patience and devotion to feed everything that grows above. The people who benefit from your work might not see you, but they'd notice immediately if you were gone.",
 		color: "#27AE60",
 	},
-	// MHLN → GDIN
-	GDIN: {
+	// MHLN → MCRP
+	MCRP: {
 		name: "The Meridian",
 		description:
 			"You measure twice and cut once, every single time, applying a methodical precision to your work that produces results of consistent, reliable quality. Quiet focus is your natural state — you operate best in environments where concentration can be sustained without interruption, where the careful work of getting things exactly right receives the unbroken attention it deserves. Fair-mindedness shapes your judgments: when evaluating options or making decisions, you weigh evidence carefully and arrive at conclusions that you can defend with reasons rather than feelings, a process that earns the trust of anyone who values substance over impulse. Your grounded nature keeps your work practical and your standards realistic — you don't pursue perfection for its own sake, but you do hold yourself to a level of quality that most people would find exhausting if they tried to maintain it consistently. Discipline in your process means that the gap between your best work and your average work is unusually small, because your systematic approach minimizes the variability that plagues less organized minds. Social engagement is selective and purposeful — you invest in conversations that have substance and avoid the ones that don't, a selectivity that means the people in your life have earned their place through genuine compatibility rather than convenience. The meridian metaphor captures your function: you're a fixed line of reference, a standard of precision that helps everyone around you orient their own work. There's a quiet authority in being the person whose measurements can be trusted, whose judgments have been thoroughly considered, and whose presence represents reliability so deep it barely needs to be stated.",
 		color: "#4A6B3C",
 	},
-	// MHLC → GDIC
-	GDIC: {
+	// MHLC → MCRD
+	MCRD: {
 		name: "The Chisel",
 		description:
 			"You shape raw material into something functional and precise through solitary effort and exacting standards that don't require anyone else's input or approval to maintain. Independence and discipline work together in you to produce craftsmanship of remarkable quality — the kind that comes from someone who has both the skill to do the work and the self-sufficiency to see it through without external motivation or social encouragement. Solitude is where your best work happens: focused, deliberate, each decision made with the kind of care that only sustained, uninterrupted attention can support. Your grounded nature means you work with what's real rather than what's theoretical, preferring proven materials and tested approaches to the exciting but unverified alternatives that more adventurous minds find irresistible. There's a functional beauty in what you produce — nothing decorative for its own sake, every element serving a purpose, the result of someone who understands that the best design is the one where nothing can be removed without losing something essential. Social engagement is rare and strictly purposeful; your time is too valuable and your work too absorbing to spend on interactions that don't contribute something concrete to either your understanding or your output. That directness extends to how you communicate when you do engage: plainspoken, efficient, and honest in a way that wastes neither your time nor theirs. The chisel metaphor captures your essential quality: you're a tool of precision and reduction, removing what doesn't belong to reveal the shape that was always there. It's solitary work, it requires patience, and the results are unmistakably yours.",
@@ -345,22 +345,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// GBE — Social glue (Grounded + Balanced + Extravert)
 
-	// MMHW → GBEW
-	GBEW: {
+	// MMHW → MSEA
+	MSEA: {
 		name: "The Loom",
 		description:
 			"You weave people together with a natural ease that transforms loose collections of individuals into genuine communities, groups that feel whole and connected because someone quietly did the work of making sure every thread was part of the fabric. Social settings are where you come alive — not for the attention, but for the deeply satisfying work of connecting people who might never have found each other without your warm, grounded intervention. Your balanced approach to life means you don't push too hard or hang too far back; you read what every situation needs and provide exactly that, whether it's energy, calm, a joke, or a listening ear. That adaptability makes you welcome in virtually any group, because you adjust your presence to complement rather than compete with the existing dynamics. Warmth radiates through everything you do socially — introductions feel generous rather than transactional, conversations feel safe rather than evaluative, and the people you bring together sense instinctively that your interest in their connection is genuine rather than self-serving. Your grounded nature keeps you practical about how communities actually work: you know that lasting bonds require more than good intentions, so the connections you foster tend to be built on shared activities, mutual respect, and the kind of regular, reliable contact that transforms acquaintances into friends. The loom metaphor captures what you do: you take separate threads — different people, different perspectives, different energies — and interlace them into something stronger and more beautiful than any of them could be alone. That's a rare skill, and the communities you create bear your signature long after the initial weaving is done.",
 		color: "#FFB347",
 	},
-	// MMHN → GBEN
-	GBEN: {
+	// MMHN → MSEP
+	MSEP: {
 		name: "The Harbor",
 		description:
 			"You offer shelter to anyone who needs it — a safe, grounded place where people can rest, regroup, and find their bearings before heading back out into the world. Social warmth meets practical reliability in you, creating an atmosphere that combines the comfort of genuine welcome with the stability of someone who can be counted on when conditions get rough. Your diplomatic instinct means conflicts that enter your space tend to settle rather than escalate; you have a way of helping people hear each other that doesn't require you to take sides or sacrifice your own grounded perspective. Balanced in temperament and flexible in approach, you adjust to meet the needs of whoever shows up at your door — one person needs practical advice, another needs emotional support, a third just needs to sit quietly in the presence of someone stable, and you provide each without the sense that you're performing or that there's a limit to your capacity. That adaptability is what makes you a harbor rather than just a helpful person: harbors don't turn ships away based on their cargo or their flag, they provide safe water for everyone. Your grounded nature ensures that the shelter you offer isn't idealistic or naive — it's practical, realistic, and built on a foundation of genuine competence. People trust your advice because it's informed by experience rather than theory, and they trust your welcome because it's been consistently available regardless of the weather. The harbor metaphor captures your function in the lives of the people around you: a reliable refuge, always there, always stable, making the open water less frightening because everyone knows they can come back to you.",
 		color: "#3498DB",
 	},
-	// MMHC → GBEC
-	GBEC: {
+	// MMHC → MSED
+	MSED: {
 		name: "The Flint",
 		description:
 			"You strike sparks of honest energy wherever you go, combining a grounded, realistic perspective with the kind of social directness that most people admire but few dare to practice. There's nothing artificial about your presence — you show up as exactly who you are, say what you mean, and engage with a genuine, unfiltered quality that cuts through the layers of social performance most gatherings are wrapped in. That directness isn't rude; it's refreshing, and the people who appreciate it find themselves being more honest around you, as if your candor gives them permission to drop their own masks. Balanced in how you process the world, you're neither too rigid nor too loose — you adapt to circumstances with a practical flexibility that keeps you effective without requiring you to overthink every adjustment. Social settings energize you, and you bring a particular kind of energy to them: warm enough to be welcoming but direct enough to be interesting, creating conversations that people remember because something real actually happened in them. Your grounded nature means the sparks you strike land on solid ground — you're not generating excitement for its own sake, you're igniting practical energy, the kind that actually gets things done rather than just making noise. The flint metaphor fits because you're fundamentally solid and your impact comes from contact: when you engage with people or ideas, something new gets created through the friction, something that wouldn't exist if you were softer or less honest. That combination of groundedness and directness is genuinely uncommon, and the people in your life value it precisely because it's so rare.",
@@ -369,22 +369,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// GBA — Even keel (Grounded + Balanced + Ambivert)
 
-	// MMMW → GBAW
-	GBAW: {
+	// MMMW → MSBA
+	MSBA: {
 		name: "The Hearth",
 		description:
 			"You're the warm center that others gather around without quite realizing they're doing it — your combination of steady presence and genuine caring creates an atmosphere so naturally comfortable that people just gravitate toward it. There's nothing dramatic about how you live; instead, there's a quiet consistency that accumulates into something extraordinary over time, the way a hearth that's always lit transforms a house into a home. Social engagement feels natural but never forced — you enjoy people, people enjoy you, and there's an ease to these exchanges that comes from someone who's genuinely comfortable in their own skin and wants others to feel the same. Your grounded perspective keeps expectations realistic and your responses proportional; you don't overreact to good news or bad, which gives the people around you a reliable emotional reference point when their own feelings are running hot. Warmth expresses itself through practical channels: the meal prepared for a stressed friend, the errand handled without being asked, the steady presence during a difficult conversation where someone just needs to be heard without being fixed. Balance and moderation define your approach to most things, not because you lack passion but because you've learned that sustained warmth does more good than intermittent fire. The hearth metaphor isn't just about warmth — it's about constancy, the assurance that this particular source of comfort will be here tomorrow, and the week after, and the year after that. People don't always articulate how much that consistency matters to them, but the moment they step out of its radius, they feel the difference immediately.",
 		color: "#C97B53",
 	},
-	// MMMN → GBAN
-	GBAN: {
+	// MMMN → MSBP
+	MSBP: {
 		name: "The Fulcrum",
 		description:
 			"You're the balancing point — the centered, steady presence that holds space for all sides without tipping toward any of them, making it possible for things to move in ways they couldn't without you. Balance isn't something you achieve through effort; it's your natural state, so deeply embedded in your temperament that most situations feel manageable simply because you're processing them through a system that doesn't amplify extremes. Social engagement is moderate and intentional: you enjoy people without needing them constantly, you appreciate solitude without craving isolation, and that flexibility means you're comfortable in almost any social configuration without feeling drained or restless. Your grounded perspective means you deal with the world as it is rather than as you wish it were, which gives your judgments a practical reliability that more idealistic or more pessimistic minds can't match. Fairness runs through your decision-making like a structural element — it's not something you add on top, it's part of the foundation, shaping how you weigh information and how you treat the people affected by your conclusions. The fulcrum metaphor captures your essential function: you don't move yourself, you make movement possible for others, providing the stable point from which effort becomes effective. That steadiness has a calming effect on the people around you, not because you tell them to calm down but because your grounded, balanced presence gives their nervous systems a model of what steady actually looks like. It's a quiet form of leadership — invisible to those who think leadership means being out front, but unmistakable to those who understand that nothing moves without a point of balance to push against.",
 		color: "#808080",
 	},
-	// MMMC → GBAC
-	GBAC: {
+	// MMMC → MSBD
+	MSBD: {
 		name: "The Ballast",
 		description:
 			"You provide the stabilizing weight that keeps things steady even when the world tilts sideways, and you do it with an independence that doesn't need anyone else to validate the importance of staying grounded. Balanced temperament and practical perspective combine in you to create someone who is remarkably difficult to destabilize — emotional extremes don't appeal to you, trendy thinking doesn't sway you, and social pressure to conform bounces off without leaving a mark. That isn't stubbornness; it's the genuine stability that comes from someone who knows who they are and what they think, arrived at through honest self-assessment rather than social positioning. Social engagement happens on your terms, which means the interactions you invest in tend to be authentic rather than obligatory, and the people in your life know that your presence was freely chosen rather than socially compelled. Your grounded nature means you see things clearly — not with cynicism but with the kind of clear-eyed realism that strips away wishful thinking and leaves only what's actually true. That clarity makes you valuable in situations where everyone else is caught up in emotion or group dynamics; your independent perspective cuts through the noise to identify what actually matters and what's just drama. The ballast metaphor captures your stabilizing function: you don't tip, you don't drift, and when the waters around you get rough, your steadiness becomes even more obviously essential. That kind of grounded independence isn't flashy, but the people who understand what keeps ships upright know exactly what they have in you.",
@@ -393,22 +393,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// GBI — Quiet observer (Grounded + Balanced + Introvert)
 
-	// MMLW → GBIW
-	GBIW: {
+	// MMLW → MSRA
+	MSRA: {
 		name: "The Spring",
 		description:
 			"You're a source of quiet nourishment that rises naturally to the surface when people need it most, offering care and support without fanfare or expectation of return. Your inner world is grounded and reflective — you process life steadily, without the dramatic swings that characterize more volatile temperaments, and that steadiness gives your caring a reliability that the people closest to you have learned to depend on. Solitude is where you recharge and reflect, but it's never truly separate from the people you care about; even in quiet moments, you're thinking about how to be useful, how to make someone's day a little easier, how to show up in the way that this particular person needs today. Social engagement is selective but deeply warm when it happens — you don't spread yourself thin across dozens of relationships, preferring instead to concentrate your considerable caring capacity on the few people who've earned the kind of trust that opens access to your private world. Balance in how you approach life means you respond proportionally to whatever comes your way: not too much, not too little, just the steady, measured care that comes from someone who's genuinely at ease with themselves. Your grounded nature keeps your support practical rather than merely emotional — you don't just sympathize, you help, in concrete ways that make a real difference in people's daily lives. The spring metaphor captures your essence: you emerge naturally from deep below the surface, you nourish everything you touch, and the water you provide is clean, consistent, and life-giving. People don't always see where it comes from, but they always know when it's there.",
 		color: "#7DCEA0",
 	},
-	// MMLN → GBIN
-	GBIN: {
+	// MMLN → MSRP
+	MSRP: {
 		name: "The Still Water",
 		description:
 			"The surface is calm, but there's deep processing happening underneath — a steady, grounded intelligence that takes in everything and evaluates it with a fairness most people can't achieve because they're too busy reacting to actually think. Quiet reflection is your natural mode, and the insights that emerge from it carry an authority that comes from thoroughness rather than volume. You don't rush to conclusions, you don't react to provocation with matching intensity, and you don't share your perspective until you've thought it through carefully enough to be confident it's worth sharing. That patience isn't passivity — it's a strategic quietness that produces unusually reliable judgments. Fairness runs through your thinking like a deep current; you genuinely consider multiple perspectives before settling on a position, and the people who know you trust your conclusions precisely because they know how much careful processing went into them. Social engagement happens in quiet, focused ways — deep conversations over coffee rather than group dynamics at parties, meaningful exchanges where both parties actually listen rather than wait for their turn to speak. Your grounded nature keeps you tethered to reality even when exploring abstract ideas, ensuring that your reflections always maintain contact with the practical world where their implications will play out. The still water metaphor captures your quality perfectly: the depth is real, the calm is real, and the reflections on the surface are clear precisely because nothing is disturbing them. People who mistake your quietness for simplicity learn quickly that still waters don't just run deep — they see everything.",
 		color: "#5B7B7A",
 	},
-	// MMLC → GBIC
-	GBIC: {
+	// MMLC → MSRD
+	MSRD: {
 		name: "The Granite",
 		description:
 			"You're solid and self-contained in a way that no amount of external pressure can change, and that immovability isn't rigidity — it's the natural stability of someone who has settled into exactly who they are with such completeness that rearrangement simply isn't on the table. Independence defines your relationship with the world: you trust your own judgment, maintain your own standards, and make your own decisions without the anxiety that most people feel when they diverge from the crowd. Solitude is your preferred state, not because you dislike people but because you function most effectively when your environment is as stable and uncluttered as your inner landscape. Grounded and balanced in perspective, you see the world clearly without the distortions that emotional reactivity or social pressure create for others — your assessments are clean, practical, and honest, which makes them valuable even when they're not what people want to hear. Social engagement is minimal and purposeful; you don't expend energy on interactions that lack substance, and the people who do earn your time know they're getting the real you, unfiltered and undiluted by social performance. There's a quiet strength in your self-containment that some people find intimidating and others find deeply reassuring — the same quality, perceived differently depending on whether someone needs agreement or simply needs to know that something solid exists in a world of constant change. The granite metaphor captures your essential nature: formed under pressure, unchanging, and providing a foundation that everything else can build on. You don't need anyone's approval to be what you are, and that freedom is the truest kind of strength.",
@@ -417,22 +417,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// GFE — Easygoing host (Grounded + Flexible + Extravert)
 
-	// MLHW → GFEW
-	GFEW: {
+	// MLHW → MFEA
+	MFEA: {
 		name: "The Campfire",
 		description:
 			"You're the relaxed warmth that makes everyone feel at home, the easy presence that transforms any gathering from a collection of individuals into something that actually feels like a good time. There's no effort in your hospitality — people gravitate toward you because your combination of practical warmth and laid-back energy creates an atmosphere where everyone can exhale and be themselves. Social settings are your natural environment, but you don't dominate them; you host them in the best sense of the word, making sure the quiet person in the corner gets included and the anxious newcomer gets a genuine welcome. Flexibility means you roll with whatever the evening brings — plans change, unexpected guests arrive, the restaurant is closed — and none of it rattles you because your good time doesn't depend on things going according to script. Your grounded nature keeps the warmth practical: you're not just emotionally welcoming, you're the person who actually thinks about whether everyone has a ride home, whether the vegetarian has something to eat, whether the conversation has drifted into territory that's making someone uncomfortable. That combination of social warmth and grounded attention to practical reality makes your presence genuinely restorative for people who've had a long week and just need to be somewhere that feels easy. The campfire metaphor captures your gift perfectly: you create a circle of warmth and light in the middle of whatever darkness or cold the world is serving up that day, and the people gathered around you feel safer, warmer, and more connected simply because you're there.",
 		color: "#E8833A",
 	},
-	// MLHN → GFEN
-	GFEN: {
+	// MLHN → MFEP
+	MFEP: {
 		name: "The Waypoint",
 		description:
 			"You're the place where people stop to get their bearings — a relaxed, diplomatic social navigator who helps others find their direction without insisting they take any particular path. Your combination of grounded perspective and easygoing flexibility makes you the person people seek out when they're lost in a decision, overwhelmed by options, or just need someone who'll listen without judgment and help them think clearly. Social settings bring out your navigational instinct: you read the room, sense where the currents of conversation are flowing, and guide things toward productive territory with a lightness that never feels like management. Diplomacy comes naturally to you — not the formal, calculated kind, but the relaxed, genuine kind that comes from actually caring about fairness and having enough flexibility to accommodate different perspectives without getting rigid about any of them. Your grounded nature means the guidance you offer is practical and realistic; you don't point people toward idealistic destinations that look good on paper but fall apart in practice. There's a go-with-the-flow quality to your presence that makes people feel comfortable asking for your input, because they know you won't impose an agenda or judge them for being uncertain. The waypoint metaphor captures your function: you're not the beginning or the end of anyone's journey, but you're the trusted marker that travelers look for when they need confirmation that they're heading in the right direction. You provide orientation without obligation, guidance without judgment, and your presence makes the path forward clearer for everyone who passes through.",
 		color: "#6B9E9E",
 	},
-	// MLHC → GFEC
-	GFEC: {
+	// MLHC → MFED
+	MFED: {
 		name: "The Squall",
 		description:
 			"You blow through with sudden practical energy — a burst of direct, honest action that clears the air and gets things moving before anyone has time to overthink or overcomplicate what was always a straightforward situation. Social confidence meets grounded pragmatism in you, creating someone who can walk into a stalled conversation, say the obvious thing that everyone was too polite to mention, and have the whole group unstuck within minutes. That directness isn't carefully considered or diplomatically packaged — it's immediate, honest, and effective in the way that a sudden wind clears a humid afternoon. Flexibility keeps you from getting attached to outcomes or positions; you say your piece, take action, and move on without the lingering investment that turns honest communication into ongoing conflict. Your grounded nature ensures that your bursts of energy are practical rather than dramatic — you're not creating storms for their own sake, you're clearing paths that need clearing and then getting out of the way. People who know you well appreciate the pattern: you arrive with energy, speak plainly, handle what needs handling, and leave things better than you found them without making a production out of any of it. The squall metaphor captures your brief, powerful quality: you're not a sustained storm, you're a sudden shift in conditions that everybody needed even if nobody asked for it. Some people find the directness startling at first, but they rarely argue with the results, and most eventually come to appreciate that the uncomfortable moment of honesty saved everyone hours of polite but unproductive circling around the real issue.",
@@ -441,22 +441,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// GFA — Unhurried moderate (Grounded + Flexible + Ambivert)
 
-	// MLMW → GFAW
-	GFAW: {
+	// MLMW → MFBA
+	MFBA: {
 		name: "The Brook",
 		description:
 			"You flow gently through life, tending to what grows along your banks with a quiet, practical nurturing that never asks for recognition or repayment. There's nothing hurried about how you care — it arrives at its own pace, in its own way, shaped by the particular needs of each person and situation rather than applied uniformly from some template of what good care should look like. Social engagement has a come-and-go quality that feels natural rather than calculated; you're available when you're there, and you're not apologetic when you're not, and people accept that rhythm because the care you provide is so genuine that its intermittent schedule doesn't diminish its value. Flexibility means you adapt to whatever the day brings without resistance or drama, finding in each change an opportunity to be useful in some small, practical way that might go unnoticed by everyone except the person it helped. Your grounded nature keeps the nurturing realistic — you don't promise more than you can deliver, and what you do deliver is always something concrete rather than just words or intentions. There's a gentle persistence to your care: it doesn't announce itself loudly but it doesn't disappear either, flowing steadily through the lives of the people you've chosen with a constancy that feels as natural and necessary as water. The brook metaphor captures your quality: you're not a dramatic river or a powerful waterfall, you're the quiet stream that keeps everything green along its path simply by being there, flowing at its own pace, giving what it has without reservation or agenda.",
 		color: "#8BC34A",
 	},
-	// MLMN → GFAN
-	GFAN: {
+	// MLMN → MFBP
+	MFBP: {
 		name: "The Plateau",
 		description:
 			"You stand at an elevation that gives you a clear, unobstructed view in every direction — no drama, no peaks of excitement, no valleys of distress, just a broad, calm perspective that sees farther than most people because there's nothing in the way. Balance defines you more completely than any single trait: you're moderate in how you think, how you feel, how you engage with others, and how you process the world, and that moderation isn't blandness — it's the quiet strength of someone who's found a sustainable altitude and sees no reason to leave it. Social engagement is easy and unforced; you participate when it's natural and step back when it isn't, and neither state feels like effort because your emotional range doesn't include the extremes that make social transitions feel jarring. Flexibility keeps you comfortable with change — you don't cling to plans or resist disruption, you simply adjust and continue, the way a plateau remains level regardless of what weather passes over it. Your grounded nature means your perspective is realistic and clear-eyed: you see things as they are, without the embellishments of optimism or the distortions of anxiety, and that clarity is why people trust your read on situations that have gotten too emotional for anyone else to think about clearly. The plateau metaphor captures your essential quality: you've found your level, it's stable, and from it you can see things that people stuck in valleys or scrambling up peaks will never have the vantage point to notice. There's a freedom in that broad perspective — nothing is hidden, nothing is inflated, and the view is exactly what it is.",
 		color: "#B0BEC5",
 	},
-	// MLMC → GFAC
-	GFAC: {
+	// MLMC → MFBD
+	MFBD: {
 		name: "The Ridgeline",
 		description:
 			"You follow your own elevated path with a practical independence that keeps you separate from the crowded valleys below without feeling isolated or disconnected from the world you're observing. Grounded and flexible, you navigate life's terrain with an ease that comes from not being attached to any particular route — when one path doesn't serve you, you simply follow the ridge to the next one, adapting without drama or backward glances. Social engagement happens on your terms and from your preferred elevation; you participate when the conversation or company meets your standards and disengage without guilt when it doesn't, because your self-worth isn't tied to participation metrics. That independence isn't defiance — it's the natural outcome of someone who has learned, through practical experience, that their own judgment about how to spend their time is more reliable than anyone else's suggestions. Flexibility keeps you comfortable with uncertainty; you don't need to know the destination to enjoy the walk, and that comfort with the unknown gives you a quality of ease that more anxious personalities can only envy. Your grounded nature means the independence you enjoy is practical rather than ideological — you're not making a statement about individuality, you're simply living in the way that works best for you. The ridgeline metaphor captures your position: elevated enough for perspective, practical enough to travel, and independent enough that the valleys below are visible but not obligatory. You don't judge the people down there — you just prefer the view from up here, and you've made peace with the fact that not everyone is willing to make the climb.",
@@ -465,22 +465,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// GFI — Gentle recluse (Grounded + Flexible + Introvert)
 
-	// MLLW → GFIW
-	GFIW: {
+	// MLLW → MFRA
+	MFRA: {
 		name: "The Moss",
 		description:
 			"You grow quietly where you're planted, asking for nothing and offering a soft, steady presence that makes whatever surface you've attached to just a little more beautiful and a little more alive. There's no ambition in your growth — it happens naturally, at its own pace, requiring only the conditions that already exist in your quiet corner of the world. Social engagement is rare and gentle, reserved for the few people who've found their way to you and demonstrated the kind of patience that earns access to your soft, grounded warmth. Flexibility means you adapt to your environment rather than trying to reshape it, which gives your presence a seamlessness that louder personalities can't achieve — you fit wherever you are because you don't demand that the space change to accommodate you. Your grounded nature keeps you practical about what you can and can't offer: you don't promise more presence or energy than you have, and what you do offer is genuine and reliable in its quiet way. There's a particular quality to your caring that people notice even if they can't name it: it's undemanding, it doesn't require reciprocity, and it arrives without conditions or expectations attached. Solitude is your natural habitat — not in a lonely way, but in the way that moss belongs to quiet places, contributing softness and color to corners that would otherwise feel bare. The moss metaphor captures something essential about your relationship with the world: you don't compete, you don't demand, you don't announce yourself. You simply grow where you are, quietly making things better by being present in your gentle, grounded, understated way.",
 		color: "#6B8E23",
 	},
-	// MLLN → GFIN
-	GFIN: {
+	// MLLN → MFRP
+	MFRP: {
 		name: "The Inlet",
 		description:
 			"You're a sheltered pocket of quiet water — calm, practical, and content within the modest boundaries of your own reflective world. Solitude feels like home in the most literal sense: the place where you're most yourself, most at ease, most able to think and process without the distorting pressure of social expectations. Fairness shapes how you evaluate the limited information that enters your quiet harbor — you consider things carefully, weigh them honestly, and arrive at conclusions that are measured and reliable precisely because they weren't rushed by anyone else's timeline. Flexibility keeps you comfortable with whatever drifts in; you don't have a rigid agenda for your quiet life, just a preference for peace and a willingness to work with whatever the tide brings. Your grounded nature means the contentment you feel isn't avoidance dressed up as a philosophy — it's genuine satisfaction with a life that's small by some standards but exactly the right size for what you need. Social engagement happens in gentle, infrequent waves: a meaningful conversation here, a shared quiet moment there, nothing that requires you to perform or extend yourself beyond what feels natural. There's wisdom in your contentment, the recognition that a rich inner life doesn't require external scale to be genuinely fulfilling. The inlet metaphor captures your relationship with the larger world: you're connected to it, you receive from it, but you maintain your own boundaries and your own depth, and the water within your sheltered space is clear precisely because it's protected from the turbulence that churns everything else up.",
 		color: "#5F8A8B",
 	},
-	// MLLC → GFIC
-	GFIC: {
+	// MLLC → MFRD
+	MFRD: {
 		name: "The Cairn",
 		description:
 			"You're a solitary marker on a quiet path — self-built, practical, standing alone by choice because that's where you function best and where your presence serves its purpose most clearly. Independence and solitude aren't compromises you've made with the world; they're the conditions you've chosen because they allow you to be exactly who you are without the distortions that social obligation and collaborative compromise inevitably introduce. Grounded and flexible, you navigate your quiet life with a practical ease that doesn't require much maintenance or external input — you know what works for you, you do it, and the results speak for themselves in the form of a life that's authentically and entirely your own. Social engagement is minimal and purposeful, reserved for moments that serve a clear function rather than performed out of convention or fear of appearing antisocial. That directness about your preferences saves everyone time, including yourself, and the people who cross your path appreciate knowing exactly where you stand without having to decode layers of social packaging. Your grounded nature means the solitary life you've built is practical rather than idealistic — it works because you've designed it to work, applying the same no-nonsense approach to your personal environment that you apply to everything else. The cairn metaphor captures your self-constructed quality: you were built stone by stone through deliberate choices, you serve as a marker for others who might pass this way, and you stand exactly where you intended to stand, needing nothing from the landscape around you to maintain your position or justify your presence.",
@@ -493,22 +493,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// PDE — Commander (Practical + Disciplined + Extravert)
 
-	// LHHW → PDEW
-	PDEW: {
+	// LHHW → TCEA
+	TCEA: {
 		name: "The Pillar",
 		description:
 			"You're the load-bearing column that everyone leans on — a traditional authority figure whose strength comes not from force but from the genuine warmth and unwavering reliability that makes people trust you with their weight. Proven methods form the foundation of your approach: you don't chase innovation for its own sake because you understand that the structures people depend on need to be built from materials that have been tested under pressure. Social confidence is natural and unforced; you lead groups with a combination of clear direction and genuine care that makes people feel both guided and valued rather than just managed. That warmth transforms your discipline from rigid to nurturing — rules and expectations in your world exist to help people, not to control them, and that orientation shows in how you enforce standards with compassion rather than punishment. Your practical perspective means the things you build, whether they're teams, traditions, or organizational systems, are designed for the real world rather than for some idealized version of it. People gravitate toward you during uncertainty because your steady presence and proven track record provide a kind of structural reassurance that no amount of charismatic optimism can match. The pillar metaphor captures your essential function: you bear weight, you stand firm, and the entire structure above you exists in its current form because you're underneath it doing the invisible, unglamorous work of holding everything up. That's leadership at its most fundamental — not the kind that inspires from a podium, but the kind that supports from the foundation.",
 		color: "#2E8B57",
 	},
-	// LHHN → PDEN
-	PDEN: {
+	// LHHN → TCEP
+	TCEP: {
 		name: "The Banner",
 		description:
 			"You carry the standard for the group — a visible, principled presence that tells everyone where to look and what to rally around when things get confusing or the path forward isn't clear. Reliability and diplomatic skill combine in you to create a leader who can hold the line on proven methods while still making people feel heard, included, and respected in the process. Your practical nature means the principles you stand for aren't abstract ideals but tested values that have earned their place through consistent real-world performance. Social confidence helps you represent those values publicly with a grace that inspires rather than intimidates, and the diplomatic streak ensures that holding firm positions never devolves into being inflexible about how those positions get communicated. Discipline shows in your follow-through: when you commit to something, the people around you can set their watches by it, a reliability so consistent it becomes part of the environment everyone plans around. There's a visible quality to your leadership that the banner metaphor captures — you're not leading from behind or managing from the shadows, you're out front where everyone can see you, carrying something that represents shared values and providing a reference point when the fog of daily complexity makes it hard to see the bigger picture. People follow you not because you demanded it but because they trust what you're carrying and how you carry it — with conviction, with fairness, and with the kind of quiet confidence that comes from knowing your principles have been tested and proven over time.",
 		color: "#B8860B",
 	},
-	// LHHC → PDEC
-	PDEC: {
+	// LHHC → TCED
+	TCED: {
 		name: "The Anvil",
 		description:
 			"You shape things through discipline, directness, and the kind of methodical force that doesn't need to be spectacular to be effective — what matters is that the raw material becomes something useful, and under your hands, it always does. Proven methods are your tools of choice: you've learned through experience what works and what doesn't, and you see no reason to experiment with untested approaches when reliable ones are sitting right there, ready to deliver consistent results. Social confidence is innate; you speak with a directness that leaves no room for ambiguity, make decisions without hand-wringing, and hold people to standards that they might initially resist but eventually appreciate because the results speak for themselves. That directness isn't cruelty — it's efficiency, the recognition that clear communication saves more time and prevents more problems than diplomatic hedging ever could. Discipline runs through everything you do like a structural element: projects get completed on time, commitments get honored fully, and the gap between what you say and what you do is essentially zero. Your practical nature means you don't waste energy on theoretical improvements when proven methods are available, and you don't entertain shortcuts that sacrifice quality for speed. The anvil metaphor captures your function: you're the hard, stable surface against which raw effort gets shaped into something useful. You don't move, you don't bend, and the things formed against you are stronger for having met the resistance you provide. That's leadership through unyielding standards — not glamorous, but undeniably effective.",
@@ -517,22 +517,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// PDA — Steward (Practical + Disciplined + Ambivert)
 
-	// LHMW → PDAW
-	PDAW: {
+	// LHMW → TCBA
+	TCBA: {
 		name: "The Cornerstone",
 		description:
 			"You're the foundation stone that everything else is built on — the reliable, caring base that makes the visible parts of the structure possible through a devotion expressed not in words but in the quiet, consistent work of holding everything together. Dependability and warmth are so intertwined in you that people experience them as a single quality: the care you show through meticulous preparation, through thinking ahead on others' behalf, through building structures that protect and serve the people who matter to you. Your practical nature means the care you give is concrete and useful rather than merely sentimental — you don't just tell people they matter, you organize your life in ways that prove it, day after day, through actions that speak louder than any declaration of affection. Discipline ensures that your caring isn't sporadic or mood-dependent; it's built into your routines, your plans, and the systems you've designed for your life, making it reliable in a way that people can depend on without anxiety. Social engagement is focused and selective — you invest deeply in chosen relationships rather than spreading yourself thin, and the people who receive your attention know they're getting the full weight of someone who plans with care and follows through with precision. There's a structural quality to your love: it bears weight, it supports growth, and it provides a stable base from which the people you care about can take risks they wouldn't dare attempt without knowing you're underneath them. The cornerstone metaphor captures your role: placed first, carrying the most weight, and determining the alignment of everything that follows.",
 		color: "#5F9EA0",
 	},
-	// LHMN → PDAN
-	PDAN: {
+	// LHMN → TCBP
+	TCBP: {
 		name: "The Scale",
 		description:
 			"You weigh everything with a fairness that comes from discipline rather than detachment — a careful, methodical process of evaluation that produces judgments people trust because they know nothing was overlooked or unfairly discounted. Balance and reliability are your defining qualities, creating someone who can be depended on not just to show up but to show up with the kind of measured, even-handed perspective that turns chaos into clarity. Your practical nature means the standards you apply are proven and realistic rather than idealistic, and the conclusions you reach have a grounded quality that makes them actionable rather than just intellectually satisfying. Social engagement is measured and intentional; you invest in interactions that serve a purpose and bring your balanced perspective to conversations where competing interests need a fair arbiter. Discipline ensures your process is consistent — the same standards that apply on your best day apply on your worst, a reliability that most people can only aspire to and that earns a deep trust from anyone who's been on the receiving end of more volatile decision-making. There's a particular satisfaction in getting the balance right, in finding the solution that honors competing needs without shortchanging any of them, and that satisfaction drives you to invest the time and care that fair judgment requires. The scale metaphor captures your function: you measure, you weigh, you balance, and the readings you provide are trusted because everyone knows the instrument is calibrated with care and maintained with discipline. In a world full of bias and hasty judgment, your even-handed precision is genuinely irreplaceable.",
 		color: "#708090",
 	},
-	// LHMC → PDAC
-	PDAC: {
+	// LHMC → TCBD
+	TCBD: {
 		name: "The Rampart",
 		description:
 			"You defend what works with a disciplined independence that treats proven methods as assets worth protecting, not relics waiting to be replaced by whatever trend is currently generating excitement. There's a practical clarity in your approach: you've seen what happens when untested ideas get implemented without the rigor they need, and you refuse to let that happen on your watch. Self-reliance means you don't need a committee to validate your defense of established practices — you hold the line based on your own assessment, and that assessment is informed by enough experience to be trustworthy. Social engagement is purposeful rather than recreational; you interact when there's a reason and bring the same directness to conversations that you bring to everything else, saying what needs to be said without excessive packaging. Discipline shows in the consistency of your position: you don't waver based on social pressure or the persuasive charisma of someone pushing change for its own sake. Your practical nature ensures that the things you're defending are genuinely worth defending — you're not clinging to tradition out of fear of change, you're protecting proven approaches because your honest assessment tells you they're better than the alternatives currently on offer. The rampart metaphor captures your defensive, structural quality: you're the wall that protects what's inside from threats that the people living behind it might not even see coming. That protection isn't glamorous — nobody celebrates the wall until it's needed — but the security it provides is foundational to everything else functioning as it should.",
@@ -541,22 +541,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// PDI — Sentinel (Practical + Disciplined + Introvert)
 
-	// LHLW → PDIW
-	PDIW: {
+	// LHLW → TCRA
+	TCRA: {
 		name: "The Bedrock",
 		description:
 			"You're the immovable foundation of quiet loyalty that supports everything above without needing to be seen, acknowledged, or thanked — the kind of person whose absence would cause a collapse that would finally make visible just how much invisible weight you've been carrying all along. Discipline and devotion converge in how you approach the people and responsibilities you care about, creating a reliability so consistent it becomes a feature of the landscape rather than something anyone thinks to comment on until it's gone. Solitude is where you do your best work, not just intellectually but emotionally — the quiet space where you can think ahead on behalf of the people you love, anticipating their needs and preparing solutions they'll never know they needed. Your practical nature means the support you offer is concrete and useful: you don't comfort with words when actions are available, and the actions you take are informed by the kind of careful planning that only sustained, focused attention can produce. Social engagement is rare and deeply meaningful; the few people who inhabit your inner world receive a loyalty so total and a care so thorough that it redefines what they thought those words meant. There's nothing showy about your devotion — it expresses itself through consistency, through the accumulated evidence of a thousand small acts performed without expectation of recognition. The bedrock metaphor captures your quality perfectly: you're the layer of solid rock beneath everything, too deep to see but absolutely essential to the stability of the world above. The people who stand on you may not know you're there, but the ground holds firm beneath their feet because you've always been exactly where you are.",
 		color: "#3E5F5F",
 	},
-	// LHLN → PDIN
-	PDIN: {
+	// LHLN → TCRP
+	TCRP: {
 		name: "The Sundial",
 		description:
 			"You track time and direction with a solitary precision that never hurries, never panics, and never produces a reading you haven't verified through patient, methodical observation. Fair-minded judgment is the cornerstone of your intellectual process: you evaluate information with a thoroughness that most people simply don't have the patience for, weighing evidence carefully before allowing it to influence your conclusions. Solitude provides the conditions your process requires — quiet, focus, the absence of social pressure to arrive at an answer before you've had time to consider it properly. Your practical nature means the conclusions you reach are grounded in real-world evidence rather than theoretical elegance; you trust what has been demonstrated over what merely sounds convincing, and that discrimination shows in the reliability of your judgments over time. Discipline ensures your approach remains consistent regardless of external circumstances — the same careful methodology that serves you on calm days serves you equally well during crises, because your process doesn't depend on your emotional state to function properly. Social engagement is infrequent but meaningful; when you speak, the people who've learned to listen know that what follows has been thoroughly considered and honestly arrived at. The sundial metaphor captures your quality: you mark the passage of things with a patient, reliable precision that depends on nothing external except the conditions that have always been there. You don't rush, you don't speculate, and the readings you provide are trusted because everyone who's used them knows they've never been wrong when the conditions were clear.",
 		color: "#6B6B3F",
 	},
-	// LHLC → PDIC
-	PDIC: {
+	// LHLC → TCRD
+	TCRD: {
 		name: "The Watchtower",
 		description:
 			"You see far from your solitary position — a disciplined, independent lookout whose practical perspective identifies threats and opportunities long before anyone closer to the ground even knows they exist. Self-reliance defines your approach: you trust your own observations, maintain your own standards, and act on your own assessments without waiting for consensus or permission from people who can't see what you can see from up here. Solitude isn't a limitation; it's a strategic advantage, the elevated position from which your careful, methodical observation produces insights that proximity would obscure. Your practical nature means the threats you identify are real rather than imagined, and the recommendations you make are actionable rather than theoretical — you don't raise alarms for the satisfaction of being the one who noticed, you raise them because something genuinely needs attention. Discipline ensures that your watch is constant and your standards never slip; the same vigilance you apply on quiet days applies when the horizon is crowded with activity, because your value depends on the consistency of your attention. Social engagement is rare and purposeful — you communicate when there's something that needs communicating, and you do it with the directness that your position demands and that the seriousness of your observations deserves. The watchtower metaphor captures your essential function: elevated, solitary, constantly watchful, and providing the early warning that allows everyone at ground level to prepare for what's coming. That lonely vigilance is a form of service, and the people who benefit from it trust you completely because you've never raised a false alarm.",
@@ -565,22 +565,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// PBE — Rally point (Practical + Balanced + Extravert)
 
-	// LMHW → PBEW
-	PBEW: {
+	// LMHW → TSEA
+	TSEA: {
 		name: "The Bellows",
 		description:
 			"You stoke practical energy in others with a warm, grounded force that gets things moving when inertia has set in and nobody else seems willing to take the first step. Social confidence meets pragmatic wisdom in you, creating someone who can walk into a stalled situation and breathe life into it through sheer enthusiasm and genuine care for the people involved. Your warmth isn't abstract — it's directed, purposeful, aimed at making the people around you feel capable and motivated to do the work that needs doing. Balanced in temperament, you don't push so hard that people burn out or back off so far that momentum dies; there's an instinctive calibration in your social energy that provides exactly as much heat as the situation requires. Your practical nature keeps you focused on what's actually achievable rather than what merely sounds impressive, and that groundedness means the energy you generate gets directed toward useful work rather than dissipated in excitement that leads nowhere. People trust your enthusiasm because it's backed by realistic assessment — when you say something can be done, they believe you, because you've never steered them toward a goal you didn't genuinely think they could reach. The bellows metaphor captures your function: you provide the focused air that turns a dying spark into a working fire, and you do it with a warmth that makes the effort feel communal rather than forced. That combination of practical wisdom and social energy is genuinely rare, and the teams and communities fortunate enough to have you among them consistently outperform the ones that don't.",
 		color: "#DAA520",
 	},
-	// LMHN → PBEN
-	PBEN: {
+	// LMHN → TSEP
+	TSEP: {
 		name: "The Crossroads",
 		description:
 			"You're where different paths meet — a practical social navigator who helps people find common ground when their trajectories seem destined to collide or diverge. Diplomatic instinct and grounded perspective combine in you to create someone who can take a room full of competing priorities and help everyone find the intersection where their interests align. Social engagement energizes you, particularly the complex, multi-stakeholder kind that would exhaust people who lack your balanced temperament and practical orientation. Your ability to see what different parties actually need — not what they say they need, not what they think they need, but what will actually solve their problem — makes you invaluable in situations where good intentions have created a mess and someone needs to find the path through it. Balance keeps you neutral without being disengaged; you care about outcomes and you care about people, but you don't get so invested in either that you lose the objectivity required to navigate fairly. Your practical nature means the solutions you propose are grounded in what's actually possible rather than what everyone wishes were possible, and that realism is what makes your navigation trustworthy. The crossroads metaphor captures your social function: you're the place where paths that seemed separate discover they were heading toward the same destination from different directions. People don't always appreciate a crossroads until they're lost, but once they've found you, they understand immediately why your particular combination of diplomatic skill and practical wisdom makes all the difference.",
 		color: "#B5651D",
 	},
-	// LMHC → PBEC
-	PBEC: {
+	// LMHC → TSED
+	TSED: {
 		name: "The Hammer",
 		description:
 			"You hit the nail with direct, practical force — no wasted motion, no unnecessary conversation, just the efficient application of energy to the exact point where it's needed most. Social confidence meets practical directness in you, creating someone who can identify what needs doing and communicate it with a clarity that cuts through the noise everyone else is generating while trying to be polite. There's a refreshing economy in how you operate: you assess, you decide, you act, you move on, and the people around you either keep up or get out of the way, both of which are fine with you. Balance keeps your directness from becoming abrasive — you know when to swing and when to hold, when the situation needs force and when it needs patience — and that calibration is what separates you from people who are just loud. Your practical nature means the targets you hit are the right ones: you don't expend energy on problems that don't matter or tasks that don't contribute to real progress, a discrimination that makes your efficiency genuinely productive rather than just busy. People respect your approach even when they find it uncomfortable, because they've learned that your directness saves time, prevents misunderstandings, and produces results that more diplomatic approaches take three times as long to achieve. The hammer metaphor captures your quality: you're a tool of focused, practical force that does exactly what it's designed to do with no pretense and no apology. Not every situation needs a hammer, but when one does, there's nobody the team would rather have swinging.",
@@ -589,22 +589,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// PBA — Steady hand (Practical + Balanced + Ambivert)
 
-	// LMMW → PBAW
-	PBAW: {
+	// LMMW → TSBA
+	TSBA: {
 		name: "The Quilt",
 		description:
 			"You wrap practical reliability in genuine warmth, creating a comfort that's as functional as it is soothing — something people reach for when the world gets cold and they need to feel both protected and cared for. Familiar patterns form the foundation of how you care: proven approaches, reliable routines, the consistent showing-up that accumulates into a safety net so dependable that the people under it might forget it's there until they need it. Social engagement is warm but measured; you invest deeply in the people you've chosen and maintain those connections with the kind of steady, practical attention that keeps relationships healthy through ordinary maintenance rather than dramatic interventions. Balance means you don't overreact or underreact — your emotional temperature stays comfortably moderate, providing a steady warmth that people can count on regardless of what's happening around them. Your practical nature means the comfort you provide is real and useful: it's not just a feeling but a set of concrete actions, preparations, and structures that make people's lives tangibly easier and more secure. There's a cumulative quality to your caring — each small act stitches into the next, creating something that's far larger and more valuable than any individual piece would suggest. The quilt metaphor captures your nature perfectly: you're assembled from familiar materials, you serve a deeply practical purpose, and the warmth you provide is inseparable from the reliability of the patterns you've built over time. People wrapped in your care feel simultaneously protected and free, which is the particular gift of someone who provides security without suffocation.",
 		color: "#CD853F",
 	},
-	// LMMN → PBAN
-	PBAN: {
+	// LMMN → TSBP
+	TSBP: {
 		name: "The Level",
 		description:
 			"You find the true horizontal in everything — the balanced, practical perspective that keeps things on an even plane when circumstances or emotions threaten to tip the whole structure sideways. Fairness and moderation define your approach to decisions, relationships, and daily life with such consistency that people calibrate their own judgments against yours, trusting that if you say something is level, it's level. Your practical nature means the balance you provide isn't philosophical — it's functional, applied to real situations where real outcomes depend on someone getting the assessment right. Social engagement is balanced and easygoing; you participate without dominating, contribute without competing, and create an atmosphere of fairness that makes everyone in the conversation feel like their perspective was genuinely considered. Balance in your temperament means emotional extremes don't destabilize your thinking — the same measured perspective that serves you in calm times serves you in crisis, providing a reliability that more volatile personalities simply can't match. There's a practical elegance in how you process the world: no unnecessary complexity, no dramatic interpretation, just a clean, clear assessment of what is and what should be done about it. The level metaphor captures your function: you're the tool that determines whether something is straight, and the reading you provide is trusted because the instrument itself has proven reliable over time. In a world that's constantly being tilted by emotion, ambition, and competing interests, your even-keeled perspective is more valuable than most people realize until they find themselves desperately needing it.",
 		color: "#95A5A6",
 	},
-	// LMMC → PBAC
-	PBAC: {
+	// LMMC → TSBD
+	TSBD: {
 		name: "The Milestone",
 		description:
 			"You mark ground covered on your own terms — an independent, practical presence that measures progress by standards you've set rather than ones the world handed you. There's a quiet confidence in knowing exactly where you are, how far you've come, and what direction you're heading, all calibrated against an internal compass that doesn't require external validation to stay accurate. Social engagement happens selectively, driven by genuine interest rather than obligation, and the people in your life know that your presence was chosen rather than defaulted into. Balance keeps you steady — you don't get swept up in excitement or dragged down by setback, maintaining a practical equanimity that serves you well in a world that rewards consistency over dramatic response. Your practical nature means the milestones you set for yourself are realistic and achievable: you don't mistake ambition for fantasy, and the progress you track is real rather than aspirational, which is why it accumulates so reliably over time. Independence is central to your identity — not as a statement or a pose but as the natural orientation of someone who trusts their own assessment of what matters and how to measure it. There's a self-contained quality to how you move through life that some people misread as aloofness but that people who know you recognize as the genuine article: someone who has found their own way, is satisfied with it, and doesn't need anyone else to confirm that it's the right one. The milestone metaphor captures your function: you mark a point in the landscape that's fixed, reliable, and useful to anyone passing through who needs to know where they are.",
@@ -613,22 +613,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// PBI — Quiet realist (Practical + Balanced + Introvert)
 
-	// LMLW → PBIW
-	PBIW: {
+	// LMLW → TSRA
+	TSRA: {
 		name: "The Wellspring",
 		description:
 			"Deep practical care rises to the surface when it's needed most — a quiet source of support that the people in your life have learned to count on even though they might not fully understand how reliably it flows until they're the ones who need it. Your inner world is grounded and reflective, processing the needs of the people you care about with a thoroughness that produces exactly the right kind of help at exactly the right moment. Solitude is where this care gets prepared — the quiet space where you think ahead, anticipate needs, and develop the practical solutions that will make someone's life easier before they even realize they're struggling. Balance in your temperament means the support you provide is proportional and sustainable: you don't burn yourself out in dramatic gestures of care, instead maintaining a steady flow of practical attention that never runs dry because it was never overextended. Your practical nature ensures that the help you offer is useful rather than merely well-intentioned — you're the person who shows up with exactly what was needed rather than a generic expression of concern that requires the struggling person to figure out the solution themselves. Social engagement is rare but deeply meaningful: the few people in your inner circle receive a quality of care that most people only read about, characterized by attentiveness, reliability, and a depth of understanding that comes from sustained quiet observation. The wellspring metaphor captures your essence: deep, reliable, nourishing, and available to those who know where to find you. The water rises when it's needed, and its quality never diminishes, because the source runs deeper than anyone looking at the surface would guess.",
 		color: "#4E8D7C",
 	},
-	// LMLN → PBIN
-	PBIN: {
+	// LMLN → TSRP
+	TSRP: {
 		name: "The Sextant",
 		description:
 			"You navigate by fixed practical stars — the proven reference points that have guided reliable navigation since long before the latest trends arrived to compete for attention. Reflective and fair-minded, you find direction in silence, processing information with a methodical thoroughness that produces navigation you can trust because every calculation was checked and every assumption was verified. Your practical nature means the stars you steer by are real rather than aspirational: tested principles, demonstrated methods, conclusions drawn from evidence rather than enthusiasm. Solitude provides the conditions your navigation requires — quiet, focus, the absence of social noise that would interfere with the precise observations your process depends on. Balance keeps your assessments honest: you don't amplify good news or catastrophize bad news, you simply report what your instruments show and adjust course accordingly, a reliability that makes your guidance invaluable to anyone who's learned to trust it. Fair-mindedness means you evaluate new information on its merits rather than on its novelty, giving established approaches the respect they've earned while remaining genuinely open to evidence that a course correction is warranted. The sextant metaphor captures your method: you're a precision instrument for finding direction, requiring patience and clear conditions to function properly, but producing readings of such accuracy that the journey can be trusted entirely to the heading you provide. In a world full of flashy navigation tools that promise speed but sacrifice reliability, your patient, methodical approach may look old-fashioned, but it gets people where they need to go every single time.",
 		color: "#4A6670",
 	},
-	// LMLC → PBIC
-	PBIC: {
+	// LMLC → TSRD
+	TSRD: {
 		name: "The Monolith",
 		description:
 			"You stand alone — solid, unchanging, needing nothing from anyone and offering nothing you haven't chosen to give, a self-contained practical authority that exists on its own terms and measures itself by its own standards. Independence isn't a phase or a reaction for you; it's your fundamental orientation, the baseline from which every other quality extends. Solitude is your natural habitat, the environment in which your practical, balanced mind operates at full capacity without the compromises and noise that social engagement inevitably introduces. Your practical nature means the independence you exercise is functional rather than philosophical: you've built a life that works on its own, requiring minimal external input and producing results that meet your own rigorous standards without needing anyone else to verify or validate them. Balance keeps you steady — the same person on good days and bad days, in calm weather and in storms, the emotional consistency of someone who has found their center and has no interest in being moved from it. There's a monumental quality to your self-possession: people encounter you and sense immediately that they're dealing with something that won't bend, negotiate, or reshape itself to accommodate their expectations. That isn't hostility — it's simply the reality of interacting with someone who is exactly who they are, completely, without the social flexibility that most people use to smooth over differences. The monolith metaphor captures your essential quality: ancient, solid, unmoved by the winds and rains that reshape everything around it. You don't need anyone, and while that might sound lonely, for you it's the purest form of freedom.",
@@ -637,22 +637,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// PFE — Open door (Practical + Flexible + Extravert)
 
-	// LLHW → PFEW
-	PFEW: {
+	// LLHW → TFEA
+	TFEA: {
 		name: "The Open Door",
 		description:
 			"You're the warm and uncomplicated welcome that everyone needs but few people actually find — what you see is what you get, and what you get is genuine friendliness, practical helpfulness, and an ease with people that makes even strangers feel like they've known you for years. Social settings are where your natural warmth finds its fullest expression: you light up in company, make people feel comfortable with an effortlessness that can't be learned or faked, and create an atmosphere where everyone's guard comes down because yours was never up to begin with. Flexibility means nothing rattles you for long — plans change, people show up unexpectedly, the evening takes a wild turn, and you roll with all of it because your good time doesn't depend on things going according to plan. Your practical nature keeps the warmth grounded: you don't just make people feel welcome, you actually help them with whatever they need, offering the kind of practical, no-strings-attached assistance that turns acquaintances into friends and friends into family. There's a simplicity to your approach that isn't simple at all — it takes genuine self-assurance to be as open and unguarded as you are in a world where most people are performing some version of themselves rather than just being one. Action wins over analysis in your world: if someone needs help, you help; if someone needs company, you're there; if something needs doing, you do it, without the deliberation that slows down more cautious personalities. The open door metaphor captures your gift: you're the entrance that's always accessible, always inviting, and always leads to somewhere genuinely warm and real.",
 		color: "#E2725B",
 	},
-	// LLHN → PFEN
-	PFEN: {
+	// LLHN → TFEP
+	TFEP: {
 		name: "The Roundtable",
 		description:
 			"Everyone gets a seat at your table — a relaxed, practical, diplomatically inclusive space where different people with different perspectives can coexist comfortably because the host understands that fairness doesn't require formality and inclusion doesn't require forced intimacy. Social energy flows naturally through you: you enjoy people, you bring them together easily, and the gatherings that form around you have an egalitarian quality that comes from your genuine belief that everyone has something worth contributing. Flexibility means the shape of the table changes to accommodate whoever shows up; there's no fixed protocol, no hierarchy of who speaks first, just an open, adaptable space where conversation flows where it wants to go. Your practical nature keeps things grounded — the discussions that happen at your table tend to produce useful outcomes rather than just pleasant feelings, because you have an instinct for steering social energy toward something productive without making it feel like work. Diplomatic skill ensures that different viewpoints get heard without any one perspective dominating, a balancing act that looks easy when you do it but that less socially attuned hosts consistently fail at. There's a democratic quality to your social presence that people find deeply appealing: nobody feels excluded, nobody feels more important than anyone else, and the resulting atmosphere of genuine equality makes people more willing to be honest, creative, and vulnerable than they would be in a more hierarchical setting. The roundtable metaphor captures your gift: equal seating, open discussion, practical outcomes, and a host whose relaxed inclusivity makes the whole thing possible.",
 		color: "#C9956B",
 	},
-	// LLHC → PFEC
-	PFEC: {
+	// LLHC → TFED
+	TFED: {
 		name: "The Wildfire",
 		description:
 			"You burn through pretense with raw, practical energy that doesn't stop to ask permission or check whether everyone's comfortable with the temperature. Social settings feel your heat immediately: you bring a directness and intensity that some find exhilarating and others find overwhelming, but nobody can ignore. Flexibility means the fire goes where the fuel is — you respond to the moment with an instinct that makes overthinking impossible and authenticity unavoidable. Your practical nature keeps the energy grounded: you're not burning for show or for abstract creative purposes, you're clearing ground, removing obstacles, getting rid of the dead wood that was preventing anything real from happening. That candor is your most distinctive quality — you say what others are thinking but too polite to voice, and while the delivery might lack diplomatic finesse, the honesty cuts through confusion and creates clarity faster than any amount of careful negotiation. People who can handle the heat discover that your fire is ultimately productive: it burns away what isn't working and leaves space for something genuine to grow in its place. Speed and directness characterize everything you do — you don't deliberate when action is possible, you don't soften feedback when plain truth is more useful, and you don't wait for the group to reach consensus when you can see what needs to happen right now. The wildfire metaphor captures your quality: you're raw, fast, transformative, and utterly indifferent to the careful boundaries that everyone else maintains. Not everyone appreciates the disruption, but nobody can deny the cleared ground you leave behind.",
@@ -661,22 +661,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// PFA — Low-key pragmatist (Practical + Flexible + Ambivert)
 
-	// LLMW → PFAW
-	PFAW: {
+	// LLMW → TFBA
+	TFBA: {
 		name: "The Trellis",
 		description:
 			"You're the quiet support structure that gives others something to grow on — practical, gentle, and present in a way that lets the people around you flourish without ever feeling managed or directed. Your care expresses itself through practical availability: you're there when someone needs you, offering the kind of grounded, reliable support that doesn't draw attention to itself but makes all the difference to the person receiving it. Social engagement is easy and unforced; you neither seek the center nor avoid it, showing up where you naturally fit and contributing whatever the moment seems to call for without drama or deliberation. Flexibility means you adapt your support to match what's needed — some people need practical help, others need a listening ear, others just need someone to be quietly present, and you shift between these modes with a naturalness that makes everyone feel like they're getting the real you, not a role you're playing. Your practical nature keeps the support concrete: you help in ways that produce actual results rather than just good feelings, and the reliability of your presence means people can plan around you without anxiety. There's a particular gift in being a structure that others grow on without being constrained by — your support creates possibility rather than dependency, offering direction without dictating it. The trellis metaphor captures your essence: sturdy but unobtrusive, practical but gentle, providing exactly the structure that living things need to reach toward the light on their own terms. People who've grown alongside you know that your quiet presence was essential to their progress, even if you'd never think to take credit for it.",
 		color: "#8FBC8F",
 	},
-	// LLMN → PFAN
-	PFAN: {
+	// LLMN → TFBP
+	TFBP: {
 		name: "The Clearing",
 		description:
 			"You're the open space where things can happen — no obstacles, no agenda, no drama, just room for whatever comes next, maintained by someone who values simplicity and fairness in equal measure. Your presence has a decluttering effect on the people and situations around you: things that seemed complicated get simpler, choices that seemed overwhelming get clearer, and the path forward reveals itself because someone removed the undergrowth that was hiding it. Social engagement is easy and balanced; you participate without pushing, listen without judging, and create a conversational space where other people feel free to think out loud without fear of premature evaluation. Flexibility is your natural mode — you meet life without resistance, adjusting to whatever shows up with a practical ease that makes transitions feel smooth rather than jarring. Your practical nature means the simplicity you create isn't naive or lazy; it's the deliberate result of someone who knows that the best solutions are usually the ones with the fewest unnecessary parts. Fairness runs through how you process the world: you give ideas and people equal consideration, weigh options honestly, and arrive at conclusions that feel clean because nothing was fudged or forced in the process. The clearing metaphor captures your gift: you create open space where other people's potential can finally express itself without the constraints of complexity, judgment, or artificial pressure. That's a subtle form of generosity — most people are adding to the world's noise, but you're one of the rare ones who makes things quieter, clearer, and more navigable for everyone around you.",
 		color: "#B0C4A8",
 	},
-	// LLMC → PFAC
-	PFAC: {
+	// LLMC → TFBD
+	TFBD: {
 		name: "The Trailhead",
 		description:
 			"You mark the beginning of your own path — an independent, practical starting point that doesn't need anyone's permission to exist and doesn't promise to lead where anyone else expects. Self-direction comes so naturally to you that it barely registers as a choice; you've always known that the path worth taking is the one you find yourself, and the confidence to step onto it has never required external encouragement. Social engagement happens when your path crosses someone else's in a way that feels natural; you don't seek company for its own sake, but you're not hostile to it either — there's an easy self-sufficiency in your social posture that people either find refreshing or puzzling, depending on how much they need others to need them. Flexibility means you don't commit to a fixed route before you've seen the terrain; you start walking, adjust as you go, and trust that the practical instinct that's served you so far will continue to point you in a useful direction. Your practical nature means the independence you exercise is functional: you're not making philosophical statements about individualism, you're simply living in the way that makes the most sense given who you are and what you know about yourself. The trailhead metaphor captures your position: you're the marker at the beginning of something, the point where comfortable, well-traveled ground meets the uncharted territory you've chosen to explore on your own terms. People who encounter you at the trailhead can see where you're headed, and some might even be inspired to start their own path, but you're already walking and you don't look back to check who's following.",
@@ -685,22 +685,22 @@ export const CURATED_ARCHETYPES: Record<string, CuratedArchetypeEntry> = {
 
 	// PFI — Hermit (Practical + Flexible + Introvert)
 
-	// LLLW → PFIW
-	PFIW: {
+	// LLLW → TFRA
+	TFRA: {
 		name: "The Candle",
 		description:
 			"You offer a small, steady light in a quiet room — practical warmth that's all the more precious for being sparingly shared and carefully tended rather than broadcast to the world at large. Your inner world is calm and grounded, a place where the people you love occupy a central, protected position even though the outside world might never guess how deeply your care runs. Solitude is your natural state, not from lack of interest in others but from a genuine need for the quiet in which your particular kind of caring can function at its best: attentive, practical, deeply personal. The people who receive your warmth know they're getting something rare — attention that's been filtered through solitude and reflection, care that arrives in exactly the form they need because you took the time to observe and understand rather than assuming you knew. Flexibility means your caring adapts to circumstances without losing its essential quality; you don't have a fixed template for how support should look, you simply respond to what's actually needed with a practical directness that cuts through the performative aspects of care that most people never question. Your practical nature means every act of caring has substance: you help in ways that make a real, material difference rather than ways that merely signal good intentions. The candle metaphor captures your quiet power: you don't light up stadiums, but in the small room where it matters most, your flame provides exactly enough warmth and visibility for the people who need it. That modesty isn't a limitation — it's the source of your light's particular intimacy and value.",
 		color: "#E6B87D",
 	},
-	// LLLN → PFIN
-	PFIN: {
+	// LLLN → TFRP
+	TFRP: {
 		name: "The Cove",
 		description:
 			"You're a sheltered, practical harbor at the edge of the world — content with your quiet corner, protected from the turbulence that churns the open water, and perfectly at peace with a life that others might consider small but that you experience as exactly the right size. Solitude is where your mind does its clearest work, processing life's questions with a patient, fair-minded thoroughness that the noise of social engagement would only disrupt. Your practical nature means the contentment you feel isn't escapism; it's an honest assessment that the life you've built serves you well and that the things you need are available within the modest boundaries you've drawn. Fairness shapes your relationship with the world — you don't judge the people who choose bigger, louder lives, you simply recognize that their path isn't yours and yours isn't theirs, and that's fine with everyone involved. Flexibility means you adapt to what comes your way without clinging to plans or expectations: the tide brings what it brings, and you work with it rather than against it, finding satisfaction in the rhythm of a life that responds to circumstances rather than trying to control them. Social engagement is gentle and rare, reserved for conversations that happen naturally and aren't manufactured by obligation or social duty. There's a deep wisdom in your contentment — the recognition that a rich inner life and a few meaningful connections provide everything genuinely necessary for fulfillment, and that the restless pursuit of more is often just avoidance of the quiet where real self-knowledge lives. The cove metaphor captures your protected, reflective quality: sheltered, practical, and perfectly content at the quiet edge of things.",
 		color: "#6B8E8E",
 	},
-	// LLLC → PFIC
-	PFIC: {
+	// LLLC → TFRD
+	TFRD: {
 		name: "The Lone Star",
 		description:
 			"You're a solitary point of light in your own sky — self-sufficient, practical, and needing nothing beyond what you've already built to shine exactly as bright as you intend to. Independence isn't something you practice; it's something you are, so fundamentally woven into your identity that imagining life any other way requires more effort than simply continuing to live on your own terms. Solitude is where you function best, not as a retreat from the world but as the optimal operating condition for a mind that processes most clearly when it's free from the noise of social obligation and the pressure to justify its choices to people who wouldn't understand them anyway. Flexibility keeps your independence from becoming rigid — you adapt to circumstances with a practical ease that doesn't require anyone else's input or approval, solving problems as they arise with the confidence of someone who has handled their own affairs successfully for so long that it's simply not a question anymore. Your practical nature means the life you've built is functional and sustainable: nothing wasted, nothing unnecessary, every element serving a purpose that makes sense to you even if it wouldn't make sense to anyone else. Social engagement is rare by choice and direct by nature — you don't perform pleasantries, you don't maintain relationships out of obligation, and the few interactions you do invest in are chosen because they serve a genuine purpose or provide genuine value. The lone star metaphor captures your self-contained quality: you don't need a constellation to be visible, you don't need other stars to define your position, and the light you emit is entirely your own, generated from your own fuel, aimed in your own direction.",

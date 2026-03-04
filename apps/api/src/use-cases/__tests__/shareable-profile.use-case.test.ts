@@ -191,8 +191,8 @@ describe("getPublicProfile Use Case", () => {
 		resetResultState();
 	});
 
-	// Derive expected values from lookupArchetype for "ODAW"
-	const expectedArchetype = lookupArchetype("ODAW");
+	// Derive expected values from lookupArchetype for "OCBA"
+	const expectedArchetype = lookupArchetype("OCBA");
 
 	describe("Success scenarios", () => {
 		it.effect("should return profile data for a public profile", () =>
@@ -207,8 +207,8 @@ describe("getPublicProfile Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "ODAWT",
-					oceanCode4: "ODAW",
+					oceanCode5: "OCBAT",
+					oceanCode4: "OCBA",
 				});
 
 				// Make it public
@@ -217,7 +217,7 @@ describe("getPublicProfile Use Case", () => {
 				const result = yield* getPublicProfile({ publicProfileId: profile.id });
 
 				expect(result.archetypeName).toBe(expectedArchetype.name);
-				expect(result.oceanCode).toBe("ODAWT");
+				expect(result.oceanCode).toBe("OCBAT");
 				expect(result.description).toBe(expectedArchetype.description);
 				expect(result.color).toBe(expectedArchetype.color);
 				expect(result.traitSummary.openness).toBe("O");
@@ -237,8 +237,8 @@ describe("getPublicProfile Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "ODAWT",
-					oceanCode4: "ODAW",
+					oceanCode5: "OCBAT",
+					oceanCode4: "OCBA",
 				});
 
 				const exit = yield* Effect.exit(getPublicProfile({ publicProfileId: profile.id }));
@@ -285,8 +285,8 @@ describe("toggleProfileVisibility Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "ODAWT",
-					oceanCode4: "ODAW",
+					oceanCode5: "OCBAT",
+					oceanCode4: "OCBA",
 				});
 
 				const result = yield* toggleProfileVisibility({
@@ -314,8 +314,8 @@ describe("toggleProfileVisibility Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "ODAWT",
-					oceanCode4: "ODAW",
+					oceanCode5: "OCBAT",
+					oceanCode4: "OCBA",
 				});
 
 				const exit = yield* Effect.exit(

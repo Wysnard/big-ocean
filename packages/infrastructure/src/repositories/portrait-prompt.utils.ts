@@ -14,8 +14,9 @@ import {
 	FACET_TO_TRAIT,
 	type FacetName,
 	type FacetScoresMap,
+	getTraitLevelLabel,
 	TRAIT_LETTER_MAP,
-	TRAIT_LEVEL_LABELS,
+	type TraitName,
 	type TraitScoresMap,
 } from "@workspace/domain";
 import type { EvidenceConfidence, EvidenceStrength } from "@workspace/domain/types/evidence";
@@ -54,7 +55,7 @@ export function formatTraitSummary(
 		else if (traitScore.score <= 80) levelIndex = 1;
 		else levelIndex = 2;
 		const letter = letters[levelIndex];
-		const traitLabel = TRAIT_LEVEL_LABELS[letter] ?? letter;
+		const traitLabel = getTraitLevelLabel(traitName as TraitName, letter);
 
 		const facetDetails: string[] = [];
 		for (const [facetName, facetScore] of Object.entries(facetScoresMap)) {

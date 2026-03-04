@@ -239,10 +239,10 @@ export function TherapistChat({
 		() => messages.filter((m) => m.role === "user").length,
 		[messages],
 	);
-	const [placeholder, setPlaceholder] = useState(() => getPlaceholder(0));
-	useEffect(() => {
-		setPlaceholder(getPlaceholder(userMessageCount, freeTierMessageThreshold));
-	}, [userMessageCount, freeTierMessageThreshold]);
+	const placeholder = useMemo(
+		() => getPlaceholder(userMessageCount, freeTierMessageThreshold),
+		[userMessageCount, freeTierMessageThreshold],
+	);
 
 	// Auto-scroll to the latest message when message count changes
 	const messageCount = messages.length;
@@ -293,7 +293,7 @@ export function TherapistChat({
 			messagesEndRef={messagesEndRef}
 			onSend={sendMessage}
 			oceanPulse={oceanPulse}
-			onInputFocus={() => setPlaceholder(getPlaceholder(userMessageCount, freeTierMessageThreshold))}
+			onInputFocus={() => {}}
 		/>
 	);
 }

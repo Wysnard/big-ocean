@@ -7,25 +7,25 @@ describe("OceanCode4Schema", () => {
 	const decode = S.decodeUnknownSync(OceanCode4Schema);
 
 	it("accepts valid 4-letter codes", () => {
-		expect(() => decode("ODAC")).not.toThrow(); // O, D, A, C positions
-		expect(() => decode("PFIW")).not.toThrow();
-		expect(() => decode("GBEN")).not.toThrow();
+		expect(() => decode("OCBD")).not.toThrow(); // O, C, B, D positions
+		expect(() => decode("TFRA")).not.toThrow();
+		expect(() => decode("MSEP")).not.toThrow();
 	});
 
 	it("rejects wrong length", () => {
-		expect(() => decode("ODA")).toThrow();
-		expect(() => decode("ODACR")).toThrow();
+		expect(() => decode("OCB")).toThrow();
+		expect(() => decode("OCBDR")).toThrow();
 	});
 
 	it("rejects lowercase", () => {
-		expect(() => decode("odac")).toThrow();
+		expect(() => decode("ocbd")).toThrow();
 	});
 
 	it("rejects invalid letters per position", () => {
-		expect(() => decode("XDAC")).toThrow(); // X not in [PGO]
-		expect(() => decode("OXAC")).toThrow(); // X not in [FBD]
-		expect(() => decode("ODXC")).toThrow(); // X not in [IAE]
-		expect(() => decode("ODAX")).toThrow(); // X not in [CNW]
+		expect(() => decode("XCBD")).toThrow(); // X not in [TMO]
+		expect(() => decode("OXBD")).toThrow(); // X not in [FSC]
+		expect(() => decode("OCXD")).toThrow(); // X not in [RBE]
+		expect(() => decode("OCBX")).toThrow(); // X not in [DPA]
 	});
 });
 
@@ -33,18 +33,18 @@ describe("OceanCode5Schema", () => {
 	const decode = S.decodeUnknownSync(OceanCode5Schema);
 
 	it("accepts valid 5-letter codes", () => {
-		expect(() => decode("ODACR")).not.toThrow();
-		expect(() => decode("PFIWT")).not.toThrow();
-		expect(() => decode("GBENS")).not.toThrow();
+		expect(() => decode("OCBDR")).not.toThrow();
+		expect(() => decode("TFRAT")).not.toThrow();
+		expect(() => decode("MSEPN")).not.toThrow();
 	});
 
 	it("rejects wrong length", () => {
-		expect(() => decode("ODAC")).toThrow();
-		expect(() => decode("ODACRS")).toThrow();
+		expect(() => decode("OCBD")).toThrow();
+		expect(() => decode("OCBDRS")).toThrow();
 	});
 
 	it("rejects invalid 5th position letter", () => {
-		expect(() => decode("ODACX")).toThrow(); // X not in [RTS]
+		expect(() => decode("OCBDX")).toThrow(); // X not in [RTN]
 	});
 });
 

@@ -2,11 +2,11 @@
  * Generates a deterministic 5-letter OCEAN code from facet scores.
  *
  * Each trait maps to unique, semantically meaningful letters:
- *   Openness:          P (Practical)     G (Grounded)     O (Open-minded)
- *   Conscientiousness: F (Flexible)      B (Balanced)     D (Disciplined)
- *   Extraversion:      I (Introvert)     A (Ambivert)     E (Extravert)
- *   Agreeableness:     C (Candid)        N (Negotiator)   W (Warm)
- *   Neuroticism:       R (Resilient)     T (Temperate)    S (Sensitive)
+ *   Openness:          T (Traditional)   M (Moderate)     O (Open-minded)
+ *   Conscientiousness: F (Flexible)      S (Steady)       C (Conscientious)
+ *   Extraversion:      R (Reserved)      B (Balanced)     E (Extravert)
+ *   Agreeableness:     D (Direct)        P (Pragmatic)    A (Agreeable)
+ *   Neuroticism:       R (Resilient)     T (Tempered)     N (Neurotic)
  *
  * Algorithm:
  * 1. Sum 6 facets per trait (using FACET_TO_TRAIT lookup)
@@ -14,7 +14,7 @@
  * 3. Concatenate 5 letters in OCEAN order
  *
  * @param facetScores - All 30 facet scores (caller must validate completeness)
- * @returns 5-letter code (e.g., "ODEWR")
+ * @returns 5-letter code (e.g., "OCEAR")
  *
  * @remarks
  * - No validation: Caller ensures all 30 facets present and valid (0-20)

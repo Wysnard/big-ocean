@@ -46,8 +46,8 @@ describe("getResults Use Case", () => {
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
 			);
 
-			expect(result.oceanCode5).toBe("ODEWS");
-			expect(result.oceanCode4).toBe("ODEW");
+			expect(result.oceanCode5).toBe("OCEAN");
+			expect(result.oceanCode4).toBe("OCEA");
 			expect(result.archetypeName).toBeDefined();
 			expect(result.archetypeName.length).toBeGreaterThan(0);
 			expect(result.archetypeDescription).toBeDefined();
@@ -72,8 +72,8 @@ describe("getResults Use Case", () => {
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
 			);
 
-			expect(result.oceanCode5).toBe("OFAWR");
-			expect(result.oceanCode4).toBe("OFAW");
+			expect(result.oceanCode5).toBe("OFBAR");
+			expect(result.oceanCode4).toBe("OFBA");
 		});
 
 		it("should compute overall confidence as mean of all facet confidences", async () => {
@@ -120,7 +120,7 @@ describe("getResults Use Case", () => {
 				expect(trait.name).toBeDefined();
 				expect(BIG_FIVE_TRAITS).toContain(trait.name);
 				expect(typeof trait.score).toBe("number");
-				expect("PGOFBDIAECNWRTS").toContain(trait.level);
+				expect("TMOFSCRBEDPARTN").toContain(trait.level);
 				expect(typeof trait.confidence).toBe("number");
 				expect(trait.confidence).toBeGreaterThanOrEqual(0);
 				expect(trait.confidence).toBeLessThanOrEqual(100);
@@ -174,11 +174,11 @@ describe("getResults Use Case", () => {
 			);
 
 			const traitMap = Object.fromEntries(result.traits.map((t) => [t.name, t]));
-			expect(traitMap.openness.level).toBe("P");
-			expect(traitMap.conscientiousness.level).toBe("B");
-			expect(traitMap.extraversion.level).toBe("A");
-			expect(traitMap.agreeableness.level).toBe("W");
-			expect(traitMap.neuroticism.level).toBe("S");
+			expect(traitMap.openness.level).toBe("T");
+			expect(traitMap.conscientiousness.level).toBe("S");
+			expect(traitMap.extraversion.level).toBe("B");
+			expect(traitMap.agreeableness.level).toBe("A");
+			expect(traitMap.neuroticism.level).toBe("N");
 		});
 
 		it("should return null profile fields for anonymous users", async () => {
@@ -245,8 +245,8 @@ describe("getResults Use Case", () => {
 					sessionId: TEST_SESSION_ID,
 					userId: "owner_user",
 					displayName: "Test User",
-					oceanCode5: "GBANT",
-					oceanCode4: "GBAN",
+					oceanCode5: "MSBPT",
+					oceanCode4: "MSBP",
 					isPublic: true,
 					viewCount: 5,
 					createdAt: new Date(),
@@ -282,7 +282,7 @@ describe("getResults Use Case", () => {
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
 			);
 
-			expect(result.oceanCode4).toBe("ODEW");
+			expect(result.oceanCode4).toBe("OCEA");
 			expect(result.archetypeName).toBeDefined();
 			expect(result.archetypeDescription).toBeDefined();
 			expect(result.archetypeColor).toBeDefined();
@@ -297,7 +297,7 @@ describe("getResults Use Case", () => {
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
 			);
 
-			expect(result.oceanCode5).toBe("GBANT");
+			expect(result.oceanCode5).toBe("MSBPT");
 			expect(result.overallConfidence).toBe(0);
 		});
 	});

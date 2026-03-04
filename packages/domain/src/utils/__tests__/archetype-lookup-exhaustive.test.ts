@@ -3,10 +3,10 @@ import { extract4LetterCode, lookupArchetype } from "../archetype-lookup";
 
 describe("lookupArchetype", () => {
 	describe("all 81 combinations", () => {
-		const oLevels = ["P", "G", "O"] as const;
-		const cLevels = ["F", "B", "D"] as const;
-		const eLevels = ["I", "A", "E"] as const;
-		const aLevels = ["C", "N", "W"] as const;
+		const oLevels = ["T", "M", "O"] as const;
+		const cLevels = ["F", "S", "C"] as const;
+		const eLevels = ["R", "B", "E"] as const;
+		const aLevels = ["D", "P", "A"] as const;
 
 		for (const O of oLevels) {
 			for (const C of cLevels) {
@@ -30,11 +30,11 @@ describe("lookupArchetype", () => {
 
 	describe("input validation", () => {
 		it("throws on code with 3 characters", () => {
-			expect(() => lookupArchetype("ODE")).toThrow();
+			expect(() => lookupArchetype("OCE")).toThrow();
 		});
 
 		it("throws on code with 5 characters", () => {
-			expect(() => lookupArchetype("ODEWR")).toThrow();
+			expect(() => lookupArchetype("OCEAR")).toThrow();
 		});
 
 		it("throws on empty string", () => {
@@ -46,24 +46,24 @@ describe("lookupArchetype", () => {
 		});
 
 		it("throws on lowercase valid chars", () => {
-			expect(() => lookupArchetype("odaw")).toThrow();
+			expect(() => lookupArchetype("ocba")).toThrow();
 		});
 
 		it("throws on mixed invalid chars", () => {
-			expect(() => lookupArchetype("OD1W")).toThrow();
+			expect(() => lookupArchetype("OC1A")).toThrow();
 		});
 	});
 });
 
 describe("archetype lookup performance (NFR9 - Story 11.4)", () => {
 	it("should complete all 81 lookups in < 100ms", () => {
-		const oLevels = ["P", "G", "O"] as const;
-		const cLevels = ["F", "B", "D"] as const;
-		const eLevels = ["I", "A", "E"] as const;
-		const aLevels = ["C", "N", "W"] as const;
+		const oLevels = ["T", "M", "O"] as const;
+		const cLevels = ["F", "S", "C"] as const;
+		const eLevels = ["R", "B", "E"] as const;
+		const aLevels = ["D", "P", "A"] as const;
 
 		// Warmup: JIT compile the function before timing
-		lookupArchetype("GBAN");
+		lookupArchetype("MSBP");
 
 		const startTime = performance.now();
 
@@ -88,24 +88,24 @@ describe("archetype lookup performance (NFR9 - Story 11.4)", () => {
 });
 
 describe("extract4LetterCode", () => {
-	it('extracts "ODAW" from "ODAWT"', () => {
-		expect(extract4LetterCode("ODAWT")).toBe("ODAW");
+	it('extracts "OCBA" from "OCBAT"', () => {
+		expect(extract4LetterCode("OCBAT")).toBe("OCBA");
 	});
 
-	it('extracts "PFIC" from "PFICR"', () => {
-		expect(extract4LetterCode("PFICR")).toBe("PFIC");
+	it('extracts "TFRD" from "TFRDR"', () => {
+		expect(extract4LetterCode("TFRDR")).toBe("TFRD");
 	});
 
-	it('extracts "GBAN" from "GBANT"', () => {
-		expect(extract4LetterCode("GBANT")).toBe("GBAN");
+	it('extracts "MSBP" from "MSBPT"', () => {
+		expect(extract4LetterCode("MSBPT")).toBe("MSBP");
 	});
 
 	it("throws on 4-letter code", () => {
-		expect(() => extract4LetterCode("ODAW")).toThrow();
+		expect(() => extract4LetterCode("OCBA")).toThrow();
 	});
 
 	it("throws on 6-letter code", () => {
-		expect(() => extract4LetterCode("ODAWTS")).toThrow();
+		expect(() => extract4LetterCode("OCBATS")).toThrow();
 	});
 
 	it("throws on empty string", () => {

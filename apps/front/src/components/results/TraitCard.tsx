@@ -1,5 +1,5 @@
 import type { FacetResult, TraitName, TraitResult } from "@workspace/domain";
-import { getTraitColor, TRAIT_LETTER_MAP, TRAIT_LEVEL_LABELS } from "@workspace/domain";
+import { getTraitColor, getTraitLevelLabel, TRAIT_LETTER_MAP } from "@workspace/domain";
 import { CardAccent } from "@workspace/ui/components/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
 import { ChevronDown } from "lucide-react";
@@ -54,7 +54,7 @@ export const TraitCard = memo(function TraitCard({
 	// Determine trait-specific level letter and human-readable name
 	const levelIndex = trait.score < 40 ? 0 : trait.score < 80 ? 1 : 2;
 	const levelLetter = TRAIT_LETTER_MAP[trait.name][levelIndex];
-	const levelLabel = TRAIT_LEVEL_LABELS[levelLetter] ?? levelLetter;
+	const levelLabel = getTraitLevelLabel(trait.name, levelLetter);
 
 	// Mini ring stroke offset: full circumference = 0%, 0 offset = 100%
 	const ringOffset = RING_CIRCUMFERENCE * (1 - confidence / 100);

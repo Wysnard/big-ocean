@@ -65,7 +65,7 @@ describe("listUserSessions Use Case", () => {
 				updatedAt: new Date("2026-02-14"),
 				status: "active",
 				messageCount: 15,
-				oceanCode5: "ODEWR",
+				oceanCode5: "OCEAR",
 				archetypeName: null,
 			},
 		];
@@ -79,7 +79,7 @@ describe("listUserSessions Use Case", () => {
 		expect(result.sessions).toHaveLength(2);
 		expect(result.sessions[0]?.id).toBe("session-1");
 		expect(result.sessions[0]?.messageCount).toBe(5);
-		expect(result.sessions[1]?.oceanCode5).toBe("ODEWR");
+		expect(result.sessions[1]?.oceanCode5).toBe("OCEAR");
 		expect(result.freeTierMessageThreshold).toBe(25);
 		expect(mockSessionRepo.getSessionsByUserId).toHaveBeenCalledWith(TEST_USER_ID);
 	});
