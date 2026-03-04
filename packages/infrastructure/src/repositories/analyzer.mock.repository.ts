@@ -126,6 +126,8 @@ function facet(
 		confidence,
 		quote,
 		highlightRange: { start, end: start + quote.length },
+		domain: "other",
+		deviation: 0,
 	};
 }
 

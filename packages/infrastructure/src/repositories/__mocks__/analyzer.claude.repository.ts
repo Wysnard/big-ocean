@@ -19,6 +19,8 @@ function mockEvidence(assessmentMessageId: string): FacetEvidence[] {
 			confidence: 70,
 			quote: "mock evidence quote",
 			highlightRange: { start: 0, end: 10 },
+			domain: "work",
+			deviation: 2,
 		},
 		{
 			assessmentMessageId,
@@ -27,6 +29,8 @@ function mockEvidence(assessmentMessageId: string): FacetEvidence[] {
 			confidence: 75,
 			quote: "mock altruism quote",
 			highlightRange: { start: 0, end: 10 },
+			domain: "relationships",
+			deviation: 1,
 		},
 	];
 }

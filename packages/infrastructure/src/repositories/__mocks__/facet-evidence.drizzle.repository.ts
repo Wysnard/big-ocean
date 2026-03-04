@@ -19,6 +19,8 @@ export const FacetEvidenceDrizzleRepositoryLive = Layer.succeed(
 			Effect.sync(() => {
 				const saved = evidence.map((e, i) => ({
 					...e,
+					domain: e.domain ?? "other",
+					deviation: e.deviation ?? 0,
 					id: `evidence_${crypto.randomUUID().slice(0, 8)}_${i}`,
 					createdAt: new Date(),
 				}));

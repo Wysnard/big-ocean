@@ -4,6 +4,24 @@
  * Extracted from DetailZone.tsx to avoid duplication with EvidencePanel.
  */
 
+const DOMAIN_LABELS: Record<string, string> = {
+	work: "Work",
+	relationships: "Relationships",
+	family: "Family",
+	leisure: "Leisure",
+	solo: "Solo",
+	other: "Other",
+};
+
+export function getDomainLabel(domain: string): string {
+	return DOMAIN_LABELS[domain] ?? domain;
+}
+
+export function formatDeviation(deviation: number): string {
+	if (deviation > 0) return `+${deviation}`;
+	return String(deviation);
+}
+
 export function getSignalBadge(confidence: number): { label: string; className: string } {
 	if (confidence >= 70) {
 		return {

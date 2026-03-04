@@ -118,6 +118,9 @@ export interface AppConfigService {
 
 	/** Global daily assessment limit (circuit breaker) — Story 15.3 */
 	readonly globalDailyAssessmentLimit: number;
+
+	/** Minimum finalWeight threshold for evidence filtering (moderate/medium = 0.36) */
+	readonly minEvidenceWeight: number;
 }
 
 /**

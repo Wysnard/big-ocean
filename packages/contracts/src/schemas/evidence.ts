@@ -50,6 +50,12 @@ export const SavedFacetEvidenceSchema = S.Struct({
 	/** Character indices for highlighting the quote in the UI */
 	highlightRange: HighlightRangeSchema,
 
+	/** Life domain (e.g., "work", "relationships", "family") */
+	domain: S.String,
+
+	/** Deviation from neutral (-3 to +3 scale) */
+	deviation: S.Number,
+
 	/** When this evidence was created */
 	createdAt: S.Date,
 });

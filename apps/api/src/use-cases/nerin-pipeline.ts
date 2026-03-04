@@ -35,12 +35,6 @@ import { Effect, Schedule } from "effect";
 /** Max user messages that count as cold start: 1 greeting + 1 opening question = 2 assistant msgs before user replies */
 const COLD_START_USER_MSG_THRESHOLD = GREETING_MESSAGES.length + 1;
 
-/** Per-message evidence cap — keep top 5 by finalWeight (Story 18-3, Pattern 6) */
-export const PER_MESSAGE_EVIDENCE_CAP = 5;
-
-/** Session-level evidence cap — skip ConversAnalyzer when reached (Story 18-3) */
-export const SESSION_EVIDENCE_CAP = 80;
-
 export interface NerinPipelineInput {
 	readonly sessionId: string;
 	readonly userId?: string;
@@ -116,13 +110,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			const existingEvidence = yield* evidenceRepo.findBySession(input.sessionId);
 
 			let allEvidence: EvidenceInput[] = existingEvidence;
-			if (existingEvidence.length >= SESSION_EVIDENCE_CAP) {
-				logger.info("Session evidence cap reached, skipping ConversAnalyzer", {
-					sessionId: input.sessionId,
-					evidenceCount: existingEvidence.length,
-					cap: SESSION_EVIDENCE_CAP,
-				});
-			} else {
+			{
 				const domainDistribution = aggregateDomainDistribution(existingEvidence);
 				const recentMessages: DomainMessage[] = domainMessages.slice(-6);
 
@@ -148,18 +136,16 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 				analyzerTokenUsage = evidenceResult.tokenUsage;
 
-				const sortedEvidence = [...evidenceResult.evidence].sort(
-					(a, b) =>
-						computeFinalWeight(b.strength, b.confidence) - computeFinalWeight(a.strength, a.confidence),
+				const filteredEvidence = evidenceResult.evidence.filter(
+					(e) => computeFinalWeight(e.strength, e.confidence) >= config.minEvidenceWeight,
 				);
-				const cappedEvidence = sortedEvidence.slice(0, PER_MESSAGE_EVIDENCE_CAP);
 
 				logger.info("Evidence weights computed", {
 					sessionId: input.sessionId,
 					messageId: input.sessionId,
 					rawCount: evidenceResult.evidence.length,
-					cappedCount: cappedEvidence.length,
-					evidence: cappedEvidence.map((e) => ({
+					filteredCount: filteredEvidence.length,
+					evidence: filteredEvidence.map((e) => ({
 						facet: e.bigfiveFacet,
 						deviation: e.deviation,
 						strength: e.strength,
@@ -169,18 +155,18 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 					})),
 				});
 
-				if (cappedEvidence.length > 0) {
+				if (filteredEvidence.length > 0) {
 					// Defer evidence save until after LLM success (atomic write)
-					pendingEvidence = cappedEvidence;
+					pendingEvidence = filteredEvidence;
 
 					logger.info("Conversanalyzer complete", {
 						sessionId: input.sessionId,
-						evidenceCount: cappedEvidence.length,
+						evidenceCount: filteredEvidence.length,
 						tokenUsage: evidenceResult.tokenUsage,
 					});
 
 					// Include pending evidence in metrics computation
-					allEvidence = [...existingEvidence, ...cappedEvidence];
+					allEvidence = [...existingEvidence, ...filteredEvidence];
 				}
 			}
 

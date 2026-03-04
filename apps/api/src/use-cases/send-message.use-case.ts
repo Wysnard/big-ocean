@@ -22,8 +22,6 @@ import {
 import { Effect } from "effect";
 import { runNerinPipeline } from "./nerin-pipeline";
 
-export { PER_MESSAGE_EVIDENCE_CAP, SESSION_EVIDENCE_CAP } from "./nerin-pipeline";
-
 export interface SendMessageInput {
 	readonly sessionId: string;
 	readonly message: string;

@@ -35,6 +35,8 @@ const createTestEvidence = (overrides: Partial<SavedFacetEvidence> = {}): SavedF
 	confidence: 85,
 	quote: "I love exploring new ideas and creative solutions",
 	highlightRange: { start: 0, end: 48 },
+	domain: "other",
+	deviation: 0,
 	createdAt: new Date("2024-01-01T10:00:00Z"),
 	...overrides,
 });

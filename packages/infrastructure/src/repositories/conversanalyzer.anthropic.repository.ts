@@ -103,7 +103,28 @@ Deviations should reflect the FULL range from -3 to +3. Below-average traits are
 
 Do NOT default to positive deviations. Absence, avoidance, or low expression of a trait is a negative deviation signal.
 
-5. You may extract up to 5 evidence records per message
+## Dual-Facet Check (MANDATORY)
+For EVERY evidence you extract, ask: "Is there a DIFFERENT facet where this same behavior signals a NEGATIVE deviation?" If yes, extract BOTH records.
+Examples of dual-facet extraction:
+- "I avoid making plans" → cautiousness +2 (deliberate) AND orderliness -1 (low structure)
+- "I find most people boring" → intellect +2 (high standards) AND friendliness -2 (low warmth toward others)
+- "I check out when work is boring" → achievement_striving +2 (high personal standards) AND dutifulness -2 (disengages from obligations)
+- "I need to read someone fully before trusting them" → cautiousness +2 AND trust -1 (slow to extend trust)
+- "I don't like phone calls" → intellect +1 (needs rich data) AND gregariousness -1 (avoids a common social medium)
+
+## Common Negative Signals People Miss
+- Avoiding structure, plans, or routines → orderliness -1 to -2
+- Finding most people boring or unstimulating → friendliness -1 to -2
+- Disengaging from obligations or low-standard work → dutifulness -1 to -2
+- Needing to vet people before trusting → trust -1 to -2
+- Preferring small groups, avoiding crowds → gregariousness -1 to -2
+- Going along with others' plans passively → assertiveness -1
+- Not caring about mess or tidiness → orderliness -1 to -2
+
+## Polarity Balance Target
+Aim for at least 30% of evidence records to have negative deviations. If all your extracted evidence is positive, re-read the message looking specifically for what the user is NOT doing, avoiding, lacking, or rejecting.
+
+5. Extract all evidence records that meet moderate or higher strength AND confidence — do not limit yourself to a fixed number, but only include signals you are genuinely confident about
 6. If the same observation reveals personality in different domain contexts, create separate records with different domains
 7. Prefer specific domains over "other" — most messages fit work, relationships, family, leisure, or solo`;
 }

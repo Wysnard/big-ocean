@@ -15,7 +15,7 @@ import { OceanDiamond } from "../ocean-shapes/OceanDiamond";
 import { OceanHalfCircle } from "../ocean-shapes/OceanHalfCircle";
 import { OceanRectangle } from "../ocean-shapes/OceanRectangle";
 import { OceanTriangle } from "../ocean-shapes/OceanTriangle";
-import { getSignalBadge } from "./evidence-utils";
+import { formatDeviation, getDomainLabel, getSignalBadge } from "./evidence-utils";
 
 const TRAIT_SHAPE: Record<TraitName, (props: { size?: number; color?: string }) => ReactNode> = {
 	openness: OceanCircle,
@@ -204,11 +204,19 @@ export function DetailZone({
 											return (
 												<div key={ev.id} className="mb-2 last:mb-0">
 													<p className="text-xs italic text-foreground/80 mb-1">&ldquo;{ev.quote}&rdquo;</p>
-													<span
-														className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${badge.className}`}
-													>
-														{badge.label}
-													</span>
+													<div className="flex items-center gap-1.5 flex-wrap">
+														<span
+															className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${badge.className}`}
+														>
+															{badge.label}
+														</span>
+														<span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-medium bg-muted text-muted-foreground">
+															{getDomainLabel(ev.domain)}
+														</span>
+														<span className="text-[10px] font-medium text-muted-foreground">
+															{formatDeviation(ev.deviation)}
+														</span>
+													</div>
 												</div>
 											);
 										})}

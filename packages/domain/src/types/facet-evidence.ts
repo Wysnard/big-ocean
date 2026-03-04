@@ -58,6 +58,12 @@ export interface FacetEvidence {
 
 	/** Character indices for highlighting the quote in the UI */
 	highlightRange: HighlightRange;
+
+	/** Life domain (e.g., "work", "relationships") */
+	domain: string;
+
+	/** Deviation from neutral (-3 to +3 scale) */
+	deviation: number;
 }
 
 /**

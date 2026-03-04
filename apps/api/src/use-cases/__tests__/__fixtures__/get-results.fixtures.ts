@@ -82,6 +82,8 @@ export function createEvidenceRecord(
 		confidence,
 		quote: `Test quote for ${facetName}`,
 		highlightRange: { start: 0, end: 20 },
+		domain: "other",
+		deviation: 0,
 		createdAt: new Date(Date.now() + messageIndex * 1000),
 	};
 }

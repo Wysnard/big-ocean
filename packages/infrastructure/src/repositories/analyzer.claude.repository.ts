@@ -249,6 +249,8 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 								start: Math.max(0, Number(item.highlightRange?.start) || 0),
 								end: Math.max(1, Number(item.highlightRange?.end) || 1),
 							},
+							domain: "other",
+							deviation: 0,
 						});
 					}
 
@@ -378,6 +380,8 @@ export const AnalyzerClaudeRepositoryLive = Layer.effect(
 								start: Math.max(0, Number(item.highlightRange?.start) || 0),
 								end: Math.max(1, Number(item.highlightRange?.end) || 1),
 							},
+							domain: "other",
+							deviation: 0,
 						});
 					}
 

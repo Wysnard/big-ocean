@@ -107,6 +107,9 @@ const configSchema = Config.all({
 	globalDailyAssessmentLimit: Config.number("GLOBAL_DAILY_ASSESSMENT_LIMIT").pipe(
 		Config.withDefault(100),
 	),
+
+	// Minimum finalWeight threshold for evidence quality filtering
+	minEvidenceWeight: Config.number("MIN_EVIDENCE_WEIGHT").pipe(Config.withDefault(0.36)),
 });
 
 /**

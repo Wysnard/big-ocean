@@ -177,8 +177,22 @@ export const mockNerinResponse = {
 
 export const mockConversanalyzerOutput = {
 	evidence: [
-		{ bigfiveFacet: "imagination" as const, score: 14, confidence: 0.6, domain: "work" as const },
-		{ bigfiveFacet: "trust" as const, score: 12, confidence: 0.5, domain: "relationships" as const },
+		{
+			bigfiveFacet: "imagination" as const,
+			deviation: 2,
+			strength: "strong" as const,
+			confidence: "high" as const,
+			domain: "work" as const,
+			note: "Creative thinking",
+		},
+		{
+			bigfiveFacet: "trust" as const,
+			deviation: 1,
+			strength: "moderate" as const,
+			confidence: "medium" as const,
+			domain: "relationships" as const,
+			note: "Trusting nature",
+		},
 	],
 	tokenUsage: { input: 200, output: 50 },
 };
@@ -217,6 +231,9 @@ export const mockConfig = {
 	polarProductRelationshipSingle: "polar_product_single",
 	polarProductRelationship5Pack: "polar_product_5pack",
 	polarProductExtendedConversation: "polar_product_extended",
+	teaserModelId: "claude-haiku-4-5-20251001",
+	globalDailyAssessmentLimit: 100,
+	minEvidenceWeight: 0.36,
 };
 
 export const createTestLayer = () =>

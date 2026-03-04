@@ -114,7 +114,7 @@ describe("sendMessage Use Case", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should cap evidence to 5 records (AC: #9)", () =>
+		it.effect("should filter evidence by weight threshold (AC: #9)", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockConversanalyzerRepo.analyze.mockReturnValue(
@@ -153,6 +153,7 @@ describe("sendMessage Use Case", () => {
 								note: "Joyful",
 							},
 							{
+								// finalWeight: 0.3 * 0.3 = 0.09 — below threshold, dropped
 								bigfiveFacet: "anxiety",
 								deviation: -2,
 								strength: "weak",
@@ -186,10 +187,12 @@ describe("sendMessage Use Case", () => {
 					message: "I work in tech",
 				});
 
-				// Only 5 records saved (capped from 7)
+				// 6 records saved (anxiety dropped due to weight < 0.36)
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
 				const savedRecords = mockEvidenceRepo.save.mock.calls[0][0];
-				expect(savedRecords).toHaveLength(5);
+				expect(savedRecords).toHaveLength(6);
+				const facets = savedRecords.map((r: { bigfiveFacet: string }) => r.bigfiveFacet);
+				expect(facets).not.toContain("anxiety");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 

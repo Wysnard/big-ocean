@@ -11,7 +11,7 @@ import type { SavedFacetEvidence } from "@workspace/contracts";
 import type { FacetName, TraitName } from "@workspace/domain";
 import { getTraitColor, TRAIT_TO_FACETS, toFacetDisplayName } from "@workspace/domain";
 import { X } from "lucide-react";
-import { getSignalBadge } from "./evidence-utils";
+import { formatDeviation, getDomainLabel, getSignalBadge } from "./evidence-utils";
 
 export interface HighlightRange {
 	start: number;
@@ -70,11 +70,19 @@ export function EvidencePanel({ facetName, evidence, onClose }: EvidencePanelPro
 					return (
 						<div key={ev.id} className="rounded-lg bg-muted/50 p-3">
 							<p className="text-xs italic text-foreground/80 mb-2">&ldquo;{ev.quote}&rdquo;</p>
-							<span
-								className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${badge.className}`}
-							>
-								{badge.label}
-							</span>
+							<div className="flex items-center gap-1.5 flex-wrap">
+								<span
+									className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${badge.className}`}
+								>
+									{badge.label}
+								</span>
+								<span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-medium bg-muted text-muted-foreground">
+									{getDomainLabel(ev.domain)}
+								</span>
+								<span className="text-[10px] font-medium text-muted-foreground">
+									{formatDeviation(ev.deviation)}
+								</span>
+							</div>
 						</div>
 					);
 				})}

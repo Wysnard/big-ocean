@@ -36,6 +36,7 @@ function toSavedFacetEvidence(row: {
 	deviation: number;
 	strength: string;
 	confidence: string;
+	domain: string;
 	note: string;
 	createdAt: Date | null;
 }): SavedFacetEvidence {
@@ -47,6 +48,8 @@ function toSavedFacetEvidence(row: {
 		confidence: CONFIDENCE_MAP[row.confidence as keyof typeof CONFIDENCE_MAP] ?? 50,
 		quote: row.note,
 		highlightRange: { start: 0, end: row.note.length },
+		domain: row.domain,
+		deviation: row.deviation,
 		createdAt: row.createdAt ?? new Date(),
 	};
 }
