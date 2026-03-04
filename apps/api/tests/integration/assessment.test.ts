@@ -340,12 +340,6 @@ describe("GET /api/assessment/:sessionId/results", () => {
 		// Overall confidence
 		expect(decoded.overallConfidence).toBeGreaterThanOrEqual(0);
 		expect(decoded.overallConfidence).toBeLessThanOrEqual(100);
-
-		// Story 11.1: Portrait generation is now handled by the finalization pipeline
-		// (Stories 11.2-11.5). The placeholder pipeline doesn't generate portraits,
-		// so personalDescription is null when session is completed via DB seeding.
-		// This assertion will be updated when real portrait generation is implemented.
-		expect(decoded.personalDescription).toBeNull();
 	});
 
 	test("returns 404 for non-existent session", async () => {

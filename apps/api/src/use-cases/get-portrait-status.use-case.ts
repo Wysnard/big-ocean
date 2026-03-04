@@ -67,25 +67,31 @@ export const getPortraitStatus = (sessionId: string) =>
 		const portrait = yield* portraitRepo.getFullPortraitBySessionId(sessionId);
 		const status = deriveStatus(portrait);
 
-		// Lazy retry: if portrait is stale "generating" with retries remaining
-		if (
-			status === "generating" &&
-			portrait &&
-			isStale(portrait.createdAt) &&
-			portrait.retryCount < 3
-		) {
-			logger.info("Triggering lazy retry for stale portrait", {
-				portraitId: portrait.id,
-				sessionId,
-				retryCount: portrait.retryCount,
-				ageMs: Date.now() - portrait.createdAt.getTime(),
-			});
-			yield* Effect.forkDaemon(
-				generateFullPortrait({
-					portraitId: portrait.id,
-					sessionId,
-				}),
-			);
+		// Eager trigger: if portrait placeholder exists but generation never started (retryCount 0, no content)
+		// This covers the case where the webhook created a placeholder but couldn't spawn the Effect daemon.
+		// Also handles lazy retry: if portrait is stale "generating" with retries remaining.
+		if (status === "generating" && portrait && portrait.retryCount < 3) {
+			const neverStarted = portrait.retryCount === 0 && !isStale(portrait.createdAt);
+			const staleRetry = isStale(portrait.createdAt);
+			if (neverStarted || staleRetry) {
+				logger.info(
+					neverStarted
+						? "Triggering eager portrait generation"
+						: "Triggering lazy retry for stale portrait",
+					{
+						portraitId: portrait.id,
+						sessionId,
+						retryCount: portrait.retryCount,
+						ageMs: Date.now() - portrait.createdAt.getTime(),
+					},
+				);
+				yield* Effect.forkDaemon(
+					generateFullPortrait({
+						portraitId: portrait.id,
+						sessionId,
+					}),
+				);
+			}
 		}
 
 		// Fetch teaser portrait data (Story 12.3)

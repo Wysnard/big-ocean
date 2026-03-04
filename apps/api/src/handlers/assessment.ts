@@ -213,6 +213,20 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 								}),
 							),
 						),
+						Effect.catchTag("ConversationEvidenceError", (error) =>
+							Effect.fail(
+								new DatabaseError({
+									message: `Finalization failed: ${error.message}`,
+								}),
+							),
+						),
+						Effect.catchTag("TeaserPortraitError", (error) =>
+							Effect.fail(
+								new DatabaseError({
+									message: `Finalization failed: ${error.message}`,
+								}),
+							),
+						),
 					);
 
 					// Format HTTP response per AC-5 contract
@@ -239,7 +253,6 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 							levelDescription: f.levelDescription,
 						})),
 						overallConfidence: result.overallConfidence,
-						personalDescription: result.personalDescription,
 						messageCount: result.messageCount,
 						publicProfileId: result.publicProfileId,
 						shareableUrl: result.shareableUrl,

@@ -56,7 +56,6 @@ const mockSession = {
 	updatedAt: new Date(),
 	sessionToken: null,
 	finalizationProgress: null,
-	personalDescription: null,
 };
 
 describe("ratePortrait", () => {

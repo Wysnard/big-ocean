@@ -8,7 +8,7 @@ import {
 } from "./portrait-markdown";
 
 interface PortraitReadingViewProps {
-	personalDescription: string;
+	content: string;
 	onViewFullProfile: () => void;
 }
 
@@ -18,10 +18,10 @@ interface PortraitReadingViewProps {
  * Story 7.18 AC #10: Portrait-first reveal layout.
  */
 export const PortraitReadingView = memo(function PortraitReadingView({
-	personalDescription,
+	content,
 	onViewFullProfile,
 }: PortraitReadingViewProps) {
-	const sections = useMemo(() => splitMarkdownSections(personalDescription), [personalDescription]);
+	const sections = useMemo(() => splitMarkdownSections(content), [content]);
 
 	return (
 		<div
@@ -51,9 +51,7 @@ export const PortraitReadingView = memo(function PortraitReadingView({
 						</div>
 					))
 				) : (
-					<div className="text-base leading-[1.7] text-foreground/80 whitespace-pre-line">
-						{personalDescription}
-					</div>
+					<div className="text-base leading-[1.7] text-foreground/80 whitespace-pre-line">{content}</div>
 				)}
 
 				{/* Transition to full profile */}

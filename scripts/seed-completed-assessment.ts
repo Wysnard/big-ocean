@@ -20,11 +20,13 @@
  */
 
 import "dotenv/config"; // Load .env file
+import { Polar } from "@polar-sh/sdk";
 import type { FacetName, LifeDomain } from "@workspace/domain";
+import { AppConfig } from "@workspace/domain";
 import { AppConfigLive, Database, DatabaseStack, dbSchema } from "@workspace/infrastructure";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
-import { Effect } from "effect";
+import { Effect, Redacted } from "effect";
 
 const {
 	account,
@@ -37,7 +39,7 @@ const {
 	user,
 } = dbSchema;
 
-const TEST_USER_EMAIL = "test@bigocean.dev";
+const TEST_USER_EMAIL = "vlay.consulting@gmail.com";
 const TEST_USER_PASSWORD = "testpassword123";
 const TEST_USER_ID = "00000000-0000-4000-a000-000000000001";
 const TEST_ACCOUNT_ID = "00000000-0000-4000-a000-000000000002";
@@ -368,6 +370,44 @@ const seedProgram = Effect.gen(function* () {
 		console.log("  Created credential account with password");
 	}
 
+	// 1c. Ensure Polar customer exists for test user (needed for checkout plugin)
+	const config = yield* AppConfig;
+	const polarToken = Redacted.value(config.polarAccessToken);
+	if (polarToken && polarToken !== "not-configured") {
+		yield* Effect.promise(async () => {
+			const polarClient = new Polar({
+				accessToken: polarToken,
+				server: config.betterAuthUrl.includes("localhost") ? "sandbox" : "production",
+			});
+			try {
+				const { result: existing } = await polarClient.customers.list({ email: TEST_USER_EMAIL });
+				if (existing.items.length > 0) {
+					const customer = existing.items[0];
+					if (customer.externalId !== userId) {
+						await polarClient.customers.update({
+							id: customer.id,
+							customerUpdate: { externalId: userId },
+						});
+						console.log(`  Updated Polar customer externalId: ${customer.id}`);
+					} else {
+						console.log(`  Polar customer already exists: ${customer.id}`);
+					}
+				} else {
+					const customer = await polarClient.customers.create({
+						email: TEST_USER_EMAIL,
+						name: "Test User",
+						externalId: userId,
+					});
+					console.log(`  Created Polar customer: ${customer.id}`);
+				}
+			} catch (err) {
+				console.warn(`  Warning: Failed to create Polar customer (checkout may not work): ${err}`);
+			}
+		});
+	} else {
+		console.log("  Skipping Polar customer creation (POLAR_ACCESS_TOKEN not configured)");
+	}
+
 	// Clean up existing assessment data for test user (allows re-running seed)
 	const existingSessions = yield* db
 		.select()
@@ -394,8 +434,6 @@ const seedProgram = Effect.gen(function* () {
 			status: "completed",
 			finalizationProgress: "completed",
 			messageCount: CONVERSATION_MESSAGES.length,
-			personalDescription:
-				"A thoughtful and curious individual who balances openness to new experiences with a grounded sense of responsibility.",
 		})
 		.returning()
 		.pipe(Effect.mapError((error) => new Error(`Failed to create assessment session: ${error}`)));

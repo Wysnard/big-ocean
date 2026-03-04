@@ -39,7 +39,6 @@ const mockSession = {
 	status: "completed",
 	messageCount: 12,
 	finalizationProgress: null,
-	personalDescription: null,
 };
 
 const mockMessages = [

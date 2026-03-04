@@ -82,7 +82,6 @@ export const mockActiveSession = {
 	status: "active",
 	messageCount: 0,
 	finalizationProgress: null,
-	personalDescription: null,
 };
 
 /** Messages simulating cold start (2 assistant greetings + 1 user reply) */

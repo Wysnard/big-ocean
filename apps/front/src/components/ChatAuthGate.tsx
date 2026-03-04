@@ -1,4 +1,3 @@
-import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
 import { NerinMessage } from "@workspace/ui/components/chat";
 import { useEffect, useState } from "react";
@@ -21,7 +20,6 @@ interface ChatAuthGateProps {
  */
 export function ChatAuthGate({ sessionId }: ChatAuthGateProps) {
 	const [mode, setMode] = useState<"gate" | "signup" | "signin">("gate");
-	const navigate = useNavigate();
 
 	// AC #6: Persist sessionId so anonymous users can return within 24h
 	useEffect(() => {
@@ -30,12 +28,7 @@ export function ChatAuthGate({ sessionId }: ChatAuthGateProps) {
 
 	const handleAuthSuccess = () => {
 		clearPendingResultsGateSession(sessionId);
-
-		// Story 11.1: Navigate to finalize route after auth — triggers generate-results
-		navigate({
-			to: "/finalize/$assessmentSessionId",
-			params: { assessmentSessionId: sessionId },
-		});
+		// After auth, TherapistChat re-renders with isAuthenticated=true → shows "View Results" button
 	};
 
 	return (

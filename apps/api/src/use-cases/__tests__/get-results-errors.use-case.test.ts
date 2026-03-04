@@ -37,7 +37,6 @@ describe("getResults Use Case", () => {
 					updatedAt: new Date(),
 					status: "active",
 					messageCount: 10,
-					personalDescription: null,
 				}),
 			);
 
@@ -49,7 +48,10 @@ describe("getResults Use Case", () => {
 			expect(mockResultRepo.getBySessionId).not.toHaveBeenCalled();
 		});
 
-		it("should fail with SessionNotCompleted when session is finalizing", async () => {
+		it("should trigger lazy finalization when session is finalizing", async () => {
+			// Lazy finalization requires additional dependencies (ConversationEvidenceRepository, etc.)
+			// which are not in the basic test layer. This is covered by integration tests.
+			// Here we just verify that "finalizing" status does NOT produce SessionNotCompleted.
 			mockSessionRepo.getSession.mockImplementation((_sessionId: string) =>
 				Effect.succeed({
 					id: TEST_SESSION_ID,
@@ -59,15 +61,21 @@ describe("getResults Use Case", () => {
 					updatedAt: new Date(),
 					status: "finalizing",
 					messageCount: 10,
-					personalDescription: null,
 				}),
 			);
 
-			const error = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer()), Effect.flip),
+			const exit = await Effect.runPromiseExit(
+				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
 			);
 
-			expect(error._tag).toBe("SessionNotCompleted");
+			// Should NOT be SessionNotCompleted — it attempts lazy finalization
+			// (which fails due to missing deps in this test, but the important thing
+			// is that it doesn't short-circuit with SessionNotCompleted)
+			if (exit._tag === "Failure") {
+				const cause = exit.cause;
+				const errorStr = JSON.stringify(cause);
+				expect(errorStr).not.toContain("SessionNotCompleted");
+			}
 		});
 
 		it("should fail with SessionNotFound when linked session is accessed by non-owner", async () => {
@@ -80,7 +88,6 @@ describe("getResults Use Case", () => {
 					updatedAt: new Date(),
 					status: "completed",
 					messageCount: 10,
-					personalDescription: null,
 				}),
 			);
 
@@ -105,7 +112,6 @@ describe("getResults Use Case", () => {
 					updatedAt: new Date(),
 					status: "completed",
 					messageCount: 10,
-					personalDescription: null,
 				}),
 			);
 
@@ -127,7 +133,6 @@ describe("getResults Use Case", () => {
 					updatedAt: new Date(),
 					status: "completed",
 					messageCount: 10,
-					personalDescription: null,
 				}),
 			);
 			const result = await Effect.runPromise(

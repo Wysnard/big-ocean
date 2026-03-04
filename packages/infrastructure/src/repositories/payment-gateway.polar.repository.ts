@@ -40,6 +40,11 @@ export const PaymentGatewayPolarRepositoryLive = Layer.effect(
 								currency: (data.currency as string) ?? "usd",
 								customerId: data.customerId as string | undefined,
 								metadata: data.metadata as Record<string, unknown> | undefined,
+								customer: data.customer
+									? {
+											externalId: (data.customer as Record<string, unknown>).externalId as string | undefined,
+										}
+									: undefined,
 							},
 						} satisfies PolarWebhookEvent;
 					},

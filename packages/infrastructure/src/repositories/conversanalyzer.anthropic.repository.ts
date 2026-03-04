@@ -88,6 +88,21 @@ ${recentText}
    - confidence: "low" | "medium" | "high" — how certain are you about this signal? (low = ambiguous, medium = likely, high = unambiguous)
    - domain: one of the 6 life domains listed above
    - note: brief behavioral paraphrase (max 200 chars, no direct quotes from the user)
+
+## Deviation Calibration
+Deviations should reflect the FULL range from -3 to +3. Below-average traits are just as informative as above-average ones. Examples:
+- gregariousness +3: "I literally can't stand being alone, I fill every evening with social plans" → far above average
+- gregariousness +2: "I love big parties and meeting new people" → clearly above average
+- gregariousness -2: "I avoid parties and prefer one-on-one conversations" → clearly below average
+- gregariousness -3: "I go weeks without seeing anyone and that's exactly how I like it" → far below average
+- self-discipline +1: "I stick to my schedule even when I don't feel like it" → somewhat above average
+- self-discipline -1: "I tend to procrastinate and struggle with routines" → somewhat below average
+- anxiety +3: "I lose sleep almost every night worrying about things that probably won't happen" → far above average
+- anxiety -3: "Even in a crisis I feel completely calm, nothing gets to me" → far below average
+- assertiveness 0: "Sometimes I speak up, sometimes I go along with the group" → population average, no clear deviation
+
+Do NOT default to positive deviations. Absence, avoidance, or low expression of a trait is a negative deviation signal.
+
 5. You may extract up to 5 evidence records per message
 6. If the same observation reveals personality in different domain contexts, create separate records with different domains
 7. Prefer specific domains over "other" — most messages fit work, relationships, family, leisure, or solo`;

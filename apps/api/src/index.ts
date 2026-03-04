@@ -52,7 +52,7 @@ import { EvidenceGroupLive } from "./handlers/evidence";
 import { HealthGroupLive } from "./handlers/health";
 import { PortraitGroupLive } from "./handlers/portrait";
 import { ProfileGroupLive } from "./handlers/profile";
-import { PurchaseGroupLive, PurchaseWebhookGroupLive } from "./handlers/purchase";
+import { PurchaseGroupLive } from "./handlers/purchase";
 import { RelationshipGroupLive, RelationshipPublicGroupLive } from "./handlers/relationship";
 import { WaitlistGroupLive } from "./handlers/waitlist";
 import { AuthMiddlewareLive, OptionalAuthMiddlewareLive } from "./middleware/auth.middleware";
@@ -192,7 +192,6 @@ const HttpGroupsLive = Layer.mergeAll(
 	ProfileGroupLive,
 	PortraitGroupLive,
 	EvidenceGroupLive,
-	PurchaseWebhookGroupLive,
 	PurchaseGroupLive,
 	RelationshipGroupLive,
 	RelationshipPublicGroupLive,
@@ -245,7 +244,7 @@ function wrapServerWithCorsAndAuth(
 			// Run our handler first (async, but we can't await in emit)
 			betterAuthHandler(req, res).then(() => {
 				// If response wasn't ended by our handler, let Effect handle it
-				if (!res.writableEnded) {
+				if (!res.writableEnded && !res.headersSent) {
 					originalEmit("request", req, res);
 				}
 			});

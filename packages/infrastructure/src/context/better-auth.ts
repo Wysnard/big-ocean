@@ -13,6 +13,9 @@
  */
 
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
+import { checkout, polar, webhooks } from "@polar-sh/better-auth";
+import { Polar } from "@polar-sh/sdk";
+import type { AppConfigService } from "@workspace/domain";
 import { AppConfig } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import bcrypt from "bcryptjs";
@@ -45,6 +48,26 @@ export class BetterAuthService extends Context.Tag("BetterAuthService")<
  * Extract service shape
  */
 export type BetterAuthShape = Context.Tag.Service<BetterAuthService>;
+
+/**
+ * Maps a Polar product ID to our internal purchase event type.
+ */
+const mapPolarProductToEventType = (
+	productId: string,
+	config: Pick<
+		AppConfigService,
+		| "polarProductPortraitUnlock"
+		| "polarProductRelationshipSingle"
+		| "polarProductRelationship5Pack"
+		| "polarProductExtendedConversation"
+	>,
+): string | null => {
+	if (productId === config.polarProductPortraitUnlock) return "portrait_unlocked";
+	if (productId === config.polarProductRelationshipSingle) return "credit_purchased";
+	if (productId === config.polarProductRelationship5Pack) return "credit_purchased";
+	if (productId === config.polarProductExtendedConversation) return "extended_conversation_unlocked";
+	return null;
+};
 
 /**
  * Better Auth Layer
@@ -189,6 +212,13 @@ export const BetterAuthLive = Layer.effect(
 			}
 		};
 
+		// Create Polar SDK client for the Better Auth plugin
+		const polarToken = Redacted.value(config.polarAccessToken);
+		const polarClient = new Polar({
+			accessToken: polarToken,
+			server: config.betterAuthUrl.includes("localhost") ? "sandbox" : "production",
+		});
+
 		// Create Better Auth with plain node-postgres drizzle instance
 		const auth = betterAuth({
 			database: drizzleAdapter(plainDb, {
@@ -200,6 +230,111 @@ export const BetterAuthLive = Layer.effect(
 				haveIBeenPwned({
 					customPasswordCompromisedMessage:
 						"This password has appeared in a data breach. Please choose a different password.",
+				}),
+				polar({
+					client: polarClient,
+					createCustomerOnSignUp: polarToken !== "not-configured" && polarToken.length > 0,
+					use: [
+						checkout({
+							products: [
+								{ productId: config.polarProductPortraitUnlock, slug: "portrait-unlock" },
+								{ productId: config.polarProductRelationshipSingle, slug: "relationship-single" },
+								{ productId: config.polarProductRelationship5Pack, slug: "relationship-5pack" },
+								{
+									productId: config.polarProductExtendedConversation,
+									slug: "extended-conversation",
+								},
+							],
+
+							authenticatedUsersOnly: true,
+						}),
+						webhooks({
+							secret: Redacted.value(config.polarWebhookSecret),
+							onOrderPaid: async (payload) => {
+								const order = payload.data;
+								const userId = order.customer?.externalId;
+								if (!userId) {
+									logger.warn("Polar webhook: order.paid missing customer externalId", {
+										orderId: order.id,
+									});
+									return;
+								}
+
+								// Map Polar product ID to internal event type
+								const productId = order.productId ?? "";
+								const eventType = mapPolarProductToEventType(productId, config);
+								if (!eventType) {
+									logger.warn("Polar webhook: unknown product", { productId });
+									return;
+								}
+
+								const is5Pack = productId === config.polarProductRelationship5Pack;
+								const checkoutId = order.checkoutId ?? order.id;
+
+								try {
+									await plainDb.transaction(async (tx) => {
+										// Insert purchase event (idempotent via unique checkout ID)
+										await tx
+											.insert(authSchema.purchaseEvents)
+											.values({
+												id: crypto.randomUUID(),
+												userId,
+												eventType,
+												polarCheckoutId: checkoutId,
+												polarProductId: productId,
+												amountCents: order.totalAmount,
+												currency: order.currency,
+												metadata: is5Pack ? { units: 5 } : null,
+											})
+											.onConflictDoNothing();
+
+										// For portrait-triggering purchases, create portrait placeholder
+										// Portrait generation is triggered lazily via getPortraitStatus polling
+										if (eventType === "portrait_unlocked" || eventType === "extended_conversation_unlocked") {
+											const sessions = await tx
+												.select()
+												.from(authSchema.assessmentSession)
+												.where(
+													and(
+														eq(authSchema.assessmentSession.userId, userId),
+														eq(authSchema.assessmentSession.status, "completed"),
+													),
+												)
+												.limit(1);
+
+											if (sessions[0]) {
+												const results = await tx
+													.select()
+													.from(authSchema.assessmentResults)
+													.where(eq(authSchema.assessmentResults.assessmentSessionId, sessions[0].id))
+													.limit(1);
+
+												if (results[0]) {
+													await tx
+														.insert(authSchema.portraits)
+														.values({
+															assessmentResultId: results[0].id,
+															tier: "full",
+															modelUsed: "claude-sonnet-4-6",
+														})
+														.onConflictDoNothing();
+												}
+											}
+										}
+									});
+
+									logger.info("Polar webhook: purchase event recorded", {
+										userId,
+										productId,
+										eventType,
+									});
+								} catch (error) {
+									const msg = error instanceof Error ? error.message : String(error);
+									logger.error(`Polar webhook: failed to record purchase event: ${msg}`);
+								}
+							},
+						}),
+					],
 				}),
 			],
 

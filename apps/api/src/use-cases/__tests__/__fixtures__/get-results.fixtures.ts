@@ -274,7 +274,6 @@ export function setupDefaultMocks() {
 			updatedAt: new Date(),
 			status: "completed",
 			messageCount: 10,
-			personalDescription: null,
 		}),
 	);
 

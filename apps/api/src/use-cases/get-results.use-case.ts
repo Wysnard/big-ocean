@@ -11,6 +11,7 @@
  * Dependencies: AssessmentSessionRepository, AssessmentResultRepository, LoggerRepository
  */
 
+import type { EvidenceInput } from "@workspace/domain";
 import {
 	AppConfig,
 	AssessmentMessageRepository,
@@ -18,7 +19,12 @@ import {
 	AssessmentResultRepository,
 	AssessmentSessionRepository,
 	BIG_FIVE_TRAITS,
+	ConversationEvidenceRepository,
+	CostGuardRepository,
 	calculateConfidenceFromFacetScores,
+	calculateCost,
+	computeAllFacetResults,
+	computeDomainCoverage,
 	computeTraitResults,
 	extract4LetterCode,
 	FACET_DESCRIPTIONS,
@@ -31,13 +37,15 @@ import {
 	getFacetLevel,
 	LoggerRepository,
 	lookupArchetype,
+	PortraitRepository,
 	PublicProfileRepository,
 	SessionNotCompleted,
 	SessionNotFound,
+	TeaserPortraitRepository,
 	TRAIT_LETTER_MAP,
 	type TraitResult,
 } from "@workspace/domain";
-import { Effect } from "effect";
+import { Effect, Schedule } from "effect";
 
 export interface GetResultsInput {
 	readonly sessionId: string;
@@ -54,7 +62,6 @@ export interface GetResultsOutput {
 	readonly traits: readonly TraitResult[];
 	readonly facets: readonly FacetResult[];
 	readonly overallConfidence: number;
-	readonly personalDescription: string | null;
 	readonly messageCount: number;
 	readonly publicProfileId: string | null;
 	readonly shareableUrl: string | null;
@@ -72,9 +79,132 @@ const mapScoreToLevel = (traitName: string, score: number): string => {
 };
 
 /**
- * Get Assessment Results Use Case (read-only after Story 11.1)
+ * Lazy finalization: scores + teaser portrait computed inline on first GET /results.
+ * Idempotent — skips if assessment_results already exists at stage "scored" or "completed".
+ */
+const lazyFinalize = (sessionId: string, userId: string | null) =>
+	Effect.gen(function* () {
+		const sessionRepo = yield* AssessmentSessionRepository;
+		const logger = yield* LoggerRepository;
+		const conversationEvidenceRepo = yield* ConversationEvidenceRepository;
+		const assessmentResultRepo = yield* AssessmentResultRepository;
+		const costGuardRepo = yield* CostGuardRepository;
+		const teaserPortraitRepo = yield* TeaserPortraitRepository;
+		const portraitRepo = yield* PortraitRepository;
+
+		// Idempotency: check if already scored/completed
+		const existingResult = yield* assessmentResultRepo.getBySessionId(sessionId);
+		if (existingResult?.stage === "completed" || existingResult?.stage === "scored") {
+			// Already done — just ensure session is marked completed
+			if (existingResult.stage === "scored") {
+				yield* assessmentResultRepo.updateStage(sessionId, "completed");
+				yield* sessionRepo.updateSession(sessionId, {
+					status: "completed",
+					finalizationProgress: "completed",
+				});
+			}
+			return;
+		}
+
+		// Acquire lock to prevent concurrent finalization
+		const lockAcquired = yield* sessionRepo.acquireSessionLock(sessionId).pipe(
+			Effect.map(() => true),
+			Effect.catchTag("ConcurrentMessageError", () => Effect.succeed(false)),
+		);
+
+		if (!lockAcquired) {
+			// Another request is already finalizing — wait and retry read
+			// For simplicity, just fail with a retriable error message
+			return yield* Effect.fail(
+				new AssessmentResultError({
+					message: "Results are being generated, please retry in a few seconds",
+				}),
+			);
+		}
+
+		yield* Effect.gen(function* () {
+			// Fetch conversation evidence
+			const conversationEvidence = yield* conversationEvidenceRepo.findBySession(sessionId);
+			const scoringInputs: EvidenceInput[] = conversationEvidence.map((ev) => ({
+				bigfiveFacet: ev.bigfiveFacet,
+				deviation: ev.deviation as -3 | -2 | -1 | 0 | 1 | 2 | 3,
+				strength: ev.strength,
+				confidence: ev.confidence,
+				domain: ev.domain,
+			}));
+
+			logger.info("Lazy finalization: scoring from conversation evidence", {
+				sessionId,
+				evidenceCount: conversationEvidence.length,
+			});
+
+			// Compute scores
+			const facets = computeAllFacetResults(scoringInputs);
+			const traits = computeTraitResults(facets);
+			const domainCoverage = computeDomainCoverage(scoringInputs);
+
+			// Generate teaser portrait
+			const teaserOutput = yield* teaserPortraitRepo
+				.generateTeaser({
+					sessionId,
+					evidence: conversationEvidence,
+					scoringEvidence: scoringInputs,
+				})
+				.pipe(Effect.retry(Schedule.once));
+
+			// Track teaser cost (fail-open)
+			const teaserCostKey = userId ?? sessionId;
+			const teaserCost = calculateCost(teaserOutput.tokenUsage.input, teaserOutput.tokenUsage.output);
+			yield* costGuardRepo.incrementDailyCost(teaserCostKey, teaserCost.totalCents).pipe(
+				Effect.catchTag("RedisOperationError", (err) => {
+					logger.warn("Failed to track teaser portrait cost (non-blocking)", {
+						error: err.message,
+						sessionId,
+					});
+					return Effect.succeed(0);
+				}),
+			);
+
+			// Upsert assessment_results with scores + portrait
+			const upsertedResult = yield* assessmentResultRepo.upsert({
+				assessmentSessionId: sessionId,
+				facets,
+				traits,
+				domainCoverage,
+				portrait: teaserOutput.portrait,
+				stage: "scored",
+			});
+
+			// Store teaser in portraits table
+			const teaserPlaceholder = yield* portraitRepo
+				.insertPlaceholder({
+					assessmentResultId: upsertedResult.id,
+					tier: "teaser" as const,
+					modelUsed: teaserOutput.modelUsed,
+				})
+				.pipe(Effect.catchTag("DuplicatePortraitError", () => Effect.succeed(null)));
+
+			if (teaserPlaceholder) {
+				yield* portraitRepo
+					.updateContent(teaserPlaceholder.id, teaserOutput.portrait)
+					.pipe(Effect.catchTag("PortraitNotFoundError", () => Effect.void));
+			}
+
+			// Mark completed
+			yield* assessmentResultRepo.updateStage(sessionId, "completed");
+			yield* sessionRepo.updateSession(sessionId, {
+				status: "completed",
+				finalizationProgress: "completed",
+			});
+
+			logger.info("Lazy finalization complete", { sessionId });
+		}).pipe(Effect.ensuring(sessionRepo.releaseSessionLock(sessionId).pipe(Effect.orDie)));
+	});
+
+/**
+ * Get Assessment Results Use Case
  *
- * 1. Validates session exists and is completed
+ * 1. Validates session exists and is completed (or lazily finalizes if "finalizing")
  * 2. Reads persisted facet/trait scores from AssessmentResultRepository
  * 3. Generates OCEAN codes, looks up archetype
  * 4. Computes overall confidence (mean of all facet confidences)
@@ -101,8 +231,10 @@ export const getResults = (input: GetResultsInput) =>
 			);
 		}
 
-		// 2. Guard: session must be completed (Story 11.1 — no lazy finalization)
-		if (session.status !== "completed") {
+		// 2. Lazy finalization: if session is "finalizing", compute scores + portrait inline
+		if (session.status === "finalizing") {
+			yield* lazyFinalize(input.sessionId, session.userId);
+		} else if (session.status !== "completed") {
 			return yield* Effect.fail(
 				new SessionNotCompleted({
 					sessionId: input.sessionId,
@@ -184,12 +316,7 @@ export const getResults = (input: GetResultsInput) =>
 			};
 		});
 
-		// 10. Read stored portrait description
-		const personalDescription = session.personalDescription?.trim()
-			? session.personalDescription
-			: null;
-
-		// 11. Ensure public profile exists for authenticated users (private by default)
+		// 10. Ensure public profile exists for authenticated users (private by default)
 		let existingProfile = yield* profileRepo
 			.getProfileBySessionId(input.sessionId)
 			.pipe(Effect.catchAll(() => Effect.succeed(null)));
@@ -211,7 +338,6 @@ export const getResults = (input: GetResultsInput) =>
 			oceanCode4,
 			archetypeName: archetype.name,
 			overallConfidence,
-			hasPortrait: personalDescription !== null,
 		});
 
 		return {
@@ -224,7 +350,6 @@ export const getResults = (input: GetResultsInput) =>
 			traits,
 			facets,
 			overallConfidence,
-			personalDescription,
 			messageCount: messages.length,
 			publicProfileId: existingProfile?.id ?? null,
 			shareableUrl: existingProfile

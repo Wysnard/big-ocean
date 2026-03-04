@@ -3,9 +3,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import type { FacetName, TraitName } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
+import { useTheme } from "@workspace/ui/hooks/use-theme";
 import { Schema as S } from "effect";
 import { BookOpen, Loader2, MessageCircle } from "lucide-react";
 import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
+import { FinalizationWaitScreen } from "@/components/finalization-wait-screen";
 import { ResultsAuthGate } from "@/components/ResultsAuthGate";
 import { RelationshipCard } from "@/components/relationship/RelationshipCard";
 import { DetailZone } from "@/components/results/DetailZone";
@@ -27,7 +29,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useFacetEvidence } from "@/hooks/use-evidence";
 import { useToggleVisibility } from "@/hooks/use-profile";
 import { usePortraitStatus } from "@/hooks/usePortraitStatus";
-import { openPolarCheckout } from "@/lib/polar-checkout";
+import { createThemedCheckoutEmbed } from "@/lib/polar-checkout";
 import {
 	clearPendingResultsGateSession,
 	persistPendingResultsGateSession,
@@ -77,14 +79,7 @@ export const Route = createFileRoute("/results/$assessmentSessionId")({
 });
 
 function ResultsLoading() {
-	return (
-		<div className="min-h-screen bg-background flex items-center justify-center">
-			<div className="text-center">
-				<Loader2 className="h-12 w-12 motion-safe:animate-spin text-primary mx-auto mb-4" />
-				<p className="text-muted-foreground">Loading your results...</p>
-			</div>
-		</div>
-	);
+	return <FinalizationWaitScreen status="analyzing" progress={20} />;
 }
 
 /** Determine the dominant (highest-scoring) trait from results */
@@ -99,6 +94,7 @@ function ResultsSessionPage() {
 	const { view } = Route.useSearch();
 	const navigate = useNavigate();
 	const { isAuthenticated, isPending: isAuthPending, user } = useAuth();
+	const { appTheme } = useTheme();
 	const canLoadResults = isAuthenticated && !isAuthPending;
 	const { data: results, isLoading, error } = useGetResults(assessmentSessionId, canLoadResults);
 	const isNotFoundError = (value: unknown): boolean => {
@@ -295,17 +291,17 @@ function ResultsSessionPage() {
 
 	// Story 12.3: Unlock full portrait via Polar checkout
 	const handleUnlockPortrait = useCallback(async () => {
-		const checkoutUrl = import.meta.env.VITE_POLAR_PORTRAIT_CHECKOUT_URL;
-		if (!checkoutUrl || !user?.id) return;
-		const result = await openPolarCheckout({
-			checkoutLinkUrl: checkoutUrl,
-			userId: user.id,
-			theme: document.documentElement.classList.contains("dark") ? "dark" : "light",
-		});
-		if (result.success) {
-			setWaitingForUnlock(true);
+		if (!user?.id) return;
+		try {
+			const checkout = await createThemedCheckoutEmbed("portrait-unlock", appTheme);
+			checkout.addEventListener("success", (event) => {
+				event.preventDefault();
+				setWaitingForUnlock(true);
+			});
+		} catch {
+			// Checkout failed to open — no action needed
 		}
-	}, [user?.id]);
+	}, [user?.id, appTheme]);
 
 	// Story 7.18 + 12.3 + 13.3: Back to profile from reading view
 	const handleBackToProfile = useCallback(
@@ -376,12 +372,7 @@ function ResultsSessionPage() {
 		// Full portrait available → full reading view
 		const fullContent = portraitStatusData?.portrait?.content;
 		if (fullContent) {
-			return (
-				<PortraitReadingView
-					personalDescription={fullContent}
-					onViewFullProfile={handleBackToProfile}
-				/>
-			);
+			return <PortraitReadingView content={fullContent} onViewFullProfile={handleBackToProfile} />;
 		}
 
 		// Teaser available → teaser reading view with locked sections + CTA
@@ -391,16 +382,6 @@ function ResultsSessionPage() {
 				<TeaserPortraitReadingView
 					teaserContent={teaserData.content}
 					onUnlock={handleUnlockPortrait}
-					onViewFullProfile={handleBackToProfile}
-				/>
-			);
-		}
-
-		// Fallback to personalDescription
-		if (results.personalDescription) {
-			return (
-				<PortraitReadingView
-					personalDescription={results.personalDescription}
 					onViewFullProfile={handleBackToProfile}
 				/>
 			);
@@ -418,7 +399,6 @@ function ResultsSessionPage() {
 			onToggleTrait={handleToggleTrait}
 			overallConfidence={results.overallConfidence}
 			isCurated={results.isCurated}
-			personalDescription={results.personalDescription}
 			fullPortraitContent={portraitStatusData?.portrait?.content}
 			fullPortraitStatus={portraitStatusData?.status}
 			onRetryPortrait={() => void refetchPortraitStatus()}
@@ -478,9 +458,7 @@ function ResultsSessionPage() {
 					{/* Action CTAs — full-width */}
 					<div className="col-span-full flex flex-wrap justify-center gap-3 py-4">
 						{/* Show "Read portrait" button if teaser OR full portrait content is available */}
-						{(results.personalDescription ||
-							portraitStatusData?.portrait?.content ||
-							portraitStatusData?.teaser) && (
+						{(portraitStatusData?.portrait?.content || portraitStatusData?.teaser) && (
 							<Button data-testid="results-read-portrait" asChild variant="outline" className="min-h-11">
 								<Link
 									to="/results/$assessmentSessionId"

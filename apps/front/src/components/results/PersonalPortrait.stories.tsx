@@ -69,20 +69,20 @@ What would happen if the most prepared person in the room decided, just once, th
 
 export const Default: Story = {
 	args: {
-		personalDescription: fullPortrait,
+		fullPortraitContent: fullPortrait,
 	},
 };
 
 export const WithDisplayName: Story = {
 	args: {
-		personalDescription: fullPortrait,
+		fullPortraitContent: fullPortrait,
 		displayName: "Alice",
 	},
 };
 
 export const PlainTextFallback: Story = {
 	args: {
-		personalDescription:
+		fullPortraitContent:
 			"You are a deeply imaginative person with strong analytical skills and a quiet confidence. You process the world through logic first but carry more emotional depth than you let on. Your ability to see through complexity is genuine — where most people get overwhelmed, you get focused.",
 	},
 };
@@ -117,6 +117,6 @@ When was the last time you did something you knew you'd be bad at — and did it
 
 export const ShortPortrait: Story = {
 	args: {
-		personalDescription: shortPortrait,
+		fullPortraitContent: shortPortrait,
 	},
 };

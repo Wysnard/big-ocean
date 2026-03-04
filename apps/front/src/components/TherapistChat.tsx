@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { ASSESSMENT_MESSAGE_MAX_LENGTH } from "@workspace/domain";
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import { Button } from "@workspace/ui/components/button";
@@ -266,20 +266,6 @@ export function TherapistChat({
 		if (isCompleted || isFarewellReceived) return "";
 		return placeholder;
 	}, [isCompleted, isFarewellReceived, placeholder]);
-
-	// Story 11.1: Navigate to finalize route when farewell received and authenticated.
-	// Delay navigation so the farewell message from Nerin renders and can be read (Story 7.18 UX).
-	const navigateToFinalize = useNavigate();
-	useEffect(() => {
-		if (!isFarewellReceived || !isAuthenticated) return;
-		const timer = setTimeout(() => {
-			navigateToFinalize({
-				to: "/finalize/$assessmentSessionId",
-				params: { assessmentSessionId: sessionId },
-			});
-		}, 2000);
-		return () => clearTimeout(timer);
-	}, [isFarewellReceived, isAuthenticated, sessionId, navigateToFinalize]);
 
 	return (
 		<ChatContent
@@ -653,7 +639,7 @@ function ChatContent({
 				</div>
 
 				{/* Input Area — fades on farewell / completion (Story 7.18) */}
-				{isCompleted ? (
+				{(isCompleted || isFarewellReceived) && isAuthenticated ? (
 					<div className="flex justify-center py-4 px-4">
 						<Button asChild variant="outline" className="min-h-11">
 							<Link to="/results/$assessmentSessionId" params={{ assessmentSessionId: sessionId }}>

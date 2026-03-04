@@ -11,7 +11,7 @@ import { EvidenceGroup } from "./groups/evidence";
 import { HealthGroup } from "./groups/health";
 import { PortraitGroup } from "./groups/portrait";
 import { ProfileGroup } from "./groups/profile";
-import { PurchaseGroup, PurchaseWebhookGroup } from "./groups/purchase";
+import { PurchaseGroup } from "./groups/purchase";
 import { RelationshipGroup, RelationshipPublicGroup } from "./groups/relationship";
 import { WaitlistGroup } from "./groups/waitlist";
 
@@ -27,7 +27,6 @@ export class BigOceanApi extends HttpApi.make("BigOceanApi")
 	.add(ProfileGroup.prefix("/api")) // /api/public-profile/*
 	.add(EvidenceGroup.prefix("/api")) // /api/evidence/*
 	.add(PortraitGroup.prefix("/api")) // /api/portrait/:sessionId/status
-	.add(PurchaseWebhookGroup.prefix("/api")) // /api/purchase/polar-webhook (public)
 	.add(PurchaseGroup.prefix("/api")) // /api/purchase/verify (authenticated)
 	.add(RelationshipGroup.prefix("/api")) // /api/relationship/* (authenticated)
 	.add(RelationshipPublicGroup.prefix("/api")) // /api/relationship/public/* (public)

@@ -33,7 +33,6 @@ const mockSession = {
 	status: "finalizing",
 	messageCount: 25,
 	finalizationProgress: null,
-	personalDescription: null,
 };
 
 const createTestLayer = () => Layer.succeed(AssessmentSessionRepository, mockSessionRepo);

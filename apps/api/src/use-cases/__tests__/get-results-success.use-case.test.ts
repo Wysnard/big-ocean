@@ -204,7 +204,6 @@ describe("getResults Use Case", () => {
 					updatedAt: new Date(),
 					status: "completed",
 					messageCount: 10,
-					personalDescription: null,
 				}),
 			);
 
@@ -238,7 +237,6 @@ describe("getResults Use Case", () => {
 					updatedAt: new Date(),
 					status: "completed",
 					messageCount: 10,
-					personalDescription: null,
 				}),
 			);
 			mockProfileRepo.getProfileBySessionId.mockImplementation(() =>
@@ -288,38 +286,6 @@ describe("getResults Use Case", () => {
 			expect(result.archetypeName).toBeDefined();
 			expect(result.archetypeDescription).toBeDefined();
 			expect(result.archetypeColor).toBeDefined();
-		});
-
-		it("should return stored portrait description when present", async () => {
-			const STORED_PORTRAIT = "Previously generated portrait text.";
-			mockSessionRepo.getSession.mockImplementation((_sessionId: string) =>
-				Effect.succeed({
-					id: TEST_SESSION_ID,
-					sessionId: TEST_SESSION_ID,
-					userId: null,
-					createdAt: new Date(),
-					updatedAt: new Date(),
-					status: "completed",
-					messageCount: 10,
-					personalDescription: STORED_PORTRAIT,
-				}),
-			);
-
-			const result = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
-			);
-
-			expect(result.personalDescription).toBe(STORED_PORTRAIT);
-		});
-
-		it("should return null personalDescription when not set", async () => {
-			// Use default result
-
-			const result = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
-			);
-
-			expect(result.personalDescription).toBeNull();
 		});
 	});
 

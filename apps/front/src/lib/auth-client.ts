@@ -5,6 +5,7 @@
  * Connects to the Express backend at /api/auth/*
  */
 
+import { polarClient } from "@polar-sh/better-auth/client";
 import { createAuthClient } from "better-auth/react";
 
 /**
@@ -15,9 +16,11 @@ import { createAuthClient } from "better-auth/react";
  * - Cookie handling
  * - CSRF protection
  * - Request/response formatting
+ * - Polar checkout (via polarClient plugin)
  */
 export const authClient = createAuthClient({
 	baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000",
+	plugins: [polarClient()],
 });
 
 /**

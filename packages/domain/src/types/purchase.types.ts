@@ -61,6 +61,9 @@ export interface PolarWebhookEvent {
 		readonly currency: string;
 		readonly customerId?: string;
 		readonly metadata?: Record<string, unknown>;
+		readonly customer?: {
+			readonly externalId?: string;
+		};
 	};
 }
 

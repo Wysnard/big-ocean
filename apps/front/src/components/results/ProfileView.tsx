@@ -26,8 +26,6 @@ interface ProfileViewProps {
 	isCurated?: boolean;
 	/** When set, shows the profile owner's name instead of "Your" */
 	displayName?: string | null;
-	/** Personal portrait markdown (Nerin's dive-master voice, ## sections) */
-	personalDescription?: string | null;
 	/** Full portrait content when available (Story 13.3) */
 	fullPortraitContent?: string | null;
 	/** Full portrait generation status (Story 13.3) */
@@ -60,7 +58,6 @@ export function ProfileView({
 	overallConfidence,
 	isCurated,
 	displayName,
-	personalDescription,
 	fullPortraitContent,
 	fullPortraitStatus,
 	onRetryPortrait,
@@ -105,29 +102,18 @@ export function ProfileView({
 			<div className="mx-auto max-w-[1120px] px-5 py-10">
 				<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
 					{/* Portrait section — full width (Story 12.3 + 13.3) */}
-					{/* Full portrait available → PersonalPortrait */}
-					{fullPortraitContent ? (
+					{/* Portrait section (Story 12.3 + 13.3) */}
+					{fullPortraitContent ||
+					fullPortraitStatus === "generating" ||
+					fullPortraitStatus === "failed" ? (
 						<PersonalPortrait
-							personalDescription={personalDescription ?? ""}
 							displayName={displayName}
 							fullPortraitContent={fullPortraitContent}
 							fullPortraitStatus={fullPortraitStatus}
 							onRetryPortrait={onRetryPortrait}
 						/>
 					) : teaserContent && onUnlockPortrait ? (
-						/* Teaser only → TeaserPortrait with gift CTA */
 						<TeaserPortrait teaserContent={teaserContent} onUnlock={onUnlockPortrait} />
-					) : personalDescription ||
-						fullPortraitStatus === "generating" ||
-						fullPortraitStatus === "failed" ? (
-						/* Fallback: personalDescription or generating/failed states */
-						<PersonalPortrait
-							personalDescription={personalDescription ?? ""}
-							displayName={displayName}
-							fullPortraitContent={fullPortraitContent}
-							fullPortraitStatus={fullPortraitStatus}
-							onRetryPortrait={onRetryPortrait}
-						/>
 					) : null}
 
 					{/* Ocean Code Strand — full width */}

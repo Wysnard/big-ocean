@@ -85,7 +85,6 @@ const mockFinalizingSession = {
 	status: "finalizing",
 	messageCount: 25,
 	finalizationProgress: null,
-	personalDescription: null,
 };
 
 const createTestLayer = () =>

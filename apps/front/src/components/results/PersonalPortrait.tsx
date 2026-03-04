@@ -13,7 +13,6 @@ import Markdown from "react-markdown";
 import { markdownComponents, renderHeader, splitMarkdownSections } from "./portrait-markdown";
 
 interface PersonalPortraitProps {
-	personalDescription: string;
 	/** When set, shows "{name}'s Portrait" instead of "Your Personality Portrait" */
 	displayName?: string | null;
 	/** Full portrait content when available (Story 13.3) */
@@ -25,14 +24,12 @@ interface PersonalPortraitProps {
 }
 
 export const PersonalPortrait = memo(function PersonalPortrait({
-	personalDescription,
 	displayName,
 	fullPortraitContent,
 	fullPortraitStatus,
 	onRetryPortrait,
 }: PersonalPortraitProps) {
-	// Use full portrait content if available, otherwise fall back to personalDescription
-	const content = fullPortraitContent ?? personalDescription;
+	const content = fullPortraitContent ?? "";
 	const sections = useMemo(() => splitMarkdownSections(content), [content]);
 
 	const isGenerating = fullPortraitStatus === "generating";

@@ -1,20 +1,14 @@
 /**
  * Purchase HTTP API Groups (Story 13.2)
  *
- * Split into two groups:
- * - PurchaseWebhookGroup: Public webhook endpoint (no auth)
- * - PurchaseGroup: Authenticated purchase endpoints
+ * Webhook handling is now done via the @polar-sh/better-auth plugin
+ * (routes registered under Better Auth at /api/polar/webhooks).
  */
 
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema as S } from "effect";
-import { DatabaseError, WebhookVerificationError } from "../../errors";
+import { DatabaseError } from "../../errors";
 import { OptionalAuthMiddleware } from "../../middleware/auth";
-
-/**
- * Webhook Response Schema
- */
-const WebhookResponseSchema = S.Struct({ received: S.Boolean });
 
 /**
  * Verify Purchase Response Schema
@@ -29,21 +23,6 @@ const VerifyPurchaseResponseSchema = S.Struct({
 		}),
 	),
 });
-
-/**
- * Purchase Webhook Group (public — no auth middleware)
- *
- * POST /api/purchase/polar-webhook
- */
-export const PurchaseWebhookGroup = HttpApiGroup.make("purchaseWebhook")
-	.add(
-		HttpApiEndpoint.post("polarWebhook", "/polar-webhook")
-			.addSuccess(WebhookResponseSchema)
-			// No setPayload - we read raw body in handler for HMAC verification
-			.addError(WebhookVerificationError, { status: 400 })
-			.addError(DatabaseError, { status: 500 }),
-	)
-	.prefix("/purchase");
 
 /**
  * Get Credits Response Schema (Story 14.1)

@@ -64,7 +64,6 @@ export const AssessmentSessionEntitySchema = Schema.Struct({
 	status: Schema.Literal("active", "paused", "finalizing", "completed", "archived"),
 	finalizationProgress: Schema.NullOr(Schema.String),
 	messageCount: Schema.Number,
-	personalDescription: Schema.NullOr(Schema.String),
 });
 
 export type AssessmentSessionEntity = Schema.Schema.Type<typeof AssessmentSessionEntitySchema>;

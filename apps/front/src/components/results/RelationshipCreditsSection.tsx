@@ -9,15 +9,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CreateInvitationResponse, GetCreditsResponse } from "@workspace/contracts";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
+import { useTheme } from "@workspace/ui/hooks/use-theme";
 import { Heart, Loader2, Send, Users } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { InvitationBottomSheet } from "@/components/relationship/InvitationBottomSheet";
 import { useAuth } from "@/hooks/use-auth";
-import { openPolarCheckout } from "@/lib/polar-checkout";
+import { createThemedCheckoutEmbed } from "@/lib/polar-checkout";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
-const POLAR_LINK_SINGLE = import.meta.env.VITE_POLAR_CHECKOUT_RELATIONSHIP_SINGLE || "";
-const POLAR_LINK_5PACK = import.meta.env.VITE_POLAR_CHECKOUT_RELATIONSHIP_5PACK || "";
 
 function useCredits(enabled: boolean) {
 	return useQuery<GetCreditsResponse>({
@@ -61,6 +60,7 @@ function useCreateInvitation() {
 
 export function RelationshipCreditsSection() {
 	const { user } = useAuth();
+	const { appTheme } = useTheme();
 	const { data, isLoading } = useCredits(!!user);
 	const queryClient = useQueryClient();
 	const [isPurchasing, setIsPurchasing] = useState(false);
@@ -103,20 +103,23 @@ export function RelationshipCreditsSection() {
 	}, [queryClient, data?.availableCredits, stopPolling]);
 
 	const handlePurchase = useCallback(
-		async (checkoutLink: string) => {
-			if (!user?.id || !checkoutLink) return;
+		async (slug: string) => {
+			if (!user?.id) return;
 			setIsPurchasing(true);
-			const result = await openPolarCheckout({
-				checkoutLinkUrl: checkoutLink,
-				userId: user.id,
-			});
-			if (result.success) {
-				pollAndRefresh();
-			} else {
+			try {
+				const checkout = await createThemedCheckoutEmbed(slug, appTheme);
+				checkout.addEventListener("success", (event) => {
+					event.preventDefault();
+					pollAndRefresh();
+				});
+				checkout.addEventListener("close", () => {
+					setIsPurchasing(false);
+				});
+			} catch {
 				setIsPurchasing(false);
 			}
 		},
-		[user?.id, pollAndRefresh],
+		[user?.id, appTheme, pollAndRefresh],
 	);
 
 	useEffect(() => {
@@ -226,8 +229,8 @@ export function RelationshipCreditsSection() {
 					<Button
 						data-testid="get-credits-button"
 						className="w-full min-h-11"
-						onClick={() => handlePurchase(POLAR_LINK_SINGLE)}
-						disabled={isPurchasing || !POLAR_LINK_SINGLE}
+						onClick={() => handlePurchase("relationship-single")}
+						disabled={isPurchasing}
 					>
 						{isPurchasing ? (
 							<Loader2 className="h-4 w-4 mr-2 motion-safe:animate-spin" />
@@ -240,8 +243,8 @@ export function RelationshipCreditsSection() {
 						data-testid="get-credits-5pack-button"
 						variant="outline"
 						className="w-full min-h-11"
-						onClick={() => handlePurchase(POLAR_LINK_5PACK)}
-						disabled={isPurchasing || !POLAR_LINK_5PACK}
+						onClick={() => handlePurchase("relationship-5pack")}
+						disabled={isPurchasing}
 					>
 						{isPurchasing ? (
 							<Loader2 className="h-4 w-4 mr-2 motion-safe:animate-spin" />

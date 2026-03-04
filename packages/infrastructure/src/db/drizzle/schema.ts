@@ -172,7 +172,6 @@ export const assessmentSession = pgTable(
 		status: text("status").notNull().default("active"),
 		finalizationProgress: text("finalization_progress"),
 		messageCount: integer("message_count").default(0).notNull(),
-		personalDescription: text("personal_description"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at")
 			.defaultNow()

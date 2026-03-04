@@ -211,7 +211,6 @@ describe("processPurchase Portrait Generation (Story 13.3)", () => {
 		updatedAt: new Date(),
 		messageCount: 20,
 		finalizationProgress: null,
-		personalDescription: null,
 	};
 
 	const mockResult = {

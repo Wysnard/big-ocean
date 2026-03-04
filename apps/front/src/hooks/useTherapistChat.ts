@@ -133,7 +133,9 @@ export function useTherapistChat(sessionId: string) {
 			id: `msg-resume-${index}`,
 			role: msg.role,
 			content: msg.content,
-			timestamp: new Date(msg.timestamp.epochMillis),
+			timestamp: new Date(
+				typeof msg.timestamp === "string" ? msg.timestamp : msg.timestamp.epochMillis,
+			),
 		}));
 
 		// Load confidence scores (values are already 0-100, do NOT multiply)

@@ -67,7 +67,12 @@ echo ""
 echo "🌱 Auto-seeding database with test assessment..."
 echo "   (Disable with: docker compose up instead of pnpm dev)"
 echo ""
+echo "💡 For Polar webhooks: docker compose --profile ngrok up -d ngrok"
+echo ""
 echo "Press Ctrl+C to stop all services"
 echo ""
+
+# Clean up stale ngrok container to prevent network mismatch errors
+docker rm -f bigocean-ngrok 2>/dev/null || true
 
 docker compose --profile seed --env-file .env up --build

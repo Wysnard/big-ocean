@@ -1,54 +1,27 @@
 /**
- * Polar.sh Checkout Utility (Story 14.1)
+ * Polar.sh Themed Checkout Embed
  *
- * Wraps @polar-sh/checkout embedded overlay for relationship credit purchases.
+ * Calls the Better Auth checkout endpoint to get a checkout URL,
+ * then creates a PolarEmbedCheckout with the app's current theme.
  */
-
 import { PolarEmbedCheckout } from "@polar-sh/checkout/embed";
-
-interface OpenCheckoutOptions {
-	/** Polar checkout link URL */
-	checkoutLinkUrl: string;
-	/** User ID to attach as metadata for webhook processing */
-	userId: string;
-	/** Theme for the checkout overlay */
-	theme?: "light" | "dark";
-}
-
-interface CheckoutResult {
-	success: boolean;
-}
+import type { AppTheme } from "@workspace/ui/hooks/use-theme";
+import { authClient } from "./auth-client";
 
 /**
- * Opens a Polar.sh embedded checkout overlay.
+ * Creates a Polar embedded checkout overlay with the given theme.
  *
- * Returns a promise that resolves when the checkout completes or is closed.
- * The userId is passed via query parameter so the webhook can attribute the purchase.
+ * We call the server endpoint manually (instead of authClient.checkoutEmbed)
+ * so we can pass the resolved app theme to the embed overlay.
  */
-export const openPolarCheckout = ({
-	checkoutLinkUrl,
-	userId,
-	theme = "light",
-}: OpenCheckoutOptions): Promise<CheckoutResult> => {
-	return new Promise((resolve) => {
-		const url = new URL(checkoutLinkUrl);
-		url.searchParams.set("metadata[userId]", userId);
-
-		PolarEmbedCheckout.create(url.toString(), { theme })
-			.then((checkout) => {
-				checkout.addEventListener("success", (event) => {
-					// Prevent Polar's automatic redirect to success_url —
-					// we stay on the page and poll for portrait status instead.
-					event.preventDefault();
-					resolve({ success: true });
-				});
-
-				checkout.addEventListener("close", () => {
-					resolve({ success: false });
-				});
-			})
-			.catch(() => {
-				resolve({ success: false });
-			});
+export async function createThemedCheckoutEmbed(slug: string, theme: AppTheme) {
+	const res = await authClient.checkout({
+		slug,
+		redirect: false,
+		embedOrigin: window.location.origin,
 	});
-};
+	if (res.error) {
+		throw new Error(res.error.message ?? "Checkout creation failed");
+	}
+	return PolarEmbedCheckout.create(res.data.url, { theme });
+}

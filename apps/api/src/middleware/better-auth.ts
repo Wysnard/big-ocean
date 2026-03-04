@@ -16,7 +16,7 @@ import { toNodeHandler } from "better-auth/node";
  */
 function isBetterAuthRoute(url: string | undefined): boolean {
 	if (!url) return false;
-	return url.startsWith("/api/auth");
+	return url.startsWith("/api/auth") || url.startsWith("/api/polar");
 }
 
 /**
