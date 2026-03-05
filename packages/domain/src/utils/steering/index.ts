@@ -22,3 +22,16 @@ export {
 	type RealizeMicroIntentInput,
 	realizeMicroIntent,
 } from "./realize-micro-intent";
+// Territory Scoring (Story 21-3)
+export {
+	buildFacetEvidenceCounts,
+	computeCoverageValue,
+	computeFreshnessBonus,
+	extractTerritoryScorerConfig,
+	type ScoredTerritory,
+	scoreAllTerritories,
+	scoreTerritory,
+	selectTerritory,
+	type TerritoryScorerConfig,
+	type TerritoryVisitHistory,
+} from "./territory-scorer";

@@ -177,6 +177,23 @@ export interface AppConfigService {
 
 	/** Range for heavy energy fit curve (default: 0.25) */
 	readonly drsHeavyFitRange: number;
+
+	// ─── Territory Scoring Configuration (Story 21-3) ──────────────────
+
+	/** Minimum evidence count to consider a facet "covered" (default: 3) */
+	readonly territoryMinEvidenceThreshold: number;
+
+	/** Maximum times a territory can be visited per conversation (default: 2) */
+	readonly territoryMaxVisits: number;
+
+	/** Freshness bonus growth per exchange since last visit (default: 0.05) */
+	readonly territoryFreshnessRate: number;
+
+	/** Minimum freshness bonus (default: 0.8) */
+	readonly territoryFreshnessMin: number;
+
+	/** Maximum freshness bonus — capped at 1.2 per failure mode analysis (default: 1.2) */
+	readonly territoryFreshnessMax: number;
 }
 
 /**

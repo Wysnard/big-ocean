@@ -68,6 +68,12 @@ export const mockAppConfig: AppConfigService = {
 	drsMediumFitRange: 0.35,
 	drsHeavyFitCenter: 0.65,
 	drsHeavyFitRange: 0.25,
+	// Territory Scoring (Story 21-3)
+	territoryMinEvidenceThreshold: 3,
+	territoryMaxVisits: 2,
+	territoryFreshnessRate: 0.05,
+	territoryFreshnessMin: 0.8,
+	territoryFreshnessMax: 1.2,
 };
 
 export const createTestAppConfigLayer = () => Layer.succeed(AppConfig, mockAppConfig);
