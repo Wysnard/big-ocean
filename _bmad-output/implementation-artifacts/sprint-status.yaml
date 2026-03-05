@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-05 (refreshed 12 — story 21-6 pr-ready)
+generated: 2026-03-05 (refreshed 13 — story 21-6 merged to done)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -355,7 +355,7 @@ development_status:
   21-3-territory-scoring-and-selection: done
   21-4-cold-start-territory-selection: done
   21-5-territory-prompt-builder-and-nerin-system-prompt: done
-  21-6-schema-migration-and-conversanalyzer-energy-classification: pr-ready
+  21-6-schema-migration-and-conversanalyzer-energy-classification: done
   21-7-pipeline-orchestration-integration: backlog
   epic-21-retrospective: optional
 
