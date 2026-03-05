@@ -23,9 +23,21 @@ describe("buildChatSystemPrompt — persona and structure", () => {
 		expect(prompt).toContain("QUESTIONING STYLE:");
 		expect(prompt).toContain("RESPONSE FORMAT");
 		expect(prompt).toContain("CONVERSATION AWARENESS");
-		expect(prompt).toContain("DEPTH PROGRESSION");
 		expect(prompt).toContain("HUMOR");
 		expect(prompt).toContain("WHAT STAYS INTERNAL");
+	});
+
+	it("does not contain DEPTH PROGRESSION section (Story 22-1: steering removed from character)", () => {
+		const prompt = buildChatSystemPrompt();
+		expect(prompt).not.toContain("DEPTH PROGRESSION");
+		expect(prompt).not.toContain("LATE-CONVERSATION DEPTH");
+		expect(prompt).not.toContain("messages ~14-18");
+	});
+
+	it("retains vulnerability response and depth celebration as personality patterns", () => {
+		const prompt = buildChatSystemPrompt();
+		expect(prompt).toContain("MEET VULNERABILITY FIRST");
+		expect(prompt).toContain("CELEBRATE NEW DEPTH");
 	});
 
 	it("includes the full NERIN_PERSONA constant", () => {
@@ -56,10 +68,10 @@ describe("buildChatSystemPrompt — persona and structure", () => {
 		expect(prompt).toContain("Save your reads for the portrait");
 	});
 
-	it("contains conversation awareness and depth progression instructions", () => {
+	it("contains conversation awareness instructions (depth progression removed)", () => {
 		const prompt = buildChatSystemPrompt();
 		expect(prompt).toContain("CONVERSATION AWARENESS");
-		expect(prompt).toContain("DEPTH PROGRESSION");
+		expect(prompt).not.toContain("DEPTH PROGRESSION");
 	});
 
 	it("contains mirror library reference (AC3)", () => {
@@ -80,7 +92,8 @@ describe("buildChatSystemPrompt — persona and structure", () => {
 		const prompt = buildChatSystemPrompt();
 		expect(prompt).toContain("CONTRADICTIONS ARE FEATURES, NOT BUGS");
 		expect(prompt).toContain("THE MOST INTERESTING THING IS USUALLY WHAT THEY THINK IS ORDINARY");
-		expect(prompt).toContain("PEOPLE ARE MORE READY FOR TRUTH THAN THEY THINK");
+		expect(prompt).toContain("PEOPLE DISCOVER MORE WHEN THEY FEEL SAFE TO EXPLORE");
+		expect(prompt).not.toContain("PEOPLE ARE MORE READY FOR TRUTH THAN THEY THINK");
 		expect(prompt).toContain("EVERY DIVE TEACHES YOU SOMETHING");
 	});
 
@@ -89,6 +102,12 @@ describe("buildChatSystemPrompt — persona and structure", () => {
 		expect(prompt).toContain("THREADING");
 		expect(prompt).toContain("FLAG it and LEAVE it");
 		expect(prompt).toContain("PARK explicitly and PICK ONE");
+	});
+
+	it("retains contradiction-surfacing (deferred to Story 2.3)", () => {
+		const prompt = buildChatSystemPrompt();
+		expect(prompt).toContain("CONTRADICTIONS ARE FEATURES, NOT BUGS");
+		expect(prompt).toContain("Surface them as threads");
 	});
 
 	it("contains emoji palette (AC5 — moved from persona)", () => {
