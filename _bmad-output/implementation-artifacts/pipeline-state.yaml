@@ -1,7 +1,7 @@
 # Pipeline State — auto-generated, do not edit manually
 parallelism_step: 1
-parallelism_step_name: "Scoring + portrait migration"
-baseline_commit: "937e9131bbbb1bb05265b80be17bf702447d48cd"
+parallelism_step_name: "Cold-start + prompt builder"
+baseline_commit: "cfdf08b88a1f1d0e91af795526a7ad5d31c82af6"
 created: "2026-03-05"
 last_updated: "2026-03-05"
 
@@ -14,17 +14,17 @@ context_docs:
 
 # Stories in this step
 stories:
-  21-3-territory-scoring-and-selection:
+  21-4-cold-start-territory-selection:
     status: done
     mode: "parallel"
-    notes: "Pure domain functions; depends on 21-2 (done)"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/116"
-    dev_branch: "feat/story-21-3-territory-scoring-and-selection"
+    notes: "Uses catalog + scoring; depends on 21-3 (done)"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/117"
+    dev_branch: "feat/story-21-4-cold-start-territory-selection"
     error: null
-  22-3-contradiction-surfacing-migration-to-portrait-generator:
+  21-5-territory-prompt-builder-and-nerin-system-prompt:
     status: done
     mode: "parallel"
-    notes: "Epic 22; modifies nerin-chat-context.ts + portrait generator; depends on 22-1 (done)"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/115"
-    dev_branch: "feat/story-22-3-contradiction-surfacing-migration-to-portrait-generator"
+    notes: "Catalog lookup + system prompt; depends on 21-1 (done)"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/118"
+    dev_branch: "feat/story-21-5-territory-prompt-builder-and-nerin-system-prompt"
     error: null
