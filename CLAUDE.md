@@ -10,7 +10,7 @@ When working on frontend code (`apps/front` or `packages/ui`), consult [FRONTEND
 
 **Worktree isolation rule:** When running in a git worktree (e.g., spawned via `isolation: "worktree"`), ONLY read and modify files within the worktree directory. Do NOT access the main repository working tree unless the user explicitly asks you to.
 
-**Related docs:** [ARCHITECTURE.md](./_bmad-output/planning-artifacts/architecture.md) (consolidated, authoritative) | [Aspirational Architecture](./_bmad-output/planning-artifacts/architecture-aspirational.md) (future plans) | [COMMANDS.md](./docs/COMMANDS.md) | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) | [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md) | [API-CONTRACT-SPECIFICATION.md](./docs/API-CONTRACT-SPECIFICATION.md) | [FRONTEND.md](./docs/FRONTEND.md)
+**Related docs:** [ARCHITECTURE.md](./_bmad-output/planning-artifacts/architecture.md) (consolidated, authoritative) | [COMMANDS.md](./docs/COMMANDS.md) | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) | [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md) | [API-CONTRACT-SPECIFICATION.md](./docs/API-CONTRACT-SPECIFICATION.md) | [FRONTEND.md](./docs/FRONTEND.md)
 
 ## Repository Overview
 

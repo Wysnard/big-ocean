@@ -11,7 +11,6 @@ inputDocuments:
   - '_bmad-output/planning-artifacts/architecture-conversation-pipeline.md'
   - '_bmad-output/planning-artifacts/architecture-innovation-strategy.md'
   - '_bmad-output/planning-artifacts/architecture-archetype-description-storage.md'
-  - '_bmad-output/planning-artifacts/architecture-aspirational.md'
   - '_bmad-output/planning-artifacts/public-profile-redesign-architecture.md'
   - '_bmad-output/planning-artifacts/architecture/architecture-decision-records.md'
   - '_bmad-output/planning-artifacts/architecture/adr-6-hexagonal-architecture-dependency-inversion.md'

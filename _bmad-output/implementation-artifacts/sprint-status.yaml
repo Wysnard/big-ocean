@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-02 (refreshed 5 — post 18-5 & 18-6 merge, epic 18 complete)
+generated: 2026-03-05 (refreshed 6 — added Conversation Experience Evolution epics 21-22)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -328,3 +328,46 @@ development_status:
   # 20-1-evidence-annotations-api-endpoint: deferred
   # 20-2-conversation-review-ui-with-inline-annotations: deferred
   # epic-20-retrospective: optional
+
+# ═══════════════════════════════════════════════════════════════
+# PHASE 4: Conversation Experience Evolution
+# ═══════════════════════════════════════════════════════════════
+# Source: _bmad-output/planning-artifacts/epics.md (CEE section)
+# Architecture: _bmad-output/planning-artifacts/architecture-conversation-experience-evolution.md
+# Territory-based steering replaces facet-targeted steering,
+# DRS drives energy pacing, character bible reform for natural conversations
+#
+# NUMBERING: Continues from Phase 3 (21+).
+# Cross-reference: epics.md (CEE) "Epic N" = sprint-status "Epic N+20"
+#   CEE Epic 1 (Territory-Based Conversation Steering) = Epic 21
+#   CEE Epic 2 (Nerin Character Evolution) = Epic 22
+
+  # ───────────────────────────────────────────────────────────────
+  # CEE EPIC 1: Territory-Based Conversation Steering (Epic 21)
+  # Territory catalog, DRS, scoring formula, cold-start, prompt builder,
+  # ConversAnalyzer energy classification, pipeline orchestration
+  # Stories: 1.1-1.7 in epics.md (CEE)
+  # Phase 1 is ATOMIC across domain + infrastructure + api
+  # ───────────────────────────────────────────────────────────────
+  epic-21: backlog
+  21-1-territory-domain-types-and-catalog: backlog
+  21-2-depth-readiness-score-drs: backlog
+  21-3-territory-scoring-and-selection: backlog
+  21-4-cold-start-territory-selection: backlog
+  21-5-territory-prompt-builder-and-nerin-system-prompt: backlog
+  21-6-schema-migration-and-conversanalyzer-energy-classification: backlog
+  21-7-pipeline-orchestration-integration: backlog
+  epic-21-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # CEE EPIC 2: Nerin Character Evolution (Epic 22)
+  # Character bible reform, relate > reflect, story-pulling,
+  # contradiction-surfacing migration to portrait generator
+  # Stories: 2.1-2.3 in epics.md (CEE)
+  # INDEPENDENT of Epic 21 — zero data flow coupling
+  # ───────────────────────────────────────────────────────────────
+  epic-22: backlog
+  22-1-remove-steering-instructions-from-character-bible: backlog
+  22-2-relate-reflect-and-story-pulling-patterns: backlog
+  22-3-contradiction-surfacing-migration-to-portrait-generator: backlog
+  epic-22-retrospective: optional
