@@ -50,7 +50,27 @@ To finalize the pipeline by updating sprint status for completed stories, report
 
 **CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise.
 
-### 1. Load Final Pipeline State
+### 1. Remove Worktrees
+
+Subagents created git worktrees during execution. These MUST be removed before the PR Verification workflow can checkout the branches. A branch checked out in a worktree cannot be checked out elsewhere — git will refuse.
+
+```bash
+git worktree list
+```
+
+For each worktree that is NOT the main working tree:
+```bash
+git worktree remove --force <worktree-path>
+```
+
+After removal, verify:
+```bash
+git worktree list
+```
+
+Only the main working tree should remain. If any worktree removal fails, report the error but continue — do not HALT.
+
+### 2. Load Final Pipeline State
 
 Read {pipelineState} completely.
 
@@ -58,7 +78,7 @@ Collect:
 - All stories with status "done" → list PR URLs
 - All stories with status "halted" → list errors and halted stages
 
-### 2. Update Sprint Status
+### 3. Update Sprint Status
 
 Read {sprintStatus}.
 
@@ -73,7 +93,7 @@ git add {sprintStatus}
 git commit -m "chore: update sprint status — mark completed stories as pr-ready"
 ```
 
-### 3. Present Final Summary
+### 4. Present Final Summary
 
 Output the final pipeline report:
 
@@ -107,7 +127,7 @@ Output the final pipeline report:
 - Investigate halted stories and re-run pipeline with `step-01b-continue`
 - When all stories in this step are merged, run pipeline again for next parallelism plan step"
 
-### 4. Pipeline End
+### 5. Pipeline End
 
 This is the FINAL step. The workflow is complete.
 
@@ -127,6 +147,7 @@ This is the terminal step. After presenting the final summary, the workflow is D
 
 ### ✅ SUCCESS:
 
+- All subagent worktrees removed (branches unblocked for PR verification)
 - Pipeline state loaded with final results
 - Sprint status updated for completed stories
 - Sprint status committed
@@ -137,6 +158,7 @@ This is the terminal step. After presenting the final summary, the workflow is D
 
 ### ❌ SYSTEM FAILURE:
 
+- Not removing worktrees (blocks PR verification branch checkout)
 - Not updating sprint status for completed stories
 - Not committing sprint status changes
 - Not reporting halted story details
