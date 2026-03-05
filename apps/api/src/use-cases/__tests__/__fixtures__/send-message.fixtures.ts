@@ -194,6 +194,7 @@ export const mockConversanalyzerOutput = {
 			note: "Trusting nature",
 		},
 	],
+	observedEnergyLevel: "medium" as const,
 	tokenUsage: { input: 200, output: 50 },
 };
 

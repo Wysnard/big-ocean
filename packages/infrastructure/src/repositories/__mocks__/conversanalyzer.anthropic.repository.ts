@@ -48,6 +48,7 @@ const defaultOutput: ConversanalyzerOutput = {
 			note: "Indicates baseline trust in social interactions",
 		},
 	],
+	observedEnergyLevel: "medium",
 	tokenUsage: { input: 0, output: 0 },
 };
 

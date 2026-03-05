@@ -208,6 +208,8 @@ export const assessmentMessage = pgTable(
 		targetDomain: evidenceDomainEnum("target_domain"),
 		targetBigfiveFacet: bigfiveFacetNameEnum("target_bigfive_facet"),
 		intentType: text("intent_type"),
+		territoryId: text("territory_id"),
+		observedEnergyLevel: text("observed_energy_level"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => [index("assessment_message_session_created_idx").on(table.sessionId, table.createdAt)],

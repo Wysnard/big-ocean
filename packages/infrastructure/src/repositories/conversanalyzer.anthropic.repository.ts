@@ -16,6 +16,8 @@ import {
 	ConversanalyzerError,
 	type ConversanalyzerInput,
 	ConversanalyzerRepository,
+	ENERGY_LEVELS,
+	type EnergyLevel,
 	FACET_PROMPT_DEFINITIONS,
 	LIFE_DOMAINS,
 	LoggerRepository,
@@ -36,6 +38,7 @@ const EvidenceItemSchema = S.Struct({
 
 const EvidenceExtractionSchema = S.Struct({
 	evidence: S.Array(EvidenceItemSchema),
+	observedEnergyLevel: S.Literal(...ENERGY_LEVELS),
 });
 
 /** JSON Schema for Anthropic tool input_schema */
@@ -126,7 +129,16 @@ Aim for at least 30% of evidence records to have negative deviations. If all you
 
 5. Extract all evidence records that meet moderate or higher strength AND confidence — do not limit yourself to a fixed number, but only include signals you are genuinely confident about
 6. If the same observation reveals personality in different domain contexts, create separate records with different domains
-7. Prefer specific domains over "other" — most messages fit work, relationships, family, leisure, or solo`;
+7. Prefer specific domains over "other" — most messages fit work, relationships, family, leisure, or solo
+
+## Energy Classification
+Classify the emotional weight of the user's latest message as one of:
+- "light": Casual, surface-level sharing — everyday topics, small talk, brief responses
+- "medium": Some self-reflection, moderate vulnerability — sharing opinions, preferences, or mild personal experiences
+- "heavy": Deep emotional disclosure, high vulnerability — sharing fears, struggles, formative experiences, or strong emotions
+
+Classify based on the EMOTIONAL WEIGHT of the content, not the message length. A short message can be heavy ("My dad left when I was 5") and a long message can be light (detailed hobby description).
+Set the observedEnergyLevel field accordingly.`;
 }
 
 // ─── MOCK_LLM fallback for Docker integration tests ──────────────────────────
@@ -140,6 +152,7 @@ function mockAnalyze(): {
 		domain: string;
 		note: string;
 	}>;
+	observedEnergyLevel: EnergyLevel;
 	tokenUsage: { input: number; output: number };
 } {
 	return {
@@ -161,6 +174,7 @@ function mockAnalyze(): {
 				note: "Indicates baseline trust in social interactions",
 			},
 		],
+		observedEnergyLevel: "medium",
 		tokenUsage: { input: 0, output: 0 },
 	};
 }
@@ -200,6 +214,7 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 									domain: e.domain as (typeof LIFE_DOMAINS)[number],
 									note: e.note,
 								})),
+								observedEnergyLevel: mock.observedEnergyLevel,
 								tokenUsage: mock.tokenUsage,
 							};
 						}
@@ -236,6 +251,7 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 
 						logger.info("Conversanalyzer extraction complete", {
 							evidenceCount: parsed.evidence.length,
+							observedEnergyLevel: parsed.observedEnergyLevel,
 							tokenUsage,
 						});
 
@@ -248,6 +264,7 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 								domain: e.domain,
 								note: e.note,
 							})),
+							observedEnergyLevel: parsed.observedEnergyLevel,
 							tokenUsage,
 						};
 					},
