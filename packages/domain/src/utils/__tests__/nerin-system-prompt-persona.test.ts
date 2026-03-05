@@ -17,7 +17,9 @@ describe("buildChatSystemPrompt — persona and structure", () => {
 		const prompt = buildChatSystemPrompt();
 		expect(prompt).toContain("CONVERSATION MODE:");
 		expect(prompt).toContain("HOW TO BEHAVE — BELIEFS IN ACTION");
-		expect(prompt).toContain("OBSERVATION + QUESTION FORMAT");
+		expect(prompt).toContain("RELATE > REFLECT");
+		expect(prompt).toContain("STORY-PULLING");
+		expect(prompt).toContain("OBSERVATION + QUESTION");
 		expect(prompt).toContain("THREADING");
 		expect(prompt).toContain("NATURAL WORLD MIRRORS");
 		expect(prompt).toContain("QUESTIONING STYLE:");
@@ -113,5 +115,78 @@ describe("buildChatSystemPrompt — persona and structure", () => {
 	it("contains emoji palette (AC5 — moved from persona)", () => {
 		const prompt = buildChatSystemPrompt();
 		expect(prompt).toContain("🐢 🐠 🐙 🦈 🐚 🪸");
+	});
+
+	// Story 22-2: Relate > Reflect & Story-Pulling Patterns
+	describe("Story 22-2 — relate > reflect & story-pulling", () => {
+		it("contains relate > reflect as primary interaction pattern (AC1)", () => {
+			const prompt = buildChatSystemPrompt();
+			expect(prompt).toContain("RELATE > REFLECT");
+			expect(prompt).toContain("primary interaction pattern");
+		});
+
+		it("contains at least 5 relate > reflect patterns with AI-truthful framing (AC1)", () => {
+			const prompt = buildChatSystemPrompt();
+			// AI-truthful framing markers
+			const truthfulMarkers = [
+				"In conversations I've had",
+				"Something I notice",
+				"What often comes up",
+				"I've found that",
+				"One thing that keeps surfacing",
+			];
+			let matchCount = 0;
+			for (const marker of truthfulMarkers) {
+				if (prompt.includes(marker)) matchCount++;
+			}
+			expect(matchCount).toBeGreaterThanOrEqual(5);
+		});
+
+		it("explicitly prohibits hallucination-adjacent language (AC1)", () => {
+			const prompt = buildChatSystemPrompt();
+			// The prompt should contain NEVER-use instructions warning against these phrases
+			expect(prompt).toContain('NEVER use: "I\'ve seen people who..."');
+			expect(prompt).toContain('"People I know..."');
+		});
+
+		it("contains story-pulling as primary question type (AC2)", () => {
+			const prompt = buildChatSystemPrompt();
+			expect(prompt).toContain("STORY-PULLING");
+			expect(prompt).toContain("primary question type");
+		});
+
+		it("contains at least 5 story-pulling patterns (AC2)", () => {
+			const prompt = buildChatSystemPrompt();
+			const storyPullingPatterns = [
+				"Tell me about a time",
+				"Walk me through",
+				"What was it like when",
+				"Can you think of a moment",
+				"How did that actually play out",
+			];
+			let matchCount = 0;
+			for (const pattern of storyPullingPatterns) {
+				if (prompt.includes(pattern)) matchCount++;
+			}
+			expect(matchCount).toBeGreaterThanOrEqual(5);
+		});
+
+		it("repositions observation + question as secondary tool (AC3)", () => {
+			const prompt = buildChatSystemPrompt();
+			// Should NOT be called "Your core move" anymore
+			expect(prompt).not.toContain("Your core move");
+			// Should contain language indicating it's a secondary/supplementary tool
+			expect(prompt).toContain("OBSERVATION + QUESTION");
+		});
+
+		it("includes territory bridges in natural world mirrors (AC4)", () => {
+			const prompt = buildChatSystemPrompt();
+			expect(prompt).toContain("TERRITORY BRIDGES");
+		});
+
+		it("includes 'it's okay to not know' normalization (AC5)", () => {
+			const prompt = buildChatSystemPrompt();
+			expect(prompt).toContain("IT'S OKAY TO NOT KNOW");
+		});
 	});
 });
