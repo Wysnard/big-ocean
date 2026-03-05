@@ -415,20 +415,30 @@ export {
 	computeDomainCoverage,
 	computeTraitResults,
 } from "./utils/score-computation";
-// Steering utilities (Story 2.3, 17.2, 21-2)
+// Steering utilities (Story 2.3, 17.2, 21-2, 21-3)
 export {
+	buildFacetEvidenceCounts,
 	computeBreadth,
+	computeCoverageValue,
 	computeDomainStreak,
 	computeDRS,
 	computeEnergyFit,
 	computeEnergyMultiplier,
 	computeEngagement,
+	computeFreshnessBonus,
 	type DRSConfig,
 	type DRSInput,
 	extractDRSConfig,
+	extractTerritoryScorerConfig,
 	INTENT_TYPES,
 	type IntentType,
 	type MicroIntent,
 	type RealizeMicroIntentInput,
 	realizeMicroIntent,
+	type ScoredTerritory,
+	scoreAllTerritories,
+	scoreTerritory,
+	selectTerritory,
+	type TerritoryScorerConfig,
+	type TerritoryVisitHistory,
 } from "./utils/steering";

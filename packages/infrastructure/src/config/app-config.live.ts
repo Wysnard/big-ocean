@@ -136,6 +136,15 @@ const configSchema = Config.all({
 	drsMediumFitRange: Config.number("DRS_MEDIUM_FIT_RANGE").pipe(Config.withDefault(0.35)),
 	drsHeavyFitCenter: Config.number("DRS_HEAVY_FIT_CENTER").pipe(Config.withDefault(0.65)),
 	drsHeavyFitRange: Config.number("DRS_HEAVY_FIT_RANGE").pipe(Config.withDefault(0.25)),
+
+	// Territory Scoring configuration (Story 21-3)
+	territoryMinEvidenceThreshold: Config.number("TERRITORY_MIN_EVIDENCE_THRESHOLD").pipe(
+		Config.withDefault(3),
+	),
+	territoryMaxVisits: Config.number("TERRITORY_MAX_VISITS").pipe(Config.withDefault(2)),
+	territoryFreshnessRate: Config.number("TERRITORY_FRESHNESS_RATE").pipe(Config.withDefault(0.05)),
+	territoryFreshnessMin: Config.number("TERRITORY_FRESHNESS_MIN").pipe(Config.withDefault(0.8)),
+	territoryFreshnessMax: Config.number("TERRITORY_FRESHNESS_MAX").pipe(Config.withDefault(1.2)),
 });
 
 /**
