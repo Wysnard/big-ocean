@@ -415,9 +415,11 @@ export {
 	computeDomainCoverage,
 	computeTraitResults,
 } from "./utils/score-computation";
-// Steering utilities (Story 2.3, 17.2, 21-2, 21-3, 21-4)
+// Steering utilities (Story 2.3, 17.2, 21-2, 21-3, 21-4, 21-5)
 export {
 	buildFacetEvidenceCounts,
+	buildTerritoryPrompt,
+	buildTerritorySystemPromptSection,
 	computeBreadth,
 	computeCoverageValue,
 	computeDomainStreak,
@@ -441,6 +443,7 @@ export {
 	selectColdStartTerritory,
 	selectTerritory,
 	selectTerritoryWithColdStart,
+	type TerritoryPromptContent,
 	type TerritoryScorerConfig,
 	type TerritoryVisitHistory,
 } from "./utils/steering";

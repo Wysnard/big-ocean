@@ -24,6 +24,12 @@ export {
 	type RealizeMicroIntentInput,
 	realizeMicroIntent,
 } from "./realize-micro-intent";
+// Territory Prompt Builder (Story 21-5)
+export {
+	buildTerritoryPrompt,
+	buildTerritorySystemPromptSection,
+	type TerritoryPromptContent,
+} from "./territory-prompt-builder";
 // Territory Scoring (Story 21-3)
 export {
 	buildFacetEvidenceCounts,
