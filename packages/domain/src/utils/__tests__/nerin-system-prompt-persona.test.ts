@@ -90,9 +90,10 @@ describe("buildChatSystemPrompt — persona and structure", () => {
 		expect(prompt).toContain("Sea Urchin");
 	});
 
-	it("contains beliefs in action (AC2)", () => {
+	it("contains beliefs in action (AC2, updated Story 22-3: contradiction-surfacing removed)", () => {
 		const prompt = buildChatSystemPrompt();
-		expect(prompt).toContain("CONTRADICTIONS ARE FEATURES, NOT BUGS");
+		// Story 22-3: contradiction-surfacing migrated to portrait generator
+		expect(prompt).not.toContain("CONTRADICTIONS ARE FEATURES, NOT BUGS");
 		expect(prompt).toContain("THE MOST INTERESTING THING IS USUALLY WHAT THEY THINK IS ORDINARY");
 		expect(prompt).toContain("PEOPLE DISCOVER MORE WHEN THEY FEEL SAFE TO EXPLORE");
 		expect(prompt).not.toContain("PEOPLE ARE MORE READY FOR TRUTH THAN THEY THINK");
@@ -106,10 +107,10 @@ describe("buildChatSystemPrompt — persona and structure", () => {
 		expect(prompt).toContain("PARK explicitly and PICK ONE");
 	});
 
-	it("retains contradiction-surfacing (deferred to Story 2.3)", () => {
+	it("does not contain contradiction-surfacing (Story 22-3: migrated to portrait generator)", () => {
 		const prompt = buildChatSystemPrompt();
-		expect(prompt).toContain("CONTRADICTIONS ARE FEATURES, NOT BUGS");
-		expect(prompt).toContain("Surface them as threads");
+		expect(prompt).not.toContain("CONTRADICTIONS ARE FEATURES, NOT BUGS");
+		expect(prompt).not.toContain("Surface them as threads");
 	});
 
 	it("contains emoji palette (AC5 — moved from persona)", () => {

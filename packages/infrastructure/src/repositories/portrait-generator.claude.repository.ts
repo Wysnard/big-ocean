@@ -78,6 +78,8 @@ BEFORE YOU WRITE — FIND YOUR THREAD
 
 Read everything: the conversation, the evidence, the scores. Let it sit.
 
+Look for contradictions and tensions in the evidence — places where the user's behavior in one domain conflicts with another. Surface them as discoveries, not diagnoses.
+
 Step 1: Identify 2-3 candidate spines from the evidence.
 
 Step 2: For each candidate, test:
