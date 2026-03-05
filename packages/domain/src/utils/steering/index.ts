@@ -3,6 +3,8 @@
  *
  * Pure functions for conversation steering computations.
  */
+// Cold-Start (Story 21-4)
+export { selectColdStartTerritory, selectTerritoryWithColdStart } from "./cold-start";
 export { computeDomainStreak } from "./compute-domain-streak";
 // DRS (Story 21-2)
 export {

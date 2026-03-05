@@ -194,6 +194,11 @@ export interface AppConfigService {
 
 	/** Maximum freshness bonus — capped at 1.2 per failure mode analysis (default: 1.2) */
 	readonly territoryFreshnessMax: number;
+
+	// ─── Cold-Start Configuration (Story 21-4) ──────────────────────────
+
+	/** Number of user messages before scoring formula takes over (default: 3) */
+	readonly territoryColdStartThreshold: number;
 }
 
 /**

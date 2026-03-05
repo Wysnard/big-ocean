@@ -145,6 +145,11 @@ const configSchema = Config.all({
 	territoryFreshnessRate: Config.number("TERRITORY_FRESHNESS_RATE").pipe(Config.withDefault(0.05)),
 	territoryFreshnessMin: Config.number("TERRITORY_FRESHNESS_MIN").pipe(Config.withDefault(0.8)),
 	territoryFreshnessMax: Config.number("TERRITORY_FRESHNESS_MAX").pipe(Config.withDefault(1.2)),
+
+	// Cold-Start configuration (Story 21-4)
+	territoryColdStartThreshold: Config.number("TERRITORY_COLD_START_THRESHOLD").pipe(
+		Config.withDefault(3),
+	),
 });
 
 /**
