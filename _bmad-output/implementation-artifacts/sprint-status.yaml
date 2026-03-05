@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-05 (refreshed 7 — stories 21-1 and 22-1 merged to done)
+generated: 2026-03-05 (refreshed 8 — stories 21-2 and 22-2 merged to done)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -351,7 +351,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-21: in-progress
   21-1-territory-domain-types-and-catalog: done
-  21-2-depth-readiness-score-drs: backlog
+  21-2-depth-readiness-score-drs: done
   21-3-territory-scoring-and-selection: backlog
   21-4-cold-start-territory-selection: backlog
   21-5-territory-prompt-builder-and-nerin-system-prompt: backlog
@@ -368,6 +368,6 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-22: in-progress
   22-1-remove-steering-instructions-from-character-bible: done
-  22-2-relate-reflect-and-story-pulling-patterns: backlog
+  22-2-relate-reflect-and-story-pulling-patterns: done
   22-3-contradiction-surfacing-migration-to-portrait-generator: backlog
   epic-22-retrospective: optional
