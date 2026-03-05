@@ -69,6 +69,7 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 								note: "Creative",
 							},
 						],
+						observedEnergyLevel: "medium" as const,
 						tokenUsage: { input: 200, output: 50 },
 					}),
 				);
@@ -150,6 +151,7 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 								note: "Assertive",
 							},
 						],
+						observedEnergyLevel: "medium" as const,
 						tokenUsage: { input: 200, output: 50 },
 					}),
 				);
@@ -185,6 +187,7 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 								note: "Curious",
 							},
 						],
+						observedEnergyLevel: "medium" as const,
 						tokenUsage: { input: 200, output: 50 },
 					}),
 				);

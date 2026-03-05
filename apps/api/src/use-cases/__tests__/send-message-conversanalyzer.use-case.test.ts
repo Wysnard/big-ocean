@@ -178,6 +178,7 @@ describe("sendMessage Use Case", () => {
 								note: "Giving",
 							},
 						],
+						observedEnergyLevel: "medium" as const,
 						tokenUsage: { input: 200, output: 50 },
 					}),
 				);
@@ -200,7 +201,11 @@ describe("sendMessage Use Case", () => {
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockConversanalyzerRepo.analyze.mockReturnValue(
-					Effect.succeed({ evidence: [], tokenUsage: { input: 100, output: 20 } }),
+					Effect.succeed({
+						evidence: [],
+						observedEnergyLevel: "light" as const,
+						tokenUsage: { input: 100, output: 20 },
+					}),
 				);
 
 				const result = yield* sendMessage({

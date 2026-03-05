@@ -10,6 +10,7 @@ import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 import type { EvidenceInput } from "../types/evidence";
 import type { DomainMessage } from "../types/message";
+import type { EnergyLevel } from "../types/territory";
 import type { DomainDistribution } from "../utils/domain-distribution";
 
 export class ConversanalyzerError extends S.TaggedError<ConversanalyzerError>()(
@@ -29,6 +30,8 @@ export interface ConversanalyzerInput {
 export interface ConversanalyzerOutput {
 	/** Extracted facet evidence (0-5 records, v2 format) */
 	readonly evidence: (EvidenceInput & { readonly note: string })[];
+	/** Observed emotional energy level of the user's response (Story 21-6) */
+	readonly observedEnergyLevel: EnergyLevel;
 	/** Token usage for cost tracking */
 	readonly tokenUsage: { readonly input: number; readonly output: number };
 }

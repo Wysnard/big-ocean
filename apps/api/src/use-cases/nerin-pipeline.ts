@@ -129,7 +129,11 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 									sessionId: input.sessionId,
 									messageId: input.sessionId,
 								});
-								return { evidence: [], tokenUsage: { input: 0, output: 0 } } as ConversanalyzerOutput;
+								return {
+									evidence: [],
+									observedEnergyLevel: "medium",
+									tokenUsage: { input: 0, output: 0 },
+								} as ConversanalyzerOutput;
 							}),
 						),
 					);
