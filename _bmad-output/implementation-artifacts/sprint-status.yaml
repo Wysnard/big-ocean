@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-05 (refreshed 6 — added Conversation Experience Evolution epics 21-22)
+generated: 2026-03-05 (refreshed 7 — stories 21-1 and 22-1 merged to done)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -350,7 +350,7 @@ development_status:
   # Phase 1 is ATOMIC across domain + infrastructure + api
   # ───────────────────────────────────────────────────────────────
   epic-21: in-progress
-  21-1-territory-domain-types-and-catalog: pr-ready
+  21-1-territory-domain-types-and-catalog: done
   21-2-depth-readiness-score-drs: backlog
   21-3-territory-scoring-and-selection: backlog
   21-4-cold-start-territory-selection: backlog
@@ -367,7 +367,7 @@ development_status:
   # INDEPENDENT of Epic 21 — zero data flow coupling
   # ───────────────────────────────────────────────────────────────
   epic-22: in-progress
-  22-1-remove-steering-instructions-from-character-bible: pr-ready
+  22-1-remove-steering-instructions-from-character-bible: done
   22-2-relate-reflect-and-story-pulling-patterns: backlog
   22-3-contradiction-surfacing-migration-to-portrait-generator: backlog
   epic-22-retrospective: optional
