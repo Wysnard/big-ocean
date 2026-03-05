@@ -1,7 +1,18 @@
 /**
- * Nerin Pipeline — shared ConversAnalyzer → evidence → steering → Nerin → save assistant msg → increment count
+ * Nerin Pipeline -- Territory-Based 8-Step Orchestration (Story 21-7)
  *
- * Extracted from send-message.use-case.ts to allow reuse from resume-session (orphan user message retry).
+ * Replaces the old facet-targeted steering with territory-based conversation steering.
+ * Clean cut migration -- no backward compatibility shim or feature flag.
+ *
+ * 8-step orchestration:
+ * 1. computeDRS() -- depth readiness from coverage, engagement, energy history
+ * 2. scoreAllTerritories() -- rank territories by coverage, energy fit, freshness
+ * 3. selectTerritory() -- pick best territory (or cold-start for first N messages)
+ * 4. buildNerinPrompt() -- look up territory from catalog for Nerin guidance
+ * 5. callNerin() -- invoke Nerin with territory-contextualized prompt
+ * 6. callConversAnalyzer() -- analyze current exchange for evidence + energy
+ * 7. saveEvidence() -- persist extracted evidence
+ * 8. saveExchangeMetadata() -- store territory_id and observed_energy_level
  */
 
 import {
@@ -9,26 +20,29 @@ import {
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	aggregateDomainDistribution,
+	buildFacetEvidenceCounts,
+	buildTerritoryPrompt,
+	COLD_START_TERRITORIES,
 	type ConversanalyzerOutput,
 	ConversanalyzerRepository,
 	ConversationEvidenceRepository,
 	CostGuardRepository,
 	calculateCost,
-	computeDomainStreak,
-	computeFacetMetrics,
+	computeDRS,
 	computeFinalWeight,
-	computeSteeringTarget,
 	type DomainMessage,
-	type EvidenceInput,
-	type FacetName,
+	type EnergyLevel,
+	extractDRSConfig,
+	extractTerritoryScorerConfig,
 	GREETING_MESSAGES,
 	getUTCDateKey,
-	type IntentType,
-	type LifeDomain,
 	LoggerRepository,
-	type MicroIntent,
 	NerinAgentRepository,
-	realizeMicroIntent,
+	scoreAllTerritories,
+	selectTerritoryWithColdStart,
+	TERRITORY_CATALOG,
+	type TerritoryId,
+	type TerritoryVisitHistory,
 } from "@workspace/domain";
 import { Effect, Schedule } from "effect";
 
@@ -46,8 +60,106 @@ export interface NerinPipelineOutput {
 	readonly isFinalTurn: boolean;
 }
 
+// ---- Helpers ----
+
 /**
- * Runs the full Nerin pipeline: ConversAnalyzer → evidence → steering → Nerin → atomically save both messages → increment count.
+ * Build territory visit history from previous assistant messages.
+ * Messages without territory_id (pre-territory-steering) are skipped.
+ */
+function buildVisitHistory(
+	assistantMessages: ReadonlyArray<{
+		territoryId?: string | null;
+	}>,
+): TerritoryVisitHistory {
+	const visits = new Map<TerritoryId, { visitCount: number; lastVisitExchange: number }>();
+
+	let exchangeIndex = 0;
+	for (const msg of assistantMessages) {
+		if (msg.territoryId) {
+			const tid = msg.territoryId as TerritoryId;
+			const existing = visits.get(tid);
+			if (existing) {
+				visits.set(tid, {
+					visitCount: existing.visitCount + 1,
+					lastVisitExchange: exchangeIndex,
+				});
+			} else {
+				visits.set(tid, {
+					visitCount: 1,
+					lastVisitExchange: exchangeIndex,
+				});
+			}
+		}
+		exchangeIndex++;
+	}
+
+	return visits;
+}
+
+/**
+ * Extract last N observed energy levels from assistant messages (most recent first).
+ */
+function extractLastEnergyLevels(
+	assistantMessages: ReadonlyArray<{
+		observedEnergyLevel?: string | null;
+	}>,
+	count: number,
+): EnergyLevel[] {
+	const levels: EnergyLevel[] = [];
+	for (let i = assistantMessages.length - 1; i >= 0 && levels.length < count; i--) {
+		const msg = assistantMessages[i];
+		if (msg?.observedEnergyLevel) {
+			levels.push(msg.observedEnergyLevel as EnergyLevel);
+		}
+	}
+	return levels;
+}
+
+/**
+ * Extract last N word counts from user messages (most recent first).
+ */
+function extractLastWordCounts(
+	userMessages: ReadonlyArray<{ content: string }>,
+	count: number,
+): number[] {
+	const counts: number[] = [];
+	for (let i = userMessages.length - 1; i >= 0 && counts.length < count; i--) {
+		const msg = userMessages[i];
+		if (msg) {
+			counts.push(msg.content.split(/\s+/).filter(Boolean).length);
+		}
+	}
+	return counts;
+}
+
+/**
+ * Build per-message evidence counts from evidence records.
+ * Returns counts for the last N user messages (most recent first).
+ */
+function extractLastEvidenceCounts(
+	evidenceRecords: ReadonlyArray<{ messageId: string }>,
+	userMessageIds: readonly string[],
+	count: number,
+): number[] {
+	// Build messageId -> evidence count map
+	const countsByMessage = new Map<string, number>();
+	for (const record of evidenceRecords) {
+		countsByMessage.set(record.messageId, (countsByMessage.get(record.messageId) ?? 0) + 1);
+	}
+
+	// Get counts for last N user messages (most recent first)
+	const counts: number[] = [];
+	for (let i = userMessageIds.length - 1; i >= 0 && counts.length < count; i--) {
+		const msgId = userMessageIds[i];
+		if (msgId) {
+			counts.push(countsByMessage.get(msgId) ?? 0);
+		}
+	}
+	return counts;
+}
+
+/**
+ * Runs the full Nerin pipeline: territory steering -> Nerin -> ConversAnalyzer -> save.
  *
  * Atomic write: user message + assistant message are persisted together only after the LLM succeeds.
  * This eliminates orphan user messages when the LLM call fails.
@@ -65,10 +177,12 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		const costKey = input.userId ?? input.sessionId;
 
-		// 1. Get all messages for context (does NOT include current user message)
+		// ---- Gather context ----
+
+		// Get all messages for context (does NOT include current user message)
 		const previousMessages = yield* messageRepo.getMessages(input.sessionId);
 
-		// 2. Map DB entities to domain messages + append current user message in-memory
+		// Map DB entities to domain messages + append current user message in-memory
 		const domainMessages: DomainMessage[] = [
 			...previousMessages.map((msg) => ({
 				id: msg.id,
@@ -78,197 +192,111 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			{ id: `pending-${Date.now()}`, role: "user" as const, content: input.userMessage },
 		];
 
-		// 3. Extract previousDomain + userMessageCount (from DB history; current user message not yet saved)
-		const userMessageCount = previousMessages.filter((m) => m.role === "user").length;
-		let previousDomain: LifeDomain | null = null;
-		for (let i = previousMessages.length - 1; i >= 0; i--) {
-			const msg = previousMessages[i];
-			if (msg !== undefined && msg.role === "assistant" && msg.targetDomain != null) {
-				previousDomain = msg.targetDomain;
-				break;
-			}
-		}
+		// Partition messages by role
+		const userMessages = previousMessages.filter((m) => m.role === "user");
+		const assistantMessages = previousMessages.filter((m) => m.role === "assistant");
+		const userMessageCount = userMessages.length;
 
-		// 3a. Compute domain streak from assistant messages
-		const assistantMessages = previousMessages
-			.filter((m) => m.role === "assistant")
-			.map((m) => ({ targetDomain: m.targetDomain ?? null }));
-		const domainStreak = computeDomainStreak(assistantMessages);
+		// Get existing evidence for DRS/scoring
+		const existingEvidence = yield* evidenceRepo.findBySession(input.sessionId);
 
-		// 4. Steering computation
-		let targetDomain: LifeDomain;
-		let targetFacet: FacetName;
-		let bestPriority = 0;
-		let coveredFacets = "0/30";
-		let metricsMapSize = 0;
+		// ---- Steps 1-4: Territory Steering ----
+
+		let selectedTerritoryId: TerritoryId;
+		let drsValue = 0;
 		let analyzerTokenUsage: { input: number; output: number } | null = null;
 
-		// Collected evidence to save atomically after LLM success
-		let pendingEvidence: ConversanalyzerOutput["evidence"] = [];
-
 		if (userMessageCount >= COLD_START_USER_MSG_THRESHOLD) {
-			const existingEvidence = yield* evidenceRepo.findBySession(input.sessionId);
+			// Step 1: Compute DRS
+			const drsConfig = extractDRSConfig(config);
+			const scorerConfig = extractTerritoryScorerConfig(config);
 
-			let allEvidence: EvidenceInput[] = existingEvidence;
-			{
-				const domainDistribution = aggregateDomainDistribution(existingEvidence);
-				const recentMessages: DomainMessage[] = domainMessages.slice(-6);
+			const facetEvidenceCounts = buildFacetEvidenceCounts(existingEvidence);
+			const coveredFacets = facetEvidenceCounts.size;
 
-				const evidenceResult = yield* conversanalyzer
-					.analyze({
-						message: input.userMessage,
-						recentMessages,
-						domainDistribution,
-					})
-					.pipe(
-						Effect.retry(Schedule.recurs(2)),
-						Effect.catchAll((error) =>
-							Effect.sync(() => {
-								logger.warn("ConversAnalyzer failed after 3 attempts, skipping", {
-									error: error.message,
-									sessionId: input.sessionId,
-									messageId: input.sessionId,
-								});
-								return {
-									evidence: [],
-									observedEnergyLevel: "medium",
-									tokenUsage: { input: 0, output: 0 },
-								} as ConversanalyzerOutput;
-							}),
-						),
-					);
+			const lastWordCounts = extractLastWordCounts(userMessages, 3);
+			const lastEvidenceCounts = extractLastEvidenceCounts(
+				existingEvidence,
+				userMessages.map((m) => m.id),
+				3,
+			);
+			const lastEnergyLevels = extractLastEnergyLevels(assistantMessages, 3);
 
-				analyzerTokenUsage = evidenceResult.tokenUsage;
+			drsValue = computeDRS(
+				{
+					coveredFacets,
+					lastWordCounts,
+					lastEvidenceCounts,
+					lastEnergyLevels,
+				},
+				drsConfig,
+			);
 
-				const filteredEvidence = evidenceResult.evidence.filter(
-					(e) => computeFinalWeight(e.strength, e.confidence) >= config.minEvidenceWeight,
-				);
+			// Step 2: Score all territories
+			const visitHistory = buildVisitHistory(assistantMessages);
+			const currentExchange = assistantMessages.length;
 
-				logger.info("Evidence weights computed", {
-					sessionId: input.sessionId,
-					messageId: input.sessionId,
-					rawCount: evidenceResult.evidence.length,
-					filteredCount: filteredEvidence.length,
-					evidence: filteredEvidence.map((e) => ({
-						facet: e.bigfiveFacet,
-						deviation: e.deviation,
-						strength: e.strength,
-						confidence: e.confidence,
-						domain: e.domain,
-						finalWeight: +computeFinalWeight(e.strength, e.confidence).toFixed(3),
-					})),
-				});
+			const scoredTerritories = scoreAllTerritories(
+				TERRITORY_CATALOG,
+				facetEvidenceCounts,
+				drsValue,
+				visitHistory,
+				currentExchange,
+				drsConfig,
+				scorerConfig,
+			);
 
-				if (filteredEvidence.length > 0) {
-					// Defer evidence save until after LLM success (atomic write)
-					pendingEvidence = filteredEvidence;
-
-					logger.info("Conversanalyzer complete", {
-						sessionId: input.sessionId,
-						evidenceCount: filteredEvidence.length,
-						tokenUsage: evidenceResult.tokenUsage,
-					});
-
-					// Include pending evidence in metrics computation
-					allEvidence = [...existingEvidence, ...filteredEvidence];
-				}
-			}
-
-			const metrics = computeFacetMetrics(allEvidence);
-
-			logger.info("Facet metrics computed", {
-				sessionId: input.sessionId,
-				facetMetrics: Object.fromEntries(
-					[...metrics.entries()].map(([facet, m]) => [
-						facet,
-						{
-							score: +m.score.toFixed(2),
-							confidence: +m.confidence.toFixed(3),
-							signalPower: +m.signalPower.toFixed(3),
-							domains: Object.fromEntries(m.domainWeights),
-						},
-					]),
-				),
+			// Step 3: Select territory (scoring path)
+			const steeringOutput = selectTerritoryWithColdStart({
+				messageCount: userMessageCount,
+				coldStartThreshold: config.territoryColdStartThreshold,
+				coldStartTerritories: COLD_START_TERRITORIES,
+				scoredTerritories,
 			});
 
-			const steering = computeSteeringTarget(metrics, previousDomain);
-			targetDomain = steering.targetDomain;
-			targetFacet = steering.targetFacet;
-			bestPriority = steering.bestPriority;
-			metricsMapSize = metrics.size;
-			let coveredCount = 0;
-			for (const [, m] of metrics) {
-				if (m.confidence > 0.3) coveredCount++;
-			}
-			coveredFacets = `${coveredCount}/30`;
+			selectedTerritoryId = steeringOutput.territoryId;
+
+			logger.info("Territory steering computed", {
+				sessionId: input.sessionId,
+				drs: +drsValue.toFixed(3),
+				selectedTerritory: selectedTerritoryId,
+				coveredFacets,
+				userMessageCount,
+				topScoredTerritories: scoredTerritories.slice(0, 3).map((t) => ({
+					id: t.territory.id,
+					score: +t.score.toFixed(3),
+					coverage: +t.coverageValue.toFixed(3),
+					energyFit: +t.energyFit.toFixed(3),
+					freshness: +t.freshnessBonus.toFixed(3),
+				})),
+			});
 		} else {
-			const steering = computeSteeringTarget(new Map(), null, undefined, GREETING_MESSAGES.length);
-			targetDomain = steering.targetDomain;
-			targetFacet = steering.targetFacet;
+			// Step 3 (cold-start path): Select from cold-start territories
+			const steeringOutput = selectTerritoryWithColdStart({
+				messageCount: userMessageCount,
+				coldStartThreshold: config.territoryColdStartThreshold,
+				coldStartTerritories: COLD_START_TERRITORIES,
+				scoredTerritories: [],
+			});
+
+			selectedTerritoryId = steeringOutput.territoryId;
+
+			logger.info("Cold-start territory selected", {
+				sessionId: input.sessionId,
+				selectedTerritory: selectedTerritoryId,
+				userMessageCount,
+			});
 		}
 
-		// 5. Extract recent intent types from last 3 assistant messages
-		const recentIntentTypes: IntentType[] = [];
-		for (let i = previousMessages.length - 1; i >= 0 && recentIntentTypes.length < 3; i--) {
-			const msg = previousMessages[i];
-			if (
-				msg !== undefined &&
-				msg.role === "assistant" &&
-				"intentType" in msg &&
-				msg.intentType != null
-			) {
-				recentIntentTypes.unshift(msg.intentType as IntentType);
-			}
-		}
+		// Step 4: Build Nerin prompt from territory catalog
+		const territoryPrompt = buildTerritoryPrompt({ territoryId: selectedTerritoryId });
 
-		// 5b. Realize micro-intent
-		const microIntent: MicroIntent = realizeMicroIntent({
-			targetFacet,
-			targetDomain,
-			previousDomain,
-			domainStreak,
-			turnIndex: userMessageCount,
-			recentIntentTypes,
-		});
-
-		// Compute topicTransitionsPerFiveTurns
-		const recentDomains: LifeDomain[] = [];
-		for (const msg of previousMessages) {
-			if (msg.role === "assistant" && msg.targetDomain != null) {
-				recentDomains.push(msg.targetDomain);
-			}
-		}
-		const lastFiveDomains = recentDomains.slice(-5);
-		let topicTransitionsPerFiveTurns = 0;
-		for (let i = 1; i < lastFiveDomains.length; i++) {
-			if (lastFiveDomains[i] !== lastFiveDomains[i - 1]) {
-				topicTransitionsPerFiveTurns++;
-			}
-		}
-
-		logger.info("Steering computed", {
-			sessionId: input.sessionId,
-			targetFacet,
-			targetDomain,
-			previousDomain,
-			userMessageCount,
-			coveredFacets,
-			metricsMapSize,
-			bestPriority,
-			domainStreak,
-			intentType: microIntent.intent,
-			topicTransitionsPerFiveTurns,
-			questionsPerAssistantTurn: 1,
-		});
-
-		// 6. Call Nerin
+		// Step 5: Call Nerin with territory-contextualized prompt
 		const result = yield* nerin
 			.invoke({
 				sessionId: input.sessionId,
 				messages: domainMessages,
-				targetDomain,
-				targetFacet,
-				microIntent,
+				territoryPrompt,
 			})
 			.pipe(
 				Effect.tapError((error) =>
@@ -282,7 +310,65 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				),
 			);
 
-		// 6a. Cost tracking
+		// Step 6: Call ConversAnalyzer (post-Nerin per FR16)
+		let pendingEvidence: ConversanalyzerOutput["evidence"] = [];
+		let observedEnergyLevel: EnergyLevel = "medium";
+
+		if (userMessageCount >= COLD_START_USER_MSG_THRESHOLD) {
+			const domainDistribution = aggregateDomainDistribution(existingEvidence);
+			const recentMessages: DomainMessage[] = domainMessages.slice(-6);
+
+			const evidenceResult = yield* conversanalyzer
+				.analyze({
+					message: input.userMessage,
+					recentMessages,
+					domainDistribution,
+				})
+				.pipe(
+					Effect.retry(Schedule.recurs(2)),
+					Effect.catchAll((error) =>
+						Effect.sync(() => {
+							logger.warn("ConversAnalyzer failed after 3 attempts, skipping", {
+								error: error.message,
+								sessionId: input.sessionId,
+							});
+							return {
+								evidence: [],
+								observedEnergyLevel: "medium",
+								tokenUsage: { input: 0, output: 0 },
+							} as ConversanalyzerOutput;
+						}),
+					),
+				);
+
+			analyzerTokenUsage = evidenceResult.tokenUsage;
+			observedEnergyLevel = evidenceResult.observedEnergyLevel;
+
+			const filteredEvidence = evidenceResult.evidence.filter(
+				(e) => computeFinalWeight(e.strength, e.confidence) >= config.minEvidenceWeight,
+			);
+
+			logger.info("Evidence weights computed", {
+				sessionId: input.sessionId,
+				rawCount: evidenceResult.evidence.length,
+				filteredCount: filteredEvidence.length,
+				observedEnergyLevel,
+				evidence: filteredEvidence.map((e) => ({
+					facet: e.bigfiveFacet,
+					deviation: e.deviation,
+					strength: e.strength,
+					confidence: e.confidence,
+					domain: e.domain,
+					finalWeight: +computeFinalWeight(e.strength, e.confidence).toFixed(3),
+				})),
+			});
+
+			if (filteredEvidence.length > 0) {
+				pendingEvidence = filteredEvidence;
+			}
+		}
+
+		// Cost tracking
 		const nerinCost = calculateCost(result.tokenCount.input, result.tokenCount.output);
 		const analyzerCost = analyzerTokenUsage
 			? calculateCost(analyzerTokenUsage.input, analyzerTokenUsage.output)
@@ -312,7 +398,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			dateKey: getUTCDateKey(),
 		});
 
-		// 7. Atomic persist: save user message first (to get ID for evidence FK)
+		// Step 7: Save evidence atomically
 		const savedUserMessage = yield* messageRepo.saveMessage(
 			input.sessionId,
 			"user",
@@ -320,7 +406,6 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			input.userId,
 		);
 
-		// 7a. Save evidence with real user message ID (if any was collected)
 		if (pendingEvidence.length > 0) {
 			yield* evidenceRepo.save(
 				pendingEvidence.map((e) => ({
@@ -331,24 +416,26 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			);
 		}
 
-		// 7b. Save assistant message with steering targets + intentType
+		// Step 8: Save assistant message with territory metadata
 		yield* messageRepo.saveMessage(
 			input.sessionId,
 			"assistant",
 			result.response,
 			undefined,
-			targetDomain,
-			targetFacet,
-			microIntent.intent,
+			undefined, // targetDomain -- no longer used
+			undefined, // targetBigfiveFacet -- no longer used
+			undefined, // intentType -- no longer used
+			selectedTerritoryId as string,
+			observedEnergyLevel,
 		);
 
-		// 8. Increment message_count atomically
+		// Increment message_count atomically
 		const messageCount = yield* sessionRepo.incrementMessageCount(input.sessionId);
 
-		// 9. Compute isFinalTurn
+		// Compute isFinalTurn
 		const isFinalTurn = messageCount >= config.freeTierMessageThreshold;
 
-		// 10. Transition session to "finalizing" on final turn
+		// Transition session to "finalizing" on final turn
 		if (isFinalTurn) {
 			yield* sessionRepo.updateSession(input.sessionId, { status: "finalizing" });
 		}
@@ -359,6 +446,10 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			tokenCount: result.tokenCount,
 			messageCount,
 			isFinalTurn,
+			selectedTerritory: selectedTerritoryId,
+			observedEnergyLevel,
+			drs: +drsValue.toFixed(3),
+			evidenceCount: pendingEvidence.length,
 		});
 
 		return {

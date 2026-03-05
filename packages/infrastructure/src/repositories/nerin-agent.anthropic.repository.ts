@@ -103,11 +103,12 @@ export const NerinAgentAnthropicRepositoryLive = Layer.effect(
 			invoke: (input: NerinInvokeInput) =>
 				Effect.tryPromise({
 					try: async () => {
-						// Build system prompt with optional micro-intent steering (Story 17.2) or raw steering (Story 9.2)
+						// Build system prompt with territory guidance (Story 21-7), micro-intent (Story 17.2), or raw steering (Story 9.2)
 						const systemPrompt = buildChatSystemPrompt({
 							targetDomain: input.targetDomain,
 							targetFacet: input.targetFacet,
 							microIntent: input.microIntent,
+							territoryPrompt: input.territoryPrompt,
 						});
 
 						// Convert domain messages to LangChain format and prepend system prompt

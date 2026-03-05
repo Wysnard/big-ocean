@@ -62,27 +62,26 @@ describe("sendMessage Use Case", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect(
-			"should save assistant message with response content, steering targets, and intentType",
-			() =>
-				Effect.gen(function* () {
-					yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
+		it.effect("should save assistant message with territory metadata (Story 21-7)", () =>
+			Effect.gen(function* () {
+				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
 
-					// Cold start: greeting seed → "relationships" / "gregariousness" (index 1 from GREETING_MESSAGES.length)
-					// Story 17.2: intentType is now passed as 7th argument
-					expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
-						"session_test_123",
-						"assistant",
-						mockNerinResponse.response,
-						undefined,
-						"relationships",
-						"gregariousness",
-						expect.any(String), // intentType from realizeMicroIntent
-					);
-				}).pipe(Effect.provide(createTestLayer())),
+				// Story 21-7: assistant message now includes territory_id and observed_energy_level
+				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
+					"session_test_123",
+					"assistant",
+					mockNerinResponse.response,
+					undefined, // userId
+					undefined, // targetDomain (no longer used)
+					undefined, // targetBigfiveFacet (no longer used)
+					undefined, // intentType (no longer used)
+					expect.any(String), // territoryId
+					expect.any(String), // observedEnergyLevel
+				);
+			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should invoke Nerin with correct message history, steering, and microIntent", () =>
+		it.effect("should invoke Nerin with territory prompt (Story 21-7)", () =>
 			Effect.gen(function* () {
 				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
 
@@ -98,11 +97,10 @@ describe("sendMessage Use Case", () => {
 							// Current user message appended in-memory by pipeline
 							expect.objectContaining({ role: "user", content: "Test" }),
 						],
-						targetDomain: "relationships",
-						targetFacet: "gregariousness",
-						microIntent: expect.objectContaining({
-							intent: expect.any(String),
-							domain: expect.any(String),
+						territoryPrompt: expect.objectContaining({
+							opener: expect.any(String),
+							domains: expect.any(Array),
+							energyLevel: expect.any(String),
 						}),
 					}),
 				);

@@ -4,6 +4,7 @@ import type { LifeDomain } from "../constants/life-domain";
 import { AgentInvocationError } from "../errors/http.errors";
 import type { DomainMessage } from "../types/message";
 import type { MicroIntent } from "../utils/steering/realize-micro-intent";
+import type { TerritoryPromptContent } from "../utils/steering/territory-prompt-builder";
 
 /**
  * Token usage metrics from agent invocation
@@ -36,6 +37,9 @@ export interface NerinInvokeInput {
 
 	/** Structured micro-intent for natural steering (Story 17.2) */
 	readonly microIntent?: MicroIntent;
+
+	/** Territory prompt content (Story 21-7) — when provided, replaces all facet-targeting steering */
+	readonly territoryPrompt?: TerritoryPromptContent;
 }
 
 /**
