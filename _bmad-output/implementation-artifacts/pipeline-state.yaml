@@ -1,7 +1,7 @@
 # Pipeline State — auto-generated, do not edit manually
 parallelism_step: 1
-parallelism_step_name: "Foundation types + Character bible cleanup"
-baseline_commit: "8c788b4c0a15c9004ee37f2a7191ab1dc2b4f5fa"
+parallelism_step_name: "Scoring + portrait migration"
+baseline_commit: "937e9131bbbb1bb05265b80be17bf702447d48cd"
 created: "2026-03-05"
 last_updated: "2026-03-05"
 
@@ -14,17 +14,17 @@ context_docs:
 
 # Stories in this step
 stories:
-  21-1-territory-domain-types-and-catalog:
+  21-3-territory-scoring-and-selection:
     status: done
     mode: "parallel"
-    notes: "Types, branded IDs, 22-territory catalog — no runtime impact"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/112"
-    dev_branch: "feat/story-21-1-territory-domain-types-and-catalog"
+    notes: "Pure domain functions; depends on 21-2 (done)"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/116"
+    dev_branch: "feat/story-21-3-territory-scoring-and-selection"
     error: null
-  22-1-remove-steering-instructions-from-character-bible:
+  22-3-contradiction-surfacing-migration-to-portrait-generator:
     status: done
     mode: "parallel"
-    notes: "Remove pacing/depth rules from nerin-chat-context.ts — independent of Epic 21"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/111"
-    dev_branch: "feat/story-22-1-remove-steering-instructions-from-character-bible"
+    notes: "Epic 22; modifies nerin-chat-context.ts + portrait generator; depends on 22-1 (done)"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/115"
+    dev_branch: "feat/story-22-3-contradiction-surfacing-migration-to-portrait-generator"
     error: null
