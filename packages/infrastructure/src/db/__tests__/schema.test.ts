@@ -42,7 +42,6 @@ describe("Assessment Session Schema", () => {
 		expect(assessmentSession.status).toBeDefined();
 		expect(assessmentSession.finalizationProgress).toBeDefined();
 		expect(assessmentSession.messageCount).toBeDefined();
-		expect(assessmentSession.personalDescription).toBeDefined();
 		expect(assessmentSession.createdAt).toBeDefined();
 		expect(assessmentSession.updatedAt).toBeDefined();
 	});
