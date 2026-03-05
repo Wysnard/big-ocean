@@ -1,8 +1,9 @@
 /**
- * Send Message Use Case Tests — Steering integration
+ * Send Message Use Case Tests -- Territory-based steering integration
  *
- * Story 10.4: Steering integration — smart Nerin responses.
- * Uses @effect/vitest it.effect() pattern per project conventions.
+ * Story 21-7: Updated from facet-targeting to territory-based steering.
+ * Tests verify that Nerin receives territory prompt context and assistant
+ * messages are saved with territory metadata.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "@effect/vitest";
@@ -30,11 +31,10 @@ describe("sendMessage Use Case", () => {
 		vi.clearAllMocks();
 	});
 
-	describe("Steering integration (Story 10.4)", () => {
-		it.effect("should pass steering target to Nerin in post-cold-start messages (AC: #1)", () =>
+	describe("Territory-based steering integration (Story 21-7)", () => {
+		it.effect("should pass territory prompt to Nerin in post-cold-start messages", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				// findBySession is called twice: once for domainDistribution, once after save for metrics
 				mockEvidenceRepo.findBySession.mockReturnValue(
 					Effect.succeed([
 						{
@@ -42,9 +42,11 @@ describe("sendMessage Use Case", () => {
 							sessionId: "session_test_123",
 							messageId: "msg_5",
 							bigfiveFacet: "imagination",
-							score: 14,
-							confidence: 0.6,
+							deviation: 1,
+							strength: "moderate",
+							confidence: "medium",
 							domain: "work",
+							note: "test",
 							createdAt: new Date(),
 						},
 					]),
@@ -56,12 +58,14 @@ describe("sendMessage Use Case", () => {
 				});
 
 				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
-				expect(nerinCall.targetDomain).toBeDefined();
-				expect(nerinCall.targetFacet).toBeDefined();
+				expect(nerinCall.territoryPrompt).toBeDefined();
+				expect(nerinCall.territoryPrompt?.opener).toBeDefined();
+				expect(nerinCall.territoryPrompt?.energyLevel).toBeDefined();
+				expect(nerinCall.territoryPrompt?.domains).toBeDefined();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should use greeting seed during cold start (AC: #2)", () =>
+		it.effect("should use cold-start territory during cold start", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
 
@@ -71,57 +75,13 @@ describe("sendMessage Use Case", () => {
 				});
 
 				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
-				// GREETING_MESSAGES.length = 1 → pool index 1 → "relationships" / "gregariousness"
-				expect(nerinCall.targetDomain).toBe("relationships");
-				expect(nerinCall.targetFacet).toBe("gregariousness");
+				// Cold-start path still provides territory prompt
+				expect(nerinCall.territoryPrompt).toBeDefined();
+				expect(nerinCall.territoryPrompt?.energyLevel).toBeDefined();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should extract previousDomain from message history (AC: #4)", () =>
-			Effect.gen(function* () {
-				const messagesWithSteering = [
-					...postColdStartMessages.slice(0, 3),
-					{
-						id: "msg_4",
-						sessionId: "session_test_123",
-						role: "assistant" as const,
-						content: "Tell me more",
-						targetDomain: "leisure" as const,
-						targetBigfiveFacet: "imagination" as const,
-						createdAt: new Date(),
-					},
-					...postColdStartMessages.slice(4),
-				];
-				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(messagesWithSteering));
-				mockEvidenceRepo.findBySession.mockReturnValue(
-					Effect.succeed([
-						{
-							id: "e1",
-							sessionId: "session_test_123",
-							messageId: "msg_5",
-							bigfiveFacet: "imagination",
-							score: 14,
-							confidence: 0.6,
-							domain: "leisure",
-							createdAt: new Date(),
-						},
-					]),
-				);
-
-				yield* sendMessage({
-					sessionId: "session_test_123",
-					message: "I work in tech",
-				});
-
-				// Verify steering was called (Nerin received steering targets)
-				expect(mockNerinRepo.invoke).toHaveBeenCalled();
-				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
-				expect(nerinCall.targetDomain).toBeDefined();
-				expect(nerinCall.targetFacet).toBeDefined();
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("should save assistant message with targetDomain and targetBigfiveFacet (AC: #3)", () =>
+		it.effect("should save assistant message with territory_id and observed_energy_level", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockEvidenceRepo.findBySession.mockReturnValue(
@@ -131,9 +91,11 @@ describe("sendMessage Use Case", () => {
 							sessionId: "session_test_123",
 							messageId: "msg_5",
 							bigfiveFacet: "imagination",
-							score: 14,
-							confidence: 0.6,
+							deviation: 1,
+							strength: "moderate",
+							confidence: "medium",
 							domain: "work",
+							note: "test",
 							createdAt: new Date(),
 						},
 					]),
@@ -144,16 +106,16 @@ describe("sendMessage Use Case", () => {
 					message: "I work in tech",
 				});
 
-				// Last call to saveMessage should be the assistant message with steering
+				// Last call to saveMessage should be the assistant message with territory metadata
 				const saveMessageCalls = mockMessageRepo.saveMessage.mock.calls;
 				const assistantSaveCall = saveMessageCalls.find((call: unknown[]) => call[1] === "assistant");
 				expect(assistantSaveCall).toBeDefined();
-				expect(assistantSaveCall?.[4]).toBeDefined(); // targetDomain
-				expect(assistantSaveCall?.[5]).toBeDefined(); // targetBigfiveFacet
+				expect(assistantSaveCall?.[7]).toBeDefined(); // territoryId (8th positional arg)
+				expect(assistantSaveCall?.[8]).toBeDefined(); // observedEnergyLevel (9th positional arg)
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should still steer on stale evidence when conversanalyzer fails (AC: #5)", () =>
+		it.effect("should still steer on stale evidence when conversanalyzer fails", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockConversanalyzerRepo.analyze.mockReturnValue(
@@ -167,9 +129,11 @@ describe("sendMessage Use Case", () => {
 							sessionId: "session_test_123",
 							messageId: "msg_3",
 							bigfiveFacet: "imagination",
-							score: 14,
-							confidence: 0.6,
+							deviation: 1,
+							strength: "moderate",
+							confidence: "medium",
 							domain: "work",
+							note: "test",
 							createdAt: new Date(),
 						},
 					]),
@@ -180,16 +144,15 @@ describe("sendMessage Use Case", () => {
 					message: "I work in tech",
 				});
 
-				// Nerin still gets steering even though conversanalyzer failed
+				// Nerin still gets territory prompt even though conversanalyzer failed
 				expect(result.response).toBe(mockNerinResponse.response);
 				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
-				expect(nerinCall.targetDomain).toBeDefined();
-				expect(nerinCall.targetFacet).toBeDefined();
+				expect(nerinCall.territoryPrompt).toBeDefined();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
 		it.effect(
-			"should compute valid steering for transition message — first post-cold-start with minimal evidence (AC: transition)",
+			"should compute valid territory steering for transition message -- first post-cold-start with minimal evidence",
 			() =>
 				Effect.gen(function* () {
 					// Transition: exactly COLD_START_USER_MSG_THRESHOLD + 1 = 3 user messages
@@ -225,7 +188,6 @@ describe("sendMessage Use Case", () => {
 						},
 					];
 					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(transitionMessages));
-					// First conversanalyzer run yields minimal evidence
 					mockEvidenceRepo.findBySession.mockReturnValue(
 						Effect.succeed([
 							{
@@ -233,9 +195,11 @@ describe("sendMessage Use Case", () => {
 								sessionId: "session_test_123",
 								messageId: "msg_5",
 								bigfiveFacet: "imagination",
-								score: 14,
-								confidence: 0.6,
+								deviation: 1,
+								strength: "moderate",
+								confidence: "medium",
 								domain: "leisure",
+								note: "test",
 								createdAt: new Date(),
 							},
 						]),
@@ -248,8 +212,7 @@ describe("sendMessage Use Case", () => {
 
 					expect(result.response).toBeDefined();
 					const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
-					expect(nerinCall.targetDomain).toBeDefined();
-					expect(nerinCall.targetFacet).toBeDefined();
+					expect(nerinCall.territoryPrompt).toBeDefined();
 				}).pipe(Effect.provide(createTestLayer())),
 		);
 	});

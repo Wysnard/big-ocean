@@ -235,6 +235,33 @@ export const mockConfig = {
 	teaserModelId: "claude-haiku-4-5-20251001",
 	globalDailyAssessmentLimit: 100,
 	minEvidenceWeight: 0.36,
+	// DRS config (Story 21-2)
+	drsBreadthWeight: 0.55,
+	drsEngagementWeight: 0.45,
+	drsBreadthOffset: 10,
+	drsBreadthRange: 15,
+	drsWordCountThreshold: 120,
+	drsEvidenceThreshold: 6,
+	drsEngagementWordWeight: 0.55,
+	drsEngagementEvidenceWeight: 0.45,
+	drsRecencyWeights: [1.0, 0.6, 0.3],
+	drsEnergyWeightLight: 0,
+	drsEnergyWeightMedium: 1,
+	drsEnergyWeightHeavy: 2,
+	drsLightFitCenter: 0.55,
+	drsLightFitRange: 0.35,
+	drsMediumFitCenter: 0.55,
+	drsMediumFitRange: 0.35,
+	drsHeavyFitCenter: 0.65,
+	drsHeavyFitRange: 0.25,
+	// Territory scoring config (Story 21-3)
+	territoryMinEvidenceThreshold: 3,
+	territoryMaxVisits: 2,
+	territoryFreshnessRate: 0.05,
+	territoryFreshnessMin: 0.8,
+	territoryFreshnessMax: 1.2,
+	// Cold-start threshold (Story 21-4)
+	territoryColdStartThreshold: 3,
 };
 
 export const createTestLayer = () =>

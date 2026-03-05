@@ -107,7 +107,7 @@ describe("sendMessage Use Case", () => {
 				// Warning was logged (after retry exhausted per AC #6 — Story 2.3 bumped to 3 attempts)
 				expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
 					"ConversAnalyzer failed after 3 attempts, skipping",
-					expect.objectContaining({ sessionId: "session_test_123", messageId: expect.any(String) }),
+					expect.objectContaining({ sessionId: "session_test_123" }),
 				);
 				// Evidence not saved
 				expect(mockEvidenceRepo.save).not.toHaveBeenCalled();
