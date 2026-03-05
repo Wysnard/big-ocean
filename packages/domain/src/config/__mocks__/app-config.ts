@@ -74,6 +74,8 @@ export const mockAppConfig: AppConfigService = {
 	territoryFreshnessRate: 0.05,
 	territoryFreshnessMin: 0.8,
 	territoryFreshnessMax: 1.2,
+	// Cold-Start (Story 21-4)
+	territoryColdStartThreshold: 3,
 };
 
 export const createTestAppConfigLayer = () => Layer.succeed(AppConfig, mockAppConfig);
