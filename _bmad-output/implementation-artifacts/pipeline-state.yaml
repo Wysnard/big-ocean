@@ -1,7 +1,7 @@
 # Pipeline State — auto-generated, do not edit manually
 parallelism_step: 1
-parallelism_step_name: "Cold-start + prompt builder"
-baseline_commit: "cfdf08b88a1f1d0e91af795526a7ad5d31c82af6"
+parallelism_step_name: "Infrastructure changes"
+baseline_commit: "6b3e2de2e5d69bd568dc19758d3440ca2fdfc3f0"
 created: "2026-03-05"
 last_updated: "2026-03-05"
 
@@ -14,17 +14,10 @@ context_docs:
 
 # Stories in this step
 stories:
-  21-4-cold-start-territory-selection:
+  21-6-schema-migration-and-conversanalyzer-energy-classification:
     status: done
     mode: "parallel"
-    notes: "Uses catalog + scoring; depends on 21-3 (done)"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/117"
-    dev_branch: "feat/story-21-4-cold-start-territory-selection"
-    error: null
-  21-5-territory-prompt-builder-and-nerin-system-prompt:
-    status: done
-    mode: "parallel"
-    notes: "Catalog lookup + system prompt; depends on 21-1 (done)"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/118"
-    dev_branch: "feat/story-21-5-territory-prompt-builder-and-nerin-system-prompt"
+    notes: "Schema migration (2 new columns on assessment_messages) + ConversAnalyzer energy classification output + mock updates; depends on 21-1 through 21-5 (all done)"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/119"
+    dev_branch: "feat/story-21-6-schema-migration-and-conversanalyzer-energy-classification"
     error: null
