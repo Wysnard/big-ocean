@@ -122,3 +122,48 @@ The Nerin agent's `invoke()` already receives `NerinInvokeInput` which has optio
 - **Subtask 7.1:** Run `pnpm turbo typecheck` -- fix any type errors
 - **Subtask 7.2:** Run `pnpm test:run` -- all tests pass including new pipeline tests
 - **Subtask 7.3:** Verify existing send-message tests still pass (backward compatibility of the pipeline interface)
+
+## Architect Notes
+
+### Finding 1: Nerin Agent Territory Prompt Plumbing
+
+The infrastructure Nerin agent at `packages/infrastructure/src/repositories/nerin-agent.anthropic.repository.ts` (line 107) already calls `buildChatSystemPrompt()` but does not pass `territoryPrompt`. The fix is:
+
+1. **Add `territoryPrompt` to `NerinInvokeInput`** at `packages/domain/src/repositories/nerin-agent.repository.ts`:
+   ```typescript
+   import type { TerritoryPromptContent } from "../utils/steering/territory-prompt-builder";
+   // Add to NerinInvokeInput:
+   readonly territoryPrompt?: TerritoryPromptContent;
+   ```
+
+2. **Pass it through in the infra layer** at `nerin-agent.anthropic.repository.ts` line 107:
+   ```typescript
+   const systemPrompt = buildChatSystemPrompt({
+       targetDomain: input.targetDomain,
+       targetFacet: input.targetFacet,
+       microIntent: input.microIntent,
+       territoryPrompt: input.territoryPrompt,
+   });
+   ```
+
+3. **The mock** at `__mocks__/nerin-agent.anthropic.repository.ts` uses `vi.fn()` so it already accepts any input shape -- no changes needed.
+
+### Finding 2: ConversAnalyzer Order Change (FR16)
+
+The new 8-step order in FR16 specifies ConversAnalyzer runs AFTER Nerin (step 6), not before. This is intentional: the territory-based steering uses ONLY historical data (prior evidence + prior energy levels) for steps 1-4. The current user message is analyzed AFTER Nerin responds.
+
+**Key implementation detail:** The existing pipeline runs ConversAnalyzer before Nerin to use fresh evidence for steering. The new pipeline reverses this:
+- Steps 1-4 use `evidenceRepo.findBySession()` (historical only) for DRS/scoring
+- Step 5 calls Nerin
+- Step 6 calls ConversAnalyzer on the current exchange (user message + Nerin response context)
+- Steps 7-8 save the new evidence and metadata
+
+**Impact:** The `pendingEvidence` pattern changes. In the old pipeline, ConversAnalyzer evidence was collected before Nerin and deferred for atomic save. In the new pipeline, ConversAnalyzer runs after Nerin, so evidence is available right before save.
+
+**The pipeline must still save user message first (to get the message ID for evidence FK), then save evidence, then save assistant message with metadata.**
+
+### Finding 3: Evidence-Per-Message Counts for DRS
+
+To compute DRS, we need "last 3 evidence counts per message." The `evidenceRepo.findBySession()` returns all evidence items. To get per-message counts, group by `messageId` field on the evidence items. This is a simple in-memory grouping -- no new repository method needed.
+
+The `EvidenceInput` type (from conversanalyzer output) does not have `messageId` -- but the stored evidence records do. Check what `findBySession()` returns. If it returns raw evidence without messageId, use the message history to infer: each user message maps to its evidence via the sequential save pattern.
