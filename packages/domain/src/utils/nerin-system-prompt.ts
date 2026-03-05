@@ -6,6 +6,7 @@
  *
  * Story 9.2: Updated to accept structured (targetDomain, targetFacet) instead of free-text steeringHint.
  * Story 17.2: Added MicroIntent support for natural steering via micro-intents.
+ * Story 21-5: Added territory prompt support — when provided, replaces facet-targeting with territory guidance.
  */
 
 import type { FacetName } from "../constants/big-five";
@@ -14,15 +15,24 @@ import type { LifeDomain } from "../constants/life-domain";
 import { CHAT_CONTEXT } from "../constants/nerin-chat-context";
 import { NERIN_PERSONA } from "../constants/nerin-persona";
 import type { MicroIntent } from "./steering/realize-micro-intent";
+import {
+	buildTerritorySystemPromptSection,
+	type TerritoryPromptContent,
+} from "./steering/territory-prompt-builder";
 
 /**
  * Parameters for building the chat system prompt
+ *
+ * When `territoryPrompt` is provided, it takes precedence over
+ * `targetDomain`, `targetFacet`, and `microIntent` (which are ignored).
  */
 export interface ChatSystemPromptParams {
 	targetDomain?: LifeDomain;
 	targetFacet?: FacetName;
 	/** Structured micro-intent (Story 17.2) — when provided, replaces raw steering format */
 	microIntent?: MicroIntent;
+	/** Territory prompt content (Story 21-5) — when provided, replaces all facet-targeting steering */
+	territoryPrompt?: TerritoryPromptContent;
 }
 
 /** Intent descriptions for Nerin prompt injection */
@@ -89,10 +99,13 @@ ${intentDesc}`;
  * @returns System prompt for Nerin agent
  */
 export function buildChatSystemPrompt(params: ChatSystemPromptParams = {}): string {
-	const { targetDomain, targetFacet, microIntent } = params;
+	const { targetDomain, targetFacet, microIntent, territoryPrompt } = params;
 	let prompt = `${NERIN_PERSONA}\n\n${CHAT_CONTEXT}`;
 
-	if (microIntent && targetFacet) {
+	if (territoryPrompt) {
+		// Story 21-5: Territory-based guidance — takes precedence over all facet-targeting
+		prompt += buildTerritorySystemPromptSection(territoryPrompt);
+	} else if (microIntent && targetFacet) {
 		// Story 17.2: Structured micro-intent format
 		prompt += buildMicroIntentSection(microIntent, targetFacet);
 	} else if (targetDomain && targetFacet) {
