@@ -62,9 +62,9 @@ So that **the same facet scores always produce the same trait levels for storage
 **And** each test defines expected behavior:
   - Test: Facet sums calculated correctly (6 facets per trait, each 0-20 → trait 0-120)
   - Test: All 243 trait level combinations map to correct codes (3^5 possibilities)
-  - Test: Trait 0-40 → Low (L), 40-80 → Mid (M), 80-120 → High (H)
+  - Test: Trait 0-40 → Low, 40-80 → Mid, 80-120 → High, mapped to semantic letters per trait (O: T/M/O, C: F/S/C, E: R/B/E, A: D/P/A, N: R/T/N)
   - Test: Same facet scores always produce same code (deterministic)
-  - Test: Code is exactly 5 letters (e.g., "HHMHM")
+  - Test: Code is exactly 5 letters (e.g., "OCSAM" — semantic letters, not H/M/L)
 
 **IMPLEMENTATION (Green Phase):**
 **Given** all 30 facets are scored (e.g., Imagination=18, Artistic=18, Emotionality=18, Adventurousness=18, Intellect=18, Liberalism=18)
@@ -75,13 +75,13 @@ So that **the same facet scores always produce the same trait levels for storage
   - Agreeableness = sum(6 A facets) = 96 (example: 16+16+16+16+16+16)
   - Neuroticism = sum(6 N facets) = 72 (example: 12+12+12+12+12+12)
 **And** the code generator processes trait scores
-**Then** each trait is mapped to a level:
-  - Openness 108 → High (H) [>80]
-  - Conscientiousness 84 → High (H) [>80]
-  - Extraversion 60 → Mid (M) [40-80]
-  - Agreeableness 96 → High (H) [>80]
-  - Neuroticism 72 → Mid (M) [40-80]
-**And** full 5-letter code is generated as: "HHMHM" (5 letters for complete OCEAN storage)
+**Then** each trait is mapped to a semantic level letter:
+  - Openness 108 → High → "O" (Open-minded) [>80]
+  - Conscientiousness 84 → High → "C" (Conscientious) [>80]
+  - Extraversion 60 → Mid → "B" (Balanced) [40-80]
+  - Agreeableness 96 → High → "A" (Agreeable) [>80]
+  - Neuroticism 72 → Mid → "T" (Tempered) [40-80]
+**And** full 5-letter code is generated as: "OCBAT" (semantic letters per trait, not H/M/L)
 **And** code is deterministic (same facet scores → same trait sums → same code, always)
 **And** all failing tests now pass (green)
 
@@ -100,10 +100,10 @@ So that **the same facet scores always produce the same trait levels for storage
   - Example: `FACET_TO_TRAIT["altruism"] = "agreeableness"`
   - Facet names are clean (no trait prefixes): "imagination", "altruism", "orderliness"
   - Result is 0-120 scale for the trait
-- Trait → Level mapping:
-  - 0-40: Low (L)
-  - 40-80: Mid (M)
-  - 80-120: High (H)
+- Trait → Level mapping (semantic letters per trait):
+  - 0-40: Low → O: T(Traditional), C: F(Flexible), E: R(Reserved), A: D(Direct), N: R(Resilient)
+  - 40-80: Mid → O: M(Moderate), C: S(Steady), E: B(Balanced), A: P(Pragmatic), N: T(Tempered)
+  - 80-120: High → O: O(Open-minded), C: C(Conscientious), E: E(Extravert), A: A(Agreeable), N: N(Neurotic)
 - 5-letter code storage: Stores all 5 traits (O, C, E, A, N) in database for complete profile
 - Archetype naming (Story 3.2): Uses first 4 letters (O, C, E, A) for POC; Phase 2 adds N
 - Facet database storage: All 30 facet scores (0-20 each)
@@ -144,9 +144,9 @@ So that **the archetype feels personal and shareable**.
   - Test: Color assignments are consistent
 
 **IMPLEMENTATION (Green Phase):**
-**Given** full 5-letter OCEAN code is "HMLHM" (all 5 traits)
+**Given** full 5-letter OCEAN code is "OSRAT" (all 5 traits, semantic letters)
 **When** the archetype lookup is performed for POC
-**Then** archetype naming uses first 4 letters: "HMLH" (O, C, E, A only)
+**Then** archetype naming uses first 4 letters: "OSRA" (O, C, E, A only)
 **And** archetype name is returned: "Thoughtful Collaborator"
 **And** 2-3 sentence description explains the 4-trait combination
 **And** lookup tests pass (green)

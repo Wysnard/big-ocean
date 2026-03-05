@@ -10,7 +10,7 @@ When working on frontend code (`apps/front` or `packages/ui`), consult [FRONTEND
 
 **Worktree isolation rule:** When running in a git worktree (e.g., spawned via `isolation: "worktree"`), ONLY read and modify files within the worktree directory. Do NOT access the main repository working tree unless the user explicitly asks you to.
 
-**Related docs:** [ARCHITECTURE.md](./docs/ARCHITECTURE.md) (current-state) | [Aspirational Architecture](./_bmad-output/planning-artifacts/architecture-aspirational.md) (future plans) | [COMMANDS.md](./docs/COMMANDS.md) | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) | [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md) | [API-CONTRACT-SPECIFICATION.md](./docs/API-CONTRACT-SPECIFICATION.md) | [FRONTEND.md](./docs/FRONTEND.md)
+**Related docs:** [ARCHITECTURE.md](./_bmad-output/planning-artifacts/architecture.md) (consolidated, authoritative) | [Aspirational Architecture](./_bmad-output/planning-artifacts/architecture-aspirational.md) (future plans) | [COMMANDS.md](./docs/COMMANDS.md) | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) | [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md) | [API-CONTRACT-SPECIFICATION.md](./docs/API-CONTRACT-SPECIFICATION.md) | [FRONTEND.md](./docs/FRONTEND.md)
 
 ## Repository Overview
 
@@ -48,7 +48,7 @@ Full GDPR compliance required for EU market expansion:
 
 ### Packages
 
-- **domain**: Repository interfaces (Context.Tag), schemas, branded types, domain errors - pure abstractions (26 repo interfaces)
+- **domain**: Repository interfaces (Context.Tag), schemas, branded types, domain errors - pure abstractions (23 repo interfaces)
 - **contracts**: HTTP API definitions (HttpApiGroup/HttpApiEndpoint) shared frontend ↔ backend
 - **infrastructure**: Repository implementations (`*RepositoryLive`), Drizzle DB schema, Pino logger (40 repo files)
 - **ui**: shadcn/ui component library
@@ -116,7 +116,7 @@ Hooks are managed by `simple-git-hooks` (installed automatically via `pnpm insta
 
 ## Architecture & Key Patterns
 
-The codebase follows **hexagonal architecture** (ports & adapters) with Effect-ts Context.Tag for dependency injection. See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full details including:
+The codebase follows **hexagonal architecture** (ports & adapters) with Effect-ts Context.Tag for dependency injection. See [ARCHITECTURE.md](./_bmad-output/planning-artifacts/architecture.md) for full details including:
 - Layer responsibilities and dependency graph
 - Complete file inventory (use-cases, repos, handlers, DB tables)
 - Assessment pipeline and LLM architecture

@@ -87,7 +87,7 @@ The core differentiation: **Conversational depth** captures the complexity and n
 
 #### 2. Public Archetype (Broad, Shareable)
 - Archetype name (e.g., "The Thoughtful Creator")
-- Big Five trait scores (simplified to 3-level: Low/Mid/High based on 0-20 scale)
+- Big Five trait scores (simplified to 3 semantic levels per trait, e.g., O: Traditional/Moderate/Open-minded, C: Flexible/Steady/Conscientious, E: Reserved/Balanced/Extravert, A: Direct/Pragmatic/Agreeable, N: Resilient/Tempered/Neurotic)
 - Facet summaries (no justifications, no detailed explanations)
 - Visual archetype representation (icon/color)
 - Brief archetype description (~2-3 sentences)
@@ -1269,7 +1269,7 @@ flowchart TD
 | Component | Install Command | Usage |
 |-----------|----------------|-------|
 | Toast | `pnpm dlx shadcn@latest add toast` | Milestone notifications (25%, 50%, 70%) with custom psychedelic burst content |
-| Badge | `pnpm dlx shadcn@latest add badge` | Trait level indicators (H/M/L) on results page |
+| Badge | `pnpm dlx shadcn@latest add badge` | Trait level indicators (semantic letters, e.g., O/M/T per trait) on results page |
 | Tabs | `pnpm dlx shadcn@latest add tabs` | Results page navigation: Overview / Facets / Evidence |
 | Tooltip | `pnpm dlx shadcn@latest add tooltip` | Facet score hover details |
 | Scroll Area | `pnpm dlx shadcn@latest add scroll-area` | Chat message container with custom scrollbar |
@@ -1296,8 +1296,8 @@ After three rounds of refinement (First Principles reduction from 10 → 2, Arch
 
 - **Location:** `apps/front/src/components/results/GeometricSignature.tsx`
 - **Purpose:** Arranges 5 OceanShapes in a per-archetype layout reflecting trait levels.
-- **Props:** `traitLevels` (record of 5 H/M/L values), `variant` ("full" | "compact" | "icon"), `className`
-- **Layout logic:** Delegates to `computeSignature()` pure function in `packages/domain`. Shape size = trait level (L=small, M=medium, H=large). Position follows fixed layout grid. **Deterministic** — same OCEAN code always produces same visual (243 possible outputs, 0 manual design work). Enables archetype brand recognition.
+- **Props:** `traitLevels` (record of 5 semantic trait level values per `TRAIT_LETTER_MAP`), `variant` ("full" | "compact" | "icon"), `className`
+- **Layout logic:** Delegates to `computeSignature()` pure function in `packages/domain`. Shape size = trait level (low=small, mid=medium, high=large). Position follows fixed layout grid. **Deterministic** — same OCEAN code always produces same visual (243 possible outputs, 0 manual design work). Enables archetype brand recognition.
 - **Reuse:** Results page header renders via React component. Share card generation renders same positions as SVG elements via `generateShareCardSVG`.
 
 ### Hooks
@@ -1666,7 +1666,7 @@ AA is the industry standard and appropriate for big-ocean's Phase 1 launch. AAA 
   - Color block compositions
   - Reveal animation visual effects
 - Meaningful alternatives:
-  - GeometricSignature: alt text describes trait levels (e.g., "Personality signature: Openness High, Conscientiousness High, Extraversion Medium, Agreeableness High, Neuroticism Medium")
+  - GeometricSignature: alt text describes trait levels (e.g., "Personality signature: Openness Open-minded, Conscientiousness Conscientious, Extraversion Balanced, Agreeableness Agreeable, Neuroticism Tempered")
   - TraitBar: value announced as "Openness: 78 out of 100"
   - Archetype card: name + summary read as heading + paragraph
 - Form inputs: associated `<label>` elements, error messages linked via `aria-describedby`
@@ -1739,7 +1739,7 @@ AA is the industry standard and appropriate for big-ocean's Phase 1 launch. AAA 
 - Focus management: `useEffect` to move focus on route change to `<main>` or page heading
 - Skip link: `<a href="#main-content" class="sr-only focus:not-sr-only">Skip to content</a>` on every page
 - Error announcements: form validation errors linked via `aria-describedby`, announced on submit
-- Color-independent status: trait levels use color + shape (OceanShape geometry) + text label (Low/Mid/High)
+- Color-independent status: trait levels use color + shape (OceanShape geometry) + semantic text label (e.g., Open-minded/Balanced/Conscientious per trait)
 
 **CSS Tier Integration (from Step 9):**
 - Tier 1 (`base.css`): All responsive layouts, all accessibility features, reduced-motion fallbacks

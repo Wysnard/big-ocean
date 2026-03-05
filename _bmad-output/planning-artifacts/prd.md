@@ -1061,7 +1061,7 @@ Functional requirements define what the system must DO—the core capabilities a
 - **FR13:** System generates shareable profile with archetype code, character name, trait summary, and facet insights
 - **FR14:** System creates unique profile URL for each completed assessment (encrypted, shareable only via explicit link)
 - **FR15:** System displays profile as private by default with explicit user control for sharing
-- **FR16:** System allows users to download/export assessment results in human-readable format
+- **FR16 (Phase 2):** System allows users to download/export assessment results in human-readable format
 
 ### Bidirectional Evidence Highlighting (Transparency Feature)
 
@@ -1093,6 +1093,12 @@ Functional requirements define what the system must DO—the core capabilities a
 - **FR27:** System monitors LLM costs per user and session in real-time
 - **FR28:** System implements rate limiting (1 assessment per user per day, 1 resume per week)
 - **FR29:** System auto-disables assessment if daily LLM cost threshold exceeded, displaying message: "We've reached our daily assessment limit. Please try again tomorrow or upgrade to premium for immediate access."
+
+### Authentication
+
+- **FR30:** Users can create an account with email and password (12+ characters, compromised credential check via Better Auth)
+- **FR31:** Users can log in with email and password to access their assessment history and profiles
+- **FR32:** Users can reset their password via email-based recovery flow
 
 ---
 

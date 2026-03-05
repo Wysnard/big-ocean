@@ -149,4 +149,17 @@
 | 8. Results Content | 8.4 Personalized Portrait (70%) | FR10 | NFR1, NFR8 |
 | 8. Results Content | 8.5 Portrait Regen (85% Paid) | FR10 | NFR1, NFR8 |
 
+## Cross-Epic Dependency Matrix
+
+The following cross-epic forward dependencies exist and should be tracked during sprint planning:
+
+| Source Story | Depends On | Reason |
+|-------------|------------|--------|
+| Story 4.2 (Session Resumption) | Story 5.3 (Evidence Highlighting) | References evidence highlighting UI for resumed sessions |
+| Story 4.7 (Phase 2 notes) | Story 2.11 (Async Analyzer) | Async analysis pipeline required for real-time updates |
+| Epic 4 (Frontend Assessment UI) | Epics 1, 2, 3 | Deep chain: Infrastructure → Backend → OCEAN → Frontend |
+| Epic 5 (Results & Profiles) | Epics 1, 2, 3, 4 | Requires complete assessment flow before results display |
+
+**Mitigation:** Parallel UI development with mock data is possible for Epics 4 and 7. Frontend components can be built and tested with stub data while backend stories complete.
+
 ---
