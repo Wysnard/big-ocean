@@ -1,6 +1,6 @@
 # Story 22.3: Contradiction-Surfacing Migration to Portrait Generator
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -18,23 +18,23 @@ So that contradictions are surfaced in the portrait narrative rather than during
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Remove contradiction-surfacing from Nerin character bible (AC: #1)
-  - [ ] 1.1: In `packages/domain/src/constants/nerin-chat-context.ts`, remove the "CONTRADICTIONS ARE FEATURES, NOT BUGS" belief block from the "HOW TO BEHAVE — BELIEFS IN ACTION" section
-  - [ ] 1.2: Verify no other contradiction-surfacing references remain in the character bible
-  - [ ] 1.3: Verify the observation + question section's contradiction example ("You said X earlier, and now Y") remains — it is a general observation technique, not contradiction-surfacing strategy
+- [x] Task 1: Remove contradiction-surfacing from Nerin character bible (AC: #1)
+  - [x] 1.1: In `packages/domain/src/constants/nerin-chat-context.ts`, remove the "CONTRADICTIONS ARE FEATURES, NOT BUGS" belief block from the "HOW TO BEHAVE — BELIEFS IN ACTION" section
+  - [x] 1.2: Verify no other contradiction-surfacing references remain in the character bible
+  - [x] 1.3: Verify the observation + question section's contradiction example ("You said X earlier, and now Y") remains — it is a general observation technique, not contradiction-surfacing strategy
 
-- [ ] Task 2: Add contradiction-surfacing instruction to portrait generator (AC: #2)
-  - [ ] 2.1: In `packages/infrastructure/src/repositories/portrait-generator.claude.repository.ts`, add contradiction-surfacing instruction to the `PORTRAIT_CONTEXT` constant
-  - [ ] 2.2: Place the instruction as an unconditional directive in the appropriate section (near BEFORE YOU WRITE or as a dedicated subsection)
-  - [ ] 2.3: Verify the teaser portrait at `packages/infrastructure/src/repositories/teaser-portrait.anthropic.repository.ts` does NOT receive the contradiction-surfacing instruction
+- [x] Task 2: Add contradiction-surfacing instruction to portrait generator (AC: #2)
+  - [x] 2.1: In `packages/infrastructure/src/repositories/portrait-generator.claude.repository.ts`, add contradiction-surfacing instruction to the `PORTRAIT_CONTEXT` constant
+  - [x] 2.2: Place the instruction as an unconditional directive in the appropriate section (near BEFORE YOU WRITE or as a dedicated subsection)
+  - [x] 2.3: Verify the teaser portrait at `packages/infrastructure/src/repositories/teaser-portrait.anthropic.repository.ts` does NOT receive the contradiction-surfacing instruction
 
-- [ ] Task 3: Write tests to verify the migration (AC: #1, #2, #3)
-  - [ ] 3.1: Write a test that verifies the character bible does NOT contain "contradictions are features" or "surface them as threads"
-  - [ ] 3.2: Write a test that verifies the portrait generator prompt DOES contain the contradiction-surfacing instruction
-  - [ ] 3.3: Write a test that verifies the teaser portrait prompt does NOT contain the contradiction-surfacing instruction
+- [x] Task 3: Write tests to verify the migration (AC: #1, #2, #3)
+  - [x] 3.1: Write a test that verifies the character bible does NOT contain "contradictions are features" or "surface them as threads"
+  - [x] 3.2: Write a test that verifies the portrait generator prompt DOES contain the contradiction-surfacing instruction
+  - [x] 3.3: Write a test that verifies the teaser portrait prompt does NOT contain the contradiction-surfacing instruction
 
-- [ ] Task 4: Update JSDoc comment in character bible (AC: #1)
-  - [ ] 4.1: Update the top-level JSDoc comment in `nerin-chat-context.ts` to note Story 22-3 removed contradiction-surfacing (migrated to portrait generator)
+- [x] Task 4: Update JSDoc comment in character bible (AC: #1)
+  - [x] 4.1: Update the top-level JSDoc comment in `nerin-chat-context.ts` to note Story 22-3 removed contradiction-surfacing (migrated to portrait generator)
 
 ## Dev Notes
 
