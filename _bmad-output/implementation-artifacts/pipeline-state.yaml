@@ -1,30 +1,30 @@
 # Pipeline State — auto-generated, do not edit manually
 parallelism_step: 1
-parallelism_step_name: "Kill FinAnalyzer & Portrait Update"
-baseline_commit: "e6817cdffa64cb40aa88e96d1c408ff2915d01d1"
-created: "2026-03-02"
-last_updated: "2026-03-02"
+parallelism_step_name: "Foundation types + Character bible cleanup"
+baseline_commit: "8c788b4c0a15c9004ee37f2a7191ab1dc2b4f5fa"
+created: "2026-03-05"
+last_updated: "2026-03-05"
 
 # Optional context documents discovered
 context_docs:
-  architecture: "_bmad-output/planning-artifacts/architecture-conversation-pipeline.md"
+  architecture: "_bmad-output/planning-artifacts/architecture.md"
   ux: "_bmad-output/planning-artifacts/ux-design-specification.md"
-  innovation: "_bmad-output/planning-artifacts/architecture-innovation-strategy.md"
+  innovation: "_bmad-output/planning-artifacts/ux-design-innovation-strategy.md"
   project_context: null
 
 # Stories in this step
 stories:
-  18-5-delete-finanalyzer-infrastructure:
+  21-1-territory-domain-types-and-catalog:
     status: done
     mode: "parallel"
-    notes: "depends on 18-4 (done), blocks 20-1 — READY"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/110"
-    dev_branch: "feat/story-18-5-delete-finanalyzer-infrastructure"
+    notes: "Types, branded IDs, 22-territory catalog — no runtime impact"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/112"
+    dev_branch: "feat/story-21-1-territory-domain-types-and-catalog"
     error: null
-  18-6-update-portrait-generators-to-use-conversation-evidence:
+  22-1-remove-steering-instructions-from-character-bible:
     status: done
     mode: "parallel"
-    notes: "depends on 18-4 (done) — READY"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/109"
-    dev_branch: "feat/story-18-6-update-portrait-generators-to-use-conversation-evidence"
+    notes: "Remove pacing/depth rules from nerin-chat-context.ts — independent of Epic 21"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/111"
+    dev_branch: "feat/story-22-1-remove-steering-instructions-from-character-bible"
     error: null

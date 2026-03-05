@@ -349,8 +349,8 @@ development_status:
   # Stories: 1.1-1.7 in epics.md (CEE)
   # Phase 1 is ATOMIC across domain + infrastructure + api
   # ───────────────────────────────────────────────────────────────
-  epic-21: backlog
-  21-1-territory-domain-types-and-catalog: backlog
+  epic-21: in-progress
+  21-1-territory-domain-types-and-catalog: pr-ready
   21-2-depth-readiness-score-drs: backlog
   21-3-territory-scoring-and-selection: backlog
   21-4-cold-start-territory-selection: backlog
@@ -366,8 +366,8 @@ development_status:
   # Stories: 2.1-2.3 in epics.md (CEE)
   # INDEPENDENT of Epic 21 — zero data flow coupling
   # ───────────────────────────────────────────────────────────────
-  epic-22: backlog
-  22-1-remove-steering-instructions-from-character-bible: backlog
+  epic-22: in-progress
+  22-1-remove-steering-instructions-from-character-bible: pr-ready
   22-2-relate-reflect-and-story-pulling-patterns: backlog
   22-3-contradiction-surfacing-migration-to-portrait-generator: backlog
   epic-22-retrospective: optional
