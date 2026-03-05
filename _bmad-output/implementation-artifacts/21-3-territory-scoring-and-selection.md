@@ -73,8 +73,11 @@ So that the system steers conversations toward under-explored territories at app
 
 ### Task 3: Implement `computeCoverageValue()`
 
-- Function signature: `computeCoverageValue(territory: Territory, facetMetrics: Map<FacetName, FacetMetrics>, config: TerritoryScorerConfig): number`
-- For each expected facet in the territory, check if it exists in facetMetrics and has `signalPower` below `minEvidenceThreshold`
+- Function signature: `computeCoverageValue(territory: Territory, facetEvidenceCounts: ReadonlyMap<FacetName, number>, config: TerritoryScorerConfig): number`
+- Accept `facetEvidenceCounts` (a map of facet name to raw evidence count) instead of `FacetMetrics` -- the threshold of 3 is a raw evidence count, not a 0-1 metric
+- The caller builds `facetEvidenceCounts` from the evidence array before calling this function
+- For each expected facet in the territory, check if evidence count is below `minEvidenceThreshold` (default: 3)
+- Facets not present in the map are treated as having 0 evidence (always "thin")
 - Return proportion of "thin" facets: `thinCount / territory.expectedFacets.length`
 - Edge case: if territory has 0 expected facets, return 0
 - Write failing test first, then implement
@@ -96,7 +99,7 @@ So that the system steers conversations toward under-explored territories at app
 
 ### Task 6: Implement `scoreAllTerritories()`
 
-- Function signature: `scoreAllTerritories(catalog: ReadonlyMap<TerritoryId, Territory>, facetMetrics: Map<FacetName, FacetMetrics>, drs: number, visitHistory: TerritoryVisitHistory, currentExchange: number, drsConfig: DRSConfig, scorerConfig: TerritoryScorerConfig): ScoredTerritory[]`
+- Function signature: `scoreAllTerritories(catalog: ReadonlyMap<TerritoryId, Territory>, facetEvidenceCounts: ReadonlyMap<FacetName, number>, drs: number, visitHistory: TerritoryVisitHistory, currentExchange: number, drsConfig: DRSConfig, scorerConfig: TerritoryScorerConfig): ScoredTerritory[]`
 - Iterate all territories in catalog
 - For each: compute coverageValue, energyFit (using `computeEnergyFit` from DRS module), freshnessBonus
 - If `visitCount >= maxTerritoryVisits`, set score to 0
@@ -120,8 +123,30 @@ So that the system steers conversations toward under-explored territories at app
 ## Technical Notes
 
 - All functions are pure -- no Effect dependencies, no side effects
-- `computeFacetMetrics()` is used as input, not replaced (wrapper pattern per architecture)
-- `signalPower` from `FacetMetrics` is the metric used for "thin" detection -- it represents the weighted evidence density for a facet
+- `computeFacetMetrics()` output is still used by the pipeline (wrapper pattern per architecture), but `computeCoverageValue` accepts raw evidence counts per facet rather than FacetMetrics, because the "thin" threshold (default: 3) is a raw evidence count, not a 0-1 metric like signalPower or confidence
+- The caller (pipeline orchestration in Story 1.7) will build `facetEvidenceCounts` from the evidence array
 - `computeEnergyFit()` from the DRS module (Story 21-2) is reused, not reimplemented
 - `extractTerritoryScorerConfig()` follows the same pattern as `extractDRSConfig()` from Story 21-2
 - Freshness cap at 1.2 (not 1.5) per failure mode analysis -- coverage must be the primary driver
+- Also export a `buildFacetEvidenceCounts(evidence: EvidenceInput[]): ReadonlyMap<FacetName, number>` helper function for the pipeline to use
+
+## Architect Notes
+
+### Finding: Evidence Count vs signalPower for "Thin" Detection
+
+**Issue:** The epic specifies `MIN_EVIDENCE_THRESHOLD` with a default of 3, which clearly refers to a raw evidence count (3 pieces of evidence per facet). However, `FacetMetrics.signalPower` is a 0-1 normalized value (V * D = volume saturation * normalized entropy). Using signalPower against a threshold of 3 would never match and break the formula.
+
+**Resolution:** `computeCoverageValue` accepts `ReadonlyMap<FacetName, number>` (raw evidence counts per facet) instead of `Map<FacetName, FacetMetrics>`. A helper function `buildFacetEvidenceCounts(evidence: EvidenceInput[]): ReadonlyMap<FacetName, number>` is provided to build this map from raw evidence. This maintains the wrapper pattern (the pipeline still calls `computeFacetMetrics()` separately) while using the correct metric for thin detection.
+
+**Files to modify:**
+- `packages/domain/src/utils/steering/territory-scorer.ts` (new file -- all scoring functions)
+- `packages/domain/src/utils/steering/index.ts` (export new functions)
+- `packages/domain/src/index.ts` (re-export from domain package)
+- `packages/domain/src/config/app-config.ts` (add territory config fields)
+- `packages/domain/src/config/__mocks__/app-config.ts` (add mock defaults)
+- `packages/infrastructure/src/config/app-config.live.ts` (add env var parsing)
+- `packages/infrastructure/src/utils/test/app-config.testing.ts` (add test defaults)
+
+**Patterns to follow:**
+- `packages/domain/src/utils/steering/drs.ts` -- config extraction pattern, pure functions, clamp utility
+- `packages/domain/src/utils/steering/__tests__/drs.test.ts` -- test pattern with inline config objects
