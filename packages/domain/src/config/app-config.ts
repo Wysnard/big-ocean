@@ -121,6 +121,62 @@ export interface AppConfigService {
 
 	/** Minimum finalWeight threshold for evidence filtering (moderate/medium = 0.36) */
 	readonly minEvidenceWeight: number;
+
+	// ─── DRS (Depth Readiness Score) Configuration (Story 21-2) ──────
+
+	/** Weight of Breadth component in DRS formula (default: 0.55) */
+	readonly drsBreadthWeight: number;
+
+	/** Weight of Engagement component in DRS formula (default: 0.45) */
+	readonly drsEngagementWeight: number;
+
+	/** Breadth offset: facets below this count yield 0 breadth (default: 10) */
+	readonly drsBreadthOffset: number;
+
+	/** Breadth range: facets above offset+range are capped at 1 (default: 15) */
+	readonly drsBreadthRange: number;
+
+	/** Word count threshold for full engagement credit (default: 120) */
+	readonly drsWordCountThreshold: number;
+
+	/** Evidence-per-message threshold for full engagement credit (default: 6) */
+	readonly drsEvidenceThreshold: number;
+
+	/** Weight of word component within engagement (default: 0.55) */
+	readonly drsEngagementWordWeight: number;
+
+	/** Weight of evidence component within engagement (default: 0.45) */
+	readonly drsEngagementEvidenceWeight: number;
+
+	/** Recency weights for energy multiplier [most recent, ..., oldest] (default: [1.0, 0.6, 0.3]) */
+	readonly drsRecencyWeights: readonly number[];
+
+	/** Energy weight for light responses (default: 0) */
+	readonly drsEnergyWeightLight: number;
+
+	/** Energy weight for medium responses (default: 1) */
+	readonly drsEnergyWeightMedium: number;
+
+	/** Energy weight for heavy responses (default: 2) */
+	readonly drsEnergyWeightHeavy: number;
+
+	/** Center point for light energy fit curve (default: 0.55) */
+	readonly drsLightFitCenter: number;
+
+	/** Range for light energy fit curve (default: 0.35) */
+	readonly drsLightFitRange: number;
+
+	/** Center point for medium energy fit curve (default: 0.55) */
+	readonly drsMediumFitCenter: number;
+
+	/** Range for medium energy fit curve (default: 0.35) */
+	readonly drsMediumFitRange: number;
+
+	/** Center point for heavy energy fit curve (default: 0.65) */
+	readonly drsHeavyFitCenter: number;
+
+	/** Range for heavy energy fit curve (default: 0.25) */
+	readonly drsHeavyFitRange: number;
 }
 
 /**

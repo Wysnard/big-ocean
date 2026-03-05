@@ -415,9 +415,17 @@ export {
 	computeDomainCoverage,
 	computeTraitResults,
 } from "./utils/score-computation";
-// Steering utilities (Story 2.3, 17.2)
+// Steering utilities (Story 2.3, 17.2, 21-2)
 export {
+	computeBreadth,
 	computeDomainStreak,
+	computeDRS,
+	computeEnergyFit,
+	computeEnergyMultiplier,
+	computeEngagement,
+	type DRSConfig,
+	type DRSInput,
+	extractDRSConfig,
 	INTENT_TYPES,
 	type IntentType,
 	type MicroIntent,
