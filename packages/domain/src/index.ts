@@ -56,6 +56,12 @@ export {
 } from "./constants/nerin-greeting";
 // Nerin persona constant (Story 2.12)
 export { NERIN_PERSONA } from "./constants/nerin-persona";
+// Territory catalog (Story 21-1)
+export {
+	COLD_START_TERRITORIES,
+	getTerritoryById,
+	TERRITORY_CATALOG,
+} from "./constants/territory-catalog";
 // Trait descriptions (Story 8.2)
 export { TRAIT_DESCRIPTIONS, type TraitDescriptions } from "./constants/trait-descriptions";
 // Validation constants (Story 9.1)
@@ -349,6 +355,16 @@ export type {
 export { INVITATION_EXPIRY_DAYS } from "./types/relationship.types";
 // Session types
 export type { MessageRole, Session, SessionStatus } from "./types/session";
+// Steering output type (Story 21-1)
+export type { SteeringOutput } from "./types/steering";
+// Territory types (Story 21-1)
+export {
+	ENERGY_LEVELS,
+	type EnergyLevel,
+	type Territory,
+	type TerritoryId,
+	TerritoryIdSchema,
+} from "./types/territory";
 // Trait types (Big Five)
 export type { BigFiveTrait, TraitConfidenceScores } from "./types/trait";
 export { BIG_FIVE_TRAITS } from "./types/trait";
