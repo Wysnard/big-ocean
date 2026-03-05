@@ -352,7 +352,7 @@ development_status:
   epic-21: in-progress
   21-1-territory-domain-types-and-catalog: done
   21-2-depth-readiness-score-drs: done
-  21-3-territory-scoring-and-selection: backlog
+  21-3-territory-scoring-and-selection: pr-ready
   21-4-cold-start-territory-selection: backlog
   21-5-territory-prompt-builder-and-nerin-system-prompt: backlog
   21-6-schema-migration-and-conversanalyzer-energy-classification: backlog
@@ -369,5 +369,5 @@ development_status:
   epic-22: in-progress
   22-1-remove-steering-instructions-from-character-bible: done
   22-2-relate-reflect-and-story-pulling-patterns: done
-  22-3-contradiction-surfacing-migration-to-portrait-generator: backlog
+  22-3-contradiction-surfacing-migration-to-portrait-generator: pr-ready
   epic-22-retrospective: optional
