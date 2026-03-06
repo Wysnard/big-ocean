@@ -58,27 +58,46 @@ describe("sendMessage Use Case", () => {
 					"user",
 					"Tell me something",
 					"user_456",
+					undefined, // targetDomain
+					undefined, // targetBigfiveFacet
+					undefined, // intentType
+					undefined, // territoryId
+					expect.any(String), // observedEnergyLevel
 				);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should save assistant message with territory metadata (Story 21-7)", () =>
-			Effect.gen(function* () {
-				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
+		it.effect(
+			"should save user message with observed_energy_level and assistant with territory_id (Story 21-7)",
+			() =>
+				Effect.gen(function* () {
+					yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
 
-				// Story 21-7: assistant message now includes territory_id and observed_energy_level
-				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
-					"session_test_123",
-					"assistant",
-					mockNerinResponse.response,
-					undefined, // userId
-					undefined, // targetDomain (no longer used)
-					undefined, // targetBigfiveFacet (no longer used)
-					undefined, // intentType (no longer used)
-					expect.any(String), // territoryId
-					expect.any(String), // observedEnergyLevel
-				);
-			}).pipe(Effect.provide(createTestLayer())),
+					// User message should have observedEnergyLevel
+					expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
+						"session_test_123",
+						"user",
+						"Test",
+						undefined, // userId
+						undefined, // targetDomain
+						undefined, // targetBigfiveFacet
+						undefined, // intentType
+						undefined, // territoryId
+						expect.any(String), // observedEnergyLevel
+					);
+
+					// Assistant message should have territory_id but no energy
+					expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
+						"session_test_123",
+						"assistant",
+						mockNerinResponse.response,
+						undefined, // userId
+						undefined, // targetDomain (no longer used)
+						undefined, // targetBigfiveFacet (no longer used)
+						undefined, // intentType (no longer used)
+						expect.any(String), // territoryId
+					);
+				}).pipe(Effect.provide(createTestLayer())),
 		);
 
 		it.effect("should invoke Nerin with territory prompt (Story 21-7)", () =>

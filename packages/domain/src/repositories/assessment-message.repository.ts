@@ -24,7 +24,7 @@ export class AssessmentMessageRepository extends Context.Tag("AssessmentMessageR
 		 * @param targetBigfiveFacet - Optional facet for steering (assistant messages, Story 9.2)
 		 * @param intentType - Optional micro-intent type (assistant messages, Story 17.2)
 		 * @param territoryId - Optional territory ID snapshot (assistant messages, Story 21-6)
-		 * @param observedEnergyLevel - Optional observed energy level (assistant messages, Story 21-6)
+		 * @param observedEnergyLevel - Optional observed energy level from ConversAnalyzer (user messages)
 		 * @returns Effect with created message entity
 		 */
 		readonly saveMessage: (

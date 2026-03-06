@@ -81,38 +81,46 @@ describe("sendMessage Use Case", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should save assistant message with territory_id and observed_energy_level", () =>
-			Effect.gen(function* () {
-				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				mockEvidenceRepo.findBySession.mockReturnValue(
-					Effect.succeed([
-						{
-							id: "e1",
-							sessionId: "session_test_123",
-							messageId: "msg_5",
-							bigfiveFacet: "imagination",
-							deviation: 1,
-							strength: "moderate",
-							confidence: "medium",
-							domain: "work",
-							note: "test",
-							createdAt: new Date(),
-						},
-					]),
-				);
+		it.effect(
+			"should save observed_energy_level on user message and territory_id on assistant message",
+			() =>
+				Effect.gen(function* () {
+					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+					mockEvidenceRepo.findBySession.mockReturnValue(
+						Effect.succeed([
+							{
+								id: "e1",
+								sessionId: "session_test_123",
+								messageId: "msg_5",
+								bigfiveFacet: "imagination",
+								deviation: 1,
+								strength: "moderate",
+								confidence: "medium",
+								domain: "work",
+								note: "test",
+								createdAt: new Date(),
+							},
+						]),
+					);
 
-				yield* sendMessage({
-					sessionId: "session_test_123",
-					message: "I work in tech",
-				});
+					yield* sendMessage({
+						sessionId: "session_test_123",
+						message: "I work in tech",
+					});
 
-				// Last call to saveMessage should be the assistant message with territory metadata
-				const saveMessageCalls = mockMessageRepo.saveMessage.mock.calls;
-				const assistantSaveCall = saveMessageCalls.find((call: unknown[]) => call[1] === "assistant");
-				expect(assistantSaveCall).toBeDefined();
-				expect(assistantSaveCall?.[7]).toBeDefined(); // territoryId (8th positional arg)
-				expect(assistantSaveCall?.[8]).toBeDefined(); // observedEnergyLevel (9th positional arg)
-			}).pipe(Effect.provide(createTestLayer())),
+					const saveMessageCalls = mockMessageRepo.saveMessage.mock.calls;
+
+					// User message should have observedEnergyLevel
+					const userSaveCall = saveMessageCalls.find((call: unknown[]) => call[1] === "user");
+					expect(userSaveCall).toBeDefined();
+					expect(userSaveCall?.[8]).toBeDefined(); // observedEnergyLevel (9th positional arg)
+
+					// Assistant message should have territory_id but no observedEnergyLevel
+					const assistantSaveCall = saveMessageCalls.find((call: unknown[]) => call[1] === "assistant");
+					expect(assistantSaveCall).toBeDefined();
+					expect(assistantSaveCall?.[7]).toBeDefined(); // territoryId (8th positional arg)
+					expect(assistantSaveCall?.[8]).toBeUndefined(); // no observedEnergyLevel
+				}).pipe(Effect.provide(createTestLayer())),
 		);
 
 		it.effect("should still steer on stale evidence when conversanalyzer fails", () =>

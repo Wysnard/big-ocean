@@ -14,6 +14,7 @@ export const AssessmentHumanMessageEntitySchema = Schema.Struct({
 	userId: Schema.NullOr(Schema.String), // Null for anonymous users
 	role: Schema.Literal("user"),
 	content: Schema.String,
+	observedEnergyLevel: Schema.optionalWith(Schema.NullOr(Schema.String), { default: () => null }),
 	createdAt: Schema.DateFromSelf,
 });
 
@@ -30,7 +31,6 @@ export const AssessmentAssistantMessageEntitySchema = Schema.Struct({
 	targetBigfiveFacet: Schema.NullOr(FacetNameSchema),
 	intentType: Schema.optionalWith(Schema.NullOr(Schema.String), { default: () => null }),
 	territoryId: Schema.optionalWith(Schema.NullOr(Schema.String), { default: () => null }),
-	observedEnergyLevel: Schema.optionalWith(Schema.NullOr(Schema.String), { default: () => null }),
 	createdAt: Schema.DateFromSelf,
 });
 

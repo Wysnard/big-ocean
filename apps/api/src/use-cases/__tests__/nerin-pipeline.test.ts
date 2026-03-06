@@ -131,7 +131,7 @@ const coldStartMessages = [
 	},
 ];
 
-/** Post-cold-start messages: 3+ user messages with territory metadata on assistant messages */
+/** Post-cold-start messages: 3+ user messages with territory metadata on assistant messages, energy on user messages */
 const postColdStartMessages = [
 	{
 		id: "msg_1",
@@ -139,7 +139,6 @@ const postColdStartMessages = [
 		role: "assistant" as const,
 		content: "Hi! I'm Nerin.",
 		territoryId: "daily-routines",
-		observedEnergyLevel: "light",
 		createdAt: new Date(),
 	},
 	{
@@ -147,6 +146,7 @@ const postColdStartMessages = [
 		sessionId: "session_test_123",
 		role: "user" as const,
 		content: "Hello there",
+		observedEnergyLevel: "light",
 		createdAt: new Date(),
 	},
 	{
@@ -155,7 +155,6 @@ const postColdStartMessages = [
 		role: "assistant" as const,
 		content: "Tell me more about your mornings.",
 		territoryId: "daily-routines",
-		observedEnergyLevel: "light",
 		createdAt: new Date(),
 	},
 	{
@@ -163,6 +162,7 @@ const postColdStartMessages = [
 		sessionId: "session_test_123",
 		role: "user" as const,
 		content: "I usually wake up early and go for a run before work",
+		observedEnergyLevel: "medium",
 		createdAt: new Date(),
 	},
 	{
@@ -171,7 +171,6 @@ const postColdStartMessages = [
 		role: "assistant" as const,
 		content: "That sounds like a solid routine.",
 		territoryId: "creative-pursuits",
-		observedEnergyLevel: "medium",
 		createdAt: new Date(),
 	},
 	{
@@ -179,6 +178,7 @@ const postColdStartMessages = [
 		sessionId: "session_test_123",
 		role: "user" as const,
 		content: "I also like painting on weekends",
+		observedEnergyLevel: "light",
 		createdAt: new Date(),
 	},
 	{
@@ -187,7 +187,6 @@ const postColdStartMessages = [
 		role: "assistant" as const,
 		content: "Creative expression is fascinating.",
 		territoryId: "weekend-adventures",
-		observedEnergyLevel: "light",
 		createdAt: new Date(),
 	},
 	{
@@ -341,25 +340,32 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("saves assistant message with territory_id", () =>
-			Effect.gen(function* () {
-				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
+		it.effect(
+			"saves user message with observed_energy_level and assistant message with territory_id",
+			() =>
+				Effect.gen(function* () {
+					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
 
-				yield* runNerinPipeline({
-					sessionId: "session_test_123",
-					userMessage: "Hello",
-				});
+					yield* runNerinPipeline({
+						sessionId: "session_test_123",
+						userMessage: "Hello",
+					});
 
-				// saveMessage is called twice: once for user, once for assistant
-				expect(mockMessageRepo.saveMessage).toHaveBeenCalledTimes(2);
+					// saveMessage is called twice: once for user, once for assistant
+					expect(mockMessageRepo.saveMessage).toHaveBeenCalledTimes(2);
 
-				// Assistant message (second call) should have territory_id
-				const assistantSaveCall = mockMessageRepo.saveMessage.mock.calls[1];
-				expect(assistantSaveCall?.[1]).toBe("assistant"); // role
-				expect(assistantSaveCall?.[7]).toBeDefined(); // territoryId (8th arg, 0-indexed 7)
-				// During cold start, observedEnergyLevel defaults to "medium"
-				expect(assistantSaveCall?.[8]).toBe("medium"); // observedEnergyLevel
-			}).pipe(Effect.provide(createTestLayer())),
+					// User message (first call) should have observedEnergyLevel
+					const userSaveCall = mockMessageRepo.saveMessage.mock.calls[0];
+					expect(userSaveCall?.[1]).toBe("user"); // role
+					// During cold start, observedEnergyLevel defaults to "medium"
+					expect(userSaveCall?.[8]).toBe("medium"); // observedEnergyLevel
+
+					// Assistant message (second call) should have territory_id but no energy
+					const assistantSaveCall = mockMessageRepo.saveMessage.mock.calls[1];
+					expect(assistantSaveCall?.[1]).toBe("assistant"); // role
+					expect(assistantSaveCall?.[7]).toBeDefined(); // territoryId (8th arg, 0-indexed 7)
+					expect(assistantSaveCall?.[8]).toBeUndefined(); // no observedEnergyLevel
+				}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
@@ -404,24 +410,30 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("stores territory_id and observed_energy_level on assistant message", () =>
-			Effect.gen(function* () {
-				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+		it.effect(
+			"stores observed_energy_level on user message and territory_id on assistant message",
+			() =>
+				Effect.gen(function* () {
+					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 
-				yield* runNerinPipeline({
-					sessionId: "session_test_123",
-					userMessage: "I work in tech",
-				});
+					yield* runNerinPipeline({
+						sessionId: "session_test_123",
+						userMessage: "I work in tech",
+					});
 
-				// Assistant message should have territory_id and observedEnergyLevel
-				const assistantSaveCall = mockMessageRepo.saveMessage.mock.calls[1];
-				expect(assistantSaveCall?.[1]).toBe("assistant");
-				// territoryId should be a string (8th arg)
-				expect(typeof assistantSaveCall?.[7]).toBe("string");
-				expect(assistantSaveCall?.[7]).toBeTruthy();
-				// observedEnergyLevel should be "medium" (from mock)
-				expect(assistantSaveCall?.[8]).toBe("medium");
-			}).pipe(Effect.provide(createTestLayer())),
+					// User message (first call) should have observedEnergyLevel
+					const userSaveCall = mockMessageRepo.saveMessage.mock.calls[0];
+					expect(userSaveCall?.[1]).toBe("user");
+					// observedEnergyLevel should be "medium" (from mock ConversAnalyzer)
+					expect(userSaveCall?.[8]).toBe("medium");
+
+					// Assistant message (second call) should have territory_id but no energy
+					const assistantSaveCall = mockMessageRepo.saveMessage.mock.calls[1];
+					expect(assistantSaveCall?.[1]).toBe("assistant");
+					expect(typeof assistantSaveCall?.[7]).toBe("string");
+					expect(assistantSaveCall?.[7]).toBeTruthy();
+					expect(assistantSaveCall?.[8]).toBeUndefined();
+				}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
@@ -481,9 +493,9 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
 				// Evidence should NOT be saved (no evidence extracted)
 				expect(mockEvidenceRepo.save).not.toHaveBeenCalled();
 
-				// Assistant message should have default energy level
-				const assistantSaveCall = mockMessageRepo.saveMessage.mock.calls[1];
-				expect(assistantSaveCall?.[8]).toBe("medium");
+				// User message should have default energy level
+				const userSaveCall = mockMessageRepo.saveMessage.mock.calls[0];
+				expect(userSaveCall?.[8]).toBe("medium");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});

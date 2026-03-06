@@ -97,17 +97,18 @@ function buildVisitHistory(
 }
 
 /**
- * Extract last N observed energy levels from assistant messages (most recent first).
+ * Extract last N observed energy levels from user messages (most recent first).
+ * Energy is a property of the user's words, extracted by ConversAnalyzer.
  */
 function extractLastEnergyLevels(
-	assistantMessages: ReadonlyArray<{
+	userMessages: ReadonlyArray<{
 		observedEnergyLevel?: string | null;
 	}>,
 	count: number,
 ): EnergyLevel[] {
 	const levels: EnergyLevel[] = [];
-	for (let i = assistantMessages.length - 1; i >= 0 && levels.length < count; i--) {
-		const msg = assistantMessages[i];
+	for (let i = userMessages.length - 1; i >= 0 && levels.length < count; i--) {
+		const msg = userMessages[i];
 		if (msg?.observedEnergyLevel) {
 			levels.push(msg.observedEnergyLevel as EnergyLevel);
 		}
@@ -220,7 +221,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				userMessages.map((m) => m.id),
 				3,
 			);
-			const lastEnergyLevels = extractLastEnergyLevels(assistantMessages, 3);
+			const lastEnergyLevels = extractLastEnergyLevels(userMessages, 3);
 
 			drsValue = computeDRS(
 				{
@@ -404,6 +405,11 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			"user",
 			input.userMessage,
 			input.userId,
+			undefined, // targetDomain
+			undefined, // targetBigfiveFacet
+			undefined, // intentType
+			undefined, // territoryId
+			observedEnergyLevel,
 		);
 
 		if (pendingEvidence.length > 0) {
@@ -426,7 +432,6 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			undefined, // targetBigfiveFacet -- no longer used
 			undefined, // intentType -- no longer used
 			selectedTerritoryId as string,
-			observedEnergyLevel,
 		);
 
 		// Increment message_count atomically
