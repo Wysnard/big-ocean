@@ -5,6 +5,7 @@
  * otherwise falls back to test placeholder values.
  */
 
+import { randomBytes } from "node:crypto";
 import { resolve } from "node:path";
 import { config } from "dotenv";
 
@@ -28,17 +29,19 @@ export const POLAR_CONFIG = {
 		process.env.POLAR_PRODUCT_EXTENDED_CONVERSATION ?? "test-product-extended",
 } as const;
 
+const E2E_UID = randomBytes(4).toString("hex");
+
 export const OWNER_USER = {
-	email: "e2e-owner@test.bigocean.dev",
+	email: `e2e-owner+${E2E_UID}@gmail.com`,
 	password: "OceanDepth#Nerin42xQ",
 	name: "E2E Owner",
-} as const;
+};
 
 export const OTHER_USER = {
-	email: "e2e-other@test.bigocean.dev",
+	email: `e2e-other+${E2E_UID}@gmail.com`,
 	password: "CoralReef$Trait78zW",
 	name: "E2E Other",
-} as const;
+};
 
 const AUTH_DIR = resolve(import.meta.dirname, ".auth");
 

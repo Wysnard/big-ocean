@@ -6,7 +6,7 @@ const PROJECT_ROOT = resolve(import.meta.dirname, "..");
 async function globalTeardown(): Promise<void> {
 	console.log("[global-teardown] Stopping Docker test containers...");
 
-	execSync("docker compose -f compose.e2e.yaml down -v --remove-orphans", {
+	execSync("docker compose -p big-ocean-e2e -f compose.e2e.yaml down -v --remove-orphans", {
 		cwd: PROJECT_ROOT,
 		stdio: "inherit",
 	});

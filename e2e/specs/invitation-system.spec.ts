@@ -20,7 +20,7 @@ import { createUser } from "../factories/user.factory.js";
 import { expect, test } from "../fixtures/base.fixture.js";
 
 const INVITE_USER = {
-	email: `e2e-invite-${Date.now()}@test.bigocean.dev`,
+	email: `e2e-invite-${Date.now()}@gmail.com`,
 	password: "OceanDepth#Nerin42xQ",
 	name: "Invitation Tester",
 } as const;

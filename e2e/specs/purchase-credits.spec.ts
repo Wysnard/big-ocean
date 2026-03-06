@@ -19,13 +19,13 @@ import { createUser } from "../factories/user.factory.js";
 import { expect, test } from "../fixtures/base.fixture.js";
 
 const CREDITS_USER = {
-	email: `e2e-credits-${Date.now()}@test.bigocean.dev`,
+	email: `e2e-credits-${Date.now()}@gmail.com`,
 	password: "OceanDepth#Nerin42xQ",
 	name: "Credits Tester",
 } as const;
 
 const NO_ASSESSMENT_USER = {
-	email: `e2e-no-assess-${Date.now()}@test.bigocean.dev`,
+	email: `e2e-no-assess-${Date.now()}@gmail.com`,
 	password: "OceanDepth#Nerin42xQ",
 	name: "No Assessment User",
 } as const;
@@ -106,7 +106,7 @@ test.describe("Purchase Credits", () => {
 		apiContext,
 	}) => {
 		let sessionId: string;
-		const uiTestEmail = `e2e-credits-ui-${Date.now()}@test.bigocean.dev`;
+		const uiTestEmail = `e2e-credits-ui-${Date.now()}@gmail.com`;
 
 		await test.step("setup: create user with completed assessment", async () => {
 			sessionId = await createAssessmentSession(apiContext);

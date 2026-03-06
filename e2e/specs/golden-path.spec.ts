@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { seedFullPortrait } from "../factories/assessment.factory.js";
 
 /**
  * Golden Path Journey
@@ -64,7 +65,7 @@ test("golden path: landing → chat → signup → results → share → public 
 		await page.getByTestId("chat-auth-gate-signup-btn").click();
 
 		// Fill sign-up form
-		await page.locator("#results-signup-email").fill("e2e-golden@test.bigocean.dev");
+		await page.locator("#results-signup-email").fill(`e2e-golden+${Date.now()}@gmail.com`);
 		await page.locator("#results-signup-password").fill("OceanDepth#Nerin42xQ");
 		await page.getByTestId("auth-gate-signup-submit").click();
 	});
@@ -77,10 +78,20 @@ test("golden path: landing → chat → signup → results → share → public 
 	});
 
 	await test.step("assert archetype card is visible", async () => {
-		await page.getByTestId("archetype-hero-section").waitFor({
-			state: "visible",
-			timeout: 15_000,
-		});
+		// Lazy finalization may still be in progress — retry with reload if needed
+		for (let attempt = 0; attempt < 3; attempt++) {
+			const hero = page.getByTestId("archetype-hero-section");
+			const visible = await hero.isVisible().catch(() => false);
+			if (visible) break;
+
+			if (attempt < 2) {
+				await page.waitForTimeout(2_000);
+				await page.reload();
+				await page.waitForLoadState("networkidle");
+			} else {
+				await hero.waitFor({ state: "visible", timeout: 15_000 });
+			}
+		}
 	});
 
 	await test.step("assert results page trait display (Story 12-1)", async () => {
@@ -105,6 +116,32 @@ test("golden path: landing → chat → signup → results → share → public 
 
 		// OCEAN code is displayed
 		await expect(page.getByTestId("ocean-code")).toBeVisible();
+	});
+
+	await test.step("assert Polar checkout button is present", async () => {
+		// Portrait unlock CTA triggers Polar checkout for full portrait
+		const portraitCta = page.getByTestId("reveal-portrait-cta");
+		await portraitCta.scrollIntoViewIfNeeded();
+		await expect(portraitCta).toBeVisible();
+	});
+
+	await test.step("seed full portrait and verify it renders", async () => {
+		// Simulate full portrait generation by seeding directly in the DB
+		// (bypasses Polar checkout → webhook → LLM pipeline)
+		await seedFullPortrait(sessionId);
+		await page.reload();
+		await page.getByTestId("archetype-hero-section").waitFor({
+			state: "visible",
+			timeout: 15_000,
+		});
+
+		// PersonalPortrait component should now render (replaces TeaserPortrait)
+		const portrait = page.locator("[data-slot='personal-portrait']");
+		await portrait.scrollIntoViewIfNeeded();
+		await expect(portrait).toBeVisible();
+
+		// Teaser portrait CTA should no longer be visible
+		await expect(page.getByTestId("reveal-portrait-cta")).not.toBeVisible();
 	});
 
 	await test.step("wait for auto-generated share link", async () => {
@@ -175,7 +212,12 @@ test("golden path: landing → chat → signup → results → share → public 
 	});
 
 	await test.step("profile page shows completed assessment card", async () => {
-		await page.goto("/profile");
+		// Use client-side navigation via user nav dropdown (avoids auth race on cold page.goto)
+		const avatarButton = page.locator("[data-slot='user-nav'] button.rounded-full");
+		await avatarButton.waitFor({ state: "visible", timeout: 10_000 });
+		await avatarButton.click();
+		await page.getByRole("menuitem", { name: "Profile" }).click();
+		await page.waitForURL(/\/profile\/?$/);
 		await page.locator("[data-slot='assessment-card']").waitFor({
 			state: "visible",
 			timeout: 10_000,

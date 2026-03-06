@@ -14,7 +14,7 @@ import { expect, test } from "../fixtures/base.fixture.js";
 
 test.describe("Waitlist API", () => {
 	test("POST /api/waitlist/signup — valid email returns ok", async ({ apiContext, apiUrl }) => {
-		const uniqueEmail = `e2e-waitlist-${Date.now()}@test.bigocean.dev`;
+		const uniqueEmail = `e2e-waitlist-${Date.now()}@gmail.com`;
 
 		const res = await apiContext.post(`${apiUrl}/api/waitlist/signup`, {
 			data: { email: uniqueEmail },
@@ -32,7 +32,7 @@ test.describe("Waitlist API", () => {
 		apiContext,
 		apiUrl,
 	}) => {
-		const uniqueEmail = `e2e-waitlist-dup-${Date.now()}@test.bigocean.dev`;
+		const uniqueEmail = `e2e-waitlist-dup-${Date.now()}@gmail.com`;
 
 		// First signup
 		const res1 = await apiContext.post(`${apiUrl}/api/waitlist/signup`, {
@@ -89,7 +89,7 @@ test.describe("Waitlist UI", () => {
 	});
 
 	test("waitlist form submits email and API returns success", async ({ page }) => {
-		const uniqueEmail = `e2e-waitlist-ui-${Date.now()}@test.bigocean.dev`;
+		const uniqueEmail = `e2e-waitlist-ui-${Date.now()}@gmail.com`;
 
 		await page.goto("/chat");
 		await page

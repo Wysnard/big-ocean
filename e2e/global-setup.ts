@@ -121,7 +121,7 @@ async function globalSetup(): Promise<void> {
 		console.log("[global-setup] Loading Polar.sh config from .env.e2e");
 	}
 
-	execSync(`docker compose -f compose.e2e.yaml ${envFileFlag} up -d --build`, {
+	execSync(`docker compose -p big-ocean-e2e -f compose.e2e.yaml ${envFileFlag} up -d --build`, {
 		cwd: PROJECT_ROOT,
 		stdio: "inherit",
 	});

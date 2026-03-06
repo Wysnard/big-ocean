@@ -1,23 +1,25 @@
 # Sprint Parallelism Plan
-Generated: 2026-03-05 (refreshed 14 — 21-6 merged, only 21-7 remains)
+Generated: 2026-03-06 (refreshed 15 — all active stories complete)
 
 > Epic 6 (Privacy/GDPR) excluded — deferred to Phase 2 EU launch.
 > Epic 20 (Evidence Review) deferred — evidence already has messageId FK.
-> Epic 22 complete — all 3 stories merged.
-> Stories 21-1 through 21-6 all merged. Only 21-7 (pipeline orchestration) remains.
+> All active epics (1-5, 7-19, 21-22) complete.
 
-## Step 1: Pipeline integration (final story)
-| Story | Mode | Notes |
-|-------|------|-------|
-| 21-7-pipeline-orchestration-integration | parallel | Wires all Epic 21 components (21-1 through 21-6) into 8-step territory-based pipeline; clean cut replaces old facet-targeted steering |
+## No Remaining Steps
 
-**Gate:** Epic 21 complete after this step.
+All active stories across Phases 1-4 are **done**.
 
-## Conflict Notes
-- **nerin-pipeline.ts**: 21-7 rewrites pipeline to 8-step orchestration using components from 21-1 through 21-6. This is the final integration story.
-- **Epic 21 is atomic at deployment** — all 7 stories must be complete before deploying territory steering to production.
+### Deferred Work (not scheduled)
+
+| Epic | Stories | Reason |
+|------|---------|--------|
+| Epic 6 (Privacy/GDPR) | 6-1, 6-2, 6-3 | Deferred to Phase 2 EU launch |
+| Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **1 step** remaining to complete Phase 4 (CEE)
-- **Step 1:** 1 story (pipeline orchestration integration)
-- **Total remaining:** 1 story in Epic 21
+- **0 steps** remaining — all active phases complete
+- **Phase 1 (MVP):** 8 epics, all done
+- **Phase 2 (Innovation Strategy):** 7 epics, all done
+- **Phase 3 (Pipeline V1 Rewrite):** 4 epics done, 1 deferred
+- **Phase 4 (CEE):** 2 epics, all done
+- **Total remaining:** 0 active stories (5 deferred)

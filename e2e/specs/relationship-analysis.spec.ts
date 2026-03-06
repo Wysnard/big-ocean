@@ -23,19 +23,19 @@ import { createUser, signInUser } from "../factories/user.factory.js";
 import { expect, test } from "../fixtures/base.fixture.js";
 
 const INVITER = {
-	email: `e2e-inviter-${Date.now()}@test.bigocean.dev`,
+	email: `e2e-inviter-${Date.now()}@gmail.com`,
 	password: "OceanDepth#Nerin42xQ",
 	name: "Test Inviter",
 } as const;
 
 const INVITEE_ACCEPT = {
-	email: `e2e-invitee-accept-${Date.now()}@test.bigocean.dev`,
+	email: `e2e-invitee-accept-${Date.now()}@gmail.com`,
 	password: "OceanDepth#Nerin42xQ",
 	name: "Test Invitee Accept",
 } as const;
 
 const INVITEE_REFUSE = {
-	email: `e2e-invitee-refuse-${Date.now()}@test.bigocean.dev`,
+	email: `e2e-invitee-refuse-${Date.now()}@gmail.com`,
 	password: "OceanDepth#Nerin42xQ",
 	name: "Test Invitee Refuse",
 } as const;
@@ -227,7 +227,7 @@ test.describe
 				});
 			});
 
-			const anonEmail = `e2e-anon-invitee-${Date.now()}@test.bigocean.dev`;
+			const anonEmail = `e2e-anon-invitee-${Date.now()}@gmail.com`;
 
 			await test.step("sign up via auth gate", async () => {
 				await page.getByTestId("chat-auth-gate-signup-btn").click();
@@ -262,7 +262,7 @@ test.describe
 			test.setTimeout(90_000);
 
 			const INVITEE_NO_ASSESSMENT = {
-				email: `e2e-invitee-noassess-${Date.now()}@test.bigocean.dev`,
+				email: `e2e-invitee-noassess-${Date.now()}@gmail.com`,
 				password: "OceanDepth#Nerin42xQ",
 				name: "Invitee No Assessment",
 			} as const;
@@ -326,11 +326,26 @@ test.describe
 				await page.getByTestId("chat-send-btn").click();
 			});
 
-			await test.step("click View Results to navigate to results page", async () => {
+			await test.step("click View Results and wait for finalization", async () => {
 				const viewResultsLink = page.getByRole("link", { name: "View Results" });
 				await viewResultsLink.waitFor({ state: "visible", timeout: 15_000 });
 				await viewResultsLink.click();
 				await page.waitForURL(/\/results\//, { timeout: 15_000 });
+
+				// Wait for lazy finalization to complete (archetype hero = results ready)
+				for (let attempt = 0; attempt < 3; attempt++) {
+					const hero = page.getByTestId("archetype-hero-section");
+					const visible = await hero.isVisible().catch(() => false);
+					if (visible) break;
+
+					if (attempt < 2) {
+						await page.waitForTimeout(2_000);
+						await page.reload();
+						await page.waitForLoadState("networkidle");
+					} else {
+						await hero.waitFor({ state: "visible", timeout: 15_000 });
+					}
+				}
 			});
 
 			await test.step("navigate back to invite page and accept via UI", async () => {

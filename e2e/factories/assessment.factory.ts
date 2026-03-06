@@ -316,6 +316,48 @@ export async function grantCredits(userId: string, count = 1): Promise<void> {
 }
 
 /**
+ * Seed a full portrait row for a session so the results page renders PersonalPortrait.
+ * Looks up the assessment_results row for the session and inserts a "full" tier portrait.
+ */
+export async function seedFullPortrait(sessionId: string): Promise<void> {
+	const pool = new Pool(TEST_DB_CONFIG);
+	const client = await pool.connect();
+
+	try {
+		const resultRow = await client.query(
+			`SELECT id FROM assessment_results WHERE assessment_session_id = $1 LIMIT 1`,
+			[sessionId],
+		);
+		if (resultRow.rows.length === 0) {
+			throw new Error(`No assessment_results found for session ${sessionId}`);
+		}
+		const assessmentResultId: string = resultRow.rows[0].id;
+
+		await client.query(
+			`INSERT INTO portraits (assessment_result_id, tier, content, model_used, retry_count, created_at)
+			 VALUES ($1, 'full', $2, 'e2e-seed', 0, NOW())
+			 ON CONFLICT (assessment_result_id, tier) DO UPDATE SET content = $2`,
+			[assessmentResultId, SEED_FULL_PORTRAIT],
+		);
+	} finally {
+		client.release();
+		await pool.end();
+	}
+}
+
+const SEED_FULL_PORTRAIT = `# The Explorer's Mind
+
+You approach the world with a rare combination of intellectual curiosity and emotional depth. Your conversations reveal someone who doesn't just think about ideas — you feel them, turning abstract concepts into lived experiences.
+
+## Openness & Curiosity
+
+Your imagination isn't idle daydreaming; it's an active force that shapes how you engage with everything from creative projects to everyday problem-solving. You're drawn to novelty not for its own sake, but because you genuinely believe there's always something new to discover.
+
+## Connection & Independence
+
+There's an interesting tension in your personality: you value deep, meaningful connections with others, yet you also need space to explore on your own terms. This isn't contradictory — it's what makes your relationships feel authentic rather than performative.`;
+
+/**
  * Look up a user by email in the Better Auth user table.
  */
 export async function getUserByEmail(email: string): Promise<{ id: string } | null> {

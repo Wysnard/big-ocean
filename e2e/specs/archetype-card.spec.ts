@@ -19,7 +19,7 @@ import { expect, test } from "../fixtures/base.fixture.js";
  */
 
 const CARD_USER = {
-	email: "e2e-card-gen@test.bigocean.dev",
+	email: `e2e-card-gen+${Date.now()}@gmail.com`,
 	password: "OceanDepth#Nerin42xQ",
 	name: "Card Tester",
 } as const;

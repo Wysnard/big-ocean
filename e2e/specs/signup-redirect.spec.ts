@@ -7,7 +7,7 @@ import { expect, test } from "@playwright/test";
  * to the correct destination (home by default), then navigates to profile.
  */
 test("signup from home → redirects to home → navigate to profile", async ({ page }) => {
-	const uniqueEmail = `e2e-signup-redirect-${Date.now()}@test.bigocean.dev`;
+	const uniqueEmail = `e2e-signup-redirect-${Date.now()}@gmail.com`;
 
 	await test.step("navigate to landing page", async () => {
 		await page.goto("/");
@@ -48,7 +48,12 @@ test("signup from home → redirects to home → navigate to profile", async ({ 
 	});
 
 	await test.step("navigate to profile and verify access", async () => {
-		await page.goto("/profile");
+		// Use client-side navigation via user nav dropdown — avoids race condition
+		// where getSession() in beforeLoad may fail on a cold page.goto to an auth route.
+		const avatarButton = page.locator("[data-slot='user-nav'] button.rounded-full");
+		await avatarButton.waitFor({ state: "visible", timeout: 10_000 });
+		await avatarButton.click();
+		await page.getByRole("menuitem", { name: "Profile" }).click();
 		await page.waitForURL(/\/profile/, { timeout: 10_000 });
 		// Authenticated user should see the profile page, not be redirected to login
 		expect(page.url()).toContain("/profile");

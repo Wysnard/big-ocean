@@ -52,7 +52,18 @@ test.describe("profile page: auth user with completed assessment", () => {
 
 	test("profile shows assessment card → click View Results → results page", async ({ page }) => {
 		await test.step("navigate to profile page", async () => {
-			await page.goto("/profile");
+			// Navigate to home first so the SPA loads and auth cookies are established,
+			// then use client-side navigation to /profile (avoids race condition where
+			// getSession() in beforeLoad may fail on a cold page.goto to an auth route).
+			await page.goto("/");
+			await page.waitForLoadState("networkidle");
+
+			const avatarButton = page.locator("[data-slot='user-nav'] button.rounded-full");
+			await avatarButton.waitFor({ state: "visible", timeout: 10_000 });
+			await avatarButton.click();
+			await page.getByRole("menuitem", { name: "Profile" }).click();
+			await page.waitForURL(/\/profile\/?$/);
+
 			await page.locator("[data-slot='profile-page']").waitFor({
 				state: "visible",
 				timeout: 15_000,

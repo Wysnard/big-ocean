@@ -21,7 +21,7 @@ import { expect, test } from "../fixtures/base.fixture.js";
  */
 
 const PROFILE_USER = {
-	email: "e2e-profile-viewer@test.bigocean.dev",
+	email: `e2e-profile-viewer+${Date.now()}@gmail.com`,
 	password: "OceanDepth#Nerin42xQ",
 	name: "Profile Tester",
 } as const;

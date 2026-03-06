@@ -13,8 +13,8 @@
 #
 # Usage:
 #   pnpm test:e2e               # Automatic via globalSetup/globalTeardown
-#   docker compose -f compose.e2e.yaml --env-file .env.e2e up -d --build   # Manual with sandbox
-#   docker compose -f compose.e2e.yaml down -v          # Manual stop
+#   docker compose -p big-ocean-e2e -f compose.e2e.yaml --env-file .env.e2e up -d --build   # Manual with sandbox
+#   docker compose -p big-ocean-e2e -f compose.e2e.yaml down -v          # Manual stop
 
 services:
   redis-e2e:
