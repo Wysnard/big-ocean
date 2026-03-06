@@ -16,36 +16,14 @@ import {
 	ConversanalyzerError,
 	type ConversanalyzerInput,
 	ConversanalyzerRepository,
-	ENERGY_LEVELS,
+	decodeEvidenceExtraction,
 	type EnergyLevel,
+	evidenceExtractionJsonSchema,
 	FACET_PROMPT_DEFINITIONS,
 	LIFE_DOMAINS,
 	LoggerRepository,
 } from "@workspace/domain";
-import { Effect, JSONSchema, Layer, Redacted } from "effect";
-import * as S from "effect/Schema";
-
-// ─── Effect Schema: Single source of truth for tool definition + validation ───
-
-const EvidenceItemSchema = S.Struct({
-	bigfiveFacet: S.Literal(...ALL_FACETS),
-	deviation: S.Int.pipe(S.between(-3, 3)),
-	strength: S.Literal("weak", "moderate", "strong"),
-	confidence: S.Literal("low", "medium", "high"),
-	domain: S.Literal(...LIFE_DOMAINS),
-	note: S.String.pipe(S.maxLength(200)),
-});
-
-const EvidenceExtractionSchema = S.Struct({
-	evidence: S.Array(EvidenceItemSchema),
-	observedEnergyLevel: S.Literal(...ENERGY_LEVELS),
-});
-
-/** JSON Schema for Anthropic tool input_schema */
-const evidenceToolJsonSchema = JSONSchema.make(EvidenceExtractionSchema);
-
-/** Validate LLM output against the same schema */
-const decodeEvidenceExtraction = S.decodeUnknownSync(EvidenceExtractionSchema);
+import { Effect, Layer, Redacted } from "effect";
 
 // ─── Prompt ───────────────────────────────────────────────────────────────────
 
@@ -64,6 +42,15 @@ function buildPrompt(input: ConversanalyzerInput): string {
 
 ## Big Five Facets (30 total)
 ${facetDefs}
+
+## IMPORTANT: Valid Facet Names (use EXACTLY these values)
+imagination, artistic_interests, emotionality, adventurousness, intellect, liberalism,
+self_efficacy, orderliness, dutifulness, achievement_striving, self_discipline, cautiousness,
+friendliness, gregariousness, assertiveness, activity_level, excitement_seeking, cheerfulness,
+trust, morality, altruism, cooperation, modesty, sympathy,
+anxiety, anger, depression, self_consciousness, immoderation, vulnerability
+
+Do NOT invent facet names. If a behavior doesn't map to one of these 30 facets, skip it.
 
 ## Life Domains
 - work: Professional activities, career, job tasks, colleagues, workplace dynamics
@@ -229,7 +216,7 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 								{
 									name: "extract_evidence",
 									description: "Extract Big Five personality evidence from the user message",
-									input_schema: evidenceToolJsonSchema as Anthropic.Tool["input_schema"],
+									input_schema: evidenceExtractionJsonSchema as Anthropic.Tool["input_schema"],
 								},
 							],
 							tool_choice: { type: "tool", name: "extract_evidence" },
@@ -241,8 +228,21 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 							throw new Error("No tool_use block in Haiku response");
 						}
 
-						// Validate against Effect Schema
+						// Validate against Effect Schema (lenient: filters invalid items)
+						const rawInput = toolUseBlock.input as {
+							evidence?: unknown[];
+						};
+						const rawCount = rawInput.evidence?.length ?? 0;
 						const parsed = decodeEvidenceExtraction(toolUseBlock.input);
+						const discardedCount = rawCount - parsed.evidence.length;
+
+						if (discardedCount > 0) {
+							logger.warn("Discarded invalid evidence items", {
+								discardedCount,
+								rawCount,
+								validCount: parsed.evidence.length,
+							});
+						}
 
 						const tokenUsage = {
 							input: response.usage.input_tokens,

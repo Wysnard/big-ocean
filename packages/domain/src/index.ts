@@ -249,6 +249,16 @@ export {
 } from "./schemas/assessment-message";
 // Big Five name schemas — typed literal schemas for TraitName and FacetName
 export { FacetNameSchema, TraitNameSchema } from "./schemas/big-five-schemas";
+// Evidence extraction schemas — ConversAnalyzer structured output with lenient filtering
+export {
+	decodeEvidenceExtraction,
+	type EvidenceExtraction,
+	EvidenceExtractionSchema,
+	type EvidenceItem,
+	EvidenceItemSchema,
+	evidenceExtractionJsonSchema,
+	LenientEvidenceExtractionSchema,
+} from "./schemas/evidence-extraction";
 // OCEAN code branded schemas (canonical definitions)
 export { OceanCode4Schema, OceanCode5Schema } from "./schemas/ocean-code";
 // Result schemas — canonical FacetResult and TraitResult types
