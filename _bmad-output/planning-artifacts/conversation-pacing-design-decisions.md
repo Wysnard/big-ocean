@@ -4,7 +4,7 @@ description: Design decisions and principles for Nerin's conversation pacing arc
 date: 2026-03-07
 status: updated
 last_updated: 2026-03-07
-changelog: "Decision 3 rewritten — E_target formula redesigned from additive sum to 7-step pipeline. Coverage removed from pacing formula (relocated to territory policy). Architecture diagram updated. Open questions split into resolved/still-open."
+changelog: "Energy and telling extraction resolved — precise definitions, 5-band extraction rubrics, ConversAnalyzer v2 output contract, orthogonality guardrails, and calibration protocol specified. Two open questions moved to resolved. Related documents updated."
 ---
 
 # Conversation Pacing Design Decisions
@@ -340,10 +340,11 @@ When forces conflict, resolve in this order:
 - **Coverage in E_target** — resolved. Removed. Coverage is assessment state, not user state. It feeds territory policy.
 - **Telling integration** — resolved (design). Telling enters E_target as an asymmetric trust qualifier on upward momentum. Piecewise linear function: T=0 maps to trust=0.5, T=0.5 to trust=1.0, T=1.0 to trust=1.2. Default trust=1.0 when telling is unavailable.
 - **Formula weights** — partially resolved. V1 defaults established (alpha_up=0.5, alpha_down=0.6, lambda=0.35, K=5). Empirical calibration with real conversations still required (Decision 10).
+- **Energy definition and extraction** — resolved. Energy represents *cost to the user*, extracted as *observable conversational intensity/load* across 4 dimensions (emotional activation, cognitive investment, expressive investment, activation/urgency). Scored via 5 anchored bands (minimal/low/steady/high/very_high) mapped to numeric values (1/3/5/7/9). Any single dimension strongly present is sufficient for high energy (equal authority, not averaged). Six guardrails prevent systematic bias: eloquence is not energy, sophistication is not cognitive investment, peak dimension not average, understated styles protected, length is not energy, comfortable analysis scores steady. Energy is scored on an absolute scale — not relative to recent conversation history. E=5 ("steady") aligns with the formula's comfort threshold (zero drain). See [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md).
+- **Telling signal extraction** — resolved. Telling measures *self-propulsion beyond the minimum viable answer* to the previous assistant message. The "minimum viable answer" framing implicitly handles prompt affordance (open prompts set a higher floor, narrow prompts set a lower floor). Scored via 5 anchored bands (fully_compliant/mostly_compliant/mixed/mostly_self_propelled/strongly_self_propelled) mapped to (0.0/0.25/0.5/0.75/1.0). Telling is scored relative to the previous assistant turn. High-telling markers: introduces new material, volunteers stories, makes own connections, reframes the question, asks questions back. Low-telling markers: stays inside the question's frame, echoes Nerin's language, answers then stops. Multi-part messages score peak telling shown. See [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md).
+- **ConversAnalyzer v2 output contract** — resolved. LLM outputs `userState` block (energyBand, tellingBand, energyReason, tellingReason, withinMessageShift) alongside unchanged evidence array. LLM produces bands (enums), pipeline maps to numbers. State extraction instructions positioned before evidence in the prompt. Fail-open defaults: energy=5, telling=null on extraction failure. Orthogonality enforced via mandatory diagonal contrastive examples in the prompt (high-E/low-T and low-E/high-T). Calibration uses expert review (20-30 messages, prompt compliance) and user self-scoring (post-session, ground truth for energy-as-cost). See [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md).
 
 ### Still Open
-
-- **Telling signal extraction** — how does ConversAnalyzer compute the telling score? The formula defines what telling *means* (self-propelled vs. compliance-driven, scale 0-1) and how it enters the formula, but the extraction method is still unspecified. The ConversAnalyzer state extraction contract needs expansion beyond facet evidence.
 - **Territory policy redesign** — territory policy must be redesigned to consume E_target alongside coverage gaps, freshness, and late-session resonance. This is a separate design problem.
 - **Continuation experience** — what does conversation 2 feel like? Does Nerin remember? Does it pick up living threads from session 1?
 - **Portrait framing** — how exactly does the portrait communicate "complete but inviting" after a single session? What language bridges "here's what we found" and "here's what's still emerging"?
@@ -354,5 +355,6 @@ When forces conflict, resolve in this order:
 ## Related Documents
 
 - [E_target Formula Specification](../problem-solution-2026-03-07.md) — complete v1 formula with pipeline definition, function shapes, constants, 10-archetype simulation results, and implementation plan
+- [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md) — precise energy/telling definitions, ConversAnalyzer v2 output contract, extraction prompt with rubrics and guardrails, calibration protocol, and implementation plan
 - [Idea Proposition](./idea-proposition.md) — the original proposition this document refines
 - [Architecture](./architecture.md) — system architecture (to be updated post-spec)
