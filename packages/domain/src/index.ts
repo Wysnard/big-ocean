@@ -402,6 +402,7 @@ export {
 	buildChatSystemPrompt,
 	calculateConfidenceFromFacetScores,
 	calculateOverallConfidence,
+	computeETarget,
 	createInitialFacetScoresMap,
 	createInitialTraitScoresMap,
 	DEFAULT_FACET_CONFIDENCE,
@@ -416,6 +417,9 @@ export {
 	getTraitColor,
 	getTraitGradient,
 	lookupArchetype,
+	PACING_CONSTANTS,
+	type PacingResult,
+	type PacingState,
 	type TraitConfidence,
 	toFacetDisplayName,
 } from "./utils/index";
