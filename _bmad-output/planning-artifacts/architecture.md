@@ -2,7 +2,7 @@
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 lastStep: 8
 status: 'complete'
-completedAt: '2026-03-05'
+completedAt: '2026-03-07'
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/ux-design-specification.md'
@@ -28,7 +28,7 @@ inputDocuments:
 workflowType: 'architecture'
 project_name: 'big-ocean'
 user_name: 'Vincentlay'
-date: '2026-03-05'
+date: '2026-03-07'
 ---
 
 # big-ocean System Architecture
@@ -46,8 +46,8 @@ This consolidated architecture covers the complete big-ocean system across all i
 #### 1. Conversational Assessment Engine (Epics 1-4, 9-11)
 - Anonymous-first 25-message conversation with Nerin (Claude Haiku via Anthropic SDK)
 - Real-time personality evidence extraction via ConversAnalyzer (Haiku, per-message)
-- Formula-driven steering: entropy-based domain selection, confidence-gap facet targeting
-- Cold-start seed pool (first 3 messages) → post-cold-start evidence-driven steering
+- Territory-based steering: DRS-scored territories, energy-fit alignment, breadth/coverage optimization
+- Cold-start seed territories (first 3 messages) → DRS-scored territory steering
 - Session ownership verification, advisory locking, message rate limiting
 - Derive-at-read: trait scores, OCEAN codes, archetypes computed from facet scores at read time
 
@@ -259,17 +259,22 @@ Deviation 0 → score 10 (midpoint), +3 → 20 (max), -3 → 0 (min).
 
 **Dual-facet extraction:** ConversAnalyzer prompted to find DIFFERENT facet with NEGATIVE deviation for every record. Polarity balance target: ≥30% negative deviations.
 
-### ADR-5: Formula-Driven Steering
+### ADR-5: Territory-Based Steering
 
-**Decision:** Pure domain functions replace LLM-based routing for conversation steering.
+**Decision:** Pure domain functions drive conversation steering via territory scoring. Legacy facet-targeting, micro-intents, and domain streak tracking have been removed — territory-based steering is the sole mechanism.
 
-**Key functions** in `packages/domain/src/utils/`:
-- `computeFacetMetrics(evidence[])` — context-weighted scores, confidence (exponential saturation), signal power (cross-context entropy)
-- `computeSteeringTarget(metrics, previousDomain, config)` — selects facet with lowest confidence/power gap, then picks domain maximizing expected signal power gain with switch-cost penalty
+**Key functions** in `packages/domain/src/utils/steering/`:
+- `scoreTerritory(territory, config)` / `scoreAllTerritories(territories, config)` — DRS-based territory ranking
+- `computeDRS(input)` — Domain Relevance Score combining breadth, coverage, energy fit
+- `computeBreadth(facetEvidenceCounts)` — cross-facet evidence distribution
+- `computeCoverageValue(facetEvidenceCounts)` — evidence density per facet
+- `computeEnergyFit(territory, observedEnergy)` — alignment between territory and user energy
+- `buildTerritoryPrompt(territory)` / `buildTerritorySystemPromptSection(content)` — prompt construction for Nerin
+- `selectTerritoryWithColdStart(territories, config)` — cold-start aware territory selection
 
-**Algorithm:** No hand-crafted domain-to-facet mapping. Formula computes which domain helps which facet based on actual evidence distribution.
+**Algorithm:** Territories scored by DRS formula. No hand-crafted domain-to-facet mapping. Formula computes which territory maximizes assessment coverage based on actual evidence distribution and user energy.
 
-**Cold-start (≤ 3 user messages):** Predefined seed pool of 5 `{ domain, facet }` pairs, round-robin via seedIndex.
+**Cold-start (≤ 3 user messages):** `selectColdStartTerritory()` provides predefined seed territories, then transitions to DRS-scored selection.
 
 ### ADR-6: Derive-at-Read
 
@@ -684,9 +689,11 @@ big-ocean/                                    # Monorepo root
 │   │   │   │   ├── facet-level.ts            # Facet level classification
 │   │   │   │   ├── trait-colors.ts           # Trait → color mapping
 │   │   │   │   ├── display-name.ts / date.utils.ts
-│   │   │   │   ├── steering/                 # Steering sub-module
-│   │   │   │   │   ├── compute-domain-streak.ts
-│   │   │   │   │   ├── realize-micro-intent.ts
+│   │   │   │   ├── steering/                 # Steering sub-module (DRS, cold-start, territory prompt)
+│   │   │   │   │   ├── cold-start.ts
+│   │   │   │   │   ├── drs.ts
+│   │   │   │   │   ├── territory-prompt-builder.ts
+│   │   │   │   │   ├── territory-scorer.ts
 │   │   │   │   │   └── __tests__/
 │   │   │   │   └── __tests__/                # 17 test files
 │   │   │   ├── services/                     # Domain services
@@ -833,7 +840,7 @@ big-ocean/                                    # Monorepo root
 
 | Table Group | Tables | Write Path | Read Path |
 |------------|--------|-----------|-----------|
-| Assessment | `assessment_sessions`, `assessment_messages`, `assessment_results` | Use-cases via Drizzle repos | Use-cases + derive-at-read |
+| Assessment | `assessment_sessions`, `assessment_messages` (territory_id, observed_energy_level), `assessment_results` | Use-cases via Drizzle repos | Use-cases + derive-at-read |
 | Evidence | `conversation_evidence` | ConversAnalyzer → nerin-pipeline → repo | Evidence queries + portrait generation |
 | Portraits | `portraits`, `portrait_ratings` | Placeholder → forkDaemon | Status polling + lazy retry |
 | Profiles | `public_profiles`, `profile_access_log` | Toggle visibility use-case | Public profile view + fire-and-forget logging |
@@ -848,7 +855,7 @@ big-ocean/                                    # Monorepo root
 
 | Epic | Backend Use-Cases | Frontend Routes/Components | Packages |
 |------|------------------|---------------------------|----------|
-| **1-4: Assessment Engine** | `start-assessment`, `send-message`, `nerin-pipeline`, `resume-session`, `calculate-confidence` | `/chat` → TherapistChat, ChatAuthGate, useTherapistChat | domain/utils/formula.ts, domain/constants/nerin-*.ts |
+| **1-4: Assessment Engine** | `start-assessment`, `send-message`, `nerin-pipeline`, `resume-session`, `calculate-confidence` | `/chat` → TherapistChat, ChatAuthGate, useTherapistChat | domain/utils/formula.ts, domain/utils/steering/*, domain/constants/nerin-*.ts |
 | **9-11: Results & Finalization** | `generate-results`, `get-results`, `get-finalization-status`, `get-facet-evidence`, `get-message-evidence`, `get-transcript` | `/results/$id` → ProfileView, TraitCard, ArchetypeCard, EvidencePanel, DetailZone | domain/utils/ocean-code-generator.ts, scoring, archetype-lookup |
 | **11-12: Portraits** | `generate-full-portrait`, `get-portrait-status`, `rate-portrait` | PersonalPortrait, PortraitReadingView, TeaserPortrait, PortraitWaitScreen | infrastructure/portrait-generator.claude.repository.ts |
 | **13: Monetization** | `process-purchase`, `get-credits` | polar-checkout.ts, RelationshipCreditsSection | infrastructure/payment-gateway.polar.repository.ts, better-auth.ts (Polar plugin) |
@@ -886,8 +893,8 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 
 1. **Assessment message flow:**
    ```text
-   User input → send-message use-case → advisory lock → Nerin agent (Haiku) → save message →
-   ConversAnalyzer (Haiku, parallel) → weight filter (≥0.36) → save evidence → compute steering → return response
+   User input → send-message use-case → advisory lock → score territories (DRS) → Nerin agent (Haiku, with territory prompt) → save message →
+   ConversAnalyzer (Haiku, parallel) → weight filter (≥0.36) → save evidence → return response
    ```
 
 2. **Results generation flow:**
@@ -942,7 +949,7 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 
 | Epic | Covered? | Notes |
 |------|----------|-------|
-| 1-4: Assessment Engine | Yes | send-message, nerin-pipeline, steering, cold-start |
+| 1-4: Assessment Engine | Yes | send-message, nerin-pipeline, territory steering (DRS), cold-start |
 | 9-11: Results & Finalization | Yes | generate-results, derive-at-read, teaser portrait |
 | 11-12: Portraits | Yes | Placeholder-row pattern, Sonnet 4.6, depth-adaptive prompt |
 | 13: Monetization | Yes | Polar plugin, append-only events, capability derivation |
