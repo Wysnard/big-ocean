@@ -21,15 +21,6 @@ export { toFacetDisplayName } from "./display-name";
 export { getFacetLevel } from "./facet-level";
 export { buildChatSystemPrompt, type ChatSystemPromptParams } from "./nerin-system-prompt";
 export { generateOceanCode } from "./ocean-code-generator";
-// Steering utilities (Story 17.3, 17.2)
-export { computeDomainStreak } from "./steering";
-export {
-	type IntentType,
-	INTENT_TYPES,
-	type MicroIntent,
-	type RealizeMicroIntentInput,
-	realizeMicroIntent,
-} from "./steering";
 export {
 	getFacetColor,
 	getTraitAccentColor,

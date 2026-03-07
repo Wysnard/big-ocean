@@ -58,9 +58,6 @@ describe("sendMessage Use Case", () => {
 					"user",
 					"Tell me something",
 					"user_456",
-					undefined, // targetDomain
-					undefined, // targetBigfiveFacet
-					undefined, // intentType
 					undefined, // territoryId
 					expect.any(String), // observedEnergyLevel
 				);
@@ -79,9 +76,6 @@ describe("sendMessage Use Case", () => {
 						"user",
 						"Test",
 						undefined, // userId
-						undefined, // targetDomain
-						undefined, // targetBigfiveFacet
-						undefined, // intentType
 						undefined, // territoryId
 						expect.any(String), // observedEnergyLevel
 					);
@@ -92,9 +86,6 @@ describe("sendMessage Use Case", () => {
 						"assistant",
 						mockNerinResponse.response,
 						undefined, // userId
-						undefined, // targetDomain (no longer used)
-						undefined, // targetBigfiveFacet (no longer used)
-						undefined, // intentType (no longer used)
 						expect.any(String), // territoryId
 					);
 				}).pipe(Effect.provide(createTestLayer())),

@@ -29,33 +29,10 @@ describe("buildChatSystemPrompt — behavior and steering", () => {
 		expect(prompt).toContain("USE CAREFULLY: implies nobody sees their contribution");
 	});
 
-	it("appends steering section with domain and facet when provided (Story 9.2)", () => {
-		const prompt = buildChatSystemPrompt({ targetDomain: "relationships", targetFacet: "trust" });
-		expect(prompt).toContain("STEERING PRIORITY:");
-		expect(prompt).toContain('"trust"');
-		expect(prompt).toContain('"relationships"');
-		expect(prompt).toContain("This is your next exploration target");
-		expect(prompt).toContain("Transition to this territory within your next 1-2 responses");
-	});
-
-	it("does not contain old steering text format", () => {
-		const prompt = buildChatSystemPrompt({ targetDomain: "work", targetFacet: "orderliness" });
-		expect(prompt).not.toContain("Current conversation focus:");
-		expect(prompt).not.toContain("Naturally guide the conversation");
-	});
-
-	it("does not include steering section when no domain/facet provided", () => {
+	it("does not include steering section when no params provided", () => {
 		const prompt = buildChatSystemPrompt();
 		expect(prompt).not.toContain("STEERING PRIORITY:");
-	});
-
-	it("combines persona, chat context, and steering when domain+facet provided", () => {
-		const prompt = buildChatSystemPrompt({ targetDomain: "work", targetFacet: "orderliness" });
-		expect(prompt).toContain(NERIN_PERSONA);
-		expect(prompt).toContain("CONVERSATION MODE:");
-		expect(prompt).toContain("STEERING PRIORITY:");
-		expect(prompt).toContain('"orderliness"');
-		expect(prompt).toContain('"work"');
+		expect(prompt).not.toContain("TERRITORY GUIDANCE:");
 	});
 
 	// Story 21-5: Territory Prompt Integration
@@ -68,11 +45,6 @@ describe("buildChatSystemPrompt — behavior and steering", () => {
 			const prompt = buildChatSystemPrompt({ territoryPrompt: territoryContent });
 			expect(prompt).toContain("TERRITORY GUIDANCE:");
 			expect(prompt).toContain(territoryContent.opener);
-		});
-
-		it("does NOT include facet-targeting steering when territoryPrompt is provided", () => {
-			const prompt = buildChatSystemPrompt({ territoryPrompt: territoryContent });
-			expect(prompt).not.toContain("STEERING PRIORITY:");
 		});
 
 		it("territory opener appears as suggested direction", () => {
@@ -93,23 +65,12 @@ describe("buildChatSystemPrompt — behavior and steering", () => {
 			}
 		});
 
-		it("territory prompt takes precedence over legacy steering params", () => {
-			const prompt = buildChatSystemPrompt({
-				territoryPrompt: territoryContent,
-				targetDomain: "work",
-				targetFacet: "orderliness",
-			});
-			expect(prompt).toContain("TERRITORY GUIDANCE:");
-			expect(prompt).not.toContain("STEERING PRIORITY:");
+		it("includes persona in output", () => {
+			const prompt = buildChatSystemPrompt({ territoryPrompt: territoryContent });
+			expect(prompt).toContain(NERIN_PERSONA);
 		});
 
-		it("backward compatibility: no territory prompt uses existing steering", () => {
-			const prompt = buildChatSystemPrompt({ targetDomain: "work", targetFacet: "orderliness" });
-			expect(prompt).toContain("STEERING PRIORITY:");
-			expect(prompt).not.toContain("TERRITORY GUIDANCE:");
-		});
-
-		it("backward compatibility: no params produces no steering section", () => {
+		it("no params produces no steering section", () => {
 			const prompt = buildChatSystemPrompt();
 			expect(prompt).not.toContain("STEERING PRIORITY:");
 			expect(prompt).not.toContain("TERRITORY GUIDANCE:");

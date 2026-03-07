@@ -193,7 +193,7 @@ export const assessmentSession = pgTable(
  * Assessment Messages
  *
  * Stores conversation history for each assessment session.
- * target_domain and target_bigfive_facet track what the assistant message was steering toward.
+ * territory_id tracks which territory the assistant message was steering toward.
  */
 export const assessmentMessage = pgTable(
 	"assessment_message",
@@ -205,9 +205,6 @@ export const assessmentMessage = pgTable(
 		userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
 		role: text("role").notNull(),
 		content: text("content").notNull(),
-		targetDomain: evidenceDomainEnum("target_domain"),
-		targetBigfiveFacet: bigfiveFacetNameEnum("target_bigfive_facet"),
-		intentType: text("intent_type"),
 		territoryId: text("territory_id"),
 		observedEnergyLevel: text("observed_energy_level"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),

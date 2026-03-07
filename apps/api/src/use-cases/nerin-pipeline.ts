@@ -405,10 +405,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			"user",
 			input.userMessage,
 			input.userId,
-			undefined, // targetDomain
-			undefined, // targetBigfiveFacet
-			undefined, // intentType
-			undefined, // territoryId
+			undefined, // territoryId (user messages don't have one)
 			observedEnergyLevel,
 		);
 
@@ -427,10 +424,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			input.sessionId,
 			"assistant",
 			result.response,
-			undefined,
-			undefined, // targetDomain -- no longer used
-			undefined, // targetBigfiveFacet -- no longer used
-			undefined, // intentType -- no longer used
+			undefined, // userId
 			selectedTerritoryId as string,
 		);
 

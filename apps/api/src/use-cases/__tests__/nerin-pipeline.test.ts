@@ -358,13 +358,13 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
 					const userSaveCall = mockMessageRepo.saveMessage.mock.calls[0];
 					expect(userSaveCall?.[1]).toBe("user"); // role
 					// During cold start, observedEnergyLevel defaults to "medium"
-					expect(userSaveCall?.[8]).toBe("medium"); // observedEnergyLevel
+					expect(userSaveCall?.[5]).toBe("medium"); // observedEnergyLevel
 
 					// Assistant message (second call) should have territory_id but no energy
 					const assistantSaveCall = mockMessageRepo.saveMessage.mock.calls[1];
 					expect(assistantSaveCall?.[1]).toBe("assistant"); // role
-					expect(assistantSaveCall?.[7]).toBeDefined(); // territoryId (8th arg, 0-indexed 7)
-					expect(assistantSaveCall?.[8]).toBeUndefined(); // no observedEnergyLevel
+					expect(assistantSaveCall?.[4]).toBeDefined(); // territoryId (5th arg, 0-indexed 4)
+					expect(assistantSaveCall?.[5]).toBeUndefined(); // no observedEnergyLevel
 				}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
@@ -425,14 +425,14 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
 					const userSaveCall = mockMessageRepo.saveMessage.mock.calls[0];
 					expect(userSaveCall?.[1]).toBe("user");
 					// observedEnergyLevel should be "medium" (from mock ConversAnalyzer)
-					expect(userSaveCall?.[8]).toBe("medium");
+					expect(userSaveCall?.[5]).toBe("medium");
 
 					// Assistant message (second call) should have territory_id but no energy
 					const assistantSaveCall = mockMessageRepo.saveMessage.mock.calls[1];
 					expect(assistantSaveCall?.[1]).toBe("assistant");
-					expect(typeof assistantSaveCall?.[7]).toBe("string");
-					expect(assistantSaveCall?.[7]).toBeTruthy();
-					expect(assistantSaveCall?.[8]).toBeUndefined();
+					expect(typeof assistantSaveCall?.[4]).toBe("string");
+					expect(assistantSaveCall?.[4]).toBeTruthy();
+					expect(assistantSaveCall?.[5]).toBeUndefined();
 				}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
@@ -495,7 +495,7 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
 
 				// User message should have default energy level
 				const userSaveCall = mockMessageRepo.saveMessage.mock.calls[0];
-				expect(userSaveCall?.[8]).toBe("medium");
+				expect(userSaveCall?.[5]).toBe("medium");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});

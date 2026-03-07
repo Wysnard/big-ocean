@@ -116,8 +116,6 @@ export const postColdStartMessages = [
 		sessionId: "session_test_123",
 		role: "assistant" as const,
 		content: "Hi! I'm Nerin.",
-		targetDomain: "relationships" as const,
-		targetBigfiveFacet: "gregariousness" as const,
 		createdAt: new Date(),
 	},
 	{
@@ -125,8 +123,6 @@ export const postColdStartMessages = [
 		sessionId: "session_test_123",
 		role: "assistant" as const,
 		content: "What brings you here?",
-		targetDomain: "relationships" as const,
-		targetBigfiveFacet: "gregariousness" as const,
 		createdAt: new Date(),
 	},
 	{
@@ -141,8 +137,6 @@ export const postColdStartMessages = [
 		sessionId: "session_test_123",
 		role: "assistant" as const,
 		content: "Tell me more",
-		targetDomain: "leisure" as const,
-		targetBigfiveFacet: "imagination" as const,
 		createdAt: new Date(),
 	},
 	{
@@ -157,8 +151,6 @@ export const postColdStartMessages = [
 		sessionId: "session_test_123",
 		role: "assistant" as const,
 		content: "Interesting!",
-		targetDomain: "work" as const,
-		targetBigfiveFacet: "orderliness" as const,
 		createdAt: new Date(),
 	},
 	{

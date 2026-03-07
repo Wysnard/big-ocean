@@ -14,9 +14,6 @@ const messages = new Map<
 		role: string;
 		content: string;
 		userId?: string;
-		targetDomain?: string | null;
-		targetBigfiveFacet?: string | null;
-		intentType?: string | null;
 		territoryId?: string | null;
 		observedEnergyLevel?: string | null;
 		createdAt: Date;
@@ -34,9 +31,6 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.succeed(
 			role: "user" | "assistant",
 			content: string,
 			userId?: string,
-			targetDomain?: string,
-			targetBigfiveFacet?: string,
-			intentType?: string,
 			territoryId?: string,
 			observedEnergyLevel?: string,
 		) =>
@@ -48,9 +42,6 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.succeed(
 					role,
 					content,
 					userId,
-					targetDomain: targetDomain ?? null,
-					targetBigfiveFacet: targetBigfiveFacet ?? null,
-					intentType: intentType ?? null,
 					territoryId: territoryId ?? null,
 					observedEnergyLevel: observedEnergyLevel ?? null,
 					createdAt: new Date(),

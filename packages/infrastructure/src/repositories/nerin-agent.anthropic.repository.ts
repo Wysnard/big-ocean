@@ -103,11 +103,8 @@ export const NerinAgentAnthropicRepositoryLive = Layer.effect(
 			invoke: (input: NerinInvokeInput) =>
 				Effect.tryPromise({
 					try: async () => {
-						// Build system prompt with territory guidance (Story 21-7), micro-intent (Story 17.2), or raw steering (Story 9.2)
+						// Build system prompt with territory guidance (Story 21-7)
 						const systemPrompt = buildChatSystemPrompt({
-							targetDomain: input.targetDomain,
-							targetFacet: input.targetFacet,
-							microIntent: input.microIntent,
 							territoryPrompt: input.territoryPrompt,
 						});
 
@@ -139,8 +136,6 @@ export const NerinAgentAnthropicRepositoryLive = Layer.effect(
 							responseLength: responseText.length,
 							tokenCount,
 							cost: cost.totalCost,
-							targetDomain: input.targetDomain,
-							targetFacet: input.targetFacet,
 						});
 
 						return {

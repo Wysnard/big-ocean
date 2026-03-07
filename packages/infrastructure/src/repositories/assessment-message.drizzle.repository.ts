@@ -34,17 +34,7 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 
 		// Return service implementation using .of() pattern
 		return AssessmentMessageRepository.of({
-			saveMessage: (
-				sessionId,
-				role,
-				content,
-				userId,
-				targetDomain,
-				targetBigfiveFacet,
-				intentType,
-				territoryId,
-				observedEnergyLevel,
-			) =>
+			saveMessage: (sessionId, role, content, userId, territoryId, observedEnergyLevel) =>
 				Effect.gen(function* () {
 					const [message] = yield* db
 						.insert(assessmentMessage)
@@ -53,9 +43,6 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 							userId: role === "user" ? (userId ?? null) : null,
 							role,
 							content,
-							targetDomain: targetDomain ?? null,
-							targetBigfiveFacet: targetBigfiveFacet ?? null,
-							intentType: intentType ?? null,
 							territoryId: territoryId ?? null,
 							observedEnergyLevel: observedEnergyLevel ?? null,
 							createdAt: new Date(),

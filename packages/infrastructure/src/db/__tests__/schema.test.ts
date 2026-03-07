@@ -48,11 +48,6 @@ describe("Assessment Session Schema", () => {
 });
 
 describe("Assessment Message Schema", () => {
-	it("should have steering target columns", () => {
-		expect(assessmentMessage.targetDomain).toBeDefined();
-		expect(assessmentMessage.targetBigfiveFacet).toBeDefined();
-	});
-
 	it("should have core message columns", () => {
 		expect(assessmentMessage.id).toBeDefined();
 		expect(assessmentMessage.sessionId).toBeDefined();

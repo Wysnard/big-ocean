@@ -425,14 +425,13 @@ export {
 	computeDomainCoverage,
 	computeTraitResults,
 } from "./utils/score-computation";
-// Steering utilities (Story 2.3, 17.2, 21-2, 21-3, 21-4, 21-5)
+// Steering utilities (Story 21-2, 21-3, 21-4, 21-5)
 export {
 	buildFacetEvidenceCounts,
 	buildTerritoryPrompt,
 	buildTerritorySystemPromptSection,
 	computeBreadth,
 	computeCoverageValue,
-	computeDomainStreak,
 	computeDRS,
 	computeEnergyFit,
 	computeEnergyMultiplier,
@@ -442,11 +441,6 @@ export {
 	type DRSInput,
 	extractDRSConfig,
 	extractTerritoryScorerConfig,
-	INTENT_TYPES,
-	type IntentType,
-	type MicroIntent,
-	type RealizeMicroIntentInput,
-	realizeMicroIntent,
 	type ScoredTerritory,
 	scoreAllTerritories,
 	scoreTerritory,

@@ -5,7 +5,6 @@
  */
 // Cold-Start (Story 21-4)
 export { selectColdStartTerritory, selectTerritoryWithColdStart } from "./cold-start";
-export { computeDomainStreak } from "./compute-domain-streak";
 // DRS (Story 21-2)
 export {
 	computeBreadth,
@@ -17,13 +16,6 @@ export {
 	type DRSInput,
 	extractDRSConfig,
 } from "./drs";
-export {
-	INTENT_TYPES,
-	type IntentType,
-	type MicroIntent,
-	type RealizeMicroIntentInput,
-	realizeMicroIntent,
-} from "./realize-micro-intent";
 // Territory Prompt Builder (Story 21-5)
 export {
 	buildTerritoryPrompt,

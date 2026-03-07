@@ -1,9 +1,6 @@
 import { Context, Effect } from "effect";
-import type { FacetName } from "../constants/big-five";
-import type { LifeDomain } from "../constants/life-domain";
 import { AgentInvocationError } from "../errors/http.errors";
 import type { DomainMessage } from "../types/message";
-import type { MicroIntent } from "../utils/steering/realize-micro-intent";
 import type { TerritoryPromptContent } from "../utils/steering/territory-prompt-builder";
 
 /**
@@ -18,9 +15,7 @@ export interface TokenUsage {
 /**
  * Input for Nerin agent invocation
  *
- * Two-tier architecture (Story 9.2): Simplified interface for direct invocation.
- * Optional targetDomain/targetFacet enable structured steering (Story 10.4).
- * For cold start (this story), both are undefined.
+ * Territory-based steering (Story 21-7): territoryPrompt provides conversation guidance.
  */
 export interface NerinInvokeInput {
 	/** Session identifier for state persistence */
@@ -29,16 +24,7 @@ export interface NerinInvokeInput {
 	/** Message history for conversational context */
 	readonly messages: readonly DomainMessage[];
 
-	/** Life domain to steer conversation toward (from steering formula, undefined for cold start) */
-	readonly targetDomain?: LifeDomain;
-
-	/** Big Five facet to steer conversation toward (from steering formula, undefined for cold start) */
-	readonly targetFacet?: FacetName;
-
-	/** Structured micro-intent for natural steering (Story 17.2) */
-	readonly microIntent?: MicroIntent;
-
-	/** Territory prompt content (Story 21-7) — when provided, replaces all facet-targeting steering */
+	/** Territory prompt content (Story 21-7) */
 	readonly territoryPrompt?: TerritoryPromptContent;
 }
 

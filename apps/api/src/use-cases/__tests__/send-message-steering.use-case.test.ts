@@ -113,13 +113,13 @@ describe("sendMessage Use Case", () => {
 					// User message should have observedEnergyLevel
 					const userSaveCall = saveMessageCalls.find((call: unknown[]) => call[1] === "user");
 					expect(userSaveCall).toBeDefined();
-					expect(userSaveCall?.[8]).toBeDefined(); // observedEnergyLevel (9th positional arg)
+					expect(userSaveCall?.[5]).toBeDefined(); // observedEnergyLevel (6th positional arg)
 
 					// Assistant message should have territory_id but no observedEnergyLevel
 					const assistantSaveCall = saveMessageCalls.find((call: unknown[]) => call[1] === "assistant");
 					expect(assistantSaveCall).toBeDefined();
-					expect(assistantSaveCall?.[7]).toBeDefined(); // territoryId (8th positional arg)
-					expect(assistantSaveCall?.[8]).toBeUndefined(); // no observedEnergyLevel
+					expect(assistantSaveCall?.[4]).toBeDefined(); // territoryId (5th positional arg)
+					expect(assistantSaveCall?.[5]).toBeUndefined(); // no observedEnergyLevel
 				}).pipe(Effect.provide(createTestLayer())),
 		);
 

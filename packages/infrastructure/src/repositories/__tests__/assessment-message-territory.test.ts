@@ -31,9 +31,6 @@ describe("Assessment Message Territory Metadata", () => {
 				"assistant",
 				"Tell me about your work",
 				undefined,
-				"work",
-				"imagination",
-				"story_pull",
 				"creative-pursuits",
 			);
 			return msg;
@@ -53,9 +50,6 @@ describe("Assessment Message Territory Metadata", () => {
 				"I love hiking in the mountains",
 				"user-1",
 				undefined,
-				undefined,
-				undefined,
-				undefined,
 				"medium",
 			);
 			return msg;
@@ -69,15 +63,7 @@ describe("Assessment Message Territory Metadata", () => {
 	it("saves message without territory metadata (backward compatible)", async () => {
 		const program = Effect.gen(function* () {
 			const repo = yield* AssessmentMessageRepository;
-			const msg = yield* repo.saveMessage(
-				"session-1",
-				"assistant",
-				"Tell me more",
-				undefined,
-				"work",
-				"imagination",
-				"explore",
-			);
+			const msg = yield* repo.saveMessage("session-1", "assistant", "Tell me more");
 			return msg;
 		});
 
@@ -90,27 +76,8 @@ describe("Assessment Message Territory Metadata", () => {
 	it("retrieves messages with territory and energy metadata", async () => {
 		const program = Effect.gen(function* () {
 			const repo = yield* AssessmentMessageRepository;
-			yield* repo.saveMessage(
-				"session-2",
-				"user",
-				"I think...",
-				"user-1",
-				undefined,
-				undefined,
-				undefined,
-				undefined,
-				"heavy",
-			);
-			yield* repo.saveMessage(
-				"session-2",
-				"assistant",
-				"Response 1",
-				undefined,
-				"work",
-				"imagination",
-				"explore",
-				"social-dynamics",
-			);
+			yield* repo.saveMessage("session-2", "user", "I think...", "user-1", undefined, "heavy");
+			yield* repo.saveMessage("session-2", "assistant", "Response 1", undefined, "social-dynamics");
 			const messages = yield* repo.getMessages("session-2");
 			return messages;
 		});
