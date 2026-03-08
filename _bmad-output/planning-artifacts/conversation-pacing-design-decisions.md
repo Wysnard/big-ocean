@@ -3,8 +3,8 @@ title: Conversation Pacing Design Decisions
 description: Design decisions and principles for Nerin's conversation pacing architecture — the shift from assessment-first to guided self-discovery
 date: 2026-03-07
 status: updated
-last_updated: 2026-03-08
-changelog: "Territory policy redesign resolved — unified five-term scorer (coverageGain + adjacency + conversationSkew - energyMalus - freshnessPenalty), three-layer architecture (Scorer → Selector → Move Generator), all terms bounded [0,1] by construction. Architecture summary updated to five layers. Decision 8 updated with concrete conversationSkew mechanism. New open questions: territory catalog refinement, selector layer design, move generator redesign."
+last_updated: 2026-03-09
+changelog: "Territory catalog migration resolved — 25-territory catalog with continuous expectedEnergy [0,1], 8 domain re-tags, 3 new territories (daily-frustrations, growing-up, family-rituals). Opener-cost calibration principle established. Cluster traps eliminated. Anger accessible at medium energy. Depression accepted as heavy-only ('still emerging' in portrait). Three natural corridors emerged (introspective, interpersonal, achiever). New Decision 11 added. Territory catalog refinement moved from open to resolved."
 ---
 
 # Conversation Pacing Design Decisions
@@ -281,6 +281,38 @@ The framework is strong enough to test. Further theoretical refinement produces 
 
 ---
 
+### Decision 11: Territory Catalog Is Architecture, Not Data
+
+The territory catalog — 25 territories with continuous `expectedEnergy`, dual-domain tags, and expected facets — is a first-order architectural concern. Three of five scorer terms (`energyMalus`, `conversationSkew`, `adjacency`) consume catalog fields directly. The scorer amplifies whatever the catalog says. Catalog quality IS scorer quality.
+
+**Key design principles:**
+
+- **`expectedEnergy` measures opener cost, not depth potential.** Each territory's energy value represents the typical cost of a genuine first answer to the territory's natural opener — not how deep it *could* go, how emotionally heavy it *sounds*, or how much signal it *yields*. This prevents inflation and keeps values stable. Anchor: 0.5 = comfort threshold (zero drain).
+- **Don't lie about what a territory is to make the math work.** If a facet needs to be reachable at a different energy level, create a territory where it genuinely surfaces at that energy — don't artificially lower a heavy territory's energy value. The territory is what it is.
+- **Create territories to fill gaps, don't force facets onto existing ones.** A new territory with narrative honesty score 1.0 (daily-frustrations for anger) beats overloading an existing territory at honesty 0.7 (adding anger to work-dynamics).
+- **Accept thin facets rather than manufacturing artificial access.** Depression exists only in heavy territories (inner-struggles at 0.65, pressure-and-resilience at 0.72). The portrait communicates this as "still emerging" rather than creating a dishonest medium-energy depression territory.
+
+**Catalog structure (25 territories):**
+
+- **Energy distribution:** 9 light (0.20-0.37), 10 medium (0.38-0.53), 6 heavy (0.58-0.72). Upper range [0.75-0.85] is headroom for future territories.
+- **Domain distribution:** relationships (15), solo (13), work (9), family (6), leisure (6). All domains appear in ≥6 territories. Every territory has exactly 2 domains.
+- **Three natural corridors** emerged from honest domain tagging:
+  - *Introspective* {solo, relationships}: comfort-zones → emotional-awareness → friendship-depth → opinions-values → inner-struggles
+  - *Interpersonal* {relationships, work}: helping-others → daily-frustrations → work-dynamics → team-leadership → conflict-resolution
+  - *Achiever* {solo, work}: daily-routines → learning-curiosity → ambition-goals → identity-purpose
+- **Bridge territories** connect corridors at Jaccard = 0.33: growing-up, social-circles, social-dynamics, family-rituals, giving-and-receiving, pressure-resilience
+- **Session arc affordance:** The energy distribution naturally supports a three-act structure (light exploration → medium corridor narrowing → heavy depth convergence) before `conversationSkew` even applies.
+
+**v1 calibration status:** Energy values were cross-validated using 3 independent methods (opener-cost assessment, 4-dimension scoring audit, relative ordering with 6 anchor territories). 4 territories flagged as high-variance (social-dynamics, opinions-and-values, team-and-leadership, daily-frustrations) — first candidates for empirical recalibration.
+
+**Known risk:** Relationships at 60% of territories creates systematic adjacency advantage. If monitoring shows >70% of turns in relationship-tagged territories, switch to inverse-frequency-weighted Jaccard in `scorer-config.ts` (a coefficient change, not a catalog change).
+
+**Principle:** The catalog is the scorer's ground truth. Getting it right is not a data entry task — it's an architectural task with direct consequences for conversation quality.
+
+**Rationale:** The original catalog used discrete `energyLevel: "light"|"medium"|"heavy"` and single-domain tags designed for human readability. The new unified scorer requires continuous `expectedEnergy` for `energyMalus` and `conversationSkew`, and multi-domain tags for Jaccard `adjacency`. Migrating the catalog exposed structural issues (4 cluster traps, a family island, 6 single-domain dead-ends, anger/depression isolated in heavy-only territories) that required domain re-tagging and 3 new territories to resolve.
+
+---
+
 ## Architecture Summary
 
 The system operates as five decoupled layers. Territory policy is split into three sub-layers (Scorer → Selector → Move Generator) for debuggability — when something goes wrong, each layer is independently diagnosable:
@@ -314,7 +346,7 @@ flowchart TB
 | Layer | Responsibility | Inputs | Output |
 |-------|---------------|--------|--------|
 | **Pacing (E_target)** | Estimate what the conversation can sustain | Energy, telling, drain | `E_target` (0-10) |
-| **Territory Scorer** | Rank all territories by unified formula | E_target, **coverage gaps**, catalog, visit history, turn/totalTurns | Sorted ranked list with per-term score breakdowns |
+| **Territory Scorer** | Rank all 25 territories by unified formula | E_target, **coverage gaps**, catalog (expectedEnergy, domains, facets), visit history, turn/totalTurns | Sorted ranked list with per-term score breakdowns |
 | **Territory Selector** | Pick from ranked list via deterministic rules | Ranked list, turn number | Selected territory, alternates, stayOrShift, selection rule |
 | **Move Generator** | Decide how to enter the territory | Selected territory, alternates, E_target, move type | Nerin's prompt instructions |
 | **Silent Scoring** | Extract evidence, update estimates | User message, conversation history | Facet scores, confidence, portrait readiness, **coverage gaps** |
@@ -349,9 +381,9 @@ When forces conflict, resolve in this order:
 - **Telling signal extraction** — resolved. Telling measures *self-propulsion beyond the minimum viable answer* to the previous assistant message. The "minimum viable answer" framing implicitly handles prompt affordance (open prompts set a higher floor, narrow prompts set a lower floor). Scored via 5 anchored bands (fully_compliant/mostly_compliant/mixed/mostly_self_propelled/strongly_self_propelled) mapped to (0.0/0.25/0.5/0.75/1.0). Telling is scored relative to the previous assistant turn. High-telling markers: introduces new material, volunteers stories, makes own connections, reframes the question, asks questions back. Low-telling markers: stays inside the question's frame, echoes Nerin's language, answers then stops. Multi-part messages score peak telling shown. See [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md).
 - **ConversAnalyzer v2 output contract** — resolved. LLM outputs `userState` block (energyBand, tellingBand, energyReason, tellingReason, withinMessageShift) alongside unchanged evidence array. LLM produces bands (enums), pipeline maps to numbers. State extraction instructions positioned before evidence in the prompt. Fail-open defaults: energy=5, telling=null on extraction failure. Orthogonality enforced via mandatory diagonal contrastive examples in the prompt (high-E/low-T and low-E/high-T). Calibration uses expert review (20-30 messages, prompt compliance) and user self-scoring (post-session, ground truth for energy-as-cost). See [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md).
 - **Territory policy redesign** — resolved. Territory policy is decomposed into three explicit layers: **Territory Scorer** (pure ranking engine), **Territory Selector** (deterministic pick rules), and **Move Generator** (phrasing/bridging, never chooses territory). The scorer runs a unified five-term formula every turn on all territories: `score(t) = coverageGain(t) + adjacency(t) + conversationSkew(t) - energyMalus(t) - freshnessPenalty(t)`. All terms are bounded [0, 1] by construction (source-normalized). Stay/shift emerges from the ranking — no exit guard, no separate stay/shift logic. Key design choices: coverageGain reuses existing per-facet `priority_f` (confidence + signalPower deficit) with source-normalized baseYield; adjacency is Jaccard similarity on domains (0.8) + facets (0.2), self-adjacency = 1.0 provides natural inertia; conversationSkew uses `expectedEnergy` for a U-shaped session arc (light territories early, deep territories late); energyMalus is quadratic (tolerant of small mismatches, punishes large ones); freshnessPenalty is linear decay derived from existing `assessment_message.territory_id`. No trait urgency (back-door energy pressure on Neuroticism), no currentBonus (redundant with self-adjacency), no coverage dampening on energyMalus (smuggles assessment into energy protection). Territory catalog migrates from discrete `energyLevel` to continuous `expectedEnergy: number`. Validated via 4 simulation scenarios + 6 stress tests. See [Territory Policy Spec](../problem-solution-2026-03-07-territory-policy.md).
+- **Territory catalog refinement** — resolved. Catalog migrated from 22 territories with discrete `energyLevel` to 25 territories with continuous `expectedEnergy: number` in [0, 1]. Energy values calibrated using opener-cost principle (cross-validated via 3 independent methods). 8 domain re-tags eliminated all cluster traps and the family island. 3 new territories added: `daily-frustrations` (anger at medium energy, 0.38), `growing-up` (family bridge at 0.45), `family-rituals` (light family entry at 0.28). All territories now have exactly 2 domains. Family and leisure domains each reach 6 territories (was 4). Depression accepted as heavy-only with "still emerging" portrait framing. `COLD_START_TERRITORIES` constant replaced by dynamic territory selector. Topology reveals three natural corridors (introspective, interpersonal, achiever) connected by bridge territories. 4 high-variance territories flagged for empirical recalibration post-launch. Relationships flood (60%) accepted for v1 with weighted Jaccard as contingency. See [Territory Catalog Migration Spec](../problem-solution-2026-03-08.md).
 
 ### Still Open
-- **Territory catalog refinement** — the existing 22-territory catalog needs migration from discrete `energyLevel` ("light"/"medium"/"heavy") to continuous `expectedEnergy: number` in [0, 1]. Beyond the type migration, catalog quality is a first-order dependency: domain tagging affects adjacency paths (single-domain territories create cluster traps), and expected facet yields need empirical validation against real conversations. See [Territory Policy Spec](../problem-solution-2026-03-07-territory-policy.md) §Catalog Schema Change and §Monitoring safeguards.
 - **Territory selector layer** — the selector is a thin deterministic rule-based consumer between the scorer and move generator. v1 rules are defined (cold-start random from top candidates, turn 2+ argmax, tiebreak by catalog order), but the cold-start selection strategy (fixed K vs margin-based vs score-weighted) needs a final design decision. v2 candidates include tie-break margins and user-direction override. See [Territory Policy Spec](../problem-solution-2026-03-07-territory-policy.md) §Territory Selector rules.
 - **Move generator redesign** — the move generator must be updated to consume the territory selector's output contract (`selectedTerritory`, `alternates`, `stayOrShift`, full scorer breakdown). Alternates enable Bridge move opportunities and graceful fallback when user drifts. The move generator never chooses the territory — that boundary is enforced by the three-layer architecture. The four move types (Pull/Bridge/Hold/Pivot) remain, but their selection logic and territory consumption need redesign.
 - **Continuation experience** — what does conversation 2 feel like? Does Nerin remember? Does it pick up living threads from session 1?
@@ -365,5 +397,6 @@ When forces conflict, resolve in this order:
 - [E_target Formula Specification](../problem-solution-2026-03-07.md) — complete v1 formula with pipeline definition, function shapes, constants, 10-archetype simulation results, and implementation plan
 - [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md) — precise energy/telling definitions, ConversAnalyzer v2 output contract, extraction prompt with rubrics and guardrails, calibration protocol, and implementation plan
 - [Territory Policy Spec](../problem-solution-2026-03-07-territory-policy.md) — unified five-term territory scorer, three-layer architecture (Scorer → Selector → Move Generator), catalog schema change, simulation scenarios, stress tests, implementation plan, and monitoring/validation strategy
+- [Territory Catalog Migration Spec](../problem-solution-2026-03-08.md) — 25-territory catalog with continuous expectedEnergy, 8 domain re-tags, 3 new territories, opener-cost calibration, topology analysis, and implementation plan
 - [Idea Proposition](./idea-proposition.md) — the original proposition this document refines
 - [Architecture](./architecture.md) — system architecture (to be updated post-spec)
