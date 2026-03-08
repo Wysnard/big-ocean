@@ -3,8 +3,8 @@ title: Conversation Pacing Design Decisions
 description: Design decisions and principles for Nerin's conversation pacing architecture — the shift from assessment-first to guided self-discovery
 date: 2026-03-07
 status: updated
-last_updated: 2026-03-07
-changelog: "Energy and telling extraction resolved — precise definitions, 5-band extraction rubrics, ConversAnalyzer v2 output contract, orthogonality guardrails, and calibration protocol specified. Two open questions moved to resolved. Related documents updated."
+last_updated: 2026-03-08
+changelog: "Territory policy redesign resolved — unified five-term scorer (coverageGain + adjacency + conversationSkew - energyMalus - freshnessPenalty), three-layer architecture (Scorer → Selector → Move Generator), all terms bounded [0,1] by construction. Architecture summary updated to five layers. Decision 8 updated with concrete conversationSkew mechanism. New open questions: territory catalog refinement, selector layer design, move generator redesign."
 ---
 
 # Conversation Pacing Design Decisions
@@ -218,14 +218,15 @@ The session should feel like a TV episode: complete enough to be satisfying, ope
 
 ### Decision 8: End on Aliveness, Not on a Manufactured Peak
 
-The final 2-3 exchanges receive a small **resonance bonus** in the territory selection layer. This bonus steers toward the user's most emotionally alive thread — the territory where telling-score was highest during the session.
+The late session receives a bias toward depth-friendly territories via **conversationSkew** in the territory scoring formula. This is not a separate resonance mechanism — it's one of five terms in the unified scorer.
 
 **Implementation:**
 
-- The resonance bonus lives in **territory scoring**, not in E_target
-- It nudges *where* to go, not *how hard* to push
-- If the user is drained, the system ends warmly and gently — it never forces a peak
-- The system identifies the most alive thread and returns to it naturally, not dramatically
+- `conversationSkew(t) = (1 - t.expectedEnergy) × earlyRamp + t.expectedEnergy × lateRamp` — low-energy territories are boosted early (turns 1-5), high-energy territories are boosted late (turns ~18-25), middle is quiet
+- The skew lives in **territory scoring**, not in E_target — it nudges *where* to go, not *how hard* to push
+- If the user is drained, energyMalus (quadratic penalty) prevents heavy territories from winning even with late-session skew — the system ends warmly and gently, it never forces a peak
+- Late-session depth emerges as a bias, not an override — coverage and adjacency still compete honestly
+- v2 refinement: storytelling-informed curve shape (Sophia's "whisper in the middle," earlier late ramp, peak contrast tracking) deferred until other mechanisms are testable
 
 **The distinction:**
 
@@ -282,7 +283,7 @@ The framework is strong enough to test. Further theoretical refinement produces 
 
 ## Architecture Summary
 
-The system operates as four decoupled layers:
+The system operates as five decoupled layers. Territory policy is split into three sub-layers (Scorer → Selector → Move Generator) for debuggability — when something goes wrong, each layer is independently diagnosable:
 
 ```mermaid
 flowchart TB
@@ -291,19 +292,20 @@ flowchart TB
 
     B --> ET["Compute E_target (energy, telling, drain)"]
 
-    A --> TP[Territory Policy]
-    ET --> TP
-
+    ET --> TS[Territory Scorer]
     SS --> COV[Coverage Gaps]
-    COV --> TP
+    COV --> TS
 
-    TP --> MG[Move Generator]
+    TS -->|"ranked list + breakdowns"| SEL[Territory Selector]
+    SEL -->|"selected + alternates"| MG[Move Generator]
     MG --> NR[Nerin Response]
 
     A --> SS[Silent Scoring]
     SS --> PR[Portrait Readiness]
 
     style ET fill:#e8f4f8,stroke:#2980b9
+    style TS fill:#dcedc8,stroke:#558b2f
+    style SEL fill:#dcedc8,stroke:#558b2f
     style COV fill:#fff3e0,stroke:#e65100
     style SS fill:#f0f0f0,stroke:#999
     style PR fill:#f0f0f0,stroke:#999
@@ -312,11 +314,14 @@ flowchart TB
 | Layer | Responsibility | Inputs | Output |
 |-------|---------------|--------|--------|
 | **Pacing (E_target)** | Estimate what the conversation can sustain | Energy, telling, drain | `E_target` (0-10) |
-| **Territory Policy** | Decide where to go next | E_target, **coverage gaps**, freshness, energy-band fit, late-session resonance bonus | Selected territory |
-| **Move Generator** | Decide how to enter the territory | Territory, E_target, move type | Nerin's prompt instructions |
+| **Territory Scorer** | Rank all territories by unified formula | E_target, **coverage gaps**, catalog, visit history, turn/totalTurns | Sorted ranked list with per-term score breakdowns |
+| **Territory Selector** | Pick from ranked list via deterministic rules | Ranked list, turn number | Selected territory, alternates, stayOrShift, selection rule |
+| **Move Generator** | Decide how to enter the territory | Selected territory, alternates, E_target, move type | Nerin's prompt instructions |
 | **Silent Scoring** | Extract evidence, update estimates | User message, conversation history | Facet scores, confidence, portrait readiness, **coverage gaps** |
 
-**Key separation:** Coverage flows from silent scoring to territory policy — never through E_target. E_target is user-state-pure. Territory policy is where coverage pressure becomes topic choice, not energy pressure.
+**Key separation:** Coverage flows from silent scoring to territory scorer — never through E_target. E_target is user-state-pure. Territory scoring is where coverage pressure becomes topic choice, not energy pressure.
+
+**Key separation:** The scorer ranks, the selector picks, the move generator executes. No layer does another's job. The move generator never chooses the territory — it receives the selection plus runner-ups for bridging and fallback.
 
 **Key separation:** Silent scoring updates the state and policy inputs for the next turn. It is not allowed to affect Nerin's tone directly. This separation prevents the assessment engine from leaking into the user experience.
 
@@ -343,9 +348,12 @@ When forces conflict, resolve in this order:
 - **Energy definition and extraction** — resolved. Energy represents *cost to the user*, extracted as *observable conversational intensity/load* across 4 dimensions (emotional activation, cognitive investment, expressive investment, activation/urgency). Scored via 5 anchored bands (minimal/low/steady/high/very_high) mapped to numeric values (1/3/5/7/9). Any single dimension strongly present is sufficient for high energy (equal authority, not averaged). Six guardrails prevent systematic bias: eloquence is not energy, sophistication is not cognitive investment, peak dimension not average, understated styles protected, length is not energy, comfortable analysis scores steady. Energy is scored on an absolute scale — not relative to recent conversation history. E=5 ("steady") aligns with the formula's comfort threshold (zero drain). See [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md).
 - **Telling signal extraction** — resolved. Telling measures *self-propulsion beyond the minimum viable answer* to the previous assistant message. The "minimum viable answer" framing implicitly handles prompt affordance (open prompts set a higher floor, narrow prompts set a lower floor). Scored via 5 anchored bands (fully_compliant/mostly_compliant/mixed/mostly_self_propelled/strongly_self_propelled) mapped to (0.0/0.25/0.5/0.75/1.0). Telling is scored relative to the previous assistant turn. High-telling markers: introduces new material, volunteers stories, makes own connections, reframes the question, asks questions back. Low-telling markers: stays inside the question's frame, echoes Nerin's language, answers then stops. Multi-part messages score peak telling shown. See [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md).
 - **ConversAnalyzer v2 output contract** — resolved. LLM outputs `userState` block (energyBand, tellingBand, energyReason, tellingReason, withinMessageShift) alongside unchanged evidence array. LLM produces bands (enums), pipeline maps to numbers. State extraction instructions positioned before evidence in the prompt. Fail-open defaults: energy=5, telling=null on extraction failure. Orthogonality enforced via mandatory diagonal contrastive examples in the prompt (high-E/low-T and low-E/high-T). Calibration uses expert review (20-30 messages, prompt compliance) and user self-scoring (post-session, ground truth for energy-as-cost). See [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md).
+- **Territory policy redesign** — resolved. Territory policy is decomposed into three explicit layers: **Territory Scorer** (pure ranking engine), **Territory Selector** (deterministic pick rules), and **Move Generator** (phrasing/bridging, never chooses territory). The scorer runs a unified five-term formula every turn on all territories: `score(t) = coverageGain(t) + adjacency(t) + conversationSkew(t) - energyMalus(t) - freshnessPenalty(t)`. All terms are bounded [0, 1] by construction (source-normalized). Stay/shift emerges from the ranking — no exit guard, no separate stay/shift logic. Key design choices: coverageGain reuses existing per-facet `priority_f` (confidence + signalPower deficit) with source-normalized baseYield; adjacency is Jaccard similarity on domains (0.8) + facets (0.2), self-adjacency = 1.0 provides natural inertia; conversationSkew uses `expectedEnergy` for a U-shaped session arc (light territories early, deep territories late); energyMalus is quadratic (tolerant of small mismatches, punishes large ones); freshnessPenalty is linear decay derived from existing `assessment_message.territory_id`. No trait urgency (back-door energy pressure on Neuroticism), no currentBonus (redundant with self-adjacency), no coverage dampening on energyMalus (smuggles assessment into energy protection). Territory catalog migrates from discrete `energyLevel` to continuous `expectedEnergy: number`. Validated via 4 simulation scenarios + 6 stress tests. See [Territory Policy Spec](../problem-solution-2026-03-07-territory-policy.md).
 
 ### Still Open
-- **Territory policy redesign** — territory policy must be redesigned to consume E_target alongside coverage gaps, freshness, and late-session resonance. This is a separate design problem.
+- **Territory catalog refinement** — the existing 22-territory catalog needs migration from discrete `energyLevel` ("light"/"medium"/"heavy") to continuous `expectedEnergy: number` in [0, 1]. Beyond the type migration, catalog quality is a first-order dependency: domain tagging affects adjacency paths (single-domain territories create cluster traps), and expected facet yields need empirical validation against real conversations. See [Territory Policy Spec](../problem-solution-2026-03-07-territory-policy.md) §Catalog Schema Change and §Monitoring safeguards.
+- **Territory selector layer** — the selector is a thin deterministic rule-based consumer between the scorer and move generator. v1 rules are defined (cold-start random from top candidates, turn 2+ argmax, tiebreak by catalog order), but the cold-start selection strategy (fixed K vs margin-based vs score-weighted) needs a final design decision. v2 candidates include tie-break margins and user-direction override. See [Territory Policy Spec](../problem-solution-2026-03-07-territory-policy.md) §Territory Selector rules.
+- **Move generator redesign** — the move generator must be updated to consume the territory selector's output contract (`selectedTerritory`, `alternates`, `stayOrShift`, full scorer breakdown). Alternates enable Bridge move opportunities and graceful fallback when user drifts. The move generator never chooses the territory — that boundary is enforced by the three-layer architecture. The four move types (Pull/Bridge/Hold/Pivot) remain, but their selection logic and territory consumption need redesign.
 - **Continuation experience** — what does conversation 2 feel like? Does Nerin remember? Does it pick up living threads from session 1?
 - **Portrait framing** — how exactly does the portrait communicate "complete but inviting" after a single session? What language bridges "here's what we found" and "here's what's still emerging"?
 - **Response latency** — message timestamps may serve as a weak confirmatory signal (long pause + high telling = depth; long pause + low telling = friction), but this is low-priority and ambiguous on its own
@@ -356,5 +364,6 @@ When forces conflict, resolve in this order:
 
 - [E_target Formula Specification](../problem-solution-2026-03-07.md) — complete v1 formula with pipeline definition, function shapes, constants, 10-archetype simulation results, and implementation plan
 - [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md) — precise energy/telling definitions, ConversAnalyzer v2 output contract, extraction prompt with rubrics and guardrails, calibration protocol, and implementation plan
+- [Territory Policy Spec](../problem-solution-2026-03-07-territory-policy.md) — unified five-term territory scorer, three-layer architecture (Scorer → Selector → Move Generator), catalog schema change, simulation scenarios, stress tests, implementation plan, and monitoring/validation strategy
 - [Idea Proposition](./idea-proposition.md) — the original proposition this document refines
 - [Architecture](./architecture.md) — system architecture (to be updated post-spec)
