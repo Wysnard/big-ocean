@@ -488,7 +488,7 @@ export {
 	computeDomainCoverage,
 	computeTraitResults,
 } from "./utils/score-computation";
-// Steering utilities (Story 21-2, 21-3, 21-4, 21-5)
+// Steering utilities (Story 21-2, 21-3, 21-4, 21-5, 25-1)
 export {
 	buildFacetEvidenceCounts,
 	buildTerritoryPrompt,
@@ -499,13 +499,18 @@ export {
 	computeEnergyFit,
 	computeEnergyMultiplier,
 	computeEngagement,
+	computeETargetV2,
 	computeFreshnessBonus,
 	type DRSConfig,
 	type DRSInput,
 	deriveEnergyGuidanceLevel,
 	type EnergyGuidanceLevel,
+	type ETargetInput,
+	type ETargetOutput,
 	extractDRSConfig,
 	extractTerritoryScorerConfig,
+	PACING_CONFIG,
+	type PacingConfig,
 	type ScoredTerritory,
 	scoreAllTerritories,
 	scoreTerritory,
