@@ -86,10 +86,6 @@ const computeComfort = (
 	config: PacingConfig,
 ): number => {
 	if (energyHistory.length === 0) return priorComfort ?? config.comfortInit;
-	if (priorComfort !== undefined && energyHistory.length === 1) {
-		// Incremental: we only have one new value to incorporate
-		// But we don't know how many prior turns there were, so fall through to full recompute
-	}
 	const sum = energyHistory.reduce((acc, e) => acc + e, 0);
 	const mean = sum / energyHistory.length;
 	return Math.min(mean, config.comfortCap);
