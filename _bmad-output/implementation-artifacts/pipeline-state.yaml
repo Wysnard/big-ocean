@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 2
-parallelism_step_name: "Parallel Processing Layers (Epics 24, 25, 26)"
-baseline_commit: "871f6f5135e8dcd9da14e3d371826eb1f2e932ae"
-created: "2026-03-12"
-last_updated: "2026-03-12"
+parallelism_step: 3
+parallelism_step_name: "Dependent Processing Stories"
+baseline_commit: "40a9f0ed4faae53a3347d43f3415a8c1dbdd6858"
+created: "2026-03-13"
+last_updated: "2026-03-13"
 
 # Optional context documents discovered
 context_docs:
@@ -14,31 +14,24 @@ context_docs:
 
 # Stories in this step
 stories:
-  24-1-conversanalyzer-v2-schemas-and-repository-methods:
+  24-2-three-tier-extraction-pipeline:
     status: done
     mode: "parallel"
-    notes: "Extends ConversAnalyzer repo; uses types from Epic 23"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/124"
-    dev_branch: "feat/story-24-1-conversanalyzer-v2-schemas-and-repository-methods"
+    notes: "Depends on 24-1 (uses analyze/analyzeLenient methods)"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/130"
+    dev_branch: "feat/story-24-2-three-tier-extraction-pipeline"
     error: null
-  25-1-e-target-pacing-formula:
+  25-3-territory-selector:
     status: done
     mode: "parallel"
-    notes: "Pure function in domain/src/utils/steering/"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/126"
-    dev_branch: "feat/story-25-1-e-target-pacing-formula"
+    notes: "Depends on 25-2 (consumes TerritoryScorerOutput)"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/128"
+    dev_branch: "feat/story-25-3-territory-selector"
     error: null
-  25-2-territory-scorer:
+  26-2-observation-gating-and-competition:
     status: done
     mode: "parallel"
-    notes: "Pure function in domain/src/utils/steering/"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/127"
-    dev_branch: "feat/story-25-2-territory-scorer"
-    error: null
-  26-1-observation-focus-strength-formulas-and-per-domain-confidence:
-    status: done
-    mode: "parallel"
-    notes: "Pure functions in domain/src/utils/steering/"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/125"
-    dev_branch: "feat/story-26-1-observation-focus-strength-formulas-and-per-domain-confidence"
+    notes: "Depends on 26-1 (uses strength formulas)"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/129"
+    dev_branch: "feat/story-26-2-observation-gating-and-competition"
     error: null

@@ -411,7 +411,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-24: in-progress
   24-1-conversanalyzer-v2-schemas-and-repository-methods: done
-  24-2-three-tier-extraction-pipeline: backlog
+  24-2-three-tier-extraction-pipeline: pr-ready
   epic-24-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -425,7 +425,7 @@ development_status:
   epic-25: in-progress
   25-1-e-target-pacing-formula: done
   25-2-territory-scorer: done
-  25-3-territory-selector: backlog
+  25-3-territory-selector: pr-ready
   epic-25-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -438,7 +438,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-26: in-progress
   26-1-observation-focus-strength-formulas-and-per-domain-confidence: done
-  26-2-observation-gating-and-competition: backlog
+  26-2-observation-gating-and-competition: pr-ready
   26-3-move-governor: backlog
   epic-26-retrospective: optional
 
