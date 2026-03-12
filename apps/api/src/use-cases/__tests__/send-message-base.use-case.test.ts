@@ -110,7 +110,7 @@ describe("sendMessage Use Case", () => {
 						territoryPrompt: expect.objectContaining({
 							opener: expect.any(String),
 							domains: expect.any(Array),
-							energyLevel: expect.any(String),
+							energyGuidanceLevel: expect.any(String),
 						}),
 					}),
 				);

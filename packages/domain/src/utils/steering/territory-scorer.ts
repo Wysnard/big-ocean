@@ -148,7 +148,7 @@ export function scoreAllTerritories(
 
 	for (const [, territory] of catalog) {
 		const coverageValue = computeCoverageValue(territory, facetEvidenceCounts, scorerConfig);
-		const energyFit = computeEnergyFit(drs, territory.energyLevel, drsConfig);
+		const energyFit = computeEnergyFit(drs, territory.expectedEnergy, drsConfig);
 		const freshnessBonus = computeFreshnessBonus(
 			territory.id,
 			visitHistory,

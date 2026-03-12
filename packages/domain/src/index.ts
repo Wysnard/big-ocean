@@ -56,9 +56,8 @@ export {
 } from "./constants/nerin-greeting";
 // Nerin persona constant (Story 2.12)
 export { NERIN_PERSONA } from "./constants/nerin-persona";
-// Territory catalog (Story 21-1)
+// Territory catalog (Story 21-1, evolved Story 23-2)
 export {
-	COLD_START_TERRITORIES,
 	getTerritoryById,
 	TERRITORY_CATALOG,
 } from "./constants/territory-catalog";
@@ -142,6 +141,7 @@ export {
 	type ConversanalyzerInput,
 	type ConversanalyzerOutput,
 	ConversanalyzerRepository,
+	type ObservedEnergyLevel,
 } from "./repositories/conversanalyzer.repository";
 // Conversation evidence repository (Story 10.1)
 export {
@@ -400,10 +400,15 @@ export { INVITATION_EXPIRY_DAYS } from "./types/relationship.types";
 export type { MessageRole, Session, SessionStatus } from "./types/session";
 // Steering output type (Story 21-1)
 export type { SteeringOutput } from "./types/steering";
-// Territory types (Story 21-1)
+// Pacing pipeline types (Story 23-1, 23-2)
 export {
-	ENERGY_LEVELS,
-	type EnergyLevel,
+	ENERGY_BANDS,
+	type EnergyBand,
+	TELLING_BANDS,
+	type TellingBand,
+} from "./types/pacing";
+// Territory types (Story 21-1, evolved Story 23-2)
+export {
 	type Territory,
 	type TerritoryId,
 	TerritoryIdSchema,
@@ -454,6 +459,8 @@ export {
 	type PacingResult,
 	type PacingState,
 	type TraitConfidence,
+	mapEnergyBand,
+	mapTellingBand,
 	toFacetDisplayName,
 } from "./utils/index";
 // Score computation (Story 11.3)
@@ -467,6 +474,8 @@ export {
 	buildFacetEvidenceCounts,
 	buildTerritoryPrompt,
 	buildTerritorySystemPromptSection,
+	deriveEnergyGuidanceLevel,
+	type EnergyGuidanceLevel,
 	computeBreadth,
 	computeCoverageValue,
 	computeDRS,

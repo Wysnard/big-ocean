@@ -59,8 +59,8 @@ const defaultDRSConfig: DRSConfig = {
 function makeTerritory(overrides: Partial<Territory> & { id: string }): Territory {
 	return {
 		id: tid(overrides.id),
-		energyLevel: overrides.energyLevel ?? "medium",
-		domains: overrides.domains ?? ["work"],
+		expectedEnergy: overrides.expectedEnergy ?? 0.42,
+		domains: overrides.domains ?? ["work", "relationships"],
 		expectedFacets: overrides.expectedFacets ?? ["imagination", "intellect", "artistic_interests"],
 		opener: overrides.opener ?? "Test opener",
 	};
@@ -216,17 +216,17 @@ describe("scoreTerritory", () => {
 describe("scoreAllTerritories", () => {
 	const lightTerritory = makeTerritory({
 		id: "light-test",
-		energyLevel: "light",
+		expectedEnergy: 0.25,
 		expectedFacets: ["imagination", "intellect"],
 	});
 	const mediumTerritory = makeTerritory({
 		id: "medium-test",
-		energyLevel: "medium",
+		expectedEnergy: 0.42,
 		expectedFacets: ["assertiveness", "achievement_striving"],
 	});
 	const heavyTerritory = makeTerritory({
 		id: "heavy-test",
-		energyLevel: "heavy",
+		expectedEnergy: 0.65,
 		expectedFacets: ["vulnerability", "depression"],
 	});
 

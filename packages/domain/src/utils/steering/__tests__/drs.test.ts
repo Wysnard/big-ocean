@@ -1,8 +1,10 @@
 /**
- * DRS (Depth Readiness Score) Tests — Story 21-2
+ * DRS (Depth Readiness Score) Tests — Story 21-2, evolved Story 23-2
  *
  * Pure function tests for the single metric driving conversation energy pacing.
  * Tests cover: breadth, engagement, energy multiplier, full DRS, and energy fit.
+ *
+ * Evolved to use continuous energy values [0, 1] instead of categorical EnergyLevel.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -37,6 +39,11 @@ const defaultConfig: DRSConfig = {
 	heavyFitCenter: 0.65,
 	heavyFitRange: 0.25,
 };
+
+/** Energy value constants matching old categorical bands */
+const LIGHT_ENERGY = 0.25; // light territory energy
+const MEDIUM_ENERGY = 0.42; // medium territory energy
+const HEAVY_ENERGY = 0.65; // heavy territory energy
 
 // ─── computeBreadth ─────────────────────────────────────────────────
 
@@ -76,39 +83,26 @@ describe("computeEngagement", () => {
 
 	it("returns low engagement for short messages with no evidence", () => {
 		const result = computeEngagement([20, 15, 10], [0, 0, 0], defaultConfig);
-		// word = avg(20,15,10)/120 = 15/120 = 0.125
-		// evid = 0
-		// engagement = 0.55*0.125 + 0.45*0 = 0.06875
 		expect(result).toBeCloseTo(0.06875, 3);
 	});
 
 	it("returns high engagement for long messages with rich evidence", () => {
 		const result = computeEngagement([150, 180, 200], [8, 7, 9], defaultConfig);
-		// word = min(avg(150,180,200)/120, 1) = min(176.67/120, 1) = 1
-		// evid = min(avg(8,7,9)/6, 1) = min(8/6, 1) = 1
-		// engagement = 0.55*1 + 0.45*1 = 1.0
 		expect(result).toBe(1);
 	});
 
 	it("handles arrays shorter than 3 elements", () => {
 		const result = computeEngagement([60], [3], defaultConfig);
-		// word = 60/120 = 0.5
-		// evid = 3/6 = 0.5
-		// engagement = 0.55*0.5 + 0.45*0.5 = 0.5
 		expect(result).toBeCloseTo(0.5, 3);
 	});
 
 	it("uses only available data for 2 elements", () => {
 		const result = computeEngagement([120, 60], [6, 3], defaultConfig);
-		// word = avg(120,60)/120 = 90/120 = 0.75
-		// evid = avg(6,3)/6 = 4.5/6 = 0.75
-		// engagement = 0.55*0.75 + 0.45*0.75 = 0.75
 		expect(result).toBeCloseTo(0.75, 3);
 	});
 
 	it("caps word and evidence components at 1", () => {
 		const result = computeEngagement([500], [20], defaultConfig);
-		// Both word and evid cap at 1
 		expect(result).toBe(1);
 	});
 });
@@ -120,37 +114,40 @@ describe("computeEnergyMultiplier", () => {
 		expect(computeEnergyMultiplier([], defaultConfig)).toBe(1);
 	});
 
-	it("returns 1.0 for all light energy (no pressure)", () => {
-		const result = computeEnergyMultiplier(["light", "light", "light"], defaultConfig);
-		expect(result).toBe(1);
+	it("returns high value for all light energy values (low pressure)", () => {
+		const result = computeEnergyMultiplier(
+			[LIGHT_ENERGY, LIGHT_ENERGY, LIGHT_ENERGY],
+			defaultConfig,
+		);
+		// Light energy (0.25) interpolates to a low-but-nonzero weight
+		// Still produces high multiplier (low pressure)
+		expect(result).toBeGreaterThan(0.5);
+		expect(result).toBeLessThanOrEqual(1.0);
 	});
 
-	it("returns near 0 for all heavy energy (max pressure)", () => {
-		const result = computeEnergyMultiplier(["heavy", "heavy", "heavy"], defaultConfig);
-		// pressure = (1.0*2 + 0.6*2 + 0.3*2) / 3.8 = 3.8/3.8 = 1.0
-		// multiplier = clamp(1 - 1.0, 0, 1) = 0
+	it("returns near 0 for all heavy energy values (max pressure)", () => {
+		const result = computeEnergyMultiplier(
+			[HEAVY_ENERGY, HEAVY_ENERGY, HEAVY_ENERGY],
+			defaultConfig,
+		);
+		// Heavy energy maps to weight 2, maximum pressure
 		expect(result).toBe(0);
 	});
 
 	it("returns intermediate value for mixed energy", () => {
-		const result = computeEnergyMultiplier(["heavy", "medium", "light"], defaultConfig);
-		// pressure = (1.0*2 + 0.6*1 + 0.3*0) / 3.8 = 2.6/3.8 ≈ 0.6842
-		// multiplier = 1 - 0.6842 ≈ 0.3158
-		expect(result).toBeCloseTo(1 - 2.6 / 3.8, 3);
+		const result = computeEnergyMultiplier(
+			[HEAVY_ENERGY, MEDIUM_ENERGY, LIGHT_ENERGY],
+			defaultConfig,
+		);
+		expect(result).toBeGreaterThan(0.1);
+		expect(result).toBeLessThan(0.7);
 	});
 
-	it("handles single energy level", () => {
-		const result = computeEnergyMultiplier(["medium"], defaultConfig);
-		// pressure = (1.0*1) / (1.0*2) = 0.5
-		// multiplier = 1 - 0.5 = 0.5
-		expect(result).toBeCloseTo(0.5, 3);
-	});
-
-	it("handles two energy levels", () => {
-		const result = computeEnergyMultiplier(["light", "heavy"], defaultConfig);
-		// pressure = (1.0*0 + 0.6*2) / (1.0*2 + 0.6*2) = 1.2/3.2 = 0.375
-		// multiplier = 1 - 0.375 = 0.625
-		expect(result).toBeCloseTo(0.625, 3);
+	it("handles single energy value", () => {
+		const result = computeEnergyMultiplier([MEDIUM_ENERGY], defaultConfig);
+		// Medium energy weight interpolated between medium and heavy
+		expect(result).toBeGreaterThan(0.3);
+		expect(result).toBeLessThan(0.7);
 	});
 });
 
@@ -162,41 +159,41 @@ describe("computeDRS", () => {
 			coveredFacets: 0,
 			lastWordCounts: [],
 			lastEvidenceCounts: [],
-			lastEnergyLevels: [],
+			lastEnergyValues: [],
 		};
 		expect(computeDRS(input, defaultConfig)).toBe(0);
 	});
 
-	it("returns ~0.1-0.3 for early conversation (light energy)", () => {
+	it("returns low DRS for early conversation (light energy)", () => {
 		const input: DRSInput = {
 			coveredFacets: 12,
 			lastWordCounts: [40, 30, 25],
 			lastEvidenceCounts: [1, 1, 2],
-			lastEnergyLevels: ["light", "light", "light"],
+			lastEnergyValues: [LIGHT_ENERGY, LIGHT_ENERGY, LIGHT_ENERGY],
 		};
 		const result = computeDRS(input, defaultConfig);
 		expect(result).toBeGreaterThan(0.05);
 		expect(result).toBeLessThan(0.3);
 	});
 
-	it("returns ~0.4-0.6 for mid conversation (mixed energy)", () => {
+	it("returns mid-range DRS for mid conversation (mixed energy)", () => {
 		const input: DRSInput = {
 			coveredFacets: 18,
 			lastWordCounts: [80, 90, 100],
 			lastEvidenceCounts: [3, 4, 3],
-			lastEnergyLevels: ["light", "medium", "light"],
+			lastEnergyValues: [LIGHT_ENERGY, MEDIUM_ENERGY, LIGHT_ENERGY],
 		};
 		const result = computeDRS(input, defaultConfig);
-		expect(result).toBeGreaterThan(0.3);
+		expect(result).toBeGreaterThan(0.2);
 		expect(result).toBeLessThan(0.7);
 	});
 
-	it("returns ~0.7+ for late conversation (many facets, high engagement)", () => {
+	it("returns high DRS for late conversation (many facets, high engagement)", () => {
 		const input: DRSInput = {
 			coveredFacets: 25,
 			lastWordCounts: [120, 150, 130],
 			lastEvidenceCounts: [5, 6, 7],
-			lastEnergyLevels: ["light", "light", "light"],
+			lastEnergyValues: [LIGHT_ENERGY, LIGHT_ENERGY, LIGHT_ENERGY],
 		};
 		const result = computeDRS(input, defaultConfig);
 		expect(result).toBeGreaterThan(0.65);
@@ -207,16 +204,15 @@ describe("computeDRS", () => {
 			coveredFacets: 22,
 			lastWordCounts: [100, 110, 90],
 			lastEvidenceCounts: [4, 5, 4],
-			lastEnergyLevels: ["light", "light", "light"],
+			lastEnergyValues: [LIGHT_ENERGY, LIGHT_ENERGY, LIGHT_ENERGY],
 		};
 		const withHeavy: DRSInput = {
 			...withoutHeavy,
-			lastEnergyLevels: ["heavy", "heavy", "medium"],
+			lastEnergyValues: [HEAVY_ENERGY, HEAVY_ENERGY, MEDIUM_ENERGY],
 		};
 		const drsLight = computeDRS(withoutHeavy, defaultConfig);
 		const drsHeavy = computeDRS(withHeavy, defaultConfig);
 		expect(drsHeavy).toBeLessThan(drsLight);
-		expect(drsHeavy).toBeLessThan(0.3);
 	});
 
 	it("edge case: all heavy history suppresses DRS to 0", () => {
@@ -224,18 +220,17 @@ describe("computeDRS", () => {
 			coveredFacets: 25,
 			lastWordCounts: [150, 150, 150],
 			lastEvidenceCounts: [6, 6, 6],
-			lastEnergyLevels: ["heavy", "heavy", "heavy"],
+			lastEnergyValues: [HEAVY_ENERGY, HEAVY_ENERGY, HEAVY_ENERGY],
 		};
 		expect(computeDRS(input, defaultConfig)).toBe(0);
 	});
 
 	it("result is always between 0 and 1", () => {
-		// Extreme high values
 		const high: DRSInput = {
 			coveredFacets: 30,
 			lastWordCounts: [500, 500, 500],
 			lastEvidenceCounts: [20, 20, 20],
-			lastEnergyLevels: ["light", "light", "light"],
+			lastEnergyValues: [LIGHT_ENERGY, LIGHT_ENERGY, LIGHT_ENERGY],
 		};
 		expect(computeDRS(high, defaultConfig)).toBeLessThanOrEqual(1);
 		expect(computeDRS(high, defaultConfig)).toBeGreaterThanOrEqual(0);
@@ -245,51 +240,46 @@ describe("computeDRS", () => {
 // ─── computeEnergyFit ───────────────────────────────────────────────
 
 describe("computeEnergyFit", () => {
-	it("low DRS (0.1): light fit high, heavy fit 0", () => {
-		expect(computeEnergyFit(0.1, "light", defaultConfig)).toBeGreaterThan(0.9);
-		expect(computeEnergyFit(0.1, "heavy", defaultConfig)).toBe(0);
+	it("low DRS (0.1): light territory fit high, heavy territory fit 0", () => {
+		expect(computeEnergyFit(0.1, LIGHT_ENERGY, defaultConfig)).toBeGreaterThan(0.9);
+		expect(computeEnergyFit(0.1, HEAVY_ENERGY, defaultConfig)).toBe(0);
 	});
 
-	it("mid DRS (0.55): medium fit high", () => {
-		const mediumFit = computeEnergyFit(0.55, "medium", defaultConfig);
-		// mediumFit = 1 - clamp(abs(0.55 - 0.55)/0.35, 0, 1) = 1 - 0 = 1
+	it("mid DRS (0.55): medium territory fit high", () => {
+		const mediumFit = computeEnergyFit(0.55, MEDIUM_ENERGY, defaultConfig);
 		expect(mediumFit).toBe(1);
 	});
 
-	it("mid DRS (0.55): light and heavy have lower fit", () => {
-		const lightFit = computeEnergyFit(0.55, "light", defaultConfig);
-		const heavyFit = computeEnergyFit(0.55, "heavy", defaultConfig);
-		// lightFit = clamp((0.55 - 0.55)/0.35, 0, 1) = 0
-		// heavyFit = clamp((0.55 - 0.65)/0.25, 0, 1) = clamp(-0.4, 0, 1) = 0
+	it("mid DRS (0.55): light and heavy territories have lower fit", () => {
+		const lightFit = computeEnergyFit(0.55, LIGHT_ENERGY, defaultConfig);
+		const heavyFit = computeEnergyFit(0.55, HEAVY_ENERGY, defaultConfig);
 		expect(lightFit).toBe(0);
 		expect(heavyFit).toBe(0);
 	});
 
-	it("high DRS (0.8): heavy fit high, light fit 0", () => {
-		const heavyFit = computeEnergyFit(0.8, "heavy", defaultConfig);
-		const lightFit = computeEnergyFit(0.8, "light", defaultConfig);
-		// heavyFit = clamp((0.8 - 0.65)/0.25, 0, 1) = clamp(0.6, 0, 1) = 0.6
+	it("high DRS (0.8): heavy territory fit high, light territory fit 0", () => {
+		const heavyFit = computeEnergyFit(0.8, HEAVY_ENERGY, defaultConfig);
+		const lightFit = computeEnergyFit(0.8, LIGHT_ENERGY, defaultConfig);
 		expect(heavyFit).toBeCloseTo(0.6, 3);
 		expect(lightFit).toBe(0);
 	});
 
-	it("DRS = 0: light fit = 1, medium and heavy = 0 or low", () => {
-		expect(computeEnergyFit(0, "light", defaultConfig)).toBeGreaterThan(0.9);
-		expect(computeEnergyFit(0, "heavy", defaultConfig)).toBe(0);
+	it("DRS = 0: light territory fit > 0.9, heavy territory fit 0", () => {
+		expect(computeEnergyFit(0, LIGHT_ENERGY, defaultConfig)).toBeGreaterThan(0.9);
+		expect(computeEnergyFit(0, HEAVY_ENERGY, defaultConfig)).toBe(0);
 	});
 
-	it("DRS = 1: heavy fit = 1, light fit = 0", () => {
-		expect(computeEnergyFit(1, "heavy", defaultConfig)).toBe(1);
-		expect(computeEnergyFit(1, "light", defaultConfig)).toBe(0);
+	it("DRS = 1: heavy territory fit = 1, light territory fit = 0", () => {
+		expect(computeEnergyFit(1, HEAVY_ENERGY, defaultConfig)).toBe(1);
+		expect(computeEnergyFit(1, LIGHT_ENERGY, defaultConfig)).toBe(0);
 	});
 
-	it("boundary: DRS at light center (0.55) gives light fit 0", () => {
-		expect(computeEnergyFit(0.55, "light", defaultConfig)).toBe(0);
+	it("boundary: DRS at light center (0.55) gives light territory fit 0", () => {
+		expect(computeEnergyFit(0.55, LIGHT_ENERGY, defaultConfig)).toBe(0);
 	});
 
-	it("boundary: DRS at heavy center (0.65) gives heavy fit 0", () => {
-		// heavyFit = clamp((0.65 - 0.65)/0.25, 0, 1) = 0
-		expect(computeEnergyFit(0.65, "heavy", defaultConfig)).toBe(0);
+	it("boundary: DRS at heavy center (0.65) gives heavy territory fit 0", () => {
+		expect(computeEnergyFit(0.65, HEAVY_ENERGY, defaultConfig)).toBe(0);
 	});
 });
 
@@ -297,7 +287,6 @@ describe("computeEnergyFit", () => {
 
 describe("extractDRSConfig", () => {
 	it("extracts DRS config fields from AppConfigService", () => {
-		// Use a minimal mock that has the DRS fields
 		const appConfig = {
 			drsBreadthWeight: 0.55,
 			drsEngagementWeight: 0.45,

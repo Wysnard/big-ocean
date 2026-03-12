@@ -16,10 +16,12 @@ export {
 	type DRSInput,
 	extractDRSConfig,
 } from "./drs";
-// Territory Prompt Builder (Story 21-5)
+// Territory Prompt Builder (Story 21-5, evolved Story 23-2)
 export {
 	buildTerritoryPrompt,
 	buildTerritorySystemPromptSection,
+	deriveEnergyGuidanceLevel,
+	type EnergyGuidanceLevel,
 	type TerritoryPromptContent,
 } from "./territory-prompt-builder";
 // Territory Scoring (Story 21-3)

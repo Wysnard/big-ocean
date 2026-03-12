@@ -60,7 +60,7 @@ describe("sendMessage Use Case", () => {
 				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
 				expect(nerinCall.territoryPrompt).toBeDefined();
 				expect(nerinCall.territoryPrompt?.opener).toBeDefined();
-				expect(nerinCall.territoryPrompt?.energyLevel).toBeDefined();
+				expect(nerinCall.territoryPrompt?.energyGuidanceLevel).toBeDefined();
 				expect(nerinCall.territoryPrompt?.domains).toBeDefined();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
@@ -77,7 +77,7 @@ describe("sendMessage Use Case", () => {
 				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
 				// Cold-start path still provides territory prompt
 				expect(nerinCall.territoryPrompt).toBeDefined();
-				expect(nerinCall.territoryPrompt?.energyLevel).toBeDefined();
+				expect(nerinCall.territoryPrompt?.energyGuidanceLevel).toBeDefined();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 

@@ -4,7 +4,7 @@
  * All types for the six-layer pacing pipeline: energy/telling extraction,
  * adaptive pacing, territory scoring, observation gating, and prompt composition.
  *
- * Part of Epic 23 (Conversation Pacing Pipeline) — Story 23-1.
+ * Part of Epic 23 (Conversation Pacing Pipeline) — Stories 23-1, 23-2.
  */
 
 import type { FacetName } from "../constants/big-five";
@@ -16,16 +16,28 @@ import type { TerritoryId } from "./territory";
 // ---------------------------------------------------------------------------
 
 /**
- * Energy Band — 5-band user energy classification.
- * ConversAnalyzer v2 outputs one of these bands; pipeline maps to [0, 1].
+ * Energy Band — 5-level categorical energy classification.
+ *
+ * Represents the user's observed conversational energy level
+ * as extracted by ConversAnalyzer. Maps to continuous [0, 1]
+ * via mapEnergyBand().
  */
-export const ENERGY_BANDS = ["minimal", "low", "steady", "high", "very_high"] as const;
+export const ENERGY_BANDS = [
+	"minimal",
+	"low",
+	"steady",
+	"high",
+	"very_high",
+] as const;
 
 export type EnergyBand = (typeof ENERGY_BANDS)[number];
 
 /**
- * Telling Band — 5-band user self-direction classification.
- * Measures how much the user drives vs follows the conversation.
+ * Telling Band — 5-level categorical telling classification.
+ *
+ * Represents how much the user is self-directing the conversation
+ * vs following Nerin's lead. Maps to continuous [0, 1]
+ * via mapTellingBand().
  */
 export const TELLING_BANDS = [
 	"fully_compliant",
