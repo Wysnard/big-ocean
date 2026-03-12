@@ -529,3 +529,17 @@ export {
 	computeSmoothedClarity,
 	OBSERVATION_FOCUS_CONSTANTS,
 } from "./utils/steering";
+// Pacing territory scorer (Story 25-2)
+export {
+	computeAdjacency,
+	computeConversationSkew,
+	computeCoverageGainV2,
+	computeEnergyMalus,
+	computeFacetPriority,
+	computeFreshnessPenaltyV2,
+	PACING_SCORER_DEFAULTS,
+	type PacingScorerConfig,
+	type PacingVisitHistory,
+	type ScoreAllTerritoriesV2Input,
+	scoreAllTerritoriesV2,
+} from "./utils/steering";

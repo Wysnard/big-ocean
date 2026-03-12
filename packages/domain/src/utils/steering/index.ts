@@ -16,6 +16,20 @@ export {
 	type DRSInput,
 	extractDRSConfig,
 } from "./drs";
+// Pacing Territory Scorer (Story 25-2)
+export {
+	computeAdjacency,
+	computeConversationSkew,
+	computeCoverageGainV2,
+	computeEnergyMalus,
+	computeFacetPriority,
+	computeFreshnessPenaltyV2,
+	PACING_SCORER_DEFAULTS,
+	type PacingScorerConfig,
+	type PacingVisitHistory,
+	type ScoreAllTerritoriesV2Input,
+	scoreAllTerritoriesV2,
+} from "./pacing-territory-scorer";
 // Territory Prompt Builder (Story 21-5, evolved Story 23-2)
 export {
 	buildTerritoryPrompt,
