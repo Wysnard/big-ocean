@@ -24,6 +24,14 @@ export {
 	type EnergyGuidanceLevel,
 	type TerritoryPromptContent,
 } from "./territory-prompt-builder";
+// E_target Pacing Formula (Story 25-1)
+export {
+	computeETarget as computeETargetV2,
+	PACING_CONFIG,
+	type ETargetInput,
+	type ETargetOutput,
+	type PacingConfig,
+} from "./e-target";
 // Territory Scoring (Story 21-3)
 export {
 	buildFacetEvidenceCounts,
