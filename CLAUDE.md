@@ -41,7 +41,7 @@ Full GDPR compliance required for EU market expansion:
 
 ### Apps
 
-- **front** (`port 3000`): TanStack Start SSR frontend - React 19, TanStack Router/Query/Form/DB, ElectricSQL, shadcn/ui, Tailwind v4
+- **front** (`port 3000`): TanStack Start SSR frontend - React 19, TanStack Router/Query/Form/DB, shadcn/ui, Tailwind v4
 - **api** (`port 4000`): Effect-ts backend - hexagonal architecture, ConversAnalyzer + formula steering pipeline, Drizzle + PostgreSQL, Better Auth
   - Health: `GET /health` | API: `/api/*`
   - Structure: `src/handlers/` (8 handlers) → `src/use-cases/` (29 use-cases)
@@ -176,7 +176,6 @@ Use `isRedirect()` in catch blocks within `beforeLoad` to re-throw TanStack Rout
 ### Database & Sync
 
 - **Backend:** Drizzle ORM + PostgreSQL (`packages/infrastructure/src/db/drizzle/schema.ts`)
-- **Frontend:** ElectricSQL + TanStack DB for local-first reactive sync
 - **Migrations:** Managed by `drizzle-kit` — run `pnpm db:migrate` to apply, `pnpm db:generate` to create new migrations
 - **Docker:** Migrations run automatically on backend startup via `docker-entrypoint.sh`
 - **Config:** `drizzle.config.ts` at repo root
