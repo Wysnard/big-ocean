@@ -69,3 +69,12 @@ export {
 	computeSmoothedClarity,
 	OBSERVATION_FOCUS_CONSTANTS,
 } from "./observation-focus";
+// Territory Selector (Story 25-3)
+export {
+	COLD_START_PERIMETER,
+	deriveSessionPhase,
+	deriveTransitionType,
+	selectTerritoryV2,
+	type SelectorSessionPhase,
+	type SelectorTransitionType,
+} from "./territory-selector";
