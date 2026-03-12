@@ -89,28 +89,27 @@ describe("sendMessage Use Case", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should handle non-fatal conversanalyzer error — Nerin still responds (AC: #6)", () =>
+		it.effect("should handle non-fatal conversanalyzer error — falls back to Tier 2 lenient (AC: #6, Story 24-2)", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockConversanalyzerRepo.analyze.mockReturnValue(
 					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
 				);
+				// analyzeLenient succeeds from default setup — Tier 2 fallback
 
 				const result = yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "I work in tech",
 				});
 
-				// Nerin should still respond normally despite conversanalyzer failure
+				// Nerin should still respond normally
 				expect(result.response).toBe(mockNerinResponse.response);
 				expect(mockNerinRepo.invoke).toHaveBeenCalled();
-				// Warning was logged (after retry exhausted per AC #6 — Story 2.3 bumped to 3 attempts)
+				// Tier 2 warning was logged (three-tier pipeline, Story 24-2)
 				expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
-					"ConversAnalyzer failed after 3 attempts, skipping",
+					"ConversAnalyzer fell back to Tier 2 (lenient schema)",
 					expect.objectContaining({ sessionId: "session_test_123" }),
 				);
-				// Evidence not saved
-				expect(mockEvidenceRepo.save).not.toHaveBeenCalled();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 

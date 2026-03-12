@@ -1,5 +1,5 @@
 ---
-status: ready-for-dev
+status: in-progress
 story_id: "24-2"
 epic: 24
 created_date: 2026-03-13

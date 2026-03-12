@@ -27,7 +27,6 @@ import {
 	aggregateDomainDistribution,
 	buildFacetEvidenceCounts,
 	buildTerritoryPrompt,
-	ConversanalyzerRepository,
 	type ConversanalyzerV2Output,
 	ConversationEvidenceRepository,
 	CostGuardRepository,
@@ -35,6 +34,7 @@ import {
 	computeDRS,
 	computeFinalWeight,
 	type DomainMessage,
+	type ExtractionTier,
 	extractDRSConfig,
 	extractTerritoryScorerConfig,
 	GREETING_MESSAGES,
@@ -48,7 +48,8 @@ import {
 	TerritoryIdSchema,
 	type TerritoryVisitHistory,
 } from "@workspace/domain";
-import { Effect, Schedule, Schema } from "effect";
+import { Effect, Schema } from "effect";
+import { runThreeTierExtraction } from "./three-tier-extraction";
 
 /** Helper to create branded TerritoryId */
 const tid = (s: string): TerritoryId => Schema.decodeSync(TerritoryIdSchema)(s);
@@ -190,7 +191,6 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const exchangeRepo = yield* AssessmentExchangeRepository;
 		const logger = yield* LoggerRepository;
 		const nerin = yield* NerinAgentRepository;
-		const conversanalyzer = yield* ConversanalyzerRepository;
 		const evidenceRepo = yield* ConversationEvidenceRepository;
 		const costGuard = yield* CostGuardRepository;
 
@@ -331,44 +331,24 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				),
 			);
 
-		// Step 6: Call ConversAnalyzer v2 (post-Nerin per FR16)
+		// Step 6: Call ConversAnalyzer v2 via three-tier extraction pipeline (Story 24-2)
 		let pendingEvidence: ConversanalyzerV2Output["evidence"] = [];
 		let observedEnergyLevel = "medium";
+		let extractionTier: ExtractionTier | null = null;
 
 		if (userMessageCount >= COLD_START_USER_MSG_THRESHOLD) {
 			const domainDistribution = aggregateDomainDistribution(existingEvidence);
 			const recentMessages: DomainMessage[] = domainMessages.slice(-6);
 
-			const neutralV2Default: ConversanalyzerV2Output = {
-				userState: {
-					energyBand: "steady",
-					tellingBand: "mixed",
-					energyReason: "",
-					tellingReason: "",
-					withinMessageShift: false,
-				},
-				evidence: [],
-				tokenUsage: { input: 0, output: 0 },
-			};
+			const extraction = yield* runThreeTierExtraction({
+				sessionId: input.sessionId,
+				message: input.userMessage,
+				recentMessages,
+				domainDistribution,
+			});
 
-			const evidenceResult = yield* conversanalyzer
-				.analyze({
-					message: input.userMessage,
-					recentMessages,
-					domainDistribution,
-				})
-				.pipe(
-					Effect.retry(Schedule.recurs(2)),
-					Effect.catchAll((error) =>
-						Effect.sync(() => {
-							logger.warn("ConversAnalyzer failed after 3 attempts, skipping", {
-								error: error.message,
-								sessionId: input.sessionId,
-							});
-							return neutralV2Default;
-						}),
-					),
-				);
+			extractionTier = extraction.extractionTier;
+			const evidenceResult = extraction.output;
 
 			analyzerTokenUsage = evidenceResult.tokenUsage;
 			// Bridge v2 energyBand to v1 observedEnergyLevel for downstream compatibility
@@ -389,6 +369,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				rawCount: evidenceResult.evidence.length,
 				filteredCount: filteredEvidence.length,
 				observedEnergyLevel,
+				extractionTier,
 				evidence: filteredEvidence.map((e) => ({
 					facet: e.bigfiveFacet,
 					deviation: e.deviation,
@@ -438,10 +419,11 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const turnNumber = previousExchanges.length + 1;
 		const exchange = yield* exchangeRepo.create(input.sessionId, turnNumber);
 
-		// Update exchange with pipeline state
+		// Update exchange with pipeline state (including extraction tier from Story 24-2)
 		yield* exchangeRepo.update(exchange.id, {
 			selectedTerritory: selectedTerritoryId as string,
 			selectionRule: userMessageCount < COLD_START_USER_MSG_THRESHOLD ? "cold_start" : "argmax",
+			...(extractionTier != null ? { extractionTier } : {}),
 		});
 
 		// Step 7: Save messages and evidence atomically
@@ -484,6 +466,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			isFinalTurn,
 			selectedTerritory: selectedTerritoryId,
 			observedEnergyLevel,
+			extractionTier,
 			drs: +drsValue.toFixed(3),
 			evidenceCount: pendingEvidence.length,
 			exchangeId: exchange.id,
