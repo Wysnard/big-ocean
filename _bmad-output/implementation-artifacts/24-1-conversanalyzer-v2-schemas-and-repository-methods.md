@@ -151,3 +151,26 @@ So that the system can extract energy/telling signals alongside evidence in a si
 - The `ConversanalyzerOutput` type (v1) is replaced by `ConversanalyzerV2Output` on the repository interface. Downstream consumers that depend on the old type will need updating in subsequent stories (Story 24-2).
 - The `ObservedEnergyLevel` type is deprecated in favor of `EnergyBand` from pacing types.
 - Temperature 0.9 enables retry variation for the three-tier extraction strategy (Story 24-2).
+
+## Architect Notes
+
+### Finding 1: Downstream Consumer Breakage (Major)
+
+Evolving `analyze` to return `ConversanalyzerV2Output` will break `apps/api/src/use-cases/nerin-pipeline.ts` and its tests, which reference `ConversanalyzerOutput` and `observedEnergyLevel`. To keep this PR green:
+
+- **Update `nerin-pipeline.ts`**: Change the import from `ConversanalyzerOutput` to `ConversanalyzerV2Output`. The pipeline currently reads `.evidence` and `.observedEnergyLevel`. After evolution, evidence stays the same. Map `observedEnergyLevel` from the new `userState.energyBand` using a simple band-to-v1-level helper (e.g., `minimal/low -> "light"`, `steady -> "medium"`, `high/very_high -> "heavy"`) as a temporary bridge. This mapping is discardable — Story 24-2 will replace it with the three-tier extraction pipeline.
+- **Update `apps/api/src/use-cases/__tests__/nerin-pipeline.test.ts`** and `__fixtures__/send-message.fixtures.ts` to use v2 output shape.
+- **Update `packages/infrastructure/src/repositories/__tests__/conversanalyzer-energy.test.ts`** for v2 output.
+
+### Finding 3: Lenient Schema Default Values (Minor)
+
+The lenient schema defaults for all `userState` fields must be explicit:
+- `energyBand`: `"steady"` (mid-range)
+- `tellingBand`: `"mixed"` (mid-range)
+- `energyReason`: `""` (empty string)
+- `tellingReason`: `""` (empty string)
+- `withinMessageShift`: `false`
+
+### Finding 4: Export UserState Type (Minor)
+
+Export `UserState` as a standalone type from the domain index for reuse by `assessment_exchange` persistence (Story 23-3 already stores these fields) and the three-tier extraction pipeline (Story 24-2).
