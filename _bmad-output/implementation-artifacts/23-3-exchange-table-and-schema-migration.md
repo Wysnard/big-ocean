@@ -123,3 +123,39 @@ So that per-turn pipeline state is stored as a single row and all related data r
 ### Task 10: Generate and verify migration
 - Run `pnpm db:generate` to create migration SQL
 - Verify migration file contents
+
+## Architect Notes
+
+### Finding 1 (major): Cascading breakage from dropped columns
+
+Dropping `userId`, `territoryId`, `observedEnergyLevel` from `assessmentMessage` will break:
+
+1. **`AssessmentMessageRepository.saveMessage` signature** — currently takes `userId`, `territoryId`, `observedEnergyLevel` as optional params. Must be simplified to `(sessionId, role, content, exchangeId?)`.
+2. **`assessment-message.drizzle.repository.ts`** — implementation inserts these columns. Must be updated.
+3. **`__mocks__/assessment-message.drizzle.repository.ts`** — mock stores these fields. Must be updated.
+4. **`message.entity.ts`** — `AssessmentHumanMessageEntitySchema` has `observedEnergyLevel` and `userId`; `AssessmentAssistantMessageEntitySchema` has `territoryId`. Both must be cleaned.
+5. **Use-cases calling `saveMessage`** — search for all callers:
+   - `apps/api/src/use-cases/send-message.use-case.ts`
+   - `apps/api/src/use-cases/` — grep for `saveMessage` and `territoryId`
+   - Seed scripts at repo root
+6. **Frontend** — `apps/front` may reference `territoryId` or `observedEnergyLevel` on message entities.
+7. **Relations in `schema.ts`** — the `assessmentMessage.user` relation uses `assessmentMessage.userId` and must be removed.
+
+**Approach:** Update all of these in a single commit. Use `pnpm turbo typecheck` to find all breakages.
+
+### Finding 2 (major): Migration generation not possible in worktree
+
+The worktree has no running database, so `pnpm db:generate` and `pnpm db:migrate` cannot run. The story scope for this PR is:
+
+1. Update Drizzle schema TypeScript (which drizzle-kit uses to generate SQL)
+2. Update all code that depends on the schema types
+3. Migration SQL generation is deferred — the schema changes are the source of truth for `drizzle-kit generate`
+
+**Do NOT** attempt to run `pnpm db:generate` or `pnpm db:migrate` in CI. The migration file will be generated when a developer runs these commands against a real database.
+
+### Finding 3 (minor): Entity schema updates
+
+The `AssessmentMessageEntitySchema` uses a `Schema.Union` of Human and Assistant message schemas. After removing the dropped columns:
+- Human messages: remove `userId`, `observedEnergyLevel`; optionally add `exchangeId`
+- Assistant messages: remove `territoryId`; optionally add `exchangeId`
+- Both: `exchangeId` as `Schema.optionalWith(Schema.NullOr(Schema.UUID), { default: () => null })`
