@@ -37,3 +37,13 @@ export {
 	type TerritoryScorerConfig,
 	type TerritoryVisitHistory,
 } from "./territory-scorer";
+// Observation Focus Strength (Story 26-1)
+export {
+	computeContradictionStrength,
+	computeConvergenceStrength,
+	computeNoticingStrength,
+	computePerDomainConfidence,
+	computeRelateStrength,
+	computeSmoothedClarity,
+	OBSERVATION_FOCUS_CONSTANTS,
+} from "./observation-focus";
