@@ -332,6 +332,39 @@ export type {
 	DomainMessage,
 	UserMessage,
 } from "./types/message";
+export type {
+	AmplifyPromptInput,
+	ContradictionFocus,
+	ContradictionTarget,
+	ConvergenceFocus,
+	ConvergenceTarget,
+	DomainScore,
+	EntryPressureDebug,
+	ExplorePromptInput,
+	MoveGovernorDebug,
+	NoticingFocus,
+	ObservationCandidate,
+	ObservationFocus,
+	ObservationGatingDebug,
+	OpenPromptInput,
+	PromptBuilderInput,
+	RankedTerritory,
+	RelateFocus,
+	TerritoryScoreBreakdown,
+	TerritoryScorerOutput,
+	TerritorySelectorOutput,
+} from "./types/pacing";
+// Pacing pipeline types (Story 23-1)
+export {
+	CONVERSATIONAL_INTENTS,
+	type ConversationalIntent,
+	ENERGY_BANDS,
+	ENTRY_PRESSURES,
+	type EnergyBand,
+	type EntryPressure,
+	TELLING_BANDS,
+	type TellingBand,
+} from "./types/pacing";
 // Portrait rating types (Story 19-2)
 export type {
 	DepthSignalLevel,

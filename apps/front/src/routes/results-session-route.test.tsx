@@ -3,12 +3,15 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockUseParams = vi.fn(() => ({ assessmentSessionId: "session-123" }));
-const mockUseSearch = vi.fn(() => ({ scrollToFacet: undefined }));
-const mockNavigate = vi.fn();
-
-const mockUseAuth = vi.fn();
-const mockUseGetResults = vi.fn();
+const { mockUseParams, mockUseSearch, mockNavigate, mockUseAuth, mockUseGetResults } = vi.hoisted(
+	() => ({
+		mockUseParams: vi.fn(() => ({ assessmentSessionId: "session-123" })),
+		mockUseSearch: vi.fn(() => ({ scrollToFacet: undefined })),
+		mockNavigate: vi.fn(),
+		mockUseAuth: vi.fn(),
+		mockUseGetResults: vi.fn(),
+	}),
+);
 
 vi.mock("@tanstack/react-router", () => ({
 	createFileRoute: () => (options: Record<string, unknown>) => ({
@@ -102,6 +105,35 @@ vi.mock("@workspace/ui/hooks/use-theme", () => ({
 	ThemeContext: { Provider: ({ children }: { children: React.ReactNode }) => children },
 }));
 
+vi.mock("@/lib/polar-checkout", () => ({
+	createThemedCheckoutEmbed: vi.fn(),
+}));
+
+vi.mock("@/components/finalization-wait-screen", () => ({
+	FinalizationWaitScreen: () => <div data-testid="finalization-wait" />,
+}));
+
+vi.mock("@/components/results/EvidencePanel", () => ({
+	EvidencePanel: () => <div data-testid="evidence-panel" />,
+}));
+
+vi.mock("@/components/results/TeaserPortraitReadingView", () => ({
+	TeaserPortraitReadingView: () => <div data-testid="teaser-portrait" />,
+}));
+
+vi.mock("@/components/sharing/archetype-share-card", () => ({
+	ArchetypeShareCard: () => <div data-testid="archetype-share-card" />,
+}));
+
+vi.mock("@/components/results/PortraitReadingView", () => ({
+	PortraitReadingView: () => <div data-testid="portrait-reading" />,
+}));
+
+// Static import — all heavy deps are mocked above (vi.mock is hoisted)
+import { Route } from "./results/$assessmentSessionId";
+
+const Component = Route.component as React.ComponentType;
+
 describe("results/$assessmentSessionId route behavior", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -113,18 +145,16 @@ describe("results/$assessmentSessionId route behavior", () => {
 		});
 	});
 
-	it("shows auth gate and disables results query for unauthenticated users", async () => {
+	it("shows auth gate and disables results query for unauthenticated users", () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: false, isPending: false });
 
-		const { Route } = await import("./results/$assessmentSessionId");
-		const Component = Route.component;
 		render(<Component />);
 
 		expect(screen.getByTestId("mock-auth-gate")).toBeInTheDocument();
 		expect(mockUseGetResults).toHaveBeenCalledWith("session-123", false);
 	});
 
-	it("bypasses gate and enables results query for authenticated users", async () => {
+	it("bypasses gate and enables results query for authenticated users", () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: true, isPending: false });
 		mockUseGetResults.mockReturnValue({
 			data: {
@@ -143,8 +173,6 @@ describe("results/$assessmentSessionId route behavior", () => {
 			error: null,
 		});
 
-		const { Route } = await import("./results/$assessmentSessionId");
-		const Component = Route.component;
 		render(<Component />);
 
 		expect(screen.queryByTestId("mock-auth-gate")).not.toBeInTheDocument();
@@ -160,8 +188,6 @@ describe("results/$assessmentSessionId route behavior", () => {
 			error: { status: 404, message: "Session not found" },
 		});
 
-		const { Route } = await import("./results/$assessmentSessionId");
-		const Component = Route.component;
 		render(<Component />);
 
 		await waitFor(() => {
@@ -178,8 +204,6 @@ describe("results/$assessmentSessionId route behavior", () => {
 			error: new Error("HTTP 404: SessionNotFound"),
 		});
 
-		const { Route } = await import("./results/$assessmentSessionId");
-		const Component = Route.component;
 		render(<Component />);
 
 		await waitFor(() => {
