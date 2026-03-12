@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 1
-parallelism_step_name: "Infrastructure changes"
-baseline_commit: "6b3e2de2e5d69bd568dc19758d3440ca2fdfc3f0"
-created: "2026-03-05"
-last_updated: "2026-03-05"
+parallelism_step: 2
+parallelism_step_name: "Parallel Processing Layers (Epics 24, 25, 26)"
+baseline_commit: "871f6f5135e8dcd9da14e3d371826eb1f2e932ae"
+created: "2026-03-12"
+last_updated: "2026-03-12"
 
 # Optional context documents discovered
 context_docs:
@@ -14,10 +14,31 @@ context_docs:
 
 # Stories in this step
 stories:
-  21-6-schema-migration-and-conversanalyzer-energy-classification:
+  24-1-conversanalyzer-v2-schemas-and-repository-methods:
     status: done
     mode: "parallel"
-    notes: "Schema migration (2 new columns on assessment_messages) + ConversAnalyzer energy classification output + mock updates; depends on 21-1 through 21-5 (all done)"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/119"
-    dev_branch: "feat/story-21-6-schema-migration-and-conversanalyzer-energy-classification"
+    notes: "Extends ConversAnalyzer repo; uses types from Epic 23"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/124"
+    dev_branch: "feat/story-24-1-conversanalyzer-v2-schemas-and-repository-methods"
+    error: null
+  25-1-e-target-pacing-formula:
+    status: done
+    mode: "parallel"
+    notes: "Pure function in domain/src/utils/steering/"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/126"
+    dev_branch: "feat/story-25-1-e-target-pacing-formula"
+    error: null
+  25-2-territory-scorer:
+    status: done
+    mode: "parallel"
+    notes: "Pure function in domain/src/utils/steering/"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/127"
+    dev_branch: "feat/story-25-2-territory-scorer"
+    error: null
+  26-1-observation-focus-strength-formulas-and-per-domain-confidence:
+    status: done
+    mode: "parallel"
+    notes: "Pure functions in domain/src/utils/steering/"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/125"
+    dev_branch: "feat/story-26-1-observation-focus-strength-formulas-and-per-domain-confidence"
     error: null
