@@ -354,7 +354,7 @@ export type {
 	TerritoryScorerOutput,
 	TerritorySelectorOutput,
 } from "./types/pacing";
-// Pacing pipeline types (Story 23-1)
+// Pacing pipeline types (Story 23-1, 23-2)
 export {
 	CONVERSATIONAL_INTENTS,
 	type ConversationalIntent,
@@ -400,13 +400,6 @@ export { INVITATION_EXPIRY_DAYS } from "./types/relationship.types";
 export type { MessageRole, Session, SessionStatus } from "./types/session";
 // Steering output type (Story 21-1)
 export type { SteeringOutput } from "./types/steering";
-// Pacing pipeline types (Story 23-1, 23-2)
-export {
-	ENERGY_BANDS,
-	type EnergyBand,
-	TELLING_BANDS,
-	type TellingBand,
-} from "./types/pacing";
 // Territory types (Story 21-1, evolved Story 23-2)
 export {
 	type Territory,
@@ -455,12 +448,12 @@ export {
 	getTraitColor,
 	getTraitGradient,
 	lookupArchetype,
+	mapEnergyBand,
+	mapTellingBand,
 	PACING_CONSTANTS,
 	type PacingResult,
 	type PacingState,
 	type TraitConfidence,
-	mapEnergyBand,
-	mapTellingBand,
 	toFacetDisplayName,
 } from "./utils/index";
 // Score computation (Story 11.3)
@@ -474,8 +467,6 @@ export {
 	buildFacetEvidenceCounts,
 	buildTerritoryPrompt,
 	buildTerritorySystemPromptSection,
-	deriveEnergyGuidanceLevel,
-	type EnergyGuidanceLevel,
 	computeBreadth,
 	computeCoverageValue,
 	computeDRS,
@@ -485,6 +476,8 @@ export {
 	computeFreshnessBonus,
 	type DRSConfig,
 	type DRSInput,
+	deriveEnergyGuidanceLevel,
+	type EnergyGuidanceLevel,
 	extractDRSConfig,
 	extractTerritoryScorerConfig,
 	type ScoredTerritory,
