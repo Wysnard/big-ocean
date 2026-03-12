@@ -3,8 +3,28 @@ title: Conversation Pacing Design Decisions
 description: Design decisions and principles for Nerin's conversation pacing architecture — the shift from assessment-first to guided self-discovery
 date: 2026-03-07
 status: updated
-last_updated: 2026-03-09
-changelog: "Territory catalog migration resolved — 25-territory catalog with continuous expectedEnergy [0,1], 8 domain re-tags, 3 new territories (daily-frustrations, growing-up, family-rituals). Opener-cost calibration principle established. Cluster traps eliminated. Anger accessible at medium energy. Depression accepted as heavy-only ('still emerging' in portrait). Three natural corridors emerged (introspective, interpersonal, achiever). New Decision 11 added. Territory catalog refinement moved from open to resolved."
+last_updated: 2026-03-11
+supersedes:
+  - doc: "problem-solution-2026-03-09-move-generator.md"
+    section: "Prompt Builder Enrichment (lines 734-933)"
+    by: "Decision 13 — three-tier contextual composition model"
+changelog:
+  - date: 2026-03-11
+    change: "Decision 12 updated from Move Governor spec — PromptBuilderInput evolved: Territory replaces TerritoryId (pipeline resolves), MomentFocus tagged union (NoticingFocus/ContradictionFocus/ConvergenceFocus) replaces raw union, amplify uses single focus instead of two suggestion fields. Convergence added as 4th Governor decision. MoveGovernorDebug restructured as product of 4 discriminated debug unions. Mutual exclusion expanded to 3-way with priority: contradiction > convergence > noticing. Amplify evaluates contradiction + convergence only (noticing excluded as local signal)."
+  - date: 2026-03-10
+    change: "Coherence audit — 6 gaps resolved. E_target outputs [0,1] natively (ConversAnalyzer normalizes). Amplify intent passes both contradiction and noticing suggestions (bypasses gating, Nerin decides). Decision 4 supersession note added. deriveIntent() and previousTerritory derivation specified. Consolidated pipeline wiring."
+  - date: 2026-03-10
+    change: "Governor output contract revised — PromptBuilderInput discriminated union is the external contract; sessionPhase/transitionType moved to MoveGovernorDebug. Intent derivation rules and field sources specified."
+  - date: 2026-03-10
+    change: "Prompt builder architecture resolved (Decision 13). Supersedes Governor spec's Prompt Builder Enrichment section."
+  - date: 2026-03-09
+    change: "Move Governor resolved (Decision 12). Reframed from Move Generator — thin restraint layer replaces action dispatch."
+  - date: 2026-03-09
+    change: "Territory Selector resolved. 3 code paths, 6-field output contract, score-perimeter cold-start."
+  - date: 2026-03-08
+    change: "Territory Catalog refined. 25 territories with continuous expectedEnergy, 3 new territories, 8 domain re-tags."
+  - date: 2026-03-07
+    change: "Initial document. E_target formula, energy/telling extraction, territory policy redesign resolved."
 ---
 
 # Conversation Pacing Design Decisions
@@ -131,7 +151,9 @@ The policy layer chooses from four functional move types. Richness and nuance co
 | **Hold** | Reflect something specific, make space | Mirror one observation and let the sentence hang — an invitation with no pressure |
 | **Pivot** | Change territory when energy or telling demands it | Topic shift, energy reset, fresh angle |
 
-**Move selection is driven by the gap between E_target and current state:**
+**Move selection as design vocabulary:**
+
+> **Superseded by Decision 12:** The E_target-gap dispatch mapping below was retired. Move types survive as vocabulary for prompt builder instructions, post-hoc analysis, and design communication — not as policy-layer dispatch targets. The Governor computes entry pressure from the E_target gap but does not dispatch move types. Nerin naturally chooses the conversational action from context. See Decision 12 for the Governor's actual mechanism.
 
 - `E_target ~ E(n)` — **Pull** or **Bridge** (stay the course or expand naturally)
 - `E_target < E(n)` — **Pivot** (shift to lighter territory)
@@ -313,9 +335,220 @@ The territory catalog — 25 territories with continuous `expectedEnergy`, dual-
 
 ---
 
+### Decision 12: Move Governor — Restraint Layer, Not Move Dispatch
+
+The third pipeline layer (after Scorer and Selector) is a **Move Governor**, not a full Move Generator. The Governor handles what LLMs are bad at (frequency control, cooldowns, entry pressure calibration) and trusts Nerin for what it's naturally good at (conversational action choice, noticing quality, contradiction framing).
+
+**The reframe:** The original Move Generator tried to dispatch Pull/Bridge/Hold/Pivot as base moves — formalizing what Nerin already does naturally. Red Team analysis showed this risks fake precision (move types may not produce behaviorally distinct LLM outputs) and required ~15 input fields including unbuilt systems. The Governor collapses to 4 decisions and outputs a `PromptBuilderInput` discriminated union with zero phantom dependencies.
+
+**Four decisions per turn:**
+
+| Decision | Mechanism | Output |
+|----------|-----------|--------|
+| **Entry pressure** | Gap between E_target and territory `expectedEnergy` | `"direct"` / `"angled"` / `"soft"` |
+| **Noticing hint** | Clarity emergence formula — EMA-smoothed clarity vs conversation-average baseline, gated by U-shaped phase curve + escalation | `LifeDomain` (compass) or `null` (suppressed) |
+| **Contradiction target** | Facet divergence across life domains — `strength = delta × min(confA, confB)` vs escalating threshold | `ContradictionTarget` (specific facet × domain pair) or `null` (suppressed) |
+| **Convergence target** | Facet alignment across 3+ life domains — `strength = (1 - normalizedSpread) × minConf` vs escalating threshold | `ConvergenceTarget` (specific facet × domain set) or `null` (suppressed) |
+
+**Key design choices:**
+
+- **Hybrid trigger model.** Contradiction and convergence are system-triggered from evidence (deterministic facet divergence/alignment). Noticing is Nerin-led with frequency throttle (clarity emergence opens a window, Nerin decides content). Different problems, different mechanisms.
+- **Escalating thresholds replace hardcoded caps.** `requiredStrength(n) = BASE × ESCALATION^n` naturally produces 0-2 contradictions, 0-1 convergences, and 0-3 noticings per session based on evidence quality — no `MAX_CONTRADICTIONS` or `MAX_NOTICINGS` constants.
+- **Mutual exclusion.** At most one overlay (noticing OR contradiction OR convergence) per turn. All three spend trust. All say "I see you." Combining them makes the user feel studied, not seen. When multiple fire, threshold ratio tiebreak decides: each signal's value divided by its required threshold. Higher ratio wins. Equal ratios → priority: contradiction > convergence > noticing (rarest to commonest). Deferred signals are re-evaluated next turn.
+- **Domain compass, not facet target.** Noticing hint is a `LifeDomain`, not a facet name. "Something is shifting in career" lets Nerin discover what's alive. "Notice their gregariousness at work" makes Nerin sound steered.
+- **Convergence mirrors contradiction.** Contradiction detects a facet scoring *differently* across two domains (complexity: "you're assertive at work but accommodating in relationships"). Convergence detects a facet scoring *similarly* across three or more domains (identity: "this curiosity threads through everything you do"). Both are evidence-based, both use the same per-domain scoring primitives, both follow the escalating threshold pattern.
+- **Closing is amplification, not wrap-up.** On `isFinalTurn`, the Governor derives `intent: "amplify"` — Nerin gets a "go deeper" instruction, permission to be braver. The Governor evaluates only contradiction and convergence for the final beat (noticing excluded — it's a local signal, not a culmination). The strongest single candidate becomes `focus: MomentFocus | null`. Nerin doesn't know it's the last turn. The conversation cuts at peak intensity.
+- **Window-based tracking is a closed system.** The Governor tracks when it *opened* windows, not when Nerin *used* them. Cooldown runs from window-open. No response parsing, no feedback loop, no extra LLM calls.
+- **Derive-at-read for session state.** Governor output is stored as jsonb on each assistant message. Session counters (windows opened, pairs surfaced, facets surfaced) are reconstructed by scanning prior messages' `MomentFocus._tag` variants — consistent with the codebase pattern. EMA + baseline recomputed from full evidence history each turn (~3750 clarity values max, sub-millisecond).
+
+**Governor output IS `PromptBuilderInput`:**
+
+The Governor's external contract is the `PromptBuilderInput` discriminated union — not a flat struct that needs downstream transformation. The Governor runs `deriveIntent()` internally to map its 4 decisions + session state into the correct variant, then outputs the shaped type directly. Each variant carries only the fields its intent needs:
+
+```typescript
+type DomainScore = { domain: LifeDomain; score: number; confidence: number }
+
+type ContradictionTarget = {
+  facet: FacetName
+  pair: [DomainScore, DomainScore]
+  strength: number
+}
+
+type ConvergenceTarget = {
+  facet: FacetName
+  domains: DomainScore[]              // 3+ domains, all scoring similarly
+  strength: number
+}
+
+type EntryPressure = "direct" | "angled" | "soft"
+type ConversationalIntent = "open" | "deepen" | "bridge" | "hold" | "amplify"
+
+// ─── Moment Focus (tagged union) ───────────────────
+type NoticingFocus    = { readonly _tag: "NoticingFocus";      readonly domain: LifeDomain }
+type ContradictionFocus = { readonly _tag: "ContradictionFocus"; readonly target: ContradictionTarget }
+type ConvergenceFocus = { readonly _tag: "ConvergenceFocus";   readonly target: ConvergenceTarget }
+type MomentFocus = NoticingFocus | ContradictionFocus | ConvergenceFocus
+
+// ─── Prompt Builder Input (discriminated union) ────
+type PromptBuilderInput =
+  | { intent: "open";    territory: Territory }
+  | { intent: "deepen";  territory: Territory; entryPressure: EntryPressure }
+  | { intent: "bridge";  territory: Territory; previousTerritory: Territory;
+      entryPressure: EntryPressure }
+  | { intent: "hold";    territory: Territory; focus: MomentFocus }
+  | { intent: "amplify"; territory: Territory; focus: MomentFocus | null }
+```
+
+**Intent derivation rules** (inside Governor, not exposed):
+
+| Condition | Intent |
+|-----------|--------|
+| `turnNumber === 1` | `open` |
+| `isFinalTurn` | `amplify` |
+| Noticing, contradiction, or convergence fires | `hold` |
+| `previousTerritory !== null && territory !== previousTerritory` | `bridge` |
+| Otherwise (same territory or first exploring turn) | `deepen` |
+
+Priority: `open` > `amplify` > `hold` > `bridge` / `deepen`. On `amplify`, the Governor evaluates only contradiction and convergence (noticing excluded — it's a local signal, not a culmination). Thresholds are bypassed (threshold parameter = 0). Surfaced-pair/facet exclusion still applies (don't repeat). The Governor picks the strongest single candidate and wraps it in `MomentFocus`, or `null` if neither has a candidate. Nerin gets one focused signal for the final beat, not two competing signals.
+
+**Field sources:**
+- `territory` — resolved from `TerritoryId` by pipeline via catalog lookup
+- `previousTerritory` — resolved by pipeline from prior message's stored `TerritoryId`
+- `entryPressure` — computed from gap between E_target and territory `expectedEnergy`
+- `focus` — the `MomentFocus` variant wrapping whichever overlay fired (noticing domain, contradiction target, or convergence target)
+
+**Note on serialization:** When `PromptBuilderInput` is persisted to jsonb on `assessment_message`, territories are stored as `TerritoryId` (not full `Territory` objects). The pipeline resolves them fresh from the catalog when reading back for reconstruction. Consistent with derive-at-read.
+
+**Debug/replay trace** (separate consumer, not sent to Prompt Builder). Each of the Governor's 4 decisions carries a discriminated debug union — no impossible states, pattern-matchable:
+
+```typescript
+type EntryPressureDebug =
+  | { result: "direct"; reason: "no_etarget" }
+  | { result: "direct"; reason: "within_range";
+      eTarget: number; territoryEnergy: number; gap: number }
+  | { result: "angled"; reason: "moderate_gap";
+      eTarget: number; territoryEnergy: number; gap: number }
+  | { result: "soft"; reason: "large_gap";
+      eTarget: number; territoryEnergy: number; gap: number }
+
+type NoticingDebug =
+  | { reason: "excluded_from_amplify" }
+  | { reason: "skipped_opening" }
+  | { reason: "no_emergence" }
+  | { reason: "below_threshold"; topDomain: LifeDomain; emergence: number; required: number }
+  | { reason: "deferred_by_other"; topDomain: LifeDomain;
+      deferredBy: "contradiction" | "convergence" }
+  | { reason: "fired"; domain: LifeDomain; emergence: number; required: number }
+
+type ContradictionDebug =
+  | { reason: "no_candidates" }
+  | { reason: "below_threshold"; topStrength: number; requiredStrength: number }
+  | { reason: "already_surfaced"; target: ContradictionTarget }
+  | { reason: "deferred_by_other"; target: ContradictionTarget;
+      deferredBy: "noticing" | "convergence" }
+  | { reason: "fired"; target: ContradictionTarget;
+      topStrength: number; requiredStrength: number }
+
+type ConvergenceDebug =
+  | { reason: "no_candidates" }
+  | { reason: "below_threshold"; topStrength: number; requiredStrength: number }
+  | { reason: "already_surfaced"; facet: FacetName }
+  | { reason: "deferred_by_other"; facet: FacetName;
+      deferredBy: "noticing" | "contradiction" }
+  | { reason: "fired"; facet: FacetName; domainCount: number;
+      spread: number; strength: number; requiredStrength: number }
+
+type MoveGovernorDebug = {
+  selectionRule: string
+  isFinalTurn: boolean
+  entryPressure: EntryPressureDebug
+  noticing: NoticingDebug
+  contradiction: ContradictionDebug
+  convergence: ConvergenceDebug
+  selectorSessionPhase: "opening" | "exploring"
+  selectorTransitionType: "continue" | "transition"
+}
+```
+
+`selectorSessionPhase` and `selectorTransitionType` are attached by the pipeline for observability — the Governor does not read them. The Governor derives intent from `turnNumber` (open), `isFinalTurn` (amplify), overlay firing (hold), and territory comparison (bridge/deepen).
+
+**Prompt builder composition:** The prompt builder receives `PromptBuilderInput` directly and assembles a four-layer system prompt: NERIN_PERSONA → Core Identity (7 always-on modules) → Behavioral Modules (selected per intent from composition matrix) → Steering Section (territory → intent instruction → entry pressure → focus → amplification). See Decision 13 for the full architecture.
+
+**Four move types survive as vocabulary:** Pull, Bridge, Hold, Pivot remain for prompt builder instructions, post-hoc analysis, and design communication. They are not Governor dispatch targets. Nerin naturally chooses the conversational action from context.
+
+**Upgrade path:** The Governor can be promoted to a full Move Generator (additive, not rewrite) if behavioral evidence shows Pull/Bridge/Hold/Pivot produce measurably distinct LLM outputs and Nerin repeatedly makes poor base-move choices.
+
+**Principle:** Trust what the LLM does well (conversational craft), constrain what it does poorly (frequency control, structural state). The Governor's job is to make sure Nerin's natural instincts are channeled well — not to replace them.
+
+**Rationale:** The Governor emerged from adversarial stress-testing of the original Move Generator. Every reduction — dropping base-move dispatch, dropping payloads, dropping feedback loops — was driven by a specific failure mode. The remaining 4 decisions, shaped into `PromptBuilderInput`, are the minimum needed to solve the four problems Nerin can't solve itself: over-noticing, premature contradiction, missing identity detection (convergence), and missing entry pressure calibration.
+
+---
+
+### Decision 13: Three-Tier Contextual Prompt Composition
+
+The prompt builder is a deterministic compositor that assembles Nerin's system prompt from four layers. CHAT_CONTEXT (276-line monolith) is decomposed into modular constants — some always-on, others included per conversational intent. The Governor outputs `PromptBuilderInput` directly — a discriminated union with five intent variants. No transform layer sits between them.
+
+**The three-tier model:**
+
+```
+┌─────────────────────────────────────────────┐
+│  NERIN_PERSONA (universal identity)         │  ← shared across all surfaces
+├─────────────────────────────────────────────┤
+│  Core Identity modules (always-on chat)     │  ← makes Nerin coherent across
+│                                             │     all 25 messages
+├─────────────────────────────────────────────┤
+│  Behavioral modules (intent-contextual)     │  ← included/excluded based on
+│                                             │     conversationalIntent
+├─────────────────────────────────────────────┤
+│  Steering section (per-turn)                │  ← Governor output translation
+└─────────────────────────────────────────────┘
+```
+
+**Five conversational intents form the complete vocabulary:**
+
+| Intent | When | Behavioral Modules Included |
+|--------|------|----------------------------|
+| `open` | First turn | Relate>Reflect |
+| `deepen` | Continue in same territory | Relate>Reflect, Story-Pulling, Mirrors (10) |
+| `bridge` | Transition to new territory | Relate>Reflect, Threading, Mirrors (4) |
+| `hold` | Noticing, contradiction, or convergence moment | Observation Quality, Mirrors (4) |
+| `amplify` | Final turn — go bold | Observation Quality (if focus), Mirrors (4) |
+
+**Key design choices:**
+
+- **Instinct vs instruction.** The character bible describes instincts ("you never make someone feel insufficient"). The steering section gives directives ("enter at an angle"). Different abstraction levels cooperate. Same abstraction level competes. This resolves all gray-zone conflicts.
+- **The absence of modules IS the instruction.** Hold-Nerin doesn't have questioning instincts loaded — not because we told it "don't ask questions" (which creates tension), but because it literally doesn't have that cognitive palette available. Story-pulling during hold, questioning during amplify — these are eliminated architecturally, not by prompt discipline.
+- **`PromptBuilderInput` discriminated union.** Five variants, each carrying only its relevant parameters. Hold requires `focus`, bridge requires `previousTerritory`, entry pressure appears only on deepen/bridge. The type system prevents impossible states at compile time.
+- **Governor output IS `PromptBuilderInput`.** The Governor's external contract is the discriminated union itself — not a flat struct with a downstream transform. `deriveIntent()` runs inside the Governor. Debug/replay receives `MoveGovernorDebug` (product of 4 discriminated debug unions, retaining selector sessionPhase/transitionType for observability). See Decision 12 for the full contract, intent derivation rules, and field sources.
+- **Rhythm is emergent, not composed.** The prompt builder shapes each beat via module selection but never orchestrates the sequence. No `previousIntent` tracking, no turn-number awareness. Rhythm emerges from scorer (session arc) + Governor (turn constraints) + pacing formula (energy ceiling).
+
+**Character bible decomposition:**
+
+- **Tier 1 — Core Identity (always-on):** `CONVERSATION_MODE`, `BELIEFS_IN_ACTION`, `CONVERSATION_INSTINCTS` (rewritten — directives removed, instincts kept), `QUALITY_INSTINCT` (extracted from RESPONSE FORMAT), `MIRROR_GUARDRAILS` (placement rules only, ~80 tokens), `HUMOR_GUARDRAILS`, `INTERNAL_TRACKING`
+- **Tier 2 — Behavioral (contextual):** `RELATE_REFLECT` (trimmed), `STORY_PULLING` (trimmed), `OBSERVATION_QUALITY` (rewritten — mechanism removed, quality instinct kept), `THREADING` (as-is), `MIRRORS_DEEPEN` (10 mirrors), `MIRRORS_BRIDGE` (4 mirrors), `MIRRORS_HOLD` (4 mirrors), `MIRRORS_AMPLIFY` (4 mirrors)
+- **Eliminated:** QUESTIONING_STYLE (folded into intent instructions), RESPONSE_FORMAT (decomposed — "every sentence earns its place" to Tier 1, format guidance merged per-intent), RESPONSE_PALETTE (eliminated)
+
+**Token budget (vs current monolith at ~2400 tokens):**
+
+| Intent | Estimated Tokens | Reduction |
+|--------|-----------------|-----------|
+| `open` | ~530 | -78% |
+| `deepen` | ~1350 | -44% |
+| `bridge` | ~1170 | -51% |
+| `hold` | ~850 | -65% |
+| `amplify` | ~920 | -62% |
+
+**Supersession:** This decision supersedes the Governor spec's Prompt Builder Enrichment section (lines 734-933 of the Move Governor spec) with a more complete architecture that accounts for character bible decomposition, contextual modules, and the discriminated union input.
+
+**Principle:** The prompt builder is a faithful translator, not a rhythm engine. It composes the right cognitive palette for each beat. The Governor decides what kind of moment this is. Nerin executes with whatever tools are loaded.
+
+**Rationale:** CHAT_CONTEXT was written as a monolith before the steering pipeline existed. It mixed *who Nerin is* with *what Nerin should do in specific situations*. The Governor now owns per-turn management, making always-on behavioral directives redundant and potentially conflicting. Worse, the monolithic structure actively sabotages specific intents — story-pulling during hold, questioning during amplify create conflicting signals that concatenation cannot resolve. The three-tier contextual composition model eliminates both problems: overlap is resolved by the instinct-vs-instruction principle, sabotage is resolved by intent-contextual module inclusion.
+
+---
+
 ## Architecture Summary
 
-The system operates as five decoupled layers. Territory policy is split into three sub-layers (Scorer → Selector → Move Generator) for debuggability — when something goes wrong, each layer is independently diagnosable:
+The system operates as six decoupled layers. Territory policy is split into three sub-layers (Scorer → Selector → Move Governor) with an enriched Prompt Builder — for debuggability, each layer is independently diagnosable:
 
 ```mermaid
 flowchart TB
@@ -329,8 +562,11 @@ flowchart TB
     COV --> TS
 
     TS -->|"ranked list + breakdowns"| SEL[Territory Selector]
-    SEL -->|"selected + alternates"| MG[Move Generator]
-    MG --> NR[Nerin Response]
+    SEL -->|"3 slim fields"| GOV[Move Governor]
+    ET -->|"E_target"| GOV
+    SS -->|"per-domain scores"| GOV
+    GOV -->|"PromptBuilderInput (5 intents)"| PB[Prompt Builder]
+    PB --> NR[Nerin Response]
 
     A --> SS[Silent Scoring]
     SS --> PR[Portrait Readiness]
@@ -338,6 +574,8 @@ flowchart TB
     style ET fill:#e8f4f8,stroke:#2980b9
     style TS fill:#dcedc8,stroke:#558b2f
     style SEL fill:#dcedc8,stroke:#558b2f
+    style GOV fill:#fce4ec,stroke:#c62828
+    style PB fill:#f3e5f5,stroke:#6a1b9a
     style COV fill:#fff3e0,stroke:#e65100
     style SS fill:#f0f0f0,stroke:#999
     style PR fill:#f0f0f0,stroke:#999
@@ -347,15 +585,12 @@ flowchart TB
 |-------|---------------|--------|--------|
 | **Pacing (E_target)** | Estimate what the conversation can sustain | Energy, telling, drain | `E_target` (0-10) |
 | **Territory Scorer** | Rank all 25 territories by unified formula | E_target, **coverage gaps**, catalog (expectedEnergy, domains, facets), visit history, turn/totalTurns | Sorted ranked list with per-term score breakdowns |
-| **Territory Selector** | Pick from ranked list via deterministic rules | Ranked list, turn number | Selected territory, alternates, stayOrShift, selection rule |
-| **Move Generator** | Decide how to enter the territory | Selected territory, alternates, E_target, move type | Nerin's prompt instructions |
+| **Territory Selector** | Pick from ranked list via deterministic rules (3 code paths: cold-start perimeter, argmax, finale) | TerritoryScorerOutput + session context (userId, sessionId) | `selectedTerritory`, `sessionPhase`, `transitionType`, `selectionRule`, `selectionSeed`, `scorerOutput` |
+| **Move Governor** | Constrain Nerin's behavior: entry pressure, noticing windows, contradiction targets, convergence targets. Derives conversational intent and outputs `PromptBuilderInput` directly | Selector output (3 fields), E_target, per-domain facet scores, session counters, `isFinalTurn` | `PromptBuilderInput` (discriminated union, 5 intent variants — see Decision 12) + `MoveGovernorDebug` (product of 4 discriminated debug unions for observability) |
+| **Prompt Builder** | Compose contextual system prompt from 4 layers — select behavioral modules per intent, translate Governor output into steering instructions | `PromptBuilderInput` (direct from Governor) + territory catalog | Complete system prompt: NERIN_PERSONA → Core Identity → Behavioral Modules (intent-contextual) → Steering Section (territory → intent → pressure → focus → amplification) |
 | **Silent Scoring** | Extract evidence, update estimates | User message, conversation history | Facet scores, confidence, portrait readiness, **coverage gaps** |
 
-**Key separation:** Coverage flows from silent scoring to territory scorer — never through E_target. E_target is user-state-pure. Territory scoring is where coverage pressure becomes topic choice, not energy pressure.
-
-**Key separation:** The scorer ranks, the selector picks, the move generator executes. No layer does another's job. The move generator never chooses the territory — it receives the selection plus runner-ups for bridging and fallback.
-
-**Key separation:** Silent scoring updates the state and policy inputs for the next turn. It is not allowed to affect Nerin's tone directly. This separation prevents the assessment engine from leaking into the user experience.
+**Separation invariants:** Coverage flows to territory scorer, never through E_target (Decision 3). Each layer does one job: scorer ranks, selector picks, Governor constrains, Nerin executes (Decision 12). Silent scoring never affects Nerin's tone directly (Decision 9).
 
 ---
 
@@ -373,19 +608,20 @@ When forces conflict, resolve in this order:
 
 ### Resolved
 
-- **Formula structure** — resolved. The additive draft was replaced by a 7-step pipeline of transforms. See Decision 3 and [E_target Formula Specification](../problem-solution-2026-03-07.md).
-- **Coverage in E_target** — resolved. Removed. Coverage is assessment state, not user state. It feeds territory policy.
-- **Telling integration** — resolved (design). Telling enters E_target as an asymmetric trust qualifier on upward momentum. Piecewise linear function: T=0 maps to trust=0.5, T=0.5 to trust=1.0, T=1.0 to trust=1.2. Default trust=1.0 when telling is unavailable.
-- **Formula weights** — partially resolved. V1 defaults established (alpha_up=0.5, alpha_down=0.6, lambda=0.35, K=5). Empirical calibration with real conversations still required (Decision 10).
-- **Energy definition and extraction** — resolved. Energy represents *cost to the user*, extracted as *observable conversational intensity/load* across 4 dimensions (emotional activation, cognitive investment, expressive investment, activation/urgency). Scored via 5 anchored bands (minimal/low/steady/high/very_high) mapped to numeric values (1/3/5/7/9). Any single dimension strongly present is sufficient for high energy (equal authority, not averaged). Six guardrails prevent systematic bias: eloquence is not energy, sophistication is not cognitive investment, peak dimension not average, understated styles protected, length is not energy, comfortable analysis scores steady. Energy is scored on an absolute scale — not relative to recent conversation history. E=5 ("steady") aligns with the formula's comfort threshold (zero drain). See [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md).
-- **Telling signal extraction** — resolved. Telling measures *self-propulsion beyond the minimum viable answer* to the previous assistant message. The "minimum viable answer" framing implicitly handles prompt affordance (open prompts set a higher floor, narrow prompts set a lower floor). Scored via 5 anchored bands (fully_compliant/mostly_compliant/mixed/mostly_self_propelled/strongly_self_propelled) mapped to (0.0/0.25/0.5/0.75/1.0). Telling is scored relative to the previous assistant turn. High-telling markers: introduces new material, volunteers stories, makes own connections, reframes the question, asks questions back. Low-telling markers: stays inside the question's frame, echoes Nerin's language, answers then stops. Multi-part messages score peak telling shown. See [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md).
-- **ConversAnalyzer v2 output contract** — resolved. LLM outputs `userState` block (energyBand, tellingBand, energyReason, tellingReason, withinMessageShift) alongside unchanged evidence array. LLM produces bands (enums), pipeline maps to numbers. State extraction instructions positioned before evidence in the prompt. Fail-open defaults: energy=5, telling=null on extraction failure. Orthogonality enforced via mandatory diagonal contrastive examples in the prompt (high-E/low-T and low-E/high-T). Calibration uses expert review (20-30 messages, prompt compliance) and user self-scoring (post-session, ground truth for energy-as-cost). See [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md).
-- **Territory policy redesign** — resolved. Territory policy is decomposed into three explicit layers: **Territory Scorer** (pure ranking engine), **Territory Selector** (deterministic pick rules), and **Move Generator** (phrasing/bridging, never chooses territory). The scorer runs a unified five-term formula every turn on all territories: `score(t) = coverageGain(t) + adjacency(t) + conversationSkew(t) - energyMalus(t) - freshnessPenalty(t)`. All terms are bounded [0, 1] by construction (source-normalized). Stay/shift emerges from the ranking — no exit guard, no separate stay/shift logic. Key design choices: coverageGain reuses existing per-facet `priority_f` (confidence + signalPower deficit) with source-normalized baseYield; adjacency is Jaccard similarity on domains (0.8) + facets (0.2), self-adjacency = 1.0 provides natural inertia; conversationSkew uses `expectedEnergy` for a U-shaped session arc (light territories early, deep territories late); energyMalus is quadratic (tolerant of small mismatches, punishes large ones); freshnessPenalty is linear decay derived from existing `assessment_message.territory_id`. No trait urgency (back-door energy pressure on Neuroticism), no currentBonus (redundant with self-adjacency), no coverage dampening on energyMalus (smuggles assessment into energy protection). Territory catalog migrates from discrete `energyLevel` to continuous `expectedEnergy: number`. Validated via 4 simulation scenarios + 6 stress tests. See [Territory Policy Spec](../problem-solution-2026-03-07-territory-policy.md).
-- **Territory catalog refinement** — resolved. Catalog migrated from 22 territories with discrete `energyLevel` to 25 territories with continuous `expectedEnergy: number` in [0, 1]. Energy values calibrated using opener-cost principle (cross-validated via 3 independent methods). 8 domain re-tags eliminated all cluster traps and the family island. 3 new territories added: `daily-frustrations` (anger at medium energy, 0.38), `growing-up` (family bridge at 0.45), `family-rituals` (light family entry at 0.28). All territories now have exactly 2 domains. Family and leisure domains each reach 6 territories (was 4). Depression accepted as heavy-only with "still emerging" portrait framing. `COLD_START_TERRITORIES` constant replaced by dynamic territory selector. Topology reveals three natural corridors (introspective, interpersonal, achiever) connected by bridge territories. 4 high-variance territories flagged for empirical recalibration post-launch. Relationships flood (60%) accepted for v1 with weighted Jaccard as contingency. See [Territory Catalog Migration Spec](../problem-solution-2026-03-08.md).
+- **Formula structure** — resolved. 7-step pipeline of transforms. See Decision 3 and [E_target Formula Spec](../problem-solution-2026-03-07.md).
+- **Coverage in E_target** — resolved. Removed. Coverage feeds territory policy, not pacing. See Decision 3.
+- **Telling integration** — resolved. Asymmetric trust qualifier on upward momentum. See Decision 3.
+- **Formula weights** — partially resolved. V1 defaults established. Empirical calibration still required. See Decision 10.
+- **Energy definition and extraction** — resolved. Cost-to-user across 4 dimensions, 5 anchored bands. See [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md).
+- **Telling signal extraction** — resolved. Self-propulsion beyond minimum viable answer. See [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md).
+- **ConversAnalyzer v2 output contract** — resolved. `userState` block with bands, fail-open defaults. See [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md).
+- **Territory policy redesign** — resolved. Three-layer decomposition: Scorer → Selector → Governor. See Decision 11 and [Territory Policy Spec](../problem-solution-2026-03-07-territory-policy.md). *Note: spec uses pre-reframe "move generator" terminology — see Decision 12 for the Governor reframe.*
+- **Territory selector layer** — resolved. 3 code paths, 6-field output contract. See [Territory Selector Spec](../problem-solution-2026-03-09.md). *Note: spec uses pre-reframe "move generator" terminology — see Decision 12.*
+- **Territory catalog refinement** — resolved. 25 territories, continuous `expectedEnergy`, 3 new territories. See Decision 11 and [Territory Catalog Migration Spec](../problem-solution-2026-03-08.md).
+- **Prompt builder architecture** — resolved. Three-tier contextual composition. Supersedes Governor spec's Prompt Builder Enrichment section. See Decision 13 and [Prompt Builder Architecture Spec](../problem-solution-2026-03-10.md).
+- **Move generator redesign** — resolved. Reframed as **Move Governor** — restraint layer, not action dispatch. See Decision 12 and [Move Governor Spec](../problem-solution-2026-03-09-move-generator.md).
 
 ### Still Open
-- **Territory selector layer** — the selector is a thin deterministic rule-based consumer between the scorer and move generator. v1 rules are defined (cold-start random from top candidates, turn 2+ argmax, tiebreak by catalog order), but the cold-start selection strategy (fixed K vs margin-based vs score-weighted) needs a final design decision. v2 candidates include tie-break margins and user-direction override. See [Territory Policy Spec](../problem-solution-2026-03-07-territory-policy.md) §Territory Selector rules.
-- **Move generator redesign** — the move generator must be updated to consume the territory selector's output contract (`selectedTerritory`, `alternates`, `stayOrShift`, full scorer breakdown). Alternates enable Bridge move opportunities and graceful fallback when user drifts. The move generator never chooses the territory — that boundary is enforced by the three-layer architecture. The four move types (Pull/Bridge/Hold/Pivot) remain, but their selection logic and territory consumption need redesign.
 - **Continuation experience** — what does conversation 2 feel like? Does Nerin remember? Does it pick up living threads from session 1?
 - **Portrait framing** — how exactly does the portrait communicate "complete but inviting" after a single session? What language bridges "here's what we found" and "here's what's still emerging"?
 - **Response latency** — message timestamps may serve as a weak confirmatory signal (long pause + high telling = depth; long pause + low telling = friction), but this is low-priority and ambiguous on its own
@@ -394,9 +630,18 @@ When forces conflict, resolve in this order:
 
 ## Related Documents
 
-- [E_target Formula Specification](../problem-solution-2026-03-07.md) — complete v1 formula with pipeline definition, function shapes, constants, 10-archetype simulation results, and implementation plan
-- [Energy and Telling Extraction Spec](../problem-solution-2026-03-07-energy-telling-extraction.md) — precise energy/telling definitions, ConversAnalyzer v2 output contract, extraction prompt with rubrics and guardrails, calibration protocol, and implementation plan
-- [Territory Policy Spec](../problem-solution-2026-03-07-territory-policy.md) — unified five-term territory scorer, three-layer architecture (Scorer → Selector → Move Generator), catalog schema change, simulation scenarios, stress tests, implementation plan, and monitoring/validation strategy
-- [Territory Catalog Migration Spec](../problem-solution-2026-03-08.md) — 25-territory catalog with continuous expectedEnergy, 8 domain re-tags, 3 new territories, opener-cost calibration, topology analysis, and implementation plan
-- [Idea Proposition](./idea-proposition.md) — the original proposition this document refines
-- [Architecture](./architecture.md) — system architecture (to be updated post-spec)
+Specs are listed in dependency order (upstream first). Coherence status reflects alignment with Decisions 1-13 in this document.
+
+| Spec | Date | Coherence | Notes |
+|:-----|:-----|:----------|:------|
+| [E_target Formula](../problem-solution-2026-03-07.md) | 03-07 | Current | Decisions 1-3, 10 |
+| [Energy and Telling Extraction](../problem-solution-2026-03-07-energy-telling-extraction.md) | 03-07 | Current | Decisions 2-3 |
+| [Territory Policy](../problem-solution-2026-03-07-territory-policy.md) | 03-07 | Terminology outdated | Uses "move generator" (15 refs) — see Decision 12 for Governor reframe |
+| [Territory Catalog Migration](../problem-solution-2026-03-08.md) | 03-08 | Current | Decision 11 |
+| [Territory Selector](../problem-solution-2026-03-09.md) | 03-09 | Current | Full coherence pass applied 03-10 — Governor terminology, pipeline diagram, separation of concerns table updated |
+| [Move Governor](../problem-solution-2026-03-09-move-generator.md) | 03-09 | Current | Decision 12. Prompt Builder Enrichment section (lines 734-933) superseded by Decision 13 |
+| [Prompt Builder Architecture](../problem-solution-2026-03-10.md) | 03-10 | Current | Decision 13. Supersedes Governor spec's Prompt Builder Enrichment |
+
+**Other references:**
+
+- [Architecture](./architecture.md) — system architecture (does not yet include conversation pacing pipeline — update after implementation)

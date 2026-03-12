@@ -4,6 +4,8 @@
 **Problem Solver:** Vincentlay
 **Problem Category:** Conversation Architecture / Policy Layer Design
 
+> **Updated 2026-03-10 — coherence pass applied.** This spec was the first territory policy document (03-07). A full coherence audit against Decisions 1-13 and sibling specs identified 18 issues (6 Tier-1, 7 Tier-2, 5 Tier-3) plus 6 design gaps. All have been resolved and applied to this document. Key changes: (1) "move generator" → "Move Governor" throughout, (2) selector output contract updated to match selector spec, (3) scorer output contract updated with `totalTurns`, (4) downstream consumer reframed as Governor with `PromptBuilderInput` output, (5) architecture updated to 6-layer model, (6) E_target outputs `[0,1]` natively — no downstream normalization, (7) catalog count 22 → 25, (8) Phase 2 pipeline wiring consolidated with current contracts. See [Coherence Audit](./problem-solution-2026-03-10-territory-policy-coherence.md) for full findings and gap resolutions.
+
 ---
 
 ## 🎯 PROBLEM DEFINITION
@@ -35,22 +37,22 @@ The policy makes two decisions:
 - **Coverage gaps** — which personality domains are under-observed (from silent scoring)
 - **Freshness** — how recently each territory was visited (anti-repetition)
 - **Adjacency** — how narratively close a candidate territory is to the current one (static, symmetric, catalog-authored)
-- **Late-session resonance** — the user's most alive threads, applied as a late-stage override bonus in final exchanges only. Gated by session phase (turn number relative to session length); session phase exists solely to activate this mechanism, not as a general-purpose input.
+- **Conversation skew** — session-arc shaping within the unified scorer. Low-energy territories boosted early, high-energy territories boosted late. Implemented as `conversationSkew(t)` — one of the 5 scorer terms, not a separate override mechanism.
 - **Current-territory state** — `currentTerritory`, `turnsInCurrentTerritory` (feeds stay/shift decision)
 
 **Deferred inputs (v2+):**
-- **User-initiated direction** — when the user steers toward a topic, territory policy yields or blends. Deferred because no clean producer exists yet. Known limitation: the system self-corrects within 1-2 turns via move generation naturally following user content, then policy catching up on next exit-guard cycle. Candidate producers: ConversAnalyzer v3 field or lightweight intent detector.
+- **User-initiated direction** — when the user steers toward a topic, territory policy yields or blends. Deferred because no clean producer exists yet. Known limitation: the system self-corrects within 1-2 turns via the Governor naturally following user content via territory selection, then policy catching up on the next scoring cycle. Candidate producers: ConversAnalyzer v3 field or lightweight intent detector.
 - **Current-territory yield** — whether the current territory is still producing useful signal, distinct from turn count alone ("we've been here 3 turns" is not the same as "we're done here"). Candidate implementation: observed evidence rate vs expected yield from catalog. Deferred because it requires calibration data from real conversations.
 
-**Three-layer architecture (scorer → selector → move generator):**
+**Three-layer architecture (scorer → selector → Move Governor):**
 
-Territory policy is decomposed into two explicit sub-layers to preserve debuggability:
+Territory policy is decomposed into three explicit sub-layers to preserve debuggability. Together with Pacing (E_target), the Prompt Builder, and Silent Scoring, these form the six-layer steering pipeline (see [Architecture Summary](./planning-artifacts/conversation-pacing-design-decisions.md#architecture-summary)):
 
 1. **Territory Scorer** — pure ranking engine. Runs the formula on all territories, returns sorted list with score breakdowns. No selection logic, no turn awareness.
-2. **Territory Selector** — thin deterministic rule-based consumer. Picks from the ranked list based on explicit rules. Loggable, swappable, testable independently.
-3. **Move Generator** — receives the selected territory + runner-ups for bridging/fallback. Never chooses the territory.
+2. **Territory Selector** — thin deterministic rule-based consumer. Picks from the ranked list based on explicit rules (3 code paths: cold-start perimeter, argmax, finale). Loggable, swappable, testable independently.
+3. **Move Governor** — thin restraint-and-context layer. Makes 3 decisions (entry pressure, noticing hint, contradiction target), derives conversational intent, and outputs `PromptBuilderInput` (discriminated union). Never chooses the territory. See [Decision 12](./planning-artifacts/conversation-pacing-design-decisions.md#decision-12-move-governor--restraint-layer-not-move-dispatch).
 
-When something goes wrong: bad ranking → scorer bug. Good ranking, bad pick → selector rule. Good pick, bad execution → move generator. Each layer is independently diagnosable.
+When something goes wrong: bad ranking → scorer bug. Good ranking, bad pick → selector rule. Good pick, bad execution → Governor. Each layer is independently diagnosable.
 
 **Territory Scorer output contract:**
 ```
@@ -62,11 +64,12 @@ TerritoryScorerOutput {
   }>  // sorted descending by score
   currentTerritory: TerritoryId | null
   turnNumber: number
+  totalTurns: number
 }
 ```
 
 **Territory Selector rules (v1):**
-- Turn 1 (cold start): random selection from top candidates — prevents identical openers across users (social/sharing UX). Replaces GREETING_SEED_POOL. Exact selection strategy (fixed K, margin-based, score-weighted) is a selector design decision, separate from territory policy.
+- Turn 1 (cold start): score-perimeter pool — take top score, include all territories within `COLD_START_PERIMETER` of top score, random pick from pool. Replaces GREETING_SEED_POOL.
 - Turn 2+: pick top-1 (deterministic argmax)
 - Tiebreak: catalog order (deterministic, loggable)
 - v2 candidates: tie-break strategy when top-2 within margin, user-direction override
@@ -74,24 +77,28 @@ TerritoryScorerOutput {
 **Territory Selector output contract:**
 ```
 TerritorySelectorOutput {
+  // Governor consumer (3 slim fields)
   selectedTerritory: TerritoryId
-  selectionRule: string              // "cold-start-top-k" | "argmax" | future rules
-  alternates: TerritoryId[]          // runner-ups for move generator bridging/fallback
-  stayOrShift: "stay" | "shift"     // derived: selected == current → stay
-  scorerOutput: TerritoryScorerOutput // full ranking preserved for logging
+  sessionPhase: "opening" | "exploring" | "closing"
+  transitionType: "continue" | "transition"
+
+  // Debug/replay consumer
+  selectionRule: "cold-start-perimeter" | "argmax"
+  selectionSeed: string | null            // hashed, non-null only on cold-start
+  scorerOutput: TerritoryScorerOutput     // full ranked list for debug
 }
 ```
 
-Move generator receives `TerritorySelectorOutput` and uses `selectedTerritory` for steering, `alternates` for bridge phrasing and natural callbacks.
+The Governor consumes 3 slim fields (`selectedTerritory`, `sessionPhase`, `transitionType`). Runner-up territories are derivable from `scorerOutput.rankedList` — no precomputed `alternates` field.
 
 **Coverage value computation:** Coverage gaps are per-facet (from silent scoring). Territories yield multiple facets (from catalog). Territory policy computes per-territory coverage value by joining coverage gaps with each territory's expected facet yield: `coverageValue[t] = aggregate(gap[facet] for facet in t.expectedFacets)`. This join is a central mechanic of the scoring function, not a raw pass-through of coverage gaps.
 
 **Execution model — unified per-turn scoring with deterministic selection:**
-Every turn, the Territory Scorer runs the formula on all territories (including current) and returns a sorted ranked list. The Territory Selector then applies its rules to pick from that list — random top-K at cold start, deterministic top-1 thereafter. Move generator receives the selection plus alternates.
+Every turn, the Territory Scorer runs the formula on all territories (including current) and returns a sorted ranked list. The Territory Selector then applies its rules to pick from that list — score-perimeter pool at cold start, deterministic top-1 thereafter. The Governor receives the selection (3 slim fields) and derives conversational intent.
 
 The current territory competes with a natural advantage: maximal self-adjacency (it is maximally adjacent to itself). Another territory must overcome this inertia with meaningfully better coverage gain, adjacency, or conversation skew to trigger a shift. No explicit currentBonus needed — adjacency-to-self provides sufficient stability.
 
-Stay/shift emerges from the ranking rather than requiring separate exit logic. Exhaustion detection is free: as a territory's expected facets get covered through evidence, its coverageGain declines, and eventually another territory overtakes it. The selector derives `stayOrShift` from whether the selected territory equals the current one.
+Stay/shift emerges from the ranking rather than requiring separate exit logic. Exhaustion detection is free: as a territory's expected facets get covered through evidence, its coverageGain declines, and eventually another territory overtakes it. The selector derives `transitionType` from whether the selected territory equals the current one.
 
 **Scope constraints:**
 - The territory catalog is a fixed input for v1 — pre-defined thematic units with energy bands, expected facet yields, and properties for computing adjacency (life domains, facet tags). Dynamic territory generation is out of scope; catalog refinement happens post-observation.
@@ -102,29 +109,30 @@ Stay/shift emerges from the ranking rather than requiring separate exit logic. E
 **What territory policy is NOT:**
 - Not a facet-level or trait-level selector (thematic units)
 - Not where pacing lives (E_target is upstream, user-state-pure) — territory policy never reads raw energy, telling, drain, or momentum
-- Not where move execution lives (move generator is downstream)
+- Not where move execution lives (Governor is downstream — restraint and intent derivation, not move dispatch)
 - Not a separate exit-guard mechanism — stay/shift emerges from the ranking
-- Not where territory *selection* lives — the scorer ranks, the selector picks, the move generator executes. No layer does another's job.
+- Not where territory *selection* lives — the scorer ranks, the selector picks, the Governor constrains, Nerin executes. No layer does another's job.
 
 ### Problem Context
 
-This problem sits at a critical junction in the new four-layer architecture:
+This problem sits at a critical junction in the six-layer steering pipeline:
 
 | Layer | Status | Feeds Into |
 |-------|--------|------------|
-| **Pacing (E_target)** | Resolved — pipeline of transforms, user-state-pure | Territory Scorer |
+| **Pacing (E_target)** | Resolved — pipeline of transforms, user-state-pure, outputs `[0, 1]` | Territory Scorer, Governor |
 | **Territory Scorer** | **This problem — pure ranking engine** | Territory Selector |
-| **Territory Selector** | **This problem — deterministic pick rules** | Move Generator |
-| **Move Generator** | Resolved — 4 move types (Pull/Bridge/Hold/Pivot) | Nerin's response |
-| **Silent Scoring** | Resolved — extracts evidence, updates coverage | Territory Scorer (via coverage gaps) |
+| **Territory Selector** | **This problem — deterministic pick rules** | Move Governor |
+| **Move Governor** | Resolved — 3 decisions (entry pressure, noticing, contradiction) → `PromptBuilderInput` | Prompt Builder |
+| **Prompt Builder** | Resolved — three-tier contextual composition (Decision 13) | Nerin's response |
+| **Silent Scoring** | Resolved — extracts evidence, updates coverage | Territory Scorer (via coverage gaps), Governor (via per-domain scores) |
 
 Key architectural constraints already locked:
-- E_target is user-state-pure — no coverage, no phase, no time pressure
+- E_target is user-state-pure — no coverage, no phase, no time pressure. Outputs `[0, 1]` natively (ConversAnalyzer normalizes energy in schema transform).
 - Coverage pressure enters the system *only* through territory policy (Decision 3)
 - Portrait readiness is read-only — never feeds back into E_target or territory scoring (Decision 9)
-- Move generation is downstream — territory policy picks *where*, move generator picks *how*
-- The priority hierarchy: protect user state > maintain momentum > quiet pressure for breadth
-- Territory catalog is a fixed input for v1 — pre-defined thematic units, not dynamically generated
+- The Governor is downstream — territory policy picks *where*, the Governor constrains *how*, Nerin executes
+- The priority hierarchy: protect user state > maintain momentum > quiet pressure for breadth. Enforced structurally: energyMalus is a penalty, coverageGain competes honestly, no coverage dampening.
+- Territory catalog is a fixed input for v1 — 25 pre-defined thematic units, not dynamically generated
 
 The current state is effectively **greenfield at the policy level** — the old assessment-first, facet-steered approach is being replaced wholesale.
 
@@ -144,7 +152,7 @@ The current state is effectively **greenfield at the policy level** — the old 
 4. **Debuggability** — given the inputs, a human can trace *why* a territory was selected and *why* a shift was triggered; the policy is deterministic, not a black-box LLM decision
 5. **Momentum preservation** — transitions between territories feel adjacent and motivated, not random or jarring; adjacency is modeled explicitly, not left to chance
 6. **Natural pacing** — the stay/shift decision avoids per-turn rerolling and avoids overstaying exhausted territories; most visits should feel brief but substantive, though actual duration may vary by territory type
-7. **User agency** (v1 soft goal) — when the user steers toward a topic, the system adapts gracefully. In v1, this is handled implicitly: move generation follows user content, territory policy self-corrects on next exit-guard cycle. Full explicit support deferred to v2 with UserDirection input.
+7. **User agency** (v1 soft goal) — when the user steers toward a topic, the system adapts gracefully. In v1, this is handled implicitly: the Governor follows user content, territory policy self-corrects via unified per-turn scoring. Full explicit support deferred to v2 with UserDirection input.
 8. **Completeness** — the artifact includes territory schema, stay/shift policy, next-territory scoring, and output contract with diagnostics
 
 ---
@@ -155,19 +163,19 @@ The current state is effectively **greenfield at the policy level** — the old 
 
 **Where the problem IS:**
 - Territory policy is the *only* layer where coverage pressure enters the conversation
-- The problem occurs at **transition points** (exit guard fires) and at **session start** (cold start)
-- Coverage, freshness, adjacency, and resonance all converge here — this is their only home
-- The policy feeds two consumers: move generation (operational) and logging/diagnostics (debuggability)
+- The problem occurs at **every turn** (unified per-turn scoring) and at **session start** (cold start)
+- Coverage, freshness, adjacency, and conversation skew all converge here — this is their only home
+- The policy feeds two consumers: the Governor (operational — 3 slim fields) and logging/diagnostics (debuggability — full scorer output)
 
 **Where the problem IS NOT:**
-- NOT within-topic behavior — move generation owns local variation between transitions
-- NOT pacing — E_target is upstream and user-state-pure; territory policy consumes it as opaque output
+- NOT within-topic behavior — the Governor owns restraint (entry pressure, noticing, contradiction), Nerin owns conversational craft
+- NOT pacing — E_target is upstream and user-state-pure; territory policy consumes it as opaque `[0, 1]` output
 - NOT signal extraction — silent scoring is separate; territory policy reads its outputs (coverage gaps)
-- NOT move phrasing — how to enter a territory is move generation's craft
+- NOT move phrasing — how to enter a territory is the Governor's entry pressure + Nerin's craft
 
 **When it happens / doesn't:**
-- Full scoring runs only when the exit guard fires (lazy). The exit guard runs every turn (always-on). Between transitions, full scoring is silent but the guard is not.
-- Cold start (turn 1) is a degenerate case of the same policy, not a separate system. Reduced inputs: no currentTerritory, no adjacency, no freshness history, resonance inactive, coverage gaps treated as uniform deficit across the catalog. Heavy reliance on opening-safe territories and E_target.
+- The scorer runs every turn on all territories (unified per-turn scoring — no separate exit guard). The selector picks from the ranked list. Stay/shift emerges from the ranking.
+- Cold start (turn 1) is a degenerate case of the same policy, not a separate system. Reduced inputs: no currentTerritory, no adjacency, no freshness history, conversation skew boosts light territories, coverage gaps treated as uniform deficit across the catalog. Heavy reliance on opening-safe territories and E_target.
 
 **Boundary decisions:**
 
@@ -175,8 +183,8 @@ The current state is effectively **greenfield at the policy level** — the old 
 |----------|----------|-----------|
 | **Cold start** | Same policy, degenerate mode — reduced input set, uniform coverage deficit, opening-safe territory preference | Avoids two topic-selection systems with different behaviors |
 | **Single-territory sessions** | Not allowed by default — coverage back-pressure pushes the system to explore breadth. The policy must serve portrait/result requirements that need facet coverage across domains. | One territory for 25 exchanges would starve the portrait. Coverage pressure exists specifically to prevent this. |
-| **Re-entry** | Territories are revisitable — freshness penalizes premature looping, resonance can justify intentional late-session return | Late-session resonance almost requires re-entry. Three cases: immediate re-entry (blocked by freshness), mid-session revisit (allowed if natural), late-session return (explicitly desirable when resonance is high). |
-| **Current territory after shift** | Excluded from candidate set when exit guard fires a shift | If the guard decided to leave, re-selecting the same territory is a fake shift. The current territory is ineligible for that scoring cycle. |
+| **Re-entry** | Territories are revisitable — freshness penalizes premature looping, conversation skew can justify intentional late-session return to depth-friendly territories | Three cases: immediate re-entry (blocked by freshness), mid-session revisit (allowed if natural), late-session return (explicitly desirable when skew boosts heavy territories). |
+| **Current territory after shift** | Competes in the unified scoring pool — self-adjacency provides natural inertia | No exclusion needed. Another territory must overcome self-adjacency advantage with better coverage gain, adjacency, or skew to trigger a shift. |
 
 ### Root Cause Analysis
 
@@ -184,7 +192,7 @@ Five root causes of the old system's territory selection failures, each mapped t
 
 | # | Root Cause | Description | New Architecture Response |
 |---|-----------|-------------|--------------------------|
-| 1 | **Fused layers** | Topic selection was an LLM side effect, not an explicit policy. The LLM made topic decisions as part of response generation — no separate layer, no tunability, no logging. | Explicit territory policy layer, separated from pacing (E_target), move generation, and silent scoring. |
+| 1 | **Fused layers** | Topic selection was an LLM side effect, not an explicit policy. The LLM made topic decisions as part of response generation — no separate layer, no tunability, no logging. | Explicit territory policy layer, separated from pacing (E_target), the Governor, and silent scoring. |
 | 2 | **Coverage leakage** | Assessment completeness was a first-class visible goal in every layer. Coverage pressure was in the pacing formula, which made the system "hunt" for thin facets in ways users could feel. | Coverage enters the system only through territory policy (Decision 3). E_target is user-state-pure. Coverage becomes topic choice pressure, not energy pressure. |
 | 3 | **No adjacency model** | Transitions optimized for assessment value, not conversational coherence. The system knew which topics were assessment-valuable but not which were conversationally adjacent. Users detected the "hunting" pattern through jarring topic jumps. | Static symmetric adjacency as a first-class scoring input. Adjacency is the default coherence mechanism — a strong prior, not a prison. Non-adjacent transitions are penalized, not blocked. |
 | 4 | **Facet-shaped entry** | Topics were entered with narrow probing prompts designed to harvest specific facets. This produced thin, single-axis evidence instead of rich multi-facet narratives. Even when territory choice was reasonable, the opener made the conversation feel clinical. | Territory schema includes experience-shaped opener guidance as a catalog-authoring constraint. Territories are thematic life experiences, not personality dimensions. Move generation consumes opener guidance; territory policy doesn't see it. |
@@ -219,7 +227,7 @@ Five root causes of the old system's territory selection failures, each mapped t
 
 | # | Force | Strength | Notes |
 |---|-------|----------|-------|
-| 1 | **Clean layer separation** | Strong | Architecture already locked: E_target upstream, move generation downstream, silent scoring separate. Territory policy has a well-defined box to fill. |
+| 1 | **Clean layer separation** | Strong | Architecture already locked: E_target upstream, Governor downstream, silent scoring separate. Territory policy has a well-defined box to fill. |
 | 2 | **Fixed catalog for v1** | Strong | Scoring a known, finite set of territories is tractable. No dynamic generation complexity. |
 | 3 | **Product frame internalized** | Strong | "Does this make the user feel seen or measured?" resolves ambiguity quickly. Cultural filter, not just a design principle. |
 | 4 | **Two-phase execution** | Medium | Exit guard + lazy scoring simplifies runtime. Full scoring can be moderately expensive since it only runs at transition points. |
@@ -236,7 +244,7 @@ Five root causes of the old system's territory selection failures, each mapped t
 | 4 | **Stay/shift threshold brittleness** | **Medium** | Through threshold tuning | Too eager = restless scanning. Too sticky = overstaying and missing breadth. Both break the self-discovery frame. Distinct from energy-band mapping — timing of shifts matters as much as destination. |
 | 5 | **No calibration data** | Medium | Only resolves with real users | Formula weights, adjacency graph, and energy bands are v1 defaults from first principles and simulation. Empirical tuning requires real conversations. |
 | 6 | **Assessment leakage hard to verify** | Medium | Only resolves with real users | Easy to cause, hard to directly measure. "Invisible coverage" means testing for the absence of a feeling — a subjective, negative signal. |
-| 7 | **Adjacency authoring subjectivity** | Low-Medium | Through iteration post-launch | Which territories are "adjacent" is a judgment call. Static symmetric adjacency + move generation's Bridge moves absorb some imperfections. Iterable after logs. |
+| 7 | **Adjacency authoring subjectivity** | Low-Medium | Through iteration post-launch | Which territories are "adjacent" is a judgment call. Static symmetric adjacency + Nerin's natural bridge moves absorb some imperfections. Iterable after logs. |
 
 **Central danger framing:** The most dangerous failure is not "we haven't mapped energy bands yet" — that's bounded engineering. The central danger is **territory policy accidentally becoming visible optimization again**. The two biggest vectors for that failure are: (1) overweighting coverage over coherence in the scoring function, and (2) relying on a weak catalog.
 
@@ -369,6 +377,7 @@ For each territory t (all territories, no exclusions):
   + t.expectedEnergy       × max(0, (sessionProgress - 0.7) / 0.3)
 
   --- Energy Malus (quadratic, no coverage dampening) ---
+  // Both expectedEnergy and E_target are [0, 1] — no normalization needed
   energyMalus(t) = w_e × (t.expectedEnergy - E_target)²
 
   --- Freshness Penalty (linear decay, derived from message history) ---
@@ -390,7 +399,7 @@ Selection is NOT the scorer's concern — the Territory Selector consumes this r
 
 The existing Territory type uses discrete `energyLevel: "light" | "medium" | "heavy"`. The formula requires continuous `expectedEnergy: number` (range `[0, 1]`) for both `energyMalus` and `conversationSkew`. Decision: **replace** `energyLevel` with `expectedEnergy` entirely — no dual fields, no transition period. The old DRS/scorer system (`territory-scorer.ts`, `drs.ts`) and prompt builder energy guidance will be removed as part of the full pipeline redo.
 
-Existing catalog (22 territories) gets a one-time authoring pass to assign numeric values. Rough mapping from the old discrete levels as starting points:
+Existing catalog (25 territories — expanded from 22 via [Territory Catalog Migration](./problem-solution-2026-03-08.md)) gets a one-time authoring pass to assign numeric values. Rough mapping from the old discrete levels as starting points:
 - Former "light" territories → `0.2 – 0.35`
 - Former "medium" territories → `0.4 – 0.6`
 - Former "heavy" territories → `0.65 – 0.85`
@@ -476,7 +485,7 @@ The codebase already computes exactly what territory policy needs: "how much wou
 
 ### Implementation Approach
 
-**Bottom-up, pure-function-first.** Build the scorer and all term functions as isolated pure functions with full test coverage. No pipeline wiring in this phase — the scorer takes typed inputs and returns a ranked list. Pipeline redo (wiring E_target, facetMetrics, replacing old DRS/scorer, connecting to move generator) is a separate effort.
+**Bottom-up, pure-function-first.** Build the scorer and all term functions as isolated pure functions with full test coverage. No pipeline wiring in this phase — the scorer takes typed inputs and returns a ranked list. Pipeline redo (wiring E_target, facetMetrics, replacing old DRS/scorer, connecting to the Governor) is a separate effort.
 
 Every function is deterministic: same inputs → same output. No IO, no side effects. Testable without database, without LLM, without running server.
 
@@ -486,7 +495,7 @@ Every function is deterministic: same inputs → same output. No IO, no side eff
 
 **Step 1 — Foundation (no dependencies, parallelizable)**
 - [ ] Add `expectedEnergy: number` to `Territory` interface, remove `energyLevel: EnergyLevel`
-- [ ] Migrate all 22 catalog entries from discrete `energyLevel` to numeric `expectedEnergy`
+- [ ] Migrate all 25 catalog entries from discrete `energyLevel` to numeric `expectedEnergy`
 - [ ] Create `jaccard-similarity.ts` — `jaccardSimilarity<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): number`
 - [ ] Create scorer config with named constants: `w_e, w_f, cooldown, adjDomainWeight, adjFacetWeight, skewEarlyBreak, skewLateBreak`
 - [ ] Unit tests: Jaccard (empty, identical, partial, disjoint sets), config validation
@@ -494,7 +503,7 @@ Every function is deterministic: same inputs → same output. No IO, no side eff
 **Step 2 — Term functions (depends on Step 1)**
 - [ ] `computeAdjacency(a: Territory, b: Territory, config): number` — Jaccard on domains + facets, weighted
 - [ ] `computeConversationSkew(territory, turnNumber, totalTurns, config): number` — energy-based U-shape
-- [ ] `computeEnergyMalus(territory, eTargetNormalized, config): number` — quadratic
+- [ ] `computeEnergyMalus(territory, eTarget, config): number` — quadratic. E_target is `[0, 1]` natively, no normalization needed.
 - [ ] `computeFreshnessPenalty(territoryId, currentTerritoryId, visitHistory, currentTurn, config): number` — linear decay
 - [ ] Extract `computeFacetPriority(facetMetrics, config): Map<FacetName, number>` from existing `computeSteeringTarget` — refactor, not rewrite
 - [ ] `computeCoverageGain(territory, facetPriorities, config): number` — source-normalized, bounded [0,1]
@@ -503,27 +512,31 @@ Every function is deterministic: same inputs → same output. No IO, no side eff
 
 **Step 3 — Scorer orchestration (depends on Step 2)**
 - [ ] `scoreAllTerritories(input: TerritoryScorerInput): TerritoryScorerOutput` — runs all 5 terms on all territories, returns sorted ranked list with per-term breakdowns
-- [ ] Test with simulation scenarios: cold start, mid-session shift, drained user, late-session resonance
+- [ ] Test with simulation scenarios: cold start, mid-session shift, drained user, late-session conversation skew
 - [ ] Test with stress tests: E_target extremes, rich first message, domain-cluster, near-complete coverage
 - [ ] Verify all terms bounded [0,1], total score is interpretable
 
 **Step 4 — Selector (depends on Step 3)**
-- [ ] `selectTerritory(scorerOutput: TerritoryScorerOutput, turnNumber): TerritorySelectorOutput` — turn 1 random from top candidates, turn 2+ deterministic top-1, tiebreak by catalog order
-- [ ] Derives `stayOrShift` from selected vs current
-- [ ] Passes alternates (runner-ups) for move generator
-- [ ] Unit tests: cold-start randomness (verify selection from top candidates), deterministic selection, tiebreak
+- [ ] `selectTerritory(scorerOutput: TerritoryScorerOutput): TerritorySelectorOutput` — turn 1 score-perimeter pool, turn 2+ deterministic top-1, tiebreak by catalog order
+- [ ] Derives `transitionType` from selected vs current
+- [ ] Derives `sessionPhase` from turn position
+- [ ] Unit tests: cold-start randomness (verify selection from score-perimeter pool), deterministic selection, tiebreak
 
 **Phase 2: Pipeline Wiring (separate effort — pipeline redo)**
 
-- [ ] Wire `computeETarget().eTarget / 10` as scorer input
+See [Coherence Audit — Consolidated Pipeline](./problem-solution-2026-03-10-territory-policy-coherence.md#gap-4-resolved-consolidated-pipeline-wiring) for the authoritative 10-step pipeline with contracts at each boundary.
+
+- [ ] Wire `computeETarget()` as scorer input — E_target outputs `[0, 1]` natively, no normalization needed
 - [ ] Wire `computeFacetMetrics()` → `computeFacetPriority()` as scorer input
 - [ ] Wire session messages → `deriveVisitHistory()` as scorer input
 - [ ] Replace old `territory-scorer.ts` and `drs.ts`
 - [ ] Replace `GREETING_SEED_POOL` / `COLD_START_TERRITORIES` with selector
-- [ ] Remove `energyLevel` / `EnergyLevel` from all consumers (39 files)
-- [ ] Wire selector output → move generator input
-- [ ] Add observability logging: per-turn score vectors, selection rule, shift events, monitoring safeguards
-- [ ] Integration tests: end-to-end scorer → selector → move generator with mock LLM
+- [ ] Remove `energyLevel` / `EnergyLevel` from all consumers
+- [ ] Wire selector output (3 slim fields) → Governor input
+- [ ] Wire Governor output (`PromptBuilderInput`) → Prompt Builder (three-tier composition, Decision 13)
+- [ ] Add `governor_output` jsonb column on `assessment_message` for derive-at-read
+- [ ] Add observability logging: per-turn score vectors, selection rule, shift events, `MoveGovernorDebug`
+- [ ] Integration tests: end-to-end scorer → selector → Governor → prompt builder with mock LLM
 
 ### File Locations
 
@@ -547,7 +560,7 @@ Reused/modified files:
 
 **Existing codebase resources consumed:**
 - `computeFacetMetrics()` — evidence → per-facet confidence + signalPower
-- `computeETarget()` — pacing state → E_target
+- `computeETarget()` — pacing state → E_target `[0, 1]` (no normalization needed)
 - `assessment_message.territory_id` — visit history source
 - Territory catalog with domains + expectedFacets
 - `FacetName`, `TerritoryId` branded types
@@ -621,7 +634,7 @@ Reused/modified files:
 
 **Tier 3: Integration validation (Phase 2, after pipeline wiring)**
 - Run with `MOCK_LLM=true` — deterministic mock responses, real scorer in the pipeline
-- Verify end-to-end: E_target → scorer → selector → move generator receives correct territory
+- Verify end-to-end: E_target → scorer → selector → Governor receives correct territory → `PromptBuilderInput` emitted
 - Verify observability: score vectors appear in structured logs
 - Verify old system removal: no references to DRS, old territory-scorer, GREETING_SEED_POOL
 
@@ -672,13 +685,13 @@ Reused/modified files:
 
 1. **Simulate before you ship.** The cold-start simulation caught a fundamental scaling bug (coverageGain dominated by facet count) that would have been invisible in code review. Source-normalizing baseYield was the fix — discovered by running numbers, not reasoning abstractly.
 
-2. **Layer boundaries are the architecture.** The most impactful decisions weren't formula terms — they were where to draw boundaries. Scorer vs selector vs move generator. Pacing vs territory policy. Every time a concern leaked across a boundary (telling in territory policy, coverage dampening energyMalus, move generation choosing territories), the design got worse. Every time we enforced the boundary, it got cleaner.
+2. **Layer boundaries are the architecture.** The most impactful decisions weren't formula terms — they were where to draw boundaries. Scorer vs selector vs Governor. Pacing vs territory policy. Every time a concern leaked across a boundary (telling in territory policy, coverage dampening energyMalus, the Governor choosing territories), the design got worse. Every time we enforced the boundary, it got cleaner.
 
 3. **Reuse existing signals aggressively.** The formula reuses `priority_f`, `expectedEnergy`, `assessment_message.territory_id`, Jaccard on catalog properties. Zero new storage, zero new metrics. The existing codebase already computed what territory policy needed — we just hadn't wired it.
 
 4. **Drop mechanisms, don't add them.** The design evolved by removing: trait urgency (back-door energy pressure), currentBonus (redundant with self-adjacency), coverage dampening (smuggled assessment into energy), exit guard (replaced by unified scoring), lightAffinity/depthAffinity (redundant with expectedEnergy). The final formula has fewer terms than any intermediate version.
 
-5. **User experience reasoning resolves technical ambiguity.** "If users compare notes and everyone got the same first question" broke a tie between deterministic and randomized cold start. "Nerin suggesting childhood callbacks is move generation's craft, not territory selection" resolved the lightAffinity/depthAffinity debate. Product thinking cut through technical analysis multiple times.
+5. **User experience reasoning resolves technical ambiguity.** "If users compare notes and everyone got the same first question" broke a tie between deterministic and randomized cold start. "Nerin suggesting childhood callbacks is Nerin's craft, not territory selection" resolved the lightAffinity/depthAffinity debate. Product thinking cut through technical analysis multiple times.
 
 6. **Catalog quality is architecture.** The formula amplifies whatever the catalog says. Domain-cluster traps, adjacency quality, facet yield accuracy — all catalog concerns that the formula can't compensate for. Catalog authoring discipline is a first-order dependency, not a downstream detail.
 
@@ -694,7 +707,7 @@ Reused/modified files:
 
 - **Designing for hypothetical users before building for real ones.** We spent significant time on weight sensitivity analysis, but the real calibration will come from 5-10 real sessions. v1 defaults are educated guesses — don't over-optimize them before data exists.
 - **Adding mechanisms to fix mechanisms.** The exit guard → exit guard + coverage backstop → exit guard + backstop + resonance override spiral was the old system's failure mode. The unified formula works because it replaced that spiral with one equation. Resist adding special cases.
-- **Conflating layers.** Every time territory policy tried to handle a move generation concern (opening variety, storytelling callbacks, user-direction following) or a pacing concern (telling, drain), the design degraded. Trust the layer boundaries.
+- **Conflating layers.** Every time territory policy tried to handle a Governor concern (opening variety, storytelling callbacks, user-direction following) or a pacing concern (telling, drain), the design degraded. Trust the layer boundaries.
 - **Discrete tiers where continuous works.** energyLevel → expectedEnergy, adjacency tiers → Jaccard, session phases → continuous skew. Every discretization created cliff effects or special cases. Continuous by default, discretize only when there's a strong reason.
 - **Normalizing at the wrong level.** Per-turn min-max normalization was tempting but would have destroyed debuggability. Source normalization (bound each term at construction) preserved interpretable, cross-turn-comparable scores.
 

@@ -521,11 +521,13 @@ Phase A can ship without waiting for Phase B. Phase B can be developed and teste
   - **Option B:** Recompute E_s from full message history each turn (stateless but O(n))
 - Recommendation: **Option A** for v1. One additional column (`smoothed_energy`) on the session or a lightweight pacing state record. Keeps the function pure while the caller manages persistence.
 
-**4. Wire into policy layer**
+**4. Wire into steering pipeline**
 - After ConversAnalyzer extracts E(n) from the user message, call `computeETarget()` with the current pacing state
-- Pass E_target to territory policy as an input alongside coverage gaps, freshness, etc.
-- Territory policy selects a territory that matches E_target AND fills coverage gaps
-- Move generator receives the selected territory + E_target and produces Nerin's prompt instructions
+- E_target feeds into two downstream consumers (see Decisions 11-12):
+  - **Territory Scorer:** uses `E_target / 10` to compute `energyMalus` — a quadratic penalty when a territory's `expectedEnergy` (0-1 scale) deviates from the normalized target. This is the primary consumption of E_target.
+  - **Move Governor:** uses the gap between `E_target / 10` and the selected territory's `expectedEnergy` to derive `entryPressure: "direct" | "angled" | "soft"` (Decision 12)
+- The Territory Selector sits between Scorer and Governor but does not consume E_target directly — it picks from the Scorer's ranked list via deterministic rules
+- **Scale note:** E_target outputs on [0, 10]. Territory catalog `expectedEnergy` is on [0, 1] where 0.5 = comfort threshold. The normalization (`E_target / 10`) is the consumer's responsibility, not E_target's.
 
 **5. Unit tests from archetype simulations**
 - Create test file: `packages/domain/src/utils/__tests__/e-target.test.ts`
@@ -548,20 +550,19 @@ Phase A can ship without waiting for Phase B. Phase B can be developed and teste
 - This enables post-session analysis: "why did E_target drop at turn 8?"
 - Coverage deficit should also be logged (for territory policy debugging), just not as an E_target input
 
-**7. Territory policy redesign (separate problem)**
-- Territory policy will need to be redesigned to consume E_target alongside coverage gaps, freshness, and late-session resonance (Decision 8). This is a **separate design problem** — not an extension of the pacing formula work.
-- The current territory steering model will likely need a full rethink to match the new pacing architecture. That design work has not been done yet.
-- **What E_target provides to territory policy:** a single number (0-10) representing the energy level the next exchange should aim for. Territory policy's job is to find a territory that (a) fits that energy level and (b) serves coverage and freshness goals.
-- **This document does not specify territory policy.** It only specifies E_target's contract: inputs, output, and the guarantee that it contains no territory or coverage logic.
+**7. Downstream pipeline (resolved separately)**
+- The territory steering pipeline has been decomposed into three layers: Territory Scorer → Territory Selector → Move Governor (Decisions 11-13). Each is specified in its own document. E_target is not responsible for their internals.
+- **What E_target provides:** a single number in [0, 10] representing the energy level the next exchange should aim for. The Scorer normalizes this to the catalog's [0, 1] scale and uses it to penalize energy-mismatched territories. The Governor uses it to calibrate entry pressure.
+- **What E_target does not provide:** territory selection, move type, prompt composition. These are downstream concerns resolved in [Territory Policy Spec](problem-solution-2026-03-07-territory-policy.md), [Territory Selector Spec](problem-solution-2026-03-09.md), [Move Governor Spec](problem-solution-2026-03-09-move-generator.md), and [Prompt Builder Spec](problem-solution-2026-03-10.md).
 
 ### Timeline and Milestones
 
 | Milestone | Dependencies | Description |
 |-----------|-------------|-------------|
-| M1: Design docs updated | None | Reflect coverage removal, 7-step pipeline, K-padding in decisions doc |
+| M1: Design docs updated | None | Reflect coverage removal, 7-step pipeline, K-padding in decisions doc. **Done** — decisions doc updated 2026-03-07. |
 | M2: Pure function implemented | None | `computeETarget()` with full test suite from 10 archetypes |
-| M3: State persistence | M2 | E_s stored per session, wired into policy layer |
-| M4: Territory policy redesign | M2 | Separate design problem. Takes E_target as input. Needs its own design session. |
+| M3: State persistence | M2 | E_s stored per session, wired into steering pipeline |
+| M4: Territory pipeline integration | M2 | Resolved in Decisions 11-13. Scorer + Selector + Governor consume E_target. |
 | M5: Telling signal added | M2 | ConversAnalyzer outputs T(n), wired into trust function |
 | M6: Calibration with real data | M4 | Observe real conversations, tune alpha_up, alpha_down, lambda, K |
 
@@ -577,7 +578,7 @@ M1 and M2 can start immediately and in parallel. M5 is independent and can happe
 ### Responsible Parties
 
 - **Formula implementation (M1-M3):** Developer implementing the pacing pipeline
-- **Territory policy update (M4):** Same or coordinated developer — requires understanding of the architecture boundary between pacing and steering
+- **Pipeline integration (M4):** Same or coordinated developer — Scorer consumes E_target/10 for energyMalus, Governor consumes for entry pressure
 - **Telling signal (M5):** Whoever owns ConversAnalyzer prompt/output contract
 - **Calibration (M6):** Product + engineering — requires defining "good" pacing from real user feedback
 

@@ -4,6 +4,8 @@
 **Problem Solver:** Vincentlay
 **Problem Category:** Conversation Architecture / Catalog Data Quality
 
+> **Coherence note (2026-03-10):** This spec is current with the authoritative [Conversation Pacing Design Decisions](./planning-artifacts/conversation-pacing-design-decisions.md) (Decisions 1-13). Updates applied: "move generator" → "Move Governor" (Decision 12), E_target outputs [0,1] natively — no downstream normalization (Gap 6 resolution from [Territory Policy Coherence Audit](./problem-solution-2026-03-10-territory-policy-coherence.md)).
+
 ---
 
 ## 🎯 PROBLEM DEFINITION
@@ -28,7 +30,7 @@ The irreducible problem: the scorer amplifies whatever the catalog says. If ener
 
 **Upstream dependency:** The territory policy redesign (resolved 2026-03-07) produced a unified five-term scorer formula: `score(t) = coverageGain(t) + adjacency(t) + conversationSkew(t) - energyMalus(t) - freshnessPenalty(t)`. Two of these terms (`energyMalus`, `conversationSkew`) consume `expectedEnergy`. One term (`adjacency`) computes Jaccard similarity on `domains` and `expectedFacets`. The catalog feeds three of five scorer terms directly.
 
-**Downstream consumers:** Territory scorer (Phase 1 Step 1-3), territory selector, move generator, prompt builder, and all existing code referencing `energyLevel` (39 files identified in prior analysis).
+**Downstream consumers:** Territory scorer (Phase 1 Step 1-3), territory selector, Move Governor, prompt builder, and all existing code referencing `energyLevel` (39 files identified in prior analysis).
 
 **Current state:**
 - 22 territories: 7 light, 8 medium, 7 heavy
@@ -67,7 +69,7 @@ Six failure scenarios were identified by imagining the catalog shipping as-is wi
 
 ### First Principles: What `expectedEnergy` Means
 
-**Definition:** `expectedEnergy` measures the energy cost a user typically pays to engage genuinely with a territory. It is on the same axis as E_target (user energy as cost). It is bounded [0, 1] because the scorer consumes normalized E_target (raw E_target / 10) and all scorer terms are bounded [0, 1] by construction.
+**Definition:** `expectedEnergy` measures the energy cost a user typically pays to engage genuinely with a territory. It is on the same axis as E_target (user energy as cost). It is bounded [0, 1] because E_target outputs [0, 1] natively (ConversAnalyzer normalizes energy from 0-10 to [0, 1] in the schema transform at source) and all scorer terms are bounded [0, 1] by construction.
 
 **Anchor point:** `expectedEnergy = 0.5` corresponds to E_target = 5.0, the comfort threshold (zero drain in the pacing formula). Below 0.5 = easier than comfortable. Above 0.5 = costlier than comfortable.
 
@@ -335,9 +337,9 @@ All changes applied: 8 domain re-tags, 3 new territories, continuous expectedEne
 
 | Dimension | IS | IS NOT |
 |---|---|---|
-| **What** | Type migration (`energyLevel` → `expectedEnergy`), energy calibration, domain re-tagging, 3 new territories, facet redistribution | Formula changes, scorer implementation, move generator redesign, pipeline wiring |
+| **What** | Type migration (`energyLevel` → `expectedEnergy`), energy calibration, domain re-tagging, 3 new territories, facet redistribution | Formula changes, scorer implementation, Move Governor redesign, pipeline wiring |
 | **Where** | `packages/domain/src/types/territory.ts`, `packages/domain/src/constants/territory-catalog.ts`, `packages/domain/src/constants/territory-catalog.test.ts` | Infrastructure layer, API handlers, frontend code |
-| **Who** | Territory scorer (primary consumer), territory selector, move generator, prompt builder | ConversAnalyzer (reads territories but doesn't consume expectedEnergy), E_target formula (no territory dependency) |
+| **Who** | Territory scorer (primary consumer), territory selector, Move Governor, prompt builder | ConversAnalyzer (reads territories but doesn't consume expectedEnergy), E_target formula (no territory dependency) |
 | **When** | Blocks Phase 1 Step 1 of territory scorer implementation | Does not block E_target implementation, energy/telling extraction, or silent scoring |
 
 ### Root Cause Analysis
@@ -487,7 +489,7 @@ The recommended solution was the only candidate that survived all 8 elicitation 
 - [ ] In `packages/domain/src/types/territory.ts`:
   - Remove `ENERGY_LEVELS` const and `EnergyLevel` type
   - Replace `energyLevel: EnergyLevel` with `expectedEnergy: number` in `Territory` interface
-  - Add JSDoc: "Energy cost of genuine engagement, [0,1], same axis as normalized E_target"
+  - Add JSDoc: "Energy cost of genuine engagement, [0,1], same axis as E_target"
 
 - [ ] In `packages/domain/src/constants/territory-catalog.ts`:
   - Update `territory()` helper: replace `energyLevel` parameter with `expectedEnergy: number`
@@ -612,7 +614,7 @@ The recommended solution was the only candidate that survived all 8 elicitation 
 - Stress tests verify edge cases (cold start, drained user, late session)
 
 **Tier 3: Integration validation (Phase 2)**
-- End-to-end with `MOCK_LLM=true`: scorer → selector → move generator
+- End-to-end with `MOCK_LLM=true`: scorer → selector → Move Governor
 - Score vectors appear in structured logs
 - Territory selection diversity meets targets
 

@@ -1,8 +1,10 @@
 # Problem Solving Session: Precise Definition and Extraction of Energy and Telling for ConversAnalyzer
 
 **Date:** 2026-03-07
+**Last Updated:** 2026-03-10
 **Problem Solver:** Vincentlay
 **Problem Category:** Signal extraction design / LLM output contract specification
+**Coherence:** Current with [Conversation Pacing Design Decisions](./planning-artifacts/conversation-pacing-design-decisions.md) (Decisions 2-3)
 
 ---
 
@@ -168,14 +170,21 @@ Pipeline (nerin-pipeline.ts) passes state to pacing layer
         ↓
 computeETarget() consumes E(n) and T(n)
         ↓
-E_target feeds territory policy + move selection
+Territory Scorer — ranks 25 territories using E_target + coverage gaps + catalog
+        ↓
+Territory Selector — picks from ranked list (3 code paths: cold-start, argmax, finale)
+        ↓
+Move Governor — constrains Nerin: entry pressure, noticing windows, contradiction targets
+  outputs PromptBuilderInput (5-intent discriminated union)
+        ↓
+Prompt Builder — composes contextual system prompt (3-tier: persona → core → behavioral → steering)
         ↓
 Nerin's next response reflects appropriate pacing
 ```
 
-**The change is at the top of the pipeline.** Everything downstream is already designed to consume these signals — the ConversAnalyzer just isn't producing them yet.
+**The change is at the top of the pipeline.** Everything downstream is now fully designed (see [Conversation Pacing Design Decisions](./planning-artifacts/conversation-pacing-design-decisions.md), Decisions 11-13) — the ConversAnalyzer just isn't producing the signals yet.
 
-**Feedback loop to monitor:** ConversAnalyzer extraction quality → E_target accuracy → pacing appropriateness → user experience. If extraction is systematically biased (guardrail failures), the entire downstream chain inherits the bias. The formula is noise-tolerant but bias-vulnerable.
+**Feedback loop to monitor:** ConversAnalyzer extraction quality → E_target accuracy → Scorer/Selector/Governor quality → pacing appropriateness → user experience. If extraction is systematically biased (guardrail failures), the entire downstream chain inherits the bias. The formula is noise-tolerant but bias-vulnerable.
 
 ### Implementation Constraints (from Party Mode discussion)
 
@@ -595,9 +604,9 @@ If evidence metrics degrade, the state extraction prompt needs shortening or mus
 
 ### Implementation Approach
 
-**Strategy: Phased rollout, ship-then-calibrate. Bundle with territory policy redesign.**
+**Strategy: Phased rollout, ship-then-calibrate. Bundle with territory policy pipeline.**
 
-The extraction spec, the E_target formula, and the redesigned territory policy ship together as one integrated pacing system. Extraction and formula are ready; territory policy redesign happens in a separate problem-solving session. Once all three are complete, they deploy as a single unit.
+The extraction spec, the E_target formula, and the territory policy pipeline (Scorer → Selector → Governor → Prompt Builder) ship together as one integrated pacing system. Extraction and formula are ready; the territory policy pipeline has been fully designed across 5 companion specs (resolved 2026-03-10). Once all components are implemented, they deploy as a single unit.
 
 **Phase 1 — Schema + Prompt + Pipeline wiring (this spec's implementation)**
 - DB migration: add 7 columns to `assessment_messages`
@@ -608,13 +617,17 @@ The extraction spec, the E_target formula, and the redesigned territory policy s
 - Fail-open handler for malformed LLM output
 - Update existing tests, add new extraction tests with the 12-scenario corpus
 
-**Phase 2 — Territory policy redesign (separate session)**
-- Redesign territory policy to consume E_target output and the two-axis state model
-- This is a separate problem-solving session — different problem space, different constraints
-- Blocked on: Phase 1 complete (territory policy needs to know the signals it receives)
+**Phase 2 — Territory policy pipeline (RESOLVED — specs complete)**
+- Territory Scorer, Selector, Governor, and Prompt Builder are fully specified across 5 design decisions and 4 companion specs:
+  - [Territory Policy](./problem-solution-2026-03-07-territory-policy.md) — three-layer decomposition (Decision 11)
+  - [Territory Catalog Migration](./problem-solution-2026-03-08.md) — 25 territories, continuous `expectedEnergy` (Decision 11)
+  - [Territory Selector](./problem-solution-2026-03-09.md) — 3 code paths, 6-field output contract
+  - [Move Governor](./problem-solution-2026-03-09-move-generator.md) — restraint layer, `PromptBuilderInput` output (Decision 12)
+  - [Prompt Builder Architecture](./problem-solution-2026-03-10.md) — three-tier contextual composition (Decision 13)
+- *Note: Territory Policy and Selector specs use pre-reframe "move generator" terminology — see Decision 12 in the design decisions doc for the Governor reframe.*
 
 **Phase 3 — Ship + Log (deploy the bundle)**
-- Deploy extraction + formula + territory policy together
+- Deploy extraction + formula + territory pipeline (Scorer → Selector → Governor → Prompt Builder) together
 - Full state logging enabled (bands, reasons, shift flag stored per message)
 - Monitor evidence extraction metrics (yield, deviation distribution, polarity balance)
 - Monitor energy-telling correlation coefficient across sessions
@@ -639,8 +652,8 @@ The extraction spec, the E_target formula, and the redesigned territory policy s
 | 8 | Wire extracted state through `nerin-pipeline.ts` to `computeETarget()` | 4, 6, 7 | 1 |
 | 9 | Update mock repositories + existing tests for new schema | 4, 6 | 1 |
 | 10 | Add validation tests using the 12-scenario corpus | 5, 6 | 1 |
-| 11 | **Territory policy redesign** (separate problem-solving session) | Phase 1 complete | 2 |
-| 12 | Deploy extraction + formula + territory policy as integrated bundle | 11 | 3 |
+| 11 | **Territory policy pipeline** — Scorer, Selector, Governor, Prompt Builder (RESOLVED — see Phase 2 spec list) | Phase 1 complete | 2 |
+| 12 | Deploy extraction + formula + territory pipeline as integrated bundle | 11 | 3 |
 | 13 | Monitor evidence metrics for degradation (yield, deviation, polarity) | 12 | 3 |
 | 14 | Monitor energy-telling correlation coefficient (target: r < 0.6) | 12 | 3 |
 | 15 | Execute expert review calibration (20-30 messages, blind scoring) | 12 | 4 |
@@ -653,8 +666,8 @@ The extraction spec, the E_target formula, and the redesigned territory policy s
 | Milestone | Gate criteria |
 |-----------|-------------|
 | **M1: Extraction spec implemented** | Steps 1-10 complete. All 12-scenario tests pass. Evidence extraction tests still pass. |
-| **M2: Territory policy redesigned** | Step 11 complete. Separate problem-solving session produces territory policy spec. |
-| **M3: Integrated pacing system shipped** | Steps 12-14. Extraction + formula + territory policy deployed together. Logging active. Evidence metrics stable. |
+| **M2: Territory policy pipeline designed** | RESOLVED (2026-03-10). 5 specs complete: Territory Policy, Catalog Migration, Selector, Governor, Prompt Builder. See Phase 2 spec list. |
+| **M3: Integrated pacing system shipped** | Steps 12-14. Extraction + formula + territory pipeline deployed together. Logging active. Evidence metrics stable. |
 | **M4: Calibration complete** | Steps 15-18. Expert review: 80%+ agreement within 1 band. User self-scoring: systematic biases identified and addressed. |
 
 ### Resource Requirements
@@ -662,7 +675,7 @@ The extraction spec, the E_target formula, and the redesigned territory policy s
 - **Code changes:** ConversAnalyzer prompt/schema, domain schemas, pipeline wiring, DB migration, tests — concentrated in existing files
 - **Infrastructure:** None new. Same Haiku call, same DB table (expanded), same pipeline
 - **Calibration:** ~20-30 messages for expert review (product builder scores blind). ~10-20 users for post-session self-scoring (requires simple scoring UI or script)
-- **Separate session:** Territory policy redesign — its own problem-solving workflow
+- **Companion specs (complete):** Territory Policy, Catalog Migration, Selector, Governor, Prompt Builder — all resolved as of 2026-03-10
 
 ### Responsible Parties
 
