@@ -102,6 +102,26 @@ vi.mock("@workspace/ui/hooks/use-theme", () => ({
 	ThemeContext: { Provider: ({ children }: { children: React.ReactNode }) => children },
 }));
 
+vi.mock("@/lib/polar-checkout", () => ({
+	createThemedCheckoutEmbed: vi.fn(),
+}));
+
+vi.mock("@/components/finalization-wait-screen", () => ({
+	FinalizationWaitScreen: () => <div data-testid="finalization-wait" />,
+}));
+
+vi.mock("@/components/results/EvidencePanel", () => ({
+	EvidencePanel: () => <div data-testid="evidence-panel" />,
+}));
+
+vi.mock("@/components/results/TeaserPortraitReadingView", () => ({
+	TeaserPortraitReadingView: () => <div data-testid="teaser-portrait" />,
+}));
+
+vi.mock("@/components/sharing/archetype-share-card", () => ({
+	ArchetypeShareCard: () => <div data-testid="archetype-share-card" />,
+}));
+
 describe("results/$assessmentSessionId route behavior", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
