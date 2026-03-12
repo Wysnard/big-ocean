@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-12 (refreshed 17 — Step 2 stories pr-ready: 24-1, 25-1, 25-2, 26-1)
+generated: 2026-03-13 (refreshed 18 — Step 2 merged: 24-1, 25-1, 25-2, 26-1)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -410,7 +410,7 @@ development_status:
   # Depends on: Epic 23
   # ───────────────────────────────────────────────────────────────
   epic-24: in-progress
-  24-1-conversanalyzer-v2-schemas-and-repository-methods: pr-ready
+  24-1-conversanalyzer-v2-schemas-and-repository-methods: done
   24-2-three-tier-extraction-pipeline: backlog
   epic-24-retrospective: optional
 
@@ -423,8 +423,8 @@ development_status:
   # Parallel with: Epic 24, Epic 26
   # ───────────────────────────────────────────────────────────────
   epic-25: in-progress
-  25-1-e-target-pacing-formula: pr-ready
-  25-2-territory-scorer: pr-ready
+  25-1-e-target-pacing-formula: done
+  25-2-territory-scorer: done
   25-3-territory-selector: backlog
   epic-25-retrospective: optional
 
@@ -437,7 +437,7 @@ development_status:
   # Parallel with: Epic 24, Epic 25
   # ───────────────────────────────────────────────────────────────
   epic-26: in-progress
-  26-1-observation-focus-strength-formulas-and-per-domain-confidence: pr-ready
+  26-1-observation-focus-strength-formulas-and-per-domain-confidence: done
   26-2-observation-gating-and-competition: backlog
   26-3-move-governor: backlog
   epic-26-retrospective: optional

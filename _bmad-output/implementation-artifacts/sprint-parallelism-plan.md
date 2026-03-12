@@ -1,29 +1,17 @@
 # Sprint Parallelism Plan
-Generated: 2026-03-12
+Generated: 2026-03-13
 
 > Epic 6 (Privacy/GDPR) excluded — deferred to Phase 2 EU launch.
 > Epic 20 (Evidence Review) deferred — evidence already has messageId FK.
 > Phases 1-4 complete. Phase 5 (Conversation Pacing Pipeline) is the active work.
 > Step 1 (Epic 23 — Foundation Layer) complete. 3 PRs merged 2026-03-12.
+> Step 2 (Parallel Processing Layers) complete. 4 PRs merged 2026-03-12.
 
 ## ~~Step 1: Foundation Layer (Epic 23)~~ DONE
 All 3 stories merged: 23-1, 23-2, 23-3 (PRs #121, #122, #123).
 
-## Step 2: Parallel Processing Layers (Epics 24, 25, 26)
-| Story | Mode | Notes |
-|-------|------|-------|
-| 24-1-conversanalyzer-v2-schemas-and-repository-methods | parallel | Extends ConversAnalyzer repo; uses types from Epic 23 |
-| 25-1-e-target-pacing-formula | parallel | Pure function in domain/src/utils/steering/ |
-| 25-2-territory-scorer | parallel | Pure function in domain/src/utils/steering/ |
-| 26-1-observation-focus-strength-formulas-and-per-domain-confidence | parallel | Pure functions in domain/src/utils/steering/ |
-
-**Gate:** All stories above must be done before proceeding.
-
-**Conflict Notes:**
-- 25-1 and 25-2 both create files in `packages/domain/src/utils/steering/` but different files (e-target.ts vs territory-scorer.ts)
-- 26-1 also creates in the same directory (observation-focus.ts) — no file overlap
-- 24-1 modifies `packages/infrastructure/src/repositories/conversanalyzer.*` — no overlap with domain-only stories
-- All 4 stories export from domain index — **merge barrel exports carefully**
+## ~~Step 2: Parallel Processing Layers (Epics 24, 25, 26)~~ DONE
+All 4 stories merged: 24-1, 25-1, 25-2, 26-1 (PRs #124, #126, #127, #125).
 
 ## Step 3: Dependent Processing Stories
 | Story | Mode | Notes |
@@ -71,8 +59,8 @@ All 3 stories merged: 23-1, 23-2, 23-3 (PRs #121, #122, #123).
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **4 remaining steps** to deliver Phase 5 Conversation Pacing Pipeline (Step 1 complete)
-- **11 stories remaining** across 4 epics (24-27)
-- **Max parallelism:** Step 2 (4 stories simultaneously)
-- **Critical path:** 25-1 → 25-3 → 26-3 → 27-2 → 27-3 (5 stories, longest sequential chain)
-- **Independent opportunity:** 27-1 (character bible) can start as early as Step 2 but placed in Step 4 for simplicity; could be pulled forward if needed
+- **3 remaining steps** to deliver Phase 5 Conversation Pacing Pipeline (Steps 1-2 complete)
+- **7 stories remaining** across 4 epics (24-27)
+- **Max parallelism:** Step 3 (3 stories simultaneously)
+- **Critical path:** 25-3 → 26-3 → 27-2 → 27-3 (4 stories, longest sequential chain)
+- **Independent opportunity:** 27-1 (character bible) can start as early as Step 3 but placed in Step 4 for simplicity; could be pulled forward if needed
