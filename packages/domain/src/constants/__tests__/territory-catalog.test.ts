@@ -1,13 +1,13 @@
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
-import { ENERGY_LEVELS, TerritoryIdSchema } from "../../types/territory";
+import { TerritoryIdSchema } from "../../types/territory";
 import { ALL_FACETS, isFacetName } from "../big-five";
 import { LIFE_DOMAINS } from "../life-domain";
-import { COLD_START_TERRITORIES, getTerritoryById, TERRITORY_CATALOG } from "../territory-catalog";
+import { getTerritoryById, TERRITORY_CATALOG } from "../territory-catalog";
 
 describe("TERRITORY_CATALOG", () => {
-	it("contains exactly 22 territories", () => {
-		expect(TERRITORY_CATALOG.size).toBe(22);
+	it("contains exactly 25 territories", () => {
+		expect(TERRITORY_CATALOG.size).toBe(25);
 	});
 
 	it("each territory has 3-6 expected facets", () => {
@@ -23,16 +23,12 @@ describe("TERRITORY_CATALOG", () => {
 		}
 	});
 
-	it("each territory has 1-3 domains", () => {
+	it("each territory has exactly 2 domains", () => {
 		for (const [id, territory] of TERRITORY_CATALOG) {
 			expect(
 				territory.domains.length,
-				`Territory "${id}" has ${territory.domains.length} domains (expected 1-3)`,
-			).toBeGreaterThanOrEqual(1);
-			expect(
-				territory.domains.length,
-				`Territory "${id}" has ${territory.domains.length} domains (expected 1-3)`,
-			).toBeLessThanOrEqual(3);
+				`Territory "${id}" has ${territory.domains.length} domains (expected exactly 2)`,
+			).toBe(2);
 		}
 	});
 
@@ -53,13 +49,16 @@ describe("TERRITORY_CATALOG", () => {
 		}
 	});
 
-	it("all energyLevel values are valid EnergyLevel values", () => {
-		const validLevels = new Set(ENERGY_LEVELS);
+	it("all expectedEnergy values are in [0, 1] range", () => {
 		for (const [id, territory] of TERRITORY_CATALOG) {
 			expect(
-				validLevels.has(territory.energyLevel),
-				`Territory "${id}" has invalid energy level "${territory.energyLevel}"`,
-			).toBe(true);
+				territory.expectedEnergy,
+				`Territory "${id}" has expectedEnergy ${territory.expectedEnergy} outside [0, 1]`,
+			).toBeGreaterThanOrEqual(0);
+			expect(
+				territory.expectedEnergy,
+				`Territory "${id}" has expectedEnergy ${territory.expectedEnergy} outside [0, 1]`,
+			).toBeLessThanOrEqual(1);
 		}
 	});
 
@@ -86,27 +85,34 @@ describe("TERRITORY_CATALOG", () => {
 			expect(key).toBe(territory.id);
 		}
 	});
-});
 
-describe("COLD_START_TERRITORIES", () => {
-	it("contains exactly 3 territory IDs", () => {
-		expect(COLD_START_TERRITORIES).toHaveLength(3);
-	});
-
-	it("all IDs exist in the catalog", () => {
-		for (const id of COLD_START_TERRITORIES) {
-			expect(TERRITORY_CATALOG.has(id), `Cold-start territory "${id}" not found in catalog`).toBe(
-				true,
-			);
+	it("all domains appear in >= 6 territories", () => {
+		const domainCounts = new Map<string, number>();
+		for (const [, territory] of TERRITORY_CATALOG) {
+			for (const domain of territory.domains) {
+				domainCounts.set(domain, (domainCounts.get(domain) ?? 0) + 1);
+			}
+		}
+		// Check only steerable domains (not "other")
+		for (const domain of ["work", "relationships", "family", "leisure", "solo"]) {
+			const count = domainCounts.get(domain) ?? 0;
+			expect(count, `Domain "${domain}" appears in only ${count} territories (expected >= 6)`).toBeGreaterThanOrEqual(6);
 		}
 	});
 
-	it("all referenced territories are light-energy", () => {
-		for (const id of COLD_START_TERRITORIES) {
-			const territory = TERRITORY_CATALOG.get(id);
-			expect(territory).toBeDefined();
-			expect(territory?.energyLevel, `Cold-start territory "${id}" is not light-energy`).toBe("light");
+	it("has correct energy distribution: 9 light, 10 medium, 6 heavy", () => {
+		let light = 0;
+		let medium = 0;
+		let heavy = 0;
+		for (const [, territory] of TERRITORY_CATALOG) {
+			const e = territory.expectedEnergy;
+			if (e >= 0.20 && e <= 0.37) light++;
+			else if (e >= 0.38 && e <= 0.53) medium++;
+			else if (e >= 0.58 && e <= 0.72) heavy++;
 		}
+		expect(light, `Expected 9 light territories, got ${light}`).toBe(9);
+		expect(medium, `Expected 10 medium territories, got ${medium}`).toBe(10);
+		expect(heavy, `Expected 6 heavy territories, got ${heavy}`).toBe(6);
 	});
 });
 

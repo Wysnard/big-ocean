@@ -1,20 +1,22 @@
 /**
- * Territory Prompt Builder -- Story 21-5
+ * Territory Prompt Builder -- Story 21-5, evolved Story 23-2
  *
  * Looks up the territory catalog and formats guidance for Nerin's system prompt.
- * Nerin receives topic-level direction (opener, domains, energy level) without
+ * Nerin receives topic-level direction (opener, domains, energy guidance) without
  * exposure to scoring internals, expected facets, or DRS values.
  *
- * FR12: Steering outputs territoryId only; prompt builder looks up the catalog.
- * FR13: Nerin receives territory guidance (topic area + energy level) instead of facet targeting.
+ * Evolved from categorical energy levels to continuous expectedEnergy [0, 1].
+ * Energy guidance is derived from expectedEnergy thresholds.
  */
 
 import type { LifeDomain } from "../../constants/life-domain";
 import { TERRITORY_CATALOG } from "../../constants/territory-catalog";
 import type { SteeringOutput } from "../../types/steering";
-import type { EnergyLevel } from "../../types/territory";
 
 // ─── Types ──────────────────────────────────────────────────────────
+
+/** Energy guidance category derived from continuous expectedEnergy */
+export type EnergyGuidanceLevel = "light" | "medium" | "heavy";
 
 /**
  * Territory prompt content — the information Nerin receives about
@@ -23,13 +25,26 @@ import type { EnergyLevel } from "../../types/territory";
  */
 export interface TerritoryPromptContent {
 	readonly opener: string;
-	readonly domains: readonly LifeDomain[];
-	readonly energyLevel: EnergyLevel;
+	readonly domains: readonly [LifeDomain, LifeDomain];
+	readonly expectedEnergy: number;
+	readonly energyGuidanceLevel: EnergyGuidanceLevel;
 }
 
 // ─── Energy Guidance ────────────────────────────────────────────────
 
-const ENERGY_GUIDANCE: Record<EnergyLevel, string> = {
+/**
+ * Derive an energy guidance level from continuous expectedEnergy.
+ *
+ * Thresholds: < 0.38 = light, < 0.55 = medium, >= 0.55 = heavy
+ * These correspond to the catalog's energy distribution bands.
+ */
+export function deriveEnergyGuidanceLevel(expectedEnergy: number): EnergyGuidanceLevel {
+	if (expectedEnergy < 0.38) return "light";
+	if (expectedEnergy < 0.55) return "medium";
+	return "heavy";
+}
+
+const ENERGY_GUIDANCE: Record<EnergyGuidanceLevel, string> = {
 	light:
 		"Keep the tone casual and approachable. This is low-stakes territory — warmth and curiosity over depth.",
 	medium:
@@ -43,7 +58,7 @@ const ENERGY_GUIDANCE: Record<EnergyLevel, string> = {
 /**
  * Look up a territory from the catalog and extract prompt-relevant content.
  *
- * Returns only what Nerin needs: opener, domains, and energy level.
+ * Returns only what Nerin needs: opener, domains, energy info.
  * Throws if the territory ID is not found in the catalog.
  */
 export function buildTerritoryPrompt(steeringOutput: SteeringOutput): TerritoryPromptContent {
@@ -56,10 +71,13 @@ export function buildTerritoryPrompt(steeringOutput: SteeringOutput): TerritoryP
 		);
 	}
 
+	const energyGuidanceLevel = deriveEnergyGuidanceLevel(territory.expectedEnergy);
+
 	return {
 		opener: territory.opener,
 		domains: territory.domains,
-		energyLevel: territory.energyLevel,
+		expectedEnergy: territory.expectedEnergy,
+		energyGuidanceLevel,
 	};
 }
 
@@ -73,11 +91,11 @@ export function buildTerritoryPrompt(steeringOutput: SteeringOutput): TerritoryP
  */
 export function buildTerritorySystemPromptSection(content: TerritoryPromptContent): string {
 	const domainList = content.domains.join(", ");
-	const energyGuidance = ENERGY_GUIDANCE[content.energyLevel];
+	const energyGuidance = ENERGY_GUIDANCE[content.energyGuidanceLevel];
 
 	return `
 TERRITORY GUIDANCE:
-Energy: ${content.energyLevel}
+Energy: ${content.energyGuidanceLevel}
 Domain area: ${domainList}
 
 ${energyGuidance}

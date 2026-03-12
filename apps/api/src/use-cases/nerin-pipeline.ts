@@ -22,7 +22,6 @@ import {
 	aggregateDomainDistribution,
 	buildFacetEvidenceCounts,
 	buildTerritoryPrompt,
-	COLD_START_TERRITORIES,
 	type ConversanalyzerOutput,
 	ConversanalyzerRepository,
 	ConversationEvidenceRepository,
@@ -31,7 +30,6 @@ import {
 	computeDRS,
 	computeFinalWeight,
 	type DomainMessage,
-	type EnergyLevel,
 	extractDRSConfig,
 	extractTerritoryScorerConfig,
 	GREETING_MESSAGES,
@@ -42,9 +40,35 @@ import {
 	selectTerritoryWithColdStart,
 	TERRITORY_CATALOG,
 	type TerritoryId,
+	TerritoryIdSchema,
 	type TerritoryVisitHistory,
 } from "@workspace/domain";
+import { Schema } from "effect";
 import { Effect, Schedule } from "effect";
+
+/** Helper to create branded TerritoryId */
+const tid = (s: string): TerritoryId => Schema.decodeSync(TerritoryIdSchema)(s);
+
+/**
+ * Default cold-start territories — light-energy territories for the first
+ * few messages before scoring takes over. These are curated light-energy
+ * territories selected for broad appeal and low emotional stakes.
+ */
+const COLD_START_TERRITORIES: readonly TerritoryId[] = [
+	tid("creative-pursuits"),
+	tid("weekend-adventures"),
+	tid("social-circles"),
+] as const;
+
+/**
+ * Map ConversAnalyzer v1 energy level strings to continuous [0, 1] values.
+ * Used to bridge the old categorical output to the new continuous DRS input.
+ */
+const ENERGY_LEVEL_TO_VALUE: Record<string, number> = {
+	light: 0.25,
+	medium: 0.42,
+	heavy: 0.65,
+};
 
 /** Max user messages that count as cold start: 1 greeting + 1 opening question = 2 assistant msgs before user replies */
 const COLD_START_USER_MSG_THRESHOLD = GREETING_MESSAGES.length + 1;
@@ -97,23 +121,24 @@ function buildVisitHistory(
 }
 
 /**
- * Extract last N observed energy levels from user messages (most recent first).
+ * Extract last N observed energy values from user messages (most recent first).
  * Energy is a property of the user's words, extracted by ConversAnalyzer.
+ * Maps categorical energy levels (ConversAnalyzer v1) to continuous [0, 1] values.
  */
-function extractLastEnergyLevels(
+function extractLastEnergyValues(
 	userMessages: ReadonlyArray<{
 		observedEnergyLevel?: string | null;
 	}>,
 	count: number,
-): EnergyLevel[] {
-	const levels: EnergyLevel[] = [];
-	for (let i = userMessages.length - 1; i >= 0 && levels.length < count; i--) {
+): number[] {
+	const values: number[] = [];
+	for (let i = userMessages.length - 1; i >= 0 && values.length < count; i--) {
 		const msg = userMessages[i];
 		if (msg?.observedEnergyLevel) {
-			levels.push(msg.observedEnergyLevel as EnergyLevel);
+			values.push(ENERGY_LEVEL_TO_VALUE[msg.observedEnergyLevel] ?? 0.42);
 		}
 	}
-	return levels;
+	return values;
 }
 
 /**
@@ -221,14 +246,14 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				userMessages.map((m) => m.id),
 				3,
 			);
-			const lastEnergyLevels = extractLastEnergyLevels(userMessages, 3);
+			const lastEnergyValues = extractLastEnergyValues(userMessages, 3);
 
 			drsValue = computeDRS(
 				{
 					coveredFacets,
 					lastWordCounts,
 					lastEvidenceCounts,
-					lastEnergyLevels,
+					lastEnergyValues,
 				},
 				drsConfig,
 			);
@@ -313,7 +338,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		// Step 6: Call ConversAnalyzer (post-Nerin per FR16)
 		let pendingEvidence: ConversanalyzerOutput["evidence"] = [];
-		let observedEnergyLevel: EnergyLevel = "medium";
+		let observedEnergyLevel = "medium";
 
 		if (userMessageCount >= COLD_START_USER_MSG_THRESHOLD) {
 			const domainDistribution = aggregateDomainDistribution(existingEvidence);

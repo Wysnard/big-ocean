@@ -13,7 +13,13 @@ import * as ParseResult from "effect/ParseResult";
 import * as S from "effect/Schema";
 import { ALL_FACETS } from "../constants/big-five";
 import { LIFE_DOMAINS } from "../constants/life-domain";
-import { ENERGY_LEVELS } from "../types/territory";
+
+/**
+ * ConversAnalyzer v1 energy levels — categorical classification used by
+ * the existing ConversAnalyzer output schema. Will be replaced by
+ * EnergyBand (5-level) in ConversAnalyzer v2 (Story 2.1).
+ */
+const OBSERVED_ENERGY_LEVELS = ["light", "medium", "heavy"] as const;
 
 // ─── Per-item schema ─────────────────────────────────────────────────────────
 
@@ -32,7 +38,7 @@ export type EvidenceItem = S.Schema.Type<typeof EvidenceItemSchema>;
 
 export const EvidenceExtractionSchema = S.Struct({
 	evidence: S.Array(EvidenceItemSchema),
-	observedEnergyLevel: S.Literal(...ENERGY_LEVELS),
+	observedEnergyLevel: S.Literal(...OBSERVED_ENERGY_LEVELS),
 });
 
 export type EvidenceExtraction = S.Schema.Type<typeof EvidenceExtractionSchema>;
@@ -44,7 +50,7 @@ export const evidenceExtractionJsonSchema = JSONSchema.make(EvidenceExtractionSc
 
 const RawExtractionSchema = S.Struct({
 	evidence: S.Array(S.Unknown),
-	observedEnergyLevel: S.Literal(...ENERGY_LEVELS),
+	observedEnergyLevel: S.Literal(...OBSERVED_ENERGY_LEVELS),
 });
 
 /**

@@ -17,7 +17,7 @@ import {
 	type ConversanalyzerInput,
 	ConversanalyzerRepository,
 	decodeEvidenceExtraction,
-	type EnergyLevel,
+	type ObservedEnergyLevel,
 	evidenceExtractionJsonSchema,
 	FACET_PROMPT_DEFINITIONS,
 	LIFE_DOMAINS,
@@ -139,7 +139,7 @@ function mockAnalyze(): {
 		domain: string;
 		note: string;
 	}>;
-	observedEnergyLevel: EnergyLevel;
+	observedEnergyLevel: ObservedEnergyLevel;
 	tokenUsage: { input: number; output: number };
 } {
 	return {

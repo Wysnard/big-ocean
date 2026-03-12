@@ -5,6 +5,7 @@
  */
 
 export { extract4LetterCode, lookupArchetype } from "./archetype-lookup";
+export { mapEnergyBand, mapTellingBand } from "./band-mapping";
 export {
 	calculateConfidenceFromFacetScores,
 	calculateOverallConfidence,

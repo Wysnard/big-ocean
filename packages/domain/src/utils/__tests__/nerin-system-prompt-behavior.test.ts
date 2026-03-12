@@ -53,9 +53,9 @@ describe("buildChatSystemPrompt — behavior and steering", () => {
 			expect(prompt).toContain(territoryContent.opener);
 		});
 
-		it("includes energy level in the territory section", () => {
+		it("includes energy guidance level in the territory section", () => {
 			const prompt = buildChatSystemPrompt({ territoryPrompt: territoryContent });
-			expect(prompt).toContain(territoryContent.energyLevel);
+			expect(prompt).toContain(territoryContent.energyGuidanceLevel);
 		});
 
 		it("includes domain area in the territory section", () => {

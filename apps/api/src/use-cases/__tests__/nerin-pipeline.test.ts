@@ -332,7 +332,7 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
 				const invokeArgs = mockNerinRepo.invoke.mock.calls[0]?.[0];
 				expect(invokeArgs?.territoryPrompt).toBeDefined();
 				expect(invokeArgs?.territoryPrompt?.opener).toBeDefined();
-				expect(invokeArgs?.territoryPrompt?.energyLevel).toBeDefined();
+				expect(invokeArgs?.territoryPrompt?.energyGuidanceLevel).toBeDefined();
 				expect(invokeArgs?.territoryPrompt?.domains).toBeDefined();
 
 				// ConversAnalyzer should NOT be called during cold start

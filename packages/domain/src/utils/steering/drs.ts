@@ -1,15 +1,16 @@
 /**
- * Depth Readiness Score (DRS) — Story 21-2
+ * Depth Readiness Score (DRS) — Story 21-2, evolved Story 23-2
  *
  * The single metric driving conversation energy pacing.
  * Pure functions — no Effect dependencies. All configurable via DRSConfig.
  *
  * DRS = (breadthWeight * Breadth + engagementWeight * Engagement) * EnergyMultiplier
  *
+ * Evolved to use continuous expectedEnergy [0, 1] instead of categorical EnergyLevel.
+ *
  * See architecture-conversation-experience-evolution.md ADR-CEE-3 for full specification.
  */
 import type { AppConfigService } from "../../config/app-config";
-import type { EnergyLevel } from "../../types/territory";
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -48,8 +49,8 @@ export interface DRSInput {
 	readonly lastWordCounts: readonly number[];
 	/** Evidence counts per message for last N messages (most recent first) */
 	readonly lastEvidenceCounts: readonly number[];
-	/** Observed energy levels for last N messages (most recent first) */
-	readonly lastEnergyLevels: readonly EnergyLevel[];
+	/** Observed energy values for last N messages (most recent first), continuous [0, 1] */
+	readonly lastEnergyValues: readonly number[];
 }
 
 // ─── Utility ────────────────────────────────────────────────────────
@@ -97,23 +98,39 @@ export function computeEngagement(
 }
 
 /**
- * Energy multiplier: recency-weighted pressure from observed energy levels.
+ * Derive an energy weight from a continuous energy value using the
+ * configured light/medium/heavy weights. Uses linear interpolation:
+ * - [0, 0.38) maps from energyWeightLight toward energyWeightMedium
+ * - [0.38, 0.55) maps from energyWeightMedium toward energyWeightHeavy
+ * - [0.55, 1.0] maps from energyWeightMedium toward energyWeightHeavy
+ */
+function energyValueToWeight(energy: number, config: DRSConfig): number {
+	if (energy < 0.38) {
+		// Light range: interpolate from light to medium weight
+		const t = energy / 0.38;
+		return config.energyWeightLight + t * (config.energyWeightMedium - config.energyWeightLight);
+	}
+	if (energy < 0.55) {
+		// Medium range: interpolate from medium toward heavy
+		const t = (energy - 0.38) / (0.55 - 0.38);
+		return config.energyWeightMedium + t * (config.energyWeightHeavy - config.energyWeightMedium);
+	}
+	// Heavy range
+	return config.energyWeightHeavy;
+}
+
+/**
+ * Energy multiplier: recency-weighted pressure from observed energy values.
  * High pressure from heavy energy suppresses DRS, causing recovery via lighter topics.
  *
- * energyPressure = sum(recencyWeight[i] * energyWeight[level]) / maxPossiblePressure
+ * energyPressure = sum(recencyWeight[i] * energyWeight(value)) / maxPossiblePressure
  * EnergyMultiplier = clamp(1 - energyPressure, 0, 1)
  */
 export function computeEnergyMultiplier(
-	energyLevels: readonly EnergyLevel[],
+	energyValues: readonly number[],
 	config: DRSConfig,
 ): number {
-	if (energyLevels.length === 0) return 1;
-
-	const energyWeightMap: Record<EnergyLevel, number> = {
-		light: config.energyWeightLight,
-		medium: config.energyWeightMedium,
-		heavy: config.energyWeightHeavy,
-	};
+	if (energyValues.length === 0) return 1;
 
 	const maxEnergyWeight = Math.max(
 		config.energyWeightLight,
@@ -122,15 +139,15 @@ export function computeEnergyMultiplier(
 	);
 
 	// Use only the recency weights for available data
-	const usedRecencyWeights = config.recencyWeights.slice(0, energyLevels.length);
+	const usedRecencyWeights = config.recencyWeights.slice(0, energyValues.length);
 
 	let weightedSum = 0;
 	let maxPossiblePressure = 0;
 
-	for (let i = 0; i < energyLevels.length; i++) {
+	for (let i = 0; i < energyValues.length; i++) {
 		const recencyWeight = usedRecencyWeights[i] ?? 0;
-		const level = energyLevels[i] as EnergyLevel;
-		weightedSum += recencyWeight * energyWeightMap[level];
+		const eWeight = energyValueToWeight(energyValues[i]!, config);
+		weightedSum += recencyWeight * eWeight;
 		maxPossiblePressure += recencyWeight * maxEnergyWeight;
 	}
 
@@ -155,7 +172,7 @@ export function computeEnergyMultiplier(
 export function computeDRS(input: DRSInput, config: DRSConfig): number {
 	const breadth = computeBreadth(input.coveredFacets, config);
 	const engagement = computeEngagement(input.lastWordCounts, input.lastEvidenceCounts, config);
-	const energyMultiplier = computeEnergyMultiplier(input.lastEnergyLevels, config);
+	const energyMultiplier = computeEnergyMultiplier(input.lastEnergyValues, config);
 
 	const raw =
 		(config.breadthWeight * breadth + config.engagementWeight * engagement) * energyMultiplier;
@@ -166,22 +183,22 @@ export function computeDRS(input: DRSInput, config: DRSConfig): number {
 // ─── Energy Fit ─────────────────────────────────────────────────────
 
 /**
- * Compute energy fit for a territory given the current DRS.
- * Uses asymmetric curves so each energy level has a different DRS sweet spot.
+ * Compute energy fit for a territory given the current DRS and the
+ * territory's continuous expectedEnergy value.
  *
- * - lightFit: peaks at low DRS, falls off above lightFitCenter
- * - mediumFit: peaks around mediumFitCenter, symmetric falloff
- * - heavyFit: peaks at high DRS, starts above heavyFitCenter
+ * Derives a guidance level from expectedEnergy thresholds:
+ * - < 0.38 = light fit curve
+ * - < 0.55 = medium fit curve
+ * - >= 0.55 = heavy fit curve
  */
-export function computeEnergyFit(drs: number, energyLevel: EnergyLevel, config: DRSConfig): number {
-	switch (energyLevel) {
-		case "light":
-			return clamp((config.lightFitCenter - drs) / config.lightFitRange, 0, 1);
-		case "medium":
-			return 1 - clamp(Math.abs(drs - config.mediumFitCenter) / config.mediumFitRange, 0, 1);
-		case "heavy":
-			return clamp((drs - config.heavyFitCenter) / config.heavyFitRange, 0, 1);
+export function computeEnergyFit(drs: number, expectedEnergy: number, config: DRSConfig): number {
+	if (expectedEnergy < 0.38) {
+		return clamp((config.lightFitCenter - drs) / config.lightFitRange, 0, 1);
 	}
+	if (expectedEnergy < 0.55) {
+		return 1 - clamp(Math.abs(drs - config.mediumFitCenter) / config.mediumFitRange, 0, 1);
+	}
+	return clamp((drs - config.heavyFitCenter) / config.heavyFitRange, 0, 1);
 }
 
 // ─── Config Extraction ──────────────────────────────────────────────
