@@ -515,4 +515,12 @@ export {
 	type TerritoryPromptContent,
 	type TerritoryScorerConfig,
 	type TerritoryVisitHistory,
+	// Observation Focus Strength (Story 26-1)
+	computeContradictionStrength,
+	computeConvergenceStrength,
+	computeNoticingStrength,
+	computePerDomainConfidence,
+	computeRelateStrength,
+	computeSmoothedClarity,
+	OBSERVATION_FOCUS_CONSTANTS,
 } from "./utils/steering";
