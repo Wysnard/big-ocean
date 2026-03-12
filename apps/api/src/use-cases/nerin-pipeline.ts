@@ -48,8 +48,7 @@ import {
 	TerritoryIdSchema,
 	type TerritoryVisitHistory,
 } from "@workspace/domain";
-import { Schema } from "effect";
-import { Effect, Schedule } from "effect";
+import { Effect, Schedule, Schema } from "effect";
 
 /** Helper to create branded TerritoryId */
 const tid = (s: string): TerritoryId => Schema.decodeSync(TerritoryIdSchema)(s);
@@ -64,16 +63,6 @@ const COLD_START_TERRITORIES: readonly TerritoryId[] = [
 	tid("weekend-adventures"),
 	tid("social-circles"),
 ] as const;
-
-/**
- * Map ConversAnalyzer v1 energy level strings to continuous [0, 1] values.
- * Used to bridge the old categorical output to the new continuous DRS input.
- */
-const ENERGY_LEVEL_TO_VALUE: Record<string, number> = {
-	light: 0.25,
-	medium: 0.42,
-	heavy: 0.65,
-};
 
 /** Max user messages that count as cold start: 1 greeting + 1 opening question = 2 assistant msgs before user replies */
 const COLD_START_USER_MSG_THRESHOLD = GREETING_MESSAGES.length + 1;
@@ -125,21 +114,20 @@ function buildVisitHistory(
 }
 
 /**
- * Extract last N observed energy values from user messages (most recent first).
- * Energy is a property of the user's words, extracted by ConversAnalyzer.
- * Maps categorical energy levels (ConversAnalyzer v1) to continuous [0, 1] values.
+ * Extract last N observed energy values from exchange records (most recent first).
+ * Energy is stored as a continuous [0, 1] value on the exchange.
  */
 function extractLastEnergyValues(
-	userMessages: ReadonlyArray<{
-		observedEnergyLevel?: string | null;
+	exchanges: ReadonlyArray<{
+		energy?: number | null;
 	}>,
 	count: number,
 ): number[] {
 	const values: number[] = [];
-	for (let i = userMessages.length - 1; i >= 0 && values.length < count; i--) {
-		const msg = userMessages[i];
-		if (msg?.observedEnergyLevel) {
-			values.push(ENERGY_LEVEL_TO_VALUE[msg.observedEnergyLevel] ?? 0.42);
+	for (let i = exchanges.length - 1; i >= 0 && values.length < count; i--) {
+		const exchange = exchanges[i];
+		if (exchange?.energy != null) {
+			values.push(exchange.energy);
 		}
 	}
 	return values;
@@ -253,7 +241,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				userMessages.map((m) => m.id),
 				3,
 			);
-			const lastEnergyValues = extractLastEnergyValues(userMessages, 3);
+			const lastEnergyValues = extractLastEnergyValues(previousExchanges, 3);
 
 			drsValue = computeDRS(
 				{
