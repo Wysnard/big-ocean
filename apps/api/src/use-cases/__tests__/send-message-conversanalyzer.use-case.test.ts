@@ -178,7 +178,13 @@ describe("sendMessage Use Case", () => {
 								note: "Giving",
 							},
 						],
-						observedEnergyLevel: "medium" as const,
+						userState: {
+							energyBand: "steady" as const,
+							tellingBand: "mixed" as const,
+							energyReason: "",
+							tellingReason: "",
+							withinMessageShift: false,
+						},
 						tokenUsage: { input: 200, output: 50 },
 					}),
 				);
@@ -202,8 +208,14 @@ describe("sendMessage Use Case", () => {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockConversanalyzerRepo.analyze.mockReturnValue(
 					Effect.succeed({
+						userState: {
+							energyBand: "low" as const,
+							tellingBand: "mixed" as const,
+							energyReason: "",
+							tellingReason: "",
+							withinMessageShift: false,
+						},
 						evidence: [],
-						observedEnergyLevel: "light" as const,
 						tokenUsage: { input: 100, output: 20 },
 					}),
 				);

@@ -141,12 +141,14 @@ export {
 } from "./repositories/assessment-result.repository";
 // Repository interfaces (ports in hexagonal architecture)
 export { AssessmentSessionRepository } from "./repositories/assessment-session.repository";
-// Conversanalyzer repository (Story 10.2)
+// Conversanalyzer repository (Story 10.2, v2 Story 24-1)
 export {
 	ConversanalyzerError,
 	type ConversanalyzerInput,
 	type ConversanalyzerOutput,
 	ConversanalyzerRepository,
+	type ConversanalyzerUserState,
+	type ConversanalyzerV2Output,
 	type ObservedEnergyLevel,
 } from "./repositories/conversanalyzer.repository";
 // Conversation evidence repository (Story 10.1)
@@ -255,6 +257,17 @@ export {
 } from "./schemas/assessment-message";
 // Big Five name schemas — typed literal schemas for TraitName and FacetName
 export { FacetNameSchema, TraitNameSchema } from "./schemas/big-five-schemas";
+// ConversAnalyzer v2 extraction schemas (Story 24-1)
+export {
+	type ConversanalyzerV2Extraction,
+	ConversanalyzerV2ToolOutput,
+	conversanalyzerV2JsonSchema,
+	decodeConversanalyzerV2Lenient,
+	decodeConversanalyzerV2Strict,
+	LenientConversanalyzerV2ToolOutput,
+	type UserState,
+	UserStateSchema,
+} from "./schemas/conversanalyzer-v2-extraction";
 // Evidence extraction schemas — ConversAnalyzer structured output with lenient filtering
 export {
 	decodeEvidenceExtraction,

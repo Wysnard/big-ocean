@@ -1,16 +1,16 @@
 /**
- * Mock: conversanalyzer.anthropic.repository.ts
+ * Mock: conversanalyzer.anthropic.repository.ts (v2)
  * Vitest auto-resolves when tests call:
  *   vi.mock('@workspace/infrastructure/repositories/conversanalyzer.anthropic.repository')
  *
- * Returns deterministic evidence balanced across domains/facets.
- * Story 10.2
+ * Returns deterministic v2 output with userState + evidence.
+ * Story 10.2 (v1), Story 24-1 (v2 evolution)
  */
 import {
 	ConversanalyzerError,
 	type ConversanalyzerInput,
-	type ConversanalyzerOutput,
 	ConversanalyzerRepository,
+	type ConversanalyzerV2Output,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
@@ -28,8 +28,15 @@ export const _resetMockState = () => {
 /** Read-only access for test assertions */
 export const _getMockCalls = () => [...calls];
 
-/** Default deterministic evidence — 2 balanced records, zero token usage (v2 format) */
-const defaultOutput: ConversanalyzerOutput = {
+/** Default deterministic v2 output — steady/mixed state, 2 balanced evidence records */
+const defaultOutput: ConversanalyzerV2Output = {
+	userState: {
+		energyBand: "steady",
+		tellingBand: "mixed",
+		energyReason: "Engaged with moderate self-reflection",
+		tellingReason: "Follows prompts with some self-direction",
+		withinMessageShift: false,
+	},
 	evidence: [
 		{
 			bigfiveFacet: "imagination",
@@ -48,15 +55,14 @@ const defaultOutput: ConversanalyzerOutput = {
 			note: "Indicates baseline trust in social interactions",
 		},
 	],
-	observedEnergyLevel: "medium",
 	tokenUsage: { input: 0, output: 0 },
 };
 
 /** Override the mock output for specific tests */
-let overrideOutput: ConversanalyzerOutput | null = null;
+let overrideOutput: ConversanalyzerV2Output | null = null;
 let overrideError: string | null = null;
 
-export const _setMockOutput = (output: ConversanalyzerOutput) => {
+export const _setMockOutput = (output: ConversanalyzerV2Output) => {
 	overrideOutput = output;
 };
 
@@ -68,6 +74,14 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.succeed(
 	ConversanalyzerRepository,
 	ConversanalyzerRepository.of({
 		analyze: (params: ConversanalyzerInput) => {
+			_callCount++;
+			calls.push(params);
+			if (overrideError) {
+				return Effect.fail(new ConversanalyzerError({ message: overrideError }));
+			}
+			return Effect.succeed(overrideOutput ?? defaultOutput);
+		},
+		analyzeLenient: (params: ConversanalyzerInput) => {
 			_callCount++;
 			calls.push(params);
 			if (overrideError) {
