@@ -1,8 +1,11 @@
 /**
- * Assessment Message Territory Metadata Tests (Story 21-6)
+ * Assessment Message Exchange Metadata Tests (Story 23-3)
  *
- * Verifies that saveMessage handles territoryId and observedEnergyLevel
- * parameters correctly, both with and without the new fields.
+ * Verifies that saveMessage handles exchangeId parameter correctly,
+ * both with and without the optional exchange link.
+ *
+ * Replaces old territory/energy metadata tests (Story 21-6) —
+ * territory and energy now live on assessment_exchange.
  */
 import { vi } from "vitest";
 
@@ -18,49 +21,29 @@ import { describe, expect, it } from "vitest";
 
 const TestLayer = AssessmentMessageDrizzleRepositoryLive;
 
-describe("Assessment Message Territory Metadata", () => {
+describe("Assessment Message Exchange Metadata (Story 23-3)", () => {
 	beforeEach(() => {
 		_resetMockState();
 	});
 
-	it("saves assistant message with territory metadata", async () => {
+	it("saves message with exchange_id", async () => {
 		const program = Effect.gen(function* () {
 			const repo = yield* AssessmentMessageRepository;
 			const msg = yield* repo.saveMessage(
 				"session-1",
 				"assistant",
 				"Tell me about your work",
-				undefined,
-				"creative-pursuits",
+				"exchange-abc",
 			);
 			return msg;
 		});
 
 		const result = await Effect.runPromise(Effect.provide(program, TestLayer));
 
-		expect(result.territoryId).toBe("creative-pursuits");
+		expect(result.exchangeId).toBe("exchange-abc");
 	});
 
-	it("saves user message with observed energy level", async () => {
-		const program = Effect.gen(function* () {
-			const repo = yield* AssessmentMessageRepository;
-			const msg = yield* repo.saveMessage(
-				"session-1",
-				"user",
-				"I love hiking in the mountains",
-				"user-1",
-				undefined,
-				"medium",
-			);
-			return msg;
-		});
-
-		const result = await Effect.runPromise(Effect.provide(program, TestLayer));
-
-		expect(result.observedEnergyLevel).toBe("medium");
-	});
-
-	it("saves message without territory metadata (backward compatible)", async () => {
+	it("saves message without exchange_id (null)", async () => {
 		const program = Effect.gen(function* () {
 			const repo = yield* AssessmentMessageRepository;
 			const msg = yield* repo.saveMessage("session-1", "assistant", "Tell me more");
@@ -69,15 +52,14 @@ describe("Assessment Message Territory Metadata", () => {
 
 		const result = await Effect.runPromise(Effect.provide(program, TestLayer));
 
-		expect(result.territoryId).toBeNull();
-		expect(result.observedEnergyLevel).toBeNull();
+		expect(result.exchangeId).toBeNull();
 	});
 
-	it("retrieves messages with territory and energy metadata", async () => {
+	it("retrieves messages with exchange metadata", async () => {
 		const program = Effect.gen(function* () {
 			const repo = yield* AssessmentMessageRepository;
-			yield* repo.saveMessage("session-2", "user", "I think...", "user-1", undefined, "heavy");
-			yield* repo.saveMessage("session-2", "assistant", "Response 1", undefined, "social-dynamics");
+			yield* repo.saveMessage("session-2", "user", "I think...", "exchange-1");
+			yield* repo.saveMessage("session-2", "assistant", "Response 1", "exchange-1");
 			const messages = yield* repo.getMessages("session-2");
 			return messages;
 		});
@@ -85,21 +67,19 @@ describe("Assessment Message Territory Metadata", () => {
 		const result = await Effect.runPromise(Effect.provide(program, TestLayer));
 
 		expect(result).toHaveLength(2);
-		// User message has energy
-		expect(result[0]?.observedEnergyLevel).toBe("heavy");
-		// Assistant message has territory
-		expect(result[1]?.territoryId).toBe("social-dynamics");
+		expect(result[0]?.exchangeId).toBe("exchange-1");
+		expect(result[1]?.exchangeId).toBe("exchange-1");
 	});
 
-	it("user messages without energy have null metadata", async () => {
+	it("user messages without exchange have null exchangeId", async () => {
 		const program = Effect.gen(function* () {
 			const repo = yield* AssessmentMessageRepository;
-			const msg = yield* repo.saveMessage("session-3", "user", "Hello", "user-1");
+			const msg = yield* repo.saveMessage("session-3", "user", "Hello");
 			return msg;
 		});
 
 		const result = await Effect.runPromise(Effect.provide(program, TestLayer));
 
-		expect(result.observedEnergyLevel).toBeNull();
+		expect(result.exchangeId).toBeNull();
 	});
 });

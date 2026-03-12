@@ -123,6 +123,12 @@ export {
 	type AnalysisTarget,
 	AnalyzerRepository,
 } from "./repositories/analyzer.repository";
+// Assessment exchange repository (Story 23-3)
+export {
+	type AssessmentExchangeRecord,
+	AssessmentExchangeRepository,
+	type AssessmentExchangeUpdateInput,
+} from "./repositories/assessment-exchange.repository";
 export { AssessmentMessageRepository } from "./repositories/assessment-message.repository";
 // Assessment result repository (Story 11.2)
 export {
@@ -354,7 +360,7 @@ export type {
 	TerritoryScorerOutput,
 	TerritorySelectorOutput,
 } from "./types/pacing";
-// Pacing pipeline types (Story 23-1, 23-2)
+// Pacing pipeline types (Story 23-1, 23-2, 23-3)
 export {
 	CONVERSATIONAL_INTENTS,
 	type ConversationalIntent,
@@ -365,6 +371,13 @@ export {
 	TELLING_BANDS,
 	type TellingBand,
 } from "./types/pacing";
+// Pacing pipeline types — Story 23-3 additions
+export type {
+	ExtractionTier,
+	SelectionRule,
+	SessionPhase,
+	TransitionType,
+} from "./types/pacing-pipeline.types";
 // Portrait rating types (Story 19-2)
 export type {
 	DepthSignalLevel,

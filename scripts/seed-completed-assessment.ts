@@ -448,7 +448,6 @@ const seedProgram = Effect.gen(function* () {
 			.insert(assessmentMessage)
 			.values({
 				sessionId: sessionRecord.id,
-				userId,
 				role: msg.role,
 				content: msg.content,
 			})

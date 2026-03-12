@@ -3,11 +3,15 @@
  *
  * Tests the full pipeline: territory steering -> Nerin -> ConversAnalyzer -> save.
  * Uses vi.fn() mock pattern from send-message.fixtures.ts.
+ *
+ * Story 23-3: Updated to use AssessmentExchangeRepository for pipeline state.
+ * Messages no longer carry territoryId/observedEnergyLevel.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "@effect/vitest";
 import {
 	AppConfig,
+	AssessmentExchangeRepository,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	ConversanalyzerError,
@@ -42,6 +46,12 @@ const mockMessageRepo = {
 	saveMessage: vi.fn(),
 	getMessages: vi.fn(),
 	getMessageCount: vi.fn(),
+};
+
+const mockExchangeRepo = {
+	create: vi.fn(),
+	update: vi.fn(),
+	findBySession: vi.fn(),
 };
 
 const mockLoggerRepo = {
@@ -106,6 +116,32 @@ const mockConversanalyzerOutput = {
 	tokenUsage: { input: 200, output: 50 },
 };
 
+const mockExchangeRecord = {
+	id: "exchange_1",
+	sessionId: "session_test_123",
+	turnNumber: 1,
+	energy: null,
+	energyBand: null,
+	telling: null,
+	tellingBand: null,
+	withinMessageShift: null,
+	stateNotes: null,
+	extractionTier: null,
+	smoothedEnergy: null,
+	comfort: null,
+	drain: null,
+	drainCeiling: null,
+	eTarget: null,
+	scorerOutput: null,
+	selectedTerritory: null,
+	selectionRule: null,
+	governorOutput: null,
+	governorDebug: null,
+	sessionPhase: null,
+	transitionType: null,
+	createdAt: new Date(),
+};
+
 /** Cold-start messages: 2 assistant greetings + 1 user reply (userMessageCount = 1, < threshold 3) */
 const coldStartMessages = [
 	{
@@ -131,14 +167,13 @@ const coldStartMessages = [
 	},
 ];
 
-/** Post-cold-start messages: 3+ user messages with territory metadata on assistant messages, energy on user messages */
+/** Post-cold-start messages: 3+ user messages (no territory/energy metadata on messages) */
 const postColdStartMessages = [
 	{
 		id: "msg_1",
 		sessionId: "session_test_123",
 		role: "assistant" as const,
 		content: "Hi! I'm Nerin.",
-		territoryId: "daily-routines",
 		createdAt: new Date(),
 	},
 	{
@@ -146,7 +181,6 @@ const postColdStartMessages = [
 		sessionId: "session_test_123",
 		role: "user" as const,
 		content: "Hello there",
-		observedEnergyLevel: "light",
 		createdAt: new Date(),
 	},
 	{
@@ -154,7 +188,6 @@ const postColdStartMessages = [
 		sessionId: "session_test_123",
 		role: "assistant" as const,
 		content: "Tell me more about your mornings.",
-		territoryId: "daily-routines",
 		createdAt: new Date(),
 	},
 	{
@@ -162,7 +195,6 @@ const postColdStartMessages = [
 		sessionId: "session_test_123",
 		role: "user" as const,
 		content: "I usually wake up early and go for a run before work",
-		observedEnergyLevel: "medium",
 		createdAt: new Date(),
 	},
 	{
@@ -170,7 +202,6 @@ const postColdStartMessages = [
 		sessionId: "session_test_123",
 		role: "assistant" as const,
 		content: "That sounds like a solid routine.",
-		territoryId: "creative-pursuits",
 		createdAt: new Date(),
 	},
 	{
@@ -178,7 +209,6 @@ const postColdStartMessages = [
 		sessionId: "session_test_123",
 		role: "user" as const,
 		content: "I also like painting on weekends",
-		observedEnergyLevel: "light",
 		createdAt: new Date(),
 	},
 	{
@@ -186,7 +216,6 @@ const postColdStartMessages = [
 		sessionId: "session_test_123",
 		role: "assistant" as const,
 		content: "Creative expression is fascinating.",
-		territoryId: "weekend-adventures",
 		createdAt: new Date(),
 	},
 	{
@@ -195,6 +224,31 @@ const postColdStartMessages = [
 		role: "user" as const,
 		content: "I work in tech and enjoy solving complex problems",
 		createdAt: new Date(),
+	},
+];
+
+/** Post-cold-start exchange records with territory/energy data */
+const postColdStartExchanges = [
+	{
+		...mockExchangeRecord,
+		id: "ex_1",
+		turnNumber: 1,
+		selectedTerritory: "daily-routines",
+		energyBand: "light",
+	},
+	{
+		...mockExchangeRecord,
+		id: "ex_2",
+		turnNumber: 2,
+		selectedTerritory: "daily-routines",
+		energyBand: "medium",
+	},
+	{
+		...mockExchangeRecord,
+		id: "ex_3",
+		turnNumber: 3,
+		selectedTerritory: "creative-pursuits",
+		energyBand: "light",
 	},
 ];
 
@@ -266,6 +320,7 @@ const createTestLayer = () =>
 		Layer.succeed(AppConfig, mockConfig),
 		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
 		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
+		Layer.succeed(AssessmentExchangeRepository, mockExchangeRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
 		Layer.succeed(NerinAgentRepository, mockNerinRepo),
 		Layer.succeed(ConversanalyzerRepository, mockConversanalyzerRepo),
@@ -288,6 +343,10 @@ function setupDefaultMocks() {
 	);
 	mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
 
+	mockExchangeRepo.create.mockReturnValue(Effect.succeed(mockExchangeRecord));
+	mockExchangeRepo.update.mockReturnValue(Effect.succeed(mockExchangeRecord));
+	mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed([]));
+
 	mockLoggerRepo.info.mockImplementation(() => {});
 	mockLoggerRepo.error.mockImplementation(() => {});
 	mockLoggerRepo.warn.mockImplementation(() => {});
@@ -306,7 +365,7 @@ function setupDefaultMocks() {
 	mockCostGuardRepo.checkMessageRateLimit.mockReturnValue(Effect.void);
 }
 
-describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
+describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7, updated 23-3)", () => {
 	beforeEach(() => {
 		setupDefaultMocks();
 	});
@@ -340,32 +399,34 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect(
-			"saves user message with observed_energy_level and assistant message with territory_id",
-			() =>
-				Effect.gen(function* () {
-					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
+		it.effect("creates exchange and saves messages with exchange_id", () =>
+			Effect.gen(function* () {
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
 
-					yield* runNerinPipeline({
-						sessionId: "session_test_123",
-						userMessage: "Hello",
-					});
+				yield* runNerinPipeline({
+					sessionId: "session_test_123",
+					userMessage: "Hello",
+				});
 
-					// saveMessage is called twice: once for user, once for assistant
-					expect(mockMessageRepo.saveMessage).toHaveBeenCalledTimes(2);
+				// Exchange should be created
+				expect(mockExchangeRepo.create).toHaveBeenCalledTimes(1);
+				expect(mockExchangeRepo.create).toHaveBeenCalledWith("session_test_123", 1);
 
-					// User message (first call) should have observedEnergyLevel
-					const userSaveCall = mockMessageRepo.saveMessage.mock.calls[0];
-					expect(userSaveCall?.[1]).toBe("user"); // role
-					// During cold start, observedEnergyLevel defaults to "medium"
-					expect(userSaveCall?.[5]).toBe("medium"); // observedEnergyLevel
+				// Exchange should be updated with territory selection
+				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
 
-					// Assistant message (second call) should have territory_id but no energy
-					const assistantSaveCall = mockMessageRepo.saveMessage.mock.calls[1];
-					expect(assistantSaveCall?.[1]).toBe("assistant"); // role
-					expect(assistantSaveCall?.[4]).toBeDefined(); // territoryId (5th arg, 0-indexed 4)
-					expect(assistantSaveCall?.[5]).toBeUndefined(); // no observedEnergyLevel
-				}).pipe(Effect.provide(createTestLayer())),
+				// saveMessage is called twice: once for user, once for assistant
+				expect(mockMessageRepo.saveMessage).toHaveBeenCalledTimes(2);
+
+				// Both messages should be linked to exchange
+				const userSaveCall = mockMessageRepo.saveMessage.mock.calls[0];
+				expect(userSaveCall?.[1]).toBe("user");
+				expect(userSaveCall?.[3]).toBe("exchange_1"); // exchangeId
+
+				const assistantSaveCall = mockMessageRepo.saveMessage.mock.calls[1];
+				expect(assistantSaveCall?.[1]).toBe("assistant");
+				expect(assistantSaveCall?.[3]).toBe("exchange_1"); // exchangeId
+			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
@@ -373,6 +434,7 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
 		it.effect("runs full territory steering + ConversAnalyzer", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
 				mockEvidenceRepo.findBySession.mockReturnValue(
 					Effect.succeed([
 						{
@@ -407,33 +469,11 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
 
 				// Evidence should be saved
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
+
+				// Exchange should be created and updated
+				expect(mockExchangeRepo.create).toHaveBeenCalledTimes(1);
+				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
 			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect(
-			"stores observed_energy_level on user message and territory_id on assistant message",
-			() =>
-				Effect.gen(function* () {
-					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-
-					yield* runNerinPipeline({
-						sessionId: "session_test_123",
-						userMessage: "I work in tech",
-					});
-
-					// User message (first call) should have observedEnergyLevel
-					const userSaveCall = mockMessageRepo.saveMessage.mock.calls[0];
-					expect(userSaveCall?.[1]).toBe("user");
-					// observedEnergyLevel should be "medium" (from mock ConversAnalyzer)
-					expect(userSaveCall?.[5]).toBe("medium");
-
-					// Assistant message (second call) should have territory_id but no energy
-					const assistantSaveCall = mockMessageRepo.saveMessage.mock.calls[1];
-					expect(assistantSaveCall?.[1]).toBe("assistant");
-					expect(typeof assistantSaveCall?.[4]).toBe("string");
-					expect(assistantSaveCall?.[4]).toBeTruthy();
-					expect(assistantSaveCall?.[5]).toBeUndefined();
-				}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
@@ -441,6 +481,7 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
 		it.effect("logs DRS, territory selected, and evidence count for post-cold-start", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
 
 				yield* runNerinPipeline({
 					sessionId: "session_test_123",
@@ -467,6 +508,7 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
 				expect(processedData).toHaveProperty("observedEnergyLevel");
 				expect(processedData).toHaveProperty("drs");
 				expect(processedData).toHaveProperty("evidenceCount");
+				expect(processedData).toHaveProperty("exchangeId");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
@@ -475,6 +517,7 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
 		it.effect("handles ConversAnalyzer failure non-fatally", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
 				mockConversanalyzerRepo.analyze.mockReturnValue(
 					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
 				);
@@ -492,10 +535,6 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
 
 				// Evidence should NOT be saved (no evidence extracted)
 				expect(mockEvidenceRepo.save).not.toHaveBeenCalled();
-
-				// User message should have default energy level
-				const userSaveCall = mockMessageRepo.saveMessage.mock.calls[0];
-				expect(userSaveCall?.[5]).toBe("medium");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
@@ -504,6 +543,7 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7)", () => {
 		it.effect("preserves existing evidence extraction unchanged", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
 
 				yield* runNerinPipeline({
 					sessionId: "session_test_123",

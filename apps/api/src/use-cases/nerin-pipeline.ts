@@ -4,6 +4,10 @@
  * Replaces the old facet-targeted steering with territory-based conversation steering.
  * Clean cut migration -- no backward compatibility shim or feature flag.
  *
+ * Story 23-3: Refactored to use assessment_exchange for per-turn state storage.
+ * Territory, energy level, and other pipeline metadata now stored on exchange rows
+ * instead of message columns.
+ *
  * 8-step orchestration:
  * 1. computeDRS() -- depth readiness from coverage, engagement, energy history
  * 2. scoreAllTerritories() -- rank territories by coverage, energy fit, freshness
@@ -12,11 +16,12 @@
  * 5. callNerin() -- invoke Nerin with territory-contextualized prompt
  * 6. callConversAnalyzer() -- analyze current exchange for evidence + energy
  * 7. saveEvidence() -- persist extracted evidence
- * 8. saveExchangeMetadata() -- store territory_id and observed_energy_level
+ * 8. saveExchangeMetadata() -- store pipeline state on assessment_exchange
  */
 
 import {
 	AppConfig,
+	AssessmentExchangeRepository,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	aggregateDomainDistribution,
@@ -43,8 +48,7 @@ import {
 	TerritoryIdSchema,
 	type TerritoryVisitHistory,
 } from "@workspace/domain";
-import { Schema } from "effect";
-import { Effect, Schedule } from "effect";
+import { Effect, Schedule, Schema } from "effect";
 
 /** Helper to create branded TerritoryId */
 const tid = (s: string): TerritoryId => Schema.decodeSync(TerritoryIdSchema)(s);
@@ -59,16 +63,6 @@ const COLD_START_TERRITORIES: readonly TerritoryId[] = [
 	tid("weekend-adventures"),
 	tid("social-circles"),
 ] as const;
-
-/**
- * Map ConversAnalyzer v1 energy level strings to continuous [0, 1] values.
- * Used to bridge the old categorical output to the new continuous DRS input.
- */
-const ENERGY_LEVEL_TO_VALUE: Record<string, number> = {
-	light: 0.25,
-	medium: 0.42,
-	heavy: 0.65,
-};
 
 /** Max user messages that count as cold start: 1 greeting + 1 opening question = 2 assistant msgs before user replies */
 const COLD_START_USER_MSG_THRESHOLD = GREETING_MESSAGES.length + 1;
@@ -87,55 +81,53 @@ export interface NerinPipelineOutput {
 // ---- Helpers ----
 
 /**
- * Build territory visit history from previous assistant messages.
- * Messages without territory_id (pre-territory-steering) are skipped.
+ * Build territory visit history from previous exchange records.
+ * Exchanges without selectedTerritory are skipped.
  */
 function buildVisitHistory(
-	assistantMessages: ReadonlyArray<{
-		territoryId?: string | null;
+	exchanges: ReadonlyArray<{
+		selectedTerritory?: string | null;
+		turnNumber: number;
 	}>,
 ): TerritoryVisitHistory {
 	const visits = new Map<TerritoryId, { visitCount: number; lastVisitExchange: number }>();
 
-	let exchangeIndex = 0;
-	for (const msg of assistantMessages) {
-		if (msg.territoryId) {
-			const tid = msg.territoryId as TerritoryId;
+	for (const exchange of exchanges) {
+		if (exchange.selectedTerritory) {
+			const tid = exchange.selectedTerritory as TerritoryId;
 			const existing = visits.get(tid);
 			if (existing) {
 				visits.set(tid, {
 					visitCount: existing.visitCount + 1,
-					lastVisitExchange: exchangeIndex,
+					lastVisitExchange: exchange.turnNumber,
 				});
 			} else {
 				visits.set(tid, {
 					visitCount: 1,
-					lastVisitExchange: exchangeIndex,
+					lastVisitExchange: exchange.turnNumber,
 				});
 			}
 		}
-		exchangeIndex++;
 	}
 
 	return visits;
 }
 
 /**
- * Extract last N observed energy values from user messages (most recent first).
- * Energy is a property of the user's words, extracted by ConversAnalyzer.
- * Maps categorical energy levels (ConversAnalyzer v1) to continuous [0, 1] values.
+ * Extract last N observed energy values from exchange records (most recent first).
+ * Energy is stored as a continuous [0, 1] value on the exchange.
  */
 function extractLastEnergyValues(
-	userMessages: ReadonlyArray<{
-		observedEnergyLevel?: string | null;
+	exchanges: ReadonlyArray<{
+		energy?: number | null;
 	}>,
 	count: number,
 ): number[] {
 	const values: number[] = [];
-	for (let i = userMessages.length - 1; i >= 0 && values.length < count; i--) {
-		const msg = userMessages[i];
-		if (msg?.observedEnergyLevel) {
-			values.push(ENERGY_LEVEL_TO_VALUE[msg.observedEnergyLevel] ?? 0.42);
+	for (let i = exchanges.length - 1; i >= 0 && values.length < count; i--) {
+		const exchange = exchanges[i];
+		if (exchange?.energy != null) {
+			values.push(exchange.energy);
 		}
 	}
 	return values;
@@ -195,6 +187,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const config = yield* AppConfig;
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
+		const exchangeRepo = yield* AssessmentExchangeRepository;
 		const logger = yield* LoggerRepository;
 		const nerin = yield* NerinAgentRepository;
 		const conversanalyzer = yield* ConversanalyzerRepository;
@@ -208,6 +201,9 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		// Get all messages for context (does NOT include current user message)
 		const previousMessages = yield* messageRepo.getMessages(input.sessionId);
 
+		// Get previous exchanges for pipeline state
+		const previousExchanges = yield* exchangeRepo.findBySession(input.sessionId);
+
 		// Map DB entities to domain messages + append current user message in-memory
 		const domainMessages: DomainMessage[] = [
 			...previousMessages.map((msg) => ({
@@ -220,7 +216,6 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		// Partition messages by role
 		const userMessages = previousMessages.filter((m) => m.role === "user");
-		const assistantMessages = previousMessages.filter((m) => m.role === "assistant");
 		const userMessageCount = userMessages.length;
 
 		// Get existing evidence for DRS/scoring
@@ -246,7 +241,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				userMessages.map((m) => m.id),
 				3,
 			);
-			const lastEnergyValues = extractLastEnergyValues(userMessages, 3);
+			const lastEnergyValues = extractLastEnergyValues(previousExchanges, 3);
 
 			drsValue = computeDRS(
 				{
@@ -259,8 +254,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			);
 
 			// Step 2: Score all territories
-			const visitHistory = buildVisitHistory(assistantMessages);
-			const currentExchange = assistantMessages.length;
+			const visitHistory = buildVisitHistory(previousExchanges);
+			const currentExchange = previousExchanges.length;
 
 			const scoredTerritories = scoreAllTerritories(
 				TERRITORY_CATALOG,
@@ -424,14 +419,22 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			dateKey: getUTCDateKey(),
 		});
 
-		// Step 7: Save evidence atomically
+		// Create exchange row for this turn
+		const turnNumber = previousExchanges.length + 1;
+		const exchange = yield* exchangeRepo.create(input.sessionId, turnNumber);
+
+		// Update exchange with pipeline state
+		yield* exchangeRepo.update(exchange.id, {
+			selectedTerritory: selectedTerritoryId as string,
+			selectionRule: userMessageCount < COLD_START_USER_MSG_THRESHOLD ? "cold_start" : "argmax",
+		});
+
+		// Step 7: Save messages and evidence atomically
 		const savedUserMessage = yield* messageRepo.saveMessage(
 			input.sessionId,
 			"user",
 			input.userMessage,
-			input.userId,
-			undefined, // territoryId (user messages don't have one)
-			observedEnergyLevel,
+			exchange.id,
 		);
 
 		if (pendingEvidence.length > 0) {
@@ -444,14 +447,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			);
 		}
 
-		// Step 8: Save assistant message with territory metadata
-		yield* messageRepo.saveMessage(
-			input.sessionId,
-			"assistant",
-			result.response,
-			undefined, // userId
-			selectedTerritoryId as string,
-		);
+		// Save assistant message linked to same exchange
+		yield* messageRepo.saveMessage(input.sessionId, "assistant", result.response, exchange.id);
 
 		// Increment message_count atomically
 		const messageCount = yield* sessionRepo.incrementMessageCount(input.sessionId);
@@ -474,6 +471,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			observedEnergyLevel,
 			drs: +drsValue.toFixed(3),
 			evidenceCount: pendingEvidence.length,
+			exchangeId: exchange.id,
 		});
 
 		return {

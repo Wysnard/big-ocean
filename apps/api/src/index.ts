@@ -16,6 +16,7 @@ import { AppConfig } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import {
 	AppConfigLive,
+	AssessmentExchangeDrizzleRepositoryLive,
 	AssessmentResultDrizzleRepositoryLive,
 	BetterAuthLive,
 	BetterAuthService,
@@ -146,6 +147,7 @@ const CostGuardLayer = CostGuardRedisRepositoryLive.pipe(
 const RepositoryLayers = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
 	AssessmentMessageDrizzleRepositoryLive,
+	AssessmentExchangeDrizzleRepositoryLive,
 	AssessmentResultDrizzleRepositoryLive,
 	ConversationEvidenceDrizzleRepositoryLive,
 	ConversanalyzerAnthropicRepositoryLive,

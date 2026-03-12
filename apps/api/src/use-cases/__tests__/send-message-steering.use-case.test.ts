@@ -15,6 +15,7 @@ import {
 	createTestLayer,
 	mockConversanalyzerRepo,
 	mockEvidenceRepo,
+	mockExchangeRepo,
 	mockMessageRepo,
 	mockNerinRepo,
 	mockNerinResponse,
@@ -82,7 +83,7 @@ describe("sendMessage Use Case", () => {
 		);
 
 		it.effect(
-			"should save observed_energy_level on user message and territory_id on assistant message",
+			"should save messages with exchange_id and store territory on exchange (Story 23-3)",
 			() =>
 				Effect.gen(function* () {
 					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
@@ -110,16 +111,23 @@ describe("sendMessage Use Case", () => {
 
 					const saveMessageCalls = mockMessageRepo.saveMessage.mock.calls;
 
-					// User message should have observedEnergyLevel
+					// Both user and assistant messages should have exchangeId (4th arg)
 					const userSaveCall = saveMessageCalls.find((call: unknown[]) => call[1] === "user");
 					expect(userSaveCall).toBeDefined();
-					expect(userSaveCall?.[5]).toBeDefined(); // observedEnergyLevel (6th positional arg)
+					expect(userSaveCall?.[3]).toBeDefined(); // exchangeId
 
-					// Assistant message should have territory_id but no observedEnergyLevel
 					const assistantSaveCall = saveMessageCalls.find((call: unknown[]) => call[1] === "assistant");
 					expect(assistantSaveCall).toBeDefined();
-					expect(assistantSaveCall?.[4]).toBeDefined(); // territoryId (5th positional arg)
-					expect(assistantSaveCall?.[5]).toBeUndefined(); // no observedEnergyLevel
+					expect(assistantSaveCall?.[3]).toBeDefined(); // exchangeId
+
+					// Exchange should be updated with territory selection
+					expect(mockExchangeRepo.update).toHaveBeenCalledWith(
+						expect.any(String),
+						expect.objectContaining({
+							selectedTerritory: expect.any(String),
+							selectionRule: expect.any(String),
+						}),
+					);
 				}).pipe(Effect.provide(createTestLayer())),
 		);
 

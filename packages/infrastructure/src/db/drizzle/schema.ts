@@ -33,6 +33,7 @@ import {
 	jsonb,
 	pgEnum,
 	pgTable,
+	real,
 	smallint,
 	text,
 	timestamp,
@@ -189,11 +190,73 @@ export const assessmentSession = pgTable(
 	],
 );
 
+// ─── Assessment Exchange (Story 23-3 — per-turn pipeline state) ────────────
+
+/**
+ * Assessment Exchange
+ *
+ * One row per conversation turn, storing all pipeline state:
+ * extraction metrics, pacing values, scorer output, territory selection,
+ * governor output/debug, and derived annotations.
+ *
+ * This is the single source of truth for pipeline replay / derive-at-read.
+ */
+export const assessmentExchange = pgTable(
+	"assessment_exchange",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		sessionId: uuid("session_id")
+			.notNull()
+			.references(() => assessmentSession.id, { onDelete: "cascade" }),
+		turnNumber: smallint("turn_number").notNull(),
+
+		// Extraction
+		energy: real("energy"),
+		energyBand: text("energy_band"),
+		telling: real("telling"),
+		tellingBand: text("telling_band"),
+		withinMessageShift: boolean("within_message_shift"),
+		stateNotes: jsonb("state_notes"),
+		extractionTier: smallint("extraction_tier"),
+
+		// Pacing
+		smoothedEnergy: real("smoothed_energy"),
+		comfort: real("comfort"),
+		drain: real("drain"),
+		drainCeiling: real("drain_ceiling"),
+		eTarget: real("e_target"),
+
+		// Scoring
+		scorerOutput: jsonb("scorer_output"),
+
+		// Selection
+		selectedTerritory: text("selected_territory"),
+		selectionRule: text("selection_rule"),
+
+		// Governor
+		governorOutput: jsonb("governor_output"),
+		governorDebug: jsonb("governor_debug"),
+
+		// Derived
+		sessionPhase: text("session_phase"),
+		transitionType: text("transition_type"),
+
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("assessment_exchange_session_id_idx").on(table.sessionId),
+		uniqueIndex("assessment_exchange_session_turn_unique").on(table.sessionId, table.turnNumber),
+	],
+);
+
 /**
  * Assessment Messages
  *
  * Stores conversation history for each assessment session.
- * territory_id tracks which territory the assistant message was steering toward.
+ * exchange_id links to the pipeline exchange that produced this message.
+ *
+ * Story 23-3: Dropped territory_id, observed_energy_level, user_id
+ * (territory/energy now live on assessment_exchange; userId derivable from session).
  */
 export const assessmentMessage = pgTable(
 	"assessment_message",
@@ -202,11 +265,11 @@ export const assessmentMessage = pgTable(
 		sessionId: uuid("session_id")
 			.notNull()
 			.references(() => assessmentSession.id, { onDelete: "cascade" }),
-		userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+		exchangeId: uuid("exchange_id").references(() => assessmentExchange.id, {
+			onDelete: "set null",
+		}),
 		role: text("role").notNull(),
 		content: text("content").notNull(),
-		territoryId: text("territory_id"),
-		observedEnergyLevel: text("observed_energy_level"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => [index("assessment_message_session_created_idx").on(table.sessionId, table.createdAt)],
@@ -229,6 +292,9 @@ export const conversationEvidence = pgTable(
 		assessmentMessageId: uuid("assessment_message_id")
 			.notNull()
 			.references(() => assessmentMessage.id, { onDelete: "cascade" }),
+		exchangeId: uuid("exchange_id").references(() => assessmentExchange.id, {
+			onDelete: "set null",
+		}),
 		bigfiveFacet: bigfiveFacetNameEnum("bigfive_facet").notNull(),
 		deviation: smallint("deviation").notNull(),
 		strength: evidenceStrengthEnum("strength").notNull(),
@@ -495,6 +561,7 @@ export const relations = defineRelations(
 		account,
 		verification,
 		assessmentSession,
+		assessmentExchange,
 		assessmentMessage,
 		conversationEvidence,
 		assessmentResults,
@@ -511,7 +578,6 @@ export const relations = defineRelations(
 			sessions: r.many.session(),
 			accounts: r.many.account(),
 			assessmentSession: r.many.assessmentSession(),
-			assessmentMessage: r.many.assessmentMessage(),
 			publicProfiles: r.many.publicProfile(),
 			purchaseEvents: r.many.purchaseEvents(),
 			sentInvitations: r.many.relationshipInvitations({
@@ -536,19 +602,28 @@ export const relations = defineRelations(
 				from: r.assessmentSession.userId,
 				to: r.user.id,
 			}),
+			exchanges: r.many.assessmentExchange(),
 			assessmentMessages: r.many.assessmentMessage(),
 			conversationEvidence: r.many.conversationEvidence(),
 			assessmentResults: r.many.assessmentResults(),
 			publicProfile: r.many.publicProfile(),
+		},
+		assessmentExchange: {
+			session: r.one.assessmentSession({
+				from: r.assessmentExchange.sessionId,
+				to: r.assessmentSession.id,
+			}),
+			messages: r.many.assessmentMessage(),
+			evidence: r.many.conversationEvidence(),
 		},
 		assessmentMessage: {
 			session: r.one.assessmentSession({
 				from: r.assessmentMessage.sessionId,
 				to: r.assessmentSession.id,
 			}),
-			user: r.one.user({
-				from: r.assessmentMessage.userId,
-				to: r.user.id,
+			exchange: r.one.assessmentExchange({
+				from: r.assessmentMessage.exchangeId,
+				to: r.assessmentExchange.id,
 			}),
 			conversationEvidence: r.many.conversationEvidence(),
 		},
@@ -560,6 +635,10 @@ export const relations = defineRelations(
 			message: r.one.assessmentMessage({
 				from: r.conversationEvidence.assessmentMessageId,
 				to: r.assessmentMessage.id,
+			}),
+			exchange: r.one.assessmentExchange({
+				from: r.conversationEvidence.exchangeId,
+				to: r.assessmentExchange.id,
 			}),
 		},
 		assessmentResults: {

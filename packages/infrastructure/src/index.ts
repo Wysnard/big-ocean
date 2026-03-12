@@ -23,6 +23,8 @@ export * as dbSchema from "./db/drizzle/schema";
 // Analyzer repository implementations
 export { AnalyzerClaudeRepositoryLive } from "./repositories/analyzer.claude.repository";
 export { AnalyzerMockRepositoryLive } from "./repositories/analyzer.mock.repository";
+// Assessment exchange repository implementation (Story 23-3)
+export { AssessmentExchangeDrizzleRepositoryLive } from "./repositories/assessment-exchange.drizzle.repository";
 // Message repository implementation
 export { AssessmentMessageDrizzleRepositoryLive } from "./repositories/assessment-message.drizzle.repository";
 // Assessment result repository implementation (Story 11.2)
