@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-06 (refreshed 14 — Epic 21 complete, story 21-7 merged)
+generated: 2026-03-12 (refreshed 15 — Phase 5 Conversation Pacing Pipeline added, Epics 23-27)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -371,3 +371,87 @@ development_status:
   22-2-relate-reflect-and-story-pulling-patterns: done
   22-3-contradiction-surfacing-migration-to-portrait-generator: done
   epic-22-retrospective: optional
+
+# ═══════════════════════════════════════════════════════════════
+# PHASE 5: Conversation Pacing Pipeline
+# ═══════════════════════════════════════════════════════════════
+# Source: _bmad-output/planning-artifacts/epics-conversation-pacing.md
+# Architecture: _bmad-output/planning-artifacts/architecture-conversation-pacing.md
+# Six-layer pipeline: energy/telling extraction, adaptive pacing (E_target),
+# unified territory scoring (5-term formula), observation gating,
+# Move Governor, and modular prompt composition (3-tier)
+# Evolves Phase 4 territory-based steering into full conversational intelligence
+#
+# NUMBERING: Continues from Phase 4 (23+).
+# Cross-reference: epics-conversation-pacing.md "Epic N" = sprint-status "Epic N+22"
+#   Pacing Epic 1 (Conversation State Foundation) = Epic 23
+#   Pacing Epic 2 (User State Extraction) = Epic 24
+#   Pacing Epic 3 (Adaptive Pacing & Territory Scoring) = Epic 25
+#   Pacing Epic 4 (Conversational Intelligence) = Epic 26
+#   Pacing Epic 5 (Prompt Composition & Pipeline Integration) = Epic 27
+
+  # ───────────────────────────────────────────────────────────────
+  # PACING EPIC 1: Conversation State Foundation (Epic 23)
+  # Pipeline domain types, territory catalog evolution (25 territories),
+  # assessment_exchange table, band-to-numeric mapping
+  # Stories: 1.1-1.3 in epics-conversation-pacing.md
+  # ───────────────────────────────────────────────────────────────
+  epic-23: backlog
+  23-1-pipeline-domain-types: backlog
+  23-2-territory-catalog-evolution-and-band-mapping: backlog
+  23-3-exchange-table-and-schema-migration: backlog
+  epic-23-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # PACING EPIC 2: User State Extraction — ConversAnalyzer v2 (Epic 24)
+  # Dual extraction (energy+telling+evidence), strict/lenient schemas,
+  # three-tier retry (strict×3 → lenient×1 → neutral defaults)
+  # Stories: 2.1-2.2 in epics-conversation-pacing.md
+  # Depends on: Epic 23
+  # ───────────────────────────────────────────────────────────────
+  epic-24: backlog
+  24-1-conversanalyzer-v2-schemas-and-repository-methods: backlog
+  24-2-three-tier-extraction-pipeline: backlog
+  epic-24-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # PACING EPIC 3: Adaptive Pacing & Territory Scoring (Epic 25)
+  # E_target 8-step pacing formula, 5-term territory scorer,
+  # territory selector (3 code paths), conversation skew, cold-start
+  # Stories: 3.1-3.3 in epics-conversation-pacing.md
+  # Depends on: Epic 23
+  # Parallel with: Epic 24, Epic 26
+  # ───────────────────────────────────────────────────────────────
+  epic-25: backlog
+  25-1-e-target-pacing-formula: backlog
+  25-2-territory-scorer: backlog
+  25-3-territory-selector: backlog
+  epic-25-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # PACING EPIC 4: Conversational Intelligence — Governor & Observations (Epic 26)
+  # ObservationFocus strength formulas, observation gating & competition,
+  # Move Governor (intent + entry pressure + gating → PromptBuilderInput)
+  # Stories: 4.1-4.3 in epics-conversation-pacing.md
+  # Depends on: Epic 23
+  # Parallel with: Epic 24, Epic 25
+  # ───────────────────────────────────────────────────────────────
+  epic-26: backlog
+  26-1-observation-focus-strength-formulas-and-per-domain-confidence: backlog
+  26-2-observation-gating-and-competition: backlog
+  26-3-move-governor: backlog
+  epic-26-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # PACING EPIC 5: Prompt Composition & Pipeline Integration (Epic 27)
+  # Character bible decomposition (CHAT_CONTEXT → modular tiers),
+  # Prompt Builder (3-tier composition), 15-step pipeline wiring
+  # Stories: 5.1-5.3 in epics-conversation-pacing.md
+  # Depends on: Epics 24, 25, 26
+  # Note: Story 27-1 (character bible) is independently deployable
+  # ───────────────────────────────────────────────────────────────
+  epic-27: backlog
+  27-1-character-bible-decomposition: backlog
+  27-2-prompt-builder: backlog
+  27-3-pipeline-integration: backlog
+  epic-27-retrospective: optional
