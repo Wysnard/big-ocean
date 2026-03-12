@@ -1,4 +1,4 @@
-import { AssessmentMessageEntity } from "@workspace/domain/entities/message.entity";
+import type { AssessmentMessageEntity } from "@workspace/domain/entities/message.entity";
 import { Context, Effect } from "effect";
 import { DatabaseError } from "../errors/http.errors";
 
@@ -7,6 +7,9 @@ import { DatabaseError } from "../errors/http.errors";
  *
  * Service interface for message persistence operations.
  * Follows official Effect pattern from https://effect.website/docs/requirements-management/services/
+ *
+ * Story 23-3: Simplified saveMessage signature — removed userId, territoryId, observedEnergyLevel
+ * (these now live on assessment_exchange). Added optional exchangeId.
  */
 export class AssessmentMessageRepository extends Context.Tag("AssessmentMessageRepository")<
 	AssessmentMessageRepository,
@@ -17,18 +20,14 @@ export class AssessmentMessageRepository extends Context.Tag("AssessmentMessageR
 		 * @param sessionId - Session identifier
 		 * @param role - Message sender role ('user' | 'assistant')
 		 * @param content - Message content
-		 * @param userId - Optional user ID for user messages
-		 * @param territoryId - Optional territory ID snapshot (assistant messages, Story 21-6)
-		 * @param observedEnergyLevel - Optional observed energy level from ConversAnalyzer (user messages)
+		 * @param exchangeId - Optional exchange ID linking to assessment_exchange
 		 * @returns Effect with created message entity
 		 */
 		readonly saveMessage: (
 			sessionId: string,
 			role: "user" | "assistant",
 			content: string,
-			userId?: string,
-			territoryId?: string,
-			observedEnergyLevel?: string,
+			exchangeId?: string,
 		) => Effect.Effect<AssessmentMessageEntity, DatabaseError, never>;
 
 		/**

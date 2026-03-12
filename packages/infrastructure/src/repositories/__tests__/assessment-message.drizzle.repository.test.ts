@@ -1,7 +1,9 @@
 /**
  * Assessment Message Repository Tests
  *
- * Verifies saveMessage → getMessages round-trip using the in-memory mock.
+ * Verifies saveMessage -> getMessages round-trip using the in-memory mock.
+ *
+ * Story 23-3: Updated for simplified saveMessage signature (no userId/territoryId/observedEnergyLevel).
  */
 import { vi } from "vitest";
 
@@ -22,11 +24,11 @@ describe("AssessmentMessageRepository — round-trip", () => {
 		_resetMockState();
 	});
 
-	it.effect("should persist and retrieve territoryId on assistant messages", () =>
+	it.effect("should persist and retrieve exchangeId on messages", () =>
 		Effect.gen(function* () {
 			const repo = yield* AssessmentMessageRepository;
 
-			yield* repo.saveMessage("session-1", "assistant", "Hello!", undefined, "creative-pursuits");
+			yield* repo.saveMessage("session-1", "assistant", "Hello!", "exchange-1");
 
 			const messages = yield* repo.getMessages("session-1");
 			expect(messages).toHaveLength(1);
@@ -34,11 +36,11 @@ describe("AssessmentMessageRepository — round-trip", () => {
 			const msg = messages[0];
 			expect(msg).toBeDefined();
 			expect(msg?.role).toBe("assistant");
-			expect(msg?.territoryId).toBe("creative-pursuits");
+			expect(msg?.exchangeId).toBe("exchange-1");
 		}).pipe(Effect.provide(TestLayer)),
 	);
 
-	it.effect("should return null territoryId when not provided", () =>
+	it.effect("should return null exchangeId when not provided", () =>
 		Effect.gen(function* () {
 			const repo = yield* AssessmentMessageRepository;
 
@@ -47,7 +49,7 @@ describe("AssessmentMessageRepository — round-trip", () => {
 			const messages = yield* repo.getMessages("session-1");
 			const msg = messages[0];
 			expect(msg).toBeDefined();
-			expect(msg?.territoryId).toBeNull();
+			expect(msg?.exchangeId).toBeNull();
 		}).pipe(Effect.provide(TestLayer)),
 	);
 
@@ -55,15 +57,15 @@ describe("AssessmentMessageRepository — round-trip", () => {
 		Effect.gen(function* () {
 			const repo = yield* AssessmentMessageRepository;
 
-			yield* repo.saveMessage("session-1", "user", "Hello", "user-123");
-			yield* repo.saveMessage("session-1", "assistant", "Hi!", undefined, "social-dynamics");
+			yield* repo.saveMessage("session-1", "user", "Hello");
+			yield* repo.saveMessage("session-1", "assistant", "Hi!", "exchange-1");
 
 			const messages = yield* repo.getMessages("session-1");
 			expect(messages).toHaveLength(2);
 			expect(messages[0]?.role).toBe("user");
 			expect(messages[1]?.role).toBe("assistant");
 
-			expect(messages[1]?.territoryId).toBe("social-dynamics");
+			expect(messages[1]?.exchangeId).toBe("exchange-1");
 		}).pipe(Effect.provide(TestLayer)),
 	);
 });

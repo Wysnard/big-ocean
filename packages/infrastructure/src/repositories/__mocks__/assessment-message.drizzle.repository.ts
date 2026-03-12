@@ -2,6 +2,8 @@
  * Mock: assessment-message.drizzle.repository.ts
  * Vitest auto-resolves when tests call:
  *   vi.mock('@workspace/infrastructure/repositories/assessment-message.drizzle.repository')
+ *
+ * Story 23-3: Simplified to match new saveMessage signature (no userId/territoryId/observedEnergyLevel).
  */
 import { AssessmentMessageRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
@@ -13,9 +15,7 @@ const messages = new Map<
 		sessionId: string;
 		role: string;
 		content: string;
-		userId?: string;
-		territoryId?: string | null;
-		observedEnergyLevel?: string | null;
+		exchangeId?: string | null;
 		createdAt: Date;
 	}>
 >();
@@ -30,9 +30,7 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.succeed(
 			sessionId: string,
 			role: "user" | "assistant",
 			content: string,
-			userId?: string,
-			territoryId?: string,
-			observedEnergyLevel?: string,
+			exchangeId?: string,
 		) =>
 			Effect.sync(() => {
 				const id = `msg_${crypto.randomUUID().slice(0, 8)}`;
@@ -41,9 +39,7 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.succeed(
 					sessionId,
 					role,
 					content,
-					userId,
-					territoryId: territoryId ?? null,
-					observedEnergyLevel: observedEnergyLevel ?? null,
+					exchangeId: exchangeId ?? null,
 					createdAt: new Date(),
 				};
 				const existing = messages.get(sessionId) || [];

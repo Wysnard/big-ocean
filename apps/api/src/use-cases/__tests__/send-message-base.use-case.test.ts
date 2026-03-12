@@ -53,42 +53,36 @@ describe("sendMessage Use Case", () => {
 				});
 
 				// User message is now saved inside the pipeline, after Nerin succeeds
+				// Story 23-3: saveMessage now takes (sessionId, role, content, exchangeId?)
 				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
 					"session_test_123",
 					"user",
 					"Tell me something",
-					"user_456",
-					undefined, // territoryId
-					expect.any(String), // observedEnergyLevel
+					expect.any(String), // exchangeId
 				);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect(
-			"should save user message with observed_energy_level and assistant with territory_id (Story 21-7)",
-			() =>
-				Effect.gen(function* () {
-					yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
+		it.effect("should save messages with exchange_id and create exchange record (Story 23-3)", () =>
+			Effect.gen(function* () {
+				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
 
-					// User message should have observedEnergyLevel
-					expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
-						"session_test_123",
-						"user",
-						"Test",
-						undefined, // userId
-						undefined, // territoryId
-						expect.any(String), // observedEnergyLevel
-					);
+				// User message linked to exchange
+				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
+					"session_test_123",
+					"user",
+					"Test",
+					expect.any(String), // exchangeId
+				);
 
-					// Assistant message should have territory_id but no energy
-					expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
-						"session_test_123",
-						"assistant",
-						mockNerinResponse.response,
-						undefined, // userId
-						expect.any(String), // territoryId
-					);
-				}).pipe(Effect.provide(createTestLayer())),
+				// Assistant message linked to same exchange
+				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
+					"session_test_123",
+					"assistant",
+					mockNerinResponse.response,
+					expect.any(String), // exchangeId
+				);
+			}).pipe(Effect.provide(createTestLayer())),
 		);
 
 		it.effect("should invoke Nerin with territory prompt (Story 21-7)", () =>

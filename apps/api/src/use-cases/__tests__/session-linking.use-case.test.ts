@@ -19,10 +19,12 @@ vi.mock("@workspace/infrastructure/repositories/assessment-message.drizzle.repos
 vi.mock("@workspace/infrastructure/repositories/conversanalyzer.anthropic.repository");
 vi.mock("@workspace/infrastructure/repositories/conversation-evidence.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/cost-guard.redis.repository");
+vi.mock("@workspace/infrastructure/repositories/assessment-exchange.drizzle.repository");
 
 import { describe, expect, it } from "@effect/vitest";
 import {
 	AppConfig,
+	AssessmentExchangeRepository,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	ConversanalyzerRepository,
@@ -31,6 +33,7 @@ import {
 	LoggerRepository,
 	NerinAgentRepository,
 } from "@workspace/domain";
+import { AssessmentExchangeDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-exchange.drizzle.repository";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
 import { ConversanalyzerAnthropicRepositoryLive } from "@workspace/infrastructure/repositories/conversanalyzer.anthropic.repository";
@@ -124,6 +127,7 @@ const MockConfigLive = Layer.succeed(AppConfig, {
 type TestServices =
 	| AssessmentSessionRepository
 	| AssessmentMessageRepository
+	| AssessmentExchangeRepository
 	| ConversanalyzerRepository
 	| ConversationEvidenceRepository
 	| CostGuardRepository
@@ -136,6 +140,7 @@ type TestServices =
 const TestLayer = Layer.mergeAll(
 	AssessmentSessionDrizzleRepositoryLive,
 	AssessmentMessageDrizzleRepositoryLive,
+	AssessmentExchangeDrizzleRepositoryLive,
 	ConversanalyzerAnthropicRepositoryLive,
 	ConversationEvidenceDrizzleRepositoryLive,
 	CostGuardRedisRepositoryLive,

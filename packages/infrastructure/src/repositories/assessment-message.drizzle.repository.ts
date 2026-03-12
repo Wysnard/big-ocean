@@ -3,11 +3,8 @@
  *
  * Manages message persistence for assessment conversations.
  *
- * Follows Effect Service Pattern:
- * - Context.Tag for service definition (in domain)
- * - Layer.effect for implementation with DI
- * - Dependencies resolved during layer construction
- * - Uses MessageRepository.of({...}) for proper service implementation
+ * Story 23-3: Simplified to remove userId, territoryId, observedEnergyLevel.
+ * Added optional exchangeId FK to assessment_exchange.
  */
 
 import { DatabaseError } from "@workspace/contracts/errors";
@@ -19,38 +16,27 @@ import { Effect, Layer, Schema } from "effect";
 import { Database } from "../context/database";
 import { assessmentMessage } from "../db/drizzle/schema";
 
-/**
- * Message Repository Layer - Receives database and logger through DI
- *
- * Layer type: Layer<MessageRepository, never, Database | LoggerRepository>
- * Dependencies resolved during layer construction, not at service level.
- */
 export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 	AssessmentMessageRepository,
 	Effect.gen(function* () {
-		// Receive dependencies through DI during layer construction
 		const db = yield* Database;
 		const logger = yield* LoggerRepository;
 
-		// Return service implementation using .of() pattern
 		return AssessmentMessageRepository.of({
-			saveMessage: (sessionId, role, content, userId, territoryId, observedEnergyLevel) =>
+			saveMessage: (sessionId, role, content, exchangeId) =>
 				Effect.gen(function* () {
 					const [message] = yield* db
 						.insert(assessmentMessage)
 						.values({
 							sessionId,
-							userId: role === "user" ? (userId ?? null) : null,
 							role,
 							content,
-							territoryId: territoryId ?? null,
-							observedEnergyLevel: observedEnergyLevel ?? null,
+							exchangeId: exchangeId ?? null,
 							createdAt: new Date(),
 						})
 						.returning()
 						.pipe(
 							Effect.mapError((error) => {
-								// Log technical details before throwing (safe - wrapped in try-catch)
 								try {
 									logger.error("Database operation failed", {
 										operation: "saveMessage",
@@ -59,7 +45,6 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 										stack: error instanceof Error ? error.stack : undefined,
 									});
 								} catch (logError) {
-									// Silently ignore logger failures - don't let logging prevent error handling
 									console.error("Logger failed in error handler:", logError);
 								}
 
@@ -77,7 +62,6 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 								error: "Insert returned no result",
 							});
 						} catch (logError) {
-							// Silently ignore logger failures - don't let logging prevent error handling
 							console.error("Logger failed:", logError);
 						}
 
@@ -90,7 +74,6 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 
 					return yield* Schema.decodeUnknown(AssessmentMessageEntitySchema)(message).pipe(
 						Effect.mapError((error) => {
-							// Log technical details before throwing (safe - wrapped in try-catch)
 							try {
 								logger.error("Database operation failed", {
 									operation: "saveMessage",
@@ -98,7 +81,6 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 									error: `Schema parse error: ${error}`,
 								});
 							} catch (logError) {
-								// Silently ignore logger failures - don't let logging prevent error handling
 								console.error("Logger failed in error handler:", logError);
 							}
 
@@ -118,7 +100,6 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 						.orderBy(asc(assessmentMessage.createdAt))
 						.pipe(
 							Effect.mapError((error) => {
-								// Log technical details before throwing (safe - wrapped in try-catch)
 								try {
 									logger.error("Database operation failed", {
 										operation: "getMessages",
@@ -127,7 +108,6 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 										stack: error instanceof Error ? error.stack : undefined,
 									});
 								} catch (logError) {
-									// Silently ignore logger failures - don't let logging prevent error handling
 									console.error("Logger failed in error handler:", logError);
 								}
 
@@ -141,7 +121,6 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 						Schema.mutable(Schema.Array(AssessmentMessageEntitySchema)),
 					)(messages).pipe(
 						Effect.mapError((error) => {
-							// Log technical details before throwing (safe - wrapped in try-catch)
 							try {
 								logger.error("Database operation failed", {
 									operation: "getMessages",
@@ -149,7 +128,6 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 									error: `Schema parse error: ${error}`,
 								});
 							} catch (logError) {
-								// Silently ignore logger failures - don't let logging prevent error handling
 								console.error("Logger failed in error handler:", logError);
 							}
 
@@ -162,14 +140,12 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 
 			getMessageCount: (sessionId) =>
 				Effect.gen(function* () {
-					// Count messages for session
 					const result = yield* db
 						.select({ count: sql<number>`cast(count(*) as int)` })
 						.from(assessmentMessage)
 						.where(eq(assessmentMessage.sessionId, sessionId))
 						.pipe(
 							Effect.mapError((error) => {
-								// Log technical details before throwing (safe - wrapped in try-catch)
 								try {
 									logger.error("Database operation failed", {
 										operation: "getMessageCount",
@@ -178,7 +154,6 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 										stack: error instanceof Error ? error.stack : undefined,
 									});
 								} catch (logError) {
-									// Silently ignore logger failures - don't let logging prevent error handling
 									console.error("Logger failed in error handler:", logError);
 								}
 

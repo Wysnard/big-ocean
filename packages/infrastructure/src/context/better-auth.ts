@@ -188,17 +188,8 @@ export const BetterAuthLive = Layer.effect(
 						return;
 					}
 
-					// Backfill historical user-authored messages in that session.
-					await tx
-						.update(authSchema.assessmentMessage)
-						.set({ userId })
-						.where(
-							and(
-								eq(authSchema.assessmentMessage.sessionId, anonymousSessionId),
-								eq(authSchema.assessmentMessage.role, "user"),
-								isNull(authSchema.assessmentMessage.userId),
-							),
-						);
+					// Story 23-3: userId column removed from assessment_message.
+					// User ownership is now derived from the session, not the message.
 				});
 
 				logger.info(

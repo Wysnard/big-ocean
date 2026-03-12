@@ -6,6 +6,7 @@
 
 import {
 	AppConfig,
+	AssessmentExchangeRepository,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	ConversanalyzerRepository,
@@ -59,6 +60,12 @@ export const mockEvidenceRepo = {
 	save: vi.fn(),
 	findBySession: vi.fn(),
 	countByMessage: vi.fn(),
+};
+
+export const mockExchangeRepo = {
+	create: vi.fn(),
+	update: vi.fn(),
+	findBySession: vi.fn(),
 };
 
 export const mockCostGuardRepo = {
@@ -256,11 +263,38 @@ export const mockConfig = {
 	territoryColdStartThreshold: 3,
 };
 
+export const mockExchangeRecord = {
+	id: "exchange_1",
+	sessionId: "session_test_123",
+	turnNumber: 1,
+	energy: null,
+	energyBand: null,
+	telling: null,
+	tellingBand: null,
+	withinMessageShift: null,
+	stateNotes: null,
+	extractionTier: null,
+	smoothedEnergy: null,
+	comfort: null,
+	drain: null,
+	drainCeiling: null,
+	eTarget: null,
+	scorerOutput: null,
+	selectedTerritory: null,
+	selectionRule: null,
+	governorOutput: null,
+	governorDebug: null,
+	sessionPhase: null,
+	transitionType: null,
+	createdAt: new Date(),
+};
+
 export const createTestLayer = () =>
 	Layer.mergeAll(
 		Layer.succeed(AppConfig, mockConfig),
 		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
 		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
+		Layer.succeed(AssessmentExchangeRepository, mockExchangeRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
 		Layer.succeed(NerinAgentRepository, mockNerinRepo),
 		Layer.succeed(ConversanalyzerRepository, mockConversanalyzerRepo),
@@ -288,6 +322,10 @@ export function setupDefaultMocks() {
 		}),
 	);
 	mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
+
+	mockExchangeRepo.create.mockReturnValue(Effect.succeed(mockExchangeRecord));
+	mockExchangeRepo.update.mockReturnValue(Effect.succeed(mockExchangeRecord));
+	mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed([]));
 
 	mockLoggerRepo.info.mockImplementation(() => {});
 	mockLoggerRepo.error.mockImplementation(() => {});
