@@ -4,20 +4,10 @@ Generated: 2026-03-12
 > Epic 6 (Privacy/GDPR) excluded — deferred to Phase 2 EU launch.
 > Epic 20 (Evidence Review) deferred — evidence already has messageId FK.
 > Phases 1-4 complete. Phase 5 (Conversation Pacing Pipeline) is the active work.
+> Step 1 (Epic 23 — Foundation Layer) complete. 3 PRs merged 2026-03-12.
 
-## Step 1: Foundation Layer (Epic 23)
-| Story | Mode | Notes |
-|-------|------|-------|
-| 23-1-pipeline-domain-types | parallel | Pure types, no runtime deps |
-| 23-2-territory-catalog-evolution-and-band-mapping | parallel | Evolves existing catalog + adds mapping fns |
-| 23-3-exchange-table-and-schema-migration | sequential(after: 23-1) | Uses new types; creates DB table + repo interface/impl |
-
-**Gate:** All stories above must be done before proceeding.
-
-**Conflict Notes:**
-- 23-1 and 23-2 both touch `packages/domain/src/` but different files (types/ vs constants/ + utils/)
-- 23-3 depends on types from 23-1 (EnergyBand, TellingBand, etc.) for the exchange table columns and repo interface
-- 23-3 touches schema.ts (infrastructure) and adds new repo files — no conflict with 23-1/23-2
+## ~~Step 1: Foundation Layer (Epic 23)~~ DONE
+All 3 stories merged: 23-1, 23-2, 23-3 (PRs #121, #122, #123).
 
 ## Step 2: Parallel Processing Layers (Epics 24, 25, 26)
 | Story | Mode | Notes |
@@ -81,8 +71,8 @@ Generated: 2026-03-12
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **5 steps** to deliver Phase 5 Conversation Pacing Pipeline
-- **14 stories** across 5 epics (23-27)
+- **4 remaining steps** to deliver Phase 5 Conversation Pacing Pipeline (Step 1 complete)
+- **11 stories remaining** across 4 epics (24-27)
 - **Max parallelism:** Step 2 (4 stories simultaneously)
-- **Critical path:** 23-1 → 25-1 → 25-3 → 26-3 → 27-2 → 27-3 (6 stories, longest sequential chain)
+- **Critical path:** 25-1 → 25-3 → 26-3 → 27-2 → 27-3 (5 stories, longest sequential chain)
 - **Independent opportunity:** 27-1 (character bible) can start as early as Step 2 but placed in Step 4 for simplicity; could be pulled forward if needed
