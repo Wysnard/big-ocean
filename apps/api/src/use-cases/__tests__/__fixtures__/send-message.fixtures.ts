@@ -54,6 +54,7 @@ export const mockNerinRepo = {
 
 export const mockConversanalyzerRepo = {
 	analyze: vi.fn(),
+	analyzeLenient: vi.fn(),
 };
 
 export const mockEvidenceRepo = {
@@ -175,6 +176,13 @@ export const mockNerinResponse = {
 };
 
 export const mockConversanalyzerOutput = {
+	userState: {
+		energyBand: "steady" as const,
+		tellingBand: "mixed" as const,
+		energyReason: "Engaged with moderate self-reflection",
+		tellingReason: "Follows prompts with some self-direction",
+		withinMessageShift: false,
+	},
 	evidence: [
 		{
 			bigfiveFacet: "imagination" as const,
@@ -193,7 +201,6 @@ export const mockConversanalyzerOutput = {
 			note: "Trusting nature",
 		},
 	],
-	observedEnergyLevel: "medium" as const,
 	tokenUsage: { input: 200, output: 50 },
 };
 
@@ -335,6 +342,7 @@ export function setupDefaultMocks() {
 	mockNerinRepo.invoke.mockReturnValue(Effect.succeed(mockNerinResponse));
 
 	mockConversanalyzerRepo.analyze.mockReturnValue(Effect.succeed(mockConversanalyzerOutput));
+	mockConversanalyzerRepo.analyzeLenient.mockReturnValue(Effect.succeed(mockConversanalyzerOutput));
 
 	mockEvidenceRepo.save.mockReturnValue(Effect.succeed(undefined));
 	mockEvidenceRepo.findBySession.mockReturnValue(Effect.succeed([]));

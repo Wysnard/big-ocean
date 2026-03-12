@@ -69,7 +69,13 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 								note: "Creative",
 							},
 						],
-						observedEnergyLevel: "medium" as const,
+						userState: {
+							energyBand: "steady" as const,
+							tellingBand: "mixed" as const,
+							energyReason: "",
+							tellingReason: "",
+							withinMessageShift: false,
+						},
 						tokenUsage: { input: 200, output: 50 },
 					}),
 				);
@@ -151,7 +157,13 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 								note: "Assertive",
 							},
 						],
-						observedEnergyLevel: "medium" as const,
+						userState: {
+							energyBand: "steady" as const,
+							tellingBand: "mixed" as const,
+							energyReason: "",
+							tellingReason: "",
+							withinMessageShift: false,
+						},
 						tokenUsage: { input: 200, output: 50 },
 					}),
 				);
@@ -187,7 +199,13 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 								note: "Curious",
 							},
 						],
-						observedEnergyLevel: "medium" as const,
+						userState: {
+							energyBand: "steady" as const,
+							tellingBand: "mixed" as const,
+							energyReason: "",
+							tellingReason: "",
+							withinMessageShift: false,
+						},
 						tokenUsage: { input: 200, output: 50 },
 					}),
 				);

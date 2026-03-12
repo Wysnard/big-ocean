@@ -27,8 +27,8 @@ import {
 	aggregateDomainDistribution,
 	buildFacetEvidenceCounts,
 	buildTerritoryPrompt,
-	type ConversanalyzerOutput,
 	ConversanalyzerRepository,
+	type ConversanalyzerV2Output,
 	ConversationEvidenceRepository,
 	CostGuardRepository,
 	calculateCost,
@@ -331,13 +331,25 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				),
 			);
 
-		// Step 6: Call ConversAnalyzer (post-Nerin per FR16)
-		let pendingEvidence: ConversanalyzerOutput["evidence"] = [];
+		// Step 6: Call ConversAnalyzer v2 (post-Nerin per FR16)
+		let pendingEvidence: ConversanalyzerV2Output["evidence"] = [];
 		let observedEnergyLevel = "medium";
 
 		if (userMessageCount >= COLD_START_USER_MSG_THRESHOLD) {
 			const domainDistribution = aggregateDomainDistribution(existingEvidence);
 			const recentMessages: DomainMessage[] = domainMessages.slice(-6);
+
+			const neutralV2Default: ConversanalyzerV2Output = {
+				userState: {
+					energyBand: "steady",
+					tellingBand: "mixed",
+					energyReason: "",
+					tellingReason: "",
+					withinMessageShift: false,
+				},
+				evidence: [],
+				tokenUsage: { input: 0, output: 0 },
+			};
 
 			const evidenceResult = yield* conversanalyzer
 				.analyze({
@@ -353,17 +365,20 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 								error: error.message,
 								sessionId: input.sessionId,
 							});
-							return {
-								evidence: [],
-								observedEnergyLevel: "medium",
-								tokenUsage: { input: 0, output: 0 },
-							} as ConversanalyzerOutput;
+							return neutralV2Default;
 						}),
 					),
 				);
 
 			analyzerTokenUsage = evidenceResult.tokenUsage;
-			observedEnergyLevel = evidenceResult.observedEnergyLevel;
+			// Bridge v2 energyBand to v1 observedEnergyLevel for downstream compatibility
+			const band = evidenceResult.userState.energyBand;
+			observedEnergyLevel =
+				band === "minimal" || band === "low"
+					? "light"
+					: band === "high" || band === "very_high"
+						? "heavy"
+						: "medium";
 
 			const filteredEvidence = evidenceResult.evidence.filter(
 				(e) => computeFinalWeight(e.strength, e.confidence) >= config.minEvidenceWeight,
