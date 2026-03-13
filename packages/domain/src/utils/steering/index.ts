@@ -86,3 +86,13 @@ export {
 	type ObservationGatingMode,
 	type ObservationGatingResult,
 } from "./observation-gating";
+// Move Governor (Story 26-3)
+export {
+	computeEntryPressure,
+	computeGovernorOutput,
+	deriveIntent,
+	ENTRY_PRESSURE_LARGE_GAP,
+	ENTRY_PRESSURE_MODERATE_GAP,
+	type MoveGovernorInput,
+	type MoveGovernorResult,
+} from "./move-governor";
