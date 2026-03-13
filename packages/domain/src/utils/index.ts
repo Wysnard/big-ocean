@@ -19,12 +19,6 @@ export {
 export { deriveCapabilities } from "./derive-capabilities";
 export { deriveTraitSummary } from "./derive-trait-summary";
 export { toFacetDisplayName } from "./display-name";
-export {
-	computeETarget,
-	PACING_CONSTANTS,
-	type PacingResult,
-	type PacingState,
-} from "./e-target";
 export { getFacetLevel } from "./facet-level";
 export { buildChatSystemPrompt, type ChatSystemPromptParams } from "./nerin-system-prompt";
 export { generateOceanCode } from "./ocean-code-generator";
