@@ -6,6 +6,7 @@ Generated: 2026-03-13
 > Phases 1-4 complete. Phase 5 (Conversation Pacing Pipeline) is the active work.
 > Step 1 (Epic 23 — Foundation Layer) complete. 3 PRs merged 2026-03-12.
 > Step 2 (Parallel Processing Layers) complete. 4 PRs merged 2026-03-12.
+> Step 3 (Dependent Processing Stories) complete. 3 PRs merged 2026-03-13.
 
 ## ~~Step 1: Foundation Layer (Epic 23)~~ DONE
 All 3 stories merged: 23-1, 23-2, 23-3 (PRs #121, #122, #123).
@@ -13,20 +14,10 @@ All 3 stories merged: 23-1, 23-2, 23-3 (PRs #121, #122, #123).
 ## ~~Step 2: Parallel Processing Layers (Epics 24, 25, 26)~~ DONE
 All 4 stories merged: 24-1, 25-1, 25-2, 26-1 (PRs #124, #126, #127, #125).
 
-## Step 3: Dependent Processing Stories
-| Story | Mode | Notes |
-|-------|------|-------|
-| 24-2-three-tier-extraction-pipeline | parallel | Depends on 24-1 (uses analyze/analyzeLenient methods) |
-| 25-3-territory-selector | parallel | Depends on 25-2 (consumes TerritoryScorerOutput) |
-| 26-2-observation-gating-and-competition | parallel | Depends on 26-1 (uses strength formulas) |
+## ~~Step 3: Dependent Processing Stories~~ DONE
+All 3 stories merged: 25-3, 26-2, 24-2 (PRs #128, #129, #130).
 
-**Gate:** All stories above must be done before proceeding.
-
-**Conflict Notes:**
-- 24-2 is in api use-cases; 25-3 and 26-2 are in domain/src/utils/steering/ — no file conflicts
-- All three are in different directories with no shared files
-
-## Step 4: Governor (requires gating + pacing + extraction orchestration)
+## Step 4: Governor + Character Bible Decomposition
 | Story | Mode | Notes |
 |-------|------|-------|
 | 26-3-move-governor | parallel | Wires: intent derivation + entry pressure (needs E_target from 25-1) + observation gating (from 26-2) → PromptBuilderInput |
@@ -59,8 +50,8 @@ All 4 stories merged: 24-1, 25-1, 25-2, 26-1 (PRs #124, #126, #127, #125).
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **3 remaining steps** to deliver Phase 5 Conversation Pacing Pipeline (Steps 1-2 complete)
-- **7 stories remaining** across 4 epics (24-27)
-- **Max parallelism:** Step 3 (3 stories simultaneously)
-- **Critical path:** 25-3 → 26-3 → 27-2 → 27-3 (4 stories, longest sequential chain)
-- **Independent opportunity:** 27-1 (character bible) can start as early as Step 3 but placed in Step 4 for simplicity; could be pulled forward if needed
+- **2 remaining steps** to deliver Phase 5 Conversation Pacing Pipeline (Steps 1-3 complete)
+- **4 stories remaining** across 2 epics (26, 27)
+- **Max parallelism:** Step 4 (2 stories simultaneously)
+- **Critical path:** 26-3 → 27-2 → 27-3 (3 stories, longest sequential chain)
+- **Independent opportunity:** 27-1 (character bible) runs in parallel with 26-3 in Step 4
