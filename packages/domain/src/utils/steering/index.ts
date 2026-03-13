@@ -96,3 +96,9 @@ export {
 	type MoveGovernorInput,
 	type MoveGovernorResult,
 } from "./move-governor";
+// Prompt Builder (Story 27-2)
+export {
+	buildPrompt,
+	type PromptBuilderOutput,
+	translateObservationFocus,
+} from "./prompt-builder";
