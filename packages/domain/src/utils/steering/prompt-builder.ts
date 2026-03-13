@@ -77,9 +77,7 @@ const EXPLORE_RESPONSE_FORMAT = `Your responses can take different shapes depend
 - A choice: "Are you more X, Y, or Z? I'm curious"
 - Circle back: "You mentioned X before — that stuck with me"
 
-Keep responses concise — 2-4 sentences typically. Longer when something deserves it, shorter when brevity hits harder.
-
-At most one direct question per response.`;
+Keep responses concise — 2-4 sentences typically. Longer when something deserves it, shorter when brevity hits harder.`;
 
 function selectTier2Modules(intent: PromptBuilderInput["intent"]): Tier2Selection {
 	switch (intent) {
