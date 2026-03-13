@@ -15,7 +15,7 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { checkout, polar, webhooks } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
-import type { AppConfigService } from "@workspace/domain";
+import type { AppConfigService, PurchaseEventType } from "@workspace/domain";
 import { AppConfig } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import bcrypt from "bcryptjs";
@@ -61,7 +61,7 @@ const mapPolarProductToEventType = (
 		| "polarProductRelationship5Pack"
 		| "polarProductExtendedConversation"
 	>,
-): string | null => {
+): PurchaseEventType | null => {
 	if (productId === config.polarProductPortraitUnlock) return "portrait_unlocked";
 	if (productId === config.polarProductRelationshipSingle) return "credit_purchased";
 	if (productId === config.polarProductRelationship5Pack) return "credit_purchased";
