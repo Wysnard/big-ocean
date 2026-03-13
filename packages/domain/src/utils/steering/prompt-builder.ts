@@ -20,7 +20,6 @@ import {
 	CONVERSATION_INSTINCTS,
 	CONVERSATION_MODE,
 	HUMOR_GUARDRAILS,
-	INTERNAL_TRACKING,
 	MIRROR_GUARDRAILS,
 	MIRRORS_AMPLIFY,
 	MIRRORS_EXPLORE,
@@ -32,15 +31,7 @@ import {
 } from "../../constants/nerin/index";
 import { NERIN_PERSONA } from "../../constants/nerin-persona";
 import { TERRITORY_CATALOG } from "../../constants/territory-catalog";
-import type {
-	EntryPressure,
-	ObservationFocus,
-	PromptBuilderInput,
-} from "../../types/pacing";
-import {
-	type TerritoryPromptContent,
-	deriveEnergyGuidanceLevel,
-} from "./territory-prompt-builder";
+import type { EntryPressure, ObservationFocus, PromptBuilderInput } from "../../types/pacing";
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -64,7 +55,6 @@ const TIER_1_MODULES = [
 	QUALITY_INSTINCT,
 	MIRROR_GUARDRAILS,
 	HUMOR_GUARDRAILS,
-	INTERNAL_TRACKING,
 ] as const;
 
 function assembleTier1(): string {
@@ -78,6 +68,19 @@ interface Tier2Selection {
 	readonly moduleNames: readonly string[];
 }
 
+/** Response format guidance — only loaded for explore intent.
+ * Open and amplify have their own response formats. */
+const EXPLORE_RESPONSE_FORMAT = `Your responses can take different shapes depending on the moment:
+- Observation + question in the same breath
+- Just a question — no preamble needed when it speaks for itself
+- Just empathy — let a moment breathe without immediately asking something
+- A choice: "Are you more X, Y, or Z? I'm curious"
+- Circle back: "You mentioned X before — that stuck with me"
+
+Keep responses concise — 2-4 sentences typically. Longer when something deserves it, shorter when brevity hits harder.
+
+At most one direct question per response.`;
+
 function selectTier2Modules(intent: PromptBuilderInput["intent"]): Tier2Selection {
 	switch (intent) {
 		case "open":
@@ -87,8 +90,14 @@ function selectTier2Modules(intent: PromptBuilderInput["intent"]): Tier2Selectio
 			};
 		case "explore":
 			return {
-				modules: [STORY_PULLING, REFLECT, THREADING, MIRRORS_EXPLORE],
-				moduleNames: ["STORY_PULLING", "REFLECT", "THREADING", "MIRRORS_EXPLORE"],
+				modules: [STORY_PULLING, REFLECT, THREADING, MIRRORS_EXPLORE, EXPLORE_RESPONSE_FORMAT],
+				moduleNames: [
+					"STORY_PULLING",
+					"REFLECT",
+					"THREADING",
+					"MIRRORS_EXPLORE",
+					"EXPLORE_RESPONSE_FORMAT",
+				],
 			};
 		case "amplify":
 			return {
@@ -119,13 +128,10 @@ export function translateObservationFocus(focus: ObservationFocus): string {
 				`Something interesting — ${focus.target.facet} shows up differently in ` +
 				`${focus.target.pair[0].domain} vs ${focus.target.pair[1].domain}. ` +
 				`Frame this as fascination, never as a verdict. ` +
-				`Example: "Something interesting is happening — earlier you described X, and here it feels almost opposite." ` +
 				`Always curiosity and wonder, never judgment or labeling.`
 			);
 		case "convergence": {
-			const domainNames = focus.target.domains
-				.map((d) => d.domain)
-				.join(", ");
+			const domainNames = focus.target.domains.map((d) => d.domain).join(", ");
 			return (
 				`A pattern is emerging — ${focus.target.facet} shows up consistently across ${domainNames}. ` +
 				`Name what you're seeing. This consistency is meaningful — it suggests something core about who they are.`
@@ -137,48 +143,32 @@ export function translateObservationFocus(focus: ObservationFocus): string {
 // ─── Entry Pressure Modifiers ───────────────────────────────────────
 
 function buildTerritoryGuidanceWithPressure(
-	content: TerritoryPromptContent,
+	territory: { opener: string; domains: readonly [string, string] },
 	entryPressure: EntryPressure,
 ): string {
-	const domainList = content.domains.join(", ");
-
-	const ENERGY_GUIDANCE: Record<string, string> = {
-		light:
-			"Keep the tone casual and approachable. This is low-stakes territory — warmth and curiosity over depth.",
-		medium:
-			"Moderate depth is welcome here. The person is engaged enough for some self-reflection and personal stakes.",
-		heavy:
-			"This is deep, emotionally weighty territory. Move with care — meet vulnerability, don't push past it.",
-	};
-
-	const energyGuidance = ENERGY_GUIDANCE[content.energyGuidanceLevel];
+	const domainList = territory.domains.join(", ");
 
 	let directionInstruction: string;
 	switch (entryPressure) {
 		case "direct":
-			directionInstruction = `Suggested direction — you could explore something like: "${content.opener}"
+			directionInstruction = `Suggested direction — you could explore something like: "${territory.opener}"
 This is a suggestion, not a script. Follow the natural flow of conversation. If the person is already in an interesting thread, stay with it. Use this as a direction to steer toward when there's a natural opening.`;
 			break;
 		case "angled":
-			directionInstruction = `Consider approaching from a related angle rather than directly: "${content.opener}"
+			directionInstruction = `Consider approaching from a related angle rather than directly: "${territory.opener}"
 Don't lead with this topic head-on. Find an adjacent thread from what they've already shared and let it naturally bend toward this territory. The approach matters more than the destination.`;
 			break;
 		case "soft":
-			directionInstruction = `If there's a natural opening, you might gently touch on: "${content.opener}"
+			directionInstruction = `If there's a natural opening, you might gently touch on: "${territory.opener}"
 This territory is a stretch from where they are energetically. Only go here if the conversation naturally drifts this way. Don't force it — there's always next turn.`;
 			break;
 	}
 
 	return `
 TERRITORY GUIDANCE:
-Energy: ${content.energyGuidanceLevel}
 Domain area: ${domainList}
 
-${energyGuidance}
-
-${directionInstruction}
-
-At most one direct question per response.`;
+${directionInstruction}`;
 }
 
 // ─── Steering Section Builder ───────────────────────────────────────
@@ -193,22 +183,14 @@ function buildSteeringSection(input: PromptBuilderInput): string {
 		);
 	}
 
-	const energyGuidanceLevel = deriveEnergyGuidanceLevel(territory.expectedEnergy);
-	const content: TerritoryPromptContent = {
-		opener: territory.opener,
-		domains: territory.domains,
-		expectedEnergy: territory.expectedEnergy,
-		energyGuidanceLevel,
-	};
-
 	// Open intent: territory guidance only, no observation
 	if (input.intent === "open") {
-		return buildTerritoryGuidanceWithPressure(content, "direct");
+		return buildTerritoryGuidanceWithPressure(territory, "direct");
 	}
 
 	// Explore / Amplify: territory guidance + observation focus
 	const entryPressure = input.entryPressure;
-	const territorySection = buildTerritoryGuidanceWithPressure(content, entryPressure);
+	const territorySection = buildTerritoryGuidanceWithPressure(territory, entryPressure);
 	const focusTranslation = translateObservationFocus(input.observationFocus);
 
 	let observationSection = `\nOBSERVATION FOCUS:\n${focusTranslation}`;
@@ -219,7 +201,7 @@ function buildSteeringSection(input: PromptBuilderInput): string {
 
 AMPLIFY MODE:
 This is a closing turn. You have permission to be bold and declarative.
-Longer responses are welcome — take the space you need.
+Respond in 3-6 sentences — take the space you need.
 Make declarative statements about the user based on what you've observed.
 This is your moment to show what you've been building toward.`;
 	}
@@ -255,8 +237,7 @@ export function buildPrompt(input: PromptBuilderInput): PromptBuilderOutput {
 	const steeringSection = buildSteeringSection(input);
 
 	// Compose the full prompt
-	const systemPrompt = [persona, tier1, tier2Content, steeringSection]
-		.join("\n\n");
+	const systemPrompt = [persona, tier1, tier2Content, steeringSection].join("\n\n");
 
 	return {
 		systemPrompt,

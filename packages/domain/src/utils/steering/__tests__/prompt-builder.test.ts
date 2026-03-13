@@ -10,13 +10,11 @@
 import { describe, expect, it } from "vitest";
 
 import type { LifeDomain } from "../../../constants/life-domain";
-import { NERIN_PERSONA } from "../../../constants/nerin-persona";
 import {
 	BELIEFS_IN_ACTION,
 	CONVERSATION_INSTINCTS,
 	CONVERSATION_MODE,
 	HUMOR_GUARDRAILS,
-	INTERNAL_TRACKING,
 	MIRROR_GUARDRAILS,
 	MIRRORS_AMPLIFY,
 	MIRRORS_EXPLORE,
@@ -26,6 +24,7 @@ import {
 	STORY_PULLING,
 	THREADING,
 } from "../../../constants/nerin/index";
+import { NERIN_PERSONA } from "../../../constants/nerin-persona";
 import type {
 	AmplifyPromptInput,
 	ContradictionTarget,
@@ -49,7 +48,6 @@ const TIER_1_MODULES = [
 	QUALITY_INSTINCT,
 	MIRROR_GUARDRAILS,
 	HUMOR_GUARDRAILS,
-	INTERNAL_TRACKING,
 ];
 
 function makeOpenInput(territory = "creative-pursuits"): OpenPromptInput {
@@ -96,7 +94,7 @@ describe("Tier 1 — always included", () => {
 		expect(amplify.systemPrompt).toContain(NERIN_PERSONA);
 	});
 
-	it("includes all 7 core identity modules in every prompt", () => {
+	it("includes all 6 core identity modules in every prompt", () => {
 		const open = buildPrompt(makeOpenInput());
 		const explore = buildPrompt(makeExploreInput());
 		const amplify = buildPrompt(makeAmplifyInput());
@@ -166,13 +164,12 @@ describe("explore intent", () => {
 			"REFLECT",
 			"THREADING",
 			"MIRRORS_EXPLORE",
+			"EXPLORE_RESPONSE_FORMAT",
 		]);
 	});
 
 	it("includes observation focus for relate", () => {
-		const result = buildPrompt(
-			makeExploreInput({ observationFocus: { type: "relate" } }),
-		);
+		const result = buildPrompt(makeExploreInput({ observationFocus: { type: "relate" } }));
 		expect(result.systemPrompt).toContain("OBSERVATION FOCUS");
 		expect(result.systemPrompt).toContain("Connect naturally");
 	});
@@ -255,9 +252,10 @@ describe("amplify intent", () => {
 		expect(result.tier2Modules).toEqual(["OBSERVATION_QUALITY", "MIRRORS_AMPLIFY"]);
 	});
 
-	it("includes bold format permission", () => {
+	it("includes bold format permission with 3-6 sentence guidance", () => {
 		const result = buildPrompt(makeAmplifyInput());
-		expect(result.systemPrompt).toMatch(/bold|declarative|longer/i);
+		expect(result.systemPrompt).toMatch(/bold|declarative/i);
+		expect(result.systemPrompt).toContain("3-6 sentences");
 	});
 
 	it("includes observation focus instruction", () => {
@@ -270,23 +268,17 @@ describe("amplify intent", () => {
 
 describe("entry pressure modifiers", () => {
 	it("direct pressure uses opener directly", () => {
-		const result = buildPrompt(
-			makeExploreInput({ entryPressure: "direct" }),
-		);
+		const result = buildPrompt(makeExploreInput({ entryPressure: "direct" }));
 		expect(result.steeringSection).toMatch(/suggest|direction|explore/i);
 	});
 
 	it("angled pressure approaches from adjacent angle", () => {
-		const result = buildPrompt(
-			makeExploreInput({ entryPressure: "angled" }),
-		);
+		const result = buildPrompt(makeExploreInput({ entryPressure: "angled" }));
 		expect(result.steeringSection).toMatch(/adjacent|related|angle/i);
 	});
 
 	it("soft pressure uses gentle mention", () => {
-		const result = buildPrompt(
-			makeExploreInput({ entryPressure: "soft" }),
-		);
+		const result = buildPrompt(makeExploreInput({ entryPressure: "soft" }));
 		expect(result.steeringSection).toMatch(/gentle|natural opening|touch on/i);
 	});
 });
@@ -368,8 +360,8 @@ describe("translateObservationFocus", () => {
 
 describe("error handling", () => {
 	it("throws descriptive error for invalid territory ID", () => {
-		expect(() =>
-			buildPrompt(makeOpenInput("nonexistent-territory")),
-		).toThrow(/territory.*not found/i);
+		expect(() => buildPrompt(makeOpenInput("nonexistent-territory"))).toThrow(
+			/territory.*not found/i,
+		);
 	});
 });
