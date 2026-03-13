@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 4
-parallelism_step_name: "Governor + Character Bible Decomposition"
-baseline_commit: "4a19a851d24f0db0f9218f90a02ac96bd8d2cd4d"
+parallelism_step: 5
+parallelism_step_name: "Prompt Builder"
+baseline_commit: "429e80521ddedf914cbc5650e954cb35ffccb32b"
 created: "2026-03-13"
-last_updated: "2026-03-13"
+last_updated: "2026-03-13T02"
 
 # Optional context documents discovered
 context_docs:
@@ -14,17 +14,10 @@ context_docs:
 
 # Stories in this step
 stories:
-  26-3-move-governor:
+  27-2-prompt-builder:
     status: done
-    mode: "parallel"
-    notes: "Wires: intent derivation + entry pressure (needs E_target from 25-1) + observation gating (from 26-2) → PromptBuilderInput"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/131"
-    dev_branch: "feat/story-26-3-move-governor"
-    error: null
-  27-1-character-bible-decomposition:
-    status: done
-    mode: "parallel"
-    notes: "INDEPENDENT — decomposes CHAT_CONTEXT into modular constants; no runtime deps on pipeline"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/132"
-    dev_branch: "feat/story-27-1-character-bible-decomposition"
+    mode: "single"
+    notes: "Depends on 26-3 (consumes PromptBuilderInput) + 27-1 (uses decomposed modules)"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/133"
+    dev_branch: "feat/story-27-2-prompt-builder"
     error: null

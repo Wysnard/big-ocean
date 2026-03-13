@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-13 (refreshed 21 — Step 4 done: 26-3, 27-1 merged; Epic 26 done)
+generated: 2026-03-13 (refreshed 22 — Step 5 pr-ready: 27-2 PR #133)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -452,6 +452,6 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-27: in-progress
   27-1-character-bible-decomposition: done
-  27-2-prompt-builder: backlog
+  27-2-prompt-builder: pr-ready
   27-3-pipeline-integration: backlog
   epic-27-retrospective: optional
