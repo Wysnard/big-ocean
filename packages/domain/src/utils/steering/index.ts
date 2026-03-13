@@ -78,3 +78,11 @@ export {
 	type SelectorSessionPhase,
 	type SelectorTransitionType,
 } from "./territory-selector";
+// Observation Gating & Competition (Story 26-2)
+export {
+	evaluateObservationGating,
+	OBSERVATION_GATING_CONSTANTS,
+	type ObservationGatingInput,
+	type ObservationGatingMode,
+	type ObservationGatingResult,
+} from "./observation-gating";
