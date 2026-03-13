@@ -8,19 +8,17 @@
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 import type { FacetName } from "../../../constants/big-five";
-import type { LifeDomain } from "../../../constants/life-domain";
-import type { FacetMetrics } from "../../formula";
 import type { Territory, TerritoryId } from "../../../types/territory";
 import { TerritoryIdSchema } from "../../../types/territory";
+import type { FacetMetrics } from "../../formula";
 import {
 	computeAdjacency,
 	computeConversationSkew,
 	computeCoverageGainV2,
 	computeEnergyMalus,
-	computeFreshnessPenaltyV2,
 	computeFacetPriority,
+	computeFreshnessPenaltyV2,
 	PACING_SCORER_DEFAULTS,
-	type PacingScorerConfig,
 	scoreAllTerritoriesV2,
 } from "../pacing-territory-scorer";
 
@@ -110,7 +108,8 @@ describe("computeCoverageGainV2", () => {
 
 	it("returns sqrt(1) = 1 when all facets have max priority and max_priority > 0", () => {
 		const emptyMetrics = new Map<FacetName, FacetMetrics>();
-		const maxPriority = config.priorityAlpha * config.C_target + config.priorityBeta * config.P_target;
+		const maxPriority =
+			config.priorityAlpha * config.C_target + config.priorityBeta * config.P_target;
 		const territory = makeTerritory({
 			id: "test",
 			expectedFacets: ["imagination", "intellect"],
@@ -126,7 +125,8 @@ describe("computeCoverageGainV2", () => {
 			id: "test",
 			expectedFacets: ["imagination", "intellect"],
 		});
-		const maxPriority = config.priorityAlpha * config.C_target + config.priorityBeta * config.P_target;
+		const maxPriority =
+			config.priorityAlpha * config.C_target + config.priorityBeta * config.P_target;
 
 		// No evidence: full priority
 		const emptyMetrics = new Map<FacetName, FacetMetrics>();
@@ -304,21 +304,25 @@ describe("computeEnergyMalus", () => {
 // ─── computeFreshnessPenaltyV2 ──────────────────────────────────────
 
 describe("computeFreshnessPenaltyV2", () => {
-	it("returns 0 for the current territory (no self-penalty)", () => {
+	it("penalizes the current territory like any other recently-visited territory", () => {
 		const currentTid = tid("current");
 		const visitHistory = new Map([[currentTid, 3]]);
-		expect(computeFreshnessPenaltyV2(currentTid, currentTid, visitHistory, 5, config)).toBe(0);
+		// turnsSince = 5 - 3 = 2, penalty = max(0, w_f * (1 - 2/5)) = 0.2 * 0.6 = 0.12
+		expect(computeFreshnessPenaltyV2(currentTid, visitHistory, 5, config)).toBeCloseTo(
+			config.w_f * (1 - 2 / config.cooldown),
+			6,
+		);
 	});
 
 	it("returns 0 for never-visited territories", () => {
 		const visitHistory = new Map<TerritoryId, number>();
-		expect(computeFreshnessPenaltyV2(tid("new"), tid("current"), visitHistory, 5, config)).toBe(0);
+		expect(computeFreshnessPenaltyV2(tid("new"), visitHistory, 5, config)).toBe(0);
 	});
 
 	it("penalizes recently-visited territory", () => {
 		const candidateId = tid("recent");
 		const visitHistory = new Map([[candidateId, 4]]); // last visited at turn 4
-		const penalty = computeFreshnessPenaltyV2(candidateId, tid("current"), visitHistory, 5, config);
+		const penalty = computeFreshnessPenaltyV2(candidateId, visitHistory, 5, config);
 		// turnsSince = 5 - 4 = 1, penalty = max(0, w_f * (1 - 1/5)) = 0.2 * 0.8 = 0.16
 		expect(penalty).toBeCloseTo(config.w_f * (1 - 1 / config.cooldown), 6);
 	});
@@ -326,7 +330,7 @@ describe("computeFreshnessPenaltyV2", () => {
 	it("penalty decays to 0 after cooldown turns", () => {
 		const candidateId = tid("old");
 		const visitHistory = new Map([[candidateId, 0]]); // visited at turn 0
-		const penalty = computeFreshnessPenaltyV2(candidateId, tid("current"), visitHistory, 5, config);
+		const penalty = computeFreshnessPenaltyV2(candidateId, visitHistory, 5, config);
 		// turnsSince = 5 - 0 = 5, penalty = max(0, w_f * (1 - 5/5)) = max(0, 0) = 0
 		expect(penalty).toBe(0);
 	});
@@ -334,7 +338,7 @@ describe("computeFreshnessPenaltyV2", () => {
 	it("penalty is capped at w_f for just-visited territory", () => {
 		const candidateId = tid("just-visited");
 		const visitHistory = new Map([[candidateId, 5]]); // visited this turn
-		const penalty = computeFreshnessPenaltyV2(candidateId, tid("current"), visitHistory, 5, config);
+		const penalty = computeFreshnessPenaltyV2(candidateId, visitHistory, 5, config);
 		// turnsSince = 0, penalty = w_f * (1 - 0/5) = w_f
 		expect(penalty).toBeCloseTo(config.w_f, 6);
 	});
@@ -541,7 +545,7 @@ describe("scoreAllTerritoriesV2", () => {
 		expect(heavyResult.breakdown.freshness).toBe(0); // never visited
 	});
 
-	it("current territory has 0 freshness penalty even if recently visited", () => {
+	it("current territory receives freshness penalty when recently visited", () => {
 		const visitHistory = new Map<TerritoryId, number>([
 			[mediumTerritory.id, 4], // visited at turn 4
 		]);
@@ -558,6 +562,7 @@ describe("scoreAllTerritoriesV2", () => {
 		});
 
 		const mediumResult = result.ranked.find((r) => r.territoryId === mediumTerritory.id)!;
-		expect(mediumResult.breakdown.freshness).toBe(0);
+		// turnsSince = 5 - 4 = 1, penalty = w_f * (1 - 1/5) = 0.2 * 0.8 = 0.16
+		expect(mediumResult.breakdown.freshness).toBeCloseTo(config.w_f * (1 - 1 / config.cooldown), 6);
 	});
 });

@@ -210,11 +210,7 @@ export function computeConversationSkew(
  *
  * energyMalus = w_e * (expectedEnergy - E_target)^2
  */
-export function computeEnergyMalus(
-	expectedEnergy: number,
-	eTarget: number,
-	w_e: number,
-): number {
+export function computeEnergyMalus(expectedEnergy: number, eTarget: number, w_e: number): number {
 	const gap = expectedEnergy - eTarget;
 	return w_e * gap * gap;
 }
@@ -236,13 +232,10 @@ export type PacingVisitHistory = ReadonlyMap<TerritoryId, number>;
  */
 export function computeFreshnessPenaltyV2(
 	territoryId: TerritoryId,
-	currentTerritoryId: TerritoryId,
 	visitHistory: PacingVisitHistory,
 	turnNumber: number,
 	config: PacingScorerConfig,
 ): number {
-	if (territoryId === currentTerritoryId) return 0;
-
 	const lastVisitTurn = visitHistory.get(territoryId);
 	if (lastVisitTurn === undefined) return 0;
 
@@ -269,9 +262,7 @@ export interface ScoreAllTerritoriesV2Input {
  *
  * score = coverageGain + adjacency + conversationSkew - energyMalus - freshnessPenalty
  */
-export function scoreAllTerritoriesV2(
-	input: ScoreAllTerritoriesV2Input,
-): TerritoryScorerOutput {
+export function scoreAllTerritoriesV2(input: ScoreAllTerritoriesV2Input): TerritoryScorerOutput {
 	const {
 		eTarget,
 		facetMetrics,
@@ -304,22 +295,11 @@ export function scoreAllTerritoriesV2(
 			? computeAdjacency(currentTerritoryDef, territory, config)
 			: 0;
 
-		const skew = computeConversationSkew(
-			territory.expectedEnergy,
-			turnNumber,
-			totalTurns,
-			config,
-		);
+		const skew = computeConversationSkew(territory.expectedEnergy, turnNumber, totalTurns, config);
 
 		const malus = computeEnergyMalus(territory.expectedEnergy, eTarget, config.w_e);
 
-		const freshness = computeFreshnessPenaltyV2(
-			territory.id,
-			currentTerritory,
-			visitHistory,
-			turnNumber,
-			config,
-		);
+		const freshness = computeFreshnessPenaltyV2(territory.id, visitHistory, turnNumber, config);
 
 		const score = coverageGain + adjacency + skew - malus - freshness;
 
