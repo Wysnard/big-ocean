@@ -522,11 +522,45 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7, updated 23
 	});
 
 	describe("Fail-open resilience", () => {
-		it.effect("handles ConversAnalyzer failure non-fatally", () =>
+		it.effect("handles ConversAnalyzer failure non-fatally — falls back to Tier 2 (Story 24-2)", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
 				mockConversanalyzerRepo.analyze.mockReturnValue(
+					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
+				);
+				// analyzeLenient succeeds from default setup — Tier 2 fallback produces evidence
+
+				const result = yield* runNerinPipeline({
+					sessionId: "session_test_123",
+					userMessage: "I work in tech",
+				});
+
+				// Pipeline should still succeed
+				expect(result.response).toBeDefined();
+
+				// Nerin should have been called
+				expect(mockNerinRepo.invoke).toHaveBeenCalledTimes(1);
+
+				// Tier 2 warning was logged
+				expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
+					"ConversAnalyzer fell back to Tier 2 (lenient schema)",
+					expect.objectContaining({ sessionId: "session_test_123" }),
+				);
+
+				// Evidence IS saved from Tier 2 lenient fallback (evidence above weight threshold)
+				expect(mockEvidenceRepo.save).toHaveBeenCalled();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("handles both ConversAnalyzer tiers failing — uses Tier 3 neutral defaults (Story 24-2)", () =>
+			Effect.gen(function* () {
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
+				mockConversanalyzerRepo.analyze.mockReturnValue(
+					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
+				);
+				mockConversanalyzerRepo.analyzeLenient.mockReturnValue(
 					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
 				);
 
@@ -541,7 +575,13 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7, updated 23
 				// Nerin should have been called
 				expect(mockNerinRepo.invoke).toHaveBeenCalledTimes(1);
 
-				// Evidence should NOT be saved (no evidence extracted)
+				// Tier 3 warning was logged
+				expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
+					"ConversAnalyzer failed at all tiers, using Tier 3 neutral defaults",
+					expect.objectContaining({ sessionId: "session_test_123" }),
+				);
+
+				// Evidence should NOT be saved (neutral defaults have empty evidence)
 				expect(mockEvidenceRepo.save).not.toHaveBeenCalled();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
