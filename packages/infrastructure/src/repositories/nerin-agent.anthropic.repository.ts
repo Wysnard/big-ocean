@@ -21,7 +21,7 @@
 import { ChatAnthropic } from "@langchain/anthropic";
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { AgentInvocationError } from "@workspace/contracts/errors";
-import { AppConfig, buildChatSystemPrompt, LoggerRepository } from "@workspace/domain";
+import { AppConfig, LoggerRepository } from "@workspace/domain";
 import {
 	NerinAgentRepository,
 	type NerinInvokeInput,
@@ -103,10 +103,8 @@ export const NerinAgentAnthropicRepositoryLive = Layer.effect(
 			invoke: (input: NerinInvokeInput) =>
 				Effect.tryPromise({
 					try: async () => {
-						// Build system prompt with territory guidance (Story 21-7)
-						const systemPrompt = buildChatSystemPrompt({
-							territoryPrompt: input.territoryPrompt,
-						});
+						// Story 27-3: Use the pre-composed system prompt from the pipeline
+						const systemPrompt = input.systemPrompt ?? "";
 
 						// Convert domain messages to LangChain format and prepend system prompt
 						const langchainMessages = domainToLangChain(input.messages);
