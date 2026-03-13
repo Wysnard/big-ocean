@@ -1,7 +1,7 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 3
-parallelism_step_name: "Dependent Processing Stories"
-baseline_commit: "40a9f0ed4faae53a3347d43f3415a8c1dbdd6858"
+parallelism_step: 4
+parallelism_step_name: "Governor + Character Bible Decomposition"
+baseline_commit: "4a19a851d24f0db0f9218f90a02ac96bd8d2cd4d"
 created: "2026-03-13"
 last_updated: "2026-03-13"
 
@@ -14,24 +14,17 @@ context_docs:
 
 # Stories in this step
 stories:
-  24-2-three-tier-extraction-pipeline:
+  26-3-move-governor:
     status: done
     mode: "parallel"
-    notes: "Depends on 24-1 (uses analyze/analyzeLenient methods)"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/130"
-    dev_branch: "feat/story-24-2-three-tier-extraction-pipeline"
+    notes: "Wires: intent derivation + entry pressure (needs E_target from 25-1) + observation gating (from 26-2) → PromptBuilderInput"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/131"
+    dev_branch: "feat/story-26-3-move-governor"
     error: null
-  25-3-territory-selector:
+  27-1-character-bible-decomposition:
     status: done
     mode: "parallel"
-    notes: "Depends on 25-2 (consumes TerritoryScorerOutput)"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/128"
-    dev_branch: "feat/story-25-3-territory-selector"
-    error: null
-  26-2-observation-gating-and-competition:
-    status: done
-    mode: "parallel"
-    notes: "Depends on 26-1 (uses strength formulas)"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/129"
-    dev_branch: "feat/story-26-2-observation-gating-and-competition"
+    notes: "INDEPENDENT — decomposes CHAT_CONTEXT into modular constants; no runtime deps on pipeline"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/132"
+    dev_branch: "feat/story-27-1-character-bible-decomposition"
     error: null
