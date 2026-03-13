@@ -49,9 +49,10 @@ describe("sendMessage Use Case", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should skip conversanalyzer during cold start (AC: #7)", () =>
+		it.effect("should run conversanalyzer during cold start for pacing data (Story 27-3)", () =>
 			Effect.gen(function* () {
-				// Cold start: only 1 user message (≤ greeting count of 2)
+				// Story 27-3: ConversAnalyzer now runs on all turns to collect energy/telling
+				// bands needed by the pacing pipeline
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
 
 				yield* sendMessage({
@@ -59,15 +60,14 @@ describe("sendMessage Use Case", () => {
 					message: "Hello",
 				});
 
-				expect(mockConversanalyzerRepo.analyze).not.toHaveBeenCalled();
-				expect(mockEvidenceRepo.save).not.toHaveBeenCalled();
+				// ConversAnalyzer should be called even during cold start
+				expect(mockConversanalyzerRepo.analyze).toHaveBeenCalledTimes(1);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should skip conversanalyzer at exactly greeting count (boundary)", () =>
+		it.effect("should run conversanalyzer at all turn positions (Story 27-3)", () =>
 			Effect.gen(function* () {
-				// DB has 1 user message (cold start history). Current user message is not yet saved
-				// (atomic write). Total user messages = 1 in DB → 1 >= 2 = false → still cold start.
+				// Story 27-3: No cold-start skip — extraction runs on every turn
 				const oneUserMessageHistory = [
 					...coldStartMessages,
 					{
@@ -85,32 +85,34 @@ describe("sendMessage Use Case", () => {
 					message: "More",
 				});
 
-				expect(mockConversanalyzerRepo.analyze).not.toHaveBeenCalled();
+				expect(mockConversanalyzerRepo.analyze).toHaveBeenCalledTimes(1);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should handle non-fatal conversanalyzer error — falls back to Tier 2 lenient (AC: #6, Story 24-2)", () =>
-			Effect.gen(function* () {
-				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				mockConversanalyzerRepo.analyze.mockReturnValue(
-					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-				);
-				// analyzeLenient succeeds from default setup — Tier 2 fallback
+		it.effect(
+			"should handle non-fatal conversanalyzer error — falls back to Tier 2 lenient (AC: #6, Story 24-2)",
+			() =>
+				Effect.gen(function* () {
+					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+					mockConversanalyzerRepo.analyze.mockReturnValue(
+						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
+					);
+					// analyzeLenient succeeds from default setup — Tier 2 fallback
 
-				const result = yield* sendMessage({
-					sessionId: "session_test_123",
-					message: "I work in tech",
-				});
+					const result = yield* sendMessage({
+						sessionId: "session_test_123",
+						message: "I work in tech",
+					});
 
-				// Nerin should still respond normally
-				expect(result.response).toBe(mockNerinResponse.response);
-				expect(mockNerinRepo.invoke).toHaveBeenCalled();
-				// Tier 2 warning was logged (three-tier pipeline, Story 24-2)
-				expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
-					"ConversAnalyzer fell back to Tier 2 (lenient schema)",
-					expect.objectContaining({ sessionId: "session_test_123" }),
-				);
-			}).pipe(Effect.provide(createTestLayer())),
+					// Nerin should still respond normally
+					expect(result.response).toBe(mockNerinResponse.response);
+					expect(mockNerinRepo.invoke).toHaveBeenCalled();
+					// Tier 2 warning was logged (three-tier pipeline, Story 24-2)
+					expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
+						"ConversAnalyzer fell back to Tier 2 (lenient schema)",
+						expect.objectContaining({ sessionId: "session_test_123" }),
+					);
+				}).pipe(Effect.provide(createTestLayer())),
 		);
 
 		it.effect("should filter evidence by weight threshold (AC: #9)", () =>

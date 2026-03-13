@@ -43,17 +43,6 @@ export {
 	LifeDomainSchema,
 	STEERABLE_DOMAINS,
 } from "./constants/life-domain";
-// Nerin farewell constants (Story 7.18)
-export {
-	NERIN_FAREWELL_MESSAGES,
-	pickFarewellMessage,
-} from "./constants/nerin-farewell";
-// Nerin greeting constants (Story 7.10)
-export {
-	GREETING_MESSAGES,
-	OPENING_QUESTIONS,
-	pickOpeningQuestion,
-} from "./constants/nerin-greeting";
 // Nerin character bible modules — decomposed Tier 1 + Tier 2 (Story 27-1)
 export {
 	BELIEFS_IN_ACTION,
@@ -70,6 +59,17 @@ export {
 	STORY_PULLING,
 	THREADING,
 } from "./constants/nerin/index";
+// Nerin farewell constants (Story 7.18)
+export {
+	NERIN_FAREWELL_MESSAGES,
+	pickFarewellMessage,
+} from "./constants/nerin-farewell";
+// Nerin greeting constants (Story 7.10)
+export {
+	GREETING_MESSAGES,
+	OPENING_QUESTIONS,
+	pickOpeningQuestion,
+} from "./constants/nerin-greeting";
 // Nerin persona constant (Story 2.12)
 export { NERIN_PERSONA } from "./constants/nerin-persona";
 // Territory catalog (Story 21-1, evolved Story 23-2)
@@ -505,63 +505,76 @@ export {
 	computeTraitResults,
 } from "./utils/score-computation";
 // Steering utilities (Story 21-2, 21-3, 21-4, 21-5, 25-1)
+// Pacing territory scorer (Story 25-2)
+// Territory Selector V2 (Story 25-3)
+// Observation Gating (Story 26-2)
+// Move Governor (Story 26-3)
+// Prompt Builder (Story 27-2)
 export {
 	buildFacetEvidenceCounts,
+	buildPrompt,
 	buildTerritoryPrompt,
 	buildTerritorySystemPromptSection,
+	COLD_START_PERIMETER,
+	computeAdjacency,
 	computeBreadth,
-	computeCoverageValue,
-	computeDRS,
-	computeEnergyFit,
-	computeEnergyMultiplier,
-	computeEngagement,
-	computeETargetV2,
-	computeFreshnessBonus,
-	type DRSConfig,
-	type DRSInput,
-	deriveEnergyGuidanceLevel,
-	type EnergyGuidanceLevel,
-	type ETargetInput,
-	type ETargetOutput,
-	extractDRSConfig,
-	extractTerritoryScorerConfig,
-	PACING_CONFIG,
-	type PacingConfig,
-	type ScoredTerritory,
-	scoreAllTerritories,
-	scoreTerritory,
-	selectColdStartTerritory,
-	selectTerritory,
-	selectTerritoryWithColdStart,
-	type TerritoryPromptContent,
-	type TerritoryScorerConfig,
-	type TerritoryVisitHistory,
 	// Observation Focus Strength (Story 26-1)
 	computeContradictionStrength,
 	computeConvergenceStrength,
+	computeConversationSkew,
+	computeCoverageGainV2,
+	computeCoverageValue,
+	computeDRS,
+	computeEnergyFit,
+	computeEnergyMalus,
+	computeEnergyMultiplier,
+	computeEngagement,
+	computeEntryPressure,
+	computeETargetV2,
+	computeFacetPriority,
+	computeFreshnessBonus,
+	computeFreshnessPenaltyV2,
+	computeGovernorOutput,
 	computeNoticingStrength,
 	computePerDomainConfidence,
 	computeRelateStrength,
 	computeSmoothedClarity,
+	type DRSConfig,
+	type DRSInput,
+	deriveEnergyGuidanceLevel,
+	deriveIntent,
+	deriveSessionPhase,
+	deriveTransitionType,
+	type EnergyGuidanceLevel,
+	type ETargetInput,
+	type ETargetOutput,
+	evaluateObservationGating,
+	extractDRSConfig,
+	extractTerritoryScorerConfig,
+	type MoveGovernorInput,
+	type MoveGovernorResult,
 	OBSERVATION_FOCUS_CONSTANTS,
-} from "./utils/steering";
-// Pacing territory scorer (Story 25-2)
-export {
-	computeAdjacency,
-	computeConversationSkew,
-	computeCoverageGainV2,
-	computeEnergyMalus,
-	computeFacetPriority,
-	computeFreshnessPenaltyV2,
+	type ObservationGatingInput,
+	type ObservationGatingResult,
+	PACING_CONFIG,
 	PACING_SCORER_DEFAULTS,
+	type PacingConfig,
 	type PacingScorerConfig,
 	type PacingVisitHistory,
-	type ScoreAllTerritoriesV2Input,
-	scoreAllTerritoriesV2,
-} from "./utils/steering";
-// Prompt Builder (Story 27-2)
-export {
-	buildPrompt,
 	type PromptBuilderOutput,
+	type ScoreAllTerritoriesV2Input,
+	type ScoredTerritory,
+	type SelectorSessionPhase,
+	type SelectorTransitionType,
+	scoreAllTerritories,
+	scoreAllTerritoriesV2,
+	scoreTerritory,
+	selectColdStartTerritory,
+	selectTerritory,
+	selectTerritoryV2,
+	selectTerritoryWithColdStart,
+	type TerritoryPromptContent,
+	type TerritoryScorerConfig,
+	type TerritoryVisitHistory,
 	translateObservationFocus,
 } from "./utils/steering";

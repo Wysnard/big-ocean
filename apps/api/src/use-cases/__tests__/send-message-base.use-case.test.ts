@@ -85,7 +85,7 @@ describe("sendMessage Use Case", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should invoke Nerin with territory prompt (Story 21-7)", () =>
+		it.effect("should invoke Nerin with system prompt (Story 27-3)", () =>
 			Effect.gen(function* () {
 				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
 
@@ -101,11 +101,7 @@ describe("sendMessage Use Case", () => {
 							// Current user message appended in-memory by pipeline
 							expect.objectContaining({ role: "user", content: "Test" }),
 						],
-						territoryPrompt: expect.objectContaining({
-							opener: expect.any(String),
-							domains: expect.any(Array),
-							energyGuidanceLevel: expect.any(String),
-						}),
+						systemPrompt: expect.any(String),
 					}),
 				);
 			}).pipe(Effect.provide(createTestLayer())),

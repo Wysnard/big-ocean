@@ -1,7 +1,6 @@
 import { Context, Effect } from "effect";
 import { AgentInvocationError } from "../errors/http.errors";
 import type { DomainMessage } from "../types/message";
-import type { TerritoryPromptContent } from "../utils/steering/territory-prompt-builder";
 
 /**
  * Token usage metrics from agent invocation
@@ -15,7 +14,8 @@ export interface TokenUsage {
 /**
  * Input for Nerin agent invocation
  *
- * Territory-based steering (Story 21-7): territoryPrompt provides conversation guidance.
+ * Story 27-3: Pipeline now provides a fully composed system prompt from the
+ * 4-tier prompt builder, replacing the old TerritoryPromptContent.
  */
 export interface NerinInvokeInput {
 	/** Session identifier for state persistence */
@@ -24,8 +24,8 @@ export interface NerinInvokeInput {
 	/** Message history for conversational context */
 	readonly messages: readonly DomainMessage[];
 
-	/** Territory prompt content (Story 21-7) */
-	readonly territoryPrompt?: TerritoryPromptContent;
+	/** Fully composed system prompt from the prompt builder (Story 27-3) */
+	readonly systemPrompt?: string;
 }
 
 /**

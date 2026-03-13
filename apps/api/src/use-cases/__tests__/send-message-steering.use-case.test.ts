@@ -33,7 +33,7 @@ describe("sendMessage Use Case", () => {
 	});
 
 	describe("Territory-based steering integration (Story 21-7)", () => {
-		it.effect("should pass territory prompt to Nerin in post-cold-start messages", () =>
+		it.effect("should pass system prompt to Nerin in post-cold-start messages (Story 27-3)", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockEvidenceRepo.findBySession.mockReturnValue(
@@ -59,14 +59,13 @@ describe("sendMessage Use Case", () => {
 				});
 
 				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
-				expect(nerinCall.territoryPrompt).toBeDefined();
-				expect(nerinCall.territoryPrompt?.opener).toBeDefined();
-				expect(nerinCall.territoryPrompt?.energyGuidanceLevel).toBeDefined();
-				expect(nerinCall.territoryPrompt?.domains).toBeDefined();
+				expect(nerinCall.systemPrompt).toBeDefined();
+				expect(typeof nerinCall.systemPrompt).toBe("string");
+				expect(nerinCall.systemPrompt.length).toBeGreaterThan(0);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should use cold-start territory during cold start", () =>
+		it.effect("should use system prompt during cold start (Story 27-3)", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
 
@@ -76,9 +75,9 @@ describe("sendMessage Use Case", () => {
 				});
 
 				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
-				// Cold-start path still provides territory prompt
-				expect(nerinCall.territoryPrompt).toBeDefined();
-				expect(nerinCall.territoryPrompt?.energyGuidanceLevel).toBeDefined();
+				// Cold-start path provides a composed system prompt
+				expect(nerinCall.systemPrompt).toBeDefined();
+				expect(typeof nerinCall.systemPrompt).toBe("string");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
@@ -163,7 +162,7 @@ describe("sendMessage Use Case", () => {
 				// Nerin still gets territory prompt even though conversanalyzer failed
 				expect(result.response).toBe(mockNerinResponse.response);
 				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
-				expect(nerinCall.territoryPrompt).toBeDefined();
+				expect(nerinCall.systemPrompt).toBeDefined();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
@@ -228,7 +227,7 @@ describe("sendMessage Use Case", () => {
 
 					expect(result.response).toBeDefined();
 					const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
-					expect(nerinCall.territoryPrompt).toBeDefined();
+					expect(nerinCall.systemPrompt).toBeDefined();
 				}).pipe(Effect.provide(createTestLayer())),
 		);
 	});

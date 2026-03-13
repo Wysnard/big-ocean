@@ -1,22 +1,22 @@
 /**
- * Nerin Pipeline -- Territory-Based 8-Step Orchestration (Story 21-7)
+ * Nerin Pipeline -- Pacing Pipeline Integration (Story 27-3)
  *
- * Replaces the old facet-targeted steering with territory-based conversation steering.
+ * Wires the full pacing pipeline into the Nerin conversation loop:
+ * E_target -> V2 scorer -> V2 selector -> Move Governor -> Prompt Builder -> Nerin -> ConversAnalyzer -> save.
+ *
+ * Replaces the old DRS + multiplicative scorer + old prompt builder path.
  * Clean cut migration -- no backward compatibility shim or feature flag.
  *
- * Story 23-3: Refactored to use assessment_exchange for per-turn state storage.
- * Territory, energy level, and other pipeline metadata now stored on exchange rows
- * instead of message columns.
- *
- * 8-step orchestration:
- * 1. computeDRS() -- depth readiness from coverage, engagement, energy history
- * 2. scoreAllTerritories() -- rank territories by coverage, energy fit, freshness
- * 3. selectTerritory() -- pick best territory (or cold-start for first N messages)
- * 4. buildNerinPrompt() -- look up territory from catalog for Nerin guidance
- * 5. callNerin() -- invoke Nerin with territory-contextualized prompt
- * 6. callConversAnalyzer() -- analyze current exchange for evidence + energy
- * 7. saveEvidence() -- persist extracted evidence
- * 8. saveExchangeMetadata() -- store pipeline state on assessment_exchange
+ * Pipeline steps:
+ * 1. Compute E_target from energy/telling histories
+ * 2. Score all territories via V2 additive scorer
+ * 3. Select territory via V2 selector (cold-start-perimeter for turn 1, argmax for turns 2+)
+ * 4. Compute observation focus strengths
+ * 5. Run Move Governor to produce PromptBuilderInput
+ * 6. Build system prompt via 4-tier prompt builder
+ * 7. Call Nerin with composed system prompt
+ * 8. Call ConversAnalyzer via three-tier extraction
+ * 9. Save evidence + exchange metadata
  */
 
 import {
@@ -25,28 +25,43 @@ import {
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	aggregateDomainDistribution,
-	buildFacetEvidenceCounts,
-	buildTerritoryPrompt,
+	buildPrompt,
 	type ConversanalyzerV2Output,
 	ConversationEvidenceRepository,
 	CostGuardRepository,
 	calculateCost,
-	computeDRS,
+	computeContradictionStrength,
+	computeConvergenceStrength,
+	computeETargetV2,
+	computeFacetMetrics,
 	computeFinalWeight,
+	computeGovernorOutput,
+	computeNoticingStrength,
+	computePerDomainConfidence,
+	computeRelateStrength,
+	computeSmoothedClarity,
 	type DomainMessage,
+	deriveSessionPhase,
+	deriveTransitionType,
+	type EnergyBand,
 	type ExtractionTier,
-	extractDRSConfig,
-	extractTerritoryScorerConfig,
-	GREETING_MESSAGES,
+	type FacetMetrics as FacetMetricsType,
 	getUTCDateKey,
+	type LifeDomain,
 	LoggerRepository,
+	type MoveGovernorInput,
+	mapEnergyBand,
+	mapTellingBand,
 	NerinAgentRepository,
-	scoreAllTerritories,
-	selectTerritoryWithColdStart,
+	OBSERVATION_FOCUS_CONSTANTS,
+	PACING_SCORER_DEFAULTS,
+	type PacingVisitHistory,
+	scoreAllTerritoriesV2,
+	selectTerritoryV2,
 	TERRITORY_CATALOG,
+	type TellingBand,
 	type TerritoryId,
 	TerritoryIdSchema,
-	type TerritoryVisitHistory,
 } from "@workspace/domain";
 import { Effect, Schema } from "effect";
 import { runThreeTierExtraction } from "./three-tier-extraction";
@@ -55,18 +70,11 @@ import { runThreeTierExtraction } from "./three-tier-extraction";
 const tid = (s: string): TerritoryId => Schema.decodeSync(TerritoryIdSchema)(s);
 
 /**
- * Default cold-start territories — light-energy territories for the first
- * few messages before scoring takes over. These are curated light-energy
- * territories selected for broad appeal and low emotional stakes.
+ * Default territory for turn 1 currentTerritory in scorer input.
+ * On turn 1, adjacency defaults to 0 for all candidates (no previous territory),
+ * so this value doesn't affect scoring -- it's just needed for the type.
  */
-const COLD_START_TERRITORIES: readonly TerritoryId[] = [
-	tid("creative-pursuits"),
-	tid("weekend-adventures"),
-	tid("social-circles"),
-] as const;
-
-/** Max user messages that count as cold start: 1 greeting + 1 opening question = 2 assistant msgs before user replies */
-const COLD_START_USER_MSG_THRESHOLD = GREETING_MESSAGES.length + 1;
+const DEFAULT_CURRENT_TERRITORY = tid("creative-pursuits");
 
 export interface NerinPipelineInput {
 	readonly sessionId: string;
@@ -82,32 +90,20 @@ export interface NerinPipelineOutput {
 // ---- Helpers ----
 
 /**
- * Build territory visit history from previous exchange records.
- * Exchanges without selectedTerritory are skipped.
+ * Build visit history from exchange records for the V2 scorer.
+ * Maps territory ID -> last visit turn number.
  */
-function buildVisitHistory(
+function buildPacingVisitHistory(
 	exchanges: ReadonlyArray<{
 		selectedTerritory?: string | null;
 		turnNumber: number;
 	}>,
-): TerritoryVisitHistory {
-	const visits = new Map<TerritoryId, { visitCount: number; lastVisitExchange: number }>();
+): PacingVisitHistory {
+	const visits = new Map<TerritoryId, number>();
 
 	for (const exchange of exchanges) {
 		if (exchange.selectedTerritory) {
-			const tid = exchange.selectedTerritory as TerritoryId;
-			const existing = visits.get(tid);
-			if (existing) {
-				visits.set(tid, {
-					visitCount: existing.visitCount + 1,
-					lastVisitExchange: exchange.turnNumber,
-				});
-			} else {
-				visits.set(tid, {
-					visitCount: 1,
-					lastVisitExchange: exchange.turnNumber,
-				});
-			}
+			visits.set(exchange.selectedTerritory as TerritoryId, exchange.turnNumber);
 		}
 	}
 
@@ -115,19 +111,13 @@ function buildVisitHistory(
 }
 
 /**
- * Extract last N observed energy values from exchange records (most recent first).
- * Energy is stored as a continuous [0, 1] value on the exchange.
+ * Extract energy history from exchange records as continuous [0, 1] values.
+ * Chronological order (oldest first) as expected by computeETarget.
  */
-function extractLastEnergyValues(
-	exchanges: ReadonlyArray<{
-		energy?: number | null;
-	}>,
-	count: number,
-): number[] {
+function extractEnergyHistory(exchanges: ReadonlyArray<{ energy?: number | null }>): number[] {
 	const values: number[] = [];
-	for (let i = exchanges.length - 1; i >= 0 && values.length < count; i--) {
-		const exchange = exchanges[i];
-		if (exchange?.energy != null) {
+	for (const exchange of exchanges) {
+		if (exchange.energy != null) {
 			values.push(exchange.energy);
 		}
 	}
@@ -135,50 +125,238 @@ function extractLastEnergyValues(
 }
 
 /**
- * Extract last N word counts from user messages (most recent first).
+ * Extract telling history from exchange records as continuous [0, 1] values.
+ * Chronological order (oldest first) as expected by computeETarget.
+ * Null values are preserved as null (telling may be unavailable).
  */
-function extractLastWordCounts(
-	userMessages: ReadonlyArray<{ content: string }>,
-	count: number,
-): number[] {
-	const counts: number[] = [];
-	for (let i = userMessages.length - 1; i >= 0 && counts.length < count; i--) {
-		const msg = userMessages[i];
-		if (msg) {
-			counts.push(msg.content.split(/\s+/).filter(Boolean).length);
-		}
+function extractTellingHistory(
+	exchanges: ReadonlyArray<{ telling?: number | null }>,
+): (number | null)[] {
+	const values: (number | null)[] = [];
+	for (const exchange of exchanges) {
+		// telling is stored as a continuous value; null if extraction failed
+		values.push(exchange.telling ?? null);
 	}
-	return counts;
+	return values;
 }
 
 /**
- * Build per-message evidence counts from evidence records.
- * Returns counts for the last N user messages (most recent first).
+ * Get the current territory from the most recent exchange.
+ * Returns null if no exchanges exist yet.
  */
-function extractLastEvidenceCounts(
-	evidenceRecords: ReadonlyArray<{ messageId: string }>,
-	userMessageIds: readonly string[],
-	count: number,
-): number[] {
-	// Build messageId -> evidence count map
-	const countsByMessage = new Map<string, number>();
-	for (const record of evidenceRecords) {
-		countsByMessage.set(record.messageId, (countsByMessage.get(record.messageId) ?? 0) + 1);
-	}
-
-	// Get counts for last N user messages (most recent first)
-	const counts: number[] = [];
-	for (let i = userMessageIds.length - 1; i >= 0 && counts.length < count; i--) {
-		const msgId = userMessageIds[i];
-		if (msgId) {
-			counts.push(countsByMessage.get(msgId) ?? 0);
+function getCurrentTerritory(
+	exchanges: ReadonlyArray<{ selectedTerritory?: string | null }>,
+): TerritoryId | null {
+	for (let i = exchanges.length - 1; i >= 0; i--) {
+		const exchange = exchanges[i];
+		if (exchange?.selectedTerritory) {
+			return exchange.selectedTerritory as TerritoryId;
 		}
 	}
-	return counts;
+	return null;
 }
 
 /**
- * Runs the full Nerin pipeline: territory steering -> Nerin -> ConversAnalyzer -> save.
+ * Compute observation focus strengths from evidence and exchange state.
+ *
+ * Returns the raw strengths needed by the Move Governor:
+ * - relate: energy x telling
+ * - noticing: smoothed clarity for top domain
+ * - contradiction: best facet contradiction across domains
+ * - convergence: best facet convergence across 3+ domains
+ * - phase: mean(confidence) / C_MAX
+ * - sharedFireCount: number of prior non-Relate observations
+ */
+function computeObservationFocusInputs(
+	facetMetrics: ReadonlyMap<string, FacetMetricsType>,
+	currentEnergy: number,
+	currentTelling: number,
+	previousSmoothedClarity: number,
+): {
+	relateStrength: number;
+	noticingStrength: number;
+	contradictionStrength: number;
+	convergenceStrength: number;
+	noticingDomain: LifeDomain | undefined;
+	contradictionTarget:
+		| {
+				facet: string;
+				pair: readonly [
+					{ domain: LifeDomain; score: number; confidence: number },
+					{ domain: LifeDomain; score: number; confidence: number },
+				];
+				strength: number;
+		  }
+		| undefined;
+	convergenceTarget:
+		| {
+				facet: string;
+				domains: readonly { domain: LifeDomain; score: number; confidence: number }[];
+				strength: number;
+		  }
+		| undefined;
+	phase: number;
+	smoothedClarity: number;
+} {
+	// Relate strength
+	const relateStrength = computeRelateStrength(currentEnergy, currentTelling);
+
+	// Phase: mean confidence across all facets with evidence / C_MAX
+	let sumConf = 0;
+	let countConf = 0;
+	for (const [, metrics] of facetMetrics) {
+		if (metrics.confidence > 0) {
+			sumConf += metrics.confidence;
+			countConf++;
+		}
+	}
+	const phase = countConf > 0 ? sumConf / countConf / OBSERVATION_FOCUS_CONSTANTS.C_MAX : 0;
+
+	// Noticing: find the domain with the highest signal clarity
+	// Clarity = max per-domain confidence across all facets for each domain
+	const domainMaxConf = new Map<LifeDomain, number>();
+	for (const [, metrics] of facetMetrics) {
+		for (const [domain, weight] of metrics.domainWeights) {
+			const conf = computePerDomainConfidence(weight);
+			const current = domainMaxConf.get(domain) ?? 0;
+			if (conf > current) domainMaxConf.set(domain, conf);
+		}
+	}
+
+	let topDomain: LifeDomain | undefined;
+	let topClarity = 0;
+	for (const [domain, conf] of domainMaxConf) {
+		if (conf > topClarity) {
+			topClarity = conf;
+			topDomain = domain;
+		}
+	}
+
+	const smoothedClarity = computeSmoothedClarity(previousSmoothedClarity, topClarity);
+	const noticingStrength = computeNoticingStrength(smoothedClarity);
+
+	// Contradiction: find the facet with the highest score divergence between 2 domains
+	let bestContradictionStrength = 0;
+	let contradictionTarget:
+		| {
+				facet: string;
+				pair: readonly [
+					{ domain: LifeDomain; score: number; confidence: number },
+					{ domain: LifeDomain; score: number; confidence: number },
+				];
+				strength: number;
+		  }
+		| undefined;
+
+	for (const [facet, metrics] of facetMetrics) {
+		const domainEntries = [...metrics.domainWeights.entries()];
+		if (domainEntries.length < 2) continue;
+
+		// Get per-domain confidences for this facet
+		const domainConfs = domainEntries.map(([domain, weight]) => ({
+			domain,
+			confidence: computePerDomainConfidence(weight),
+			score: metrics.score, // Facet-level score (same across domains for now)
+		}));
+
+		// Find pair with maximum confidence divergence
+		for (let i = 0; i < domainConfs.length; i++) {
+			for (let j = i + 1; j < domainConfs.length; j++) {
+				const a = domainConfs[i]!;
+				const b = domainConfs[j]!;
+				// Delta: absolute difference in per-domain confidence
+				const delta = Math.abs(a.confidence - b.confidence);
+				const strength = computeContradictionStrength(delta, a.confidence, b.confidence);
+				if (strength > bestContradictionStrength) {
+					bestContradictionStrength = strength;
+					contradictionTarget = {
+						facet: facet as string,
+						pair: [
+							{ domain: a.domain, score: a.score, confidence: a.confidence },
+							{ domain: b.domain, score: b.score, confidence: b.confidence },
+						] as const,
+						strength,
+					};
+				}
+			}
+		}
+	}
+
+	// Convergence: find the facet with most consistent scores across 3+ domains
+	let bestConvergenceStrength = 0;
+	let convergenceTarget:
+		| {
+				facet: string;
+				domains: readonly { domain: LifeDomain; score: number; confidence: number }[];
+				strength: number;
+		  }
+		| undefined;
+
+	for (const [facet, metrics] of facetMetrics) {
+		const domainEntries = [...metrics.domainWeights.entries()];
+		if (domainEntries.length < 3) continue;
+
+		const domainConfs = domainEntries.map(([domain, weight]) => ({
+			domain,
+			confidence: computePerDomainConfidence(weight),
+			score: metrics.score,
+		}));
+
+		const confidences = domainConfs.map((d) => d.confidence);
+		const maxConf = Math.max(...confidences);
+		const minConf = Math.min(...confidences);
+		const normalizedSpread = maxConf > 0 ? (maxConf - minConf) / maxConf : 0;
+
+		const strength = computeConvergenceStrength(normalizedSpread, confidences);
+		if (strength > bestConvergenceStrength) {
+			bestConvergenceStrength = strength;
+			convergenceTarget = {
+				facet: facet as string,
+				domains: domainConfs.map((d) => ({
+					domain: d.domain,
+					score: d.score,
+					confidence: d.confidence,
+				})),
+				strength,
+			};
+		}
+	}
+
+	return {
+		relateStrength,
+		noticingStrength,
+		contradictionStrength: bestContradictionStrength,
+		convergenceStrength: bestConvergenceStrength,
+		noticingDomain: topDomain,
+		contradictionTarget,
+		convergenceTarget,
+		phase,
+		smoothedClarity,
+	};
+}
+
+/**
+ * Count the number of non-Relate observation focus events from exchange history.
+ * Uses the governorOutput field which stores the PromptBuilderInput.
+ */
+function countSharedFires(exchanges: ReadonlyArray<{ governorOutput?: unknown }>): number {
+	let count = 0;
+	for (const exchange of exchanges) {
+		if (exchange.governorOutput && typeof exchange.governorOutput === "object") {
+			const output = exchange.governorOutput as {
+				intent?: string;
+				observationFocus?: { type?: string };
+			};
+			if (output.observationFocus && output.observationFocus.type !== "relate") {
+				count++;
+			}
+		}
+	}
+	return count;
+}
+
+/**
+ * Runs the full Nerin pipeline with pacing integration.
  *
  * Atomic write: user message + assistant message are persisted together only after the LLM succeeds.
  * This eliminates orphan user messages when the LLM call fails.
@@ -214,110 +392,129 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			{ id: `pending-${Date.now()}`, role: "user" as const, content: input.userMessage },
 		];
 
-		// Partition messages by role
-		const userMessages = previousMessages.filter((m) => m.role === "user");
-		const userMessageCount = userMessages.length;
-
-		// Get existing evidence for DRS/scoring
+		// Get existing evidence for scoring
 		const existingEvidence = yield* evidenceRepo.findBySession(input.sessionId);
 
-		// ---- Steps 1-4: Territory Steering ----
+		// Current turn number (1-based)
+		const turnNumber = previousExchanges.length + 1;
+		const totalTurns = config.freeTierMessageThreshold;
 
-		let selectedTerritoryId: TerritoryId;
-		let drsValue = 0;
+		// ---- Step 1: Compute E_target ----
+
+		const energyHistory = extractEnergyHistory(previousExchanges);
+		const tellingHistory = extractTellingHistory(previousExchanges);
+
+		// Get priors from the last exchange for incremental computation
+		const lastExchange =
+			previousExchanges.length > 0 ? previousExchanges[previousExchanges.length - 1] : null;
+
+		const eTargetResult = computeETargetV2({
+			energyHistory,
+			tellingHistory,
+			priorSmoothedEnergy: lastExchange?.smoothedEnergy ?? undefined,
+			priorComfort: lastExchange?.comfort ?? undefined,
+		});
+
+		// ---- Step 2: Score all territories ----
+
+		const facetMetrics = computeFacetMetrics(existingEvidence as any[]);
+		const visitHistory = buildPacingVisitHistory(previousExchanges);
+		const currentTerritory = getCurrentTerritory(previousExchanges) ?? DEFAULT_CURRENT_TERRITORY;
+
+		const scorerOutput = scoreAllTerritoriesV2({
+			eTarget: eTargetResult.eTarget,
+			facetMetrics,
+			catalog: TERRITORY_CATALOG,
+			currentTerritory,
+			visitHistory,
+			turnNumber,
+			totalTurns,
+			config: PACING_SCORER_DEFAULTS,
+		});
+
+		// ---- Step 3: Select territory ----
+
+		// Seed for cold-start-perimeter deterministic selection (turn-based)
+		const selectionSeed = turnNumber * 7919; // Prime-based seed for determinism
+		const selectorOutput = selectTerritoryV2(scorerOutput, selectionSeed);
+		const selectedTerritoryId = selectorOutput.selectedTerritory;
+
+		// ---- Step 4: Compute observation focus strengths ----
+
+		// Get current energy/telling from last exchange (or defaults for first turn)
+		const currentEnergy = energyHistory.length > 0 ? energyHistory[energyHistory.length - 1]! : 0.5;
+		const currentTelling =
+			tellingHistory.length > 0 ? (tellingHistory[tellingHistory.length - 1] ?? 0.5) : 0.5;
+
+		// Get previous smoothed clarity from exchange history
+		// (stored as part of governor debug, but for simplicity we recompute)
+		const previousSmoothedClarity = 0; // Will build up over exchanges
+
+		const focusInputs = computeObservationFocusInputs(
+			facetMetrics,
+			currentEnergy,
+			currentTelling,
+			previousSmoothedClarity,
+		);
+
+		const sharedFireCount = countSharedFires(previousExchanges);
+
+		// ---- Step 5: Run Move Governor ----
+
+		const territory = TERRITORY_CATALOG.get(selectedTerritoryId);
+		const expectedEnergy = territory?.expectedEnergy ?? 0.5;
+		const isFinalTurn = turnNumber >= totalTurns;
+
+		const governorInput: MoveGovernorInput = {
+			selectedTerritory: selectedTerritoryId,
+			eTarget: eTargetResult.eTarget,
+			turnNumber,
+			isFinalTurn,
+			expectedEnergy,
+			previousTerritory: getCurrentTerritory(previousExchanges),
+			phase: focusInputs.phase,
+			sharedFireCount,
+			relateStrength: focusInputs.relateStrength,
+			noticingStrength: focusInputs.noticingStrength,
+			contradictionStrength: focusInputs.contradictionStrength,
+			convergenceStrength: focusInputs.convergenceStrength,
+			noticingDomain: focusInputs.noticingDomain,
+			contradictionTarget: focusInputs.contradictionTarget as any,
+			convergenceTarget: focusInputs.convergenceTarget as any,
+		};
+
+		const governorResult = computeGovernorOutput(governorInput);
+
+		// ---- Step 6: Build system prompt via 4-tier prompt builder ----
+
+		const promptResult = buildPrompt(governorResult.output);
+
+		logger.info("Pacing pipeline computed", {
+			sessionId: input.sessionId,
+			turnNumber,
+			eTarget: +eTargetResult.eTarget.toFixed(3),
+			smoothedEnergy: +eTargetResult.smoothedEnergy.toFixed(3),
+			selectedTerritory: selectedTerritoryId,
+			selectionRule: selectorOutput.selectionRule,
+			governorIntent: governorResult.output.intent,
+			entryPressure: governorResult.debug.entryPressure.level,
+			observationFocus: governorResult.debug.observationGating.winner?.type ?? "relate",
+			tier2Modules: promptResult.tier2Modules,
+			topScoredTerritories: scorerOutput.ranked.slice(0, 3).map((t) => ({
+				id: t.territoryId,
+				score: +t.score.toFixed(3),
+			})),
+		});
+
+		// ---- Step 7: Call Nerin with composed system prompt ----
+
 		let analyzerTokenUsage: { input: number; output: number } | null = null;
 
-		if (userMessageCount >= COLD_START_USER_MSG_THRESHOLD) {
-			// Step 1: Compute DRS
-			const drsConfig = extractDRSConfig(config);
-			const scorerConfig = extractTerritoryScorerConfig(config);
-
-			const facetEvidenceCounts = buildFacetEvidenceCounts(existingEvidence);
-			const coveredFacets = facetEvidenceCounts.size;
-
-			const lastWordCounts = extractLastWordCounts(userMessages, 3);
-			const lastEvidenceCounts = extractLastEvidenceCounts(
-				existingEvidence,
-				userMessages.map((m) => m.id),
-				3,
-			);
-			const lastEnergyValues = extractLastEnergyValues(previousExchanges, 3);
-
-			drsValue = computeDRS(
-				{
-					coveredFacets,
-					lastWordCounts,
-					lastEvidenceCounts,
-					lastEnergyValues,
-				},
-				drsConfig,
-			);
-
-			// Step 2: Score all territories
-			const visitHistory = buildVisitHistory(previousExchanges);
-			const currentExchange = previousExchanges.length;
-
-			const scoredTerritories = scoreAllTerritories(
-				TERRITORY_CATALOG,
-				facetEvidenceCounts,
-				drsValue,
-				visitHistory,
-				currentExchange,
-				drsConfig,
-				scorerConfig,
-			);
-
-			// Step 3: Select territory (scoring path)
-			const steeringOutput = selectTerritoryWithColdStart({
-				messageCount: userMessageCount,
-				coldStartThreshold: config.territoryColdStartThreshold,
-				coldStartTerritories: COLD_START_TERRITORIES,
-				scoredTerritories,
-			});
-
-			selectedTerritoryId = steeringOutput.territoryId;
-
-			logger.info("Territory steering computed", {
-				sessionId: input.sessionId,
-				drs: +drsValue.toFixed(3),
-				selectedTerritory: selectedTerritoryId,
-				coveredFacets,
-				userMessageCount,
-				topScoredTerritories: scoredTerritories.slice(0, 3).map((t) => ({
-					id: t.territory.id,
-					score: +t.score.toFixed(3),
-					coverage: +t.coverageValue.toFixed(3),
-					energyFit: +t.energyFit.toFixed(3),
-					freshness: +t.freshnessBonus.toFixed(3),
-				})),
-			});
-		} else {
-			// Step 3 (cold-start path): Select from cold-start territories
-			const steeringOutput = selectTerritoryWithColdStart({
-				messageCount: userMessageCount,
-				coldStartThreshold: config.territoryColdStartThreshold,
-				coldStartTerritories: COLD_START_TERRITORIES,
-				scoredTerritories: [],
-			});
-
-			selectedTerritoryId = steeringOutput.territoryId;
-
-			logger.info("Cold-start territory selected", {
-				sessionId: input.sessionId,
-				selectedTerritory: selectedTerritoryId,
-				userMessageCount,
-			});
-		}
-
-		// Step 4: Build Nerin prompt from territory catalog
-		const territoryPrompt = buildTerritoryPrompt({ territoryId: selectedTerritoryId });
-
-		// Step 5: Call Nerin with territory-contextualized prompt
 		const result = yield* nerin
 			.invoke({
 				sessionId: input.sessionId,
 				messages: domainMessages,
-				territoryPrompt,
+				systemPrompt: promptResult.systemPrompt,
 			})
 			.pipe(
 				Effect.tapError((error) =>
@@ -331,12 +528,18 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				),
 			);
 
-		// Step 6: Call ConversAnalyzer v2 via three-tier extraction pipeline (Story 24-2)
+		// ---- Step 8: Call ConversAnalyzer via three-tier extraction ----
+
 		let pendingEvidence: ConversanalyzerV2Output["evidence"] = [];
-		let observedEnergyLevel = "medium";
+		let observedEnergyBand: EnergyBand = "steady";
+		let observedTellingBand: TellingBand = "mixed";
+		let observedEnergy = 0.5;
+		let observedTelling = 0.5;
+		let withinMessageShift = false;
 		let extractionTier: ExtractionTier | null = null;
 
-		if (userMessageCount >= COLD_START_USER_MSG_THRESHOLD) {
+		// Always run extraction (no more cold-start skip)
+		if (turnNumber >= 1) {
 			const domainDistribution = aggregateDomainDistribution(existingEvidence);
 			const recentMessages: DomainMessage[] = domainMessages.slice(-6);
 
@@ -351,14 +554,11 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			const evidenceResult = extraction.output;
 
 			analyzerTokenUsage = evidenceResult.tokenUsage;
-			// Bridge v2 energyBand to v1 observedEnergyLevel for downstream compatibility
-			const band = evidenceResult.userState.energyBand;
-			observedEnergyLevel =
-				band === "minimal" || band === "low"
-					? "light"
-					: band === "high" || band === "very_high"
-						? "heavy"
-						: "medium";
+			observedEnergyBand = evidenceResult.userState.energyBand;
+			observedTellingBand = evidenceResult.userState.tellingBand;
+			observedEnergy = mapEnergyBand(observedEnergyBand);
+			observedTelling = mapTellingBand(observedTellingBand);
+			withinMessageShift = evidenceResult.userState.withinMessageShift;
 
 			const filteredEvidence = evidenceResult.evidence.filter(
 				(e) => computeFinalWeight(e.strength, e.confidence) >= config.minEvidenceWeight,
@@ -368,7 +568,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				sessionId: input.sessionId,
 				rawCount: evidenceResult.evidence.length,
 				filteredCount: filteredEvidence.length,
-				observedEnergyLevel,
+				observedEnergyBand,
+				observedTellingBand,
 				extractionTier,
 				evidence: filteredEvidence.map((e) => ({
 					facet: e.bigfiveFacet,
@@ -385,7 +586,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			}
 		}
 
-		// Cost tracking
+		// ---- Cost tracking ----
+
 		const nerinCost = calculateCost(result.tokenCount.input, result.tokenCount.output);
 		const analyzerCost = analyzerTokenUsage
 			? calculateCost(analyzerTokenUsage.input, analyzerTokenUsage.output)
@@ -415,18 +617,65 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			dateKey: getUTCDateKey(),
 		});
 
+		// ---- Step 9: Save exchange + messages + evidence ----
+
+		// Derive session phase and transition type
+		const sessionPhase = deriveSessionPhase(turnNumber, totalTurns);
+		const previousTerritory = getCurrentTerritory(previousExchanges);
+		const transitionType = previousTerritory
+			? deriveTransitionType(selectedTerritoryId, previousTerritory)
+			: ("transition" as const);
+
+		// Compute drain and ceiling from E_target internals for storage
+		// (These are intermediate values computed inside computeETarget; we store for observability)
+		const _drain = 0; // Recomputed from history inside computeETarget; not exposed
+		const _drainCeiling = eTargetResult.eTarget; // Approximate: eTarget is min(shifted, ceiling)
+
 		// Create exchange row for this turn
-		const turnNumber = previousExchanges.length + 1;
 		const exchange = yield* exchangeRepo.create(input.sessionId, turnNumber);
 
-		// Update exchange with pipeline state (including extraction tier from Story 24-2)
+		// Update exchange with full pipeline state
 		yield* exchangeRepo.update(exchange.id, {
-			selectedTerritory: selectedTerritoryId as string,
-			selectionRule: userMessageCount < COLD_START_USER_MSG_THRESHOLD ? "cold_start" : "argmax",
+			// Extraction state
+			energy: observedEnergy,
+			energyBand: observedEnergyBand,
+			telling: observedTelling,
+			tellingBand: observedTellingBand,
+			withinMessageShift,
 			...(extractionTier != null ? { extractionTier } : {}),
+
+			// Pacing state
+			smoothedEnergy: eTargetResult.smoothedEnergy,
+			comfort: eTargetResult.comfort,
+			eTarget: eTargetResult.eTarget,
+
+			// Scoring
+			scorerOutput: {
+				ranked: scorerOutput.ranked.slice(0, 5).map((t) => ({
+					id: t.territoryId,
+					score: +t.score.toFixed(3),
+				})),
+			},
+
+			// Selection
+			selectedTerritory: selectedTerritoryId as string,
+			selectionRule: selectorOutput.selectionRule === "cold-start-perimeter" ? "cold_start" : "argmax",
+
+			// Governor
+			governorOutput: governorResult.output,
+			governorDebug: governorResult.debug,
+
+			// Derived
+			sessionPhase:
+				sessionPhase === "opening"
+					? "opening"
+					: sessionPhase === "closing"
+						? "amplifying"
+						: "exploring",
+			transitionType: transitionType === "continue" ? "normal" : "territory_change",
 		});
 
-		// Step 7: Save messages and evidence atomically
+		// Save messages and evidence
 		const savedUserMessage = yield* messageRepo.saveMessage(
 			input.sessionId,
 			"user",
@@ -450,11 +699,11 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		// Increment message_count atomically
 		const messageCount = yield* sessionRepo.incrementMessageCount(input.sessionId);
 
-		// Compute isFinalTurn
-		const isFinalTurn = messageCount >= config.freeTierMessageThreshold;
+		// Compute isFinalTurn from message count
+		const isFinalTurnResult = messageCount >= config.freeTierMessageThreshold;
 
 		// Transition session to "finalizing" on final turn
-		if (isFinalTurn) {
+		if (isFinalTurnResult) {
 			yield* sessionRepo.updateSession(input.sessionId, { status: "finalizing" });
 		}
 
@@ -463,17 +712,19 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			responseLength: result.response.length,
 			tokenCount: result.tokenCount,
 			messageCount,
-			isFinalTurn,
+			isFinalTurn: isFinalTurnResult,
 			selectedTerritory: selectedTerritoryId,
-			observedEnergyLevel,
+			observedEnergyBand,
+			observedTellingBand,
 			extractionTier,
-			drs: +drsValue.toFixed(3),
+			eTarget: +eTargetResult.eTarget.toFixed(3),
+			governorIntent: governorResult.output.intent,
 			evidenceCount: pendingEvidence.length,
 			exchangeId: exchange.id,
 		});
 
 		return {
 			response: result.response,
-			isFinalTurn,
+			isFinalTurn: isFinalTurnResult,
 		} satisfies NerinPipelineOutput;
 	});

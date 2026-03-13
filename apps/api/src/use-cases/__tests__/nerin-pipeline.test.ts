@@ -1,11 +1,10 @@
 /**
- * Nerin Pipeline Tests -- Territory-Based 8-Step Orchestration (Story 21-7)
+ * Nerin Pipeline Tests -- Pacing Pipeline Integration (Story 27-3)
  *
- * Tests the full pipeline: territory steering -> Nerin -> ConversAnalyzer -> save.
- * Uses vi.fn() mock pattern from send-message.fixtures.ts.
+ * Tests the full pipeline: E_target -> V2 scorer -> V2 selector -> Move Governor ->
+ * Prompt Builder -> Nerin -> ConversAnalyzer -> save.
  *
- * Story 23-3: Updated to use AssessmentExchangeRepository for pipeline state.
- * Messages no longer carry territoryId/observedEnergyLevel.
+ * Uses vi.fn() mock pattern.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "@effect/vitest";
@@ -149,8 +148,8 @@ const mockExchangeRecord = {
 	createdAt: new Date(),
 };
 
-/** Cold-start messages: 2 assistant greetings + 1 user reply (userMessageCount = 1, < threshold 3) */
-const coldStartMessages = [
+/** Turn 1 messages: just the greeting, no prior user messages */
+const turn1Messages = [
 	{
 		id: "msg_1",
 		sessionId: "session_test_123",
@@ -158,23 +157,9 @@ const coldStartMessages = [
 		content: "Hi! I'm Nerin.",
 		createdAt: new Date(),
 	},
-	{
-		id: "msg_2",
-		sessionId: "session_test_123",
-		role: "assistant" as const,
-		content: "What brings you here?",
-		createdAt: new Date(),
-	},
-	{
-		id: "msg_3",
-		sessionId: "session_test_123",
-		role: "user" as const,
-		content: "Hello",
-		createdAt: new Date(),
-	},
 ];
 
-/** Post-cold-start messages: 3+ user messages (no territory/energy metadata on messages) */
+/** Post-cold-start messages: multiple exchanges already happened */
 const postColdStartMessages = [
 	{
 		id: "msg_1",
@@ -234,28 +219,60 @@ const postColdStartMessages = [
 	},
 ];
 
-/** Post-cold-start exchange records with territory/energy data */
+/** Post-cold-start exchange records with pacing state */
 const postColdStartExchanges = [
 	{
 		...mockExchangeRecord,
 		id: "ex_1",
 		turnNumber: 1,
 		selectedTerritory: "daily-routines",
-		energyBand: "light",
+		energy: 0.3,
+		energyBand: "low",
+		telling: 0.5,
+		tellingBand: "mixed",
+		smoothedEnergy: 0.4,
+		comfort: 0.4,
+		eTarget: 0.5,
+		selectionRule: "cold_start",
+		governorOutput: { intent: "open", territory: "daily-routines" },
 	},
 	{
 		...mockExchangeRecord,
 		id: "ex_2",
 		turnNumber: 2,
 		selectedTerritory: "daily-routines",
-		energyBand: "medium",
+		energy: 0.5,
+		energyBand: "steady",
+		telling: 0.5,
+		tellingBand: "mixed",
+		smoothedEnergy: 0.45,
+		comfort: 0.45,
+		eTarget: 0.5,
+		selectionRule: "argmax",
+		governorOutput: {
+			intent: "explore",
+			territory: "daily-routines",
+			observationFocus: { type: "relate" },
+		},
 	},
 	{
 		...mockExchangeRecord,
 		id: "ex_3",
 		turnNumber: 3,
 		selectedTerritory: "creative-pursuits",
-		energyBand: "light",
+		energy: 0.3,
+		energyBand: "low",
+		telling: 0.25,
+		tellingBand: "mostly_compliant",
+		smoothedEnergy: 0.4,
+		comfort: 0.4,
+		eTarget: 0.48,
+		selectionRule: "argmax",
+		governorOutput: {
+			intent: "explore",
+			territory: "creative-pursuits",
+			observationFocus: { type: "relate" },
+		},
 	},
 ];
 
@@ -293,7 +310,7 @@ const mockConfig = {
 	teaserModelId: "claude-haiku-4-5-20251001",
 	globalDailyAssessmentLimit: 100,
 	minEvidenceWeight: 0.36,
-	// DRS config
+	// DRS config (still needed for AppConfig type but not used by new pipeline)
 	drsBreadthWeight: 0.55,
 	drsEngagementWeight: 0.45,
 	drsBreadthOffset: 10,
@@ -312,13 +329,13 @@ const mockConfig = {
 	drsMediumFitRange: 0.35,
 	drsHeavyFitCenter: 0.65,
 	drsHeavyFitRange: 0.25,
-	// Territory scoring config
+	// Territory scoring config (old, still in AppConfig type)
 	territoryMinEvidenceThreshold: 3,
 	territoryMaxVisits: 2,
 	territoryFreshnessRate: 0.05,
 	territoryFreshnessMin: 0.8,
 	territoryFreshnessMax: 1.2,
-	// Cold-start threshold
+	// Cold-start threshold (old, still in AppConfig type)
 	territoryColdStartThreshold: 3,
 };
 
@@ -348,7 +365,7 @@ function setupDefaultMocks() {
 			createdAt: new Date(),
 		}),
 	);
-	mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
+	mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(turn1Messages));
 
 	mockExchangeRepo.create.mockReturnValue(Effect.succeed(mockExchangeRecord));
 	mockExchangeRepo.update.mockReturnValue(Effect.succeed(mockExchangeRecord));
@@ -373,7 +390,7 @@ function setupDefaultMocks() {
 	mockCostGuardRepo.checkMessageRateLimit.mockReturnValue(Effect.void);
 }
 
-describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7, updated 23-3)", () => {
+describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 	beforeEach(() => {
 		setupDefaultMocks();
 	});
@@ -382,10 +399,10 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7, updated 23
 		vi.clearAllMocks();
 	});
 
-	describe("Cold-start path", () => {
-		it.effect("selects from COLD_START_TERRITORIES for early messages", () =>
+	describe("Turn 1 (cold-start-perimeter path)", () => {
+		it.effect("selects territory via V2 selector with cold-start-perimeter rule", () =>
 			Effect.gen(function* () {
-				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(turn1Messages));
 
 				const result = yield* runNerinPipeline({
 					sessionId: "session_test_123",
@@ -394,22 +411,23 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7, updated 23
 
 				expect(result.response).toBeDefined();
 
-				// Nerin should be invoked with territory prompt
+				// Nerin should be invoked with a system prompt string (not territoryPrompt)
 				expect(mockNerinRepo.invoke).toHaveBeenCalledTimes(1);
 				const invokeArgs = mockNerinRepo.invoke.mock.calls[0]?.[0];
-				expect(invokeArgs?.territoryPrompt).toBeDefined();
-				expect(invokeArgs?.territoryPrompt?.opener).toBeDefined();
-				expect(invokeArgs?.territoryPrompt?.energyGuidanceLevel).toBeDefined();
-				expect(invokeArgs?.territoryPrompt?.domains).toBeDefined();
+				expect(invokeArgs?.systemPrompt).toBeDefined();
+				expect(typeof invokeArgs?.systemPrompt).toBe("string");
+				expect(invokeArgs?.systemPrompt.length).toBeGreaterThan(0);
 
-				// ConversAnalyzer should NOT be called during cold start
-				expect(mockConversanalyzerRepo.analyze).not.toHaveBeenCalled();
+				// Exchange should store cold_start selection rule
+				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
+				const updateCall = mockExchangeRepo.update.mock.calls[0]?.[1];
+				expect(updateCall?.selectionRule).toBe("cold_start");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
 		it.effect("creates exchange and saves messages with exchange_id", () =>
 			Effect.gen(function* () {
-				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(turn1Messages));
 
 				yield* runNerinPipeline({
 					sessionId: "session_test_123",
@@ -420,7 +438,7 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7, updated 23
 				expect(mockExchangeRepo.create).toHaveBeenCalledTimes(1);
 				expect(mockExchangeRepo.create).toHaveBeenCalledWith("session_test_123", 1);
 
-				// Exchange should be updated with territory selection
+				// Exchange should be updated with pipeline state
 				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
 
 				// saveMessage is called twice: once for user, once for assistant
@@ -438,8 +456,8 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7, updated 23
 		);
 	});
 
-	describe("Post-cold-start path (full 8-step orchestration)", () => {
-		it.effect("runs full territory steering + ConversAnalyzer", () =>
+	describe("Post-cold-start path (full pacing pipeline)", () => {
+		it.effect("runs E_target -> V2 scorer -> selector -> governor -> prompt builder", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
@@ -467,26 +485,48 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7, updated 23
 
 				expect(result.response).toBeDefined();
 
-				// Nerin should be called with territory prompt
+				// Nerin should be called with system prompt (not territoryPrompt)
 				expect(mockNerinRepo.invoke).toHaveBeenCalledTimes(1);
 				const invokeArgs = mockNerinRepo.invoke.mock.calls[0]?.[0];
-				expect(invokeArgs?.territoryPrompt).toBeDefined();
+				expect(invokeArgs?.systemPrompt).toBeDefined();
+				expect(typeof invokeArgs?.systemPrompt).toBe("string");
 
-				// ConversAnalyzer should be called (post-cold-start)
+				// ConversAnalyzer should be called
 				expect(mockConversanalyzerRepo.analyze).toHaveBeenCalledTimes(1);
 
 				// Evidence should be saved
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
 
-				// Exchange should be created and updated
+				// Exchange should be created and updated with full pipeline state
 				expect(mockExchangeRepo.create).toHaveBeenCalledTimes(1);
 				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
+
+				const updateData = mockExchangeRepo.update.mock.calls[0]?.[1];
+				// Verify pacing state stored
+				expect(updateData?.eTarget).toBeDefined();
+				expect(typeof updateData?.eTarget).toBe("number");
+				expect(updateData?.smoothedEnergy).toBeDefined();
+				expect(updateData?.comfort).toBeDefined();
+				// Verify selection state
+				expect(updateData?.selectedTerritory).toBeDefined();
+				expect(updateData?.selectionRule).toBe("argmax");
+				// Verify governor state
+				expect(updateData?.governorOutput).toBeDefined();
+				expect(updateData?.governorDebug).toBeDefined();
+				// Verify extraction state
+				expect(updateData?.energy).toBeDefined();
+				expect(updateData?.energyBand).toBeDefined();
+				expect(updateData?.telling).toBeDefined();
+				expect(updateData?.tellingBand).toBeDefined();
+				// Verify session state
+				expect(updateData?.sessionPhase).toBeDefined();
+				expect(updateData?.transitionType).toBeDefined();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
 	describe("Observability logging (NFR5)", () => {
-		it.effect("logs DRS, territory selected, and evidence count for post-cold-start", () =>
+		it.effect("logs pacing pipeline state including E_target and governor intent", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
@@ -496,15 +536,18 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7, updated 23
 					userMessage: "I work in tech",
 				});
 
-				// Check that "Territory steering computed" was logged
-				const steeringLogCall = mockLoggerRepo.info.mock.calls.find(
-					(call: unknown[]) => call[0] === "Territory steering computed",
+				// Check that "Pacing pipeline computed" was logged
+				const pacingLogCall = mockLoggerRepo.info.mock.calls.find(
+					(call: unknown[]) => call[0] === "Pacing pipeline computed",
 				);
-				expect(steeringLogCall).toBeDefined();
-				const steeringData = steeringLogCall?.[1];
-				expect(steeringData).toHaveProperty("drs");
-				expect(steeringData).toHaveProperty("selectedTerritory");
-				expect(steeringData).toHaveProperty("coveredFacets");
+				expect(pacingLogCall).toBeDefined();
+				const pacingData = pacingLogCall?.[1];
+				expect(pacingData).toHaveProperty("eTarget");
+				expect(pacingData).toHaveProperty("selectedTerritory");
+				expect(pacingData).toHaveProperty("governorIntent");
+				expect(pacingData).toHaveProperty("entryPressure");
+				expect(pacingData).toHaveProperty("observationFocus");
+				expect(pacingData).toHaveProperty("turnNumber");
 
 				// Check "Message processed" log includes territory info
 				const processedLogCall = mockLoggerRepo.info.mock.calls.find(
@@ -513,8 +556,8 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7, updated 23
 				expect(processedLogCall).toBeDefined();
 				const processedData = processedLogCall?.[1];
 				expect(processedData).toHaveProperty("selectedTerritory");
-				expect(processedData).toHaveProperty("observedEnergyLevel");
-				expect(processedData).toHaveProperty("drs");
+				expect(processedData).toHaveProperty("eTarget");
+				expect(processedData).toHaveProperty("governorIntent");
 				expect(processedData).toHaveProperty("evidenceCount");
 				expect(processedData).toHaveProperty("exchangeId");
 			}).pipe(Effect.provide(createTestLayer())),
@@ -522,68 +565,72 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7, updated 23
 	});
 
 	describe("Fail-open resilience", () => {
-		it.effect("handles ConversAnalyzer failure non-fatally — falls back to Tier 2 (Story 24-2)", () =>
-			Effect.gen(function* () {
-				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
-				mockConversanalyzerRepo.analyze.mockReturnValue(
-					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-				);
-				// analyzeLenient succeeds from default setup — Tier 2 fallback produces evidence
+		it.effect(
+			"handles ConversAnalyzer failure non-fatally -- falls back to Tier 2 (Story 24-2)",
+			() =>
+				Effect.gen(function* () {
+					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+					mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
+					mockConversanalyzerRepo.analyze.mockReturnValue(
+						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
+					);
+					// analyzeLenient succeeds from default setup -- Tier 2 fallback produces evidence
 
-				const result = yield* runNerinPipeline({
-					sessionId: "session_test_123",
-					userMessage: "I work in tech",
-				});
+					const result = yield* runNerinPipeline({
+						sessionId: "session_test_123",
+						userMessage: "I work in tech",
+					});
 
-				// Pipeline should still succeed
-				expect(result.response).toBeDefined();
+					// Pipeline should still succeed
+					expect(result.response).toBeDefined();
 
-				// Nerin should have been called
-				expect(mockNerinRepo.invoke).toHaveBeenCalledTimes(1);
+					// Nerin should have been called
+					expect(mockNerinRepo.invoke).toHaveBeenCalledTimes(1);
 
-				// Tier 2 warning was logged
-				expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
-					"ConversAnalyzer fell back to Tier 2 (lenient schema)",
-					expect.objectContaining({ sessionId: "session_test_123" }),
-				);
+					// Tier 2 warning was logged
+					expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
+						"ConversAnalyzer fell back to Tier 2 (lenient schema)",
+						expect.objectContaining({ sessionId: "session_test_123" }),
+					);
 
-				// Evidence IS saved from Tier 2 lenient fallback (evidence above weight threshold)
-				expect(mockEvidenceRepo.save).toHaveBeenCalled();
-			}).pipe(Effect.provide(createTestLayer())),
+					// Evidence IS saved from Tier 2 lenient fallback (evidence above weight threshold)
+					expect(mockEvidenceRepo.save).toHaveBeenCalled();
+				}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("handles both ConversAnalyzer tiers failing — uses Tier 3 neutral defaults (Story 24-2)", () =>
-			Effect.gen(function* () {
-				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
-				mockConversanalyzerRepo.analyze.mockReturnValue(
-					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-				);
-				mockConversanalyzerRepo.analyzeLenient.mockReturnValue(
-					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-				);
+		it.effect(
+			"handles both ConversAnalyzer tiers failing -- uses Tier 3 neutral defaults (Story 24-2)",
+			() =>
+				Effect.gen(function* () {
+					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+					mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
+					mockConversanalyzerRepo.analyze.mockReturnValue(
+						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
+					);
+					mockConversanalyzerRepo.analyzeLenient.mockReturnValue(
+						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
+					);
 
-				const result = yield* runNerinPipeline({
-					sessionId: "session_test_123",
-					userMessage: "I work in tech",
-				});
+					const result = yield* runNerinPipeline({
+						sessionId: "session_test_123",
+						userMessage: "I work in tech",
+					});
 
-				// Pipeline should still succeed
-				expect(result.response).toBeDefined();
+					// Pipeline should still succeed
+					expect(result.response).toBeDefined();
 
-				// Nerin should have been called
-				expect(mockNerinRepo.invoke).toHaveBeenCalledTimes(1);
+					// Nerin should have been called
+					expect(mockNerinRepo.invoke).toHaveBeenCalledTimes(1);
 
-				// Tier 3 warning was logged
-				expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
-					"ConversAnalyzer failed at all tiers, using Tier 3 neutral defaults",
-					expect.objectContaining({ sessionId: "session_test_123" }),
-				);
+					// Tier 3 warning was logged
+					expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
+						"ConversAnalyzer failed at all tiers, using Tier 3 neutral defaults",
+						expect.objectContaining({ sessionId: "session_test_123" }),
+					);
 
-				// Evidence should NOT be saved (neutral defaults have empty evidence)
-				expect(mockEvidenceRepo.save).not.toHaveBeenCalled();
-			}).pipe(Effect.provide(createTestLayer())),
+					// Evidence should NOT be saved (neutral defaults have empty evidence)
+					expect(mockEvidenceRepo.save).not.toHaveBeenCalled();
+				}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
@@ -604,6 +651,38 @@ describe("Nerin Pipeline - Territory-Based Orchestration (Story 21-7, updated 23
 				expect(analyzerInput).toHaveProperty("message");
 				expect(analyzerInput).toHaveProperty("recentMessages");
 				expect(analyzerInput).toHaveProperty("domainDistribution");
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("Pipeline state on exchange (AC6)", () => {
+		it.effect("stores full pipeline state on exchange row", () =>
+			Effect.gen(function* () {
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
+
+				yield* runNerinPipeline({
+					sessionId: "session_test_123",
+					userMessage: "I enjoy creative work",
+				});
+
+				const updateData = mockExchangeRepo.update.mock.calls[0]?.[1];
+
+				// All pipeline state fields should be present
+				expect(updateData).toHaveProperty("energy");
+				expect(updateData).toHaveProperty("energyBand");
+				expect(updateData).toHaveProperty("telling");
+				expect(updateData).toHaveProperty("tellingBand");
+				expect(updateData).toHaveProperty("smoothedEnergy");
+				expect(updateData).toHaveProperty("comfort");
+				expect(updateData).toHaveProperty("eTarget");
+				expect(updateData).toHaveProperty("scorerOutput");
+				expect(updateData).toHaveProperty("selectedTerritory");
+				expect(updateData).toHaveProperty("selectionRule");
+				expect(updateData).toHaveProperty("governorOutput");
+				expect(updateData).toHaveProperty("governorDebug");
+				expect(updateData).toHaveProperty("sessionPhase");
+				expect(updateData).toHaveProperty("transitionType");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
