@@ -43,15 +43,9 @@ import {
 
 // ─── pgEnums (single source of truth from domain constants) ───────────────
 
-export const evidenceDomainEnum = pgEnum(
-	"evidence_domain",
-	LIFE_DOMAINS as unknown as [string, ...string[]],
-);
+export const evidenceDomainEnum = pgEnum("evidence_domain", LIFE_DOMAINS);
 
-export const bigfiveFacetNameEnum = pgEnum(
-	"bigfive_facet_name",
-	ALL_FACETS as unknown as [string, ...string[]],
-);
+export const bigfiveFacetNameEnum = pgEnum("bigfive_facet_name", ALL_FACETS);
 
 export const evidenceStrengthEnum = pgEnum("evidence_strength", ["weak", "moderate", "strong"]);
 
@@ -59,25 +53,13 @@ export const evidenceConfidenceEnum = pgEnum("evidence_confidence", ["low", "med
 
 export const resultStageEnum = pgEnum("result_stage", ["scored", "completed"]);
 
-export const portraitTypeEnum = pgEnum(
-	"portrait_type",
-	PORTRAIT_TYPES as unknown as [string, ...string[]],
-);
+export const portraitTypeEnum = pgEnum("portrait_type", PORTRAIT_TYPES);
 
-export const portraitRatingEnum = pgEnum(
-	"portrait_rating",
-	PORTRAIT_RATINGS as unknown as [string, ...string[]],
-);
+export const portraitRatingEnum = pgEnum("portrait_rating", PORTRAIT_RATINGS);
 
-export const depthSignalEnum = pgEnum(
-	"depth_signal",
-	DEPTH_SIGNAL_LEVELS as unknown as [string, ...string[]],
-);
+export const depthSignalEnum = pgEnum("depth_signal", DEPTH_SIGNAL_LEVELS);
 
-export const purchaseEventTypeEnum = pgEnum(
-	"purchase_event_type",
-	PURCHASE_EVENT_TYPES as unknown as [string, ...string[]],
-);
+export const purchaseEventTypeEnum = pgEnum("purchase_event_type", PURCHASE_EVENT_TYPES);
 
 // ─── Better Auth tables ───────────────────────────────────────────────────
 

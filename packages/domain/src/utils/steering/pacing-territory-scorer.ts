@@ -249,7 +249,7 @@ export interface ScoreAllTerritoriesV2Input {
 	readonly eTarget: number;
 	readonly facetMetrics: ReadonlyMap<FacetName, FacetMetrics>;
 	readonly catalog: ReadonlyMap<TerritoryId, Territory>;
-	readonly currentTerritory: TerritoryId;
+	readonly currentTerritory: TerritoryId | null;
 	readonly visitHistory: PacingVisitHistory;
 	readonly turnNumber: number;
 	readonly totalTurns: number;
@@ -284,7 +284,7 @@ export function scoreAllTerritoriesV2(input: ScoreAllTerritoriesV2Input): Territ
 	}
 
 	// Look up current territory for adjacency computation
-	const currentTerritoryDef = catalog.get(currentTerritory);
+	const currentTerritoryDef = currentTerritory ? catalog.get(currentTerritory) : undefined;
 
 	const ranked: RankedTerritory[] = [];
 

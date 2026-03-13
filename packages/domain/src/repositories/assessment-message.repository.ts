@@ -41,6 +41,15 @@ export class AssessmentMessageRepository extends Context.Tag("AssessmentMessageR
 		) => Effect.Effect<AssessmentMessageEntity[], DatabaseError, never>;
 
 		/**
+		 * Update the exchangeId on an existing message.
+		 * Used to link a user message to the previous exchange after creation.
+		 */
+		readonly updateExchangeId: (
+			messageId: string,
+			exchangeId: string,
+		) => Effect.Effect<void, DatabaseError, never>;
+
+		/**
 		 * Get message count for a session
 		 *
 		 * @param sessionId - Session identifier

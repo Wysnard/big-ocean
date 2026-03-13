@@ -114,6 +114,7 @@ const makeConversationEvidence = (
 		id: crypto.randomUUID(),
 		sessionId,
 		messageId: `msg-${crypto.randomUUID()}`,
+		exchangeId: `exchange-${crypto.randomUUID()}`,
 		bigfiveFacet: r.facet as ConversationEvidenceRecord["bigfiveFacet"],
 		deviation: r.deviation,
 		strength: r.strength,

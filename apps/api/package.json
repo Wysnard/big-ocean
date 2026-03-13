@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "tsx -r dotenv/config --watch src/index.ts",
+    "dev": "tsx -r dotenv/config --watch --watch-path=. --watch-path=../../packages src/index.ts",
     "build": "tsc",
     "start": "tsx src/index.ts",
     "test": "vitest run",

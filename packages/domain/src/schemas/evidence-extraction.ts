@@ -29,7 +29,7 @@ export const EvidenceItemSchema = S.Struct({
 	strength: S.Literal("weak", "moderate", "strong"),
 	confidence: S.Literal("low", "medium", "high"),
 	domain: S.Literal(...LIFE_DOMAINS),
-	note: S.String.pipe(S.maxLength(200)),
+	note: S.String.pipe(S.maxLength(500)),
 });
 
 export type EvidenceItem = S.Schema.Type<typeof EvidenceItemSchema>;

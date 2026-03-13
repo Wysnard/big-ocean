@@ -19,15 +19,16 @@ import {
 import { AssessmentSessionEntitySchema } from "@workspace/domain/entities/session.entity";
 import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
+import { RedisRepository } from "@workspace/domain/repositories/redis.repository";
 import { Database } from "@workspace/infrastructure/context/database";
 import { and, count, eq, sql } from "drizzle-orm";
 import { Effect, Layer, Schema } from "effect";
 import { assessmentMessage, assessmentSession, publicProfile } from "../db/drizzle/schema";
 
 /**
- * Session Repository Layer - Receives database and logger through DI
+ * Session Repository Layer - Receives database, logger, and Redis through DI
  *
- * Layer type: Layer<AssessmentSessionRepository, never, Database | LoggerRepository>
+ * Layer type: Layer<AssessmentSessionRepository, never, Database | LoggerRepository | RedisRepository>
  * Dependencies resolved during layer construction, not at service level.
  *
  * "Layers act as constructors for creating services" - dependencies managed at construction time.
@@ -38,6 +39,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 		// Receive dependencies through DI during layer construction
 		const db = yield* Database;
 		const logger = yield* LoggerRepository;
+		const redis = yield* RedisRepository;
 
 		// Return service implementation using .of() pattern
 		return AssessmentSessionRepository.of({
@@ -610,30 +612,31 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 
 			acquireSessionLock: (sessionId: string) =>
 				Effect.gen(function* () {
-					const results = yield* db
-						.execute(sql`SELECT pg_try_advisory_lock(hashtext(${sessionId})) AS locked`)
-						.pipe(
-							Effect.mapError((error) => {
-								try {
-									logger.error("Database operation failed", {
-										operation: "acquireSessionLock",
-										sessionId,
-										error: error instanceof Error ? error.message : String(error),
-									});
-								} catch (logError) {
-									console.error("Logger failed:", logError);
-								}
-								return new DatabaseError({
-									message: "Failed to acquire session lock",
-								});
-							}),
-						);
+					const key = `session_lock:${sessionId}`;
+					const count = yield* redis.incr(key).pipe(
+						Effect.mapError((error) => {
+							logger.error("Redis operation failed", {
+								operation: "acquireSessionLock",
+								sessionId,
+								error: error.message,
+							});
+							return new DatabaseError({
+								message: "Failed to acquire session lock",
+							});
+						}),
+					);
 
-					const row = results[0] as { locked: boolean } | undefined;
-					if (!row?.locked) {
-						logger.warn("Advisory lock contention", {
+					// First increment → lock acquired. Set safety TTL to auto-release on crash.
+					if (count === 1) {
+						yield* redis.expire(key, 120).pipe(Effect.catchAll(() => Effect.void));
+					}
+
+					if (count > 1) {
+						// Another request is processing — decrement back and fail
+						yield* redis.decr(key).pipe(Effect.catchAll(() => Effect.void));
+						logger.warn("Session lock contention", {
 							sessionId,
-							event: "advisory_lock_contention",
+							event: "session_lock_contention",
 						});
 						return yield* Effect.fail(
 							new ConcurrentMessageError({
@@ -646,17 +649,14 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 
 			releaseSessionLock: (sessionId: string) =>
 				Effect.gen(function* () {
-					yield* db.execute(sql`SELECT pg_advisory_unlock(hashtext(${sessionId}))`).pipe(
+					const key = `session_lock:${sessionId}`;
+					yield* redis.decr(key).pipe(
 						Effect.mapError((error) => {
-							try {
-								logger.error("Database operation failed", {
-									operation: "releaseSessionLock",
-									sessionId,
-									error: error instanceof Error ? error.message : String(error),
-								});
-							} catch (logError) {
-								console.error("Logger failed:", logError);
-							}
+							logger.error("Redis operation failed", {
+								operation: "releaseSessionLock",
+								sessionId,
+								error: error.message,
+							});
 							return new DatabaseError({ message: "Failed to release session lock" });
 						}),
 					);

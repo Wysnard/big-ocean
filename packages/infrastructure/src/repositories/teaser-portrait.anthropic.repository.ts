@@ -13,7 +13,8 @@
  * Story 11.5
  */
 
-import Anthropic from "@anthropic-ai/sdk";
+import { ChatAnthropic } from "@langchain/anthropic";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import type { ConversationEvidenceRecord, FacetName, TraitScoresMap } from "@workspace/domain";
 import {
 	AppConfig,
@@ -27,7 +28,7 @@ import {
 	TRAIT_TO_FACETS,
 	type TraitName,
 } from "@workspace/domain";
-import { Effect, Layer, Redacted } from "effect";
+import { Effect, Layer } from "effect";
 import { computeDepthSignal, FACET_GLOSSARY, formatTraitSummary } from "./portrait-prompt.utils";
 
 /**
@@ -202,7 +203,10 @@ export const TeaserPortraitAnthropicRepositoryLive = Layer.effect(
 		const logger = yield* LoggerRepository;
 		const config = yield* AppConfig;
 
-		const client = new Anthropic({ apiKey: Redacted.value(config.anthropicApiKey) });
+		const model = new ChatAnthropic({
+			model: config.teaserModelId,
+			maxTokens: 1024,
+		});
 
 		logger.info("TeaserPortrait configured", {
 			model: config.teaserModelId,
@@ -241,22 +245,23 @@ ${depthSignal}
 
 Write the Opening section of this person's portrait in your voice as Nerin.`;
 
-						const response = await client.messages.create({
-							model: config.teaserModelId,
-							max_tokens: 1024,
-							system: TEASER_SYSTEM_PROMPT,
-							messages: [{ role: "user", content: userPrompt }],
-						});
+						const response = await model.invoke([
+							new SystemMessage(TEASER_SYSTEM_PROMPT),
+							new HumanMessage(userPrompt),
+						]);
 
-						const textBlock = response.content.find((b) => b.type === "text");
-						const rawText = textBlock?.text ?? "";
+						const responseText =
+							typeof response.content === "string"
+								? response.content
+								: ((response.content[0] as { text: string })?.text ?? "");
 
+						const usageMeta = response.usage_metadata;
 						const tokenUsage = {
-							input: response.usage.input_tokens,
-							output: response.usage.output_tokens,
+							input: usageMeta?.input_tokens ?? 0,
+							output: usageMeta?.output_tokens ?? 0,
 						};
 
-						const portrait = rawText;
+						const portrait = responseText;
 
 						logger.info("Teaser portrait generated", {
 							sessionId: input.sessionId,

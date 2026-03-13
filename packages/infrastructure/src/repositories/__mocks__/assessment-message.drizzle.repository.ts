@@ -50,6 +50,17 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.succeed(
 
 		getMessages: (sessionId: string) => Effect.sync(() => messages.get(sessionId) || []),
 
+		updateExchangeId: (messageId: string, exchangeId: string) =>
+			Effect.sync(() => {
+				for (const [, sessionMessages] of messages) {
+					const msg = sessionMessages.find((m) => m.id === messageId);
+					if (msg) {
+						msg.exchangeId = exchangeId;
+						return;
+					}
+				}
+			}),
+
 		getMessageCount: (sessionId: string) => Effect.sync(() => (messages.get(sessionId) || []).length),
 	}),
 );

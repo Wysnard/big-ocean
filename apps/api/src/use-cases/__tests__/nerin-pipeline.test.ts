@@ -45,6 +45,7 @@ const mockMessageRepo = {
 	saveMessage: vi.fn(),
 	getMessages: vi.fn(),
 	getMessageCount: vi.fn(),
+	updateExchangeId: vi.fn(),
 };
 
 const mockExchangeRepo = {
@@ -120,6 +121,33 @@ const mockConversanalyzerOutput = {
 		},
 	],
 	tokenUsage: { input: 200, output: 50 },
+};
+
+/** Opener exchange (turn 0) — created by start-assessment */
+const openerExchangeRecord = {
+	id: "exchange_opener",
+	sessionId: "session_test_123",
+	turnNumber: 0,
+	energy: null,
+	energyBand: null,
+	telling: null,
+	tellingBand: null,
+	withinMessageShift: null,
+	stateNotes: null,
+	extractionTier: null,
+	smoothedEnergy: null,
+	comfort: null,
+	drain: null,
+	drainCeiling: null,
+	eTarget: null,
+	scorerOutput: null,
+	selectedTerritory: null,
+	selectionRule: null,
+	governorOutput: null,
+	governorDebug: null,
+	sessionPhase: null,
+	transitionType: null,
+	createdAt: new Date(),
 };
 
 const mockExchangeRecord = {
@@ -219,8 +247,9 @@ const postColdStartMessages = [
 	},
 ];
 
-/** Post-cold-start exchange records with pacing state */
+/** Post-cold-start exchange records with pacing state (includes opener at turn 0) */
 const postColdStartExchanges = [
+	{ ...openerExchangeRecord },
 	{
 		...mockExchangeRecord,
 		id: "ex_1",
@@ -367,9 +396,12 @@ function setupDefaultMocks() {
 	);
 	mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(turn1Messages));
 
+	mockMessageRepo.updateExchangeId.mockReturnValue(Effect.succeed(undefined));
+
 	mockExchangeRepo.create.mockReturnValue(Effect.succeed(mockExchangeRecord));
 	mockExchangeRepo.update.mockReturnValue(Effect.succeed(mockExchangeRecord));
-	mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed([]));
+	// Default: opener exchange exists (created by start-assessment)
+	mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed([openerExchangeRecord]));
 
 	mockLoggerRepo.info.mockImplementation(() => {});
 	mockLoggerRepo.error.mockImplementation(() => {});
@@ -418,14 +450,15 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 				expect(typeof invokeArgs?.systemPrompt).toBe("string");
 				expect(invokeArgs?.systemPrompt.length).toBeGreaterThan(0);
 
-				// Exchange should store cold_start selection rule
-				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
-				const updateCall = mockExchangeRepo.update.mock.calls[0]?.[1];
-				expect(updateCall?.selectionRule).toBe("cold_start");
+				// Exchange update called twice: once for opener extraction, once for new exchange steering
+				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(2);
+				// Second update (new exchange) should store cold_start selection rule
+				const steeringUpdate = mockExchangeRepo.update.mock.calls[1]?.[1];
+				expect(steeringUpdate?.selectionRule).toBe("cold_start");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("creates exchange and saves messages with exchange_id", () =>
+		it.effect("creates exchange and saves messages with correct exchange linking", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(turn1Messages));
 
@@ -434,24 +467,25 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 					userMessage: "Hello",
 				});
 
-				// Exchange should be created
+				// New exchange should be created for turn 1
 				expect(mockExchangeRepo.create).toHaveBeenCalledTimes(1);
 				expect(mockExchangeRepo.create).toHaveBeenCalledWith("session_test_123", 1);
 
-				// Exchange should be updated with pipeline state
-				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
+				// Exchange update called twice: opener extraction + new exchange steering
+				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(2);
 
 				// saveMessage is called twice: once for user, once for assistant
 				expect(mockMessageRepo.saveMessage).toHaveBeenCalledTimes(2);
 
-				// Both messages should be linked to exchange
+				// User message linked to previous (opener) exchange
 				const userSaveCall = mockMessageRepo.saveMessage.mock.calls[0];
 				expect(userSaveCall?.[1]).toBe("user");
-				expect(userSaveCall?.[3]).toBe("exchange_1"); // exchangeId
+				expect(userSaveCall?.[3]).toBe("exchange_opener"); // opener exchangeId
 
+				// Assistant message linked to new exchange
 				const assistantSaveCall = mockMessageRepo.saveMessage.mock.calls[1];
 				expect(assistantSaveCall?.[1]).toBe("assistant");
-				expect(assistantSaveCall?.[3]).toBe("exchange_1"); // exchangeId
+				expect(assistantSaveCall?.[3]).toBe("exchange_1"); // new exchangeId
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
@@ -497,30 +531,33 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 				// Evidence should be saved
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
 
-				// Exchange should be created and updated with full pipeline state
+				// Exchange should be created and updated (2 updates: previous extraction + new steering)
 				expect(mockExchangeRepo.create).toHaveBeenCalledTimes(1);
-				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
+				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(2);
 
-				const updateData = mockExchangeRepo.update.mock.calls[0]?.[1];
+				// First update: extraction data on previous exchange
+				const extractionUpdate = mockExchangeRepo.update.mock.calls[0]?.[1];
+				expect(extractionUpdate?.energy).toBeDefined();
+				expect(extractionUpdate?.energyBand).toBeDefined();
+				expect(extractionUpdate?.telling).toBeDefined();
+				expect(extractionUpdate?.tellingBand).toBeDefined();
+
+				// Second update: steering data on new exchange
+				const steeringUpdate = mockExchangeRepo.update.mock.calls[1]?.[1];
 				// Verify pacing state stored
-				expect(updateData?.eTarget).toBeDefined();
-				expect(typeof updateData?.eTarget).toBe("number");
-				expect(updateData?.smoothedEnergy).toBeDefined();
-				expect(updateData?.comfort).toBeDefined();
+				expect(steeringUpdate?.eTarget).toBeDefined();
+				expect(typeof steeringUpdate?.eTarget).toBe("number");
+				expect(steeringUpdate?.smoothedEnergy).toBeDefined();
+				expect(steeringUpdate?.comfort).toBeDefined();
 				// Verify selection state
-				expect(updateData?.selectedTerritory).toBeDefined();
-				expect(updateData?.selectionRule).toBe("argmax");
+				expect(steeringUpdate?.selectedTerritory).toBeDefined();
+				expect(steeringUpdate?.selectionRule).toBe("argmax");
 				// Verify governor state
-				expect(updateData?.governorOutput).toBeDefined();
-				expect(updateData?.governorDebug).toBeDefined();
-				// Verify extraction state
-				expect(updateData?.energy).toBeDefined();
-				expect(updateData?.energyBand).toBeDefined();
-				expect(updateData?.telling).toBeDefined();
-				expect(updateData?.tellingBand).toBeDefined();
+				expect(steeringUpdate?.governorOutput).toBeDefined();
+				expect(steeringUpdate?.governorDebug).toBeDefined();
 				// Verify session state
-				expect(updateData?.sessionPhase).toBeDefined();
-				expect(updateData?.transitionType).toBeDefined();
+				expect(steeringUpdate?.sessionPhase).toBeDefined();
+				expect(steeringUpdate?.transitionType).toBeDefined();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
@@ -656,7 +693,7 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 	});
 
 	describe("Pipeline state on exchange (AC6)", () => {
-		it.effect("stores full pipeline state on exchange row", () =>
+		it.effect("stores extraction on previous exchange and steering on new exchange", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
@@ -666,23 +703,28 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 					userMessage: "I enjoy creative work",
 				});
 
-				const updateData = mockExchangeRepo.update.mock.calls[0]?.[1];
+				// Two updates: extraction on previous, steering on new
+				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(2);
 
-				// All pipeline state fields should be present
-				expect(updateData).toHaveProperty("energy");
-				expect(updateData).toHaveProperty("energyBand");
-				expect(updateData).toHaveProperty("telling");
-				expect(updateData).toHaveProperty("tellingBand");
-				expect(updateData).toHaveProperty("smoothedEnergy");
-				expect(updateData).toHaveProperty("comfort");
-				expect(updateData).toHaveProperty("eTarget");
-				expect(updateData).toHaveProperty("scorerOutput");
-				expect(updateData).toHaveProperty("selectedTerritory");
-				expect(updateData).toHaveProperty("selectionRule");
-				expect(updateData).toHaveProperty("governorOutput");
-				expect(updateData).toHaveProperty("governorDebug");
-				expect(updateData).toHaveProperty("sessionPhase");
-				expect(updateData).toHaveProperty("transitionType");
+				// First update: extraction data on previous exchange
+				const extractionData = mockExchangeRepo.update.mock.calls[0]?.[1];
+				expect(extractionData).toHaveProperty("energy");
+				expect(extractionData).toHaveProperty("energyBand");
+				expect(extractionData).toHaveProperty("telling");
+				expect(extractionData).toHaveProperty("tellingBand");
+
+				// Second update: steering data on new exchange
+				const steeringData = mockExchangeRepo.update.mock.calls[1]?.[1];
+				expect(steeringData).toHaveProperty("smoothedEnergy");
+				expect(steeringData).toHaveProperty("comfort");
+				expect(steeringData).toHaveProperty("eTarget");
+				expect(steeringData).toHaveProperty("scorerOutput");
+				expect(steeringData).toHaveProperty("selectedTerritory");
+				expect(steeringData).toHaveProperty("selectionRule");
+				expect(steeringData).toHaveProperty("governorOutput");
+				expect(steeringData).toHaveProperty("governorDebug");
+				expect(steeringData).toHaveProperty("sessionPhase");
+				expect(steeringData).toHaveProperty("transitionType");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});

@@ -138,6 +138,27 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 					);
 				}),
 
+			updateExchangeId: (messageId, exchangeId) =>
+				db
+					.update(assessmentMessage)
+					.set({ exchangeId })
+					.where(eq(assessmentMessage.id, messageId))
+					.pipe(
+						Effect.map(() => undefined as undefined),
+						Effect.mapError((error) => {
+							try {
+								logger.error("Database operation failed", {
+									operation: "updateExchangeId",
+									messageId,
+									error: error instanceof Error ? error.message : String(error),
+								});
+							} catch (logError) {
+								console.error("Logger failed in error handler:", logError);
+							}
+							return new DatabaseError({ message: "Failed to update message exchange ID" });
+						}),
+					),
+
 			getMessageCount: (sessionId) =>
 				Effect.gen(function* () {
 					const result = yield* db

@@ -1,7 +1,7 @@
 /**
  * Conversanalyzer Anthropic Repository Implementation (v2)
  *
- * Calls Claude Haiku via Anthropic SDK tool use for dual extraction:
+ * Calls Claude Haiku via LangChain structured output for dual extraction:
  * 1. User state (energy band + telling band) — positioned FIRST for attention priority
  * 2. Big Five facet evidence — positioned SECOND (battle-tested, tolerates being second)
  *
@@ -10,7 +10,9 @@
  * Story 10.2 (v1), Story 24-1 (v2 evolution)
  */
 
-import Anthropic from "@anthropic-ai/sdk";
+import { ChatAnthropic } from "@langchain/anthropic";
+import type { AIMessage } from "@langchain/core/messages";
+import { HumanMessage } from "@langchain/core/messages";
 import {
 	AppConfig,
 	ConversanalyzerError,
@@ -20,10 +22,13 @@ import {
 	conversanalyzerV2JsonSchema,
 	decodeConversanalyzerV2Lenient,
 	decodeConversanalyzerV2Strict,
+	EvidenceItemSchema,
 	FACET_PROMPT_DEFINITIONS,
 	LoggerRepository,
 } from "@workspace/domain";
-import { Effect, Layer, Redacted } from "effect";
+import { Effect, Either, Layer } from "effect";
+import * as ParseResult from "effect/ParseResult";
+import * as S from "effect/Schema";
 
 // ─── v2 Prompt ───────────────────────────────────────────────────────────────
 
@@ -199,38 +204,6 @@ function mockAnalyzeV2(): ConversanalyzerV2Output {
 	};
 }
 
-// ─── Shared extraction logic ─────────────────────────────────────────────────
-
-async function callAnthropic(
-	client: Anthropic,
-	modelId: string,
-	prompt: string,
-): Promise<Anthropic.Message> {
-	return client.messages.create({
-		model: modelId,
-		max_tokens: 1024,
-		temperature: 0.9,
-		messages: [{ role: "user", content: prompt }],
-		tools: [
-			{
-				name: "extract_state_and_evidence",
-				description:
-					"Extract user conversational state (energy + telling) and Big Five personality evidence from the user message",
-				input_schema: conversanalyzerV2JsonSchema as Anthropic.Tool["input_schema"],
-			},
-		],
-		tool_choice: { type: "tool", name: "extract_state_and_evidence" },
-	});
-}
-
-function extractToolInput(response: Anthropic.Message): unknown {
-	const toolUseBlock = response.content.find((b) => b.type === "tool_use");
-	if (!toolUseBlock || toolUseBlock.type !== "tool_use") {
-		throw new Error("No tool_use block in Haiku response");
-	}
-	return toolUseBlock.input;
-}
-
 // ─── Repository Layer ─────────────────────────────────────────────────────────
 
 export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
@@ -241,9 +214,17 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 
 		const isMocked = config.nodeEnv === "test" || process.env.MOCK_LLM === "true";
 
-		const client = isMocked
+		const baseModel = isMocked
 			? null
-			: new Anthropic({ apiKey: Redacted.value(config.anthropicApiKey) });
+			: new ChatAnthropic({
+					model: config.conversanalyzerModelId,
+					maxTokens: 2048,
+					temperature: 0.9,
+				});
+
+		const model = baseModel
+			? baseModel.withStructuredOutput(conversanalyzerV2JsonSchema, { includeRaw: true })
+			: null;
 
 		logger.info("Conversanalyzer v2 configured", {
 			model: config.conversanalyzerModelId,
@@ -254,20 +235,32 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 			analyze: (input: ConversanalyzerInput) =>
 				Effect.tryPromise({
 					try: async () => {
-						if (isMocked || !client) {
+						if (isMocked || !model) {
 							return mockAnalyzeV2();
 						}
 
 						const prompt = buildV2Prompt(input);
-						const response = await callAnthropic(client, config.conversanalyzerModelId, prompt);
-						const rawInput = extractToolInput(response);
+						const invokeResult = await model.invoke([new HumanMessage(prompt)]);
 
 						// Strict decode — all-or-nothing
-						const parsed = decodeConversanalyzerV2Strict(rawInput);
+						let parsed: ReturnType<typeof decodeConversanalyzerV2Strict>;
+						try {
+							parsed = decodeConversanalyzerV2Strict(invokeResult.parsed);
+						} catch (parseError) {
+							const formattedError = ParseResult.isParseError(parseError)
+								? ParseResult.TreeFormatter.formatErrorSync(parseError)
+								: String(parseError);
+							logger.warn("ConversAnalyzer v2 strict decode failed", {
+								error: formattedError,
+								rawOutput: JSON.stringify(invokeResult.parsed).slice(0, 2000),
+							});
+							throw parseError;
+						}
 
+						const usageMeta = (invokeResult.raw as AIMessage)?.usage_metadata;
 						const tokenUsage = {
-							input: response.usage.input_tokens,
-							output: response.usage.output_tokens,
+							input: usageMeta?.input_tokens ?? 0,
+							output: usageMeta?.output_tokens ?? 0,
 						};
 
 						logger.info("ConversAnalyzer v2 strict extraction complete", {
@@ -299,19 +292,38 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 			analyzeLenient: (input: ConversanalyzerInput) =>
 				Effect.tryPromise({
 					try: async () => {
-						if (isMocked || !client) {
+						if (isMocked || !model) {
 							return mockAnalyzeV2();
 						}
 
 						const prompt = buildV2Prompt(input);
-						const response = await callAnthropic(client, config.conversanalyzerModelId, prompt);
-						const rawInput = extractToolInput(response) as {
+						const invokeResult = await model.invoke([new HumanMessage(prompt)]);
+
+						const rawInput = invokeResult.parsed as {
 							evidence?: unknown[];
 							userState?: unknown;
 						};
 
 						// Count raw evidence for discard logging
 						const rawCount = rawInput.evidence?.length ?? 0;
+
+						// Log per-item validation failures before lenient decode
+						if (rawInput.evidence) {
+							const decodeItem = S.decodeUnknownEither(EvidenceItemSchema);
+							for (let i = 0; i < rawInput.evidence.length; i++) {
+								const item = rawInput.evidence[i];
+								const result = decodeItem(item);
+								if (Either.isLeft(result)) {
+									logger.warn("Invalid evidence item from ConversAnalyzer", {
+										index: i,
+										rawItem: JSON.stringify(item).slice(0, 500),
+										error: ParseResult.TreeFormatter.formatErrorSync(
+											new ParseResult.ParseError({ issue: result.left.issue }),
+										),
+									});
+								}
+							}
+						}
 
 						// Lenient decode — independent field parsing with defaults
 						const parsed = decodeConversanalyzerV2Lenient(rawInput);
@@ -325,9 +337,10 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 							});
 						}
 
+						const usageMeta = (invokeResult.raw as AIMessage)?.usage_metadata;
 						const tokenUsage = {
-							input: response.usage.input_tokens,
-							output: response.usage.output_tokens,
+							input: usageMeta?.input_tokens ?? 0,
+							output: usageMeta?.output_tokens ?? 0,
 						};
 
 						logger.info("ConversAnalyzer v2 lenient extraction complete", {

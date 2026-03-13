@@ -52,35 +52,34 @@ describe("sendMessage Use Case", () => {
 					userId: "user_456",
 				});
 
-				// User message is now saved inside the pipeline, after Nerin succeeds
-				// Story 23-3: saveMessage now takes (sessionId, role, content, exchangeId?)
+				// User message linked to previous (opener) exchange
 				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
 					"session_test_123",
 					"user",
 					"Tell me something",
-					expect.any(String), // exchangeId
+					"exchange_opener", // linked to opener exchange
 				);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should save messages with exchange_id and create exchange record (Story 23-3)", () =>
+		it.effect("should save messages with correct exchange linking (Story 23-3)", () =>
 			Effect.gen(function* () {
 				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
 
-				// User message linked to exchange
+				// User message linked to previous (opener) exchange
 				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
 					"session_test_123",
 					"user",
 					"Test",
-					expect.any(String), // exchangeId
+					"exchange_opener", // previous exchange
 				);
 
-				// Assistant message linked to same exchange
+				// Assistant message linked to new exchange
 				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
 					"session_test_123",
 					"assistant",
 					mockNerinResponse.response,
-					expect.any(String), // exchangeId
+					"exchange_1", // new exchange
 				);
 			}).pipe(Effect.provide(createTestLayer())),
 		);

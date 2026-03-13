@@ -17,7 +17,6 @@
     "./db/schema": "./src/infrastructure/db/schema.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.74.0",
     "@better-auth/drizzle-adapter": "catalog:",
     "@effect/sql": "catalog:",
     "@langchain/anthropic": "^1.3.18",

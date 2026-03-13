@@ -35,6 +35,7 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.succeed(
 						id: crypto.randomUUID(),
 						sessionId: input.sessionId,
 						messageId: input.messageId,
+						exchangeId: input.exchangeId,
 						bigfiveFacet: input.bigfiveFacet,
 						deviation: input.deviation,
 						strength: input.strength,

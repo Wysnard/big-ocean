@@ -22,13 +22,7 @@ import type { TerritoryId } from "./territory";
  * as extracted by ConversAnalyzer. Maps to continuous [0, 1]
  * via mapEnergyBand().
  */
-export const ENERGY_BANDS = [
-	"minimal",
-	"low",
-	"steady",
-	"high",
-	"very_high",
-] as const;
+export const ENERGY_BANDS = ["minimal", "low", "steady", "high", "very_high"] as const;
 
 export type EnergyBand = (typeof ENERGY_BANDS)[number];
 
@@ -228,7 +222,7 @@ export interface RankedTerritory {
 /** Output of the territory scorer — all territories ranked with context. */
 export interface TerritoryScorerOutput {
 	readonly ranked: readonly RankedTerritory[];
-	readonly currentTerritory: TerritoryId;
+	readonly currentTerritory: TerritoryId | null;
 	readonly turnNumber: number;
 	readonly totalTurns: number;
 }

@@ -116,7 +116,7 @@ describe("ConversanalyzerV2ToolOutput (strict)", () => {
 	it("rejects energyReason exceeding 200 chars", () => {
 		expect(() =>
 			decodeConversanalyzerV2Strict({
-				userState: { ...validUserState, energyReason: "x".repeat(201) },
+				userState: { ...validUserState, energyReason: "x".repeat(501) },
 				evidence: [],
 			}),
 		).toThrow();
@@ -274,7 +274,7 @@ describe("LenientConversanalyzerV2ToolOutput (lenient)", () => {
 
 	it("preserves valid energyReason when tellingReason exceeds max length", () => {
 		const result = decodeConversanalyzerV2Lenient({
-			userState: { ...validUserState, tellingReason: "x".repeat(201) },
+			userState: { ...validUserState, tellingReason: "x".repeat(501) },
 			evidence: [],
 		});
 		expect(result.userState.energyReason).toBe("User is engaged but measured");

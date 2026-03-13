@@ -31,6 +31,7 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 							records.map((r) => ({
 								assessmentSessionId: r.sessionId,
 								assessmentMessageId: r.messageId,
+								exchangeId: r.exchangeId,
 								bigfiveFacet: r.bigfiveFacet,
 								deviation: r.deviation,
 								strength: r.strength,
@@ -68,6 +69,7 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 						id: row.id,
 						sessionId: row.assessmentSessionId,
 						messageId: row.assessmentMessageId,
+						exchangeId: row.exchangeId as string,
 						bigfiveFacet: row.bigfiveFacet as ConversationEvidenceRecord["bigfiveFacet"],
 						deviation: row.deviation,
 						strength: row.strength as ConversationEvidenceRecord["strength"],

@@ -23,8 +23,8 @@ import { EvidenceItemSchema } from "./evidence-extraction";
 export const UserStateSchema = S.Struct({
 	energyBand: S.Literal(...ENERGY_BANDS),
 	tellingBand: S.Literal(...TELLING_BANDS),
-	energyReason: S.String.pipe(S.maxLength(200)),
-	tellingReason: S.String.pipe(S.maxLength(200)),
+	energyReason: S.String.pipe(S.maxLength(500)),
+	tellingReason: S.String.pipe(S.maxLength(500)),
 	withinMessageShift: S.Boolean,
 });
 
@@ -93,7 +93,7 @@ export const LenientConversanalyzerV2ToolOutput = S.transformOrFail(
 					tellingBand = tellingResult.right;
 				}
 
-				const reasonSchema = S.String.pipe(S.maxLength(200));
+				const reasonSchema = S.String.pipe(S.maxLength(500));
 				const energyReasonResult = S.decodeUnknownEither(reasonSchema)(rawState.energyReason);
 				if (Either.isRight(energyReasonResult)) {
 					energyReason = energyReasonResult.right;

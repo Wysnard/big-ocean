@@ -9,6 +9,7 @@
  * The conversation never breaks due to extraction failure — it just becomes less steered.
  */
 
+import type { DomainDistribution } from "@workspace/domain";
 import {
 	ConversanalyzerRepository,
 	type ConversanalyzerV2Output,
@@ -16,7 +17,6 @@ import {
 	type ExtractionTier,
 	LoggerRepository,
 } from "@workspace/domain";
-import type { DomainDistribution } from "@workspace/domain";
 import { Effect, Schedule } from "effect";
 
 /** Input for the three-tier extraction pipeline */
@@ -81,12 +81,13 @@ export const runThreeTierExtraction = (input: ThreeTierExtractionInput) =>
 		// Orchestrate: Tier 1 → fallback to Tier 2 → fallback to Tier 3
 		const result: ThreeTierExtractionOutput = yield* tier1.pipe(
 			// Tier 2: lenient schema × 1 attempt (lazy — only runs if Tier 1 fails)
-			Effect.orElse(() =>
+			Effect.catchAll((tier1Error) =>
 				conversanalyzer.analyzeLenient(conversanalyzerInput).pipe(
 					Effect.tap(() =>
 						Effect.sync(() => {
 							logger.warn("ConversAnalyzer fell back to Tier 2 (lenient schema)", {
 								sessionId: input.sessionId,
+								tier1Error: tier1Error.message,
 							});
 						}),
 					),
@@ -99,14 +100,12 @@ export const runThreeTierExtraction = (input: ThreeTierExtractionInput) =>
 				),
 			),
 			// Tier 3: neutral defaults — no LLM call (lazy — only runs if Tier 2 fails)
-			Effect.orElse(() =>
+			Effect.catchAll((tier2Error) =>
 				Effect.sync((): ThreeTierExtractionOutput => {
-					logger.warn(
-						"ConversAnalyzer failed at all tiers, using Tier 3 neutral defaults",
-						{
-							sessionId: input.sessionId,
-						},
-					);
+					logger.warn("ConversAnalyzer failed at all tiers, using Tier 3 neutral defaults", {
+						sessionId: input.sessionId,
+						tier2Error: tier2Error.message,
+					});
 					return {
 						output: NEUTRAL_DEFAULTS,
 						extractionTier: 3 as ExtractionTier,

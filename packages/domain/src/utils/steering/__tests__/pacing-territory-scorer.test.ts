@@ -545,6 +545,24 @@ describe("scoreAllTerritoriesV2", () => {
 		expect(heavyResult.breakdown.freshness).toBe(0); // never visited
 	});
 
+	it("currentTerritory: null produces 0 adjacency for all candidates (turn 1 scenario)", () => {
+		const result = scoreAllTerritoriesV2({
+			eTarget: 0.5,
+			facetMetrics: new Map(),
+			catalog,
+			currentTerritory: null,
+			visitHistory: new Map(),
+			turnNumber: 1,
+			totalTurns: 25,
+			config,
+		});
+
+		for (const r of result.ranked) {
+			expect(r.breakdown.adjacency).toBe(0);
+		}
+		expect(result.currentTerritory).toBeNull();
+	});
+
 	it("current territory receives freshness penalty when recently visited", () => {
 		const visitHistory = new Map<TerritoryId, number>([
 			[mediumTerritory.id, 4], // visited at turn 4

@@ -144,8 +144,10 @@ const CostGuardLayer = CostGuardRedisRepositoryLive.pipe(
 /**
  * Repository Layers - require Database and Logger
  */
+const SessionRepoLayer = AssessmentSessionDrizzleRepositoryLive.pipe(Layer.provide(RedisLayer));
+
 const RepositoryLayers = Layer.mergeAll(
-	AssessmentSessionDrizzleRepositoryLive,
+	SessionRepoLayer,
 	AssessmentMessageDrizzleRepositoryLive,
 	AssessmentExchangeDrizzleRepositoryLive,
 	AssessmentResultDrizzleRepositoryLive,

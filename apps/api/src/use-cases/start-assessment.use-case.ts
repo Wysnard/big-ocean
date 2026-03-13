@@ -10,6 +10,7 @@
 
 import { AssessmentAlreadyExists, RateLimitExceeded } from "@workspace/contracts";
 import {
+	AssessmentExchangeRepository,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	CostGuardRepository,
@@ -48,18 +49,30 @@ const createSessionWithGreetings = (userId?: string) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
+		const exchangeRepo = yield* AssessmentExchangeRepository;
 		const logger = yield* LoggerRepository;
 
 		const result = yield* sessionRepo.createSession(userId);
+
+		// Create opener exchange (turn 0) for the opening question
+		const openerExchange = yield* exchangeRepo.create(result.sessionId, 0);
 
 		// Build the 2 greeting messages (1 fixed + 1 random opening question)
 		const openingQuestion = pickOpeningQuestion();
 		const greetingContents = [...GREETING_MESSAGES, openingQuestion];
 
 		// Persist greeting messages to DB so Nerin has full conversation context
+		// Greeting: exchangeId = null (pure greeting, not a question)
+		// Opening question: exchangeId = opener exchange (this is the AI question)
 		const savedMessages: StartAssessmentMessage[] = [];
-		for (const content of greetingContents) {
-			const saved = yield* messageRepo.saveMessage(result.sessionId, "assistant", content);
+		for (const [i, content] of greetingContents.entries()) {
+			const isOpeningQuestion = i === greetingContents.length - 1;
+			const saved = yield* messageRepo.saveMessage(
+				result.sessionId,
+				"assistant",
+				content,
+				isOpeningQuestion ? openerExchange.id : undefined,
+			);
 			savedMessages.push({
 				role: "assistant",
 				content: saved.content,
@@ -199,14 +212,26 @@ export const startAnonymousAssessment = () =>
 		// Create anonymous session with token
 		const { sessionId, sessionToken } = yield* sessionRepo.createAnonymousSession();
 
+		// Create opener exchange (turn 0) for the opening question
+		const exchangeRepo = yield* AssessmentExchangeRepository;
+		const openerExchange = yield* exchangeRepo.create(sessionId, 0);
+
 		// Build the 2 greeting messages (1 fixed + 1 random opening question)
 		const openingQuestion = pickOpeningQuestion();
 		const greetingContents = [...GREETING_MESSAGES, openingQuestion];
 
 		// Persist greeting messages
+		// Greeting: exchangeId = null (pure greeting, not a question)
+		// Opening question: exchangeId = opener exchange (this is the AI question)
 		const savedMessages: StartAssessmentMessage[] = [];
-		for (const content of greetingContents) {
-			const saved = yield* messageRepo.saveMessage(sessionId, "assistant", content);
+		for (const [i, content] of greetingContents.entries()) {
+			const isOpeningQuestion = i === greetingContents.length - 1;
+			const saved = yield* messageRepo.saveMessage(
+				sessionId,
+				"assistant",
+				content,
+				isOpeningQuestion ? openerExchange.id : undefined,
+			);
 			savedMessages.push({
 				role: "assistant",
 				content: saved.content,

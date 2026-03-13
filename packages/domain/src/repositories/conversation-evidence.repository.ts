@@ -14,11 +14,12 @@ import type { EvidenceConfidence, EvidenceInput, EvidenceStrength } from "../typ
 
 export { ConversationEvidenceError };
 
-/** Input for saving conversation evidence — EvidenceInput + FK context + required note */
+/** Input for saving conversation evidence — EvidenceInput + FK context + required note + exchange link */
 export type ConversationEvidenceInput = EvidenceInput & {
 	readonly sessionId: string;
 	readonly messageId: string;
 	readonly note: string;
+	readonly exchangeId: string;
 };
 
 /** Full DB row returned from queries */
@@ -26,6 +27,7 @@ export interface ConversationEvidenceRecord {
 	readonly id: string;
 	readonly sessionId: string;
 	readonly messageId: string;
+	readonly exchangeId: string;
 	readonly bigfiveFacet: FacetName;
 	readonly deviation: number;
 	readonly strength: EvidenceStrength;

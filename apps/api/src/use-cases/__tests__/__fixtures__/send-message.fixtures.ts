@@ -39,6 +39,7 @@ export const mockMessageRepo = {
 	saveMessage: vi.fn(),
 	getMessages: vi.fn(),
 	getMessageCount: vi.fn(),
+	updateExchangeId: vi.fn(),
 };
 
 export const mockLoggerRepo = {
@@ -270,6 +271,33 @@ export const mockConfig = {
 	territoryColdStartThreshold: 3,
 };
 
+/** Opener exchange (turn 0) — created by start-assessment */
+export const openerExchangeRecord = {
+	id: "exchange_opener",
+	sessionId: "session_test_123",
+	turnNumber: 0,
+	energy: null,
+	energyBand: null,
+	telling: null,
+	tellingBand: null,
+	withinMessageShift: null,
+	stateNotes: null,
+	extractionTier: null,
+	smoothedEnergy: null,
+	comfort: null,
+	drain: null,
+	drainCeiling: null,
+	eTarget: null,
+	scorerOutput: null,
+	selectedTerritory: null,
+	selectionRule: null,
+	governorOutput: null,
+	governorDebug: null,
+	sessionPhase: null,
+	transitionType: null,
+	createdAt: new Date(),
+};
+
 export const mockExchangeRecord = {
 	id: "exchange_1",
 	sessionId: "session_test_123",
@@ -329,10 +357,12 @@ export function setupDefaultMocks() {
 		}),
 	);
 	mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
+	mockMessageRepo.updateExchangeId.mockReturnValue(Effect.succeed(undefined));
 
 	mockExchangeRepo.create.mockReturnValue(Effect.succeed(mockExchangeRecord));
 	mockExchangeRepo.update.mockReturnValue(Effect.succeed(mockExchangeRecord));
-	mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed([]));
+	// Default: opener exchange exists (created by start-assessment)
+	mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed([openerExchangeRecord]));
 
 	mockLoggerRepo.info.mockImplementation(() => {});
 	mockLoggerRepo.error.mockImplementation(() => {});

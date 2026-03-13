@@ -110,14 +110,14 @@ describe("sendMessage Use Case", () => {
 
 					const saveMessageCalls = mockMessageRepo.saveMessage.mock.calls;
 
-					// Both user and assistant messages should have exchangeId (4th arg)
+					// User message linked to previous exchange, assistant to new exchange
 					const userSaveCall = saveMessageCalls.find((call: unknown[]) => call[1] === "user");
 					expect(userSaveCall).toBeDefined();
-					expect(userSaveCall?.[3]).toBeDefined(); // exchangeId
+					expect(userSaveCall?.[3]).toBeDefined(); // previous exchangeId
 
 					const assistantSaveCall = saveMessageCalls.find((call: unknown[]) => call[1] === "assistant");
 					expect(assistantSaveCall).toBeDefined();
-					expect(assistantSaveCall?.[3]).toBeDefined(); // exchangeId
+					expect(assistantSaveCall?.[3]).toBeDefined(); // new exchangeId
 
 					// Exchange should be updated with territory selection
 					expect(mockExchangeRepo.update).toHaveBeenCalledWith(

@@ -5,6 +5,7 @@
  */
 
 import {
+	AssessmentExchangeRepository,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	CostGuardRepository,
@@ -43,6 +44,12 @@ export const mockLoggerRepo = {
 	debug: vi.fn(),
 };
 
+export const mockExchangeRepo = {
+	create: vi.fn(),
+	update: vi.fn(),
+	findBySession: vi.fn(),
+};
+
 export const mockCostGuardRepo = {
 	incrementDailyCost: vi.fn(),
 	getDailyCost: vi.fn(),
@@ -65,6 +72,7 @@ export const createTestLayer = () =>
 	Layer.mergeAll(
 		Layer.succeed(AssessmentSessionRepository, mockAssessmentSessionRepo),
 		Layer.succeed(AssessmentMessageRepository, mockAssessmentMessageRepo),
+		Layer.succeed(AssessmentExchangeRepository, mockExchangeRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
 		Layer.succeed(CostGuardRepository, mockCostGuardRepo),
 	);
@@ -101,6 +109,36 @@ export function setupDefaultMocks() {
 	mockAssessmentSessionRepo.incrementMessageCount.mockImplementation(() => Effect.succeed(1));
 	mockAssessmentSessionRepo.acquireSessionLock.mockImplementation(() => Effect.succeed(undefined));
 	mockAssessmentSessionRepo.releaseSessionLock.mockImplementation(() => Effect.succeed(undefined));
+
+	mockExchangeRepo.create.mockImplementation((_sessionId: string, _turnNumber: number) =>
+		Effect.succeed({
+			id: "exchange_opener_0",
+			sessionId: _sessionId,
+			turnNumber: _turnNumber,
+			energy: null,
+			energyBand: null,
+			telling: null,
+			tellingBand: null,
+			withinMessageShift: null,
+			stateNotes: null,
+			extractionTier: null,
+			smoothedEnergy: null,
+			comfort: null,
+			drain: null,
+			drainCeiling: null,
+			eTarget: null,
+			scorerOutput: null,
+			selectedTerritory: null,
+			selectionRule: null,
+			governorOutput: null,
+			governorDebug: null,
+			sessionPhase: null,
+			transitionType: null,
+			createdAt: new Date("2026-02-01T10:00:00Z"),
+		}),
+	);
+	mockExchangeRepo.update.mockImplementation(() => Effect.succeed({}));
+	mockExchangeRepo.findBySession.mockImplementation(() => Effect.succeed([]));
 
 	mockAssessmentMessageRepo.saveMessage.mockImplementation(
 		(sessionId: string, role: string, content: string) => {

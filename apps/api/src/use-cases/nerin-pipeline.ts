@@ -61,20 +61,9 @@ import {
 	TERRITORY_CATALOG,
 	type TellingBand,
 	type TerritoryId,
-	TerritoryIdSchema,
 } from "@workspace/domain";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 import { runThreeTierExtraction } from "./three-tier-extraction";
-
-/** Helper to create branded TerritoryId */
-const tid = (s: string): TerritoryId => Schema.decodeSync(TerritoryIdSchema)(s);
-
-/**
- * Default territory for turn 1 currentTerritory in scorer input.
- * On turn 1, adjacency defaults to 0 for all candidates (no previous territory),
- * so this value doesn't affect scoring -- it's just needed for the type.
- */
-const DEFAULT_CURRENT_TERRITORY = tid("creative-pursuits");
 
 export interface NerinPipelineInput {
 	readonly sessionId: string;
@@ -373,6 +362,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const costGuard = yield* CostGuardRepository;
 
 		const costKey = input.userId ?? input.sessionId;
+		const t0 = Date.now();
 
 		// ---- Gather context ----
 
@@ -395,18 +385,23 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		// Get existing evidence for scoring
 		const existingEvidence = yield* evidenceRepo.findBySession(input.sessionId);
 
-		// Current turn number (1-based)
-		const turnNumber = previousExchanges.length + 1;
+		// Current turn number (1-based, excludes opener exchange at turn 0)
+		const turnNumber = previousExchanges.filter((e) => e.turnNumber > 0).length + 1;
 		const totalTurns = config.freeTierMessageThreshold;
+
+		const tContext = Date.now();
 
 		// ---- Step 1: Compute E_target ----
 
-		const energyHistory = extractEnergyHistory(previousExchanges);
-		const tellingHistory = extractTellingHistory(previousExchanges);
+		// Skip opener exchange (turn 0) — it has no extraction/steering data
+		const pipelineExchanges = previousExchanges.filter((e) => e.turnNumber > 0);
 
-		// Get priors from the last exchange for incremental computation
+		const energyHistory = extractEnergyHistory(pipelineExchanges);
+		const tellingHistory = extractTellingHistory(pipelineExchanges);
+
+		// Get priors from the last pipeline exchange for incremental computation
 		const lastExchange =
-			previousExchanges.length > 0 ? previousExchanges[previousExchanges.length - 1] : null;
+			pipelineExchanges.length > 0 ? pipelineExchanges[pipelineExchanges.length - 1] : null;
 
 		const eTargetResult = computeETargetV2({
 			energyHistory,
@@ -418,8 +413,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		// ---- Step 2: Score all territories ----
 
 		const facetMetrics = computeFacetMetrics(existingEvidence as any[]);
-		const visitHistory = buildPacingVisitHistory(previousExchanges);
-		const currentTerritory = getCurrentTerritory(previousExchanges) ?? DEFAULT_CURRENT_TERRITORY;
+		const visitHistory = buildPacingVisitHistory(pipelineExchanges);
+		const currentTerritory = getCurrentTerritory(pipelineExchanges);
 
 		const scorerOutput = scoreAllTerritoriesV2({
 			eTarget: eTargetResult.eTarget,
@@ -457,7 +452,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			previousSmoothedClarity,
 		);
 
-		const sharedFireCount = countSharedFires(previousExchanges);
+		const sharedFireCount = countSharedFires(pipelineExchanges);
 
 		// ---- Step 5: Run Move Governor ----
 
@@ -471,7 +466,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			turnNumber,
 			isFinalTurn,
 			expectedEnergy,
-			previousTerritory: getCurrentTerritory(previousExchanges),
+			previousTerritory: getCurrentTerritory(pipelineExchanges),
 			phase: focusInputs.phase,
 			sharedFireCount,
 			relateStrength: focusInputs.relateStrength,
@@ -488,6 +483,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		// ---- Step 6: Build system prompt via 4-tier prompt builder ----
 
 		const promptResult = buildPrompt(governorResult.output);
+
+		const tPacing = Date.now();
 
 		logger.info("Pacing pipeline computed", {
 			sessionId: input.sessionId,
@@ -527,6 +524,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 					),
 				),
 			);
+
+		const tNerin = Date.now();
 
 		// ---- Step 8: Call ConversAnalyzer via three-tier extraction ----
 
@@ -586,6 +585,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			}
 		}
 
+		const tExtraction = Date.now();
+
 		// ---- Cost tracking ----
 
 		const nerinCost = calculateCost(result.tokenCount.input, result.tokenCount.output);
@@ -617,33 +618,65 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			dateKey: getUTCDateKey(),
 		});
 
-		// ---- Step 9: Save exchange + messages + evidence ----
+		const tCost = Date.now();
+
+		// ---- Step 9: Save exchange + messages + evidence (two-phase model) ----
+		//
+		// Exchange #N links: AI message #N (question) + user message #N+1 (answer)
+		// Phase A: Close previous exchange — link user message + extraction data
+		// Phase B: Create new exchange — link AI message + steering data
 
 		// Derive session phase and transition type
 		const sessionPhase = deriveSessionPhase(turnNumber, totalTurns);
-		const previousTerritory = getCurrentTerritory(previousExchanges);
+		const previousTerritory = getCurrentTerritory(pipelineExchanges);
 		const transitionType = previousTerritory
 			? deriveTransitionType(selectedTerritoryId, previousTerritory)
 			: ("transition" as const);
 
-		// Compute drain and ceiling from E_target internals for storage
-		// (These are intermediate values computed inside computeETarget; we store for observability)
-		const _drain = 0; // Recomputed from history inside computeETarget; not exposed
-		const _drainCeiling = eTargetResult.eTarget; // Approximate: eTarget is min(shifted, ceiling)
+		// Previous exchange: opener (turn 0) or last pipeline exchange
+		const previousExchangeId =
+			previousExchanges.length > 0 ? previousExchanges[previousExchanges.length - 1]?.id : null;
 
-		// Create exchange row for this turn
+		// --- Phase A: Close previous exchange ---
+		// Link user message to previous exchange (user is answering that AI question)
+		const savedUserMessage = yield* messageRepo.saveMessage(
+			input.sessionId,
+			"user",
+			input.userMessage,
+			previousExchangeId ?? undefined,
+		);
+
+		if (previousExchangeId) {
+			// Store extraction data on previous exchange
+			yield* exchangeRepo.update(previousExchangeId, {
+				energy: observedEnergy,
+				energyBand: observedEnergyBand,
+				telling: observedTelling,
+				tellingBand: observedTellingBand,
+				withinMessageShift,
+				...(extractionTier != null ? { extractionTier } : {}),
+			});
+		}
+
+		// Save evidence linked to user message and the exchange whose question prompted it.
+		// Evidence only exists when turnNumber >= 1 (extraction skipped on turn 0),
+		// so previousExchangeId is always non-null here.
+		if (pendingEvidence.length > 0 && previousExchangeId) {
+			yield* evidenceRepo.save(
+				pendingEvidence.map((e) => ({
+					...e,
+					sessionId: input.sessionId,
+					messageId: savedUserMessage.id,
+					exchangeId: previousExchangeId,
+				})),
+			);
+		}
+
+		// --- Phase B: Create new exchange for AI response ---
 		const exchange = yield* exchangeRepo.create(input.sessionId, turnNumber);
 
-		// Update exchange with full pipeline state
+		// Store steering data on new exchange
 		yield* exchangeRepo.update(exchange.id, {
-			// Extraction state
-			energy: observedEnergy,
-			energyBand: observedEnergyBand,
-			telling: observedTelling,
-			tellingBand: observedTellingBand,
-			withinMessageShift,
-			...(extractionTier != null ? { extractionTier } : {}),
-
 			// Pacing state
 			smoothedEnergy: eTargetResult.smoothedEnergy,
 			comfort: eTargetResult.comfort,
@@ -675,25 +708,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			transitionType: transitionType === "continue" ? "normal" : "territory_change",
 		});
 
-		// Save messages and evidence
-		const savedUserMessage = yield* messageRepo.saveMessage(
-			input.sessionId,
-			"user",
-			input.userMessage,
-			exchange.id,
-		);
-
-		if (pendingEvidence.length > 0) {
-			yield* evidenceRepo.save(
-				pendingEvidence.map((e) => ({
-					...e,
-					sessionId: input.sessionId,
-					messageId: savedUserMessage.id,
-				})),
-			);
-		}
-
-		// Save assistant message linked to same exchange
+		// Link AI message to new exchange
 		yield* messageRepo.saveMessage(input.sessionId, "assistant", result.response, exchange.id);
 
 		// Increment message_count atomically
@@ -706,6 +721,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		if (isFinalTurnResult) {
 			yield* sessionRepo.updateSession(input.sessionId, { status: "finalizing" });
 		}
+
+		const tSave = Date.now();
 
 		logger.info("Message processed", {
 			sessionId: input.sessionId,
@@ -721,6 +738,15 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			governorIntent: governorResult.output.intent,
 			evidenceCount: pendingEvidence.length,
 			exchangeId: exchange.id,
+			durationMs: {
+				total: tSave - t0,
+				gatherContext: tContext - t0,
+				pacingPipeline: tPacing - tContext,
+				nerinAgent: tNerin - tPacing,
+				extraction: tExtraction - tNerin,
+				costTracking: tCost - tExtraction,
+				dbSave: tSave - tCost,
+			},
 		});
 
 		return {
