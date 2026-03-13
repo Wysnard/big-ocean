@@ -146,3 +146,30 @@ This story **wires** those layers into the nerin-pipeline, replacing the legacy 
 - **Cost neutrality:** Same number of LLM calls. Pacing computations are pure functions with negligible overhead.
 - **FacetMetrics dependency:** The V2 scorer uses `FacetMetrics` (from formula.ts) instead of raw facet evidence counts. Need to compute facet metrics using `computeFacetMetrics()` from domain utils.
 - **Observation focus bootstrapping:** Early conversations will have minimal evidence, so observation strengths will be near-zero and Relate focus will dominate. This is correct behavior.
+
+## Architect Notes
+
+### Finding 1 (Major): Test assertions on territoryPrompt will break
+
+When `NerinInvokeInput.territoryPrompt` is replaced with `systemPrompt`, the existing pipeline test at `apps/api/src/use-cases/__tests__/nerin-pipeline.test.ts` asserts `invokeArgs?.territoryPrompt`. These assertions must be updated to check `invokeArgs?.systemPrompt` instead. Also check for any assertions in the Nerin agent mock at `packages/infrastructure/src/repositories/__mocks__/nerin-agent.anthropic.repository.ts`.
+
+**Guidance:** Update all test assertions that reference `territoryPrompt` to reference `systemPrompt`. The new assertion should verify that `systemPrompt` is a non-empty string (not an object).
+
+### Finding 2 (Major): V2 scorer requires FacetMetrics, not raw counts
+
+The old pipeline used `buildFacetEvidenceCounts()` to get `Map<FacetName, number>`. The V2 scorer (`scoreAllTerritoriesV2()`) requires `Map<FacetName, FacetMetrics>` from `computeFacetMetrics()`.
+
+**Guidance:** Call `computeFacetMetrics(existingEvidence)` from `packages/domain/src/utils/formula.ts` and pass the result to `scoreAllTerritoriesV2()`. The function signature is:
+```typescript
+computeFacetMetrics(evidence: EvidenceInput[], config?: FormulaConfig): Map<FacetName, FacetMetrics>
+```
+
+### Finding 3 (Major): V2 scorer requires currentTerritory, which doesn't exist on turn 1
+
+`scoreAllTerritoriesV2()` requires a `currentTerritory: TerritoryId` parameter for adjacency computation. On turn 1, there's no previous territory.
+
+**Guidance:** On turn 1, `selectTerritoryV2()` uses `cold-start-perimeter` selection which doesn't rely on adjacency. Use the first cold-start territory from the catalog as a fallback `currentTerritory` for turn 1 scoring. Looking at the scorer code, when `currentTerritoryDef` is not found in the catalog, adjacency defaults to 0 for all candidates, which is correct cold-start behavior. So passing any valid territory ID works.
+
+### Finding 4 (Minor): totalTurns needed for V2 scorer and selector
+
+Both `scoreAllTerritoriesV2()` and `selectTerritoryV2()` require `totalTurns`. This should come from `config.freeTierMessageThreshold` which represents the total number of user exchanges in a session.
