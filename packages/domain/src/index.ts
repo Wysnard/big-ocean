@@ -559,3 +559,9 @@ export {
 	type ScoreAllTerritoriesV2Input,
 	scoreAllTerritoriesV2,
 } from "./utils/steering";
+// Prompt Builder (Story 27-2)
+export {
+	buildPrompt,
+	type PromptBuilderOutput,
+	translateObservationFocus,
+} from "./utils/steering";
