@@ -21,12 +21,12 @@ All 3 stories merged: 25-3, 26-2, 24-2 (PRs #128, #129, #130).
 ## ~~Step 4: Governor + Character Bible Decomposition~~ DONE
 All 2 stories merged: 26-3, 27-1 (PRs #131, #132).
 
-## Step 5: Prompt Builder
-| Story | Mode | Notes |
-|-------|------|-------|
-| 27-2-prompt-builder | single | Depends on 26-3 (consumes PromptBuilderInput) + 27-1 (uses decomposed modules) |
+## Step 5: Prompt Builder — PR-READY
+| Story | Mode | Status | Notes |
+|-------|------|--------|-------|
+| 27-2-prompt-builder | single | **pr-ready** (PR #133) | Depends on 26-3 (consumes PromptBuilderInput) + 27-1 (uses decomposed modules) |
 
-**Gate:** Story above must be done before proceeding.
+**Gate:** Story above must be done (PR #133 merge) before proceeding.
 
 **Conflict Notes:**
 - 27-2 creates prompt-builder.ts in domain/src/utils/steering/
