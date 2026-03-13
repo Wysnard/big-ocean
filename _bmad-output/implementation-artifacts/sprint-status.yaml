@@ -453,5 +453,5 @@ development_status:
   epic-27: in-progress
   27-1-character-bible-decomposition: done
   27-2-prompt-builder: pr-ready
-  27-3-pipeline-integration: backlog
+  27-3-pipeline-integration: pr-ready
   epic-27-retrospective: optional
