@@ -54,6 +54,22 @@ export {
 	OPENING_QUESTIONS,
 	pickOpeningQuestion,
 } from "./constants/nerin-greeting";
+// Nerin character bible modules — decomposed Tier 1 + Tier 2 (Story 27-1)
+export {
+	BELIEFS_IN_ACTION,
+	CONVERSATION_INSTINCTS,
+	CONVERSATION_MODE,
+	HUMOR_GUARDRAILS,
+	INTERNAL_TRACKING,
+	MIRROR_GUARDRAILS,
+	MIRRORS_AMPLIFY,
+	MIRRORS_EXPLORE,
+	OBSERVATION_QUALITY,
+	QUALITY_INSTINCT,
+	REFLECT,
+	STORY_PULLING,
+	THREADING,
+} from "./constants/nerin/index";
 // Nerin persona constant (Story 2.12)
 export { NERIN_PERSONA } from "./constants/nerin-persona";
 // Territory catalog (Story 21-1, evolved Story 23-2)
