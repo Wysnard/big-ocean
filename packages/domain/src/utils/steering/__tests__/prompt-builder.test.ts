@@ -14,6 +14,7 @@ import {
 	BELIEFS_IN_ACTION,
 	CONVERSATION_INSTINCTS,
 	CONVERSATION_MODE,
+	getPressureModifier,
 	HUMOR_GUARDRAILS,
 	MIRROR_GUARDRAILS,
 	OBSERVATION_QUALITY_COMMON,
@@ -22,11 +23,11 @@ import {
 	STEERING_PREFIX,
 	STORY_PULLING,
 	THREADING_COMMON,
-	getPressureModifier,
 } from "../../../constants/nerin/index";
 import { NERIN_PERSONA } from "../../../constants/nerin-persona";
 import type {
 	AmplifyPromptInput,
+	BridgePromptInput,
 	ContradictionTarget,
 	ConvergenceTarget,
 	DomainScore,
@@ -304,6 +305,88 @@ describe("amplify intent", () => {
 	it("has templateKey matching intent:observation", () => {
 		const result = buildPrompt(makeAmplifyInput());
 		expect(result.templateKey).toBe("amplify:relate");
+	});
+});
+
+// ─── Bridge Intent ──────────────────────────────────────────────────
+
+function makeBridgeInput(
+	overrides: Partial<Omit<BridgePromptInput, "intent">> = {},
+): BridgePromptInput {
+	return {
+		intent: "bridge",
+		territory: tid("daily-routines"),
+		previousTerritory: tid("creative-pursuits"),
+		entryPressure: "angled",
+		observationFocus: { type: "relate" },
+		...overrides,
+	};
+}
+
+describe("bridge intent", () => {
+	it("uses bridge-specific template (not explore fallback)", () => {
+		const result = buildPrompt(makeBridgeInput());
+		// Bridge template mentions previousTerritory name — explore template does not
+		expect(result.systemPrompt).toContain("Creative Pursuits"); // previousTerritory.name
+		// Bridge template mentions newTerritory description
+		expect(result.systemPrompt).toContain("how they structure their time"); // newTerritory.description
+		// Bridge x relate has 3-tier fallback content
+		expect(result.systemPrompt).toContain("come back to it");
+	});
+
+	it("includes soft negative constraint with previousTerritory name", () => {
+		const result = buildPrompt(makeBridgeInput());
+		expect(result.systemPrompt).toContain("Don't pull the conversation back");
+		expect(result.systemPrompt).toContain("Creative Pursuits");
+	});
+
+	it("includes both territory references in output", () => {
+		const result = buildPrompt(makeBridgeInput());
+		// previousTerritory name appears in template and negative constraint
+		expect(result.systemPrompt).toContain("Creative Pursuits");
+		// newTerritory description appears in template
+		expect(result.systemPrompt).toContain(
+			"how they structure their time and what they protect in it",
+		);
+	});
+
+	it("appends pressure modifier for angled", () => {
+		const result = buildPrompt(makeBridgeInput({ entryPressure: "angled" }));
+		expect(result.systemPrompt).toContain(getPressureModifier("angled"));
+	});
+
+	it("appends pressure modifier for direct", () => {
+		const result = buildPrompt(makeBridgeInput({ entryPressure: "direct" }));
+		expect(result.systemPrompt).toContain(getPressureModifier("direct"));
+	});
+
+	it("appends pressure modifier for soft", () => {
+		const result = buildPrompt(makeBridgeInput({ entryPressure: "soft" }));
+		expect(result.systemPrompt).toContain(getPressureModifier("soft"));
+	});
+
+	it("has templateKey bridge:relate", () => {
+		const result = buildPrompt(makeBridgeInput());
+		expect(result.templateKey).toBe("bridge:relate");
+	});
+
+	it("has templateKey bridge:noticing", () => {
+		const focus: ObservationFocus = { type: "noticing", domain: "work" as LifeDomain };
+		const result = buildPrompt(makeBridgeInput({ observationFocus: focus }));
+		expect(result.templateKey).toBe("bridge:noticing");
+	});
+
+	it("includes all common modules", () => {
+		const result = buildPrompt(makeBridgeInput());
+		for (const mod of COMMON_MODULES) {
+			expect(result.systemPrompt).toContain(mod);
+		}
+	});
+
+	it("throws descriptive error for invalid previousTerritory", () => {
+		expect(() =>
+			buildPrompt(makeBridgeInput({ previousTerritory: tid("nonexistent-territory") })),
+		).toThrow(/territory.*not found/i);
 	});
 });
 
