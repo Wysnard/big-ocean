@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 7
-parallelism_step_name: "Steering Format Foundation (Epic 28)"
-baseline_commit: "4b4665814fb337b772505496bb6edf2450687306"
+parallelism_step: 8
+parallelism_step_name: "Skeleton Templates"
+baseline_commit: "1cd628e1760b6d13c9c15cf5f9c892020e3fdbb6"
 created: "2026-03-14"
-last_updated: "2026-03-14T14"
+last_updated: "2026-03-14T15"
 
 # Optional context documents discovered
 context_docs:
@@ -14,17 +14,10 @@ context_docs:
 
 # Stories in this step
 stories:
-  28-1-territory-catalog-enrichment:
+  28-3-intent-observation-templates-and-pressure-modifiers:
     status: done
-    mode: "parallel"
-    notes: "Pure data: add name + description to 25 territories"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/135"
-    dev_branch: "feat/story-28-1-territory-catalog-enrichment"
-    error: null
-  28-2-common-layer-reform:
-    status: done
-    mode: "parallel"
-    notes: "Reorganize modules: trim instincts, move reflect/story-pulling to common"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/136"
-    dev_branch: "feat/story-28-2-common-layer-reform"
+    mode: "single"
+    notes: "Creates 9 templates + 3 pressure modifiers as new constants"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/137"
+    dev_branch: "feat/story-28-3-intent-observation-templates-and-pressure-modifiers"
     error: null
