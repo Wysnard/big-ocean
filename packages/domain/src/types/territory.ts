@@ -45,6 +45,10 @@ export type TerritoryId = Schema.Schema.Type<typeof TerritoryIdSchema>;
 export interface Territory {
 	/** Unique territory identifier (branded slug) */
 	readonly id: TerritoryId;
+	/** Human-readable territory name (e.g., "Daily Routines") */
+	readonly name: string;
+	/** Nerin's curiosity framing — what she's drawn to explore (e.g., "how they structure their time and what they protect in it") */
+	readonly description: string;
 	/** Expected energy cost of honest engagement, continuous [0, 1] */
 	readonly expectedEnergy: number;
 	/** Life domains this territory explores — exactly 2 per territory */

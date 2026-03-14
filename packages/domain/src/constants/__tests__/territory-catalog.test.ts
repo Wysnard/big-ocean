@@ -96,7 +96,35 @@ describe("TERRITORY_CATALOG", () => {
 		// Check only steerable domains (not "other")
 		for (const domain of ["work", "relationships", "family", "leisure", "solo"]) {
 			const count = domainCounts.get(domain) ?? 0;
-			expect(count, `Domain "${domain}" appears in only ${count} territories (expected >= 6)`).toBeGreaterThanOrEqual(6);
+			expect(
+				count,
+				`Domain "${domain}" appears in only ${count} territories (expected >= 6)`,
+			).toBeGreaterThanOrEqual(6);
+		}
+	});
+
+	it("each territory has a non-empty name string", () => {
+		for (const [id, territory] of TERRITORY_CATALOG) {
+			expect(territory.name.length, `Territory "${id}" has empty name`).toBeGreaterThan(0);
+		}
+	});
+
+	it("each territory has a non-empty description string", () => {
+		for (const [id, territory] of TERRITORY_CATALOG) {
+			expect(territory.description.length, `Territory "${id}" has empty description`).toBeGreaterThan(
+				0,
+			);
+		}
+	});
+
+	it("descriptions follow curiosity framing pattern", () => {
+		const validStarts = ["how", "what", "who", "when", "where", "the"];
+		for (const [id, territory] of TERRITORY_CATALOG) {
+			const firstWord = territory.description.split(" ")[0]?.toLowerCase();
+			expect(
+				validStarts.includes(firstWord),
+				`Territory "${id}" description starts with "${firstWord}" — expected one of: ${validStarts.join(", ")}`,
+			).toBe(true);
 		}
 	});
 
@@ -106,7 +134,7 @@ describe("TERRITORY_CATALOG", () => {
 		let heavy = 0;
 		for (const [, territory] of TERRITORY_CATALOG) {
 			const e = territory.expectedEnergy;
-			if (e >= 0.20 && e <= 0.37) light++;
+			if (e >= 0.2 && e <= 0.37) light++;
 			else if (e >= 0.38 && e <= 0.53) medium++;
 			else if (e >= 0.58 && e <= 0.72) heavy++;
 		}
