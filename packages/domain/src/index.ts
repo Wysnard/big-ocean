@@ -45,10 +45,10 @@ export {
 } from "./constants/life-domain";
 // Nerin character bible modules — decomposed Tier 1 + Tier 2 (Story 27-1)
 export {
-	AMPLIFY_CONTRADICTION_TEMPLATE,
-	AMPLIFY_CONVERGENCE_TEMPLATE,
-	AMPLIFY_NOTICING_TEMPLATE,
-	AMPLIFY_RELATE_TEMPLATE,
+	CLOSE_CONTRADICTION_TEMPLATE,
+	CLOSE_CONVERGENCE_TEMPLATE,
+	CLOSE_NOTICING_TEMPLATE,
+	CLOSE_RELATE_TEMPLATE,
 	BELIEFS_IN_ACTION,
 	CONVERSATION_INSTINCTS,
 	CONVERSATION_MODE,
@@ -61,7 +61,6 @@ export {
 	HUMOR_GUARDRAILS,
 	INTERNAL_TRACKING,
 	MIRROR_GUARDRAILS,
-	OBSERVATION_QUALITY,
 	OBSERVATION_QUALITY_COMMON,
 	OPEN_RELATE_TEMPLATE,
 	PRESSURE_ANGLED,
@@ -73,7 +72,6 @@ export {
 	renderTemplate,
 	STEERING_PREFIX,
 	STORY_PULLING,
-	THREADING,
 	THREADING_COMMON,
 } from "./constants/nerin/index";
 // Nerin farewell constants (Story 7.18)
@@ -385,7 +383,7 @@ export type {
 	UserMessage,
 } from "./types/message";
 export type {
-	AmplifyPromptInput,
+	ClosePromptInput,
 	BridgePromptInput,
 	ContradictionFocus,
 	ContradictionTarget,

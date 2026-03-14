@@ -2,15 +2,15 @@
  * Observation Gating & Competition Tests — Story 26-2
  *
  * Pure function tests for observation gating: explore mode (phase-gated
- * threshold with mutual exclusion) and amplify mode (raw strength argmax).
+ * threshold with mutual exclusion) and close mode (raw strength argmax).
  *
  * Tests cover (AC #9):
  * - Early session (low phase): Relate wins by default
  * - Mid session (moderate phase + strong signal): noticing fires
  * - Mutual exclusion: contradiction > convergence > noticing
  * - Escalation: high fire count blocks moderate signals
- * - Amplify mode: raw strength competition, Relate can win
- * - Amplify mode: simmering contradiction wins
+ * - Close mode: raw strength competition, Relate can win
+ * - Close mode: simmering contradiction wins
  * - Threshold escalation values
  * - Constants are named and match expected values
  */
@@ -40,10 +40,10 @@ function exploreInput(overrides: Partial<ObservationGatingInput> = {}): Observat
 	};
 }
 
-/** Helper to create a minimal amplify input */
-function amplifyInput(overrides: Partial<ObservationGatingInput> = {}): ObservationGatingInput {
+/** Helper to create a minimal close input */
+function closeInput(overrides: Partial<ObservationGatingInput> = {}): ObservationGatingInput {
 	return {
-		mode: "amplify",
+		mode: "close",
 		phase: 0.8,
 		sharedFireCount: 0,
 		relateStrength: 0.3,
@@ -225,12 +225,12 @@ describe("evaluateObservationGating — explore mode", () => {
 	});
 });
 
-// ─── Amplify Mode ───────────────────────────────────────────────────
+// ─── Close Mode ─────────────────────────────────────────────────────
 
-describe("evaluateObservationGating — amplify mode", () => {
+describe("evaluateObservationGating — close mode", () => {
 	it("all compete on raw strength, Relate wins when energy x telling is strongest", () => {
 		const result = evaluateObservationGating(
-			amplifyInput({
+			closeInput({
 				relateStrength: 0.8,
 				noticingStrength: 0.3,
 				contradictionStrength: 0.2,
@@ -239,14 +239,14 @@ describe("evaluateObservationGating — amplify mode", () => {
 		);
 
 		expect(result.focus.type).toBe("relate");
-		expect(result.debug.mode).toBe("amplify");
-		// No threshold in amplify mode
+		expect(result.debug.mode).toBe("close");
+		// No threshold in close mode
 		expect(result.debug.threshold).toBe(0);
 	});
 
 	it("simmering contradiction wins when its raw strength is highest", () => {
 		const result = evaluateObservationGating(
-			amplifyInput({
+			closeInput({
 				relateStrength: 0.3,
 				noticingStrength: 0.2,
 				contradictionStrength: 0.6,
@@ -258,9 +258,9 @@ describe("evaluateObservationGating — amplify mode", () => {
 		expect(result.focus.type).toBe("contradiction");
 	});
 
-	it("no phase gating in amplify mode — uses raw strengths directly", () => {
+	it("no phase gating in close mode — uses raw strengths directly", () => {
 		const result = evaluateObservationGating(
-			amplifyInput({
+			closeInput({
 				phase: 0.1, // very low phase doesn't matter
 				relateStrength: 0.2,
 				noticingStrength: 0.5,
@@ -277,7 +277,7 @@ describe("evaluateObservationGating — amplify mode", () => {
 	it("tiebreak uses priority: contradiction > convergence > noticing > relate", () => {
 		// All equal — contradiction wins tiebreak
 		const result = evaluateObservationGating(
-			amplifyInput({
+			closeInput({
 				relateStrength: 0.5,
 				noticingStrength: 0.5,
 				contradictionStrength: 0.5,
@@ -290,9 +290,9 @@ describe("evaluateObservationGating — amplify mode", () => {
 		expect(result.focus.type).toBe("contradiction");
 	});
 
-	it("amplify mode does not use sharedFireCount", () => {
+	it("close mode does not use sharedFireCount", () => {
 		const result = evaluateObservationGating(
-			amplifyInput({
+			closeInput({
 				sharedFireCount: 10, // high fire count doesn't matter
 				relateStrength: 0.2,
 				noticingStrength: 0.6,

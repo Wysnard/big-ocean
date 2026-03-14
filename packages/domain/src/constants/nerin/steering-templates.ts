@@ -9,7 +9,7 @@
  * - open x relate (1)
  * - explore x relate/noticing/contradiction/convergence (4)
  * - bridge x relate/noticing/contradiction/convergence (4) — Story 29-2
- * - amplify x relate/noticing/contradiction/convergence (4)
+ * - close x relate/noticing/contradiction/convergence (4)
  *
  * These templates are consumed by the Prompt Builder (Story 1.4 / 28-4).
  */
@@ -73,22 +73,22 @@ export const BRIDGE_CONVERGENCE_TEMPLATE =
 export const BRIDGE_NEGATIVE_CONSTRAINT =
 	"You've been exploring {previousTerritory.name} — your curiosity has moved. Don't pull the conversation back there.";
 
-// ─── Amplify Templates (4) ──────────────────────────────────────────
+// ─── Close Templates (4) ────────────────────────────────────────────
 
-/** amplify x relate — last question, land it with feeling. */
-export const AMPLIFY_RELATE_TEMPLATE =
+/** close x relate — last question, land it with feeling. */
+export const CLOSE_RELATE_TEMPLATE =
 	"This is your last question. Connect to what they just shared and land it — something that lets them leave with a feeling, not a thread to chase.";
 
-/** amplify x noticing — last question, name the domain shift. */
-export const AMPLIFY_NOTICING_TEMPLATE =
+/** close x noticing — last question, name the domain shift. */
+export const CLOSE_NOTICING_TEMPLATE =
 	"This is your last question. Something has been shifting in how they talk about {domain}. Name it — give them something to sit with.";
 
-/** amplify x contradiction — last question, frame tension as worth holding. */
-export const AMPLIFY_CONTRADICTION_TEMPLATE =
+/** close x contradiction — last question, frame tension as worth holding. */
+export const CLOSE_CONTRADICTION_TEMPLATE =
 	"This is your last question. {facet} shows up differently in {domain1} vs {domain2}. Frame that tension as something worth holding — not to resolve, to notice.";
 
-/** amplify x convergence — last question, name the core pattern. */
-export const AMPLIFY_CONVERGENCE_TEMPLATE =
+/** close x convergence — last question, name the core pattern. */
+export const CLOSE_CONVERGENCE_TEMPLATE =
 	"This is your last question. {facet} has shown up consistently across {domains}. Name that pattern — it says something core about who they are.";
 
 // ─── Template Lookup ────────────────────────────────────────────────
@@ -104,10 +104,10 @@ const TEMPLATE_LOOKUP: Record<string, string> = {
 	"bridge:noticing": BRIDGE_NOTICING_TEMPLATE,
 	"bridge:contradiction": BRIDGE_CONTRADICTION_TEMPLATE,
 	"bridge:convergence": BRIDGE_CONVERGENCE_TEMPLATE,
-	"amplify:relate": AMPLIFY_RELATE_TEMPLATE,
-	"amplify:noticing": AMPLIFY_NOTICING_TEMPLATE,
-	"amplify:contradiction": AMPLIFY_CONTRADICTION_TEMPLATE,
-	"amplify:convergence": AMPLIFY_CONVERGENCE_TEMPLATE,
+	"close:relate": CLOSE_RELATE_TEMPLATE,
+	"close:noticing": CLOSE_NOTICING_TEMPLATE,
+	"close:contradiction": CLOSE_CONTRADICTION_TEMPLATE,
+	"close:convergence": CLOSE_CONVERGENCE_TEMPLATE,
 };
 
 /** Total template count — exported for test assertions. */
@@ -184,7 +184,7 @@ function extractParams(
 /**
  * Select and render the correct intent x observation template.
  *
- * @param intent - The conversational intent (open, explore, bridge, amplify)
+ * @param intent - The conversational intent (open, explore, bridge, close)
  * @param focus - The observation focus discriminated union
  * @param territory - Territory with name and description for parameter interpolation
  *   (for bridge intent, this is the **new** territory)
@@ -194,7 +194,7 @@ function extractParams(
  * @throws Error if bridge intent is called without previousTerritory
  */
 export function renderSteeringTemplate(
-	intent: "open" | "explore" | "bridge" | "amplify",
+	intent: "open" | "explore" | "bridge" | "close",
 	focus: ObservationFocus,
 	territory: { readonly name: string; readonly description: string },
 	previousTerritory?: { readonly name: string; readonly description: string },
@@ -212,7 +212,7 @@ export function renderSteeringTemplate(
 	if (!template) {
 		throw new Error(
 			`No steering template for intent "${intent}" x observation "${focus.type}". ` +
-				"Valid combinations: open x relate, explore x all, bridge x all, amplify x all.",
+				"Valid combinations: open x relate, explore x all, bridge x all, close x all.",
 		);
 	}
 

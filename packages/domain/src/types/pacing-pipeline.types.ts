@@ -55,7 +55,7 @@ export type ExtractionTier = 1 | 2 | 3;
  * Session Phase — current phase of the conversation session.
  * Derived from turn number and session state.
  */
-export type SessionPhase = "opening" | "exploring" | "amplifying";
+export type SessionPhase = "opening" | "exploring" | "closing";
 
 /**
  * Transition Type — how the current exchange transitioned from the previous.
@@ -65,4 +65,4 @@ export type TransitionType = "normal" | "energy_shift" | "territory_change";
 /**
  * Selection Rule — which code path was used to select the territory.
  */
-export type SelectionRule = "cold_start" | "argmax" | "argmax_amplify";
+export type SelectionRule = "cold_start" | "argmax" | "argmax_close";

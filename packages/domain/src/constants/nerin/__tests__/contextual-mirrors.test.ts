@@ -188,23 +188,23 @@ describe("bridge intent — subset of explore mirrors", () => {
 	});
 });
 
-// ─── Amplify Intent — Same Set for All Observations ─────────────────
+// ─── Close Intent — Same Set for All Observations ───────────────────
 
-describe("amplify intent — same set for all observations", () => {
-	const AMPLIFY_MIRRORS = [
+describe("close intent — same set for all observations", () => {
+	const CLOSE_MIRRORS = [
 		"Ghost Net",
 		"Mimic Octopus",
 		"Volcanic Vents",
 		"Mola Mola",
 	];
 
-	it("amplify x relate includes exactly Ghost Net, Mimic Octopus, Volcanic Vents, Mola Mola", () => {
-		const result = getMirrorsForContext("amplify", "relate");
+	it("close x relate includes exactly Ghost Net, Mimic Octopus, Volcanic Vents, Mola Mola", () => {
+		const result = getMirrorsForContext("close", "relate");
 		expect(result).not.toBeNull();
-		for (const mirror of AMPLIFY_MIRRORS) {
+		for (const mirror of CLOSE_MIRRORS) {
 			expect(result).toContain(mirror);
 		}
-		// Should NOT include non-amplify mirrors
+		// Should NOT include non-close mirrors
 		expect(result).not.toContain("Hermit Crab");
 		expect(result).not.toContain("Pilot Fish");
 		expect(result).not.toContain("Clownfish");
@@ -215,21 +215,21 @@ describe("amplify intent — same set for all observations", () => {
 		expect(result).not.toContain("Tide Pool");
 	});
 
-	it("amplify x noticing returns same set as amplify x relate", () => {
-		const relate = getMirrorsForContext("amplify", "relate");
-		const noticing = getMirrorsForContext("amplify", "noticing");
+	it("close x noticing returns same set as close x relate", () => {
+		const relate = getMirrorsForContext("close", "relate");
+		const noticing = getMirrorsForContext("close", "noticing");
 		expect(noticing).toBe(relate);
 	});
 
-	it("amplify x contradiction returns same set as amplify x relate", () => {
-		const relate = getMirrorsForContext("amplify", "relate");
-		const contradiction = getMirrorsForContext("amplify", "contradiction");
+	it("close x contradiction returns same set as close x relate", () => {
+		const relate = getMirrorsForContext("close", "relate");
+		const contradiction = getMirrorsForContext("close", "contradiction");
 		expect(contradiction).toBe(relate);
 	});
 
-	it("amplify x convergence returns same set as amplify x relate", () => {
-		const relate = getMirrorsForContext("amplify", "relate");
-		const convergence = getMirrorsForContext("amplify", "convergence");
+	it("close x convergence returns same set as close x relate", () => {
+		const relate = getMirrorsForContext("close", "relate");
+		const convergence = getMirrorsForContext("close", "convergence");
 		expect(convergence).toBe(relate);
 	});
 });
@@ -238,7 +238,7 @@ describe("amplify intent — same set for all observations", () => {
 
 describe("guardrail inclusion", () => {
 	it("all non-null results include the guardrail text", () => {
-		const intents = ["explore", "bridge", "amplify"] as const;
+		const intents = ["explore", "bridge", "close"] as const;
 		const observations = [
 			"relate",
 			"noticing",

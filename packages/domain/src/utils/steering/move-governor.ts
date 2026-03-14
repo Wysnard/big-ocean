@@ -15,7 +15,7 @@
 
 import type { LifeDomain } from "../../constants/life-domain";
 import type {
-	AmplifyPromptInput,
+	ClosePromptInput,
 	BridgePromptInput,
 	ConversationalIntent,
 	ContradictionTarget,
@@ -102,7 +102,7 @@ export interface MoveGovernorResult {
 /**
  * Derive the conversational intent from turn position and territory transition.
  *
- * Priority: open (turn 1) > amplify (final) > bridge (territory change) > explore (same territory).
+ * Priority: open (turn 1) > close (final) > bridge (territory change) > explore (same territory).
  * Open takes priority even on a single-turn session.
  * Bridge fires when selectedTerritory !== previousTerritory, not turn 1, not final.
  */
@@ -113,7 +113,7 @@ export function deriveIntent(
 	previousTerritory: TerritoryId | null,
 ): ConversationalIntent {
 	if (turnNumber === 1) return "open";
-	if (isFinalTurn) return "amplify";
+	if (isFinalTurn) return "close";
 	if (previousTerritory !== null && selectedTerritory !== previousTerritory) return "bridge";
 	return "explore";
 }
@@ -182,7 +182,7 @@ const OPEN_GATING_DEBUG: ObservationGatingDebug = {
  * Compute the Governor's output: PromptBuilderInput + MoveGovernorDebug.
  *
  * Orchestrates three decisions:
- * 1. Intent derivation (open / explore / amplify)
+ * 1. Intent derivation (open / explore / close)
  * 2. Entry pressure (direct / angled / soft)
  * 3. Observation gating (which focus wins)
  *
@@ -215,10 +215,10 @@ export function computeGovernorOutput(input: MoveGovernorInput): MoveGovernorRes
 		return { output, debug };
 	}
 
-	// ── Amplify intent: direct entry, amplify-mode gating ──
-	if (intent === "amplify") {
+	// ── Close intent: direct entry, close-mode gating ──
+	if (intent === "close") {
 		const gatingInput: ObservationGatingInput = {
-			mode: "amplify",
+			mode: "close",
 			phase: input.phase,
 			sharedFireCount: input.sharedFireCount,
 			relateStrength: input.relateStrength,
@@ -232,15 +232,15 @@ export function computeGovernorOutput(input: MoveGovernorInput): MoveGovernorRes
 
 		const gatingResult = evaluateObservationGating(gatingInput);
 
-		const output: AmplifyPromptInput = {
-			intent: "amplify",
+		const output: ClosePromptInput = {
+			intent: "close",
 			territory: input.selectedTerritory,
 			entryPressure: "direct",
 			observationFocus: gatingResult.focus,
 		};
 
 		const debug: MoveGovernorDebug = {
-			intent: "amplify",
+			intent: "close",
 			isFinalTurn: true,
 			entryPressure: {
 				level: "direct",

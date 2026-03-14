@@ -2,7 +2,7 @@
  * Tier 2 — STORY_PULLING
  *
  * Primary question type for pulling concrete narratives. Loaded for
- * explore intent only. Not loaded for open or amplify intents.
+ * explore intent only. Not loaded for open or close intents.
  * Extracted from CHAT_CONTEXT "STORY-PULLING" section.
  *
  * Story 27-1: Character Bible Decomposition

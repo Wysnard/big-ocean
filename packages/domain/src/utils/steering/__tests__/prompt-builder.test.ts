@@ -26,7 +26,7 @@ import {
 } from "../../../constants/nerin/index";
 import { NERIN_PERSONA } from "../../../constants/nerin-persona";
 import type {
-	AmplifyPromptInput,
+	ClosePromptInput,
 	BridgePromptInput,
 	ContradictionTarget,
 	ConvergenceTarget,
@@ -75,11 +75,11 @@ function makeExploreInput(
 	};
 }
 
-function makeAmplifyInput(
-	overrides: Partial<Omit<AmplifyPromptInput, "intent" | "entryPressure">> = {},
-): AmplifyPromptInput {
+function makeCloseInput(
+	overrides: Partial<Omit<ClosePromptInput, "intent" | "entryPressure">> = {},
+): ClosePromptInput {
 	return {
-		intent: "amplify",
+		intent: "close",
 		territory: tid("creative-pursuits"),
 		entryPressure: "direct",
 		observationFocus: { type: "relate" },
@@ -93,22 +93,22 @@ describe("common layer — always included", () => {
 	it("includes NERIN_PERSONA in all intents", () => {
 		const open = buildPrompt(makeOpenInput());
 		const explore = buildPrompt(makeExploreInput());
-		const amplify = buildPrompt(makeAmplifyInput());
+		const close = buildPrompt(makeCloseInput());
 
 		expect(open.systemPrompt).toContain(NERIN_PERSONA);
 		expect(explore.systemPrompt).toContain(NERIN_PERSONA);
-		expect(amplify.systemPrompt).toContain(NERIN_PERSONA);
+		expect(close.systemPrompt).toContain(NERIN_PERSONA);
 	});
 
 	it("includes all 10 common modules in every prompt", () => {
 		const open = buildPrompt(makeOpenInput());
 		const explore = buildPrompt(makeExploreInput());
-		const amplify = buildPrompt(makeAmplifyInput());
+		const close = buildPrompt(makeCloseInput());
 
 		for (const mod of COMMON_MODULES) {
 			expect(open.systemPrompt).toContain(mod);
 			expect(explore.systemPrompt).toContain(mod);
-			expect(amplify.systemPrompt).toContain(mod);
+			expect(close.systemPrompt).toContain(mod);
 		}
 	});
 });
@@ -131,11 +131,11 @@ describe("steering section position", () => {
 	it("all intents include STEERING_PREFIX", () => {
 		const open = buildPrompt(makeOpenInput());
 		const explore = buildPrompt(makeExploreInput());
-		const amplify = buildPrompt(makeAmplifyInput());
+		const close = buildPrompt(makeCloseInput());
 
 		expect(open.systemPrompt).toContain(STEERING_PREFIX);
 		expect(explore.systemPrompt).toContain(STEERING_PREFIX);
-		expect(amplify.systemPrompt).toContain(STEERING_PREFIX);
+		expect(close.systemPrompt).toContain(STEERING_PREFIX);
 	});
 });
 
@@ -246,22 +246,22 @@ describe("explore intent", () => {
 	});
 });
 
-// ─── Amplify Intent ─────────────────────────────────────────────────
+// ─── Close Intent ───────────────────────────────────────────────────
 
-describe("amplify intent", () => {
-	it("uses amplify x relate template", () => {
-		const result = buildPrompt(makeAmplifyInput());
+describe("close intent", () => {
+	it("uses close x relate template", () => {
+		const result = buildPrompt(makeCloseInput());
 		expect(result.systemPrompt).toContain("last question");
 	});
 
-	it("uses amplify x noticing template", () => {
+	it("uses close x noticing template", () => {
 		const focus: ObservationFocus = { type: "noticing", domain: "leisure" as LifeDomain };
-		const result = buildPrompt(makeAmplifyInput({ observationFocus: focus }));
+		const result = buildPrompt(makeCloseInput({ observationFocus: focus }));
 		expect(result.systemPrompt).toContain("last question");
 		expect(result.systemPrompt).toContain("leisure");
 	});
 
-	it("uses amplify x contradiction template", () => {
+	it("uses close x contradiction template", () => {
 		const domainA: DomainScore = { domain: "work" as LifeDomain, score: 0.8, confidence: 0.7 };
 		const domainB: DomainScore = {
 			domain: "family" as LifeDomain,
@@ -274,13 +274,13 @@ describe("amplify intent", () => {
 			strength: 0.7,
 		};
 		const focus: ObservationFocus = { type: "contradiction", target };
-		const result = buildPrompt(makeAmplifyInput({ observationFocus: focus }));
+		const result = buildPrompt(makeCloseInput({ observationFocus: focus }));
 		expect(result.systemPrompt).toContain("trust");
 		expect(result.systemPrompt).toContain("work");
 		expect(result.systemPrompt).toContain("family");
 	});
 
-	it("uses amplify x convergence template", () => {
+	it("uses close x convergence template", () => {
 		const domains: DomainScore[] = [
 			{ domain: "work" as LifeDomain, score: 0.7, confidence: 0.8 },
 			{ domain: "relationships" as LifeDomain, score: 0.72, confidence: 0.7 },
@@ -292,19 +292,19 @@ describe("amplify intent", () => {
 			strength: 0.6,
 		};
 		const focus: ObservationFocus = { type: "convergence", target };
-		const result = buildPrompt(makeAmplifyInput({ observationFocus: focus }));
+		const result = buildPrompt(makeCloseInput({ observationFocus: focus }));
 		expect(result.systemPrompt).toContain("self_efficacy");
 		expect(result.systemPrompt).toContain("work");
 	});
 
 	it("appends pressure modifier", () => {
-		const result = buildPrompt(makeAmplifyInput());
+		const result = buildPrompt(makeCloseInput());
 		expect(result.systemPrompt).toContain(getPressureModifier("direct"));
 	});
 
 	it("has templateKey matching intent:observation", () => {
-		const result = buildPrompt(makeAmplifyInput());
-		expect(result.templateKey).toBe("amplify:relate");
+		const result = buildPrompt(makeCloseInput());
+		expect(result.templateKey).toBe("close:relate");
 	});
 });
 
@@ -422,8 +422,8 @@ describe("contextual mirrors", () => {
 		expect(result.systemPrompt).toContain("NATURAL WORLD MIRRORS");
 	});
 
-	it("amplify includes closing mirrors", () => {
-		const result = buildPrompt(makeAmplifyInput());
+	it("close includes closing mirrors", () => {
+		const result = buildPrompt(makeCloseInput());
 		expect(result.mirrorSet).not.toBeNull();
 		expect(result.mirrorSet).toContain("Ghost Net");
 		expect(result.mirrorSet).toContain("Mimic Octopus");
@@ -435,12 +435,12 @@ describe("contextual mirrors", () => {
 	it("all non-null mirror sets include guardrail text", () => {
 		const explore = buildPrompt(makeExploreInput());
 		const bridge = buildPrompt(makeBridgeInput());
-		const amplify = buildPrompt(makeAmplifyInput());
+		const close = buildPrompt(makeCloseInput());
 
 		const guardrail = "You can discover new mirrors in the moment";
 		expect(explore.mirrorSet).toContain(guardrail);
 		expect(bridge.mirrorSet).toContain(guardrail);
-		expect(amplify.mirrorSet).toContain(guardrail);
+		expect(close.mirrorSet).toContain(guardrail);
 	});
 
 	it("mirrors appear after steering section in system prompt", () => {
@@ -462,11 +462,11 @@ describe("removed content (4-tier artifacts)", () => {
 	it("does not contain old TERRITORY GUIDANCE header", () => {
 		const open = buildPrompt(makeOpenInput());
 		const explore = buildPrompt(makeExploreInput());
-		const amplify = buildPrompt(makeAmplifyInput());
+		const close = buildPrompt(makeCloseInput());
 
 		expect(open.systemPrompt).not.toContain("TERRITORY GUIDANCE");
 		expect(explore.systemPrompt).not.toContain("TERRITORY GUIDANCE");
-		expect(amplify.systemPrompt).not.toContain("TERRITORY GUIDANCE");
+		expect(close.systemPrompt).not.toContain("TERRITORY GUIDANCE");
 	});
 
 	it("does not contain old OBSERVATION FOCUS header", () => {
@@ -475,8 +475,8 @@ describe("removed content (4-tier artifacts)", () => {
 	});
 
 	it("does not contain old AMPLIFY MODE block", () => {
-		const amplify = buildPrompt(makeAmplifyInput());
-		expect(amplify.systemPrompt).not.toContain("AMPLIFY MODE:");
+		const close = buildPrompt(makeCloseInput());
+		expect(close.systemPrompt).not.toContain("AMPLIFY MODE:");
 	});
 
 	it("output has no tier2Modules property", () => {

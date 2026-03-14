@@ -56,9 +56,9 @@ export type EntryPressure = (typeof ENTRY_PRESSURES)[number];
  * - open: first visit to a territory (opener question)
  * - explore: mid-conversation depth (observation may fire)
  * - bridge: territory transition (selectedTerritory !== previousTerritory)
- * - amplify: final-turn crescendo (best observation wins)
+ * - close: final-turn crescendo (best observation wins)
  */
-export const CONVERSATIONAL_INTENTS = ["open", "explore", "bridge", "amplify"] as const;
+export const CONVERSATIONAL_INTENTS = ["open", "explore", "bridge", "close"] as const;
 
 export type ConversationalIntent = (typeof CONVERSATIONAL_INTENTS)[number];
 
@@ -164,11 +164,11 @@ export interface BridgePromptInput {
 }
 
 /**
- * Amplify intent — final-turn crescendo. Always uses "direct" entry pressure.
+ * Close intent — final-turn crescendo. Always uses "direct" entry pressure.
  * The best observation focus wins via raw strength competition.
  */
-export interface AmplifyPromptInput {
-	readonly intent: "amplify";
+export interface ClosePromptInput {
+	readonly intent: "close";
 	readonly territory: TerritoryId;
 	readonly entryPressure: "direct";
 	readonly observationFocus: ObservationFocus;
@@ -182,7 +182,7 @@ export type PromptBuilderInput =
 	| OpenPromptInput
 	| ExplorePromptInput
 	| BridgePromptInput
-	| AmplifyPromptInput;
+	| ClosePromptInput;
 
 // ---------------------------------------------------------------------------
 // Task 5: Debug and scorer output types
@@ -204,7 +204,7 @@ export interface EntryPressureDebug {
 
 /** Debug info for the observation gating decision. */
 export interface ObservationGatingDebug {
-	readonly mode: "explore" | "amplify";
+	readonly mode: "explore" | "close";
 	readonly phase: number;
 	readonly threshold: number;
 	readonly sharedFireCount: number;

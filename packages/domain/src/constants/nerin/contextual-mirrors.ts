@@ -10,7 +10,7 @@
  * - Open: no mirrors
  * - Explore: observation-specific subsets
  * - Bridge: smaller observation-specific subsets
- * - Amplify: same 4 mirrors for all observations
+ * - Close: same 4 mirrors for all observations
  *
  * Each mirror set includes the guardrail:
  * "You can discover new mirrors in the moment — but the biology must be real"
@@ -138,8 +138,8 @@ const BRIDGE_NOTICING_MIRRORS = [HERMIT_CRAB, VOLCANIC_VENTS];
 const BRIDGE_CONTRADICTION_MIRRORS = [TIDE_POOL, DOLPHIN_ECHOLOCATION];
 const BRIDGE_CONVERGENCE_MIRRORS = [GHOST_NET, CORAL_REEF, PILOT_FISH];
 
-// Amplify — same set for all observations
-const AMPLIFY_MIRRORS = [GHOST_NET, MIMIC_OCTOPUS, VOLCANIC_VENTS, MOLA_MOLA];
+// Close — same set for all observations
+const CLOSE_MIRRORS = [GHOST_NET, MIMIC_OCTOPUS, VOLCANIC_VENTS, MOLA_MOLA];
 
 // ─── Formatting ─────────────────────────────────────────────────────
 
@@ -168,9 +168,9 @@ const BRIDGE_NOTICING_SET = formatMirrorSet(BRIDGE_NOTICING_MIRRORS, "");
 const BRIDGE_CONTRADICTION_SET = formatMirrorSet(BRIDGE_CONTRADICTION_MIRRORS, "");
 const BRIDGE_CONVERGENCE_SET = formatMirrorSet(BRIDGE_CONVERGENCE_MIRRORS, "");
 
-const AMPLIFY_SET = formatMirrorSet(
-	AMPLIFY_MIRRORS,
-	" (AMPLIFY)",
+const CLOSE_SET = formatMirrorSet(
+	CLOSE_MIRRORS,
+	" (CLOSE)",
 );
 
 // ─── Lookup Table ───────────────────────────────────────────────────
@@ -193,11 +193,11 @@ const MIRROR_LOOKUP: Record<string, string | null> = {
 	"bridge:noticing": BRIDGE_NOTICING_SET,
 	"bridge:contradiction": BRIDGE_CONTRADICTION_SET,
 	"bridge:convergence": BRIDGE_CONVERGENCE_SET,
-	// Amplify — same set for all observations
-	"amplify:relate": AMPLIFY_SET,
-	"amplify:noticing": AMPLIFY_SET,
-	"amplify:contradiction": AMPLIFY_SET,
-	"amplify:convergence": AMPLIFY_SET,
+	// Close — same set for all observations
+	"close:relate": CLOSE_SET,
+	"close:noticing": CLOSE_SET,
+	"close:contradiction": CLOSE_SET,
+	"close:convergence": CLOSE_SET,
 };
 
 // ─── Public API ─────────────────────────────────────────────────────
@@ -208,7 +208,7 @@ const MIRROR_LOOKUP: Record<string, string | null> = {
  * Returns a formatted mirror block string to include in the system prompt,
  * or null if no mirrors should be loaded (e.g., open intent).
  *
- * @param intent - The conversational intent (open, explore, bridge, amplify)
+ * @param intent - The conversational intent (open, explore, bridge, close)
  * @param observationType - The observation focus type (relate, noticing, contradiction, convergence)
  * @returns Formatted mirror block string, or null if no mirrors for this context
  */

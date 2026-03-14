@@ -77,7 +77,7 @@ function assembleCommonLayer(): string {
 
 /**
  * Derive the observation focus for the given input.
- * Open intent always uses relate; explore/bridge/amplify carry their own focus.
+ * Open intent always uses relate; explore/bridge/close carry their own focus.
  */
 function getObservationFocus(input: PromptBuilderInput): ObservationFocus {
 	if (input.intent === "open") {
@@ -93,7 +93,7 @@ function getObservationFocus(input: PromptBuilderInput): ObservationFocus {
  * - STEERING_PREFIX
  * - Rendered intent x observation template
  * - Soft negative constraint (bridge intent only)
- * - Entry pressure modifier (for explore, bridge, and amplify intents)
+ * - Entry pressure modifier (for explore, bridge, and close intents)
  */
 function buildSteeringSection(
 	input: PromptBuilderInput,
@@ -118,8 +118,8 @@ function buildSteeringSection(
 		parts.push(constraint);
 	}
 
-	// Append pressure modifier for explore, bridge, and amplify intents
-	if (input.intent === "explore" || input.intent === "bridge" || input.intent === "amplify") {
+	// Append pressure modifier for explore, bridge, and close intents
+	if (input.intent === "explore" || input.intent === "bridge" || input.intent === "close") {
 		parts.push(getPressureModifier(input.entryPressure));
 	}
 

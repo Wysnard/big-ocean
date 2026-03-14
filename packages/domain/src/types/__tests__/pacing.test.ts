@@ -86,11 +86,11 @@ describe("Pacing Pipeline Domain Types", () => {
 	describe("ConversationalIntent", () => {
 		it("has exactly 4 intents", () => {
 			expect(CONVERSATIONAL_INTENTS).toHaveLength(4);
-			expect(CONVERSATIONAL_INTENTS).toEqual(["open", "explore", "bridge", "amplify"]);
+			expect(CONVERSATIONAL_INTENTS).toEqual(["open", "explore", "bridge", "close"]);
 		});
 
 		it("type-checks all valid values", () => {
-			const values: ConversationalIntent[] = ["open", "explore", "bridge", "amplify"];
+			const values: ConversationalIntent[] = ["open", "explore", "bridge", "close"];
 			expect(values).toHaveLength(4);
 		});
 	});
@@ -264,15 +264,15 @@ describe("Pacing Pipeline Domain Types", () => {
 			}
 		});
 
-		it("constructs AmplifyPromptInput with territory, direct pressure, and observationFocus", () => {
+		it("constructs ClosePromptInput with territory, direct pressure, and observationFocus", () => {
 			const input: PromptBuilderInput = {
-				intent: "amplify",
+				intent: "close",
 				territory: territoryId,
 				entryPressure: "direct",
 				observationFocus: { type: "relate" },
 			};
-			if (input.intent === "amplify") {
-				// AmplifyPromptInput always has entryPressure: "direct"
+			if (input.intent === "close") {
+				// ClosePromptInput always has entryPressure: "direct"
 				expect(input.entryPressure).toBe("direct");
 			}
 		});
@@ -294,7 +294,7 @@ describe("Pacing Pipeline Domain Types", () => {
 					observationFocus: { type: "relate" },
 				},
 				{
-					intent: "amplify",
+					intent: "close",
 					territory: territoryId,
 					entryPressure: "direct",
 					observationFocus: {
@@ -317,7 +317,7 @@ describe("Pacing Pipeline Domain Types", () => {
 						expect(input.entryPressure).toBeDefined();
 						expect(input.observationFocus).toBeDefined();
 						break;
-					case "amplify":
+					case "close":
 						expect(input.entryPressure).toBe("direct");
 						expect(input.observationFocus).toBeDefined();
 						break;
