@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 6
-parallelism_step_name: "Pipeline Integration"
-baseline_commit: "7a31e3a569004a2949abee9319bdcd7035b206e9"
-created: "2026-03-13"
-last_updated: "2026-03-13T03"
+parallelism_step: 7
+parallelism_step_name: "Steering Format Foundation (Epic 28)"
+baseline_commit: "4b4665814fb337b772505496bb6edf2450687306"
+created: "2026-03-14"
+last_updated: "2026-03-14T14"
 
 # Optional context documents discovered
 context_docs:
@@ -14,10 +14,17 @@ context_docs:
 
 # Stories in this step
 stories:
-  27-3-pipeline-integration:
+  28-1-territory-catalog-enrichment:
     status: done
-    mode: "single"
-    notes: "Wires ALL layers: 15-step pipeline replacing old steering; depends on everything"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/134"
-    dev_branch: "feat/story-27-3-pipeline-integration"
+    mode: "parallel"
+    notes: "Pure data: add name + description to 25 territories"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/135"
+    dev_branch: "feat/story-28-1-territory-catalog-enrichment"
+    error: null
+  28-2-common-layer-reform:
+    status: done
+    mode: "parallel"
+    notes: "Reorganize modules: trim instincts, move reflect/story-pulling to common"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/136"
+    dev_branch: "feat/story-28-2-common-layer-reform"
     error: null

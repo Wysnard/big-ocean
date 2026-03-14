@@ -476,9 +476,9 @@ development_status:
   # intent × observation templates, prompt builder skeleton swap
   # Stories: 1.1-1.4 in epics-nerin-steering-format.md
   # ───────────────────────────────────────────────────────────────
-  epic-28: backlog
-  28-1-territory-catalog-enrichment: backlog
-  28-2-common-layer-reform: backlog
+  epic-28: in-progress
+  28-1-territory-catalog-enrichment: pr-ready
+  28-2-common-layer-reform: pr-ready
   28-3-intent-observation-templates-and-pressure-modifiers: backlog
   28-4-prompt-builder-skeleton-swap: backlog
   epic-28-retrospective: optional
