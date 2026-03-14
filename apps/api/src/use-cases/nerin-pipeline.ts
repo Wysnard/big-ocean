@@ -480,7 +480,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		const governorResult = computeGovernorOutput(governorInput);
 
-		// ---- Step 6: Build system prompt via 4-tier prompt builder ----
+		// ---- Step 6: Build system prompt via 2-layer prompt builder ----
 
 		const promptResult = buildPrompt(governorResult.output);
 
