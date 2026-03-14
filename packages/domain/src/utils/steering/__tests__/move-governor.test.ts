@@ -63,22 +63,43 @@ describe("Entry pressure constants", () => {
 
 describe("deriveIntent", () => {
 	it("returns 'open' for turn 1", () => {
-		expect(deriveIntent(1, false)).toBe("open");
+		expect(deriveIntent(1, false, tid("a"), null)).toBe("open");
 	});
 
 	it("returns 'open' for turn 1 even if isFinalTurn", () => {
 		// Edge case: single-turn session. Open takes priority.
-		expect(deriveIntent(1, true)).toBe("open");
+		expect(deriveIntent(1, true, tid("a"), null)).toBe("open");
+	});
+
+	it("returns 'open' for turn 1 even if territory changed", () => {
+		// Open takes priority over bridge
+		expect(deriveIntent(1, false, tid("a"), tid("b"))).toBe("open");
 	});
 
 	it("returns 'amplify' for final turn (not turn 1)", () => {
-		expect(deriveIntent(25, true)).toBe("amplify");
+		expect(deriveIntent(25, true, tid("a"), null)).toBe("amplify");
 	});
 
-	it("returns 'explore' for mid-conversation turns", () => {
-		expect(deriveIntent(5, false)).toBe("explore");
-		expect(deriveIntent(12, false)).toBe("explore");
-		expect(deriveIntent(24, false)).toBe("explore");
+	it("returns 'amplify' for final turn even if territory changed", () => {
+		// Amplify takes priority over bridge
+		expect(deriveIntent(25, true, tid("a"), tid("b"))).toBe("amplify");
+	});
+
+	it("returns 'explore' for mid-conversation turns with same territory", () => {
+		expect(deriveIntent(5, false, tid("a"), tid("a"))).toBe("explore");
+		expect(deriveIntent(12, false, tid("a"), tid("a"))).toBe("explore");
+	});
+
+	it("returns 'explore' when previousTerritory is null (no prior exchange)", () => {
+		expect(deriveIntent(5, false, tid("a"), null)).toBe("explore");
+	});
+
+	it("returns 'bridge' when territory changed, not turn 1, not final turn", () => {
+		expect(deriveIntent(5, false, tid("creative-pursuits"), tid("daily-rituals"))).toBe("bridge");
+	});
+
+	it("returns 'bridge' on turn 2 when territory changed", () => {
+		expect(deriveIntent(2, false, tid("new-territory"), tid("old-territory"))).toBe("bridge");
 	});
 });
 
@@ -162,11 +183,14 @@ describe("computeGovernorOutput", () => {
 		});
 	});
 
-	describe("explore intent (mid-conversation)", () => {
+	describe("explore intent (mid-conversation, same territory)", () => {
 		it("returns ExplorePromptInput with entry pressure and observation focus", () => {
 			const input = buildInput({
 				turnNumber: 12,
 				isFinalTurn: false,
+				// Same territory as previous — triggers explore, not bridge
+				selectedTerritory: tid("creative-pursuits"),
+				previousTerritory: tid("creative-pursuits"),
 				eTarget: 0.5,
 				expectedEnergy: 0.45,
 				relateStrength: 0.3,
@@ -193,6 +217,8 @@ describe("computeGovernorOutput", () => {
 			const input = buildInput({
 				turnNumber: 12,
 				isFinalTurn: false,
+				selectedTerritory: tid("creative-pursuits"),
+				previousTerritory: tid("creative-pursuits"),
 				eTarget: 0.3,
 				expectedEnergy: 0.7,
 			});
@@ -219,6 +245,8 @@ describe("computeGovernorOutput", () => {
 			const input = buildInput({
 				turnNumber: 12,
 				isFinalTurn: false,
+				selectedTerritory: tid("creative-pursuits"),
+				previousTerritory: tid("creative-pursuits"),
 				phase: 0.8,
 				sharedFireCount: 0,
 				relateStrength: 0.1,
@@ -295,7 +323,7 @@ describe("computeGovernorOutput", () => {
 
 	describe("MoveGovernorDebug completeness", () => {
 		it("contains all required debug fields for explore", () => {
-			const input = buildInput({ turnNumber: 12, isFinalTurn: false });
+			const input = buildInput({ turnNumber: 12, isFinalTurn: false, previousTerritory: tid("creative-pursuits") });
 			const { debug } = computeGovernorOutput(input);
 
 			expect(debug).toHaveProperty("intent");
@@ -332,10 +360,141 @@ describe("computeGovernorOutput", () => {
 
 	describe("output uses TerritoryId (not full Territory)", () => {
 		it("output.territory is a TerritoryId string, not a Territory object", () => {
-			const input = buildInput({ turnNumber: 5, isFinalTurn: false });
+			const input = buildInput({ turnNumber: 5, isFinalTurn: false, previousTerritory: tid("creative-pursuits") });
 			const { output } = computeGovernorOutput(input);
 
 			expect(typeof output.territory).toBe("string");
+		});
+	});
+
+	describe("bridge intent (territory change)", () => {
+		it("returns BridgePromptInput when territory changed", () => {
+			const input = buildInput({
+				turnNumber: 5,
+				isFinalTurn: false,
+				selectedTerritory: tid("creative-pursuits"),
+				previousTerritory: tid("daily-rituals"),
+			});
+			const { output, debug } = computeGovernorOutput(input);
+
+			expect(output.intent).toBe("bridge");
+			if (output.intent === "bridge") {
+				expect(output.territory).toBe(tid("creative-pursuits"));
+				expect(output.previousTerritory).toBe(tid("daily-rituals"));
+				expect(output.entryPressure).toBeDefined();
+				expect(output.observationFocus).toBeDefined();
+			}
+		});
+
+		it("returns ExplorePromptInput when territory is unchanged", () => {
+			const input = buildInput({
+				turnNumber: 5,
+				isFinalTurn: false,
+				selectedTerritory: tid("daily-rituals"),
+				previousTerritory: tid("daily-rituals"),
+			});
+			const { output } = computeGovernorOutput(input);
+
+			expect(output.intent).toBe("explore");
+		});
+
+		it("returns ExplorePromptInput when previousTerritory is null", () => {
+			const input = buildInput({
+				turnNumber: 5,
+				isFinalTurn: false,
+				previousTerritory: null,
+			});
+			const { output } = computeGovernorOutput(input);
+
+			expect(output.intent).toBe("explore");
+		});
+
+		it("bridge intent computes entry pressure same as explore", () => {
+			const input = buildInput({
+				turnNumber: 5,
+				isFinalTurn: false,
+				selectedTerritory: tid("creative-pursuits"),
+				previousTerritory: tid("daily-rituals"),
+				eTarget: 0.3,
+				expectedEnergy: 0.7,
+			});
+			const { output, debug } = computeGovernorOutput(input);
+
+			expect(output.intent).toBe("bridge");
+			if (output.intent === "bridge") {
+				expect(output.entryPressure).toBe("soft");
+			}
+			expect(debug.entryPressure.level).toBe("soft");
+			expect(debug.entryPressure.gap).toBeCloseTo(0.4, 5);
+		});
+
+		it("bridge intent runs observation gating in explore mode", () => {
+			const contradictionTarget: ContradictionTarget = {
+				facet: "Assertiveness" as any,
+				pair: [
+					{ domain: "work" as LifeDomain, score: 0.8, confidence: 0.7 },
+					{ domain: "relationships" as LifeDomain, score: 0.3, confidence: 0.6 },
+				],
+				strength: 0.3,
+			};
+
+			const input = buildInput({
+				turnNumber: 5,
+				isFinalTurn: false,
+				selectedTerritory: tid("creative-pursuits"),
+				previousTerritory: tid("daily-rituals"),
+				phase: 0.8,
+				sharedFireCount: 0,
+				relateStrength: 0.1,
+				contradictionStrength: 0.5,
+				noticingStrength: 0.0,
+				convergenceStrength: 0.0,
+				contradictionTarget,
+			});
+			const { output, debug } = computeGovernorOutput(input);
+
+			expect(output.intent).toBe("bridge");
+			if (output.intent === "bridge") {
+				expect(output.observationFocus.type).toBe("contradiction");
+			}
+			expect(debug.observationGating.mode).toBe("explore");
+		});
+
+		it("debug shows intent=bridge on territory change", () => {
+			const input = buildInput({
+				turnNumber: 5,
+				isFinalTurn: false,
+				selectedTerritory: tid("creative-pursuits"),
+				previousTerritory: tid("daily-rituals"),
+			});
+			const { debug } = computeGovernorOutput(input);
+
+			expect(debug.intent).toBe("bridge");
+			expect(debug.isFinalTurn).toBe(false);
+		});
+
+		it("open still takes priority over bridge on turn 1", () => {
+			const input = buildInput({
+				turnNumber: 1,
+				isFinalTurn: false,
+				selectedTerritory: tid("creative-pursuits"),
+				previousTerritory: tid("daily-rituals"),
+			});
+			const { output } = computeGovernorOutput(input);
+
+			expect(output.intent).toBe("open");
+		});
+
+		it("amplify still takes priority over bridge on final turn", () => {
+			const input = buildInput({
+				turnNumber: 25,
+				isFinalTurn: true,
+				selectedTerritory: tid("creative-pursuits"),
+				previousTerritory: tid("daily-rituals"),
+			});
+			const { output } = computeGovernorOutput(input);
+
+			expect(output.intent).toBe("amplify");
 		});
 	});
 

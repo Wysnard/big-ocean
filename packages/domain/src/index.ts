@@ -387,6 +387,7 @@ export type {
 } from "./types/message";
 export type {
 	AmplifyPromptInput,
+	BridgePromptInput,
 	ContradictionFocus,
 	ContradictionTarget,
 	ConvergenceFocus,

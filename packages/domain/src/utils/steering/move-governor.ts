@@ -16,6 +16,7 @@
 import type { LifeDomain } from "../../constants/life-domain";
 import type {
 	AmplifyPromptInput,
+	BridgePromptInput,
 	ConversationalIntent,
 	ContradictionTarget,
 	ConvergenceTarget,
@@ -99,17 +100,21 @@ export interface MoveGovernorResult {
 // ─── Intent Derivation ──────────────────────────────────────────────
 
 /**
- * Derive the conversational intent from turn position.
+ * Derive the conversational intent from turn position and territory transition.
  *
- * Priority: open (turn 1) > amplify (final) > explore (everything else).
+ * Priority: open (turn 1) > amplify (final) > bridge (territory change) > explore (same territory).
  * Open takes priority even on a single-turn session.
+ * Bridge fires when selectedTerritory !== previousTerritory, not turn 1, not final.
  */
 export function deriveIntent(
 	turnNumber: number,
 	isFinalTurn: boolean,
+	selectedTerritory: TerritoryId,
+	previousTerritory: TerritoryId | null,
 ): ConversationalIntent {
 	if (turnNumber === 1) return "open";
 	if (isFinalTurn) return "amplify";
+	if (previousTerritory !== null && selectedTerritory !== previousTerritory) return "bridge";
 	return "explore";
 }
 
@@ -184,7 +189,12 @@ const OPEN_GATING_DEBUG: ObservationGatingDebug = {
  * Then shapes the result into the correct PromptBuilderInput variant.
  */
 export function computeGovernorOutput(input: MoveGovernorInput): MoveGovernorResult {
-	const intent = deriveIntent(input.turnNumber, input.isFinalTurn);
+	const intent = deriveIntent(
+		input.turnNumber,
+		input.isFinalTurn,
+		input.selectedTerritory,
+		input.previousTerritory,
+	);
 
 	// ── Open intent: territory only, skip pressure + gating ──
 	if (intent === "open") {
@@ -244,7 +254,7 @@ export function computeGovernorOutput(input: MoveGovernorInput): MoveGovernorRes
 		return { output, debug };
 	}
 
-	// ── Explore intent: full entry pressure + explore-mode gating ──
+	// ── Bridge / Explore: full entry pressure + explore-mode gating ──
 	const entryPressureDebug = computeEntryPressure(input.eTarget, input.expectedEnergy);
 
 	const gatingInput: ObservationGatingInput = {
@@ -262,6 +272,28 @@ export function computeGovernorOutput(input: MoveGovernorInput): MoveGovernorRes
 
 	const gatingResult = evaluateObservationGating(gatingInput);
 
+	if (intent === "bridge") {
+		// Bridge intent: territory transition with previousTerritory context
+		// previousTerritory is guaranteed non-null when intent is "bridge"
+		const output: BridgePromptInput = {
+			intent: "bridge",
+			territory: input.selectedTerritory,
+			previousTerritory: input.previousTerritory!,
+			entryPressure: entryPressureDebug.level,
+			observationFocus: gatingResult.focus,
+		};
+
+		const debug: MoveGovernorDebug = {
+			intent: "bridge",
+			isFinalTurn: false,
+			entryPressure: entryPressureDebug,
+			observationGating: gatingResult.debug,
+		};
+
+		return { output, debug };
+	}
+
+	// ── Explore intent: same territory, no transition ──
 	const output: ExplorePromptInput = {
 		intent: "explore",
 		territory: input.selectedTerritory,

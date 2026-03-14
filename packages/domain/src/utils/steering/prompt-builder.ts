@@ -70,7 +70,7 @@ function assembleCommonLayer(): string {
 
 /**
  * Derive the observation focus for the given input.
- * Open intent always uses relate; explore/amplify carry their own focus.
+ * Open intent always uses relate; explore/bridge/amplify carry their own focus.
  */
 function getObservationFocus(input: PromptBuilderInput): ObservationFocus {
 	if (input.intent === "open") {
@@ -93,12 +93,15 @@ function buildSteeringSection(
 ): { section: string; templateKey: string } {
 	const focus = getObservationFocus(input);
 	const templateKey = `${input.intent}:${focus.type}`;
-	const renderedTemplate = renderSteeringTemplate(input.intent, focus, territory);
+
+	// Bridge falls back to explore templates until Story 2.2 adds bridge-specific templates
+	const templateIntent = input.intent === "bridge" ? "explore" : input.intent;
+	const renderedTemplate = renderSteeringTemplate(templateIntent, focus, territory);
 
 	const parts = [STEERING_PREFIX, renderedTemplate];
 
-	// Append pressure modifier for explore and amplify intents
-	if (input.intent === "explore" || input.intent === "amplify") {
+	// Append pressure modifier for explore, bridge, and amplify intents
+	if (input.intent === "explore" || input.intent === "bridge" || input.intent === "amplify") {
 		parts.push(getPressureModifier(input.entryPressure));
 	}
 

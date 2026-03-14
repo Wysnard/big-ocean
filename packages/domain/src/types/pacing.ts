@@ -55,9 +55,10 @@ export type EntryPressure = (typeof ENTRY_PRESSURES)[number];
  * Conversational Intent — the Governor's high-level intent for each turn.
  * - open: first visit to a territory (opener question)
  * - explore: mid-conversation depth (observation may fire)
+ * - bridge: territory transition (selectedTerritory !== previousTerritory)
  * - amplify: final-turn crescendo (best observation wins)
  */
-export const CONVERSATIONAL_INTENTS = ["open", "explore", "amplify"] as const;
+export const CONVERSATIONAL_INTENTS = ["open", "explore", "bridge", "amplify"] as const;
 
 export type ConversationalIntent = (typeof CONVERSATIONAL_INTENTS)[number];
 
@@ -150,6 +151,19 @@ export interface ExplorePromptInput {
 }
 
 /**
+ * Bridge intent — territory transition. Carries the previous territory
+ * for bridging context, entry pressure, and observation focus.
+ * Emitted when selectedTerritory !== previousTerritory (not turn 1, not final).
+ */
+export interface BridgePromptInput {
+	readonly intent: "bridge";
+	readonly territory: TerritoryId;
+	readonly previousTerritory: TerritoryId;
+	readonly entryPressure: EntryPressure;
+	readonly observationFocus: ObservationFocus;
+}
+
+/**
  * Amplify intent — final-turn crescendo. Always uses "direct" entry pressure.
  * The best observation focus wins via raw strength competition.
  */
@@ -164,7 +178,11 @@ export interface AmplifyPromptInput {
  * PromptBuilderInput — discriminated union on `intent`.
  * Each variant carries only the fields relevant to that intent.
  */
-export type PromptBuilderInput = OpenPromptInput | ExplorePromptInput | AmplifyPromptInput;
+export type PromptBuilderInput =
+	| OpenPromptInput
+	| ExplorePromptInput
+	| BridgePromptInput
+	| AmplifyPromptInput;
 
 // ---------------------------------------------------------------------------
 // Task 5: Debug and scorer output types
