@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-14 (refreshed 26 — sprint-planning workflow)
+generated: 2026-03-14 (refreshed 27 — sprint-planning workflow)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -476,11 +476,11 @@ development_status:
   # intent × observation templates, prompt builder skeleton swap
   # Stories: 1.1-1.4 in epics-nerin-steering-format.md
   # ───────────────────────────────────────────────────────────────
-  epic-28: in-progress
+  epic-28: done
   28-1-territory-catalog-enrichment: done
   28-2-common-layer-reform: done
   28-3-intent-observation-templates-and-pressure-modifiers: done
-  28-4-prompt-builder-skeleton-swap: pr-ready
+  28-4-prompt-builder-skeleton-swap: done
   epic-28-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
