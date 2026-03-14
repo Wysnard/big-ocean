@@ -112,3 +112,37 @@ Add tests:
 - The soft negative constraint uses `renderTemplate` to interpolate `{previousTerritory.name}`
 - THREADING module (`threading.ts`) content is now fully absorbed: "connect threads" in `threading-common.ts` (Story 28-2), "flag and leave" + "park and pick" in `BRIDGE_RELATE_TEMPLATE` (this story)
 - The `threading.ts` file is NOT deleted in this story — deletion happens in Story 2.4 (final cleanup)
+
+## Architect Notes
+
+### Finding: renderSteeringTemplate needs previousTerritory for bridge templates
+
+The current `renderSteeringTemplate(intent, focus, territory)` signature only takes one territory object. Bridge templates need both `previousTerritory` and `newTerritory` data.
+
+**Resolution:** Add an optional 4th parameter `previousTerritory` to `renderSteeringTemplate`:
+
+```typescript
+export function renderSteeringTemplate(
+  intent: "open" | "explore" | "bridge" | "amplify",
+  focus: ObservationFocus,
+  territory: { readonly name: string; readonly description: string },
+  previousTerritory?: { readonly name: string; readonly description: string },
+): string
+```
+
+When `intent === "bridge"` and `previousTerritory` is provided, `extractParams` adds `previousTerritory.name` to the params as `"previousTerritory.name"` and maps the `territory` params to `"newTerritory.name"` and `"newTerritory.description"` keys (since bridge templates use `{newTerritory.*}` not `{territory.*}`).
+
+When `intent === "bridge"` and `previousTerritory` is NOT provided, throw an Error indicating bridge intent requires previousTerritory.
+
+**File:** `packages/domain/src/constants/nerin/steering-templates.ts` — update `extractParams` signature to:
+```typescript
+function extractParams(
+  focus: ObservationFocus,
+  territory: { readonly name: string; readonly description: string },
+  previousTerritory?: { readonly name: string; readonly description: string },
+): Record<string, string>
+```
+
+For bridge, return params with keys: `previousTerritory.name`, `newTerritory.name`, `newTerritory.description`, plus observation-specific params (`domain`, `facet`, `domain1`, `domain2`, `domains`).
+
+**File:** `packages/domain/src/utils/steering/prompt-builder.ts` — in `buildSteeringSection`, for bridge intent, look up `previousTerritory` from TERRITORY_CATALOG using `input.previousTerritory` and pass it as the 4th arg to `renderSteeringTemplate`. Then append the rendered `BRIDGE_NEGATIVE_CONSTRAINT` (using `renderTemplate` to fill `{previousTerritory.name}`).
