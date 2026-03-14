@@ -1,32 +1,39 @@
 /**
- * Steering Templates Tests — Story 28-3
+ * Steering Templates Tests — Stories 28-3, 29-2
  *
- * Verifies the 9 intent x observation templates and the renderSteeringTemplate
+ * Verifies the 13 intent x observation templates and the renderSteeringTemplate
  * function that selects and renders templates based on intent + observation focus.
+ *
+ * Story 29-2: Adds 4 bridge x observation templates and BRIDGE_NEGATIVE_CONSTRAINT.
  */
 
 import { describe, expect, it } from "vitest";
-
-import type { LifeDomain } from "../../life-domain";
 import type {
 	ContradictionTarget,
 	ConvergenceTarget,
 	DomainScore,
 	ObservationFocus,
 } from "../../../types/pacing";
+import type { LifeDomain } from "../../life-domain";
 import {
 	AMPLIFY_CONTRADICTION_TEMPLATE,
 	AMPLIFY_CONVERGENCE_TEMPLATE,
 	AMPLIFY_NOTICING_TEMPLATE,
 	AMPLIFY_RELATE_TEMPLATE,
+	BRIDGE_CONTRADICTION_TEMPLATE,
+	BRIDGE_CONVERGENCE_TEMPLATE,
+	BRIDGE_NEGATIVE_CONSTRAINT,
+	BRIDGE_NOTICING_TEMPLATE,
+	BRIDGE_RELATE_TEMPLATE,
 	EXPLORE_CONTRADICTION_TEMPLATE,
 	EXPLORE_CONVERGENCE_TEMPLATE,
 	EXPLORE_NOTICING_TEMPLATE,
 	EXPLORE_RELATE_TEMPLATE,
 	OPEN_RELATE_TEMPLATE,
-	STEERING_PREFIX,
 	renderSteeringTemplate,
 	renderTemplate,
+	STEERING_PREFIX,
+	TEMPLATE_COUNT,
 } from "../steering-templates";
 
 // ─── Helpers ────────────────────────────────────────────────────────
@@ -61,13 +68,17 @@ const makeConvergenceTarget = (): ConvergenceTarget => ({
 // ─── Template Constants ─────────────────────────────────────────────
 
 describe("template constants", () => {
-	it("all 9 templates are non-empty strings", () => {
+	it("all 13 templates are non-empty strings", () => {
 		const templates = [
 			OPEN_RELATE_TEMPLATE,
 			EXPLORE_RELATE_TEMPLATE,
 			EXPLORE_NOTICING_TEMPLATE,
 			EXPLORE_CONTRADICTION_TEMPLATE,
 			EXPLORE_CONVERGENCE_TEMPLATE,
+			BRIDGE_RELATE_TEMPLATE,
+			BRIDGE_NOTICING_TEMPLATE,
+			BRIDGE_CONTRADICTION_TEMPLATE,
+			BRIDGE_CONVERGENCE_TEMPLATE,
 			AMPLIFY_RELATE_TEMPLATE,
 			AMPLIFY_NOTICING_TEMPLATE,
 			AMPLIFY_CONTRADICTION_TEMPLATE,
@@ -77,6 +88,10 @@ describe("template constants", () => {
 			expect(typeof t).toBe("string");
 			expect(t.length).toBeGreaterThan(0);
 		}
+	});
+
+	it("TEMPLATE_COUNT is 13", () => {
+		expect(TEMPLATE_COUNT).toBe(13);
 	});
 
 	it("OPEN_RELATE_TEMPLATE has territory parameter slots", () => {
@@ -103,6 +118,40 @@ describe("template constants", () => {
 		expect(EXPLORE_CONVERGENCE_TEMPLATE).toContain("{facet}");
 		expect(EXPLORE_CONVERGENCE_TEMPLATE).toContain("{domains}");
 		expect(EXPLORE_CONVERGENCE_TEMPLATE).toContain("{territory.description}");
+	});
+
+	it("BRIDGE templates have correct parameter slots", () => {
+		// All bridge templates reference previousTerritory.name and newTerritory.name/description
+		for (const tmpl of [
+			BRIDGE_RELATE_TEMPLATE,
+			BRIDGE_NOTICING_TEMPLATE,
+			BRIDGE_CONTRADICTION_TEMPLATE,
+			BRIDGE_CONVERGENCE_TEMPLATE,
+		]) {
+			expect(tmpl).toContain("{previousTerritory.name}");
+			expect(tmpl).toContain("{newTerritory.description}");
+		}
+
+		// bridge x relate: 3-tier fallback structure
+		expect(BRIDGE_RELATE_TEMPLATE).toContain("come back to it");
+		expect(BRIDGE_RELATE_TEMPLATE).toContain("good read");
+
+		// bridge x noticing: domain param
+		expect(BRIDGE_NOTICING_TEMPLATE).toContain("{domain}");
+
+		// bridge x contradiction: facet, domain1, domain2
+		expect(BRIDGE_CONTRADICTION_TEMPLATE).toContain("{facet}");
+		expect(BRIDGE_CONTRADICTION_TEMPLATE).toContain("{domain1}");
+		expect(BRIDGE_CONTRADICTION_TEMPLATE).toContain("{domain2}");
+
+		// bridge x convergence: facet, domains
+		expect(BRIDGE_CONVERGENCE_TEMPLATE).toContain("{facet}");
+		expect(BRIDGE_CONVERGENCE_TEMPLATE).toContain("{domains}");
+	});
+
+	it("BRIDGE_NEGATIVE_CONSTRAINT has previousTerritory.name slot", () => {
+		expect(BRIDGE_NEGATIVE_CONSTRAINT).toContain("{previousTerritory.name}");
+		expect(BRIDGE_NEGATIVE_CONSTRAINT).toContain("Don't pull the conversation back");
 	});
 
 	it("AMPLIFY templates have correct parameter slots per observation", () => {
@@ -209,6 +258,61 @@ describe("renderSteeringTemplate", () => {
 			expect(result).toContain("family");
 			expect(result).toContain("how they structure their time");
 			expect(result).not.toMatch(/\{[^}]+\}/);
+		});
+	});
+
+	describe("bridge intent", () => {
+		const previousTerritory = {
+			name: "Creative Pursuits",
+			description: "what they make or imagine when nobody's watching",
+		};
+		const newTerritory = sampleTerritory;
+
+		it("renders bridge x relate with both territory params and 3-tier fallback content", () => {
+			const focus: ObservationFocus = { type: "relate" };
+			const result = renderSteeringTemplate("bridge", focus, newTerritory, previousTerritory);
+			expect(result).toContain("Creative Pursuits"); // previousTerritory.name
+			expect(result).toContain("how they structure their time"); // newTerritory.description
+			expect(result).toContain("come back to it"); // flag and leave
+			expect(result).toContain("good read"); // clean jump
+			expect(result).not.toMatch(/\{[^}]+\}/);
+		});
+
+		it("renders bridge x noticing with domain + both territory params", () => {
+			const focus: ObservationFocus = { type: "noticing", domain: "work" as LifeDomain };
+			const result = renderSteeringTemplate("bridge", focus, newTerritory, previousTerritory);
+			expect(result).toContain("work");
+			expect(result).toContain("Creative Pursuits");
+			expect(result).toContain("how they structure their time");
+			expect(result).not.toMatch(/\{[^}]+\}/);
+		});
+
+		it("renders bridge x contradiction with facet, domains + both territory params", () => {
+			const focus: ObservationFocus = { type: "contradiction", target: makeContradictionTarget() };
+			const result = renderSteeringTemplate("bridge", focus, newTerritory, previousTerritory);
+			expect(result).toContain("trust");
+			expect(result).toContain("work");
+			expect(result).toContain("relationships");
+			expect(result).toContain("Creative Pursuits");
+			expect(result).toContain("how they structure their time");
+			expect(result).not.toMatch(/\{[^}]+\}/);
+		});
+
+		it("renders bridge x convergence with facet, domains + both territory params", () => {
+			const focus: ObservationFocus = { type: "convergence", target: makeConvergenceTarget() };
+			const result = renderSteeringTemplate("bridge", focus, newTerritory, previousTerritory);
+			expect(result).toContain("altruism");
+			expect(result).toContain("work");
+			expect(result).toContain("Creative Pursuits");
+			expect(result).toContain("how they structure their time");
+			expect(result).not.toMatch(/\{[^}]+\}/);
+		});
+
+		it("throws when bridge intent is called without previousTerritory", () => {
+			const focus: ObservationFocus = { type: "relate" };
+			expect(() => renderSteeringTemplate("bridge", focus, newTerritory)).toThrow(
+				/bridge.*previousTerritory/i,
+			);
 		});
 	});
 

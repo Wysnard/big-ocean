@@ -34,13 +34,17 @@ export {
 } from "./pressure-modifiers";
 export { QUALITY_INSTINCT } from "./quality-instinct";
 export { REFLECT } from "./reflect";
-export { STORY_PULLING } from "./story-pulling";
-// Intent x observation steering templates (Story 28-3)
+// Intent x observation steering templates (Stories 28-3, 29-2)
 export {
 	AMPLIFY_CONTRADICTION_TEMPLATE,
 	AMPLIFY_CONVERGENCE_TEMPLATE,
 	AMPLIFY_NOTICING_TEMPLATE,
 	AMPLIFY_RELATE_TEMPLATE,
+	BRIDGE_CONTRADICTION_TEMPLATE,
+	BRIDGE_CONVERGENCE_TEMPLATE,
+	BRIDGE_NEGATIVE_CONSTRAINT,
+	BRIDGE_NOTICING_TEMPLATE,
+	BRIDGE_RELATE_TEMPLATE,
 	EXPLORE_CONTRADICTION_TEMPLATE,
 	EXPLORE_CONVERGENCE_TEMPLATE,
 	EXPLORE_NOTICING_TEMPLATE,
@@ -49,7 +53,9 @@ export {
 	renderSteeringTemplate,
 	renderTemplate,
 	STEERING_PREFIX,
+	TEMPLATE_COUNT,
 } from "./steering-templates";
+export { STORY_PULLING } from "./story-pulling";
 // Tier 2 — Intent-Contextual
 export { THREADING } from "./threading";
 export { THREADING_COMMON } from "./threading-common";

@@ -1,18 +1,17 @@
 /**
- * Intent x Observation Steering Templates — Story 28-3
+ * Intent x Observation Steering Templates — Stories 28-3, 29-2
  *
- * 9 intent x observation templates that determine Nerin's response shape.
+ * 13 intent x observation templates that determine Nerin's response shape.
  * Each template is a prose instruction in Nerin's voice with parameter slots
  * that are filled at render time based on the steering pipeline output.
  *
  * Template matrix:
  * - open x relate (1)
  * - explore x relate/noticing/contradiction/convergence (4)
+ * - bridge x relate/noticing/contradiction/convergence (4) — Story 29-2
  * - amplify x relate/noticing/contradiction/convergence (4)
  *
- * Bridge templates (4 more) will be added in Epic 2, Story 2.2.
- *
- * These templates are consumed by the Prompt Builder (Story 1.4).
+ * These templates are consumed by the Prompt Builder (Story 1.4 / 28-4).
  */
 
 import type { ObservationFocus } from "../../types/pacing";
@@ -46,6 +45,34 @@ export const EXPLORE_CONTRADICTION_TEMPLATE =
 export const EXPLORE_CONVERGENCE_TEMPLATE =
 	"{facet} keeps showing up across {domains}. That pattern connects to {territory.description} — go deeper.";
 
+// ─── Bridge Templates (4) — Story 29-2 ─────────────────────────────
+
+/**
+ * bridge x relate — 3-tier fallback: find connection, flag and leave, clean jump.
+ * Absorbs "flag and leave" and "park and pick" from dissolved THREADING module.
+ */
+export const BRIDGE_RELATE_TEMPLATE =
+	"You've been exploring {previousTerritory.name}. Something in what they just shared connects to {newTerritory.description}. Follow that thread. If the thread isn't there but something interesting is unfinished, name it — \"there's something there, we'll come back to it\" — and shift your curiosity to {newTerritory.description}. If nothing connects, you have a good read on {previousTerritory.name} — tell them, and shift your curiosity to {newTerritory.description}.";
+
+/** bridge x noticing — domain shift pulling from previousTerritory toward newTerritory. */
+export const BRIDGE_NOTICING_TEMPLATE =
+	"Something is shifting in how they talk about {domain}. You've been in {previousTerritory.name} — this shift is pulling you toward {newTerritory.description}.";
+
+/** bridge x contradiction — facet tension pulling from previousTerritory toward newTerritory. */
+export const BRIDGE_CONTRADICTION_TEMPLATE =
+	"{facet} shows up differently in {domain1} vs {domain2}. You've been exploring {previousTerritory.name} — that tension is pulling you toward {newTerritory.description}.";
+
+/** bridge x convergence — facet pattern spanning from previousTerritory toward newTerritory. */
+export const BRIDGE_CONVERGENCE_TEMPLATE =
+	"{facet} keeps showing up across {domains}. You've been in {previousTerritory.name}. You're curious where else it lives — {newTerritory.description}.";
+
+/**
+ * Soft negative constraint — appended to all bridge templates to prevent
+ * Nerin from pulling the conversation back to the previous territory.
+ */
+export const BRIDGE_NEGATIVE_CONSTRAINT =
+	"You've been exploring {previousTerritory.name} — your curiosity has moved. Don't pull the conversation back there.";
+
 // ─── Amplify Templates (4) ──────────────────────────────────────────
 
 /** amplify x relate — last question, land it with feeling. */
@@ -73,11 +100,18 @@ const TEMPLATE_LOOKUP: Record<string, string> = {
 	"explore:noticing": EXPLORE_NOTICING_TEMPLATE,
 	"explore:contradiction": EXPLORE_CONTRADICTION_TEMPLATE,
 	"explore:convergence": EXPLORE_CONVERGENCE_TEMPLATE,
+	"bridge:relate": BRIDGE_RELATE_TEMPLATE,
+	"bridge:noticing": BRIDGE_NOTICING_TEMPLATE,
+	"bridge:contradiction": BRIDGE_CONTRADICTION_TEMPLATE,
+	"bridge:convergence": BRIDGE_CONVERGENCE_TEMPLATE,
 	"amplify:relate": AMPLIFY_RELATE_TEMPLATE,
 	"amplify:noticing": AMPLIFY_NOTICING_TEMPLATE,
 	"amplify:contradiction": AMPLIFY_CONTRADICTION_TEMPLATE,
 	"amplify:convergence": AMPLIFY_CONVERGENCE_TEMPLATE,
 };
+
+/** Total template count — exported for test assertions. */
+export const TEMPLATE_COUNT = Object.keys(TEMPLATE_LOOKUP).length;
 
 // ─── Template Rendering ─────────────────────────────────────────────
 
@@ -104,15 +138,27 @@ export function renderTemplate(template: string, params: Record<string, string>)
  * - noticing: domain, territory.name, territory.description
  * - contradiction: facet, domain1, domain2, territory.name, territory.description
  * - convergence: facet, domains, territory.name, territory.description
+ *
+ * For bridge intent, territory params are keyed as newTerritory.* and
+ * previousTerritory.* to match bridge template parameter slots.
  */
 function extractParams(
 	focus: ObservationFocus,
 	territory: { readonly name: string; readonly description: string },
+	previousTerritory?: { readonly name: string; readonly description: string },
 ): Record<string, string> {
-	const base: Record<string, string> = {
-		"territory.name": territory.name,
-		"territory.description": territory.description,
-	};
+	// Bridge templates use {newTerritory.*} and {previousTerritory.*}
+	// Non-bridge templates use {territory.*}
+	const base: Record<string, string> = previousTerritory
+		? {
+				"newTerritory.name": territory.name,
+				"newTerritory.description": territory.description,
+				"previousTerritory.name": previousTerritory.name,
+			}
+		: {
+				"territory.name": territory.name,
+				"territory.description": territory.description,
+			};
 
 	switch (focus.type) {
 		case "relate":
@@ -138,27 +184,38 @@ function extractParams(
 /**
  * Select and render the correct intent x observation template.
  *
- * @param intent - The conversational intent (open, explore, amplify)
+ * @param intent - The conversational intent (open, explore, bridge, amplify)
  * @param focus - The observation focus discriminated union
  * @param territory - Territory with name and description for parameter interpolation
+ *   (for bridge intent, this is the **new** territory)
+ * @param previousTerritory - For bridge intent only: the territory being transitioned from
  * @returns Rendered template string with all parameters filled
  * @throws Error if no template exists for the given intent x observation combination
+ * @throws Error if bridge intent is called without previousTerritory
  */
 export function renderSteeringTemplate(
-	intent: "open" | "explore" | "amplify",
+	intent: "open" | "explore" | "bridge" | "amplify",
 	focus: ObservationFocus,
 	territory: { readonly name: string; readonly description: string },
+	previousTerritory?: { readonly name: string; readonly description: string },
 ): string {
+	if (intent === "bridge" && !previousTerritory) {
+		throw new Error(
+			"Bridge intent requires previousTerritory parameter. " +
+				"Pass the territory being transitioned from as the 4th argument.",
+		);
+	}
+
 	const key = `${intent}:${focus.type}`;
 	const template = TEMPLATE_LOOKUP[key];
 
 	if (!template) {
 		throw new Error(
 			`No steering template for intent "${intent}" x observation "${focus.type}". ` +
-				"Valid combinations: open x relate, explore x all, amplify x all.",
+				"Valid combinations: open x relate, explore x all, bridge x all, amplify x all.",
 		);
 	}
 
-	const params = extractParams(focus, territory);
+	const params = extractParams(focus, territory, previousTerritory);
 	return renderTemplate(template, params);
 }

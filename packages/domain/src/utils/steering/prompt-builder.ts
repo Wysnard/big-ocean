@@ -19,17 +19,21 @@ import {
 	BELIEFS_IN_ACTION,
 	CONVERSATION_INSTINCTS,
 	CONVERSATION_MODE,
+	getPressureModifier,
 	HUMOR_GUARDRAILS,
 	MIRROR_GUARDRAILS,
 	OBSERVATION_QUALITY_COMMON,
 	QUALITY_INSTINCT,
 	REFLECT,
+	renderSteeringTemplate,
 	STEERING_PREFIX,
 	STORY_PULLING,
 	THREADING_COMMON,
-	getPressureModifier,
-	renderSteeringTemplate,
 } from "../../constants/nerin/index";
+import {
+	BRIDGE_NEGATIVE_CONSTRAINT,
+	renderTemplate,
+} from "../../constants/nerin/steering-templates";
 import { NERIN_PERSONA } from "../../constants/nerin-persona";
 import { TERRITORY_CATALOG } from "../../constants/territory-catalog";
 import type { ObservationFocus, PromptBuilderInput } from "../../types/pacing";
@@ -85,20 +89,31 @@ function getObservationFocus(input: PromptBuilderInput): ObservationFocus {
  * Structure:
  * - STEERING_PREFIX
  * - Rendered intent x observation template
- * - Entry pressure modifier (for explore and amplify intents)
+ * - Soft negative constraint (bridge intent only)
+ * - Entry pressure modifier (for explore, bridge, and amplify intents)
  */
 function buildSteeringSection(
 	input: PromptBuilderInput,
 	territory: { readonly name: string; readonly description: string },
+	previousTerritoryData?: { readonly name: string; readonly description: string },
 ): { section: string; templateKey: string } {
 	const focus = getObservationFocus(input);
 	const templateKey = `${input.intent}:${focus.type}`;
 
-	// Bridge falls back to explore templates until Story 2.2 adds bridge-specific templates
-	const templateIntent = input.intent === "bridge" ? "explore" : input.intent;
-	const renderedTemplate = renderSteeringTemplate(templateIntent, focus, territory);
+	const renderedTemplate =
+		input.intent === "bridge"
+			? renderSteeringTemplate("bridge", focus, territory, previousTerritoryData)
+			: renderSteeringTemplate(input.intent, focus, territory);
 
 	const parts = [STEERING_PREFIX, renderedTemplate];
+
+	// Append soft negative constraint for bridge intent
+	if (input.intent === "bridge" && previousTerritoryData) {
+		const constraint = renderTemplate(BRIDGE_NEGATIVE_CONSTRAINT, {
+			"previousTerritory.name": previousTerritoryData.name,
+		});
+		parts.push(constraint);
+	}
 
 	// Append pressure modifier for explore, bridge, and amplify intents
 	if (input.intent === "explore" || input.intent === "bridge" || input.intent === "amplify") {
@@ -134,11 +149,28 @@ export function buildPrompt(input: PromptBuilderInput): PromptBuilderOutput {
 		);
 	}
 
+	// Look up previous territory for bridge intent
+	let previousTerritoryData: { readonly name: string; readonly description: string } | undefined;
+	if (input.intent === "bridge") {
+		const prevTerritory = TERRITORY_CATALOG.get(input.previousTerritory);
+		if (!prevTerritory) {
+			throw new Error(
+				`Previous territory not found in catalog: "${input.previousTerritory}". ` +
+					"This indicates a mismatch between steering output and the territory catalog.",
+			);
+		}
+		previousTerritoryData = prevTerritory;
+	}
+
 	// Layer 1: Common (stable)
 	const commonLayer = assembleCommonLayer();
 
 	// Layer 2: Steering (per-turn)
-	const { section: steeringSection, templateKey } = buildSteeringSection(input, territory);
+	const { section: steeringSection, templateKey } = buildSteeringSection(
+		input,
+		territory,
+		previousTerritoryData,
+	);
 
 	// Compose: common + steering
 	const systemPrompt = [commonLayer, steeringSection].join("\n\n");
