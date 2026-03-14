@@ -33,6 +33,8 @@ const tid = (s: string): TerritoryId => Schema.decodeSync(TerritoryIdSchema)(s);
  */
 function territory(def: {
 	readonly id: string;
+	readonly name: string;
+	readonly description: string;
 	readonly expectedEnergy: number;
 	readonly domains: readonly [LifeDomain, LifeDomain];
 	readonly expectedFacets: readonly FacetName[];
@@ -48,7 +50,9 @@ function territory(def: {
 
 const DAILY_ROUTINES = territory({
 	id: "daily-routines",
-	expectedEnergy: 0.20,
+	name: "Daily Routines",
+	description: "how they structure their time and what they protect in it",
+	expectedEnergy: 0.2,
 	domains: ["work", "solo"],
 	expectedFacets: ["orderliness", "self_discipline", "activity_level"],
 	opener: "What does a typical morning look like for you before the day really gets going?",
@@ -56,6 +60,8 @@ const DAILY_ROUTINES = territory({
 
 const CREATIVE_PURSUITS = territory({
 	id: "creative-pursuits",
+	name: "Creative Pursuits",
+	description: "what they make or imagine when nobody's watching",
 	expectedEnergy: 0.25,
 	domains: ["leisure", "solo"],
 	expectedFacets: ["imagination", "artistic_interests", "adventurousness"],
@@ -64,6 +70,8 @@ const CREATIVE_PURSUITS = territory({
 
 const WEEKEND_ADVENTURES = territory({
 	id: "weekend-adventures",
+	name: "Weekend Adventures",
+	description: "what they chase when the schedule opens up",
 	expectedEnergy: 0.25,
 	domains: ["leisure", "solo"],
 	expectedFacets: ["excitement_seeking", "adventurousness", "cheerfulness"],
@@ -72,6 +80,8 @@ const WEEKEND_ADVENTURES = territory({
 
 const LEARNING_CURIOSITY = territory({
 	id: "learning-curiosity",
+	name: "Learning & Curiosity",
+	description: "what pulls their attention and why they follow it",
 	expectedEnergy: 0.25,
 	domains: ["solo", "work"],
 	expectedFacets: ["intellect", "imagination", "self_efficacy"],
@@ -80,6 +90,8 @@ const LEARNING_CURIOSITY = territory({
 
 const FAMILY_RITUALS = territory({
 	id: "family-rituals",
+	name: "Family Rituals",
+	description: "the small repeated things that hold their family together",
 	expectedEnergy: 0.28,
 	domains: ["family", "leisure"],
 	expectedFacets: ["dutifulness", "cheerfulness", "cooperation", "morality"],
@@ -88,7 +100,9 @@ const FAMILY_RITUALS = territory({
 
 const SOCIAL_CIRCLES = territory({
 	id: "social-circles",
-	expectedEnergy: 0.30,
+	name: "Social Circles",
+	description: "who they spend time with and what draws them there",
+	expectedEnergy: 0.3,
 	domains: ["relationships", "leisure"],
 	expectedFacets: ["friendliness", "gregariousness", "trust"],
 	opener: "Tell me about the people you tend to spend the most time with.",
@@ -96,7 +110,9 @@ const SOCIAL_CIRCLES = territory({
 
 const HELPING_OTHERS = territory({
 	id: "helping-others",
-	expectedEnergy: 0.30,
+	name: "Helping Others",
+	description: "how they show up for people and what that costs them",
+	expectedEnergy: 0.3,
 	domains: ["relationships", "work"],
 	expectedFacets: ["altruism", "sympathy", "cooperation"],
 	opener: "Can you tell me about a time you helped someone out recently?",
@@ -104,6 +120,8 @@ const HELPING_OTHERS = territory({
 
 const COMFORT_ZONES = territory({
 	id: "comfort-zones",
+	name: "Comfort Zones",
+	description: "where they retreat when things get heavy and what that says about them",
 	expectedEnergy: 0.33,
 	domains: ["solo", "relationships"],
 	expectedFacets: ["cautiousness", "vulnerability", "adventurousness"],
@@ -112,6 +130,8 @@ const COMFORT_ZONES = territory({
 
 const SPONTANEITY_AND_IMPULSE = territory({
 	id: "spontaneity-and-impulse",
+	name: "Spontaneity & Impulse",
+	description: "when they let go of the plan and what happens",
 	expectedEnergy: 0.37,
 	domains: ["leisure", "solo"],
 	expectedFacets: ["immoderation", "excitement_seeking", "cautiousness"],
@@ -122,6 +142,8 @@ const SPONTANEITY_AND_IMPULSE = territory({
 
 const DAILY_FRUSTRATIONS = territory({
 	id: "daily-frustrations",
+	name: "Daily Frustrations",
+	description: "what gets under their skin and how they handle it",
 	expectedEnergy: 0.38,
 	domains: ["relationships", "work"],
 	expectedFacets: ["anger", "cooperation", "self_consciousness", "assertiveness"],
@@ -130,6 +152,8 @@ const DAILY_FRUSTRATIONS = territory({
 
 const WORK_DYNAMICS = territory({
 	id: "work-dynamics",
+	name: "Work Dynamics",
+	description: "how they navigate challenge and hierarchy at work",
 	expectedEnergy: 0.42,
 	domains: ["work", "relationships"],
 	expectedFacets: ["assertiveness", "achievement_striving", "self_efficacy", "cooperation"],
@@ -138,6 +162,8 @@ const WORK_DYNAMICS = territory({
 
 const EMOTIONAL_AWARENESS = territory({
 	id: "emotional-awareness",
+	name: "Emotional Awareness",
+	description: "how they read their own internal weather",
 	expectedEnergy: 0.42,
 	domains: ["solo", "relationships"],
 	expectedFacets: ["emotionality", "anxiety", "self_consciousness"],
@@ -146,6 +172,8 @@ const EMOTIONAL_AWARENESS = territory({
 
 const AMBITION_AND_GOALS = territory({
 	id: "ambition-and-goals",
+	name: "Ambition & Goals",
+	description: "what they're building toward and what's driving it",
 	expectedEnergy: 0.43,
 	domains: ["work", "solo"],
 	expectedFacets: ["achievement_striving", "self_discipline", "activity_level"],
@@ -154,6 +182,8 @@ const AMBITION_AND_GOALS = territory({
 
 const GROWING_UP = territory({
 	id: "growing-up",
+	name: "Growing Up",
+	description: "what shaped them early and what they carried forward",
 	expectedEnergy: 0.45,
 	domains: ["family", "solo"],
 	expectedFacets: ["emotionality", "trust", "imagination", "dutifulness"],
@@ -162,6 +192,8 @@ const GROWING_UP = territory({
 
 const SOCIAL_DYNAMICS = territory({
 	id: "social-dynamics",
+	name: "Social Dynamics",
+	description: "how they move through rooms and what that takes from them",
 	expectedEnergy: 0.46,
 	domains: ["relationships", "leisure"],
 	expectedFacets: ["gregariousness", "self_consciousness", "cheerfulness", "friendliness"],
@@ -170,6 +202,8 @@ const SOCIAL_DYNAMICS = territory({
 
 const FRIENDSHIP_DEPTH = territory({
 	id: "friendship-depth",
+	name: "Close Friendships",
+	description: "who they let close, what earns that, and what they need from it",
 	expectedEnergy: 0.48,
 	domains: ["relationships", "solo"],
 	expectedFacets: ["trust", "friendliness", "modesty", "morality"],
@@ -178,6 +212,8 @@ const FRIENDSHIP_DEPTH = territory({
 
 const OPINIONS_AND_VALUES = territory({
 	id: "opinions-and-values",
+	name: "Opinions & Values",
+	description: "what they stand for and where they push back",
 	expectedEnergy: 0.49,
 	domains: ["solo", "relationships"],
 	expectedFacets: ["liberalism", "morality", "assertiveness"],
@@ -187,6 +223,8 @@ const OPINIONS_AND_VALUES = territory({
 
 const TEAM_AND_LEADERSHIP = territory({
 	id: "team-and-leadership",
+	name: "Team & Leadership",
+	description: "how they lead, how they follow, and which one costs more",
 	expectedEnergy: 0.49,
 	domains: ["work", "relationships"],
 	expectedFacets: ["assertiveness", "cooperation", "dutifulness", "modesty"],
@@ -195,6 +233,8 @@ const TEAM_AND_LEADERSHIP = territory({
 
 const GIVING_AND_RECEIVING = territory({
 	id: "giving-and-receiving",
+	name: "Giving & Receiving",
+	description: "how they handle generosity coming in and going out",
 	expectedEnergy: 0.53,
 	domains: ["relationships", "family"],
 	expectedFacets: ["altruism", "modesty", "sympathy", "immoderation"],
@@ -205,6 +245,8 @@ const GIVING_AND_RECEIVING = territory({
 
 const FAMILY_BONDS = territory({
 	id: "family-bonds",
+	name: "Family Bonds",
+	description: "who shaped them in the family and what that left behind",
 	expectedEnergy: 0.58,
 	domains: ["family", "relationships"],
 	expectedFacets: ["trust", "sympathy", "dutifulness", "emotionality"],
@@ -213,6 +255,8 @@ const FAMILY_BONDS = territory({
 
 const CONFLICT_AND_RESOLUTION = territory({
 	id: "conflict-and-resolution",
+	name: "Conflict & Resolution",
+	description: "how they fight, how they repair, and what that costs them",
 	expectedEnergy: 0.59,
 	domains: ["relationships", "work"],
 	expectedFacets: ["anger", "cooperation", "assertiveness", "morality"],
@@ -221,6 +265,8 @@ const CONFLICT_AND_RESOLUTION = territory({
 
 const IDENTITY_AND_PURPOSE = territory({
 	id: "identity-and-purpose",
+	name: "Identity & Purpose",
+	description: "what drives them and whether they trust it",
 	expectedEnergy: 0.63,
 	domains: ["solo", "work"],
 	expectedFacets: ["intellect", "liberalism", "self_efficacy", "emotionality"],
@@ -229,6 +275,8 @@ const IDENTITY_AND_PURPOSE = territory({
 
 const INNER_STRUGGLES = territory({
 	id: "inner-struggles",
+	name: "Inner Struggles",
+	description: "what weighs on them and how they carry it",
 	expectedEnergy: 0.65,
 	domains: ["solo", "relationships"],
 	expectedFacets: ["depression", "anxiety", "vulnerability", "anger"],
@@ -237,7 +285,9 @@ const INNER_STRUGGLES = territory({
 
 const VULNERABILITY_AND_TRUST = territory({
 	id: "vulnerability-and-trust",
-	expectedEnergy: 0.70,
+	name: "Vulnerability & Trust",
+	description: "what it takes for them to be open and who gets to see it",
+	expectedEnergy: 0.7,
 	domains: ["relationships", "family"],
 	expectedFacets: ["vulnerability", "trust", "anxiety", "self_consciousness"],
 	opener: "Can you think of a time when being open with someone actually brought you closer?",
@@ -245,6 +295,8 @@ const VULNERABILITY_AND_TRUST = territory({
 
 const PRESSURE_AND_RESILIENCE = territory({
 	id: "pressure-and-resilience",
+	name: "Pressure & Resilience",
+	description: "how they hold up when it gets hard and what that reveals",
 	expectedEnergy: 0.72,
 	domains: ["work", "family"],
 	expectedFacets: ["vulnerability", "self_discipline", "achievement_striving", "depression"],
