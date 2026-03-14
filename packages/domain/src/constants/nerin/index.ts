@@ -23,7 +23,6 @@ export { getMirrorsForContext } from "./contextual-mirrors";
 export { HUMOR_GUARDRAILS } from "./humor-guardrails";
 export { INTERNAL_TRACKING } from "./internal-tracking";
 export { MIRROR_GUARDRAILS } from "./mirror-guardrails";
-export { OBSERVATION_QUALITY } from "./observation-quality";
 export { OBSERVATION_QUALITY_COMMON } from "./observation-quality-common";
 // Pressure modifiers — entry pressure language (Story 28-3)
 export {
@@ -36,10 +35,10 @@ export { QUALITY_INSTINCT } from "./quality-instinct";
 export { REFLECT } from "./reflect";
 // Intent x observation steering templates (Stories 28-3, 29-2)
 export {
-	AMPLIFY_CONTRADICTION_TEMPLATE,
-	AMPLIFY_CONVERGENCE_TEMPLATE,
-	AMPLIFY_NOTICING_TEMPLATE,
-	AMPLIFY_RELATE_TEMPLATE,
+	CLOSE_CONTRADICTION_TEMPLATE,
+	CLOSE_CONVERGENCE_TEMPLATE,
+	CLOSE_NOTICING_TEMPLATE,
+	CLOSE_RELATE_TEMPLATE,
 	BRIDGE_CONTRADICTION_TEMPLATE,
 	BRIDGE_CONVERGENCE_TEMPLATE,
 	BRIDGE_NEGATIVE_CONSTRAINT,
@@ -56,6 +55,4 @@ export {
 	TEMPLATE_COUNT,
 } from "./steering-templates";
 export { STORY_PULLING } from "./story-pulling";
-// Tier 2 — Intent-Contextual
-export { THREADING } from "./threading";
 export { THREADING_COMMON } from "./threading-common";

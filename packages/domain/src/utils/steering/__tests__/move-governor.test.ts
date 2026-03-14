@@ -76,13 +76,13 @@ describe("deriveIntent", () => {
 		expect(deriveIntent(1, false, tid("a"), tid("b"))).toBe("open");
 	});
 
-	it("returns 'amplify' for final turn (not turn 1)", () => {
-		expect(deriveIntent(25, true, tid("a"), null)).toBe("amplify");
+	it("returns 'close' for final turn (not turn 1)", () => {
+		expect(deriveIntent(25, true, tid("a"), null)).toBe("close");
 	});
 
-	it("returns 'amplify' for final turn even if territory changed", () => {
-		// Amplify takes priority over bridge
-		expect(deriveIntent(25, true, tid("a"), tid("b"))).toBe("amplify");
+	it("returns 'close' for final turn even if territory changed", () => {
+		// Close takes priority over bridge
+		expect(deriveIntent(25, true, tid("a"), tid("b"))).toBe("close");
 	});
 
 	it("returns 'explore' for mid-conversation turns with same territory", () => {
@@ -266,8 +266,8 @@ describe("computeGovernorOutput", () => {
 		});
 	});
 
-	describe("amplify intent (final turn)", () => {
-		it("returns AmplifyPromptInput with direct entry pressure", () => {
+	describe("close intent (final turn)", () => {
+		it("returns ClosePromptInput with direct entry pressure", () => {
 			const input = buildInput({
 				turnNumber: 25,
 				isFinalTurn: true,
@@ -276,15 +276,15 @@ describe("computeGovernorOutput", () => {
 			});
 			const { output, debug } = computeGovernorOutput(input);
 
-			expect(output.intent).toBe("amplify");
-			if (output.intent === "amplify") {
-				// Amplify always uses direct entry pressure
+			expect(output.intent).toBe("close");
+			if (output.intent === "close") {
+				// Close always uses direct entry pressure
 				expect(output.entryPressure).toBe("direct");
 				expect(output.observationFocus).toBeDefined();
 			}
 		});
 
-		it("wires observation gating in amplify mode", () => {
+		it("wires observation gating in close mode", () => {
 			const input = buildInput({
 				turnNumber: 25,
 				isFinalTurn: true,
@@ -303,19 +303,19 @@ describe("computeGovernorOutput", () => {
 			});
 			const { output, debug } = computeGovernorOutput(input);
 
-			expect(output.intent).toBe("amplify");
-			if (output.intent === "amplify") {
-				// In amplify mode, raw strength competition. Contradiction (0.8) wins.
+			expect(output.intent).toBe("close");
+			if (output.intent === "close") {
+				// In close mode, raw strength competition. Contradiction (0.8) wins.
 				expect(output.observationFocus.type).toBe("contradiction");
 			}
-			expect(debug.observationGating.mode).toBe("amplify");
+			expect(debug.observationGating.mode).toBe("close");
 		});
 
-		it("debug shows intent=amplify and isFinalTurn=true", () => {
+		it("debug shows intent=close and isFinalTurn=true", () => {
 			const input = buildInput({ turnNumber: 25, isFinalTurn: true });
 			const { debug } = computeGovernorOutput(input);
 
-			expect(debug.intent).toBe("amplify");
+			expect(debug.intent).toBe("close");
 			expect(debug.isFinalTurn).toBe(true);
 			expect(debug.entryPressure.level).toBe("direct");
 		});
@@ -485,7 +485,7 @@ describe("computeGovernorOutput", () => {
 			expect(output.intent).toBe("open");
 		});
 
-		it("amplify still takes priority over bridge on final turn", () => {
+		it("close still takes priority over bridge on final turn", () => {
 			const input = buildInput({
 				turnNumber: 25,
 				isFinalTurn: true,
@@ -494,7 +494,7 @@ describe("computeGovernorOutput", () => {
 			});
 			const { output } = computeGovernorOutput(input);
 
-			expect(output.intent).toBe("amplify");
+			expect(output.intent).toBe("close");
 		});
 	});
 

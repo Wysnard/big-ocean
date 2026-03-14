@@ -15,12 +15,12 @@ import { QUALITY_INSTINCT } from "../quality-instinct";
 import { MIRROR_GUARDRAILS } from "../mirror-guardrails";
 import { HUMOR_GUARDRAILS } from "../humor-guardrails";
 import { INTERNAL_TRACKING } from "../internal-tracking";
+import { OBSERVATION_QUALITY_COMMON } from "../observation-quality-common";
+import { THREADING_COMMON } from "../threading-common";
 
 // Tier 2 — Intent-Contextual
 import { STORY_PULLING } from "../story-pulling";
 import { REFLECT } from "../reflect";
-import { THREADING } from "../threading";
-import { OBSERVATION_QUALITY } from "../observation-quality";
 // Contextual mirror system (Story 29-3) — replaces MIRRORS_EXPLORE / MIRRORS_AMPLIFY
 import { getMirrorsForContext } from "../contextual-mirrors";
 
@@ -79,24 +79,14 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 			expect(REFLECT.length).toBeGreaterThan(0);
 		});
 
-		it("THREADING is a non-empty string", () => {
-			expect(typeof THREADING).toBe("string");
-			expect(THREADING.length).toBeGreaterThan(0);
-		});
-
-		it("OBSERVATION_QUALITY is a non-empty string", () => {
-			expect(typeof OBSERVATION_QUALITY).toBe("string");
-			expect(OBSERVATION_QUALITY.length).toBeGreaterThan(0);
-		});
-
 		it("getMirrorsForContext returns contextual mirrors for explore", () => {
 			const result = getMirrorsForContext("explore", "relate");
 			expect(typeof result).toBe("string");
 			expect(result!.length).toBeGreaterThan(0);
 		});
 
-		it("getMirrorsForContext returns contextual mirrors for amplify", () => {
-			const result = getMirrorsForContext("amplify", "relate");
+		it("getMirrorsForContext returns contextual mirrors for close", () => {
+			const result = getMirrorsForContext("close", "relate");
 			expect(typeof result).toBe("string");
 			expect(result!.length).toBeGreaterThan(0);
 		});
@@ -104,7 +94,7 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 
 	describe("No content lost", () => {
 		const exploreMirrors = getMirrorsForContext("explore", "relate") ?? "";
-		const amplifyMirrors = getMirrorsForContext("amplify", "relate") ?? "";
+		const closeMirrors = getMirrorsForContext("close", "relate") ?? "";
 		const allModules = [
 			CONVERSATION_MODE,
 			BELIEFS_IN_ACTION,
@@ -115,10 +105,10 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 			INTERNAL_TRACKING,
 			STORY_PULLING,
 			REFLECT,
-			THREADING,
-			OBSERVATION_QUALITY,
+			OBSERVATION_QUALITY_COMMON,
+			THREADING_COMMON,
 			exploreMirrors,
-			amplifyMirrors,
+			closeMirrors,
 		].join("\n");
 
 		it("contains CONVERSATION MODE frame", () => {
@@ -137,9 +127,9 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 			);
 		});
 
-		it("contains threading guidance", () => {
+		it("contains threading guidance (dissolved into threading-common)", () => {
 			expect(allModules).toContain(
-				"Connect threads across the conversation",
+				"you're always tracking threads",
 			);
 		});
 
@@ -178,7 +168,7 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 
 	describe("Eliminated sections", () => {
 		const exploreMirrors2 = getMirrorsForContext("explore", "relate") ?? "";
-		const amplifyMirrors2 = getMirrorsForContext("amplify", "relate") ?? "";
+		const closeMirrors2 = getMirrorsForContext("close", "relate") ?? "";
 		const allModules = [
 			CONVERSATION_MODE,
 			BELIEFS_IN_ACTION,
@@ -189,10 +179,10 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 			INTERNAL_TRACKING,
 			STORY_PULLING,
 			REFLECT,
-			THREADING,
-			OBSERVATION_QUALITY,
+			OBSERVATION_QUALITY_COMMON,
+			THREADING_COMMON,
 			exploreMirrors2,
-			amplifyMirrors2,
+			closeMirrors2,
 		].join("\n");
 
 		it("does not contain QUESTIONING STYLE as a standalone section header", () => {
@@ -245,9 +235,9 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 		});
 	});
 
-	describe("Contextual mirrors — amplify includes 4 mirrors", () => {
-		const amplifyMirrors3 = getMirrorsForContext("amplify", "relate");
-		const amplifyExpected = [
+	describe("Contextual mirrors — close includes 4 mirrors", () => {
+		const closeMirrors3 = getMirrorsForContext("close", "relate");
+		const closeExpected = [
 			"Ghost Net",
 			"Mimic Octopus",
 			"Volcanic Vents",
@@ -255,21 +245,21 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 		];
 
 		it("contains all 4 expected mirrors", () => {
-			expect(amplifyMirrors3).not.toBeNull();
-			for (const mirror of amplifyExpected) {
-				expect(amplifyMirrors3).toContain(mirror);
+			expect(closeMirrors3).not.toBeNull();
+			for (const mirror of closeExpected) {
+				expect(closeMirrors3).toContain(mirror);
 			}
 		});
 
 		it("does not contain mirrors exclusive to explore", () => {
-			expect(amplifyMirrors3).not.toContain("Hermit Crab");
-			expect(amplifyMirrors3).not.toContain("Pilot Fish");
-			expect(amplifyMirrors3).not.toContain("Clownfish");
-			expect(amplifyMirrors3).not.toContain("Dolphin Echolocation");
-			expect(amplifyMirrors3).not.toContain("Bioluminescence");
-			expect(amplifyMirrors3).not.toContain("Parrotfish");
-			expect(amplifyMirrors3).not.toContain("Sea Urchin");
-			expect(amplifyMirrors3).not.toContain("Tide Pool");
+			expect(closeMirrors3).not.toContain("Hermit Crab");
+			expect(closeMirrors3).not.toContain("Pilot Fish");
+			expect(closeMirrors3).not.toContain("Clownfish");
+			expect(closeMirrors3).not.toContain("Dolphin Echolocation");
+			expect(closeMirrors3).not.toContain("Bioluminescence");
+			expect(closeMirrors3).not.toContain("Parrotfish");
+			expect(closeMirrors3).not.toContain("Sea Urchin");
+			expect(closeMirrors3).not.toContain("Tide Pool");
 		});
 	});
 
@@ -303,8 +293,6 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 		it("exports all Tier 2 modules", () => {
 			expect(nerinModules.STORY_PULLING).toBe(STORY_PULLING);
 			expect(nerinModules.REFLECT).toBe(REFLECT);
-			expect(nerinModules.THREADING).toBe(THREADING);
-			expect(nerinModules.OBSERVATION_QUALITY).toBe(OBSERVATION_QUALITY);
 		});
 
 		it("exports getMirrorsForContext from contextual mirrors", () => {

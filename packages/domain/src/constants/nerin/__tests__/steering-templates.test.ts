@@ -16,10 +16,10 @@ import type {
 } from "../../../types/pacing";
 import type { LifeDomain } from "../../life-domain";
 import {
-	AMPLIFY_CONTRADICTION_TEMPLATE,
-	AMPLIFY_CONVERGENCE_TEMPLATE,
-	AMPLIFY_NOTICING_TEMPLATE,
-	AMPLIFY_RELATE_TEMPLATE,
+	CLOSE_CONTRADICTION_TEMPLATE,
+	CLOSE_CONVERGENCE_TEMPLATE,
+	CLOSE_NOTICING_TEMPLATE,
+	CLOSE_RELATE_TEMPLATE,
 	BRIDGE_CONTRADICTION_TEMPLATE,
 	BRIDGE_CONVERGENCE_TEMPLATE,
 	BRIDGE_NEGATIVE_CONSTRAINT,
@@ -79,10 +79,10 @@ describe("template constants", () => {
 			BRIDGE_NOTICING_TEMPLATE,
 			BRIDGE_CONTRADICTION_TEMPLATE,
 			BRIDGE_CONVERGENCE_TEMPLATE,
-			AMPLIFY_RELATE_TEMPLATE,
-			AMPLIFY_NOTICING_TEMPLATE,
-			AMPLIFY_CONTRADICTION_TEMPLATE,
-			AMPLIFY_CONVERGENCE_TEMPLATE,
+			CLOSE_RELATE_TEMPLATE,
+			CLOSE_NOTICING_TEMPLATE,
+			CLOSE_CONTRADICTION_TEMPLATE,
+			CLOSE_CONVERGENCE_TEMPLATE,
 		];
 		for (const t of templates) {
 			expect(typeof t).toBe("string");
@@ -154,23 +154,23 @@ describe("template constants", () => {
 		expect(BRIDGE_NEGATIVE_CONSTRAINT).toContain("Don't pull the conversation back");
 	});
 
-	it("AMPLIFY templates have correct parameter slots per observation", () => {
+	it("CLOSE templates have correct parameter slots per observation", () => {
 		// relate: no parameter slots needed
-		expect(AMPLIFY_RELATE_TEMPLATE).not.toContain("{territory");
-		expect(AMPLIFY_RELATE_TEMPLATE).not.toContain("{facet}");
+		expect(CLOSE_RELATE_TEMPLATE).not.toContain("{territory");
+		expect(CLOSE_RELATE_TEMPLATE).not.toContain("{facet}");
 
 		// noticing: domain only
-		expect(AMPLIFY_NOTICING_TEMPLATE).toContain("{domain}");
-		expect(AMPLIFY_NOTICING_TEMPLATE).not.toContain("{territory");
+		expect(CLOSE_NOTICING_TEMPLATE).toContain("{domain}");
+		expect(CLOSE_NOTICING_TEMPLATE).not.toContain("{territory");
 
 		// contradiction: facet, domain1, domain2
-		expect(AMPLIFY_CONTRADICTION_TEMPLATE).toContain("{facet}");
-		expect(AMPLIFY_CONTRADICTION_TEMPLATE).toContain("{domain1}");
-		expect(AMPLIFY_CONTRADICTION_TEMPLATE).toContain("{domain2}");
+		expect(CLOSE_CONTRADICTION_TEMPLATE).toContain("{facet}");
+		expect(CLOSE_CONTRADICTION_TEMPLATE).toContain("{domain1}");
+		expect(CLOSE_CONTRADICTION_TEMPLATE).toContain("{domain2}");
 
 		// convergence: facet, domains
-		expect(AMPLIFY_CONVERGENCE_TEMPLATE).toContain("{facet}");
-		expect(AMPLIFY_CONVERGENCE_TEMPLATE).toContain("{domains}");
+		expect(CLOSE_CONVERGENCE_TEMPLATE).toContain("{facet}");
+		expect(CLOSE_CONVERGENCE_TEMPLATE).toContain("{domains}");
 	});
 });
 
@@ -316,34 +316,34 @@ describe("renderSteeringTemplate", () => {
 		});
 	});
 
-	describe("amplify intent", () => {
-		it("renders amplify x relate (no territory params needed)", () => {
+	describe("close intent", () => {
+		it("renders close x relate (no territory params needed)", () => {
 			const focus: ObservationFocus = { type: "relate" };
-			const result = renderSteeringTemplate("amplify", focus, sampleTerritory);
+			const result = renderSteeringTemplate("close", focus, sampleTerritory);
 			expect(result).toContain("last question");
 			expect(result).not.toMatch(/\{[^}]+\}/);
 		});
 
-		it("renders amplify x noticing with domain param", () => {
+		it("renders close x noticing with domain param", () => {
 			const focus: ObservationFocus = { type: "noticing", domain: "leisure" as LifeDomain };
-			const result = renderSteeringTemplate("amplify", focus, sampleTerritory);
+			const result = renderSteeringTemplate("close", focus, sampleTerritory);
 			expect(result).toContain("leisure");
 			expect(result).toContain("last question");
 			expect(result).not.toMatch(/\{[^}]+\}/);
 		});
 
-		it("renders amplify x contradiction with facet and domain params", () => {
+		it("renders close x contradiction with facet and domain params", () => {
 			const focus: ObservationFocus = { type: "contradiction", target: makeContradictionTarget() };
-			const result = renderSteeringTemplate("amplify", focus, sampleTerritory);
+			const result = renderSteeringTemplate("close", focus, sampleTerritory);
 			expect(result).toContain("trust");
 			expect(result).toContain("work");
 			expect(result).toContain("relationships");
 			expect(result).not.toMatch(/\{[^}]+\}/);
 		});
 
-		it("renders amplify x convergence with facet and domains params", () => {
+		it("renders close x convergence with facet and domains params", () => {
 			const focus: ObservationFocus = { type: "convergence", target: makeConvergenceTarget() };
-			const result = renderSteeringTemplate("amplify", focus, sampleTerritory);
+			const result = renderSteeringTemplate("close", focus, sampleTerritory);
 			expect(result).toContain("altruism");
 			expect(result).toContain("work, relationships, family");
 			expect(result).not.toMatch(/\{[^}]+\}/);

@@ -8,7 +8,7 @@
  * Two modes:
  * - **explore**: phase-gated threshold with mutual exclusion
  *   (contradiction > convergence > noticing). Relate wins by default.
- * - **amplify**: raw strength argmax across all four focuses.
+ * - **close**: raw strength argmax across all four focuses.
  *   Relate is a competitor, not a fallback.
  *
  * All values operate in [0, 1] space per NFR1.
@@ -39,8 +39,8 @@ export const OBSERVATION_GATING_CONSTANTS = Object.freeze({
 
 // ─── Types ──────────────────────────────────────────────────────────
 
-/** Gating mode: explore (phase-gated) or amplify (raw competition) */
-export type ObservationGatingMode = "explore" | "amplify";
+/** Gating mode: explore (phase-gated) or close (raw competition) */
+export type ObservationGatingMode = "explore" | "close";
 
 /**
  * Input to the observation gating function.
@@ -184,13 +184,13 @@ function evaluateExplore(
 }
 
 /**
- * Evaluate observation gating for amplify mode.
+ * Evaluate observation gating for close mode.
  *
  * All four focuses compete on raw strength — no phase gating, no threshold.
  * Winner = argmax of raw strengths.
  * Tiebreak by priority: contradiction > convergence > noticing > relate.
  */
-function evaluateAmplify(
+function evaluateClose(
 	candidates: RankedCandidate[],
 ): { winner: RankedCandidate; mutualExclusionApplied: boolean } {
 	// Sort by raw strength descending, then by priority ascending (tiebreak)
@@ -216,7 +216,7 @@ export function evaluateObservationGating(input: ObservationGatingInput): Observ
 	const { winner, mutualExclusionApplied } =
 		input.mode === "explore"
 			? evaluateExplore(candidates, threshold)
-			: evaluateAmplify(candidates);
+			: evaluateClose(candidates);
 
 	// Build ObservationCandidate[] for debug output
 	const debugCandidates: ObservationCandidate[] = candidates.map((c) => ({

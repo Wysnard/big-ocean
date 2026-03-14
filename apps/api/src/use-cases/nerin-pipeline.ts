@@ -703,7 +703,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				sessionPhase === "opening"
 					? "opening"
 					: sessionPhase === "closing"
-						? "amplifying"
+						? "closing"
 						: "exploring",
 			transitionType: transitionType === "continue" ? "normal" : "territory_change",
 		});
