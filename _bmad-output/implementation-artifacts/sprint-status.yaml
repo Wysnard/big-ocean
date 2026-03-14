@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-13 (refreshed 23 — sprint-planning workflow)
+generated: 2026-03-14 (refreshed 24 — sprint-planning workflow)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -455,3 +455,43 @@ development_status:
   27-2-prompt-builder: pr-ready
   27-3-pipeline-integration: pr-ready
   epic-27-retrospective: optional
+
+# ═══════════════════════════════════════════════════════════════
+# PHASE 6: Nerin Steering Format Overhaul
+# ═══════════════════════════════════════════════════════════════
+# Source: _bmad-output/planning-artifacts/epics-nerin-steering-format.md
+# Collapses 4-tier prompt to 2 layers (common + steering),
+# desire framing replaces suggestive language, bridge intent for
+# territory transitions, module dissolution into skeleton templates
+# Fixes: Nerin ignoring steering pipeline territory instructions
+#
+# NUMBERING: Continues from Phase 5 (28+).
+# Cross-reference: epics-nerin-steering-format.md "Epic N" = sprint-status "Epic N+27"
+#   Steering Epic 1 (Desire-Framed Steering System) = Epic 28
+#   Steering Epic 2 (Bridge Transitions & Contextual Mirrors) = Epic 29
+
+  # ───────────────────────────────────────────────────────────────
+  # STEERING EPIC 1: Desire-Framed Steering System (Epic 28)
+  # Territory catalog enrichment, common layer reform,
+  # intent × observation templates, prompt builder skeleton swap
+  # Stories: 1.1-1.4 in epics-nerin-steering-format.md
+  # ───────────────────────────────────────────────────────────────
+  epic-28: backlog
+  28-1-territory-catalog-enrichment: backlog
+  28-2-common-layer-reform: backlog
+  28-3-intent-observation-templates-and-pressure-modifiers: backlog
+  28-4-prompt-builder-skeleton-swap: backlog
+  epic-28-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # STEERING EPIC 2: Bridge Transitions & Contextual Mirrors (Epic 29)
+  # Bridge intent, bridge templates, contextual mirrors, amplify→close rename
+  # Stories: 2.1-2.4 in epics-nerin-steering-format.md
+  # Depends on: Epic 28
+  # ───────────────────────────────────────────────────────────────
+  epic-29: backlog
+  29-1-bridge-intent-and-governor-integration: backlog
+  29-2-bridge-templates-and-threading-dissolution: backlog
+  29-3-contextual-mirror-system: backlog
+  29-4-rename-amplify-to-close-and-final-cleanup: backlog
+  epic-29-retrospective: optional
