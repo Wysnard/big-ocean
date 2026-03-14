@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 10
-parallelism_step_name: "Bridge Intent + Templates"
-baseline_commit: "e0ad2e2c701c2cc381d6736c363cc4d4c8dc1720"
+parallelism_step: 11
+parallelism_step_name: "Mirrors + Cleanup"
+baseline_commit: "8dd937d2b914b3d0130dba1579f0632ad5303c52"
 created: "2026-03-14"
-last_updated: "2026-03-14T11:00"
+last_updated: "2026-03-14"
 
 # Optional context documents discovered
 context_docs:
@@ -14,17 +14,17 @@ context_docs:
 
 # Stories in this step
 stories:
-  29-1-bridge-intent-and-governor-integration:
+  29-3-contextual-mirror-system:
     status: done
     mode: "parallel"
-    notes: "Adds bridge to PromptBuilderInput type + governor logic"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/139"
-    dev_branch: "feat/story-29-1-bridge-intent-and-governor-integration"
+    notes: "Replaces MIRRORS_EXPLORE/MIRRORS_AMPLIFY with lookup table"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/141"
+    dev_branch: "feat/story-29-3-contextual-mirror-system"
     error: null
-  29-2-bridge-templates-and-threading-dissolution:
+  29-4-rename-amplify-to-close-and-final-cleanup:
     status: done
-    mode: "sequential(after: 29-1)"
-    notes: "Creates 4 bridge templates, prompt builder handles bridge case"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/140"
-    dev_branch: "feat/story-29-2-bridge-templates-and-threading-dissolution"
+    mode: "sequential(after: 29-3)"
+    notes: "Renames amplify→close everywhere, deletes dead modules"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/142"
+    dev_branch: "feat/story-29-4-rename-amplify-to-close-and-final-cleanup"
     error: null

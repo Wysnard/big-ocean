@@ -491,7 +491,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-29: in-progress
   29-1-bridge-intent-and-governor-integration: done
-  29-2-bridge-templates-and-threading-dissolution: pr-ready
-  29-3-contextual-mirror-system: backlog
-  29-4-rename-amplify-to-close-and-final-cleanup: backlog
+  29-2-bridge-templates-and-threading-dissolution: done
+  29-3-contextual-mirror-system: done
+  29-4-rename-amplify-to-close-and-final-cleanup: pr-ready
   epic-29-retrospective: optional
