@@ -54,10 +54,12 @@ export {
 	MIRRORS_AMPLIFY,
 	MIRRORS_EXPLORE,
 	OBSERVATION_QUALITY,
+	OBSERVATION_QUALITY_COMMON,
 	QUALITY_INSTINCT,
 	REFLECT,
 	STORY_PULLING,
 	THREADING,
+	THREADING_COMMON,
 } from "./constants/nerin/index";
 // Nerin farewell constants (Story 7.18)
 export {

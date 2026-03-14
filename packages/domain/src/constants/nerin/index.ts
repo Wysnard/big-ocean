@@ -10,21 +10,24 @@
  * for backward compatibility until Story 27-2 switches to these modules.
  *
  * Story 27-1: Character Bible Decomposition
+ * Story 28-2: Common Layer Reform — REFLECT, STORY_PULLING promoted to Tier 1;
+ *   OBSERVATION_QUALITY_COMMON and THREADING_COMMON extracted as always-on instincts.
  */
 
-// Tier 1 — Core Identity (always-on)
-export { CONVERSATION_MODE } from "./conversation-mode";
 export { BELIEFS_IN_ACTION } from "./beliefs-in-action";
 export { CONVERSATION_INSTINCTS } from "./conversation-instincts";
-export { QUALITY_INSTINCT } from "./quality-instinct";
-export { MIRROR_GUARDRAILS } from "./mirror-guardrails";
+// Tier 1 — Core Identity (always-on)
+export { CONVERSATION_MODE } from "./conversation-mode";
 export { HUMOR_GUARDRAILS } from "./humor-guardrails";
 export { INTERNAL_TRACKING } from "./internal-tracking";
-
-// Tier 2 — Intent-Contextual
-export { STORY_PULLING } from "./story-pulling";
-export { REFLECT } from "./reflect";
-export { THREADING } from "./threading";
-export { OBSERVATION_QUALITY } from "./observation-quality";
-export { MIRRORS_EXPLORE } from "./mirrors-explore";
+export { MIRROR_GUARDRAILS } from "./mirror-guardrails";
 export { MIRRORS_AMPLIFY } from "./mirrors-amplify";
+export { MIRRORS_EXPLORE } from "./mirrors-explore";
+export { OBSERVATION_QUALITY } from "./observation-quality";
+export { OBSERVATION_QUALITY_COMMON } from "./observation-quality-common";
+export { QUALITY_INSTINCT } from "./quality-instinct";
+export { REFLECT } from "./reflect";
+export { STORY_PULLING } from "./story-pulling";
+// Tier 2 — Intent-Contextual
+export { THREADING } from "./threading";
+export { THREADING_COMMON } from "./threading-common";
