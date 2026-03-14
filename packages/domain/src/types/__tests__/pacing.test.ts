@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { FacetName } from "../../constants/big-five";
 import type { LifeDomain } from "../../constants/life-domain";
 import type {
+	BridgePromptInput,
 	ContradictionTarget,
 	ConvergenceTarget,
 	DomainScore,
@@ -83,14 +84,14 @@ describe("Pacing Pipeline Domain Types", () => {
 	});
 
 	describe("ConversationalIntent", () => {
-		it("has exactly 3 intents", () => {
-			expect(CONVERSATIONAL_INTENTS).toHaveLength(3);
-			expect(CONVERSATIONAL_INTENTS).toEqual(["open", "explore", "amplify"]);
+		it("has exactly 4 intents", () => {
+			expect(CONVERSATIONAL_INTENTS).toHaveLength(4);
+			expect(CONVERSATIONAL_INTENTS).toEqual(["open", "explore", "bridge", "amplify"]);
 		});
 
 		it("type-checks all valid values", () => {
-			const values: ConversationalIntent[] = ["open", "explore", "amplify"];
-			expect(values).toHaveLength(3);
+			const values: ConversationalIntent[] = ["open", "explore", "bridge", "amplify"];
+			expect(values).toHaveLength(4);
 		});
 	});
 
@@ -247,6 +248,22 @@ describe("Pacing Pipeline Domain Types", () => {
 			}
 		});
 
+		it("constructs BridgePromptInput with territory, previousTerritory, entryPressure, and observationFocus", () => {
+			const input: PromptBuilderInput = {
+				intent: "bridge",
+				territory: territoryId,
+				previousTerritory: Schema.decodeSync(TerritoryIdSchema)("daily-routines"),
+				entryPressure: "angled",
+				observationFocus: { type: "relate" },
+			};
+			if (input.intent === "bridge") {
+				const _narrowed: BridgePromptInput = input;
+				expect(_narrowed.previousTerritory).toBe("daily-routines");
+				expect(_narrowed.entryPressure).toBe("angled");
+				expect(_narrowed.observationFocus.type).toBe("relate");
+			}
+		});
+
 		it("constructs AmplifyPromptInput with territory, direct pressure, and observationFocus", () => {
 			const input: PromptBuilderInput = {
 				intent: "amplify",
@@ -270,6 +287,13 @@ describe("Pacing Pipeline Domain Types", () => {
 					observationFocus: { type: "relate" },
 				},
 				{
+					intent: "bridge",
+					territory: territoryId,
+					previousTerritory: Schema.decodeSync(TerritoryIdSchema)("daily-routines"),
+					entryPressure: "angled",
+					observationFocus: { type: "relate" },
+				},
+				{
 					intent: "amplify",
 					territory: territoryId,
 					entryPressure: "direct",
@@ -285,6 +309,11 @@ describe("Pacing Pipeline Domain Types", () => {
 						expect(input.territory).toBeDefined();
 						break;
 					case "explore":
+						expect(input.entryPressure).toBeDefined();
+						expect(input.observationFocus).toBeDefined();
+						break;
+					case "bridge":
+						expect(input.previousTerritory).toBeDefined();
 						expect(input.entryPressure).toBeDefined();
 						expect(input.observationFocus).toBeDefined();
 						break;
