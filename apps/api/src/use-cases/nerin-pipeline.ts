@@ -496,7 +496,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			governorIntent: governorResult.output.intent,
 			entryPressure: governorResult.debug.entryPressure.level,
 			observationFocus: governorResult.debug.observationGating.winner?.type ?? "relate",
-			tier2Modules: promptResult.tier2Modules,
+			templateKey: promptResult.templateKey,
 			topScoredTerritories: scorerOutput.ranked.slice(0, 3).map((t) => ({
 				id: t.territoryId,
 				score: +t.score.toFixed(3),

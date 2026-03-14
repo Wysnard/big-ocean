@@ -1,19 +1,18 @@
 /**
- * Prompt Builder — Story 27-2, updated Story 28-2
+ * Prompt Builder — Story 28-4 (Skeleton Swap)
  *
  * Deterministic prompt compositor that assembles Nerin's system prompt
- * from modular tiers based on the Governor's PromptBuilderInput.
+ * from 2 layers based on the Governor's PromptBuilderInput.
  *
- * 4-tier composition:
- * 1. NERIN_PERSONA — universal identity
- * 2. Core identity modules (Tier 1 — always included, includes REFLECT,
- *    STORY_PULLING, OBSERVATION_QUALITY_COMMON, THREADING_COMMON per Story 28-2)
- * 3. Question modules (Tier 2 — included/excluded per intent)
- * 4. Steering section (per-turn — territory + observation focus)
+ * 2-layer composition:
+ * 1. Common layer — NERIN_PERSONA + always-on identity modules
+ * 2. Steering layer — STEERING_PREFIX + rendered intent x observation template
+ *    + entry pressure modifier (per-turn)
+ *
+ * Replaces the previous 4-tier system (Story 27-2, 28-2).
+ * Templates from Story 28-3 drive the steering section.
  *
  * Pure function — no Effect dependencies, no I/O.
- *
- * @see {@link file://_bmad-output/planning-artifacts/epics-conversation-pacing.md} Story 5.2
  */
 
 import {
@@ -22,18 +21,18 @@ import {
 	CONVERSATION_MODE,
 	HUMOR_GUARDRAILS,
 	MIRROR_GUARDRAILS,
-	MIRRORS_AMPLIFY,
-	MIRRORS_EXPLORE,
-	OBSERVATION_QUALITY,
 	OBSERVATION_QUALITY_COMMON,
 	QUALITY_INSTINCT,
 	REFLECT,
+	STEERING_PREFIX,
 	STORY_PULLING,
 	THREADING_COMMON,
+	getPressureModifier,
+	renderSteeringTemplate,
 } from "../../constants/nerin/index";
 import { NERIN_PERSONA } from "../../constants/nerin-persona";
 import { TERRITORY_CATALOG } from "../../constants/territory-catalog";
-import type { EntryPressure, ObservationFocus, PromptBuilderInput } from "../../types/pacing";
+import type { ObservationFocus, PromptBuilderInput } from "../../types/pacing";
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -41,18 +40,16 @@ import type { EntryPressure, ObservationFocus, PromptBuilderInput } from "../../
 export interface PromptBuilderOutput {
 	/** The fully composed system prompt for Nerin */
 	readonly systemPrompt: string;
-	/** Names of Tier 2 modules loaded for this intent */
-	readonly tier2Modules: readonly string[];
-	/** The steering section (territory + observation) for debugging */
+	/** The intent x observation template key used (e.g., "explore:noticing") */
+	readonly templateKey: string;
+	/** The steering section (prefix + template + pressure) for debugging */
 	readonly steeringSection: string;
 }
 
-// ─── Tier 1 Assembly ────────────────────────────────────────────────
+// ─── Common Layer Assembly ──────────────────────────────────────────
 
-/** All Tier 1 (always-on) modules in canonical order.
- * Story 28-2: Added REFLECT, STORY_PULLING, OBSERVATION_QUALITY_COMMON,
- * THREADING_COMMON — promoted from Tier 2 to common layer. */
-const TIER_1_MODULES = [
+/** All common (always-on) modules in canonical order. */
+const COMMON_MODULES = [
 	CONVERSATION_MODE,
 	BELIEFS_IN_ACTION,
 	CONVERSATION_INSTINCTS,
@@ -65,120 +62,66 @@ const TIER_1_MODULES = [
 	THREADING_COMMON,
 ] as const;
 
-function assembleTier1(): string {
-	return TIER_1_MODULES.join("\n\n");
-}
-
-// ─── Tier 2 Module Selection ────────────────────────────────────────
-
-interface Tier2Selection {
-	readonly modules: readonly string[];
-	readonly moduleNames: readonly string[];
-}
-
-/** Response format guidance — only loaded for explore intent.
- * Open and amplify have their own response formats. */
-const EXPLORE_RESPONSE_FORMAT = `Your responses can take different shapes depending on the moment:
-- Observation + question in the same breath
-- Just a question — no preamble needed when it speaks for itself
-- Just empathy — let a moment breathe without immediately asking something
-- A choice: "Are you more X, Y, or Z? I'm curious"
-- Circle back: "You mentioned X before — that stuck with me"
-
-Keep responses concise — 2-4 sentences typically. Longer when something deserves it, shorter when brevity hits harder.`;
-
-function selectTier2Modules(intent: PromptBuilderInput["intent"]): Tier2Selection {
-	switch (intent) {
-		case "open":
-			// Story 28-2: REFLECT promoted to Tier 1 — no Tier 2 modules for open
-			return {
-				modules: [],
-				moduleNames: [],
-			};
-		case "explore":
-			// Story 28-2: STORY_PULLING, REFLECT, THREADING promoted to Tier 1
-			return {
-				modules: [MIRRORS_EXPLORE, EXPLORE_RESPONSE_FORMAT],
-				moduleNames: ["MIRRORS_EXPLORE", "EXPLORE_RESPONSE_FORMAT"],
-			};
-		case "amplify":
-			// Story 28-2: OBSERVATION_QUALITY universal parts promoted to Tier 1 via
-			// OBSERVATION_QUALITY_COMMON. Full OBSERVATION_QUALITY kept here for
-			// observation-specific content until Story 1.3 dissolves it.
-			return {
-				modules: [OBSERVATION_QUALITY, MIRRORS_AMPLIFY],
-				moduleNames: ["OBSERVATION_QUALITY", "MIRRORS_AMPLIFY"],
-			};
-	}
-}
-
-// ─── Observation Focus Translation ──────────────────────────────────
-
-/**
- * Translate an ObservationFocus into a natural language instruction for Nerin.
- *
- * - Relate: connect naturally
- * - Noticing: domain compass (not facet target)
- * - Contradiction: fascination framing (never verdict)
- * - Convergence: pattern recognition
- */
-export function translateObservationFocus(focus: ObservationFocus): string {
-	switch (focus.type) {
-		case "relate":
-			return "Connect naturally to what they just shared. No special observation — be present and genuine.";
-		case "noticing":
-			return `Something is shifting in ${focus.domain} — you're seeing it, let them see it too. Frame it as curiosity, not diagnosis.`;
-		case "contradiction":
-			return (
-				`Something interesting — ${focus.target.facet} shows up differently in ` +
-				`${focus.target.pair[0].domain} vs ${focus.target.pair[1].domain}. ` +
-				`Frame this as fascination, never as a verdict. ` +
-				`Always curiosity and wonder, never judgment or labeling.`
-			);
-		case "convergence": {
-			const domainNames = focus.target.domains.map((d) => d.domain).join(", ");
-			return (
-				`A pattern is emerging — ${focus.target.facet} shows up consistently across ${domainNames}. ` +
-				`Name what you're seeing. This consistency is meaningful — it suggests something core about who they are.`
-			);
-		}
-	}
-}
-
-// ─── Entry Pressure Modifiers ───────────────────────────────────────
-
-function buildTerritoryGuidanceWithPressure(
-	territory: { opener: string; domains: readonly [string, string] },
-	entryPressure: EntryPressure,
-): string {
-	const domainList = territory.domains.join(", ");
-
-	let directionInstruction: string;
-	switch (entryPressure) {
-		case "direct":
-			directionInstruction = `Suggested direction — you could explore something like: "${territory.opener}"
-This is a suggestion, not a script. Follow the natural flow of conversation. If the person is already in an interesting thread, stay with it. Use this as a direction to steer toward when there's a natural opening.`;
-			break;
-		case "angled":
-			directionInstruction = `Consider approaching from a related angle rather than directly: "${territory.opener}"
-Don't lead with this topic head-on. Find an adjacent thread from what they've already shared and let it naturally bend toward this territory. The approach matters more than the destination.`;
-			break;
-		case "soft":
-			directionInstruction = `If there's a natural opening, you might gently touch on: "${territory.opener}"
-This territory is a stretch from where they are energetically. Only go here if the conversation naturally drifts this way. Don't force it — there's always next turn.`;
-			break;
-	}
-
-	return `
-TERRITORY GUIDANCE:
-Domain area: ${domainList}
-
-${directionInstruction}`;
+function assembleCommonLayer(): string {
+	return [NERIN_PERSONA, ...COMMON_MODULES].join("\n\n");
 }
 
 // ─── Steering Section Builder ───────────────────────────────────────
 
-function buildSteeringSection(input: PromptBuilderInput): string {
+/**
+ * Derive the observation focus for the given input.
+ * Open intent always uses relate; explore/amplify carry their own focus.
+ */
+function getObservationFocus(input: PromptBuilderInput): ObservationFocus {
+	if (input.intent === "open") {
+		return { type: "relate" };
+	}
+	return input.observationFocus;
+}
+
+/**
+ * Build the steering section from template + pressure modifier.
+ *
+ * Structure:
+ * - STEERING_PREFIX
+ * - Rendered intent x observation template
+ * - Entry pressure modifier (for explore and amplify intents)
+ */
+function buildSteeringSection(
+	input: PromptBuilderInput,
+	territory: { readonly name: string; readonly description: string },
+): { section: string; templateKey: string } {
+	const focus = getObservationFocus(input);
+	const templateKey = `${input.intent}:${focus.type}`;
+	const renderedTemplate = renderSteeringTemplate(input.intent, focus, territory);
+
+	const parts = [STEERING_PREFIX, renderedTemplate];
+
+	// Append pressure modifier for explore and amplify intents
+	if (input.intent === "explore" || input.intent === "amplify") {
+		parts.push(getPressureModifier(input.entryPressure));
+	}
+
+	return {
+		section: parts.join("\n\n"),
+		templateKey,
+	};
+}
+
+// ─── Main Build Function ────────────────────────────────────────────
+
+/**
+ * Build the complete system prompt for Nerin from 2 layers.
+ *
+ * Composes:
+ * 1. Common layer (persona + always-on modules)
+ * 2. Steering layer (prefix + template + pressure)
+ *
+ * @param input - PromptBuilderInput from the Move Governor
+ * @returns PromptBuilderOutput with composed prompt and metadata
+ * @throws Error if territory ID is not found in the catalog
+ */
+export function buildPrompt(input: PromptBuilderInput): PromptBuilderOutput {
 	const territory = TERRITORY_CATALOG.get(input.territory);
 
 	if (!territory) {
@@ -188,65 +131,18 @@ function buildSteeringSection(input: PromptBuilderInput): string {
 		);
 	}
 
-	// Open intent: territory guidance only, no observation
-	if (input.intent === "open") {
-		return buildTerritoryGuidanceWithPressure(territory, "direct");
-	}
+	// Layer 1: Common (stable)
+	const commonLayer = assembleCommonLayer();
 
-	// Explore / Amplify: territory guidance + observation focus
-	const entryPressure = input.entryPressure;
-	const territorySection = buildTerritoryGuidanceWithPressure(territory, entryPressure);
-	const focusTranslation = translateObservationFocus(input.observationFocus);
+	// Layer 2: Steering (per-turn)
+	const { section: steeringSection, templateKey } = buildSteeringSection(input, territory);
 
-	let observationSection = `\nOBSERVATION FOCUS:\n${focusTranslation}`;
-
-	// Amplify gets additional formatting permission
-	if (input.intent === "amplify") {
-		observationSection += `
-
-AMPLIFY MODE:
-This is a closing turn. You have permission to be bold and declarative.
-Respond in 3-6 sentences — take the space you need.
-Make declarative statements about the user based on what you've observed.
-This is your moment to show what you've been building toward.`;
-	}
-
-	return `${territorySection}\n${observationSection}`;
-}
-
-// ─── Main Build Function ────────────────────────────────────────────
-
-/**
- * Build the complete system prompt for Nerin from modular tiers.
- *
- * Composes 4 tiers:
- * 1. NERIN_PERSONA (universal identity)
- * 2. Core identity modules (always-on)
- * 3. Question modules (per intent)
- * 4. Steering section (territory + observation)
- *
- * @param input - PromptBuilderInput from the Move Governor
- * @returns PromptBuilderOutput with composed prompt and metadata
- * @throws Error if territory ID is not found in the catalog
- */
-export function buildPrompt(input: PromptBuilderInput): PromptBuilderOutput {
-	// Tier 1: Persona + Core Identity
-	const persona = NERIN_PERSONA;
-	const tier1 = assembleTier1();
-
-	// Tier 2: Intent-specific modules
-	const tier2 = selectTier2Modules(input.intent);
-	const tier2Content = tier2.modules.join("\n\n");
-
-	// Tier 4: Steering section (territory + observation)
-	const steeringSection = buildSteeringSection(input);
-
-	// Compose the full prompt
-	const systemPrompt = [persona, tier1, tier2Content, steeringSection].join("\n\n");
+	// Compose: common + steering
+	const systemPrompt = [commonLayer, steeringSection].join("\n\n");
 
 	return {
 		systemPrompt,
-		tier2Modules: tier2.moduleNames,
+		templateKey,
 		steeringSection,
 	};
 }

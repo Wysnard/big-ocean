@@ -574,5 +574,4 @@ export {
 	scoreAllTerritoriesV2,
 	selectTerritoryV2,
 	type TerritoryPromptContent,
-	translateObservationFocus,
 } from "./utils/steering";
