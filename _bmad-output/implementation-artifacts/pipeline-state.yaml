@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 9
-parallelism_step_name: "Prompt Builder Swap — THE BEHAVIOR CHANGE"
-baseline_commit: "030ed0cdc97632cbb9cb800e2ee8a6ffe26e82bd"
+parallelism_step: 10
+parallelism_step_name: "Bridge Intent + Templates"
+baseline_commit: "e0ad2e2c701c2cc381d6736c363cc4d4c8dc1720"
 created: "2026-03-14"
-last_updated: "2026-03-14"
+last_updated: "2026-03-14T11:00"
 
 # Optional context documents discovered
 context_docs:
@@ -14,10 +14,17 @@ context_docs:
 
 # Stories in this step
 stories:
-  28-4-prompt-builder-skeleton-swap:
+  29-1-bridge-intent-and-governor-integration:
     status: done
-    mode: "single"
-    notes: "Replaces 4-tier with 2-layer; promotes steering; desire framing. This is where Nerin's behavior changes."
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/138"
-    dev_branch: "feat/story-28-4-prompt-builder-skeleton-swap"
+    mode: "parallel"
+    notes: "Adds bridge to PromptBuilderInput type + governor logic"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/139"
+    dev_branch: "feat/story-29-1-bridge-intent-and-governor-integration"
+    error: null
+  29-2-bridge-templates-and-threading-dissolution:
+    status: done
+    mode: "sequential(after: 29-1)"
+    notes: "Creates 4 bridge templates, prompt builder handles bridge case"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/140"
+    dev_branch: "feat/story-29-2-bridge-templates-and-threading-dissolution"
     error: null
