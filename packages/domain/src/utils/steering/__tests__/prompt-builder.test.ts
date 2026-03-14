@@ -390,6 +390,67 @@ describe("bridge intent", () => {
 	});
 });
 
+// ─── Contextual Mirrors (Story 29-3) ────────────────────────────────
+
+describe("contextual mirrors", () => {
+	it("open intent has no mirrors in output", () => {
+		const result = buildPrompt(makeOpenInput());
+		expect(result.mirrorSet).toBeNull();
+		expect(result.systemPrompt).not.toContain("NATURAL WORLD MIRRORS");
+	});
+
+	it("explore x relate includes mirrors with all 13 entries", () => {
+		const result = buildPrompt(makeExploreInput({ observationFocus: { type: "relate" } }));
+		expect(result.mirrorSet).not.toBeNull();
+		expect(result.systemPrompt).toContain("NATURAL WORLD MIRRORS");
+		expect(result.mirrorSet).toContain("Hermit Crab");
+		expect(result.mirrorSet).toContain("Mola Mola");
+	});
+
+	it("explore x noticing includes observation-specific mirror subset", () => {
+		const focus: ObservationFocus = { type: "noticing", domain: "work" as LifeDomain };
+		const result = buildPrompt(makeExploreInput({ observationFocus: focus }));
+		expect(result.mirrorSet).not.toBeNull();
+		expect(result.mirrorSet).toContain("Hermit Crab");
+		expect(result.mirrorSet).toContain("Volcanic Vents");
+		expect(result.mirrorSet).not.toContain("Ghost Net");
+	});
+
+	it("bridge x relate includes mirrors", () => {
+		const result = buildPrompt(makeBridgeInput());
+		expect(result.mirrorSet).not.toBeNull();
+		expect(result.systemPrompt).toContain("NATURAL WORLD MIRRORS");
+	});
+
+	it("amplify includes closing mirrors", () => {
+		const result = buildPrompt(makeAmplifyInput());
+		expect(result.mirrorSet).not.toBeNull();
+		expect(result.mirrorSet).toContain("Ghost Net");
+		expect(result.mirrorSet).toContain("Mimic Octopus");
+		expect(result.mirrorSet).toContain("Volcanic Vents");
+		expect(result.mirrorSet).toContain("Mola Mola");
+		expect(result.mirrorSet).not.toContain("Hermit Crab");
+	});
+
+	it("all non-null mirror sets include guardrail text", () => {
+		const explore = buildPrompt(makeExploreInput());
+		const bridge = buildPrompt(makeBridgeInput());
+		const amplify = buildPrompt(makeAmplifyInput());
+
+		const guardrail = "You can discover new mirrors in the moment";
+		expect(explore.mirrorSet).toContain(guardrail);
+		expect(bridge.mirrorSet).toContain(guardrail);
+		expect(amplify.mirrorSet).toContain(guardrail);
+	});
+
+	it("mirrors appear after steering section in system prompt", () => {
+		const result = buildPrompt(makeExploreInput());
+		const steeringIndex = result.systemPrompt.indexOf(STEERING_PREFIX);
+		const mirrorIndex = result.systemPrompt.indexOf("NATURAL WORLD MIRRORS");
+		expect(mirrorIndex).toBeGreaterThan(steeringIndex);
+	});
+});
+
 // ─── Removed Content ────────────────────────────────────────────────
 
 describe("removed content (4-tier artifacts)", () => {

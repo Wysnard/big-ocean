@@ -18,11 +18,11 @@ export { BELIEFS_IN_ACTION } from "./beliefs-in-action";
 export { CONVERSATION_INSTINCTS } from "./conversation-instincts";
 // Tier 1 — Core Identity (always-on)
 export { CONVERSATION_MODE } from "./conversation-mode";
+// Contextual mirror system — Story 29-3 (replaces MIRRORS_EXPLORE + MIRRORS_AMPLIFY)
+export { getMirrorsForContext } from "./contextual-mirrors";
 export { HUMOR_GUARDRAILS } from "./humor-guardrails";
 export { INTERNAL_TRACKING } from "./internal-tracking";
 export { MIRROR_GUARDRAILS } from "./mirror-guardrails";
-export { MIRRORS_AMPLIFY } from "./mirrors-amplify";
-export { MIRRORS_EXPLORE } from "./mirrors-explore";
 export { OBSERVATION_QUALITY } from "./observation-quality";
 export { OBSERVATION_QUALITY_COMMON } from "./observation-quality-common";
 // Pressure modifiers — entry pressure language (Story 28-3)

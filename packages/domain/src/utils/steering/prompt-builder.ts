@@ -15,6 +15,7 @@
  * Pure function — no Effect dependencies, no I/O.
  */
 
+import { getMirrorsForContext } from "../../constants/nerin/contextual-mirrors";
 import {
 	BELIEFS_IN_ACTION,
 	CONVERSATION_INSTINCTS,
@@ -48,6 +49,8 @@ export interface PromptBuilderOutput {
 	readonly templateKey: string;
 	/** The steering section (prefix + template + pressure) for debugging */
 	readonly steeringSection: string;
+	/** The contextual mirror set included in the prompt, or null if no mirrors (e.g., open intent) */
+	readonly mirrorSet: string | null;
 }
 
 // ─── Common Layer Assembly ──────────────────────────────────────────
@@ -172,12 +175,21 @@ export function buildPrompt(input: PromptBuilderInput): PromptBuilderOutput {
 		previousTerritoryData,
 	);
 
-	// Compose: common + steering
-	const systemPrompt = [commonLayer, steeringSection].join("\n\n");
+	// Contextual mirrors — loaded by intent x observation
+	const focus = getObservationFocus(input);
+	const mirrorSet = getMirrorsForContext(input.intent, focus.type);
+
+	// Compose: common + steering + mirrors (if present)
+	const parts = [commonLayer, steeringSection];
+	if (mirrorSet) {
+		parts.push(mirrorSet);
+	}
+	const systemPrompt = parts.join("\n\n");
 
 	return {
 		systemPrompt,
 		templateKey,
 		steeringSection,
+		mirrorSet,
 	};
 }

@@ -21,8 +21,8 @@ import { STORY_PULLING } from "../story-pulling";
 import { REFLECT } from "../reflect";
 import { THREADING } from "../threading";
 import { OBSERVATION_QUALITY } from "../observation-quality";
-import { MIRRORS_EXPLORE } from "../mirrors-explore";
-import { MIRRORS_AMPLIFY } from "../mirrors-amplify";
+// Contextual mirror system (Story 29-3) — replaces MIRRORS_EXPLORE / MIRRORS_AMPLIFY
+import { getMirrorsForContext } from "../contextual-mirrors";
 
 // Original monolith — verify backward compatibility
 import { CHAT_CONTEXT } from "../../nerin-chat-context";
@@ -89,18 +89,22 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 			expect(OBSERVATION_QUALITY.length).toBeGreaterThan(0);
 		});
 
-		it("MIRRORS_EXPLORE is a non-empty string", () => {
-			expect(typeof MIRRORS_EXPLORE).toBe("string");
-			expect(MIRRORS_EXPLORE.length).toBeGreaterThan(0);
+		it("getMirrorsForContext returns contextual mirrors for explore", () => {
+			const result = getMirrorsForContext("explore", "relate");
+			expect(typeof result).toBe("string");
+			expect(result!.length).toBeGreaterThan(0);
 		});
 
-		it("MIRRORS_AMPLIFY is a non-empty string", () => {
-			expect(typeof MIRRORS_AMPLIFY).toBe("string");
-			expect(MIRRORS_AMPLIFY.length).toBeGreaterThan(0);
+		it("getMirrorsForContext returns contextual mirrors for amplify", () => {
+			const result = getMirrorsForContext("amplify", "relate");
+			expect(typeof result).toBe("string");
+			expect(result!.length).toBeGreaterThan(0);
 		});
 	});
 
 	describe("No content lost", () => {
+		const exploreMirrors = getMirrorsForContext("explore", "relate") ?? "";
+		const amplifyMirrors = getMirrorsForContext("amplify", "relate") ?? "";
 		const allModules = [
 			CONVERSATION_MODE,
 			BELIEFS_IN_ACTION,
@@ -113,8 +117,8 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 			REFLECT,
 			THREADING,
 			OBSERVATION_QUALITY,
-			MIRRORS_EXPLORE,
-			MIRRORS_AMPLIFY,
+			exploreMirrors,
+			amplifyMirrors,
 		].join("\n");
 
 		it("contains CONVERSATION MODE frame", () => {
@@ -173,6 +177,8 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 	});
 
 	describe("Eliminated sections", () => {
+		const exploreMirrors2 = getMirrorsForContext("explore", "relate") ?? "";
+		const amplifyMirrors2 = getMirrorsForContext("amplify", "relate") ?? "";
 		const allModules = [
 			CONVERSATION_MODE,
 			BELIEFS_IN_ACTION,
@@ -185,8 +191,8 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 			REFLECT,
 			THREADING,
 			OBSERVATION_QUALITY,
-			MIRRORS_EXPLORE,
-			MIRRORS_AMPLIFY,
+			exploreMirrors2,
+			amplifyMirrors2,
 		].join("\n");
 
 		it("does not contain QUESTIONING STYLE as a standalone section header", () => {
@@ -213,7 +219,8 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 		});
 	});
 
-	describe("MIRRORS_EXPLORE — 13 mirrors", () => {
+	describe("Contextual mirrors — explore x relate includes all 13 mirrors", () => {
+		const exploreMirrors3 = getMirrorsForContext("explore", "relate");
 		const exploreExpected = [
 			"Hermit Crab",
 			"Ghost Net",
@@ -231,17 +238,15 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 		];
 
 		it("contains all 13 expected mirrors", () => {
+			expect(exploreMirrors3).not.toBeNull();
 			for (const mirror of exploreExpected) {
-				expect(MIRRORS_EXPLORE).toContain(mirror);
+				expect(exploreMirrors3).toContain(mirror);
 			}
-		});
-
-		it("contains territory bridge guidance", () => {
-			expect(MIRRORS_EXPLORE).toContain("TERRITORY BRIDGES");
 		});
 	});
 
-	describe("MIRRORS_AMPLIFY — 4 mirrors", () => {
+	describe("Contextual mirrors — amplify includes 4 mirrors", () => {
+		const amplifyMirrors3 = getMirrorsForContext("amplify", "relate");
 		const amplifyExpected = [
 			"Ghost Net",
 			"Mimic Octopus",
@@ -250,21 +255,21 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 		];
 
 		it("contains all 4 expected mirrors", () => {
+			expect(amplifyMirrors3).not.toBeNull();
 			for (const mirror of amplifyExpected) {
-				expect(MIRRORS_AMPLIFY).toContain(mirror);
+				expect(amplifyMirrors3).toContain(mirror);
 			}
 		});
 
 		it("does not contain mirrors exclusive to explore", () => {
-			// These 6 mirrors should NOT be in amplify
-			expect(MIRRORS_AMPLIFY).not.toContain("Hermit Crab");
-			expect(MIRRORS_AMPLIFY).not.toContain("Pilot Fish");
-			expect(MIRRORS_AMPLIFY).not.toContain("Clownfish");
-			expect(MIRRORS_AMPLIFY).not.toContain("Dolphin Echolocation");
-			expect(MIRRORS_AMPLIFY).not.toContain("Bioluminescence");
-			expect(MIRRORS_AMPLIFY).not.toContain("Parrotfish");
-			expect(MIRRORS_AMPLIFY).not.toContain("Sea Urchin");
-			expect(MIRRORS_AMPLIFY).not.toContain("Tide Pool");
+			expect(amplifyMirrors3).not.toContain("Hermit Crab");
+			expect(amplifyMirrors3).not.toContain("Pilot Fish");
+			expect(amplifyMirrors3).not.toContain("Clownfish");
+			expect(amplifyMirrors3).not.toContain("Dolphin Echolocation");
+			expect(amplifyMirrors3).not.toContain("Bioluminescence");
+			expect(amplifyMirrors3).not.toContain("Parrotfish");
+			expect(amplifyMirrors3).not.toContain("Sea Urchin");
+			expect(amplifyMirrors3).not.toContain("Tide Pool");
 		});
 	});
 
@@ -300,8 +305,10 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 			expect(nerinModules.REFLECT).toBe(REFLECT);
 			expect(nerinModules.THREADING).toBe(THREADING);
 			expect(nerinModules.OBSERVATION_QUALITY).toBe(OBSERVATION_QUALITY);
-			expect(nerinModules.MIRRORS_EXPLORE).toBe(MIRRORS_EXPLORE);
-			expect(nerinModules.MIRRORS_AMPLIFY).toBe(MIRRORS_AMPLIFY);
+		});
+
+		it("exports getMirrorsForContext from contextual mirrors", () => {
+			expect(nerinModules.getMirrorsForContext).toBe(getMirrorsForContext);
 		});
 	});
 });
