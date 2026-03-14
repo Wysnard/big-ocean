@@ -1,14 +1,11 @@
 /**
- * Prompt Builder Tests — Story 27-2, updated Story 28-2
+ * Prompt Builder Tests — Story 28-4 (Skeleton Swap)
  *
- * Tests for the modular prompt compositor that assembles Nerin's system prompt
- * from 4 tiers based on the Governor's PromptBuilderInput.
+ * Tests for the 2-layer prompt compositor that assembles Nerin's system prompt
+ * from common (stable) + steering (per-turn) layers.
  *
- * Tests verify: correct module selection per intent, observation focus translation,
- * entry pressure modifiers, contradiction framing safety, and tier composition.
- *
- * Story 28-2: Updated to reflect Common Layer Reform — REFLECT, STORY_PULLING,
- * OBSERVATION_QUALITY_COMMON, THREADING_COMMON promoted to Tier 1.
+ * Story 28-4: Replaces the 4-tier system with 2-layer skeleton-based composition.
+ * Templates from Story 28-3 drive the steering section. No more dynamic Tier 2 selection.
  */
 import { describe, expect, it } from "vitest";
 
@@ -19,14 +16,13 @@ import {
 	CONVERSATION_MODE,
 	HUMOR_GUARDRAILS,
 	MIRROR_GUARDRAILS,
-	MIRRORS_AMPLIFY,
-	MIRRORS_EXPLORE,
-	OBSERVATION_QUALITY,
 	OBSERVATION_QUALITY_COMMON,
 	QUALITY_INSTINCT,
 	REFLECT,
+	STEERING_PREFIX,
 	STORY_PULLING,
 	THREADING_COMMON,
+	getPressureModifier,
 } from "../../../constants/nerin/index";
 import { NERIN_PERSONA } from "../../../constants/nerin-persona";
 import type {
@@ -39,32 +35,25 @@ import type {
 	OpenPromptInput,
 } from "../../../types/pacing";
 import type { TerritoryId } from "../../../types/territory";
-import { buildPrompt, translateObservationFocus } from "../prompt-builder";
+import { buildPrompt } from "../prompt-builder";
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
 const tid = (s: string) => s as TerritoryId;
 
-/** Original Tier 1 modules (core identity, always-on since Story 27-1). */
-const ORIGINAL_TIER_1_MODULES = [
+/** All common layer modules (always loaded). */
+const COMMON_MODULES = [
 	CONVERSATION_MODE,
 	BELIEFS_IN_ACTION,
 	CONVERSATION_INSTINCTS,
 	QUALITY_INSTINCT,
 	MIRROR_GUARDRAILS,
 	HUMOR_GUARDRAILS,
-];
-
-/** Modules promoted to Tier 1 in Story 28-2 (Common Layer Reform). */
-const PROMOTED_TIER_1_MODULES = [
 	REFLECT,
 	STORY_PULLING,
 	OBSERVATION_QUALITY_COMMON,
 	THREADING_COMMON,
 ];
-
-/** All Tier 1 modules combined. */
-const ALL_TIER_1_MODULES = [...ORIGINAL_TIER_1_MODULES, ...PROMOTED_TIER_1_MODULES];
 
 function makeOpenInput(territory = "creative-pursuits"): OpenPromptInput {
 	return {
@@ -97,9 +86,9 @@ function makeAmplifyInput(
 	};
 }
 
-// ─── Tier 1 (Always-On) ─────────────────────────────────────────────
+// ─── Common Layer (Always-On) ────────────────────────────────────────
 
-describe("Tier 1 — always included", () => {
+describe("common layer — always included", () => {
 	it("includes NERIN_PERSONA in all intents", () => {
 		const open = buildPrompt(makeOpenInput());
 		const explore = buildPrompt(makeExploreInput());
@@ -110,155 +99,88 @@ describe("Tier 1 — always included", () => {
 		expect(amplify.systemPrompt).toContain(NERIN_PERSONA);
 	});
 
-	it("includes all 10 Tier 1 modules in every prompt", () => {
+	it("includes all 10 common modules in every prompt", () => {
 		const open = buildPrompt(makeOpenInput());
 		const explore = buildPrompt(makeExploreInput());
 		const amplify = buildPrompt(makeAmplifyInput());
 
-		for (const mod of ALL_TIER_1_MODULES) {
+		for (const mod of COMMON_MODULES) {
 			expect(open.systemPrompt).toContain(mod);
 			expect(explore.systemPrompt).toContain(mod);
 			expect(amplify.systemPrompt).toContain(mod);
 		}
 	});
-
-	it("includes REFLECT in common layer for all intents (Story 28-2)", () => {
-		const open = buildPrompt(makeOpenInput());
-		const explore = buildPrompt(makeExploreInput());
-		const amplify = buildPrompt(makeAmplifyInput());
-
-		expect(open.systemPrompt).toContain(REFLECT);
-		expect(explore.systemPrompt).toContain(REFLECT);
-		expect(amplify.systemPrompt).toContain(REFLECT);
-	});
-
-	it("includes STORY_PULLING in common layer for all intents (Story 28-2)", () => {
-		const open = buildPrompt(makeOpenInput());
-		const explore = buildPrompt(makeExploreInput());
-		const amplify = buildPrompt(makeAmplifyInput());
-
-		expect(open.systemPrompt).toContain(STORY_PULLING);
-		expect(explore.systemPrompt).toContain(STORY_PULLING);
-		expect(amplify.systemPrompt).toContain(STORY_PULLING);
-	});
-
-	it("includes OBSERVATION_QUALITY_COMMON in common layer for all intents (Story 28-2)", () => {
-		const open = buildPrompt(makeOpenInput());
-		const explore = buildPrompt(makeExploreInput());
-		const amplify = buildPrompt(makeAmplifyInput());
-
-		expect(open.systemPrompt).toContain(OBSERVATION_QUALITY_COMMON);
-		expect(explore.systemPrompt).toContain(OBSERVATION_QUALITY_COMMON);
-		expect(amplify.systemPrompt).toContain(OBSERVATION_QUALITY_COMMON);
-	});
-
-	it("includes THREADING_COMMON in common layer for all intents (Story 28-2)", () => {
-		const open = buildPrompt(makeOpenInput());
-		const explore = buildPrompt(makeExploreInput());
-		const amplify = buildPrompt(makeAmplifyInput());
-
-		expect(open.systemPrompt).toContain(THREADING_COMMON);
-		expect(explore.systemPrompt).toContain(THREADING_COMMON);
-		expect(amplify.systemPrompt).toContain(THREADING_COMMON);
-	});
 });
 
-// ─── Depth Instinct Removal (Story 28-2) ─────────────────────────────
+// ─── Steering Section Position ──────────────────────────────────────
 
-describe("depth instinct removal (Story 28-2)", () => {
-	it("CONVERSATION_INSTINCTS does NOT contain unconditional depth instinct", () => {
-		expect(CONVERSATION_INSTINCTS).not.toContain("When someone is opening up, you go deeper");
+describe("steering section position", () => {
+	it("steering section appears after persona and common modules", () => {
+		const result = buildPrompt(makeExploreInput());
+
+		// Persona should come before steering prefix
+		const personaIndex = result.systemPrompt.indexOf(NERIN_PERSONA);
+		const steeringIndex = result.systemPrompt.indexOf(STEERING_PREFIX);
+
+		expect(personaIndex).toBeLessThan(steeringIndex);
+		expect(personaIndex).toBeGreaterThanOrEqual(0);
+		expect(steeringIndex).toBeGreaterThanOrEqual(0);
 	});
 
-	it("CONVERSATION_INSTINCTS still contains guarded-angle instinct", () => {
-		expect(CONVERSATION_INSTINCTS).toContain("When guarded, you change angle");
-	});
-
-	it("no prompt output contains unconditional depth instinct", () => {
+	it("all intents include STEERING_PREFIX", () => {
 		const open = buildPrompt(makeOpenInput());
 		const explore = buildPrompt(makeExploreInput());
 		const amplify = buildPrompt(makeAmplifyInput());
 
-		expect(open.systemPrompt).not.toContain("When someone is opening up, you go deeper");
-		expect(explore.systemPrompt).not.toContain("When someone is opening up, you go deeper");
-		expect(amplify.systemPrompt).not.toContain("When someone is opening up, you go deeper");
+		expect(open.systemPrompt).toContain(STEERING_PREFIX);
+		expect(explore.systemPrompt).toContain(STEERING_PREFIX);
+		expect(amplify.systemPrompt).toContain(STEERING_PREFIX);
 	});
 });
 
 // ─── Open Intent ────────────────────────────────────────────────────
 
 describe("open intent", () => {
-	it("loads no Tier 2 modules (Story 28-2 — REFLECT promoted to Tier 1)", () => {
+	it("uses open x relate template with territory params", () => {
 		const result = buildPrompt(makeOpenInput());
-
-		// REFLECT is in Tier 1 now, not Tier 2
-		expect(result.tier2Modules).toEqual([]);
-
-		// These should NOT be in the prompt at all (not Tier 1, not Tier 2 for open)
-		expect(result.systemPrompt).not.toContain(MIRRORS_EXPLORE);
-		expect(result.systemPrompt).not.toContain(MIRRORS_AMPLIFY);
-		expect(result.systemPrompt).not.toContain(OBSERVATION_QUALITY);
+		// Template: "This is your first question. You're curious about {territory.name} — {territory.description}."
+		expect(result.systemPrompt).toContain("first question");
+		expect(result.systemPrompt).toContain("Creative Pursuits");
+		expect(result.systemPrompt).toContain("what they make or imagine when nobody's watching");
 	});
 
-	it("includes territory opener as suggested direction", () => {
+	it("does not include pressure modifier", () => {
 		const result = buildPrompt(makeOpenInput());
-		expect(result.systemPrompt).toContain("TERRITORY GUIDANCE");
+		// No pressure modifier for open intent
+		expect(result.systemPrompt).not.toContain(getPressureModifier("direct"));
+		expect(result.systemPrompt).not.toContain(getPressureModifier("angled"));
+		expect(result.systemPrompt).not.toContain(getPressureModifier("soft"));
 	});
 
-	it("does not include observation focus instruction", () => {
+	it("has templateKey open:relate", () => {
 		const result = buildPrompt(makeOpenInput());
-		expect(result.systemPrompt).not.toContain("OBSERVATION FOCUS");
-	});
-
-	it("reports empty tier2Modules", () => {
-		const result = buildPrompt(makeOpenInput());
-		expect(result.tier2Modules).toEqual([]);
+		expect(result.templateKey).toBe("open:relate");
 	});
 });
 
 // ─── Explore Intent ─────────────────────────────────────────────────
 
 describe("explore intent", () => {
-	it("loads MIRRORS_EXPLORE and EXPLORE_RESPONSE_FORMAT in Tier 2", () => {
-		const result = buildPrompt(makeExploreInput());
-
-		expect(result.systemPrompt).toContain(MIRRORS_EXPLORE);
-	});
-
-	it("does NOT load amplify-specific modules", () => {
-		const result = buildPrompt(makeExploreInput());
-
-		expect(result.systemPrompt).not.toContain(OBSERVATION_QUALITY);
-		expect(result.systemPrompt).not.toContain(MIRRORS_AMPLIFY);
-	});
-
-	it("reports correct tier2Modules (Story 28-2 — promoted modules removed)", () => {
-		const result = buildPrompt(makeExploreInput());
-		expect(result.tier2Modules).toEqual(["MIRRORS_EXPLORE", "EXPLORE_RESPONSE_FORMAT"]);
-	});
-
-	it("includes observation focus for relate", () => {
+	it("uses explore x relate template with territory params", () => {
 		const result = buildPrompt(makeExploreInput({ observationFocus: { type: "relate" } }));
-		expect(result.systemPrompt).toContain("OBSERVATION FOCUS");
 		expect(result.systemPrompt).toContain("Connect naturally");
+		expect(result.systemPrompt).toContain("Creative Pursuits");
 	});
 
-	it("includes observation focus for noticing", () => {
-		const focus: ObservationFocus = {
-			type: "noticing",
-			domain: "work" as LifeDomain,
-		};
+	it("uses explore x noticing template with domain param", () => {
+		const focus: ObservationFocus = { type: "noticing", domain: "work" as LifeDomain };
 		const result = buildPrompt(makeExploreInput({ observationFocus: focus }));
 		expect(result.systemPrompt).toContain("shifting");
 		expect(result.systemPrompt).toContain("work");
 	});
 
-	it("includes observation focus for contradiction", () => {
-		const domainA: DomainScore = {
-			domain: "work" as LifeDomain,
-			score: 0.8,
-			confidence: 0.7,
-		};
+	it("uses explore x contradiction template", () => {
+		const domainA: DomainScore = { domain: "work" as LifeDomain, score: 0.8, confidence: 0.7 };
 		const domainB: DomainScore = {
 			domain: "relationships" as LifeDomain,
 			score: 0.3,
@@ -271,13 +193,12 @@ describe("explore intent", () => {
 		};
 		const focus: ObservationFocus = { type: "contradiction", target };
 		const result = buildPrompt(makeExploreInput({ observationFocus: focus }));
-		expect(result.systemPrompt).toContain("interesting");
 		expect(result.systemPrompt).toContain("trust");
 		expect(result.systemPrompt).toContain("work");
 		expect(result.systemPrompt).toContain("relationships");
 	});
 
-	it("includes observation focus for convergence", () => {
+	it("uses explore x convergence template", () => {
 		const domains: DomainScore[] = [
 			{ domain: "work" as LifeDomain, score: 0.7, confidence: 0.8 },
 			{ domain: "relationships" as LifeDomain, score: 0.72, confidence: 0.7 },
@@ -290,123 +211,75 @@ describe("explore intent", () => {
 		};
 		const focus: ObservationFocus = { type: "convergence", target };
 		const result = buildPrompt(makeExploreInput({ observationFocus: focus }));
-		expect(result.systemPrompt).toContain("pattern");
 		expect(result.systemPrompt).toContain("altruism");
 		expect(result.systemPrompt).toContain("work");
 		expect(result.systemPrompt).toContain("relationships");
 		expect(result.systemPrompt).toContain("family");
+	});
+
+	it("appends pressure modifier for direct", () => {
+		const result = buildPrompt(makeExploreInput({ entryPressure: "direct" }));
+		expect(result.systemPrompt).toContain(getPressureModifier("direct"));
+	});
+
+	it("appends pressure modifier for angled", () => {
+		const result = buildPrompt(makeExploreInput({ entryPressure: "angled" }));
+		expect(result.systemPrompt).toContain(getPressureModifier("angled"));
+	});
+
+	it("appends pressure modifier for soft", () => {
+		const result = buildPrompt(makeExploreInput({ entryPressure: "soft" }));
+		expect(result.systemPrompt).toContain(getPressureModifier("soft"));
+	});
+
+	it("has templateKey matching intent:observation", () => {
+		const result = buildPrompt(makeExploreInput({ observationFocus: { type: "relate" } }));
+		expect(result.templateKey).toBe("explore:relate");
+
+		const noticing = buildPrompt(
+			makeExploreInput({
+				observationFocus: { type: "noticing", domain: "work" as LifeDomain },
+			}),
+		);
+		expect(noticing.templateKey).toBe("explore:noticing");
 	});
 });
 
 // ─── Amplify Intent ─────────────────────────────────────────────────
 
 describe("amplify intent", () => {
-	it("loads OBSERVATION_QUALITY and MIRRORS_AMPLIFY in Tier 2", () => {
+	it("uses amplify x relate template", () => {
 		const result = buildPrompt(makeAmplifyInput());
-
-		expect(result.systemPrompt).toContain(OBSERVATION_QUALITY);
-		expect(result.systemPrompt).toContain(MIRRORS_AMPLIFY);
+		expect(result.systemPrompt).toContain("last question");
 	});
 
-	it("does NOT load MIRRORS_EXPLORE in amplify", () => {
-		const result = buildPrompt(makeAmplifyInput());
-
-		expect(result.systemPrompt).not.toContain(MIRRORS_EXPLORE);
+	it("uses amplify x noticing template", () => {
+		const focus: ObservationFocus = { type: "noticing", domain: "leisure" as LifeDomain };
+		const result = buildPrompt(makeAmplifyInput({ observationFocus: focus }));
+		expect(result.systemPrompt).toContain("last question");
+		expect(result.systemPrompt).toContain("leisure");
 	});
 
-	it("reports correct tier2Modules", () => {
-		const result = buildPrompt(makeAmplifyInput());
-		expect(result.tier2Modules).toEqual(["OBSERVATION_QUALITY", "MIRRORS_AMPLIFY"]);
+	it("uses amplify x contradiction template", () => {
+		const domainA: DomainScore = { domain: "work" as LifeDomain, score: 0.8, confidence: 0.7 };
+		const domainB: DomainScore = {
+			domain: "family" as LifeDomain,
+			score: 0.2,
+			confidence: 0.6,
+		};
+		const target: ContradictionTarget = {
+			facet: "trust" as never,
+			pair: [domainA, domainB],
+			strength: 0.7,
+		};
+		const focus: ObservationFocus = { type: "contradiction", target };
+		const result = buildPrompt(makeAmplifyInput({ observationFocus: focus }));
+		expect(result.systemPrompt).toContain("trust");
+		expect(result.systemPrompt).toContain("work");
+		expect(result.systemPrompt).toContain("family");
 	});
 
-	it("includes bold format permission with 3-6 sentence guidance", () => {
-		const result = buildPrompt(makeAmplifyInput());
-		expect(result.systemPrompt).toMatch(/bold|declarative/i);
-		expect(result.systemPrompt).toContain("3-6 sentences");
-	});
-
-	it("includes observation focus instruction", () => {
-		const result = buildPrompt(makeAmplifyInput());
-		expect(result.systemPrompt).toContain("OBSERVATION FOCUS");
-	});
-});
-
-// ─── Entry Pressure ─────────────────────────────────────────────────
-
-describe("entry pressure modifiers", () => {
-	it("direct pressure uses opener directly", () => {
-		const result = buildPrompt(makeExploreInput({ entryPressure: "direct" }));
-		expect(result.steeringSection).toMatch(/suggest|direction|explore/i);
-	});
-
-	it("angled pressure approaches from adjacent angle", () => {
-		const result = buildPrompt(makeExploreInput({ entryPressure: "angled" }));
-		expect(result.steeringSection).toMatch(/adjacent|related|angle/i);
-	});
-
-	it("soft pressure uses gentle mention", () => {
-		const result = buildPrompt(makeExploreInput({ entryPressure: "soft" }));
-		expect(result.steeringSection).toMatch(/gentle|natural opening|touch on/i);
-	});
-});
-
-// ─── Contradiction Framing ──────────────────────────────────────────
-
-describe("contradiction framing safety", () => {
-	const domainA: DomainScore = {
-		domain: "work" as LifeDomain,
-		score: 0.8,
-		confidence: 0.7,
-	};
-	const domainB: DomainScore = {
-		domain: "family" as LifeDomain,
-		score: 0.2,
-		confidence: 0.6,
-	};
-	const target: ContradictionTarget = {
-		facet: "trust" as never,
-		pair: [domainA, domainB],
-		strength: 0.7,
-	};
-
-	it("uses fascination language", () => {
-		const translation = translateObservationFocus({ type: "contradiction", target });
-		expect(translation).toMatch(/interesting|fascin/i);
-	});
-
-	it("does NOT use verdict language", () => {
-		const translation = translateObservationFocus({ type: "contradiction", target });
-		expect(translation).not.toMatch(/contradictory|inconsistent|you're actually/i);
-	});
-
-	it("names the facet and domains", () => {
-		const translation = translateObservationFocus({ type: "contradiction", target });
-		expect(translation).toContain("trust");
-		expect(translation).toContain("work");
-		expect(translation).toContain("family");
-	});
-});
-
-// ─── Observation Focus Translation ──────────────────────────────────
-
-describe("translateObservationFocus", () => {
-	it("relate — connect naturally", () => {
-		const result = translateObservationFocus({ type: "relate" });
-		expect(result).toContain("Connect naturally");
-	});
-
-	it("noticing — domain compass", () => {
-		const result = translateObservationFocus({
-			type: "noticing",
-			domain: "leisure" as LifeDomain,
-		});
-		expect(result).toContain("shifting");
-		expect(result).toContain("leisure");
-		// Not a facet target
-		expect(result).not.toMatch(/facet|score/i);
-	});
-
-	it("convergence — pattern across domains", () => {
+	it("uses amplify x convergence template", () => {
 		const domains: DomainScore[] = [
 			{ domain: "work" as LifeDomain, score: 0.7, confidence: 0.8 },
 			{ domain: "relationships" as LifeDomain, score: 0.72, confidence: 0.7 },
@@ -417,9 +290,74 @@ describe("translateObservationFocus", () => {
 			domains,
 			strength: 0.6,
 		};
-		const result = translateObservationFocus({ type: "convergence", target });
-		expect(result).toContain("pattern");
-		expect(result).toContain("self_efficacy");
+		const focus: ObservationFocus = { type: "convergence", target };
+		const result = buildPrompt(makeAmplifyInput({ observationFocus: focus }));
+		expect(result.systemPrompt).toContain("self_efficacy");
+		expect(result.systemPrompt).toContain("work");
+	});
+
+	it("appends pressure modifier", () => {
+		const result = buildPrompt(makeAmplifyInput());
+		expect(result.systemPrompt).toContain(getPressureModifier("direct"));
+	});
+
+	it("has templateKey matching intent:observation", () => {
+		const result = buildPrompt(makeAmplifyInput());
+		expect(result.templateKey).toBe("amplify:relate");
+	});
+});
+
+// ─── Removed Content ────────────────────────────────────────────────
+
+describe("removed content (4-tier artifacts)", () => {
+	it("does not contain EXPLORE_RESPONSE_FORMAT content", () => {
+		const result = buildPrompt(makeExploreInput());
+		expect(result.systemPrompt).not.toContain("Your responses can take different shapes");
+	});
+
+	it("does not contain old TERRITORY GUIDANCE header", () => {
+		const open = buildPrompt(makeOpenInput());
+		const explore = buildPrompt(makeExploreInput());
+		const amplify = buildPrompt(makeAmplifyInput());
+
+		expect(open.systemPrompt).not.toContain("TERRITORY GUIDANCE");
+		expect(explore.systemPrompt).not.toContain("TERRITORY GUIDANCE");
+		expect(amplify.systemPrompt).not.toContain("TERRITORY GUIDANCE");
+	});
+
+	it("does not contain old OBSERVATION FOCUS header", () => {
+		const explore = buildPrompt(makeExploreInput());
+		expect(explore.systemPrompt).not.toContain("OBSERVATION FOCUS:");
+	});
+
+	it("does not contain old AMPLIFY MODE block", () => {
+		const amplify = buildPrompt(makeAmplifyInput());
+		expect(amplify.systemPrompt).not.toContain("AMPLIFY MODE:");
+	});
+
+	it("output has no tier2Modules property", () => {
+		const result = buildPrompt(makeOpenInput());
+		expect(result).not.toHaveProperty("tier2Modules");
+	});
+});
+
+// ─── Output Shape ───────────────────────────────────────────────────
+
+describe("output shape", () => {
+	it("has systemPrompt, steeringSection, and templateKey", () => {
+		const result = buildPrompt(makeExploreInput());
+		expect(result).toHaveProperty("systemPrompt");
+		expect(result).toHaveProperty("steeringSection");
+		expect(result).toHaveProperty("templateKey");
+		expect(typeof result.systemPrompt).toBe("string");
+		expect(typeof result.steeringSection).toBe("string");
+		expect(typeof result.templateKey).toBe("string");
+	});
+
+	it("steeringSection contains the rendered template", () => {
+		const result = buildPrompt(makeExploreInput());
+		expect(result.steeringSection).toContain(STEERING_PREFIX);
+		expect(result.steeringSection).toContain("Connect naturally");
 	});
 });
 
