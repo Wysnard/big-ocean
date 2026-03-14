@@ -480,7 +480,7 @@ development_status:
   28-1-territory-catalog-enrichment: done
   28-2-common-layer-reform: done
   28-3-intent-observation-templates-and-pressure-modifiers: done
-  28-4-prompt-builder-skeleton-swap: backlog
+  28-4-prompt-builder-skeleton-swap: pr-ready
   epic-28-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────

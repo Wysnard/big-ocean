@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 8
-parallelism_step_name: "Skeleton Templates"
-baseline_commit: "1cd628e1760b6d13c9c15cf5f9c892020e3fdbb6"
+parallelism_step: 9
+parallelism_step_name: "Prompt Builder Swap — THE BEHAVIOR CHANGE"
+baseline_commit: "030ed0cdc97632cbb9cb800e2ee8a6ffe26e82bd"
 created: "2026-03-14"
-last_updated: "2026-03-14T15"
+last_updated: "2026-03-14"
 
 # Optional context documents discovered
 context_docs:
@@ -14,10 +14,10 @@ context_docs:
 
 # Stories in this step
 stories:
-  28-3-intent-observation-templates-and-pressure-modifiers:
+  28-4-prompt-builder-skeleton-swap:
     status: done
     mode: "single"
-    notes: "Creates 9 templates + 3 pressure modifiers as new constants"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/137"
-    dev_branch: "feat/story-28-3-intent-observation-templates-and-pressure-modifiers"
+    notes: "Replaces 4-tier with 2-layer; promotes steering; desire framing. This is where Nerin's behavior changes."
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/138"
+    dev_branch: "feat/story-28-4-prompt-builder-skeleton-swap"
     error: null
