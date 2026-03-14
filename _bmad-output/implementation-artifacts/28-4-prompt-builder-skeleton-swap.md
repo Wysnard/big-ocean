@@ -109,3 +109,33 @@ Rewrite all tests to verify the new 2-layer structure:
 - The prompt builder is a pure function with no Effect dependencies
 - MIRRORS_EXPLORE, MIRRORS_AMPLIFY, and OBSERVATION_QUALITY remain as constants — they are not loaded by the new prompt builder but will be cleaned up in Story 2.3/2.4
 - The `translateObservationFocus` function is currently exported and may be used elsewhere — check for usages before removing
+
+## Architect Notes
+
+### Finding 1: `tier2Modules` used in nerin-pipeline logging (Critical)
+
+`apps/api/src/use-cases/nerin-pipeline.ts` line 499 references `promptResult.tier2Modules` in a structured log statement. Removing this field from `PromptBuilderOutput` will cause a compile-time error.
+
+**Resolution:** Replace `tier2Modules` in `PromptBuilderOutput` with a `templateKey` field (e.g., `"open:relate"`, `"explore:noticing"`) that provides equivalent debugging info for the new system. Update the nerin-pipeline.ts log call to use `templateKey` instead of `tier2Modules`.
+
+**Files to modify:**
+- `packages/domain/src/utils/steering/prompt-builder.ts` — add `templateKey` to output
+- `apps/api/src/use-cases/nerin-pipeline.ts` — change `tier2Modules: promptResult.tier2Modules` to `templateKey: promptResult.templateKey`
+
+### Finding 2: `translateObservationFocus` exported from index files (Major)
+
+`translateObservationFocus` is re-exported from:
+- `packages/domain/src/utils/steering/index.ts`
+- `packages/domain/src/index.ts`
+
+No external consumers exist (only prompt-builder.ts and its test). Safe to remove, but must update both re-export files.
+
+**Files to modify:**
+- `packages/domain/src/utils/steering/index.ts` — remove `translateObservationFocus` export
+- `packages/domain/src/index.ts` — remove `translateObservationFocus` export
+
+### Finding 3: Mirror modules dropped from prompt (Major)
+
+MIRRORS_EXPLORE and MIRRORS_AMPLIFY are currently loaded as Tier 2 modules. The new 2-layer system has no Tier 2 mechanism. These modules should be dropped from prompt output in this story — Story 2.3 (Contextual Mirror System) will re-add them via the intent x observation mirror lookup table. The mirror guardrails constant (MIRROR_GUARDRAILS) remains in common layer.
+
+No code changes needed beyond removing the Tier 2 loading — this is by design.
