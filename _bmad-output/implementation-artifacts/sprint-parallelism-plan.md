@@ -4,7 +4,7 @@ Generated: 2026-03-14
 > Epic 6 (Privacy/GDPR) excluded — deferred to Phase 2 EU launch.
 > Epic 20 (Evidence Review) deferred — evidence already has messageId FK.
 > Phases 1-5 complete. Phase 6 (Nerin Steering Format Overhaul) in progress.
-> Steps 1-7 complete. Step 8 next.
+> Steps 1-8 complete. Step 9 next.
 
 ## ~~Step 1: Foundation Layer (Epic 23)~~ DONE
 All 3 stories merged: 23-1, 23-2, 23-3 (PRs #121, #122, #123).
@@ -27,15 +27,8 @@ Story 27-3 merged (PR #134). Phase 5 complete.
 ## ~~Step 7: Steering Format Foundation (Epic 28)~~ DONE
 Both stories merged: 28-1 (PR #135), 28-2 (PR #136).
 
-## Step 8: Skeleton Templates
-| Story | Mode | Status | Notes |
-|-------|------|--------|-------|
-| 28-3-intent-observation-templates-and-pressure-modifiers | single | **backlog** | Creates 9 templates + 3 pressure modifiers as new constants |
-
-**Gate:** Story above must be done before proceeding.
-
-**Conflict Notes:**
-- Creates new files in domain/src/constants/nerin/ — no conflicts with existing code
+## ~~Step 8: Skeleton Templates~~ DONE
+Story 28-3 merged (PR #137).
 
 ## Step 9: Prompt Builder Swap — THE BEHAVIOR CHANGE
 | Story | Mode | Status | Notes |
@@ -81,7 +74,7 @@ Both stories merged: 28-1 (PR #135), 28-2 (PR #136).
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **Phase 6:** 6 stories remaining across 2 epics (28, 29) — all backlog
-- **4 remaining steps** (Steps 8-11) to deliver Phase 6 Nerin Steering Format
+- **Phase 6:** 5 stories remaining across 2 epics (28, 29) — all backlog
+- **3 remaining steps** (Steps 9-11) to deliver Phase 6 Nerin Steering Format
 - **Parallelism opportunities:** Steps 10 and 11 have parallel stories
-- **Critical path:** 28-3 → 28-4 → 29-1+29-2 → 29-3+29-4
+- **Critical path:** 28-4 → 29-1+29-2 → 29-3+29-4
