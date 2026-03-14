@@ -25,9 +25,31 @@ export { MIRRORS_AMPLIFY } from "./mirrors-amplify";
 export { MIRRORS_EXPLORE } from "./mirrors-explore";
 export { OBSERVATION_QUALITY } from "./observation-quality";
 export { OBSERVATION_QUALITY_COMMON } from "./observation-quality-common";
+// Pressure modifiers — entry pressure language (Story 28-3)
+export {
+	getPressureModifier,
+	PRESSURE_ANGLED,
+	PRESSURE_DIRECT,
+	PRESSURE_SOFT,
+} from "./pressure-modifiers";
 export { QUALITY_INSTINCT } from "./quality-instinct";
 export { REFLECT } from "./reflect";
 export { STORY_PULLING } from "./story-pulling";
+// Intent x observation steering templates (Story 28-3)
+export {
+	AMPLIFY_CONTRADICTION_TEMPLATE,
+	AMPLIFY_CONVERGENCE_TEMPLATE,
+	AMPLIFY_NOTICING_TEMPLATE,
+	AMPLIFY_RELATE_TEMPLATE,
+	EXPLORE_CONTRADICTION_TEMPLATE,
+	EXPLORE_CONVERGENCE_TEMPLATE,
+	EXPLORE_NOTICING_TEMPLATE,
+	EXPLORE_RELATE_TEMPLATE,
+	OPEN_RELATE_TEMPLATE,
+	renderSteeringTemplate,
+	renderTemplate,
+	STEERING_PREFIX,
+} from "./steering-templates";
 // Tier 2 — Intent-Contextual
 export { THREADING } from "./threading";
 export { THREADING_COMMON } from "./threading-common";
