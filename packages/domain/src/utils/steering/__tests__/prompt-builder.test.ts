@@ -1,11 +1,14 @@
 /**
- * Prompt Builder Tests — Story 27-2
+ * Prompt Builder Tests — Story 27-2, updated Story 28-2
  *
  * Tests for the modular prompt compositor that assembles Nerin's system prompt
  * from 4 tiers based on the Governor's PromptBuilderInput.
  *
  * Tests verify: correct module selection per intent, observation focus translation,
  * entry pressure modifiers, contradiction framing safety, and tier composition.
+ *
+ * Story 28-2: Updated to reflect Common Layer Reform — REFLECT, STORY_PULLING,
+ * OBSERVATION_QUALITY_COMMON, THREADING_COMMON promoted to Tier 1.
  */
 import { describe, expect, it } from "vitest";
 
@@ -19,10 +22,11 @@ import {
 	MIRRORS_AMPLIFY,
 	MIRRORS_EXPLORE,
 	OBSERVATION_QUALITY,
+	OBSERVATION_QUALITY_COMMON,
 	QUALITY_INSTINCT,
 	REFLECT,
 	STORY_PULLING,
-	THREADING,
+	THREADING_COMMON,
 } from "../../../constants/nerin/index";
 import { NERIN_PERSONA } from "../../../constants/nerin-persona";
 import type {
@@ -41,7 +45,8 @@ import { buildPrompt, translateObservationFocus } from "../prompt-builder";
 
 const tid = (s: string) => s as TerritoryId;
 
-const TIER_1_MODULES = [
+/** Original Tier 1 modules (core identity, always-on since Story 27-1). */
+const ORIGINAL_TIER_1_MODULES = [
 	CONVERSATION_MODE,
 	BELIEFS_IN_ACTION,
 	CONVERSATION_INSTINCTS,
@@ -49,6 +54,17 @@ const TIER_1_MODULES = [
 	MIRROR_GUARDRAILS,
 	HUMOR_GUARDRAILS,
 ];
+
+/** Modules promoted to Tier 1 in Story 28-2 (Common Layer Reform). */
+const PROMOTED_TIER_1_MODULES = [
+	REFLECT,
+	STORY_PULLING,
+	OBSERVATION_QUALITY_COMMON,
+	THREADING_COMMON,
+];
+
+/** All Tier 1 modules combined. */
+const ALL_TIER_1_MODULES = [...ORIGINAL_TIER_1_MODULES, ...PROMOTED_TIER_1_MODULES];
 
 function makeOpenInput(territory = "creative-pursuits"): OpenPromptInput {
 	return {
@@ -94,28 +110,91 @@ describe("Tier 1 — always included", () => {
 		expect(amplify.systemPrompt).toContain(NERIN_PERSONA);
 	});
 
-	it("includes all 6 core identity modules in every prompt", () => {
+	it("includes all 10 Tier 1 modules in every prompt", () => {
 		const open = buildPrompt(makeOpenInput());
 		const explore = buildPrompt(makeExploreInput());
 		const amplify = buildPrompt(makeAmplifyInput());
 
-		for (const mod of TIER_1_MODULES) {
+		for (const mod of ALL_TIER_1_MODULES) {
 			expect(open.systemPrompt).toContain(mod);
 			expect(explore.systemPrompt).toContain(mod);
 			expect(amplify.systemPrompt).toContain(mod);
 		}
+	});
+
+	it("includes REFLECT in common layer for all intents (Story 28-2)", () => {
+		const open = buildPrompt(makeOpenInput());
+		const explore = buildPrompt(makeExploreInput());
+		const amplify = buildPrompt(makeAmplifyInput());
+
+		expect(open.systemPrompt).toContain(REFLECT);
+		expect(explore.systemPrompt).toContain(REFLECT);
+		expect(amplify.systemPrompt).toContain(REFLECT);
+	});
+
+	it("includes STORY_PULLING in common layer for all intents (Story 28-2)", () => {
+		const open = buildPrompt(makeOpenInput());
+		const explore = buildPrompt(makeExploreInput());
+		const amplify = buildPrompt(makeAmplifyInput());
+
+		expect(open.systemPrompt).toContain(STORY_PULLING);
+		expect(explore.systemPrompt).toContain(STORY_PULLING);
+		expect(amplify.systemPrompt).toContain(STORY_PULLING);
+	});
+
+	it("includes OBSERVATION_QUALITY_COMMON in common layer for all intents (Story 28-2)", () => {
+		const open = buildPrompt(makeOpenInput());
+		const explore = buildPrompt(makeExploreInput());
+		const amplify = buildPrompt(makeAmplifyInput());
+
+		expect(open.systemPrompt).toContain(OBSERVATION_QUALITY_COMMON);
+		expect(explore.systemPrompt).toContain(OBSERVATION_QUALITY_COMMON);
+		expect(amplify.systemPrompt).toContain(OBSERVATION_QUALITY_COMMON);
+	});
+
+	it("includes THREADING_COMMON in common layer for all intents (Story 28-2)", () => {
+		const open = buildPrompt(makeOpenInput());
+		const explore = buildPrompt(makeExploreInput());
+		const amplify = buildPrompt(makeAmplifyInput());
+
+		expect(open.systemPrompt).toContain(THREADING_COMMON);
+		expect(explore.systemPrompt).toContain(THREADING_COMMON);
+		expect(amplify.systemPrompt).toContain(THREADING_COMMON);
+	});
+});
+
+// ─── Depth Instinct Removal (Story 28-2) ─────────────────────────────
+
+describe("depth instinct removal (Story 28-2)", () => {
+	it("CONVERSATION_INSTINCTS does NOT contain unconditional depth instinct", () => {
+		expect(CONVERSATION_INSTINCTS).not.toContain("When someone is opening up, you go deeper");
+	});
+
+	it("CONVERSATION_INSTINCTS still contains guarded-angle instinct", () => {
+		expect(CONVERSATION_INSTINCTS).toContain("When guarded, you change angle");
+	});
+
+	it("no prompt output contains unconditional depth instinct", () => {
+		const open = buildPrompt(makeOpenInput());
+		const explore = buildPrompt(makeExploreInput());
+		const amplify = buildPrompt(makeAmplifyInput());
+
+		expect(open.systemPrompt).not.toContain("When someone is opening up, you go deeper");
+		expect(explore.systemPrompt).not.toContain("When someone is opening up, you go deeper");
+		expect(amplify.systemPrompt).not.toContain("When someone is opening up, you go deeper");
 	});
 });
 
 // ─── Open Intent ────────────────────────────────────────────────────
 
 describe("open intent", () => {
-	it("loads only REFLECT in Tier 2", () => {
+	it("loads no Tier 2 modules (Story 28-2 — REFLECT promoted to Tier 1)", () => {
 		const result = buildPrompt(makeOpenInput());
 
-		expect(result.systemPrompt).toContain(REFLECT);
-		expect(result.systemPrompt).not.toContain(STORY_PULLING);
-		expect(result.systemPrompt).not.toContain(THREADING);
+		// REFLECT is in Tier 1 now, not Tier 2
+		expect(result.tier2Modules).toEqual([]);
+
+		// These should NOT be in the prompt at all (not Tier 1, not Tier 2 for open)
 		expect(result.systemPrompt).not.toContain(MIRRORS_EXPLORE);
 		expect(result.systemPrompt).not.toContain(MIRRORS_AMPLIFY);
 		expect(result.systemPrompt).not.toContain(OBSERVATION_QUALITY);
@@ -123,7 +202,6 @@ describe("open intent", () => {
 
 	it("includes territory opener as suggested direction", () => {
 		const result = buildPrompt(makeOpenInput());
-		// Should contain the territory opener text
 		expect(result.systemPrompt).toContain("TERRITORY GUIDANCE");
 	});
 
@@ -132,21 +210,18 @@ describe("open intent", () => {
 		expect(result.systemPrompt).not.toContain("OBSERVATION FOCUS");
 	});
 
-	it("reports correct tier2Modules", () => {
+	it("reports empty tier2Modules", () => {
 		const result = buildPrompt(makeOpenInput());
-		expect(result.tier2Modules).toEqual(["REFLECT"]);
+		expect(result.tier2Modules).toEqual([]);
 	});
 });
 
 // ─── Explore Intent ─────────────────────────────────────────────────
 
 describe("explore intent", () => {
-	it("loads STORY_PULLING, REFLECT, THREADING, MIRRORS_EXPLORE in Tier 2", () => {
+	it("loads MIRRORS_EXPLORE and EXPLORE_RESPONSE_FORMAT in Tier 2", () => {
 		const result = buildPrompt(makeExploreInput());
 
-		expect(result.systemPrompt).toContain(STORY_PULLING);
-		expect(result.systemPrompt).toContain(REFLECT);
-		expect(result.systemPrompt).toContain(THREADING);
 		expect(result.systemPrompt).toContain(MIRRORS_EXPLORE);
 	});
 
@@ -157,15 +232,9 @@ describe("explore intent", () => {
 		expect(result.systemPrompt).not.toContain(MIRRORS_AMPLIFY);
 	});
 
-	it("reports correct tier2Modules", () => {
+	it("reports correct tier2Modules (Story 28-2 — promoted modules removed)", () => {
 		const result = buildPrompt(makeExploreInput());
-		expect(result.tier2Modules).toEqual([
-			"STORY_PULLING",
-			"REFLECT",
-			"THREADING",
-			"MIRRORS_EXPLORE",
-			"EXPLORE_RESPONSE_FORMAT",
-		]);
+		expect(result.tier2Modules).toEqual(["MIRRORS_EXPLORE", "EXPLORE_RESPONSE_FORMAT"]);
 	});
 
 	it("includes observation focus for relate", () => {
@@ -239,11 +308,9 @@ describe("amplify intent", () => {
 		expect(result.systemPrompt).toContain(MIRRORS_AMPLIFY);
 	});
 
-	it("does NOT load STORY_PULLING, THREADING, or MIRRORS_EXPLORE", () => {
+	it("does NOT load MIRRORS_EXPLORE in amplify", () => {
 		const result = buildPrompt(makeAmplifyInput());
 
-		expect(result.systemPrompt).not.toContain(STORY_PULLING);
-		expect(result.systemPrompt).not.toContain(THREADING);
 		expect(result.systemPrompt).not.toContain(MIRRORS_EXPLORE);
 	});
 

@@ -1,12 +1,13 @@
 /**
- * Prompt Builder — Story 27-2
+ * Prompt Builder — Story 27-2, updated Story 28-2
  *
  * Deterministic prompt compositor that assembles Nerin's system prompt
  * from modular tiers based on the Governor's PromptBuilderInput.
  *
  * 4-tier composition:
  * 1. NERIN_PERSONA — universal identity
- * 2. Core identity modules (Tier 1 — always included)
+ * 2. Core identity modules (Tier 1 — always included, includes REFLECT,
+ *    STORY_PULLING, OBSERVATION_QUALITY_COMMON, THREADING_COMMON per Story 28-2)
  * 3. Question modules (Tier 2 — included/excluded per intent)
  * 4. Steering section (per-turn — territory + observation focus)
  *
@@ -24,10 +25,11 @@ import {
 	MIRRORS_AMPLIFY,
 	MIRRORS_EXPLORE,
 	OBSERVATION_QUALITY,
+	OBSERVATION_QUALITY_COMMON,
 	QUALITY_INSTINCT,
 	REFLECT,
 	STORY_PULLING,
-	THREADING,
+	THREADING_COMMON,
 } from "../../constants/nerin/index";
 import { NERIN_PERSONA } from "../../constants/nerin-persona";
 import { TERRITORY_CATALOG } from "../../constants/territory-catalog";
@@ -47,7 +49,9 @@ export interface PromptBuilderOutput {
 
 // ─── Tier 1 Assembly ────────────────────────────────────────────────
 
-/** All Tier 1 (always-on) modules in canonical order. */
+/** All Tier 1 (always-on) modules in canonical order.
+ * Story 28-2: Added REFLECT, STORY_PULLING, OBSERVATION_QUALITY_COMMON,
+ * THREADING_COMMON — promoted from Tier 2 to common layer. */
 const TIER_1_MODULES = [
 	CONVERSATION_MODE,
 	BELIEFS_IN_ACTION,
@@ -55,6 +59,10 @@ const TIER_1_MODULES = [
 	QUALITY_INSTINCT,
 	MIRROR_GUARDRAILS,
 	HUMOR_GUARDRAILS,
+	REFLECT,
+	STORY_PULLING,
+	OBSERVATION_QUALITY_COMMON,
+	THREADING_COMMON,
 ] as const;
 
 function assembleTier1(): string {
@@ -82,22 +90,21 @@ Keep responses concise — 2-4 sentences typically. Longer when something deserv
 function selectTier2Modules(intent: PromptBuilderInput["intent"]): Tier2Selection {
 	switch (intent) {
 		case "open":
+			// Story 28-2: REFLECT promoted to Tier 1 — no Tier 2 modules for open
 			return {
-				modules: [REFLECT],
-				moduleNames: ["REFLECT"],
+				modules: [],
+				moduleNames: [],
 			};
 		case "explore":
+			// Story 28-2: STORY_PULLING, REFLECT, THREADING promoted to Tier 1
 			return {
-				modules: [STORY_PULLING, REFLECT, THREADING, MIRRORS_EXPLORE, EXPLORE_RESPONSE_FORMAT],
-				moduleNames: [
-					"STORY_PULLING",
-					"REFLECT",
-					"THREADING",
-					"MIRRORS_EXPLORE",
-					"EXPLORE_RESPONSE_FORMAT",
-				],
+				modules: [MIRRORS_EXPLORE, EXPLORE_RESPONSE_FORMAT],
+				moduleNames: ["MIRRORS_EXPLORE", "EXPLORE_RESPONSE_FORMAT"],
 			};
 		case "amplify":
+			// Story 28-2: OBSERVATION_QUALITY universal parts promoted to Tier 1 via
+			// OBSERVATION_QUALITY_COMMON. Full OBSERVATION_QUALITY kept here for
+			// observation-specific content until Story 1.3 dissolves it.
 			return {
 				modules: [OBSERVATION_QUALITY, MIRRORS_AMPLIFY],
 				moduleNames: ["OBSERVATION_QUALITY", "MIRRORS_AMPLIFY"],
