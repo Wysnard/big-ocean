@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-14 (refreshed 27 — sprint-planning workflow)
+generated: 2026-03-15 (refreshed 28 — sprint-planning workflow)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -489,9 +489,9 @@ development_status:
   # Stories: 2.1-2.4 in epics-nerin-steering-format.md
   # Depends on: Epic 28
   # ───────────────────────────────────────────────────────────────
-  epic-29: in-progress
+  epic-29: done
   29-1-bridge-intent-and-governor-integration: done
   29-2-bridge-templates-and-threading-dissolution: done
   29-3-contextual-mirror-system: done
-  29-4-rename-amplify-to-close-and-final-cleanup: pr-ready
+  29-4-rename-amplify-to-close-and-final-cleanup: done
   epic-29-retrospective: optional

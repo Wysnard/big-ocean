@@ -1,10 +1,7 @@
 # Sprint Parallelism Plan
-Generated: 2026-03-14
+Generated: 2026-03-15
 
-> Epic 6 (Privacy/GDPR) excluded — deferred to Phase 2 EU launch.
-> Epic 20 (Evidence Review) deferred — evidence already has messageId FK.
-> Phases 1-5 complete. Phase 6 (Nerin Steering Format Overhaul) in progress.
-> Steps 1-9 complete. Step 10 next.
+> All active phases (1-6) complete. Only deferred epics remain.
 
 ## ~~Step 1: Foundation Layer (Epic 23)~~ DONE
 All 3 stories merged: 23-1, 23-2, 23-3 (PRs #121, #122, #123).
@@ -33,30 +30,11 @@ Story 28-3 merged (PR #137).
 ## ~~Step 9: Prompt Builder Swap — THE BEHAVIOR CHANGE~~ DONE
 Story 28-4 merged (PR #138). Epic 28 complete.
 
-## Step 10: Bridge Intent + Templates
-| Story | Mode | Status | Notes |
-|-------|------|--------|-------|
-| 29-1-bridge-intent-and-governor-integration | parallel | **backlog** | Adds bridge to PromptBuilderInput type + governor logic |
-| 29-2-bridge-templates-and-threading-dissolution | sequential(after: 29-1) | **backlog** | Creates 4 bridge templates, prompt builder handles bridge case |
+## ~~Step 10: Bridge Intent + Templates~~ DONE
+Both stories merged: 29-1 (PR #139), 29-2 (PR #140).
 
-**Gate:** Both stories above must be done before proceeding.
-
-**Conflict Notes:**
-- 29-1 modifies pacing.ts types + move-governor.ts
-- 29-2 modifies prompt-builder.ts (adds bridge case) — must wait for 29-1's type changes
-- 29-2 also creates new constant files (no conflict)
-
-## Step 11: Mirrors + Cleanup
-| Story | Mode | Status | Notes |
-|-------|------|--------|-------|
-| 29-3-contextual-mirror-system | parallel | **backlog** | Replaces MIRRORS_EXPLORE/MIRRORS_AMPLIFY with lookup table |
-| 29-4-rename-amplify-to-close-and-final-cleanup | sequential(after: 29-3) | **backlog** | Renames amplify→close everywhere, deletes dead modules |
-
-**Gate:** Phase 6 complete after this step.
-
-**Conflict Notes:**
-- 29-3 modifies prompt-builder.ts mirror loading — no overlap with 29-4's rename scope
-- 29-4 touches many files (type rename) — must be last to avoid merge conflicts with 29-3
+## ~~Step 11: Mirrors + Cleanup~~ DONE
+Both stories merged: 29-3 (PR #141), 29-4 (PR #142). Phase 6 complete.
 
 ## Deferred Work (not scheduled)
 
@@ -66,7 +44,6 @@ Story 28-4 merged (PR #138). Epic 28 complete.
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **Phase 6:** 4 stories remaining in Epic 29 — all backlog
-- **2 remaining steps** (Steps 10-11) to deliver Phase 6 Nerin Steering Format
-- **Parallelism opportunities:** Steps 10 and 11 each have a parallel + sequential pair
-- **Critical path:** 29-1+29-2 → 29-3+29-4
+- **All 6 phases complete** — 11 steps delivered, 29 epics, ~127 stories
+- **No active forward-looking work** — only deferred epics remain (Epic 6: Privacy, Epic 20: Evidence Review)
+- **Next milestone:** New epic planning required for next development phase
