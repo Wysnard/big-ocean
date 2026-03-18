@@ -533,14 +533,14 @@ development_status:
   # session resume, cost guard, drop-off email
   # Stories: 2.1-2.7 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-31: backlog
+  epic-31: in-progress
   31-1-nerin-greeting-and-onboarding-message: backlog
   31-2-nerin-character-quality-observations-transitions-and-character-bible: backlog
   31-3-conversation-closing-exchange: backlog
   31-4-depth-meter-and-progress-milestones: backlog
   31-5-session-resume: backlog
   31-6-cost-guard: backlog
-  31-7-email-infrastructure-and-drop-off-re-engagement: backlog
+  31-7-email-infrastructure-and-drop-off-re-engagement: pr-ready
   epic-31-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -549,15 +549,15 @@ development_status:
   # PWYW modal, full portrait, reconciliation, archetype cards, share/credits
   # Stories: 3.0-3.8 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-32: backlog
-  32-0-remove-teaser-portrait: backlog
+  epic-32: in-progress
+  32-0-remove-teaser-portrait: pr-ready
   32-1-results-page-identity-section: backlog
   32-2-results-page-scientific-section: backlog
-  32-3-polar-integration-and-purchase-events: backlog
+  32-3-polar-integration-and-purchase-events: pr-ready
   32-4-pwyw-modal-and-portrait-unlock: backlog
   32-5-full-portrait-display: backlog
   32-6-portrait-reconciliation-and-retry: backlog
-  32-7-archetype-card-image-generation: backlog
+  32-7-archetype-card-image-generation: pr-ready
   32-8-basic-share-and-credit-system: backlog
   epic-32-retrospective: optional
 

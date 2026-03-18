@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 11
-parallelism_step_name: "Mirrors + Cleanup"
-baseline_commit: "8dd937d2b914b3d0130dba1579f0632ad5303c52"
-created: "2026-03-14"
-last_updated: "2026-03-14"
+parallelism_step: 1
+parallelism_step_name: "Infrastructure Foundations"
+baseline_commit: "6c18c6422115fa99ea9ff95acbdd6218176ec504"
+created: "2026-03-18"
+last_updated: "2026-03-18"
 
 # Optional context documents discovered
 context_docs:
@@ -14,17 +14,31 @@ context_docs:
 
 # Stories in this step
 stories:
-  29-3-contextual-mirror-system:
+  32-0-remove-teaser-portrait:
     status: done
     mode: "parallel"
-    notes: "Replaces MIRRORS_EXPLORE/MIRRORS_AMPLIFY with lookup table"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/141"
-    dev_branch: "feat/story-29-3-contextual-mirror-system"
+    notes: "Codebase cleanup, no new features"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/145"
+    dev_branch: "feat/story-32-0-remove-teaser-portrait"
     error: null
-  29-4-rename-amplify-to-close-and-final-cleanup:
+  32-3-polar-integration-and-purchase-events:
     status: done
-    mode: "sequential(after: 29-3)"
-    notes: "Renames amplify→close everywhere, deletes dead modules"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/142"
-    dev_branch: "feat/story-29-4-rename-amplify-to-close-and-final-cleanup"
+    mode: "parallel"
+    notes: "NEW: Polar plugin, purchase_events table, webhook handler"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/143"
+    dev_branch: "feat/story-32-3-polar-integration-and-purchase-events"
+    error: null
+  31-7-email-infrastructure-and-drop-off-re-engagement:
+    status: done
+    mode: "parallel"
+    notes: "NEW: Resend repo, React Email templates, drop-off email"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/144"
+    dev_branch: "feat/story-31-7-email-infrastructure-and-drop-off-re-engagement"
+    error: null
+  32-7-archetype-card-image-generation:
+    status: done
+    mode: "parallel"
+    notes: "NEW: Satori + resvg image pipeline, independent"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/146"
+    dev_branch: "feat/story-32-7-archetype-card-image-generation"
     error: null
