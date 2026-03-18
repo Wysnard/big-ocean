@@ -19,8 +19,14 @@ import { Route as PublicProfilePublicProfileIdRouteImport } from "./routes/publi
 import { Route as RelationshipAnalysisIdRouteImport } from "./routes/relationship/$analysisId";
 import { Route as ResultsRouteImport } from "./routes/results";
 import { Route as ResultsAssessmentSessionIdRouteImport } from "./routes/results/$assessmentSessionId";
+import { Route as SettingsRouteImport } from "./routes/settings";
 import { Route as SignupRouteImport } from "./routes/signup";
 
+const SettingsRoute = SettingsRouteImport.update({
+	id: "/settings",
+	path: "/settings",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const SignupRoute = SignupRouteImport.update({
 	id: "/signup",
 	path: "/signup",
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
 	"/login": typeof LoginRoute;
 	"/profile": typeof ProfileRoute;
 	"/results": typeof ResultsRouteWithChildren;
+	"/settings": typeof SettingsRoute;
 	"/signup": typeof SignupRoute;
 	"/invite/$token": typeof InviteTokenRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
 	"/login": typeof LoginRoute;
 	"/profile": typeof ProfileRoute;
 	"/results": typeof ResultsRouteWithChildren;
+	"/settings": typeof SettingsRoute;
 	"/signup": typeof SignupRoute;
 	"/invite/$token": typeof InviteTokenRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
@@ -110,6 +118,7 @@ export interface FileRoutesById {
 	"/login": typeof LoginRoute;
 	"/profile": typeof ProfileRoute;
 	"/results": typeof ResultsRouteWithChildren;
+	"/settings": typeof SettingsRoute;
 	"/signup": typeof SignupRoute;
 	"/invite/$token": typeof InviteTokenRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
 		| "/login"
 		| "/profile"
 		| "/results"
+		| "/settings"
 		| "/signup"
 		| "/invite/$token"
 		| "/public-profile/$publicProfileId"
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
 		| "/login"
 		| "/profile"
 		| "/results"
+		| "/settings"
 		| "/signup"
 		| "/invite/$token"
 		| "/public-profile/$publicProfileId"
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
 		| "/login"
 		| "/profile"
 		| "/results"
+		| "/settings"
 		| "/signup"
 		| "/invite/$token"
 		| "/public-profile/$publicProfileId"
@@ -165,6 +177,7 @@ export interface RootRouteChildren {
 	LoginRoute: typeof LoginRoute;
 	ProfileRoute: typeof ProfileRoute;
 	ResultsRoute: typeof ResultsRouteWithChildren;
+	SettingsRoute: typeof SettingsRoute;
 	SignupRoute: typeof SignupRoute;
 	InviteTokenRoute: typeof InviteTokenRoute;
 	PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute;
@@ -193,6 +206,13 @@ declare module "@tanstack/react-router" {
 			path: "/profile";
 			fullPath: "/profile";
 			preLoaderRoute: typeof ProfileRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/settings": {
+			id: "/settings";
+			path: "/settings";
+			fullPath: "/settings";
+			preLoaderRoute: typeof SettingsRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
 		"/login": {
@@ -270,6 +290,7 @@ const rootRouteChildren: RootRouteChildren = {
 	LoginRoute: LoginRoute,
 	ProfileRoute: ProfileRoute,
 	ResultsRoute: ResultsRouteWithChildren,
+	SettingsRoute: SettingsRoute,
 	SignupRoute: SignupRoute,
 	InviteTokenRoute: InviteTokenRoute,
 	PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,

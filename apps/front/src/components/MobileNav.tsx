@@ -9,7 +9,7 @@ import {
 	SheetTrigger,
 } from "@workspace/ui/components/sheet";
 import { type UserTheme, useTheme } from "@workspace/ui/hooks/use-theme";
-import { Home, LogOut, Menu, Monitor, Moon, Sun, User } from "lucide-react";
+import { Home, LogOut, Menu, Monitor, Moon, Settings, Sun, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/use-auth";
 import { getActiveAssessmentSessionId } from "../lib/auth-session-linking";
@@ -109,15 +109,26 @@ export function MobileNav() {
 					</SheetClose>
 
 					{isAuthenticated && (
-						<SheetClose asChild>
-							<Link
-								to="/profile"
-								className="flex items-center gap-3 rounded-md px-3 py-2 min-h-11 text-sm font-medium text-foreground hover:bg-accent"
-							>
-								<User className="size-4" />
-								Profile
-							</Link>
-						</SheetClose>
+						<>
+							<SheetClose asChild>
+								<Link
+									to="/profile"
+									className="flex items-center gap-3 rounded-md px-3 py-2 min-h-11 text-sm font-medium text-foreground hover:bg-accent"
+								>
+									<User className="size-4" />
+									Profile
+								</Link>
+							</SheetClose>
+							<SheetClose asChild>
+								<Link
+									to="/settings"
+									className="flex items-center gap-3 rounded-md px-3 py-2 min-h-11 text-sm font-medium text-foreground hover:bg-accent"
+								>
+									<Settings className="size-4" />
+									Settings
+								</Link>
+							</SheetClose>
+						</>
 					)}
 				</nav>
 
