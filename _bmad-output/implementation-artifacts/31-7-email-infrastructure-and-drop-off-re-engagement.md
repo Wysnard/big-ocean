@@ -18,7 +18,7 @@ So that users who dropped off are reminded to return and complete their experien
 
 4. **AC4: Fire-and-forget / fail-open** — The email is sent fire-and-forget (does not block any user-facing operation). If sending fails, the failure is logged but does not affect any other system behavior.
 
-5. **AC5: React Email template** — The drop-off re-engagement email uses a React Email template consistent with frontend styling, referencing the last conversation territory (e.g., "You and Nerin were talking about [territory]...").
+5. **AC5: Email template** — The drop-off re-engagement email uses an HTML template function consistent with frontend styling, referencing the last conversation territory (e.g., "You and Nerin were talking about [territory]...").
 
 6. **AC6: Drop-off detection use-case** — A `check-drop-off.use-case.ts` use-case queries for sessions that are `in_progress`, inactive beyond the threshold, and have not yet received a drop-off email. It sends the email and marks the session. This use-case is invoked periodically (cron or on-demand endpoint).
 
@@ -53,14 +53,15 @@ So that users who dropped off are reminded to return and complete their experien
   - [ ] 4.2 Add config binding reading `DROP_OFF_THRESHOLD_HOURS` env var
   - [ ] 4.3 Update mock app-config with test default
 
-- [ ] Task 5: Create React Email template (AC: #5)
-  - [ ] 5.1 Create `packages/infrastructure/src/email-templates/drop-off-re-engagement.tsx` using React Email components
-  - [ ] 5.2 Template accepts `{ userName: string; territoryName: string; resumeUrl: string }` props
+- [ ] Task 5: Create email template (AC: #5)
+  - [ ] 5.1 Create `packages/infrastructure/src/email-templates/drop-off-re-engagement.ts` as a pure function returning HTML string
+  - [ ] 5.2 Template function accepts `{ userName: string; territoryName: string; resumeUrl: string }` and returns HTML string
   - [ ] 5.3 Template renders "You and Nerin were talking about [territory]..." with a CTA button to resume
 
 - [ ] Task 6: Create check-drop-off use-case (AC: #2, #3, #4, #6)
   - [ ] 6.1 Add `findDropOffSessions` method to `AssessmentSessionRepository` interface:
     - Returns sessions where `status = 'in_progress'`, `updatedAt < now - thresholdHours`, `dropOffEmailSentAt IS NULL`, and `userId IS NOT NULL`
+    - JOIN with `user` table to include `email` and `name` in the returned records (avoids separate user lookup)
   - [ ] 6.2 Implement `findDropOffSessions` in `assessment-session.drizzle.repository.ts`
   - [ ] 6.3 Update `assessment-session.drizzle.repository.ts` mock
   - [ ] 6.4 Create `apps/api/src/use-cases/check-drop-off.use-case.ts`:
@@ -84,4 +85,28 @@ So that users who dropped off are reminded to return and complete their experien
 - **Territory lookup:** Use `getTerritoryById()` from `@workspace/domain` to map territory ID to display name
 - **Email from auth:** User email comes from Better Auth's user table. The session has `userId` which links to the auth user.
 - **One-shot enforcement:** The `dropOffEmailSentAt` column prevents duplicate emails. Set it BEFORE sending (optimistic) to prevent race conditions with concurrent cron runs.
-- **React Email:** Templates are server-rendered to HTML strings, passed to Resend's `sendEmail` as the `html` parameter.
+- **HTML templates:** Use plain TypeScript functions returning HTML strings (no React Email / JSX needed). The infrastructure package has no JSX support in its tsconfig.
+
+## Architect Notes
+
+### Finding 1: User email retrieval (KEEP)
+The `findDropOffSessions` query must JOIN `assessment_sessions` with the `user` table (Better Auth managed) to return user email and name alongside session data. The `user` table schema is in `packages/infrastructure/src/db/drizzle/schema.ts` with columns `id`, `name`, `email`. The Drizzle implementation should use `innerJoin(user, eq(assessmentSessions.userId, user.id))` to avoid a separate query per session.
+
+**Return type for `findDropOffSessions`:**
+```typescript
+Array<{
+  sessionId: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  updatedAt: Date;
+}>
+```
+
+### Finding 2: No JSX in infrastructure package (KEEP)
+The infrastructure package's `tsconfig.json` extends `@workspace/typescript-config/base.json` which has no `jsx` compiler option. Adding React Email (JSX-based) would require modifying the tsconfig and adding React as a dependency. Instead, use plain TypeScript template literal functions that return HTML strings. This is simpler and has no dependency cost.
+
+**Pattern:** `packages/infrastructure/src/email-templates/drop-off-re-engagement.ts` exports a function `renderDropOffEmail(props) => string` using tagged template literals.
+
+### Finding 3: fromEmail config (KEEP)
+Resend requires a verified sender email. Add `emailFromAddress` to `AppConfigService` (default: `"noreply@bigocean.dev"`, read from `EMAIL_FROM_ADDRESS` env var). Include in `SendEmailInput` or as a default in the repository implementation.
