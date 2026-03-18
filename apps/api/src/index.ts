@@ -37,6 +37,7 @@ import {
 	RelationshipAnalysisGeneratorAnthropicRepositoryLive,
 	RelationshipAnalysisGeneratorMockRepositoryLive,
 	RelationshipInvitationDrizzleRepositoryLive,
+	ResendEmailResendRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
 } from "@workspace/infrastructure";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
@@ -53,6 +54,7 @@ import { PortraitGroupLive } from "./handlers/portrait";
 import { ProfileGroupLive } from "./handlers/profile";
 import { PurchaseGroupLive } from "./handlers/purchase";
 import { RelationshipGroupLive, RelationshipPublicGroupLive } from "./handlers/relationship";
+import { EmailGroupLive } from "./handlers/email";
 import { WaitlistGroupLive } from "./handlers/waitlist";
 import { AuthMiddlewareLive, OptionalAuthMiddlewareLive } from "./middleware/auth.middleware";
 import { createBetterAuthHandler } from "./middleware/better-auth";
@@ -154,6 +156,7 @@ const RepositoryLayers = Layer.mergeAll(
 	RelationshipAnalysisGeneratorLayer,
 	RelationshipInvitationDrizzleRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
+	ResendEmailResendRepositoryLive,
 );
 
 /**
@@ -186,6 +189,7 @@ const HttpGroupsLive = Layer.mergeAll(
 	RelationshipGroupLive,
 	RelationshipPublicGroupLive,
 	WaitlistGroupLive,
+	EmailGroupLive,
 	LoggerPinoRepositoryLive,
 );
 

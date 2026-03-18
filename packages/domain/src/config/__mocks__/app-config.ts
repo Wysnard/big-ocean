@@ -75,6 +75,10 @@ export const mockAppConfig: AppConfigService = {
 	territoryFreshnessMax: 1.2,
 	// Cold-Start (Story 21-4)
 	territoryColdStartThreshold: 3,
+	// Email Infrastructure (Story 31-7)
+	resendApiKey: Redacted.make("test-resend-api-key"),
+	emailFromAddress: "noreply@test.bigocean.dev",
+	dropOffThresholdHours: 24,
 };
 
 export const createTestAppConfigLayer = () => Layer.succeed(AppConfig, mockAppConfig);

@@ -21,9 +21,9 @@ import { AssessmentSessionRepository } from "@workspace/domain/repositories/asse
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import { RedisRepository } from "@workspace/domain/repositories/redis.repository";
 import { Database } from "@workspace/infrastructure/context/database";
-import { and, count, eq, sql } from "drizzle-orm";
+import { and, count, eq, isNull, lt, sql } from "drizzle-orm";
 import { Effect, Layer, Schema } from "effect";
-import { assessmentMessage, assessmentSession, publicProfile } from "../db/drizzle/schema";
+import { assessmentMessage, assessmentSession, publicProfile, user } from "../db/drizzle/schema";
 
 /**
  * Session Repository Layer - Receives database, logger, and Redis through DI
@@ -660,6 +660,72 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 							return new DatabaseError({ message: "Failed to release session lock" });
 						}),
 					);
+				}),
+
+			findDropOffSessions: (thresholdHours: number) =>
+				Effect.gen(function* () {
+					const cutoff = new Date(Date.now() - thresholdHours * 60 * 60 * 1000);
+
+					const results = yield* db
+						.select({
+							sessionId: assessmentSession.id,
+							userId: assessmentSession.userId,
+							userEmail: user.email,
+							userName: user.name,
+							updatedAt: assessmentSession.updatedAt,
+						})
+						.from(assessmentSession)
+						.innerJoin(user, eq(assessmentSession.userId, user.id))
+						.where(
+							and(
+								eq(assessmentSession.status, "active"),
+								lt(assessmentSession.updatedAt, cutoff),
+								isNull(assessmentSession.dropOffEmailSentAt),
+							),
+						)
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "findDropOffSessions",
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({ message: "Failed to find drop-off sessions" });
+							}),
+						);
+
+					return results.map((row) => ({
+						sessionId: row.sessionId,
+						userId: row.userId as string,
+						userEmail: row.userEmail,
+						userName: row.userName,
+						updatedAt: row.updatedAt,
+					}));
+				}),
+
+			markDropOffEmailSent: (sessionId: string) =>
+				Effect.gen(function* () {
+					yield* db
+						.update(assessmentSession)
+						.set({ dropOffEmailSentAt: new Date() })
+						.where(eq(assessmentSession.id, sessionId))
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "markDropOffEmailSent",
+										sessionId,
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({ message: "Failed to mark drop-off email sent" });
+							}),
+						);
 				}),
 		});
 	}),

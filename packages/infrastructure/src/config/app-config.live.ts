@@ -146,6 +146,15 @@ const configSchema = Config.all({
 	territoryColdStartThreshold: Config.number("TERRITORY_COLD_START_THRESHOLD").pipe(
 		Config.withDefault(3),
 	),
+
+	// Email Infrastructure (Story 31-7)
+	resendApiKey: Config.redacted("RESEND_API_KEY").pipe(
+		Config.withDefault("not-configured" as any),
+	),
+	emailFromAddress: Config.string("EMAIL_FROM_ADDRESS").pipe(
+		Config.withDefault("noreply@bigocean.dev"),
+	),
+	dropOffThresholdHours: Config.number("DROP_OFF_THRESHOLD_HOURS").pipe(Config.withDefault(24)),
 });
 
 /**

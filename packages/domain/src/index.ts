@@ -171,7 +171,10 @@ export {
 	type ResultStage,
 } from "./repositories/assessment-result.repository";
 // Repository interfaces (ports in hexagonal architecture)
-export { AssessmentSessionRepository } from "./repositories/assessment-session.repository";
+export {
+	AssessmentSessionRepository,
+	type DropOffSession,
+} from "./repositories/assessment-session.repository";
 // Conversanalyzer repository (Story 10.2, v2 Story 24-1)
 export {
 	ConversanalyzerError,
@@ -254,6 +257,13 @@ export {
 } from "./repositories/relationship-analysis-generator.repository";
 // Relationship invitation repository (Story 14.2)
 export { RelationshipInvitationRepository } from "./repositories/relationship-invitation.repository";
+// Resend email repository (Story 31-7)
+export {
+	EmailError,
+	ResendEmailRepository,
+	type ResendEmailMethods,
+	type SendEmailInput,
+} from "./repositories/resend-email.repository";
 // Waitlist repository (Story 15.3)
 export { WaitlistRepository } from "./repositories/waitlist.repository";
 // Agent response schemas for structured LLM output (Story 2.4, Task 13)

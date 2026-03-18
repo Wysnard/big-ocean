@@ -160,6 +160,7 @@ export const assessmentSession = pgTable(
 			.defaultNow()
 			.$onUpdate(() => new Date())
 			.notNull(),
+		dropOffEmailSentAt: timestamp("drop_off_email_sent_at"),
 	},
 	(table) => [
 		index("assessment_session_user_id_idx").on(table.userId),
