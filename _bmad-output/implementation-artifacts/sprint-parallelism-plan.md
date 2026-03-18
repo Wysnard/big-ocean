@@ -15,7 +15,7 @@ Generated: 2026-03-18
 | 32-0b-ocean-code-letter-mapping-update | parallel | Letter collision fix: R→I (E-low), T→V (N-mid), update 27 archetype keys |
 | 32-3-polar-integration-and-purchase-events | parallel | NEW: Polar plugin, purchase_events table, webhook handler |
 | 31-7-email-infrastructure-and-drop-off-re-engagement | parallel | NEW: Resend repo, React Email templates, drop-off email |
-| 32-7-archetype-card-image-generation | parallel | NEW: Satori + resvg image pipeline, independent |
+| 32-7-archetype-card-image-generation | sequential(after: 32-0b) | NEW: Satori + resvg image pipeline. **Merge order:** merge 32-0b first, then rebase 32-7 on master. **Resolve:** archetype keys R→I at position 3 in card rendering, any hardcoded OCEAN code examples, shape/letter references in card templates |
 
 **Gate:** All stories above must be done before proceeding.
 
