@@ -460,7 +460,7 @@ const seedProgram = Effect.gen(function* () {
 			facets: facetsJson,
 			traits: traitsJson,
 			domainCoverage: domainCoverageJson,
-			portrait: null,
+			portrait: "",
 		})
 		.returning()
 		.pipe(Effect.mapError((error) => new Error(`Failed to insert assessment results: ${error}`)));
