@@ -196,6 +196,17 @@ export interface AppConfigService {
 
 	/** Number of user messages before scoring formula takes over (default: 3) */
 	readonly territoryColdStartThreshold: number;
+
+	// ─── Email Infrastructure (Story 31-7) ────────────────────────────────
+
+	/** Resend API key for transactional email (secret) */
+	readonly resendApiKey: Redacted.Redacted<string>;
+
+	/** Sender email address for transactional emails */
+	readonly emailFromAddress: string;
+
+	/** Hours of inactivity before sending drop-off re-engagement email (default: 24) */
+	readonly dropOffThresholdHours: number;
 }
 
 /**

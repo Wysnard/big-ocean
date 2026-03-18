@@ -204,5 +204,42 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 		acquireSessionLock: (_sessionId: string) => Effect.void,
 
 		releaseSessionLock: (_sessionId: string) => Effect.void,
+
+		findDropOffSessions: (_thresholdHours: number) =>
+			Effect.sync(() => {
+				const results: Array<{
+					sessionId: string;
+					userId: string;
+					userEmail: string;
+					userName: string;
+					updatedAt: Date;
+				}> = [];
+
+				for (const session of sessions.values()) {
+					if (
+						session.status === "active" &&
+						session.userId &&
+						!session.dropOffEmailSentAt
+					) {
+						results.push({
+							sessionId: session.id as string,
+							userId: session.userId as string,
+							userEmail: (session.userEmail as string) ?? "test@example.com",
+							userName: (session.userName as string) ?? "Test User",
+							updatedAt: session.updatedAt as Date,
+						});
+					}
+				}
+
+				return results;
+			}),
+
+		markDropOffEmailSent: (sessionId: string) =>
+			Effect.sync(() => {
+				const session = sessions.get(sessionId);
+				if (session) {
+					sessions.set(sessionId, { ...session, dropOffEmailSentAt: new Date() });
+				}
+			}),
 	}),
 );

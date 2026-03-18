@@ -169,5 +169,40 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 		 * @returns Effect that succeeds when lock is released
 		 */
 		readonly releaseSessionLock: (sessionId: string) => Effect.Effect<void, DatabaseError, never>;
+
+		/**
+		 * Find sessions eligible for drop-off re-engagement email (Story 31-7)
+		 *
+		 * Returns sessions where:
+		 * - status is 'active' (in-progress)
+		 * - updatedAt is older than thresholdHours ago
+		 * - dropOffEmailSentAt IS NULL (not yet emailed)
+		 * - userId IS NOT NULL (authenticated sessions only)
+		 *
+		 * JOINs with user table to include email and name.
+		 *
+		 * @param thresholdHours - Hours of inactivity before session is considered dropped-off
+		 */
+		readonly findDropOffSessions: (thresholdHours: number) => Effect.Effect<
+			Array<DropOffSession>,
+			DatabaseError,
+			never
+		>;
+
+		/**
+		 * Mark a session as having had its drop-off email sent (Story 31-7)
+		 *
+		 * @param sessionId - Session to mark
+		 */
+		readonly markDropOffEmailSent: (sessionId: string) => Effect.Effect<void, DatabaseError, never>;
 	}
 >() {}
+
+/** Drop-off session record returned by findDropOffSessions */
+export interface DropOffSession {
+	readonly sessionId: string;
+	readonly userId: string;
+	readonly userEmail: string;
+	readonly userName: string;
+	readonly updatedAt: Date;
+}

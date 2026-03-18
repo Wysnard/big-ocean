@@ -7,6 +7,7 @@
 
 import { HttpApi } from "@effect/platform";
 import { AssessmentGroup } from "./groups/assessment";
+import { EmailGroup } from "./groups/email";
 import { EvidenceGroup } from "./groups/evidence";
 import { HealthGroup } from "./groups/health";
 import { PortraitGroup } from "./groups/portrait";
@@ -30,4 +31,5 @@ export class BigOceanApi extends HttpApi.make("BigOceanApi")
 	.add(PurchaseGroup.prefix("/api")) // /api/purchase/verify (authenticated)
 	.add(RelationshipGroup.prefix("/api")) // /api/relationship/* (authenticated)
 	.add(RelationshipPublicGroup.prefix("/api")) // /api/relationship/public/* (public)
-	.add(WaitlistGroup.prefix("/api")) {} // /api/waitlist/signup (public)
+	.add(WaitlistGroup.prefix("/api")) // /api/waitlist/signup (public)
+	.add(EmailGroup.prefix("/api")) {} // /api/email/check-drop-off (internal)
