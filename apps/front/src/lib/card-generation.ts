@@ -1,21 +1,17 @@
 /**
  * Card Generation Utilities
  *
- * Shared helpers for archetype card and OG image generation routes.
+ * Shared utilities for archetype card and OG image generation.
+ * Used by both the archetype card server function and the OG image route.
  */
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-export type ProfileData = {
-	archetypeName: string;
-	oceanCode: string;
-	displayName: string | null;
-	traitSummary: Record<string, string>;
-	facets: Record<string, { score: number; confidence: number }>;
-	color: string;
-};
-
+/**
+ * Trait hex colors for Satori rendering (no CSS variables in server-side SVG).
+ * Mirrors the design system trait colors.
+ */
 export const TRAIT_COLORS: Record<string, string> = {
 	openness: "#A855F7",
 	conscientiousness: "#FF6B2B",
@@ -23,6 +19,14 @@ export const TRAIT_COLORS: Record<string, string> = {
 	agreeableness: "#00B4A6",
 	neuroticism: "#1c1c9c",
 };
+
+export const TRAIT_ORDER = [
+	"openness",
+	"conscientiousness",
+	"extraversion",
+	"agreeableness",
+	"neuroticism",
+] as const;
 
 const TRAIT_FACETS: Record<string, string[]> = {
 	openness: [
@@ -60,7 +64,12 @@ const TRAIT_FACETS: Record<string, string[]> = {
 	],
 };
 
-export function deriveTraitScores(facets: ProfileData["facets"]): Record<string, number> {
+export type ProfileFacets = Record<string, { score: number; confidence: number }>;
+
+/**
+ * Derives trait scores (0-120) from facet score map by summing each trait's 6 facets.
+ */
+export function deriveTraitScores(facets: ProfileFacets): Record<string, number> {
 	const scores: Record<string, number> = {};
 	for (const [trait, facetNames] of Object.entries(TRAIT_FACETS)) {
 		scores[trait] = facetNames.reduce((sum, f) => sum + (facets[f]?.score ?? 0), 0);
@@ -68,44 +77,44 @@ export function deriveTraitScores(facets: ProfileData["facets"]): Record<string,
 	return scores;
 }
 
+/**
+ * Returns the hex color of the highest-scoring trait.
+ */
 export function getDominantColor(traitScores: Record<string, number>): string {
 	const dominantTrait =
 		Object.entries(traitScores).sort(([, a], [, b]) => b - a)[0]?.[0] ?? "openness";
-	return TRAIT_COLORS[dominantTrait] ?? "#A855F7";
+	return TRAIT_COLORS[dominantTrait] ?? TRAIT_COLORS.openness!;
 }
 
-let cachedFontData: ArrayBuffer | null = null;
+let _fontData: ArrayBuffer | null = null;
+
+/**
+ * Reads the Inter Bold font from disk and caches it.
+ * Font is required by Satori for text rendering.
+ */
 export function getFontData(): ArrayBuffer {
-	if (cachedFontData) return cachedFontData;
-	// Try multiple paths: relative to cwd (dev), and relative to this file (build)
-	const candidates = [
-		resolve(process.cwd(), "assets/fonts/Inter-Bold.ttf"),
-		resolve(process.cwd(), "apps/front/assets/fonts/Inter-Bold.ttf"),
-	];
-	let buffer: Buffer | null = null;
-	for (const p of candidates) {
-		try {
-			buffer = readFileSync(p);
-			break;
-		} catch {
-			// try next
-		}
-	}
-	if (!buffer) {
-		throw new Error(`Inter-Bold.ttf not found in: ${candidates.join(", ")}`);
-	}
-	// Create a clean ArrayBuffer copy (Node Buffer may share underlying memory)
-	const ab = new ArrayBuffer(buffer.length);
-	new Uint8Array(ab).set(buffer);
-	cachedFontData = ab;
-	return cachedFontData;
+	if (_fontData) return _fontData;
+	const fontPath = resolve(process.cwd(), "assets/fonts/Inter-Bold.ttf");
+	const buffer = readFileSync(fontPath);
+	_fontData = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+	return _fontData;
 }
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+export type ProfileData = {
+	archetypeName: string;
+	oceanCode: string;
+	displayName: string | null;
+	facets: ProfileFacets;
+};
 
+/**
+ * Fetches public profile data from the API backend.
+ */
 export async function fetchProfileData(
 	publicProfileId: string,
 ): Promise<{ profile: ProfileData | null; status: number }> {
+	const API_URL = process.env.VITE_API_URL ?? "http://localhost:4000";
+
 	const res = await fetch(`${API_URL}/api/public-profile/${publicProfileId}`, {
 		headers: { "Content-Type": "application/json" },
 	});

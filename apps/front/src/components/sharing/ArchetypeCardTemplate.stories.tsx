@@ -112,3 +112,43 @@ export const HighNeuroticism: Story = {
 		),
 	],
 };
+
+export const ArchetypeGenericOG: Story = {
+	name: "Archetype-Generic (OG 1.91:1)",
+	args: {
+		archetypeName: "The Beacon",
+		oceanCode: "OCEA",
+		description:
+			"You have a way of seeing what could be and making others believe in it too. Creative ideas become plans that pull people together around something meaningful.",
+		archetypeColor: "#6B5CE7",
+		width: 1200,
+		height: 630,
+	},
+	decorators: [
+		(Story) => (
+			<div style={{ transform: "scale(0.5)", transformOrigin: "top center" }}>
+				<Story />
+			</div>
+		),
+	],
+};
+
+export const ArchetypeGenericStory: Story = {
+	name: "Archetype-Generic (9:16 Story)",
+	args: {
+		archetypeName: "The Beacon",
+		oceanCode: "OCEA",
+		description:
+			"You have a way of seeing what could be and making others believe in it too. Creative ideas become plans that pull people together around something meaningful.",
+		archetypeColor: "#6B5CE7",
+		width: 1080,
+		height: 1920,
+	},
+	decorators: [
+		(Story) => (
+			<div style={{ transform: "scale(0.3)", transformOrigin: "top center" }}>
+				<Story />
+			</div>
+		),
+	],
+};
