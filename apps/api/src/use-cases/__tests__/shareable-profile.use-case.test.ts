@@ -207,7 +207,7 @@ describe("getPublicProfile Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "OCBAT",
+					oceanCode5: "OCBAV",
 					oceanCode4: "OCBA",
 				});
 
@@ -237,7 +237,7 @@ describe("getPublicProfile Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "OCBAT",
+					oceanCode5: "OCBAV",
 					oceanCode4: "OCBA",
 				});
 
@@ -285,7 +285,7 @@ describe("toggleProfileVisibility Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "OCBAT",
+					oceanCode5: "OCBAV",
 					oceanCode4: "OCBA",
 				});
 
@@ -314,7 +314,7 @@ describe("toggleProfileVisibility Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "OCBAT",
+					oceanCode5: "OCBAV",
 					oceanCode4: "OCBA",
 				});
 

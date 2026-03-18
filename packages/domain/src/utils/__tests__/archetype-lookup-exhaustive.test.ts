@@ -5,7 +5,7 @@ describe("lookupArchetype", () => {
 	describe("all 81 combinations", () => {
 		const oLevels = ["T", "M", "O"] as const;
 		const cLevels = ["F", "S", "C"] as const;
-		const eLevels = ["R", "B", "E"] as const;
+		const eLevels = ["I", "B", "E"] as const;
 		const aLevels = ["D", "P", "A"] as const;
 
 		for (const O of oLevels) {
@@ -59,7 +59,7 @@ describe("archetype lookup performance (NFR9 - Story 11.4)", () => {
 	it("should complete all 81 lookups in < 100ms", () => {
 		const oLevels = ["T", "M", "O"] as const;
 		const cLevels = ["F", "S", "C"] as const;
-		const eLevels = ["R", "B", "E"] as const;
+		const eLevels = ["I", "B", "E"] as const;
 		const aLevels = ["D", "P", "A"] as const;
 
 		// Warmup: JIT compile the function before timing
@@ -88,16 +88,16 @@ describe("archetype lookup performance (NFR9 - Story 11.4)", () => {
 });
 
 describe("extract4LetterCode", () => {
-	it('extracts "OCBA" from "OCBAT"', () => {
-		expect(extract4LetterCode("OCBAT")).toBe("OCBA");
+	it('extracts "OCBA" from "OCBAV"', () => {
+		expect(extract4LetterCode("OCBAV")).toBe("OCBA");
 	});
 
-	it('extracts "TFRD" from "TFRDR"', () => {
-		expect(extract4LetterCode("TFRDR")).toBe("TFRD");
+	it('extracts "TFID" from "TFIDR"', () => {
+		expect(extract4LetterCode("TFIDR")).toBe("TFID");
 	});
 
-	it('extracts "MSBP" from "MSBPT"', () => {
-		expect(extract4LetterCode("MSBPT")).toBe("MSBP");
+	it('extracts "MSBP" from "MSBPV"', () => {
+		expect(extract4LetterCode("MSBPV")).toBe("MSBP");
 	});
 
 	it("throws on 4-letter code", () => {
@@ -105,7 +105,7 @@ describe("extract4LetterCode", () => {
 	});
 
 	it("throws on 6-letter code", () => {
-		expect(() => extract4LetterCode("OCBATS")).toThrow();
+		expect(() => extract4LetterCode("OCBAVS")).toThrow();
 	});
 
 	it("throws on empty string", () => {

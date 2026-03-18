@@ -4,9 +4,9 @@
  * Each trait maps to unique, semantically meaningful letters:
  *   Openness:          T (Traditional)   M (Moderate)     O (Open-minded)
  *   Conscientiousness: F (Flexible)      S (Steady)       C (Conscientious)
- *   Extraversion:      R (Reserved)      B (Balanced)     E (Extravert)
+ *   Extraversion:      I (Introverted)   B (Balanced)     E (Extravert)
  *   Agreeableness:     D (Direct)        P (Pragmatic)    A (Agreeable)
- *   Neuroticism:       R (Resilient)     T (Tempered)     N (Neurotic)
+ *   Neuroticism:       R (Resilient)     V (Variable)     N (Neurotic)
  *
  * Algorithm:
  * 1. Sum 6 facets per trait (using FACET_TO_TRAIT lookup)

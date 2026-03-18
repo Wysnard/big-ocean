@@ -34,12 +34,12 @@ describe("generateOceanCode", () => {
 	describe("trait sum calculation", () => {
 		it("all facets at 10 → trait sum = 60 (midpoint) → all mid letters", () => {
 			const scores = createAllFacetsAtScore(10);
-			expect(generateOceanCode(scores)).toBe("MSBPT");
+			expect(generateOceanCode(scores)).toBe("MSBPV");
 		});
 
 		it("all facets at 0 → trait sum = 0 (minimum → Low) → all low letters", () => {
 			const scores = createAllFacetsAtScore(0);
-			expect(generateOceanCode(scores)).toBe("TFRDR");
+			expect(generateOceanCode(scores)).toBe("TFIDR");
 		});
 
 		it("all facets at 20 → trait sum = 120 (maximum → High) → all high letters", () => {
@@ -121,7 +121,7 @@ describe("generateOceanCode", () => {
 
 		it("output matches valid OCEAN code pattern", () => {
 			const scores = createAllFacetsAtScore(10);
-			expect(generateOceanCode(scores)).toMatch(/^[TMO][FSC][RBE][DPA][RTN]$/);
+			expect(generateOceanCode(scores)).toMatch(/^[TMO][FSC][IBE][DPA][RVN]$/);
 		});
 
 		it("OCEAN order is correct (O first, N last)", () => {
@@ -139,9 +139,9 @@ describe("generateOceanCode", () => {
 
 	// === Task 5: Edge case tests ===
 	describe("edge cases", () => {
-		it("returns MSBPT for all facets at 10 (all mid)", () => {
+		it("returns MSBPV for all facets at 10 (all mid)", () => {
 			const scores = createAllFacetsAtScore(10);
-			expect(generateOceanCode(scores)).toBe("MSBPT");
+			expect(generateOceanCode(scores)).toBe("MSBPV");
 		});
 
 		it("is deterministic — same input called 100 times → same output", () => {
@@ -156,9 +156,9 @@ describe("generateOceanCode", () => {
 			expect(new Set(results).size).toBe(1);
 		});
 
-		it("returns TFRDR for all facets at 0 (all low)", () => {
+		it("returns TFIDR for all facets at 0 (all low)", () => {
 			const scores = createAllFacetsAtScore(0);
-			expect(generateOceanCode(scores)).toBe("TFRDR");
+			expect(generateOceanCode(scores)).toBe("TFIDR");
 		});
 
 		it("returns OCEAN for all facets at 20 (all high)", () => {
@@ -167,13 +167,13 @@ describe("generateOceanCode", () => {
 		});
 
 		it("example: facets yielding O=108(H) C=84(H) E=60(M) A=96(H) N=72(M)", () => {
-			// O=108(H→O), C=84(H→C), E=60(M→B), A=96(H→A), N=72(M→T)
+			// O=108(H→O), C=84(H→C), E=60(M→B), A=96(H→A), N=72(M→V)
 			const traitToFacetScore: Record<TraitName, number> = {
 				openness: 18, // 18*6=108 → H → O
 				conscientiousness: 14, // 14*6=84 → H → C
 				extraversion: 10, // 10*6=60 → M → B
 				agreeableness: 16, // 16*6=96 → H → A
-				neuroticism: 12, // 12*6=72 → M → T
+				neuroticism: 12, // 12*6=72 → M → V
 			};
 			const scores = {} as Record<FacetName, FacetScore>;
 			for (const facet of ALL_FACETS) {
@@ -182,7 +182,7 @@ describe("generateOceanCode", () => {
 					confidence: 80,
 				};
 			}
-			expect(generateOceanCode(scores)).toBe("OCBAT");
+			expect(generateOceanCode(scores)).toBe("OCBAV");
 		});
 	});
 });

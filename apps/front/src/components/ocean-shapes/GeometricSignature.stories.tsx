@@ -4,10 +4,10 @@ import { GeometricSignature } from "./GeometricSignature";
 function SignatureShowcase() {
 	const codes = [
 		{ code: "OCEAR", label: "All High" },
-		{ code: "TFRDR", label: "All Low" },
-		{ code: "MSBPT", label: "All Mid" },
+		{ code: "TFIDR", label: "All Low" },
+		{ code: "MSBPV", label: "All Mid" },
 		{ code: "OCBAN", label: "Mixed (Open Diplomat)" },
-		{ code: "TFRAR", label: "Mixed (Quiet Helper)" },
+		{ code: "TFIAR", label: "Mixed (Quiet Helper)" },
 	];
 
 	return (

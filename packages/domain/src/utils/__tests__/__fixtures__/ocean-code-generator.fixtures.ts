@@ -12,9 +12,9 @@ export type InternalLevel = "L" | "M" | "H";
 export const TRAIT_LETTERS: Record<TraitName, [string, string, string]> = {
 	openness: ["T", "M", "O"],
 	conscientiousness: ["F", "S", "C"],
-	extraversion: ["R", "B", "E"],
+	extraversion: ["I", "B", "E"],
 	agreeableness: ["D", "P", "A"],
-	neuroticism: ["R", "T", "N"],
+	neuroticism: ["R", "V", "N"],
 };
 
 const LEVEL_INDEX: Record<InternalLevel, number> = { L: 0, M: 1, H: 2 };

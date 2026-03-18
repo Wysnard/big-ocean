@@ -20,24 +20,23 @@ describe("GeometricSignature", () => {
 		});
 
 		it("maps all Low letters to small shapes (0.5x baseSize)", () => {
-			// T=Traditional(openness low), F=Flexible(consc low), R=Reserved(extra low), D=Direct(agree low), R=Resilient(neuro low)
-			// Note: T collides (openness low=small, neuroticism mid=medium) — last-write-wins → T=medium
-			// So first letter T renders as medium (24), rest are small (16)
-			const lowCode = "TFRDR";
+			// T=Traditional(openness low), F=Flexible(consc low), I=Introverted(extra low), D=Direct(agree low), R=Resilient(neuro low)
+			// All 15 letters are now unique — no collisions
+			const lowCode = "TFIDR";
 			const { container } = render(<GeometricSignature oceanCode={lowCode} baseSize={32} />);
 			const svgs = container.querySelectorAll("svg");
 
 			expect(svgs).toHaveLength(5);
-			expect(svgs[0].getAttribute("height")).toBe("24"); // T → medium (collision: neuroticism mid overwrites openness low)
+			expect(svgs[0].getAttribute("height")).toBe("16"); // T → small
 			expect(svgs[1].getAttribute("height")).toBe("16"); // F → small
-			expect(svgs[2].getAttribute("height")).toBe("16"); // R → small
+			expect(svgs[2].getAttribute("height")).toBe("16"); // I → small
 			expect(svgs[3].getAttribute("height")).toBe("16"); // D → small
 			expect(svgs[4].getAttribute("height")).toBe("16"); // R → small
 		});
 
 		it("maps all Mid letters to medium shapes (0.75x baseSize)", () => {
-			// G=Grounded, B=Balanced, A=Ambivert, N=Negotiator, T=Temperate — all Mid
-			const midCode = "MSBPT";
+			// M=Moderate, S=Steady, B=Balanced, P=Pragmatic, V=Variable — all Mid
+			const midCode = "MSBPV";
 			const { container } = render(<GeometricSignature oceanCode={midCode} baseSize={32} />);
 			const svgs = container.querySelectorAll("svg");
 
@@ -48,21 +47,19 @@ describe("GeometricSignature", () => {
 		});
 
 		it("maps mixed codes to correct size tiers", () => {
-			// O=High(32), B=Mid(24), I=Low(16), W=High(32), T=Mid(24)
-			const { container } = render(<GeometricSignature oceanCode="OSRAT" baseSize={32} />);
+			// O=High(32), S=Mid(24), I=Low(16), A=High(32), V=Mid(24)
+			const { container } = render(<GeometricSignature oceanCode="OSIAV" baseSize={32} />);
 			const svgs = container.querySelectorAll("svg");
 
 			expect(svgs[0].getAttribute("height")).toBe("32"); // O → large
-			expect(svgs[1].getAttribute("height")).toBe("24"); // B → medium
+			expect(svgs[1].getAttribute("height")).toBe("24"); // S → medium
 			expect(svgs[2].getAttribute("height")).toBe("16"); // I → small
-			expect(svgs[3].getAttribute("height")).toBe("32"); // W → large
-			expect(svgs[4].getAttribute("height")).toBe("24"); // T → medium
+			expect(svgs[3].getAttribute("height")).toBe("32"); // A → large
+			expect(svgs[4].getAttribute("height")).toBe("24"); // V → medium
 		});
 
 		it("maps every valid trait letter to a known size", () => {
-			// Letters with collisions in the flat LETTER_TO_SIZE_TIER map (last-write-wins):
-			// T: openness low=small, neuroticism mid=medium → T=medium
-			// R: extraversion low=small, neuroticism low=small → R=small (no conflict)
+			// All 15 letters are unique — no collisions in the flat LETTER_TO_SIZE_TIER map
 			const EXPECTED_TIER: Record<string, number> = {};
 			for (const [, letters] of Object.entries(TRAIT_LETTER_MAP)) {
 				// Mirrors the production flat-map build order (last write wins)

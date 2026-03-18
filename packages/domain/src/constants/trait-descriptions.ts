@@ -58,7 +58,7 @@ export const TRAIT_DESCRIPTIONS = {
 		tagline:
 			"Captures sociability, assertiveness, and positive emotionality. High scorers draw energy from social interaction; low scorers recharge through solitude and quiet reflection.",
 		levels: {
-			R: "Quiet reflection and one-on-one conversations recharge you. Depth matters more than breadth — a small circle of close friends suits you better than a wide social network.",
+			I: "Quiet reflection and one-on-one conversations recharge you. Depth matters more than breadth — a small circle of close friends suits you better than a wide social network.",
 			B: "Social energy and solitude both have a place in your life. A lively gathering one evening, a quiet night in the next — you shift between them with ease.",
 			E: "Being around people is what charges your batteries. You bring others together naturally, keep conversations alive, and put people at ease with your warmth.",
 		},
@@ -77,7 +77,7 @@ export const TRAIT_DESCRIPTIONS = {
 			"Indicates emotional reactivity and vulnerability to stress. High scorers experience feelings intensely and are more prone to anxiety; low scorers remain calm under pressure.",
 		levels: {
 			R: "A steady emotional baseline carries you through pressure and setbacks. You stay calm, recover quickly, and make clear-headed decisions even when the stakes are high.",
-			T: "Highs and lows both register genuinely, but a solid internal process keeps you moving forward. Self-awareness helps you handle what comes up without getting stuck.",
+			V: "Highs and lows both register genuinely, but a solid internal process keeps you moving forward. Self-awareness helps you handle what comes up without getting stuck.",
 			N: "Emotions run deep — joy and stress both hit with real intensity. That sensitivity fuels sharp intuition, genuine empathy, and a rich inner life others may not see.",
 		},
 	},
