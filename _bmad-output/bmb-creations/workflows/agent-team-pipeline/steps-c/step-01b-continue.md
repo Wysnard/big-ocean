@@ -4,8 +4,6 @@ description: 'Resume pipeline from previous session — skip completed stories, 
 
 nextStepFile: './step-02-execute.md'
 pipelineState: '{implementation_artifacts}/pipeline-state.yaml'
-parallelismPlan: '{implementation_artifacts}/sprint-parallelism-plan.md'
-sprintStatus: '{implementation_artifacts}/sprint-status.yaml'
 ---
 
 # Step 1b: Continue Pipeline

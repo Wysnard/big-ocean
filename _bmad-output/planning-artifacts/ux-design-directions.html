@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>big-ocean — Design Direction Showcase</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #FFF8F0; --fg: #1A1A2E; --card: #FFF0E8; --card-fg: #1A1A2E;
+    --primary: #FF0080; --primary-hover: #FF1493; --primary-fg: #FFFFFF;
+    --secondary: #FF6B2B; --secondary-fg: #FFFFFF;
+    --tertiary: #00B4A6; --tertiary-fg: #FFFFFF;
+    --accent: #FFE8D8; --accent-fg: #1A1A2E;
+    --muted: #FFF0E8; --muted-fg: #6B6580;
+    --border: #FFD6C4;
+    --success: #00C896; --warning: #FFB020; --destructive: #FF3B5C;
+    --depth-surface: #FFF8F0; --depth-shallows: #FFECDB;
+    --depth-mid: #FFE0CA; --depth-deep: #FFD4B9;
+    --gradient-celebration: linear-gradient(120deg, #FF0080, #FF1493, #FF6B2B);
+    --gradient-progress: linear-gradient(90deg, #00B4A6, #00D4C8);
+    --trait-O: #A855F7; --trait-C: #FF6B2B; --trait-E: #FF0080;
+    --trait-A: #00B4A6; --trait-N: #1c1c9c;
+    --font-heading: 'Space Grotesk', system-ui, sans-serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-data: 'JetBrains Mono', monospace;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
+    --radius-button: 12px; --radius-card: 16px; --radius-dialog: 24px;
+    --radius-hero: 32px; --radius-full: 9999px;
+    --bubble-border-color: rgba(0, 180, 166, 0.45);
+    --bubble-fill-color: rgba(0, 180, 166, 0.04);
+    --bubble-opacity: 0.22;
+  }
+  .dark {
+    --bg: #0A0E27; --fg: #F0EDE8; --card: #141838; --card-fg: #F0EDE8;
+    --primary: #A78BFA; --primary-hover: #C4B5FD; --primary-fg: #0A0E27;
+    --secondary: #34D399; --secondary-fg: #0A0E27;
+    --tertiary: #FF2D9B; --tertiary-fg: #FFFFFF;
+    --accent: #1C2148; --accent-fg: #F0EDE8;
+    --muted: #141838; --muted-fg: #8B85A0;
+    --border: #252A52;
+    --success: #00E0A0; --warning: #FFB830; --destructive: #FF4D6A;
+    --depth-surface: #0A0E27; --depth-shallows: #101432;
+    --depth-mid: #171C40; --depth-deep: #1E244E;
+    --gradient-celebration: linear-gradient(120deg, #A78BFA, #34D399, #FF2D9B);
+    --gradient-progress: linear-gradient(90deg, #A78BFA, #C4B5FD);
+    --trait-O: #C084FC; --trait-C: #FF8F5E; --trait-E: #FF4DA6;
+    --trait-A: #2DD4BF; --trait-N: #6366F1;
+    --bubble-border-color: #F0EDE8;
+    --bubble-fill-color: rgba(240, 237, 232, 0.04);
+    --bubble-opacity: 0.18;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  body { font-family: var(--font-body); background: var(--bg); color: var(--fg); line-height: 1.5; transition: background 0.3s, color 0.3s; }
+
+  /* ========== OCEAN SHAPES (SVG inline) ========== */
+  .ocean-shape { display: inline-block; vertical-align: middle; }
+
+  /* ========== NAV ========== */
+  .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); padding: var(--space-3) var(--space-6); display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(12px); }
+  .nav-title { font-family: var(--font-heading); font-size: 1.125rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .nav-links { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center; }
+  .nav-links a { font-size: 0.75rem; padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); background: var(--accent); color: var(--accent-fg); text-decoration: none; font-weight: 500; transition: all 0.2s; white-space: nowrap; }
+  .nav-links a:hover { background: var(--primary); color: var(--primary-fg); }
+  .theme-toggle { cursor: pointer; font-size: 1.25rem; background: none; border: none; padding: var(--space-1); }
+
+  /* ========== SECTIONS ========== */
+  .section { min-height: 100vh; padding: 80px var(--space-6) var(--space-16); max-width: 1200px; margin: 0 auto; }
+  .section-title { font-family: var(--font-heading); font-size: 2.25rem; font-weight: 700; margin-bottom: var(--space-2); }
+  .section-subtitle { color: var(--muted-fg); font-size: 1rem; margin-bottom: var(--space-12); max-width: 65ch; }
+  .section-label { font-family: var(--font-data); font-size: 0.75rem; color: var(--primary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: var(--space-2); }
+
+  /* ========== SURFACE 1: AMBIENT VISUALIZATION ========== */
+  .ocean-demo { position: relative; border-radius: var(--radius-hero); overflow: hidden; height: 450px; background: var(--depth-surface); }
+  .ocean-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .ocean-bubble { position: absolute; border-radius: 50%; border: 1px solid var(--bubble-border-color); background: var(--bubble-fill-color); opacity: var(--bubble-opacity); animation: bubbleRise linear infinite; }
+  .ocean-bubble:nth-child(1) { width: 12px; height: 12px; left: 10%; animation-duration: 9s; }
+  .ocean-bubble:nth-child(2) { width: 8px; height: 8px; left: 25%; animation-duration: 13s; animation-delay: 2s; }
+  .ocean-bubble:nth-child(3) { width: 16px; height: 16px; left: 45%; animation-duration: 11s; animation-delay: 4s; }
+  .ocean-bubble:nth-child(4) { width: 6px; height: 6px; left: 65%; animation-duration: 15s; animation-delay: 1s; }
+  .ocean-bubble:nth-child(5) { width: 10px; height: 10px; left: 80%; animation-duration: 10s; animation-delay: 3s; }
+  .ocean-bubble:nth-child(6) { width: 14px; height: 14px; left: 55%; animation-duration: 12s; animation-delay: 5s; }
+  @keyframes bubbleRise { 0% { bottom: -20px; opacity: var(--bubble-opacity); transform: translateX(0) scale(0.95); } 10% { transform: translateX(4px) scale(1); } 25% { transform: translateX(-3px) scale(1.04); } 55% { transform: translateX(-2px) scale(1.03); } 85% { opacity: var(--bubble-opacity); } 100% { bottom: 110%; opacity: 0; transform: translateX(0) scale(0.96); } }
+
+  /* Geometric creatures floating */
+  .ocean-creature { position: absolute; opacity: 0.12; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+  .creature-circle { animation: creatureDrift1 18s infinite alternate; left: 15%; top: 60%; }
+  .creature-triangle { animation: creatureDrift2 22s infinite alternate; right: 20%; top: 30%; }
+  .creature-diamond { animation: creatureDrift3 20s infinite alternate; left: 50%; top: 45%; }
+  .creature-rect { animation: creatureDrift4 16s infinite alternate; right: 35%; bottom: 25%; }
+  .creature-halfcircle { animation: creatureDrift5 24s infinite alternate; left: 30%; top: 20%; }
+  @keyframes creatureDrift1 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(30px, -20px) rotate(10deg); } }
+  @keyframes creatureDrift2 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(-25px, 15px) rotate(-8deg); } }
+  @keyframes creatureDrift3 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(20px, 25px) rotate(15deg); } }
+  @keyframes creatureDrift4 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(-15px, -30px) rotate(-12deg); } }
+  @keyframes creatureDrift5 { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(35px, 10px) rotate(5deg); } }
+
+  .ocean-caustic { position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 50%, var(--depth-shallows) 0%, transparent 50%), radial-gradient(ellipse at 70% 30%, var(--depth-mid) 0%, transparent 40%); opacity: 0.5; animation: causticShift 12s ease-in-out infinite alternate; }
+  @keyframes causticShift { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(20px, -10px) scale(1.05); } }
+
+  .ocean-states { display: flex; gap: var(--space-4); margin-top: var(--space-6); flex-wrap: wrap; }
+  .ocean-state-card { flex: 1; min-width: 180px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-4); }
+  .ocean-state-card h4 { font-family: var(--font-heading); font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-1); }
+  .ocean-state-card p { font-size: 0.78rem; color: var(--muted-fg); line-height: 1.5; }
+  .energy-bar { height: 4px; border-radius: 2px; margin-top: var(--space-3); background: var(--border); overflow: hidden; }
+  .energy-fill { height: 100%; border-radius: 2px; background: var(--gradient-progress); }
+
+  /* ========== SURFACE 2: RESULTS PAGE (GRID) ========== */
+  .results-demo { background: var(--depth-surface); border: 1px solid var(--border); border-radius: var(--radius-hero); overflow: hidden; }
+
+  /* Hero section */
+  .results-hero { padding: var(--space-8) var(--space-8) var(--space-6); text-align: center; position: relative; overflow: hidden; }
+  .results-hero-shapes { position: absolute; inset: 0; pointer-events: none; }
+  .hero-shape-bg { position: absolute; opacity: 0.06; }
+  .hero-shape-bg:nth-child(1) { top: -20px; right: -20px; }
+  .hero-shape-bg:nth-child(2) { bottom: 10px; left: 20px; }
+  .hero-shape-bg:nth-child(3) { top: 30%; right: 15%; }
+
+  .geo-sig { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: var(--space-4); }
+  .geo-sig svg { animation: shapeReveal 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  @keyframes shapeReveal { from { transform: scale(0) rotate(-8deg); opacity: 0; } to { transform: scale(1) rotate(0deg); opacity: 1; } }
+
+  .results-archetype { font-family: var(--font-heading); font-size: 2.25rem; font-weight: 700; background: var(--gradient-celebration); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: fadeIn 400ms ease 1200ms both; }
+  .results-ocean-code { font-family: var(--font-data); font-size: 1.125rem; color: var(--muted-fg); margin-top: var(--space-2); letter-spacing: 0.2em; }
+  .results-desc { color: var(--muted-fg); font-size: 0.875rem; max-width: 50ch; margin: var(--space-3) auto 0; line-height: 1.6; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Grid */
+  .results-grid { padding: var(--space-6) var(--space-6) var(--space-8); display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 5px; max-width: 1120px; margin: 0 auto; }
+  .col-full { grid-column: 1 / -1; }
+
+  /* Strand */
+  .strand-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-6); }
+  .strand-row { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3) 0; border-bottom: 1px solid var(--border); }
+  .strand-row:last-child { border-bottom: none; }
+  .strand-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .strand-dot svg { width: 18px; height: 18px; }
+  .strand-info { flex: 1; }
+  .strand-trait-name { font-family: var(--font-data); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted-fg); }
+  .strand-level { font-family: var(--font-heading); font-size: 0.875rem; font-weight: 600; }
+
+  /* Radar + confidence row */
+  .radar-row { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .viz-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-6); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; }
+  .viz-card h4 { font-family: var(--font-heading); font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-4); }
+
+  /* Radar chart (simplified SVG) */
+  .radar-svg { width: 180px; height: 180px; }
+
+  /* Confidence ring */
+  .confidence-ring { position: relative; width: 120px; height: 120px; }
+  .confidence-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .confidence-ring-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .confidence-pct { font-family: var(--font-data); font-size: 1.5rem; font-weight: 700; }
+  .confidence-sub { font-size: 0.65rem; color: var(--muted-fg); }
+
+  /* Trait cards */
+  .trait-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-4); cursor: pointer; transition: all 0.2s; }
+  .trait-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+  .trait-card-header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+  .trait-card-header svg { flex-shrink: 0; }
+  .trait-card-name { font-family: var(--font-heading); font-size: 0.875rem; font-weight: 600; flex: 1; }
+  .trait-card-level { font-size: 0.7rem; padding: 2px 8px; border-radius: var(--radius-full); background: var(--accent); font-weight: 500; }
+  .trait-card-score { font-family: var(--font-data); font-size: 1.75rem; font-weight: 700; }
+  .trait-card-score span { font-size: 0.875rem; color: var(--muted-fg); font-weight: 400; }
+  .trait-card-bar { height: 6px; background: var(--border); border-radius: 3px; margin: var(--space-2) 0 var(--space-3); overflow: hidden; }
+  .trait-card-fill { height: 100%; border-radius: 3px; }
+  .facet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .facet-item { display: flex; align-items: center; gap: 4px; font-size: 0.7rem; }
+  .facet-bar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .facet-fill { height: 100%; border-radius: 2px; }
+  .facet-name { width: 52px; color: var(--muted-fg); font-size: 0.6rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+  .trait-card-hint { font-size: 0.7rem; color: var(--muted-fg); margin-top: var(--space-3); text-align: center; }
+
+  /* ========== SURFACE 3: PORTRAIT (SPINE FORMAT) ========== */
+  .portrait-demo { max-width: 65ch; margin: 0 auto; padding: var(--space-16) var(--space-6); line-height: 1.75; }
+  .portrait-section { margin-bottom: var(--space-8); }
+  .portrait-section-header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+  .portrait-section-emoji { font-size: 1.5rem; }
+  .portrait-section-title { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; }
+  .portrait-section-sub { font-size: 0.875rem; color: var(--muted-fg); font-style: italic; margin-bottom: var(--space-4); }
+  .portrait-body p { margin-bottom: var(--space-4); font-size: 1rem; }
+  .portrait-highlight { background: linear-gradient(120deg, transparent 0%, var(--accent) 10%, var(--accent) 90%, transparent 100%); padding: 2px 0; cursor: pointer; transition: background 0.2s; }
+  .portrait-highlight:hover { background: linear-gradient(120deg, transparent 0%, var(--depth-mid) 10%, var(--depth-mid) 90%, transparent 100%); }
+  .portrait-actions { display: flex; gap: var(--space-3); margin-top: var(--space-8); flex-wrap: wrap; padding-top: var(--space-6); border-top: 1px solid var(--border); }
+
+  /* ========== SURFACE 4: PORTRAIT CURTAIN ========== */
+  .curtain-demo { background: var(--card); border-radius: var(--radius-hero); padding: var(--space-8); text-align: center; max-width: 640px; margin: 0 auto; }
+  .curtain-locked { padding: var(--space-6); border: 2px dashed var(--border); border-radius: var(--radius-card); margin-bottom: var(--space-6); }
+  .curtain-locked-text { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 600; margin-bottom: var(--space-2); }
+  .curtain-locked-sub { color: var(--muted-fg); font-size: 0.875rem; margin-bottom: var(--space-6); }
+  .curtain-blurred { filter: blur(8px); opacity: 0.4; font-size: 0.875rem; line-height: 1.75; padding: var(--space-4); user-select: none; max-width: 50ch; margin: 0 auto; text-align: left; }
+  .founder-section { background: var(--accent); border-radius: var(--radius-card); padding: var(--space-6); margin-bottom: var(--space-6); text-align: left; }
+  .founder-header { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+  .founder-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-celebration); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.875rem; }
+  .founder-name { font-family: var(--font-heading); font-weight: 600; font-size: 0.875rem; }
+  .founder-label { font-size: 0.75rem; color: var(--muted-fg); }
+  .founder-excerpt { font-size: 0.875rem; line-height: 1.65; font-style: italic; }
+  .pwyw-section { text-align: center; }
+  .pwyw-headline { font-family: var(--font-heading); font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-2); }
+  .pwyw-sub { font-size: 0.875rem; color: var(--muted-fg); margin-bottom: var(--space-2); max-width: 45ch; margin-left: auto; margin-right: auto; }
+  .pwyw-credit { font-size: 0.8rem; color: var(--tertiary); margin-bottom: var(--space-4); }
+  .polar-note { font-size: 0.7rem; color: var(--muted-fg); margin-top: var(--space-2); font-style: italic; }
+
+  /* ========== SURFACE 5: TRANSITION ========== */
+  .transition-demo { position: relative; border-radius: var(--radius-hero); overflow: hidden; background: var(--depth-surface); }
+  .transition-phases { display: flex; }
+  .transition-phase { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-6) var(--space-3); position: relative; border-right: 1px solid var(--border); transition: all 0.3s; min-height: 260px; }
+  .transition-phase:last-child { border-right: none; }
+  .transition-phase:hover { background: var(--depth-shallows); }
+  .transition-phase-label { font-family: var(--font-data); font-size: 0.6rem; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: var(--space-2); }
+  .transition-phase-icon { font-size: 2rem; margin-bottom: var(--space-2); }
+  .transition-phase-name { font-family: var(--font-heading); font-size: 0.8rem; font-weight: 600; text-align: center; }
+  .transition-phase-desc { font-size: 0.68rem; color: var(--muted-fg); text-align: center; margin-top: var(--space-1); max-width: 120px; }
+
+  /* ========== SURFACE 6: PERSONALITY CARD ========== */
+  .card-variants { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-6); }
+  .personality-card { aspect-ratio: 1.91/1; border-radius: var(--radius-card); padding: var(--space-6); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; color: #fff; min-height: 220px; }
+  .personality-card::before { content: ''; position: absolute; inset: 0; opacity: 0.15; background: radial-gradient(circle at 80% 20%, rgba(255,255,255,0.3), transparent 50%); }
+  .card-v1 { background: linear-gradient(135deg, #A855F7, #FF0080, #FF6B2B); }
+  .card-v2 { background: linear-gradient(135deg, #0A0E27, #1C2148, #252A52); border: 1px solid rgba(255,255,255,0.1); }
+  .card-v3 { background: linear-gradient(135deg, #00B4A6, #A855F7); }
+  .card-top { position: relative; z-index: 1; }
+  .card-archetype { font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; }
+  .card-ocean-code { font-family: var(--font-data); font-size: 0.875rem; letter-spacing: 0.2em; opacity: 0.8; margin-top: 4px; }
+  .card-footer { display: flex; justify-content: space-between; align-items: flex-end; position: relative; z-index: 1; }
+  .card-logo { display: flex; align-items: center; gap: 4px; font-family: var(--font-heading); font-size: 0.8rem; font-weight: 600; opacity: 0.8; }
+  .card-logo svg { opacity: 0.9; }
+  .card-shapes { display: flex; gap: 4px; align-items: center; }
+  .card-shapes svg { opacity: 0.7; }
+  /* Floating shapes on card */
+  .card-float-shapes { position: absolute; inset: 0; pointer-events: none; }
+  .card-float-shapes svg { position: absolute; opacity: 0.08; }
+
+  /* ========== SURFACE 7: RELATIONSHIP ========== */
+  .relationship-demo { background: var(--card); border-radius: var(--radius-hero); padding: var(--space-8); max-width: 800px; margin: 0 auto; }
+  .relationship-header { display: flex; align-items: center; justify-content: center; gap: var(--space-6); margin-bottom: var(--space-8); }
+  .relationship-user { text-align: center; }
+  .relationship-avatar { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; color: #fff; margin: 0 auto var(--space-2); }
+  .relationship-name { font-family: var(--font-heading); font-size: 0.875rem; font-weight: 600; }
+  .relationship-archetype-small { font-size: 0.75rem; color: var(--muted-fg); }
+  .relationship-vs { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--muted-fg); }
+  .relationship-trait-row { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+  .relationship-trait-label { display: flex; align-items: center; justify-content: center; width: 24px; }
+  .relationship-bar-container { flex: 1; position: relative; height: 24px; background: var(--border); border-radius: 12px; overflow: hidden; }
+  .relationship-bar-a, .relationship-bar-b { position: absolute; top: 0; height: 100%; border-radius: 12px; opacity: 0.7; display: flex; align-items: center; padding: 0 var(--space-2); font-family: var(--font-data); font-size: 0.65rem; color: #fff; font-weight: 500; }
+  .relationship-bar-a { left: 0; } .relationship-bar-b { right: 0; }
+  .relationship-insight { background: var(--accent); border-radius: var(--radius-card); padding: var(--space-4); margin-top: var(--space-6); }
+  .relationship-insight-title { font-family: var(--font-heading); font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-2); }
+  .relationship-insight-body { font-size: 0.875rem; line-height: 1.6; }
+
+  /* ========== SURFACE 8: PUBLIC PROFILE ========== */
+  .profile-demo { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-hero); overflow: hidden; max-width: 640px; margin: 0 auto; }
+  .profile-hero { height: 120px; position: relative; overflow: hidden; }
+  .profile-hero-bg { position: absolute; inset: 0; background: var(--gradient-celebration); opacity: 0.8; }
+  .profile-hero-shapes { position: absolute; inset: 0; pointer-events: none; }
+  .profile-hero-shapes svg { position: absolute; opacity: 0.15; }
+  .profile-content { padding: var(--space-6); text-align: center; margin-top: -40px; position: relative; }
+  .profile-avatar-large { width: 80px; height: 80px; border-radius: 50%; background: var(--gradient-celebration); border: 4px solid var(--bg); display: flex; align-items: center; justify-content: center; font-family: var(--font-heading); font-size: 2rem; font-weight: 700; color: #fff; margin: 0 auto var(--space-3); }
+  .profile-name { font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; }
+  .profile-archetype { font-size: 1rem; color: var(--primary); font-weight: 500; margin-bottom: var(--space-1); }
+  .profile-ocean-code { font-family: var(--font-data); font-size: 0.875rem; color: var(--muted-fg); letter-spacing: 0.15em; margin-bottom: var(--space-4); }
+  .profile-geo-sig { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: var(--space-6); }
+  .profile-trait-circles { display: flex; gap: var(--space-3); justify-content: center; margin-bottom: var(--space-4); }
+  .profile-trait-circle { width: 48px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .profile-trait-circle-inner { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-data); font-size: 0.7rem; font-weight: 600; color: #fff; }
+  .profile-trait-circle span { font-size: 0.6rem; color: var(--muted-fg); }
+  .profile-teaser { background: var(--accent); border-radius: var(--radius-card); padding: var(--space-6); margin-top: var(--space-4); }
+  .profile-teaser-title { font-family: var(--font-heading); font-size: 1rem; font-weight: 600; margin-bottom: var(--space-2); }
+  .profile-teaser-body { font-size: 0.875rem; color: var(--muted-fg); margin-bottom: var(--space-4); }
+  .profile-teaser-blurred { filter: blur(6px); opacity: 0.4; font-size: 0.8rem; padding: var(--space-3); user-select: none; margin-bottom: var(--space-4); }
+
+  /* ========== BUTTONS ========== */
+  .btn { display: inline-flex; align-items: center; justify-content: center; padding: var(--space-3) var(--space-6); border-radius: var(--radius-button); font-family: var(--font-body); font-size: 0.875rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; }
+  .btn-primary { background: var(--primary); color: var(--primary-fg); }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-secondary { background: var(--accent); color: var(--accent-fg); border: 1px solid var(--border); }
+  .btn-ghost { background: transparent; color: var(--fg); border: 1px solid var(--border); }
+  .btn-sm { padding: var(--space-1) var(--space-3); font-size: 0.75rem; }
+
+  @media (max-width: 768px) {
+    .section { padding: 80px var(--space-4) var(--space-8); }
+    .section-title { font-size: 1.5rem; }
+    .transition-phases { flex-wrap: wrap; }
+    .transition-phase { min-width: 50%; border-bottom: 1px solid var(--border); min-height: 180px; }
+    .card-variants { grid-template-columns: 1fr; }
+    .relationship-header { flex-direction: column; gap: var(--space-3); }
+    .nav-links { display: none; }
+    .results-grid { grid-template-columns: 1fr; }
+    .radar-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-title">
+    big-
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--trait-O)"><circle cx="12" cy="12" r="10"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--trait-C)"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--trait-E)"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--trait-A)"><polygon points="12,2 22,22 2,22"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--trait-N)"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+  </div>
+  <div class="nav-links">
+    <a href="#ambient">Ambient</a>
+    <a href="#results">Results</a>
+    <a href="#portrait">Portrait</a>
+    <a href="#curtain">Curtain</a>
+    <a href="#transition">Transition</a>
+    <a href="#card">Card</a>
+    <a href="#relationship">Relationship</a>
+    <a href="#profile">Profile</a>
+    <a href="#charts">Charts</a>
+  </div>
+  <button class="theme-toggle" onclick="document.body.classList.toggle('dark')">🌙</button>
+</nav>
+
+<!-- 1. AMBIENT VISUALIZATION -->
+<section class="section" id="ambient">
+  <div class="section-label">Surface 1</div>
+  <h2 class="section-title">Ambient Visualization — Geometric Ocean</h2>
+  <p class="section-subtitle">Geometric shapes (trait creatures) drift through the ocean layer alongside bubbles. Responds to conversational energy — not personality dimensions. Each trait has its shape: Circle (O), Half-Circle (C), Rectangle (E), Triangle (A), Diamond (N).</p>
+
+  <div class="ocean-demo">
+    <div class="ocean-caustic"></div>
+    <div class="ocean-layer">
+      <div class="ocean-bubble"></div>
+      <div class="ocean-bubble"></div>
+      <div class="ocean-bubble"></div>
+      <div class="ocean-bubble"></div>
+      <div class="ocean-bubble"></div>
+      <div class="ocean-bubble"></div>
+      <!-- Geometric creatures -->
+      <svg class="ocean-creature creature-circle" width="48" height="48" viewBox="0 0 24 24" fill="var(--trait-O)"><circle cx="12" cy="12" r="10"/></svg>
+      <svg class="ocean-creature creature-triangle" width="40" height="40" viewBox="0 0 24 24" fill="var(--trait-A)"><polygon points="12,2 22,22 2,22"/></svg>
+      <svg class="ocean-creature creature-diamond" width="36" height="36" viewBox="0 0 24 24" fill="var(--trait-N)"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+      <svg class="ocean-creature creature-rect" width="32" height="32" viewBox="0 0 24 24" fill="var(--trait-E)"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+      <svg class="ocean-creature creature-halfcircle" width="44" height="44" viewBox="0 0 24 24" fill="var(--trait-C)"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+    </div>
+  </div>
+
+  <div class="ocean-states">
+    <div class="ocean-state-card">
+      <h4>Act 1: Settling In</h4>
+      <p>Gentle, slow. Few bubbles drift lazily. Shapes barely visible, distant. The ocean is calm — inviting the user in.</p>
+      <div class="energy-bar"><div class="energy-fill" style="width: 20%"></div></div>
+    </div>
+    <div class="ocean-state-card">
+      <h4>Act 2: Deep Exploration</h4>
+      <p>Energy builds. More bubbles, faster. Shapes emerge more clearly, drifting closer. The ocean mirrors engagement depth.</p>
+      <div class="energy-bar"><div class="energy-fill" style="width: 65%"></div></div>
+    </div>
+    <div class="ocean-state-card">
+      <h4>Act 3: Convergence</h4>
+      <p>Peak energy. Rich, active. Multiple bubble streams. Shapes prominent and closer. Deep caustic movement.</p>
+      <div class="energy-bar"><div class="energy-fill" style="width: 90%"></div></div>
+    </div>
+    <div class="ocean-state-card">
+      <h4>The Breath</h4>
+      <p>Consolidation. Bubbles slow. Shapes drift to center. Caustics settle. 3-5 seconds of stillness.</p>
+      <div class="energy-bar"><div class="energy-fill" style="width: 40%"></div></div>
+    </div>
+    <div class="ocean-state-card">
+      <h4>Results / Portrait</h4>
+      <p>Quiet background. Minimal motion. Shapes still present but faint. The room has gotten quieter.</p>
+      <div class="energy-bar"><div class="energy-fill" style="width: 15%"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. RESULTS PAGE -->
+<section class="section" id="results">
+  <div class="section-label">Surface 2</div>
+  <h2 class="section-title">Results Page — Grid Layout</h2>
+  <p class="section-subtitle">Existing layout: Hero with GeometricSignature → Strand → Radar + Confidence → 3+2 Trait Card grid. Portrait curtain and relationship invite integrate into this grid.</p>
+
+  <div class="results-demo">
+    <!-- Hero -->
+    <div class="results-hero">
+      <div class="results-hero-shapes">
+        <svg class="hero-shape-bg" style="top:-20px;right:-20px" width="180" height="180" viewBox="0 0 24 24" fill="var(--trait-O)"><circle cx="12" cy="12" r="10"/></svg>
+        <svg class="hero-shape-bg" style="bottom:10px;left:20px" width="80" height="80" viewBox="0 0 24 24" fill="var(--trait-A)"><polygon points="12,2 22,22 2,22"/></svg>
+        <svg class="hero-shape-bg" style="top:30%;right:15%" width="60" height="60" viewBox="0 0 24 24" fill="var(--trait-E)"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+      </div>
+      <!-- Geometric Signature -->
+      <div class="geo-sig">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--trait-O)" style="animation-delay:0ms"><circle cx="12" cy="12" r="10"/></svg>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--trait-C)" style="animation-delay:200ms"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--trait-E)" style="animation-delay:400ms"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--trait-A)" style="animation-delay:600ms"><polygon points="12,2 22,22 2,22"/></svg>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--trait-N)" style="animation-delay:800ms"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+      </div>
+      <div class="results-archetype">The Quiet Architect</div>
+      <div class="results-ocean-code">
+        <span style="color:var(--trait-O)">O</span>
+        <span style="color:var(--trait-C)">C</span>
+        <span style="color:var(--trait-E)">B</span>
+        <span style="color:var(--trait-A)">A</span>
+        <span style="color:var(--trait-N)">T</span>
+      </div>
+      <div class="results-desc">A systematic mind that builds elegant structures while caring deeply about the people who inhabit them.</div>
+    </div>
+
+    <div class="results-grid">
+      <!-- Portrait curtain (col-full) -->
+      <div class="col-full" style="background: var(--card); border: 2px solid var(--primary); border-radius: var(--radius-card); padding: var(--space-6); text-align: center; margin-bottom: 5px;">
+        <div style="font-family: var(--font-heading); font-size: 1rem; font-weight: 600; margin-bottom: var(--space-2);">Your Portrait</div>
+        <div style="font-size: 0.8rem; color: var(--muted-fg); margin-bottom: var(--space-4);">Nerin wrote you a personal portrait based on your conversation.</div>
+        <button class="btn btn-primary btn-sm">Unlock Portrait · PWYW</button>
+      </div>
+
+      <!-- Strand (col-full) -->
+      <div class="col-full strand-card">
+        <div class="strand-row">
+          <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-O) 15%, transparent);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-O)"><circle cx="12" cy="12" r="10"/></svg>
+          </div>
+          <div class="strand-info">
+            <div class="strand-trait-name">Openness</div>
+            <div class="strand-level" style="color: var(--trait-O)">Very Open</div>
+          </div>
+        </div>
+        <div class="strand-row">
+          <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-C) 15%, transparent);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-C)"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+          </div>
+          <div class="strand-info">
+            <div class="strand-trait-name">Conscientiousness</div>
+            <div class="strand-level" style="color: var(--trait-C)">Conscientious</div>
+          </div>
+        </div>
+        <div class="strand-row">
+          <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-E) 15%, transparent);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-E)"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+          </div>
+          <div class="strand-info">
+            <div class="strand-trait-name">Extraversion</div>
+            <div class="strand-level" style="color: var(--trait-E)">Balanced</div>
+          </div>
+        </div>
+        <div class="strand-row">
+          <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-A) 15%, transparent);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-A)"><polygon points="12,2 22,22 2,22"/></svg>
+          </div>
+          <div class="strand-info">
+            <div class="strand-trait-name">Agreeableness</div>
+            <div class="strand-level" style="color: var(--trait-A)">Agreeable</div>
+          </div>
+        </div>
+        <div class="strand-row">
+          <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-N) 15%, transparent);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-N)"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+          </div>
+          <div class="strand-info">
+            <div class="strand-trait-name">Neuroticism</div>
+            <div class="strand-level" style="color: var(--trait-N)">Tempered</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Radar + Confidence -->
+      <div class="col-full radar-row">
+        <div class="viz-card">
+          <h4>Personality Radar</h4>
+          <svg class="radar-svg" viewBox="0 0 200 200">
+            <polygon points="100,20 180,75 155,165 45,165 20,75" fill="none" stroke="var(--border)" stroke-width="1"/>
+            <polygon points="100,50 155,87 140,142 60,142 45,87" fill="none" stroke="var(--border)" stroke-width="0.5"/>
+            <polygon points="100,82 100,20 180,75 155,165 45,165 20,75" fill="none" stroke="transparent"/>
+            <!-- Data polygon -->
+            <polygon points="100,28 168,80 130,158 52,148 30,72" fill="var(--primary)" fill-opacity="0.12" stroke="var(--primary)" stroke-width="1.5"/>
+            <!-- Vertices -->
+            <circle cx="100" cy="28" r="4" fill="var(--trait-O)"/>
+            <circle cx="168" cy="80" r="4" fill="var(--trait-C)"/>
+            <circle cx="130" cy="158" r="4" fill="var(--trait-E)"/>
+            <circle cx="52" cy="148" r="4" fill="var(--trait-A)"/>
+            <circle cx="30" cy="72" r="4" fill="var(--trait-N)"/>
+            <!-- Labels -->
+            <text x="100" y="14" text-anchor="middle" font-family="var(--font-data)" font-size="9" fill="var(--trait-O)">O 82</text>
+            <text x="188" y="80" text-anchor="start" font-family="var(--font-data)" font-size="9" fill="var(--trait-C)">C 88</text>
+            <text x="138" y="174" text-anchor="start" font-family="var(--font-data)" font-size="9" fill="var(--trait-E)">E 45</text>
+            <text x="38" y="174" text-anchor="end" font-family="var(--font-data)" font-size="9" fill="var(--trait-A)">A 76</text>
+            <text x="12" y="72" text-anchor="end" font-family="var(--font-data)" font-size="9" fill="var(--trait-N)">N 52</text>
+          </svg>
+        </div>
+        <div class="viz-card">
+          <h4>Confidence</h4>
+          <div class="confidence-ring">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="52" fill="none" stroke="var(--border)" stroke-width="8"/>
+              <circle cx="60" cy="60" r="52" fill="none" stroke="var(--primary)" stroke-width="8" stroke-dasharray="272" stroke-dashoffset="54" stroke-linecap="round"/>
+            </svg>
+            <div class="confidence-ring-label">
+              <div class="confidence-pct">80%</div>
+              <div class="confidence-sub">12 messages</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trait Cards Row 1: O, C, E -->
+      <div class="trait-card">
+        <div class="trait-card-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--trait-O)"><circle cx="12" cy="12" r="10"/></svg>
+          <div class="trait-card-name">Openness</div>
+          <div class="trait-card-level">Very Open</div>
+        </div>
+        <div class="trait-card-score" style="color: var(--trait-O)">82<span>/120</span></div>
+        <div class="trait-card-bar"><div class="trait-card-fill" style="width:68%;background:var(--trait-O)"></div></div>
+        <div class="facet-grid">
+          <div class="facet-item"><span class="facet-name">Imagination</span><div class="facet-bar"><div class="facet-fill" style="width:75%;background:var(--trait-O)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Artistic</span><div class="facet-bar"><div class="facet-fill" style="width:80%;background:var(--trait-O)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Emotionality</span><div class="facet-bar"><div class="facet-fill" style="width:60%;background:var(--trait-O)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Adventure</span><div class="facet-bar"><div class="facet-fill" style="width:70%;background:var(--trait-O)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Intellect</span><div class="facet-bar"><div class="facet-fill" style="width:85%;background:var(--trait-O)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Liberalism</span><div class="facet-bar"><div class="facet-fill" style="width:55%;background:var(--trait-O)"></div></div></div>
+        </div>
+        <div class="trait-card-hint">Tap to see evidence →</div>
+      </div>
+
+      <div class="trait-card">
+        <div class="trait-card-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--trait-C)"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+          <div class="trait-card-name">Conscientiousness</div>
+          <div class="trait-card-level">Conscientious</div>
+        </div>
+        <div class="trait-card-score" style="color: var(--trait-C)">88<span>/120</span></div>
+        <div class="trait-card-bar"><div class="trait-card-fill" style="width:73%;background:var(--trait-C)"></div></div>
+        <div class="facet-grid">
+          <div class="facet-item"><span class="facet-name">Self-efficacy</span><div class="facet-bar"><div class="facet-fill" style="width:80%;background:var(--trait-C)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Orderliness</span><div class="facet-bar"><div class="facet-fill" style="width:90%;background:var(--trait-C)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Dutifulness</span><div class="facet-bar"><div class="facet-fill" style="width:70%;background:var(--trait-C)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Achievement</span><div class="facet-bar"><div class="facet-fill" style="width:85%;background:var(--trait-C)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Discipline</span><div class="facet-bar"><div class="facet-fill" style="width:65%;background:var(--trait-C)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Cautiousness</span><div class="facet-bar"><div class="facet-fill" style="width:75%;background:var(--trait-C)"></div></div></div>
+        </div>
+        <div class="trait-card-hint">Tap to see evidence →</div>
+      </div>
+
+      <div class="trait-card">
+        <div class="trait-card-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--trait-E)"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+          <div class="trait-card-name">Extraversion</div>
+          <div class="trait-card-level">Balanced</div>
+        </div>
+        <div class="trait-card-score" style="color: var(--trait-E)">45<span>/120</span></div>
+        <div class="trait-card-bar"><div class="trait-card-fill" style="width:38%;background:var(--trait-E)"></div></div>
+        <div class="facet-grid">
+          <div class="facet-item"><span class="facet-name">Friendliness</span><div class="facet-bar"><div class="facet-fill" style="width:50%;background:var(--trait-E)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Gregarious</span><div class="facet-bar"><div class="facet-fill" style="width:30%;background:var(--trait-E)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Assertive</span><div class="facet-bar"><div class="facet-fill" style="width:45%;background:var(--trait-E)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Activity</span><div class="facet-bar"><div class="facet-fill" style="width:40%;background:var(--trait-E)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Excitement</span><div class="facet-bar"><div class="facet-fill" style="width:55%;background:var(--trait-E)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Cheerfulness</span><div class="facet-bar"><div class="facet-fill" style="width:35%;background:var(--trait-E)"></div></div></div>
+        </div>
+        <div class="trait-card-hint">Tap to see evidence →</div>
+      </div>
+
+      <!-- Row 2: A, N -->
+      <div class="trait-card">
+        <div class="trait-card-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--trait-A)"><polygon points="12,2 22,22 2,22"/></svg>
+          <div class="trait-card-name">Agreeableness</div>
+          <div class="trait-card-level">Agreeable</div>
+        </div>
+        <div class="trait-card-score" style="color: var(--trait-A)">76<span>/120</span></div>
+        <div class="trait-card-bar"><div class="trait-card-fill" style="width:63%;background:var(--trait-A)"></div></div>
+        <div class="facet-grid">
+          <div class="facet-item"><span class="facet-name">Trust</span><div class="facet-bar"><div class="facet-fill" style="width:65%;background:var(--trait-A)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Morality</span><div class="facet-bar"><div class="facet-fill" style="width:70%;background:var(--trait-A)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Altruism</span><div class="facet-bar"><div class="facet-fill" style="width:80%;background:var(--trait-A)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Cooperation</span><div class="facet-bar"><div class="facet-fill" style="width:60%;background:var(--trait-A)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Modesty</span><div class="facet-bar"><div class="facet-fill" style="width:55%;background:var(--trait-A)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Sympathy</span><div class="facet-bar"><div class="facet-fill" style="width:75%;background:var(--trait-A)"></div></div></div>
+        </div>
+        <div class="trait-card-hint">Tap to see evidence →</div>
+      </div>
+
+      <div class="trait-card">
+        <div class="trait-card-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--trait-N)"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+          <div class="trait-card-name">Neuroticism</div>
+          <div class="trait-card-level">Tempered</div>
+        </div>
+        <div class="trait-card-score" style="color: var(--trait-N)">52<span>/120</span></div>
+        <div class="trait-card-bar"><div class="trait-card-fill" style="width:43%;background:var(--trait-N)"></div></div>
+        <div class="facet-grid">
+          <div class="facet-item"><span class="facet-name">Anxiety</span><div class="facet-bar"><div class="facet-fill" style="width:50%;background:var(--trait-N)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Anger</span><div class="facet-bar"><div class="facet-fill" style="width:35%;background:var(--trait-N)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Depression</span><div class="facet-bar"><div class="facet-fill" style="width:45%;background:var(--trait-N)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Self-consc.</span><div class="facet-bar"><div class="facet-fill" style="width:55%;background:var(--trait-N)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Immoderate</span><div class="facet-bar"><div class="facet-fill" style="width:40%;background:var(--trait-N)"></div></div></div>
+          <div class="facet-item"><span class="facet-name">Vulnerable</span><div class="facet-bar"><div class="facet-fill" style="width:60%;background:var(--trait-N)"></div></div></div>
+        </div>
+        <div class="trait-card-hint">Tap to see evidence →</div>
+      </div>
+
+      <!-- Relationship invite (locked, col-full) -->
+      <div class="col-full" style="background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-4); text-align: center; opacity: 0.5; filter: blur(1px);">
+        <div style="font-size: 0.8rem; color: var(--muted-fg);">🔒 Unlock portrait to compare with someone who matters</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. PORTRAIT (SPINE FORMAT) -->
+<section class="section" id="portrait">
+  <div class="section-label">Surface 3</div>
+  <h2 class="section-title">Portrait — Spine Format with Headers</h2>
+  <p class="section-subtitle">Nerin's writing style creates the "letter" quality. The portrait uses the existing spine format with emoji headers and thematic sections — same artistic direction, just wider reading width (65ch) and generous line-height (1.75).</p>
+
+  <div class="portrait-demo">
+    <div class="portrait-section">
+      <div class="portrait-section-header">
+        <span class="portrait-section-emoji">🤿</span>
+        <span class="portrait-section-title">The Dive Log</span>
+      </div>
+      <div class="portrait-body">
+        <p>What a fascinating dive we just had. You found your rhythm quickly once we got past the surface — no hesitation when the questions went deeper. We covered some real territory together. What I see is someone who lives in an interesting contradiction: <span class="portrait-highlight">you crave novelty and unpredictability, but only when you feel prepared for it.</span> You're emotionally deep but learning to trust that depth.</p>
+      </div>
+    </div>
+
+    <div class="portrait-section">
+      <div class="portrait-section-header">
+        <span class="portrait-section-emoji">🧬</span>
+        <span class="portrait-section-title">What Sets You Apart</span>
+      </div>
+      <div class="portrait-section-sub">What makes you, you</div>
+      <div class="portrait-body">
+        <p>Even after a thousand dives in my log, this particular combination caught my attention. You have this selective relationship with uncertainty that I don't see often. Most people either love unpredictability or they don't. But you? <span class="portrait-highlight">You actively seek it in some areas and freeze up in others.</span> You want the waves to surprise you, you want technology to reshape how you think — but when a stranger approaches you, uncertainty makes you shut down. That's not contradictory, it's strategic.</p>
+      </div>
+    </div>
+
+    <div class="portrait-section">
+      <div class="portrait-section-header">
+        <span class="portrait-section-emoji">💎</span>
+        <span class="portrait-section-title">Your Depths</span>
+      </div>
+      <div class="portrait-section-sub">What you're good at</div>
+      <div class="portrait-body">
+        <p>Your ability to adapt in real-time is genuine. Once you're in the moment — on a wave, in an unpredictable situation you've prepared for — you thrive. That combination of preparation and flexibility is powerful.</p>
+        <p>You think in systems. When you talked about innovation and technology reshaping how we think — you see the bigger picture. <span class="portrait-highlight">You understand why things work the way they do, not just how.</span></p>
+      </div>
+    </div>
+
+    <div class="portrait-section">
+      <div class="portrait-section-header">
+        <span class="portrait-section-emoji">🌊</span>
+        <span class="portrait-section-title">Undercurrents</span>
+      </div>
+      <div class="portrait-section-sub">What limits you</div>
+      <div class="portrait-body">
+        <p>Uncertainty paralysis with people is holding you back more than you realize. You know this — you can see it happening in real time when someone approaches you and you freeze. But here's what you might not see: that response is costing you connections with exactly the kind of people you want to meet.</p>
+      </div>
+    </div>
+
+    <div class="portrait-section">
+      <div class="portrait-section-header">
+        <span class="portrait-section-emoji">⚓</span>
+        <span class="portrait-section-title">The Anchor</span>
+      </div>
+      <div class="portrait-section-sub">What's holding you in place</div>
+      <div class="portrait-body">
+        <p>There's a belief running underneath everything — that showing up authentically with people is inherently risky. You can handle uncertainty in waves, in technology, in ideas — but with people, your default is to protect first, connect second. What would it look like if you treated meeting new people like you treat reading the waves — observing first, then committing fully?</p>
+      </div>
+    </div>
+
+    <div class="portrait-actions">
+      <button class="btn btn-primary btn-sm">Share a passage</button>
+      <button class="btn btn-secondary btn-sm">Invite for comparison</button>
+      <button class="btn btn-ghost btn-sm">Go deeper with Nerin · €25</button>
+    </div>
+  </div>
+</section>
+
+<!-- 4. PORTRAIT CURTAIN -->
+<section class="section" id="curtain">
+  <div class="section-label">Surface 4</div>
+  <h2 class="section-title">Portrait Curtain — PWYW Gate</h2>
+  <p class="section-subtitle">Blurred preview + founder portrait. "Unlock Portrait" triggers Polar embedded checkout modal (overlay) where user selects PWYW amount inside Polar's UI.</p>
+
+  <div class="curtain-demo" style="max-width: 720px; text-align: left;">
+    <!-- Blurred portrait preview -->
+    <div class="curtain-locked">
+      <div class="curtain-locked-text" style="text-align: center;">Your Portrait</div>
+      <div class="curtain-locked-sub" style="text-align: center;">Nerin wrote you a personal portrait based on everything you shared.</div>
+      <div class="curtain-blurred">
+        🤿 The Dive Log — What a fascinating dive we just had. You found your rhythm quickly once we got past the surface — no hesitation when the questions went deeper. We covered some real territory together. What I see is someone who lives in an interesting contradiction...
+      </div>
+    </div>
+
+    <!-- Founder origin story — storytelling experience -->
+    <div style="margin-bottom: var(--space-6);">
+      <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+        <div class="founder-avatar">V</div>
+        <div>
+          <div class="founder-name">Vincent, founder</div>
+          <div class="founder-label">Why I built big-ocean</div>
+        </div>
+      </div>
+
+      <div style="font-size: 0.9rem; line-height: 1.75; color: var(--fg);">
+        <p style="margin-bottom: var(--space-4);">I took every personality test out there. 16Personalities. Truity. The OCEAN quizzes. Each time I'd get a result — four letters, a percentage, maybe a paragraph that could describe anyone. I'd read it, nod, and forget it within a day.</p>
+        <p style="margin-bottom: var(--space-4);">Then one day, a friend described me in a way I'd never heard before. Not a label — a <em>story</em>. She told me about the contradiction she saw: how I chase depth in everything but build my life to move fast. How I care deeply about people but always keep one foot near the exit. It stuck with me for weeks. Not because it was flattering — because it was <em>true</em> in a way no test result had ever been.</p>
+        <p style="margin-bottom: var(--space-4);">That's when I realized: the problem isn't the science. The Big Five model works. The problem is that no one turns the science into something that <em>moves</em> you. Something you remember.</p>
+        <p style="margin-bottom: var(--space-4);">So I built Nerin — an AI that doesn't just assess you, but gets to know you through real conversation. And then writes you something personal. Not a score. Not a type. A portrait.</p>
+      </div>
+
+      <!-- Founder's own portrait excerpt -->
+      <div class="founder-section" style="margin-top: var(--space-4);">
+        <div style="font-size: 0.78rem; color: var(--muted-fg); margin-bottom: var(--space-2); font-family: var(--font-data); text-transform: uppercase; letter-spacing: 0.05em;">Here's what Nerin wrote for me</div>
+        <div class="founder-excerpt">
+          "You chase depth in everything, but you've built a life that moves fast. There's a paradox you don't talk about — how the thing you want most (time to think) is the thing you sacrifice first. The projects you're most proud of aren't the ones that succeeded. They're the ones where you felt you understood something new about yourself while building them..."
+        </div>
+      </div>
+    </div>
+
+    <!-- PWYW unlock -->
+    <div class="pwyw-section">
+      <div class="pwyw-headline">Unlock your portrait</div>
+      <div class="pwyw-sub">Pay what you feel it's worth — €1 minimum. Includes one relationship comparison.</div>
+      <div class="pwyw-credit">✨ Includes 1 relationship comparison credit</div>
+      <button class="btn btn-primary" style="width: 100%; max-width: 300px;">
+        Unlock my portrait
+      </button>
+      <div class="polar-note">Opens Polar checkout · Apple Pay · Google Pay · Card</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. TRANSITION -->
+<section class="section" id="transition">
+  <div class="section-label">Surface 5</div>
+  <h2 class="section-title">Conversation → Results Transition</h2>
+  <p class="section-subtitle">The "breath" — 3-5 seconds where geometric shapes consolidate, the conversation fades, and results emerge. Not a loading state — a designed pause.</p>
+
+  <div class="transition-demo">
+    <div class="transition-phases">
+      <div class="transition-phase">
+        <div class="transition-phase-label">Final turn</div>
+        <div class="transition-phase-icon">💬</div>
+        <div class="transition-phase-name">Nerin's last word</div>
+        <div class="transition-phase-desc">Seeds anticipation. Shapes still active in ocean.</div>
+      </div>
+      <div class="transition-phase">
+        <div class="transition-phase-label">0-1s</div>
+        <div class="transition-phase-icon">🌊</div>
+        <div class="transition-phase-name">Chat fades</div>
+        <div class="transition-phase-desc">UI dissolves. Ocean shapes drift toward center.</div>
+      </div>
+      <div class="transition-phase">
+        <div class="transition-phase-label">1-3s</div>
+        <div class="transition-phase-icon">✨</div>
+        <div class="transition-phase-name">Shapes consolidate</div>
+        <div class="transition-phase-desc">5 trait shapes converge into GeometricSignature formation.</div>
+      </div>
+      <div class="transition-phase">
+        <div class="transition-phase-label">3-5s</div>
+        <div class="transition-phase-icon">🎭</div>
+        <div class="transition-phase-name">Archetype rises</div>
+        <div class="transition-phase-desc">Shapes pop-in with staggered reveal. Name fades in.</div>
+      </div>
+      <div class="transition-phase">
+        <div class="transition-phase-label">5s+</div>
+        <div class="transition-phase-icon">📊</div>
+        <div class="transition-phase-name">Grid populates</div>
+        <div class="transition-phase-desc">Cards cascade in. Ocean quiets to background.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. PERSONALITY CARD -->
+<section class="section" id="card">
+  <div class="section-label">Surface 6</div>
+  <h2 class="section-title">Personality Card — Social Artifact</h2>
+  <p class="section-subtitle">Always shareable. Features the OceanShapeSet logo and trait-colored geometric shapes. Three gradient directions explored.</p>
+
+  <div class="card-variants">
+    <!-- V1: Celebration -->
+    <div class="personality-card card-v1">
+      <div class="card-float-shapes">
+        <svg width="120" height="120" viewBox="0 0 24 24" fill="rgba(255,255,255,0.15)" style="top:-20px;right:-20px"><circle cx="12" cy="12" r="10"/></svg>
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="rgba(255,255,255,0.08)" style="bottom:20px;left:20px"><polygon points="12,2 22,22 2,22"/></svg>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="rgba(255,255,255,0.06)" style="top:40%;left:30%"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+      </div>
+      <div class="card-top">
+        <div class="card-archetype">The Quiet Architect</div>
+        <div class="card-ocean-code">O C B A T</div>
+      </div>
+      <div class="card-footer">
+        <div class="card-logo">
+          big-
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="10"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#fff"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#fff"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#fff"><polygon points="12,2 22,22 2,22"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#fff"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+        </div>
+        <div class="card-shapes">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,0.9)"><circle cx="12" cy="12" r="10"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,0.9)"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,0.9)"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,0.9)"><polygon points="12,2 22,22 2,22"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,0.9)"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- V2: Dark Abyss -->
+    <div class="personality-card card-v2">
+      <div class="card-float-shapes">
+        <svg width="100" height="100" viewBox="0 0 24 24" fill="rgba(167,139,250,0.1)" style="top:-10px;right:-10px"><circle cx="12" cy="12" r="10"/></svg>
+        <svg width="50" height="50" viewBox="0 0 24 24" fill="rgba(52,211,153,0.08)" style="bottom:15px;left:15px"><polygon points="12,2 22,22 2,22"/></svg>
+      </div>
+      <div class="card-top">
+        <div class="card-archetype">The Quiet Architect</div>
+        <div class="card-ocean-code">O C B A T</div>
+      </div>
+      <div class="card-footer">
+        <div class="card-logo">
+          big-
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#C084FC"><circle cx="12" cy="12" r="10"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#FF8F5E"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#FF4DA6"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#2DD4BF"><polygon points="12,2 22,22 2,22"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#6366F1"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+        </div>
+        <div class="card-shapes">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="#C084FC"><circle cx="12" cy="12" r="10"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="#FF8F5E"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="#FF4DA6"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="#2DD4BF"><polygon points="12,2 22,22 2,22"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="#6366F1"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- V3: Trait gradient -->
+    <div class="personality-card card-v3">
+      <div class="card-float-shapes">
+        <svg width="90" height="90" viewBox="0 0 24 24" fill="rgba(255,255,255,0.12)" style="top:-15px;right:10%"><circle cx="12" cy="12" r="10"/></svg>
+        <svg width="70" height="70" viewBox="0 0 24 24" fill="rgba(255,255,255,0.06)" style="bottom:10px;right:20%"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+      </div>
+      <div class="card-top">
+        <div class="card-archetype">The Quiet Architect</div>
+        <div class="card-ocean-code">O C B A T</div>
+      </div>
+      <div class="card-footer">
+        <div class="card-logo">
+          big-
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="10"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#fff"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#fff"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#fff"><polygon points="12,2 22,22 2,22"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="#fff"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+        </div>
+        <div class="card-shapes">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,0.9)"><circle cx="12" cy="12" r="10"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,0.9)"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,0.9)"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,0.9)"><polygon points="12,2 22,22 2,22"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,0.9)"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ocean-states" style="margin-top: var(--space-6);">
+    <div class="ocean-state-card">
+      <h4>V1 — Celebration</h4>
+      <p>Brand gradient with floating geometric shapes. Bold, high social impact. Shapes reflect trait sizes (larger = higher score).</p>
+    </div>
+    <div class="ocean-state-card">
+      <h4>V2 — Abyss</h4>
+      <p>Dark mode palette. Premium feel. Trait-colored shapes in logo and footer. Stands out against bright social feeds.</p>
+    </div>
+    <div class="ocean-state-card">
+      <h4>V3 — Trait Gradient</h4>
+      <p>Top two trait colors as gradient. Every card is unique. Most "Spotify Wrapped" feel. Floating shapes add depth.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. RELATIONSHIP -->
+<section class="section" id="relationship">
+  <div class="section-label">Surface 7</div>
+  <h2 class="section-title">Relationship Analysis</h2>
+  <p class="section-subtitle">Side-by-side comparison with geometric shapes per trait. Narrative insight with evidence from both conversations.</p>
+
+  <div class="relationship-demo" style="max-width: 900px;">
+    <!-- Header: two users -->
+    <div class="relationship-header">
+      <div class="relationship-user">
+        <div class="relationship-avatar" style="background: linear-gradient(135deg, var(--trait-O), var(--trait-C));">V</div>
+        <div class="relationship-name">Vincent</div>
+        <div class="relationship-archetype-small">The Quiet Architect</div>
+        <div style="display: flex; gap: 3px; justify-content: center; margin-top: 4px;">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--trait-O)"><circle cx="12" cy="12" r="10"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--trait-C)"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--trait-E)"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--trait-A)"><polygon points="12,2 22,22 2,22"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--trait-N)"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+        </div>
+      </div>
+      <div class="relationship-vs">&</div>
+      <div class="relationship-user">
+        <div class="relationship-avatar" style="background: linear-gradient(135deg, var(--trait-E), var(--trait-A));">S</div>
+        <div class="relationship-name">Sarah</div>
+        <div class="relationship-archetype-small">The Warm Catalyst</div>
+        <div style="display: flex; gap: 3px; justify-content: center; margin-top: 4px;">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--trait-O)"><circle cx="12" cy="12" r="10"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--trait-C)"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--trait-E)"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--trait-A)"><polygon points="12,2 22,22 2,22"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--trait-N)"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Relationship Portrait (same spine format + typography as personal portrait) -->
+    <div class="portrait-demo" style="max-width: 65ch; margin: var(--space-6) auto; padding: var(--space-8) 0; line-height: 1.75;">
+
+      <div class="portrait-section">
+        <div class="portrait-section-header">
+          <span class="portrait-section-emoji">🤿</span>
+          <span class="portrait-section-title">Two Dives, One Ocean</span>
+        </div>
+        <div class="portrait-body">
+          <p>There's a pattern I noticed across both your conversations that neither of you mentioned directly. Vincent described how Sarah "makes the room warmer," and Sarah described how Vincent "makes the plan clearer" — <span class="portrait-highlight">neither of you realized you were describing the same dynamic from opposite sides.</span></p>
+        </div>
+      </div>
+
+      <div class="portrait-section">
+        <div class="portrait-section-header">
+          <span class="portrait-section-emoji">🧬</span>
+          <span class="portrait-section-title">Where You Click</span>
+        </div>
+        <div class="portrait-section-sub">The frequencies you share</div>
+        <div class="portrait-body">
+          <p>You operate on complementary frequencies. Vincent's conscientiousness (+34 above Sarah's) creates the scaffolding that Sarah's spontaneity fills with life. Sarah's extraversion (+34 above Vincent's) opens doors to people and experiences that Vincent's depth then makes meaningful. <span class="portrait-highlight">This isn't balance by accident — it's the reason you work.</span></p>
+          <p>Both of you scored high in openness — you share an intellectual curiosity and a love for exploring ideas together. When Vincent mentioned building systems "that make you think differently," Sarah lit up talking about "finding people who see the world sideways." Same impulse, different expression.</p>
+        </div>
+      </div>
+
+      <div class="portrait-section">
+        <div class="portrait-section-header">
+          <span class="portrait-section-emoji">🌊</span>
+          <span class="portrait-section-title">The Undercurrent</span>
+        </div>
+        <div class="portrait-section-sub">Where friction lives</div>
+        <div class="portrait-body">
+          <p>The tension point to watch: Sarah processes out loud, Vincent processes internally. When Sarah needs to talk through a problem, Vincent's first instinct is to listen and solve. <span class="portrait-highlight">What Sarah actually wants is to be <em>heard thinking</em>, not fixed.</span> When Vincent goes quiet, Sarah's first instinct is to fill the silence. What Vincent actually needs is space to arrive at his answer.</p>
+          <p>The 34-point conscientiousness gap shows up in how you plan together. Vincent wants the plan before the action. Sarah wants to start moving and figure it out on the way. Neither approach is wrong — but when one of you feels rushed and the other feels stalled, this is why.</p>
+        </div>
+      </div>
+
+      <div class="portrait-section">
+        <div class="portrait-section-header">
+          <span class="portrait-section-emoji">⚓</span>
+          <span class="portrait-section-title">What Holds You Together</span>
+        </div>
+        <div class="portrait-body">
+          <p>Here's what I think you both already know but haven't said out loud: you make each other braver. Vincent takes social risks he wouldn't take alone because Sarah makes the room feel safe enough to try. Sarah slows down and goes deeper because Vincent's attention tells her that depth is worth the patience. You don't complete each other — you expand each other.</p>
+        </div>
+      </div>
+
+      <div class="portrait-actions">
+        <button class="btn btn-primary btn-sm">Share with Sarah</button>
+        <button class="btn btn-secondary btn-sm">Download comparison card</button>
+        <button class="btn btn-ghost btn-sm">Invite someone else</button>
+      </div>
+    </div>
+
+    <!-- Overlaid Radar Chart (same component as results, two polygons) -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: var(--space-6);">
+      <div class="viz-card">
+        <h4>Overlaid Radar</h4>
+        <svg class="radar-svg" viewBox="0 0 200 200">
+          <!-- Grid rings -->
+          <polygon points="100,20 180,75 155,165 45,165 20,75" fill="none" stroke="var(--border)" stroke-width="1"/>
+          <polygon points="100,50 155,87 140,142 60,142 45,87" fill="none" stroke="var(--border)" stroke-width="0.5"/>
+          <!-- Vincent (primary) -->
+          <polygon points="100,28 168,80 130,158 52,148 30,72" fill="var(--primary)" fill-opacity="0.12" stroke="var(--primary)" stroke-width="1.5"/>
+          <!-- Sarah (secondary) -->
+          <polygon points="100,34 145,95 148,155 48,138 58,70" fill="var(--secondary)" fill-opacity="0.10" stroke="var(--secondary)" stroke-width="1.5" stroke-dasharray="6 3"/>
+          <!-- Trait vertices (shape + color) -->
+          <circle cx="100" cy="28" r="4" fill="var(--trait-O)"/>
+          <circle cx="168" cy="80" r="4" fill="var(--trait-C)"/>
+          <circle cx="130" cy="158" r="4" fill="var(--trait-E)"/>
+          <circle cx="52" cy="148" r="4" fill="var(--trait-A)"/>
+          <circle cx="30" cy="72" r="4" fill="var(--trait-N)"/>
+          <!-- Labels -->
+          <text x="100" y="14" text-anchor="middle" font-family="var(--font-data)" font-size="9" fill="var(--trait-O)">O</text>
+          <text x="188" y="80" text-anchor="start" font-family="var(--font-data)" font-size="9" fill="var(--trait-C)">C</text>
+          <text x="138" y="174" text-anchor="start" font-family="var(--font-data)" font-size="9" fill="var(--trait-E)">E</text>
+          <text x="38" y="174" text-anchor="end" font-family="var(--font-data)" font-size="9" fill="var(--trait-A)">A</text>
+          <text x="12" y="72" text-anchor="end" font-family="var(--font-data)" font-size="9" fill="var(--trait-N)">N</text>
+        </svg>
+        <div style="display: flex; gap: var(--space-4); font-size: 0.7rem; font-family: var(--font-data); margin-top: var(--space-2);">
+          <span><span style="display: inline-block; width: 12px; height: 3px; background: var(--primary); vertical-align: middle; margin-right: 4px;"></span>Vincent</span>
+          <span><span style="display: inline-block; width: 12px; height: 3px; background: var(--secondary); vertical-align: middle; margin-right: 4px; border-top: 1px dashed var(--secondary);"></span>Sarah</span>
+        </div>
+      </div>
+
+      <!-- Key dynamics cards (same card pattern as results) -->
+      <div style="display: flex; flex-direction: column; gap: 5px;">
+        <div style="background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-4); flex: 1;">
+          <div style="font-family: var(--font-heading); font-size: 0.8rem; font-weight: 600; margin-bottom: var(--space-2); color: var(--tertiary);">Where you click</div>
+          <div style="font-size: 0.8rem; line-height: 1.6;">Both high in openness — you share intellectual curiosity and love exploring ideas. Your agreeableness levels are close, meaning you navigate conflict similarly.</div>
+        </div>
+        <div style="background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-4); flex: 1;">
+          <div style="font-family: var(--font-heading); font-size: 0.8rem; font-weight: 600; margin-bottom: var(--space-2); color: var(--warning);">Where you stretch</div>
+          <div style="font-size: 0.8rem; line-height: 1.6;">The 34-point extraversion gap is your biggest difference. Sarah recharges through people; Vincent through solitude.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Strand comparison (reuses OceanCodeStrand component, side-by-side) -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: var(--space-6);">
+      <!-- Vincent's strand -->
+      <div class="strand-card">
+        <div style="font-family: var(--font-data); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted-fg); margin-bottom: var(--space-3);">Vincent</div>
+        <div class="strand-row">
+          <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-O) 15%, transparent);"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-O)"><circle cx="12" cy="12" r="10"/></svg></div>
+          <div class="strand-info"><div class="strand-trait-name">Openness</div><div class="strand-level" style="color: var(--trait-O)">Very Open · 82</div></div>
+        </div>
+        <div class="strand-row">
+          <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-C) 15%, transparent);"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-C)"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg></div>
+          <div class="strand-info"><div class="strand-trait-name">Conscientiousness</div><div class="strand-level" style="color: var(--trait-C)">Conscientious · 88</div></div>
+        </div>
+        <div class="strand-row">
+          <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-E) 15%, transparent);"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-E)"><rect x="7" y="2" width="10" height="20" rx="1"/></svg></div>
+          <div class="strand-info"><div class="strand-trait-name">Extraversion</div><div class="strand-level" style="color: var(--trait-E)">Balanced · 45</div></div>
+        </div>
+        <div class="strand-row">
+          <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-A) 15%, transparent);"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-A)"><polygon points="12,2 22,22 2,22"/></svg></div>
+          <div class="strand-info"><div class="strand-trait-name">Agreeableness</div><div class="strand-level" style="color: var(--trait-A)">Agreeable · 76</div></div>
+        </div>
+        <div class="strand-row">
+          <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-N) 15%, transparent);"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-N)"><polygon points="12,1 23,12 12,23 1,12"/></svg></div>
+          <div class="strand-info"><div class="strand-trait-name">Neuroticism</div><div class="strand-level" style="color: var(--trait-N)">Tempered · 52</div></div>
+        </div>
+      </div>
+      <!-- Sarah's strand -->
+      <div class="strand-card">
+        <div style="font-family: var(--font-data); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted-fg); margin-bottom: var(--space-3);">Sarah</div>
+        <div class="strand-row">
+          <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-O) 15%, transparent);"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-O)"><circle cx="12" cy="12" r="10"/></svg></div>
+          <div class="strand-info"><div class="strand-trait-name">Openness</div><div class="strand-level" style="color: var(--trait-O)">Open · 71</div></div>
+        </div>
+        <div class="strand-row">
+          <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-C) 15%, transparent);"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-C)"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg></div>
+          <div class="strand-info"><div class="strand-trait-name">Conscientiousness</div><div class="strand-level" style="color: var(--trait-C)">Moderate · 54</div></div>
+        </div>
+        <div class="strand-row">
+          <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-E) 15%, transparent);"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-E)"><rect x="7" y="2" width="10" height="20" rx="1"/></svg></div>
+          <div class="strand-info"><div class="strand-trait-name">Extraversion</div><div class="strand-level" style="color: var(--trait-E)">Extraverted · 79</div></div>
+        </div>
+        <div class="strand-row">
+          <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-A) 15%, transparent);"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-A)"><polygon points="12,2 22,22 2,22"/></svg></div>
+          <div class="strand-info"><div class="strand-trait-name">Agreeableness</div><div class="strand-level" style="color: var(--trait-A)">Very Agreeable · 85</div></div>
+        </div>
+        <div class="strand-row">
+          <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-N) 15%, transparent);"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-N)"><polygon points="12,1 23,12 12,23 1,12"/></svg></div>
+          <div class="strand-info"><div class="strand-trait-name">Neuroticism</div><div class="strand-level" style="color: var(--trait-N)">Composed · 35</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. PUBLIC PROFILE -->
+<section class="section" id="profile">
+  <div class="section-label">Surface 8</div>
+  <h2 class="section-title">Public Profile — Acquisition Surface</h2>
+  <p class="section-subtitle">Opt-in, private by default. GeometricSignature as visual identity. Comparison teaser with blurred preview converts viewers.</p>
+
+  <div class="profile-demo">
+    <div class="profile-hero">
+      <div class="profile-hero-bg"></div>
+      <div class="profile-hero-shapes">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="rgba(255,255,255,0.2)" style="top:-10px;right:20px"><circle cx="12" cy="12" r="10"/></svg>
+        <svg width="50" height="50" viewBox="0 0 24 24" fill="rgba(255,255,255,0.12)" style="bottom:5px;left:30px"><polygon points="12,2 22,22 2,22"/></svg>
+        <svg width="35" height="35" viewBox="0 0 24 24" fill="rgba(255,255,255,0.08)" style="top:20%;right:40%"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+      </div>
+    </div>
+    <div class="profile-content">
+      <div class="profile-avatar-large">V</div>
+      <div class="profile-name">Vincent</div>
+      <div class="profile-archetype">The Quiet Architect</div>
+
+      <!-- GeometricSignature -->
+      <div class="profile-geo-sig">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-O)"><circle cx="12" cy="12" r="10"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-C)"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-E)"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-A)"><polygon points="12,2 22,22 2,22"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-N)"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+      </div>
+
+      <div class="profile-ocean-code">
+        <span style="color:var(--trait-O)">H</span>
+        <span style="color:var(--trait-C)">H</span>
+        <span style="color:var(--trait-E)">M</span>
+        <span style="color:var(--trait-A)">H</span>
+        <span style="color:var(--trait-N)">M</span>
+      </div>
+
+      <!-- Reused: Radar + Strand (same components as results page) -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: var(--space-4) 0; text-align: left;">
+        <!-- Radar (same PersonalityRadarChart component) -->
+        <div class="viz-card">
+          <svg class="radar-svg" viewBox="0 0 200 200">
+            <polygon points="100,20 180,75 155,165 45,165 20,75" fill="none" stroke="var(--border)" stroke-width="1"/>
+            <polygon points="100,50 155,87 140,142 60,142 45,87" fill="none" stroke="var(--border)" stroke-width="0.5"/>
+            <polygon points="100,28 168,80 130,158 52,148 30,72" fill="var(--primary)" fill-opacity="0.12" stroke="var(--primary)" stroke-width="1.5"/>
+            <circle cx="100" cy="28" r="4" fill="var(--trait-O)"/>
+            <circle cx="168" cy="80" r="4" fill="var(--trait-C)"/>
+            <circle cx="130" cy="158" r="4" fill="var(--trait-E)"/>
+            <circle cx="52" cy="148" r="4" fill="var(--trait-A)"/>
+            <circle cx="30" cy="72" r="4" fill="var(--trait-N)"/>
+            <text x="100" y="14" text-anchor="middle" font-family="var(--font-data)" font-size="9" fill="var(--trait-O)">O 82</text>
+            <text x="188" y="80" text-anchor="start" font-family="var(--font-data)" font-size="9" fill="var(--trait-C)">C 88</text>
+            <text x="138" y="174" text-anchor="start" font-family="var(--font-data)" font-size="9" fill="var(--trait-E)">E 45</text>
+            <text x="38" y="174" text-anchor="end" font-family="var(--font-data)" font-size="9" fill="var(--trait-A)">A 76</text>
+            <text x="12" y="72" text-anchor="end" font-family="var(--font-data)" font-size="9" fill="var(--trait-N)">N 52</text>
+          </svg>
+        </div>
+
+        <!-- Strand (same OceanCodeStrand component) -->
+        <div class="strand-card">
+          <div class="strand-row">
+            <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-O) 15%, transparent);"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-O)"><circle cx="12" cy="12" r="10"/></svg></div>
+            <div class="strand-info"><div class="strand-trait-name">Openness</div><div class="strand-level" style="color: var(--trait-O)">Very Open</div></div>
+          </div>
+          <div class="strand-row">
+            <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-C) 15%, transparent);"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-C)"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg></div>
+            <div class="strand-info"><div class="strand-trait-name">Conscientiousness</div><div class="strand-level" style="color: var(--trait-C)">Conscientious</div></div>
+          </div>
+          <div class="strand-row">
+            <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-E) 15%, transparent);"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-E)"><rect x="7" y="2" width="10" height="20" rx="1"/></svg></div>
+            <div class="strand-info"><div class="strand-trait-name">Extraversion</div><div class="strand-level" style="color: var(--trait-E)">Balanced</div></div>
+          </div>
+          <div class="strand-row">
+            <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-A) 15%, transparent);"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-A)"><polygon points="12,2 22,22 2,22"/></svg></div>
+            <div class="strand-info"><div class="strand-trait-name">Agreeableness</div><div class="strand-level" style="color: var(--trait-A)">Agreeable</div></div>
+          </div>
+          <div class="strand-row">
+            <div class="strand-dot" style="background: color-mix(in srgb, var(--trait-N) 15%, transparent);"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--trait-N)"><polygon points="12,1 23,12 12,23 1,12"/></svg></div>
+            <div class="strand-info"><div class="strand-trait-name">Neuroticism</div><div class="strand-level" style="color: var(--trait-N)">Tempered</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparison CTA -->
+      <div class="profile-teaser">
+        <div class="profile-teaser-title">How would you compare?</div>
+        <div class="profile-teaser-body">Have a 30-minute conversation with Nerin. Then discover what your personality dynamic with Vincent really looks like.</div>
+        <div class="profile-teaser-blurred">
+          Your conscientiousness scores differ by 34 points — this creates a natural dynamic where one of you provides structure while the other brings flexibility. The extraversion gap means you'll recharge differently...
+        </div>
+        <button class="btn btn-primary" style="width: 100%; margin-bottom: var(--space-2);">Start my conversation with Nerin</button>
+        <div style="font-size: 0.75rem; color: var(--muted-fg);">Free · 30 minutes · Get your own archetype, traits, and comparison</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. CHART ARTISTIC DIRECTION -->
+<section class="section" id="charts">
+  <div class="section-label">Artistic Direction</div>
+  <h2 class="section-title">Chart & Data Visualization Language</h2>
+  <p class="section-subtitle">Unified visual language for all data displays across Results, Public Profile, and Relationship Analysis. Components are reused — only the data and context changes.</p>
+
+  <!-- Component reuse matrix -->
+  <div style="background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-6); margin-bottom: var(--space-8);">
+    <h3 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 600; margin-bottom: var(--space-4);">Component Reuse Matrix</h3>
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--border);">
+            <th style="text-align: left; padding: var(--space-2) var(--space-3); font-family: var(--font-data); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-fg);">Component</th>
+            <th style="text-align: center; padding: var(--space-2) var(--space-3); font-family: var(--font-data); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-fg);">Results</th>
+            <th style="text-align: center; padding: var(--space-2) var(--space-3); font-family: var(--font-data); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-fg);">Public Profile</th>
+            <th style="text-align: center; padding: var(--space-2) var(--space-3); font-family: var(--font-data); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-fg);">Relationship</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: var(--space-2) var(--space-3); font-weight: 500;">OceanCodeStrand</td>
+            <td style="text-align: center; padding: var(--space-2);">Full (5 rows)</td>
+            <td style="text-align: center; padding: var(--space-2);">Full (5 rows)</td>
+            <td style="text-align: center; padding: var(--space-2);">Side-by-side (2x)</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: var(--space-2) var(--space-3); font-weight: 500;">PersonalityRadarChart</td>
+            <td style="text-align: center; padding: var(--space-2);">Single polygon</td>
+            <td style="text-align: center; padding: var(--space-2);">Single polygon</td>
+            <td style="text-align: center; padding: var(--space-2);">Overlaid (2 polygons)</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: var(--space-2) var(--space-3); font-weight: 500;">TraitCard (w/ facets)</td>
+            <td style="text-align: center; padding: var(--space-2);">3+2 grid</td>
+            <td style="text-align: center; padding: var(--space-2);">-</td>
+            <td style="text-align: center; padding: var(--space-2);">-</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: var(--space-2) var(--space-3); font-weight: 500;">ConfidenceRingCard</td>
+            <td style="text-align: center; padding: var(--space-2);">Yes</td>
+            <td style="text-align: center; padding: var(--space-2);">-</td>
+            <td style="text-align: center; padding: var(--space-2);">-</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: var(--space-2) var(--space-3); font-weight: 500;">GeometricSignature</td>
+            <td style="text-align: center; padding: var(--space-2);">Hero</td>
+            <td style="text-align: center; padding: var(--space-2);">Hero</td>
+            <td style="text-align: center; padding: var(--space-2);">Per user (mini)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Chart principles -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-8);">
+    <div style="background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-6);">
+      <h4 style="font-family: var(--font-heading); font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-3);">Color as Identity</h4>
+      <p style="font-size: 0.8rem; color: var(--muted-fg); line-height: 1.6; margin-bottom: var(--space-3);">Every trait has a fixed color + shape pair. These never change across contexts. The user learns to read their personality through color alone.</p>
+      <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+        <span style="display: flex; align-items: center; gap: 4px; font-family: var(--font-data); font-size: 0.7rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--trait-O)"><circle cx="12" cy="12" r="10"/></svg> O
+        </span>
+        <span style="display: flex; align-items: center; gap: 4px; font-family: var(--font-data); font-size: 0.7rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--trait-C)"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg> C
+        </span>
+        <span style="display: flex; align-items: center; gap: 4px; font-family: var(--font-data); font-size: 0.7rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--trait-E)"><rect x="7" y="2" width="10" height="20" rx="1"/></svg> E
+        </span>
+        <span style="display: flex; align-items: center; gap: 4px; font-family: var(--font-data); font-size: 0.7rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--trait-A)"><polygon points="12,2 22,22 2,22"/></svg> A
+        </span>
+        <span style="display: flex; align-items: center; gap: 4px; font-family: var(--font-data); font-size: 0.7rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--trait-N)"><polygon points="12,1 23,12 12,23 1,12"/></svg> N
+        </span>
+      </div>
+    </div>
+
+    <div style="background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-6);">
+      <h4 style="font-family: var(--font-heading); font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-3);">Typography in Data</h4>
+      <p style="font-size: 0.8rem; color: var(--muted-fg); line-height: 1.6; margin-bottom: var(--space-3);">Scores, labels, and axis values always use <code style="background: var(--accent); padding: 1px 4px; border-radius: 4px; font-size: 0.75rem;">--font-data</code> (JetBrains Mono). Section titles use <code style="background: var(--accent); padding: 1px 4px; border-radius: 4px; font-size: 0.75rem;">--font-heading</code> (Space Grotesk). Descriptions use <code style="background: var(--accent); padding: 1px 4px; border-radius: 4px; font-size: 0.75rem;">--font-body</code> (DM Sans).</p>
+      <div style="font-family: var(--font-data); font-size: 1.5rem; font-weight: 700; color: var(--trait-O);">82<span style="font-size: 0.875rem; color: var(--muted-fg); font-weight: 400;">/120</span></div>
+    </div>
+
+    <div style="background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-6);">
+      <h4 style="font-family: var(--font-heading); font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-3);">Grid Lines & Axes</h4>
+      <p style="font-size: 0.8rem; color: var(--muted-fg); line-height: 1.6;">Minimal. Grid rings on radar use <code style="background: var(--accent); padding: 1px 4px; border-radius: 4px; font-size: 0.75rem;">--border</code> at 0.5-1px. No fill on grid shapes. Progress bars use 6px height with 3px radius. Facet bars use 3px height. Background always <code style="background: var(--accent); padding: 1px 4px; border-radius: 4px; font-size: 0.75rem;">--border</code>.</p>
+    </div>
+
+    <div style="background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-6);">
+      <h4 style="font-family: var(--font-heading); font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-3);">Fill & Opacity</h4>
+      <p style="font-size: 0.8rem; color: var(--muted-fg); line-height: 1.6;">Radar polygon: trait-colored stroke (1.5px) + 12% opacity fill. Second person overlay: dashed stroke (6 3) + 10% fill. Confidence ring: 8px stroke, rounded caps. Progress bars: solid trait color. Never use gradients inside charts.</p>
+    </div>
+
+    <div style="background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-6);">
+      <h4 style="font-family: var(--font-heading); font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-3);">Vertex Markers</h4>
+      <p style="font-size: 0.8rem; color: var(--muted-fg); line-height: 1.6;">Radar vertices use filled circles (r=4) in the trait's color. In future: replace circles with the trait's geometric shape as vertex markers (circle for O, half-circle for C, etc.) for even stronger identity.</p>
+    </div>
+
+    <div style="background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-6);">
+      <h4 style="font-family: var(--font-heading); font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-3);">Animation</h4>
+      <p style="font-size: 0.8rem; color: var(--muted-fg); line-height: 1.6;">Charts animate on reveal only (not loops). Radar polygon draws from center outward (300ms ease-out). Progress bars fill left-to-right (400ms staggered 50ms per trait). Confidence ring draws clockwise. All respect <code style="background: var(--accent); padding: 1px 4px; border-radius: 4px; font-size: 0.75rem;">prefers-reduced-motion</code>.</p>
+    </div>
+  </div>
+
+  <!-- Visual examples: chart states -->
+  <div style="margin-bottom: var(--space-8);">
+    <h3 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 600; margin-bottom: var(--space-4);">Chart Modes</h3>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4);">
+      <!-- Single user radar -->
+      <div class="viz-card">
+        <h4>Single User</h4>
+        <svg class="radar-svg" viewBox="0 0 200 200" style="width: 150px; height: 150px;">
+          <polygon points="100,20 180,75 155,165 45,165 20,75" fill="none" stroke="var(--border)" stroke-width="1"/>
+          <polygon points="100,28 168,80 130,158 52,148 30,72" fill="var(--primary)" fill-opacity="0.12" stroke="var(--primary)" stroke-width="1.5"/>
+          <circle cx="100" cy="28" r="4" fill="var(--trait-O)"/>
+          <circle cx="168" cy="80" r="4" fill="var(--trait-C)"/>
+          <circle cx="130" cy="158" r="4" fill="var(--trait-E)"/>
+          <circle cx="52" cy="148" r="4" fill="var(--trait-A)"/>
+          <circle cx="30" cy="72" r="4" fill="var(--trait-N)"/>
+        </svg>
+        <div style="font-size: 0.7rem; color: var(--muted-fg); margin-top: var(--space-2);">Results + Public Profile</div>
+      </div>
+
+      <!-- Comparison radar -->
+      <div class="viz-card">
+        <h4>Comparison</h4>
+        <svg class="radar-svg" viewBox="0 0 200 200" style="width: 150px; height: 150px;">
+          <polygon points="100,20 180,75 155,165 45,165 20,75" fill="none" stroke="var(--border)" stroke-width="1"/>
+          <polygon points="100,28 168,80 130,158 52,148 30,72" fill="var(--primary)" fill-opacity="0.12" stroke="var(--primary)" stroke-width="1.5"/>
+          <polygon points="100,34 145,95 148,155 48,138 58,70" fill="var(--secondary)" fill-opacity="0.10" stroke="var(--secondary)" stroke-width="1.5" stroke-dasharray="6 3"/>
+          <circle cx="100" cy="28" r="4" fill="var(--trait-O)"/>
+          <circle cx="168" cy="80" r="4" fill="var(--trait-C)"/>
+          <circle cx="130" cy="158" r="4" fill="var(--trait-E)"/>
+          <circle cx="52" cy="148" r="4" fill="var(--trait-A)"/>
+          <circle cx="30" cy="72" r="4" fill="var(--trait-N)"/>
+        </svg>
+        <div style="font-size: 0.7rem; color: var(--muted-fg); margin-top: var(--space-2);">Relationship Analysis</div>
+      </div>
+
+      <!-- Confidence ring -->
+      <div class="viz-card">
+        <h4>Confidence Ring</h4>
+        <div class="confidence-ring" style="width: 100px; height: 100px;">
+          <svg viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="var(--border)" stroke-width="8"/>
+            <circle cx="60" cy="60" r="52" fill="none" stroke="var(--primary)" stroke-width="8" stroke-dasharray="272" stroke-dashoffset="54" stroke-linecap="round"/>
+          </svg>
+          <div class="confidence-ring-label">
+            <div class="confidence-pct" style="font-size: 1.25rem;">80%</div>
+            <div class="confidence-sub">12 msg</div>
+          </div>
+        </div>
+        <div style="font-size: 0.7rem; color: var(--muted-fg); margin-top: var(--space-2);">Results only</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Theme behavior -->
+  <div style="background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-6);">
+    <h3 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 600; margin-bottom: var(--space-3);">Theme Behavior</h3>
+    <p style="font-size: 0.85rem; line-height: 1.6; margin-bottom: var(--space-3);">Charts adapt through CSS custom properties only — no conditional rendering. The same SVG works in both themes because all colors reference <code style="background: var(--accent); padding: 1px 4px; border-radius: 4px; font-size: 0.75rem;">var(--trait-*)</code> and <code style="background: var(--accent); padding: 1px 4px; border-radius: 4px; font-size: 0.75rem;">var(--border)</code>.</p>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); font-size: 0.8rem;">
+      <div>
+        <div style="font-family: var(--font-data); font-size: 0.7rem; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-2);">Light mode</div>
+        <ul style="list-style: none; padding: 0;">
+          <li style="margin-bottom: 4px;">Grid: <span style="font-family: var(--font-data); font-size: 0.75rem;">#FFD6C4</span> (warm border)</li>
+          <li style="margin-bottom: 4px;">Trait colors: vibrant (full saturation)</li>
+          <li style="margin-bottom: 4px;">Fill: 12% opacity (cream shows through)</li>
+          <li>Card bg: <span style="font-family: var(--font-data); font-size: 0.75rem;">#FFF0E8</span></li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-family: var(--font-data); font-size: 0.7rem; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-2);">Dark mode</div>
+        <ul style="list-style: none; padding: 0;">
+          <li style="margin-bottom: 4px;">Grid: <span style="font-family: var(--font-data); font-size: 0.75rem;">#252A52</span> (deep border)</li>
+          <li style="margin-bottom: 4px;">Trait colors: lighter variants (readable on dark)</li>
+          <li style="margin-bottom: 4px;">Fill: 12% opacity (abyss shows through)</li>
+          <li>Card bg: <span style="font-family: var(--font-data); font-size: 0.75rem;">#141838</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div style="text-align: center; padding: var(--space-16) var(--space-6); color: var(--muted-fg); font-size: 0.875rem;">
+  <p style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+    big-
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--trait-O)"><circle cx="12" cy="12" r="10"/></svg>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--trait-C)"><path d="M18 2 A10 10 0 0 0 18 22 Z"/></svg>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--trait-E)"><rect x="7" y="2" width="10" height="20" rx="1"/></svg>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--trait-A)"><polygon points="12,2 22,22 2,22"/></svg>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--trait-N)"><polygon points="12,1 23,12 12,23 1,12"/></svg>
+    &nbsp;Design Direction Showcase · 8 surfaces + chart direction · Toggle 🌙 for dark mode
+  </p>
+</div>
+
+</body>
+</html>

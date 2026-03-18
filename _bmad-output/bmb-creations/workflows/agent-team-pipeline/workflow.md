@@ -71,6 +71,10 @@ These are passed to subagents for richer context:
 - `innovation_file` = `{planning_artifacts}/*innovation*.md`
 - `project_context` = `**/project-context.md`
 
-### 2. First Step Execution
+### 2. Read Sprint Parallelism Plan
+
+**MANDATORY:** Read `{parallelism_plan}` completely before proceeding. This is the source of truth for which stories to execute and their parallelism constraints.
+
+### 3. First Step Execution
 
 Load, read the full file, and then execute `./steps-c/step-01-init.md` to begin the workflow.

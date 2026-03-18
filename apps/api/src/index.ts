@@ -9,7 +9,7 @@
 import "dotenv/config";
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import { createServer } from "node:http";
-import { HttpApiBuilder, HttpMiddleware } from "@effect/platform";
+import { HttpApiBuilder, HttpMiddleware, HttpServerRequest } from "@effect/platform";
 import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
 import { BigOceanApi } from "@workspace/contracts";
 import { AppConfig } from "@workspace/domain";
@@ -47,7 +47,7 @@ import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories
 import { NerinAgentAnthropicRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.anthropic.repository";
 import { NerinAgentMockRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.mock.repository";
 import { RedisIoRedisRepositoryLive } from "@workspace/infrastructure/repositories/redis.ioredis.repository";
-import { Context, Effect, Layer } from "effect";
+import { Cause, Context, Effect, Layer } from "effect";
 import { AssessmentGroupLive } from "./handlers/assessment";
 import { EvidenceGroupLive } from "./handlers/evidence";
 import { HealthGroupLive } from "./handlers/health";
@@ -326,7 +326,32 @@ const main = Effect.gen(function* () {
 	yield* logStartup(config.port, config.frontendUrl);
 
 	// Create HTTP server layer with CORS and Better Auth integration
-	const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
+	const errorLoggingMiddleware = HttpMiddleware.make((app) =>
+		HttpMiddleware.logger(app).pipe(
+			Effect.tap((response) =>
+				Effect.gen(function* () {
+					if (response.status >= 500) {
+						const request = yield* HttpServerRequest.HttpServerRequest;
+						const bodyText =
+							response.body._tag === "Uint8Array"
+								? new TextDecoder().decode(response.body.body)
+								: response.body._tag;
+						logger.error(`Server error ${response.status}: ${request.method} ${request.url}`, {
+							status: response.status,
+							method: request.method,
+							url: request.url,
+							responseBody: bodyText,
+						});
+					}
+				}),
+			),
+			Effect.tapErrorCause((cause) =>
+				Effect.sync(() => logger.error(`Unhandled server error: ${Cause.pretty(cause)}`)),
+			),
+		),
+	);
+
+	const HttpLive = HttpApiBuilder.serve(errorLoggingMiddleware).pipe(
 		Layer.provide(ApiLayer),
 		Layer.provide(
 			NodeHttpServer.layer(createCustomServerFactory(auth, config.betterAuthUrl, config.frontendUrl), {

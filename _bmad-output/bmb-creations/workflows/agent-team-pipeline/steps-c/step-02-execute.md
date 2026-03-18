@@ -78,7 +78,7 @@ For EACH story that needs execution, create a self-contained prompt by replacing
 | Variable | Source |
 |----------|--------|
 | `{{story_key}}` | Story key from pipeline state |
-| `{{epics_file}}` | Resolved path to epics.md |
+| `{{epics_file}}` | {epicsFile} |
 | `{{sprint_status}}` | Resolved path to sprint-status.yaml |
 | `{{baseline_commit}}` | From pipeline state |
 | `{{architecture_file}}` | From context_docs (or "not available") |

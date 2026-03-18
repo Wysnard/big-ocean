@@ -32,6 +32,15 @@ Read CLAUDE.md and any referenced docs for project conventions before implementi
 
 ---
 
+### STAGE 0: Environment Setup
+
+1. Run `pnpm install` to install all dependencies (worktrees do not carry node_modules)
+2. Verify installation succeeded — HALT if it fails
+
+**Output:** dependencies installed
+
+---
+
 ### STAGE 1: Create Story
 
 1. Read the epics file at `{{epics_file}}`
@@ -145,14 +154,24 @@ error: [typecheck error output]
 
 ### STAGE 8: CI Check
 
-1. Run: `gh pr checks --watch`
-2. If ALL checks pass: proceed to return success
-3. If ANY check fails:
+1. Wait 2 minutes for CI to start: `sleep 120`
+2. Poll CI status every 15 seconds until resolved:
+   ```
+   while true; do
+     status=$(gh pr checks --json state --jq '.[].state' 2>/dev/null)
+     if echo "$status" | grep -q "FAILURE"; then break; fi
+     if echo "$status" | grep -q "PENDING\|EXPECTED"; then sleep 15; continue; fi
+     if echo "$status" | grep -q "SUCCESS"; then break; fi
+     sleep 15
+   done
+   ```
+3. If ALL checks pass: proceed to return success
+4. If ANY check fails:
    a. Get failure logs: `gh run view <run-id> --log-failed`
    b. Read the failure logs and identify the issue
    c. Fix the issue in code
    d. Commit and push: `git push`
-   e. Run `gh pr checks --watch` again
+   e. Wait 2 minutes (`sleep 120`), then poll every 15 seconds again
    f. Repeat up to 3 times
 
 **HALT if 3 consecutive CI failures.** Report:

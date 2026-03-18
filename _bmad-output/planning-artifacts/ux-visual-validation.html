@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>big-ocean — Visual Validation v2</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #FFF8F0; --fg: #1A1A2E; --card: #FFF0E8; --card-fg: #1A1A2E;
+    --primary: #FF0080; --primary-hover: #FF1493; --primary-fg: #FFFFFF;
+    --accent: #FFE8D8; --accent-fg: #1A1A2E;
+    --muted: #FFF0E8; --muted-fg: #6B6580;
+    --border: #FFD6C4;
+    --trait-O: #A855F7; --trait-C: #FF6B2B; --trait-E: #FF0080;
+    --trait-A: #00B4A6; --trait-N: #1c1c9c;
+    --font-heading: 'Space Grotesk', system-ui, sans-serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-data: 'JetBrains Mono', monospace;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
+    --radius-button: 12px; --radius-card: 16px; --radius-dialog: 24px;
+    --radius-hero: 32px; --radius-full: 9999px;
+  }
+  .dark {
+    --bg: #0A0E27; --fg: #F0EDE8; --card: #141838; --card-fg: #F0EDE8;
+    --primary: #A78BFA; --primary-hover: #C4B5FD; --primary-fg: #0A0E27;
+    --accent: #1C2148; --accent-fg: #F0EDE8;
+    --muted: #141838; --muted-fg: #8B85A0;
+    --border: #252A52;
+    --trait-O: #C084FC; --trait-C: #FF8F5E; --trait-E: #FF4DA6;
+    --trait-A: #2DD4BF; --trait-N: #6366F1;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  body { font-family: var(--font-body); background: var(--bg); color: var(--fg); line-height: 1.5; transition: background 0.3s, color 0.3s; }
+
+  /* NAV */
+  .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); padding: var(--space-3) var(--space-6); display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(12px); }
+  .nav-title { font-family: var(--font-heading); font-size: 1.125rem; font-weight: 600; }
+  .nav-links { display: flex; gap: var(--space-2); align-items: center; }
+  .nav-links a { font-size: 0.75rem; padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); background: var(--accent); color: var(--accent-fg); text-decoration: none; font-weight: 500; transition: all 0.2s; }
+  .nav-links a:hover { background: var(--primary); color: var(--primary-fg); }
+  .theme-toggle { cursor: pointer; font-size: 1.25rem; background: none; border: none; padding: var(--space-1); color: var(--fg); }
+
+  /* SECTIONS */
+  .section { min-height: 100vh; padding: 80px var(--space-6) var(--space-16); max-width: 900px; margin: 0 auto; }
+  .section-title { font-family: var(--font-heading); font-size: 2rem; font-weight: 700; margin-bottom: var(--space-2); }
+  .section-subtitle { color: var(--muted-fg); font-size: 0.95rem; margin-bottom: var(--space-8); max-width: 65ch; }
+  .section-label { font-family: var(--font-data); font-size: 0.7rem; color: var(--primary); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: var(--space-2); }
+
+  /* CONTROLS */
+  .controls { display: flex; gap: var(--space-3); justify-content: center; margin-top: var(--space-6); flex-wrap: wrap; }
+  .ctrl-btn { font-family: var(--font-data); font-size: 0.75rem; padding: var(--space-2) var(--space-4); border-radius: var(--radius-button); border: 1px solid var(--border); background: var(--card); color: var(--fg); cursor: pointer; transition: all 0.2s; }
+  .ctrl-btn:hover { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+  .ctrl-btn.primary { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+  .ctrl-btn.primary:hover { background: var(--primary-hover); }
+
+  .design-notes { margin-top: var(--space-6); padding: var(--space-4); background: var(--accent); border-radius: var(--radius-card); font-size: 0.85rem; line-height: 1.6; }
+  .design-notes h4 { font-family: var(--font-heading); font-size: 0.9rem; font-weight: 600; margin-bottom: var(--space-2); }
+  .design-notes ul { padding-left: var(--space-6); }
+  .design-notes li { margin-bottom: var(--space-1); }
+  .divider { border: none; border-top: 1px solid var(--border); margin: var(--space-16) 0; }
+
+  /* ========== COMPONENT 1: SEALED ENVELOPE ========== */
+  .envelope-demo { display: flex; flex-direction: column; align-items: center; gap: var(--space-8); }
+
+  .envelope-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .envelope-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+
+  .envelope-container:hover { transform: translateY(-4px); }
+  .envelope-container:hover .envelope-svg { filter: drop-shadow(0 8px 24px rgba(255, 0, 128, 0.2)); }
+  .envelope-container:hover .seal-pentagon { transform: translate(-50%, -50%) scale(1.08); }
+
+  .envelope-svg-wrapper {
+    position: relative;
+    width: 200px;
+    height: 160px;
+  }
+
+  .envelope-svg {
+    width: 200px;
+    height: 160px;
+    transition: filter 0.3s ease, opacity 0.6s ease;
+    animation: envelopeBreathe 4s ease-in-out infinite;
+  }
+
+  .envelope-body { fill: var(--trait-A); }
+  .envelope-flap { fill: var(--trait-E); }
+
+  .seal-pentagon {
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px;
+    height: 44px;
+    transition: transform 0.3s ease, opacity 0.6s ease;
+    animation: sealPulse 3s ease-in-out infinite;
+    filter: drop-shadow(0 2px 6px rgba(255, 0, 128, 0.3));
+  }
+
+  .seal-pentagon polygon { fill: var(--primary); }
+  .seal-pentagon text { fill: var(--primary-fg); font-family: var(--font-heading); font-size: 10px; font-weight: 700; }
+
+  .envelope-text {
+    text-align: center;
+    transition: opacity 0.6s ease;
+  }
+
+  .envelope-label {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--fg);
+    margin-bottom: var(--space-1);
+  }
+
+  .envelope-archetype {
+    font-family: var(--font-data);
+    font-size: 0.75rem;
+    color: var(--muted-fg);
+  }
+
+  @keyframes envelopeBreathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+
+  @keyframes sealPulse {
+    0%, 100% { opacity: 0.85; }
+    50% { opacity: 1; }
+  }
+
+  /* Opening animation */
+  .envelope-container.opening .envelope-svg {
+    animation: none;
+    opacity: 0;
+    transform: scale(1.05) translateY(-12px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  .envelope-container.opening .seal-pentagon {
+    animation: sealSpin 0.5s ease-out forwards;
+  }
+
+  .envelope-container.opening .envelope-text {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  @keyframes sealSpin {
+    0% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.5) rotate(72deg); opacity: 0; }
+  }
+
+  /* Skeleton */
+  .portrait-skeleton {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease 0.4s;
+  }
+
+  .portrait-skeleton.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .skeleton-line {
+    height: 12px;
+    background: var(--accent);
+    border-radius: 6px;
+    animation: skeletonPulse 1.5s ease-in-out infinite;
+  }
+  .skeleton-line:nth-child(1) { width: 35%; height: 18px; }
+  .skeleton-line:nth-child(2) { width: 90%; animation-delay: 0.1s; }
+  .skeleton-line:nth-child(3) { width: 75%; animation-delay: 0.2s; }
+  .skeleton-line:nth-child(4) { width: 85%; animation-delay: 0.3s; }
+  .skeleton-line:nth-child(5) { width: 50%; animation-delay: 0.4s; }
+  .skeleton-gap { height: var(--space-6); }
+  .skeleton-line:nth-child(7) { width: 30%; height: 18px; animation-delay: 0.5s; }
+  .skeleton-line:nth-child(8) { width: 95%; animation-delay: 0.6s; }
+  .skeleton-line:nth-child(9) { width: 80%; animation-delay: 0.7s; }
+  .skeleton-line:nth-child(10) { width: 65%; animation-delay: 0.8s; }
+
+  @keyframes skeletonPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+  }
+
+  /* ========== COMPONENT 2: RITUAL SCREEN ========== */
+  .ritual-viewport {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    height: 520px;
+    border-radius: var(--radius-hero);
+    overflow: hidden;
+    background: var(--bg);
+    border: 1px solid var(--border);
+  }
+
+  /* Geometric background — floating shapes */
+  .ritual-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+
+  .ritual-viewport.active .ritual-bg { opacity: 1; }
+
+  .ritual-shape {
+    position: absolute;
+    opacity: 0.06;
+    transition: opacity 1s ease;
+  }
+
+  .ritual-viewport.active .ritual-shape { opacity: 0.08; }
+
+  .ritual-shape:nth-child(1) { top: 8%; left: 10%; animation: floatShape 20s ease-in-out infinite; }
+  .ritual-shape:nth-child(2) { top: 70%; left: 80%; animation: floatShape 25s ease-in-out infinite reverse; }
+  .ritual-shape:nth-child(3) { top: 30%; left: 75%; animation: floatShape 18s ease-in-out infinite 3s; }
+  .ritual-shape:nth-child(4) { top: 80%; left: 15%; animation: floatShape 22s ease-in-out infinite 7s; }
+  .ritual-shape:nth-child(5) { top: 15%; left: 55%; animation: floatShape 24s ease-in-out infinite 5s; }
+
+  @keyframes floatShape {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(10px, -15px) rotate(5deg); }
+    50% { transform: translate(-8px, -25px) rotate(-3deg); }
+    75% { transform: translate(12px, -10px) rotate(4deg); }
+  }
+
+  /* Vignette removed — clean background, no corner shadows */
+  .ritual-vignette { display: none; }
+
+  /* Content */
+  .ritual-content {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: var(--space-8);
+    text-align: center;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 1s ease 0.4s, transform 1s ease 0.4s;
+  }
+
+  .ritual-viewport.active .ritual-content {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Nerin identity — geometric shapes instead of wave */
+  .ritual-nerin-mark {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: var(--space-8);
+    opacity: 0.7;
+  }
+
+  .ritual-nerin-mark svg { width: 16px; height: 16px; }
+
+  .ritual-message {
+    font-family: var(--font-heading);
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1.35;
+    max-width: 400px;
+    margin-bottom: var(--space-4);
+  }
+
+  .ritual-submessage {
+    font-size: 0.9rem;
+    color: var(--muted-fg);
+    max-width: 340px;
+    margin-bottom: var(--space-8);
+    line-height: 1.65;
+  }
+
+  .ritual-actions { display: flex; gap: var(--space-4); align-items: center; }
+
+  .ritual-start {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 600;
+    padding: var(--space-3) var(--space-8);
+    border-radius: var(--radius-button);
+    background: var(--primary);
+    color: var(--primary-fg);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ritual-start:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+  .ritual-skip {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--muted-fg);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .ritual-skip:hover { color: var(--fg); }
+
+  /* ========== COMPONENT 3: BREATH SEQUENCE ========== */
+  .breath-viewport {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    height: 520px;
+    border-radius: var(--radius-hero);
+    overflow: hidden;
+    background: var(--bg);
+    border: 1px solid var(--border);
+  }
+
+  /* Chat */
+  .breath-chat {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: var(--space-6);
+    gap: var(--space-3);
+    opacity: 1;
+    transition: opacity 0.8s ease;
+  }
+
+  .breath-viewport[data-phase="fade"] .breath-chat,
+  .breath-viewport[data-phase="reveal"] .breath-chat,
+  .breath-viewport[data-phase="results"] .breath-chat { opacity: 0; }
+
+  .breath-msg {
+    max-width: 75%;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-card);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+  .breath-msg.nerin { background: var(--card); color: var(--card-fg); align-self: flex-start; border-bottom-left-radius: var(--space-1); }
+  .breath-msg.user { background: var(--primary); color: var(--primary-fg); align-self: flex-end; border-bottom-right-radius: var(--space-1); }
+
+  /* Combined reveal: shapes + archetype together */
+  .breath-reveal {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-6);
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+
+  .breath-viewport[data-phase="reveal"] .breath-reveal { opacity: 1; }
+  .breath-viewport[data-phase="results"] .breath-reveal { opacity: 1; }
+
+  .breath-shapes-row {
+    display: flex;
+    gap: var(--space-4);
+    align-items: center;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.6s ease, transform 0.8s ease;
+  }
+
+  .breath-viewport[data-phase="reveal"] .breath-shapes-row,
+  .breath-viewport[data-phase="results"] .breath-shapes-row {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .breath-archetype-name {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    font-weight: 700;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s, font-size 0.6s ease;
+  }
+
+  .breath-viewport[data-phase="reveal"] .breath-archetype-name,
+  .breath-viewport[data-phase="results"] .breath-archetype-name {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .breath-archetype-code {
+    font-family: var(--font-data);
+    font-size: 1rem;
+    color: var(--muted-fg);
+    letter-spacing: 0.2em;
+    opacity: 0;
+    transition: opacity 0.6s ease 0.5s;
+  }
+
+  .breath-viewport[data-phase="reveal"] .breath-archetype-code,
+  .breath-viewport[data-phase="results"] .breath-archetype-code { opacity: 1; }
+
+  /* Results phase — reveal moves up, grid appears */
+  .breath-viewport[data-phase="results"] .breath-reveal {
+    justify-content: flex-start;
+    padding-top: var(--space-8);
+  }
+
+  .breath-viewport[data-phase="results"] .breath-archetype-name {
+    font-size: 1.5rem;
+  }
+
+  .breath-viewport[data-phase="results"] .breath-shapes-row {
+    transform: scale(0.8);
+  }
+
+  /* Trait grid */
+  .breath-results {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+    padding: var(--space-6);
+    padding-top: var(--space-3);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .breath-viewport[data-phase="results"] .breath-results {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .breath-trait-card {
+    background: var(--card);
+    border-radius: var(--radius-card);
+    padding: var(--space-3);
+  }
+
+  .breath-trait-name {
+    font-family: var(--font-heading);
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-bottom: var(--space-1);
+  }
+
+  .breath-trait-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--accent);
+    overflow: hidden;
+  }
+
+  .breath-trait-fill {
+    height: 100%;
+    border-radius: 3px;
+    width: 0;
+    transition: width 0.8s ease 0.3s;
+  }
+
+  .breath-viewport[data-phase="results"] .breath-trait-fill { width: var(--target-width); }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .envelope-svg, .seal-pentagon { animation: none !important; }
+    .ritual-shape { animation: none !important; }
+    .breath-chat, .breath-reveal, .breath-shapes-row, .breath-archetype-name, .breath-archetype-code, .breath-results { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav-title">big-ocean — Visual Validation v2</span>
+  <div class="nav-links">
+    <a href="#envelope">Envelope</a>
+    <a href="#ritual">Ritual</a>
+    <a href="#breath">Breath</a>
+    <button class="theme-toggle" onclick="document.body.classList.toggle('dark')">◐</button>
+  </div>
+</nav>
+
+<!-- ==================== SEALED ENVELOPE ==================== -->
+<section class="section" id="envelope">
+  <div class="section-label">Component 1</div>
+  <h2 class="section-title">Sealed Envelope</h2>
+  <p class="section-subtitle">SVG envelope shape (inverted triangle flap + rectangle body). Pentagon seal with spin animation on tap. Transitions to portrait skeleton.</p>
+
+  <div class="envelope-demo">
+    <div class="envelope-wrapper">
+      <div class="envelope-container" id="envelopeContainer" onclick="triggerEnvelope()">
+        <div class="envelope-svg-wrapper">
+          <!-- SVG Envelope: rectangle body + inverted triangle flap with gap -->
+          <svg class="envelope-svg" viewBox="0 0 200 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Body: rectangle -->
+            <rect class="envelope-body" x="10" y="62" width="180" height="80" rx="6"/>
+            <!-- Flap: inverted triangle (with gap above the rectangle) -->
+            <polygon class="envelope-flap" points="10,52 100,0 190,52"/>
+          </svg>
+          <!-- Pentagon seal -->
+          <svg class="seal-pentagon" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="22,2 42,16 35,40 9,40 2,16"/>
+            <text x="22" y="26" text-anchor="middle" dominant-baseline="middle">BO</text>
+          </svg>
+        </div>
+        <div class="envelope-text">
+          <div class="envelope-label">Nerin has written something for you.</div>
+          <div class="envelope-archetype">The Beacon</div>
+        </div>
+      </div>
+
+      <!-- Skeleton appears after envelope opens -->
+      <div class="portrait-skeleton" id="portraitSkeleton">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-gap"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl-btn" onclick="resetEnvelope()">Reset</button>
+      <button class="ctrl-btn primary" onclick="triggerEnvelope()">Tap to Open</button>
+    </div>
+  </div>
+
+  <div class="design-notes">
+    <h4>Design Notes</h4>
+    <ul>
+      <li><strong>Shape:</strong> SVG envelope — rectangle body + inverted triangle flap with visible gap between them. Filled with saturated trait colors (body: Agreeableness teal, flap: Extraversion pink).</li>
+      <li><strong>Seal:</strong> Pentagon with "BO" branding. Pulses subtly (opacity 0.85→1). Spins 72° and scales up on tap before fading.</li>
+      <li><strong>Breathing:</strong> Entire envelope scales 1→1.02 over 4s. Gentle, not distracting.</li>
+      <li><strong>Hover:</strong> Lifts -4px, drop-shadow appears.</li>
+      <li><strong>Opening:</strong> Seal spins out → envelope fades up and out → skeleton fades in (0.4s delay).</li>
+      <li><strong>Skeleton:</strong> Pulsing lines representing portrait sections. Appears in the reserved space.</li>
+    </ul>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ==================== RITUAL SCREEN ==================== -->
+<section class="section" id="ritual">
+  <div class="section-label">Component 2</div>
+  <h2 class="section-title">Ritual Screen</h2>
+  <p class="section-subtitle">Simpler background using floating geometric shapes from the identity system. Vignette overlay. Nerin speaks to both users directly.</p>
+
+  <div class="ritual-demo">
+    <div class="ritual-viewport" id="ritualViewport">
+      <!-- Geometric shapes background (identity shapes, not ocean) -->
+      <div class="ritual-bg">
+        <!-- Circle (Openness) -->
+        <svg class="ritual-shape" style="top:8%;left:10%" width="60" height="60"><circle cx="30" cy="30" r="28" fill="var(--trait-O)"/></svg>
+        <!-- Half-circle (Conscientiousness) -->
+        <svg class="ritual-shape" style="top:70%;left:78%" width="50" height="28"><path d="M0 28 A25 25 0 0 1 50 28 Z" fill="var(--trait-C)"/></svg>
+        <!-- Rectangle (Extraversion) -->
+        <svg class="ritual-shape" style="top:25%;left:72%" width="24" height="50"><rect width="24" height="50" rx="4" fill="var(--trait-E)"/></svg>
+        <!-- Triangle (Agreeableness) -->
+        <svg class="ritual-shape" style="top:75%;left:18%" width="50" height="46"><polygon points="25,0 50,46 0,46" fill="var(--trait-A)"/></svg>
+        <!-- Diamond (Neuroticism) -->
+        <svg class="ritual-shape" style="top:12%;left:52%" width="36" height="36"><rect x="4" y="4" width="24" height="24" transform="rotate(45 18 18)" fill="var(--trait-N)"/></svg>
+      </div>
+
+      <div class="ritual-vignette"></div>
+
+      <div class="ritual-content">
+        <!-- Nerin identity mark: 5 small geometric shapes -->
+        <div class="ritual-nerin-mark">
+          <svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="var(--trait-O)"/></svg>
+          <svg width="12" height="7"><path d="M0 7 A6 6 0 0 1 12 7 Z" fill="var(--trait-C)"/></svg>
+          <svg width="6" height="12"><rect width="6" height="12" rx="1.5" fill="var(--trait-E)"/></svg>
+          <svg width="12" height="11"><polygon points="6,0 12,11 0,11" fill="var(--trait-A)"/></svg>
+          <svg width="9" height="9"><rect x="1" y="1" width="6" height="6" transform="rotate(45 4.5 4.5)" fill="var(--trait-N)"/></svg>
+        </div>
+
+        <div class="ritual-message" id="ritualMessage">I wrote this about the two of you.</div>
+        <div class="ritual-submessage" id="ritualSub">It's better to read this together. Talk about what you're expecting before you read it.</div>
+        <div class="ritual-actions" id="ritualActions">
+          <button class="ritual-start" onclick="startRitual()">Start</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl-btn" onclick="resetRitual()">Reset</button>
+      <button class="ctrl-btn primary" onclick="activateRitual()">Activate</button>
+    </div>
+  </div>
+
+  <div class="design-notes">
+    <h4>Design Notes</h4>
+    <ul>
+      <li><strong>Background:</strong> Floating geometric identity shapes (circle, half-circle, rectangle, triangle, diamond) at very low opacity (0.06→0.08). Gentle drift animation.</li>
+      <li><strong>No ocean/waves:</strong> This screen uses the geometric shape identity, not the ocean layer. Clean and focused.</li>
+      <li><strong>Nerin mark:</strong> 5 mini shapes in a row replacing the avatar — consistent with GeometricSignature identity system.</li>
+      <li><strong>No vignette/backdrop shadows:</strong> Clean background. Geometric shapes + content are sufficient to create focus.</li>
+      <li><strong>Typography:</strong> 1.6rem heading weight 600. The largest non-archetype text in the product.</li>
+      <li><strong>Entrance:</strong> Shapes fade to 0.08, vignette fades in, then content rises (0.4s delay).</li>
+    </ul>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ==================== BREATH SEQUENCE ==================== -->
+<section class="section" id="breath">
+  <div class="section-label">Component 3</div>
+  <h2 class="section-title">Breath Sequence</h2>
+  <p class="section-subtitle">Chat → Fade → Shapes + Archetype (combined reveal) → Results page populates. The transition FROM /chat TO /results. ~3 seconds total.</p>
+
+  <div class="breath-demo">
+    <div class="breath-viewport" id="breathViewport" data-phase="chat">
+      <!-- Chat (fades out) -->
+      <div class="breath-chat">
+        <div class="breath-msg nerin">I've noticed something about how you describe your work versus your friendships. There's a real shift in energy.</div>
+        <div class="breath-msg user">Yeah, I think I'm more guarded at work. With friends I can be myself.</div>
+        <div class="breath-msg nerin">That distinction tells me a lot about where you find your anchoring. I think we've reached a good place. I have something to share with you.</div>
+      </div>
+
+      <!-- Combined reveal: shapes + archetype name + code together -->
+      <div class="breath-reveal">
+        <div class="breath-shapes-row">
+          <svg width="28" height="28"><circle cx="14" cy="14" r="13" fill="var(--trait-O)"/></svg>
+          <svg width="28" height="15"><path d="M0 15 A14 14 0 0 1 28 15 Z" fill="var(--trait-C)"/></svg>
+          <svg width="14" height="28"><rect width="14" height="28" rx="3" fill="var(--trait-E)"/></svg>
+          <svg width="28" height="26"><polygon points="14,0 28,26 0,26" fill="var(--trait-A)"/></svg>
+          <svg width="20" height="20"><rect x="3" y="3" width="13" height="13" rx="1" transform="rotate(45 10 10)" fill="var(--trait-N)"/></svg>
+        </div>
+        <div class="breath-archetype-name">The Beacon</div>
+        <div class="breath-archetype-code">O C E A R</div>
+      </div>
+
+      <!-- Results grid (populates below reveal) -->
+      <div class="breath-results">
+        <div class="breath-trait-card">
+          <div class="breath-trait-name" style="color: var(--trait-O)">Openness</div>
+          <div class="breath-trait-bar"><div class="breath-trait-fill" style="background: var(--trait-O); --target-width: 85%"></div></div>
+        </div>
+        <div class="breath-trait-card">
+          <div class="breath-trait-name" style="color: var(--trait-C)">Conscientiousness</div>
+          <div class="breath-trait-bar"><div class="breath-trait-fill" style="background: var(--trait-C); --target-width: 72%"></div></div>
+        </div>
+        <div class="breath-trait-card">
+          <div class="breath-trait-name" style="color: var(--trait-E)">Extraversion</div>
+          <div class="breath-trait-bar"><div class="breath-trait-fill" style="background: var(--trait-E); --target-width: 68%"></div></div>
+        </div>
+        <div class="breath-trait-card">
+          <div class="breath-trait-name" style="color: var(--trait-A)">Agreeableness</div>
+          <div class="breath-trait-bar"><div class="breath-trait-fill" style="background: var(--trait-A); --target-width: 78%"></div></div>
+        </div>
+        <div class="breath-trait-card">
+          <div class="breath-trait-name" style="color: var(--trait-N)">Neuroticism</div>
+          <div class="breath-trait-bar"><div class="breath-trait-fill" style="background: var(--trait-N); --target-width: 35%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl-btn" onclick="breathReset()">Reset</button>
+      <button class="ctrl-btn primary" onclick="breathPlay()">Play Sequence</button>
+      <button class="ctrl-btn" onclick="breathStep('fade')">Fade Chat</button>
+      <button class="ctrl-btn" onclick="breathStep('reveal')">Shapes + Archetype</button>
+      <button class="ctrl-btn" onclick="breathStep('results')">Results Page</button>
+    </div>
+  </div>
+
+  <div class="design-notes">
+    <h4>Design Notes</h4>
+    <ul>
+      <li><strong>Phase 1 (chat):</strong> Nerin's last message visible. Natural state.</li>
+      <li><strong>Phase 2 (fade, 800ms):</strong> Chat fades out. Clean canvas.</li>
+      <li><strong>Phase 3 (reveal, 1000ms):</strong> Shapes + archetype name + OCEAN code appear TOGETHER. One reveal moment — the identity crystallizes.</li>
+      <li><strong>Phase 4 (results, 600ms):</strong> Reveal compresses upward. Trait cards populate below with animated bars. This IS the /results page loading.</li>
+      <li><strong>Total: ~2.8s.</strong> Skippable (tap viewport). Reduced motion: instant cut to results.</li>
+      <li><strong>Shapes + archetype combined:</strong> Not two separate phases. The shapes ARE the archetype identity — they appear together.</li>
+    </ul>
+  </div>
+</section>
+
+<script>
+  // ========== SEALED ENVELOPE ==========
+  function triggerEnvelope() {
+    const container = document.getElementById('envelopeContainer');
+    const skeleton = document.getElementById('portraitSkeleton');
+    if (container.classList.contains('opening')) return;
+    container.classList.add('opening');
+    setTimeout(() => {
+      container.style.display = 'none';
+      skeleton.classList.add('visible');
+    }, 600);
+  }
+
+  function resetEnvelope() {
+    const container = document.getElementById('envelopeContainer');
+    const skeleton = document.getElementById('portraitSkeleton');
+    container.classList.remove('opening');
+    container.style.display = '';
+    skeleton.classList.remove('visible');
+  }
+
+  // ========== RITUAL SCREEN ==========
+  function activateRitual() {
+    document.getElementById('ritualViewport').classList.add('active');
+  }
+
+  function resetRitual() {
+    const vp = document.getElementById('ritualViewport');
+    vp.classList.remove('active');
+    document.getElementById('ritualMessage').textContent = "I wrote this about the two of you.";
+    document.getElementById('ritualSub').style.display = '';
+    document.getElementById('ritualSub').textContent = "It's better to read this together. Talk about what you're expecting before you read it.";
+    document.getElementById('ritualActions').style.display = '';
+    document.querySelector('.ritual-content').style.opacity = '';
+  }
+
+  function startRitual() {
+    document.getElementById('ritualMessage').textContent = "Let's begin.";
+    document.getElementById('ritualSub').style.display = 'none';
+    document.getElementById('ritualActions').style.display = 'none';
+    setTimeout(() => {
+      document.querySelector('.ritual-content').style.opacity = '0';
+    }, 1000);
+  }
+
+  function skipRitual() {
+    document.querySelector('.ritual-content').style.opacity = '0';
+    setTimeout(() => resetRitual(), 500);
+  }
+
+  // ========== BREATH SEQUENCE ==========
+  function breathStep(phase) {
+    document.getElementById('breathViewport').setAttribute('data-phase', phase);
+  }
+
+  function breathReset() {
+    document.getElementById('breathViewport').setAttribute('data-phase', 'chat');
+  }
+
+  function breathPlay() {
+    breathReset();
+    setTimeout(() => breathStep('fade'), 400);
+    setTimeout(() => breathStep('reveal'), 1200);
+    setTimeout(() => breathStep('results'), 2400);
+  }
+
+  // Skip on click
+  document.getElementById('breathViewport').addEventListener('click', (e) => {
+    if (e.target.closest('.ctrl-btn')) return;
+    breathStep('results');
+  });
+</script>
+
+</body>
+</html>

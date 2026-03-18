@@ -1,1134 +1,676 @@
 ---
-stepsCompleted: ["step-01-init", "step-02-discovery", "step-02-advanced-elicitation", "step-02-party-mode", "step-03-success", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit"]
+stepsCompleted: ["step-01-init", "step-02-discovery", "step-03-success", "step-04-journeys", "step-05-domain", "step-06-innovation", "step-07-project-type", "step-08-scoping", "step-09-functional", "step-10-nonfunctional", "step-11-polish"]
 inputDocuments:
-  - "brainstorming-session-2026-01-29.md"
-  - "CLAUDE.md"
-  - "prd-validation-report-2026-02-02.md"
+  - "architecture.md (consolidated, 2026-03-15)"
+  - "problem-solution-2026-03-13.md"
+  - "brainstorming-session-2026-03-13.md"
+  - "epics-conversation-pacing.md"
+  - "epics-nerin-steering-format.md"
+  - "epics-innovation-strategy.md"
+  - "ux-design-innovation-strategy.md"
+  - "public-profile-redesign-architecture.md"
+  - "public-profile-redesign-ux-spec.md"
+  - "ux-design-specification.md (2026-02-12, outdated — included as context)"
+  - "COMPLETED-STORIES.md"
+  - "prd-2026-02-02-archived.md (baseline reference)"
 workflowType: 'prd'
-lastEdited: '2026-02-02'
-editHistory:
-  - date: '2026-02-02T14:30:00Z'
-    changes: 'Priority 2 Fixes: Replaced 5 subjective NFRs with measurable criteria, Added Web Application Requirements section (browser matrix, responsive design, SEO, accessibility), Abstracted technology names (TanStack/React/Node.js → capability descriptions), Fixed FR format for FR1/2/3/6/8/26'
-    reason: 'Address warning-level validation issues for quality improvement'
-  - date: '2026-02-02T13:00:00Z'
-    changes: 'Added Executive Summary (vision, goals, metrics), Added User Journeys section (3 B2C journeys), Reclassified Infrastructure FRs (FR20, FR24-26)'
-    reason: 'Fix critical structural gaps identified in validation report'
 brownfield: true
 brainstormingCount: 1
 researchCount: 0
 projectDocsCount: 2
+documentCounts:
+  architectureDocs: 1
+  problemSolutionDocs: 1
+  brainstormingDocs: 1
+  epicsDocs: 3
+  uxDesignDocs: 4
+  completedStoriesDocs: 1
+  baselinePrdDocs: 1
 classification:
   projectType: web_app
-  domain: psychology_assessment
+  domain: adaptive_conversational_ai
+  vertical: personality
   complexity: high
   projectContext: brownfield
-  businessStrategy: "B2C-first (B2B optionality for startups)"
-  fundingApproach: "Self-funded MVP → Pre-seed if successful"
+  strategicNature: platform
+  valueContract: "25 minutes of attention → personality intelligence no other product can produce"
+  competitivePositioning: "Only product combining guided UX + social sharing + LLM-powered personalization + structured relationship analysis"
+  competitiveAxes:
+    - "vs personality tests (16Personalities/MBTI): better depth, personalized not generic"
+    - "vs conversational AI (ChatGPT/Claude): guided UX, social outputs, structured insights"
+    - "vs therapists: more accessible, affordable, scalable — potential complementary tool"
+  strategicFrame: "Conversation is the mechanism, personality intelligence is the product, experience quality is the competitive advantage"
+  platformVsApplication:
+    platform: "Adaptive conversation engine + personality data model + extraction pipeline"
+    applications: "Portrait, relationship analysis, personal development, B2B team insights"
+    extensibility: "Same engine could serve other verticals (career, learning, clinical)"
   complexityDrivers:
-    - "Multi-region privacy compliance (GDPR, CCPA, worldwide)"
-    - "Real-time streaming requirements (low-latency LLM responses)"
-    - "Conversational AI assessment methodology (novel approach)"
-    - "Extended session engagement (30+ min minimum, UX-first)"
-    - "LLM cost control at scale (self-funded constraint)"
-    - "Foundation for scientific validation (future improvement)"
-  targetMarkets:
-    - "B2C (primary): Individuals globally seeking personality insight"
-    - "B2B (secondary): Startups using platform organically"
-    - "Geographic: EU, US, Asia (worldwide)"
-  userEngagementStrategy: "UX-first, minimize chat duration, keep engagement high"
-  validationApproach: "User engagement focused now, scientific validation improvement later"
-  dataStrategy: "Conversation data as competitive moat (training models, market insights)"
-  privacyApproach: "Privacy-first, explicit user control, zero discovery (profiles not searchable)"
-  shareableProfilesDay1: true
-  profileShareMechanism: "User generates unique link, explicitly shares (copy/paste), no directory listing"
-  realtimeRequirement: true
-  minSessionDuration: "30 minutes"
-  mvpTarget: "500 beta users, validate cost model + product-market fit"
-  day1Features:
-    - "Conversational Big Five assessment with Nerin (excellence is moat)"
-    - "Shareable profiles (LinkedIn-style sharing, viral growth)"
-    - "Privacy controls (default private, explicit sharing only)"
-    - "Export conversation to PDF (data ownership + trust)"
-    - "Real-time streaming responses (engagement)"
-    - "All 30 facets with simplified archetype variants"
-  scientificPositioning: "Market existing Big Five research, not original validation study"
-  mvpArchetype: "Simplified variant count while preserving all 30 facets"
-  mvpElectricSQL: "Server-side session management for MVP (Phase 1), ElectricSQL local-first sync deferred to Phase 2 for enhanced offline capability"
-  mvpCompliance: "Privacy-first (default), detailed GDPR/CCPA Phase 2-3 (not MVP)"
-  conversionHistory: "Keep forever for MVP, review retention policy post-launch"
-  launchGeography: "US first, add EU/Asia after PMF validation"
+    - "Closed-loop real-time adaptation (6-layer pacing pipeline)"
+    - "Dual-output system (structured data + generative narrative)"
+    - "Network product dynamics (relationship analysis creates network effects)"
+    - "Experience quality as survival requirement (25-min attention investment)"
+    - "Self-funded cost constraint (every LLM call has budget impact)"
+    - "Category creation — new market between personality tests, conversational AI, and therapy"
+    - "Credibility chain — conversation quality → scores self-recognition → portrait proves capability → ambassador conversion"
+    - "Multi-user data privacy (relationship analysis correlates data across users)"
+    - "Psychological harm mitigation (output framing, disclaimers, liability)"
+  credibilityChain:
+    - "Nerin conversation quality builds initial trust"
+    - "Free results (scores + archetype) create self-recognition"
+    - "PWYW portrait deepens self-recognition, proves AI capability"
+    - "Portrait quality drives trust in relationship analysis"
+    - "Satisfied user becomes ambassador, recruits their people"
+  monetization:
+    free: "25-exchange assessment + OCEAN code + archetype + trait/facet scores + shareable public profile"
+    portrait: "PWYW (€1+ minimum) — Sonnet-generated narrative portrait"
+    relationshipAnalysis: "€5/credit for additional relationship analyses"
+    conversationExtension: "€25 — +25 exchanges for deeper accuracy/continued experience"
+    subscription: "TBD — periodic re-assessment, personality evolution tracking (H1.5/H2)"
+  growthHorizons:
+    H1_MVP: "Assessment → portrait → relationship analysis (2-person) → social sharing"
+    H2: "B2B team dynamics, group analysis, B2B pricing (per-seat, per-month)"
+    H3: "Personal development insights, personality evolution tracking, therapist integration, additional verticals"
+  growthModel:
+    acquisition: "Relationship analysis recruits users, archetype sharing creates impressions"
+    conversion: "Portrait self-recognition proves quality, drives PWYW + relationship credits"
+    retention: "Conversation extension (occasional) + subscription evolution tracking (recurring)"
+    ambassador: "Satisfied users recruit their people for relationship analysis"
+  b2bOptionality: "Team management, group dynamics, therapist pre-screening tool"
+  domainConcerns:
+    - "LLM reliability and prompt compliance"
+    - "Psychological harm mitigation"
+    - "Multi-user data privacy for relationship analysis"
+    - "Category creation risk (behavior change bet)"
 ---
 
 # Product Requirements Document - big-ocean
 
 **Author:** Vincentlay
-**Date:** 2026-01-29
-**Project Type:** Brownfield (Existing monorepo infrastructure)
-**Frontend App:** apps/front (Interactive full-stack framework with server-side rendering)
-**Backend App:** apps/api (Backend service with functional programming runtime and multi-agent orchestration)
+**Date:** 2026-03-15
 
----
+## Executive Summary
 
-## Critical Success Criteria & Risk Mitigation
+big-ocean is a conversational personality assessment platform built on the Big Five framework. Users have a 25-exchange adaptive conversation with Nerin — an AI dive master persona guided by a 6-layer pacing pipeline — producing personality intelligence: OCEAN codes, nature-based archetypes (81 hand-curated), trait/facet scores, and a narrative portrait written as a personal letter from Nerin.
 
-Based on Pre-mortem Analysis, these requirements are **non-negotiable** for platform success:
+**Target users:** Psychology-curious adults (25-40) who find traditional personality tests generic and want deeper, personalized insight they can share and use to understand their relationships.
 
-### 0. LLM Cost Control (HIGHEST PRIORITY - Funding Constraint)
-**What Could Fail:** LLM costs explode before product gains traction. Self-funded runway exhausted before product-market fit.
+**Differentiator:** The only product combining guided conversational UX, LLM-powered adaptive assessment, social sharing (archetype cards, public profiles), and structured 2-person relationship analysis. The assessment experience IS the marketing — conversation quality drives self-recognition, self-recognition drives sharing, sharing drives growth.
 
-**Critical Cost Realities:**
-- Claude 3.5 Sonnet: ~$0.10 per assessment session (30-min conversation at ~15k tokens)
-- 1,000 users = $100/day = $3,000/month in LLM costs alone
-- 10,000 users = $1,000/day = $30,000/month (unaffordable at B2C freemium pricing)
-- **Break-even:** ~500-1000 paying users at $5/month each before costs exceed revenue
+**Business model:** Free assessment (OCEAN code + archetype + scores + public profile) → PWYW portrait (€1+ minimum, grants 1 free relationship analysis credit) → relationship analysis credits (€5/additional) → conversation extension (+25 exchanges, €25). Target: 100 completed assessments in 3 months, break-even on LLM costs (~€0.20/assessment, ~€0.20/portrait).
 
-**Mandatory Cost Control Architecture:**
-- ✅ Smart caching: Cache common Nerin responses, reuse for similar users (reduce 30-50%)
-- ✅ Rate limiting: 1 assessment per user per day, 1 resume per week (prevent abuse/spam)
-- ✅ Tiered LLM quality: Free tier uses cheaper model (GPT-3.5), Premium uses Claude
-- ✅ Batch processing: Analyzer creates facet evidence per message; Scorer aggregates every 3 messages (batched, non-blocking)
-- ✅ Circuit breakers: Auto-disable Nerin if cost/day exceeds cap, show graceful degradation
-- ✅ Cost monitoring: Real-time dashboard tracking spend per user, per feature
-- ✅ User cap: Scale gradually (500 → 2000 → 10k) as cost optimization improves
-
-**Funding Strategy:**
-- Phase 1 (Self-funded MVP): 500 beta users, validate cost model + product-market fit
-- Phase 2 (If successful): Seek pre-seed funding to scale to 10k users + improve cost efficiency
-- Phase 3 (If needed): Pivot to B2B startups for higher revenue/lower user count
-
----
-
-### 1. Scaling (Second Priority)
-**What Could Fail:** Platform melts at 50k concurrent users. Database queries timeout (separate from LLM cost).
-
-**Prevention Requirements:**
-- ✅ Real-time SLA: Nerin responses < 2 seconds (P95) for user engagement
-- ✅ LLM cost budgeting with rate limiting + per-user cost caps
-- ✅ Database query optimization + indexing strategy from day 1
-- ✅ Load testing at 10k, 50k, 100k concurrent users before launch
-- ✅ Caching strategy for common conversation patterns (reduce LLM calls)
-- ✅ Cost monitoring dashboard + automatic alerts for overspending
-- ✅ Graceful degradation when LLM unavailable (cached responses, fallback)
-
-### 2. Business Model (Second Priority) - B2C First with B2B Optionality
-**Strategy:** Launch B2C-first to popularize Big Five model, collect valuable conversation data, validate product-market fit. B2B (especially startups) enabled but not primary focus initially.
-
-**Why B2C-First:**
-- ✅ Market education: Conversational Big Five assessment as differentiation vs. static questionnaires
-- ✅ Data advantage: B2C conversation data trains better models, proprietary moat
-- ✅ Faster feedback: B2C users provide rapid iteration signal
-- ✅ Lower compliance: Individual consent vs. enterprise multi-stakeholder complexity
-- ✅ Network effects: Shareable profiles create viral growth + recruitment discovery
-
-**Primary Revenue Model: B2C (Individual Users - Not Retention-Based)**
-- ✅ Free tier: Unlimited personality assessment + basic profile + shareable link
-- ✅ Merch + affiliate: Revenue from personality-themed merchandise (t-shirts, mugs, etc.)
-- ✅ Coaching partnerships: Revenue share on referred coaching (post-assessment upsell)
-- ✅ Subscription (optional future): "$10-20/month to continue conversations with Nerin" (deeper self-discovery coaching)
-  - **Note:** Not about user retention loops, but about users who want ongoing dialogue/coaching
-
-**Why Not Retention-Focused:**
-- Users take assessment once (30 min), share profile, recommend friends (viral growth)
-- Retaining users daily/weekly doesn't fit the psychology product model
-- Exception: B2B managers need repeated access to team personality data
-
-**Secondary Revenue Model: B2B (Startups + SMBs - Phase 2-3)**
-- ✅ Team plans: Startups can assess teams for free/low-cost (build habit before enterprise)
-- ✅ Recruitment tools: Startup HR uses shareable profiles to evaluate candidates
-- ✅ Not initial focus: Complex enterprise features (SSO, HIPAA, multi-region compliance) are post-launch
-
-**Critical Constraint: LLM Cost Optimization**
-- ⚠️ **Highest Risk:** Nerin (Claude Sonnet API) cost scales linearly with users
-- ✅ **Realistic Cost Budgeting:**
-  - Pure API cost: ~$0.06-$0.08 per 30-min assessment (Sonnet pricing: ~$3/1M input tokens, ~$15/1M output tokens)
-  - Add infrastructure overhead (monitoring, retries, error handling): +$0.04-$0.07
-  - **Realistic total: $0.12-$0.15 per assessment**
-  - **Optimization target: $0.10** (via caching, prompt optimization, batch processing)
-- ✅ Cost control mechanisms (CRITICAL):
-  - Rate limiting: Max 1 assessment per user per day (prevent abuse)
-  - Caching: Store common conversation responses (reduce API calls 20-40%)
-  - Cost caps: Alert when LLM spend exceeds thresholds
-  - Prompt optimization: Minimize tokens while maintaining quality
-  - Batch processing: Off-peak LLM processing for lower cost
-  - User cap strategy: Scale gradually (500 → 1k → 5k as optimization improves)
-
-**Data Architecture for Business Model:**
-- ✅ Conversation history preserved forever (MVP) (valuable for product improvement + coaching insights)
-- ✅ Facet scoring: 100-point precision in database for analytics + scientific integrity
-- ✅ UI simplification: Display 3 trait levels (low/mid/high) + 2 facet levels for readability
-- ✅ Shareable profiles: Users generate unique link (LinkedIn-style), not discoverable/searchable
-- ✅ A/B testing framework for B2C funnel optimization
-- ✅ Analytics: Track which conversation patterns → merch purchases, coaching conversions, sharing behavior
-
-### 3. User Experience (Third Priority)
-**What Could Fail:** 70% drop-out rate during 30-min assessment. Users feel judged. No progress visibility.
-
-**Prevention Requirements:**
-- ✅ Progress indicator: "You're 45% through this assessment" (psychological impact)
-- ✅ Trait framing strategy: No negative language, all traits presented as strengths + context
-- ✅ Orchestrator prevents repetitive questions (tracks conversation domain coverage)
-- ✅ Real-time streaming responses (Nerin) keep users engaged
-- ✅ Session resumption: Users can pause and return without losing context
-- ✅ Mobile-first, responsive UI for 30+ minute engagement
-- ✅ **DAY-1 FEATURE: Shareable profiles** (viral growth lever, privacy-controlled)
-  - Users generate unique public profile link (shareable on LinkedIn, job applications, social)
-  - Profile shows: Trait summary (3-level), archetype + visual, top facet insights
-  - Privacy control: Profiles are NOT discoverable/searchable—only accessible via explicit link
-  - No profile listing, no user directory—complete privacy by default
-- ✅ **Export conversation to PDF:** Users can download full assessment conversation + insights
-
-### 4. Privacy & Data Protection (BLOCKER #1 - Highest User Concern)
-**What Could Fail:** User trust eroded by privacy leaks. Employer/recruiter sees assessment without consent. Public assumes data is sold/shared.
-
-**Core Privacy Principle: Explicit User Control**
-- ✅ **Zero public discovery:** Profiles are NOT searchable, NOT discoverable, NOT in directories
-- ✅ **Explicit sharing only:** Users must deliberately generate + share profile link (copy/paste to LinkedIn, email, etc.)
-- ✅ **No employer visibility:** Unless user explicitly shares, employers/recruiters have zero access
-- ✅ **Conversation privacy:** Full conversation stored encrypted, never shared or analyzed without user consent
-- ✅ **Data ownership:** Users own their conversation data, can export to PDF anytime
-
-**Technical Privacy Requirements (Phased Implementation):**
-
-**Phase 1 (US MVP - Basic Privacy Foundation):**
-- ✅ TLS 1.3 encryption in transit for all API calls
-- ✅ Better Auth password security (12+ char, compromised credential checks)
-- ✅ Default-private profiles (explicit sharing only, zero public discovery)
-- ✅ PostgreSQL Row-Level Security (RLS) for data access control
-- ✅ No inference/profiling: Conversation data NOT used for training without explicit consent
-- ✅ Third-party security vetting (Anthropic Claude API, Railway infrastructure)
-- ✅ Privacy policy in plain language + data retention policy
-
-**Phase 2 (EU Launch - Full GDPR Compliance):**
-- ✅ AES-256-GCM encryption at rest for all conversation data
-- ✅ Comprehensive audit logs for all data access (who accessed what, when)
-- ✅ GDPR compliance: Right to deletion, right to data portability, right to object (Epic 6)
-- ✅ Regular security audits + annual penetration testing
-- ✅ User data breach response plan (24-hour notification)
-- ✅ CCPA compliance for US region (if required post-MVP)
-
-**User Trust Signals (Marketing/Product):**
-- ✅ Privacy policy in plain language (not legal jargon)
-- ✅ "Your profile is private by default" (visible in UI, not hidden in settings)
-- ✅ Data retention policy explicit (conversation kept X years, then deleted)
-- ✅ Opt-in for analytics (allow us to study conversation patterns for product improvement)
-
-### 5. Compliance & Governance (Fifth Priority)
-**What Could Fail:** GDPR violation + regulatory fines. Platform shut down by authorities.
-
-**Prevention Requirements (Phased):**
-
-**Phase 1 (US MVP):**
-- ✅ Data governance framework: Assessment data classified as sensitive personal data
-- ✅ Consent flows: Explicit opt-in for assessment participation + conversation data storage
-- ✅ Data retention policies (conversation kept 3 years, then deleted)
-- ✅ Privacy by design principle in all architectural decisions
-- ✅ US privacy compliance (basic CCPA requirements)
-
-**Phase 2 (EU Launch):**
-- ✅ Full GDPR compliance (Epic 6): Data deletion/portability mechanisms (Article 17, 20)
-- ✅ Cross-border data transfer agreements (EU-US)
-- ✅ Legal review for EU market expansion
-- ✅ Enhanced consent flows for GDPR requirements
-- ✅ DPA (Data Processing Agreement) ready for B2B use (startups/companies)
-
-**Phase 3+ (Asia Expansion):**
-- ✅ Asia region compliance (China, Japan, India data protection laws)
-- ✅ Additional cross-border data transfer agreements
-
----
-
-## Product Differentiation: Conversational Depth vs. Predefined Boxes
-
-**The Insight:** Personality tests have been oversimplifying users for decades through predefined questionnaires that force people into rigid boxes. Professionals and thoughtful people are frustrated by assessments that can't capture their complexity.
-
-**big-ocean's Answer:** Conversational depth through dialogue, not predefined boxes through questions.
-
-**Why This Matters:**
-- MBTI/16Personalities: "Are you more introverted or extroverted?" → Forces binary choice → Oversimplification
-- big-ocean: Nerin explores context, nuance, contradictions → Captures complexity → Users feel genuinely understood
-- **User consequence:** Professionals who've dismissed personality tests suddenly find one that works ("Finally, something that actually gets me")
-- **Business consequence:** These users are MORE likely to share because they're solving a real pain point
-
-**Target Audience:** Professionals, thoughtful individuals, anyone frustrated by personality test oversimplification
-
-**Competitive Advantage:**
-- Not "better MBTI" (which is a losing game)
-- But "fundamentally different category" (conversational depth)
-- This justifies 15% sharing rate target (vs. 5% if you were just a competitor to MBTI)
-
-**OCEAN Code System (Second Layer of Differentiation):**
-- **MBTI:** 16 fixed personality types (forced categorization)
-- **big-ocean OCEAN (POC):** 81 unique personality combinations (4 traits × 3 levels), expandable to 243 post-validation
-- **User outcome:** Instead of "I'm an INTJ" (1 of 16 boxes), users get a unique 5-letter OCEAN code (e.g., "ODEWR") as their primary identity, with a poetic archetype name (e.g., "The Idealist") as flavor text
-- **Shareability — Code-First Identity:** OCEAN codes enable **partial-match tribalism** — "I'm ODEWR, you're ODANT, we're both OD!" creates social discovery moments that archetype names alone cannot. People say "I'm an INTP," not "I'm a Logician." The code IS the social currency. Archetype names add emotional color but the code drives social interaction.
-- **Scientific integrity:** Grounded in Big Five research with semantic letters (O=Open-minded, D=Disciplined) that self-explain, unlike MBTI's opaque J/P axis
-- **Pragmatic POC approach:** Validate concept with 81 combinations + ~30 hand-curated names; expand to full 243 if metrics justify post-launch curation effort
-- **Superior social protocol:** 5 axes × 3 levels enables richer comparisons than MBTI's binary same/different — exact matches ("we're both O!"), adjacent matches ("you're G, I'm O — we're close"), and polar opposites ("you're P, I'm O — interesting tension")
-
----
-
-## Positioning: Why Big Five > MBTI (Without Original Research)
-
-**The Reality:**
-- MBTI: Invented 1940s, no peer-reviewed validation, ~70% test-retest reliability
-- Big Five: 40+ years peer-reviewed research, consistently validated across cultures, ~80%+ reliability
-
-**Your Marketing Angle (Not New Research):**
-- ✅ "Big Five is scientifically validated. MBTI is a myth people believe."
-- ✅ Link to existing research (Costa & McCrae, Goldberg, academic publications)
-- ✅ Position conversational assessment as MORE accurate than MBTI questionnaires (psychology fact)
-- ✅ Show Big Five used by: psychologists, researchers, recruiters, organizations (vs. MBTI's pop-culture use)
-
-**In Your Messaging:**
-- "Based on 40+ years of peer-reviewed research, not personality folklore"
-- "Used by psychologists and researchers worldwide"
-- "More accurate than personality quizzes because we assess through conversation, not binary choices"
-
-**Note:** You don't need to publish original research. Users can look up Big Five science themselves. Your value is conversational assessment methodology, not scientific validation (which exists).
-
----
-
-## Data Architecture & Scoring Model
-
-**Dual-Layer Scoring System (Critical for Business Model):**
-
-### OCEAN Archetype System (Competitive Differentiator)
-
-The OCEAN system transforms raw Big Five trait scores into memorable, shareable character archetypes that drive user engagement and viral sharing. Unlike MBTI's fixed 16 types, OCEAN generates **81 unique personality combinations in POC scope** (expandable to 243 post-validation) that feel personal while remaining scientifically grounded.
-
-**POC Strategy:** Store all 5 Big Five traits (OCEAN) with full precision, but use only 4 traits (OCEA) for archetype naming to reduce sensitivity concerns while maintaining complete data. Archetype names serve as memorable identity anchors (e.g., "The Catalyst"), while detailed trait descriptions carry the psychological accuracy. This separation allows us to validate concept viability without perfecting all 243 names upfront.
-
-#### Main Archetype (5-Letter OCEAN Code + 4-Letter Naming)
-
-**Data Storage:** All 5 Big Five traits collected and stored
-
-| Trait | Low | Mid | High |
-|-------|-----|-----|------|
-| **Openness** | **P**ractical | **R**eflective | **I**maginative |
-| **Conscientiousness** | **E**asygoing | **P**urposeful | **D**isciplined |
-| **Extraversion** | **I**ntrovert | **A**mbivert | **E**xtravert |
-| **Agreeableness** | **A**ssertive | **M**oderate | **C**ompassionate |
-| **Neuroticism** | **G**rounded | **R**esponsive | **P**assionate |
-
-**Archetype Naming (POC Scope):** Only 4 traits used for character archetype name generation (dropping Neuroticism)
-
-| Trait | Low | Mid | High |
-|-------|-----|-----|------|
-| **Openness** | **P**ractical | **R**eflective | **I**maginative |
-| **Conscientiousness** | **E**asygoing | **P**urposeful | **D**isciplined |
-| **Extraversion** | **I**ntrovert | **A**mbivert | **E**xtravert |
-| **Agreeableness** | **A**ssertive | **M**oderate | **C**ompassionate |
-
-**Result:**
-- **Main OCEAN Code:** 5-letter (e.g., PRIAGG) representing all 5 traits
-- **Archetype Name:** Based on 4-letter subset (e.g., PRIA) = **81 unique combinations** for POC
-
-**Phase 2 (Post-Validation):** Extend archetype naming to include Neuroticism dimension, expanding to 243 combinations if POC validates engagement hypothesis.
-
-**Example:** A user with Practical/Purposeful/Ambivert/Moderate scores + Grounded on Neuroticism:
-- **Full OCEAN Code:** **PPAMG** (5 letters - all traits stored)
-- **Archetype Name Code:** **PPAM** (4 letters - used for naming)
-- **Archetype Name:** **"The Grounded Thinker"**
-- **Description:** *"You approach life with practical realism, adapting easily to change while maintaining thoughtful perspectives. You navigate relationships diplomatically, finding balance without sacrificing authenticity."*
-
-**Calculation:** At assessment end, trait scores (0-120 per trait, sum of 6 facets) map to levels: Low (0-40) → Mid (40-80) → High (80-120). First letter of each level name creates the 5-letter OCEAN code. Archetype name uses only first 4 letters (O-C-E-A).
-
-#### Archetype Naming Philosophy: Names as Anchors, Descriptions as Truth
-
-Rather than perfecting 243 character names upfront, we use a **two-tier approach**:
-
-**Tier 1: Memorable Archetype Names (Identity Anchor)**
-- ~25-30 hand-curated modern/creative names for POC launch (covers ~60% of common trait combinations)
-- Example names: "The Catalyst," "The Architect," "The Maverick," "The Empath"
-- Purpose: Give users a memorable identity label they're proud to share
-
-**Tier 2: Component-Based Naming System (Scalability)**
-- For remaining combinations, use **component-based generation**: [Trait1 Adjective] + [Trait2 Noun]
-- Example: Practical + Builder = "The Pragmatist," Imaginative + Creator = "The Visionary"
-- Ensures all 81 combinations have meaningful names without requiring full hand-curation
-
-**Tier 3: Full Trait Description (Psychological Accuracy)**
-- Every archetype includes a 2-3 sentence description that captures the actual trait combination
-- Description is where the *meaning* lives—not the name
-- Users who want accuracy read descriptions; those who want shareability use the name
-
-**Why This Works:** The name doesn't have to perfectly capture personality—it just needs to be memorable enough to share. The description ensures users understand what their profile actually means.
-
-#### 25 Anchor Archetypes (POC Hand-Curated)
-
-These 25 anchor names set the tone and style for the full naming system:
-
-| Code | Character Archetype | Trait Pattern |
-|------|-------------------|----------------|
-| RPAM | The Anchor | Reflective, Purposeful, Ambivert, Moderate |
-| RPAC | The Bridge | Reflective, Purposeful, Ambivert, Compassionate |
-| PPIM | The Maker | Practical, Purposeful, Introvert, Moderate |
-| IDEC | The Catalyst | Imaginative, Disciplined, Extrovert, Compassionate |
-| IDEA | The Disruptor | Imaginative, Disciplined, Extrovert, Assertive |
-| PDEA | The Commander | Practical, Disciplined, Extrovert, Assertive |
-| PDIC | The Architect | Practical, Disciplined, Introvert, Compassionate |
-| PDIA | The Strategist | Practical, Disciplined, Introvert, Assertive |
-| IDIC | The Mystic | Imaginative, Disciplined, Introvert, Compassionate |
-| IEEC | The Rebel | Imaginative, Easygoing, Extrovert, Compassionate |
-| IEIC | The Ghost | Imaginative, Easygoing, Introvert, Compassionate |
-| IEIA | The Maverick | Imaginative, Easygoing, Introvert, Assertive |
-| REEC | The Luminous | Reflective, Easygoing, Extrovert, Compassionate |
-| RPIC | The Empath | Reflective, Purposeful, Introvert, Compassionate |
-| IPAC | The Conductor | Imaginative, Purposeful, Ambivert, Compassionate |
-| RRAM | The Curator | Reflective, Responsive, Ambivert, Moderate |
-| IPAM | The Shapeshifter | Imaginative, Purposeful, Ambivert, Moderate |
-| PDIA | The Operator | Practical, Disciplined, Introvert, Assertive |
-| IDIC | The Alchemist | Imaginative, Disciplined, Introvert, Compassionate |
-| RPIM | The Archivist | Reflective, Purposeful, Introvert, Moderate |
-| PEIA | The Renegade | Practical, Easygoing, Introvert, Assertive |
-| RDEC | The Beacon | Reflective, Disciplined, Extrovert, Compassionate |
-| IEEC | The Wanderer | Imaginative, Easygoing, Extrovert, Compassionate |
-| IDEA | The Visionary | Imaginative, Disciplined, Extrovert, Assertive |
-| RPIM | The Scholar | Reflective, Purposeful, Introvert, Moderate |
-
-**Remaining 56 combinations (POC scope):** Use component-based naming system to ensure all 81 combinations have memorable identities.
-
-#### Detailed Archetype (Facet-Led Code - Phase 2)
-
-After POC validation, users who want deeper insight receive facet-level codes: **XX-XX-XX-XX** (4 trait pairs). This adds nuance without overwhelming casual users.
-
-#### Facet Names (24 Facets × 2 Levels - POC Scope)
-
-POC includes all facets for 4 traits (24 facets total). Full table maintained in database; displayed on request only.
-
-**Naming Principle:** All facet names frame observable behaviors as situational strengths, never as deficits. Users never see negative framings.
-
-#### Data Flow: Trait Scores → OCEAN Code → Character Name → Description
-
-1. **Assessment End:** Nerin conversation completes, Analyzer has created facet evidence per message, Scorer aggregates evidence into 30 facet scores (0-20), Aggregator derives 5 trait scores from facets
-2. **Code Calculation:** Trait scores (4 traits) map to levels, creating 4-letter OCEAN code
-3. **Name Lookup:** Code queries archetype registry (~25 curated + component-based fallback for remaining 56)
-4. **Description Retrieval:** Full trait description loaded and displayed with archetype name
-5. **User Presentation:** Profile displays archetype name as the emotional anchor (e.g., *"The Idealist"*) with OCEAN code as strong secondary identity (e.g., "ODEWR" — monochrome, typographic in hero; full-color exploration in OceanCodeStrand card below) + description + optional facet breakdown
-6. **Sharing:** User shares OCEAN code + archetype name (e.g., "I'm an ODEWR — The Idealist") with shareable profile link. The code enables partial-match discovery with other users.
-
-**Performance:** Code calculation + name lookup + description retrieval completes in <100ms.
-
-#### Why OCEAN Codes Drive Engagement & Sharing
-
-- **Dual identity system** → Archetype name anchors the reveal moment (emotional, "The Idealist" is the h1), OCEAN code anchors the social moment (shareable, "I'm an ODEWR" like "I'm an INTP"). Hero shows code as monochrome secondary; full-color exploration in OceanCodeStrand card
-- **Partial-match tribalism** → "I'm ODEWR, you're ODANT — we're both OD!" creates social discovery and tribal bonding that isolated archetype names cannot enable
-- **Semantic letters** → Each letter self-explains (O=Open-minded, D=Disciplined, E=Extravert) — more intuitive than MBTI's opaque axes
-- **81 unique combinations (POC)** → Users feel individually recognized, not forced into predefined boxes
-- **Archetype names as emotional anchors** → "The Idealist" is the primary *reveal* identity (h1, display scale in hero), adding warmth and recognition. The code is the primary *social* identity (what users say, share, and compare)
-- **Scientific foundation** (Big Five) → Maintains credibility for B2B use cases (recruitment, team analysis)
-- **Expandable to 243** → POC proves the concept; Phase 2 adds full nuance if metrics justify the effort
-- **Composable identity DNA** → Unlike isolated archetype names, codes let users discover shared traits, compare letter-by-letter, and form sub-communities around shared trait combos
-
----
-
-### Backend Precision (Database):
-
-**Evidence-Based Facet Scoring Architecture:**
-
-The assessment system uses a **facet-first, evidence-based** approach where every personality insight is tied to specific conversation evidence:
-
-1. **Facet Evidence (Atomic Level)**
-   - Each message analyzed for 30 facet signals
-   - **Unified FacetEvidence type:** messageId reference, facet name (clean - no trait prefix), numeric score (0-20), confidence (0.0-1.0), exact quote, character-level highlight range
-   - Stored in `facet_evidence` table with indexes on messageId and facet
-   - Example: User says "I love helping people" → Creates evidence record: `{ messageId: "msg_5", facet: "altruism", score: 18, confidence: 0.9, quote: "helping people", highlightRange: {start: 7, end: 21} }`
-
-2. **Facet Scores (Aggregated Level)**
-   - 30 facets scored independently (0-20 scale each)
-   - Clean naming: "altruism", "imagination", "orderliness" (not "agreeableness_altruism")
-   - Stored as `Record<FacetName, FacetScore>` - no redundant facet field
-   - Each score includes: aggregated score, adjusted confidence, evidence array, statistics (computed on-demand: mean, variance, sampleSize)
-   - Contradiction detection via variance analysis: high variance → lower confidence
-   - Recency weighting: more recent messages weighted higher in aggregation
-
-3. **Trait Scores (Derived Level)**
-   - 5 Big Five traits derived from facet averages using `FACET_TO_TRAIT` lookup
-   - Trait confidence = minimum confidence across contributing facets
-   - Traits are computed properties, not primary data
-
-4. **Data Storage**
-   - **assessment_messages:** Complete conversation history (existing table)
-   - **facet_evidence:** Per-message facet detections with evidence (NEW)
-   - **facet_scores:** Aggregated scores per facet (NEW - 30 rows per session)
-   - **trait_scores:** Derived trait scores (NEW - 5 rows per session)
-   - **Statistics computed, not stored:** mean/variance/sampleSize calculated from facet_evidence on query
-
-5. **Bidirectional UI Highlighting**
-   - **Profile → Conversation:** Click "Altruism: 16/20" → highlights all supporting messages
-   - **Conversation → Profile:** Click message → shows which facets it contributed to
-   - `highlightRange` enables precise text highlighting in UI
-   - Builds user trust through transparency ("show your work")
-
-**Multi-Agent Pipeline:**
-
-```
-Analyzer (per message):
-  - Detects 30 facet signals
-  - Outputs numeric scores (0-20) per facet
-  - Creates FacetEvidence records with messageId references
-       ↓
-Scorer (every 3 messages):
-  - Aggregates FacetEvidence by facet
-  - Detects contradictions (variance analysis)
-  - Adjusts confidence based on consistency
-  - Outputs Record<FacetName, FacetScore>
-       ↓
-Aggregator:
-  - Derives 5 trait scores from facet averages
-  - Uses FACET_TO_TRAIT lookup table
-       ↓
-Router:
-  - Finds lowest-confidence facet
-  - Guides Nerin with specific exploration strategy
-```
-
-**Key Benefits:**
-- **Transparency:** Users see exact quotes that influenced each score
-- **Scientific Validity:** Facet-level measurement aligns with Big Five research (NEO-PI-R pattern)
-- **Testability:** Clear separation between per-message analysis and cross-message aggregation
-- **Trust-Building:** Evidence trails enable user verification and self-reflection
-
-### Frontend Display (UI/UX Readability):
-- **Big Five traits:** 3-level display (Low/Mid/High) based on 0-120 range thresholds (sum of 6 facets)
-  - Low: 0-40
-  - Mid: 40-80
-  - High: 80-120
-- **Facets:** 2-level display (Lower/Higher) for clarity, with numeric score on hover
-- **Progress indicator:** Visual trait precision (0-100%) during assessment
-- **Shareable profile:** Public profile card shows traits + archetypes, optionally includes conversation insights
-
-### Data Retention & Business Intelligence:
-- ✅ Full conversation history preserved (compliance + business value)
-- ✅ Conversation data used for: model training, market research, personality trend analysis
-- ✅ User consent: Clear disclosure that conversation data may be used for research/analytics
-- ✅ Queryable database: Companies can search assessments by trait patterns for hiring/team analytics
-
----
-
-## Strategic Clarity: B2C-First Business Model Rationale
-
-**Decision:** Launch B2C-first to popularize the model, collect conversation data, validate product-market fit. B2B features enabled later as startups discover the platform.
-
-**Stakeholder Tensions Resolved:**
-- **B2C User Needs:** Beautiful UX, affordable pricing ($0-20/mo), privacy from employers, emotional resonance
-- **B2B Company Needs:** Enterprise integrations, audit logs, compliance, volume pricing
-- **Technical Reality:** Building both equally from day 1 = feature complexity + slower time-to-market
-
-**Why B2C-First Wins:**
-1. **Market Education:** Conversational Big Five assessment is novel vs. static questionnaires → B2C drives adoption
-2. **Data Moat:** Conversation data from 100k B2C users trains better models than questionnaire data
-3. **Faster Iteration:** B2C users provide rapid feedback loops (days vs. enterprise sales cycles of 6-12 months)
-4. **Lower Compliance Burden:** Individual consent vs. enterprise multi-region contracts
-5. **Funding Alignment:** Self-funded MVP targets 500-1000 users before VC (B2B contracts are too slow)
-
-**B2B Optionality (Not Initial Focus):**
-- Startups can use platform cost-effectively (no SSO/HIPAA/compliance complexity)
-- Shareable profiles enable passive recruitment discovery
-- Post-MVP: Turn profitable B2C user base into B2B features
-
----
-
-## Comparative Analysis: Success Metrics Validation
-
-**Benchmarked Against:** 16Personalities, MBTI apps, general personality quizzes, viral coefficient research
-
-**Key Findings:**
-
-1. **Completion Rate (50%) = Excellent**
-   - Competitors achieve 75-80% on 10-min quizzes
-   - Your 30-min conversational assessment achieving 50% completion = ~70% normalized equivalence
-   - Validates that longer conversations don't collapse engagement
-
-2. **Sharing Rate (10%) = Realistic & Conservative**
-   - Personality tests naturally achieve 10-20% sharing (people love sharing results)
-   - Your archetype names + LinkedIn integration should drive toward 15%+
-   - Increased from 5% target to 10% (more achievable given viral potential of personality content)
-
-3. **NPS (40) = Competitive Advantage**
-   - Competitors achieve 30-45 range
-   - Your target of 40 = top quartile, indicates excellent product quality
-   - Increased from 30 to 40 to reflect ambition + differentiation vs. MBTI/16Personalities
-
-4. **LLM Cost ($0.10/assessment) = Sustainable**
-   - At 500 users: $50/day in LLM costs
-   - Justified by longer sessions (30 min) driving better engagement + sharing
-   - Cost only becomes constraint if acquisition (sharing rate) is too low
-
-**Party Mode Insights (Team Review):**
-The BMAD expert team reviewed your success criteria and provided refinements:
-- **Sharing Rate:** Increased from 10% to 15% to reflect confidence in conversational depth differentiation
-- **LLM Cost:** Adjusted from $0.10 (optimistic) to $0.15 (realistic for Sonnet) with $0.10 as optimization target
-- **NPS Measurement:** Added survivorship bias mitigation—capture sentiment from dropouts, not just completers
-- **Exit Analysis:** Add where/why users abandon to improve engagement (addresses 50% non-completion)
-- **Product Positioning:** Reframed as "conversational depth vs. predefined boxes" (not "better MBTI")
-
-**Confidence Level:** ✅ HIGH - MVP success metrics are validated by industry benchmarks, expert review, and realistic for your unique 30-minute conversational model.
-
----
-
-## User Focus Group Insights: B2C User Validation
-
-**Key Findings from 5 User Personas (Maya, Alex, Jordan, Sam, Riley):**
-
-**Blocker #1 (CRITICAL): Privacy Trust**
-- Users assume "conversational assessment" = employer surveillance
-- Solution: Privacy controls front-and-center, NOT discoverable unless explicitly shared
-- This is more important than premium features
-
-**User Validation Results:**
-- ✅ Shareable profiles as viral growth lever (LinkedIn differentiation)
-- ✅ Conversation insights as core value (not just trait scores)
-- ✅ Privacy controls as #1 design priority
-- ✅ Export conversation feature essential (data ownership + trust)
-- ✅ Scientific credibility (Big Five > MBTI) marketing angle resonates
-- ✅ Free tier adoption (Sam: "free to try, no risk")
-- ✅ Manager/recruiter use case opportunity (Riley: if privacy consent clear)
-
-**Product Implications:**
-- Privacy is not a feature, it's a foundation
-- "Your profile is private by default" must be visible in UI
-- Shareable profiles = your B2C viral growth mechanism
-- Conversation log export = trust signal + competitive advantage vs. MBTI
-
----
-
-## First Principles Analysis: What Must Be True
-
-**Fundamental Truths (Non-Negotiable):**
-1. ✅ **Conversational quality is launch moat** - Nerin excellence drives engagement (30+ min conversations)
-2. ✅ **Profiles must be shareable** - Easy sharing for communication + viral growth (like LinkedIn)
-3. ✅ **Privacy must be default** - Users only share if they trust you with personal data
-4. ✅ **Cost must be sustainable** - Provisioned/monitored, not estimated before MVP validation
-5. ✅ **Target small before big** - 500 users MVP for PMF validation, then scale
-
-**Clarifications to Business Model:**
-- ❌ **NOT about user retention loops** - Users take assessment once, share profile, recommend to friends
-- ✅ **Revenue from communication + merchandise** - Coaching, merchandise, deeper features (premium tiers)
-- ✅ **Subscription tier optionality** - "Pay to go deeper with Nerin" (continue conversations, get coaching)
-- ✅ **B2B retention is different** - Managers need repeated access to team personality data
-
-**MVP Scope Decisions:**
-- ✅ **Keep 30 facets** - Scientific integrity of Big Five framework is non-negotiable
-- ✅ **Simplify archetype variants** - Reduce complexity of variant combinations while preserving all facets
-- ✅ **Server-side session management for MVP** - ElectricSQL local-first sync deferred to Phase 2 (cleaner MVP scope, defer complexity)
-- ✅ **Keep conversation history forever (MVP)** - Simpler for MVP, review retention policy post-launch
-- ✅ **Defer compliance** - Privacy-first yes, but GDPR/CCPA detail Phase 2-3, not Phase 1
-- ✅ **US launch first** - Add EU/Asia regions after PMF validation
-
----
-
-## Reverse Engineering: B2C → B2B Business Model (Future State)
-
-**Working Backwards from Success: B2B Enterprise Adoption**
-
-### End State (January 2029): Profitable B2B Platform
-```
-- 50 enterprise contracts (HR departments)
-- $50k-$500k per contract/year = $5-25M ARR (primary revenue)
-- 100k employees assessed via company contracts
-- 50k B2C individual users (secondary revenue)
-- Shareable profiles enabling passive recruitment pipeline
-```
-
-### Data Requirements Architected From Day 1:
-
-**1. B2B Features (Enterprise Value):**
-- Company dashboard: Visualize team Big Five distribution
-- Hiring integration: Filter candidates by trait patterns (e.g., "high conscientiousness + high openness for engineers")
-- Recruitment analytics: Track which personality profiles succeed in which roles (proprietary insight)
-- Employee onboarding: Batch assess new hires, identify team composition gaps
-- Role fit analysis: Match employees to roles based on personality
-
-**2. Shareable Profiles (Passive Recruitment):**
-- Public profile URL: User can share "big-ocean.com/@vincentlay"
-- Recruiters can view trait summary + archetype + top facets
-- Candidate portfolio: Employees link assessments in LinkedIn/portfolio
-- Company can analyze candidate personality before interview (de-bias hiring)
-
-**3. Data That Must Be Captured:**
-- ✅ Full 30-facet precision (0-20 scale) for nuanced hiring decisions
-- ✅ Conversation history (what revealed each trait? Why did this profile emerge?)
-- ✅ Domain coverage during assessment (which life areas explored? Job, relationships, stress, goals?)
-- ✅ Archetype mapping (memorable name + visual identity for easy discussion)
-- ✅ Behavioral signals during assessment (how did they answer? Confidence? Contradictions?)
-
-**4. Competitive Moat from Conversation Data:**
-- ✅ Traditional assessments are static questionnaires
-- ✅ Conversation data is dynamic, nuanced, reveals *why* not just *what*
-- ✅ Can train proprietary models on conversation patterns → predict job success
-- ✅ Can analyze conversation trends → personality market research ("what's driving stress in 2029?")
-
----
+**Current state:** Brownfield — hexagonal architecture, auth, CI/CD, cloud deployment, and infrastructure already built. Primary gap: Nerin character quality (~40% → launch-ready). The credibility chain (conversation → self-recognition → portrait revelation → trust → ambassador) requires every link to work at launch.
 
 ## Success Criteria
 
 ### User Success
 
-**Primary User Success Metric: Completion Rate > 50%**
-- User sits through 30+ minute conversational assessment without abandoning
-- This indicates: Nerin engagement is working, questions feel relevant, users feel heard
-- **Success threshold:** ≥ 50% of users who start assessment complete it fully
-- **Measurement:** Track drop-off points in conversation flow, identify where users abandon
+**Conversation Engagement (the "stay" metric):**
+- Users experience 2-3 "feel seen" moments during a 25-exchange conversation — moments where Nerin makes an observation about a pattern in the user's behavior or personality that resonates *(delivered by: FR3 pacing pipeline, FR6 portrait teasing, FR7 observation framing)*
+- Users complete the full 25 exchanges without dropping out (completion rate target: >70%) *(delivered by: FR4 depth meter, FR5 milestones)*
+- Mid-conversation dropout tracked by exchange number — specifically monitor exchanges 10-18 where novelty has worn off but payoff hasn't arrived
+- Users feel the conversation was with a distinct character (Nerin as ocean dive master with marine metaphors), not a generic AI *(delivered by: FR2 persona, FR8 greeting)*
 
-**Secondary User Success Metric: Sharing Rate ≥ 15%**
-- Users proactively generate shareable profile link and send to others
-- This indicates: Users see value in their results, want to share personality insights, feel pride in archetype
-- **Success threshold:** ≥ 15% of completed assessments result in profile shares
-- **Measurement:** Track unique profile link generation (primary behavior) + clicks from shared links (secondary signal)
-- **Viral signal:** Each shared profile that converts (recipient takes assessment) = growth multiplier
-- **Rationale:** Your differentiation (conversational depth vs. predefined boxes) attracts users who value accuracy, making them MORE likely to share. Target 15% reflects confidence in your value proposition over competitors.
+**Portrait Payoff (the "worth it" metric):**
+- Users experience **self-revelation** when reading their portrait — not just "that's me" (recognition) but "I never articulated it that way but that's exactly what's happening" (revelation) *(delivered by: FR20 portrait generation, FR21 PWYW modal)*
+- Emotional impact measured via behavioral proxies: share rate, conversation extension purchase rate, return visits within 48 hours, and time spent on portrait page as proxy for emotional engagement
+- Portrait quality drives sharing behavior: users share archetype card or tell someone about the experience within 48 hours
+- Portrait quality is high enough that users trust relationship analysis will be equally good
+- Conversation extension (+25 exchanges) explicitly improves portrait — more evidence produces richer, more nuanced narrative *(delivered by: FR10, FR23, FR25)*
 
-**Tertiary User Success Metric: User Sentiment & NPS**
-- Users report assessment felt meaningful, accurate, insightful
-- **Measurement methods:**
-  - Post-assessment survey: "How well did this assessment capture your personality?" (1-10)
-  - NPS question: "Would you recommend big-ocean to friends?" (0-10)
-  - Qualitative feedback: "What surprised you most about your assessment?"
-- **Success threshold:** Average sentiment score ≥ 7/10, **NPS ≥ 40** (validated against personality quiz benchmarks of 30-45)
-- **Note:** Increased from 30 to 40 to reflect ambitious excellence target + competitive advantage vs. MBTI/16Personalities
+**Nerin Character Quality (current state: ~40%, target: launch-ready):**
+- Nerin speaks as a distinct persona: ocean dive master, marine biology metaphors, warm but specific voice — NOT generic LLM tone
+- "Feel seen" moments have *accent* — they land with emotional weight, not just factual accuracy. Nerin names the pattern AND connects it to something the user cares about. Constraint: feel-seen moments are only attempted when evidence confidence is high — a failed observation breaks trust
+- Conversation includes encouragement: progress milestones ("we're getting somewhere interesting"), motivational moments ("that took courage to say"), celebration of depth ("you just named something most people never articulate")
+- Distinct voice that users remember and describe to others
 
-**User Experience Success: Nerin Quality + UI/UX Polish**
-- Users feel heard during conversation (not robotic, personalized, adaptive)
-- UI is beautiful, intuitive, builds trust (privacy controls visible, not hidden)
-- Profile display makes archetype memorable + shareable (visual appeal, readability)
-- **Measurement:** User feedback on conversation quality, UI intuitiveness, aesthetic appeal
-
-**Exit Analysis (Addressing Survivorship Bias):**
-- Capture sentiment from users who abandon assessment mid-conversation
-- **Where do users abandon?** Track drop-off points (after 5 min? 15 min? 25 min?)
-- **Why do they leave?** Exit survey: "Too long / boring / confusing / personal / other"
-- **Qualitative feedback:** Email beta dropouts: "We noticed you didn't finish—what happened?"
-- **Measurement:** Cohort analysis by drop-off point + sentiment from dropouts
-- **Insight:** Understanding why 50% don't complete helps optimize for the other 50%
-
----
+**Archetype Card & Social Identity:**
+- Archetype card designed as a **curiosity trigger** — makes non-users want to know "what tribe are you in?" without needing to understand the system
+- OCEAN code uses meaningful letters (e.g., "OCEAR" not "HHMHM") — each letter is descriptive: O(pen-minded), C(onscientious), E(xtravert), A(greeable), R(esilient). The example "OCEAR" shows one possible all-high + N-low combination; the full system has 15 unique semantic letters (3 per trait: Low/Mid/High). See the UX design specification for the complete letter map
+- 81 hand-curated archetypes with evocative nature-based names ("The Beacon," "The Anchor," "The Pillar")
+- Three tribe groups based on Openness (O-Group/G-Group/P-Group) create social belonging
+- Public profile is where full explanation lives — scores, facets, archetype description, trait strata
 
 ### Business Success
 
-**MVP Phase (500 users) - Validation Success:**
-- ✅ **Completion rate ≥ 50%** - Proves engagement model works (excellent for 30-min conversation vs. competitors at 10 min)
-- ✅ **Sharing rate ≥ 15%** - Proves viral potential (reflects confidence in conversational depth differentiation)
-- ✅ **NPS ≥ 40 from completers** - Proves users are promoters (competitive advantage)
-- ✅ **Cost per assessment ≤ $0.15** - Proves LLM cost model is realistic and manageable
-- ✅ **Exit analysis: Understand dropout patterns** - Proves engagement issues are addressable
-- ✅ **Zero data breaches** - Proves privacy/security foundation is solid
-- ✅ **Positive user sentiment ≥ 7/10** - Proves product-market fit signal
+**Primary metric: 100 completed assessments in the first 3 months post-launch**
 
-**Post-MVP Phase (1000-5000 users) - Growth Success:**
-- ✅ **Coaching conversion rate ≥ 3%** - Prove coaching upsell viability
-- ✅ **Merch revenue ≥ $2-5k/month** - Prove merchandise revenue channel
-- ✅ **Organic sharing > 50% of new users** - Prove viral loop is sustainable
-- ✅ **User acquisition cost (CAC) < $5** - Prove growth is efficient
+**Initial seeding:** Founder seeds first ~20 users directly. Organic growth measured from month 2 onward.
 
-**Long-term (50k+ users) - Profitability Success:**
-- ✅ **ARPU (Average Revenue Per User) ≥ $2-5/year** - Merch + coaching + premium tier
-- ✅ **CAC payback period < 6 months** - Unit economics are healthy
-- ✅ **Conversation data insights unlock B2B revenue** - Secondary revenue stream emerges
+**Organic growth signal:** Growth continues without founder-driven marketing. Measured by:
+- QR scans / analyses initiated (leading indicator — each scan = potential new user)
+- QR-accept-to-completion conversion rate (how many invited users finish their own assessment)
+- Viral coefficient: each user brings >1 new user through relationship analysis QR flow + social sharing combined
+- Archetype card shares triggering profile visits (secondary acquisition channel)
 
----
+**Ambassador quality:** What ambassadors say when recommending matters more than invitation mechanics. Track qualitative signal: are users describing the experience as transformative ("this thing understood me better than anything") or transactional ("try this personality test")?
+
+**Revenue signal (validation, not target):**
+- PWYW portrait conversion rate >20% of completed assessments
+- Average PWYW amount >€3 (signals perceived value)
+- Relationship analysis credit purchases (signals willingness to pay for social features)
 
 ### Technical Success
 
-**Nerin Conversational Quality (Launch Moat)**
-- ≥70% of users rate responses as "specifically tailored to me" vs "generic" in post-assessment survey
-- Conversation adapts based on user context (Orchestrator prevents repetition)
-- Users stay engaged for 30+ minutes without forcing (measured by completion rate ≥50%)
-- **Measurement:** Post-assessment survey question: "How personalized did the conversation feel? (1-5 scale, ≥4 = success)", conversation length distribution, drop-off analysis
-- **Non-negotiable:** Nerin must be excellent, or entire product fails
+**Conversation quality:**
+- Pacing pipeline produces territory coverage across ≥4 life domains per assessment (no single-topic lock-in)
+- Nerin follows territory assignments from steering pipeline >70% of turns (prompt compliance)
+- "Feel seen" observations derive from actual extracted evidence (not generic statements)
 
-**UX/UI Polish (Trust & Aesthetics)**
-- ≥80% of users locate privacy settings without help in usability testing (5 participants, task: "Show me how to make profile private")
-- ≥4/5 design review score from 3 independent designers for shareable profile card (aesthetics + clarity criteria)
-- ≥75% of users complete assessment flow without requesting help or expressing confusion (measured via support requests + exit survey)
-- ≥60% of users recall their 4-letter archetype code after 1 week (follow-up email survey)
-- **Measurement:** Usability testing sessions, design peer review, support ticket analysis, follow-up recall survey
-- **Non-negotiable:** Excellent UX builds trust and drives virality
+**Reliability:**
+- Assessment completion without errors >99%
+- Nerin response time <2s P95
+- Portrait generation completes successfully >99%
 
-**OCEAN Archetype System Quality**
-- Archetype code generation deterministic: Same trait scores always produce identical 4-letter OCEAN code (POC scope: 4 traits)
-- Character name + description lookup: Registry query returns name + 2-3 sentence description in <100ms
-- Facet scoring precision: All 24 facets (POC scope) stored with 0.1-point decimal precision for consistent code calculation
-- Code consistency across sessions: User's archetype code remains stable across profile views and shareable link
-- Component-based naming fallback: All 81 combinations have meaningful names via hand-curation (25-30) + component-based generation (remaining 56)
-- **Measurement:** Automated testing of code generation determinism, performance monitoring of lookups, user sentiment on name + description resonance
-- **Non-negotiable:** Users must feel their archetype identity is stable, memorable, and accurately described across interactions
-
-**Real-Time Performance**
-- Nerin response time: < 2 seconds (P95) for perceived responsiveness
-- Assessment data saves instantly (< 500ms latency for user inputs)
-- Profile page loads in < 1 second
-- **Measurement:** Real User Monitoring (RUM), Lighthouse performance scores
-- **Non-negotiable:** Slow responses kill engagement during 30-min conversation
-
-**Privacy & Security Foundation**
-- Zero unauthorized profile access (profiles only visible via explicit link)
-- Conversation data encrypted at rest + in transit
-- No data breaches or unauthorized access incidents
-- EU compliance (GDPR, data protection) from day 1
-- **Measurement:** Security audits, penetration testing, compliance checklists
-- **Non-negotiable:** Privacy breach destroys trust permanently
-
-**Database & Scaling**
-- Handle 500 concurrent users in MVP without degradation
-- Query response time < 500ms for user data retrieval
-- Session state (conversation progress) persists reliably
-- **Measurement:** Load testing, database query optimization
-- **Non-negotiable for MVP:** Must be stable at 500 users; scaling to 5k is Phase 2 optimization
-
----
+**Cost:**
+- Per-assessment cost (all LLM calls) stays within ~€0.20 budget for Haiku conversation + extraction
+- Per-portrait cost (Sonnet) stays within ~€0.20
 
 ### Measurable Outcomes
 
-| Metric | MVP Target (500 users) | Post-MVP Target (5k users) | Measurement Method |
-|--------|------------------------|--------------------------|-------------------|
-| **Completion Rate** | ≥ 50% | ≥ 60% | User submitted final assessment data |
-| **Sharing Rate** | ≥ 15% | ≥ 20% | Profile link generation (primary behavior) |
-| **User Sentiment (Completers)** | ≥ 7/10 | ≥ 8/10 | Post-assessment survey (completers only) |
-| **NPS (Completers)** | ≥ 40 | ≥ 50 | "Would recommend to friends?" survey |
-| **Exit Sentiment (Dropouts)** | Capture via survey | Improve engagement | Exit survey: "Why did you leave?" |
-| **Drop-off Analysis** | Identify WHERE users abandon | Optimize pacing | Cohort analysis by conversation length |
-| **OCEAN Code + Archetype Resonance** | ≥ 75% of users remember their OCEAN code + feel it represents them | ≥ 80% | Post-assessment survey: "Do you remember your OCEAN code?" + "Does your code + archetype feel worth sharing?" |
-| **OCEAN Code Social Usage** | ≥ 50% of users who share use their OCEAN code (not just archetype name) in social posts | ≥ 60% | Content analysis of shared posts + profile link captions |
-| **Partial-Match Discovery** | Users who compare codes report "tribal connection" moments | Qualitative | Follow-up interviews: "Did you discover shared traits with someone?" |
-| **OCEAN Code Consistency** | Same trait scores always produce identical 5-letter OCEAN code (deterministic) | 100% | Automated testing of code generation |
-| **Trait Description Accuracy** | ≥ 80% of users find their trait description accurate + insightful | ≥ 85% | Post-assessment survey: "Does this description capture your personality?" |
-| **LLM Cost/User** | ≤ $0.15 (realistic) | ≤ $0.12 | API cost monitoring (optimization target: $0.10) |
-| **Nerin Response Time (P95)** | < 2 seconds | < 1.5 seconds | Real User Monitoring |
-| **Page Load Time** | < 2 seconds | < 1 second | Lighthouse, RUM |
-| **Data Breach Incidents** | 0 | 0 | Security audit log |
-| **EU GDPR Compliance** | ✅ Day 1 | ✅ Full compliance | Legal + compliance audit |
-| **Coaching Conversion (Phase 2)** | N/A (post-MVP) | ≥ 3% | Transaction tracking |
-
----
+| Metric | Target | Timeframe | Why it matters |
+|--------|--------|-----------|----------------|
+| Completed assessments | 100 | 3 months | Primary success signal |
+| Completion rate | >70% | Ongoing | Conversation quality proxy |
+| Mid-conversation dropout | Monitor exchanges 10-18 | Ongoing | Identifies engagement valley |
+| Relationship analyses initiated (QR accepted) | >30 | 3 months | Growth engine validation |
+| QR-accept→completion rate | >40% | Ongoing | Ambassador quality signal |
+| PWYW conversion | >20% | Ongoing | Portrait value validation |
+| Portrait emotional impact | Share rate >30%, extension purchase >5%, return visit within 48h >40% | Ongoing | Self-revelation behavioral proxies |
+| Territory compliance | >70% | Ongoing | Pipeline effectiveness |
+| Nerin character distinctiveness | Qualitative | Pre-launch | Assessed via test sessions |
 
 ## Product Scope
 
-### MVP - Minimum Viable Product (500 users, Validate PMF)
+### MVP — Minimum Viable Product
 
-**Must Have (US-Only Launch):**
-- ✅ Conversational Big Five assessment with Nerin (excellence is priority)
-- ✅ Shareable profiles (private by default, LinkedIn-style sharing)
-- ✅ Privacy controls visible in UI ("Your profile is private by default")
-- ✅ Real-time streaming responses (< 2 sec response time)
-- ✅ OCEAN Archetype System (POC Scope): 4-letter main archetype code (81 combinations: 4 traits × 3 levels), ~25-30 hand-curated archetype character names covering common combinations, component-based naming system for remaining 56 combinations, all 24 facets (4 traits × 6 facets) with scientific precision in database, trait descriptions providing psychological accuracy
-- ✅ Server-side session state management with URL-based resumption (client-side state management for frontend)
-- ✅ LLM cost monitoring + capping dashboard
-- ✅ Basic privacy foundation (TLS 1.3, Better Auth security, default-private profiles, PostgreSQL RLS)
-- ✅ Nerin quality + UX/UI polish (beautiful profile card, intuitive flow)
+The full journey (conversation → results → portrait → relationship analysis → social sharing) must work at launch. The credibility chain requires every link.
 
-**Explicitly NOT in MVP:**
-- ❌ Export conversation to PDF (removed for scope simplification)
-- ❌ ElectricSQL local-first sync (Phase 2 - MVP uses server-side sessions with URL resumption)
-- ❌ Coaching partner integrations (Phase 2)
-- ❌ Merch infrastructure (Phase 2)
-- ❌ B2B team/recruiter features (Phase 2)
-- ❌ ML models trained on conversation data (Phase 3+)
-- ❌ Conversation data analytics dashboard (Phase 2)
-- ❌ Subscription tier for "continue with Nerin" (Phase 2+)
-- ❌ **Full GDPR compliance** (encryption at rest, data deletion/portability, audit logging - Phase 2 for EU launch)
-- ❌ **EU/Asia market launch** (US-only for MVP, expand to EU in Phase 2 after PMF validation)
+**Platform:** 25-exchange adaptive conversation with Nerin (dive master persona), 6-layer pacing pipeline, 2-layer prompt system (common identity + per-turn steering), ConversAnalyzer v2 dual extraction, derive-at-read scoring (30 facets → 5 traits → OCEAN code → archetype).
 
----
+**Application:** Free results (OCEAN code, archetype, scores, public profile) + portrait (PWYW €1+, grants 1 free relationship analysis credit) + relationship analysis (2-person) + conversation extension (+25 exchanges) + Polar.sh payments.
 
-### Growth Features (Post-MVP, After PMF Validation)
+**Critical gap:** Nerin character quality (~40% → launch-ready). Dive master persona, encouragement system, "feel seen" moment accent, distinct memorable voice. Infrastructure already built (auth, hexagonal architecture, Railway, CI/CD).
 
-**Phase 2 (1k-5k users):**
-- ✅ **EU Launch + GDPR Compliance** (Epic 6: encryption at rest, data deletion/portability, audit logging)
-- ✅ Coaching partner integrations (revenue share)
-- ✅ Merch infrastructure (e-commerce, personality-themed products)
-- ✅ B2B optionality (team assessments for startups, recruiter profiles)
-- ✅ Conversation data analytics dashboard (internal insights)
-- ✅ US region support + compliance (after EU validation)
-- ✅ Subscription tier ("continue with Nerin" for ongoing coaching conversations)
-- ✅ Mobile app (if user demand signals it)
-
-**Phase 3 (5k+ users):**
-- ✅ ML models trained on conversation data (proprietary insights)
-- ✅ Personality market research products (anonymized trend reports)
-- ✅ Asia region support + compliance
-- ✅ B2B enterprise features (team analytics, role fit analysis)
-- ✅ Export conversation data (if user demand signals it)
-
----
-
-### Vision (18+ months, Full Product)
-
-- ✅ Global compliance (EU, US, Asia, worldwide)
-- ✅ Proprietary conversation-based ML models (competitive moat)
-- ✅ B2B enterprise platform (team analytics, recruitment integration)
-- ✅ Subscription coaching marketplace (connect users to coaches)
-- ✅ Merch + coaching revenue streams mature (predictable, significant)
-- ✅ Company partnerships (HR platforms, recruitment tools, career apps)
-- ✅ Scientific research partnerships (validate assessment methodology)
-- ✅ Personality trend reports (market research product)
-
----
-
-## Web Application Requirements
-
-As a web_app project type, the following platform-specific requirements ensure cross-browser compatibility, responsive design, discoverability, and accessibility.
-
-### Browser Compatibility Matrix
-
-**Supported Browsers (Minimum Versions):**
-- Chrome/Chromium: 90+ (covers 70%+ of users)
-- Firefox: 88+ (covers 10%+ of users)
-- Safari: 14+ (covers 15%+ of users, iOS compatibility)
-- Edge: 90+ (covers 5%+ of users)
-
-**Testing Strategy:**
-- Automated cross-browser testing via Playwright/Cypress
-- Manual testing on latest stable versions
-- Graceful degradation for older browsers (show upgrade notice for <90)
-
-**Critical Features per Browser:**
-- Real-time streaming (SSE/WebSocket support)
-- Local storage for session persistence
-- CSS Grid/Flexbox for responsive layout
-- TLS 1.3 for secure connections
-
-### Responsive Design Requirements
-
-**Mobile-First Approach:**
-- Design for smallest screen first (375px width minimum)
-- Progressive enhancement for larger screens
-
-**Breakpoints:**
-- Mobile: 375px - 767px (portrait phone, primary for conversational assessment)
-- Tablet: 768px - 1023px (portrait iPad, assessment + results viewing)
-- Desktop: 1024px - 1439px (laptop, optimal for profile exploration)
-- Large Desktop: 1440px+ (external monitor, admin/analytics views)
-
-**Responsive Behavior:**
-- Mobile: Single-column layout, bottom navigation, touch-optimized tap targets (44px minimum)
-- Tablet: Two-column layout for results, persistent side navigation
-- Desktop: Multi-column dashboard, hover states, keyboard navigation
-
-**Touch & Interaction:**
-- Touch targets ≥44px for mobile (finger-friendly)
-- Swipe gestures for navigation (optional enhancement)
-- Keyboard navigation for desktop accessibility
-
-### SEO Strategy
-
-**Organic Discovery Goals:**
-- Rank for "Big Five personality test", "OCEAN personality assessment", "scientific personality test"
-- Drive 50%+ of traffic from organic search (post-MVP)
-
-**On-Page SEO:**
-- Meta tags: Title (55 chars), Description (155 chars), Keywords
-- Open Graph tags for social sharing (og:title, og:description, og:image)
-- Twitter Card markup for rich previews
-- Structured data (Schema.org): FAQPage, Person, Organization
-
-**Technical SEO:**
-- XML sitemap with assessment + profile pages
-- Robots.txt allowing all public pages
-- Canonical URLs for duplicate content prevention
-- 301 redirects for URL changes
-- Page load speed <2 seconds (Core Web Vitals)
-
-**Content Strategy:**
-- Educational content: "What is Big Five?", "MBTI vs Big Five comparison"
-- Landing pages per archetype (81 unique URLs for SEO)
-- Blog posts: Personality insights, research summaries
-
-### Accessibility Standards
-
-**WCAG 2.1 Level AA Compliance (Minimum):**
-- Perceivable: Alt text for images, captions for videos, color contrast ≥4.5:1
-- Operable: Keyboard navigation (Tab, Enter, Escape), focus indicators, no keyboard traps
-- Understandable: Clear language (8th grade reading level), consistent navigation, error identification
-- Robust: Valid HTML5, ARIA landmarks, semantic markup
-
-**Screen Reader Support:**
-- NVDA (Windows), JAWS (Windows), VoiceOver (macOS/iOS) testing
-- ARIA labels for interactive elements
-- Skip navigation links
-- Focus management during Nerin conversation
-
-**Keyboard Navigation:**
-- Tab order follows visual flow
-- Enter/Space activates buttons
-- Escape closes modals
-- Arrow keys navigate lists
-
-**Testing:**
-- Automated: axe DevTools, Lighthouse accessibility audit
-- Manual: Screen reader testing, keyboard-only navigation
-- Target: Zero critical accessibility violations before launch
-
----
+See [Project Scoping & Phased Development](#project-scoping--phased-development) for detailed feature breakdown, post-MVP phases, and risk mitigation.
 
 ## User Journeys
 
-User journeys map how target users interact with the platform from discovery through ongoing engagement, ensuring all functional requirements trace back to actual user needs.
+### Journey 1: The Curious First-Timer — Léa
 
-### Journey 1: New User → Assessment → Profile → Share
+**Who she is:** Léa, 28, UX designer in Lyon. Interested in psychology, has taken 16Personalities twice but found the results generic. Sees a friend's archetype card on Instagram — "The Beacon" with an ocean-themed visual and an OCEAN code she doesn't recognize. She's intrigued: *what's my code?*
 
-**User:** Maya (32, product manager seeking self-awareness for career growth)
+**Opening Scene:** Léa taps the card link, lands on her friend's public profile. The archetype name and OCEAN code are front and center — a one-line hook beneath. She scrolls: detailed scores and facet bars are there for the curious, giving a scientific credibility ("this isn't astrology") without overwhelming the first impression. The archetype description feels specific — not "you're creative and empathetic" but a narrative that reads like someone actually *knows* this person. At the bottom: "Discover your own." She signs up.
 
-**Trigger:** Discovers big-ocean through LinkedIn post from friend sharing their archetype
+**Rising Action:** Nerin greets her — not with a form, but with a question about her daily routines. The tone is warm, specific, slightly playful. Ocean metaphors. A depth meter sits on the left edge of the screen, quietly tracking the conversation's progress. By exchange 8, Nerin says something like: "You mentioned you redesign your workspace every few months but you've kept the same morning routine for years. That's an interesting tension — the part of you that craves novelty has a deal with the part that needs anchoring." Léa pauses. That's... exactly right. She's never thought about it that way.
 
-**Steps:**
-1. **Discover:** Clicks shared profile link → Views friend's archetype results → Intrigued by "Mindful Architect" description
-2. **Start Assessment:** Clicks "Take Your Assessment" → Lands on homepage → Reads "30-min conversation" promise
-3. **Engage with Nerin:** Begins conversational assessment → Nerin asks open-ended questions → Maya responds naturally → Progress indicator shows 35% complete
-4. **Continue Conversation:** Nerin adapts questions based on responses → Explores values, work style, social preferences → No repetitive or generic questions → 25 minutes elapsed
-5. **Receive Results:** Assessment complete → OCEAN code revealed prominently (e.g., "ODEWR") → Archetype name shown as subtitle ("The Catalyst") → Reads archetype description
-6. **Explore Profile:** Views trait breakdown (5 Big Five traits with scores) → Each OCEAN letter explored individually → Reads facet-level details (6 facets per trait) → Precision score shows 85% confidence
-7. **Share:** Clicks "Share Profile" → Generates unique URL → Copies link → Posts to LinkedIn with caption "I'm an ODEWR — The Catalyst. What's your code?"
+Around exchange 13, she hits a natural lull — novelty has worn off. (Note: the specific exchange number is illustrative — pacing is driven by energy and telling signals, not fixed turn numbers.) But the depth meter has been climbing, she's past the 50% milestone marker, and Nerin drops a progress signal: "We're getting somewhere interesting." She stays.
 
-**Success Criteria:** Completion rate ≥50%, Sharing rate ≥15%, User sentiment ≥7/10
+**Climax:** Exchange 22. Nerin makes an observation about how Léa handles conflict at work vs with her partner — she avoids in one domain, confronts in the other. The pattern lands with emotional weight. During the conversation, Nerin has been teasing: he's seen things about her, and he wants to show her. The 75% milestone passes. She finishes the 25 exchanges genuinely curious about what Nerin has written.
 
-**Key FRs:** FR1-4 (Assessment), FR5-7 (Trait scoring), FR8-11 (Archetype system), FR13-15 (Profile sharing)
+**Resolution:** Léa sees her OCEAN code, her archetype ("The Beacon"), her trait and facet scores. The scores feel right. Then the PWYW modal opens automatically. It's not a paywall — it's personal. Vincent, the founder, congratulates her for completing the journey. He shares why he built big-ocean: the portrait Nerin wrote for *him* changed how he sees himself — like Nerin held up a mirror. She reads Vincent's actual portrait — his struggles, his vulnerabilities, why this product exists. She can see exactly what a portrait looks like and judge: *is this worth it to me?* She pays €5. Nerin's letter to her arrives — not a report, but a personal letter naming her core tension: creative ambition held in check by a need for external validation. She screenshots her archetype card and sends it to three friends: "You have to try this."
 
----
+**Recovery beat — what if the portrait doesn't land?** If Léa reads the portrait and thinks "that's not me," the credibility chain breaks. Behavioral signals (no share, no return visit, no extension purchase) capture this. The conversation extension becomes the recovery path — more exchanges produce better evidence, which produces a richer, more accurate letter from Nerin.
 
-### Journey 2: Returning User → Resume → Complete → Export
+**Capabilities revealed:** Sign-up flow, 25-exchange conversation with Nerin, pacing pipeline (territory coverage, feel-seen moments), depth meter + progress milestones (25%/50%/75%), Nerin teasing portrait during conversation, results page (OCEAN code, archetype, scores), PWYW modal with founder story + example portrait, portrait as Nerin's letter, behavioral proxy tracking, archetype card sharing, public profile as landing page, conversation extension as quality recovery.
 
-**User:** Alex (28, engineer who started assessment during lunch break, needs to finish)
+### Journey 2: The Invited User — Marc
 
-**Trigger:** Started assessment 2 days ago, received email reminder "Your personality assessment is waiting"
+**Who he is:** Marc, 34, Léa's partner. Not into personality tests. Léa completed her assessment and wants to use her free relationship analysis credit.
 
-**Steps:**
-1. **Return:** Clicks email link → Lands on resume page → Sees "Pick up where you left off" message
-2. **Resume:** System loads session state → Last conversation message visible → Progress shows 60% complete → "~12 minutes remaining"
-3. **Continue Assessment:** Nerin picks up conversation naturally → No repeated questions → Feels seamless, not fragmented
-4. **Complete:** Final questions answered → Assessment complete → Results generated
-5. **Review Results:** Explores full profile → Reads trait descriptions → Checks facet scores
-6. **Export:** Clicks "Download Results" → Receives PDF with conversation history + trait breakdown → Saves for personal records
+**Opening Scene — The QR Flow:** Léa opens the QR drawer in the app. Marc scans the code with his phone (or opens the URL it contains). He lands on a screen showing Léa's archetype card, both users' confidence rings, and Léa's available credit balance, with Accept and Refuse buttons. Marc understands: Léa wants to understand their relationship better, and it starts with a 25-minute conversation about him. He knows what Léa got out of it — she's been talking about her portrait — so there's social proof before he even starts. He accepts and creates an account.
 
-**Success Criteria:** Resume rate ≥70% (users who pause actually return), Session continuity feels natural
+**Rising Action — The Skeptic's First Exchanges:** Marc meets Nerin and expects a quiz. Instead, Nerin asks about his weekend — what he does when nothing is planned. Marc answers briefly. Exchanges 2-5 are short, low-energy responses. The pacing pipeline detects this: low telling score, guarded energy. It responds by keeping territories light (daily routines, comfort zones), using soft entry pressure, and letting Marc set the pace. Nerin doesn't push — she stays curious without demanding depth. But Nerin isn't passive either — by exchange 5, she drops something specific enough to catch Marc's attention: an observation about the *way* he talks about routine, not just what he says. By exchange 6, Marc notices Nerin keeps circling around structure — meal prep, workout schedule, project timelines — and Nerin says: "You build systems for things most people leave to chance. I'm curious what happens when the system breaks." Marc laughs — that's exactly what Léa says about him. The depth meter starts climbing. He leans in.
 
-**Key FRs:** FR3 (Pause/resume), FR4 (Progress indicator), FR16 (Export), FR21-22 (Session state management)
+**Climax:** Exchange 18. Nerin connects something Marc said about his father's expectations to how he handles feedback at work. Marc didn't expect to go there. The observation is specific enough that he feels *seen*, not analyzed. Nerin teases what he's been noticing — there's a letter waiting at the end. Marc finishes the conversation with a sense that this thing actually understood something real.
 
----
+**Resolution — The Relationship Analysis:** Marc gets his results — a different archetype than Léa, but they share letters in their OCEAN codes, which makes the similarities visible at a glance. The PWYW modal opens with the founder's story — Marc reads Vincent's portrait, sees what a portrait looks like, pays €3 for his own letter from Nerin.
 
-### Journey 3: Privacy-Conscious User → Selective Sharing → Access Control
+Now both assessments are complete — the relationship analysis generates. When they open it, a ritual screen greets them: a suggestion to find a quiet moment, sit down together, and discuss what they discover. The ritual has a single Start button — no skip option. They choose to read it side by side — a structured comparison of how they handle conflict, emotional expression, decision-making. It names the dynamic they've been navigating for years but never articulated. They talk about it over dinner. Marc tells his friend Thomas: "It's not what you think — it's actually good."
 
-**User:** Jordan (35, therapist concerned about data privacy and professional boundaries)
+**Capabilities revealed:** QR flow (drawer + scan/URL), pacing pipeline adaptation for low-motivation/guarded users (soft pressure, light territories, early hook), depth meter + milestones, relationship analysis generation (triggered when both complete), ritual suggestion screen, cross-profile data correlation, OCEAN code comparison (shared letters = shared traits), PWYW modal with founder story, portrait as Nerin's letter, conversion of skeptic into ambassador.
 
-**Trigger:** Interested in assessment but wary of data collection and unwanted profile visibility
+### Journey 3: The Returning User — Léa (continued)
 
-**Steps:**
-1. **Research Privacy:** Visits homepage → Clicks "Privacy Policy" → Reads "Default Private" and "Explicit Sharing Only" promises
-2. **Start Assessment:** Begins conversation → Notices "Your data is encrypted" badge → Feels reassured
-3. **Complete Assessment:** Receives results → Profile shows "Private" status by default → No public directory listing
-4. **Control Sharing:** Views sharing options → Generates unique link for close friend only → Does NOT share publicly → Link expires after 30 days (Phase 2 feature)
-5. **Manage Data:** Clicks "Data Settings" → Reviews data retention policy → Sees option to delete all data (GDPR Article 17) → Exports conversation as backup before deletion
-6. **Delete Profile:** Requests account deletion → System confirms all data will be permanently removed within 30 days → Receives confirmation email
+**Who she is:** Same Léa, 2 weeks later. Nerin's letter named a tension she can't stop thinking about. She wants more depth.
 
-**Success Criteria:** Zero unauthorized profile access, GDPR compliance day 1, User trust metrics >8/10
+**Opening Scene — The Re-engagement:** Léa receives an email when the relationship analysis with Marc is ready. She clicks through, reads it with Marc over dinner (the ritual). A few days later, she's back on the platform looking at her results. She sees the conversation extension option: +25 exchanges for €25 to deepen accuracy and continue the experience with Nerin.
 
-**Key FRs:** FR15 (Privacy controls), FR17-20 (Data encryption, deletion, audit logs), NFRs for GDPR compliance
+**Rising Action:** She purchases the extension. Nerin picks up where they left off — referencing themes and patterns from the first conversation, acknowledging the time gap. The second session goes deeper: more nuanced territories, heavier energy. Nerin explores her relationship with ambition, her family dynamics, her inner struggles with more precision because the pacing pipeline now has 25 exchanges of prior evidence to steer from. The depth meter climbs further than before.
 
----
+**Climax:** The updated letter from Nerin arrives. It's noticeably richer — new patterns emerge from the additional evidence. A section on how she handles pressure at work connects to something she said about her childhood. She feels the €25 was worth it.
+
+**Resolution:** Léa now wants to analyze her relationship with her mother. She buys a relationship analysis credit (€5) and opens the QR drawer to initiate. She's become a recurring user: portrait extension, multiple relationship analyses, and she shares her archetype card every time someone asks "what's that ocean code?"
+
+**Capabilities revealed:** Re-engagement notifications (email when relationship analysis ready), conversation extension purchase (Polar.sh), continued conversation with context preservation across time gap, portrait regeneration with richer evidence (updated Nerin letter), relationship analysis credit purchase, multi-relationship analysis, returning user dashboard.
+
+### Journey 4: The Public Profile Visitor — Thomas
+
+**Who he is:** Thomas, 31, Marc's friend. He's not going to sign up today. He sees Marc's archetype card in a group chat — "The Anchor" with an OCEAN code and an ocean-themed visual — and taps the link out of curiosity.
+
+**Opening Scene:** Thomas lands on Marc's public profile. No account needed. The archetype name, OCEAN code, and a framing line — "[Name] dove deep with Nerin — here's what surfaced" — lead the page. Simple, memorable, designed to be *talkable*. Below, detailed trait scores and facet bars are available for those who want to dig in — the scientific data gives credibility without overwhelming the first impression.
+
+**Rising Action:** Thomas doesn't scroll far. He sees the archetype name, thinks "huh, that's very Marc," and goes back to the chat. But the profile did its job — it gave him something to say. Someone in the group chat asks what "The Anchor" means. Marc explains. Someone else says "I bet I'd be something different." That conversation — not the profile — is the actual conversion engine. The archetype name enters the friend group's vocabulary. They start calling Marc "The Anchor" as a joke.
+
+**Climax:** Thomas doesn't convert today. But when a third friend shares their card a week later, Thomas compares their OCEAN codes and notices shared letters. The system's social currency is working — comparison is organic, not forced. The detailed data on the profiles gives the whole thing a scientific feel: this isn't a buzzfeed quiz.
+
+**Resolution:** Thomas signs up three weeks later after seeing multiple friends share their cards. The cumulative exposure converted him — no single moment, but repeated social proof, FOMO, and the curiosity of "what would my code be?"
+
+**Capabilities revealed:** Public profile rendering (no auth required), OG meta tags for social sharing, archetype card visual (designed for memorability and talkability), trait/facet score visualization (depth for credibility, not front-loaded), OCEAN code as social comparison object, CTA to assessment, SEO/social preview optimization.
+
+### Journey 5: The Founder — Vincent (admin/ops)
+
+**Who he is:** Vincent, founder and sole operator. He needs to monitor the platform's health, seed initial users, and track growth signals.
+
+**Opening Scene:** Vincent checks the admin view after seeding his first 20 users. He needs to know: how many completed? Where did they drop off? Are the LLM costs within budget?
+
+**Rising Action:** He reviews completion rates — 15/20 completed. The 5 dropouts all happened between exchanges 12-16. He checks the pacing pipeline logs: those sessions got stuck in a single territory for 6+ consecutive turns. Steering compliance was below 50% for those sessions. He adjusts prompt parameters and monitors the next batch.
+
+**Climax:** Month 2. Vincent sees the first organic signups — users he didn't seed. Relationship analysis QR scans are driving new completions. He tracks the viral coefficient: 1.3 — each user is bringing slightly more than one new user. PWYW revenue trickles in: average €4.20/portrait, 25% conversion. The unit economics work. Then he sees a user who shared their archetype card within minutes of unlocking their portrait, followed by a conversation extension purchase the same day. That's the moment he knows the product is real — not the metrics, the behavioral signal behind the metrics.
+
+**Resolution:** Vincent monitors cost per assessment (~€0.18 on Haiku), portrait generation costs (~€0.15 on Sonnet), and platform reliability (99.2% completion without errors). He's watching the ambassador quality signal: early users describe the experience as "it actually understood me" rather than "try this test." The product is working.
+
+**Capabilities revealed:** Admin dashboard/monitoring, completion funnel analytics, mid-conversation dropout tracking by exchange number, steering compliance metrics, cost tracking per assessment/portrait, viral coefficient measurement, revenue reporting, error monitoring, pacing pipeline observability.
+
+### Journey Requirements Summary
+
+| Journey | Key Capabilities Revealed |
+|---------|--------------------------|
+| **Léa (First-Timer)** | Sign-up, conversation, pacing pipeline, depth meter + milestones, Nerin portrait teasing, results page, PWYW modal (founder story + example portrait), portrait as Nerin's letter, behavioral proxy tracking, archetype sharing, public profile landing, extension as recovery |
+| **Marc (Invited)** | QR flow (drawer + scan), pacing adaptation for guarded users, early hook for skeptics, depth meter, relationship analysis (both-complete trigger), ritual suggestion screen, OCEAN code comparison, ambassador conversion |
+| **Léa (Returning)** | Re-engagement email, conversation extension with context preservation, portrait regeneration (richer Nerin letter), credit purchase, multi-relationship analysis |
+| **Thomas (Profile Visitor)** | Public profile (talkable first impression + scientific depth on scroll), OG tags, archetype as social object, OCEAN code comparison, CTA funnel |
+| **Vincent (Founder)** | Admin monitoring, completion funnel, dropout analytics, steering compliance, cost tracking, viral metrics |
+
+**Critical path:** Journeys 1→2 form the growth loop. The PWYW modal (founder vulnerability + example portrait) is the monetization conversion moment. The relationship ritual transforms the product from individual tool to shared experience. Journey 4's public profile is designed for *talkability* — the social conversation around it drives conversion more than the profile itself. Journey 5 ensures operational visibility.
+
+## Domain-Specific Requirements
+
+These constraints protect users from the inherent risks of AI-powered personality analysis. They're not optional — they're the reason users trust the product.
+
+### Psychological Framing & Liability
+
+- **Greeting disclaimer:** Nerin's first message includes a natural, non-clinical framing: "this is not therapy" — integrated into the conversation tone, not a legal banner
+- **Language constraints:** Nerin never uses diagnostic language (no "you have...", no DSM terms, no clinical labels). Observations are framed as patterns and curiosities, not diagnoses
+- **Third-party protection rule:** Nerin never characterizes people the user talks about. Nerin can observe the user's *experience* of a relationship ("the way you describe your mother, there's a weight to it") but never labels the other person ("your mother sounds controlling")
+- **Permission to disagree:** Nerin's observations are invitations to explore, not declarations. When a user pushes back, Nerin holds gently — doesn't abandon the observation, doesn't push harder. Gives the user space to sit with it. Redirects only if the user clearly rejects it a second time
+- **Portrait framing:** Nerin's letter describes patterns and tensions, not conditions. "You tend to..." not "You suffer from..."
+- **Relationship analysis framing guardrails:** Differences are framed as *dynamics*, not deficits. No blame language. No one is the problem. The ritual screen reinforces: "This analysis describes your dynamic, not who's right or wrong"
+- **Relationship analysis content boundary:** The analysis describes the dynamic *between* two people — never exposes individual vulnerability data (inner struggles, pressure responses). Only relational patterns appear
+- **Archetype positivity audit:** All 81 archetypes must be frameable as a strength. Every name, description, and portrait framing should make the user feel proud of their result
+- **Product identity:** Friendly conversation, not clinical assessment
+
+### Multi-User Data Privacy (Relationship Analysis)
+
+- **Visibility between users:** Each user can see the other's public profile data (scores, confidence, archetype) — unless that profile is set to private. Binary visibility only — fully public or fully private. No intermediate state (e.g., hiding scores while showing OCEAN code)
+- **Relationship analysis access:** Both users can see the full relationship analysis
+- **Per-relationship consent:** Initiator implicitly consents by generating the QR token. Recipient consents by accepting on the QR accept screen (both users must have completed assessments). Single consent gate — like accepting a friend request
+- **Account deletion:** If one user deletes their account, the relationship analysis is deleted for both parties
+- **Data correlation boundary:** Relationship analysis does not expose raw conversation transcripts to the other party
+
+### Data Retention & Transcript Security
+
+- **Transcript storage:** Raw conversation transcripts stored indefinitely for MVP (needed for conversation extension)
+- **User awareness:** Users informed during onboarding that conversation data is stored
+- **Encryption at rest:** AES-256-GCM planned for Epic 6 (EU launch). MVP relies on TLS 1.3 in transit + PostgreSQL RLS
+
+### LLM Cost & Reliability
+
+*See FR55-FR57, FR58 for functional specifications.*
+
+- **Cost guard:** Per-session cost monitoring with a budget threshold
+- **Session-aware cost guard:** Never block a user mid-session. Budget protection applies at session boundaries, not during active conversations
+- **Retry pattern:** Users can retry sending their message — not a hard failure, a temporary pause
+- **Response length:** Nerin's response length may vary — shorter responses are expected and acceptable
+- **Fail behavior:** Cost guard blocks the turn, does not terminate the session
+
+### Content Moderation & Crisis Protocol
+
+- **MVP scope:** Out of scope for MVP
+- **Future consideration:** Crisis detection is a candidate for post-MVP
+
+## Innovation & Novel Patterns
+
+### Detected Innovation Areas
+
+**1. Category Creation — Personality Intelligence (primary innovation)**
+big-ocean bets that personality intelligence is a product category that doesn't exist yet. 16Personalities gives you a label. ChatGPT gives you a chat. A therapist gives you insight over months. big-ocean's bet: 25 minutes of structured conversation can produce personality intelligence that's *actionable* — you can share it, compare it, use it to understand your relationships. The structural difference: quizzes capture self-assignment ("are you organized?"), conversations capture behavioral patterns (how you describe your morning reveals what you protect). A quiz can't generate a portrait sourced from your own story — only a conversation can. The assessment experience itself is the marketing. Conversation quality IS the credibility that drives sharing. That's not a feature — it's a structural moat.
+
+**2. Closed-Loop Conversation Control System**
+The 6-layer pacing pipeline (ConversAnalyzer v2 → E_target → Territory Scorer → Territory Selector → Move Governor → Prompt Builder) is a closed-loop control system running on top of an LLM conversation. Most LLM products are stateless — the LLM drives. big-ocean treats the LLM as a *guided instrument*: extract signal → compute target state → score moves → select action → compose instruction → execute → loop. The LLM is the actuator, not the brain. The pacing pipeline IS the brain. This is genuinely novel in the LLM application space and is the platform innovation that makes everything else possible.
+
+**3. Conversation as Mechanism, Not Product**
+The user experiences a meaningful personal conversation. The system experiences a structured data extraction pipeline. These are the same 25 exchanges. The control system makes a 25-minute assessment feel like an encounter with a perceptive character, not a test. The data collection *is* the experience — there's no trade-off between thoroughness and engagement.
+
+**4. Ocean Metaphor as Structural UX Language**
+The ocean/diving metaphor isn't cosmetic — it's structural. It shapes how the product talks, how users understand their journey, and how they describe the experience to others. Conversation = diving deeper. Depth meter = literal depth visualization. Territories = underwater zones. Mirrors = marine biology phenomena reflecting human patterns. Archetypes = nature-based identity ("The Beacon," "The Anchor"). The portrait = what Nerin found in the deep. "I went on this deep dive and Nerin found..." — that's a story users tell. Try telling a story about your 16Personalities result.
+
+**5. Credibility Chain as Growth Architecture**
+Conversation quality → self-recognition (scores + archetype) → portrait revelation (Nerin's letter) → trust in relationship analysis → ambassador conversion. Each product layer builds trust for the next. This isn't a marketing funnel — it's a credibility funnel where each step proves the AI's capability, making users willing to invest more (time, money, social capital).
+
+**6. Relationship Analysis as Viral Engine**
+The core growth mechanic requires *another person* to complete their own 25-minute assessment. Every relationship analysis QR scan is a potential new user acquisition that goes through the full credibility chain. The product creates network effects from what starts as a fundamentally individual experience.
+
+**7. PWYW with Founder Vulnerability**
+The payment modal shows the founder's own portrait — his struggles, his vulnerabilities, why he built this. This creates an emotional connection that frames payment as participation in something personal rather than a transaction. The user sees a concrete example of the product's output and judges its value before deciding what to pay.
+
+**8. Relationship Analysis Ritual as Harm Reduction**
+The ritual screen (read together, discuss) and framing guardrails (dynamics not deficits, no blame) aren't just UX — they're a harm reduction mechanism for how personality data is consumed. Accurate personality intelligence will sometimes surface uncomfortable truths. The innovation is creating a container where difficult discoveries are productive rather than destructive.
+
+### Market Context & Competitive Landscape
+
+| Competitor | What they have | What they lack |
+|-----------|---------------|---------------|
+| 16Personalities / MBTI | Guided UX, social identity, archetypes | Generic results, no personalization, no conversational depth |
+| ChatGPT / Claude | Personalization, conversational depth | No guided UX, no social outputs, no structured personality model |
+| Therapists | Depth, relationship analysis, clinical rigor | Accessibility, scalability, affordability, social features |
+| BetterHelp / therapy apps | Accessibility, scalability | No personality model, no social identity, no structured insights |
+
+big-ocean's unique position: the only product where the assessment experience IS the marketing. The structural advantage is that conversation quality, sharing behavior, and growth are the same system — not separate concerns.
+
+**Revenue model clarity:** MVP monetization (portrait PWYW + relationship credits + conversation extensions) targets break-even while building the user base and data moat. B2B team dynamics (H2) is the real revenue engine — personality intelligence applied to team management at enterprise scale.
+
+### Validation Approach
+
+**Pre-launch validation (first 20 seeded users):**
+- Do users describe the experience as something *new*, or map it to something existing? ("Better 16Personalities" = category not landing. "I've never done anything like this" = category exists.)
+- Do users spontaneously share without being asked? Spontaneous sharing is the category signal
+- What language do users use when describing it to friends? Their words reveal whether the category is landing
+
+**Post-launch validation:**
+- 100 completed assessments in 3 months — if users complete and share, the category exists
+- >70% completion rate — proves the control system works as an experience
+- PWYW conversion >20% — portrait self-revelation drives willingness to pay
+- Break-even signal — MVP monetization covers LLM costs. Not a profit target, a sustainability floor
+- Viral coefficient >1 — relationship analysis drives organic acquisition
+- Character resonance — do users describe Nerin as a character, or as "the AI"?
+
+### Risk Mitigation
+
+See [Risk Mitigation Strategy](#risk-mitigation-strategy) in Project Scoping for the consolidated risk table covering both innovation and execution risks.
+
+### Strategic Priorities
+
+**1. Conversation engine is the primary innovation investment.** The pacing pipeline + Nerin character must work before anything else matters. If the first 20 users don't complete and don't feel seen, no amount of archetype cards, public profiles, or payment modals will save the product.
+
+**2. Iteration over perfection.** The 81 archetypes, territory descriptions, mirror system, and templates are first drafts that will improve with real user data. Ship, learn, refine. Don't over-polish pre-launch.
+
+**3. Relationship analysis as emergent product identity.** The relationship analysis may become what people *call* the product — "have you done a big-ocean with someone?" is a social behavior, not a feature. Design for this possibility even though it can't be forced.
+
+**4. Data flywheel as long-term moat.** ConversAnalyzer improves → portraits improve → more users → more data → ConversAnalyzer improves. This flywheel is the company's long-term defensibility. Every conversation makes the next one better.
+
+**5. Protect the founder story.** The PWYW modal with the founder's portrait is the soul of the product. Keep it even as the company grows.
+
+## Web App Specific Requirements
+
+The following specifications ensure the experience described above works reliably across devices and contexts.
+
+### Project-Type Overview
+
+big-ocean is a hybrid SSR web application built with TanStack Start (React 19) with server-rendered pages and client-side navigation. The primary user experience is a conversational interface (chat with Nerin) and results/profile pages. SEO is critical for public profiles which serve as the top-of-funnel acquisition channel.
+
+### Browser Support
+
+- **Target:** Modern evergreen browsers — Chrome, Firefox, Safari, Edge (latest 2 versions)
+- **No IE11 or legacy browser support**
+- **Mobile browsers:** Safari iOS, Chrome Android (latest 2 versions) — conversation UX must work well on mobile given social sharing flows start on phones (tapping archetype cards from Instagram/messaging apps)
+
+### Responsive Design
+
+- **Mobile-first for conversation and results pages** — users arriving from shared archetype cards on social/messaging apps will be on mobile
+- **Public profile must render well on mobile** — it's the first impression for potential users
+- **Desktop optimized for extended sessions** — conversation extension (50 exchanges) and relationship analysis reading benefit from larger screens
+- **Depth meter placement** — left edge on desktop, adapts for mobile viewport
+
+### Performance Targets
+
+- **Public profile page:** <1s LCP (Largest Contentful Paint) — this is the acquisition landing page, speed matters for bounce rate
+- **Chat page:** <2s initial load, then instant client-side interactions. Nerin response time <2s P95 (server-side, already defined in technical success criteria)
+- **Results page:** <1.5s LCP — users arrive here with anticipation after completing 25 exchanges, delay kills the emotional moment
+- **Portrait generation:** Async — user is informed it's generating, no blocking wait. Notification when ready
+
+### SEO & Social Sharing Strategy
+
+- **Public profiles are SEO-critical:** Server-rendered with structured data, unique URLs per user
+- **OG meta tags per public profile:** Archetype name, OCEAN code, archetype card image — optimized for social preview when shared in messaging apps and social media
+- **OG image generation:** Dynamic archetype card image per user for social previews
+- **Landing/marketing pages:** SSR for SEO. Standard meta tags, structured data
+- **Conversation and results pages:** Not indexed (behind auth). `noindex` meta tag
+- **Sitemap:** Public profiles only (for users who opt into public visibility)
+
+### Accessibility
+
+- **Target:** WCAG 2.1 AA compliance
+- **Conversation UX:** Chat interface must be keyboard-navigable, screen-reader compatible, with proper ARIA labels for depth meter and progress milestones
+- **Public profile:** Score visualizations (facet bars, trait bands) must have text alternatives
+- **Color contrast:** Archetype card colors and ocean theme palette must meet AA contrast ratios
+- **Focus management:** Proper focus handling in PWYW modal and relationship analysis ritual screen
+
+### Implementation Considerations
+
+- **SSR framework:** TanStack Start (already in use) — server-rendering for public profiles and landing pages, client-side for authenticated experiences
+- **Deployment:** Railway (already in use) — single region for MVP
+- **CDN:** Consider for static assets and OG images as public profile traffic grows
+- **Image optimization:** Archetype card images and OG previews should be generated and cached, not computed per request
+
+## Project Scoping & Phased Development
+
+### MVP Strategy & Philosophy
+
+**MVP Approach:** End-to-end experience MVP — the full journey (conversation → results → portrait → relationship analysis → social sharing) must work at launch. No staged rollout. The credibility chain requires every link to be present for the growth loop to activate.
+
+**Resource:** Solo founder. Architecture (hexagonal, Effect-ts) and infrastructure (Railway, CI/CD) already built to minimize ops burden. Most infrastructure is in place — focus is on conversation engine quality and feature completion.
+
+### MVP Feature Set (Phase 1)
+
+**Core User Journeys Supported:** All five (Léa, Marc, Léa returning, Thomas, Vincent)
+
+**Must-Have Capabilities:**
+
+| Capability | Justification |
+|-----------|--------------|
+| 25-exchange conversation with Nerin character | The product IS the conversation |
+| 6-layer pacing pipeline | Without it, Nerin is just ChatGPT |
+| Nerin dive master persona + ocean metaphors | Character distinctiveness = memorability = sharing |
+| Depth meter + progress milestones (25%/50%/75%) | Prevents mid-conversation dropout |
+| Nerin portrait teasing during conversation | Builds anticipation for the payoff |
+| Results page (OCEAN code, archetype, scores) | Free tier value — the self-recognition moment |
+| PWYW modal with founder story + example portrait | Monetization conversion moment |
+| Portrait generation (Nerin's letter, Sonnet) | The payoff — the "worth it" moment. Portrait unlock uses a simple button ("Nerin has written something for you. Unlock your portrait."), not a visual envelope |
+| Behavioral proxy tracking (share rate, extension purchase, return visits) | Measures self-revelation via behavioral signals |
+| Public profile (default-private, shareable) | Top-of-funnel acquisition channel |
+| OG meta tags + archetype card image | Social sharing is the passive growth channel |
+| QR flow (drawer + scan/URL) | Relationship analysis requires connecting with someone |
+| Relationship analysis (2-person, both-complete trigger) | The growth engine — each QR scan = potential new user |
+| Ritual suggestion screen (Start button only, no skip) | Harm reduction + experience enhancement |
+| Per-relationship consent (accept gate) | Domain requirement — privacy |
+| Conversation extension (+25 exchanges, €25) | Revenue + portrait quality recovery path |
+| Relationship analysis credits (1 free on first portrait purchase PWYW ≥€1; €5/additional) | Revenue + multi-relationship use case |
+| Polar.sh payment integration | PWYW + credits + extension purchases |
+| Transactional emails via Resend (3 types: drop-off re-engagement with last territory, Nerin check-in ~2 weeks post-assessment, deferred portrait recapture) | Brings users back — lifecycle triggers for retention and conversion |
+| Auth (Better Auth) | Already built |
+| Cost guard (session-aware) | Prevents budget blowout without killing sessions |
+
+**Nice-to-Have (post-MVP, pre-H2):**
+
+| Capability | Why it can wait |
+|-----------|----------------|
+| Product analytics (PostHog) | Valuable for tracking funnels, events, and user behavior — but founder can validate core metrics manually at first |
+| Admin dashboard / analytics UI | Founder can query DB directly for MVP |
+| Detailed dropout analytics by exchange | Can be computed from logs post-hoc |
+| Viral coefficient tracking | Manual calculation from QR-accept/completion data |
+| Revenue reporting dashboard | Polar.sh dashboard covers this initially |
+
+### Post-MVP Features
+
+**Phase 2 — B2B (H2):**
+- B2B team dynamics (group analysis for management)
+- Group relationship analysis (>2 people)
+- B2B pricing model (per-seat, per-month)
+
+**Phase 3 — Personal Development (H3):**
+- Personal development insights (work behavior, relationship patterns)
+- Personality evolution tracking (periodic re-assessment, subscription model)
+- Therapist integration (pre-screening tool, complementary assessment)
+- Additional verticals on same conversation engine (career coaching, learning assessment)
+- Longitudinal data architecture for growth tracking over time
+
+### Risk Mitigation Strategy
+
+**Execution Risks:**
+
+| Risk | Impact | Mitigation |
+|------|--------|-----------|
+| **Nerin character quality (~40% → launch-ready)** | High — credibility chain breaks at step 1 | #1 pre-launch investment. Steering format overhaul (Epic 29) |
+| **Pacing pipeline complexity (6 layers)** | High — low territory compliance degrades conversation quality | Already architected. Ship at 70% compliance, improve iteratively |
+| **Portrait quality** | High — no self-revelation = PWYW fails | Sonnet generation with rich evidence. Test with first 20 users |
+| **Relationship analysis quality** | Medium — new feature, unvalidated | Ship simpler V1, iterate on user feedback |
+| **Solo founder bandwidth** | High — ambitious MVP for one person | Most infrastructure built. Conversation engine first, layer features |
+
+**Innovation Risks:**
+
+| Risk | Impact | Mitigation |
+|------|--------|-----------|
+| **Category doesn't exist (no market)** | Critical | Seed first 20 users, observe category language and spontaneous sharing before scaling |
+| **Control system feels mechanical** | High | Character voice + desire framing provide naturalness on top of pipeline outputs |
+| **Ocean theme limits appeal** | Medium | Test via archetype card sharing — if cards get shared, theme works |
+| **PWYW settles at minimum (€1)** | Medium | Survivable if relationship credits convert. Iterate framing before changing model |
+| **Relationship analysis surfaces painful truths** | Medium | Inherent to category. Ritual + framing guardrails are harm reduction |
+| **Defensibility — tech is copyable** | High | Moat is data: relationship graph + extraction patterns + model refinements. Competitors can copy the product, not 6 months of data |
+| **First-mover window is narrow** | High | First 6 months = race to build data moat. Speed to 100 users = defensibility |
+| **LLM prompt compliance** | High | Territory compliance >70%; 2-layer prompt system with desire framing designed to solve this |
 
 ## Functional Requirements
 
-Functional requirements define what the system must DO—the core capabilities and user interactions.
+### Conversation Experience
 
-### Assessment & Conversation
+- **FR1:** Users can have a 25-exchange adaptive conversation with Nerin
+- **FR2:** Nerin responds using ocean/marine metaphors and dive master persona
+- **FR3:** The pacing pipeline steers Nerin's territory focus, observation type, and entry pressure each turn
+- **FR4:** Users can see a depth meter reflecting the conversation's progress
+- **FR5:** Users receive progress milestone markers at 25%, 50%, and 75% of the conversation
+- **FR6:** Nerin references patterns he is noticing about the user during the conversation to build anticipation for the portrait
+- **FR7:** Nerin frames observations as invitations to explore — acknowledges user pushback, offers an alternative framing, and redirects to a different topic only if the user rejects the observation a second time
+- **FR8:** Nerin includes a "this is not therapy" framing in the greeting
+- **FR9:** Nerin never uses diagnostic language or characterizes third parties the user mentions
+- **FR10:** Users can purchase a conversation extension (+25 exchanges) to continue with Nerin
+- **FR11:** Users can resume an abandoned conversation from where they left off
+- **FR12:** The conversation ends with a distinct closing exchange from Nerin before transitioning to results
+- **FR13:** Nerin transitions between territories using a connecting observation or question that references the prior topic when the pacing pipeline changes territory (distinct from general steering)
 
-- **FR1:** Users can complete multi-turn conversational personality assessment with AI agent for minimum 30 minutes
-- **FR2:** Users can send messages and receive responses in real-time with streaming (response time <2 seconds P95)
-- **FR3:** Users can pause assessment and resume later from saved conversation state (session ID + message offset + conversation context)
-- **FR4:** System displays real-time progress indicator showing percentage completion (0-100%)
+### Personality Assessment & Results
 
-### Big Five Trait Assessment (Evidence-Based Facet Scoring)
+- **FR14:** The system extracts facet evidence and energy signals from each user response via the extraction pipeline
+- **FR15:** The system computes 30 facet scores, 5 trait scores, OCEAN code, and archetype from conversation evidence (recomputed at read time)
+- **FR16:** Users can view their OCEAN code, archetype name, tribe feeling, and trait/facet scores on the results page
+- **FR17:** The system assigns one of 81 hand-curated archetypes based on the user's OCEAN code
+- **FR18:** The system presents all archetypes with positive, strength-based framing
+- **FR19:** Users can view a dashboard of their results, portrait, and relationship analyses
 
-- **FR5:** System analyzes each message to detect 30 Big Five facet signals, creating evidence records with: facet name (clean, no trait prefix), numeric score (0-20), confidence (0.0-1.0), exact quote, and character-level highlight range tied to messageId
-- **FR5.1:** System stores facet evidence in `facet_evidence` table with indexes on messageId and facet for bidirectional navigation (Profile ↔ Conversation)
-- **FR5.2:** System aggregates facet evidence every 3 messages using weighted averaging (recency + confidence) and contradiction detection (variance analysis)
-- **FR5.3:** System adjusts facet confidence based on evidence consistency: high variance → lower confidence, more samples → higher confidence
-- **FR6:** Users can view Big Five trait scores derived from facet averages using FACET_TO_TRAIT lookup (traits are computed properties, not primary data)
-- **FR6.1:** Users can click any facet score in profile to view supporting evidence with highlighted message quotes
-- **FR6.2:** Users can click any message in conversation history to see which facets it contributed to and their score contributions
-- **FR7:** System maintains and updates per-facet confidence scores (0.0-1.0) throughout conversation, with trait confidence derived as minimum across contributing facets
+### Portrait
 
-### OCEAN Archetype System (POC Scope: 4 Traits)
+- **FR20:** The system generates a narrative portrait written as a personal letter from Nerin using a high-capability LLM
+- **FR21:** Users are presented with a PWYW modal showing the founder's story and example portrait after completing the assessment
+- **FR22:** Users can view their portrait after payment
+- **FR23:** Conversation extension produces an updated portrait that incorporates observations derived from extended evidence not present in the original portrait
+- **FR24:** The system tracks behavioral proxies for portrait emotional impact: share rate, conversation extension purchase rate, and return visits within 48 hours
+- **FR25:** Conversation extension creates a new assessment session. The pacing pipeline initializes from the prior session's final state and evidence. On completion, new assessment results are generated. The prior portrait and any relationship analyses based on the prior results become "previous version"
+- **FR26:** Portrait generation is asynchronous — users are notified when ready
+- **FR27:** The system retries portrait generation on failure and informs the user if it ultimately fails
 
-- **FR8:** Users receive 4-letter OCEAN archetype code generated from trait levels (Openness, Conscientiousness, Extraversion, Agreeableness: each Low/Mid/High)
-- **FR9:** System maps OCEAN codes to memorable character archetype names: ~25-30 hand-curated names + component-based generation for remaining combinations
-- **FR10:** System retrieves archetype name + 2-3 sentence trait description explaining the personality combination
-- **FR11:** System displays all 24 facet level names (Low/High pairs for 4 traits) aligned with user's assessment results on request
-- **FR12 (Phase 2):** System extends to 5 traits (adding Neuroticism) and generates detailed archetype codes (XX-XX-XX-XX-XX) post-POC validation
+### Relationship Analysis
 
-### Profile & Results
+- **FR28:** Users can initiate a relationship analysis by opening a QR drawer; the other person scans the QR code or opens the contained URL
+- **FR29:** The system generates a 2-person relationship analysis when both users have completed their assessments
+- **FR30:** The QR accept screen shows the initiator's archetype card, both users' confidence rings, and available credit balance, with Accept and Refuse buttons. The recipient must accept before the analysis proceeds (single consent gate)
+- **FR31:** Users see a ritual suggestion screen before accessing the relationship analysis
+- **FR32:** The relationship analysis describes relational dynamics without blame language and without exposing individual vulnerability data
+- **FR33:** Users receive one free relationship analysis credit upon completing their first portrait purchase (PWYW ≥€1). Additional credits cost €5 each
+- **FR34:** If one user deletes their account, the shared relationship analysis is deleted
+- **FR35:** Each relationship analysis is linked to both users' assessment results (not to invitations). All analyses are preserved as snapshots — the newest is primary, older ones are classified as "previous version." Version detection is derive-at-read: if newer assessment results exist for either user, the analysis is classified as "previous version." Users can view all their relationship analyses
+- **FR36:** Users receive an email notification when a relationship analysis they participated in is ready
+- **FR37:** The QR accept screen is only accessible to logged-in users with a completed assessment. There is no pre-account context — User B must sign up and complete their assessment before seeing the accept screen
+- **FR38:** The system tracks relationship analysis credits per user (1 free, additional purchased)
 
-- **FR13:** System generates shareable profile with archetype code, character name, trait summary, and facet insights
-- **FR14:** System creates unique profile URL for each completed assessment (encrypted, shareable only via explicit link)
-- **FR15:** System displays profile as private by default with explicit user control for sharing
-- **FR16 (Phase 2):** System allows users to download/export assessment results in human-readable format
+### Public Profile & Social Sharing
 
-### Bidirectional Evidence Highlighting (Transparency Feature)
+- **FR39:** Users have a public profile page showing their archetype, OCEAN code, trait/facet scores, and the framing line "[Name] dove deep with Nerin — here's what surfaced"
+- **FR40:** Public profiles are default-private; users can explicitly make them public. Binary visibility only — fully public or fully private. No intermediate state (e.g., hiding scores while showing OCEAN code)
+- **FR41:** Public profiles generate dynamic OG meta tags and archetype card images for social preview
+- **FR42:** Public profiles are accessible without authentication
+- **FR43:** Public profiles include a CTA to start the user's own assessment
+- **FR44:** Users can copy a shareable link to their public profile
+- **FR45:** When a logged-in user with a completed assessment views another user's public profile, a relationship analysis CTA is displayed: "You care about [Name]. Discover your dynamic together." with a brief QR flow explanation
+- **FR46:** The system generates archetype card images per archetype (81 cards) — users with the same archetype share the same card visual. Each card contains: archetype name, short description (1-2 sentences), GeometricSignature, and OCEAN code. No individual trait/facet scores. One card per archetype (generic, not personalized)
 
-- **FR17:** Users can click any facet score in their profile to view "Show Evidence" panel listing all supporting message quotes with their score contributions
-- **FR17.1:** Clicking "Jump to Message" in evidence panel scrolls conversation to that message and highlights the exact quote that contributed to the facet score
-- **FR17.2:** System applies color-coded highlighting: green (strong positive signal), yellow (moderate signal), red (contradictory signal), with opacity indicating confidence level
-- **FR18:** Users can click any message in conversation history to view side panel showing which facets it contributed to and their respective score contributions
-- **FR18.1:** System displays bidirectional navigation: Profile → Evidence → Message (forward) and Message → Facets → Profile (backward)
-- **FR19:** System uses character-level `highlightRange` from facet evidence to precisely highlight relevant text in message content
+### Payments & Monetization
 
-### Data Management
+- **FR47:** Users can pay for portraits via PWYW with embedded checkout. The payment provider handles all pricing UI. Default €5, minimum €1. No preset amount buttons in the product UI — a single "Unlock your portrait" button opens the checkout modal
+- **FR48:** Users can purchase relationship analysis credits via embedded checkout
+- **FR49:** Users can purchase conversation extensions via embedded checkout
 
-- **FR20:** System stores complete conversation history encrypted at rest with user data
-- **FR20.1:** System stores facet evidence records with messageId references for transparency and bidirectional navigation
-- **FR21:** System encrypts all data in transit (TLS 1.3 minimum)
-- **FR22:** System provides data deletion and portability capabilities per GDPR Article 17, 20
+### User Account & Privacy
 
-### Real-Time Synchronization
+- **FR50:** Users can create an account and authenticate
+- **FR51:** Users can control the visibility of their public profile (binary: fully public or fully private — no intermediate state)
+- **FR52:** Users are informed during onboarding that conversation data is stored
+- **FR53:** Users can delete their account, which deletes their data and any shared relationship analyses
+- **FR54:** Users are introduced to Nerin and the conversation format before the conversation begins (pre-conversation onboarding)
 
-- **FR23:** System maintains session state on server with URL-based resumption capability (ElectricSQL local-first sync deferred to Phase 2)
-- **FR24:** System maintains session state across device switches without data loss via session URL
-- **FR25:** System implements optimistic updates for instant UI feedback during conversation
+### Cost Management
 
-### Infrastructure Requirements
-
-*These requirements address backend operational concerns (compliance, cost control, system monitoring) without direct user-facing features. They enable business viability and regulatory compliance.*
-
-- **FR26:** System logs all profile access with timestamp, user, and request type for audit trail
-- **FR27:** System monitors LLM costs per user and session in real-time
-- **FR28:** System implements rate limiting (1 assessment per user per day, 1 resume per week)
-- **FR29:** System auto-disables assessment if daily LLM cost threshold exceeded, displaying message: "We've reached our daily assessment limit. Please try again tomorrow or upgrade to premium for immediate access."
-
-### Authentication
-
-- **FR30:** Users can create an account with email and password (12+ characters, compromised credential check via Better Auth)
-- **FR31:** Users can log in with email and password to access their assessment history and profiles
-- **FR32:** Users can reset their password via email-based recovery flow
-
----
+- **FR55:** The system monitors per-session LLM costs against a budget threshold
+- **FR56:** The cost guard never blocks a user mid-session; budget protection applies at session boundaries
+- **FR57:** When cost guard triggers, users can retry sending their message
+- **FR58:** Users are informed when cost guard triggers and told they can retry
 
 ## Non-Functional Requirements
 
-Non-functional requirements specify HOW WELL the system performs—quality attributes and constraints.
+### Performance
 
-(See Technical Success section above for comprehensive NFRs covering performance, privacy, security, scaling, and archetype system quality)
+- **NFR1:** Nerin response time <2s P95 (server-side LLM call + pipeline processing)
+- **NFR2:** Public profile page LCP <1s (acquisition landing page — bounce rate sensitive)
+- **NFR3:** Results page LCP <1.5s (emotional moment after completing 25 exchanges)
+- **NFR4:** Chat page initial load <2s, subsequent interactions <200ms (client-side)
+- **NFR5:** Portrait generation completes within 60s (async — user notified, not waiting. Benchmark and adjust)
+- **NFR6:** Per-assessment LLM cost stays within ~€0.20 budget (cost-efficient LLM for conversation + extraction)
+- **NFR7:** Per-portrait LLM cost stays within ~€0.20 budget (high-capability LLM for generation)
 
----
+### Security & Privacy
 
-## Executive Summary
+- **NFR8:** All data in transit encrypted via TLS 1.3
+- **NFR9:** Authentication requires 12+ character passwords and compromised credential checks
+- **NFR10:** Row-level data access control ensures users can only access their own data
+- **NFR11:** Public profiles default to private — zero public discovery without explicit user opt-in
+- **NFR12:** Conversation transcripts stored indefinitely; retrievable within 2s regardless of age
+- **NFR13:** Relationship analysis data does not expose raw conversation transcripts to the other party
+- **NFR14:** Account deletion cascades to all user data and shared relationship analyses
 
-**Vision:** Transform personality assessment through conversational AI that provides engaging, scientifically-grounded Big Five personality profiles with memorable archetypes and privacy-first sharing.
+### Reliability
 
-**Product:** big-ocean delivers a 30-minute conversational assessment via Nerin (AI agent) that analyzes 30 Big Five facets, reveals a memorable archetype name as the emotional anchor (e.g., "The Idealist") with a unique 5-letter OCEAN code as the shareable social identity (e.g., "ODEWR"), and creates shareable profiles that enable partial-match tribal discovery between users—while maintaining user privacy control.
+- **NFR15:** Assessment completion without errors >99%
+- **NFR16:** Portrait generation completes successfully >99%
+- **NFR17:** Portrait generation retries automatically on failure
+- **NFR18:** Cost guard never terminates an active session — only blocks at session boundaries
+- **NFR19:** Conversation sessions are resumable after browser close or connection loss
 
-**Target Users:** B2C individuals globally seeking authentic personality insight beyond MBTI's oversimplification, particularly professionals interested in self-awareness, team dynamics, and personal growth.
+### Accessibility
 
-**Core Business Goals:**
-- Validate product-market fit with 500 beta users (MVP Phase 1)
-- Achieve 50% completion rate and 15% sharing rate demonstrating engagement
-- Maintain LLM costs ≤$0.15 per assessment through optimization and rate limiting
-- Build conversation data moat (competitive advantage for future model training)
-- Position Big Five as scientifically superior to MBTI through market education
+- **NFR20:** WCAG 2.1 AA compliance required for: public profile, conversation UI, results page, PWYW modal. Best-effort AA for remaining pages
+- **NFR21:** Chat interface keyboard-navigable with proper ARIA labels
+- **NFR22:** Score visualizations (facet bars, trait bands) have text alternatives
+- **NFR23:** Ocean theme color palette meets AA contrast ratios
+- **NFR24:** Proper focus management in modals (PWYW, ritual screen)
 
-**Key Success Metrics:**
-- User Engagement: ≥50% completion rate, ≥15% sharing rate, NPS ≥40
-- Technical Performance: <2 sec response time (P95), zero data breaches
-- Business Viability: Cost ≤$0.15/user, CAC payback <6 months (post-MVP)
+### Integration
 
-**Differentiation:** Conversational depth + dual identity system (archetype-first reveal, code-first social sharing) with partial-match tribalism + privacy-first + scientific credibility (vs. questionnaire-based assessments with generic results)
+- **NFR25:** Embedded checkout integration for PWYW, credits, and extension purchases
+- **NFR26:** The system can switch LLM providers without code changes to the conversation or portrait pipeline
+- **NFR27:** Transactional email delivery. Three email types: (1) drop-off re-engagement with last territory, (2) Nerin check-in ~2 weeks post-assessment, (3) deferred portrait recapture. Relationship analysis notifications delivered within 5 minutes of completion, >95% delivery rate
 
+### Observability
+
+- **NFR28:** System logs include per-session cost, completion status, and error events in structured format
+
+### Data Consistency
+
+- **NFR29:** Personality scores displayed to users are never stale — always recomputed from current facet evidence at read time (see FR15 for mechanism)

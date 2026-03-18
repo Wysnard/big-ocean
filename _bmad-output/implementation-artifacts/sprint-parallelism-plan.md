@@ -1,49 +1,125 @@
 # Sprint Parallelism Plan
-Generated: 2026-03-15
+Generated: 2026-03-18
 
-> All active phases (1-6) complete. Only deferred epics remain.
+> Phase 7: Product Completeness & Launch Readiness
+> Source: epics.md (9 epics, 38 stories)
+> Only forward-looking stories included — all prior phases complete.
+>
+> Conservative parallelism: stories sharing a page, route, or domain area
+> are placed in separate steps even when technically independent.
 
-## ~~Step 1: Foundation Layer (Epic 23)~~ DONE
-All 3 stories merged: 23-1, 23-2, 23-3 (PRs #121, #122, #123).
+## Step 1: Infrastructure Foundations
+| Story | Mode | Notes |
+|-------|------|-------|
+| 32-0-remove-teaser-portrait | parallel | Codebase cleanup, no new features |
+| 32-3-polar-integration-and-purchase-events | parallel | NEW: Polar plugin, purchase_events table, webhook handler |
+| 31-7-email-infrastructure-and-drop-off-re-engagement | parallel | NEW: Resend repo, React Email templates, drop-off email |
+| 32-7-archetype-card-image-generation | parallel | NEW: Satori + resvg image pipeline, independent |
 
-## ~~Step 2: Parallel Processing Layers (Epics 24, 25, 26)~~ DONE
-All 4 stories merged: 24-1, 25-1, 25-2, 26-1 (PRs #124, #126, #127, #125).
+**Gate:** All stories above must be done before proceeding.
 
-## ~~Step 3: Dependent Processing Stories~~ DONE
-All 3 stories merged: 24-2, 25-3, 26-2 (PRs #128, #129, #130).
+## Step 2: Area Foundations — Account, Nerin, Results, Homepage
+| Story | Mode | Notes |
+|-------|------|-------|
+| 30-1-profile-visibility-controls | parallel | Account settings: visibility toggle |
+| 31-1-nerin-greeting-and-onboarding-message | parallel | Nerin pipeline: greeting refinement |
+| 32-1-results-page-identity-section | parallel | Results page: hero/identity section |
+| 37-1-homepage-narrative-and-layout | parallel | Homepage: independent page |
 
-## ~~Step 4: Governor + Character Bible Decomposition~~ DONE
-All 2 stories merged: 26-3, 27-1 (PRs #131, #132).
+**Gate:** All stories above must be done before proceeding.
 
-## ~~Step 5: Prompt Builder~~ DONE
-Story 27-2 merged (PR #133).
+## Step 3: Second Layer — Character, Results Depth, Chat UI
+| Story | Mode | Notes |
+|-------|------|-------|
+| 31-2-nerin-character-quality-observations-transitions-and-character-bible | parallel | After 31-1. Character bible + observation patterns |
+| 32-2-results-page-scientific-section | parallel | After 32-1. Radar chart, trait cards, facet detail zones |
+| 31-4-depth-meter-and-progress-milestones | parallel | Frontend-only chat UI component |
+| 37-2-founder-portrait-bridge-and-relationship-cta | parallel | After 37-1. Homepage section |
 
-## ~~Step 6: Pipeline Integration~~ DONE
-Story 27-3 merged (PR #134). Phase 5 complete.
+**Gate:** All stories above must be done before proceeding.
 
-## ~~Step 7: Steering Format Foundation (Epic 28)~~ DONE
-Both stories merged: 28-1 (PR #135), 28-2 (PR #136).
+## Step 4: Account Deletion, Closing Exchange, Session Resume, PWYW
+| Story | Mode | Notes |
+|-------|------|-------|
+| 30-2-account-deletion-with-cascade-hooks | parallel | After 30-1. Cascade event hooks for Epic 35 |
+| 31-3-conversation-closing-exchange | parallel | After 31-2. Move Governor close intent |
+| 31-5-session-resume | parallel | Chat page: resume flow, different area from 31-3 (pipeline) |
+| 32-4-pwyw-modal-and-portrait-unlock | parallel | After 32-3. Results page modal overlay |
 
-## ~~Step 8: Skeleton Templates~~ DONE
-Story 28-3 merged (PR #137).
+**Gate:** All stories above must be done before proceeding.
 
-## ~~Step 9: Prompt Builder Swap — THE BEHAVIOR CHANGE~~ DONE
-Story 28-4 merged (PR #138). Epic 28 complete.
+## Step 5: Portrait, Cost Guard, Public Profile
+| Story | Mode | Notes |
+|-------|------|-------|
+| 32-5-full-portrait-display | parallel | After 32-2. Spine renderer + portrait section on results page |
+| 32-6-portrait-reconciliation-and-retry | parallel | After 32-3. Backend reconciliation use-case |
+| 31-6-cost-guard | parallel | Cost tracking refinement, chat/API |
+| 33-1-public-profile-page | parallel | After 30-1. New page, independent route |
 
-## ~~Step 10: Bridge Intent + Templates~~ DONE
-Both stories merged: 29-1 (PR #139), 29-2 (PR #140).
+**Gate:** All stories above must be done before proceeding.
 
-## ~~Step 11: Mirrors + Cleanup~~ DONE
-Both stories merged: 29-3 (PR #141), 29-4 (PR #142). Phase 6 complete.
+## Step 6: Credits, QR Infra, Extension, OG Tags
+| Story | Mode | Notes |
+|-------|------|-------|
+| 32-8-basic-share-and-credit-system | parallel | After 32-3. Credit derivation + share action on results |
+| 34-1-qr-token-infrastructure | parallel | After 32-3. New table: relationship_qr_tokens |
+| 36-1-conversation-extension-purchase-and-session-creation | parallel | After 32-3. Extension checkout + session creation |
+| 33-2-og-meta-tags-and-social-preview | parallel | After 33-1 + 32-7. OG image serving |
+
+**Gate:** All stories above must be done before proceeding.
+
+## Step 7: Share Flow, QR Drawer, Extension Pipeline, Check-in Email
+| Story | Mode | Notes |
+|-------|------|-------|
+| 33-3-share-flow-and-visibility-toggle | parallel | After 33-1. Share action + public toggle prompt |
+| 34-2-qr-drawer-ui | parallel | After 34-1. QR code rendering + status polling |
+| 36-2-extended-conversation-pipeline-initialization | parallel | After 36-1. Pipeline init from prior session state |
+| 38-1-nerin-check-in-email | parallel | After 31-7. Scheduled email + Nerin voice |
+
+**Gate:** All stories above must be done before proceeding.
+
+## Step 8: Relationship CTA, QR Accept, Extension Results, Recapture Email
+| Story | Mode | Notes |
+|-------|------|-------|
+| 33-4-relationship-analysis-cta-on-public-profile | parallel | After 33-1. CTA on public profile page |
+| 34-3-qr-accept-screen-and-consent-gate | parallel | After 34-2. Accept/refuse flow, credit consumption |
+| 36-3-extended-results-and-portrait-versioning | parallel | After 36-2. Combined evidence scoring + versioning |
+| 38-2-deferred-portrait-recapture-email | parallel | After 31-7 + 32-3. Portrait recapture email |
+
+**Gate:** All stories above must be done before proceeding.
+
+## Step 9: Ritual + Relationship Analysis Generation
+| Story | Mode | Notes |
+|-------|------|-------|
+| 35-1-ritual-suggestion-screen | parallel | After 34-3. Frontend ritual screen |
+| 35-2-relationship-analysis-generation | parallel | After 34-3. Sonnet agent, backend generation daemon |
+
+**Gate:** All stories above must be done before proceeding.
+
+## Step 10: Relationship Analysis Display, Versioning & Notification
+| Story | Mode | Notes |
+|-------|------|-------|
+| 35-3-relationship-analysis-display | parallel | After 35-2. Reuses spine renderer from 32-5 |
+| 35-4-version-management-and-cascade-deletion | parallel | After 35-2 + 30-2. Derive-at-read versioning |
+| 35-5-relationship-analysis-email-notification | parallel | After 35-2 + 31-7. Email on analysis ready |
+
+**Gate:** All stories above must be done before proceeding.
+
+## Step 11: Dashboard (Final Integration)
+| Story | Mode | Notes |
+|-------|------|-------|
+| 38-3-dashboard | — | After 32-1, 32-5, 35-3. Aggregates all product surfaces |
+
+**Gate:** Phase 7 complete.
 
 ## Deferred Work (not scheduled)
-
 | Epic | Stories | Reason |
 |------|---------|--------|
-| Epic 6 (Privacy/GDPR) | 6-1, 6-2, 6-3 | Deferred to Phase 2 EU launch |
+| Epic 6 (Privacy/GDPR) | 6-1, 6-2, 6-3 | Deferred to EU launch |
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **All 6 phases complete** — 11 steps delivered, 29 epics, ~127 stories
-- **No active forward-looking work** — only deferred epics remain (Epic 6: Privacy, Epic 20: Evidence Review)
-- **Next milestone:** New epic planning required for next development phase
+- **11 steps**, 3-4 stories per step (conservative parallelism)
+- **Critical path:** 32-3 (Step 1) → 34-1 (Step 6) → 34-2 (Step 7) → 34-3 (Step 8) → 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
+- **Key enablers:** Polar (32-3, Step 1) and Email Infrastructure (31-7, Step 1) — both land early
+- **No shared-file conflicts within any step** — stories in the same step touch different pages/domains

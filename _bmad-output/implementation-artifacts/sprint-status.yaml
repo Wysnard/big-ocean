@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-15 (refreshed 28 — sprint-planning workflow)
+generated: 2026-03-18 (refreshed 29 — sprint-planning workflow)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -495,3 +495,138 @@ development_status:
   29-3-contextual-mirror-system: done
   29-4-rename-amplify-to-close-and-final-cleanup: done
   epic-29-retrospective: optional
+
+# ═══════════════════════════════════════════════════════════════
+# PHASE 7: Product Completeness & Launch Readiness
+# ═══════════════════════════════════════════════════════════════
+# Source: _bmad-output/planning-artifacts/epics.md (rewritten 2026-03-18)
+# Full product backlog from PRD + Architecture + UX Design spec.
+# Account management, conversation polish, results/portrait/monetization,
+# public profiles, relationship analysis (QR + generation), conversation
+# extension, homepage, engagement emails & dashboard.
+#
+# NUMBERING: Continues from Phase 6 (30+).
+# Cross-reference: epics.md "Epic N" = sprint-status "Epic N+29"
+#   Epic 1 (Account & Onboarding) = Epic 30
+#   Epic 2 (Conversational Assessment) = Epic 31
+#   Epic 3 (Results, Portrait & Monetization) = Epic 32
+#   Epic 4 (Public Profile & Sharing) = Epic 33
+#   Epic 5 (Relationship Analysis — QR & Credits) = Epic 34
+#   Epic 6 (Relationship Analysis — Generation & Display) = Epic 35
+#   Epic 7 (Conversation Extension) = Epic 36
+#   Epic 8 (Homepage & Acquisition Funnel) = Epic 37
+#   Epic 9 (Engagement Emails & Dashboard) = Epic 38
+
+  # ───────────────────────────────────────────────────────────────
+  # EPIC 30: Account, Onboarding & Privacy Foundation
+  # Profile visibility, account deletion with cascade hooks
+  # Stories: 1.1-1.2 in epics.md
+  # ───────────────────────────────────────────────────────────────
+  epic-30: backlog
+  30-1-profile-visibility-controls: backlog
+  30-2-account-deletion-with-cascade-hooks: backlog
+  epic-30-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # EPIC 31: Conversational Assessment & Drop-off Recovery
+  # Greeting, character quality, closing exchange, depth meter,
+  # session resume, cost guard, drop-off email
+  # Stories: 2.1-2.7 in epics.md
+  # ───────────────────────────────────────────────────────────────
+  epic-31: backlog
+  31-1-nerin-greeting-and-onboarding-message: backlog
+  31-2-nerin-character-quality-observations-transitions-and-character-bible: backlog
+  31-3-conversation-closing-exchange: backlog
+  31-4-depth-meter-and-progress-milestones: backlog
+  31-5-session-resume: backlog
+  31-6-cost-guard: backlog
+  31-7-email-infrastructure-and-drop-off-re-engagement: backlog
+  epic-31-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # EPIC 32: Results, Portrait & Monetization
+  # Remove teaser portrait, identity/scientific sections, Polar,
+  # PWYW modal, full portrait, reconciliation, archetype cards, share/credits
+  # Stories: 3.0-3.8 in epics.md
+  # ───────────────────────────────────────────────────────────────
+  epic-32: backlog
+  32-0-remove-teaser-portrait: backlog
+  32-1-results-page-identity-section: backlog
+  32-2-results-page-scientific-section: backlog
+  32-3-polar-integration-and-purchase-events: backlog
+  32-4-pwyw-modal-and-portrait-unlock: backlog
+  32-5-full-portrait-display: backlog
+  32-6-portrait-reconciliation-and-retry: backlog
+  32-7-archetype-card-image-generation: backlog
+  32-8-basic-share-and-credit-system: backlog
+  epic-32-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # EPIC 33: Public Profile & Sharing
+  # Public profile page, OG meta tags, share flow, relationship CTA
+  # Stories: 4.1-4.4 in epics.md
+  # ───────────────────────────────────────────────────────────────
+  epic-33: backlog
+  33-1-public-profile-page: backlog
+  33-2-og-meta-tags-and-social-preview: backlog
+  33-3-share-flow-and-visibility-toggle: backlog
+  33-4-relationship-analysis-cta-on-public-profile: backlog
+  epic-33-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # EPIC 34: Relationship Analysis — QR & Credits
+  # QR token infrastructure, QR drawer UI, accept screen & consent gate
+  # Stories: 5.1-5.3 in epics.md
+  # ───────────────────────────────────────────────────────────────
+  epic-34: backlog
+  34-1-qr-token-infrastructure: backlog
+  34-2-qr-drawer-ui: backlog
+  34-3-qr-accept-screen-and-consent-gate: backlog
+  epic-34-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # EPIC 35: Relationship Analysis — Generation & Display
+  # Ritual suggestion, analysis generation, display, version management,
+  # email notification
+  # Stories: 6.1-6.5 in epics.md
+  # ───────────────────────────────────────────────────────────────
+  epic-35: backlog
+  35-1-ritual-suggestion-screen: backlog
+  35-2-relationship-analysis-generation: backlog
+  35-3-relationship-analysis-display: backlog
+  35-4-version-management-and-cascade-deletion: backlog
+  35-5-relationship-analysis-email-notification: backlog
+  epic-35-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # EPIC 36: Conversation Extension
+  # Extension purchase & session creation, pipeline initialization,
+  # extended results & portrait versioning
+  # Stories: 7.1-7.3 in epics.md
+  # ───────────────────────────────────────────────────────────────
+  epic-36: backlog
+  36-1-conversation-extension-purchase-and-session-creation: backlog
+  36-2-extended-conversation-pipeline-initialization: backlog
+  36-3-extended-results-and-portrait-versioning: backlog
+  epic-36-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # EPIC 37: Homepage & Acquisition Funnel
+  # Homepage narrative & layout, founder portrait bridge & relationship CTA
+  # Stories: 8.1-8.2 in epics.md
+  # ───────────────────────────────────────────────────────────────
+  epic-37: backlog
+  37-1-homepage-narrative-and-layout: backlog
+  37-2-founder-portrait-bridge-and-relationship-cta: backlog
+  epic-37-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # EPIC 38: Engagement Emails & Dashboard
+  # Nerin check-in email, deferred portrait recapture email, dashboard
+  # Stories: 9.1-9.3 in epics.md
+  # ───────────────────────────────────────────────────────────────
+  epic-38: backlog
+  38-1-nerin-check-in-email: backlog
+  38-2-deferred-portrait-recapture-email: backlog
+  38-3-dashboard: backlog
+  epic-38-retrospective: optional

@@ -1,1754 +1,4218 @@
 ---
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-lastStep: 14
-completedAt: 2026-02-13
 inputDocuments:
-  - _bmad-output/planning-artifacts/ux-design-specification/index.md
-  - _bmad-output/planning-artifacts/ux-design-specification/executive-summary.md
-  - _bmad-output/planning-artifacts/ux-design-specification/privacy-model-architecture.md
-  - _bmad-output/planning-artifacts/ux-design-specification/target-user-segments-positioning.md
-  - _bmad-output/planning-artifacts/ux-design-specification/success-metrics-engagement-goals.md
-  - _bmad-output/planning-artifacts/ux-design-specification/core-user-experience.md
-  - _bmad-output/planning-artifacts/ux-design-specification/monetization-display-transparency-model.md
-  - _bmad-output/planning-artifacts/ux-design-specification/desired-emotional-response.md
-  - _bmad-output/planning-artifacts/ux-design-specification/community-architecture.md
-  - _bmad-output/planning-artifacts/ux-design-specification/ux-pattern-analysis-inspiration.md
-  - _bmad-output/planning-artifacts/ux-design-specification/design-system-foundation.md
-  - _bmad-output/planning-artifacts/ux-design-specification/core-experience-the-30-minute-conversation-with-nerin.md
-  - _bmad-output/planning-artifacts/ux-design-specification/visual-design-foundation.md
-  - _bmad-output/planning-artifacts/ux-design-specification/geometric-ocean-ambient-system.md
+  - '_bmad-output/planning-artifacts/prd.md'
+  - '_bmad-output/planning-artifacts/ux-design-specification-archived.md'
+  - 'docs/project-overview.md'
+  - 'docs/FRONTEND.md (potentially outdated — last updated 2026-02-10)'
+  - '_bmad-output/planning-artifacts/architecture.md'
 ---
 
 # UX Design Specification big-ocean
 
 **Author:** Vincentlay
-**Date:** 2026-02-12
+**Date:** 2026-03-16 (updated 2026-03-18, page specs expanded 2026-03-18)
 
 ---
-
-<!-- UX design content assembled from previously completed workflow steps 2-8 -->
 
 ## Executive Summary
 
 ### Project Vision
 
-**big-ocean** is a conversational Big Five personality assessment platform that replaces static questionnaires with dynamic, LLM-powered dialogues. Users engage with "Nerin" (Claude-based AI) for 30+ minute assessments that feel like authentic conversations, not robotic questionnaires.
+Big-ocean transforms personality assessment from a static questionnaire into a guided 25-turn conversation with Nerin, an AI personality specialist. Built on the Big Five (OCEAN) framework, it extracts personality evidence through natural dialogue, scores 30 facets, and maps results to memorable archetypes via a 5-letter OCEAN code. The platform combines scientific rigor with consumer-grade shareability — turning self-discovery into a social experience.
 
-The core differentiation: **Conversational depth** captures the complexity and nuance that predefined questionnaire boxes cannot. Rather than forcing users into binary choices, Nerin explores context, contradictions, and subtleties—resulting in personality profiles that feel genuinely personal and understood.
+The product sits at the intersection of conversational AI and personality science, differentiated by guided UX, structured insights, and social outputs that no existing personality test or general-purpose chatbot provides.
+
+### Assessment Invisibility Principle
+
+The user should forget they are being assessed. Nerin operates as a perceptive conversational partner — reflecting observations about what the user has said, drawing them deeper into authentic self-reflection. No partial results, no scoring indicators, no mid-conversation reveals of the assessment layer. The trust loop is: user opens up → Nerin reflects something perceptive → user opens up more. Anything that surfaces the "we are evaluating you" subtext breaks this loop and undermines the coherence-based methodology.
+
+Nerin's observations are conversational, not diagnostic: "I notice you describe your work relationships very differently from your friendships" — never "You seem high in agreeableness." The distinction between perceptive partner and clinical assessor is fundamental to the entire UX.
 
 ### Target Users
 
-**Core Audience:** Anyone authenticity-seeking who is tired of oversimplified personality assessments
-- Professionals frustrated by MBTI/16Personalities limitations
-- Thoughtful individuals seeking genuine self-understanding
-- People willing to invest 30 minutes for accuracy vs. 10-minute quick quizzes
-- Primary: Age 25-45, digitally native, value authenticity and complexity
-- Secondary: Naturally attracts professionals once established, but positioning is inclusive
+**Primary (Phase 1): Self-Understanding Seekers (25-40)**
+Adults curious about personality and self-knowledge. They've likely taken personality tests before (16Personalities, MBTI) but found them superficial. They want something that feels more personal, nuanced, and trustworthy. They're mobile-first, social-media-literate, and accustomed to polished consumer experiences. For sophisticated users (coaches, psychology-adjacent professionals), the longer conversation format is a credibility signal — it separates big-ocean from shallow quiz apps.
 
-**User Pain Point:** Existing personality tests oversimplify through predefined boxes. Users feel misunderstood or put into rigid categories that don't capture their actual complexity. big-ocean solves this through conversational exploration instead of forced categorization.
+**Viral Growth Lever: Relationship Explorers**
+Users who arrive via a shared personality card or public profile link, not the landing page. Their entry point is someone else's archetype — the viral funnel starts at the public profile (or homepage if private), not through direct marketing. The public profile must convert curiosity into commitment before they ever see the conversation. Relationship comparison itself is powered by QR-based connection between two completed users.
+
+**Tertiary: Self-Improvement Enthusiasts**
+Users seeking actionable insights from their personality profile — how their traits affect work, relationships, and decision-making. They want evidence-linked narrative, not just scores. Deeper engagement layer for retention.
+
+### Conversation Length Philosophy
+
+The assessment is currently a 25-turn conversation lasting 30-45 minutes depending on engagement depth. Reducing to 20 turns (20-30 minutes) is under consideration as a trade-off between assessment quality and drop-off risk, but not decided — below 20 turns would degrade assessment quality and the richness of evidence available for archetype generation.
+
+The length is a deliberate differentiator and audience filter — "how can you know someone in 10 minutes?" This will exclude casual users who want quick results. That is by design. The length self-selects for users who genuinely want a meaningful self-understanding experience, and those users are the ones most likely to complete, value their results, share authentically, and convert their relationships into new users. Optimizing for breadth of adoption at the cost of depth of experience would destroy what makes big-ocean different.
 
 ### Key Design Challenges
 
-1. **Engagement vs. Length Risk:** 30-minute conversations risk 50% dropout. UX must make long sessions feel fast, rewarding, and valuable (progress feedback, dynamic pacing, micro-motivation).
+1. **The 30-45 minute commitment — earned, not endured** — The UX should frame this as a meaningful conversation, not a task to complete. The length is a credibility signal for the right audience — lean into it rather than apologize for it. Momentum comes from conversational quality, the depth engagement system, and Nerin's responsiveness as a perceptive partner.
 
-2. **Privacy Model Complexity:** Three distinct tiers (private profile / public archetype / shareable link) create UI/UX design tension. Users must clearly understand what they're sharing before they share it.
+2. **Conversational trust through Nerin's observations** — The UI environment, pacing, and visual treatment must frame Nerin as a compelling conversation partner worth opening up to. Surface-level responses produce poor assessments — the UX should encourage depth without feeling demanding. Nerin's mid-conversation observations ("I notice that when you talk about creativity, your energy shifts") are the primary trust-building and retention mechanism. These are conversational reflections, never assessment reveals.
 
-3. **Data Complexity vs. UI Simplicity:** 30 facets + Big Five traits = complex data structure. UI must make this readable and intuitive without losing nuance or feeling overwhelming.
+3. **Results that demand sharing** — The archetype reveal is the critical conversion moment from user to evangelist. It must feel like a personal discovery, not a generic report. Results should reference specific conversation moments as evidence — showing the "how" behind scores, not just the scores themselves.
 
-4. **Nerin Authenticity vs. Assessment Rigor:** Nerin must feel like a genuine conversation partner (not robotic) while systematically assessing all personality dimensions. The assessment machinery should be invisible.
+4. **Mobile-first conversation ergonomics with session persistence** — 30-45 minutes of mobile interaction requires careful attention to input fatigue, response sizing, and visual breathing room. Save-and-resume is essential — users will be interrupted. Auth-gating before the conversation starts ensures email is collected, enabling automated recapture.
 
-5. **Trust & Privacy Signals:** Users sharing personality data = high-trust requirement. Beautiful design + clear privacy controls must work together to build confidence in data safety.
+5. **Recapture flow for interrupted sessions** — Auth-gate the conversation so email is collected before the first turn. If a user pauses mid-conversation, automated email reminders bring them back ("You and Nerin were in the middle of something — pick up where you left off"). This converts the save-and-resume problem from "lost user" to "delayed user with a nudge."
+
+6. **The public profile as acquisition surface** — Relationship explorers arrive at public profile pages via shared archetype cards, not the homepage. The framing line ("[Name] dove deep with Nerin — here's what surfaced"), archetype description, and comparison-driven CTA ("What's YOUR code?") must convert the viewer into a new user. If the sharer's profile is private, the link shows "This user has made their profile private" and redirects to the homepage.
+
+7. **Assessment integrity vs. ambient feedback** — The visual environment and progress signals must never telegraph personality dimensions or trait directions. If users can infer where the assessment is heading, they can game their responses, undermining the coherence-based methodology. All real-time feedback reflects conversational energy and engagement depth, never personality scoring.
+
+8. **Day 2+ retention beyond the initial assessment** — The core assessment is a one-time experience. Initial monetization lever is a one-time €25 conversation extension (25 additional turns with Nerin for deeper exploration). Email/notification reminders nudge users to come back and purchase another extension over time. The UX should be designed with extension and return hooks in mind even if not all are in MVP. Without a compelling return loop, the product risks the same retention cliff that plagues every personality assessment platform.
 
 ### Design Opportunities
 
-1. **Progress as Motivation:** Visual progress indicator during assessment reduces "how much longer?" anxiety and increases completion rate beyond 50%.
+1. **Relationship comparison as viral engine** — QR scan → compare → share flows turn every completed assessment into a potential acquisition channel. The shared results page is the primary viral surface — not a generic "share" button but a dedicated conversion experience with teaser content that creates FOMO around the comparison.
 
-2. **Archetype as Emotional Anchor:** Memorable archetype names + compelling visuals make profiles inherently shareable (vs. generic trait percentages that feel clinical).
+2. **Immersive conversational interface** — Explore a departure from standard chat-bubble UI toward a full-screen, ambient experience where the conversation feels like entering a space, not opening a messaging app. The ocean/geometric visualization lives around and behind the text, creating an intimate environment distinct from any chatbot interaction. No timestamps, no avatar bubbles — each exchange is its own moment. (Design direction to evaluate, not a commitment.)
 
-3. **Privacy Clarity Through Design:** Obvious visual distinction between "My Private Profile" (detailed, personal) and "Share Archetype" (broad, public) builds user confidence in privacy model.
+3. **Energy-responsive ambient visualization** — The ocean/geometric system responds to conversational energy and depth (emotional texture, engagement intensity, conversational momentum) — NOT to personality dimensions. This preserves assessment integrity while creating a living, responsive environment that rewards deeper engagement visually without revealing scoring.
 
-4. **Guided Sharing Experience:** Simple 3-step share flow: (1) preview what shareable link shows, (2) confirm before generating, (3) easy copy/send. Reassurance reduces sharing anxiety.
+4. **Depth progress system (existing pattern)** — The conversation sustains momentum through three complementary mechanisms: a depth meter (vertical bar showing conversation progress — how far through the 25 turns, not engagement quality), unnamed milestones that mark the journey without countdown anxiety, and Nerin's in-conversation validation when the system detects increasing depth and authenticity. This is the therapeutic alliance trust loop — vulnerability met with recognition encourages further opening.
 
-5. **Responsive Mobile-First Design:** Optimizing for phone-first use unlocks broader sharing behavior (easier to send links from mobile, fits 30-min session in commute/break time).
+5. **Evidence-linked results narrative** — Unlike any competitor, big-ocean can connect archetype insights back to specific things the user said during their conversation. "Your high openness showed up when you described..." transforms results from generic personality labels into deeply personal storytelling.
 
----
+6. **Personality portrait as social identity object** — The shareable artifact should be a visual personality portrait — a unique, generative visual signature tied to the user's OCEAN code — not a results card or data summary. Designed for identity performance on social media (think: Spotify Wrapped aesthetic meets generative art). The OCEAN code becomes a visual identity, not a letter string.
 
-## Privacy Model Architecture
+### Future Considerations
 
-### Three Distinct Privacy Tiers
-
-#### 1. Private Profile (User-Only, 100% Confidential)
-- Full conversation history with Nerin
-- Detailed personality justifications and stories collected by LLM
-- All 30 Big Five facets with nuanced insights
-- Personal notes and reflection points from assessment
-- **Visibility:** User only — zero visibility beyond authenticated account
-- **Sharing:** Not shareable, not exportable, not visible in any public form
-
-#### 2. Public Archetype (Broad, Shareable)
-- Archetype name (e.g., "The Thoughtful Creator")
-- Big Five trait scores (simplified to 3 semantic levels per trait, e.g., O: Traditional/Moderate/Open-minded, C: Flexible/Steady/Conscientious, E: Reserved/Balanced/Extravert, A: Direct/Pragmatic/Agreeable, N: Resilient/Tempered/Neurotic)
-- Facet summaries (no justifications, no detailed explanations)
-- Visual archetype representation (icon/color)
-- Brief archetype description (~2-3 sentences)
-- **Visibility:** Only visible when user explicitly generates shareable link
-- **Sharing:** Intended for sharing via unique link
-
-#### 3. Shareable Link Profile (What Recipients See)
-- Public archetype information only (name, traits, visuals, brief summary)
-- No conversation details or personal stories
-- No detailed facet justifications
-- Broad personality snapshot, not deep dive
-- Recipient sees archetype, not the user's personal data
-- **Tracking:** Silent engagement tracking (link clicks, views) — not shown to user
-- **Future Privacy Controls:** Phase 2 adds on/off toggle for granular visibility settings
-
-### Privacy-First Principle
-
-Users are **private by default, shareable by choice.** Any sharing requires explicit user action (generating a link). No automatic visibility, no discovery directory, no profile recommendations.
-
----
-
-## Target User Segments & Positioning
-
-### Primary Segment: Authenticity-Seekers
-- **Who:** Professionals, students, thoughtful individuals frustrated by oversimplified personality tests
-- **Pain:** MBTI/16Personalities feel reductive; tests don't capture their complexity
-- **Motivation:** Genuine self-understanding, not entertainment or pop-culture categorization
-- **Value Signal:** Willing to spend 30 minutes for accuracy; value conversational depth
-- **Sharing Motivation:** Want to share because results feel personally accurate and meaningful
-
-### Secondary Segment: Social Discovery (Post-MVP)
-- **Who:** Professionals on LinkedIn, recruiters evaluating candidates, teams assessing dynamics
-- **Pain:** Current personality assessments lack credibility for professional context
-- **Motivation:** Want personality insights that feel real and science-backed
-- **Value Signal:** Big Five credibility vs. MBTI; conversation-based methodology
-- **Sharing Motivation:** Share to build professional profile; compare with colleagues
-
-### Inclusive by Design
-- Marketing and positioning is NOT "professional networking" but "authentic self-discovery"
-- This naturally attracts professionals while remaining welcoming to all truth-seekers
-- Broad positioning = larger addressable market + viral potential through diverse sharing networks
-
----
-
-## Success Metrics & Engagement Goals
-
-### Primary User Success Metrics
-
-- **Completion Rate ≥ 50%:** Users sit through 30+ minute assessment without abandoning
-- **Sharing Rate ≥ 15%:** Users proactively generate shareable profile link and share with others
-- **User Sentiment ≥ 7/10:** Post-assessment survey on accuracy and relevance
-- **NPS ≥ 40:** "Would you recommend big-ocean to friends?"
-
-### UX Design Implications
-
-These metrics shape critical UX decisions:
-- **Progress feedback** during assessment keeps engagement high (addresses 50% completion goal)
-- **Archetype visibility & visuals** during results make profiles memorable and shareable
-- **Privacy clarity** builds trust needed for 15% sharing rate
-- **Beautiful, intuitive UI** signals quality and authenticity, increasing NPS
-
----
+- **Voice input as optional modality** — Could reduce mobile fatigue and produce richer, more natural responses. Parked due to cost implications (~$0.27/conversation via speech-to-text APIs vs. the $0.15/user LLM cost target). Revisit as a premium feature or when costs decrease.
+- **Community feed** — A social discovery feed where users can browse archetypes, see anonymized personality portraits, and find people with complementary or contrasting profiles. Strong candidate for Day 2+ retention. Not MVP.
+- **Reassessment over time** — "How have you changed?" periodic reassessment to track personality evolution. Planned for post-MVP.
+- **Subscription model** — Considered for post-MVP as a broader monetization layer beyond conversation extensions.
 
 ## Core User Experience
 
-### Defining Experience: Assessment as Continuous Evolution
+### Defining Experience
 
-The core big-ocean experience is fundamentally different from traditional personality assessment products: **Assessment is not completion, it is a beginning.**
+The core experience of big-ocean is a 25-turn conversation with Nerin that transforms from "I'm here to get my personality results" into "I'm genuinely engaged in this conversation about myself." The user enters with an expectation of insight — for personal development or relationship understanding — and the conversation must deliver on that anticipation through two distinct value layers:
 
-**The Experience Model:**
-1. **Initial Assessment (30 minutes):** Nerin has a conversational dialogue with the user, systematically exploring Big Five dimensions through context and nuance
-2. **Precision Milestone (70%+):** Once precision reaches 70%+, the user's archetype is ready and valid for sharing
-3. **Celebration & Choice:** System celebrates reaching 70%+ precision as an achievement, then offers two paths:
-   - **Share Now:** Generate shareable archetype link immediately
-   - **Keep Exploring:** Continue refining the profile in the same session
-4. **Precision Evolution:** As users continue chatting with Nerin, precision increases. Results evolve. Archetype details sharpen.
-5. **Return Engagement:** Users can return to continue conversations and watch their profile evolve over time
+**Layer 1: The Conversation (30-45 minutes)**
+Nerin's observations during the conversation — surfacing patterns, contradictions, and tensions in what the user has said — serve three purposes simultaneously: they build credibility ("this AI is actually listening"), they create the feeling of being understood ("how did she notice that?"), and they build anticipation for the portrait ("if she's catching this much now, the full results must be incredible"). The conversation is not a waiting room for results — it's the first act of a two-act experience.
 
-**Why This Model:**
-- **Authenticity:** Conversational depth means understanding users better with more dialogue, not less
-- **User Autonomy:** Users choose how deep to go — some want quick archetype (70%), others want 85%+ precision
-- **Extended Engagement:** Longer total engagement amortizes LLM costs and improves precision
-- **Stickiness & Virality:** Profile evolution creates return visits and ongoing sharing moments
-- **Scientific Integrity:** Higher precision = better Big Five representation
+**Layer 2: The Portrait & Results**
+The archetype reveal, evidence-linked narrative, and trait breakdown must land with the weight of everything the conversation promised. This is where anticipation converts to conviction. The results page is the personal payoff — a private, deep insight experience designed entirely for the user.
+
+**The core loop:**
+Conversation with Nerin → Portrait reveal (private results) → Share personality card → Viewer lands on public profile (or homepage if private) → Viewer takes their own conversation → QR scan triggers relationship analysis → Both see deep comparison → Both share again
+
+### Conversation Arc
+
+The conversation is not a flat sequence of questions. It has a three-act narrative structure, and each act has different UX requirements for Nerin's behavior, visual pacing, and depth engagement signals.
+
+| Act | Turns | Purpose | User State |
+|-----|-------|---------|------------|
+| **Act 1: Settling In** | 1-8 | Establish trust, signal depth, move past surface answers. Nerin's tone puts the user at ease while signaling this is not small talk. | Curious but guarded → opening up |
+| **Act 2: Deep Exploration** | 8-18 | Nerin's observations surface patterns and contradictions. The user is fully engaged and moving into authentic self-reflection. The "how did you know?" moments happen here. | Opening up → genuinely reflecting |
+| **Act 3: Convergence** | 18-25 | Themes deepen and connect. The user begins forming their own hypothesis about what their portrait will say. Anticipation peaks. | Reflecting → anticipating the portrait |
+
+The transition between acts should be felt, not announced. The depth meter, ambient visualization energy, and Nerin's conversational tone all shift subtly as the conversation deepens.
+
+### Three-Surface Model
+
+The product operates across three distinct surfaces, each with a different audience and purpose:
+
+**1. Results Page (Private)**
+The full assessment output — portrait, archetype name, trait breakdown, evidence-linked narrative. Designed entirely for the authenticated user's personal insight experience. No conversion elements, no sharing pressure. This is the payoff.
+
+**2. Public Profile (Opt-in, Private by Default)**
+A separate, public-facing page the user can choose to enable. Displays the personality portrait, archetype, and curated information the user has selected. Serves as the acquisition surface for visitors arriving via shared links — includes comparison teaser ("see how you match") to convert viewers into new users. When the profile doesn't exist or is private, visitors are redirected to the homepage.
+
+**3. Relationship Analysis (Auth-Gated, Private Data)**
+Deep comparison between two users, using full private assessment data from both parties. Accessed via QR-based connection — both users must have completed assessments. One user generates a temporary QR, the other scans and accepts (paying the credit). This is the primary viral mechanism for relationship-motivated users.
+
+**Personality Card (Always Shareable)**
+A visual identity artifact — the user's personality portrait as a shareable image/link. Always available regardless of profile privacy settings. The card links to the user's public profile URL; if the profile is private or doesn't exist, the visitor is transparently redirected to the homepage. Privacy never blocks sharing — every user can express their identity without exposing personal data.
+
+### Competitive Context
+
+**ChatGPT is the experiential benchmark, not quiz apps.** Users are already having personality conversations with general-purpose AI. But ChatGPT offers no structure, no saved results, no shareable artifacts, no comparison features. big-ocean is the guided, scored, shareable, relationship-aware version of what people already do when they ask ChatGPT about their personality. Positioning should lean into this distinction rather than competing with quiz apps on format.
+
+**16Personalities owns cultural ubiquity, not quality.** "I'm an ENFJ" is social currency. "I'm an OCEAR" is not — yet. The OCEAN code lacks recognition, so the visual identity system must carry the social language burden. The personality portrait and card must be so visually distinctive that they become their own recognizable format in social feeds — the way Spotify Wrapped is instantly identifiable regardless of the data inside it.
+
+**Time-to-value is the deliberate trade-off.** Every competitor delivers results in under 15 minutes. big-ocean asks for 30-45 minutes. This is the cost of depth and the source of differentiation. The UX implication: every touchpoint before the conversation (landing page, public profile, shared personality card) must work harder than competitors to justify the commitment. The quality promise must be viscerally clear before turn 1.
 
 ### Platform Strategy
 
-**Web-First, Mobile-Responsive**
-- Primary platform: Web app via TanStack Start (React 19, full-stack SSR)
-- Device support: Desktop, tablet, mobile
-- Optimization: Mobile-responsive design for 30-min sessions on smartphones
-- Touch-friendly inputs for long conversational sessions
+**Current:** Web application (TanStack Start SSR), mobile-responsive design. Always-connected — no offline mode required.
 
-**Real-Time Streaming**
-- Nerin responses stream live (< 2 sec perceived latency) to maintain engagement
-- User inputs submit instantly, conversation flows naturally
-- Technical responsiveness is essential — delays kill 30-min engagement
+**Near-term consideration:** Native mobile app. The 30-45 minute conversational format and the social sharing mechanics (personality cards, comparison links) align strongly with mobile-native behaviors. If/when a native app is pursued, the conversation experience and push notification recapture flow would benefit significantly from native capabilities.
 
-**Session Persistence**
-- User can pause assessment at any time and resume later
-- Conversation state persists on server, accessible via session URL
-- Precision snapshot at each session close point
-- Device switching enabled via unique session URL (paste URL on new device to continue)
-- **Phase 2 Enhancement:** ElectricSQL for automatic real-time sync + offline capability
+**Design implications:**
+- Mobile-first responsive design is mandatory — most users will be on phones even on web
+- Touch interaction patterns take priority over mouse/keyboard
+- The conversation input area must be optimized for thumb typing on mobile viewports
+- Share mechanics should leverage native share sheets where available (Web Share API)
+- Auth-gated email collection enables cross-platform session continuity (start on mobile web, receive reminder email, resume on desktop or vice versa)
 
 ### Effortless Interactions
 
-**Starting Assessment**
-- One click from landing page to first Nerin message
-- Optional sign-up after first message (zero friction to start)
-- User immediately feels the conversational quality
+**Must be zero-friction:**
 
-**During 30-Min Conversation**
-- Message input feels natural (text field + send, like messaging app)
-- Nerin responses appear instantly without loading spinners (streaming UI)
-- Precision meter shows progress toward 70%+ threshold (passive feedback)
-- No form fills, no questionnaire complexity — pure conversation
+1. **Sharing the archetype card** — One tap to share a beautiful visual artifact. The card is generic (archetype-level: name, short description, GeometricSignature, OCEAN code — no scores). Always shareable. Link parameterized to user's public profile. If profile is private, user is prompted to make it public at the moment of sharing.
 
-**Reaching 70%+ Precision**
-- Celebration screen: "Your Personality Profile is Ready!"
-- Archetype revealed with visual design flourish
-- Precision score displayed prominently (e.g., "Precision: 73%")
-- Clear distinction: archetype is VALID and shareable now, but also IMPROVABLE
+2. **Dynamic social previews** — The shared archetype card link must render the archetype card image (with short description) via OG meta tags. If the preview looks generic or broken on iMessage, Instagram, or WhatsApp, the viral loop breaks before it starts. The card must look incredible in every platform's link preview format.
 
-**Choosing Next Action**
-- Two prominent CTAs:
-  1. **"Share My Archetype"** — Generate shareable link with one click
-  2. **"Keep Exploring"** — Continue refining in same session (no friction)
-- Either choice is equally valid; no pressure either way
+3. **Initiating a relationship analysis** — From the results page, opening the QR drawer and scanning should be effortless. The scanner sees the initiator's archetype card and decides whether to accept (spending their credit). Both users must have completed assessments — no half-baked analyses.
 
-**Sharing Profile**
-- One-click generation of unique shareable link
-- Preview what recipient will see (public archetype only)
-- Copy link or share to social platforms directly
-- No additional disclaimers or friction
+4. **Starting the conversation** — Auth-gate collects email (and minimal profile info), then the conversation begins immediately. No onboarding tutorial, no "how this works" explainer unless the user seeks it. Nerin's first message IS the onboarding.
 
-**Continuation Chatting**
-- Same conversational interface continues seamlessly
-- Precision meter updates live as user chats further
-- Milestones trigger gentle notifications: "Your profile is now 80% precise"
-- User can exit and resume anytime
+5. **Resuming an interrupted conversation** — If a user returns (via email reminder or direct navigation), they land exactly where they left off. No re-authentication friction, no "welcome back" modal. Just Nerin, picking up naturally.
+
+**Should feel natural but may require some thought:**
+
+6. **Navigating results** — The portrait, trait breakdown, evidence narrative, and comparison features have depth. Navigation should feel like exploring, not like reading a report. Progressive disclosure over information dump.
+
+7. **Relationship analysis unlock** — Once both parties have completed, the comparison should surface automatically or with minimal action. The user shouldn't have to "find" their comparison — it should find them (notification, email, prominent placement on results page).
 
 ### Critical Success Moments
 
-**Moment 1: First Nerin Message**
-- User types first question/thought, Nerin responds with personalized, contextual message
-- If Nerin feels robotic or generic, user abandons immediately
-- If Nerin feels present and interested, user is hooked
-- Success signal: User feels understood immediately
+1. **The first Nerin observation (Act 1 → Act 2 transition, turns 5-8)** — The moment Nerin surfaces a pattern or tension the user didn't expect. This is the credibility inflection point. If it lands, the user thinks "okay, this is real" and commits to the full conversation. If it feels generic or off-base, trust erodes and depth of subsequent answers drops. **This is the single most important UX moment in the entire product.**
 
-**Moment 2: The 15-Minute Mark**
-- Halfway through 30-min assessment — abandonment risk point
-- Nerin should acknowledge progress: "I'm getting a clearer picture of you..."
-- Precision meter shows visible progress toward 70%
-- Success signal: User feels encouraged to continue
+2. **The portrait reveal** — The transition from conversation end to results. This moment carries all the anticipation built over 30-45 minutes. The visual personality portrait, the archetype name, the opening narrative must deliver on the promise the conversation built. (Nice-to-have: choreographed transition — visual shift, beat of silence, sense of arrival rather than a page load.)
 
-**Moment 3: Reaching 70%+ Precision**
-- Transition from "gathering information" to "revealing insights"
-- Archetype reveal should feel surprising and meaningful
-- Celebration tone (not clinical) acknowledges the user's investment
-- Success signal: User feels their time investment was worthwhile
+3. **The "that's so me" confirmation** — Somewhere in the results, the user reads something that feels uncannily accurate — ideally tied to a specific thing they said during the conversation. This is the moment that converts a user into a sharer. Evidence-linked narrative ("Your high openness showed up when you described...") is the mechanism.
 
-**Moment 4: The Share Decision**
-- User sees public archetype and share option
-- Must understand instantly: "This shares only the archetype, not my private details"
-- Should feel safe and empowering, not risky
-- Success signal: User generates and shares link, feels proud of their archetype
+4. **The relationship analysis unlock** — When both parties have completed and the comparison becomes available. This should feel like a reward, not a feature. The notification/reveal should carry excitement ("Your comparison with [name] is ready").
 
-**Moment 5: Link Recipient Experience**
-- Friend clicks shared link, sees public archetype (cool, not invasive)
-- Recipient feels intrigued, not surveilled
-- Recipient wants to take the assessment themselves
-- Success signal: Viral loop activates
+5. **First share action** — The moment a user decides to share their archetype card. The share flow must be instant and the card must look incredible in the destination context (iMessage preview, Instagram story, WhatsApp thumbnail). If profile is private, prompt visibility toggle at this moment.
 
 ### Experience Principles
 
-**1. Conversational Authenticity Over Questionnaire Rigor**
-- Nerin must feel like a genuine conversation partner, never robotic
-- Assessment machinery should be completely invisible to user
-- Authenticity is the moat; all UX decisions serve this principle
+1. **The conversation is the product, not the cost of admission.** Every design decision about the conversation should optimize for engagement quality, not completion speed. If a user feels like they're "getting through" the conversation to reach results, the UX has failed.
 
-**2. Precision as Achievement, Not Judgment**
-- Reaching 70%+ is celebrated as an accomplishment ("Congratulations!")
-- Precision is presented as evolving, not final
-- Higher precision is an invitation to explore more, not a requirement
-- Users control their engagement depth
+2. **Anticipation is a feature.** Nerin's observations build anticipation for the portrait deliberately. The longer the user has been engaged and the more credible Nerin feels, the more powerful the portrait reveal becomes. Don't shortcut this arc.
 
-**3. Privacy Transparency By Design**
-- Private profile and shareable archetype are visually and functionally distinct
-- "Your profile is private by default" visible in UI, not buried
-- Sharing should feel empowering because users trust the privacy model
-- Silent engagement tracking (no notifications to create sharing anxiety)
+3. **The conversation has narrative structure.** Three acts — settling in, deep exploration, convergence — each with different requirements for tone, pacing, and depth signals. The UX must support this arc through ambient visualization, depth meter behavior, and Nerin's evolving conversational approach.
 
-**4. Meaningful Insights Over Data Overload**
-- Focus on archetype + Big Five summary, not all 30 facets
-- Private profile contains depth; shareable profile shows essence
-- Beautiful visuals + memorable archetype names beat complex data
-- Every UI element earns its space
+4. **Sharing should feel like self-expression, not distribution.** The archetype card is something users share because it says something about who they are, not because we asked them to. The card must be beautiful enough to be worth posting. Privacy is handled at the sharing moment — prompt to go public, not buried in settings.
 
-**5. Real-Time Responsiveness Over Perfection**
-- Nerin responses must stream instantly (< 2 sec) to maintain flow
-- User inputs submit immediately without lag
-- Technical delays are death for 30-min engagement
-- Responsiveness > optimization
+5. **The viral loop is relationship-powered.** The personality card drives broad social sharing; the QR-based relationship analysis drives deep comparison. Both paths must be effortless, but they serve different motivations and lead to different experiences.
 
-**6. Continuous Improvement Over Completion**
-- Assessment continues as long as user wants to explore
-- Results evolve as precision improves
-- Returning to refine profile feels natural and encouraged
-- "Your profile at 78% precision" invites ongoing engagement
+6. **Assessment invisibility above all.** No UX element should remind the user they are being evaluated. The depth meter shows conversation progress (how far through the 25 turns), not scoring or engagement quality. Nerin observes, doesn't diagnose. The ambient visualization responds to energy, not traits. The assessment runs silently beneath a conversation that feels genuinely human.
 
-**7. Inclusive Authenticity Over Professional Gatekeeping**
-- Design and language speak to anyone authenticity-seeking, not just professionals
-- Warm, personal tone, not clinical or corporate
-- "We all deserve to understand ourselves" community feeling
-
----
-
-## Monetization & Display Transparency Model
-
-### Philosophy: Generous Free Tier, Depth-Focused Premium
-
-**Core Principle:** big-ocean offers a complete, valid personality profile for free. Premium unlocks the *journey* of deeper self-discovery, not access to withheld content.
-
-**Why This Model:**
-- Builds trust through generosity (free tier is genuinely valuable)
-- Aligns with authenticity brand positioning (no manipulative paywalls)
-- Self-selects serious users for premium (only those who want depth pay)
-- Creates natural conversion through relationship with Nerin (not FOMO)
-
----
-
-### Free Tier: Complete Snapshot (70% Precision)
-
-**What Users Get (No Payment Required):**
-
-- **Full Archetype Profile** — Archetype name, visual character, and description
-- **All 30 Facet Scores** — Numeric scores visible for all facets
-- **Big Five Trait Summary** — High/Mid/Low classification for all 5 traits
-- **Shareable Link** — Generate unique public archetype link
-
-**What's NOT Included:**
-- Continued conversation with Nerin beyond 70%
-- Evidence transparency ("show your work" feature)
-- Precision evolution (70% → 85%+)
-- Multi-context exploration (relationships, work, stress)
-
----
-
-### Premium Tier: The Journey Continues (One-Time Payment - [PRICE TBD])
-
-**What Users Unlock:**
-- **Unlimited Continued Conversation** — Resume dialogue with Nerin anytime
-- **Evidence Transparency ("Show Your Work")** — See which conversation messages influenced each facet score
-- **Precision Evolution** — Continue refining from 70% → 85%+ precision
-- **Multi-Context Exploration** — Explore how you show up in relationships, work, under stress
-
----
-
-### In-Assessment Display Rules (Free & Paid)
-
-**Principle:** Scores remain hidden during conversation to maintain assessment integrity and prevent user bias.
-
-**During Conversation (All Users):**
-- SHOW: Precision meter, precision updates every 2-3 messages, milestone notifications, Nerin's guidance
-- HIDE: Individual facet scores, Big Five trait scores, archetype name or hints, score direction indicators
-
----
-
-### Results Page Transparency (Free & Paid)
-
-- **Always Visible:** Complete archetype profile, Big Five trait summary, precision percentage, facet descriptions
-- **Paid-Only Features:** Evidence transparency panel, clickable facet scores with quotes, confidence-weighted highlights, bidirectional navigation
-
----
-
-### Conversion Messaging Principles
-
-- Celebrate completion: "Your personality profile is complete!"
-- Show value of free tier: "Valid, shareable, scientifically-grounded"
-- Create curiosity: "Want to understand the *why* behind your scores?"
-- Clear one-time pricing; invitation tone
-- NO FOMO language, urgency tactics, or pressure
-
----
-
-### Post-Payment Experience
-
-- Conversation resumes with same hidden-score pattern
-- Results page with evidence transparency active
-- Unlimited sessions with persistent state
-- Precision evolution tracked over time
-
----
-
-### Complete User Journey
-
-**Free Tier Path:** Start → 30-min conversation → 70% precision → complete archetype reveal → share or continue → conversion prompt
-
-**Paid Tier Path:** Pay → resume conversation → precision increases → updated results + evidence → repeat indefinitely
-
-**Viral Loop:** User shares → recipient views → takes assessment → shares with their network
-
----
-
-### Design Implications for Assessment Integrity
-
-Scores remain hidden during conversation to prevent anchoring, performing, self-censoring, and optimizing. Show precision (completeness), not scores (trait values).
-
----
-
-### Success Metrics for Monetization Model
-
-- **Free-to-Paid Conversion Target:** ≥ 10%
-- **Premium User Engagement:** Average precision increase 70% → 82%+
-- **Free Tier Virality:** Sharing rate ≥ 15%
-- **User Sentiment:** Free ≥ 7/10, Premium ≥ 8/10
-
----
+7. **Pre-conversation touchpoints must sell the commitment.** Because time-to-value is big-ocean's weakest competitive dimension, every surface before the conversation (landing page, public profile, shared personality card) must work harder than competitors to justify 30-45 minutes. The quality promise must be viscerally clear before turn 1.
 
 ## Desired Emotional Response
 
-### Primary Emotional Goal: Self-Acceptance Through Clarity
+### Primary Emotional Goals
 
-The core emotional goal is **self-acceptance through clarity** — users want to see themselves accurately AND accept what they see.
+**During the conversation: "I feel heard."**
+The dominant emotion throughout the conversation should be the rare sense of being genuinely listened to. Not interrogated, not entertained — *heard*. This is the feeling that separates big-ocean from every competitor. 16Personalities feels like filling out a form. ChatGPT feels like talking to a tool. big-ocean should feel like talking to someone who actually cares what you're saying.
 
-1. **Clarity:** "I understand why I think and act this way"
-2. **Acceptance:** "This is who I am, and that's okay"
-3. **Permission:** "I'm ready to share this understanding with others"
+The emotional texture adapts to the user through the pacing system:
+- **Deep seekers** experience a late-night-conversation intimacy — reflection, tension, surprising self-recognition
+- **Lighter engagers** experience a warm, friendly, naturally flowing chat — comfortable, curious, gently revealing
 
-**The Emotional Arc:** Exploration → Recognition → Acceptance → Sharing → Connection
+Both feel listened to. The depth differs, not the quality of attention.
+
+**At the portrait reveal: "That's me — but I couldn't have said it that way."**
+The reveal should land as both validation and discovery simultaneously. The user recognizes themselves but sees themselves articulated in a way they couldn't have done alone. It's the feeling of reading a description that captures something you've always felt but never named. The visual portrait appears first — the emotional impact lands visually before a single word is read. The narrative reinforces what the image already communicated.
+
+**When sharing: "This says something about who I am."**
+The share impulse should come from identity expression, not product promotion. The personality card should feel like a personal statement — something the user is proud to attach to their social identity.
+
+**When seeing a relationship comparison: "I feel closer to this person."**
+The comparison should deepen connection, not create competition. The emotional goal is mutual understanding — "oh, that's why they do that" — not "I scored better." The comparison should make both parties feel more understood by each other.
+
+### The Trust-Surprise Loop: Core Emotional Engine
+
+The foundational emotional mechanic of the entire product:
+
+```
+Trust → user opens up → Nerin has richer material →
+specific observation → Surprise → reinforces Trust →
+user opens up more → deeper material → ...
+```
+
+If this loop activates by turn 8, everything downstream works — Depth, Validation, Pride, Self-Expression, Virality. If it doesn't activate, nothing compensates. The first Nerin observation (turns 5-8) is the ignition point. This is why it's the single most important UX moment: it's not just a retention moment, it's the start of the emotional engine that powers the entire experience.
+
+**Conversation depth directly determines portrait quality.** This is a hidden dependency — the results page seems like a separate design problem from the conversation UI. But deeper conversation → richer evidence → more specific portrait → stronger Validation → more Pride → more sharing. UX investment in driving deeper conversation has a direct multiplier effect on everything downstream. A beautifully designed results page with shallow evidence will feel generic. A plain results page with deep, specific evidence will feel powerful.
 
 ### Emotional Journey Mapping
 
-- **Phase 1: Discovery** — Skepticism mixed with curiosity
-- **Phase 2: Assessment** — Exploration → engagement → momentum
-- **Phase 3: Results Reveal** — Recognition → accomplishment → meaningful insight
-- **Phase 4: Share Decision** — Pride + connection opportunity
-- **Phase 5: Discovering Your Tribe** — Recognition + belonging + peer discovery
-- **Phase 6: Return & Exploration** — Curiosity about growth
+| Stage | Desired Emotion | Threat Emotion | Design Response |
+|-------|----------------|----------------|-----------------|
+| **Landing / Public profile** | Curiosity + intrigue ("this looks different") | Skepticism ("another personality quiz") | Visual distinctiveness, quality signals, social proof from shared cards |
+| **Auth gate** | Commitment ("this is worth my time") | Hesitation ("30-45 minutes is a lot") | Minimal friction, clear value promise, no overwhelming onboarding |
+| **Act 1 (turns 1-8)** | Comfort + emerging trust ("this feels natural") | Guardedness ("am I being judged?") | Nerin's warm tone, adaptive pacing, no clinical framing. The ambient visualization signals "you've entered a different space" — a container for self-reflection. |
+| **Act 2 (turns 8-18)** | Being understood + surprise ("how did she notice that?") | Exposure anxiety ("that's too personal") | Nerin acknowledges if she touches something sensitive, draws back to comfortable ground. After vulnerable moments, a held silence — a deliberate pause communicated through pacing and ambient visualization shift, not a typing indicator — signals respect. |
+| **Act 3 (turns 18-25)** | Anticipation + self-recognition ("I'm starting to see myself") | Fatigue ("are we almost done?") | Depth meter shows momentum, conversation feels like it's converging, not dragging |
+| **Closing ritual** | Gratitude + readiness ("that was meaningful, I want to see my portrait") | Abruptness ("wait, it's over?") | Nerin acknowledges the conversation as a whole before the portrait transition — "You've shared a lot with me" — bridging the emotional arc rather than cutting to results. |
+| **Portrait reveal** | Awe + validation ("that's exactly me") | Disappointment ("this is generic") | Layered revelation: conversation ends → brief pause → ambient visualization transforms → archetype name appears → portrait visual materializes → opening narrative fades in. Visual first, text second. Each layer adds a beat of anticipation. |
+| **Results exploration** | Discovery + pride ("I didn't know that about myself") | Overwhelm ("too much data") | Progressive disclosure, explore-don't-dump |
+| **First share** | Self-expression + excitement ("people need to see this") | Privacy concern ("is this too personal?") | Personality card is curated/beautiful, privacy handled transparently |
+| **Relationship comparison** | Closeness + mutual understanding ("now I get them") | Judgment ("my partner scored lower") | Frame as complementary, not competitive. Focus on understanding, not ranking |
+| **Comparison notification (delayed)** | Re-ignited excitement ("something surprising came up") | Indifference ("I already got my results days ago") | The notification must re-create anticipation, not just inform: "Something surprising came up in your comparison with [name]" — framed as a new discovery, not a status update |
+| **Return visit / extension** | Desire for more depth ("I want to go deeper") | Indifference ("I already got my results") | Email/notification framing emphasizes new insights, not repetition |
 
-### Micro-Emotions & Deeper Truths
+### Micro-Emotions
 
-Key emotional tensions designed for: Confidence vs. Confusion, Trust vs. Skepticism, "Aha" Recognition vs. Confirmation, Understanding vs. Judgment, Peer Connection vs. Loneliness, Maturity vs. Incompleteness, Belonging vs. Judgment.
+**Critical emotional states to cultivate:**
 
-### Emotional Design Implications (From Deeper Understanding)
+- **Trust over skepticism** — Earned through Nerin's perceptiveness, not claimed through marketing copy. Trust builds when Nerin reflects something accurate, not when the UI says "trusted by millions."
+- **Surprise over predictability** — The "how did she know?" moments are the emotional fuel of the entire experience. If the conversation feels predictable, engagement drops.
+- **Pride over embarrassment** — The results should make users feel good about who they are, including their complexities and contradictions. Nobody shares something that makes them look bad.
+- **Closeness over competition** — Relationship comparisons must frame differences as complementary. "You bring stability, they bring spontaneity" — not "you scored 72, they scored 45."
+- **Held silence after vulnerability** — When the user shares something deep, a deliberate pause in Nerin's response — communicated through pacing and a subtle ambient visualization shift — signals "I'm sitting with what you just said." Not a typing indicator. Presence, not processing.
 
-1. Design for "Aha" Moments (Not Just Data)
-2. Show the "Why" (Science + Context + Guidance)
-3. Nerin as Visible Coach (Not Hidden Algorithm)
-4. Multi-Dimensional Self-Discovery (Context Matters)
-5. Precision as Permission + Growth Milestone
-6. Tribe as "People Who Get You" (Not Just Similar)
-7. Privacy as Both Data Safety + Personality Acceptance
+**Critical emotional states to prevent:**
+
+- **Clinical observation** — "You exhibit high neuroticism" is devastating. Nerin is a perceptive friend, not a psychologist reading from a chart.
+- **Exposure without consent** — If the conversation touches something sensitive and the user pulls back, Nerin must acknowledge and redirect. Never push.
+- **Generic flattery** — If the portrait reads like a horoscope ("you're creative and caring"), trust collapses. Specificity is the antidote.
+- **Abandonment after results** — The post-reveal experience should feel like an invitation to explore further, not a dead end. The conversation extension and relationship features should feel like natural next steps, not upsells.
+
+### Handling Negative Moments
+
+When something goes wrong — Nerin misreads the user, touches a sensitive topic, or a technical error occurs — the emotional design principle is: **acknowledge, don't ignore.**
+
+- **Nerin says something off-base:** Nerin acknowledges the miss naturally ("I may have read that differently than you meant — tell me more about what you were getting at") and draws the conversation back to comfortable ground. No defensiveness, no pretending it didn't happen.
+- **User pulls back from a sensitive topic:** Nerin recognizes the shift and redirects with warmth. The pacing system adapts — lighter tone, safer subject, space to re-engage at the user's pace.
+- **Technical interruption (error, disconnect):** The resume experience must feel seamless — Nerin picks up as if the conversation never stopped. The emotional goal is "that didn't happen" rather than "welcome back, we had an issue."
+- **Delayed comparison notification:** The comparison may unlock days after the original assessment, when emotional momentum has faded. The notification must re-ignite excitement, not just inform. Framing as a new discovery ("Something surprising came up in your comparison with [name]") re-creates anticipation rather than delivering a status update.
 
 ### Emotional Design Principles
 
-1. Insight Over Information
-2. Acceptance Over Judgment
-3. Organic Discovery Over Platform Search
-4. Permission Over Perfection
-5. Transparent Science Over Mystique
-6. Context Over Labels
-7. Self-Discovery Journey Over Self-Definition
+1. **Presence is the product.** The quality of attention Nerin gives — and the UI communicates — is the core emotional differentiator. Not features, not data, not gamification. Every UI element should reinforce "I am here with you." Drawing from therapy: the feeling of being truly attended to is what makes this experience transformative.
 
-### Deeper Emotional Truths (From Socratic Exploration)
+2. **The Trust-Surprise loop is everything.** If this loop activates by turn 8, the experience becomes self-sustaining. If it doesn't, nothing downstream compensates. Every UX decision about the conversation should be evaluated against: "does this help the Trust-Surprise loop fire?"
 
-1. "Honestly Understood" is Actually Self-Acceptance
-2. "Your Tribe Discovers You When You Share"
-3. Privacy Fear Masks Personality Acceptance Fear
-4. Precision is a Psychological Milestone, Not Just a Data Threshold
-5. The Real Transformation is Insight, Not Assessment
-6. Users Return Not to "Improve" But to "Explore Differently"
-7. Support is Explanation + Acceptance + Guidance, Not Just Positivity
+3. **The pacing system is emotional intelligence.** Adaptive pacing isn't just a conversation mechanic — it's how the product reads the room. Deep seekers get depth. Lighter engagers get warmth. Both feel the conversation was made for them.
 
----
+4. **Surprise is earned through specificity.** The "how did she know?" moments only work if they reference specific things the user said. Generic observations ("you seem introspective") don't create surprise. Specific ones ("the way you talked about your childhood home was very different from how you describe where you live now") do.
 
-## Community Architecture
+5. **Vulnerability must be met with grace.** When a user opens up, the next thing that happens determines whether they open up more or shut down. Nerin's response to vulnerability is the highest-stakes emotional moment in every conversation. A held silence — presence without rushing to respond — communicates respect.
 
-### Three Pillars: Personal Discovery + Peer Connection + Scientific Grounding
+6. **Comparison deepens connection, never creates winners.** Every element of the relationship analysis — language, framing, visual design — must reinforce mutual understanding over competition. Differences are complementary, not ranked.
 
-**Pillar 1: Personal Discovery Journey (MVP)**
-- Conversational exploration with Nerin
-- Safe, supportive, non-judgmental assessment
+7. **Visual first, narrative second.** At the portrait reveal, the visual identity object appears first. The text narrative reinforces what the visual already communicated emotionally. Don't lead with a wall of text — lead with beauty, then explain.
 
-**Pillar 2: Your Tribe Discovers You (MVP + Phase 2)**
-- Organic peer discovery through shared links (no searchable directory)
-- Compare archetypes with people who shared with you (reciprocal only)
+8. **Environment is container, not decoration.** The ambient visualization signals entry into a different kind of digital space — a container for self-reflection. Drawing from meditation apps: sustained attention without gamification requires environment + presence + no judgment. The visualization says "you've left the normal internet."
 
-**Pillar 3: Scientific Credibility (Phase 2+)**
-- Big Five research foundation
-- Research repository and study participation
+9. **The reveal is layered, not instant.** Drawing from luxury unboxing: anticipation builds through sequence. Conversation ends → closing ritual → pause → visual transformation → archetype name → portrait → narrative. Each layer adds a beat. The portrait reveal is an event, not a page load.
 
-### Community Features by Phase
-
-- **MVP:** Share & Compare — beautiful shareable archetype profile, no searchable directory
-- **Phase 2:** Reciprocal Discovery — see who shared with you, research repository
-- **Phase 3+:** Research partnerships, advanced analytics, optional curated groups
-
----
+10. **Anticipation is stored energy.** Anticipation accumulates throughout the conversation — fueled by every Trust-Surprise cycle — and discharges at the portrait reveal. The closing ritual is the peak of stored anticipation. Design the reveal to honor this accumulated energy. Conversation depth directly determines how much energy is stored.
 
 ## UX Pattern Analysis & Inspiration
 
 ### Inspiring Products Analysis
 
-1. **16Personalities** — Archetype virality + tribal identity (memorable codes, tribal belonging)
-2. **Headspace** — Playful illustration + guided emotional journeys (character-driven warmth)
-3. **Figma** — Bold color confidence + strategic use (saturated colors, gradient sophistication)
+#### Headspace — The Container
+
+**What it does well:** Creates a calm, safe digital space where users feel comfortable being vulnerable. The visual language — simple illustrations, soft color palettes, geometric shapes — communicates warmth and approachability without childishness. The positioning around self-development frames the product as something that *improves your life*, not just something you use.
+
+**Key UX patterns to study:**
+- **Environment as sanctuary:** The moment you open Headspace, you've left the noisy internet. The visual treatment, pacing, and tone all say "you're safe here." This maps directly to big-ocean's ambient visualization and immersive conversational space.
+- **Simple shapes, saturated palette:** Headspace's artistic approach — geometric forms, limited but bold color palette — aligns closely with big-ocean's existing psychedelic/saturated aesthetic and geometric shape design language. The simplicity makes complex topics (meditation, mindfulness) feel accessible rather than clinical.
+- **Content as retention layer:** Headspace's library of guided content (sleep stories, courses, focus sessions) creates reasons to return daily. big-ocean's future content layer — personality-grounded articles, psychology explainers, science-backed statistics — could serve the same role, but with a personality lens. "How your openness affects your creative process" or "The science behind your conflict style" — content that feels written for *your* archetype.
+- **Progressive depth:** Headspace starts with basics and unlocks deeper practices over time. big-ocean's conversation extension model echoes this — your first conversation is the foundation, extensions go deeper.
+
+**Emotional alignment:** Headspace's core emotional promise is "calm safety." big-ocean's is "heard and understood." Both require the same design principle: the environment must communicate safety before the user is asked to be vulnerable.
+
+#### ChatGPT — The Conversational Baseline
+
+**What it does well:** Warm, curious, responsive personality that makes you feel like you're talking to someone genuinely interested in what you're saying. Good follow-up questions that deepen the conversation rather than redirect it. The experience of asking ChatGPT to analyze your personality feels surprisingly good — it listens, reframes, and reflects back.
+
+**Key UX patterns to study:**
+- **Conversational warmth:** ChatGPT's tone feels human without trying to be human. It's warm, curious, and non-judgmental. This is the baseline Nerin must meet and exceed.
+- **Follow-up questions that deepen:** Instead of moving to the next topic, ChatGPT asks "what do you mean by that?" or "can you give me an example?" — this creates the feeling of genuine curiosity. Nerin's steering system should create this same feeling of natural deepening.
+- **Reframing:** ChatGPT takes what you said and reflects it back with added clarity or a new angle. This is the "how did she know?" moment in embryonic form. big-ocean takes this further by adding scientific structure and evidence tracking behind the scenes.
+
+**Where big-ocean goes beyond:**
+- Structure: ChatGPT personality conversations are freeform. big-ocean's guided 25-turn format ensures coverage of all Big Five dimensions while feeling natural.
+- Persistence: ChatGPT conversations are ephemeral. big-ocean saves, scores, and generates a permanent portrait.
+- Shareability: ChatGPT produces a chat log. big-ocean produces a visual identity artifact.
+- Relationships: ChatGPT is single-player. big-ocean's comparison and relationship analysis create social value.
+
+**Emotional alignment:** ChatGPT's core emotional quality is "warmth + curiosity." This is Nerin's conversational floor — the minimum standard of responsiveness. Nerin adds perceptiveness (observations the user didn't expect) and emotional intelligence (adaptive pacing, held silences, graceful handling of sensitive topics).
+
+#### 16Personalities — The Social Layer
+
+**What it does well:** Made personality typing accessible, shareable, and culturally relevant at massive scale. "I'm an ENFJ" is instantly understood in casual conversation. Their archetype pages are scannable, visual, and designed for quick comprehension — you can grasp the essence of a personality type in seconds.
+
+**Key UX patterns to study:**
+- **Glanceable personality:** The 4-letter code, the archetype illustration, and the one-line description create an instantly readable personality snapshot. big-ocean needs its own version — the OCEAN code + visual portrait + archetype name must be graspable in under 3 seconds.
+- **Tribe effect:** 16Personalities creates belonging — "other ENFJs include..." and type-specific communities. Users feel part of a group. big-ocean's archetype system (81 combinations) could create similar belonging but with more nuance.
+- **Shareability as default:** The results are designed to be shared — every page has share buttons, comparison tools, and social hooks. Sharing isn't an afterthought; it's built into the core experience.
+- **Archetype construction:** Each type has a detailed, multi-page profile with strengths, weaknesses, relationships, career advice. The depth creates re-read value. big-ocean's evidence-linked narrative goes further (personalized, not generic) but can learn from the *structure* of how 16Personalities organizes type information.
+
+**Where big-ocean goes beyond:**
+- Depth: 60 checkbox questions → 25-turn conversation with an AI that adapts to you
+- Personalization: Generic type descriptions → evidence-linked narrative referencing your specific conversation
+- Scientific grounding: MBTI (debated validity) → Big Five (gold standard in personality research)
+- Relationship depth: Generic compatibility pages → private, evidence-based comparison using both parties' real data
+
+**Emotional alignment:** 16Personalities' core emotional quality is "recognition + belonging." big-ocean aims for the same, but deeper — not just "I'm this type" but "I'm understood in a way nobody else has articulated."
+
+#### Journey (thatgamecompany) — The Emotional Arc
+
+**What it does well:** A 2-hour game with no dialogue, no combat, no score. You traverse a desert toward a mountain. You occasionally encounter another anonymous player and travel together in silence. It's the closest a digital product has come to what big-ocean is trying to achieve: a sustained, emotionally transformative experience with no gamification.
+
+**Key UX patterns to study:**
+- **Wordless emotional arc:** The entire journey is communicated through music, visual scale, and movement — not text. The desert expands, the mountain looms closer, the light shifts. You *feel* progress without being told. big-ocean's ambient visualization could communicate the conversation arc similarly — not just responding to energy, but evolving across acts.
+- **The companion encounter:** Midway through, you meet another anonymous player. You can't speak — only chirp. Yet players report feeling profound connection. The game proves that meaningful connection doesn't require information exchange — it requires *shared experience.* big-ocean's relationship comparison is powerful precisely because both people went through the same journey independently.
+- **Scale communicates meaning:** Journey uses physical scale to create awe — tiny figure against massive dunes, a vast underground cavern, the blinding summit. The portrait reveal could use visual scale similarly — after an intimate, contained conversation space, the reveal *expands.*
+- **No fail state:** You can't lose. You can't make a wrong choice. This removes performance anxiety entirely. big-ocean must feel the same — there are no wrong answers, no bad conversation paths, no judgment.
+- **The summit arrival:** After 2 hours, you reach the summit. The screen fills with light. Pure emotion — no text, no score, no achievement popup. Just the arrival. The portrait reveal is big-ocean's summit.
+
+**Emotional alignment:** Journey's core emotional quality is "sustained presence leading to wordless awe." This maps directly to big-ocean's conversation arc → portrait reveal. The lesson: sustained, non-competitive, wordlessly emotional experiences are the most powerful digital products ever made.
 
 ### Transferable UX Patterns
 
-1. **Bold Archetype Identity** — Each archetype gets vibrant primary color, permeates experience
-2. **Character-Driven Personality** — Playful illustrated characters, animation serves emotional moments
-3. **Bold Visual Richness Over Clinical Minimalism** — Gradients, bold typography, personality-driven design
+**From Headspace → big-ocean:**
+
+| Pattern | Source Behavior | big-ocean Application |
+|---------|---------------|----------------------|
+| Environment as sanctuary | Visual calm, muted palette, simple shapes signal safety | Ambient visualization creates a container that says "you've left the normal internet" |
+| Geometric simplicity | Bold shapes, limited palette, accessible feel | Align with big-ocean's existing psychedelic/saturated + geometric design language |
+| Content as retention | Library of guided content drives daily returns | Future: personality-grounded articles, science explainers, archetype-specific insights |
+| Progressive depth | Basics → advanced practices over time | First conversation → extensions → deeper exploration |
+| Self-development positioning | "Improve your life" framing, not "use this tool" | big-ocean is a self-understanding experience, not a personality test |
+
+**From ChatGPT → big-ocean:**
+
+| Pattern | Source Behavior | big-ocean Application |
+|---------|---------------|----------------------|
+| Conversational warmth | Non-judgmental, curious, human-feeling tone | Nerin's baseline personality — warm, curious, never clinical |
+| Deepening follow-ups | "What do you mean by that?" instead of moving on | Nerin's steering naturally deepens topics before moving to the next |
+| Reframing | Reflects back with added clarity or a new angle | Nerin's observations surface patterns the user didn't articulate |
+| Low-friction input | Simple text box, no UI complexity around the conversation | The conversation UI should be equally minimal — the focus is the dialogue, not the chrome |
+
+**From 16Personalities → big-ocean:**
+
+| Pattern | Source Behavior | big-ocean Application |
+|---------|---------------|----------------------|
+| Glanceable identity | 4-letter code + illustration + one-liner = instant recognition | OCEAN code + visual portrait + archetype name must communicate in under 3 seconds |
+| Tribe/belonging | "Other ENFJs include..." creates group identity | Archetype communities, "others like you" discovery (future community feed) |
+| Share-first design | Share buttons and comparison tools on every page | Personality card always available, share flow is one tap, comparison teaser on public profile |
+| Structured type profiles | Strengths, weaknesses, relationships, career — organized depth | Results page with progressive disclosure: portrait → traits → evidence → relationships |
+
+**From Journey → big-ocean:**
+
+| Pattern | Source Behavior | big-ocean Application |
+|---------|---------------|----------------------|
+| Visual arc communicates progress | Environment evolves through desert → caves → summit | Ambient visualization evolves across acts: expansive/exploratory → intensifying/deepening → converging/crystallizing. (Design direction to explore — implementation feasibility TBD) |
+| Shared experience as connection | Anonymous companion creates bond through parallel journey | Relationship comparison emphasizes "you both sat with Nerin" — shared experience is the emotional foundation |
+| Scale shift creates awe | Tiny figure → vast spaces → blinding summit | Portrait reveal expands visually — contrast between intimate conversation and expansive reveal. (Design direction to explore — implementation feasibility TBD) |
+| No fail state | Can't lose, can't make wrong choices | No wrong answers, no judgment signals, no performance anxiety in the conversation |
+| Summit = pure arrival | No score, no popup, just light and arrival | Portrait reveal is an arrival — visual first, minimal chrome, let the user sit with it |
+
+**From Hinge → big-ocean:**
+
+| Pattern | Source Behavior | big-ocean Application |
+|---------|---------------|----------------------|
+| "Most compatible" reveal framing | Daily match feels like a gift, leads with best insight | Comparison notification leads with the most emotionally resonant insight: "Something surprising came up between you and [name]" |
+| User-curated highlights | Users choose which prompts/photos to feature | Users select conversation moments to highlight on their public profile — curated self-expression from their own words |
+| Intimate by design | Limited likes, no counts, depth over breadth | 3 deep comparisons should feel rich, not insufficient. No friend counts, no connection graphs |
+| Designed to be finished | "Designed to be deleted" — the product has a natural endpoint | "One conversation. Your portrait for life." The first assessment is complete, not a retention treadmill |
+
+### Conversation Highlights System
+
+**On Public Profile:** Users can select specific moments from their conversation to feature on their public profile — curated self-expression using their own words and Nerin's observations. These become scannable personality signals that are more authentic than a generic bio. The user controls which moments are visible, maintaining the privacy-first principle.
+
+**In Relationship Analysis:** The analysis produces a relationship portrait but also surfaces specific messages from *both* conversations that are relevant to the relationship dynamic. "When you said [X] and they said [Y] — this is where your different approaches to conflict become visible." This grounds the comparison in real evidence from both journeys, making it feel specific and earned rather than algorithmic.
 
 ### Anti-Patterns to Avoid
 
-- Reductive archetypes, sterile corporate aesthetic, neutral safe color palettes, gratuitous animation
+**1. Claude/LLM chat coldness**
+The Claude chat interface feels clinical and detached. The LLM doesn't ask follow-up questions that deepen conversation — it tends to answer and wait. Nerin must feel fundamentally different: proactive, warm, curious, and invested in what the user is saying. The conversation should feel like it's being *driven* by genuine interest, not passively received.
+
+**Design implication:** Nerin's responses should include observations, follow-ups, and emotional responsiveness as a default — not just answers to questions. The pacing system and steering format should create the feeling of a two-way conversation, not an interview.
+
+**2. Facebook-style social mechanics**
+The relationship analysis features are a social network at their core, but must never *feel* like one. No friend counts, no public friend lists, no "add friend" buttons, no group join mechanics. Every connection should feel meaningful and intentional — this is about understanding the people closest to you, not collecting connections.
+
+**Design implication:** Relationship connections are direct and personal (QR scan in-person or shared link), not mass-broadcast. No follower counts. No public relationship graphs. The connection model is intimate: you connect with specific people for specific comparisons. Quality over quantity, always.
+
+**3. Quiz-app disposability**
+16Personalities' format — take once, get result, share, never return — is the anti-pattern for retention. The UX must signal from the start that big-ocean is a deeper, ongoing relationship with self-understanding, not a disposable quiz.
+
+**Design implication:** The conversation length itself signals depth. The evidence-linked narrative signals personalization. The conversation extension and relationship features signal ongoing value. Every touchpoint should reinforce "this is the beginning of something, not a one-time result."
+
+**4. Clinical/diagnostic framing**
+Any UX that makes the user feel like a patient — progress bars labeled "assessment," clinical terminology, diagnostic language in results — breaks the emotional contract. big-ocean is a conversation, not an examination.
+
+**Design implication:** No word "assessment" visible to users. No "test," "quiz," or "diagnostic." Nerin is a conversational partner, not an assessor. Results are a "portrait," not a "report." The entire user-facing vocabulary should be warm and personal.
+
+**5. Performance anxiety**
+Any UX signal that implies answers can be "wrong" or that the user is performing poorly undermines the experience. Drawing from Journey's no-fail-state principle: the conversation has no wrong paths, no bad answers, no judgment. The depth meter shows conversation progress (turn count), not performance. A shallow answer isn't punished — Nerin simply adjusts and finds another angle.
+
+**Design implication:** No error states in conversation. No "try to be more detailed" prompts. No visible scoring or quality indicators on user responses. The pacing system adapts silently. If the user coasts, Nerin meets them where they are without signaling disappointment.
 
 ### Design Inspiration Strategy
 
-- **Visual Direction:** Bold Personality Over Conservative Minimalism
-- Adopt: Memorable tribal identity, playful illustration, bold color
-- Adapt: Headspace calm → big-ocean richness, Figma enterprise → bold consumer
-- Avoid: Corporate sterility, cold minimalism, reductive archetypes
+**Adopt directly:**
+- Headspace's environment-as-sanctuary approach for the conversation space
+- ChatGPT's conversational warmth and follow-up depth as Nerin's personality baseline
+- 16Personalities' glanceable identity model for the personality card and portrait
+- 16Personalities' share-first design philosophy for every results touchpoint
+- Hinge's comparison notification framing — lead with the most emotionally resonant insight
+- Journey's no-fail-state principle — no wrong answers, no performance anxiety
 
-### Big-Ocean's Distinct Visual Identity
+**Adapt for big-ocean's unique needs:**
+- Headspace's geometric/simple aesthetic → big-ocean's psychedelic/saturated palette with geometric shapes (bolder, more identity-forward than Headspace's calm neutrals)
+- ChatGPT's conversational flow → add Nerin's proactive observations, adaptive pacing, and emotional intelligence layer
+- 16Personalities' archetype profiles → evidence-linked, personalized narrative instead of generic type descriptions
+- Headspace's content library → personality-grounded articles and science explainers (future, not MVP)
+- Hinge's user-curated prompts → user-selected conversation highlights on public profile + relationship analysis highlights relevant messages from both conversations
+- Journey's visual arc → ambient visualization evolving across three conversation acts (explore implementation feasibility)
+- Journey's scale shift at summit → portrait reveal as visual expansion (explore implementation feasibility)
 
-**Design Philosophy: Warm, Bold, Personality-First** — Bold colors, warm tone, celebratory, playful, scientific, alive.
-
-### Shared-Link-Only Community Model: Privacy-First by Architecture
-
-No platform directory. Organic sharing through unique URLs. Privacy fortress, authentic connection, controlled growth.
-
----
+**Avoid explicitly:**
+- Claude's conversational coldness and passive response style
+- Facebook's social graph mechanics (friend counts, mass connections, public lists)
+- Quiz-app disposability (take once, share, forget)
+- Clinical/diagnostic framing and vocabulary
+- Any UX that makes connections feel cheap or mass-produced
+- Any UX that implies performance anxiety or wrong answers
 
 ## Design System Foundation
 
-### Design System Choice: shadcn/ui + Tailwind CSS v4
+### Design System Choice
 
-**Selected Approach:** Themeable System (shadcn/ui + Tailwind CSS v4)
+**shadcn/ui + Tailwind CSS v4 + Radix UI** — already established and actively used.
 
-### Rationale for Selection
+This is a themeable system approach that provides the ideal balance for big-ocean: proven, accessible component primitives from Radix UI, the flexibility of Tailwind utility classes for custom surfaces, and shadcn/ui's composable component architecture that can be extended without forking.
 
-1. Perfect Tech Stack Alignment (already using Tailwind CSS v4, React 19, TanStack Start)
-2. Extreme Customization for Bold Identity (headless components, full control)
-3. Speed to MVP (pre-built battle-tested components)
-4. Supports Visual Goals (vibrant palettes, gradients, responsive, animation)
-5. Long-Term Viability (active community, composable, scalable)
+### Current System Inventory
 
-### Implementation Approach
+**Foundation:**
+- **Component library:** shadcn/ui components in `packages/ui/src/components/`
+- **Styling engine:** Tailwind CSS v4 with CSS custom properties
+- **Primitives:** Radix UI for accessible interaction patterns
+- **Variant system:** CVA (class-variance-authority) for component variants
+- **State management:** Data attributes (`data-state`, `data-slot`) per FRONTEND.md conventions
+- **Utility:** `cn()` for class merging
 
-- Phase 1: Theme & Color System (Tailwind theme, typography, spacing)
-- Phase 2: Component Library (core shadcn/ui + custom components)
-- Phase 3: Design Tokens (colors, spacing, typography, shadows, animations)
+**Design Tokens (defined in `packages/ui/src/styles/globals.css`):**
+
+| Token Category | Light Mode | Dark Mode | Notes |
+|---|---|---|---|
+| **Surfaces** | Warm cream (`#FFF8F0`) | Abyss navy (`#0A0E27`) | "Psychedelic celebration" ↔ "Midnight aurora" |
+| **Primary** | Electric pink (`#FF0080`) | Lavender (`#A78BFA`) | Dramatically different per mode — identity-forward |
+| **Secondary** | Orange (`#FF6B2B`) | Emerald (`#34D399`) | |
+| **Tertiary** | Teal (`#00B4A6`) | Hot pink (`#FF2D9B`) | |
+| **Big Five traits** | 5 trait colors + 5 accent pairs | Brightened variants for dark bg | Full OKLCH color space with gradient pairs |
+| **30 facets** | 6 per trait, stepped lightness | Dark mode adjusted | Comprehensive facet-level color system |
+| **Gradients** | Celebration, progress, surface glow | Midnight aurora variants | |
+| **Depth zones** | Warm cream progression | Abyss navy progression | For layered depth in UI |
+| **Conversation** | Bubble, embed, input, avatar tokens | Dark variants with transparency | Chat-specific design tokens |
+| **Typography** | Space Grotesk (headings), DM Sans (body), JetBrains Mono (data) | Same fonts | Three-font system |
+| **Spacing** | 4px base, 8-step scale | Same | Consistent spacing tokens |
+| **Radius** | Context-specific (button 12px, card 16px, dialog 24px, hero 32px, chat bubble 16px) | Same | Purpose-driven radius scale |
+
+### Rationale for Current Choice
+
+shadcn/ui is the right foundation for big-ocean because:
+
+1. **Composability over configuration.** shadcn components are copied into the project, not installed as dependencies. Every component can be extended, modified, or combined without fighting a library's API constraints. Critical for the unique surfaces big-ocean needs.
+
+2. **Radix UI accessibility for free.** Dialog, collapsible, accordion, checkbox — all come with ARIA patterns, keyboard navigation, and focus management built in. Especially important for a 30-45 minute mobile conversation where accessibility failures compound.
+
+3. **Tailwind alignment.** The entire design token system is already CSS custom properties consumed by Tailwind. No abstraction mismatch between the styling engine and the component library.
+
+4. **Extend, don't fork.** The strategy for unique surfaces (ambient visualization, personality portrait, personality card) is to build custom components using Tailwind, reusing and extending shadcn primitives where applicable.
 
 ### Customization Strategy
 
-- Archetype Color System (5 traits × bold color + accent)
-- Custom Component Styling (Tailwind utility-first)
-- Extending shadcn/ui (composition, variants)
-- Brand Consistency (archetype colors, gradients, typography, animation)
+**Extend shadcn components for:**
+- Chat bubbles and conversation UI (already started with conversation tokens and `nerin-prose` styles)
+- Results page components (trait displays, facet cascades, score visualizations)
+- Share/QR flows (personality card, relationship QR drawer)
+- Any UI that builds on standard patterns (dialogs, cards, forms, navigation)
 
-### Accessibility & Performance
+**Custom-build with Tailwind for:**
+- Ambient ocean/geometric visualization (already started with `geometric-ocean-layer`)
+- Personality portrait generative visual
+- Portrait reveal transition/choreography
+- Depth meter and milestone indicators
+- Any surface that has no standard component analogue
 
-- ARIA labels and semantic HTML via shadcn/ui
-- Responsive design, dark mode support
-- Optimized bundle size, component-level code splitting
+### Animation Strategy
 
----
+**Existing animations** (in `globals.css`):
+- Ocean/ambient: `wave`, `caustic`, `bubble`, `bubbleRise`
+- Entrance: `fadeInUp`, `fade-in`, `float`
+- Geometric: `shape-reveal`, `breathe`, `bob`
+- Results: `traitPairEnter/Exit`, `facetCascade`, `shapeReveal`
+- Utility: `pulse-highlight`
+- Accessibility: `prefers-reduced-motion` respected throughout
 
-## Core Experience: The 30-Minute Conversation with Nerin
+**Tier 1 — MVP (CSS + timing):**
 
-### Defining Experience: Conversational Assessment as Self-Discovery
+| Animation Need | Implementation | Priority |
+|---|---|---|
+| **Conversation pacing / held silence** | Deliberate delay before Nerin's message renders + CSS transition on ambient visualization during the pause. This is a timing problem, not an animation problem — `setTimeout` + CSS class transition. | High |
+| **Depth meter transitions** | CSS transitions on height/fill with custom easing curve. Subtle glow pulse on milestone hits. | High |
+| **Basic portrait reveal** | CSS keyframe sequence — fade/scale transitions for portrait visual, archetype name, and opening narrative appearing in order. | High |
 
-**Core Interaction:** User sits down with Nerin for a 30-minute dialogue about their life, personality, experiences, and relationships. Through natural conversation, Nerin helps the user discover who they truly are.
+**Tier 2 — Post-launch iteration:**
 
-**What Users Will Tell Friends:** *"I had this conversation with an AI and it actually understood me. It noticed things I didn't consciously know about myself."*
+| Animation Need | Implementation | When |
+|---|---|---|
+| **Orchestrated portrait reveal** | Evaluate Framer Motion (~30KB) for `AnimatePresence`, `staggerChildren` — upgrades reveal from "good" to "magical." Decision deferred until user feedback validates the investment. | After launch data |
+| **Ambient energy response** | CSS custom properties to shift ocean's color temperature, animation speed, and opacity based on conversational energy. GPU-friendly, no layout thrashing. | After launch |
+| **Share card animation stills** | Dynamic social preview image generation derived from personality portrait. | After launch |
 
-**Critical Success Criteria:**
-- User feels genuinely understood
-- Conversation feels natural
-- Progress is tangibly visible
-- Nerin reveals patterns
-- Results feel shareable
-- Emotional safety throughout
+**Tier 3 — Future:**
 
-### User Mental Model
+| Animation Need | Implementation | When |
+|---|---|---|
+| **Canvas/WebGL ambient visualization** | Evaluate Canvas 2D or WebGL for fluid, real-time responsive ocean. Only if CSS custom property approach proves insufficient. | Post-MVP |
+| **Generative portrait animations** | Portrait that breathes/moves — living identity object. | Post-MVP |
+| **Micro-interactions** | Polish layer — button states, scroll behaviors, page transitions. | Post-MVP |
 
-**What users expect:** "I'm taking a personality test"
-**What they hope for:** "Someone actually understands me"
-**What they fear:** Generic results, robotic responses, judgment, wasted time
-**What makes them stay:** Visible progress, surprise moments, being heard, safety
+**Performance budget:**
+- < 5% CPU usage from animations during conversation (mid-range Android target: Snapdragon 6 Gen 1)
+- All animations on `transform` and `opacity` only — no layout thrashing
+- `will-change` on animated elements, used sparingly
+- `prefers-reduced-motion` kills all non-essential animations
+- No animation library added to MVP bundle — CSS only
 
-### Experience Mechanics: Step-by-Step Flow
+### Design Token Evolution
 
-#### Phase 1: Invitation to Begin (Before Assessment)
-- Warm, inviting intro; one-click to begin; Nerin's first message appears
+The token system is comprehensive. Areas to extend as new surfaces are built:
 
-#### Phase 2: First Contact (0-2 minutes) — THE CRITICAL MOMENT
-- First Nerin message sets tone (warm, curious, NOT robotic)
-- Simple text input like messaging app
+- **Animation tokens:** Standardize duration and easing curves (e.g., `--duration-fast: 150ms`, `--duration-normal: 300ms`, `--ease-conversation: cubic-bezier(...)`)
+- **Ambient visualization tokens:** Color, opacity, and motion tokens for the ocean system's responsive behavior (Tier 2)
+- **Portrait tokens:** Colors and gradients specific to the generative personality portrait
+- **Comparison tokens:** Visual language for relationship analysis (complementary vs. contrasting trait displays)
 
-#### Phase 3: Dialogue & Understanding Building (2-28 minutes)
-- Contextual responses, not pre-written script
-- Precision meter visible and updating (34% → 41% → 56% → 63% → 72%)
-- Active contradiction exploration (the "aha" moments)
-- Coaching tone throughout
-- Key conversation moments at 5min, 15min, 22min, 28min
+## Defining Experience
 
-#### Phase 4: Results Reveal (28-30 minutes) — THE CELEBRATION
-- Precision reaches 70%+ threshold — celebratory notification
-- Archetype reveal with animated transition
-- Private profile depth with conversation evidence
-- Evidence-based transparency ("show your work")
-- Precision transparency + two clear CTAs
+### 7.1 The One-Liner
 
-#### Phase 5: Continuation (Optional)
-- Same interface continues; Nerin shifts to contextual exploration
-- Session flexibility with pause/resume
+**Marketing line:** "30 minutes to know yourself and others better"
 
-### Critical Design Principles for Nerin Conversation
+**Word-of-mouth line:** "I had a conversation with an AI and it showed me something about myself I'd never put into words."
 
-1. Real Understanding Through Contradiction
-2. Visible Progress as Engagement Driver
-3. Coaching Tone, Not Diagnostic
-4. Revelation, Not Just Confirmation
-5. Emotional Safety
-6. Depth Through Length
-7. Precision as Meaningful Milestone
-8. Shareable Results
+The marketing line sets the time-and-value expectation for landing pages and ads. The word-of-mouth line is what users actually say to friends — design the experience to produce this sentence organically.
 
----
+### 7.2 How Users Will Describe It
+
+Users will describe big-ocean as "a conversation that sees you" — not a test, not a quiz, not a chatbot. The differentiator in their retelling will be Nerin's observations ("she said something about how I talk about my friendships vs. my work and I'd never thought about it that way") and the portrait ("it was like reading a letter from someone who actually listened"). The OCEAN code and trait data are supporting evidence; the portrait is the emotional artifact they share.
+
+### 7.3 User Mental Model
+
+**Arriving expectation:** Users arrive thinking it's a personality test (quiz format, quick results) or a relationship analyzer (input two names, get compatibility). The 16Personalities mental model is dominant — answer questions, get a 4-letter code, share it.
+
+**Reality shift:** Instead of questions, they get a conversation. This mental model gap is the most dangerous UX moment. If Nerin's first message feels like a chatbot greeting, the quiz expectation hardens. The first message must break the frame in 3 seconds — it should feel like walking into a room where someone interesting is already mid-thought, not like receiving an automated welcome.
+
+**When the shift happens:** During the first 3-4 turns Nerin asks. By turn 4, the user should have stopped thinking "when do I get my results?" and started thinking "this is actually interesting."
+
+**Persona-specific hooks:** The hook works differently for each persona. Self-understanding seekers respond to Nerin's tone and conversational quality. Relationship explorers respond to ease — they answer before realizing they're in the assessment. Skeptics respond to intellectual respect — Nerin not being obvious earns their attention.
+
+### 7.4 Success Criteria
+
+**Success states:**
+1. User forgets they're being assessed and engages authentically
+2. User experiences at least one "how did you know that?" moment from Nerin
+3. User completes all turns without checking how many are left
+4. User's portrait feels deeply personal — not generic, not interchangeable
+5. User screenshots or shares their portrait within 24 hours
+
+**Failure states:**
+1. User gives surface-level answers throughout, treating it as a quiz to finish
+2. User checks turn count repeatedly — the conversation feels like a task
+3. User completes 25 turns and the results feel generic — worse than a dropout because it generates active negative word-of-mouth
+4. The portrait paywall breaks the emotional arc instead of extending it
+5. User can predict what their results will say before seeing them
+
+### 7.5 Four-Beat Defining Experience
+
+The defining experience follows a four-beat rhythm. All four must land for the product to work:
+
+**Beat 1 — The Hook (turns 1-3):** Nerin says something that makes the user think "this isn't what I expected — this is better." The quiz expectation breaks. The conversation frame takes hold.
+
+**Beat 2 — The Mirror (turns 8-18):** Nerin reflects something back that the user didn't consciously know about themselves. The "how did you know that?" moment. This is where trust converts to emotional investment. The depth engagement system, ambient visualization, and Nerin's observations must actively earn continued engagement through this mid-conversation zone. Nerin's observations serve double duty: they build trust AND they build portrait anticipation. Each observation is a preview of the portrait's depth — by turn 18, the user should sense that Nerin has been paying attention to everything and the portrait must be incredible.
+
+**Beat 3 — The Free Reveal (post-conversation):** Archetype name, description, evidence-linked narrative, trait/facet data — all free. This proves the system works. The user sees their conversation reflected back accurately. Trust is at its peak. The free layer must feel **accurate but incomplete** — like seeing your reflection in a window vs. in a mirror. Data and evidence confirm "yes, this system understood me." But the narrative thread — the meaning of those patterns, the connections between them, what they say about who the user is becoming — lives exclusively in the portrait. The results page layout should be designed portrait-first, with the portrait as the centerpiece behind the curtain. The free elements surround it — archetype above, evidence alongside, data below. When the portrait is locked, the page feels complete-but-missing-its-heart.
+
+**Beat 4 — The Portrait (PWYW curtain):** The portrait — Nerin's personal letter to the user — sits behind a PWYW gate (€1 minimum). The founder's own portrait serves as the conversion bridge: "I built big-ocean because of what Nerin wrote for me. Before you read yours, here's mine." This is personal vulnerability, not a product demo — the founder's willingness to be fully seen IS the conversion mechanism. The founder portrait should be a curated excerpt (30-60 seconds to read), showing the most emotionally resonant passage to demonstrate depth — A/B test which specific excerpt maximizes conversion (the highest-converting passage makes readers imagine their own version). The free results prove accuracy; the founder's portrait proves depth; the payment is a gesture of acceptance, not a transaction. Framing: "Nerin wrote you a portrait. Pay what you feel it's worth." The portrait already exists — the user isn't buying its creation, they're receiving something made for them.
+
+### 7.6 Portrait as the Emotional Peak
+
+The portrait IS the defining artifact of big-ocean — what no competitor offers. 16Personalities has archetype + description + data. ChatGPT gives generic responses unless pushed. Neither produces a personal letter written by an entity that spent 30-45 minutes listening. The portrait is:
+
+- A continuation of the conversation in Nerin's voice — same entity, not a clinical report by a different voice
+- Must reference 2-3 specific things from the user's conversation — recognizably their words and situations
+- Connects patterns the user didn't connect themselves
+- Every portrait must feel unreproducible for anyone else — one generic or Barnum-effect statement converts skeptics from advocates to active detractors
+- Should identify one specific unexplored thread from the conversation — a half-open door that seeds genuine curiosity for conversation extension, without feeling like a cliffhanger or withholding tactic. The portrait must feel COMPLETE while leaving one door ajar.
+
+**Portrait quality is non-negotiable.** A disappointed completer who paid is the worst possible outcome — active negative word-of-mouth from someone who invested 30-45 minutes AND money.
+
+### 7.7 Monetization Architecture
+
+**Progressive unlock model:**
+
+| Layer | Access | What It Contains |
+|-------|--------|-----------------|
+| **Free** | All completers | Archetype + description + evidence snippets + trait/facet data |
+| **Portrait** | PWYW €1 minimum | Nerin's personal letter + 1 relationship credit |
+| **Relationship credit** | €5 per additional credit | Comparison analysis with someone who matters |
+| **Conversation extension** | €25 one-time | 25 additional turns with Nerin for deeper exploration |
+
+**PWYW modal framing:**
+> *Nerin wrote you a portrait — a personal letter about who you are, drawn from everything you shared.*
+>
+> *Your payment also includes one relationship analysis credit.*
+>
+> *Pay what you feel it's worth — €1 minimum.*
+
+The portrait is the emotional headline. The relationship credit is the practical hook that converts fence-sitters — especially relationship explorers who came for the comparison. The founder's vulnerability and Vincent's example portrait demonstrate the depth and specificity of what the user is unlocking.
+
+**Payment implementation:** Polar embedded checkout (modal overlay, no redirect) with Apple Pay / Google Pay priority for one-gesture payment. On `success` event, portrait unfolds. The user never leaves the results page. Polar natively supports PWYW pricing with minimum price. Domain validation required for wallet payment methods.
+
+**Portrait unlock button for deferred payers:** Portrait is generated and stored at conversation completion, not on-demand. If the user returns later, the portrait is waiting. A portrait unlock button visual signals something personal already exists. Email recapture: "Nerin's portrait is waiting for you."
+
+### 7.8 Relationship Credit System
+
+**Credit lifecycle:**
+
+| Event | Credit Change |
+|-------|-------------|
+| Portrait PWYW payment (first time only) | +1 |
+| €5 credit purchase | +1 |
+| Relationship analysis accepted (scanner pays) | -1 (consumed) |
+
+Credits never expire. One free credit per account with first portrait purchase.
+
+**Two Polar products:**
+1. Portrait — PWYW, €1 minimum, one-time (includes 1 relationship credit)
+2. Relationship credit — fixed €5, purchasable multiple times
+
+**€5 prices intention, not features.** The platform values meaningful relationships — the price should be high enough that users are deliberate about who they compare with. Partners, best friends, siblings — not casual curiosity.
+
+**Connection model:** Both users must have completed assessments. User A generates a temporary QR code (from results page or dashboard). User B scans the QR, sees User A's archetype card, and accepts the analysis (spending their own credit). No invitation flow, no pending states. QR-only, in-person or shared URL. See Journey 2 (§10.2) for full flow details.
+
+**Viral loop:**
+```
+User A completes assessment → shares archetype card
+    ↓
+User B sees card → signs up → completes assessment (Journey 1)
+    ↓
+User A and B meet → QR scan → relationship analysis (€5, scanner pays)
+    ↓
+Both experience the relationship analysis → talk about it
+    ↓
+User B shares their archetype card → User C signs up
+    ↓
+...each new user feeds the growth loop through sharing
+```
+
+### 7.9 Novel UX Patterns
+
+**Familiar-adapted:**
+- Conversational interface (familiar from messaging apps, adapted: no timestamps, no avatars, ambient environment)
+- Profile sharing (familiar from social platforms, adapted: generic archetype card with visibility toggle at share moment)
+- PWYW pricing (familiar from indie games/music, adapted: embedded modal checkout with wallet payments, no redirect)
+
+**Genuinely novel:**
+- Assessment invisibility — the user is being scientifically assessed but the UX never reveals this
+- Energy-responsive ambient visualization — responds to conversational energy, not personality dimensions
+- Depth meter as conversation progress — vertical bar with turn-based milestones at 25/50/75%, showing how far through the conversation
+- Evidence-linked personality narrative — results reference specific things the user said
+- Conversation highlights — user-selected moments from the conversation surfaced in results and relationship analysis
+- Founder portrait as conversion bridge — not a product demo, a personal artifact that previews emotional weight
+- Portrait passage highlighting — mark and share specific passages as visual artifacts
+- Progressive unlock results page — layers reveal as user invests (free → portrait → social → extension)
+- Paywall as commitment filter — €1 filters for users who genuinely value the experience, purifying the viral loop
+
+### 7.10 Experience Mechanics
+
+**1. Initiation:**
+- User arrives via landing page, shared personality card, or public profile
+- Auth-gate collects email (minimal friction, enables recapture)
+- Nerin's first message IS the onboarding — no tutorial, no explainer
+- First message breaks the quiz mental model immediately
+
+**2. Interaction:**
+- 25-turn guided conversation with three-act arc (Settling In → Deep Exploration → Convergence)
+- Pacing system adapts to engagement depth (light vs. deep seekers)
+- Depth meter (vertical bar) and ambient visualization provide non-numeric progress
+- Nerin's observations surface patterns, build trust, and build portrait anticipation simultaneously
+- Save-and-resume with email recapture for interrupted sessions
+
+**3. Transition:**
+- Nerin's final message plants the seed — signals she has formed a perspective, builds anticipation without being explicit about the portrait
+- 3-5 second breath — ambient visualization shifts, environment transforms
+- Portrait is generated only after payment (LLM generation cost) — the "breath" is a designed pause for emotional transition, not buffering
+- The user is emotionally primed: trust is high, curiosity peaked
+
+**4. Free Reveal:**
+- Archetype name + description + evidence-linked snippets + trait/facet data
+- Evidence snippets display life domain tags as subtle metadata (e.g., small label: "work", "relationships", "daily life") — helps user understand the source context of each observation
+- Life domains are NOT surfaced as a taxonomy or breakdown — Nerin naturally references domain-specific patterns in conversation and portrait when they're meaningful
+- Proves accuracy, creates intellectual satisfaction
+- Story gap visible — data is there but meaning is missing
+- Portrait space is the focal point of the layout — visibly waiting
+
+**5. Portrait Curtain:**
+- Founder's portrait (curated excerpt, 30-60s read) as personal vulnerability bridge
+- PWYW gate: founder's love letter + Vincent's portrait as example + relationship credit mention. Polar embed, default €5, min €1
+- Polar embedded checkout — modal overlay, Apple Pay/Google Pay, `success` event triggers portrait unfold
+- Server-side payment verification before serving portrait content (success event → Polar API verify → serve)
+- Portrait unlock button visual for deferred payers, email recapture for return visits
+
+**6. Post-Portrait:**
+- Portrait passage highlighting for sharing
+- Personality card always shareable
+- 1 free relationship credit unlocked (first portrait purchase only)
+- Additional relationship credits available (€5 each)
+- Conversation extension (€25) seeded by portrait's half-open door
+
+### 7.11 The Reverse-Engineered Chain
+
+Every link must hold — if any breaks, downstream conversion fails:
+
+```
+Turn 1-3: Hook breaks quiz expectation → user engages authentically
+    ↓
+Turn 8-18: Nerin's observations build trust AND portrait anticipation
+    ↓
+Turn 25: Nerin's final message signals "I have something to share"
+    ↓
+Transition: 3-5 second breath, environment shifts, portrait already generating
+    ↓
+Free reveal: Archetype + evidence + data = accuracy proof, story gap visible
+    ↓
+Founder portrait: Personal vulnerability demonstrates format depth
+    ↓
+PWYW gate: Founder's love letter + example portrait + 1 relationship credit. Polar embed, one gesture.
+    ↓
+Portrait unfolds: Nerin's voice, specific references, unreproducible, half-open door
+    ↓
+Screenshot + share: Passage so resonant it demands sharing
+    ↓
+Share: Archetype card enters friend group vocabulary
+    ↓
+New user signs up via shared card → completes assessment (Journey 1)
+    ↓
+Portrait purchase (PWYW) → gets 1 relationship credit
+    ↓
+QR scan → relationship analysis → shared reading experience
+    ↓
+Loop compounds: Each portrait payment funds the next relationship analysis
+```
+
+**PWYW amount as product metric:** Track payment amounts as a quality signal. Average payment above €1 minimum indicates emotional resonance; payments clustering at €1 may signal the portrait isn't landing.
 
 ## Visual Design Foundation
 
-### Color System
-
-**Design Philosophy:** Psychedelic, bold, saturated — a visual identity that feels alive, distinctive, and unmistakably "big-ocean."
-
-#### Light Mode Palette
-
-| Token | Name | Hex | Usage |
-|-------|------|-----|-------|
-| `--primary` | Electric Pink | `#FF0080` | Primary CTAs, brand accent, active states |
-| `--primary-hover` | Neon Fuchsia | `#FF1493` | Hover/pressed states |
-| `--secondary` | Vivid Orange | `#FF6B2B` | Secondary actions, highlights, warmth signals |
-| `--tertiary` | Saturated Teal | `#00B4A6` | Info, progress bars, trust/science signals |
-| `--background` | Warm Cream | `#FFF8F0` | Page backgrounds |
-| `--surface` | Soft Blush | `#FFF0E8` | Cards, panels, elevated surfaces |
-| `--surface-alt` | Light Peach | `#FFE8D8` | Alternate surface, hover backgrounds |
-| `--foreground` | Deep Charcoal | `#1A1A2E` | Primary body text |
-| `--muted` | Warm Gray | `#6B6580` | Secondary text, captions |
-| `--border` | Blush Border | `#FFD6C4` | Card borders, dividers |
-| `--success` | Ocean Green | `#00C896` | Success states, positive signals |
-| `--warning` | Amber | `#FFB020` | Warning states |
-| `--error` | Coral Red | `#FF3B5C` | Error states, destructive actions |
+### 8.1 Color System
+
+**Dual-theme architecture** with distinct personalities per mode:
+
+**Light Mode — "Psychedelic Celebration"**
+- Background: Warm cream `#FFF8F0` — soft, inviting, not clinical
+- Primary: Electric pink `#FF0080` — bold, energetic, unmistakably branded
+- Secondary: Vibrant orange `#FF6B2B` — warmth, energy
+- Tertiary: Teal `#00B4A6` — calm counterbalance to the warm palette
+- Borders/inputs: Peach-tinted `#FFD6C4` — warm even in structural elements
+- Muted foreground: `#6B6580` — purple-grey, not cold grey
+
+**Dark Mode — "Midnight Aurora"**
+- Background: Abyss navy `#0A0E27` — deep, immersive, oceanic
+- Primary: Lavender `#A78BFA` — softer, contemplative energy
+- Secondary: Emerald `#34D399` — natural, grounded
+- Tertiary: Hot pink `#FF2D9B` — retained vibrancy against dark
+- Borders/inputs: Deep indigo `#252A52` — structural but atmospheric
+- Muted foreground: `#8B85A0` — lavender-grey, consistent with aurora palette
+
+**Semantic color mapping:**
+
+| Token | Light | Dark | Purpose |
+|-------|-------|------|---------|
+| `--primary` | `#FF0080` | `#A78BFA` | CTAs, links, brand emphasis |
+| `--secondary` | `#FF6B2B` | `#34D399` | Supporting actions, accents |
+| `--tertiary` | `#00B4A6` | `#FF2D9B` | Contrast accent, highlights |
+| `--destructive` | `#FF3B5C` | `#FF4D6A` | Errors, destructive actions |
+| `--success` | `#00C896` | `#00E0A0` | Positive feedback |
+| `--warning` | `#FFB020` | `#FFB830` | Caution states |
+
+**Gradients:**
+- `--gradient-celebration`: 3-color sweep (primary → secondary or aurora equivalents) — hero moments, personality card backgrounds
+- `--gradient-progress`: 2-color sweep — progress indicators, depth meter
+- `--gradient-surface-glow`: Radial — subtle surface depth, card hover states
+
+**Depth zones** (4-tier progression for layered surfaces):
+- `--depth-surface` → `--depth-shallows` → `--depth-mid` → `--depth-deep`
+- Light: warm cream deepening toward peach
+- Dark: abyss navy deepening toward indigo
+
+### 8.2 Big Five Trait Color System
+
+Each of the 5 traits has a primary color, accent color, gradient, and 6 facet color variants — 70 color tokens total.
+
+**Trait primaries (OKLCH color space for perceptual uniformity):**
+
+| Trait | Light | Dark | Character |
+|-------|-------|------|-----------|
+| Openness | Purple `oklch(0.55 0.24 293)` | Brighter purple `oklch(0.67 0.20 293)` | Imagination, depth |
+| Conscientiousness | Orange `oklch(0.67 0.20 42)` | Brighter orange `oklch(0.74 0.16 46)` | Warmth, discipline |
+| Extraversion | Electric pink `oklch(0.59 0.27 348)` | Brighter pink `oklch(0.65 0.23 350)` | Energy, boldness |
+| Agreeableness | Teal `oklch(0.67 0.13 181)` | Brighter teal `oklch(0.77 0.14 178)` | Calm, harmony |
+| Neuroticism | Navy `oklch(0.29 0.19 272)` | Brighter indigo `oklch(0.54 0.22 275)` | Depth, intensity |
+
+**Facet colors:** Each trait's 6 facets are distributed along the lightness axis (L step = 0.05) within the same hue family. Dark mode applies a uniform lightness boost (+0.12) for readability on dark backgrounds.
+
+**Trait gradients:** Each trait has a `--gradient-trait-{name}` combining primary → accent at 135deg, providing ready-made visual identity per dimension.
+
+### 8.3 Typography System
+
+**Font stack — three typefaces, distinct roles:**
+
+| Token | Font | Role |
+|-------|------|------|
+| `--font-heading` / `--font-display` | Space Grotesk | Headlines, archetype names, hero text — geometric, modern, distinctive |
+| `--font-body` | DM Sans | Body text, conversation bubbles, descriptions — humanist, highly readable |
+| `--font-data` | JetBrains Mono | Scores, facet values, OCEAN codes, data labels — monospace, precise |
+
+**Type scale (rem-based, 11 sizes):**
+
+| Token | Size | Use |
+|-------|------|-----|
+| `--text-display-hero` | 3.5rem (56px) | Landing page hero, archetype reveal |
+| `--text-display-xl` | 3rem (48px) | Section headers, personality portrait title |
+| `--text-display` | 2.25rem (36px) | Page titles, major headings |
+| `--text-h1` | 1.875rem (30px) | Primary headings |
+| `--text-h2` | 1.5rem (24px) | Secondary headings |
+| `--text-h3` | 1.25rem (20px) | Tertiary headings, card titles |
+| `--text-h4` | 1.125rem (18px) | Subsection headers |
+| `--text-body` | 1rem (16px) | Default body text, conversation messages |
+| `--text-body-sm` | 0.875rem (14px) | Secondary text, metadata |
+| `--text-caption` | 0.75rem (12px) | Labels, timestamps, fine print |
+| `--text-data` | 1rem (16px) | Data values (monospace context) |
+
+**Nerin editorial prose** (`.nerin-prose` class): Dedicated typographic hierarchy for Nerin's chat bubbles — h3/h4 headings, prose paragraphs, lists, and aside elements with controlled spacing and font-family switching between heading and body fonts.
+
+**Line-height tokens (to add):**
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `--leading-tight` | 1.25 | Headings, display text |
+| `--leading-prose` | 1.75 | Portrait section, extended reading |
+
+### 8.4 Spacing & Layout Foundation
+
+**Base unit:** 4px (`--space-1`)
+
+**Spacing scale (9 steps):**
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `--space-1` | 4px | Tight element gaps, icon padding |
+| `--space-2` | 8px | Inline spacing, small gaps |
+| `--space-3` | 12px | Component internal padding |
+| `--space-4` | 16px | Standard padding, card content |
+| `--space-6` | 24px | Section padding, card margins |
+| `--space-8` | 32px | Major section gaps |
+| `--space-12` | 48px | Page section separators |
+| `--space-16` | 64px | Hero spacing, major layout gaps |
+| `--space-24` | 96px | Page-level vertical rhythm |
+
+**Content-width tokens (to add):**
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `--width-conversation` | 640px | Chat interface, message column |
+| `--width-prose` | 65ch | Portrait section, long-form reading |
+
+Additional width tokens (`--width-content`, `--width-wide`) can be added when comparison views and dashboard layouts are built.
+
+**Layout principles:**
+- Mobile-first responsive — most users on phones even on web
+- Spacious, not dense — the product is a personal experience, not a dashboard
+- Generous vertical rhythm — conversation and results pages need breathing room for emotional pacing
+- Touch-optimized — minimum 44px tap targets, thumb-friendly input areas
+
+### 8.5 Radius System
+
+**Component-specific radii (not generic sm/md/lg):**
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `--radius-button` | 12px | Buttons, CTAs |
+| `--radius-input` | 12px | Form inputs, text fields |
+| `--radius-card` | 16px | Cards, panels |
+| `--radius-dialog` | 24px | Modals, dialogs, overlays |
+| `--radius-hero` | 32px | Hero sections, feature cards |
+| `--radius-full` | 9999px | Pills, badges, avatars |
+| `--radius-chat-bubble` | 16px | Nerin's message bubbles |
+| `--radius-chat-sender` | 4px | User's message bubbles (intentional asymmetry: Nerin = rounded/warm, user = sharper/direct) |
+
+### 8.6 Conversation Tokens
 
-**Light Mode Gradients:**
-- **Celebration gradient:** `linear-gradient(120deg, #FF0080, #FF1493, #FF6B2B)` — Pink → Fuchsia → Orange
-- **Progress gradient:** `linear-gradient(90deg, #00B4A6, #00D4C8)` — Teal ramp
-- **Surface glow:** `radial-gradient(circle, #FFF0E8, #FFF8F0)` — Subtle warm depth
+Dedicated token layer for the chat interface — separate from global semantic tokens to allow the conversation to feel like its own environment:
+
+- `--bubble-bg/border/fg`: Message bubble surfaces
+- `--embed-bg/border`: Embedded content within bubbles
+- `--user-avatar-from/to/fg`: User avatar gradient
+- `--input-bar-bg/border`: Conversation input area (semi-transparent overlay)
+- `--input-field-bg/border/color`: Text input styling
+- `--radar-fill/fill-you`: Trait radar chart fills
+- `--bar-track`: Score bar backgrounds
+- `--thread-line`: Conversation threading visual
+- `--share-card-gradient/border`: Share card styling
+
+Dark mode conversation tokens use RGBA transparency for glass-morphism effects against the abyss navy background.
+
+### 8.7 Animation Foundation
 
-#### Dark Mode Palette
-
-| Token | Name | Hex | Usage |
-|-------|------|-----|-------|
-| `--primary` | Saturated Teal | `#00D4C8` | Primary CTAs, brand accent, active states |
-| `--primary-hover` | Bright Teal | `#00EDE5` | Hover/pressed states |
-| `--secondary` | Rich Gold | `#FFB830` | Highlights, premium signals, warmth |
-| `--tertiary` | Hot Pink | `#FF2D9B` | Accents, secondary actions, energy |
-| `--background` | Abyss Navy | `#0A0E27` | Page backgrounds |
-| `--surface` | Deep Navy | `#141838` | Cards, panels, elevated surfaces |
-| `--surface-alt` | Midnight | `#1C2148` | Alternate surface, hover backgrounds |
-| `--foreground` | Warm White | `#F0EDE8` | Primary body text |
-| `--muted` | Muted Lavender | `#8B85A0` | Secondary text, captions |
-| `--border` | Navy Edge | `#252A52` | Card borders, dividers |
-| `--success` | Mint | `#00E0A0` | Success states |
-| `--warning` | Gold | `#FFB830` | Warning states |
-| `--error` | Neon Coral | `#FF4D6A` | Error states |
-
-**Dark Mode Gradients:**
-- **Celebration gradient:** `linear-gradient(120deg, #00D4C8, #FFB830, #FF2D9B)` — Teal → Gold → Pink
-- **Progress gradient:** `linear-gradient(90deg, #00D4C8, #00EDE5)` — Teal ramp
-- **Surface glow:** `radial-gradient(circle, #1C2148, #0A0E27)` — Subtle depth
-
-**Dark Mode Gold Principle:** Gold is punctuation, not surface. Teal carries dark mode as the primary accent. Gold appears exclusively at moments of achievement.
-
-#### Dark Mode Personality Shift
-
-Dark mode is not simply "inverted light mode" — it's the **deep-ocean version.** Light mode is the sunlit surface — warm, energetic, pink-and-orange psychedelic energy. Dark mode is the midnight zone — cool, mysterious, teal-and-gold bioluminescence.
-
-#### Dual Color Modes by Intent
-
-- **Celebration contexts:** Complementary vibrating pairs — Electric Pink on Teal, Orange on Navy
-- **Reading contexts:** Analogous harmonious pairs — text on muted backgrounds, comfortable contrast
-
-#### Archetype Trait Colors
-
-| Trait | Shape | Primary | Accent | Gradient |
-|-------|-------|---------|--------|----------|
-| **O — Openness** | Circle | `#A855F7` Purple | `#FFB830` Gold | Purple → Gold |
-| **C — Conscientiousness** | Half Circle | `#FF6B2B` Orange | `#00B4A6` Teal | Orange → Teal |
-| **E — Extraversion** | Tall Slim Rectangle | `#FF0080` Electric Pink | `#FF6B2B` Orange | Pink → Orange |
-| **A — Agreeableness** | Triangle | `#00B4A6` Teal | `#00E0A0` Mint | Teal → Mint |
-| **N — Neuroticism** | Diamond | `#1c1c9c` Navy | `#00D4C8` Teal | Navy → Teal |
-
-#### Color Saturation as Data Encoding
-
-- **Low scores:** Desaturated, muted versions of the trait color
-- **High scores:** Fully saturated, almost glowing
-- **Confidence level:** Opacity encodes confidence
-
-#### Accessibility Compliance
-
-- All text/background combinations meet WCAG AA minimum
-- Vibrating complementary pairs reserved for non-text celebration surfaces
-- Interactive elements have distinct focus states (not color-only)
-- Color is never the sole indicator of state
-
----
-
-### OCEAN Geometric Identity System
-
-**Design Philosophy:** The Big Five framework encoded into 5 geometric shapes — one per OCEAN trait.
-
-#### Shape Definitions
-
-| Letter | Trait | Shape | Rationale |
-|--------|-------|-------|-----------|
-| **O** | Openness | Circle | Wholeness, expansiveness |
-| **C** | Conscientiousness | Half Circle | Structure, precision |
-| **E** | Extraversion | Tall Slim Rectangle | Solid presence, energy |
-| **A** | Agreeableness | Triangle | Harmony, balance |
-| **N** | Neuroticism | Diamond | Pressure-formed, sensitivity |
-
-#### Brand Mark Usage
-
-**Logo:** "big-" in Space Grotesk bold, followed by 5 geometric shapes inline replacing "ocean."
-
-#### Geometric Personality Signature
-
-Each user's OCEAN code renders as their unique signature — Shape = Trait, Size = Level, Fill = Trait color.
-
-#### Results Reveal Animation
-
-5 shapes animate in sequence (O → C → E → A → N), ~200ms stagger, scaling to final size with color fill.
-
-#### Decorative & Structural Use
-
-Section dividers, loading states, background patterns, navigation markers, data visualization markers.
-
----
-
-### Hero & Key Surfaces: Color Block Composition
-
-Bold geometric color blocks with hard edges, asymmetric layout, OCEAN shapes as blocks, content overlaying blocks.
-
-- **Light Mode Hero:** Electric Pink dominant, Teal secondary, Orange accent on Warm Cream
-- **Dark Mode Hero:** Teal dominant, Navy secondary, Gold accent on Abyss Navy
-
----
-
-### Typography System
-
-| Role | Font Family | Weight Range | Rationale |
-|------|-------------|-------------|-----------|
-| **Headings / Display** | **Space Grotesk** | 500–700 | Geometric, modern, distinctive |
-| **Body** | **DM Sans** | 400–600 | Clean, excellent readability |
-| **Monospace** | **JetBrains Mono** | 400 | Data display, precision scores |
-
-Type scale from `display-hero` (56-64px) through `caption` (12px).
-
----
-
-### Data Visualization Style
-
-Organic data forms — wave-inspired shapes, color saturation encoding, facet constellation maps, OCEAN shapes as chart markers. Character-as-data pattern for archetype characters.
-
----
-
-### Illustration & Imagery System
-
-**MVP Illustration Scope:** 1 character (The Diver), 3-4 SVG decorative elements, ocean icon set, OCEAN geometric shapes.
-
-**Chat Interface Visual Calm:** Calmest expression of brand identity — minimal decoration, generous padding, psychedelic energy only in milestone toasts and results transition.
-
----
-
-### Credibility Gradient Pattern
-
-Pages transition from psychedelic/emotional at top to structured/scientific at depth: Hero → Overview → Detail → Evidence.
-
----
-
-### Spacing & Layout Foundation
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| `space-1` | 4px | Tight spacing |
-| `space-2` | 8px | Inline gaps |
-| `space-4` | 16px | Standard padding |
-| `space-6` | 24px | Section gaps |
-| `space-8` | 32px | Section spacing |
-| `space-12` | 48px | Major breaks |
-| `space-16` | 64px | Page-level spacing |
-| `space-24` | 96px | Hero sections |
-
-Layout: Mobile-first, 12-column grid, max-width 1200px, generous breathing room, rounded everything.
-
-| Element | Radius |
-|---------|--------|
-| Buttons | 12px |
-| Cards | 16px |
-| Modals | 24px |
-| Hero containers | 32px |
-| Chat bubbles | 16px (4px sender corner) |
-
----
-
-### Accessibility Considerations
-
-- WCAG AA color contrast for all text
-- `prefers-reduced-motion` respected for all animations
-- High-contrast focus rings on all interactive elements
-- Minimum 44x44px touch targets
-- All typography in rem units
-- Decorative elements `aria-hidden`; meaningful content accessible
-- Color never sole indicator of state
-
----
-
-## Design Direction Decision
-
-### Design Directions Explored
-
-Seven distinct visual directions were generated and evaluated:
-1. Psychedelic Poster — Maximum color block composition with OCEAN shapes as large background art
-2. Ocean Depths — Dark-first bioluminescent aesthetic
-3. Warm Conversational — Cream-forward, colors as accents only
-4. Geometric Grid — OCEAN shapes defining page layout grid
-5. Magazine Editorial — Typography-forward with dramatic display sizes
-6. Split Register — Dual psychedelic/scientific register
-7. Coral Reef — Organic fluid blobs and flowing gradients
-
-Interactive showcase: `_bmad-output/planning-artifacts/ux-design-directions.html`
-
-### Chosen Direction
-
-**"Psychedelic Editorial"** — A hybrid combining elements from four directions, refined through SCAMPER creativity analysis:
-
-- **Primary: Psychedelic Poster** — Floating OCEAN geometric shapes as bold background composition elements. Hard-edge color blocks for hero and celebration surfaces. Maximum brand impact through shape and color.
-- **Typography: Magazine Editorial** — Large display typography (64-80px+) for hero moments and archetype reveals. Space Grotesk at dramatic scale. Confident, asymmetric text placement that lets typography carry personality.
-- **Background Texture: Blurred OCEAN Shapes** — Instead of generic organic blobs, blur the actual trait shapes (circle, triangle, diamond, half-circle, rectangle) in the background for calm reading contexts. A blurred purple circle is still recognizably "Openness." Brand reinforcement even in the calm register — chat interface, evidence panels, facet detail pages.
-- **Data Display: Warm Conversational Cards** — Rounded cards with trait-color gradient-fade top borders (not flat accent lines — color fades softly from the accent border into the card background). Soft shadows, generous padding, approachable warmth.
-
-### Dark Mode: Bioluminescent Hue-Shift
-
-Dark mode colors don't just desaturate — they **shift hue** to create authentic bioluminescent variants. Deep-sea creatures don't have the same colors as surface creatures.
-
-| Trait | Light Mode | Dark Mode (Hue-Shifted) | Shift |
-|-------|-----------|------------------------|-------|
-| **O — Openness** | `#A855F7` Purple | `#7C3AED` Deep Violet | Purple → deeper violet |
-| **C — Conscientiousness** | `#FF6B2B` Orange | `#D4940A` Dark Amber | Orange → warm amber |
-| **E — Extraversion** | `#FF0080` Electric Pink | `#9B1B8C` Deep Magenta | Pink → magenta/violet |
-| **A — Agreeableness** | `#00B4A6` Teal | `#0D9488` Deep Teal | Stays teal (already dark-friendly) |
-| **N — Neuroticism** | `#1c1c9c` Navy | `#1E1B4B` Abyss Indigo | Navy → deeper indigo |
-
-**Background shapes in dark mode:** OCEAN shapes at 15-25% opacity with subtle luminous edge glow (1px blur in the hue-shifted color). Bioluminescent organisms in the deep ocean.
-
-**Floating shapes opacity:**
-- Light mode: 20-40% opacity, full saturation
-- Dark mode: 15-25% opacity, hue-shifted, soft glow edges
-
-### Micro-Animated OCEAN Shapes (Experimental)
-
-Floating OCEAN shapes drift with subtle sea-creature-like behavior:
-
-| Shape | Movement Pattern | Inspiration | Speed |
-|-------|-----------------|-------------|-------|
-| **Circle (O)** | Slow pulsing drift, gentle size oscillation | Jellyfish pulse | 40-60s loop |
-| **Half-Circle (C)** | Steady horizontal glide, slight wobble | Manta ray cruising | 30-45s loop |
-| **Rectangle (E)** | Upward drift with lateral sway | Fish schooling movement | 25-35s loop |
-| **Triangle (A)** | Gentle rotation + forward drift | Stingray gliding | 35-50s loop |
-| **Diamond (N)** | Slow tumble with depth oscillation (scale) | Jellyfish tentacle drift | 45-60s loop |
-
-**Implementation rules:**
-- `prefers-reduced-motion`: All shapes freeze immediately (static fallback)
-- GPU-accelerated CSS transforms only (`translate3d`, `scale`, `rotate`) — no layout thrash
-- Maximum 3-5 shapes visible per viewport at any time (performance budget)
-- Chat interface: Shapes move at 50% speed (calmer) vs hero sections at full speed
-- **Prototyping gate:** Build one shape animation first, user-test for distraction before committing to all 5. If too much, fall back to static + subtle opacity pulse only.
-
-### Archetype Reveal: Calm-to-Celebration Transformation
-
-The archetype reveal isn't just an animation — **the entire page transforms** from calm register to full psychedelic mode:
-
-**Sequence (2-3 seconds total):**
-1. **Chat fades** — conversation dims to 30% opacity, slides up
-2. **Background snaps** — blurred OCEAN shapes in background sharpen into focus, saturate to full color
-3. **Color blocks emerge** — trait-color blocks slide/scale in from edges (hard-edge poster composition)
-4. **Shapes animate** — 5 OCEAN shapes appear in sequence (O→C→E→A→N, ~200ms stagger), scaling to encode trait level
-5. **Typography lands** — Archetype name fades in at `display-hero` size (64px+), editorial placement
-6. **Hold** — Full psychedelic poster state holds, user sees their complete Geometric Personality Signature
-
-**The metaphor:** Rising from the deep ocean (calm, dark, blurred) to the sunlit surface (vivid, sharp, celebratory). The assessment journey ends by breaking through to the light.
-
-**`prefers-reduced-motion` fallback:** Instant cut from chat to final celebration state. No animation, same visual impact.
-
-### Evolving Chat Background Tint (Experimental)
-
-As Nerin maps the user's personality, the chat background subtly shifts toward their dominant trait color:
-
-- **Messages 1-5:** Neutral warm cream / abyss navy (no tint)
-- **Messages 6-15:** Very faint tint begins (5-8% opacity of emerging dominant trait color)
-- **Messages 16-25:** Tint strengthens (10-15% opacity), user may notice subconsciously
-- **70%+ precision:** Tint reaches 15-20% — the assessment has literally colored their world
-
-**Implementation rules:**
-- Tint is applied as a CSS background-blend or overlay — not changing actual background color token
-- Must remain readable: maximum 20% overlay opacity, tested against WCAG AA contrast
-- Transition between tint levels is gradual (2-3 second CSS transition)
-- **Prototyping gate:** Test with 5 users first. If anyone reports it as distracting or nauseating, remove. The chat must remain the calmest surface.
-
-### Design Rationale
-
-1. **Brand Recognition:** Floating OCEAN shapes (even blurred) create unmistakable visual identity everywhere
-2. **Premium Feel:** Editorial typography at dramatic scale makes archetype reveals feel earned
-3. **Living Interface:** Micro-animated shapes make the platform feel alive — an underwater world, not a static page
-4. **Reading Comfort:** Blurred trait shapes create gentle branded depth without competing with content
-5. **Data Approachability:** Warm gradient-fade cards make 30 facets feel browsable, not clinical
-6. **Dark Mode Authenticity:** Hue-shifted bioluminescent colors feel like a real deep-ocean environment, not a dimmer switch
-7. **Reveal as Climax:** Calm-to-celebration page transformation makes the archetype moment genuinely dramatic
-
-### Implementation Approach
-
-**Surface Types and Their Visual Treatment:**
-
-| Surface | Visual Treatment |
+**Existing keyframes (Tier 1 — CSS only):**
+
+| Animation | Purpose |
+|-----------|---------|
+| `fadeInUp` | Content entrance, progressive reveal |
+| `fade-in` | Soft appearance |
+| `shape-reveal` | Geometric shape pop-in (spring easing) |
+| `wave` | Ocean ambient motion |
+| `caustic` | Water light patterns |
+| `bubble` / `bubbleRise` | Ascending bubble particles |
+| `breathe` | Subtle scale pulse |
+| `bob` | Gentle vertical motion |
+| `float` | Subtle elevation drift |
+| `traitPairEnter/Exit` | Trait stack transitions |
+| `facetCascade` | Facet list entrance |
+| `shapeReveal` | Geometric shape appearance |
+
+Animation duration and easing values are currently hardcoded per keyframe. Standardized tokens (`--duration-*`, `--ease-*`) should be added during animation refactoring, not upfront — current hardcoded values are functional.
+
+**Naming inconsistency:** Current keyframes mix camelCase (`fadeInUp`, `bubbleRise`) and kebab-case (`shape-reveal`, `fade-in`). Standardize during refactor.
+
+**Reduced motion:** `prefers-reduced-motion: reduce` is handled for the geometric ocean layer. Needs global extension to cover all custom animations — add when refactoring animation system.
+
+### 8.8 Z-Index Scale (to add)
+
+Multiple overlapping layers require a managed stacking order. Define upfront to prevent stacking context bugs as new surfaces are added:
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `--z-ocean` | 0 | Geometric ocean background layer |
+| `--z-content` | 10 | Page content, results, cards |
+| `--z-input-bar` | 20 | Conversation input area (sticky) |
+| `--z-depth-meter` | 30 | Depth progress indicator |
+| `--z-overlay` | 40 | Portrait reveal overlay, dimmed backgrounds |
+| `--z-modal` | 50 | PWYW checkout modal (Polar embed), dialogs |
+| `--z-toast` | 60 | Notifications, success confirmations |
+
+### 8.9 Specialized Token Domains
+
+**Geometric Ocean Sea Life** (`[data-slot="geometric-ocean-layer"]`):
+- Scoped tokens to avoid `:root` pollution
+- Bubble border/fill/opacity with light/dark variants
+- Full keyframe set for ambient visualization
+- Needs a "consolidation" state for the conversation-to-results transition (ocean elements slow, converge, settle — CSS class state change on existing animations)
+
+**Horoscope Panel** (`--horoscope-*`):
+- 9 dedicated tokens for horoscope display
+- Currently in `:root` — consider scoping with `data-slot` for consistency with ocean tokens
+
+**Score Level** (`--score-high/medium/low`):
+- Traffic-light semantics for trait/facet score display
+- Should pair with icons or text labels, not rely solely on color (accessibility)
+
+### 8.10 Portrait Visual Treatment
+
+The portrait section maintains the unified artistic direction — same colors, same fonts, same surfaces. The tonal shift is achieved through **typography and spacing only**, creating a "room getting quieter" effect:
+
+- **Reading width:** `--width-prose` (65ch) — narrower than results page, optimal for long-form reading
+- **Line-height:** `--leading-prose` (1.75) — more generous than body text, allows the words to breathe
+- **Vertical padding:** `--space-16` or `--space-24` above and below — creates breathing room that separates the portrait from surrounding data
+- **Ambient visualization:** Ocean layer softens (reduced animation intensity, not stopped) — the environment gets quieter
+- **No background color change, no separate token namespace** — the shift is felt through reading rhythm, not visual chrome
+
+The portrait's "letter" quality comes from Nerin's writing style, not from visual ornamentation. The design stays minimal. The words do the work.
+
+**Sealed portrait state (deferred payers):** Clean, minimal locked visual — blurred preview or simple card with archetype name and CTA. No skeuomorphic metaphors. Uses existing card tokens with a locked state variant.
+
+**Progressive unlock results page:** Visual differentiation between locked/unlocked layers via opacity or blur. Relationship QR drawer accessible from results page. Non-payers see relationship at €5; portrait buyers have 1 free credit.
+
+### 8.11 Personality Card Visual Spec
+
+The personality card is the shareable visual identity artifact — optimized for social media:
+
+- User's dominant trait gradient as background
+- Archetype name in `--font-heading` at display size
+- OCEAN code in `--font-data`
+- Personality portrait visual (generative — future)
+- Dimensions optimized for social preview ratios (1.91:1 for OG images, 9:16 for stories)
+
+The card must render identically in-app (CSS) and in social previews (server-side image generation). Rendering strategy and dual-representation approach is an architecture concern documented separately.
+
+### 8.12 Accessibility Considerations
+
+**Current state:**
+- `prefers-reduced-motion` respected in geometric ocean layer
+- Dual-theme provides light/dark options
+- OKLCH color system enables programmatic contrast adjustments
+
+**Gaps to address incrementally:**
+- **Reduced motion:** Extend globally to all custom animations (during animation refactor)
+- **Focus states:** Ring token (`--ring`) exists; add focus-visible offset tokens when building interactive surfaces
+- **Color-only indicators:** Score levels should pair with icons or text labels
+- **High-contrast mode:** Not MVP. Architecture supports a `.high-contrast` class for future addition. Document which tokens would need overrides.
+- **Portrait contrast:** Must meet WCAG AA in both themes — non-negotiable for paid content
+
+### 8.13 Token Addition Summary
+
+**Tokens to add now (10 total):**
+
+| Token | Value | Rationale |
+|-------|-------|-----------|
+| `--leading-tight` | 1.25 | Headings, display text |
+| `--leading-prose` | 1.75 | Portrait readability |
+| `--width-conversation` | 640px | Chat interface |
+| `--width-prose` | 65ch | Portrait reading width |
+| `--z-ocean` | 0 | Ocean background |
+| `--z-content` | 10 | Page content |
+| `--z-input-bar` | 20 | Sticky input |
+| `--z-depth-meter` | 30 | Depth indicator |
+| `--z-overlay` | 40 | Portrait overlay |
+| `--z-modal` | 50 | Polar checkout, dialogs |
+| `--z-toast` | 60 | Notifications |
+
+**Deferred (add when needed):**
+- Animation duration/easing tokens — during animation refactor
+- Opacity scale — document convention, don't tokenize
+- Additional content-widths — when comparison/dashboard views are built
+- Additional line-heights — when more reading contexts emerge
+- Focus/interaction state tokens — when building interactive surfaces
+
+## 9. Design Direction Decision
+
+### 9.1 Design Directions Explored
+
+Eight surface mockups were generated as an interactive HTML showcase (`_bmad-output/planning-artifacts/ux-design-directions.html`) exploring the full visual range of big-ocean's design system:
+
+| Surface | What it explores |
 |---------|-----------------|
-| **Hero / Landing** | Full psychedelic — large floating OCEAN shapes (micro-animated), color blocks, editorial typography at 64-80px |
-| **Chat Interface** | Calm register — blurred OCEAN shapes at 5-10% opacity background, micro-animation at 50% speed, warm cream/navy base, warm card-style message bubbles, experimental trait tint overlay |
-| **Results Reveal** | Calm-to-celebration transformation — background sharpens, color blocks emerge, OCEAN shapes animate to final signature, editorial archetype name |
-| **Trait/Facet Cards** | Warm cards — rounded 16px, trait-color gradient-fade top border, soft shadow, generous padding |
-| **Evidence Panels** | Scientific register — clean grid, blurred OCEAN shapes as subtle background, monospace data, minimal decoration |
-| **Share Card** | Compact psychedelic — color block composition, editorial archetype name, geometric signature |
-| **Milestone Toasts** | Brief psychedelic burst — single color block flash with trait shape, editorial text, fades to calm |
+| **Ambient Visualization** | Geometric ocean with trait-shaped creatures drifting alongside bubbles, responding to conversational energy across 5 states |
+| **Results Page** | Grid layout matching existing codebase (ArchetypeHeroSection → OceanCodeStrand → Radar + Confidence → 3+2 TraitCards with facet grids) |
+| **Portrait** | Spine format with AI-generated emoji headers, 65ch width, 1.75 line-height — Nerin's voice creates the "letter" quality, not visual decoration |
+| **Portrait Curtain** | Founder origin story as love letter + blurred preview + Polar embedded checkout modal (PWYW, no custom amount picker in our UI) |
+| **Transition Moment** | 5-phase "breath" sequence from conversation to results (Nerin's last word → chat fades → shapes consolidate → archetype rises → grid populates) |
+| **Personality Card** | 3 gradient variants (Celebration, Abyss, Trait Gradient) with OceanShapeSet logo and uniform-size geometric shapes |
+| **Relationship Analysis** | Relationship portrait (spine format matching personal portrait) + overlaid radar + side-by-side strands + insight cards |
+| **Public Profile** | Reuses PersonalityRadarChart + OceanCodeStrand from results, with comparison CTA |
 
-### Experimental Features (Prototype Before Committing)
+### 9.2 Chosen Direction
 
-| Feature | Gate Criteria | Fallback |
-|---------|-------------|----------|
-| Micro-animated shapes | Test 1 shape first; user-test for distraction | Static shapes with subtle opacity pulse |
-| Evolving chat tint | Test with 5 users; check readability + distraction | No tint, neutral background throughout |
+**Unified artistic direction** — a single visual language that adapts through data, not through surface-specific styles. Key decisions:
 
-### Comparative Analysis Matrix
+1. **Component reuse over surface-specific design.** The same `OceanCodeStrand`, `PersonalityRadarChart`, `TraitCard`, and `GeometricSignature` components render across Results, Public Profile, and Relationship Analysis. Only the data and layout context changes.
 
-**Evaluation Criteria (Weighted):**
+2. **Geometric shapes as trait identity.** Each Big Five trait has a base shape at its High level (O=Circle, C=HalfCircle, E=Rectangle, A=Triangle, N=Diamond) and color. These appear in: the ocean layer as creatures, strand dots, trait card headers, radar vertices, personality card footers, and profile signatures.
 
-| # | Criterion | Weight | Rationale |
-|---|-----------|--------|-----------|
-| A | Brand Impact (uniqueness, memorability) | 25% | Must stand apart from generic personality tests |
-| B | Readability & Usability | 20% | 30-min chat session demands comfortable reading |
-| C | Dark Mode Quality | 15% | Critical for user comfort; many users prefer dark |
-| D | Shareability (social card appeal) | 15% | Viral loop depends on share-worthy results |
-| E | Emotional Resonance (self-discovery feel) | 15% | Core product promise — feeling "seen" |
-| F | Dev Effort (inverse: 10=easy, 1=hard) | 10% | Lowest weight but real constraint |
+3. **Shape library: one shape per OCEAN code letter.** Each trait level maps to a unique letter, and each letter has its own filled geometric shape — an abstract geometric interpretation of the letter itself. The OCEAN code `OCEAR` renders as 5 distinct shapes where the shape IS the letter. All 15 shapes are solid/filled.
 
-**Scores (1-10 per criterion):**
+   **OCEAN Code Letter Map (15 unique letters):**
 
-| Direction | A (25%) | B (20%) | C (15%) | D (15%) | E (15%) | F (10%) | **Weighted** |
-|-----------|---------|---------|---------|---------|---------|---------|-------------|
-| 1. Psychedelic Poster | 9 | 5 | 4 | 8 | 7 | 5 | **6.60** |
-| 2. Ocean Depths | 6 | 7 | 8 | 5 | 6 | 7 | **6.45** |
-| 3. Warm Conversational | 4 | 9 | 6 | 5 | 8 | 8 | **6.45** |
-| 4. Geometric Grid | 5 | 8 | 7 | 6 | 4 | 9 | **6.20** |
-| 5. Magazine Editorial | 7 | 9 | 6 | 7 | 6 | 7 | **7.05** |
-| 6. Split Register | 8 | 6 | 5 | 7 | 7 | 4 | **6.45** |
-| 7. Coral Reef | 7 | 7 | 7 | 6 | 8 | 6 | **6.85** |
-| **8. Psychedelic Editorial (Hybrid)** | **9** | **8** | **8** | **9** | **8** | **4** | **7.85** |
+   | Trait | Low | Mid | High |
+   |-------|-----|-----|------|
+   | Openness | T (Traditional) | M (Moderate) | O (Open-minded) |
+   | Conscientiousness | F (Flexible) | S (Steady) | C (Conscientious) |
+   | Extraversion | I (Introverted) | B (Balanced) | E (Extravert) |
+   | Agreeableness | D (Direct) | P (Pragmatic) | A (Agreeable) |
+   | Neuroticism | R (Resilient) | V (Variable) | N (Neurotic) |
 
-**Verdict:** Hybrid outscores all individual directions by 0.80-1.65 points. Only weakness is dev effort (4/10), mitigated by experimental gates and CSS-only fallbacks. Direction validated.
+   **Shape Library (letter → geometric shape):**
 
-### User Persona Focus Group
+   | Letter | Shape | Trait + Level |
+   |--------|-------|---------------|
+   | O | Full circle | Openness — High |
+   | M | Square with inverted equilateral triangle cut out | Openness — Mid |
+   | T | Equilateral cross standing upright | Openness — Low |
+   | C | Half-circle (flat edge) | Conscientiousness — High |
+   | S | Two quarter-circles facing outward | Conscientiousness — Mid |
+   | F | Three-quarter square (one side missing) | Conscientiousness — Low |
+   | E | Tall rectangle | Extraversion — High |
+   | B | Quarter-circle | Extraversion — Mid |
+   | I | Oval (vertical ellipse) | Extraversion — Low |
+   | A | Equilateral triangle | Agreeableness — High |
+   | P | Square standing on one stick | Agreeableness — Mid |
+   | D | Full half-circle facing opposite direction as C | Agreeableness — Low |
+   | N | Diamond | Neuroticism — High |
+   | V | Inverted equilateral triangle (point down) | Neuroticism — Mid |
+   | R | Square standing on two sticks | Neuroticism — Low |
 
-Three personas tested against the Psychedelic Editorial direction at every touchpoint (landing, chat, reveal, dark mode, share).
+   Existing High-level shapes (O, C, E, A, N) are already in the codebase. 10 new shapes to create. All shapes uniform size per context (28px hero, 18px profile, 12px cards, 10px mini). Designs finalized during component development in `ocean-shapes/`.
 
-**Personas:**
-- **Sam (Anxious Overthinker):** 28, high neuroticism + conscientiousness. Needs emotional safety. Dark mode exclusive. Shares cautiously.
-- **Alex (Skeptical Professional):** 34, moderate all traits. Values scientific credibility. Will share on LinkedIn only if it looks rigorous.
-- **Jordan (Enthusiastic Sharer):** 22, high extraversion + openness. Aesthetics-driven. Shares immediately everywhere.
+   **Codebase update required:** `TRAIT_LETTER_MAP` in `packages/domain/src/types/archetype.ts` — E-low from R→I, N-mid from T→V.
 
-**Verdicts:** Sam 8/10, Alex 7/10, Jordan 9.5/10
+   **Shape library purpose:** Shapes serve primarily as **tribal recognition** — users learn their own 5 shapes and recognize others with the same shapes as sharing that trait level. The full 15-shape vocabulary is not expected to be memorized. A dedicated shape/archetype library page will exist for users who want to explore all shapes and their meanings.
 
-**Cross-Persona Findings:**
+4. **Portrait as tonal shift, not visual world.** Both personal and relationship portraits use the same spine format with wider reading width (65ch) and generous line-height (1.75). No background color change, no separate token namespace — "the room gets quieter."
 
-| Insight | Sam | Alex | Jordan | Action |
-|---------|-----|------|--------|--------|
-| Chat animation must be subtle | Critical | Neutral | Wants more | Default 5-10% opacity, validate with user test |
-| Breathing pause before reveal | Critical | Neutral | Doesn't care | Add 1-2s calm beat before transition |
-| Reveal must not block interaction | Neutral | Critical | Neutral | Animation = visual layer, not interaction gate |
-| Scientific credibility on share card | Nice-to-have | Critical | Doesn't care | Add "Big Five Personality Assessment" label |
-| Credibility anchor near hero | Nice-to-have | Critical | Doesn't care | Add science line within first viewport |
-| Evolving tint must be imperceptible | Critical | Neutral | Wants more | Ultra-gradual change, experimental gate applies |
-| Share card customization | Neutral | Neutral | Wants badly | Post-MVP feature flag |
+5. **Founder origin story as love letter.** The portrait curtain features a personal letter from the founder — not a platform critique or product pitch, but a vulnerable message to close ones, family, friends, and the world. Key beats: spent a life building things that didn't make sense → built Nerin out of curiosity → what it wrote changed how I view myself and others → made it into a product for me, for those I care about, for everyone → chose a happy life over a comfortable one → "here is my portrait" → "I have put my blood and sweat in this project, I hope it will help someone somewhere. That is why I choose to let you guys choose what it is worth." The PWYW reasoning emerges organically from the story, not as a sales mechanism.
 
-**4 Design Refinements Applied:**
-1. **Breathing pause** — 1-2 second stillness between conversation end and reveal transition (respects emotional weight for Sam-type users)
-2. **Non-blocking reveal** — Celebration animation runs as visual overlay; content remains interactive immediately (prevents impatience for Alex-type users)
-3. **Science anchor in hero** — "Built on the Big Five framework" positioned within first viewport alongside editorial headline (credibility for skeptical users)
-4. **Science label on share card** — Small "Big Five Personality Assessment" line on all share cards (enables professional sharing for Alex-type users)
+6. **Relationship portrait mirrors personal portrait.** Same spine renderer, same section count, same typography treatment. The relationship analysis is a portrait *about the dynamic*, not just a data comparison.
 
-### Party Mode: Team Design Review
+### 9.3 Portrait Spine Structure
 
-Cross-functional review by UX (Sally), Architect (Winston), PM (John), Storyteller (Sophia), Developer (Amelia).
+Both personal and relationship portraits use the same renderer. The structure is:
 
-**Finding 1: Reveal Animation vs Results Page**
+- **Fixed section count** (defined per portrait type in the AI prompt)
+- **AI-generated titles, subtitles, and emojis** — not hardcoded. Each portrait gets unique section headers generated by Nerin based on the conversation content
+- **Highlight spans** within paragraphs for key insights (rendered as subtle background highlight, interactive — links back to transcript evidence)
 
-The reveal is a one-time transition animation that plays when results are first shown. Once the animation completes, the user sees the results page in its final steady-state form. Returning users land directly on this same results page — no animation replay, no separate "returning" layout. The results page design is identical whether the user just completed the reveal or is visiting a week later. The reveal animation is an entrance effect, not a mode.
+The renderer accepts an array of spine sections: `{emoji, title, subtitle?, paragraphs[]}[]`. Personal and relationship portraits differ only in the AI prompt and data context — the component is identical.
 
-**Finding 2: Credibility-to-Personality Ratio Per Surface**
+**Generation constraint:** Section titles must reference specific conversation content (e.g., "The Wave You Keep Riding" not "Your Strengths"). Generic titles are a generation failure mode to guard against in the AI prompt. Specificity is what makes the portrait feel personal.
 
-Each surface has an explicit balance between bold visual personality and scientific credibility to prevent inconsistency:
+### 9.4 Chart & Data Visualization Artistic Direction
 
-| Surface | Personality | Credibility | Rationale |
-|---------|------------|-------------|-----------|
-| Landing / Hero | 80% | 20% | Hook first, science anchor in viewport but secondary |
-| Chat Interface | 30% | 70% | Calm, functional, trust-building — warm cards but minimal decoration |
-| Results Page | 60% | 40% | Archetype celebration + trait data coexist; editorial type bridges both |
-| Evidence Panel | 10% | 90% | Scientific register — clean grid, monospace data, minimal decoration |
-| Share Card | 50% | 50% | Must be visually distinctive AND professionally shareable |
-| Milestone Toasts | 70% | 30% | Brief celebratory moments, trait shape flash |
+Unified visual language for all charts and data displays:
 
-**Finding 3: CSS Layer Architecture (Three-Tier)**
+| Principle | Rule |
+|-----------|------|
+| **Color as Identity** | Trait colors + shapes are fixed pairs. Never reassigned. User learns to read personality through color alone. |
+| **Typography** | Scores, labels, axes: `--font-data` (JetBrains Mono). Titles: `--font-heading` (Space Grotesk). Body: `--font-body` (DM Sans). |
+| **Grid & Axes** | Minimal. `--border` color, 0.5-1px stroke. No fill on grid shapes. |
+| **Radar** | Built with Recharts via shadcn/ui. "Lines only" style. Proper hover tooltips, responsive sizing, accessible. |
+| **Radar: single vs combined** | Same component, same API. Single person: one polygon with trait-colored vertices. Relationship: two polygons overlaid — solid stroke for user A, lighter/dashed stroke for user B. Tooltip shows both scores on hover. |
+| **Progress Bars** | Trait bars: 6px height, 3px radius. Facet bars: 3px height. Background: `--border`. Fill: solid trait color. |
+| **Confidence Ring** | 8px stroke, rounded caps, clockwise draw animation. |
+| **No gradients in charts** | Gradients live on cards and heroes. Charts use flat, solid colors for clarity. |
+| **Animation** | Reveal-only (no loops). Radar: center outward 300ms. Bars: left-to-right 400ms staggered 50ms. All respect `prefers-reduced-motion`. |
+| **Theme adaptation** | Same SVG, different colors via CSS custom properties. Light: vibrant traits on cream. Dark: lighter trait variants on abyss. |
+| **Responsive** | Radar: fixed 180px, centered on mobile. Side-by-side strands: stack vertically below `sm`. Overlaid radar stays overlaid (never splits). Facet grid: 2-col → 1-col on narrow cards. |
+| **States** | Loading: pulsing border outline, no fill. Empty (0 data): gray outline with "Not enough data" label. Error: card with retry button, no chart rendered. |
 
-Feature tiers implemented as CSS layers, not JS conditional rendering:
+**Component reuse matrix:**
 
-| Tier | Layer | Contents | Activation |
-|------|-------|----------|------------|
-| 1 (must ship) | `base.css` | Editorial typography, warm cards, static OCEAN shapes, standard dark mode, share cards | Default — always active |
-| 2 (validated) | `enhancement.css` | Micro-animations, bioluminescent hue-shift, staged reveal animation | `data-tier="2"` on `<html>` |
-| 3 (post-MVP) | `experimental.css` | Evolving chat tint, share card customization | `data-tier="3"` on `<html>` |
+| Component | Results | Public Profile | Relationship |
+|-----------|---------|---------------|-------------|
+| OceanCodeStrand | Full (5 rows) | Full (5 rows) | Side-by-side (2x) |
+| PersonalityRadarChart | Single polygon | Single polygon | Overlaid (2 polygons, Recharts) |
+| TraitCard (w/ facets) | 3+2 grid | — | — |
+| ConfidenceRingCard | Yes | — | — |
+| GeometricSignature | Hero (28px) | Hero (18px) | Per user mini (10px) |
 
-Uses Tailwind v4 native `@layer` support. Each tier imports the previous. No JS branching for visual features — pure CSS progressive enhancement.
+**Future refinement:** Radar vertex markers may evolve from circles to the trait's geometric shape for stronger identity at the chart level.
 
-**Finding 4: Reveal Animation as Single Timeline**
+### 9.5 Design Rationale
 
-The 5-stage reveal sequence (warm close → fade → stillness → name reveal → visual celebration) must be implemented as a single choreographed `@keyframes` animation timeline, not 5 independent transitions stitched together. Timing values stored as design tokens in Tailwind config to prevent hardcoded values in component files.
+- **Unified components reduce implementation cost** — build once in `packages/ui`, render everywhere with different props. Matches the existing hexagonal architecture pattern.
+- **Geometric shapes as brand language** — competitors (16Personalities, Truity) use generic charts. The shape-per-letter system gives big-ocean a visual alphabet that's instantly recognizable on social feeds.
+- **Tribal recognition over vocabulary mastery** — users learn their own 5 shapes, not all 15. Seeing a matching shape on someone else's profile creates instant connection ("we share this trait"). The full library exists for those who want to explore.
+- **Portrait format consistency** — using the same spine renderer for both personal and relationship portraits means Nerin's voice is the constant. The AI generates unique section headers for each, but the visual treatment is identical.
+- **Founder storytelling as love letter** — the origin story builds empathy and trust before asking for payment. It's vulnerable and personal, not a product pitch. The PWYW reasoning emerges from the story itself.
+- **Chart minimalism** — personality data is already complex (5 traits × 6 facets). Charts must reduce cognitive load, not add to it. Flat colors, minimal gridlines, and consistent trait-color mapping let the shapes and numbers speak.
+- **Recharts radar as unified chart** — one component for single and comparison modes. Recharts via shadcn provides hover tooltips, responsive sizing, and accessible markup out of the box. The "lines only" style is cleaner than hand-drawn SVG and works at any size.
 
----
+### 9.6 Implementation Approach
+
+1. **Build order:** Shape library (15 SVGs) → GeometricSignature → OceanCodeStrand → PersonalityRadarChart (Recharts) → TraitCard → ConfidenceRingCard → PortraitSpineRenderer → Personality Card update
+2. **Shape library** — 15 SVG components in `ocean-shapes/`, one per OCEAN code letter. Each accepts `size` and `color` props. `GeometricSignature` maps an OCEAN code string (e.g., "OCEAR") to the corresponding 5 shapes. Requires codebase update: E-low R→I, N-mid T→V in `TRAIT_LETTER_MAP`.
+3. **Radar chart** — Recharts `<RadarChart>` via shadcn/ui. Accepts `data: {trait, scoreA, scoreB?}[]`. When `scoreB` present, renders overlaid comparison mode with dashed second polygon.
+4. **Portrait spine renderer** accepts `{emoji, title, subtitle?, paragraphs[]}[]` — all content AI-generated. Highlight spans parsed from markdown bold/italic markers. No full markdown parser needed.
+5. **Archetype Card export** — existing Satori + Resvg pipeline (`archetype-card.server.ts`, `ArchetypeCardTemplate`, 1:1 + 9:16). Cards are generic per archetype (name + short description + GeometricSignature + OCEAN code, no individual scores). Update to support 3 gradient variants, uniform-sized geometric shapes from the shape library, and short archetype description text. One card template per archetype — no per-user rendering of score data.
+6. **Polar integration** via `@polar-sh/checkout/embed`. Single button triggers modal overlay. Listen for `success` event → call backend to mark portrait as unlocked.
+7. **Recharts tooltip customization** — scoped as a distinct task. Default shadcn radar handles single-polygon mode. Relationship overlay requires custom tooltip showing both users' scores per trait with shape icons. Budget this separately from base radar implementation.
+8. **TRAIT_LETTER_MAP migration** — changing E-low (R→I) and N-mid (T→V) is a non-issue for assessment results: OCEAN codes are always derived at read time from facet scores, never stored. **Schema cleanup required:** `public_profile` table currently stores `ocean_code_5` and `ocean_code_4` columns — these must be removed and replaced with derive-at-read computation from the user's facet scores, consistent with the architectural rule that OCEAN codes are never persisted. This is a schema migration + repository update in `packages/infrastructure`.
 
 ## User Journey Flows
 
-### Journey 1: New User → First Assessment → Results
+### 10.1 Journey 1: First-Timer Flow (Léa)
 
-**Entry:** User lands on big-ocean landing page.
+**Goal:** Curious stranger → completed assessment → paying portrait customer → sharing ambassador
 
-**Sign-Up Gate Strategy:** Users chat anonymously for the full 30 minutes. When precision reaches 70%+, the sign-up prompt appears BEFORE the reveal. The reveal is the reward for creating an account. This is the natural conversion moment — the user has invested 30 minutes and wants to see their archetype.
+**Entry point:** Sees friend's archetype card on social media → taps link → public profile
 
-```mermaid
-flowchart TD
-    A[User lands on big-ocean] --> B[View landing page<br/>Hero: editorial headline + OCEAN shapes<br/>Science anchor in viewport]
-    B --> C["Click 'Start Assessment'<br/>Single CTA, zero friction"]
-    C --> D[Start chat immediately<br/>No sign-up gate, anonymous OK]
-
-    D --> E[Nerin sends first message<br/>Warm, contextual opener]
-    E --> F[User types response<br/>Simple text input, messaging UX]
-    F --> G[Conversation loop<br/>Nerin responds contextually<br/>Precision meter updates every 2-3 msgs]
-
-    G --> H{Precision milestones}
-    H -->|< 50%| I[Continue conversation<br/>Visual punctuation at 25% milestone]
-    I --> F
-    H -->|50-69%| J[Deeper exploration<br/>Nerin references earlier statements<br/>Contradiction surfacing]
-    J --> F
-
-    H -->|≥ 70%| K[Precision threshold reached!]
-    K --> L[Nerin warm closing line<br/>Reflective, not abrupt]
-    L --> M{Has account?}
-    M -->|Yes| N[Proceed to reveal]
-    M -->|No| O[Sign-up prompt<br/>'Create an account to see your archetype'<br/>Minimal: email + password<br/>The reveal is the reward]
-    O --> P{User action}
-    P -->|Signs up| N
-    P -->|Declines| Q[Offer: save session for 24h<br/>Can sign up later to see results<br/>No reveal without account]
-
-    N --> R[5-stage reveal sequence<br/>1. Fade chat 2. Stillness<br/>3. Name 4. Shapes sharpen 5. Color bloom]
-    R --> S[Results page<br/>Archetype + traits + 30 facets<br/>Editorial type + warm cards + OCEAN shapes]
-
-    S --> T{User choice}
-    T -->|Share| U[Journey 2: Share flow]
-    T -->|Keep exploring| V[Journey 4: Premium conversion]
-    T -->|Leave| W[Session saved, can return anytime]
-
-    G --> X{User wants to pause?}
-    X -->|Yes| Y[Save session state<br/>Nerin: 'No rush, pick this up later']
-    Y --> Z[Resume via URL or login]
-```
-
-**Key design decisions:**
-- **Zero friction to start** — Anonymous users chat immediately. No sign-up barrier at the beginning.
-- **Sign-up at the reveal gate** — After 30 minutes of investment, users are highly motivated to create an account. The reveal animation is the reward.
-- **No reveal without account** — This is the conversion lever. Users who decline can save their session for 24 hours and sign up later.
-- **Visual punctuation** — At 25%, 50%, 70% milestones, a brief 0.5s shape opacity pulse resets visual habituation.
-- **Pause is graceful** — Nerin acknowledges the pause warmly, not with "session timeout" UX.
-
-**Error recovery:**
-- Network drop during chat → Messages queued locally, sent on reconnect. Nerin: "Welcome back — I was just thinking about what you said."
-- Browser close mid-session → Session persists server-side 24h for anonymous, indefinitely for accounts.
-- Precision stalls (short/evasive answers) → Nerin gently steers: "I'd love to hear more about that. Can you walk me through a specific example?"
-
----
-
-### Journey 2: Results → Share
-
-**Entry:** User on results page after reveal.
+#### Flow Diagram
 
 ```mermaid
 flowchart TD
-    A[User on results page] --> B["Click 'Share My Archetype'"]
-    B --> C[Generate shareable link<br/>User already has account from reveal gate]
+    %% Entry
+    A[Sees archetype card on social media] --> B[Taps link → Public Profile]
+    B --> C{Scrolls & explores?}
+    C -->|Quick glance| D["Archetype name + OCEAN code + description hook
+    Tooltips on OCEAN letters, traits, confidence"]
+    C -->|Deep scroll| E[Trait bars, facet data, scientific depth]
+    D --> F["CTA: comparison-driven ('What's YOUR code?')"]
+    E --> F
 
-    C --> D[Share preview screen<br/>Shows exactly what recipient will see:<br/>Archetype name, trait summary, OCEAN visual<br/>Science label: 'Big Five Personality Assessment']
+    %% Auth
+    F --> G{Has account?}
+    G -->|No| H[Sign Up — email/password or social]
+    G -->|Yes| I[Log In]
+    H --> J[Straight to conversation — no interstitial]
+    I --> J
 
-    D --> E{Share method}
-    E -->|Copy link| F[Link copied to clipboard<br/>Toast: 'Link copied!']
-    E -->|Social platform| G[Platform share sheet<br/>Pre-filled with archetype card image<br/>Platform-specific variant]
-    E -->|Direct message| H[Share via messaging app<br/>og:image meta tags for rich preview]
+    %% Conversation start — spread across 1-3 exchanges
+    J --> K["Nerin exchange 1: scannable greeting + first question
+    (who she is, what you'll do together, question visible without scrolling)"]
+    K --> K2["Exchanges 2-3: Nerin naturally weaves in
+    'not therapy' framing, duration, what you'll get"]
 
-    F --> I[Return to results page]
-    G --> I
-    H --> I
+    %% Conversation loop
+    K2 --> L[Conversation loop: exchanges 1-25]
+    L --> M["Depth meter: milestones at 25% / 50% / 75%
+    (turn-based, visual only — does not influence Nerin)"]
+
+    %% Pacing pipeline — adaptive
+    L --> N{"Pacing pipeline reads energy + telling"}
+    N -->|High energy/telling| O[Nerin follows into deeper territory]
+    N -->|Low energy/telling| P[Nerin stays light, keeps door open]
+    N -->|Evidence confidence high| Q["Feel-seen moment attempted
+    (only when confident — failed observation breaks trust)"]
+    Q --> L
+    O --> L
+    P --> L
+
+    %% Drop-off
+    L -->|User leaves| R[Session saved + last topic stored as string]
+    R --> S["Re-engagement email:
+    'You and Nerin were talking about [topic]...'
+    (templated, no LLM call)"]
+    S --> T["Or: logged-in prompt on return
+    (including if visiting a friend's profile)"]
+    T --> L
+
+    %% Conversation end
+    L --> U["Exchange 25: complete
+    (Nerin has been teasing portrait since 75% milestone)"]
+
+    %% Results
+    U --> V["Results Page: OCEAN code + archetype + trait/facet scores
+    Conversation extension visible as standing option (€25)"]
+
+    %% PWYW
+    V --> W[PWYW modal auto-opens]
+    W --> X["Founder story: dense, not long (3-4 sentences)
+    Love letter essence — every sentence earns its place"]
+    X --> Y["Vincent's portrait: scrollable preview
+    Shows spine structure, specificity, tone, depth"]
+    Y --> Z{Pay or skip?}
+    Z -->|Pays ≥€1| AA[Payment via Polar — Apple/Google Pay]
+    Z -->|Skips| AB["Free results — archetype card still shareable
+    Share prompt equally prominent"]
+
+    %% Portrait
+    AA --> AC[Portrait generates — Nerin's letter]
+    AC --> AD{Generation succeeds?}
+    AD -->|Yes| AE[Portrait delivered — personal letter from Nerin]
+    AD -->|Fails| AF[Retry button]
+    AF --> AC
+
+    %% Post-portrait — share, no survey
+    AE --> AG["Share prompt: 'Show someone who you are'
+    Archetype card download (1:1 + 9:16) + Web Share
+    Screenshots are valid sharing too"]
+    AB --> AG
+
+    %% Growth loop
+    AG --> AH[Shares to friends — growth loop begins]
+    AH --> AI[Friend lands on Léa's public profile → cycle restarts]
+
+    %% Relationship credit
+    AE --> AJ["1 free relationship credit unlocked
+    (first portrait only, lifetime)"]
+    AJ --> AK["QR scan with another completed user → Journey 2"]
 ```
 
-**Key design decisions:**
-- **No guest sharing** — Since sign-up happens at the reveal gate, all users who reach the share flow have accounts. Simplifies the flow.
-- **Preview before share** — User sees exactly what recipients will see. No surprises. Privacy confidence.
-- **Platform-specific cards** — og:image at 1200×630 (Facebook/LinkedIn), 1080×1080 (Instagram), 800×400 (Twitter). Compression-resistant: solid color blocks, 32px minimum archetype name.
-- **Science label on every card** — "Big Five Personality Assessment" in small type.
+#### Screen States & Key Moments
 
----
+| Step | Screen | Key UX Element | Purpose |
+|------|--------|---------------|---------|
+| Public Profile | `/profile/:id` | Archetype name + description + OCEAN code with tooltips, GeometricSignature, trait bars on scroll | Hook comparison curiosity, tooltips aid understanding |
+| Sign Up | `/signup` | Email/password + social auth | Minimal friction — one screen, no interstitial after |
+| Exchange 1 | `/chat` | Nerin's scannable greeting + first question (visible without scrolling on mobile) | Start conversation, don't overwhelm |
+| Exchanges 2-3 | `/chat` | Nerin weaves in framing naturally ("not therapy", ~25 min, what you'll get) | Context spread across messages, not front-loaded |
+| Depth Meter | `/chat` sidebar | Visual milestones at 25% (~6), 50% (~12), 75% (~19) — turn-based | Progress reassurance, sunk-cost motivation |
+| Feel-seen Moments | In-conversation | Only attempted when evidence confidence is high | Mid-conversation value delivery — swing only when confident |
+| 75%+ | In-conversation | Nerin teases portrait: builds anticipation for what she's written | User finishes *wanting* to read Nerin's letter |
+| Results | `/results` | OCEAN code strand, radar chart, trait cards, archetype hero, conversation extension option | Scientific credibility + delight |
+| PWYW Modal | Overlay | Dense founder story (3-4 sentences) + scrollable Vincent portrait preview | Shows what they're buying — quality, specificity, tone |
+| Portrait | Below results | Spine-format letter from Nerin (AI-generated sections) | Emotional payoff |
+| Share | Post-portrait or post-skip | Archetype card (1:1 + 9:16) + Web Share. Screenshots also valid | Growth loop — convenience layer, not gate |
 
-### Journey 3: Share Recipient → Viral Conversion
+#### Decision Points
 
-**Entry:** Someone clicks a shared archetype link.
+1. **Public profile scroll depth** — Quick glancers see archetype + description + code (tooltips help). Deep scrollers see scientific data. Both reach comparison-driven CTA.
+2. **Pacing pipeline adaptation** — Nerin matches user energy/telling continuously. Goes deeper when user signals readiness. Stays light and curious when user is guarded. Feel-seen moments only attempted at high evidence confidence — a missed observation is worse than none.
+3. **Mid-conversation drop-off** — Session auto-saves. Last conversation topic stored as simple string. Re-engagement email templates in the topic ("You and Nerin were talking about [topic]"). Logged-in prompt appears on return, including via friend's profile link. One email only — respect silence.
+4. **PWYW pay or skip** — Skip gets free results + equally prominent share prompt. Pay unlocks portrait + 1 free relationship credit (first purchase only). Founder story is dense not long. Vincent's portrait preview is scrollable — shows enough depth to demonstrate value.
+5. **Sharing** — Screenshots are valid sharing. Archetype card is a convenience layer: prettier format + profile link for conversion. Card designed for destination (Stories 9:16, link previews 1:1).
+
+#### Error Recovery
+
+| Failure | Recovery |
+|---------|----------|
+| Auth fails | Standard errors, social auth fallback |
+| Conversation interrupted | Session saved, topic stored, templated re-engagement email |
+| Feel-seen moment doesn't land | Nerin stays curious, doesn't double down — redirects naturally |
+| PWYW payment fails | Retry, change method, or skip |
+| Portrait generation fails | Retry button, status indicator |
+| Portrait doesn't resonate | Conversation extension on results page as standing option |
+
+#### Flow Optimizations
+
+1. **Zero-to-value in 2 taps** — Public profile → CTA → Sign up. No landing page, no interstitial.
+2. **Archetype description + tooltips on public profile** — Visitor understands what they're looking at without a tutorial.
+3. **Nerin's context spread across exchanges 1-3** — First message scannable on mobile, question visible without scrolling.
+4. **Adaptive pacing, not scripted beats** — Pacing pipeline reads energy/telling, Nerin matches the user's pace. Big ocean is a self-understanding companion, not a script.
+5. **Feel-seen moments gated by confidence** — Only attempted when evidence is strong. Failed observation breaks trust — better to stay curious than swing and miss.
+6. **Depth meter milestones at 25/50/75%** — Turn-based visual markers, don't influence Nerin's behavior.
+7. **Dense PWYW modal** — Founder story in 3-4 sentences + scrollable portrait preview showing depth and specificity. Not too short (user won't see value) or too long (user skips).
+8. **Portrait → Share (no micro-survey)** — Emotional peak flows to action. Behavioral proxies (share rate, extension purchase, return visits) track resonance.
+9. **Screenshots are sharing** — Archetype card is convenience layer (prettier + profile link). Growth loop works either way.
+10. **Simple re-engagement** — Last topic stored as string during conversation, templated into email. No LLM call needed. One email only — respect silence.
+
+### 10.2 Journey 2: Relationship Analysis Flow
+
+**Goal:** Two users with completed assessments → QR scan → analysis generates → shared reading experience
+
+**Entry point:** User A opens QR drawer from results page or dashboard. Both users must have accounts + completed assessments.
+
+#### Flow Diagram
 
 ```mermaid
 flowchart TD
-    A[Recipient clicks shared link] --> B[View shared archetype page<br/>Public archetype only<br/>Credibility:Personality = 50:50]
+    %% Precondition
+    A["Precondition: both users have accounts
+    + completed assessments"]
 
-    B --> C[See archetype name + trait summary<br/>OCEAN visual signature<br/>Sender's display name optional]
+    %% QR Drawer — private, on-demand
+    A --> B["User A goes to results page or dashboard"]
+    B --> C["Opens QR drawer
+    → QR generated on open
+    TTL: 6 hours, auto-regenerates every hour
+    while drawer stays open"]
 
-    C --> D{Recipient reaction}
-    D -->|Curious| E["Click 'Discover Your Own Archetype'"]
-    D -->|Compare| F["Click 'How Similar Are You?'<br/>Teaser: start assessment to compare"]
-    D -->|Leave| G[Exit — no friction, no pop-up]
+    %% Scanning
+    C --> D["User B scans QR (phone camera)
+    or opens shared URL"]
+    D --> E["Browser opens URL →
+    User A's archetype card displayed"]
 
-    E --> H[Landing page with context<br/>'Your friend is The Thoughtful Creator.<br/>What's YOUR archetype?']
-    F --> H
+    %% Auth gate
+    E --> F{"User B logged in?"}
+    F -->|No| G["Login / Sign up prompt
+    → standard auth wall"]
+    F -->|Yes, assessment complete| H["Accept screen:
+    User A's archetype card
+    Both users' confidence rings
+    'Analyze your relationship with [name]?'
+    Uses 1 credit — [X] remaining
+    [Accept] [Refuse]"]
+    F -->|Yes, assessment incomplete| I["'Complete your assessment first'
+    → Link to continue"]
 
-    H --> I[Journey 1: New User flow]
+    %% Decision
+    H --> J{User B's choice}
+    J -->|Accept| K["Credit consumed
+    QR token invalidated
+    QR drawer closes on User A's device"]
+    J -->|Refuse| L["Nothing happens
+    No notification to User A
+    QR stays active until TTL"]
+
+    %% Credit
+    K --> M{User B has credit?}
+    M -->|Free credit from first portrait| N[Credit consumed]
+    M -->|No credits| O["Purchase (€5 via Polar)
+    inline on accept screen"]
+    O --> N
+
+    %% Ritual launch — synchronous
+    N --> P["Both users see ritual screen simultaneously:
+    Nerin speaks to both
+    'I wrote this about the two of you.
+    Talk about what you're expecting
+    before you read it.'
+    Distinct visual — personal, not UI
+    Start button only"]
+
+    %% Generation
+    P --> Q[Relationship analysis generates]
+    Q --> R{Generation succeeds?}
+    R -->|Yes| S["Both users notified (in-app + email):
+    'Your relationship analysis is ready.'"]
+    R -->|Fails| T[Retry — both notified of delay]
+    T --> Q
+
+    %% Analysis content
+    S --> U["Relationship Analysis Page"]
+    U --> V["Relationship portrait (spine format)
+    Nerin's letter about their dynamic
+    AI-generated sections — same renderer"]
+    U --> W["OCEAN code comparison
+    Shared letters highlighted"]
+    U --> X["Radar chart overlay
+    Both profiles superimposed"]
+    U --> Y["Trait-level dynamic descriptions
+    Differences = dynamics, not deficits"]
+
+    %% Framing
+    V --> Z["Framing throughout:
+    'This describes your dynamic,
+    not who's right or wrong'
+    No individual vulnerability exposed
+    No blame language"]
+
+    %% Post-analysis
+    Z --> AA["Shared reading → conversation"]
+    AA --> AB["Ambassador conversion:
+    'We did this together — it was good'"]
+
+    %% Relationship list
+    AB --> AC["Analysis archived in relationship list
+    All snapshots viewable — newest primary,
+    old ones marked 'previous version'"]
+
+    %% Repeat
+    AC --> AD["Either user can generate new QR
+    for analyses with other users"]
 ```
 
-**Key design decisions:**
-- **No data collection on view** — Recipient views the profile without cookies, tracking, or sign-up prompts. Trust first.
-- **Two CTAs** — "Discover Your Own" (independent) and "How Similar Are You?" (comparison hook). Both lead to same assessment with different framing.
-- **Contextual landing** — If referred from a shared link, the landing page acknowledges the friend's archetype.
-- **No pop-ups on exit** — Clean exit. No desperate retention tactics.
+#### Screen States & Key Moments
 
----
+| Step | Screen | Key UX Element | Purpose |
+|------|--------|---------------|---------|
+| QR Drawer | Results page or dashboard | Drawer opens → QR generated. Auto-regenerates hourly. 6h TTL | Private, on-demand, always fresh while open |
+| Scanned URL | Browser (User B) | User A's archetype card + both confidence rings + accept/refuse + credit balance | Full information before committing |
+| Accept | Same URL page | Accept consumes credit, invalidates QR token, closes User A's drawer | Consent + payment + synchronous transition |
+| Ritual Screen | Both devices | Nerin speaks to both directly. Launches on both devices after accept | Synchronous shared moment — personal, not UI |
+| Generating | In-app | Loading state | Both users see progress |
+| Analysis | `/relationship/:id` | Portrait (spine) + OCEAN comparison + radar overlay + dynamics | The shared payoff |
+| Relationship List | Dashboard or `/relationships` | All analyses as snapshots — newest primary, old marked "previous version" | History preserved |
 
-### Journey 4: Free → Premium Conversion
+#### QR Mechanics
 
-**Entry:** User on results page after completing free assessment.
+| Element | Details |
+|---------|---------|
+| Where to generate | QR drawer on results page or dashboard — private screens only |
+| Generation trigger | Drawer opens → QR generated. Not before |
+| TTL | 6 hours |
+| Auto-regeneration | Every hour while drawer is open — QR always fresh |
+| Drawer closed | No active QR. Regenerates on next open |
+| What QR encodes | URL with temporary token linking to User A |
+| On accept | QR token invalidated immediately. No further scans possible. Drawer closes on User A's device |
+| On refuse | Nothing happens. No notification. QR stays active until TTL |
+| Expired QR | "This link has expired" if opened after TTL |
+
+#### Relationship Credits
+
+| Rule | Details |
+|------|---------|
+| Free credit | 1 free credit with first portrait purchase (PWYW ≥€1). One per account, lifetime |
+| Paid credits | €5 each via Polar |
+| Who pays | Scanner (User B) always pays |
+| Non-payers | See relationship feature at full price (€5). No hidden feature — seeing the cost may motivate PWYW portrait purchase (€1 min → free credit worth €5) |
+| Extension cascade | **Post-MVP.** Conversation extension invalidates existing portrait + relationship analyses. User must repay for regeneration. Economics and UX to be validated with user research before implementation |
+
+#### Relationship Analysis as Snapshot (Archive Model)
+
+| Event | What Happens |
+|-------|-------------|
+| Analysis generated | Snapshot added to relationship list for both users |
+| Previous version detection | Analysis has FK to result table. If a newer result exists for either user, analysis is a previous version |
+| Extension by either user | All relationship analyses involving that user marked "previous version" for both parties |
+| Re-analysis | New snapshot generated (costs 1 credit). Old snapshot archived, still viewable |
+| Relationship list | All snapshots listed chronologically — newest primary, older marked "previous version" |
+| Account deletion | All relationship analyses involving that user deleted for both parties |
+
+#### Content & Framing Rules
+
+- **Spine format** — same renderer as personal portrait. AI-generated section headers, emojis, content
+- **Dynamics, not deficits** — "the tension between structure and spontaneity" not "Marc is rigid"
+- **No blame** — no one is the problem
+- **No individual vulnerability** — inner struggles, pressure responses stay private. Only relational patterns
+- **Framing reinforced** — ritual screen + within analysis: "This describes your dynamic, not who's right or wrong"
+
+#### Error Recovery
+
+| Failure | Recovery |
+|---------|----------|
+| QR expired when scanned | "This link has expired" — User A opens drawer to regenerate |
+| User B not logged in | Standard auth wall — login/signup |
+| User B hasn't completed assessment | "Complete your assessment first" with link to continue |
+| User B has no credits | Purchase flow (€5 via Polar) inline on accept screen |
+| Wrong person scanned | Archetype card + confidence rings shown before accept — verify before committing |
+| Analysis generation fails | Retry, both users notified |
+| One user deletes account | All shared analyses deleted |
+| QR shared publicly | Safe — credit gate + auth + TTL. Card is public-level data. Token invalidated after first accept |
+
+#### Flow Optimizations
+
+1. **QR drawer: private, on-demand, auto-fresh** — generated on open, auto-regenerates hourly, 6h TTL. No stale codes.
+2. **One QR mechanism** — encodes a URL. Works for in-person (scan) and remote (share URL). No separate flows.
+3. **Scanner always pays** — simple, protects privacy, doesn't exhaust inviter's credits.
+4. **QR invalidated on accept** — token dies after first acceptance. Drawer closes on User A's device. No lingering state.
+5. **Ritual launches on both devices** — synchronous shared moment after accept. Nerin speaks to both.
+6. **Refuse = silence** — no notification to User A. No awkward social dynamics.
+7. **Standard auth wall for non-users** — no special handling. Same as any social platform.
+8. **Confidence rings on accept screen** — both users' confidence visible. Subtle quality signal without gating.
+9. **Archive model with FK-based version detection** — analysis references result table. Newer result = previous version. Simple DB logic.
+10. **Non-payers see full-price relationship** — €5 visible. Motivates PWYW portrait purchase (€1 → free credit worth €5). Smart conversion nudge.
+11. **One free credit per account, lifetime** — tied to first portrait purchase only. Not repeatable on extension/regeneration.
+
+### 10.3 Journey 3: Portrait Curtain + PWYW Flow
+
+**Goal:** User sees results → absorbs accuracy → PWYW modal → pays or skips → portrait delivered → relationship credit unlocked
+
+**Entry point:** Assessment complete → results page loads → user absorbs results → PWYW modal opens after brief delay
+
+#### Flow Diagram
 
 ```mermaid
 flowchart TD
-    A[User views results at 70%+<br/>Free tier complete] --> B[Subtle conversion prompt<br/>Below results, equal weight to Share CTA]
+    %% Results absorption
+    A["Assessment complete — results page loads
+    OCEAN code, archetype, trait/facet scores visible"]
+    A --> B["User absorbs results briefly
+    Archetype name, code, scores validate accuracy
+    'This is really me' moment"]
+    B --> C["PWYW modal auto-opens after delay
+    Modal overlay — same treatment mobile + desktop"]
 
-    B --> C{User interest}
-    C -->|Not interested| D[No follow-up, no nagging<br/>Prompt available in profile settings later]
-    C -->|Curious| E["Click 'Continue Exploring'"]
+    %% Modal content — single scrollable narrative
+    C --> D["Section 1: Bridge + Congratulations
+    'Congratulations on completing 25 turns with Nerin.
+    Before you read what she wrote,
+    I want to tell you why this exists.'"]
+    D --> E["Section 2: Founder's love letter
+    3-4 sentences, dense, every word earns its place
+    Vincent's vulnerability: why he built this,
+    what Nerin's portrait meant to him"]
+    E --> F["Section 3: Vincent's portrait (full length)
+    Complete spine-format example — not truncated
+    User sees full proof, expects same volume
+    Emojis, AI titles, specificity, depth"]
+    F --> G["Section 4: CTA
+    'Unlock your portrait'
+    'Includes 1 relationship analysis credit'
+    Single button → opens Polar embed modal"]
 
-    E --> F[Premium details<br/>• Continued Nerin conversation<br/>• Evidence transparency<br/>• Precision evolution 70%→85%+<br/>• Multi-context exploration]
+    %% Polar modal — stacks on top
+    G --> H["Polar checkout embed opens on top of PWYW modal
+    Default price: €5 / Minimum: €1
+    User adjusts price within Polar UI
+    Apple Pay / Google Pay / card
+    No redirect — stays in-app"]
 
-    F --> G{Decision}
-    G -->|Pay| H[Secure checkout<br/>One-time payment, price shown clearly]
-    G -->|Not now| I[Return to results<br/>Prompt won't reappear this session]
+    %% Skip
+    C --> I["Skip: 'Maybe later' or close modal
+    Always visible, no guilt language"]
+    I --> J["Modal closes → results page accessible
+    Portrait section: portrait unlock button visual
+    Subtle animation (breathing/glow)
+    'Unlock your portrait' re-entry CTA"]
 
-    H --> J[Payment confirmed<br/>Brief celebration moment]
-    J --> K[Return to chat interface<br/>Nerin: 'Welcome back. Where shall we explore next?']
-    K --> L[Continued conversation<br/>Precision meter keeps climbing]
+    %% Payment outcome
+    H --> K{Payment succeeds?}
+    K -->|Yes| L["Polar success event →
+    Backend: verify via Polar API →
+    Unlock portrait + add 1 relationship credit
+    (first purchase only, lifetime)"]
+    K -->|Fails| M["Error in Polar modal
+    Retry or change method"]
+    M --> H
 
-    L --> M[User visits results page<br/>Evidence transparency now active<br/>Updated scores visible]
+    %% Post-payment
+    L --> N["Both modals close (Polar + PWYW)
+    'Thank you. Nerin is writing your portrait now.'"]
+
+    %% Portrait generation
+    N --> O["Portrait generates
+    Loading skeleton in portrait section"]
+    O --> P{Generation succeeds?}
+    P -->|Yes| Q["Portrait appears on results page
+    Spine-format letter from Nerin
+    Smooth reveal — portrait unlock button opens"]
+    P -->|Fails| R["'Generation failed' + retry button
+    User already paid — no re-charge"]
+    R --> O
+
+    %% Post-portrait
+    Q --> S["Share prompt:
+    'Show someone who you are'
+    Archetype card download (1:1 + 9:16)
+    + Web Share API
+    Screenshots valid too"]
+
+    %% Results page continues below portrait
+    Q --> T["Below portrait on results page:
+    Relationship analysis section
+    '€5 per analysis' (or 'You have 1 credit')
+    QR drawer accessible
+    Conversation extension option (€25)"]
+
+    %% Re-entry for skippers
+    J --> U["Portrait unlock button persists on results page
+    Patient, not pushy
+    Tapping re-opens PWYW modal"]
+    U --> C
+
+    %% Email recapture
+    J --> V["Email recapture for deferred payers:
+    'Nerin's portrait is waiting for you'"]
+    V --> U
 ```
 
-**Key design decisions:**
-- **No nagging** — Conversion prompt appears once on the results page. If dismissed, doesn't reappear during session. Available later via settings.
-- **One-time payment** — No subscription. Clear price. No hidden costs.
-- **Seamless return to chat** — After payment, user is back with Nerin within one click.
-- **Evidence unlocks silently** — When user visits results page, evidence panel is discoverable through clicking facet scores. No tutorial overlay.
+#### Modal Content Structure
 
----
+Single scrollable narrative in a modal overlay. Same treatment on mobile and desktop. Polar checkout stacks on top when CTA is tapped.
 
-### Journey 5: Returning User → Resume / Revisit
+| Section | Content | Purpose |
+|---------|---------|---------|
+| 1. Bridge | Congratulations on 25 turns. "Before you read what she wrote, I want to tell you why this exists." | Validates effort, bridges from personal to founder context |
+| 2. Founder's Letter | 3-4 sentences. Vincent's love letter: why he built this, what his portrait meant to him. Dense, personal, vulnerable | Emotional permission to pay. Trust through vulnerability |
+| 3. Example Portrait | Vincent's actual portrait — full length, not truncated. Complete spine format. User sees exactly the volume and quality they'll receive | Full proof. No bait-and-switch on content length |
+| 4. CTA | "Unlock your portrait" + "Includes 1 relationship analysis credit." Single button → Polar modal | Clear action. Credit mention converts relationship-motivated users |
 
-**Entry:** User returns to big-ocean after previous visit.
+#### Polar Integration
+
+| Element | Details |
+|---------|---------|
+| Method | `@polar-sh/checkout/embed` — Polar modal stacks on top of PWYW modal |
+| Default price | €5 (configured in Polar) |
+| Minimum price | €1 (enforced by Polar) |
+| Price selection | User adjusts within Polar's UI — no pricing controls in our UI |
+| Payment options | Apple Pay / Google Pay / card |
+| No redirect | Entire flow stays in-app |
+| Success event | `success` → backend verifies via Polar API → unlocks portrait + adds relationship credit |
+| Failure | Retry within Polar modal |
+
+#### Conversion Psychology
+
+| Element | How It Works |
+|---------|-------------|
+| Delayed auto-open | User absorbs results first → "this is accurate" validates the product before the ask |
+| Congratulations bridge | Acknowledges their 25-turn investment → they've earned the right to see what Nerin wrote |
+| Founder vulnerability | Love letter tone builds trust → paying feels like supporting a person, not a product |
+| Full-length example | No mystery about what they're buying → removes uncertainty, sets accurate expectations |
+| Relationship credit at CTA | For users who came hearing about relationship analysis: €1 PWYW → free €5 credit = obvious deal |
+| Default €5 | Behavioral anchoring — most users won't adjust down. Good for revenue without being pushy |
+| €1 minimum | Price is never the blocker. Removes "I can't afford it" objection |
+| No guilt on skip | "Maybe later" respected. Portrait unlock button waits patiently. No FOMO tactics |
+
+#### Skip Path
+
+| Available to Non-Payers | Not Available |
+|------------------------|--------------|
+| OCEAN code + archetype + description | Portrait (Nerin's letter) |
+| All trait and facet scores | Free relationship credit |
+| Radar chart | |
+| Archetype card (download + share) | |
+| Conversation extension (€25) | |
+| Relationship analysis (€5, no free credit) | |
+
+#### Sealed Envelope (Deferred Payers)
+
+| Element | Details |
+|---------|---------|
+| Visual | Portrait unlock button in portrait section — evocative, not a generic button |
+| Animation | Subtle breathing or glow — communicates "something personal is here, waiting" |
+| Behavior | Tapping opens PWYW modal. Always accessible. Patient, not pushy |
+| Email recapture | "Nerin's portrait is waiting for you" — sent to deferred payers after X days |
+| On purchase | Portrait unlock button opens → portrait reveals with smooth animation |
+
+#### Screen States
+
+| State | Results Page | Portrait Section | PWYW Modal |
+|-------|-------------|-----------------|------------|
+| Results loading | Visible, scores appearing | Not shown | Not yet |
+| Absorption delay | Fully visible, user reading | Not shown | Not yet |
+| PWYW modal open | Dimmed behind modal | Not shown | Open — scrollable |
+| Polar modal open | Dimmed | Not shown | Open — Polar stacked on top |
+| Payment success | Fully visible | Loading skeleton | Closes (both) |
+| Portrait generating | Fully visible | Skeleton + "Nerin is writing..." | Closed |
+| Portrait delivered | Fully visible | Spine-format letter | Closed |
+| Portrait failed | Fully visible | "Failed" + retry | Closed |
+| Skipped | Fully visible | Portrait unlock button + re-entry CTA | Closed |
+
+#### Error Recovery
+
+| Failure | Recovery |
+|---------|----------|
+| Polar embed fails to load | "Payment temporarily unavailable. Try again later." Portrait unlock button persists |
+| Payment fails | Retry or change method within Polar modal |
+| Browser closed mid-payment | Payment state checked on return. If paid → auto-trigger portrait generation |
+| Portrait generation fails | Retry button. Already paid — no re-charge |
+| Portrait generation slow | Skeleton + "Nerin is writing..." reassurance |
+| Paid but portrait missing | Backend reconciliation: payment confirmed → auto-trigger on next page load |
+
+#### Flow Optimizations
+
+1. **Delayed auto-open** — user absorbs results first. "This is really me" feeling fuels conversion.
+2. **Bridge + congratulations** — validates 25-turn effort before transitioning to founder context.
+3. **Founder letter is dense, not long** — 3-4 sentences. Love letter, not pitch.
+4. **Full-length example portrait** — no truncation. User sees exact volume they'll receive. No bait-and-switch.
+5. **Relationship credit at CTA** — converts relationship-motivated users. €1 PWYW → free €5 credit is an obvious deal.
+6. **Polar owns pricing UI** — one CTA button, Polar handles price selection. Default €5, min €1.
+7. **Modal for both mobile + desktop** — one approach, no conditional rendering. Polar stacks on top.
+8. **Portrait unlock button** — simple, clear CTA. "Nerin has written something for you. Unlock your portrait." Always accessible, always visible.
+9. **Email recapture** — "Nerin's portrait is waiting for you" for deferred payers.
+10. **Paid-but-failed reconciliation** — backend auto-triggers portrait if payment confirmed but not generated.
+11. **PWYW amount as quality metric** — average above €1 = emotional resonance. Clustering at €1 = portrait may not be landing.
+
+### 10.4 Journey 4: Returning User Flow (Léa Returning)
+
+**Goal:** Returning user → re-engagement → conversation extension → deeper conversation → portrait regeneration → relationship re-analysis
+
+**Entry point:** Léa returns ~2 weeks after initial assessment, motivated by unfinished emotional resonance from Nerin's portrait
+
+#### Flow Diagram
 
 ```mermaid
 flowchart TD
-    A[User returns to big-ocean] --> B{Auth state}
-    B -->|Logged in| C{Assessment state?}
-    B -->|Anonymous with session URL| D[Resume from URL<br/>Session valid 24h]
-    B -->|Anonymous, no URL| E[Landing page<br/>Journey 1: New user]
+    %% Re-engagement triggers
+    A{"How does Léa return?"}
+    A -->|Nerin check-in email| B["~2 weeks post-assessment
+    Nerin-voiced: references specific tension
+    from portrait, not promotional
+    'I've been thinking about [theme]...'
+    One email only — then silence"]
+    A -->|Relationship notification| C["'Your analysis with Marc is ready'"]
+    A -->|Organic return| D["Opens app / visits site"]
+    A -->|Via friend's card| E["Sees friend's card → visits profile
+    → navigates to own results"]
 
-    C -->|In progress, < 70%| F[Dashboard: 'Continue Your Conversation'<br/>Precision %, last message preview<br/>Single CTA to resume]
-    C -->|Completed, free tier| G[Dashboard: Results page<br/>Archetype + scores + share<br/>Subtle 'Go Deeper' premium prompt]
-    C -->|Completed, premium| H[Dashboard: Results + options<br/>• Resume conversation<br/>• View results with evidence<br/>• Share archetype]
+    %% Results page — returning state
+    B --> F["Results page / dashboard"]
+    C --> F
+    D --> F
+    E --> F
 
-    F --> I[Resume chat<br/>Nerin: contextual re-entry<br/>'Last time we were discussing...']
+    %% Extension CTA surfaces at re-engagement moments
+    F --> G["Extension visible across touchpoints:
+    Results page, portrait view,
+    relationship page, QR drawer
+    Subtle 'go deeper' — not pushy"]
 
-    G --> J[Results page<br/>Steady-state design<br/>Same layout as post-reveal]
+    %% The real CTA: portrait's half-open door
+    G --> H["Portrait's narrative hook:
+    Nerin's letter ends with an unresolved
+    tension — an observation that hints
+    at something deeper, unexplored
+    THIS is the real extension CTA"]
 
-    H --> K{User choice}
-    K -->|Chat| L[Resume conversation]
-    K -->|Results| M[Results with evidence panel]
-    K -->|Share| N[Journey 2: Share flow]
+    %% Extension decision
+    H --> I{"Léa wants more depth?"}
+    I -->|Yes| J["Taps extension CTA"]
+    I -->|No| K["Views analyses, revisits portrait,
+    shares card, initiates relationships"]
 
-    D --> O{Session valid?}
-    O -->|Yes, < 24h| I
-    O -->|Expired| P[Prompt: Create account<br/>Or start fresh]
+    %% Extension info screen
+    J --> L["Extension info screen:
+    '+25 exchanges with Nerin — €25'
+    'Nerin remembers your conversation
+    and wants to explore [tension she named]'
+    Echoes the portrait's unfinished thread
+
+    Evolution framing:
+    'Your portrait and relationship analyses
+    will evolve with deeper evidence.
+    Previous versions remain viewable.'
+
+    €25 — single purchase"]
+    L --> M{Léa confirms?}
+    M -->|Yes| N["Polar checkout (€25 fixed)
+    Apple Pay / Google Pay / card"]
+    M -->|No| F
+
+    %% Payment
+    N --> O{Payment succeeds?}
+    O -->|Yes| P["Extension unlocked → /chat"]
+    O -->|Fails| Q[Retry within Polar]
+    Q --> N
+
+    %% Continued conversation
+    P --> R["Nerin picks up with themes, not transcripts
+    References patterns and tensions,
+    not specific exchanges
+    'Last time, I noticed a tension between
+    your need for novelty and your need
+    for anchoring. I'd like to explore that.'
+    Matches how humans recall conversations"]
+    R --> S["Conversation loop: exchanges 26-50
+    Depth meter resets with new milestones
+    25% / 50% / 75% of extension"]
+
+    %% Deeper pacing
+    S --> T{"Pacing pipeline has 25 exchanges
+    of prior evidence"}
+    T --> U["Deeper territories with more precision
+    Ambition, family dynamics, inner tensions
+    Feel-seen moments more frequent +
+    more specific (higher confidence base)"]
+
+    %% Drop-off
+    S -->|Léa leaves| V["Session saved + topic stored
+    Same re-engagement as Journey 1"]
+    V --> S
+
+    %% Completion
+    U --> W["Exchange 50: extension complete"]
+    W --> X["New results generated
+    Updated scores from 50 exchanges
+    Archetype may evolve
+    OCEAN code may shift"]
+
+    %% Evolution framing
+    X --> Y{"Archetype changed?"}
+    Y -->|Yes| Z["Evolution framing:
+    'With deeper evidence, your profile
+    evolved from The Beacon to The Navigator.
+    Both reflect real parts of you.'
+    Old archetype preserved in history"]
+    Y -->|No| AA["Same archetype, refined scores
+    Confidence levels higher"]
+
+    %% Cascade — evolution not loss
+    Z --> AB["Previous portrait marked 'previous version'
+    Previous analyses marked 'previous version'
+    (FK check — newer result exists)
+    All previous versions remain viewable"]
+    AA --> AB
+
+    %% Portrait regeneration
+    AB --> AC["Portrait regeneration prompt:
+    'Nerin has 50 exchanges to draw from now.
+    Your new portrait will reveal patterns
+    that weren't visible before.'
+    Framed as NEW portrait, not a fix
+    PWYW via Polar (same flow)"]
+    AC --> AD{Pays for regeneration?}
+    AD -->|Yes| AE["New portrait generates
+    Noticeably richer — deeper patterns,
+    more specific observations"]
+    AD -->|Not now| AF["Previous portrait still viewable
+    Regeneration CTA persists
+    New results visible"]
+
+    %% Relationship re-analysis
+    AE --> AG["Previous analyses marked 'previous version'
+    Re-analyze via QR scan (€5 each)
+    → Journey 2 flow
+    New snapshot archived alongside old"]
+    AF --> AG
 ```
 
-**Key design decisions:**
-- **Contextual re-entry** — Nerin references the last conversation topic. Demonstrates the product remembers.
-- **Dashboard is simple** — One primary action based on user state.
-- **Results page is always the same** — No first-visit vs returning distinction. The reveal is a one-time entrance animation only.
+#### Screen States & Key Moments
+
+| Step | Screen | Key UX Element | Purpose |
+|------|--------|---------------|---------|
+| Re-engagement | Email / organic | Nerin-voiced check-in referencing specific tension from portrait. One email, then silence | Emotional hook, not promotional |
+| Results (returning) | `/results` | Portrait, relationship list, extension CTA visible across touchpoints | Full history accessible |
+| Portrait's Half-Open Door | Portrait section | Nerin's letter ends with unresolved tension — narrative hook | The real extension CTA is the unfinished feeling |
+| Extension Info | Modal/screen | Echoes portrait's unfinished thread + evolution framing + €25 | Sells on emotional resonance, not features |
+| Continued Conversation | `/chat` | Nerin references themes/patterns, not transcripts. Acknowledges time gap naturally | Feels like picking up with a friend |
+| Depth Meter | `/chat` sidebar | New milestones at 25/50/75% of extension | Progress through new segment |
+| Updated Results | `/results` | New scores, possible archetype evolution. Old archetype in history | "Evolved" not "replaced" |
+| Portrait Regeneration | Results page | "Nerin has 50 exchanges now" — PWYW, same Polar flow | New portrait, not a fix |
+| Relationship Re-analysis | Relationship list | Previous versions viewable, re-analyze via QR (€5) | New snapshot, old archived |
+
+#### Re-engagement Mechanics
+
+| Trigger | Details |
+|---------|---------|
+| Nerin check-in email | ~2 weeks post-assessment. Nerin-voiced, references specific tension from portrait. Not promotional. One email only — respect silence after |
+| Relationship notification | "Your analysis with [name] is ready" (if applicable) |
+| Organic return | User revisits results/dashboard on their own |
+| Friend's card | Sees friend's archetype → visits their profile → navigates to own results |
+| Extension CTA placement | Visible on results page, portrait view, relationship page, QR drawer. Subtle, not pushy |
+
+#### Conversation Extension Mechanics
+
+| Element | Details |
+|---------|---------|
+| Price | €25 fixed (not PWYW) — intentional price filters for users who genuinely want depth |
+| What it unlocks | 25 additional exchanges (26-50) with Nerin |
+| Context preservation | Nerin references themes and patterns, not specific exchanges. Matches how humans recall conversations |
+| Pacing pipeline | Starts with 25 exchanges of evidence. Deeper territories, higher confidence for feel-seen moments |
+| Depth meter | Resets for extension segment. New milestones at 25/50/75% |
+| Multiple extensions | Not in MVP scope — one extension only (50 total) |
+
+#### Evolution Framing (Not "Outdated")
+
+| Element | Old Framing | New Framing |
+|---------|-------------|-------------|
+| Portrait after extension | "Outdated" | "Previous version" — still viewable |
+| Relationship analyses | "Outdated" | "Previous version" — still viewable |
+| Archetype change | Implied error | "Evolved with deeper evidence. Both reflect real parts of you." |
+| Regeneration prompt | "Regenerate" | "Nerin has 50 exchanges to draw from now. New patterns visible." |
+| Old versions | Could feel "broken" | Preserved in history as snapshots of a less complete picture |
+
+#### Regeneration Economics
+
+| Item | Cost | Framing |
+|------|------|---------|
+| Conversation extension | €25 fixed | "Go deeper with Nerin" |
+| Portrait regeneration | PWYW (default €5, min €1) | "New portrait from deeper evidence" — not a fix |
+| Relationship re-analysis | €5 per analysis | New snapshot, old archived |
+| Total (2 relationships) | €25 + PWYW + €10 | **Post-MVP.** Cascade economics to be validated with user research before implementation |
+
+#### Nerin's Continuity
+
+| Element | How It Works |
+|---------|-------------|
+| Time gap | Acknowledged naturally: "It's been a while..." |
+| Thread references | Themes and patterns, not specific exchanges. "I noticed a tension between X and Y" |
+| Deeper territories | Ambition, family dynamics, inner tensions — with precision from prior evidence |
+| Feel-seen moments | More frequent, more specific — higher confidence base from 25 prior exchanges |
+| Tone | Warmer than exchange 1 — they know each other. No re-introduction |
+
+#### Error Recovery
+
+| Failure | Recovery |
+|---------|----------|
+| Extension payment fails | Retry within Polar. No partial state |
+| Conversation interrupted | Session saved, same re-engagement as Journey 1 |
+| Portrait regeneration fails | Retry. Already paid — no re-charge |
+| Archetype changes dramatically | Evolution framing + old archetype preserved in history |
+| User regrets extension | Old portrait still viewable. New results reflect deeper evidence |
+
+#### Flow Optimizations
+
+1. **Portrait IS the extension CTA** — the half-open door in Nerin's letter creates unfinished resonance. If the portrait lands, the extension sells itself.
+2. **Extension info echoes portrait's thread** — not generic "go deeper" but "Nerin wants to explore [tension she named]."
+3. **Evolution, not "outdated"** — "previous version" language. Old versions preserved. Archetype change = growth, not error.
+4. **Nerin references themes, not transcripts** — matches how humans recall past conversations. Patterns and tensions, not specific exchanges.
+5. **One Nerin-voiced check-in email** — references specific tension from portrait. Not promotional. One email, then silence.
+6. **€25 is intentional** — filters for users who genuinely want depth. Don't discount or bundle.
+7. **Portrait regeneration framed as new** — "50 exchanges to draw from" emphasizes what's new, not what's replaced.
+8. **Extension CTA at re-engagement touchpoints** — visible on portrait view, relationship page, QR drawer. Not just results page.
+9. **Cascade cost is transparent** — extension info screen explains evolution before purchase. No surprise after.
+10. **The real competitor is inaction** — €25 needs to feel cheaper than the cost of NOT exploring the tension Nerin named.
+
+### 10.5 Journey 5: Public Profile → Conversion Flow
+
+**Goal:** Stranger lands on a public profile → understands the product through someone else's results → comparison curiosity drives sign-up → own assessment
+
+**Entry point:** Taps link from shared archetype card (social media, message, screenshot) → lands on public profile page
+
+#### Flow Diagram
+
+```mermaid
+flowchart TD
+    %% Entry sources
+    A{"How does the stranger arrive?"}
+    A -->|Archetype card on social| B["Taps link embedded in card
+    Instagram Story, WhatsApp, Twitter, etc.
+    Card is generic (archetype-level, no scores)
+    Link parameterized to user's public profile"]
+    A -->|Screenshot shared| C["Sees screenshot → googles
+    archetype name or 'big ocean'
+    → finds landing page or profile"]
+    A -->|Direct link| D["Friend texts profile URL directly"]
+    A -->|Link preview| E["Sees OG meta preview in chat
+    (archetype name + archetype card image)
+    → taps through"]
+
+    %% Landing
+    B --> F["Public Profile Page
+    /profile/:id"]
+    C --> G["Landing Page / Homepage
+    → may find profile from there"]
+    D --> F
+    E --> F
+    G --> F
+
+    %% Profile states
+    F --> FA{"Profile status?"}
+    FA -->|Public| H["Profile renders"]
+    FA -->|Private| FB["'This user has made their profile private.'
+    Redirect to homepage
+    No CTA, no archetype teaser
+    Respects user's choice"]
+    FA -->|Deleted| FC["'This profile has been deleted.'
+    No CTA"]
+
+    %% Above the fold — instant hook
+    H --> HAF["Above the fold (mobile-first, no scroll):
+    1. Framing: '[Name] dove deep with Nerin
+       — here's what surfaced'
+    2. Archetype name ('The Beacon')
+    3. Short archetype description (2-3 sentences
+       that trigger self-comparison)
+    4. GeometricSignature + OCEAN code with tooltips
+    5. CTA: 'What's YOUR code?
+       Discover it in a conversation with Nerin'"]
+
+    %% Scroll depth
+    HAF --> I{Visitor scrolls?}
+    I -->|No — quick glance| J["Above-the-fold does ALL conversion work
+    Archetype description is the engine"]
+    I -->|Yes — curious| K["Below the fold:
+    Trait bars (5 traits, visual)
+    Facet breakdown (expandable)
+    Confidence rings per trait
+    Tooltips on traits, facets, confidence"]
+
+    %% Deep scroll
+    K --> L{Keeps scrolling?}
+    L -->|Yes| M["Scientific depth:
+    Trait descriptions
+    (no private evidence shown)
+    'How it works' micro-preview:
+    1. Talk to Nerin (~25 min)
+    2. Get your archetype + code
+    3. Compare with friends"]
+    L -->|No| N["CTA repeated after trait bars"]
+
+    %% CTA
+    J --> O["CTA: 'What's YOUR code?
+    Discover it in a conversation with Nerin'"]
+    N --> O
+    M --> O
+
+    %% CTA tap
+    O --> P{Visitor taps CTA}
+    P -->|Yes| Q{Has account?}
+    P -->|No — leaves| R["Profile visit counted as impression
+    No retargeting, no follow-up
+    Card/link persists if they return
+    Archetype name is googlable"]
+
+    %% Auth
+    Q -->|No| S["Sign Up page
+    Email/password + social auth
+    One screen, minimal fields"]
+    Q -->|Yes, no assessment| T["Redirected to /chat
+    Start conversation with Nerin"]
+    Q -->|Yes, assessment complete| U["Views friend's profile
+    with relationship CTA"]
+
+    %% Post sign-up
+    S --> V["Account created →
+    Straight to /chat
+    No interstitial, no onboarding screen
+    Nerin IS the onboarding"]
+
+    %% Journey 1 begins
+    V --> W["→ Journey 1: First-Timer Flow
+    (full flow from exchange 1)"]
+    T --> W
+
+    %% Logged-in user on someone's profile
+    U --> X["Sees friend's profile data
+    Relationship analysis CTA:
+    'You care about [Name].
+    Discover your dynamic together.'
+    Explains QR flow briefly
+    Plants seed for next in-person moment"]
+
+    %% Sharing prompt with visibility toggle
+    HAF --> SH["When profile OWNER shares:
+    If profile is private → prompt:
+    'Make your profile public so friends
+    can see your archetype when they
+    tap your link?'
+    Toggle right at sharing moment
+    Not buried in settings"]
+```
+
+#### Screen States — Public Profile Page
+
+**Above the fold (mobile-first, no scroll needed):**
+
+| Order | Element | Details | Purpose |
+|-------|---------|---------|---------|
+| 1 | Framing Line | "[Name] dove deep with Nerin — here's what surfaced" | Explains what this page is + introduces Nerin. Ocean metaphor. Visitor has zero context — this line provides it |
+| 2 | Archetype Name | Large, prominent ("The Beacon") | Talkable, memorable — the hook |
+| 3 | Archetype Description | 2-3 sentences that trigger self-comparison: "Am I like this? Am I different?" | The conversion engine. Makes visitor think about THEMSELVES, not the profile owner |
+| 4 | GeometricSignature + OCEAN Code | 5 shapes + semantic letters (e.g., OCEAR) with tooltips | Visual identity — "I want one of these." Tooltips explain but don't satisfy curiosity |
+| 5 | CTA | "What's YOUR code? Discover it in a conversation with Nerin" | Sells output (code) + process (conversation with Nerin). Sets expectation |
+
+**Below the fold (scroll reveals):**
+
+| Element | Details | Purpose |
+|---------|---------|---------|
+| Trait Bars | 5 horizontal bars, colored by trait, labeled | Visual snapshot — triggers "where would I be on these?" |
+| Facet Breakdown | Expandable per trait — 6 facets each | Depth for curious visitors |
+| Confidence Rings | Per trait — subtle visual | Scientific credibility signal |
+| Tooltips | On traits, facets, confidence — explain concepts on tap | Self-serve education — tooltips explain the OTHER person, CTA redirects curiosity to SELF |
+| Repeated CTA | Same CTA after trait bars section | Catches visitors who scrolled past first CTA |
+| "How it works" | 3 steps: 1. Talk to Nerin (~25 min) → 2. Get your archetype + code → 3. Compare with friends | Sets accurate expectations. Prevents quiz-expectation mismatch |
+
+#### Archetype Card (Generic, Not Personalized)
+
+| Element | Details |
+|---------|---------|
+| Content | Archetype name + short description (1-2 sentences) + GeometricSignature + OCEAN code |
+| No scores | No trait bars, no facet data. Scores live on the public profile only |
+| One card per archetype | Same card for everyone with that archetype — no per-user rendering |
+| Link | Parameterized to the user's public profile URL |
+| Formats | 1:1 (link previews, WhatsApp) + 9:16 (Instagram Stories) |
+| Short description | Each archetype gets a 1-2 sentence description baked into the card. Makes the card self-contained |
+
+#### What IS Shown vs What ISN'T
+
+| Shown (Public Profile) | Not Shown (Private) |
+|------------------------|-------------------|
+| Archetype name + description | Portrait (Nerin's letter) |
+| OCEAN code + GeometricSignature | Evidence snippets (what user said) |
+| Trait scores + bars | Conversation content |
+| Facet scores (expandable) | Relationship analyses |
+| Confidence rings | |
+| Trait-level descriptions | |
+
+| Shown (Archetype Card) | Not Shown (Card) |
+|------------------------|-----------------|
+| Archetype name + short description | Trait/facet scores |
+| GeometricSignature + OCEAN code | Confidence data |
+| Profile link | Any personalized data |
+
+The public profile is a **showcase, not a dossier.** The archetype card is a **hook, not a report.**
+
+#### Tooltip System
+
+| Element | Tooltip Content |
+|---------|----------------|
+| OCEAN code letter (e.g., "O") | "Open-minded — curious, creative, open to new experiences" |
+| OCEAN code letter (e.g., "T") | "Traditional — practical, conventional, prefers the familiar" |
+| Trait name (e.g., "Openness") | Brief trait description + score range context |
+| Facet name (e.g., "Imagination") | One-line facet explanation |
+| Confidence ring | "Based on X pieces of evidence. Higher = more data points" |
+| GeometricSignature shapes | Each shape maps to a trait letter — tap to see which |
+
+Tooltips are **tap-to-reveal on mobile, hover on desktop.** They educate about the profile owner's data, but the CTA redirects curiosity back to self: "But what would YOUR code be?"
+
+#### Logged-In Visitor Experience
+
+When a logged-in user with a completed assessment visits someone's public profile:
+
+| Element | Details |
+|---------|---------|
+| Profile view | Standard profile data — same as any visitor |
+| Relationship CTA | "You care about [Name]. Discover your dynamic together." + brief QR explanation |
+| QR explanation | "Next time you're together, scan QR codes to unlock your full relationship analysis" |
+| Why it works | Visitor is here because they care about this person — the perfect moment to plant the relationship seed |
+| No automatic comparison overlay | Relationship analysis (Journey 2) is where the dynamic is explored, not the profile page |
+
+#### Privacy Model (Binary)
+
+| Setting | Default | Effect |
+|---------|---------|--------|
+| Profile visibility | Private | "This user has made their profile private." + redirect to homepage. No CTA, no teaser |
+| Profile visibility | Public | Full profile visible: archetype, scores, facets, confidence, traits |
+
+**No partial visibility.** Profile is either fully public or fully private. OCEAN code on the archetype card already implies the score levels — hiding scores while showing the code is redundant.
+
+**Visibility toggle surfaced at sharing moment:** When a user with a private profile taps "Share," prompt: "Make your profile public so friends can see your archetype when they tap your link?" Toggle right there — not in settings. If they decline, the card still shares but the link shows the private profile message.
+
+#### OG Meta / Link Previews
+
+| Platform | Preview Content |
+|----------|----------------|
+| WhatsApp / iMessage | Archetype card image (with short description) + "Discover [name]'s personality on big ocean" |
+| Twitter/X | Large card — archetype card image + archetype name |
+| Instagram Stories | Link sticker — archetype name visible in URL preview |
+| General OG tags | `og:title`: "[Name] is The Beacon — OCEAR" / `og:image`: archetype card (not just GeometricSignature — the full card with description) / `og:description`: Most compelling sentence from archetype description + "Discover your own." |
+
+OG image = **archetype card itself** (with short description), not just the GeometricSignature. The card is designed to be eye-catching; the isolated signature loses impact at small sizes.
+
+#### Error States
+
+| State | Display | Action |
+|-------|---------|--------|
+| Profile not found (bad URL) | "Profile not found" | Redirect to homepage |
+| Profile is private | "This user has made their profile private." | Redirect to homepage |
+| Profile deleted | "This profile has been deleted." | No CTA |
+| Link preview image fails | Fallback to text-only OG tags | Archetype name still visible |
+
+**No CTA on error states for private/deleted profiles.** Respect the user's privacy choice. Homepage redirect is sufficient — the homepage has its own conversion flow.
+
+#### Conversion Funnel Metrics
+
+| Step | Metric | Purpose |
+|------|--------|---------|
+| Impression | Profile page views | How many people land on profiles |
+| Engagement | Scroll depth, tooltip interactions | Are visitors exploring or bouncing? |
+| CTA tap | Click rate on comparison CTA | Is the hook working? |
+| Sign-up | Registration from profile referral | Conversion rate |
+| Assessment start | First Nerin exchange from profile-referred users | Do sign-ups actually start? |
+| Assessment complete | Completion rate for profile-referred users | Do they finish? |
+
+#### Flow Optimizations
+
+1. **Framing line introduces Nerin + ocean metaphor** — "[Name] dove deep with Nerin — here's what surfaced." Zero-context visitors understand what this page is in one line.
+2. **Visual hierarchy: emotion before data** — framing → archetype name → description → shapes/code → CTA. The conversion engine is the archetype description (triggers self-comparison), not the data.
+3. **CTA sells output AND process** — "What's YOUR code? Discover it in a conversation with Nerin." Sets accurate expectations (not a quiz).
+4. **"How it works" micro-preview below fold** — 3 steps, 5 seconds to scan. Catches visitors who need more before committing.
+5. **Archetype card is generic** — same card for everyone with that archetype. No per-user score rendering. Short description baked in makes card self-contained.
+6. **Binary privacy** — public or private, no partial states. Visibility toggle surfaced at sharing moment, not buried in settings.
+7. **Private/deleted = respect + redirect** — no CTA on error states. "Profile is private" + homepage redirect. Respect the choice.
+8. **OG image = archetype card** — full card with description, not just GeometricSignature. Eye-catching at preview sizes.
+9. **Logged-in visitors see relationship CTA** — "You care about [Name]" plants the seed for in-person QR. Acknowledges they're not together right now.
+10. **Tooltips educate, CTA redirects** — tooltips explain the profile owner's data. CTA redirects curiosity back to self. Education ≠ satisfaction.
+11. **Mobile-first** — most traffic from social media taps. Above-the-fold hierarchy fits first viewport on mobile.
+12. **No retargeting** — visitor leaves, no follow-up. Card/link persists in social feeds. Archetype name is googlable.
+13. **No social proof** — no "X friends have this archetype." Big ocean is about genuine connection, not social metrics.
+14. **Screenshots are valid entry** — archetype name googlable. Homepage catches these visitors.
+
+## 11. Component Strategy
+
+### 11.1 Design System Coverage (shadcn/ui)
+
+**Available from shadcn/ui (already installed):**
+
+| Component | Usage in big-ocean |
+|-----------|--------------------|
+| Button | CTAs, actions, form submissions |
+| Card | Trait cards, evidence cards, relationship cards |
+| Dialog | PWYW curtain modal, confirmations |
+| Drawer | QR drawer |
+| Sheet | Mobile navigation |
+| Input | Chat input, forms |
+| Switch | Profile visibility toggle |
+| Tooltip | OCEAN code letters, trait explanations |
+| Badge | Evolution badge, credit display |
+| Avatar | User avatars |
+| Dropdown Menu | User navigation, settings |
+| Chart (Recharts) | Radar chart base |
+| Sonner (Toast) | Transient error notifications, success confirmations |
+
+### 11.2 Already Built (Custom)
+
+| Category | Components |
+|----------|-----------|
+| Chat | Message, MessageBubble, NerinMessage, ChatConversation, ChatInputBarShell, DepthMeter, EvidenceCard, FacetIcon |
+| Ocean Shapes | OceanCircle, OceanTriangle, OceanDiamond, OceanHalfCircle, OceanRectangle, OceanShapeSet |
+| Results | ArchetypeHeroSection, ArchetypeCard, ArchetypeDescriptionSection, PersonalityRadarChart, ConfidenceRingCard, TraitBand, FacetScoreBar, DetailZone, PersonalPortrait, PortraitReadingView, PortraitUnlockButton, HighlightedText, ProfileView, QuickActionsCard, ShareProfileSection, PublicProfileCTA, RelationshipCreditsSection, ConversationTranscript |
+| Sea Life | GeometricOcean, Bubbles |
+| Sharing | ArchetypeCardTemplate, ArchetypeShareCard |
+| Relationship | InvitationBottomSheet, RelationshipCard |
+| Auth | ChatAuthGate, ResultsAuthGate, login-form, signup-form |
+| Home | HeroSection, ConversationFlow, ChatBubble, ComparisonCard, ResultPreviewEmbed, TraitStackEmbed |
+| Other | FinalizationWaitScreen, PortraitWaitScreen, Logo, Header, ThemeToggle, ErrorBanner |
+
+### 11.3 Architecture Principles
+
+**Navigation:** All internal links use TanStack `Link` from `@tanstack/react-router`. No raw `<a>` tags for internal navigation.
+
+**SSR-first for read-heavy surfaces:** Results page, public profile, and relationship analysis are server-rendered via TanStack Start. react-markdown runs server-side — browser receives ready HTML. Client rendering reserved for interactive components (chat, QR drawer, depth meter). Vincent's example portrait in the PWYW modal is pre-rendered at build time as static content (it never changes).
+
+**Error strategy — three tiers:**
+
+| Error Type | Surface | Example |
+|-----------|---------|---------|
+| Transient / recoverable | Sonner toast (shadcn) | "Payment failed — try again", "QR generation failed", "Network error" |
+| Component crash | React Error Boundary at route composition level | Portrait renderer crashes → fallback UI, rest of page works |
+| Action-blocking | Inline in component | Portrait generation failed → retry button where portrait would be |
+
+Error boundaries are placed at the **route composition level**, not per-component. One component failure never crashes the page.
+
+**Loading convention:** Skeleton placeholders for content with a known shape (portrait sections, signature shapes, trait bars). Spinner for indeterminate waits (QR generation, payment processing). Applied consistently across all components.
+
+**Testing convention:** Each custom component gets: (1) a Storybook story showing all states/variants, (2) a Vitest test for interactive behavior (tooltip opening, toggle state, polling lifecycle).
+
+### 11.4 Custom Components (New)
+
+#### GeometricSignature
+
+**Purpose:** Renders a user's OCEAN code as 5 geometric shapes in sequence — the visual identity mark across all surfaces.
+
+**Props:**
+- `oceanCode: string` — 5-letter code (e.g., "OCEAR")
+- `size: "hero" | "profile" | "card" | "mini"` — maps to 28px / 18px / 12px / 10px
+- `animated?: boolean` — subtle entrance animation
+
+**States:** Default (5 shapes inline, even spacing) · Loading (5 gray skeleton circles)
+
+**Satori constraint:** All 15 shapes must render identically in React DOM and Satori (server-side OG image generation). No CSS transforms for shape construction — use SVG `path` or `polygon` only. No `clip-path`, no gradients inside shapes. Solid fills only. Test each shape in Satori during development.
+
+**Usage:** Results page hero, public profile, archetype card, relationship analysis, share card, OG image generation.
+
+**Accessibility:** `aria-label="Personality signature: [spell out code letters]"`. Each shape: `role="img"` with trait name tooltip.
 
 ---
 
-### Journey Patterns (Cross-Journey)
+#### OceanCodeStrand
 
-**Navigation Patterns:**
-- **Single primary CTA** — Every screen has one dominant action. Secondary actions exist but never compete visually.
-- **Contextual back** — Returns to previous meaningful state, not previous URL.
-- **Deep link friendly** — Every state (results, shared profile, chat) is URL-addressable.
+**Purpose:** Displays the 5-letter OCEAN code with interactive tooltips explaining each letter's meaning.
 
-**Decision Patterns:**
-- **Equal-weight choices** — When two options are valid (Share / Keep Exploring), visual weight is equal. No manipulation.
-- **Dismissible prompts** — Every prompt (premium, share) can be dismissed without consequence. No return-visit nagging.
-- **Progressive disclosure** — Complex features (evidence panel, facet details) discoverable through interaction, not displayed upfront.
+**Props:**
+- `oceanCode: string`
+- `size: "display" | "default" | "compact"`
+- `interactive?: boolean` — enable/disable tooltips (default true)
 
-**Feedback Patterns:**
-- **Visual punctuation** — Brief 0.5s animations at milestones (25%, 50%, 70%) to mark progress.
-- **Toast notifications** — Non-blocking, bottom-of-screen, auto-dismiss 3s. Used for: link copied, session saved, precision milestone.
-- **Nerin verbal milestones** — Conversational progress acknowledgment at key moments.
+**States:** Default (5 letters in `--font-data`, subtle trait-color underlines) · Tooltip open (letter highlighted, tooltip: letter meaning + trait name + level description)
 
-**Error Recovery Patterns:**
-- **Graceful degradation** — Network drops don't lose data. Messages queue locally, sync on reconnect.
-- **Warm error messages** — Nerin-voiced where possible: "Something went wrong on my end — let me try that again."
-- **No dead ends** — Every error state has a clear recovery action.
+**Usage:** Results page, public profile, relationship comparison.
 
-### Flow Optimization Principles
-
-1. **Minimum steps to value** — Landing → chat in 1 click. Chat → sign-up → reveal in ~30 min. Results → share in 2 clicks.
-2. **Sign-up at peak motivation** — Account creation at the reveal gate, when user has maximum investment and desire to see results.
-3. **State preservation everywhere** — Pausing, closing browser, switching devices — nothing loses progress.
-4. **Celebration at every milestone** — 50% precision, 70% threshold, account creation, archetype reveal, first share, premium unlock.
-5. **Exit without guilt** — Every exit point is clean. No "Are you sure?" dialogs. No abandoned-cart emails.
+**Accessibility:** Each letter is a `<button>` with `aria-describedby` linking to tooltip. Keyboard navigable (Tab between letters, Enter/Space to open).
 
 ---
 
-## Component Strategy
+#### PortraitSpineRenderer
 
-### Design System Components (shadcn/ui)
+**Purpose:** Renders personal and relationship portraits in spine format — AI-generated sections with emoji headers and narrative content.
 
-**Already installed:** Button, Card, Dialog, Sheet, Dropdown Menu
+**Props:**
+- `sections: Array<{ emoji: string, title: string, subtitle?: string, content: string }>`
+- `variant: "personal" | "relationship"`
 
-**To install for MVP:**
+**Content rendering:** Uses `react-markdown` for section content — supports bold, italic, bullet points, titles, subtitles. Runs server-side via SSR — browser receives pre-rendered HTML. Data shape is identical for personal portraits, relationship portraits, and Vincent's example portrait (static data).
 
-| Component | Install Command | Usage |
-|-----------|----------------|-------|
-| Toast | `pnpm dlx shadcn@latest add toast` | Milestone notifications (25%, 50%, 70%) with custom psychedelic burst content |
-| Badge | `pnpm dlx shadcn@latest add badge` | Trait level indicators (semantic letters, e.g., O/M/T per trait) on results page |
-| Tabs | `pnpm dlx shadcn@latest add tabs` | Results page navigation: Overview / Facets / Evidence |
-| Tooltip | `pnpm dlx shadcn@latest add tooltip` | Facet score hover details |
-| Scroll Area | `pnpm dlx shadcn@latest add scroll-area` | Chat message container with custom scrollbar |
-| Separator | `pnpm dlx shadcn@latest add separator` | Content section dividers |
-| Progress | `pnpm dlx shadcn@latest add progress` | Precision meter — proper component for clean separation |
+**States:** Default (sections rendered with vertical rhythm, 65ch width, 1.75 line-height) · Generating (skeleton sections pulsing) · Failed (inline retry button — the error IS the content location)
 
-**Not needed for MVP:** Avatar (3 lines of Tailwind for initials circle), Accordion, Collapsible.
+**Usage:** Results page portrait section, relationship analysis page, PWYW modal (Vincent's portrait).
 
-### Custom Components
-
-After three rounds of refinement (First Principles reduction from 10 → 2, Architecture Decision Records, Mentor-Apprentice review), the custom component list is minimal:
-
-**1. OceanShape**
-
-- **Location:** `packages/ui/src/components/ocean-shape.tsx`
-- **Purpose:** Renders one of 5 OCEAN geometric shapes as a decorative element.
-- **Props:** `trait` (O/C/E/A/N), `variant` ("blurred" | "sharp" | "outline"), `size`, `opacity`, `className`
-- **Rendering:** Hybrid approach (ADR-1). CSS `clip-path` for Circle, Rectangle, Diamond, Triangle. Inline SVG for Half-Circle (requires arc path). Shape geometry imported from shared constants.
-- **Animation:** Not built in. Animation is applied externally via CSS classes on the wrapper (`animate-jellyfish`, `animate-float`, etc.). This maintains clean tier separation — deleting `enhancement.css` removes all animation without touching the component.
-- **Accessibility:** `aria-hidden="true"` — purely decorative.
-- **Dark mode:** Hue-shifted trait colors applied via CSS custom properties. Component is color-agnostic — reads from theme tokens.
-
-**2. GeometricSignature**
-
-- **Location:** `apps/front/src/components/results/GeometricSignature.tsx`
-- **Purpose:** Arranges 5 OceanShapes in a per-archetype layout reflecting trait levels.
-- **Props:** `traitLevels` (record of 5 semantic trait level values per `TRAIT_LETTER_MAP`), `variant` ("full" | "compact" | "icon"), `className`
-- **Layout logic:** Delegates to `computeSignature()` pure function in `packages/domain`. Shape size = trait level (low=small, mid=medium, high=large). Position follows fixed layout grid. **Deterministic** — same OCEAN code always produces same visual (243 possible outputs, 0 manual design work). Enables archetype brand recognition.
-- **Reuse:** Results page header renders via React component. Share card generation renders same positions as SVG elements via `generateShareCardSVG`.
-
-### Hooks
-
-**useRevealAnimation**
-
-- **Location:** `apps/front/src/hooks/useRevealAnimation.ts`
-- **Purpose:** Orchestrates the 5-stage archetype reveal animation (ADR-3).
-- **API:** Returns `{ stage, start, skip }`. Stage is one of: `idle`, `fade`, `still`, `name`, `shapes`, `bloom`, `complete`.
-- **Implementation:** Lightweight JS orchestration via `setTimeout` chain (~30 lines). CSS does the visuals (transitions on elements responding to stage-based classes). JS is the conductor.
-- **Stage timings:** `fade: 800ms`, `still: 1700ms`, `name: 1000ms`, `shapes: 1000ms`, `bloom: 1000ms` — stored as design tokens.
-- **Skip support:** `skip()` jumps immediately to `complete` state. For Alex-type users who want to see data immediately.
-- **Non-blocking:** Content is always rendered and interactive. Stages control CSS overlay classes only.
-- **First-visit detection:** `revealedAt` timestamp set on results page mount (before animation starts), not on completion. Prevents refresh replay race condition.
-- **Tier fallback:** Tier 1 — `start()` immediately sets `stage = 'complete'` (simple fade-in via CSS transition). Tier 2 — full staged sequence.
-
-### Server Utilities
-
-**generateShareCardSVG**
-
-- **Location:** `apps/api/src/utils/share-card.ts`
-- **Purpose:** Generates platform-optimized share card images (ADR-2).
-- **Approach:** SVG template → PNG conversion via `sharp` or `resvg-js`. No headless browser.
-- **Variants:** `og` (1200×630), `square` (1080×1080), `twitter` (800×400), `thumbnail` (300×160).
-- **Content:** Archetype name (32px minimum), GeometricSignature shapes, trait-color solid background (compression-resistant — no gradients), "Big Five Personality Assessment" science label.
-- **Shape rendering:** Imports from shared `ocean-shapes.ts` constants — same geometry as the React OceanShape component.
-
-### Shared Domain Modules
-
-Two new modules in `packages/domain` ensure single source of truth between frontend and backend:
-
-**ocean-shapes.ts**
-
-- **Location:** `packages/domain/src/constants/ocean-shapes.ts`
-- **Purpose:** Pure shape geometry definitions — no React, no DOM.
-- **Exports:** Clip-path polygon points, SVG path data (half-circle arc), trait-to-color mappings.
-- **Consumers:** `OceanShape` React component (packages/ui) and `generateShareCardSVG` server utility (apps/api).
-
-**geometric-signature.ts**
-
-- **Location:** `packages/domain/src/utils/geometric-signature.ts`
-- **Purpose:** `computeSignature(traitLevels) → ShapePosition[]` — pure function computing shape arrangement from trait levels.
-- **Consumers:** `GeometricSignature` React component and `generateShareCardSVG` server utility.
-- **Deterministic:** Same input → same output. 243 possible OCEAN codes → 243 unique arrangements.
-
-### Components NOT Created (And Why)
-
-These were proposed then eliminated through First Principles Analysis and Mentor-Apprentice review:
-
-| Proposed | Replaced By | Rationale |
-|----------|-------------|-----------|
-| RevealTransition | `useRevealAnimation` hook | It's behavior (hook), not DOM (component) |
-| ShareCard | `generateShareCardSVG` server utility | Never rendered in browser — server-side pipeline |
-| SharePreview | Card + img + Button composition | Used once on share page, no reuse case |
-| SharedArchetypePage | Route page composing Card, Badge, Button | It's a page, not a component |
-| PremiumPrompt | Card with sessionStorage dismiss (inline) | Used once, behavior is trivial |
-| MilestoneToast | shadcn Toast with custom content + CSS class | shadcn Toast handles positioning/stacking |
-| PrecisionMeter | shadcn Progress with theme styling | Proper Progress component, themed to match |
-| SignUpGate | Inline section of results page using existing `signup-form.tsx` | Used once, auth form is reused from existing component |
-
-### Existing Components: Restyle, Don't Rewrite
-
-**TherapistChat.tsx** — Needs CSS rework for Psychedelic Editorial visual register (warm card-style bubbles, OceanShape background at 5-10% opacity, milestone visual punctuation). No component restructure — implementation story, not component strategy.
-
-**ProgressBar.tsx** — Replace with shadcn Progress component themed to Psychedelic Editorial. Clean separation between component logic and visual styling.
-
-**TraitBar, ArchetypeCard, FacetBreakdown** — Existing results components. Restyle with editorial typography, warm card treatment, trait-color gradient-fade borders. Structure is sound.
-
-### Component Implementation Strategy
-
-**CSS Layer Architecture (from Party Mode: Team Design Review):**
-
-| Tier | CSS Layer | Components Affected |
-|------|-----------|-------------------|
-| 1 (must ship) | `base.css` | All components — editorial type, warm cards, static OceanShapes |
-| 2 (validated) | `enhancement.css` | OceanShape animations, RevealTransition stages, hue-shift dark mode |
-| 3 (post-MVP) | `experimental.css` | Chat background tint, share card customization |
-
-Activation via `data-tier` attribute on `<html>`. Tailwind v4 `@layer` support. Zero JS branching.
-
-### Implementation Roadmap
-
-**Tier 1 — Must Ship:**
-
-| Priority | Item | Type | Dependency |
-|----------|------|------|------------|
-| P0 | `ocean-shapes.ts` | Shared constant | None — foundational |
-| P0 | `geometric-signature.ts` | Shared utility | ocean-shapes.ts |
-| P0 | OceanShape component | React component | ocean-shapes.ts |
-| P0 | Install shadcn: Toast, Badge, Tabs, Tooltip, Scroll Area, Separator, Progress | shadcn/ui | None |
-| P1 | GeometricSignature component | React component | OceanShape + geometric-signature.ts |
-| P1 | `generateShareCardSVG` | Server utility | ocean-shapes.ts + geometric-signature.ts |
-| P1 | Restyle TherapistChat | CSS rework | OceanShape (background) |
-| P1 | Restyle results components (TraitBar, ArchetypeCard, FacetBreakdown) | CSS rework | Badge, Tabs |
-
-**Tier 2 — Ship If Validated:**
-
-| Priority | Item | Gate |
-|----------|------|------|
-| P2 | `useRevealAnimation` hook | Prototype single keyframe timeline |
-| P2 | OceanShape animation classes (enhancement.css) | Test 1 shape for distraction |
-| P2 | Hue-shift dark mode tokens | Real-screen contrast testing |
-
-**Tier 3 — Post-MVP:**
-
-| Priority | Item | Gate |
-|----------|------|------|
-| P3 | Evolving chat background tint | Test with 5 users |
-| P3 | Share card customization UI | Post-launch user feedback |
+**Accessibility:** Semantic HTML (`<article>`, `<section>`, `<h3>` for titles). Screen readers announce section titles.
 
 ---
 
-## UX Consistency Patterns
+#### PersonalityRadarChart (Extended)
 
-### Button Hierarchy
+**Existing component extended** with optional `comparisonData` prop for relationship analysis.
 
-| Level | Variant | Usage | Rule |
-|-------|---------|-------|------|
-| Primary | `default` (solid fill) | "Start Assessment", "Share My Archetype", "Sign Up" | One per screen. `lg` on landing/results, `default` in forms. |
-| Secondary | `outline` (border only) | "Copy Link", "Back to Results", "Not Now" | Always paired with primary. Never alone. |
-| Tertiary | `ghost` (text only) | "Skip", "Dismiss", "Later" | Dismissals and low-priority actions. Never destructive. |
-| Destructive | `destructive` (red) | Account deletion (post-MVP only) | Always requires confirmation dialog. |
-| Icon-only | `ghost` + `size: icon` | Theme toggle, hamburger, close | Always has `aria-label`. |
+**New prop:**
+- `comparisonData?: { name: string, scores: TraitScores, color: string }` — when present, renders dual polygons
 
-**Equal-Weight Pattern:** When two options are genuinely equal (Share / Keep Exploring), both use `default` variant at same size. Stacked vertically on mobile, side-by-side on desktop. No color manipulation to favor one. Each button gets `aria-description` explaining consequence for screen reader / voice control differentiation (e.g., "Share your archetype publicly via a link" vs "Continue chatting with Nerin to deepen your profile").
+**Behavior:** Single user = solid polygon (existing). Two users = solid + dashed polygon with custom tooltip showing both scores per trait with shape icons.
 
-### Feedback Patterns
+**Usage:** Results page (single), relationship analysis (dual).
 
-**Milestone Toast:**
-- shadcn Toast with custom content: trait-colored OceanShape icon + editorial text
-- Position: bottom-center. Duration: 3s auto-dismiss. Max 1 visible (new replaces previous).
-- Copy: "You're 25% understood", "Halfway there — 50%", "Your archetype is ready — 70%+"
-- Tier 1: static toast. Tier 2: psychedelic burst animation.
-
-**Success Feedback:**
-- Inline confirmation replacing the CTA button for 2 seconds (green checkmark + text), then reverts.
-- No separate success page or modal. Keep user in flow.
-
-**Error Feedback:**
-- Nerin-voiced in chat context: "Something went wrong on my end — let me try that again."
-- ErrorBanner for persistent errors. Toast for transient errors.
-- Every error has a recovery action. No dead ends.
-- Auto-retry: 3 attempts at 1s, 3s, 9s intervals (exponential backoff). New user message cancels active retry. After 3 failures: ErrorBanner with "Try again" button.
-
-**Streaming Feedback (Nerin responses):**
-- Tokens render as received from SSE stream. No artificial typing animation. Natural streaming cadence (~50-100ms per chunk) provides the typing feel.
-- Typing indicator: 3 animated dots in a Nerin message bubble (warm card style) shown before first token arrives.
-- Tier 2 polish: blinking cursor (`▍`) via CSS `::after` pseudo-element during streaming, removed on completion.
-- Stream failure mid-message: "Let me rephrase that..." + automatic retry.
-
-**Progress Feedback:**
-- Precision meter (shadcn Progress): visible during chat, bottom of screen.
-- Smooth CSS transition between values. Updates every 2-3 messages.
-
-**Anticipatory Feedback:**
-- **Pre-gate signal** — At 65% precision, Nerin verbally signals profile is almost ready ("I'm getting a really clear picture of you now"). Prepares user for sign-up gate at 70%.
-- **Offline indicator** — Send button shows subtle wifi-off icon when connection lost, BEFORE user tries to send. Not a banner — button state change only.
-- **Evidence preview** — Premium prompt includes blurred/teaser screenshot of the evidence panel. Shows what they'd unlock. Visual, not just text.
-
-### Form Patterns
-
-**Chat Input (core interaction):**
-- Simple text field + send button (messaging app UX)
-- Auto-focus on page load. Enter to send, Shift+Enter for newline.
-- Max character indicator at 80% of limit (subtle).
-- Disabled while Nerin is responding (prevents double-send).
-- Placeholder: "Type your response..."
-
-**Sign-Up Form (reveal gate):**
-- Minimal: email + password only.
-- Inline validation: email format on blur, password requirements on type.
-- Password requirements below field: "12+ characters"
-- Submit: "Create Account & See Your Archetype" (primary variant)
-- Error: inline below field, red text, specific ("Email already registered" not "Invalid input").
-
-**Form Principles:**
-- Labels above fields (never floating/inline).
-- Required by default. Optional fields marked "(optional)".
-- Tab order follows visual order.
-- Submit disabled until valid (no premature error display).
-
-### Navigation Patterns
-
-**Global Header:**
-- Present on all pages except chat interface (chat is immersive — header distracts).
-- Contents: Logo (left), theme toggle (right), user menu (right, if authenticated).
-- Mobile: hamburger → Sheet slide-in. Sticky desktop, static mobile.
-
-**Chat ↔ Results Bidirectional Navigation:**
-- **From chat → results:** "View Results" link appears in chat header area after precision ≥ 70%. Client-side route transition (`/chat/$sessionId` → `/results/$sessionId`), 300ms fade. Results data prefetched at 60% precision via TanStack Query.
-- **From results → chat:** "Continue Chatting" button on results page. Chat scroll position preserved via React state.
-- **From profile/dashboard → results:** Link to view results on the dashboard/profile page. Primary entry point for returning users.
-
-**Results Page Tabs:**
-- Three tabs: Overview / Facets / Evidence.
-- Evidence tab: visible but locked for free users (lock icon + "Premium" Badge).
-- URL-synced: `/results/$sessionId?tab=facets` — deep-linkable.
-- Mobile: horizontal scroll tabs.
-
-**Back Navigation:**
-- Returns to previous meaningful state, not browser history.
-- Context preserved through React state.
-
-**Deep Links:**
-- Every meaningful state is URL-addressable: `/chat/$sessionId`, `/results/$sessionId`, `/share/$linkId`.
-- Bookmarkable. Shareable. Refreshable without state loss.
-
-### Loading & Streaming States
-
-**Page Load:**
-- Skeleton screen matching final layout (Card shapes, text line placeholders).
-- OceanShapes in background at reduced opacity during load (instant visual identity).
-- No blank screen. Skeleton within 100ms.
-- No spinners anywhere in the product. Skeletons only. Exception: precision meter uses smooth CSS transition.
-
-**Chat Message Loading:**
-- Nerin: typing indicator (3 dots in warm card bubble) → streaming tokens → complete message.
-- User: message appears immediately (optimistic rendering) with send indicator.
-- Failed send: message shows "retry" icon, tap to resend.
-
-**Offline Message Queue:**
-- Queue limit: 1 message. New message replaces previous queued message.
-- When reconnected: last queued message sent automatically.
-- Previous unsent messages show "not sent" indicator with manual resend option.
-
-### Empty & Error States
-
-**Empty States:**
-- Pre-assessment: Landing page hero (not empty dashboard).
-- No evidence (free tier): Card with lock icon + "Unlock with premium" — not blank panel.
-- Chat start: Nerin's first message appears immediately. User never sees empty chat.
-
-**Error States:**
-- **Offline:** Banner at top of chat — "You're offline. Messages will send when you reconnect." Input remains active.
-- **Session expired (anonymous, >24h):** "Your session has expired. Create an account to save progress, or start fresh." Buttons: Sign Up / Start Fresh.
-- **Server error:** Nerin-voiced: "I'm having trouble right now. Give me a moment..." Auto-retry 3x. After 3 failures: ErrorBanner with "Try again."
-- **Rate limited:** "You've already started an assessment today. Come back tomorrow or continue your existing conversation." Resume button for active session.
-- **Budget paused:** "We've reached our daily limit. Your session is saved — come back after [time]."
-- **Error principles:** Warm, not clinical. Always a recovery action. Never blame user. Never show technical details.
-
-### Modal & Overlay Patterns
-
-**Dialog:** Used sparingly (share preview, deletion confirmation). Always dismissible via X, backdrop click, Escape. Mobile: full-screen Sheet instead of centered Dialog.
-
-**Sheet:** Mobile navigation (hamburger), facet detail panel. Clear close mechanism.
-
-**Toast:** Bottom-center. Max 1 visible. 3s auto-dismiss. Never for critical errors.
-
-**Rule:** No confirmation dialogs for non-destructive actions. Undo > confirm.
-
-### Design System Integration
-
-| Pattern | shadcn Component | Customization |
-|---------|-----------------|---------------|
-| Primary CTA | Button `default` | Trait-color tint on results page |
-| Toast | Toast | Custom content with OceanShape icon |
-| Form fields | Input (to install) | Labels above, inline validation |
-| Results tabs | Tabs | URL-synced, lock icon on Evidence |
-| Skeletons | DIVs + `animate-pulse` | Match warm card shapes |
-| Modals | Dialog (desktop) / Sheet (mobile) | Adaptive by viewport |
-| Progress | Progress | Precision meter with theme |
+**Accessibility:** `role="img"` with `aria-label`. Data table fallback for screen readers when comparison mode active.
 
 ---
 
-## Responsive Design & Accessibility
+#### QRDrawer
 
-### Responsive Strategy
+**Purpose:** Generates and displays a temporary QR code for initiating relationship analysis.
 
-**Design Approach: Mobile-First, Chat-Centric**
+**Props:**
+- `userId: string`
+- `onAccepted: () => void` — triggers ritual screen navigation
+- `onClose: () => void`
 
-big-ocean's core experience is a 30-minute conversation — a fundamentally mobile-friendly interaction pattern (messaging). The responsive strategy prioritizes the chat interface on small screens and progressively enhances with richer layouts on larger viewports.
+**State management:** Extracted into `useQRToken(userId)` custom hook returning `{ qrUrl, status, regenerate }`. The hook handles polling, auto-regeneration, and status tracking. QRDrawer is a thin UI layer consuming the hook.
 
-**Mobile (< 640px) — Primary Target**
-- Single-column layout throughout. Full-width cards, no side panels.
-- Chat interface: bottom-anchored input within thumb reach zone. Messages fill viewport width with 16px horizontal padding.
-- Results page: traits stack vertically. Facet breakdowns expand inline (accordion pattern). Evidence panel slides up as a Sheet (bottom drawer).
-- Navigation: hamburger icon → Sheet slide-in with nav links. Header is static (not sticky) to maximize chat viewport.
-- GeometricSignature: renders at reduced scale (120x120px) centered above archetype name.
-- OceanShapes decorative usage: reduced to 1-2 background shapes (vs 3-4 on desktop) to avoid visual clutter.
-- Sign-up gate: full-screen overlay with centered form. No side art.
+**Hook behavior (`useQRToken`):**
+- Generates token on mount (API call)
+- TTL: 6 hours. Auto-regenerates every hour
+- Polls token validity every 60 seconds (`GET /api/relationship/qr/:token/status` → `valid | accepted | expired`)
+- On `expired` → auto-generates fresh QR silently (no button, no manual refresh)
+- On `accepted` → returns status, drawer closes and navigates
+- On unmount (drawer close) → polling stops (cleanup in `useEffect`)
 
-**Tablet (640px–1024px) — Enhanced Layout**
-- Two-column layouts where appropriate: results traits list + facet detail side panel.
-- Chat interface: same as mobile (single-column messaging works well at this width). Wider message bubbles (max 80% width).
-- Evidence panel: persistent side panel (right) when viewing facet details, instead of Sheet overlay.
-- Navigation: still hamburger on smaller tablets (< 768px); horizontal nav on larger tablets (768px+).
-- GeometricSignature: medium scale (160x160px).
-- Decorative OceanShapes: 2-3 background elements.
+**Visual:** Breathing animation on **surrounding container only**, NOT on QR image (scanning interference). CSS-only animation gated by `prefers-reduced-motion`.
 
-**Desktop (> 1024px) — Full Experience**
-- Multi-column layouts with persistent sidebars. Max content width 1200px, centered.
-- Chat interface: centered column (max 720px) with generous side margins. Precision meter visible in left margin.
-- Results page: trait list + facet breakdown + evidence panel visible simultaneously (three-column at widest viewports > 1440px, two-column otherwise).
-- Navigation: full horizontal header with Logo, nav links, theme toggle, user avatar/auth controls.
-- GeometricSignature: full scale (200x200px) with breathing room.
-- Decorative OceanShapes: full set (3-4 floating background shapes with animation).
-- Reveal animation: full cinematic experience with all 5 stages. Reduced to 3 stages (fade → name → color) on mobile for performance.
+**States:** Generating (spinner) · Active (QR + freshness indicator + container breathing) · Accepted (auto-close)
 
-### Breakpoint Strategy
+**Errors:** Generation failure → Sonner toast. No error state in drawer UI.
 
-**Tailwind v4 Standard Breakpoints (mobile-first):**
+**Built on:** shadcn `Drawer`.
 
-| Token | Min-Width | Target |
-|-------|-----------|--------|
-| `sm` | 640px | Large phones, small tablets |
-| `md` | 768px | Tablets portrait |
-| `lg` | 1024px | Tablets landscape, small laptops |
-| `xl` | 1280px | Standard desktops |
-| `2xl` | 1536px | Large desktops |
-
-**Rationale:** Standard Tailwind breakpoints. No custom breakpoints needed — big-ocean's layouts are simple enough (chat, results, home) that standard breaks cover all transitions cleanly.
-
-**Critical Breakpoint Behaviors:**
-
-| Surface | < 640px | 640–1024px | > 1024px |
-|---------|---------|------------|----------|
-| Chat input | Full-width, bottom-fixed | Full-width, bottom-fixed | Centered column (720px max) |
-| Precision meter | Inline below header (compact) | Inline below header | Left sidebar float |
-| Results traits | Single column, accordion | Two-column (traits + facets) | Two/three-column |
-| Evidence panel | Sheet (bottom drawer) | Side panel (right) | Persistent side panel |
-| Header | Logo + hamburger | Logo + hamburger / inline nav | Full horizontal nav |
-| Share card preview | Full-width | Centered (400px max) | Centered (400px max) |
-| Home hero | Stacked, text-first | Side-by-side at `md` | Full color block composition |
-| OceanShape decorative | 1-2 shapes, no animation | 2-3 shapes, subtle float | 3-4 shapes, full animation |
-| Reveal animation | 3-stage (fade, name, color) | Full 5-stage | Full 5-stage |
-
-**Container Strategy:**
-- Content max-width: `max-w-7xl` (1280px) for page layouts
-- Chat column max-width: `max-w-3xl` (720px) centered
-- Card max-width: `max-w-md` (448px) for share card preview
-- Horizontal padding: `px-4` (16px) on mobile, `px-6` (24px) on tablet, `px-8` (32px) on desktop
-
-### Accessibility Strategy
-
-**Compliance Level: WCAG 2.1 AA**
-
-AA is the industry standard and appropriate for big-ocean's Phase 1 launch. AAA is not targeted but several AAA criteria are met naturally (font scaling, focus indicators, motion respect).
-
-**Color & Contrast:**
-- All body text: minimum 4.5:1 contrast ratio against background
-- Large text (>= 18px bold or >= 24px regular): minimum 3:1
-- UI components and graphical objects: minimum 3:1
-- Vibrating complementary color pairs (celebration surfaces) restricted to non-text decorative use only
-- Dark mode palette validated independently for AA compliance
-- Trait colors validated for sufficient contrast against both light and dark backgrounds
-
-**Keyboard Navigation:**
-- All interactive elements reachable via Tab / Shift+Tab
-- Focus order follows visual reading order (top-to-bottom, left-to-right)
-- Focus ring: 2px solid, high-contrast, offset — never hidden
-- Skip-to-content link as first focusable element on every page
-- Chat input: Enter sends message, Shift+Enter for newline
-- Results tabs: Arrow keys navigate between tabs, Tab moves into tab content
-- Evidence panel: Escape closes panel, focus returns to triggering facet score
-- Modals: focus trapped inside, Escape dismisses, focus returns to trigger
-
-**Screen Reader Support:**
-- Semantic HTML throughout: `<main>`, `<nav>`, `<article>`, `<section>` with appropriate headings
-- Live regions (`aria-live="polite"`) for:
-  - New chat messages from Nerin
-  - Precision meter updates (announced at 10% intervals, not every update)
-  - Toast notifications (milestone celebrations)
-- Decorative elements (`aria-hidden="true"`):
-  - Background OceanShapes
-  - Floating shape animations
-  - Color block compositions
-  - Reveal animation visual effects
-- Meaningful alternatives:
-  - GeometricSignature: alt text describes trait levels (e.g., "Personality signature: Openness Open-minded, Conscientiousness Conscientious, Extraversion Balanced, Agreeableness Agreeable, Neuroticism Tempered")
-  - TraitBar: value announced as "Openness: 78 out of 100"
-  - Archetype card: name + summary read as heading + paragraph
-- Form inputs: associated `<label>` elements, error messages linked via `aria-describedby`
-
-**Motion & Animation:**
-- All animations respect `prefers-reduced-motion: reduce`:
-  - OceanShape floating → static position
-  - Reveal animation 5-stage → instant display (no fade, no stagger)
-  - Celebration animations → simple opacity fade
-  - Background shape drift → static
-  - Page transitions → instant
-- No auto-playing video or audio
-- No content that flashes more than 3 times per second
-
-**Touch & Pointer:**
-- Minimum touch target: 44x44px for all interactive elements
-- Adequate spacing between touch targets (minimum 8px gap)
-- Chat send button: 48x48px (oversized for thumb accuracy)
-- No hover-only interactions — all hover states have tap/focus equivalents
-- Pinch-to-zoom not disabled (`user-scalable=yes`)
-
-**Text & Readability:**
-- All typography in `rem` units — respects browser font-size settings
-- Content reflows without horizontal scrolling up to 400% zoom
-- Line height minimum 1.5 for body text
-- Paragraph max-width ~65-75 characters for readability
-- No text in images (share card SVG includes text as SVG `<text>` elements, not rasterized)
-
-### Testing Strategy
-
-**Automated (CI/CD):**
-- `axe-core` integration via `@axe-core/react` in development mode — flags violations in console
-- Storybook accessibility addon for component-level testing
-- Lighthouse CI accessibility audit on PR builds (target: score >= 90)
-
-**Manual Checklist (Per Feature):**
-- Keyboard-only navigation walkthrough (Tab through entire flow)
-- VoiceOver (macOS/iOS) screen reader pass on chat and results flows
-- Color contrast spot-check with browser DevTools
-- `prefers-reduced-motion` toggled ON — verify all animations degrade
-- Zoom to 200% — verify no content loss or horizontal scroll
-
-**Device Testing Matrix (MVP):**
-
-| Device | Browser | Priority |
-|--------|---------|----------|
-| iPhone 14/15 | Safari | P0 — primary mobile target |
-| Android (Pixel 7+) | Chrome | P0 — primary mobile target |
-| iPad | Safari | P1 — tablet reference |
-| MacBook | Chrome, Safari | P0 — desktop reference |
-| Windows laptop | Chrome, Edge | P1 — secondary desktop |
-
-**Accessibility Testing Cadence:**
-- P0: Every feature PR runs axe-core + Lighthouse
-- P1: Monthly manual VoiceOver walkthrough of core flows (chat, results, share)
-- P2: Quarterly color blindness simulation pass (protanopia, deuteranopia, tritanopia)
-
-### Implementation Guidelines
-
-**Responsive Development:**
-- Mobile-first media queries exclusively (`min-width` only, never `max-width`)
-- Use Tailwind responsive prefixes: bare = mobile, `sm:` = 640px+, `md:` = 768px+, `lg:` = 1024px+
-- Relative units: `rem` for typography and spacing, `%` and `vw` for layout widths
-- Images: `<Image>` with `sizes` attribute for responsive loading, WebP format with fallback
-- Container queries (`@container`) considered for component-level responsiveness (results cards adapting to sidebar vs full-width context) — Tailwind v4 supports this natively
-
-**Accessibility Development:**
-- Semantic HTML first — `<button>` for actions, `<a>` for navigation, `<input>` for forms. No `<div onClick>`.
-- ARIA only when semantic HTML is insufficient (live regions, complex widgets)
-- Focus management: `useEffect` to move focus on route change to `<main>` or page heading
-- Skip link: `<a href="#main-content" class="sr-only focus:not-sr-only">Skip to content</a>` on every page
-- Error announcements: form validation errors linked via `aria-describedby`, announced on submit
-- Color-independent status: trait levels use color + shape (OceanShape geometry) + semantic text label (e.g., Open-minded/Balanced/Conscientious per trait)
-
-**CSS Tier Integration (from Step 9):**
-- Tier 1 (`base.css`): All responsive layouts, all accessibility features, reduced-motion fallbacks
-- Tier 2 (`enhancement.css`): Decorative animations, floating shapes, reveal animation stages
-- Tier 3 (`experimental.css`): Advanced interactions (parallax, 3D transforms) — not in MVP scope
-
-**Testing Integration:**
-- `data-testid` attributes on key interactive elements for automated testing
-- `aria-label` doubles as both accessibility label and test selector where appropriate
-- Storybook stories include responsive viewport presets (mobile 375px, tablet 768px, desktop 1280px)
+**Accessibility:** `aria-live="polite"` for status changes. QR: `aria-label="QR code for relationship analysis"`.
 
 ---
+
+#### RitualScreen
+
+**Purpose:** Pre-analysis screen advising both users to read the analysis together. Pure UI — no sync, no locking.
+
+**Props:**
+- `userAName: string`
+- `userBName: string`
+- `onStart: () => void`
+
+**Content:** Each user sees this screen independently after acceptance. Text advises doing it together, nothing enforces it. Start button only — no skip (Start and Skip functionally do the same thing).
+
+**States:** Default ("I wrote this about the two of you. It's better to read this together." + Start button) · Started (Nerin's message, transition to analysis)
+
+**Visual treatment:** Same design tokens. Clean background with floating geometric identity shapes (circle, half-circle, rectangle, triangle, diamond) at very low opacity. No vignette/backdrop shadows. Nerin identity mark (5 mini trait shapes) replaces avatar. Text in `--font-heading` at larger size.
+
+**Usage:** Both devices after relationship analysis is accepted.
+
+**Accessibility:** `role="dialog"` with `aria-labelledby`. Focus managed.
+
+---
+
+#### PortraitUnlockButton
+
+**Purpose:** Portrait section placeholder for deferred payers. Simple button that opens PWYWCurtainModal.
+
+**Props:**
+- `archetypeName: string`
+- `onTap: () => void` — opens PWYW curtain modal
+
+**States:** Default · Hover · Tapped (opens PWYW curtain)
+
+**Content:** "Nerin has written something for you. Unlock your portrait." — carries emotional weight in the label, not in visual complexity.
+
+**Layout:** Sits inside a container with **reserved vertical space** for the portrait that will replace it. When portrait loads, it fills the reserved space without layout shift.
+
+**Built on:** shadcn `Button` (primary variant, full-width).
+
+**Usage:** Results page portrait section (deferred payers only).
+
+**Accessibility:** `aria-label="Nerin has written something for you. Unlock your portrait."`
+
+---
+
+#### PWYWCurtainModal
+
+**Purpose:** Scrollable modal presenting the PWYW experience. Single scroll container — no nested scrollable regions.
+
+**Props:**
+- `isOpen: boolean`
+- `onClose: () => void`
+- `onPaymentSuccess: () => void`
+- `founderPortrait: PortraitSpineData`
+- `includesRelationshipCredit: boolean`
+
+**Scroll:** One continuous scroll container: bridge → founder letter → Vincent's portrait (full length, pre-rendered static content) → CTA. No inner scrollable regions (iOS Safari nested scroll issue). Body scroll locked when modal open.
+
+**Sections:**
+1. "Congratulations on completing 25 turns with Nerin. Before you read what she wrote, I want to tell you why this exists."
+2. Founder's love letter (3-4 sentences, dense)
+3. Vincent's portrait (full length, PortraitSpineRenderer with static data)
+4. "Unlock your portrait" + "Includes 1 relationship analysis credit" + button → Polar embed
+
+**States:** Open (scrollable overlay, same mobile + desktop) · Polar stacked (Polar embed on top) · Payment success (both close) · Payment failed (Sonner toast) · Closed/skipped ("Maybe later", no guilt)
+
+**iOS Safari:** Body scroll locked on mount. Verify shadcn Dialog scroll behavior. Budget Safari-specific testing.
+
+**Built on:** shadcn `Dialog`. Polar via `@polar-sh/checkout/embed`.
+
+**Accessibility:** `aria-modal="true"`. Focus trapped. Close always visible. Heading hierarchy across sections.
+
+---
+
+#### ConversationCTA
+
+**Purpose:** Primary conversion button driving visitors to sign up and start a conversation with Nerin.
+
+**Content:** "What's YOUR code? Discover it in a conversation with Nerin"
+
+**Props:**
+- `variant: "hero" | "inline"`
+- `to: string` — TanStack Link destination
+
+**States:** Default · Hover (subtle lift/glow) · Active (pressed)
+
+**Mobile viewport:** Above-the-fold placement (hero variant) must fit on smallest screens (375×667) alongside framing line, archetype name, description, GeometricSignature, and OceanCodeStrand. Requires mobile viewport audit during implementation.
+
+**Built on:** TanStack `Link` + shadcn `Button`.
+
+**Accessibility:** Descriptive text content — no icon-only variant.
+
+---
+
+#### DepthMeterMilestones
+
+**Purpose:** Adds turn-based 25/50/75% visual milestones to the existing DepthMeter.
+
+**Props:**
+- `currentTurn: number`
+- `totalTurns: number` — 25 for initial, 25 for extension
+- `milestones?: number[]` — defaults to `[0.25, 0.5, 0.75]`
+
+**States:** Unreached (dimmed) · Reached (lights up, brief pulse) · Passed (stays lit)
+
+**Visual:** Small horizontal ticks or dots on vertical bar. Visual only — does not influence Nerin.
+
+**Extends:** Existing `DepthMeter` in `apps/front/src/components/chat/`.
+
+**Accessibility:** `aria-valuenow` on meter. Milestones announced via `aria-live="polite"`: "25% depth reached."
+
+---
+
+#### ProfileVisibilityToggle
+
+**Purpose:** Contextual toggle surfaced at sharing moment, prompting private-profile users to go public.
+
+**Props:**
+- `isPublic: boolean`
+- `onToggle: (value: boolean) => void`
+- `context: "share" | "settings"`
+
+**States:** Private + share context (prompt + toggle off) · Toggled on (confirmation) · Settings context (standard toggle)
+
+**Built on:** shadcn `Switch` + custom prompt wrapper.
+
+**Accessibility:** `role="switch"` with `aria-checked`. Prompt linked via `aria-describedby`.
+
+---
+
+#### RelationshipCTA
+
+**Purpose:** Prompts logged-in visitors on a public profile to initiate a relationship analysis.
+
+**Content:** "You care about [Name]. Discover your dynamic together."
+
+**Props:**
+- `profileUserName: string`
+- `onLearnMore?: () => void`
+
+**States:** Default (card + message + "Learn how") · Expanded (QR flow explanation: "Next time you're together, scan QR codes to unlock your full relationship analysis")
+
+**Usage:** Public profile (logged-in visitors with completed assessments only).
+
+**Accessibility:** `role="complementary"` with descriptive `aria-label`.
+
+---
+
+#### EvolutionBadge
+
+**Purpose:** "Previous version" indicator for archived portraits and relationship analyses.
+
+**Props:**
+- `basedOnExchanges: number`
+- `variant: "portrait" | "relationship"`
+
+**States:** Default (subtle label) · Hover/tap (expanded: "Based on 25 exchanges. A newer version exists.")
+
+**Built on:** shadcn `Badge` + shadcn `Tooltip`.
+
+**Accessibility:** `aria-label="Previous version based on [X] exchanges"`.
+
+---
+
+#### CreditBalance
+
+**Purpose:** Displays remaining relationship analysis credits with inline purchase option.
+
+**Props:**
+- `credits: number`
+- `onPurchase: () => void`
+
+**States:** Has credits ("[X] credits remaining") · No credits ("No credits — Purchase (€5)") · Purchasing (Polar modal)
+
+**Behavior:** Optimistic updates via TanStack Query — balance updates immediately on Polar `success` event, reconciles with backend webhook.
+
+**Errors:** Purchase failure → Sonner toast.
+
+**Built on:** shadcn `Badge` + Polar embed.
+
+**Usage:** QR accept screen, results page, dashboard.
+
+**Accessibility:** `aria-live="polite"` for credit count changes.
+
+### 11.5 Route-Level Compositions (Not Library Components)
+
+Page layouts that compose library components with data-fetching concerns. Live in `apps/front/src/routes/`, not `packages/ui`.
+
+| Composition | Route | Composes |
+|-------------|-------|----------|
+| **RelationshipAnalysisPage** | `/relationship/:id` | PortraitSpineRenderer (relationship) + OceanCodeStrand ×2 (side-by-side) + PersonalityRadarChart (comparison mode) + EvolutionBadge + framing text |
+| **PublicProfilePage** | `/profile/:id` | Framing line ("[Name] dove deep with Nerin — here's what surfaced") + archetype name/description + GeometricSignature + OceanCodeStrand + ConversationCTA + trait bars + RelationshipCTA (logged-in) |
+| **ResultsPage** | `/results` | ArchetypeHeroSection + GeometricSignature + OceanCodeStrand + PersonalityRadarChart + TraitBand/FacetScoreBar + PersonalPortrait or PortraitUnlockButton + QRDrawer + CreditBalance |
+
+**Layout slot reservation:** Results page, public profile, and relationship analysis layouts must **reserve UI slots** for Phase 6 components (EvolutionBadge, CreditBalance) during Phase 1-2 development. Invisible placeholders ensure lifecycle components drop in cleanly without layout redesign.
+
+### 11.6 Implementation Roadmap
+
+| Phase | Components | Unlocks | Priority |
+|-------|-----------|---------|----------|
+| **1: Core Identity** | GeometricSignature, OceanCodeStrand | Results page, public profile, archetype card — used everywhere | Highest — blocks all visual surfaces |
+| **2: Portrait** | PortraitSpineRenderer, PortraitUnlockButton, PWYWCurtainModal | Portrait delivery + PWYW monetization (Journey 1 + 3) | High — core monetization |
+| **3: Conversation** | DepthMeterMilestones, ConversationCTA | Conversation experience + conversion funnel (Journey 1 + 5) | High — core experience + acquisition |
+| **4: Public Profile** | ProfileVisibilityToggle, RelationshipCTA | Viral surface + sharing loop (Journey 5) | Medium — growth mechanics |
+| **5: Relationship** | QRDrawer, RitualScreen, PersonalityRadarChart extension | Relationship analysis flow (Journey 2) | Medium — second monetization |
+| **6: Lifecycle** | EvolutionBadge, CreditBalance | Returning user + credit economics (Journey 4) | Lower — retention features |
+
+### 11.7 Implementation Notes
+
+- **Satori compatibility** is a hard constraint for GeometricSignature and all 15 ocean shapes. Test in Satori during shape development, not after.
+- **iOS Safari testing** budgeted for PWYWCurtainModal (scroll behavior) and any component using `position: fixed` with scroll.
+- **Mobile viewport audit** required for public profile above-the-fold content (ConversationCTA hero variant on 375×667).
+- **`useQRToken` hook** extracts QR lifecycle logic from QRDrawer — easier to test and maintain.
+- **Sonner** added to shadcn component set for unified toast notifications across the app.
+- **Vincent's portrait** pre-rendered at build time — static content, never changes, no client-side parsing.
+
+## 12. UX Consistency Patterns
+
+### 12.1 Feedback Patterns
+
+**Three-tier error strategy:**
+
+| Error Type | Surface | Example |
+|-----------|---------|---------|
+| Transient / informational | Sonner toast | "Link copied", "Profile is now public", "1 credit added" |
+| Action-required | In-context (where user is looking) | Payment failure shown in Polar's own UI, message send failure as toast in chat |
+| Component crash | React Error Boundary fallback | Portrait renderer crashes → "Something went wrong" + retry, rest of page works |
+
+**Sonner toast configuration:**
+
+| Setting | Value |
+|---------|-------|
+| Position (default) | Bottom-center (mobile), bottom-right (desktop) |
+| Position (`/chat` route) | **Top-center** — avoids overlap with chat input |
+| Success duration | 4 seconds |
+| Error duration | 6 seconds |
+| Info duration | 3 seconds |
+| Max visible | 1 toast at a time |
+| Dismiss | Swipe (mobile), click X (desktop) |
+| During conversation | Allowed — but only for send failures. No promotional or system toasts |
+
+**Toast inventory:**
+
+| Situation | Type | Message |
+|-----------|------|---------|
+| Payment succeeded | Success | "Thank you. Nerin is writing your portrait now." |
+| Payment failed | Error | Handled by Polar's own UI (in-context) |
+| QR generation failed | Error | "Couldn't generate QR code — try again" |
+| Network error | Error | "Connection lost. Check your network." |
+| Message send failed | Error | "Message failed to send — tap to retry" |
+| Profile made public | Success | "Your profile is now public" |
+| Credit purchased | Success | "1 relationship credit added" |
+| Link copied | Info | "Link copied to clipboard" |
+
+**Inline error states (action-blocking):**
+
+| Situation | Location | Display |
+|-----------|----------|---------|
+| Portrait generation failed | Portrait section | "Generation failed" + retry button in place of portrait |
+| Relationship analysis failed | Relationship page | "Analysis couldn't be generated" + retry |
+| Sign up validation | Form fields | Error message below invalid field |
+| Chat input too long | Chat input bar | Character count turns red, send disabled |
+
+**Error boundary placement:**
+
+| Scope | Fallback | Rest of page |
+|-------|----------|-------------|
+| Portrait section | "Something went wrong loading your portrait" + retry | Results page works |
+| Radar chart | "Chart unavailable" placeholder | Trait data visible in cards |
+| Relationship analysis | "Something went wrong" + retry | Navigation works |
+| QR drawer | Drawer closes, Sonner toast | Results page works |
+
+**Long operation thresholds:**
+
+| Duration | Behavior |
+|----------|----------|
+| Under 10 seconds | Skeleton pulsing, no messaging |
+| 10-30 seconds | "Nerin is writing..." reassurance text below skeleton |
+| 30-60 seconds | "Taking longer than usual — please wait" |
+| Over 60 seconds | "Something went wrong" + retry button |
+
+Applies to portrait generation, relationship analysis generation, and any AI-driven operation.
+
+**Offline / degraded network:**
+
+| Surface | Behavior |
+|---------|----------|
+| Banner | Top-of-page banner: "You're offline — messages will send when you reconnect" |
+| Chat | Messages queue locally, send on reconnect |
+| Results page | SSR content stays visible (already loaded). Dynamic features (QR, purchase) show disabled state |
+| Payment | Polar handles its own offline behavior |
+
+### 12.2 Navigation Patterns
+
+**Navigation structure:**
+
+| Surface | Chrome | Mobile | Desktop |
+|---------|--------|--------|---------|
+| Pre-auth (homepage, public profile) | Minimal header: Logo + Sign In | Same | Same |
+| Conversation (`/chat`) | **Navigation-free.** Only: logo (home), depth meter | No hamburger | Same — minimal chrome |
+| Results (`/results`) | Header: Logo + "Dashboard" link + User nav (avatar dropdown) | Mobile nav (hamburger → sheet) | Full header |
+| Dashboard (`/dashboard`) | Header: Logo + "Dashboard" link (active) + User nav | Mobile nav (hamburger → sheet) | Full header |
+
+**Authenticated header layout:** `Logo — [Dashboard] — spacer — UserNav (avatar dropdown)`. The "Dashboard" link appears in the header for all authenticated pages (except `/chat` which is navigation-free). On mobile, it appears in the hamburger sheet menu.
+
+**Auth gates:**
+
+| Route | Unauthenticated | Auth'd, no assessment | Auth'd, assessment complete |
+|-------|----------------|------|------|
+| `/dashboard` | → sign up | Empty state: "Start your conversation" CTA | Full dashboard with all sections |
+| `/chat` | → sign up | Start/resume conversation | Resume or extension CTA |
+| `/results` | → sign up | → `/chat` | Results page |
+| `/profile/:id` | Public profile visible (or private msg) | Public profile visible | Profile + relationship CTA |
+| `/relationship/:id` | → sign up | → `/chat` | Analysis (if participant) |
+| QR URL | Login/sign up → return to accept screen | "Complete assessment first" | Accept screen |
+
+**Key transitions:**
+
+| From → To | Transition |
+|-----------|-----------|
+| Chat → Results | Breath sequence (5-phase, 3-5s). Designed pause, not buffering |
+| Results → PWYW | Modal overlay (delayed auto-open after absorption) |
+| PWYW → Portrait | Envelope opens → skeleton → portrait reveal |
+| QR Accept → Ritual | Page transition, slower entrance (600ms) |
+| Ritual → Analysis | Fade (400ms) |
+| All other navigation | Instant (TanStack Router default) |
+
+**Deep linking:**
+
+| URL | Behavior |
+|-----|----------|
+| `/profile/:id` | Public profile. Private → message + redirect. Deleted → message |
+| QR URL (temp token) | Auth gate → accept screen. Expired → "Link expired" |
+| `/relationship/:id` | Auth gate → analysis (participant only). Otherwise 404 |
+| `/results` | Auth gate → own results. No `:id` — always your own |
+
+**Back button:**
+
+| Context | Behavior |
+|---------|---------|
+| During conversation | Back exits. Session auto-saved. No confirmation modal |
+| Results page | Back → chat (or home if complete) |
+| PWYW modal open | Back closes modal, stays on results |
+| QR accept screen | Back exits app (external entry). Accept screen is self-contained — everything needed is on one screen |
+| Relationship analysis | Back → `/dashboard` (relationship list section) |
+
+**Scroll restoration:** TanStack Router `scrollRestoration` enabled. Back navigation restores position. New page starts at top. Modal close: no scroll change.
+
+### 12.3 Modal and Overlay Patterns
+
+**Modal inventory:**
+
+| Modal | Component | Trigger | Can Stack |
+|-------|-----------|---------|-----------|
+| PWYW Curtain | PWYWCurtainModal (Dialog) | Auto-open / PortraitUnlockButton tap | Yes — Polar on top |
+| Polar Checkout | `@polar-sh/checkout/embed` | CTA in PWYW | Stacks on PWYW |
+| QR Drawer | QRDrawer (Drawer) | "Generate QR" button | No |
+| Profile Visibility | ProfileVisibilityToggle | Share action with private profile | No |
+| Tooltips | shadcn Tooltip | Hover/tap | No — one at a time |
+
+**Modal rules:**
+
+| Rule | Details |
+|------|---------|
+| Body scroll lock | Always when modal/drawer open. Prevents iOS Safari scroll bleed |
+| Backdrop | Dimmed for Dialog. Drawer slides with dimmed backdrop |
+| Close mechanisms | X button + backdrop tap + Escape + "Maybe later" text (PWYW) |
+| Max stack depth | 2 (PWYW + Polar only) |
+| Focus trap | Tab cycles within modal. Escape closes topmost |
+| Return focus | On close, focus returns to trigger element |
+| No modals during conversation | Never interrupt Nerin in `/chat` |
+| Same treatment mobile + desktop | Modals, not full-screen takeovers |
+
+**Tooltip rules:**
+
+| Rule | Details |
+|------|---------|
+| Mobile trigger | Tap to reveal |
+| Desktop trigger | Hover (200ms delay to prevent flicker) |
+| Dismiss | Tap elsewhere (mobile), mouseout (desktop) |
+| Max one open | New tooltip closes previous |
+| Position | Auto within viewport, prefer bottom |
+| Content | Short text only — no interactive elements |
+| Mobile density | Tooltips on OCEAN letters + trait names only. Facets and confidence rings use static labels on mobile. GeometricSignature shapes link to shape library page |
+
+### 12.4 Empty States
+
+**Every empty state:**
+
+| State | Display | Action |
+|-------|---------|--------|
+| No conversation started | "Ready to dive in? Start your conversation with Nerin" | ConversationCTA |
+| Conversation in progress | "You're still underwater. Continue your conversation with Nerin" + turn X/25 | Navigate to `/chat` |
+| Portrait skipped (PWYW) | PortraitUnlockButton — breathing animation | Tap → PWYW curtain |
+| Portrait generating | Skeleton sections pulsing | Auto-refreshes |
+| Portrait failed | "Generation failed" + retry inline | Retry |
+| No relationships | "Still waters. Start a relationship analysis with someone who matters." | QR drawer explanation |
+| All relationships previous version | Analyses shown with EvolutionBadge — not empty | Re-analyze via QR |
+| No credits | CreditBalance: "No credits — Purchase (€5)" | Polar purchase |
+| Incomplete assessment (QR accept) | "Complete your assessment first" | Link to `/chat` |
+| Private profile (visitor) | "This user has made their profile private." | Redirect to homepage |
+| Deleted profile | "This profile has been deleted." | No action |
+| Profile not found | "Profile not found" | Redirect to homepage |
+
+**Empty state rules:**
+
+| Rule | Details |
+|------|---------|
+| Tone | Warm, ocean-metaphor where natural. Never "Oops!" or "Nothing here yet!" |
+| Action | Every state has a next step — never a dead end (except private/deleted → redirect) |
+| No illustrations | No placeholder images or sad-face icons. Text + CTA. Matches minimal design |
+| Brand voice | Ocean metaphor for empty states ("dive in", "still waters", "underwater"). Errors stay clear and functional — don't force the metaphor into error contexts |
+
+### 12.5 Button Hierarchy
+
+**Three tiers:**
+
+| Tier | shadcn Variant | Usage | Visual |
+|------|---------------|-------|--------|
+| Primary | `default` | One per viewport. Main action | Solid fill, high contrast |
+| Secondary | `outline` | Supporting actions | Outline, lower emphasis |
+| Ghost | `ghost` | Dismiss, close, skip | No border, text only |
+
+**Usage across screens:**
+
+| Screen | Primary | Secondary | Ghost |
+|--------|---------|-----------|-------|
+| Public profile | ConversationCTA | — | — |
+| Sign up | "Create account" | Social auth (outline) | "Already have account?" (link) |
+| Chat | Send (icon button) | — | — |
+| PWYW modal | "Unlock your portrait" | — | "Maybe later" |
+| QR accept | "Accept" | "Refuse" | — |
+| Ritual | "Start" | — | "Skip" |
+| Portrait unlock button | Envelope IS the button | — | — |
+| Results (post-skip) | PortraitUnlockButton (portrait) | Relationship QR, Extension CTA | — |
+
+**Button rules:**
+
+| Rule | Details |
+|------|---------|
+| One primary per viewport | Never two primaries competing |
+| Primary = forward | Moves user forward. Never for destructive/backward actions |
+| Ghost for dismissal | Close, skip, "maybe later" — always ghost |
+| Full width on mobile | Primary and secondary go full-width. Ghost stays inline |
+| Loading state | Spinner + "Processing..." text. Button disabled. Fixed width (no layout shift) |
+| Disabled state | Opacity 0.5, `cursor: not-allowed`. Never hide — show disabled with reason |
+| Scroll hierarchy (results) | Portrait unlock = primary visual weight. Relationship/extension CTAs = secondary (outline). Natural reading order guides priority |
+
+**Icon buttons (limited):**
+
+| Usage | Icon | Context |
+|-------|------|---------|
+| Send message | Arrow up | Chat input — only icon button |
+| Close modal | X | Top-right of modals/drawers |
+| Copy QR link | Copy | QR drawer |
+
+All icon buttons have `aria-label`. No icon-only navigation.
+
+### 12.6 Form Patterns
+
+**Form inventory:**
+
+| Form | Fields | Validation |
+|------|--------|-----------|
+| Sign up | Email, password | Email format. Password: 12+ chars, compromised check (Better Auth) |
+| Login | Email, password | Email format, password required |
+| Social auth | OAuth buttons | Handled by provider |
+| Chat input | Text area | Character limit. Empty = send disabled |
+| Profile visibility | Toggle | No validation — immediate effect |
+
+**Validation rules:**
+
+| Rule | Details |
+|------|---------|
+| Validate on blur | Not on every keystroke |
+| Error below field | Red message directly below invalid field |
+| Clear on focus | Error clears when user focuses field to fix |
+| Submit disabled | While required fields empty. Enables when all have content |
+| Server errors | Sonner toast (network/auth) or inline below relevant field (email exists) |
+
+**Chat input specifics:**
+
+| Element | Details |
+|---------|---------|
+| Type | Auto-growing text area (expands, max height then scrolls) |
+| Character limit | Counter visible. Turns red near limit. Send disabled at limit |
+| Send | Enter on desktop. Shift+Enter for newline. Send button on mobile |
+| Draft persistence | Draft persists across page refreshes within same session |
+
+**Form accessibility:**
+
+| Rule | Details |
+|------|---------|
+| Labels | Visible `<label>` with `htmlFor` on every input |
+| Errors | Linked via `aria-describedby` |
+| Required | `aria-required="true"` |
+| Focus on error | Submit error → focus moves to first invalid field |
+| Autocomplete | `autocomplete="email"` + `autocomplete="current-password"` on auth forms |
+
+### 12.7 Transition Patterns
+
+**Emotional transitions (5 total):**
+
+| Transition | From → To | Duration | Purpose |
+|-----------|-----------|----------|---------|
+| Breath sequence | Chat → Results | 3-5 seconds (5 phases) | Emotional shift from conversation to reveal |
+| PWYW delayed open | Results → modal | ~2-3s delay | Let user absorb results before the ask |
+| Portrait reveal | Envelope → portrait | 1-2s + generation | The reveal moment |
+| Ritual entrance | QR accept → ritual | 600ms | Shift to quieter space |
+| Analysis fade | Ritual → relationship | 400ms | Gentle entry to shared reading |
+
+**Breath sequence phases:**
+
+| Phase | What Happens | Duration |
+|-------|-------------|----------|
+| 1 | Nerin's last message finishes | Natural speed |
+| 2 | Chat fades to background | 800ms |
+| 3 | Ocean shapes gather, settle | 1000ms |
+| 4 | Archetype name + GeometricSignature appear | 800ms |
+| 5 | Trait cards, scores fill in | 600ms |
+
+Portrait is generated only after payment — breath is a designed emotional pause between conversation and results, not buffering.
+
+**Transition rules:**
+
+| Rule | Details |
+|------|---------|
+| Emotional only | Only 5 transitions above get animation. Everything else instant |
+| `prefers-reduced-motion` | All transitions respect. Fallback: instant cut |
+| Skippable | Breath sequence skippable (tap anywhere). Ritual has Start button only (no skip — same action) |
+| SSR-friendly | Transitions are client-side enhancements |
+| CSS-first | CSS `@keyframes` + `transition` where possible. JS only for breath (multi-phase coordination) |
+| No transition on back | Browser back = instant. No reverse animation |
+
+**Reduced motion fallbacks:**
+
+| Transition | Fallback |
+|-----------|----------|
+| Breath sequence | Instant cut to results |
+| PWYW delayed open | Opens immediately |
+| Envelope → portrait | Instant swap to skeleton |
+| Ritual entrance | Standard page load |
+| Analysis fade | Standard page load |
+
+### 12.8 Pattern Insights from Competitive Analysis
+
+**What big-ocean adopts:**
+
+| Source | Pattern | Adaptation |
+|--------|---------|------------|
+| Spotify Wrapped | Transitions as emotional punctuation | Breath sequence — limited to key moments, not everywhere |
+| Discord | Sonner-style toasts with context positioning | Adopted. Chat route → top-center. Others → bottom |
+| Discord | Self-contained accept screens | QR accept screen has everything needed — no need to navigate away |
+
+**What big-ocean avoids:**
+
+| Source | Anti-pattern | Reason |
+|--------|-------------|--------|
+| 16Personalities | Aggressive email capture modal on results | Breaks trust. PWYW modal is earned through 25 turns of conversation |
+| Spotify Wrapped | Over-animated transitions | Works for 2-min consumption. Exhausting in 25+ min experience |
+| BetterHelp | Clinical tab-bar navigation | big-ocean is a companion, not a tool |
+
+**Brand differentiation in patterns:**
+
+| Element | How patterns reinforce brand |
+|---------|---------------------------|
+| Navigation-free conversation | Nerin is a companion, not a feature inside a product |
+| Ocean-metaphored empty states | Brand voice persists in mundane moments |
+| Breath sequence | The transition itself communicates "this matters" |
+| Portrait unlock button | Waiting feels intentional, not broken |
+| Ritual screen | Reading together is an invitation, not a feature |
+| Tooltips in Nerin's language | Results page speaks like Nerin, not like a textbook |
+
+## 13. Responsive Design & Accessibility
+
+### 13.1 Responsive Strategy
+
+**Mobile-first approach.** All layouts designed for mobile first, enhanced for larger screens. Tailwind's mobile-first media queries (`sm:`, `md:`, `lg:`) already in use across the codebase.
+
+**Per-surface responsive behavior:**
+
+| Surface | Mobile (< 640px) | Tablet (640-1023px) | Desktop (1024px+) |
+|---------|-------------------|---------------------|-------------------|
+| **Homepage** | Single column. Hero stacked. ConversationCTA full-width | Two-column where natural. Hero side-by-side | Max-width container (1280px). Generous whitespace |
+| **Chat** | Full viewport. Input bar sticky bottom. Depth meter sidebar thin | Same — conversation is inherently single-column | `--width-conversation` (640px) centered. Depth meter has breathing room |
+| **Results** | Single column. Cards stack. Radar full-width. Portrait full-width | Cards 2-column grid. Radar + portrait side by side | 3-column grid for trait cards. Generous margins |
+| **Public profile** | Stacked: framing → archetype → description → signature/code → CTA. Traits below fold | GeometricSignature + OceanCodeStrand inline beside archetype name | Same as tablet with more whitespace |
+| **PWYW modal** | Full viewport width. Single scroll. CTA visible after scroll | Same at 90% width | Modal at max 600px, centered |
+| **QR drawer** | Bottom sheet (slides up) | Bottom sheet (portrait). Right drawer (landscape — handled by `lg` breakpoint) | Right-side drawer |
+| **Relationship analysis** | Single column stacked: portrait → comparison → radar | Radar + comparison side-by-side. Portrait full width | Same as tablet with max-width container |
+| **Ritual screen** | Full viewport. Centered text. Large type | Same | Same — intentionally simple at all sizes |
+
+**Mobile-specific:**
+
+| Element | Mobile Behavior |
+|---------|----------------|
+| Primary/secondary buttons | Full-width |
+| Tooltips | Tap-to-reveal. Reduced density (OCEAN letters + trait names only) |
+| Header | Hamburger → sheet (except chat: no header) |
+| Chat input | Enter = send. Shift+Enter = newline. Send button always visible |
+| GeometricSignature | Same component, smaller `size` prop |
+| Portrait | Full width, `--width-prose` (65ch) constrains naturally on large screens |
+
+**Desktop enhancements:**
+
+| Element | Desktop Behavior |
+|---------|-----------------|
+| Tooltip trigger | Hover (200ms delay) |
+| Full tooltip coverage | Facets + confidence rings get hover tooltips |
+| Multi-column grids | Trait cards 3+2 layout |
+| QR drawer | Right-side panel instead of bottom sheet |
+| Conversation | Centered at 640px with ocean layer visible on sides |
+
+### 13.2 Breakpoint Strategy
+
+**Tailwind defaults — no custom breakpoints:**
+
+| Breakpoint | Value | Design Shift |
+|-----------|-------|-------------|
+| Base | < 640px | Mobile. Single column. Full-width. Stacked |
+| `sm` | ≥ 640px | Two-column grids start. Inline layouts |
+| `md` | ≥ 768px | Side-by-side compositions (radar + portrait) |
+| `lg` | ≥ 1024px | Desktop. Three-column grids. Max-width containers. Full tooltip coverage. QR drawer switches to right-side |
+| `xl` | ≥ 1280px | More whitespace. Content doesn't widen, margins grow |
+
+**Content width constraints:**
+
+| Content | Max Width | Rationale |
+|---------|-----------|-----------|
+| Conversation | 640px (`--width-conversation`) | Optimal chat reading width |
+| Portrait | 65ch (`--width-prose`) | Optimal long-form reading |
+| Results page | 1280px | Data-rich, needs horizontal space |
+| Public profile | 1024px | Conversion-focused, not data exploration |
+| Modals | 600px | Comfortable modal reading width |
+
+### 13.3 Accessibility Strategy (WCAG AA)
+
+**Target:** WCAG 2.1 Level AA.
+
+**Already implemented:**
+
+| Requirement | Status |
+|-------------|--------|
+| `prefers-reduced-motion` | Respected in ocean layer. Extended to all transitions (§12.7) |
+| Dual theme (light/dark) | Both themes available |
+| OKLCH color system | Programmatic contrast adjustments |
+| Focus ring token (`--ring`) | Ready for `focus-visible` states |
+
+**WCAG AA mapped to big-ocean:**
+
+| Criterion | Requirement | Implementation |
+|-----------|------------|----------------|
+| 1.1.1 Non-text Content | Alt text for images | `aria-label` on GeometricSignature, shapes, radar chart |
+| 1.3.1 Info and Relationships | Semantic structure | `<article>`, `<section>`, `<nav>`, heading hierarchy |
+| 1.4.3 Contrast (Minimum) | 4.5:1 text, 3:1 large text | OKLCH ensures compliance. Portrait: AA in both themes (non-negotiable) |
+| 1.4.11 Non-text Contrast | 3:1 for UI components | Trait bars, depth meter, confidence rings meet 3:1 |
+| 1.4.4 Resize Text | Up to 200% | Relative units (`rem`, `ch`, `%`). No fixed pixel layouts |
+| 2.1.1 Keyboard | All functionality via keyboard | Tab, Enter/Space for actions, Escape for modals |
+| 2.4.3 Focus Order | Logical tab order | DOM order = visual order. Focus trap in modals |
+| 2.4.7 Focus Visible | Visible focus indicator | `focus-visible` ring on all interactive elements |
+| 2.5.5 Target Size | 44×44px minimum touch targets | All buttons and interactive elements |
+| 3.3.1 Error Identification | Errors described | Sonner toasts + inline errors with text |
+| 3.3.2 Labels | Inputs have labels | Visible `<label>` with `htmlFor` |
+
+**Chat conversation accessibility:**
+
+| Element | Approach |
+|---------|----------|
+| Nerin's messages | `aria-live="polite"` with **summary announcement** ("Nerin sent a message"). Full content in DOM for screen reader exploration. Prevents wall-of-audio for long messages |
+| Depth meter | `aria-valuenow` updates **every exchange** (not just milestones). "Exchange 8 of 25" |
+| Milestones | `aria-live="polite"` announcement when reached: "25% depth reached" |
+| Enter-to-send | Keep as-is — universal chat convention. Send button is always visible as accessible alternative |
+| Message history | Chat messages use `role="log"` on the container for screen reader navigation |
+
+**Results page accessibility:**
+
+| Element | Approach |
+|---------|----------|
+| Long scroll | ARIA landmarks per section (`<section aria-label="Your traits">`, `<section aria-label="Your portrait">`, etc.). Screen reader users jump between landmarks via hotkeys |
+| Sticky section nav | Phase 2 — add visual navigation if scroll depth is a problem. ARIA landmarks cover screen reader needs for MVP |
+| Radar chart | `role="img"` with `aria-label` summarizing profile. Data table fallback for screen readers |
+| Trait cards | Each card is an `<article>` with heading. Facet data in accessible tables |
+
+**Portrait unlock button accessible label:**
+
+```
+aria-label="Nerin has written something for you. Unlock your portrait."
+```
+
+Carries emotional weight, not just action description.
+
+**Color and contrast:**
+
+| Element | Requirement | Approach |
+|---------|------------|----------|
+| Body text | 4.5:1 | Existing tokens compliant |
+| Large text | 3:1 | Existing tokens compliant |
+| Trait color bars | 3:1 against background | Paired with text labels (not color-only) |
+| Confidence rings | 3:1 against background | Text label alongside visual |
+| Depth meter | 3:1 | Solid bar on cream/dark — accessible by default |
+| Portrait | 4.5:1 in both themes | Non-negotiable for paid content |
+| Ocean layer | Decorative | `aria-hidden="true"` |
+
+**Motion — `prefers-reduced-motion` fallbacks:**
+
+| Animation | Reduced Motion |
+|-----------|---------------|
+| Breath sequence | Instant cut to results |
+| Portrait unlock button | No change (already a simple button) |
+| QR container pulse | No animation |
+| Milestone pulse | No animation |
+| Transition entrances | Standard page load |
+
+### 13.4 Testing Strategy
+
+**MVP testing:**
+
+| Category | Scope | Approach |
+|----------|-------|---------|
+| Browsers | Chrome + Safari | Manual testing |
+| Mobile devices | iPhone SE (375×667), iPhone 14/15, Android mid-range | Real devices preferred |
+| Automated a11y | `@axe-core/playwright` — extend existing e2e tests with `checkA11y(page)` on static pages (homepage, public profile, results) | Piggybacks on existing Playwright setup in `e2e/` |
+| Dynamic pages (chat) | Manual accessibility testing | Keyboard navigation + screen reader spot-checks |
+| Keyboard navigation | Tab through all 5 journey flows | Manual per journey |
+| Reduced motion | Toggle preference, verify all transitions degrade | Manual |
+| iOS Safari | PWYW modal scroll, body scroll lock, fixed positioning | Real iPhone testing |
+
+**Phase 2 testing:**
+
+| Category | Scope |
+|----------|-------|
+| Screen readers | VoiceOver (Safari), NVDA (Windows) |
+| Color blindness | Deuteranopia, protanopia simulation via devtools |
+| Full browser matrix | Firefox, Edge, Samsung Internet |
+| High contrast mode | Windows High Contrast + future `.high-contrast` class |
+| Performance a11y | Lighthouse accessibility ≥ 90 |
+| CI integration | axe-core blocking on a11y violations for static pages |
+
+**Per-journey test checklist:**
+
+| Journey | Key A11y Test Points |
+|---------|---------------------|
+| 1. First-Timer | Sign up form → chat keyboard nav → breath reduced motion → results landmarks → PWYW focus trap → share flow |
+| 2. Relationship | QR drawer screen reader → accept screen keyboard → ritual focus management → stacked radar data table |
+| 3. PWYW | Modal scroll iOS Safari → Polar embed → envelope button role → payment error feedback |
+| 4. Returning | Extension CTA keyboard → evolution badge tooltip → regeneration flow |
+| 5. Public Profile | Above-the-fold on 375×667 → tooltip density mobile → OG image alt → private profile announcement |
+
+### 13.5 Implementation Guidelines
+
+**Responsive development:**
+
+| Guideline | Details |
+|-----------|---------|
+| Mobile-first CSS | Base = mobile. `sm:`, `md:`, `lg:` add complexity. Never `max-width` queries |
+| Relative units | `rem` for spacing, `ch` for reading widths, `%` for fluid layouts. Pixels only for borders, shadows, icon sizes |
+| Touch targets | 44×44px minimum. Add padding to small elements |
+| Images | `loading="lazy"`. SVG for shapes (scalable). OG images at fixed sizes |
+| Fluid typography | Phase 2. Consider `clamp()` for headings. Body text fixed for MVP |
+| Container queries | Phase 2. Tailwind breakpoints for MVP |
+
+**Accessibility development:**
+
+| Guideline | Details |
+|-----------|---------|
+| Semantic HTML | `<header>`, `<main>`, `<nav>`, `<article>`, `<section>`, `<aside>`. No `<div>` soup |
+| ARIA | Only when semantic HTML isn't sufficient. Prefer native elements (`<button>`, `<a>`, `<input>`) |
+| Focus management | Modal open → focus to modal. Modal close → focus to trigger. Page nav → focus to `<main>` |
+| Skip links | "Skip to content" as first focusable element on pages with navigation. Hidden visually, visible on focus |
+| Live regions | `aria-live="polite"` for: toasts, credit changes, depth milestones, QR status, Nerin message summary |
+| Color independence | Never color alone. Pair with text labels, icons, patterns, or position |
+| Heading hierarchy | One `<h1>` per page. Sequential nesting. No skipped levels |
+| Link vs button | Links navigate (TanStack `Link`). Buttons perform actions (`<button>`). Never `<a>` for actions |
+| Results page landmarks | Each section: `<section aria-label="...">`. Screen reader users jump between sections via hotkeys |
+
+## 14. Re-Engagement Email Specification
+
+### 14.1 Email Inventory
+
+| Email | Trigger | Timing | Sender Voice | Limit |
+|-------|---------|--------|-------------|-------|
+| **Drop-off recapture** | User leaves mid-conversation (session saved) | 24 hours after last activity | Nerin-voiced | 1 email only — then silence |
+| **Portrait waiting** | User skipped PWYW (has completed assessment, no portrait) | 48 hours after completion | Nerin-voiced | 1 email only — then silence |
+| **Nerin check-in** | User completed assessment + purchased portrait | ~2 weeks post-assessment | Nerin-voiced | 1 email only — then silence |
+| **Relationship ready** | Both users completed QR scan, analysis generated | Immediately after generation | System | 1 notification |
+
+### 14.2 Email Design Principles
+
+- **One email per trigger, then silence.** Never send a second follow-up. Respect the user's decision not to return.
+- **Nerin's voice, not marketing copy.** Emails from Nerin should read like a continuation of the conversation, not a product notification.
+- **No LLM calls for email content.** All emails are templated. Dynamic content is limited to: user's first name, last conversation topic (stored as a simple string), archetype name, and relationship partner name.
+- **Minimal design.** Text-forward, no hero images, no heavy branding. Consistent with the product's intimate tone. One CTA button per email.
+- **Deep link to exact state.** Every email links directly to where the user left off — `/chat?sessionId=...` for drop-off, `/results` for portrait, `/relationship/:id` for analysis ready.
+
+### 14.3 Email Content Templates
+
+**Drop-off recapture:**
+- Subject: "You and Nerin were in the middle of something"
+- Body: "Hey {firstName}, you and Nerin were talking about {lastTopic}. She's still here if you want to pick up where you left off."
+- CTA: "Continue your conversation"
+- Link: `/chat?sessionId={sessionId}`
+
+**Portrait waiting (deferred payer):**
+- Subject: "Nerin's portrait is waiting for you"
+- Body: "Hey {firstName}, Nerin wrote something for you after your conversation. It's personal, and it's ready whenever you are."
+- CTA: "Read your portrait"
+- Link: `/results`
+
+**Nerin check-in (~2 weeks):**
+- Subject: "I've been thinking about something you said"
+- Body: "Hey {firstName}, I've been thinking about {tensionFromPortrait}. There's more to explore there if you're curious."
+- CTA: "Continue with Nerin"
+- Link: `/results` (extension CTA visible on results page)
+- Note: `{tensionFromPortrait}` is extracted from the portrait's half-open door theme and stored as a simple string at portrait generation time — not an LLM call at email send time.
+
+**Relationship analysis ready:**
+- Subject: "Your relationship analysis with {partnerName} is ready"
+- Body: "Hey {firstName}, Nerin has written about your dynamic with {partnerName}. Something surprising came up."
+- CTA: "Read your analysis"
+- Link: `/relationship/{analysisId}`
+
+### 14.4 Technical Implementation
+
+- **Email provider:** Transactional email service (e.g., Resend, Postmark) — not marketing platform. No sequences, no drip campaigns.
+- **Scheduling:** Cron job or delayed task queue. Drop-off: 24h after last `assessment_message` timestamp. Portrait: 48h after assessment completion with no portrait purchase. Check-in: 14 days after portrait purchase.
+- **Suppression:** Before sending, verify the user hasn't already taken the action (resumed conversation, purchased portrait, etc.). Don't send if action already completed.
+- **Unsubscribe:** One-click unsubscribe per email category. CAN-SPAM / GDPR compliant.
+
+## 15. Dashboard Specification
+
+### 15.1 Dashboard Purpose
+
+The dashboard (`/dashboard`) is the returning user's home base — the surface that answers "what do I have, and what can I do next?" It's the hub that connects all post-assessment experiences: results, portrait, relationships, and extension.
+
+**Current state:** A minimal profile page showing a single assessment card with archetype name, geometric signature, and navigation to results or conversation resumption.
+
+**Target state:** A cohesive dashboard that surfaces all of the user's big-ocean artifacts and available actions in one place.
+
+### 15.2 Current Implementation (Built)
+
+The existing `/profile` route (`apps/front/src/routes/profile.tsx`) implements a functional but minimal dashboard (to be moved to `/dashboard`):
+
+| Component | File | What It Does |
+|-----------|------|-------------|
+| `profile.tsx` | `routes/profile.tsx` | Route with auth guard, fetches sessions via `useListAssessments(true)` |
+| `AssessmentCard` | `components/profile/AssessmentCard.tsx` | Single card: status badge, GeometricSignature (if completed), progress bar (if in-progress), date, action buttons |
+| `EmptyProfile` | `components/profile/EmptyProfile.tsx` | Empty state: MessageCircle icon + "No assessments yet" + "Start Your Assessment" CTA |
+| `ProfileSkeleton` | Inline in route | Loading skeleton placeholder |
+
+**Current layout:**
+```
+┌─────────────────────────────────────────────┐
+│ Your Assessment                             │
+│ Welcome back, {user.name}                   │
+│                                             │
+│  ┌─────────────────────────────────────┐   │
+│  │ [Status Badge: Complete/In Progress] │   │
+│  │                                     │   │
+│  │  [GeometricSignature] or [Progress] │   │
+│  │                                     │   │
+│  │  Date: Mon, Day, Year              │   │
+│  │                                     │   │
+│  │  [View Results] [Keep Exploring]   │   │
+│  │  or [Continue]                      │   │
+│  └─────────────────────────────────────┘   │
+└─────────────────────────────────────────────┘
+```
+
+**Data currently available:** `SessionSummary { id, createdAt, updatedAt, status, messageCount, oceanCode5?, archetypeName? }` + `freeTierMessageThreshold`.
+
+**Data attributes:** `data-slot="profile-page"`, `data-slot="assessment-card"`, `data-status="completed|in-progress"`, `data-slot="status-badge"`, `data-slot="progress-section"`, `data-slot="empty-dashboard"`.
+
+### 15.3 Target Dashboard Sections
+
+**Above the fold — Identity at a glance:**
+
+| Order | Element | Details |
+|-------|---------|---------|
+| 1 | User name + email | Simple, personal |
+| 2 | Archetype name + GeometricSignature | The user's identity mark — large, prominent |
+| 3 | OCEAN code (OceanCodeStrand, interactive) | Tooltips on each letter |
+| 4 | Quick actions | Primary CTAs based on user state (see §15.4) |
+
+**Below the fold — Your big-ocean world:**
+
+| Section | Content | Visibility |
+|---------|---------|-----------|
+| **Portrait** | Portrait status: locked (PortraitUnlockButton) / unlocked (link to read) / not yet generated | Always (after assessment complete) |
+| **Personality snapshot** | Mini radar chart + top 3 traits with scores | Always (after assessment complete) |
+| **Relationship analyses** | List of all relationship analyses — newest first, older marked "previous version" (EvolutionBadge). Each card shows: partner name, archetype, date, status | After first analysis |
+| **Relationship credits** | CreditBalance component — credits remaining + purchase CTA | Always (after assessment complete) |
+| **Conversation extension** | Extension CTA — "Go deeper with Nerin" (€25). Only shown if not yet purchased | After portrait purchase |
+| **Archetype card** | Share card preview + share button + download (1:1 + 9:16) | Always (after assessment complete) |
+
+### 15.4 State-Dependent Quick Actions
+
+The dashboard adapts its primary CTAs based on the user's current state:
+
+| User State | Primary CTA | Secondary CTA |
+|-----------|-------------|---------------|
+| No assessment started | "Start your conversation with Nerin" → `/chat` | — |
+| Assessment in progress | "Continue your conversation" → `/chat?sessionId=...` | Turn X/25 progress indicator |
+| Assessment complete, no portrait | "View your results" → `/results` | "Unlock your portrait" |
+| Assessment complete, portrait purchased | "View your results" → `/results` | "Share your archetype" / "Start a relationship analysis" |
+| Extension purchased, in progress | "Continue your extension" → `/chat?sessionId=...` | Turn X/50 progress indicator |
+| Extension complete | "View your updated results" → `/results` | "Regenerate your portrait" |
+
+### 15.5 Flow Diagram
+
+```mermaid
+flowchart TD
+    A["User logs in"] --> B{Has assessment?}
+    B -->|No| C["Empty state: 'No assessments yet'
+    CTA: 'Start your conversation with Nerin' → /chat"]
+    B -->|Yes| D{Assessment status?}
+
+    D -->|In progress| E["Dashboard: identity section (no archetype yet)
+    Primary CTA: 'Continue your conversation'
+    Progress: Turn X/25"]
+    D -->|Complete| F{Portrait purchased?}
+
+    F -->|No| G["Dashboard: full identity section
+    Portrait section: PortraitUnlockButton
+    Primary CTA: 'View your results'
+    Secondary: 'Unlock your portrait'"]
+    F -->|Yes| H{Has relationship analyses?}
+
+    H -->|No| I["Dashboard: full identity + portrait link
+    Personality snapshot (mini radar)
+    Relationship section: empty state
+    CreditBalance: 1 credit
+    Archetype card: share/download"]
+    H -->|Yes| J["Dashboard: full identity + portrait link
+    Personality snapshot (mini radar)
+    Relationship list (newest first)
+    CreditBalance: X credits
+    Archetype card: share/download"]
+
+    %% Extension states
+    G --> K{Extension purchased?}
+    I --> K
+    J --> K
+    K -->|Yes, in progress| L["Extension CTA replaced by:
+    'Continue your extension' Turn X/50"]
+    K -->|Yes, complete| M["'View your updated results'
+    Portrait regeneration CTA"]
+    K -->|No| N["Extension CTA: 'Go deeper with Nerin' (€25)
+    Only shown after portrait purchase"]
+```
+
+### 15.6 Relationship Analysis List
+
+The relationship section is a primary feature of the dashboard — it gives returning users a way to revisit any past analysis.
+
+| Element | Details |
+|---------|---------|
+| Card content | Partner's archetype name + GeometricSignature (mini) + date + "View analysis" link |
+| Card link | Each card links to `/relationship/:id` — the full relationship analysis result page |
+| Ordering | Newest first |
+| Versioning | EvolutionBadge on analyses based on outdated results (FK check: newer result exists for either user) |
+| Empty state | "Still waters. Start a relationship analysis with someone who matters." + QR explanation |
+| QR access | "Generate QR" button → opens QRDrawer |
+| Maximum shown | All analyses — no pagination for MVP (unlikely to exceed 10-20) |
+
+### 15.7 Loading & Skeleton States
+
+| Section | Skeleton |
+|---------|----------|
+| Identity (above fold) | Large rounded rect (signature) + 2 text lines (name, code) + 2 button-shaped rects |
+| Portrait status | Card-shaped rect with subtle pulse |
+| Personality snapshot | Circle (radar placeholder) + 3 horizontal bars |
+| Relationship list | 2-3 card-shaped rects stacked |
+| Credits | Small badge-shaped rect |
+| Archetype card | Card-shaped rect at share card aspect ratio |
+
+All skeletons use `animate-pulse` with `bg-muted`. Skeleton renders server-side to avoid layout shift.
+
+### 15.8 Error States
+
+| Section | Error Display | Recovery |
+|---------|--------------|----------|
+| Full page data fetch fails | ErrorBanner: "Something went wrong loading your profile" | Retry button (refetches query) |
+| Portrait status fails | Card: "Couldn't load portrait status" | Retry link |
+| Relationship list fails | "Couldn't load your relationship analyses" | Retry link. Rest of dashboard works |
+| Credit balance fails | Badge shows "—" | Retry on next page visit |
+| Share card generation fails | Sonner toast | "Try again" in toast action |
+
+Per-section error boundaries — one section crashing never takes down the dashboard.
+
+### 15.9 Animation & Transitions
+
+| Element | Animation | Duration | Trigger |
+|---------|-----------|----------|---------|
+| GeometricSignature entrance | Scale 0→1 with stagger per shape | 400ms, 80ms stagger | Page load |
+| Section entrance | Fade-in + slide-up (opacity 0→1, translateY 12→0) | 500ms, cubic-bezier(.16,1,.3,1) | IntersectionObserver (threshold 0.1) |
+| Quick action state change | Cross-fade between CTA variants | 200ms | Data update |
+| Relationship card entrance | Staggered fade-in | 300ms, 60ms stagger per card | List load |
+
+All animations gated by `prefers-reduced-motion: no-preference`.
+
+### 15.10 Responsive Behavior
+
+| Viewport | Layout |
+|----------|--------|
+| Mobile (< 640px) | Single column, stacked sections. Quick actions full-width. Relationship cards stacked |
+| Tablet (640-1023px) | Identity section full-width. Relationship cards 2-column grid |
+| Desktop (1024px+) | Max-width container (1024px). Identity section with radar chart side-by-side. Relationship cards 2-column grid |
+
+### 15.11 Navigation
+
+| Element | Details |
+|---------|---------|
+| Route | `/dashboard` (moved from `/profile`) |
+| Header | Standard authenticated header: Logo + "Dashboard" nav link + User nav (avatar dropdown) |
+| Mobile header | Hamburger → sheet (Dashboard link in sheet menu) |
+| Nav highlight | "Dashboard" link in header is active |
+| Post-auth redirect | New users → `/chat`. Returning users with assessment → `/dashboard` |
+
+### 15.12 Data Model
+
+**Single dashboard query** — TanStack Query call to a dashboard endpoint returning all data in one request:
+
+```typescript
+interface DashboardResponse {
+  user: { name: string; email: string }
+  assessment: {
+    sessionId: string
+    status: "active" | "paused" | "finalizing" | "completed" | "archived"
+    messageCount: number
+    freeTierMessageThreshold: number
+    oceanCode5: string | null
+    archetypeName: string | null
+    createdAt: string
+  } | null
+  portrait: {
+    status: "none" | "generating" | "ready" | "failed"
+    purchasedAt: string | null
+  }
+  relationships: Array<{
+    analysisId: string
+    partnerName: string
+    partnerArchetype: string
+    partnerOceanCode: string
+    createdAt: string
+    isOutdated: boolean  // FK check: newer result exists
+  }>
+  credits: { balance: number }
+  extension: {
+    purchased: boolean
+    inProgress: boolean
+    messageCount: number | null
+  }
+  publicProfileId: string | null
+}
+```
+
+**Current gap:** The existing `GET /api/assessment/sessions` endpoint returns only session data. A new dashboard endpoint (or expanded session endpoint) is needed to include portrait status, relationships, credits, and extension state.
+
+### 15.13 Implementation Notes
+
+- **Extends existing:** The current `/profile` route moves to `/dashboard`. Existing `AssessmentCard` component serves as the foundation. Add sections incrementally.
+- **Data fetching:** Single TanStack Query call to a dashboard endpoint. Server-rendered via TanStack Start.
+- **Component reuse:** GeometricSignature, OceanCodeStrand, PersonalityRadarChart (mini), CreditBalance, EvolutionBadge, PortraitUnlockButton — all from `packages/ui`.
+- **Empty states:** Each section has its own empty state per §12.4 conventions.
+- **Error boundaries:** Per-section error boundaries. One section failing doesn't crash the dashboard.
+- **Build incrementally:** Start with identity section + quick actions (replaces current AssessmentCard). Add portrait, snapshot, relationships, credits, extension, and share card as those features are built.
+- **Preserve data-testid/data-slot:** Existing `data-slot` attributes must be preserved or aliased during migration.
+
+### 15.14 Implementation Gap (Current → Target)
+
+| Area | Current | Target | Work Required |
+|------|---------|--------|---------------|
+| Route | `/profile` | `/dashboard` | Move route file, update all internal links and redirects |
+| Header nav | No dashboard link in header | "Dashboard" link in authenticated header | Add link to header component, mobile sheet menu |
+| Identity section | User name + single AssessmentCard | Archetype name + GeometricSignature + OceanCodeStrand + state-aware CTAs | Replace AssessmentCard with identity layout + QuickActions |
+| Portrait section | Not present | Portrait status card (locked/unlocked/generating) | New section, depends on portrait API |
+| Personality snapshot | Not present | Mini radar chart + top 3 traits | New section, reuse PersonalityRadarChart with compact prop |
+| Relationship list | Not present | Partner cards with EvolutionBadge | New section, depends on relationship API |
+| Credits | Not present | CreditBalance component | New section, depends on credits API |
+| Extension CTA | Not present | "Go deeper with Nerin" card | New section, conditional on portrait purchase |
+| Archetype card | Not present | Share card preview + download buttons | New section, reuse ArchetypeShareCard |
+| Data endpoint | `GET /api/assessment/sessions` (sessions only) | Dashboard endpoint with all data | New API endpoint or expand existing |
+
+---
+
+## 16. Homepage Specification
+
+### 16.1 Homepage Purpose
+
+The homepage is the primary conversion surface for organic visitors — people who Google "big ocean personality," land from SEO, or arrive without a shared card context. Unlike public profiles (which convert via someone else's results), the homepage must sell the experience cold.
+
+**Current state:** A 14-beat conversational narrative between Nerin, a skeptical user, and Vincent (founder). Scroll-driven, with embedded interactive previews (trait explorer, horoscope vs. portrait comparison, radar chart). Uses a DepthScrollProvider + DepthMeter to track scroll progress.
+
+### 16.2 Current Homepage Structure (Built)
+
+The existing homepage (`apps/front/src/routes/index.tsx`) implements a full conversational scroll experience:
+
+**Route:** `/` — no authentication required.
+
+**Component inventory:**
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `HeroSection` | `components/home/HeroSection.tsx` | Full-viewport intro: headline, subtitle, tagline, CTA, 5 animated OCEAN breathing shapes |
+| `ConversationFlow` | `components/home/ConversationFlow.tsx` | Container with vertical CSS thread line connecting all message groups |
+| `ChatBubble` | `components/home/ChatBubble.tsx` | 3 variants: `nerin` (NerinMessage from @workspace/ui), `user` (gradient bubble, "Y" avatar), `vincent` (amber gradient, "V" avatar, "Founder" label) |
+| `MessageGroup` | `components/home/MessageGroup.tsx` | IntersectionObserver wrapper: fade-in + slide-up on scroll visibility |
+| `ComparisonCard` | `components/home/ComparisonCard.tsx` | Beat 4: split panel — "Traditional" (16Personalities scale) vs "Conversational" (animated chat bubbles with staggered typing) |
+| `TraitStackEmbed` | `components/home/TraitStackEmbed.tsx` | Beat 6: 5 interactive trait buttons → click expands to show 6 facets per trait with cascading animation |
+| `HoroscopeVsPortraitComparison` | `components/home/HoroscopeVsPortraitComparison.tsx` | Beat 8 (climax): side-by-side — horoscope card (Aries, pastel, star ratings) vs real portrait excerpt from Nerin |
+| `ComparisonTeaserPreview` | `components/home/ComparisonTeaserPreview.tsx` | Beat 12: dual overlaid radar charts ("You" vs "A Friend") in ResultPreviewEmbed wrapper |
+| `ResultPreviewEmbed` | `components/home/ResultPreviewEmbed.tsx` | Container with border + backdrop blur + CTA button for embedded previews |
+| `DepthMeter` | `components/home/DepthMeter.tsx` | Left sidebar progress bar, appears at 5% scroll, fills based on scroll percentage. Hidden on mobile |
+| `DepthScrollProvider` | `components/home/DepthScrollProvider.tsx` | Context tracking scroll percentage (0-1) for DepthMeter and ChatInputBar visibility |
+| `ChatInputBar` | `components/home/ChatInputBar.tsx` | Sticky bottom bar appearing at 35% scroll depth — fake input field linking to `/chat` |
+| `WaveDivider` | `components/home/WaveDivider.tsx` | Wave SVG divider between sections |
+| `ScrollIndicator` | `components/home/ScrollIndicator.tsx` | Bouncing chevron |
+
+### 16.3 14-Beat Narrative Structure (Built)
+
+| Beat | Speaker | Content | Embed |
+|------|---------|---------|-------|
+| 1 | Nerin | Hook — the "but" problem with personality tests | — |
+| 2 | User | Skeptic reveals wound — past test disappointments | — |
+| 3 | Nerin | Acknowledges wound, frames the problem | — |
+| 4 | Nerin | Traditional vs Conversational comparison | `ComparisonCard` — split panel with animated chat bubbles |
+| 5 | User | Bridges — skepticism continues | — |
+| 6 | Nerin | Trait explorer — interactive Big Five overview | `TraitStackEmbed` — 5 clickable traits |
+| 6b | (conditional) | Facet details for selected trait | `TraitFacetPair` — spawned on trait click, 6 facets with cascade animation |
+| 7 | User | Challenges output — "all descriptions sound the same" | — |
+| 8 | Nerin | **Climax** — horoscope vs portrait side-by-side | `HoroscopeVsPortraitComparison` — real Nerin portrait excerpt vs generic Aries horoscope |
+| 9 | User | Reacts to portrait quality | — |
+| 10 | Nerin | The reveal — Vincent's portrait | — |
+| 10b | Vincent | Founder's personal share | — |
+| 11 | User | "I'd be scared to read mine" | — |
+| 11b | Nerin | Privacy + control message | — |
+| 11c | User | Asks about sharing | — |
+| 12 | Nerin | Social comparison — radar chart preview | `ComparisonTeaserPreview` — dual radar in ResultPreviewEmbed |
+| 13 | User | Converting line: "I wonder what mine would say" | — |
+| 14 | Nerin | CTA close: "Just a Conversation" | — |
+
+**Portrait excerpt content** (used in beat 8): `portrait-excerpt.md` — two real sections from a Nerin portrait: "The Selective Gate" (strategic filtering) and "The Undertow" (protective barrier pattern).
+
+### 16.4 Animation Inventory (Built)
+
+| Element | Animation | Timing | Notes |
+|---------|-----------|--------|-------|
+| OCEAN breathing shapes (hero) | Scale breathing (6s infinite) | Staggered delays: -1.2s to -4.8s per shape | `@keyframes breathe` |
+| MessageGroup entrance | Fade-in + slide-up (opacity 0→1, translateY 26→0) | 650ms, cubic-bezier(.16,1,.3,1) | IntersectionObserver, threshold 0.12, rootMargin "0px 0px -30px 0px" |
+| ComparisonCard chat bubbles | Staggered typing appearance | 600-1800ms delays per bubble | Simulates real conversation |
+| TraitStackEmbed click | Cross-fade between traits | 200ms exit → enter new | State-driven |
+| Facet cascade | Staggered reveal per facet | 60ms stagger, starts at 400ms | `@keyframes facetCascade` |
+| HoroscopeVsPortraitComparison | Staggered entrance | Left: 200ms, Right: 500ms, Closing text: 900ms | IntersectionObserver |
+| DepthMeter appearance | Fade-in | At 5% scroll depth | CSS transition |
+| ChatInputBar appearance | Fade-in + translateY | At 35% scroll depth, 500ms | CSS transition |
+| ScrollIndicator | Bounce | Infinite | CSS animation |
+
+All animations respect `prefers-reduced-motion`.
+
+### 16.5 Elements to Preserve
+
+| Element | Why |
+|---------|-----|
+| **Nerin-User-Vincent three-voice narrative** | Models the actual product experience. Shows Nerin's personality, not just describes it |
+| **Objection-resolution arc** | User asks skeptical questions, Nerin addresses them through demonstration |
+| **Embedded interactive previews** | Trait explorer, horoscope vs. portrait, radar comparison — show, don't tell |
+| **Vincent's founder reveal** | Humanizes the product, introduces the portrait through personal vulnerability |
+| **Scroll-as-conversation metaphor** | DepthMeter + ConversationFlow thread line create a reading experience |
+| **DepthScrollProvider + DepthMeter** | Unique and on-brand scroll tracking |
+
+### 16.6 Homepage Redesign Areas
+
+The following areas need design attention:
+
+#### A. Hero Section Refinement
+
+**Current:** "Not a personality quiz. A conversation." with animated OCEAN shapes and "Begin Your Dive ↓" CTA.
+
+**Update to align with spec:**
+
+| Element | Current | Updated |
+|---------|---------|---------|
+| Headline | "Not a personality quiz. A conversation." | Keep — this is strong |
+| Subtitle | "A portrait of who you are that no test has ever given you." | Keep |
+| Tagline | "30 MIN · NO ACCOUNT · JUST TALKING" | Update: "~25 MIN · FREE · JUST A CONVERSATION" (align with current conversation length, remove "no account" since auth-gate exists) |
+| Primary CTA | "Begin Your Dive ↓" (scrolls down) | Add secondary CTA: "Start your conversation with Nerin" → `/chat` (direct conversion for visitors who don't need convincing) |
+| OCEAN shapes | Animated breathing shapes | Keep — aligns with GeometricSignature design language |
+
+#### B. Conversion CTAs
+
+**Problem:** Current homepage has embedded CTAs inside ResultPreviewEmbed components but no persistent, visible conversion button after the hero.
+
+**Add:**
+- **Sticky bottom CTA (mobile):** After scrolling past the hero, a sticky bottom bar appears: "Start your conversation" → `/chat`. Disappears when user scrolls back to hero. CSS-only show/hide via IntersectionObserver on hero section.
+- **Final CTA section:** After beat 14 (Nerin's closing), a dedicated conversion section with the full ConversationCTA component: "What's YOUR code? Discover it in a conversation with Nerin" → `/chat`.
+- **Social proof strip (optional, post-MVP):** Number of conversations completed, average portrait rating, example archetype cards. Only add when real data exists.
+
+#### C. "How It Works" Section
+
+**Currently missing.** Add between the conversational narrative and the final CTA:
+
+| Step | Icon/Visual | Text |
+|------|-------------|------|
+| 1 | Chat bubble | **Talk to Nerin** — A 25-minute conversation about you. No quiz, no checkboxes. |
+| 2 | GeometricSignature | **Get your portrait** — Your archetype, OCEAN code, and a personal letter from Nerin. |
+| 3 | Two overlaid signatures | **Compare with someone who matters** — Scan QR codes together for a relationship analysis. |
+
+Three steps, scannable in 5 seconds. Addresses the "what is this?" question for visitors who scroll past the conversational narrative without reading it.
+
+#### D. Archetype Gallery Preview
+
+**Currently missing.** Add as a section showing 3-4 example archetype cards (real archetypes from the system) in a horizontal scroll or grid. Purpose: demonstrate the visual identity system and trigger "I want one of these" curiosity.
+
+| Element | Details |
+|---------|---------|
+| Content | 3-4 archetype cards with names, OCEAN codes, GeometricSignatures, short descriptions |
+| Layout | Horizontal scroll (mobile), 3-4 column grid (desktop) |
+| Interaction | Tap → nothing (no link to type pages for MVP). Visual only |
+| Position | Between "How It Works" and final CTA |
+
+### 16.7 Homepage Flow Diagram
+
+```mermaid
+flowchart TD
+    A["Visitor arrives (SEO, direct, referral)"] --> B["Hero: headline + OCEAN shapes
+    + 'Start your conversation' CTA"]
+    B --> C{Scrolls down?}
+    C -->|No — convinced| D["Taps hero CTA → /chat"]
+    C -->|Yes — needs convincing| E["Conversational narrative
+    (14 beats, scroll-driven)"]
+    E --> F["How It Works (3 steps)"]
+    F --> G["Archetype Gallery (3-4 cards)"]
+    G --> H["Final CTA: 'What's YOUR code?'"]
+    H --> I["→ /chat"]
+
+    %% Sticky CTA
+    E -.->|Sticky bottom bar (mobile)| I
+
+    %% Auth gate
+    D --> J{Has account?}
+    I --> J
+    J -->|No| K["Sign up → /chat"]
+    J -->|Yes, no assessment| L["/chat — start conversation"]
+    J -->|Yes, assessment complete| M["/dashboard"]
+```
+
+### 16.8 Loading & Error States
+
+| Section | Loading | Error/Fallback |
+|---------|---------|----------------|
+| Hero | Server-rendered — no loading state (critical path) | Static content, cannot fail |
+| OCEAN breathing shapes | Render immediately (SVG, no data dependency) | — |
+| Conversational narrative | MessageGroups lazy-load via IntersectionObserver | Static content, cannot fail |
+| TraitStackEmbed | Renders immediately (static trait data) | Trait data is hardcoded — no API call |
+| HoroscopeVsPortraitComparison | Renders immediately (static portrait excerpt + horoscope data) | Static content |
+| ComparisonTeaserPreview | Renders immediately (static sample radar data) | Static content |
+| Archetype Gallery (new) | Skeleton cards while loading archetype data | Fallback: hide section entirely (non-critical) |
+| ChatInputBar | Appears at 35% scroll — no data dependency | — |
+
+**Key insight:** The entire existing homepage is static content — no API calls, no data dependencies. All interactive embeds use hardcoded data. This is intentional for performance (LCP < 2.5s target). The only new section requiring data fetching is the Archetype Gallery Preview.
+
+### 16.9 OG Meta / SEO
+
+| Tag | Content |
+|-----|---------|
+| `og:title` | "big ocean — Not a personality quiz. A conversation." |
+| `og:description` | "Talk to Nerin for 25 minutes. Get a portrait of who you are that no test has ever given you." |
+| `og:image` | Hero visual or branded card (not an archetype card — generic brand image) |
+| `<title>` | "big ocean — Personality portrait through conversation" |
+| `<meta description>` | "A 25-minute conversation with Nerin reveals your personality portrait, OCEAN code, and archetype. Compare with friends. Built on Big Five science." |
+
+### 16.10 Responsive Behavior
+
+| Viewport | Layout |
+|----------|--------|
+| Mobile (< 640px) | Single column. Hero stacked. Conversation full-width. Sticky bottom CTA after hero. Archetype gallery horizontal scroll. DepthMeter hidden. ChatInputBar visible |
+| Tablet (640-1023px) | Hero side-by-side. Conversation at comfortable reading width. Archetype gallery 2x2 grid. DepthMeter visible |
+| Desktop (1024px+) | Hero side-by-side at max-width (1280px). Conversation centered (900px). Archetype gallery 4-column. No sticky CTA (hero CTA visible enough). DepthMeter visible |
+
+### 16.11 Implementation Notes
+
+- **Preserve existing components.** HeroSection, ConversationFlow, ChatBubble, MessageGroup, ComparisonCard, TraitStackEmbed, HoroscopeVsPortraitComparison, ComparisonTeaserPreview — all stay. Modifications are additive.
+- **New components:** StickyConversionBar (CSS-only show/hide via IntersectionObserver), HowItWorks (static, 3 steps), ArchetypeGalleryPreview (static cards with real archetype data).
+- **Hero CTA update:** Add direct `/chat` link alongside existing scroll-down CTA. Two paths: "I'm curious, show me more" (scroll) vs. "I'm ready, let me start" (navigate).
+- **DepthMeter + DepthScrollProvider:** Keep — the scroll-as-conversation metaphor is unique and on-brand.
+- **Performance:** Homepage is the primary SEO surface. Ensure LCP < 2.5s. Hero section server-rendered. Embeds lazy-loaded via IntersectionObserver (already implemented in MessageGroup).
+- **Preserve data-testid:** Existing `data-testid` and `data-slot` attributes must not be removed.
+
+### 16.12 Implementation Gap (Current → Target)
+
+| Area | Current | Target | Work Required |
+|------|---------|--------|---------------|
+| Hero tagline | "30 MIN · NO ACCOUNT · JUST TALKING" | "~25 MIN · FREE · JUST A CONVERSATION" | Text update in HeroSection |
+| Hero secondary CTA | None | "Start your conversation with Nerin" → `/chat` | Add Button + Link in HeroSection |
+| Sticky bottom CTA | None | Mobile-only sticky bar after scrolling past hero | New `StickyConversionBar` component, IntersectionObserver |
+| "How It Works" section | None | 3-step static section | New `HowItWorks` component |
+| Archetype Gallery | None | 3-4 example archetype cards | New `ArchetypeGalleryPreview` component, may need archetype data source |
+| Final CTA section | None | ConversationCTA after beat 14 | Add section after last MessageGroup |
+
+---
+
+## 17. Public Profile Page Specification
+
+### 17.1 Public Profile Purpose
+
+The public profile (`/public-profile/:publicProfileId`) is the primary acquisition surface for relationship explorers — visitors who arrive via a shared archetype card or direct link. It must convert curiosity about someone else's personality into commitment to discover their own. No authentication required.
+
+**Current state:** A fully implemented 5-section "story scroll" layout with SSR, OG image generation, and auth-state-dependent CTAs.
+
+### 17.2 Current Implementation (Built)
+
+**Route:** `apps/front/src/routes/public-profile.$publicProfileId.tsx` (~390 lines)
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `ArchetypeHeroSection` | `components/results/ArchetypeHeroSection.tsx` | Section 1: archetype name, OCEAN code, GeometricSignature, scroll indicator |
+| `PersonalityRadarChart` | `components/results/PersonalityRadarChart.tsx` | Section 2: 5-point radar chart with gradient fill, trait legend |
+| `TraitBand` | `components/results/TraitBand.tsx` | Section 3: colored bands per trait with score bar + 6-facet grid |
+| `ArchetypeDescriptionSection` | `components/results/ArchetypeDescriptionSection.tsx` | Section 4: 2-3 sentence description with decorative quotes, gradient background |
+| `PublicProfileCTA` | `components/results/PublicProfileCTA.tsx` | Section 5: auth-state-dependent CTA (3 variants) |
+| `GeometricSignature` | `components/ocean-shapes/GeometricSignature.tsx` | OCEAN code rendered as 5 geometric shapes |
+| `PsychedelicBackground` | (inline) | Subtle background treatment for radar section |
+
+**API:** `GET /api/public-profile/:publicProfileId` — no auth required. Returns archetype, OCEAN code, trait/facet scores, display name, description, privacy status. Fires-and-forgets view count increment + audit log.
+
+**OG Image:** Nitro endpoint at `server/routes/api/og/public-profile/[publicProfileId].get.ts` — generates 1200×630 PNG via SVG + Resvg. Shows archetype name, OCEAN code letters (colored), display name, dominant trait gradient. Cached 24h with stale-while-revalidate.
+
+### 17.3 Page Layout — 5-Section Story Scroll
+
+The public profile uses a vertical "story scroll" layout where each section occupies significant viewport height, creating a progressive reveal experience:
+
+```
+┌─────────────────────────────────────────────┐
+│ Section 1: ARCHETYPE HERO                   │
+│  Archetype name (display-size)              │
+│  GeometricSignature (animated)              │
+│  Colored OCEAN code letters                 │
+│  Confidence pill                            │
+│  Archetype description                      │
+│  Decorative background (dominant trait)      │
+│  ↓ Scroll indicator                         │
+├─────────────────────────────────────────────┤
+│ Section 2: PERSONALITY RADAR                │
+│  5-point radar chart (gradient fill)        │
+│  PsychedelicBackground (subtle)             │
+│  Trait legend with OCEAN shapes             │
+├─────────────────────────────────────────────┤
+│ Section 3: TRAIT STRATA                     │
+│  5 colored trait bands:                     │
+│    Trait name + OceanShape icon             │
+│    Score bar (animated on scroll)           │
+│    6-facet grid with scores                 │
+├─────────────────────────────────────────────┤
+│ Section 4: ARCHETYPE DESCRIPTION            │
+│  2-3 sentence description                  │
+│  Decorative quotes                          │
+│  Gradient background (dominant+secondary)   │
+├─────────────────────────────────────────────┤
+│ Section 5: CALL TO ACTION                   │
+│  Auth-state-dependent CTA (see §17.5)       │
+└─────────────────────────────────────────────┘
+```
+
+### 17.4 Screen States — Above vs Below the Fold
+
+**Above the fold (mobile-first, no scroll needed):**
+
+| Order | Element | Details | Purpose |
+|-------|---------|---------|---------|
+| 1 | Archetype Name | Large, prominent ("The Beacon") | Talkable, memorable — the hook |
+| 2 | GeometricSignature | 5 shapes representing OCEAN code | Visual identity — "I want one of these" |
+| 3 | OCEAN Code Letters | Colored by trait, with tooltips | Semantic identity mark |
+| 4 | Confidence Pill | Badge showing assessment confidence | Credibility signal |
+| 5 | Archetype Description | 2-3 sentences triggering self-comparison | The conversion engine — makes visitor think about THEMSELVES |
+
+**Below the fold (scroll reveals):**
+
+| Element | Details | Purpose |
+|---------|---------|---------|
+| Personality Radar | 5-point radar chart with gradient fill | Visual snapshot — "where would I be?" |
+| Trait Bands × 5 | Colored bars with score + 6-facet grid per trait | Depth for curious visitors |
+| Archetype Description | Extended description with decorative treatment | Scientific credibility + emotional resonance |
+| CTA | Auth-state-dependent (see §17.5) | Conversion |
+
+### 17.5 Auth-State CTA Variants (Built)
+
+| Auth State | Heading | CTA Button | Link Target |
+|-----------|---------|-----------|------------|
+| Unauthenticated | "Curious about your own personality?" | "Discover Your Personality" | `/signup` |
+| Authenticated, no assessment | "Want to compare personalities?" | "Start Your Assessment" | `/chat` |
+| Authenticated, assessment complete | "See how you compare with {displayName}" | "Start Relationship Analysis" | `/relationship-analysis?with={publicProfileId}` |
+
+### 17.6 Privacy Model (Binary)
+
+| Setting | Default | Effect |
+|---------|---------|--------|
+| Profile visibility | Private | Lock icon + "This Profile is Private" message. No data shown |
+| Profile visibility | Public | Full profile visible: archetype, scores, facets, confidence, traits |
+
+**No partial visibility.** Profile is either fully public or fully private. OCEAN code on the archetype card already implies score levels — hiding scores while showing the code is redundant.
+
+**Visibility toggle surfaced at sharing moment:** When a user with a private profile taps "Share," prompt: "Make your profile public so friends can see your archetype when they tap your link?" Toggle right there — not in settings. If they decline, the card still shares but the link shows the private profile message.
+
+### 17.7 What IS Shown vs What ISN'T
+
+| Shown (Public Profile) | Not Shown (Private) |
+|------------------------|-------------------|
+| Archetype name + description | Portrait (Nerin's letter) |
+| OCEAN code + GeometricSignature | Evidence snippets (what user said) |
+| Trait scores + radar chart | Conversation content |
+| Facet scores (in trait bands) | Relationship analyses |
+| Confidence data | |
+| Trait-level descriptions | |
+
+### 17.8 OG Meta / Link Previews (Built)
+
+| Tag | Content |
+|-----|---------|
+| `og:title` | "{archetypeName} \| big-ocean" |
+| `og:description` | Profile description or fallback |
+| `og:url` | Full profile URL |
+| `og:type` | "profile" |
+| `og:image` | `/api/og/public-profile/{publicProfileId}` (1200×630 PNG) |
+| `twitter:card` | "summary_large_image" |
+
+**OG image = archetype card** — full card with OCEAN code letters, archetype name, display name, dominant trait gradient. Eye-catching at preview sizes. Cached 24h.
+
+### 17.9 Tooltip System
+
+| Element | Tooltip Content |
+|---------|----------------|
+| OCEAN code letter (e.g., "O") | "Open-minded — curious, creative, open to new experiences" |
+| Trait name (e.g., "Openness") | Brief trait description + score range context |
+| Facet name (e.g., "Imagination") | One-line facet explanation |
+| Confidence ring | "Based on X pieces of evidence. Higher = more data points" |
+| GeometricSignature shapes | Each shape maps to a trait letter — tap to see which |
+
+Tooltips are **tap-to-reveal on mobile, hover on desktop.** They educate about the profile owner's data, but the CTA redirects curiosity back to self.
+
+### 17.10 Error States (Built)
+
+| State | Display | Action |
+|-------|---------|--------|
+| Profile not found (bad URL) | "Profile not found" | Redirect to homepage |
+| Profile is private | Lock icon + "This Profile is Private" | No data shown, no redirect |
+| Profile deleted | "This profile has been deleted" | No CTA |
+| API fetch fails | Error boundary with retry | Retry button |
+| OG image fails | Fallback to text-only OG tags | Archetype name still visible in previews |
+
+### 17.11 Flow Diagram
+
+```mermaid
+flowchart TD
+    %% Entry sources
+    A{"How does the visitor arrive?"}
+    A -->|Archetype card on social| B["Taps link in card"]
+    A -->|Direct link| C["Friend texts profile URL"]
+    A -->|Link preview| D["Sees OG preview in chat → taps"]
+    A -->|Screenshot| E["Googles archetype name"]
+
+    %% Landing
+    B --> F["Public Profile Page
+    /public-profile/:publicProfileId"]
+    C --> F
+    D --> F
+    E --> G["Homepage → may find profile"]
+    G --> F
+
+    %% Profile states
+    F --> FA{"Profile status?"}
+    FA -->|Public| H["5-section story scroll renders"]
+    FA -->|Private| FB["Lock icon + 'This Profile is Private'"]
+    FA -->|Not found| FC["'Profile not found' → homepage redirect"]
+
+    %% Scroll depth
+    H --> I{Visitor scrolls?}
+    I -->|Quick glance| J["Above fold: archetype + description + code"]
+    I -->|Deep scroll| K["Radar chart → Trait bands → Description → CTA"]
+
+    %% CTA
+    J --> O["CTA based on auth state (§17.5)"]
+    K --> O
+
+    %% CTA tap
+    O --> P{Taps CTA?}
+    P -->|Yes| Q{Auth state?}
+    P -->|No — leaves| R["Profile view counted. No retargeting"]
+
+    Q -->|Unauthenticated| S["→ /signup"]
+    Q -->|Authenticated, no assessment| T["→ /chat"]
+    Q -->|Authenticated, assessed| U["→ Relationship analysis flow"]
+
+    S --> V["Account created → /chat → Journey 1"]
+    T --> V
+```
+
+### 17.12 Logged-In Visitor Experience
+
+When a logged-in user with a completed assessment visits someone's public profile:
+
+| Element | Details |
+|---------|---------|
+| Profile view | Standard profile data — same as any visitor |
+| Relationship CTA | "See how you compare with {displayName}" + "Start Relationship Analysis" |
+| Why it works | Visitor is here because they care about this person — the perfect moment to plant the relationship seed |
+
+### 17.13 Responsive Behavior
+
+| Viewport | Layout |
+|----------|--------|
+| Mobile (< 640px) | Single column. Each section full-width. Trait bands stacked. Facet grids 1-column. CTA full-width |
+| Tablet (640-1023px) | Sections at comfortable reading width. Facet grids 2-column. Radar centered |
+| Desktop (1024px+) | Max-width container. Hero with generous whitespace. Radar + legend side-by-side. Facet grids 2-column |
+
+### 17.14 Performance
+
+| Metric | Target | Approach |
+|--------|--------|----------|
+| LCP | < 1s | SSR via TanStack Start. Hero content server-rendered. No client-side data fetch for initial render |
+| CLS | < 0.1 | Fixed layout slots for all sections. No dynamic content insertion |
+| FID | < 100ms | Minimal JS on initial load. Interactive tooltips lazy-loaded |
+
+Public profiles are SEO-critical — server-rendered with unique URLs, structured OG data, `index,follow` meta.
+
+### 17.15 Conversion Funnel Metrics
+
+| Step | Metric | Purpose |
+|------|--------|---------|
+| Impression | Profile page views | How many people land on profiles |
+| Engagement | Scroll depth, tooltip interactions | Are visitors exploring or bouncing? |
+| CTA tap | Click rate on conversion CTA | Is the hook working? |
+| Sign-up | Registration from profile referral | Conversion rate |
+| Assessment start | First Nerin exchange from profile-referred users | Do sign-ups actually start? |
+| Assessment complete | Completion rate for profile-referred users | Do they finish? |
+
+### 17.16 Implementation Notes
+
+- **Component reuse from results page:** ArchetypeHeroSection, PersonalityRadarChart, TraitBand, GeometricSignature are shared between results page and public profile. Only layout context and data source differ.
+- **SSR-first:** Entire page server-rendered. No client-side data fetching for read-only content. Interactive elements (tooltips) hydrate on client.
+- **Fire-and-forget analytics:** View count and audit logging never block the page render.
+- **Satori compatibility:** GeometricSignature and OCEAN shapes must render in both DOM and Satori (OG image generation). SVG path only, no CSS transforms.
+- **Layout slot reservation:** Reserve UI slots for Phase 6 components (EvolutionBadge) during current development.
+
+### 17.17 Implementation Gap (Current → Target)
+
+| Area | Current | Target (from UX spec §10.5) | Work Required |
+|------|---------|------------------------------|---------------|
+| Framing line | Not present | "[Name] dove deep with Nerin — here's what surfaced" above archetype name | Add to ArchetypeHeroSection (public profile variant) |
+| CTA text | Generic per auth state | "What's YOUR code? Discover it in a conversation with Nerin" | Update PublicProfileCTA copy |
+| "How it works" micro-preview | Not present | 3-step section below trait data | New section (reuse HowItWorks from homepage) |
+| Repeated CTA | Only at bottom (section 5) | Second CTA after trait bands section | Add inline CTA between sections 3 and 4 |
+| Relationship CTA (logged-in) | Links to non-existent `/relationship-analysis?with=...` route | Functional relationship initiation flow | Implement relationship initiation route + backend |
+| Privacy redirect | Shows "This Profile is Private" inline | Redirect to homepage per spec | Change behavior: private → homepage redirect |
+
+---
+
+## 18. Results Page Specification
+
+This section consolidates all results page specifications previously distributed across §7 (Defining Experience), §9 (Design Direction), §10.1 (Journey 1), §10.3 (Journey 3: PWYW), §10.4 (Journey 4: Returning), §11 (Component Strategy), and §12-13 (Patterns & Accessibility).
+
+### 18.1 Results Page Purpose
+
+The results page (`/results/:assessmentSessionId`) is the private, personal payoff — the surface that delivers on 30-45 minutes of conversation with Nerin. It's the emotional peak of the product and the bridge to every downstream action: portrait reveal, sharing, relationship analysis, and conversation extension.
+
+**Design principle:** The results page is designed for the user's personal insight experience. No conversion pressure, no sharing CTAs above the fold. The data earns the share — if results resonate, the user will want to share without being asked.
+
+### 18.2 Current Implementation (Built)
+
+**Route:** `apps/front/src/routes/results/$assessmentSessionId.tsx`
+**Shell:** `apps/front/src/routes/results.tsx` (handles 24-hour session resumption from localStorage)
+**Orchestrator:** `apps/front/src/components/results/ProfileView.tsx` — CSS grid layout composing all sections.
+
+| Component | File | Section |
+|-----------|------|---------|
+| `ArchetypeHeroSection` | `components/results/ArchetypeHeroSection.tsx` | Hero: archetype name, GeometricSignature, OCEAN code, confidence, description |
+| `PersonalPortrait` | `components/results/PersonalPortrait.tsx` | Full portrait markdown (generating/failed states) |
+| `PortraitUnlockButton` | `components/results/PortraitUnlockButton.tsx` | "Unlock your portrait" CTA with breathing animation → opens PWYW checkout |
+| `PortraitReadingView` | `components/results/PortraitReadingView.tsx` | Full-screen immersive reading mode |
+| `OceanCodeStrand` | `components/results/OceanCodeStrand.tsx` | OCEAN code legend with trait icons + connecting line |
+| `PersonalityRadarChart` | `components/results/PersonalityRadarChart.tsx` | 5-point radar with trait scores |
+| `ConfidenceRingCard` | `components/results/ConfidenceRingCard.tsx` | Confidence ring + message count metadata |
+| `TraitCard` | `components/results/TraitCard.tsx` | Per-trait card: shape, score, percentage, confidence, level |
+| `DetailZone` | `components/results/DetailZone.tsx` | Expandable facet breakdown for selected trait |
+| `EvidencePanel` | `components/results/EvidencePanel.tsx` | Evidence quotes from conversation for selected facet |
+| `ShareProfileSection` | `components/results/ShareProfileSection.tsx` | Privacy toggle + copy link |
+| `RelationshipCard` | `components/relationship/RelationshipCard.tsx` | Relationship analysis state + sent invitations |
+| `RelationshipCreditsSection` | `components/results/RelationshipCreditsSection.tsx` | Credits balance + purchase CTA + invitation form |
+| `ArchetypeShareCard` | `components/sharing/archetype-share-card.tsx` | Card preview (9:16 + 1:1) + download/share |
+| `QuickActionsCard` | `components/results/QuickActionsCard.tsx` | 3 actions: resume chat, view public profile, download report |
+| `ResultsAuthGate` | `components/ResultsAuthGate.tsx` | Unauthenticated gate with preview (blurred archetype, deterministic OCEAN code from session hash) |
+
+### 18.3 Page Layout — 10-Section Grid
+
+The results page uses a CSS grid layout (`ProfileView.tsx`) with progressive disclosure:
+
+```
+┌─────────────────────────────────────────────────────┐
+│ 1. ARCHETYPE HERO (full-width)                      │
+│    Archetype name (display-size) + GeometricSignature│
+│    OCEAN code letters (colored) + confidence pill    │
+│    Archetype description + background shapes         │
+│    Scroll indicator ↓                                │
+├─────────────────────────────────────────────────────┤
+│ 2. PORTRAIT SECTION (full-width)                    │
+│    PersonalPortrait (full) OR PortraitUnlockButton   │
+│    Rainbow accent bar (all 5 trait colors)           │
+├─────────────────────────────────────────────────────┤
+│ 3. OCEAN CODE STRAND (full-width)                   │
+│    5 trait icons with vertical connecting line       │
+│    Trait level descriptions + spectrum explanation   │
+├──────────────────────┬──────────────────────────────┤
+│ 4a. RADAR CHART      │ 4b. CONFIDENCE RING          │
+│    5-point polygon   │     Overall confidence %      │
+│    Gradient fill     │     Message count metadata    │
+├──────────────────────┴──────────────────────────────┤
+│ 5a. TRAIT CARDS — Row 1 (3 cards)                   │
+│    [Openness] [Conscientiousness] [Extraversion]     │
+│    Each: shape + score + % + confidence + level      │
+├─────────────────────────────────────────────────────┤
+│ 5b. DETAIL ZONE (if trait from row 1 selected)      │
+│    Facet breakdowns for selected trait               │
+│    → click facet → EvidencePanel overlay             │
+├─────────────────────────────────────────────────────┤
+│ 5c. TRAIT CARDS — Row 2 (2 cards)                   │
+│    [Agreeableness] [Neuroticism]                     │
+├─────────────────────────────────────────────────────┤
+│ 5d. DETAIL ZONE (if trait from row 2 selected)      │
+│    Facet breakdowns for selected trait               │
+├─────────────────────────────────────────────────────┤
+│ 6. SHARE PROFILE SECTION (full-width)               │
+│    Privacy toggle (Switch) + copy shareable link     │
+│    Gradient background                               │
+├─────────────────────────────────────────────────────┤
+│ 7. RELATIONSHIP CARD (full-width)                   │
+│    Relationship analysis state + invitation list     │
+├─────────────────────────────────────────────────────┤
+│ 8. RELATIONSHIP CREDITS (full-width)                │
+│    Credit balance + purchase CTA + invitation form   │
+├─────────────────────────────────────────────────────┤
+│ 9. ARCHETYPE SHARE CARD (full-width)                │
+│    Card preview (9:16 + 1:1) + download + share     │
+├─────────────────────────────────────────────────────┤
+│ 10. QUICK ACTIONS (full-width)                      │
+│    Resume Conversation | View Public Profile |       │
+│    Download Report (disabled)                        │
+└─────────────────────────────────────────────────────┘
+```
+
+### 18.4 Progressive Disclosure Model
+
+The results page reveals content in layers — from emotional impact to scientific depth to social actions:
+
+| Layer | Sections | What It Delivers | Scroll Position |
+|-------|----------|-----------------|-----------------|
+| **Identity** | Hero + Portrait | Archetype name, visual identity, Nerin's letter | Above the fold |
+| **Scientific** | OCEAN Strand + Radar + Traits | Data validation — "this is really me" | First scroll |
+| **Evidence** | DetailZone + EvidencePanel | Conversation-linked proof | On interaction (click trait → click facet) |
+| **Social** | Share + Relationship + Card | Sharing, comparison, download | Below the fold |
+| **Actions** | Quick Actions | Resume chat, public profile, report | Bottom |
+
+### 18.5 Portrait Section States
+
+The portrait section is the emotional centerpiece. It has multiple states depending on payment and generation status:
+
+| State | What Renders | Behavior |
+|-------|-------------|----------|
+| **Portrait ready (paid)** | `PersonalPortrait` — full markdown, rainbow accent bar | Click → `PortraitReadingView` (immersive, no UI chrome) via `?view=portrait` |
+| **Generating (paid)** | `PortraitWaitScreen` — loading state | "Nerin is writing..." + skeleton pulse |
+| **Not purchased** | `PortraitUnlockButton` — evocative button with breathing animation | Tap → opens Polar checkout (`createThemedCheckoutEmbed`) |
+| **Generation failed** | Inline error + retry button | Retry re-triggers generation (no re-charge) |
+| **No portrait yet** | Not shown | Assessment not yet complete |
+
+**Portrait status polling** (`usePortraitStatus` hook): Polls `GET /api/portrait/:sessionId/status` every 2s while generating. Stops on "ready", "failed", or "none".
+
+### 18.6 PWYW Modal Flow (see also §10.3)
+
+The PWYW flow is the monetization conversion moment. Full details in Journey 3 (§10.3). Summary of the results page integration:
+
+1. **Auto-open:** PWYW modal auto-opens after brief delay on first results page visit (user absorbs free results first)
+2. **Modal content:** Bridge + congratulations → founder's letter (3-4 sentences) → Vincent's portrait (full length) → "Unlock your portrait" CTA
+3. **Polar checkout:** Stacks on top of PWYW modal. Default €5, minimum €1. Apple Pay / Google Pay / card
+4. **On success:** Both modals close → portrait generates → skeleton → portrait reveals
+5. **On skip:** "Maybe later" closes modal. PortraitUnlockButton persists in portrait section. No guilt
+6. **Re-entry:** Tapping PortraitUnlockButton re-opens PWYW modal at any time
+
+### 18.7 Trait Card Interaction Flow
+
+Trait cards are the primary interactive element on the results page. The interaction cascade is:
+
+```
+TraitCard (click) → DetailZone expands below the clicked row
+    → Shows 6 facet breakdowns (score bars + confidence)
+    → FacetBar (click) → EvidencePanel overlays
+        → Shows conversation quotes with confidence badges
+        → Domain labels (e.g., "work", "relationships")
+```
+
+| Component | Trigger | Behavior |
+|-----------|---------|----------|
+| `TraitCard` | Click | Expands `DetailZone` below the card's row. Only one trait expanded at a time |
+| `DetailZone` | Renders on trait selection | 6 facet bars with scores + confidence. Animated expansion |
+| `EvidencePanel` | Click on facet in DetailZone | Overlay showing conversation evidence quotes. Facet name header + evidence list |
+
+### 18.8 Data Fetching
+
+| Hook | Endpoint | When | Polling |
+|------|----------|------|---------|
+| `useGetResults(sessionId)` | `GET /api/assessment/:sessionId/results` | Page load | No — single fetch, cached |
+| `usePortraitStatus(sessionId)` | `GET /api/portrait/:sessionId/status` | After results load | Every 2s while "generating" |
+| `useTraitEvidence(sessionId, trait)` | Evidence endpoint | On trait card click | No |
+| `useFacetEvidence(sessionId, facet)` | Evidence endpoint | On facet click | No |
+| `useToggleVisibility()` | `PATCH /api/public-profile/:id/visibility` | On toggle | Mutation |
+| `useRelationshipState()` | Relationship endpoint | On mount | Every 5s while "generating" |
+| `useCredits()` | Credits endpoint | On mount | No |
+
+### 18.9 Auth Gate (`ResultsAuthGate`)
+
+Unauthenticated users hitting a results URL see a teaser experience:
+
+| Element | Details |
+|---------|---------|
+| Blurred archetype name | Generates deterministic teaser OCEAN code from sessionId hash |
+| GeometricSignature | Rendered from teaser code |
+| 24-hour localStorage window | Unauthenticated users can view for 24h after assessment completion |
+| Auth modes | "teaser" (preview), "signup", "signin" |
+
+### 18.10 Screen States
+
+| State | Results Page | Portrait Section | PWYW Modal |
+|-------|-------------|-----------------|------------|
+| Results loading | Skeleton (all sections) | Not shown | Not yet |
+| Results loaded | Fully visible | Depends on portrait state (§18.5) | Auto-opens after delay (first visit) |
+| PWYW modal open | Dimmed behind modal | Not shown | Open — scrollable |
+| Polar modal open | Dimmed | Not shown | Open — Polar stacked on top |
+| Payment success | Fully visible | Loading skeleton | Closes (both) |
+| Portrait generating | Fully visible | Skeleton + "Nerin is writing..." | Closed |
+| Portrait delivered | Fully visible | Spine-format letter | Closed |
+| Portrait failed | Fully visible | "Failed" + retry | Closed |
+| Skipped PWYW | Fully visible | PortraitUnlockButton | Closed |
+| Portrait reading mode | Hidden (full-screen takeover) | `PortraitReadingView` fills viewport | — |
+
+### 18.11 Error States
+
+| Component/Section | Error Display | Recovery | Page Impact |
+|-------------------|--------------|----------|-------------|
+| Full results fetch | ErrorBanner: "Something went wrong" | Retry button | Entire page blocked |
+| Portrait section | "Something went wrong loading your portrait" + retry | Retry in-place | Rest of page works |
+| Portrait generation | "Generation failed" + retry | Retry (no re-charge) | Rest of page works |
+| Trait evidence | Sonner toast | Auto-retry once | DetailZone shows skeleton |
+| QR drawer | Drawer closes, Sonner toast | Re-open drawer | Results page works |
+| Share link copy | Sonner toast: "Couldn't copy link" | Manual URL selection | — |
+| Payment fails | Error in Polar modal | Retry or change method | — |
+| Offline/network | SSR content stays visible. Dynamic features disabled | Reconnect | Static content readable |
+
+### 18.12 Responsive Behavior
+
+| Viewport | Layout |
+|----------|--------|
+| Mobile (< 640px) | Single column. Hero full-width. Radar stacked above confidence. Trait cards single column. Detail zone full-width. Share/relationship sections stacked. Card previews stacked |
+| Tablet (640-1023px) | Radar + confidence side-by-side. Trait cards: 3-column row 1, 2-column row 2. Detail zone spans row width |
+| Desktop (1024px+) | Max-width container (1280px). Same grid as tablet with more generous spacing. Reading mode centered at prose width (65ch) |
+
+### 18.13 Performance
+
+| Metric | Target | Approach |
+|--------|--------|----------|
+| LCP | < 1.5s | SSR via TanStack Start. Hero section server-rendered. Portrait markdown pre-rendered server-side via react-markdown |
+| CLS | < 0.1 | Reserved layout slots for portrait (known height range), trait cards (fixed), and all sections |
+| TTI | < 3s | Interactive elements (trait clicks, tooltips, QR drawer) hydrate progressively. Static content readable immediately |
+
+### 18.14 Accessibility
+
+| Element | Requirement |
+|---------|-------------|
+| Page landmarks | Each section: `<section aria-label="...">`. Screen reader users jump between sections via hotkeys |
+| Radar chart | `role="img"` with `aria-label`. Data table fallback for screen readers |
+| Trait cards | Keyboard navigable (Tab + Enter to expand DetailZone). `aria-expanded` state |
+| Evidence panel | `role="dialog"` with focus trap. `aria-labelledby` linked to facet name |
+| Portrait reading view | `role="article"`. Semantic headings (`h3`) for spine sections |
+| OCEAN code strand | Each letter: `<button>` with `aria-describedby` → tooltip. Tab navigable |
+| Confidence rings | `aria-valuenow`, `aria-valuemin`, `aria-valuemax` |
+| Color contrast | All trait colors meet WCAG AA on both light and dark backgrounds |
+| Reduced motion | All animations gated by `prefers-reduced-motion`. Radar draw, bar fills, card entrances all respect preference |
+| Tooltips in Nerin's language | Results page speaks like Nerin, not like a textbook |
+
+### 18.15 Navigation
+
+| Element | Details |
+|---------|---------|
+| Route | `/results/:assessmentSessionId` |
+| Auth | Required — redirects to login if unauthenticated (except 24h teaser window) |
+| Header | Standard authenticated header |
+| Back navigation | → `/chat` (if conversation in progress) or `/dashboard` (if complete) |
+| Portrait reading mode | `?view=portrait` URL param. Back button returns to results grid |
+| Quick action links | Resume conversation → `/chat?sessionId=...`, Public profile → `/public-profile/:id`, Download report → disabled (placeholder) |
+
+### 18.16 Key Cross-References
+
+This specification consolidates content from:
+- §7.5-7.7 — Four-beat experience, portrait as emotional peak, monetization architecture
+- §9.2 — Chosen design direction, component reuse matrix
+- §9.3 — Portrait spine structure
+- §9.4 — Chart and data visualization direction
+- §10.1 — Journey 1 results page touchpoints
+- §10.3 — Journey 3 PWYW flow (complete flow diagram and modal spec)
+- §10.4 — Journey 4 returning user results experience
+- §11.4-11.5 — Component specs (PortraitSpineRenderer, PortraitUnlockButton, PWYWCurtainModal, etc.) and route composition
+- §12.1-12.7 — Feedback patterns, navigation, modals, empty states, button hierarchy, transitions
+- §13.1-13.4 — Responsive strategy, breakpoints, accessibility, testing
