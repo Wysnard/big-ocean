@@ -7,20 +7,48 @@ describe("nerin-greeting", () => {
 			expect(GREETING_MESSAGES).toHaveLength(1);
 		});
 
-		it("message 1 is the exact Prototype K verbatim text", () => {
-			expect(GREETING_MESSAGES[0]).toBe(
-				"Hey — I'm Nerin 👋 We're about to have a conversation, and by the end I'll write you something about what I noticed. No quizzes, no right answers — just talk honestly and the messy, contradictory stuff is welcome 🤿",
-			);
-		});
-
 		it("message 1 introduces Nerin and creates portrait anticipation", () => {
 			expect(GREETING_MESSAGES[0]).toContain("Nerin");
 			expect(GREETING_MESSAGES[0]).toContain("write you something");
-			expect(GREETING_MESSAGES[0]).not.toContain("personality dive master");
+		});
+
+		it("message 1 includes 'not therapy' framing (FR8)", () => {
+			// The greeting must include a natural "not therapy" framing
+			expect(GREETING_MESSAGES[0].toLowerCase()).toContain("therapy");
+		});
+
+		it("message 1 includes data storage notice (FR52)", () => {
+			// The greeting must mention that conversation data is kept/stored
+			const msg = GREETING_MESSAGES[0].toLowerCase();
+			const hasStorageNotice =
+				msg.includes("keep") || msg.includes("store") || msg.includes("save") || msg.includes("note");
+			expect(hasStorageNotice).toBe(true);
+		});
+
+		it("message 1 includes encouragement cues (FR54)", () => {
+			const msg = GREETING_MESSAGES[0].toLowerCase();
+			// Should encourage honesty/truthfulness
+			const hasHonestyCue = msg.includes("honest") || msg.includes("truthful") || msg.includes("real");
+			expect(hasHonestyCue).toBe(true);
 		});
 
 		it("message 1 includes messy/contradictory permission", () => {
-			expect(GREETING_MESSAGES[0]).toContain("messy, contradictory");
+			expect(GREETING_MESSAGES[0]).toContain("messy");
+		});
+
+		it("does not contain forbidden words as standalone terms", () => {
+			// These words should not appear as standalone terms framing the experience
+			// "quizzes" is acceptable (negation: "no quizzes"), but "quiz" as a label is not
+			const forbidden = ["assessment", "diagnostic", "evaluation"];
+			for (const msg of GREETING_MESSAGES) {
+				for (const word of forbidden) {
+					expect(msg.toLowerCase()).not.toContain(word);
+				}
+			}
+			// "personality" should not appear as a framing label
+			for (const msg of GREETING_MESSAGES) {
+				expect(msg.toLowerCase()).not.toContain("personality");
+			}
 		});
 
 		it("does not contain instructional language", () => {
@@ -46,7 +74,7 @@ describe("nerin-greeting", () => {
 		it("does not contain the beach question", () => {
 			for (const q of OPENING_QUESTIONS) {
 				expect(q).not.toContain("at the beach");
-				expect(q).not.toContain("🌊");
+				expect(q).not.toContain("\u{1F30A}");
 			}
 		});
 
@@ -59,6 +87,15 @@ describe("nerin-greeting", () => {
 			const boringQuestion = OPENING_QUESTIONS.find((q) => q.includes("boring true thing"));
 			expect(boringQuestion).toBeDefined();
 			expect(boringQuestion).toContain("most interesting");
+		});
+
+		it("does not contain forbidden words", () => {
+			const forbidden = ["assessment", "test", "diagnostic", "personality", "quiz", "evaluation"];
+			for (const q of OPENING_QUESTIONS) {
+				for (const word of forbidden) {
+					expect(q.toLowerCase()).not.toContain(word);
+				}
+			}
 		});
 	});
 

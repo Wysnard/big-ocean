@@ -3,10 +3,16 @@
  * Persisted to the database as the first 2 assistant messages when a session starts.
  *
  * Message 1 is fixed. Message 2 is randomly selected from OPENING_QUESTIONS.
+ *
+ * Greeting includes (per FR8, FR52, FR54):
+ * - "Not therapy" framing woven naturally into Nerin's voice
+ * - Data storage notice in conversational tone
+ * - Encouragement cues (honesty, concrete examples, going beyond)
+ * - Portrait anticipation without revealing the format
  */
 
 export const GREETING_MESSAGES = [
-	"Hey — I'm Nerin 👋 We're about to have a conversation, and by the end I'll write you something about what I noticed. No quizzes, no right answers — just talk honestly and the messy, contradictory stuff is welcome 🤿",
+	"Hey — I'm Nerin 👋 We're about to have a conversation, and by the end I'll write you something about what I noticed. This isn't therapy and there are no right answers — just talk honestly. I keep notes from our conversation so I can be precise about what I see. The messy, contradictory, real stuff is welcome — and if a question doesn't quite fit, go wherever it takes you 🤿",
 ] as const;
 
 /**
