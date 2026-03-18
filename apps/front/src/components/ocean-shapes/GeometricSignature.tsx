@@ -1,39 +1,63 @@
-import { type OceanCode5, TRAIT_LETTER_MAP } from "@workspace/domain";
+import type { OceanCode5 } from "@workspace/domain";
 import { cn } from "@workspace/ui/lib/utils";
+import type { ComponentType } from "react";
 import { OceanCircle } from "./OceanCircle";
+import { OceanCross } from "./OceanCross";
+import { OceanCutSquare } from "./OceanCutSquare";
 import { OceanDiamond } from "./OceanDiamond";
+import { OceanDoubleQuarter } from "./OceanDoubleQuarter";
 import { OceanHalfCircle } from "./OceanHalfCircle";
+import { OceanInvertedTriangle } from "./OceanInvertedTriangle";
+import { OceanLollipop } from "./OceanLollipop";
+import { OceanOval } from "./OceanOval";
+import { OceanQuarterCircle } from "./OceanQuarterCircle";
 import { OceanRectangle } from "./OceanRectangle";
+import { OceanReversedHalfCircle } from "./OceanReversedHalfCircle";
+import { OceanTable } from "./OceanTable";
+import { OceanThreeQuarterSquare } from "./OceanThreeQuarterSquare";
 import { OceanTriangle } from "./OceanTriangle";
 
-type SizeTier = "small" | "medium" | "large";
+type ShapeProps = { size?: number; color?: string; className?: string };
 
-/** Maps trait-specific letters to size tiers using TRAIT_LETTER_MAP from domain */
-const LETTER_TO_SIZE_TIER: Record<string, SizeTier> = {};
-
-for (const [, letters] of Object.entries(TRAIT_LETTER_MAP)) {
-	LETTER_TO_SIZE_TIER[letters[0]] = "small"; // Low
-	LETTER_TO_SIZE_TIER[letters[1]] = "medium"; // Mid
-	LETTER_TO_SIZE_TIER[letters[2]] = "large"; // High
-}
-
-const SIZE_MULTIPLIERS: Record<SizeTier, number> = {
-	small: 0.5,
-	medium: 0.75,
-	large: 1.0,
+/** Maps each OCEAN code letter to its unique shape component */
+const LETTER_TO_SHAPE: Record<string, ComponentType<ShapeProps>> = {
+	// Openness: T (Low), M (Mid), O (High)
+	T: OceanCross,
+	M: OceanCutSquare,
+	O: OceanCircle,
+	// Conscientiousness: F (Low), S (Mid), C (High)
+	F: OceanThreeQuarterSquare,
+	S: OceanDoubleQuarter,
+	C: OceanHalfCircle,
+	// Extraversion: I (Low), B (Mid), E (High)
+	I: OceanOval,
+	B: OceanQuarterCircle,
+	E: OceanRectangle,
+	// Agreeableness: D (Low), P (Mid), A (High)
+	D: OceanReversedHalfCircle,
+	P: OceanLollipop,
+	A: OceanTriangle,
+	// Neuroticism: R (Low), V (Mid), N (High)
+	R: OceanTable,
+	V: OceanInvertedTriangle,
+	N: OceanDiamond,
 };
 
-function getShapeSize(letter: string, baseSize: number): number {
-	const tier = LETTER_TO_SIZE_TIER[letter] ?? "medium";
-	return baseSize * SIZE_MULTIPLIERS[tier];
-}
+const VALID_LETTERS = new Set(Object.keys(LETTER_TO_SHAPE));
 
-const VALID_LETTERS = new Set(Object.keys(LETTER_TO_SIZE_TIER));
+/** Trait colors in OCEAN order */
+const TRAIT_COLORS = [
+	"var(--trait-openness)",
+	"var(--trait-conscientiousness)",
+	"var(--trait-extraversion)",
+	"var(--trait-agreeableness)",
+	"var(--trait-neuroticism)",
+];
 
 interface GeometricSignatureProps {
 	/** 5-letter OCEAN code (e.g., "OCEAR") */
 	oceanCode: OceanCode5;
-	/** Base size in px — Large shapes use this, Medium = 0.75x, Small = 0.5x */
+	/** Base size in px for all shapes (uniform sizing) */
 	baseSize?: number;
 	/** Whether to animate the reveal */
 	animate?: boolean;
@@ -64,41 +88,10 @@ export function GeometricSignature({
 		}
 	}
 
-	const letters = oceanCode.split("").slice(0, 5);
-	const [o, c, e, a, n] = letters;
-
-	const shapes = [
-		{
-			key: "o",
-			Component: OceanCircle,
-			letter: o,
-			color: "var(--trait-openness)",
-		},
-		{
-			key: "c",
-			Component: OceanHalfCircle,
-			letter: c,
-			color: "var(--trait-conscientiousness)",
-		},
-		{
-			key: "e",
-			Component: OceanRectangle,
-			letter: e,
-			color: "var(--trait-extraversion)",
-		},
-		{
-			key: "a",
-			Component: OceanTriangle,
-			letter: a,
-			color: "var(--trait-agreeableness)",
-		},
-		{
-			key: "n",
-			Component: OceanDiamond,
-			letter: n,
-			color: "var(--trait-neuroticism)",
-		},
-	];
+	// Always produce exactly 5 entries — pad with empty strings for short codes
+	const raw = oceanCode.split("").slice(0, 5);
+	const letters = Array.from({ length: 5 }, (_, i) => raw[i] ?? "");
+	const TRAIT_KEYS = ["o", "c", "e", "a", "n"];
 
 	return (
 		<div
@@ -106,26 +99,29 @@ export function GeometricSignature({
 			className={cn("flex flex-col items-center gap-3", className)}
 		>
 			<div className="flex items-center gap-[0.2em]">
-				{shapes.map((shape, index) => (
-					<span
-						key={shape.key}
-						className={cn(
-							"inline-flex items-center justify-center",
-							animate && "motion-safe:animate-shape-reveal motion-reduce:animate-none",
-						)}
-						style={
-							animate
-								? ({
-										"--shape-index": index,
-										animationDelay: `${index * 200}ms`,
-										animationFillMode: "both",
-									} as React.CSSProperties)
-								: undefined
-						}
-					>
-						<shape.Component size={getShapeSize(shape.letter ?? "", baseSize)} color={shape.color} />
-					</span>
-				))}
+				{letters.map((letter, index) => {
+					const ShapeComponent = LETTER_TO_SHAPE[letter] ?? OceanCircle;
+					return (
+						<span
+							key={TRAIT_KEYS[index]}
+							className={cn(
+								"inline-flex items-center justify-center",
+								animate && "motion-safe:animate-shape-reveal motion-reduce:animate-none",
+							)}
+							style={
+								animate
+									? ({
+											"--shape-index": index,
+											animationDelay: `${index * 200}ms`,
+											animationFillMode: "both",
+										} as React.CSSProperties)
+									: undefined
+							}
+						>
+							<ShapeComponent size={baseSize} color={TRAIT_COLORS[index]} />
+						</span>
+					);
+				})}
 			</div>
 			{archetypeName && (
 				<span

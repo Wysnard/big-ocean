@@ -1,7 +1,17 @@
 export { GeometricSignature } from "./GeometricSignature";
 export { OceanCircle } from "./OceanCircle";
+export { OceanCross } from "./OceanCross";
+export { OceanCutSquare } from "./OceanCutSquare";
 export { OceanDiamond } from "./OceanDiamond";
+export { OceanDoubleQuarter } from "./OceanDoubleQuarter";
 export { OceanHalfCircle } from "./OceanHalfCircle";
+export { OceanInvertedTriangle } from "./OceanInvertedTriangle";
+export { OceanLollipop } from "./OceanLollipop";
+export { OceanOval } from "./OceanOval";
+export { OceanQuarterCircle } from "./OceanQuarterCircle";
 export { OceanRectangle } from "./OceanRectangle";
+export { OceanReversedHalfCircle } from "./OceanReversedHalfCircle";
 export { OceanShapeSet } from "./OceanShapeSet";
+export { OceanTable } from "./OceanTable";
+export { OceanThreeQuarterSquare } from "./OceanThreeQuarterSquare";
 export { OceanTriangle } from "./OceanTriangle";
