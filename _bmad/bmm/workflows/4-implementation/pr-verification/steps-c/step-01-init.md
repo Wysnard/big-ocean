@@ -5,8 +5,8 @@ description: 'Initialize PR verification — discover sprint plan, build PR queu
 nextStepFile: './step-02-checkout-rebase.md'
 continueFile: './step-01b-continue.md'
 stateFile: '{output_folder}/pr-verification-state.yaml'
-sprintPlanFolder: '{output_folder}'
-sprintPlanPattern: 'sprint-*.yaml'
+sprintPlanFolder: '{output_folder}/implementation-artifacts'
+sprintPlanPattern: 'sprint-parallelism-plan.md'
 ---
 
 # Step 1: Initialize PR Verification
