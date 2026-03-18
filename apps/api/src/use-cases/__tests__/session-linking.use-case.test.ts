@@ -92,7 +92,6 @@ const MockConfigLive = Layer.succeed(AppConfig, {
 	polarProductRelationshipSingle: "polar_product_single",
 	polarProductRelationship5Pack: "polar_product_5pack",
 	polarProductExtendedConversation: "polar_product_extended",
-	teaserModelId: "mock",
 	globalDailyAssessmentLimit: 100,
 	minEvidenceWeight: 0.36,
 	// DRS config (Story 21-2)

@@ -135,13 +135,10 @@ test("golden path: landing → chat → signup → results → share → public 
 			timeout: 15_000,
 		});
 
-		// PersonalPortrait component should now render (replaces TeaserPortrait)
+		// PersonalPortrait component should render
 		const portrait = page.locator("[data-slot='personal-portrait']");
 		await portrait.scrollIntoViewIfNeeded();
 		await expect(portrait).toBeVisible();
-
-		// Teaser portrait CTA should no longer be visible
-		await expect(page.getByTestId("reveal-portrait-cta")).not.toBeVisible();
 	});
 
 	await test.step("wait for auto-generated share link", async () => {

@@ -379,12 +379,12 @@ export const purchaseEvents = pgTable(
 	],
 );
 
-// ─── Portraits (Story 13.3 — two-tier portrait system) ───────────────────
+// ─── Portraits (Story 13.3) ───────────────────────────────────────────────
 
 /**
  * Portraits
  *
- * Two-tier portrait system (teaser/full).
+ * Full portrait system (teaser tier removed — Story 32-0).
  * Placeholder row pattern: content=NULL means generating.
  * Status derived from data, not stored column.
  */
@@ -395,7 +395,7 @@ export const portraits = pgTable(
 		assessmentResultId: uuid("assessment_result_id")
 			.notNull()
 			.references(() => assessmentResults.id, { onDelete: "cascade" }),
-		tier: text("tier").notNull().$type<"teaser" | "full">(),
+		tier: text("tier").notNull().$type<"full">(),
 		content: text("content"), // nullable — NULL = generating
 		modelUsed: text("model_used").notNull(),
 		retryCount: integer("retry_count").notNull().default(0),

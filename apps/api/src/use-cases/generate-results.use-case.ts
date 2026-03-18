@@ -7,7 +7,7 @@
  * Pipeline stages:
  *   1. Idempotency check: stage=completed → return immediately
  *   2. Idempotency check: stage=scored → skip scoring, proceed to completion
- *   3. Acquire lock → compute scores + portrait → upsert result with stage=scored
+ *   3. Acquire lock → compute scores → upsert result with stage=scored
  *   4. Mark session completed, set stage=completed
  */
 
@@ -16,25 +16,21 @@ import {
 	AssessmentResultRepository,
 	AssessmentSessionRepository,
 	ConversationEvidenceRepository,
-	CostGuardRepository,
-	calculateCost,
 	computeAllFacetResults,
 	computeDomainCoverage,
 	computeTraitResults,
 	LoggerRepository,
-	PortraitRepository,
 	SessionNotFinalizing,
 	SessionNotFound,
-	TeaserPortraitRepository,
 } from "@workspace/domain";
-import { Effect, Schedule } from "effect";
+import { Effect } from "effect";
 
 export interface GenerateResultsInput {
 	readonly sessionId: string;
 	readonly authenticatedUserId: string | null;
 }
 
-export type GenerateResultsStatus = "analyzing" | "generating_portrait" | "completed";
+export type GenerateResultsStatus = "analyzing" | "completed";
 
 export const generateResults = (input: GenerateResultsInput) =>
 	Effect.gen(function* () {
@@ -42,9 +38,6 @@ export const generateResults = (input: GenerateResultsInput) =>
 		const logger = yield* LoggerRepository;
 		const conversationEvidenceRepo = yield* ConversationEvidenceRepository;
 		const assessmentResultRepo = yield* AssessmentResultRepository;
-		const costGuardRepo = yield* CostGuardRepository;
-		const teaserPortraitRepo = yield* TeaserPortraitRepository;
-		const portraitRepo = yield* PortraitRepository;
 
 		// 1. Validate session exists and user owns it
 		const session = yield* sessionRepo.getSession(input.sessionId);
@@ -168,57 +161,15 @@ export const generateResults = (input: GenerateResultsInput) =>
 					domainCoverage,
 				});
 
-				// Update progress to generating portrait
-				yield* sessionRepo.updateSession(input.sessionId, {
-					finalizationProgress: "generating_portrait",
-				});
-
-				// Generate teaser portrait
-				const teaserOutput = yield* teaserPortraitRepo
-					.generateTeaser({
-						sessionId: input.sessionId,
-						evidence: conversationEvidence,
-						scoringEvidence: scoringInputs,
-					})
-					.pipe(Effect.retry(Schedule.once));
-
-				// Track teaser cost (fail-open)
-				const teaserCostKey = session.userId ?? input.sessionId;
-				const teaserCost = calculateCost(teaserOutput.tokenUsage.input, teaserOutput.tokenUsage.output);
-				yield* costGuardRepo.incrementDailyCost(teaserCostKey, teaserCost.totalCents).pipe(
-					Effect.catchTag("RedisOperationError", (err) => {
-						logger.warn("Failed to track teaser portrait cost (non-blocking)", {
-							error: err.message,
-							sessionId: input.sessionId,
-						});
-						return Effect.succeed(0);
-					}),
-				);
-
-				// Upsert assessment_results with scores + portrait, set stage=scored
-				const upsertedResult = yield* assessmentResultRepo.upsert({
+				// Upsert assessment_results with scores (no portrait at finalization — Story 32-0)
+				yield* assessmentResultRepo.upsert({
 					assessmentSessionId: input.sessionId,
 					facets,
 					traits,
 					domainCoverage,
-					portrait: teaserOutput.portrait,
+					portrait: "",
 					stage: "scored",
 				});
-
-				// Store teaser in portraits table (additive)
-				const teaserPlaceholder = yield* portraitRepo
-					.insertPlaceholder({
-						assessmentResultId: upsertedResult.id,
-						tier: "teaser" as const,
-						modelUsed: teaserOutput.modelUsed,
-					})
-					.pipe(Effect.catchTag("DuplicatePortraitError", () => Effect.succeed(null)));
-
-				if (teaserPlaceholder) {
-					yield* portraitRepo
-						.updateContent(teaserPlaceholder.id, teaserOutput.portrait)
-						.pipe(Effect.catchTag("PortraitNotFoundError", () => Effect.void));
-				}
 
 				const scoringDuration = Date.now() - pipelineStart;
 				const facetsWithEvidence = Object.values(facets).filter((f) => f.confidence > 0).length;
@@ -226,7 +177,6 @@ export const generateResults = (input: GenerateResultsInput) =>
 					sessionId: input.sessionId,
 					facetsWithEvidence,
 					scoringDurationMs: scoringDuration,
-					teaserLength: teaserOutput.portrait.length,
 					traitScores: Object.fromEntries(
 						Object.entries(traits).map(([t, v]) => [t, v.score.toFixed(2)]),
 					),

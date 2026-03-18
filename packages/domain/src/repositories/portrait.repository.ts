@@ -1,7 +1,7 @@
 /**
  * Portrait Repository Interface (Story 13.3)
  *
- * Database operations for two-tier portrait system (teaser/full).
+ * Database operations for portrait system (teaser tier removed — Story 32-0).
  * Uses placeholder row pattern: content=NULL means generating.
  * Status derived from data, not stored column.
  */
@@ -11,7 +11,7 @@ import { DatabaseError } from "../errors/http.errors";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type PortraitTier = "teaser" | "full";
+export type PortraitTier = "full";
 
 export type PortraitStatus = "none" | "generating" | "ready" | "failed";
 

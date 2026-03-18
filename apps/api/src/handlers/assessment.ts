@@ -220,13 +220,6 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 								}),
 							),
 						),
-						Effect.catchTag("TeaserPortraitError", (error) =>
-							Effect.fail(
-								new DatabaseError({
-									message: `Finalization failed: ${error.message}`,
-								}),
-							),
-						),
 					);
 
 					// Format HTTP response per AC-5 contract

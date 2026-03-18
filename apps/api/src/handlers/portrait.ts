@@ -30,7 +30,6 @@ export const PortraitGroupLive = HttpApiBuilder.group(BigOceanApi, "portrait", (
 					return {
 						status: result.status,
 						portrait,
-						teaser: result.teaser,
 					};
 				}),
 			)

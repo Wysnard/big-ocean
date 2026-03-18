@@ -28,7 +28,7 @@ describe("ResultsAuthGate", () => {
 		mockRefreshSession.mockResolvedValue({});
 	});
 
-	it("renders teaser CTA with required data slots", () => {
+	it("renders gate CTA with required data slots", () => {
 		render(
 			<ResultsAuthGate sessionId="session-123" onAuthSuccess={() => {}} onStartFresh={() => {}} />,
 		);

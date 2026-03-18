@@ -26,18 +26,11 @@ export const PortraitStatusSchema = S.Literal("none", "generating", "ready", "fa
 export const PortraitSchema = S.Struct({
 	id: S.String,
 	assessmentResultId: S.String,
-	tier: S.Literal("teaser", "full"),
+	tier: S.Literal("full"),
 	content: S.NullOr(S.String),
 	modelUsed: S.String,
 	retryCount: S.Number,
 	createdAt: S.DateTimeUtc,
-});
-
-/**
- * Teaser Portrait Data Schema (Story 12.3)
- */
-export const TeaserPortraitDataSchema = S.Struct({
-	content: S.String,
 });
 
 /**
@@ -46,7 +39,6 @@ export const TeaserPortraitDataSchema = S.Struct({
 export const GetPortraitStatusResponseSchema = S.Struct({
 	status: PortraitStatusSchema,
 	portrait: S.NullOr(PortraitSchema),
-	teaser: S.NullOr(TeaserPortraitDataSchema),
 });
 
 /**
@@ -61,7 +53,7 @@ const PortraitStatusPathSchema = S.Struct({
  */
 export const RatePortraitPayloadSchema = S.Struct({
 	assessmentSessionId: S.String,
-	portraitType: S.Literal("teaser", "full"),
+	portraitType: S.Literal("full"),
 	rating: S.Literal("up", "down"),
 	depthSignal: S.Literal("rich", "moderate", "thin"),
 	evidenceCount: S.Number.pipe(S.int(), S.nonNegative()),

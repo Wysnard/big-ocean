@@ -3,7 +3,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import type { FacetName, TraitName } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
-import { useTheme } from "@workspace/ui/hooks/use-theme";
 import { Schema as S } from "effect";
 import { BookOpen, Loader2, MessageCircle } from "lucide-react";
 import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
@@ -17,7 +16,6 @@ import { ProfileView } from "@/components/results/ProfileView";
 import { QuickActionsCard } from "@/components/results/QuickActionsCard";
 import { RelationshipCreditsSection } from "@/components/results/RelationshipCreditsSection";
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
-import { TeaserPortraitReadingView } from "@/components/results/TeaserPortraitReadingView";
 import { useTraitEvidence } from "@/components/results/useTraitEvidence";
 import { ArchetypeShareCard } from "@/components/sharing/archetype-share-card";
 import {
@@ -29,7 +27,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useFacetEvidence } from "@/hooks/use-evidence";
 import { useToggleVisibility } from "@/hooks/use-profile";
 import { usePortraitStatus } from "@/hooks/usePortraitStatus";
-import { createThemedCheckoutEmbed } from "@/lib/polar-checkout";
 import {
 	clearPendingResultsGateSession,
 	persistPendingResultsGateSession,
@@ -93,8 +90,7 @@ function ResultsSessionPage() {
 	const { assessmentSessionId } = Route.useParams();
 	const { view } = Route.useSearch();
 	const navigate = useNavigate();
-	const { isAuthenticated, isPending: isAuthPending, user } = useAuth();
-	const { appTheme } = useTheme();
+	const { isAuthenticated, isPending: isAuthPending } = useAuth();
 	const canLoadResults = isAuthenticated && !isAuthPending;
 	const { data: results, isLoading, error } = useGetResults(assessmentSessionId, canLoadResults);
 	const isNotFoundError = (value: unknown): boolean => {
@@ -289,21 +285,7 @@ function ResultsSessionPage() {
 		void navigate({ to: "/chat", search: { sessionId: undefined } });
 	};
 
-	// Story 12.3: Unlock full portrait via Polar checkout
-	const handleUnlockPortrait = useCallback(async () => {
-		if (!user?.id) return;
-		try {
-			const checkout = await createThemedCheckoutEmbed("portrait-unlock", appTheme);
-			checkout.addEventListener("success", (event) => {
-				event.preventDefault();
-				setWaitingForUnlock(true);
-			});
-		} catch {
-			// Checkout failed to open — no action needed
-		}
-	}, [user?.id, appTheme]);
-
-	// Story 7.18 + 12.3 + 13.3: Back to profile from reading view
+	// Story 7.18 + 13.3: Back to profile from reading view
 	const handleBackToProfile = useCallback(
 		() =>
 			navigate({
@@ -374,18 +356,6 @@ function ResultsSessionPage() {
 		if (fullContent) {
 			return <PortraitReadingView content={fullContent} onViewFullProfile={handleBackToProfile} />;
 		}
-
-		// Teaser available → teaser reading view with locked sections + CTA
-		const teaserData = portraitStatusData?.teaser;
-		if (teaserData) {
-			return (
-				<TeaserPortraitReadingView
-					teaserContent={teaserData.content}
-					onUnlock={handleUnlockPortrait}
-					onViewFullProfile={handleBackToProfile}
-				/>
-			);
-		}
 	}
 
 	return (
@@ -402,8 +372,6 @@ function ResultsSessionPage() {
 			fullPortraitContent={portraitStatusData?.portrait?.content}
 			fullPortraitStatus={portraitStatusData?.status}
 			onRetryPortrait={() => void refetchPortraitStatus()}
-			teaserContent={portraitStatusData?.teaser?.content}
-			onUnlockPortrait={handleUnlockPortrait}
 			selectedTrait={selectedTrait}
 			messageCount={results.messageCount}
 			detailZone={
@@ -457,8 +425,8 @@ function ResultsSessionPage() {
 
 					{/* Action CTAs — full-width */}
 					<div className="col-span-full flex flex-wrap justify-center gap-3 py-4">
-						{/* Show "Read portrait" button if teaser OR full portrait content is available */}
-						{(portraitStatusData?.portrait?.content || portraitStatusData?.teaser) && (
+						{/* Show "Read portrait" button if full portrait content is available */}
+						{portraitStatusData?.portrait?.content && (
 							<Button data-testid="results-read-portrait" asChild variant="outline" className="min-h-11">
 								<Link
 									to="/results/$assessmentSessionId"

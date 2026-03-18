@@ -46,7 +46,6 @@ export const defaultTestConfig: AppConfigService = {
 	portraitWaitMinMs: 2000,
 	conversanalyzerModelId: "claude-haiku-4-5-20251001",
 	portraitGeneratorModelId: "claude-sonnet-4-6",
-	teaserModelId: "claude-haiku-4-5-20251001",
 	messageRateLimit: 2,
 	polarAccessToken: Redacted.make("test-polar-access-token"),
 	polarWebhookSecret: Redacted.make("test-polar-webhook-secret"),

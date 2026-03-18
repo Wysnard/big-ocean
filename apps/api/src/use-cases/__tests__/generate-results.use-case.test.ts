@@ -1,9 +1,9 @@
 /**
  * Generate Results Use Case Tests (Story 18-4: Staged Idempotency Rewrite)
  *
- * Tests staged idempotency (scored → completed), session validation,
+ * Tests staged idempotency (scored -> completed), session validation,
  * conversation evidence as authoritative source, score computation,
- * teaser portrait generation, and progress status transitions.
+ * and progress status transitions.
  */
 
 import { vi } from "vitest";
@@ -11,9 +11,6 @@ import { vi } from "vitest";
 // Activate mocking — Vitest auto-resolves to __mocks__ siblings
 vi.mock("@workspace/infrastructure/repositories/assessment-result.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/conversation-evidence.drizzle.repository");
-vi.mock("@workspace/infrastructure/repositories/cost-guard.redis.repository");
-vi.mock("@workspace/infrastructure/repositories/teaser-portrait.anthropic.repository");
-vi.mock("@workspace/infrastructure/repositories/portrait.drizzle.repository");
 
 import { describe, expect, it } from "@effect/vitest";
 import {
@@ -36,20 +33,6 @@ import {
 	_resetMockState as resetConversationEvidence,
 	_seedEvidence as seedConversationEvidence,
 } from "@workspace/infrastructure/repositories/conversation-evidence.drizzle.repository";
-import {
-	CostGuardRedisRepositoryLive,
-	_resetMockState as resetCostGuard,
-} from "@workspace/infrastructure/repositories/cost-guard.redis.repository";
-import {
-	_getAllPortraits as getAllPortraits,
-	PortraitDrizzleRepositoryLive,
-	_resetMockState as resetPortrait,
-} from "@workspace/infrastructure/repositories/portrait.drizzle.repository";
-import {
-	_resetMockState as resetTeaserPortrait,
-	_setMockError as setTeaserError,
-	TeaserPortraitAnthropicRepositoryLive,
-} from "@workspace/infrastructure/repositories/teaser-portrait.anthropic.repository";
 import { Effect, Layer } from "effect";
 import { generateResults } from "../generate-results.use-case";
 
@@ -93,9 +76,6 @@ const createTestLayer = () =>
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
 		AssessmentResultDrizzleRepositoryLive,
 		ConversationEvidenceDrizzleRepositoryLive,
-		CostGuardRedisRepositoryLive,
-		TeaserPortraitAnthropicRepositoryLive,
-		PortraitDrizzleRepositoryLive,
 	);
 
 /** Helper: create conversation evidence records for seeding */
@@ -129,9 +109,6 @@ describe("generateResults Use Case (Story 18-4)", () => {
 		vi.clearAllMocks();
 		resetResults();
 		resetConversationEvidence();
-		resetCostGuard();
-		resetTeaserPortrait();
-		resetPortrait();
 		mockSessionRepo.getSession.mockReturnValue(Effect.succeed(mockFinalizingSession));
 		mockSessionRepo.updateSession.mockReturnValue(Effect.succeed(mockFinalizingSession));
 		mockSessionRepo.acquireSessionLock.mockReturnValue(Effect.void);
@@ -209,7 +186,7 @@ describe("generateResults Use Case (Story 18-4)", () => {
 		);
 	});
 
-	describe("Idempotency: result at stage=scored → skip scoring, complete", () => {
+	describe("Idempotency: result at stage=scored -> skip scoring, complete", () => {
 		it.effect("should skip scoring and proceed to completion when stage=scored", () =>
 			Effect.gen(function* () {
 				seedResult("session_123", { stage: "scored" });
@@ -244,7 +221,7 @@ describe("generateResults Use Case (Story 18-4)", () => {
 				mockSessionRepo.getSession.mockReturnValue(
 					Effect.succeed({
 						...mockFinalizingSession,
-						finalizationProgress: "generating_portrait",
+						finalizationProgress: "analyzing",
 					}),
 				);
 				mockSessionRepo.acquireSessionLock.mockReturnValue(
@@ -260,55 +237,57 @@ describe("generateResults Use Case (Story 18-4)", () => {
 					authenticatedUserId: "user_456",
 				});
 
-				expect(result).toEqual({ status: "generating_portrait" });
+				expect(result).toEqual({ status: "analyzing" });
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
-	describe("Full pipeline: conversation evidence → scores → portrait → completed", () => {
-		it.effect("happy path: reads conversation evidence, computes scores, generates portrait", () =>
-			Effect.gen(function* () {
-				// Seed conversation evidence
-				const evidence = makeConversationEvidence("session_123", [
-					{
-						facet: "imagination",
-						deviation: 2,
-						strength: "strong",
-						confidence: "high",
-						domain: "work",
-						note: "loves brainstorming",
-					},
-					{
-						facet: "trust",
-						deviation: 1,
-						strength: "moderate",
-						confidence: "medium",
-						domain: "relationships",
-						note: "open with friends",
-					},
-				]);
-				seedConversationEvidence(evidence);
+	describe("Full pipeline: conversation evidence -> scores -> completed", () => {
+		it.effect(
+			"happy path: reads conversation evidence, computes scores, no portrait at finalization",
+			() =>
+				Effect.gen(function* () {
+					// Seed conversation evidence
+					const evidence = makeConversationEvidence("session_123", [
+						{
+							facet: "imagination",
+							deviation: 2,
+							strength: "strong",
+							confidence: "high",
+							domain: "work",
+							note: "loves brainstorming",
+						},
+						{
+							facet: "trust",
+							deviation: 1,
+							strength: "moderate",
+							confidence: "medium",
+							domain: "relationships",
+							note: "open with friends",
+						},
+					]);
+					seedConversationEvidence(evidence);
 
-				const result = yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
+					const result = yield* generateResults({
+						sessionId: "session_123",
+						authenticatedUserId: "user_456",
+					});
 
-				expect(result).toEqual({ status: "completed" });
+					expect(result).toEqual({ status: "completed" });
 
-				// Assessment result created with scores and portrait
-				const results = getStoredResults();
-				expect(results.size).toBe(1);
-				const record = results.get("session_123");
-				expect(record).toBeDefined();
-				expect(record?.stage).toBe("completed");
-				expect(Object.keys(record?.facets ?? {})).toHaveLength(30);
-				expect(Object.keys(record?.traits ?? {})).toHaveLength(5);
-				expect(record?.portrait).toContain("The Quiet Architecture");
+					// Assessment result created with scores but no portrait (Story 32-0)
+					const results = getStoredResults();
+					expect(results.size).toBe(1);
+					const record = results.get("session_123");
+					expect(record).toBeDefined();
+					expect(record?.stage).toBe("completed");
+					expect(Object.keys(record?.facets ?? {})).toHaveLength(30);
+					expect(Object.keys(record?.traits ?? {})).toHaveLength(5);
+					expect(record?.portrait).toBe("");
 
-				// Lock released
-				expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
-			}).pipe(Effect.provide(createTestLayer())),
+					// Lock released
+					expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
+				}).pipe(Effect.provide(createTestLayer())),
 		);
 
 		it.effect("all 30 facets populated including defaults for missing evidence", () =>
@@ -352,7 +331,7 @@ describe("generateResults Use Case (Story 18-4)", () => {
 
 		it.effect("trait derivation: each trait score is mean of its 6 facets", () =>
 			Effect.gen(function* () {
-				// No evidence → all defaults
+				// No evidence -> all defaults
 				yield* generateResults({
 					sessionId: "session_123",
 					authenticatedUserId: "user_456",
@@ -451,73 +430,8 @@ describe("generateResults Use Case (Story 18-4)", () => {
 		);
 	});
 
-	describe("Teaser portrait", () => {
-		it.effect("portrait included in final result and stored in portraits table", () =>
-			Effect.gen(function* () {
-				const evidence = makeConversationEvidence("session_123", [
-					{
-						facet: "imagination",
-						deviation: 2,
-						strength: "strong",
-						confidence: "high",
-						domain: "work",
-						note: "brainstorming",
-					},
-				]);
-				seedConversationEvidence(evidence);
-
-				const result = yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
-
-				expect(result).toEqual({ status: "completed" });
-
-				const results = getStoredResults();
-				const record = results.get("session_123");
-				expect(record?.portrait).toContain("The Quiet Architecture");
-
-				const allPortraits = getAllPortraits();
-				const teaserPortrait = allPortraits.find((p) => p.tier === "teaser");
-				expect(teaserPortrait).toBeDefined();
-				expect(teaserPortrait?.content).toContain("The Quiet Architecture");
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("teaser failure propagates, lock released", () =>
-			Effect.gen(function* () {
-				const evidence = makeConversationEvidence("session_123", [
-					{
-						facet: "imagination",
-						deviation: 1,
-						strength: "moderate",
-						confidence: "medium",
-						domain: "work",
-						note: "test",
-					},
-				]);
-				seedConversationEvidence(evidence);
-
-				setTeaserError("Haiku API timeout");
-
-				const exit = yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				}).pipe(Effect.exit);
-
-				expect(exit._tag).toBe("Failure");
-				if (exit._tag === "Failure") {
-					expect(String(exit.cause)).toContain("TeaserPortraitError");
-				}
-
-				// Lock released even on failure
-				expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-	});
-
 	describe("Progress transitions", () => {
-		it.effect("analyzing → generating_portrait → completed", () =>
+		it.effect("analyzing -> completed (no portrait generation step)", () =>
 			Effect.gen(function* () {
 				const evidence = makeConversationEvidence("session_123", [
 					{
@@ -543,13 +457,13 @@ describe("generateResults Use Case (Story 18-4)", () => {
 					)
 					.map(([, update]: [string, Record<string, unknown>]) => update.finalizationProgress);
 
-				expect(progressUpdates).toEqual(["analyzing", "generating_portrait", "completed"]);
+				expect(progressUpdates).toEqual(["analyzing", "completed"]);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
 	describe("Stage transitions", () => {
-		it.effect("full pipeline: null → scored → completed", () =>
+		it.effect("full pipeline: null -> scored -> completed", () =>
 			Effect.gen(function* () {
 				const evidence = makeConversationEvidence("session_123", [
 					{
