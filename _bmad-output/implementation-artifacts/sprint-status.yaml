@@ -551,6 +551,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-32: in-progress
   32-0-remove-teaser-portrait: pr-ready
+  32-0b-ocean-code-letter-mapping-update: backlog
   32-1-results-page-identity-section: backlog
   32-2-results-page-scientific-section: backlog
   32-3-polar-integration-and-purchase-events: pr-ready

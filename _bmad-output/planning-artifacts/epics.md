@@ -526,6 +526,28 @@ So that the architecture is clean and only the full portrait concept exists.
 **When** the LLM agent inventory is updated
 **Then** four agents remain: Nerin (Haiku), ConversAnalyzer v2 (Haiku), Full Portrait (Sonnet), Relationship Analysis (Sonnet)
 
+### Story 3.0b: OCEAN Code Letter Mapping Update
+
+As a user viewing my personality results,
+I want each trait level to have a unique, meaningful letter,
+So that my OCEAN code is unambiguous and maps to distinct geometric shapes.
+
+**Acceptance Criteria:**
+
+**Given** the current TRAIT_LETTER_MAP has letter collisions (R used for both E-low and N-low, T used for both O-low and N-mid)
+**When** the letter mapping is updated per the UX design specification
+**Then** Extraversion-Low changes from R (Reserved) to I (Introverted)
+**And** Neuroticism-Mid changes from T (Tempered) to V (Variable)
+**And** all 15 trait-level letters are unique
+**And** type definitions (ExtraversionLevel, NeuroticismLevel) are updated
+**And** schema regex (OceanCode4Schema, OceanCode5Schema) validates the new letters
+**And** all 27 CURATED_ARCHETYPES keys with R in position 3 are updated to I
+**And** TEASER_TRAIT_LETTERS reflects the new mapping
+**And** all existing tests pass with updated fixtures
+**And** CLAUDE.md OCEAN Code Generation section is updated to reflect semantic letters (not L/M/H)
+**And** PRD and architecture documents are verified for consistency with the new letter mapping
+**And** any doc comments in codebase referencing old letters (R=Reserved, T=Tempered) are updated
+
 ### Story 3.1: Results Page — Identity Section
 
 As a user,

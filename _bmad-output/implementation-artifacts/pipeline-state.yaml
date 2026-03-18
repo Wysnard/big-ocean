@@ -42,3 +42,10 @@ stories:
     pr_url: "https://github.com/Wysnard/big-ocean/pull/146"
     dev_branch: "feat/story-32-7-archetype-card-image-generation"
     error: null
+  32-0b-ocean-code-letter-mapping-update:
+    status: pending
+    mode: "parallel"
+    notes: "Letter collision fix: R→I (E-low), T→V (N-mid), update 27 archetype keys"
+    pr_url: null
+    dev_branch: null
+    error: null

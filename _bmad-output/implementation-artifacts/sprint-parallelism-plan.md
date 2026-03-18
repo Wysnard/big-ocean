@@ -12,6 +12,7 @@ Generated: 2026-03-18
 | Story | Mode | Notes |
 |-------|------|-------|
 | 32-0-remove-teaser-portrait | parallel | Codebase cleanup, no new features |
+| 32-0b-ocean-code-letter-mapping-update | parallel | Letter collision fix: R→I (E-low), T→V (N-mid), update 27 archetype keys |
 | 32-3-polar-integration-and-purchase-events | parallel | NEW: Polar plugin, purchase_events table, webhook handler |
 | 31-7-email-infrastructure-and-drop-off-re-engagement | parallel | NEW: Resend repo, React Email templates, drop-off email |
 | 32-7-archetype-card-image-generation | parallel | NEW: Satori + resvg image pipeline, independent |
