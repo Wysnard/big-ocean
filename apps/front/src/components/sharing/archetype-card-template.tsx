@@ -244,7 +244,7 @@ export function ArchetypeCardTemplate({
 						if (i === 0) {
 							// Circle (Openness) — SVG path
 							return (
-								<svg key={trait} width={size} height={size} viewBox="0 0 24 24">
+								<svg key={trait} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
 									<circle cx="12" cy="12" r="10" fill={color} />
 								</svg>
 							);
@@ -252,7 +252,7 @@ export function ArchetypeCardTemplate({
 						if (i === 4) {
 							// Diamond (Neuroticism) — SVG polygon, no CSS transform
 							return (
-								<svg key={trait} width={size} height={size} viewBox="0 0 24 24">
+								<svg key={trait} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
 									<polygon points="12,1 23,12 12,23 1,12" fill={color} />
 								</svg>
 							);
@@ -260,7 +260,7 @@ export function ArchetypeCardTemplate({
 						if (i === 3) {
 							// Triangle (Agreeableness) — SVG polygon
 							return (
-								<svg key={trait} width={size} height={size} viewBox="0 0 24 24">
+								<svg key={trait} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
 									<polygon points="12,2 22,22 2,22" fill={color} />
 								</svg>
 							);
@@ -268,14 +268,14 @@ export function ArchetypeCardTemplate({
 						if (i === 1) {
 							// Half-circle / arch (Conscientiousness) — SVG path
 							return (
-								<svg key={trait} width={size} height={size} viewBox="0 0 24 24">
+								<svg key={trait} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
 									<path d="M2,24 L2,12 A10,10 0 0,1 22,12 L22,24 Z" fill={color} />
 								</svg>
 							);
 						}
 						// Rectangle (Extraversion)
 						return (
-							<svg key={trait} width={size} height={size * 0.7} viewBox="0 0 24 17">
+							<svg key={trait} width={size} height={size * 0.7} viewBox="0 0 24 17" aria-hidden="true">
 								<rect x="0" y="0" width="24" height="17" rx="2" fill={color} />
 							</svg>
 						);

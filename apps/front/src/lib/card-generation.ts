@@ -83,7 +83,7 @@ export function deriveTraitScores(facets: ProfileFacets): Record<string, number>
 export function getDominantColor(traitScores: Record<string, number>): string {
 	const dominantTrait =
 		Object.entries(traitScores).sort(([, a], [, b]) => b - a)[0]?.[0] ?? "openness";
-	return TRAIT_COLORS[dominantTrait] ?? TRAIT_COLORS.openness!;
+	return TRAIT_COLORS[dominantTrait] ?? "#A855F7";
 }
 
 let _fontData: ArrayBuffer | null = null;
