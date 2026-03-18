@@ -6,9 +6,9 @@
  */
 
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ProfileVisibilitySection } from "../components/settings/ProfileVisibilitySection";
-import { useListAssessments } from "../hooks/use-assessment";
+import { useGetResults, useListAssessments } from "../hooks/use-assessment";
 import { useToggleVisibility } from "../hooks/use-profile";
 import { useAuth } from "../hooks/use-auth";
 import { getSession } from "../lib/auth-client";
@@ -28,56 +28,33 @@ function SettingsPage() {
 	const { data: assessmentData, isLoading: isAssessmentsLoading } = useListAssessments(true);
 	const toggleVisibility = useToggleVisibility();
 
-	// Find the completed session's profile data
+	// Find the completed session
 	const completedSession = assessmentData?.sessions.find((s) => s.status === "completed");
 
-	// Profile visibility state — loaded from results when available
-	const [profileState, setProfileState] = useState<{
-		publicProfileId: string;
-		isPublic: boolean;
-	} | null>(null);
+	// Use the existing hook to fetch results (leverages TanStack Query cache)
+	const { data: results } = useGetResults(completedSession?.id ?? "", !!completedSession);
 
-	// Fetch results for the completed session to get publicProfileId and isPublic
-	const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
-	useEffect(() => {
-		if (!completedSession || profileState) return;
+	// Local override for optimistic toggle updates
+	const [isPublicOverride, setIsPublicOverride] = useState<boolean | null>(null);
 
-		const fetchProfileData = async () => {
-			try {
-				const response = await fetch(
-					`${API_URL}/api/assessment/${completedSession.id}/results`,
-					{ credentials: "include" },
-				);
-				if (!response.ok) return;
-				const data = await response.json();
-				if (data.publicProfileId) {
-					setProfileState({
-						publicProfileId: data.publicProfileId,
-						isPublic: data.isPublic ?? false,
-					});
-				}
-			} catch {
-				// Silently fail — profile section will show disabled state
-			}
-		};
-
-		void fetchProfileData();
-	}, [completedSession, profileState, API_URL]);
+	// Derive profile state from results data
+	const publicProfileId = results?.publicProfileId ?? null;
+	const isPublic = isPublicOverride ?? results?.isPublic ?? false;
 
 	const handleToggleVisibility = async () => {
-		if (!profileState) return;
-		const previousState = profileState.isPublic;
+		if (!publicProfileId) return;
+		const previousState = isPublic;
 		// Optimistic update
-		setProfileState((prev) => (prev ? { ...prev, isPublic: !prev.isPublic } : null));
+		setIsPublicOverride(!previousState);
 		try {
 			const result = await toggleVisibility.mutateAsync({
-				publicProfileId: profileState.publicProfileId,
+				publicProfileId,
 				isPublic: !previousState,
 			});
-			setProfileState((prev) => (prev ? { ...prev, isPublic: result.isPublic } : null));
+			setIsPublicOverride(result.isPublic);
 		} catch {
 			// Rollback on error
-			setProfileState((prev) => (prev ? { ...prev, isPublic: previousState } : null));
+			setIsPublicOverride(previousState);
 		}
 	};
 
@@ -106,8 +83,8 @@ function SettingsPage() {
 						</div>
 					) : (
 						<ProfileVisibilitySection
-							publicProfileId={profileState?.publicProfileId ?? null}
-							isPublic={profileState?.isPublic ?? false}
+							publicProfileId={publicProfileId}
+							isPublic={isPublic}
 							isTogglePending={toggleVisibility.isPending}
 							onToggleVisibility={handleToggleVisibility}
 						/>
