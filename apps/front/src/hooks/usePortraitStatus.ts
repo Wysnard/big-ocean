@@ -5,7 +5,7 @@
  * Stops polling when status becomes "ready", "failed", or "none".
  *
  * When `waitingForUnlock` is true (after successful checkout), polls until
- * the full portrait becomes ready — even if status is still teaser/none
+ * the full portrait becomes ready — even if status is still none
  * while the webhook is being processed.
  */
 

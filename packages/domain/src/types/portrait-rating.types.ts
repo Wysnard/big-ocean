@@ -7,7 +7,7 @@
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
-export const PORTRAIT_TYPES = ["teaser", "full"] as const;
+export const PORTRAIT_TYPES = ["full"] as const;
 export type PortraitType = (typeof PORTRAIT_TYPES)[number];
 
 export const PORTRAIT_RATINGS = ["up", "down"] as const;

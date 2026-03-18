@@ -37,8 +37,6 @@ import {
 	RelationshipAnalysisGeneratorAnthropicRepositoryLive,
 	RelationshipAnalysisGeneratorMockRepositoryLive,
 	RelationshipInvitationDrizzleRepositoryLive,
-	TeaserPortraitAnthropicRepositoryLive,
-	TeaserPortraitMockRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
 } from "@workspace/infrastructure";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
@@ -107,17 +105,6 @@ const PortraitGeneratorLayer =
 		: PortraitGeneratorClaudeRepositoryLive;
 
 /**
- * Teaser Portrait Layer Selection
- *
- * Uses mock implementation when MOCK_LLM=true (for integration testing).
- * Uses real Haiku implementation otherwise (production/development).
- */
-const TeaserPortraitLayer =
-	process.env.MOCK_LLM === "true"
-		? TeaserPortraitMockRepositoryLive
-		: TeaserPortraitAnthropicRepositoryLive;
-
-/**
  * Relationship Analysis Generator Layer Selection
  *
  * Uses mock implementation when MOCK_LLM=true (for integration testing).
@@ -166,7 +153,6 @@ const RepositoryLayers = Layer.mergeAll(
 	RelationshipAnalysisDrizzleRepositoryLive,
 	RelationshipAnalysisGeneratorLayer,
 	RelationshipInvitationDrizzleRepositoryLive,
-	TeaserPortraitLayer,
 	WaitlistDrizzleRepositoryLive,
 );
 

@@ -5,7 +5,7 @@
 // Configuration service interface (implementation in @workspace/infrastructure)
 export { AppConfig, type AppConfigService } from "./config/index";
 // Archetype constants (Story 3.2)
-export { CURATED_ARCHETYPES, TEASER_TRAIT_LETTERS } from "./constants/archetypes";
+export { CURATED_ARCHETYPES } from "./constants/archetypes";
 // Big Five constants and types (Story 2.3)
 export {
 	AGREEABLENESS_FACETS,
@@ -45,11 +45,11 @@ export {
 } from "./constants/life-domain";
 // Nerin character bible modules — decomposed Tier 1 + Tier 2 (Story 27-1)
 export {
+	BELIEFS_IN_ACTION,
 	CLOSE_CONTRADICTION_TEMPLATE,
 	CLOSE_CONVERGENCE_TEMPLATE,
 	CLOSE_NOTICING_TEMPLATE,
 	CLOSE_RELATE_TEMPLATE,
-	BELIEFS_IN_ACTION,
 	CONVERSATION_INSTINCTS,
 	CONVERSATION_MODE,
 	EXPLORE_CONTRADICTION_TEMPLATE,
@@ -254,13 +254,6 @@ export {
 } from "./repositories/relationship-analysis-generator.repository";
 // Relationship invitation repository (Story 14.2)
 export { RelationshipInvitationRepository } from "./repositories/relationship-invitation.repository";
-// Teaser portrait repository (Story 11.5)
-export {
-	TeaserPortraitError,
-	type TeaserPortraitInput,
-	type TeaserPortraitOutput,
-	TeaserPortraitRepository,
-} from "./repositories/teaser-portrait.repository";
 // Waitlist repository (Story 15.3)
 export { WaitlistRepository } from "./repositories/waitlist.repository";
 // Agent response schemas for structured LLM output (Story 2.4, Task 13)
@@ -383,8 +376,8 @@ export type {
 	UserMessage,
 } from "./types/message";
 export type {
-	ClosePromptInput,
 	BridgePromptInput,
+	ClosePromptInput,
 	ContradictionFocus,
 	ContradictionTarget,
 	ConvergenceFocus,

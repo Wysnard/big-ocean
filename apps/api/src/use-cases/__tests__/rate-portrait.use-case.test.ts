@@ -41,7 +41,7 @@ const TestLayer = Layer.mergeAll(
 const validInput = {
 	userId: "user_123",
 	assessmentSessionId: "session_456",
-	portraitType: "teaser" as const,
+	portraitType: "full" as const,
 	rating: "up" as const,
 	depthSignal: "rich" as const,
 	evidenceCount: 42,
@@ -73,7 +73,7 @@ describe("ratePortrait", () => {
 			const result = yield* ratePortrait(validInput);
 
 			expect(result.id).toBe("rating_789");
-			expect(result.portraitType).toBe("teaser");
+			expect(result.portraitType).toBe("full");
 			expect(result.rating).toBe("up");
 		}).pipe(Effect.provide(TestLayer)),
 	);

@@ -9,7 +9,7 @@
  * - Test user (if doesn't exist)
  * - Completed assessment session
  * - Realistic conversation messages (12 messages)
- * - Assessment results (facets, traits, domain coverage, teaser portrait)
+ * - Assessment results (facets, traits, domain coverage)
  * - Conversation evidence
  * - Public profile with OCEAN codes
  *
@@ -34,7 +34,6 @@ const {
 	assessmentResults,
 	assessmentSession,
 	conversationEvidence,
-	portraits,
 	publicProfile,
 	user,
 } = dbSchema;
@@ -228,15 +227,6 @@ const _EVIDENCE_QUOTES: Partial<
 		},
 	],
 };
-
-// Pre-generated teaser portrait in Nerin's voice (Opening section only)
-const SEED_TEASER_PORTRAIT = `# 🏗️ The Architect of Certainty
-
-You told me something early on that I haven't stopped thinking about. When I asked about a recent decision, you didn't tell me about the decision itself — you told me about the *system* you built around it. That's a different answer than most people give, and it told me more than the next ten minutes of conversation combined.
-
-What I see is someone who has turned the need for control into an art form so refined that even you've forgotten it started as a defense. Everything — the color-coded shelves, the backup plans for backup plans, the scaffolding you build before you start anything — orbits one invisible center: the belief that if you prepare well enough, nothing can catch you off guard. That's your spine. And it's both the most impressive and most limiting thing about you.
-
-But here's what stayed with me after everything else settled. That systematic precision you trust so completely? It has a cost you've stopped counting.`;
 
 // Build JSONB facets data
 const buildFacetsJson = () => {
@@ -470,25 +460,11 @@ const seedProgram = Effect.gen(function* () {
 			facets: facetsJson,
 			traits: traitsJson,
 			domainCoverage: domainCoverageJson,
-			portrait: SEED_TEASER_PORTRAIT,
+			portrait: null,
 		})
 		.returning()
 		.pipe(Effect.mapError((error) => new Error(`Failed to insert assessment results: ${error}`)));
 	console.log(`  Created assessment results: ${resultRecord.id}`);
-
-	// 4b. Insert teaser portrait row
-	console.log("\nInserting teaser portrait...");
-	const [portraitRecord] = yield* db
-		.insert(portraits)
-		.values({
-			assessmentResultId: resultRecord.id,
-			tier: "teaser" as const,
-			content: SEED_TEASER_PORTRAIT,
-			modelUsed: "seed-script",
-		})
-		.returning()
-		.pipe(Effect.mapError((error) => new Error(`Failed to insert teaser portrait: ${error}`)));
-	console.log(`  Created teaser portrait: ${portraitRecord.id}`);
 
 	// 5. Insert conversation evidence (lean, steering-only)
 	console.log("\nInserting conversation evidence...");

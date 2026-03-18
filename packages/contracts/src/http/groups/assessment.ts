@@ -10,7 +10,6 @@ import {
 	AssessmentMessageContentSchema,
 	AssessmentResultError,
 	FacetResultSchema,
-	TeaserPortraitError,
 	TraitResultSchema,
 } from "@workspace/domain";
 import { Schema as S } from "effect";
@@ -256,7 +255,6 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 			.addError(ConcurrentMessageError, { status: 409 })
 			.addError(AssessmentResultError, { status: 500 })
 			.addError(ConversationEvidenceError, { status: 500 })
-			.addError(TeaserPortraitError, { status: 500 })
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.add(

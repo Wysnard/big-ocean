@@ -11,12 +11,7 @@
  * - failed: Portrait has retry_count >= 3
  */
 
-import {
-	AssessmentResultRepository,
-	LoggerRepository,
-	PortraitRepository,
-	type PortraitStatus,
-} from "@workspace/domain";
+import { LoggerRepository, PortraitRepository, type PortraitStatus } from "@workspace/domain";
 import type { Portrait } from "@workspace/domain/repositories/portrait.repository";
 import { Effect } from "effect";
 import { generateFullPortrait } from "./generate-full-portrait.use-case";
@@ -41,14 +36,9 @@ export const deriveStatus = (portrait: Portrait | null): PortraitStatus => {
 export const isStale = (createdAt: Date): boolean =>
 	Date.now() - createdAt.getTime() > STALENESS_THRESHOLD_MS;
 
-export interface TeaserData {
-	readonly content: string;
-}
-
 export interface GetPortraitStatusOutput {
 	readonly status: PortraitStatus;
 	readonly portrait: Portrait | null;
-	readonly teaser: TeaserData | null;
 }
 
 /**
@@ -61,7 +51,6 @@ export interface GetPortraitStatusOutput {
 export const getPortraitStatus = (sessionId: string) =>
 	Effect.gen(function* () {
 		const portraitRepo = yield* PortraitRepository;
-		const assessmentResultRepo = yield* AssessmentResultRepository;
 		const logger = yield* LoggerRepository;
 
 		const portrait = yield* portraitRepo.getFullPortraitBySessionId(sessionId);
@@ -94,19 +83,5 @@ export const getPortraitStatus = (sessionId: string) =>
 			}
 		}
 
-		// Fetch teaser portrait data (Story 12.3)
-		let teaser: TeaserData | null = null;
-		const existingResult = yield* assessmentResultRepo
-			.getBySessionId(sessionId)
-			.pipe(Effect.catchAll(() => Effect.succeed(null)));
-		if (existingResult) {
-			const teaserPortrait = yield* portraitRepo.getByResultIdAndTier(existingResult.id, "teaser");
-			if (teaserPortrait?.content) {
-				teaser = {
-					content: teaserPortrait.content,
-				};
-			}
-		}
-
-		return { status, portrait, teaser } satisfies GetPortraitStatusOutput;
+		return { status, portrait } satisfies GetPortraitStatusOutput;
 	});

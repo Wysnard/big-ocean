@@ -336,7 +336,6 @@ const mockConfig = {
 	polarProductRelationshipSingle: "polar_product_single",
 	polarProductRelationship5Pack: "polar_product_5pack",
 	polarProductExtendedConversation: "polar_product_extended",
-	teaserModelId: "claude-haiku-4-5-20251001",
 	globalDailyAssessmentLimit: 100,
 	minEvidenceWeight: 0.36,
 	// DRS config (still needed for AppConfig type but not used by new pipeline)

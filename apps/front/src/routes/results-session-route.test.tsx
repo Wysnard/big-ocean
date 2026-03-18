@@ -117,10 +117,6 @@ vi.mock("@/components/results/EvidencePanel", () => ({
 	EvidencePanel: () => <div data-testid="evidence-panel" />,
 }));
 
-vi.mock("@/components/results/TeaserPortraitReadingView", () => ({
-	TeaserPortraitReadingView: () => <div data-testid="teaser-portrait" />,
-}));
-
 vi.mock("@/components/sharing/archetype-share-card", () => ({
 	ArchetypeShareCard: () => <div data-testid="archetype-share-card" />,
 }));

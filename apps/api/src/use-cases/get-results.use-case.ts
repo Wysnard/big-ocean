@@ -20,9 +20,7 @@ import {
 	AssessmentSessionRepository,
 	BIG_FIVE_TRAITS,
 	ConversationEvidenceRepository,
-	CostGuardRepository,
 	calculateConfidenceFromFacetScores,
-	calculateCost,
 	computeAllFacetResults,
 	computeDomainCoverage,
 	computeTraitResults,
@@ -37,15 +35,13 @@ import {
 	getFacetLevel,
 	LoggerRepository,
 	lookupArchetype,
-	PortraitRepository,
 	PublicProfileRepository,
 	SessionNotCompleted,
 	SessionNotFound,
-	TeaserPortraitRepository,
 	TRAIT_LETTER_MAP,
 	type TraitResult,
 } from "@workspace/domain";
-import { Effect, Schedule } from "effect";
+import { Effect } from "effect";
 
 export interface GetResultsInput {
 	readonly sessionId: string;
@@ -79,18 +75,16 @@ const mapScoreToLevel = (traitName: string, score: number): string => {
 };
 
 /**
- * Lazy finalization: scores + teaser portrait computed inline on first GET /results.
+ * Lazy finalization: scores computed inline on first GET /results.
  * Idempotent — skips if assessment_results already exists at stage "scored" or "completed".
+ * Portrait generation is deferred until after purchase (Story 32-0).
  */
-const lazyFinalize = (sessionId: string, userId: string | null) =>
+const lazyFinalize = (sessionId: string, _userId: string | null) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const logger = yield* LoggerRepository;
 		const conversationEvidenceRepo = yield* ConversationEvidenceRepository;
 		const assessmentResultRepo = yield* AssessmentResultRepository;
-		const costGuardRepo = yield* CostGuardRepository;
-		const teaserPortraitRepo = yield* TeaserPortraitRepository;
-		const portraitRepo = yield* PortraitRepository;
 
 		// Idempotency: check if already scored/completed
 		const existingResult = yield* assessmentResultRepo.getBySessionId(sessionId);
@@ -113,8 +107,6 @@ const lazyFinalize = (sessionId: string, userId: string | null) =>
 		);
 
 		if (!lockAcquired) {
-			// Another request is already finalizing — wait and retry read
-			// For simplicity, just fail with a retriable error message
 			return yield* Effect.fail(
 				new AssessmentResultError({
 					message: "Results are being generated, please retry in a few seconds",
@@ -138,57 +130,20 @@ const lazyFinalize = (sessionId: string, userId: string | null) =>
 				evidenceCount: conversationEvidence.length,
 			});
 
-			// Compute scores
+			// Compute scores (no portrait at finalization — Story 32-0)
 			const facets = computeAllFacetResults(scoringInputs);
 			const traits = computeTraitResults(facets);
 			const domainCoverage = computeDomainCoverage(scoringInputs);
 
-			// Generate teaser portrait
-			const teaserOutput = yield* teaserPortraitRepo
-				.generateTeaser({
-					sessionId,
-					evidence: conversationEvidence,
-					scoringEvidence: scoringInputs,
-				})
-				.pipe(Effect.retry(Schedule.once));
-
-			// Track teaser cost (fail-open)
-			const teaserCostKey = userId ?? sessionId;
-			const teaserCost = calculateCost(teaserOutput.tokenUsage.input, teaserOutput.tokenUsage.output);
-			yield* costGuardRepo.incrementDailyCost(teaserCostKey, teaserCost.totalCents).pipe(
-				Effect.catchTag("RedisOperationError", (err) => {
-					logger.warn("Failed to track teaser portrait cost (non-blocking)", {
-						error: err.message,
-						sessionId,
-					});
-					return Effect.succeed(0);
-				}),
-			);
-
-			// Upsert assessment_results with scores + portrait
-			const upsertedResult = yield* assessmentResultRepo.upsert({
+			// Upsert assessment_results with scores only
+			yield* assessmentResultRepo.upsert({
 				assessmentSessionId: sessionId,
 				facets,
 				traits,
 				domainCoverage,
-				portrait: teaserOutput.portrait,
+				portrait: "",
 				stage: "scored",
 			});
-
-			// Store teaser in portraits table
-			const teaserPlaceholder = yield* portraitRepo
-				.insertPlaceholder({
-					assessmentResultId: upsertedResult.id,
-					tier: "teaser" as const,
-					modelUsed: teaserOutput.modelUsed,
-				})
-				.pipe(Effect.catchTag("DuplicatePortraitError", () => Effect.succeed(null)));
-
-			if (teaserPlaceholder) {
-				yield* portraitRepo
-					.updateContent(teaserPlaceholder.id, teaserOutput.portrait)
-					.pipe(Effect.catchTag("PortraitNotFoundError", () => Effect.void));
-			}
 
 			// Mark completed
 			yield* assessmentResultRepo.updateStage(sessionId, "completed");
