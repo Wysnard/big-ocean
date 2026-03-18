@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-18 (refreshed 29 — sprint-planning workflow)
+generated: 2026-03-19 (refreshed 31 — sprint-planning workflow, added 31-7b + 32-7b)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -540,7 +540,8 @@ development_status:
   31-4-depth-meter-and-progress-milestones: backlog
   31-5-session-resume: backlog
   31-6-cost-guard: backlog
-  31-7-email-infrastructure-and-drop-off-re-engagement: pr-ready
+  31-7-email-infrastructure-and-drop-off-re-engagement: done
+  31-7b-wire-resend-into-better-auth: backlog
   epic-31-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -550,15 +551,16 @@ development_status:
   # Stories: 3.0-3.8 in epics.md
   # ───────────────────────────────────────────────────────────────
   epic-32: in-progress
-  32-0-remove-teaser-portrait: pr-ready
-  32-0b-ocean-code-letter-mapping-update: pr-ready
+  32-0-remove-teaser-portrait: done
+  32-0b-ocean-code-letter-mapping-update: done
   32-1-results-page-identity-section: backlog
   32-2-results-page-scientific-section: backlog
-  32-3-polar-integration-and-purchase-events: pr-ready
+  32-3-polar-integration-and-purchase-events: done
   32-4-pwyw-modal-and-portrait-unlock: backlog
   32-5-full-portrait-display: backlog
   32-6-portrait-reconciliation-and-retry: backlog
-  32-7-archetype-card-image-generation: pr-ready
+  32-7-archetype-card-image-generation: done
+  32-7b-complete-ocean-shape-library: backlog
   32-8-basic-share-and-credit-system: backlog
   epic-32-retrospective: optional
 

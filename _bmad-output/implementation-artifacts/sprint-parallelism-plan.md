@@ -1,30 +1,25 @@
 # Sprint Parallelism Plan
-Generated: 2026-03-18
+Generated: 2026-03-19
 
 > Phase 7: Product Completeness & Launch Readiness
 > Source: epics.md (9 epics, 38 stories)
 > Only forward-looking stories included — all prior phases complete.
+> Step 1 (Infrastructure Foundations) complete — 5 PRs merged 2026-03-18.
 >
 > Conservative parallelism: stories sharing a page, route, or domain area
 > are placed in separate steps even when technically independent.
 
-## Step 1: Infrastructure Foundations
-| Story | Mode | Notes |
-|-------|------|-------|
-| 32-0-remove-teaser-portrait | parallel | Codebase cleanup, no new features |
-| 32-0b-ocean-code-letter-mapping-update | parallel | Letter collision fix: R→I (E-low), T→V (N-mid), update 27 archetype keys |
-| 32-3-polar-integration-and-purchase-events | parallel | NEW: Polar plugin, purchase_events table, webhook handler |
-| 31-7-email-infrastructure-and-drop-off-re-engagement | parallel | NEW: Resend repo, React Email templates, drop-off email |
-| 32-7-archetype-card-image-generation | sequential(after: 32-0b) | NEW: Satori + resvg image pipeline. **Merge order:** merge 32-0b first, then rebase 32-7 on master. **Resolve:** archetype keys R→I at position 3 in card rendering, any hardcoded OCEAN code examples, shape/letter references in card templates |
+## Step 1: COMPLETE (2026-03-18)
+All 5 stories merged: 32-0b, 32-0, 32-3, 31-7, 32-7.
 
-**Gate:** All stories above must be done before proceeding.
-
-## Step 2: Area Foundations — Account, Nerin, Results, Homepage
+## Step 2: Area Foundations — Account, Nerin, Results, Homepage, Auth Email
 | Story | Mode | Notes |
 |-------|------|-------|
 | 30-1-profile-visibility-controls | parallel | Account settings: visibility toggle |
 | 31-1-nerin-greeting-and-onboarding-message | parallel | Nerin pipeline: greeting refinement |
+| 31-7b-wire-resend-into-better-auth | parallel | NEW: Email verification + password reset via Resend callbacks in Better Auth. Touches login form, adds 3 new routes (/forgot-password, /reset-password, /verify-email), modifies signup redirect. No shared files with other Step 2 stories |
 | 32-1-results-page-identity-section | parallel | Results page: hero/identity section |
+| 32-7b-complete-ocean-shape-library | parallel | NEW: 10 missing SVG shapes + GeometricSignature refactor + ArchetypeCardTemplate refactor. Frontend-only, no shared files with other Step 2 stories |
 | 37-1-homepage-narrative-and-layout | parallel | Homepage: independent page |
 
 **Gate:** All stories above must be done before proceeding.
@@ -120,7 +115,8 @@ Generated: 2026-03-18
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **11 steps**, 3-4 stories per step (conservative parallelism)
-- **Critical path:** 32-3 (Step 1) → 34-1 (Step 6) → 34-2 (Step 7) → 34-3 (Step 8) → 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
-- **Key enablers:** Polar (32-3, Step 1) and Email Infrastructure (31-7, Step 1) — both land early
+- **11 steps**, Step 1 complete, 3-5 stories per remaining step
+- **New in this refresh:** Story 31-7b (Resend + Better Auth) added to Step 2
+- **Critical path:** 32-3 (done) → 34-1 (Step 6) → 34-2 (Step 7) → 34-3 (Step 8) → 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
+- **Key enablers:** Polar (32-3, done) and Email Infrastructure (31-7, done) — both landed in Step 1
 - **No shared-file conflicts within any step** — stories in the same step touch different pages/domains
