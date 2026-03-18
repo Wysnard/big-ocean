@@ -11,20 +11,22 @@
 import { Route as rootRouteImport } from "./routes/__root";
 import { Route as R404RouteImport } from "./routes/404";
 import { Route as ChatIndexRouteImport } from "./routes/chat/index";
+import { Route as ForgotPasswordRouteImport } from "./routes/forgot-password";
 import { Route as IndexRouteImport } from "./routes/index";
 import { Route as InviteTokenRouteImport } from "./routes/invite/$token";
 import { Route as LoginRouteImport } from "./routes/login";
 import { Route as ProfileRouteImport } from "./routes/profile";
 import { Route as PublicProfilePublicProfileIdRouteImport } from "./routes/public-profile.$publicProfileId";
 import { Route as RelationshipAnalysisIdRouteImport } from "./routes/relationship/$analysisId";
+import { Route as ResetPasswordRouteImport } from "./routes/reset-password";
 import { Route as ResultsRouteImport } from "./routes/results";
 import { Route as ResultsAssessmentSessionIdRouteImport } from "./routes/results/$assessmentSessionId";
-import { Route as SettingsRouteImport } from "./routes/settings";
 import { Route as SignupRouteImport } from "./routes/signup";
+import { Route as VerifyEmailRouteImport } from "./routes/verify-email";
 
-const SettingsRoute = SettingsRouteImport.update({
-	id: "/settings",
-	path: "/settings",
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+	id: "/verify-email",
+	path: "/verify-email",
 	getParentRoute: () => rootRouteImport,
 } as any);
 const SignupRoute = SignupRouteImport.update({
@@ -37,6 +39,11 @@ const ResultsRoute = ResultsRouteImport.update({
 	path: "/results",
 	getParentRoute: () => rootRouteImport,
 } as any);
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+	id: "/reset-password",
+	path: "/reset-password",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const ProfileRoute = ProfileRouteImport.update({
 	id: "/profile",
 	path: "/profile",
@@ -45,6 +52,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
 	id: "/login",
 	path: "/login",
+	getParentRoute: () => rootRouteImport,
+} as any);
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+	id: "/forgot-password",
+	path: "/forgot-password",
 	getParentRoute: () => rootRouteImport,
 } as any);
 const R404Route = R404RouteImport.update({
@@ -86,11 +98,13 @@ const InviteTokenRoute = InviteTokenRouteImport.update({
 export interface FileRoutesByFullPath {
 	"/": typeof IndexRoute;
 	"/404": typeof R404Route;
+	"/forgot-password": typeof ForgotPasswordRoute;
 	"/login": typeof LoginRoute;
 	"/profile": typeof ProfileRoute;
+	"/reset-password": typeof ResetPasswordRoute;
 	"/results": typeof ResultsRouteWithChildren;
-	"/settings": typeof SettingsRoute;
 	"/signup": typeof SignupRoute;
+	"/verify-email": typeof VerifyEmailRoute;
 	"/invite/$token": typeof InviteTokenRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
 	"/relationship/$analysisId": typeof RelationshipAnalysisIdRoute;
@@ -100,11 +114,13 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
 	"/": typeof IndexRoute;
 	"/404": typeof R404Route;
+	"/forgot-password": typeof ForgotPasswordRoute;
 	"/login": typeof LoginRoute;
 	"/profile": typeof ProfileRoute;
+	"/reset-password": typeof ResetPasswordRoute;
 	"/results": typeof ResultsRouteWithChildren;
-	"/settings": typeof SettingsRoute;
 	"/signup": typeof SignupRoute;
+	"/verify-email": typeof VerifyEmailRoute;
 	"/invite/$token": typeof InviteTokenRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
 	"/relationship/$analysisId": typeof RelationshipAnalysisIdRoute;
@@ -115,11 +131,13 @@ export interface FileRoutesById {
 	__root__: typeof rootRouteImport;
 	"/": typeof IndexRoute;
 	"/404": typeof R404Route;
+	"/forgot-password": typeof ForgotPasswordRoute;
 	"/login": typeof LoginRoute;
 	"/profile": typeof ProfileRoute;
+	"/reset-password": typeof ResetPasswordRoute;
 	"/results": typeof ResultsRouteWithChildren;
-	"/settings": typeof SettingsRoute;
 	"/signup": typeof SignupRoute;
+	"/verify-email": typeof VerifyEmailRoute;
 	"/invite/$token": typeof InviteTokenRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
 	"/relationship/$analysisId": typeof RelationshipAnalysisIdRoute;
@@ -131,11 +149,13 @@ export interface FileRouteTypes {
 	fullPaths:
 		| "/"
 		| "/404"
+		| "/forgot-password"
 		| "/login"
 		| "/profile"
+		| "/reset-password"
 		| "/results"
-		| "/settings"
 		| "/signup"
+		| "/verify-email"
 		| "/invite/$token"
 		| "/public-profile/$publicProfileId"
 		| "/relationship/$analysisId"
@@ -145,11 +165,13 @@ export interface FileRouteTypes {
 	to:
 		| "/"
 		| "/404"
+		| "/forgot-password"
 		| "/login"
 		| "/profile"
+		| "/reset-password"
 		| "/results"
-		| "/settings"
 		| "/signup"
+		| "/verify-email"
 		| "/invite/$token"
 		| "/public-profile/$publicProfileId"
 		| "/relationship/$analysisId"
@@ -159,11 +181,13 @@ export interface FileRouteTypes {
 		| "__root__"
 		| "/"
 		| "/404"
+		| "/forgot-password"
 		| "/login"
 		| "/profile"
+		| "/reset-password"
 		| "/results"
-		| "/settings"
 		| "/signup"
+		| "/verify-email"
 		| "/invite/$token"
 		| "/public-profile/$publicProfileId"
 		| "/relationship/$analysisId"
@@ -174,11 +198,13 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
 	IndexRoute: typeof IndexRoute;
 	R404Route: typeof R404Route;
+	ForgotPasswordRoute: typeof ForgotPasswordRoute;
 	LoginRoute: typeof LoginRoute;
 	ProfileRoute: typeof ProfileRoute;
+	ResetPasswordRoute: typeof ResetPasswordRoute;
 	ResultsRoute: typeof ResultsRouteWithChildren;
-	SettingsRoute: typeof SettingsRoute;
 	SignupRoute: typeof SignupRoute;
+	VerifyEmailRoute: typeof VerifyEmailRoute;
 	InviteTokenRoute: typeof InviteTokenRoute;
 	PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute;
 	RelationshipAnalysisIdRoute: typeof RelationshipAnalysisIdRoute;
@@ -187,6 +213,13 @@ export interface RootRouteChildren {
 
 declare module "@tanstack/react-router" {
 	interface FileRoutesByPath {
+		"/verify-email": {
+			id: "/verify-email";
+			path: "/verify-email";
+			fullPath: "/verify-email";
+			preLoaderRoute: typeof VerifyEmailRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
 		"/signup": {
 			id: "/signup";
 			path: "/signup";
@@ -201,6 +234,13 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof ResultsRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
+		"/reset-password": {
+			id: "/reset-password";
+			path: "/reset-password";
+			fullPath: "/reset-password";
+			preLoaderRoute: typeof ResetPasswordRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
 		"/profile": {
 			id: "/profile";
 			path: "/profile";
@@ -208,18 +248,18 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof ProfileRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
-		"/settings": {
-			id: "/settings";
-			path: "/settings";
-			fullPath: "/settings";
-			preLoaderRoute: typeof SettingsRouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
 		"/login": {
 			id: "/login";
 			path: "/login";
 			fullPath: "/login";
 			preLoaderRoute: typeof LoginRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/forgot-password": {
+			id: "/forgot-password";
+			path: "/forgot-password";
+			fullPath: "/forgot-password";
+			preLoaderRoute: typeof ForgotPasswordRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
 		"/404": {
@@ -287,11 +327,13 @@ const ResultsRouteWithChildren = ResultsRoute._addFileChildren(ResultsRouteChild
 const rootRouteChildren: RootRouteChildren = {
 	IndexRoute: IndexRoute,
 	R404Route: R404Route,
+	ForgotPasswordRoute: ForgotPasswordRoute,
 	LoginRoute: LoginRoute,
 	ProfileRoute: ProfileRoute,
+	ResetPasswordRoute: ResetPasswordRoute,
 	ResultsRoute: ResultsRouteWithChildren,
-	SettingsRoute: SettingsRoute,
 	SignupRoute: SignupRoute,
+	VerifyEmailRoute: VerifyEmailRoute,
 	InviteTokenRoute: InviteTokenRoute,
 	PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,
 	RelationshipAnalysisIdRoute: RelationshipAnalysisIdRoute,
