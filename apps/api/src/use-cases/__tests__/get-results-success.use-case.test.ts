@@ -120,7 +120,7 @@ describe("getResults Use Case", () => {
 				expect(trait.name).toBeDefined();
 				expect(BIG_FIVE_TRAITS).toContain(trait.name);
 				expect(typeof trait.score).toBe("number");
-				expect("TMOFSCRBEDPARTN").toContain(trait.level);
+				expect("TMOFSCIBEDPARVN").toContain(trait.level);
 				expect(typeof trait.confidence).toBe("number");
 				expect(trait.confidence).toBeGreaterThanOrEqual(0);
 				expect(trait.confidence).toBeLessThanOrEqual(100);
@@ -245,7 +245,7 @@ describe("getResults Use Case", () => {
 					sessionId: TEST_SESSION_ID,
 					userId: "owner_user",
 					displayName: "Test User",
-					oceanCode5: "MSBPT",
+					oceanCode5: "MSBPV",
 					oceanCode4: "MSBP",
 					isPublic: true,
 					viewCount: 5,
@@ -297,7 +297,7 @@ describe("getResults Use Case", () => {
 				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
 			);
 
-			expect(result.oceanCode5).toBe("MSBPT");
+			expect(result.oceanCode5).toBe("MSBPV");
 			expect(result.overallConfidence).toBe(0);
 		});
 	});

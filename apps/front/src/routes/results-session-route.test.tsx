@@ -159,7 +159,7 @@ describe("results/$assessmentSessionId route behavior", () => {
 		mockUseGetResults.mockReturnValue({
 			data: {
 				archetypeName: "Navigator",
-				oceanCode5: "OCEAT",
+				oceanCode5: "OCEAV",
 				archetypeDescription: "Description",
 				overallConfidence: 0.78,
 				isCurated: true,

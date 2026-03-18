@@ -30,15 +30,15 @@ describe("lookupArchetype", () => {
 		});
 
 		it("ODIW → The Lantern", () => {
-			expect(lookupArchetype("OCRA").name).toBe("The Lantern");
+			expect(lookupArchetype("OCIA").name).toBe("The Lantern");
 		});
 
 		it("ODIN → The Lens", () => {
-			expect(lookupArchetype("OCRP").name).toBe("The Lens");
+			expect(lookupArchetype("OCIP").name).toBe("The Lens");
 		});
 
 		it("ODIC → The Clockwork", () => {
-			expect(lookupArchetype("OCRD").name).toBe("The Clockwork");
+			expect(lookupArchetype("OCID").name).toBe("The Clockwork");
 		});
 
 		it("OBEW → The Catalyst", () => {
@@ -66,15 +66,15 @@ describe("lookupArchetype", () => {
 		});
 
 		it("OBIW → The Well", () => {
-			expect(lookupArchetype("OSRA").name).toBe("The Well");
+			expect(lookupArchetype("OSIA").name).toBe("The Well");
 		});
 
 		it("OBIN → The Pendulum", () => {
-			expect(lookupArchetype("OSRP").name).toBe("The Pendulum");
+			expect(lookupArchetype("OSIP").name).toBe("The Pendulum");
 		});
 
 		it("OBIC → The Telescope", () => {
-			expect(lookupArchetype("OSRD").name).toBe("The Telescope");
+			expect(lookupArchetype("OSID").name).toBe("The Telescope");
 		});
 
 		it("OFEW → The Bonfire", () => {
@@ -102,15 +102,15 @@ describe("lookupArchetype", () => {
 		});
 
 		it("OFIW → The Ember", () => {
-			expect(lookupArchetype("OFRA").name).toBe("The Ember");
+			expect(lookupArchetype("OFIA").name).toBe("The Ember");
 		});
 
 		it("OFIN → The Tributary", () => {
-			expect(lookupArchetype("OFRP").name).toBe("The Tributary");
+			expect(lookupArchetype("OFIP").name).toBe("The Tributary");
 		});
 
 		it("OFIC → The Lone Flame", () => {
-			expect(lookupArchetype("OFRD").name).toBe("The Lone Flame");
+			expect(lookupArchetype("OFID").name).toBe("The Lone Flame");
 		});
 
 		// G-Group: Grounded (27)
@@ -140,15 +140,15 @@ describe("lookupArchetype", () => {
 		});
 
 		it("GDIW → The Root", () => {
-			expect(lookupArchetype("MCRA").name).toBe("The Root");
+			expect(lookupArchetype("MCIA").name).toBe("The Root");
 		});
 
 		it("GDIN → The Meridian", () => {
-			expect(lookupArchetype("MCRP").name).toBe("The Meridian");
+			expect(lookupArchetype("MCIP").name).toBe("The Meridian");
 		});
 
 		it("GDIC → The Chisel", () => {
-			expect(lookupArchetype("MCRD").name).toBe("The Chisel");
+			expect(lookupArchetype("MCID").name).toBe("The Chisel");
 		});
 
 		it("GBEW → The Loom", () => {
@@ -176,15 +176,15 @@ describe("lookupArchetype", () => {
 		});
 
 		it("GBIW → The Spring", () => {
-			expect(lookupArchetype("MSRA").name).toBe("The Spring");
+			expect(lookupArchetype("MSIA").name).toBe("The Spring");
 		});
 
 		it("GBIN → The Still Water", () => {
-			expect(lookupArchetype("MSRP").name).toBe("The Still Water");
+			expect(lookupArchetype("MSIP").name).toBe("The Still Water");
 		});
 
 		it("GBIC → The Granite", () => {
-			expect(lookupArchetype("MSRD").name).toBe("The Granite");
+			expect(lookupArchetype("MSID").name).toBe("The Granite");
 		});
 
 		it("GFEW → The Campfire", () => {
@@ -212,15 +212,15 @@ describe("lookupArchetype", () => {
 		});
 
 		it("GFIW → The Moss", () => {
-			expect(lookupArchetype("MFRA").name).toBe("The Moss");
+			expect(lookupArchetype("MFIA").name).toBe("The Moss");
 		});
 
 		it("GFIN → The Inlet", () => {
-			expect(lookupArchetype("MFRP").name).toBe("The Inlet");
+			expect(lookupArchetype("MFIP").name).toBe("The Inlet");
 		});
 
 		it("GFIC → The Cairn", () => {
-			expect(lookupArchetype("MFRD").name).toBe("The Cairn");
+			expect(lookupArchetype("MFID").name).toBe("The Cairn");
 		});
 
 		// P-Group: Practical (27)
@@ -250,15 +250,15 @@ describe("lookupArchetype", () => {
 		});
 
 		it("PDIW → The Bedrock", () => {
-			expect(lookupArchetype("TCRA").name).toBe("The Bedrock");
+			expect(lookupArchetype("TCIA").name).toBe("The Bedrock");
 		});
 
 		it("PDIN → The Sundial", () => {
-			expect(lookupArchetype("TCRP").name).toBe("The Sundial");
+			expect(lookupArchetype("TCIP").name).toBe("The Sundial");
 		});
 
 		it("PDIC → The Watchtower", () => {
-			expect(lookupArchetype("TCRD").name).toBe("The Watchtower");
+			expect(lookupArchetype("TCID").name).toBe("The Watchtower");
 		});
 
 		it("PBEW → The Bellows", () => {
@@ -286,15 +286,15 @@ describe("lookupArchetype", () => {
 		});
 
 		it("PBIW → The Wellspring", () => {
-			expect(lookupArchetype("TSRA").name).toBe("The Wellspring");
+			expect(lookupArchetype("TSIA").name).toBe("The Wellspring");
 		});
 
 		it("PBIN → The Sextant", () => {
-			expect(lookupArchetype("TSRP").name).toBe("The Sextant");
+			expect(lookupArchetype("TSIP").name).toBe("The Sextant");
 		});
 
 		it("PBIC → The Monolith", () => {
-			expect(lookupArchetype("TSRD").name).toBe("The Monolith");
+			expect(lookupArchetype("TSID").name).toBe("The Monolith");
 		});
 
 		it("PFEW → The Open Door", () => {
@@ -322,15 +322,15 @@ describe("lookupArchetype", () => {
 		});
 
 		it("PFIW → The Candle", () => {
-			expect(lookupArchetype("TFRA").name).toBe("The Candle");
+			expect(lookupArchetype("TFIA").name).toBe("The Candle");
 		});
 
 		it("PFIN → The Cove", () => {
-			expect(lookupArchetype("TFRP").name).toBe("The Cove");
+			expect(lookupArchetype("TFIP").name).toBe("The Cove");
 		});
 
 		it("PFIC → The Lone Star", () => {
-			expect(lookupArchetype("TFRD").name).toBe("The Lone Star");
+			expect(lookupArchetype("TFID").name).toBe("The Lone Star");
 		});
 	});
 
@@ -342,81 +342,81 @@ describe("lookupArchetype", () => {
 			"OCBA",
 			"OCBP",
 			"OCBD",
-			"OCRA",
-			"OCRP",
-			"OCRD",
+			"OCIA",
+			"OCIP",
+			"OCID",
 			"OSEA",
 			"OSEP",
 			"OSED",
 			"OSBA",
 			"OSBP",
 			"OSBD",
-			"OSRA",
-			"OSRP",
-			"OSRD",
+			"OSIA",
+			"OSIP",
+			"OSID",
 			"OFEA",
 			"OFEP",
 			"OFED",
 			"OFBA",
 			"OFBP",
 			"OFBD",
-			"OFRA",
-			"OFRP",
-			"OFRD",
+			"OFIA",
+			"OFIP",
+			"OFID",
 			"MCEA",
 			"MCEP",
 			"MCED",
 			"MCBA",
 			"MCBP",
 			"MCBD",
-			"MCRA",
-			"MCRP",
-			"MCRD",
+			"MCIA",
+			"MCIP",
+			"MCID",
 			"MSEA",
 			"MSEP",
 			"MSED",
 			"MSBA",
 			"MSBP",
 			"MSBD",
-			"MSRA",
-			"MSRP",
-			"MSRD",
+			"MSIA",
+			"MSIP",
+			"MSID",
 			"MFEA",
 			"MFEP",
 			"MFED",
 			"MFBA",
 			"MFBP",
 			"MFBD",
-			"MFRA",
-			"MFRP",
-			"MFRD",
+			"MFIA",
+			"MFIP",
+			"MFID",
 			"TCEA",
 			"TCEP",
 			"TCED",
 			"TCBA",
 			"TCBP",
 			"TCBD",
-			"TCRA",
-			"TCRP",
-			"TCRD",
+			"TCIA",
+			"TCIP",
+			"TCID",
 			"TSEA",
 			"TSEP",
 			"TSED",
 			"TSBA",
 			"TSBP",
 			"TSBD",
-			"TSRA",
-			"TSRP",
-			"TSRD",
+			"TSIA",
+			"TSIP",
+			"TSID",
 			"TFEA",
 			"TFEP",
 			"TFED",
 			"TFBA",
 			"TFBP",
 			"TFBD",
-			"TFRA",
-			"TFRP",
-			"TFRD",
+			"TFIA",
+			"TFIP",
+			"TFID",
 		];
 
 		it("isCurated is true for all 81 entries", () => {

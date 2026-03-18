@@ -52,7 +52,7 @@ export const LowConfidence: Story = {
 	args: {
 		archetypeName: "The Explorer",
 		oceanCode4: OceanCode4Schema.make("OSBP"),
-		oceanCode5: OceanCode5Schema.make("OSBPT"),
+		oceanCode5: OceanCode5Schema.make("OSBPV"),
 		description:
 			"Driven by curiosity and a desire to understand the world. You balance exploration with a steady, grounded approach to relationships.",
 		color: "#E87B35",
@@ -65,7 +65,7 @@ export const HighConfidence: Story = {
 	args: {
 		archetypeName: "The Architect",
 		oceanCode4: OceanCode4Schema.make("MCEP"),
-		oceanCode5: OceanCode5Schema.make("MCEPT"),
+		oceanCode5: OceanCode5Schema.make("MCEPV"),
 		description:
 			"A methodical builder who brings order to complexity. Your strong conscientiousness and extraversion make you a natural leader in structured environments.",
 		color: "#4CAF6E",

@@ -6,9 +6,9 @@
  *
  * Openness:          T (Traditional)   M (Moderate)     O (Open-minded)
  * Conscientiousness:  F (Flexible)      S (Steady)       C (Conscientious)
- * Extraversion:       R (Reserved)      B (Balanced)     E (Extravert)
+ * Extraversion:       I (Introverted)   B (Balanced)     E (Extravert)
  * Agreeableness:      D (Direct)        P (Pragmatic)    A (Agreeable)
- * Neuroticism:        R (Resilient)     T (Tempered)     N (Neurotic)
+ * Neuroticism:        R (Resilient)     V (Variable)     N (Neurotic)
  *
  * Full 5-letter codes (including Neuroticism) are stored but only 4 letters are used
  * for archetype naming in POC. Phase 2 will extend to all 5 traits (243 combinations).
@@ -23,11 +23,11 @@ export type OpennessLevel = "T" | "M" | "O";
 /** Conscientiousness level letters */
 export type ConscientiousnessLevel = "F" | "S" | "C";
 /** Extraversion level letters */
-export type ExtraversionLevel = "R" | "B" | "E";
+export type ExtraversionLevel = "I" | "B" | "E";
 /** Agreeableness level letters */
 export type AgreeablenessLevel = "D" | "P" | "A";
 /** Neuroticism level letters */
-export type NeuroticismLevel = "R" | "T" | "N";
+export type NeuroticismLevel = "R" | "V" | "N";
 
 /** Union of all possible trait-level letters */
 export type TraitLevel =
@@ -47,18 +47,18 @@ export type OceanCode5 = Schema.Schema.Type<typeof OceanCode5Schema>;
 export const TRAIT_LETTER_MAP: Record<TraitName, readonly [string, string, string]> = {
 	openness: ["T", "M", "O"],
 	conscientiousness: ["F", "S", "C"],
-	extraversion: ["R", "B", "E"],
+	extraversion: ["I", "B", "E"],
 	agreeableness: ["D", "P", "A"],
-	neuroticism: ["R", "T", "N"],
+	neuroticism: ["R", "V", "N"],
 } as const;
 
 /** Human-readable label for each trait-level letter, keyed by trait then letter */
 export const TRAIT_LEVEL_LABELS: Record<TraitName, Record<string, string>> = {
 	openness: { T: "Traditional", M: "Moderate", O: "Open-minded" },
 	conscientiousness: { F: "Flexible", S: "Steady", C: "Conscientious" },
-	extraversion: { R: "Reserved", B: "Balanced", E: "Extravert" },
+	extraversion: { I: "Introverted", B: "Balanced", E: "Extravert" },
 	agreeableness: { D: "Direct", P: "Pragmatic", A: "Agreeable" },
-	neuroticism: { R: "Resilient", T: "Tempered", N: "Neurotic" },
+	neuroticism: { R: "Resilient", V: "Variable", N: "Neurotic" },
 } as const;
 
 /** Resolve a trait-level letter to its human-readable label */

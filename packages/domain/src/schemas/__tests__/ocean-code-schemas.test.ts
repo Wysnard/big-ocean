@@ -8,7 +8,7 @@ describe("OceanCode4Schema", () => {
 
 	it("accepts valid 4-letter codes", () => {
 		expect(() => decode("OCBD")).not.toThrow(); // O, C, B, D positions
-		expect(() => decode("TFRA")).not.toThrow();
+		expect(() => decode("TFIA")).not.toThrow();
 		expect(() => decode("MSEP")).not.toThrow();
 	});
 
@@ -24,7 +24,7 @@ describe("OceanCode4Schema", () => {
 	it("rejects invalid letters per position", () => {
 		expect(() => decode("XCBD")).toThrow(); // X not in [TMO]
 		expect(() => decode("OXBD")).toThrow(); // X not in [FSC]
-		expect(() => decode("OCXD")).toThrow(); // X not in [RBE]
+		expect(() => decode("OCXD")).toThrow(); // X not in [IBE]
 		expect(() => decode("OCBX")).toThrow(); // X not in [DPA]
 	});
 });
@@ -34,7 +34,7 @@ describe("OceanCode5Schema", () => {
 
 	it("accepts valid 5-letter codes", () => {
 		expect(() => decode("OCBDR")).not.toThrow();
-		expect(() => decode("TFRAT")).not.toThrow();
+		expect(() => decode("TFIAV")).not.toThrow();
 		expect(() => decode("MSEPN")).not.toThrow();
 	});
 
@@ -44,7 +44,7 @@ describe("OceanCode5Schema", () => {
 	});
 
 	it("rejects invalid 5th position letter", () => {
-		expect(() => decode("OCBDX")).toThrow(); // X not in [RTN]
+		expect(() => decode("OCBDX")).toThrow(); // X not in [RVN]
 	});
 });
 
