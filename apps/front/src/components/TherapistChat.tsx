@@ -8,6 +8,7 @@ import { Loader2, Send } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import { getPlaceholder } from "@/constants/chat-placeholders";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useTherapistChat } from "@/hooks/useTherapistChat";
 import { ChatAuthGate } from "./ChatAuthGate";
 import { ChatInputBarShell } from "./chat/ChatInputBarShell";
@@ -159,6 +160,9 @@ export function TherapistChat({
 		portraitWaitMinMs: _portraitWaitMinMs,
 	} = useTherapistChat(sessionId);
 
+	// Story 31-5: Track network connectivity for offline UX
+	const { isOnline, wasOffline } = useOnlineStatus();
+
 	// Notify parent (route) of session errors for auth-based redirect decisions
 	useEffect(() => {
 		if (!onSessionError) return;
@@ -295,6 +299,8 @@ export function TherapistChat({
 			onSend={sendMessage}
 			oceanPulse={oceanPulse}
 			onInputFocus={() => {}}
+			isOnline={isOnline}
+			wasOffline={wasOffline}
 		/>
 	);
 }
@@ -452,6 +458,8 @@ function ChatContent({
 	onSend,
 	oceanPulse,
 	onInputFocus,
+	isOnline,
+	wasOffline,
 }: {
 	sessionId: string;
 	messages: Array<{
@@ -484,6 +492,8 @@ function ChatContent({
 	onSend: (message: string) => Promise<void>;
 	oceanPulse: boolean;
 	onInputFocus: () => void;
+	isOnline: boolean;
+	wasOffline: boolean;
 }) {
 	return (
 		<>
@@ -630,6 +640,29 @@ function ChatContent({
 							{isFarewellReceived && !isAuthenticated && <ChatAuthGate sessionId={sessionId} />}
 
 							<div ref={messagesEndRef} />
+						</div>
+					)}
+
+					{/* Story 31-5: Offline banner — non-blocking network status indicator */}
+					{!isOnline && (
+						<div
+							data-slot="offline-banner"
+							className="mx-4 mb-2 p-3 bg-muted border border-border rounded-lg flex items-center gap-2"
+						>
+							<div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+							<p className="text-sm text-muted-foreground">
+								You're offline — your message will be sent when you reconnect.
+							</p>
+						</div>
+					)}
+
+					{/* Story 31-5: Reconnection toast — brief confirmation after coming back online */}
+					{wasOffline && isOnline && (
+						<div
+							data-slot="reconnection-toast"
+							className="mx-4 mb-2 p-3 bg-accent/50 border border-accent rounded-lg"
+						>
+							<p className="text-sm text-accent-foreground">Connection restored — you can continue your conversation.</p>
 						</div>
 					)}
 
