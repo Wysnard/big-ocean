@@ -42,7 +42,7 @@ export interface StartAnonymousAssessmentOutput extends StartAssessmentOutput {
 }
 
 /**
- * Shared helper: create a new session and persist 2 greeting messages.
+ * Shared helper: create a new session and persist greeting messages.
  * Used by both authenticated and anonymous paths.
  */
 const createSessionWithGreetings = (userId?: string) =>
@@ -57,12 +57,12 @@ const createSessionWithGreetings = (userId?: string) =>
 		// Create opener exchange (turn 0) for the opening question
 		const openerExchange = yield* exchangeRepo.create(result.sessionId, 0);
 
-		// Build the 2 greeting messages (1 fixed + 1 random opening question)
+		// Build greeting messages (4 fixed bubbles + 1 random opening question)
 		const openingQuestion = pickOpeningQuestion();
 		const greetingContents = [...GREETING_MESSAGES, openingQuestion];
 
 		// Persist greeting messages to DB so Nerin has full conversation context
-		// Greeting: exchangeId = null (pure greeting, not a question)
+		// Greeting bubbles: exchangeId = null (pure greeting, not a question)
 		// Opening question: exchangeId = opener exchange (this is the AI question)
 		const savedMessages: StartAssessmentMessage[] = [];
 		for (const [i, content] of greetingContents.entries()) {
@@ -216,12 +216,12 @@ export const startAnonymousAssessment = () =>
 		const exchangeRepo = yield* AssessmentExchangeRepository;
 		const openerExchange = yield* exchangeRepo.create(sessionId, 0);
 
-		// Build the 2 greeting messages (1 fixed + 1 random opening question)
+		// Build greeting messages (4 fixed bubbles + 1 random opening question)
 		const openingQuestion = pickOpeningQuestion();
 		const greetingContents = [...GREETING_MESSAGES, openingQuestion];
 
 		// Persist greeting messages
-		// Greeting: exchangeId = null (pure greeting, not a question)
+		// Greeting bubbles: exchangeId = null (pure greeting, not a question)
 		// Opening question: exchangeId = opener exchange (this is the AI question)
 		const savedMessages: StartAssessmentMessage[] = [];
 		for (const [i, content] of greetingContents.entries()) {

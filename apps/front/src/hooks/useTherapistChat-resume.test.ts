@@ -42,10 +42,10 @@ const wrapper = ({ children }: { children: ReactNode }) =>
 	createElement(QueryClientProvider, { client: queryClient }, children);
 
 describe("useTherapistChat", () => {
-	// Advance timers past all greeting stagger delays (0 + 1200 + 2000ms)
+	// Advance timers past all greeting stagger delays (0 + 800 + 1400 + 2000 + 2600ms)
 	function completeGreetingStagger() {
 		act(() => {
-			vi.advanceTimersByTime(2500);
+			vi.advanceTimersByTime(3000);
 		});
 	}
 
@@ -145,8 +145,8 @@ describe("useTherapistChat", () => {
 			const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 			completeGreetingStagger();
 
-			expect(result.current.messages).toHaveLength(3);
-			expect(result.current.messages[0].content).toContain("Nerin");
+			expect(result.current.messages).toHaveLength(5);
+			expect(result.current.messages[0].content).toContain("Big Ocean");
 		});
 
 		it("sets empty messages when resume returns empty array", () => {

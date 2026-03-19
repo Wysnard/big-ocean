@@ -154,9 +154,9 @@ export function useTherapistChat(sessionId: string) {
 			setIsFarewellReceived(true);
 		}
 
-		// Detect new session: exactly 3 assistant-only messages (server-persisted greeting)
+		// Detect new session: exactly 5 assistant-only messages (4 greeting bubbles + 1 opening question)
 		const isNewSession =
-			mappedMessages.length === 3 && mappedMessages.every((m) => m.role === "assistant");
+			mappedMessages.length === 5 && mappedMessages.every((m) => m.role === "assistant");
 
 		if (!isNewSession) {
 			// Resumed session with existing conversation — show all immediately
@@ -164,7 +164,7 @@ export function useTherapistChat(sessionId: string) {
 			return;
 		}
 
-		// Stagger greeting messages per AC #1: 0ms / 1200ms / 2000ms
+		// Stagger greeting bubbles: 0ms / 800ms / 1400ms / 2000ms / 2600ms
 		const prefersReducedMotion =
 			typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -178,7 +178,7 @@ export function useTherapistChat(sessionId: string) {
 		setMessages([first]);
 		pendingGreetingsRef.current = [...rest];
 
-		const delays = [1200, 2000];
+		const delays = [800, 1400, 2000, 2600];
 		const timeouts: ReturnType<typeof setTimeout>[] = [];
 
 		rest.forEach((msg, i) => {

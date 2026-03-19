@@ -3,51 +3,54 @@ import { GREETING_MESSAGES, OPENING_QUESTIONS, pickOpeningQuestion } from "../ne
 
 describe("nerin-greeting", () => {
 	describe("GREETING_MESSAGES", () => {
-		it("has exactly 1 fixed message", () => {
-			expect(GREETING_MESSAGES).toHaveLength(1);
+		it("has exactly 4 fixed greeting bubbles", () => {
+			expect(GREETING_MESSAGES).toHaveLength(4);
 		});
 
-		it("message 1 introduces Nerin and creates portrait anticipation", () => {
-			expect(GREETING_MESSAGES[0]).toContain("Nerin");
-			expect(GREETING_MESSAGES[0]).toContain("write you something");
+		it("bubble 1 introduces Big Ocean as a diving shop", () => {
+			expect(GREETING_MESSAGES[0]).toContain("Big Ocean");
+			expect(GREETING_MESSAGES[0]).toContain("diving shop");
 		});
 
-		it("message 1 includes 'not therapy' framing (FR8)", () => {
-			// The greeting must include a natural "not therapy" framing
-			expect(GREETING_MESSAGES[0].toLowerCase()).toContain("therapy");
+		it("bubble 2 introduces Nerin as dive master and creates diving log anticipation", () => {
+			expect(GREETING_MESSAGES[1]).toContain("Nerin");
+			expect(GREETING_MESSAGES[1]).toContain("dive master");
+			expect(GREETING_MESSAGES[1]).toContain("diving log");
 		});
 
-		it("message 1 includes data storage notice (FR52)", () => {
-			// The greeting must mention that conversation data is kept/stored
-			const msg = GREETING_MESSAGES[0].toLowerCase();
+		it("bubble 3 includes 'not therapy' framing (FR8)", () => {
+			expect(GREETING_MESSAGES[2].toLowerCase()).toContain("therapy");
+		});
+
+		it("bubble 3 includes honesty cue", () => {
+			expect(GREETING_MESSAGES[2].toLowerCase()).toContain("honest");
+		});
+
+		it("bubble 3 includes data storage notice (FR52)", () => {
+			const msg = GREETING_MESSAGES[2].toLowerCase();
 			const hasStorageNotice =
 				msg.includes("keep") || msg.includes("store") || msg.includes("save") || msg.includes("note");
 			expect(hasStorageNotice).toBe(true);
 		});
 
-		it("message 1 includes encouragement cues (FR54)", () => {
-			const msg = GREETING_MESSAGES[0].toLowerCase();
-			// Should encourage honesty/truthfulness
-			const hasHonestyCue = msg.includes("honest") || msg.includes("truthful") || msg.includes("real");
-			expect(hasHonestyCue).toBe(true);
+		it("bubble 4 includes encouragement cues (FR54)", () => {
+			const msg = GREETING_MESSAGES[3].toLowerCase();
+			// Should encourage real/authentic sharing
+			expect(msg).toContain("messy");
+			// Should encourage concrete stories over abstract answers
+			expect(msg).toContain("stories");
 		});
 
-		it("message 1 includes messy/contradictory permission", () => {
-			expect(GREETING_MESSAGES[0]).toContain("messy");
+		it("bubble 4 encourages going beyond the question", () => {
+			expect(GREETING_MESSAGES[3]).toContain("go wherever it takes you");
 		});
 
 		it("does not contain forbidden words as standalone terms", () => {
-			// These words should not appear as standalone terms framing the experience
-			// "quizzes" is acceptable (negation: "no quizzes"), but "quiz" as a label is not
-			const forbidden = ["assessment", "diagnostic", "evaluation"];
+			const forbidden = ["assessment", "diagnostic", "evaluation", "personality", "test", "quiz"];
 			for (const msg of GREETING_MESSAGES) {
 				for (const word of forbidden) {
 					expect(msg.toLowerCase()).not.toContain(word);
 				}
-			}
-			// "personality" should not appear as a framing label
-			for (const msg of GREETING_MESSAGES) {
-				expect(msg.toLowerCase()).not.toContain("personality");
 			}
 		});
 
