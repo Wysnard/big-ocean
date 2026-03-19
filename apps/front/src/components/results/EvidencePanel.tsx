@@ -11,6 +11,7 @@ import type { SavedFacetEvidence } from "@workspace/contracts";
 import type { FacetName, TraitName } from "@workspace/domain";
 import { getTraitColor, TRAIT_TO_FACETS, toFacetDisplayName } from "@workspace/domain";
 import { X } from "lucide-react";
+import { useEffect, useId, useRef } from "react";
 import { formatDeviation, getDomainLabel, getSignalBadge } from "./evidence-utils";
 
 export interface HighlightRange {
@@ -37,16 +38,34 @@ interface EvidencePanelProps {
 export function EvidencePanel({ facetName, evidence, onClose }: EvidencePanelProps) {
 	const parentTrait = getParentTrait(facetName);
 	const traitColor = parentTrait ? getTraitColor(parentTrait) : "var(--primary)";
+	const headingId = useId();
+	const panelRef = useRef<HTMLDivElement>(null);
+
+	// Focus the panel on mount for keyboard accessibility
+	useEffect(() => {
+		panelRef.current?.focus();
+	}, []);
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "Escape") {
+			onClose();
+		}
+	};
 
 	return (
 		<div
+			ref={panelRef}
 			data-testid="evidence-panel"
-			className="rounded-xl border bg-card p-4 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2"
+			role="dialog"
+			aria-labelledby={headingId}
+			tabIndex={-1}
+			onKeyDown={handleKeyDown}
+			className="rounded-xl border bg-card p-4 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 outline-none"
 			style={{ borderColor: traitColor }}
 		>
 			{/* Header */}
 			<div className="flex items-center justify-between mb-3">
-				<h4 className="text-sm font-semibold text-foreground">
+				<h4 id={headingId} className="text-sm font-semibold text-foreground">
 					{toFacetDisplayName(facetName)} — Evidence
 				</h4>
 				<button

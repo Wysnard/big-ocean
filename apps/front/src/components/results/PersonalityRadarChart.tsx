@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/componen
 import type { ChartConfig } from "@workspace/ui/components/chart";
 import { ChartContainer } from "@workspace/ui/components/chart";
 import { cn } from "@workspace/ui/lib/utils";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart } from "recharts";
 
 const TRAIT_LABELS: Record<TraitName, string> = {
@@ -161,6 +161,17 @@ export const PersonalityRadarChart = memo(function PersonalityRadarChart({
 		[chartData],
 	);
 
+	// Respect prefers-reduced-motion for Recharts animation
+	const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+	useEffect(() => {
+		if (typeof window === "undefined" || !window.matchMedia) return;
+		const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+		setPrefersReducedMotion(mql.matches);
+		const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+		mql.addEventListener("change", handler);
+		return () => mql.removeEventListener("change", handler);
+	}, []);
+
 	const hasExplicitSize = width != null && height != null;
 
 	const chart = (
@@ -173,25 +184,60 @@ export const PersonalityRadarChart = memo(function PersonalityRadarChart({
 				<PolarGrid />
 				<PolarRadiusAxis domain={[0, MAX_TRAIT_SCORE]} tick={false} axisLine={false} />
 				<PolarAngleAxis dataKey="trait" tick={renderTick} />
-				<Radar dataKey="score" fill="none" stroke="none" shape={renderGradientShape} dot={renderDot} />
+				<Radar
+					dataKey="score"
+					fill="none"
+					stroke="none"
+					shape={renderGradientShape}
+					dot={renderDot}
+					isAnimationActive={!prefersReducedMotion}
+				/>
 			</RadarChart>
 		</ChartContainer>
 	);
 
+	/** Visually hidden data table for screen reader access (NFR22) */
+	const dataTable = (
+		<table className="sr-only" aria-label="Trait scores">
+			<thead>
+				<tr>
+					<th scope="col">Trait</th>
+					<th scope="col">Score</th>
+				</tr>
+			</thead>
+			<tbody>
+				{chartData.map((item) => (
+					<tr key={item.trait}>
+						<td>{item.label}</td>
+						<td>
+							{Math.round(item.score)} / {MAX_TRAIT_SCORE}
+						</td>
+					</tr>
+				))}
+			</tbody>
+		</table>
+	);
+
 	if (standalone) {
-		return <div data-slot="personality-radar-chart">{chart}</div>;
+		return (
+			<div data-slot="personality-radar-chart">
+				{chart}
+				{dataTable}
+			</div>
+		);
 	}
 
 	return (
-		<Card
-			data-slot="personality-radar-chart"
-			role="img"
-			aria-label="Personality radar chart showing Big Five trait scores"
-		>
+		<Card data-slot="personality-radar-chart">
 			<CardHeader>
 				<CardTitle className="text-lg font-display">Personality Shape</CardTitle>
 			</CardHeader>
-			<CardContent>{chart}</CardContent>
+			<CardContent>
+				<div role="img" aria-label="Personality radar chart showing Big Five trait scores">
+					{chart}
+				</div>
+			</CardContent>
+			{dataTable}
 		</Card>
 	);
 });

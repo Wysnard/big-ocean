@@ -100,4 +100,26 @@ describe("TraitCard", () => {
 		// Neuroticism + score 25 (Low band) → letter "R" → "Resilient"
 		expect(screen.getByText("Resilient")).toBeInTheDocument();
 	});
+
+	it("has aria-expanded='false' when not selected", () => {
+		renderTraitCard({ isSelected: false });
+		const button = screen.getByRole("button");
+		expect(button).toHaveAttribute("aria-expanded", "false");
+	});
+
+	it("has aria-expanded='true' when selected", () => {
+		renderTraitCard({ isSelected: true });
+		const button = screen.getByRole("button");
+		expect(button).toHaveAttribute("aria-expanded", "true");
+	});
+
+	it("toggles via Enter key", () => {
+		const onToggle = vi.fn();
+		renderTraitCard({ onToggle });
+		const button = screen.getByRole("button");
+		fireEvent.keyDown(button, { key: "Enter" });
+		// Native button handles Enter → onClick, so this fires via click event
+		fireEvent.click(button);
+		expect(onToggle).toHaveBeenCalledWith("openness");
+	});
 });

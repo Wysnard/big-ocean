@@ -34,6 +34,27 @@ describe("PersonalityRadarChart", () => {
 		expect(screen.getByText("Personality Shape")).toBeInTheDocument();
 	});
 
+	it("has role='img' and aria-label on the chart visual container", () => {
+		render(<PersonalityRadarChart traits={mockTraits} />);
+		const imgEl = screen.getByRole("img", { name: /personality radar chart/i });
+		expect(imgEl).toBeInTheDocument();
+	});
+
+	it("renders a visually hidden data table with trait scores for screen readers", () => {
+		render(<PersonalityRadarChart traits={mockTraits} />);
+		const table = screen.getByRole("table", { name: /trait scores/i });
+		expect(table).toBeInTheDocument();
+
+		// Check that all trait names appear in the table
+		const rows = screen.getAllByRole("row");
+		// 1 header row + 5 data rows
+		expect(rows.length).toBe(6);
+
+		// Check specific trait data
+		expect(screen.getByText("90 / 120")).toBeInTheDocument();
+		expect(screen.getByText("60 / 120")).toBeInTheDocument();
+	});
+
 	// Note: Recharts RadarChart internal components (Radar shape, dots) require actual DOM dimensions
 	// to compute polar coordinates. jsdom renders at 0x0 so these callbacks are never invoked.
 	// The multi-color shape rendering (5 path slices + 5 line strokes) is verified via manual

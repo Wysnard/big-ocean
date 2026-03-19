@@ -141,7 +141,14 @@ export const TraitCard = memo(function TraitCard({
 				</div>
 
 				{/* Score progress bar */}
-				<div className="w-full bg-muted rounded-full h-2 mb-4">
+				<div
+					className="w-full bg-muted rounded-full h-2 mb-4"
+					role="progressbar"
+					aria-valuenow={Math.round(trait.score)}
+					aria-valuemin={0}
+					aria-valuemax={MAX_TRAIT_SCORE}
+					aria-label={`${TRAIT_LABELS[trait.name]}: ${Math.round(trait.score)} out of ${MAX_TRAIT_SCORE}`}
+				>
 					<div
 						className="h-2 rounded-full motion-safe:transition-all motion-safe:duration-500"
 						style={{
@@ -154,8 +161,8 @@ export const TraitCard = memo(function TraitCard({
 
 				{/* Compact 2x3 facet grid */}
 				<div className="grid grid-cols-2 gap-x-3 gap-y-2 mb-3">
-					{facets.map((facet) => (
-						<FacetScoreBar key={facet.name} facet={facet} size="compact" />
+					{facets.map((facet, i) => (
+						<FacetScoreBar key={facet.name} facet={facet} size="compact" staggerIndex={i} />
 					))}
 				</div>
 

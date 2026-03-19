@@ -9,7 +9,7 @@ import {
 } from "@workspace/ui/components/card";
 import type { ChartConfig } from "@workspace/ui/components/chart";
 import { ChartContainer } from "@workspace/ui/components/chart";
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { Label, PolarGrid, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
 
 interface ConfidenceRingCardProps {
@@ -32,8 +32,22 @@ export const ConfidenceRingCard = memo(function ConfidenceRingCard({
 		[displayConfidence],
 	);
 
+	// Respect prefers-reduced-motion for Recharts animation
+	const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+	useEffect(() => {
+		if (typeof window === "undefined" || !window.matchMedia) return;
+		const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+		setPrefersReducedMotion(mql.matches);
+		const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+		mql.addEventListener("change", handler);
+		return () => mql.removeEventListener("change", handler);
+	}, []);
+
 	return (
-		<Card data-slot="confidence-ring-card">
+		<Card
+			data-slot="confidence-ring-card"
+			aria-label={`Overall assessment confidence: ${displayConfidence}%`}
+		>
 			<CardHeader>
 				<CardTitle className="text-lg font-display">Overall Confidence</CardTitle>
 			</CardHeader>
@@ -53,7 +67,12 @@ export const ConfidenceRingCard = memo(function ConfidenceRingCard({
 							className="first:fill-muted last:fill-background"
 							polarRadius={[76, 64]}
 						/>
-						<RadialBar dataKey="confidence" background cornerRadius={10} />
+						<RadialBar
+							dataKey="confidence"
+							background
+							cornerRadius={10}
+							isAnimationActive={!prefersReducedMotion}
+						/>
 						<PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
 							<Label
 								content={({ viewBox }) => {
