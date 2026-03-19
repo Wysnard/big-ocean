@@ -9,7 +9,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
-import { LogOut, User } from "lucide-react";
+import { LogOut, Settings, User } from "lucide-react";
 import { useAuth } from "../hooks/use-auth";
 import { getActiveAssessmentSessionId } from "../lib/auth-session-linking";
 
@@ -100,6 +100,12 @@ export function UserNav() {
 							<Link to="/profile" className="flex items-center gap-2 cursor-pointer">
 								<User className="size-4" />
 								Profile
+							</Link>
+						</DropdownMenuItem>
+						<DropdownMenuItem asChild>
+							<Link to="/settings" className="flex items-center gap-2 cursor-pointer">
+								<Settings className="size-4" />
+								Settings
 							</Link>
 						</DropdownMenuItem>
 					</DropdownMenuGroup>
