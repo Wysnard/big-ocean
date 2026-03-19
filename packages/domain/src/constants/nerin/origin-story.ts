@@ -6,8 +6,8 @@
  * This module explains how Nerin came to be good at reading people
  * through diving — experiential, not academic.
  *
- * Loaded in the Common layer (always-on) to anchor Nerin's identity
- * in a specific place and relationship.
+ * Shared across chat (Common layer) and portrait surfaces to anchor
+ * Nerin's identity in a specific place and relationship.
  *
  * Story 31-2: Nerin Character Quality — Observations, Transitions & Character Bible
  */

@@ -19,7 +19,6 @@ import {
 	MIRROR_GUARDRAILS,
 	OBSERVATION_QUALITY_COMMON,
 	ORIGIN_STORY,
-	PATTERN_OBSERVATIONS,
 	PUSHBACK_HANDLING,
 	QUALITY_INSTINCT,
 	REFLECT,
@@ -57,7 +56,6 @@ const COMMON_MODULES = [
 	HUMOR_GUARDRAILS,
 	SAFETY_GUARDRAILS,
 	PUSHBACK_HANDLING,
-	PATTERN_OBSERVATIONS,
 	REFLECT,
 	STORY_PULLING,
 	OBSERVATION_QUALITY_COMMON,
@@ -108,7 +106,7 @@ describe("common layer — always included", () => {
 		expect(close.systemPrompt).toContain(NERIN_PERSONA);
 	});
 
-	it("includes all 14 common modules in every prompt", () => {
+	it("includes all 13 common modules in every prompt", () => {
 		const open = buildPrompt(makeOpenInput());
 		const explore = buildPrompt(makeExploreInput());
 		const close = buildPrompt(makeCloseInput());
@@ -516,13 +514,13 @@ describe("output shape", () => {
 // ─── Word Budget (Story 31-2) ──────────────────────────────────────
 
 describe("common layer word budget", () => {
-	it("common layer stays within budget (under 2,500 words)", () => {
+	it("common layer stays within budget (1,500-2,500 words)", () => {
 		const result = buildPrompt(makeOpenInput());
 		// Extract common layer: everything before the steering prefix
 		const steeringStart = result.systemPrompt.indexOf(STEERING_PREFIX);
 		const commonLayer = result.systemPrompt.slice(0, steeringStart);
 		const wordCount = commonLayer.split(/\s+/).filter((w) => w.length > 0).length;
-		// Budget: common layer (persona + 14 modules) should not exceed 2,500 words
+		// Budget: common layer (persona + 13 modules) should stay within 1,500-2,500 words
 		// to keep LLM context costs reasonable. Current: ~2,350 words.
 		expect(wordCount).toBeGreaterThanOrEqual(1500);
 		expect(wordCount).toBeLessThanOrEqual(2500);
@@ -546,11 +544,6 @@ describe("Story 31-2 — character quality modules", () => {
 	it("includes PUSHBACK_HANDLING with reframe guidance", () => {
 		const result = buildPrompt(makeOpenInput());
 		expect(result.systemPrompt).toContain("WHEN THEY PUSH BACK");
-	});
-
-	it("includes PATTERN_OBSERVATIONS with portrait anticipation", () => {
-		const result = buildPrompt(makeOpenInput());
-		expect(result.systemPrompt).toContain("SHARING WHAT YOU'RE NOTICING");
 	});
 });
 

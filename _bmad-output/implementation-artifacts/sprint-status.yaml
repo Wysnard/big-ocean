@@ -535,7 +535,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-31: in-progress
   31-1-nerin-greeting-and-onboarding-message: done
-  31-2-nerin-character-quality-observations-transitions-and-character-bible: pr-ready
+  31-2-nerin-character-quality-observations-transitions-and-character-bible: done
   31-3-conversation-closing-exchange: backlog
   31-4-depth-meter-and-progress-milestones: pr-ready
   31-5-session-resume: backlog

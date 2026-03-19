@@ -26,7 +26,6 @@ export { MIRROR_GUARDRAILS } from "./mirror-guardrails";
 export { OBSERVATION_QUALITY_COMMON } from "./observation-quality-common";
 // Story 31-2 — Character Quality modules
 export { ORIGIN_STORY } from "./origin-story";
-export { PATTERN_OBSERVATIONS } from "./pattern-observations";
 // Pressure modifiers — entry pressure language (Story 28-3)
 export {
 	getPressureModifier,
