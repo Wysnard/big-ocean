@@ -3,7 +3,8 @@
  *
  * Single source of truth for Nerin's identity, voice, and universal anti-patterns.
  * Imported by both the chat prompt builder and the portrait generator to ensure
- * consistent personality across all surfaces.
+ * consistent personality across all surfaces. ORIGIN_STORY (nerin/origin-story.ts)
+ * is the companion shared constant — both are composed into every surface prompt.
  *
  * Surface-specific behavior (empathy model, emoji rules, metaphor rules, mirroring,
  * threading, mirrors) lives in CHAT_CONTEXT (nerin-chat-context.ts) or PORTRAIT_CONTEXT.

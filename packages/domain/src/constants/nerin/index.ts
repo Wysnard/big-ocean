@@ -15,15 +15,17 @@
  */
 
 export { BELIEFS_IN_ACTION } from "./beliefs-in-action";
+// Contextual mirror system — Story 29-3 (replaces MIRRORS_EXPLORE + MIRRORS_AMPLIFY)
+export { getMirrorsForContext } from "./contextual-mirrors";
 export { CONVERSATION_INSTINCTS } from "./conversation-instincts";
 // Tier 1 — Core Identity (always-on)
 export { CONVERSATION_MODE } from "./conversation-mode";
-// Contextual mirror system — Story 29-3 (replaces MIRRORS_EXPLORE + MIRRORS_AMPLIFY)
-export { getMirrorsForContext } from "./contextual-mirrors";
 export { HUMOR_GUARDRAILS } from "./humor-guardrails";
 export { INTERNAL_TRACKING } from "./internal-tracking";
 export { MIRROR_GUARDRAILS } from "./mirror-guardrails";
 export { OBSERVATION_QUALITY_COMMON } from "./observation-quality-common";
+// Story 31-2 — Character Quality modules
+export { ORIGIN_STORY } from "./origin-story";
 // Pressure modifiers — entry pressure language (Story 28-3)
 export {
 	getPressureModifier,
@@ -31,19 +33,21 @@ export {
 	PRESSURE_DIRECT,
 	PRESSURE_SOFT,
 } from "./pressure-modifiers";
+export { PUSHBACK_HANDLING } from "./pushback-handling";
 export { QUALITY_INSTINCT } from "./quality-instinct";
 export { REFLECT } from "./reflect";
+export { SAFETY_GUARDRAILS } from "./safety-guardrails";
 // Intent x observation steering templates (Stories 28-3, 29-2)
 export {
-	CLOSE_CONTRADICTION_TEMPLATE,
-	CLOSE_CONVERGENCE_TEMPLATE,
-	CLOSE_NOTICING_TEMPLATE,
-	CLOSE_RELATE_TEMPLATE,
 	BRIDGE_CONTRADICTION_TEMPLATE,
 	BRIDGE_CONVERGENCE_TEMPLATE,
 	BRIDGE_NEGATIVE_CONSTRAINT,
 	BRIDGE_NOTICING_TEMPLATE,
 	BRIDGE_RELATE_TEMPLATE,
+	CLOSE_CONTRADICTION_TEMPLATE,
+	CLOSE_CONVERGENCE_TEMPLATE,
+	CLOSE_NOTICING_TEMPLATE,
+	CLOSE_RELATE_TEMPLATE,
 	EXPLORE_CONTRADICTION_TEMPLATE,
 	EXPLORE_CONVERGENCE_TEMPLATE,
 	EXPLORE_NOTICING_TEMPLATE,

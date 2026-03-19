@@ -20,6 +20,7 @@ import {
 	AppConfig,
 	LoggerRepository,
 	NERIN_PERSONA,
+	ORIGIN_STORY,
 	PortraitGenerationError,
 	type PortraitGenerationInput,
 	PortraitGeneratorRepository,
@@ -577,9 +578,9 @@ Opening: ~30% | Build: ~35% | Turn: ~10-15% | Landing: ~20-25%
 The Turn is intentionally the shortest section.`;
 
 /**
- * Composed portrait system prompt: shared persona + portrait-specific context.
+ * Composed portrait system prompt: shared persona + origin story + portrait-specific context.
  */
-const PORTRAIT_SYSTEM_PROMPT = `${NERIN_PERSONA}\n\n${PORTRAIT_CONTEXT}`;
+const PORTRAIT_SYSTEM_PROMPT = `${NERIN_PERSONA}\n\n${ORIGIN_STORY}\n\n${PORTRAIT_CONTEXT}`;
 
 /**
  * Extract text content from a ChatAnthropic response.

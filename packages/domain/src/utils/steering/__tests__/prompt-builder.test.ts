@@ -18,16 +18,19 @@ import {
 	HUMOR_GUARDRAILS,
 	MIRROR_GUARDRAILS,
 	OBSERVATION_QUALITY_COMMON,
+	ORIGIN_STORY,
+	PUSHBACK_HANDLING,
 	QUALITY_INSTINCT,
 	REFLECT,
+	SAFETY_GUARDRAILS,
 	STEERING_PREFIX,
 	STORY_PULLING,
 	THREADING_COMMON,
 } from "../../../constants/nerin/index";
 import { NERIN_PERSONA } from "../../../constants/nerin-persona";
 import type {
-	ClosePromptInput,
 	BridgePromptInput,
+	ClosePromptInput,
 	ContradictionTarget,
 	ConvergenceTarget,
 	DomainScore,
@@ -44,12 +47,15 @@ const tid = (s: string) => s as TerritoryId;
 
 /** All common layer modules (always loaded). */
 const COMMON_MODULES = [
+	ORIGIN_STORY,
 	CONVERSATION_MODE,
 	BELIEFS_IN_ACTION,
 	CONVERSATION_INSTINCTS,
 	QUALITY_INSTINCT,
 	MIRROR_GUARDRAILS,
 	HUMOR_GUARDRAILS,
+	SAFETY_GUARDRAILS,
+	PUSHBACK_HANDLING,
 	REFLECT,
 	STORY_PULLING,
 	OBSERVATION_QUALITY_COMMON,
@@ -100,7 +106,7 @@ describe("common layer — always included", () => {
 		expect(close.systemPrompt).toContain(NERIN_PERSONA);
 	});
 
-	it("includes all 10 common modules in every prompt", () => {
+	it("includes all 13 common modules in every prompt", () => {
 		const open = buildPrompt(makeOpenInput());
 		const explore = buildPrompt(makeExploreInput());
 		const close = buildPrompt(makeCloseInput());
@@ -502,6 +508,42 @@ describe("output shape", () => {
 		const result = buildPrompt(makeExploreInput());
 		expect(result.steeringSection).toContain(STEERING_PREFIX);
 		expect(result.steeringSection).toContain("Connect naturally");
+	});
+});
+
+// ─── Word Budget (Story 31-2) ──────────────────────────────────────
+
+describe("common layer word budget", () => {
+	it("common layer stays within budget (1,500-2,500 words)", () => {
+		const result = buildPrompt(makeOpenInput());
+		// Extract common layer: everything before the steering prefix
+		const steeringStart = result.systemPrompt.indexOf(STEERING_PREFIX);
+		const commonLayer = result.systemPrompt.slice(0, steeringStart);
+		const wordCount = commonLayer.split(/\s+/).filter((w) => w.length > 0).length;
+		// Budget: common layer (persona + 13 modules) should stay within 1,500-2,500 words
+		// to keep LLM context costs reasonable. Current: ~2,350 words.
+		expect(wordCount).toBeGreaterThanOrEqual(1500);
+		expect(wordCount).toBeLessThanOrEqual(2500);
+	});
+});
+
+// ─── Story 31-2 New Modules ────────────────────────────────────────
+
+describe("Story 31-2 — character quality modules", () => {
+	it("includes ORIGIN_STORY with Big Ocean setting", () => {
+		const result = buildPrompt(makeOpenInput());
+		expect(result.systemPrompt).toContain("Big Ocean");
+		expect(result.systemPrompt).toContain("Vincent");
+	});
+
+	it("includes SAFETY_GUARDRAILS with diagnostic prohibition", () => {
+		const result = buildPrompt(makeOpenInput());
+		expect(result.systemPrompt).toContain("diagnostic language");
+	});
+
+	it("includes PUSHBACK_HANDLING with reframe guidance", () => {
+		const result = buildPrompt(makeOpenInput());
+		expect(result.systemPrompt).toContain("WHEN THEY PUSH BACK");
 	});
 });
 
