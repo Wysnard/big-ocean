@@ -188,9 +188,16 @@ export function DetailZone({
 										</div>
 
 										{/* Score bar */}
-										<div className="w-full bg-muted rounded-full h-1.5 mb-3">
+										<div
+											className="w-full bg-muted rounded-full h-1.5 mb-3"
+											role="progressbar"
+											aria-valuenow={facet.score}
+											aria-valuemin={0}
+											aria-valuemax={20}
+											aria-label={`${toFacetDisplayName(facet.name)}: ${facet.score} out of 20`}
+										>
 											<div
-												className="h-1.5 rounded-full"
+												className="h-1.5 rounded-full motion-safe:transition-[width] motion-safe:duration-500 motion-safe:ease-out"
 												style={{ width: `${facetPct}%`, backgroundColor: traitColor, opacity: 0.7 }}
 											/>
 										</div>
