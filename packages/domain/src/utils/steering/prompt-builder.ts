@@ -18,6 +18,7 @@
 import { getMirrorsForContext } from "../../constants/nerin/contextual-mirrors";
 import {
 	BELIEFS_IN_ACTION,
+	CLOSING_EXCHANGE,
 	CONVERSATION_INSTINCTS,
 	CONVERSATION_MODE,
 	getPressureModifier,
@@ -73,6 +74,7 @@ const COMMON_MODULES = [
 	STORY_PULLING,
 	OBSERVATION_QUALITY_COMMON,
 	THREADING_COMMON,
+	CLOSING_EXCHANGE,
 ] as const;
 
 function assembleCommonLayer(): string {

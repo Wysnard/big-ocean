@@ -15,6 +15,8 @@
  */
 
 export { BELIEFS_IN_ACTION } from "./beliefs-in-action";
+// Story 31-3 — Closing Exchange instinct
+export { CLOSING_EXCHANGE } from "./closing-exchange";
 // Contextual mirror system — Story 29-3 (replaces MIRRORS_EXPLORE + MIRRORS_AMPLIFY)
 export { getMirrorsForContext } from "./contextual-mirrors";
 export { CONVERSATION_INSTINCTS } from "./conversation-instincts";
