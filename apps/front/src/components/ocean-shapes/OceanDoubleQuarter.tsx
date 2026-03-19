@@ -18,8 +18,8 @@ export function OceanDoubleQuarter({ size = 24, color, className }: OceanDoubleQ
 			data-slot="ocean-shape-s"
 			className={cn("shrink-0", className)}
 		>
-			<path d="M2 2v10A10 10 0 0 0 12 2z" />
-			<path d="M22 22V12A10 10 0 0 0 12 22z" />
+			<path d="M2 12L12 12A10 10 0 0 1 2 22Z" />
+			<path d="M22 12L12 12A10 10 0 0 1 22 2Z" />
 		</svg>
 	);
 }

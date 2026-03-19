@@ -22,7 +22,7 @@ export function OceanThreeQuarterSquare({
 			data-slot="ocean-shape-f"
 			className={cn("shrink-0", className)}
 		>
-			<path d="M2 2h20v4H6v14h18v4H2z" />
+			<path d="M2 2h20v10H12v10H2z" />
 		</svg>
 	);
 }
