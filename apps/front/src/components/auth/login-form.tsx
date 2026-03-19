@@ -139,6 +139,15 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 					/>
 				</div>
 
+				<div className="flex justify-end">
+					<a
+						href="/forgot-password"
+						className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+					>
+						Forgot password?
+					</a>
+				</div>
+
 				<button
 					type="submit"
 					disabled={isLoading}

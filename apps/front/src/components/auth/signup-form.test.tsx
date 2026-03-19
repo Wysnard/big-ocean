@@ -135,7 +135,7 @@ describe("SignupForm", () => {
 		});
 	});
 
-	it("navigates to redirectTo after successful signup", async () => {
+	it("navigates to verify-email after successful signup with redirectTo", async () => {
 		mockSignUpEmail.mockResolvedValueOnce({ user: { id: "1" } });
 
 		renderSignupForm({ redirectTo: "/results/session-123" });
@@ -151,11 +151,14 @@ describe("SignupForm", () => {
 		fireEvent.submit(screen.getByRole("button", { name: "Create Account" }));
 
 		await waitFor(() => {
-			expect(mockNavigate).toHaveBeenCalledWith({ to: "/results/session-123" });
+			expect(mockNavigate).toHaveBeenCalledWith({
+				to: "/verify-email",
+				search: { email: "test@example.com", error: undefined },
+			});
 		});
 	});
 
-	it("navigates to /results/:sessionId when anonymousSessionId is provided", async () => {
+	it("navigates to verify-email after successful signup with anonymousSessionId", async () => {
 		mockSignUpEmail.mockResolvedValueOnce({ user: { id: "1" } });
 
 		renderSignupForm({ anonymousSessionId: "session-456" });
@@ -172,13 +175,13 @@ describe("SignupForm", () => {
 
 		await waitFor(() => {
 			expect(mockNavigate).toHaveBeenCalledWith({
-				to: "/results/$assessmentSessionId",
-				params: { assessmentSessionId: "session-456" },
+				to: "/verify-email",
+				search: { email: "test@example.com", error: undefined },
 			});
 		});
 	});
 
-	it("navigates to /profile by default after signup", async () => {
+	it("navigates to verify-email by default after signup", async () => {
 		mockSignUpEmail.mockResolvedValueOnce({ user: { id: "1" } });
 
 		renderSignupForm();
@@ -194,11 +197,14 @@ describe("SignupForm", () => {
 		fireEvent.submit(screen.getByRole("button", { name: "Create Account" }));
 
 		await waitFor(() => {
-			expect(mockNavigate).toHaveBeenCalledWith({ to: "/profile" });
+			expect(mockNavigate).toHaveBeenCalledWith({
+				to: "/verify-email",
+				search: { email: "test@example.com", error: undefined },
+			});
 		});
 	});
 
-	it("ignores non-relative redirectTo (open redirect guard)", async () => {
+	it("always navigates to verify-email regardless of redirectTo (open redirect guard)", async () => {
 		mockSignUpEmail.mockResolvedValueOnce({ user: { id: "1" } });
 
 		renderSignupForm({ redirectTo: "https://evil.com" });
@@ -214,8 +220,11 @@ describe("SignupForm", () => {
 		fireEvent.submit(screen.getByRole("button", { name: "Create Account" }));
 
 		await waitFor(() => {
-			// Should fall through to /profile, not navigate to external URL
-			expect(mockNavigate).toHaveBeenCalledWith({ to: "/profile" });
+			// Should always go to verify-email, not navigate to external URL
+			expect(mockNavigate).toHaveBeenCalledWith({
+				to: "/verify-email",
+				search: { email: "test@example.com", error: undefined },
+			});
 		});
 	});
 

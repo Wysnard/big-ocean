@@ -25,7 +25,10 @@ import { and, eq, gt, isNull, ne, or, sql } from "drizzle-orm";
 import { drizzle as drizzleNodePg } from "drizzle-orm/node-postgres";
 import { Context, Effect, Layer, Redacted } from "effect";
 import pg from "pg";
+import { Resend } from "resend";
 import * as authSchema from "../db/drizzle/schema";
+import { renderEmailVerificationEmail } from "../email-templates/email-verification";
+import { renderPasswordResetEmail } from "../email-templates/password-reset";
 
 /**
  * Better Auth instance type — inferred from betterAuth() return.
@@ -203,6 +206,12 @@ export const BetterAuthLive = Layer.effect(
 			}
 		};
 
+		// Create Resend SDK client for auth emails (verification + password reset)
+		// Same Promise-based pattern as Polar — Better Auth callbacks are async, not Effect
+		const resendApiKey = Redacted.value(config.resendApiKey);
+		const resend = new Resend(resendApiKey);
+		const emailFrom = config.emailFromAddress;
+
 		// Create Polar SDK client for the Better Auth plugin
 		const polarToken = Redacted.value(config.polarAccessToken);
 		const polarClient = new Polar({
@@ -338,7 +347,7 @@ export const BetterAuthLive = Layer.effect(
 
 			emailAndPassword: {
 				enabled: true,
-				requireEmailVerification: false,
+				requireEmailVerification: true,
 
 				// NIST 2025: Length-based validation
 				minPasswordLength: 12,
@@ -352,6 +361,47 @@ export const BetterAuthLive = Layer.effect(
 					verify: async (data: { hash: string; password: string }) => {
 						return await bcrypt.compare(data.password, data.hash);
 					},
+				},
+
+				// Fire-and-forget password reset email via Resend (Story 31-7b)
+				// Avoid awaiting to prevent timing attacks (Better Auth docs recommendation)
+				sendResetPassword: async ({ user, url }) => {
+					void resend.emails
+						.send({
+							from: emailFrom,
+							to: user.email,
+							subject: "Reset your password \u2014 big ocean",
+							html: renderPasswordResetEmail({
+								userName: user.name || "",
+								resetUrl: url,
+							}),
+						})
+						.catch((e: unknown) => {
+							const msg = e instanceof Error ? e.message : String(e);
+							logger.error(`Failed to send password reset email to ${user.email}: ${msg}`);
+						});
+				},
+			},
+
+			// Email verification via Resend (Story 31-7b)
+			emailVerification: {
+				sendOnSignUp: true,
+				autoSignInAfterVerification: true,
+				sendVerificationEmail: async ({ user, url }) => {
+					void resend.emails
+						.send({
+							from: emailFrom,
+							to: user.email,
+							subject: "Verify your email \u2014 big ocean",
+							html: renderEmailVerificationEmail({
+								userName: user.name || "",
+								verifyUrl: url,
+							}),
+						})
+						.catch((e: unknown) => {
+							const msg = e instanceof Error ? e.message : String(e);
+							logger.error(`Failed to send verification email to ${user.email}: ${msg}`);
+						});
 				},
 			},
 

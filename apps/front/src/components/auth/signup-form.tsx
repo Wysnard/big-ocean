@@ -49,17 +49,12 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 		try {
 			await signUp.email(email, password, name, anonymousSessionId);
 
-			// Navigate using TanStack Router (matching login form pattern)
-			if (redirectTo?.startsWith("/")) {
-				await navigate({ to: redirectTo });
-			} else if (anonymousSessionId) {
-				await navigate({
-					to: "/results/$assessmentSessionId",
-					params: { assessmentSessionId: anonymousSessionId },
-				});
-			} else {
-				await navigate({ to: "/profile" });
-			}
+			// Redirect to verify-email page (Story 31-7b)
+			// Email verification is required before session creation
+			await navigate({
+				to: "/verify-email",
+				search: { email, error: undefined },
+			});
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : String(err);
 			if (errorMessage.includes("already exists")) {
