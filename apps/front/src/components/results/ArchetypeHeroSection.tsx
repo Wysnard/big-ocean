@@ -3,7 +3,6 @@ import {
 	BIG_FIVE_TRAITS,
 	getTraitColor,
 	getTraitLevelLabel,
-	getTribeGroup,
 } from "@workspace/domain";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
 import { ChevronDown } from "lucide-react";
@@ -69,7 +68,6 @@ export function ArchetypeHeroSection({
 }: ArchetypeHeroSectionProps) {
 	const traitColor = getTraitColor(dominantTrait);
 	const tooltipBaseId = useId();
-	const tribeGroup = getTribeGroup(oceanCode5[0]);
 
 	const resolvedSubtitle =
 		subtitle ??
@@ -127,14 +125,6 @@ export function ArchetypeHeroSection({
 				>
 					{archetypeName}
 				</h1>
-
-				{/* Tribe group label — derived from Openness level */}
-				<p
-					data-testid="tribe-group"
-					className="text-xs font-medium text-foreground/50 uppercase tracking-widest mb-4"
-				>
-					{tribeGroup.fullLabel}
-				</p>
 
 				{/* OCEAN code — each letter as a navigable button with tooltip (AC #2) */}
 				<div

@@ -41,25 +41,6 @@ describe("ArchetypeHeroSection", () => {
 		).toBeInTheDocument();
 	});
 
-	it("renders tribe group label derived from Openness level", () => {
-		renderWithTooltipProvider(<ArchetypeHeroSection {...defaultProps} />);
-		expect(screen.getByTestId("tribe-group")).toHaveTextContent("O-Group: Open-Minded");
-	});
-
-	it("renders G-Group for Moderate Openness", () => {
-		renderWithTooltipProvider(
-			<ArchetypeHeroSection {...defaultProps} oceanCode5={OceanCode5Schema.make("MCEAR")} />,
-		);
-		expect(screen.getByTestId("tribe-group")).toHaveTextContent("G-Group: Grounded");
-	});
-
-	it("renders P-Group for Traditional Openness", () => {
-		renderWithTooltipProvider(
-			<ArchetypeHeroSection {...defaultProps} oceanCode5={OceanCode5Schema.make("TCEAR")} />,
-		);
-		expect(screen.getByTestId("tribe-group")).toHaveTextContent("P-Group: Practical");
-	});
-
 	it("renders OCEAN code letters as buttons with aria-describedby", () => {
 		renderWithTooltipProvider(<ArchetypeHeroSection {...defaultProps} />);
 		const oceanCodeEl = screen.getByTestId("ocean-code");
