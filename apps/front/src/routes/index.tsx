@@ -6,8 +6,10 @@ import { ComparisonTeaserPreview } from "../components/home/ComparisonTeaserPrev
 import { ConversationFlow } from "../components/home/ConversationFlow";
 import { DepthMeter } from "../components/home/DepthMeter";
 import { DepthScrollProvider } from "../components/home/DepthScrollProvider";
+import { FinalCta } from "../components/home/FinalCta";
 import { HeroSection } from "../components/home/HeroSection";
 import { HoroscopeVsPortraitComparison } from "../components/home/HoroscopeVsPortraitComparison";
+import { HowItWorks } from "../components/home/HowItWorks";
 import { MessageGroup } from "../components/home/MessageGroup";
 import {
 	TraitFacetPair,
@@ -17,6 +19,27 @@ import {
 
 export const Route = createFileRoute("/")({
 	component: HomePage,
+	head: () => ({
+		meta: [
+			{
+				title: "big ocean \u2014 Personality portrait through conversation",
+			},
+			{
+				name: "description",
+				content:
+					"A 25-minute conversation with Nerin reveals your personality portrait, OCEAN code, and archetype. Compare with friends. Built on Big Five science.",
+			},
+			{
+				property: "og:title",
+				content: "big ocean \u2014 Not a personality quiz. A conversation.",
+			},
+			{
+				property: "og:description",
+				content:
+					"Talk to Nerin for 25 minutes. Get a portrait of who you are that no test has ever given you.",
+			},
+		],
+	}),
 });
 
 function HomePage() {
@@ -204,7 +227,7 @@ function HomePage() {
 				<MessageGroup>
 					<ChatBubble variant="nerin">
 						<h3>Just a Conversation</h3>
-						<p>Thirty minutes. No account. No wrong answers.</p>
+						<p>About twenty-five minutes. Free. No wrong answers.</p>
 						<p>
 							Just talking&nbsp;&mdash;&nbsp;about things you probably think about anyway. You just
 							don&rsquo;t usually say them out loud.
@@ -212,6 +235,12 @@ function HomePage() {
 					</ChatBubble>
 				</MessageGroup>
 			</ConversationFlow>
+
+			{/* How It Works — scannable 3-step overview */}
+			<HowItWorks />
+
+			{/* Final conversion CTA */}
+			<FinalCta />
 
 			{/* Fixed UI elements */}
 			<DepthMeter />

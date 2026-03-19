@@ -29,16 +29,25 @@ export function HeroSection() {
 				</p>
 
 				<div className="mb-8 font-mono text-[.72rem] tracking-[.05em] text-muted-foreground">
-					30 MIN &middot; NO ACCOUNT &middot; JUST TALKING
+					~25 MIN &middot; FREE &middot; JUST A CONVERSATION
 				</div>
 
-				<Link
-					to="/chat"
-					data-testid="hero-cta"
-					className="inline-flex items-center gap-[10px] rounded-xl bg-gradient-to-r from-primary to-secondary px-[34px] py-[15px] font-heading text-[.95rem] font-semibold text-white transition-[transform,box-shadow] duration-200 hover:translate-y-[-2px] hover:shadow-[0_8px_28px_rgba(255,0,128,.28)]"
-				>
-					Begin Your Dive &darr;
-				</Link>
+				<div className="flex flex-wrap items-center gap-3 max-[900px]:justify-center">
+					<Link
+						to="/chat"
+						data-testid="hero-cta"
+						className="inline-flex min-h-[44px] items-center gap-[10px] rounded-xl bg-gradient-to-r from-primary to-secondary px-[34px] py-[15px] font-heading text-[.95rem] font-semibold text-white transition-[transform,box-shadow] duration-200 hover:translate-y-[-2px] hover:shadow-[0_8px_28px_rgba(255,0,128,.28)]"
+					>
+						Start your conversation with Nerin &rarr;
+					</Link>
+					<a
+						href="#conversation"
+						data-testid="hero-scroll-cta"
+						className="inline-flex min-h-[44px] items-center gap-[6px] rounded-xl border border-border px-[24px] py-[13px] font-heading text-[.88rem] font-medium text-muted-foreground transition-colors duration-200 hover:border-foreground/30 hover:text-foreground"
+					>
+						See how it works &darr;
+					</a>
+				</div>
 			</div>
 
 			{/* Right: OCEAN shapes with breathing animation */}
