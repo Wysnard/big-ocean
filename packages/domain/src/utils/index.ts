@@ -28,3 +28,4 @@ export {
 	getTraitColor,
 	getTraitGradient,
 } from "./trait-colors";
+export { getTribeGroup, type TribeGroup } from "./tribe-group";

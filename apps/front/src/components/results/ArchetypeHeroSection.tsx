@@ -1,8 +1,22 @@
 import type { OceanCode5, TraitName } from "@workspace/domain";
-import { BIG_FIVE_TRAITS, getTraitColor } from "@workspace/domain";
+import {
+	BIG_FIVE_TRAITS,
+	getTraitColor,
+	getTraitLevelLabel,
+} from "@workspace/domain";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
 import { ChevronDown } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { GeometricSignature } from "../ocean-shapes/GeometricSignature";
+
+/** Capitalized trait labels for tooltip display */
+const TRAIT_DISPLAY_NAMES: Record<TraitName, string> = {
+	openness: "Openness",
+	conscientiousness: "Conscientiousness",
+	extraversion: "Extraversion",
+	agreeableness: "Agreeableness",
+	neuroticism: "Neuroticism",
+};
 
 interface ArchetypeHeroSectionProps {
 	archetypeName: string;
@@ -53,6 +67,7 @@ export function ArchetypeHeroSection({
 	showScrollIndicator,
 }: ArchetypeHeroSectionProps) {
 	const traitColor = getTraitColor(dominantTrait);
+	const tooltipBaseId = useId();
 
 	const resolvedSubtitle =
 		subtitle ??
@@ -111,18 +126,35 @@ export function ArchetypeHeroSection({
 					{archetypeName}
 				</h1>
 
-				{/* OCEAN code — each letter colored by its trait */}
-				<p
+				{/* OCEAN code — each letter as a navigable button with tooltip (AC #2) */}
+				<div
 					data-testid="ocean-code"
 					title={`OCEAN personality code: ${oceanCode5}`}
-					className="font-mono text-3xl md:text-4xl lg:text-5xl tracking-[0.3em]"
+					className="font-mono text-3xl md:text-4xl lg:text-5xl tracking-[0.3em] flex items-center justify-center gap-1"
 				>
-					{oceanCode5.split("").map((letter, i) => (
-						<span key={BIG_FIVE_TRAITS[i]} style={{ color: getTraitColor(BIG_FIVE_TRAITS[i]) }}>
-							{letter}
-						</span>
-					))}
-				</p>
+					{oceanCode5.split("").map((letter, i) => {
+						const traitName = BIG_FIVE_TRAITS[i];
+						const levelLabel = getTraitLevelLabel(traitName, letter);
+						const tooltipId = `${tooltipBaseId}-trait-${traitName}`;
+						return (
+							<Tooltip key={traitName}>
+								<TooltipTrigger asChild>
+									<button
+										type="button"
+										aria-describedby={tooltipId}
+										className="min-w-11 min-h-11 inline-flex items-center justify-center rounded-md hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+										style={{ color: getTraitColor(traitName) }}
+									>
+										{letter}
+									</button>
+								</TooltipTrigger>
+								<TooltipContent id={tooltipId} side="bottom">
+									{TRAIT_DISPLAY_NAMES[traitName]}: {levelLabel}
+								</TooltipContent>
+							</Tooltip>
+						);
+					})}
+				</div>
 
 				{/* Confidence — tertiary metadata pill */}
 				{overallConfidence != null && (

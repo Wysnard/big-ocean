@@ -260,8 +260,8 @@ export { RelationshipInvitationRepository } from "./repositories/relationship-in
 // Resend email repository (Story 31-7)
 export {
 	EmailError,
-	ResendEmailRepository,
 	type ResendEmailMethods,
+	ResendEmailRepository,
 	type SendEmailInput,
 } from "./repositories/resend-email.repository";
 // Waitlist repository (Story 15.3)
@@ -507,10 +507,12 @@ export {
 	getFacetLevel,
 	getTraitColor,
 	getTraitGradient,
+	getTribeGroup,
 	lookupArchetype,
 	mapEnergyBand,
 	mapTellingBand,
 	type TraitConfidence,
+	type TribeGroup,
 	toFacetDisplayName,
 } from "./utils/index";
 // Score computation (Story 11.3)
