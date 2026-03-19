@@ -535,9 +535,9 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-31: in-progress
   31-1-nerin-greeting-and-onboarding-message: done
-  31-2-nerin-character-quality-observations-transitions-and-character-bible: backlog
+  31-2-nerin-character-quality-observations-transitions-and-character-bible: pr-ready
   31-3-conversation-closing-exchange: backlog
-  31-4-depth-meter-and-progress-milestones: backlog
+  31-4-depth-meter-and-progress-milestones: pr-ready
   31-5-session-resume: backlog
   31-6-cost-guard: backlog
   31-7-email-infrastructure-and-drop-off-re-engagement: done
@@ -554,7 +554,7 @@ development_status:
   32-0-remove-teaser-portrait: done
   32-0b-ocean-code-letter-mapping-update: done
   32-1-results-page-identity-section: done
-  32-2-results-page-scientific-section: backlog
+  32-2-results-page-scientific-section: pr-ready
   32-3-polar-integration-and-purchase-events: done
   32-4-pwyw-modal-and-portrait-unlock: backlog
   32-5-full-portrait-display: backlog
@@ -620,7 +620,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-37: in-progress
   37-1-homepage-narrative-and-layout: done
-  37-2-founder-portrait-bridge-and-relationship-cta: backlog
+  37-2-founder-portrait-bridge-and-relationship-cta: pr-ready
   epic-37-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────

@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 2
-parallelism_step_name: "Area Foundations — Account, Nerin, Results, Homepage, Auth Email"
-baseline_commit: "f6d879e596824f60cb48743a9308ed4ca6d2d654"
+parallelism_step: 3
+parallelism_step_name: "Second Layer — Character, Results Depth, Chat UI"
+baseline_commit: "360d7fe826e18b31da1488782fbda4d03c5040bb"
 created: "2026-03-19"
-last_updated: "2026-03-19T12:00:00"
+last_updated: "2026-03-19T14:00:00"
 
 # Optional context documents discovered
 context_docs:
@@ -14,45 +14,31 @@ context_docs:
 
 # Stories in this step
 stories:
-  30-1-profile-visibility-controls:
+  31-2-nerin-character-quality-observations-transitions-and-character-bible:
     status: done
     mode: "parallel"
-    notes: "Account settings: visibility toggle"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/151"
-    dev_branch: "feat/story-30-1-profile-visibility-controls"
+    notes: "After 31-1. Character bible + observation patterns"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/156"
+    dev_branch: "feat/story-31-2-nerin-character-quality-observations-transitions-and-character-bible"
     error: null
-  31-1-nerin-greeting-and-onboarding-message:
+  32-2-results-page-scientific-section:
     status: done
     mode: "parallel"
-    notes: "Nerin pipeline: greeting refinement"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/148"
-    dev_branch: "feat/story-31-1-nerin-greeting-and-onboarding-message"
+    notes: "After 32-1. Radar chart, trait cards, facet detail zones"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/157"
+    dev_branch: "feat/story-32-2-results-page-scientific-section"
     error: null
-  31-7b-wire-resend-into-better-auth:
+  31-4-depth-meter-and-progress-milestones:
     status: done
     mode: "parallel"
-    notes: "NEW: Email verification + password reset via Resend callbacks in Better Auth"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/153"
-    dev_branch: "feat/story-31-7b-wire-resend-into-better-auth"
+    notes: "Frontend-only chat UI component"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/154"
+    dev_branch: "feat/story-31-4-depth-meter-and-progress-milestones"
     error: null
-  32-1-results-page-identity-section:
+  37-2-founder-portrait-bridge-and-relationship-cta:
     status: done
     mode: "parallel"
-    notes: "Results page: hero/identity section"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/150"
-    dev_branch: "feat/story-32-1-results-page-identity-section"
-    error: null
-  32-7b-complete-ocean-shape-library:
-    status: done
-    mode: "parallel"
-    notes: "NEW: 10 missing SVG shapes + GeometricSignature refactor + ArchetypeCardTemplate refactor"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/152"
-    dev_branch: "feat/story-32-7b-complete-ocean-shape-library"
-    error: null
-  37-1-homepage-narrative-and-layout:
-    status: done
-    mode: "parallel"
-    notes: "Homepage: independent page"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/149"
-    dev_branch: "feat/story-37-1-homepage-narrative-and-layout"
+    notes: "After 37-1. Homepage section"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/155"
+    dev_branch: "feat/story-37-2-founder-portrait-bridge-and-relationship-cta"
     error: null
