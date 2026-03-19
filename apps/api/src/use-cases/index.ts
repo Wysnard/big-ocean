@@ -11,6 +11,7 @@ export {
 	type CreateShareableProfileOutput,
 	createShareableProfile,
 } from "./create-shareable-profile.use-case";
+export { deleteAccount } from "./delete-account.use-case";
 export {
 	type GenerateResultsInput,
 	generateResults,

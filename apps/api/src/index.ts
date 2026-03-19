@@ -46,15 +46,17 @@ import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories
 import { NerinAgentAnthropicRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.anthropic.repository";
 import { NerinAgentMockRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.mock.repository";
 import { RedisIoRedisRepositoryLive } from "@workspace/infrastructure/repositories/redis.ioredis.repository";
+import { UserAccountDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/user-account.drizzle.repository";
 import { Cause, Context, Effect, Layer } from "effect";
+import { AccountGroupLive } from "./handlers/account";
 import { AssessmentGroupLive } from "./handlers/assessment";
+import { EmailGroupLive } from "./handlers/email";
 import { EvidenceGroupLive } from "./handlers/evidence";
 import { HealthGroupLive } from "./handlers/health";
 import { PortraitGroupLive } from "./handlers/portrait";
 import { ProfileGroupLive } from "./handlers/profile";
 import { PurchaseGroupLive } from "./handlers/purchase";
 import { RelationshipGroupLive, RelationshipPublicGroupLive } from "./handlers/relationship";
-import { EmailGroupLive } from "./handlers/email";
 import { WaitlistGroupLive } from "./handlers/waitlist";
 import { AuthMiddlewareLive, OptionalAuthMiddlewareLive } from "./middleware/auth.middleware";
 import { createBetterAuthHandler } from "./middleware/better-auth";
@@ -155,6 +157,7 @@ const RepositoryLayers = Layer.mergeAll(
 	RelationshipAnalysisDrizzleRepositoryLive,
 	RelationshipAnalysisGeneratorLayer,
 	RelationshipInvitationDrizzleRepositoryLive,
+	UserAccountDrizzleRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
 	ResendEmailResendRepositoryLive,
 );
@@ -181,6 +184,7 @@ const AuthMiddlewareLayer = Layer.mergeAll(AuthMiddlewareLive, OptionalAuthMiddl
 
 const HttpGroupsLive = Layer.mergeAll(
 	HealthGroupLive,
+	AccountGroupLive,
 	AssessmentGroupLive,
 	ProfileGroupLive,
 	PortraitGroupLive,

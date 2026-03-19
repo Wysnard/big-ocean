@@ -12,11 +12,14 @@
 export * from "./errors";
 // HTTP API Composition
 export { BigOceanApi } from "./http/api";
-// Email HTTP Schemas and Types (Story 31-7)
-export { EmailGroup } from "./http/groups/email";
+// Account HTTP Schemas and Types (Story 30-2)
+export * from "./http/groups/account";
+export { AccountGroup } from "./http/groups/account";
 // HTTP Schemas and Types
 export * from "./http/groups/assessment";
 export { AssessmentGroup } from "./http/groups/assessment";
+// Email HTTP Schemas and Types (Story 31-7)
+export { EmailGroup } from "./http/groups/email";
 // Evidence HTTP Schemas and Types
 export * from "./http/groups/evidence";
 export { EvidenceGroup } from "./http/groups/evidence";

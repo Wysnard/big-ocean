@@ -5,13 +5,15 @@
  * Provides profile visibility controls and account settings.
  */
 
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { AccountDeletionSection } from "../components/settings/AccountDeletionSection";
 import { ProfileVisibilitySection } from "../components/settings/ProfileVisibilitySection";
+import { useDeleteAccount } from "../hooks/use-account";
 import { useGetResults, useListAssessments } from "../hooks/use-assessment";
-import { useToggleVisibility } from "../hooks/use-profile";
 import { useAuth } from "../hooks/use-auth";
-import { getSession } from "../lib/auth-client";
+import { useToggleVisibility } from "../hooks/use-profile";
+import { getSession, signOut } from "../lib/auth-client";
 
 export const Route = createFileRoute("/settings")({
 	beforeLoad: async () => {
@@ -25,8 +27,10 @@ export const Route = createFileRoute("/settings")({
 
 function SettingsPage() {
 	const { user } = useAuth();
+	const navigate = useNavigate();
 	const { data: assessmentData, isLoading: isAssessmentsLoading } = useListAssessments(true);
 	const toggleVisibility = useToggleVisibility();
+	const deleteAccountMutation = useDeleteAccount();
 
 	// Find the completed session
 	const completedSession = assessmentData?.sessions.find((s) => s.status === "completed");
@@ -40,6 +44,12 @@ function SettingsPage() {
 	// Derive profile state from results data
 	const publicProfileId = results?.publicProfileId ?? null;
 	const isPublic = isPublicOverride ?? results?.isPublic ?? false;
+
+	const handleDeleteAccount = async () => {
+		await deleteAccountMutation.mutateAsync();
+		await signOut();
+		navigate({ to: "/" });
+	};
 
 	const handleToggleVisibility = async () => {
 		if (!publicProfileId) return;
@@ -89,6 +99,12 @@ function SettingsPage() {
 							onToggleVisibility={handleToggleVisibility}
 						/>
 					)}
+
+					{/* Account deletion — always visible for authenticated users */}
+					<AccountDeletionSection
+						onDelete={handleDeleteAccount}
+						isDeleting={deleteAccountMutation.isPending}
+					/>
 				</div>
 			</div>
 		</div>
