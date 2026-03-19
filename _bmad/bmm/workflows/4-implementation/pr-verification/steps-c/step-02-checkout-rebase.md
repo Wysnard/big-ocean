@@ -2,7 +2,7 @@
 name: 'step-02-checkout-rebase'
 description: 'Checkout PR branch and rebase onto latest base with cascade-aware conflict resolution'
 
-nextStepFile: './step-03-e2e-testing.md'
+nextStepFile: './step-02b-check-comments.md'
 finalStepFile: './step-06-summary.md'
 stateFile: '{output_folder}/pr-verification-state.yaml'
 ---

@@ -64,8 +64,8 @@ gh pr checks [prNumber]
 ```
 
 **If CI checks are pending:**
-Report: "CI checks still running. Waiting..."
-Wait for CI to complete (poll with `gh pr checks` at reasonable intervals).
+Report: "CI checks still running. Waiting 2 min 30 sec for initial run..."
+Wait 2 minutes 30 seconds before the first poll, then poll with `gh pr checks` every 15 seconds until checks complete or fail.
 
 **If CI checks pass:**
 Report: "CI checks passed. ✓"
