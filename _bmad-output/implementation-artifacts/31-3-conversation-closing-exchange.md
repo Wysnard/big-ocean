@@ -1,6 +1,6 @@
 # Story 31-3: Conversation Closing Exchange
 
-Status: ready-for-dev
+Status: done
 
 <!-- Origin: Epic 2 (Conversational Assessment & Drop-off Recovery), Story 2.3 in epics.md -->
 <!-- Phase 7, Epic 31, Story 3 -->
