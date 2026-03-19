@@ -21,6 +21,7 @@ import { Route as RelationshipAnalysisIdRouteImport } from "./routes/relationshi
 import { Route as ResetPasswordRouteImport } from "./routes/reset-password";
 import { Route as ResultsRouteImport } from "./routes/results";
 import { Route as ResultsAssessmentSessionIdRouteImport } from "./routes/results/$assessmentSessionId";
+import { Route as SettingsRouteImport } from "./routes/settings";
 import { Route as SignupRouteImport } from "./routes/signup";
 import { Route as VerifyEmailRouteImport } from "./routes/verify-email";
 
@@ -32,6 +33,11 @@ const VerifyEmailRoute = VerifyEmailRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
 	id: "/signup",
 	path: "/signup",
+	getParentRoute: () => rootRouteImport,
+} as any);
+const SettingsRoute = SettingsRouteImport.update({
+	id: "/settings",
+	path: "/settings",
 	getParentRoute: () => rootRouteImport,
 } as any);
 const ResultsRoute = ResultsRouteImport.update({
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
 	"/profile": typeof ProfileRoute;
 	"/reset-password": typeof ResetPasswordRoute;
 	"/results": typeof ResultsRouteWithChildren;
+	"/settings": typeof SettingsRoute;
 	"/signup": typeof SignupRoute;
 	"/verify-email": typeof VerifyEmailRoute;
 	"/invite/$token": typeof InviteTokenRoute;
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
 	"/profile": typeof ProfileRoute;
 	"/reset-password": typeof ResetPasswordRoute;
 	"/results": typeof ResultsRouteWithChildren;
+	"/settings": typeof SettingsRoute;
 	"/signup": typeof SignupRoute;
 	"/verify-email": typeof VerifyEmailRoute;
 	"/invite/$token": typeof InviteTokenRoute;
@@ -136,6 +144,7 @@ export interface FileRoutesById {
 	"/profile": typeof ProfileRoute;
 	"/reset-password": typeof ResetPasswordRoute;
 	"/results": typeof ResultsRouteWithChildren;
+	"/settings": typeof SettingsRoute;
 	"/signup": typeof SignupRoute;
 	"/verify-email": typeof VerifyEmailRoute;
 	"/invite/$token": typeof InviteTokenRoute;
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
 		| "/profile"
 		| "/reset-password"
 		| "/results"
+		| "/settings"
 		| "/signup"
 		| "/verify-email"
 		| "/invite/$token"
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
 		| "/profile"
 		| "/reset-password"
 		| "/results"
+		| "/settings"
 		| "/signup"
 		| "/verify-email"
 		| "/invite/$token"
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
 		| "/profile"
 		| "/reset-password"
 		| "/results"
+		| "/settings"
 		| "/signup"
 		| "/verify-email"
 		| "/invite/$token"
@@ -203,6 +215,7 @@ export interface RootRouteChildren {
 	ProfileRoute: typeof ProfileRoute;
 	ResetPasswordRoute: typeof ResetPasswordRoute;
 	ResultsRoute: typeof ResultsRouteWithChildren;
+	SettingsRoute: typeof SettingsRoute;
 	SignupRoute: typeof SignupRoute;
 	VerifyEmailRoute: typeof VerifyEmailRoute;
 	InviteTokenRoute: typeof InviteTokenRoute;
@@ -225,6 +238,13 @@ declare module "@tanstack/react-router" {
 			path: "/signup";
 			fullPath: "/signup";
 			preLoaderRoute: typeof SignupRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/settings": {
+			id: "/settings";
+			path: "/settings";
+			fullPath: "/settings";
+			preLoaderRoute: typeof SettingsRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
 		"/results": {
@@ -332,6 +352,7 @@ const rootRouteChildren: RootRouteChildren = {
 	ProfileRoute: ProfileRoute,
 	ResetPasswordRoute: ResetPasswordRoute,
 	ResultsRoute: ResultsRouteWithChildren,
+	SettingsRoute: SettingsRoute,
 	SignupRoute: SignupRoute,
 	VerifyEmailRoute: VerifyEmailRoute,
 	InviteTokenRoute: InviteTokenRoute,

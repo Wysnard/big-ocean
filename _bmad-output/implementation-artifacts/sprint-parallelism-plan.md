@@ -1,10 +1,10 @@
 # Sprint Parallelism Plan
-Generated: 2026-03-19
+Generated: 2026-03-19 (refreshed)
 
 > Phase 7: Product Completeness & Launch Readiness
-> Source: epics.md (9 epics, 38 stories)
+> Source: epics.md (9 epics, 41 stories incl. sub-stories)
 > Only forward-looking stories included — all prior phases complete.
-> Step 1 (Infrastructure Foundations) complete — 5 PRs merged 2026-03-18.
+> Steps 1-2 complete (11 stories merged). Step 3 unlocked.
 >
 > Conservative parallelism: stories sharing a page, route, or domain area
 > are placed in separate steps even when technically independent.
@@ -12,17 +12,8 @@ Generated: 2026-03-19
 ## Step 1: COMPLETE (2026-03-18)
 All 5 stories merged: 32-0b, 32-0, 32-3, 31-7, 32-7.
 
-## Step 2: Area Foundations — Account, Nerin, Results, Homepage, Auth Email
-| Story | Mode | Notes |
-|-------|------|-------|
-| 30-1-profile-visibility-controls | parallel | Account settings: visibility toggle |
-| 31-1-nerin-greeting-and-onboarding-message | parallel | Nerin pipeline: greeting refinement |
-| 31-7b-wire-resend-into-better-auth | parallel | NEW: Email verification + password reset via Resend callbacks in Better Auth. Touches login form, adds 3 new routes (/forgot-password, /reset-password, /verify-email), modifies signup redirect. No shared files with other Step 2 stories |
-| 32-1-results-page-identity-section | parallel | Results page: hero/identity section |
-| 32-7b-complete-ocean-shape-library | parallel | NEW: 10 missing SVG shapes + GeometricSignature refactor + ArchetypeCardTemplate refactor. Frontend-only, no shared files with other Step 2 stories |
-| 37-1-homepage-narrative-and-layout | parallel | Homepage: independent page |
-
-**Gate:** All stories above must be done before proceeding.
+## Step 2: COMPLETE (2026-03-19)
+All 6 stories merged: 30-1, 31-1, 31-7b, 32-1, 32-7b, 37-1.
 
 ## Step 3: Second Layer — Character, Results Depth, Chat UI
 | Story | Mode | Notes |
@@ -115,8 +106,8 @@ All 5 stories merged: 32-0b, 32-0, 32-3, 31-7, 32-7.
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **11 steps**, Step 1 complete, 3-5 stories per remaining step
-- **New in this refresh:** Story 31-7b (Resend + Better Auth) added to Step 2
+- **11 steps** — Steps 1-2 complete (11 merged), Step 3 now unlocked
+- **28 stories remaining** (Steps 3-11)
 - **Critical path:** 32-3 (done) → 34-1 (Step 6) → 34-2 (Step 7) → 34-3 (Step 8) → 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
 - **Key enablers:** Polar (32-3, done) and Email Infrastructure (31-7, done) — both landed in Step 1
 - **No shared-file conflicts within any step** — stories in the same step touch different pages/domains
