@@ -22,7 +22,7 @@
  * ```
  */
 import { AppConfig, type AppConfigService } from "@workspace/domain";
-import { Config, type ConfigError, Effect, Layer } from "effect";
+import { Config, type ConfigError, Effect, Layer, Redacted } from "effect";
 
 /**
  * Configuration schema - defines how to load each variable
@@ -149,7 +149,7 @@ const configSchema = Config.all({
 
 	// Email Infrastructure (Story 31-7)
 	resendApiKey: Config.redacted("RESEND_API_KEY").pipe(
-		Config.withDefault("not-configured" as any),
+		Config.withDefault(Redacted.make("not-configured")),
 	),
 	emailFromAddress: Config.string("EMAIL_FROM_ADDRESS").pipe(
 		Config.withDefault("noreply@bigocean.dev"),
