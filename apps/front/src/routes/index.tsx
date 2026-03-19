@@ -7,10 +7,12 @@ import { ConversationFlow } from "../components/home/ConversationFlow";
 import { DepthMeter } from "../components/home/DepthMeter";
 import { DepthScrollProvider } from "../components/home/DepthScrollProvider";
 import { FinalCta } from "../components/home/FinalCta";
+import { FounderPortraitExcerpt } from "../components/home/FounderPortraitExcerpt";
 import { HeroSection } from "../components/home/HeroSection";
 import { HoroscopeVsPortraitComparison } from "../components/home/HoroscopeVsPortraitComparison";
 import { HowItWorks } from "../components/home/HowItWorks";
 import { MessageGroup } from "../components/home/MessageGroup";
+import { RelationshipCta } from "../components/home/RelationshipCta";
 import {
 	TraitFacetPair,
 	TraitStackEmbed,
@@ -160,7 +162,7 @@ function HomePage() {
 					<ChatBubble variant="nerin">That&rsquo;s actually the person who built big-ocean.</ChatBubble>
 				</MessageGroup>
 
-				{/* Beat 10b — Vincent: Founder's personal share */}
+				{/* Beat 10b — Vincent: Founder's personal share + portrait excerpt */}
 				<MessageGroup>
 					<ChatBubble variant="vincent">
 						I&rsquo;d taken every test out there. MBTI, Enneagram, even a few I&rsquo;m embarrassed to
@@ -170,7 +172,8 @@ function HomePage() {
 						carrying without words for them.
 						<br />
 						<br />
-						That&rsquo;s why I built this.
+						That&rsquo;s why I built this. Here&rsquo;s a piece of what Nerin wrote about me:
+						<FounderPortraitExcerpt />
 					</ChatBubble>
 				</MessageGroup>
 
@@ -199,7 +202,7 @@ function HomePage() {
 					</ChatBubble>
 				</MessageGroup>
 
-				{/* Beat 12 — Nerin: Social comparison */}
+				{/* Beat 12 — Nerin: Social comparison + relationship CTA */}
 				<MessageGroup>
 					<ChatBubble variant="nerin">
 						<h3>See How You Connect</h3>
@@ -215,6 +218,7 @@ function HomePage() {
 							Neither was wrong&nbsp;&mdash;&nbsp;they just literally see &ldquo;a good trip&rdquo; as
 							opposite things.
 						</p>
+						<RelationshipCta />
 					</ChatBubble>
 				</MessageGroup>
 
