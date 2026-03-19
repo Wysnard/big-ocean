@@ -1,26 +1,38 @@
 import { vi } from "vitest";
 
 /**
- * Simulates the 3 greeting messages that the backend now persists during startAssessment.
+ * Simulates the 5 greeting messages that the backend persists during startAssessment.
  * These are returned by the resume endpoint for new sessions.
+ * (4 greeting bubbles + 1 opening question)
  */
 export const SERVER_GREETING_MESSAGES = [
 	{
 		role: "assistant" as const,
-		content:
-			"Hey there! I'm Nerin — I'm here to help you understand your personality through conversation. No multiple choice, no right answers, just us talking.",
+		content: "Welcome to Big Ocean — a diving shop where the ocean we explore is you 🌊",
 		timestamp: "2026-02-01T10:00:00Z",
 	},
 	{
 		role: "assistant" as const,
 		content:
-			"Here's the thing: the more openly and honestly you share, the more accurate and meaningful your insights will be. This is a judgment-free space — be as real as you'd like. The honest answer, even if it's messy or contradictory, is always more valuable than the polished one.",
+			"I'm Nerin, think of me as your dive master 👋 We'll talk for a bit, and by the end I'll write you a diving log — what waters we've been to, what I found beneath the surface, and what I think it means.",
 		timestamp: "2026-02-01T10:00:01Z",
 	},
 	{
 		role: "assistant" as const,
-		content: "If your closest friend described you in three words, what would they say?",
+		content:
+			"This isn't therapy, and there are no right answers — just be honest. I keep notes as we go so the log is precise — nothing leaves this dive.",
 		timestamp: "2026-02-01T10:00:02Z",
+	},
+	{
+		role: "assistant" as const,
+		content:
+			"The messy, contradictory, real stuff is what I work with best — stories beat theories every time. If a question doesn't quite fit, go wherever it takes you 🤿",
+		timestamp: "2026-02-01T10:00:03Z",
+	},
+	{
+		role: "assistant" as const,
+		content: "If your closest friend described you in three words, what would they say?",
+		timestamp: "2026-02-01T10:00:04Z",
 	},
 ];
 
@@ -40,7 +52,7 @@ export function setupDefaultMocks(mockResumeSession: ReturnType<typeof vi.fn>) {
 		})),
 	});
 
-	// Default mock: new session with 3 server-persisted greeting messages
+	// Default mock: new session with 5 server-persisted greeting messages
 	mockResumeSession.mockReturnValue({
 		data: {
 			messages: SERVER_GREETING_MESSAGES,

@@ -68,39 +68,42 @@ describe("startAssessment Use Case", () => {
 
 			expect(mockLoggerRepo.info).toHaveBeenCalledWith("Anonymous assessment started", {
 				sessionId: "session_anon_123",
-				greetingCount: 2,
+				greetingCount: 5,
 			});
 		});
 
 		describe("Greeting message persistence", () => {
-			it("should save exactly 2 greeting messages to the database", async () => {
+			it("should save exactly 5 greeting messages to the database", async () => {
 				const testLayer = createTestLayer();
 
 				await Effect.runPromise(startAnonymousAssessment().pipe(Effect.provide(testLayer)));
 
-				expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledTimes(2);
+				expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledTimes(5);
 			});
 
-			it("should save the fixed greeting message and opening question in order", async () => {
+			it("should save greeting bubbles and opening question in order", async () => {
 				const testLayer = createTestLayer();
 
 				await Effect.runPromise(startAnonymousAssessment().pipe(Effect.provide(testLayer)));
 
-				const firstCall = mockAssessmentMessageRepo.saveMessage.mock.calls[0];
-				const secondCall = mockAssessmentMessageRepo.saveMessage.mock.calls[1];
+				const calls = mockAssessmentMessageRepo.saveMessage.mock.calls;
 
-				expect(firstCall[2]).toBe(GREETING_MESSAGES[0]);
-				expect(OPENING_QUESTIONS).toContain(secondCall[2]);
+				// First 4 calls are greeting bubbles
+				for (let i = 0; i < GREETING_MESSAGES.length; i++) {
+					expect(calls[i][2]).toBe(GREETING_MESSAGES[i]);
+				}
+				// Last call is the opening question
+				expect(OPENING_QUESTIONS).toContain(calls[4][2]);
 			});
 
-			it("should return 2 messages with role and content in the response", async () => {
+			it("should return 5 messages with role and content in the response", async () => {
 				const testLayer = createTestLayer();
 
 				const result = await Effect.runPromise(
 					startAnonymousAssessment().pipe(Effect.provide(testLayer)),
 				);
 
-				expect(result.messages).toHaveLength(2);
+				expect(result.messages).toHaveLength(5);
 				for (const msg of result.messages) {
 					expect(msg.role).toBe("assistant");
 					expect(typeof msg.content).toBe("string");
@@ -115,8 +118,12 @@ describe("startAssessment Use Case", () => {
 					startAnonymousAssessment().pipe(Effect.provide(testLayer)),
 				);
 
-				expect(result.messages[0].content).toBe(GREETING_MESSAGES[0]);
-				expect(OPENING_QUESTIONS).toContain(result.messages[1].content);
+				// First 4 messages are greeting bubbles
+				for (let i = 0; i < GREETING_MESSAGES.length; i++) {
+					expect(result.messages[i].content).toBe(GREETING_MESSAGES[i]);
+				}
+				// Last message is the opening question
+				expect(OPENING_QUESTIONS).toContain(result.messages[4].content);
 			});
 		});
 

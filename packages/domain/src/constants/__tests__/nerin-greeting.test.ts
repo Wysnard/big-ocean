@@ -3,24 +3,55 @@ import { GREETING_MESSAGES, OPENING_QUESTIONS, pickOpeningQuestion } from "../ne
 
 describe("nerin-greeting", () => {
 	describe("GREETING_MESSAGES", () => {
-		it("has exactly 1 fixed message", () => {
-			expect(GREETING_MESSAGES).toHaveLength(1);
+		it("has exactly 4 fixed greeting bubbles", () => {
+			expect(GREETING_MESSAGES).toHaveLength(4);
 		});
 
-		it("message 1 is the exact Prototype K verbatim text", () => {
-			expect(GREETING_MESSAGES[0]).toBe(
-				"Hey — I'm Nerin 👋 We're about to have a conversation, and by the end I'll write you something about what I noticed. No quizzes, no right answers — just talk honestly and the messy, contradictory stuff is welcome 🤿",
-			);
+		it("bubble 1 introduces Big Ocean as a diving shop", () => {
+			expect(GREETING_MESSAGES[0]).toContain("Big Ocean");
+			expect(GREETING_MESSAGES[0]).toContain("diving shop");
 		});
 
-		it("message 1 introduces Nerin and creates portrait anticipation", () => {
-			expect(GREETING_MESSAGES[0]).toContain("Nerin");
-			expect(GREETING_MESSAGES[0]).toContain("write you something");
-			expect(GREETING_MESSAGES[0]).not.toContain("personality dive master");
+		it("bubble 2 introduces Nerin as dive master and creates diving log anticipation", () => {
+			expect(GREETING_MESSAGES[1]).toContain("Nerin");
+			expect(GREETING_MESSAGES[1]).toContain("dive master");
+			expect(GREETING_MESSAGES[1]).toContain("diving log");
 		});
 
-		it("message 1 includes messy/contradictory permission", () => {
-			expect(GREETING_MESSAGES[0]).toContain("messy, contradictory");
+		it("bubble 3 includes 'not therapy' framing (FR8)", () => {
+			expect(GREETING_MESSAGES[2].toLowerCase()).toContain("therapy");
+		});
+
+		it("bubble 3 includes honesty cue", () => {
+			expect(GREETING_MESSAGES[2].toLowerCase()).toContain("honest");
+		});
+
+		it("bubble 3 includes data storage notice (FR52)", () => {
+			const msg = GREETING_MESSAGES[2].toLowerCase();
+			const hasStorageNotice =
+				msg.includes("keep") || msg.includes("store") || msg.includes("save") || msg.includes("note");
+			expect(hasStorageNotice).toBe(true);
+		});
+
+		it("bubble 4 includes encouragement cues (FR54)", () => {
+			const msg = GREETING_MESSAGES[3].toLowerCase();
+			// Should encourage real/authentic sharing
+			expect(msg).toContain("messy");
+			// Should encourage concrete stories over abstract answers
+			expect(msg).toContain("stories");
+		});
+
+		it("bubble 4 encourages going beyond the question", () => {
+			expect(GREETING_MESSAGES[3]).toContain("go wherever it takes you");
+		});
+
+		it("does not contain forbidden words as standalone terms", () => {
+			const forbidden = ["assessment", "diagnostic", "evaluation", "personality", "test", "quiz"];
+			for (const msg of GREETING_MESSAGES) {
+				for (const word of forbidden) {
+					expect(msg.toLowerCase()).not.toContain(word);
+				}
+			}
 		});
 
 		it("does not contain instructional language", () => {
@@ -46,7 +77,7 @@ describe("nerin-greeting", () => {
 		it("does not contain the beach question", () => {
 			for (const q of OPENING_QUESTIONS) {
 				expect(q).not.toContain("at the beach");
-				expect(q).not.toContain("🌊");
+				expect(q).not.toContain("\u{1F30A}");
 			}
 		});
 
@@ -59,6 +90,15 @@ describe("nerin-greeting", () => {
 			const boringQuestion = OPENING_QUESTIONS.find((q) => q.includes("boring true thing"));
 			expect(boringQuestion).toBeDefined();
 			expect(boringQuestion).toContain("most interesting");
+		});
+
+		it("does not contain forbidden words", () => {
+			const forbidden = ["assessment", "test", "diagnostic", "personality", "quiz", "evaluation"];
+			for (const q of OPENING_QUESTIONS) {
+				for (const word of forbidden) {
+					expect(q.toLowerCase()).not.toContain(word);
+				}
+			}
 		});
 	});
 

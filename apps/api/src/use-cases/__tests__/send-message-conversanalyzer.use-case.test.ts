@@ -35,7 +35,7 @@ describe("sendMessage Use Case", () => {
 	describe("Conversanalyzer integration (Story 10.2)", () => {
 		it.effect("should trigger conversanalyzer for post-cold-start messages (AC: #1)", () =>
 			Effect.gen(function* () {
-				// Post-cold-start: 3 user messages (> greeting count of 2)
+				// Post-cold-start: 3 user messages (past initial greeting exchange)
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 
 				const result = yield* sendMessage({
