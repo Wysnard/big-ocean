@@ -1,10 +1,10 @@
 # Sprint Parallelism Plan
-Generated: 2026-03-19 (refreshed, re-validated)
+Generated: 2026-03-19 (refreshed — Step 3 complete)
 
 > Phase 7: Product Completeness & Launch Readiness
 > Source: epics.md (9 epics, 41 stories incl. sub-stories)
 > Only forward-looking stories included — all prior phases complete.
-> Steps 1-2 complete (11 stories merged). Step 3 nearly complete (1 merged, 3 pr-ready).
+> Steps 1-3 complete (15 stories merged). Step 4 unlocked.
 >
 > Conservative parallelism: stories sharing a page, route, or domain area
 > are placed in separate steps even when technically independent.
@@ -15,15 +15,8 @@ All 5 stories merged: 32-0b, 32-0, 32-3, 31-7, 32-7.
 ## Step 2: COMPLETE (2026-03-19)
 All 6 stories merged: 30-1, 31-1, 31-7b, 32-1, 32-7b, 37-1.
 
-## Step 3: Second Layer — Character, Results Depth, Chat UI (IN PROGRESS)
-| Story | Status | Notes |
-|-------|--------|-------|
-| 31-2-nerin-character-quality-observations-transitions-and-character-bible | done | Merged PR #156 |
-| 32-2-results-page-scientific-section | pr-ready | PR #157 |
-| 31-4-depth-meter-and-progress-milestones | pr-ready | PR #154 |
-| 37-2-founder-portrait-bridge-and-relationship-cta | pr-ready | PR #155 |
-
-**Gate:** All stories above must be done before proceeding.
+## Step 3: COMPLETE (2026-03-19)
+All 4 stories merged: 31-2 (PR #156), 32-2 (PR #157), 31-4 (PR #154), 37-2 (PR #155).
 
 ## Step 4: Account Deletion, Closing Exchange, Session Resume, PWYW
 | Story | Mode | Notes |
@@ -106,9 +99,9 @@ All 6 stories merged: 30-1, 31-1, 31-7b, 32-1, 32-7b, 37-1.
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **11 steps** — Steps 1-2 complete (11 merged), Step 3 in progress (1 merged, 3 pr-ready)
-- **27 stories remaining** (Steps 3-11; 3 of Step 3's 4 stories awaiting merge)
+- **11 steps** — Steps 1-3 complete (15 merged), Step 4 now unlocked
+- **24 stories remaining** (Steps 4-11)
 - **Critical path:** 32-3 (done) → 34-1 (Step 6) → 34-2 (Step 7) → 34-3 (Step 8) → 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
 - **Key enablers:** Polar (32-3, done) and Email Infrastructure (31-7, done) — both landed in Step 1
 - **No shared-file conflicts within any step** — stories in the same step touch different pages/domains
-- **Next unlock:** Merging Step 3 PRs (#154, #155, #157) unlocks Step 4 (account deletion, closing exchange, session resume, PWYW)
+- **Next up (Step 4):** 30-2 (account deletion), 31-3 (closing exchange), 31-5 (session resume), 32-4 (PWYW modal) — all parallel
