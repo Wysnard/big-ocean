@@ -1,86 +1,96 @@
 // @vitest-environment jsdom
 
 import { render } from "@testing-library/react";
-import { TRAIT_LETTER_MAP } from "@workspace/domain";
 import { describe, expect, it, vi } from "vitest";
 import { GeometricSignature } from "./GeometricSignature";
 
 describe("GeometricSignature", () => {
-	describe("letter-to-size mapping", () => {
-		it("maps all High letters to large shapes (1.0x baseSize)", () => {
-			// O=Open-minded, D=Disciplined, E=Extravert, W=Warm, S=Sensitive — all High
-			const highCode = "OCEAN";
-			const { container } = render(<GeometricSignature oceanCode={highCode} baseSize={32} />);
+	describe("letter-to-shape mapping", () => {
+		it("renders unique data-slot per letter for all High letters", () => {
+			// O, C, E, A, N — all High
+			const { container } = render(<GeometricSignature oceanCode="OCEAN" baseSize={32} />);
 			const svgs = container.querySelectorAll("svg");
 
 			expect(svgs).toHaveLength(5);
-			for (const svg of svgs) {
-				expect(svg.getAttribute("height")).toBe("32");
-			}
+			expect(svgs[0].getAttribute("data-slot")).toBe("ocean-shape-o");
+			expect(svgs[1].getAttribute("data-slot")).toBe("ocean-shape-c");
+			expect(svgs[2].getAttribute("data-slot")).toBe("ocean-shape-e");
+			expect(svgs[3].getAttribute("data-slot")).toBe("ocean-shape-a");
+			expect(svgs[4].getAttribute("data-slot")).toBe("ocean-shape-n");
 		});
 
-		it("maps all Low letters to small shapes (0.5x baseSize)", () => {
-			// T=Traditional(openness low), F=Flexible(consc low), I=Introverted(extra low), D=Direct(agree low), R=Resilient(neuro low)
-			// All 15 letters are now unique — no collisions
-			const lowCode = "TFIDR";
-			const { container } = render(<GeometricSignature oceanCode={lowCode} baseSize={32} />);
+		it("renders unique data-slot per letter for all Low letters", () => {
+			// T, F, I, D, R — all Low
+			const { container } = render(<GeometricSignature oceanCode="TFIDR" baseSize={32} />);
 			const svgs = container.querySelectorAll("svg");
 
 			expect(svgs).toHaveLength(5);
-			expect(svgs[0].getAttribute("height")).toBe("16"); // T → small
-			expect(svgs[1].getAttribute("height")).toBe("16"); // F → small
-			expect(svgs[2].getAttribute("height")).toBe("16"); // I → small
-			expect(svgs[3].getAttribute("height")).toBe("16"); // D → small
-			expect(svgs[4].getAttribute("height")).toBe("16"); // R → small
+			expect(svgs[0].getAttribute("data-slot")).toBe("ocean-shape-t");
+			expect(svgs[1].getAttribute("data-slot")).toBe("ocean-shape-f");
+			expect(svgs[2].getAttribute("data-slot")).toBe("ocean-shape-i");
+			expect(svgs[3].getAttribute("data-slot")).toBe("ocean-shape-d");
+			expect(svgs[4].getAttribute("data-slot")).toBe("ocean-shape-r");
 		});
 
-		it("maps all Mid letters to medium shapes (0.75x baseSize)", () => {
-			// M=Moderate, S=Steady, B=Balanced, P=Pragmatic, V=Variable — all Mid
-			const midCode = "MSBPV";
-			const { container } = render(<GeometricSignature oceanCode={midCode} baseSize={32} />);
+		it("renders unique data-slot per letter for all Mid letters", () => {
+			// M, S, B, P, V — all Mid
+			const { container } = render(<GeometricSignature oceanCode="MSBPV" baseSize={32} />);
 			const svgs = container.querySelectorAll("svg");
 
 			expect(svgs).toHaveLength(5);
-			for (const svg of svgs) {
-				expect(svg.getAttribute("height")).toBe("24");
-			}
+			expect(svgs[0].getAttribute("data-slot")).toBe("ocean-shape-m");
+			expect(svgs[1].getAttribute("data-slot")).toBe("ocean-shape-s");
+			expect(svgs[2].getAttribute("data-slot")).toBe("ocean-shape-b");
+			expect(svgs[3].getAttribute("data-slot")).toBe("ocean-shape-p");
+			expect(svgs[4].getAttribute("data-slot")).toBe("ocean-shape-v");
 		});
 
-		it("maps mixed codes to correct size tiers", () => {
-			// O=High(32), S=Mid(24), I=Low(16), A=High(32), V=Mid(24)
+		it("renders mixed codes with correct per-letter shapes", () => {
+			// O=High, S=Mid, I=Low, A=High, V=Mid
 			const { container } = render(<GeometricSignature oceanCode="OSIAV" baseSize={32} />);
 			const svgs = container.querySelectorAll("svg");
 
-			expect(svgs[0].getAttribute("height")).toBe("32"); // O → large
-			expect(svgs[1].getAttribute("height")).toBe("24"); // S → medium
-			expect(svgs[2].getAttribute("height")).toBe("16"); // I → small
-			expect(svgs[3].getAttribute("height")).toBe("32"); // A → large
-			expect(svgs[4].getAttribute("height")).toBe("24"); // V → medium
+			expect(svgs[0].getAttribute("data-slot")).toBe("ocean-shape-o");
+			expect(svgs[1].getAttribute("data-slot")).toBe("ocean-shape-s");
+			expect(svgs[2].getAttribute("data-slot")).toBe("ocean-shape-i");
+			expect(svgs[3].getAttribute("data-slot")).toBe("ocean-shape-a");
+			expect(svgs[4].getAttribute("data-slot")).toBe("ocean-shape-v");
 		});
 
-		it("maps every valid trait letter to a known size", () => {
-			// All 15 letters are unique — no collisions in the flat LETTER_TO_SIZE_TIER map
-			const EXPECTED_TIER: Record<string, number> = {};
-			for (const [, letters] of Object.entries(TRAIT_LETTER_MAP)) {
-				// Mirrors the production flat-map build order (last write wins)
-				EXPECTED_TIER[letters[0]] = 0.5; // small
-				EXPECTED_TIER[letters[1]] = 0.75; // medium
-				EXPECTED_TIER[letters[2]] = 1.0; // large
-			}
+		it("renders all shapes at uniform baseSize", () => {
+			const { container } = render(<GeometricSignature oceanCode="TFIDR" baseSize={48} />);
+			const svgs = container.querySelectorAll("svg");
 
-			for (const [, letters] of Object.entries(TRAIT_LETTER_MAP)) {
-				for (const letter of letters) {
-					const multiplier = EXPECTED_TIER[letter];
-					const expectedHeight = String(40 * multiplier);
-					const { container } = render(
-						<GeometricSignature
-							oceanCode={`${letter}${letter}${letter}${letter}${letter}`}
-							baseSize={40}
-						/>,
-					);
-					const svg = container.querySelector("svg");
-					expect(svg?.getAttribute("height")).toBe(expectedHeight);
-				}
+			expect(svgs).toHaveLength(5);
+			for (const svg of svgs) {
+				expect(svg.getAttribute("height")).toBe("48");
+			}
+		});
+
+		it("renders all 15 valid letters with correct data-slot", () => {
+			const ALL_LETTERS: Record<string, string> = {
+				T: "ocean-shape-t",
+				M: "ocean-shape-m",
+				O: "ocean-shape-o",
+				F: "ocean-shape-f",
+				S: "ocean-shape-s",
+				C: "ocean-shape-c",
+				I: "ocean-shape-i",
+				B: "ocean-shape-b",
+				E: "ocean-shape-e",
+				D: "ocean-shape-d",
+				P: "ocean-shape-p",
+				A: "ocean-shape-a",
+				R: "ocean-shape-r",
+				V: "ocean-shape-v",
+				N: "ocean-shape-n",
+			};
+
+			for (const [letter, expectedSlot] of Object.entries(ALL_LETTERS)) {
+				const code = `${letter}${letter}${letter}${letter}${letter}`;
+				const { container } = render(<GeometricSignature oceanCode={code} baseSize={32} />);
+				const svg = container.querySelector("svg");
+				expect(svg?.getAttribute("data-slot")).toBe(expectedSlot);
 			}
 		});
 	});
@@ -119,7 +129,6 @@ describe("GeometricSignature", () => {
 		});
 
 		it("uses default baseSize of 32", () => {
-			// ODEWS = all High → baseSize * 1.0 = 32
 			const { container } = render(<GeometricSignature oceanCode="OCEAN" />);
 			const svg = container.querySelector("svg");
 			expect(svg?.getAttribute("height")).toBe("32");
@@ -185,15 +194,11 @@ describe("GeometricSignature", () => {
 			warnSpy.mockRestore();
 		});
 
-		it("handles empty ocean code (renders 5 medium shapes)", () => {
+		it("handles empty ocean code (renders 5 fallback shapes)", () => {
 			const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 			const { container } = render(<GeometricSignature oceanCode="" />);
 			const svgs = container.querySelectorAll("svg");
 			expect(svgs).toHaveLength(5);
-			// Unknown letters fall back to medium (0.75 * 32 = 24)
-			for (const svg of svgs) {
-				expect(svg.getAttribute("height")).toBe("24");
-			}
 			warnSpy.mockRestore();
 		});
 

@@ -1,20 +1,27 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { OceanCircle } from "./OceanCircle";
+import { OceanCross } from "./OceanCross";
+import { OceanCutSquare } from "./OceanCutSquare";
 import { OceanDiamond } from "./OceanDiamond";
+import { OceanDoubleQuarter } from "./OceanDoubleQuarter";
 import { OceanHalfCircle } from "./OceanHalfCircle";
+import { OceanInvertedTriangle } from "./OceanInvertedTriangle";
+import { OceanLollipop } from "./OceanLollipop";
+import { OceanOval } from "./OceanOval";
+import { OceanQuarterCircle } from "./OceanQuarterCircle";
 import { OceanRectangle } from "./OceanRectangle";
+import { OceanReversedHalfCircle } from "./OceanReversedHalfCircle";
+import { OceanTable } from "./OceanTable";
+import { OceanThreeQuarterSquare } from "./OceanThreeQuarterSquare";
 import { OceanTriangle } from "./OceanTriangle";
 
 /**
  * OCEAN Shape Library
  *
  * The UX spec defines 15 unique geometric shapes — one per OCEAN code letter.
- * Each letter has its own distinct shape, not just a size variation.
+ * Each letter has its own distinct shape — not just a size variation.
  *
- * Currently implemented: 5 shapes (the High-level shapes).
- * Missing: 10 shapes (Low and Mid levels need unique designs).
- *
- * See: ux-design-specification.md section 9.2, "Shape Library (letter → geometric shape)"
+ * See: ux-design-specification.md section 9.2, "Shape Library (letter -> geometric shape)"
  */
 
 const SHAPE_SPEC = [
@@ -26,13 +33,13 @@ const SHAPE_SPEC = [
 				letter: "T",
 				label: "Traditional",
 				shape: "Equilateral cross standing upright",
-				Component: null,
+				Component: OceanCross,
 			},
 			{
 				letter: "M",
 				label: "Moderate",
 				shape: "Square with inverted triangle cut out",
-				Component: null,
+				Component: OceanCutSquare,
 			},
 			{ letter: "O", label: "Open-minded", shape: "Full circle", Component: OceanCircle },
 		],
@@ -45,9 +52,14 @@ const SHAPE_SPEC = [
 				letter: "F",
 				label: "Flexible",
 				shape: "Three-quarter square (one side missing)",
-				Component: null,
+				Component: OceanThreeQuarterSquare,
 			},
-			{ letter: "S", label: "Steady", shape: "Two quarter-circles facing outward", Component: null },
+			{
+				letter: "S",
+				label: "Steady",
+				shape: "Two quarter-circles facing outward",
+				Component: OceanDoubleQuarter,
+			},
 			{
 				letter: "C",
 				label: "Conscientious",
@@ -60,8 +72,8 @@ const SHAPE_SPEC = [
 		trait: "Extraversion",
 		color: "var(--trait-extraversion)",
 		levels: [
-			{ letter: "I", label: "Introverted", shape: "Oval (vertical ellipse)", Component: null },
-			{ letter: "B", label: "Balanced", shape: "Quarter-circle", Component: null },
+			{ letter: "I", label: "Introverted", shape: "Oval (vertical ellipse)", Component: OceanOval },
+			{ letter: "B", label: "Balanced", shape: "Quarter-circle", Component: OceanQuarterCircle },
 			{ letter: "E", label: "Extravert", shape: "Tall rectangle", Component: OceanRectangle },
 		],
 	},
@@ -73,9 +85,14 @@ const SHAPE_SPEC = [
 				letter: "D",
 				label: "Direct",
 				shape: "Half-circle facing opposite direction",
-				Component: null,
+				Component: OceanReversedHalfCircle,
 			},
-			{ letter: "P", label: "Pragmatic", shape: "Square standing on one stick", Component: null },
+			{
+				letter: "P",
+				label: "Pragmatic",
+				shape: "Square standing on one stick",
+				Component: OceanLollipop,
+			},
 			{ letter: "A", label: "Agreeable", shape: "Equilateral triangle", Component: OceanTriangle },
 		],
 	},
@@ -83,8 +100,18 @@ const SHAPE_SPEC = [
 		trait: "Neuroticism",
 		color: "var(--trait-neuroticism)",
 		levels: [
-			{ letter: "R", label: "Resilient", shape: "Square standing on two sticks", Component: null },
-			{ letter: "V", label: "Variable", shape: "Inverted triangle (point down)", Component: null },
+			{
+				letter: "R",
+				label: "Resilient",
+				shape: "Square standing on two sticks",
+				Component: OceanTable,
+			},
+			{
+				letter: "V",
+				label: "Variable",
+				shape: "Inverted triangle (point down)",
+				Component: OceanInvertedTriangle,
+			},
 			{ letter: "N", label: "Neurotic", shape: "Diamond", Component: OceanDiamond },
 		],
 	},
@@ -95,14 +122,14 @@ function ImplementedShapes({ size }: { size: number }) {
 		<div style={{ display: "flex", gap: 24, alignItems: "center" }}>
 			{SHAPE_SPEC.map(({ trait, color, levels }) => {
 				const high = levels[2];
-				return high.Component ? (
+				return (
 					<div key={trait} style={{ textAlign: "center" }}>
 						<high.Component size={size} color={color} />
 						<div style={{ fontSize: 11, marginTop: 4, color: "var(--muted-foreground)" }}>
 							{high.letter} — {trait}
 						</div>
 					</div>
-				) : null;
+				);
 			})}
 		</div>
 	);
@@ -137,33 +164,14 @@ function CompleteShapeLibrary({ size }: { size: number }) {
 										height: size + 8,
 									}}
 								>
-									{Component ? (
-										<Component size={size} color={color} />
-									) : (
-										<div
-											style={{
-												width: size,
-												height: size,
-												border: `2px dashed ${color}`,
-												borderRadius: 4,
-												display: "flex",
-												alignItems: "center",
-												justifyContent: "center",
-												fontSize: 10,
-												color: "var(--muted-foreground)",
-												opacity: 0.5,
-											}}
-										>
-											TODO
-										</div>
-									)}
+									<Component size={size} color={color} />
 								</div>
 								<div
 									style={{
 										fontSize: 18,
 										fontWeight: 700,
 										marginTop: 8,
-										color: Component ? "var(--foreground)" : "var(--muted-foreground)",
+										color: "var(--foreground)",
 									}}
 								>
 									{letter}
@@ -246,36 +254,17 @@ function ShapeSpecGrid({ size }: { size: number }) {
 								}}
 							>
 								<div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-									{Component ? (
-										<Component size={size} color={color} />
-									) : (
-										<div
-											style={{
-												width: size,
-												height: size,
-												border: `2px dashed ${color}`,
-												borderRadius: 4,
-												display: "flex",
-												alignItems: "center",
-												justifyContent: "center",
-												fontSize: 8,
-												color: "var(--muted-foreground)",
-												opacity: 0.5,
-											}}
-										>
-											TODO
-										</div>
-									)}
+									<Component size={size} color={color} />
 									<span style={{ fontWeight: 700 }}>{letter}</span>
 									<span style={{ color: "var(--muted-foreground)", fontSize: 11 }}>{label}</span>
 									<span
 										style={{
-											color: Component ? "var(--muted-foreground)" : "var(--destructive)",
+											color: "var(--muted-foreground)",
 											fontSize: 10,
 											opacity: 0.7,
 										}}
 									>
-										{Component ? shape : `Not implemented: ${shape}`}
+										{shape}
 									</span>
 								</div>
 							</td>
@@ -299,13 +288,13 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Implemented: Story = {
-	name: "5 Implemented Shapes (High Level)",
+export const HighLevelShapes: Story = {
+	name: "5 High-Level Shapes",
 	args: { size: 48 },
 };
 
 export const FullLibrary: Story = {
-	name: "Complete 15-Shape Library (5 done, 10 TODO)",
+	name: "Complete 15-Shape Library",
 	render: () => <CompleteShapeLibrary size={48} />,
 	args: { size: 48 },
 };
