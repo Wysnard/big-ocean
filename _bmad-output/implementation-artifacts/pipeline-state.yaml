@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 3
-parallelism_step_name: "Second Layer — Character, Results Depth, Chat UI"
-baseline_commit: "360d7fe826e18b31da1488782fbda4d03c5040bb"
+parallelism_step: 4
+parallelism_step_name: "Account Deletion, Closing Exchange, Session Resume, PWYW"
+baseline_commit: "0329300f9a0ff1bc17ce5c07f1e25beab869ee92"
 created: "2026-03-19"
-last_updated: "2026-03-19T14:00:00"
+last_updated: "2026-03-19T16:00:00"
 
 # Optional context documents discovered
 context_docs:
@@ -14,31 +14,31 @@ context_docs:
 
 # Stories in this step
 stories:
-  31-2-nerin-character-quality-observations-transitions-and-character-bible:
+  30-2-account-deletion-with-cascade-hooks:
     status: done
     mode: "parallel"
-    notes: "After 31-1. Character bible + observation patterns"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/156"
-    dev_branch: "feat/story-31-2-nerin-character-quality-observations-transitions-and-character-bible"
+    notes: "After 30-1. Cascade event hooks for Epic 35"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/161"
+    dev_branch: "feat/story-30-2-account-deletion-with-cascade-hooks"
     error: null
-  32-2-results-page-scientific-section:
+  31-3-conversation-closing-exchange:
     status: done
     mode: "parallel"
-    notes: "After 32-1. Radar chart, trait cards, facet detail zones"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/157"
-    dev_branch: "feat/story-32-2-results-page-scientific-section"
+    notes: "After 31-2. Move Governor close intent"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/158"
+    dev_branch: "feat/story-31-3-conversation-closing-exchange"
     error: null
-  31-4-depth-meter-and-progress-milestones:
+  31-5-session-resume:
     status: done
     mode: "parallel"
-    notes: "Frontend-only chat UI component"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/154"
-    dev_branch: "feat/story-31-4-depth-meter-and-progress-milestones"
+    notes: "Chat page: resume flow, different area from 31-3 (pipeline)"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/160"
+    dev_branch: "feat/story-31-5-session-resume"
     error: null
-  37-2-founder-portrait-bridge-and-relationship-cta:
+  32-4-pwyw-modal-and-portrait-unlock:
     status: done
     mode: "parallel"
-    notes: "After 37-1. Homepage section"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/155"
-    dev_branch: "feat/story-37-2-founder-portrait-bridge-and-relationship-cta"
+    notes: "After 32-3. Results page modal overlay"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/159"
+    dev_branch: "feat/story-32-4-pwyw-modal-and-portrait-unlock"
     error: null
