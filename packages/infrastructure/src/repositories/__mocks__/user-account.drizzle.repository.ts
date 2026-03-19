@@ -28,7 +28,7 @@ export const UserAccountDrizzleRepositoryLive = Layer.succeed(
 	UserAccountRepository,
 	UserAccountRepository.of({
 		deleteAccount: (userId: string) =>
-			Effect.gen(function* () {
+			Effect.sync(() => {
 				if (existingUsers.has(userId)) {
 					existingUsers.delete(userId);
 					deletedUsers.add(userId);
