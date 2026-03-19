@@ -7,16 +7,15 @@ import {
 } from "../results/portrait-markdown";
 import portraitExcerpt from "./portrait-excerpt.md?raw";
 
+// Parse once at module level — static content, no need to recompute per render
+const excerpt = splitMarkdownSections(portraitExcerpt).filter((s) => s.level === 2)[0];
+
 /**
  * Curated excerpt from Vincent's real portrait, displayed as a personal artifact.
  * Uses the first section of portrait-excerpt.md ("The Selective Gate") to show
  * the depth and specificity of a Nerin portrait — not a product demo, a real thing.
  */
 export function FounderPortraitExcerpt() {
-	const sections = splitMarkdownSections(portraitExcerpt).filter((s) => s.level === 2);
-	// Use only the first section for the excerpt — concise but impactful
-	const excerpt = sections[0];
-
 	if (!excerpt) return null;
 
 	return (
