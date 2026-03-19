@@ -6,6 +6,7 @@ import { ConfidenceRingCard } from "./ConfidenceRingCard";
 import { OceanCodeStrand } from "./OceanCodeStrand";
 import { PersonalityRadarChart } from "./PersonalityRadarChart";
 import { PersonalPortrait } from "./PersonalPortrait";
+import { PortraitUnlockCta } from "./PortraitUnlockCta";
 import { TraitCard } from "./TraitCard";
 
 /** Row 1 traits (3-up on desktop) — detail zone inserts after this row */
@@ -31,6 +32,8 @@ interface ProfileViewProps {
 	fullPortraitStatus?: PortraitStatus;
 	/** Callback to retry failed portrait generation (Story 13.3) */
 	onRetryPortrait?: () => void;
+	/** Callback to open PWYW modal for portrait unlock (Story 3.4) */
+	onUnlockPortrait?: () => void;
 	/** Current selected trait for DetailZone */
 	selectedTrait?: TraitName | null;
 	/** Total message count for confidence ring */
@@ -56,6 +59,7 @@ export function ProfileView({
 	fullPortraitContent,
 	fullPortraitStatus,
 	onRetryPortrait,
+	onUnlockPortrait,
 	selectedTrait,
 	messageCount,
 	detailZone,
@@ -94,7 +98,7 @@ export function ProfileView({
 			{/* Single CSS Grid container */}
 			<div className="mx-auto max-w-[1120px] px-5 py-10">
 				<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
-					{/* Portrait section (Story 13.3) — only shown when full portrait exists or is generating */}
+					{/* Portrait section (Story 13.3 + 3.4) */}
 					{fullPortraitContent ||
 					fullPortraitStatus === "generating" ||
 					fullPortraitStatus === "failed" ? (
@@ -104,6 +108,8 @@ export function ProfileView({
 							fullPortraitStatus={fullPortraitStatus}
 							onRetryPortrait={onRetryPortrait}
 						/>
+					) : onUnlockPortrait ? (
+						<PortraitUnlockCta onUnlock={onUnlockPortrait} />
 					) : null}
 
 					{/* Ocean Code Strand — full width */}

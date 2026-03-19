@@ -4,8 +4,9 @@ import { getRequestHeader } from "@tanstack/react-start/server";
 import type { FacetName, TraitName } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
 import { Schema as S } from "effect";
+import { useTheme } from "@workspace/ui/hooks/use-theme";
 import { BookOpen, Loader2, MessageCircle } from "lucide-react";
-import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FinalizationWaitScreen } from "@/components/finalization-wait-screen";
 import { ResultsAuthGate } from "@/components/ResultsAuthGate";
 import { RelationshipCard } from "@/components/relationship/RelationshipCard";
@@ -13,6 +14,7 @@ import { DetailZone } from "@/components/results/DetailZone";
 import { EvidencePanel } from "@/components/results/EvidencePanel";
 import { PortraitReadingView } from "@/components/results/PortraitReadingView";
 import { ProfileView } from "@/components/results/ProfileView";
+import { PwywModal } from "@/components/results/PwywModal";
 import { QuickActionsCard } from "@/components/results/QuickActionsCard";
 import { RelationshipCreditsSection } from "@/components/results/RelationshipCreditsSection";
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
@@ -27,6 +29,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useFacetEvidence } from "@/hooks/use-evidence";
 import { useToggleVisibility } from "@/hooks/use-profile";
 import { usePortraitStatus } from "@/hooks/usePortraitStatus";
+import { createThemedCheckoutEmbed } from "@/lib/polar-checkout";
 import {
 	clearPendingResultsGateSession,
 	persistPendingResultsGateSession,
@@ -130,6 +133,60 @@ function ResultsSessionPage() {
 			setWaitingForUnlock(false);
 		}
 	}, [waitingForUnlock, portraitStatusData?.status]);
+
+	// Story 3.4: PWYW modal state
+	const [showPwywModal, setShowPwywModal] = useState(false);
+	const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+	const { appTheme } = useTheme();
+	const pwywAutoOpenRef = useRef(false);
+
+	// Story 3.4: Auto-open PWYW modal ~2.5s after first visit when portrait not unlocked
+	useEffect(() => {
+		if (!canLoadResults || !results) return;
+		if (pwywAutoOpenRef.current) return;
+
+		const portraitStatus = portraitStatusData?.status;
+		// Don't auto-open if portrait is already unlocked, generating, or failed
+		if (portraitStatus === "ready" || portraitStatus === "generating" || portraitStatus === "failed") return;
+
+		// Check sessionStorage to avoid re-opening on page refresh
+		const storageKey = `pwyw-modal-shown-${assessmentSessionId}`;
+		if (typeof window !== "undefined" && sessionStorage.getItem(storageKey)) return;
+
+		pwywAutoOpenRef.current = true;
+		const timer = setTimeout(() => {
+			setShowPwywModal(true);
+			if (typeof window !== "undefined") {
+				sessionStorage.setItem(storageKey, "1");
+			}
+		}, 2500);
+
+		return () => clearTimeout(timer);
+	}, [canLoadResults, results, portraitStatusData?.status, assessmentSessionId]);
+
+	// Story 3.4: Handle Polar checkout for portrait unlock
+	const handlePwywCheckout = useCallback(async () => {
+		setIsCheckoutLoading(true);
+		try {
+			const checkout = await createThemedCheckoutEmbed("portrait-unlock", appTheme);
+			checkout.addEventListener("success", (event) => {
+				event.preventDefault();
+				setShowPwywModal(false);
+				setWaitingForUnlock(true);
+				setIsCheckoutLoading(false);
+			});
+			checkout.addEventListener("close", () => {
+				setIsCheckoutLoading(false);
+			});
+		} catch {
+			setIsCheckoutLoading(false);
+		}
+	}, [appTheme]);
+
+	// Story 3.4: Callback to reopen PWYW modal from the unlock CTA button
+	const handleUnlockPortrait = useCallback(() => {
+		setShowPwywModal(true);
+	}, []);
 
 	const [isGateExpired, setIsGateExpired] = useState(false);
 	const [shareState, setShareState] = useState<{
@@ -359,6 +416,7 @@ function ResultsSessionPage() {
 	}
 
 	return (
+		<>
 		<ProfileView
 			archetypeName={results.archetypeName}
 			oceanCode5={results.oceanCode5}
@@ -372,6 +430,13 @@ function ResultsSessionPage() {
 			fullPortraitContent={portraitStatusData?.portrait?.content}
 			fullPortraitStatus={portraitStatusData?.status}
 			onRetryPortrait={() => void refetchPortraitStatus()}
+			onUnlockPortrait={
+				portraitStatusData?.status !== "ready" &&
+				portraitStatusData?.status !== "generating" &&
+				portraitStatusData?.status !== "failed"
+					? handleUnlockPortrait
+					: undefined
+			}
 			selectedTrait={selectedTrait}
 			messageCount={results.messageCount}
 			detailZone={
@@ -448,5 +513,14 @@ function ResultsSessionPage() {
 				</div>
 			</div>
 		</ProfileView>
+
+		{/* Story 3.4: PWYW Modal */}
+		<PwywModal
+			open={showPwywModal}
+			onOpenChange={setShowPwywModal}
+			onCheckout={() => void handlePwywCheckout()}
+			isCheckoutLoading={isCheckoutLoading}
+		/>
+		</>
 	);
 }
