@@ -279,7 +279,8 @@ export function TherapistChat({
 			resumeError={resumeError}
 			userName={userName}
 			userImage={userImage}
-			depthProgress={Math.min(userMessageCount / (freeTierMessageThreshold || 27), 1)}
+			currentTurn={userMessageCount}
+			totalTurns={freeTierMessageThreshold || 27}
 			errorMessage={errorMessage}
 			errorType={errorType}
 			clearError={clearError}
@@ -435,7 +436,8 @@ function ChatContent({
 	resumeError,
 	userName,
 	userImage,
-	depthProgress,
+	currentTurn,
+	totalTurns,
 	errorMessage,
 	errorType,
 	clearError,
@@ -466,7 +468,8 @@ function ChatContent({
 	resumeError: Error | null;
 	userName?: string | null;
 	userImage?: string | null;
-	depthProgress: number;
+	currentTurn: number;
+	totalTurns: number;
 	errorMessage: string | null;
 	errorType: string | null;
 	clearError: () => void;
@@ -485,11 +488,14 @@ function ChatContent({
 	return (
 		<>
 			{/* Depth Meter — fixed sidebar, desktop only */}
-			<DepthMeter progress={depthProgress} />
+			<DepthMeter currentTurn={currentTurn} totalTurns={totalTurns} />
 
 			<div className="h-[calc(100dvh-3.5rem)] flex flex-col overflow-hidden overscroll-none bg-background text-foreground relative">
 				{/* Geometric Ocean — ambient sea life layer behind chat */}
-				<GeometricOcean depthProgress={depthProgress} pulse={oceanPulse} />
+				<GeometricOcean
+					depthProgress={totalTurns > 0 ? Math.min(currentTurn / totalTurns, 1) : 0}
+					pulse={oceanPulse}
+				/>
 
 				{/* Header — matches homepage style */}
 				<div
