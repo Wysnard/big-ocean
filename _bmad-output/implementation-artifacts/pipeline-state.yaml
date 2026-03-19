@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 1
-parallelism_step_name: "Infrastructure Foundations"
-baseline_commit: "6c18c6422115fa99ea9ff95acbdd6218176ec504"
-created: "2026-03-18"
-last_updated: "2026-03-18T23:59:00"
+parallelism_step: 2
+parallelism_step_name: "Area Foundations — Account, Nerin, Results, Homepage, Auth Email"
+baseline_commit: "f6d879e596824f60cb48743a9308ed4ca6d2d654"
+created: "2026-03-19"
+last_updated: "2026-03-19T12:00:00"
 
 # Optional context documents discovered
 context_docs:
@@ -14,38 +14,45 @@ context_docs:
 
 # Stories in this step
 stories:
-  32-0-remove-teaser-portrait:
+  30-1-profile-visibility-controls:
     status: done
     mode: "parallel"
-    notes: "Codebase cleanup, no new features"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/145"
-    dev_branch: "feat/story-32-0-remove-teaser-portrait"
+    notes: "Account settings: visibility toggle"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/151"
+    dev_branch: "feat/story-30-1-profile-visibility-controls"
     error: null
-  32-3-polar-integration-and-purchase-events:
+  31-1-nerin-greeting-and-onboarding-message:
     status: done
     mode: "parallel"
-    notes: "NEW: Polar plugin, purchase_events table, webhook handler"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/143"
-    dev_branch: "feat/story-32-3-polar-integration-and-purchase-events"
+    notes: "Nerin pipeline: greeting refinement"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/148"
+    dev_branch: "feat/story-31-1-nerin-greeting-and-onboarding-message"
     error: null
-  31-7-email-infrastructure-and-drop-off-re-engagement:
+  31-7b-wire-resend-into-better-auth:
     status: done
     mode: "parallel"
-    notes: "NEW: Resend repo, React Email templates, drop-off email"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/144"
-    dev_branch: "feat/story-31-7-email-infrastructure-and-drop-off-re-engagement"
+    notes: "NEW: Email verification + password reset via Resend callbacks in Better Auth"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/153"
+    dev_branch: "feat/story-31-7b-wire-resend-into-better-auth"
     error: null
-  32-7-archetype-card-image-generation:
+  32-1-results-page-identity-section:
     status: done
     mode: "parallel"
-    notes: "NEW: Satori + resvg image pipeline, independent"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/146"
-    dev_branch: "feat/story-32-7-archetype-card-image-generation"
+    notes: "Results page: hero/identity section"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/150"
+    dev_branch: "feat/story-32-1-results-page-identity-section"
     error: null
-  32-0b-ocean-code-letter-mapping-update:
+  32-7b-complete-ocean-shape-library:
     status: done
     mode: "parallel"
-    notes: "Letter collision fix: R→I (E-low), T→V (N-mid), update 27 archetype keys"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/147"
-    dev_branch: "feat/story-32-0b-ocean-code-letter-mapping-update"
+    notes: "NEW: 10 missing SVG shapes + GeometricSignature refactor + ArchetypeCardTemplate refactor"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/152"
+    dev_branch: "feat/story-32-7b-complete-ocean-shape-library"
+    error: null
+  37-1-homepage-narrative-and-layout:
+    status: done
+    mode: "parallel"
+    notes: "Homepage: independent page"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/149"
+    dev_branch: "feat/story-37-1-homepage-narrative-and-layout"
     error: null

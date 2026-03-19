@@ -522,8 +522,8 @@ development_status:
   # Profile visibility, account deletion with cascade hooks
   # Stories: 1.1-1.2 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-30: backlog
-  30-1-profile-visibility-controls: backlog
+  epic-30: in-progress
+  30-1-profile-visibility-controls: pr-ready
   30-2-account-deletion-with-cascade-hooks: backlog
   epic-30-retrospective: optional
 
@@ -534,14 +534,14 @@ development_status:
   # Stories: 2.1-2.7 in epics.md
   # ───────────────────────────────────────────────────────────────
   epic-31: in-progress
-  31-1-nerin-greeting-and-onboarding-message: backlog
+  31-1-nerin-greeting-and-onboarding-message: pr-ready
   31-2-nerin-character-quality-observations-transitions-and-character-bible: backlog
   31-3-conversation-closing-exchange: backlog
   31-4-depth-meter-and-progress-milestones: backlog
   31-5-session-resume: backlog
   31-6-cost-guard: backlog
   31-7-email-infrastructure-and-drop-off-re-engagement: done
-  31-7b-wire-resend-into-better-auth: backlog
+  31-7b-wire-resend-into-better-auth: pr-ready
   epic-31-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -553,14 +553,14 @@ development_status:
   epic-32: in-progress
   32-0-remove-teaser-portrait: done
   32-0b-ocean-code-letter-mapping-update: done
-  32-1-results-page-identity-section: backlog
+  32-1-results-page-identity-section: pr-ready
   32-2-results-page-scientific-section: backlog
   32-3-polar-integration-and-purchase-events: done
   32-4-pwyw-modal-and-portrait-unlock: backlog
   32-5-full-portrait-display: backlog
   32-6-portrait-reconciliation-and-retry: backlog
   32-7-archetype-card-image-generation: done
-  32-7b-complete-ocean-shape-library: backlog
+  32-7b-complete-ocean-shape-library: pr-ready
   32-8-basic-share-and-credit-system: backlog
   epic-32-retrospective: optional
 
@@ -618,8 +618,8 @@ development_status:
   # Homepage narrative & layout, founder portrait bridge & relationship CTA
   # Stories: 8.1-8.2 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-37: backlog
-  37-1-homepage-narrative-and-layout: backlog
+  epic-37: in-progress
+  37-1-homepage-narrative-and-layout: pr-ready
   37-2-founder-portrait-bridge-and-relationship-cta: backlog
   epic-37-retrospective: optional
 
