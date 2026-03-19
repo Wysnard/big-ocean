@@ -100,3 +100,28 @@ Better Auth does not provide a built-in `deleteUser` API method. The use-case wi
 ### Frontend Pattern
 
 The settings page already exists at `/settings` with `ProfileVisibilitySection`. Add `AccountDeletionSection` below it following the same component pattern.
+
+## Architect Notes
+
+### Finding 1: Do NOT change purchase_events FK to cascade — delete explicitly
+
+The `purchase_events` table uses `onDelete: "restrict"` intentionally to prevent accidental user deletion when purchase records exist. For account deletion, the use-case must **explicitly delete** purchase_events rows for the user BEFORE deleting the user row. Do NOT change the FK constraint — the restrict guard protects against bugs in other code paths.
+
+**Action:** Remove Task 2.1 (FK change for purchase_events). In Task 1.5, delete purchase events explicitly via `DELETE FROM purchase_events WHERE user_id = ?`.
+
+### Finding 2: Assessment sessions must be deleted explicitly — not via user row cascade
+
+The `assessment_session.user_id` FK uses `onDelete: "set null"`, meaning deleting the user row orphans sessions rather than deleting them. The use-case MUST:
+1. Query all assessment session IDs for the user
+2. Delete those sessions explicitly (which cascades to messages, evidence, exchanges, results, portraits, public profiles via existing FK cascades)
+3. Only THEN delete the user row
+
+**Action:** Task 1.7 must explicitly delete assessment sessions by user_id. The deletion order in the use-case must be:
+1. Delete relationship_analyses (user_a_id OR user_b_id)
+2. Delete relationship_invitations (inviter_user_id OR invitee_user_id)
+3. Delete purchase_events (user_id)
+4. Delete assessment_sessions (user_id) — cascades to all child tables
+5. Delete user row — cascades to Better Auth sessions, accounts, portrait_ratings
+
+**File:** `apps/api/src/use-cases/delete-account.use-case.ts`
+**Pattern:** Use raw Drizzle `db.delete().where()` calls within a single transaction. Follow the same Drizzle access pattern used in `packages/infrastructure/src/context/better-auth.ts` (direct Drizzle operations).
