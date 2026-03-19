@@ -7,12 +7,14 @@
  * Dependencies: UserAccountRepository, LoggerRepository
  */
 
-import { DatabaseError } from "@workspace/contracts/errors";
 import { LoggerRepository, UserAccountRepository } from "@workspace/domain";
 import { Effect } from "effect";
 
 /**
  * Delete a user's account and all associated data.
+ *
+ * Error propagation: DatabaseError from repo passes through without remapping
+ * (per ARCHITECTURE.md: use-cases must NOT remap errors).
  *
  * @param userId - The authenticated user's ID
  * @returns { success: boolean } - true if account was deleted
@@ -24,14 +26,7 @@ export const deleteAccount = (userId: string) =>
 
 		logger.info("Account deletion requested", { userId });
 
-		const wasDeleted = yield* accountRepo.deleteAccount(userId).pipe(
-			Effect.mapError(
-				(error) =>
-					new DatabaseError({
-						message: `Account deletion failed: ${error.message}`,
-					}),
-			),
-		);
+		const wasDeleted = yield* accountRepo.deleteAccount(userId);
 
 		if (!wasDeleted) {
 			logger.warn("Account deletion: user not found", { userId });
