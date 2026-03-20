@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 import type { LifeDomain } from "../../../constants/life-domain";
 import {
 	BELIEFS_IN_ACTION,
+	CLOSING_EXCHANGE,
 	CONVERSATION_INSTINCTS,
 	CONVERSATION_MODE,
 	getPressureModifier,
@@ -60,6 +61,7 @@ const COMMON_MODULES = [
 	STORY_PULLING,
 	OBSERVATION_QUALITY_COMMON,
 	THREADING_COMMON,
+	CLOSING_EXCHANGE,
 ];
 
 function makeOpenInput(territory = "creative-pursuits"): OpenPromptInput {
@@ -106,7 +108,7 @@ describe("common layer — always included", () => {
 		expect(close.systemPrompt).toContain(NERIN_PERSONA);
 	});
 
-	it("includes all 13 common modules in every prompt", () => {
+	it("includes all 14 common modules in every prompt", () => {
 		const open = buildPrompt(makeOpenInput());
 		const explore = buildPrompt(makeExploreInput());
 		const close = buildPrompt(makeCloseInput());
@@ -520,8 +522,8 @@ describe("common layer word budget", () => {
 		const steeringStart = result.systemPrompt.indexOf(STEERING_PREFIX);
 		const commonLayer = result.systemPrompt.slice(0, steeringStart);
 		const wordCount = commonLayer.split(/\s+/).filter((w) => w.length > 0).length;
-		// Budget: common layer (persona + 13 modules) should stay within 1,500-2,500 words
-		// to keep LLM context costs reasonable. Current: ~2,350 words.
+		// Budget: common layer (persona + 14 modules) should stay within 1,500-2,500 words
+		// to keep LLM context costs reasonable. Current: ~2,500 words.
 		expect(wordCount).toBeGreaterThanOrEqual(1500);
 		expect(wordCount).toBeLessThanOrEqual(2500);
 	});
@@ -544,6 +546,20 @@ describe("Story 31-2 — character quality modules", () => {
 	it("includes PUSHBACK_HANDLING with reframe guidance", () => {
 		const result = buildPrompt(makeOpenInput());
 		expect(result.systemPrompt).toContain("WHEN THEY PUSH BACK");
+	});
+});
+
+// ─── Story 31-3 New Module ───────────────────────────────────────────
+
+describe("Story 31-3 — closing exchange module", () => {
+	it("includes CLOSING_EXCHANGE with closing instinct", () => {
+		const result = buildPrompt(makeOpenInput());
+		expect(result.systemPrompt).toContain("WHEN THE CONVERSATION IS CLOSING");
+	});
+
+	it("CLOSING_EXCHANGE present in close intent prompt", () => {
+		const result = buildPrompt(makeCloseInput());
+		expect(result.systemPrompt).toContain(CLOSING_EXCHANGE);
 	});
 });
 
