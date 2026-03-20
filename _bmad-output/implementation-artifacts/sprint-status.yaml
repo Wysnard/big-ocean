@@ -524,7 +524,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-30: in-progress
   30-1-profile-visibility-controls: done
-  30-2-account-deletion-with-cascade-hooks: pr-ready
+  30-2-account-deletion-with-cascade-hooks: review
   epic-30-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -536,9 +536,9 @@ development_status:
   epic-31: in-progress
   31-1-nerin-greeting-and-onboarding-message: done
   31-2-nerin-character-quality-observations-transitions-and-character-bible: done
-  31-3-conversation-closing-exchange: pr-ready
+  31-3-conversation-closing-exchange: done
   31-4-depth-meter-and-progress-milestones: done
-  31-5-session-resume: pr-ready
+  31-5-session-resume: done
   31-6-cost-guard: backlog
   31-7-email-infrastructure-and-drop-off-re-engagement: done
   31-7b-wire-resend-into-better-auth: done
@@ -556,7 +556,7 @@ development_status:
   32-1-results-page-identity-section: done
   32-2-results-page-scientific-section: done
   32-3-polar-integration-and-purchase-events: done
-  32-4-pwyw-modal-and-portrait-unlock: pr-ready
+  32-4-pwyw-modal-and-portrait-unlock: done
   32-5-full-portrait-display: backlog
   32-6-portrait-reconciliation-and-retry: backlog
   32-7-archetype-card-image-generation: done
