@@ -1,18 +1,12 @@
 /**
  * PWYW Modal — Pay What You Wish (Story 3.4)
  *
- * Congratulations bridge -> Founder's love letter -> Vincent's portrait example -> CTA
+ * Unified Vincent voice: opening hook -> origin story -> portrait excerpt -> PWYW philosophy -> CTA
  * Uses Radix Dialog primitives from packages/ui for focus management and accessibility.
  */
 
 import { Button } from "@workspace/ui/components/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@workspace/ui/components/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@workspace/ui/components/dialog";
 import { Loader2, Sparkles } from "lucide-react";
 
 interface PwywModalProps {
@@ -27,81 +21,91 @@ const VINCENT_PORTRAIT_EXCERPT = `You didn't describe your process — you descr
 
 That weekend you spent color-coding your books wasn't organization. It was architectural thinking — a level of systematic care most people can't sustain for an afternoon. You probably don't think of this as special. It is.`;
 
-export function PwywModal({ open, onOpenChange, onCheckout, isCheckoutLoading = false }: PwywModalProps) {
+export function PwywModal({
+	open,
+	onOpenChange,
+	onCheckout,
+	isCheckoutLoading = false,
+}: PwywModalProps) {
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
 				data-testid="pwyw-modal"
-				className="max-w-md sm:max-w-lg max-h-[85dvh] overflow-y-auto"
+				className="max-w-md sm:max-w-lg md:max-w-xl lg:max-w-4xl lg:p-10"
 				showCloseButton
 			>
 				<DialogHeader>
 					<DialogTitle className="text-xl font-display text-center">
-						Nerin wrote you a portrait
+						Before you see your portrait
 					</DialogTitle>
-					<DialogDescription className="text-center text-muted-foreground">
-						A personal letter about who you are, drawn from everything you shared.
-					</DialogDescription>
 				</DialogHeader>
 
-				<div className="space-y-5 pt-2">
-					{/* Congratulations bridge */}
-					<p className="text-sm leading-relaxed text-foreground/90 text-center">
-						You've just shared something rare — a real conversation about who you are.
-						Not a quiz. Not a checklist. Nerin listened to the way you think, the things
-						that light you up, and the patterns you might not see yourself.
-					</p>
+				{/* Scrollable content — header and footer stay fixed */}
+				<div className="-mx-6 lg:-mx-10 max-h-[50vh] overflow-y-auto px-6 lg:px-10">
+					<div className="space-y-5">
+						{/* Founder's letter — unified Vincent voice */}
+						<div className="rounded-xl bg-muted/50 p-4 space-y-3">
+							<p className="text-sm leading-relaxed text-foreground/85">
+								What you just did with Nerin — that wasn't a personality quiz. And what she wrote about you
+								isn't a report.
+							</p>
+							<p className="text-sm leading-relaxed text-foreground/85">
+								I know, because she did it to me first.
+							</p>
+							<p className="text-sm leading-relaxed text-foreground/85">
+								I spent years living as the person other people described — nonchalant, undisciplined,
+								someone who doesn't commit. Then out of curiosity, I built Nerin — an AI that listens to how
+								you think, not just what you say. I made the mistake of turning her on myself. She told me I
+								was wrong about who I was. I laughed. She showed me proof from my own words. Something
+								cracked open.
+							</p>
+							<p className="text-sm leading-relaxed text-foreground/85">
+								Turns out I was never undisciplined. I was just waiting for something worth the discipline.
+								The portrait is why I built Big Ocean.
+							</p>
+							<p className="text-sm leading-relaxed text-foreground/85">
+								This is a piece of what she wrote about me:
+							</p>
+						</div>
 
-					{/* Founder's love letter */}
-					<div className="rounded-xl bg-muted/50 p-4 space-y-2">
-						<p className="text-sm leading-relaxed text-foreground/85">
-							I built Big Ocean because I wanted something that didn't exist — a
-							portrait of who someone really is, written by something that spent
-							thirty minutes listening. Not a label. Not a type. A letter.
-						</p>
-						<p className="text-sm leading-relaxed text-foreground/85">
-							The portrait Nerin writes is unlike anything a personality test has
-							ever produced. It references your exact words, names the patterns
-							you might not see, and speaks directly to you — not about you.
-						</p>
-						<p className="text-xs text-muted-foreground text-right italic">
-							— Vincent, founder
-						</p>
-					</div>
-
-					{/* Vincent's portrait example */}
-					<div className="space-y-2">
-						<p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-							From Vincent's portrait
-						</p>
-						<blockquote className="rounded-lg border-l-2 border-primary/40 bg-primary/5 px-4 py-3 text-sm leading-relaxed text-foreground/80 italic max-h-32 overflow-y-auto">
+						{/* Vincent's portrait excerpt */}
+						<blockquote className="rounded-lg border-l-2 border-primary/40 bg-primary/5 px-4 py-3 text-sm leading-relaxed text-foreground/80 italic">
 							{VINCENT_PORTRAIT_EXCERPT}
 						</blockquote>
+
+						{/* Post-excerpt — still Vincent's voice */}
+						<div className="space-y-2 text-center">
+							<p className="text-sm leading-relaxed text-foreground/85 italic">
+								I still re-read mine — usually when I forget why I'm doing this.
+							</p>
+							<p className="text-sm leading-relaxed text-foreground/90">
+								Yours is ready. Written from everything you just shared with Nerin. I can't put a price on
+								something this personal. So I won't.
+							</p>
+							<p className="text-xs text-muted-foreground text-right italic">— Vincent, founder</p>
+						</div>
 					</div>
+				</div>
 
-					{/* Relationship credit mention */}
-					<p className="text-xs text-center text-muted-foreground">
-						Your payment also includes one relationship analysis credit — discover
-						how your personality compares with someone who matters to you.
-					</p>
-
-					{/* CTA */}
+				{/* Sticky footer — always visible below scroll area */}
+				<div className="space-y-3 pt-2">
 					<Button
 						data-testid="pwyw-unlock-button"
+						size="lg"
 						className="w-full min-h-12 text-base font-medium"
 						onClick={onCheckout}
 						disabled={isCheckoutLoading}
 					>
-						{isCheckoutLoading ? (
-							<Loader2 className="w-5 h-5 mr-2 motion-safe:animate-spin" />
-						) : (
-							<Sparkles className="w-5 h-5 mr-2" />
-						)}
+						{isCheckoutLoading ? <Loader2 className="motion-safe:animate-spin" /> : <Sparkles />}
 						Unlock your portrait
 					</Button>
 
+					<p className="text-sm text-center text-muted-foreground font-medium">
+						Pay what you wish — starting at EUR 1
+					</p>
+
 					<p className="text-xs text-center text-muted-foreground">
-						Pay what you feel it's worth — minimum EUR 1
+						Includes one relationship credit — compare your personality with someone who matters to you.
 					</p>
 				</div>
 			</DialogContent>
