@@ -12,25 +12,21 @@ describe("PwywModal", () => {
 	};
 
 	describe("content sections", () => {
-		it("renders the congratulations bridge", () => {
+		it("renders the founder origin story", () => {
+			render(<PwywModal {...defaultProps} />);
+			expect(screen.getByText(/I know, because she did it to me first/i)).toBeInTheDocument();
+		});
+
+		it("renders the founder's letter section", () => {
 			render(<PwywModal {...defaultProps} />);
 			expect(
-				screen.getByText(/you.ve just shared something rare/i),
+				screen.getByText(/I spent years living as the person other people described/i),
 			).toBeInTheDocument();
 		});
 
-		it("renders the founder's love letter section", () => {
+		it("renders Vincent's portrait excerpt intro", () => {
 			render(<PwywModal {...defaultProps} />);
-			expect(
-				screen.getByText(/I built Big Ocean/i),
-			).toBeInTheDocument();
-		});
-
-		it("renders Vincent's portrait example", () => {
-			render(<PwywModal {...defaultProps} />);
-			expect(
-				screen.getByText(/vincent.*portrait/i),
-			).toBeInTheDocument();
+			expect(screen.getByText(/this is a piece of what she wrote about me/i)).toBeInTheDocument();
 		});
 
 		it("renders the unlock CTA button", () => {
@@ -42,9 +38,7 @@ describe("PwywModal", () => {
 
 		it("renders relationship credit mention", () => {
 			render(<PwywModal {...defaultProps} />);
-			expect(
-				screen.getByText(/relationship analysis credit/i),
-			).toBeInTheDocument();
+			expect(screen.getByText(/relationship credit/i)).toBeInTheDocument();
 		});
 	});
 
@@ -59,7 +53,7 @@ describe("PwywModal", () => {
 			render(<PwywModal {...defaultProps} />);
 			const dialog = screen.getByRole("dialog");
 			// Radix Dialog provides aria-labelledby automatically when DialogTitle is used
-			expect(within(dialog).getByText(/nerin wrote you a portrait/i)).toBeInTheDocument();
+			expect(within(dialog).getByText(/before you see your portrait/i)).toBeInTheDocument();
 		});
 	});
 
