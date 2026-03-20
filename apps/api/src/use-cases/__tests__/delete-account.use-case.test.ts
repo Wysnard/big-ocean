@@ -9,11 +9,12 @@ import { UserAccountRepository } from "@workspace/domain";
 import {
 	addMockUser,
 	resetMockUsers,
+	setMockDbError,
 	wasMockUserDeleted,
 } from "@workspace/infrastructure/repositories/__mocks__/user-account.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 import { UserAccountDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/user-account.drizzle.repository";
-import { Effect, Layer } from "effect";
+import { Effect, Exit, Layer } from "effect";
 import { beforeEach } from "vitest";
 import { deleteAccount } from "../delete-account.use-case";
 
@@ -40,11 +41,30 @@ describe("deleteAccount", () => {
 		}).pipe(Effect.provide(TestLayer)),
 	);
 
-	it.effect("returns success: false when user does not exist", () =>
+	it.effect("fails with AccountNotFound when user does not exist", () =>
 		Effect.gen(function* () {
-			const result = yield* deleteAccount("non-existent-user");
+			const exit = yield* Effect.exit(deleteAccount("non-existent-user"));
 
-			expect(result.success).toBe(false);
+			expect(Exit.isFailure(exit)).toBe(true);
+			if (Exit.isFailure(exit)) {
+				const error = exit.cause.toString();
+				expect(error).toContain("AccountNotFound");
+			}
+		}).pipe(Effect.provide(TestLayer)),
+	);
+
+	it.effect("propagates DatabaseError from repository without remapping", () =>
+		Effect.gen(function* () {
+			addMockUser(USER_ID);
+			setMockDbError(true);
+
+			const exit = yield* Effect.exit(deleteAccount(USER_ID));
+
+			expect(Exit.isFailure(exit)).toBe(true);
+			if (Exit.isFailure(exit)) {
+				const error = exit.cause.toString();
+				expect(error).toContain("DatabaseError");
+			}
 		}).pipe(Effect.provide(TestLayer)),
 	);
 

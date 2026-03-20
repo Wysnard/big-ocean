@@ -173,6 +173,31 @@ Use `isRedirect()` in catch blocks within `beforeLoad` to re-throw TanStack Rout
 
 **Session ownership verification** (Story 9.4): Lives in `/chat` route's `beforeLoad`, not in `ChatAuthGate`. After auth, ChatAuthGate navigates to `/chat?sessionId=...` which triggers the loader to verify the session belongs to the user.
 
+### Frontend API Client Pattern (Effect HttpApiClient)
+
+Frontend hooks must use the typed Effect `HttpApiClient` derived from `@workspace/contracts`, **not raw `fetch`**. The shared client setup lives in `apps/front/src/lib/api-client.ts` and provides `FetchHttpClient` with `credentials: "include"` for cookie-based auth.
+
+```typescript
+import { useMutation } from "@tanstack/react-query";
+import { Effect } from "effect";
+import { makeApiClient } from "../lib/api-client";
+
+export function useDeleteAccount() {
+  return useMutation({
+    mutationKey: ["account", "delete"],
+    mutationFn: () =>
+      Effect.gen(function* () {
+        const client = yield* makeApiClient;
+        return yield* client.account.deleteAccount({});
+      }).pipe(Effect.runPromise),
+  });
+}
+```
+
+**Key file:** `apps/front/src/lib/api-client.ts` — exports `makeApiClient` (an Effect that yields a fully-typed client with all endpoint methods grouped by API group name).
+
+**Pattern:** `yield* makeApiClient` → `yield* client.<group>.<endpoint>({ path, payload, ... })` → wrap in `Effect.runPromise` inside TanStack Query `mutationFn` / `queryFn`.
+
 ### Database & Sync
 
 - **Backend:** Drizzle ORM + PostgreSQL (`packages/infrastructure/src/db/drizzle/schema.ts`)

@@ -111,6 +111,7 @@ export {
 } from "./errors/evidence.errors";
 // HTTP API errors (canonical definitions)
 export {
+	AccountNotFound,
 	AgentInvocationError,
 	AnalyzerError,
 	AssessmentAlreadyExists,

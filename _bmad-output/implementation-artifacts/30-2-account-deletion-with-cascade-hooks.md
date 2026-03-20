@@ -1,6 +1,6 @@
 # Story 30-2: Account Deletion with Cascade Hooks
 
-Status: review
+Status: done
 
 ## Story
 
@@ -133,7 +133,39 @@ The original architect notes recommended explicit deletion with `restrict` on pu
 - `apps/front/src/routes/settings.tsx` (existing — unchanged)
 - `apps/api/src/use-cases/__tests__/delete-account.use-case.test.ts` (existing — unchanged)
 
+## Senior Developer Review (AI)
+
+**Reviewer:** Vincentlay | **Date:** 2026-03-21 | **Outcome:** Approved with fixes applied
+
+### Findings & Fixes Applied
+
+| # | Severity | Status | Description |
+|---|----------|--------|-------------|
+| 1 | CRITICAL | FIXED | Session invalidation race condition — `signOut()` called after session rows cascade-deleted. Fixed: wrapped in `.catch(() => {})` so navigation always proceeds |
+| 2 | CRITICAL | FIXED | `signOut()` errors not caught — could leave user stuck in dialog. Fixed: same as #1 |
+| 3 | CRITICAL | FIXED | AC3 missing — no domain event emitted. Fixed: added structured `account.deleted` log event in use-case |
+| 4 | HIGH | NOT A BUG | `portrait_ratings` FK already `CASCADE` from prior migration — migration is correct |
+| 5 | HIGH | FIXED | Non-existent user returned 200 `{ success: false }` instead of 404. Fixed: added `AccountNotFound` error type, use-case now fails with 404 |
+| 6 | HIGH | FIXED | No test for DatabaseError propagation. Fixed: added mock failure mode + test verifying DatabaseError passes through unremapped |
+| 7 | MEDIUM | FIXED | Raw `fetch` bypassed typed contract client. Fixed: introduced Effect `HttpApiClient` pattern with `makeApiClient` in `api-client.ts`, updated hook to use typed `client.account.deleteAccount({})` |
+| 8 | MEDIUM | FIXED | Mobile `autoCapitalize` breaks "DELETE" confirmation. Fixed: added `autoCapitalize="none"` + `spellCheck={false}` |
+
+### Files Modified During Review
+- `apps/front/src/routes/settings.tsx` — signOut error handling
+- `apps/front/src/components/settings/AccountDeletionSection.tsx` — mobile input attrs
+- `apps/front/src/hooks/use-account.ts` — Effect HttpApiClient typed client (replaces raw fetch)
+- `apps/front/src/lib/api-client.ts` — NEW: shared Effect HttpApiClient setup with FetchHttpClient
+- `apps/api/src/use-cases/delete-account.use-case.ts` — AccountNotFound + domain event
+- `apps/api/src/use-cases/__tests__/delete-account.use-case.test.ts` — 2 new tests
+- `packages/domain/src/errors/http.errors.ts` — AccountNotFound error class
+- `packages/domain/src/index.ts` — export AccountNotFound
+- `packages/contracts/src/errors.ts` — re-export AccountNotFound
+- `packages/contracts/src/http/groups/account.ts` — 404 error on endpoint
+- `packages/infrastructure/src/repositories/__mocks__/user-account.drizzle.repository.ts` — DatabaseError mock support
+- `CLAUDE.md` — added Frontend API Client Pattern section
+
 ## Change Log
 
+- 2026-03-21: Code review fixes — session invalidation, AccountNotFound 404, domain event, DatabaseError test, mobile input, Effect HttpApiClient pattern
 - 2026-03-20: Changed all user-referencing FKs to `onDelete: "cascade"`, simplified repository to single-delete approach, wrote manual migration SQL
 - 2026-03-19: Initial implementation of account deletion (use-case, handler, contract, frontend UI, tests)

@@ -6,6 +6,7 @@
  */
 
 export {
+	AccountNotFound,
 	AgentInvocationError,
 	AnalyzerError,
 	AssessmentAlreadyExists,

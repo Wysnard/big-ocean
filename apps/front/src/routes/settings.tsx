@@ -47,7 +47,9 @@ function SettingsPage() {
 
 	const handleDeleteAccount = async () => {
 		await deleteAccountMutation.mutateAsync();
-		await signOut();
+		// Session rows are already cascade-deleted by the backend.
+		// Best-effort cookie cleanup — may fail since server session is gone.
+		await signOut().catch(() => {});
 		navigate({ to: "/" });
 	};
 

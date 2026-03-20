@@ -7,7 +7,7 @@
 
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema as S } from "effect";
-import { DatabaseError, Unauthorized } from "../../errors";
+import { AccountNotFound, DatabaseError, Unauthorized } from "../../errors";
 import { AuthMiddleware } from "../../middleware/auth";
 
 /**
@@ -27,6 +27,7 @@ export const AccountGroup = HttpApiGroup.make("account")
 	.add(
 		HttpApiEndpoint.del("deleteAccount", "/")
 			.addSuccess(DeleteAccountResponseSchema)
+			.addError(AccountNotFound, { status: 404 })
 			.addError(Unauthorized, { status: 401 })
 			.addError(DatabaseError, { status: 500 }),
 	)

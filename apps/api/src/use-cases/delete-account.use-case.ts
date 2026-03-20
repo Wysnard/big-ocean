@@ -7,17 +7,18 @@
  * Dependencies: UserAccountRepository, LoggerRepository
  */
 
-import { LoggerRepository, UserAccountRepository } from "@workspace/domain";
+import { AccountNotFound, LoggerRepository, UserAccountRepository } from "@workspace/domain";
 import { Effect } from "effect";
 
 /**
  * Delete a user's account and all associated data.
  *
- * Error propagation: DatabaseError from repo passes through without remapping
+ * Error propagation: AccountNotFound (404) when user doesn't exist,
+ * DatabaseError from repo passes through without remapping
  * (per ARCHITECTURE.md: use-cases must NOT remap errors).
  *
  * @param userId - The authenticated user's ID
- * @returns { success: boolean } - true if account was deleted
+ * @returns { success: true } on successful deletion
  */
 export const deleteAccount = (userId: string) =>
 	Effect.gen(function* () {
@@ -29,8 +30,16 @@ export const deleteAccount = (userId: string) =>
 		const wasDeleted = yield* accountRepo.deleteAccount(userId);
 
 		if (!wasDeleted) {
-			logger.warn("Account deletion: user not found", { userId });
+			return yield* Effect.fail(
+				new AccountNotFound({
+					userId,
+					message: "Account not found",
+				}),
+			);
 		}
 
-		return { success: wasDeleted };
+		// Domain event: structured log for future event bus subscribers (AC3)
+		logger.info("account.deleted", { userId, event: "account.deleted" });
+
+		return { success: true as const };
 	});
