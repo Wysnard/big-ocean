@@ -154,8 +154,8 @@ function ResultsSessionPage() {
 		const storageKey = `pwyw-modal-shown-${assessmentSessionId}`;
 		if (typeof window !== "undefined" && sessionStorage.getItem(storageKey)) return;
 
-		pwywAutoOpenRef.current = true;
 		const timer = setTimeout(() => {
+			pwywAutoOpenRef.current = true;
 			setShowPwywModal(true);
 			if (typeof window !== "undefined") {
 				sessionStorage.setItem(storageKey, "1");
