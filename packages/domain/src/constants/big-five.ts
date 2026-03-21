@@ -195,7 +195,6 @@ export const TRAIT_TO_FACETS: Record<TraitName, readonly FacetName[]> = {
 	neuroticism: NEUROTICISM_FACETS,
 } as const;
 
-
 /**
  * OCEAN-Interleaved Facet Order (30 facets)
  *
@@ -204,9 +203,8 @@ export const TRAIT_TO_FACETS: Record<TraitName, readonly FacetName[]> = {
  *
  * Used by computeSteeringTarget() as tiebreaker to ensure balanced trait exploration.
  */
-export const OCEAN_INTERLEAVED_ORDER: readonly FacetName[] = Array.from(
-	{ length: 6 },
-	(_, i) => TRAIT_NAMES.map((t) => TRAIT_TO_FACETS[t][i]),
+export const OCEAN_INTERLEAVED_ORDER: readonly FacetName[] = Array.from({ length: 6 }, (_, i) =>
+	TRAIT_NAMES.map((t) => TRAIT_TO_FACETS[t][i]),
 ).flat() as FacetName[];
 
 /**

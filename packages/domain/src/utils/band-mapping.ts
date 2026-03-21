@@ -8,8 +8,7 @@
  * All values are in [0, 1] space per NFR1.
  */
 
-import type { EnergyBand } from "../types/pacing";
-import type { TellingBand } from "../types/pacing";
+import type { EnergyBand, TellingBand } from "../types/pacing";
 
 /**
  * Energy band to numeric mapping.

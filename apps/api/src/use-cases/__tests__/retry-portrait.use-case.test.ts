@@ -19,7 +19,6 @@ import {
 	AssessmentSessionRepository,
 	LoggerRepository,
 	PortraitRepository,
-	SessionNotFound,
 } from "@workspace/domain";
 import type { Portrait } from "@workspace/domain/repositories/portrait.repository";
 import { Effect, Exit, Layer } from "effect";
@@ -80,9 +79,7 @@ describe("retryPortrait Use Case (Story 32-6)", () => {
 			mockSessionRepo.getSession.mockReturnValue(
 				Effect.succeed({ id: "session_123", userId: "user_789", status: "completed" }),
 			);
-			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(
-				Effect.succeed(failedPortrait),
-			);
+			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(failedPortrait));
 			mockPortraitRepo.resetRetryCount.mockReturnValue(
 				Effect.succeed({ ...failedPortrait, retryCount: 0 }),
 			);
@@ -107,9 +104,7 @@ describe("retryPortrait Use Case (Story 32-6)", () => {
 			mockSessionRepo.getSession.mockReturnValue(
 				Effect.succeed({ id: "session_123", userId: "user_789", status: "completed" }),
 			);
-			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(
-				Effect.succeed(readyPortrait),
-			);
+			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(readyPortrait));
 
 			const result = yield* retryPortrait({
 				sessionId: "session_123",

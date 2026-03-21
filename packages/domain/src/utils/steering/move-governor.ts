@@ -15,11 +15,11 @@
 
 import type { LifeDomain } from "../../constants/life-domain";
 import type {
-	ClosePromptInput,
 	BridgePromptInput,
-	ConversationalIntent,
+	ClosePromptInput,
 	ContradictionTarget,
 	ConvergenceTarget,
+	ConversationalIntent,
 	EntryPressure,
 	EntryPressureDebug,
 	ExplorePromptInput,
@@ -45,7 +45,7 @@ export const ENTRY_PRESSURE_MODERATE_GAP = 0.15;
  * Gap > LARGE_GAP -> "soft".
  * Simulation-derived default, named for calibration.
  */
-export const ENTRY_PRESSURE_LARGE_GAP = 0.30;
+export const ENTRY_PRESSURE_LARGE_GAP = 0.3;
 
 // ─── Types ──────────────────────────────────────────────────────────
 

@@ -6,7 +6,12 @@
 
 import { DatabaseError } from "@workspace/domain/errors/http.errors";
 import { PortraitRatingRepository } from "@workspace/domain/repositories/portrait-rating.repository";
-import type { DepthSignalLevel, PortraitRating, PortraitRatingRecord, PortraitType } from "@workspace/domain/types/portrait-rating.types";
+import type {
+	DepthSignalLevel,
+	PortraitRating,
+	PortraitRatingRecord,
+	PortraitType,
+} from "@workspace/domain/types/portrait-rating.types";
 import { Effect, Layer } from "effect";
 import { Database } from "../context/database";
 import { portraitRatings } from "../db/drizzle/schema";

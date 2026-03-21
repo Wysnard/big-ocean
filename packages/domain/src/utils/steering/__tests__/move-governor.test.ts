@@ -7,12 +7,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { LifeDomain } from "../../../constants/life-domain";
-import type {
-	ContradictionTarget,
-	ConvergenceTarget,
-	DomainScore,
-	EntryPressure,
-} from "../../../types/pacing";
+import type { ContradictionTarget } from "../../../types/pacing";
 import type { TerritoryId } from "../../../types/territory";
 import {
 	computeEntryPressure,
@@ -55,7 +50,7 @@ describe("Entry pressure constants", () => {
 	});
 
 	it("ENTRY_PRESSURE_LARGE_GAP should be 0.30", () => {
-		expect(ENTRY_PRESSURE_LARGE_GAP).toBe(0.30);
+		expect(ENTRY_PRESSURE_LARGE_GAP).toBe(0.3);
 	});
 });
 
@@ -107,9 +102,9 @@ describe("deriveIntent", () => {
 
 describe("computeEntryPressure", () => {
 	it("returns 'direct' when gap is small (<= 0.15)", () => {
-		const result = computeEntryPressure(0.5, 0.60);
+		const result = computeEntryPressure(0.5, 0.6);
 		expect(result.level).toBe("direct");
-		expect(result.gap).toBeCloseTo(0.10, 5);
+		expect(result.gap).toBeCloseTo(0.1, 5);
 	});
 
 	it("returns 'direct' when territory energy is below E_target", () => {
@@ -149,12 +144,12 @@ describe("computeEntryPressure", () => {
 	});
 
 	it("returns 'direct' at exact boundary (gap = 0.15)", () => {
-		const result = computeEntryPressure(0.45, 0.60);
+		const result = computeEntryPressure(0.45, 0.6);
 		expect(result.level).toBe("direct");
 	});
 
 	it("returns 'angled' at exact boundary (gap = 0.30)", () => {
-		const result = computeEntryPressure(0.30, 0.60);
+		const result = computeEntryPressure(0.3, 0.6);
 		expect(result.level).toBe("angled");
 	});
 });
@@ -323,7 +318,11 @@ describe("computeGovernorOutput", () => {
 
 	describe("MoveGovernorDebug completeness", () => {
 		it("contains all required debug fields for explore", () => {
-			const input = buildInput({ turnNumber: 12, isFinalTurn: false, previousTerritory: tid("creative-pursuits") });
+			const input = buildInput({
+				turnNumber: 12,
+				isFinalTurn: false,
+				previousTerritory: tid("creative-pursuits"),
+			});
 			const { debug } = computeGovernorOutput(input);
 
 			expect(debug).toHaveProperty("intent");
@@ -360,7 +359,11 @@ describe("computeGovernorOutput", () => {
 
 	describe("output uses TerritoryId (not full Territory)", () => {
 		it("output.territory is a TerritoryId string, not a Territory object", () => {
-			const input = buildInput({ turnNumber: 5, isFinalTurn: false, previousTerritory: tid("creative-pursuits") });
+			const input = buildInput({
+				turnNumber: 5,
+				isFinalTurn: false,
+				previousTerritory: tid("creative-pursuits"),
+			});
 			const { output } = computeGovernorOutput(input);
 
 			expect(typeof output.territory).toBe("string");

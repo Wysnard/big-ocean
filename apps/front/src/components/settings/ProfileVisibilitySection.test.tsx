@@ -66,9 +66,7 @@ describe("ProfileVisibilitySection", () => {
 				onToggleVisibility={() => {}}
 			/>,
 		);
-		expect(
-			container.querySelector("[data-slot='profile-visibility-section']"),
-		).toBeInTheDocument();
+		expect(container.querySelector("[data-slot='profile-visibility-section']")).toBeInTheDocument();
 	});
 
 	it("disables toggle when isTogglePending is true", () => {

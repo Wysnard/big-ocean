@@ -15,8 +15,8 @@ import {
 	LoggerRepository,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
-import { NEUTRAL_DEFAULTS, runThreeTierExtraction } from "../three-tier-extraction";
 import type { ThreeTierExtractionInput } from "../three-tier-extraction";
+import { NEUTRAL_DEFAULTS, runThreeTierExtraction } from "../three-tier-extraction";
 
 // ---- Mock Repos ----
 
@@ -150,40 +150,32 @@ describe("Three-Tier Extraction Pipeline (Story 24-2)", () => {
 	});
 
 	describe("Tier 2 — Lenient Schema Fallback", () => {
-		it.effect(
-			"Tier 2 fallback: Tier 1 fails 3 times, Tier 2 succeeds -> extractionTier = 2",
-			() =>
-				Effect.gen(function* () {
-					mockConversanalyzerRepo.analyze.mockReturnValue(Effect.fail(conversanalyzerError));
-					mockConversanalyzerRepo.analyzeLenient.mockReturnValue(
-						Effect.succeed(successfulV2Output),
-					);
+		it.effect("Tier 2 fallback: Tier 1 fails 3 times, Tier 2 succeeds -> extractionTier = 2", () =>
+			Effect.gen(function* () {
+				mockConversanalyzerRepo.analyze.mockReturnValue(Effect.fail(conversanalyzerError));
+				mockConversanalyzerRepo.analyzeLenient.mockReturnValue(Effect.succeed(successfulV2Output));
 
-					const result = yield* runThreeTierExtraction(testInput);
+				const result = yield* runThreeTierExtraction(testInput);
 
-					expect(result.extractionTier).toBe(2);
-					expect(result.output).toEqual(successfulV2Output);
-					// Tier 1: 1 initial + 2 retries = 3 calls
-					expect(mockConversanalyzerRepo.analyze).toHaveBeenCalledTimes(3);
-					expect(mockConversanalyzerRepo.analyzeLenient).toHaveBeenCalledTimes(1);
-				}).pipe(Effect.provide(createTestLayer())),
+				expect(result.extractionTier).toBe(2);
+				expect(result.output).toEqual(successfulV2Output);
+				// Tier 1: 1 initial + 2 retries = 3 calls
+				expect(mockConversanalyzerRepo.analyze).toHaveBeenCalledTimes(3);
+				expect(mockConversanalyzerRepo.analyzeLenient).toHaveBeenCalledTimes(1);
+			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect(
-			"Partial Tier 2: lenient schema returns subset of evidence -> valid items kept",
-			() =>
-				Effect.gen(function* () {
-					mockConversanalyzerRepo.analyze.mockReturnValue(Effect.fail(conversanalyzerError));
-					mockConversanalyzerRepo.analyzeLenient.mockReturnValue(
-						Effect.succeed(partialV2Output),
-					);
+		it.effect("Partial Tier 2: lenient schema returns subset of evidence -> valid items kept", () =>
+			Effect.gen(function* () {
+				mockConversanalyzerRepo.analyze.mockReturnValue(Effect.fail(conversanalyzerError));
+				mockConversanalyzerRepo.analyzeLenient.mockReturnValue(Effect.succeed(partialV2Output));
 
-					const result = yield* runThreeTierExtraction(testInput);
+				const result = yield* runThreeTierExtraction(testInput);
 
-					expect(result.extractionTier).toBe(2);
-					expect(result.output.evidence).toHaveLength(1);
-					expect(result.output.evidence[0]?.bigfiveFacet).toBe("imagination");
-				}).pipe(Effect.provide(createTestLayer())),
+				expect(result.extractionTier).toBe(2);
+				expect(result.output.evidence).toHaveLength(1);
+				expect(result.output.evidence[0]?.bigfiveFacet).toBe("imagination");
+			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
@@ -193,9 +185,7 @@ describe("Three-Tier Extraction Pipeline (Story 24-2)", () => {
 			() =>
 				Effect.gen(function* () {
 					mockConversanalyzerRepo.analyze.mockReturnValue(Effect.fail(conversanalyzerError));
-					mockConversanalyzerRepo.analyzeLenient.mockReturnValue(
-						Effect.fail(conversanalyzerError),
-					);
+					mockConversanalyzerRepo.analyzeLenient.mockReturnValue(Effect.fail(conversanalyzerError));
 
 					const result = yield* runThreeTierExtraction(testInput);
 
@@ -230,9 +220,7 @@ describe("Three-Tier Extraction Pipeline (Story 24-2)", () => {
 		it.effect("logs at warn level when Tier 2 is used (degraded extraction)", () =>
 			Effect.gen(function* () {
 				mockConversanalyzerRepo.analyze.mockReturnValue(Effect.fail(conversanalyzerError));
-				mockConversanalyzerRepo.analyzeLenient.mockReturnValue(
-					Effect.succeed(partialV2Output),
-				);
+				mockConversanalyzerRepo.analyzeLenient.mockReturnValue(Effect.succeed(partialV2Output));
 
 				yield* runThreeTierExtraction(testInput);
 
@@ -248,9 +236,7 @@ describe("Three-Tier Extraction Pipeline (Story 24-2)", () => {
 		it.effect("logs at warn level when Tier 3 neutral defaults are used", () =>
 			Effect.gen(function* () {
 				mockConversanalyzerRepo.analyze.mockReturnValue(Effect.fail(conversanalyzerError));
-				mockConversanalyzerRepo.analyzeLenient.mockReturnValue(
-					Effect.fail(conversanalyzerError),
-				);
+				mockConversanalyzerRepo.analyzeLenient.mockReturnValue(Effect.fail(conversanalyzerError));
 
 				yield* runThreeTierExtraction(testInput);
 

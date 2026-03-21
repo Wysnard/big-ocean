@@ -27,8 +27,6 @@ describe("PortraitUnlockCta", () => {
 
 	it("renders descriptive text about what the portrait is", () => {
 		render(<PortraitUnlockCta onUnlock={vi.fn()} />);
-		expect(
-			screen.getByText(/nerin.*letter/i),
-		).toBeInTheDocument();
+		expect(screen.getByText(/nerin.*letter/i)).toBeInTheDocument();
 	});
 });

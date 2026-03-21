@@ -662,7 +662,9 @@ function ChatContent({
 							data-slot="reconnection-toast"
 							className="mx-4 mb-2 p-3 bg-accent/50 border border-accent rounded-lg"
 						>
-							<p className="text-sm text-accent-foreground">Connection restored — you can continue your conversation.</p>
+							<p className="text-sm text-accent-foreground">
+								Connection restored — you can continue your conversation.
+							</p>
 						</div>
 					)}
 

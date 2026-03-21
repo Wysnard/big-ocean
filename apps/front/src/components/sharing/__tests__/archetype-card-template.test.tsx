@@ -112,7 +112,13 @@ describe("ArchetypeCardTemplate", () => {
 					archetypeName="The Beacon"
 					oceanCode="OCEAR"
 					displayName="Alex"
-					traitScores={{ openness: 95, conscientiousness: 72, extraversion: 88, agreeableness: 60, neuroticism: 45 }}
+					traitScores={{
+						openness: 95,
+						conscientiousness: 72,
+						extraversion: 88,
+						agreeableness: 60,
+						neuroticism: 45,
+					}}
 					dominantColor="#A855F7"
 					width={1080}
 					height={1920}

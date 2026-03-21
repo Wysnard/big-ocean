@@ -4,6 +4,7 @@
  * In-memory implementation for testing.
  */
 
+import { randomUUID } from "node:crypto";
 import type {
 	InsertPortraitRating,
 	PortraitRatingRepository as PortraitRatingRepoType,
@@ -11,7 +12,6 @@ import type {
 import { PortraitRatingRepository } from "@workspace/domain/repositories/portrait-rating.repository";
 import type { PortraitRatingRecord } from "@workspace/domain/types/portrait-rating.types";
 import { Effect, Layer } from "effect";
-import { randomUUID } from "node:crypto";
 
 const ratings: PortraitRatingRecord[] = [];
 

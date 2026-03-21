@@ -12,13 +12,13 @@ import {
 	AppConfig,
 	AssessmentExchangeRepository,
 	AssessmentSessionRepository,
+	getTerritoryById,
 	LoggerRepository,
 	ResendEmailRepository,
 	type TerritoryId,
-	getTerritoryById,
 } from "@workspace/domain";
-import { Effect } from "effect";
 import { renderDropOffEmail } from "@workspace/infrastructure/email-templates/drop-off-re-engagement";
+import { Effect } from "effect";
 
 /**
  * Check for drop-off sessions and send re-engagement emails.
@@ -56,9 +56,9 @@ export const checkDropOff = Effect.gen(function* () {
 		);
 
 		// Look up last territory from assessment exchanges
-		const exchanges = yield* exchangeRepo.findBySession(session.sessionId).pipe(
-			Effect.catchAll(() => Effect.succeed([] as Array<{ selectedTerritory: string | null }>)),
-		);
+		const exchanges = yield* exchangeRepo
+			.findBySession(session.sessionId)
+			.pipe(Effect.catchAll(() => Effect.succeed([] as Array<{ selectedTerritory: string | null }>)));
 
 		let territoryName = "your personality";
 		if (exchanges.length > 0) {

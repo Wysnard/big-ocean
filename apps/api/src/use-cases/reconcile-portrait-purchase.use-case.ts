@@ -53,9 +53,9 @@ export const reconcilePortraitPurchase = (input: ReconcilePortraitPurchaseInput)
 		}
 
 		// 3. Look up assessment result for placeholder insertion
-		const result = yield* resultsRepo.getBySessionId(input.sessionId).pipe(
-			Effect.catchAll(() => Effect.succeed(null)),
-		);
+		const result = yield* resultsRepo
+			.getBySessionId(input.sessionId)
+			.pipe(Effect.catchAll(() => Effect.succeed(null)));
 		if (!result) {
 			logger.warn("Portrait reconciliation: no assessment result found, skipping", {
 				sessionId: input.sessionId,

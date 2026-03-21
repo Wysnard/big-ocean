@@ -21,7 +21,7 @@ export const PRESSURE_ANGLED =
 
 /** Soft pressure — only if conversation opens naturally. */
 export const PRESSURE_SOFT =
-	'Only if the conversation opens toward it naturally. If not, stay where you are. If you see a thread worth holding, name it — "there\'s something there, we\'ll come back to it."';
+	"Only if the conversation opens toward it naturally. If not, stay where you are. If you see a thread worth holding, name it — \"there's something there, we'll come back to it.\"";
 
 // ─── Lookup Function ────────────────────────────────────────────────
 

@@ -9,8 +9,8 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { authClient, getSession } from "../lib/auth-client";
 import { OceanShapeSet } from "../components/ocean-shapes";
+import { authClient, getSession } from "../lib/auth-client";
 
 export const Route = createFileRoute("/forgot-password")({
 	beforeLoad: async () => {
@@ -63,9 +63,7 @@ function ForgotPasswordPage() {
 
 					{/* Brand mark */}
 					<div className="mb-5 flex items-center gap-1">
-						<span className="font-heading text-lg font-bold tracking-tight text-foreground">
-							big-
-						</span>
+						<span className="font-heading text-lg font-bold tracking-tight text-foreground">big-</span>
 						<OceanShapeSet size={12} />
 					</div>
 
@@ -98,10 +96,7 @@ function ForgotPasswordPage() {
 					) : (
 						<form onSubmit={handleSubmit} className="space-y-4">
 							<div>
-								<label
-									htmlFor="forgot-email"
-									className="mb-1 block text-sm font-medium text-foreground"
-								>
+								<label htmlFor="forgot-email" className="mb-1 block text-sm font-medium text-foreground">
 									Email
 								</label>
 								<input
@@ -121,9 +116,7 @@ function ForgotPasswordPage() {
 								disabled={isLoading}
 								className="mt-3 min-h-[52px] w-full rounded-xl bg-foreground font-heading text-base font-bold tracking-tight text-background transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-primary hover:shadow-lg hover:-translate-y-px active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
 							>
-								{isLoading && (
-									<Loader2 className="mr-2 inline h-4 w-4 motion-safe:animate-spin" />
-								)}
+								{isLoading && <Loader2 className="mr-2 inline h-4 w-4 motion-safe:animate-spin" />}
 								{isLoading ? "Sending..." : "Send Reset Link"}
 							</button>
 

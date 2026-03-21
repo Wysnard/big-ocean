@@ -33,10 +33,7 @@ export function ChatConversation<T>({
 	}, [messageCount, autoScroll, scrollToBottom]);
 
 	return (
-		<div
-			data-slot="chat-conversation"
-			className={cn("flex-1 overflow-y-auto space-y-4", className)}
-		>
+		<div data-slot="chat-conversation" className={cn("flex-1 overflow-y-auto space-y-4", className)}>
 			{messages.map((message, index) => renderMessage(message, index))}
 			{typingIndicator}
 			<div ref={endRef} />

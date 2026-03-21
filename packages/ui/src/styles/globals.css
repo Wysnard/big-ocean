@@ -10,63 +10,63 @@
 
 :root {
 	/* ========== SURFACES & NEUTRALS (warm cream) ========== */
-	--background: #FFF8F0;
-	--foreground: #1A1A2E;
-	--card: #FFF0E8;
-	--card-foreground: #1A1A2E;
-	--popover: #FFF0E8;
-	--popover-foreground: #1A1A2E;
+	--background: #fff8f0;
+	--foreground: #1a1a2e;
+	--card: #fff0e8;
+	--card-foreground: #1a1a2e;
+	--popover: #fff0e8;
+	--popover-foreground: #1a1a2e;
 
 	/* ========== CORE SEMANTIC (psychedelic celebration) ========== */
-	--primary: #FF0080;
-	--primary-hover: #FF1493;
-	--primary-foreground: #FFFFFF;
-	--secondary: #FF6B2B;
-	--secondary-foreground: #FFFFFF;
-	--tertiary: #00B4A6;
-	--tertiary-foreground: #FFFFFF;
-	--accent: #FFE8D8;
-	--accent-foreground: #1A1A2E;
-	--muted: #FFF0E8;
-	--muted-foreground: #6B6580;
-	--ring: #FF0080;
+	--primary: #ff0080;
+	--primary-hover: #ff1493;
+	--primary-foreground: #ffffff;
+	--secondary: #ff6b2b;
+	--secondary-foreground: #ffffff;
+	--tertiary: #00b4a6;
+	--tertiary-foreground: #ffffff;
+	--accent: #ffe8d8;
+	--accent-foreground: #1a1a2e;
+	--muted: #fff0e8;
+	--muted-foreground: #6b6580;
+	--ring: #ff0080;
 
 	/* ========== STATUS & FEEDBACK ========== */
-	--destructive: #FF3B5C;
-	--destructive-foreground: #FFFFFF;
-	--success: #00C896;
-	--warning: #FFB020;
-	--border: #FFD6C4;
-	--input: #FFD6C4;
+	--destructive: #ff3b5c;
+	--destructive-foreground: #ffffff;
+	--success: #00c896;
+	--warning: #ffb020;
+	--border: #ffd6c4;
+	--input: #ffd6c4;
 	--radius: 0.75rem;
 
 	/* ========== CHARTS (psychedelic palette) ========== */
-	--chart-1: #FF0080;
-	--chart-2: #00B4A6;
-	--chart-3: #FF6B2B;
-	--chart-4: #FF1493;
-	--chart-5: #00C896;
+	--chart-1: #ff0080;
+	--chart-2: #00b4a6;
+	--chart-3: #ff6b2b;
+	--chart-4: #ff1493;
+	--chart-5: #00c896;
 
 	/* ========== SIDEBAR (psychedelic celebration) ========== */
-	--sidebar: #FFF8F0;
-	--sidebar-foreground: #1A1A2E;
-	--sidebar-primary: #FF0080;
-	--sidebar-primary-foreground: #FFFFFF;
-	--sidebar-accent: #FFE8D8;
-	--sidebar-accent-foreground: #1A1A2E;
-	--sidebar-border: #FFD6C4;
-	--sidebar-ring: #FF0080;
+	--sidebar: #fff8f0;
+	--sidebar-foreground: #1a1a2e;
+	--sidebar-primary: #ff0080;
+	--sidebar-primary-foreground: #ffffff;
+	--sidebar-accent: #ffe8d8;
+	--sidebar-accent-foreground: #1a1a2e;
+	--sidebar-border: #ffd6c4;
+	--sidebar-ring: #ff0080;
 
 	/* ========== GRADIENTS (celebration) ========== */
-	--gradient-celebration: linear-gradient(120deg, #FF0080, #FF1493, #FF6B2B);
-	--gradient-progress: linear-gradient(90deg, #00B4A6, #00D4C8);
-	--gradient-surface-glow: radial-gradient(circle, #FFF0E8, #FFF8F0);
+	--gradient-celebration: linear-gradient(120deg, #ff0080, #ff1493, #ff6b2b);
+	--gradient-progress: linear-gradient(90deg, #00b4a6, #00d4c8);
+	--gradient-surface-glow: radial-gradient(circle, #fff0e8, #fff8f0);
 
 	/* ========== DEPTH ZONES (warm cream progression) ========== */
 	--depth-surface: var(--background);
-	--depth-shallows: #FFECDB;
-	--depth-mid: #FFE0CA;
-	--depth-deep: #FFD4B9;
+	--depth-shallows: #ffecdb;
+	--depth-mid: #ffe0ca;
+	--depth-deep: #ffd4b9;
 
 	/* ========== SPACING SCALE ========== */
 	--space-1: 4px;
@@ -109,31 +109,31 @@
 	--radius-chat-sender: 4px;
 
 	/* ========== BIG FIVE TRAIT TOKENS ========== */
-	--trait-openness: oklch(0.55 0.24 293);           /* spec: #A855F7 Purple */
-	--trait-conscientiousness: oklch(0.67 0.20 42);    /* spec: #FF6B2B Orange */
-	--trait-extraversion: oklch(0.59 0.27 348);        /* spec: #FF0080 Electric Pink */
-	--trait-agreeableness: oklch(0.67 0.13 181);       /* spec: #00B4A6 Teal */
-	--trait-neuroticism: oklch(0.29 0.19 272);         /* spec: #1c1c9c Navy */
+	--trait-openness: oklch(0.55 0.24 293); /* spec: #A855F7 Purple */
+	--trait-conscientiousness: oklch(0.67 0.2 42); /* spec: #FF6B2B Orange */
+	--trait-extraversion: oklch(0.59 0.27 348); /* spec: #FF0080 Electric Pink */
+	--trait-agreeableness: oklch(0.67 0.13 181); /* spec: #00B4A6 Teal */
+	--trait-neuroticism: oklch(0.29 0.19 272); /* spec: #1c1c9c Navy */
 
 	/* Trait accent colors (gradient pairs) */
-	--trait-openness-accent: oklch(0.82 0.16 80);           /* spec: #FFB830 Gold */
+	--trait-openness-accent: oklch(0.82 0.16 80); /* spec: #FFB830 Gold */
 	--trait-conscientiousness-accent: oklch(0.67 0.13 181); /* spec: #00B4A6 Teal */
-	--trait-extraversion-accent: oklch(0.67 0.20 42);       /* spec: #FF6B2B Orange */
-	--trait-agreeableness-accent: oklch(0.72 0.19 48);      /* Warm Orange — high contrast pair with Teal */
-	--trait-neuroticism-accent: oklch(0.78 0.14 182);       /* spec: #00D4C8 Teal */
+	--trait-extraversion-accent: oklch(0.67 0.2 42); /* spec: #FF6B2B Orange */
+	--trait-agreeableness-accent: oklch(0.72 0.19 48); /* Warm Orange — high contrast pair with Teal */
+	--trait-neuroticism-accent: oklch(0.78 0.14 182); /* spec: #00D4C8 Teal */
 
 	/* Openness facets (base: L=0.55 C=0.24 H=293, step=0.05) */
 	--facet-imagination: oklch(0.45 0.22 293);
-	--facet-artistic_interests: oklch(0.50 0.23 293);
+	--facet-artistic_interests: oklch(0.5 0.23 293);
 	--facet-emotionality: oklch(0.55 0.24 293);
-	--facet-adventurousness: oklch(0.60 0.25 293);
+	--facet-adventurousness: oklch(0.6 0.25 293);
 	--facet-intellect: oklch(0.65 0.26 293);
-	--facet-liberalism: oklch(0.70 0.25 293);
+	--facet-liberalism: oklch(0.7 0.25 293);
 
 	/* Conscientiousness facets (base: L=0.67 C=0.20 H=42, step=0.05) */
 	--facet-self_efficacy: oklch(0.57 0.18 42);
 	--facet-orderliness: oklch(0.62 0.19 42);
-	--facet-dutifulness: oklch(0.67 0.20 42);
+	--facet-dutifulness: oklch(0.67 0.2 42);
 	--facet-achievement_striving: oklch(0.72 0.21 42);
 	--facet-self_discipline: oklch(0.77 0.22 42);
 	--facet-cautiousness: oklch(0.82 0.21 42);
@@ -158,16 +158,36 @@
 	--facet-anxiety: oklch(0.19 0.17 272);
 	--facet-anger: oklch(0.24 0.18 272);
 	--facet-depression: oklch(0.29 0.19 272);
-	--facet-self_consciousness: oklch(0.34 0.20 272);
+	--facet-self_consciousness: oklch(0.34 0.2 272);
 	--facet-immoderation: oklch(0.39 0.21 272);
-	--facet-vulnerability: oklch(0.44 0.20 272);
+	--facet-vulnerability: oklch(0.44 0.2 272);
 
 	/* Trait gradients (accent-pair, auto light/dark via var() references) */
-	--gradient-trait-openness: linear-gradient(135deg, var(--trait-openness), var(--trait-openness-accent));
-	--gradient-trait-conscientiousness: linear-gradient(135deg, var(--trait-conscientiousness), var(--trait-conscientiousness-accent));
-	--gradient-trait-extraversion: linear-gradient(135deg, var(--trait-extraversion), var(--trait-extraversion-accent));
-	--gradient-trait-agreeableness: linear-gradient(135deg, var(--trait-agreeableness), var(--trait-agreeableness-accent));
-	--gradient-trait-neuroticism: linear-gradient(135deg, var(--trait-neuroticism), var(--trait-neuroticism-accent));
+	--gradient-trait-openness: linear-gradient(
+		135deg,
+		var(--trait-openness),
+		var(--trait-openness-accent)
+	);
+	--gradient-trait-conscientiousness: linear-gradient(
+		135deg,
+		var(--trait-conscientiousness),
+		var(--trait-conscientiousness-accent)
+	);
+	--gradient-trait-extraversion: linear-gradient(
+		135deg,
+		var(--trait-extraversion),
+		var(--trait-extraversion-accent)
+	);
+	--gradient-trait-agreeableness: linear-gradient(
+		135deg,
+		var(--trait-agreeableness),
+		var(--trait-agreeableness-accent)
+	);
+	--gradient-trait-neuroticism: linear-gradient(
+		135deg,
+		var(--trait-neuroticism),
+		var(--trait-neuroticism-accent)
+	);
 
 	/* ========== CONVERSATION TOKENS (light defaults) ========== */
 	--bubble-bg: var(--card);
@@ -214,76 +234,78 @@
 
 .dark {
 	/* ========== SURFACES & NEUTRALS (abyss navy) ========== */
-	--background: #0A0E27;
-	--foreground: #F0EDE8;
+	--background: #0a0e27;
+	--foreground: #f0ede8;
 	--card: #141838;
-	--card-foreground: #F0EDE8;
+	--card-foreground: #f0ede8;
 	--popover: #141838;
-	--popover-foreground: #F0EDE8;
+	--popover-foreground: #f0ede8;
 
 	/* ========== CORE SEMANTIC (midnight aurora) ========== */
-	--primary: #A78BFA;
-	--primary-hover: #C4B5FD;
-	--primary-foreground: #0A0E27;
-	--secondary: #34D399;
-	--secondary-foreground: #0A0E27;
-	--tertiary: #FF2D9B;
-	--tertiary-foreground: #FFFFFF;
-	--accent: #1C2148;
-	--accent-foreground: #F0EDE8;
+	--primary: #a78bfa;
+	--primary-hover: #c4b5fd;
+	--primary-foreground: #0a0e27;
+	--secondary: #34d399;
+	--secondary-foreground: #0a0e27;
+	--tertiary: #ff2d9b;
+	--tertiary-foreground: #ffffff;
+	--accent: #1c2148;
+	--accent-foreground: #f0ede8;
 	--muted: #141838;
-	--muted-foreground: #8B85A0;
-	--ring: #A78BFA;
+	--muted-foreground: #8b85a0;
+	--ring: #a78bfa;
 
 	/* ========== STATUS & FEEDBACK ========== */
-	--destructive: #FF4D6A;
-	--destructive-foreground: #FFFFFF;
-	--success: #00E0A0;
-	--warning: #FFB830;
-	--border: #252A52;
-	--input: #252A52;
+	--destructive: #ff4d6a;
+	--destructive-foreground: #ffffff;
+	--success: #00e0a0;
+	--warning: #ffb830;
+	--border: #252a52;
+	--input: #252a52;
 
 	/* ========== CHARTS (midnight aurora palette) ========== */
-	--chart-1: #A78BFA;
-	--chart-2: #34D399;
-	--chart-3: #FF2D9B;
-	--chart-4: #C4B5FD;
-	--chart-5: #FF4D6A;
+	--chart-1: #a78bfa;
+	--chart-2: #34d399;
+	--chart-3: #ff2d9b;
+	--chart-4: #c4b5fd;
+	--chart-5: #ff4d6a;
 
 	/* ========== SIDEBAR (midnight aurora) ========== */
-	--sidebar: #0A0E27;
-	--sidebar-foreground: #F0EDE8;
-	--sidebar-primary: #A78BFA;
-	--sidebar-primary-foreground: #0A0E27;
-	--sidebar-accent: #1C2148;
-	--sidebar-accent-foreground: #F0EDE8;
-	--sidebar-border: #252A52;
-	--sidebar-ring: #A78BFA;
+	--sidebar: #0a0e27;
+	--sidebar-foreground: #f0ede8;
+	--sidebar-primary: #a78bfa;
+	--sidebar-primary-foreground: #0a0e27;
+	--sidebar-accent: #1c2148;
+	--sidebar-accent-foreground: #f0ede8;
+	--sidebar-border: #252a52;
+	--sidebar-ring: #a78bfa;
 
 	/* ========== GRADIENTS (midnight aurora) ========== */
-	--gradient-celebration: linear-gradient(120deg, #A78BFA, #34D399, #FF2D9B);
-	--gradient-progress: linear-gradient(90deg, #A78BFA, #C4B5FD);
-	--gradient-surface-glow: radial-gradient(circle, #1C2148, #0A0E27);
+	--gradient-celebration: linear-gradient(120deg, #a78bfa, #34d399, #ff2d9b);
+	--gradient-progress: linear-gradient(90deg, #a78bfa, #c4b5fd);
+	--gradient-surface-glow: radial-gradient(circle, #1c2148, #0a0e27);
 
 	/* ========== DEPTH ZONES (abyss navy progression) ========== */
-	--depth-surface: #0A0E27;
+	--depth-surface: #0a0e27;
 	--depth-shallows: #101432;
-	--depth-mid: #171C40;
-	--depth-deep: #1E244E;
+	--depth-mid: #171c40;
+	--depth-deep: #1e244e;
 
 	/* ========== BIG FIVE TRAIT TOKENS (dark mode — brighter for dark backgrounds) ========== */
-	--trait-openness: oklch(0.67 0.20 293);           /* spec: #C084FC Brighter purple */
-	--trait-conscientiousness: oklch(0.74 0.16 46);    /* spec: #FF8F5E Brighter orange */
-	--trait-extraversion: oklch(0.65 0.23 350);        /* spec: #FF4DA6 Brighter pink */
-	--trait-agreeableness: oklch(0.77 0.14 178);       /* spec: #2DD4BF Brighter teal */
-	--trait-neuroticism: oklch(0.54 0.22 275);         /* spec: #6366F1 Brighter indigo */
+	--trait-openness: oklch(0.67 0.2 293); /* spec: #C084FC Brighter purple */
+	--trait-conscientiousness: oklch(0.74 0.16 46); /* spec: #FF8F5E Brighter orange */
+	--trait-extraversion: oklch(0.65 0.23 350); /* spec: #FF4DA6 Brighter pink */
+	--trait-agreeableness: oklch(0.77 0.14 178); /* spec: #2DD4BF Brighter teal */
+	--trait-neuroticism: oklch(0.54 0.22 275); /* spec: #6366F1 Brighter indigo */
 
 	/* Trait accent colors (dark mode — brighter for dark backgrounds) */
-	--trait-openness-accent: oklch(0.90 0.16 80);           /* Brighter gold */
+	--trait-openness-accent: oklch(0.9 0.16 80); /* Brighter gold */
 	--trait-conscientiousness-accent: oklch(0.79 0.13 181); /* Brighter teal */
-	--trait-extraversion-accent: oklch(0.79 0.20 42);       /* Brighter orange */
-	--trait-agreeableness-accent: oklch(0.80 0.19 48);      /* Brighter warm orange — high contrast pair with Teal */
-	--trait-neuroticism-accent: oklch(0.88 0.14 182);       /* Brighter teal */
+	--trait-extraversion-accent: oklch(0.79 0.2 42); /* Brighter orange */
+	--trait-agreeableness-accent: oklch(
+		0.8 0.19 48
+	); /* Brighter warm orange — high contrast pair with Teal */
+	--trait-neuroticism-accent: oklch(0.88 0.14 182); /* Brighter teal */
 
 	/* Openness facets (dark mode: light-mode L + 0.12, step=0.05) */
 	--facet-imagination: oklch(0.57 0.22 293);
@@ -296,7 +318,7 @@
 	/* Conscientiousness facets (dark mode: light-mode L + 0.12, step=0.05, H=46) */
 	--facet-self_efficacy: oklch(0.69 0.18 46);
 	--facet-orderliness: oklch(0.74 0.19 46);
-	--facet-dutifulness: oklch(0.79 0.20 46);
+	--facet-dutifulness: oklch(0.79 0.2 46);
 	--facet-achievement_striving: oklch(0.84 0.21 46);
 	--facet-self_discipline: oklch(0.89 0.22 46);
 	--facet-cautiousness: oklch(0.92 0.21 46);
@@ -318,12 +340,12 @@
 	--facet-sympathy: oklch(0.92 0.14 178);
 
 	/* Neuroticism facets (dark mode: boosted L for dark bg visibility, step=0.05, H=275) */
-	--facet-anxiety: oklch(0.54 0.20 275);
+	--facet-anxiety: oklch(0.54 0.2 275);
 	--facet-anger: oklch(0.59 0.21 275);
 	--facet-depression: oklch(0.64 0.22 275);
 	--facet-self_consciousness: oklch(0.69 0.22 275);
 	--facet-immoderation: oklch(0.74 0.21 275);
-	--facet-vulnerability: oklch(0.79 0.20 275);
+	--facet-vulnerability: oklch(0.79 0.2 275);
 
 	/* ========== CONVERSATION TOKENS (dark mode) ========== */
 	--bubble-bg: rgba(255, 255, 255, 0.05);
@@ -351,7 +373,13 @@
 	--share-card-border: rgba(255, 255, 255, 0.08);
 
 	/* ========== HOROSCOPE PANEL TOKENS ========== */
-	--horoscope-bg: linear-gradient(160deg, rgba(88, 28, 135, 0.3) 0%, rgba(131, 24, 67, 0.25) 40%, rgba(76, 29, 149, 0.3) 80%, rgba(30, 58, 138, 0.25) 100%);
+	--horoscope-bg: linear-gradient(
+		160deg,
+		rgba(88, 28, 135, 0.3) 0%,
+		rgba(131, 24, 67, 0.25) 40%,
+		rgba(76, 29, 149, 0.3) 80%,
+		rgba(30, 58, 138, 0.25) 100%
+	);
 	--horoscope-sign: #c4b5fd;
 	--horoscope-date: #a78bcc;
 	--horoscope-description: #b8a0cc;
@@ -571,30 +599,61 @@
 }
 
 @keyframes wave {
-	0%, 100% { transform: translateY(0) rotate(0deg); }
-	25% { transform: translateY(-3px) rotate(2deg); }
-	75% { transform: translateY(3px) rotate(-2deg); }
+	0%,
+	100% {
+		transform: translateY(0) rotate(0deg);
+	}
+	25% {
+		transform: translateY(-3px) rotate(2deg);
+	}
+	75% {
+		transform: translateY(3px) rotate(-2deg);
+	}
 }
 
 @keyframes caustic {
-	0%, 100% { background-position: 0% 0%; }
-	50% { background-position: 100% 100%; }
+	0%,
+	100% {
+		background-position: 0% 0%;
+	}
+	50% {
+		background-position: 100% 100%;
+	}
 }
 
 @keyframes bubble {
-	0% { transform: translateY(0) scale(1); opacity: 0.6; }
-	50% { opacity: 0.3; }
-	100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
+	0% {
+		transform: translateY(0) scale(1);
+		opacity: 0.6;
+	}
+	50% {
+		opacity: 0.3;
+	}
+	100% {
+		transform: translateY(-100vh) scale(0.5);
+		opacity: 0;
+	}
 }
 
 @keyframes fadeInUp {
-	from { opacity: 0; transform: translateY(24px); }
-	to { opacity: 1; transform: translateY(0); }
+	from {
+		opacity: 0;
+		transform: translateY(24px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 @keyframes float {
-	0%, 100% { transform: translateY(0); }
-	50% { transform: translateY(-4px); }
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-4px);
+	}
 }
 
 @keyframes shape-reveal {
@@ -609,8 +668,12 @@
 }
 
 @keyframes fade-in {
-	from { opacity: 0; }
-	to { opacity: 1; }
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
 }
 
 @utility animate-shape-reveal {
@@ -626,34 +689,68 @@
 }
 
 @keyframes breathe {
-	0%, 100% { transform: scale(1); }
-	50% { transform: scale(1.07); }
+	0%,
+	100% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.07);
+	}
 }
 
 @keyframes bob {
-	0%, 100% { transform: translateX(-50%) translateY(0); }
-	50% { transform: translateX(-50%) translateY(8px); }
+	0%,
+	100% {
+		transform: translateX(-50%) translateY(0);
+	}
+	50% {
+		transform: translateX(-50%) translateY(8px);
+	}
 }
 
 /* Trait stack animations */
 @keyframes traitPairEnter {
-	from { opacity: 0; transform: translateY(16px); }
-	to { opacity: 1; transform: translateY(0); }
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 @keyframes traitPairExit {
-	from { opacity: 1; transform: translateY(0); }
-	to { opacity: 0; transform: translateY(-8px); }
+	from {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	to {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
 }
 
 @keyframes facetCascade {
-	from { opacity: 0; transform: translateX(-6px); }
-	to { opacity: 1; transform: translateX(0); }
+	from {
+		opacity: 0;
+		transform: translateX(-6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
 }
 
 @keyframes shapeReveal {
-	from { transform: scale(0.8) rotate(-8deg); opacity: 0; }
-	to { transform: scale(1) rotate(0deg); opacity: 1; }
+	from {
+		transform: scale(0.8) rotate(-8deg);
+		opacity: 0;
+	}
+	to {
+		transform: scale(1) rotate(0deg);
+		opacity: 1;
+	}
 }
 
 /* ══════════════════════════════════════
@@ -668,21 +765,42 @@
 }
 
 .dark [data-slot="geometric-ocean-layer"] {
-	--bubble-border-color: #F0EDE8;
+	--bubble-border-color: #f0ede8;
 	--bubble-fill-color: rgba(240, 237, 232, 0.04);
 	--bubble-opacity: 0.18;
 }
 
 /* ── Bubbles ── */
 @keyframes bubbleRise {
-	0% { bottom: -20px; opacity: var(--bubble-opacity); transform: translateX(0) scale(0.95); }
-	10% { transform: translateX(4px) scale(1); }
-	25% { transform: translateX(-3px) scale(1.04); }
-	40% { transform: translateX(5px) scale(0.97); }
-	55% { transform: translateX(-2px) scale(1.03); }
-	70% { transform: translateX(3px) scale(0.98); }
-	85% { opacity: var(--bubble-opacity); transform: translateX(-1px) scale(1); }
-	100% { bottom: 110%; opacity: 0; transform: translateX(0) scale(0.96); }
+	0% {
+		bottom: -20px;
+		opacity: var(--bubble-opacity);
+		transform: translateX(0) scale(0.95);
+	}
+	10% {
+		transform: translateX(4px) scale(1);
+	}
+	25% {
+		transform: translateX(-3px) scale(1.04);
+	}
+	40% {
+		transform: translateX(5px) scale(0.97);
+	}
+	55% {
+		transform: translateX(-2px) scale(1.03);
+	}
+	70% {
+		transform: translateX(3px) scale(0.98);
+	}
+	85% {
+		opacity: var(--bubble-opacity);
+		transform: translateX(-1px) scale(1);
+	}
+	100% {
+		bottom: 110%;
+		opacity: 0;
+		transform: translateX(0) scale(0.96);
+	}
 }
 
 /* ── Reduced motion ── */

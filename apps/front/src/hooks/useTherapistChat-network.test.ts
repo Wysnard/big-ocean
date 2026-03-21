@@ -107,9 +107,7 @@ describe("useTherapistChat — Network error retry (Story 31-5)", () => {
 	it("retryLastMessage re-sends the failed message", async () => {
 		mockResumeSession.mockReturnValue({
 			data: {
-				messages: [
-					{ role: "assistant", content: "Hi!", timestamp: "2026-01-01T00:00:00Z" },
-				],
+				messages: [{ role: "assistant", content: "Hi!", timestamp: "2026-01-01T00:00:00Z" }],
 				confidence: {
 					openness: 50,
 					conscientiousness: 50,
@@ -139,7 +137,10 @@ describe("useTherapistChat — Network error retry (Story 31-5)", () => {
 
 		// Now retry succeeds
 		mockMutate.mockImplementation(
-			(_input: unknown, opts: { onSuccess: (data: { response: string; isFinalTurn: boolean }) => void }) => {
+			(
+				_input: unknown,
+				opts: { onSuccess: (data: { response: string; isFinalTurn: boolean }) => void },
+			) => {
 				opts.onSuccess({ response: "Nerin responds", isFinalTurn: false });
 			},
 		);

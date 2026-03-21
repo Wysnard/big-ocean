@@ -26,13 +26,13 @@ const tid = (s: string): TerritoryId => Schema.decodeSync(TerritoryIdSchema)(s);
 
 describe("deriveEnergyGuidanceLevel", () => {
 	it("returns 'light' for expectedEnergy < 0.38", () => {
-		expect(deriveEnergyGuidanceLevel(0.20)).toBe("light");
+		expect(deriveEnergyGuidanceLevel(0.2)).toBe("light");
 		expect(deriveEnergyGuidanceLevel(0.37)).toBe("light");
 	});
 
 	it("returns 'medium' for expectedEnergy >= 0.38 and < 0.55", () => {
 		expect(deriveEnergyGuidanceLevel(0.38)).toBe("medium");
-		expect(deriveEnergyGuidanceLevel(0.50)).toBe("medium");
+		expect(deriveEnergyGuidanceLevel(0.5)).toBe("medium");
 		expect(deriveEnergyGuidanceLevel(0.54)).toBe("medium");
 	});
 

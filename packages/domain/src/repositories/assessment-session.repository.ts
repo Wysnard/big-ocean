@@ -183,11 +183,9 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 		 *
 		 * @param thresholdHours - Hours of inactivity before session is considered dropped-off
 		 */
-		readonly findDropOffSessions: (thresholdHours: number) => Effect.Effect<
-			Array<DropOffSession>,
-			DatabaseError,
-			never
-		>;
+		readonly findDropOffSessions: (
+			thresholdHours: number,
+		) => Effect.Effect<Array<DropOffSession>, DatabaseError, never>;
 
 		/**
 		 * Mark a session as having had its drop-off email sent (Story 31-7)

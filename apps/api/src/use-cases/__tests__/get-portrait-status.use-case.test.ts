@@ -246,9 +246,7 @@ describe("getPortraitStatus Reconciliation (Story 32-6)", () => {
 	it.effect("attempts reconciliation when status is 'none' and userId provided", () =>
 		Effect.gen(function* () {
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
-			vi.mocked(reconcilePortraitPurchase).mockReturnValue(
-				Effect.succeed({ reconciled: false }),
-			);
+			vi.mocked(reconcilePortraitPurchase).mockReturnValue(Effect.succeed({ reconciled: false }));
 
 			const result = yield* getPortraitStatus({
 				sessionId: "session_123",
@@ -270,9 +268,7 @@ describe("getPortraitStatus Reconciliation (Story 32-6)", () => {
 			mockPortraitRepo.getFullPortraitBySessionId
 				.mockReturnValueOnce(Effect.succeed(null))
 				.mockReturnValueOnce(Effect.succeed(newPlaceholder));
-			vi.mocked(reconcilePortraitPurchase).mockReturnValue(
-				Effect.succeed({ reconciled: true }),
-			);
+			vi.mocked(reconcilePortraitPurchase).mockReturnValue(Effect.succeed({ reconciled: true }));
 
 			const result = yield* getPortraitStatus({
 				sessionId: "session_123",

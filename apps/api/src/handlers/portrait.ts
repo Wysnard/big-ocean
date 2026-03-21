@@ -21,9 +21,7 @@ export const PortraitGroupLive = HttpApiBuilder.group(BigOceanApi, "portrait", (
 			.handle("getPortraitStatus", ({ path: { sessionId } }) =>
 				Effect.gen(function* () {
 					// Attempt to get userId for reconciliation (optional — endpoint is unauthenticated)
-					const userId = yield* CurrentUser.pipe(
-						Effect.catchAll(() => Effect.succeed(undefined)),
-					);
+					const userId = yield* CurrentUser.pipe(Effect.catchAll(() => Effect.succeed(undefined)));
 
 					const result = yield* getPortraitStatus({ sessionId, userId });
 

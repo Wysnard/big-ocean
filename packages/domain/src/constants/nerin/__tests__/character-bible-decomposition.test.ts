@@ -6,29 +6,25 @@
  */
 
 import { describe, expect, it } from "vitest";
-
-// Tier 1 — Core Identity (always-on)
-import { CONVERSATION_MODE } from "../conversation-mode";
-import { BELIEFS_IN_ACTION } from "../beliefs-in-action";
-import { CONVERSATION_INSTINCTS } from "../conversation-instincts";
-import { QUALITY_INSTINCT } from "../quality-instinct";
-import { MIRROR_GUARDRAILS } from "../mirror-guardrails";
-import { HUMOR_GUARDRAILS } from "../humor-guardrails";
-import { INTERNAL_TRACKING } from "../internal-tracking";
-import { OBSERVATION_QUALITY_COMMON } from "../observation-quality-common";
-import { THREADING_COMMON } from "../threading-common";
-
-// Tier 2 — Intent-Contextual
-import { STORY_PULLING } from "../story-pulling";
-import { REFLECT } from "../reflect";
-// Contextual mirror system (Story 29-3) — replaces MIRRORS_EXPLORE / MIRRORS_AMPLIFY
-import { getMirrorsForContext } from "../contextual-mirrors";
-
 // Original monolith — verify backward compatibility
 import { CHAT_CONTEXT } from "../../nerin-chat-context";
-
+import { BELIEFS_IN_ACTION } from "../beliefs-in-action";
+// Contextual mirror system (Story 29-3) — replaces MIRRORS_EXPLORE / MIRRORS_AMPLIFY
+import { getMirrorsForContext } from "../contextual-mirrors";
+import { CONVERSATION_INSTINCTS } from "../conversation-instincts";
+// Tier 1 — Core Identity (always-on)
+import { CONVERSATION_MODE } from "../conversation-mode";
+import { HUMOR_GUARDRAILS } from "../humor-guardrails";
 // Barrel export
 import * as nerinModules from "../index";
+import { INTERNAL_TRACKING } from "../internal-tracking";
+import { MIRROR_GUARDRAILS } from "../mirror-guardrails";
+import { OBSERVATION_QUALITY_COMMON } from "../observation-quality-common";
+import { QUALITY_INSTINCT } from "../quality-instinct";
+import { REFLECT } from "../reflect";
+// Tier 2 — Intent-Contextual
+import { STORY_PULLING } from "../story-pulling";
+import { THREADING_COMMON } from "../threading-common";
 
 describe("Character Bible Decomposition (Story 27-1)", () => {
 	describe("Tier 1 — Core Identity (always-on)", () => {
@@ -82,13 +78,13 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 		it("getMirrorsForContext returns contextual mirrors for explore", () => {
 			const result = getMirrorsForContext("explore", "relate");
 			expect(typeof result).toBe("string");
-			expect(result!.length).toBeGreaterThan(0);
+			expect(result?.length).toBeGreaterThan(0);
 		});
 
 		it("getMirrorsForContext returns contextual mirrors for close", () => {
 			const result = getMirrorsForContext("close", "relate");
 			expect(typeof result).toBe("string");
-			expect(result!.length).toBeGreaterThan(0);
+			expect(result?.length).toBeGreaterThan(0);
 		});
 	});
 
@@ -116,21 +112,15 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 		});
 
 		it("contains beliefs", () => {
-			expect(allModules).toContain(
-				"PEOPLE DISCOVER MORE WHEN THEY FEEL SAFE TO EXPLORE",
-			);
+			expect(allModules).toContain("PEOPLE DISCOVER MORE WHEN THEY FEEL SAFE TO EXPLORE");
 		});
 
 		it("contains story-pulling patterns", () => {
-			expect(allModules).toContain(
-				"Tell me about a time when you had to choose",
-			);
+			expect(allModules).toContain("Tell me about a time when you had to choose");
 		});
 
 		it("contains threading guidance (dissolved into threading-common)", () => {
-			expect(allModules).toContain(
-				"you're always tracking threads",
-			);
+			expect(allModules).toContain("you're always tracking threads");
 		});
 
 		it("contains mirror reference library", () => {
@@ -140,9 +130,7 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 		});
 
 		it("contains humor guardrails", () => {
-			expect(allModules).toContain(
-				"Humor must land for BOTH of you",
-			);
+			expect(allModules).toContain("Humor must land for BOTH of you");
 		});
 
 		it("contains internal tracking", () => {
@@ -237,12 +225,7 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 
 	describe("Contextual mirrors — close includes 4 mirrors", () => {
 		const closeMirrors3 = getMirrorsForContext("close", "relate");
-		const closeExpected = [
-			"Ghost Net",
-			"Mimic Octopus",
-			"Volcanic Vents",
-			"Mola Mola",
-		];
+		const closeExpected = ["Ghost Net", "Mimic Octopus", "Volcanic Vents", "Mola Mola"];
 
 		it("contains all 4 expected mirrors", () => {
 			expect(closeMirrors3).not.toBeNull();

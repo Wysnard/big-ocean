@@ -109,13 +109,22 @@ function buildCandidates(input: ObservationGatingInput): RankedCandidate[] {
 	const isExplore = input.mode === "explore";
 
 	const relateFocus: ObservationFocus = { type: "relate" };
-	const noticingFocus: ObservationFocus = { type: "noticing", domain: input.noticingDomain ?? ("work" as LifeDomain) };
+	const noticingFocus: ObservationFocus = {
+		type: "noticing",
+		domain: input.noticingDomain ?? ("work" as LifeDomain),
+	};
 	const contradictionFocus: ObservationFocus = input.contradictionTarget
 		? { type: "contradiction", target: input.contradictionTarget }
-		: { type: "contradiction", target: { facet: "Openness to Experience" as any, pair: [] as any, strength: 0 } };
+		: {
+				type: "contradiction",
+				target: { facet: "Openness to Experience" as any, pair: [] as any, strength: 0 },
+			};
 	const convergenceFocus: ObservationFocus = input.convergenceTarget
 		? { type: "convergence", target: input.convergenceTarget }
-		: { type: "convergence", target: { facet: "Openness to Experience" as any, domains: [], strength: 0 } };
+		: {
+				type: "convergence",
+				target: { facet: "Openness to Experience" as any, domains: [], strength: 0 },
+			};
 
 	return [
 		{
@@ -137,9 +146,7 @@ function buildCandidates(input: ObservationGatingInput): RankedCandidate[] {
 		{
 			focus: noticingFocus,
 			rawStrength: input.noticingStrength,
-			effectiveStrength: isExplore
-				? input.noticingStrength * input.phase
-				: input.noticingStrength,
+			effectiveStrength: isExplore ? input.noticingStrength * input.phase : input.noticingStrength,
 			priority: 2,
 		},
 		{
@@ -190,9 +197,10 @@ function evaluateExplore(
  * Winner = argmax of raw strengths.
  * Tiebreak by priority: contradiction > convergence > noticing > relate.
  */
-function evaluateClose(
-	candidates: RankedCandidate[],
-): { winner: RankedCandidate; mutualExclusionApplied: boolean } {
+function evaluateClose(candidates: RankedCandidate[]): {
+	winner: RankedCandidate;
+	mutualExclusionApplied: boolean;
+} {
 	// Sort by raw strength descending, then by priority ascending (tiebreak)
 	const sorted = [...candidates].sort((a, b) => {
 		if (b.rawStrength !== a.rawStrength) return b.rawStrength - a.rawStrength;
@@ -214,9 +222,7 @@ export function evaluateObservationGating(input: ObservationGatingInput): Observ
 	const candidates = buildCandidates(input);
 
 	const { winner, mutualExclusionApplied } =
-		input.mode === "explore"
-			? evaluateExplore(candidates, threshold)
-			: evaluateClose(candidates);
+		input.mode === "explore" ? evaluateExplore(candidates, threshold) : evaluateClose(candidates);
 
 	// Build ObservationCandidate[] for debug output
 	const debugCandidates: ObservationCandidate[] = candidates.map((c) => ({

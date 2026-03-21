@@ -8,13 +8,13 @@
 import { describe, expect, it } from "vitest";
 import { FORMULA_DEFAULTS } from "../../formula";
 import {
-	OBSERVATION_FOCUS_CONSTANTS,
 	computeContradictionStrength,
 	computeConvergenceStrength,
 	computeNoticingStrength,
 	computePerDomainConfidence,
 	computeRelateStrength,
 	computeSmoothedClarity,
+	OBSERVATION_FOCUS_CONSTANTS,
 } from "../observation-focus";
 
 // ─── Per-Domain Confidence ───────────────────────────────────────────
@@ -24,8 +24,7 @@ describe("computePerDomainConfidence", () => {
 		// The facet-level confidence in formula.ts is: C_max * (1 - exp(-k * W))
 		// Per-domain confidence uses same C_MAX and k but scoped to single domain weight
 		const weight = 1.5;
-		const expected =
-			FORMULA_DEFAULTS.C_max * (1 - Math.exp(-FORMULA_DEFAULTS.k * weight));
+		const expected = FORMULA_DEFAULTS.C_max * (1 - Math.exp(-FORMULA_DEFAULTS.k * weight));
 		const result = computePerDomainConfidence(weight);
 		expect(result).toBeCloseTo(expected, 10);
 	});

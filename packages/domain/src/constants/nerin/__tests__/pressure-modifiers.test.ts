@@ -8,10 +8,10 @@ import { describe, expect, it } from "vitest";
 
 import type { EntryPressure } from "../../../types/pacing";
 import {
+	getPressureModifier,
 	PRESSURE_ANGLED,
 	PRESSURE_DIRECT,
 	PRESSURE_SOFT,
-	getPressureModifier,
 } from "../pressure-modifiers";
 
 // ─── Pressure Modifier Constants ────────────────────────────────────

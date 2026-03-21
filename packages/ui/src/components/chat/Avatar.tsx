@@ -18,11 +18,7 @@ export function Avatar({ src, fallback, size = 32, className }: AvatarProps) {
 			)}
 			style={{ width: size, height: size }}
 		>
-			{src ? (
-				<img src={src} alt="" className="w-full h-full object-cover" />
-			) : (
-				fallback
-			)}
+			{src ? <img src={src} alt="" className="w-full h-full object-cover" /> : fallback}
 		</div>
 	);
 }

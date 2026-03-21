@@ -99,7 +99,9 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.succeed(
 			const record = storedResults.get(sessionId);
 			if (!record) {
 				return Effect.fail(
-					new AssessmentResultError({ message: `Assessment result not found for session: ${sessionId}` }),
+					new AssessmentResultError({
+						message: `Assessment result not found for session: ${sessionId}`,
+					}),
 				);
 			}
 			const updated: AssessmentResultRecord = { ...record, stage };

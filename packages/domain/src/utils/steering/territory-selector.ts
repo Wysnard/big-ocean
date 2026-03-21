@@ -15,10 +15,7 @@
  * @see {@link file://_bmad-output/planning-artifacts/epics-conversation-pacing.md} Story 3.3
  */
 
-import type {
-	TerritoryScorerOutput,
-	TerritorySelectorOutput,
-} from "../../types/pacing";
+import type { TerritoryScorerOutput, TerritorySelectorOutput } from "../../types/pacing";
 import type { TerritoryId } from "../../types/territory";
 
 // ─── Constants ──────────────────────────────────────────────────────
@@ -43,7 +40,7 @@ function seededRandom(seed: number): number {
 	s ^= s << 13;
 	s ^= s >> 17;
 	s ^= s << 5;
-	return (((s < 0 ? ~s + 1 : s) % 1000000) / 1000000);
+	return ((s < 0 ? ~s + 1 : s) % 1000000) / 1000000;
 }
 
 // ─── Selection Rules ────────────────────────────────────────────────
@@ -59,15 +56,18 @@ function selectColdStartPerimeter(
 	input: TerritoryScorerOutput,
 	seed: number,
 ): TerritorySelectorOutput {
-	const topScore = input.ranked[0]!.score;
-	const threshold = topScore - COLD_START_PERIMETER;
+	const first = input.ranked[0];
+	if (!first) {
+		throw new Error("ranked list is empty — scorer invariant violated");
+	}
+	const threshold = first.score - COLD_START_PERIMETER;
 
 	// Build the perimeter pool
 	const pool = input.ranked.filter((t) => t.score >= threshold);
 
 	// Deterministic pick from pool using seed
 	const index = Math.floor(seededRandom(seed) * pool.length);
-	const selected = pool[index]!;
+	const selected = pool[index] ?? first;
 
 	return {
 		selectedTerritory: selected.territoryId,
@@ -83,11 +83,13 @@ function selectColdStartPerimeter(
  * Picks the top-1 territory from the ranked list.
  * Tiebreak is by catalog order (already maintained by the scorer's sort stability).
  */
-function selectArgmax(
-	input: TerritoryScorerOutput,
-): TerritorySelectorOutput {
+function selectArgmax(input: TerritoryScorerOutput): TerritorySelectorOutput {
+	const first = input.ranked[0];
+	if (!first) {
+		throw new Error("ranked list is empty — scorer invariant violated");
+	}
 	return {
-		selectedTerritory: input.ranked[0]!.territoryId,
+		selectedTerritory: first.territoryId,
 		selectionRule: "argmax",
 		selectionSeed: undefined,
 		scorerOutput: input,
@@ -136,10 +138,7 @@ export type SelectorTransitionType = "continue" | "transition";
  * - Final turn (turnNumber === totalTurns): "closing"
  * - Otherwise: "exploring"
  */
-export function deriveSessionPhase(
-	turnNumber: number,
-	totalTurns: number,
-): SelectorSessionPhase {
+export function deriveSessionPhase(turnNumber: number, totalTurns: number): SelectorSessionPhase {
 	if (turnNumber === 1) return "opening";
 	if (turnNumber === totalTurns) return "closing";
 	return "exploring";

@@ -46,13 +46,7 @@ export function FacetIcon({ trait, className }: FacetIconProps) {
 			)}
 			title={`Trait: ${trait}`}
 		>
-			<svg
-				width={18}
-				height={18}
-				viewBox="0 0 18 18"
-				fill={TRAIT_COLORS[trait]}
-				aria-hidden="true"
-			>
+			<svg width={18} height={18} viewBox="0 0 18 18" fill={TRAIT_COLORS[trait]} aria-hidden="true">
 				<TraitShape trait={trait} />
 				<text
 					x="9"

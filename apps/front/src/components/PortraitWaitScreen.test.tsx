@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PortraitWaitScreen } from "./PortraitWaitScreen";
 
 // Mock useGetResults hook
-let mockResultsData: unknown = undefined;
+let mockResultsData: unknown;
 let mockIsError = false;
 const mockRefetch = vi.fn();
 
@@ -62,17 +62,13 @@ describe("PortraitWaitScreen", () => {
 	});
 
 	it("renders first rotating line on mount", () => {
-		renderWithProviders(
-			<PortraitWaitScreen sessionId="session-123" onRevealClick={vi.fn()} />,
-		);
+		renderWithProviders(<PortraitWaitScreen sessionId="session-123" onRevealClick={vi.fn()} />);
 
 		expect(screen.getByText("Sitting with everything you told me...")).toBeTruthy();
 	});
 
 	it("rotates to next line after interval", () => {
-		renderWithProviders(
-			<PortraitWaitScreen sessionId="session-123" onRevealClick={vi.fn()} />,
-		);
+		renderWithProviders(<PortraitWaitScreen sessionId="session-123" onRevealClick={vi.fn()} />);
 
 		act(() => {
 			vi.advanceTimersByTime(8000);
@@ -85,11 +81,7 @@ describe("PortraitWaitScreen", () => {
 		mockResultsData = { portrait: "test" };
 
 		renderWithProviders(
-			<PortraitWaitScreen
-				sessionId="session-123"
-				portraitWaitMinMs={2000}
-				onRevealClick={vi.fn()}
-			/>,
+			<PortraitWaitScreen sessionId="session-123" portraitWaitMinMs={2000} onRevealClick={vi.fn()} />,
 		);
 
 		// Before min wait — should not show reveal
@@ -127,9 +119,7 @@ describe("PortraitWaitScreen", () => {
 	it("shows error state with retry when results fail", () => {
 		mockIsError = true;
 
-		renderWithProviders(
-			<PortraitWaitScreen sessionId="session-123" onRevealClick={vi.fn()} />,
-		);
+		renderWithProviders(<PortraitWaitScreen sessionId="session-123" onRevealClick={vi.fn()} />);
 
 		expect(screen.getByText("Something got tangled.")).toBeTruthy();
 		expect(screen.getByText("Let me try again.")).toBeTruthy();
@@ -139,9 +129,7 @@ describe("PortraitWaitScreen", () => {
 	it("calls refetch when retry button is clicked", () => {
 		mockIsError = true;
 
-		renderWithProviders(
-			<PortraitWaitScreen sessionId="session-123" onRevealClick={vi.fn()} />,
-		);
+		renderWithProviders(<PortraitWaitScreen sessionId="session-123" onRevealClick={vi.fn()} />);
 
 		fireEvent.click(screen.getByTestId("wait-retry-btn"));
 		expect(mockRefetch).toHaveBeenCalledOnce();
@@ -151,11 +139,7 @@ describe("PortraitWaitScreen", () => {
 		mockResultsData = undefined;
 
 		renderWithProviders(
-			<PortraitWaitScreen
-				sessionId="session-123"
-				portraitWaitMinMs={2000}
-				onRevealClick={vi.fn()}
-			/>,
+			<PortraitWaitScreen sessionId="session-123" portraitWaitMinMs={2000} onRevealClick={vi.fn()} />,
 		);
 
 		act(() => {

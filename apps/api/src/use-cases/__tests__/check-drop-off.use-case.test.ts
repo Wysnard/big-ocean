@@ -16,13 +16,17 @@ vi.mock("@workspace/infrastructure/repositories/resend-email.resend.repository")
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 
 import { describe, expect, it } from "@effect/vitest";
-import { AssessmentExchangeRepository, AssessmentSessionRepository, ResendEmailRepository } from "@workspace/domain";
+import {
+	AssessmentExchangeRepository,
+	AssessmentSessionRepository,
+	ResendEmailRepository,
+} from "@workspace/domain";
+import { createTestAppConfigLayer } from "@workspace/domain/config/__mocks__/app-config";
 import { AssessmentExchangeDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-exchange.drizzle.repository";
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 import { ResendEmailResendRepositoryLive } from "@workspace/infrastructure/repositories/resend-email.resend.repository";
 import { Effect, Layer } from "effect";
-import { createTestAppConfigLayer } from "@workspace/domain/config/__mocks__/app-config";
 import { checkDropOff } from "../check-drop-off.use-case";
 
 describe("checkDropOff use-case", () => {
@@ -77,8 +81,7 @@ describe("checkDropOff use-case", () => {
 			const failingEmailLayer = Layer.succeed(
 				ResendEmailRepository,
 				ResendEmailRepository.of({
-					sendEmail: () =>
-						Effect.fail({ _tag: "EmailError", message: "Resend API down" } as any),
+					sendEmail: () => Effect.fail({ _tag: "EmailError", message: "Resend API down" } as any),
 				}),
 			);
 

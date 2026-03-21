@@ -69,7 +69,7 @@ describe("selectTerritoryV2 — cold-start-perimeter (turn 1)", () => {
 		const ranked = [
 			makeRankedTerritory("territory-a", 2.0),
 			makeRankedTerritory("territory-b", 1.95),
-			makeRankedTerritory("territory-c", 1.90),
+			makeRankedTerritory("territory-c", 1.9),
 		];
 		const input = makeScorerOutput(ranked, { turnNumber: 1 });
 
@@ -175,10 +175,7 @@ describe("selectTerritoryV2 — argmax (steady state)", () => {
 
 describe("selectTerritoryV2 — argmax (finale, turn 25)", () => {
 	it("uses argmax same as steady-state on final turn", () => {
-		const ranked = [
-			makeRankedTerritory("territory-a", 3.0),
-			makeRankedTerritory("territory-b", 2.0),
-		];
+		const ranked = [makeRankedTerritory("territory-a", 3.0), makeRankedTerritory("territory-b", 2.0)];
 		const input = makeScorerOutput(ranked, { turnNumber: 25, totalTurns: 25 });
 
 		const result = selectTerritoryV2(input);

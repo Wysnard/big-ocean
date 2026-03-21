@@ -36,9 +36,24 @@ describe("Pacing pipeline resume (Story 31-5)", () => {
 			// plus the opener exchange (turn 0)
 			const priorExchanges = [
 				openerExchangeRecord,
-				{ ...openerExchangeRecord, id: "exchange_1", turnNumber: 1, selectedTerritory: "daily-routines" },
-				{ ...openerExchangeRecord, id: "exchange_2", turnNumber: 2, selectedTerritory: "creative-pursuits" },
-				{ ...openerExchangeRecord, id: "exchange_3", turnNumber: 3, selectedTerritory: "weekend-adventures" },
+				{
+					...openerExchangeRecord,
+					id: "exchange_1",
+					turnNumber: 1,
+					selectedTerritory: "daily-routines",
+				},
+				{
+					...openerExchangeRecord,
+					id: "exchange_2",
+					turnNumber: 2,
+					selectedTerritory: "creative-pursuits",
+				},
+				{
+					...openerExchangeRecord,
+					id: "exchange_3",
+					turnNumber: 3,
+					selectedTerritory: "weekend-adventures",
+				},
 			];
 
 			// Session has 8 messages (2 greetings + 3 user + 3 assistant)
@@ -57,14 +72,62 @@ describe("Pacing pipeline resume (Story 31-5)", () => {
 
 			// Post-cold-start: 3+ user messages, so ConversAnalyzer runs
 			const resumedMessages = [
-				{ id: "msg_1", sessionId: "session_test_123", role: "assistant" as const, content: "Hi!", createdAt: new Date() },
-				{ id: "msg_2", sessionId: "session_test_123", role: "assistant" as const, content: "Question?", createdAt: new Date() },
-				{ id: "msg_3", sessionId: "session_test_123", role: "user" as const, content: "Answer 1", createdAt: new Date() },
-				{ id: "msg_4", sessionId: "session_test_123", role: "assistant" as const, content: "Next?", createdAt: new Date() },
-				{ id: "msg_5", sessionId: "session_test_123", role: "user" as const, content: "Answer 2", createdAt: new Date() },
-				{ id: "msg_6", sessionId: "session_test_123", role: "assistant" as const, content: "More?", createdAt: new Date() },
-				{ id: "msg_7", sessionId: "session_test_123", role: "user" as const, content: "Answer 3", createdAt: new Date() },
-				{ id: "msg_8", sessionId: "session_test_123", role: "assistant" as const, content: "Go on", createdAt: new Date() },
+				{
+					id: "msg_1",
+					sessionId: "session_test_123",
+					role: "assistant" as const,
+					content: "Hi!",
+					createdAt: new Date(),
+				},
+				{
+					id: "msg_2",
+					sessionId: "session_test_123",
+					role: "assistant" as const,
+					content: "Question?",
+					createdAt: new Date(),
+				},
+				{
+					id: "msg_3",
+					sessionId: "session_test_123",
+					role: "user" as const,
+					content: "Answer 1",
+					createdAt: new Date(),
+				},
+				{
+					id: "msg_4",
+					sessionId: "session_test_123",
+					role: "assistant" as const,
+					content: "Next?",
+					createdAt: new Date(),
+				},
+				{
+					id: "msg_5",
+					sessionId: "session_test_123",
+					role: "user" as const,
+					content: "Answer 2",
+					createdAt: new Date(),
+				},
+				{
+					id: "msg_6",
+					sessionId: "session_test_123",
+					role: "assistant" as const,
+					content: "More?",
+					createdAt: new Date(),
+				},
+				{
+					id: "msg_7",
+					sessionId: "session_test_123",
+					role: "user" as const,
+					content: "Answer 3",
+					createdAt: new Date(),
+				},
+				{
+					id: "msg_8",
+					sessionId: "session_test_123",
+					role: "assistant" as const,
+					content: "Go on",
+					createdAt: new Date(),
+				},
 			];
 			mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(resumedMessages));
 

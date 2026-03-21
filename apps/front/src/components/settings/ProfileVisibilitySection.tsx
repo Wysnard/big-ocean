@@ -38,10 +38,7 @@ export function ProfileVisibilitySection({
 							disabled={isDisabled}
 							aria-label={isPublic ? "Make profile private" : "Make profile public"}
 						/>
-						<span
-							data-testid="profile-visibility-status"
-							className="text-sm font-medium text-foreground"
-						>
+						<span data-testid="profile-visibility-status" className="text-sm font-medium text-foreground">
 							{isPublic ? "Public" : "Private"}
 						</span>
 						{isTogglePending && (

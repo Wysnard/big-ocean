@@ -15,8 +15,8 @@ import {
 	SessionNotFound,
 } from "@workspace/domain";
 import { Effect } from "effect";
-import { deriveStatus } from "./get-portrait-status.use-case";
 import { generateFullPortrait } from "./generate-full-portrait.use-case";
+import { deriveStatus } from "./get-portrait-status.use-case";
 
 export interface RetryPortraitInput {
 	readonly sessionId: string;

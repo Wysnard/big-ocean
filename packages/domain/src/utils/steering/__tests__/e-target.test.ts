@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	computeETarget,
-	PACING_CONFIG,
-	type ETargetInput,
-	type ETargetOutput,
-} from "../e-target";
+import { computeETarget, type ETargetInput, type ETargetOutput, PACING_CONFIG } from "../e-target";
 
 /**
  * Helper: simulate a multi-turn sequence and return all results.
@@ -315,7 +310,7 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 				{ energy: 0.3 },
 			]);
 			const turn5 = results[4].eTarget;
-			const turn8 = results[7].eTarget;
+			const _turn8 = results[7].eTarget;
 			// After recovery turns, drain should decrease
 			// turn 8 E_target should be less constrained than turn 5 E_target
 			// (though turn8 smoothed energy will be lower, so eTarget is lower overall)
@@ -422,9 +417,7 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 				{ energy: 0.8, telling: 0.1 },
 				{ energy: 0.8, telling: 0.1 },
 			]);
-			expect(lowTellingResults[2].eTarget).toBeLessThan(
-				highTellingResults[2].eTarget,
-			);
+			expect(lowTellingResults[2].eTarget).toBeLessThan(highTellingResults[2].eTarget);
 		});
 
 		it("Over-sharer — ceiling protects before burnout", () => {
@@ -441,15 +434,11 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 
 		it("Volatile — EMA dampens raw swings", () => {
 			const rawEnergies = [0.3, 0.9, 0.2, 0.8, 0.3, 0.9];
-			const results = simulateSequence(
-				rawEnergies.map((energy) => ({ energy })),
-			);
+			const results = simulateSequence(rawEnergies.map((energy) => ({ energy })));
 			// E_target swings should be smaller than raw energy swings
 			for (let i = 1; i < results.length; i++) {
 				const rawSwing = Math.abs(rawEnergies[i] - rawEnergies[i - 1]);
-				const targetSwing = Math.abs(
-					results[i].eTarget - results[i - 1].eTarget,
-				);
+				const targetSwing = Math.abs(results[i].eTarget - results[i - 1].eTarget);
 				// Target swing should be less than raw swing (EMA dampening)
 				expect(targetSwing).toBeLessThan(rawSwing);
 			}

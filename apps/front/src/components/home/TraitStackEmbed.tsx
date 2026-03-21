@@ -1,10 +1,10 @@
-import { useCallback, useState } from "react";
 import {
 	BIG_FIVE_TRAITS,
-	TRAIT_TO_FACETS,
 	type FacetName,
+	TRAIT_TO_FACETS,
 	type TraitName,
 } from "@workspace/domain";
+import { useCallback, useState } from "react";
 import { OceanCircle } from "../ocean-shapes/OceanCircle";
 import { OceanDiamond } from "../ocean-shapes/OceanDiamond";
 import { OceanHalfCircle } from "../ocean-shapes/OceanHalfCircle";
@@ -31,7 +31,7 @@ const TRAIT_DESCRIPTIONS: Record<TraitName, string> = {
 const FACET_DESCRIPTIONS: Record<FacetName, string> = {
 	// Openness
 	imagination:
-		'How much your mind wanders into \u201cwhat if\u201d territory. The daydreamers, the world-builders.',
+		"How much your mind wanders into \u201cwhat if\u201d territory. The daydreamers, the world-builders.",
 	artistic_interests:
 		"Whether beauty stops you in your tracks\u00A0— music, art, a particular light. Not talent. Sensitivity.",
 	emotionality:
@@ -48,9 +48,9 @@ const FACET_DESCRIPTIONS: Record<FacetName, string> = {
 	orderliness:
 		"Whether your desk has a system\u00A0— or IS the system. How much chaos costs you energy.",
 	dutifulness:
-		'How heavy the word \u201cshould\u201d sits in your vocabulary. Whether promises keep you up at night.',
+		"How heavy the word \u201cshould\u201d sits in your vocabulary. Whether promises keep you up at night.",
 	achievement_striving:
-		'The gap between \u201cgood enough\u201d and \u201cmy best.\u201d How much that gap bothers you.',
+		"The gap between \u201cgood enough\u201d and \u201cmy best.\u201d How much that gap bothers you.",
 	self_discipline:
 		"The boring superpower. Can you stay on task when the task isn\u2019t interesting? That\u2019s this.",
 	cautiousness:
@@ -59,13 +59,13 @@ const FACET_DESCRIPTIONS: Record<FacetName, string> = {
 	friendliness:
 		"How quickly warmth shows up. Some people are warm in 30\u00A0seconds, others in 30\u00A0days. Both are real.",
 	gregariousness:
-		'Not just \u201cdo you like people\u201d\u00A0— do you actively seek the crowd? Or do you pick your three and go deep?',
+		"Not just \u201cdo you like people\u201d\u00A0— do you actively seek the crowd? Or do you pick your three and go deep?",
 	assertiveness:
 		"How naturally you take space in a room. Whether influence feels like effort or instinct.",
 	activity_level:
 		"Your idle speed. Some people\u2019s rest looks like other people\u2019s hustle. This measures the engine, not the output.",
 	excitement_seeking:
-		'Where your threshold is for \u201cenough stimulation.\u201d Roller coasters vs.\u00A0books. Or maybe both.',
+		"Where your threshold is for \u201cenough stimulation.\u201d Roller coasters vs.\u00A0books. Or maybe both.",
 	cheerfulness:
 		"Your emotional default state. Not whether you\u2019re happy right now\u00A0— whether happiness is where your mood naturally returns to.",
 	// Agreeableness
@@ -73,8 +73,7 @@ const FACET_DESCRIPTIONS: Record<FacetName, string> = {
 		"Your default setting with strangers. Some people start at 100 and subtract. Others start at zero and make you earn it.",
 	morality:
 		"Your relationship with the straight line between thinking and saying. Some people filter everything. Others can\u2019t.",
-	altruism:
-		"Whether helping feels like a choice or a reflex. The difference matters.",
+	altruism: "Whether helping feels like a choice or a reflex. The difference matters.",
 	cooperation:
 		"What happens when you disagree. Do you push back, or find the overlap? Your reflex, not your strategy.",
 	modesty:
@@ -83,13 +82,13 @@ const FACET_DESCRIPTIONS: Record<FacetName, string> = {
 		"How much other people\u2019s pain becomes yours. The spectrum between empathic sponge and emotional Teflon.",
 	// Neuroticism
 	anxiety:
-		'How loud the \u201cwhat could go wrong\u201d voice is. Everyone has one. This measures the volume.',
+		"How loud the \u201cwhat could go wrong\u201d voice is. Everyone has one. This measures the volume.",
 	anger:
 		"How short the fuse is\u00A0— and what lights it. Not whether you\u2019re angry now, but how easily you get there.",
 	depression:
 		"Your vulnerability to low moods. Not clinical depression\u00A0— the tendency to dip into guilt, sadness, or hopelessness when things go sideways.",
 	self_consciousness:
-		'How aware you are of being watched. The volume knob on \u201cwhat do they think of me?\u201d',
+		"How aware you are of being watched. The volume knob on \u201cwhat do they think of me?\u201d",
 	immoderation:
 		"How hard it is to stop once you\u2019ve started\u00A0— food, scrolling, spending, whatever your thing is. Impulse control, unfiltered.",
 	vulnerability:
@@ -132,10 +131,7 @@ interface TraitStackEmbedProps {
 	onTraitSelect: (trait: TraitName | null) => void;
 }
 
-export function TraitStackEmbed({
-	activeTrait,
-	onTraitSelect,
-}: TraitStackEmbedProps) {
+export function TraitStackEmbed({ activeTrait, onTraitSelect }: TraitStackEmbedProps) {
 	return (
 		<div
 			data-slot="trait-stack-embed"
@@ -149,9 +145,7 @@ export function TraitStackEmbed({
 					<button
 						key={trait}
 						type="button"
-						onClick={() =>
-							onTraitSelect(isActive ? null : trait)
-						}
+						onClick={() => onTraitSelect(isActive ? null : trait)}
 						data-slot="trait-card"
 						data-state={isActive ? "active" : isDimmed ? "dimmed" : "idle"}
 						className="flex cursor-pointer items-center gap-[14px] rounded-[10px] border-[1.5px] border-transparent px-4 py-[14px] text-left transition-all duration-[280ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] hover:bg-[rgba(0,0,0,0.02)] dark:hover:bg-[rgba(255,255,255,0.02)] data-[state=active]:bg-[var(--active-wash)] data-[state=active]:border-[var(--active-color)] data-[state=dimmed]:opacity-45 max-[600px]:flex-col max-[600px]:items-start max-[600px]:gap-2"
@@ -219,9 +213,7 @@ export function TraitFacetPair({ trait, isAnimating }: TraitFacetPairProps) {
 		>
 			{/* User asks about the trait */}
 			<MessageGroup>
-				<ChatBubble variant="user">
-					Tell me more about {formatTraitName(trait)}
-				</ChatBubble>
+				<ChatBubble variant="user">Tell me more about {formatTraitName(trait)}</ChatBubble>
 			</MessageGroup>
 
 			{/* Nerin responds with facets */}

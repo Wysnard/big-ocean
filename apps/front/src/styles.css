@@ -2,8 +2,13 @@
 
 /* Story 12.2: Pulse highlight animation for transcript scroll target */
 @keyframes pulse-highlight {
-	0%, 100% { background-color: transparent; }
-	50% { background-color: oklch(0.75 0.1 250 / 0.25); }
+	0%,
+	100% {
+		background-color: transparent;
+	}
+	50% {
+		background-color: oklch(0.75 0.1 250 / 0.25);
+	}
 }
 
 .animate-pulse-highlight {

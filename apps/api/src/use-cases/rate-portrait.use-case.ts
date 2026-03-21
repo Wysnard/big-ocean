@@ -34,9 +34,7 @@ export const ratePortrait = (input: RatePortraitInput) =>
 
 		// Validate session ownership
 		if (session.userId !== input.userId) {
-			return yield* Effect.fail(
-				new Unauthorized({ message: "Session does not belong to this user" }),
-			);
+			return yield* Effect.fail(new Unauthorized({ message: "Session does not belong to this user" }));
 		}
 
 		// Persist rating

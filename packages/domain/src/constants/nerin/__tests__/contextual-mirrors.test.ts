@@ -27,8 +27,7 @@ const ALL_MIRRORS = [
 	"Mola Mola",
 ] as const;
 
-const GUARDRAIL_TEXT =
-	"You can discover new mirrors in the moment — but the biology must be real";
+const GUARDRAIL_TEXT = "You can discover new mirrors in the moment — but the biology must be real";
 
 // ─── Open Intent — No Mirrors ───────────────────────────────────────
 
@@ -191,12 +190,7 @@ describe("bridge intent — subset of explore mirrors", () => {
 // ─── Close Intent — Same Set for All Observations ───────────────────
 
 describe("close intent — same set for all observations", () => {
-	const CLOSE_MIRRORS = [
-		"Ghost Net",
-		"Mimic Octopus",
-		"Volcanic Vents",
-		"Mola Mola",
-	];
+	const CLOSE_MIRRORS = ["Ghost Net", "Mimic Octopus", "Volcanic Vents", "Mola Mola"];
 
 	it("close x relate includes exactly Ghost Net, Mimic Octopus, Volcanic Vents, Mola Mola", () => {
 		const result = getMirrorsForContext("close", "relate");
@@ -239,12 +233,7 @@ describe("close intent — same set for all observations", () => {
 describe("guardrail inclusion", () => {
 	it("all non-null results include the guardrail text", () => {
 		const intents = ["explore", "bridge", "close"] as const;
-		const observations = [
-			"relate",
-			"noticing",
-			"contradiction",
-			"convergence",
-		] as const;
+		const observations = ["relate", "noticing", "contradiction", "convergence"] as const;
 
 		for (const intent of intents) {
 			for (const observation of observations) {

@@ -12,8 +12,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { authClient } from "../lib/auth-client";
 import { OceanShapeSet } from "../components/ocean-shapes";
+import { authClient } from "../lib/auth-client";
 
 export const Route = createFileRoute("/verify-email")({
 	validateSearch: (search: Record<string, unknown>) => ({
@@ -69,9 +69,7 @@ function VerifyEmailPage() {
 
 					{/* Brand mark */}
 					<div className="mb-5 flex items-center gap-1">
-						<span className="font-heading text-lg font-bold tracking-tight text-foreground">
-							big-
-						</span>
+						<span className="font-heading text-lg font-bold tracking-tight text-foreground">big-</span>
 						<OceanShapeSet size={12} />
 					</div>
 
@@ -112,9 +110,7 @@ function VerifyEmailPage() {
 									disabled={isResending || resendSuccess}
 									className="min-h-[52px] w-full rounded-xl bg-foreground font-heading text-base font-bold tracking-tight text-background transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-primary hover:shadow-lg hover:-translate-y-px active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
 								>
-									{isResending && (
-										<Loader2 className="mr-2 inline h-4 w-4 motion-safe:animate-spin" />
-									)}
+									{isResending && <Loader2 className="mr-2 inline h-4 w-4 motion-safe:animate-spin" />}
 									{isResending ? "Sending..." : "Resend Verification Email"}
 								</button>
 							)}
@@ -131,12 +127,8 @@ function VerifyEmailPage() {
 						<div className="mt-6 space-y-4">
 							<p className="text-sm text-muted-foreground">
 								We sent a verification link to{" "}
-								{email ? (
-									<strong className="text-foreground">{email}</strong>
-								) : (
-									"your email"
-								)}
-								. Click the link to activate your account and start your journey with Nerin.
+								{email ? <strong className="text-foreground">{email}</strong> : "your email"}. Click the
+								link to activate your account and start your journey with Nerin.
 							</p>
 
 							<div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-3 text-sm text-foreground">
@@ -165,14 +157,8 @@ function VerifyEmailPage() {
 									disabled={isResending || resendSuccess}
 									className="min-h-11 w-full rounded-xl bg-transparent text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary disabled:cursor-not-allowed disabled:text-muted-foreground/50"
 								>
-									{isResending && (
-										<Loader2 className="mr-2 inline h-4 w-4 motion-safe:animate-spin" />
-									)}
-									{isResending
-										? "Sending..."
-										: resendSuccess
-											? "Email sent"
-											: "Resend verification email"}
+									{isResending && <Loader2 className="mr-2 inline h-4 w-4 motion-safe:animate-spin" />}
+									{isResending ? "Sending..." : resendSuccess ? "Email sent" : "Resend verification email"}
 								</button>
 							)}
 

@@ -96,9 +96,7 @@ describe("reconcilePortraitPurchase Use Case (Story 32-6)", () => {
 
 	it.effect("creates placeholder and forks daemon when purchase exists but no portrait", () =>
 		Effect.gen(function* () {
-			mockPurchaseRepo.getCapabilities.mockReturnValue(
-				Effect.succeed(HAS_PORTRAIT_CAPABILITIES),
-			);
+			mockPurchaseRepo.getCapabilities.mockReturnValue(Effect.succeed(HAS_PORTRAIT_CAPABILITIES));
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
 			mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(mockResult));
 			mockPortraitRepo.insertPlaceholder.mockReturnValue(
@@ -133,9 +131,7 @@ describe("reconcilePortraitPurchase Use Case (Story 32-6)", () => {
 
 	it.effect("is a no-op when portrait already exists", () =>
 		Effect.gen(function* () {
-			mockPurchaseRepo.getCapabilities.mockReturnValue(
-				Effect.succeed(HAS_PORTRAIT_CAPABILITIES),
-			);
+			mockPurchaseRepo.getCapabilities.mockReturnValue(Effect.succeed(HAS_PORTRAIT_CAPABILITIES));
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(
 				Effect.succeed({
 					id: "portrait_existing",
@@ -160,9 +156,7 @@ describe("reconcilePortraitPurchase Use Case (Story 32-6)", () => {
 
 	it.effect("is a no-op when no purchase event exists", () =>
 		Effect.gen(function* () {
-			mockPurchaseRepo.getCapabilities.mockReturnValue(
-				Effect.succeed(NO_PORTRAIT_CAPABILITIES),
-			);
+			mockPurchaseRepo.getCapabilities.mockReturnValue(Effect.succeed(NO_PORTRAIT_CAPABILITIES));
 
 			const result = yield* reconcilePortraitPurchase({
 				sessionId: "session_123",
@@ -176,9 +170,7 @@ describe("reconcilePortraitPurchase Use Case (Story 32-6)", () => {
 
 	it.effect("handles missing assessment result gracefully", () =>
 		Effect.gen(function* () {
-			mockPurchaseRepo.getCapabilities.mockReturnValue(
-				Effect.succeed(HAS_PORTRAIT_CAPABILITIES),
-			);
+			mockPurchaseRepo.getCapabilities.mockReturnValue(Effect.succeed(HAS_PORTRAIT_CAPABILITIES));
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
 			mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(null));
 
@@ -198,9 +190,7 @@ describe("reconcilePortraitPurchase Use Case (Story 32-6)", () => {
 
 	it.effect("catches DuplicatePortraitError as no-op (idempotent)", () =>
 		Effect.gen(function* () {
-			mockPurchaseRepo.getCapabilities.mockReturnValue(
-				Effect.succeed(HAS_PORTRAIT_CAPABILITIES),
-			);
+			mockPurchaseRepo.getCapabilities.mockReturnValue(Effect.succeed(HAS_PORTRAIT_CAPABILITIES));
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
 			mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(mockResult));
 			mockPortraitRepo.insertPlaceholder.mockReturnValue(

@@ -216,11 +216,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 				}> = [];
 
 				for (const session of sessions.values()) {
-					if (
-						session.status === "active" &&
-						session.userId &&
-						!session.dropOffEmailSentAt
-					) {
+					if (session.status === "active" && session.userId && !session.dropOffEmailSentAt) {
 						results.push({
 							sessionId: session.id as string,
 							userId: session.userId as string,

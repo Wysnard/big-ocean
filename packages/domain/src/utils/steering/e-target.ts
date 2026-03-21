@@ -118,10 +118,8 @@ const computeDrain = (
  * Step 7: Fatigue ceiling.
  * E_cap = floor + (maxcap - floor) × (1 - d²)
  */
-const computeCeiling = (
-	drain: number,
-	config: PacingConfig,
-): number => config.floor + (config.maxcap - config.floor) * (1 - drain * drain);
+const computeCeiling = (drain: number, config: PacingConfig): number =>
+	config.floor + (config.maxcap - config.floor) * (1 - drain * drain);
 
 // ── Main function ───────────────────────────────────────────────────
 
@@ -194,9 +192,8 @@ export const computeETarget = (input: ETargetInput): ETargetOutput => {
 	const vDown = Math.max(-velocity, 0);
 
 	// ── Step 3: Trust from telling ───────────────────────────────
-	const currentTelling: number | null = tellingHistory.length > 0
-		? (tellingHistory[tellingHistory.length - 1] ?? null)
-		: null;
+	const currentTelling: number | null =
+		tellingHistory.length > 0 ? (tellingHistory[tellingHistory.length - 1] ?? null) : null;
 	const trust = computeTrust(currentTelling);
 
 	// ── Step 4: Shift ────────────────────────────────────────────

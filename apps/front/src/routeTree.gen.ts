@@ -24,6 +24,7 @@ import { Route as ResultsAssessmentSessionIdRouteImport } from './routes/results
 import { Route as RelationshipAnalysisIdRouteImport } from './routes/relationship/$analysisId'
 import { Route as PublicProfilePublicProfileIdRouteImport } from './routes/public-profile.$publicProfileId'
 import { Route as InviteTokenRouteImport } from './routes/invite/$token'
+import { Route as DevComponentsRouteImport } from './routes/dev/components'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
@@ -102,6 +103,11 @@ const InviteTokenRoute = InviteTokenRouteImport.update({
   path: '/invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevComponentsRoute = DevComponentsRouteImport.update({
+  id: '/dev/components',
+  path: '/dev/components',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/dev/components': typeof DevComponentsRoute
   '/invite/$token': typeof InviteTokenRoute
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/dev/components': typeof DevComponentsRoute
   '/invite/$token': typeof InviteTokenRoute
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/dev/components': typeof DevComponentsRoute
   '/invite/$token': typeof InviteTokenRoute
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
@@ -168,6 +177,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/verify-email'
+    | '/dev/components'
     | '/invite/$token'
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/verify-email'
+    | '/dev/components'
     | '/invite/$token'
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/verify-email'
+    | '/dev/components'
     | '/invite/$token'
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
@@ -220,6 +232,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
+  DevComponentsRoute: typeof DevComponentsRoute
   InviteTokenRoute: typeof InviteTokenRoute
   PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute
   RelationshipAnalysisIdRoute: typeof RelationshipAnalysisIdRoute
@@ -333,6 +346,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/components': {
+      id: '/dev/components'
+      path: '/dev/components'
+      fullPath: '/dev/components'
+      preLoaderRoute: typeof DevComponentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -358,6 +378,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
   VerifyEmailRoute: VerifyEmailRoute,
+  DevComponentsRoute: DevComponentsRoute,
   InviteTokenRoute: InviteTokenRoute,
   PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,
   RelationshipAnalysisIdRoute: RelationshipAnalysisIdRoute,
