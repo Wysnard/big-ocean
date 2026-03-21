@@ -76,31 +76,38 @@ test("golden path: landing → chat → signup → results → share → public 
 		await page.getByTestId("auth-gate-signup-submit").click();
 	});
 
-	await test.step("verify email in DB, sign in via API, and reload chat (Story 31-7b bypass)", async () => {
+	await test.step("verify email in DB and sign in via browser (Story 31-7b bypass)", async () => {
 		// With requireEmailVerification=true, signup doesn't auto-authenticate.
-		// Bypass: verify email in DB, sign in via API to get cookies, then reload chat page.
-		await page.waitForTimeout(1_000); // Let signup complete
+		// Bypass: verify email in DB, sign in via browser login, then navigate to chat.
+		await page.waitForTimeout(2_000); // Let signup complete
 
 		const pool = new Pool(TEST_DB_CONFIG);
 		const client = await pool.connect();
 		try {
-			await client.query(`UPDATE "user" SET "email_verified" = true WHERE "email" = $1`, [
-				goldenEmail,
-			]);
+			// Retry until user exists (signup may still be propagating)
+			for (let i = 0; i < 5; i++) {
+				const result = await client.query(
+					`UPDATE "user" SET "email_verified" = true WHERE "email" = $1 RETURNING id`,
+					[goldenEmail],
+				);
+				if (result.rowCount && result.rowCount > 0) break;
+				await new Promise((r) => setTimeout(r, 1_000));
+			}
 		} finally {
 			client.release();
 			await pool.end();
 		}
 
-		// Sign in via API to establish auth cookies in the browser context
-		const signInRes = await page.request.post("http://localhost:4001/api/auth/sign-in/email", {
-			data: { email: goldenEmail, password: "OceanDepth#Nerin42xQ" },
-		});
-		if (!signInRes.ok()) {
-			throw new Error(`Sign-in failed: ${await signInRes.text()}`);
-		}
+		// Sign in via browser login page (cookies persist in browser context)
+		await page.goto("/login");
+		const submitBtn = page.locator('button[type="submit"]');
+		await submitBtn.waitFor({ state: "visible" });
+		await page.locator("#login-email").fill(goldenEmail);
+		await page.locator("#login-password").fill("OceanDepth#Nerin42xQ");
+		await submitBtn.click();
+		await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15_000 });
 
-		// Reload chat page — now authenticated, TherapistChat shows "View Results"
+		// Navigate to chat page — now authenticated
 		await page.goto(`/chat?sessionId=${sessionId}`);
 	});
 

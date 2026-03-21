@@ -183,13 +183,15 @@ export const PersonalityRadarChart = memo(function PersonalityRadarChart({
 			<RadarChart data={chartData}>
 				<PolarGrid />
 				<PolarRadiusAxis domain={[0, MAX_TRAIT_SCORE]} tick={false} axisLine={false} />
-				<PolarAngleAxis dataKey="trait" tick={renderTick} />
+				{/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- Recharts TickProp types are wider than our callback signature */}
+				<PolarAngleAxis dataKey="trait" tick={renderTick as any} />
 				<Radar
 					dataKey="score"
 					fill="none"
 					stroke="none"
 					shape={renderGradientShape}
-					dot={renderDot}
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Recharts DotType is wider than our callback
+					dot={renderDot as any}
 					isAnimationActive={!prefersReducedMotion}
 				/>
 			</RadarChart>

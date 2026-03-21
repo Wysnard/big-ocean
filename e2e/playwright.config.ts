@@ -111,6 +111,24 @@ export default defineConfig({
 			},
 		},
 
+		// ── Conversation lifecycle: multi-turn flow → results ────────────
+		{
+			name: "conversation-lifecycle",
+			testMatch: "specs/conversation-lifecycle.spec.ts",
+		},
+
+		// ── Session resume: browser reload preserves session ─────────────
+		{
+			name: "session-resume",
+			testMatch: "specs/session-resume.spec.ts",
+		},
+
+		// ── Homepage: acquisition funnel CTAs ────────────────────────────
+		{
+			name: "homepage",
+			testMatch: "specs/homepage.spec.ts",
+		},
+
 		// ── Access-control: unauthenticated ──────────────────────────────
 		{
 			name: "unauth",
