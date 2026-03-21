@@ -14,9 +14,9 @@ interface PublicProfileCTAProps {
 
 const CTA_CONTENT: Record<AuthState, { heading: string; subtext: string; buttonLabel: string }> = {
 	unauthenticated: {
-		heading: "Curious about your own personality?",
-		subtext: "Discover your archetype through a 10-minute conversation with our AI.",
-		buttonLabel: "Discover Your Personality",
+		heading: "What's YOUR code?",
+		subtext: "Discover it in a conversation with Nerin",
+		buttonLabel: "Start Your Conversation",
 	},
 	"authenticated-no-assessment": {
 		heading: "Want to compare personalities?",
@@ -24,8 +24,8 @@ const CTA_CONTENT: Record<AuthState, { heading: string; subtext: string; buttonL
 		buttonLabel: "Start Your Assessment",
 	},
 	"authenticated-assessed": {
-		heading: "", // dynamic
-		subtext: "Explore where you align and where you differ across all personality traits.",
+		heading: "", // dynamic — set below
+		subtext: "Scan a QR code together to unlock a deep comparison of your personality dynamics.",
 		buttonLabel: "Start Relationship Analysis",
 	},
 };
@@ -38,7 +38,7 @@ export function PublicProfileCTA({
 	const content = CTA_CONTENT[authState];
 	const heading =
 		authState === "authenticated-assessed"
-			? `See how you compare with ${displayName}`
+			? `You care about ${displayName}. Discover your dynamic together.`
 			: content.heading;
 
 	const href =
@@ -72,7 +72,7 @@ export function PublicProfileCTA({
 					</Button>
 				</Link>
 
-				<p className="text-sm text-muted-foreground mt-8">── big-ocean ──</p>
+				<p className="text-sm text-muted-foreground mt-8">-- big-ocean --</p>
 			</div>
 		</section>
 	);

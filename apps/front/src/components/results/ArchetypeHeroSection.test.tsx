@@ -72,4 +72,21 @@ describe("ArchetypeHeroSection", () => {
 		renderWithTooltipProvider(<ArchetypeHeroSection {...defaultProps} />);
 		expect(screen.getByText("Your Personality Archetype")).toBeInTheDocument();
 	});
+
+	it("renders framing line when framingLine prop is provided", () => {
+		renderWithTooltipProvider(
+			<ArchetypeHeroSection
+				{...defaultProps}
+				framingLine="Alice dove deep with Nerin — here's what surfaced"
+			/>,
+		);
+		expect(screen.getByTestId("framing-line")).toHaveTextContent(
+			"Alice dove deep with Nerin — here's what surfaced",
+		);
+	});
+
+	it("does NOT render framing line when framingLine prop is omitted", () => {
+		renderWithTooltipProvider(<ArchetypeHeroSection {...defaultProps} />);
+		expect(screen.queryByTestId("framing-line")).not.toBeInTheDocument();
+	});
 });
