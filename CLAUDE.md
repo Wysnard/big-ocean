@@ -8,152 +8,94 @@ Always use Context7 MCP when I need library/API documentation, code generation, 
 
 When working on frontend code (`apps/front` or `packages/ui`), consult [FRONTEND.md](./docs/FRONTEND.md) for styling patterns, component conventions, and data attribute usage.
 
+**Frontend API rule:** When fetching the backend from the frontend, always use the typed Effect `HttpApiClient` with `@workspace/contracts` — never raw `fetch`. See the [Frontend API Client Pattern](#frontend-api-client-pattern-effect-httpapiclient) below.
+
+**Environment variables:** Check `.env` (local dev) and `.env.example` (template) for available environment variables before making assumptions about config values.
+
 **Worktree isolation rule:** When running in a git worktree (e.g., spawned via `isolation: "worktree"`), ONLY read and modify files within the worktree directory. Do NOT access the main repository working tree unless the user explicitly asks you to.
 
-**Related docs:** [ARCHITECTURE.md](./_bmad-output/planning-artifacts/architecture.md) (consolidated, authoritative) | [COMMANDS.md](./docs/COMMANDS.md) | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) | [COMPLETED-STORIES.md](./docs/COMPLETED-STORIES.md) | [API-CONTRACT-SPECIFICATION.md](./docs/API-CONTRACT-SPECIFICATION.md) | [FRONTEND.md](./docs/FRONTEND.md)
+**Related docs:** [COMMANDS.md](./docs/COMMANDS.md) | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) | [API-CONTRACT-SPECIFICATION.md](./docs/API-CONTRACT-SPECIFICATION.md) | [FRONTEND.md](./docs/FRONTEND.md)
 
 ## Repository Overview
 
-**big-ocean** is a sophisticated psychological profiling platform built on the Big Five personality framework. It's a monorepo using [Turbo](https://turbo.build) and [pnpm workspaces](https://pnpm.io) with a clear separation between frontend, backend, shared packages, and infrastructure.
+**big-ocean** is a psychological profiling platform built on the Big Five personality framework. Monorepo using Turbo + pnpm workspaces.
 
 **Core Vision:** Conversational, coherence-based personality assessment via LLM agents → scientific research integration → memorable archetypes → social features for comparison and discovery.
 
 **Node requirement:** >= 20
 **Package manager:** pnpm@10.4.1
 
-## Privacy Implementation Strategy (Phased Approach)
-
-**Phase 1 (US MVP - Epics 1-5):**
-The MVP implements **basic privacy foundation** sufficient for US-only launch:
-- ✅ **TLS 1.3** encryption in transit (all API calls)
-- ✅ **Better Auth** password security (12+ char, compromised credential checks)
-- ✅ **Default-private profiles** (zero public discovery, explicit sharing only)
-- ✅ **PostgreSQL RLS** for data access control
-- ✅ Privacy controls visible in UI
-
-**Phase 2 (EU Launch - Epic 6):**
-Full GDPR compliance required for EU market expansion:
-- 🔒 **AES-256-GCM encryption at rest** (Story 6.1)
-- 🌍 **GDPR deletion/portability** endpoints (Story 6.2)
-- 📋 **Comprehensive audit logging** (Story 6.3)
-
-**Rationale:** Epic 6 (Privacy & Data Management) was moved from Phase 1 to Phase 2 on 2026-02-10 to accelerate MVP delivery. Basic privacy controls in Phase 1 are sufficient for US launch and PMF validation. Full GDPR compliance is deferred to Phase 2 when expanding to EU market.
-
-### Apps
-
-- **front** (`port 3000`): TanStack Start SSR frontend - React 19, TanStack Router/Query/Form/DB, shadcn/ui, Tailwind v4
-- **api** (`port 4000`): Effect-ts backend - hexagonal architecture, ConversAnalyzer + formula steering pipeline, Drizzle + PostgreSQL, Better Auth
-  - Health: `GET /health` | API: `/api/*`
-  - Structure: `src/handlers/` (8 handlers) → `src/use-cases/` (29 use-cases)
-
-### Packages
-
-- **domain**: Repository interfaces (Context.Tag), schemas, branded types, domain errors - pure abstractions (23 repo interfaces)
-- **contracts**: HTTP API definitions (HttpApiGroup/HttpApiEndpoint) shared frontend ↔ backend
-- **infrastructure**: Repository implementations (`*RepositoryLive`), Drizzle DB schema, Pino logger (40 repo files)
-- **ui**: shadcn/ui component library
-- **lint** / **typescript-config**: Shared configurations
-
 ## Common Commands
-
-**Quick Start:**
 
 ```bash
 pnpm install                # Install dependencies
-pnpm prepare                # Install git hooks (automatic via postinstall)
-pnpm dev                    # Start all services
+pnpm dev                    # Start all services (front:3000, api:4000)
+pnpm dev --filter=front     # Frontend only
+pnpm dev --filter=api       # Backend only
+pnpm build                  # Build all packages
 pnpm test:run               # Run all tests
+pnpm test:coverage          # Tests with coverage
 pnpm lint                   # Lint all packages
+pnpm lint:fix               # Auto-fix lint issues
+pnpm format                 # Format all code
+pnpm db:migrate             # Apply Drizzle migrations
+pnpm db:generate            # Generate migration from schema changes
+pnpm seed:test-assessment   # Seed test assessment data
 ```
 
 For complete command reference, see [COMMANDS.md](./docs/COMMANDS.md).
 
-**Key Commands:**
-- `pnpm dev --filter=front` - Frontend only (TanStack Start, port 3000)
-- `pnpm dev --filter=api` - Backend only (Node.js, port 4000)
-- `pnpm build` - Build all packages
-- `pnpm format` - Format all code
-- `pnpm test:coverage` - Run tests with coverage
-- `pnpm db:migrate` - Apply Drizzle migrations
-- `pnpm db:generate` - Generate migration from schema changes
-- `pnpm seed:test-assessment` - Seed test assessment data
-
 ### Quick Testing
 
-Test the assessment results page without running a full conversation:
-
 ```bash
-# Option 1: Auto-seed on dev startup (recommended)
-pnpm dev  # Automatically seeds database with test assessment
-
-# Option 2: Manual seeding
-pnpm seed:test-assessment  # Run seed script directly
+pnpm dev                    # Auto-seeds database with test assessment
+pnpm seed:test-assessment   # Or seed manually
 ```
 
-**What gets seeded:** Test user (`test@bigocean.dev`), completed assessment with 12 messages, 30 facet scores, 5 trait scores, ~40 evidence records.
+**What gets seeded:** Test user (see credentials in `scripts/seed-completed-assessment.ts`), completed assessment with 12 messages, 30 facet scores, 5 trait scores, ~40 evidence records.
 
-### Git Hooks (Local Enforcement)
+### Integration Testing
 
-Git hooks ensure code quality before commits and pushes:
-
-**Pre-push hook** (runs before `git push`):
-- Lint check (`pnpm lint`)
-- TypeScript check (`pnpm turbo lint`)
-- Test suite (`pnpm test:run`)
-- Blocks push if any check fails
-
-**Commit-msg hook** (validates commit messages):
-- Requires [conventional commit format](#commit-message-format)
-- Allowed types: `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `perf`, `style`, `build`, `revert`
-
-**Bypass hooks (use sparingly):**
 ```bash
-git commit --no-verify   # Skip commit-msg hook
-git push --no-verify     # Skip pre-push hook
+pnpm test:integration       # Run all (auto Docker lifecycle)
+pnpm docker:test:up         # Manual: start test env
+pnpm docker:test:down       # Manual: stop and clean
 ```
 
-Hooks are managed by `simple-git-hooks` (installed automatically via `pnpm install`).
+**Ports:** Dev (API 4000, PG 5432) / Test (API 4001, PG 5433)
+**LLM Mocking:** `MOCK_LLM=true` swaps real Claude for deterministic mock responses.
+**Three-tier strategy:** Unit (mock repos) → Integration (Docker) → Real LLM ($$)
 
-## Architecture & Key Patterns
+### Git Hooks
 
-The codebase follows **hexagonal architecture** (ports & adapters) with Effect-ts Context.Tag for dependency injection. See [ARCHITECTURE.md](./_bmad-output/planning-artifacts/architecture.md) for full details including:
-- Layer responsibilities and dependency graph
-- Complete file inventory (use-cases, repos, handlers, DB tables)
-- Assessment pipeline and LLM architecture
-- Error architecture and location rules
-- Architectural patterns (placeholder-row, append-only events, fail-open, fire-and-forget)
+- **Pre-push:** lint + typecheck + tests — blocks push on failure
+- **Commit-msg:** requires conventional commit format (`feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `perf`, `style`, `build`, `revert`)
+- Managed by `simple-git-hooks` (installed automatically via `pnpm install`)
 
-**Key rules (also in ARCHITECTURE.md):**
+## Architecture Rules
 
-- **Hard Rule:** No business logic in handlers — all logic belongs in use-cases
+The codebase follows **hexagonal architecture** (ports & adapters) with Effect-ts `Context.Tag` for dependency injection.
+
+**Hard rules:**
+
+- **No business logic in handlers** — all logic belongs in use-cases
 - **Error Location:** HTTP errors in `contracts/src/errors.ts`, infrastructure errors co-located with repo interfaces in `domain/src/repositories/`
 - **Error Propagation:** Use-cases and handlers must NOT remap errors. Only allowed `catchTag` is fail-open resilience.
-- **Derive-at-Read:** Trait scores, OCEAN codes, and archetypes are recomputed from facet scores at read time — never read stored aggregations. Facet scores are the single source of truth. See ARCHITECTURE.md for details.
+- **Derive-at-Read:** Trait scores, OCEAN codes, and archetypes are recomputed from facet scores at read time — never read stored aggregations. Facet scores are the single source of truth.
 
-**Naming Conventions:**
+**Naming conventions:**
 
-| Component | Location | Example | Notes |
-|-----------|----------|---------|-------|
-| Repository Interface | `packages/domain/src/repositories/` | `assessment-message.repository.ts` | Context.Tag definition |
-| Repository Implementation | `packages/infrastructure/src/repositories/` | `assessment-message.drizzle.repository.ts` | Layer.effect implementation |
-| Live Layer Export | Same as implementation | `AssessmentMessageDrizzleRepositoryLive` | Production Layer |
-| Use-Case | `apps/api/src/use-cases/` | `send-message.use-case.ts` | Pure business logic |
-| Handler | `apps/api/src/handlers/` | `assessment.ts` | HTTP adapter |
+| Component | Pattern | Example |
+|-----------|---------|---------|
+| Repository Interface | `{entity}.repository.ts` in `domain/` | `assessment-message.repository.ts` |
+| Repository Implementation | `{entity}.drizzle.repository.ts` in `infrastructure/` | `assessment-message.drizzle.repository.ts` |
+| Live Layer Export | `{Entity}DrizzleRepositoryLive` | `AssessmentMessageDrizzleRepositoryLive` |
+| Use-Case | `{action}.use-case.ts` | `send-message.use-case.ts` |
+| Handler | `{domain}.ts` in `handlers/` | `assessment.ts` |
 
-### OCEAN Code Generation (Story 3.1)
+See [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) for branch naming, commit format, and more.
 
-Pure function that deterministically maps 30 facet scores to a 5-letter OCEAN code (e.g., "HHMHM").
-
-**Key File:** `packages/domain/src/utils/ocean-code-generator.ts`
-
-**Algorithm:** Sum 6 facets per trait (0-120) → map to level (L/M/H) → concatenate in OCEAN order.
-
-**Thresholds:** 0-40=L, 40-80=M, 80-120=H
-
-```typescript
-import { generateOceanCode } from "@workspace/domain";
-const code = generateOceanCode(facetScoresMap); // → "HHMHM"
-```
+## Key Patterns
 
 ### Route Loader Auth Pattern
 
@@ -171,11 +113,11 @@ beforeLoad: async ({ search }) => {
 ```
 Use `isRedirect()` in catch blocks within `beforeLoad` to re-throw TanStack Router redirects.
 
-**Session ownership verification** (Story 9.4): Lives in `/chat` route's `beforeLoad`, not in `ChatAuthGate`. After auth, ChatAuthGate navigates to `/chat?sessionId=...` which triggers the loader to verify the session belongs to the user.
+**Session ownership verification** (Story 9.4): Lives in `/chat` route's `beforeLoad`, not in `ChatAuthGate`.
 
 ### Frontend API Client Pattern (Effect HttpApiClient)
 
-Frontend hooks must use the typed Effect `HttpApiClient` derived from `@workspace/contracts`, **not raw `fetch`**. The shared client setup lives in `apps/front/src/lib/api-client.ts` and provides `FetchHttpClient` with `credentials: "include"` for cookie-based auth.
+Frontend hooks must use the typed Effect `HttpApiClient` derived from `@workspace/contracts`, **not raw `fetch`**. The shared client setup lives in `apps/front/src/lib/api-client.ts`.
 
 ```typescript
 import { useMutation } from "@tanstack/react-query";
@@ -194,185 +136,91 @@ export function useDeleteAccount() {
 }
 ```
 
-**Key file:** `apps/front/src/lib/api-client.ts` — exports `makeApiClient` (an Effect that yields a fully-typed client with all endpoint methods grouped by API group name).
+**Pattern:** `yield* makeApiClient` → `yield* client.<group>.<endpoint>({ ... })` → wrap in `Effect.runPromise` inside TanStack Query `mutationFn` / `queryFn`.
 
-**Pattern:** `yield* makeApiClient` → `yield* client.<group>.<endpoint>({ path, payload, ... })` → wrap in `Effect.runPromise` inside TanStack Query `mutationFn` / `queryFn`.
+### OCEAN Code Generation
 
-### Database & Sync
+Pure deterministic function: 30 facet scores → 5-letter OCEAN code (e.g., "HHMHM").
 
-- **Backend:** Drizzle ORM + PostgreSQL (`packages/infrastructure/src/db/drizzle/schema.ts`)
-- **Migrations:** Managed by `drizzle-kit` — run `pnpm db:migrate` to apply, `pnpm db:generate` to create new migrations
-- **Docker:** Migrations run automatically on backend startup via `docker-entrypoint.sh`
-- **Config:** `drizzle.config.ts` at repo root
+**Algorithm:** Sum 6 facets per trait (0-120) → map to level (L/M/H) → concatenate OCEAN order.
+**Thresholds:** 0-40=L, 40-80=M, 80-120=H
 
-### Tech Stack Summary
-
-**Core Dependencies:**
-- **Effect-ts**: Functional programming and error handling (latest)
-- **@effect/platform**: Type-safe HTTP contracts and server
-- **@effect/schema**: Runtime validation and serialization
-- **Anthropic SDK**: Claude integration (ConversAnalyzer Haiku + Nerin agent)
-- **Drizzle ORM**: Type-safe database queries with PostgreSQL
-- **Pino**: High-performance structured logging
-- **React 19 + TanStack**: Frontend with SSR, routing, forms, state
-
-**Deployment & Dev:**
-- Railway for production API
-- Docker Compose for development environment parity
-- GitHub Actions for CI/CD (lint → build → test → validate commits)
-- Better Auth for authentication
-
-See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for production details.
-
-## Testing
-
-**`data-testid` rule:** NEVER remove, replace, or rename `data-testid` attributes. They are used exclusively by e2e tests (Playwright). `data-slot` is a separate shadcn/ui concern — they coexist. See [FRONTEND.md](./docs/FRONTEND.md#testing-with-data-attributes) for details.
-
-Uses [@effect/vitest](https://github.com/Effect-TS/effect/tree/main/packages/vitest) with dependency injection via Test Layers.
-
-**Commands:**
-```bash
-pnpm test:run          # Run all tests
-pnpm test:watch        # Watch mode
-pnpm --filter=api test # API tests only
-pnpm test:coverage     # With coverage
-```
-
-### Mock Architecture (`__mocks__` + `vi.mock()` Pattern)
-
-Mock implementations are co-located with their repository implementations using [Vitest's `__mocks__` auto-resolution](https://vitest.dev/guide/mocking/modules):
-
-```
-packages/infrastructure/src/repositories/
-├── assessment-session.drizzle.repository.ts    # Production implementation
-├── conversanalyzer.anthropic.repository.ts
-├── ...
-└── __mocks__/
-    ├── assessment-session.drizzle.repository.ts  # In-memory mock Layer
-    ├── conversanalyzer.anthropic.repository.ts   # Deterministic mock with business logic
-    └── ...
-
-packages/domain/src/config/
-├── app-config.ts                           # Interface
-└── __mocks__/
-    └── app-config.ts                       # Test config defaults (uses vi.importActual)
-```
-
-**Each `__mocks__` file:**
-- Exports the same Live layer name as the real module (e.g., `AssessmentSessionDrizzleRepositoryLive`)
-- Implements `Layer.succeed(Tag, implementation)` with in-memory behavior
-- Imports Context.Tags directly from `@workspace/domain`
-
-**How to use in test files** — call `vi.mock()` with the infrastructure module path (no factory), then import the Live layer. Vitest auto-resolves to the `__mocks__` sibling:
 ```typescript
-import { vi } from "vitest";
-
-// Activate mocking — Vitest auto-resolves to __mocks__ siblings
-vi.mock("@workspace/infrastructure/repositories/cost-guard.redis.repository");
-
-// Import Live layer — Vitest replaces with __mocks__ version
-import { CostGuardRedisRepositoryLive } from "@workspace/infrastructure/repositories/cost-guard.redis.repository";
-
-// Compose local TestLayer with only the dependencies this test needs
-const TestLayer = Layer.mergeAll(CostGuardRedisRepositoryLive, LoggerPinoRepositoryLive);
+import { generateOceanCode } from "@workspace/domain";
+const code = generateOceanCode(facetScoresMap); // → "HHMHM"
 ```
 
-**Important:** Never import directly from `__mocks__/` paths. Always use `vi.mock()` + original paths.
+### Database
 
-**Import ordering with `@effect/vitest`:** When combining `vi.mock()` with `@effect/vitest`, import `vi` from `vitest` on its own line **before** any `@effect/vitest` imports. Otherwise you get `"Cannot access '__vi_import_0__' before initialization"`:
+- Drizzle ORM + PostgreSQL — migrations via `drizzle-kit`
+- Docker: migrations run automatically on backend startup via `docker-entrypoint.sh`
+
+**Migration rule:** When modifying the DB schema (`packages/infrastructure/src/db/drizzle/schema.ts`), always hand-write a corresponding migration SQL file following the Drizzle migration format (see existing files in `packages/infrastructure/src/db/drizzle/migrations/` for reference).
+
+## Testing Rules
+
+**`data-testid` rule:** NEVER remove, replace, or rename `data-testid` attributes. They are used exclusively by e2e tests (Playwright). `data-slot` is a separate shadcn/ui concern — they coexist. See [FRONTEND.md](./docs/FRONTEND.md#testing-with-data-attributes).
+
+### Mock Architecture (`__mocks__` + `vi.mock()`)
+
+Mock implementations are co-located with repository implementations using Vitest's `__mocks__` auto-resolution.
+
+**Rules:**
+- Each `__mocks__` file exports the same Live layer name as the real module
+- Implements `Layer.succeed(Tag, implementation)` with in-memory behavior
+- Never import directly from `__mocks__/` paths — always use `vi.mock()` + original paths
+- No centralized `TestRepositoriesLayer` — each test composes a minimal local `TestLayer` via `Layer.mergeAll(...)`
+
+**Import ordering with `@effect/vitest`** (critical — avoids `"Cannot access '__vi_import_0__' before initialization"`):
 ```typescript
 import { vi } from "vitest";                    // FIRST — vi.mock() hoisting needs this
 vi.mock("@workspace/infrastructure/repositories/...");
 import { describe, expect, it } from "@effect/vitest"; // AFTER vi.mock calls
 ```
 
-**No centralized `TestRepositoriesLayer`** — each test file declares its own `vi.mock()` calls and composes a minimal local `TestLayer` with only the services it needs via `Layer.mergeAll(...)`.
+**Test utilities:** `it.effect()`, `it.scoped`, `Effect.exit()`, `TestClock.adjust()`
 
-**Test utilities:**
-- `it.effect()` - Test Effect programs with TestClock injected
-- `it.scoped` - Auto-cleanup for resources
-- `Effect.exit()` - Capture failures for assertion
-- `TestClock.adjust()` - Virtual time control
+## Type Safety Rules
 
-See `apps/api/src/__tests__/` for examples.
+- **Bare imports** — no `.js` extensions (bundler mode)
+- **Workspace imports** — `@workspace/domain`, `@workspace/contracts`, etc.
+- **Type imports** — use `import type` for type-only imports (Biome enforced)
+- **Avoid `as any`** — use type guards, typed arrays, or `unknown`. Acceptable with comment for: test mocks, complex generics, generated files, external library compat.
+- **Branded types** — type-safe IDs (`UserId`, `SessionId`) prevent accidental mixing
+- **Domain types** from `@workspace/domain`: `TraitName`, `FacetName`, `BIG_FIVE_TRAITS`, `ALL_FACETS`
 
-## Integration Testing (Docker)
+## Linting
 
-Validates HTTP stack with Dockerized API before Railway deployment.
+- Biome with shared config from `@workspace/lint` — single source of truth at `packages/lint/biome.json`
+- Zero-warnings policy for `packages/ui`, `packages/contracts`
+- Pre-commit hook auto-runs Biome check with auto-fix on staged files
 
+## UI Component Rules
+
+**Placement:**
+- Reusable, generic components (buttons, dialogs, inputs) belong in `packages/ui`
+- Page-specific or business-logic components belong in `apps/front/src/components/`
+
+**Component selection priority (follow this order):**
+1. **Check shadcn/ui first** — look at the shadcn docs for an existing component that fits your use case
+2. **Extend or modify** — if a shadcn component is close but not exact, extend it or modify it directly in `packages/ui` if the change benefits the whole app
+3. **Build custom** — only create a new component from scratch if neither of the above works
+
+**`/dev/` routes:** The `/dev/` route is for development-only pages. Prototypes may live here but are throwaway — do not maintain, fix, or update them. If a prototype breaks the build, delete it rather than fix it. Only the `/dev/components` kitchen sink must be kept up to date.
+
+**Kitchen sink rule:** Every component in `packages/ui` must have a demo in the `/dev/components` route. When modifying or adding a component in `packages/ui`, update the kitchen sink to reflect the changes so it stays up to date.
+
+**Adding a shadcn component:**
 ```bash
-pnpm test:integration       # Run all (auto Docker lifecycle)
-pnpm test:integration:watch # Watch mode
-pnpm docker:test:up         # Manual: start test env
-pnpm docker:test:down       # Manual: stop and clean
-```
-
-**Ports:** Dev (API 4000, PG 5432) / Test (API 4001, PG 5433)
-
-**LLM Mocking:** `MOCK_LLM=true` swaps real Claude for deterministic mock responses.
-
-**Three-tier strategy:** Unit (mock repos) → Integration (Docker) → Real LLM ($$)
-
-See `apps/api/tests/integration/README.md` for details.
-
-## Git Conventions
-
-Branch naming, commit messages, and component naming follow consistent patterns.
-
-See [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) for:
-- Branch naming format (`feat/story-{epic-num}-{story-num}-{slug}`)
-- Commit message format with examples
-- Component naming conventions
-- Repository interface and implementation patterns
-
-## Linting & Code Quality
-
-- **Root level**: Biome with shared config from @workspace/lint
-- **All apps (front, api)**: Biome via extends pattern from @workspace/lint/biome
-- **All packages (ui, contracts, domain, infrastructure, lint, typescript-config)**: Biome via extends pattern
-- **Zero-warnings policy**: Maintained for packages/ui, packages/contracts
-- **Format all**: `pnpm format` runs Prettier on all code
-- **Shared config**: `packages/lint/biome.json` is the single source of truth for linting rules
-- **Auto-fix**: `pnpm lint:fix` applies all safe Biome fixes across the monorepo
-- **Pre-commit hook**: Automatically runs Biome check with auto-fix on staged files
-
-## Type Safety Patterns
-
-- **Bare imports** - No `.js` extensions (bundler mode)
-- **Workspace imports** - `@workspace/domain`, `@workspace/contracts`, etc.
-- **Type imports** - Use `import type` for type-only imports (Biome enforced)
-
-**Avoid `as any`** - Use type guards, typed arrays, or `unknown` instead. Acceptable with comment for: test mocks, complex generics, generated files, external library compat.
-
-**Key patterns:**
-- **Branded types** - Type-safe IDs (`UserId`, `SessionId`) prevent accidental mixing
-- **Discriminated unions** - Tagged `_tag` for exhaustive matching (Effect provides this)
-- **Schema transforms** - `S.transform()` for validated external → domain conversions
-
-**Domain types** from `@workspace/domain`: `TraitName`, `FacetName`, `BIG_FIVE_TRAITS`, `ALL_FACETS`
-
-## Adding New Packages or Apps
-
-When adding a new package or app:
-
-1. Create directory under `packages/` or `apps/`
-2. Add `package.json` with workspace references
-3. Turbo and pnpm automatically recognize it via `pnpm-workspace.yaml`
-4. Update imports in dependent packages
-5. Add lint task to `turbo.json` if needed
-
-## Adding Components to UI Library
-
-```bash
-# Add component from shadcn/ui registry
 pnpm dlx shadcn@latest add [component-name] -c apps/front
-
-# Then move generated files from apps/front to packages/ui/src/components/
+# Then move from apps/front to packages/ui/src/components/
 # and export from packages/ui/src/index.ts
 ```
 
-Components are imported across apps as:
+Import as: `import { Button } from "@workspace/ui/components/button";`
 
-```tsx
-import { Button } from "@workspace/ui/components/button";
-```
+## Privacy Implementation Strategy
+
+**Phase 1 (US MVP):** Basic privacy foundation — TLS 1.3, Better Auth (12+ char passwords, compromised credential checks), default-private profiles, PostgreSQL RLS.
+
+**Phase 2 (EU Launch — Epic 6):** Full GDPR compliance — AES-256-GCM encryption at rest, GDPR deletion/portability endpoints, comprehensive audit logging. Deferred from Phase 1 on 2026-02-10 to accelerate MVP delivery.

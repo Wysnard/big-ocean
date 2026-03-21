@@ -8,359 +8,368 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as ResultsRouteImport } from './routes/results'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as R404RouteImport } from './routes/404'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ChatIndexRouteImport } from './routes/chat/index'
-import { Route as ResultsAssessmentSessionIdRouteImport } from './routes/results/$assessmentSessionId'
-import { Route as RelationshipAnalysisIdRouteImport } from './routes/relationship/$analysisId'
-import { Route as PublicProfilePublicProfileIdRouteImport } from './routes/public-profile.$publicProfileId'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as R404RouteImport } from "./routes/404";
+import { Route as ChatIndexRouteImport } from "./routes/chat/index";
+import { Route as DevComponentsRouteImport } from "./routes/dev/components";
+import { Route as ForgotPasswordRouteImport } from "./routes/forgot-password";
+import { Route as IndexRouteImport } from "./routes/index";
+import { Route as LoginRouteImport } from "./routes/login";
+import { Route as ProfileRouteImport } from "./routes/profile";
+import { Route as PublicProfilePublicProfileIdRouteImport } from "./routes/public-profile.$publicProfileId";
+import { Route as RelationshipAnalysisIdRouteImport } from "./routes/relationship/$analysisId";
+import { Route as ResetPasswordRouteImport } from "./routes/reset-password";
+import { Route as ResultsRouteImport } from "./routes/results";
+import { Route as ResultsAssessmentSessionIdRouteImport } from "./routes/results/$assessmentSessionId";
+import { Route as SettingsRouteImport } from "./routes/settings";
+import { Route as SignupRouteImport } from "./routes/signup";
+import { Route as VerifyEmailRouteImport } from "./routes/verify-email";
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/verify-email",
+	path: "/verify-email",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/signup",
+	path: "/signup",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/settings",
+	path: "/settings",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const ResultsRoute = ResultsRouteImport.update({
-  id: '/results',
-  path: '/results',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/results",
+	path: "/results",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/reset-password",
+	path: "/reset-password",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/profile",
+	path: "/profile",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/login",
+	path: "/login",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/forgot-password",
+	path: "/forgot-password",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const R404Route = R404RouteImport.update({
-  id: '/404',
-  path: '/404',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/404",
+	path: "/404",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/",
+	path: "/",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const ChatIndexRoute = ChatIndexRouteImport.update({
-  id: '/chat/',
-  path: '/chat/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResultsAssessmentSessionIdRoute =
-  ResultsAssessmentSessionIdRouteImport.update({
-    id: '/$assessmentSessionId',
-    path: '/$assessmentSessionId',
-    getParentRoute: () => ResultsRoute,
-  } as any)
+	id: "/chat/",
+	path: "/chat/",
+	getParentRoute: () => rootRouteImport,
+} as any);
+const ResultsAssessmentSessionIdRoute = ResultsAssessmentSessionIdRouteImport.update({
+	id: "/$assessmentSessionId",
+	path: "/$assessmentSessionId",
+	getParentRoute: () => ResultsRoute,
+} as any);
 const RelationshipAnalysisIdRoute = RelationshipAnalysisIdRouteImport.update({
-  id: '/relationship/$analysisId',
-  path: '/relationship/$analysisId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PublicProfilePublicProfileIdRoute =
-  PublicProfilePublicProfileIdRouteImport.update({
-    id: '/public-profile/$publicProfileId',
-    path: '/public-profile/$publicProfileId',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-
+	id: "/relationship/$analysisId",
+	path: "/relationship/$analysisId",
+	getParentRoute: () => rootRouteImport,
+} as any);
+const PublicProfilePublicProfileIdRoute = PublicProfilePublicProfileIdRouteImport.update({
+	id: "/public-profile/$publicProfileId",
+	path: "/public-profile/$publicProfileId",
+	getParentRoute: () => rootRouteImport,
+} as any);
+const DevComponentsRoute = DevComponentsRouteImport.update({
+	id: "/dev/components",
+	path: "/dev/components",
+	getParentRoute: () => rootRouteImport,
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/404': typeof R404Route
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
-  '/reset-password': typeof ResetPasswordRoute
-  '/results': typeof ResultsRouteWithChildren
-  '/settings': typeof SettingsRoute
-  '/signup': typeof SignupRoute
-  '/verify-email': typeof VerifyEmailRoute
-
-  '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
-  '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
-  '/results/$assessmentSessionId': typeof ResultsAssessmentSessionIdRoute
-  '/chat/': typeof ChatIndexRoute
+	"/": typeof IndexRoute;
+	"/404": typeof R404Route;
+	"/forgot-password": typeof ForgotPasswordRoute;
+	"/login": typeof LoginRoute;
+	"/profile": typeof ProfileRoute;
+	"/reset-password": typeof ResetPasswordRoute;
+	"/results": typeof ResultsRouteWithChildren;
+	"/settings": typeof SettingsRoute;
+	"/signup": typeof SignupRoute;
+	"/verify-email": typeof VerifyEmailRoute;
+	"/dev/components": typeof DevComponentsRoute;
+	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
+	"/relationship/$analysisId": typeof RelationshipAnalysisIdRoute;
+	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
+	"/chat/": typeof ChatIndexRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/404': typeof R404Route
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
-  '/reset-password': typeof ResetPasswordRoute
-  '/results': typeof ResultsRouteWithChildren
-  '/settings': typeof SettingsRoute
-  '/signup': typeof SignupRoute
-  '/verify-email': typeof VerifyEmailRoute
-
-  '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
-  '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
-  '/results/$assessmentSessionId': typeof ResultsAssessmentSessionIdRoute
-  '/chat': typeof ChatIndexRoute
+	"/": typeof IndexRoute;
+	"/404": typeof R404Route;
+	"/forgot-password": typeof ForgotPasswordRoute;
+	"/login": typeof LoginRoute;
+	"/profile": typeof ProfileRoute;
+	"/reset-password": typeof ResetPasswordRoute;
+	"/results": typeof ResultsRouteWithChildren;
+	"/settings": typeof SettingsRoute;
+	"/signup": typeof SignupRoute;
+	"/verify-email": typeof VerifyEmailRoute;
+	"/dev/components": typeof DevComponentsRoute;
+	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
+	"/relationship/$analysisId": typeof RelationshipAnalysisIdRoute;
+	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
+	"/chat": typeof ChatIndexRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/404': typeof R404Route
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
-  '/reset-password': typeof ResetPasswordRoute
-  '/results': typeof ResultsRouteWithChildren
-  '/settings': typeof SettingsRoute
-  '/signup': typeof SignupRoute
-  '/verify-email': typeof VerifyEmailRoute
-
-  '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
-  '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
-  '/results/$assessmentSessionId': typeof ResultsAssessmentSessionIdRoute
-  '/chat/': typeof ChatIndexRoute
+	__root__: typeof rootRouteImport;
+	"/": typeof IndexRoute;
+	"/404": typeof R404Route;
+	"/forgot-password": typeof ForgotPasswordRoute;
+	"/login": typeof LoginRoute;
+	"/profile": typeof ProfileRoute;
+	"/reset-password": typeof ResetPasswordRoute;
+	"/results": typeof ResultsRouteWithChildren;
+	"/settings": typeof SettingsRoute;
+	"/signup": typeof SignupRoute;
+	"/verify-email": typeof VerifyEmailRoute;
+	"/dev/components": typeof DevComponentsRoute;
+	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
+	"/relationship/$analysisId": typeof RelationshipAnalysisIdRoute;
+	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
+	"/chat/": typeof ChatIndexRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/404'
-    | '/forgot-password'
-    | '/login'
-    | '/profile'
-    | '/reset-password'
-    | '/results'
-    | '/settings'
-    | '/signup'
-    | '/verify-email'
-
-    | '/public-profile/$publicProfileId'
-    | '/relationship/$analysisId'
-    | '/results/$assessmentSessionId'
-    | '/chat/'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/404'
-    | '/forgot-password'
-    | '/login'
-    | '/profile'
-    | '/reset-password'
-    | '/results'
-    | '/settings'
-    | '/signup'
-    | '/verify-email'
-
-    | '/public-profile/$publicProfileId'
-    | '/relationship/$analysisId'
-    | '/results/$assessmentSessionId'
-    | '/chat'
-  id:
-    | '__root__'
-    | '/'
-    | '/404'
-    | '/forgot-password'
-    | '/login'
-    | '/profile'
-    | '/reset-password'
-    | '/results'
-    | '/settings'
-    | '/signup'
-    | '/verify-email'
-
-    | '/public-profile/$publicProfileId'
-    | '/relationship/$analysisId'
-    | '/results/$assessmentSessionId'
-    | '/chat/'
-  fileRoutesById: FileRoutesById
+	fileRoutesByFullPath: FileRoutesByFullPath;
+	fullPaths:
+		| "/"
+		| "/404"
+		| "/forgot-password"
+		| "/login"
+		| "/profile"
+		| "/reset-password"
+		| "/results"
+		| "/settings"
+		| "/signup"
+		| "/verify-email"
+		| "/dev/components"
+		| "/public-profile/$publicProfileId"
+		| "/relationship/$analysisId"
+		| "/results/$assessmentSessionId"
+		| "/chat/";
+	fileRoutesByTo: FileRoutesByTo;
+	to:
+		| "/"
+		| "/404"
+		| "/forgot-password"
+		| "/login"
+		| "/profile"
+		| "/reset-password"
+		| "/results"
+		| "/settings"
+		| "/signup"
+		| "/verify-email"
+		| "/dev/components"
+		| "/public-profile/$publicProfileId"
+		| "/relationship/$analysisId"
+		| "/results/$assessmentSessionId"
+		| "/chat";
+	id:
+		| "__root__"
+		| "/"
+		| "/404"
+		| "/forgot-password"
+		| "/login"
+		| "/profile"
+		| "/reset-password"
+		| "/results"
+		| "/settings"
+		| "/signup"
+		| "/verify-email"
+		| "/dev/components"
+		| "/public-profile/$publicProfileId"
+		| "/relationship/$analysisId"
+		| "/results/$assessmentSessionId"
+		| "/chat/";
+	fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  R404Route: typeof R404Route
-  ForgotPasswordRoute: typeof ForgotPasswordRoute
-  LoginRoute: typeof LoginRoute
-  ProfileRoute: typeof ProfileRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
-  ResultsRoute: typeof ResultsRouteWithChildren
-  SettingsRoute: typeof SettingsRoute
-  SignupRoute: typeof SignupRoute
-  VerifyEmailRoute: typeof VerifyEmailRoute
-
-  PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute
-  RelationshipAnalysisIdRoute: typeof RelationshipAnalysisIdRoute
-  ChatIndexRoute: typeof ChatIndexRoute
+	IndexRoute: typeof IndexRoute;
+	R404Route: typeof R404Route;
+	ForgotPasswordRoute: typeof ForgotPasswordRoute;
+	LoginRoute: typeof LoginRoute;
+	ProfileRoute: typeof ProfileRoute;
+	ResetPasswordRoute: typeof ResetPasswordRoute;
+	ResultsRoute: typeof ResultsRouteWithChildren;
+	SettingsRoute: typeof SettingsRoute;
+	SignupRoute: typeof SignupRoute;
+	VerifyEmailRoute: typeof VerifyEmailRoute;
+	DevComponentsRoute: typeof DevComponentsRoute;
+	PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute;
+	RelationshipAnalysisIdRoute: typeof RelationshipAnalysisIdRoute;
+	ChatIndexRoute: typeof ChatIndexRoute;
 }
 
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof VerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/results': {
-      id: '/results'
-      path: '/results'
-      fullPath: '/results'
-      preLoaderRoute: typeof ResultsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/404': {
-      id: '/404'
-      path: '/404'
-      fullPath: '/404'
-      preLoaderRoute: typeof R404RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/chat/': {
-      id: '/chat/'
-      path: '/chat'
-      fullPath: '/chat/'
-      preLoaderRoute: typeof ChatIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/results/$assessmentSessionId': {
-      id: '/results/$assessmentSessionId'
-      path: '/$assessmentSessionId'
-      fullPath: '/results/$assessmentSessionId'
-      preLoaderRoute: typeof ResultsAssessmentSessionIdRouteImport
-      parentRoute: typeof ResultsRoute
-    }
-    '/relationship/$analysisId': {
-      id: '/relationship/$analysisId'
-      path: '/relationship/$analysisId'
-      fullPath: '/relationship/$analysisId'
-      preLoaderRoute: typeof RelationshipAnalysisIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/public-profile/$publicProfileId': {
-      id: '/public-profile/$publicProfileId'
-      path: '/public-profile/$publicProfileId'
-      fullPath: '/public-profile/$publicProfileId'
-      preLoaderRoute: typeof PublicProfilePublicProfileIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-
-  }
+declare module "@tanstack/react-router" {
+	interface FileRoutesByPath {
+		"/verify-email": {
+			id: "/verify-email";
+			path: "/verify-email";
+			fullPath: "/verify-email";
+			preLoaderRoute: typeof VerifyEmailRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/signup": {
+			id: "/signup";
+			path: "/signup";
+			fullPath: "/signup";
+			preLoaderRoute: typeof SignupRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/settings": {
+			id: "/settings";
+			path: "/settings";
+			fullPath: "/settings";
+			preLoaderRoute: typeof SettingsRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/results": {
+			id: "/results";
+			path: "/results";
+			fullPath: "/results";
+			preLoaderRoute: typeof ResultsRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/reset-password": {
+			id: "/reset-password";
+			path: "/reset-password";
+			fullPath: "/reset-password";
+			preLoaderRoute: typeof ResetPasswordRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/profile": {
+			id: "/profile";
+			path: "/profile";
+			fullPath: "/profile";
+			preLoaderRoute: typeof ProfileRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/login": {
+			id: "/login";
+			path: "/login";
+			fullPath: "/login";
+			preLoaderRoute: typeof LoginRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/forgot-password": {
+			id: "/forgot-password";
+			path: "/forgot-password";
+			fullPath: "/forgot-password";
+			preLoaderRoute: typeof ForgotPasswordRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/404": {
+			id: "/404";
+			path: "/404";
+			fullPath: "/404";
+			preLoaderRoute: typeof R404RouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/": {
+			id: "/";
+			path: "/";
+			fullPath: "/";
+			preLoaderRoute: typeof IndexRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/chat/": {
+			id: "/chat/";
+			path: "/chat";
+			fullPath: "/chat/";
+			preLoaderRoute: typeof ChatIndexRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/results/$assessmentSessionId": {
+			id: "/results/$assessmentSessionId";
+			path: "/$assessmentSessionId";
+			fullPath: "/results/$assessmentSessionId";
+			preLoaderRoute: typeof ResultsAssessmentSessionIdRouteImport;
+			parentRoute: typeof ResultsRoute;
+		};
+		"/relationship/$analysisId": {
+			id: "/relationship/$analysisId";
+			path: "/relationship/$analysisId";
+			fullPath: "/relationship/$analysisId";
+			preLoaderRoute: typeof RelationshipAnalysisIdRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/public-profile/$publicProfileId": {
+			id: "/public-profile/$publicProfileId";
+			path: "/public-profile/$publicProfileId";
+			fullPath: "/public-profile/$publicProfileId";
+			preLoaderRoute: typeof PublicProfilePublicProfileIdRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/dev/components": {
+			id: "/dev/components";
+			path: "/dev/components";
+			fullPath: "/dev/components";
+			preLoaderRoute: typeof DevComponentsRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+	}
 }
 
 interface ResultsRouteChildren {
-  ResultsAssessmentSessionIdRoute: typeof ResultsAssessmentSessionIdRoute
+	ResultsAssessmentSessionIdRoute: typeof ResultsAssessmentSessionIdRoute;
 }
 
 const ResultsRouteChildren: ResultsRouteChildren = {
-  ResultsAssessmentSessionIdRoute: ResultsAssessmentSessionIdRoute,
-}
+	ResultsAssessmentSessionIdRoute: ResultsAssessmentSessionIdRoute,
+};
 
-const ResultsRouteWithChildren =
-  ResultsRoute._addFileChildren(ResultsRouteChildren)
+const ResultsRouteWithChildren = ResultsRoute._addFileChildren(ResultsRouteChildren);
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  R404Route: R404Route,
-  ForgotPasswordRoute: ForgotPasswordRoute,
-  LoginRoute: LoginRoute,
-  ProfileRoute: ProfileRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
-  ResultsRoute: ResultsRouteWithChildren,
-  SettingsRoute: SettingsRoute,
-  SignupRoute: SignupRoute,
-  VerifyEmailRoute: VerifyEmailRoute,
-
-  PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,
-  RelationshipAnalysisIdRoute: RelationshipAnalysisIdRoute,
-  ChatIndexRoute: ChatIndexRoute,
-}
+	IndexRoute: IndexRoute,
+	R404Route: R404Route,
+	ForgotPasswordRoute: ForgotPasswordRoute,
+	LoginRoute: LoginRoute,
+	ProfileRoute: ProfileRoute,
+	ResetPasswordRoute: ResetPasswordRoute,
+	ResultsRoute: ResultsRouteWithChildren,
+	SettingsRoute: SettingsRoute,
+	SignupRoute: SignupRoute,
+	VerifyEmailRoute: VerifyEmailRoute,
+	DevComponentsRoute: DevComponentsRoute,
+	PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,
+	RelationshipAnalysisIdRoute: RelationshipAnalysisIdRoute,
+	ChatIndexRoute: ChatIndexRoute,
+};
 export const routeTree = rootRouteImport
-  ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+	._addFileChildren(rootRouteChildren)
+	._addFileTypes<FileRouteTypes>();
 
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
+import type { createStart } from "@tanstack/react-start";
+import type { getRouter } from "./router.tsx";
+
+declare module "@tanstack/react-start" {
+	interface Register {
+		ssr: true;
+		router: Awaited<ReturnType<typeof getRouter>>;
+	}
 }
