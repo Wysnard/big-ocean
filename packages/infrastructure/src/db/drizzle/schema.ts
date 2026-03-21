@@ -142,15 +142,13 @@ export const verification = pgTable(
 /**
  * Assessment Sessions
  *
- * Tracks personality assessment conversation sessions.
- * Sessions can be anonymous (userId NULL) or linked to authenticated users.
- * Anonymous sessions use session_token for cookie-based auth.
+ * Tracks personality assessment conversation sessions linked to authenticated users.
  */
 export const assessmentSession = pgTable(
 	"assessment_session",
 	{
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-		userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+		userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
 		sessionToken: text("session_token"),
 		status: text("status").notNull().default("active"),
 		finalizationProgress: text("finalization_progress"),
@@ -331,7 +329,7 @@ export const publicProfile = pgTable(
 		assessmentResultId: uuid("assessment_result_id").references(() => assessmentResults.id, {
 			onDelete: "cascade",
 		}),
-		userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+		userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
 		oceanCode5: text("ocean_code_5").notNull(),
 		oceanCode4: text("ocean_code_4").notNull(),
 		isPublic: boolean("is_public").default(false).notNull(),
@@ -363,7 +361,7 @@ export const purchaseEvents = pgTable(
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
 		userId: text("user_id")
 			.notNull()
-			.references(() => user.id, { onDelete: "restrict" }),
+			.references(() => user.id, { onDelete: "cascade" }),
 		eventType: purchaseEventTypeEnum("event_type").notNull(),
 		polarCheckoutId: text("polar_checkout_id"),
 		polarProductId: text("polar_product_id"),
@@ -470,8 +468,8 @@ export const relationshipInvitations = pgTable(
 		id: uuid("id").primaryKey().defaultRandom(),
 		inviterUserId: text("inviter_user_id")
 			.notNull()
-			.references(() => user.id),
-		inviteeUserId: text("invitee_user_id").references(() => user.id),
+			.references(() => user.id, { onDelete: "cascade" }),
+		inviteeUserId: text("invitee_user_id").references(() => user.id, { onDelete: "cascade" }),
 		invitationToken: uuid("invitation_token").notNull().unique(),
 		personalMessage: text("personal_message"),
 		status: invitationStatusEnum("status").notNull().default("pending"),
@@ -498,10 +496,10 @@ export const relationshipAnalyses = pgTable("relationship_analyses", {
 		.references(() => relationshipInvitations.id),
 	userAId: text("user_a_id")
 		.notNull()
-		.references(() => user.id),
+		.references(() => user.id, { onDelete: "cascade" }),
 	userBId: text("user_b_id")
 		.notNull()
-		.references(() => user.id),
+		.references(() => user.id, { onDelete: "cascade" }),
 	content: text("content"),
 	modelUsed: text("model_used"),
 	retryCount: integer("retry_count").notNull().default(0),

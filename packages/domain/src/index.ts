@@ -111,6 +111,7 @@ export {
 } from "./errors/evidence.errors";
 // HTTP API errors (canonical definitions)
 export {
+	AccountNotFound,
 	AgentInvocationError,
 	AnalyzerError,
 	AssessmentAlreadyExists,
@@ -265,6 +266,8 @@ export {
 	ResendEmailRepository,
 	type SendEmailInput,
 } from "./repositories/resend-email.repository";
+// User account repository (Story 30-2)
+export { UserAccountRepository } from "./repositories/user-account.repository";
 // Waitlist repository (Story 15.3)
 export { WaitlistRepository } from "./repositories/waitlist.repository";
 // Agent response schemas for structured LLM output (Story 2.4, Task 13)

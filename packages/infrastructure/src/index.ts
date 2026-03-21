@@ -69,5 +69,7 @@ export { RelationshipAnalysisGeneratorMockRepositoryLive } from "./repositories/
 export { RelationshipInvitationDrizzleRepositoryLive } from "./repositories/relationship-invitation.drizzle.repository";
 // Resend email repository implementation (Story 31-7)
 export { ResendEmailResendRepositoryLive } from "./repositories/resend-email.resend.repository";
+// User account repository implementation (Story 30-2)
+export { UserAccountDrizzleRepositoryLive } from "./repositories/user-account.drizzle.repository";
 // Waitlist repository implementation (Story 15.3)
 export { WaitlistDrizzleRepositoryLive } from "./repositories/waitlist.drizzle.repository";

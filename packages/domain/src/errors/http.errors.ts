@@ -14,6 +14,15 @@
 import { Schema as S } from "effect";
 
 /**
+ * Account not found error (404)
+ * Authenticated user's account row does not exist (e.g., concurrent double-deletion)
+ */
+export class AccountNotFound extends S.TaggedError<AccountNotFound>()("AccountNotFound", {
+	userId: S.String,
+	message: S.String,
+}) {}
+
+/**
  * Session-related errors (404, 410)
  */
 export class SessionNotFound extends S.TaggedError<SessionNotFound>()("SessionNotFound", {
