@@ -37,36 +37,44 @@ So that **I can show friends what I discovered and know what I can do next**.
 
 ## Tasks
 
-### Task 1: Share Results Use Case (Backend)
-Create a use case that generates a shareable URL for the user's results page.
+### Task 1: Add Web Share API to Share Handler (Frontend)
+The backend share infrastructure already exists (`POST /api/public-profile/share`, `createShareableProfile` use case). The results page already gets share state from `results.publicProfileId`/`results.shareableUrl`. The only gap is Web Share API support in the share handler.
 
 **Subtasks:**
-- 1.1: Create `get-share-url.use-case.ts` in `apps/api/src/use-cases/` that takes a `sessionId` and `userId`, verifies session ownership, and returns the shareable URL (delegates to existing `createShareableProfile`)
-- 1.2: Add `getShareUrl` endpoint to the contracts `ResultsGroup` in `packages/contracts/src/http/groups/results.ts` -- `GET /results/:sessionId/share` returning `{ shareableUrl: string, isPublic: boolean }`
-- 1.3: Wire the handler in `apps/api/src/handlers/results.ts` to call the use case
-- 1.4: Write tests for the use case verifying session ownership check and URL generation
+- 1.1: Enhance `handleCopyLink` in `apps/front/src/routes/results/$assessmentSessionId.tsx` to attempt `navigator.share()` first (with `title`, `text`, `url`), falling back to `navigator.clipboard.writeText()` on rejection or lack of support
+- 1.2: Update `ShareProfileSection` component to use a share icon label ("Share" instead of just "Copy") when Web Share API is available
+- 1.3: Write unit tests for the Web Share API logic (mock `navigator.share` and `navigator.clipboard`)
 
-### Task 2: Share Button Component (Frontend)
-Implement the share button with Web Share API and clipboard fallback on the results page.
-
-**Subtasks:**
-- 2.1: Create `useShareResults` hook in `apps/front/src/components/results/useShareResults.ts` that calls `GET /results/:sessionId/share`, triggers Web Share API where available, falls back to `navigator.clipboard.writeText`, and tracks copied state with auto-reset timer
-- 2.2: Create `ShareResultsButton` component in `apps/front/src/components/results/ShareResultsButton.tsx` with share icon, loading state, and success feedback (checkmark)
-- 2.3: Integrate `ShareResultsButton` into the results page layout alongside existing share section
-- 2.4: Write component tests verifying Web Share API usage, clipboard fallback, and loading states
-
-### Task 3: Credits Display Component (Frontend)
-Display the credit balance and purchase CTA on the results page using the existing `GET /api/purchase/credits` endpoint.
+### Task 2: Credits Display Verification
+The existing `RelationshipCreditsSection` already satisfies AC3 (credit balance, single/5-pack purchase CTAs via Polar). The existing `getCredits` use case already satisfies AC2 (derive-at-read from purchase_events). Verify integration is complete.
 
 **Subtasks:**
-- 3.1: Verify the existing `RelationshipCreditsSection` component already satisfies AC3 requirements (credit balance display, purchase CTA via Polar embedded checkout)
-- 3.2: If any gaps exist, enhance the component to show credit balance prominently and ensure the purchase CTA is always visible
-- 3.3: Ensure the credits section is integrated into the results page grid layout
+- 2.1: Confirm `RelationshipCreditsSection` is rendered in the results page grid (already at line 485 in `$assessmentSessionId.tsx`)
+- 2.2: Confirm credit derivation test coverage exists (already in `get-credits.use-case.test.ts`)
 
-### Task 4: Integration Verification
-Verify the full flow end-to-end.
+### Task 3: Integration & Typecheck
+- 3.1: Run `pnpm turbo typecheck` and `pnpm test:run` to ensure no regressions
 
-**Subtasks:**
-- 4.1: Verify that share action on results page correctly triggers Web Share API or clipboard copy
-- 4.2: Verify credit balance updates after purchase via Polar webhook polling
-- 4.3: Run `pnpm turbo typecheck` and `pnpm test:run` to ensure no regressions
+## Architect Notes
+
+### Critical Finding: Existing Backend Infrastructure
+The share URL generation backend is fully implemented:
+- **Contract:** `ProfileGroup` in `packages/contracts/src/http/groups/profile.ts` has `POST /api/public-profile/share`
+- **Use case:** `apps/api/src/use-cases/create-shareable-profile.use-case.ts`
+- **Handler:** `apps/api/src/handlers/profile.ts`
+- **Results page integration:** `$assessmentSessionId.tsx` lines 271-281 initialize `shareState` from results data
+
+**Do NOT create duplicate endpoints or use cases.** The only implementation gap is adding Web Share API support to the frontend share handler.
+
+### Critical Finding: Existing Credits Infrastructure
+Credits are fully implemented:
+- **Use case:** `apps/api/src/use-cases/get-credits.use-case.ts` (derive-at-read from purchase_events)
+- **Contract:** `PurchaseGroup` has `GET /api/purchase/credits`
+- **Frontend:** `RelationshipCreditsSection` component with balance display + Polar checkout
+- **Tests:** Full coverage in `get-credits.use-case.test.ts`
+
+### Implementation Guidance
+1. **File to modify:** `apps/front/src/routes/results/$assessmentSessionId.tsx` - enhance `handleCopyLink`
+2. **File to modify:** `apps/front/src/components/results/ShareProfileSection.tsx` - update copy button to show "Share" when Web Share API available
+3. **Pattern to follow:** `apps/front/src/components/sharing/archetype-share-card.tsx` lines 96-112 already use `navigator.share()` with clipboard fallback -- replicate this pattern
+4. **Test pattern:** Component tests in `apps/front/src/components/results/` (e.g., `QuickActionsCard.test.tsx`)
