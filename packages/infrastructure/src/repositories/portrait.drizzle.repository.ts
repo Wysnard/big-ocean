@@ -1,8 +1,10 @@
 /**
- * Portrait Repository Implementation (Story 13.3)
+ * Portrait Repository Implementation (Story 13.3, extended Story 32-6)
  *
  * Two-tier portrait system with placeholder row pattern.
  * Status derived from data (content IS NULL + retry_count).
+ *
+ * Story 32-6 adds: resetRetryCount for manual retry.
  */
 
 import { DatabaseError } from "@workspace/domain/errors/http.errors";
@@ -166,6 +168,31 @@ export const PortraitDrizzleRepositoryLive = Layer.effect(
 							return new DatabaseError({ message: "Failed to get full portrait" });
 						}),
 					),
+
+			resetRetryCount: (id: string) =>
+				Effect.gen(function* () {
+					const rows = yield* db
+						.update(portraits)
+						.set({ retryCount: 0 })
+						.where(eq(portraits.id, id))
+						.returning()
+						.pipe(
+							Effect.mapError((error) => {
+								logger.error("Database operation failed", {
+									operation: "resetRetryCount",
+									portraitId: id,
+									error: error instanceof Error ? error.message : String(error),
+								});
+								return new DatabaseError({ message: "Failed to reset retry count" });
+							}),
+						);
+
+					const row = rows[0];
+					if (!row) {
+						return yield* Effect.fail(new PortraitNotFoundError({ portraitId: id }));
+					}
+					return mapRow(row);
+				}),
 		});
 	}),
 );

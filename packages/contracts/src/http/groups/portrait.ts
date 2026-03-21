@@ -1,14 +1,16 @@
 /**
- * Portrait HTTP API Group (Story 13.3)
+ * Portrait HTTP API Group (Story 13.3, extended Story 32-6)
  *
- * Endpoints for portrait status polling and retrieval.
+ * Endpoints for portrait status polling, rating, and manual retry.
  * Used by frontend to poll for async portrait generation completion.
+ *
+ * Story 32-6 adds: retryPortrait endpoint for manual retry of failed generation.
  */
 
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema as S } from "effect";
 import { DatabaseError, SessionNotFound, Unauthorized } from "../../errors";
-import { AuthMiddleware } from "../../middleware/auth";
+import { AuthMiddleware, OptionalAuthMiddleware } from "../../middleware/auth";
 
 /**
  * Portrait Status Enum
@@ -68,11 +70,19 @@ export const RatePortraitResponseSchema = S.Struct({
 });
 
 /**
+ * Retry Portrait Response Schema (Story 32-6)
+ */
+export const RetryPortraitResponseSchema = S.Struct({
+	status: PortraitStatusSchema,
+});
+
+/**
  * Portrait API Group
  *
  * Routes:
  * - GET /api/portrait/:sessionId/status - Get portrait generation status
  * - POST /api/portrait/rate - Submit portrait quality rating (auth required)
+ * - POST /api/portrait/:sessionId/retry - Manual retry of failed portrait generation (auth required)
  */
 export const PortraitGroup = HttpApiGroup.make("portrait")
 	.add(
@@ -90,6 +100,16 @@ export const PortraitGroup = HttpApiGroup.make("portrait")
 			.addError(DatabaseError, { status: 500 })
 			.middleware(AuthMiddleware),
 	)
+	.add(
+		HttpApiEndpoint.post("retryPortrait", "/:sessionId/retry")
+			.setPath(PortraitStatusPathSchema)
+			.addSuccess(RetryPortraitResponseSchema)
+			.addError(SessionNotFound, { status: 404 })
+			.addError(Unauthorized, { status: 401 })
+			.addError(DatabaseError, { status: 500 })
+			.middleware(AuthMiddleware),
+	)
+	.middleware(OptionalAuthMiddleware)
 	.prefix("/portrait");
 
 // Export TypeScript types for frontend use
@@ -98,3 +118,4 @@ export type Portrait = typeof PortraitSchema.Type;
 export type GetPortraitStatusResponse = typeof GetPortraitStatusResponseSchema.Type;
 export type RatePortraitPayload = typeof RatePortraitPayloadSchema.Type;
 export type RatePortraitResponse = typeof RatePortraitResponseSchema.Type;
+export type RetryPortraitResponse = typeof RetryPortraitResponseSchema.Type;

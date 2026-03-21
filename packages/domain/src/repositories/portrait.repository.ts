@@ -100,5 +100,15 @@ export class PortraitRepository extends Context.Tag("PortraitRepository")<
 		readonly getFullPortraitBySessionId: (
 			sessionId: string,
 		) => Effect.Effect<Portrait | null, DatabaseError>;
+
+		/**
+		 * Reset retry count to 0 for manual retry (Story 32-6).
+		 * Allows the lazy retry mechanism to re-trigger generation.
+		 *
+		 * @throws PortraitNotFoundError if no matching row exists
+		 */
+		readonly resetRetryCount: (
+			id: string,
+		) => Effect.Effect<Portrait, DatabaseError | PortraitNotFoundError>;
 	}
 >() {}
