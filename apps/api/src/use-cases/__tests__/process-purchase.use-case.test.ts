@@ -21,6 +21,7 @@ import {
 	AssessmentSessionRepository,
 	LoggerRepository,
 	PortraitRepository,
+	PurchaseEventRepository,
 } from "@workspace/domain";
 import {
 	createTestAppConfigLayer,
@@ -339,6 +340,77 @@ describe("processPurchase Portrait Generation (Story 13.3)", () => {
 			// Portrait should NOT be created
 			const portrait = _getPortraitByResultIdAndTier("result_789", "full");
 			expect(portrait).toBeUndefined();
+		}).pipe(Effect.provide(TestLayer)),
+	);
+});
+
+describe("processPurchase Free Credit Grant (Story 3.4)", () => {
+	beforeEach(() => {
+		_resetMockState();
+		vi.clearAllMocks();
+		// Default: no existing session (portrait flow not needed for credit tests)
+		mockSessionRepo.findSessionByUserId.mockReturnValue(Effect.succeed(null));
+		mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(null));
+		mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
+	});
+
+	it.effect("should grant free_credit_granted on first portrait_unlocked", () =>
+		Effect.gen(function* () {
+			const purchaseRepo = yield* PurchaseEventRepository;
+
+			yield* processPurchase({
+				...baseInput,
+				productId: mockAppConfig.polarProductPortraitUnlock,
+			});
+
+			const events = yield* purchaseRepo.getEventsByUserId("user_123");
+			const freeCredits = events.filter((e) => e.eventType === "free_credit_granted");
+			expect(freeCredits).toHaveLength(1);
+			expect(freeCredits[0].amountCents).toBe(0);
+
+			expect(mockLogger.info).toHaveBeenCalledWith(
+				"Granted free relationship credit on first portrait purchase",
+				expect.objectContaining({ userId: "user_123" }),
+			);
+		}).pipe(Effect.provide(TestLayer)),
+	);
+
+	it.effect("should NOT grant free credit when user already has one", () =>
+		Effect.gen(function* () {
+			const purchaseRepo = yield* PurchaseEventRepository;
+
+			// First purchase — gets free credit
+			yield* processPurchase({
+				...baseInput,
+				checkoutId: "checkout_first",
+				productId: mockAppConfig.polarProductPortraitUnlock,
+			});
+
+			// Second purchase — should NOT get another free credit
+			yield* processPurchase({
+				...baseInput,
+				checkoutId: "checkout_second",
+				productId: mockAppConfig.polarProductPortraitUnlock,
+			});
+
+			const events = yield* purchaseRepo.getEventsByUserId("user_123");
+			const freeCredits = events.filter((e) => e.eventType === "free_credit_granted");
+			expect(freeCredits).toHaveLength(1);
+		}).pipe(Effect.provide(TestLayer)),
+	);
+
+	it.effect("should NOT grant free credit for non-portrait purchases", () =>
+		Effect.gen(function* () {
+			const purchaseRepo = yield* PurchaseEventRepository;
+
+			yield* processPurchase({
+				...baseInput,
+				productId: mockAppConfig.polarProductRelationshipSingle,
+			});
+
+			const events = yield* purchaseRepo.getEventsByUserId("user_123");
+			const freeCredits = events.filter((e) => e.eventType === "free_credit_granted");
+			expect(freeCredits).toHaveLength(0);
 		}).pipe(Effect.provide(TestLayer)),
 	);
 });

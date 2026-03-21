@@ -3,9 +3,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import type { FacetName, TraitName } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
+import { useTheme } from "@workspace/ui/hooks/use-theme";
 import { Schema as S } from "effect";
 import { BookOpen, Loader2, MessageCircle } from "lucide-react";
-import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FinalizationWaitScreen } from "@/components/finalization-wait-screen";
 import { ResultsAuthGate } from "@/components/ResultsAuthGate";
 import { RelationshipCard } from "@/components/relationship/RelationshipCard";
@@ -13,6 +14,7 @@ import { DetailZone } from "@/components/results/DetailZone";
 import { EvidencePanel } from "@/components/results/EvidencePanel";
 import { PortraitReadingView } from "@/components/results/PortraitReadingView";
 import { ProfileView } from "@/components/results/ProfileView";
+import { PwywModal } from "@/components/results/PwywModal";
 import { QuickActionsCard } from "@/components/results/QuickActionsCard";
 import { RelationshipCreditsSection } from "@/components/results/RelationshipCreditsSection";
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
@@ -27,6 +29,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useFacetEvidence } from "@/hooks/use-evidence";
 import { useToggleVisibility } from "@/hooks/use-profile";
 import { usePortraitStatus } from "@/hooks/usePortraitStatus";
+import { createThemedCheckoutEmbed } from "@/lib/polar-checkout";
 import {
 	clearPendingResultsGateSession,
 	persistPendingResultsGateSession,
@@ -130,6 +133,63 @@ function ResultsSessionPage() {
 			setWaitingForUnlock(false);
 		}
 	}, [waitingForUnlock, portraitStatusData?.status]);
+
+	// Story 3.4: PWYW modal state
+	const [showPwywModal, setShowPwywModal] = useState(false);
+	const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+	const { appTheme } = useTheme();
+	const pwywAutoOpenRef = useRef(false);
+
+	// Story 3.4: Auto-open PWYW modal ~2.5s after first visit when portrait not unlocked
+	useEffect(() => {
+		if (!canLoadResults || !results) return;
+		if (pwywAutoOpenRef.current) return;
+
+		const portraitStatus = portraitStatusData?.status;
+		// Don't auto-open if portrait is already unlocked, generating, or failed
+		if (portraitStatus === "ready" || portraitStatus === "generating" || portraitStatus === "failed")
+			return;
+
+		// Check sessionStorage to avoid re-opening on page refresh
+		const storageKey = `pwyw-modal-shown-${assessmentSessionId}`;
+		if (typeof window !== "undefined" && sessionStorage.getItem(storageKey)) return;
+
+		const timer = setTimeout(() => {
+			pwywAutoOpenRef.current = true;
+			setShowPwywModal(true);
+			if (typeof window !== "undefined") {
+				sessionStorage.setItem(storageKey, "1");
+			}
+		}, 2500);
+
+		return () => clearTimeout(timer);
+	}, [canLoadResults, results, portraitStatusData?.status, assessmentSessionId]);
+
+	// Story 3.4: Handle Polar checkout for portrait unlock
+	const handlePwywCheckout = useCallback(async () => {
+		setIsCheckoutLoading(true);
+		try {
+			const checkout = await createThemedCheckoutEmbed("portrait-unlock", appTheme);
+			// Hide our modal so it doesn't show behind the Polar checkout overlay
+			setShowPwywModal(false);
+			setIsCheckoutLoading(false);
+			checkout.addEventListener("success", (event) => {
+				event.preventDefault();
+				setWaitingForUnlock(true);
+			});
+			checkout.addEventListener("close", () => {
+				// User dismissed Polar checkout — they already read the founder's letter,
+				// so land them on results page with the inline "Unlock" button visible
+			});
+		} catch {
+			setIsCheckoutLoading(false);
+		}
+	}, [appTheme]);
+
+	// Story 3.4: Callback to reopen PWYW modal from the unlock CTA button
+	const handleUnlockPortrait = useCallback(() => {
+		setShowPwywModal(true);
+	}, []);
 
 	const [isGateExpired, setIsGateExpired] = useState(false);
 	const [shareState, setShareState] = useState<{
@@ -359,94 +419,111 @@ function ResultsSessionPage() {
 	}
 
 	return (
-		<ProfileView
-			archetypeName={results.archetypeName}
-			oceanCode5={results.oceanCode5}
-			description={results.archetypeDescription}
-			dominantTrait={dominantTrait}
-			traits={results.traits}
-			facets={results.facets}
-			onToggleTrait={handleToggleTrait}
-			overallConfidence={results.overallConfidence}
-			isCurated={results.isCurated}
-			fullPortraitContent={portraitStatusData?.portrait?.content}
-			fullPortraitStatus={portraitStatusData?.status}
-			onRetryPortrait={() => void refetchPortraitStatus()}
-			selectedTrait={selectedTrait}
-			messageCount={results.messageCount}
-			detailZone={
-				selectedTraitData && (
-					<>
-						<DetailZone
-							trait={selectedTraitData}
-							facetDetails={facetDetails ?? []}
-							isOpen={!!selectedTrait}
-							onClose={handleCloseDetailZone}
-							isLoading={evidenceLoading}
-							onFacetClick={handleFacetClick}
+		<>
+			<ProfileView
+				archetypeName={results.archetypeName}
+				oceanCode5={results.oceanCode5}
+				description={results.archetypeDescription}
+				dominantTrait={dominantTrait}
+				traits={results.traits}
+				facets={results.facets}
+				onToggleTrait={handleToggleTrait}
+				overallConfidence={results.overallConfidence}
+				isCurated={results.isCurated}
+				fullPortraitContent={portraitStatusData?.portrait?.content}
+				fullPortraitStatus={portraitStatusData?.status}
+				onRetryPortrait={() => void refetchPortraitStatus()}
+				onUnlockPortrait={
+					portraitStatusData?.status !== "ready" &&
+					portraitStatusData?.status !== "generating" &&
+					portraitStatusData?.status !== "failed"
+						? handleUnlockPortrait
+						: undefined
+				}
+				selectedTrait={selectedTrait}
+				messageCount={results.messageCount}
+				detailZone={
+					selectedTraitData && (
+						<>
+							<DetailZone
+								trait={selectedTraitData}
+								facetDetails={facetDetails ?? []}
+								isOpen={!!selectedTrait}
+								onClose={handleCloseDetailZone}
+								isLoading={evidenceLoading}
+								onFacetClick={handleFacetClick}
+							/>
+							{selectedFacet && selectedFacetEvidence && (
+								<EvidencePanel
+									facetName={selectedFacet}
+									evidence={selectedFacetEvidence}
+									onClose={handleCloseEvidencePanel}
+								/>
+							)}
+						</>
+					)
+				}
+				quickActions={
+					<QuickActionsCard
+						sessionId={assessmentSessionId}
+						publicProfileId={shareState?.publicProfileId}
+					/>
+				}
+			>
+				{/* Grid children: Share + Continue Chat */}
+				<div className="mx-auto max-w-[1120px] px-5 pb-10">
+					<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
+						<ShareProfileSection
+							shareState={shareState}
+							copied={copied}
+							isTogglePending={toggleVisibility.isPending}
+							onCopyLink={handleCopyLink}
+							onToggleVisibility={handleToggleVisibility}
 						/>
-						{selectedFacet && selectedFacetEvidence && (
-							<EvidencePanel
-								facetName={selectedFacet}
-								evidence={selectedFacetEvidence}
-								onClose={handleCloseEvidencePanel}
+
+						<RelationshipCard />
+						<RelationshipCreditsSection />
+
+						{shareState?.publicProfileId && (
+							<ArchetypeShareCard
+								publicProfileId={shareState.publicProfileId}
+								archetypeName={results.archetypeName}
 							/>
 						)}
-					</>
-				)
-			}
-			quickActions={
-				<QuickActionsCard
-					sessionId={assessmentSessionId}
-					publicProfileId={shareState?.publicProfileId}
-				/>
-			}
-		>
-			{/* Grid children: Share + Continue Chat */}
-			<div className="mx-auto max-w-[1120px] px-5 pb-10">
-				<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
-					<ShareProfileSection
-						shareState={shareState}
-						copied={copied}
-						isTogglePending={toggleVisibility.isPending}
-						onCopyLink={handleCopyLink}
-						onToggleVisibility={handleToggleVisibility}
-					/>
 
-					<RelationshipCard />
-					<RelationshipCreditsSection />
-
-					{shareState?.publicProfileId && (
-						<ArchetypeShareCard
-							publicProfileId={shareState.publicProfileId}
-							archetypeName={results.archetypeName}
-						/>
-					)}
-
-					{/* Action CTAs — full-width */}
-					<div className="col-span-full flex flex-wrap justify-center gap-3 py-4">
-						{/* Show "Read portrait" button if full portrait content is available */}
-						{portraitStatusData?.portrait?.content && (
-							<Button data-testid="results-read-portrait" asChild variant="outline" className="min-h-11">
-								<Link
-									to="/results/$assessmentSessionId"
-									params={{ assessmentSessionId }}
-									search={{ view: "portrait" }}
-								>
-									<BookOpen className="w-4 h-4 mr-2" />
-									Read your portrait again
+						{/* Action CTAs — full-width */}
+						<div className="col-span-full flex flex-wrap justify-center gap-3 py-4">
+							{/* Show "Read portrait" button if full portrait content is available */}
+							{portraitStatusData?.portrait?.content && (
+								<Button data-testid="results-read-portrait" asChild variant="outline" className="min-h-11">
+									<Link
+										to="/results/$assessmentSessionId"
+										params={{ assessmentSessionId }}
+										search={{ view: "portrait" }}
+									>
+										<BookOpen className="w-4 h-4 mr-2" />
+										Read your portrait again
+									</Link>
+								</Button>
+							)}
+							<Button data-testid="results-continue-chat" asChild variant="outline" className="min-h-11">
+								<Link to="/chat" search={{ sessionId: assessmentSessionId }}>
+									<MessageCircle className="w-4 h-4 mr-2" />
+									Continue Chat
 								</Link>
 							</Button>
-						)}
-						<Button data-testid="results-continue-chat" asChild variant="outline" className="min-h-11">
-							<Link to="/chat" search={{ sessionId: assessmentSessionId }}>
-								<MessageCircle className="w-4 h-4 mr-2" />
-								Continue Chat
-							</Link>
-						</Button>
+						</div>
 					</div>
 				</div>
-			</div>
-		</ProfileView>
+			</ProfileView>
+
+			{/* Story 3.4: PWYW Modal */}
+			<PwywModal
+				open={showPwywModal}
+				onOpenChange={setShowPwywModal}
+				onCheckout={() => void handlePwywCheckout()}
+				isCheckoutLoading={isCheckoutLoading}
+			/>
+		</>
 	);
 }

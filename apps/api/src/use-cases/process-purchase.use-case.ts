@@ -1,5 +1,5 @@
 /**
- * Process Purchase Use Case (Story 13.2, extended Story 13.3)
+ * Process Purchase Use Case (Story 13.2, extended Story 13.3, extended Story 3.4)
  *
  * Effect-based use-case that maps a Polar webhook order to a purchase event.
  * The actual webhook handler (createOnOrderPaidHandler) uses plain Drizzle
@@ -10,6 +10,9 @@
  * - Two-phase idempotency for duplicate webhooks
  * - Portrait placeholder insertion in transaction
  * - forkDaemon for async portrait generation
+ *
+ * Story 3.4 adds:
+ * - Free credit grant on first portrait purchase (FR33)
  *
  * Dependencies: PurchaseEventRepository, AssessmentSessionRepository,
  *               AssessmentResultRepository, PortraitRepository, AppConfig
@@ -179,6 +182,28 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 			eventInput,
 			portraitPlaceholder,
 		);
+
+		// ───────────────────────────────────────────────────────────────
+		// Phase 3: Free credit grant on first portrait purchase (Story 3.4, FR33)
+		// ───────────────────────────────────────────────────────────────
+		if (eventType === "portrait_unlocked") {
+			const existingEvents = yield* purchaseRepo.getEventsByUserId(input.userId);
+			const hasFreeCredit = existingEvents.some((e) => e.eventType === "free_credit_granted");
+			if (!hasFreeCredit) {
+				yield* purchaseRepo.insertEvent({
+					userId: input.userId,
+					eventType: "free_credit_granted",
+					polarCheckoutId: null,
+					polarProductId: null,
+					amountCents: 0,
+					currency: input.currency,
+					metadata: null,
+				});
+				logger.info("Granted free relationship credit on first portrait purchase", {
+					userId: input.userId,
+				});
+			}
+		}
 
 		// Spawn portrait generation daemon AFTER transaction commits
 		if (insertResult.portrait && sessionId) {
