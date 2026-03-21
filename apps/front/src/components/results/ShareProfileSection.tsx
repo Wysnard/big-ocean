@@ -92,7 +92,7 @@ export function ShareProfileSection({
 					</span>
 					<button
 						data-slot="share-action-btn"
-						data-testid="share-action-btn"
+						data-testid="share-copy-btn"
 						type="button"
 						onClick={handleActionClick}
 						aria-label={copied ? "Link copied" : hasWebShare ? "Share link" : "Copy link"}

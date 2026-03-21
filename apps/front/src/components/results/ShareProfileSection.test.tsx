@@ -75,7 +75,7 @@ describe("ShareProfileSection", () => {
 				onShareLink={() => {}}
 			/>,
 		);
-		expect(screen.getByTestId("share-action-btn")).toHaveTextContent("Share");
+		expect(screen.getByTestId("share-copy-btn")).toHaveTextContent("Share");
 	});
 
 	it("shows 'Copy' button when Web Share API is not available", () => {
@@ -89,7 +89,7 @@ describe("ShareProfileSection", () => {
 				onShareLink={() => {}}
 			/>,
 		);
-		expect(screen.getByTestId("share-action-btn")).toHaveTextContent("Copy");
+		expect(screen.getByTestId("share-copy-btn")).toHaveTextContent("Copy");
 	});
 
 	it("calls onShareLink when Web Share API is available and button is clicked", () => {
@@ -110,7 +110,7 @@ describe("ShareProfileSection", () => {
 				onShareLink={onShareLink}
 			/>,
 		);
-		fireEvent.click(screen.getByTestId("share-action-btn"));
+		fireEvent.click(screen.getByTestId("share-copy-btn"));
 		expect(onShareLink).toHaveBeenCalledOnce();
 	});
 
@@ -127,7 +127,7 @@ describe("ShareProfileSection", () => {
 				onShareLink={() => {}}
 			/>,
 		);
-		fireEvent.click(screen.getByTestId("share-action-btn"));
+		fireEvent.click(screen.getByTestId("share-copy-btn"));
 		expect(onCopyLink).toHaveBeenCalledOnce();
 	});
 
@@ -142,7 +142,7 @@ describe("ShareProfileSection", () => {
 				onShareLink={() => {}}
 			/>,
 		);
-		expect(screen.getByTestId("share-action-btn")).toHaveTextContent("Copied!");
+		expect(screen.getByTestId("share-copy-btn")).toHaveTextContent("Copied!");
 	});
 
 	it("has data-slot attribute", () => {
