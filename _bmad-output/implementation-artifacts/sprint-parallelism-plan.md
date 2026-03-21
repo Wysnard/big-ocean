@@ -1,10 +1,10 @@
 # Sprint Parallelism Plan
-Generated: 2026-03-19 (refreshed — Step 3 complete)
+Generated: 2026-03-21 (refreshed — Step 4 complete)
 
 > Phase 7: Product Completeness & Launch Readiness
 > Source: epics.md (9 epics, 41 stories incl. sub-stories)
 > Only forward-looking stories included — all prior phases complete.
-> Steps 1-3 complete (15 stories merged). Step 4 unlocked.
+> Steps 1-4 complete (19 stories merged). Step 5 unlocked.
 >
 > Conservative parallelism: stories sharing a page, route, or domain area
 > are placed in separate steps even when technically independent.
@@ -18,15 +18,8 @@ All 6 stories merged: 30-1, 31-1, 31-7b, 32-1, 32-7b, 37-1.
 ## Step 3: COMPLETE (2026-03-19)
 All 4 stories merged: 31-2 (PR #156), 32-2 (PR #157), 31-4 (PR #154), 37-2 (PR #155).
 
-## Step 4: Account Deletion, Closing Exchange, Session Resume, PWYW
-| Story | Mode | Notes |
-|-------|------|-------|
-| 30-2-account-deletion-with-cascade-hooks | parallel | After 30-1. Cascade event hooks for Epic 35 |
-| 31-3-conversation-closing-exchange | parallel | After 31-2. Move Governor close intent |
-| 31-5-session-resume | parallel | Chat page: resume flow, different area from 31-3 (pipeline) |
-| 32-4-pwyw-modal-and-portrait-unlock | parallel | After 32-3. Results page modal overlay |
-
-**Gate:** All stories above must be done before proceeding.
+## Step 4: COMPLETE (2026-03-21)
+All 4 stories merged: 30-2 (PR #161), 31-3 (PR #158), 31-5 (PR #160), 32-4 (PR #159).
 
 ## Step 5: Portrait, Cost Guard, Public Profile
 | Story | Mode | Notes |
@@ -99,9 +92,9 @@ All 4 stories merged: 31-2 (PR #156), 32-2 (PR #157), 31-4 (PR #154), 37-2 (PR #
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **11 steps** — Steps 1-3 complete (15 merged), Step 4 now unlocked
-- **24 stories remaining** (Steps 4-11)
-- **Critical path:** 32-3 (done) → 34-1 (Step 6) → 34-2 (Step 7) → 34-3 (Step 8) → 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
+- **11 steps** — Steps 1-4 complete (19 merged), Step 5 now unlocked
+- **20 stories remaining** (Steps 5-11)
+- **Critical path:** 33-1 (Step 5) → 34-1 (Step 6) → 34-2 (Step 7) → 34-3 (Step 8) → 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
 - **Key enablers:** Polar (32-3, done) and Email Infrastructure (31-7, done) — both landed in Step 1
 - **No shared-file conflicts within any step** — stories in the same step touch different pages/domains
-- **Next up (Step 4):** 30-2 (account deletion), 31-3 (closing exchange), 31-5 (session resume), 32-4 (PWYW modal) — all parallel
+- **Next up (Step 5):** 32-5 (full portrait display), 32-6 (portrait reconciliation), 31-6 (cost guard), 33-1 (public profile page) — all parallel

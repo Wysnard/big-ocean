@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-19 (refreshed — 3 pr-ready→done, Step 3 complete)
+generated: 2026-03-21 (refreshed — Epic 30 done, all Phase 7 Step 4 stories merged)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -522,7 +522,7 @@ development_status:
   # Profile visibility, account deletion with cascade hooks
   # Stories: 1.1-1.2 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-30: in-progress
+  epic-30: done
   30-1-profile-visibility-controls: done
   30-2-account-deletion-with-cascade-hooks: done
   epic-30-retrospective: optional
