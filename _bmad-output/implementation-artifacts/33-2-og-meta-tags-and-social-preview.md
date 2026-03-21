@@ -1,5 +1,5 @@
 ---
-status: ready-for-dev
+status: done
 story_id: "4.2"
 epic: 4
 created_date: 2026-03-21
