@@ -1,8 +1,10 @@
 /**
- * Public Profile Route — Story 15-1 Redesign
+ * Public Profile Route — Story 15-1 Redesign + Story 33-1 Enhancements
  *
  * 5-section "Story Scroll" layout for shareable personality profiles.
  * No auth required to view. Auth state determines CTA variant.
+ * Enhancements: framing line, inline CTA, "How it works" micro-preview,
+ * updated CTA copy per UX spec section 17.17.
  * Route: /public-profile/:publicProfileId
  */
 
@@ -30,6 +32,8 @@ import { OceanTriangle } from "@/components/ocean-shapes/OceanTriangle";
 import { ArchetypeDescriptionSection } from "@/components/results/ArchetypeDescriptionSection";
 import { ArchetypeHeroSection } from "@/components/results/ArchetypeHeroSection";
 import { PersonalityRadarChart } from "@/components/results/PersonalityRadarChart";
+import { ProfileHowItWorks } from "@/components/results/ProfileHowItWorks";
+import { ProfileInlineCTA } from "@/components/results/ProfileInlineCTA";
 import { PsychedelicBackground } from "@/components/results/PsychedelicBackground";
 import type { AuthState } from "@/components/results/PublicProfileCTA";
 import { PublicProfileCTA } from "@/components/results/PublicProfileCTA";
@@ -334,6 +338,7 @@ function ProfilePage() {
 				dominantTrait={dominantTrait}
 				displayName={displayName}
 				subtitle={`${displayName}\u2019s Personality`}
+				framingLine={`${displayName} dove deep with Nerin \u2014 here\u2019s what surfaced`}
 				showScrollIndicator
 			/>
 
@@ -368,6 +373,12 @@ function ProfilePage() {
 					return <TraitBand key={traitName} trait={traitData} facets={traitFacets} />;
 				})}
 			</section>
+
+			{/* Inline CTA — between trait strata and "How it works" */}
+			<ProfileInlineCTA authState={authState} />
+
+			{/* How It Works micro-preview */}
+			<ProfileHowItWorks />
 
 			{/* Section 4: Archetype Description */}
 			<ArchetypeDescriptionSection

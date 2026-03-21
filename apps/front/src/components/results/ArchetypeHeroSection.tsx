@@ -1,9 +1,5 @@
 import type { OceanCode5, TraitName } from "@workspace/domain";
-import {
-	BIG_FIVE_TRAITS,
-	getTraitColor,
-	getTraitLevelLabel,
-} from "@workspace/domain";
+import { BIG_FIVE_TRAITS, getTraitColor, getTraitLevelLabel } from "@workspace/domain";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useId, useState } from "react";
@@ -33,6 +29,8 @@ interface ArchetypeHeroSectionProps {
 	subtitle?: string;
 	/** Show animated scroll indicator chevron at bottom. Fades on first scroll. */
 	showScrollIndicator?: boolean;
+	/** Framing line displayed above the subtitle (e.g. "[Name] dove deep with Nerin — here's what surfaced") */
+	framingLine?: string;
 }
 
 function ScrollIndicator() {
@@ -65,6 +63,7 @@ export function ArchetypeHeroSection({
 	displayName,
 	subtitle,
 	showScrollIndicator,
+	framingLine,
 }: ArchetypeHeroSectionProps) {
 	const traitColor = getTraitColor(dominantTrait);
 	const tooltipBaseId = useId();
@@ -103,6 +102,13 @@ export function ArchetypeHeroSection({
 
 			{/* Content — always above shapes */}
 			<div className="relative z-30 mx-auto max-w-2xl text-center">
+				{/* Framing line — public profile only */}
+				{framingLine && (
+					<p data-testid="framing-line" className="text-base md:text-lg text-foreground/60 italic mb-2">
+						{framingLine}
+					</p>
+				)}
+
 				{/* Subtitle */}
 				<p className="text-sm tracking-wider uppercase font-heading text-foreground/70 mb-4">
 					{resolvedSubtitle}
