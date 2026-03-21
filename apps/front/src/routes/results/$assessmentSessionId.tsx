@@ -298,6 +298,20 @@ function ResultsSessionPage() {
 		}
 	};
 
+	const handleShareLink = async () => {
+		if (!shareState) return;
+		try {
+			await navigator.share({
+				title: `My personality archetype: ${results?.archetypeName ?? "Big Ocean"}`,
+				text: "Check out my Big Ocean personality profile",
+				url: shareState.shareableUrl,
+			});
+		} catch {
+			// User cancelled share or share failed — fall back to clipboard copy
+			await handleCopyLink();
+		}
+	};
+
 	const handleToggleVisibility = async () => {
 		if (!shareState) return;
 		try {
@@ -479,6 +493,7 @@ function ResultsSessionPage() {
 							isTogglePending={toggleVisibility.isPending}
 							onCopyLink={handleCopyLink}
 							onToggleVisibility={handleToggleVisibility}
+							onShareLink={handleShareLink}
 						/>
 
 						<RelationshipCard />

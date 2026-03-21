@@ -1,5 +1,5 @@
 import { Switch } from "@workspace/ui/components/switch";
-import { Check, Copy, Loader2 } from "lucide-react";
+import { Check, Copy, Loader2, Share2 } from "lucide-react";
 
 interface ShareState {
 	publicProfileId: string;
@@ -13,6 +13,12 @@ interface ShareProfileSectionProps {
 	isTogglePending: boolean;
 	onCopyLink: () => void;
 	onToggleVisibility: () => void;
+	onShareLink: () => void;
+}
+
+/** Detect Web Share API availability at render time */
+function canUseWebShare(): boolean {
+	return typeof navigator !== "undefined" && typeof navigator.share === "function";
 }
 
 export function ShareProfileSection({
@@ -21,8 +27,30 @@ export function ShareProfileSection({
 	isTogglePending,
 	onCopyLink,
 	onToggleVisibility,
+	onShareLink,
 }: ShareProfileSectionProps) {
 	if (!shareState) return null;
+
+	const hasWebShare = canUseWebShare();
+
+	const handleActionClick = () => {
+		if (copied) return;
+		if (hasWebShare) {
+			onShareLink();
+		} else {
+			onCopyLink();
+		}
+	};
+
+	const getButtonLabel = (): string => {
+		if (copied) return "Copied!";
+		return hasWebShare ? "Share" : "Copy";
+	};
+
+	const getButtonIcon = () => {
+		if (copied) return <Check className="w-4 h-4" />;
+		return hasWebShare ? <Share2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />;
+	};
 
 	return (
 		<div
@@ -63,15 +91,15 @@ export function ShareProfileSection({
 						{shareState.shareableUrl}
 					</span>
 					<button
-						data-slot="share-copy-btn"
+						data-slot="share-action-btn"
 						data-testid="share-copy-btn"
 						type="button"
-						onClick={onCopyLink}
-						aria-label={copied ? "Link copied" : "Copy link"}
+						onClick={handleActionClick}
+						aria-label={copied ? "Link copied" : hasWebShare ? "Share link" : "Copy link"}
 						className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[oklch(0.67_0.13_181)] px-3.5 py-1.5 text-sm font-medium text-white hover:bg-[oklch(0.60_0.13_181)] transition-colors"
 					>
-						{copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-						<span>{copied ? "Copied!" : "Copy"}</span>
+						{getButtonIcon()}
+						<span>{getButtonLabel()}</span>
 					</button>
 				</div>
 			</div>
