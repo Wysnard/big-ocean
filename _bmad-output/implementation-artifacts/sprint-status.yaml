@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-21 (refreshed — full sprint planning refresh, all statuses verified)
+generated: 2026-03-21 (refreshed — Step 5 complete, Epic 31 done)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -533,13 +533,13 @@ development_status:
   # session resume, cost guard, drop-off email
   # Stories: 2.1-2.7 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-31: in-progress
+  epic-31: done
   31-1-nerin-greeting-and-onboarding-message: done
   31-2-nerin-character-quality-observations-transitions-and-character-bible: done
   31-3-conversation-closing-exchange: done
   31-4-depth-meter-and-progress-milestones: done
   31-5-session-resume: done
-  31-6-cost-guard: pr-ready
+  31-6-cost-guard: done
   31-7-email-infrastructure-and-drop-off-re-engagement: done
   31-7b-wire-resend-into-better-auth: done
   epic-31-retrospective: optional
@@ -557,8 +557,8 @@ development_status:
   32-2-results-page-scientific-section: done
   32-3-polar-integration-and-purchase-events: done
   32-4-pwyw-modal-and-portrait-unlock: done
-  32-5-full-portrait-display: pr-ready
-  32-6-portrait-reconciliation-and-retry: pr-ready
+  32-5-full-portrait-display: done
+  32-6-portrait-reconciliation-and-retry: done
   32-7-archetype-card-image-generation: done
   32-7b-complete-ocean-shape-library: done
   32-8-basic-share-and-credit-system: backlog
@@ -570,7 +570,7 @@ development_status:
   # Stories: 4.1-4.4 in epics.md
   # ───────────────────────────────────────────────────────────────
   epic-33: in-progress
-  33-1-public-profile-page: pr-ready
+  33-1-public-profile-page: done
   33-2-og-meta-tags-and-social-preview: backlog
   33-3-share-flow-and-visibility-toggle: backlog
   33-4-relationship-analysis-cta-on-public-profile: backlog

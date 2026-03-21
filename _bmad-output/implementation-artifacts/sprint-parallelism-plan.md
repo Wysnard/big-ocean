@@ -1,10 +1,10 @@
 # Sprint Parallelism Plan
-Generated: 2026-03-21 (refreshed — Step 5 in progress, 4 stories pr-ready)
+Generated: 2026-03-21 (refreshed — Step 5 complete, Step 6 unlocked)
 
 > Phase 7: Product Completeness & Launch Readiness
 > Source: epics.md (9 epics, 41 stories incl. sub-stories)
 > Only forward-looking stories included — all prior phases complete.
-> Steps 1-4 complete (19 stories merged). Step 5 in progress (all 4 stories pr-ready).
+> Steps 1-5 complete (23 stories merged). Step 6 unlocked.
 >
 > Conservative parallelism: stories sharing a page, route, or domain area
 > are placed in separate steps even when technically independent.
@@ -21,15 +21,8 @@ All 4 stories merged: 31-2 (PR #156), 32-2 (PR #157), 31-4 (PR #154), 37-2 (PR #
 ## Step 4: COMPLETE (2026-03-21)
 All 4 stories merged: 30-2 (PR #161), 31-3 (PR #158), 31-5 (PR #160), 32-4 (PR #159).
 
-## Step 5: Portrait, Cost Guard, Public Profile — IN PROGRESS (all pr-ready)
-| Story | Status | Mode | Notes |
-|-------|--------|------|-------|
-| 32-5-full-portrait-display | pr-ready | parallel | After 32-2. Spine renderer + portrait section on results page |
-| 32-6-portrait-reconciliation-and-retry | pr-ready | parallel | After 32-3. Backend reconciliation use-case |
-| 31-6-cost-guard | pr-ready | parallel | Cost tracking refinement, chat/API |
-| 33-1-public-profile-page | pr-ready | parallel | After 30-1. New page, independent route |
-
-**Gate:** All stories above must be done before proceeding.
+## Step 5: COMPLETE (2026-03-21)
+All 4 stories merged: 32-5 (PR #162), 33-1 (PR #163), 32-6 (PR #164), 31-6 (PR #165).
 
 ## Step 6: Credits, QR Infra, Extension, OG Tags
 | Story | Mode | Notes |
@@ -92,9 +85,9 @@ All 4 stories merged: 30-2 (PR #161), 31-3 (PR #158), 31-5 (PR #160), 32-4 (PR #
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **11 steps** — Steps 1-4 complete (19 merged), Step 5 in progress (4 pr-ready)
-- **16 stories remaining** (Steps 6-11, after Step 5 merges)
-- **Critical path:** 33-1 (Step 5, pr-ready) → 34-1 (Step 6) → 34-2 (Step 7) → 34-3 (Step 8) → 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
-- **Key enablers:** Polar (32-3, done) and Email Infrastructure (31-7, done) — both landed in Step 1
+- **11 steps** — Steps 1-5 complete (23 merged), Step 6 unlocked
+- **16 stories remaining** (Steps 6-11)
+- **Critical path:** 34-1 (Step 6) → 34-2 (Step 7) → 34-3 (Step 8) → 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
+- **Key enablers:** Polar (32-3, done), Email Infrastructure (31-7, done), Public Profile (33-1, done), Portrait (32-5, done)
 - **No shared-file conflicts within any step** — stories in the same step touch different pages/domains
-- **Next action:** Merge Step 5 PRs (32-5, 32-6, 31-6, 33-1) to unlock Step 6
+- **Next action:** Begin Step 6 — 4 parallel stories: 32-8 (credits), 34-1 (QR infra), 36-1 (extension), 33-2 (OG tags)
