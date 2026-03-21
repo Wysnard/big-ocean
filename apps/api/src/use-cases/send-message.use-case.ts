@@ -48,7 +48,7 @@ export interface SendMessageOutput {
  */
 export const sendMessage = (input: SendMessageInput) =>
 	Effect.gen(function* () {
-		const config = yield* AppConfig;
+		const _config = yield* AppConfig;
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const logger = yield* LoggerRepository;
 		const costGuard = yield* CostGuardRepository;
@@ -89,17 +89,9 @@ export const sendMessage = (input: SendMessageInput) =>
 				// 4a. Cost key: userId if authenticated, sessionId for anonymous
 				const costKey = input.userId ?? input.sessionId;
 
-				// 4b. Budget check — fail-open if Redis is down (Story 10.6)
-				yield* costGuard.checkDailyBudget(costKey, config.dailyCostLimit * 100).pipe(
-					Effect.catchTag("RedisOperationError", (err) =>
-						Effect.sync(() => {
-							logger.error("Redis unavailable for budget check, allowing message", {
-								error: err.message,
-								sessionId: input.sessionId,
-							});
-						}),
-					),
-				);
+				// 4b. Budget check removed from send-message (Story 31-6)
+				// Per FR56/NFR18, cost guard never blocks mid-session.
+				// Budget enforcement now happens at session boundaries only (start-assessment).
 
 				// 4c. Message rate limit — fail-open if Redis is down
 				yield* costGuard.checkMessageRateLimit(costKey).pipe(

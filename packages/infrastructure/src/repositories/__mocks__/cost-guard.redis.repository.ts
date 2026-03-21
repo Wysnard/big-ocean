@@ -99,5 +99,22 @@ export const CostGuardRedisRepositoryLive = Layer.succeed(
 					);
 				}
 			}),
+
+		incrementSessionCost: (sessionId: string, costCents: number) =>
+			Effect.sync(() => {
+				const key = `session_cost:${sessionId}`;
+				const current = costs.get(key) || 0;
+				const newValue = current + costCents;
+				costs.set(key, newValue);
+				return newValue;
+			}),
+
+		getSessionCost: (sessionId: string) =>
+			Effect.sync(() => {
+				const key = `session_cost:${sessionId}`;
+				return costs.get(key) || 0;
+			}),
+
+		checkSessionBudget: (_sessionId: string, _limitCents: number) => Effect.void,
 	}),
 );

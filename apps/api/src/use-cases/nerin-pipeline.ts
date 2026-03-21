@@ -607,14 +607,29 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 					}),
 				),
 			);
+
+			// Per-session cost tracking (Story 31-6) — fail-open
+			yield* costGuard.incrementSessionCost(input.sessionId, totalCostCents).pipe(
+				Effect.catchAll((err) =>
+					Effect.sync(() => {
+						logger.error("Failed to increment session cost (non-fatal)", {
+							error: err.message,
+							sessionId: input.sessionId,
+							totalCostCents,
+						});
+					}),
+				),
+			);
 		}
 
 		logger.info("Cost tracked", {
+			event: "session_cost_tracked",
 			sessionId: input.sessionId,
 			costKey,
 			nerinCostCents: nerinCost.totalCents,
 			analyzerCostCents: analyzerCost.totalCents,
 			totalCostCents,
+			exchangeNumber: turnNumber,
 			dateKey: getUTCDateKey(),
 		});
 
@@ -700,11 +715,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 			// Derived
 			sessionPhase:
-				sessionPhase === "opening"
-					? "opening"
-					: sessionPhase === "closing"
-						? "closing"
-						: "exploring",
+				sessionPhase === "opening" ? "opening" : sessionPhase === "closing" ? "closing" : "exploring",
 			transitionType: transitionType === "continue" ? "normal" : "territory_change",
 		});
 

@@ -10,6 +10,7 @@
 
 import { AssessmentAlreadyExists, RateLimitExceeded } from "@workspace/contracts";
 import {
+	AppConfig,
 	AssessmentExchangeRepository,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
@@ -106,6 +107,7 @@ export const startAuthenticatedAssessment = (input: { userId: string }) =>
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
 		const costGuard = yield* CostGuardRepository;
+		const config = yield* AppConfig;
 		const logger = yield* LoggerRepository;
 
 		const { userId } = input;
@@ -161,6 +163,19 @@ export const startAuthenticatedAssessment = (input: { userId: string }) =>
 			),
 		);
 
+		// Daily budget check at session boundary (Story 31-6, FR56/NFR18)
+		// Budget enforcement happens here, not mid-conversation
+		yield* costGuard.checkDailyBudget(userId, config.dailyCostLimit * 100).pipe(
+			Effect.catchTag("RedisOperationError", (err) =>
+				Effect.sync(() => {
+					logger.warn("Redis unavailable for budget check, allowing", {
+						error: err.message,
+						userId,
+					});
+				}),
+			),
+		);
+
 		// Check rate limit
 		const canStart = yield* costGuard.canStartAssessment(userId);
 		if (!canStart) {
@@ -196,6 +211,7 @@ export const startAnonymousAssessment = () =>
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
 		const costGuard = yield* CostGuardRepository;
+		const _config = yield* AppConfig;
 		const logger = yield* LoggerRepository;
 
 		// Global circuit breaker check (Story 15.3) — fail-open on Redis errors

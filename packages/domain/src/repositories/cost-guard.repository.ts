@@ -99,6 +99,36 @@ export interface CostGuardMethods {
 		void,
 		RedisOperationError | GlobalAssessmentLimitReached
 	>;
+
+	/**
+	 * Increment per-session LLM cost (Story 31-6)
+	 * Tracks cumulative cost for a single assessment session.
+	 * @param sessionId - Assessment session identifier
+	 * @param costCents - Cost in cents to add
+	 * @returns New total session cost in cents
+	 */
+	readonly incrementSessionCost: (
+		sessionId: string,
+		costCents: number,
+	) => Effect.Effect<number, RedisOperationError>;
+
+	/**
+	 * Get current per-session LLM cost (Story 31-6)
+	 * @param sessionId - Assessment session identifier
+	 * @returns Current session cost in cents (0 if no usage)
+	 */
+	readonly getSessionCost: (sessionId: string) => Effect.Effect<number, RedisOperationError>;
+
+	/**
+	 * Check per-session budget — fails with CostLimitExceeded if limit reached (Story 31-6)
+	 * Used at session boundaries only (never mid-conversation per FR56/NFR18).
+	 * @param sessionId - Assessment session identifier
+	 * @param limitCents - Session budget in cents
+	 */
+	readonly checkSessionBudget: (
+		sessionId: string,
+		limitCents: number,
+	) => Effect.Effect<void, RedisOperationError | CostLimitExceeded>;
 }
 
 /**

@@ -2,12 +2,13 @@
  * Send Message Use Case Tests — Cost tracking & rate limiting
  *
  * Story 10.6: Cost tracking, rate limiting, and budget enforcement.
+ * Story 31-6: Per-session cost tracking, budget check moved to session boundary.
  * Uses @effect/vitest it.effect() pattern per project conventions.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "@effect/vitest";
-import { CostLimitExceeded, MessageRateLimitError, RedisOperationError } from "@workspace/domain";
-import { Cause, DateTime, Effect, Option } from "effect";
+import { MessageRateLimitError, RedisOperationError } from "@workspace/domain";
+import { Effect } from "effect";
 import { sendMessage } from "../send-message.use-case";
 import {
 	coldStartMessages,
@@ -30,79 +31,18 @@ describe("sendMessage Use Case", () => {
 		vi.clearAllMocks();
 	});
 
-	describe("Cost tracking & rate limiting (Story 10.6)", () => {
-		describe("Budget enforcement (AC #2)", () => {
-			it.effect("should proceed when daily budget check passes", () =>
+	describe("Cost tracking & rate limiting (Story 10.6, Story 31-6)", () => {
+		describe("Budget enforcement moved to session boundary (Story 31-6)", () => {
+			it.effect("should NOT call checkDailyBudget during send-message (FR56/NFR18)", () =>
 				Effect.gen(function* () {
-					// checkDailyBudget returns void (passes) by default in beforeEach
-
-					const result = yield* sendMessage({
+					yield* sendMessage({
 						sessionId: "session_test_123",
-						message: "Budget check pass",
+						message: "Budget check should not happen here",
 						userId: "user_456",
 					});
 
-					expect(result.response).toBe(mockNerinResponse.response);
-					expect(mockCostGuardRepo.checkDailyBudget).toHaveBeenCalledWith("user_456", 7500);
-				}).pipe(Effect.provide(createTestLayer())),
-			);
-
-			it.effect("should fail with CostLimitExceeded when daily cost at limit", () =>
-				Effect.gen(function* () {
-					mockCostGuardRepo.checkDailyBudget.mockReturnValue(
-						Effect.fail(
-							new CostLimitExceeded({
-								dailySpend: 7500,
-								limit: 7500,
-								resumeAfter: DateTime.unsafeFromDate(new Date("2026-02-24T00:00:00Z")),
-								message: "Daily cost limit exceeded",
-							}),
-						),
-					);
-
-					const exit = yield* sendMessage({
-						sessionId: "session_test_123",
-						message: "Over budget",
-						userId: "user_456",
-					}).pipe(Effect.exit);
-
-					expect(exit._tag).toBe("Failure");
-					if (exit._tag === "Failure") {
-						expect(String(exit.cause)).toContain("CostLimitExceeded");
-					}
-					// No side effects after budget check failure
-					expect(mockNerinRepo.invoke).not.toHaveBeenCalled();
-				}).pipe(Effect.provide(createTestLayer())),
-			);
-
-			it.effect("should fail with CostLimitExceeded including correct resumeAfter", () =>
-				Effect.gen(function* () {
-					mockCostGuardRepo.checkDailyBudget.mockReturnValue(
-						Effect.fail(
-							new CostLimitExceeded({
-								dailySpend: 7500,
-								limit: 7500,
-								resumeAfter: DateTime.unsafeFromDate(new Date("2026-02-24T00:00:00Z")),
-								message: "Daily cost limit exceeded",
-							}),
-						),
-					);
-
-					const exit = yield* sendMessage({
-						sessionId: "session_test_123",
-						message: "Over budget",
-						userId: "user_456",
-					}).pipe(Effect.exit);
-
-					expect(exit._tag).toBe("Failure");
-					if (exit._tag === "Failure") {
-						const failure = Cause.failureOption(exit.cause);
-						expect(Option.isSome(failure)).toBe(true);
-						if (Option.isSome(failure)) {
-							const error = failure.value as CostLimitExceeded;
-							expect(error.resumeAfter).toBeDefined();
-						}
-					}
+					// Budget check no longer happens mid-session (Story 31-6)
+					expect(mockCostGuardRepo.checkDailyBudget).not.toHaveBeenCalled();
 				}).pipe(Effect.provide(createTestLayer())),
 			);
 		});
@@ -149,6 +89,26 @@ describe("sendMessage Use Case", () => {
 					expect(costArg).toBeGreaterThan(0);
 				}).pipe(Effect.provide(createTestLayer())),
 			);
+
+			it.effect("should track per-session cost via incrementSessionCost (Story 31-6)", () =>
+				Effect.gen(function* () {
+					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+
+					yield* sendMessage({
+						sessionId: "session_test_123",
+						message: "Track session cost",
+						userId: "user_456",
+					});
+
+					// Per-session cost should be tracked
+					expect(mockCostGuardRepo.incrementSessionCost).toHaveBeenCalledWith(
+						"session_test_123",
+						expect.any(Number),
+					);
+					const costArg = mockCostGuardRepo.incrementSessionCost.mock.calls[0][1];
+					expect(costArg).toBeGreaterThan(0);
+				}).pipe(Effect.provide(createTestLayer())),
+			);
 		});
 
 		describe("Message rate limiting (AC #3)", () => {
@@ -183,9 +143,13 @@ describe("sendMessage Use Case", () => {
 					});
 
 					// Should use sessionId as cost key for anonymous users
-					expect(mockCostGuardRepo.checkDailyBudget).toHaveBeenCalledWith("session_test_123", 7500);
 					expect(mockCostGuardRepo.checkMessageRateLimit).toHaveBeenCalledWith("session_test_123");
 					expect(mockCostGuardRepo.incrementDailyCost).toHaveBeenCalledWith(
+						"session_test_123",
+						expect.any(Number),
+					);
+					// Per-session cost always uses sessionId
+					expect(mockCostGuardRepo.incrementSessionCost).toHaveBeenCalledWith(
 						"session_test_123",
 						expect.any(Number),
 					);
@@ -194,27 +158,6 @@ describe("sendMessage Use Case", () => {
 		});
 
 		describe("Fail-open resilience (AC #2, #4)", () => {
-			it.effect("should proceed when Redis budget check fails", () =>
-				Effect.gen(function* () {
-					mockCostGuardRepo.checkDailyBudget.mockReturnValue(
-						Effect.fail(new RedisOperationError("Connection refused")),
-					);
-
-					const result = yield* sendMessage({
-						sessionId: "session_test_123",
-						message: "Redis down",
-						userId: "user_456",
-					});
-
-					// Fail-open: message should still proceed
-					expect(result.response).toBe(mockNerinResponse.response);
-					expect(mockLoggerRepo.error).toHaveBeenCalledWith(
-						expect.stringContaining("Redis"),
-						expect.any(Object),
-					);
-				}).pipe(Effect.provide(createTestLayer())),
-			);
-
 			it.effect("should proceed when Redis rate limit check fails", () =>
 				Effect.gen(function* () {
 					mockCostGuardRepo.checkMessageRateLimit.mockReturnValue(
@@ -245,6 +188,23 @@ describe("sendMessage Use Case", () => {
 					const result = yield* sendMessage({
 						sessionId: "session_test_123",
 						message: "Redis write fail",
+						userId: "user_456",
+					});
+
+					// Fail-open: message should still succeed
+					expect(result.response).toBe(mockNerinResponse.response);
+				}).pipe(Effect.provide(createTestLayer())),
+			);
+
+			it.effect("should proceed when Redis session cost increment fails (Story 31-6)", () =>
+				Effect.gen(function* () {
+					mockCostGuardRepo.incrementSessionCost.mockReturnValue(
+						Effect.fail(new RedisOperationError("Write timeout")),
+					);
+
+					const result = yield* sendMessage({
+						sessionId: "session_test_123",
+						message: "Redis session cost fail",
 						userId: "user_456",
 					});
 
