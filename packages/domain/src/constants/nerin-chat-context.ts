@@ -11,7 +11,7 @@
  *
  * Story 22-1: Removed depth progression pacing (messages 14-18 rules) and
  * late-conversation depth section. Steering strategy is now handled by the
- * DRS and territory system. Vulnerability response and depth celebration
+ * pacing pipeline and territory system. Vulnerability response and depth celebration
  * retained as personality patterns under CONVERSATION AWARENESS.
  *
  * Story 22-2: Added relate > reflect as primary interaction pattern (5+ patterns
