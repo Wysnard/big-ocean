@@ -75,6 +75,7 @@ export const Route = createFileRoute("/chat/")({
 				}
 
 				// 409 = user already has an assessment — redirect to existing session
+				// Story 31-5: The listSessions check below will redirect completed sessions to results
 				if (response.status === 409 && error.existingSessionId) {
 					throw redirect({
 						to: "/chat",
@@ -104,6 +105,18 @@ export const Route = createFileRoute("/chat/")({
 				});
 				if (res.ok) {
 					const data = await res.json();
+
+					// Story 31-5: Redirect completed/finalizing sessions to results page
+					const currentSession = data.sessions?.find(
+						(s: { id: string }) => s.id === search.sessionId,
+					) as { id: string; status: string } | undefined;
+					if (currentSession && (currentSession.status === "completed" || currentSession.status === "finalizing")) {
+						throw redirect({
+							to: "/results/$assessmentSessionId",
+							params: { assessmentSessionId: currentSession.id },
+						});
+					}
+
 					const linked = data.sessions?.some((s: { id: string }) => s.id === search.sessionId);
 					if (!linked && data.sessions?.length > 0) {
 						throw redirect({
