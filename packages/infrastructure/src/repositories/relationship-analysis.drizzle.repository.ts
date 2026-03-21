@@ -1,8 +1,9 @@
 /**
- * Relationship Analysis Repository Implementation (Story 14.4)
+ * Relationship Analysis Repository Implementation (Story 14.4, updated Story 34-1)
  *
  * Drizzle-based implementation with placeholder row pattern.
  * Canonical user ordering: userAId = MIN(inviter, invitee), userBId = MAX(inviter, invitee).
+ * Updated: uses userAResultId/userBResultId instead of invitationId (ADR-10).
  */
 
 import { DatabaseError } from "@workspace/domain/errors/http.errors";
@@ -25,9 +26,10 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.effect(
 
 		const mapRow = (row: typeof relationshipAnalyses.$inferSelect): RelationshipAnalysis => ({
 			id: row.id,
-			invitationId: row.invitationId,
 			userAId: row.userAId,
 			userBId: row.userBId,
+			userAResultId: row.userAResultId,
+			userBResultId: row.userBResultId,
 			content: row.content,
 			modelUsed: row.modelUsed,
 			retryCount: row.retryCount,
@@ -40,11 +42,11 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.effect(
 					const rows = yield* db
 						.insert(relationshipAnalyses)
 						.values({
-							invitationId: input.invitationId,
 							userAId: input.userAId,
 							userBId: input.userBId,
+							userAResultId: input.userAResultId,
+							userBResultId: input.userBResultId,
 						})
-						.onConflictDoNothing({ target: relationshipAnalyses.invitationId })
 						.returning()
 						.pipe(
 							Effect.mapError((error) => {
@@ -58,7 +60,6 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.effect(
 
 					const row = rows[0];
 					if (!row) {
-						// onConflictDoNothing returns empty when placeholder already exists
 						return null;
 					}
 					return mapRow(row);
@@ -115,23 +116,6 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.effect(
 					}
 					return mapRow(row);
 				}),
-
-			getByInvitationId: (invitationId) =>
-				db
-					.select()
-					.from(relationshipAnalyses)
-					.where(eq(relationshipAnalyses.invitationId, invitationId))
-					.pipe(
-						Effect.map((rows) => (rows[0] ? mapRow(rows[0]) : null)),
-						Effect.mapError((error) => {
-							logger.error("Database operation failed", {
-								operation: "getByInvitationId",
-								invitationId,
-								error: error instanceof Error ? error.message : String(error),
-							});
-							return new DatabaseError({ message: "Failed to get analysis by invitation" });
-						}),
-					),
 
 			getByUserId: (userId) =>
 				db

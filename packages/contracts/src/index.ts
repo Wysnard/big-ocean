@@ -34,9 +34,12 @@ export * from "./http/groups/profile";
 export { ProfileGroup } from "./http/groups/profile";
 // Purchase HTTP Schemas and Types (Story 14.1)
 export * from "./http/groups/purchase";
-// Relationship HTTP Schemas and Types (Story 14.2)
+// QR Token HTTP Schemas and Types (Story 34-1)
+export * from "./http/groups/qr-token";
+export { QrTokenGroup } from "./http/groups/qr-token";
+// Relationship HTTP Schemas and Types (Story 14.2, updated Story 34-1)
 export * from "./http/groups/relationship";
-export { RelationshipGroup, RelationshipPublicGroup } from "./http/groups/relationship";
+export { RelationshipGroup } from "./http/groups/relationship";
 // Auth Middleware (Story 1.4)
 export { AuthMiddleware, OptionalAuthMiddleware } from "./middleware/auth";
 // Shared Schemas & Types
@@ -44,5 +47,3 @@ export * from "./schemas/evidence";
 export * from "./schemas/ocean-code";
 // Assessment Token Security (Story 9.1)
 export { AssessmentTokenSecurity } from "./security/assessment-token";
-// Invite Token Security (Story 14.3)
-export { InviteTokenSecurity } from "./security/invite-token";

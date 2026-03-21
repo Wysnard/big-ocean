@@ -1,277 +1,99 @@
 /**
- * Get Relationship State Use Case Tests (Story 14.4)
- *
- * Tests all 7 states from Decision Tree 1, including pending-received for invitees.
+ * Get Relationship State Use Case Tests (Story 34-1 — QR Token Model)
  */
+
+import { vi } from "vitest";
+
+vi.mock("@workspace/infrastructure/repositories/qr-token.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/relationship-analysis.drizzle.repository");
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
 	PurchaseEventRepository,
+	QrTokenRepository,
 	RelationshipAnalysisRepository,
-	RelationshipInvitationRepository,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
-import { vi } from "vitest";
 import { getRelationshipState } from "../get-relationship-state.use-case";
+import {
+	QrTokenDrizzleRepositoryLive,
+	_resetMockState as resetQrMock,
+} from "@workspace/infrastructure/repositories/qr-token.drizzle.repository";
+import {
+	RelationshipAnalysisDrizzleRepositoryLive,
+	_resetMockState as resetAnalysisMock,
+} from "@workspace/infrastructure/repositories/relationship-analysis.drizzle.repository";
 
-const USER_ID = "user-123";
-
-const mockInvitationRepo = {
-	createWithCreditConsumption: vi.fn(),
-	getByToken: vi.fn(),
-	listByInviter: vi.fn(),
-	listByInvitee: vi.fn(),
-	updateStatus: vi.fn(),
-	acceptInvitation: vi.fn(),
-	refuseInvitation: vi.fn(),
-	getByTokenWithInviterName: vi.fn(),
-};
-
-const mockAnalysisRepo = {
-	insertPlaceholder: vi.fn(),
-	updateContent: vi.fn(),
-	incrementRetryCount: vi.fn(),
-	getByInvitationId: vi.fn(),
-	getByUserId: vi.fn(),
-	getById: vi.fn(),
-};
+const TEST_USER_ID = "user-123";
 
 const mockPurchaseRepo = {
-	insertEvent: vi.fn(),
-	getEventsByUserId: vi.fn(),
 	getCapabilities: vi.fn(),
+	insertEvent: vi.fn(),
 	getByCheckoutId: vi.fn(),
+	getByUserId: vi.fn(),
 	insertEventWithPortraitPlaceholder: vi.fn(),
 };
 
-const createTestLayer = () =>
-	Layer.mergeAll(
-		Layer.succeed(RelationshipInvitationRepository, mockInvitationRepo),
-		Layer.succeed(RelationshipAnalysisRepository, mockAnalysisRepo),
-		Layer.succeed(PurchaseEventRepository, mockPurchaseRepo),
-	);
+const TestLayer = Layer.mergeAll(
+	QrTokenDrizzleRepositoryLive,
+	RelationshipAnalysisDrizzleRepositoryLive,
+	Layer.succeed(PurchaseEventRepository, mockPurchaseRepo),
+);
 
-describe("getRelationshipState Use Case (Story 14.4)", () => {
+describe("getRelationshipState Use Case (Story 34-1)", () => {
 	beforeEach(() => {
+		resetQrMock();
+		resetAnalysisMock();
 		vi.clearAllMocks();
-		mockInvitationRepo.listByInviter.mockReturnValue(Effect.succeed([]));
-		mockInvitationRepo.listByInvitee.mockReturnValue(Effect.succeed([]));
-		mockAnalysisRepo.getByUserId.mockReturnValue(Effect.succeed([]));
-		mockAnalysisRepo.getByInvitationId.mockReturnValue(Effect.succeed(null));
+
 		mockPurchaseRepo.getCapabilities.mockReturnValue(
-			Effect.succeed({ availableCredits: 0, hasFullPortrait: false, hasExtendedConversation: false }),
+			Effect.succeed({ availableCredits: 0, hasPortrait: false, canExtend: false }),
 		);
 	});
 
-	it.effect("returns invite-prompt when user has credits and no invitations", () =>
+	it.effect("returns no-credits when user has no credits and no tokens", () =>
+		Effect.gen(function* () {
+			const result = yield* getRelationshipState(TEST_USER_ID);
+			expect(result._tag).toBe("no-credits");
+		}).pipe(Effect.provide(TestLayer)),
+	);
+
+	it.effect("returns invite-prompt when user has credits", () =>
 		Effect.gen(function* () {
 			mockPurchaseRepo.getCapabilities.mockReturnValue(
-				Effect.succeed({ availableCredits: 2, hasFullPortrait: false, hasExtendedConversation: false }),
+				Effect.succeed({ availableCredits: 2, hasPortrait: false, canExtend: false }),
 			);
 
-			const state = yield* getRelationshipState(USER_ID);
-			expect(state._tag).toBe("invite-prompt");
-			if (state._tag === "invite-prompt") {
-				expect(state.availableCredits).toBe(2);
+			const result = yield* getRelationshipState(TEST_USER_ID);
+			expect(result._tag).toBe("invite-prompt");
+			if (result._tag === "invite-prompt") {
+				expect(result.availableCredits).toBe(2);
 			}
-		}).pipe(Effect.provide(createTestLayer())),
+		}).pipe(Effect.provide(TestLayer)),
 	);
 
-	it.effect("returns no-credits when user has no credits and no invitations", () =>
+	it.effect("returns qr-active when user has an active QR token", () =>
 		Effect.gen(function* () {
-			const state = yield* getRelationshipState(USER_ID);
-			expect(state._tag).toBe("no-credits");
-		}).pipe(Effect.provide(createTestLayer())),
+			const qrRepo = yield* QrTokenRepository;
+			yield* qrRepo.generate(TEST_USER_ID);
+
+			const result = yield* getRelationshipState(TEST_USER_ID);
+			expect(result._tag).toBe("qr-active");
+		}).pipe(Effect.provide(TestLayer)),
 	);
 
-	it.effect("returns pending-received when user has a pending invitation as invitee", () =>
+	it.effect("returns generating when analysis has null content", () =>
 		Effect.gen(function* () {
-			mockInvitationRepo.listByInvitee.mockReturnValue(
-				Effect.succeed([
-					{
-						id: "inv-1",
-						inviterUserId: "other-user",
-						inviteeUserId: USER_ID,
-						invitationToken: "tok",
-						personalMessage: null,
-						status: "pending",
-						expiresAt: new Date(Date.now() + 86400000),
-						updatedAt: new Date(),
-						createdAt: new Date(),
-					},
-				]),
-			);
+			const analysisRepo = yield* RelationshipAnalysisRepository;
+			yield* analysisRepo.insertPlaceholder({
+				userAId: TEST_USER_ID,
+				userBId: "user-456",
+				userAResultId: "result-1",
+				userBResultId: "result-2",
+			});
 
-			const state = yield* getRelationshipState(USER_ID);
-			expect(state._tag).toBe("pending-received");
-			if (state._tag === "pending-received") {
-				expect(state.invitationId).toBe("inv-1");
-			}
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-
-	it.effect("returns pending-sent when inviter has a pending invitation", () =>
-		Effect.gen(function* () {
-			mockInvitationRepo.listByInviter.mockReturnValue(
-				Effect.succeed([
-					{
-						id: "inv-1",
-						inviterUserId: USER_ID,
-						inviteeUserId: null,
-						invitationToken: "tok",
-						personalMessage: null,
-						status: "pending",
-						expiresAt: new Date(Date.now() + 86400000),
-						updatedAt: new Date(),
-						createdAt: new Date(),
-					},
-				]),
-			);
-
-			const state = yield* getRelationshipState(USER_ID);
-			expect(state._tag).toBe("pending-sent");
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-
-	it.effect("returns generating when invitation accepted but analysis not ready", () =>
-		Effect.gen(function* () {
-			mockInvitationRepo.listByInviter.mockReturnValue(
-				Effect.succeed([
-					{
-						id: "inv-1",
-						inviterUserId: USER_ID,
-						inviteeUserId: "invitee-1",
-						invitationToken: "tok",
-						personalMessage: null,
-						status: "accepted",
-						expiresAt: new Date(Date.now() + 86400000),
-						updatedAt: new Date(),
-						createdAt: new Date(),
-					},
-				]),
-			);
-			mockAnalysisRepo.getByInvitationId.mockReturnValue(
-				Effect.succeed({ id: "a-1", content: null, retryCount: 0 }),
-			);
-
-			const state = yield* getRelationshipState(USER_ID);
-			expect(state._tag).toBe("generating");
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-
-	it.effect("returns ready when analysis has content (inviter side)", () =>
-		Effect.gen(function* () {
-			mockInvitationRepo.listByInviter.mockReturnValue(
-				Effect.succeed([
-					{
-						id: "inv-1",
-						inviterUserId: USER_ID,
-						inviteeUserId: "invitee-1",
-						invitationToken: "tok",
-						personalMessage: null,
-						status: "accepted",
-						expiresAt: new Date(Date.now() + 86400000),
-						updatedAt: new Date(),
-						createdAt: new Date(),
-					},
-				]),
-			);
-			mockAnalysisRepo.getByInvitationId.mockReturnValue(
-				Effect.succeed({ id: "a-1", content: "Analysis content", retryCount: 0 }),
-			);
-
-			const state = yield* getRelationshipState(USER_ID);
-			expect(state._tag).toBe("ready");
-			if (state._tag === "ready") {
-				expect(state.analysisId).toBe("a-1");
-			}
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-
-	it.effect("returns declined when invitation was refused", () =>
-		Effect.gen(function* () {
-			mockInvitationRepo.listByInviter.mockReturnValue(
-				Effect.succeed([
-					{
-						id: "inv-1",
-						inviterUserId: USER_ID,
-						inviteeUserId: "invitee-1",
-						invitationToken: "tok",
-						personalMessage: null,
-						status: "refused",
-						expiresAt: new Date(Date.now() + 86400000),
-						updatedAt: new Date(),
-						createdAt: new Date(),
-					},
-				]),
-			);
-
-			const state = yield* getRelationshipState(USER_ID);
-			expect(state._tag).toBe("declined");
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-
-	it.effect("returns ready when user is invitee and analysis is complete", () =>
-		Effect.gen(function* () {
-			mockAnalysisRepo.getByUserId.mockReturnValue(
-				Effect.succeed([
-					{
-						id: "a-1",
-						invitationId: "inv-1",
-						userAId: "other-user",
-						userBId: USER_ID,
-						content: "Relationship analysis...",
-						modelUsed: "sonnet",
-						retryCount: 0,
-						createdAt: new Date(),
-					},
-				]),
-			);
-
-			const state = yield* getRelationshipState(USER_ID);
-			expect(state._tag).toBe("ready");
-			if (state._tag === "ready") {
-				expect(state.analysisId).toBe("a-1");
-			}
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-
-	it.effect("prioritizes ready over declined when user has both", () =>
-		Effect.gen(function* () {
-			mockInvitationRepo.listByInviter.mockReturnValue(
-				Effect.succeed([
-					{
-						id: "inv-refused",
-						inviterUserId: USER_ID,
-						inviteeUserId: "other-1",
-						invitationToken: "tok1",
-						personalMessage: null,
-						status: "refused",
-						expiresAt: new Date(Date.now() + 86400000),
-						updatedAt: new Date(),
-						createdAt: new Date(),
-					},
-					{
-						id: "inv-accepted",
-						inviterUserId: USER_ID,
-						inviteeUserId: "other-2",
-						invitationToken: "tok2",
-						personalMessage: null,
-						status: "accepted",
-						expiresAt: new Date(Date.now() + 86400000),
-						updatedAt: new Date(),
-						createdAt: new Date(),
-					},
-				]),
-			);
-			mockAnalysisRepo.getByInvitationId.mockImplementation((invId: string) =>
-				invId === "inv-accepted"
-					? Effect.succeed({ id: "a-1", content: "Analysis", retryCount: 0 })
-					: Effect.succeed(null),
-			);
-
-			const state = yield* getRelationshipState(USER_ID);
-			expect(state._tag).toBe("ready");
-		}).pipe(Effect.provide(createTestLayer())),
+			const result = yield* getRelationshipState(TEST_USER_ID);
+			expect(result._tag).toBe("generating");
+		}).pipe(Effect.provide(TestLayer)),
 	);
 });

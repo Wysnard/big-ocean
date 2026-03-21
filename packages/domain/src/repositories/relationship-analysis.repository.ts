@@ -1,9 +1,11 @@
 /**
- * Relationship Analysis Repository Interface (Story 14.4)
+ * Relationship Analysis Repository Interface (Story 14.4, updated Story 34-1)
  *
  * Port for relationship analysis CRUD operations.
  * Uses placeholder row pattern: content=NULL means generating.
  * Canonical user ordering: userAId = MIN(inviter, invitee), userBId = MAX(inviter, invitee).
+ *
+ * Updated: invitationId replaced with userAResultId/userBResultId (ADR-10).
  */
 
 import { Context, Data, Effect } from "effect";
@@ -22,9 +24,10 @@ export class RelationshipAnalysisRepository extends Context.Tag("RelationshipAna
 	RelationshipAnalysisRepository,
 	{
 		readonly insertPlaceholder: (input: {
-			invitationId: string;
 			userAId: string;
 			userBId: string;
+			userAResultId: string;
+			userBResultId: string;
 		}) => Effect.Effect<RelationshipAnalysis | null, DatabaseError>;
 
 		readonly updateContent: (input: {
@@ -36,10 +39,6 @@ export class RelationshipAnalysisRepository extends Context.Tag("RelationshipAna
 		readonly incrementRetryCount: (
 			id: string,
 		) => Effect.Effect<RelationshipAnalysis, DatabaseError | AnalysisNotFoundError>;
-
-		readonly getByInvitationId: (
-			invitationId: string,
-		) => Effect.Effect<RelationshipAnalysis | null, DatabaseError>;
 
 		readonly getByUserId: (
 			userId: string,

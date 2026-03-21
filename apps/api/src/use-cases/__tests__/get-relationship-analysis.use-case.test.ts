@@ -1,5 +1,5 @@
 /**
- * Get Relationship Analysis Use Case Tests (Story 14.4)
+ * Get Relationship Analysis Use Case Tests (Story 14.4, updated Story 34-1)
  */
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
@@ -17,7 +17,6 @@ const mockAnalysisRepo = {
 	insertPlaceholder: vi.fn(),
 	updateContent: vi.fn(),
 	incrementRetryCount: vi.fn(),
-	getByInvitationId: vi.fn(),
 	getByUserId: vi.fn(),
 	getById: vi.fn(),
 };
@@ -35,9 +34,10 @@ describe("getRelationshipAnalysis Use Case (Story 14.4)", () => {
 			mockAnalysisRepo.getById.mockReturnValue(
 				Effect.succeed({
 					id: ANALYSIS_ID,
-					invitationId: "inv-1",
 					userAId: USER_A,
 					userBId: USER_B,
+					userAResultId: "result-a",
+					userBResultId: "result-b",
 					content: "# Analysis\n\nContent here",
 					modelUsed: "sonnet",
 					retryCount: 0,
@@ -77,9 +77,10 @@ describe("getRelationshipAnalysis Use Case (Story 14.4)", () => {
 			mockAnalysisRepo.getById.mockReturnValue(
 				Effect.succeed({
 					id: ANALYSIS_ID,
-					invitationId: "inv-1",
 					userAId: USER_A,
 					userBId: USER_B,
+					userAResultId: "result-a",
+					userBResultId: "result-b",
 					content: "Analysis content",
 					modelUsed: "sonnet",
 					retryCount: 0,
@@ -105,9 +106,10 @@ describe("getRelationshipAnalysis Use Case (Story 14.4)", () => {
 			mockAnalysisRepo.getById.mockReturnValue(
 				Effect.succeed({
 					id: ANALYSIS_ID,
-					invitationId: "inv-1",
 					userAId: USER_A,
 					userBId: USER_B,
+					userAResultId: "result-a",
+					userBResultId: "result-b",
 					content: null,
 					modelUsed: null,
 					retryCount: 0,
