@@ -1,9 +1,9 @@
 /**
- * Big Ocean API Server
+ * Big Ocean API Server — E2E Test Entrypoint
  *
- * Effect-first architecture - all initialization via Layer composition.
- * Better Auth at node:http layer, Effect handles remaining routes.
- * Pattern from: https://dev.to/danimydev/authentication-with-nodehttp-and-better-auth-2l2g
+ * Independent composition root for E2E testing.
+ * Mirrors index.ts but swaps LLM, email, and payment layers for mocks.
+ * No MOCK_LLM env var — mock selection is structural, not conditional.
  */
 
 import "dotenv/config";
@@ -20,28 +20,28 @@ import {
 	AssessmentResultDrizzleRepositoryLive,
 	BetterAuthLive,
 	BetterAuthService,
-	ConversanalyzerAnthropicRepositoryLive,
+	ConversanalyzerMockRepositoryLive,
 	ConversationEvidenceDrizzleRepositoryLive,
 	CostGuardRedisRepositoryLive,
 	DatabaseStack,
 	FacetEvidenceDrizzleRepositoryLive,
-	PaymentGatewayPolarRepositoryLive,
+	PaymentGatewayMockRepositoryLive,
 	PortraitDrizzleRepositoryLive,
-	PortraitGeneratorClaudeRepositoryLive,
+	PortraitGeneratorMockRepositoryLive,
 	PortraitRatingDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
 	QrTokenDrizzleRepositoryLive,
 	RelationshipAnalysisDrizzleRepositoryLive,
-	RelationshipAnalysisGeneratorAnthropicRepositoryLive,
-	ResendEmailResendRepositoryLive,
+	RelationshipAnalysisGeneratorMockRepositoryLive,
+	ResendEmailMockRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
 } from "@workspace/infrastructure";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
-import { NerinAgentAnthropicRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.anthropic.repository";
+import { NerinAgentMockRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.mock.repository";
 import { RedisIoRedisRepositoryLive } from "@workspace/infrastructure/repositories/redis.ioredis.repository";
 import { UserAccountDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/user-account.drizzle.repository";
 import { Cause, Context, Effect, Layer } from "effect";
@@ -61,31 +61,18 @@ import { createBetterAuthHandler } from "./middleware/better-auth";
 
 /**
  * Infrastructure Layer - Config, Database, Auth, Logger
- *
- * Build layers bottom-up: base services first, then dependent services.
- * AppConfig is the foundation - all other services depend on it.
  */
 
-// Base services with no dependencies
 const BaseServices = Layer.mergeAll(AppConfigLive, LoggerPinoRepositoryLive);
 
-// Database stack needs AppConfig
 const DatabaseServices = DatabaseStack.pipe(Layer.provide(AppConfigLive));
 
-// BetterAuth needs AppConfig and LoggerRepository (creates its own pg.Pool internally)
 const AuthServices = BetterAuthLive.pipe(
 	Layer.provide(LoggerPinoRepositoryLive),
 	Layer.provide(AppConfigLive),
 );
 
-// Complete infrastructure layer - merge all services for consumers
 const InfrastructureLayer = Layer.mergeAll(BaseServices, DatabaseServices, AuthServices);
-
-/**
- * LLM Layer Selection — Production
- *
- * For E2E testing with mock layers, use index.e2e.ts instead.
- */
 
 /**
  * Redis Layer - provides Redis for CostGuard
@@ -101,7 +88,15 @@ const CostGuardLayer = CostGuardRedisRepositoryLive.pipe(
 );
 
 /**
- * Repository Layers - require Database and Logger
+ * Repository Layers
+ *
+ * Mock layers swapped for E2E:
+ * - NerinAgentMockRepositoryLive (was: NerinAgentAnthropicRepositoryLive)
+ * - ConversanalyzerMockRepositoryLive (was: ConversanalyzerAnthropicRepositoryLive)
+ * - PortraitGeneratorMockRepositoryLive (was: PortraitGeneratorClaudeRepositoryLive)
+ * - RelationshipAnalysisGeneratorMockRepositoryLive (was: ...AnthropicRepositoryLive)
+ * - ResendEmailMockRepositoryLive (was: ResendEmailResendRepositoryLive)
+ * - PaymentGatewayMockRepositoryLive (was: PaymentGatewayPolarRepositoryLive)
  */
 const SessionRepoLayer = AssessmentSessionDrizzleRepositoryLive.pipe(Layer.provide(RedisLayer));
 
@@ -111,23 +106,23 @@ const RepositoryLayers = Layer.mergeAll(
 	AssessmentExchangeDrizzleRepositoryLive,
 	AssessmentResultDrizzleRepositoryLive,
 	ConversationEvidenceDrizzleRepositoryLive,
-	ConversanalyzerAnthropicRepositoryLive,
+	ConversanalyzerMockRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
 	FacetEvidenceDrizzleRepositoryLive,
-	NerinAgentAnthropicRepositoryLive,
+	NerinAgentMockRepositoryLive,
 	CostGuardLayer,
-	PortraitGeneratorClaudeRepositoryLive,
+	PortraitGeneratorMockRepositoryLive,
 	PortraitDrizzleRepositoryLive,
 	PortraitRatingDrizzleRepositoryLive,
-	PaymentGatewayPolarRepositoryLive,
+	PaymentGatewayMockRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
 	RelationshipAnalysisDrizzleRepositoryLive,
-	RelationshipAnalysisGeneratorAnthropicRepositoryLive,
+	RelationshipAnalysisGeneratorMockRepositoryLive,
 	QrTokenDrizzleRepositoryLive,
 	UserAccountDrizzleRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
-	ResendEmailResendRepositoryLive,
+	ResendEmailMockRepositoryLive,
 );
 
 /**
@@ -136,15 +131,7 @@ const RepositoryLayers = Layer.mergeAll(
 const ServiceLayers = RepositoryLayers.pipe(Layer.provide(InfrastructureLayer));
 
 /**
- * Handler Layers - HTTP API handlers
- */
-/**
- * Auth Middleware Layer - requires BetterAuthService from InfrastructureLayer
- *
- * Provided separately from HttpGroupsLive because HttpApiBuilder.api() pulls
- * AuthMiddleware into its own R type parameter (from the group contract's
- * .middleware(AuthMiddleware) declaration). Layer.mergeAll doesn't cross-resolve
- * dependencies, so we provide AuthMiddleware explicitly to ApiLive.
+ * Auth Middleware Layer
  */
 const AuthMiddlewareLayer = Layer.mergeAll(AuthMiddlewareLive, OptionalAuthMiddlewareLive).pipe(
 	Layer.provide(InfrastructureLayer),
@@ -166,16 +153,13 @@ const HttpGroupsLive = Layer.mergeAll(
 );
 
 /**
- * API Layer - Builds HTTP API from contracts with handlers
+ * API Layer
  */
 const ApiLive = HttpApiBuilder.api(BigOceanApi).pipe(
 	Layer.provide(HttpGroupsLive),
 	Layer.provide(AuthMiddlewareLayer),
 );
 
-/**
- * Complete API Layer with Router, Middleware, and Server Context
- */
 const ApiLayer = Layer.mergeAll(
 	ApiLive,
 	HttpApiBuilder.Router.Live,
@@ -183,13 +167,7 @@ const ApiLayer = Layer.mergeAll(
 );
 
 /**
- * Wrap Better Auth handler to intercept ALL requests
- *
- * Creates a wrapper that:
- * 1. Adds CORS headers to every response
- * 2. Handles OPTIONS preflight
- * 3. Processes Better Auth routes
- * 4. Passes non-auth requests to next handler
+ * CORS + Better Auth integration (identical to production)
  */
 function wrapServerWithCorsAndAuth(
 	server: Server,
@@ -199,17 +177,13 @@ function wrapServerWithCorsAndAuth(
 ): void {
 	const betterAuthHandler = createBetterAuthHandler(auth, betterAuthUrl, frontendUrl);
 
-	// Store original emit function
 	const originalEmit = server.emit.bind(server);
 
-	// Override emit to intercept "request" events
 	server.emit = ((event: string, ...args: any[]): boolean => {
 		if (event === "request") {
 			const [req, res] = args as [IncomingMessage, ServerResponse];
 
-			// Run our handler first (async, but we can't await in emit)
 			betterAuthHandler(req, res).then(() => {
-				// If response wasn't ended by our handler, let Effect handle it
 				if (!res.writableEnded && !res.headersSent) {
 					originalEmit("request", req, res);
 				}
@@ -218,17 +192,10 @@ function wrapServerWithCorsAndAuth(
 			return true;
 		}
 
-		// For other events, use original emit
 		return originalEmit(event, ...args);
 	}) as any;
 }
 
-/**
- * Create custom server factory that integrates CORS and Better Auth BEFORE Effect
- *
- * NodeHttpServer.layer will attach the Effect handler to this server.
- * We intercept ALL requests first via emit override.
- */
 const createCustomServerFactory =
 	(
 		auth: Context.Tag.Service<typeof BetterAuthService>,
@@ -242,52 +209,35 @@ const createCustomServerFactory =
 	};
 
 /**
- * Startup logging
+ * Startup logging (E2E mode)
  */
 const logStartup = (port: number, frontendUrl: string) =>
 	Effect.gen(function* () {
 		const logger = yield* LoggerRepository;
 
-		logger.info(`Starting Big Ocean API server on port ${port}`);
+		logger.info(`Starting Big Ocean API server on port ${port} [E2E MODE]`);
 		logger.info("");
-		logger.info("✓ CORS enabled:");
-		logger.info(`  - Allowed origin: ${frontendUrl}`);
-		logger.info("  - Credentials: true");
+		logger.info("Mock layers active:");
+		logger.info("  - Nerin Agent (mock)");
+		logger.info("  - ConversAnalyzer (mock)");
+		logger.info("  - Portrait Generator (mock)");
+		logger.info("  - Relationship Analysis Generator (mock)");
+		logger.info("  - Resend Email (mock)");
+		logger.info("  - Payment Gateway (mock)");
 		logger.info("");
-		logger.info("✓ Better Auth routes (node:http layer):");
-		logger.info("  - POST /api/auth/sign-up/email");
-		logger.info("  - POST /api/auth/sign-in/email");
-		logger.info("  - POST /api/auth/sign-out");
-		logger.info("  - GET  /api/auth/get-session");
-		logger.info("");
-		logger.info("✓ Effect/Platform routes (Effect layer):");
-		logger.info("  - GET  /health");
-		logger.info("  - POST /api/assessment/start");
-		logger.info("  - POST /api/assessment/message");
-		logger.info("  - GET  /api/assessment/:sessionId/resume");
-		logger.info("  - GET  /api/assessment/:sessionId/results");
-		logger.info("");
-		logger.info("✓ Public Profile routes (Effect layer):");
-		logger.info("  - POST  /api/public-profile/share");
-		logger.info("  - GET   /api/public-profile/:publicProfileId");
-		logger.info("  - PATCH /api/public-profile/:publicProfileId/visibility");
+		logger.info(`CORS origin: ${frontendUrl}`);
 	});
 
 /**
- * Main program - all initialization via Layer composition
- *
- * All initialization runs within Effect context for proper error handling.
+ * Main program
  */
 const main = Effect.gen(function* () {
-	// Get injected services
 	const config = yield* AppConfig;
 	const auth = yield* BetterAuthService;
 	const logger = yield* LoggerRepository;
 
-	// Log startup info
 	yield* logStartup(config.port, config.frontendUrl);
 
-	// Create HTTP server layer with CORS and Better Auth integration
 	const errorLoggingMiddleware = HttpMiddleware.make((app) =>
 		HttpMiddleware.logger(app).pipe(
 			Effect.tap((response) =>
@@ -326,7 +276,6 @@ const main = Effect.gen(function* () {
 
 	logger.info("Launching HTTP server...");
 
-	// Launch server
 	yield* Layer.launch(HttpLive);
 }).pipe(Effect.provide(InfrastructureLayer));
 

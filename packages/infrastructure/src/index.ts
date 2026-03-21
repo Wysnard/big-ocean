@@ -31,8 +31,9 @@ export { AssessmentMessageDrizzleRepositoryLive } from "./repositories/assessmen
 export { AssessmentResultDrizzleRepositoryLive } from "./repositories/assessment-result.drizzle.repository";
 // Session repository implementation
 export { AssessmentSessionDrizzleRepositoryLive } from "./repositories/assessment-session.drizzle.repository";
-// Conversanalyzer repository implementation (Story 10.2)
+// Conversanalyzer repository implementations (Story 10.2)
 export { ConversanalyzerAnthropicRepositoryLive } from "./repositories/conversanalyzer.anthropic.repository";
+export { ConversanalyzerMockRepositoryLive } from "./repositories/conversanalyzer.mock.repository";
 // Conversation evidence repository implementation (Story 10.1)
 export { ConversationEvidenceDrizzleRepositoryLive } from "./repositories/conversation-evidence.drizzle.repository";
 // CostGuard repository implementation
@@ -44,7 +45,8 @@ export { LoggerPinoRepositoryLive } from "./repositories/logger.pino.repository"
 // Nerin agent repository implementations (direct ChatAnthropic invocation)
 export { NerinAgentAnthropicRepositoryLive } from "./repositories/nerin-agent.anthropic.repository";
 export { NerinAgentMockRepositoryLive } from "./repositories/nerin-agent.mock.repository";
-// Payment gateway repository implementation (Story 13.2)
+export { PaymentGatewayMockRepositoryLive } from "./repositories/payment-gateway.mock.repository";
+// Payment gateway repository implementations (Story 13.2)
 export { PaymentGatewayPolarRepositoryLive } from "./repositories/payment-gateway.polar.repository";
 // Portrait repository implementation (Story 13.3)
 export { PortraitDrizzleRepositoryLive } from "./repositories/portrait.drizzle.repository";
@@ -59,15 +61,16 @@ export { ProfileAccessLogDrizzleRepositoryLive } from "./repositories/profile-ac
 export { PublicProfileDrizzleRepositoryLive } from "./repositories/public-profile.drizzle.repository";
 // Purchase event repository implementation (Story 13.1)
 export { PurchaseEventDrizzleRepositoryLive } from "./repositories/purchase-event.drizzle.repository";
+// QR token repository implementation (Story 34-1)
+export { QrTokenDrizzleRepositoryLive } from "./repositories/qr-token.drizzle.repository";
 // Redis repository implementation
 export { RedisIoRedisRepositoryLive } from "./repositories/redis.ioredis.repository";
 // Relationship analysis repositories (Story 14.4)
 export { RelationshipAnalysisDrizzleRepositoryLive } from "./repositories/relationship-analysis.drizzle.repository";
 export { RelationshipAnalysisGeneratorAnthropicRepositoryLive } from "./repositories/relationship-analysis-generator.anthropic.repository";
 export { RelationshipAnalysisGeneratorMockRepositoryLive } from "./repositories/relationship-analysis-generator.mock.repository";
-// QR token repository implementation (Story 34-1)
-export { QrTokenDrizzleRepositoryLive } from "./repositories/qr-token.drizzle.repository";
-// Resend email repository implementation (Story 31-7)
+export { ResendEmailMockRepositoryLive } from "./repositories/resend-email.mock.repository";
+// Resend email repository implementations (Story 31-7)
 export { ResendEmailResendRepositoryLive } from "./repositories/resend-email.resend.repository";
 // User account repository implementation (Story 30-2)
 export { UserAccountDrizzleRepositoryLive } from "./repositories/user-account.drizzle.repository";

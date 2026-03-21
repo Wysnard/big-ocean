@@ -120,6 +120,6 @@ test("anonymous user views public profile with traits and facets", async ({ page
 		const cta = page.getByTestId("public-profile-cta");
 		await cta.scrollIntoViewIfNeeded();
 		await expect(cta).toBeVisible();
-		await expect(cta).toContainText("Discover Your Personality");
+		await expect(cta).toContainText("Start Your Conversation");
 	});
 });

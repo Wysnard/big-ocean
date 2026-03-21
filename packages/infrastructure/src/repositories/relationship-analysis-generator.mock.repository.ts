@@ -2,7 +2,7 @@
  * Relationship Analysis Generator Mock Repository
  *
  * Mock implementation for integration testing that returns a deterministic analysis
- * without calling the real Anthropic API. Used when MOCK_LLM=true environment variable is set.
+ * without calling the real Anthropic API. Used via index.e2e.ts entrypoint for E2E and integration testing.
  */
 
 import { RelationshipAnalysisGeneratorRepository } from "@workspace/domain";

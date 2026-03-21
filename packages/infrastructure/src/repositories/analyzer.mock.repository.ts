@@ -2,7 +2,7 @@
  * Analyzer Mock Repository
  *
  * Mock implementation for integration testing that provides pattern-based facet evidence
- * without calling the real Anthropic API. Used when MOCK_LLM=true environment variable is set.
+ * without calling the real Anthropic API. Used via index.e2e.ts entrypoint for E2E and integration testing.
  *
  * Benefits:
  * - Zero API costs during integration testing

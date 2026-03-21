@@ -5,7 +5,7 @@
 # Key Design Decisions:
 # - Uses postgres-test on port 5433 to avoid conflict with dev postgres (5432)
 # - API builds from production Dockerfile to validate deployment artifact
-# - MOCK_LLM=true prevents real Anthropic API calls (zero cost testing)
+# - Uses index.e2e.ts entrypoint → mock layers composed structurally (no MOCK_LLM env var)
 # - Tests run on HOST (not in container) to enable vitest watch/UI/debugging
 # - Isolated network prevents cross-contamination with dev environment
 #
@@ -66,8 +66,6 @@ services:
       DATABASE_URL: postgresql://test_user:test_password@postgres-test:5432/bigocean_test
       # Redis connection for CostGuard budget tracking (uses internal Docker network hostname)
       REDIS_URL: "redis://redis-test:6379"
-      # CRITICAL: Mock LLM to avoid Anthropic API costs
-      MOCK_LLM: "true"
       # Low threshold so integration tests can trigger portrait generation with 3 messages
       FREE_TIER_MESSAGE_THRESHOLD: "3"
       # Story 9.2: Two-tier architecture uses MESSAGE_THRESHOLD for isFinalTurn
@@ -76,7 +74,7 @@ services:
       PORTRAIT_WAIT_MIN_MS: "2000"
       # High message rate limit so integration tests can send multiple messages quickly
       MESSAGE_RATE_LIMIT: "100"
-      # Dummy API key (required for env validation, but MOCK_LLM=true prevents actual usage)
+      # Dummy API key (required for env validation, mock layers prevent actual usage)
       ANTHROPIC_API_KEY: "sk-test-dummy-key-for-integration-tests"
       # Polar.sh integration (Story 13.2)
       POLAR_ACCESS_TOKEN: "pol_test_access_token"
@@ -96,6 +94,7 @@ services:
       HOST: 0.0.0.0
       # Disable SSL for test database
       DATABASE_SSL: "false"
+    command: ["sh", "-c", "tsx src/migrate.ts && tsx src/index.e2e.ts"]
     ports:
       - "4001:4000"  # Host port 4001 → Container port 4000 (avoids conflict with dev API)
     depends_on:

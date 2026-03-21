@@ -18,7 +18,6 @@ import {
 	ConversanalyzerError,
 	type ConversanalyzerInput,
 	ConversanalyzerRepository,
-	type ConversanalyzerV2Output,
 	conversanalyzerV2JsonSchema,
 	decodeConversanalyzerV2Lenient,
 	decodeConversanalyzerV2Strict,
@@ -171,39 +170,6 @@ Aim for at least 30% of evidence records to have negative deviations.
 7. Prefer specific domains over "other"`;
 }
 
-// ─── MOCK_LLM fallback for Docker integration tests ──────────────────────────
-
-function mockAnalyzeV2(): ConversanalyzerV2Output {
-	return {
-		userState: {
-			energyBand: "steady",
-			tellingBand: "mixed",
-			energyReason: "Engaged with moderate self-reflection",
-			tellingReason: "Follows prompts with some self-direction",
-			withinMessageShift: false,
-		},
-		evidence: [
-			{
-				bigfiveFacet: "imagination",
-				deviation: 1,
-				strength: "moderate",
-				confidence: "medium",
-				domain: "work",
-				note: "Shows creative thinking in professional context",
-			},
-			{
-				bigfiveFacet: "trust",
-				deviation: 1,
-				strength: "weak",
-				confidence: "medium",
-				domain: "relationships",
-				note: "Indicates baseline trust in social interactions",
-			},
-		],
-		tokenUsage: { input: 0, output: 0 },
-	};
-}
-
 // ─── Repository Layer ─────────────────────────────────────────────────────────
 
 export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
@@ -212,33 +178,22 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 		const logger = yield* LoggerRepository;
 		const config = yield* AppConfig;
 
-		const isMocked = config.nodeEnv === "test" || process.env.MOCK_LLM === "true";
+		const baseModel = new ChatAnthropic({
+			model: config.conversanalyzerModelId,
+			maxTokens: 2048,
+			temperature: 0.9,
+		});
 
-		const baseModel = isMocked
-			? null
-			: new ChatAnthropic({
-					model: config.conversanalyzerModelId,
-					maxTokens: 2048,
-					temperature: 0.9,
-				});
-
-		const model = baseModel
-			? baseModel.withStructuredOutput(conversanalyzerV2JsonSchema, { includeRaw: true })
-			: null;
+		const model = baseModel.withStructuredOutput(conversanalyzerV2JsonSchema, { includeRaw: true });
 
 		logger.info("Conversanalyzer v2 configured", {
 			model: config.conversanalyzerModelId,
-			mocked: isMocked,
 		});
 
 		return ConversanalyzerRepository.of({
 			analyze: (input: ConversanalyzerInput) =>
 				Effect.tryPromise({
 					try: async () => {
-						if (isMocked || !model) {
-							return mockAnalyzeV2();
-						}
-
 						const prompt = buildV2Prompt(input);
 						const invokeResult = await model.invoke([new HumanMessage(prompt)]);
 
@@ -292,10 +247,6 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 			analyzeLenient: (input: ConversanalyzerInput) =>
 				Effect.tryPromise({
 					try: async () => {
-						if (isMocked || !model) {
-							return mockAnalyzeV2();
-						}
-
 						const prompt = buildV2Prompt(input);
 						const invokeResult = await model.invoke([new HumanMessage(prompt)]);
 
