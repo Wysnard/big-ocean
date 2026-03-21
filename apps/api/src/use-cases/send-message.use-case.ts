@@ -12,7 +12,6 @@
  */
 
 import {
-	AppConfig,
 	AssessmentSessionRepository,
 	CostGuardRepository,
 	LoggerRepository,
@@ -48,7 +47,6 @@ export interface SendMessageOutput {
  */
 export const sendMessage = (input: SendMessageInput) =>
 	Effect.gen(function* () {
-		const _config = yield* AppConfig;
 		const sessionRepo = yield* AssessmentSessionRepository;
 		const logger = yield* LoggerRepository;
 		const costGuard = yield* CostGuardRepository;
