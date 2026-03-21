@@ -94,6 +94,8 @@ const MockConfigLive = Layer.succeed(AppConfig, {
 	polarProductExtendedConversation: "polar_product_extended",
 	globalDailyAssessmentLimit: 100,
 	minEvidenceWeight: 0.36,
+	// Cost Guard (Story 31-6)
+	sessionCostLimitCents: 2000,
 });
 
 type TestServices =

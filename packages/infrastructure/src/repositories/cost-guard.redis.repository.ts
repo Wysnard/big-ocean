@@ -276,6 +276,76 @@ export const CostGuardRedisRepositoryLive = Layer.effect(
 					}
 				}),
 
+			incrementSessionCost: (sessionId: string, costCents: number) =>
+				Effect.gen(function* () {
+					if (!sessionId || sessionId.trim() === "") {
+						return yield* Effect.fail(
+							new RedisOperationError("sessionId is required for incrementSessionCost"),
+						);
+					}
+
+					const key = `session_cost:${sessionId}`;
+					const newValue = yield* redis.incrby(key, costCents);
+
+					// Only set TTL if key is new (TTL returns -1 for no expiration)
+					const existingTTL = yield* redis.ttl(key);
+					if (existingTTL === -1) {
+						yield* redis.expire(key, TTL_SECONDS);
+					}
+
+					logger.debug("Session cost incremented", {
+						sessionId,
+						costCents,
+						newSessionTotal: newValue,
+					});
+
+					return newValue;
+				}),
+
+			getSessionCost: (sessionId: string) =>
+				Effect.gen(function* () {
+					if (!sessionId || sessionId.trim() === "") {
+						return yield* Effect.fail(
+							new RedisOperationError("sessionId is required for getSessionCost"),
+						);
+					}
+
+					const key = `session_cost:${sessionId}`;
+					const value = yield* redis.get(key);
+					const cost = value ? parseInt(value, 10) : 0;
+
+					logger.debug("Session cost retrieved", {
+						sessionId,
+						cost,
+					});
+
+					return cost;
+				}),
+
+			checkSessionBudget: (sessionId: string, limitCents: number) =>
+				Effect.gen(function* () {
+					if (!sessionId || sessionId.trim() === "") {
+						return yield* Effect.fail(
+							new RedisOperationError("sessionId is required for checkSessionBudget"),
+						);
+					}
+
+					const key = `session_cost:${sessionId}`;
+					const value = yield* redis.get(key);
+					const sessionCostCents = value ? parseInt(value, 10) : 0;
+
+					if (sessionCostCents >= limitCents) {
+						return yield* Effect.fail(
+							new CostLimitExceeded({
+								dailySpend: sessionCostCents,
+								limit: limitCents,
+								resumeAfter: DateTime.unsafeFromDate(getNextDayMidnightUTC()),
+								message: "Session cost limit exceeded",
+							}),
+						);
+					}
+				}),
+
 			checkAndRecordGlobalAssessmentStart: () =>
 				Effect.gen(function* () {
 					const dateKey = getUTCDateKey();
@@ -390,6 +460,23 @@ export const createTestCostGuardRepository = () => {
 		checkMessageRateLimit: (_key: string) => Effect.void,
 
 		checkAndRecordGlobalAssessmentStart: () => Effect.void,
+
+		incrementSessionCost: (sessionId: string, costCents: number) =>
+			Effect.sync(() => {
+				const key = `session_cost:${sessionId}`;
+				const current = costs.get(key) || 0;
+				const newValue = current + costCents;
+				costs.set(key, newValue);
+				return newValue;
+			}),
+
+		getSessionCost: (sessionId: string) =>
+			Effect.sync(() => {
+				const key = `session_cost:${sessionId}`;
+				return costs.get(key) || 0;
+			}),
+
+		checkSessionBudget: (_sessionId: string, _limitCents: number) => Effect.void,
 	});
 };
 

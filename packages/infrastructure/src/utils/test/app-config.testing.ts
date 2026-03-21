@@ -59,6 +59,8 @@ export const defaultTestConfig: AppConfigService = {
 	resendApiKey: Redacted.make("test-resend-api-key"),
 	emailFromAddress: "noreply@test.bigocean.dev",
 	dropOffThresholdHours: 24,
+	// Cost Guard (Story 31-6)
+	sessionCostLimitCents: 2000,
 };
 
 /**

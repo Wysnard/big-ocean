@@ -172,6 +172,83 @@ describe("CostGuard Repository", () => {
 		});
 	});
 
+	describe("Per-Session Cost Tracking (Story 31-6)", () => {
+		it("should increment session cost atomically", async () => {
+			const testRepo = createTestCostGuardRepository();
+			const testLayer = Layer.succeed(CostGuardRepository, testRepo);
+
+			const program = Effect.gen(function* () {
+				const costGuard = yield* CostGuardRepository;
+
+				const first = yield* costGuard.incrementSessionCost("session_abc", 50);
+				expect(first).toBe(50);
+
+				const second = yield* costGuard.incrementSessionCost("session_abc", 30);
+				expect(second).toBe(80);
+
+				return second;
+			});
+
+			const result = await Effect.runPromise(program.pipe(Effect.provide(testLayer)));
+			expect(result).toBe(80);
+		});
+
+		it("should get current session cost", async () => {
+			const testRepo = createTestCostGuardRepository();
+			const testLayer = Layer.succeed(CostGuardRepository, testRepo);
+
+			const program = Effect.gen(function* () {
+				const costGuard = yield* CostGuardRepository;
+
+				yield* costGuard.incrementSessionCost("session_get_test", 150);
+				const cost = yield* costGuard.getSessionCost("session_get_test");
+
+				expect(cost).toBe(150);
+				return cost;
+			});
+
+			const result = await Effect.runPromise(program.pipe(Effect.provide(testLayer)));
+			expect(result).toBe(150);
+		});
+
+		it("should return 0 for session with no cost", async () => {
+			const testRepo = createTestCostGuardRepository();
+			const testLayer = Layer.succeed(CostGuardRepository, testRepo);
+
+			const program = Effect.gen(function* () {
+				const costGuard = yield* CostGuardRepository;
+				const cost = yield* costGuard.getSessionCost("session_no_cost");
+				expect(cost).toBe(0);
+				return cost;
+			});
+
+			const result = await Effect.runPromise(program.pipe(Effect.provide(testLayer)));
+			expect(result).toBe(0);
+		});
+
+		it("should track costs separately per session", async () => {
+			const testRepo = createTestCostGuardRepository();
+			const testLayer = Layer.succeed(CostGuardRepository, testRepo);
+
+			const program = Effect.gen(function* () {
+				const costGuard = yield* CostGuardRepository;
+
+				yield* costGuard.incrementSessionCost("session_a", 100);
+				yield* costGuard.incrementSessionCost("session_b", 200);
+
+				const costA = yield* costGuard.getSessionCost("session_a");
+				const costB = yield* costGuard.getSessionCost("session_b");
+
+				expect(costA).toBe(100);
+				expect(costB).toBe(200);
+
+				return { costA, costB };
+			});
+
+			await Effect.runPromise(program.pipe(Effect.provide(testLayer)));
+		});
+	});
+
 	describe("Combined Operations", () => {
 		it("should handle both cost and assessment tracking for same user", async () => {
 			const testRepo = createTestCostGuardRepository();

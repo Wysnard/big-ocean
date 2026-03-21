@@ -129,6 +129,11 @@ export interface AppConfigService {
 
 	/** Hours of inactivity before sending drop-off re-engagement email (default: 24) */
 	readonly dropOffThresholdHours: number;
+
+	// ─── Cost Guard Configuration (Story 31-6) ─────────────────────────
+
+	/** Per-session LLM cost limit in cents (default: 2000 = $0.20, matching NFR6) */
+	readonly sessionCostLimitCents: number;
 }
 
 /**

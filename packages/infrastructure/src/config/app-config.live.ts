@@ -115,6 +115,9 @@ const configSchema = Config.all({
 		Config.withDefault("noreply@bigocean.dev"),
 	),
 	dropOffThresholdHours: Config.number("DROP_OFF_THRESHOLD_HOURS").pipe(Config.withDefault(24)),
+
+	// Cost Guard (Story 31-6)
+	sessionCostLimitCents: Config.number("SESSION_COST_LIMIT_CENTS").pipe(Config.withDefault(2000)),
 });
 
 /**

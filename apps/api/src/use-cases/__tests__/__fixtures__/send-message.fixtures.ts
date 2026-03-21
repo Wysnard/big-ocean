@@ -79,6 +79,10 @@ export const mockCostGuardRepo = {
 	recordAssessmentStart: vi.fn(),
 	checkDailyBudget: vi.fn(),
 	checkMessageRateLimit: vi.fn(),
+	checkAndRecordGlobalAssessmentStart: vi.fn(),
+	incrementSessionCost: vi.fn(),
+	getSessionCost: vi.fn(),
+	checkSessionBudget: vi.fn(),
 };
 
 // Mock data
@@ -241,6 +245,8 @@ export const mockConfig = {
 	polarProductExtendedConversation: "polar_product_extended",
 	globalDailyAssessmentLimit: 100,
 	minEvidenceWeight: 0.36,
+	// Cost Guard (Story 31-6)
+	sessionCostLimitCents: 2000,
 };
 
 /** Opener exchange (turn 0) — created by start-assessment */
@@ -353,4 +359,8 @@ export function setupDefaultMocks() {
 	mockCostGuardRepo.checkDailyBudget.mockReturnValue(Effect.void);
 	mockCostGuardRepo.incrementDailyCost.mockReturnValue(Effect.succeed(1));
 	mockCostGuardRepo.checkMessageRateLimit.mockReturnValue(Effect.void);
+	mockCostGuardRepo.checkAndRecordGlobalAssessmentStart.mockReturnValue(Effect.void);
+	mockCostGuardRepo.incrementSessionCost.mockReturnValue(Effect.succeed(1));
+	mockCostGuardRepo.getSessionCost.mockReturnValue(Effect.succeed(0));
+	mockCostGuardRepo.checkSessionBudget.mockReturnValue(Effect.void);
 }

@@ -209,7 +209,8 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 			.addError(AssessmentAlreadyExists, { status: 409 })
 			.addError(RateLimitExceeded, { status: 429 })
 			.addError(DatabaseError, { status: 500 })
-			.addError(GlobalAssessmentLimitReached, { status: 503 }),
+			.addError(GlobalAssessmentLimitReached, { status: 503 })
+			.addError(CostLimitExceeded, { status: 503 }),
 	)
 	.add(
 		HttpApiEndpoint.post("sendMessage", "/message")
