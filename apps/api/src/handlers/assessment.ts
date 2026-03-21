@@ -26,6 +26,7 @@ import {
 	RedisOperationError,
 } from "@workspace/domain";
 import { DateTime, Effect, Redacted } from "effect";
+import { activateConversationExtension } from "../use-cases/activate-conversation-extension.use-case";
 import {
 	generateResults,
 	getFinalizationStatus,
@@ -287,6 +288,29 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 					return {
 						messages: result.messages.map((msg) => ({
 							id: msg.id,
+							role: msg.role,
+							content: msg.content,
+							timestamp: DateTime.unsafeMake(msg.createdAt.getTime()),
+						})),
+					};
+				}),
+			)
+			.handle("activateExtension", () =>
+				Effect.gen(function* () {
+					const userId = yield* CurrentUser;
+					if (!userId) {
+						return yield* Effect.fail(
+							new Unauthorized({ message: "Authentication required to activate extension" }),
+						);
+					}
+
+					const result = yield* activateConversationExtension({ userId });
+
+					return {
+						sessionId: result.sessionId,
+						parentSessionId: result.parentSessionId,
+						createdAt: DateTime.unsafeMake(result.createdAt.getTime()),
+						messages: result.messages.map((msg) => ({
 							role: msg.role,
 							content: msg.content,
 							timestamp: DateTime.unsafeMake(msg.createdAt.getTime()),

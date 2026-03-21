@@ -64,6 +64,8 @@ export const AssessmentSessionEntitySchema = Schema.Struct({
 	status: Schema.Literal("active", "paused", "finalizing", "completed", "archived"),
 	finalizationProgress: Schema.NullOr(Schema.String),
 	messageCount: Schema.Number,
+	/** FK to parent session for conversation extensions (Story 36-1) */
+	parentSessionId: Schema.NullOr(Schema.String).pipe(Schema.optional),
 });
 
 export type AssessmentSessionEntity = Schema.Schema.Type<typeof AssessmentSessionEntitySchema>;

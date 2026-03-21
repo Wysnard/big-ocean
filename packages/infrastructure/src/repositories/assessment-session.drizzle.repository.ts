@@ -727,6 +727,173 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 							}),
 						);
 				}),
+
+			createExtensionSession: (userId: string, parentSessionId: string) =>
+				Effect.gen(function* () {
+					const [session] = yield* db
+						.insert(assessmentSession)
+						.values({
+							userId,
+							parentSessionId,
+							status: "active",
+							messageCount: 0,
+							createdAt: new Date(),
+							updatedAt: new Date(),
+						})
+						.returning()
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "createExtensionSession",
+										userId,
+										parentSessionId,
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({ message: "Failed to create extension session" });
+							}),
+						);
+
+					if (!session) {
+						return yield* Effect.fail(
+							new DatabaseError({ message: "Failed to create extension session" }),
+						);
+					}
+
+					logger.info("Extension session created", {
+						sessionId: session.id,
+						parentSessionId,
+						userId,
+					});
+					return { sessionId: session.id };
+				}),
+
+			findCompletedSessionWithoutChild: (userId: string) =>
+				Effect.gen(function* () {
+					// Find most recent completed session that has no child extension session
+					const childParentIds = db
+						.select({ parentId: assessmentSession.parentSessionId })
+						.from(assessmentSession)
+						.where(sql`${assessmentSession.parentSessionId} IS NOT NULL`);
+
+					const results = yield* db
+						.select()
+						.from(assessmentSession)
+						.where(
+							and(
+								eq(assessmentSession.userId, userId),
+								eq(assessmentSession.status, "completed"),
+								sql`${assessmentSession.id} NOT IN (${childParentIds})`,
+							),
+						)
+						.orderBy(sql`${assessmentSession.createdAt} DESC`)
+						.limit(1)
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "findCompletedSessionWithoutChild",
+										userId,
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({
+									message: "Failed to find completed session without child",
+								});
+							}),
+						);
+
+					if (results.length === 0 || !results[0]) {
+						return null;
+					}
+
+					return yield* Schema.decodeUnknown(AssessmentSessionEntitySchema)(results[0]).pipe(
+						Effect.mapError((error) => {
+							try {
+								logger.error("Schema parse error", {
+									operation: "findCompletedSessionWithoutChild",
+									error: String(error),
+								});
+							} catch (logError) {
+								console.error("Logger failed:", logError);
+							}
+							return new DatabaseError({
+								message: "Failed to parse completed session",
+							});
+						}),
+					);
+				}),
+
+			hasExtensionSession: (parentSessionId: string) =>
+				Effect.gen(function* () {
+					const results = yield* db
+						.select({ id: assessmentSession.id })
+						.from(assessmentSession)
+						.where(eq(assessmentSession.parentSessionId, parentSessionId))
+						.limit(1)
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "hasExtensionSession",
+										parentSessionId,
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({ message: "Failed to check extension session" });
+							}),
+						);
+
+					return results.length > 0;
+				}),
+
+			findExtensionSession: (parentSessionId: string) =>
+				Effect.gen(function* () {
+					const results = yield* db
+						.select()
+						.from(assessmentSession)
+						.where(eq(assessmentSession.parentSessionId, parentSessionId))
+						.limit(1)
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "findExtensionSession",
+										parentSessionId,
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({ message: "Failed to find extension session" });
+							}),
+						);
+
+					if (results.length === 0 || !results[0]) {
+						return null;
+					}
+
+					return yield* Schema.decodeUnknown(AssessmentSessionEntitySchema)(results[0]).pipe(
+						Effect.mapError((error) => {
+							try {
+								logger.error("Schema parse error", {
+									operation: "findExtensionSession",
+									error: String(error),
+								});
+							} catch (logError) {
+								console.error("Logger failed:", logError);
+							}
+							return new DatabaseError({ message: "Failed to parse extension session" });
+						}),
+					);
+				}),
 		});
 	}),
 );
