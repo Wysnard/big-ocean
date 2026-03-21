@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 5
-parallelism_step_name: "Portrait, Cost Guard, Public Profile"
-baseline_commit: "f3ed9d6cb64f11e1227562e23b996f863f4af211"
+parallelism_step: 6
+parallelism_step_name: "Credits, QR Infra, Extension, OG Tags"
+baseline_commit: "5d9f07fbd43a645a53ac1e32e1ea0d77ebadfc06"
 created: "2026-03-21"
-last_updated: "2026-03-21T18:00:00"
+last_updated: "2026-03-21"
 
 # Optional context documents discovered
 context_docs:
@@ -14,31 +14,31 @@ context_docs:
 
 # Stories in this step
 stories:
-  32-5-full-portrait-display:
+  32-8-basic-share-and-credit-system:
     status: done
     mode: "parallel"
-    notes: "After 32-2. Spine renderer + portrait section on results page"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/162"
-    dev_branch: "feat/story-32-5-full-portrait-display"
+    notes: "After 32-3. Credit derivation + share action on results"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/168"
+    dev_branch: "feat/story-32-8-basic-share-and-credit-system"
     error: null
-  32-6-portrait-reconciliation-and-retry:
+  34-1-qr-token-infrastructure:
     status: done
     mode: "parallel"
-    notes: "After 32-3. Backend reconciliation use-case"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/164"
-    dev_branch: "feat/story-32-6-portrait-reconciliation-and-retry"
+    notes: "After 32-3. New table: relationship_qr_tokens"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/170"
+    dev_branch: "feat/story-34-1-qr-token-infrastructure"
     error: null
-  31-6-cost-guard:
+  36-1-conversation-extension-purchase-and-session-creation:
     status: done
     mode: "parallel"
-    notes: "Cost tracking refinement, chat/API"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/165"
-    dev_branch: "feat/story-31-6-cost-guard"
+    notes: "After 32-3. Extension checkout + session creation"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/169"
+    dev_branch: "feat/story-36-1-conversation-extension-purchase-and-session-creation"
     error: null
-  33-1-public-profile-page:
+  33-2-og-meta-tags-and-social-preview:
     status: done
     mode: "parallel"
-    notes: "After 30-1. New page, independent route"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/163"
-    dev_branch: "feat/story-33-1-public-profile-page"
+    notes: "After 33-1 + 32-7. OG image serving"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/167"
+    dev_branch: "feat/story-33-2-og-meta-tags-and-social-preview"
     error: null

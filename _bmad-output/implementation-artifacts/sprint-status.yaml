@@ -561,7 +561,7 @@ development_status:
   32-6-portrait-reconciliation-and-retry: done
   32-7-archetype-card-image-generation: done
   32-7b-complete-ocean-shape-library: done
-  32-8-basic-share-and-credit-system: backlog
+  32-8-basic-share-and-credit-system: pr-ready
   epic-32-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -571,7 +571,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-33: in-progress
   33-1-public-profile-page: done
-  33-2-og-meta-tags-and-social-preview: backlog
+  33-2-og-meta-tags-and-social-preview: pr-ready
   33-3-share-flow-and-visibility-toggle: backlog
   33-4-relationship-analysis-cta-on-public-profile: backlog
   epic-33-retrospective: optional
@@ -581,8 +581,8 @@ development_status:
   # QR token infrastructure, QR drawer UI, accept screen & consent gate
   # Stories: 5.1-5.3 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-34: backlog
-  34-1-qr-token-infrastructure: backlog
+  epic-34: in-progress
+  34-1-qr-token-infrastructure: pr-ready
   34-2-qr-drawer-ui: backlog
   34-3-qr-accept-screen-and-consent-gate: backlog
   epic-34-retrospective: optional
@@ -607,8 +607,8 @@ development_status:
   # extended results & portrait versioning
   # Stories: 7.1-7.3 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-36: backlog
-  36-1-conversation-extension-purchase-and-session-creation: backlog
+  epic-36: in-progress
+  36-1-conversation-extension-purchase-and-session-creation: pr-ready
   36-2-extended-conversation-pipeline-initialization: backlog
   36-3-extended-results-and-portrait-versioning: backlog
   epic-36-retrospective: optional
