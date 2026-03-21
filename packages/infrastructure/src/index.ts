@@ -65,8 +65,8 @@ export { RedisIoRedisRepositoryLive } from "./repositories/redis.ioredis.reposit
 export { RelationshipAnalysisDrizzleRepositoryLive } from "./repositories/relationship-analysis.drizzle.repository";
 export { RelationshipAnalysisGeneratorAnthropicRepositoryLive } from "./repositories/relationship-analysis-generator.anthropic.repository";
 export { RelationshipAnalysisGeneratorMockRepositoryLive } from "./repositories/relationship-analysis-generator.mock.repository";
-// Relationship invitation repository implementation (Story 14.2)
-export { RelationshipInvitationDrizzleRepositoryLive } from "./repositories/relationship-invitation.drizzle.repository";
+// QR token repository implementation (Story 34-1)
+export { QrTokenDrizzleRepositoryLive } from "./repositories/qr-token.drizzle.repository";
 // Resend email repository implementation (Story 31-7)
 export { ResendEmailResendRepositoryLive } from "./repositories/resend-email.resend.repository";
 // User account repository implementation (Story 30-2)

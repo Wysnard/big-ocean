@@ -34,9 +34,9 @@ import {
 	PublicProfileDrizzleRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
 	RelationshipAnalysisDrizzleRepositoryLive,
+	QrTokenDrizzleRepositoryLive,
 	RelationshipAnalysisGeneratorAnthropicRepositoryLive,
 	RelationshipAnalysisGeneratorMockRepositoryLive,
-	RelationshipInvitationDrizzleRepositoryLive,
 	ResendEmailResendRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
 } from "@workspace/infrastructure";
@@ -56,7 +56,8 @@ import { HealthGroupLive } from "./handlers/health";
 import { PortraitGroupLive } from "./handlers/portrait";
 import { ProfileGroupLive } from "./handlers/profile";
 import { PurchaseGroupLive } from "./handlers/purchase";
-import { RelationshipGroupLive, RelationshipPublicGroupLive } from "./handlers/relationship";
+import { QrTokenGroupLive } from "./handlers/qr-token";
+import { RelationshipGroupLive } from "./handlers/relationship";
 import { WaitlistGroupLive } from "./handlers/waitlist";
 import { AuthMiddlewareLive, OptionalAuthMiddlewareLive } from "./middleware/auth.middleware";
 import { createBetterAuthHandler } from "./middleware/better-auth";
@@ -156,7 +157,7 @@ const RepositoryLayers = Layer.mergeAll(
 	PurchaseEventDrizzleRepositoryLive,
 	RelationshipAnalysisDrizzleRepositoryLive,
 	RelationshipAnalysisGeneratorLayer,
-	RelationshipInvitationDrizzleRepositoryLive,
+	QrTokenDrizzleRepositoryLive,
 	UserAccountDrizzleRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
 	ResendEmailResendRepositoryLive,
@@ -190,8 +191,8 @@ const HttpGroupsLive = Layer.mergeAll(
 	PortraitGroupLive,
 	EvidenceGroupLive,
 	PurchaseGroupLive,
+	QrTokenGroupLive,
 	RelationshipGroupLive,
-	RelationshipPublicGroupLive,
 	WaitlistGroupLive,
 	EmailGroupLive,
 	LoggerPinoRepositoryLive,

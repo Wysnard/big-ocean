@@ -1,5 +1,5 @@
 /**
- * Mock: relationship-analysis.drizzle.repository.ts
+ * Mock: relationship-analysis.drizzle.repository.ts (updated Story 34-1)
  * Vitest auto-resolves when tests call:
  *   vi.mock('@workspace/infrastructure/repositories/relationship-analysis.drizzle.repository')
  */
@@ -9,12 +9,10 @@ import { AnalysisNotFoundError, RelationshipAnalysisRepository } from "@workspac
 import { Effect, Layer } from "effect";
 
 const store = new Map<string, RelationshipAnalysis>();
-const invitationIndex = new Map<string, string>(); // invitationId → id
 
 /** Clear in-memory state between tests. */
 export const _resetMockState = () => {
 	store.clear();
-	invitationIndex.clear();
 };
 
 /** Get stored analysis by ID (for test assertions). */
@@ -25,22 +23,18 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.succeed(
 	RelationshipAnalysisRepository.of({
 		insertPlaceholder: (input) =>
 			Effect.sync(() => {
-				// onConflictDoNothing: return null if placeholder already exists
-				const existingId = invitationIndex.get(input.invitationId);
-				if (existingId) return null;
-
 				const analysis: RelationshipAnalysis = {
 					id: crypto.randomUUID(),
-					invitationId: input.invitationId,
 					userAId: input.userAId,
 					userBId: input.userBId,
+					userAResultId: input.userAResultId,
+					userBResultId: input.userBResultId,
 					content: null,
 					modelUsed: null,
 					retryCount: 0,
 					createdAt: new Date(),
 				};
 				store.set(analysis.id, analysis);
-				invitationIndex.set(input.invitationId, analysis.id);
 				return analysis;
 			}),
 
@@ -71,13 +65,6 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.succeed(
 				};
 				store.set(id, updated);
 				return updated;
-			}),
-
-		getByInvitationId: (invitationId) =>
-			Effect.sync(() => {
-				const id = invitationIndex.get(invitationId);
-				if (!id) return null;
-				return store.get(id) ?? null;
 			}),
 
 		getByUserId: (userId) =>

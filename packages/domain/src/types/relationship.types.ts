@@ -1,36 +1,39 @@
 /**
- * Relationship Invitation Types (Story 14.2)
+ * Relationship Types (Story 34-1 — QR Token Infrastructure)
+ *
+ * QR token model replaces invitation model per ADR-10.
  */
 
-export type InvitationStatus = "pending" | "accepted" | "refused" | "expired";
+// ─── QR Token Types ────────────────────────────────────────────────────────
 
-export interface RelationshipInvitation {
+export type QrTokenStatus = "active" | "accepted" | "expired";
+
+export interface QrToken {
 	readonly id: string;
-	readonly inviterUserId: string;
-	readonly inviteeUserId: string | null;
-	readonly invitationToken: string;
-	readonly personalMessage: string | null;
-	readonly status: InvitationStatus;
+	readonly userId: string;
+	readonly token: string;
 	readonly expiresAt: Date;
-	readonly updatedAt: Date;
+	readonly status: QrTokenStatus;
+	readonly acceptedByUserId: string | null;
 	readonly createdAt: Date;
 }
 
-export interface CreateInvitationInput {
-	readonly inviterUserId: string;
-	readonly personalMessage?: string;
-}
+/** QR tokens expire after 6 hours */
+export const QR_TOKEN_TTL_HOURS = 6;
 
-export const INVITATION_EXPIRY_DAYS = 30;
+// ─── Relationship Analysis Types ───────────────────────────────────────────
 
 /**
- * Relationship Analysis Record (Story 14.4)
+ * Relationship Analysis Record (Story 14.4, updated Story 34-1)
+ *
+ * Updated: invitationId removed, userAResultId/userBResultId added.
  */
 export interface RelationshipAnalysis {
 	readonly id: string;
-	readonly invitationId: string;
 	readonly userAId: string;
 	readonly userBId: string;
+	readonly userAResultId: string;
+	readonly userBResultId: string;
 	readonly content: string | null;
 	readonly modelUsed: string | null;
 	readonly retryCount: number;

@@ -392,3 +392,33 @@ export class RelationshipAnalysisUnauthorizedError extends S.TaggedError<Relatio
 		message: S.String,
 	},
 ) {}
+
+/**
+ * QR token not found error (404)
+ */
+export class QrTokenNotFoundError extends S.TaggedError<QrTokenNotFoundError>()(
+	"QrTokenNotFoundError",
+	{
+		message: S.String,
+	},
+) {}
+
+/**
+ * QR token expired error (410)
+ */
+export class QrTokenExpiredError extends S.TaggedError<QrTokenExpiredError>()(
+	"QrTokenExpiredError",
+	{
+		message: S.String,
+	},
+) {}
+
+/**
+ * QR token already accepted error (409)
+ */
+export class QrTokenAlreadyAcceptedError extends S.TaggedError<QrTokenAlreadyAcceptedError>()(
+	"QrTokenAlreadyAcceptedError",
+	{
+		message: S.String,
+	},
+) {}

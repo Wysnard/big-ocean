@@ -27,7 +27,6 @@ const mockAnalysisRepo = {
 	insertPlaceholder: vi.fn(),
 	updateContent: vi.fn(),
 	incrementRetryCount: vi.fn(),
-	getByInvitationId: vi.fn(),
 	getByUserId: vi.fn(),
 	getById: vi.fn(),
 };

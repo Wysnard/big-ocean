@@ -448,62 +448,63 @@ export const waitlistEmails = pgTable("waitlist_emails", {
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// ─── Invitation Status Enum (Story 14.2) ──────────────────────────────────
+// ─── QR Token Status Enum (Story 34-1) ─────────────────────────────────────
 
-export const invitationStatusEnum = pgEnum("invitation_status", [
-	"pending",
+export const qrTokenStatusEnum = pgEnum("qr_token_status", [
+	"active",
 	"accepted",
-	"refused",
 	"expired",
 ]);
 
-// ─── Relationship Invitations (Story 14.2) ────────────────────────────────
+// ─── Relationship QR Tokens (Story 34-1, ADR-10) ──────────────────────────
 
 /**
- * Relationship Invitations
+ * Relationship QR Tokens
  *
- * Tracks invitation links sent by users with relationship credits.
- * Credit consumption + invitation creation happen in a single transaction.
- * Expiry derived at query time — no background cron needed.
+ * Ephemeral tokens for relationship analysis initiation.
+ * 6h TTL, auto-regenerate hourly (client-side), derive expiry at query time.
  */
-export const relationshipInvitations = pgTable(
-	"relationship_invitations",
+export const relationshipQrTokens = pgTable(
+	"relationship_qr_tokens",
 	{
 		id: uuid("id").primaryKey().defaultRandom(),
-		inviterUserId: text("inviter_user_id")
+		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
-		inviteeUserId: text("invitee_user_id").references(() => user.id, { onDelete: "cascade" }),
-		invitationToken: uuid("invitation_token").notNull().unique(),
-		personalMessage: text("personal_message"),
-		status: invitationStatusEnum("status").notNull().default("pending"),
+		token: text("token").notNull().unique(),
 		expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-		updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+		status: qrTokenStatusEnum("status").notNull().default("active"),
+		acceptedByUserId: text("accepted_by_user_id").references(() => user.id, {
+			onDelete: "set null",
+		}),
 		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 	},
-	(table) => [index("relationship_invitations_inviter_idx").on(table.inviterUserId)],
+	(table) => [index("relationship_qr_tokens_user_idx").on(table.userId)],
 );
 
-// ─── Relationship Analyses (Story 14.2 placeholder, used in 14.4) ────────
+// ─── Relationship Analyses (Story 14.4, updated Story 34-1 — ADR-10) ─────
 
 /**
  * Relationship Analyses
  *
  * Stores generated pair analysis content.
  * Placeholder row pattern: content=NULL means generating (same as portraits).
+ * Updated: references assessment_results instead of relationship_invitations.
  */
 export const relationshipAnalyses = pgTable("relationship_analyses", {
 	id: uuid("id").primaryKey().defaultRandom(),
-	invitationId: uuid("invitation_id")
-		.notNull()
-		.unique()
-		.references(() => relationshipInvitations.id),
 	userAId: text("user_a_id")
 		.notNull()
 		.references(() => user.id, { onDelete: "cascade" }),
 	userBId: text("user_b_id")
 		.notNull()
 		.references(() => user.id, { onDelete: "cascade" }),
+	userAResultId: uuid("user_a_result_id")
+		.notNull()
+		.references(() => assessmentResults.id),
+	userBResultId: uuid("user_b_result_id")
+		.notNull()
+		.references(() => assessmentResults.id),
 	content: text("content"),
 	modelUsed: text("model_used"),
 	retryCount: integer("retry_count").notNull().default(0),
@@ -554,7 +555,7 @@ export const relations = defineRelations(
 		purchaseEvents,
 		portraits,
 		profileAccessLog,
-		relationshipInvitations,
+		relationshipQrTokens,
 		relationshipAnalyses,
 		portraitRatings,
 	},
@@ -565,9 +566,9 @@ export const relations = defineRelations(
 			assessmentSession: r.many.assessmentSession(),
 			publicProfiles: r.many.publicProfile(),
 			purchaseEvents: r.many.purchaseEvents(),
-			sentInvitations: r.many.relationshipInvitations({
+			qrTokens: r.many.relationshipQrTokens({
 				from: r.user.id,
-				to: r.relationshipInvitations.inviterUserId,
+				to: r.relationshipQrTokens.userId,
 			}),
 		},
 		session: {
@@ -666,25 +667,17 @@ export const relations = defineRelations(
 				to: r.publicProfile.id,
 			}),
 		},
-		relationshipInvitations: {
-			inviter: r.one.user({
-				from: r.relationshipInvitations.inviterUserId,
+		relationshipQrTokens: {
+			user: r.one.user({
+				from: r.relationshipQrTokens.userId,
 				to: r.user.id,
 			}),
-			invitee: r.one.user({
-				from: r.relationshipInvitations.inviteeUserId,
+			acceptedBy: r.one.user({
+				from: r.relationshipQrTokens.acceptedByUserId,
 				to: r.user.id,
-			}),
-			analysis: r.one.relationshipAnalyses({
-				from: r.relationshipInvitations.id,
-				to: r.relationshipAnalyses.invitationId,
 			}),
 		},
 		relationshipAnalyses: {
-			invitation: r.one.relationshipInvitations({
-				from: r.relationshipAnalyses.invitationId,
-				to: r.relationshipInvitations.id,
-			}),
 			userA: r.one.user({
 				from: r.relationshipAnalyses.userAId,
 				to: r.user.id,
@@ -692,6 +685,14 @@ export const relations = defineRelations(
 			userB: r.one.user({
 				from: r.relationshipAnalyses.userBId,
 				to: r.user.id,
+			}),
+			userAResult: r.one.assessmentResults({
+				from: r.relationshipAnalyses.userAResultId,
+				to: r.assessmentResults.id,
+			}),
+			userBResult: r.one.assessmentResults({
+				from: r.relationshipAnalyses.userBResultId,
+				to: r.assessmentResults.id,
 			}),
 		},
 		portraitRatings: {

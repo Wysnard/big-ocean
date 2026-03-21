@@ -127,6 +127,9 @@ export {
 	InvalidFacetNameError,
 	InvitationAlreadyRespondedError,
 	InvitationNotFoundError,
+	QrTokenAlreadyAcceptedError,
+	QrTokenExpiredError,
+	QrTokenNotFoundError,
 	MalformedEvidenceError,
 	MessageRateLimitError,
 	NerinError,
@@ -257,8 +260,8 @@ export {
 	type RelationshipAnalysisGenerationOutput,
 	RelationshipAnalysisGeneratorRepository,
 } from "./repositories/relationship-analysis-generator.repository";
-// Relationship invitation repository (Story 14.2)
-export { RelationshipInvitationRepository } from "./repositories/relationship-invitation.repository";
+// QR token repository (Story 34-1)
+export { QrTokenRepository } from "./repositories/qr-token.repository";
 // Resend email repository (Story 31-7)
 export {
 	EmailError,
@@ -453,14 +456,13 @@ export {
 	PURCHASE_EVENT_TYPES,
 	parseMetadata,
 } from "./types/purchase.types";
-// Relationship types (Story 14.2, 14.4)
+// Relationship types (Story 34-1 — QR Token Infrastructure)
 export type {
-	CreateInvitationInput,
-	InvitationStatus,
+	QrToken,
+	QrTokenStatus,
 	RelationshipAnalysis,
-	RelationshipInvitation,
 } from "./types/relationship.types";
-export { INVITATION_EXPIRY_DAYS } from "./types/relationship.types";
+export { QR_TOKEN_TTL_HOURS } from "./types/relationship.types";
 // Session types
 export type { MessageRole, Session, SessionStatus } from "./types/session";
 // Steering output type (Story 21-1)
