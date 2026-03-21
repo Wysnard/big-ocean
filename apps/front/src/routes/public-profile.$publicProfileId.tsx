@@ -42,8 +42,7 @@ import { useGetPublicProfile } from "../hooks/use-profile";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
-const FALLBACK_TITLE = "Personality Profile | big-ocean";
-const FALLBACK_DESCRIPTION = "Discover your personality archetype with big-ocean.";
+import { generateOgMetaTags } from "../lib/og-meta-tags";
 
 // ---------------------------------------------------------------------------
 // Server Functions
@@ -119,32 +118,19 @@ export const Route = createFileRoute("/public-profile/$publicProfileId")({
 	},
 	head: ({ loaderData, params }) => {
 		const profile = loaderData?.profile;
-		const title = profile ? `${profile.archetypeName} | big-ocean` : FALLBACK_TITLE;
-		const description = profile?.description || FALLBACK_DESCRIPTION;
 		const origin =
 			typeof window !== "undefined"
 				? window.location.origin
 				: (import.meta.env.VITE_APP_URL ?? "https://bigocean.dev");
-		const canonicalUrl = `${origin}/public-profile/${params.publicProfileId}`;
-		const ogImageUrl = `${origin}/api/og/public-profile/${params.publicProfileId}`;
 
 		return {
-			meta: [
-				{ title },
-				{ name: "description", content: description },
-				{ property: "og:title", content: title },
-				{ property: "og:description", content: description },
-				{ property: "og:url", content: canonicalUrl },
-				{ property: "og:type", content: "profile" },
-				{ property: "og:site_name", content: "big-ocean" },
-				{ property: "og:image", content: ogImageUrl },
-				{ property: "og:image:width", content: "1200" },
-				{ property: "og:image:height", content: "630" },
-				{ name: "twitter:card", content: "summary_large_image" },
-				{ name: "twitter:title", content: title },
-				{ name: "twitter:description", content: description },
-				{ name: "twitter:image", content: ogImageUrl },
-			],
+			meta: generateOgMetaTags({
+				profile: profile
+					? { archetypeName: profile.archetypeName, description: profile.description }
+					: null,
+				publicProfileId: params.publicProfileId,
+				origin,
+			}),
 		};
 	},
 	pendingComponent: ProfileLoading,
