@@ -107,46 +107,6 @@ const configSchema = Config.all({
 	// Minimum finalWeight threshold for evidence quality filtering
 	minEvidenceWeight: Config.number("MIN_EVIDENCE_WEIGHT").pipe(Config.withDefault(0.36)),
 
-	// DRS (Depth Readiness Score) configuration (Story 21-2)
-	drsBreadthWeight: Config.number("DRS_BREADTH_WEIGHT").pipe(Config.withDefault(0.55)),
-	drsEngagementWeight: Config.number("DRS_ENGAGEMENT_WEIGHT").pipe(Config.withDefault(0.45)),
-	drsBreadthOffset: Config.number("DRS_BREADTH_OFFSET").pipe(Config.withDefault(10)),
-	drsBreadthRange: Config.number("DRS_BREADTH_RANGE").pipe(Config.withDefault(15)),
-	drsWordCountThreshold: Config.number("DRS_WORD_COUNT_THRESHOLD").pipe(Config.withDefault(120)),
-	drsEvidenceThreshold: Config.number("DRS_EVIDENCE_THRESHOLD").pipe(Config.withDefault(6)),
-	drsEngagementWordWeight: Config.number("DRS_ENGAGEMENT_WORD_WEIGHT").pipe(
-		Config.withDefault(0.55),
-	),
-	drsEngagementEvidenceWeight: Config.number("DRS_ENGAGEMENT_EVIDENCE_WEIGHT").pipe(
-		Config.withDefault(0.45),
-	),
-	drsRecencyWeights: Config.array(Config.number(), "DRS_RECENCY_WEIGHTS").pipe(
-		Config.withDefault([1.0, 0.6, 0.3]),
-	),
-	drsEnergyWeightLight: Config.number("DRS_ENERGY_WEIGHT_LIGHT").pipe(Config.withDefault(0)),
-	drsEnergyWeightMedium: Config.number("DRS_ENERGY_WEIGHT_MEDIUM").pipe(Config.withDefault(1)),
-	drsEnergyWeightHeavy: Config.number("DRS_ENERGY_WEIGHT_HEAVY").pipe(Config.withDefault(2)),
-	drsLightFitCenter: Config.number("DRS_LIGHT_FIT_CENTER").pipe(Config.withDefault(0.55)),
-	drsLightFitRange: Config.number("DRS_LIGHT_FIT_RANGE").pipe(Config.withDefault(0.35)),
-	drsMediumFitCenter: Config.number("DRS_MEDIUM_FIT_CENTER").pipe(Config.withDefault(0.55)),
-	drsMediumFitRange: Config.number("DRS_MEDIUM_FIT_RANGE").pipe(Config.withDefault(0.35)),
-	drsHeavyFitCenter: Config.number("DRS_HEAVY_FIT_CENTER").pipe(Config.withDefault(0.65)),
-	drsHeavyFitRange: Config.number("DRS_HEAVY_FIT_RANGE").pipe(Config.withDefault(0.25)),
-
-	// Territory Scoring configuration (Story 21-3)
-	territoryMinEvidenceThreshold: Config.number("TERRITORY_MIN_EVIDENCE_THRESHOLD").pipe(
-		Config.withDefault(3),
-	),
-	territoryMaxVisits: Config.number("TERRITORY_MAX_VISITS").pipe(Config.withDefault(2)),
-	territoryFreshnessRate: Config.number("TERRITORY_FRESHNESS_RATE").pipe(Config.withDefault(0.05)),
-	territoryFreshnessMin: Config.number("TERRITORY_FRESHNESS_MIN").pipe(Config.withDefault(0.8)),
-	territoryFreshnessMax: Config.number("TERRITORY_FRESHNESS_MAX").pipe(Config.withDefault(1.2)),
-
-	// Cold-Start configuration (Story 21-4)
-	territoryColdStartThreshold: Config.number("TERRITORY_COLD_START_THRESHOLD").pipe(
-		Config.withDefault(3),
-	),
-
 	// Email Infrastructure (Story 31-7)
 	resendApiKey: Config.redacted("RESEND_API_KEY").pipe(
 		Config.withDefault(Redacted.make("not-configured")),
