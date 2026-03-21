@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-21 (refreshed — Epic 30 done, all Phase 7 Step 4 stories merged)
+generated: 2026-03-21 (refreshed — full sprint planning refresh, all statuses verified)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system

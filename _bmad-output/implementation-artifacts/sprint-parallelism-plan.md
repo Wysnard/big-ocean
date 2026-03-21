@@ -1,10 +1,10 @@
 # Sprint Parallelism Plan
-Generated: 2026-03-21 (refreshed — Step 4 complete)
+Generated: 2026-03-21 (refreshed — Step 5 in progress, 4 stories pr-ready)
 
 > Phase 7: Product Completeness & Launch Readiness
 > Source: epics.md (9 epics, 41 stories incl. sub-stories)
 > Only forward-looking stories included — all prior phases complete.
-> Steps 1-4 complete (19 stories merged). Step 5 unlocked.
+> Steps 1-4 complete (19 stories merged). Step 5 in progress (all 4 stories pr-ready).
 >
 > Conservative parallelism: stories sharing a page, route, or domain area
 > are placed in separate steps even when technically independent.
@@ -21,13 +21,13 @@ All 4 stories merged: 31-2 (PR #156), 32-2 (PR #157), 31-4 (PR #154), 37-2 (PR #
 ## Step 4: COMPLETE (2026-03-21)
 All 4 stories merged: 30-2 (PR #161), 31-3 (PR #158), 31-5 (PR #160), 32-4 (PR #159).
 
-## Step 5: Portrait, Cost Guard, Public Profile
-| Story | Mode | Notes |
-|-------|------|-------|
-| 32-5-full-portrait-display | parallel | After 32-2. Spine renderer + portrait section on results page |
-| 32-6-portrait-reconciliation-and-retry | parallel | After 32-3. Backend reconciliation use-case |
-| 31-6-cost-guard | parallel | Cost tracking refinement, chat/API |
-| 33-1-public-profile-page | parallel | After 30-1. New page, independent route |
+## Step 5: Portrait, Cost Guard, Public Profile — IN PROGRESS (all pr-ready)
+| Story | Status | Mode | Notes |
+|-------|--------|------|-------|
+| 32-5-full-portrait-display | pr-ready | parallel | After 32-2. Spine renderer + portrait section on results page |
+| 32-6-portrait-reconciliation-and-retry | pr-ready | parallel | After 32-3. Backend reconciliation use-case |
+| 31-6-cost-guard | pr-ready | parallel | Cost tracking refinement, chat/API |
+| 33-1-public-profile-page | pr-ready | parallel | After 30-1. New page, independent route |
 
 **Gate:** All stories above must be done before proceeding.
 
@@ -92,9 +92,9 @@ All 4 stories merged: 30-2 (PR #161), 31-3 (PR #158), 31-5 (PR #160), 32-4 (PR #
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **11 steps** — Steps 1-4 complete (19 merged), Step 5 now unlocked
-- **20 stories remaining** (Steps 5-11)
-- **Critical path:** 33-1 (Step 5) → 34-1 (Step 6) → 34-2 (Step 7) → 34-3 (Step 8) → 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
+- **11 steps** — Steps 1-4 complete (19 merged), Step 5 in progress (4 pr-ready)
+- **16 stories remaining** (Steps 6-11, after Step 5 merges)
+- **Critical path:** 33-1 (Step 5, pr-ready) → 34-1 (Step 6) → 34-2 (Step 7) → 34-3 (Step 8) → 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
 - **Key enablers:** Polar (32-3, done) and Email Infrastructure (31-7, done) — both landed in Step 1
 - **No shared-file conflicts within any step** — stories in the same step touch different pages/domains
-- **Next up (Step 5):** 32-5 (full portrait display), 32-6 (portrait reconciliation), 31-6 (cost guard), 33-1 (public profile page) — all parallel
+- **Next action:** Merge Step 5 PRs (32-5, 32-6, 31-6, 33-1) to unlock Step 6
