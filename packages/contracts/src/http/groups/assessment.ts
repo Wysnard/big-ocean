@@ -191,6 +191,22 @@ export const GetTranscriptResponseSchema = S.Struct({
 });
 
 /**
+ * Activate Extension Request Schema (Story 36-1)
+ */
+export const ActivateExtensionResponseSchema = S.Struct({
+	sessionId: S.String,
+	parentSessionId: S.String,
+	createdAt: S.DateTimeUtc,
+	messages: S.Array(
+		S.Struct({
+			role: S.Literal("user", "assistant"),
+			content: S.String,
+			timestamp: S.DateTimeUtc,
+		}),
+	),
+});
+
+/**
  * Assessment API Group
  *
  * Routes:
@@ -200,6 +216,7 @@ export const GetTranscriptResponseSchema = S.Struct({
  * - GET /api/assessment/:sessionId/resume - Resume existing session
  * - GET /api/assessment/:sessionId/transcript - Get conversation transcript (Story 12.2)
  * - GET /api/assessment/sessions - List user's assessment sessions (Story 7.13)
+ * - POST /api/assessment/activate-extension - Activate conversation extension (Story 36-1)
  */
 export const AssessmentGroup = HttpApiGroup.make("assessment")
 	.add(
@@ -275,6 +292,13 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 			.addError(Unauthorized, { status: 401 })
 			.addError(DatabaseError, { status: 500 }),
 	)
+	.add(
+		HttpApiEndpoint.post("activateExtension", "/activate-extension")
+			.addSuccess(ActivateExtensionResponseSchema)
+			.addError(SessionNotFound, { status: 404 })
+			.addError(Unauthorized, { status: 401 })
+			.addError(DatabaseError, { status: 500 }),
+	)
 	.middleware(OptionalAuthMiddleware)
 	.prefix("/assessment");
 
@@ -290,3 +314,4 @@ export type ListSessionsResponse = typeof ListSessionsResponseSchema.Type;
 export type GenerateResultsResponse = typeof GenerateResultsResponseSchema.Type;
 export type FinalizationStatusResponse = typeof FinalizationStatusResponseSchema.Type;
 export type GetTranscriptResponse = typeof GetTranscriptResponseSchema.Type;
+export type ActivateExtensionResponse = typeof ActivateExtensionResponseSchema.Type;

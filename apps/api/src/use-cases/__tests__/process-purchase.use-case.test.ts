@@ -17,6 +17,8 @@ vi.mock("../generate-full-portrait.use-case", () => ({
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
+	AssessmentExchangeRepository,
+	AssessmentMessageRepository,
 	AssessmentResultRepository,
 	AssessmentSessionRepository,
 	LoggerRepository,
@@ -35,7 +37,7 @@ import { PurchaseEventDrizzleRepositoryLive } from "@workspace/infrastructure/re
 import { Effect, Exit, Layer } from "effect";
 import { processPurchase } from "../process-purchase.use-case";
 
-// Mock repositories needed for portrait flow
+// Mock repositories needed for portrait flow + extension activation (Story 36-1)
 const mockSessionRepo = {
 	createSession: vi.fn(),
 	getSession: vi.fn(),
@@ -50,6 +52,35 @@ const mockSessionRepo = {
 	incrementMessageCount: vi.fn(),
 	acquireSessionLock: vi.fn(),
 	releaseSessionLock: vi.fn(),
+	createExtensionSession: vi.fn(),
+	findCompletedSessionWithoutChild: vi.fn(),
+	hasExtensionSession: vi.fn(),
+	findExtensionSession: vi.fn(),
+	findDropOffSessions: vi.fn(),
+	markDropOffEmailSent: vi.fn(),
+};
+
+const mockMessageRepo = {
+	saveMessage: vi.fn(() =>
+		Effect.succeed({
+			id: "msg_mock",
+			sessionId: "session_mock",
+			role: "assistant",
+			content: "mock message",
+			createdAt: new Date(),
+		}),
+	),
+	getMessages: vi.fn(),
+};
+
+const mockExchangeRepo = {
+	create: vi.fn(() =>
+		Effect.succeed({ id: "exchange_mock", sessionId: "session_mock", turnNumber: 0 }),
+	),
+	getBySessionId: vi.fn(),
+	getBySessionIdAndTurn: vi.fn(),
+	update: vi.fn(),
+	getLastExchange: vi.fn(),
 };
 
 const mockResultsRepo = {
@@ -82,6 +113,8 @@ const TestLayer = Layer.mergeAll(
 	Layer.succeed(AssessmentResultRepository, mockResultsRepo),
 	Layer.succeed(PortraitRepository, mockPortraitRepo),
 	Layer.succeed(LoggerRepository, mockLogger),
+	Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
+	Layer.succeed(AssessmentExchangeRepository, mockExchangeRepo),
 );
 
 const baseInput = {
@@ -97,6 +130,12 @@ describe("processPurchase Use Case", () => {
 		vi.clearAllMocks();
 		// Default mocks: no existing session
 		mockSessionRepo.findSessionByUserId.mockReturnValue(Effect.succeed(null));
+		mockSessionRepo.findCompletedSessionWithoutChild.mockReturnValue(Effect.succeed(null));
+		mockSessionRepo.hasExtensionSession.mockReturnValue(Effect.succeed(false));
+		mockSessionRepo.findExtensionSession.mockReturnValue(Effect.succeed(null));
+		mockSessionRepo.createExtensionSession.mockReturnValue(
+			Effect.succeed({ sessionId: "ext_session_mock" }),
+		);
 		mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(null));
 		mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
 	});

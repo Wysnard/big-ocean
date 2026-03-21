@@ -193,6 +193,48 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 		 * @param sessionId - Session to mark
 		 */
 		readonly markDropOffEmailSent: (sessionId: string) => Effect.Effect<void, DatabaseError, never>;
+
+		/**
+		 * Create a conversation extension session linked to a parent session (Story 36-1)
+		 *
+		 * @param userId - Authenticated user ID
+		 * @param parentSessionId - ID of the completed session to extend
+		 * @returns Effect with new session ID
+		 */
+		readonly createExtensionSession: (
+			userId: string,
+			parentSessionId: string,
+		) => Effect.Effect<{ sessionId: string }, DatabaseError, never>;
+
+		/**
+		 * Find the most recent completed session that has no child extension session (Story 36-1)
+		 *
+		 * @param userId - Authenticated user ID
+		 * @returns Effect with session entity or null if none eligible
+		 */
+		readonly findCompletedSessionWithoutChild: (
+			userId: string,
+		) => Effect.Effect<AssessmentSessionEntity | null, DatabaseError, never>;
+
+		/**
+		 * Check if a parent session already has a child extension session (Story 36-1)
+		 *
+		 * @param parentSessionId - Parent session ID to check
+		 * @returns Effect with boolean — true if an extension session exists
+		 */
+		readonly hasExtensionSession: (
+			parentSessionId: string,
+		) => Effect.Effect<boolean, DatabaseError, never>;
+
+		/**
+		 * Find the active extension session for a given parent session (Story 36-1)
+		 *
+		 * @param parentSessionId - Parent session ID
+		 * @returns Effect with session entity or null
+		 */
+		readonly findExtensionSession: (
+			parentSessionId: string,
+		) => Effect.Effect<AssessmentSessionEntity | null, DatabaseError, never>;
 	}
 >() {}
 

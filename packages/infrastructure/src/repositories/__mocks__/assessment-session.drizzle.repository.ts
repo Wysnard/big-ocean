@@ -237,5 +237,93 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 					sessions.set(sessionId, { ...session, dropOffEmailSentAt: new Date() });
 				}
 			}),
+
+		createExtensionSession: (userId: string, parentSessionId: string) =>
+			Effect.sync(() => {
+				const sessionId = `session_${crypto.randomUUID().slice(0, 8)}`;
+				const session = {
+					id: sessionId,
+					userId,
+					parentSessionId,
+					sessionToken: null,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					status: "active" as const,
+					finalizationProgress: null,
+					messageCount: 0,
+				};
+				sessions.set(sessionId, session);
+				return { sessionId };
+			}),
+
+		findCompletedSessionWithoutChild: (userId: string) =>
+			Effect.sync(() => {
+				// Collect all parent_session_ids from child sessions
+				const childParentIds = new Set<string>();
+				for (const session of sessions.values()) {
+					if (session.parentSessionId) {
+						childParentIds.add(session.parentSessionId as string);
+					}
+				}
+
+				const candidates: Array<Record<string, unknown>> = [];
+				for (const session of sessions.values()) {
+					if (
+						session.userId === userId &&
+						session.status === "completed" &&
+						!childParentIds.has(session.id as string)
+					) {
+						candidates.push(session);
+					}
+				}
+
+				// Sort by createdAt descending, return first
+				candidates.sort((a, b) => (b.createdAt as Date).getTime() - (a.createdAt as Date).getTime());
+
+				const best = candidates[0];
+				if (!best) return null;
+
+				return {
+					id: best.id as string,
+					userId: best.userId as string | null,
+					sessionToken: (best.sessionToken as string) ?? null,
+					createdAt: best.createdAt as Date,
+					updatedAt: best.updatedAt as Date,
+					status: best.status as string,
+					finalizationProgress: (best.finalizationProgress as string) ?? null,
+					messageCount: (best.messageCount as number) ?? 0,
+					parentSessionId: (best.parentSessionId as string) ?? null,
+				};
+			}),
+
+		hasExtensionSession: (parentSessionId: string) =>
+			Effect.sync(() => {
+				for (const session of sessions.values()) {
+					if (session.parentSessionId === parentSessionId) {
+						return true;
+					}
+				}
+				return false;
+			}),
+
+		findExtensionSession: (parentSessionId: string) =>
+			Effect.sync(() => {
+				for (const session of sessions.values()) {
+					if (session.parentSessionId === parentSessionId) {
+						return {
+							id: session.id as string,
+							userId: session.userId as string | null,
+							sessionToken: (session.sessionToken as string) ?? null,
+							createdAt: session.createdAt as Date,
+							updatedAt: session.updatedAt as Date,
+							status: session.status as string,
+							finalizationProgress: (session.finalizationProgress as string) ?? null,
+							messageCount: (session.messageCount as number) ?? 0,
+							parentSessionId: (session.parentSessionId as string) ?? null,
+						};
+					}
+				}
+				return null;
+			}),
 	}),
 );

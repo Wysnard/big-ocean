@@ -29,6 +29,7 @@ import {
 	UnknownProductError,
 } from "@workspace/domain";
 import { Effect } from "effect";
+import { activateConversationExtension } from "./activate-conversation-extension.use-case";
 import { generateFullPortrait } from "./generate-full-portrait.use-case";
 
 export interface ProcessPurchaseInput {
@@ -216,6 +217,31 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 					portraitId: insertResult.portrait.id,
 					sessionId,
 				}),
+			);
+		}
+
+		// ───────────────────────────────────────────────────────────────
+		// Phase 4: Extension session creation (Story 36-1)
+		// ───────────────────────────────────────────────────────────────
+		if (eventType === "extended_conversation_unlocked") {
+			yield* activateConversationExtension({ userId: input.userId }).pipe(
+				Effect.tap((result) =>
+					Effect.sync(() => {
+						logger.info("Extension session created from purchase webhook", {
+							sessionId: result.sessionId,
+							parentSessionId: result.parentSessionId,
+							userId: input.userId,
+						});
+					}),
+				),
+				Effect.catchAll((error) =>
+					Effect.sync(() => {
+						logger.warn("Failed to create extension session from webhook, user can activate via API", {
+							userId: input.userId,
+							error: String(error),
+						});
+					}),
+				),
 			);
 		}
 
