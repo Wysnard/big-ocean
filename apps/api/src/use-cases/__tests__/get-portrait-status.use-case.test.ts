@@ -1,24 +1,30 @@
 /**
- * Get Portrait Status Use Case Tests (Story 13.3)
+ * Get Portrait Status Use Case Tests (Story 13.3, extended Story 32-6)
  *
  * Tests:
  * - deriveStatus pure function for all cases (none, generating, ready, failed)
  * - isStale pure function
  * - Staleness check triggers forkDaemon
  * - Non-stale generating does NOT trigger forkDaemon
+ * - Story 32-6: Reconciliation when status is "none" with userId
  */
+
+import { vi } from "vitest";
+
+vi.mock("../generate-full-portrait.use-case", () => ({
+	generateFullPortrait: vi.fn(() => Effect.succeed({ success: true })),
+}));
+
+vi.mock("../reconcile-portrait-purchase.use-case", () => ({
+	reconcilePortraitPurchase: vi.fn(() => Effect.succeed({ reconciled: false })),
+}));
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { LoggerRepository, PortraitRepository } from "@workspace/domain";
 import type { Portrait } from "@workspace/domain/repositories/portrait.repository";
 import { Effect, Layer } from "effect";
-import { vi } from "vitest";
 import { deriveStatus, getPortraitStatus, isStale } from "../get-portrait-status.use-case";
-
-// Mock portrait generator to verify forkDaemon calls
-vi.mock("../generate-full-portrait.use-case", () => ({
-	generateFullPortrait: vi.fn(() => Effect.succeed({ success: true })),
-}));
+import { reconcilePortraitPurchase } from "../reconcile-portrait-purchase.use-case";
 
 const mockPortraitRepo = {
 	insertPlaceholder: vi.fn(),
@@ -26,6 +32,7 @@ const mockPortraitRepo = {
 	incrementRetryCount: vi.fn(),
 	getByResultIdAndTier: vi.fn(),
 	getFullPortraitBySessionId: vi.fn(),
+	resetRetryCount: vi.fn(),
 };
 
 const mockLogger = {
@@ -108,7 +115,7 @@ describe("getPortraitStatus Use Case (Story 13.3)", () => {
 		Effect.gen(function* () {
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
 
-			const result = yield* getPortraitStatus("session_123");
+			const result = yield* getPortraitStatus({ sessionId: "session_123" });
 
 			expect(result.status).toBe("none");
 			expect(result.portrait).toBeNull();
@@ -120,7 +127,7 @@ describe("getPortraitStatus Use Case (Story 13.3)", () => {
 			const portrait = createMockPortrait({ content: "Your personality portrait..." });
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(portrait));
 
-			const result = yield* getPortraitStatus("session_123");
+			const result = yield* getPortraitStatus({ sessionId: "session_123" });
 
 			expect(result.status).toBe("ready");
 			expect(result.portrait).toEqual(portrait);
@@ -132,7 +139,7 @@ describe("getPortraitStatus Use Case (Story 13.3)", () => {
 			const portrait = createMockPortrait({ content: null, retryCount: 1 });
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(portrait));
 
-			const result = yield* getPortraitStatus("session_123");
+			const result = yield* getPortraitStatus({ sessionId: "session_123" });
 
 			expect(result.status).toBe("generating");
 			expect(result.portrait).toEqual(portrait);
@@ -144,7 +151,7 @@ describe("getPortraitStatus Use Case (Story 13.3)", () => {
 			const portrait = createMockPortrait({ content: null, retryCount: 3 });
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(portrait));
 
-			const result = yield* getPortraitStatus("session_123");
+			const result = yield* getPortraitStatus({ sessionId: "session_123" });
 
 			expect(result.status).toBe("failed");
 			expect(result.portrait).toEqual(portrait);
@@ -161,7 +168,7 @@ describe("getPortraitStatus Use Case (Story 13.3)", () => {
 			});
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(portrait));
 
-			yield* getPortraitStatus("session_123");
+			yield* getPortraitStatus({ sessionId: "session_123" });
 
 			// Logger should NOT have been called with lazy retry message
 			expect(mockLogger.info).not.toHaveBeenCalledWith(
@@ -182,7 +189,7 @@ describe("getPortraitStatus Use Case (Story 13.3)", () => {
 			});
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(portrait));
 
-			const result = yield* getPortraitStatus("session_123");
+			const result = yield* getPortraitStatus({ sessionId: "session_123" });
 
 			expect(result.status).toBe("generating");
 			// Logger should have been called with lazy retry message
@@ -208,7 +215,7 @@ describe("getPortraitStatus Use Case (Story 13.3)", () => {
 			});
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(portrait));
 
-			const result = yield* getPortraitStatus("session_123");
+			const result = yield* getPortraitStatus({ sessionId: "session_123" });
 
 			// Status should be failed, no retry triggered
 			expect(result.status).toBe("failed");
@@ -216,6 +223,64 @@ describe("getPortraitStatus Use Case (Story 13.3)", () => {
 				"Triggering lazy retry for stale portrait",
 				expect.anything(),
 			);
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+});
+
+describe("getPortraitStatus Reconciliation (Story 32-6)", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it.effect("does NOT attempt reconciliation when no userId provided", () =>
+		Effect.gen(function* () {
+			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
+
+			const result = yield* getPortraitStatus({ sessionId: "session_123" });
+
+			expect(result.status).toBe("none");
+			expect(reconcilePortraitPurchase).not.toHaveBeenCalled();
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+
+	it.effect("attempts reconciliation when status is 'none' and userId provided", () =>
+		Effect.gen(function* () {
+			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
+			vi.mocked(reconcilePortraitPurchase).mockReturnValue(
+				Effect.succeed({ reconciled: false }),
+			);
+
+			const result = yield* getPortraitStatus({
+				sessionId: "session_123",
+				userId: "user_789",
+			});
+
+			expect(result.status).toBe("none");
+			expect(reconcilePortraitPurchase).toHaveBeenCalledWith({
+				sessionId: "session_123",
+				userId: "user_789",
+			});
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+
+	it.effect("returns 'generating' after successful reconciliation", () =>
+		Effect.gen(function* () {
+			// First call returns null (no portrait), second returns the new placeholder
+			const newPlaceholder = createMockPortrait({ content: null, retryCount: 0 });
+			mockPortraitRepo.getFullPortraitBySessionId
+				.mockReturnValueOnce(Effect.succeed(null))
+				.mockReturnValueOnce(Effect.succeed(newPlaceholder));
+			vi.mocked(reconcilePortraitPurchase).mockReturnValue(
+				Effect.succeed({ reconciled: true }),
+			);
+
+			const result = yield* getPortraitStatus({
+				sessionId: "session_123",
+				userId: "user_789",
+			});
+
+			expect(result.status).toBe("generating");
+			expect(result.portrait).toEqual(newPlaceholder);
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 });

@@ -2,6 +2,8 @@
  * Mock: portrait.drizzle.repository.ts
  * Vitest auto-resolves when tests call:
  *   vi.mock('@workspace/infrastructure/repositories/portrait.drizzle.repository')
+ *
+ * Story 32-6: Added resetRetryCount mock.
  */
 
 import type { InsertPortraitPlaceholder, Portrait, PortraitTier } from "@workspace/domain";
@@ -133,6 +135,26 @@ export const PortraitDrizzleRepositoryLive = Layer.succeed(
 
 				const indexKey = makeIndexKey(assessmentResultId, "full");
 				return resultTierIndex.get(indexKey) ?? null;
+			}),
+
+		resetRetryCount: (id: string) =>
+			Effect.gen(function* () {
+				const existing = portraitStore.get(id);
+
+				if (!existing) {
+					return yield* Effect.fail(new PortraitNotFoundError({ portraitId: id }));
+				}
+
+				const updated: Portrait = {
+					...existing,
+					retryCount: 0,
+				};
+
+				portraitStore.set(id, updated);
+				const indexKey = makeIndexKey(existing.assessmentResultId, existing.tier);
+				resultTierIndex.set(indexKey, updated);
+
+				return updated;
 			}),
 	}),
 );
