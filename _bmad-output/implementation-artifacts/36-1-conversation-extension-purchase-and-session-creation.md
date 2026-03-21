@@ -100,6 +100,27 @@ So that I can go deeper and discover more about myself.
 - **Greeting messages:** Reuse the existing greeting pattern from `start-assessment.use-case.ts`.
 - **Conversation extension model per architecture:** New session with `parent_session_id`, pacing pipeline initialized from prior session's final state (Story 7.2 scope — not this story). This story covers session creation only.
 
+## Architect Notes
+
+### Critical: `assessment_session_user_lifetime_unique` constraint must be modified
+
+**Problem:** The current schema has a unique index:
+```sql
+uniqueIndex("assessment_session_user_lifetime_unique")
+  .on(table.userId)
+  .where(sql`user_id IS NOT NULL AND status IN ('finalizing', 'completed')`)
+```
+This allows only ONE completed/finalizing session per user. When an extension session completes, the constraint will be violated.
+
+**Solution:** Drop the existing constraint and replace with one that allows multiple completed sessions. The new constraint should allow multiple completed sessions as long as they have different `parent_session_id` values (or one has NULL `parent_session_id`). The simplest approach: remove the unique constraint entirely and rely on application-level logic (the `findCompletedSessionWithoutChild` query and `hasExtensionSession` check) to prevent duplicates.
+
+**Files to modify:**
+- `packages/infrastructure/src/db/drizzle/schema.ts` — Modify the `assessment_session_user_lifetime_unique` constraint in the same migration that adds `parent_session_id`.
+
+**Pattern:** The `startAuthenticatedAssessment` use-case already checks for existing sessions at the application level before creating. The DB constraint was a safety net for the single-session model but is incompatible with the extension model.
+
+**Implementation guidance:** In the migration, DROP the old unique index and optionally add a new partial unique index that only constrains sessions where `parent_session_id IS NULL` (one original assessment per user). Extension sessions (where `parent_session_id IS NOT NULL`) are not constrained by this — application logic handles it.
+
 ## Dependencies
 
 - Epic 3 (Results, Portrait & Monetization) — Polar integration, purchase events system.
