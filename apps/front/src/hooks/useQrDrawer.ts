@@ -1,164 +1,81 @@
 /**
  * useQrDrawer Hook (Story 34-2)
  *
- * Manages the QR drawer lifecycle:
- * - Generates a QR token on drawer open
- * - Exposes pollNow() for status checking (component sets up interval)
+ * Manages the QR drawer lifecycle using TanStack Query:
+ * - useMutation for token generation
+ * - useQuery with refetchInterval for status polling
  * - Auto-regenerates token when near expiry (< 55 min remaining)
- * - Cleans up on close or unmount
- *
- * Uses Effect HttpApiClient with @workspace/contracts for type-safe API calls.
  */
 
-import { Effect } from "effect";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { makeApiClient } from "../lib/api-client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useState } from "react";
+import { fetchTokenStatus, generateToken, type QrTokenData } from "../lib/qr-token-api";
 
 export const POLL_INTERVAL_MS = 60_000;
 const REGENERATE_THRESHOLD_MS = 55 * 60 * 1000; // Regenerate when < 55 min remaining
 
-type QrStatus = "idle" | "valid" | "accepted" | "expired";
-
-interface QrDrawerState {
-	isOpen: boolean;
-	token: string | null;
-	shareUrl: string | null;
-	expiresAt: string | null;
-	status: QrStatus;
-	isLoading: boolean;
-	error: string | null;
-}
-
-const initialState: QrDrawerState = {
-	isOpen: false,
-	token: null,
-	shareUrl: null,
-	expiresAt: null,
-	status: "idle",
-	isLoading: false,
-	error: null,
-};
-
-async function generateToken(): Promise<{
-	token: string;
-	shareUrl: string;
-	expiresAt: string;
-}> {
-	const result = await Effect.gen(function* () {
-		const client = yield* makeApiClient;
-		return yield* client.qrToken.generateQrToken({});
-	}).pipe(Effect.runPromise);
-
-	return {
-		token: result.token,
-		shareUrl: result.shareUrl,
-		expiresAt: String(result.expiresAt),
-	};
-}
-
-async function fetchTokenStatus(
-	token: string,
-): Promise<{ status: "valid" | "accepted" | "expired" }> {
-	return Effect.gen(function* () {
-		const client = yield* makeApiClient;
-		return yield* client.qrToken.getQrTokenStatus({ path: { token } });
-	}).pipe(Effect.runPromise);
-}
-
 export function useQrDrawer() {
-	const [state, setState] = useState<QrDrawerState>(initialState);
-	const isMountedRef = useRef(true);
-	const stateRef = useRef(state);
-	stateRef.current = state;
+	const [isOpen, setIsOpen] = useState(false);
+	const [tokenData, setTokenData] = useState<QrTokenData | null>(null);
+	const queryClient = useQueryClient();
 
-	const close = useCallback(() => {
-		setState(initialState);
-	}, []);
+	const generateMutation = useMutation({
+		mutationKey: ["qrToken", "generate"],
+		mutationFn: generateToken,
+		onSuccess: (data) => {
+			setTokenData(data);
+		},
+		onError: () => {
+			setIsOpen(false);
+		},
+	});
 
-	const pollNow = useCallback(async () => {
-		const current = stateRef.current;
-		if (!current.token || !current.expiresAt || !isMountedRef.current) return;
+	// Poll token status while drawer is open and token is valid
+	const statusQuery = useQuery({
+		queryKey: ["qrToken", "status", tokenData?.token],
+		queryFn: async () => {
+			if (!tokenData) throw new Error("No token");
 
-		try {
 			// Check if token is near expiry — regenerate if so
-			const timeRemaining = new Date(current.expiresAt).getTime() - Date.now();
+			const timeRemaining = new Date(tokenData.expiresAt).getTime() - Date.now();
 			if (timeRemaining < REGENERATE_THRESHOLD_MS) {
 				const fresh = await generateToken();
-				if (!isMountedRef.current) return;
-				setState((prev) => ({
-					...prev,
-					token: fresh.token,
-					shareUrl: fresh.shareUrl,
-					expiresAt: fresh.expiresAt,
-					status: "valid",
-				}));
-				return;
+				setTokenData(fresh);
+				return { status: "valid" as const };
 			}
 
-			const result = await fetchTokenStatus(current.token);
-			if (!isMountedRef.current) return;
+			return fetchTokenStatus(tokenData.token);
+		},
+		enabled: isOpen && !!tokenData?.token,
+		refetchInterval: (query) => {
+			const status = query.state.data?.status;
+			if (status === "accepted" || status === "expired") return false;
+			return POLL_INTERVAL_MS;
+		},
+	});
 
-			setState((prev) => ({ ...prev, status: result.status }));
-		} catch {
-			// Polling errors are non-fatal — will retry next interval
-		}
-	}, []);
+	const status = statusQuery.data?.status ?? (tokenData ? "valid" : "idle");
 
-	const open = useCallback(async () => {
-		setState((prev) => ({ ...prev, isOpen: true, isLoading: true, error: null }));
+	const open = useCallback(() => {
+		setIsOpen(true);
+		generateMutation.mutate();
+	}, [generateMutation]);
 
-		try {
-			const data = await generateToken();
-			if (!isMountedRef.current) return;
-
-			setState({
-				isOpen: true,
-				token: data.token,
-				shareUrl: data.shareUrl,
-				expiresAt: data.expiresAt,
-				status: "valid",
-				isLoading: false,
-				error: null,
-			});
-		} catch {
-			if (!isMountedRef.current) return;
-			setState({
-				...initialState,
-				error: "Failed to generate QR code. Please try again.",
-			});
-		}
-	}, []);
-
-	// Auto-poll when drawer is open with a valid/non-terminal status
-	useEffect(() => {
-		if (!state.isOpen || !state.token || state.status === "accepted" || state.status === "expired") {
-			return;
-		}
-
-		const intervalId = setInterval(() => {
-			pollNow();
-		}, POLL_INTERVAL_MS);
-
-		return () => clearInterval(intervalId);
-	}, [state.isOpen, state.token, state.status, pollNow]);
-
-	// Cleanup on unmount
-	useEffect(() => {
-		isMountedRef.current = true;
-		return () => {
-			isMountedRef.current = false;
-		};
-	}, []);
+	const close = useCallback(() => {
+		setIsOpen(false);
+		setTokenData(null);
+		generateMutation.reset();
+		queryClient.removeQueries({ queryKey: ["qrToken", "status"] });
+	}, [generateMutation, queryClient]);
 
 	return {
-		isOpen: state.isOpen,
-		token: state.token,
-		shareUrl: state.shareUrl,
-		status: state.status,
-		isLoading: state.isLoading,
-		error: state.error,
+		isOpen,
+		token: tokenData?.token ?? null,
+		shareUrl: tokenData?.shareUrl ?? null,
+		status,
+		isLoading: generateMutation.isPending,
+		error: generateMutation.isError ? "Failed to generate QR code. Please try again." : null,
 		open,
 		close,
-		pollNow,
 	};
 }
