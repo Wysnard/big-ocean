@@ -15,12 +15,12 @@ import {
 } from "@workspace/domain/errors/http.errors";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import { QrTokenRepository } from "@workspace/domain/repositories/qr-token.repository";
-import { QR_TOKEN_TTL_HOURS } from "@workspace/domain/types/relationship.types";
 import type { QrToken } from "@workspace/domain/types/relationship.types";
+import { QR_TOKEN_TTL_HOURS } from "@workspace/domain/types/relationship.types";
 import { Database } from "@workspace/infrastructure/context/database";
 import { and, eq, gt, ne, sql } from "drizzle-orm";
 import { Effect, Layer } from "effect";
-import { relationshipQrTokens } from "../db/drizzle/schema";
+import { relationshipQrTokens, user } from "../db/drizzle/schema";
 
 const mapRow = (row: typeof relationshipQrTokens.$inferSelect): QrToken => {
 	const token: QrToken = {
@@ -72,9 +72,7 @@ export const QrTokenDrizzleRepositoryLive = Layer.effect(
 
 					const row = rows[0];
 					if (!row) {
-						return yield* Effect.fail(
-							new DatabaseError({ message: "Generate returned no rows" }),
-						);
+						return yield* Effect.fail(new DatabaseError({ message: "Generate returned no rows" }));
 					}
 
 					return mapRow(row);
@@ -175,16 +173,12 @@ export const QrTokenDrizzleRepositoryLive = Layer.effect(
 						.from(relationshipQrTokens)
 						.where(eq(relationshipQrTokens.token, input.token))
 						.pipe(
-							Effect.mapError(() =>
-								new DatabaseError({ message: "Failed to diagnose accept failure" }),
-							),
+							Effect.mapError(() => new DatabaseError({ message: "Failed to diagnose accept failure" })),
 						);
 
 					const row = existing[0];
 					if (!row) {
-						return yield* Effect.fail(
-							new QrTokenNotFoundError({ message: "QR token not found" }),
-						);
+						return yield* Effect.fail(new QrTokenNotFoundError({ message: "QR token not found" }));
 					}
 					if (row.userId === input.acceptedByUserId) {
 						return yield* Effect.fail(
@@ -201,9 +195,7 @@ export const QrTokenDrizzleRepositoryLive = Layer.effect(
 						);
 					}
 					// expired (either status or time-based)
-					return yield* Effect.fail(
-						new QrTokenExpiredError({ message: "QR token has expired" }),
-					);
+					return yield* Effect.fail(new QrTokenExpiredError({ message: "QR token has expired" }));
 				}),
 
 			expireToken: (token) =>
@@ -245,6 +237,35 @@ export const QrTokenDrizzleRepositoryLive = Layer.effect(
 							});
 						}),
 					),
+			getByTokenWithInitiatorName: (token) =>
+				Effect.gen(function* () {
+					const rows = yield* db
+						.select({
+							qr: relationshipQrTokens,
+							initiatorName: user.name,
+						})
+						.from(relationshipQrTokens)
+						.innerJoin(user, eq(relationshipQrTokens.userId, user.id))
+						.where(eq(relationshipQrTokens.token, token))
+						.pipe(
+							Effect.mapError((error) => {
+								logger.error("Database operation failed", {
+									operation: "getByTokenWithInitiatorName",
+									error: error instanceof Error ? error.message : String(error),
+								});
+								return new DatabaseError({ message: "Failed to get QR token with initiator name" });
+							}),
+						);
+
+					const row = rows[0];
+					if (!row) {
+						return yield* Effect.fail(
+							new QrTokenNotFoundError({ message: `QR token not found: ${token}` }),
+						);
+					}
+
+					return { ...mapRow(row.qr), initiatorName: row.initiatorName };
+				}),
 		});
 	}),
 );

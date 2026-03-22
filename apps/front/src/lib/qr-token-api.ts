@@ -36,3 +36,27 @@ export function fetchTokenStatus(
 		return yield* client.qrToken.getQrTokenStatus({ path: { token } });
 	}).pipe(Effect.runPromise);
 }
+
+/** Fetch QR token details for the accept screen (Story 34-3) */
+export function fetchTokenDetails(token: string) {
+	return Effect.gen(function* () {
+		const client = yield* makeApiClient;
+		return yield* client.qrToken.getQrTokenDetails({ path: { token } });
+	}).pipe(Effect.runPromise);
+}
+
+/** Accept a QR token (Story 34-3) */
+export function acceptToken(token: string): Promise<{ analysisId: string }> {
+	return Effect.gen(function* () {
+		const client = yield* makeApiClient;
+		return yield* client.qrToken.acceptQrToken({ path: { token } });
+	}).pipe(Effect.runPromise);
+}
+
+/** Refuse a QR token (Story 34-3) */
+export function refuseToken(token: string): Promise<{ ok: true }> {
+	return Effect.gen(function* () {
+		const client = yield* makeApiClient;
+		return yield* client.qrToken.refuseQrToken({ path: { token } });
+	}).pipe(Effect.runPromise);
+}
