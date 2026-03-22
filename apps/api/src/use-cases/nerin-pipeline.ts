@@ -369,24 +369,20 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const session = yield* sessionRepo.getSession(input.sessionId);
 		const isExtensionSession = !!session.parentSessionId;
 
-		// For authenticated users with prior sessions, load ALL messages across
-		// all their conversations so Nerin sees the full history as one continuous
-		// conversation. For anonymous/first-time users, load current session only.
-		const previousMessages = yield* input.userId
+		// Load all persisted messages — for authenticated users this spans all
+		// sessions so Nerin sees one continuous conversation history.
+		const savedMessages = yield* input.userId
 			? messageRepo
 					.getMessagesByUserId(input.userId)
 					.pipe(Effect.catchAll(() => messageRepo.getMessages(input.sessionId)))
 			: messageRepo.getMessages(input.sessionId);
 
-		// Filter out messages from current session that haven't been saved yet
-		// (the current user message is appended in-memory below)
-
 		// Get previous exchanges for pipeline state
 		const previousExchanges = yield* exchangeRepo.findBySession(input.sessionId);
 
-		// Map DB entities to domain messages + append current user message in-memory
+		// Append the current (not yet persisted) user message
 		const domainMessages: DomainMessage[] = [
-			...previousMessages.map((msg) => ({
+			...savedMessages.map((msg) => ({
 				id: msg.id,
 				role: msg.role,
 				content: msg.content,
@@ -424,7 +420,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				sessionId: input.sessionId,
 				parentSessionId: session.parentSessionId,
 				parentExchangeCount: parentExchangesResult.length,
-				totalMessagesLoaded: previousMessages.length,
+				totalMessagesLoaded: savedMessages.length,
 				totalEvidenceLoaded: allEvidence.length,
 			});
 		}
