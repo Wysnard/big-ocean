@@ -55,7 +55,7 @@ export const retryRelationshipAnalysis = (input: RetryRelationshipAnalysisInput)
 			return { status: "ready" as const } satisfies RetryRelationshipAnalysisOutput;
 		}
 
-		// 4. Reset retry state by inserting a fresh placeholder (reuses existing row)
+		// 4. Log and fork a new generation daemon (retryCount is not reset — daemon increments on failure)
 		logger.info("Manual relationship analysis retry: spawning generation daemon", {
 			analysisId: input.analysisId,
 			previousRetryCount: analysis.retryCount,
