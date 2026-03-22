@@ -25,6 +25,19 @@ When working on frontend code (`apps/front` or `packages/ui`), consult [FRONTEND
 **Node requirement:** >= 20
 **Package manager:** pnpm@10.4.1
 
+**Workspace packages:**
+
+| Package | Path | Purpose |
+|---------|------|---------|
+| `front` | `apps/front` | React frontend (TanStack Router + Start, TanStack Query) |
+| `api` | `apps/api` | Effect-ts HTTP API server |
+| `@workspace/contracts` | `packages/contracts` | Shared API schemas, endpoint definitions, error re-exports |
+| `@workspace/domain` | `packages/domain` | Business logic: use-cases, repository interfaces, domain types, errors |
+| `@workspace/infrastructure` | `packages/infrastructure` | Drizzle repositories, LLM clients, external service adapters |
+| `@workspace/ui` | `packages/ui` | Shared shadcn/ui component library |
+| `@workspace/lint` | `packages/lint` | Shared Biome config |
+| `@workspace/typescript-config` | `packages/typescript-config` | Shared tsconfig bases |
+
 ## Common Commands
 
 ```bash
@@ -33,8 +46,10 @@ pnpm dev                    # Start all services (front:3000, api:4000)
 pnpm dev --filter=front     # Frontend only
 pnpm dev --filter=api       # Backend only
 pnpm build                  # Build all packages
+pnpm typecheck              # Typecheck all packages (turbo)
 pnpm test:run               # Run all tests
 pnpm test:coverage          # Tests with coverage
+pnpm test:e2e               # Run Playwright e2e tests
 pnpm lint                   # Lint all packages
 pnpm lint:fix               # Auto-fix lint issues
 pnpm format                 # Format all code
@@ -79,7 +94,7 @@ The codebase follows **hexagonal architecture** (ports & adapters) with Effect-t
 **Hard rules:**
 
 - **No business logic in handlers** — all logic belongs in use-cases
-- **Error Location:** HTTP errors in `contracts/src/errors.ts`, infrastructure errors co-located with repo interfaces in `domain/src/repositories/`
+- **Error Location:** HTTP errors defined in `domain/src/errors/http.errors.ts` (re-exported via `contracts/src/errors.ts`), infrastructure errors co-located with repo interfaces in `domain/src/repositories/`
 - **Error Propagation:** Use-cases and handlers must NOT remap errors. Only allowed `catchTag` is fail-open resilience.
 - **Derive-at-Read:** Trait scores, OCEAN codes, and archetypes are recomputed from facet scores at read time — never read stored aggregations. Facet scores are the single source of truth.
 
@@ -102,16 +117,17 @@ See [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) for branch naming, com
 Check auth state in `beforeLoad` using `getSession()` from `@/lib/auth-client`:
 ```typescript
 import { getSession } from "@/lib/auth-client";
-import { isRedirect } from "@tanstack/react-router";
+import { redirect } from "@tanstack/react-router";
 
-beforeLoad: async ({ search }) => {
+beforeLoad: async () => {
   const { data: session } = await getSession();
-  if (session?.user) {
-    // authenticated — verify ownership, redirect, etc.
+  if (!session?.user) {
+    throw redirect({ to: "/login", search: { sessionId: undefined, redirectTo: undefined } });
   }
 }
 ```
-Use `isRedirect()` in catch blocks within `beforeLoad` to re-throw TanStack Router redirects.
+
+**Advanced:** If `beforeLoad` has a try/catch (e.g., for ownership checks that may fail), import `isRedirect` from `@tanstack/react-router` and re-throw redirects: `if (isRedirect(e)) throw e;` — see `/chat` route for example.
 
 **Session ownership verification** (Story 9.4): Lives in `/chat` route's `beforeLoad`, not in `ChatAuthGate`.
 
@@ -219,8 +235,3 @@ pnpm dlx shadcn@latest add [component-name] -c apps/front
 
 Import as: `import { Button } from "@workspace/ui/components/button";`
 
-## Privacy Implementation Strategy
-
-**Phase 1 (US MVP):** Basic privacy foundation — TLS 1.3, Better Auth (12+ char passwords, compromised credential checks), default-private profiles, PostgreSQL RLS.
-
-**Phase 2 (EU Launch — Epic 6):** Full GDPR compliance — AES-256-GCM encryption at rest, GDPR deletion/portability endpoints, comprehensive audit logging. Deferred from Phase 1 on 2026-02-10 to accelerate MVP delivery.
