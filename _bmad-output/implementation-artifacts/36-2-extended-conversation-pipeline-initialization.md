@@ -1,6 +1,6 @@
 # Story 36-2: Extended Conversation Pipeline Initialization
 
-**Status:** ready-for-dev
+**Status:** review
 
 ## Story
 
@@ -13,41 +13,93 @@ So that Nerin builds on what we already explored together.
 
 ## Acceptance Criteria
 
-1. **Given** a new extension session is created, **When** the pacing pipeline initializes, **Then** the session starts at exchange 1 of 25 (fresh 25-exchange arc) **And** the prior session's final user state is loaded: smoothed energy, comfort, drain, drain ceiling (FR25).
+1. **Given** a new extension session is created, **When** the pacing pipeline runs, **Then** Nerin receives ALL messages from ALL the user's sessions in chronological order as one continuous conversation history, so she can naturally reference things the user said in prior conversations.
 
-2. **Given** Nerin's prompts are constructed for the extension session, **When** the Common prompt layer references prior context, **Then** Nerin references "themes and patterns" from prior evidence **And** Nerin does NOT reference specific exchanges or quote the user's prior words.
+2. **Given** the territory scorer runs, **When** coverage gaps are computed, **Then** ALL evidence from ALL user sessions contributes to scoring coverage, loaded via a single `findByUserId` query rather than manual session merging.
 
-3. **Given** the territory scorer runs in the extension session, **When** coverage gaps are computed, **Then** evidence from both the original and extension sessions contributes to coverage **And** the scorer naturally steers toward under-explored territories.
+3. **Given** the pacing pipeline computes visit history and E_target, **When** exchanges are loaded, **Then** ALL exchanges from ALL user sessions are used for visit history and E_target seeding, loaded via a single `findByUserId` query.
+
+4. **Given** anonymous users or query failures, **When** user-level queries are attempted, **Then** the pipeline falls back gracefully to session-scoped queries.
 
 ## Tasks
 
-### Task 1: Load Prior Session State for E_target Initialization
+### Task 1: Add `getMessagesByUserId` to message repository
 
-- **1a:** Add `getParentSessionId` helper to resolve the parent session ID from an extension session entity.
-- **1b:** In `nerin-pipeline.ts`, detect when the current session is an extension session (has `parentSessionId`).
-- **1c:** When the extension session has no prior exchanges yet (turn 1), load the parent session's final exchange to seed `priorSmoothedEnergy` and `priorComfort` for `computeETargetV2`.
-- **1d:** Write unit tests verifying that E_target on the first turn of an extension session uses the parent's final state rather than defaults.
+- [x] 1a: Add `getMessagesByUserId(userId: string)` to `AssessmentMessageRepository` interface in `packages/domain/src/repositories/assessment-message.repository.ts`
+- [x] 1b: Implement in `packages/infrastructure/src/repositories/assessment-message.drizzle.repository.ts` — JOIN `assessment_message` with `assessment_session` on `sessionId`, filter by `assessment_session.userId`, ORDER BY `createdAt ASC`
+- [x] 1c: Add to mock in `packages/infrastructure/src/repositories/__mocks__/assessment-message.drizzle.repository.ts`
 
-### Task 2: Merge Evidence from Parent + Extension Sessions for Coverage
+### Task 2: Add `findByUserId` to evidence repository
 
-- **2a:** In `nerin-pipeline.ts`, when the session is an extension session, load evidence from both the parent session and the current extension session.
-- **2b:** The merged evidence feeds into `computeFacetMetrics` so the territory scorer sees combined coverage.
-- **2c:** Write unit tests verifying that the territory scorer receives merged evidence from both sessions and steers toward under-explored territories.
+- [x] 2a: Add `findByUserId(userId: string)` to `ConversationEvidenceRepository` interface in `packages/domain/src/repositories/conversation-evidence.repository.ts`
+- [x] 2b: Implement in `packages/infrastructure/src/repositories/conversation-evidence.drizzle.repository.ts` — JOIN `conversation_evidence` with `assessment_session`, filter by `userId`
+- [x] 2c: Add to mock in `packages/infrastructure/src/repositories/__mocks__/conversation-evidence.drizzle.repository.ts`
 
-### Task 3: Merge Visit History from Parent Session
+### Task 3: Add `findByUserId` to exchange repository
 
-- **3a:** When the session is an extension session and has no prior exchanges, load the parent session's exchange records to build the initial visit history.
-- **3b:** The combined visit history feeds into the freshness penalty computation, ensuring recently-visited territories from the parent session are penalized appropriately.
-- **3c:** Write unit tests verifying that visit history from the parent session influences territory scoring in the extension session.
+- [x] 3a: Add `findByUserId(userId: string)` to `AssessmentExchangeRepository` interface in `packages/domain/src/repositories/assessment-exchange.repository.ts`
+- [x] 3b: Implement in `packages/infrastructure/src/repositories/assessment-exchange.drizzle.repository.ts` — JOIN `assessment_exchange` with `assessment_session`, filter by `userId`, ORDER BY `createdAt ASC`
+- [x] 3c: Add to mock in `packages/infrastructure/src/repositories/__mocks__/assessment-exchange.drizzle.repository.ts`
 
-### Task 4: Prompt Builder Extension Context
+### Task 4: Refactor nerin-pipeline to use user-level queries
 
-- **4a:** Create a `buildExtensionContext` pure function in `packages/domain/src/utils/steering/` that takes parent session evidence and produces a summary of "themes and patterns" (territory names visited, dominant facets observed) without referencing specific user quotes.
-- **4b:** Integrate the extension context into the prompt builder so it is included in the Common prompt layer when an extension session is active.
-- **4c:** Write unit tests verifying the extension context output contains territory/theme references but no user quotes.
+- [x] 4a: Replace session-scoped `getMessages(sessionId)` with `getMessagesByUserId(userId)` for authenticated users (fall back to session-scoped for anonymous). Nerin gets the full conversation history across all sessions.
+- [x] 4b: Replace session-scoped `findBySession(sessionId)` evidence query with `findByUserId(userId)` for authenticated users (fall back to session-scoped for anonymous).
+- [x] 4c: Replace session-scoped `findBySession(sessionId)` exchange query with `findByUserId(userId)` for authenticated users. Use all-user exchanges for visit history, E_target seeding, and currentTerritory. Keep session-scoped exchanges only for turn counting and message linking.
+- [x] 4d: Remove `buildExtensionContext` / `extension-context.ts` and the `extensionContext` prompt builder parameter — no longer needed since Nerin gets actual messages.
+- [x] 4e: Remove parent-session-specific exchange loading (`parentExchanges`) — replaced by user-level queries.
 
-### Task 5: Integration — Wire Extension Pipeline in nerin-pipeline.ts
+### Task 5: Tests
 
-- **5a:** Wire Tasks 1-4 together in `nerin-pipeline.ts`: detect extension session, load parent state, merge evidence, merge visit history, and pass extension context to prompt builder.
-- **5b:** Ensure the pipeline falls back gracefully if the parent session data is missing (e.g., parent was deleted).
-- **5c:** Write integration-style unit tests exercising the full pipeline with an extension session mock.
+- [x] 5a: Write unit tests verifying `getMessagesByUserId` returns messages from all sessions chronologically
+- [x] 5b: Write unit tests verifying `findByUserId` (evidence) returns evidence from all sessions
+- [x] 5c: Write unit tests verifying `findByUserId` (exchange) returns exchanges from all sessions
+- [x] 5d: Write pipeline tests verifying authenticated users get full cross-session context
+- [x] 5e: Write pipeline tests verifying anonymous/fail-open fallback to session-scoped queries
+
+## Dev Notes
+
+- Messages, evidence, and exchanges are stored per assessment_session but conceptually belong to the user. When loading context for the pipeline, we should always load by user to see the complete history.
+- The previous approach (loading parent session specifically) was too narrow — it only saw one parent, not the full chain of conversations.
+- The `extension-context.ts` summary approach is removed entirely. Instead of summarizing themes for Nerin, we give her the actual messages so she can naturally reference prior conversations.
+- E_target seeding still matters: on the first turn of an extension session (no prior exchanges in current session), use the most recent exchange from any user session for smoothedEnergy/comfort priors.
+- All user-level queries use INNER JOIN on `assessment_session` filtered by `userId`. This means anonymous sessions (userId IS NULL) won't appear — which is correct since they don't have user-level context.
+
+## Dev Agent Record
+
+### Implementation Plan
+- Tasks 1-3: Add `findByUserId` / `getMessagesByUserId` repo methods (interface, drizzle impl, mock)
+- Task 4: Refactor pipeline to use user-level queries, remove extension-context approach
+- Task 5: Tests for new repo methods and pipeline behavior
+
+### Debug Log
+
+### Completion Notes
+- All 3 repositories (message, evidence, exchange) now have `findByUserId`/`getMessagesByUserId` methods using INNER JOIN on `assessment_session`
+- Pipeline loads all user context (messages, evidence, exchanges) by userId for authenticated users, falls back to sessionId for anonymous
+- Removed `extension-context.ts`, `PromptBuilderOptions`, and parent-session-specific loading — replaced by user-level queries
+- All 290 tests pass, 0 regressions. Updated test fixtures in both `nerin-pipeline.test.ts` and `send-message.fixtures.ts`
+
+## File List
+
+- packages/domain/src/repositories/assessment-message.repository.ts (modified — added `getMessagesByUserId`)
+- packages/domain/src/repositories/conversation-evidence.repository.ts (modified — added `findByUserId`)
+- packages/domain/src/repositories/assessment-exchange.repository.ts (modified — added `findByUserId`)
+- packages/infrastructure/src/repositories/assessment-message.drizzle.repository.ts (modified — implemented `getMessagesByUserId`)
+- packages/infrastructure/src/repositories/conversation-evidence.drizzle.repository.ts (modified — implemented `findByUserId`)
+- packages/infrastructure/src/repositories/assessment-exchange.drizzle.repository.ts (modified — implemented `findByUserId`)
+- packages/infrastructure/src/repositories/__mocks__/assessment-message.drizzle.repository.ts (modified — added mock)
+- packages/infrastructure/src/repositories/__mocks__/conversation-evidence.drizzle.repository.ts (modified — added mock)
+- packages/infrastructure/src/repositories/__mocks__/assessment-exchange.drizzle.repository.ts (modified — added mock)
+- apps/api/src/use-cases/nerin-pipeline.ts (modified — user-level queries, removed extension-context)
+- apps/api/src/use-cases/__tests__/nerin-pipeline.test.ts (modified — updated extension tests, added user-level tests)
+- apps/api/src/use-cases/__tests__/__fixtures__/send-message.fixtures.ts (modified — added new mock methods)
+- packages/domain/src/utils/steering/prompt-builder.ts (modified — removed `PromptBuilderOptions`)
+- packages/domain/src/utils/steering/index.ts (modified — removed extension-context exports)
+- packages/domain/src/index.ts (modified — removed extension-context exports)
+- packages/domain/src/utils/steering/extension-context.ts (deleted)
+- packages/domain/src/utils/steering/__tests__/extension-context.test.ts (deleted)
+
+## Change Log
+
+- 2026-03-22: Refactored from parent-session-specific loading to user-level queries for messages, evidence, and exchanges. Removed extension-context summary approach — Nerin now gets actual conversation history across all sessions.

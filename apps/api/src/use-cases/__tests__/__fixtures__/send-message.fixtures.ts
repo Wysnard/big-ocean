@@ -38,6 +38,7 @@ export const mockSessionRepo = {
 export const mockMessageRepo = {
 	saveMessage: vi.fn(),
 	getMessages: vi.fn(),
+	getMessagesByUserId: vi.fn(),
 	getMessageCount: vi.fn(),
 	updateExchangeId: vi.fn(),
 };
@@ -61,6 +62,7 @@ export const mockConversanalyzerRepo = {
 export const mockEvidenceRepo = {
 	save: vi.fn(),
 	findBySession: vi.fn(),
+	findByUserId: vi.fn(),
 	countByMessage: vi.fn(),
 };
 
@@ -68,6 +70,7 @@ export const mockExchangeRepo = {
 	create: vi.fn(),
 	update: vi.fn(),
 	findBySession: vi.fn(),
+	findByUserId: vi.fn(),
 };
 
 export const mockCostGuardRepo = {
@@ -335,12 +338,14 @@ export function setupDefaultMocks() {
 		}),
 	);
 	mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(coldStartMessages));
+	mockMessageRepo.getMessagesByUserId.mockReturnValue(Effect.succeed(coldStartMessages));
 	mockMessageRepo.updateExchangeId.mockReturnValue(Effect.succeed(undefined));
 
 	mockExchangeRepo.create.mockReturnValue(Effect.succeed(mockExchangeRecord));
 	mockExchangeRepo.update.mockReturnValue(Effect.succeed(mockExchangeRecord));
 	// Default: opener exchange exists (created by start-assessment)
 	mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed([openerExchangeRecord]));
+	mockExchangeRepo.findByUserId.mockReturnValue(Effect.succeed([openerExchangeRecord]));
 
 	mockLoggerRepo.info.mockImplementation(() => {});
 	mockLoggerRepo.error.mockImplementation(() => {});
@@ -354,6 +359,7 @@ export function setupDefaultMocks() {
 
 	mockEvidenceRepo.save.mockReturnValue(Effect.succeed(undefined));
 	mockEvidenceRepo.findBySession.mockReturnValue(Effect.succeed([]));
+	mockEvidenceRepo.findByUserId.mockReturnValue(Effect.succeed([]));
 	mockEvidenceRepo.countByMessage.mockReturnValue(Effect.succeed(0));
 
 	mockCostGuardRepo.checkDailyBudget.mockReturnValue(Effect.void);

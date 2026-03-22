@@ -118,5 +118,12 @@ export class AssessmentExchangeRepository extends Context.Tag("AssessmentExchang
 		readonly findBySession: (
 			sessionId: string,
 		) => Effect.Effect<AssessmentExchangeRecord[], DatabaseError>;
+
+		/**
+		 * Find all exchanges for a user across all sessions, ordered by createdAt ascending.
+		 */
+		readonly findByUserId: (
+			userId: string,
+		) => Effect.Effect<AssessmentExchangeRecord[], DatabaseError>;
 	}
 >() {}

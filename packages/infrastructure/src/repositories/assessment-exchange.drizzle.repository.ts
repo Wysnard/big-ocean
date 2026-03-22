@@ -12,7 +12,7 @@ import { LoggerRepository } from "@workspace/domain/repositories/logger.reposito
 import { asc, eq } from "drizzle-orm";
 import { Effect, Layer } from "effect";
 import { Database } from "../context/database";
-import { assessmentExchange } from "../db/drizzle/schema";
+import { assessmentExchange, assessmentSession } from "../db/drizzle/schema";
 
 export const AssessmentExchangeDrizzleRepositoryLive = Layer.effect(
 	AssessmentExchangeRepository,
@@ -101,6 +101,51 @@ export const AssessmentExchangeDrizzleRepositoryLive = Layer.effect(
 								console.error("Logger failed in error handler:", logError);
 							}
 							return new DatabaseError({ message: "Failed to find exchanges" });
+						}),
+					),
+			findByUserId: (userId) =>
+				db
+					.select({
+						id: assessmentExchange.id,
+						sessionId: assessmentExchange.sessionId,
+						turnNumber: assessmentExchange.turnNumber,
+						energy: assessmentExchange.energy,
+						energyBand: assessmentExchange.energyBand,
+						telling: assessmentExchange.telling,
+						tellingBand: assessmentExchange.tellingBand,
+						withinMessageShift: assessmentExchange.withinMessageShift,
+						stateNotes: assessmentExchange.stateNotes,
+						extractionTier: assessmentExchange.extractionTier,
+						smoothedEnergy: assessmentExchange.smoothedEnergy,
+						comfort: assessmentExchange.comfort,
+						drain: assessmentExchange.drain,
+						drainCeiling: assessmentExchange.drainCeiling,
+						eTarget: assessmentExchange.eTarget,
+						scorerOutput: assessmentExchange.scorerOutput,
+						selectedTerritory: assessmentExchange.selectedTerritory,
+						selectionRule: assessmentExchange.selectionRule,
+						governorOutput: assessmentExchange.governorOutput,
+						governorDebug: assessmentExchange.governorDebug,
+						sessionPhase: assessmentExchange.sessionPhase,
+						transitionType: assessmentExchange.transitionType,
+						createdAt: assessmentExchange.createdAt,
+					})
+					.from(assessmentExchange)
+					.innerJoin(assessmentSession, eq(assessmentExchange.sessionId, assessmentSession.id))
+					.where(eq(assessmentSession.userId, userId))
+					.orderBy(asc(assessmentExchange.createdAt))
+					.pipe(
+						Effect.mapError((error) => {
+							try {
+								logger.error("Database operation failed", {
+									operation: "findExchangesByUserId",
+									userId,
+									error: error instanceof Error ? error.message : String(error),
+								});
+							} catch (logError) {
+								console.error("Logger failed in error handler:", logError);
+							}
+							return new DatabaseError({ message: "Failed to find exchanges by user" });
 						}),
 					),
 		});
