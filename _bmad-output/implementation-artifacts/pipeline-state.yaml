@@ -1,7 +1,7 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 10
-parallelism_step_name: "Relationship Analysis Display, Versioning & Notification"
-baseline_commit: "eff25e9ab6d84b6dfab6b27d0ec7934e6ed34266"
+parallelism_step: 11
+parallelism_step_name: "Dashboard (Final Integration)"
+baseline_commit: "1b598b5d28685448506dba87d6fc05ffc37ba206"
 created: "2026-03-22"
 last_updated: "2026-03-22"
 
@@ -14,43 +14,19 @@ context_docs:
 
 # Stories in this step
 stories:
-  35-3-relationship-analysis-display:
+  38-3-dashboard:
     status: done
-    mode: "parallel"
-    notes: "After 35-2. Reuses spine renderer from 32-5"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/183"
-    dev_branch: "feat/story-35-3-relationship-analysis-display"
-    error: null
-  35-4-version-management-and-cascade-deletion:
-    status: done
-    mode: "parallel"
-    notes: "After 35-2 + 30-2. Derive-at-read versioning"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/181"
-    dev_branch: "feat/story-35-4-version-management-and-cascade-deletion"
-    error: null
-  35-5-relationship-analysis-email-notification:
-    status: done
-    mode: "parallel"
-    notes: "After 35-2 + 31-7. Email on analysis ready"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/182"
-    dev_branch: "feat/story-35-5-relationship-analysis-email-notification"
+    mode: "—"
+    notes: "After 32-1, 32-5, 35-3. Aggregates all product surfaces"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/184"
+    dev_branch: "feat/story-38-3-dashboard"
     error: null
 
 # Conflict detection (populated by step-02b)
 conflicts:
-  detected: true
+  detected: false
+  note: "Single branch — conflict detection skipped (no overlaps possible)"
   scanned_branches:
-    - "feat/story-35-3-relationship-analysis-display"
-    - "feat/story-35-4-version-management-and-cascade-deletion"
-    - "feat/story-35-5-relationship-analysis-email-notification"
+    - "feat/story-38-3-dashboard"
   skipped_branches: []
-  overlapping_files:
-    - file: "packages/domain/src/repositories/relationship-analysis.repository.ts"
-      risk: high
-      branches: ["feat/story-35-4-version-management-and-cascade-deletion", "feat/story-35-5-relationship-analysis-email-notification"]
-    - file: "packages/infrastructure/src/repositories/relationship-analysis.drizzle.repository.ts"
-      risk: high
-      branches: ["feat/story-35-4-version-management-and-cascade-deletion", "feat/story-35-5-relationship-analysis-email-notification"]
-    - file: "packages/infrastructure/src/repositories/__mocks__/relationship-analysis.drizzle.repository.ts"
-      risk: high
-      branches: ["feat/story-35-4-version-management-and-cascade-deletion", "feat/story-35-5-relationship-analysis-email-notification"]
+  overlapping_files: []
