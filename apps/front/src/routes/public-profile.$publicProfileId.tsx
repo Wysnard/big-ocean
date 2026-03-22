@@ -268,10 +268,8 @@ function ProfilePage() {
 			? "authenticated-assessed"
 			: "authenticated-no-assessment";
 
-	// Own-profile detection: suppress relationship CTA when viewing your own profile
-	const isOwnProfile = (assessmentData?.sessions ?? []).some(
-		(s) => s.publicProfileId === publicProfileId,
-	);
+	// Own-profile detection: API returns isOwnProfile when viewer is authenticated
+	const isOwnProfile = profile?.isOwnProfile ?? false;
 
 	if (isLoading && !profile) return <ProfileLoading />;
 	if (error && !profile) return <ProfileErrorState error={error} />;

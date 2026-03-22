@@ -65,6 +65,10 @@ export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (ha
 						),
 					);
 
+					// Own-profile detection: check if the authenticated viewer owns this profile
+					const viewerUserId = yield* CurrentUser;
+					const isOwnProfile = !!viewerUserId && viewerUserId === result.userId;
+
 					return {
 						archetypeName: result.archetypeName,
 						oceanCode: result.oceanCode,
@@ -74,6 +78,7 @@ export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (ha
 						traitSummary: result.traitSummary,
 						facets: result.facets,
 						isPublic: result.isPublic,
+						isOwnProfile,
 					};
 				}),
 			)

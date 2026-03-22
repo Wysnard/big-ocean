@@ -39,6 +39,7 @@ export interface GetPublicProfileOutput {
 	readonly traitSummary: Record<string, string>;
 	readonly facets: FacetScoresMap;
 	readonly isPublic: boolean;
+	readonly userId: string | null;
 }
 
 /**
@@ -134,5 +135,6 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 			traitSummary,
 			facets,
 			isPublic: profile.isPublic,
+			userId: profile.userId,
 		};
 	});
