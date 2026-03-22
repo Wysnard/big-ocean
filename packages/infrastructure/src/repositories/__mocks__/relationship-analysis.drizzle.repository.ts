@@ -74,6 +74,18 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.succeed(
 
 		getById: (id) => Effect.sync(() => store.get(id) ?? null),
 
+		getParticipantEmails: (analysisId) =>
+			Effect.sync(() => {
+				const analysis = store.get(analysisId);
+				if (!analysis) return null;
+				return {
+					userAEmail: "usera@test.com",
+					userAName: "User A",
+					userBEmail: "userb@test.com",
+					userBName: "User B",
+				};
+			}),
+
 		getByIdWithParticipantNames: (id) =>
 			Effect.sync(() => {
 				const analysis = store.get(id);

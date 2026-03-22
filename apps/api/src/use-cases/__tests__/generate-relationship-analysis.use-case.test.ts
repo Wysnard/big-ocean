@@ -1,5 +1,5 @@
 /**
- * Generate Relationship Analysis Use Case Tests (Story 18-6, updated Story 35-2)
+ * Generate Relationship Analysis Use Case Tests (Story 18-6, updated Story 35-2, 35-5)
  *
  * Tests:
  * - Successful generation updates placeholder
@@ -7,19 +7,23 @@
  * - Retry when invitee data not found
  * - Idempotent update (already has content)
  * - Uses ConversationEvidenceRepository (not FinalizationEvidenceRepository)
+ * - Email notification sent after successful generation (Story 35-5)
+ * - Email notification NOT sent on idempotent skip (Story 35-5)
  */
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
 	AnalysisNotFoundError,
+	AppConfig,
 	AssessmentResultRepository,
 	AssessmentSessionRepository,
 	ConversationEvidenceRepository,
 	LoggerRepository,
 	RelationshipAnalysisGeneratorRepository,
 	RelationshipAnalysisRepository,
+	ResendEmailRepository,
 } from "@workspace/domain";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Redacted } from "effect";
 import { vi } from "vitest";
 import { generateRelationshipAnalysis } from "../generate-relationship-analysis.use-case";
 
@@ -29,6 +33,53 @@ const mockAnalysisRepo = {
 	incrementRetryCount: vi.fn(),
 	getByUserId: vi.fn(),
 	getById: vi.fn(),
+	getByIdWithParticipantNames: vi.fn(),
+	getParticipantEmails: vi.fn(),
+};
+
+const mockEmailRepo = {
+	sendEmail: vi.fn(),
+};
+
+const mockConfig = {
+	frontendUrl: "https://bigocean.dev",
+	databaseUrl: "",
+	redisUrl: "",
+	anthropicApiKey: Redacted.make("test"),
+	betterAuthSecret: Redacted.make("test"),
+	betterAuthUrl: "",
+	port: 4000,
+	nodeEnv: "test",
+	analyzerModelId: "",
+	analyzerMaxTokens: 0,
+	analyzerTemperature: 0,
+	portraitModelId: "",
+	portraitMaxTokens: 0,
+	portraitTemperature: 0,
+	nerinModelId: "",
+	nerinMaxTokens: 0,
+	nerinTemperature: 0,
+	dailyCostLimit: 0,
+	freeTierMessageThreshold: 0,
+	portraitWaitMinMs: 0,
+	shareMinConfidence: 0,
+	conversanalyzerModelId: "",
+	portraitGeneratorModelId: "",
+	messageRateLimit: 0,
+	polarAccessToken: Redacted.make("test"),
+	polarWebhookSecret: Redacted.make("test"),
+	polarProductPortraitUnlock: "",
+	polarProductRelationshipSingle: "",
+	polarProductRelationship5Pack: "",
+	polarProductExtendedConversation: "",
+	globalDailyAssessmentLimit: 0,
+	minEvidenceWeight: 0,
+	resendApiKey: Redacted.make("test"),
+	emailFromAddress: "noreply@bigocean.dev",
+	dropOffThresholdHours: 24,
+	checkInThresholdDays: 14,
+	recaptureThresholdDays: 3,
+	sessionCostLimitCents: 2000,
 };
 
 const mockAnalysisGen = {
@@ -76,6 +127,8 @@ const createTestLayer = () =>
 		Layer.succeed(AssessmentResultRepository, mockResultsRepo),
 		Layer.succeed(ConversationEvidenceRepository, mockConversationEvidenceRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
+		Layer.succeed(ResendEmailRepository, mockEmailRepo),
+		Layer.succeed(AppConfig, mockConfig),
 	);
 
 const INVITER_ID = "inviter-user-1";
@@ -147,6 +200,15 @@ describe("generateRelationshipAnalysis Use Case (Story 18-6)", () => {
 		);
 		mockAnalysisRepo.updateContent.mockReturnValue(Effect.succeed(undefined));
 		mockAnalysisRepo.incrementRetryCount.mockReturnValue(Effect.succeed(undefined));
+		mockAnalysisRepo.getParticipantEmails.mockReturnValue(
+			Effect.succeed({
+				userAEmail: "alice@example.com",
+				userAName: "Alice",
+				userBEmail: "bob@example.com",
+				userBName: "Bob",
+			}),
+		);
+		mockEmailRepo.sendEmail.mockReturnValue(Effect.void);
 	});
 
 	it.effect("should generate analysis and update placeholder on success", () =>
@@ -225,6 +287,37 @@ describe("generateRelationshipAnalysis Use Case (Story 18-6)", () => {
 				"Analysis already has content, skipping update",
 				expect.objectContaining({ analysisId: ANALYSIS_ID }),
 			);
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+
+	it.effect("should send email notification after successful generation (Story 35-5)", () =>
+		Effect.gen(function* () {
+			yield* generateRelationshipAnalysis({
+				analysisId: ANALYSIS_ID,
+				inviterUserId: INVITER_ID,
+				inviteeUserId: INVITEE_ID,
+			});
+
+			// Email sent to both users
+			expect(mockEmailRepo.sendEmail).toHaveBeenCalledTimes(2);
+			expect(mockAnalysisRepo.getParticipantEmails).toHaveBeenCalledWith(ANALYSIS_ID);
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+
+	it.effect("should NOT send email notification on idempotent skip (Story 35-5)", () =>
+		Effect.gen(function* () {
+			mockAnalysisRepo.updateContent.mockReturnValue(
+				Effect.fail(new AnalysisNotFoundError({ analysisId: ANALYSIS_ID })),
+			);
+
+			yield* generateRelationshipAnalysis({
+				analysisId: ANALYSIS_ID,
+				inviterUserId: INVITER_ID,
+				inviteeUserId: INVITEE_ID,
+			});
+
+			// No emails sent because content was already present
+			expect(mockEmailRepo.sendEmail).not.toHaveBeenCalled();
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
