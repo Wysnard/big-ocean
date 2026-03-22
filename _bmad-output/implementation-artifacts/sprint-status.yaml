@@ -573,7 +573,7 @@ development_status:
   33-1-public-profile-page: done
   33-2-og-meta-tags-and-social-preview: done
   33-3-share-flow-and-visibility-toggle: done
-  33-4-relationship-analysis-cta-on-public-profile: backlog
+  33-4-relationship-analysis-cta-on-public-profile: pr-ready
   epic-33-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -584,7 +584,7 @@ development_status:
   epic-34: in-progress
   34-1-qr-token-infrastructure: done
   34-2-qr-drawer-ui: done
-  34-3-qr-accept-screen-and-consent-gate: backlog
+  34-3-qr-accept-screen-and-consent-gate: pr-ready
   epic-34-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -610,7 +610,7 @@ development_status:
   epic-36: in-progress
   36-1-conversation-extension-purchase-and-session-creation: done
   36-2-extended-conversation-pipeline-initialization: done
-  36-3-extended-results-and-portrait-versioning: backlog
+  36-3-extended-results-and-portrait-versioning: pr-ready
   epic-36-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -630,6 +630,6 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-38: in-progress
   38-1-nerin-check-in-email: done
-  38-2-deferred-portrait-recapture-email: backlog
+  38-2-deferred-portrait-recapture-email: pr-ready
   38-3-dashboard: backlog
   epic-38-retrospective: optional

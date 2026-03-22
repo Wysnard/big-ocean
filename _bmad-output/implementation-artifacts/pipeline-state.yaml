@@ -1,7 +1,7 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 7
-parallelism_step_name: "Share Flow, QR Drawer, Extension Pipeline, Check-in Email"
-baseline_commit: "23a5b72c19ce142de83c5ba192b96648be87c07b"
+parallelism_step: 8
+parallelism_step_name: "Relationship CTA, QR Accept, Extension Results, Recapture Email"
+baseline_commit: "7f642eaab6bf6edf1c4dad33428f389e2e3d8084"
 created: "2026-03-22"
 last_updated: "2026-03-22"
 
@@ -14,45 +14,45 @@ context_docs:
 
 # Stories in this step
 stories:
-  33-3-share-flow-and-visibility-toggle:
+  33-4-relationship-analysis-cta-on-public-profile:
     status: done
     mode: "parallel"
-    notes: "After 33-1. Share action + public toggle prompt"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/171"
-    dev_branch: "feat/story-33-3-share-flow-and-visibility-toggle"
+    notes: "After 33-1. CTA on public profile page"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/175"
+    dev_branch: "feat/story-33-4-relationship-analysis-cta-on-public-profile"
     error: null
-  34-2-qr-drawer-ui:
+  34-3-qr-accept-screen-and-consent-gate:
     status: done
     mode: "parallel"
-    notes: "After 34-1. QR code rendering + status polling"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/172"
-    dev_branch: "feat/story-34-2-qr-drawer-ui"
+    notes: "After 34-2. Accept/refuse flow, credit consumption"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/178"
+    dev_branch: "feat/story-34-3-qr-accept-screen-and-consent-gate"
     error: null
-  36-2-extended-conversation-pipeline-initialization:
+  36-3-extended-results-and-portrait-versioning:
     status: done
     mode: "parallel"
-    notes: "After 36-1. Pipeline init from prior session state"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/173"
-    dev_branch: "feat/story-36-2-extended-conversation-pipeline-initialization"
+    notes: "After 36-2. Combined evidence scoring + versioning"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/177"
+    dev_branch: "feat/story-36-3-extended-results-and-portrait-versioning"
     error: null
-  38-1-nerin-check-in-email:
+  38-2-deferred-portrait-recapture-email:
     status: done
     mode: "parallel"
-    notes: "After 31-7. Scheduled email + Nerin voice"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/174"
-    dev_branch: "feat/story-38-1-nerin-check-in-email"
+    notes: "After 31-7 + 32-3. Portrait recapture email"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/176"
+    dev_branch: "feat/story-38-2-deferred-portrait-recapture-email"
     error: null
 
 # Conflict detection (populated by step-02b)
 conflicts:
   detected: true
   scanned_branches:
-    - "feat/story-33-3-share-flow-and-visibility-toggle"
-    - "feat/story-34-2-qr-drawer-ui"
-    - "feat/story-36-2-extended-conversation-pipeline-initialization"
-    - "feat/story-38-1-nerin-check-in-email"
+    - "feat/story-33-4-relationship-analysis-cta-on-public-profile"
+    - "feat/story-34-3-qr-accept-screen-and-consent-gate"
+    - "feat/story-36-3-extended-results-and-portrait-versioning"
+    - "feat/story-38-2-deferred-portrait-recapture-email"
   skipped_branches: []
   overlapping_files:
     - file: "packages/domain/src/index.ts"
       risk: high
-      branches: ["feat/story-36-2-extended-conversation-pipeline-initialization", "feat/story-38-1-nerin-check-in-email"]
+      branches: ["feat/story-36-3-extended-results-and-portrait-versioning", "feat/story-38-2-deferred-portrait-recapture-email"]
