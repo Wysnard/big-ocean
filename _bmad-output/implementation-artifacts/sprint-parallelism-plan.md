@@ -1,10 +1,10 @@
 # Sprint Parallelism Plan
-Generated: 2026-03-22 (refreshed — Step 7 complete)
+Generated: 2026-03-22 (refreshed — Step 8 complete)
 
 > Phase 7: Product Completeness & Launch Readiness
 > Source: epics.md (9 epics, 41 stories incl. sub-stories)
 > Only forward-looking stories included — all prior phases complete.
-> Steps 1-7 complete (31 stories merged). Step 8 unlocked.
+> Steps 1-8 complete (35 stories merged). Step 9 unlocked.
 >
 > Conservative parallelism: stories sharing a page, route, or domain area
 > are placed in separate steps even when technically independent.
@@ -30,15 +30,8 @@ All 4 stories merged: 33-2 (PR #167), 32-8 (PR #168), 36-1 (PR #169), 34-1 (PR #
 ## Step 7: COMPLETE (2026-03-22)
 All 4 stories merged: 33-3 (PR #171), 34-2 (PR #172), 36-2 (PR #173), 38-1 (PR #174).
 
-## Step 8: Relationship CTA, QR Accept, Extension Results, Recapture Email
-| Story | Mode | Notes |
-|-------|------|-------|
-| 33-4-relationship-analysis-cta-on-public-profile | parallel | After 33-1. CTA on public profile page |
-| 34-3-qr-accept-screen-and-consent-gate | parallel | After 34-2. Accept/refuse flow, credit consumption |
-| 36-3-extended-results-and-portrait-versioning | parallel | After 36-2. Combined evidence scoring + versioning |
-| 38-2-deferred-portrait-recapture-email | parallel | After 31-7 + 32-3. Portrait recapture email |
-
-**Gate:** All stories above must be done before proceeding.
+## Step 8: COMPLETE (2026-03-22)
+All 4 stories merged: 33-4 (PR #175), 36-3 (PR #177), 38-2 (PR #176), 34-3 (merged to master).
 
 ## Step 9: Ritual + Relationship Analysis Generation
 | Story | Mode | Notes |
@@ -71,9 +64,8 @@ All 4 stories merged: 33-3 (PR #171), 34-2 (PR #172), 36-2 (PR #173), 38-1 (PR #
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **11 steps** — Steps 1-7 complete (31 merged), Step 8 unlocked
-- **10 stories remaining** (Steps 8-11)
-- **Critical path:** 34-3 (Step 8) → 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
-- **Key enablers:** All Step 7 deliverables now merged — share flow (33-3), QR drawer (34-2), extension pipeline (36-2), check-in email (38-1)
+- **11 steps** — Steps 1-8 complete (36 merged), Step 9 unlocked
+- **6 stories remaining** (Steps 9-11)
+- **Critical path:** 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
 - **No shared-file conflicts within any step** — stories in the same step touch different pages/domains
-- **Next action:** Begin Step 8 — 4 parallel stories: 33-4 (relationship CTA), 34-3 (QR accept), 36-3 (extension results), 38-2 (recapture email)
+- **Next action:** Begin Step 9 — 2 parallel stories: 35-1 (ritual screen), 35-2 (analysis generation)

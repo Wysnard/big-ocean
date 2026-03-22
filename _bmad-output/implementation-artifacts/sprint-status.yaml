@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-22 (refreshed — Step 7 complete)
+generated: 2026-03-22 (refreshed — Step 8 complete, PRs #175-177 merged)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -569,11 +569,11 @@ development_status:
   # Public profile page, OG meta tags, share flow, relationship CTA
   # Stories: 4.1-4.4 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-33: in-progress
+  epic-33: done
   33-1-public-profile-page: done
   33-2-og-meta-tags-and-social-preview: done
   33-3-share-flow-and-visibility-toggle: done
-  33-4-relationship-analysis-cta-on-public-profile: pr-ready
+  33-4-relationship-analysis-cta-on-public-profile: done
   epic-33-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -581,10 +581,10 @@ development_status:
   # QR token infrastructure, QR drawer UI, accept screen & consent gate
   # Stories: 5.1-5.3 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-34: in-progress
+  epic-34: done
   34-1-qr-token-infrastructure: done
   34-2-qr-drawer-ui: done
-  34-3-qr-accept-screen-and-consent-gate: pr-ready
+  34-3-qr-accept-screen-and-consent-gate: done
   epic-34-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -607,10 +607,10 @@ development_status:
   # extended results & portrait versioning
   # Stories: 7.1-7.3 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-36: in-progress
+  epic-36: done
   36-1-conversation-extension-purchase-and-session-creation: done
   36-2-extended-conversation-pipeline-initialization: done
-  36-3-extended-results-and-portrait-versioning: pr-ready
+  36-3-extended-results-and-portrait-versioning: done
   epic-36-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -630,6 +630,6 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-38: in-progress
   38-1-nerin-check-in-email: done
-  38-2-deferred-portrait-recapture-email: pr-ready
+  38-2-deferred-portrait-recapture-email: done
   38-3-dashboard: backlog
   epic-38-retrospective: optional
