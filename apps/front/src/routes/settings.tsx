@@ -16,6 +16,7 @@ import { useToggleVisibility } from "../hooks/use-profile";
 import { getSession, signOut } from "../lib/auth-client";
 
 export const Route = createFileRoute("/settings")({
+	ssr: false,
 	beforeLoad: async () => {
 		const { data: session } = await getSession();
 		if (!session?.user) {

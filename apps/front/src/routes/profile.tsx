@@ -15,6 +15,7 @@ import { useAuth } from "../hooks/use-auth";
 import { getSession } from "../lib/auth-client";
 
 export const Route = createFileRoute("/profile")({
+	ssr: false,
 	beforeLoad: async () => {
 		const { data: session } = await getSession();
 		if (!session?.user) {

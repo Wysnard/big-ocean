@@ -19,6 +19,7 @@ import { makeApiClient } from "@/lib/api-client";
 import { getSession } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/relationship/$analysisId_/ritual")({
+	ssr: false,
 	beforeLoad: async () => {
 		const { data: session } = await getSession();
 		if (!session?.user) {
