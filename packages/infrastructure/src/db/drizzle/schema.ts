@@ -159,6 +159,7 @@ export const assessmentSession = pgTable(
 			.$onUpdate(() => new Date())
 			.notNull(),
 		dropOffEmailSentAt: timestamp("drop_off_email_sent_at"),
+		checkInEmailSentAt: timestamp("check_in_email_sent_at"),
 		parentSessionId: uuid("parent_session_id"),
 	},
 	(table) => [
@@ -450,11 +451,7 @@ export const waitlistEmails = pgTable("waitlist_emails", {
 
 // ─── QR Token Status Enum (Story 34-1) ─────────────────────────────────────
 
-export const qrTokenStatusEnum = pgEnum("qr_token_status", [
-	"active",
-	"accepted",
-	"expired",
-]);
+export const qrTokenStatusEnum = pgEnum("qr_token_status", ["active", "accepted", "expired"]);
 
 // ─── Relationship QR Tokens (Story 34-1, ADR-10) ──────────────────────────
 

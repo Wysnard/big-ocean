@@ -21,4 +21,9 @@ export const EmailGroup = HttpApiGroup.make("email")
 			.addSuccess(S.Struct({ emailsSent: S.Number }))
 			.addError(DatabaseError, { status: 500 }),
 	)
+	.add(
+		HttpApiEndpoint.post("checkCheckIn", "/check-check-in")
+			.addSuccess(S.Struct({ emailsSent: S.Number }))
+			.addError(DatabaseError, { status: 500 }),
+	)
 	.prefix("/email");
