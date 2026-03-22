@@ -40,7 +40,7 @@ export function shouldPollRelationshipAnalysis(
  * Fetch and poll a relationship analysis.
  * Polls every 5s while content is null (generating).
  */
-export function useRelationshipAnalysis(analysisId: string, enabled: boolean) {
+export function useRelationshipAnalysis(analysisId: string) {
 	return useQuery<RelationshipAnalysisResponse>({
 		queryKey: ["relationship", "analysis", analysisId],
 		queryFn: () =>
@@ -49,7 +49,6 @@ export function useRelationshipAnalysis(analysisId: string, enabled: boolean) {
 				return yield* client.relationship.getRelationshipAnalysis({ path: { analysisId } });
 			}).pipe(Effect.runPromise),
 		staleTime: 5 * 60 * 1000,
-		enabled,
 		refetchInterval: (query) =>
 			shouldPollRelationshipAnalysis(query.state.status, query.state.data?.content),
 	});
