@@ -10,6 +10,7 @@ interface PublicProfileCTAProps {
 	displayName: string;
 	publicProfileId: string;
 	authState: AuthState;
+	isOwnProfile?: boolean;
 }
 
 const CTA_CONTENT: Record<AuthState, { heading: string; subtext: string; buttonLabel: string }> = {
@@ -34,17 +35,22 @@ export function PublicProfileCTA({
 	displayName,
 	publicProfileId,
 	authState,
+	isOwnProfile = false,
 }: PublicProfileCTAProps) {
-	const content = CTA_CONTENT[authState];
+	// When viewing own profile as authenticated-assessed user, show the generic CTA
+	const effectiveAuthState =
+		isOwnProfile && authState === "authenticated-assessed" ? "unauthenticated" : authState;
+
+	const content = CTA_CONTENT[effectiveAuthState];
 	const heading =
-		authState === "authenticated-assessed"
+		effectiveAuthState === "authenticated-assessed"
 			? `You care about ${displayName}. Discover your dynamic together.`
 			: content.heading;
 
 	const href =
-		authState === "unauthenticated"
+		effectiveAuthState === "unauthenticated"
 			? "/signup"
-			: authState === "authenticated-no-assessment"
+			: effectiveAuthState === "authenticated-no-assessment"
 				? "/chat"
 				: `/relationship-analysis?with=${publicProfileId}`;
 

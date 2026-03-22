@@ -1,0 +1,30 @@
+prsProcessed: []
+currentPr:
+  prNumber: 175
+  storyKey: '33-4'
+  branch: 'feat/story-33-4-relationship-analysis-cta-on-public-profile'
+currentStage: checkout-rebase
+prQueue:
+  - prNumber: 175
+    storyKey: '33-4'
+    branch: 'feat/story-33-4-relationship-analysis-cta-on-public-profile'
+    dependencies: []
+    testSuites: []
+  - prNumber: 176
+    storyKey: '38-2'
+    branch: 'feat/story-38-2-deferred-portrait-recapture-email'
+    dependencies: []
+    testSuites: []
+  - prNumber: 177
+    storyKey: '36-3'
+    branch: 'feat/story-36-3-extended-results-and-portrait-versioning'
+    dependencies: []
+    testSuites: []
+  - prNumber: 178
+    storyKey: '34-3'
+    branch: 'feat/story-34-3-qr-accept-screen-and-consent-gate'
+    dependencies: []
+    testSuites: []
+staleTestsRemoved: []
+prResults: []
+startedAt: '2026-03-22'
