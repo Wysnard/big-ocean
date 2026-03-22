@@ -167,6 +167,9 @@ export const mockResultRepo = {
 	create: vi.fn(),
 	getBySessionId: vi.fn(),
 	update: vi.fn(),
+	upsert: vi.fn(),
+	updateStage: vi.fn(),
+	getLatestByUserId: vi.fn(),
 };
 
 export const mockConfig = {
@@ -298,6 +301,9 @@ export function setupDefaultMocks() {
 	mockMessageRepo.getMessages.mockImplementation(() => Effect.succeed([]));
 
 	mockResultRepo.getBySessionId.mockImplementation(() => Effect.succeed(DEFAULT_RESULT));
+
+	// Story 36-3: Default to returning the same result (latest version)
+	mockResultRepo.getLatestByUserId.mockImplementation(() => Effect.succeed(DEFAULT_RESULT));
 
 	mockSessionRepo.updateSession.mockImplementation((_id: string, partial: Record<string, unknown>) =>
 		Effect.succeed({ id: _id, ...partial }),

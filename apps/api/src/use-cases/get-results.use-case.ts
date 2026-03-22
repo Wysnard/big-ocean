@@ -33,6 +33,7 @@ import {
 	type FacetScoresMap,
 	generateOceanCode,
 	getFacetLevel,
+	isLatestVersion,
 	LoggerRepository,
 	lookupArchetype,
 	PublicProfileRepository,
@@ -62,6 +63,7 @@ export interface GetResultsOutput {
 	readonly publicProfileId: string | null;
 	readonly shareableUrl: string | null;
 	readonly isPublic: boolean | null;
+	readonly isLatestVersion: boolean;
 }
 
 /**
@@ -116,7 +118,14 @@ const lazyFinalize = (sessionId: string, _userId: string | null) =>
 
 		yield* Effect.gen(function* () {
 			// Fetch conversation evidence
-			const conversationEvidence = yield* conversationEvidenceRepo.findBySession(sessionId);
+			// Story 36-3: For extension sessions with authenticated users, use ALL user evidence
+			const session2 = yield* sessionRepo.getSession(sessionId);
+			const isExtension = session2.parentSessionId != null;
+			const hasAuthUser = session2.userId != null;
+			const conversationEvidence =
+				isExtension && hasAuthUser
+					? yield* conversationEvidenceRepo.findByUserId(session2.userId as string)
+					: yield* conversationEvidenceRepo.findBySession(sessionId);
 			const scoringInputs: EvidenceInput[] = conversationEvidence.map((ev) => ({
 				bigfiveFacet: ev.bigfiveFacet,
 				deviation: ev.deviation as -3 | -2 | -1 | 0 | 1 | 2 | 3,
@@ -271,7 +280,16 @@ export const getResults = (input: GetResultsInput) =>
 			};
 		});
 
-		// 10. Ensure public profile exists for authenticated users (private by default)
+		// 10. Determine version status (Story 36-3, fail-open: default to latest on error)
+		let latestVersion = true;
+		if (input.authenticatedUserId) {
+			const latestResult = yield* resultRepo
+				.getLatestByUserId(input.authenticatedUserId)
+				.pipe(Effect.catchTag("AssessmentResultError", () => Effect.succeed(null)));
+			latestVersion = isLatestVersion(result.id, latestResult?.id ?? null);
+		}
+
+		// 11. Ensure public profile exists for authenticated users (private by default)
 		let existingProfile = yield* profileRepo
 			.getProfileBySessionId(input.sessionId)
 			.pipe(Effect.catchAll(() => Effect.succeed(null)));
@@ -311,5 +329,6 @@ export const getResults = (input: GetResultsInput) =>
 				? `${config.frontendUrl}/public-profile/${existingProfile.id}`
 				: null,
 			isPublic: existingProfile?.isPublic ?? null,
+			isLatestVersion: latestVersion,
 		} satisfies GetResultsOutput;
 	});

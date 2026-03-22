@@ -31,6 +31,8 @@ export type RelationshipCardState = typeof RelationshipCardStateSchema.Type;
 const RelationshipAnalysisResponseSchema = S.Struct({
 	analysisId: S.String,
 	content: S.String,
+	/** Whether this analysis is based on both users' latest results (Story 36-3) */
+	isLatestVersion: S.Boolean,
 });
 
 export type RelationshipAnalysisResponse = typeof RelationshipAnalysisResponseSchema.Type;
