@@ -535,7 +535,6 @@ export {
 // Move Governor (Story 26-3)
 // Prompt Builder (Story 27-2)
 export {
-	buildExtensionContext,
 	buildPrompt,
 	buildTerritoryPrompt,
 	buildTerritorySystemPromptSection,
@@ -564,9 +563,6 @@ export {
 	type EnergyGuidanceLevel,
 	type ETargetInput,
 	type ETargetOutput,
-	type ExtensionContext,
-	type ExtensionEvidenceRecord,
-	type ExtensionExchangeRecord,
 	evaluateObservationGating,
 	type MoveGovernorInput,
 	type MoveGovernorResult,

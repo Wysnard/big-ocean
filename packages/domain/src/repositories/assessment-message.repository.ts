@@ -50,6 +50,16 @@ export class AssessmentMessageRepository extends Context.Tag("AssessmentMessageR
 		) => Effect.Effect<void, DatabaseError, never>;
 
 		/**
+		 * Get all messages for a user across all sessions
+		 *
+		 * @param userId - User identifier
+		 * @returns Effect with array of messages in chronological order across all sessions
+		 */
+		readonly getMessagesByUserId: (
+			userId: string,
+		) => Effect.Effect<AssessmentMessageEntity[], DatabaseError, never>;
+
+		/**
 		 * Get message count for a session
 		 *
 		 * @param sessionId - Session identifier

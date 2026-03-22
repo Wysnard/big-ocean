@@ -139,28 +139,18 @@ function buildSteeringSection(
 
 // ─── Main Build Function ────────────────────────────────────────────
 
-/** Options for the prompt builder. */
-export interface PromptBuilderOptions {
-	/** Optional extension context to include in the common layer (Story 36-2) */
-	readonly extensionContext?: string;
-}
-
 /**
  * Build the complete system prompt for Nerin from 2 layers.
  *
  * Composes:
- * 1. Common layer (persona + always-on modules + optional extension context)
+ * 1. Common layer (persona + always-on modules)
  * 2. Steering layer (prefix + template + pressure)
  *
  * @param input - PromptBuilderInput from the Move Governor
- * @param options - Optional configuration (extension context, etc.)
  * @returns PromptBuilderOutput with composed prompt and metadata
  * @throws Error if territory ID is not found in the catalog
  */
-export function buildPrompt(
-	input: PromptBuilderInput,
-	options?: PromptBuilderOptions,
-): PromptBuilderOutput {
+export function buildPrompt(input: PromptBuilderInput): PromptBuilderOutput {
 	const territory = TERRITORY_CATALOG.get(input.territory);
 
 	if (!territory) {
@@ -197,11 +187,8 @@ export function buildPrompt(
 	const focus = getObservationFocus(input);
 	const mirrorSet = getMirrorsForContext(input.intent, focus.type);
 
-	// Compose: common + extension context (if present) + steering + mirrors (if present)
+	// Compose: common + steering + mirrors (if present)
 	const parts = [commonLayer];
-	if (options?.extensionContext) {
-		parts.push(options.extensionContext);
-	}
 	parts.push(steeringSection);
 	if (mirrorSet) {
 		parts.push(mirrorSet);

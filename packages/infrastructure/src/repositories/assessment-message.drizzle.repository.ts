@@ -14,7 +14,7 @@ import { LoggerRepository } from "@workspace/domain/repositories/logger.reposito
 import { asc, eq, sql } from "drizzle-orm";
 import { Effect, Layer, Schema } from "effect";
 import { Database } from "../context/database";
-import { assessmentMessage } from "../db/drizzle/schema";
+import { assessmentMessage, assessmentSession } from "../db/drizzle/schema";
 
 export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 	AssessmentMessageRepository,
@@ -158,6 +158,61 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 							return new DatabaseError({ message: "Failed to update message exchange ID" });
 						}),
 					),
+
+			getMessagesByUserId: (userId) =>
+				Effect.gen(function* () {
+					const messages = yield* db
+						.select({
+							id: assessmentMessage.id,
+							sessionId: assessmentMessage.sessionId,
+							exchangeId: assessmentMessage.exchangeId,
+							role: assessmentMessage.role,
+							content: assessmentMessage.content,
+							createdAt: assessmentMessage.createdAt,
+						})
+						.from(assessmentMessage)
+						.innerJoin(assessmentSession, eq(assessmentMessage.sessionId, assessmentSession.id))
+						.where(eq(assessmentSession.userId, userId))
+						.orderBy(asc(assessmentMessage.createdAt))
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "getMessagesByUserId",
+										userId,
+										error: error instanceof Error ? error.message : String(error),
+										stack: error instanceof Error ? error.stack : undefined,
+									});
+								} catch (logError) {
+									console.error("Logger failed in error handler:", logError);
+								}
+
+								return new DatabaseError({
+									message: "Failed to fetch messages by user",
+								});
+							}),
+						);
+
+					return yield* Schema.decodeUnknown(
+						Schema.mutable(Schema.Array(AssessmentMessageEntitySchema)),
+					)(messages).pipe(
+						Effect.mapError((error) => {
+							try {
+								logger.error("Database operation failed", {
+									operation: "getMessagesByUserId",
+									userId,
+									error: `Schema parse error: ${error}`,
+								});
+							} catch (logError) {
+								console.error("Logger failed in error handler:", logError);
+							}
+
+							return new DatabaseError({
+								message: "Failed to fetch messages by user",
+							});
+						}),
+					);
+				}),
 
 			getMessageCount: (sessionId) =>
 				Effect.gen(function* () {

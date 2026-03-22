@@ -25,7 +25,6 @@ import {
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	aggregateDomainDistribution,
-	buildExtensionContext,
 	buildPrompt,
 	type ConversanalyzerV2Output,
 	ConversationEvidenceRepository,
@@ -367,8 +366,20 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		// ---- Gather context ----
 
-		// Get all messages for context (does NOT include current user message)
-		const previousMessages = yield* messageRepo.getMessages(input.sessionId);
+		const session = yield* sessionRepo.getSession(input.sessionId);
+		const isExtensionSession = !!session.parentSessionId;
+
+		// For authenticated users with prior sessions, load ALL messages across
+		// all their conversations so Nerin sees the full history as one continuous
+		// conversation. For anonymous/first-time users, load current session only.
+		const previousMessages = yield* input.userId
+			? messageRepo
+					.getMessagesByUserId(input.userId)
+					.pipe(Effect.catchAll(() => messageRepo.getMessages(input.sessionId)))
+			: messageRepo.getMessages(input.sessionId);
+
+		// Filter out messages from current session that haven't been saved yet
+		// (the current user message is appended in-memory below)
 
 		// Get previous exchanges for pipeline state
 		const previousExchanges = yield* exchangeRepo.findBySession(input.sessionId);
@@ -383,49 +394,38 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			{ id: `pending-${Date.now()}`, role: "user" as const, content: input.userMessage },
 		];
 
-		// Get existing evidence for scoring
-		const existingEvidence = yield* evidenceRepo.findBySession(input.sessionId);
+		// For authenticated users, load ALL evidence across all sessions for
+		// scoring coverage. For anonymous users, load current session only.
+		const allEvidence = yield* input.userId
+			? evidenceRepo
+					.findByUserId(input.userId)
+					.pipe(Effect.catchAll(() => evidenceRepo.findBySession(input.sessionId)))
+			: evidenceRepo.findBySession(input.sessionId);
 
 		// Current turn number (1-based, excludes opener exchange at turn 0)
 		const turnNumber = previousExchanges.filter((e) => e.turnNumber > 0).length + 1;
 		const totalTurns = config.freeTierMessageThreshold;
 
-		// ---- Extension session detection (Story 36-2) ----
-		// Load parent session data when this is a conversation extension session.
-		// The parent session's final state seeds E_target priors, evidence merges
-		// for coverage, visit history merges for freshness, and extension context
-		// is injected into the prompt builder.
+		// ---- Extension session context (Story 36-2) ----
+		// For extension sessions, load parent exchanges for E_target seeding
+		// and visit history merging. Messages and evidence are already loaded
+		// across all user sessions above.
 
-		const session = yield* sessionRepo.getSession(input.sessionId);
-		const isExtensionSession = !!session.parentSessionId;
 		let parentExchanges: typeof previousExchanges = [];
-		let parentEvidence: typeof existingEvidence = [];
-		let extensionContextSummary: string | undefined;
 
 		if (isExtensionSession && session.parentSessionId) {
-			// Load parent session data — fail gracefully if parent is gone
 			const parentExchangesResult = yield* exchangeRepo
 				.findBySession(session.parentSessionId)
 				.pipe(Effect.catchAll(() => Effect.succeed([] as typeof previousExchanges)));
 
-			const parentEvidenceResult = yield* evidenceRepo
-				.findBySession(session.parentSessionId)
-				.pipe(Effect.catchAll(() => Effect.succeed([] as typeof existingEvidence)));
-
 			parentExchanges = parentExchangesResult;
-			parentEvidence = parentEvidenceResult;
-
-			// Build extension context for prompt builder
-			const extensionCtx = buildExtensionContext(parentEvidenceResult as any[], parentExchangesResult);
-			extensionContextSummary = extensionCtx.summary || undefined;
 
 			logger.info("Extension session context loaded", {
 				sessionId: input.sessionId,
 				parentSessionId: session.parentSessionId,
 				parentExchangeCount: parentExchangesResult.length,
-				parentEvidenceCount: parentEvidenceResult.length,
-				visitedTerritories: extensionCtx.visitedTerritoryNames,
-				dominantFacets: extensionCtx.dominantFacets,
+				totalMessagesLoaded: previousMessages.length,
+				totalEvidenceLoaded: allEvidence.length,
 			});
 		}
 
@@ -477,12 +477,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		// ---- Step 2: Score all territories ----
 
-		// Merge evidence from parent + extension sessions for coverage computation (Story 36-2, AC3)
-		const mergedEvidence = isExtensionSession
-			? [...parentEvidence, ...existingEvidence]
-			: existingEvidence;
-
-		const facetMetrics = computeFacetMetrics(mergedEvidence as any[]);
+		const facetMetrics = computeFacetMetrics(allEvidence as any[]);
 
 		// Merge visit history from parent session for freshness penalty (Story 36-2, Task 3)
 		let visitHistory = buildPacingVisitHistory(pipelineExchanges);
@@ -565,9 +560,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		// ---- Step 6: Build system prompt via 2-layer prompt builder ----
 
-		const promptResult = buildPrompt(governorResult.output, {
-			extensionContext: extensionContextSummary,
-		});
+		const promptResult = buildPrompt(governorResult.output);
 
 		const tPacing = Date.now();
 
@@ -625,7 +618,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		// Always run extraction (no more cold-start skip)
 		if (turnNumber >= 1) {
-			const domainDistribution = aggregateDomainDistribution(mergedEvidence);
+			const domainDistribution = aggregateDomainDistribution(allEvidence);
 			const recentMessages: DomainMessage[] = domainMessages.slice(-6);
 
 			const extraction = yield* runThreeTierExtraction({
