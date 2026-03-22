@@ -133,6 +133,9 @@ export interface AppConfigService {
 	/** Days after assessment completion before sending Nerin check-in email (default: 14) */
 	readonly checkInThresholdDays: number;
 
+	/** Days after assessment completion before sending deferred portrait recapture email (default: 3) */
+	readonly recaptureThresholdDays: number;
+
 	// ─── Cost Guard Configuration (Story 31-6) ─────────────────────────
 
 	/** Per-session LLM cost limit in cents (default: 2000 = $0.20, matching NFR6) */

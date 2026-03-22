@@ -160,6 +160,7 @@ export const assessmentSession = pgTable(
 			.notNull(),
 		dropOffEmailSentAt: timestamp("drop_off_email_sent_at"),
 		checkInEmailSentAt: timestamp("check_in_email_sent_at"),
+		recaptureEmailSentAt: timestamp("recapture_email_sent_at"),
 		parentSessionId: uuid("parent_session_id"),
 	},
 	(table) => [
