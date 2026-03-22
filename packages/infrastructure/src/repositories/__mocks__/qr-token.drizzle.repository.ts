@@ -97,15 +97,11 @@ export const QrTokenDrizzleRepositoryLive = Layer.succeed(
 			Effect.gen(function* () {
 				const id = tokenIndex.get(input.token);
 				if (!id) {
-					return yield* Effect.fail(
-						new QrTokenNotFoundError({ message: "QR token not found" }),
-					);
+					return yield* Effect.fail(new QrTokenNotFoundError({ message: "QR token not found" }));
 				}
 				const qrToken = store.get(id);
 				if (!qrToken) {
-					return yield* Effect.fail(
-						new QrTokenNotFoundError({ message: "QR token not found" }),
-					);
+					return yield* Effect.fail(new QrTokenNotFoundError({ message: "QR token not found" }));
 				}
 				if (qrToken.userId === input.acceptedByUserId) {
 					return yield* Effect.fail(
@@ -118,9 +114,7 @@ export const QrTokenDrizzleRepositoryLive = Layer.succeed(
 					);
 				}
 				if (qrToken.status === "expired" || qrToken.expiresAt < new Date()) {
-					return yield* Effect.fail(
-						new QrTokenExpiredError({ message: "QR token has expired" }),
-					);
+					return yield* Effect.fail(new QrTokenExpiredError({ message: "QR token has expired" }));
 				}
 				const updated: QrToken = {
 					...qrToken,
@@ -154,6 +148,23 @@ export const QrTokenDrizzleRepositoryLive = Layer.succeed(
 					}
 				}
 				return null;
+			}),
+
+		getByTokenWithInitiatorName: (token) =>
+			Effect.gen(function* () {
+				const id = tokenIndex.get(token);
+				if (!id) {
+					return yield* Effect.fail(
+						new QrTokenNotFoundError({ message: `QR token not found: ${token}` }),
+					);
+				}
+				const qrToken = store.get(id);
+				if (!qrToken) {
+					return yield* Effect.fail(
+						new QrTokenNotFoundError({ message: `QR token not found: ${token}` }),
+					);
+				}
+				return { ...deriveStatus(qrToken), initiatorName: "Test User" };
 			}),
 	}),
 );

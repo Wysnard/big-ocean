@@ -10,6 +10,7 @@ import { AuthenticatedUser } from "@workspace/domain";
 import { DateTime, Effect } from "effect";
 import { acceptQrInvitation } from "../use-cases/accept-qr-invitation.use-case";
 import { generateQrToken } from "../use-cases/generate-qr-token.use-case";
+import { getQrTokenDetails } from "../use-cases/get-qr-token-details.use-case";
 import { getQrTokenStatus } from "../use-cases/get-qr-token-status.use-case";
 import { refuseQrInvitation } from "../use-cases/refuse-qr-invitation.use-case";
 
@@ -32,6 +33,12 @@ export const QrTokenGroupLive = HttpApiBuilder.group(BigOceanApi, "qrToken", (ha
 					yield* AuthenticatedUser;
 					const result = yield* getQrTokenStatus(path.token);
 					return result;
+				}),
+			)
+			.handle("getQrTokenDetails", ({ path }) =>
+				Effect.gen(function* () {
+					const userId = yield* AuthenticatedUser;
+					return yield* getQrTokenDetails(path.token, userId);
 				}),
 			)
 			.handle("acceptQrToken", ({ path }) =>

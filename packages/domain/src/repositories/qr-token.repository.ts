@@ -69,5 +69,13 @@ export class QrTokenRepository extends Context.Tag("QrTokenRepository")<
 		 * Returns null if no active token exists.
 		 */
 		readonly getActiveByUserId: (userId: string) => Effect.Effect<QrToken | null, DatabaseError>;
+
+		/**
+		 * Get a QR token with the initiator's display name (Story 34-3).
+		 * Joins the user table to include initiator name for the accept screen.
+		 */
+		readonly getByTokenWithInitiatorName: (
+			token: string,
+		) => Effect.Effect<QrToken & { initiatorName: string }, DatabaseError | QrTokenNotFoundError>;
 	}
 >() {}

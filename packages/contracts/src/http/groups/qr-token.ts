@@ -40,6 +40,25 @@ const RefuseQrTokenResponseSchema = S.Struct({
 	ok: S.Literal(true),
 });
 
+const QrTokenDetailsResponseSchema = S.Struct({
+	tokenStatus: S.Literal("valid", "accepted", "expired"),
+	initiator: S.Struct({
+		name: S.String,
+		archetypeName: S.String,
+		oceanCode4: S.String,
+		oceanCode5: S.String,
+		description: S.String,
+		color: S.String,
+		isCurated: S.Boolean,
+		overallConfidence: S.Number,
+	}),
+	acceptor: S.Struct({
+		overallConfidence: S.Number,
+		availableCredits: S.Number,
+		hasCompletedAssessment: S.Boolean,
+	}),
+});
+
 // ─── QR Token Group (authenticated) ─────────────────────────────────────
 
 export const QrTokenGroup = HttpApiGroup.make("qrToken")
@@ -67,6 +86,13 @@ export const QrTokenGroup = HttpApiGroup.make("qrToken")
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.add(
+		HttpApiEndpoint.get("getQrTokenDetails", "/qr/:token/details")
+			.setPath(S.Struct({ token: S.String }))
+			.addSuccess(QrTokenDetailsResponseSchema)
+			.addError(QrTokenNotFoundError, { status: 404 })
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
 		HttpApiEndpoint.post("refuseQrToken", "/qr/:token/refuse")
 			.setPath(S.Struct({ token: S.String }))
 			.addSuccess(RefuseQrTokenResponseSchema)
@@ -82,3 +108,4 @@ export type GenerateQrTokenResponse = typeof GenerateQrTokenResponseSchema.Type;
 export type QrTokenStatusResponse = typeof QrTokenStatusResponseSchema.Type;
 export type AcceptQrTokenResponse = typeof AcceptQrTokenResponseSchema.Type;
 export type RefuseQrTokenResponse = typeof RefuseQrTokenResponseSchema.Type;
+export type QrTokenDetailsResponse = typeof QrTokenDetailsResponseSchema.Type;
