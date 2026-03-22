@@ -13,7 +13,7 @@ import {
 import { eq, sql } from "drizzle-orm";
 import { Effect, Layer } from "effect";
 import { Database } from "../context/database";
-import { conversationEvidence } from "../db/drizzle/schema";
+import { assessmentSession, conversationEvidence } from "../db/drizzle/schema";
 
 export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 	ConversationEvidenceRepository,
@@ -61,6 +61,52 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 								(error) =>
 									new ConversationEvidenceError({
 										message: `Failed to find conversation evidence: ${error instanceof Error ? error.message : String(error)}`,
+									}),
+							),
+						);
+
+					return rows.map((row) => ({
+						id: row.id,
+						sessionId: row.assessmentSessionId,
+						messageId: row.assessmentMessageId,
+						exchangeId: row.exchangeId as string,
+						bigfiveFacet: row.bigfiveFacet as ConversationEvidenceRecord["bigfiveFacet"],
+						deviation: row.deviation,
+						strength: row.strength as ConversationEvidenceRecord["strength"],
+						confidence: row.confidence as ConversationEvidenceRecord["confidence"],
+						domain: row.domain as ConversationEvidenceRecord["domain"],
+						note: row.note,
+						createdAt: row.createdAt as Date,
+					}));
+				}),
+
+			findByUserId: (userId) =>
+				Effect.gen(function* () {
+					const rows = yield* db
+						.select({
+							id: conversationEvidence.id,
+							assessmentSessionId: conversationEvidence.assessmentSessionId,
+							assessmentMessageId: conversationEvidence.assessmentMessageId,
+							exchangeId: conversationEvidence.exchangeId,
+							bigfiveFacet: conversationEvidence.bigfiveFacet,
+							deviation: conversationEvidence.deviation,
+							strength: conversationEvidence.strength,
+							confidence: conversationEvidence.confidence,
+							domain: conversationEvidence.domain,
+							note: conversationEvidence.note,
+							createdAt: conversationEvidence.createdAt,
+						})
+						.from(conversationEvidence)
+						.innerJoin(
+							assessmentSession,
+							eq(conversationEvidence.assessmentSessionId, assessmentSession.id),
+						)
+						.where(eq(assessmentSession.userId, userId))
+						.pipe(
+							Effect.mapError(
+								(error) =>
+									new ConversationEvidenceError({
+										message: `Failed to find conversation evidence by user: ${error instanceof Error ? error.message : String(error)}`,
 									}),
 							),
 						);

@@ -61,6 +61,23 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.succeed(
 				}
 			}),
 
+		getMessagesByUserId: (_userId: string) =>
+			Effect.sync(() => {
+				// Return all messages across all sessions (mock doesn't track userId)
+				const all: Array<{
+					id: string;
+					sessionId: string;
+					role: string;
+					content: string;
+					exchangeId?: string | null;
+					createdAt: Date;
+				}> = [];
+				for (const [, sessionMessages] of messages) {
+					all.push(...sessionMessages);
+				}
+				return all.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+			}),
+
 		getMessageCount: (sessionId: string) => Effect.sync(() => (messages.get(sessionId) || []).length),
 	}),
 );

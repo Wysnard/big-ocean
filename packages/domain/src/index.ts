@@ -127,15 +127,15 @@ export {
 	InvalidFacetNameError,
 	InvitationAlreadyRespondedError,
 	InvitationNotFoundError,
-	QrTokenAlreadyAcceptedError,
-	QrTokenExpiredError,
-	QrTokenNotFoundError,
 	MalformedEvidenceError,
 	MessageRateLimitError,
 	NerinError,
 	ProfileError,
 	ProfileNotFound,
 	ProfilePrivate,
+	QrTokenAlreadyAcceptedError,
+	QrTokenExpiredError,
+	QrTokenNotFoundError,
 	RateLimitExceeded,
 	RelationshipAnalysisNotFoundError,
 	RelationshipAnalysisUnauthorizedError,
@@ -243,6 +243,8 @@ export type {
 } from "./repositories/purchase-event.repository";
 // Purchase event repository (Story 13.1, extended Story 13.3)
 export { PurchaseEventRepository } from "./repositories/purchase-event.repository";
+// QR token repository (Story 34-1)
+export { QrTokenRepository } from "./repositories/qr-token.repository";
 export {
 	RedisConnectionError,
 	RedisOperationError,
@@ -260,8 +262,6 @@ export {
 	type RelationshipAnalysisGenerationOutput,
 	RelationshipAnalysisGeneratorRepository,
 } from "./repositories/relationship-analysis-generator.repository";
-// QR token repository (Story 34-1)
-export { QrTokenRepository } from "./repositories/qr-token.repository";
 // Resend email repository (Story 31-7)
 export {
 	EmailError,

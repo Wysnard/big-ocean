@@ -188,7 +188,8 @@ export function buildPrompt(input: PromptBuilderInput): PromptBuilderOutput {
 	const mirrorSet = getMirrorsForContext(input.intent, focus.type);
 
 	// Compose: common + steering + mirrors (if present)
-	const parts = [commonLayer, steeringSection];
+	const parts = [commonLayer];
+	parts.push(steeringSection);
 	if (mirrorSet) {
 		parts.push(mirrorSet);
 	}

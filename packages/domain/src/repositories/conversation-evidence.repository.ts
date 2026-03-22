@@ -46,6 +46,9 @@ export class ConversationEvidenceRepository extends Context.Tag("ConversationEvi
 		readonly findBySession: (
 			sessionId: string,
 		) => Effect.Effect<ConversationEvidenceRecord[], ConversationEvidenceError>;
+		readonly findByUserId: (
+			userId: string,
+		) => Effect.Effect<ConversationEvidenceRecord[], ConversationEvidenceError>;
 		readonly countByMessage: (messageId: string) => Effect.Effect<number, ConversationEvidenceError>;
 	}
 >() {}

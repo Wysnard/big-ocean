@@ -79,5 +79,14 @@ export const AssessmentExchangeDrizzleRepositoryLive = Layer.succeed(
 				const sessionExchanges = exchanges.get(sessionId) || [];
 				return [...sessionExchanges].sort((a, b) => a.turnNumber - b.turnNumber);
 			}),
+
+		findByUserId: (_userId: string) =>
+			Effect.sync(() => {
+				const all: AssessmentExchangeRecord[] = [];
+				for (const [, sessionExchanges] of exchanges) {
+					all.push(...sessionExchanges);
+				}
+				return all.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+			}),
 	}),
 );

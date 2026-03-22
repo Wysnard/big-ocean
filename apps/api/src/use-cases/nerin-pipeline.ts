@@ -366,15 +366,31 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		// ---- Gather context ----
 
-		// Get all messages for context (does NOT include current user message)
-		const previousMessages = yield* messageRepo.getMessages(input.sessionId);
+		const session = yield* sessionRepo.getSession(input.sessionId);
+		const isExtensionSession = !!session.parentSessionId;
 
-		// Get previous exchanges for pipeline state
-		const previousExchanges = yield* exchangeRepo.findBySession(input.sessionId);
+		// Load all persisted messages — for authenticated users this spans all
+		// sessions so Nerin sees one continuous conversation history.
+		const savedMessages = yield* input.userId
+			? messageRepo
+					.getMessagesByUserId(input.userId)
+					.pipe(Effect.catchAll(() => messageRepo.getMessages(input.sessionId)))
+			: messageRepo.getMessages(input.sessionId);
 
-		// Map DB entities to domain messages + append current user message in-memory
+		// Current session exchanges — needed for turn counting and message linking.
+		const sessionExchanges = yield* exchangeRepo.findBySession(input.sessionId);
+
+		// For authenticated users, load ALL exchanges/evidence across all sessions
+		// for visit history, E_target seeding, and scoring coverage.
+		const allExchanges = yield* input.userId
+			? exchangeRepo
+					.findByUserId(input.userId)
+					.pipe(Effect.catchAll(() => exchangeRepo.findBySession(input.sessionId)))
+			: exchangeRepo.findBySession(input.sessionId);
+
+		// Append the current (not yet persisted) user message
 		const domainMessages: DomainMessage[] = [
-			...previousMessages.map((msg) => ({
+			...savedMessages.map((msg) => ({
 				id: msg.id,
 				role: msg.role,
 				content: msg.content,
@@ -382,39 +398,65 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			{ id: `pending-${Date.now()}`, role: "user" as const, content: input.userMessage },
 		];
 
-		// Get existing evidence for scoring
-		const existingEvidence = yield* evidenceRepo.findBySession(input.sessionId);
+		const allEvidence = yield* input.userId
+			? evidenceRepo
+					.findByUserId(input.userId)
+					.pipe(Effect.catchAll(() => evidenceRepo.findBySession(input.sessionId)))
+			: evidenceRepo.findBySession(input.sessionId);
 
 		// Current turn number (1-based, excludes opener exchange at turn 0)
-		const turnNumber = previousExchanges.filter((e) => e.turnNumber > 0).length + 1;
+		const turnNumber = sessionExchanges.filter((e) => e.turnNumber > 0).length + 1;
 		const totalTurns = config.freeTierMessageThreshold;
+
+		if (isExtensionSession) {
+			logger.info("Extension session context loaded", {
+				sessionId: input.sessionId,
+				parentSessionId: session.parentSessionId,
+				totalMessagesLoaded: savedMessages.length,
+				totalExchangesLoaded: allExchanges.length,
+				totalEvidenceLoaded: allEvidence.length,
+			});
+		}
 
 		const tContext = Date.now();
 
 		// ---- Step 1: Compute E_target ----
 
-		// Skip opener exchange (turn 0) — it has no extraction/steering data
-		const pipelineExchanges = previousExchanges.filter((e) => e.turnNumber > 0);
+		// All pipeline exchanges across all user sessions (skip opener turn 0)
+		const allPipelineExchanges = allExchanges.filter((e) => e.turnNumber > 0);
+		// Current session pipeline exchanges only (for session-specific state)
+		const sessionPipelineExchanges = sessionExchanges.filter((e) => e.turnNumber > 0);
 
-		const energyHistory = extractEnergyHistory(pipelineExchanges);
-		const tellingHistory = extractTellingHistory(pipelineExchanges);
+		const energyHistory = extractEnergyHistory(sessionPipelineExchanges);
+		const tellingHistory = extractTellingHistory(sessionPipelineExchanges);
 
-		// Get priors from the last pipeline exchange for incremental computation
-		const lastExchange =
-			pipelineExchanges.length > 0 ? pipelineExchanges[pipelineExchanges.length - 1] : null;
+		// E_target priors: use current session's last exchange, or fall back to
+		// the most recent exchange across all sessions (covers extension sessions).
+		const lastSessionExchange =
+			sessionPipelineExchanges.length > 0
+				? sessionPipelineExchanges[sessionPipelineExchanges.length - 1]
+				: null;
+		const lastAnyExchange =
+			allPipelineExchanges.length > 0 ? allPipelineExchanges[allPipelineExchanges.length - 1] : null;
+
+		const priorExchange = lastSessionExchange ?? lastAnyExchange;
+		const priorSmoothedEnergy = priorExchange?.smoothedEnergy ?? undefined;
+		const priorComfort = priorExchange?.comfort ?? undefined;
 
 		const eTargetResult = computeETargetV2({
 			energyHistory,
 			tellingHistory,
-			priorSmoothedEnergy: lastExchange?.smoothedEnergy ?? undefined,
-			priorComfort: lastExchange?.comfort ?? undefined,
+			priorSmoothedEnergy,
+			priorComfort,
 		});
 
 		// ---- Step 2: Score all territories ----
 
-		const facetMetrics = computeFacetMetrics(existingEvidence as any[]);
-		const visitHistory = buildPacingVisitHistory(pipelineExchanges);
-		const currentTerritory = getCurrentTerritory(pipelineExchanges);
+		const facetMetrics = computeFacetMetrics(allEvidence as any[]);
+
+		// Visit history and current territory from all user exchanges
+		const visitHistory = buildPacingVisitHistory(allPipelineExchanges);
+		const currentTerritory = getCurrentTerritory(allPipelineExchanges);
 
 		const scorerOutput = scoreAllTerritoriesV2({
 			eTarget: eTargetResult.eTarget,
@@ -452,7 +494,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			previousSmoothedClarity,
 		);
 
-		const sharedFireCount = countSharedFires(pipelineExchanges);
+		const sharedFireCount = countSharedFires(allPipelineExchanges);
 
 		// ---- Step 5: Run Move Governor ----
 
@@ -466,7 +508,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			turnNumber,
 			isFinalTurn,
 			expectedEnergy,
-			previousTerritory: getCurrentTerritory(pipelineExchanges),
+			previousTerritory: getCurrentTerritory(allPipelineExchanges),
 			phase: focusInputs.phase,
 			sharedFireCount,
 			relateStrength: focusInputs.relateStrength,
@@ -497,6 +539,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			entryPressure: governorResult.debug.entryPressure.level,
 			observationFocus: governorResult.debug.observationGating.winner?.type ?? "relate",
 			templateKey: promptResult.templateKey,
+			isExtensionSession,
 			topScoredTerritories: scorerOutput.ranked.slice(0, 3).map((t) => ({
 				id: t.territoryId,
 				score: +t.score.toFixed(3),
@@ -539,7 +582,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		// Always run extraction (no more cold-start skip)
 		if (turnNumber >= 1) {
-			const domainDistribution = aggregateDomainDistribution(existingEvidence);
+			const domainDistribution = aggregateDomainDistribution(allEvidence);
 			const recentMessages: DomainMessage[] = domainMessages.slice(-6);
 
 			const extraction = yield* runThreeTierExtraction({
@@ -643,14 +686,14 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		// Derive session phase and transition type
 		const sessionPhase = deriveSessionPhase(turnNumber, totalTurns);
-		const previousTerritory = getCurrentTerritory(pipelineExchanges);
+		const previousTerritory = getCurrentTerritory(allPipelineExchanges);
 		const transitionType = previousTerritory
 			? deriveTransitionType(selectedTerritoryId, previousTerritory)
 			: ("transition" as const);
 
 		// Previous exchange: opener (turn 0) or last pipeline exchange
 		const previousExchangeId =
-			previousExchanges.length > 0 ? previousExchanges[previousExchanges.length - 1]?.id : null;
+			sessionExchanges.length > 0 ? sessionExchanges[sessionExchanges.length - 1]?.id : null;
 
 		// --- Phase A: Close previous exchange ---
 		// Link user message to previous exchange (user is answering that AI question)
