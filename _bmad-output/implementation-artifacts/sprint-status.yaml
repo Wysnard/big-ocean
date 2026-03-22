@@ -596,9 +596,9 @@ development_status:
   epic-35: in-progress
   35-1-ritual-suggestion-screen: done
   35-2-relationship-analysis-generation: done
-  35-3-relationship-analysis-display: backlog
-  35-4-version-management-and-cascade-deletion: backlog
-  35-5-relationship-analysis-email-notification: backlog
+  35-3-relationship-analysis-display: pr-ready
+  35-4-version-management-and-cascade-deletion: pr-ready
+  35-5-relationship-analysis-email-notification: pr-ready
   epic-35-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
