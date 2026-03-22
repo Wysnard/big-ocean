@@ -1,8 +1,8 @@
 /**
- * Relationship HTTP API Groups (Story 14.4, updated Story 34-1)
+ * Relationship HTTP API Groups (Story 14.4, updated Story 34-1, Story 35-2)
  *
  * Simplified: Invitation endpoints removed (replaced by QR token endpoints in qr-token.ts).
- * Remaining: Authenticated analysis + state endpoints.
+ * Remaining: Authenticated analysis + state + retry endpoints.
  */
 
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
@@ -39,6 +39,14 @@ const RelationshipAnalysisResponseSchema = S.Struct({
 
 export type RelationshipAnalysisResponse = typeof RelationshipAnalysisResponseSchema.Type;
 
+/**
+ * Response for retry endpoint (Story 35-2).
+ * status: "generating" if retry was triggered, "ready" if already complete.
+ */
+const RetryRelationshipAnalysisResponseSchema = S.Struct({
+	status: S.Union(S.Literal("generating"), S.Literal("ready")),
+});
+
 // ─── Authenticated Group ──────────────────────────────────────────────────
 
 export const RelationshipGroup = HttpApiGroup.make("relationship")
@@ -51,6 +59,14 @@ export const RelationshipGroup = HttpApiGroup.make("relationship")
 		HttpApiEndpoint.get("getRelationshipAnalysis", "/analysis/:analysisId")
 			.setPath(S.Struct({ analysisId: S.String }))
 			.addSuccess(RelationshipAnalysisResponseSchema)
+			.addError(RelationshipAnalysisNotFoundError, { status: 404 })
+			.addError(RelationshipAnalysisUnauthorizedError, { status: 403 })
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
+		HttpApiEndpoint.post("retryRelationshipAnalysis", "/analysis/:analysisId/retry")
+			.setPath(S.Struct({ analysisId: S.String }))
+			.addSuccess(RetryRelationshipAnalysisResponseSchema)
 			.addError(RelationshipAnalysisNotFoundError, { status: 404 })
 			.addError(RelationshipAnalysisUnauthorizedError, { status: 403 })
 			.addError(DatabaseError, { status: 500 }),
