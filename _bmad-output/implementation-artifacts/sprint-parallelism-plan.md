@@ -1,10 +1,10 @@
 # Sprint Parallelism Plan
-Generated: 2026-03-22 (refreshed — Step 9 complete)
+Generated: 2026-03-22 (refreshed — Step 10 complete)
 
 > Phase 7: Product Completeness & Launch Readiness
 > Source: epics.md (9 epics, 41 stories incl. sub-stories)
 > Only forward-looking stories included — all prior phases complete.
-> Steps 1-9 complete (37 stories merged). Step 10 unlocked.
+> Steps 1-10 complete (41 stories merged). Step 11 unlocked.
 >
 > Conservative parallelism: stories sharing a page, route, or domain area
 > are placed in separate steps even when technically independent.
@@ -36,14 +36,8 @@ All 4 stories merged: 33-4 (PR #175), 36-3 (PR #177), 38-2 (PR #176), 34-3 (merg
 ## Step 9: COMPLETE (2026-03-22)
 All 2 stories merged: 35-1 (PR #179), 35-2 (PR #180).
 
-## Step 10: Relationship Analysis Display, Versioning & Notification
-| Story | Mode | Notes |
-|-------|------|-------|
-| 35-3-relationship-analysis-display | parallel | After 35-2. Reuses spine renderer from 32-5 |
-| 35-4-version-management-and-cascade-deletion | parallel | After 35-2 + 30-2. Derive-at-read versioning |
-| 35-5-relationship-analysis-email-notification | parallel | After 35-2 + 31-7. Email on analysis ready |
-
-**Gate:** All stories above must be done before proceeding.
+## Step 10: COMPLETE (2026-03-22)
+All 3 stories merged: 35-4 (PR #181), 35-5 (PR #182), 35-3 (PR #183).
 
 ## Step 11: Dashboard (Final Integration)
 | Story | Mode | Notes |
@@ -59,8 +53,8 @@ All 2 stories merged: 35-1 (PR #179), 35-2 (PR #180).
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **11 steps** — Steps 1-9 complete (38 merged), Step 10 unlocked
-- **4 stories remaining** (Steps 10-11)
-- **Critical path:** 35-3 (Step 10) → 38-3 (Step 11)
-- **No shared-file conflicts within any step** — stories in the same step touch different pages/domains
-- **Next action:** Begin Step 10 — 3 parallel stories: 35-3 (analysis display), 35-4 (versioning), 35-5 (email notification)
+- **11 steps** — Steps 1-10 complete (41 merged), Step 11 unlocked
+- **1 story remaining** (Step 11: 38-3 Dashboard)
+- **Critical path:** 38-3 (Dashboard) — last story before Phase 7 completion
+- **No shared-file conflicts** — single story step
+- **Next action:** Begin Step 11 — create story file for 38-3-dashboard, then implement
