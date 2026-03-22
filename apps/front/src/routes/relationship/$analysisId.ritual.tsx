@@ -5,19 +5,20 @@
  *
  * Auth-gated route that displays the ritual suggestion screen
  * before users view their relationship analysis. Both users see
- * this independently after QR acceptance.
+ * this independently after QR acceptance. Participant names are
+ * fetched from the analysis endpoint.
  */
 
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import type { RelationshipAnalysisResponse } from "@workspace/contracts/http/groups/relationship";
+import { Effect } from "effect";
 import { useCallback } from "react";
 import { RitualScreen } from "@/components/relationship/RitualScreen";
+import { makeApiClient } from "@/lib/api-client";
 import { getSession } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/relationship/$analysisId/ritual")({
-	validateSearch: (search: Record<string, unknown>) => ({
-		userAName: typeof search.userAName === "string" ? search.userAName : undefined,
-		userBName: typeof search.userBName === "string" ? search.userBName : undefined,
-	}),
 	beforeLoad: async () => {
 		const { data: session } = await getSession();
 		if (!session?.user) {
@@ -32,8 +33,17 @@ export const Route = createFileRoute("/relationship/$analysisId/ritual")({
 
 function RitualRoute() {
 	const { analysisId } = Route.useParams();
-	const { userAName, userBName } = Route.useSearch();
 	const navigate = useNavigate();
+
+	const { data } = useQuery<RelationshipAnalysisResponse>({
+		queryKey: ["relationship", "analysis", analysisId],
+		queryFn: () =>
+			Effect.gen(function* () {
+				const client = yield* makeApiClient;
+				return yield* client.relationship.getRelationshipAnalysis({ path: { analysisId } });
+			}).pipe(Effect.runPromise),
+		staleTime: 5 * 60 * 1000,
+	});
 
 	const handleStart = useCallback(() => {
 		void navigate({
@@ -42,5 +52,7 @@ function RitualRoute() {
 		});
 	}, [navigate, analysisId]);
 
-	return <RitualScreen userAName={userAName} userBName={userBName} onStart={handleStart} />;
+	return (
+		<RitualScreen userAName={data?.userAName} userBName={data?.userBName} onStart={handleStart} />
+	);
 }

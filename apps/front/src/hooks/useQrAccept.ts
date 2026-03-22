@@ -8,7 +8,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { acceptToken, fetchTokenDetails, refuseToken } from "@/lib/qr-token-api";
 
 export function useQrAccept(token: string) {
@@ -21,12 +21,6 @@ export function useQrAccept(token: string) {
 		staleTime: 30_000,
 	});
 
-	// Keep a ref to the latest initiator name for use in the accept callback
-	const initiatorNameRef = useRef<string | undefined>(undefined);
-	if (detailsQuery.data?.initiator?.name) {
-		initiatorNameRef.current = detailsQuery.data.initiator.name;
-	}
-
 	const acceptMutation = useMutation({
 		mutationKey: ["qr-token", "accept", token],
 		mutationFn: () => acceptToken(token),
@@ -34,9 +28,6 @@ export function useQrAccept(token: string) {
 			void navigate({
 				to: "/relationship/$analysisId/ritual",
 				params: { analysisId: data.analysisId },
-				search: {
-					userAName: initiatorNameRef.current,
-				},
 			});
 		},
 	});

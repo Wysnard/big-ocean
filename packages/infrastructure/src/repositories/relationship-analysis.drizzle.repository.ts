@@ -15,8 +15,9 @@ import {
 import type { RelationshipAnalysis } from "@workspace/domain/types/relationship.types";
 import { Database } from "@workspace/infrastructure/context/database";
 import { and, eq, isNull, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { Effect, Layer } from "effect";
-import { relationshipAnalyses } from "../db/drizzle/schema";
+import { relationshipAnalyses, user } from "../db/drizzle/schema";
 
 export const RelationshipAnalysisDrizzleRepositoryLive = Layer.effect(
 	RelationshipAnalysisRepository,
@@ -150,6 +151,42 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.effect(
 							return new DatabaseError({ message: "Failed to get analysis by id" });
 						}),
 					),
+
+			getByIdWithParticipantNames: (id) => {
+				const userA = alias(user, "userA");
+				const userB = alias(user, "userB");
+				return db
+					.select({
+						analysis: relationshipAnalyses,
+						userAName: userA.name,
+						userBName: userB.name,
+					})
+					.from(relationshipAnalyses)
+					.innerJoin(userA, eq(relationshipAnalyses.userAId, userA.id))
+					.innerJoin(userB, eq(relationshipAnalyses.userBId, userB.id))
+					.where(eq(relationshipAnalyses.id, id))
+					.pipe(
+						Effect.map((rows) => {
+							const row = rows[0];
+							if (!row) return null;
+							return {
+								...mapRow(row.analysis),
+								userAName: row.userAName,
+								userBName: row.userBName,
+							};
+						}),
+						Effect.mapError((error) => {
+							logger.error("Database operation failed", {
+								operation: "getByIdWithParticipantNames",
+								analysisId: id,
+								error: error instanceof Error ? error.message : String(error),
+							});
+							return new DatabaseError({
+								message: "Failed to get analysis with participant names",
+							});
+						}),
+					);
+			},
 		});
 	}),
 );
