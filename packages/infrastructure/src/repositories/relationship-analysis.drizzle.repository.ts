@@ -153,6 +153,35 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.effect(
 						}),
 					),
 
+			getParticipantEmails: (analysisId) => {
+				const userA = alias(user, "userA");
+				const userB = alias(user, "userB");
+				return db
+					.select({
+						userAEmail: userA.email,
+						userAName: userA.name,
+						userBEmail: userB.email,
+						userBName: userB.name,
+					})
+					.from(relationshipAnalyses)
+					.innerJoin(userA, eq(relationshipAnalyses.userAId, userA.id))
+					.innerJoin(userB, eq(relationshipAnalyses.userBId, userB.id))
+					.where(eq(relationshipAnalyses.id, analysisId))
+					.pipe(
+						Effect.map((rows) => rows[0] ?? null),
+						Effect.mapError((error) => {
+							logger.error("Database operation failed", {
+								operation: "getParticipantEmails",
+								analysisId,
+								error: error instanceof Error ? error.message : String(error),
+							});
+							return new DatabaseError({
+								message: "Failed to get participant emails",
+							});
+						}),
+					);
+			},
+
 			getByIdWithParticipantNames: (id) => {
 				const userA = alias(user, "userA");
 				const userB = alias(user, "userB");

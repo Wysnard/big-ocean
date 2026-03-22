@@ -19,6 +19,7 @@ import {
 } from "@workspace/domain";
 import type { ConversationEvidenceRecord } from "@workspace/domain/repositories/conversation-evidence.repository";
 import { Effect, Schedule } from "effect";
+import { sendRelationshipAnalysisNotification } from "./send-relationship-analysis-notification.use-case";
 
 export interface GenerateRelationshipAnalysisInput {
 	readonly analysisId: string;
@@ -122,6 +123,7 @@ export const generateRelationshipAnalysis = (input: GenerateRelationshipAnalysis
 			);
 
 		// 4. Update placeholder with generated content (idempotent)
+		let contentWasWritten = true;
 		yield* analysisRepo
 			.updateContent({
 				id: input.analysisId,
@@ -133,6 +135,7 @@ export const generateRelationshipAnalysis = (input: GenerateRelationshipAnalysis
 					logger.info("Analysis already has content, skipping update", {
 						analysisId: input.analysisId,
 					});
+					contentWasWritten = false;
 					return Effect.succeed(undefined);
 				}),
 			);
@@ -141,6 +144,21 @@ export const generateRelationshipAnalysis = (input: GenerateRelationshipAnalysis
 			analysisId: input.analysisId,
 			contentLength: result.content.length,
 		});
+
+		// 5. Send email notifications to both participants (fire-and-forget, Story 35-5)
+		if (contentWasWritten) {
+			yield* sendRelationshipAnalysisNotification({
+				analysisId: input.analysisId,
+			}).pipe(
+				Effect.catchAll((err) => {
+					logger.error("Failed to send relationship analysis notification (fail-open)", {
+						analysisId: input.analysisId,
+						error: err instanceof Error ? err.message : String(err),
+					});
+					return Effect.void;
+				}),
+			);
+		}
 
 		return { success: true };
 	});

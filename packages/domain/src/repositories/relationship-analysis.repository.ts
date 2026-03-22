@@ -65,5 +65,15 @@ export class RelationshipAnalysisRepository extends Context.Tag("RelationshipAna
 			ReadonlyArray<RelationshipAnalysis & { userAName: string; userBName: string }>,
 			DatabaseError
 		>;
+
+		readonly getParticipantEmails: (analysisId: string) => Effect.Effect<
+			{
+				userAEmail: string;
+				userAName: string;
+				userBEmail: string;
+				userBName: string;
+			} | null,
+			DatabaseError
+		>;
 	}
 >() {}
