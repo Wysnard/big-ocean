@@ -1,17 +1,16 @@
 import { createFileRoute, isRedirect, redirect, useNavigate } from "@tanstack/react-router";
-import { Schema as S } from "effect";
+import { Effect, Schema as S } from "effect";
 import { Loader2 } from "lucide-react";
 import { useCallback } from "react";
 import { TherapistChat } from "@/components/TherapistChat";
 import { WaitlistForm } from "@/components/waitlist/waitlist-form";
 import { useAuth } from "@/hooks/use-auth";
+import { makeApiClient } from "@/lib/api-client";
 import { getSession } from "@/lib/auth-client";
 import {
 	clearPendingResultsGateSession,
 	readPendingResultsGateSession,
 } from "@/lib/results-auth-gate-storage";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 // URL search params arrive as strings; accept both "true"/"false" and native booleans
 const BooleanFromSearch = S.Union(
@@ -39,6 +38,12 @@ export const Route = createFileRoute("/chat/")({
 	beforeLoad: async (context) => {
 		const { search } = context;
 
+		// Redirect unauthenticated users to sign-in
+		const { data: sessionData } = await getSession();
+		if (!sessionData?.user) {
+			throw redirect({ to: "/login", search: { sessionId: undefined, redirectTo: undefined } });
+		}
+
 		if (!search.sessionId && !search.waitlist && !search.expired) {
 			// Story 7.18 AC #6: Recover pending session from localStorage (anonymous user returning)
 			const pending = readPendingResultsGateSession();
@@ -57,37 +62,20 @@ export const Route = createFileRoute("/chat/")({
 				});
 			}
 
-			const response = await fetch(`${API_URL}/api/assessment/start`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({}),
-				credentials: "include",
-			});
+			const data = await Effect.gen(function* () {
+				const client = yield* makeApiClient;
+				return yield* client.assessment.start({ payload: {} });
+			}).pipe(
+				Effect.catchTag("GlobalAssessmentLimitReached", () =>
+					Effect.fail(redirect({ to: "/chat", search: { waitlist: true } })),
+				),
+				Effect.catchTag("AssessmentAlreadyExists", (e) =>
+					// Story 31-5: The listSessions check below will redirect completed sessions to results
+					Effect.fail(redirect({ to: "/chat", search: { sessionId: e.existingSessionId } })),
+				),
+				Effect.runPromise,
+			);
 
-			if (!response.ok) {
-				const error = await response.json().catch(() => ({ message: response.statusText }));
-
-				// 503 + GlobalAssessmentLimitReached = circuit breaker active — show waitlist
-				if (response.status === 503 && error._tag === "GlobalAssessmentLimitReached") {
-					throw redirect({
-						to: "/chat",
-						search: { waitlist: true },
-					});
-				}
-
-				// 409 = user already has an assessment — redirect to existing session
-				// Story 31-5: The listSessions check below will redirect completed sessions to results
-				if (response.status === 409 && error.existingSessionId) {
-					throw redirect({
-						to: "/chat",
-						search: { sessionId: error.existingSessionId },
-					});
-				}
-
-				throw new Error(error.message || `Failed to start assessment: ${response.status}`);
-			}
-
-			const data = await response.json();
 			throw redirect({
 				to: "/chat",
 				search: { sessionId: data.sessionId },
@@ -98,22 +86,19 @@ export const Route = createFileRoute("/chat/")({
 		// When an authenticated user navigates here with a sessionId (e.g., post-auth redirect
 		// from ChatAuthGate), verify the session was actually linked to their account.
 		// If not (conflict — user already had a different session), redirect to their real session.
-		const { data: session } = await getSession();
-		if (session?.user && search.sessionId) {
+		if (search.sessionId) {
 			try {
-				const res = await fetch(`${API_URL}/api/assessment/sessions`, {
-					credentials: "include",
-				});
-				if (res.ok) {
-					const data = await res.json();
+				const data = await Effect.gen(function* () {
+					const client = yield* makeApiClient;
+					return yield* client.assessment.listSessions();
+				}).pipe(Effect.runPromise);
 
-					const linked = data.sessions?.some((s: { id: string }) => s.id === search.sessionId);
-					if (!linked && data.sessions?.length > 0) {
-						throw redirect({
-							to: "/chat",
-							search: { sessionId: data.sessions[0].id },
-						});
-					}
+				const linked = data.sessions.some((s) => s.id === search.sessionId);
+				if (!linked && data.sessions.length > 0) {
+					throw redirect({
+						to: "/chat",
+						search: { sessionId: data.sessions[0].id },
+					});
 				}
 			} catch (e) {
 				if (isRedirect(e)) throw e;
