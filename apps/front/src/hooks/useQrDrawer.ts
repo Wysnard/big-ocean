@@ -6,11 +6,13 @@
  * - Exposes pollNow() for status checking (component sets up interval)
  * - Auto-regenerates token when near expiry (< 55 min remaining)
  * - Cleans up on close or unmount
+ *
+ * Uses Effect HttpApiClient with @workspace/contracts for type-safe API calls.
  */
 
+import { Effect } from "effect";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+import { makeApiClient } from "../lib/api-client";
 
 export const POLL_INTERVAL_MS = 60_000;
 const REGENERATE_THRESHOLD_MS = 55 * 60 * 1000; // Regenerate when < 55 min remaining
@@ -42,27 +44,25 @@ async function generateToken(): Promise<{
 	shareUrl: string;
 	expiresAt: string;
 }> {
-	const response = await fetch(`${API_URL}/api/relationship/qr/generate`, {
-		method: "POST",
-		credentials: "include",
-		headers: { "Content-Type": "application/json" },
-	});
-	if (!response.ok) {
-		throw new Error(`HTTP ${response.status}`);
-	}
-	return response.json();
+	const result = await Effect.gen(function* () {
+		const client = yield* makeApiClient;
+		return yield* client.qrToken.generateQrToken({});
+	}).pipe(Effect.runPromise);
+
+	return {
+		token: result.token,
+		shareUrl: result.shareUrl,
+		expiresAt: String(result.expiresAt),
+	};
 }
 
 async function fetchTokenStatus(
 	token: string,
 ): Promise<{ status: "valid" | "accepted" | "expired" }> {
-	const response = await fetch(`${API_URL}/api/relationship/qr/${token}/status`, {
-		credentials: "include",
-	});
-	if (!response.ok) {
-		throw new Error(`HTTP ${response.status}`);
-	}
-	return response.json();
+	return Effect.gen(function* () {
+		const client = yield* makeApiClient;
+		return yield* client.qrToken.getQrTokenStatus({ path: { token } });
+	}).pipe(Effect.runPromise);
 }
 
 export function useQrDrawer() {
