@@ -1,8 +1,8 @@
 /**
- * Relationship Credits Section (Story 14.1, updated Story 34-1)
+ * Relationship Credits Section (Story 14.1, updated Story 34-1, 34-2)
  *
- * Displays available relationship credits and purchase options on the results page.
- * Invitation flow removed — replaced by QR token flow in Story 5.2.
+ * Displays available relationship credits, purchase options, and QR drawer trigger
+ * on the results page.
  */
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ import { Button } from "@workspace/ui/components/button";
 import { useTheme } from "@workspace/ui/hooks/use-theme";
 import { Heart, Loader2, Users } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { QrDrawerWithTrigger } from "@/components/relationship/QrDrawer";
 import { useAuth } from "@/hooks/use-auth";
 import { createThemedCheckoutEmbed } from "@/lib/polar-checkout";
 
@@ -143,7 +144,9 @@ export function RelationshipCreditsSection() {
 				</span>
 			</div>
 
-			{!hasCredits && (
+			{hasCredits ? (
+				<QrDrawerWithTrigger />
+			) : (
 				<div className="space-y-2">
 					<Button
 						data-testid="get-credits-button"
