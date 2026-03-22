@@ -1,5 +1,5 @@
 /**
- * Generate Relationship Analysis Use Case Tests (Story 18-6)
+ * Generate Relationship Analysis Use Case Tests (Story 18-6, updated Story 35-2)
  *
  * Tests:
  * - Successful generation updates placeholder
@@ -11,6 +11,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
+	AnalysisNotFoundError,
 	AssessmentResultRepository,
 	AssessmentSessionRepository,
 	ConversationEvidenceRepository,
@@ -18,7 +19,6 @@ import {
 	RelationshipAnalysisGeneratorRepository,
 	RelationshipAnalysisRepository,
 } from "@workspace/domain";
-import { AnalysisNotFoundError } from "@workspace/domain/repositories/relationship-analysis.repository";
 import { Effect, Layer } from "effect";
 import { vi } from "vitest";
 import { generateRelationshipAnalysis } from "../generate-relationship-analysis.use-case";
@@ -135,7 +135,13 @@ describe("generateRelationshipAnalysis Use Case (Story 18-6)", () => {
 		);
 		mockAnalysisGen.generateAnalysis.mockReturnValue(
 			Effect.succeed({
-				content: "# Relationship Analysis\n\nYour dynamic is fascinating...",
+				content: JSON.stringify([
+					{
+						emoji: "\u{1F30A}",
+						title: "The Dynamic Between You",
+						paragraphs: ["Your dynamic is fascinating."],
+					},
+				]),
 				modelUsed: "claude-sonnet",
 			}),
 		);
@@ -162,7 +168,7 @@ describe("generateRelationshipAnalysis Use Case (Story 18-6)", () => {
 
 			expect(mockAnalysisRepo.updateContent).toHaveBeenCalledWith({
 				id: ANALYSIS_ID,
-				content: expect.stringContaining("Relationship Analysis"),
+				content: expect.stringContaining("The Dynamic Between You"),
 				modelUsed: "claude-sonnet",
 			});
 		}).pipe(Effect.provide(createTestLayer())),
