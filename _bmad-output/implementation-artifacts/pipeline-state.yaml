@@ -1,7 +1,7 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 8
-parallelism_step_name: "Relationship CTA, QR Accept, Extension Results, Recapture Email"
-baseline_commit: "7f642eaab6bf6edf1c4dad33428f389e2e3d8084"
+parallelism_step: 9
+parallelism_step_name: "Ritual + Relationship Analysis Generation"
+baseline_commit: "a37e18c332d11a14a9978eaae9fb05ff9dd9612b"
 created: "2026-03-22"
 last_updated: "2026-03-22"
 
@@ -14,45 +14,26 @@ context_docs:
 
 # Stories in this step
 stories:
-  33-4-relationship-analysis-cta-on-public-profile:
+  35-1-ritual-suggestion-screen:
     status: done
     mode: "parallel"
-    notes: "After 33-1. CTA on public profile page"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/175"
-    dev_branch: "feat/story-33-4-relationship-analysis-cta-on-public-profile"
+    notes: "After 34-3. Frontend ritual screen"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/179"
+    dev_branch: "feat/story-35-1-ritual-suggestion-screen"
     error: null
-  34-3-qr-accept-screen-and-consent-gate:
+  35-2-relationship-analysis-generation:
     status: done
     mode: "parallel"
-    notes: "After 34-2. Accept/refuse flow, credit consumption"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/178"
-    dev_branch: "feat/story-34-3-qr-accept-screen-and-consent-gate"
-    error: null
-  36-3-extended-results-and-portrait-versioning:
-    status: done
-    mode: "parallel"
-    notes: "After 36-2. Combined evidence scoring + versioning"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/177"
-    dev_branch: "feat/story-36-3-extended-results-and-portrait-versioning"
-    error: null
-  38-2-deferred-portrait-recapture-email:
-    status: done
-    mode: "parallel"
-    notes: "After 31-7 + 32-3. Portrait recapture email"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/176"
-    dev_branch: "feat/story-38-2-deferred-portrait-recapture-email"
+    notes: "After 34-3. Sonnet agent, backend generation daemon"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/180"
+    dev_branch: "feat/story-35-2-relationship-analysis-generation"
     error: null
 
 # Conflict detection (populated by step-02b)
 conflicts:
-  detected: true
+  detected: false
   scanned_branches:
-    - "feat/story-33-4-relationship-analysis-cta-on-public-profile"
-    - "feat/story-34-3-qr-accept-screen-and-consent-gate"
-    - "feat/story-36-3-extended-results-and-portrait-versioning"
-    - "feat/story-38-2-deferred-portrait-recapture-email"
+    - "feat/story-35-1-ritual-suggestion-screen"
+    - "feat/story-35-2-relationship-analysis-generation"
   skipped_branches: []
-  overlapping_files:
-    - file: "packages/domain/src/index.ts"
-      risk: high
-      branches: ["feat/story-36-3-extended-results-and-portrait-versioning", "feat/story-38-2-deferred-portrait-recapture-email"]
+  overlapping_files: []

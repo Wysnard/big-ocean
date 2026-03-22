@@ -593,9 +593,9 @@ development_status:
   # email notification
   # Stories: 6.1-6.5 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-35: backlog
-  35-1-ritual-suggestion-screen: backlog
-  35-2-relationship-analysis-generation: backlog
+  epic-35: in-progress
+  35-1-ritual-suggestion-screen: pr-ready
+  35-2-relationship-analysis-generation: pr-ready
   35-3-relationship-analysis-display: backlog
   35-4-version-management-and-cascade-deletion: backlog
   35-5-relationship-analysis-email-notification: backlog
