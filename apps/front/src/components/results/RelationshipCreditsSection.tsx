@@ -5,34 +5,15 @@
  * on the results page.
  */
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { GetCreditsResponse } from "@workspace/contracts";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@workspace/ui/components/button";
 import { useTheme } from "@workspace/ui/hooks/use-theme";
 import { Heart, Loader2, Users } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { QrDrawerWithTrigger } from "@/components/relationship/QrDrawer";
 import { useAuth } from "@/hooks/use-auth";
+import { useCredits } from "@/hooks/useCredits";
 import { createThemedCheckoutEmbed } from "@/lib/polar-checkout";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
-
-function useCredits(enabled: boolean) {
-	return useQuery<GetCreditsResponse>({
-		queryKey: ["purchase", "credits"],
-		queryFn: async () => {
-			const response = await fetch(`${API_URL}/api/purchase/credits`, {
-				credentials: "include",
-			});
-			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}`);
-			}
-			return response.json();
-		},
-		staleTime: 30_000,
-		enabled,
-	});
-}
 
 export function RelationshipCreditsSection() {
 	const { user } = useAuth();
