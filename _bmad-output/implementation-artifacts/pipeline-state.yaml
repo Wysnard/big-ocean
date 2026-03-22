@@ -1,7 +1,7 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 9
-parallelism_step_name: "Ritual + Relationship Analysis Generation"
-baseline_commit: "a37e18c332d11a14a9978eaae9fb05ff9dd9612b"
+parallelism_step: 10
+parallelism_step_name: "Relationship Analysis Display, Versioning & Notification"
+baseline_commit: "eff25e9ab6d84b6dfab6b27d0ec7934e6ed34266"
 created: "2026-03-22"
 last_updated: "2026-03-22"
 
@@ -14,26 +14,43 @@ context_docs:
 
 # Stories in this step
 stories:
-  35-1-ritual-suggestion-screen:
+  35-3-relationship-analysis-display:
     status: done
     mode: "parallel"
-    notes: "After 34-3. Frontend ritual screen"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/179"
-    dev_branch: "feat/story-35-1-ritual-suggestion-screen"
+    notes: "After 35-2. Reuses spine renderer from 32-5"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/183"
+    dev_branch: "feat/story-35-3-relationship-analysis-display"
     error: null
-  35-2-relationship-analysis-generation:
+  35-4-version-management-and-cascade-deletion:
     status: done
     mode: "parallel"
-    notes: "After 34-3. Sonnet agent, backend generation daemon"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/180"
-    dev_branch: "feat/story-35-2-relationship-analysis-generation"
+    notes: "After 35-2 + 30-2. Derive-at-read versioning"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/181"
+    dev_branch: "feat/story-35-4-version-management-and-cascade-deletion"
+    error: null
+  35-5-relationship-analysis-email-notification:
+    status: done
+    mode: "parallel"
+    notes: "After 35-2 + 31-7. Email on analysis ready"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/182"
+    dev_branch: "feat/story-35-5-relationship-analysis-email-notification"
     error: null
 
 # Conflict detection (populated by step-02b)
 conflicts:
-  detected: false
+  detected: true
   scanned_branches:
-    - "feat/story-35-1-ritual-suggestion-screen"
-    - "feat/story-35-2-relationship-analysis-generation"
+    - "feat/story-35-3-relationship-analysis-display"
+    - "feat/story-35-4-version-management-and-cascade-deletion"
+    - "feat/story-35-5-relationship-analysis-email-notification"
   skipped_branches: []
-  overlapping_files: []
+  overlapping_files:
+    - file: "packages/domain/src/repositories/relationship-analysis.repository.ts"
+      risk: high
+      branches: ["feat/story-35-4-version-management-and-cascade-deletion", "feat/story-35-5-relationship-analysis-email-notification"]
+    - file: "packages/infrastructure/src/repositories/relationship-analysis.drizzle.repository.ts"
+      risk: high
+      branches: ["feat/story-35-4-version-management-and-cascade-deletion", "feat/story-35-5-relationship-analysis-email-notification"]
+    - file: "packages/infrastructure/src/repositories/__mocks__/relationship-analysis.drizzle.repository.ts"
+      risk: high
+      branches: ["feat/story-35-4-version-management-and-cascade-deletion", "feat/story-35-5-relationship-analysis-email-notification"]
