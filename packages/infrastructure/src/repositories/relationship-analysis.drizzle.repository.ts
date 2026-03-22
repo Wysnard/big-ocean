@@ -1,9 +1,10 @@
 /**
- * Relationship Analysis Repository Implementation (Story 14.4, updated Story 34-1)
+ * Relationship Analysis Repository Implementation (Story 14.4, updated Story 34-1, Story 35-4)
  *
  * Drizzle-based implementation with placeholder row pattern.
  * Canonical user ordering: userAId = MIN(inviter, invitee), userBId = MAX(inviter, invitee).
  * Updated: uses userAResultId/userBResultId instead of invitationId (ADR-10).
+ * Story 35-4: Added listByUserId for version management.
  */
 
 import { DatabaseError } from "@workspace/domain/errors/http.errors";
@@ -14,7 +15,7 @@ import {
 } from "@workspace/domain/repositories/relationship-analysis.repository";
 import type { RelationshipAnalysis } from "@workspace/domain/types/relationship.types";
 import { Database } from "@workspace/infrastructure/context/database";
-import { and, eq, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { Effect, Layer } from "effect";
 import { relationshipAnalyses, user } from "../db/drizzle/schema";
@@ -183,6 +184,41 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.effect(
 							});
 							return new DatabaseError({
 								message: "Failed to get analysis with participant names",
+							});
+						}),
+					);
+			},
+
+			listByUserId: (userId) => {
+				const userA = alias(user, "userA");
+				const userB = alias(user, "userB");
+				return db
+					.select({
+						analysis: relationshipAnalyses,
+						userAName: userA.name,
+						userBName: userB.name,
+					})
+					.from(relationshipAnalyses)
+					.innerJoin(userA, eq(relationshipAnalyses.userAId, userA.id))
+					.innerJoin(userB, eq(relationshipAnalyses.userBId, userB.id))
+					.where(or(eq(relationshipAnalyses.userAId, userId), eq(relationshipAnalyses.userBId, userId)))
+					.orderBy(desc(relationshipAnalyses.createdAt))
+					.pipe(
+						Effect.map((rows) =>
+							rows.map((row) => ({
+								...mapRow(row.analysis),
+								userAName: row.userAName,
+								userBName: row.userBName,
+							})),
+						),
+						Effect.mapError((error) => {
+							logger.error("Database operation failed", {
+								operation: "listByUserId",
+								userId,
+								error: error instanceof Error ? error.message : String(error),
+							});
+							return new DatabaseError({
+								message: "Failed to list analyses by user",
 							});
 						}),
 					);

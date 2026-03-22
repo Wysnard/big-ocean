@@ -100,6 +100,10 @@ vi.mock("@/components/relationship/RelationshipCard", () => ({
 	RelationshipCard: () => null,
 }));
 
+vi.mock("@/components/relationship/RelationshipAnalysesList", () => ({
+	RelationshipAnalysesList: () => null,
+}));
+
 vi.mock("@workspace/ui/hooks/use-theme", () => ({
 	useTheme: () => ({ userTheme: "system", appTheme: "light", setTheme: vi.fn() }),
 	ThemeContext: { Provider: ({ children }: { children: React.ReactNode }) => children },
