@@ -572,7 +572,7 @@ development_status:
   epic-33: in-progress
   33-1-public-profile-page: done
   33-2-og-meta-tags-and-social-preview: done
-  33-3-share-flow-and-visibility-toggle: backlog
+  33-3-share-flow-and-visibility-toggle: pr-ready
   33-4-relationship-analysis-cta-on-public-profile: backlog
   epic-33-retrospective: optional
 
@@ -583,7 +583,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-34: in-progress
   34-1-qr-token-infrastructure: done
-  34-2-qr-drawer-ui: backlog
+  34-2-qr-drawer-ui: pr-ready
   34-3-qr-accept-screen-and-consent-gate: backlog
   epic-34-retrospective: optional
 
@@ -609,7 +609,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-36: in-progress
   36-1-conversation-extension-purchase-and-session-creation: done
-  36-2-extended-conversation-pipeline-initialization: backlog
+  36-2-extended-conversation-pipeline-initialization: pr-ready
   36-3-extended-results-and-portrait-versioning: backlog
   epic-36-retrospective: optional
 
@@ -628,8 +628,8 @@ development_status:
   # Nerin check-in email, deferred portrait recapture email, dashboard
   # Stories: 9.1-9.3 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-38: backlog
-  38-1-nerin-check-in-email: backlog
+  epic-38: in-progress
+  38-1-nerin-check-in-email: pr-ready
   38-2-deferred-portrait-recapture-email: backlog
   38-3-dashboard: backlog
   epic-38-retrospective: optional
