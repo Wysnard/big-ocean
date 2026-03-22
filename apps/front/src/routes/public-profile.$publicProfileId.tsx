@@ -9,8 +9,6 @@
  */
 
 import { createFileRoute } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/react-start/server";
 import type { GetPublicProfileResponse } from "@workspace/contracts";
 import type { FacetName, FacetResult, TraitLevel, TraitName, TraitResult } from "@workspace/domain";
 import {
@@ -38,83 +36,36 @@ import { PsychedelicBackground } from "@/components/results/PsychedelicBackgroun
 import type { AuthState } from "@/components/results/PublicProfileCTA";
 import { PublicProfileCTA } from "@/components/results/PublicProfileCTA";
 import { TraitBand } from "@/components/results/TraitBand";
-import { useGetPublicProfile } from "../hooks/use-profile";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
-
+import { useListAssessments } from "../hooks/use-assessment";
+import { getPublicProfileQueryOptions, useGetPublicProfile } from "../hooks/use-profile";
+import { getSession } from "../lib/auth-client";
 import { generateOgMetaTags } from "../lib/og-meta-tags";
-
-// ---------------------------------------------------------------------------
-// Server Functions
-// ---------------------------------------------------------------------------
-
-const checkPublicProfileAuth = createServerFn({ method: "GET" }).handler(async () => {
-	try {
-		const cookie = getRequestHeader("cookie") ?? "";
-		const response = await fetch(`${API_URL}/api/auth/get-session`, {
-			headers: { "Content-Type": "application/json", cookie },
-		});
-		if (!response.ok) return { isAuthenticated: false as const };
-		const session = await response.json();
-		return { isAuthenticated: !!session?.session?.id };
-	} catch {
-		return { isAuthenticated: false as const };
-	}
-});
-
-const checkHasCompletedAssessment = createServerFn({ method: "GET" }).handler(async () => {
-	try {
-		const cookie = getRequestHeader("cookie") ?? "";
-		const response = await fetch(`${API_URL}/api/assessment/sessions`, {
-			headers: { "Content-Type": "application/json", cookie },
-		});
-		if (!response.ok) return { hasCompleted: false };
-		const data = await response.json();
-		const hasCompleted = (data.sessions ?? []).some(
-			(s: { status: string }) => s.status === "completed",
-		);
-		return { hasCompleted };
-	} catch {
-		return { hasCompleted: false };
-	}
-});
 
 // ---------------------------------------------------------------------------
 // Route Definition
 // ---------------------------------------------------------------------------
 
 export const Route = createFileRoute("/public-profile/$publicProfileId")({
-	loader: async ({ params }) => {
-		// 1. Fetch public profile (no auth needed)
+	beforeLoad: async () => {
+		try {
+			const { data: session } = await getSession();
+			return { isAuthenticated: !!session?.user };
+		} catch {
+			return { isAuthenticated: false };
+		}
+	},
+	loader: async ({ params, context }) => {
+		// Prefetch public profile via React Query (SSR for OG meta tags + client hydration)
 		let profile: GetPublicProfileResponse | null = null;
 		try {
-			const response = await fetch(`${API_URL}/api/public-profile/${params.publicProfileId}`, {
-				headers: { "Content-Type": "application/json" },
-			});
-			if (response.ok) {
-				profile = await response.json();
-			}
+			profile = await context.queryClient.ensureQueryData(
+				getPublicProfileQueryOptions(params.publicProfileId),
+			);
 		} catch {
-			/* profile stays null */
+			/* profile stays null — client-side hook will retry */
 		}
 
-		// 2. Auth check
-		const authResult = await checkPublicProfileAuth().catch(() => ({
-			isAuthenticated: false,
-		}));
-
-		// 3. Assessment completion (only if authenticated)
-		let authState: AuthState = "unauthenticated";
-		if (authResult.isAuthenticated) {
-			const completionResult = await checkHasCompletedAssessment().catch(() => ({
-				hasCompleted: false,
-			}));
-			authState = completionResult.hasCompleted
-				? "authenticated-assessed"
-				: "authenticated-no-assessment";
-		}
-
-		return { profile, authState };
+		return { profile, isAuthenticated: context.isAuthenticated };
 	},
 	head: ({ loaderData, params }) => {
 		const profile = loaderData?.profile;
@@ -299,11 +250,23 @@ function ProfileErrorState({ error }: { error?: Error }) {
 function ProfilePage() {
 	const { publicProfileId } = Route.useParams();
 	const loaderData = Route.useLoaderData();
-	const authState = (loaderData?.authState as AuthState) ?? "unauthenticated";
+	const isAuthenticated = loaderData?.isAuthenticated ?? false;
 
-	// Client-side data (SSR pre-fetched in loader, this provides reactivity + fallback)
+	// Client-side data (SSR pre-fetched in loader via ensureQueryData, this provides reactivity)
 	const { data: hookProfile, isLoading, error } = useGetPublicProfile(publicProfileId);
 	const profile = loaderData?.profile ?? hookProfile;
+
+	// Derive auth state from existing React Query hook
+	const { data: assessmentData } = useListAssessments(isAuthenticated);
+	const hasCompletedAssessment = (assessmentData?.sessions ?? []).some(
+		(s) => s.status === "completed",
+	);
+
+	const authState: AuthState = !isAuthenticated
+		? "unauthenticated"
+		: hasCompletedAssessment
+			? "authenticated-assessed"
+			: "authenticated-no-assessment";
 
 	if (isLoading && !profile) return <ProfileLoading />;
 	if (error && !profile) return <ProfileErrorState error={error} />;

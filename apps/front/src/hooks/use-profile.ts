@@ -5,7 +5,7 @@
  * Uses direct HTTP calls to backend profile endpoints.
  */
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import type {
 	GetPublicProfileResponse,
 	ShareProfileResponse,
@@ -51,16 +51,24 @@ export function useShareProfile() {
 }
 
 /**
+ * Query options factory for public profile.
+ * Use with queryClient.ensureQueryData() for SSR prefetching (e.g., OG meta tags).
+ */
+export function getPublicProfileQueryOptions(publicProfileId: string) {
+	return queryOptions<GetPublicProfileResponse>({
+		queryKey: ["profile", "public", publicProfileId],
+		queryFn: async () => fetchApi(`/api/public-profile/${publicProfileId}`),
+		retry: false,
+	});
+}
+
+/**
  * Get a public profile by ID
  */
 export function useGetPublicProfile(publicProfileId: string, enabled = true) {
 	return useQuery({
-		queryKey: ["profile", "public", publicProfileId],
-		queryFn: async (): Promise<GetPublicProfileResponse> => {
-			return fetchApi(`/api/public-profile/${publicProfileId}`);
-		},
+		...getPublicProfileQueryOptions(publicProfileId),
 		enabled: enabled && !!publicProfileId,
-		retry: false,
 	});
 }
 
