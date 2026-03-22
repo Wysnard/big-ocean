@@ -18,6 +18,7 @@ import { Route as LoginRouteImport } from "./routes/login";
 import { Route as ProfileRouteImport } from "./routes/profile";
 import { Route as PublicProfilePublicProfileIdRouteImport } from "./routes/public-profile.$publicProfileId";
 import { Route as RelationshipAnalysisIdRouteImport } from "./routes/relationship/$analysisId";
+import { Route as RelationshipAnalysisIdRitualRouteImport } from "./routes/relationship/$analysisId.ritual";
 import { Route as RelationshipQrTokenRouteImport } from "./routes/relationship/qr/$token";
 import { Route as ResetPasswordRouteImport } from "./routes/reset-password";
 import { Route as ResultsRouteImport } from "./routes/results";
@@ -91,11 +92,6 @@ const RelationshipAnalysisIdRoute = RelationshipAnalysisIdRouteImport.update({
 	path: "/relationship/$analysisId",
 	getParentRoute: () => rootRouteImport,
 } as any);
-const RelationshipQrTokenRoute = RelationshipQrTokenRouteImport.update({
-	id: "/relationship/qr/$token",
-	path: "/relationship/qr/$token",
-	getParentRoute: () => rootRouteImport,
-} as any);
 const PublicProfilePublicProfileIdRoute = PublicProfilePublicProfileIdRouteImport.update({
 	id: "/public-profile/$publicProfileId",
 	path: "/public-profile/$publicProfileId",
@@ -105,6 +101,16 @@ const DevComponentsRoute = DevComponentsRouteImport.update({
 	id: "/dev/components",
 	path: "/dev/components",
 	getParentRoute: () => rootRouteImport,
+} as any);
+const RelationshipQrTokenRoute = RelationshipQrTokenRouteImport.update({
+	id: "/relationship/qr/$token",
+	path: "/relationship/qr/$token",
+	getParentRoute: () => rootRouteImport,
+} as any);
+const RelationshipAnalysisIdRitualRoute = RelationshipAnalysisIdRitualRouteImport.update({
+	id: "/ritual",
+	path: "/ritual",
+	getParentRoute: () => RelationshipAnalysisIdRoute,
 } as any);
 
 export interface FileRoutesByFullPath {
@@ -120,10 +126,11 @@ export interface FileRoutesByFullPath {
 	"/verify-email": typeof VerifyEmailRoute;
 	"/dev/components": typeof DevComponentsRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
-	"/relationship/$analysisId": typeof RelationshipAnalysisIdRoute;
-	"/relationship/qr/$token": typeof RelationshipQrTokenRoute;
+	"/relationship/$analysisId": typeof RelationshipAnalysisIdRouteWithChildren;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
+	"/relationship/$analysisId/ritual": typeof RelationshipAnalysisIdRitualRoute;
+	"/relationship/qr/$token": typeof RelationshipQrTokenRoute;
 }
 export interface FileRoutesByTo {
 	"/": typeof IndexRoute;
@@ -138,10 +145,11 @@ export interface FileRoutesByTo {
 	"/verify-email": typeof VerifyEmailRoute;
 	"/dev/components": typeof DevComponentsRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
-	"/relationship/$analysisId": typeof RelationshipAnalysisIdRoute;
-	"/relationship/qr/$token": typeof RelationshipQrTokenRoute;
+	"/relationship/$analysisId": typeof RelationshipAnalysisIdRouteWithChildren;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat": typeof ChatIndexRoute;
+	"/relationship/$analysisId/ritual": typeof RelationshipAnalysisIdRitualRoute;
+	"/relationship/qr/$token": typeof RelationshipQrTokenRoute;
 }
 export interface FileRoutesById {
 	__root__: typeof rootRouteImport;
@@ -157,10 +165,11 @@ export interface FileRoutesById {
 	"/verify-email": typeof VerifyEmailRoute;
 	"/dev/components": typeof DevComponentsRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
-	"/relationship/$analysisId": typeof RelationshipAnalysisIdRoute;
-	"/relationship/qr/$token": typeof RelationshipQrTokenRoute;
+	"/relationship/$analysisId": typeof RelationshipAnalysisIdRouteWithChildren;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
+	"/relationship/$analysisId/ritual": typeof RelationshipAnalysisIdRitualRoute;
+	"/relationship/qr/$token": typeof RelationshipQrTokenRoute;
 }
 export interface FileRouteTypes {
 	fileRoutesByFullPath: FileRoutesByFullPath;
@@ -178,9 +187,10 @@ export interface FileRouteTypes {
 		| "/dev/components"
 		| "/public-profile/$publicProfileId"
 		| "/relationship/$analysisId"
-		| "/relationship/qr/$token"
 		| "/results/$assessmentSessionId"
-		| "/chat/";
+		| "/chat/"
+		| "/relationship/$analysisId/ritual"
+		| "/relationship/qr/$token";
 	fileRoutesByTo: FileRoutesByTo;
 	to:
 		| "/"
@@ -196,9 +206,10 @@ export interface FileRouteTypes {
 		| "/dev/components"
 		| "/public-profile/$publicProfileId"
 		| "/relationship/$analysisId"
-		| "/relationship/qr/$token"
 		| "/results/$assessmentSessionId"
-		| "/chat";
+		| "/chat"
+		| "/relationship/$analysisId/ritual"
+		| "/relationship/qr/$token";
 	id:
 		| "__root__"
 		| "/"
@@ -214,9 +225,10 @@ export interface FileRouteTypes {
 		| "/dev/components"
 		| "/public-profile/$publicProfileId"
 		| "/relationship/$analysisId"
-		| "/relationship/qr/$token"
 		| "/results/$assessmentSessionId"
-		| "/chat/";
+		| "/chat/"
+		| "/relationship/$analysisId/ritual"
+		| "/relationship/qr/$token";
 	fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
@@ -232,9 +244,9 @@ export interface RootRouteChildren {
 	VerifyEmailRoute: typeof VerifyEmailRoute;
 	DevComponentsRoute: typeof DevComponentsRoute;
 	PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute;
-	RelationshipAnalysisIdRoute: typeof RelationshipAnalysisIdRoute;
-	RelationshipQrTokenRoute: typeof RelationshipQrTokenRoute;
+	RelationshipAnalysisIdRoute: typeof RelationshipAnalysisIdRouteWithChildren;
 	ChatIndexRoute: typeof ChatIndexRoute;
+	RelationshipQrTokenRoute: typeof RelationshipQrTokenRoute;
 }
 
 declare module "@tanstack/react-router" {
@@ -330,13 +342,6 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof RelationshipAnalysisIdRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
-		"/relationship/qr/$token": {
-			id: "/relationship/qr/$token";
-			path: "/relationship/qr/$token";
-			fullPath: "/relationship/qr/$token";
-			preLoaderRoute: typeof RelationshipQrTokenRouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
 		"/public-profile/$publicProfileId": {
 			id: "/public-profile/$publicProfileId";
 			path: "/public-profile/$publicProfileId";
@@ -351,6 +356,20 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof DevComponentsRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
+		"/relationship/qr/$token": {
+			id: "/relationship/qr/$token";
+			path: "/relationship/qr/$token";
+			fullPath: "/relationship/qr/$token";
+			preLoaderRoute: typeof RelationshipQrTokenRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/relationship/$analysisId/ritual": {
+			id: "/relationship/$analysisId/ritual";
+			path: "/ritual";
+			fullPath: "/relationship/$analysisId/ritual";
+			preLoaderRoute: typeof RelationshipAnalysisIdRitualRouteImport;
+			parentRoute: typeof RelationshipAnalysisIdRoute;
+		};
 	}
 }
 
@@ -363,6 +382,18 @@ const ResultsRouteChildren: ResultsRouteChildren = {
 };
 
 const ResultsRouteWithChildren = ResultsRoute._addFileChildren(ResultsRouteChildren);
+
+interface RelationshipAnalysisIdRouteChildren {
+	RelationshipAnalysisIdRitualRoute: typeof RelationshipAnalysisIdRitualRoute;
+}
+
+const RelationshipAnalysisIdRouteChildren: RelationshipAnalysisIdRouteChildren = {
+	RelationshipAnalysisIdRitualRoute: RelationshipAnalysisIdRitualRoute,
+};
+
+const RelationshipAnalysisIdRouteWithChildren = RelationshipAnalysisIdRoute._addFileChildren(
+	RelationshipAnalysisIdRouteChildren,
+);
 
 const rootRouteChildren: RootRouteChildren = {
 	IndexRoute: IndexRoute,
@@ -377,20 +408,10 @@ const rootRouteChildren: RootRouteChildren = {
 	VerifyEmailRoute: VerifyEmailRoute,
 	DevComponentsRoute: DevComponentsRoute,
 	PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,
-	RelationshipAnalysisIdRoute: RelationshipAnalysisIdRoute,
-	RelationshipQrTokenRoute: RelationshipQrTokenRoute,
+	RelationshipAnalysisIdRoute: RelationshipAnalysisIdRouteWithChildren,
 	ChatIndexRoute: ChatIndexRoute,
+	RelationshipQrTokenRoute: RelationshipQrTokenRoute,
 };
 export const routeTree = rootRouteImport
 	._addFileChildren(rootRouteChildren)
 	._addFileTypes<FileRouteTypes>();
-
-import type { createStart } from "@tanstack/react-start";
-import type { getRouter } from "./router.tsx";
-
-declare module "@tanstack/react-start" {
-	interface Register {
-		ssr: true;
-		router: Awaited<ReturnType<typeof getRouter>>;
-	}
-}
