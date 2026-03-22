@@ -111,7 +111,13 @@ export const generateResults = (input: GenerateResultsInput) =>
 				yield* sessionRepo.updateSession(input.sessionId, { finalizationProgress: "analyzing" });
 
 				// Fetch conversation evidence (authoritative source — Story 18-4)
-				const conversationEvidence = yield* conversationEvidenceRepo.findBySession(input.sessionId);
+				// Story 36-3: For extension sessions with authenticated users, use ALL user evidence
+				const isExtension = session.parentSessionId != null;
+				const hasAuthenticatedUser = session.userId != null;
+				const conversationEvidence =
+					isExtension && hasAuthenticatedUser
+						? yield* conversationEvidenceRepo.findByUserId(session.userId as string)
+						: yield* conversationEvidenceRepo.findBySession(input.sessionId);
 
 				// Map conversation evidence to EvidenceInput for scoring
 				const scoringInputs: EvidenceInput[] = conversationEvidence.map((ev) => ({

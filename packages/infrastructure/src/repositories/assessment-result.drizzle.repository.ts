@@ -11,10 +11,10 @@ import {
 	type AssessmentResultRecord,
 	AssessmentResultRepository,
 } from "@workspace/domain";
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { Effect, Layer } from "effect";
 import { Database } from "../context/database";
-import { assessmentResults } from "../db/drizzle/schema";
+import { assessmentResults, assessmentSession } from "../db/drizzle/schema";
 
 export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 	AssessmentResultRepository,
@@ -148,6 +148,39 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 					}
 
 					return mapRow(row);
+				}),
+
+			getLatestByUserId: (userId) =>
+				Effect.gen(function* () {
+					const rows = yield* db
+						.select({
+							id: assessmentResults.id,
+							assessmentSessionId: assessmentResults.assessmentSessionId,
+							facets: assessmentResults.facets,
+							traits: assessmentResults.traits,
+							domainCoverage: assessmentResults.domainCoverage,
+							portrait: assessmentResults.portrait,
+							stage: assessmentResults.stage,
+							createdAt: assessmentResults.createdAt,
+						})
+						.from(assessmentResults)
+						.innerJoin(assessmentSession, eq(assessmentResults.assessmentSessionId, assessmentSession.id))
+						.where(and(eq(assessmentSession.userId, userId), eq(assessmentResults.stage, "completed")))
+						.orderBy(desc(assessmentResults.createdAt))
+						.limit(1)
+						.pipe(
+							Effect.mapError(
+								(error) =>
+									new AssessmentResultError({
+										message: `Failed to get latest result by userId: ${error instanceof Error ? error.message : String(error)}`,
+									}),
+							),
+						);
+
+					const row = rows[0];
+					if (!row) return null;
+
+					return mapRow(row as typeof assessmentResults.$inferSelect);
 				}),
 
 			updateStage: (sessionId, stage) =>

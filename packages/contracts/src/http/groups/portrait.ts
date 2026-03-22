@@ -41,6 +41,8 @@ export const PortraitSchema = S.Struct({
 export const GetPortraitStatusResponseSchema = S.Struct({
 	status: PortraitStatusSchema,
 	portrait: S.NullOr(PortraitSchema),
+	/** Whether this portrait is for the user's latest assessment result (Story 36-3) */
+	isLatestVersion: S.Boolean,
 });
 
 /**

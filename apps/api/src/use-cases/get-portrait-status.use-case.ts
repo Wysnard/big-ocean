@@ -14,7 +14,14 @@
  * - failed: Portrait has retry_count >= 3
  */
 
-import { LoggerRepository, PortraitRepository, type PortraitStatus } from "@workspace/domain";
+import {
+	AssessmentResultRepository,
+	AssessmentSessionRepository,
+	isLatestVersion,
+	LoggerRepository,
+	PortraitRepository,
+	type PortraitStatus,
+} from "@workspace/domain";
 import type { Portrait } from "@workspace/domain/repositories/portrait.repository";
 import { Effect } from "effect";
 import { generateFullPortrait } from "./generate-full-portrait.use-case";
@@ -49,6 +56,7 @@ export interface GetPortraitStatusInput {
 export interface GetPortraitStatusOutput {
 	readonly status: PortraitStatus;
 	readonly portrait: Portrait | null;
+	readonly isLatestVersion: boolean;
 }
 
 /**
@@ -108,5 +116,20 @@ export const getPortraitStatus = (input: GetPortraitStatusInput) =>
 			}
 		}
 
-		return { status, portrait } satisfies GetPortraitStatusOutput;
+		// Story 36-3: Derive-at-read version detection (fail-open: default to latest)
+		const versionLatest = input.userId
+			? yield* Effect.gen(function* () {
+					const sessionRepo = yield* AssessmentSessionRepository;
+					const resultRepo = yield* AssessmentResultRepository;
+
+					const _session = yield* sessionRepo.getSession(input.sessionId);
+					const resultForSession = yield* resultRepo.getBySessionId(input.sessionId);
+					if (!resultForSession) return true;
+
+					const latestResult = yield* resultRepo.getLatestByUserId(input.userId as string);
+					return isLatestVersion(resultForSession.id, latestResult?.id ?? null);
+				}).pipe(Effect.catchAllCause(() => Effect.succeed(true)))
+			: true;
+
+		return { status, portrait, isLatestVersion: versionLatest } satisfies GetPortraitStatusOutput;
 	});

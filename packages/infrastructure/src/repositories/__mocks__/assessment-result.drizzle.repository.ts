@@ -95,6 +95,21 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.succeed(
 			return Effect.succeed(record);
 		},
 
+		getLatestByUserId: (_userId: string) => {
+			// Find the most recent completed result by iterating all stored results
+			// Mock needs session → userId mapping; we look at sessionId patterns
+			// In tests, callers should use _seedResult with appropriate session IDs
+			let latest: AssessmentResultRecord | null = null;
+			for (const record of storedResults.values()) {
+				if (record.stage === "completed") {
+					if (!latest || record.createdAt > latest.createdAt) {
+						latest = record;
+					}
+				}
+			}
+			return Effect.succeed(latest);
+		},
+
 		updateStage: (sessionId: string, stage: ResultStage) => {
 			const record = storedResults.get(sessionId);
 			if (!record) {

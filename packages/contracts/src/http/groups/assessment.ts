@@ -103,6 +103,8 @@ export const GetResultsResponseSchema = S.Struct({
 	publicProfileId: S.NullOr(S.String),
 	shareableUrl: S.NullOr(S.String),
 	isPublic: S.NullOr(S.Boolean),
+	/** Whether this result is the user's latest version (Story 36-3) */
+	isLatestVersion: S.Boolean,
 });
 
 /**

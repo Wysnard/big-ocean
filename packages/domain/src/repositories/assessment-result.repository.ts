@@ -71,5 +71,16 @@ export class AssessmentResultRepository extends Context.Tag("AssessmentResultRep
 			sessionId: string,
 			stage: ResultStage,
 		) => Effect.Effect<AssessmentResultRecord, AssessmentResultError>;
+
+		/**
+		 * Get the most recent completed assessment result for a user (Story 36-3).
+		 * JOINs through assessment_session to find results by userId.
+		 * Returns null if user has no completed results.
+		 *
+		 * @param userId - Authenticated user ID
+		 */
+		readonly getLatestByUserId: (
+			userId: string,
+		) => Effect.Effect<AssessmentResultRecord | null, AssessmentResultError>;
 	}
 >() {}

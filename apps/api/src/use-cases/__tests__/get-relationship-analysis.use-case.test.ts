@@ -3,7 +3,7 @@
  */
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { RelationshipAnalysisRepository } from "@workspace/domain";
+import { AssessmentResultRepository, RelationshipAnalysisRepository } from "@workspace/domain";
 import { Effect, Exit, Layer } from "effect";
 import { vi } from "vitest";
 import { getRelationshipAnalysis } from "../get-relationship-analysis.use-case";
@@ -21,8 +21,20 @@ const mockAnalysisRepo = {
 	getById: vi.fn(),
 };
 
+const mockResultRepo = {
+	create: vi.fn(),
+	getBySessionId: vi.fn(),
+	update: vi.fn(),
+	upsert: vi.fn(),
+	updateStage: vi.fn(),
+	getLatestByUserId: vi.fn(() => Effect.succeed(null)),
+};
+
 const createTestLayer = () =>
-	Layer.mergeAll(Layer.succeed(RelationshipAnalysisRepository, mockAnalysisRepo));
+	Layer.mergeAll(
+		Layer.succeed(RelationshipAnalysisRepository, mockAnalysisRepo),
+		Layer.succeed(AssessmentResultRepository, mockResultRepo),
+	);
 
 describe("getRelationshipAnalysis Use Case (Story 14.4)", () => {
 	beforeEach(() => {
@@ -52,6 +64,7 @@ describe("getRelationshipAnalysis Use Case (Story 14.4)", () => {
 
 			expect(result.analysisId).toBe(ANALYSIS_ID);
 			expect(result.content).toContain("Analysis");
+			expect(result.isLatestVersion).toBe(true);
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 

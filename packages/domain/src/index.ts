@@ -586,3 +586,5 @@ export {
 	selectTerritoryV2,
 	type TerritoryPromptContent,
 } from "./utils/steering";
+// Version detection (Story 36-3)
+export { isLatestVersion } from "./utils/version-detection";
