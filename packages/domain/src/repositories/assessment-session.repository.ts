@@ -235,11 +235,44 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 		readonly findExtensionSession: (
 			parentSessionId: string,
 		) => Effect.Effect<AssessmentSessionEntity | null, DatabaseError, never>;
+
+		/**
+		 * Find sessions eligible for Nerin check-in email (Story 38-1)
+		 *
+		 * Returns sessions where:
+		 * - status is 'completed'
+		 * - updatedAt is older than thresholdDays ago
+		 * - checkInEmailSentAt IS NULL (not yet emailed)
+		 * - userId IS NOT NULL (authenticated sessions only)
+		 *
+		 * JOINs with user table to include email and name.
+		 *
+		 * @param thresholdDays - Days since completion before session is eligible for check-in
+		 */
+		readonly findCheckInEligibleSessions: (
+			thresholdDays: number,
+		) => Effect.Effect<Array<CheckInEligibleSession>, DatabaseError, never>;
+
+		/**
+		 * Mark a session as having had its check-in email sent (Story 38-1)
+		 *
+		 * @param sessionId - Session to mark
+		 */
+		readonly markCheckInEmailSent: (sessionId: string) => Effect.Effect<void, DatabaseError, never>;
 	}
 >() {}
 
 /** Drop-off session record returned by findDropOffSessions */
 export interface DropOffSession {
+	readonly sessionId: string;
+	readonly userId: string;
+	readonly userEmail: string;
+	readonly userName: string;
+	readonly updatedAt: Date;
+}
+
+/** Check-in eligible session record returned by findCheckInEligibleSessions (Story 38-1) */
+export interface CheckInEligibleSession {
 	readonly sessionId: string;
 	readonly userId: string;
 	readonly userEmail: string;

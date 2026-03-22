@@ -117,6 +117,24 @@ describe("TERRITORY_CATALOG", () => {
 		}
 	});
 
+	it("each territory has a non-empty descriptionYou string", () => {
+		for (const [id, territory] of TERRITORY_CATALOG) {
+			expect(
+				territory.descriptionYou.length,
+				`Territory "${id}" has empty descriptionYou`,
+			).toBeGreaterThan(0);
+		}
+	});
+
+	it("descriptionYou uses second-person pronouns", () => {
+		for (const [id, territory] of TERRITORY_CATALOG) {
+			expect(
+				territory.descriptionYou,
+				`Territory "${id}" descriptionYou should use 'you/your' not 'they/their'`,
+			).not.toMatch(/\bthey\b|\btheir\b|\bthem\b/i);
+		}
+	});
+
 	it("descriptions follow curiosity framing pattern", () => {
 		const validStarts = ["how", "what", "who", "when", "where", "the"];
 		for (const [id, territory] of TERRITORY_CATALOG) {

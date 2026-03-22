@@ -49,6 +49,8 @@ export interface Territory {
 	readonly name: string;
 	/** Nerin's curiosity framing — what she's drawn to explore (e.g., "how they structure their time and what they protect in it") */
 	readonly description: string;
+	/** Second-person variant of description for user-facing content (e.g., "how you structure your time and what you protect in it") */
+	readonly descriptionYou: string;
 	/** Expected energy cost of honest engagement, continuous [0, 1] */
 	readonly expectedEnergy: number;
 	/** Life domains this territory explores — exactly 2 per territory */

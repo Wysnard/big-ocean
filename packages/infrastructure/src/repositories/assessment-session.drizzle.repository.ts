@@ -894,6 +894,72 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 						}),
 					);
 				}),
+
+			findCheckInEligibleSessions: (thresholdDays: number) =>
+				Effect.gen(function* () {
+					const cutoff = new Date(Date.now() - thresholdDays * 24 * 60 * 60 * 1000);
+
+					const results = yield* db
+						.select({
+							sessionId: assessmentSession.id,
+							userId: assessmentSession.userId,
+							userEmail: user.email,
+							userName: user.name,
+							updatedAt: assessmentSession.updatedAt,
+						})
+						.from(assessmentSession)
+						.innerJoin(user, eq(assessmentSession.userId, user.id))
+						.where(
+							and(
+								eq(assessmentSession.status, "completed"),
+								lt(assessmentSession.updatedAt, cutoff),
+								isNull(assessmentSession.checkInEmailSentAt),
+							),
+						)
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "findCheckInEligibleSessions",
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({ message: "Failed to find check-in eligible sessions" });
+							}),
+						);
+
+					return results.map((row) => ({
+						sessionId: row.sessionId,
+						userId: row.userId as string,
+						userEmail: row.userEmail,
+						userName: row.userName,
+						updatedAt: row.updatedAt,
+					}));
+				}),
+
+			markCheckInEmailSent: (sessionId: string) =>
+				Effect.gen(function* () {
+					yield* db
+						.update(assessmentSession)
+						.set({ checkInEmailSentAt: new Date() })
+						.where(eq(assessmentSession.id, sessionId))
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "markCheckInEmailSent",
+										sessionId,
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({ message: "Failed to mark check-in email sent" });
+							}),
+						);
+				}),
 		});
 	}),
 );

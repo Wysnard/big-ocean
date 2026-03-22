@@ -178,6 +178,7 @@ export {
 // Repository interfaces (ports in hexagonal architecture)
 export {
 	AssessmentSessionRepository,
+	type CheckInEligibleSession,
 	type DropOffSession,
 } from "./repositories/assessment-session.repository";
 // Conversanalyzer repository (Story 10.2, v2 Story 24-1)
