@@ -39,6 +39,12 @@ const mockSessionRepo = {
 	incrementMessageCount: vi.fn(),
 	acquireSessionLock: vi.fn(),
 	releaseSessionLock: vi.fn(),
+	findDropOffSessions: vi.fn(),
+	markDropOffEmailSent: vi.fn(),
+	createExtensionSession: vi.fn(),
+	findCompletedSessionWithoutChild: vi.fn(),
+	hasExtensionSession: vi.fn(),
+	findExtensionSession: vi.fn(),
 };
 
 const mockMessageRepo = {
@@ -362,6 +368,19 @@ const createTestLayer = () =>
 function setupDefaultMocks() {
 	mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(1));
 	mockSessionRepo.updateSession.mockReturnValue(Effect.succeed({}));
+	// Default: non-extension session (no parentSessionId)
+	mockSessionRepo.getSession.mockReturnValue(
+		Effect.succeed({
+			id: "session_test_123",
+			userId: null,
+			sessionToken: null,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+			status: "active",
+			finalizationProgress: null,
+			messageCount: 0,
+		}),
+	);
 
 	mockMessageRepo.saveMessage.mockReturnValue(
 		Effect.succeed({
@@ -710,4 +729,352 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
+});
+
+// ─── Extension Session Tests (Story 36-2) ───────────────────────────
+
+/** Parent session's final exchange with populated pacing state */
+const parentFinalExchange = {
+	...mockExchangeRecord,
+	id: "parent_ex_final",
+	sessionId: "parent_session_id",
+	turnNumber: 25,
+	selectedTerritory: "daily-routines",
+	energy: 0.6,
+	energyBand: "high",
+	telling: 0.75,
+	tellingBand: "mostly_self_propelled",
+	smoothedEnergy: 0.55,
+	comfort: 0.6,
+	eTarget: 0.52,
+	selectionRule: "argmax",
+	governorOutput: {
+		intent: "close",
+		territory: "daily-routines",
+		entryPressure: "direct",
+		observationFocus: { type: "relate" },
+	},
+};
+
+const parentExchangeHistory = [
+	{ ...openerExchangeRecord, sessionId: "parent_session_id" },
+	{
+		...mockExchangeRecord,
+		id: "parent_ex_1",
+		sessionId: "parent_session_id",
+		turnNumber: 1,
+		selectedTerritory: "daily-routines",
+		energy: 0.3,
+		energyBand: "low",
+		telling: 0.5,
+		tellingBand: "mixed",
+		smoothedEnergy: 0.4,
+		comfort: 0.4,
+	},
+	{
+		...mockExchangeRecord,
+		id: "parent_ex_2",
+		sessionId: "parent_session_id",
+		turnNumber: 2,
+		selectedTerritory: "creative-pursuits",
+		energy: 0.5,
+		energyBand: "steady",
+		telling: 0.5,
+		tellingBand: "mixed",
+		smoothedEnergy: 0.45,
+		comfort: 0.45,
+	},
+	parentFinalExchange,
+];
+
+const parentEvidence = [
+	{
+		id: "ev_parent_1",
+		sessionId: "parent_session_id",
+		messageId: "msg_parent_1",
+		exchangeId: "parent_ex_1",
+		bigfiveFacet: "imagination" as const,
+		deviation: 2,
+		strength: "strong" as const,
+		confidence: "high" as const,
+		domain: "work" as const,
+		note: "Creative thinking",
+		createdAt: new Date(),
+	},
+	{
+		id: "ev_parent_2",
+		sessionId: "parent_session_id",
+		messageId: "msg_parent_2",
+		exchangeId: "parent_ex_2",
+		bigfiveFacet: "orderliness" as const,
+		deviation: -1,
+		strength: "moderate" as const,
+		confidence: "medium" as const,
+		domain: "work" as const,
+		note: "Flexible approach",
+		createdAt: new Date(),
+	},
+];
+
+describe("Extension Session Pipeline (Story 36-2)", () => {
+	beforeEach(() => {
+		setupDefaultMocks();
+	});
+
+	afterEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it.effect("seeds E_target priors from parent session on first turn", () =>
+		Effect.gen(function* () {
+			// Mock extension session
+			mockSessionRepo.getSession.mockReturnValue(
+				Effect.succeed({
+					id: "extension_session_id",
+					userId: "user_123",
+					sessionToken: null,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					status: "active",
+					finalizationProgress: null,
+					messageCount: 0,
+					parentSessionId: "parent_session_id",
+				}),
+			);
+
+			// Extension session has only opener exchange (turn 1 = first real turn)
+			mockExchangeRepo.findBySession.mockImplementation((sessionId: string) => {
+				if (sessionId === "parent_session_id") {
+					return Effect.succeed(parentExchangeHistory);
+				}
+				return Effect.succeed([openerExchangeRecord]);
+			});
+
+			// Parent evidence for coverage
+			mockEvidenceRepo.findBySession.mockImplementation((sessionId: string) => {
+				if (sessionId === "parent_session_id") {
+					return Effect.succeed(parentEvidence);
+				}
+				return Effect.succeed([]);
+			});
+
+			const result = yield* runNerinPipeline({
+				sessionId: "extension_session_id",
+				userMessage: "Hello again",
+			});
+
+			expect(result.response).toBeDefined();
+
+			// Verify extension context was logged
+			const extensionLog = mockLoggerRepo.info.mock.calls.find(
+				(call: unknown[]) => call[0] === "Extension session context loaded",
+			);
+			expect(extensionLog).toBeDefined();
+			const logData = extensionLog?.[1] as Record<string, unknown>;
+			expect(logData?.parentSessionId).toBe("parent_session_id");
+
+			// Verify E_target seeded log
+			const eTargetLog = mockLoggerRepo.info.mock.calls.find(
+				(call: unknown[]) => call[0] === "E_target seeded from parent session",
+			);
+			expect(eTargetLog).toBeDefined();
+			const eTargetData = eTargetLog?.[1] as Record<string, unknown>;
+			expect(eTargetData?.parentSmoothedEnergy).toBe(0.55);
+			expect(eTargetData?.parentComfort).toBe(0.6);
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+
+	it.effect("merges evidence from parent and extension sessions for scoring", () =>
+		Effect.gen(function* () {
+			// Mock extension session
+			mockSessionRepo.getSession.mockReturnValue(
+				Effect.succeed({
+					id: "extension_session_id",
+					userId: "user_123",
+					sessionToken: null,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					status: "active",
+					finalizationProgress: null,
+					messageCount: 0,
+					parentSessionId: "parent_session_id",
+				}),
+			);
+
+			const extensionEvidence = [
+				{
+					id: "ev_ext_1",
+					sessionId: "extension_session_id",
+					messageId: "msg_ext_1",
+					exchangeId: "ext_ex_1",
+					bigfiveFacet: "trust" as const,
+					deviation: 1,
+					strength: "moderate" as const,
+					confidence: "medium" as const,
+					domain: "relationships" as const,
+					note: "Trusting",
+					createdAt: new Date(),
+				},
+			];
+
+			mockExchangeRepo.findBySession.mockImplementation((sessionId: string) => {
+				if (sessionId === "parent_session_id") {
+					return Effect.succeed(parentExchangeHistory);
+				}
+				return Effect.succeed([openerExchangeRecord]);
+			});
+
+			mockEvidenceRepo.findBySession.mockImplementation((sessionId: string) => {
+				if (sessionId === "parent_session_id") {
+					return Effect.succeed(parentEvidence);
+				}
+				return Effect.succeed(extensionEvidence);
+			});
+
+			const result = yield* runNerinPipeline({
+				sessionId: "extension_session_id",
+				userMessage: "Let's continue",
+			});
+
+			expect(result.response).toBeDefined();
+
+			// Evidence from both sessions was loaded
+			const extensionLog = mockLoggerRepo.info.mock.calls.find(
+				(call: unknown[]) => call[0] === "Extension session context loaded",
+			);
+			expect(extensionLog).toBeDefined();
+			const logData = extensionLog?.[1] as Record<string, unknown>;
+			expect(logData?.parentEvidenceCount).toBe(2);
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+
+	it.effect("includes extension context in prompt when session is an extension", () =>
+		Effect.gen(function* () {
+			// Mock extension session
+			mockSessionRepo.getSession.mockReturnValue(
+				Effect.succeed({
+					id: "extension_session_id",
+					userId: "user_123",
+					sessionToken: null,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					status: "active",
+					finalizationProgress: null,
+					messageCount: 0,
+					parentSessionId: "parent_session_id",
+				}),
+			);
+
+			mockExchangeRepo.findBySession.mockImplementation((sessionId: string) => {
+				if (sessionId === "parent_session_id") {
+					return Effect.succeed(parentExchangeHistory);
+				}
+				return Effect.succeed([openerExchangeRecord]);
+			});
+
+			mockEvidenceRepo.findBySession.mockImplementation((sessionId: string) => {
+				if (sessionId === "parent_session_id") {
+					return Effect.succeed(parentEvidence);
+				}
+				return Effect.succeed([]);
+			});
+
+			yield* runNerinPipeline({
+				sessionId: "extension_session_id",
+				userMessage: "Hello",
+			});
+
+			// Verify Nerin was called with a system prompt containing extension context
+			const nerinCall = mockNerinRepo.invoke.mock.calls[0]?.[0];
+			expect(nerinCall?.systemPrompt).toContain("CONTINUATION CONTEXT:");
+			expect(nerinCall?.systemPrompt).toContain("Daily Routines");
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+
+	it.effect("logs isExtensionSession in pacing pipeline log", () =>
+		Effect.gen(function* () {
+			// Mock extension session
+			mockSessionRepo.getSession.mockReturnValue(
+				Effect.succeed({
+					id: "extension_session_id",
+					userId: "user_123",
+					sessionToken: null,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					status: "active",
+					finalizationProgress: null,
+					messageCount: 0,
+					parentSessionId: "parent_session_id",
+				}),
+			);
+
+			mockExchangeRepo.findBySession.mockImplementation((sessionId: string) => {
+				if (sessionId === "parent_session_id") {
+					return Effect.succeed(parentExchangeHistory);
+				}
+				return Effect.succeed([openerExchangeRecord]);
+			});
+
+			mockEvidenceRepo.findBySession.mockImplementation((sessionId: string) => {
+				if (sessionId === "parent_session_id") {
+					return Effect.succeed(parentEvidence);
+				}
+				return Effect.succeed([]);
+			});
+
+			yield* runNerinPipeline({
+				sessionId: "extension_session_id",
+				userMessage: "Hello",
+			});
+
+			const pacingLog = mockLoggerRepo.info.mock.calls.find(
+				(call: unknown[]) => call[0] === "Pacing pipeline computed",
+			);
+			expect(pacingLog).toBeDefined();
+			const pacingData = pacingLog?.[1] as Record<string, unknown>;
+			expect(pacingData?.isExtensionSession).toBe(true);
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+
+	it.effect("handles missing parent session data gracefully", () =>
+		Effect.gen(function* () {
+			// Mock extension session with parent that returns errors
+			mockSessionRepo.getSession.mockReturnValue(
+				Effect.succeed({
+					id: "extension_session_id",
+					userId: "user_123",
+					sessionToken: null,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					status: "active",
+					finalizationProgress: null,
+					messageCount: 0,
+					parentSessionId: "deleted_parent_id",
+				}),
+			);
+
+			// Parent data loading fails
+			mockExchangeRepo.findBySession.mockImplementation((sessionId: string) => {
+				if (sessionId === "deleted_parent_id") {
+					return Effect.fail({ _tag: "DatabaseError", message: "Not found" });
+				}
+				return Effect.succeed([openerExchangeRecord]);
+			});
+
+			mockEvidenceRepo.findBySession.mockImplementation((sessionId: string) => {
+				if (sessionId === "deleted_parent_id") {
+					return Effect.fail({ _tag: "ConversationEvidenceError", message: "Not found" });
+				}
+				return Effect.succeed([]);
+			});
+
+			// Pipeline should still succeed with defaults
+			const result = yield* runNerinPipeline({
+				sessionId: "extension_session_id",
+				userMessage: "Hello",
+			});
+
+			expect(result.response).toBeDefined();
+		}).pipe(Effect.provide(createTestLayer())),
+	);
 });

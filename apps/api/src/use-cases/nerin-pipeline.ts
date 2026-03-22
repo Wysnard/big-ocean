@@ -25,6 +25,7 @@ import {
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	aggregateDomainDistribution,
+	buildExtensionContext,
 	buildPrompt,
 	type ConversanalyzerV2Output,
 	ConversationEvidenceRepository,
@@ -389,6 +390,45 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const turnNumber = previousExchanges.filter((e) => e.turnNumber > 0).length + 1;
 		const totalTurns = config.freeTierMessageThreshold;
 
+		// ---- Extension session detection (Story 36-2) ----
+		// Load parent session data when this is a conversation extension session.
+		// The parent session's final state seeds E_target priors, evidence merges
+		// for coverage, visit history merges for freshness, and extension context
+		// is injected into the prompt builder.
+
+		const session = yield* sessionRepo.getSession(input.sessionId);
+		const isExtensionSession = !!session.parentSessionId;
+		let parentExchanges: typeof previousExchanges = [];
+		let parentEvidence: typeof existingEvidence = [];
+		let extensionContextSummary: string | undefined;
+
+		if (isExtensionSession && session.parentSessionId) {
+			// Load parent session data — fail gracefully if parent is gone
+			const parentExchangesResult = yield* exchangeRepo
+				.findBySession(session.parentSessionId)
+				.pipe(Effect.catchAll(() => Effect.succeed([] as typeof previousExchanges)));
+
+			const parentEvidenceResult = yield* evidenceRepo
+				.findBySession(session.parentSessionId)
+				.pipe(Effect.catchAll(() => Effect.succeed([] as typeof existingEvidence)));
+
+			parentExchanges = parentExchangesResult;
+			parentEvidence = parentEvidenceResult;
+
+			// Build extension context for prompt builder
+			const extensionCtx = buildExtensionContext(parentEvidenceResult as any[], parentExchangesResult);
+			extensionContextSummary = extensionCtx.summary || undefined;
+
+			logger.info("Extension session context loaded", {
+				sessionId: input.sessionId,
+				parentSessionId: session.parentSessionId,
+				parentExchangeCount: parentExchangesResult.length,
+				parentEvidenceCount: parentEvidenceResult.length,
+				visitedTerritories: extensionCtx.visitedTerritoryNames,
+				dominantFacets: extensionCtx.dominantFacets,
+			});
+		}
+
 		const tContext = Date.now();
 
 		// ---- Step 1: Compute E_target ----
@@ -399,22 +439,65 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const energyHistory = extractEnergyHistory(pipelineExchanges);
 		const tellingHistory = extractTellingHistory(pipelineExchanges);
 
-		// Get priors from the last pipeline exchange for incremental computation
+		// Get priors from the last pipeline exchange for incremental computation.
+		// For extension sessions on their first turn (no prior pipeline exchanges),
+		// seed from the parent session's final exchange state (Story 36-2, AC1).
 		const lastExchange =
 			pipelineExchanges.length > 0 ? pipelineExchanges[pipelineExchanges.length - 1] : null;
+
+		let priorSmoothedEnergy = lastExchange?.smoothedEnergy ?? undefined;
+		let priorComfort = lastExchange?.comfort ?? undefined;
+
+		if (!lastExchange && isExtensionSession && parentExchanges.length > 0) {
+			// Seed E_target priors from parent session's final pipeline exchange
+			const parentPipelineExchanges = parentExchanges.filter((e) => e.turnNumber > 0);
+			const parentLastExchange =
+				parentPipelineExchanges.length > 0
+					? parentPipelineExchanges[parentPipelineExchanges.length - 1]
+					: null;
+
+			if (parentLastExchange) {
+				priorSmoothedEnergy = parentLastExchange.smoothedEnergy ?? undefined;
+				priorComfort = parentLastExchange.comfort ?? undefined;
+
+				logger.info("E_target seeded from parent session", {
+					sessionId: input.sessionId,
+					parentSmoothedEnergy: priorSmoothedEnergy,
+					parentComfort: priorComfort,
+				});
+			}
+		}
 
 		const eTargetResult = computeETargetV2({
 			energyHistory,
 			tellingHistory,
-			priorSmoothedEnergy: lastExchange?.smoothedEnergy ?? undefined,
-			priorComfort: lastExchange?.comfort ?? undefined,
+			priorSmoothedEnergy,
+			priorComfort,
 		});
 
 		// ---- Step 2: Score all territories ----
 
-		const facetMetrics = computeFacetMetrics(existingEvidence as any[]);
-		const visitHistory = buildPacingVisitHistory(pipelineExchanges);
-		const currentTerritory = getCurrentTerritory(pipelineExchanges);
+		// Merge evidence from parent + extension sessions for coverage computation (Story 36-2, AC3)
+		const mergedEvidence = isExtensionSession
+			? [...parentEvidence, ...existingEvidence]
+			: existingEvidence;
+
+		const facetMetrics = computeFacetMetrics(mergedEvidence as any[]);
+
+		// Merge visit history from parent session for freshness penalty (Story 36-2, Task 3)
+		let visitHistory = buildPacingVisitHistory(pipelineExchanges);
+		if (isExtensionSession && pipelineExchanges.length === 0 && parentExchanges.length > 0) {
+			// On first turn of extension, seed visit history from parent
+			const parentPipelineExchanges = parentExchanges.filter((e) => e.turnNumber > 0);
+			visitHistory = buildPacingVisitHistory(parentPipelineExchanges);
+		}
+
+		// Seed currentTerritory from parent session if no prior exchanges in extension
+		let currentTerritory = getCurrentTerritory(pipelineExchanges);
+		if (!currentTerritory && isExtensionSession && parentExchanges.length > 0) {
+			const parentPipelineExchanges = parentExchanges.filter((e) => e.turnNumber > 0);
+			currentTerritory = getCurrentTerritory(parentPipelineExchanges);
+		}
 
 		const scorerOutput = scoreAllTerritoriesV2({
 			eTarget: eTargetResult.eTarget,
@@ -482,7 +565,9 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		// ---- Step 6: Build system prompt via 2-layer prompt builder ----
 
-		const promptResult = buildPrompt(governorResult.output);
+		const promptResult = buildPrompt(governorResult.output, {
+			extensionContext: extensionContextSummary,
+		});
 
 		const tPacing = Date.now();
 
@@ -497,6 +582,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			entryPressure: governorResult.debug.entryPressure.level,
 			observationFocus: governorResult.debug.observationGating.winner?.type ?? "relate",
 			templateKey: promptResult.templateKey,
+			isExtensionSession,
 			topScoredTerritories: scorerOutput.ranked.slice(0, 3).map((t) => ({
 				id: t.territoryId,
 				score: +t.score.toFixed(3),
@@ -539,7 +625,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		// Always run extraction (no more cold-start skip)
 		if (turnNumber >= 1) {
-			const domainDistribution = aggregateDomainDistribution(existingEvidence);
+			const domainDistribution = aggregateDomainDistribution(mergedEvidence);
 			const recentMessages: DomainMessage[] = domainMessages.slice(-6);
 
 			const extraction = yield* runThreeTierExtraction({

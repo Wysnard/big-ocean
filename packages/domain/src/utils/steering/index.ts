@@ -13,6 +13,13 @@ export {
 	PACING_CONFIG,
 	type PacingConfig,
 } from "./e-target";
+// Extension Context Builder (Story 36-2)
+export {
+	buildExtensionContext,
+	type ExtensionContext,
+	type ExtensionEvidenceRecord,
+	type ExtensionExchangeRecord,
+} from "./extension-context";
 // Move Governor (Story 26-3)
 export {
 	computeEntryPressure,
@@ -55,7 +62,7 @@ export {
 	scoreAllTerritoriesV2,
 } from "./pacing-territory-scorer";
 // Prompt Builder (Story 27-2, rewritten Story 28-4)
-export { buildPrompt, type PromptBuilderOutput } from "./prompt-builder";
+export { buildPrompt, type PromptBuilderOptions, type PromptBuilderOutput } from "./prompt-builder";
 // Territory Prompt Builder (Story 21-5, evolved Story 23-2)
 export {
 	buildTerritoryPrompt,
