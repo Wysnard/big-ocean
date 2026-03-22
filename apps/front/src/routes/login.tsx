@@ -10,6 +10,7 @@ import { LoginForm } from "../components/auth";
 import { getSession } from "../lib/auth-client";
 
 export const Route = createFileRoute("/login")({
+	ssr: false,
 	validateSearch: (search: Record<string, unknown>) => ({
 		sessionId: typeof search.sessionId === "string" ? search.sessionId : undefined,
 		redirectTo: typeof search.redirectTo === "string" ? search.redirectTo : undefined,

@@ -13,6 +13,7 @@ import { useQrAccept } from "@/hooks/useQrAccept";
 import { getSession } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/relationship/qr/$token")({
+	ssr: false,
 	beforeLoad: async ({ params }) => {
 		const { data: session } = await getSession();
 		if (!session?.user) {

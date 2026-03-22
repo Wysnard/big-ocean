@@ -34,6 +34,7 @@ const ChatSearchParams = S.Struct({
 });
 
 export const Route = createFileRoute("/chat/")({
+	ssr: false,
 	validateSearch: (search) => S.decodeUnknownSync(ChatSearchParams)(search),
 	beforeLoad: async (context) => {
 		const { search } = context;

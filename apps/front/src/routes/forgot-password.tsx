@@ -13,6 +13,7 @@ import { OceanShapeSet } from "../components/ocean-shapes";
 import { authClient, getSession } from "../lib/auth-client";
 
 export const Route = createFileRoute("/forgot-password")({
+	ssr: false,
 	beforeLoad: async () => {
 		const { data: session } = await getSession();
 		if (session?.user) {
