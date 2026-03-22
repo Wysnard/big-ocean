@@ -12,7 +12,8 @@ Frontend development guidelines and patterns for big-ocean.
 
 1. [Tailwind Data Attributes for State Management](#tailwind-data-attributes-for-state-management)
 2. [Component Patterns](#component-patterns)
-3. [Tech Stack Reference](#tech-stack-reference)
+3. [Data Fetching](#data-fetching)
+4. [Tech Stack Reference](#tech-stack-reference)
 
 ---
 
@@ -353,6 +354,85 @@ export function Button({ className, variant, size, ...props }: ButtonProps) {
 **When to use CVA vs data attributes:**
 - **CVA:** Visual variants that are part of the component API (primary/secondary, small/large)
 - **Data attributes:** Dynamic state that changes during runtime (open/closed, loading/idle)
+
+---
+
+## Data Fetching
+
+### Standard: TanStack Query + Effect HttpApiClient
+
+All frontend data fetching MUST use **TanStack Query** (`useQuery`, `useMutation`) with the typed **Effect HttpApiClient** from `@workspace/contracts`. Never use raw `fetch`.
+
+**API functions** live in `apps/front/src/lib/` (e.g., `qr-token-api.ts`) — pure async functions using the Effect client. **Hooks** in `apps/front/src/hooks/` compose these with TanStack Query.
+
+#### Mutations (POST/PUT/DELETE)
+
+```tsx
+import { useMutation } from "@tanstack/react-query";
+import { Effect } from "effect";
+import { makeApiClient } from "../lib/api-client";
+
+export function useDeleteAccount() {
+  return useMutation({
+    mutationKey: ["account", "delete"],
+    mutationFn: () =>
+      Effect.gen(function* () {
+        const client = yield* makeApiClient;
+        return yield* client.account.deleteAccount({});
+      }).pipe(Effect.runPromise),
+  });
+}
+```
+
+#### Queries with Polling
+
+```tsx
+import { useQuery } from "@tanstack/react-query";
+
+export function usePortraitStatus(sessionId: string) {
+  return useQuery({
+    queryKey: ["portraitStatus", sessionId],
+    queryFn: () => fetchPortraitStatus(sessionId),
+    enabled: !!sessionId,
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      if (status === "ready" || status === "failed") return false;
+      return 2000; // Poll every 2s while generating
+    },
+  });
+}
+```
+
+#### API Function Pattern (for testability)
+
+Extract API calls into separate files in `lib/` so hooks can be tested by mocking the API module:
+
+```tsx
+// lib/qr-token-api.ts — API functions (mockable)
+export function generateToken(): Promise<QrTokenData> {
+  return Effect.gen(function* () {
+    const client = yield* makeApiClient;
+    return yield* client.qrToken.generateQrToken({});
+  }).pipe(Effect.runPromise);
+}
+
+// hooks/useQrDrawer.ts — Hook (testable)
+import { generateToken } from "../lib/qr-token-api";
+
+export function useQrDrawer() {
+  const mutation = useMutation({ mutationFn: generateToken });
+  // ...
+}
+```
+
+#### Rules
+
+- **Always use TanStack Query** for async state — never manual `useState` + `useEffect` for fetching
+- **Always use Effect HttpApiClient** — never raw `fetch` (see CLAUDE.md)
+- **Extract API functions** into `lib/` for testability
+- **Use `refetchInterval`** for polling — never `setInterval`
+- **Use `enabled`** to conditionally run queries — never guard with `if` inside `queryFn`
+- **Invalidate queries** after mutations via `queryClient.invalidateQueries`
 
 ---
 
