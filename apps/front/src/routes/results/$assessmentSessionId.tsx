@@ -28,6 +28,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useFacetEvidence } from "@/hooks/use-evidence";
 import { useToggleVisibility } from "@/hooks/use-profile";
+import { useShareFlow } from "@/hooks/use-share-flow";
 import { usePortraitStatus } from "@/hooks/usePortraitStatus";
 import { createThemedCheckoutEmbed } from "@/lib/polar-checkout";
 import {
@@ -197,7 +198,6 @@ function ResultsSessionPage() {
 		shareableUrl: string;
 		isPublic: boolean;
 	} | null>(null);
-	const [copied, setCopied] = useState(false);
 
 	// Trait selection state
 	const [selectedTrait, setSelectedTrait] = useState<TraitName | null>(null);
@@ -280,37 +280,13 @@ function ResultsSessionPage() {
 		}
 	}, [results, isAuthenticated, shareState]);
 
-	const handleCopyLink = async () => {
-		if (!shareState) return;
-		try {
-			await navigator.clipboard.writeText(shareState.shareableUrl);
-			setCopied(true);
-			setTimeout(() => setCopied(false), 2000);
-		} catch {
-			const textarea = document.createElement("textarea");
-			textarea.value = shareState.shareableUrl;
-			document.body.appendChild(textarea);
-			textarea.select();
-			document.execCommand("copy");
-			document.body.removeChild(textarea);
-			setCopied(true);
-			setTimeout(() => setCopied(false), 2000);
-		}
-	};
-
-	const handleShareLink = async () => {
-		if (!shareState) return;
-		try {
-			await navigator.share({
-				title: `My personality archetype: ${results?.archetypeName ?? "Big Ocean"}`,
-				text: "Check out my Big Ocean personality profile",
-				url: shareState.shareableUrl,
-			});
-		} catch {
-			// User cancelled share or share failed — fall back to clipboard copy
-			await handleCopyLink();
-		}
-	};
+	// Story 33-3: Share flow with visibility prompt
+	const shareFlow = useShareFlow({
+		shareState,
+		archetypeName: results?.archetypeName ?? "Big Ocean",
+		toggleVisibility: (input) => toggleVisibility.mutateAsync(input),
+		onShareStateChange: (update) => setShareState((prev) => (prev ? { ...prev, ...update } : null)),
+	});
 
 	const handleToggleVisibility = async () => {
 		if (!shareState) return;
@@ -489,11 +465,14 @@ function ResultsSessionPage() {
 					<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
 						<ShareProfileSection
 							shareState={shareState}
-							copied={copied}
+							copied={shareFlow.copied}
 							isTogglePending={toggleVisibility.isPending}
-							onCopyLink={handleCopyLink}
 							onToggleVisibility={handleToggleVisibility}
-							onShareLink={handleShareLink}
+							onShareAction={() => void shareFlow.initiateShare()}
+							promptNeeded={shareFlow.promptNeeded}
+							onAcceptPrompt={() => void shareFlow.acceptAndShare()}
+							onDeclinePrompt={shareFlow.declineShare}
+							isShareToggling={shareFlow.isToggling}
 						/>
 
 						<RelationshipCard />
