@@ -268,8 +268,9 @@ function ProfilePage() {
 			? "authenticated-assessed"
 			: "authenticated-no-assessment";
 
-	// Own-profile detection: API returns isOwnProfile when viewer is authenticated
-	const isOwnProfile = profile?.isOwnProfile ?? false;
+	// Own-profile detection: prefer client-side hook data (re-fetched with auth cookies)
+	// over loader data (SSR fetch may lack cookies, returning isOwnProfile=false)
+	const isOwnProfile = hookProfile?.isOwnProfile ?? false;
 
 	if (isLoading && !profile) return <ProfileLoading />;
 	if (error && !profile) return <ProfileErrorState error={error} />;
