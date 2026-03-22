@@ -45,5 +45,12 @@ export class RelationshipAnalysisRepository extends Context.Tag("RelationshipAna
 		) => Effect.Effect<ReadonlyArray<RelationshipAnalysis>, DatabaseError>;
 
 		readonly getById: (id: string) => Effect.Effect<RelationshipAnalysis | null, DatabaseError>;
+
+		readonly getByIdWithParticipantNames: (
+			id: string,
+		) => Effect.Effect<
+			(RelationshipAnalysis & { userAName: string; userBName: string }) | null,
+			DatabaseError
+		>;
 	}
 >() {}

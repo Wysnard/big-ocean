@@ -1,8 +1,9 @@
 /**
- * useQrAccept Hook (Story 34-3)
+ * useQrAccept Hook (Story 34-3, updated Story 35-1)
  *
  * Manages the accept/refuse flow for QR token accept screen.
  * Uses TanStack Query mutations for accept and refuse actions.
+ * After acceptance, navigates to the ritual screen before the analysis.
  */
 
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -25,7 +26,7 @@ export function useQrAccept(token: string) {
 		mutationFn: () => acceptToken(token),
 		onSuccess: (data) => {
 			void navigate({
-				to: "/relationship/$analysisId",
+				to: "/relationship/$analysisId/ritual",
 				params: { analysisId: data.analysisId },
 			});
 		},

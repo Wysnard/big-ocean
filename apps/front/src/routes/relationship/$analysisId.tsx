@@ -1,19 +1,20 @@
 /**
- * Relationship Analysis View Page (Story 14.4)
+ * Relationship Analysis View Page (Story 14.4, updated Story 35-1)
  *
  * Displays the full personality comparison analysis for authorized users.
+ * Handles null content (still generating) with a loading state.
  */
 
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import type { RelationshipAnalysisResponse } from "@workspace/contracts/http/groups/relationship";
 import { Button } from "@workspace/ui/components/button";
+import { Effect } from "effect";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import Markdown from "react-markdown";
 import { useAuth } from "@/hooks/use-auth";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+import { makeApiClient } from "@/lib/api-client";
 
 export const Route = createFileRoute("/relationship/$analysisId")({
 	component: RelationshipAnalysisPage,
@@ -22,14 +23,11 @@ export const Route = createFileRoute("/relationship/$analysisId")({
 function useRelationshipAnalysis(analysisId: string, enabled: boolean) {
 	return useQuery<RelationshipAnalysisResponse>({
 		queryKey: ["relationship", "analysis", analysisId],
-		queryFn: async () => {
-			const response = await fetch(
-				`${API_URL}/api/relationship/analysis/${encodeURIComponent(analysisId)}`,
-				{ credentials: "include" },
-			);
-			if (!response.ok) throw new Error(`HTTP ${response.status}`);
-			return response.json();
-		},
+		queryFn: () =>
+			Effect.gen(function* () {
+				const client = yield* makeApiClient;
+				return yield* client.relationship.getRelationshipAnalysis({ path: { analysisId } });
+			}).pipe(Effect.runPromise),
 		staleTime: 5 * 60 * 1000,
 		enabled,
 	});
@@ -74,6 +72,20 @@ function RelationshipAnalysisPage() {
 						<Link to="/">Go Home</Link>
 					</Button>
 				</div>
+			</div>
+		);
+	}
+
+	if (data.content === null) {
+		return (
+			<div
+				data-testid="relationship-analysis-page"
+				className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6"
+			>
+				<Loader2 className="h-10 w-10 motion-safe:animate-spin text-primary" />
+				<p className="text-sm text-muted-foreground">
+					Your relationship analysis is being generated...
+				</p>
 			</div>
 		);
 	}

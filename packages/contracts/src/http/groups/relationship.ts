@@ -30,9 +30,11 @@ export type RelationshipCardState = typeof RelationshipCardStateSchema.Type;
 
 const RelationshipAnalysisResponseSchema = S.Struct({
 	analysisId: S.String,
-	content: S.String,
+	content: S.NullOr(S.String),
 	/** Whether this analysis is based on both users' latest results (Story 36-3) */
 	isLatestVersion: S.Boolean,
+	userAName: S.String,
+	userBName: S.String,
 });
 
 export type RelationshipAnalysisResponse = typeof RelationshipAnalysisResponseSchema.Type;
