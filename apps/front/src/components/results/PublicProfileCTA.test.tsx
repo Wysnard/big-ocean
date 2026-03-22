@@ -75,4 +75,45 @@ describe("PublicProfileCTA", () => {
 		const link = screen.getByTestId("public-profile-cta-button").closest("a");
 		expect(link).toHaveAttribute("href", "/signup");
 	});
+
+	it("does NOT show relationship CTA when viewing own profile as authenticated-assessed", () => {
+		render(
+			<PublicProfileCTA
+				displayName="Alice"
+				publicProfileId="abc123"
+				authState="authenticated-assessed"
+				isOwnProfile={true}
+			/>,
+		);
+		expect(
+			screen.queryByText("You care about Alice. Discover your dynamic together."),
+		).not.toBeInTheDocument();
+		expect(screen.queryByText(/scan a QR code together/i)).not.toBeInTheDocument();
+	});
+
+	it("shows generic CTA when viewing own profile as authenticated-assessed", () => {
+		render(
+			<PublicProfileCTA
+				displayName="Alice"
+				publicProfileId="abc123"
+				authState="authenticated-assessed"
+				isOwnProfile={true}
+			/>,
+		);
+		expect(screen.getByText("What's YOUR code?")).toBeInTheDocument();
+	});
+
+	it("shows relationship CTA when isOwnProfile is false for authenticated-assessed", () => {
+		render(
+			<PublicProfileCTA
+				displayName="Alice"
+				publicProfileId="abc123"
+				authState="authenticated-assessed"
+				isOwnProfile={false}
+			/>,
+		);
+		expect(
+			screen.getByText("You care about Alice. Discover your dynamic together."),
+		).toBeInTheDocument();
+	});
 });

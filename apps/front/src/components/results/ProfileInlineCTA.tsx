@@ -4,11 +4,13 @@ import type { AuthState } from "./PublicProfileCTA";
 
 interface ProfileInlineCTAProps {
 	authState: AuthState;
+	isOwnProfile?: boolean;
 }
 
-export function ProfileInlineCTA({ authState }: ProfileInlineCTAProps) {
-	// Only show for visitors who haven't completed their assessment
-	if (authState === "authenticated-assessed") {
+export function ProfileInlineCTA({ authState, isOwnProfile = false }: ProfileInlineCTAProps) {
+	// Only show for visitors who haven't completed their assessment.
+	// Also hide when the user is viewing their own profile (they already have an assessment).
+	if (authState === "authenticated-assessed" || isOwnProfile) {
 		return null;
 	}
 

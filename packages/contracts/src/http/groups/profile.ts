@@ -54,6 +54,7 @@ export const GetPublicProfileResponseSchema = S.Struct({
 	traitSummary: S.Record({ key: S.String, value: S.String }),
 	facets: S.Record({ key: S.String, value: FacetScoreSchema }),
 	isPublic: S.Boolean,
+	isOwnProfile: S.Boolean,
 });
 
 /**

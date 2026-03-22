@@ -268,6 +268,10 @@ function ProfilePage() {
 			? "authenticated-assessed"
 			: "authenticated-no-assessment";
 
+	// Own-profile detection: prefer client-side hook data (re-fetched with auth cookies)
+	// over loader data (SSR fetch may lack cookies, returning isOwnProfile=false)
+	const isOwnProfile = hookProfile?.isOwnProfile ?? false;
+
 	if (isLoading && !profile) return <ProfileLoading />;
 	if (error && !profile) return <ProfileErrorState error={error} />;
 	if (!profile) return <ProfileErrorState />;
@@ -324,7 +328,7 @@ function ProfilePage() {
 			</section>
 
 			{/* Inline CTA — between trait strata and "How it works" */}
-			<ProfileInlineCTA authState={authState} />
+			<ProfileInlineCTA authState={authState} isOwnProfile={isOwnProfile} />
 
 			{/* How It Works micro-preview */}
 			<ProfileHowItWorks />
@@ -343,6 +347,7 @@ function ProfilePage() {
 				displayName={displayName}
 				publicProfileId={publicProfileId}
 				authState={authState}
+				isOwnProfile={isOwnProfile}
 			/>
 		</div>
 	);

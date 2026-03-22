@@ -48,4 +48,14 @@ describe("ProfileInlineCTA", () => {
 		const link = screen.getByTestId("profile-inline-cta-button").closest("a");
 		expect(link).toHaveAttribute("href", "/chat");
 	});
+
+	it("does NOT render when isOwnProfile is true (even for unauthenticated state)", () => {
+		render(<ProfileInlineCTA authState="unauthenticated" isOwnProfile={true} />);
+		expect(screen.queryByTestId("profile-inline-cta-button")).not.toBeInTheDocument();
+	});
+
+	it("renders when isOwnProfile is false", () => {
+		render(<ProfileInlineCTA authState="unauthenticated" isOwnProfile={false} />);
+		expect(screen.getByTestId("profile-inline-cta-button")).toBeInTheDocument();
+	});
 });
