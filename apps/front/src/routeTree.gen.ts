@@ -18,7 +18,7 @@ import { Route as LoginRouteImport } from "./routes/login";
 import { Route as ProfileRouteImport } from "./routes/profile";
 import { Route as PublicProfilePublicProfileIdRouteImport } from "./routes/public-profile.$publicProfileId";
 import { Route as RelationshipAnalysisIdRouteImport } from "./routes/relationship/$analysisId";
-import { Route as RelationshipAnalysisIdRitualRouteImport } from "./routes/relationship/$analysisId.ritual";
+import { Route as RelationshipAnalysisIdRitualRouteImport } from "./routes/relationship/$analysisId_.ritual";
 import { Route as RelationshipQrTokenRouteImport } from "./routes/relationship/qr/$token";
 import { Route as ResetPasswordRouteImport } from "./routes/reset-password";
 import { Route as ResultsRouteImport } from "./routes/results";
@@ -108,9 +108,9 @@ const RelationshipQrTokenRoute = RelationshipQrTokenRouteImport.update({
 	getParentRoute: () => rootRouteImport,
 } as any);
 const RelationshipAnalysisIdRitualRoute = RelationshipAnalysisIdRitualRouteImport.update({
-	id: "/ritual",
-	path: "/ritual",
-	getParentRoute: () => RelationshipAnalysisIdRoute,
+	id: "/relationship/$analysisId_/ritual",
+	path: "/relationship/$analysisId/ritual",
+	getParentRoute: () => rootRouteImport,
 } as any);
 
 export interface FileRoutesByFullPath {
@@ -126,7 +126,7 @@ export interface FileRoutesByFullPath {
 	"/verify-email": typeof VerifyEmailRoute;
 	"/dev/components": typeof DevComponentsRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
-	"/relationship/$analysisId": typeof RelationshipAnalysisIdRouteWithChildren;
+	"/relationship/$analysisId": typeof RelationshipAnalysisIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
 	"/relationship/$analysisId/ritual": typeof RelationshipAnalysisIdRitualRoute;
@@ -145,7 +145,7 @@ export interface FileRoutesByTo {
 	"/verify-email": typeof VerifyEmailRoute;
 	"/dev/components": typeof DevComponentsRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
-	"/relationship/$analysisId": typeof RelationshipAnalysisIdRouteWithChildren;
+	"/relationship/$analysisId": typeof RelationshipAnalysisIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat": typeof ChatIndexRoute;
 	"/relationship/$analysisId/ritual": typeof RelationshipAnalysisIdRitualRoute;
@@ -165,10 +165,10 @@ export interface FileRoutesById {
 	"/verify-email": typeof VerifyEmailRoute;
 	"/dev/components": typeof DevComponentsRoute;
 	"/public-profile/$publicProfileId": typeof PublicProfilePublicProfileIdRoute;
-	"/relationship/$analysisId": typeof RelationshipAnalysisIdRouteWithChildren;
+	"/relationship/$analysisId": typeof RelationshipAnalysisIdRoute;
 	"/results/$assessmentSessionId": typeof ResultsAssessmentSessionIdRoute;
 	"/chat/": typeof ChatIndexRoute;
-	"/relationship/$analysisId/ritual": typeof RelationshipAnalysisIdRitualRoute;
+	"/relationship/$analysisId_/ritual": typeof RelationshipAnalysisIdRitualRoute;
 	"/relationship/qr/$token": typeof RelationshipQrTokenRoute;
 }
 export interface FileRouteTypes {
@@ -227,7 +227,7 @@ export interface FileRouteTypes {
 		| "/relationship/$analysisId"
 		| "/results/$assessmentSessionId"
 		| "/chat/"
-		| "/relationship/$analysisId/ritual"
+		| "/relationship/$analysisId_/ritual"
 		| "/relationship/qr/$token";
 	fileRoutesById: FileRoutesById;
 }
@@ -244,8 +244,9 @@ export interface RootRouteChildren {
 	VerifyEmailRoute: typeof VerifyEmailRoute;
 	DevComponentsRoute: typeof DevComponentsRoute;
 	PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute;
-	RelationshipAnalysisIdRoute: typeof RelationshipAnalysisIdRouteWithChildren;
+	RelationshipAnalysisIdRoute: typeof RelationshipAnalysisIdRoute;
 	ChatIndexRoute: typeof ChatIndexRoute;
+	RelationshipAnalysisIdRitualRoute: typeof RelationshipAnalysisIdRitualRoute;
 	RelationshipQrTokenRoute: typeof RelationshipQrTokenRoute;
 }
 
@@ -363,12 +364,12 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof RelationshipQrTokenRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
-		"/relationship/$analysisId/ritual": {
-			id: "/relationship/$analysisId/ritual";
-			path: "/ritual";
+		"/relationship/$analysisId_/ritual": {
+			id: "/relationship/$analysisId_/ritual";
+			path: "/relationship/$analysisId/ritual";
 			fullPath: "/relationship/$analysisId/ritual";
 			preLoaderRoute: typeof RelationshipAnalysisIdRitualRouteImport;
-			parentRoute: typeof RelationshipAnalysisIdRoute;
+			parentRoute: typeof rootRouteImport;
 		};
 	}
 }
@@ -383,18 +384,6 @@ const ResultsRouteChildren: ResultsRouteChildren = {
 
 const ResultsRouteWithChildren = ResultsRoute._addFileChildren(ResultsRouteChildren);
 
-interface RelationshipAnalysisIdRouteChildren {
-	RelationshipAnalysisIdRitualRoute: typeof RelationshipAnalysisIdRitualRoute;
-}
-
-const RelationshipAnalysisIdRouteChildren: RelationshipAnalysisIdRouteChildren = {
-	RelationshipAnalysisIdRitualRoute: RelationshipAnalysisIdRitualRoute,
-};
-
-const RelationshipAnalysisIdRouteWithChildren = RelationshipAnalysisIdRoute._addFileChildren(
-	RelationshipAnalysisIdRouteChildren,
-);
-
 const rootRouteChildren: RootRouteChildren = {
 	IndexRoute: IndexRoute,
 	R404Route: R404Route,
@@ -408,10 +397,21 @@ const rootRouteChildren: RootRouteChildren = {
 	VerifyEmailRoute: VerifyEmailRoute,
 	DevComponentsRoute: DevComponentsRoute,
 	PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,
-	RelationshipAnalysisIdRoute: RelationshipAnalysisIdRouteWithChildren,
+	RelationshipAnalysisIdRoute: RelationshipAnalysisIdRoute,
 	ChatIndexRoute: ChatIndexRoute,
+	RelationshipAnalysisIdRitualRoute: RelationshipAnalysisIdRitualRoute,
 	RelationshipQrTokenRoute: RelationshipQrTokenRoute,
 };
 export const routeTree = rootRouteImport
 	._addFileChildren(rootRouteChildren)
 	._addFileTypes<FileRouteTypes>();
+
+import type { createStart } from "@tanstack/react-start";
+import type { getRouter } from "./router.tsx";
+
+declare module "@tanstack/react-start" {
+	interface Register {
+		ssr: true;
+		router: Awaited<ReturnType<typeof getRouter>>;
+	}
+}
