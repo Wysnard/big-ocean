@@ -80,7 +80,7 @@ describe("useQrDrawer", () => {
 		expect(mockGenerateToken).toHaveBeenCalledOnce();
 	});
 
-	it("sets error and closes on generation failure", async () => {
+	it("shows error but keeps drawer open on generation failure", async () => {
 		mockGenerateToken.mockRejectedValueOnce(new Error("HTTP 500"));
 
 		const { result } = renderHook(() => useQrDrawer(), { wrapper: createWrapper() });
@@ -91,7 +91,7 @@ describe("useQrDrawer", () => {
 
 		await waitFor(() => {
 			expect(result.current.error).toBe("Failed to generate QR code. Please try again.");
-			expect(result.current.isOpen).toBe(false);
+			expect(result.current.isOpen).toBe(true); // Drawer stays open for retry
 		});
 	});
 

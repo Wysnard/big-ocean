@@ -1,10 +1,11 @@
 /**
  * useQrDrawer Hook (Story 34-2)
  *
- * Manages the QR drawer lifecycle using TanStack Query:
- * - useMutation for token generation
- * - useQuery with refetchInterval for status polling
- * - Auto-regenerates token when near expiry (< 55 min remaining)
+ * QR drawer lifecycle using TanStack Query:
+ * - Opens drawer → generates token → displays QR
+ * - Polls status every 60s → if expired, auto-regenerates
+ * - Token regenerates every hour (55-min threshold to avoid edge cases)
+ * - On generation failure, keeps drawer open for retry
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,7 +13,7 @@ import { useCallback, useState } from "react";
 import { fetchTokenStatus, generateToken, type QrTokenData } from "../lib/qr-token-api";
 
 export const POLL_INTERVAL_MS = 60_000;
-const REGENERATE_THRESHOLD_MS = 55 * 60 * 1000; // Regenerate when < 55 min remaining
+const REGENERATE_THRESHOLD_MS = 55 * 60 * 1000; // 55 min — regenerate before 1h TTL
 
 export function useQrDrawer() {
 	const [isOpen, setIsOpen] = useState(false);
@@ -25,18 +26,15 @@ export function useQrDrawer() {
 		onSuccess: (data) => {
 			setTokenData(data);
 		},
-		onError: () => {
-			setIsOpen(false);
-		},
 	});
 
-	// Poll token status while drawer is open and token is valid
-	const statusQuery = useQuery({
+	// Poll token status — auto-regenerate on expiry or near-expiry
+	useQuery({
 		queryKey: ["qrToken", "status", tokenData?.token],
 		queryFn: async () => {
 			if (!tokenData) throw new Error("No token");
 
-			// Check if token is near expiry — regenerate if so
+			// Near expiry → regenerate preemptively
 			const timeRemaining = new Date(tokenData.expiresAt).getTime() - Date.now();
 			if (timeRemaining < REGENERATE_THRESHOLD_MS) {
 				const fresh = await generateToken();
@@ -44,17 +42,28 @@ export function useQrDrawer() {
 				return { status: "valid" as const };
 			}
 
-			return fetchTokenStatus(tokenData.token);
+			const result = await fetchTokenStatus(tokenData.token);
+
+			// Expired → auto-regenerate
+			if (result.status === "expired") {
+				const fresh = await generateToken();
+				setTokenData(fresh);
+				return { status: "valid" as const };
+			}
+
+			return result;
 		},
 		enabled: isOpen && !!tokenData?.token,
 		refetchInterval: (query) => {
-			const status = query.state.data?.status;
-			if (status === "accepted" || status === "expired") return false;
+			// Stop polling once accepted (terminal state)
+			if (query.state.data?.status === "accepted") return false;
 			return POLL_INTERVAL_MS;
 		},
 	});
 
-	const status = statusQuery.data?.status ?? (tokenData ? "valid" : "idle");
+	const status =
+		queryClient.getQueryData<{ status: string }>(["qrToken", "status", tokenData?.token])?.status ??
+		(tokenData ? "valid" : "idle");
 
 	const open = useCallback(() => {
 		setIsOpen(true);
@@ -68,6 +77,10 @@ export function useQrDrawer() {
 		queryClient.removeQueries({ queryKey: ["qrToken", "status"] });
 	}, [generateMutation, queryClient]);
 
+	const retry = useCallback(() => {
+		generateMutation.mutate();
+	}, [generateMutation]);
+
 	return {
 		isOpen,
 		token: tokenData?.token ?? null,
@@ -77,5 +90,6 @@ export function useQrDrawer() {
 		error: generateMutation.isError ? "Failed to generate QR code. Please try again." : null,
 		open,
 		close,
+		retry,
 	};
 }

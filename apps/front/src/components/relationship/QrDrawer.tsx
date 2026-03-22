@@ -26,6 +26,7 @@ interface QrDrawerContentProps {
 	status: string;
 	error: string | null;
 	onClose: () => void;
+	onRetry: () => void;
 }
 
 /**
@@ -39,6 +40,7 @@ export function QrDrawerContent({
 	status,
 	error,
 	onClose,
+	onRetry,
 }: QrDrawerContentProps) {
 	const [copied, setCopied] = useState(false);
 
@@ -53,14 +55,19 @@ export function QrDrawerContent({
 		}
 	}, [shareUrl]);
 
-	// Error state
+	// Error state — drawer stays open, user can retry
 	if (error) {
 		return (
 			<div data-testid="qr-drawer-error" className="p-6 text-center space-y-4">
 				<div className="text-destructive text-sm">{error}</div>
-				<Button variant="outline" onClick={onClose} className="min-h-11">
-					Close
-				</Button>
+				<div className="flex gap-2 justify-center">
+					<Button variant="default" onClick={onRetry} className="min-h-11">
+						Try Again
+					</Button>
+					<Button variant="outline" onClick={onClose} className="min-h-11">
+						Close
+					</Button>
+				</div>
 			</div>
 		);
 	}
@@ -148,13 +155,6 @@ export function QrDrawerContent({
 					)}
 				</Button>
 			</div>
-
-			{/* Status indicator */}
-			{status === "expired" && (
-				<p className="text-xs text-muted-foreground text-center">
-					This QR code has expired. Close and reopen to generate a new one.
-				</p>
-			)}
 		</div>
 	);
 }
@@ -198,6 +198,7 @@ export function QrDrawerWithTrigger() {
 						status={drawer.status}
 						error={drawer.error}
 						onClose={drawer.close}
+						onRetry={drawer.retry}
 					/>
 				</DrawerContent>
 			</Drawer>

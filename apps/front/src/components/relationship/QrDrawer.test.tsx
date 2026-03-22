@@ -9,9 +9,16 @@
  * - Copy to clipboard functionality
  */
 
+import { vi } from "vitest";
+
+vi.mock("../../lib/qr-token-api", () => ({
+	generateToken: vi.fn(),
+	fetchTokenStatus: vi.fn(),
+}));
+
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { QrDrawerContent } from "./QrDrawer";
 
 describe("QrDrawerContent", () => {
@@ -24,6 +31,7 @@ describe("QrDrawerContent", () => {
 				status="idle"
 				error={null}
 				onClose={vi.fn()}
+				onRetry={vi.fn()}
 			/>,
 		);
 
@@ -39,6 +47,7 @@ describe("QrDrawerContent", () => {
 				status="valid"
 				error={null}
 				onClose={vi.fn()}
+				onRetry={vi.fn()}
 			/>,
 		);
 
@@ -56,14 +65,14 @@ describe("QrDrawerContent", () => {
 				status="accepted"
 				error={null}
 				onClose={vi.fn()}
+				onRetry={vi.fn()}
 			/>,
 		);
 
 		expect(screen.getByTestId("qr-drawer-accepted")).toBeInTheDocument();
 	});
 
-	it("renders error state", () => {
-		const onClose = vi.fn();
+	it("renders error state with retry and close buttons", () => {
 		render(
 			<QrDrawerContent
 				isLoading={false}
@@ -71,12 +80,34 @@ describe("QrDrawerContent", () => {
 				shareUrl={null}
 				status="idle"
 				error="Failed to generate QR code. Please try again."
-				onClose={onClose}
+				onClose={vi.fn()}
+				onRetry={vi.fn()}
 			/>,
 		);
 
 		expect(screen.getByTestId("qr-drawer-error")).toBeInTheDocument();
 		expect(screen.getByText("Failed to generate QR code. Please try again.")).toBeInTheDocument();
+		expect(screen.getByText("Try Again")).toBeInTheDocument();
+		expect(screen.getByText("Close")).toBeInTheDocument();
+	});
+
+	it("calls onRetry when Try Again is clicked", async () => {
+		const user = userEvent.setup();
+		const onRetry = vi.fn();
+		render(
+			<QrDrawerContent
+				isLoading={false}
+				token={null}
+				shareUrl={null}
+				status="idle"
+				error="Failed to generate QR code. Please try again."
+				onClose={vi.fn()}
+				onRetry={onRetry}
+			/>,
+		);
+
+		await user.click(screen.getByText("Try Again"));
+		expect(onRetry).toHaveBeenCalledOnce();
 	});
 
 	it("copies share URL to clipboard on button click", async () => {
@@ -95,6 +126,7 @@ describe("QrDrawerContent", () => {
 				status="valid"
 				error={null}
 				onClose={vi.fn()}
+				onRetry={vi.fn()}
 			/>,
 		);
 
@@ -113,6 +145,7 @@ describe("QrDrawerContent", () => {
 				status="valid"
 				error={null}
 				onClose={vi.fn()}
+				onRetry={vi.fn()}
 			/>,
 		);
 
@@ -129,6 +162,7 @@ describe("QrDrawerContent", () => {
 				status="valid"
 				error={null}
 				onClose={vi.fn()}
+				onRetry={vi.fn()}
 			/>,
 		);
 
