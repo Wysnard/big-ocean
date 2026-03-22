@@ -62,7 +62,7 @@ export const checkCheckIn = Effect.gen(function* () {
 			.findBySession(session.sessionId)
 			.pipe(Effect.catchAll(() => Effect.succeed([] as Array<{ selectedTerritory: string | null }>)));
 
-		let territoryName = "your personality";
+		let territoryDescription = "your personality";
 		if (exchanges.length > 0) {
 			// Find the last exchange with a selected territory
 			for (let i = exchanges.length - 1; i >= 0; i--) {
@@ -70,7 +70,7 @@ export const checkCheckIn = Effect.gen(function* () {
 				if (exchange?.selectedTerritory) {
 					const territory = getTerritoryById(exchange.selectedTerritory as TerritoryId);
 					if (territory) {
-						territoryName = territory.name;
+						territoryDescription = territory.descriptionYou;
 					}
 					break;
 				}
@@ -81,7 +81,7 @@ export const checkCheckIn = Effect.gen(function* () {
 
 		const html = renderCheckInEmail({
 			userName: session.userName,
-			territoryName,
+			territoryDescription,
 			resultsUrl,
 		});
 
@@ -97,7 +97,7 @@ export const checkCheckIn = Effect.gen(function* () {
 					logger.info("Nerin check-in email sent", {
 						sessionId: session.sessionId,
 						userEmail: session.userEmail,
-						territoryName,
+						territoryDescription,
 					});
 					emailsSent++;
 					return Effect.void;

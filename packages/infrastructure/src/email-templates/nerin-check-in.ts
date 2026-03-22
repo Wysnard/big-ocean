@@ -10,7 +10,7 @@
 
 export interface CheckInEmailProps {
 	readonly userName: string;
-	readonly territoryName: string;
+	readonly territoryDescription: string;
 	readonly resultsUrl: string;
 }
 
@@ -21,7 +21,7 @@ export interface CheckInEmailProps {
  * the last conversation territory as something he's been thinking about.
  */
 export function renderCheckInEmail(props: CheckInEmailProps): string {
-	const { userName, territoryName, resultsUrl } = props;
+	const { userName, territoryDescription, resultsUrl } = props;
 	const displayName = userName || "there";
 
 	return `<!DOCTYPE html>
@@ -51,7 +51,7 @@ export function renderCheckInEmail(props: CheckInEmailProps): string {
                 Hey ${escapeHtml(displayName)},
               </h2>
               <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #94a3b8;">
-                I've been thinking about our conversation — especially what came up around <strong style="color: #c4b5fd;">${escapeHtml(territoryName)}</strong>. There's more to explore there if you're curious.
+                I've been thinking about our conversation — especially <strong style="color: #c4b5fd;">${escapeHtml(territoryDescription)}</strong>. There's more to explore there if you're curious.
               </p>
               <p style="margin: 0 0 32px 0; font-size: 16px; line-height: 1.6; color: #94a3b8;">
                 Your portrait and results are still here. Come back whenever you're ready.

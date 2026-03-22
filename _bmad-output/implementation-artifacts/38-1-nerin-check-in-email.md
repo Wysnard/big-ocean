@@ -34,9 +34,14 @@ So that the experience has a lasting emotional resonance beyond the initial sess
 
 - [ ] Task 3: Create Nerin check-in email template (AC: #2)
   - [ ] 3.1: Create `packages/infrastructure/src/email-templates/nerin-check-in.ts` following the `drop-off-re-engagement.ts` pattern
-  - [ ] 3.2: Template uses Nerin's warm, curious voice — subject: "I've been thinking about something you said", body references last territory as a tension/theme
+  - [ ] 3.2: Template uses Nerin's warm, curious voice — subject: "I've been thinking about something you said", body references last territory using its second-person `descriptionYou` field (e.g., "how you structure your time and what you protect in it")
   - [ ] 3.3: CTA links to `/results` (extension CTA visible on results page)
   - [ ] 3.4: Add unit test in `packages/infrastructure/src/email-templates/__tests__/nerin-check-in.test.ts`
+
+- [ ] Task 6: Add `descriptionYou` field to Territory type and catalog (AC: #2)
+  - [ ] 6.1: Add `readonly descriptionYou: string` to `Territory` interface in `packages/domain/src/types/territory.ts`
+  - [ ] 6.2: Add hand-written second-person `descriptionYou` to all 25 territories in `packages/domain/src/constants/territory-catalog.ts`
+  - [ ] 6.3: Add catalog tests for `descriptionYou` (non-empty, uses you/your not they/their)
 
 - [ ] Task 4: Create `check-check-in` use-case (AC: #1, #3, #4)
   - [ ] 4.1: Create `apps/api/src/use-cases/check-check-in.use-case.ts` following the `check-drop-off.use-case.ts` pattern
@@ -53,6 +58,6 @@ So that the experience has a lasting emotional resonance beyond the initial sess
 
 - Follows exact same architecture as the drop-off re-engagement email (Story 31-7): same repository methods, same email template pattern, same use-case structure, same handler wiring
 - Email content per UX spec 14.3: Subject "I've been thinking about something you said", body references the last territory as a conversational theme
-- The `{tensionFromPortrait}` mentioned in UX spec is aspirational — for now, use the last territory name from assessment exchanges (same approach as drop-off email)
+- The `{tensionFromPortrait}` mentioned in UX spec is aspirational — for now, use the territory's `descriptionYou` field (second-person curiosity framing) from the last assessment exchange territory
 - One-shot enforcement: mark session with `checkInEmailSentAt` timestamp BEFORE attempting send to prevent duplicates on concurrent cron runs
 - Fire-and-forget: email failures are logged but never propagate errors
