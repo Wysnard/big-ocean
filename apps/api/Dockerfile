@@ -69,7 +69,7 @@ EXPOSE 4000
 
 # Use entrypoint to rebuild esbuild after volumes are mounted
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["pnpm", "-C", "apps/api", "dev"]
+CMD ["pnpm", "-C", "apps/api", "dev:docker"]
 
 # Production build stage - use pnpm deploy for monorepo
 FROM builder AS deploy

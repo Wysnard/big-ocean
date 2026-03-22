@@ -78,6 +78,22 @@ services:
       - backend_ui_node_modules:/app/packages/ui/node_modules
       - backend_lint_node_modules:/app/packages/lint/node_modules
       - backend_typescript_config_node_modules:/app/packages/typescript-config/node_modules
+    develop:
+      watch:
+        # Backend source — sync + restart on any change
+        - action: sync+restart
+          path: ./apps/api/src
+          target: /app/apps/api/src
+        # Shared workspace packages — sync + restart on any change
+        - action: sync+restart
+          path: ./packages/contracts/src
+          target: /app/packages/contracts/src
+        - action: sync+restart
+          path: ./packages/domain/src
+          target: /app/packages/domain/src
+        - action: sync+restart
+          path: ./packages/infrastructure/src
+          target: /app/packages/infrastructure/src
     depends_on:
       postgres:
         condition: service_healthy

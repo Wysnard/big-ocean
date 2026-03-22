@@ -499,10 +499,10 @@ export const relationshipAnalyses = pgTable("relationship_analyses", {
 		.references(() => user.id, { onDelete: "cascade" }),
 	userAResultId: uuid("user_a_result_id")
 		.notNull()
-		.references(() => assessmentResults.id),
+		.references(() => assessmentResults.id, { onDelete: "cascade" }),
 	userBResultId: uuid("user_b_result_id")
 		.notNull()
-		.references(() => assessmentResults.id),
+		.references(() => assessmentResults.id, { onDelete: "cascade" }),
 	content: text("content"),
 	modelUsed: text("model_used"),
 	retryCount: integer("retry_count").notNull().default(0),

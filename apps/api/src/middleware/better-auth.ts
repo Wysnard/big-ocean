@@ -25,7 +25,10 @@ function isBetterAuthRoute(url: string | undefined): boolean {
 function addCorsHeaders(res: ServerResponse, frontendUrl: string): void {
 	res.setHeader("Access-Control-Allow-Origin", frontendUrl);
 	res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-	res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
+	res.setHeader(
+		"Access-Control-Allow-Headers",
+		"Content-Type, Authorization, Cookie, traceparent, tracestate, b3",
+	);
 	res.setHeader("Access-Control-Allow-Credentials", "true");
 	res.setHeader("Access-Control-Max-Age", "86400");
 }
