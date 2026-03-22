@@ -1,10 +1,10 @@
 # Sprint Parallelism Plan
-Generated: 2026-03-21 (refreshed — Step 6 complete, Epic 32 done)
+Generated: 2026-03-22 (refreshed — Step 7 complete)
 
 > Phase 7: Product Completeness & Launch Readiness
 > Source: epics.md (9 epics, 41 stories incl. sub-stories)
 > Only forward-looking stories included — all prior phases complete.
-> Steps 1-6 complete (27 stories merged). Step 7 unlocked.
+> Steps 1-7 complete (31 stories merged). Step 8 unlocked.
 >
 > Conservative parallelism: stories sharing a page, route, or domain area
 > are placed in separate steps even when technically independent.
@@ -27,15 +27,8 @@ All 4 stories merged: 32-5 (PR #162), 33-1 (PR #163), 32-6 (PR #164), 31-6 (PR #
 ## Step 6: COMPLETE (2026-03-21)
 All 4 stories merged: 33-2 (PR #167), 32-8 (PR #168), 36-1 (PR #169), 34-1 (PR #170).
 
-## Step 7: Share Flow, QR Drawer, Extension Pipeline, Check-in Email
-| Story | Mode | Notes |
-|-------|------|-------|
-| 33-3-share-flow-and-visibility-toggle | parallel | After 33-1. Share action + public toggle prompt |
-| 34-2-qr-drawer-ui | parallel | After 34-1. QR code rendering + status polling |
-| 36-2-extended-conversation-pipeline-initialization | parallel | After 36-1. Pipeline init from prior session state |
-| 38-1-nerin-check-in-email | parallel | After 31-7. Scheduled email + Nerin voice |
-
-**Gate:** All stories above must be done before proceeding.
+## Step 7: COMPLETE (2026-03-22)
+All 4 stories merged: 33-3 (PR #171), 34-2 (PR #172), 36-2 (PR #173), 38-1 (PR #174).
 
 ## Step 8: Relationship CTA, QR Accept, Extension Results, Recapture Email
 | Story | Mode | Notes |
@@ -78,9 +71,9 @@ All 4 stories merged: 33-2 (PR #167), 32-8 (PR #168), 36-1 (PR #169), 34-1 (PR #
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **11 steps** — Steps 1-6 complete (27 merged), Step 7 unlocked
-- **12 stories remaining** (Steps 7-11)
-- **Critical path:** 34-2 (Step 7) → 34-3 (Step 8) → 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
-- **Key enablers:** Polar (32-3, done), Email Infrastructure (31-7, done), Public Profile (33-1, done), Portrait (32-5, done), QR Token Infra (34-1, done), Extension Session (36-1, done)
+- **11 steps** — Steps 1-7 complete (31 merged), Step 8 unlocked
+- **10 stories remaining** (Steps 8-11)
+- **Critical path:** 34-3 (Step 8) → 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
+- **Key enablers:** All Step 7 deliverables now merged — share flow (33-3), QR drawer (34-2), extension pipeline (36-2), check-in email (38-1)
 - **No shared-file conflicts within any step** — stories in the same step touch different pages/domains
-- **Next action:** Begin Step 7 — 4 parallel stories: 33-3 (share flow), 34-2 (QR drawer), 36-2 (extension pipeline), 38-1 (check-in email)
+- **Next action:** Begin Step 8 — 4 parallel stories: 33-4 (relationship CTA), 34-3 (QR accept), 36-3 (extension results), 38-2 (recapture email)

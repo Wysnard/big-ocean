@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-21 (refreshed — Step 6 complete, Epic 32 done)
+generated: 2026-03-22 (refreshed — Step 7 complete)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -572,7 +572,7 @@ development_status:
   epic-33: in-progress
   33-1-public-profile-page: done
   33-2-og-meta-tags-and-social-preview: done
-  33-3-share-flow-and-visibility-toggle: pr-ready
+  33-3-share-flow-and-visibility-toggle: done
   33-4-relationship-analysis-cta-on-public-profile: backlog
   epic-33-retrospective: optional
 
@@ -583,7 +583,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-34: in-progress
   34-1-qr-token-infrastructure: done
-  34-2-qr-drawer-ui: pr-ready
+  34-2-qr-drawer-ui: done
   34-3-qr-accept-screen-and-consent-gate: backlog
   epic-34-retrospective: optional
 
@@ -609,7 +609,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-36: in-progress
   36-1-conversation-extension-purchase-and-session-creation: done
-  36-2-extended-conversation-pipeline-initialization: pr-ready
+  36-2-extended-conversation-pipeline-initialization: done
   36-3-extended-results-and-portrait-versioning: backlog
   epic-36-retrospective: optional
 
@@ -629,7 +629,7 @@ development_status:
   # Stories: 9.1-9.3 in epics.md
   # ───────────────────────────────────────────────────────────────
   epic-38: in-progress
-  38-1-nerin-check-in-email: pr-ready
+  38-1-nerin-check-in-email: done
   38-2-deferred-portrait-recapture-email: backlog
   38-3-dashboard: backlog
   epic-38-retrospective: optional
