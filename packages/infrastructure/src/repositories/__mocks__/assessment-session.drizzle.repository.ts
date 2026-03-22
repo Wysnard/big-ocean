@@ -358,5 +358,38 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
 					sessions.set(sessionId, { ...session, checkInEmailSentAt: new Date() });
 				}
 			}),
+
+		findRecaptureEligibleSessions: (_thresholdDays: number) =>
+			Effect.sync(() => {
+				const results: Array<{
+					sessionId: string;
+					userId: string;
+					userEmail: string;
+					userName: string;
+					updatedAt: Date;
+				}> = [];
+
+				for (const session of sessions.values()) {
+					if (session.status === "completed" && session.userId && !session.recaptureEmailSentAt) {
+						results.push({
+							sessionId: session.id as string,
+							userId: session.userId as string,
+							userEmail: (session.userEmail as string) ?? "test@example.com",
+							userName: (session.userName as string) ?? "Test User",
+							updatedAt: session.updatedAt as Date,
+						});
+					}
+				}
+
+				return results;
+			}),
+
+		markRecaptureEmailSent: (sessionId: string) =>
+			Effect.sync(() => {
+				const session = sessions.get(sessionId);
+				if (session) {
+					sessions.set(sessionId, { ...session, recaptureEmailSentAt: new Date() });
+				}
+			}),
 	}),
 );

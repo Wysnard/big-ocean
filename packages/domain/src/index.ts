@@ -180,6 +180,7 @@ export {
 	AssessmentSessionRepository,
 	type CheckInEligibleSession,
 	type DropOffSession,
+	type RecaptureEligibleSession,
 } from "./repositories/assessment-session.repository";
 // Conversanalyzer repository (Story 10.2, v2 Story 24-1)
 export {

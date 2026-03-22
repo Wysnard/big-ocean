@@ -1,17 +1,15 @@
 /**
- * Check Check-in Use Case Tests (Story 38-1)
+ * Check Recapture Use Case Tests (Story 38-2)
  *
- * Verifies Nerin check-in email logic:
- * - Finds completed sessions and sends check-in emails
+ * Verifies deferred portrait recapture email logic:
+ * - Finds completed sessions without portrait purchase and sends recapture emails
  * - One-shot enforcement (no duplicate emails)
  * - Fire-and-forget (email failures don't propagate)
- * - Territory name lookup from assessment exchanges
  */
 import { vi } from "vitest";
 
 vi.mock("@workspace/domain/config/app-config");
 vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
-vi.mock("@workspace/infrastructure/repositories/assessment-exchange.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/resend-email.resend.repository");
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 
@@ -19,16 +17,14 @@ import { describe, expect, it } from "@effect/vitest";
 import {
 	AppConfig,
 	type AppConfigService,
-	AssessmentExchangeRepository,
 	AssessmentSessionRepository,
 	ResendEmailRepository,
 } from "@workspace/domain";
-import { AssessmentExchangeDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-exchange.drizzle.repository";
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 import { ResendEmailResendRepositoryLive } from "@workspace/infrastructure/repositories/resend-email.resend.repository";
 import { Effect, Layer, Redacted } from "effect";
-import { checkCheckIn } from "../check-check-in.use-case";
+import { checkRecapture } from "../check-recapture.use-case";
 
 const mockConfig: AppConfigService = {
 	databaseUrl: "postgresql://test:test@localhost:5432/test",
@@ -73,41 +69,33 @@ const mockConfig: AppConfigService = {
 
 const TestConfigLayer = Layer.succeed(AppConfig, mockConfig);
 
-describe("checkCheckIn use-case", () => {
+describe("checkRecapture use-case", () => {
 	const BaseTestLayer = Layer.mergeAll(
 		AssessmentSessionDrizzleRepositoryLive,
-		AssessmentExchangeDrizzleRepositoryLive,
 		ResendEmailResendRepositoryLive,
 		LoggerPinoRepositoryLive,
 		TestConfigLayer,
 	);
 
-	it.effect("returns 0 when no check-in eligible sessions exist", () =>
+	it.effect("returns 0 when no recapture eligible sessions exist", () =>
 		Effect.gen(function* () {
-			const result = yield* checkCheckIn;
+			const result = yield* checkRecapture;
 			expect(result.emailsSent).toBe(0);
 		}).pipe(Effect.provide(BaseTestLayer)),
 	);
 
-	it.effect("sends email for completed sessions and marks them", () =>
+	it.effect("sends email for completed sessions without portrait purchase", () =>
 		Effect.gen(function* () {
 			const sessionRepo = yield* AssessmentSessionRepository;
-			const exchangeRepo = yield* AssessmentExchangeRepository;
 
 			// Create a completed session
-			const { sessionId } = yield* sessionRepo.createSession("user-456");
+			const { sessionId } = yield* sessionRepo.createSession("user-789");
 			yield* sessionRepo.updateSession(sessionId, {
 				status: "completed",
-				userId: "user-456",
+				userId: "user-789",
 			} as any);
 
-			// Create an exchange with a territory
-			const exchange = yield* exchangeRepo.create(sessionId, 1);
-			yield* exchangeRepo.update(exchange.id, {
-				selectedTerritory: "creative-expression",
-			});
-
-			const result = yield* checkCheckIn;
+			const result = yield* checkRecapture;
 
 			// Verify email was attempted (mock always succeeds)
 			expect(result.emailsSent).toBeGreaterThanOrEqual(0);
@@ -126,14 +114,13 @@ describe("checkCheckIn use-case", () => {
 
 			const testLayer = Layer.mergeAll(
 				AssessmentSessionDrizzleRepositoryLive,
-				AssessmentExchangeDrizzleRepositoryLive,
 				failingEmailLayer,
 				LoggerPinoRepositoryLive,
 				TestConfigLayer,
 			);
 
 			// Should not throw even though email fails
-			const result = yield* checkCheckIn.pipe(Effect.provide(testLayer));
+			const result = yield* checkRecapture.pipe(Effect.provide(testLayer));
 			expect(result).toBeDefined();
 			expect(result.emailsSent).toBe(0);
 		}),

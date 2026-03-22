@@ -23,7 +23,13 @@ import { RedisRepository } from "@workspace/domain/repositories/redis.repository
 import { Database } from "@workspace/infrastructure/context/database";
 import { and, count, eq, isNull, lt, sql } from "drizzle-orm";
 import { Effect, Layer, Schema } from "effect";
-import { assessmentMessage, assessmentSession, publicProfile, user } from "../db/drizzle/schema";
+import {
+	assessmentMessage,
+	assessmentSession,
+	publicProfile,
+	purchaseEvents,
+	user,
+} from "../db/drizzle/schema";
 
 /**
  * Session Repository Layer - Receives database, logger, and Redis through DI
@@ -957,6 +963,82 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 									console.error("Logger failed:", logError);
 								}
 								return new DatabaseError({ message: "Failed to mark check-in email sent" });
+							}),
+						);
+				}),
+
+			findRecaptureEligibleSessions: (thresholdDays: number) =>
+				Effect.gen(function* () {
+					const cutoff = new Date(Date.now() - thresholdDays * 24 * 60 * 60 * 1000);
+
+					// Find completed sessions past threshold, not yet emailed,
+					// where the user has NO portrait_unlocked purchase event
+					const results = yield* db
+						.select({
+							sessionId: assessmentSession.id,
+							userId: assessmentSession.userId,
+							userEmail: user.email,
+							userName: user.name,
+							updatedAt: assessmentSession.updatedAt,
+						})
+						.from(assessmentSession)
+						.innerJoin(user, eq(assessmentSession.userId, user.id))
+						.leftJoin(
+							purchaseEvents,
+							and(
+								eq(purchaseEvents.userId, assessmentSession.userId),
+								eq(purchaseEvents.eventType, "portrait_unlocked"),
+							),
+						)
+						.where(
+							and(
+								eq(assessmentSession.status, "completed"),
+								lt(assessmentSession.updatedAt, cutoff),
+								isNull(assessmentSession.recaptureEmailSentAt),
+								isNull(purchaseEvents.id),
+							),
+						)
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "findRecaptureEligibleSessions",
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({ message: "Failed to find recapture eligible sessions" });
+							}),
+						);
+
+					return results.map((row) => ({
+						sessionId: row.sessionId,
+						userId: row.userId as string,
+						userEmail: row.userEmail,
+						userName: row.userName,
+						updatedAt: row.updatedAt,
+					}));
+				}),
+
+			markRecaptureEmailSent: (sessionId: string) =>
+				Effect.gen(function* () {
+					yield* db
+						.update(assessmentSession)
+						.set({ recaptureEmailSentAt: new Date() })
+						.where(eq(assessmentSession.id, sessionId))
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "markRecaptureEmailSent",
+										sessionId,
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({ message: "Failed to mark recapture email sent" });
 							}),
 						);
 				}),

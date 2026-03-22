@@ -53,6 +53,7 @@ export const mockAppConfig: AppConfigService = {
 	emailFromAddress: "noreply@test.bigocean.dev",
 	dropOffThresholdHours: 24,
 	checkInThresholdDays: 14,
+	recaptureThresholdDays: 3,
 	// Cost Guard (Story 31-6)
 	sessionCostLimitCents: 2000,
 };
