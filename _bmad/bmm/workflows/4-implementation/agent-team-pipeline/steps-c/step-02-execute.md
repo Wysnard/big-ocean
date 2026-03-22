@@ -5,7 +5,7 @@ description: 'Fan-out: spawn one subagent per story with worktree isolation, col
 pipelineState: '{implementation_artifacts}/pipeline-state.yaml'
 agentPrompts: '{installed_path}/data/agent-prompts.md'
 epicsFile: '{planning_artifacts}/epics.md'
-nextStepFile: './step-03-cleanup.md'
+nextStepFile: './step-02b-conflict-detection.md'
 ---
 
 # Step 2: Execute Story Pipelines

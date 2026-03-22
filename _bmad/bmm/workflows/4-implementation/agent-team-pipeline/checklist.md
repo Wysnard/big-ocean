@@ -49,6 +49,15 @@ required-inputs:
 - [ ] Story file committed to feature branch
 - [ ] Subagent returned: {story_key, status, pr_url, dev_branch}
 
+## Step 02b: Conflict Detection
+
+- [ ] Pipeline state loaded with completed branches
+- [ ] Changed files collected per branch via `git diff --name-only`
+- [ ] Overlap matrix built across all branch pairs
+- [ ] Risk levels assigned (high/medium/low)
+- [ ] Pipeline state updated with `conflicts` section
+- [ ] Conflict report presented with actionable merge guidance
+
 ## Step 03: Cleanup
 
 - [ ] All subagent results collected

@@ -562,7 +562,7 @@ development_status:
   32-7-archetype-card-image-generation: done
   32-7b-complete-ocean-shape-library: done
   32-8-basic-share-and-credit-system: done
-  epic-32-retrospective: optional
+  epic-32-retrospective: done
 
   # ───────────────────────────────────────────────────────────────
   # EPIC 33: Public Profile & Sharing
@@ -621,7 +621,7 @@ development_status:
   epic-37: done
   37-1-homepage-narrative-and-layout: done
   37-2-founder-portrait-bridge-and-relationship-cta: done
-  epic-37-retrospective: optional
+  epic-37-retrospective: done
 
   # ───────────────────────────────────────────────────────────────
   # EPIC 38: Engagement Emails & Dashboard

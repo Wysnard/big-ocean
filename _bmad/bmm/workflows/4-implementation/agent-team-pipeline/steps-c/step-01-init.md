@@ -154,6 +154,13 @@ stories:
     pr_url: null
     dev_branch: null
     error: null
+
+# Conflict detection (populated by step-02b)
+conflicts:
+  detected: false
+  scanned_branches: []
+  skipped_branches: []
+  overlapping_files: []
 ```
 
 ### 7. Report and Proceed
