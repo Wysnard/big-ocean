@@ -46,9 +46,7 @@ export const listRelationshipAnalyses = (userId: string) =>
 		yield* Effect.all(
 			[...uniqueUserIds].map((uid) =>
 				resultRepo.getLatestByUserId(uid).pipe(
-					Effect.map((result) => {
-						latestResultMap.set(uid, result?.id ?? null);
-					}),
+					Effect.tap((result) => Effect.sync(() => latestResultMap.set(uid, result?.id ?? null))),
 					Effect.catchTag("AssessmentResultError", () => {
 						latestResultMap.set(uid, null);
 						return Effect.void;
