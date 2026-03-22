@@ -11,6 +11,18 @@ const defaultShareState = {
 	isPublic: true,
 };
 
+const defaultProps = {
+	shareState: defaultShareState,
+	copied: false,
+	isTogglePending: false,
+	onToggleVisibility: () => {},
+	onShareAction: () => {},
+	promptNeeded: false,
+	onAcceptPrompt: () => {},
+	onDeclinePrompt: () => {},
+	isShareToggling: false,
+};
+
 describe("ShareProfileSection", () => {
 	beforeEach(() => {
 		// Reset navigator mocks
@@ -31,30 +43,12 @@ describe("ShareProfileSection", () => {
 	});
 
 	it("renders null when shareState is null", () => {
-		const { container } = render(
-			<ShareProfileSection
-				shareState={null}
-				copied={false}
-				isTogglePending={false}
-				onCopyLink={() => {}}
-				onToggleVisibility={() => {}}
-				onShareLink={() => {}}
-			/>,
-		);
+		const { container } = render(<ShareProfileSection {...defaultProps} shareState={null} />);
 		expect(container.innerHTML).toBe("");
 	});
 
 	it("renders the share section with URL", () => {
-		render(
-			<ShareProfileSection
-				shareState={defaultShareState}
-				copied={false}
-				isTogglePending={false}
-				onCopyLink={() => {}}
-				onToggleVisibility={() => {}}
-				onShareLink={() => {}}
-			/>,
-		);
+		render(<ShareProfileSection {...defaultProps} />);
 		expect(screen.getByTestId("share-url")).toHaveTextContent(defaultShareState.shareableUrl);
 	});
 
@@ -65,97 +59,66 @@ describe("ShareProfileSection", () => {
 			configurable: true,
 		});
 
-		render(
-			<ShareProfileSection
-				shareState={defaultShareState}
-				copied={false}
-				isTogglePending={false}
-				onCopyLink={() => {}}
-				onToggleVisibility={() => {}}
-				onShareLink={() => {}}
-			/>,
-		);
+		render(<ShareProfileSection {...defaultProps} />);
 		expect(screen.getByTestId("share-copy-btn")).toHaveTextContent("Share");
 	});
 
 	it("shows 'Copy' button when Web Share API is not available", () => {
-		render(
-			<ShareProfileSection
-				shareState={defaultShareState}
-				copied={false}
-				isTogglePending={false}
-				onCopyLink={() => {}}
-				onToggleVisibility={() => {}}
-				onShareLink={() => {}}
-			/>,
-		);
+		render(<ShareProfileSection {...defaultProps} />);
 		expect(screen.getByTestId("share-copy-btn")).toHaveTextContent("Copy");
 	});
 
-	it("calls onShareLink when Web Share API is available and button is clicked", () => {
-		Object.defineProperty(navigator, "share", {
-			value: vi.fn(),
-			writable: true,
-			configurable: true,
-		});
-		const onShareLink = vi.fn();
-
-		render(
-			<ShareProfileSection
-				shareState={defaultShareState}
-				copied={false}
-				isTogglePending={false}
-				onCopyLink={() => {}}
-				onToggleVisibility={() => {}}
-				onShareLink={onShareLink}
-			/>,
-		);
+	it("calls onShareAction when share button is clicked", () => {
+		const onShareAction = vi.fn();
+		render(<ShareProfileSection {...defaultProps} onShareAction={onShareAction} />);
 		fireEvent.click(screen.getByTestId("share-copy-btn"));
-		expect(onShareLink).toHaveBeenCalledOnce();
-	});
-
-	it("calls onCopyLink when Web Share API is not available and button is clicked", () => {
-		const onCopyLink = vi.fn();
-
-		render(
-			<ShareProfileSection
-				shareState={defaultShareState}
-				copied={false}
-				isTogglePending={false}
-				onCopyLink={onCopyLink}
-				onToggleVisibility={() => {}}
-				onShareLink={() => {}}
-			/>,
-		);
-		fireEvent.click(screen.getByTestId("share-copy-btn"));
-		expect(onCopyLink).toHaveBeenCalledOnce();
+		expect(onShareAction).toHaveBeenCalledOnce();
 	});
 
 	it("shows 'Copied!' when copied is true", () => {
-		render(
-			<ShareProfileSection
-				shareState={defaultShareState}
-				copied={true}
-				isTogglePending={false}
-				onCopyLink={() => {}}
-				onToggleVisibility={() => {}}
-				onShareLink={() => {}}
-			/>,
-		);
+		render(<ShareProfileSection {...defaultProps} copied={true} />);
 		expect(screen.getByTestId("share-copy-btn")).toHaveTextContent("Copied!");
 	});
 
+	it("does not call onShareAction when copied is true", () => {
+		const onShareAction = vi.fn();
+		render(<ShareProfileSection {...defaultProps} copied={true} onShareAction={onShareAction} />);
+		fireEvent.click(screen.getByTestId("share-copy-btn"));
+		expect(onShareAction).not.toHaveBeenCalled();
+	});
+
 	it("has data-slot attribute", () => {
-		const { container } = render(
-			<ShareProfileSection
-				shareState={defaultShareState}
-				copied={false}
-				isTogglePending={false}
-				onCopyLink={() => {}}
-				onToggleVisibility={() => {}}
-				onShareLink={() => {}}
-			/>,
-		);
+		const { container } = render(<ShareProfileSection {...defaultProps} />);
 		expect(container.querySelector("[data-slot='share-profile-section']")).toBeInTheDocument();
+	});
+
+	it("renders PublicVisibilityPrompt when promptNeeded is true", () => {
+		render(<ShareProfileSection {...defaultProps} promptNeeded={true} />);
+		expect(screen.getByText(/make your profile public so friends can see/i)).toBeInTheDocument();
+	});
+
+	it("does not render PublicVisibilityPrompt when promptNeeded is false", () => {
+		render(<ShareProfileSection {...defaultProps} promptNeeded={false} />);
+		expect(
+			screen.queryByText(/make your profile public so friends can see/i),
+		).not.toBeInTheDocument();
+	});
+
+	it("calls onAcceptPrompt when Accept is clicked in prompt", () => {
+		const onAcceptPrompt = vi.fn();
+		render(
+			<ShareProfileSection {...defaultProps} promptNeeded={true} onAcceptPrompt={onAcceptPrompt} />,
+		);
+		fireEvent.click(screen.getByTestId("visibility-prompt-accept"));
+		expect(onAcceptPrompt).toHaveBeenCalledOnce();
+	});
+
+	it("calls onDeclinePrompt when Decline is clicked in prompt", () => {
+		const onDeclinePrompt = vi.fn();
+		render(
+			<ShareProfileSection {...defaultProps} promptNeeded={true} onDeclinePrompt={onDeclinePrompt} />,
+		);
+		fireEvent.click(screen.getByTestId("visibility-prompt-decline"));
+		expect(onDeclinePrompt).toHaveBeenCalledOnce();
 	});
 });
