@@ -1,11 +1,12 @@
 /**
- * Relationship Analysis Repository Interface (Story 14.4, updated Story 34-1)
+ * Relationship Analysis Repository Interface (Story 14.4, updated Story 34-1, Story 35-4)
  *
  * Port for relationship analysis CRUD operations.
  * Uses placeholder row pattern: content=NULL means generating.
  * Canonical user ordering: userAId = MIN(inviter, invitee), userBId = MAX(inviter, invitee).
  *
  * Updated: invitationId replaced with userAResultId/userBResultId (ADR-10).
+ * Story 35-4: Added listByUserId for version management.
  */
 
 import { Context, Data, Effect } from "effect";
@@ -50,6 +51,18 @@ export class RelationshipAnalysisRepository extends Context.Tag("RelationshipAna
 			id: string,
 		) => Effect.Effect<
 			(RelationshipAnalysis & { userAName: string; userBName: string }) | null,
+			DatabaseError
+		>;
+
+		/**
+		 * List all analyses for a user with participant names (Story 35-4).
+		 * JOINs through user table for both participants.
+		 * Ordered by createdAt DESC.
+		 */
+		readonly listByUserId: (
+			userId: string,
+		) => Effect.Effect<
+			ReadonlyArray<RelationshipAnalysis & { userAName: string; userBName: string }>,
 			DatabaseError
 		>;
 	}

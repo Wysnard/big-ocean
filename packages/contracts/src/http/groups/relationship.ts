@@ -1,8 +1,8 @@
 /**
- * Relationship HTTP API Groups (Story 14.4, updated Story 34-1, Story 35-2)
+ * Relationship HTTP API Groups (Story 14.4, updated Story 34-1, Story 35-2, Story 35-4)
  *
  * Simplified: Invitation endpoints removed (replaced by QR token endpoints in qr-token.ts).
- * Remaining: Authenticated analysis + state + retry endpoints.
+ * Remaining: Authenticated analysis + state + retry + list endpoints.
  */
 
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
@@ -47,6 +47,33 @@ const RetryRelationshipAnalysisResponseSchema = S.Struct({
 	status: S.Union(S.Literal("generating"), S.Literal("ready")),
 });
 
+/**
+ * Response item for list analyses endpoint (Story 35-4).
+ * Version detection is derive-at-read: isLatestVersion = false means
+ * newer assessment results exist for at least one participant.
+ */
+const RelationshipAnalysisListItemSchema = S.Struct({
+	/** UUID of the relationship analysis */
+	analysisId: S.String,
+	/** Display name of user A (canonical MIN user) */
+	userAName: S.String,
+	/** Display name of user B (canonical MAX user) */
+	userBName: S.String,
+	/**
+	 * Whether this analysis is based on both users' latest results.
+	 * false = "previous version" — newer assessment results exist for at least one user.
+	 */
+	isLatestVersion: S.Boolean,
+	/** Whether the analysis content has been generated (true) or is still generating (false) */
+	hasContent: S.Boolean,
+	/** When this analysis was created (ISO 8601 string) */
+	createdAt: S.String,
+});
+
+export type RelationshipAnalysisListItem = typeof RelationshipAnalysisListItemSchema.Type;
+
+const RelationshipAnalysisListResponseSchema = S.Array(RelationshipAnalysisListItemSchema);
+
 // ─── Authenticated Group ──────────────────────────────────────────────────
 
 export const RelationshipGroup = HttpApiGroup.make("relationship")
@@ -69,6 +96,11 @@ export const RelationshipGroup = HttpApiGroup.make("relationship")
 			.addSuccess(RetryRelationshipAnalysisResponseSchema)
 			.addError(RelationshipAnalysisNotFoundError, { status: 404 })
 			.addError(RelationshipAnalysisUnauthorizedError, { status: 403 })
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
+		HttpApiEndpoint.get("listRelationshipAnalyses", "/analyses")
+			.addSuccess(RelationshipAnalysisListResponseSchema)
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.middleware(AuthMiddleware)

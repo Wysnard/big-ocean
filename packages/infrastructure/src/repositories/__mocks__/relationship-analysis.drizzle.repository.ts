@@ -1,5 +1,5 @@
 /**
- * Mock: relationship-analysis.drizzle.repository.ts (updated Story 34-1)
+ * Mock: relationship-analysis.drizzle.repository.ts (updated Story 34-1, Story 35-4)
  * Vitest auto-resolves when tests call:
  *   vi.mock('@workspace/infrastructure/repositories/relationship-analysis.drizzle.repository')
  */
@@ -84,5 +84,17 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.succeed(
 					userBName: "User B",
 				};
 			}),
+
+		listByUserId: (userId) =>
+			Effect.sync(() =>
+				[...store.values()]
+					.filter((a) => a.userAId === userId || a.userBId === userId)
+					.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+					.map((a) => ({
+						...a,
+						userAName: "User A",
+						userBName: "User B",
+					})),
+			),
 	}),
 );

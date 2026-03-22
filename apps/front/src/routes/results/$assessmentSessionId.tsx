@@ -9,6 +9,7 @@ import { BookOpen, Loader2, MessageCircle } from "lucide-react";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FinalizationWaitScreen } from "@/components/finalization-wait-screen";
 import { ResultsAuthGate } from "@/components/ResultsAuthGate";
+import { RelationshipAnalysesList } from "@/components/relationship/RelationshipAnalysesList";
 import { RelationshipCard } from "@/components/relationship/RelationshipCard";
 import { DetailZone } from "@/components/results/DetailZone";
 import { EvidencePanel } from "@/components/results/EvidencePanel";
@@ -476,6 +477,7 @@ function ResultsSessionPage() {
 						/>
 
 						<RelationshipCard />
+						<RelationshipAnalysesList />
 						<RelationshipCreditsSection />
 
 						{shareState?.publicProfileId && (

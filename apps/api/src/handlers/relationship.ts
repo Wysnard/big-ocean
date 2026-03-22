@@ -1,8 +1,8 @@
 /**
- * Relationship Presenters (HTTP Handlers) — Story 14.4, updated Story 34-1, Story 35-2
+ * Relationship Presenters (HTTP Handlers) — Story 14.4, updated Story 34-1, Story 35-2, Story 35-4
  *
  * Simplified: Invitation handlers removed (replaced by QR token handlers).
- * Remaining: Analysis + state + retry endpoints.
+ * Remaining: Analysis + state + retry + list endpoints.
  */
 
 import { HttpApiBuilder } from "@effect/platform";
@@ -11,6 +11,7 @@ import { AuthenticatedUser } from "@workspace/domain";
 import { Effect } from "effect";
 import { getRelationshipAnalysis } from "../use-cases/get-relationship-analysis.use-case";
 import { getRelationshipState } from "../use-cases/get-relationship-state.use-case";
+import { listRelationshipAnalyses } from "../use-cases/list-relationship-analyses.use-case";
 import { retryRelationshipAnalysis } from "../use-cases/retry-relationship-analysis.use-case";
 
 /**
@@ -41,6 +42,16 @@ export const RelationshipGroupLive = HttpApiBuilder.group(BigOceanApi, "relation
 						analysisId: path.analysisId,
 						userId,
 					});
+				}),
+			)
+			.handle("listRelationshipAnalyses", () =>
+				Effect.gen(function* () {
+					const userId = yield* AuthenticatedUser;
+					const analyses = yield* listRelationshipAnalyses(userId);
+					return analyses.map((a) => ({
+						...a,
+						createdAt: a.createdAt.toISOString(),
+					}));
 				}),
 			);
 	}),
