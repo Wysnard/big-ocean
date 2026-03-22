@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-22 (refreshed — Step 8 complete, PRs #175-177 merged)
+generated: 2026-03-22 (refreshed — Stories 35-1/35-2 done via PRs #179-180)
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -594,8 +594,8 @@ development_status:
   # Stories: 6.1-6.5 in epics.md
   # ───────────────────────────────────────────────────────────────
   epic-35: in-progress
-  35-1-ritual-suggestion-screen: pr-ready
-  35-2-relationship-analysis-generation: pr-ready
+  35-1-ritual-suggestion-screen: done
+  35-2-relationship-analysis-generation: done
   35-3-relationship-analysis-display: backlog
   35-4-version-management-and-cascade-deletion: backlog
   35-5-relationship-analysis-email-notification: backlog

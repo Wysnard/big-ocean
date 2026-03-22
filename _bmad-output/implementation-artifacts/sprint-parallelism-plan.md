@@ -1,10 +1,10 @@
 # Sprint Parallelism Plan
-Generated: 2026-03-22 (refreshed — Step 8 complete)
+Generated: 2026-03-22 (refreshed — Step 9 complete)
 
 > Phase 7: Product Completeness & Launch Readiness
 > Source: epics.md (9 epics, 41 stories incl. sub-stories)
 > Only forward-looking stories included — all prior phases complete.
-> Steps 1-8 complete (35 stories merged). Step 9 unlocked.
+> Steps 1-9 complete (37 stories merged). Step 10 unlocked.
 >
 > Conservative parallelism: stories sharing a page, route, or domain area
 > are placed in separate steps even when technically independent.
@@ -33,13 +33,8 @@ All 4 stories merged: 33-3 (PR #171), 34-2 (PR #172), 36-2 (PR #173), 38-1 (PR #
 ## Step 8: COMPLETE (2026-03-22)
 All 4 stories merged: 33-4 (PR #175), 36-3 (PR #177), 38-2 (PR #176), 34-3 (merged to master).
 
-## Step 9: Ritual + Relationship Analysis Generation
-| Story | Mode | Notes |
-|-------|------|-------|
-| 35-1-ritual-suggestion-screen | parallel | After 34-3. Frontend ritual screen |
-| 35-2-relationship-analysis-generation | parallel | After 34-3. Sonnet agent, backend generation daemon |
-
-**Gate:** All stories above must be done before proceeding.
+## Step 9: COMPLETE (2026-03-22)
+All 2 stories merged: 35-1 (PR #179), 35-2 (PR #180).
 
 ## Step 10: Relationship Analysis Display, Versioning & Notification
 | Story | Mode | Notes |
@@ -64,8 +59,8 @@ All 4 stories merged: 33-4 (PR #175), 36-3 (PR #177), 38-2 (PR #176), 34-3 (merg
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
 ## Summary
-- **11 steps** — Steps 1-8 complete (36 merged), Step 9 unlocked
-- **6 stories remaining** (Steps 9-11)
-- **Critical path:** 35-2 (Step 9) → 35-3 (Step 10) → 38-3 (Step 11)
+- **11 steps** — Steps 1-9 complete (38 merged), Step 10 unlocked
+- **4 stories remaining** (Steps 10-11)
+- **Critical path:** 35-3 (Step 10) → 38-3 (Step 11)
 - **No shared-file conflicts within any step** — stories in the same step touch different pages/domains
-- **Next action:** Begin Step 9 — 2 parallel stories: 35-1 (ritual screen), 35-2 (analysis generation)
+- **Next action:** Begin Step 10 — 3 parallel stories: 35-3 (analysis display), 35-4 (versioning), 35-5 (email notification)
