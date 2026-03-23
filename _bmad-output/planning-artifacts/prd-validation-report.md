@@ -1,7 +1,8 @@
 ---
 validationTarget: '_bmad-output/planning-artifacts/prd.md'
-validationDate: '2026-03-18'
+validationDate: '2026-03-23'
 inputDocuments:
+  - 'prd.md'
   - 'architecture.md (consolidated, 2026-03-15)'
   - 'problem-solution-2026-03-13.md'
   - 'brainstorming-session-2026-03-13.md'
@@ -16,14 +17,14 @@ inputDocuments:
   - 'prd-2026-02-02-archived.md (baseline reference)'
 validationStepsCompleted: ['step-v-01-discovery', 'step-v-02-format-detection', 'step-v-03-density-validation', 'step-v-04-brief-coverage-validation', 'step-v-05-measurability-validation', 'step-v-06-traceability-validation', 'step-v-07-implementation-leakage-validation', 'step-v-08-domain-compliance-validation', 'step-v-09-project-type-validation', 'step-v-10-smart-validation', 'step-v-11-holistic-quality-validation', 'step-v-12-completeness-validation']
 validationStatus: COMPLETE
-holisticQualityRating: '4/5 - Good'
-overallStatus: Warning
+holisticQualityRating: '5/5 - Excellent'
+overallStatus: Pass
 ---
 
 # PRD Validation Report
 
 **PRD Being Validated:** `_bmad-output/planning-artifacts/prd.md`
-**Validation Date:** 2026-03-18
+**Validation Date:** 2026-03-23
 
 ## Input Documents
 
@@ -41,28 +42,29 @@ overallStatus: Warning
 ## Format Detection
 
 **PRD Structure (## Level 2 headers):**
-1. Success Criteria
-2. Product Scope
-3. User Journeys
-4. Domain-Specific Requirements
-5. Innovation & Novel Patterns
-6. Web App Specific Requirements
-7. Project Scoping & Phased Development
-8. Functional Requirements
-9. Non-Functional Requirements
+1. Executive Summary
+2. Success Criteria
+3. Product Scope
+4. User Journeys
+5. Domain-Specific Requirements
+6. Innovation & Novel Patterns
+7. Web App Specific Requirements
+8. Project Scoping & Phased Development
+9. Functional Requirements
+10. Non-Functional Requirements
 
 **BMAD Core Sections Present:**
-- Executive Summary: Missing
-- Success Criteria: Present
-- Product Scope: Present
-- User Journeys: Present
-- Functional Requirements: Present
-- Non-Functional Requirements: Present
+- Executive Summary: Present ✓
+- Success Criteria: Present ✓
+- Product Scope: Present ✓
+- User Journeys: Present ✓
+- Functional Requirements: Present ✓
+- Non-Functional Requirements: Present ✓
 
 **Format Classification:** BMAD Standard
-**Core Sections Present:** 6/6 (Executive Summary added during validation)
+**Core Sections Present:** 6/6
 
-~~**Note:** Executive Summary section was absent.~~ **Fixed:** Executive Summary added during validation session (2026-03-18).
+**Delta from prior validation (2026-03-18):** Executive Summary was previously missing — now present. Full structural compliance achieved.
 
 ## Information Density Validation
 
@@ -78,7 +80,7 @@ overallStatus: Warning
 
 **Severity Assessment:** Pass
 
-**Recommendation:** PRD demonstrates excellent information density with zero violations. Writing is direct, concise, and every sentence carries information weight.
+**Recommendation:** PRD demonstrates excellent information density with zero violations. Writing is direct, concise, and every sentence carries information weight. Consistent with prior validation (2026-03-18).
 
 ## Product Brief Coverage
 
@@ -88,161 +90,138 @@ overallStatus: Warning
 
 ### Functional Requirements
 
-**Total FRs Analyzed:** 38
+**Total FRs Analyzed:** 58
 
 **Format Violations:** 0
 All FRs follow clear "[Actor] can [capability]" or "[System] [behavior]" patterns.
 
-**Subjective Adjectives Found:** 2
-- FR18 (line 562): "richer" — "Conversation extension produces a **richer**, updated portrait" — no metric for what constitutes "richer"
-- FR54 (line 546): "naturally" — "Nerin bridges between territories **naturally**" — subjective, not testable
+**Subjective Adjectives Found:** 0
+Previous violations (FR7 "holds gently", FR18/FR23 "richer", FR54 "naturally") have all been fixed with testable language.
 
 **Vague Quantifiers Found:** 0
 
-**Implementation Leakage:** 6
-- FR32 (line 595): Names "Polar.sh", "@polar-sh/checkout/embed" — specific vendor and package
-- FR33 (line 596): Names "Polar.sh"
-- FR34 (line 597): Names "Polar.sh"
-- FR35 (line 601): Names "Better Auth"
-- FR44 (line 564): References DB table names (`assessment_session`, `assessment_results`) and schema behavior
-- FR57 (line 577): References DB tables (`relationship_analyses`, `assessment_results`), "foreign keys", "list endpoint"
+**Implementation Leakage:** 1
+- FR46 (line 607): "GeometricSignature" — specific component name from codebase. Should use a generic term (e.g., "geometric visual element")
 
-**Note (brownfield context):** FR32-35 name technologies already in production. This is borderline — the PRD records business decisions, but pure BMAD format would express these as capabilities (e.g., "Users can pay via embedded checkout" rather than naming Polar.sh). FR44 and FR57 contain genuine schema-level implementation details that belong in architecture, not the PRD.
-
-**FR Violations Total:** 8
+**FR Violations Total:** 1
 
 ### Non-Functional Requirements
 
-**Total NFRs Analyzed:** 22
+**Total NFRs Analyzed:** 29
 
-**Missing Metrics:** 1
-- NFR4 (line 621): "subsequent interactions instant" — "instant" is subjective. Should specify a target (e.g., "<100ms")
+**Missing Metrics:** 0
+Previous violation (NFR4 "instant") has been fixed to "<200ms".
 
 **Incomplete Template:** 0
-Most NFRs include criterion + metric. Several lack explicit measurement method, but metrics are standard and implicitly measurable (LCP, P95, uptime %).
+All NFRs include criterion + metric.
 
-**Implementation Leakage:** 4
-- NFR9 (line 629): Names "Better Auth"
-- NFR10 (line 630): Names "PostgreSQL Row-Level Security"
-- NFR25 (line 654): Names "Polar.sh embedded checkout"
-- NFR27 (line 656): Names "Resend"
+**Implementation Leakage:** 0
+Previous violations (Better Auth, PostgreSQL RLS, Polar.sh, Resend, Sonnet, Haiku) have all been cleaned up. FRs/NFRs now express capabilities, not technologies.
 
-**NFR Violations Total:** 5
+**NFR Violations Total:** 0
 
 ### Overall Assessment
 
-**Total Requirements:** 60 (38 FRs + 22 NFRs)
-**Total Violations:** 13 (8 FR + 5 NFR)
+**Total Requirements:** 87 (58 FRs + 29 NFRs)
+**Total Violations:** 1 (1 FR + 0 NFR)
 
-**Severity:** Critical (>10 violations)
+**Severity:** Pass (<5 violations)
 
-**Recommendation:** Most violations are implementation leakage (10 of 13) — naming specific technologies (Polar.sh, Better Auth, Resend, PostgreSQL RLS) and DB schema details. Given brownfield context, vendor naming is a judgment call. The 2 subjective adjectives (FR18 "richer", FR54 "naturally") and 1 missing metric (NFR4 "instant") are more actionable — these should be made measurable or testable. The DB schema details in FR44 and FR57 should be moved to architecture.
+**Recommendation:** Requirements demonstrate excellent measurability. The sole violation (FR46 "GeometricSignature") is minor implementation leakage of a component name. All 12 violations from the prior validation (2026-03-18) have been resolved — subjective adjectives replaced with testable language, vendor/technology names removed from FRs/NFRs.
+
+**Note (scope section):** The Product Scope Must-Have table (lines 482-494) still names specific vendors (Polar.sh, Better Auth, Resend, Sonnet). This is acceptable in scope — it documents business decisions, not requirements. The FRs/NFRs themselves are now clean.
 
 ## Traceability Validation
 
 ### Chain Validation
 
-**Vision → Success Criteria:** Intact (with structural note)
-No dedicated Executive Summary section exists, but vision is clearly articulated in frontmatter metadata (valueContract, strategicFrame, credibilityChain) and Product Scope. Success Criteria explicitly reference FR numbers with "(delivered by: FRx)" annotations. The chain functions despite the missing section header.
+**Executive Summary → Success Criteria:** Intact
+Executive Summary articulates vision, target users, differentiator, business model, and current state. All dimensions flow directly into Success Criteria sections. The "(delivered by: FRx)" annotations in Success Criteria strengthen this chain explicitly.
 
 **Success Criteria → User Journeys:** Intact
-All success criteria dimensions (conversation engagement, portrait payoff, Nerin character, social identity, business metrics, technical metrics) are demonstrated through at least one user journey. Coverage is comprehensive.
+All success criteria dimensions demonstrated through journeys: engagement (J1/J2), portrait payoff (J1/J3), character quality (J1/J2), social identity (J4), business growth (J2/J4), ops (J5).
 
 **User Journeys → Functional Requirements:** Intact
-The PRD includes an explicit "Journey Requirements Summary" table mapping capabilities to journeys. All 5 journeys have supporting FRs. Journey 5 (founder/admin) has some capabilities deferred to Nice-to-Have — this is intentional scope management, not a traceability gap.
+Explicit Journey Requirements Summary table (lines 280-287) maps capabilities to journeys. All 5 journeys have supporting FRs. Journey 5 (admin) capabilities intentionally deferred to Nice-to-Have.
 
 **Scope → FR Alignment:** Intact
-MVP Must-Have capabilities table aligns with FRs. Nice-to-Have items are clearly separated and not represented as FRs.
+All Must-Have capabilities have corresponding FRs. Nice-to-Have items correctly lack FRs.
 
 ### Orphan Elements
 
 **Orphan Functional Requirements:** 0
-All 38 FRs trace to at least one user journey or business objective.
+All 58 FRs trace to at least one user journey or business objective. The 20 new FRs (FR39-FR58) added since prior validation all trace cleanly.
 
 **Unsupported Success Criteria:** 0
-All success criteria are supported by user journeys.
 
 **User Journeys Without FRs:** 0 (with note)
-Journey 5 (Vincent/admin) describes monitoring capabilities (admin dashboard, dropout analytics, viral coefficient, revenue reporting) that are explicitly deferred as Nice-to-Have — these have no supporting FRs by design.
+Journey 5 (Vincent/admin) monitoring capabilities deferred to Nice-to-Have — by design.
 
 ### Traceability Summary
 
 | Chain Link | Status | Notes |
 |-----------|--------|-------|
-| Vision → Success Criteria | Intact | Vision in frontmatter/scope, not Executive Summary |
+| Executive Summary → Success Criteria | Intact | Explicit FR cross-references |
 | Success Criteria → Journeys | Intact | All criteria covered |
 | Journeys → FRs | Intact | Explicit mapping table provided |
 | Scope → FRs | Intact | Must-Have/Nice-to-Have clearly separated |
-| Orphan FRs | 0 | All trace to source |
+| Orphan FRs | 0 | All 58 trace to source |
 
-**Total Traceability Issues:** 0 (1 structural note: missing Executive Summary header)
+**Total Traceability Issues:** 0
 
 **Severity:** Pass
 
-**Recommendation:** Traceability chain is intact — all requirements trace to user needs or business objectives. The PRD's explicit "(delivered by: FRx)" annotations in Success Criteria and the Journey Requirements Summary table are strong traceability practices. Consider adding an Executive Summary section to complete the structural chain.
+**Recommendation:** Traceability chain is fully intact — all requirements trace to user needs or business objectives. The Executive Summary (previously missing) now completes the structural chain. The explicit "(delivered by: FRx)" annotations and Journey Requirements Summary table are strong traceability practices.
+
+**Delta from prior validation (2026-03-18):** Previously had 1 structural note (missing Executive Summary). Now resolved — full chain integrity.
 
 ## Implementation Leakage Validation
 
-### Leakage by Category
+### Leakage by Category (FRs/NFRs only)
 
 **Frontend Frameworks:** 0 violations
 
 **Backend Frameworks:** 0 violations
 
-**Databases:** 3 violations
-- NFR10 (line 630): "PostgreSQL Row-Level Security" — names specific database technology
-- FR44 (line 564): DB table names (`assessment_session`, `assessment_results`) and schema behavior
-- FR57 (line 577): DB table names (`relationship_analyses`, `assessment_results`), "foreign keys", "list endpoint"
+**Databases:** 0 violations
+Previous violations (PostgreSQL RLS in NFR10, DB table names in FR44/FR57) have been cleaned.
 
 **Cloud Platforms:** 0 violations
 
 **Infrastructure:** 0 violations
 
-**Libraries/Vendors:** 7 violations
-- FR32 (line 595): "Polar.sh", "@polar-sh/checkout/embed" — vendor + npm package
-- FR33 (line 596): "Polar.sh"
-- FR34 (line 597): "Polar.sh"
-- FR35 (line 601): "Better Auth"
-- NFR9 (line 629): "Better Auth"
-- NFR25 (line 654): "Polar.sh embedded checkout"
-- NFR27 (line 656): "Resend"
+**Libraries/Vendors:** 0 violations
+Previous violations (Polar.sh in FR32-34/NFR25, Better Auth in FR35/NFR9, Resend in NFR27) have been cleaned.
 
-**Other Implementation Details:** 3 violations
-- FR15 (line 559): "Sonnet" — specific LLM model name
-- NFR6 (line 623): "Haiku" — specific LLM model name
-- NFR7 (line 624): "Sonnet" — specific LLM model name
+**Other Implementation Details:** 1 violation
+- FR46 (line 607): "GeometricSignature" — specific UI component name from codebase. Should use generic term (e.g., "geometric visual element")
 
 ### Summary
 
-**Total Implementation Leakage Violations:** 13
+**Total Implementation Leakage Violations:** 1
 
-**Severity:** Critical (>5 violations)
+**Severity:** Pass (<2 violations)
 
-**Recommendation:** Extensive implementation leakage found in FRs and NFRs. By strict BMAD standards, requirements should specify WHAT (capabilities), not HOW (technologies). Examples of recommended rewrites:
-- FR32: "Users can pay for portraits via embedded PWYW checkout" (remove Polar.sh/@polar-sh)
-- FR35: "Users can create an account and authenticate" (remove Better Auth)
-- NFR10: "Row-level data access control per user" (remove PostgreSQL)
-- FR15: "The system generates a narrative portrait" (remove Sonnet)
-- FR44/FR57: Move DB schema details to architecture document
+**Recommendation:** No significant implementation leakage in FRs/NFRs. The sole violation (FR46 "GeometricSignature") is minor — a component name that leaked into requirements. All 13 violations from prior validation (2026-03-18) have been resolved. FRs/NFRs now properly specify WHAT without HOW.
 
-**Brownfield context note:** This PRD serves a solo-founder brownfield project where all named technologies are already in production. The leakage is *intentional documentation of business decisions*, not accidental. In this context, naming vendors (Polar.sh, Better Auth, Resend) and models (Haiku, Sonnet) serves as a practical system-of-record. The DB schema details in FR44/FR57 are the only violations that clearly belong in architecture rather than PRD.
+**Note:** TLS 1.3 (NFR8), WCAG 2.1 AA (NFR20), and ARIA (NFR21) are standards, not implementation details — these are acceptable. Vendor names in Product Scope table (Polar.sh, Better Auth, Resend) document business decisions, not requirements — acceptable in scope context.
 
-**Note:** TLS 1.3 (NFR8) and WCAG 2.1 AA (NFR20) are security/accessibility *standards*, not implementation details — these are acceptable.
+**Delta from prior validation (2026-03-18):** 13 violations → 1 violation. Dramatic improvement.
 
 ## Domain Compliance Validation
 
 **Domain:** adaptive_conversational_ai (personality vertical)
-**Complexity:** Low (general/standard — not a regulated industry)
+**Complexity:** Low (general/standard — not a regulated industry per domain-complexity.csv)
 **Assessment:** No mandatory regulatory compliance sections required.
 
-**Proactive coverage (strength):** Despite being a general-complexity domain, this PRD proactively includes a "Domain-Specific Requirements" section addressing:
-- Psychological framing & liability (5 guardrails)
-- Multi-user data privacy for relationship analysis (5 rules)
-- Data retention & transcript security
-- LLM cost & reliability
-- Content moderation & crisis protocol (scoped to post-MVP)
+**Proactive coverage (strength):** Despite being a general-complexity domain, this PRD proactively includes a comprehensive "Domain-Specific Requirements" section addressing:
+- Psychological framing & liability (8 guardrails including third-party protection, permission to disagree, archetype positivity audit)
+- Multi-user data privacy for relationship analysis (5 rules including per-relationship consent, account deletion cascading, data correlation boundary)
+- Data retention & transcript security (encryption roadmap, user awareness)
+- LLM cost & reliability (session-aware cost guard, retry patterns)
+- Content moderation & crisis protocol (explicitly scoped to post-MVP)
 
-This is excellent practice for an AI product handling sensitive personality data — the PRD exceeds domain complexity expectations.
+This exceeds domain complexity expectations — excellent practice for an AI product handling sensitive personality data. Consistent with prior validation (2026-03-18).
 
 ## Project-Type Compliance Validation
 
@@ -250,11 +229,11 @@ This is excellent practice for an AI product handling sensitive personality data
 
 ### Required Sections
 
-**Browser Matrix:** Present ✓ — Browser Support section (lines 399-403) specifies modern evergreen browsers, mobile browsers, version targets
-**Responsive Design:** Present ✓ — Responsive Design section (lines 405-411) covers mobile-first, desktop optimization, depth meter placement
-**Performance Targets:** Present ✓ — Performance Targets section (lines 412-418) specifies LCP targets for public profile, chat, results pages
-**SEO Strategy:** Present ✓ — SEO & Social Sharing Strategy section (lines 419-427) covers OG tags, server-rendering, sitemap, noindex for auth pages
-**Accessibility Level:** Present ✓ — Accessibility section (lines 429-434) specifies WCAG 2.1 AA with specific requirements
+**Browser Matrix:** Present ✓ — Browser Support section (lines 416-419) specifies modern evergreen browsers, mobile browsers, version targets
+**Responsive Design:** Present ✓ — Responsive Design section (lines 421-427) covers mobile-first, desktop optimization, depth meter placement
+**Performance Targets:** Present ✓ — Performance Targets section (lines 429-434) specifies LCP targets for public profile, chat, results pages
+**SEO Strategy:** Present ✓ — SEO & Social Sharing Strategy section (lines 436-442) covers OG tags, server-rendering, sitemap, noindex for auth pages
+**Accessibility Level:** Present ✓ — Accessibility section (lines 444-450) specifies WCAG 2.1 AA with specific requirements
 
 ### Excluded Sections (Should Not Be Present)
 
@@ -269,134 +248,121 @@ This is excellent practice for an AI product handling sensitive personality data
 
 **Severity:** Pass
 
-**Recommendation:** All required sections for web_app are present and well-documented. The "Web App Specific Requirements" section is comprehensive with specific, measurable targets.
+**Recommendation:** All required sections for web_app are present and well-documented. Consistent with prior validation (2026-03-18).
 
 ## SMART Requirements Validation
 
-**Total Functional Requirements:** 38
+**Total Functional Requirements:** 58
 
 ### Scoring Summary
 
-**All scores ≥ 3:** 92.1% (35/38)
-**All scores ≥ 4:** 78.9% (30/38)
+**All scores >= 3:** 100% (58/58)
+**All scores >= 4:** 93.1% (54/58)
 **Overall Average Score:** 4.7/5.0
 
 ### Flagged FRs (Score < 3 in any category)
 
-| FR # | S | M | A | R | T | Avg | Flag |
-|------|---|---|---|---|---|-----|------|
-| FR7 | 4 | 2 | 4 | 5 | 5 | 4.0 | X |
-| FR18 | 3 | 2 | 4 | 5 | 5 | 3.8 | X |
-| FR54 | 3 | 2 | 4 | 5 | 5 | 3.8 | X |
+**None.** All 58 FRs score >= 3 across all SMART dimensions.
 
-**Legend:** S=Specific, M=Measurable, A=Attainable, R=Relevant, T=Traceable. 1=Poor, 3=Acceptable, 5=Excellent. X=Score <3.
+**Delta from prior validation (2026-03-18):** Previously 3 FRs were flagged (FR7 M:2, FR18 M:2, FR54 M:2). All three have been rewritten with testable language — FR7 now defines observable pushback behavior, FR23 (formerly FR18's issue) specifies "observations from extended evidence not present in original," FR13 (formerly FR54's issue) specifies "connecting observation or question that references prior topic."
 
 ### Near-Threshold FRs (Score of 3 in Measurable)
 
-| FR # | S | M | A | R | T | Avg |
-|------|---|---|---|---|---|-----|
-| FR2 | 4 | 3 | 4 | 5 | 5 | 4.2 |
-| FR6 | 4 | 3 | 4 | 5 | 5 | 4.2 |
-| FR24 | 4 | 3 | 4 | 5 | 5 | 4.2 |
-| FR46 | 4 | 3 | 5 | 5 | 5 | 4.4 |
-| FR53 | 4 | 3 | 5 | 5 | 5 | 4.4 |
+| FR # | S | M | A | R | T | Avg | Notes |
+|------|---|---|---|---|---|-----|-------|
+| FR2 | 4 | 3 | 4 | 5 | 5 | 4.2 | Metaphor/persona usage verifiable by review but inherently qualitative |
+| FR6 | 4 | 3 | 4 | 5 | 5 | 4.2 | "References patterns" — observable but frequency/timing unspecified |
+| FR18 | 4 | 3 | 5 | 5 | 5 | 4.4 | "Positive, strength-based framing" — content review testable |
+| FR24 | 4 | 3 | 5 | 5 | 5 | 4.4 | Behavioral proxies defined (share rate, extension rate, return visits) but no threshold targets in FR itself |
 
-Remaining 30 FRs scored 4-5 across all categories.
-
-### Improvement Suggestions
-
-**FR7:** "Nerin frames observations as invitations to explore, and holds gently on user pushback"
-- "holds gently" is subjective and untestable. Suggestion: define observable behavior (e.g., "acknowledges pushback, offers alternative framing, redirects after second rejection")
-
-**FR18:** "Conversation extension produces a richer, updated portrait from additional evidence"
-- "richer" is subjective. Suggestion: define measurably (e.g., "portrait includes observations from extended evidence not present in the original portrait")
-
-**FR54:** "Nerin bridges between territories naturally when the pacing pipeline changes territory"
-- "naturally" is subjective. Suggestion: define the bridging behavior (e.g., "Nerin transitions between territories using a connecting observation or question that references the prior topic")
+Remaining 54 FRs scored 4-5 across all categories.
 
 ### Overall Assessment
 
-**Severity:** Pass (7.9% flagged, <10% threshold)
+**Severity:** Pass (0% flagged, well below 10% threshold)
 
-**Recommendation:** Functional Requirements demonstrate strong SMART quality overall. Only 3 FRs are flagged — all in the Measurable dimension due to subjective language ("holds gently", "richer", "naturally"). These describe LLM behavioral qualities that are inherently harder to quantify. The suggestions above offer concrete rewording options. The remaining 35 FRs are well-specified with clear actors, capabilities, and testable criteria.
+**Recommendation:** Functional Requirements demonstrate excellent SMART quality. Zero FRs flagged — a significant improvement from the 3 flagged in prior validation. The 4 near-threshold FRs (M:3) describe LLM behavioral qualities or content constraints that are inherently harder to quantify but are still testable via content review. No action required.
 
 ## Holistic Quality Assessment
 
 ### Document Flow & Coherence
 
-**Assessment:** Good
+**Assessment:** Excellent
 
 **Strengths:**
-- User journeys are exceptional — vivid, narrative-driven, and they make the product vision tangible. They read like short stories, not spec sheets
-- Consistent terminology and tone throughout the document
-- Success criteria explicitly reference FR numbers with "(delivered by: FRx)" — excellent traceability practice
+- Executive Summary now provides a clear entry point — the reader is oriented before diving into details
+- User journeys are exceptional — vivid, narrative-driven, they make the product vision tangible and emotionally resonant
+- "(delivered by: FRx)" annotations in Success Criteria create explicit, machine-readable traceability
 - Journey Requirements Summary table provides clear capability-to-journey mapping
 - Risk tables are practical with concrete mitigations, not generic platitudes
-- The Innovation section articulates genuine competitive differentiation with substance
-- Frontmatter classification metadata is rich and well-structured
+- Innovation section articulates genuine competitive differentiation with substance — not buzzwords
+- Frontmatter classification metadata is rich and well-structured (credibility chain, competitive axes, growth horizons)
+- FR/NFR sections are clean — implementation details have been moved to scope and architecture
+- Consistent terminology and tone throughout a 681-line document
 
 **Areas for Improvement:**
-- No Executive Summary — the reader enters at Success Criteria without vision context. The rich frontmatter contains vision, competitive positioning, and monetization model, but frontmatter is machine-readable, not human-friendly
-- FR numbering is non-sequential (FR1-FR10, FR49, FR53, FR54, then FR11-FR14...) — likely reflecting organic evolution. Not wrong, but makes scanning harder
-- The document is long (~665 lines) — appropriate for complexity but the missing Executive Summary means no "TL;DR" exists
+- Domain-Specific Requirements section (line 299) still uses "holds gently" — softer language than the improved FR7 wording. Minor inconsistency between prose description and formal requirement
+- Journey Requirements Summary table maps capabilities to journeys but not specific FR numbers — adding FR cross-references would tighten traceability further
 
 ### Dual Audience Effectiveness
 
 **For Humans:**
-- Executive-friendly: Good — success criteria and scope are clear, but would benefit from an Executive Summary for quick orientation
-- Developer clarity: Excellent — FRs are specific, grouped by domain, with clear acceptance criteria implicit in the specificity
-- Designer clarity: Excellent — user journeys provide rich UX context, emotional states, and interaction flows
-- Stakeholder decision-making: Good — risk tables, phased development, and monetization model enable informed decisions
+- Executive-friendly: Excellent — Executive Summary + Success Criteria + Scope provide quick orientation. The 2026-03-23 edit (dashboard/profile merge) shows the PRD is actively maintained
+- Developer clarity: Excellent — 58 FRs organized by domain, specific enough to implement from
+- Designer clarity: Excellent — user journeys describe detailed interaction flows, emotional states, and UI elements with specificity ("depth meter on left edge," "ritual screen with Start button")
+- Stakeholder decision-making: Excellent — risk tables, phased development, monetization model, and innovation analysis enable informed decisions
 
 **For LLMs:**
-- Machine-readable structure: Excellent — consistent ## headers, numbered FRs/NFRs, structured tables
-- UX readiness: Excellent — user journeys describe detailed interaction flows, emotional states, and UI elements
-- Architecture readiness: Good — FRs specify capabilities clearly; domain requirements and NFRs provide constraints
-- Epic/Story readiness: Excellent — FRs are granular enough to map 1:1 to stories in most cases
+- Machine-readable structure: Excellent — consistent ## headers, numbered FRs/NFRs, structured tables, YAML frontmatter
+- UX readiness: Excellent — user journeys describe detailed interaction flows and emotional states
+- Architecture readiness: Excellent — FRs specify capabilities clearly; domain requirements and NFRs provide constraints
+- Epic/Story readiness: Excellent — FRs are granular enough to map 1:1 to stories in most cases; the expansion from 38 to 58 FRs increases coverage
 
-**Dual Audience Score:** 4/5
+**Dual Audience Score:** 5/5
 
 ### BMAD PRD Principles Compliance
 
 | Principle | Status | Notes |
 |-----------|--------|-------|
 | Information Density | Met | Zero anti-pattern violations. Dense, direct writing throughout |
-| Measurability | Partial | 3 FRs with subjective terms, 1 NFR with "instant" |
+| Measurability | Met | 0 flagged FRs (previously 3). 1 minor leakage (FR46). All NFRs quantified |
 | Traceability | Met | Explicit FR cross-references, Journey Summary table, zero orphan FRs |
-| Domain Awareness | Met | Exceeds expectations — proactive psychological safety section for non-regulated domain |
+| Domain Awareness | Met | Exceeds expectations — proactive psychological safety for non-regulated domain |
 | Zero Anti-Patterns | Met | No filler, no wordiness, no redundancy |
 | Dual Audience | Met | Strong for both humans (vivid journeys) and LLMs (structured, numbered, cross-referenced) |
 | Markdown Format | Met | Clean, consistent formatting with proper header hierarchy |
 
-**Principles Met:** 6/7 (Measurability is Partial)
+**Principles Met:** 7/7
 
 ### Overall Quality Rating
 
-**Rating:** 4/5 - Good
+**Rating:** 5/5 - Excellent
 
 **Scale:**
-- 5/5 - Excellent: Exemplary, ready for production use
-- **4/5 - Good: Strong with minor improvements needed** <--
+- **5/5 - Excellent: Exemplary, ready for production use** <--
+- 4/5 - Good: Strong with minor improvements needed
 - 3/5 - Adequate: Acceptable but needs refinement
 - 2/5 - Needs Work: Significant gaps or issues
 - 1/5 - Problematic: Major flaws, needs substantial revision
 
-### Top 3 Improvements
+**Delta from prior validation (2026-03-18):** Upgraded from 4/5 (Good) to 5/5 (Excellent). All three top improvements from prior validation have been addressed: Executive Summary added, implementation leakage cleaned from FRs/NFRs, subjective FR language made testable.
 
-1. **Add Executive Summary section**
-   The PRD jumps straight into Success Criteria without orienting the reader. A 5-10 line Executive Summary (vision, target users, differentiator, value proposition) would complete the structural chain and give stakeholders a "TL;DR." The content exists in the frontmatter — it just needs to be surfaced as a human-readable section.
+### Top 3 Improvements (minor — polish level)
 
-2. **Clean implementation leakage from FRs/NFRs**
-   10 of 13 measurability violations are implementation leakage (Polar.sh, Better Auth, Resend, PostgreSQL RLS, Sonnet/Haiku, DB table names). For pure BMAD compliance, express these as capabilities: "embedded PWYW checkout" not "Polar.sh." The most impactful fix: move FR44 and FR57's DB schema details to the architecture document entirely.
+1. **Fix FR46 "GeometricSignature" → generic term**
+   The sole remaining implementation leakage. Replace with "geometric visual element" or similar capability-level description. 30-second fix.
 
-3. **Make subjective FR language testable**
-   FR7 ("holds gently"), FR18 ("richer"), FR54 ("naturally") use subjective terms that resist testing. For LLM behavioral requirements, define observable proxy behaviors: e.g., "acknowledges pushback before redirecting" instead of "holds gently."
+2. **Align Domain Requirements prose with improved FR language**
+   Line 299 still says "holds gently" while the corresponding FR7 now says "acknowledges user pushback, offers alternative framing, redirects after second rejection." Update the Domain Requirements section to match the improved FR wording for internal consistency.
+
+3. **Add FR numbers to Journey Requirements Summary table**
+   The table maps capabilities to journeys but doesn't reference specific FR numbers. Adding FR cross-references (e.g., "Pacing pipeline (FR3)") would create a bidirectional traceability matrix directly in the document.
 
 ### Summary
 
-**This PRD is:** A strong, information-dense document with exceptional user journeys, solid traceability, and thoughtful domain-specific requirements — held back from Excellent only by a missing Executive Summary and implementation leakage in requirements.
+**This PRD is:** An exemplary, production-ready document with exceptional user journeys, complete traceability, clean requirements, and comprehensive domain coverage — addressing all prior validation findings and expanding from 38 to 58 well-specified FRs.
 
-**To make it great:** Focus on the top 3 improvements above — the Executive Summary is the highest-impact, lowest-effort fix.
+**To make it great:** The top 3 improvements above are polish-level. This PRD is ready for downstream consumption (UX design, architecture, epic/story breakdown).
 
 ## Completeness Validation
 
@@ -407,28 +373,35 @@ No template variables remaining ✓
 
 ### Content Completeness by Section
 
-**Executive Summary:** Missing
-No dedicated Executive Summary section exists. Vision content is distributed across frontmatter metadata and Product Scope.
+**Executive Summary:** Complete ✓
+Vision, target users, differentiator, business model, current state — all present in a concise 3-paragraph summary.
 
 **Success Criteria:** Complete ✓
-Four subsections (User Success, Business Success, Technical Success, Measurable Outcomes) with specific metrics, targets, and timeframes.
+Four subsections (User Success, Business Success, Technical Success, Measurable Outcomes) with specific metrics, targets, timeframes, and FR cross-references.
 
 **Product Scope:** Complete ✓
 MVP strategy, Must-Have capabilities table with justifications, Nice-to-Have with rationale, Post-MVP phases (H2, H3).
 
 **User Journeys:** Complete ✓
-5 comprehensive journeys covering all user types (first-timer, invited, returning, profile visitor, founder/admin). Each includes who/opening/rising/climax/resolution structure. Journey Requirements Summary table maps capabilities.
+5 comprehensive journeys covering all user types (first-timer, invited skeptic, returning, profile visitor, founder/admin). Each uses narrative structure (opening/rising/climax/resolution). Journey Requirements Summary table.
+
+**Domain-Specific Requirements:** Complete ✓
+Psychological framing (8 guardrails), multi-user data privacy (5 rules), data retention, LLM cost/reliability, content moderation.
+
+**Innovation & Novel Patterns:** Complete ✓
+8 innovation areas, market context table, validation approach, risk mitigation, strategic priorities.
+
+**Web App Specific Requirements:** Complete ✓
+Browser support, responsive design, performance targets, SEO strategy, accessibility, implementation considerations.
+
+**Project Scoping & Phased Development:** Complete ✓
+MVP philosophy, feature set with justifications, post-MVP phases, risk mitigation tables.
 
 **Functional Requirements:** Complete ✓
-38 FRs organized into 7 categories. All numbered, all with clear actors and capabilities.
+58 FRs organized into 8 categories. All numbered, all with clear actors and capabilities.
 
 **Non-Functional Requirements:** Complete ✓
-22 NFRs organized into 6 categories (Performance, Security, Reliability, Accessibility, Integration, Observability, Data Consistency). Metrics specified.
-
-**Domain-Specific Requirements:** Complete ✓ (bonus section)
-**Innovation & Novel Patterns:** Complete ✓ (bonus section)
-**Web App Specific Requirements:** Complete ✓ (bonus section)
-**Project Scoping & Phased Development:** Complete ✓ (bonus section)
+29 NFRs organized into 7 categories (Performance, Security, Reliability, Accessibility, Integration, Observability, Data Consistency). All with metrics.
 
 ### Section-Specific Completeness
 
@@ -439,30 +412,27 @@ All criteria in the Measurable Outcomes table have specific targets, timeframes,
 First-timer (Léa), Invited skeptic (Marc), Returning user (Léa), Passive visitor (Thomas), Founder/operator (Vincent).
 
 **FRs Cover MVP Scope:** Yes
-All Must-Have capabilities in the scope table have corresponding FRs. Nice-to-Have items correctly lack FRs.
+All Must-Have capabilities in scope table have corresponding FRs. Nice-to-Have items correctly lack FRs.
 
-**NFRs Have Specific Criteria:** Some
-21/22 NFRs have specific metrics. NFR4 uses "instant" without a metric.
+**NFRs Have Specific Criteria:** All
+All 29 NFRs have specific metrics.
 
 ### Frontmatter Completeness
 
-**stepsCompleted:** Present ✓ (11 steps tracked)
+**stepsCompleted:** Present ✓ (13 steps tracked including edit steps)
 **classification:** Present ✓ (projectType, domain, vertical, complexity, plus rich metadata)
 **inputDocuments:** Present ✓ (12 documents tracked)
-**date:** Present ✓ (in document header: 2026-03-15)
+**date:** Present ✓ (2026-03-15 in header, lastEdited 2026-03-23 in frontmatter)
 
 **Frontmatter Completeness:** 4/4
 
 ### Completeness Summary
 
-**Overall Completeness:** 90% (9/10 expected sections present — only Executive Summary missing)
+**Overall Completeness:** 100% (10/10 sections present and complete)
 
-**Critical Gaps:** 1
-- Missing Executive Summary section
+**Critical Gaps:** 0
+**Minor Gaps:** 0
 
-**Minor Gaps:** 1
-- NFR4 "instant" lacks specific metric
+**Severity:** Pass
 
-**Severity:** Warning (one missing core section, no template variables)
-
-**Recommendation:** PRD has minor completeness gaps. The missing Executive Summary is the only structural gap — all other BMAD core sections are present and well-populated. Add an Executive Summary to reach full completeness.
+**Recommendation:** PRD is fully complete with all required sections, all content present, no template variables, and complete frontmatter. This is a significant improvement from prior validation (2026-03-18) which had 1 critical gap (missing Executive Summary) and 1 minor gap (NFR4 "instant"). Both have been resolved.

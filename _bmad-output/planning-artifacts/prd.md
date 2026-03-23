@@ -279,11 +279,11 @@ Now both assessments are complete — the relationship analysis generates. When 
 
 | Journey | Key Capabilities Revealed |
 |---------|--------------------------|
-| **Léa (First-Timer)** | Sign-up, conversation, pacing pipeline, depth meter + milestones, Nerin portrait teasing, results page, PWYW modal (founder story + example portrait), portrait as Nerin's letter, behavioral proxy tracking, archetype sharing, public profile landing, extension as recovery |
-| **Marc (Invited)** | QR flow (drawer + scan), pacing adaptation for guarded users, early hook for skeptics, depth meter, relationship analysis (both-complete trigger), ritual suggestion screen, OCEAN code comparison, ambassador conversion |
-| **Léa (Returning)** | Re-engagement email, conversation extension with context preservation, portrait regeneration (richer Nerin letter), credit purchase, multi-relationship analysis |
-| **Thomas (Profile Visitor)** | Public profile (talkable first impression + scientific depth on scroll), OG tags, archetype as social object, OCEAN code comparison, CTA funnel |
-| **Vincent (Founder)** | Admin monitoring, completion funnel, dropout analytics, steering compliance, cost tracking, viral metrics |
+| **Léa (First-Timer)** | Sign-up (FR50), conversation (FR1), pacing pipeline (FR3), depth meter + milestones (FR4, FR5), Nerin portrait teasing (FR6), results page (FR16), PWYW modal (FR21), portrait as Nerin's letter (FR20), behavioral proxy tracking (FR24), archetype sharing (FR44, FR46), public profile landing (FR39), extension as recovery (FR10, FR23) |
+| **Marc (Invited)** | QR flow (FR28), pacing adaptation for guarded users (FR3), early hook for skeptics (FR6), depth meter (FR4), relationship analysis (FR29), ritual suggestion screen (FR31), OCEAN code comparison (FR39), ambassador conversion (FR33) |
+| **Léa (Returning)** | Re-engagement email (FR36), conversation extension with context preservation (FR10, FR25), portrait regeneration (FR23), credit purchase (FR48), multi-relationship analysis (FR35) |
+| **Thomas (Profile Visitor)** | Public profile (FR39, FR42), OG tags (FR41), archetype as social object (FR46), OCEAN code comparison (FR39), CTA funnel (FR43) |
+| **Vincent (Founder)** | Admin monitoring (Nice-to-Have), completion funnel (FR24), dropout analytics (Nice-to-Have), steering compliance (FR3), cost tracking (FR55), viral metrics (Nice-to-Have) |
 
 **Critical path:** Journeys 1→2 form the growth loop. The PWYW modal (founder vulnerability + example portrait) is the monetization conversion moment. The relationship ritual transforms the product from individual tool to shared experience. Journey 4's public profile is designed for *talkability* — the social conversation around it drives conversion more than the profile itself. Journey 5 ensures operational visibility.
 
@@ -296,7 +296,7 @@ These constraints protect users from the inherent risks of AI-powered personalit
 - **Greeting disclaimer:** Nerin's first message includes a natural, non-clinical framing: "this is not therapy" — integrated into the conversation tone, not a legal banner
 - **Language constraints:** Nerin never uses diagnostic language (no "you have...", no DSM terms, no clinical labels). Observations are framed as patterns and curiosities, not diagnoses
 - **Third-party protection rule:** Nerin never characterizes people the user talks about. Nerin can observe the user's *experience* of a relationship ("the way you describe your mother, there's a weight to it") but never labels the other person ("your mother sounds controlling")
-- **Permission to disagree:** Nerin's observations are invitations to explore, not declarations. When a user pushes back, Nerin holds gently — doesn't abandon the observation, doesn't push harder. Gives the user space to sit with it. Redirects only if the user clearly rejects it a second time
+- **Permission to disagree:** Nerin's observations are invitations to explore, not declarations. When a user pushes back, Nerin acknowledges the pushback, offers an alternative framing, and redirects to a different topic only if the user rejects the observation a second time
 - **Portrait framing:** Nerin's letter describes patterns and tensions, not conditions. "You tend to..." not "You suffer from..."
 - **Relationship analysis framing guardrails:** Differences are framed as *dynamics*, not deficits. No blame language. No one is the problem. The ritual screen reinforces: "This analysis describes your dynamic, not who's right or wrong"
 - **Relationship analysis content boundary:** The analysis describes the dynamic *between* two people — never exposes individual vulnerability data (inner struggles, pressure responses). Only relational patterns appear
@@ -604,7 +604,7 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 - **FR43:** Public profiles include a CTA to start the user's own assessment
 - **FR44:** Users can copy a shareable link to their public profile
 - **FR45:** When a logged-in user with a completed assessment views another user's public profile, a relationship analysis CTA is displayed: "You care about [Name]. Discover your dynamic together." with a brief QR flow explanation
-- **FR46:** The system generates archetype card images per archetype (81 cards) — users with the same archetype share the same card visual. Each card contains: archetype name, short description (1-2 sentences), GeometricSignature, and OCEAN code. No individual trait/facet scores. One card per archetype (generic, not personalized)
+- **FR46:** The system generates archetype card images per archetype (81 cards) — users with the same archetype share the same card visual. Each card contains: archetype name, short description (1-2 sentences), geometric visual element, and OCEAN code. No individual trait/facet scores. One card per archetype (generic, not personalized)
 
 ### Payments & Monetization
 

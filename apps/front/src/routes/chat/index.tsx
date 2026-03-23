@@ -62,23 +62,30 @@ export const Route = createFileRoute("/chat/")({
 				});
 			}
 
-			const data = await Effect.gen(function* () {
+			const result = await Effect.gen(function* () {
 				const client = yield* makeApiClient;
 				return yield* client.assessment.start({ payload: {} });
 			}).pipe(
 				Effect.catchTag("GlobalAssessmentLimitReached", () =>
-					Effect.fail(redirect({ to: "/chat", search: { waitlist: true } })),
+					Effect.succeed({ _tag: "waitlist" as const }),
 				),
 				Effect.catchTag("AssessmentAlreadyExists", (e) =>
 					// Story 31-5: The listSessions check below will redirect completed sessions to results
-					Effect.fail(redirect({ to: "/chat", search: { sessionId: e.existingSessionId } })),
+					Effect.succeed({ _tag: "existing" as const, sessionId: e.existingSessionId }),
 				),
 				Effect.runPromise,
 			);
 
+			if ("_tag" in result && result._tag === "waitlist") {
+				throw redirect({ to: "/chat", search: { waitlist: true } });
+			}
+			if ("_tag" in result && result._tag === "existing") {
+				throw redirect({ to: "/chat", search: { sessionId: result.sessionId } });
+			}
+
 			throw redirect({
 				to: "/chat",
-				search: { sessionId: data.sessionId },
+				search: { sessionId: result.sessionId },
 			});
 		}
 
