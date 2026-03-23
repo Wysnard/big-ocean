@@ -365,9 +365,7 @@ export const purchaseEvents = pgTable(
 	"purchase_events",
 	{
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-		userId: text("user_id")
-			.notNull()
-			.references(() => user.id, { onDelete: "cascade" }),
+		userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
 		eventType: purchaseEventTypeEnum("event_type").notNull(),
 		polarCheckoutId: text("polar_checkout_id"),
 		polarProductId: text("polar_product_id"),

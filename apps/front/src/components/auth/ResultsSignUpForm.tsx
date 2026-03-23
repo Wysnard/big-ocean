@@ -71,7 +71,13 @@ export function ResultsSignUpForm({
 			setError(null);
 
 			try {
-				await signUp.email(value.email, value.password, undefined, sessionId);
+				await signUp.email(
+					value.email,
+					value.password,
+					undefined,
+					sessionId,
+					`${window.location.origin}/dashboard`,
+				);
 				await refreshSession();
 				onSuccess();
 			} catch (authError) {

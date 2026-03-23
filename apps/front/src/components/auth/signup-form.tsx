@@ -47,7 +47,13 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 		setIsLoading(true);
 
 		try {
-			await signUp.email(email, password, name, anonymousSessionId);
+			await signUp.email(
+				email,
+				password,
+				name,
+				anonymousSessionId,
+				`${window.location.origin}/dashboard`,
+			);
 
 			// Redirect to verify-email page (Story 31-7b)
 			// Email verification is required before session creation

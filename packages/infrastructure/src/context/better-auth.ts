@@ -21,7 +21,7 @@ import { LoggerRepository } from "@workspace/domain/repositories/logger.reposito
 import bcrypt from "bcryptjs";
 import { betterAuth } from "better-auth";
 import { haveIBeenPwned } from "better-auth/plugins";
-import { and, eq, isNull, or, sql } from "drizzle-orm";
+import { and, eq, isNull, or } from "drizzle-orm";
 import { drizzle as drizzleNodePg } from "drizzle-orm/node-postgres";
 import { Context, Effect, Layer, Redacted } from "effect";
 import pg from "pg";
@@ -335,8 +335,9 @@ export const BetterAuthLive = Layer.effect(
 				sendOnSignUp: true,
 				autoSignInAfterVerification: true,
 				sendVerificationEmail: async ({ user, url }) => {
-					void resend.emails
-						.send({
+					logger.info(`Sending verification email to ${user.email} with URL: ${url}`);
+					try {
+						const result = await resend.emails.send({
 							from: emailFrom,
 							to: user.email,
 							subject: "Verify your email \u2014 big ocean",
@@ -344,11 +345,12 @@ export const BetterAuthLive = Layer.effect(
 								userName: user.name || "",
 								verifyUrl: url,
 							}),
-						})
-						.catch((e: unknown) => {
-							const msg = e instanceof Error ? e.message : String(e);
-							logger.error(`Failed to send verification email to ${user.email}: ${msg}`);
 						});
+						logger.info(`Verification email result for ${user.email}: ${JSON.stringify(result)}`);
+					} catch (e: unknown) {
+						const msg = e instanceof Error ? e.message : String(e);
+						logger.error(`Failed to send verification email to ${user.email}: ${msg}`);
+					}
 				},
 			},
 
@@ -400,7 +402,6 @@ export const BetterAuthLive = Layer.effect(
 							if (anonymousSessionId) {
 								await linkAnonymousAssessmentSession(user.id, anonymousSessionId, "signup");
 							}
-
 						},
 					},
 				},

@@ -1,1 +1,0 @@
-ALTER TABLE "assessment_session" ADD COLUMN "personal_description" text;

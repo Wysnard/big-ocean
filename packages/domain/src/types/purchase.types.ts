@@ -26,7 +26,7 @@ export type PurchaseEventType = (typeof PURCHASE_EVENT_TYPES)[number];
 
 export interface PurchaseEvent {
 	readonly id: string;
-	readonly userId: string;
+	readonly userId: string | null;
 	readonly eventType: PurchaseEventType;
 	readonly polarCheckoutId: string | null;
 	readonly polarProductId: string | null;

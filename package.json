@@ -27,6 +27,7 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
+		"db:studio": "drizzle-kit studio",
 		"seed:test-assessment": "tsx scripts/seed-completed-assessment.ts",
 		"test:e2e": "pnpm --filter=@workspace/e2e test:e2e",
 		"test:e2e:ui": "pnpm --filter=@workspace/e2e test:e2e:ui",
