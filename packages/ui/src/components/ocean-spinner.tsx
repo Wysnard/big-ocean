@@ -52,8 +52,8 @@ export function OceanSpinner({
 			const path = pathRef.current;
 			if (!path || letters.length < 2) return;
 
-			const morphDuration = duration * 0.55;
-			const holdDuration = duration * 0.45;
+			const morphDuration = duration * 0.6;
+			const holdDuration = duration * 0.4;
 
 			const tl = gsap.timeline({ repeat: -1 });
 
@@ -61,34 +61,32 @@ export function OceanSpinner({
 				const nextIndex = (i + 1) % letters.length;
 				const nextPath = getPath(letters, nextIndex);
 
-				// Breathe pulse during hold
-				tl.to(path, {
-					scale: 1.05,
-					transformOrigin: "50% 50%",
-					duration: holdDuration / 2,
-					ease: "sine.inOut",
-					yoyo: true,
-					repeat: 1,
-				});
+				// Hold on current shape
+				tl.to(path, { duration: holdDuration });
 
-				// Morph to next shape
-				tl.to(path, {
-					morphSVG: nextPath,
-					duration: morphDuration,
-					ease: "power2.inOut",
-				});
-
-				// Color transition (if not mono)
+				// Morph to next shape (swap color at midpoint via onUpdate)
 				if (!mono) {
-					tl.to(
-						path,
-						{
-							color: getTraitColor(nextIndex),
-							duration: morphDuration,
-							ease: "power1.inOut",
+					let colorSwapped = false;
+					tl.to(path, {
+						morphSVG: nextPath,
+						duration: morphDuration,
+						ease: "power2.inOut",
+						onUpdate() {
+							if (!colorSwapped && this.progress() >= 0.5) {
+								colorSwapped = true;
+								gsap.set(path.closest("svg"), { color: getTraitColor(nextIndex) });
+							}
 						},
-						"<",
-					);
+						onStart() {
+							colorSwapped = false;
+						},
+					});
+				} else {
+					tl.to(path, {
+						morphSVG: nextPath,
+						duration: morphDuration,
+						ease: "power2.inOut",
+					});
 				}
 			}
 		},
