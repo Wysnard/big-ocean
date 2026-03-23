@@ -31,7 +31,8 @@ import * as S from "effect/Schema";
 
 // ─── v2 Prompt ───────────────────────────────────────────────────────────────
 
-function buildV2Prompt(input: ConversanalyzerInput): string {
+/** @internal Exported for testing — not part of public API */
+export function buildV2Prompt(input: ConversanalyzerInput): string {
 	const facetDefs = Object.entries(FACET_PROMPT_DEFINITIONS)
 		.map(([facet, def]) => `  - ${facet}: ${def}`)
 		.join("\n");
