@@ -11,12 +11,20 @@
  */
 
 import { expect, test } from "@playwright/test";
+import { signUpAndLoginViaBrowser } from "../utils/browser-auth.js";
 
 test.describe("Session Resume", () => {
 	test.setTimeout(60_000);
 
 	test("@P0 browser reload mid-conversation preserves session", async ({ page }) => {
 		let sessionId = "";
+
+		await test.step("sign up and login", async () => {
+			await signUpAndLoginViaBrowser(page, {
+				email: `e2e-resume-reload+${Date.now()}@gmail.com`,
+				password: "OceanDepth#Nerin42xQ",
+			});
+		});
 
 		await test.step("navigate to /chat and create session", async () => {
 			for (let attempt = 0; attempt < 3; attempt++) {
@@ -67,6 +75,13 @@ test.describe("Session Resume", () => {
 
 	test("@P0 navigate away and return via URL preserves session", async ({ page }) => {
 		let sessionId = "";
+
+		await test.step("sign up and login", async () => {
+			await signUpAndLoginViaBrowser(page, {
+				email: `e2e-resume-nav+${Date.now()}@gmail.com`,
+				password: "OceanDepth#Nerin42xQ",
+			});
+		});
 
 		await test.step("create session", async () => {
 			for (let attempt = 0; attempt < 3; attempt++) {

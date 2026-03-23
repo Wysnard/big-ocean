@@ -73,9 +73,10 @@ test("archetype share card and OG image route", async ({ page, request, apiConte
 
 	await test.step("navigate to results page", async () => {
 		await page.goto(`/results/${sessionId}`);
-		// Dismiss PWYW modal if it appears (Story 32-4 auto-opens on first visit)
+		// Dismiss PWYW modal — wait longer as it may render after page load
 		const pwywModal = page.getByTestId("pwyw-modal");
-		if (await pwywModal.isVisible({ timeout: 3_000 }).catch(() => false)) {
+		await pwywModal.waitFor({ state: "visible", timeout: 8_000 }).catch(() => {});
+		if (await pwywModal.isVisible()) {
 			await page.locator("[data-slot='dialog-close']").click();
 			await pwywModal.waitFor({ state: "hidden", timeout: 3_000 });
 		}
@@ -96,6 +97,13 @@ test("archetype share card and OG image route", async ({ page, request, apiConte
 
 	await test.step("toggle to 9:16 format updates preview", async () => {
 		const shareCard = page.locator("[data-slot='archetype-share-card']");
+
+		// Dismiss PWYW modal if it reappeared
+		const pwyw = page.getByTestId("pwyw-modal");
+		if (await pwyw.isVisible({ timeout: 2_000 }).catch(() => false)) {
+			await page.locator("[data-slot='dialog-close']").click();
+			await pwyw.waitFor({ state: "hidden", timeout: 3_000 });
+		}
 
 		await shareCard.getByText("9:16 Story").click();
 

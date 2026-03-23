@@ -15,11 +15,8 @@
  */
 
 import { expect, test } from "@playwright/test";
-import pg from "pg";
-import { TEST_DB_CONFIG } from "../e2e-env.js";
 import { createApiContext } from "../utils/api-client.js";
-
-const { Pool } = pg;
+import { signUpAndLoginViaBrowser } from "../utils/browser-auth.js";
 
 const LIFECYCLE_USER = {
 	email: `e2e-lifecycle-${Date.now()}@gmail.com`,
@@ -30,10 +27,14 @@ const LIFECYCLE_USER = {
 test.describe("Conversation Lifecycle", () => {
 	test.setTimeout(60_000);
 
-	test("@P0 start → exchange → farewell → auth → results with OCEAN code", async ({ page }) => {
+	test("@P0 start → exchange → farewell → results with OCEAN code", async ({ page }) => {
 		let sessionId = "";
 
-		await test.step("navigate to /chat and create anonymous session", async () => {
+		await test.step("sign up and login", async () => {
+			await signUpAndLoginViaBrowser(page, LIFECYCLE_USER);
+		});
+
+		await test.step("navigate to /chat and create session", async () => {
 			for (let attempt = 0; attempt < 3; attempt++) {
 				await page.goto("/chat").catch(() => {});
 				try {
@@ -71,59 +72,10 @@ test.describe("Conversation Lifecycle", () => {
 			await chatInput.fill("I find deep satisfaction in understanding complex systems and patterns.");
 			await page.getByTestId("chat-send-btn").click();
 
-			// With MESSAGE_THRESHOLD=1, first user message triggers farewell + auth gate
+			// With MESSAGE_THRESHOLD=1, first user message triggers farewell + View Results link
 			await page
-				.locator("[data-slot='chat-auth-gate']")
+				.getByRole("link", { name: "View Results" })
 				.waitFor({ state: "visible", timeout: 30_000 });
-		});
-
-		await test.step("verify closing exchange: Nerin farewell message appears", async () => {
-			// After farewell, there should be multiple chat bubbles (greeting + user msg + farewell)
-			const bubbles = page.locator("[data-slot='chat-bubble']");
-			const count = await bubbles.count();
-			expect(count).toBeGreaterThanOrEqual(3); // greeting + user message + farewell
-		});
-
-		await test.step("sign up via auth gate, verify email, sign in via browser", async () => {
-			await page.getByTestId("chat-auth-gate-signup-btn").click();
-			await page.locator("#results-signup-email").fill(LIFECYCLE_USER.email);
-			await page.locator("#results-signup-password").fill(LIFECYCLE_USER.password);
-			await page.getByTestId("auth-gate-signup-submit").click();
-
-			// Wait for signup to complete (may redirect to /verify-email)
-			await page.waitForTimeout(2_000);
-
-			// Bypass email verification in DB
-			const pool = new Pool(TEST_DB_CONFIG);
-			const client = await pool.connect();
-			try {
-				// Retry until user exists (signup may still be propagating)
-				for (let i = 0; i < 5; i++) {
-					const result = await client.query(
-						`UPDATE "user" SET "email_verified" = true WHERE "email" = $1 RETURNING id`,
-						[LIFECYCLE_USER.email],
-					);
-					if (result.rowCount && result.rowCount > 0) break;
-					await new Promise((r) => setTimeout(r, 1_000));
-				}
-			} finally {
-				client.release();
-				await pool.end();
-			}
-
-			// Sign in via browser login page (cookies persist in browser context)
-			await page.goto("/login");
-			const submitBtn = page.locator('button[type="submit"]');
-			await submitBtn.waitFor({ state: "visible" });
-			await page.locator("#login-email").fill(LIFECYCLE_USER.email);
-			await page.locator("#login-password").fill(LIFECYCLE_USER.password);
-			await submitBtn.click();
-
-			// Wait for auth to complete
-			await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15_000 });
-
-			// Navigate to chat with session
-			await page.goto(`/chat?sessionId=${sessionId}`);
 		});
 
 		await test.step("View Results link appears → navigate to results", async () => {
@@ -170,7 +122,7 @@ test.describe("Conversation Lifecycle", () => {
 		});
 
 		await test.step("verify assessment data persisted via API", async () => {
-			// Check results endpoint returns valid data
+			// Use API context with cookie auth from browser — sign in as the already-authenticated user
 			const api = await createApiContext();
 			const signIn = await api.post("/api/auth/sign-in/email", {
 				data: { email: LIFECYCLE_USER.email, password: LIFECYCLE_USER.password },

@@ -1,22 +1,19 @@
 import { expect, test } from "@playwright/test";
-import pg from "pg";
-import { TEST_DB_CONFIG } from "../e2e-env.js";
 import { seedFullPortrait } from "../factories/assessment.factory.js";
+import { signUpAndLoginViaBrowser } from "../utils/browser-auth.js";
 
-const { Pool } = pg;
+const goldenEmail = `e2e-golden+${Date.now()}@gmail.com`;
+const goldenPassword = "OceanDepth#Nerin42xQ";
 
 /**
  * Golden Path Journey
  *
- * Landing → Chat → Farewell → Auth Gate Sign-up → Finalization Wait Screen → Results → Share → Public Profile → Continue Chat (read-only) → View Results → Profile
+ * Landing → Sign Up → Verify Email → Login → /chat (authenticated, creates session) → Message → Farewell → View Results → Results → Share → Public Profile → Continue Chat (read-only) → Dashboard
  *
  * Single long user journey exercising the core happy path.
  * Uses data-testid and data-slot selectors — never matches on LLM output text.
- *
- * Story 11.1: After auth gate signup, redirects to /finalize/$sessionId wait screen
- * which triggers generate-results and auto-redirects to results on completion.
  */
-test("golden path: landing → chat → signup → results → share → public profile → continue chat → profile", async ({
+test("golden path: landing → signup → chat → results → share → public profile → continue chat → dashboard", async ({
 	page,
 }) => {
 	test.setTimeout(90_000); // Long journey — multiple API calls, auth, navigation
@@ -24,6 +21,14 @@ test("golden path: landing → chat → signup → results → share → public 
 		await page.goto("/");
 		await page.locator("[data-slot='hero-section']").waitFor({ state: "visible" });
 		await expect(page.getByTestId("hero-cta")).toBeVisible();
+	});
+
+	await test.step("sign up, verify email, and login", async () => {
+		await signUpAndLoginViaBrowser(page, {
+			email: goldenEmail,
+			password: goldenPassword,
+			name: "Golden Path Tester",
+		});
 	});
 
 	await test.step("navigate to /chat and create session", async () => {
@@ -57,58 +62,11 @@ test("golden path: landing → chat → signup → results → share → public 
 		await page.getByTestId("chat-send-btn").click();
 
 		// With MESSAGE_THRESHOLD=1, the 1st user message triggers farewell.
-		// Wait for the auth gate to appear (anonymous user) — farewell + auth gate render together.
-		await page.locator("[data-slot='chat-auth-gate']").waitFor({
+		// User is authenticated, so "View Results" link appears directly (no auth gate).
+		await page.getByRole("link", { name: "View Results" }).waitFor({
 			state: "visible",
 			timeout: 30_000,
 		});
-	});
-
-	const goldenEmail = `e2e-golden+${Date.now()}@gmail.com`;
-
-	await test.step("auth gate appears inline → sign up", async () => {
-		// Story 7.18: Auth gate is now inline in chat after farewell (not on results page)
-		await page.getByTestId("chat-auth-gate-signup-btn").click();
-
-		// Fill sign-up form
-		await page.locator("#results-signup-email").fill(goldenEmail);
-		await page.locator("#results-signup-password").fill("OceanDepth#Nerin42xQ");
-		await page.getByTestId("auth-gate-signup-submit").click();
-	});
-
-	await test.step("verify email in DB and sign in via browser (Story 31-7b bypass)", async () => {
-		// With requireEmailVerification=true, signup doesn't auto-authenticate.
-		// Bypass: verify email in DB, sign in via browser login, then navigate to chat.
-		await page.waitForTimeout(2_000); // Let signup complete
-
-		const pool = new Pool(TEST_DB_CONFIG);
-		const client = await pool.connect();
-		try {
-			// Retry until user exists (signup may still be propagating)
-			for (let i = 0; i < 5; i++) {
-				const result = await client.query(
-					`UPDATE "user" SET "email_verified" = true WHERE "email" = $1 RETURNING id`,
-					[goldenEmail],
-				);
-				if (result.rowCount && result.rowCount > 0) break;
-				await new Promise((r) => setTimeout(r, 1_000));
-			}
-		} finally {
-			client.release();
-			await pool.end();
-		}
-
-		// Sign in via browser login page (cookies persist in browser context)
-		await page.goto("/login");
-		const submitBtn = page.locator('button[type="submit"]');
-		await submitBtn.waitFor({ state: "visible" });
-		await page.locator("#login-email").fill(goldenEmail);
-		await page.locator("#login-password").fill("OceanDepth#Nerin42xQ");
-		await submitBtn.click();
-		await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15_000 });
-
-		// Navigate to chat page — now authenticated
-		await page.goto(`/chat?sessionId=${sessionId}`);
 	});
 
 	await test.step("click View Results to navigate to results page", async () => {
@@ -288,20 +246,17 @@ test("golden path: landing → chat → signup → results → share → public 
 		});
 	});
 
-	await test.step("profile page shows completed assessment card", async () => {
+	await test.step("dashboard shows identity card with archetype", async () => {
 		// Use client-side navigation via user nav dropdown (avoids auth race on cold page.goto)
 		const avatarButton = page.locator("[data-slot='user-nav'] button.rounded-full");
 		await avatarButton.waitFor({ state: "visible", timeout: 10_000 });
 		await avatarButton.click();
-		await page.getByRole("menuitem", { name: "Profile" }).click();
-		await page.waitForURL(/\/profile\/?$/);
-		await page.locator("[data-slot='assessment-card']").waitFor({
+		await page.getByRole("menuitem", { name: "Dashboard" }).click();
+		await page.waitForURL(/\/dashboard\/?$/);
+		await page.getByTestId("dashboard-identity-card").waitFor({
 			state: "visible",
 			timeout: 10_000,
 		});
-		await expect(
-			page.locator("[data-slot='assessment-card'][data-status='completed']"),
-		).toBeVisible();
-		await expect(page.locator("[data-slot='status-badge']")).toContainText("Complete");
+		await expect(page.getByTestId("dashboard-archetype-name")).toBeVisible();
 	});
 });
