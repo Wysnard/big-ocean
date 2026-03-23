@@ -22,7 +22,11 @@ import { RelationshipCreditsSection } from "@/components/results/RelationshipCre
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
 import { useTraitEvidence } from "@/components/results/useTraitEvidence";
 import { ArchetypeShareCard } from "@/components/sharing/archetype-share-card";
-import { getResultsQueryOptions, useGetResults } from "@/hooks/use-assessment";
+import {
+	getResultsQueryOptions,
+	isAssessmentApiError,
+	useGetResults,
+} from "@/hooks/use-assessment";
 import { useAuth } from "@/hooks/use-auth";
 import { useFacetEvidence } from "@/hooks/use-evidence";
 import { useToggleVisibility } from "@/hooks/use-profile";
@@ -359,6 +363,15 @@ function ResultsSessionPage() {
 
 	if (isLoading) {
 		return <ResultsLoading />;
+	}
+
+	if (error && isAssessmentApiError(error) && error.status === 404) {
+		return (
+			<NotFound
+				title="Assessment not found"
+				description={`The assessment session ${assessmentSessionId} doesn't exist or you don't have access to it.`}
+			/>
+		);
 	}
 
 	if (error || !results) {

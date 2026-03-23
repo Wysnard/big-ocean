@@ -103,6 +103,7 @@ describe("ResultsAuthGate", () => {
 				"long-enough-password",
 				undefined,
 				"session-123",
+				expect.any(String),
 			);
 		});
 		expect(mockRefreshSession).toHaveBeenCalled();
@@ -178,6 +179,7 @@ describe("ResultsAuthGate", () => {
 				"long-enough-password",
 				undefined,
 				undefined,
+				expect.any(String),
 			);
 		});
 	});
