@@ -1,6 +1,4 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/react-start/server";
 import type { FacetName, TraitName } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
 import { useTheme } from "@workspace/ui/hooks/use-theme";
@@ -32,6 +30,7 @@ import { useFacetEvidence } from "@/hooks/use-evidence";
 import { useToggleVisibility } from "@/hooks/use-profile";
 import { useShareFlow } from "@/hooks/use-share-flow";
 import { usePortraitStatus } from "@/hooks/usePortraitStatus";
+import { getSession } from "@/lib/auth-client";
 import { createThemedCheckoutEmbed } from "@/lib/polar-checkout";
 import {
 	clearPendingResultsGateSession,
@@ -39,32 +38,17 @@ import {
 	readPendingResultsGateSession,
 } from "@/lib/results-auth-gate-storage";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
-
-/** Server function that checks auth by forwarding cookies from the incoming request */
-const checkAuthSession = createServerFn({ method: "GET" }).handler(async () => {
-	try {
-		const cookie = getRequestHeader("cookie") ?? "";
-		const response = await fetch(`${API_URL}/api/auth/get-session`, {
-			headers: { "Content-Type": "application/json", cookie },
-		});
-		if (!response.ok) return { isAuthenticated: false as const };
-		const session = await response.json();
-		return { isAuthenticated: !!session?.session?.id };
-	} catch {
-		return { isAuthenticated: false as const };
-	}
-});
-
 const SessionResultsSearchParams = S.Struct({
 	view: S.optional(S.String),
 });
 
 export const Route = createFileRoute("/results/$assessmentSessionId")({
+	ssr: false,
 	validateSearch: (search) => S.decodeUnknownSync(SessionResultsSearchParams)(search),
 	beforeLoad: async () => {
 		try {
-			return await checkAuthSession();
+			const { data: session } = await getSession();
+			return { isAuthenticated: !!session?.user };
 		} catch {
 			return { isAuthenticated: false };
 		}
@@ -74,14 +58,7 @@ export const Route = createFileRoute("/results/$assessmentSessionId")({
 		try {
 			await context.queryClient.ensureQueryData(getResultsQueryOptions(params.assessmentSessionId));
 		} catch (error) {
-			const is404 =
-				(typeof error === "object" &&
-					error !== null &&
-					"status" in error &&
-					(error as { status: number }).status === 404) ||
-				(error instanceof Error &&
-					(error.message.includes("404") || error.message.includes("SessionNotFound")));
-			if (is404) throw notFound();
+			if (isAssessmentApiError(error) && error.status === 404) throw notFound();
 			// Graceful degradation: client-side useGetResults will retry
 		}
 	},
@@ -382,7 +359,7 @@ function ResultsSessionPage() {
 					<p className="text-muted-foreground mb-6">
 						{error?.message || "Your assessment may not be complete yet."}
 					</p>
-					<Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+					<Button asChild>
 						<Link to="/chat" search={{ sessionId: assessmentSessionId }}>
 							<MessageCircle className="w-4 h-4 mr-2" />
 							Continue Assessment

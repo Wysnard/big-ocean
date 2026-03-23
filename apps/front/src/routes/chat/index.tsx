@@ -1,4 +1,11 @@
-import { createFileRoute, isRedirect, redirect, useNavigate } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	isNotFound,
+	isRedirect,
+	notFound,
+	redirect,
+	useNavigate,
+} from "@tanstack/react-router";
 import { Effect, Schema as S } from "effect";
 import { Loader2 } from "lucide-react";
 import { useCallback, useState } from "react";
@@ -102,14 +109,18 @@ export const Route = createFileRoute("/chat/")({
 				}).pipe(Effect.runPromise);
 
 				const linked = data.sessions.some((s) => s.id === search.sessionId);
-				if (!linked && data.sessions.length > 0) {
-					throw redirect({
-						to: "/chat",
-						search: { sessionId: data.sessions[0].id },
-					});
+				if (!linked) {
+					if (data.sessions.length > 0) {
+						throw redirect({
+							to: "/chat",
+							search: { sessionId: data.sessions[0].id },
+						});
+					}
+					throw notFound();
 				}
 			} catch (e) {
 				if (isRedirect(e)) throw e;
+				if (isNotFound(e)) throw e;
 				// Fail-open: if ownership check fails (network error, API down), allow through.
 				// The session itself validates ownership server-side on each message send.
 				console.warn("[chat/beforeLoad] Session ownership check failed, allowing through:", e);

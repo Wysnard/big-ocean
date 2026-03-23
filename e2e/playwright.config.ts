@@ -156,10 +156,10 @@ export default defineConfig({
 
 	webServer: {
 		command:
-			"cd apps/front && VITE_API_URL=http://localhost:4001 VITE_E2E=true npx vite dev --port 3001",
-		url: "http://localhost:3001",
+			"cd apps/front && rm -rf .output .nitro && VITE_API_URL=http://localhost:4001 VITE_E2E=true npx vite dev --port 3001",
+		url: "http://localhost:3001/login",
 		cwd: PROJECT_ROOT,
 		reuseExistingServer: !process.env.CI,
-		timeout: 20_000,
+		timeout: 30_000,
 	},
 });

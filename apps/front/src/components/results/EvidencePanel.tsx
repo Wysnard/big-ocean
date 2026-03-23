@@ -31,7 +31,7 @@ function getParentTrait(facetName: FacetName): TraitName | undefined {
 
 interface EvidencePanelProps {
 	facetName: FacetName;
-	evidence: SavedFacetEvidence[];
+	evidence: readonly SavedFacetEvidence[];
 	onClose: () => void;
 }
 

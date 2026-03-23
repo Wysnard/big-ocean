@@ -2,23 +2,18 @@
  * Assessment HTTP Hooks
  *
  * React hooks for type-safe assessment operations using TanStack Query.
- * Uses direct HTTP calls to backend assessment endpoints.
+ * Uses Effect HttpApiClient for type-safe API calls via @workspace/contracts.
  */
 
 import { keepPreviousData, queryOptions, useMutation, useQuery } from "@tanstack/react-query";
-import type {
-	GetResultsResponse,
-	GetTranscriptResponse,
-	ListSessionsResponse,
-	ResumeSessionResponse,
-	SendMessageRequest,
-	SendMessageResponse,
-	StartAssessmentRequest,
-	StartAssessmentResponse,
-} from "@workspace/contracts";
+import type { SendMessageRequest, StartAssessmentRequest } from "@workspace/contracts";
+import { Effect } from "effect";
+import { makeApiClient } from "../lib/api-client";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
-
+/**
+ * Structured API error for backward-compatible error detection.
+ * Used by the results route loader and component to detect 404s.
+ */
 export class AssessmentApiError extends Error {
 	readonly status: number;
 	readonly details: unknown;
@@ -34,94 +29,31 @@ export class AssessmentApiError extends Error {
 export const isAssessmentApiError = (error: unknown): error is AssessmentApiError =>
 	error instanceof AssessmentApiError;
 
-const getErrorMessage = (details: unknown, status: number, statusText: string): string => {
-	if (typeof details === "object" && details !== null && "message" in details) {
-		const message = (details as { message?: unknown }).message;
-		if (typeof message === "string" && message.length > 0) {
-			return message;
-		}
-	}
-
-	return `HTTP ${status}: ${statusText}`;
-};
-
-/**
- * HTTP client for assessment endpoints
- */
-async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
-	const response = await fetch(`${API_URL}${endpoint}`, {
-		...options,
-		headers: {
-			"Content-Type": "application/json",
-			...options?.headers,
-		},
-		credentials: "include", // Include cookies for auth
-	});
-
-	if (!response.ok) {
-		const error = await response.json().catch(() => null);
-		throw new AssessmentApiError(
-			response.status,
-			getErrorMessage(error, response.status, response.statusText),
-			error,
-		);
-	}
-
-	return response.json();
-}
-
 /**
  * Start a new assessment session
- *
- * Creates a new personality assessment session for a user (optional userId for anonymous sessions).
- *
- * @example
- * ```tsx
- * const { mutate, isPending } = useStartAssessment();
- *
- * <button onClick={() => mutate({ userId: "123" })}>
- *   Start Assessment
- * </button>
- * ```
  */
 export function useStartAssessment() {
 	return useMutation({
 		mutationKey: ["assessment", "start"],
-		mutationFn: async (input: StartAssessmentRequest = {}): Promise<StartAssessmentResponse> => {
-			return fetchApi("/api/assessment/start", {
-				method: "POST",
-				body: JSON.stringify(input),
-			});
-		},
+		mutationFn: (input: StartAssessmentRequest = {}) =>
+			Effect.gen(function* () {
+				const client = yield* makeApiClient;
+				return yield* client.assessment.start({ payload: input });
+			}).pipe(Effect.runPromise),
 	});
 }
 
 /**
  * Send a message in an assessment session
- *
- * Sends a user message to Nerin and receives a response with updated precision scores.
- *
- * @example
- * ```tsx
- * const { mutate, isPending } = useSendMessage();
- *
- * <button onClick={() => mutate({
- *   sessionId: "session-123",
- *   message: "I enjoy trying new things"
- * })}>
- *   Send Message
- * </button>
- * ```
  */
 export function useSendMessage() {
 	return useMutation({
 		mutationKey: ["assessment", "sendMessage"],
-		mutationFn: async (input: SendMessageRequest): Promise<SendMessageResponse> => {
-			return fetchApi("/api/assessment/message", {
-				method: "POST",
-				body: JSON.stringify(input),
-			});
-		},
+		mutationFn: (input: SendMessageRequest) =>
+			Effect.gen(function* () {
+				const client = yield* makeApiClient;
+				return yield* client.assessment.sendMessage({ payload: input });
+			}).pipe(Effect.runPromise),
 	});
 }
 
@@ -129,9 +61,25 @@ export function useSendMessage() {
  * Fetch assessment results (non-hook)
  *
  * Standalone function for use in route loaders and other non-React contexts.
+ * The Promise .catch() converts FiberFailure (from Effect.runPromise) into a real
+ * AssessmentApiError instance so instanceof checks work in the loader and component.
  */
-export function fetchResults(sessionId: string): Promise<GetResultsResponse> {
-	return fetchApi(`/api/assessment/${sessionId}/results`);
+export function fetchResults(sessionId: string) {
+	return Effect.gen(function* () {
+		const client = yield* makeApiClient;
+		return yield* client.assessment.getResults({ path: { sessionId } });
+	})
+		.pipe(Effect.runPromise)
+		.catch((e: unknown) => {
+			const str = String(e);
+			const msg = e instanceof Error ? e.message : str;
+			const status = str.includes("SessionNotFound")
+				? 404
+				: str.includes("SessionNotCompleted")
+					? 409
+					: 500;
+			throw new AssessmentApiError(status, msg, e);
+		});
 }
 
 /**
@@ -170,63 +118,39 @@ export function useGetResults(sessionId: string, enabled = true) {
  *
  * @param sessionId - The session ID to resume
  * @param enabled - Whether to enable the query (default: true)
- *
- * @example
- * ```tsx
- * const { data, isLoading } = useResumeSession("session-123");
- *
- * {data && (
- *   <div>
- *     <ul>
- *       {data.messages.map((msg) => (
- *         <li key={msg.id}>{msg.content}</li>
- *       ))}
- *     </ul>
- *     <p>Precision: {data.precision}%</p>
- *   </div>
- * )}
- * ```
  */
 export function useResumeSession(sessionId: string, enabled = true) {
 	return useQuery({
 		queryKey: ["assessment", "session", sessionId],
-		queryFn: async (): Promise<ResumeSessionResponse> => {
-			return fetchApi(`/api/assessment/${sessionId}/resume`);
-		},
+		queryFn: () =>
+			Effect.gen(function* () {
+				const client = yield* makeApiClient;
+				return yield* client.assessment.resumeSession({ path: { sessionId } });
+			}).pipe(Effect.runPromise),
 		enabled: enabled && !!sessionId,
 		placeholderData: keepPreviousData,
 	});
 }
 
 /**
- * List assessment sessions for the authenticated user (Story 7.13)
- *
- * Returns all assessment sessions with computed message count and optional archetype data.
- * Also returns freeTierMessageThreshold for determining completion status on the frontend.
- *
- * @param enabled - Whether to enable the query (default: true)
- *
- * @example
- * ```tsx
- * const { data, isLoading } = useListAssessments();
- *
- * {data?.sessions.map((session) => (
- *   <AssessmentCard key={session.id} session={session} />
- * ))}
- * ```
- */
-/**
  * Query options factory for listing assessments.
  * Use with queryClient.fetchQuery() for imperative fetching (e.g., post-auth verification).
  */
 export function listAssessmentsQueryOptions() {
-	return queryOptions<ListSessionsResponse>({
+	return queryOptions({
 		queryKey: ["assessments", "list"],
-		queryFn: async () => fetchApi("/api/assessment/sessions"),
+		queryFn: () =>
+			Effect.gen(function* () {
+				const client = yield* makeApiClient;
+				return yield* client.assessment.listSessions();
+			}).pipe(Effect.runPromise),
 		staleTime: 5 * 60 * 1000,
 	});
 }
 
+/**
+ * List assessment sessions for the authenticated user (Story 7.13)
+ */
 export function useListAssessments(enabled = true) {
 	return useQuery({
 		...listAssessmentsQueryOptions(),
@@ -246,39 +170,12 @@ export function useListAssessments(enabled = true) {
 export function useConversationTranscript(sessionId: string, enabled = true) {
 	return useQuery({
 		queryKey: ["assessment", "transcript", sessionId],
-		queryFn: async (): Promise<GetTranscriptResponse> => {
-			return fetchApi(`/api/assessment/${sessionId}/transcript`);
-		},
+		queryFn: () =>
+			Effect.gen(function* () {
+				const client = yield* makeApiClient;
+				return yield* client.assessment.getTranscript({ path: { sessionId } });
+			}).pipe(Effect.runPromise),
 		enabled: enabled && !!sessionId,
 		staleTime: Number.POSITIVE_INFINITY,
 	});
 }
-
-/**
- * Optimistic update helper for sendMessage
- *
- * Example of how to implement optimistic updates with the assessment mutations.
- *
- * @example
- * ```tsx
- * const queryClient = useQueryClient();
- * const { mutate } = useSendMessage();
- *
- * const optimisticSend = (sessionId: string, message: string) => {
- *   // Optimistically add message to UI
- *   queryClient.setQueryData(
- *     ["assessment", "session", sessionId],
- *     (old: any) => ({
- *       ...old,
- *       messages: [
- *         ...old.messages,
- *         { id: crypto.randomUUID(), role: "user", content: message }
- *       ]
- *     })
- *   );
- *
- *   // Send actual request
- *   mutate({ sessionId, message });
- * };
- * ```
- */

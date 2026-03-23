@@ -2,38 +2,13 @@
  * Profile HTTP Hooks
  *
  * React hooks for type-safe profile sharing operations using TanStack Query.
- * Uses direct HTTP calls to backend profile endpoints.
+ * Uses Effect HttpApiClient for type-safe API calls via @workspace/contracts.
  */
 
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
-import type {
-	GetPublicProfileResponse,
-	ShareProfileResponse,
-	ToggleVisibilityResponse,
-} from "@workspace/contracts";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
-
-/**
- * HTTP client for profile endpoints
- */
-async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
-	const response = await fetch(`${API_URL}${endpoint}`, {
-		...options,
-		headers: {
-			"Content-Type": "application/json",
-			...options?.headers,
-		},
-		credentials: "include",
-	});
-
-	if (!response.ok) {
-		const error = await response.json().catch(() => ({ message: response.statusText }));
-		throw new Error(error.message || `HTTP ${response.status}: ${response.statusText}`);
-	}
-
-	return response.json();
-}
+import type { GetPublicProfileResponse } from "@workspace/contracts";
+import { Effect } from "effect";
+import { makeApiClient } from "../lib/api-client";
 
 /**
  * Create a shareable profile from a completed assessment session
@@ -41,12 +16,11 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
 export function useShareProfile() {
 	return useMutation({
 		mutationKey: ["profile", "share"],
-		mutationFn: async (sessionId: string): Promise<ShareProfileResponse> => {
-			return fetchApi("/api/public-profile/share", {
-				method: "POST",
-				body: JSON.stringify({ sessionId }),
-			});
-		},
+		mutationFn: (sessionId: string) =>
+			Effect.gen(function* () {
+				const client = yield* makeApiClient;
+				return yield* client.profile.shareProfile({ payload: { sessionId } });
+			}).pipe(Effect.runPromise),
 	});
 }
 
@@ -57,7 +31,11 @@ export function useShareProfile() {
 export function getPublicProfileQueryOptions(publicProfileId: string) {
 	return queryOptions<GetPublicProfileResponse>({
 		queryKey: ["profile", "public", publicProfileId],
-		queryFn: async () => fetchApi(`/api/public-profile/${publicProfileId}`),
+		queryFn: () =>
+			Effect.gen(function* () {
+				const client = yield* makeApiClient;
+				return yield* client.profile.getProfile({ path: { publicProfileId } });
+			}).pipe(Effect.runPromise),
 		retry: false,
 	});
 }
@@ -78,14 +56,13 @@ export function useGetPublicProfile(publicProfileId: string, enabled = true) {
 export function useToggleVisibility() {
 	return useMutation({
 		mutationKey: ["profile", "toggleVisibility"],
-		mutationFn: async (input: {
-			publicProfileId: string;
-			isPublic: boolean;
-		}): Promise<ToggleVisibilityResponse> => {
-			return fetchApi(`/api/public-profile/${input.publicProfileId}/visibility`, {
-				method: "PATCH",
-				body: JSON.stringify({ isPublic: input.isPublic }),
-			});
-		},
+		mutationFn: (input: { publicProfileId: string; isPublic: boolean }) =>
+			Effect.gen(function* () {
+				const client = yield* makeApiClient;
+				return yield* client.profile.toggleVisibility({
+					path: { publicProfileId: input.publicProfileId },
+					payload: { isPublic: input.isPublic },
+				});
+			}).pipe(Effect.runPromise),
 	});
 }

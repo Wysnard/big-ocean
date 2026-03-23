@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("../lib/api-client", () => ({ makeApiClient: {} }));
+
 import { PORTRAIT_POLL_INTERVAL_MS, shouldPollPortraitStatus } from "./usePortraitStatus";
 
 describe("shouldPollPortraitStatus", () => {

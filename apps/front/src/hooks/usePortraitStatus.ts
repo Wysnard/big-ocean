@@ -7,12 +7,14 @@
  * When `waitingForUnlock` is true (after successful checkout), polls until
  * the full portrait becomes ready — even if status is still none
  * while the webhook is being processed.
+ *
+ * Uses Effect HttpApiClient for type-safe API calls via @workspace/contracts.
  */
 
 import { useQuery } from "@tanstack/react-query";
 import type { GetPortraitStatusResponse, PortraitStatus } from "@workspace/contracts";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+import { Effect } from "effect";
+import { makeApiClient } from "../lib/api-client";
 
 /** Polling interval in milliseconds */
 export const PORTRAIT_POLL_INTERVAL_MS = 2000;
@@ -51,18 +53,11 @@ export function usePortraitStatus(sessionId: string, options?: UsePortraitStatus
 
 	return useQuery<GetPortraitStatusResponse>({
 		queryKey: ["portraitStatus", sessionId],
-		queryFn: async () => {
-			const response = await fetch(`${API_URL}/api/portrait/${sessionId}/status`, {
-				credentials: "include",
-			});
-
-			if (!response.ok) {
-				const error = await response.json().catch(() => null);
-				throw new Error(typeof error?.message === "string" ? error.message : `HTTP ${response.status}`);
-			}
-
-			return response.json();
-		},
+		queryFn: () =>
+			Effect.gen(function* () {
+				const client = yield* makeApiClient;
+				return yield* client.portrait.getPortraitStatus({ path: { sessionId } });
+			}).pipe(Effect.runPromise),
 		refetchInterval: (query) =>
 			shouldPollPortraitStatus(query.state.status, query.state.data?.status, waitingForUnlock),
 		enabled: !!sessionId,

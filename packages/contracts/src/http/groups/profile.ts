@@ -58,6 +58,13 @@ export const GetPublicProfileResponseSchema = S.Struct({
 });
 
 /**
+ * Public Profile Path Schema
+ */
+export const PublicProfilePathSchema = S.Struct({
+	publicProfileId: S.String,
+});
+
+/**
  * Toggle Visibility Request Schema
  */
 export const ToggleVisibilityRequestSchema = S.Struct({
@@ -91,6 +98,7 @@ export const ProfileGroup = HttpApiGroup.make("profile")
 	)
 	.add(
 		HttpApiEndpoint.get("getProfile", "/:publicProfileId")
+			.setPath(PublicProfilePathSchema)
 			.addSuccess(GetPublicProfileResponseSchema)
 			.addError(ProfileNotFound, { status: 404 })
 			.addError(ProfilePrivate, { status: 403 })
@@ -98,6 +106,7 @@ export const ProfileGroup = HttpApiGroup.make("profile")
 	)
 	.add(
 		HttpApiEndpoint.patch("toggleVisibility", "/:publicProfileId/visibility")
+			.setPath(PublicProfilePathSchema)
 			.addSuccess(ToggleVisibilityResponseSchema)
 			.setPayload(ToggleVisibilityRequestSchema)
 			.addError(ProfileNotFound, { status: 404 })

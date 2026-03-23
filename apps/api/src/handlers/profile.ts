@@ -40,21 +40,8 @@ export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (ha
 					};
 				}),
 			)
-			.handle("getProfile", ({ request }) =>
+			.handle("getProfile", ({ path: { publicProfileId } }) =>
 				Effect.gen(function* () {
-					// Extract publicProfileId from URL path
-					const url = new URL(request.url, "http://localhost");
-					const pathParts = url.pathname.split("/");
-					const publicProfileId = pathParts[pathParts.length - 1];
-
-					if (!publicProfileId) {
-						return yield* Effect.fail(
-							new DatabaseError({
-								message: "Missing profile ID in request path",
-							}),
-						);
-					}
-
 					const result = yield* getPublicProfile({ publicProfileId }).pipe(
 						Effect.catchTag("AssessmentResultError", (error: AssessmentResultError) =>
 							Effect.fail(
@@ -82,22 +69,8 @@ export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (ha
 					};
 				}),
 			)
-			.handle("toggleVisibility", ({ payload, request }) =>
+			.handle("toggleVisibility", ({ path: { publicProfileId }, payload }) =>
 				Effect.gen(function* () {
-					// Extract publicProfileId from URL path
-					const url = new URL(request.url, "http://localhost");
-					const pathParts = url.pathname.split("/");
-					// Path: /api/public-profile/:publicProfileId/visibility
-					const publicProfileId = pathParts[pathParts.length - 2];
-
-					if (!publicProfileId) {
-						return yield* Effect.fail(
-							new DatabaseError({
-								message: "Missing profile ID in request path",
-							}),
-						);
-					}
-
 					// Extract authenticated user ID from middleware
 					const authenticatedUserId = yield* CurrentUser;
 

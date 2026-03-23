@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from "./routes/__root";
-import { Route as R404RouteImport } from "./routes/404";
 import { Route as ChatIndexRouteImport } from "./routes/chat/index";
 import { Route as DashboardRouteImport } from "./routes/dashboard";
 import { Route as DevComponentsRouteImport } from "./routes/dev/components";
@@ -67,11 +66,6 @@ const DashboardRoute = DashboardRouteImport.update({
 	path: "/dashboard",
 	getParentRoute: () => rootRouteImport,
 } as any);
-const R404Route = R404RouteImport.update({
-	id: "/404",
-	path: "/404",
-	getParentRoute: () => rootRouteImport,
-} as any);
 const IndexRoute = IndexRouteImport.update({
 	id: "/",
 	path: "/",
@@ -115,7 +109,6 @@ const RelationshipAnalysisIdRitualRoute = RelationshipAnalysisIdRitualRouteImpor
 
 export interface FileRoutesByFullPath {
 	"/": typeof IndexRoute;
-	"/404": typeof R404Route;
 	"/dashboard": typeof DashboardRoute;
 	"/forgot-password": typeof ForgotPasswordRoute;
 	"/login": typeof LoginRoute;
@@ -134,7 +127,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
 	"/": typeof IndexRoute;
-	"/404": typeof R404Route;
 	"/dashboard": typeof DashboardRoute;
 	"/forgot-password": typeof ForgotPasswordRoute;
 	"/login": typeof LoginRoute;
@@ -154,7 +146,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
 	__root__: typeof rootRouteImport;
 	"/": typeof IndexRoute;
-	"/404": typeof R404Route;
 	"/dashboard": typeof DashboardRoute;
 	"/forgot-password": typeof ForgotPasswordRoute;
 	"/login": typeof LoginRoute;
@@ -175,7 +166,6 @@ export interface FileRouteTypes {
 	fileRoutesByFullPath: FileRoutesByFullPath;
 	fullPaths:
 		| "/"
-		| "/404"
 		| "/dashboard"
 		| "/forgot-password"
 		| "/login"
@@ -194,7 +184,6 @@ export interface FileRouteTypes {
 	fileRoutesByTo: FileRoutesByTo;
 	to:
 		| "/"
-		| "/404"
 		| "/dashboard"
 		| "/forgot-password"
 		| "/login"
@@ -213,7 +202,6 @@ export interface FileRouteTypes {
 	id:
 		| "__root__"
 		| "/"
-		| "/404"
 		| "/dashboard"
 		| "/forgot-password"
 		| "/login"
@@ -233,7 +221,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
 	IndexRoute: typeof IndexRoute;
-	R404Route: typeof R404Route;
 	DashboardRoute: typeof DashboardRoute;
 	ForgotPasswordRoute: typeof ForgotPasswordRoute;
 	LoginRoute: typeof LoginRoute;
@@ -308,13 +295,6 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof DashboardRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
-		"/404": {
-			id: "/404";
-			path: "/404";
-			fullPath: "/404";
-			preLoaderRoute: typeof R404RouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
 		"/": {
 			id: "/";
 			path: "/";
@@ -386,7 +366,6 @@ const ResultsRouteWithChildren = ResultsRoute._addFileChildren(ResultsRouteChild
 
 const rootRouteChildren: RootRouteChildren = {
 	IndexRoute: IndexRoute,
-	R404Route: R404Route,
 	DashboardRoute: DashboardRoute,
 	ForgotPasswordRoute: ForgotPasswordRoute,
 	LoginRoute: LoginRoute,
