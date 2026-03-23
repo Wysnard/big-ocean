@@ -679,8 +679,8 @@ function OceanLoadingSection() {
 						<span className="text-caption text-muted-foreground">Default (48px)</span>
 					</div>
 					<div className="flex flex-col items-center gap-2">
-						<OceanSpinner size={32} interval={1200} />
-						<span className="text-caption text-muted-foreground">Slow (1200ms)</span>
+						<OceanSpinner size={32} duration={2} />
+						<span className="text-caption text-muted-foreground">Slow (2s)</span>
 					</div>
 					<div className="flex flex-col items-center gap-2">
 						<OceanSpinner size={16} mono />
