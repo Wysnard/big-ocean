@@ -1,28 +1,24 @@
 "use client";
 
 import type { SavedFacetEvidence } from "@workspace/contracts";
-import type { FacetName, TraitName, TraitResult } from "@workspace/domain";
-import { getTraitColor, TRAIT_TO_FACETS, toFacetDisplayName } from "@workspace/domain";
+import type { FacetName, TraitLevel, TraitName, TraitResult } from "@workspace/domain";
+import { TRAIT_TO_FACETS, toFacetDisplayName } from "@workspace/domain";
 import { AccentCard, Card, CardAccent, CardContent } from "@workspace/ui/components/card";
 import type { ChartConfig } from "@workspace/ui/components/chart";
 import { ChartContainer } from "@workspace/ui/components/chart";
+import { OceanHieroglyph } from "@workspace/ui/components/ocean-hieroglyph";
 import { X } from "lucide-react";
-import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { Label, PolarGrid, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
-import { OceanCircle } from "../ocean-shapes/OceanCircle";
-import { OceanDiamond } from "../ocean-shapes/OceanDiamond";
-import { OceanHalfCircle } from "../ocean-shapes/OceanHalfCircle";
-import { OceanRectangle } from "../ocean-shapes/OceanRectangle";
-import { OceanTriangle } from "../ocean-shapes/OceanTriangle";
 import { formatDeviation, getDomainLabel, getSignalBadge } from "./evidence-utils";
 
-const TRAIT_SHAPE: Record<TraitName, (props: { size?: number; color?: string }) => ReactNode> = {
-	openness: OceanCircle,
-	conscientiousness: OceanHalfCircle,
-	extraversion: OceanRectangle,
-	agreeableness: OceanTriangle,
-	neuroticism: OceanDiamond,
+/** Maps each trait to its "High" letter for use as representative hieroglyph */
+const TRAIT_HIEROGLYPH_LETTER: Record<TraitName, TraitLevel> = {
+	openness: "O",
+	conscientiousness: "C",
+	extraversion: "E",
+	agreeableness: "A",
+	neuroticism: "N",
 };
 
 const TRAIT_LABELS: Record<TraitName, string> = {
@@ -106,8 +102,7 @@ export function DetailZone({
 	isLoading,
 	onFacetClick,
 }: DetailZoneProps) {
-	const traitColor = getTraitColor(trait.name);
-	const ShapeComponent = TRAIT_SHAPE[trait.name];
+	const traitVar = `var(--trait-${trait.name})`;
 	const levelLetter = trait.score < 40 ? "Low" : trait.score < 80 ? "Mid" : "High";
 	const totalEvidence = facetDetails.reduce((sum, f) => sum + f.evidence.length, 0);
 
@@ -121,11 +116,14 @@ export function DetailZone({
 				opacity: isOpen ? 1 : 0,
 			}}
 		>
-			<div className="rounded-xl border bg-card p-5" style={{ borderColor: traitColor }}>
+			<div className="rounded-xl border bg-card p-5" style={{ borderColor: traitVar }}>
 				{/* Header */}
 				<div className="flex items-center justify-between mb-5">
 					<div className="flex items-center gap-3">
-						<ShapeComponent size={24} color={traitColor} />
+						<OceanHieroglyph
+							letter={TRAIT_HIEROGLYPH_LETTER[trait.name]}
+							style={{ width: 24, height: 24 }}
+						/>
 						<div>
 							<h3 className="text-lg font-display font-semibold text-foreground">
 								{TRAIT_LABELS[trait.name]} — Evidence
@@ -174,7 +172,7 @@ export function DetailZone({
 									className={`flex-row${onFacetClick ? " cursor-pointer hover:ring-1 hover:ring-primary/30 motion-safe:transition-shadow" : ""}`}
 									onClick={onFacetClick ? () => onFacetClick(facet.name) : undefined}
 								>
-									<CardAccent position="left" style={{ backgroundColor: traitColor }} />
+									<CardAccent position="left" style={{ backgroundColor: traitVar }} />
 									<CardContent className="flex-1 p-4">
 										{/* Facet header */}
 										<div className="flex items-center justify-between mb-2">
@@ -198,7 +196,7 @@ export function DetailZone({
 										>
 											<div
 												className="h-1.5 rounded-full motion-safe:transition-[width] motion-safe:duration-500 motion-safe:ease-out"
-												style={{ width: `${facetPct}%`, backgroundColor: traitColor, opacity: 0.7 }}
+												style={{ width: `${facetPct}%`, backgroundColor: traitVar, opacity: 0.7 }}
 											/>
 										</div>
 

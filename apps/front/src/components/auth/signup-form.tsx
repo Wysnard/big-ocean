@@ -6,11 +6,11 @@
  */
 
 import { useNavigate } from "@tanstack/react-router";
+import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../hooks/use-auth";
 import { buildAuthPageHref } from "../../lib/auth-session-linking";
-import { OceanShapeSet } from "../ocean-shapes";
 
 interface SignupFormProps {
 	anonymousSessionId?: string;
@@ -91,7 +91,7 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 			{/* Brand mark */}
 			<div className="mb-5 flex items-center gap-1">
 				<span className="font-heading text-lg font-bold tracking-tight text-foreground">big-</span>
-				<OceanShapeSet size={12} />
+				<OceanHieroglyphSet size={12} />
 			</div>
 
 			{/* Heading with gradient accent */}

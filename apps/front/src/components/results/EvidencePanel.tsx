@@ -9,7 +9,7 @@
 
 import type { SavedFacetEvidence } from "@workspace/contracts";
 import type { FacetName, TraitName } from "@workspace/domain";
-import { getTraitColor, TRAIT_TO_FACETS, toFacetDisplayName } from "@workspace/domain";
+import { TRAIT_TO_FACETS, toFacetDisplayName } from "@workspace/domain";
 import { X } from "lucide-react";
 import { useEffect, useId, useRef } from "react";
 import { formatDeviation, getDomainLabel, getSignalBadge } from "./evidence-utils";
@@ -37,7 +37,7 @@ interface EvidencePanelProps {
 
 export function EvidencePanel({ facetName, evidence, onClose }: EvidencePanelProps) {
 	const parentTrait = getParentTrait(facetName);
-	const traitColor = parentTrait ? getTraitColor(parentTrait) : "var(--primary)";
+	const traitVar = parentTrait ? `var(--trait-${parentTrait})` : "var(--primary)";
 	const headingId = useId();
 	const panelRef = useRef<HTMLDivElement>(null);
 
@@ -61,7 +61,7 @@ export function EvidencePanel({ facetName, evidence, onClose }: EvidencePanelPro
 			tabIndex={-1}
 			onKeyDown={handleKeyDown}
 			className="rounded-xl border bg-card p-4 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 outline-none"
-			style={{ borderColor: traitColor }}
+			style={{ borderColor: traitVar }}
 		>
 			{/* Header */}
 			<div className="flex items-center justify-between mb-3">

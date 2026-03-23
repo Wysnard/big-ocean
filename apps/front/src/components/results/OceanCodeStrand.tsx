@@ -1,31 +1,14 @@
-import type { OceanCode5, TraitName } from "@workspace/domain";
+import type { OceanCode5, TraitLevel, TraitName } from "@workspace/domain";
 import {
 	BIG_FIVE_TRAITS,
-	getTraitColor,
 	getTraitLevelLabel,
 	TRAIT_DESCRIPTIONS,
 	TRAIT_LETTER_MAP,
 } from "@workspace/domain";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { OceanHieroglyph } from "@workspace/ui/components/ocean-hieroglyph";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
-import type { ComponentType } from "react";
 import { memo } from "react";
-import { OceanCircle } from "../ocean-shapes/OceanCircle";
-import { OceanDiamond } from "../ocean-shapes/OceanDiamond";
-import { OceanHalfCircle } from "../ocean-shapes/OceanHalfCircle";
-import { OceanRectangle } from "../ocean-shapes/OceanRectangle";
-import { OceanTriangle } from "../ocean-shapes/OceanTriangle";
-
-const TRAIT_SHAPE_MAP: Record<
-	TraitName,
-	ComponentType<{ size?: number; color?: string; className?: string }>
-> = {
-	openness: OceanCircle,
-	conscientiousness: OceanHalfCircle,
-	extraversion: OceanRectangle,
-	agreeableness: OceanTriangle,
-	neuroticism: OceanDiamond,
-};
 
 const TRAIT_LABELS: Record<TraitName, string> = {
 	openness: "Openness",
@@ -64,13 +47,12 @@ export const OceanCodeStrand = memo(function OceanCodeStrand({
 					<div
 						className="absolute left-[19px] top-2 bottom-2 w-[3px] rounded-full opacity-20"
 						style={{
-							background: `linear-gradient(to bottom, ${BIG_FIVE_TRAITS.map((t) => getTraitColor(t)).join(", ")})`,
+							background: `linear-gradient(to bottom, ${BIG_FIVE_TRAITS.map((t) => `var(--trait-${t})`).join(", ")})`,
 						}}
 					/>
 
 					{BIG_FIVE_TRAITS.map((traitName, i) => {
 						const letter = oceanCode5[i];
-						const traitColor = getTraitColor(traitName);
 						const levelLabel = getTraitLevelLabel(traitName, letter);
 						const letters = TRAIT_LETTER_MAP[traitName];
 
@@ -81,7 +63,7 @@ export const OceanCodeStrand = memo(function OceanCodeStrand({
 									<TooltipTrigger asChild>
 										<div
 											className="relative z-10 flex shrink-0 items-center justify-center w-10 h-10 rounded-full text-sm font-extrabold text-white font-mono shadow-[0_0_0_4px_var(--color-card)] cursor-default"
-											style={{ backgroundColor: traitColor }}
+											style={{ backgroundColor: `var(--trait-${traitName})` }}
 										>
 											{letter}
 										</div>
@@ -100,13 +82,8 @@ export const OceanCodeStrand = memo(function OceanCodeStrand({
 									{/* Level label (larger, bold) */}
 									<div className="text-[15px] font-bold text-foreground mt-0.5 mb-1.5">{levelLabel}</div>
 
-									{/* 3-segment gauge with dots */}
-									<LevelGauge
-										letters={letters}
-										activeLetter={letter}
-										traitColor={traitColor}
-										traitName={traitName}
-									/>
+									{/* 3-segment gauge with hieroglyphs */}
+									<LevelGauge letters={letters} activeLetter={letter} traitName={traitName} />
 
 									{/* Inline level description */}
 									<p className="text-[13px] leading-relaxed text-muted-foreground mt-2.5">
@@ -122,18 +99,15 @@ export const OceanCodeStrand = memo(function OceanCodeStrand({
 	);
 });
 
-/* ── Level Gauge (3-segment track with shapes) ─────────── */
+/* ── Level Gauge (3-segment track with hieroglyphs) ─────────── */
 
 interface LevelGaugeProps {
 	letters: readonly [string, string, string];
 	activeLetter: string;
-	traitColor: string;
 	traitName: TraitName;
 }
 
-function LevelGauge({ letters, activeLetter, traitColor, traitName }: LevelGaugeProps) {
-	const Shape = TRAIT_SHAPE_MAP[traitName];
-
+function LevelGauge({ letters, activeLetter, traitName }: LevelGaugeProps) {
 	return (
 		<div className="flex items-start gap-0.5 max-w-[260px]">
 			{letters.map((l) => {
@@ -141,25 +115,42 @@ function LevelGauge({ letters, activeLetter, traitColor, traitName }: LevelGauge
 				const label = getTraitLevelLabel(traitName, l);
 
 				return (
-					<div key={l} className="flex-1 flex flex-col items-center gap-1">
-						{/* Track bar with shape */}
+					<div
+						key={l}
+						className="flex-1 flex flex-col items-center gap-1"
+						data-trait={isActive ? traitName : undefined}
+					>
+						{/* Track bar with hieroglyph */}
 						<div className="relative w-full h-1 rounded-sm bg-[var(--color-border)]">
 							{isActive && (
-								<div className="absolute inset-0 rounded-sm" style={{ backgroundColor: traitColor }} />
+								<div
+									className="absolute inset-0 rounded-sm"
+									style={{ backgroundColor: `var(--trait-${traitName})` }}
+								/>
 							)}
-							{/* Shape indicator */}
+							{/* Hieroglyph indicator */}
 							<div
 								className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-								style={{ zIndex: isActive ? 1 : undefined }}
+								style={{
+									zIndex: isActive ? 1 : undefined,
+									color: isActive ? undefined : "var(--color-border)",
+								}}
 							>
-								<Shape size={isActive ? 14 : 10} color={isActive ? traitColor : "var(--color-border)"} />
+								<OceanHieroglyph
+									letter={l as TraitLevel}
+									style={{ width: isActive ? 14 : 10, height: isActive ? 14 : 10 }}
+								/>
 							</div>
 						</div>
 
 						{/* Label */}
 						<span
 							className="text-[10px] font-semibold text-center text-muted-foreground"
-							style={isActive ? { color: traitColor, fontWeight: 700, opacity: 1 } : { opacity: 0.5 }}
+							style={
+								isActive
+									? { color: `var(--trait-${traitName})`, fontWeight: 700, opacity: 1 }
+									: { opacity: 0.5 }
+							}
 						>
 							{l} · {label}
 						</span>

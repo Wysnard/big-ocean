@@ -10,12 +10,8 @@
  */
 
 import { Button } from "@workspace/ui/components/button";
+import { OceanHieroglyph } from "@workspace/ui/components/ocean-hieroglyph";
 import { useEffect, useId, useRef } from "react";
-import { OceanCircle } from "../ocean-shapes/OceanCircle";
-import { OceanDiamond } from "../ocean-shapes/OceanDiamond";
-import { OceanHalfCircle } from "../ocean-shapes/OceanHalfCircle";
-import { OceanRectangle } from "../ocean-shapes/OceanRectangle";
-import { OceanTriangle } from "../ocean-shapes/OceanTriangle";
 
 export interface RitualScreenProps {
 	userAName?: string;
@@ -40,39 +36,54 @@ export function RitualScreen({ userAName, userBName, onStart }: RitualScreenProp
 			aria-labelledby={headingId}
 			className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background px-6 motion-safe:animate-fade-in"
 		>
-			{/* Floating geometric shapes at very low opacity */}
+			{/* Floating hieroglyphs at very low opacity */}
 			<div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-				<OceanCircle
-					size={64}
+				<OceanHieroglyph
+					letter="O"
 					className="absolute top-[12%] left-[8%] opacity-[0.06] motion-safe:animate-[float_6s_ease-in-out_infinite]"
+					style={{ width: 64, height: 64 }}
 				/>
-				<OceanHalfCircle
-					size={48}
+				<OceanHieroglyph
+					letter="N"
 					className="absolute top-[20%] right-[12%] opacity-[0.05] motion-safe:animate-[float_8s_ease-in-out_infinite_1s]"
+					style={{ width: 48, height: 48 }}
 				/>
-				<OceanRectangle
-					size={56}
+				<OceanHieroglyph
+					letter="C"
 					className="absolute bottom-[25%] left-[15%] opacity-[0.04] motion-safe:animate-[float_7s_ease-in-out_infinite_2s]"
+					style={{ width: 56, height: 56 }}
 				/>
-				<OceanTriangle
-					size={40}
+				<OceanHieroglyph
+					letter="A"
 					className="absolute bottom-[15%] right-[10%] opacity-[0.06] motion-safe:animate-[float_9s_ease-in-out_infinite_0.5s]"
+					style={{ width: 40, height: 40 }}
 				/>
-				<OceanDiamond
-					size={36}
+				<OceanHieroglyph
+					letter="E"
 					className="absolute top-[45%] right-[25%] opacity-[0.04] motion-safe:animate-[float_7.5s_ease-in-out_infinite_1.5s]"
+					style={{ width: 36, height: 36 }}
 				/>
 			</div>
 
 			{/* Content */}
 			<div className="relative z-10 flex max-w-sm flex-col items-center gap-8 text-center">
-				{/* Nerin identity mark: 5 mini trait shapes */}
+				{/* Nerin identity mark: 5 mini trait hieroglyphs */}
 				<div className="flex items-center gap-2" aria-hidden="true">
-					<OceanCircle size={12} className="text-trait-openness" />
-					<OceanRectangle size={12} className="text-trait-conscientiousness" />
-					<OceanTriangle size={12} className="text-trait-extraversion" />
-					<OceanDiamond size={12} className="text-trait-agreeableness" />
-					<OceanHalfCircle size={12} className="text-trait-neuroticism" />
+					<span data-trait="openness">
+						<OceanHieroglyph letter="O" style={{ width: 12, height: 12 }} />
+					</span>
+					<span data-trait="conscientiousness">
+						<OceanHieroglyph letter="C" style={{ width: 12, height: 12 }} />
+					</span>
+					<span data-trait="extraversion">
+						<OceanHieroglyph letter="E" style={{ width: 12, height: 12 }} />
+					</span>
+					<span data-trait="agreeableness">
+						<OceanHieroglyph letter="A" style={{ width: 12, height: 12 }} />
+					</span>
+					<span data-trait="neuroticism">
+						<OceanHieroglyph letter="N" style={{ width: 12, height: 12 }} />
+					</span>
 				</div>
 
 				{/* Nerin's framing message */}

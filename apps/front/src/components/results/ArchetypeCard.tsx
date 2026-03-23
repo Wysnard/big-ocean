@@ -1,6 +1,6 @@
 import type { OceanCode4, OceanCode5 } from "@workspace/domain";
+import { OceanHieroglyphCode } from "@workspace/ui/components/ocean-hieroglyph-code";
 import { cn } from "@workspace/ui/lib/utils";
-import { GeometricSignature } from "../ocean-shapes/GeometricSignature";
 
 export interface ArchetypeCardProps {
 	archetypeName: string;
@@ -69,9 +69,9 @@ export function ArchetypeCard({
 						</span>
 					</div>
 
-					{/* Geometric Signature */}
+					{/* Hieroglyph Code */}
 					<div className="mt-3">
-						<GeometricSignature oceanCode={oceanCode5} baseSize={24} />
+						<OceanHieroglyphCode code={oceanCode5} size={24} />
 					</div>
 				</div>
 

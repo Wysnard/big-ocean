@@ -255,6 +255,11 @@ The system sends check-in and recapture emails. Users can view a centralized das
 **NFR coverage:** NFR27 (remaining 2 email types: Nerin check-in ~2 weeks post-assessment, deferred portrait recapture)
 **Notes:** Dashboard is aggregation view — built last when all content types exist. Behavioral proxy tracking (share rate, extension purchase rate, return visits). Remaining email templates build on Resend infrastructure from Epic 2.
 
+### Epic 10: Ocean Hieroglyph System — Rename & Consolidation
+Refactor "Ocean Shape" → "Ocean Hieroglyph". Consolidate 15 shape components into a single lookup table + renderer in `packages/ui`. Introduce declarative `data-trait` CSS coloring. Clean sweep rename across the codebase.
+**Architecture reference:** ADR-22
+**Parallelism:** Independent of all other epics. No backend changes. Pure frontend refactor.
+
 ### Parallelism Map
 
 ```
@@ -264,6 +269,8 @@ Phase 3: Epic 4 ∥ Epic 5 (public profile ∥ QR infra — independent)
 Phase 4: Epic 6 (relationship generation — depends on E5+E3)
 Phase 5: Epic 7 ∥ Epic 8 (extension ∥ homepage — independent)
 Phase 6: Epic 9 (dashboard + remaining emails — last)
+
+Independent: Epic 10 (hieroglyph refactor — can run in parallel with any phase)
 ```
 
 ---
@@ -1341,3 +1348,165 @@ So that I can easily navigate between my results, portrait, and relationship ana
 **Given** the dashboard
 **When** the user has no portrait or relationship analyses yet
 **Then** empty states use warm tone with ocean metaphors and a clear next step CTA (no dead ends)
+
+---
+
+## Epic 10: Ocean Hieroglyph System — Rename & Consolidation
+
+Refactor the "Ocean Shape" system into "Ocean Hieroglyph" — a consolidated, type-safe, Tailwind-native glyph system. Replaces 15 individual shape components with a single lookup table + renderer, introduces declarative `data-trait` CSS coloring, and performs a clean sweep rename across the codebase.
+
+**Architecture reference:** ADR-22 in `architecture.md`
+**FRs covered:** FR16 (OCEAN code display), FR46 (archetype card images — hieroglyph rendering)
+**Cross-cutting:** Touches `packages/domain`, `packages/ui`, `apps/front` (results, dashboard, profile, sharing components)
+**Parallelism:** Independent of all other epics. No backend changes.
+
+### Story 10.1: Hieroglyph Data Layer
+
+As a developer,
+I want the hieroglyph SVG definitions stored as pure data in the domain package with proper const-derived typing,
+So that hieroglyph geometry is portable, type-safe, and decoupled from any rendering framework.
+
+**Acceptance Criteria:**
+
+**Given** the new type definitions
+**When** `HieroglyphElement` and `HieroglyphDef` are created in `packages/domain/src/types/ocean-hieroglyph.ts`
+**Then** `HieroglyphElement.tag` is a union of `"path" | "circle" | "ellipse" | "rect" | "polygon"`
+**And** `HieroglyphElement.attrs` is `Record<string, string | number>`
+**And** `HieroglyphDef` has `viewBox: string` and `elements: ReadonlyArray<HieroglyphElement>`
+**And** both types are exported from `packages/domain/src/index.ts`
+
+**Given** the lookup table
+**When** `OCEAN_HIEROGLYPHS` is created in `packages/domain/src/constants/ocean-hieroglyphs.ts`
+**Then** it is typed as `Record<TraitLevel, HieroglyphDef>` using the existing `TraitLevel` const union (15 letters)
+**And** it contains all 15 hieroglyph definitions with SVG geometry extracted from the current shape components
+**And** no SVG element contains any color information — geometry only
+**And** all viewBoxes are `"0 0 24 24"`
+**And** the constant is exported from `packages/domain/src/index.ts`
+
+**Given** the existing `TraitLevel` type in `packages/domain/src/types/archetype.ts`
+**When** it is used as the lookup table key
+**Then** TypeScript enforces at compile time that all 15 letters have a definition — missing letters cause a type error
+
+**Technical notes:**
+- Extract SVG geometry from the 15 existing components: `OceanCircle` (O), `OceanCross` (T), `OceanCutSquare` (M), `OceanThreeQuarterSquare` (F), `OceanDoubleQuarter` (S), `OceanHalfCircle` (C), `OceanOval` (I), `OceanQuarterCircle` (B), `OceanRectangle` (E), `OceanReversedHalfCircle` (D), `OceanLollipop` (P), `OceanTriangle` (A), `OceanTable` (R), `OceanInvertedTriangle` (V), `OceanDiamond` (N)
+- Multi-element shapes (S, P, R) have multiple entries in the `elements` array
+- No React dependency — this is pure data
+
+### Story 10.2: Renderer Components, Data-Trait Coloring & Consumer Migration
+
+As a developer,
+I want a single hieroglyph renderer in `packages/ui` with declarative `data-trait` coloring, and all consumers migrated from the old shape components,
+So that the codebase uses one consistent, Tailwind-native hieroglyph system with zero color props.
+
+**Acceptance Criteria:**
+
+**Given** the `OceanHieroglyph` component in `packages/ui/src/components/ocean-hieroglyph.tsx`
+**When** it receives a `letter: TraitLevel` prop (const union, not string)
+**Then** it renders an SVG from `OCEAN_HIEROGLYPHS[letter]` with `fill="currentColor"`
+**And** it sets `data-slot="ocean-hieroglyph-{letter}"` (lowercase) and `aria-hidden="true"`
+**And** it accepts `className` for Tailwind sizing and color (e.g., `"size-6 text-trait-openness"`)
+**And** it has no `color` prop and no `size` prop — styling is Tailwind-only
+**And** it is exported from `packages/ui/src/index.ts`
+
+**Given** the `OceanHieroglyphCode` component in `packages/ui/src/components/ocean-hieroglyph-code.tsx`
+**When** it receives a `code: OceanCode5` prop
+**Then** it renders 5 `OceanHieroglyph` instances, one per letter
+**And** each glyph wrapper has `data-trait={TRAIT_NAMES[i]}` where `TRAIT_NAMES[i]` is typed as `TraitName` (const union)
+**And** CSS `[data-trait]` rules auto-apply the correct trait color via `currentColor`
+
+**Given** `OceanHieroglyphCode` with `mono={true}`
+**When** monochrome mode is active
+**Then** `data-trait` attributes are omitted
+**And** all glyphs inherit `currentColor` from the parent
+
+**Given** `OceanHieroglyphCode` with `animate={true}`
+**When** the component renders
+**Then** each glyph has staggered reveal animation via `animate-hieroglyph-reveal` (renamed from `animate-shape-reveal`)
+**And** animation delay is `index * 200ms` using CSS variable `--hieroglyph-index`
+**And** archetype name (if provided) fades in after all glyphs with `1200ms` delay
+
+**Given** the `OceanHieroglyphSet` component in `packages/ui/src/components/ocean-hieroglyph-set.tsx`
+**When** it renders
+**Then** it displays the 5 "high" glyphs (O, C, E, A, N) in fixed OCEAN order
+**And** it supports `mono` prop for monochrome mode
+**And** it replaces `OceanShapeSet` in all consumers (Logo, hero sections)
+
+**Given** the `[data-trait]` CSS rules in `packages/ui/src/styles/globals.css`
+**When** any element has `data-trait="openness"` (or any of the 5 trait names)
+**Then** it receives `color: var(--trait-openness)` (or the corresponding trait variable)
+**And** children using `currentColor` (including SVG `fill`) inherit the trait color
+**And** Tailwind classes can override when needed (specificity: class > attribute selector)
+
+**Given** the consumer migration
+**When** all `apps/front` components are updated
+**Then** `GeometricSignature` is replaced by `OceanHieroglyphCode` from `packages/ui`
+**And** `OceanShapeSet` is replaced by `OceanHieroglyphSet` from `packages/ui`
+**And** `OceanCodeStrand` uses `OceanHieroglyph` with `data-trait` instead of individual shape imports + `getTraitColor()`
+**And** `ArchetypeHeroSection`, `ShareCardPreview`, `DashboardIdentityCard`, `Logo` use the new hieroglyph components
+**And** `TraitCard`, `TraitBand`, `FacetScoreBar`, `DetailZone`, `EvidencePanel` replace `getTraitColor()` inline styles with `data-trait` attributes where applicable
+**And** `PersonalityRadarChart` retains `getTraitColor()` (chart library requires JS color values)
+
+**Given** the deletion of old shape files
+**When** the migration is complete
+**Then** all 18 files in `apps/front/src/components/ocean-shapes/` are deleted (15 shape components + `GeometricSignature.tsx` + `OceanShapeSet.tsx` + `index.ts`)
+**And** no remaining imports reference the old `ocean-shapes` directory
+
+**Given** the `getTraitColor()` function in `packages/domain/src/utils/trait-colors.ts`
+**When** it is updated
+**Then** it is marked with `@deprecated` JSDoc: "Use `data-trait` attribute for DOM elements. This function is retained only for chart libraries requiring JS color values."
+
+**Given** the CSS animation rename
+**When** `globals.css` is updated
+**Then** `animate-shape-reveal` is renamed to `animate-hieroglyph-reveal`
+**And** the corresponding `@keyframes shape-reveal` is renamed to `@keyframes hieroglyph-reveal`
+
+**Given** the kitchen sink at `/dev/components`
+**When** it is updated
+**Then** it reflects the new `OceanHieroglyph`, `OceanHieroglyphCode`, and `OceanHieroglyphSet` component APIs
+
+**Technical notes:**
+- All `data-slot` attributes change from `ocean-shape-*` to `ocean-hieroglyph-*`
+- The `TRAIT_COLORS` array in `GeometricSignature` is eliminated — `data-trait` replaces it entirely
+- `OceanHieroglyph` renders SVG elements dynamically from the lookup table using `createElement` or a tag→element switch
+
+### Story 10.3: Tests & Storybook Stories Rewrite
+
+As a developer,
+I want all tests and Storybook stories updated to reflect the hieroglyph rename and new component API,
+So that test coverage and visual documentation remain complete and accurate.
+
+**Acceptance Criteria:**
+
+**Given** the `GeometricSignature.test.tsx` test file
+**When** it is rewritten
+**Then** it is renamed/relocated to test `OceanHieroglyphCode` from `packages/ui`
+**And** all assertions reference `data-slot="ocean-hieroglyph-*"` (not `ocean-shape-*`)
+**And** letter-to-hieroglyph mapping validation covers all 15 `TraitLevel` letters
+**And** animation class assertions use `animate-hieroglyph-reveal`
+**And** no assertions check for a `color` prop — color is verified via `data-trait` attribute presence
+**And** monochrome mode is tested (no `data-trait` attributes when `mono={true}`)
+
+**Given** new unit tests for `OceanHieroglyph` (single glyph renderer)
+**When** they run
+**Then** they verify SVG rendering for each of the 15 letters
+**And** they verify `fill="currentColor"` on all rendered SVG elements
+**And** they verify `data-slot` and `aria-hidden` attributes
+**And** they verify that invalid letters are handled gracefully
+
+**Given** new unit tests for `OCEAN_HIEROGLYPHS` lookup table
+**When** they run
+**Then** they verify all 15 `TraitLevel` keys are present
+**And** they verify each definition has a valid `viewBox` and non-empty `elements` array
+**And** they verify no element contains color-related attributes (`fill`, `stroke`, `color`)
+
+**Given** the Storybook stories
+**When** they are rewritten
+**Then** `OceanShapes.stories.tsx` becomes `OceanHieroglyphs.stories.tsx` with: individual hieroglyph gallery, trait-level groupings, UX spec grid, multiple sizes
+**And** `GeometricSignature.stories.tsx` becomes `OceanHieroglyphCode.stories.tsx` with: various OCEAN codes, archetype names, animation demos, monochrome mode
+**And** `OceanShapeSet.stories.tsx` becomes `OceanHieroglyphSet.stories.tsx` with: color and monochrome variants
+**And** all story names and titles use "Hieroglyph" terminology
+
+**Given** any existing e2e tests referencing `data-testid` or `data-slot` with "shape"
+**When** they are updated
+**Then** all references use "hieroglyph" terminology
+**And** no test references the deleted `ocean-shapes` directory

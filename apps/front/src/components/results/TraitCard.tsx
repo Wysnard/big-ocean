@@ -1,23 +1,19 @@
-import type { FacetResult, TraitName, TraitResult } from "@workspace/domain";
-import { getTraitColor, getTraitLevelLabel, TRAIT_LETTER_MAP } from "@workspace/domain";
+import type { FacetResult, TraitLevel, TraitName, TraitResult } from "@workspace/domain";
+import { getTraitLevelLabel, TRAIT_LETTER_MAP } from "@workspace/domain";
 import { CardAccent } from "@workspace/ui/components/card";
+import { OceanHieroglyph } from "@workspace/ui/components/ocean-hieroglyph";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
 import { ChevronDown } from "lucide-react";
-import type { ReactNode } from "react";
 import { memo } from "react";
-import { OceanCircle } from "../ocean-shapes/OceanCircle";
-import { OceanDiamond } from "../ocean-shapes/OceanDiamond";
-import { OceanHalfCircle } from "../ocean-shapes/OceanHalfCircle";
-import { OceanRectangle } from "../ocean-shapes/OceanRectangle";
-import { OceanTriangle } from "../ocean-shapes/OceanTriangle";
 import { FacetScoreBar } from "./FacetScoreBar";
 
-const TRAIT_SHAPE: Record<TraitName, (props: { size?: number; color?: string }) => ReactNode> = {
-	openness: OceanCircle,
-	conscientiousness: OceanHalfCircle,
-	extraversion: OceanRectangle,
-	agreeableness: OceanTriangle,
-	neuroticism: OceanDiamond,
+/** Maps each trait to its "High" letter for use as representative hieroglyph */
+const TRAIT_HIEROGLYPH_LETTER: Record<TraitName, TraitLevel> = {
+	openness: "O",
+	conscientiousness: "C",
+	extraversion: "E",
+	agreeableness: "A",
+	neuroticism: "N",
 };
 
 const TRAIT_LABELS: Record<TraitName, string> = {
@@ -45,9 +41,8 @@ export const TraitCard = memo(function TraitCard({
 	isSelected,
 	onToggle,
 }: TraitCardProps) {
-	const traitColor = getTraitColor(trait.name);
+	const traitVar = `var(--trait-${trait.name})`;
 	const scorePercent = Math.round((trait.score / MAX_TRAIT_SCORE) * 100);
-	const ShapeComponent = TRAIT_SHAPE[trait.name];
 	const confidence = Math.min(Math.max(Math.round(trait.confidence * 100), 0), 100);
 	const isLowConfidence = confidence < 40;
 
@@ -71,26 +66,29 @@ export const TraitCard = memo(function TraitCard({
 			className="relative flex flex-col h-full text-left rounded-xl border bg-card p-0 overflow-hidden cursor-pointer motion-safe:transition-all motion-safe:duration-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 data-selected:shadow-none data-selected:translate-y-0"
 			style={
 				{
-					"--trait-color": traitColor,
-					borderColor: isSelected ? traitColor : undefined,
+					"--trait-color": traitVar,
+					borderColor: isSelected ? traitVar : undefined,
 				} as React.CSSProperties
 			}
 		>
 			{/* Color accent bar — top edge */}
-			<CardAccent style={{ backgroundColor: traitColor }} />
+			<CardAccent style={{ backgroundColor: traitVar }} />
 
 			<div className="flex-1 flex flex-col p-4">
 				{/* Header: shape + name + level badge + confidence ring */}
 				<div className="flex items-center gap-2 mb-3">
-					<ShapeComponent size={20} color={traitColor} />
+					<OceanHieroglyph
+						letter={TRAIT_HIEROGLYPH_LETTER[trait.name]}
+						style={{ width: 20, height: 20 }}
+					/>
 					<span className="text-sm font-display font-semibold text-foreground">
 						{TRAIT_LABELS[trait.name]}
 					</span>
 					<span
 						className="rounded-md px-2 py-0.5 text-[10px] font-bold uppercase"
 						style={{
-							backgroundColor: `color-mix(in oklch, ${traitColor} 15%, transparent)`,
-							color: traitColor,
+							backgroundColor: `color-mix(in oklch, ${traitVar} 15%, transparent)`,
+							color: traitVar,
 						}}
 					>
 						{levelLabel}
@@ -105,7 +103,7 @@ export const TraitCard = memo(function TraitCard({
 										r={RING_RADIUS}
 										fill="none"
 										strokeWidth={2.5}
-										style={{ stroke: `color-mix(in oklch, ${traitColor} 15%, transparent)` }}
+										style={{ stroke: `color-mix(in oklch, ${traitVar} 15%, transparent)` }}
 									/>
 									<circle
 										cx={10}
@@ -115,7 +113,7 @@ export const TraitCard = memo(function TraitCard({
 										strokeWidth={2.5}
 										strokeLinecap="round"
 										style={{
-											stroke: traitColor,
+											stroke: traitVar,
 											strokeDasharray: RING_CIRCUMFERENCE,
 											strokeDashoffset: ringOffset,
 											opacity: isLowConfidence ? 0.5 : 1,
@@ -153,7 +151,7 @@ export const TraitCard = memo(function TraitCard({
 						className="h-2 rounded-full motion-safe:transition-all motion-safe:duration-500"
 						style={{
 							width: `${scorePercent}%`,
-							backgroundColor: traitColor,
+							backgroundColor: traitVar,
 							opacity: isLowConfidence ? 0.5 : 1,
 						}}
 					/>
@@ -177,7 +175,7 @@ export const TraitCard = memo(function TraitCard({
 			{isSelected && (
 				<div
 					className="absolute left-1/2 -bottom-[8px] -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent"
-					style={{ borderTopColor: traitColor }}
+					style={{ borderTopColor: traitVar }}
 				/>
 			)}
 		</button>

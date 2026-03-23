@@ -4,19 +4,14 @@ import {
 	TRAIT_TO_FACETS,
 	type TraitName,
 } from "@workspace/domain/constants/big-five";
+import type { TraitLevel } from "@workspace/domain/types/archetype";
 import {
 	getFacetColor,
 	getTraitAccentColor,
 	getTraitColor,
 	getTraitGradient,
 } from "@workspace/domain/utils/trait-colors";
-import {
-	OceanCircle,
-	OceanDiamond,
-	OceanHalfCircle,
-	OceanRectangle,
-	OceanTriangle,
-} from "../ocean-shapes";
+import { OceanHieroglyph } from "@workspace/ui/components/ocean-hieroglyph";
 
 // ─── Constants ──────────────────────────────────────────────────
 
@@ -36,12 +31,12 @@ const TRAIT_LABELS: Record<TraitName, string> = {
 	neuroticism: "Neuroticism",
 };
 
-const TRAIT_SHAPES: Record<TraitName, React.FC<{ size: number; color: string }>> = {
-	openness: OceanCircle,
-	conscientiousness: OceanHalfCircle,
-	extraversion: OceanRectangle,
-	agreeableness: OceanTriangle,
-	neuroticism: OceanDiamond,
+const TRAIT_HIEROGLYPH: Record<TraitName, TraitLevel> = {
+	openness: "M",
+	conscientiousness: "S",
+	extraversion: "B",
+	agreeableness: "P",
+	neuroticism: "V",
 };
 
 // ─── Swatch Helper ──────────────────────────────────────────────
@@ -90,7 +85,7 @@ function TraitSwatches() {
 			</h2>
 			<div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
 				{TRAITS.map((trait) => {
-					const Shape = TRAIT_SHAPES[trait];
+					const letter = TRAIT_HIEROGLYPH[trait];
 					return (
 						<div
 							key={trait}
@@ -106,7 +101,10 @@ function TraitSwatches() {
 								minWidth: 120,
 							}}
 						>
-							<Shape size={40} color={getTraitColor(trait)} />
+							<OceanHieroglyph
+								letter={letter}
+								style={{ width: 40, height: 40, color: getTraitColor(trait) }}
+							/>
 							<Swatch color={getTraitColor(trait)} label={TRAIT_LABELS[trait]} size={56} />
 							<div
 								style={{
@@ -247,15 +245,15 @@ function ColorsWithShapes() {
 					color: "var(--foreground)",
 				}}
 			>
-				Trait Colors with OCEAN Geometric Shapes
+				Trait Colors with OCEAN Hieroglyphs
 			</h2>
 			<p style={{ fontSize: 12, color: "var(--muted-foreground)" }}>
 				Per AC #3: Color is never the sole indicator — each trait is always paired with its unique
-				geometric shape and text label.
+				hieroglyph and text label.
 			</p>
 			<div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
 				{TRAITS.map((trait) => {
-					const Shape = TRAIT_SHAPES[trait];
+					const letter = TRAIT_HIEROGLYPH[trait];
 					return (
 						<div
 							key={trait}
@@ -270,7 +268,7 @@ function ColorsWithShapes() {
 								minWidth: 140,
 							}}
 						>
-							<Shape size={48} color="white" />
+							<OceanHieroglyph letter={letter} style={{ width: 48, height: 48, color: "white" }} />
 							<span
 								style={{
 									color: "white",
@@ -306,8 +304,8 @@ function ContrastReference() {
 			</h2>
 			<p style={{ fontSize: 12, color: "var(--muted-foreground)" }}>
 				Trait colors as fills/backgrounds with white and dark foreground text. Neuroticism (dark navy in
-				light mode) works best with white text overlay. All traits use shape + text pairing so color is
-				never the sole indicator.
+				light mode) works best with white text overlay. All traits use hieroglyph + text pairing so
+				color is never the sole indicator.
 			</p>
 			<div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 				{TRAITS.map((trait) => (
@@ -434,7 +432,7 @@ export const Gradients: Story = {
 };
 
 export const WithShapes: Story = {
-	name: "Colors + OCEAN Shapes",
+	name: "Colors + OCEAN Hieroglyphs",
 	render: () => <ColorsWithShapes />,
 };
 

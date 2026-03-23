@@ -16,17 +16,11 @@ import {
 	FACET_DESCRIPTIONS,
 	FACET_TO_TRAIT,
 	getFacetLevel,
-	getTraitColor,
 	TRAIT_LETTER_MAP,
 	TRAIT_TO_FACETS,
 } from "@workspace/domain";
+import { OceanHieroglyph } from "@workspace/ui/components/ocean-hieroglyph";
 import { Loader2, Lock, ShieldAlert } from "lucide-react";
-import type { ReactNode } from "react";
-import { OceanCircle } from "@/components/ocean-shapes/OceanCircle";
-import { OceanDiamond } from "@/components/ocean-shapes/OceanDiamond";
-import { OceanHalfCircle } from "@/components/ocean-shapes/OceanHalfCircle";
-import { OceanRectangle } from "@/components/ocean-shapes/OceanRectangle";
-import { OceanTriangle } from "@/components/ocean-shapes/OceanTriangle";
 import { ArchetypeDescriptionSection } from "@/components/results/ArchetypeDescriptionSection";
 import { ArchetypeHeroSection } from "@/components/results/ArchetypeHeroSection";
 import { PersonalityRadarChart } from "@/components/results/PersonalityRadarChart";
@@ -153,12 +147,13 @@ function getSecondaryTrait(traits: TraitResult[]): TraitName {
 // Inline Components
 // ---------------------------------------------------------------------------
 
-const TRAIT_SHAPE: Record<TraitName, (props: { size?: number; color?: string }) => ReactNode> = {
-	openness: OceanCircle,
-	conscientiousness: OceanHalfCircle,
-	extraversion: OceanRectangle,
-	agreeableness: OceanTriangle,
-	neuroticism: OceanDiamond,
+/** Maps each trait to its "High" letter for use as representative hieroglyph */
+const TRAIT_HIEROGLYPH_LETTER: Record<TraitName, TraitLevel> = {
+	openness: "O",
+	conscientiousness: "C",
+	extraversion: "E",
+	agreeableness: "A",
+	neuroticism: "N",
 };
 
 const TRAIT_LABELS: Record<TraitName, string> = {
@@ -172,16 +167,15 @@ const TRAIT_LABELS: Record<TraitName, string> = {
 function TraitLegendRow() {
 	return (
 		<div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-6" aria-hidden="true">
-			{BIG_FIVE_TRAITS.map((traitName) => {
-				const color = getTraitColor(traitName);
-				const ShapeComponent = TRAIT_SHAPE[traitName];
-				return (
-					<div key={traitName} className="flex items-center gap-1.5 text-sm" style={{ color }}>
-						<ShapeComponent size={14} color={color} />
-						<span>{TRAIT_LABELS[traitName]}</span>
-					</div>
-				);
-			})}
+			{BIG_FIVE_TRAITS.map((traitName) => (
+				<div key={traitName} className="flex items-center gap-1.5 text-sm" data-trait={traitName}>
+					<OceanHieroglyph
+						letter={TRAIT_HIEROGLYPH_LETTER[traitName]}
+						style={{ width: 14, height: 14 }}
+					/>
+					<span>{TRAIT_LABELS[traitName]}</span>
+				</div>
+			))}
 		</div>
 	);
 }

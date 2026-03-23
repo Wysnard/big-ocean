@@ -88,6 +88,8 @@ export {
 } from "./constants/nerin-greeting";
 // Nerin persona constant (Story 2.12)
 export { NERIN_PERSONA } from "./constants/nerin-persona";
+// Ocean Hieroglyph lookup table (Story 10.1)
+export { OCEAN_HIEROGLYPHS } from "./constants/ocean-hieroglyphs";
 // Territory catalog (Story 21-1, evolved Story 23-2)
 export {
 	getTerritoryById,
@@ -394,6 +396,8 @@ export type {
 	DomainMessage,
 	UserMessage,
 } from "./types/message";
+// Ocean Hieroglyph types (Story 10.1)
+export type { HieroglyphDef, HieroglyphElement } from "./types/ocean-hieroglyph";
 export type {
 	BridgePromptInput,
 	ClosePromptInput,

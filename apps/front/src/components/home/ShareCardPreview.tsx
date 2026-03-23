@@ -1,6 +1,6 @@
 import type { OceanCode5 } from "@workspace/domain";
-import { GeometricSignature } from "../ocean-shapes/GeometricSignature";
-import { OceanShapeSet } from "../ocean-shapes/OceanShapeSet";
+import { OceanHieroglyphCode } from "@workspace/ui/components/ocean-hieroglyph-code";
+import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import { ResultPreviewEmbed } from "./ResultPreviewEmbed";
 
 const TRAIT_BADGES = [
@@ -28,14 +28,14 @@ export function ShareCardPreview() {
 					{/* Brand mark */}
 					<div className="flex items-center gap-1">
 						<span className="font-heading text-sm font-bold text-foreground">big-</span>
-						<OceanShapeSet size={16} />
+						<OceanHieroglyphSet size={16} />
 					</div>
 
 					{/* Archetype name */}
 					<h3 className="font-heading text-xl font-bold text-foreground">The Explorer</h3>
 
 					{/* Geometric Signature */}
-					<GeometricSignature oceanCode={"OCBAV" as OceanCode5} baseSize={24} animate={false} />
+					<OceanHieroglyphCode code={"OCBAV" as OceanCode5} size={24} />
 
 					{/* Trait summary row */}
 					<div className="flex flex-wrap justify-center gap-1">

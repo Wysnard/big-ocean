@@ -1,6 +1,6 @@
+import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
-import { OceanShapeSet } from "../ocean-shapes/OceanShapeSet";
 import {
 	markdownComponents,
 	renderHeader,
@@ -140,7 +140,7 @@ export function HoroscopeVsPortraitComparison() {
 					<div className="opacity-0 translate-y-3 transition-all duration-500 delay-500 group-data-visible:opacity-100 group-data-visible:translate-y-0 motion-reduce:opacity-100! motion-reduce:translate-y-0!">
 						<div className="px-5 py-2.5 flex items-center gap-1">
 							<span className="font-heading text-[.72rem] font-black tracking-wider">big-</span>
-							<OceanShapeSet size={11} />
+							<OceanHieroglyphSet size={11} />
 						</div>
 						<div className="px-5 pb-5 space-y-6">
 							{sections.map((section, i) => (

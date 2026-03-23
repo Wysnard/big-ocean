@@ -1,15 +1,13 @@
 import {
 	BIG_FIVE_TRAITS,
 	type FacetName,
+	TRAIT_LETTER_MAP,
 	TRAIT_TO_FACETS,
+	type TraitLevel,
 	type TraitName,
 } from "@workspace/domain";
+import { OceanHieroglyph } from "@workspace/ui/components/ocean-hieroglyph";
 import { useCallback, useState } from "react";
-import { OceanCircle } from "../ocean-shapes/OceanCircle";
-import { OceanDiamond } from "../ocean-shapes/OceanDiamond";
-import { OceanHalfCircle } from "../ocean-shapes/OceanHalfCircle";
-import { OceanRectangle } from "../ocean-shapes/OceanRectangle";
-import { OceanTriangle } from "../ocean-shapes/OceanTriangle";
 import { ChatBubble } from "./ChatBubble";
 import { MessageGroup } from "./MessageGroup";
 
@@ -98,19 +96,12 @@ const FACET_DESCRIPTIONS: Record<FacetName, string> = {
 /* ── Shape helper ── */
 
 function TraitShape({ trait, size }: { trait: TraitName; size: number }) {
-	const color = `var(--trait-${trait})`;
-	switch (trait) {
-		case "openness":
-			return <OceanCircle size={size} color={color} />;
-		case "conscientiousness":
-			return <OceanHalfCircle size={size} color={color} />;
-		case "extraversion":
-			return <OceanRectangle size={size} color={color} />;
-		case "agreeableness":
-			return <OceanTriangle size={size} color={color} />;
-		case "neuroticism":
-			return <OceanDiamond size={size} color={color} />;
-	}
+	const highLetter = TRAIT_LETTER_MAP[trait][2] as TraitLevel;
+	return (
+		<span data-trait={trait}>
+			<OceanHieroglyph letter={highLetter} style={{ width: size, height: size }} />
+		</span>
+	);
 }
 
 function formatTraitName(trait: string): string {

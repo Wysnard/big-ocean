@@ -10,9 +10,9 @@
  */
 
 import { createFileRoute } from "@tanstack/react-router";
+import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { OceanShapeSet } from "../components/ocean-shapes";
 import { authClient } from "../lib/auth-client";
 
 export const Route = createFileRoute("/verify-email")({
@@ -40,7 +40,7 @@ function VerifyEmailPage() {
 		try {
 			await authClient.sendVerificationEmail({
 				email,
-				callbackURL: "/profile",
+				callbackURL: "/dashboard",
 			});
 			setResendSuccess(true);
 		} catch {
@@ -70,7 +70,7 @@ function VerifyEmailPage() {
 					{/* Brand mark */}
 					<div className="mb-5 flex items-center gap-1">
 						<span className="font-heading text-lg font-bold tracking-tight text-foreground">big-</span>
-						<OceanShapeSet size={12} />
+						<OceanHieroglyphSet size={12} />
 					</div>
 
 					{/* Heading */}

@@ -1,13 +1,13 @@
 /**
  * DashboardIdentityCard (Story 38-3, Task 3)
  *
- * Displays archetype name, OCEAN code, and GeometricSignature as a summary card.
- * Links to the full results page.
+ * Displays archetype name, OCEAN code, and hieroglyph code as a summary card.
+ * Links to the full results page. Optionally links to the public profile.
  */
 
 import { Link } from "@tanstack/react-router";
 import type { OceanCode5, TraitName } from "@workspace/domain";
-import { BIG_FIVE_TRAITS, getTraitColor, getTraitLevelLabel } from "@workspace/domain";
+import { BIG_FIVE_TRAITS, getTraitLevelLabel } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
 import {
 	Card,
@@ -16,10 +16,10 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@workspace/ui/components/card";
+import { OceanHieroglyphCode } from "@workspace/ui/components/ocean-hieroglyph-code";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import { useId } from "react";
-import { GeometricSignature } from "@/components/ocean-shapes/GeometricSignature";
 
 /** Capitalized trait labels for tooltip display */
 const TRAIT_DISPLAY_NAMES: Record<TraitName, string> = {
@@ -35,6 +35,7 @@ interface DashboardIdentityCardProps {
 	oceanCode5: OceanCode5;
 	sessionId: string;
 	dominantTrait: TraitName;
+	publicProfileId?: string;
 }
 
 export function DashboardIdentityCard({
@@ -42,16 +43,16 @@ export function DashboardIdentityCard({
 	oceanCode5,
 	sessionId,
 	dominantTrait,
+	publicProfileId,
 }: DashboardIdentityCardProps) {
 	const tooltipBaseId = useId();
-	const traitColor = getTraitColor(dominantTrait);
 
 	return (
 		<Card data-testid="dashboard-identity-card" className="relative overflow-hidden">
 			{/* Subtle color accent from dominant trait */}
 			<div
 				className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-1/2 translate-x-1/2 opacity-10"
-				style={{ backgroundColor: traitColor }}
+				style={{ backgroundColor: `var(--trait-${dominantTrait})` }}
 				aria-hidden="true"
 			/>
 
@@ -60,18 +61,35 @@ export function DashboardIdentityCard({
 			</CardHeader>
 
 			<CardContent className="relative z-10 space-y-4">
-				{/* GeometricSignature */}
+				{/* Hieroglyph Code */}
 				<div className="flex justify-center">
-					<GeometricSignature oceanCode={oceanCode5} baseSize={36} />
+					<OceanHieroglyphCode code={oceanCode5} size={36} />
 				</div>
 
-				{/* Archetype name */}
-				<h2
-					data-testid="dashboard-archetype-name"
-					className="text-2xl font-display font-bold text-center text-foreground"
-				>
-					{archetypeName}
-				</h2>
+				{/* Archetype name + public profile link */}
+				<div className="flex items-center justify-center gap-2">
+					<h2
+						data-testid="dashboard-archetype-name"
+						className="text-2xl font-display font-bold text-center text-foreground"
+					>
+						{archetypeName}
+					</h2>
+					{publicProfileId && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Link
+									to="/public-profile/$publicProfileId"
+									params={{ publicProfileId }}
+									className="text-muted-foreground hover:text-foreground transition-colors"
+									aria-label="View public profile"
+								>
+									<ExternalLink className="w-4 h-4" />
+								</Link>
+							</TooltipTrigger>
+							<TooltipContent>View public profile</TooltipContent>
+						</Tooltip>
+					)}
+				</div>
 
 				{/* OCEAN code with tooltips */}
 				<div className="flex items-center justify-center gap-1 font-mono text-xl tracking-[0.2em]">
@@ -86,7 +104,7 @@ export function DashboardIdentityCard({
 									<span
 										aria-describedby={tooltipId}
 										className="inline-flex items-center justify-center w-9 h-9 rounded-md text-sm font-bold cursor-default"
-										style={{ color: getTraitColor(traitName) }}
+										data-trait={traitName}
 									>
 										{letter}
 									</span>

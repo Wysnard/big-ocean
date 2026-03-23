@@ -534,6 +534,14 @@
 		@apply bg-background text-foreground;
 		font-family: var(--font-body);
 	}
+
+	/* Declarative trait coloring — set data-trait on any element to apply its trait color.
+	   Children inherit via currentColor (SVG fill, text, borders). */
+	[data-trait="openness"] { color: var(--trait-openness); }
+	[data-trait="conscientiousness"] { color: var(--trait-conscientiousness); }
+	[data-trait="extraversion"] { color: var(--trait-extraversion); }
+	[data-trait="agreeableness"] { color: var(--trait-agreeableness); }
+	[data-trait="neuroticism"] { color: var(--trait-neuroticism); }
 }
 
 /* ========== NERIN EDITORIAL PROSE ========== */
@@ -656,7 +664,7 @@
 	}
 }
 
-@keyframes shape-reveal {
+@keyframes hieroglyph-reveal {
 	from {
 		transform: scale(0);
 		opacity: 0;
@@ -676,8 +684,8 @@
 	}
 }
 
-@utility animate-shape-reveal {
-	animation: shape-reveal 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+@utility animate-hieroglyph-reveal {
+	animation: hieroglyph-reveal 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 @utility animate-fade-in {

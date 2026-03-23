@@ -1,5 +1,5 @@
 import type { FacetResult } from "@workspace/domain";
-import { getTraitColor, toFacetDisplayName } from "@workspace/domain";
+import { toFacetDisplayName } from "@workspace/domain";
 
 interface FacetScoreBarProps {
 	facet: FacetResult;
@@ -17,7 +17,7 @@ export function FacetScoreBar({
 	showScore = true,
 	staggerIndex,
 }: FacetScoreBarProps) {
-	const traitColor = getTraitColor(facet.traitName);
+	const traitVar = `var(--trait-${facet.traitName})`;
 	const facetPct = Math.round((facet.score / 20) * 100);
 	const isCompact = size === "compact";
 	const displayName = toFacetDisplayName(facet.name);
@@ -35,7 +35,7 @@ export function FacetScoreBar({
 					{showScore && (
 						<span
 							className={`${isCompact ? "text-[10px] font-medium text-muted-foreground" : "text-sm font-data"} ml-1 shrink-0`}
-							style={isCompact ? undefined : { color: traitColor }}
+							style={isCompact ? undefined : { color: traitVar }}
 						>
 							{Math.round(facet.score)}
 						</span>
@@ -53,7 +53,7 @@ export function FacetScoreBar({
 						className={`${isCompact ? "h-1" : "h-1.5"} rounded-full motion-safe:transition-[width] motion-safe:duration-500 motion-safe:ease-out`}
 						style={{
 							width: `${facetPct}%`,
-							backgroundColor: traitColor,
+							backgroundColor: traitVar,
 							opacity: isCompact ? 0.6 : 0.7,
 						}}
 					/>

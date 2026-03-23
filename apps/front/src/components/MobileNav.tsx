@@ -1,5 +1,6 @@
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
+import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import {
 	Sheet,
 	SheetClose,
@@ -9,21 +10,10 @@ import {
 	SheetTrigger,
 } from "@workspace/ui/components/sheet";
 import { type UserTheme, useTheme } from "@workspace/ui/hooks/use-theme";
-import {
-	Home,
-	LayoutDashboard,
-	LogOut,
-	Menu,
-	Monitor,
-	Moon,
-	Settings,
-	Sun,
-	User,
-} from "lucide-react";
+import { Home, LayoutDashboard, LogOut, Menu, Monitor, Moon, Settings, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/use-auth";
 import { getActiveAssessmentSessionId } from "../lib/auth-session-linking";
-import { OceanShapeSet } from "./ocean-shapes/OceanShapeSet";
 
 export function MobileNav() {
 	const [open, setOpen] = useState(false);
@@ -102,7 +92,7 @@ export function MobileNav() {
 					<SheetTitle>
 						<span className="flex items-center gap-1">
 							<span className="text-xl font-heading font-bold tracking-tight text-foreground">big-</span>
-							<OceanShapeSet size={20} />
+							<OceanHieroglyphSet size={20} />
 						</span>
 					</SheetTitle>
 				</SheetHeader>
@@ -127,15 +117,6 @@ export function MobileNav() {
 								>
 									<LayoutDashboard className="size-4" />
 									Dashboard
-								</Link>
-							</SheetClose>
-							<SheetClose asChild>
-								<Link
-									to="/profile"
-									className="flex items-center gap-3 rounded-md px-3 py-2 min-h-11 text-sm font-medium text-foreground hover:bg-accent"
-								>
-									<User className="size-4" />
-									Profile
 								</Link>
 							</SheetClose>
 							<SheetClose asChild>

@@ -1,6 +1,5 @@
 import type { OceanCode5, TraitName } from "@workspace/domain";
-import { getTraitColor } from "@workspace/domain";
-import { GeometricSignature } from "../ocean-shapes/GeometricSignature";
+import { OceanHieroglyphCode } from "@workspace/ui/components/ocean-hieroglyph-code";
 
 interface ArchetypeDescriptionSectionProps {
 	archetypeName: string;
@@ -17,8 +16,8 @@ export function ArchetypeDescriptionSection({
 	dominantTrait,
 	secondaryTrait,
 }: ArchetypeDescriptionSectionProps) {
-	const dominantColor = getTraitColor(dominantTrait);
-	const secondaryColor = getTraitColor(secondaryTrait);
+	const dominantColor = `var(--trait-${dominantTrait})`;
+	const secondaryColor = `var(--trait-${secondaryTrait})`;
 
 	return (
 		<section
@@ -29,9 +28,9 @@ export function ArchetypeDescriptionSection({
 			}}
 		>
 			<div className="relative mx-auto max-w-[720px] px-6 text-center">
-				{/* GeometricSignature as visual divider */}
+				{/* Hieroglyph code as visual divider */}
 				<div className="mb-8 opacity-40" aria-hidden="true">
-					<GeometricSignature oceanCode={oceanCode} baseSize={24} />
+					<OceanHieroglyphCode code={oceanCode} size={24} />
 				</div>
 
 				{/* Section title */}

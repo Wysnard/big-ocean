@@ -4,6 +4,7 @@ import type {
 	FacetResult,
 	OceanCode4,
 	OceanCode5,
+	TraitLevel,
 	TraitResult,
 } from "@workspace/domain";
 import { TRAIT_TO_FACETS } from "@workspace/domain";
@@ -28,6 +29,9 @@ import {
 	DialogTrigger,
 } from "@workspace/ui/components/dialog";
 import { Input } from "@workspace/ui/components/input";
+import { OceanHieroglyph } from "@workspace/ui/components/ocean-hieroglyph";
+import { OceanHieroglyphCode } from "@workspace/ui/components/ocean-hieroglyph-code";
+import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import {
 	Sheet,
 	SheetContent,
@@ -40,25 +44,6 @@ import { Switch } from "@workspace/ui/components/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
 import { useState } from "react";
 import { ErrorBanner } from "../../components/ErrorBanner";
-import {
-	GeometricSignature,
-	OceanCircle,
-	OceanCross,
-	OceanCutSquare,
-	OceanDiamond,
-	OceanDoubleQuarter,
-	OceanHalfCircle,
-	OceanInvertedTriangle,
-	OceanLollipop,
-	OceanOval,
-	OceanQuarterCircle,
-	OceanRectangle,
-	OceanReversedHalfCircle,
-	OceanShapeSet,
-	OceanTable,
-	OceanThreeQuarterSquare,
-	OceanTriangle,
-} from "../../components/ocean-shapes";
 import { ArchetypeCard } from "../../components/results/ArchetypeCard";
 import { ConfidenceRingCard } from "../../components/results/ConfidenceRingCard";
 import { DetailZone } from "../../components/results/DetailZone";
@@ -93,7 +78,7 @@ function StickyNav() {
 		<nav className="sticky top-0 z-50 flex items-center justify-between gap-4 border-b bg-background/95 backdrop-blur px-6 py-3">
 			<div className="flex items-center gap-1">
 				<span className="text-xl font-heading font-bold tracking-tight text-foreground">big-</span>
-				<OceanShapeSet size={18} />
+				<OceanHieroglyphSet size={18} />
 				<span className="ml-2 text-sm text-muted-foreground font-body">Kitchen Sink</span>
 			</div>
 			<div className="flex items-center gap-1">
@@ -584,87 +569,77 @@ function IdentitySection() {
 				<div className="flex items-center gap-8">
 					<div className="flex items-center gap-1">
 						<span className="text-xl font-heading font-bold tracking-tight text-foreground">big-</span>
-						<OceanShapeSet size={20} />
+						<OceanHieroglyphSet size={20} />
 					</div>
 					<div className="flex items-center gap-1">
 						<span className="text-3xl font-heading font-bold tracking-tight text-foreground">big-</span>
-						<OceanShapeSet size={30} />
+						<OceanHieroglyphSet size={30} />
 					</div>
 					<div className="flex items-center gap-1 text-muted-foreground">
 						<span className="text-xl font-heading font-bold tracking-tight">big-</span>
-						<OceanShapeSet size={20} variant="monochrome" />
+						<OceanHieroglyphSet size={20} mono />
 					</div>
 				</div>
 			</SubSection>
 
-			<SubSection title="Ocean Shape Set (OCEAN)">
+			<SubSection title="Ocean Hieroglyph Set (OCEAN)">
 				<div className="flex flex-wrap gap-8 items-end">
 					<div className="flex flex-col items-center gap-2">
-						<OceanShapeSet size={32} />
+						<OceanHieroglyphSet size={32} />
 						<span className="text-caption text-muted-foreground">Color (32px)</span>
 					</div>
 					<div className="flex flex-col items-center gap-2">
-						<OceanShapeSet size={48} />
+						<OceanHieroglyphSet size={48} />
 						<span className="text-caption text-muted-foreground">Color (48px)</span>
 					</div>
 					<div className="flex flex-col items-center gap-2">
-						<OceanShapeSet size={32} variant="monochrome" />
+						<OceanHieroglyphSet size={32} mono />
 						<span className="text-caption text-muted-foreground">Monochrome</span>
 					</div>
 				</div>
 			</SubSection>
 
-			<SubSection title="All Shapes">
+			<SubSection title="All Hieroglyphs">
 				<div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-6">
-					{[
-						{ name: "Circle", Component: OceanCircle, color: "var(--trait-openness)" },
-						{ name: "Half Circle", Component: OceanHalfCircle, color: "var(--trait-conscientiousness)" },
-						{ name: "Rectangle", Component: OceanRectangle, color: "var(--trait-extraversion)" },
-						{ name: "Triangle", Component: OceanTriangle, color: "var(--trait-agreeableness)" },
-						{ name: "Diamond", Component: OceanDiamond, color: "var(--trait-neuroticism)" },
-						{ name: "Cross", Component: OceanCross, color: "var(--trait-openness)" },
-						{ name: "Cut Square", Component: OceanCutSquare, color: "var(--trait-openness)" },
-						{ name: "Oval", Component: OceanOval, color: "var(--trait-extraversion)" },
-						{ name: "Quarter", Component: OceanQuarterCircle, color: "var(--trait-extraversion)" },
-						{
-							name: "Inv. Triangle",
-							Component: OceanInvertedTriangle,
-							color: "var(--trait-neuroticism)",
-						},
-						{ name: "Lollipop", Component: OceanLollipop, color: "var(--trait-agreeableness)" },
-						{
-							name: "Rev. Half",
-							Component: OceanReversedHalfCircle,
-							color: "var(--trait-agreeableness)",
-						},
-						{
-							name: "3/4 Square",
-							Component: OceanThreeQuarterSquare,
-							color: "var(--trait-conscientiousness)",
-						},
-						{
-							name: "Dbl Quarter",
-							Component: OceanDoubleQuarter,
-							color: "var(--trait-conscientiousness)",
-						},
-						{ name: "Table", Component: OceanTable, color: "var(--trait-neuroticism)" },
-					].map(({ name, Component, color }) => (
-						<div key={name} className="flex flex-col items-center gap-2">
-							<Component size={40} color={color} />
-							<span className="text-caption text-muted-foreground text-center leading-tight">{name}</span>
+					{(
+						[
+							{ name: "Circle (O)", letter: "O", trait: "openness" },
+							{ name: "Half Circle (C)", letter: "C", trait: "conscientiousness" },
+							{ name: "Rectangle (E)", letter: "E", trait: "extraversion" },
+							{ name: "Triangle (A)", letter: "A", trait: "agreeableness" },
+							{ name: "Diamond (N)", letter: "N", trait: "neuroticism" },
+							{ name: "Cross (T)", letter: "T", trait: "openness" },
+							{ name: "Cut Square (M)", letter: "M", trait: "openness" },
+							{ name: "Oval (I)", letter: "I", trait: "extraversion" },
+							{ name: "Quarter (B)", letter: "B", trait: "extraversion" },
+							{ name: "Inverted Triangle (V)", letter: "V", trait: "neuroticism" },
+							{ name: "Lollipop (P)", letter: "P", trait: "agreeableness" },
+							{ name: "Reversed Half Circle (D)", letter: "D", trait: "agreeableness" },
+							{ name: "Three Quarter Square (F)", letter: "F", trait: "conscientiousness" },
+							{ name: "Double Quarter (S)", letter: "S", trait: "conscientiousness" },
+							{ name: "Table (R)", letter: "R", trait: "neuroticism" },
+						] satisfies Array<{ name: string; letter: TraitLevel; trait: string }>
+					).map((shape) => (
+						<div key={shape.letter} className="flex flex-col items-center gap-2">
+							<span data-trait={shape.trait}>
+								<OceanHieroglyph letter={shape.letter} style={{ width: 40, height: 40 }} />
+							</span>
+							<span className="text-caption text-muted-foreground text-center leading-tight">
+								{shape.name}
+							</span>
 						</div>
 					))}
 				</div>
 			</SubSection>
 
-			<SubSection title="Geometric Signatures">
+			<SubSection title="Ocean Hieroglyph Codes">
 				<p className="text-sm text-muted-foreground mb-4">
-					Each OCEAN code maps to a unique 5-shape signature. Here are some examples:
+					Each OCEAN code maps to a unique 5-glyph signature. Here are some examples:
 				</p>
 				<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
 					{(["OCELR", "MCBPV", "TFIAN", "OSBDN", "TCEPN"] as OceanCode5[]).map((code) => (
 						<div key={code} className="flex flex-col items-center gap-2">
-							<GeometricSignature oceanCode={code} baseSize={36} />
+							<OceanHieroglyphCode code={code} size={36} />
 							<span
 								className="text-sm font-data font-bold tracking-widest"
 								style={{ fontFamily: "var(--font-data)" }}
@@ -1235,7 +1210,7 @@ function DepthSection() {
 							</Button>
 							<Badge>Badge</Badge>
 							<Input className="max-w-[160px]" placeholder="Input..." />
-							<OceanShapeSet size={20} />
+							<OceanHieroglyphSet size={20} />
 						</div>
 					))}
 				</div>

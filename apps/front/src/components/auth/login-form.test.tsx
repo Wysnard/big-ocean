@@ -25,9 +25,9 @@ vi.mock("@tanstack/react-router", () => ({
 	useNavigate: () => mockNavigate,
 }));
 
-// Mock OceanShapeSet
-vi.mock("../ocean-shapes", () => ({
-	OceanShapeSet: () => <span data-testid="ocean-shapes" />,
+// Mock OceanHieroglyphSet
+vi.mock("@workspace/ui/components/ocean-hieroglyph-set", () => ({
+	OceanHieroglyphSet: () => <span data-testid="ocean-hieroglyphs" />,
 }));
 
 // Mock auth-session-linking
@@ -133,7 +133,7 @@ describe("LoginForm", () => {
 		fireEvent.submit(screen.getByRole("button", { name: "Sign In" }));
 
 		await waitFor(() => {
-			expect(mockNavigate).toHaveBeenCalledWith({ to: "/profile" });
+			expect(mockNavigate).toHaveBeenCalledWith({ to: "/dashboard" });
 		});
 	});
 

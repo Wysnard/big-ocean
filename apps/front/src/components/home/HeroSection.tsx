@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { OceanShapeSet } from "../ocean-shapes/OceanShapeSet";
+import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 
 export function HeroSection() {
 	return (
@@ -13,8 +13,8 @@ export function HeroSection() {
 				{/* Brand mark */}
 				<div className="mb-6 flex items-center gap-2 max-[900px]:justify-center">
 					<span className="font-heading text-4xl font-bold tracking-tight text-foreground">big-</span>
-					<OceanShapeSet size={36} className="sm:hidden" />
-					<OceanShapeSet size={44} className="hidden sm:inline-flex" />
+					<OceanHieroglyphSet size={36} className="sm:hidden" />
+					<OceanHieroglyphSet size={44} className="hidden sm:inline-flex" />
 				</div>
 
 				<h1 className="mb-[18px] font-heading text-[clamp(2.4rem,5vw,4rem)] font-bold leading-[1.06]">

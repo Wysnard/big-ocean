@@ -1,9 +1,9 @@
 import type { OceanCode5, TraitName } from "@workspace/domain";
-import { BIG_FIVE_TRAITS, getTraitColor, getTraitLevelLabel } from "@workspace/domain";
+import { BIG_FIVE_TRAITS, getTraitLevelLabel } from "@workspace/domain";
+import { OceanHieroglyphCode } from "@workspace/ui/components/ocean-hieroglyph-code";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useId, useState } from "react";
-import { GeometricSignature } from "../ocean-shapes/GeometricSignature";
 
 /** Capitalized trait labels for tooltip display */
 const TRAIT_DISPLAY_NAMES: Record<TraitName, string> = {
@@ -65,7 +65,6 @@ export function ArchetypeHeroSection({
 	showScrollIndicator,
 	framingLine,
 }: ArchetypeHeroSectionProps) {
-	const traitColor = getTraitColor(dominantTrait);
 	const tooltipBaseId = useId();
 
 	const resolvedSubtitle =
@@ -82,13 +81,13 @@ export function ArchetypeHeroSection({
 				{/* Dominant: large circle in trait color */}
 				<div
 					className="absolute -top-[20%] -right-[10%] z-0 aspect-square w-[60vmin] rounded-full"
-					style={{ backgroundColor: traitColor, opacity: 0.85 }}
+					style={{ backgroundColor: `var(--trait-${dominantTrait})`, opacity: 0.85 }}
 				/>
 				{/* Secondary: triangle in complementary position */}
 				<div
 					className="absolute bottom-0 left-0 z-10 w-[35vmin] aspect-[3/4]"
 					style={{
-						backgroundColor: traitColor,
+						backgroundColor: `var(--trait-${dominantTrait})`,
 						opacity: 0.35,
 						clipPath: "polygon(0 100%, 100% 100%, 50% 0)",
 					}}
@@ -96,7 +95,7 @@ export function ArchetypeHeroSection({
 				{/* Tertiary: small rectangle */}
 				<div
 					className="absolute top-[15%] left-[8%] z-10 w-[18vmin] aspect-square rounded-xl"
-					style={{ backgroundColor: traitColor, opacity: 0.2 }}
+					style={{ backgroundColor: `var(--trait-${dominantTrait})`, opacity: 0.2 }}
 				/>
 			</div>
 
@@ -114,11 +113,11 @@ export function ArchetypeHeroSection({
 					{resolvedSubtitle}
 				</p>
 
-				{/* Geometric Signature */}
+				{/* Hieroglyph Code */}
 				<div className="mb-6">
-					<GeometricSignature
-						oceanCode={oceanCode5}
-						baseSize={48}
+					<OceanHieroglyphCode
+						code={oceanCode5}
+						size={48}
 						animate
 						className="motion-safe:animate-shape-reveal motion-reduce:!animate-none [&_span]:motion-reduce:!animate-none [&_span]:motion-reduce:opacity-100"
 					/>
@@ -148,8 +147,8 @@ export function ArchetypeHeroSection({
 									<button
 										type="button"
 										aria-describedby={tooltipId}
+										data-trait={traitName}
 										className="min-w-11 min-h-11 inline-flex items-center justify-center rounded-md hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
-										style={{ color: getTraitColor(traitName) }}
 									>
 										{letter}
 									</button>

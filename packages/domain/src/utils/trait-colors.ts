@@ -2,6 +2,7 @@ import type { FacetName, TraitName } from "../constants/big-five";
 
 /**
  * Return the CSS variable reference for a trait color token.
+ * @deprecated Use `data-trait` attribute on DOM elements instead. Retained only for chart libraries requiring JS color values.
  */
 export function getTraitColor(trait: TraitName): string {
 	return `var(--trait-${trait})`;

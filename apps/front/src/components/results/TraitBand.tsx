@@ -1,20 +1,15 @@
-import type { FacetResult, TraitName, TraitResult } from "@workspace/domain";
-import { getTraitColor } from "@workspace/domain";
-import type { ReactNode } from "react";
+import type { FacetResult, TraitLevel, TraitName, TraitResult } from "@workspace/domain";
+import { OceanHieroglyph } from "@workspace/ui/components/ocean-hieroglyph";
 import { useEffect, useRef, useState } from "react";
-import { OceanCircle } from "../ocean-shapes/OceanCircle";
-import { OceanDiamond } from "../ocean-shapes/OceanDiamond";
-import { OceanHalfCircle } from "../ocean-shapes/OceanHalfCircle";
-import { OceanRectangle } from "../ocean-shapes/OceanRectangle";
-import { OceanTriangle } from "../ocean-shapes/OceanTriangle";
 import { FacetScoreBar } from "./FacetScoreBar";
 
-const TRAIT_SHAPE: Record<TraitName, (props: { size?: number; color?: string }) => ReactNode> = {
-	openness: OceanCircle,
-	conscientiousness: OceanHalfCircle,
-	extraversion: OceanRectangle,
-	agreeableness: OceanTriangle,
-	neuroticism: OceanDiamond,
+/** Maps each trait to its "High" letter for use as representative hieroglyph */
+const TRAIT_HIEROGLYPH_LETTER: Record<TraitName, TraitLevel> = {
+	openness: "O",
+	conscientiousness: "C",
+	extraversion: "E",
+	agreeableness: "A",
+	neuroticism: "N",
 };
 
 const TRAIT_LABELS: Record<TraitName, string> = {
@@ -33,9 +28,8 @@ interface TraitBandProps {
 }
 
 export function TraitBand({ trait, facets }: TraitBandProps) {
-	const traitColor = getTraitColor(trait.name);
+	const traitVar = `var(--trait-${trait.name})`;
 	const scorePercent = Math.round((trait.score / MAX_TRAIT_SCORE) * 100);
-	const ShapeComponent = TRAIT_SHAPE[trait.name];
 
 	const ref = useRef<HTMLDivElement>(null);
 	const [visible, setVisible] = useState(false);
@@ -56,21 +50,25 @@ export function TraitBand({ trait, facets }: TraitBandProps) {
 		<div
 			ref={ref}
 			data-testid={`trait-band-${trait.name}`}
+			data-trait={trait.name}
 			className="p-6 motion-safe:transition-all motion-safe:duration-500"
 			style={{
-				borderLeft: `4px solid ${traitColor}`,
-				backgroundColor: `color-mix(in oklch, ${traitColor} 5%, transparent)`,
+				borderLeft: `4px solid ${traitVar}`,
+				backgroundColor: `color-mix(in oklch, ${traitVar} 5%, transparent)`,
 				opacity: visible ? 1 : 0,
 				transform: visible ? "translateY(0)" : "translateY(12px)",
 			}}
 		>
 			{/* Header row */}
 			<div className="flex items-center gap-3 mb-2">
-				<ShapeComponent size={24} color={traitColor} />
+				<OceanHieroglyph
+					letter={TRAIT_HIEROGLYPH_LETTER[trait.name]}
+					style={{ width: 24, height: 24 }}
+				/>
 				<h2 className="font-display text-xl font-semibold text-foreground flex-1">
 					{TRAIT_LABELS[trait.name]}
 				</h2>
-				<span className="font-data text-2xl font-bold" style={{ color: traitColor }}>
+				<span className="font-data text-2xl font-bold">
 					{trait.score}
 					<span className="text-sm text-muted-foreground font-normal">/120</span>
 				</span>
@@ -80,7 +78,7 @@ export function TraitBand({ trait, facets }: TraitBandProps) {
 			<div className="w-full bg-muted rounded-full h-2 mb-5">
 				<div
 					className="h-2 rounded-full motion-safe:transition-all motion-safe:duration-700"
-					style={{ width: `${scorePercent}%`, backgroundColor: traitColor }}
+					style={{ width: `${scorePercent}%`, backgroundColor: traitVar }}
 				/>
 			</div>
 

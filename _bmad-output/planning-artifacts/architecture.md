@@ -3,6 +3,8 @@ stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 lastStep: 8
 status: 'complete'
 completedAt: '2026-03-15'
+lastUpdated: '2026-03-23'
+adrsAdded: ['ADR-22: Ocean Hieroglyph System', 'ADR-23: Dashboard/Profile Consolidation']
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/ux-design-specification.md'
@@ -549,7 +551,7 @@ This covers the "browser closed mid-payment" edge case where webhook fired but p
 | `/` (landing) | Full access | Full access | Full access |
 | `/public-profile/:id` | Full access | Full access | Full access + relationship CTA |
 | `/chat` | → sign up | Start/resume conversation | Resume or extension CTA |
-| `/dashboard` | → sign up | Empty state: "Start your conversation" CTA | Full dashboard |
+| `/dashboard` | → sign up | Empty state or in-progress: progress bar + "Continue" CTA | Full dashboard (identity, credits, relationships) |
 | `/results` | → sign up | → `/chat` | Results page |
 | `/relationship/:id` | → sign up | → `/chat` | Analysis (if participant) |
 | QR URL | Login/sign up → return to accept screen | "Complete assessment first" | Accept screen |
@@ -953,7 +955,6 @@ big-ocean/                                    # Monorepo root
 │           │   ├── chat/index.tsx            # Conversation (/chat)
 │           │   ├── results.tsx               # Results layout (/results)
 │           │   ├── results/$assessmentSessionId.tsx  # Results detail
-│           │   ├── profile.tsx               # User profile (/profile)
 │           │   ├── public-profile.$publicProfileId.tsx  # Public profiles
 │           │   ├── relationship/$analysisId.tsx  # Relationship view
 │           │   ├── relationship/qr/$token.tsx # QR accept/refuse screen
@@ -964,7 +965,6 @@ big-ocean/                                    # Monorepo root
 │           │   ├── chat/                     # Chat UI: input bar, depth meter, evidence card
 │           │   ├── home/                     # Landing page sections (14 files)
 │           │   ├── results/                  # Results page: trait cards, portrait, archetype (28 files)
-│           │   ├── profile/                  # User profile components
 │           │   ├── relationship/             # QR accept screen, relationship card
 │           │   ├── sharing/                  # Archetype card template, share card
 │           │   ├── ocean-shapes/             # Geometric signature system (10 files)
@@ -982,7 +982,6 @@ big-ocean/                                    # Monorepo root
 │           │   ├── use-auth.ts               # Auth state hook
 │           │   ├── use-evidence.ts           # Evidence query hooks
 │           │   ├── use-relationship.ts        # Relationship QR + analysis hooks
-│           │   ├── use-profile.ts            # Profile hooks
 │           │   ├── useTherapistChat.ts       # Chat orchestration hook
 │           │   ├── usePortraitStatus.ts      # Portrait polling hook
 │           │   └── __mocks__/                # Hook mocks for tests
@@ -1228,7 +1227,7 @@ big-ocean/                                    # Monorepo root
 | Landing | `/` | HeroSection, ConversationFlow, home/* | None |
 | Chat | `/chat` | TherapistChat, ChatInputBarShell, DepthMeter, EvidenceCard | assessment.*, evidence.* |
 | Results | `/results/$id` | ProfileView, TraitCard, ArchetypeCard, PersonalPortrait, ConfidenceRingCard, DetailZone | profile.results, portrait.*, evidence.* |
-| Profile | `/profile` | AssessmentCard, EmptyProfile | profile.*, relationship.* |
+| Dashboard | `/dashboard` | DashboardIdentityCard (+ public profile link), DashboardInProgressCard, DashboardRelationshipsCard, DashboardCreditsCard, DashboardEmptyState | assessment.*, profile.*, relationship.*, credits.* |
 | Public Profile | `/public-profile.$id` | ProfileView (read-only) | profile.public |
 | Relationship | `/relationship/$id` | RelationshipCard | relationship.analysis |
 | QR Accept | `/relationship/qr/$token` | QR accept/refuse screen (archetype card, confidence rings, credit balance) | relationship.qr |
@@ -1466,6 +1465,251 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 - Respect project structure and boundaries
 - Refer to this document for all architectural questions
 - When in doubt about where code belongs, check the Epic → Directory Mapping table
+
+---
+
+### ADR-22: Ocean Hieroglyph System — Rename, Consolidation & Data-Attribute Coloring
+
+_Added: 2026-03-23. Supersedes the original "Ocean Shape" component set (Story 32-7b)._
+
+**Decision:** Rename "Ocean Shape" to "Ocean Hieroglyph" across the entire codebase. Consolidate 15 individual React shape components into a single lookup table (pure data, no React) + a single renderer component. Replace all programmatic trait-color helpers (`getTraitColor()`) in DOM-rendering components with declarative `data-trait` CSS attribute coloring.
+
+**Rationale:** Each glyph is a symbolic representation of a trait-level letter — an ancient-alphabet aesthetic that encodes personality meaning in geometric form. The current implementation scatters this concept across 15 files with inconsistent color application (mix of inline styles, CSS variables, and Tailwind classes). Consolidation reduces surface area (15 files → 2), makes hieroglyph data portable (server-side rendering, PDF, OG images), and establishes a single declarative coloring pattern.
+
+#### 22.1 — Terminology
+
+| Old Term | New Term |
+|----------|----------|
+| Ocean Shape | Ocean Hieroglyph |
+| `data-slot="ocean-shape-*"` | `data-slot="ocean-hieroglyph-*"` |
+| `GeometricSignature` | `OceanHieroglyphCode` |
+| `OceanShapeSet` | `OceanHieroglyphSet` |
+| `LETTER_TO_SHAPE` | `OCEAN_HIEROGLYPHS` (lookup table) |
+| `animate-shape-reveal` | `animate-hieroglyph-reveal` |
+
+#### 22.2 — Type Contracts
+
+All hieroglyph APIs use the existing const-derived union types — never raw `string`:
+
+```typescript
+// packages/domain — already exists
+export const TRAIT_NAMES = ["openness", "conscientiousness", "extraversion", "agreeableness", "neuroticism"] as const;
+export type TraitName = (typeof TRAIT_NAMES)[number];
+// → "openness" | "conscientiousness" | "extraversion" | "agreeableness" | "neuroticism"
+
+// packages/domain — already exists
+export type TraitLevel =
+  | OpennessLevel          // "T" | "M" | "O"
+  | ConscientiousnessLevel // "F" | "S" | "C"
+  | ExtraversionLevel      // "I" | "B" | "E"
+  | AgreeablenessLevel     // "D" | "P" | "A"
+  | NeuroticismLevel;      // "R" | "V" | "N"
+
+// packages/domain — NEW
+export interface HieroglyphElement {
+  readonly tag: "path" | "circle" | "ellipse" | "rect" | "polygon";
+  readonly attrs: Record<string, string | number>;
+}
+
+export interface HieroglyphDef {
+  readonly viewBox: string;
+  readonly elements: ReadonlyArray<HieroglyphElement>;
+}
+```
+
+**Typing rules:**
+- Lookup table key: `TraitLevel` (15-letter union) — compile-time guarantee all 15 letters have a definition
+- Renderer `letter` prop: `TraitLevel` — no `string` accepted
+- `data-trait` attribute value: `TraitName` (5-value union) — enforced in component props
+- OCEAN position mapping: `TRAIT_NAMES[i]` returns `TraitName`, not `string`
+
+#### 22.3 — Hieroglyph Lookup Table (Pure Data)
+
+Location: `packages/domain/src/constants/ocean-hieroglyphs.ts`
+
+A `Record<TraitLevel, HieroglyphDef>` containing raw SVG geometry. No React, no color, no rendering logic. Example:
+
+```typescript
+export const OCEAN_HIEROGLYPHS: Record<TraitLevel, HieroglyphDef> = {
+  // Openness
+  T: { viewBox: "0 0 24 24", elements: [{ tag: "path", attrs: { d: "M9 2h6v7h7v6h-7v7H9v-7H2V9h7z" } }] },
+  M: { viewBox: "0 0 24 24", elements: [{ tag: "path", attrs: { d: "M2 7h20v10H2z" } }] },
+  O: { viewBox: "0 0 24 24", elements: [{ tag: "circle", attrs: { cx: 12, cy: 12, r: 10 } }] },
+  // Conscientiousness
+  F: { viewBox: "0 0 24 24", elements: [{ tag: "path", attrs: { d: "M2 2h20v10H12v10H2z" } }] },
+  S: { viewBox: "0 0 24 24", elements: [
+    { tag: "path", attrs: { d: "M2 12L12 12A10 10 0 0 1 2 22Z" } },
+    { tag: "path", attrs: { d: "M22 12L12 12A10 10 0 0 1 22 2Z" } },
+  ] },
+  C: { viewBox: "0 0 24 24", elements: [{ tag: "path", attrs: { d: "M18 2 A10 10 0 0 0 18 22 Z" } }] },
+  // Extraversion
+  I: { viewBox: "0 0 24 24", elements: [{ tag: "ellipse", attrs: { cx: 12, cy: 12, rx: 6, ry: 10 } }] },
+  B: { viewBox: "0 0 24 24", elements: [{ tag: "path", attrs: { d: "M2 2v20A20 20 0 0 0 22 2z" } }] },
+  E: { viewBox: "0 0 24 24", elements: [{ tag: "rect", attrs: { x: 7, y: 2, width: 10, height: 20, rx: 1 } }] },
+  // Agreeableness
+  D: { viewBox: "0 0 24 24", elements: [{ tag: "path", attrs: { d: "M6 2 A10 10 0 0 1 6 22 Z" } }] },
+  P: { viewBox: "0 0 24 24", elements: [
+    { tag: "rect", attrs: { x: 5, y: 2, width: 14, height: 14 } },
+    { tag: "rect", attrs: { x: 10, y: 16, width: 4, height: 6 } },
+  ] },
+  A: { viewBox: "0 0 24 24", elements: [{ tag: "polygon", attrs: { points: "12,2 22,22 2,22" } }] },
+  // Neuroticism
+  R: { viewBox: "0 0 24 24", elements: [
+    { tag: "rect", attrs: { x: 2, y: 2, width: 20, height: 14 } },
+    { tag: "rect", attrs: { x: 5, y: 16, width: 4, height: 6 } },
+    { tag: "rect", attrs: { x: 15, y: 16, width: 4, height: 6 } },
+  ] },
+  V: { viewBox: "0 0 24 24", elements: [{ tag: "polygon", attrs: { points: "2,2 22,2 12,22" } }] },
+  N: { viewBox: "0 0 24 24", elements: [{ tag: "polygon", attrs: { points: "12,1 23,12 12,23 1,12" } }] },
+} as const;
+```
+
+**Portability:** This data can be consumed by any renderer — React SVG, server-side Satori (for OG/share cards), Canvas, PDF generation — without any React dependency.
+
+#### 22.4 — Renderer Components (packages/ui)
+
+**`OceanHieroglyph`** — single glyph renderer:
+
+```typescript
+interface OceanHieroglyphProps {
+  letter: TraitLevel;         // Const union, not string
+  className?: string;         // Tailwind size + color (e.g., "size-6 text-trait-openness")
+}
+```
+
+- Looks up `OCEAN_HIEROGLYPHS[letter]`, renders SVG with `fill="currentColor"`
+- No `color` prop, no `size` prop — use Tailwind `size-*` and `text-*` classes
+- Sets `data-slot="ocean-hieroglyph-{letter}"` and `aria-hidden="true"`
+
+**`OceanHieroglyphCode`** — 5-glyph composite (replaces `GeometricSignature`):
+
+```typescript
+interface OceanHieroglyphCodeProps {
+  code: OceanCode5;           // Branded 5-letter code
+  size?: number;              // Base size in px (default 32)
+  animate?: boolean;          // Staggered reveal animation
+  archetypeName?: string;     // Label below the code
+  mono?: boolean;             // Monochrome mode — skips data-trait, uses currentColor
+  className?: string;
+}
+```
+
+- Splits code into 5 letters, maps each position to `TRAIT_NAMES[i]` (typed as `TraitName`)
+- Each glyph wrapper gets `data-trait={TRAIT_NAMES[i]}` — CSS handles coloring automatically
+- When `mono` is true, omits `data-trait` so `currentColor` cascades from parent
+- Animation: staggered reveal via `animate-hieroglyph-reveal` + `--hieroglyph-index` CSS variable
+
+**`OceanHieroglyphSet`** — branding set (replaces `OceanShapeSet`):
+
+```typescript
+interface OceanHieroglyphSetProps {
+  size?: number;
+  mono?: boolean;             // Monochrome mode
+  className?: string;
+}
+```
+
+- Renders the 5 "high" glyphs (O, C, E, A, N) in fixed OCEAN order
+- Used in Logo component and hero sections
+
+#### 22.5 — Declarative Trait Coloring via `data-trait`
+
+New CSS rules in `packages/ui/src/styles/globals.css`:
+
+```css
+/* Trait color attribution — any element with data-trait inherits its trait color */
+[data-trait="openness"]          { color: var(--trait-openness); }
+[data-trait="conscientiousness"] { color: var(--trait-conscientiousness); }
+[data-trait="extraversion"]      { color: var(--trait-extraversion); }
+[data-trait="agreeableness"]     { color: var(--trait-agreeableness); }
+[data-trait="neuroticism"]       { color: var(--trait-neuroticism); }
+```
+
+**How it works:**
+- Set `data-trait="openness"` on any element → it gets the trait color
+- Children inherit via `currentColor` (SVG `fill="currentColor"` picks it up)
+- Tailwind classes still win for overrides (`className="text-white"` beats the attribute rule)
+- Works for any element, not just hieroglyphs — trait-colored dots, labels, borders all benefit
+
+**`getTraitColor()` deprecation plan:**
+- Remove from all DOM-rendering components — replace with `data-trait` attribute
+- Keep only for programmatic cases where JS must pass a color value (chart libraries like Recharts that take color as a prop)
+- Mark remaining function as `@deprecated` with JSDoc guidance to prefer `data-trait`
+
+#### 22.6 — Migration: Consumer Components
+
+| Consumer | Current Pattern | New Pattern |
+|----------|----------------|-------------|
+| `GeometricSignature` | 15 component imports + `LETTER_TO_SHAPE` map + `color={TRAIT_COLORS[i]}` | **Deleted** — replaced by `OceanHieroglyphCode` from `packages/ui` |
+| `OceanShapeSet` | 5 component imports + inline `color="var(--trait-*)"` | **Deleted** — replaced by `OceanHieroglyphSet` from `packages/ui` |
+| `OceanCodeStrand` | Imports 5 shape components + `getTraitColor()` | Uses `OceanHieroglyph` + `data-trait` attribute |
+| `ArchetypeHeroSection` | `<GeometricSignature>` | `<OceanHieroglyphCode>` |
+| `ShareCardPreview` | `<GeometricSignature>` | `<OceanHieroglyphCode>` |
+| `DashboardIdentityCard` | `getTraitColor()` for styling | `data-trait` attribute |
+| `Logo` | `<OceanShapeSet>` | `<OceanHieroglyphSet>` |
+| `TraitCard`, `TraitBand`, `FacetScoreBar` | `getTraitColor()` inline styles | `data-trait` attribute where applicable |
+| `PersonalityRadarChart` | `getTraitColor()` for chart config | **Keep** — chart library requires JS color values |
+| `DetailZone`, `EvidencePanel` | `getTraitColor()` for highlights | `data-trait` attribute |
+
+#### 22.7 — File Map
+
+| File | Action |
+|------|--------|
+| `packages/domain/src/types/ocean-hieroglyph.ts` | **Create** — `HieroglyphDef`, `HieroglyphElement` types |
+| `packages/domain/src/constants/ocean-hieroglyphs.ts` | **Create** — `OCEAN_HIEROGLYPHS` lookup table |
+| `packages/domain/src/index.ts` | **Modify** — export new types + constant |
+| `packages/ui/src/components/ocean-hieroglyph.tsx` | **Create** — single glyph renderer |
+| `packages/ui/src/components/ocean-hieroglyph-code.tsx` | **Create** — 5-glyph composite |
+| `packages/ui/src/components/ocean-hieroglyph-set.tsx` | **Create** — branding set |
+| `packages/ui/src/index.ts` | **Modify** — export new components |
+| `packages/ui/src/styles/globals.css` | **Modify** — add `[data-trait]` color rules, rename `animate-shape-reveal` → `animate-hieroglyph-reveal` |
+| `apps/front/src/components/ocean-shapes/*.tsx` | **Delete** — all 18 files (15 shapes + GeometricSignature + OceanShapeSet + index.ts) |
+| `apps/front/src/components/results/OceanCodeStrand.tsx` | **Modify** — use `OceanHieroglyph` + `data-trait` |
+| All consumer components | **Modify** — update imports, replace `getTraitColor()` with `data-trait` |
+| `packages/domain/src/utils/trait-colors.ts` | **Modify** — mark `getTraitColor()` as `@deprecated` |
+| Tests (`.test.tsx`) | **Rewrite** — new component names, `data-slot` values, no `color` prop assertions |
+| Stories (`.stories.tsx`) | **Rewrite** — rename to `OceanHieroglyph*`, update demos |
+| Kitchen sink (`/dev/components`) | **Update** — reflect new component API |
+
+#### 22.8 — Anti-Patterns
+
+- **Never encode color in SVG data** or pass a `color` prop to hieroglyph components — color is always external via `currentColor`
+- **Never import individual hieroglyphs** — always use the lookup table via the renderer
+- **Never use `getTraitColor()` when `data-trait` achieves the same result** — `data-trait` is the default; `getTraitColor()` is the escape hatch for chart libraries only
+- **Never use raw `string` for trait/letter props** — always use `TraitLevel` or `TraitName` const unions
+- **Never duplicate the hieroglyph SVG data** — single source of truth in `OCEAN_HIEROGLYPHS`
+
+### ADR-23: Dashboard/Profile Consolidation
+
+**Decision:** Merge the `/profile` route into `/dashboard` and delete `/profile` entirely. The dashboard becomes the single authenticated home surface.
+
+**What changes:**
+- `/profile` route deleted — all user-facing state (identity, in-progress assessment, relationships, credits) lives on `/dashboard`
+- `AssessmentCard` and `EmptyProfile` components deleted — their in-progress state absorbed into `DashboardInProgressCard`
+- `DashboardPortraitCard` removed — portrait access moved to the results page (`/results/$sessionId`)
+- `DashboardIdentityCard` gains a public profile link (external-link icon → `/public-profile/$publicProfileId`)
+- Navigation links updated: no "Profile" link in header, mobile nav, or user dropdown
+- `use-profile.ts` hook removed — dashboard fetches its own data
+
+**Why:** The dashboard and profile served overlapping purposes with split navigation. Users had to context-switch between two surfaces to understand their state. Consolidating into one hub simplifies the mental model: "dashboard = what I have + what I can do next." The dashboard was already the richer page; absorbing profile's in-progress state is additive, not a rebuild.
+
+**Dashboard states (post-merge):**
+
+| User State | Identity Card Shows | Other Cards |
+|-----------|-------------------|-------------|
+| No assessment started | `DashboardEmptyState`: "Start Your Conversation" CTA → `/chat` | Hidden |
+| Assessment in progress | Progress bar (`messageCount / threshold`) + "Continue" CTA → `/chat?sessionId=...` | Credits (if applicable) |
+| Assessment complete | Archetype name + OCEAN code + GeometricSignature + public profile link + "View Full Results" CTA | Credits + Relationships |
+
+**Layout (2-column grid):**
+```
+┌─────────────────┬─────────────────┐
+│  Identity Card  │  Credits Card   │  ← sm:grid-cols-2
+│  + public link  │                 │
+├─────────────────┴─────────────────┤
+│  Relationships Card (span 2)      │
+└───────────────────────────────────┘
+```
 
 **Related standalone documents (full specifications):**
 - [Conversation Pacing Pipeline Architecture](./architecture-conversation-pacing.md) — Full specifications: E_target formula, territory scorer, selector, governor, observation gating, persistence, type contracts, testing patterns (1,823 lines)

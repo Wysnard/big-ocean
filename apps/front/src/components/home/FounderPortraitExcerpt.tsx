@@ -1,5 +1,5 @@
+import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import Markdown from "react-markdown";
-import { OceanShapeSet } from "../ocean-shapes/OceanShapeSet";
 import {
 	markdownComponents,
 	renderHeader,
@@ -29,7 +29,7 @@ export function FounderPortraitExcerpt() {
 				<span className="font-heading text-[.72rem] font-black tracking-wider text-foreground">
 					big-
 				</span>
-				<OceanShapeSet size={11} />
+				<OceanHieroglyphSet size={11} />
 				<span className="ml-auto font-mono text-[.6rem] tracking-[.06em] text-muted-foreground">
 					Vincent&rsquo;s portrait
 				</span>
