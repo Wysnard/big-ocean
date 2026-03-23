@@ -11,7 +11,7 @@ inputDocuments:
 # UX Design Specification big-ocean
 
 **Author:** Vincentlay
-**Date:** 2026-03-16 (updated 2026-03-18, page specs expanded 2026-03-18)
+**Date:** 2026-03-16 (updated 2026-03-18, page specs expanded 2026-03-18, dashboard/profile merge 2026-03-23)
 
 ---
 
@@ -3239,121 +3239,138 @@ Carries emotional weight, not just action description.
 
 ### 15.1 Dashboard Purpose
 
-The dashboard (`/dashboard`) is the returning user's home base — the surface that answers "what do I have, and what can I do next?" It's the hub that connects all post-assessment experiences: results, portrait, relationships, and extension.
+The dashboard (`/dashboard`) is the returning user's **single home base** — the surface that answers "what do I have, and what can I do next?" It consolidates what was previously split across `/dashboard` and `/profile` into one cohesive view. The `/profile` route is removed; all user-facing state lives here.
 
-**Current state:** A minimal profile page showing a single assessment card with archetype name, geometric signature, and navigation to results or conversation resumption.
+**Design principle:** The dashboard is a *hub*, not a destination. Each card connects to a deeper surface (results, relationship analysis, public profile) — the dashboard shows *status and links*, not full content. Portrait status, for example, is accessed via the results page, not duplicated here.
 
-**Target state:** A cohesive dashboard that surfaces all of the user's big-ocean artifacts and available actions in one place.
+**Current state (implemented):** A 2-column grid with Identity Card (archetype + OCEAN code + GeometricSignature), Portrait Card, Relationships Card, and Credits Card. Empty state for users without a completed assessment.
+
+**Target state:** Merge profile's in-progress assessment handling into the dashboard, remove the Portrait Card (portrait accessed via results), add a public profile link to the Identity Card, and delete the `/profile` route entirely.
 
 ### 15.2 Current Implementation (Built)
 
-The existing `/profile` route (`apps/front/src/routes/profile.tsx`) implements a functional but minimal dashboard (to be moved to `/dashboard`):
+The dashboard (`/dashboard`) and profile (`/profile`) currently exist as separate routes. The dashboard is the richer page; the profile will be absorbed into it and deleted.
+
+**Dashboard route** (`apps/front/src/routes/dashboard.tsx`):
+
+| Component | File | What It Does |
+|-----------|------|-------------|
+| `dashboard.tsx` | `routes/dashboard.tsx` | Route with auth guard, fetches sessions, results, portrait status, relationships, credits |
+| `DashboardIdentityCard` | `components/dashboard/DashboardIdentityCard.tsx` | Archetype name + OCEAN code with tooltips + GeometricSignature + "View Full Results" CTA |
+| `DashboardPortraitCard` | `components/dashboard/DashboardPortraitCard.tsx` | Portrait unlock/generation status (**to be removed** — portrait accessed via results) |
+| `DashboardRelationshipsCard` | `components/dashboard/DashboardRelationshipsCard.tsx` | List of relationship analyses with status badges + "Read Analysis" links |
+| `DashboardCreditsCard` | `components/dashboard/DashboardCreditsCard.tsx` | Credit balance + purchase CTA + QR drawer |
+| `DashboardEmptyState` | `components/dashboard/DashboardEmptyState.tsx` | Empty state: "Start Your Conversation" CTA → `/chat` |
+
+**Profile route** (`apps/front/src/routes/profile.tsx`) — **to be deleted:**
 
 | Component | File | What It Does |
 |-----------|------|-------------|
 | `profile.tsx` | `routes/profile.tsx` | Route with auth guard, fetches sessions via `useListAssessments(true)` |
 | `AssessmentCard` | `components/profile/AssessmentCard.tsx` | Single card: status badge, GeometricSignature (if completed), progress bar (if in-progress), date, action buttons |
 | `EmptyProfile` | `components/profile/EmptyProfile.tsx` | Empty state: MessageCircle icon + "No assessments yet" + "Start Your Assessment" CTA |
-| `ProfileSkeleton` | Inline in route | Loading skeleton placeholder |
 
-**Current layout:**
+**Current dashboard layout (built):**
 ```
-┌─────────────────────────────────────────────┐
-│ Your Assessment                             │
-│ Welcome back, {user.name}                   │
-│                                             │
-│  ┌─────────────────────────────────────┐   │
-│  │ [Status Badge: Complete/In Progress] │   │
-│  │                                     │   │
-│  │  [GeometricSignature] or [Progress] │   │
-│  │                                     │   │
-│  │  Date: Mon, Day, Year              │   │
-│  │                                     │   │
-│  │  [View Results] [Keep Exploring]   │   │
-│  │  or [Continue]                      │   │
-│  └─────────────────────────────────────┘   │
-└─────────────────────────────────────────────┘
+┌─────────────────┬─────────────────┐
+│  Identity Card  │  Portrait Card  │  ← sm:grid-cols-2
+│                 │  (TO REMOVE)    │
+├─────────────────┴─────────────────┤
+│  Relationships Card (span 2)      │
+├───────────────────────────────────┤
+│  Credits Card (span 2)            │
+└───────────────────────────────────┘
 ```
 
-**Data currently available:** `SessionSummary { id, createdAt, updatedAt, status, messageCount, oceanCode5?, archetypeName? }` + `freeTierMessageThreshold`.
+**Profile-only data to absorb:** Assessment in-progress state (progress bar showing `messageCount / freeTierMessageThreshold`, "Continue" CTA → `/chat?sessionId=...`).
 
-**Data attributes:** `data-slot="profile-page"`, `data-slot="assessment-card"`, `data-status="completed|in-progress"`, `data-slot="status-badge"`, `data-slot="progress-section"`, `data-slot="empty-dashboard"`.
+**Data currently available:** `SessionSummary { id, createdAt, updatedAt, status, messageCount, oceanCode5?, archetypeName? }` + `freeTierMessageThreshold` + `GetResultsResponse { archetypeName, oceanCode5, traits, publicProfileId, shareableUrl, isPublic }`.
+
+**Data attributes to preserve:** `data-testid="dashboard-page"`, `data-testid="dashboard-identity-card"`, `data-testid="dashboard-archetype-name"`.
 
 ### 15.3 Target Dashboard Sections
 
-**Above the fold — Identity at a glance:**
+**Target layout (2-column grid):**
+```
+┌─────────────────┬─────────────────┐
+│  Identity Card  │  Credits Card   │  ← sm:grid-cols-2
+│  + public link  │                 │
+├─────────────────┴─────────────────┤
+│  Relationships Card (span 2)      │
+└───────────────────────────────────┘
+```
+
+**Mobile stack order:** Identity → Credits → Relationships (single column).
+
+**Identity Card (above the fold):**
 
 | Order | Element | Details |
 |-------|---------|---------|
-| 1 | User name + email | Simple, personal |
-| 2 | Archetype name + GeometricSignature | The user's identity mark — large, prominent |
-| 3 | OCEAN code (OceanCodeStrand, interactive) | Tooltips on each letter |
-| 4 | Quick actions | Primary CTAs based on user state (see §15.4) |
+| 1 | Archetype name + GeometricSignature | The user's identity mark — large, prominent |
+| 2 | OCEAN code with tooltips | Interactive tooltips on each letter showing trait name + level |
+| 3 | Public profile link | Small external-link icon next to archetype name → `/public-profile/$publicProfileId`. Only shown when `publicProfileId` exists (profile has been shared). Subtle — not a primary CTA |
+| 4 | "View Full Results" CTA | Links to `/results/$sessionId` — this is where portrait, traits, and full details live |
+
+**When assessment is in-progress (no completed session):** The Identity Card area shows a progress state instead of archetype/OCEAN:
+- Progress bar (`messageCount / freeTierMessageThreshold`)
+- "Continue your conversation" CTA → `/chat?sessionId=...`
+- No archetype, no OCEAN code, no public profile link (these don't exist yet)
 
 **Below the fold — Your big-ocean world:**
 
 | Section | Content | Visibility |
 |---------|---------|-----------|
-| **Portrait** | Portrait status: locked (PortraitUnlockButton) / unlocked (link to read) / not yet generated | Always (after assessment complete) |
-| **Personality snapshot** | Mini radar chart + top 3 traits with scores | Always (after assessment complete) |
 | **Relationship analyses** | List of all relationship analyses — newest first, older marked "previous version" (EvolutionBadge). Each card shows: partner name, archetype, date, status | After first analysis |
-| **Relationship credits** | CreditBalance component — credits remaining + purchase CTA | Always (after assessment complete) |
+| **Relationship credits** | CreditBalance component — credits remaining + purchase CTA + QR drawer | Always (after assessment complete) |
 | **Conversation extension** | Extension CTA — "Go deeper with Nerin" (€25). Only shown if not yet purchased | After portrait purchase |
-| **Archetype card** | Share card preview + share button + download (1:1 + 9:16) | Always (after assessment complete) |
 
-### 15.4 State-Dependent Quick Actions
+**Removed from dashboard (accessed via results page instead):**
+- ~~Portrait section~~ — portrait unlock/status lives on the results page (`/results/$sessionId?view=portrait`)
+- ~~Personality snapshot (mini radar)~~ — full trait visualization lives on results page
+- ~~Archetype card / share preview~~ — sharing actions live on results page
 
-The dashboard adapts its primary CTAs based on the user's current state:
+### 15.4 State-Dependent Dashboard Behavior
 
-| User State | Primary CTA | Secondary CTA |
-|-----------|-------------|---------------|
-| No assessment started | "Start your conversation with Nerin" → `/chat` | — |
-| Assessment in progress | "Continue your conversation" → `/chat?sessionId=...` | Turn X/25 progress indicator |
-| Assessment complete, no portrait | "View your results" → `/results` | "Unlock your portrait" |
-| Assessment complete, portrait purchased | "View your results" → `/results` | "Share your archetype" / "Start a relationship analysis" |
-| Extension purchased, in progress | "Continue your extension" → `/chat?sessionId=...` | Turn X/50 progress indicator |
-| Extension complete | "View your updated results" → `/results` | "Regenerate your portrait" |
+The dashboard adapts based on the user's assessment state:
+
+| User State | Identity Card Shows | Other Cards |
+|-----------|-------------------|-------------|
+| No assessment started | `DashboardEmptyState`: "Start Your Conversation" CTA → `/chat` | Hidden (no data) |
+| Assessment in progress | Progress bar (`messageCount / threshold`) + "Continue your conversation" → `/chat?sessionId=...` | Credits Card (if applicable) |
+| Assessment complete | Archetype name + GeometricSignature + OCEAN code + public profile link (if shared) + "View Full Results" → `/results/$sessionId` | Credits Card + Relationships Card |
+| Extension in progress | Same as complete, plus "Continue your extension" CTA | Credits Card + Relationships Card |
 
 ### 15.5 Flow Diagram
 
 ```mermaid
 flowchart TD
     A["User logs in"] --> B{Has assessment?}
-    B -->|No| C["Empty state: 'No assessments yet'
-    CTA: 'Start your conversation with Nerin' → /chat"]
+    B -->|No| C["Empty state: 'Start Your Conversation'
+    CTA → /chat"]
     B -->|Yes| D{Assessment status?}
 
-    D -->|In progress| E["Dashboard: identity section (no archetype yet)
-    Primary CTA: 'Continue your conversation'
-    Progress: Turn X/25"]
-    D -->|Complete| F{Portrait purchased?}
+    D -->|In progress| E["Identity Card: progress bar
+    (messageCount / threshold)
+    CTA: 'Continue your conversation' → /chat?sessionId=...
+    Credits Card (if applicable)"]
+    D -->|Complete| F["Identity Card: archetype + OCEAN + signature
+    + public profile link (if shared)
+    + 'View Full Results' → /results"]
 
-    F -->|No| G["Dashboard: full identity section
-    Portrait section: PortraitUnlockButton
-    Primary CTA: 'View your results'
-    Secondary: 'Unlock your portrait'"]
-    F -->|Yes| H{Has relationship analyses?}
+    F --> G{Has relationship analyses?}
 
-    H -->|No| I["Dashboard: full identity + portrait link
-    Personality snapshot (mini radar)
-    Relationship section: empty state
-    CreditBalance: 1 credit
-    Archetype card: share/download"]
-    H -->|Yes| J["Dashboard: full identity + portrait link
-    Personality snapshot (mini radar)
-    Relationship list (newest first)
-    CreditBalance: X credits
-    Archetype card: share/download"]
+    G -->|No| H["Credits Card: balance + purchase CTA
+    Relationships Card: empty state"]
+    G -->|Yes| I["Credits Card: balance + QR drawer
+    Relationships Card: list (newest first)"]
 
     %% Extension states
-    G --> K{Extension purchased?}
-    I --> K
-    J --> K
-    K -->|Yes, in progress| L["Extension CTA replaced by:
+    H --> J{Extension purchased?}
+    I --> J
+    J -->|Yes, in progress| K["Extension CTA replaced by:
     'Continue your extension' Turn X/50"]
-    K -->|Yes, complete| M["'View your updated results'
-    Portrait regeneration CTA"]
-    K -->|No| N["Extension CTA: 'Go deeper with Nerin' (€25)
+    J -->|Yes, complete| L["'View your updated results'"]
+    J -->|No| M["Extension CTA: 'Go deeper with Nerin' (€25)
     Only shown after portrait purchase"]
 ```
 
@@ -3375,12 +3392,9 @@ The relationship section is a primary feature of the dashboard — it gives retu
 
 | Section | Skeleton |
 |---------|----------|
-| Identity (above fold) | Large rounded rect (signature) + 2 text lines (name, code) + 2 button-shaped rects |
-| Portrait status | Card-shaped rect with subtle pulse |
-| Personality snapshot | Circle (radar placeholder) + 3 horizontal bars |
+| Identity Card (above fold) | Large rounded rect (signature) + 2 text lines (name, code) + button-shaped rect |
+| Credits Card | Card-shaped rect with badge placeholder |
 | Relationship list | 2-3 card-shaped rects stacked |
-| Credits | Small badge-shaped rect |
-| Archetype card | Card-shaped rect at share card aspect ratio |
 
 All skeletons use `animate-pulse` with `bg-muted`. Skeleton renders server-side to avoid layout shift.
 
@@ -3388,11 +3402,9 @@ All skeletons use `animate-pulse` with `bg-muted`. Skeleton renders server-side 
 
 | Section | Error Display | Recovery |
 |---------|--------------|----------|
-| Full page data fetch fails | ErrorBanner: "Something went wrong loading your profile" | Retry button (refetches query) |
-| Portrait status fails | Card: "Couldn't load portrait status" | Retry link |
+| Full page data fetch fails | ErrorBanner: "Something went wrong loading your dashboard" | Retry button (refetches query) |
 | Relationship list fails | "Couldn't load your relationship analyses" | Retry link. Rest of dashboard works |
 | Credit balance fails | Badge shows "—" | Retry on next page visit |
-| Share card generation fails | Sonner toast | "Try again" in toast action |
 
 Per-section error boundaries — one section crashing never takes down the dashboard.
 
@@ -3411,84 +3423,57 @@ All animations gated by `prefers-reduced-motion: no-preference`.
 
 | Viewport | Layout |
 |----------|--------|
-| Mobile (< 640px) | Single column, stacked sections. Quick actions full-width. Relationship cards stacked |
-| Tablet (640-1023px) | Identity section full-width. Relationship cards 2-column grid |
-| Desktop (1024px+) | Max-width container (1024px). Identity section with radar chart side-by-side. Relationship cards 2-column grid |
+| Mobile (< 640px) | Single column: Identity Card → Credits Card → Relationships Card. All full-width, stacked |
+| Tablet/Desktop (≥ 640px) | 2-column grid: Identity Card (col 1) + Credits Card (col 2), Relationships Card (span 2). Max-width 1024px container |
 
 ### 15.11 Navigation
 
 | Element | Details |
 |---------|---------|
-| Route | `/dashboard` (moved from `/profile`) |
-| Header | Standard authenticated header: Logo + "Dashboard" nav link + User nav (avatar dropdown) |
-| Mobile header | Hamburger → sheet (Dashboard link in sheet menu) |
+| Route | `/dashboard` — the only authenticated home surface. `/profile` route is **deleted** |
+| Header (desktop) | Logo + "Dashboard" nav link + User nav (avatar dropdown). No "Profile" link |
+| Header (mobile) | Hamburger → sheet: Dashboard, Settings, Sign Out. No "Profile" link |
 | Nav highlight | "Dashboard" link in header is active |
 | Post-auth redirect | New users → `/chat`. Returning users with assessment → `/dashboard` |
+| User nav dropdown | Dashboard → `/dashboard`, Settings → `/settings`, Sign Out. Profile link removed |
 
 ### 15.12 Data Model
 
-**Single dashboard query** — TanStack Query call to a dashboard endpoint returning all data in one request:
+The dashboard composes data from multiple existing hooks (no single dashboard endpoint):
 
-```typescript
-interface DashboardResponse {
-  user: { name: string; email: string }
-  assessment: {
-    sessionId: string
-    status: "active" | "paused" | "finalizing" | "completed" | "archived"
-    messageCount: number
-    freeTierMessageThreshold: number
-    oceanCode5: string | null
-    archetypeName: string | null
-    createdAt: string
-  } | null
-  portrait: {
-    status: "none" | "generating" | "ready" | "failed"
-    purchasedAt: string | null
-  }
-  relationships: Array<{
-    analysisId: string
-    partnerName: string
-    partnerArchetype: string
-    partnerOceanCode: string
-    createdAt: string
-    isOutdated: boolean  // FK check: newer result exists
-  }>
-  credits: { balance: number }
-  extension: {
-    purchased: boolean
-    inProgress: boolean
-    messageCount: number | null
-  }
-  publicProfileId: string | null
-}
-```
+| Hook | Data | Purpose |
+|------|------|---------|
+| `useAuth()` | `user` (name, email, id) | Page header greeting, credits userId |
+| `useListAssessments()` | `sessions[]`, `freeTierMessageThreshold` | Find latest session, detect in-progress vs completed |
+| `useGetResults(sessionId)` | `archetypeName`, `oceanCode5`, `traits[]`, `publicProfileId` | Identity Card content + public profile link |
+| `useRelationshipAnalysesList()` | `analyses[]` | Relationships Card |
+| `useCredits()` | `availableCredits` | Credits Card |
 
-**Current gap:** The existing `GET /api/assessment/sessions` endpoint returns only session data. A new dashboard endpoint (or expanded session endpoint) is needed to include portrait status, relationships, credits, and extension state.
+**Key data flows:**
+- `publicProfileId` comes from the results response (`GetResultsResponse`) — available only for completed assessments that have been shared. Used for the external-link icon on the Identity Card.
+- Assessment in-progress state uses `sessions[0].messageCount / freeTierMessageThreshold` for the progress bar.
+- Portrait status is **not fetched** on the dashboard — it lives on the results page.
 
 ### 15.13 Implementation Notes
 
-- **Extends existing:** The current `/profile` route moves to `/dashboard`. Existing `AssessmentCard` component serves as the foundation. Add sections incrementally.
-- **Data fetching:** Single TanStack Query call to a dashboard endpoint. Server-rendered via TanStack Start.
-- **Component reuse:** GeometricSignature, OceanCodeStrand, PersonalityRadarChart (mini), CreditBalance, EvolutionBadge, PortraitUnlockButton — all from `packages/ui`.
-- **Empty states:** Each section has its own empty state per §12.4 conventions.
+- **Merge, don't rebuild:** The dashboard already exists with Identity, Relationships, and Credits cards. The work is: remove Portrait Card, add public profile link to Identity Card, absorb in-progress state from profile, delete `/profile` route.
+- **Data fetching:** Multiple TanStack Query hooks (see §15.12). No single dashboard endpoint needed — existing APIs cover all required data.
+- **Component reuse:** GeometricSignature, OceanCodeStrand — from shared components. CreditBalance, EvolutionBadge — in dashboard components.
+- **Empty states:** `DashboardEmptyState` for no assessment. Each section (relationships, credits) has its own empty state per §12.4 conventions.
 - **Error boundaries:** Per-section error boundaries. One section failing doesn't crash the dashboard.
-- **Build incrementally:** Start with identity section + quick actions (replaces current AssessmentCard). Add portrait, snapshot, relationships, credits, extension, and share card as those features are built.
-- **Preserve data-testid/data-slot:** Existing `data-slot` attributes must be preserved or aliased during migration.
+- **Preserve data-testid:** Existing `data-testid` attributes on dashboard components must not be removed (used by e2e tests).
+- **Profile cleanup:** Delete `apps/front/src/routes/profile.tsx`, `components/profile/AssessmentCard.tsx`, `components/profile/EmptyProfile.tsx`. Remove "Profile" link from `Header.tsx`, `UserNav.tsx`, `MobileNav.tsx`.
 
 ### 15.14 Implementation Gap (Current → Target)
 
 | Area | Current | Target | Work Required |
 |------|---------|--------|---------------|
-| Route | `/profile` | `/dashboard` | Move route file, update all internal links and redirects |
-| Header nav | No dashboard link in header | "Dashboard" link in authenticated header | Add link to header component, mobile sheet menu |
-| Identity section | User name + single AssessmentCard | Archetype name + GeometricSignature + OceanCodeStrand + state-aware CTAs | Replace AssessmentCard with identity layout + QuickActions |
-| Portrait section | Not present | Portrait status card (locked/unlocked/generating) | New section, depends on portrait API |
-| Personality snapshot | Not present | Mini radar chart + top 3 traits | New section, reuse PersonalityRadarChart with compact prop |
-| Relationship list | Not present | Partner cards with EvolutionBadge | New section, depends on relationship API |
-| Credits | Not present | CreditBalance component | New section, depends on credits API |
-| Extension CTA | Not present | "Go deeper with Nerin" card | New section, conditional on portrait purchase |
-| Archetype card | Not present | Share card preview + download buttons | New section, reuse ArchetypeShareCard |
-| Data endpoint | `GET /api/assessment/sessions` (sessions only) | Dashboard endpoint with all data | New API endpoint or expand existing |
+| Portrait Card | `DashboardPortraitCard` on dashboard | Removed — portrait accessed via results page | Delete component, remove from grid |
+| Public profile link | Not present | External-link icon on Identity Card → `/public-profile/$publicProfileId` | Add icon + conditional link to `DashboardIdentityCard`, pass `publicProfileId` from results |
+| In-progress state | Only on `/profile` (progress bar + "Continue" CTA) | Handled in dashboard empty/identity area | Add progress bar + Continue CTA when latest session is in-progress |
+| `/profile` route | Exists as separate route | Deleted | Delete route + profile components, update nav |
+| Navigation | Header/UserNav/MobileNav have "Profile" link | "Profile" link removed | Remove from Header.tsx, UserNav.tsx, MobileNav.tsx |
+| Grid layout | 2-col: Identity + Portrait, Relationships (span 2), Credits (span 2) | 2-col: Identity + Credits, Relationships (span 2) | Reorder grid, adjust column spans |
 
 ---
 

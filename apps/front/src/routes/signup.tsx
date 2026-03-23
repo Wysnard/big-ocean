@@ -18,7 +18,7 @@ export const Route = createFileRoute("/signup")({
 	beforeLoad: async () => {
 		const { data: session } = await getSession();
 		if (session?.user) {
-			throw redirect({ to: "/profile" });
+			throw redirect({ to: "/dashboard" });
 		}
 	},
 	component: SignupPage,

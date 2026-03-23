@@ -1,7 +1,8 @@
 /**
  * Dashboard Route (Story 38-3)
  *
- * Centralized view of user's results, portrait, relationship analyses, and credits.
+ * Centralized view of user's results, relationship analyses, and credits.
+ * Merges previous /profile route — single authenticated home base.
  * Requires authentication.
  */
 
@@ -11,12 +12,11 @@ import { Loader2 } from "lucide-react";
 import { DashboardCreditsCard } from "@/components/dashboard/DashboardCreditsCard";
 import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 import { DashboardIdentityCard } from "@/components/dashboard/DashboardIdentityCard";
-import { DashboardPortraitCard } from "@/components/dashboard/DashboardPortraitCard";
+import { DashboardInProgressCard } from "@/components/dashboard/DashboardInProgressCard";
 import { DashboardRelationshipsCard } from "@/components/dashboard/DashboardRelationshipsCard";
 import { useGetResults, useListAssessments } from "@/hooks/use-assessment";
 import { useAuth } from "@/hooks/use-auth";
 import { useCredits } from "@/hooks/useCredits";
-import { usePortraitStatus } from "@/hooks/usePortraitStatus";
 import { useRelationshipAnalysesList } from "@/hooks/useRelationshipAnalysesList";
 import { getSession } from "@/lib/auth-client";
 
@@ -55,8 +55,8 @@ function DashboardPage() {
 		canLoad && !!sessionId,
 	);
 
-	// Portrait status
-	const { data: portraitStatusData } = usePortraitStatus(canLoad && !!sessionId ? sessionId : "");
+	// Check for in-progress session (not completed)
+	const inProgressSession = assessmentData?.sessions.find((s) => s.status !== "completed");
 
 	// Relationship analyses
 	const { data: analyses, isLoading: isAnalysesLoading } = useRelationshipAnalysesList(canLoad);
@@ -86,31 +86,39 @@ function DashboardPage() {
 					<p className="text-sm text-muted-foreground mt-1">Welcome back, {user?.name || user?.email}</p>
 				</div>
 
-				{!hasCompletedAssessment ? (
+				{!hasCompletedAssessment && !inProgressSession ? (
 					<DashboardEmptyState />
+				) : !hasCompletedAssessment && inProgressSession ? (
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+						{/* In-progress assessment card */}
+						<DashboardInProgressCard
+							sessionId={inProgressSession.id}
+							messageCount={inProgressSession.messageCount}
+							freeTierMessageThreshold={assessmentData?.freeTierMessageThreshold ?? 0}
+						/>
+
+						{/* Credits card */}
+						<DashboardCreditsCard credits={credits} isLoading={isCreditsLoading} userId={user?.id} />
+					</div>
 				) : (
 					<div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-						{/* Identity card — full width on mobile, half on sm+ */}
+						{/* Identity card */}
 						{results && !isResultsLoading && (
 							<DashboardIdentityCard
 								archetypeName={results.archetypeName}
 								oceanCode5={results.oceanCode5}
 								sessionId={sessionId}
 								dominantTrait={getDominantTrait(results.traits)}
+								publicProfileId={results.publicProfileId ?? undefined}
 							/>
 						)}
 
-						{/* Portrait card */}
-						<DashboardPortraitCard portraitStatus={portraitStatusData?.status} sessionId={sessionId} />
+						{/* Credits card */}
+						<DashboardCreditsCard credits={credits} isLoading={isCreditsLoading} userId={user?.id} />
 
 						{/* Relationship analyses — full width */}
 						<div className="sm:col-span-2">
 							<DashboardRelationshipsCard analyses={analyses} isLoading={isAnalysesLoading} />
-						</div>
-
-						{/* Credits card */}
-						<div className="sm:col-span-2">
-							<DashboardCreditsCard credits={credits} isLoading={isCreditsLoading} userId={user?.id} />
 						</div>
 					</div>
 				)}

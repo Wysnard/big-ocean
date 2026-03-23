@@ -16,7 +16,6 @@ import { Route as DevComponentsRouteImport } from "./routes/dev/components";
 import { Route as ForgotPasswordRouteImport } from "./routes/forgot-password";
 import { Route as IndexRouteImport } from "./routes/index";
 import { Route as LoginRouteImport } from "./routes/login";
-import { Route as ProfileRouteImport } from "./routes/profile";
 import { Route as PublicProfilePublicProfileIdRouteImport } from "./routes/public-profile.$publicProfileId";
 import { Route as RelationshipAnalysisIdRouteImport } from "./routes/relationship/$analysisId";
 import { Route as RelationshipAnalysisIdRitualRouteImport } from "./routes/relationship/$analysisId_.ritual";
@@ -28,11 +27,6 @@ import { Route as SettingsRouteImport } from "./routes/settings";
 import { Route as SignupRouteImport } from "./routes/signup";
 import { Route as VerifyEmailRouteImport } from "./routes/verify-email";
 
-const DashboardRoute = DashboardRouteImport.update({
-	id: "/dashboard",
-	path: "/dashboard",
-	getParentRoute: () => rootRouteImport,
-} as any);
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
 	id: "/verify-email",
 	path: "/verify-email",
@@ -58,11 +52,6 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 	path: "/reset-password",
 	getParentRoute: () => rootRouteImport,
 } as any);
-const ProfileRoute = ProfileRouteImport.update({
-	id: "/profile",
-	path: "/profile",
-	getParentRoute: () => rootRouteImport,
-} as any);
 const LoginRoute = LoginRouteImport.update({
 	id: "/login",
 	path: "/login",
@@ -71,6 +60,11 @@ const LoginRoute = LoginRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 	id: "/forgot-password",
 	path: "/forgot-password",
+	getParentRoute: () => rootRouteImport,
+} as any);
+const DashboardRoute = DashboardRouteImport.update({
+	id: "/dashboard",
+	path: "/dashboard",
 	getParentRoute: () => rootRouteImport,
 } as any);
 const R404Route = R404RouteImport.update({
@@ -125,7 +119,6 @@ export interface FileRoutesByFullPath {
 	"/dashboard": typeof DashboardRoute;
 	"/forgot-password": typeof ForgotPasswordRoute;
 	"/login": typeof LoginRoute;
-	"/profile": typeof ProfileRoute;
 	"/reset-password": typeof ResetPasswordRoute;
 	"/results": typeof ResultsRouteWithChildren;
 	"/settings": typeof SettingsRoute;
@@ -145,7 +138,6 @@ export interface FileRoutesByTo {
 	"/dashboard": typeof DashboardRoute;
 	"/forgot-password": typeof ForgotPasswordRoute;
 	"/login": typeof LoginRoute;
-	"/profile": typeof ProfileRoute;
 	"/reset-password": typeof ResetPasswordRoute;
 	"/results": typeof ResultsRouteWithChildren;
 	"/settings": typeof SettingsRoute;
@@ -166,7 +158,6 @@ export interface FileRoutesById {
 	"/dashboard": typeof DashboardRoute;
 	"/forgot-password": typeof ForgotPasswordRoute;
 	"/login": typeof LoginRoute;
-	"/profile": typeof ProfileRoute;
 	"/reset-password": typeof ResetPasswordRoute;
 	"/results": typeof ResultsRouteWithChildren;
 	"/settings": typeof SettingsRoute;
@@ -188,7 +179,6 @@ export interface FileRouteTypes {
 		| "/dashboard"
 		| "/forgot-password"
 		| "/login"
-		| "/profile"
 		| "/reset-password"
 		| "/results"
 		| "/settings"
@@ -208,7 +198,6 @@ export interface FileRouteTypes {
 		| "/dashboard"
 		| "/forgot-password"
 		| "/login"
-		| "/profile"
 		| "/reset-password"
 		| "/results"
 		| "/settings"
@@ -228,7 +217,6 @@ export interface FileRouteTypes {
 		| "/dashboard"
 		| "/forgot-password"
 		| "/login"
-		| "/profile"
 		| "/reset-password"
 		| "/results"
 		| "/settings"
@@ -249,7 +237,6 @@ export interface RootRouteChildren {
 	DashboardRoute: typeof DashboardRoute;
 	ForgotPasswordRoute: typeof ForgotPasswordRoute;
 	LoginRoute: typeof LoginRoute;
-	ProfileRoute: typeof ProfileRoute;
 	ResetPasswordRoute: typeof ResetPasswordRoute;
 	ResultsRoute: typeof ResultsRouteWithChildren;
 	SettingsRoute: typeof SettingsRoute;
@@ -300,13 +287,6 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof ResetPasswordRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
-		"/profile": {
-			id: "/profile";
-			path: "/profile";
-			fullPath: "/profile";
-			preLoaderRoute: typeof ProfileRouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
 		"/login": {
 			id: "/login";
 			path: "/login";
@@ -321,18 +301,18 @@ declare module "@tanstack/react-router" {
 			preLoaderRoute: typeof ForgotPasswordRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
-		"/404": {
-			id: "/404";
-			path: "/404";
-			fullPath: "/404";
-			preLoaderRoute: typeof R404RouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
 		"/dashboard": {
 			id: "/dashboard";
 			path: "/dashboard";
 			fullPath: "/dashboard";
 			preLoaderRoute: typeof DashboardRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/404": {
+			id: "/404";
+			path: "/404";
+			fullPath: "/404";
+			preLoaderRoute: typeof R404RouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
 		"/": {
@@ -410,7 +390,6 @@ const rootRouteChildren: RootRouteChildren = {
 	DashboardRoute: DashboardRoute,
 	ForgotPasswordRoute: ForgotPasswordRoute,
 	LoginRoute: LoginRoute,
-	ProfileRoute: ProfileRoute,
 	ResetPasswordRoute: ResetPasswordRoute,
 	ResultsRoute: ResultsRouteWithChildren,
 	SettingsRoute: SettingsRoute,

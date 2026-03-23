@@ -76,13 +76,13 @@ test("signup from home → redirects to verify-email → sign in → navigate to
 		await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15_000 });
 	});
 
-	await test.step("navigate to profile and verify access", async () => {
+	await test.step("navigate to dashboard and verify access", async () => {
 		// Use client-side navigation via user nav dropdown
 		const avatarButton = page.locator("[data-slot='user-nav'] button.rounded-full");
 		await avatarButton.waitFor({ state: "visible", timeout: 10_000 });
 		await avatarButton.click();
-		await page.getByRole("menuitem", { name: "Profile" }).click();
-		await page.waitForURL(/\/profile/, { timeout: 10_000 });
-		expect(page.url()).toContain("/profile");
+		await page.getByRole("menuitem", { name: "Dashboard" }).click();
+		await page.waitForURL(/\/dashboard/, { timeout: 10_000 });
+		expect(page.url()).toContain("/dashboard");
 	});
 });

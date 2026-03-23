@@ -11,7 +11,7 @@ const PROJECT_ROOT = resolve(import.meta.dirname, "..");
  *
  * Projects:
  *   golden-path    → self-contained journey spec (creates its own user)
- *   profile-page   → profile page journeys (empty state + assessment card)
+ *   dashboard-page → dashboard journeys (empty state + identity card)
  *   public-profile → anonymous viewer accesses shared profile
  *   unauth         → unauthenticated access denial (no storageState)
  *   auth-other     → other-user access denial (other-user.json)
@@ -46,10 +46,10 @@ export default defineConfig({
 			},
 		},
 
-		// ── Profile page: auth user journeys (manages own storageState) ─
+		// ── Dashboard page: auth user journeys (manages own storageState) ─
 		{
-			name: "profile-page",
-			testMatch: "specs/profile-page.spec.ts",
+			name: "dashboard-page",
+			testMatch: "specs/dashboard-page.spec.ts",
 		},
 
 		// ── Public profile: anonymous viewer accesses shared profile ─────
