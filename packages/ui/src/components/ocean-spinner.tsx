@@ -1,10 +1,24 @@
 import type { TraitLevel, TraitName } from "@workspace/domain";
 import { OCEAN_HIEROGLYPH_PATHS, TRAIT_NAMES } from "@workspace/domain";
 import { cn } from "@workspace/ui/lib/utils";
-import flubber from "flubber";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Interpolator = (t: number) => string;
+type InterpolateFn = (
+	from: string,
+	to: string,
+	opts?: { maxSegmentLength?: number },
+) => Interpolator;
+
+// Lazy-loaded flubber — CJS module requires dynamic import for Vite SSR/client compat
+let _interpolate: InterpolateFn | null = null;
+const flubberReady =
+	typeof window !== "undefined"
+		? import("flubber").then((m) => {
+				const mod = m.default ?? m;
+				_interpolate = (mod as { interpolate: InterpolateFn }).interpolate;
+			})
+		: Promise.resolve();
 
 interface OceanSpinnerProps {
 	/** Hieroglyph letters to cycle through. Default: "OCEAN" */
@@ -54,6 +68,12 @@ export function OceanSpinner({
 	const svgRef = useRef<SVGSVGElement>(null);
 	const animRef = useRef<number>(0);
 	const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+	const [ready, setReady] = useState(false);
+
+	// Load flubber on mount
+	useEffect(() => {
+		flubberReady.then(() => setReady(true));
+	}, []);
 
 	// Reduced motion detection
 	useEffect(() => {
@@ -76,8 +96,9 @@ export function OceanSpinner({
 
 	// Morph animation loop
 	const animate = useCallback(() => {
-		if (prefersReducedMotion || letters.length < 1) return;
+		if (prefersReducedMotion || letters.length < 1 || !ready || !_interpolate) return;
 
+		const interpolate = _interpolate;
 		const path = pathRef.current;
 		const svg = svgRef.current;
 		if (!path || !svg) return;
@@ -128,7 +149,7 @@ export function OceanSpinner({
 				// Create interpolator once per morph transition
 				if (cachedInterp === null || cachedMorphKey !== morphKey) {
 					try {
-						cachedInterp = flubber.interpolate(fromPathD, toPathD, {
+						cachedInterp = interpolate(fromPathD, toPathD, {
 							maxSegmentLength: 5,
 						});
 					} catch {
@@ -169,7 +190,7 @@ export function OceanSpinner({
 		animRef.current = requestAnimationFrame(tick);
 
 		return () => cancelAnimationFrame(animRef.current);
-	}, [letters, interval, morphDuration, mono, prefersReducedMotion]);
+	}, [letters, interval, morphDuration, mono, prefersReducedMotion, ready]);
 
 	// Start/stop animation
 	useEffect(() => {
