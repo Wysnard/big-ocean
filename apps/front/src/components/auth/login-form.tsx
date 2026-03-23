@@ -9,7 +9,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import { OceanSpinner } from "@workspace/ui/components/ocean-spinner";
 import { useState } from "react";
-import { useAuth } from "../../hooks/use-auth";
+import { AuthError, useAuth } from "../../hooks/use-auth";
 import { buildAuthPageHref } from "../../lib/auth-session-linking";
 
 interface LoginFormProps {
@@ -45,7 +45,16 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 			} else {
 				await navigate({ to: "/dashboard" });
 			}
-		} catch (_err) {
+		} catch (err) {
+			// 403 = email not verified — redirect to verify-email page (AC6, ADR-24)
+			// Better Auth already auto-resent the verification email (sendOnSignIn: true)
+			if (err instanceof AuthError && err.status === 403) {
+				await navigate({
+					to: "/verify-email",
+					search: { email, error: undefined },
+				});
+				return;
+			}
 			// Always show generic message to avoid revealing whether email exists (AC #3)
 			setError("Invalid email or password");
 		} finally {

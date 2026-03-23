@@ -8,6 +8,23 @@ import type { Session, User } from "../lib/auth-client";
 import { getSession, signIn, signOut, signUp, useSession } from "../lib/auth-client";
 
 /**
+ * Auth error with HTTP status code preserved from Better Auth response.
+ * Allows consumers (e.g., login form) to distinguish 403 (email not verified)
+ * from other auth errors.
+ */
+export class AuthError extends Error {
+	readonly status: number | undefined;
+	readonly code: string | undefined;
+
+	constructor(message: string, status?: number, code?: string) {
+		super(message);
+		this.name = "AuthError";
+		this.status = status;
+		this.code = code;
+	}
+}
+
+/**
  * Main Auth Hook
  *
  * Provides complete auth state and actions.
@@ -42,7 +59,11 @@ export function useAuth() {
 				});
 
 				if (result.error) {
-					throw new Error(result.error.message || "Sign in failed");
+					throw new AuthError(
+						result.error.message || "Sign in failed",
+						result.error.status,
+						result.error.code,
+					);
 				}
 
 				return result.data;
