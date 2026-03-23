@@ -1,5 +1,9 @@
 ---
-stepsCompleted: ["step-01-init", "step-02-discovery", "step-03-success", "step-04-journeys", "step-05-domain", "step-06-innovation", "step-07-project-type", "step-08-scoping", "step-09-functional", "step-10-nonfunctional", "step-11-polish"]
+stepsCompleted: ["step-01-init", "step-02-discovery", "step-03-success", "step-04-journeys", "step-05-domain", "step-06-innovation", "step-07-project-type", "step-08-scoping", "step-09-functional", "step-10-nonfunctional", "step-11-polish", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit"]
+lastEdited: '2026-03-23'
+editHistory:
+  - date: '2026-03-23'
+    changes: 'Dashboard/profile merge: removed "profile" as separate page type in Web App Requirements, updated FR19 to include public profile link on dashboard'
 inputDocuments:
   - "architecture.md (consolidated, 2026-03-15)"
   - "problem-solution-2026-03-13.md"
@@ -406,7 +410,7 @@ The following specifications ensure the experience described above works reliabl
 
 ### Project-Type Overview
 
-big-ocean is a hybrid SSR web application built with TanStack Start (React 19) with server-rendered pages and client-side navigation. The primary user experience is a conversational interface (chat with Nerin) and results/profile pages. SEO is critical for public profiles which serve as the top-of-funnel acquisition channel.
+big-ocean is a hybrid SSR web application built with TanStack Start (React 19) with server-rendered pages and client-side navigation. The primary user experience is a conversational interface (chat with Nerin) and results pages. SEO is critical for public profiles which serve as the top-of-funnel acquisition channel.
 
 ### Browser Support
 
@@ -564,7 +568,7 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 - **FR16:** Users can view their OCEAN code, archetype name, tribe feeling, and trait/facet scores on the results page
 - **FR17:** The system assigns one of 81 hand-curated archetypes based on the user's OCEAN code
 - **FR18:** The system presents all archetypes with positive, strength-based framing
-- **FR19:** Users can view a dashboard of their results, portrait, and relationship analyses
+- **FR19:** Users can view a dashboard of their results, portrait, relationship analyses, and a link to their public profile
 
 ### Portrait
 
