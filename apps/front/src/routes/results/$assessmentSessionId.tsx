@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import type { FacetName, TraitName } from "@workspace/domain";
@@ -8,6 +8,7 @@ import { Schema as S } from "effect";
 import { BookOpen, Loader2, MessageCircle } from "lucide-react";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FinalizationWaitScreen } from "@/components/finalization-wait-screen";
+import { NotFound } from "@/components/NotFound";
 import { ResultsAuthGate } from "@/components/ResultsAuthGate";
 import { RelationshipAnalysesList } from "@/components/relationship/RelationshipAnalysesList";
 import { RelationshipCard } from "@/components/relationship/RelationshipCard";
@@ -21,11 +22,7 @@ import { RelationshipCreditsSection } from "@/components/results/RelationshipCre
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
 import { useTraitEvidence } from "@/components/results/useTraitEvidence";
 import { ArchetypeShareCard } from "@/components/sharing/archetype-share-card";
-import {
-	getResultsQueryOptions,
-	isAssessmentApiError,
-	useGetResults,
-} from "@/hooks/use-assessment";
+import { getResultsQueryOptions, useGetResults } from "@/hooks/use-assessment";
 import { useAuth } from "@/hooks/use-auth";
 import { useFacetEvidence } from "@/hooks/use-evidence";
 import { useToggleVisibility } from "@/hooks/use-profile";
@@ -72,16 +69,35 @@ export const Route = createFileRoute("/results/$assessmentSessionId")({
 		if (!context.isAuthenticated) return;
 		try {
 			await context.queryClient.ensureQueryData(getResultsQueryOptions(params.assessmentSessionId));
-		} catch {
+		} catch (error) {
+			const is404 =
+				(typeof error === "object" &&
+					error !== null &&
+					"status" in error &&
+					(error as { status: number }).status === 404) ||
+				(error instanceof Error &&
+					(error.message.includes("404") || error.message.includes("SessionNotFound")));
+			if (is404) throw notFound();
 			// Graceful degradation: client-side useGetResults will retry
 		}
 	},
+	notFoundComponent: ResultsNotFound,
 	pendingComponent: ResultsLoading,
 	component: ResultsSessionPage,
 });
 
 function ResultsLoading() {
 	return <FinalizationWaitScreen status="analyzing" progress={20} />;
+}
+
+function ResultsNotFound() {
+	const { assessmentSessionId } = Route.useParams();
+	return (
+		<NotFound
+			title="Assessment not found"
+			description={`The assessment session ${assessmentSessionId} doesn't exist or you don't have access to it.`}
+		/>
+	);
 }
 
 /** Determine the dominant (highest-scoring) trait from results */
@@ -98,26 +114,6 @@ function ResultsSessionPage() {
 	const { isAuthenticated, isPending: isAuthPending } = useAuth();
 	const canLoadResults = isAuthenticated && !isAuthPending;
 	const { data: results, isLoading, error } = useGetResults(assessmentSessionId, canLoadResults);
-	const isNotFoundError = (value: unknown): boolean => {
-		if (isAssessmentApiError(value)) {
-			return value.status === 404;
-		}
-
-		if (typeof value === "object" && value !== null && "status" in value) {
-			const status = (value as { status?: unknown }).status;
-			if (status === 404) {
-				return true;
-			}
-		}
-
-		if (value instanceof Error) {
-			return value.message.includes("404") || value.message.includes("SessionNotFound");
-		}
-
-		return false;
-	};
-
-	const shouldRedirectDeniedSession = isAuthenticated && error != null && isNotFoundError(error);
 	const toggleVisibility = useToggleVisibility();
 
 	// Story 12.3: Track whether we're waiting for portrait unlock after checkout
@@ -261,14 +257,6 @@ function ResultsSessionPage() {
 		setIsGateExpired(false);
 	}, [isAuthenticated, assessmentSessionId]);
 
-	useEffect(() => {
-		if (!shouldRedirectDeniedSession) {
-			return;
-		}
-
-		void navigate({ to: "/404" });
-	}, [navigate, shouldRedirectDeniedSession]);
-
 	// Initialize share state from results data (profile created eagerly by backend)
 	useEffect(() => {
 		if (!results || !isAuthenticated || shareState) return;
@@ -371,10 +359,6 @@ function ResultsSessionPage() {
 
 	if (isLoading) {
 		return <ResultsLoading />;
-	}
-
-	if (shouldRedirectDeniedSession) {
-		return null;
 	}
 
 	if (error || !results) {

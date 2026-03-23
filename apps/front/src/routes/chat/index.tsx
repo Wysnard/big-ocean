@@ -1,7 +1,8 @@
 import { createFileRoute, isRedirect, redirect, useNavigate } from "@tanstack/react-router";
 import { Effect, Schema as S } from "effect";
 import { Loader2 } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
+import { NotFound } from "@/components/NotFound";
 import { TherapistChat } from "@/components/TherapistChat";
 import { WaitlistForm } from "@/components/waitlist/waitlist-form";
 import { useAuth } from "@/hooks/use-auth";
@@ -131,14 +132,15 @@ function RouteComponent() {
 	} = Route.useSearch();
 	const { user, isAuthenticated } = useAuth();
 	const navigate = useNavigate();
+	const [sessionNotFound, setSessionNotFound] = useState(false);
 
-	// Session error handling — redirect based on auth status
-	// Authenticated users hitting a missing session → 404 (private session denied)
+	// Session error handling — render NotFound or redirect based on auth status
+	// Authenticated users hitting a missing session → show NotFound (private session denied)
 	// Unauthenticated users → /chat for recovery (start fresh)
 	const handleSessionError = useCallback(
 		(_error: { type: "not-found" | "session"; isResumeError: boolean }) => {
 			if (isAuthenticated) {
-				navigate({ to: "/404" });
+				setSessionNotFound(true);
 			} else {
 				navigate({ to: "/chat" });
 			}
@@ -156,6 +158,15 @@ function RouteComponent() {
 			});
 		}
 	}, [sessionId, navigate]);
+
+	if (sessionNotFound) {
+		return (
+			<NotFound
+				title="Assessment not found"
+				description={`The assessment session ${sessionId} doesn't exist or you don't have access to it.`}
+			/>
+		);
+	}
 
 	// Story 15.3: Circuit breaker active — show waitlist form
 	if (waitlist) {

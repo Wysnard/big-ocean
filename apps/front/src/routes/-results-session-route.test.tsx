@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockUseParams, mockUseSearch, mockNavigate, mockUseAuth, mockUseGetResults } = vi.hoisted(
@@ -180,7 +180,7 @@ describe("results/$assessmentSessionId route behavior", () => {
 		expect(mockUseGetResults).toHaveBeenCalledWith("session-123", true);
 	});
 
-	it("redirects authenticated users to 404 on denied 404 access", async () => {
+	it("does not render results content on 404 error", async () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: true, isPending: false });
 		mockUseGetResults.mockReturnValue({
 			data: null,
@@ -190,25 +190,6 @@ describe("results/$assessmentSessionId route behavior", () => {
 
 		render(<Component />);
 
-		await waitFor(() => {
-			expect(mockNavigate).toHaveBeenCalledWith({ to: "/404" });
-		});
-		expect(screen.queryByText("Continue Assessment")).not.toBeInTheDocument();
-	});
-
-	it("redirects authenticated users to 404 on plain error 404 text", async () => {
-		mockUseAuth.mockReturnValue({ isAuthenticated: true, isPending: false });
-		mockUseGetResults.mockReturnValue({
-			data: null,
-			isLoading: false,
-			error: new Error("HTTP 404: SessionNotFound"),
-		});
-
-		render(<Component />);
-
-		await waitFor(() => {
-			expect(mockNavigate).toHaveBeenCalledWith({ to: "/404" });
-		});
 		expect(screen.queryByText("Continue Assessment")).not.toBeInTheDocument();
 	});
 });

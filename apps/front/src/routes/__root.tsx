@@ -1,9 +1,15 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import type { QueryClient } from "@tanstack/react-query";
-import { createRootRouteWithContext, HeadContent, Scripts } from "@tanstack/react-router";
+import {
+	createRootRouteWithContext,
+	ErrorComponent,
+	HeadContent,
+	Scripts,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TooltipProvider } from "@workspace/ui/components/tooltip";
 import Header from "../components/Header";
+import { NotFound } from "../components/NotFound";
 import { ThemeProvider } from "../components/ThemeProvider";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 import appCss from "../styles.css?url";
@@ -62,6 +68,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 		],
 	}),
 
+	errorComponent: ErrorComponent,
+	notFoundComponent: () => <NotFound />,
 	shellComponent: RootDocument,
 });
 
