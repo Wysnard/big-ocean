@@ -51,6 +51,10 @@ const WARNING_THRESHOLD = 0.9;
 /** Milestone thresholds and their app-voiced progress messages */
 const MILESTONES = [
 	{
+		threshold: 25,
+		message: "Great start — your personality portrait is beginning to emerge.",
+	},
+	{
 		threshold: 50,
 		message: "Halfway there — your personality portrait is taking shape.",
 	},
