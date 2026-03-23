@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 11
-parallelism_step_name: "Dashboard (Final Integration)"
-baseline_commit: "1b598b5d28685448506dba87d6fc05ffc37ba206"
-created: "2026-03-22"
-last_updated: "2026-03-22"
+parallelism_step: 12
+parallelism_step_name: "Readiness Review Gap Closure"
+baseline_commit: "572b5da8be2613388c47274af20fb78ff67be962"
+created: "2026-03-23"
+last_updated: "2026-03-23"
 
 # Optional context documents discovered
 context_docs:
@@ -14,19 +14,26 @@ context_docs:
 
 # Stories in this step
 stories:
-  38-3-dashboard:
+  30-3-email-verification-gate:
     status: done
-    mode: "—"
-    notes: "After 32-1, 32-5, 35-3. Aggregates all product surfaces"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/184"
-    dev_branch: "feat/story-38-3-dashboard"
+    mode: "parallel"
+    notes: "Epic 30 — Better Auth config + /verify-email route + resend flow. Auth/frontend scope."
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/185"
+    dev_branch: "feat/story-30-3-email-verification-gate"
+    error: null
+  31-8-extraction-pipeline-and-evidence-processing:
+    status: done
+    mode: "parallel"
+    notes: "Epic 31 — ConversAnalyzer v2 dual extraction, three-tier retry. Backend pipeline scope."
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/186"
+    dev_branch: "feat/story-31-8-extraction-pipeline-and-evidence-processing"
     error: null
 
 # Conflict detection (populated by step-02b)
 conflicts:
   detected: false
-  note: "Single branch — conflict detection skipped (no overlaps possible)"
   scanned_branches:
-    - "feat/story-38-3-dashboard"
+    - "feat/story-30-3-email-verification-gate"
+    - "feat/story-31-8-extraction-pipeline-and-evidence-processing"
   skipped_branches: []
   overlapping_files: []
