@@ -34,7 +34,7 @@ FR15: The system computes 30 facet scores, 5 trait scores, OCEAN code, and arche
 FR16: Users can view their OCEAN code, archetype name, tribe feeling, and trait/facet scores on the results page
 FR17: The system assigns one of 81 hand-curated archetypes based on the user's OCEAN code
 FR18: The system presents all archetypes with positive, strength-based framing
-FR19: Users can view a dashboard of their results, portrait, and relationship analyses
+FR19: Users can view a dashboard of their results, portrait, relationship analyses, and a link to their public profile
 FR20: The system generates a narrative portrait written as a personal letter from Nerin using a high-capability LLM
 FR21: Users are presented with a PWYW modal showing the founder's story and example portrait after completing the assessment
 FR22: Users can view their portrait after payment
@@ -52,7 +52,7 @@ FR33: Users receive one free relationship analysis credit upon completing their 
 FR34: If one user deletes their account, the shared relationship analysis is deleted
 FR35: Each relationship analysis is linked to both users' assessment results (not to invitations). All analyses are preserved as snapshots — the newest is primary, older ones are classified as "previous version." Version detection is derive-at-read: if newer assessment results exist for either user, the analysis is classified as "previous version." Users can view all their relationship analyses
 FR36: Users receive an email notification when a relationship analysis they participated in is ready
-FR37: The QR accept screen is only accessible to logged-in users with a completed assessment. There is no pre-account context — User B must sign up and complete their assessment before seeing the accept screen
+FR37: The QR accept screen is only accessible to logged-in users with a completed assessment. There is no pre-account context — User B must sign up, verify their email, and complete their assessment before seeing the accept screen
 FR38: The system tracks relationship analysis credits per user (1 free, additional purchased)
 FR39: Users have a public profile page showing their archetype, OCEAN code, trait/facet scores, and the framing line "[Name] dove deep with Nerin — here's what surfaced"
 FR40: Public profiles are default-private; users can explicitly make them public. Binary visibility only — fully public or fully private. No intermediate state
@@ -65,7 +65,9 @@ FR46: The system generates archetype card images per archetype (81 cards) — us
 FR47: Users can pay for portraits via PWYW with embedded checkout. Default 5 euros, minimum 1 euro. No preset amount buttons — a single "Unlock your portrait" button opens the checkout modal
 FR48: Users can purchase relationship analysis credits via embedded checkout
 FR49: Users can purchase conversation extensions via embedded checkout
-FR50: Users can create an account and authenticate
+FR50: Users can create an account with email and password. Account creation triggers a verification email. Unverified accounts are treated as unauthenticated — no access to dashboard, assessment, results, or any authenticated feature. Public profiles and the home page remain accessible without authentication
+FR50a: Verification email contains a unique link that expires after 1 week. Clicking the link activates the account and grants platform access
+FR50b: Users can request a new verification email from the verify-email page if the original expired or was not received
 FR51: Users can control the visibility of their public profile (binary: fully public or fully private)
 FR52: Users are informed during onboarding that conversation data is stored
 FR53: Users can delete their account, which deletes their data and any shared relationship analyses
@@ -86,6 +88,8 @@ NFR6: Per-assessment LLM cost stays within ~0.20 euro budget (cost-efficient LLM
 NFR7: Per-portrait LLM cost stays within ~0.20 euro budget (high-capability LLM for generation)
 NFR8: All data in transit encrypted via TLS 1.3
 NFR9: Authentication requires 12+ character passwords and compromised credential checks
+NFR9a: Unverified accounts cannot access any authenticated route. All protected routes check verification status and redirect unverified users to the verify-email page
+NFR9b: Verification email links expire after 1 week. Expired links redirect to the verify-email page with a prompt to request a new link
 NFR10: Row-level data access control ensures users can only access their own data
 NFR11: Public profiles default to private — zero public discovery without explicit user opt-in
 NFR12: Conversation transcripts stored indefinitely; retrievable within 2s regardless of age
@@ -172,7 +176,8 @@ NFR29: Personality scores displayed to users are never stale — always recomput
 | FR1-FR9 | Epic 2 | Conversation with Nerin (pacing, persona, safety) |
 | FR10 | Epic 7 | Conversation extension purchase |
 | FR11 | Epic 2 | Resume abandoned conversation |
-| FR12-FR14 | Epic 2 | Closing exchange, territory transitions, extraction |
+| FR12-FR13 | Epic 2 | Closing exchange, territory transitions |
+| FR14 | Epic 2 | Extraction pipeline (ConversAnalyzer v2, dual extraction) |
 | FR15-FR18 | Epic 3 | Scoring, archetypes, OCEAN code |
 | FR19 | Epic 9 | Dashboard |
 | FR20-FR22 | Epic 3 | Portrait generation, PWYW, viewing |
@@ -193,7 +198,9 @@ NFR29: Personality scores displayed to users are never stale — always recomput
 | FR41-FR45 | Epic 4 | OG tags, sharing, CTAs |
 | FR46 | Epic 3 | Archetype card images |
 | FR47-FR49 | Epic 3 | PWYW, credit, extension checkout |
-| FR50 | Epic 1 | Account creation & auth |
+| FR50 | Epic 1 | Account creation with email verification |
+| FR50a | Epic 1 | Verification link with 1-week expiry |
+| FR50b | Epic 1 | Resend verification email |
 | FR51 | Epic 1 | Profile visibility control |
 | FR52 | Epic 2 | Data storage notice (in Nerin's greeting) |
 | FR53 | Epic 1 | Account deletion |
@@ -203,16 +210,17 @@ NFR29: Personality scores displayed to users are never stale — always recomput
 ## Epic List
 
 ### Epic 1: Account, Onboarding & Privacy Foundation
-Users can create an account, authenticate, understand what they're about to experience, and delete their account if desired. Privacy controls are in place from day one.
-**FRs covered:** FR50, FR53, FR40, FR51
-**Notes:** FR52 (data storage notice) and FR54 (pre-conversation onboarding) moved to Epic 2 — handled in Nerin's greeting message.
+Users can create an account with email verification, authenticate, control their privacy, and delete their account if desired. Unverified accounts cannot access the platform.
+**FRs covered:** FR50, FR50a, FR50b, FR53, FR40, FR51
+**NFR coverage:** NFR9a (unverified route protection), NFR9b (link expiry enforcement)
+**Notes:** FR52 (data storage notice) and FR54 (pre-conversation onboarding) moved to Epic 2 — handled in Nerin's greeting message. Email verification gate per ADR-24 — unverified = unauthenticated.
 **Parallelism:** Can be built simultaneously with Epic 2.
 
 ### Epic 2: Conversational Assessment & Drop-off Recovery
 Users can have a complete 25-exchange adaptive conversation with Nerin and resume if interrupted. Drop-off users receive a re-engagement email.
 **FRs covered:** FR1-FR9, FR11-FR14, FR52, FR54, FR55-FR58
 **NFR coverage:** NFR27 (drop-off re-engagement email — Resend setup + first template)
-**Notes:** Email infrastructure (Resend setup, React Email) is a parallel workstream within this epic — does not block conversation stories. Accept this as the largest epic (~2-3x others). Character quality work (FR6-FR9, FR12-FR13) is iterative prompt engineering.
+**Notes:** Email infrastructure (Resend setup, React Email) is a parallel workstream within this epic — does not block conversation stories. Accept this as the largest epic (~2-3x others). Character quality work (FR6-FR9, FR12-FR13) is iterative prompt engineering. Story 2.8 covers the extraction pipeline (ConversAnalyzer v2, dual extraction, three-tier retry) — the backbone of the scoring system.
 **Parallelism:** Can be built simultaneously with Epic 1.
 
 ### Epic 3: Results, Portrait & Monetization
@@ -330,6 +338,56 @@ So that my personal information is removed from the platform.
 **Given** a user has deleted their account
 **When** anyone attempts to access their former profile URL
 **Then** they receive a 404 or appropriate "not found" response
+
+### Story 1.3: Email Verification Gate
+
+As a user,
+I want to verify my email address before accessing the platform,
+So that my account is secured and I can receive important notifications reliably.
+
+**Acceptance Criteria:**
+
+**Given** a user submits the sign-up form with email and password
+**When** the account is created
+**Then** a verification email is sent to the provided address
+**And** the user is redirected to the `/verify-email` page with a "Check your inbox" message
+**And** the account exists but is unverified — no access to any authenticated feature
+
+**Given** a user receives the verification email
+**When** they click the verification link
+**Then** the account is activated and the user gains platform access
+**And** the link contains a unique token that expires after 1 week (FR50a)
+
+**Given** a user's verification link has expired (>1 week)
+**When** they click the expired link
+**Then** they are redirected to the `/verify-email` page with an "expired link" message and a resend button (NFR9b)
+
+**Given** a user is on the `/verify-email` page
+**When** they click "Resend verification email"
+**Then** a new verification email is sent with a fresh 1-week expiry token (FR50b)
+**And** the resend action is rate-limited to prevent abuse
+
+**Given** an unverified user attempts to access any authenticated route (dashboard, chat, results, etc.)
+**When** the route's `beforeLoad` checks auth status via `getSession()`
+**Then** `getSession()` returns null because Better Auth's `requireEmailVerification: true` prevents session creation for unverified accounts (ADR-24)
+**And** the standard auth gate redirects to `/login` (same as unauthenticated users)
+
+**Given** an unverified user lands on `/login` and submits correct credentials
+**When** Better Auth processes the sign-in
+**Then** Better Auth returns a **403 status** (not a session)
+**And** Better Auth auto-resends the verification email (`sendOnSignIn: true` — login attempt doubles as a resend mechanism)
+**And** the login form catches the 403 and redirects to `/verify-email` with the user's email as a search param
+**And** the `/verify-email` page shows "Check your inbox" + resend button
+
+**Given** the two-redirect path (protected route → `/login` → 403 → `/verify-email`)
+**When** the implementation is considered
+**Then** this is the expected behavior — Better Auth does not expose unverified status via `getSession()` (no session exists), so `beforeLoad` cannot distinguish "no account" from "unverified account"
+**And** the login form 403 handler is the bridge between the auth gate and the verify-email page
+**And** this is documented as the intentional flow per ADR-24
+
+**Given** public routes (`/`, `/public-profile/:id`)
+**When** an unauthenticated or unverified user visits them
+**Then** the pages render normally — no verification required
 
 ---
 
@@ -507,6 +565,45 @@ So that users who dropped off are reminded to return and complete their experien
 **Given** the email sending fails
 **When** the failure is detected
 **Then** the failure is logged but does not affect any other system behavior (fail-open)
+
+### Story 2.8: Extraction Pipeline & Evidence Processing
+
+As a user,
+I want my conversation responses to be analyzed for personality evidence in real time,
+So that the system can steer the conversation intelligently and produce accurate results.
+
+**Acceptance Criteria:**
+
+**Given** a user sends a message in the conversation
+**When** the message is processed
+**Then** ConversAnalyzer v2 (Haiku 4.5) runs BEFORE Nerin — sequential, not parallel (FR14)
+**And** dual extraction produces: userState (energy × telling) and evidence (facet + deviation + strength + domain)
+
+**Given** ConversAnalyzer v2 processes a user response
+**When** extraction is attempted
+**Then** three-tier retry logic applies: Strict schema (attempts 1-3) → Lenient schema (attempt 4) → Neutral defaults with no LLM call (fail-open)
+**And** each tier is clearly logged with attempt number and schema type
+
+**Given** extraction succeeds at any tier
+**When** the results are persisted
+**Then** an assessment_exchange row is created with: extraction results, pacing state, scoring state, governor decision, and observability columns
+**And** the exchange is 1-indexed (NOT zero-indexed) per architecture specification
+
+**Given** dual-facet extraction
+**When** ConversAnalyzer is prompted
+**Then** it finds a DIFFERENT facet with NEGATIVE deviation for every evidence record
+**And** polarity balance target is ≥30% negative deviations across the session
+
+**Given** extraction produces userState
+**When** energy and telling scores are computed
+**Then** values are passed to the pacing pipeline's E_target formula as input
+**And** userState is used for energy-based territory scoring (energyMalus term)
+
+**Given** extraction fails at all tiers (strict + lenient both fail)
+**When** neutral defaults are applied
+**Then** the conversation continues normally with default userState values
+**And** no evidence is recorded for that exchange (fail-open)
+**And** the failure is logged as a structured event (NFR28)
 
 ---
 
@@ -918,7 +1015,7 @@ So that I can invite them to discover our relational dynamic together.
 
 **Acceptance Criteria:**
 
-**Given** a user with a completed assessment and available credits
+**Given** a user with a completed assessment
 **When** they open the QR drawer (from results page or dashboard)
 **Then** a QR code is rendered via qrcode.react
 **And** the QR code encodes a URL pointing to the accept screen with the token

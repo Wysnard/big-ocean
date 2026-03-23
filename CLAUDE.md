@@ -171,7 +171,7 @@ const code = generateOceanCode(facetScoresMap); // → "HHMHM"
 - Drizzle ORM + PostgreSQL — migrations via `drizzle-kit`
 - Docker: migrations run automatically on backend startup via `docker-entrypoint.sh`
 
-**Migration rule:** When modifying the DB schema (`packages/infrastructure/src/db/drizzle/schema.ts`), always hand-write a corresponding migration SQL file following the Drizzle migration format (see existing files in `packages/infrastructure/src/db/drizzle/migrations/` for reference).
+**Migration rule:** When modifying the DB schema (`packages/infrastructure/src/db/drizzle/schema.ts`), always hand-write a corresponding migration SQL file following the Drizzle migration format (see existing files in `drizzle/` for reference). **NEVER modify an existing migration file** — always append a new migration. Existing migrations may already be applied to production or other developers' databases; modifying them causes migration journal mismatches and failures.
 
 ## Testing Rules
 

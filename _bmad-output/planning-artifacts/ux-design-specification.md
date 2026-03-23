@@ -11,7 +11,7 @@ inputDocuments:
 # UX Design Specification big-ocean
 
 **Author:** Vincentlay
-**Date:** 2026-03-16 (updated 2026-03-18, page specs expanded 2026-03-18, dashboard/profile merge 2026-03-23)
+**Date:** 2026-03-16 (updated 2026-03-18, page specs expanded 2026-03-18, dashboard/profile merge 2026-03-23, email verification gate 2026-03-23)
 
 ---
 
@@ -56,7 +56,7 @@ The length is a deliberate differentiator and audience filter — "how can you k
 
 4. **Mobile-first conversation ergonomics with session persistence** — 30-45 minutes of mobile interaction requires careful attention to input fatigue, response sizing, and visual breathing room. Save-and-resume is essential — users will be interrupted. Auth-gating before the conversation starts ensures email is collected, enabling automated recapture.
 
-5. **Recapture flow for interrupted sessions** — Auth-gate the conversation so email is collected before the first turn. If a user pauses mid-conversation, automated email reminders bring them back ("You and Nerin were in the middle of something — pick up where you left off"). This converts the save-and-resume problem from "lost user" to "delayed user with a nudge."
+5. **Recapture flow for interrupted sessions** — Auth-gate the conversation so email is collected and verified before the first turn. Verified email ensures reliable delivery for re-engagement. If a user pauses mid-conversation, automated email reminders bring them back ("You and Nerin were in the middle of something — pick up where you left off"). This converts the save-and-resume problem from "lost user" to "delayed user with a nudge."
 
 6. **The public profile as acquisition surface** — Relationship explorers arrive at public profile pages via shared archetype cards, not the homepage. The framing line ("[Name] dove deep with Nerin — here's what surfaced"), archetype description, and comparison-driven CTA ("What's YOUR code?") must convert the viewer into a new user. If the sharer's profile is private, the link shows "This user has made their profile private" and redirects to the homepage.
 
@@ -1241,9 +1241,13 @@ flowchart TD
 
     %% Auth
     F --> G{Has account?}
-    G -->|No| H[Sign Up — email/password or social]
+    G -->|No| H[Sign Up — email/password]
     G -->|Yes| I[Log In]
-    H --> J[Straight to conversation — no interstitial]
+    H --> H2["Verify-email page:
+    'Check your inbox — click the link to activate your account'
+    Resend button if not received. Link expires after 1 week"]
+    H2 --> H3["User clicks verification link in email"]
+    H3 --> J[Account activated → straight to conversation]
     I --> J
 
     %% Conversation start — spread across 1-3 exchanges
@@ -1323,7 +1327,8 @@ flowchart TD
 | Step | Screen | Key UX Element | Purpose |
 |------|--------|---------------|---------|
 | Public Profile | `/profile/:id` | Archetype name + description + OCEAN code with tooltips, GeometricSignature, trait bars on scroll | Hook comparison curiosity, tooltips aid understanding |
-| Sign Up | `/signup` | Email/password + social auth | Minimal friction — one screen, no interstitial after |
+| Sign Up | `/signup` | Email/password | Minimal friction — one screen, redirects to verify-email page after submission |
+| Verify Email | `/verify-email` | "Check your inbox" message + resend button | Gate before platform access. Resend available if link expired or not received. Link expires after 1 week |
 | Exchange 1 | `/chat` | Nerin's scannable greeting + first question (visible without scrolling on mobile) | Start conversation, don't overwhelm |
 | Exchanges 2-3 | `/chat` | Nerin weaves in framing naturally ("not therapy", ~25 min, what you'll get) | Context spread across messages, not front-loaded |
 | Depth Meter | `/chat` sidebar | Visual milestones at 25% (~6), 50% (~12), 75% (~19) — turn-based | Progress reassurance, sunk-cost motivation |
@@ -1347,6 +1352,9 @@ flowchart TD
 | Failure | Recovery |
 |---------|----------|
 | Auth fails | Standard errors, social auth fallback |
+| Verification email not received | Resend button on `/verify-email` page (rate-limited) |
+| Verification link expired | Redirect to `/verify-email` with "Link expired" message + resend button |
+| Login with unverified account | Redirect to `/verify-email` with resend option |
 | Conversation interrupted | Session saved, topic stored, templated re-engagement email |
 | Feel-seen moment doesn't land | Nerin stays curious, doesn't double down — redirects naturally |
 | PWYW payment fails | Retry, change method, or skip |
@@ -1355,7 +1363,7 @@ flowchart TD
 
 #### Flow Optimizations
 
-1. **Zero-to-value in 2 taps** — Public profile → CTA → Sign up. No landing page, no interstitial.
+1. **Zero-to-value in 3 taps** — Public profile → CTA → Sign up → verify email → conversation. The verification step adds one async gate (check inbox) but ensures email recapture reliability.
 2. **Archetype description + tooltips on public profile** — Visitor understands what they're looking at without a tutorial.
 3. **Nerin's context spread across exchanges 1-3** — First message scannable on mobile, question visible without scrolling.
 4. **Adaptive pacing, not scripted beats** — Pacing pipeline reads energy/telling, Nerin matches the user's pace. Big ocean is a self-understanding companion, not a script.
@@ -2076,17 +2084,19 @@ flowchart TD
 
     %% Auth
     Q -->|No| S["Sign Up page
-    Email/password + social auth
-    One screen, minimal fields"]
+    Email/password, one screen, minimal fields"]
     Q -->|Yes, no assessment| T["Redirected to /chat
     Start conversation with Nerin"]
     Q -->|Yes, assessment complete| U["Views friend's profile
     with relationship CTA"]
 
     %% Post sign-up
-    S --> V["Account created →
+    S --> S2["→ /verify-email
+    'Check your inbox' + resend button
+    Link expires after 1 week"]
+    S2 --> S3["User clicks verification link"]
+    S3 --> V["Account activated →
     Straight to /chat
-    No interstitial, no onboarding screen
     Nerin IS the onboarding"]
 
     %% Journey 1 begins
@@ -2660,6 +2670,9 @@ Page layouts that compose library components with data-fetching concerns. Live i
 | Profile made public | Success | "Your profile is now public" |
 | Credit purchased | Success | "1 relationship credit added" |
 | Link copied | Info | "Link copied to clipboard" |
+| Verification email sent | Success | "Verification email sent — check your inbox" |
+| Verification email resent | Success | "New verification email sent" |
+| Verification link expired | Warning | "This link has expired. Request a new one below." |
 
 **Inline error states (action-blocking):**
 
@@ -2714,14 +2727,18 @@ Applies to portrait generation, relationship analysis generation, and any AI-dri
 
 **Auth gates:**
 
-| Route | Unauthenticated | Auth'd, no assessment | Auth'd, assessment complete |
+| Route | Unauthenticated (incl. unverified) | Auth'd, no assessment | Auth'd, assessment complete |
 |-------|----------------|------|------|
+| `/` | Home page (public) | Home page | Home page |
 | `/dashboard` | → sign up | Empty state: "Start your conversation" CTA | Full dashboard with all sections |
 | `/chat` | → sign up | Start/resume conversation | Resume or extension CTA |
 | `/results` | → sign up | → `/chat` | Results page |
 | `/profile/:id` | Public profile visible (or private msg) | Public profile visible | Profile + relationship CTA |
 | `/relationship/:id` | → sign up | → `/chat` | Analysis (if participant) |
 | QR URL | Login/sign up → return to accept screen | "Complete assessment first" | Accept screen |
+| `/verify-email` | Verify-email page (post-signup) | N/A (already verified) | N/A |
+
+**Unverified users:** Treated as unauthenticated. All authenticated routes redirect unverified users to `/verify-email` with a prompt to check their inbox and a resend button. Logging in with an unverified account also redirects to `/verify-email`.
 
 **Key transitions:**
 
@@ -2835,7 +2852,8 @@ Applies to portrait generation, relationship analysis generation, and any AI-dri
 | Screen | Primary | Secondary | Ghost |
 |--------|---------|-----------|-------|
 | Public profile | ConversationCTA | — | — |
-| Sign up | "Create account" | Social auth (outline) | "Already have account?" (link) |
+| Sign up | "Create account" | — | "Already have account?" (link) |
+| Verify email | "Resend verification email" | — | — |
 | Chat | Send (icon button) | — | — |
 | PWYW modal | "Unlock your portrait" | — | "Maybe later" |
 | QR accept | "Accept" | "Refuse" | — |
@@ -2871,9 +2889,9 @@ All icon buttons have `aria-label`. No icon-only navigation.
 
 | Form | Fields | Validation |
 |------|--------|-----------|
-| Sign up | Email, password | Email format. Password: 12+ chars, compromised check (Better Auth) |
-| Login | Email, password | Email format, password required |
-| Social auth | OAuth buttons | Handled by provider |
+| Sign up | Email, password | Email format. Password: 12+ chars, compromised check (Better Auth). On success → redirect to `/verify-email` |
+| Verify email | Resend button | Rate-limited. Shows "Check your inbox" message. Resend enabled after cooldown. Link expires after 1 week |
+| Login | Email, password | Email format, password required. Unverified accounts → redirect to `/verify-email` |
 | Chat input | Text area | Character limit. Empty = send disabled |
 | Profile visibility | Toggle | No validation — immediate effect |
 
@@ -3633,7 +3651,7 @@ flowchart TD
     %% Auth gate
     D --> J{Has account?}
     I --> J
-    J -->|No| K["Sign up → /chat"]
+    J -->|No| K["Sign up → /verify-email → verify → /chat"]
     J -->|Yes, no assessment| L["/chat — start conversation"]
     J -->|Yes, assessment complete| M["/dashboard"]
 ```
@@ -3884,7 +3902,7 @@ flowchart TD
     Q -->|Authenticated, no assessment| T["→ /chat"]
     Q -->|Authenticated, assessed| U["→ Relationship analysis flow"]
 
-    S --> V["Account created → /chat → Journey 1"]
+    S --> V["Account created → /verify-email → verify → /chat → Journey 1"]
     T --> V
 ```
 

@@ -3,6 +3,8 @@ stepsCompleted: ["step-01-init", "step-02-discovery", "step-03-success", "step-0
 lastEdited: '2026-03-23'
 editHistory:
   - date: '2026-03-23'
+    changes: 'Email verification gate: expanded FR50 to require email verification before platform access, added FR50a (verification link with 1-week expiry), FR50b (resend verification email), NFR9a (unverified route protection), NFR9b (link expiry enforcement). Updated Journeys 1 and 2 to include verification step'
+  - date: '2026-03-23'
     changes: 'Dashboard/profile merge: removed "profile" as separate page type in Web App Requirements, updated FR19 to include public profile link on dashboard'
 inputDocuments:
   - "architecture.md (consolidated, 2026-03-15)"
@@ -203,7 +205,7 @@ See [Project Scoping & Phased Development](#project-scoping--phased-development)
 
 **Who she is:** Léa, 28, UX designer in Lyon. Interested in psychology, has taken 16Personalities twice but found the results generic. Sees a friend's archetype card on Instagram — "The Beacon" with an ocean-themed visual and an OCEAN code she doesn't recognize. She's intrigued: *what's my code?*
 
-**Opening Scene:** Léa taps the card link, lands on her friend's public profile. The archetype name and OCEAN code are front and center — a one-line hook beneath. She scrolls: detailed scores and facet bars are there for the curious, giving a scientific credibility ("this isn't astrology") without overwhelming the first impression. The archetype description feels specific — not "you're creative and empathetic" but a narrative that reads like someone actually *knows* this person. At the bottom: "Discover your own." She signs up.
+**Opening Scene:** Léa taps the card link, lands on her friend's public profile. The archetype name and OCEAN code are front and center — a one-line hook beneath. She scrolls: detailed scores and facet bars are there for the curious, giving a scientific credibility ("this isn't astrology") without overwhelming the first impression. The archetype description feels specific — not "you're creative and empathetic" but a narrative that reads like someone actually *knows* this person. At the bottom: "Discover your own." She signs up, receives a verification email, confirms her address, and enters the platform.
 
 **Rising Action:** Nerin greets her — not with a form, but with a question about her daily routines. The tone is warm, specific, slightly playful. Ocean metaphors. A depth meter sits on the left edge of the screen, quietly tracking the conversation's progress. By exchange 8, Nerin says something like: "You mentioned you redesign your workspace every few months but you've kept the same morning routine for years. That's an interesting tension — the part of you that craves novelty has a deal with the part that needs anchoring." Léa pauses. That's... exactly right. She's never thought about it that way.
 
@@ -221,7 +223,7 @@ Around exchange 13, she hits a natural lull — novelty has worn off. (Note: the
 
 **Who he is:** Marc, 34, Léa's partner. Not into personality tests. Léa completed her assessment and wants to use her free relationship analysis credit.
 
-**Opening Scene — The QR Flow:** Léa opens the QR drawer in the app. Marc scans the code with his phone (or opens the URL it contains). He lands on a screen showing Léa's archetype card, both users' confidence rings, and Léa's available credit balance, with Accept and Refuse buttons. Marc understands: Léa wants to understand their relationship better, and it starts with a 25-minute conversation about him. He knows what Léa got out of it — she's been talking about her portrait — so there's social proof before he even starts. He accepts and creates an account.
+**Opening Scene — The QR Flow:** Léa opens the QR drawer in the app. Marc scans the code with his phone (or opens the URL it contains). He lands on a screen showing Léa's archetype card, both users' confidence rings, and Léa's available credit balance, with Accept and Refuse buttons. Marc understands: Léa wants to understand their relationship better, and it starts with a 25-minute conversation about him. He knows what Léa got out of it — she's been talking about her portrait — so there's social proof before he even starts. He accepts, creates an account, verifies his email, and enters the platform.
 
 **Rising Action — The Skeptic's First Exchanges:** Marc meets Nerin and expects a quiz. Instead, Nerin asks about his weekend — what he does when nothing is planned. Marc answers briefly. Exchanges 2-5 are short, low-energy responses. The pacing pipeline detects this: low telling score, guarded energy. It responds by keeping territories light (daily routines, comfort zones), using soft entry pressure, and letting Marc set the pace. Nerin doesn't push — she stays curious without demanding depth. But Nerin isn't passive either — by exchange 5, she drops something specific enough to catch Marc's attention: an observation about the *way* he talks about routine, not just what he says. By exchange 6, Marc notices Nerin keeps circling around structure — meal prep, workout schedule, project timelines — and Nerin says: "You build systems for things most people leave to chance. I'm curious what happens when the system breaks." Marc laughs — that's exactly what Léa says about him. The depth meter starts climbing. He leans in.
 
@@ -279,7 +281,7 @@ Now both assessments are complete — the relationship analysis generates. When 
 
 | Journey | Key Capabilities Revealed |
 |---------|--------------------------|
-| **Léa (First-Timer)** | Sign-up (FR50), conversation (FR1), pacing pipeline (FR3), depth meter + milestones (FR4, FR5), Nerin portrait teasing (FR6), results page (FR16), PWYW modal (FR21), portrait as Nerin's letter (FR20), behavioral proxy tracking (FR24), archetype sharing (FR44, FR46), public profile landing (FR39), extension as recovery (FR10, FR23) |
+| **Léa (First-Timer)** | Sign-up with email verification (FR50, FR50a, FR50b), conversation (FR1), pacing pipeline (FR3), depth meter + milestones (FR4, FR5), Nerin portrait teasing (FR6), results page (FR16), PWYW modal (FR21), portrait as Nerin's letter (FR20), behavioral proxy tracking (FR24), archetype sharing (FR44, FR46), public profile landing (FR39), extension as recovery (FR10, FR23) |
 | **Marc (Invited)** | QR flow (FR28), pacing adaptation for guarded users (FR3), early hook for skeptics (FR6), depth meter (FR4), relationship analysis (FR29), ritual suggestion screen (FR31), OCEAN code comparison (FR39), ambassador conversion (FR33) |
 | **Léa (Returning)** | Re-engagement email (FR36), conversation extension with context preservation (FR10, FR25), portrait regeneration (FR23), credit purchase (FR48), multi-relationship analysis (FR35) |
 | **Thomas (Profile Visitor)** | Public profile (FR39, FR42), OG tags (FR41), archetype as social object (FR46), OCEAN code comparison (FR39), CTA funnel (FR43) |
@@ -592,7 +594,7 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 - **FR34:** If one user deletes their account, the shared relationship analysis is deleted
 - **FR35:** Each relationship analysis is linked to both users' assessment results (not to invitations). All analyses are preserved as snapshots — the newest is primary, older ones are classified as "previous version." Version detection is derive-at-read: if newer assessment results exist for either user, the analysis is classified as "previous version." Users can view all their relationship analyses
 - **FR36:** Users receive an email notification when a relationship analysis they participated in is ready
-- **FR37:** The QR accept screen is only accessible to logged-in users with a completed assessment. There is no pre-account context — User B must sign up and complete their assessment before seeing the accept screen
+- **FR37:** The QR accept screen is only accessible to logged-in users with a completed assessment. There is no pre-account context — User B must sign up, verify their email, and complete their assessment before seeing the accept screen
 - **FR38:** The system tracks relationship analysis credits per user (1 free, additional purchased)
 
 ### Public Profile & Social Sharing
@@ -614,7 +616,9 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 
 ### User Account & Privacy
 
-- **FR50:** Users can create an account and authenticate
+- **FR50:** Users can create an account with email and password. Account creation triggers a verification email. Unverified accounts are treated as unauthenticated — no access to dashboard, assessment, results, or any authenticated feature. Public profiles and the home page remain accessible without authentication
+- **FR50a:** Verification email contains a unique link that expires after 1 week. Clicking the link activates the account and grants platform access
+- **FR50b:** Users can request a new verification email from the verify-email page if the original expired or was not received
 - **FR51:** Users can control the visibility of their public profile (binary: fully public or fully private — no intermediate state)
 - **FR52:** Users are informed during onboarding that conversation data is stored
 - **FR53:** Users can delete their account, which deletes their data and any shared relationship analyses
@@ -643,6 +647,8 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 
 - **NFR8:** All data in transit encrypted via TLS 1.3
 - **NFR9:** Authentication requires 12+ character passwords and compromised credential checks
+- **NFR9a:** Unverified accounts cannot access any authenticated route. All protected routes check verification status and redirect unverified users to the verify-email page
+- **NFR9b:** Verification email links expire after 1 week. Expired links redirect to the verify-email page with a prompt to request a new link
 - **NFR10:** Row-level data access control ensures users can only access their own data
 - **NFR11:** Public profiles default to private — zero public discovery without explicit user opt-in
 - **NFR12:** Conversation transcripts stored indefinitely; retrievable within 2s regardless of age

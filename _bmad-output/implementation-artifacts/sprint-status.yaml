@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-03-13
+# Generated: 2026-03-23
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-22 (refreshed — Epic 35 complete via PRs #181-183)
+generated: 2026-03-23
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -95,13 +95,14 @@ development_status:
   5-3-bidirectional-evidence-highlighting-and-transparency: done
   epic-5-retrospective: done
 
-  # EPIC 6: Privacy & Data Management (EU Launch — deferred)
+  # EPIC 6: Privacy & Data Management (EU Launch)
+  # DEFERRED 2026-03-23 — EU launch scope, not required for initial release.
   # Now tracked as New Epic 7 in epics.md. Kept here for continuity.
-  epic-6: backlog
-  6-1-server-side-encryption-at-rest-and-tls-in-transit: backlog
-  6-2-gdpr-compliance-data-deletion-portability: backlog
-  6-3-audit-logging-and-access-control: backlog
-  epic-6-retrospective: optional
+  # epic-6: deferred
+  # 6-1-server-side-encryption-at-rest-and-tls-in-transit: deferred
+  # 6-2-gdpr-compliance-data-deletion-portability: deferred
+  # 6-3-audit-logging-and-access-control: deferred
+  # epic-6-retrospective: optional
 
   # EPIC 7: UI Theme & Visual Identity
   epic-7: done
@@ -522,9 +523,10 @@ development_status:
   # Profile visibility, account deletion with cascade hooks
   # Stories: 1.1-1.2 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-30: done
+  epic-30: in-progress
   30-1-profile-visibility-controls: done
   30-2-account-deletion-with-cascade-hooks: done
+  30-3-email-verification-gate: backlog
   epic-30-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -533,7 +535,7 @@ development_status:
   # session resume, cost guard, drop-off email
   # Stories: 2.1-2.7 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-31: done
+  epic-31: in-progress
   31-1-nerin-greeting-and-onboarding-message: done
   31-2-nerin-character-quality-observations-transitions-and-character-bible: done
   31-3-conversation-closing-exchange: done
@@ -542,6 +544,7 @@ development_status:
   31-6-cost-guard: done
   31-7-email-infrastructure-and-drop-off-re-engagement: done
   31-7b-wire-resend-into-better-auth: done
+  31-8-extraction-pipeline-and-evidence-processing: backlog
   epic-31-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -628,8 +631,21 @@ development_status:
   # Nerin check-in email, deferred portrait recapture email, dashboard
   # Stories: 9.1-9.3 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-38: in-progress
+  epic-38: done
   38-1-nerin-check-in-email: done
   38-2-deferred-portrait-recapture-email: done
-  38-3-dashboard: pr-ready
+  38-3-dashboard: done
   epic-38-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # EPIC 39: Ocean Hieroglyph System — Rename & Consolidation
+  # Hieroglyph data layer, renderer components + consumer migration,
+  # tests & storybook stories rewrite
+  # Stories: 10.1-10.3 in epics.md
+  # Independent of all other epics. No backend changes. Pure frontend refactor.
+  # ───────────────────────────────────────────────────────────────
+  epic-39: done
+  39-1-hieroglyph-data-layer: done
+  39-2-renderer-components-data-trait-coloring-and-consumer-migration: done
+  39-3-tests-and-storybook-stories-rewrite: done
+  epic-39-retrospective: optional

@@ -3,8 +3,8 @@ stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 lastStep: 8
 status: 'complete'
 completedAt: '2026-03-15'
-lastUpdated: '2026-03-23'
-adrsAdded: ['ADR-22: Ocean Hieroglyph System', 'ADR-23: Dashboard/Profile Consolidation']
+lastUpdated: '2026-03-23 (ADR-24 added)'
+adrsAdded: ['ADR-22: Ocean Hieroglyph System', 'ADR-23: Dashboard/Profile Consolidation', 'ADR-24: Email Verification Gate']
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/ux-design-specification.md'
@@ -544,17 +544,20 @@ This covers the "browser closed mid-payment" edge case where webhook fired but p
 
 **Auth middleware change:** Assessment group switches from `OptionalAuthMiddleware` to `AuthMiddleware` (or auth required on `start` endpoint at minimum).
 
-**Auth gates (from UX spec):**
+**Auth gates (from UX spec, updated per ADR-24):**
 
-| Route | Unauthenticated | Auth'd, no assessment | Auth'd, assessment complete |
+| Route | Unauthenticated (incl. unverified) | Auth'd, no assessment | Auth'd, assessment complete |
 |-------|----------------|------|------|
 | `/` (landing) | Full access | Full access | Full access |
 | `/public-profile/:id` | Full access | Full access | Full access + relationship CTA |
+| `/verify-email` | Verify-email page (post-signup) | N/A (already verified) | N/A |
 | `/chat` | → sign up | Start/resume conversation | Resume or extension CTA |
 | `/dashboard` | → sign up | Empty state or in-progress: progress bar + "Continue" CTA | Full dashboard (identity, credits, relationships) |
 | `/results` | → sign up | → `/chat` | Results page |
 | `/relationship/:id` | → sign up | → `/chat` | Analysis (if participant) |
 | QR URL | Login/sign up → return to accept screen | "Complete assessment first" | Accept screen |
+
+**Unverified users:** Treated as unauthenticated. Better Auth's `requireEmailVerification: true` prevents session creation for unverified accounts, so route-level `beforeLoad` auth checks naturally redirect them. See ADR-24 for full details.
 
 ### ADR-16: Archetype Metadata Not Stored
 
@@ -1716,5 +1719,86 @@ New CSS rules in `packages/ui/src/styles/globals.css`:
 - [Problem Solution: Nerin Territory Compliance](../../problem-solution-2026-03-13.md) — Root cause analysis, 3-layer solution (A+B+C), implementation plan
 - [Brainstorming: Adaptive Response Format](../../brainstorming/brainstorming-session-2026-03-13.md) — 13 intent×observation templates, 25 territory descriptions, module dissolution plan
 - [Conversation Experience Evolution Architecture](./architecture-conversation-experience-evolution.md) — Original territory-based steering and character bible reform (partially superseded by pacing pipeline)
+
+### ADR-24: Email Verification Gate — Unverified Equals Unauthenticated
+
+**Decision:** Enforce email verification as a hard gate before platform access. Unverified accounts are treated as unauthenticated — all authenticated routes redirect unverified users to `/verify-email`. Public routes (`/`, `/public-profile/:id`) remain accessible without authentication.
+
+**Why:** The auth-gated conversation (ADR-15) collects email before the first turn to enable drop-off recapture. But if the email is unverified, recapture emails bounce or land in abandoned inboxes. Verification ensures the email is reachable, making the entire re-engagement pipeline (ADR-12) reliable. Additionally, verification prevents account creation with typo'd or fake emails that pollute the user base.
+
+**Backend (already implemented):**
+
+Better Auth configuration in `packages/infrastructure/src/context/better-auth.ts`:
+```typescript
+emailAndPassword: {
+  requireEmailVerification: true,
+  // ...
+},
+emailVerification: {
+  sendOnSignUp: true,
+  sendOnSignIn: true,
+  autoSignInAfterVerification: true,
+  sendVerificationEmail: async ({ user, url }) => { /* Resend via email-verification template */ },
+},
+```
+
+- `requireEmailVerification: true` — Better Auth blocks session creation for unverified users. Sign-in returns **403** status
+- `sendOnSignUp: true` — verification email sent automatically on signup
+- `sendOnSignIn: true` — when an unverified user tries to log in, Better Auth auto-resends the verification email before returning 403. The login form itself becomes a resend mechanism
+- `autoSignInAfterVerification: true` — clicking the verification link creates a session and redirects to the app
+- Verification link expiry: Better Auth default (controlled by `expiresIn` on verification token — configured to 1 week)
+- Resend capability: Better Auth's `sendVerificationEmail` client method, exposed via `auth-client.ts`
+- **Anti-enumeration:** When `requireEmailVerification` is enabled, signing up with an existing email returns success instead of an error — prevents user enumeration attacks
+
+**Frontend enforcement:**
+
+| Route | Unverified behavior |
+|-------|-------------------|
+| `/verify-email` | Verify-email page: "Check your inbox" message + resend button |
+| `/dashboard`, `/chat`, `/results`, `/relationship/:id` | Redirect to `/verify-email` (unverified = unauthenticated, Better Auth returns no session) |
+| `/`, `/public-profile/:id` | Accessible (no auth required) |
+| `/login` (unverified user logs in) | Better Auth returns 403 + auto-resends verification email (`sendOnSignIn: true`). Login form catches 403 and redirects to `/verify-email` |
+
+**Signup flow:**
+1. User submits email + password on `/signup`
+2. Better Auth creates user record with `emailVerified: false`, sends verification email via Resend
+3. Frontend redirects to `/verify-email` (check inbox message + resend button)
+4. User clicks verification link → Better Auth sets `emailVerified: true`, creates session (`autoSignInAfterVerification`)
+5. User redirected to `/chat` (or `redirectTo` param if present)
+
+**Verification link expiry:** 1 week. Expired links redirect to `/verify-email` with "Link expired" messaging and resend button.
+
+**Resend flow:** Three paths to resend verification email:
+1. **Resend button** on `/verify-email` page — calls `authClient.sendVerificationEmail({ email, callbackURL })` (rate-limited)
+2. **Login attempt** by unverified user — `sendOnSignIn: true` auto-resends before returning 403
+3. **Manual** — `POST /auth/send-verification-email` endpoint (exposed by Better Auth)
+
+**Login form 403 handling:**
+```typescript
+await authClient.signIn.email({ email, password }, {
+  onError: (ctx) => {
+    if (ctx.error.status === 403) {
+      // Unverified — redirect to /verify-email
+      // Better Auth already re-sent verification email (sendOnSignIn: true)
+      navigate({ to: "/verify-email", search: { email } });
+      return;
+    }
+    // Other errors: show generic "Invalid email or password"
+  }
+});
+```
+
+**Signup anti-enumeration note:** With `requireEmailVerification: true`, Better Auth returns success even when signing up with an existing email. The frontend signup error handling for "already exists" may no longer trigger — this is intentional security behavior, not a bug.
+
+**What this changes from ADR-15:**
+- ADR-15 auth gates table now has an implicit additional gate: unverified users are blocked at the same points as unauthenticated users
+- The flow becomes: Landing → `/chat` → auth gate → signup → **verify email** → return to `/chat` → start assessment
+- No new middleware needed — Better Auth's `requireEmailVerification` handles this at the session level (no session = route-level `beforeLoad` redirect fires)
+
+**What this does NOT change:**
+- No new database columns (Better Auth manages `emailVerified` on the `user` table)
+- No new API endpoints (Better Auth exposes verification endpoints)
+- No changes to Polar customer creation (still fires on signup via `createCustomerOnSignUp`, before verification)
+- Email template already exists: `packages/infrastructure/src/email-templates/email-verification.ts`
 
 **This document replaces:** `docs/ARCHITECTURE.md` as the single authoritative architecture reference. The standalone documents above contain full implementation-level specifications referenced by the ADRs in this document.
