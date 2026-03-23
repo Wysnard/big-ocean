@@ -177,6 +177,8 @@ const code = generateOceanCode(facetScoresMap); // → "HHMHM"
 
 **`data-testid` rule:** NEVER remove, replace, or rename `data-testid` attributes. They are used exclusively by e2e tests (Playwright). `data-slot` is a separate shadcn/ui concern — they coexist. See [FRONTEND.md](./docs/FRONTEND.md#testing-with-data-attributes).
 
+**Route test files:** NEVER place test files (`.test.ts`, `.test.tsx`) directly in `apps/front/src/routes/`. TanStack Router treats all files in this directory as routes, causing build errors. Prefix with `-` (e.g., `-my-route.test.tsx`) to exclude from route generation, or place tests in a sibling `__tests__` directory.
+
 ### Mock Architecture (`__mocks__` + `vi.mock()`)
 
 Mock implementations are co-located with repository implementations using Vitest's `__mocks__` auto-resolution.
