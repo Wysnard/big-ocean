@@ -782,9 +782,9 @@
    ══════════════════════════════════════ */
 
 [data-slot="geometric-ocean-layer"] {
-	--bubble-border-color: rgba(0, 180, 166, 0.45);
-	--bubble-fill-color: rgba(0, 180, 166, 0.04);
-	--bubble-opacity: 0.22;
+	--bubble-border-color: rgba(0, 140, 130, 0.7);
+	--bubble-fill-color: rgba(0, 140, 130, 0.08);
+	--bubble-opacity: 0.35;
 }
 
 .dark [data-slot="geometric-ocean-layer"] {
