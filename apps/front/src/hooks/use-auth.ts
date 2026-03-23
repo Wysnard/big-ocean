@@ -75,6 +75,7 @@ export function useAuth() {
 
 		signOut: async () => {
 			await signOut();
+			window.location.href = "/";
 		},
 
 		refreshSession: async () => {

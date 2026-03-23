@@ -7,7 +7,7 @@
 
 import { useNavigate } from "@tanstack/react-router";
 import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
-import { Loader2 } from "lucide-react";
+import { OceanSpinner } from "@workspace/ui/components/ocean-spinner";
 import { useState } from "react";
 import { useAuth } from "../../hooks/use-auth";
 import { buildAuthPageHref } from "../../lib/auth-session-linking";
@@ -151,9 +151,9 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 				<button
 					type="submit"
 					disabled={isLoading}
-					className="mt-3 min-h-[52px] w-full rounded-xl bg-foreground font-heading text-base font-bold tracking-tight text-background transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-primary hover:shadow-lg hover:-translate-y-px active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
+					className="mt-3 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-foreground font-heading text-base font-bold tracking-tight text-background transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-primary hover:shadow-lg hover:-translate-y-px active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
 				>
-					{isLoading && <Loader2 className="mr-2 inline h-4 w-4 motion-safe:animate-spin" />}
+					{isLoading && <OceanSpinner size={16} mono />}
 					{isLoading ? "Signing in..." : "Sign In"}
 				</button>
 
