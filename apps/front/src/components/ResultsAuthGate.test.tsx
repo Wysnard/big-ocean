@@ -33,13 +33,11 @@ describe("ResultsAuthGate", () => {
 			<ResultsAuthGate sessionId="session-123" onAuthSuccess={() => {}} onStartFresh={() => {}} />,
 		);
 
-		expect(screen.getByText("Your Personality Profile is Ready!")).toBeInTheDocument();
-		expect(screen.getByText("Sign Up to See Your Results")).toHaveAttribute(
-			"data-slot",
+		expect(screen.getByText("Your Personality Profile is Ready!")).toBeTruthy();
+		expect(screen.getByText("Sign Up to See Your Results").getAttribute("data-slot")).toBe(
 			"results-auth-gate-signup-cta",
 		);
-		expect(screen.getByText("Already have an account? Sign In")).toHaveAttribute(
-			"data-slot",
+		expect(screen.getByText("Already have an account? Sign In").getAttribute("data-slot")).toBe(
 			"results-auth-gate-signin-cta",
 		);
 	});
@@ -151,7 +149,7 @@ describe("ResultsAuthGate", () => {
 			/>,
 		);
 
-		expect(screen.getByText("This Results Unlock Window Expired")).toBeInTheDocument();
+		expect(screen.getByText("This Results Unlock Window Expired")).toBeTruthy();
 		fireEvent.click(screen.getByRole("button", { name: "Start Fresh Assessment" }));
 		expect(onStartFresh).toHaveBeenCalled();
 	});
