@@ -88,6 +88,8 @@ export {
 } from "./constants/nerin-greeting";
 // Nerin persona constant (Story 2.12)
 export { NERIN_PERSONA } from "./constants/nerin-persona";
+// Ocean Hieroglyph normalized path strings (for flubber SVG morphing)
+export { OCEAN_HIEROGLYPH_PATHS } from "./constants/ocean-hieroglyph-paths";
 // Ocean Hieroglyph lookup table (Story 10.1)
 export { OCEAN_HIEROGLYPHS } from "./constants/ocean-hieroglyphs";
 // Territory catalog (Story 21-1, evolved Story 23-2)

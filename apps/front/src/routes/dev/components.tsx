@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { ClientOnly, createFileRoute, redirect } from "@tanstack/react-router";
 import type {
 	FacetName,
 	FacetResult,
@@ -32,6 +32,8 @@ import { Input } from "@workspace/ui/components/input";
 import { OceanHieroglyph } from "@workspace/ui/components/ocean-hieroglyph";
 import { OceanHieroglyphCode } from "@workspace/ui/components/ocean-hieroglyph-code";
 import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
+import { OceanSkeleton } from "@workspace/ui/components/ocean-skeleton";
+import { OceanSpinner } from "@workspace/ui/components/ocean-spinner";
 import {
 	Sheet,
 	SheetContent,
@@ -654,6 +656,95 @@ function IdentitySection() {
 	);
 }
 
+/* ── Ocean Loading Components ──────────────────────────── */
+
+function OceanLoadingSection() {
+	const [skeletonCount, setSkeletonCount] = useState(0);
+
+	return (
+		<section className="space-y-8">
+			<SectionHeading
+				id="ocean-loading"
+				title="Ocean Loading"
+				subtitle="Branded loading components built on the Ocean Hieroglyph system"
+			/>
+
+			<SubSection title="Ocean Spinner">
+				<p className="text-sm text-muted-foreground mb-4">
+					SVG morphing spinner using flubber. Each hieroglyph smoothly warps into the next.
+				</p>
+				<div className="flex flex-wrap gap-8 items-end">
+					<div className="flex flex-col items-center gap-2">
+						<OceanSpinner size={48} />
+						<span className="text-caption text-muted-foreground">Default (48px)</span>
+					</div>
+					<div className="flex flex-col items-center gap-2">
+						<OceanSpinner size={32} interval={1200} />
+						<span className="text-caption text-muted-foreground">Slow (1200ms)</span>
+					</div>
+					<div className="flex flex-col items-center gap-2">
+						<OceanSpinner size={16} mono />
+						<span className="text-caption text-muted-foreground">Inline Mono (16px)</span>
+					</div>
+					<div className="flex flex-col items-center gap-2">
+						<OceanSpinner code="OCA" size={36} />
+						<span className="text-caption text-muted-foreground">Custom Code</span>
+					</div>
+					<div className="flex flex-col items-center gap-2">
+						<Button disabled>
+							<OceanSpinner size={16} mono />
+							Processing...
+						</Button>
+						<span className="text-caption text-muted-foreground">In Button</span>
+					</div>
+				</div>
+			</SubSection>
+
+			<SubSection title="Ocean Skeleton">
+				<p className="text-sm text-muted-foreground mb-4">
+					Progressive glyph assembly. Controlled via revealedCount or self-animating with autoReveal.
+				</p>
+				<div className="flex flex-wrap gap-8 items-end">
+					<div className="flex flex-col items-center gap-2">
+						<OceanSkeleton autoReveal />
+						<span className="text-caption text-muted-foreground">Auto (default)</span>
+					</div>
+					<div className="flex flex-col items-center gap-2">
+						<OceanSkeleton autoReveal interval={400} size={24} />
+						<span className="text-caption text-muted-foreground">Fast (400ms, 24px)</span>
+					</div>
+					<div className="flex flex-col items-center gap-2">
+						<OceanSkeleton autoReveal mono />
+						<span className="text-caption text-muted-foreground">Mono</span>
+					</div>
+					<div className="flex flex-col items-center gap-2">
+						<OceanSkeleton code="OCA" autoReveal size={36} />
+						<span className="text-caption text-muted-foreground">Custom Code</span>
+					</div>
+				</div>
+
+				<div className="mt-6 space-y-3">
+					<p className="text-sm text-muted-foreground">
+						Controlled mode — drag the slider to reveal glyphs:
+					</p>
+					<div className="flex items-center gap-4">
+						<input
+							type="range"
+							min={0}
+							max={5}
+							value={skeletonCount}
+							onChange={(e) => setSkeletonCount(Number(e.target.value))}
+							className="w-48"
+						/>
+						<span className="text-sm font-data">{skeletonCount}/5</span>
+					</div>
+					<OceanSkeleton revealedCount={skeletonCount} size={40} />
+				</div>
+			</SubSection>
+		</section>
+	);
+}
+
 /* ── Mock Data ──────────────────────────────────────────── */
 
 const MOCK_TRAITS: TraitResult[] = [
@@ -1234,6 +1325,9 @@ function KitchenSinkPage() {
 				<ChartsSection />
 				<ModalsSection />
 				<DepthSection />
+				<ClientOnly fallback={null}>
+					<OceanLoadingSection />
+				</ClientOnly>
 
 				<footer className="text-center py-12 border-t border-border">
 					<p className="text-sm text-muted-foreground">

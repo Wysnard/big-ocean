@@ -14,6 +14,8 @@ interface OceanHieroglyphProps {
 export function OceanHieroglyph({ letter, className, style }: OceanHieroglyphProps) {
 	const def = OCEAN_HIEROGLYPHS[letter];
 
+	if (!def) return null;
+
 	return (
 		<svg
 			viewBox={def.viewBox}
