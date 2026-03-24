@@ -1,23 +1,37 @@
 // @vitest-environment jsdom
 
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock auth hook
 const mockSignInEmail = vi.fn();
-vi.mock("@/hooks/use-auth", () => ({
-	useAuth: () => ({
-		signIn: { email: mockSignInEmail },
-		signUp: { email: vi.fn() },
-		signOut: vi.fn(),
-		refreshSession: vi.fn(),
-		session: null,
-		user: null,
-		isAuthenticated: false,
-		isPending: false,
-		error: null,
-	}),
-}));
+vi.mock("@/hooks/use-auth", async () => {
+	// AuthError must be defined inside the factory to avoid hoisting issues
+	class AuthError extends Error {
+		readonly status: number | undefined;
+		readonly code: string | undefined;
+		constructor(message: string, status?: number, code?: string) {
+			super(message);
+			this.name = "AuthError";
+			this.status = status;
+			this.code = code;
+		}
+	}
+	return {
+		AuthError,
+		useAuth: () => ({
+			signIn: { email: mockSignInEmail },
+			signUp: { email: vi.fn() },
+			signOut: vi.fn(),
+			refreshSession: vi.fn(),
+			session: null,
+			user: null,
+			isAuthenticated: false,
+			isPending: false,
+			error: null,
+		}),
+	};
+});
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -35,6 +49,7 @@ vi.mock("../../lib/auth-session-linking", () => ({
 	buildAuthPageHref: (path: string) => path,
 }));
 
+import { AuthError } from "@/hooks/use-auth";
 import { LoginForm } from "./login-form";
 
 function renderLoginForm(props = {}) {
@@ -42,6 +57,11 @@ function renderLoginForm(props = {}) {
 }
 
 describe("LoginForm", () => {
+	beforeEach(() => {
+		mockSignInEmail.mockReset();
+		mockNavigate.mockReset();
+	});
+
 	it("renders email and password fields", () => {
 		renderLoginForm();
 
@@ -148,5 +168,48 @@ describe("LoginForm", () => {
 		renderLoginForm();
 
 		expect(screen.getByText("New here? Create account")).toBeTruthy();
+	});
+
+	it("redirects to /verify-email on 403 (unverified email) instead of showing error", async () => {
+		mockSignInEmail.mockRejectedValueOnce(
+			new AuthError("Email not verified", 403, "EMAIL_NOT_VERIFIED"),
+		);
+
+		renderLoginForm();
+
+		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "unverified@example.com" } });
+		fireEvent.change(screen.getByLabelText("Password"), {
+			target: { value: "correctpassword1" },
+		});
+		fireEvent.submit(screen.getByRole("button", { name: "Sign In" }));
+
+		await waitFor(() => {
+			expect(mockNavigate).toHaveBeenCalledWith({
+				to: "/verify-email",
+				search: { email: "unverified@example.com", error: undefined },
+			});
+		});
+
+		// Should NOT show the generic error message
+		expect(screen.queryByText("Invalid email or password")).toBeNull();
+	});
+
+	it("shows generic error for non-403 AuthError", async () => {
+		mockSignInEmail.mockRejectedValueOnce(new AuthError("Invalid credentials", 401));
+
+		renderLoginForm();
+
+		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
+		fireEvent.change(screen.getByLabelText("Password"), {
+			target: { value: "wrongpassword1" },
+		});
+		fireEvent.submit(screen.getByRole("button", { name: "Sign In" }));
+
+		await waitFor(() => {
+			expect(screen.getByText("Invalid email or password")).toBeTruthy();
+		});
+
+		// Should NOT navigate to verify-email
+		expect(mockNavigate).not.toHaveBeenCalledWith(expect.objectContaining({ to: "/verify-email" }));
 	});
 });

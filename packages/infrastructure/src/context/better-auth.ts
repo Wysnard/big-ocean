@@ -333,6 +333,7 @@ export const BetterAuthLive = Layer.effect(
 			// Email verification via Resend (Story 31-7b)
 			emailVerification: {
 				sendOnSignUp: true,
+				sendOnSignIn: true,
 				autoSignInAfterVerification: true,
 				sendVerificationEmail: async ({ user, url }) => {
 					logger.info(`Sending verification email to ${user.email} with URL: ${url}`);
