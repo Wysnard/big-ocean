@@ -1,0 +1,4 @@
+secret:
+  ignored-matches:
+    - name: "BMAD tech spec test webhook secret"
+      match: "whsec_dGVzdC1lMmUtd2ViaG9vay1zZWNyZXQ="
