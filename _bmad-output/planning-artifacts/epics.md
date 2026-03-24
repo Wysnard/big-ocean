@@ -254,8 +254,8 @@ Users can purchase an extension to continue their conversation with Nerin for an
 
 ### Epic 8: Homepage & Acquisition Funnel
 New visitors experience a compelling homepage that introduces big-ocean's value proposition and drives them to start their own assessment.
-**FRs covered:** (Acquisition funnel — not explicitly in FRs but critical for scaling)
-**Notes:** 14-beat conversational narrative, embedded interactive previews, scroll-driven depth meter (desktop), sticky bottom CTA (mobile), founder portrait bridge. Growth-phase investment, not PMF-critical.
+**FRs covered:** FR59-FR66
+**Notes:** 8-beat compressed narrative (from brainstorming 2026-03-23), portrait excerpt at ~33% scroll, Nerin depth preview, founder reveal with PWYW transparency, fear-resolving How It Works section, archetype gallery preview. Replaces previous 14-beat test-frame narrative. Content restructure, not a rebuild — existing ConversationFlow/ChatBubble/MessageGroup/DepthMeter infrastructure reused.
 
 ### Epic 9: Engagement Emails & Dashboard
 The system sends check-in and recapture emails. Users can view a centralized dashboard with results, portrait, relationship analyses, and behavioral impact metrics.
@@ -1300,61 +1300,112 @@ So that my deeper exploration produces a more refined understanding of who I am.
 
 New visitors experience a compelling homepage that introduces big-ocean's value proposition and drives them to start their own assessment.
 
-### Story 8.1: Homepage Narrative & Layout
+### Story 8.1: Homepage Narrative & Layout (DELIVERED — original 14-beat version)
+
+_Delivered as stories 37-1/37-2. Superseded by Stories 8.3 and 8.4 below (brainstorming 2026-03-23)._
+
+### Story 8.2: Founder Portrait Bridge & Relationship CTA (DELIVERED — original version)
+
+_Delivered as story 37-2. Founder reveal preserved in Story 8.3 Beat 6._
+
+### Story 8.3: Homepage Narrative Restructure & Hero Redesign
 
 As a new visitor,
-I want to experience a compelling introduction to big-ocean,
+I want to experience a sharp, compressed introduction to big-ocean that shows me what I'll get within seconds,
 So that I understand the value and feel drawn to start my own conversation with Nerin.
 
 **Acceptance Criteria:**
 
 **Given** a visitor navigates to the homepage
 **When** the page renders
-**Then** a 14-beat conversational narrative scroll is displayed
-**And** the page is server-rendered via TanStack Start with LCP <2.5s
-**And** static content is readable immediately (TTI <3s, progressive hydration)
+**Then** an 8-beat conversational narrative scroll is displayed (compressed from previous 14-beat structure)
+**And** the page is server-rendered via TanStack Start with LCP <1s
+**And** the hero section leads with a transformation-oriented hook — no test references, no defining by negation (FR59, FR60)
 
-**Given** the homepage on mobile (<640px)
-**When** the user scrolls past the hero section
-**Then** a sticky bottom CTA appears styled as a chat input box, inviting the user to start their conversation
-**And** all interactive elements meet 44px minimum tap targets
+**Given** the hero section
+**When** it renders
+**Then** the headline communicates what Big Ocean is for zero-context visitors within 3 seconds
+**And** the subtitle is concrete and specific (e.g., "A 25-minute conversation with an AI that writes you a personal letter about who you are")
+**And** the tagline surfaces PWYW pricing: "~25 MIN · FREE · PAY WHAT YOU WANT" (FR65)
+**And** a single primary CTA "Start your conversation" links to `/chat` — no secondary CTAs (FR61)
+**And** the ScrollIndicator (bouncing chevron) is removed
+**And** the "See how it works" secondary CTA is removed
 
-**Given** the homepage on desktop (>=1024px)
-**When** the user scrolls through the narrative
-**Then** a scroll-driven depth meter tracks progress through the 14 beats
-**And** the sticky bottom chat input CTA is visible
-**And** the depth meter uses CSS transitions respecting prefers-reduced-motion
+**Given** the conversational narrative
+**When** the user scrolls through the beats
+**Then** Beat 3 (~33% scroll depth) shows a concrete portrait excerpt as a personal letter — demonstrating output quality (FR62)
+**And** Beat 4 shows Nerin making a specific pattern observation — demonstrating conversational depth, not pitching (FR63)
+**And** Beat 6 integrates Vincent's founder story with PWYW transparency including average payment amount (FR65)
+**And** the narrative works across visitor types: zero-context, invited friend, social media curious, therapy-seeker (FR66)
 
-**Given** a visitor interacts with the chat input CTA
-**When** they tap or click it
-**Then** they are routed to the auth flow which redirects to /chat after login/signup
+**Given** the compressed narrative
+**When** compared to the previous structure
+**Then** ComparisonCard (test-frame), TraitStackEmbed (methodology), and ComparisonTeaserPreview are removed from the homepage flow
+**And** the component source files are NOT deleted (may be reused on results page)
+**And** existing ConversationFlow, ChatBubble, MessageGroup, DepthScrollProvider infrastructure is preserved
 
-**Given** the homepage layout
-**When** dynamic content loads
-**Then** CLS <0.1 is maintained via fixed layout slots and reserved heights
+**Given** the DepthMeter
+**When** recalibrated
+**Then** it tracks progress through 8 beats instead of 14
+**And** it remains hidden on mobile
 
-### Story 8.2: Founder Portrait Bridge & Relationship CTA
+**Given** the OG meta tags
+**When** the page is shared
+**Then** og:title matches the new headline (no test references)
+**And** og:description mentions "25-minute conversation," "personal letter," and "pay what you want"
 
-As a new visitor,
-I want to see a real portrait excerpt and understand the relationship analysis feature,
-So that I feel the emotional weight of the product and see its social dimension.
+**Implementation notes:**
+- Content restructure, not a rebuild (UX Spec §16.11)
+- Beat mapping: see UX Spec §16.6E for old→new beat correspondence
+- Portrait excerpt content: reuse existing `portrait-excerpt.md`, presented standalone (not in horoscope comparison)
+- New Beat 4 content: Nerin observation with bold scannable headline (UX Spec §16.6F)
+- Preserve all existing `data-testid` and `data-slot` attributes
+
+### Story 8.4: How It Works, Archetype Gallery & Conversion Flow
+
+As a new visitor who has scrolled through the narrative,
+I want my remaining fears addressed and a clear path to action,
+So that I convert from curious to committed.
 
 **Acceptance Criteria:**
 
-**Given** the homepage narrative includes the founder portrait bridge
-**When** the section renders
-**Then** Vincent's personal portrait excerpt is displayed as a real artifact, not a product demo
-**And** the voice is dense (3-4 sentences), personally vulnerable, love letter tone
+**Given** the visitor scrolls past the conversational narrative
+**When** the How It Works section renders
+**Then** three fear-resolving steps are displayed (not feature steps):
+  1. Process anxiety: "It feels like a conversation, not a test" (FR64)
+  2. Time commitment: "You'll get something no test can produce" + PWYW mention (FR64)
+  3. Self-exposure: "It's a mirror, not a judgment" — privacy reassurance (FR64)
+**And** the section is scannable in 5 seconds
+**And** tone is warm, direct, reassuring — not marketing copy
 
-**Given** the homepage narrative includes the relationship analysis section
-**When** the section renders
-**Then** a CTA for relationship analysis is prominently featured
-**And** it communicates the value of discovering relational dynamics with someone you care about
-**And** it explains the QR-based flow briefly
+**Given** the Archetype Gallery section
+**When** it renders after How It Works
+**Then** 3-4 real archetype cards are displayed with names, OCEAN codes, GeometricSignatures, and short descriptions
+**And** on mobile: horizontal scroll layout
+**And** on desktop: 3-4 column grid
+**And** cards are visual only — no click interaction for MVP
+**And** skeleton cards display while archetype data loads; section hides entirely on failure
 
-**Given** a visitor clicks the relationship analysis CTA
-**When** they are not authenticated
-**Then** they are routed to the auth flow, then directed to complete their own assessment first
+**Given** the final CTA section
+**When** it renders after the Archetype Gallery
+**Then** a dedicated conversion section with "What's YOUR code?" copy links to `/chat`
+
+**Given** the sticky bottom CTA (mobile only)
+**When** the visitor scrolls past the hero section
+**Then** a sticky bar appears at the bottom with "Start your conversation" → `/chat`
+**And** it disappears when scrolling back to the hero (CSS-only via IntersectionObserver)
+**And** it meets 44px minimum tap target
+
+**Given** the previous homepage
+**When** compared to the new structure
+**Then** all embedded CTAs inside ResultPreviewEmbed components are removed
+**And** the page feels like reading/experiencing, not being sold to
+
+**Implementation notes:**
+- HowItWorks: new static component, no API calls
+- ArchetypeGalleryPreview: needs archetype data — only new section requiring data fetching
+- StickyConversionBar: CSS-only show/hide via IntersectionObserver (no JS state)
+- See UX Spec §16.6C, §16.6D for detailed content direction
 
 ---
 

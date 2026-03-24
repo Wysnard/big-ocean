@@ -1,7 +1,9 @@
 ---
-stepsCompleted: ["step-01-init", "step-02-discovery", "step-03-success", "step-04-journeys", "step-05-domain", "step-06-innovation", "step-07-project-type", "step-08-scoping", "step-09-functional", "step-10-nonfunctional", "step-11-polish", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit"]
-lastEdited: '2026-03-23'
+stepsCompleted: ["step-01-init", "step-02-discovery", "step-03-success", "step-04-journeys", "step-05-domain", "step-06-innovation", "step-07-project-type", "step-08-scoping", "step-09-functional", "step-10-nonfunctional", "step-11-polish", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit"]
+lastEdited: '2026-03-24'
 editHistory:
+  - date: '2026-03-24'
+    changes: 'Homepage conversion: added Journey 6 (Cold Visitor — Inès), added FR59-FR66 (homepage messaging, universal hook, single CTA, portrait excerpt preview, Nerin conversation preview, fear-addressing content, PWYW transparency, multi-persona content). Added homepage metrics to Success Criteria (bounce rate, sign-up conversion, time-to-CTA). Added Homepage Performance section to Web App Requirements. Updated Executive Summary to flag homepage as primary gap alongside Nerin quality. Updated MVP Feature Set with homepage conversion content. Updated Journey 2 to note invited-friend entry mismatch. Source: brainstorming-session-2026-03-23.md (66 ideas, 6 themes)'
   - date: '2026-03-23'
     changes: 'Email verification gate: expanded FR50 to require email verification before platform access, added FR50a (verification link with 1-week expiry), FR50b (resend verification email), NFR9a (unverified route protection), NFR9b (link expiry enforcement). Updated Journeys 1 and 2 to include verification step'
   - date: '2026-03-23'
@@ -19,6 +21,7 @@ inputDocuments:
   - "ux-design-specification.md (2026-02-12, outdated — included as context)"
   - "COMPLETED-STORIES.md"
   - "prd-2026-02-02-archived.md (baseline reference)"
+  - "brainstorming-session-2026-03-23.md (homepage improvement — messaging, layout, UX)"
 workflowType: 'prd'
 brownfield: true
 brainstormingCount: 1
@@ -27,7 +30,7 @@ projectDocsCount: 2
 documentCounts:
   architectureDocs: 1
   problemSolutionDocs: 1
-  brainstormingDocs: 1
+  brainstormingDocs: 2
   epicsDocs: 3
   uxDesignDocs: 4
   completedStoriesDocs: 1
@@ -104,7 +107,7 @@ big-ocean is a conversational personality assessment platform built on the Big F
 
 **Business model:** Free assessment (OCEAN code + archetype + scores + public profile) → PWYW portrait (€1+ minimum, grants 1 free relationship analysis credit) → relationship analysis credits (€5/additional) → conversation extension (+25 exchanges, €25). Target: 100 completed assessments in 3 months, break-even on LLM costs (~€0.20/assessment, ~€0.20/portrait).
 
-**Current state:** Brownfield — hexagonal architecture, auth, CI/CD, cloud deployment, and infrastructure already built. Primary gap: Nerin character quality (~40% → launch-ready). The credibility chain (conversation → self-recognition → portrait revelation → trust → ambassador) requires every link to work at launch.
+**Current state:** Brownfield — hexagonal architecture, auth, CI/CD, cloud deployment, and infrastructure already built. Primary gaps: Nerin character quality (~40% → launch-ready) and homepage conversion (the homepage must communicate what the product is and why it's worth 25 minutes to visitors with zero context — the product consistently exceeds expectations, but the homepage undersells the experience). The credibility chain (conversation → self-recognition → portrait revelation → trust → ambassador) requires every link to work at launch.
 
 ## Success Criteria
 
@@ -184,6 +187,9 @@ big-ocean is a conversational personality assessment platform built on the Big F
 | Portrait emotional impact | Share rate >30%, extension purchase >5%, return visit within 48h >40% | Ongoing | Self-revelation behavioral proxies |
 | Territory compliance | >70% | Ongoing | Pipeline effectiveness |
 | Nerin character distinctiveness | Qualitative | Pre-launch | Assessed via test sessions |
+| Homepage bounce rate | <60% | Ongoing | Cold visitors stay long enough to understand the product |
+| Homepage → sign-up conversion | >5% | Ongoing | Homepage messaging drives assessment starts |
+| Time to CTA click | <90s median | Ongoing | Messaging clarity — visitors understand fast enough to act |
 
 ## Product Scope
 
@@ -223,7 +229,7 @@ Around exchange 13, she hits a natural lull — novelty has worn off. (Note: the
 
 **Who he is:** Marc, 34, Léa's partner. Not into personality tests. Léa completed her assessment and wants to use her free relationship analysis credit.
 
-**Opening Scene — The QR Flow:** Léa opens the QR drawer in the app. Marc scans the code with his phone (or opens the URL it contains). He lands on a screen showing Léa's archetype card, both users' confidence rings, and Léa's available credit balance, with Accept and Refuse buttons. Marc understands: Léa wants to understand their relationship better, and it starts with a 25-minute conversation about him. He knows what Léa got out of it — she's been talking about her portrait — so there's social proof before he even starts. He accepts, creates an account, verifies his email, and enters the platform.
+**Opening Scene — The QR Flow:** Léa opens the QR drawer in the app. Marc scans the code with his phone (or opens the URL it contains). He lands on a screen showing Léa's archetype card, both users' confidence rings, and Léa's available credit balance, with Accept and Refuse buttons. Marc understands: Léa wants to understand their relationship better, and it starts with a 25-minute conversation about him. He knows what Léa got out of it — she's been talking about her portrait — so there's social proof before he even starts. He accepts, creates an account, verifies his email, and enters the platform. Note: Marc is the highest-intent visitor type — he already has social proof from his partner. If he visits the homepage before completing signup, the generic self-discovery narrative is a mismatch. The homepage content must work for visitors who already have a reason to be here and just need a clear path forward (FR66).
 
 **Rising Action — The Skeptic's First Exchanges:** Marc meets Nerin and expects a quiz. Instead, Nerin asks about his weekend — what he does when nothing is planned. Marc answers briefly. Exchanges 2-5 are short, low-energy responses. The pacing pipeline detects this: low telling score, guarded energy. It responds by keeping territories light (daily routines, comfort zones), using soft entry pressure, and letting Marc set the pace. Nerin doesn't push — she stays curious without demanding depth. But Nerin isn't passive either — by exchange 5, she drops something specific enough to catch Marc's attention: an observation about the *way* he talks about routine, not just what he says. By exchange 6, Marc notices Nerin keeps circling around structure — meal prep, workout schedule, project timelines — and Nerin says: "You build systems for things most people leave to chance. I'm curious what happens when the system breaks." Marc laughs — that's exactly what Léa says about him. The depth meter starts climbing. He leans in.
 
@@ -277,6 +283,20 @@ Now both assessments are complete — the relationship analysis generates. When 
 
 **Capabilities revealed:** Admin dashboard/monitoring, completion funnel analytics, mid-conversation dropout tracking by exchange number, steering compliance metrics, cost tracking per assessment/portrait, viral coefficient measurement, revenue reporting, error monitoring, pacing pipeline observability.
 
+### Journey 6: The Cold Visitor — Inès
+
+**Who she is:** Inès, 32, product manager in Paris. She stumbles onto the homepage from a Google search about personality assessments. She's never heard of Big Ocean, doesn't know the Big Five, and has no social proof from friends. She has 10 seconds of attention to give.
+
+**Opening Scene — The First 3 Seconds:** Inès reads a headline that stops her — not a comparison to other tests (she hasn't taken any), but a promise that lands: something about discovering a part of yourself you've never been able to articulate. Below, a single line of context: a 25-minute conversation with an AI that writes you a personal letter about who you are. One CTA. No competing options. She's intrigued — that's a specific, unusual promise.
+
+**Rising Action — The Scroll:** She scrolls. The page doesn't shift into a sales pitch — it stays in conversational format. She sees Nerin say something to a user that's startlingly specific: a pattern observation that feels like it could only come from a real conversation. It's not a feature description — it's proof of depth. A few beats later, a short excerpt from a portrait — a paragraph that reads like a letter from someone who knows you. Not generic. Not flattering. *Specific.* She thinks: "I want to know what it would say about me." The page addresses the question forming in her head: "Is 25 minutes a lot?" A beat explains what the time feels like — not a quiz, not awkward, more like a conversation that keeps surprising you. Another beat mentions the pricing model — pay what you want, starting at €1. She registers: this isn't a paywall trap.
+
+**Climax — The Decision:** Inès doesn't need to be convinced the method is better than a quiz. She needs to believe the output will be worth 25 minutes. The portrait excerpt did that. The Nerin conversation snippet did that. The PWYW transparency removed the last friction. She clicks the CTA.
+
+**Resolution:** She signs up, verifies her email, and meets Nerin. She came in cold and converted on three things: a sharp hook, concrete proof of output quality, and zero pricing surprise.
+
+**Capabilities revealed:** Homepage messaging (FR59), universal hook without test-frame reference (FR60), single primary CTA (FR61), portrait excerpt as early proof (FR62), Nerin conversation preview showing character depth (FR63), fear-addressing content for process anxiety and time commitment (FR64), PWYW transparency as trust signal (FR65), multi-persona content that works for zero-context visitors (FR66).
+
 ### Journey Requirements Summary
 
 | Journey | Key Capabilities Revealed |
@@ -286,8 +306,11 @@ Now both assessments are complete — the relationship analysis generates. When 
 | **Léa (Returning)** | Re-engagement email (FR36), conversation extension with context preservation (FR10, FR25), portrait regeneration (FR23), credit purchase (FR48), multi-relationship analysis (FR35) |
 | **Thomas (Profile Visitor)** | Public profile (FR39, FR42), OG tags (FR41), archetype as social object (FR46), OCEAN code comparison (FR39), CTA funnel (FR43) |
 | **Vincent (Founder)** | Admin monitoring (Nice-to-Have), completion funnel (FR24), dropout analytics (Nice-to-Have), steering compliance (FR3), cost tracking (FR55), viral metrics (Nice-to-Have) |
+| **Inès (Cold Visitor)** | Homepage messaging (FR59), universal hook (FR60), single CTA (FR61), portrait excerpt as proof (FR62), Nerin conversation preview (FR63), fear-addressing content (FR64), PWYW transparency (FR65), multi-persona content (FR66) |
 
-**Critical path:** Journeys 1→2 form the growth loop. The PWYW modal (founder vulnerability + example portrait) is the monetization conversion moment. The relationship ritual transforms the product from individual tool to shared experience. Journey 4's public profile is designed for *talkability* — the social conversation around it drives conversion more than the profile itself. Journey 5 ensures operational visibility.
+**Critical path:** Journeys 1→2 form the growth loop. The PWYW modal (founder vulnerability + example portrait) is the monetization conversion moment. The relationship ritual transforms the product from individual tool to shared experience. Journey 5 ensures operational visibility.
+
+**Two acquisition channels:** Journey 4 (Thomas) and Journey 6 (Inès) are complementary non-user acquisition paths. Thomas arrives via social sharing (profile links, archetype cards in group chats) — his conversion is cumulative, driven by repeated exposure and social proof. Inès arrives via organic search or direct link with zero context — her conversion is immediate, driven by homepage messaging clarity and output proof. Journey 4 is the passive/social channel; Journey 6 is the organic/direct channel. Both feed Journey 1.
 
 ## Domain-Specific Requirements
 
@@ -434,6 +457,13 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 - **Results page:** <1.5s LCP — users arrive here with anticipation after completing 25 exchanges, delay kills the emotional moment
 - **Portrait generation:** Async — user is informed it's generating, no blocking wait. Notification when ready
 
+### Homepage Performance & Optimization
+
+- **Homepage is a primary acquisition surface:** Cold visitors arriving from search, social media links, or word-of-mouth land here with zero context. The homepage must convert within 90 seconds of attention
+- **Homepage LCP <1s:** Speed matters for bounce rate — equal priority to public profiles
+- **Mobile-first for homepage:** Social media arrivals (Instagram stories, messaging app links) are predominantly mobile. Homepage layout and scroll behavior must be optimized for mobile viewports first
+- **Homepage SSR:** Server-rendered for SEO. Structured data for personality assessment schema. Meta description optimized for search intent ("personality assessment," "know yourself," "AI conversation")
+
 ### SEO & Social Sharing Strategy
 
 - **Public profiles are SEO-critical:** Server-rendered with structured data, unique URLs per user
@@ -493,6 +523,7 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 | Relationship analysis credits (1 free on first portrait purchase PWYW ≥€1; €5/additional) | Revenue + multi-relationship use case |
 | Polar.sh payment integration | PWYW + credits + extension purchases |
 | Transactional emails via Resend (3 types: drop-off re-engagement with last territory, Nerin check-in ~2 weeks post-assessment, deferred portrait recapture) | Brings users back — lifecycle triggers for retention and conversion |
+| Homepage conversion content (messaging, hook, portrait preview, fear-addressing, PWYW transparency) | The product is better than the marketing — cold visitors need to understand the value in 3 seconds. Without a converting homepage, growth depends entirely on social sharing |
 | Auth (Better Auth) | Already built |
 | Cost guard (session-aware) | Prevents budget blowout without killing sessions |
 
@@ -554,10 +585,10 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 - **FR3:** The pacing pipeline steers Nerin's territory focus, observation type, and entry pressure each turn
 - **FR4:** Users can see a depth meter reflecting the conversation's progress
 - **FR5:** Users receive progress milestone markers at 25%, 50%, and 75% of the conversation
-- **FR6:** Nerin references patterns he is noticing about the user during the conversation to build anticipation for the portrait
-- **FR7:** Nerin frames observations as invitations to explore — acknowledges user pushback, offers an alternative framing, and redirects to a different topic only if the user rejects the observation a second time
+- **FR6:** Nerin references patterns he is noticing about the user during the conversation to build anticipation for the portrait. *Acceptance: given a 25-exchange conversation, Nerin makes ≥2 specific pattern observations that reference concrete details from the user's prior responses (not generic statements)*
+- **FR7:** Nerin frames observations as invitations to explore — acknowledges user pushback, offers an alternative framing, and redirects to a different topic only if the user rejects the observation a second time. *Acceptance: when a test user contradicts Nerin's observation, Nerin (1) acknowledges the disagreement, (2) offers a reframed version or alternative, and (3) only changes topic if the user rejects again*
 - **FR8:** Nerin includes a "this is not therapy" framing in the greeting
-- **FR9:** Nerin never uses diagnostic language or characterizes third parties the user mentions
+- **FR9:** Nerin never uses diagnostic language or characterizes third parties the user mentions. *Acceptance: across 10 test conversations, Nerin uses zero DSM terms or clinical labels, and never labels a person the user describes (e.g., never says "your mother sounds controlling" — only observes the user's experience of the relationship)*
 - **FR10:** Users can purchase a conversation extension (+25 exchanges) to continue with Nerin
 - **FR11:** Users can resume an abandoned conversation from where they left off
 - **FR12:** The conversation ends with a distinct closing exchange from Nerin before transitioning to results
@@ -623,6 +654,17 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 - **FR52:** Users are informed during onboarding that conversation data is stored
 - **FR53:** Users can delete their account, which deletes their data and any shared relationship analyses
 - **FR54:** Users are introduced to Nerin and the conversation format before the conversation begins (pre-conversation onboarding)
+
+### Homepage & Conversion
+
+- **FR59:** The homepage communicates what Big Ocean is and what the user receives within 3 seconds of landing — without referencing other personality tests or defining by negation
+- **FR60:** The homepage leads with a transformation-oriented hook: what the portrait reveals about you, not how the method works. The hook must land for visitors with zero prior context
+- **FR61:** The homepage has one primary CTA to start the assessment. No competing secondary CTAs, no "See how it works" alternatives that dilute conversion
+- **FR62:** The homepage surfaces a concrete portrait excerpt within the first 40% of scroll depth — a paragraph that reads as a personal letter, demonstrating output specificity and emotional weight
+- **FR63:** The homepage includes a Nerin conversation preview showing character depth and perceptiveness — demonstrating what the conversation feels like, not describing it. Nerin is shown being Nerin (observing patterns, making connections), not pitching the product
+- **FR64:** The homepage addresses three visitor fears: process anxiety ("Will this be awkward?"), time commitment ("Is 25 minutes worth it?"), and self-exposure ("What if I don't like what it says?") — integrated into the page flow, not as an FAQ section
+- **FR65:** The homepage surfaces the PWYW pricing model early as a trust signal — framed as generosity and confidence in the product, not as a footnote. Users should encounter pricing transparency before reaching the CTA, not after committing 25 minutes
+- **FR66:** The homepage content works across multiple visitor types (zero-context searcher, social media curious, invited friend awaiting their own assessment, therapy-seeker) without requiring a single narrative arc or assuming a specific entry motivation
 
 ### Cost Management
 

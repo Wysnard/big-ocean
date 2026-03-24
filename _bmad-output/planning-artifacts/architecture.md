@@ -966,7 +966,7 @@ big-ocean/                                    # Monorepo root
 │           ├── components/                   # Feature-organized components
 │           │   ├── auth/                     # Login/signup forms (6 files)
 │           │   ├── chat/                     # Chat UI: input bar, depth meter, evidence card
-│           │   ├── home/                     # Landing page sections (14 files)
+│           │   ├── home/                     # Landing page sections (~12 files — 8-beat narrative + HowItWorks + ArchetypeGallery)
 │           │   ├── results/                  # Results page: trait cards, portrait, archetype (28 files)
 │           │   ├── relationship/             # QR accept screen, relationship card
 │           │   ├── sharing/                  # Archetype card template, share card
@@ -1227,7 +1227,7 @@ big-ocean/                                    # Monorepo root
 
 | Frontend Domain | Route | Key Components | API Dependencies |
 |----------------|-------|----------------|-----------------|
-| Landing | `/` | HeroSection, ConversationFlow, home/* | None |
+| Landing | `/` | HeroSection, ConversationFlow, HowItWorks, ArchetypeGalleryPreview, home/* | None (ArchetypeGallery fetches archetype data) |
 | Chat | `/chat` | TherapistChat, ChatInputBarShell, DepthMeter, EvidenceCard | assessment.*, evidence.* |
 | Results | `/results/$id` | ProfileView, TraitCard, ArchetypeCard, PersonalPortrait, ConfidenceRingCard, DetailZone | profile.results, portrait.*, evidence.* |
 | Dashboard | `/dashboard` | DashboardIdentityCard (+ public profile link), DashboardInProgressCard, DashboardRelationshipsCard, DashboardCreditsCard, DashboardEmptyState | assessment.*, profile.*, relationship.*, credits.* |

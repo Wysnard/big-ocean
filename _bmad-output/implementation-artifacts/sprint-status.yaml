@@ -621,10 +621,15 @@ development_status:
   # Homepage narrative & layout, founder portrait bridge & relationship CTA
   # Stories: 8.1-8.2 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-37: done
+  # EPIC 37 note: Stories 37-1 and 37-2 delivered the original 14-beat homepage.
+  # Brainstorming session 2026-03-23 identified fundamental narrative misalignment.
+  # Stories 37-3 and 37-4 implement the homepage redesign per UX Spec §16.6.
+  epic-37: in-progress
   37-1-homepage-narrative-and-layout: done
   37-2-founder-portrait-bridge-and-relationship-cta: done
-  epic-37-retrospective: done
+  37-3-homepage-narrative-restructure-and-hero-redesign: backlog
+  37-4-how-it-works-archetype-gallery-and-conversion-flow: backlog
+  epic-37-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
   # EPIC 38: Engagement Emails & Dashboard

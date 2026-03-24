@@ -11,7 +11,7 @@ inputDocuments:
 # UX Design Specification big-ocean
 
 **Author:** Vincentlay
-**Date:** 2026-03-16 (updated 2026-03-18, page specs expanded 2026-03-18, dashboard/profile merge 2026-03-23, email verification gate 2026-03-23)
+**Date:** 2026-03-16 (updated 2026-03-18, page specs expanded 2026-03-18, dashboard/profile merge 2026-03-23, email verification gate 2026-03-23, homepage redesign from brainstorming 2026-03-24)
 
 ---
 
@@ -3584,40 +3584,51 @@ All animations respect `prefers-reduced-motion`.
 
 The following areas need design attention:
 
-#### A. Hero Section Refinement
+#### A. Hero Section Redesign (FR59, FR60, FR61)
 
-**Current:** "Not a personality quiz. A conversation." with animated OCEAN shapes and "Begin Your Dive ↓" CTA.
+**Current:** "Not a personality quiz. A conversation." — defines by negation, references tests (irrelevant to visitors who haven't taken any), has dual CTAs that dilute conversion.
 
-**Update to align with spec:**
+**Brainstorming insight:** The test-frame trap (#10). Most visitors don't arrive thinking about personality tests. The headline has a conversation about something they never asked about. The founder's in-person pitch — a transformation story — converts instantly. The homepage doesn't use this approach.
 
-| Element | Current | Updated |
-|---------|---------|---------|
-| Headline | "Not a personality quiz. A conversation." | Keep — this is strong |
-| Subtitle | "A portrait of who you are that no test has ever given you." | Keep |
-| Tagline | "30 MIN · NO ACCOUNT · JUST TALKING" | Update: "~25 MIN · FREE · JUST A CONVERSATION" (align with current conversation length, remove "no account" since auth-gate exists) |
-| Primary CTA | "Begin Your Dive ↓" (scrolls down) | Add secondary CTA: "Start your conversation with Nerin" → `/chat` (direct conversion for visitors who don't need convincing) |
-| OCEAN shapes | Animated breathing shapes | Keep — aligns with GeometricSignature design language |
+**Updated hero:**
 
-#### B. Conversion CTAs
+| Element | Current | Updated | Rationale |
+|---------|---------|---------|-----------|
+| Headline | "Not a personality quiz. A conversation." | **New: transformation-oriented hook.** Must land for zero-context visitors. No test references. Leads with what the portrait *does to you*, not what the method *is*. Exact copy TBD — brainstorming direction: something about discovering a part of yourself you've never been able to articulate | FR59: no test references. FR60: transformation-oriented |
+| Subtitle | "A portrait of who you are that no test has ever given you." | **New: one-line clarity.** "A 25-minute conversation with an AI that writes you a personal letter about who you are." — concrete, specific, immediately understandable | FR59: communicate what it is in 3 seconds |
+| Tagline | "30 MIN · NO ACCOUNT · JUST TALKING" | "~25 MIN · FREE · PAY WHAT YOU WANT" — surfaces pricing transparency immediately | FR65: PWYW as trust signal |
+| Primary CTA | "Begin Your Dive ↓" (scroll-down) | **Single CTA:** "Start your conversation" → `/chat`. No scroll-down alternative. No "See how it works." One action | FR61: single primary CTA |
+| Secondary CTA | None (proposed in previous spec) | **Removed.** No competing CTAs. Visitors who need convincing scroll; the page content converts them. The CTA reappears as sticky bar (mobile) and at page bottom | FR61 |
+| OCEAN shapes | Animated breathing shapes | Keep — aligns with GeometricSignature design language | §16.5 preserve |
+| Scroll indicator | Bouncing chevron | **Remove.** Trust the content to pull visitors down | Brainstorming #60 |
 
-**Problem:** Current homepage has embedded CTAs inside ResultPreviewEmbed components but no persistent, visible conversion button after the hero.
+#### B. Conversion CTAs (FR61)
 
-**Add:**
-- **Sticky bottom CTA (mobile):** After scrolling past the hero, a sticky bottom bar appears: "Start your conversation" → `/chat`. Disappears when user scrolls back to hero. CSS-only show/hide via IntersectionObserver on hero section.
-- **Final CTA section:** After beat 14 (Nerin's closing), a dedicated conversion section with the full ConversationCTA component: "What's YOUR code? Discover it in a conversation with Nerin" → `/chat`.
-- **Social proof strip (optional, post-MVP):** Number of conversations completed, average portrait rating, example archetype cards. Only add when real data exists.
+**Principle:** One CTA, repeated at natural decision points. Never competing CTAs. The same action ("Start your conversation" → `/chat`) appears in three places, one at a time:
 
-#### C. "How It Works" Section
+| Placement | Behavior | Viewport |
+|-----------|----------|----------|
+| **Hero CTA** | Static, above the fold. The primary conversion point for visitors who don't need convincing | All |
+| **Sticky bottom bar** | Appears after scrolling past the hero. Disappears when user scrolls back to hero. CSS-only via IntersectionObserver | Mobile only |
+| **Final CTA section** | After the last beat. Dedicated conversion section: "What's YOUR code?" → `/chat` | All |
 
-**Currently missing.** Add between the conversational narrative and the final CTA:
+**Removed:** All embedded CTAs inside ResultPreviewEmbed components. The page should feel like reading/experiencing, not like being sold to. The CTA is always available but never intrusive.
 
-| Step | Icon/Visual | Text |
-|------|-------------|------|
-| 1 | Chat bubble | **Talk to Nerin** — A 25-minute conversation about you. No quiz, no checkboxes. |
-| 2 | GeometricSignature | **Get your portrait** — Your archetype, OCEAN code, and a personal letter from Nerin. |
-| 3 | Two overlaid signatures | **Compare with someone who matters** — Scan QR codes together for a relationship analysis. |
+#### C. "How It Works" Section — Fear-Resolving, Not Feature-Based (FR64)
 
-Three steps, scannable in 5 seconds. Addresses the "what is this?" question for visitors who scroll past the conversational narrative without reading it.
+**Currently missing.** Add between the conversational narrative and the final CTA.
+
+**Brainstorming insight:** The homepage never addresses "Will this be awkward?" (#15), "Is 25 minutes worth it?" (#11), or "What if I don't like what it says?" (#17). These are the actual barriers to conversion, not lack of feature understanding.
+
+**Reframe as three fear-resolving steps:**
+
+| Step | Fear Addressed | Content |
+|------|---------------|---------|
+| 1 | "Will this be awkward?" (process anxiety) | **It feels like a conversation, not a test.** No quiz. No checkboxes. Nerin asks about your life — your routines, your relationships, what you care about. Most people are surprised by how natural it feels. ~25 minutes. |
+| 2 | "Is it worth 25 minutes?" (time commitment) | **You'll get something no test can produce.** A personal letter from Nerin about who you are — not generic descriptions, but patterns from YOUR conversation. Your OCEAN code, your archetype, your scores. Pay what you want, starting at €1. |
+| 3 | "What if I don't like what it says?" (self-exposure fear) | **It's a mirror, not a judgment.** Nerin describes patterns and tensions — things you'll recognize. Nothing clinical, nothing labeling. And it's private — only you see it unless you choose to share. |
+
+**Design:** Three cards or stacked sections, scannable in 5 seconds. Each addresses a real visitor question, not a product feature. Tone: warm, direct, reassuring.
 
 #### D. Archetype Gallery Preview
 
@@ -3630,17 +3641,102 @@ Three steps, scannable in 5 seconds. Addresses the "what is this?" question for 
 | Interaction | Tap → nothing (no link to type pages for MVP). Visual only |
 | Position | Between "How It Works" and final CTA |
 
+#### E. Beat Compression & Reordering (FR62, brainstorming #59, #66)
+
+**Current:** 14 beats, portrait excerpt at Beat 8 (~57% scroll), trait explorer at Beat 6.
+
+**Brainstorming insight:** The homepage's greatest strength (immersive format) is also its conversion weakness (#13). Value not visible fast enough. Best content buried deep. The page rewards patience but punishes scanning.
+
+**Compressed to ~9 beats with portrait at ~40%:**
+
+| Beat | Speaker | Content | Maps to old beat |
+|------|---------|---------|-----------------|
+| 1 | Nerin | **Hook — sharp, weighted opening.** Not about tests. Something that creates different reactions for different visitors: the therapy-seeker thinks "yes, I need this," the fun-seeker thinks "ooh that's bold." Bold, scannable headline on this bubble | New |
+| 2 | User | One-line gut reaction — not a scripted dialogue, a single authentic response | Compressed from old 2 |
+| 3 | Nerin | **Portrait excerpt — proof of output quality.** A real paragraph from a Nerin portrait. Specific, personal, emotionally resonant. Shows what you'll get, not describes it. This is the "I want to know what it would say about ME" moment | Moved from old 8 (FR62: within 40%) |
+| 4 | Nerin | **Nerin being Nerin — a pattern observation.** Not pitching. A demonstration of conversational depth: Nerin noticing something specific about someone's behavior that feels startlingly perceptive. Shows what the conversation *feels like* | New (FR63) |
+| 5 | User | Reacts — "how did you notice that?" or equivalent | New |
+| 6 | Nerin | **The founder reveal.** Vincent's personal story — why he built this, what Nerin's letter did for him. Humanizes the product. Includes PWYW transparency: "pay what you want, starting at €1" | Compressed from old 10/10b (FR65) |
+| 7 | User | The converting line — "I want to know what mine would say" | Old 13 |
+| 8 | Nerin | **CTA close.** "Just a conversation." Single CTA | Old 14 |
+
+**Beats removed:** Old 4 (Traditional vs Conversational comparison — test-frame), old 6 (Trait explorer — machinery explanation), old 7 (User challenges output), old 5 (skepticism bridge), old 11/11b/11c (fear + privacy — moved to How It Works section), old 12 (radar comparison preview — moved to after CTA or removed).
+
+**Key structural changes:**
+- Portrait excerpt at Beat 3 (~33% through) instead of Beat 8 (~57%) — FR62 met
+- Nerin depth preview at Beat 4 — FR63 met
+- PWYW at Beat 6 — FR65 met
+- Removed test-comparison framing entirely — FR59 met
+- Reduced trait machinery to zero (moved to results page where it belongs) — brainstorming #61
+
+**Elements preserved from §16.5:**
+- Nerin-User-Vincent three-voice narrative ✓
+- Objection-resolution arc (compressed, not eliminated) ✓
+- Vincent's founder reveal ✓
+- Scroll-as-conversation metaphor (DepthMeter + thread line) ✓
+- Embedded interactive preview: HoroscopeVsPortraitComparison repurposed as Beat 3's portrait excerpt ✓
+
+**Elements moved, not deleted:**
+- TraitStackEmbed → results page or public profile (where visitors who care about methodology can explore)
+- ComparisonTeaserPreview → optional section after final CTA, or removed for MVP
+- ComparisonCard (Traditional vs Conversational) → removed (test-frame)
+
+#### F. Nerin Depth Preview Beat (FR63)
+
+**Purpose:** Show Nerin being Nerin — not explaining, not pitching, but demonstrating the conversational depth that makes the product different. This is the "proof of character" moment.
+
+**Content direction:** A Nerin observation from a real conversation (anonymized). Something like: "You mentioned you redesign your workspace every few months but you've kept the same morning routine for years. That's an interesting tension — the part of you that craves novelty has a deal with the part that needs anchoring."
+
+**Design requirements:**
+- This beat should feel like eavesdropping on a real conversation, not reading marketing copy
+- Bold, scannable headline on the Nerin bubble (brainstorming #47): e.g., "What Nerin sounds like"
+- Nerin's observation should be 2-3 sentences max — specific enough to feel real, general enough that multiple visitor types recognize the depth
+- No explanation of methodology. Just the observation landing.
+
+#### G. PWYW Transparency (FR65)
+
+**Purpose:** Surface pricing before the CTA so visitors know what they're getting into. PWYW is a trust-builder, not a liability.
+
+**Placement:** Integrated into Beat 6 (founder reveal) and the hero tagline.
+
+**Content direction:**
+- Hero tagline: "~25 MIN · FREE · PAY WHAT YOU WANT"
+- Beat 6 (Vincent): "Your results — OCEAN code, archetype, scores — are free. The portrait Nerin writes for you is pay-what-you-want, starting at €1. Most people pay around €5."
+- The average payment amount is social proof — it communicates value, adoption, and generosity simultaneously (brainstorming #53)
+
+**Design:** Not a pricing table. Woven into Vincent's personal story as a natural aside. The tone is confidence, not justification.
+
+#### H. Multi-Persona Considerations (FR66)
+
+**Purpose:** The homepage must work for visitors with different motivations without requiring a single narrative arc.
+
+**Brainstorming personas:**
+1. **Zero-context visitor** (Inès from Journey 6) — needs to understand what this is in 3 seconds
+2. **Invited friend** (Marc from Journey 2) — already has social proof, needs a clear path forward
+3. **Social media curious** — saw a clip or archetype card, wants fun, low-friction energy
+4. **Therapy-seeker** — going through something, emotionally open, needs to feel safe
+
+**How the compressed arc serves all four:**
+- **Beat 1 (hook):** A weighted, provocative opening creates different reactions for each persona. The therapy-seeker thinks "yes." The fun-seeker thinks "ooh." The zero-context visitor thinks "what is this?" — and scrolls to find out. One line, four doors
+- **Beat 3 (portrait excerpt):** Proof of quality. The zero-context visitor sees what they'll get. The invited friend sees their partner's experience validated. The therapy-seeker sees emotional depth. The fun-seeker sees something surprisingly personal
+- **Beat 6 (founder + PWYW):** The zero-context visitor's last friction (cost) is removed. The invited friend is reassured. The therapy-seeker connects with vulnerability. The fun-seeker sees the price is trivial
+- **How It Works (fear-resolving):** Addresses the three universal fears regardless of entry motivation
+
+**For invited friends specifically:** If a visitor arrives with a referral parameter (from QR flow or shared link), the homepage should feel relevant even though their primary conversion path is the QR accept screen. The compressed, non-test-frame arc ensures the homepage doesn't feel like a mismatch if they land here first.
+
 ### 16.7 Homepage Flow Diagram
 
 ```mermaid
 flowchart TD
-    A["Visitor arrives (SEO, direct, referral)"] --> B["Hero: headline + OCEAN shapes
-    + 'Start your conversation' CTA"]
+    A["Visitor arrives (SEO, direct, referral)"] --> B["Hero: transformation hook + OCEAN shapes
+    + single CTA: 'Start your conversation'"]
     B --> C{Scrolls down?}
     C -->|No — convinced| D["Taps hero CTA → /chat"]
-    C -->|Yes — needs convincing| E["Conversational narrative
-    (14 beats, scroll-driven)"]
-    E --> F["How It Works (3 steps)"]
+    C -->|Yes — exploring| E["Compressed narrative (8 beats)
+    Portrait excerpt at Beat 3 (~33%)
+    Nerin depth preview at Beat 4
+    Founder + PWYW at Beat 6"]
+    E --> F["How It Works (3 fear-resolving steps)"]
     F --> G["Archetype Gallery (3-4 cards)"]
     G --> H["Final CTA: 'What's YOUR code?'"]
     H --> I["→ /chat"]
@@ -3675,8 +3771,8 @@ flowchart TD
 
 | Tag | Content |
 |-----|---------|
-| `og:title` | "big ocean — Not a personality quiz. A conversation." |
-| `og:description` | "Talk to Nerin for 25 minutes. Get a portrait of who you are that no test has ever given you." |
+| `og:title` | "big ocean — [Updated to match new hero headline, no test references]" |
+| `og:description` | "A 25-minute conversation with an AI that writes you a personal letter about who you are. Free results. Pay what you want for the portrait." |
 | `og:image` | Hero visual or branded card (not an archetype card — generic brand image) |
 | `<title>` | "big ocean — Personality portrait through conversation" |
 | `<meta description>` | "A 25-minute conversation with Nerin reveals your personality portrait, OCEAN code, and archetype. Compare with friends. Built on Big Five science." |
@@ -3691,23 +3787,36 @@ flowchart TD
 
 ### 16.11 Implementation Notes
 
-- **Preserve existing components.** HeroSection, ConversationFlow, ChatBubble, MessageGroup, ComparisonCard, TraitStackEmbed, HoroscopeVsPortraitComparison, ComparisonTeaserPreview — all stay. Modifications are additive.
-- **New components:** StickyConversionBar (CSS-only show/hide via IntersectionObserver), HowItWorks (static, 3 steps), ArchetypeGalleryPreview (static cards with real archetype data).
-- **Hero CTA update:** Add direct `/chat` link alongside existing scroll-down CTA. Two paths: "I'm curious, show me more" (scroll) vs. "I'm ready, let me start" (navigate).
-- **DepthMeter + DepthScrollProvider:** Keep — the scroll-as-conversation metaphor is unique and on-brand.
-- **Performance:** Homepage is the primary SEO surface. Ensure LCP < 2.5s. Hero section server-rendered. Embeds lazy-loaded via IntersectionObserver (already implemented in MessageGroup).
+- **This is a content restructure, not a rebuild.** ConversationFlow, ChatBubble, MessageGroup, DepthMeter, DepthScrollProvider all stay. The change is: fewer beats, reordered content, new beats, removed components.
+- **Components to remove from homepage flow:** ComparisonCard (test-frame), TraitStackEmbed (machinery), ComparisonTeaserPreview (moved or removed), ScrollIndicator (removed). These components may be reused elsewhere (TraitStackEmbed on results page) — don't delete the source files.
+- **Components to add:** StickyConversionBar (CSS-only show/hide via IntersectionObserver), HowItWorks (static, 3 fear-resolving steps), ArchetypeGalleryPreview (static cards with real archetype data).
+- **Hero CTA:** Single "Start your conversation" → `/chat`. No scroll-down alternative.
+- **New beat content:** Beat 3 (portrait excerpt) reuses the existing portrait-excerpt.md content but presented standalone, not in a horoscope comparison. Beat 4 (Nerin observation) is new ChatBubble content with a bold headline.
+- **DepthMeter + DepthScrollProvider:** Keep — recalibrate for 8 beats instead of 14.
+- **Performance:** Homepage is the primary SEO surface. Ensure LCP < 1s (updated target from PRD). Hero section server-rendered. Embeds lazy-loaded via IntersectionObserver (already implemented in MessageGroup).
 - **Preserve data-testid:** Existing `data-testid` and `data-slot` attributes must not be removed.
+- **Copy dependency:** Hero headline (FR60) and Nerin observation beat (FR63) require copywriting iteration. Placeholder content can be used for initial implementation, then refined.
 
 ### 16.12 Implementation Gap (Current → Target)
 
 | Area | Current | Target | Work Required |
 |------|---------|--------|---------------|
-| Hero tagline | "30 MIN · NO ACCOUNT · JUST TALKING" | "~25 MIN · FREE · JUST A CONVERSATION" | Text update in HeroSection |
-| Hero secondary CTA | None | "Start your conversation with Nerin" → `/chat` | Add Button + Link in HeroSection |
-| Sticky bottom CTA | None | Mobile-only sticky bar after scrolling past hero | New `StickyConversionBar` component, IntersectionObserver |
-| "How It Works" section | None | 3-step static section | New `HowItWorks` component |
-| Archetype Gallery | None | 3-4 example archetype cards | New `ArchetypeGalleryPreview` component, may need archetype data source |
-| Final CTA section | None | ConversationCTA after beat 14 | Add section after last MessageGroup |
+| **Hero headline** | "Not a personality quiz. A conversation." | Transformation-oriented hook, no test references (FR59, FR60) | Rewrite headline + subtitle in HeroSection. Copy TBD |
+| **Hero subtitle** | "A portrait of who you are that no test has ever given you." | "A 25-minute conversation with an AI that writes you a personal letter about who you are." | Text update in HeroSection |
+| **Hero tagline** | "30 MIN · NO ACCOUNT · JUST TALKING" | "~25 MIN · FREE · PAY WHAT YOU WANT" (FR65) | Text update in HeroSection |
+| **Hero CTA** | "Begin Your Dive ↓" (scroll-down) | Single "Start your conversation" → `/chat` (FR61) | Replace scroll CTA with nav link |
+| **Scroll indicator** | Bouncing chevron | Remove | Delete ScrollIndicator component usage |
+| **Beat compression** | 14 beats | ~8 beats (FR62 portrait at 40%) | Reorder ConversationFlow beats, remove 5-6 beats, add 2 new beats |
+| **Portrait excerpt position** | Beat 8 (~57%) | Beat 3 (~33%) (FR62) | Move HoroscopeVsPortraitComparison earlier, simplify to portrait-only |
+| **Nerin depth preview** | None | New beat showing Nerin observation (FR63) | New ChatBubble content with bold headline |
+| **Test-comparison framing** | ComparisonCard at Beat 4 | Remove (FR59) | Remove ComparisonCard from flow |
+| **Trait explorer** | TraitStackEmbed at Beat 6 | Remove from homepage (move to results page) | Remove TraitStackEmbed from flow |
+| **PWYW in founder beat** | Vincent reveals portrait, no pricing | Add PWYW transparency + average payment (FR65) | Update Beat 6 content |
+| **Sticky bottom CTA** | None | Mobile-only sticky bar after scrolling past hero | New `StickyConversionBar` component, IntersectionObserver |
+| **"How It Works"** | None | 3-step fear-resolving section (FR64) | New `HowItWorks` component |
+| **Archetype Gallery** | None | 3-4 example archetype cards | New `ArchetypeGalleryPreview` component |
+| **Final CTA section** | None | ConversationCTA after last beat | Add section after last MessageGroup |
+| **OG meta tags** | Test-frame headline | Updated to match new hero (FR59) | Update meta tags in route |
 
 ---
 
