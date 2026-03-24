@@ -12,7 +12,10 @@ export function NotFound({
 	description = "The page you're looking for doesn't exist or has drifted away.",
 }: NotFoundProps = {}) {
 	return (
-		<div className="min-h-[calc(100dvh-3.5rem)] bg-background flex items-center justify-center px-6 relative overflow-hidden">
+		<div
+			data-testid="not-found-page"
+			className="min-h-[calc(100dvh-3.5rem)] bg-background flex items-center justify-center px-6 relative overflow-hidden"
+		>
 			<div className="absolute top-12 left-1/2 -translate-x-1/2 w-80 pointer-events-none">
 				<BubblesDecoration className="opacity-[0.06]" />
 			</div>
