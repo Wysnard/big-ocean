@@ -15,10 +15,6 @@ import { WaitlistForm } from "@/components/waitlist/waitlist-form";
 import { useAuth } from "@/hooks/use-auth";
 import { makeApiClient } from "@/lib/api-client";
 import { getSession } from "@/lib/auth-client";
-import {
-	clearPendingResultsGateSession,
-	readPendingResultsGateSession,
-} from "@/lib/results-auth-gate-storage";
 
 // URL search params arrive as strings; accept both "true"/"false" and native booleans
 const BooleanFromSearch = S.Union(
@@ -31,7 +27,6 @@ const BooleanFromSearch = S.Union(
 
 const ChatSearchParams = S.Struct({
 	sessionId: S.optional(S.String),
-	expired: S.optional(BooleanFromSearch),
 	waitlist: S.optional(BooleanFromSearch),
 	highlightMessageId: S.optional(S.String),
 	highlightQuote: S.optional(S.String),
@@ -52,24 +47,7 @@ export const Route = createFileRoute("/chat/")({
 			throw redirect({ to: "/login", search: { sessionId: undefined, redirectTo: undefined } });
 		}
 
-		if (!search.sessionId && !search.waitlist && !search.expired) {
-			// Story 7.18 AC #6: Recover pending session from localStorage (anonymous user returning)
-			const pending = readPendingResultsGateSession();
-			if (pending) {
-				if (!pending.expired) {
-					throw redirect({
-						to: "/chat",
-						search: { sessionId: pending.sessionId },
-					});
-				}
-				// Expired session — show Nerin-themed message (Task 3.4)
-				clearPendingResultsGateSession();
-				throw redirect({
-					to: "/chat",
-					search: { expired: true },
-				});
-			}
-
+		if (!search.sessionId && !search.waitlist) {
 			const result = await Effect.gen(function* () {
 				const client = yield* makeApiClient;
 				return yield* client.assessment.start({ payload: {} });
@@ -77,6 +55,8 @@ export const Route = createFileRoute("/chat/")({
 				Effect.catchTag("GlobalAssessmentLimitReached", () =>
 					Effect.succeed({ _tag: "waitlist" as const }),
 				),
+				Effect.catchTag("RateLimitExceeded", () => Effect.succeed({ _tag: "waitlist" as const })),
+				Effect.catchTag("CostLimitExceeded", () => Effect.succeed({ _tag: "waitlist" as const })),
 				Effect.catchTag("AssessmentAlreadyExists", (e) =>
 					// Story 31-5: The listSessions check below will redirect completed sessions to results
 					Effect.succeed({ _tag: "existing" as const, sessionId: e.existingSessionId }),
@@ -133,7 +113,6 @@ export const Route = createFileRoute("/chat/")({
 function RouteComponent() {
 	const {
 		sessionId,
-		expired,
 		waitlist,
 		highlightMessageId,
 		highlightQuote,
@@ -145,18 +124,12 @@ function RouteComponent() {
 	const navigate = useNavigate();
 	const [sessionNotFound, setSessionNotFound] = useState(false);
 
-	// Session error handling — render NotFound or redirect based on auth status
-	// Authenticated users hitting a missing session → show NotFound (private session denied)
-	// Unauthenticated users → /chat for recovery (start fresh)
+	// Authenticated users hitting a missing session → show NotFound
 	const handleSessionError = useCallback(
 		(_error: { type: "not-found" | "session"; isResumeError: boolean }) => {
-			if (isAuthenticated) {
-				setSessionNotFound(true);
-			} else {
-				navigate({ to: "/chat" });
-			}
+			setSessionNotFound(true);
 		},
-		[isAuthenticated, navigate],
+		[],
 	);
 
 	// Story 7.18: Navigate to portrait reading view when user clicks "Read what Nerin wrote"
@@ -182,25 +155,6 @@ function RouteComponent() {
 	// Story 15.3: Circuit breaker active — show waitlist form
 	if (waitlist) {
 		return <WaitlistForm />;
-	}
-
-	// Story 7.18 Task 3.4: Expired session — Nerin-themed message
-	if (expired) {
-		return (
-			<div className="h-[calc(100dvh-3.5rem)] flex items-center justify-center bg-background">
-				<div className="text-center max-w-md px-6">
-					<p className="text-lg text-foreground font-heading">This dive session has ended.</p>
-					<p className="mt-2 text-muted-foreground">Sign up to start a new one.</p>
-					<button
-						type="button"
-						onClick={() => navigate({ to: "/chat", search: {} })}
-						className="mt-6 min-h-[48px] rounded-xl bg-foreground px-8 font-heading text-base font-bold text-background transition-all hover:bg-primary hover:shadow-lg"
-					>
-						Start a new dive
-					</button>
-				</div>
-			</div>
-		);
 	}
 
 	if (!sessionId) {
