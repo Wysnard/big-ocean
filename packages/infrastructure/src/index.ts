@@ -45,9 +45,6 @@ export { LoggerPinoRepositoryLive } from "./repositories/logger.pino.repository"
 // Nerin agent repository implementations (direct ChatAnthropic invocation)
 export { NerinAgentAnthropicRepositoryLive } from "./repositories/nerin-agent.anthropic.repository";
 export { NerinAgentMockRepositoryLive } from "./repositories/nerin-agent.mock.repository";
-export { PaymentGatewayMockRepositoryLive } from "./repositories/payment-gateway.mock.repository";
-// Payment gateway repository implementations (Story 13.2)
-export { PaymentGatewayPolarRepositoryLive } from "./repositories/payment-gateway.polar.repository";
 // Portrait repository implementation (Story 13.3)
 export { PortraitDrizzleRepositoryLive } from "./repositories/portrait.drizzle.repository";
 // Portrait generator repository implementations

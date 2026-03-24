@@ -214,8 +214,6 @@ export {
 	type NerinInvokeInput,
 	type NerinInvokeOutput,
 } from "./repositories/nerin-agent.repository";
-// Payment gateway repository (Story 13.2)
-export { PaymentGatewayRepository } from "./repositories/payment-gateway.repository";
 // Portrait repository (Story 13.3 — two-tier portrait system)
 export {
 	DuplicatePortraitError,

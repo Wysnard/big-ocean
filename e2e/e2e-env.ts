@@ -1,32 +1,39 @@
 /**
  * Shared E2E constants — URLs, credentials, auth file paths.
  *
- * Polar.sh config is loaded from .env.e2e if present (for sandbox testing),
- * otherwise falls back to test placeholder values.
+ * All external service config (Polar, Resend) comes from .env.e2e — no fallbacks.
+ * If .env.e2e is missing or incomplete, global-setup.ts will fail fast.
+ * Container-side defaults live in compose.e2e.yaml (AppConfig).
  */
 
 import { randomBytes } from "node:crypto";
 import { resolve } from "node:path";
 import { config } from "dotenv";
 
-// Load .env.e2e from project root if it exists
+// Load .env.e2e from project root — required for e2e tests
 config({ path: resolve(import.meta.dirname, "../.env.e2e") });
+
+function requireEnv(name: string): string {
+	const value = process.env[name];
+	if (!value) {
+		throw new Error(`[e2e-env] Missing required env var: ${name} — set it in .env.e2e`);
+	}
+	return value;
+}
 
 export const API_URL = "http://localhost:4001";
 export const FRONTEND_URL = "http://localhost:3001";
 
 /**
  * Polar.sh configuration for E2E tests.
- * Uses sandbox credentials from .env.e2e if available, otherwise test placeholders.
+ * All values read from .env.e2e — no fallbacks.
  */
 export const POLAR_CONFIG = {
-	accessToken: process.env.POLAR_ACCESS_TOKEN ?? "not-configured",
-	webhookSecret: process.env.POLAR_WEBHOOK_SECRET ?? "test-webhook-secret-for-e2e",
-	productPortraitUnlock: process.env.POLAR_PRODUCT_PORTRAIT_UNLOCK ?? "test-product-portrait",
-	productRelationshipSingle: process.env.POLAR_PRODUCT_RELATIONSHIP_SINGLE ?? "test-product-single",
-	productRelationship5Pack: process.env.POLAR_PRODUCT_RELATIONSHIP_5PACK ?? "test-product-5pack",
-	productExtendedConversation:
-		process.env.POLAR_PRODUCT_EXTENDED_CONVERSATION ?? "test-product-extended",
+	webhookSecret: requireEnv("POLAR_WEBHOOK_SECRET"),
+	productPortraitUnlock: requireEnv("POLAR_PRODUCT_PORTRAIT_UNLOCK"),
+	productRelationshipSingle: requireEnv("POLAR_PRODUCT_RELATIONSHIP_SINGLE"),
+	productRelationship5Pack: requireEnv("POLAR_PRODUCT_RELATIONSHIP_5PACK"),
+	productExtendedConversation: requireEnv("POLAR_PRODUCT_EXTENDED_CONVERSATION"),
 } as const;
 
 const E2E_UID = randomBytes(4).toString("hex");

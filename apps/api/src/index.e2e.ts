@@ -2,8 +2,9 @@
  * Big Ocean API Server — E2E Test Entrypoint
  *
  * Independent composition root for E2E testing.
- * Mirrors index.ts but swaps LLM, email, and payment layers for mocks.
- * No MOCK_LLM env var — mock selection is structural, not conditional.
+ * Mirrors index.ts but swaps LLM layers for mocks and uses sandbox Resend.
+ * Payment webhooks handled by Better Auth plugin (not an Effect layer).
+ * No MOCK_LLM env var — layer selection is structural, not conditional.
  */
 
 import "dotenv/config";
@@ -25,7 +26,6 @@ import {
 	CostGuardRedisRepositoryLive,
 	DatabaseStack,
 	FacetEvidenceDrizzleRepositoryLive,
-	PaymentGatewayMockRepositoryLive,
 	PortraitDrizzleRepositoryLive,
 	PortraitGeneratorMockRepositoryLive,
 	PortraitRatingDrizzleRepositoryLive,
@@ -35,7 +35,7 @@ import {
 	QrTokenDrizzleRepositoryLive,
 	RelationshipAnalysisDrizzleRepositoryLive,
 	RelationshipAnalysisGeneratorMockRepositoryLive,
-	ResendEmailMockRepositoryLive,
+	ResendEmailResendRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
 } from "@workspace/infrastructure";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
@@ -90,13 +90,14 @@ const CostGuardLayer = CostGuardRedisRepositoryLive.pipe(
 /**
  * Repository Layers
  *
- * Mock layers swapped for E2E:
- * - NerinAgentMockRepositoryLive (was: NerinAgentAnthropicRepositoryLive)
- * - ConversanalyzerMockRepositoryLive (was: ConversanalyzerAnthropicRepositoryLive)
- * - PortraitGeneratorMockRepositoryLive (was: PortraitGeneratorClaudeRepositoryLive)
- * - RelationshipAnalysisGeneratorMockRepositoryLive (was: ...AnthropicRepositoryLive)
- * - ResendEmailMockRepositoryLive (was: ResendEmailResendRepositoryLive)
- * - PaymentGatewayMockRepositoryLive (was: PaymentGatewayPolarRepositoryLive)
+ * Layers swapped for E2E:
+ * - NerinAgentMockRepositoryLive (was: NerinAgentAnthropicRepositoryLive) — mock
+ * - ConversanalyzerMockRepositoryLive (was: ConversanalyzerAnthropicRepositoryLive) — mock
+ * - PortraitGeneratorMockRepositoryLive (was: PortraitGeneratorClaudeRepositoryLive) — mock
+ * - RelationshipAnalysisGeneratorMockRepositoryLive (was: ...AnthropicRepositoryLive) — mock
+ * - ResendEmailResendRepositoryLive — LIVE (sandbox API key via .env.e2e)
+ *
+ * PaymentGateway removed — webhook handling is in Better Auth plugin, not Effect layer.
  */
 const SessionRepoLayer = AssessmentSessionDrizzleRepositoryLive.pipe(Layer.provide(RedisLayer));
 
@@ -115,14 +116,13 @@ const RepositoryLayers = Layer.mergeAll(
 	PortraitGeneratorMockRepositoryLive,
 	PortraitDrizzleRepositoryLive,
 	PortraitRatingDrizzleRepositoryLive,
-	PaymentGatewayMockRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
 	RelationshipAnalysisDrizzleRepositoryLive,
 	RelationshipAnalysisGeneratorMockRepositoryLive,
 	QrTokenDrizzleRepositoryLive,
 	UserAccountDrizzleRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
-	ResendEmailMockRepositoryLive,
+	ResendEmailResendRepositoryLive,
 );
 
 /**
@@ -217,13 +217,12 @@ const logStartup = (port: number, frontendUrl: string) =>
 
 		logger.info(`Starting Big Ocean API server on port ${port} [E2E MODE]`);
 		logger.info("");
-		logger.info("Mock layers active:");
+		logger.info("E2E layers:");
 		logger.info("  - Nerin Agent (mock)");
 		logger.info("  - ConversAnalyzer (mock)");
 		logger.info("  - Portrait Generator (mock)");
 		logger.info("  - Relationship Analysis Generator (mock)");
-		logger.info("  - Resend Email (mock)");
-		logger.info("  - Payment Gateway (mock)");
+		logger.info("  - Resend Email (sandbox)");
 		logger.info("");
 		logger.info(`CORS origin: ${frontendUrl}`);
 	});

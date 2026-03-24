@@ -1,8 +1,11 @@
-import { expect, test } from "@playwright/test";
-import { seedFullPortrait } from "../factories/assessment.factory.js";
+import { randomBytes } from "node:crypto";
+import { POLAR_CONFIG } from "../e2e-env.js";
+import { getUserByEmail, seedFullPortrait } from "../factories/assessment.factory.js";
+import { expect, test } from "../fixtures/base.fixture.js";
+import { sendPolarWebhook } from "../helpers/webhook.helper.js";
 import { signUpAndLoginViaBrowser } from "../utils/browser-auth.js";
 
-const goldenEmail = `e2e-golden+${Date.now()}@gmail.com`;
+const goldenEmail = `e2e-golden+${randomBytes(4).toString("hex")}@gmail.com`;
 const goldenPassword = "OceanDepth#Nerin42xQ";
 
 /**
@@ -13,8 +16,9 @@ const goldenPassword = "OceanDepth#Nerin42xQ";
  * Single long user journey exercising the core happy path.
  * Uses data-testid and data-slot selectors — never matches on LLM output text.
  */
-test("golden path: landing → signup → chat → results → share → public profile → continue chat → dashboard", async ({
+test("golden path: landing → signup → chat → results → share → public profile → continue chat → dashboard @critical", async ({
 	page,
+	apiContext,
 }) => {
 	test.setTimeout(90_000); // Long journey — multiple API calls, auth, navigation
 	await test.step("navigate to landing page and verify CTA exists", async () => {
@@ -37,12 +41,11 @@ test("golden path: landing → signup → chat → results → share → public 
 		for (let attempt = 0; attempt < 3; attempt++) {
 			await page.goto("/chat").catch(() => {});
 			try {
-				await page.waitForURL(/\/chat\?sessionId=/, { timeout: 10_000 });
+				await page.waitForURL(/\/chat\?sessionId=/, { timeout: 15_000 });
 				break;
 			} catch {
 				if (attempt === 2) throw new Error("Failed to navigate to /chat?sessionId= after 3 attempts");
 				// Retry — SSR beforeLoad may have failed transiently
-				await page.waitForTimeout(1_000);
 			}
 		}
 	});
@@ -85,26 +88,8 @@ test("golden path: landing → signup → chat → results → share → public 
 	});
 
 	await test.step("assert archetype card is visible", async () => {
-		// Lazy finalization may still be in progress — retry with reload if needed
-		for (let attempt = 0; attempt < 3; attempt++) {
-			const hero = page.getByTestId("archetype-hero-section");
-			const visible = await hero.isVisible().catch(() => false);
-			if (visible) break;
-
-			if (attempt < 2) {
-				await page.waitForTimeout(2_000);
-				await page.reload();
-				await page.waitForLoadState("networkidle");
-				// Dismiss PWYW modal again after reload
-				const modal = page.getByTestId("pwyw-modal");
-				if (await modal.isVisible({ timeout: 2_000 }).catch(() => false)) {
-					await page.locator("[data-slot='dialog-close']").click();
-					await modal.waitFor({ state: "hidden", timeout: 2_000 });
-				}
-			} else {
-				await hero.waitFor({ state: "visible", timeout: 15_000 });
-			}
-		}
+		// Lazy finalization may still be in progress — use a generous timeout
+		await expect(page.getByTestId("archetype-hero-section")).toBeVisible({ timeout: 30_000 });
 	});
 
 	await test.step("assert results page trait display (Story 12-1)", async () => {
@@ -147,9 +132,19 @@ test("golden path: landing → signup → chat → results → share → public 
 		await expect(portraitCta).toBeVisible();
 	});
 
-	await test.step("seed full portrait and verify it renders", async () => {
-		// Simulate full portrait generation by seeding directly in the DB
-		// (bypasses Polar checkout → webhook → LLM pipeline)
+	await test.step("simulate portrait purchase via Polar webhook", async () => {
+		const user = await getUserByEmail(goldenEmail);
+		if (!user) throw new Error("Golden path user not found for webhook");
+		await sendPolarWebhook(apiContext, {
+			productId: POLAR_CONFIG.productPortraitUnlock,
+			externalUserId: user.id,
+		});
+	});
+
+	await test.step("seed portrait content and verify it renders", async () => {
+		// The webhook created a portrait placeholder + purchase event.
+		// Portrait content generation is async via mock generator — seed content
+		// directly for deterministic test behavior.
 		await seedFullPortrait(sessionId);
 		await page.reload();
 		await page.getByTestId("archetype-hero-section").waitFor({
@@ -248,7 +243,7 @@ test("golden path: landing → signup → chat → results → share → public 
 
 	await test.step("dashboard shows identity card with archetype", async () => {
 		// Use client-side navigation via user nav dropdown (avoids auth race on cold page.goto)
-		const avatarButton = page.locator("[data-slot='user-nav'] button.rounded-full");
+		const avatarButton = page.getByTestId("user-nav-avatar");
 		await avatarButton.waitFor({ state: "visible", timeout: 10_000 });
 		await avatarButton.click();
 		await page.getByRole("menuitem", { name: "Dashboard" }).click();

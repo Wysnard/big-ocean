@@ -114,14 +114,25 @@ async function createAuthState(): Promise<void> {
 async function globalSetup(): Promise<void> {
 	console.log("[global-setup] Starting Docker test containers...");
 
-	// Use .env.e2e if it exists (for Polar.sh sandbox credentials)
+	// .env.e2e is required — validate before starting containers
 	const envFile = resolve(PROJECT_ROOT, ".env.e2e");
-	const envFileFlag = existsSync(envFile) ? "--env-file .env.e2e" : "";
-	if (envFileFlag) {
-		console.log("[global-setup] Loading Polar.sh config from .env.e2e");
+	if (!existsSync(envFile)) {
+		throw new Error(
+			"[global-setup] .env.e2e not found — copy .env.e2e.example and fill in credentials.\n" +
+				"See .env.e2e.example for required variables.",
+		);
 	}
+	for (const key of ["RESEND_API_KEY", "POLAR_WEBHOOK_SECRET"]) {
+		if (!process.env[key]) {
+			throw new Error(
+				`[global-setup] ${key} not configured — set it in .env.e2e\n` +
+					"See .env.e2e.example for required variables.",
+			);
+		}
+	}
+	console.log("[global-setup] .env.e2e validated");
 
-	execSync(`docker compose -p big-ocean-e2e -f compose.e2e.yaml ${envFileFlag} up -d --build`, {
+	execSync(`docker compose -p big-ocean-e2e -f compose.e2e.yaml --env-file .env.e2e up -d --build`, {
 		cwd: PROJECT_ROOT,
 		stdio: "inherit",
 	});

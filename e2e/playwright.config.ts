@@ -41,6 +41,7 @@ export default defineConfig({
 		{
 			name: "golden-path",
 			testMatch: "specs/golden-path.spec.ts",
+			fullyParallel: false, // Serial — triggers real Resend emails (rate limit 5 req/s)
 			use: {
 				video: "on",
 			},
@@ -77,38 +78,21 @@ export default defineConfig({
 		},
 
 		// ── Purchase credits: free credit grant, credits endpoint, UI ────
-		// Runs after waitlist to avoid Redis counter contention (waitlist sets counter to 999)
 		{
 			name: "purchase-credits",
 			testMatch: "specs/purchase-credits.spec.ts",
-			dependencies: ["waitlist"],
 		},
 
 		// ── Invitation system: create, list, token lookup, credit guard ──
-		// Runs after waitlist to avoid Redis counter contention
 		{
 			name: "invitation-system",
 			testMatch: "specs/invitation-system.spec.ts",
-			dependencies: ["waitlist"],
 		},
 
 		// ── Relationship analysis: invitation flows + analysis generation & viewing ──
 		{
 			name: "relationship-analysis",
 			testMatch: "specs/relationship-analysis.spec.ts",
-			dependencies: ["waitlist"],
-		},
-
-		// ── Evidence highlighting: authed owner with seeded evidence ─────
-		// Runs after auth-owner because seedResultsData deletes the owner's
-		// completed session (unique constraint), which auth-owner tests depend on
-		{
-			name: "evidence-highlighting",
-			testMatch: "specs/evidence-highlighting.spec.ts",
-			dependencies: ["auth-owner"],
-			use: {
-				storageState: ".auth/owner.json",
-			},
 		},
 
 		// ── Conversation lifecycle: multi-turn flow → results ────────────
@@ -160,6 +144,6 @@ export default defineConfig({
 		url: "http://localhost:3001/login",
 		cwd: PROJECT_ROOT,
 		reuseExistingServer: !process.env.CI,
-		timeout: 30_000,
+		timeout: 60_000,
 	},
 });

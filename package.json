@@ -30,6 +30,8 @@
 		"db:studio": "drizzle-kit studio",
 		"seed:test-assessment": "tsx scripts/seed-completed-assessment.ts",
 		"test:e2e": "pnpm --filter=@workspace/e2e test:e2e",
+		"test:e2e:critical": "playwright test --grep @critical",
+		"test:e2e:smoke": "playwright test --grep @smoke",
 		"test:e2e:ui": "pnpm --filter=@workspace/e2e test:e2e:ui",
 		"test:e2e:headed": "pnpm --filter=@workspace/e2e test:e2e:headed",
 		"eval:portrait": "tsx scripts/eval-portrait.ts"
@@ -51,6 +53,7 @@
 		"jsdom": "^27.0.0",
 		"prettier": "^3.7.4",
 		"simple-git-hooks": "^2.13.1",
+		"standardwebhooks": "^1.0.0",
 		"tsx": "^4.21.0",
 		"turbo": "^2.6.3",
 		"typescript": "5.7.3",
