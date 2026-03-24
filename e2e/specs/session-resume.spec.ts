@@ -10,13 +10,13 @@
  * This test verifies resume BEFORE sending any user messages (mid-greeting).
  */
 
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../fixtures/base.fixture.js";
 import { signUpAndLoginViaBrowser } from "../utils/browser-auth.js";
 
 test.describe("Session Resume", () => {
 	test.setTimeout(60_000);
 
-	test("@P0 browser reload mid-conversation preserves session", async ({ page }) => {
+	test("browser reload mid-conversation preserves session @critical", async ({ page }) => {
 		let sessionId = "";
 
 		await test.step("sign up and login", async () => {
@@ -34,7 +34,6 @@ test.describe("Session Resume", () => {
 					break;
 				} catch {
 					if (attempt === 2) throw new Error("Failed to navigate to /chat?sessionId= after 3 attempts");
-					await page.waitForTimeout(1_000);
 				}
 			}
 			sessionId = new URL(page.url()).searchParams.get("sessionId") ?? "";
@@ -73,7 +72,7 @@ test.describe("Session Resume", () => {
 		});
 	});
 
-	test("@P0 navigate away and return via URL preserves session", async ({ page }) => {
+	test("navigate away and return via URL preserves session @critical", async ({ page }) => {
 		let sessionId = "";
 
 		await test.step("sign up and login", async () => {
@@ -91,7 +90,6 @@ test.describe("Session Resume", () => {
 					break;
 				} catch {
 					if (attempt === 2) throw new Error("Failed to create session");
-					await page.waitForTimeout(1_000);
 				}
 			}
 			sessionId = new URL(page.url()).searchParams.get("sessionId") ?? "";

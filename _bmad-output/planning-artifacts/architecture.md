@@ -3,8 +3,8 @@ stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 lastStep: 8
 status: 'complete'
 completedAt: '2026-03-15'
-lastUpdated: '2026-03-23 (ADR-24 added)'
-adrsAdded: ['ADR-22: Ocean Hieroglyph System', 'ADR-23: Dashboard/Profile Consolidation', 'ADR-24: Email Verification Gate']
+lastUpdated: '2026-03-24 (ADR-25 added)'
+adrsAdded: ['ADR-22: Ocean Hieroglyph System', 'ADR-23: Dashboard/Profile Consolidation', 'ADR-24: Email Verification Gate', 'ADR-25: E2E Sandbox Testing for Email & Payments']
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/ux-design-specification.md'
@@ -31,6 +31,7 @@ inputDocuments:
   - 'docs/COMPLETED-STORIES.md'
   - 'docs/API-CONTRACT-SPECIFICATION.md'
   - 'docs/data-models.md'
+  - '_bmad-output/planning-artifacts/research/technical-e2e-testing-email-payments-research-2026-03-24.md'
 workflowType: 'architecture'
 project_name: 'big-ocean'
 user_name: 'Vincentlay'
@@ -1800,5 +1801,91 @@ await authClient.signIn.email({ email, password }, {
 - No new API endpoints (Better Auth exposes verification endpoints)
 - No changes to Polar customer creation (still fires on signup via `createCustomerOnSignUp`, before verification)
 - Email template already exists: `packages/infrastructure/src/email-templates/email-verification.ts`
+
+### ADR-25: E2E Sandbox Testing for Email & Payments — Real APIs, Simulated Webhooks
+
+**Decision:** Replace email and payment mock repositories in `index.e2e.ts` with their live implementations backed by real sandbox APIs. Payment webhooks are simulated by the e2e test helper using Standard Webhooks signature generation — no tunnel or ngrok required.
+
+**Why:** The existing `.mock.repository.ts` files for email and payments skip external APIs entirely, which means e2e tests never validate real API contract compatibility. Using sandbox APIs catches drift (Resend API changes, Polar SDK updates) without incurring costs. Payment webhook simulation avoids the operational burden of `polar listen` / ngrok tunneling in Docker. This extends the existing `index.e2e.ts` dependency-swapping pattern — the frontend and domain layers remain completely unaware of test mode.
+
+**What changes in `index.e2e.ts`:**
+
+| Layer | Before (mock) | After (sandbox) |
+|-------|--------------|-----------------|
+| Email | `ResendEmailMockRepositoryLive` | `ResendEmailResendRepositoryLive` |
+| Payment | `PaymentGatewayMockRepositoryLive` | `PaymentGatewayPolarRepositoryLive` |
+| LLM Agents | `*MockRepositoryLive` | **no change** — stays mocked (cost + determinism) |
+
+The live `PaymentGatewayPolarRepositoryLive` uses `validateEvent(rawBody, headers, webhookSecret)` from `@polar-sh/sdk/webhooks.js`. The e2e test signs payloads with the same `POLAR_WEBHOOK_SECRET` configured in `compose.e2e.yaml`, so the live repository accepts them without modification.
+
+**New env vars in `compose.e2e.yaml`:**
+
+```yaml
+environment:
+  RESEND_API_KEY: ${RESEND_API_KEY_SANDBOX}           # Resend sandbox key (from CI secrets or .env.e2e)
+  POLAR_WEBHOOK_SECRET: "whsec_e2e-test-secret"       # Known value — tests sign payloads with this
+```
+
+`RESEND_API_KEY_SANDBOX` is a real Resend API key scoped to a sandbox/test domain. Emails are sent to `delivered@resend.dev` (Resend's built-in test address — simulates delivery without affecting domain reputation).
+
+**Webhook simulation helper** (`e2e/helpers/webhook.helper.ts`):
+
+```typescript
+import { Webhook } from "standardwebhooks";
+
+export async function sendPolarWebhook(
+  apiContext: APIRequestContext,
+  event: { type: string; data: Record<string, unknown> },
+) {
+  const secret = "whsec_e2e-test-secret"; // must match compose.e2e.yaml
+  const wh = new Webhook(secret);
+  const payload = JSON.stringify(event);
+  const headers = wh.sign("msg_test", new Date(), payload);
+  return apiContext.post("/api/webhooks/polar", {
+    data: payload,
+    headers: { ...headers, "content-type": "application/json" },
+  });
+}
+```
+
+This generates valid Standard Webhooks HMAC headers. The live `PaymentGatewayPolarRepositoryLive.verifyWebhook()` validates the signature and processes the event through the real use-case pipeline (purchase event insert, portrait placeholder, credit grant). The domain layer is fully exercised.
+
+**E2E test flow — payment:**
+
+```
+[Playwright]  → navigates to purchase page, clicks "Buy"
+[E2E helper]  → sendPolarWebhook(apiContext, { type: "order.paid", data: { ... } })
+[API server]  → PaymentGatewayPolarRepositoryLive.verifyWebhook() → valid ✓
+              → onOrderPaid handler → insert purchase_event → insert portrait placeholder
+[Playwright]  → asserts UI reflects purchase state (credits, portrait unlocked, etc.)
+```
+
+**E2E test flow — email:**
+
+```
+[Playwright]  → triggers signup or action that sends email
+[API server]  → ResendEmailResendRepositoryLive.sendEmail() → real Resend sandbox API
+              → email sent to delivered@resend.dev (simulated delivery)
+[E2E test]    → optionally: poll Resend GET /emails/{id} to verify last_event === "delivered"
+```
+
+No changes needed to the email test flow beyond verifying the e2e server sends real API calls. For e2e tests that only care that the email was attempted (not its content), the test simply asserts on the app's post-send UI state.
+
+**What stays the same:**
+- All `__mocks__/*.ts` files — vitest unit/integration tests use them unchanged via `vi.mock()`
+- LLM agent mocks in `index.e2e.ts` — still mocked (`NerinAgentMockRepositoryLive`, etc.)
+- All existing e2e fixtures, factories, `global-setup.ts` — unchanged
+- Frontend code — zero awareness of test mode
+- `payment-gateway.mock.repository.ts` and `resend-email.mock.repository.ts` — kept in codebase (other tests or future use), just no longer wired in `index.e2e.ts`
+- Domain layer, use-cases, handlers — zero changes
+
+**New dev dependency:** `standardwebhooks` — the same library Polar SDK uses internally for signature verification. Used by the e2e webhook helper to generate valid signatures.
+
+**Credential management:**
+- `RESEND_API_KEY_SANDBOX` — stored in CI secrets (GitHub Actions) and `.env.e2e` (local dev). Never committed.
+- `POLAR_WEBHOOK_SECRET` — hardcoded known value in `compose.e2e.yaml` (not a real secret — only used to make the live verifier accept test payloads). Safe to commit since it has no external authority.
+- Resend test address `delivered@resend.dev` — hardcoded in tests. Protects domain reputation.
+
+**Cost impact:** Resend free tier allows 100 emails/day (3,000/month) — sufficient for e2e runs. Polar sandbox is free (no real transactions). LLM agents remain mocked (no API costs). Primary cost is CI runner time.
 
 **This document replaces:** `docs/ARCHITECTURE.md` as the single authoritative architecture reference. The standalone documents above contain full implementation-level specifications referenced by the ADRs in this document.

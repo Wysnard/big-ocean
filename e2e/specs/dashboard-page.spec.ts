@@ -25,9 +25,9 @@ test.describe("dashboard: auth user without assessment", () => {
 		});
 
 		await test.step("click dashboard link in user nav dropdown", async () => {
-			// Wait for auth to resolve — the avatar button (rounded-full) appears
+			// Wait for auth to resolve — the avatar button appears
 			// only when the user is authenticated (not during loading skeleton)
-			const avatarButton = page.locator("[data-slot='user-nav'] button.rounded-full");
+			const avatarButton = page.getByTestId("user-nav-avatar");
 			await avatarButton.waitFor({ state: "visible", timeout: 10_000 });
 			await avatarButton.click();
 
@@ -60,7 +60,7 @@ test.describe("dashboard: auth user with completed assessment", () => {
 			await page.goto("/");
 			await page.waitForLoadState("networkidle");
 
-			const avatarButton = page.locator("[data-slot='user-nav'] button.rounded-full");
+			const avatarButton = page.getByTestId("user-nav-avatar");
 			await avatarButton.waitFor({ state: "visible", timeout: 10_000 });
 			await avatarButton.click();
 			await page.getByRole("menuitem", { name: "Dashboard" }).click();

@@ -29,101 +29,106 @@ const INVITE_USER = {
 	name: "Invitation Tester",
 } as const;
 
-test.describe
-	.serial("Invitation System", () => {
-		test.setTimeout(60_000);
+test.describe("Invitation System", () => {
+	test.setTimeout(60_000);
 
-		const todayKey = new Date().toISOString().slice(0, 10);
-		const redisKey = `global_assessments:${todayKey}`;
+	const todayKey = new Date().toISOString().slice(0, 10);
+	const redisKey = `global_assessments:${todayKey}`;
 
-		let sessionId: string;
+	let sessionId: string;
 
-		test.beforeAll(() => {
-			execSync(`docker exec bigocean-redis-e2e redis-cli DEL ${redisKey}`);
+	test.beforeAll(() => {
+		execSync(`docker exec bigocean-redis-e2e redis-cli DEL ${redisKey}`);
+	});
+
+	test("create QR token, verify status, check relationship card @critical", async ({
+		page,
+		apiContext,
+	}) => {
+		// ── Setup: create user with completed assessment ──
+		await test.step("seed user with completed assessment", async () => {
+			sessionId = await createAssessmentSession(apiContext);
+			await createUser(apiContext, {
+				...INVITE_USER,
+				anonymousSessionId: sessionId,
+			});
+
+			const linkedUserId = await getSessionUserId(sessionId);
+			if (!linkedUserId) {
+				const user = await getUserByEmail(INVITE_USER.email);
+				if (user) await linkSessionToUser(sessionId, user.id);
+			}
+
+			try {
+				await seedSessionForResults(sessionId);
+			} catch (err) {
+				console.warn(
+					`[invitation-system] Skipping evidence seed: ${err instanceof Error ? err.message : err}`,
+				);
+			}
 		});
 
-		test("create QR token, verify status, check relationship card", async ({ page, apiContext }) => {
-			// ── Setup: create user with completed assessment ──
-			await test.step("seed user with completed assessment", async () => {
-				sessionId = await createAssessmentSession(apiContext);
-				await createUser(apiContext, {
-					...INVITE_USER,
-					anonymousSessionId: sessionId,
-				});
+		// ── Generate QR token via API ──
+		// TODO: These API steps (generate, verify status, verify credits) could be
+		// moved to integration tests in the future. They are kept here because they
+		// serve as setup/verification within the browser journey.
+		let qrToken = "";
+		let shareUrl = "";
 
-				const linkedUserId = await getSessionUserId(sessionId);
-				if (!linkedUserId) {
-					const user = await getUserByEmail(INVITE_USER.email);
-					if (user) await linkSessionToUser(sessionId, user.id);
-				}
+		await test.step("generate QR token via API", async () => {
+			const res = await apiContext.post("/api/relationship/qr/generate");
+			if (!res.ok()) {
+				const body = await res.text();
+				throw new Error(`QR generate failed (${res.status()}): ${body}`);
+			}
 
-				try {
-					await seedSessionForResults(sessionId);
-				} catch (err) {
-					console.warn(
-						`[invitation-system] Skipping evidence seed: ${err instanceof Error ? err.message : err}`,
-					);
-				}
-			});
+			const body = (await res.json()) as {
+				token: string;
+				shareUrl: string;
+				expiresAt: string;
+			};
+			qrToken = body.token;
+			shareUrl = body.shareUrl;
+			expect(qrToken).toBeTruthy();
+			expect(shareUrl).toContain("/relationship/qr/");
+		});
 
-			// ── Generate QR token via API ──
-			let qrToken = "";
-			let shareUrl = "";
+		// ── Verify token status via API ──
+		await test.step("verify QR token status is active", async () => {
+			const res = await apiContext.get(`/api/relationship/qr/${qrToken}/status`);
+			expect(res.ok()).toBe(true);
 
-			await test.step("generate QR token via API", async () => {
-				const res = await apiContext.post("/api/relationship/qr/generate");
-				if (!res.ok()) {
-					const body = await res.text();
-					throw new Error(`QR generate failed (${res.status()}): ${body}`);
-				}
+			const body = (await res.json()) as { status: string };
+			expect(body.status).toBe("valid");
+		});
 
-				const body = (await res.json()) as {
-					token: string;
-					shareUrl: string;
-					expiresAt: string;
-				};
-				qrToken = body.token;
-				shareUrl = body.shareUrl;
-				expect(qrToken).toBeTruthy();
-				expect(shareUrl).toContain("/relationship/qr/");
-			});
+		// ── Verify relationship card shows qr-active state ──
+		await test.step("transfer auth cookies to browser", async () => {
+			const storageState = await apiContext.storageState();
+			await page.context().addCookies(storageState.cookies);
+		});
 
-			// ── Verify token status via API ──
-			await test.step("verify QR token status is active", async () => {
-				const res = await apiContext.get(`/api/relationship/qr/${qrToken}/status`);
-				expect(res.ok()).toBe(true);
+		await test.step("results page shows relationship card in qr-active state", async () => {
+			await page.goto(`/results/${sessionId}`);
+			// Dismiss PWYW modal if it appears
+			const pwywModal = page.getByTestId("pwyw-modal");
+			if (await pwywModal.isVisible({ timeout: 3_000 }).catch(() => false)) {
+				await page.locator("[data-slot='dialog-close']").click();
+				await pwywModal.waitFor({ state: "hidden", timeout: 3_000 });
+			}
 
-				const body = (await res.json()) as { status: string };
-				expect(body.status).toBe("valid");
-			});
+			const card = page.getByTestId("relationship-card");
+			await expect(card).toBeVisible({ timeout: 15_000 });
+		});
 
-			// ── Verify relationship card shows qr-active state ──
-			await test.step("transfer auth cookies to browser", async () => {
-				const storageState = await apiContext.storageState();
-				await page.context().addCookies(storageState.cookies);
-			});
+		// ── Verify credits endpoint still shows credit (consumed on accept, not generate) ──
+		await test.step("credits endpoint shows credits available", async () => {
+			const res = await apiContext.get("/api/purchase/credits");
+			expect(res.ok()).toBe(true);
 
-			await test.step("results page shows relationship card in qr-active state", async () => {
-				await page.goto(`/results/${sessionId}`);
-				// Dismiss PWYW modal if it appears
-				const pwywModal = page.getByTestId("pwyw-modal");
-				if (await pwywModal.isVisible({ timeout: 3_000 }).catch(() => false)) {
-					await page.locator("[data-slot='dialog-close']").click();
-					await pwywModal.waitFor({ state: "hidden", timeout: 3_000 });
-				}
-
-				const card = page.getByTestId("relationship-card");
-				await expect(card).toBeVisible({ timeout: 15_000 });
-			});
-
-			// ── Verify credits endpoint still shows credit (consumed on accept, not generate) ──
-			await test.step("credits endpoint shows credits available", async () => {
-				const res = await apiContext.get("/api/purchase/credits");
-				expect(res.ok()).toBe(true);
-
-				const body = (await res.json()) as { availableCredits: number };
-				// QR generation does not consume credit — credit consumed on accept
-				expect(body.availableCredits).toBe(1);
-			});
+			const body = (await res.json()) as { availableCredits: number };
+			// QR generation does not consume credit — credit consumed on accept
+			expect(body.availableCredits).toBe(1);
 		});
 	});
+});

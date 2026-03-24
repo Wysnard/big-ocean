@@ -14,7 +14,7 @@ When working on frontend code (`apps/front` or `packages/ui`), consult [FRONTEND
 
 **Worktree isolation rule:** When running in a git worktree (e.g., spawned via `isolation: "worktree"`), ONLY read and modify files within the worktree directory. Do NOT access the main repository working tree unless the user explicitly asks you to.
 
-**Related docs:** [COMMANDS.md](./docs/COMMANDS.md) | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) | [API-CONTRACT-SPECIFICATION.md](./docs/API-CONTRACT-SPECIFICATION.md) | [FRONTEND.md](./docs/FRONTEND.md)
+**Related docs:** [COMMANDS.md](./docs/COMMANDS.md) | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) | [API-CONTRACT-SPECIFICATION.md](./docs/API-CONTRACT-SPECIFICATION.md) | [FRONTEND.md](./docs/FRONTEND.md) | [E2E-TESTING.md](./docs/E2E-TESTING.md)
 
 ## Repository Overview
 
@@ -174,6 +174,8 @@ const code = generateOceanCode(facetScoresMap); // → "HHMHM"
 **Migration rule:** When modifying the DB schema (`packages/infrastructure/src/db/drizzle/schema.ts`), always hand-write a corresponding migration SQL file following the Drizzle migration format (see existing files in `drizzle/` for reference). **NEVER modify an existing migration file** — always append a new migration. Existing migrations may already be applied to production or other developers' databases; modifying them causes migration journal mismatches and failures.
 
 ## Testing Rules
+
+**E2E standard:** When writing or reviewing Playwright E2E tests, follow the [E2E Testing Standard](./docs/E2E-TESTING.md). Key rules: E2E is only for critical multi-page journeys and access control boundaries — push everything else to integration or unit tests. Total suite must stay under 5 minutes. New specs must be self-contained (no dependency chains unless technically required).
 
 **`data-testid` rule:** NEVER remove, replace, or rename `data-testid` attributes. They are used exclusively by e2e tests (Playwright). `data-slot` is a separate shadcn/ui concern — they coexist. See [FRONTEND.md](./docs/FRONTEND.md#testing-with-data-attributes).
 

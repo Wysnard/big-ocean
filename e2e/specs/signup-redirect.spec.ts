@@ -11,7 +11,7 @@ const { Pool } = pg;
  * to /verify-email (Story 31-7b), then after email verification and
  * sign-in, user can access profile.
  */
-test("signup from home → redirects to verify-email → sign in → navigate to profile", async ({
+test("signup from home → redirects to verify-email → sign in → navigate to profile @critical", async ({
 	page,
 }) => {
 	const uniqueEmail = `e2e-signup-redirect-${Date.now()}@gmail.com`;
@@ -25,7 +25,7 @@ test("signup from home → redirects to verify-email → sign in → navigate to
 		await page.goto("/signup?redirectTo=/");
 		const submitBtn = page.locator('button[type="submit"]');
 		await submitBtn.waitFor({ state: "visible" });
-		await page.waitForTimeout(1_000);
+		await expect(page.locator("#signup-name")).toBeEnabled();
 	});
 
 	await test.step("fill and submit signup form", async () => {
@@ -78,7 +78,7 @@ test("signup from home → redirects to verify-email → sign in → navigate to
 
 	await test.step("navigate to dashboard and verify access", async () => {
 		// Use client-side navigation via user nav dropdown
-		const avatarButton = page.locator("[data-slot='user-nav'] button.rounded-full");
+		const avatarButton = page.getByTestId("user-nav-avatar");
 		await avatarButton.waitFor({ state: "visible", timeout: 10_000 });
 		await avatarButton.click();
 		await page.getByRole("menuitem", { name: "Dashboard" }).click();

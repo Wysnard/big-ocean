@@ -32,7 +32,7 @@ function expectPngBytes(body: Buffer) {
 	expect(body[3]).toBe(0x47);
 }
 
-test("archetype share card and OG image route", async ({ page, request, apiContext }) => {
+test("archetype share card and OG image route @smoke", async ({ page, request, apiContext }) => {
 	test.setTimeout(60_000);
 
 	let sessionId = "";
@@ -105,7 +105,7 @@ test("archetype share card and OG image route", async ({ page, request, apiConte
 			await pwyw.waitFor({ state: "hidden", timeout: 3_000 });
 		}
 
-		await shareCard.getByText("9:16 Story").click();
+		await shareCard.getByRole("button", { name: "9:16 Story" }).click();
 
 		const previewImg = shareCard.locator("img");
 		await expect(previewImg).toBeVisible({ timeout: 15_000 });

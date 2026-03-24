@@ -27,7 +27,7 @@ const LIFECYCLE_USER = {
 test.describe("Conversation Lifecycle", () => {
 	test.setTimeout(60_000);
 
-	test("@P0 start → exchange → farewell → results with OCEAN code", async ({ page }) => {
+	test("start → exchange → farewell → results with OCEAN code @critical", async ({ page }) => {
 		let sessionId = "";
 
 		await test.step("sign up and login", async () => {
@@ -38,11 +38,10 @@ test.describe("Conversation Lifecycle", () => {
 			for (let attempt = 0; attempt < 3; attempt++) {
 				await page.goto("/chat").catch(() => {});
 				try {
-					await page.waitForURL(/\/chat\?sessionId=/, { timeout: 10_000 });
+					await page.waitForURL(/\/chat\?sessionId=/, { timeout: 15_000 });
 					break;
 				} catch {
 					if (attempt === 2) throw new Error("Failed to navigate to /chat?sessionId= after 3 attempts");
-					await page.waitForTimeout(1_000);
 				}
 			}
 			sessionId = new URL(page.url()).searchParams.get("sessionId") ?? "";
@@ -95,23 +94,8 @@ test.describe("Conversation Lifecycle", () => {
 			}
 
 			// Wait for archetype hero (finalization may still be processing)
-			for (let attempt = 0; attempt < 3; attempt++) {
-				const hero = page.getByTestId("archetype-hero-section");
-				if (await hero.isVisible().catch(() => false)) break;
-				if (attempt < 2) {
-					await page.waitForTimeout(2_000);
-					await page.reload();
-					// Dismiss PWYW again
-					const modal = page.getByTestId("pwyw-modal");
-					await modal.waitFor({ state: "visible", timeout: 3_000 }).catch(() => {});
-					if (await modal.isVisible()) {
-						await page.locator("[data-slot='dialog-close']").click();
-						await modal.waitFor({ state: "hidden", timeout: 3_000 });
-					}
-				} else {
-					await hero.waitFor({ state: "visible", timeout: 15_000 });
-				}
-			}
+			// Lazy finalization may still be in progress — use a generous timeout
+			await expect(page.getByTestId("archetype-hero-section")).toBeVisible({ timeout: 30_000 });
 
 			// OCEAN code displayed
 			await expect(page.getByTestId("ocean-code")).toBeVisible();

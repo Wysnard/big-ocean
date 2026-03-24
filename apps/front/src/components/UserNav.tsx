@@ -83,7 +83,7 @@ export function UserNav() {
 		<div data-slot="user-nav">
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
-					<Button variant="ghost" size="icon" className="rounded-full">
+					<Button variant="ghost" size="icon" className="rounded-full" data-testid="user-nav-avatar">
 						<UserInitial name={user.name || user.email} />
 					</Button>
 				</DropdownMenuTrigger>
