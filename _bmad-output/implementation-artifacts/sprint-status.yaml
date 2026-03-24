@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-03-23
+# Generated: 2026-03-24
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-23
+generated: 2026-03-24
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -523,10 +523,10 @@ development_status:
   # Profile visibility, account deletion with cascade hooks
   # Stories: 1.1-1.2 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-30: in-progress
+  epic-30: done
   30-1-profile-visibility-controls: done
   30-2-account-deletion-with-cascade-hooks: done
-  30-3-email-verification-gate: pr-ready
+  30-3-email-verification-gate: done
   epic-30-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -535,7 +535,7 @@ development_status:
   # session resume, cost guard, drop-off email
   # Stories: 2.1-2.7 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-31: in-progress
+  epic-31: done
   31-1-nerin-greeting-and-onboarding-message: done
   31-2-nerin-character-quality-observations-transitions-and-character-bible: done
   31-3-conversation-closing-exchange: done
@@ -544,7 +544,7 @@ development_status:
   31-6-cost-guard: done
   31-7-email-infrastructure-and-drop-off-re-engagement: done
   31-7b-wire-resend-into-better-auth: done
-  31-8-extraction-pipeline-and-evidence-processing: pr-ready
+  31-8-extraction-pipeline-and-evidence-processing: done
   epic-31-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
