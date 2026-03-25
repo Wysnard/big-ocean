@@ -255,7 +255,7 @@ Users can purchase an extension to continue their conversation with Nerin for an
 ### Epic 8: Homepage & Acquisition Funnel
 New visitors experience a compelling homepage that introduces big-ocean's value proposition and drives them to start their own assessment.
 **FRs covered:** FR59-FR66
-**Notes:** 8-beat compressed narrative (from brainstorming 2026-03-23), portrait excerpt at ~33% scroll, Nerin depth preview, founder reveal with PWYW transparency, fear-resolving How It Works section, archetype gallery preview. Replaces previous 14-beat test-frame narrative. Content restructure, not a rebuild — existing ConversationFlow/ChatBubble/MessageGroup/DepthMeter infrastructure reused.
+**Notes:** _(Updated 2026-03-25 from storytelling session)_ Three-voice conversational page (Nerin bubbles / lighter user bubbles / narrator interface text). Hero + 8 beats. Portrait excerpt at Beat 2 (~25% scroll). Vincent interruption at Beat 3. Fears dissolved through narrative demonstration, not a separate HowItWorks section. Sticky chat input bar as only CTA. Relationship celebration as post-close Beat 8. No archetype gallery on homepage. Narrative source of truth: `_bmad-output/story-2026-03-24.md`. Content restructure, not a rebuild — existing ConversationFlow/ChatBubble/MessageGroup/DepthMeter infrastructure reused and extended.
 
 ### Epic 9: Engagement Emails & Dashboard
 The system sends check-in and recapture emails. Users can view a centralized dashboard with results, portrait, relationship analyses, and behavioral impact metrics.
@@ -1310,39 +1310,67 @@ _Delivered as story 37-2. Founder reveal preserved in Story 8.3 Beat 6._
 
 ### Story 8.3: Homepage Narrative Restructure & Hero Redesign
 
+_Updated 2026-03-25 to align with storytelling session output. Narrative source of truth: `_bmad-output/story-2026-03-24.md`_
+
 As a new visitor,
-I want to experience a sharp, compressed introduction to big-ocean that shows me what I'll get within seconds,
-So that I understand the value and feel drawn to start my own conversation with Nerin.
+I want to experience a compelling conversational introduction to big-ocean that makes me feel seen and curious,
+So that I start my own conversation with Nerin.
+
+**Narrative Design (from storytelling session):**
+
+The page uses a **three-voice system**:
+- **Nerin:** Full chat bubbles, left-aligned, solid background — her real voice from the character bible
+- **User:** Chat bubbles, right-aligned, lighter background, smaller text, less padding — reactive fragments ("...what do you mean?", "...an AI wrote that?", "...okay")
+- **Narrator:** No bubble, muted typography (small caps/mono) — carries context, framing, logistics. Anything that would sound fabricated in either voice goes here.
+
+**Emotional arc:** Intrigue → curiosity → awe (portrait) → dangerous curiosity → relief → wanting
 
 **Acceptance Criteria:**
 
 **Given** a visitor navigates to the homepage
 **When** the page renders
-**Then** an 8-beat conversational narrative scroll is displayed (compressed from previous 14-beat structure)
+**Then** a Hero + 8-beat conversational narrative scroll is displayed using the three-voice system
 **And** the page is server-rendered via TanStack Start with LCP <1s
-**And** the hero section leads with a transformation-oriented hook — no test references, no defining by negation (FR59, FR60)
 
 **Given** the hero section
 **When** it renders
-**Then** the headline communicates what Big Ocean is for zero-context visitors within 3 seconds
-**And** the subtitle is concrete and specific (e.g., "A 25-minute conversation with an AI that writes you a personal letter about who you are")
-**And** the tagline surfaces PWYW pricing: "~25 MIN · FREE · PAY WHAT YOU WANT" (FR65)
-**And** a single primary CTA "Start your conversation" links to `/chat` — no secondary CTAs (FR61)
+**Then** the brand mark (big-ocean + OCEAN hieroglyph shapes) is displayed (narrator space)
+**And** a Nerin chat bubble displays: "What if the most interesting person in the room is you?"
+**And** narrator text below reads: "A personality portrait through conversation · ~25 min · Free"
+**And** a scroll cue "↓ Dive deeper" is displayed (narrator space)
 **And** the ScrollIndicator (bouncing chevron) is removed
 **And** the "See how it works" secondary CTA is removed
+**And** no CTA button in the hero — the sticky input bar (see below) is the only CTA
+
+**Given** a sticky chat input bar
+**When** the visitor scrolls past the hero section
+**Then** a sticky overlay bar appears at the bottom styled as a chat input field with "Start the conversation →" button inside
+**And** subtle muted text underneath reads: "25 min · Free · Private"
+**And** it stays visible throughout the entire page (this is the ONLY CTA)
+**And** it disappears when scrolling back to the hero (CSS-only via IntersectionObserver)
+**And** it meets 44px minimum tap target
+**And** it links to `/chat`
 
 **Given** the conversational narrative
 **When** the user scrolls through the beats
-**Then** Beat 3 (~33% scroll depth) shows a concrete portrait excerpt as a personal letter — demonstrating output quality (FR62)
-**And** Beat 4 shows Nerin making a specific pattern observation — demonstrating conversational depth, not pitching (FR63)
-**And** Beat 6 integrates Vincent's founder story with PWYW transparency including average payment amount (FR65)
-**And** the narrative works across visitor types: zero-context, invited friend, social media curious, therapy-seeker (FR66)
+**Then** the beats follow this structure:
+  - **Beat 1** (conversation): User "...what do you mean?" → Nerin explains patterns + "You can live inside a pattern your whole life and never once see it." → User "..."
+  - **Beat 2** (portrait drops): Narrator setup "After one conversation, this is what Nerin wrote about the person who built big-ocean." → Portrait excerpt card in Nerin's real voice (section header "🧭 The Solving Reflex", raw conversation quotes, pattern + shadow observation) → User "...an AI wrote that?"
+  - **Beat 3** (Vincent interrupts): Distinct visual treatment (quote card). Vincent speaks unprompted — sword metaphor, what changed, why he built big-ocean. → User "..."
+  - **Beat 4** (pivot): Nerin "I don't know yet. Your pattern isn't the same as his." → "The only way I find it is by talking to you." → User "what if I don't like what you find?"
+  - **Beat 5** (permission): Nerin "I'm not a judge. I'm more like a mirror with better lighting." → "I tell you what I see — the pattern, the texture, the contradictions. What you do with it is yours." → Narrator: privacy statement
+  - **Beat 6** (science): Narrator "Built on the Big Five (OCEAN) — the personality model used by psychologists and researchers. Five traits, thirty facets." → Optional data layer visual → Nerin "The science gives us the map. The conversation gives us you."
+  - **Beat 7** (close): Nerin "About twenty-five minutes. No right answers. No wrong ones either. Just talking — about things you probably think about anyway." → "You just don't usually say them out loud." → User "...okay"
+
+**And** the narrative works across visitor types: zero-context Google searcher, invited partner, social media curious (FR66)
+**And** the portrait excerpt is at Beat 2 (~25% scroll depth) — much earlier than previous structure
 
 **Given** the compressed narrative
 **When** compared to the previous structure
-**Then** ComparisonCard (test-frame), TraitStackEmbed (methodology), and ComparisonTeaserPreview are removed from the homepage flow
+**Then** ComparisonCard, TraitStackEmbed, ComparisonTeaserPreview, HoroscopeVsPortraitComparison are removed from the homepage flow
 **And** the component source files are NOT deleted (may be reused on results page)
-**And** existing ConversationFlow, ChatBubble, MessageGroup, DepthScrollProvider infrastructure is preserved
+**And** existing ConversationFlow, ChatBubble, MessageGroup infrastructure is preserved and extended for three-voice system (user bubbles get lighter/smaller variant)
+**And** no separate HowItWorks section is needed — fears are dissolved through the narrative itself (portrait dissolves "AI can't read hearts" + "not enough depth" + "it'll be boring"; Nerin's "mirror" line dissolves judgment fear; narrator handles privacy)
 
 **Given** the DepthMeter
 **When** recalibrated
@@ -1351,61 +1379,50 @@ So that I understand the value and feel drawn to start my own conversation with 
 
 **Given** the OG meta tags
 **When** the page is shared
-**Then** og:title matches the new headline (no test references)
-**And** og:description mentions "25-minute conversation," "personal letter," and "pay what you want"
+**Then** og:title: "big ocean — What if the most interesting person in the room is you?"
+**And** og:description: "A 25-minute conversation. A portrait of who you are. Free."
 
 **Implementation notes:**
-- Content restructure, not a rebuild (UX Spec §16.11)
-- Beat mapping: see UX Spec §16.6E for old→new beat correspondence
-- Portrait excerpt content: reuse existing `portrait-excerpt.md`, presented standalone (not in horoscope comparison)
-- New Beat 4 content: Nerin observation with bold scannable headline (UX Spec §16.6F)
+- Narrative source of truth: `_bmad-output/story-2026-03-24.md` (full beat-by-beat script with voice tags)
+- Three-voice visual system: Nerin (full bubble), User (lighter/smaller bubble), Narrator (no bubble, interface typography)
+- Portrait excerpt: new content in Nerin's real portrait voice — includes conversation quotes, personalized section header, pattern + shadow structure. See story doc for full text.
+- Vincent card: distinct visual treatment, not a chat bubble. See story doc for full text.
+- Sticky input bar replaces all other CTAs (hero button, embedded CTAs, final CTA section)
 - Preserve all existing `data-testid` and `data-slot` attributes
+- Content restructure, not a rebuild — reuse existing component infrastructure
 
-### Story 8.4: How It Works, Archetype Gallery & Conversion Flow
+### Story 8.4: Relationship Celebration & Post-Close Conversion
 
-As a new visitor who has scrolled through the narrative,
-I want my remaining fears addressed and a clear path to action,
-So that I convert from curious to committed.
+_Updated 2026-03-25 to align with storytelling session output. Previous scope (HowItWorks, ArchetypeGallery) removed — fears are dissolved through narrative in 8.3. Relationship beat added as post-close content._
+
+As a visitor who has scrolled through the full narrative,
+I want to discover that I can do this with someone I care about,
+So that I have an additional reason to engage and a way to share big-ocean with people who matter to me.
 
 **Acceptance Criteria:**
 
-**Given** the visitor scrolls past the conversational narrative
-**When** the How It Works section renders
-**Then** three fear-resolving steps are displayed (not feature steps):
-  1. Process anxiety: "It feels like a conversation, not a test" (FR64)
-  2. Time commitment: "You'll get something no test can produce" + PWYW mention (FR64)
-  3. Self-exposure: "It's a mirror, not a judgment" — privacy reassurance (FR64)
-**And** the section is scannable in 5 seconds
-**And** tone is warm, direct, reassuring — not marketing copy
+**Given** the visitor scrolls past the close (Beat 7 "...okay")
+**When** Beat 8 renders
+**Then** Nerin introduces the relationship analysis: "There's one more thing. This starts with you — but it doesn't have to stay with you."
+**And** Nerin explains: "If someone matters to you — a partner, a best friend — you can invite them to take their own dive. Then we put your portraits side by side."
+**And** a comparison teaser visual is displayed (two portraits overlaid, warm not clinical)
+**And** Nerin frames it as celebration: "Think of it as a letter to someone that says: you matter to me, and I want to understand us better."
+**And** Nerin adds nuance: "It won't just show the good parts. It'll show the friction too — and why it exists. But that's what makes it real."
+**And** narrator text: "Relationship analysis · Invite someone you love"
 
-**Given** the Archetype Gallery section
-**When** it renders after How It Works
-**Then** 3-4 real archetype cards are displayed with names, OCEAN codes, GeometricSignatures, and short descriptions
-**And** on mobile: horizontal scroll layout
-**And** on desktop: 3-4 column grid
-**And** cards are visual only — no click interaction for MVP
-**And** skeleton cards display while archetype data loads; section hides entirely on failure
-
-**Given** the final CTA section
-**When** it renders after the Archetype Gallery
-**Then** a dedicated conversion section with "What's YOUR code?" copy links to `/chat`
-
-**Given** the sticky bottom CTA (mobile only)
-**When** the visitor scrolls past the hero section
-**Then** a sticky bar appears at the bottom with "Start your conversation" → `/chat`
-**And** it disappears when scrolling back to the hero (CSS-only via IntersectionObserver)
-**And** it meets 44px minimum tap target
-
-**Given** the previous homepage
+**Given** the previous homepage components
 **When** compared to the new structure
 **Then** all embedded CTAs inside ResultPreviewEmbed components are removed
 **And** the page feels like reading/experiencing, not being sold to
+**And** no separate HowItWorks section exists (moved to narrative in 8.3)
+**And** no ArchetypeGalleryPreview exists on the homepage (may be reconsidered for results page)
+**And** no "What's YOUR code?" final CTA section exists (sticky bar handles conversion)
 
 **Implementation notes:**
-- HowItWorks: new static component, no API calls
-- ArchetypeGalleryPreview: needs archetype data — only new section requiring data fetching
-- StickyConversionBar: CSS-only show/hide via IntersectionObserver (no JS state)
-- See UX Spec §16.6C, §16.6D for detailed content direction
+- Beat 8 is post-close — visitors who already converted via sticky bar may never see it. It serves: (a) last-chance conversion for those who scrolled the whole page, (b) planting the relationship seed for after their own conversation, (c) viral/sharing hook
+- Comparison teaser: reuse or adapt existing ComparisonTeaserPreview component with warmer visual treatment
+- Relationship analysis is a paid feature — this beat plants the seed without mentioning price
+- See `_bmad-output/story-2026-03-24.md` Beat 8 for full script
 
 ---
 

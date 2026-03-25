@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { NerinMessage } from "@workspace/ui/components/chat";
 import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 
 export function HeroSection() {
@@ -6,7 +6,7 @@ export function HeroSection() {
 		<section
 			data-slot="hero-section"
 			data-testid="hero-section"
-			className="relative grid min-h-screen items-center gap-11 px-6 py-24 max-[900px]:grid-cols-1 max-[900px]:text-center min-[900px]:grid-cols-[1.1fr_1fr] min-[900px]:px-20 min-[900px]:py-[100px]"
+			className="relative grid min-h-[calc(100vh-3.5rem)] items-center gap-11 px-6 py-24 max-[900px]:grid-cols-1 max-[900px]:text-center min-[900px]:grid-cols-[1.1fr_1fr] min-[900px]:px-20 min-[900px]:py-[100px]"
 		>
 			{/* Left: Text content */}
 			<div>
@@ -17,37 +17,27 @@ export function HeroSection() {
 					<OceanHieroglyphSet size={44} className="hidden sm:inline-flex" />
 				</div>
 
-				<h1 className="mb-[18px] font-heading text-[clamp(2.4rem,5vw,4rem)] font-bold leading-[1.06]">
-					Not a personality quiz.{" "}
-					<span className="bg-gradient-to-r from-primary via-[#FF1493] to-secondary bg-clip-text text-transparent">
-						A conversation.
-					</span>
-				</h1>
+				{/* Nerin chat bubble — the first bubble of the conversation */}
+				<div data-testid="hero-cta">
+					<NerinMessage className="mb-6">
+						<p className="font-heading text-[clamp(1.4rem,3vw,1.8rem)] font-bold leading-[1.2]">
+							What if the{" "}
+							<em className="not-italic bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent dark:bg-none dark:text-[var(--bubble-fg)]">
+								most interesting person
+							</em>{" "}
+							in the room is{" "}
+							<em className="not-italic bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent dark:bg-none dark:text-[var(--bubble-fg)]">
+								you
+							</em>
+							?
+						</p>
+					</NerinMessage>
+				</div>
 
-				<p className="mb-6 max-w-[440px] text-[1.05rem] leading-[1.7] text-muted-foreground max-[900px]:mx-auto">
-					A portrait of who you are that no test has ever given you.
+				{/* Narrator context */}
+				<p className="mb-8 text-sm font-mono tracking-wide text-muted-foreground" role="note">
+					A personality portrait through conversation &middot; ~25 min &middot; Free
 				</p>
-
-				<div className="mb-8 font-mono text-[.72rem] tracking-[.05em] text-muted-foreground">
-					~25 MIN &middot; FREE &middot; JUST A CONVERSATION
-				</div>
-
-				<div className="flex flex-wrap items-center gap-3 max-[900px]:justify-center">
-					<Link
-						to="/chat"
-						data-testid="hero-cta"
-						className="inline-flex min-h-[44px] items-center gap-[10px] rounded-xl bg-gradient-to-r from-primary to-secondary px-[34px] py-[15px] font-heading text-[.95rem] font-semibold text-white transition-[transform,box-shadow] duration-200 hover:translate-y-[-2px] hover:shadow-[0_8px_28px_rgba(255,0,128,.28)]"
-					>
-						Start your conversation with Nerin &rarr;
-					</Link>
-					<a
-						href="#conversation"
-						data-testid="hero-scroll-cta"
-						className="inline-flex min-h-[44px] items-center gap-[6px] rounded-xl border border-border px-[24px] py-[13px] font-heading text-[.88rem] font-medium text-muted-foreground transition-colors duration-200 hover:border-foreground/30 hover:text-foreground"
-					>
-						See how it works &darr;
-					</a>
-				</div>
 			</div>
 
 			{/* Right: OCEAN shapes with breathing animation */}
@@ -102,13 +92,13 @@ export function HeroSection() {
 				/>
 			</div>
 
-			{/* Scroll cue */}
+			{/* Scroll cue — narrator space */}
 			<div
-				className="absolute bottom-7 left-1/2 flex -translate-x-1/2 flex-col items-center gap-[3px] text-[.78rem] text-muted-foreground motion-safe:animate-[bob_2.5s_ease-in-out_infinite]"
+				className="absolute bottom-7 left-1/2 flex -translate-x-1/2 flex-col items-center gap-[3px] text-sm font-mono tracking-wide text-muted-foreground motion-safe:animate-[bob_2.5s_ease-in-out_infinite]"
 				aria-hidden="true"
+				data-testid="hero-scroll-cta"
 			>
-				<span>Scroll to descend</span>
-				<span>&darr;</span>
+				<span>&darr; Dive deeper</span>
 			</div>
 		</section>
 	);

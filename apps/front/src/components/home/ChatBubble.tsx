@@ -2,13 +2,25 @@ import { NerinMessage } from "@workspace/ui/components/chat";
 import type * as React from "react";
 
 interface ChatBubbleProps {
-	variant: "nerin" | "user" | "vincent";
+	variant: "nerin" | "user" | "vincent" | "narrator";
 	children: React.ReactNode;
 }
 
 export function ChatBubble({ variant, children }: ChatBubbleProps) {
 	if (variant === "nerin") {
 		return <NerinMessage className="relative z-[1] mb-3">{children}</NerinMessage>;
+	}
+
+	if (variant === "narrator") {
+		return (
+			<div
+				data-slot="narrator-message"
+				className="relative z-[1] mb-3 text-sm font-mono tracking-wide text-muted-foreground"
+				role="note"
+			>
+				{children}
+			</div>
+		);
 	}
 
 	if (variant === "vincent") {
@@ -47,8 +59,8 @@ export function ChatBubble({ variant, children }: ChatBubbleProps) {
 			>
 				Y
 			</div>
-			{/* Bubble */}
-			<div className="max-w-[88%] rounded-[18px] rounded-br-[5px] bg-gradient-to-br from-primary to-secondary px-[22px] py-4 text-[.92rem] leading-[1.65] text-white min-[1200px]:max-w-[92%]">
+			{/* Bubble — lighter/smaller for reactive user fragments */}
+			<div className="max-w-[88%] rounded-[18px] rounded-br-[5px] bg-gradient-to-br from-primary/80 to-secondary/80 px-4 py-2 text-sm leading-[1.65] text-white min-[1200px]:max-w-[92%]">
 				{children}
 			</div>
 		</div>
