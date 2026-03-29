@@ -7,9 +7,6 @@ import {
 	type TraitName,
 } from "@workspace/domain";
 import { OceanHieroglyph } from "@workspace/ui/components/ocean-hieroglyph";
-import { useCallback, useState } from "react";
-import { ChatBubble } from "./ChatBubble";
-import { MessageGroup } from "./MessageGroup";
 
 /* ── Copy deck (Version A — Nerin voice) ── */
 
@@ -115,31 +112,22 @@ function formatFacetName(facet: string): string {
 		.join(" ");
 }
 
-/* ── Trait stack embed (lives inside a ChatBubble) ── */
+/* ── Trait stack embed (CSS-only accordion using <details>) ── */
 
-interface TraitStackEmbedProps {
-	activeTrait: TraitName | null;
-	onTraitSelect: (trait: TraitName | null) => void;
-}
-
-export function TraitStackEmbed({ activeTrait, onTraitSelect }: TraitStackEmbedProps) {
+export function TraitStackEmbed() {
 	return (
 		<div
 			data-slot="trait-stack-embed"
-			className="mt-[14px] flex flex-col gap-2 rounded-xl border border-[var(--embed-border)] bg-[var(--embed-bg)] p-4 backdrop-blur-[4px] transition-[background,border-color] duration-[350ms]"
+			className="group/stack mt-[14px] flex flex-col gap-2 rounded-xl border border-[var(--embed-border)] bg-[var(--embed-bg)] p-4 backdrop-blur-[4px] transition-[background,border-color] duration-[350ms]"
 		>
 			{BIG_FIVE_TRAITS.map((trait) => {
-				const isActive = activeTrait === trait;
-				const isDimmed = activeTrait !== null && !isActive;
+				const facets = TRAIT_TO_FACETS[trait] ?? [];
 
 				return (
-					<button
+					<details
 						key={trait}
-						type="button"
-						onClick={() => onTraitSelect(isActive ? null : trait)}
-						data-slot="trait-card"
-						data-state={isActive ? "active" : isDimmed ? "dimmed" : "idle"}
-						className="flex cursor-pointer items-center gap-[14px] rounded-[10px] border-[1.5px] border-transparent px-4 py-[14px] text-left transition-all duration-[280ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] hover:bg-[rgba(0,0,0,0.02)] dark:hover:bg-[rgba(255,255,255,0.02)] data-[state=active]:bg-[var(--active-wash)] data-[state=active]:border-[var(--active-color)] data-[state=dimmed]:opacity-45 max-[600px]:flex-col max-[600px]:items-start max-[600px]:gap-2"
+						name="trait-explorer"
+						className="group rounded-[10px] border-[1.5px] border-transparent transition-all duration-[280ms] [transition-timing-function:cubic-bezier(.16,1,.3,1)] hover:bg-[rgba(0,0,0,0.02)] dark:hover:bg-[rgba(255,255,255,0.02)] open:bg-[var(--active-wash)] open:border-[var(--active-color)] group-has-[[open]]/stack:opacity-45 open:!opacity-100"
 						style={
 							{
 								"--active-color": `var(--trait-${trait})`,
@@ -147,151 +135,64 @@ export function TraitStackEmbed({ activeTrait, onTraitSelect }: TraitStackEmbedP
 							} as React.CSSProperties
 						}
 					>
-						<div
-							className="flex w-9 shrink-0 items-center justify-center transition-transform duration-300 [transition-timing-function:cubic-bezier(.34,1.56,.64,1)] data-[active=true]:scale-[1.15]"
-							data-active={isActive}
-						>
-							<TraitShape trait={trait} size={32} />
-						</div>
-						<div className="min-w-0 flex-1">
+						<summary className="flex cursor-pointer list-none items-center gap-[14px] px-4 py-[14px] text-left [&::-webkit-details-marker]:hidden max-[600px]:flex-col max-[600px]:items-start max-[600px]:gap-2">
+							<div className="flex w-9 shrink-0 items-center justify-center transition-transform duration-300 [transition-timing-function:cubic-bezier(.34,1.56,.64,1)] group-open:scale-[1.15]">
+								<TraitShape trait={trait} size={32} />
+							</div>
+							<div className="min-w-0 flex-1">
+								<div
+									className="font-heading text-[1.05rem] font-bold leading-tight"
+									style={{ color: `var(--trait-${trait})` }}
+								>
+									{formatTraitName(trait)}
+								</div>
+								<p className="mt-[2px] text-[.82rem] leading-[1.55] text-[var(--muted-dynamic)] transition-colors duration-[350ms]">
+									{TRAIT_DESCRIPTIONS[trait]}
+								</p>
+							</div>
+							<svg
+								className="h-5 w-5 shrink-0 text-[var(--muted-dynamic)] opacity-40 transition-all duration-250 group-open:opacity-0 group-open:translate-x-1 max-[600px]:absolute max-[600px]:right-4 max-[600px]:top-[14px]"
+								viewBox="0 0 20 20"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="1.5"
+								aria-hidden="true"
+							>
+								<path d="M7 4l6 6-6 6" />
+							</svg>
+						</summary>
+
+						{/* Facet content — revealed on open */}
+						<div className="px-4 pb-4 pt-1">
 							<div
-								className="font-heading text-[1.05rem] font-bold leading-tight"
+								className="font-heading text-[.85rem] font-semibold mb-3"
 								style={{ color: `var(--trait-${trait})` }}
 							>
-								{formatTraitName(trait)}
+								Six facets
 							</div>
-							<p className="mt-[2px] text-[.82rem] leading-[1.55] text-[var(--muted-dynamic)] transition-colors duration-[350ms]">
-								{TRAIT_DESCRIPTIONS[trait]}
-							</p>
+							<div className="flex flex-col gap-[14px]">
+								{facets.map((facet) => (
+									<div
+										key={facet}
+										className="border-l-[3px] pl-[14px]"
+										style={{ borderLeftColor: `var(--facet-${facet})` }}
+									>
+										<div
+											className="font-heading text-[.85rem] font-semibold"
+											style={{ color: `var(--facet-${facet})` }}
+										>
+											{formatFacetName(facet)}
+										</div>
+										<p className="mt-[2px] text-[.8rem] leading-[1.55] text-[var(--muted-dynamic)] transition-colors duration-[350ms]">
+											{FACET_DESCRIPTIONS[facet]}
+										</p>
+									</div>
+								))}
+							</div>
 						</div>
-						<svg
-							className="h-5 w-5 shrink-0 text-[var(--muted-dynamic)] opacity-40 transition-all duration-250 data-[active=true]:opacity-0 data-[active=true]:translate-x-1 max-[600px]:absolute max-[600px]:right-4 max-[600px]:top-[14px]"
-							data-active={isActive}
-							viewBox="0 0 20 20"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="1.5"
-							aria-hidden="true"
-						>
-							<path d="M7 4l6 6-6 6" />
-						</svg>
-					</button>
+					</details>
 				);
 			})}
 		</div>
 	);
-}
-
-/* ── Facet conversation pair (lives in ConversationFlow, outside any ChatBubble) ── */
-
-interface TraitFacetPairProps {
-	trait: TraitName;
-	isAnimating: boolean;
-}
-
-export function TraitFacetPair({ trait, isAnimating }: TraitFacetPairProps) {
-	const facets = TRAIT_TO_FACETS[trait] ?? [];
-
-	return (
-		<div
-			data-slot="facet-conversation-pair"
-			className="flex flex-col gap-5 motion-reduce:!opacity-100 motion-reduce:!translate-y-0"
-			style={{
-				animation: isAnimating
-					? "traitPairExit 200ms ease-in forwards"
-					: "traitPairEnter 450ms cubic-bezier(.16,1,.3,1) forwards",
-			}}
-		>
-			{/* User asks about the trait */}
-			<MessageGroup>
-				<ChatBubble variant="user">Tell me more about {formatTraitName(trait)}</ChatBubble>
-			</MessageGroup>
-
-			{/* Nerin responds with facets */}
-			<MessageGroup>
-				<ChatBubble variant="nerin">
-					<div className="flex items-center gap-[10px] mb-3">
-						<div className="motion-safe:animate-[shapeReveal_400ms_cubic-bezier(.34,1.56,.64,1)_300ms_both]">
-							<TraitShape trait={trait} size={40} />
-						</div>
-						<span
-							className="font-heading text-[.95rem] font-semibold"
-							style={{
-								color: `var(--trait-${trait})`,
-							}}
-						>
-							{formatTraitName(trait)}
-						</span>
-					</div>
-
-					<p className="mb-4 text-[.84rem] leading-[1.6] text-[var(--muted-dynamic)] transition-colors duration-[350ms]">
-						{TRAIT_DESCRIPTIONS[trait]}
-					</p>
-
-					<div
-						className="font-heading text-[.85rem] font-semibold mb-3"
-						style={{ color: `var(--trait-${trait})` }}
-					>
-						Six facets
-					</div>
-
-					<div className="flex flex-col gap-[14px]">
-						{facets.map((facet, i) => (
-							<div
-								key={facet}
-								className="border-l-[3px] pl-[14px] motion-safe:animate-[facetCascade_300ms_cubic-bezier(.16,1,.3,1)_both]"
-								style={{
-									borderLeftColor: `var(--facet-${facet})`,
-									animationDelay: `${400 + i * 60}ms`,
-								}}
-							>
-								<div
-									className="font-heading text-[.85rem] font-semibold"
-									style={{ color: `var(--facet-${facet})` }}
-								>
-									{formatFacetName(facet)}
-								</div>
-								<p className="mt-[2px] text-[.8rem] leading-[1.55] text-[var(--muted-dynamic)] transition-colors duration-[350ms]">
-									{FACET_DESCRIPTIONS[facet]}
-								</p>
-							</div>
-						))}
-					</div>
-				</ChatBubble>
-			</MessageGroup>
-		</div>
-	);
-}
-
-/* ── Hook for managing trait selection with cross-fade animation ── */
-
-export function useTraitSelection() {
-	const [activeTrait, setActiveTrait] = useState<TraitName | null>(null);
-	const [isAnimating, setIsAnimating] = useState(false);
-
-	const handleTraitSelect = useCallback(
-		(trait: TraitName | null) => {
-			if (isAnimating) return;
-
-			if (trait === null || activeTrait === trait) {
-				setActiveTrait(null);
-				return;
-			}
-
-			if (activeTrait !== null) {
-				// Cross-fade: exit current, then enter new
-				setIsAnimating(true);
-				setTimeout(() => {
-					setActiveTrait(trait);
-					setIsAnimating(false);
-				}, 200);
-				return;
-			}
-
-			setActiveTrait(trait);
-		},
-		[activeTrait, isAnimating],
-	);
-
-	return { activeTrait, isAnimating, handleTraitSelect };
 }

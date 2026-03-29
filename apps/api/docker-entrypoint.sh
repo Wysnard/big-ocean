@@ -8,7 +8,7 @@ echo "🔧 Rebuilding esbuild for Linux platform..."
 pnpm rebuild esbuild
 
 echo "🗃️ Running database migrations..."
-pnpm -C /app db:migrate 2>&1 || echo "⚠️ Migration warning (may be expected on first run)"
+pnpm -C /app db:migrate
 
 echo "✅ Setup complete"
 echo "🚀 Starting development server..."

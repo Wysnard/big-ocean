@@ -111,6 +111,8 @@ export function useTherapistChat(sessionId: string) {
 
 	// Pending greeting messages not yet displayed (for stagger flush on early send)
 	const pendingGreetingsRef = useRef<Message[]>([]);
+	// Track whether greeting stagger has already played for this session
+	const hasStaggeredRef = useRef(false);
 
 	// Session resumption
 	const {
@@ -158,7 +160,7 @@ export function useTherapistChat(sessionId: string) {
 		const isNewSession =
 			mappedMessages.length === 5 && mappedMessages.every((m) => m.role === "assistant");
 
-		if (!isNewSession) {
+		if (!isNewSession || hasStaggeredRef.current) {
 			// Resumed session with existing conversation — show all immediately
 			setMessages(mappedMessages);
 			return;
@@ -174,6 +176,7 @@ export function useTherapistChat(sessionId: string) {
 		}
 
 		// First message appears immediately; remaining stagger in
+		hasStaggeredRef.current = true;
 		const [first, ...rest] = mappedMessages;
 		setMessages([first]);
 		pendingGreetingsRef.current = [...rest];

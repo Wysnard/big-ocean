@@ -154,6 +154,7 @@ function ResultsSessionPage() {
 			setIsCheckoutLoading(false);
 			checkout.addEventListener("success", (event) => {
 				event.preventDefault();
+				checkout.close();
 				setWaitingForUnlock(true);
 			});
 			checkout.addEventListener("close", () => {

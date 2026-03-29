@@ -13,11 +13,7 @@ import { HoroscopeVsPortraitComparison } from "../components/home/HoroscopeVsPor
 import { HowItWorks } from "../components/home/HowItWorks";
 import { MessageGroup } from "../components/home/MessageGroup";
 import { RelationshipCta } from "../components/home/RelationshipCta";
-import {
-	TraitFacetPair,
-	TraitStackEmbed,
-	useTraitSelection,
-} from "../components/home/TraitStackEmbed";
+import { TraitStackEmbed } from "../components/home/TraitStackEmbed";
 
 export const Route = createFileRoute("/")({
 	component: HomePage,
@@ -45,8 +41,6 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-	const { activeTrait, isAnimating, handleTraitSelect } = useTraitSelection();
-
 	return (
 		<DepthScrollProvider>
 			{/* Hero — full-viewport intro */}
@@ -122,13 +116,10 @@ function HomePage() {
 							Emotionality, Imagination, Intellect, Liberalism. Six flavors of one trait.
 						</p>
 						<p>Tap one and see what&rsquo;s underneath.</p>
-						<TraitStackEmbed activeTrait={activeTrait} onTraitSelect={handleTraitSelect} />
+						<TraitStackEmbed />
 						<p>You don&rsquo;t get a type. You get a landscape.</p>
 					</ChatBubble>
 				</MessageGroup>
-
-				{/* Beat 6b — Conditional: Spawned conversation pair */}
-				{activeTrait && <TraitFacetPair trait={activeTrait} isAnimating={isAnimating} />}
 
 				{/* Beat 7 — User: Challenges output */}
 				<MessageGroup>

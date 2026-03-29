@@ -38,6 +38,12 @@ const ChatSearchParams = S.Struct({
 export const Route = createFileRoute("/chat/")({
 	ssr: false,
 	validateSearch: (search) => S.decodeUnknownSync(ChatSearchParams)(search),
+	notFoundComponent: () => (
+		<NotFound
+			title="Session not found"
+			description="This conversation doesn't exist or doesn't belong to your account."
+		/>
+	),
 	beforeLoad: async (context) => {
 		const { search } = context;
 
