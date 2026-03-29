@@ -26,6 +26,7 @@ import {
 	AssessmentSessionRepository,
 	aggregateDomainDistribution,
 	buildPrompt,
+	buildSurfacingPrompt,
 	type ConversanalyzerV2Output,
 	ConversationEvidenceRepository,
 	CostGuardRepository,
@@ -74,6 +75,8 @@ export interface NerinPipelineInput {
 export interface NerinPipelineOutput {
 	readonly response: string;
 	readonly isFinalTurn: boolean;
+	/** Beat 2 surfacing message — only present on the final turn */
+	readonly surfacingMessage?: string;
 }
 
 // ---- Helpers ----
@@ -773,8 +776,63 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		// Compute isFinalTurn from message count
 		const isFinalTurnResult = messageCount >= config.freeTierMessageThreshold;
 
-		// Transition session to "finalizing" on final turn
+		// ---- Beat 2: Generate surfacing message on final turn ----
+
+		let surfacingMessage: string | undefined;
+
 		if (isFinalTurnResult) {
+			const surfacingPrompt = buildSurfacingPrompt();
+
+			// Build message history for surfacing — include the Beat 1 response
+			const surfacingMessages: ReadonlyArray<DomainMessage> = [
+				...domainMessages,
+				{ id: `surfacing-ctx-${Date.now()}`, role: "assistant" as const, content: result.response },
+			];
+
+			const surfacingResult = yield* nerin
+				.invoke({
+					sessionId: input.sessionId,
+					messages: surfacingMessages,
+					systemPrompt: surfacingPrompt,
+				})
+				.pipe(
+					Effect.tapError((error) =>
+						Effect.sync(() =>
+							logger.error("Surfacing message generation failed", {
+								errorTag: error._tag,
+								sessionId: input.sessionId,
+								message: error.message,
+							}),
+						),
+					),
+				);
+
+			surfacingMessage = surfacingResult.response;
+
+			// Save surfacing message to DB (linked to closing exchange)
+			yield* messageRepo.saveMessage(input.sessionId, "assistant", surfacingMessage, exchange.id);
+
+			// Track surfacing cost — fail-open
+			const surfacingCost = calculateCost(
+				surfacingResult.tokenCount.input,
+				surfacingResult.tokenCount.output,
+			);
+			if (surfacingCost.totalCents > 0) {
+				yield* costGuard
+					.incrementDailyCost(costKey, surfacingCost.totalCents)
+					.pipe(Effect.catchAll(() => Effect.void));
+				yield* costGuard
+					.incrementSessionCost(input.sessionId, surfacingCost.totalCents)
+					.pipe(Effect.catchAll(() => Effect.void));
+			}
+
+			logger.info("Surfacing message generated", {
+				sessionId: input.sessionId,
+				surfacingLength: surfacingMessage.length,
+				surfacingTokenCount: surfacingResult.tokenCount,
+			});
+
+			// Transition session to "finalizing"
 			yield* sessionRepo.updateSession(input.sessionId, { status: "finalizing" });
 		}
 
@@ -786,6 +844,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			tokenCount: result.tokenCount,
 			messageCount,
 			isFinalTurn: isFinalTurnResult,
+			hasSurfacingMessage: !!surfacingMessage,
 			selectedTerritory: selectedTerritoryId,
 			observedEnergyBand,
 			observedTellingBand,
@@ -808,5 +867,6 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		return {
 			response: result.response,
 			isFinalTurn: isFinalTurnResult,
+			...(surfacingMessage ? { surfacingMessage } : {}),
 		} satisfies NerinPipelineOutput;
 	});

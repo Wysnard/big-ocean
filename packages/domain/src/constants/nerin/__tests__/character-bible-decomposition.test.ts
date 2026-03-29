@@ -142,7 +142,7 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 		});
 
 		it("contains vulnerability response", () => {
-			expect(allModules).toContain("MEET VULNERABILITY FIRST");
+			expect(allModules).toContain("HONOR WHAT THEY GIVE YOU");
 		});
 
 		it("contains normalization patterns", () => {
@@ -193,7 +193,7 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 
 		it("contains instinct-level behaviors", () => {
 			// Should preserve the instinct patterns
-			expect(CONVERSATION_INSTINCTS).toContain("MEET VULNERABILITY FIRST");
+			expect(CONVERSATION_INSTINCTS).toContain("HONOR WHAT THEY GIVE YOU");
 		});
 	});
 

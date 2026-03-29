@@ -26,7 +26,6 @@ import {
 	SAFETY_GUARDRAILS,
 	STEERING_PREFIX,
 	STORY_PULLING,
-	THREADING_COMMON,
 } from "../../../constants/nerin/index";
 import { NERIN_PERSONA } from "../../../constants/nerin-persona";
 import type {
@@ -60,8 +59,6 @@ const COMMON_MODULES = [
 	REFLECT,
 	STORY_PULLING,
 	OBSERVATION_QUALITY_COMMON,
-	THREADING_COMMON,
-	CLOSING_EXCHANGE,
 ];
 
 function makeOpenInput(territory = "creative-pursuits"): OpenPromptInput {
@@ -108,7 +105,7 @@ describe("common layer — always included", () => {
 		expect(close.systemPrompt).toContain(NERIN_PERSONA);
 	});
 
-	it("includes all 14 common modules in every prompt", () => {
+	it("includes all 12 common modules in every prompt", () => {
 		const open = buildPrompt(makeOpenInput());
 		const explore = buildPrompt(makeExploreInput());
 		const close = buildPrompt(makeCloseInput());
@@ -259,13 +256,13 @@ describe("explore intent", () => {
 describe("close intent", () => {
 	it("uses close x relate template", () => {
 		const result = buildPrompt(makeCloseInput());
-		expect(result.systemPrompt).toContain("last question");
+		expect(result.systemPrompt).toContain("last response");
 	});
 
 	it("uses close x noticing template", () => {
 		const focus: ObservationFocus = { type: "noticing", domain: "leisure" as LifeDomain };
 		const result = buildPrompt(makeCloseInput({ observationFocus: focus }));
-		expect(result.systemPrompt).toContain("last question");
+		expect(result.systemPrompt).toContain("last response");
 		expect(result.systemPrompt).toContain("leisure");
 	});
 
@@ -552,9 +549,11 @@ describe("Story 31-2 — character quality modules", () => {
 // ─── Story 31-3 New Module ───────────────────────────────────────────
 
 describe("Story 31-3 — closing exchange module", () => {
-	it("includes CLOSING_EXCHANGE with closing instinct", () => {
-		const result = buildPrompt(makeOpenInput());
-		expect(result.systemPrompt).toContain("WHEN THE CONVERSATION IS CLOSING");
+	it("CLOSING_EXCHANGE only included in close intent (not open/explore)", () => {
+		const open = buildPrompt(makeOpenInput());
+		const explore = buildPrompt(makeExploreInput());
+		expect(open.systemPrompt).not.toContain("WHEN THE CONVERSATION IS CLOSING");
+		expect(explore.systemPrompt).not.toContain("WHEN THE CONVERSATION IS CLOSING");
 	});
 
 	it("CLOSING_EXCHANGE present in close intent prompt", () => {

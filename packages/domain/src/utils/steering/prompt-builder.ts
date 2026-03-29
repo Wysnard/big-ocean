@@ -26,6 +26,7 @@ import {
 	MIRROR_GUARDRAILS,
 	OBSERVATION_QUALITY_COMMON,
 	ORIGIN_STORY,
+	PORTRAIT_CONTEXT,
 	PUSHBACK_HANDLING,
 	QUALITY_INSTINCT,
 	REFLECT,
@@ -33,7 +34,7 @@ import {
 	SAFETY_GUARDRAILS,
 	STEERING_PREFIX,
 	STORY_PULLING,
-	THREADING_COMMON,
+	SURFACING_MESSAGE,
 } from "../../constants/nerin/index";
 import {
 	BRIDGE_NEGATIVE_CONSTRAINT,
@@ -73,8 +74,6 @@ const COMMON_MODULES = [
 	REFLECT,
 	STORY_PULLING,
 	OBSERVATION_QUALITY_COMMON,
-	THREADING_COMMON,
-	CLOSING_EXCHANGE,
 ] as const;
 
 function assembleCommonLayer(): string {
@@ -129,6 +128,11 @@ function buildSteeringSection(
 	// Append pressure modifier for explore, bridge, and close intents
 	if (input.intent === "explore" || input.intent === "bridge" || input.intent === "close") {
 		parts.push(getPressureModifier(input.entryPressure));
+	}
+
+	// Inject CLOSING_EXCHANGE only on close intent (moved out of common layer)
+	if (input.intent === "close") {
+		parts.push(CLOSING_EXCHANGE);
 	}
 
 	return {
@@ -201,4 +205,32 @@ export function buildPrompt(input: PromptBuilderInput): PromptBuilderOutput {
 		steeringSection,
 		mirrorSet,
 	};
+}
+
+// ─── Surfacing Prompt Builder (Beat 2) ─────────────────────────────
+
+/**
+ * Build the system prompt for the surfacing message (Beat 2 of closing).
+ *
+ * Uses Nerin's persona + the SURFACING_MESSAGE module. No steering layer
+ * needed — this is a standalone reflective message, not a response to input.
+ *
+ * @returns System prompt string for the surfacing message generation
+ */
+export function buildSurfacingPrompt(): string {
+	return [NERIN_PERSONA, ORIGIN_STORY, SURFACING_MESSAGE].join("\n\n");
+}
+
+// ─── Portrait Prompt Builder ───────────────────────────────────────
+
+/**
+ * Build the system prompt for the personality portrait (letter-writing).
+ *
+ * Uses Nerin's persona + origin story + the PORTRAIT_CONTEXT module.
+ * Parallel mechanism to buildPrompt (chat) and buildSurfacingPrompt (Beat 2).
+ *
+ * @returns System prompt string for portrait generation
+ */
+export function buildPortraitPrompt(): string {
+	return [NERIN_PERSONA, ORIGIN_STORY, PORTRAIT_CONTEXT].join("\n\n");
 }

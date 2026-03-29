@@ -73,23 +73,23 @@ export const BRIDGE_CONVERGENCE_TEMPLATE =
 export const BRIDGE_NEGATIVE_CONSTRAINT =
 	"You've been exploring {previousTerritory.name} — your curiosity has moved. Don't pull the conversation back there.";
 
-// ─── Close Templates (4) ────────────────────────────────────────────
+// ─── Close Templates (4) — Beat 1: "The Landing" ───────────────────
 
-/** close x relate — last question, land it with feeling. */
+/** close x relate — last response, land with warmth. */
 export const CLOSE_RELATE_TEMPLATE =
-	"This is your last question. Connect to what they just shared and land it — something that lets them leave with a feeling, not a thread to chase.";
+	"This is your last response. Land on what they just shared — no question, they won't get to answer. Acknowledge what they gave you, name what's real about it, and let it settle. You're beginning to surface.";
 
-/** close x noticing — last question, name the domain shift. */
+/** close x noticing — last response, name the domain shift. */
 export const CLOSE_NOTICING_TEMPLATE =
-	"This is your last question. Something has been shifting in how they talk about {domain}. Name it — give them something to sit with.";
+	"This is your last response. Something has been shifting in how they talk about {domain}. Name it simply. Don't ask — let it land. You're beginning to surface.";
 
-/** close x contradiction — last question, frame tension as worth holding. */
+/** close x contradiction — last response, frame tension as worth holding. */
 export const CLOSE_CONTRADICTION_TEMPLATE =
-	"This is your last question. {facet} shows up differently in {domain1} vs {domain2}. Frame that tension as something worth holding — not to resolve, to notice.";
+	"This is your last response. {facet} shows up differently in {domain1} vs {domain2}. Name that tension as something worth holding — don't ask them to explain it, let them sit with it. You're beginning to surface.";
 
-/** close x convergence — last question, name the core pattern. */
+/** close x convergence — last response, name the core pattern. */
 export const CLOSE_CONVERGENCE_TEMPLATE =
-	"This is your last question. {facet} has shown up consistently across {domains}. Name that pattern — it says something core about who they are.";
+	"This is your last response. {facet} has shown up consistently across {domains}. Name that core pattern — honor it. Don't probe further. You're beginning to surface.";
 
 // ─── Template Lookup ────────────────────────────────────────────────
 

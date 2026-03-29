@@ -55,7 +55,12 @@ export {
 	scoreAllTerritoriesV2,
 } from "./pacing-territory-scorer";
 // Prompt Builder (Story 27-2, rewritten Story 28-4)
-export { buildPrompt, type PromptBuilderOutput } from "./prompt-builder";
+export {
+	buildPortraitPrompt,
+	buildPrompt,
+	buildSurfacingPrompt,
+	type PromptBuilderOutput,
+} from "./prompt-builder";
 // Territory Prompt Builder (Story 21-5, evolved Story 23-2)
 export {
 	buildTerritoryPrompt,

@@ -236,16 +236,27 @@ export function useTherapistChat(sessionId: string) {
 				{ sessionId, message: userMessage },
 				{
 					onSuccess: (data) => {
-						// Add assistant response
-						setMessages((prev) => [
-							...prev,
+						// Add assistant response (Beat 1)
+						const newMessages: typeof messages = [
 							{
 								id: `msg-${Date.now()}-response`,
 								role: "assistant",
 								content: data.response,
 								timestamp: new Date(),
 							},
-						]);
+						];
+
+						// Beat 2: Surfacing message (only on final turn)
+						if (data.surfacingMessage) {
+							newMessages.push({
+								id: `msg-${Date.now()}-surfacing`,
+								role: "assistant",
+								content: data.surfacingMessage,
+								timestamp: new Date(),
+							});
+						}
+
+						setMessages((prev) => [...prev, ...newMessages]);
 
 						// Story 7.18: Handle final turn — trigger farewell transition
 						if (data.isFinalTurn) {

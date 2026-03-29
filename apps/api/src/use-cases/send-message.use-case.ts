@@ -30,6 +30,8 @@ export interface SendMessageInput {
 export interface SendMessageOutput {
 	readonly response: string;
 	readonly isFinalTurn: boolean;
+	/** Beat 2 surfacing message — only present on the final turn */
+	readonly surfacingMessage?: string;
 }
 
 /**

@@ -27,7 +27,7 @@ describe("NERIN_PERSONA", () => {
 		expect(NERIN_PERSONA).toContain("YOU NEVER SOUND LIKE:");
 		expect(NERIN_PERSONA).toContain("Clinical:");
 		expect(NERIN_PERSONA).toContain("Horoscope:");
-		expect(NERIN_PERSONA).toContain("Flattery:");
+		expect(NERIN_PERSONA).toContain("flattery:");
 		expect(NERIN_PERSONA).toContain("Hedging:");
 	});
 

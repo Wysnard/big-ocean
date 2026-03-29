@@ -28,6 +28,8 @@ export { MIRROR_GUARDRAILS } from "./mirror-guardrails";
 export { OBSERVATION_QUALITY_COMMON } from "./observation-quality-common";
 // Story 31-2 — Character Quality modules
 export { ORIGIN_STORY } from "./origin-story";
+// Portrait context — letter-writing instructions for portrait generation
+export { PORTRAIT_CONTEXT } from "./portrait-context";
 // Pressure modifiers — entry pressure language (Story 28-3)
 export {
 	getPressureModifier,
@@ -61,4 +63,6 @@ export {
 	TEMPLATE_COUNT,
 } from "./steering-templates";
 export { STORY_PULLING } from "./story-pulling";
+// Surfacing message — Beat 2 of two-beat closing
+export { SURFACING_MESSAGE } from "./surfacing-message";
 export { THREADING_COMMON } from "./threading-common";

@@ -73,6 +73,7 @@ export const SendMessageRequestSchema = S.Struct({
 export const SendMessageResponseSchema = S.Struct({
 	response: S.String,
 	isFinalTurn: S.Boolean,
+	surfacingMessage: S.optional(S.String),
 });
 
 /**

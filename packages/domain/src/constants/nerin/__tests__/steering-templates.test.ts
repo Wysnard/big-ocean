@@ -320,7 +320,7 @@ describe("renderSteeringTemplate", () => {
 		it("renders close x relate (no territory params needed)", () => {
 			const focus: ObservationFocus = { type: "relate" };
 			const result = renderSteeringTemplate("close", focus, sampleTerritory);
-			expect(result).toContain("last question");
+			expect(result).toContain("last response");
 			expect(result).not.toMatch(/\{[^}]+\}/);
 		});
 
@@ -328,7 +328,7 @@ describe("renderSteeringTemplate", () => {
 			const focus: ObservationFocus = { type: "noticing", domain: "leisure" as LifeDomain };
 			const result = renderSteeringTemplate("close", focus, sampleTerritory);
 			expect(result).toContain("leisure");
-			expect(result).toContain("last question");
+			expect(result).toContain("last response");
 			expect(result).not.toMatch(/\{[^}]+\}/);
 		});
 

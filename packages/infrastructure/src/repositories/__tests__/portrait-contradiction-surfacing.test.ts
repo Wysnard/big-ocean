@@ -3,23 +3,16 @@
  *
  * Verifies that the contradiction-surfacing instruction was added to the
  * full portrait generator prompt.
+ *
+ * PORTRAIT_CONTEXT was extracted from infrastructure to domain (portrait-context.ts).
+ * Tests now import the constant directly rather than reading source files.
  */
 
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { PORTRAIT_CONTEXT } from "@workspace/domain";
 import { describe, expect, it } from "vitest";
 
-/**
- * Read source file content for prompt verification.
- * We read the source files directly rather than importing private constants,
- * following the same approach as prompt content tests elsewhere.
- */
-function readSourceFile(relativePath: string): string {
-	return readFileSync(resolve(__dirname, "..", relativePath), "utf-8");
-}
-
 describe("Story 22-3: Contradiction-Surfacing in Portrait Generator", () => {
-	const portraitSource = readSourceFile("portrait-generator.claude.repository.ts");
+	const portraitSource = PORTRAIT_CONTEXT;
 
 	it("full portrait prompt contains contradiction-surfacing instruction", () => {
 		expect(portraitSource).toContain("Look for contradictions and tensions in the evidence");

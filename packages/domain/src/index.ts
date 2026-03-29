@@ -64,6 +64,7 @@ export {
 	OBSERVATION_QUALITY_COMMON,
 	OPEN_RELATE_TEMPLATE,
 	ORIGIN_STORY,
+	PORTRAIT_CONTEXT,
 	PRESSURE_ANGLED,
 	PRESSURE_DIRECT,
 	PRESSURE_SOFT,
@@ -542,7 +543,9 @@ export {
 // Move Governor (Story 26-3)
 // Prompt Builder (Story 27-2)
 export {
+	buildPortraitPrompt,
 	buildPrompt,
+	buildSurfacingPrompt,
 	buildTerritoryPrompt,
 	buildTerritorySystemPromptSection,
 	COLD_START_PERIMETER,

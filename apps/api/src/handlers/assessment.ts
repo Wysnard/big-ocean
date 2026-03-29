@@ -198,6 +198,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 					return {
 						response: result.response,
 						isFinalTurn: result.isFinalTurn,
+						...(result.surfacingMessage ? { surfacingMessage: result.surfacingMessage } : {}),
 					};
 				}),
 			)
