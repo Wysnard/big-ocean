@@ -33,9 +33,9 @@ export const OPEN_RELATE_TEMPLATE =
 export const EXPLORE_RELATE_TEMPLATE =
 	"Connect naturally to what they just shared. Your curiosity is on {territory.name} — {territory.description}.";
 
-/** explore x noticing — domain shift pointing toward territory. */
+/** explore x noticing — acknowledge domain signal, then steer toward territory. */
 export const EXPLORE_NOTICING_TEMPLATE =
-	"Something is shifting in how they talk about {domain}. That shift points toward {territory.description} — follow it.";
+	"Something landed in how they talked about {domain} — name it briefly so they feel heard. Then use that as a setup to steer toward {territory.description}. The noticing is the bridge, not the destination.";
 
 /** explore x contradiction — facet tension across domains, linked to territory. */
 export const EXPLORE_CONTRADICTION_TEMPLATE =
@@ -54,9 +54,9 @@ export const EXPLORE_CONVERGENCE_TEMPLATE =
 export const BRIDGE_RELATE_TEMPLATE =
 	"You've been exploring {previousTerritory.name}. Something in what they just shared connects to {newTerritory.description}. Follow that thread. If the thread isn't there but something interesting is unfinished, name it — \"there's something there, we'll come back to it\" — and shift your curiosity to {newTerritory.description}. If nothing connects, you have a good read on {previousTerritory.name} — tell them, and shift your curiosity to {newTerritory.description}.";
 
-/** bridge x noticing — domain shift pulling from previousTerritory toward newTerritory. */
+/** bridge x noticing — acknowledge domain signal, then bridge toward new territory. */
 export const BRIDGE_NOTICING_TEMPLATE =
-	"Something is shifting in how they talk about {domain}. You've been in {previousTerritory.name} — this shift is pulling you toward {newTerritory.description}.";
+	"Something landed in how they talked about {domain} — name it briefly so they feel heard. You've been in {previousTerritory.name}. Use what you noticed as a bridge into {newTerritory.description}. The noticing is the bridge, not the destination.";
 
 /** bridge x contradiction — facet tension pulling from previousTerritory toward newTerritory. */
 export const BRIDGE_CONTRADICTION_TEMPLATE =

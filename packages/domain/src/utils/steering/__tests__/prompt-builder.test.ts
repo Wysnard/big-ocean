@@ -184,7 +184,7 @@ describe("explore intent", () => {
 	it("uses explore x noticing template with domain param", () => {
 		const focus: ObservationFocus = { type: "noticing", domain: "work" as LifeDomain };
 		const result = buildPrompt(makeExploreInput({ observationFocus: focus }));
-		expect(result.systemPrompt).toContain("shifting");
+		expect(result.systemPrompt).toContain("landed");
 		expect(result.systemPrompt).toContain("work");
 	});
 
