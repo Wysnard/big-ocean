@@ -69,7 +69,7 @@ The main `architecture.md` covers the platform (hexagonal architecture, Effect-t
 
 When forces conflict, resolve in this order:
 
-1. **Protect user state** — never push harder because a facet is thin (enforced structurally: drain ceiling in E_target, coverage excluded from pacing)
+1. **Protect user state** — never push harder because a facet is thin (enforced structurally: trust cap in E_target, coverage excluded from pacing)
 2. **Maintain conversational momentum** — favor transitions that feel adjacent, not random
 3. **Apply quiet pressure for breadth and depth** — through territory selection, never through E_target
 
@@ -136,60 +136,84 @@ flowchart TB
 E_target is a **pipeline of transforms**, not an additive sum. Each signal operates in its natural mode. All values are in **[0, 1] space** — the band-to-numeric mapping outputs [0, 1] directly. No normalization step exists in the pipeline.
 
 ```text
-1. E_s        = EMA of energy (smoothed anchor, init at 0.5, lambda=0.35)
-2. V_up/down  = momentum from smoothed energy (split for asymmetric treatment)
-3. trust      = f(telling) — qualifies upward momentum only
-4. E_shifted  = E_s + alpha_up * trust * V_up - alpha_down * V_down
-5. comfort    = running mean of all raw E values (adaptive baseline, init 0.5)
-6. d          = average headroom-normalized excess cost over last 5 turns
-7. E_cap      = concave fatigue ceiling from drain (floor=0.25, maxcap=0.9)
-8. E_target   = clamp(min(E_shifted, E_cap), 0, 1)
+1. E_s          = EMA of energy (smoothed anchor, init at 0.5, lambda=0.35)
+2. V_up/down    = momentum from smoothed energy (split for asymmetric treatment)
+3. tellingGain  = f(telling) — per-turn momentum amplifier
+4. E_shifted    = E_s + alpha_up × tellingGain × V_up - alpha_down × V_down
+5. sessionTrust = EMA(energy × tellingFactor) — accumulated trust (init 0.15, trustLambda=0.2)
+6. drain        = mean excess cost over fixed baseline (0.5) in last K turns (K=5, K-padded)
+7. e_drained    = E_shifted × (1 - drain)
+   trust_cap    = floor + (maxcap - floor) × sessionTrust
+   E_target     = clamp(min(e_drained, trust_cap), 0, 1)
 ```
 
 **Normalization boundary:** Band-to-numeric mapping. The LLM outputs bands (not numbers). The mapping function converts directly to [0, 1] space: `minimal=0.1, low=0.3, steady=0.5, high=0.7, very_high=0.9`. No intermediate 0-10 scale at runtime. E_target is directly comparable with territory `expectedEnergy` — no conversion needed anywhere downstream.
 
 **Key design choices:**
 
-- **Momentum shifts, telling qualifies, drain constrains.** Different _types_ of force — not additive terms on the same axis. The pipeline structure makes this explicit.
-- **Telling is asymmetric.** Qualifies upward momentum (is this self-propelled or performative?) but does not dampen downward momentum (always respect cooling). When unavailable, trust defaults to 1.0.
-- **Drain measures excess cost above adaptive comfort.** Comfort adapts to the user's natural energy level (running mean, init 0.5). Only energy above the user's own baseline accumulates as fatigue. A naturally intense user at their normal level accumulates zero drain.
-- **Drain is a ceiling, not a subtraction.** Fatigue protection dominates by construction — no other force can exceed the drain-derived cap.
+- **Momentum shifts, tellingGain amplifies, drain pulls, trust caps.** Different _types_ of force — not additive terms on the same axis. The pipeline structure makes this explicit.
+- **TellingGain is asymmetric.** Amplifies upward momentum (compliant user → dampen at 0.5, self-propelled → boost to 1.2) but does not dampen downward momentum (always respect cooling). When unavailable, defaults to 1.0.
+- **Drain uses a fixed baseline (0.5), not adaptive comfort.** Excess energy above 0.5 accumulates as fatigue. Drain is a multiplicative pull on E_shifted — `e_drained = E_shifted × (1 - drain)` — not a ceiling. This is simpler and avoids the adaptive comfort problem where naturally intense users never accumulate drain.
+- **Session trust gates depth as a cap.** Trust is an EMA of `energy × tellingFactor` — it builds slowly over the session as the user demonstrates engagement. `trust_cap = floor + (maxcap - floor) × sessionTrust`. Low trust early in the session prevents premature depth; earned trust unlocks higher energy targets.
 - **Coverage is NOT in the formula.** Coverage pressure is assessment state, not user state. Simulation proved it causes inverted pressure on low-energy users. Coverage belongs in territory policy.
 
-**Weight hierarchy:** `drain ceiling (structural) > alpha_down (0.6) >= alpha_up (0.5)`. No coverage term.
+**Weight hierarchy:** `trust cap (structural) > drain pull (multiplicative) > alpha_down (0.6) >= alpha_up (0.5)`. No coverage term.
 
-**Trust function:**
-
-```text
-trust(T) = 0.5                    when T = 0.0  (fully compliant — discount momentum)
-trust(T) = 1.0                    when T = 0.5  (neutral — no modification)
-trust(T) = 1.2                    when T = 1.0  (strongly self-propelled — slight boost)
-```
-
-Linear interpolation between anchor points.
-
-**Drain computation:**
+**TellingGain function (Step 3):**
 
 ```text
-comfort(n) = mean(E(1), E(2), …, E(n))          // adaptive to user's natural level, init 0.5 at turn 0
-cost(E)    = max(0, E - comfort) / (1 - comfort) // headroom-normalized [0, 1]
-d          = mean(cost(E) for last K turns)       // K = 5, always divide by 5
-E_cap      = floor + (maxcap - floor) × (1 - d²)
-
-Safety: cap comfort at 0.85 to prevent division-by-zero.
+tellingGain(T) = 0.5              when T = 0.0  (fully compliant — dampen momentum)
+tellingGain(T) = 1.0              when T = 0.5  (neutral — no modification)
+tellingGain(T) = 1.2              when T = 1.0  (strongly self-propelled — slight boost)
 ```
 
-Constants: `floor=0.25, maxcap=0.9, K=5`
+Linear interpolation between anchor points. Controls how much upward momentum is followed based on who's steering.
 
-**Why adaptive comfort:** Fixed comfort at 0.5 assumes everyone is comfortable at mid-energy. A naturally intense user (average E ≈ 0.7) would accumulate drain at their normal operating level. A naturally quiet user (average E ≈ 0.3) would never accumulate drain even when being pushed. Adaptive comfort measures fatigue relative to _this user's_ baseline.
+**Session trust (Step 5):**
 
-**Why headroom normalization `(1 - comfort)`:** The same absolute energy gap costs more when you have less room above your baseline. A quiet user pushed from 0.3→0.7 is being stretched harder (relative to their headroom) than an intense user pushed from 0.7→0.9.
+```text
+tellingFactor(T) = 0.5            when T ≤ 0.25  (compliant — following, not trusting)
+tellingFactor(T) = 0.7            when T ≤ 0.50
+tellingFactor(T) = 1.0            when T ≤ 0.75  (mixed to self-propelled)
+tellingFactor(T) = 1.3            when T > 0.75  (strongly self-propelled — high trust signal)
+tellingFactor(null) = 0.7         (neutral default)
+
+signal(n) = energy(n) × tellingFactor(telling(n))
+sessionTrust(n) = trustLambda × signal(n) + (1 - trustLambda) × sessionTrust(n-1)
+```
+
+Constants: `trustLambda=0.2, trustInit=0.15`
+
+Session trust represents earned relationship depth. It builds slowly (low lambda) and starts low (0.15) — the user must demonstrate engagement before the system allows high-energy targets.
+
+**Drain computation (Step 6):**
+
+```text
+cost(E) = max(0, E - drainBaseline) / (1 - drainBaseline)   // excess above fixed baseline
+drain   = min(1.0, sum(cost(E) for last K turns) / K)       // K-padded mean
+```
+
+Constants: `drainBaseline=0.5, K=5`
+
+**Why fixed baseline (not adaptive comfort):** v2 used adaptive comfort (`mean(all E values)`) as the drain baseline. This created a problem: naturally intense users adapted their baseline upward and never accumulated drain. Fixed baseline at 0.5 is simpler and more protective — sustained high energy always accumulates fatigue regardless of the user's history.
+
+**Why K-padded:** Always divide by K (5) even with fewer turns. This dampens early-session overreaction — a single high-energy turn doesn't spike drain.
 
 **Why raw E (not E_s):** Drain measures what the user *actually experienced*, not what the smoothed model estimated. A single intense turn causes real fatigue even if the EMA trend is moderate. E_s is for pacing targets; raw E is for cost accounting.
 
-The quadratic `(1 - d²)` shape is concave — gentle degradation at moderate drain, steep collapse at high drain. At d=0 (no fatigue): E_cap=0.9. At d=1 (maximum sustained overload): E_cap=0.25.
+**Trust cap + drain pull (Step 7):**
 
-**Cold start:** Neutral defaults (momentum=0, drain=0, telling=neutral). First-turn E_target ≈ 0.5 (comfort midpoint).
+```text
+e_drained = E_shifted × (1 - drain)                          // multiplicative pull toward zero
+trust_cap = floor + (maxcap - floor) × sessionTrust           // linear gate from trust
+E_target  = clamp(min(e_drained, trust_cap), 0, 1)
+```
+
+Constants: `floor=0.25, maxcap=0.9`
+
+At zero trust (session start): trust_cap ≈ 0.35. At full trust: trust_cap = 0.9. Drain and trust cap are independent constraints — whichever is more restrictive wins.
+
+**Cold start:** Neutral defaults (momentum=0, drain=0, sessionTrust=0.15). First-turn E_target = 0.5 (initEnergy).
 
 **Full specification:** [E_target Formula Spec](../problem-solution-2026-03-07.md)
 
@@ -279,7 +303,7 @@ interface Territory {
 
 **Key design principles:**
 
-- **`expectedEnergy` measures opener cost, not depth potential.** How much a genuine first answer typically costs — not how deep it _could_ go. Anchor: 0.5 = comfort threshold (zero drain).
+- **`expectedEnergy` measures opener cost, not depth potential.** How much a genuine first answer typically costs — not how deep it _could_ go. Anchor: 0.5 = drain baseline (zero drain accumulation).
 - **Don't lie about what a territory is to make the math work.** If a facet needs different energy access, create a territory where it genuinely surfaces at that energy.
 - **Create territories to fill gaps, don't force facets onto existing ones.** A new territory with narrative honesty score 1.0 beats overloading an existing territory at 0.7.
 - **Accept thin facets rather than manufacturing artificial access.** Depression exists only in heavy territories (0.65, 0.72). The portrait communicates this as "still emerging."
@@ -643,7 +667,7 @@ Relate is not a fallback — it's a competitor. When the user is in flow (high e
 
 **Amplify closing:** On the final turn, the Governor derives `intent: "amplify"`. Nerin gets permission to be braver — longer responses, bold format, declarative statements about the user. All four observation focuses (Relate, Noticing, Contradiction, Convergence) compete on raw strength with no thresholds. The best observation wins honestly. Entry pressure is always `"direct"`. Nerin doesn't know it's the last turn. The conversation cuts at peak intensity.
 
-**No drain protection on amplify.** The user has crossed the finish line. The 24 turns of pacing that got them here earned the crescendo. E_target still computes but does not gate the amplify moment.
+**No drain/trust protection on amplify.** The user has crossed the finish line. The 24 turns of pacing that got them here earned the crescendo. E_target still computes but does not gate the amplify moment.
 
 **The distinction:**
 - **Engineering a peak** = manipulation
@@ -739,7 +763,7 @@ const result = yield* conversanalyzer.analyze(input)
 
 | Default | Value | Pipeline consequence |
 |---------|-------|---------------------|
-| `energy` | 0.5 | E_target ≈ 0.5 (comfort midpoint) — no deep push, no light pull |
+| `energy` | 0.5 | E_target = 0.5 (initEnergy) — no deep push, no light pull |
 | `telling` | 0.5 | Trust = 1.0 (neutral) — no momentum modification |
 | `evidence` | `[]` | No new evidence this turn. Scorer uses prior coverage gaps. |
 | `energyBand` | `"steady"` | Consistent with 0.5 energy |
@@ -762,7 +786,7 @@ The lenient schema (Tier 2) handles this naturally: `userState` and `evidence` a
 
 - **Tier 1 success (normal path):** Full steering — E_target, territory scoring, observation gating all have real data. Best possible Nerin prompt.
 - **Tier 2 success (partial recovery):** Some evidence lost to filtering. Steering slightly less informed but still responsive. Log discarded item count for monitoring.
-- **Tier 3 (neutral defaults):** Nerin gets a comfort-level prompt — territory selection uses prior coverage, observation gating uses prior confidence for phase, E_target at midpoint. The conversation feels "normal" — no weird behavior, just less steered. System recovers on the next turn.
+- **Tier 3 (neutral defaults):** Nerin gets a mid-energy prompt — territory selection uses prior coverage, observation gating uses prior confidence for phase, E_target at midpoint. The conversation feels "normal" — no weird behavior, just less steered. System recovers on the next turn.
 
 **Monitoring:** Log the tier that succeeded per turn. If Tier 2/3 fire rates exceed 5%, investigate prompt or schema issues.
 
@@ -825,7 +849,7 @@ const ConversanalyzerV2ToolOutput = S.Struct({
 const ENERGY_BAND_MAP = {
   minimal: 0.1, low: 0.3, steady: 0.5, high: 0.7, very_high: 0.9
 };
-// E=0.5 ("steady") = comfort threshold (zero drain). By design.
+// E=0.5 ("steady") = drain baseline (zero drain accumulation). By design.
 // Directly in [0, 1] space — no intermediate 0-10 scale at runtime.
 
 const TELLING_BAND_MAP = {
@@ -907,9 +931,9 @@ assessment_exchange (
 
   -- Pacing (E_target computation)
   smoothed_energy       real                  -- EMA state carried forward
-  comfort               real                  -- adaptive comfort this turn
-  drain                 real                  -- d value
-  drain_ceiling         real                  -- E_cap
+  session_trust         real                  -- accumulated trust level [0, 1]
+  drain                 real                  -- fatigue level [0, 1]
+  trust_cap             real                  -- ceiling from trust
   e_target              real                  -- [0, 1] final output
 
   -- Territory Scoring
@@ -965,7 +989,7 @@ The pipeline reconstructs session state by scanning prior exchanges:
 - **Observation fire count (n):** Count exchanges where `governor_output->'observationFocus'->>'type'` is not `'relate'`
 - **Smoothed energy for EMA:** Read `smoothed_energy` from the most recent exchange
 - **Visit history for freshness penalty:** Read `selected_territory` from prior exchanges
-- **Comfort baseline:** Read `comfort` from the most recent exchange (or recompute from all prior exchange `energy` values)
+- **Session trust:** Read `session_trust` from the most recent exchange (or recompute EMA from all prior exchange `energy × tellingFactor(telling)` values)
 
 **jsonb serialization rules:**
 - `governor_output`: Territories stored as `TerritoryId` (not full objects). Pipeline resolves from catalog when reading back.
@@ -1105,7 +1129,7 @@ Evolved pipeline (new steps in bold):
 
 **Key change: ConversAnalyzer moves before Nerin.** In the current pipeline, ConversAnalyzer runs parallel with or after Nerin. The evolved pipeline reverses this — ConversAnalyzer must run _first_ because the steering pipeline (E_target → Scorer → Selector → Governor → Prompt Builder) needs energy and telling signals to compose Nerin's system prompt. Evidence extraction still happens in the same ConversAnalyzer call; it just runs earlier.
 
-**Latency implication:** This adds ConversAnalyzer's latency (~1-2s Haiku call) to the critical path _before_ Nerin responds. Previously the two LLM calls overlapped. The tradeoff is accepted because steering quality requires user state signals — without them, E_target defaults to comfort and the scorer loses its primary input. The pure-function steps 5-9 add sub-millisecond overhead and do not contribute meaningfully to latency.
+**Latency implication:** This adds ConversAnalyzer's latency (~1-2s Haiku call) to the critical path _before_ Nerin responds. Previously the two LLM calls overlapped. The tradeoff is accepted because steering quality requires user state signals — without them, E_target defaults to initEnergy and the scorer loses its primary input. The pure-function steps 5-9 add sub-millisecond overhead and do not contribute meaningfully to latency.
 
 **Ordering constraint:** Steps 5-11 are sequential (each feeds the next). Steps 5 and 12 are the two LLM calls (Haiku and Sonnet respectively). Steps 7-11 are pure functions — sub-millisecond total.
 
@@ -1148,7 +1172,7 @@ Key behavioral metrics:
 
 ### Resolved Questions
 
-- Formula structure — 8-step pipeline with adaptive comfort (Decision 3, evolved)
+- Formula structure — 7-step pipeline with trust + drain (Decision 3, evolved to v3)
 - Coverage in E_target — removed (Decision 3)
 - Telling integration — asymmetric trust qualifier (Decision 3)
 - Energy/telling extraction — 4-dimension energy, self-propulsion telling (ADR-CP-2)
@@ -1163,12 +1187,12 @@ Key behavioral metrics:
 - **Noticing strength** — simplified to `smoothedClarity` (baseline removed; phase curve handles "too early").
 - **Amplify competition** — thresholds removed on final turn. All four focuses compete on raw strength. Entry pressure always direct. Best ending wins honestly.
 - **Escalation shape** — linear (not exponential) because shared counter across focus types already enforces scarcity.
-- **Error/fallback behavior** — three-tier extraction (strict × 3 → lenient × 1 → neutral defaults). Two repository methods (`analyze` strict, `analyzeLenient` lenient). Temperature 0.9 for retry variation. Neutral defaults = comfort-level conversation.
+- **Error/fallback behavior** — three-tier extraction (strict × 3 → lenient × 1 → neutral defaults). Two repository methods (`analyze` strict, `analyzeLenient` lenient). Temperature 0.9 for retry variation. Neutral defaults = mid-energy conversation.
 - **ConversAnalyzer v2 prompt architecture** — single-call dual extraction (userState + evidence). State extraction first for attention priority. LLM outputs bands, pipeline maps to numbers. Strict schema for tiers 1-3, lenient (independent parsing of userState and evidence) for tier 4. Six load-bearing guardrails against systematic bias.
-- **Persistence** — dedicated `assessment_exchange` table (1 row per turn). All pipeline metrics on one row: extraction, pacing (E_target + adaptive comfort + drain), scoring, selection, governor. Messages and evidence reference the exchange via `exchange_id` FK. `assessment_message` becomes lean (content + role only).
+- **Persistence** — dedicated `assessment_exchange` table (1 row per turn). All pipeline metrics on one row: extraction, pacing (E_target + session trust + drain + trust cap), scoring, selection, governor. Messages and evidence reference the exchange via `exchange_id` FK. `assessment_message` becomes lean (content + role only).
 - **Selector output slimmed** — Governor consumes 1 field (`selectedTerritory`). `sessionPhase` and `transitionType` demoted to derived columns on `assessment_exchange` for observability only — not part of any inter-layer contract.
 - **Per-domain confidence** — `domainConf(f, d) = C_MAX × (1 - exp(-k × w_g(f, d)))` reuses existing formula scoped to domain's evidence weight. Shared by contradiction and convergence strength formulas.
-- **Adaptive drain comfort** — `comfort(n) = mean(E(1)…E(n))` adapts to user's natural energy level (init 0.5). Cost headroom-normalized by `(1 - comfort)`. Fixed 0.5 comfort assumption removed.
+- **Trust + drain pacing (v3)** — Adaptive comfort removed. Drain uses fixed baseline (0.5) as multiplicative pull. Session trust (EMA of energy × tellingFactor, init 0.15) gates depth as a cap. Simpler, more protective than v2 adaptive comfort.
 - **Migration strategy** — fresh start. Product is in development, no production users. Single migration creates `assessment_exchange`, adds `exchange_id` FKs, drops `territory_id` and `observed_energy_level` from `assessment_message`. Existing dev sessions discarded.
 
 ### Still Open
@@ -1186,7 +1210,7 @@ Specs listed in dependency order (upstream first). Coherence status reflects ali
 
 | Spec | Date | Coherence | Notes |
 |:-----|:-----|:----------|:------|
-| [E_target Formula](../problem-solution-2026-03-07.md) | 03-07 | Partially superseded | Drain formula evolved (adaptive comfort, headroom normalization). Pipeline steps and trust function unchanged. |
+| [E_target Formula](../problem-solution-2026-03-07.md) | 03-07 | Partially superseded | v3: comfort removed, replaced by session trust (cap) + fixed-baseline drain (pull). Pipeline reduced from 8 to 7 steps. |
 | [Energy and Telling Extraction](../problem-solution-2026-03-07-energy-telling-extraction.md) | 03-07 | Current | Decisions 2-3 |
 | [Territory Policy](../problem-solution-2026-03-07-territory-policy.md) | 03-07 | Updated 03-10 | Scorer formula, 3-layer decomposition |
 | [Territory Catalog Migration](../problem-solution-2026-03-08.md) | 03-08 | Current | Decision 11. 22→25 territories |
@@ -1269,7 +1293,7 @@ Turn 1 has specific cold-start rules across multiple layers:
 | Layer | Turn 1 behavior | Why |
 |-------|-----------------|-----|
 | **ConversAnalyzer** | `tellingBand` is always `"mixed"` (0.5) | No prior assistant message to measure self-propulsion against. This is correct, not a failure. Do not infer telling from energy. |
-| **E_target** | Uses init defaults: `smoothed_energy=0.5, comfort=0.5, drain=0` | No prior exchange state. Real energy from ConversAnalyzer is applied via EMA. |
+| **E_target** | Uses init defaults: `smoothed_energy=0.5, sessionTrust=0.15, drain=0` | No prior exchange state. Real energy from ConversAnalyzer is applied via EMA. |
 | **Scorer (adjacency)** | `adjacency(t) = 0` for all territories | No `currentTerritory`. Coverage gain + conversation skew (early ramp) determine ranking. |
 | **Scorer (freshness)** | `freshnessPenalty(t) = 0` for all territories | All territories never-visited (`turnsSinceLastVisit = ∞`). The `if t == currentTerritory` guard never triggers (null matches nothing). |
 | **Selector** | `cold-start-perimeter` rule | Random pick from pool within perimeter of top score. |
@@ -1295,7 +1319,7 @@ Each pipeline layer consumes a typed input and produces a typed output. **Layers
 
 | Component | Purity | State access |
 |-----------|--------|-------------|
-| E_target computation | **Pure function** | Receives prior `smoothed_energy`, `comfort`, raw E history as arguments |
+| E_target computation | **Pure function** | Receives prior `smoothed_energy`, `sessionTrust`, raw E/telling history as arguments |
 | Territory scorer | **Pure function** | Receives E_target, coverage gaps, catalog, visit history, turn/totalTurns |
 | Territory selector | **Pure function** | Receives `TerritoryScorerOutput` |
 | Move Governor | **Pure function** | Receives selectedTerritory, E_target, per-domain scores, turnNumber, isFinalTurn, observation fire count |
@@ -1314,15 +1338,15 @@ territories.sort((a, b) => b.score - a.score || a.catalogIndex - b.catalogIndex)
 
 ### Carry-Forward State Recovery
 
-`smoothed_energy` and `comfort` are stored on `assessment_exchange` as carry-forward optimizations:
+`smoothed_energy` and `session_trust` are stored on `assessment_exchange` as carry-forward optimizations:
 
-| Situation | `smoothed_energy` | `comfort` |
-|-----------|-------------------|-----------|
-| **Turn 1** (no prior exchange) | Init default: `0.5` | Init default: `0.5` |
+| Situation | `smoothed_energy` | `session_trust` |
+|-----------|-------------------|-----------------|
+| **Turn 1** (no prior exchange) | Init default: `0.5` | Init default: `0.15` |
 | **Turn 2+, prior exchange exists** | Read from most recent exchange | Read from most recent exchange |
-| **Turn 2+, prior exchange missing carry-forward** (data integrity issue) | **Recompute:** apply EMA (`λ=0.35`) over all prior exchanges' `energy` values | **Recompute:** `mean(energy values from all prior exchanges)` |
+| **Turn 2+, prior exchange missing carry-forward** (data integrity issue) | **Recompute:** apply EMA (`λ=0.35`) over all prior exchanges' `energy` values | **Recompute:** apply EMA (`trustLambda=0.2`) over all prior exchanges' `energy × tellingFactor(telling)` values |
 
-**Rule:** Never default to `0.5` on turn 2+ — that discards session history. Recomputation is the fallback for data integrity, not the normal path. Log a warning when recomputation triggers.
+**Rule:** Never default to init values on turn 2+ — that discards session history. Recomputation is the fallback for data integrity, not the normal path. Log a warning when recomputation triggers.
 
 ### Catalog as Immutable Data
 
@@ -1363,7 +1387,7 @@ type ConvergenceFocus   = { readonly type: "convergence";   readonly target: Con
 | Observation fire count (n) | Count prior exchanges where `governor_output->'observationFocus'->>'type' != 'relate'` | A stored counter column |
 | Visit history (freshness) | `selected_territory` from prior exchanges | A `territory_visit_count` column |
 | Smoothed energy (EMA) | `smoothed_energy` from most recent exchange | Recomputing from all raw E values |
-| Comfort baseline | `comfort` from most recent exchange (or recompute) | A stored running average |
+| Session trust | `session_trust` from most recent exchange (or recompute EMA) | A stored counter |
 
 **Observation fire count — null handling:** Exchanges with `intent: "open"` have no `observationFocus` field. When counting fires, **skip exchanges where `observationFocus` is absent.** In SQL: `governor_output->'observationFocus' IS NOT NULL AND governor_output->'observationFocus'->>'type' != 'relate'`. In TypeScript: filter for exchanges that have an `observationFocus` property before checking `.type`.
 
@@ -1453,9 +1477,9 @@ The mock should implement both, with `analyze` always succeeding (no need to sim
 
   // Pacing
   smoothed_energy: number,           // EMA carry-forward
-  comfort: number,                   // adaptive baseline
-  drain: number,
-  drain_ceiling: number,
+  session_trust: number,             // accumulated trust [0, 1]
+  drain: number,                     // fatigue level [0, 1]
+  trust_cap: number,                 // ceiling from trust
   e_target: number,
 
   // Territory
@@ -1558,7 +1582,7 @@ export const mockConversanalyzerOutput = {
 | Fixture | Energy pattern | Telling pattern | Tests |
 |---------|---------------|-----------------|-------|
 | `guarded-user` | Low-steady (0.3 avg) | Low (mostly compliant) | E_target stays low, scorer favors light territories |
-| `over-sharer` | High sustained (0.7+ avg) | High (self-propelled) | Drain ceiling activates, observation gating fires early |
+| `over-sharer` | High sustained (0.7+ avg) | High (self-propelled) | Drain pull + trust cap activate, observation gating fires early |
 | `skeptic` | Mixed/declining | Low telling, high energy spikes | Trust function dampens momentum, entry pressure stays soft |
 | `low-self-awareness` | Steady (0.5 avg) | Mixed | Coverage gain dominates scorer, territories rotate broadly |
 
@@ -1737,7 +1761,7 @@ _Validated 2026-03-12. Two rounds of adversarial review (party mode + red team/p
 |----------|-----|--------|
 | 1: Self-Discovery First | Core Frame (§Context) | Embedded as architectural frame |
 | 2: Two-Axis State Model | ADR-CP-2 | Full — energy dimensions, telling bands, extraction guardrails |
-| 3: E_target User-State-Pure | ADR-CP-1 | Full — 8-step pipeline, adaptive comfort, drain ceiling |
+| 3: E_target User-State-Pure | ADR-CP-1 | Full — 7-step pipeline, session trust cap, drain pull |
 | 4: Four Move Types | ADR-CP-6 | **Superseded** — 5→3 intents. Noted in Resolved Questions. |
 | 5: Contradiction Gated | ADR-CP-9 | Full — observation focus variant with strength formula |
 | 6: Noticing Event-Driven | ADR-CP-10 | Full — smoothedClarity, domain compass |
