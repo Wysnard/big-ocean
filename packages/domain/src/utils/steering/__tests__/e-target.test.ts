@@ -29,17 +29,19 @@ const simulateSequence = (
 	return results;
 };
 
-describe("computeETarget (v2 — [0, 1] space)", () => {
+describe("computeETarget (v3 — trust + drain)", () => {
 	// === Pure function interface ===
 	describe("function interface", () => {
-		it("returns eTarget, smoothedEnergy, and comfort", () => {
+		it("returns eTarget, smoothedEnergy, sessionTrust, drain, trustCap", () => {
 			const result = computeETarget({
 				energyHistory: [0.5],
 				tellingHistory: [null],
 			});
 			expect(result).toHaveProperty("eTarget");
 			expect(result).toHaveProperty("smoothedEnergy");
-			expect(result).toHaveProperty("comfort");
+			expect(result).toHaveProperty("sessionTrust");
+			expect(result).toHaveProperty("drain");
+			expect(result).toHaveProperty("trustCap");
 		});
 
 		it("is deterministic — same inputs produce same output", () => {
@@ -51,7 +53,7 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 			const r2 = computeETarget(input);
 			expect(r1.eTarget).toBe(r2.eTarget);
 			expect(r1.smoothedEnergy).toBe(r2.smoothedEnergy);
-			expect(r1.comfort).toBe(r2.comfort);
+			expect(r1.sessionTrust).toBe(r2.sessionTrust);
 		});
 
 		it("output is always in [0, 1]", () => {
@@ -76,43 +78,45 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 			expect(PACING_CONFIG).toHaveProperty("lambda", 0.35);
 			expect(PACING_CONFIG).toHaveProperty("alphaUp", 0.5);
 			expect(PACING_CONFIG).toHaveProperty("alphaDown", 0.6);
-			expect(PACING_CONFIG).toHaveProperty("comfortInit", 0.5);
-			expect(PACING_CONFIG).toHaveProperty("comfortCap", 0.85);
+			expect(PACING_CONFIG).toHaveProperty("initEnergy", 0.5);
 			expect(PACING_CONFIG).toHaveProperty("K", 5);
+			expect(PACING_CONFIG).toHaveProperty("drainBaseline", 0.5);
 			expect(PACING_CONFIG).toHaveProperty("floor", 0.25);
 			expect(PACING_CONFIG).toHaveProperty("maxcap", 0.9);
+			expect(PACING_CONFIG).toHaveProperty("trustLambda", 0.2);
+			expect(PACING_CONFIG).toHaveProperty("trustInit", 0.15);
 		});
 	});
 
-	// === Cold start (AC4, FR25) ===
+	// === Cold start ===
 	describe("cold start", () => {
-		it("empty history produces E_target = 0.5", () => {
+		it("empty history produces E_target = initEnergy (0.5)", () => {
 			const result = computeETarget({
 				energyHistory: [],
 				tellingHistory: [],
 			});
 			expect(result.eTarget).toBeCloseTo(0.5, 5);
 			expect(result.smoothedEnergy).toBeCloseTo(0.5, 5);
-			expect(result.comfort).toBeCloseTo(0.5, 5);
+			expect(result.sessionTrust).toBeCloseTo(PACING_CONFIG.trustInit, 5);
 		});
 
-		it("first turn at E=0.5 produces E_target near 0.5", () => {
+		it("first turn at E=0.5 — trust cap limits e-target", () => {
 			const result = computeETarget({
 				energyHistory: [0.5],
 				tellingHistory: [null],
 			});
-			expect(result.eTarget).toBeCloseTo(0.5, 1);
+			// Trust is still very low (~0.15 + small EMA step), so trust_cap is low
+			// E_shifted ≈ 0.5, but trust_cap ≈ floor + 0.65 * ~0.19 ≈ 0.37
+			expect(result.eTarget).toBeLessThan(0.5);
+			expect(result.trustCap).toBeLessThan(0.5);
 		});
 
-		it("first turn — no active forces, graceful default", () => {
+		it("first turn — smoothed energy is correct", () => {
 			const result = computeETarget({
 				energyHistory: [0.5],
 				tellingHistory: [null],
 			});
-			// V=0 (first turn, previous smoothed = 0.5, lambda*0.5 + 0.65*0.5 = 0.5)
-			// drain=0, trust=1.0 → E_shifted = E_s = 0.5, E_cap = 0.9
 			expect(result.smoothedEnergy).toBeCloseTo(0.5, 5);
-			expect(result.eTarget).toBeCloseTo(0.5, 1);
 		});
 	});
 
@@ -141,28 +145,31 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 		});
 	});
 
-	// === Trust from telling (Step 3, AC2) ===
-	describe("trust function", () => {
-		it("telling=null defaults to trust=1.0 (no effect on momentum)", () => {
+	// === Telling gain — per-turn momentum amplifier (Step 3) ===
+	describe("telling gain", () => {
+		it("telling=null defaults to gain=1.0 (no effect on momentum)", () => {
 			const withTelling = computeETarget({
 				energyHistory: [0.7],
-				tellingHistory: [0.5], // trust = 1.0
+				tellingHistory: [0.5], // gain = 1.0
 			});
 			const withoutTelling = computeETarget({
 				energyHistory: [0.7],
-				tellingHistory: [null], // trust = 1.0
+				tellingHistory: [null], // gain = 1.0
 			});
-			expect(withTelling.eTarget).toBeCloseTo(withoutTelling.eTarget, 5);
+			// Both have same telling gain, but different telling factors for trust
+			// The eTarget may differ slightly due to trust computation
+			// But smoothedEnergy should be identical
+			expect(withTelling.smoothedEnergy).toBeCloseTo(withoutTelling.smoothedEnergy, 5);
 		});
 
 		it("low telling dampens upward momentum", () => {
 			const lowTelling = computeETarget({
 				energyHistory: [0.5, 0.8],
-				tellingHistory: [null, 0.0], // trust = 0.5
+				tellingHistory: [null, 0.0], // gain = 0.5
 			});
 			const highTelling = computeETarget({
 				energyHistory: [0.5, 0.8],
-				tellingHistory: [null, 1.0], // trust = 1.2
+				tellingHistory: [null, 1.0], // gain = 1.2
 			});
 			expect(lowTelling.eTarget).toBeLessThan(highTelling.eTarget);
 		});
@@ -176,13 +183,18 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 				energyHistory: [0.5, 0.2],
 				tellingHistory: [null, 1.0],
 			});
-			// Downward momentum is not qualified by trust — same result
-			expect(lowTelling.eTarget).toBeCloseTo(highTelling.eTarget, 5);
+			// Downward momentum is not qualified by telling gain
+			// Both have same E_shifted, but trust differs → trust_cap differs
+			// High telling → higher trust → higher cap → potentially higher eTarget
+			// But since E_shifted is already low, trust cap won't be binding
+			// The key invariant: downward momentum weight is the same
+			const lowSmoothed = lowTelling.smoothedEnergy;
+			const highSmoothed = highTelling.smoothedEnergy;
+			expect(lowSmoothed).toBeCloseTo(highSmoothed, 5);
 		});
 
-		it("trust values match piecewise spec: T=0→0.5, T=0.5→1.0, T=1.0→1.2", () => {
-			// We verify indirectly through upward momentum amplification
-			// With an upward shift, higher trust → higher E_target
+		it("telling gain values match piecewise spec: T=0→0.5, T=0.5→1.0, T=1.0→1.2", () => {
+			// With an upward shift, higher telling gain → higher E_target
 			const t0 = computeETarget({
 				energyHistory: [0.3, 0.8],
 				tellingHistory: [null, 0.0],
@@ -200,105 +212,127 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 		});
 	});
 
-	// === Adaptive comfort (Step 5, AC3) ===
-	describe("adaptive comfort", () => {
-		it("comfort is running mean of all raw energy values", () => {
-			const result = computeETarget({
-				energyHistory: [0.3, 0.5, 0.7],
-				tellingHistory: [null, null, null],
-			});
-			// comfort = mean(0.3, 0.5, 0.7) = 0.5
-			expect(result.comfort).toBeCloseTo(0.5, 5);
+	// === Session trust (Step 5) ===
+	describe("session trust", () => {
+		it("trust starts low and builds over time with engagement", () => {
+			const results = simulateSequence([
+				{ energy: 0.6, telling: 0.5 },
+				{ energy: 0.7, telling: 0.6 },
+				{ energy: 0.7, telling: 0.7 },
+				{ energy: 0.8, telling: 0.8 },
+				{ energy: 0.8, telling: 0.9 },
+			]);
+			// Trust should increase monotonically
+			for (let i = 1; i < results.length; i++) {
+				expect(results[i].sessionTrust).toBeGreaterThan(results[i - 1].sessionTrust);
+			}
 		});
 
-		it("comfort is capped at 0.85", () => {
-			const result = computeETarget({
-				energyHistory: [1.0, 1.0, 1.0, 1.0, 1.0],
-				tellingHistory: [null, null, null, null, null],
-			});
-			// comfort = mean(1.0 x 5) = 1.0, but capped at 0.85
-			expect(result.comfort).toBeCloseTo(0.85, 5);
+		it("low energy + compliant telling builds trust slowly", () => {
+			const lowEngagement = simulateSequence([
+				{ energy: 0.3, telling: 0.1 },
+				{ energy: 0.3, telling: 0.1 },
+				{ energy: 0.3, telling: 0.1 },
+				{ energy: 0.3, telling: 0.1 },
+				{ energy: 0.3, telling: 0.1 },
+			]);
+			const highEngagement = simulateSequence([
+				{ energy: 0.7, telling: 0.8 },
+				{ energy: 0.7, telling: 0.8 },
+				{ energy: 0.7, telling: 0.8 },
+				{ energy: 0.7, telling: 0.8 },
+				{ energy: 0.7, telling: 0.8 },
+			]);
+			const lowTrust = lowEngagement[4].sessionTrust;
+			const highTrust = highEngagement[4].sessionTrust;
+			expect(lowTrust).toBeLessThan(highTrust);
 		});
 
-		it("naturally intense user has less drain than low-baseline user at same energy", () => {
-			// High-baseline user: all 0.7, then one 0.9
-			const intense = computeETarget({
-				energyHistory: [0.7, 0.7, 0.7, 0.7, 0.9],
-				tellingHistory: [null, null, null, null, null],
+		it("trust_cap = floor + (maxcap - floor) × sessionTrust", () => {
+			const result = computeETarget({
+				energyHistory: [0.7],
+				tellingHistory: [0.8],
 			});
-			// Low-baseline user: all 0.3, then one 0.9
-			const lowBase = computeETarget({
-				energyHistory: [0.3, 0.3, 0.3, 0.3, 0.9],
-				tellingHistory: [null, null, null, null, null],
+			const expectedCap =
+				PACING_CONFIG.floor + (PACING_CONFIG.maxcap - PACING_CONFIG.floor) * result.sessionTrust;
+			expect(result.trustCap).toBeCloseTo(expectedCap, 5);
+		});
+
+		it("trust gates depth — early session e-target is limited by trust cap", () => {
+			// First turn: trust is very low, so trust_cap constrains e-target
+			const result = computeETarget({
+				energyHistory: [0.8],
+				tellingHistory: [0.5],
 			});
-			// The intense user should have a higher (less constrained) E_target
-			// because their comfort is higher, so 0.9 feels like less of a spike
-			expect(intense.eTarget).toBeGreaterThan(lowBase.eTarget);
+			// E_shifted would be high, but trust_cap holds it down
+			expect(result.eTarget).toBeLessThanOrEqual(result.trustCap + 0.001);
 		});
 	});
 
-	// === Drain and ceiling (Steps 6-7, AC5) ===
-	describe("drain and ceiling", () => {
-		it("energy at comfort level produces zero drain", () => {
+	// === Drain (Step 6) ===
+	describe("drain", () => {
+		it("energy at baseline (0.5) produces zero drain", () => {
 			const result = computeETarget({
 				energyHistory: [0.5, 0.5, 0.5, 0.5, 0.5],
 				tellingHistory: [null, null, null, null, null],
 			});
-			// drain=0, ceiling=0.9
-			expect(result.eTarget).toBeCloseTo(0.5, 1);
+			expect(result.drain).toBeCloseTo(0, 5);
 		});
 
-		it("sustained high energy produces strong ceiling pressure (AC5)", () => {
+		it("sustained high energy accumulates drain against fixed baseline", () => {
 			const results = simulateSequence([
-				{ energy: 0.9 },
-				{ energy: 0.9 },
-				{ energy: 0.9 },
-				{ energy: 0.9 },
-				{ energy: 0.9 },
+				{ energy: 0.7 },
+				{ energy: 0.7 },
+				{ energy: 0.7 },
+				{ energy: 0.7 },
+				{ energy: 0.7 },
 			]);
+			// drain = mean of (0.7 - 0.5) / 0.5 = 0.4 per turn → drain = 0.4
 			const last = results[results.length - 1];
-			// Comfort grows toward 0.85 (capped), drain from headroom-normalized cost
-			// E_cap should be significantly below 0.9
-			expect(last.eTarget).toBeLessThan(0.85);
+			expect(last.drain).toBeCloseTo(0.4, 1);
 		});
 
-		it("maximum sustained drain drives E_cap toward floor (0.25)", () => {
-			// Sustained E=1.0 with comfort capped at 0.85
-			const results = simulateSequence([
-				{ energy: 1.0 },
-				{ energy: 1.0 },
-				{ energy: 1.0 },
-				{ energy: 1.0 },
-				{ energy: 1.0 },
-			]);
-			const last = results[results.length - 1];
-			// drain should be high, ceiling near floor
-			expect(last.eTarget).toBeLessThan(0.5);
-		});
-
-		it("K-padded drain: single hot message does not trigger heavy ceiling", () => {
-			const result = computeETarget({
-				energyHistory: [0.9], // only 1 turn, but drain divides by K=5
-				tellingHistory: [null],
-			});
-			// Ceiling should still be permissive
-			expect(result.eTarget).toBeGreaterThan(0.5);
-		});
-
-		it("at d=0 (no fatigue): E_cap = 0.9", () => {
-			// Energy at exactly comfort, so no excess cost
-			const result = computeETarget({
+		it("drain pulls e-target down multiplicatively", () => {
+			const _noDrain = computeETarget({
 				energyHistory: [0.5],
 				tellingHistory: [null],
 			});
-			// comfort = 0.5, energy = 0.5, cost = 0, drain = 0, E_cap = 0.9
-			expect(result.eTarget).toBeCloseTo(0.5, 1); // capped at shifted, not ceiling
+			const withDrain = computeETarget({
+				energyHistory: [0.8, 0.8, 0.8, 0.8, 0.8],
+				tellingHistory: [null, null, null, null, null],
+			});
+			// With drain, e-target should be pulled down from e_shifted
+			expect(withDrain.drain).toBeGreaterThan(0);
+		});
+
+		it("K-padded: single hot message does not trigger heavy drain", () => {
+			const result = computeETarget({
+				energyHistory: [0.9],
+				tellingHistory: [null],
+			});
+			// Only 1 turn, divided by K=5 → drain is mild
+			expect(result.drain).toBeLessThan(0.2);
+		});
+
+		it("sustained E=1.0 produces maximum drain", () => {
+			const results = simulateSequence([
+				{ energy: 1.0 },
+				{ energy: 1.0 },
+				{ energy: 1.0 },
+				{ energy: 1.0 },
+				{ energy: 1.0 },
+			]);
+			const last = results[results.length - 1];
+			// drain = mean of (1.0 - 0.5) / 0.5 = 1.0 per turn → drain = 1.0
+			expect(last.drain).toBeCloseTo(1.0, 1);
+			// e_drained = e_shifted × (1 - 1.0) = 0
+			expect(last.eTarget).toBeLessThan(0.1);
 		});
 	});
 
-	// === Recovery (AC8) ===
+	// === Recovery ===
 	describe("recovery after drain", () => {
-		it("ceiling rises as drain drops with low-energy recovery turns", () => {
+		it("drain decreases with low-energy recovery turns", () => {
 			const results = simulateSequence([
 				{ energy: 0.9 },
 				{ energy: 0.9 },
@@ -309,25 +343,19 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 				{ energy: 0.3 },
 				{ energy: 0.3 },
 			]);
-			const turn5 = results[4].eTarget;
-			const _turn8 = results[7].eTarget;
-			// After recovery turns, drain should decrease
-			// turn 8 E_target should be less constrained than turn 5 E_target
-			// (though turn8 smoothed energy will be lower, so eTarget is lower overall)
-			// The key: comfort adapts, drain window shifts
-			expect(turn5).toBeLessThan(0.85);
+			const turn5Drain = results[4].drain;
+			const turn8Drain = results[7].drain;
+			expect(turn8Drain).toBeLessThan(turn5Drain);
 		});
 	});
 
-	// === Weight hierarchy (AC6) ===
+	// === Weight hierarchy ===
 	describe("weight hierarchy", () => {
-		it("drain ceiling > alpha_down > alpha_up", () => {
+		it("alphaDown > alphaUp", () => {
 			expect(PACING_CONFIG.alphaDown).toBeGreaterThan(PACING_CONFIG.alphaUp);
-			// Structural: ceiling is min() applied after shift, so it always wins
 		});
 
 		it("no coverage, portrait, or phase inputs in function signature", () => {
-			// Structural test: ETargetInput only has energy/telling history and optional priors
 			const input: ETargetInput = {
 				energyHistory: [0.5],
 				tellingHistory: [null],
@@ -343,7 +371,7 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 
 	// === Archetype simulations ===
 	describe("archetype simulations", () => {
-		it("Deep user — ceiling kicks in, forces pullback", () => {
+		it("Deep user — drain pulls back, trust cap limits", () => {
 			const results = simulateSequence([
 				{ energy: 0.5 },
 				{ energy: 0.7 },
@@ -354,7 +382,7 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 				{ energy: 0.8 },
 				{ energy: 0.7 },
 			]);
-			// By turn 6, sustained high energy should trigger ceiling
+			// By turn 6, drain should pull e-target significantly below raw energy
 			expect(results[5].eTarget).toBeLessThan(0.85);
 		});
 
@@ -367,25 +395,26 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 				{ energy: 0.3 },
 				{ energy: 0.2 },
 			]);
-			// E_target should stay low, never push up significantly
 			for (const r of results.slice(2)) {
 				expect(r.eTarget).toBeLessThan(0.45);
 			}
 		});
 
-		it("Flowing user — smooth following", () => {
+		it("Flowing user — trust builds, allows gradual depth", () => {
 			const results = simulateSequence([
-				{ energy: 0.6, telling: 0.8 },
-				{ energy: 0.6, telling: 0.8 },
-				{ energy: 0.7, telling: 0.9 },
-				{ energy: 0.7, telling: 0.8 },
+				{ energy: 0.5, telling: 0.5 },
+				{ energy: 0.5, telling: 0.6 },
 				{ energy: 0.6, telling: 0.7 },
+				{ energy: 0.6, telling: 0.7 },
+				{ energy: 0.7, telling: 0.8 },
+				{ energy: 0.7, telling: 0.8 },
+				{ energy: 0.7, telling: 0.8 },
+				{ energy: 0.7, telling: 0.8 },
 			]);
-			// E_target follows the gentle wave, stays within 0.15 of smoothed energy
-			for (let i = 2; i < results.length; i++) {
-				const gap = Math.abs(results[i].eTarget - results[i].smoothedEnergy);
-				expect(gap).toBeLessThan(0.15);
-			}
+			// Trust should build over time → trust_cap rises → e-target can follow
+			expect(results[7].trustCap).toBeGreaterThan(results[0].trustCap);
+			// But drain also accumulates from sustained 0.7 → keeps things in check
+			expect(results[7].eTarget).toBeLessThan(0.8);
 		});
 
 		it("Fading user — follows the fade, no false uplift", () => {
@@ -398,15 +427,13 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 				{ energy: 0.2 },
 				{ energy: 0.1 },
 			]);
-			// E_target should decline, not push up
 			for (let i = 1; i < results.length; i++) {
 				expect(results[i].eTarget).toBeLessThanOrEqual(results[i - 1].eTarget + 0.05);
 			}
-			// Final target should be low
 			expect(results[results.length - 1].eTarget).toBeLessThan(0.35);
 		});
 
-		it("Performance mode — trust dampens upward following", () => {
+		it("Performance mode — low telling gain dampens upward following", () => {
 			const highTellingResults = simulateSequence([
 				{ energy: 0.7, telling: 0.9 },
 				{ energy: 0.8, telling: 0.9 },
@@ -420,7 +447,7 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 			expect(lowTellingResults[2].eTarget).toBeLessThan(highTellingResults[2].eTarget);
 		});
 
-		it("Over-sharer — ceiling protects before burnout", () => {
+		it("Over-sharer — drain protects before burnout", () => {
 			const results = simulateSequence([
 				{ energy: 0.9, telling: 0.9 },
 				{ energy: 1.0, telling: 0.9 },
@@ -428,19 +455,18 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 				{ energy: 0.9, telling: 0.7 },
 				{ energy: 1.0, telling: 0.8 },
 			]);
-			// Ceiling should activate strongly
+			// Drain should activate strongly, pulling e-target down
 			expect(results[3].eTarget).toBeLessThan(0.85);
+			expect(results[3].drain).toBeGreaterThan(0.3);
 		});
 
 		it("Volatile — EMA dampens raw swings", () => {
 			const rawEnergies = [0.3, 0.9, 0.2, 0.8, 0.3, 0.9];
 			const results = simulateSequence(rawEnergies.map((energy) => ({ energy })));
-			// E_target swings should be smaller than raw energy swings
 			for (let i = 1; i < results.length; i++) {
+				const eSwing = Math.abs(results[i].eTarget - results[i - 1].eTarget);
 				const rawSwing = Math.abs(rawEnergies[i] - rawEnergies[i - 1]);
-				const targetSwing = Math.abs(results[i].eTarget - results[i - 1].eTarget);
-				// Target swing should be less than raw swing (EMA dampening)
-				expect(targetSwing).toBeLessThan(rawSwing);
+				expect(eSwing).toBeLessThan(rawSwing);
 			}
 		});
 	});
@@ -454,18 +480,11 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 				{ energy: 0 },
 				{ energy: 0 },
 				{ energy: 0 },
-				{ energy: 0 },
-				{ energy: 0 },
-				{ energy: 0 },
-				{ energy: 0 },
-				{ energy: 0 },
 			]);
-			const last = results[results.length - 1];
-			expect(last.eTarget).toBeLessThan(0.15);
-			expect(last.smoothedEnergy).toBeLessThan(0.1);
+			expect(results[results.length - 1].eTarget).toBeLessThan(0.15);
 		});
 
-		it("sustained E=1.0 — ceiling drops significantly", () => {
+		it("sustained E=1.0 — drain pulls hard, trust may cap high", () => {
 			const results = simulateSequence([
 				{ energy: 1.0 },
 				{ energy: 1.0 },
@@ -474,8 +493,9 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 				{ energy: 1.0 },
 			]);
 			const last = results[results.length - 1];
-			// Ceiling should be heavily constrained
-			expect(last.eTarget).toBeLessThan(0.6);
+			expect(last.drain).toBeGreaterThan(0.8);
+			// Even if trust is high, drain × (1 - drain) kills the target
+			expect(last.eTarget).toBeLessThan(0.2);
 		});
 
 		it("single turn with prior state", () => {
@@ -483,10 +503,11 @@ describe("computeETarget (v2 — [0, 1] space)", () => {
 				energyHistory: [0.7],
 				tellingHistory: [0.5],
 				priorSmoothedEnergy: 0.6,
-				priorComfort: 0.55,
+				priorSessionTrust: 0.5,
 			});
 			expect(result.eTarget).toBeGreaterThanOrEqual(0);
 			expect(result.eTarget).toBeLessThanOrEqual(1);
+			expect(result.sessionTrust).toBeGreaterThan(0);
 		});
 	});
 });

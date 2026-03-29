@@ -149,9 +149,9 @@ const openerExchangeRecord = {
 	stateNotes: null,
 	extractionTier: null,
 	smoothedEnergy: null,
-	comfort: null,
+	sessionTrust: null,
 	drain: null,
-	drainCeiling: null,
+	trustCap: null,
 	eTarget: null,
 	scorerOutput: null,
 	selectedTerritory: null,
@@ -175,9 +175,9 @@ const mockExchangeRecord = {
 	stateNotes: null,
 	extractionTier: null,
 	smoothedEnergy: null,
-	comfort: null,
+	sessionTrust: null,
 	drain: null,
-	drainCeiling: null,
+	trustCap: null,
 	eTarget: null,
 	scorerOutput: null,
 	selectedTerritory: null,
@@ -273,7 +273,7 @@ const postColdStartExchanges = [
 		telling: 0.5,
 		tellingBand: "mixed",
 		smoothedEnergy: 0.4,
-		comfort: 0.4,
+		sessionTrust: 0.4,
 		eTarget: 0.5,
 		selectionRule: "cold_start",
 		governorOutput: { intent: "open", territory: "daily-routines" },
@@ -288,7 +288,7 @@ const postColdStartExchanges = [
 		telling: 0.5,
 		tellingBand: "mixed",
 		smoothedEnergy: 0.45,
-		comfort: 0.45,
+		sessionTrust: 0.45,
 		eTarget: 0.5,
 		selectionRule: "argmax",
 		governorOutput: {
@@ -307,7 +307,7 @@ const postColdStartExchanges = [
 		telling: 0.25,
 		tellingBand: "mostly_compliant",
 		smoothedEnergy: 0.4,
-		comfort: 0.4,
+		sessionTrust: 0.4,
 		eTarget: 0.48,
 		selectionRule: "argmax",
 		governorOutput: {
@@ -555,7 +555,7 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 				expect(steeringUpdate?.eTarget).toBeDefined();
 				expect(typeof steeringUpdate?.eTarget).toBe("number");
 				expect(steeringUpdate?.smoothedEnergy).toBeDefined();
-				expect(steeringUpdate?.comfort).toBeDefined();
+				expect(steeringUpdate?.sessionTrust).toBeDefined();
 				// Verify selection state
 				expect(steeringUpdate?.selectedTerritory).toBeDefined();
 				expect(steeringUpdate?.selectionRule).toBe("argmax");
@@ -723,7 +723,7 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 				// Second update: steering data on new exchange
 				const steeringData = mockExchangeRepo.update.mock.calls[1]?.[1];
 				expect(steeringData).toHaveProperty("smoothedEnergy");
-				expect(steeringData).toHaveProperty("comfort");
+				expect(steeringData).toHaveProperty("sessionTrust");
 				expect(steeringData).toHaveProperty("eTarget");
 				expect(steeringData).toHaveProperty("scorerOutput");
 				expect(steeringData).toHaveProperty("selectedTerritory");
@@ -751,7 +751,7 @@ const parentFinalExchange = {
 	telling: 0.75,
 	tellingBand: "mostly_self_propelled",
 	smoothedEnergy: 0.55,
-	comfort: 0.6,
+	sessionTrust: 0.6,
 	eTarget: 0.52,
 	selectionRule: "argmax",
 	governorOutput: {
@@ -775,7 +775,7 @@ const parentExchangeHistory = [
 		telling: 0.5,
 		tellingBand: "mixed",
 		smoothedEnergy: 0.4,
-		comfort: 0.4,
+		sessionTrust: 0.4,
 	},
 	{
 		...mockExchangeRecord,
@@ -788,7 +788,7 @@ const parentExchangeHistory = [
 		telling: 0.5,
 		tellingBand: "mixed",
 		smoothedEnergy: 0.45,
-		comfort: 0.45,
+		sessionTrust: 0.45,
 	},
 	parentFinalExchange,
 ];

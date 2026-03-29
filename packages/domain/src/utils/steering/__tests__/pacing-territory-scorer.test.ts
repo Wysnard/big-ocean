@@ -430,11 +430,11 @@ describe("scoreAllTerritoriesV2", () => {
 		});
 		for (const r of result.ranked) {
 			const { coverageGain, adjacency, skew, malus, freshness } = r.breakdown;
-			expect(r.score).toBeCloseTo(coverageGain + adjacency + skew - malus - freshness, 6);
+			expect(r.score).toBeCloseTo(coverageGain + config.w_a * adjacency + skew - malus - freshness, 6);
 		}
 	});
 
-	it("early session boosts light territories via conversationSkew", () => {
+	it("conversationSkew removed — skew is always 0 (trust-gated e-target replaces it)", () => {
 		const result = scoreAllTerritoriesV2({
 			eTarget: 0.5,
 			facetMetrics: new Map(),
@@ -446,28 +446,9 @@ describe("scoreAllTerritoriesV2", () => {
 			config,
 		});
 
-		const lightResult = result.ranked.find((r) => r.territoryId === lightTerritory.id)!;
-		const heavyResult = result.ranked.find((r) => r.territoryId === heavyTerritory.id)!;
-		expect(lightResult.breakdown.skew).toBeGreaterThan(0);
-		expect(heavyResult.breakdown.skew).toBe(0);
-	});
-
-	it("late session boosts heavy territories via conversationSkew", () => {
-		const result = scoreAllTerritoriesV2({
-			eTarget: 0.5,
-			facetMetrics: new Map(),
-			catalog,
-			currentTerritory: mediumTerritory.id,
-			visitHistory: new Map(),
-			turnNumber: 22,
-			totalTurns: 25,
-			config,
-		});
-
-		const lightResult = result.ranked.find((r) => r.territoryId === lightTerritory.id)!;
-		const heavyResult = result.ranked.find((r) => r.territoryId === heavyTerritory.id)!;
-		expect(heavyResult.breakdown.skew).toBeGreaterThan(0);
-		expect(lightResult.breakdown.skew).toBe(0);
+		for (const r of result.ranked) {
+			expect(r.breakdown.skew).toBe(0);
+		}
 	});
 
 	it("coverage drives shifts: coverageGain declines as facets get evidence", () => {

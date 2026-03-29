@@ -208,9 +208,9 @@ export const assessmentExchange = pgTable(
 
 		// Pacing
 		smoothedEnergy: real("smoothed_energy"),
-		comfort: real("comfort"),
+		sessionTrust: real("session_trust"),
 		drain: real("drain"),
-		drainCeiling: real("drain_ceiling"),
+		trustCap: real("trust_cap"),
 		eTarget: real("e_target"),
 
 		// Scoring

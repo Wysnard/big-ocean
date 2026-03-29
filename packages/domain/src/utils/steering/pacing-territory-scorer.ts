@@ -2,7 +2,7 @@
  * Pacing Territory Scorer — Story 25-2
  *
  * Evolved territory scorer using a 5-term additive formula:
- *   score = coverageGain + adjacency + conversationSkew - energyMalus - freshnessPenalty
+ *   score = coverageGain + w_a × adjacency - energyMalus - freshnessPenalty
  *
  * Replaces the multiplicative scorer from Story 21-3 for the conversation pacing pipeline.
  * Pure functions only — no Effect dependencies, no database, no I/O.
@@ -27,6 +27,8 @@ import type { FacetMetrics } from "../formula";
  * All constants are simulation-derived defaults; easily adjustable for calibration.
  */
 export interface PacingScorerConfig {
+	/** Adjacency weight — controls how much domain/facet similarity influences territory selection (tiebreaker, not driver) */
+	readonly w_a: number;
 	/** Energy malus weight — controls penalty for energy mismatch */
 	readonly w_e: number;
 	/** Freshness penalty weight — controls penalty for recently-visited territories */
@@ -56,8 +58,9 @@ export interface PacingScorerConfig {
 }
 
 export const PACING_SCORER_DEFAULTS: PacingScorerConfig = {
+	w_a: 0.3,
 	w_e: 0.3,
-	w_f: 0.2,
+	w_f: 0.5,
 	cooldown: 5,
 	domainAdjWeight: 0.8,
 	facetAdjWeight: 0.2,
@@ -260,7 +263,7 @@ export interface ScoreAllTerritoriesV2Input {
  * Score all territories using the 5-term additive formula and return a
  * TerritoryScorerOutput with territories ranked by score (descending).
  *
- * score = coverageGain + adjacency + conversationSkew - energyMalus - freshnessPenalty
+ * score = coverageGain + w_a × adjacency - energyMalus - freshnessPenalty
  */
 export function scoreAllTerritoriesV2(input: ScoreAllTerritoriesV2Input): TerritoryScorerOutput {
 	const {
@@ -295,18 +298,16 @@ export function scoreAllTerritoriesV2(input: ScoreAllTerritoriesV2Input): Territ
 			? computeAdjacency(currentTerritoryDef, territory, config)
 			: 0;
 
-		const skew = computeConversationSkew(territory.expectedEnergy, turnNumber, totalTurns, config);
-
 		const malus = computeEnergyMalus(territory.expectedEnergy, eTarget, config.w_e);
 
 		const freshness = computeFreshnessPenaltyV2(territory.id, visitHistory, turnNumber, config);
 
-		const score = coverageGain + adjacency + skew - malus - freshness;
+		const score = coverageGain + config.w_a * adjacency - malus - freshness;
 
 		const breakdown: TerritoryScoreBreakdown = {
 			coverageGain,
 			adjacency,
-			skew,
+			skew: 0,
 			malus,
 			freshness,
 		};

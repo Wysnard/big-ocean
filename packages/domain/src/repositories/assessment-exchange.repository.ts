@@ -30,9 +30,9 @@ export interface AssessmentExchangeUpdateInput {
 
 	// Pacing
 	readonly smoothedEnergy?: number;
-	readonly comfort?: number;
+	readonly sessionTrust?: number;
 	readonly drain?: number;
-	readonly drainCeiling?: number;
+	readonly trustCap?: number;
 	readonly eTarget?: number;
 
 	// Scoring
@@ -68,9 +68,9 @@ export interface AssessmentExchangeRecord {
 
 	// Pacing
 	readonly smoothedEnergy: number | null;
-	readonly comfort: number | null;
+	readonly sessionTrust: number | null;
 	readonly drain: number | null;
-	readonly drainCeiling: number | null;
+	readonly trustCap: number | null;
 	readonly eTarget: number | null;
 
 	// Scoring

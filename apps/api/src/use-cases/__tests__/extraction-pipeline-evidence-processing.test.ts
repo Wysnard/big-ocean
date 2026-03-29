@@ -155,9 +155,9 @@ const openerExchangeRecord = {
 	stateNotes: null,
 	extractionTier: null,
 	smoothedEnergy: null,
-	comfort: null,
+	sessionTrust: null,
 	drain: null,
-	drainCeiling: null,
+	trustCap: null,
 	eTarget: null,
 	scorerOutput: null,
 	selectedTerritory: null,
@@ -181,9 +181,9 @@ const mockExchangeRecord = {
 	stateNotes: null,
 	extractionTier: null,
 	smoothedEnergy: null,
-	comfort: null,
+	sessionTrust: null,
 	drain: null,
-	drainCeiling: null,
+	trustCap: null,
 	eTarget: null,
 	scorerOutput: null,
 	selectedTerritory: null,
@@ -440,7 +440,7 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 
 				// Pacing state
 				expect(steeringUpdate).toHaveProperty("smoothedEnergy");
-				expect(steeringUpdate).toHaveProperty("comfort");
+				expect(steeringUpdate).toHaveProperty("sessionTrust");
 				expect(steeringUpdate).toHaveProperty("eTarget");
 
 				// Scoring state

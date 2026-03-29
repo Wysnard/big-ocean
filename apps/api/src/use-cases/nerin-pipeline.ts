@@ -441,13 +441,13 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		const priorExchange = lastSessionExchange ?? lastAnyExchange;
 		const priorSmoothedEnergy = priorExchange?.smoothedEnergy ?? undefined;
-		const priorComfort = priorExchange?.comfort ?? undefined;
+		const priorSessionTrust = priorExchange?.sessionTrust ?? undefined;
 
 		const eTargetResult = computeETargetV2({
 			energyHistory,
 			tellingHistory,
 			priorSmoothedEnergy,
-			priorComfort,
+			priorSessionTrust,
 		});
 
 		// ---- Step 2: Score all territories ----
@@ -737,7 +737,9 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		yield* exchangeRepo.update(exchange.id, {
 			// Pacing state
 			smoothedEnergy: eTargetResult.smoothedEnergy,
-			comfort: eTargetResult.comfort,
+			sessionTrust: eTargetResult.sessionTrust,
+			drain: eTargetResult.drain,
+			trustCap: eTargetResult.trustCap,
 			eTarget: eTargetResult.eTarget,
 
 			// Scoring
