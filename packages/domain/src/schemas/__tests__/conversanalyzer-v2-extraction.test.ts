@@ -122,32 +122,31 @@ describe("ConversanalyzerV2ToolOutput (strict)", () => {
 		).toThrow();
 	});
 
-	it("rejects malformed evidence items", () => {
-		expect(() =>
-			decodeConversanalyzerV2Strict({
-				userState: validUserState,
-				evidence: [{ bigfiveFacet: "not_a_facet", deviation: 1 }],
-			}),
-		).toThrow();
+	it("filters out malformed evidence items", () => {
+		const result = decodeConversanalyzerV2Strict({
+			userState: validUserState,
+			evidence: [{ bigfiveFacet: "not_a_facet", deviation: 1 }],
+		});
+		expect(result.evidence).toHaveLength(0);
 	});
 
-	it("rejects when any evidence item is invalid", () => {
-		expect(() =>
-			decodeConversanalyzerV2Strict({
-				userState: validUserState,
-				evidence: [
-					validEvidence[0],
-					{
-						bigfiveFacet: "hallucinated_facet",
-						deviation: 1,
-						strength: "strong",
-						confidence: "high",
-						domain: "work",
-						note: "bad",
-					},
-				],
-			}),
-		).toThrow();
+	it("filters invalid evidence items and keeps valid ones", () => {
+		const result = decodeConversanalyzerV2Strict({
+			userState: validUserState,
+			evidence: [
+				validEvidence[0],
+				{
+					bigfiveFacet: "hallucinated_facet",
+					deviation: 1,
+					strength: "strong",
+					confidence: "high",
+					domain: "work",
+					note: "bad",
+				},
+			],
+		});
+		expect(result.evidence).toHaveLength(1);
+		expect(result.evidence[0].bigfiveFacet).toBe(validEvidence[0].bigfiveFacet);
 	});
 
 	it("rejects missing userState", () => {

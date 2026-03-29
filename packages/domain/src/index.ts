@@ -321,6 +321,7 @@ export {
 	type EvidenceItem,
 	EvidenceItemSchema,
 	evidenceExtractionJsonSchema,
+	FACET_REMAP,
 	LenientEvidenceExtractionSchema,
 } from "./schemas/evidence-extraction";
 // OCEAN code branded schemas (canonical definitions)

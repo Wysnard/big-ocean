@@ -115,14 +115,14 @@ Extract Big Five personality signals from the latest user message.
 ### Big Five Facets (30 total)
 ${facetDefs}
 
-### IMPORTANT: Valid Facet Names (use EXACTLY these values)
+### ⚠️ CRITICAL: Valid Facet Names — ONLY these 30 strings are accepted. Any other string will be silently rejected.
 imagination, artistic_interests, emotionality, adventurousness, intellect, liberalism,
 self_efficacy, orderliness, dutifulness, achievement_striving, self_discipline, cautiousness,
 friendliness, gregariousness, assertiveness, activity_level, excitement_seeking, cheerfulness,
 trust, morality, altruism, cooperation, modesty, sympathy,
 anxiety, anger, depression, self_consciousness, immoderation, vulnerability
 
-Do NOT invent facet names. If a behavior doesn't map to one of these 30 facets, skip it.
+Copy-paste from this list. If a behavior doesn't map to one of these 30 facets, skip it — do not invent a facet name.
 
 ### Life Domains
 - work: Professional activities, career, job tasks, colleagues, workplace dynamics

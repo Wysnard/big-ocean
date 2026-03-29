@@ -11,8 +11,38 @@
 import { Either, JSONSchema } from "effect";
 import * as ParseResult from "effect/ParseResult";
 import * as S from "effect/Schema";
+import type { FacetName } from "../constants/big-five";
 import { ALL_FACETS } from "../constants/big-five";
 import { LIFE_DOMAINS } from "../constants/life-domain";
+
+/**
+ * Remap known LLM hallucinated facet names to their closest valid Big Five facet.
+ * The model persistently invents facet names outside the 30-facet enum.
+ * Instead of discarding the evidence, we recover it by mapping to the correct facet.
+ */
+export const FACET_REMAP: Record<string, FacetName> = {
+	autonomy: "liberalism",
+	independence: "liberalism",
+	contentment: "cheerfulness",
+	intellectualism: "intellect",
+	intellectual_curiosity: "intellect",
+	emotional_awareness: "emotionality",
+	emotions: "emotionality",
+	honesty: "morality",
+	ethics: "morality",
+	open_mindedness: "liberalism",
+	progressivism: "liberalism",
+	hostility: "anger",
+	irritability: "anger",
+	positivity: "cheerfulness",
+	optimism: "cheerfulness",
+	introversion: "gregariousness",
+	extraversion: "gregariousness",
+	cautious: "cautiousness",
+	self_control: "self_discipline",
+	impulsivity: "immoderation",
+	warmth: "friendliness",
+};
 
 /**
  * ConversAnalyzer v1 energy levels — categorical classification used by
@@ -21,10 +51,30 @@ import { LIFE_DOMAINS } from "../constants/life-domain";
  */
 const OBSERVED_ENERGY_LEVELS = ["light", "medium", "heavy"] as const;
 
+// ─── Facet name schema with remap ────────────────────────────────────────────
+
+const ALL_FACETS_SET: ReadonlySet<string> = new Set(ALL_FACETS);
+
+/**
+ * Schema that accepts valid facet names OR known hallucinated aliases,
+ * remapping aliases to their canonical facet name during decode.
+ * Annotated so JSONSchema.make still emits the original enum constraint.
+ */
+const FacetNameSchema = S.transformOrFail(S.String, S.Literal(...ALL_FACETS), {
+	strict: true,
+	decode: (raw, _, ast) => {
+		if (ALL_FACETS_SET.has(raw)) return ParseResult.succeed(raw as FacetName);
+		const remapped = FACET_REMAP[raw];
+		if (remapped) return ParseResult.succeed(remapped);
+		return ParseResult.fail(new ParseResult.Type(ast, raw, `Unknown facet: "${raw}"`));
+	},
+	encode: (facet) => ParseResult.succeed(facet),
+});
+
 // ─── Per-item schema ─────────────────────────────────────────────────────────
 
 export const EvidenceItemSchema = S.Struct({
-	bigfiveFacet: S.Literal(...ALL_FACETS),
+	bigfiveFacet: FacetNameSchema,
 	deviation: S.Int.pipe(S.between(-3, 3)),
 	strength: S.Literal("weak", "moderate", "strong"),
 	confidence: S.Literal("low", "medium", "high"),
@@ -33,6 +83,19 @@ export const EvidenceItemSchema = S.Struct({
 });
 
 export type EvidenceItem = S.Schema.Type<typeof EvidenceItemSchema>;
+
+/**
+ * Schema using S.Literal for bigfiveFacet — used exclusively for JSON Schema
+ * generation so the LLM sees the enum constraint in the tool schema.
+ */
+export const EvidenceItemJsonSchemaSource = S.Struct({
+	bigfiveFacet: S.Literal(...ALL_FACETS),
+	deviation: S.Int.pipe(S.between(-3, 3)),
+	strength: S.Literal("weak", "moderate", "strong"),
+	confidence: S.Literal("low", "medium", "high"),
+	domain: S.Literal(...LIFE_DOMAINS),
+	note: S.String.pipe(S.maxLength(500)),
+});
 
 // ─── Strict schema (used for JSON Schema generation → sent to LLM) ──────────
 
@@ -43,8 +106,13 @@ export const EvidenceExtractionSchema = S.Struct({
 
 export type EvidenceExtraction = S.Schema.Type<typeof EvidenceExtractionSchema>;
 
-/** JSON Schema for Anthropic tool input_schema */
-export const evidenceExtractionJsonSchema = JSONSchema.make(EvidenceExtractionSchema);
+/** JSON Schema for Anthropic tool input_schema — uses Literal enum for bigfiveFacet */
+export const evidenceExtractionJsonSchema = JSONSchema.make(
+	S.Struct({
+		evidence: S.Array(EvidenceItemJsonSchemaSource),
+		observedEnergyLevel: S.Literal(...OBSERVED_ENERGY_LEVELS),
+	}),
+);
 
 // ─── Lenient schema (filters invalid items instead of rejecting all) ─────────
 

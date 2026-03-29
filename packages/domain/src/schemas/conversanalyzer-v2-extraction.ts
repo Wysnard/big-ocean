@@ -16,7 +16,7 @@ import * as ParseResult from "effect/ParseResult";
 import * as S from "effect/Schema";
 import { ENERGY_BANDS, TELLING_BANDS } from "../types/pacing";
 import type { EvidenceItem } from "./evidence-extraction";
-import { EvidenceItemSchema } from "./evidence-extraction";
+import { EvidenceItemJsonSchemaSource, EvidenceItemSchema } from "./evidence-extraction";
 
 // ─── UserState schema ────────────────────────────────────────────────────────
 
@@ -30,17 +30,51 @@ export const UserStateSchema = S.Struct({
 
 export type UserState = S.Schema.Type<typeof UserStateSchema>;
 
-// ─── Strict schema (all-or-nothing validation) ──────────────────────────────
+// ─── Strict schema (userState all-or-nothing, evidence filters invalid items) ─
 
-export const ConversanalyzerV2ToolOutput = S.Struct({
+/**
+ * Raw input schema for strict decode: userState is validated all-or-nothing,
+ * evidence items are filtered individually (one bad item doesn't reject the batch).
+ */
+const RawStrictV2Schema = S.Struct({
+	userState: UserStateSchema,
+	evidence: S.Array(S.Unknown),
+});
+
+/** Decoded output type for both strict and lenient paths */
+const DecodedV2Schema = S.Struct({
 	userState: UserStateSchema,
 	evidence: S.Array(EvidenceItemSchema),
 });
 
-export type ConversanalyzerV2Extraction = S.Schema.Type<typeof ConversanalyzerV2ToolOutput>;
+export const ConversanalyzerV2ToolOutput = S.transformOrFail(RawStrictV2Schema, DecodedV2Schema, {
+	strict: true,
+	decode: (raw) => {
+		const decodeItem = S.decodeUnknownEither(EvidenceItemSchema);
+		const validItems: Array<EvidenceItem> = [];
+		for (const item of raw.evidence) {
+			const result = decodeItem(item);
+			if (Either.isRight(result)) {
+				validItems.push(result.right);
+			}
+		}
+		return ParseResult.succeed({
+			userState: raw.userState,
+			evidence: validItems,
+		});
+	},
+	encode: (typed) => ParseResult.succeed(typed),
+});
 
-/** JSON Schema for Anthropic tool input_schema (v2) */
-export const conversanalyzerV2JsonSchema = JSONSchema.make(ConversanalyzerV2ToolOutput);
+export type ConversanalyzerV2Extraction = S.Schema.Type<typeof DecodedV2Schema>;
+
+/** JSON Schema for Anthropic tool input_schema (v2) — uses Literal enum for bigfiveFacet */
+export const conversanalyzerV2JsonSchema = JSONSchema.make(
+	S.Struct({
+		userState: UserStateSchema,
+		evidence: S.Array(EvidenceItemJsonSchemaSource),
+	}),
+);
 
 // ─── Lenient schema (independent parsing with defaults) ──────────────────────
 
@@ -69,7 +103,7 @@ const RawV2ExtractionSchema = S.Struct({
  */
 export const LenientConversanalyzerV2ToolOutput = S.transformOrFail(
 	RawV2ExtractionSchema,
-	ConversanalyzerV2ToolOutput,
+	DecodedV2Schema,
 	{
 		strict: true,
 		decode: (raw) => {
@@ -118,7 +152,7 @@ export const LenientConversanalyzerV2ToolOutput = S.transformOrFail(
 				withinMessageShift,
 			};
 
-			// Filter evidence items individually
+			// Filter evidence items individually (FacetNameSchema handles remap)
 			const decodeItem = S.decodeUnknownEither(EvidenceItemSchema);
 			const validItems: Array<EvidenceItem> = [];
 			for (const item of raw.evidence) {
