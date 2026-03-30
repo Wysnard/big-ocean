@@ -3,8 +3,8 @@ stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 lastStep: 8
 status: 'complete'
 completedAt: '2026-03-15'
-lastUpdated: '2026-03-24 (ADR-25 added)'
-adrsAdded: ['ADR-22: Ocean Hieroglyph System', 'ADR-23: Dashboard/Profile Consolidation', 'ADR-24: Email Verification Gate', 'ADR-25: E2E Sandbox Testing for Email & Payments']
+lastUpdated: '2026-03-29 (ADR-26, ADR-27, ADR-28 added)'
+adrsAdded: ['ADR-22: Ocean Hieroglyph System', 'ADR-23: Dashboard/Profile Consolidation', 'ADR-24: Email Verification Gate', 'ADR-25: E2E Sandbox Testing for Email & Payments', 'ADR-26: Life Domain Restructure', 'ADR-27: Evidence Extraction v3 Polarity Model', 'ADR-28: Three-Signal Model Confirmed + Territory Catalog Evolution']
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/ux-design-specification.md'
@@ -1887,5 +1887,141 @@ No changes needed to the email test flow beyond verifying the e2e server sends r
 - Resend test address `delivered@resend.dev` — hardcoded in tests. Protects domain reputation.
 
 **Cost impact:** Resend free tier allows 100 emails/day (3,000/month) — sufficient for e2e runs. Polar sandbox is free (no real transactions). LLM agents remain mocked (no API costs). Primary cost is CI runner time.
+
+### ADR-26: Life Domain Restructure — Solo Removed, Health Added
+
+**Supersedes:** Domain list in ADR-4 (6 domains → 6 domains, different set)
+
+**Decision:** Replace `solo` with `health` in the life domain enum. The domain list becomes: `work | relationships | family | leisure | health | other`.
+
+**Rationale:**
+- `solo` conflated two concepts: social context (being alone) and activity type (self-care, introspection). The "alone" dimension is implicitly captured by territory design (e.g., "inner-struggles" is inherently solitary).
+- `health` was the most significant gap identified in domain research — exercise habits, diet discipline, sleep routines, stress management are strong personality signals, especially for conscientiousness and neuroticism facets.
+- `leisure` absorbs the introspective/hobby aspects previously in `solo` (daydreaming, reading, solo hobbies).
+- Education maps to `work` — the extraction prompt makes this explicit.
+
+**Domain definitions:**
+
+| Domain | Covers |
+|--------|--------|
+| `work` | Professional activities, career, job tasks, education, studying, colleagues |
+| `relationships` | Romantic partners, close friendships, social connections |
+| `family` | Parents, siblings, children, extended family, household dynamics |
+| `leisure` | Hobbies, entertainment, sports, travel, group activities, alone-time hobbies, introspection, daydreaming |
+| `health` | Exercise, diet, sleep, self-care routines, morning/evening habits, physical/mental wellness, stress management |
+| `other` | Catch-all. Target <5% of evidence. |
+
+**Migration:** Add `health` to pgEnum. Remap existing `solo` evidence to `leisure` or `health` based on content. Update territory catalog — territories formerly using `solo` get reassigned domains.
+
+**Research basis:** Meta-analysis shows contextualized assessment outperforms global (validity .24 vs .11). Standard personality research life domains: work, relationships, family, leisure, health.
+
+### ADR-27: Evidence Extraction v3 — Polarity + Strength Model
+
+**Supersedes:** Deviation-based extraction in ADR-4. ConversAnalyzer v2 dual-purpose prompt in ADR-20.
+
+**Decision:** Replace the `deviation` field (-3 to +3, LLM-judged magnitude) with `polarity` (high/low, LLM-judged direction). Magnitude is derived deterministically from `polarity × strength`. The ConversAnalyzer is split into two separate LLM calls: user state extraction and personality evidence extraction.
+
+**Problem solved:** In observed sessions, LLM evidence extraction produced 75% positive deviations, zero -3 extractions, and never used deviation=0. Root cause: LLMs have structural positivity bias and struggle with calibrated magnitude judgment on arbitrary scales. This compressed scores toward above-average and prevented accurate low-scoring facets.
+
+**New schema (`conversation_evidence`):**
+
+| Field | Type | Change |
+|-------|------|--------|
+| `bigfive_facet` | enum (30 facets) | Unchanged |
+| `polarity` | enum (high/low) | **NEW** — replaces deviation as extracted field |
+| `deviation` | smallint (-3 to +3) | **Now derived**: `sign(polarity) × magnitude(strength)` |
+| `strength` | enum (weak/moderate/strong) | Unchanged |
+| `confidence` | enum (low/medium/high) | Unchanged |
+| `domain` | enum (6 life domains) | Updated per ADR-26 |
+| `note` | text (max 200) | Unchanged |
+
+**Deterministic magnitude mapping:**
+```text
+high + strong → +3    low + strong → -3
+high + moderate → +2  low + moderate → -2
+high + weak → +1      low + weak → -1
+```
+
+**Two separate LLM calls (replaces single ConversAnalyzer v2 call):**
+
+| Call | Purpose | Input | Output |
+|------|---------|-------|--------|
+| **User State** | Energy + telling classification | Latest message + context | `{ energyBand, tellingBand, energyReason, tellingReason, withinMessageShift }` |
+| **Evidence** | Personality signal extraction | Latest message + context + facet anchors + domain distribution | `{ evidence: { bigfiveFacet, polarity, strength, confidence, domain, note }[] }` |
+
+**Why split:** The dual-purpose v2 prompt increased hallucination rates. Separation gives each call a focused task and frees token budget for rich per-facet behavioral examples in the evidence call.
+
+**Per-facet conversational anchors:** The evidence extraction prompt includes HIGH and LOW behavioral examples for each of the 30 facets, written as natural conversation (what a real person would say to Nerin). These give the LLM concrete calibration for polarity judgment.
+
+**Polarity balance audit:** The extraction prompt includes a mandatory self-check: if <35% of extracted signals are LOW, the LLM re-reads for absences, avoidances, and preferences-against before submitting.
+
+**Downstream impact:** An adapter function converts `{ polarity, strength }` → `deviation` before entering `formula.ts`. Zero changes to scoring math — `computeFacetMetrics()`, `computeAllFacetResults()`, `computeTraitResults()` unchanged.
+
+**Full specification:** [Scoring & Confidence v2 Spec](./scoring-confidence-v2-spec.md) §3-4
+
+### ADR-28: Three-Signal Scoring Model Confirmed + Territory Catalog Evolution
+
+**Status:** Preserves existing architecture. No formula changes.
+
+**Decision:** The three-signal scoring model (`score`, `confidence`, `signalPower`) is confirmed as architecturally correct. Confidence remains domain-blind (evidence mass). Signal power remains the domain diversity signal used by steering. No merging of breadth into confidence.
+
+**Rationale:** Exploration of merging domain breadth into confidence (proposed as `conf_reported = conf_mass × (ρ + (1-ρ) × breadth)`) was rejected after analysis revealed cascading complexity:
+1. Merging breadth into confidence penalized narrow facets (orderliness, artistic_interests)
+2. Fixing that required per-facet eligible domain overrides
+3. Natural-emergence facets (extraversion) needed broader eligibility than catalog-derived
+4. That required a weighted observability matrix (30 × 5 hand-tuned values)
+5. Each fix created a new problem — classic architecture smell
+
+**Root insight:** Confidence and breadth answer different questions:
+- **Confidence** = "How much evidence supports this score?" (reliability)
+- **Signal power** = "How broadly was it observed across domains?" (generalizability)
+
+These are analogous to precision and recall — merging them into one number loses information. The existing separation is correct. Signal power already incorporates domain diversity (`V × D` where D = normalized entropy) and already drives the steering system to seek broader evidence.
+
+**What stays unchanged:**
+- `confidence = C_max × (1 - e^{-kW})` — evidence mass saturation, domain-blind
+- `signalPower = V × D` — volume × domain diversity, drives steering
+- `priority = α × max(0, C_target - confidence) + β × max(0, P_target - signalPower)` — two-term steering
+- Result schema: `{ score, confidence, signalPower }` per facet and trait
+
+**What changes (territory catalog only):**
+
+The territory catalog evolves to support ADR-26 (solo → health) with 3 new health territories and domain remapping of 12 existing territories. Additionally, hard-to-assess facets get additional territory routes to eliminate single-territory bottlenecks:
+
+| Facet | Problem | Fix |
+|-------|---------|-----|
+| orderliness | 1 territory, single domain pair | 3 new territories with distinct domain pairs: **daily-routines** (work, health), **home-and-space** (family, leisure), **trips-and-plans** (leisure, relationships) — 5 domains total |
+| artistic_interests | 1 territory — fragile | Added to **inner-life** (new territory) |
+| cautiousness | No work domain coverage | Added to **work-dynamics**; also in new **home-and-space** |
+| altruism | Missing health domain | New **taking-care** territory (health, family) |
+| liberalism | Only 2 territory routes | Added to **growing-up** (family, relationships) |
+
+**New health territories (3):**
+
+| Territory | Domains | Facets | Energy |
+|-----------|---------|--------|--------|
+| body-and-movement | health, leisure | activity_level, self_discipline, excitement_seeking | 0.25 (light) |
+| cravings-and-indulgences | health, leisure | immoderation, self_discipline, cautiousness | 0.40 (medium) |
+| stress-and-the-body | health, work | vulnerability, anxiety, self_efficacy, self_discipline | 0.60 (heavy) |
+
+**New hard-to-assess coverage territories (3):**
+
+| Territory | Domains | Facets | Energy |
+|-----------|---------|--------|--------|
+| home-and-space | family, leisure | orderliness, activity_level, cautiousness | 0.22 (light) |
+| trips-and-plans | leisure, relationships | orderliness, adventurousness, cooperation | 0.28 (light) |
+| taking-care | health, family | altruism, sympathy, dutifulness, self_discipline | 0.48 (medium) |
+
+**Replacement territory (identity-and-purpose removed):**
+
+| Territory | Domains | Facets | Energy |
+|-----------|---------|--------|--------|
+| inner-life | health, leisure | intellect, emotionality, imagination, liberalism, artistic_interests | 0.60 (heavy) |
+
+**Catalog size:** 25 → 31 territories (3 new health, 3 new hard-to-assess coverage, 1 replacement). All 30 facets have ≥2 territory routes. No hard-to-assess facet is stuck in a single domain pair.
+
+**Facet coverage design principle:** Hard-to-assess facets (orderliness, artistic_interests, cautiousness, liberalism) need explicit territory targeting because they won't emerge without steering. Natural-emergence facets (extraversion cluster, trust, anxiety, etc.) emerge from conversational style regardless of territory — they need fewer dedicated territories but the extractor catches them across all domains.
+
+**Full territory remapping:** [Scoring & Confidence v2 Spec](./scoring-confidence-v2-spec.md)
 
 **This document replaces:** `docs/ARCHITECTURE.md` as the single authoritative architecture reference. The standalone documents above contain full implementation-level specifications referenced by the ADRs in this document.

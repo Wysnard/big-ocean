@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-03-24
+# Generated: 2026-03-30
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-24
+generated: 2026-03-30
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -154,12 +154,12 @@ development_status:
 # ═══════════════════════════════════════════════════════════════
 # Architecture: _bmad-output/planning-artifacts/architecture.md
 # Architecture (pipeline): _bmad-output/planning-artifacts/architecture-assessment-pipeline.md
-# Epics/Stories: _bmad-output/planning-artifacts/epics.md (7 new epics, 29 stories)
+# Epics/Stories: _bmad-output/planning-artifacts/epics-innovation-strategy.md (7 new epics, 29 stories)
 # Replaces LangGraph with conversanalyzer (Haiku) + finanalyzer (Sonnet)
 # + formula-driven steering + monetization + relationships + viral mechanics
 #
 # NUMBERING: Phase 2 epics continue from Phase 1 numbering (9+).
-# Cross-reference: epics.md "New Epic N" = sprint-status "Epic N+8"
+# Cross-reference: epics-innovation-strategy.md "New Epic N" = sprint-status "Epic N+8"
 #   New Epic 1 (Conversational Assessment) = Epics 9+10 (done)
 #   New Epic 2 (Finalization & Scoring) = Epic 11
 #   New Epic 3 (Results Experience) = Epic 12
@@ -195,7 +195,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   # NEW EPIC 2: Finalization & Scoring (Epic 11)
   # FinAnalyzer (Sonnet), score computation, OCEAN code, archetype, pipeline
-  # Stories: 2.1-2.5 in epics.md
+  # Stories: 2.1-2.5 in epics-innovation-strategy.md
   # ───────────────────────────────────────────────────────────────
   epic-11: done
   11-1-finalization-trigger-and-auth-gate: done
@@ -208,7 +208,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   # NEW EPIC 3: Results Experience (Epic 12)
   # Results page, evidence highlighting, teaser portrait
-  # Stories: 3.1-3.3 in epics.md
+  # Stories: 3.1-3.3 in epics-innovation-strategy.md
   # ───────────────────────────────────────────────────────────────
   epic-12: done
   12-1-results-page-and-trait-display: done
@@ -219,7 +219,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   # NEW EPIC 4: Monetization & Full Portrait (Epic 13)
   # Polar.sh, PWYW, purchase events, full portrait async generation
-  # Stories: 4.1-4.3 in epics.md
+  # Stories: 4.1-4.3 in epics-innovation-strategy.md
   # ───────────────────────────────────────────────────────────────
   epic-13: done
   13-1-purchase-events-schema-and-capability-derivation: done
@@ -230,7 +230,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   # NEW EPIC 5: Relationship Analysis (Epic 14)
   # Credits, invitations, invitee flow, pair analysis
-  # Stories: 5.1-5.4 in epics.md
+  # Stories: 5.1-5.4 in epics-innovation-strategy.md
   # ───────────────────────────────────────────────────────────────
   epic-14: done
   14-1-relationship-credits-and-purchase-flow: done
@@ -242,7 +242,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   # NEW EPIC 6: Growth & Operational Safety (Epic 15)
   # Shareable profile, archetype cards, waitlist, circuit breaker
-  # Stories: 6.1-6.3 in epics.md
+  # Stories: 6.1-6.3 in epics-innovation-strategy.md
   # ───────────────────────────────────────────────────────────────
   epic-15: done
   15-1-shareable-profile-and-public-url: done
@@ -253,7 +253,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   # NEW EPIC 7: Privacy & Compliance (EU Launch)
   # GDPR, encryption at rest, audit logging
-  # Stories: 7.1-7.3 in epics.md — tracked under Epic 6 above
+  # Stories: 7.1-7.3 in epics-innovation-strategy.md — tracked under Epic 6 above
   # ───────────────────────────────────────────────────────────────
   # See epic-6 section above (stories 6-1, 6-2, 6-3)
 
@@ -500,14 +500,14 @@ development_status:
 # ═══════════════════════════════════════════════════════════════
 # PHASE 7: Product Completeness & Launch Readiness
 # ═══════════════════════════════════════════════════════════════
-# Source: _bmad-output/planning-artifacts/epics.md (rewritten 2026-03-18)
+# Source: _bmad-output/planning-artifacts/epics-innovation-strategy.md (rewritten 2026-03-18)
 # Full product backlog from PRD + Architecture + UX Design spec.
 # Account management, conversation polish, results/portrait/monetization,
 # public profiles, relationship analysis (QR + generation), conversation
 # extension, homepage, engagement emails & dashboard.
 #
 # NUMBERING: Continues from Phase 6 (30+).
-# Cross-reference: epics.md "Epic N" = sprint-status "Epic N+29"
+# Cross-reference: epics-innovation-strategy.md "Epic N" = sprint-status "Epic N+29"
 #   Epic 1 (Account & Onboarding) = Epic 30
 #   Epic 2 (Conversational Assessment) = Epic 31
 #   Epic 3 (Results, Portrait & Monetization) = Epic 32
@@ -521,7 +521,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   # EPIC 30: Account, Onboarding & Privacy Foundation
   # Profile visibility, account deletion with cascade hooks
-  # Stories: 1.1-1.2 in epics.md
+  # Stories: 1.1-1.2 in epics-innovation-strategy.md
   # ───────────────────────────────────────────────────────────────
   epic-30: done
   30-1-profile-visibility-controls: done
@@ -533,7 +533,7 @@ development_status:
   # EPIC 31: Conversational Assessment & Drop-off Recovery
   # Greeting, character quality, closing exchange, depth meter,
   # session resume, cost guard, drop-off email
-  # Stories: 2.1-2.7 in epics.md
+  # Stories: 2.1-2.7 in epics-innovation-strategy.md
   # ───────────────────────────────────────────────────────────────
   epic-31: done
   31-1-nerin-greeting-and-onboarding-message: done
@@ -551,7 +551,7 @@ development_status:
   # EPIC 32: Results, Portrait & Monetization
   # Remove teaser portrait, identity/scientific sections, Polar,
   # PWYW modal, full portrait, reconciliation, archetype cards, share/credits
-  # Stories: 3.0-3.8 in epics.md
+  # Stories: 3.0-3.8 in epics-innovation-strategy.md
   # ───────────────────────────────────────────────────────────────
   epic-32: done
   32-0-remove-teaser-portrait: done
@@ -570,7 +570,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   # EPIC 33: Public Profile & Sharing
   # Public profile page, OG meta tags, share flow, relationship CTA
-  # Stories: 4.1-4.4 in epics.md
+  # Stories: 4.1-4.4 in epics-innovation-strategy.md
   # ───────────────────────────────────────────────────────────────
   epic-33: done
   33-1-public-profile-page: done
@@ -582,7 +582,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   # EPIC 34: Relationship Analysis — QR & Credits
   # QR token infrastructure, QR drawer UI, accept screen & consent gate
-  # Stories: 5.1-5.3 in epics.md
+  # Stories: 5.1-5.3 in epics-innovation-strategy.md
   # ───────────────────────────────────────────────────────────────
   epic-34: done
   34-1-qr-token-infrastructure: done
@@ -594,7 +594,7 @@ development_status:
   # EPIC 35: Relationship Analysis — Generation & Display
   # Ritual suggestion, analysis generation, display, version management,
   # email notification
-  # Stories: 6.1-6.5 in epics.md
+  # Stories: 6.1-6.5 in epics-innovation-strategy.md
   # ───────────────────────────────────────────────────────────────
   epic-35: done
   35-1-ritual-suggestion-screen: done
@@ -608,7 +608,7 @@ development_status:
   # EPIC 36: Conversation Extension
   # Extension purchase & session creation, pipeline initialization,
   # extended results & portrait versioning
-  # Stories: 7.1-7.3 in epics.md
+  # Stories: 7.1-7.3 in epics-innovation-strategy.md
   # ───────────────────────────────────────────────────────────────
   epic-36: done
   36-1-conversation-extension-purchase-and-session-creation: done
@@ -619,7 +619,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   # EPIC 37: Homepage & Acquisition Funnel
   # Homepage narrative & layout, founder portrait bridge & relationship CTA
-  # Stories: 8.1-8.2 in epics.md
+  # Stories: 8.1-8.2 in epics-innovation-strategy.md
   # ───────────────────────────────────────────────────────────────
   # EPIC 37 note: Stories 37-1 and 37-2 delivered the original 14-beat homepage.
   # Brainstorming session 2026-03-23 identified fundamental narrative misalignment.
@@ -632,7 +632,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   # EPIC 38: Engagement Emails & Dashboard
   # Nerin check-in email, deferred portrait recapture email, dashboard
-  # Stories: 9.1-9.3 in epics.md
+  # Stories: 9.1-9.3 in epics-innovation-strategy.md
   # ───────────────────────────────────────────────────────────────
   epic-38: done
   38-1-nerin-check-in-email: done
@@ -644,7 +644,7 @@ development_status:
   # EPIC 39: Ocean Hieroglyph System — Rename & Consolidation
   # Hieroglyph data layer, renderer components + consumer migration,
   # tests & storybook stories rewrite
-  # Stories: 10.1-10.3 in epics.md
+  # Stories: 10.1-10.3 in epics-innovation-strategy.md
   # Independent of all other epics. No backend changes. Pure frontend refactor.
   # ───────────────────────────────────────────────────────────────
   epic-39: done
@@ -652,3 +652,66 @@ development_status:
   39-2-renderer-components-data-trait-coloring-and-consumer-migration: done
   39-3-tests-and-storybook-stories-rewrite: done
   epic-39-retrospective: optional
+
+# ═══════════════════════════════════════════════════════════════
+# PHASE 8: Scoring & Confidence v2
+# ═══════════════════════════════════════════════════════════════
+# Source: _bmad-output/planning-artifacts/epics.md (Scoring v2)
+# Architecture: ADR-26 (life domain restructure), ADR-27 (evidence extraction
+# redesign), ADR-28 (territory catalog evolution)
+# Three interconnected changes: health domain replaces solo, polarity model
+# replaces deviation, territory catalog grows 25→31 with health territories
+#
+# NUMBERING: Continues from Phase 7 (40+).
+# Cross-reference: epics.md (Scoring v2) "Epic N" = sprint-status "Epic N+39"
+#   Scoring Epic 1 (Health Domain & Evidence Migration) = Epic 40
+#   Scoring Epic 2 (Territory Catalog Expansion) = Epic 41
+#   Scoring Epic 3 (Evidence Extraction v3 — Polarity Model) = Epic 42
+#
+# DEPENDENCY ORDER: Epic 40 first (foundation), then Epic 41 + 42 in parallel
+# POST-IMPL: cleanup-1 runs after all 3 epics verified in production
+
+  # ───────────────────────────────────────────────────────────────
+  # SCORING EPIC 1: Health Domain & Evidence Migration (Epic 40)
+  # Add health life domain, update domain definitions, migrate solo evidence
+  # Stories: 1.1-1.3 in epics.md (Scoring v2)
+  # Depends on: Nothing — foundation
+  # ───────────────────────────────────────────────────────────────
+  epic-40: backlog
+  40-1-add-health-life-domain-to-constants-schemas-and-database: backlog
+  40-2-update-domain-definitions-and-assignment-guidance: backlog
+  40-3-migrate-existing-solo-evidence-and-remove-solo-domain: backlog
+  epic-40-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # SCORING EPIC 2: Territory Catalog Expansion (Epic 41)
+  # Remap 12 territory domains, replace identity-and-purpose with inner-life,
+  # add 6 new territories (3 health + 3 hard-to-assess), facet additions
+  # Stories: 2.1-2.3 in epics.md (Scoring v2)
+  # Depends on: Epic 40 (new territories reference health domain)
+  # ───────────────────────────────────────────────────────────────
+  epic-41: backlog
+  41-1-remap-existing-territory-domains-and-replace-identity-and-purpose: backlog
+  41-2-add-6-new-territories: backlog
+  41-3-facet-additions-to-existing-territories-and-catalog-validation: backlog
+  epic-41-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # SCORING EPIC 3: Evidence Extraction v3 — Polarity Model (Epic 42)
+  # Polarity column + deviation adapter, split ConversAnalyzer into 2 calls,
+  # per-facet conversational anchors prompt, pipeline integration
+  # Stories: 3.1-3.4 in epics.md (Scoring v2)
+  # Depends on: Epic 40 (extraction prompt uses updated domain list)
+  # ───────────────────────────────────────────────────────────────
+  epic-42: backlog
+  42-1-polarity-schema-database-migration-and-deviation-adapter: backlog
+  42-2-split-conversanalyzer-into-two-separate-llm-calls: backlog
+  42-3-evidence-extraction-v3-prompt-with-per-facet-conversational-anchors: backlog
+  42-4-pipeline-integration-wire-two-call-extraction-into-nerin-pipeline: backlog
+  epic-42-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # POST-IMPLEMENTATION CLEANUP
+  # Run after all Scoring v2 epics verified in production
+  # ───────────────────────────────────────────────────────────────
+  cleanup-1-remove-solo-from-postgresql-enum: backlog
