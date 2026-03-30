@@ -7,7 +7,8 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@workspace/ui/components/card";
-import { Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { OceanSkeleton } from "@workspace/ui/components/ocean-skeleton";
+import { RefreshCw, Sparkles } from "lucide-react";
 import { memo, useMemo } from "react";
 import Markdown from "react-markdown";
 import { markdownComponents, renderHeader, splitMarkdownSections } from "./portrait-markdown";
@@ -63,9 +64,9 @@ export const PersonalPortrait = memo(function PersonalPortrait({
 				{/* Generating state */}
 				{isGenerating && (
 					<div className="flex flex-col items-center justify-center py-8 gap-4">
-						<Loader2 className="w-8 h-8 text-primary animate-spin" />
+						<OceanSkeleton autoReveal size={36} aria-label="Generating portrait" />
 						<div className="text-center">
-							<p className="text-sm font-medium text-foreground">Generating your full portrait...</p>
+							<p className="text-sm font-medium text-foreground">Generating your portrait...</p>
 							<p className="text-xs text-muted-foreground mt-1">This may take a minute</p>
 						</div>
 					</div>

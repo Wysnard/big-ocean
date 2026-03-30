@@ -14,19 +14,22 @@ import { describe, expect, it } from "vitest";
 describe("Story 22-3: Contradiction-Surfacing in Portrait Generator", () => {
 	const portraitSource = PORTRAIT_CONTEXT;
 
-	it("full portrait prompt contains contradiction-surfacing instruction", () => {
-		expect(portraitSource).toContain("Look for contradictions and tensions in the evidence");
-		expect(portraitSource).toContain("Surface them as discoveries, not diagnoses");
+	it("full portrait prompt contains fingerprint principle (contradictions + rare combinations)", () => {
+		expect(portraitSource).toContain("CONTRADICTIONS: Two traits that seemingly oppose each other");
+		expect(portraitSource).toContain("RARE COMBINATIONS: Unusual alliances between traits");
+		expect(portraitSource).toContain(
+			"Surface both as discoveries you're genuinely fascinated by, not diagnoses",
+		);
 	});
 
-	it("contradiction-surfacing is placed in the BEFORE YOU WRITE section", () => {
+	it("fingerprint principle is placed in the BEFORE YOU WRITE section", () => {
 		// The instruction should appear between "BEFORE YOU WRITE" header and "Step 1:"
 		const beforeWriteIdx = portraitSource.indexOf("BEFORE YOU WRITE");
-		const contradictionIdx = portraitSource.indexOf("Look for contradictions and tensions");
+		const fingerprintIdx = portraitSource.indexOf("CONTRADICTIONS: Two traits");
 		const step1Idx = portraitSource.indexOf("Step 1: Identify");
 
 		expect(beforeWriteIdx).toBeGreaterThan(-1);
-		expect(contradictionIdx).toBeGreaterThan(beforeWriteIdx);
-		expect(contradictionIdx).toBeLessThan(step1Idx);
+		expect(fingerprintIdx).toBeGreaterThan(beforeWriteIdx);
+		expect(fingerprintIdx).toBeLessThan(step1Idx);
 	});
 });
