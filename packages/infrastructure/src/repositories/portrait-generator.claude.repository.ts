@@ -97,6 +97,7 @@ TRAIT & FACET PROFILE (with confidence levels):
 ${traitSummary}
 
 EVIDENCE FROM CONVERSATION (in conversation order — weigh all of it, the most important pattern may connect early and late moments):
+Uniqueness values indicate how exceptional a trait is: most people have balanced personalities, so high or low scores mean this person is uncommon in that dimension — not that something is wrong. Treat uniqueness as what makes them distinctive.
 ${evidenceFormatted}
 
 ${depthSignal}

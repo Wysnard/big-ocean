@@ -165,7 +165,7 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 					portraitPlaceholder = {
 						assessmentResultId: result.id,
 						tier: "full" as const,
-						modelUsed: "claude-sonnet-4-6",
+						modelUsed: config.portraitModelId,
 					};
 				}
 			}

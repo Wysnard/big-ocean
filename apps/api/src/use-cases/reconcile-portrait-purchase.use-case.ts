@@ -14,6 +14,7 @@
  */
 
 import {
+	AppConfig,
 	AssessmentResultRepository,
 	LoggerRepository,
 	PortraitRepository,
@@ -38,6 +39,7 @@ export const reconcilePortraitPurchase = (input: ReconcilePortraitPurchaseInput)
 		const portraitRepo = yield* PortraitRepository;
 		const resultsRepo = yield* AssessmentResultRepository;
 		const logger = yield* LoggerRepository;
+		const config = yield* AppConfig;
 
 		// 1. Check if user has purchased a portrait
 		const capabilities = yield* purchaseRepo.getCapabilities(input.userId);
@@ -75,7 +77,7 @@ export const reconcilePortraitPurchase = (input: ReconcilePortraitPurchaseInput)
 			.insertPlaceholder({
 				assessmentResultId: result.id,
 				tier: "full",
-				modelUsed: "claude-sonnet-4-6",
+				modelUsed: config.portraitModelId,
 			})
 			.pipe(
 				Effect.catchTag("DuplicatePortraitError", () => {

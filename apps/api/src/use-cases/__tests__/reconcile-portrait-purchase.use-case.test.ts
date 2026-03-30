@@ -22,6 +22,7 @@ import {
 	PortraitRepository,
 	PurchaseEventRepository,
 } from "@workspace/domain";
+import { createTestAppConfigLayer } from "@workspace/domain/config/__mocks__/app-config";
 import { DuplicatePortraitError } from "@workspace/domain/repositories/portrait.repository";
 import type { UserCapabilities } from "@workspace/domain/types/purchase.types";
 import { Effect, Layer } from "effect";
@@ -66,6 +67,7 @@ const createTestLayer = () =>
 		Layer.succeed(PortraitRepository, mockPortraitRepo),
 		Layer.succeed(AssessmentResultRepository, mockResultsRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
+		createTestAppConfigLayer(),
 	);
 
 const NO_PORTRAIT_CAPABILITIES: UserCapabilities = {
@@ -120,7 +122,7 @@ describe("reconcilePortraitPurchase Use Case (Story 32-6)", () => {
 			expect(mockPortraitRepo.insertPlaceholder).toHaveBeenCalledWith({
 				assessmentResultId: "result_456",
 				tier: "full",
-				modelUsed: "claude-sonnet-4-6",
+				modelUsed: expect.any(String),
 			});
 			expect(mockLogger.info).toHaveBeenCalledWith(
 				"Portrait reconciliation: inserting placeholder and spawning generation",

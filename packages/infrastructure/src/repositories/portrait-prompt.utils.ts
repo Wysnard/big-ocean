@@ -91,7 +91,7 @@ export function formatEvidence(
 	return evidence
 		.map((e, i) => {
 			const trait = FACET_TO_TRAIT[e.bigfiveFacet as FacetName] ?? "Unknown";
-			return `${i + 1}. [${trait} → ${e.bigfiveFacet}, deviation: ${e.deviation}, strength: ${e.strength}, confidence: ${e.confidence}] "${e.note}"`;
+			return `${i + 1}. [${trait} → ${e.bigfiveFacet}, uniqueness: ${e.deviation}, strength: ${e.strength}, confidence: ${e.confidence}] "${e.note}"`;
 		})
 		.join("\n");
 }
