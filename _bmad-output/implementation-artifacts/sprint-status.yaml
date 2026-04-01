@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-04-01
+generated: 2026-04-02
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -679,9 +679,9 @@ development_status:
   # Stories: 1.1-1.3 in epics.md (Scoring v2)
   # Depends on: Nothing — foundation
   # ───────────────────────────────────────────────────────────────
-  epic-40: backlog
-  40-1-add-health-life-domain-to-constants-schemas-and-database: backlog
-  40-2-update-domain-definitions-and-assignment-guidance: backlog
+  epic-40: in-progress
+  40-1-add-health-life-domain-to-constants-schemas-and-database: done
+  40-2-update-domain-definitions-and-assignment-guidance: done
   40-3-migrate-existing-solo-evidence-and-remove-solo-domain: backlog
   epic-40-retrospective: optional
 
