@@ -1,5 +1,5 @@
 # Sprint Status Tracking - big-ocean
-# Generated: 2026-03-30
+# Generated: 2026-04-01
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-03-30
+generated: 2026-04-01
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -624,9 +624,11 @@ development_status:
   # EPIC 37 note: Stories 37-1 and 37-2 delivered the original 14-beat homepage.
   # Brainstorming session 2026-03-23 identified fundamental narrative misalignment.
   # Stories 37-3 and 37-4 implement the homepage redesign per UX Spec §16.6.
-  epic-37: in-progress
+  epic-37: done
   37-1-homepage-narrative-and-layout: done
   37-2-founder-portrait-bridge-and-relationship-cta: done
+  37-3-homepage-narrative-restructure-and-hero-redesign: done
+  37-4-how-it-works-archetype-gallery-and-conversion-flow: done
   epic-37-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
