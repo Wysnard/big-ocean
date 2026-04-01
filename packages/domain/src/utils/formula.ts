@@ -60,7 +60,7 @@ export const GREETING_SEED_POOL = [
 	{ domain: "leisure", facet: "imagination" },
 	{ domain: "relationships", facet: "gregariousness" },
 	{ domain: "work", facet: "achievement_striving" },
-	{ domain: "solo", facet: "self_consciousness" },
+	{ domain: "health", facet: "self_consciousness" },
 	{ domain: "family", facet: "altruism" },
 ] as const satisfies readonly { domain: LifeDomain; facet: FacetName }[];
 

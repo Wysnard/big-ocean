@@ -13,7 +13,6 @@ export const LIFE_DOMAINS = [
 	"relationships",
 	"family",
 	"leisure",
-	"solo",
 	"health",
 	"other",
 ] as const;
@@ -22,17 +21,17 @@ export type LifeDomain = (typeof LIFE_DOMAINS)[number];
 
 export const LifeDomainSchema = S.Literal(...LIFE_DOMAINS);
 
-/** Domains not eligible for steering: "other" (catch-all) and "solo" (deprecated, pending removal in Story 1.3) */
-const NON_STEERABLE: ReadonlySet<LifeDomain> = new Set(["other", "solo"]);
+/** Domains not eligible for steering: "other" (catch-all) */
+const NON_STEERABLE: ReadonlySet<LifeDomain> = new Set(["other"]);
 
 /** Type guard for steerable domains */
 const isSteerableDomain = (d: LifeDomain): boolean => !NON_STEERABLE.has(d);
 
-/** Domains eligible for steering (excludes "other" and deprecated "solo") */
+/** Domains eligible for steering (excludes "other") */
 export const STEERABLE_DOMAINS = LIFE_DOMAINS.filter(isSteerableDomain);
 
-/** Active life domains — excludes deprecated "solo" */
-export type ActiveLifeDomain = Exclude<LifeDomain, "solo">;
+/** @deprecated Solo domain removed in Story 40-3. ActiveLifeDomain is now identical to LifeDomain. */
+export type ActiveLifeDomain = LifeDomain;
 
 /**
  * Domain definitions for extraction prompts and domain assignment guidance.

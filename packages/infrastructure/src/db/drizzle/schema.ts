@@ -17,7 +17,9 @@
  */
 
 import { ALL_FACETS } from "@workspace/domain/constants/big-five";
-import { LIFE_DOMAINS } from "@workspace/domain/constants/life-domain";
+// Note: LIFE_DOMAINS import removed in Story 40-3. The pgEnum must keep "solo" for backward
+// compatibility with PostgreSQL (existing enum value), even though TypeScript no longer includes it.
+// Solo removal from pgEnum is deferred to Story C.1.
 import {
 	DEPTH_SIGNAL_LEVELS,
 	PORTRAIT_RATINGS,
@@ -43,7 +45,21 @@ import {
 
 // ─── pgEnums (single source of truth from domain constants) ───────────────
 
-export const evidenceDomainEnum = pgEnum("evidence_domain", LIFE_DOMAINS);
+/**
+ * DB-level evidence domain enum — includes deprecated "solo" for PostgreSQL backward compat.
+ * TypeScript-level LIFE_DOMAINS no longer includes "solo" (Story 40-3).
+ * Solo removal from pgEnum deferred to Story C.1.
+ */
+const DB_EVIDENCE_DOMAINS = [
+	"work",
+	"relationships",
+	"family",
+	"leisure",
+	"solo",
+	"health",
+	"other",
+] as const;
+export const evidenceDomainEnum = pgEnum("evidence_domain", DB_EVIDENCE_DOMAINS);
 
 export const bigfiveFacetNameEnum = pgEnum("bigfive_facet_name", ALL_FACETS);
 
