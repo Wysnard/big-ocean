@@ -50,23 +50,3 @@ The TypeScript constants change `solo → health` (replace), but the DB migratio
 
 ### Pattern Reference
 See existing migrations in `drizzle/` for format. Each migration is a directory named `YYYYMMDDHHMMSS_description/migration.sql`.
-
-## Architect Notes
-
-### Finding: pgEnum/LIFE_DOMAINS Divergence Risk (Major)
-
-**Problem:** `schema.ts` declares `pgEnum("evidence_domain", LIFE_DOMAINS)`. If LIFE_DOMAINS removes "solo", the Drizzle schema will no longer recognize "solo" as a valid enum value, but existing DB rows still contain domain="solo". This can cause read failures or Drizzle introspection mismatches.
-
-**Resolution:** In this story, LIFE_DOMAINS must ADD "health" while KEEPING "solo". The constant becomes a 7-element array: `["work", "relationships", "family", "leisure", "solo", "health", "other"]`. Story 1.3 will later remove "solo" after data migration. This means:
-
-- `packages/domain/src/constants/life-domain.ts`: Add "health" to LIFE_DOMAINS, keep "solo". STEERABLE_DOMAINS filter already excludes "other"; update it to also exclude "solo" from steering (since solo is deprecated and should not be steered to).
-- AC #1 should be interpreted as: LIFE_DOMAINS includes health (additive). Solo removal is deferred to Story 1.3.
-- The LifeDomainSchema will validate both "solo" and "health" — this is correct for the transition period.
-- The pgEnum in schema.ts will include both "solo" and "health" — matching the DB state after migration.
-
-**Key file changes:**
-1. `packages/domain/src/constants/life-domain.ts` — Add "health" to array, update STEERABLE_DOMAINS to exclude "solo"
-2. `packages/infrastructure/src/db/drizzle/schema.ts` — No code change needed (auto-derives from LIFE_DOMAINS)
-3. `drizzle/20260401220000_add_health_domain/migration.sql` — `ALTER TYPE evidence_domain ADD VALUE 'health';`
-4. Test files referencing "solo" domain — no changes needed (solo still valid)
-5. Update any tests that assert exact LIFE_DOMAINS contents to include "health"
