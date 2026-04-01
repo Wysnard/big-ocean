@@ -361,7 +361,13 @@ export type {
 } from "./types/archetype";
 export { getTraitLevelLabel, TRAIT_LETTER_MAP, TRAIT_LEVEL_LABELS } from "./types/archetype";
 // Evidence input type (Story 9.1, v2 Story 18-1)
-export type { EvidenceConfidence, EvidenceInput, EvidenceStrength } from "./types/evidence";
+export type {
+	EvidenceConfidence,
+	EvidenceInput,
+	EvidencePolarity,
+	EvidenceStrength,
+	ExtractedEvidence,
+} from "./types/evidence";
 // Facet types
 export type {
 	AgreeableFacet,
@@ -483,8 +489,11 @@ export {
 // Trait types (Big Five)
 export type { BigFiveTrait, TraitConfidenceScores } from "./types/trait";
 export { BIG_FIVE_TRAITS } from "./types/trait";
+// Polarity deviation adapter (Story 42-1)
+export { adaptExtractedEvidence } from "./utils/adapt-extracted-evidence";
 // Date utilities for cost tracking and rate limiting
 export { getNextDayMidnightUTC, getUTCDateKey } from "./utils/date.utils";
+export { deriveDeviation } from "./utils/derive-deviation";
 // Domain distribution utility (Story 10.2)
 export { aggregateDomainDistribution, type DomainDistribution } from "./utils/domain-distribution";
 // Formula functions (Story 10.3)

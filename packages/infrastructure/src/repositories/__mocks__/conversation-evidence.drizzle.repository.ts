@@ -41,6 +41,7 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.succeed(
 						strength: input.strength,
 						confidence: input.confidence,
 						domain: input.domain,
+						polarity: input.polarity ?? null,
 						note: input.note,
 						createdAt: new Date(),
 					});

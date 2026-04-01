@@ -80,6 +80,8 @@ export const EvidenceItemSchema = S.Struct({
 	confidence: S.Literal("low", "medium", "high"),
 	domain: S.Literal(...LIFE_DOMAINS),
 	note: S.String.pipe(S.maxLength(500)),
+	/** Polarity field — optional for backward compat with existing extraction pipeline (Story 42-1) */
+	polarity: S.optional(S.Literal("high", "low")),
 });
 
 export type EvidenceItem = S.Schema.Type<typeof EvidenceItemSchema>;
@@ -95,6 +97,8 @@ export const EvidenceItemJsonSchemaSource = S.Struct({
 	confidence: S.Literal("low", "medium", "high"),
 	domain: S.Literal(...LIFE_DOMAINS),
 	note: S.String.pipe(S.maxLength(500)),
+	/** Polarity field — optional for backward compat with existing extraction pipeline (Story 42-1) */
+	polarity: S.optional(S.Literal("high", "low")),
 });
 
 // ─── Strict schema (used for JSON Schema generation → sent to LLM) ──────────
