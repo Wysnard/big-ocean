@@ -23,6 +23,7 @@ import {
 	decodeConversanalyzerV2Strict,
 	EvidenceItemSchema,
 	FACET_PROMPT_DEFINITIONS,
+	LIFE_DOMAIN_DEFINITIONS,
 	LoggerRepository,
 } from "@workspace/domain";
 import { Effect, Either, Layer } from "effect";
@@ -35,6 +36,10 @@ import * as S from "effect/Schema";
 export function buildV2Prompt(input: ConversanalyzerInput): string {
 	const facetDefs = Object.entries(FACET_PROMPT_DEFINITIONS)
 		.map(([facet, def]) => `  - ${facet}: ${def}`)
+		.join("\n");
+
+	const domainDefs = Object.entries(LIFE_DOMAIN_DEFINITIONS)
+		.map(([domain, definition]) => `- ${domain}: ${definition}`)
 		.join("\n");
 
 	const domainDist = Object.entries(input.domainDistribution)
@@ -125,12 +130,7 @@ anxiety, anger, depression, self_consciousness, immoderation, vulnerability
 Copy-paste from this list. If a behavior doesn't map to one of these 30 facets, skip it — do not invent a facet name.
 
 ### Life Domains
-- work: Professional activities, career, job tasks, colleagues, workplace dynamics
-- relationships: Romantic partners, close friendships, social connections
-- family: Parents, siblings, children, extended family, household dynamics
-- leisure: Hobbies, entertainment, sports, travel, group activities
-- solo: Personal habits, self-care, alone time, individual routines, introspection
-- other: ONLY when the message truly doesn't fit any above domain. Target <15% of all evidence in "other".
+${domainDefs}
 
 ### Current Evidence Distribution
 ${domainDist}

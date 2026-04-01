@@ -38,6 +38,8 @@ export {
 } from "./constants/finalization";
 // Life domain constants (Story 9.1)
 export {
+	type ActiveLifeDomain,
+	LIFE_DOMAIN_DEFINITIONS,
 	LIFE_DOMAINS,
 	type LifeDomain,
 	LifeDomainSchema,

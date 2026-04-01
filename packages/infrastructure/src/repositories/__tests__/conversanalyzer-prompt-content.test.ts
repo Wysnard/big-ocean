@@ -1,5 +1,5 @@
 /**
- * ConversAnalyzer v2 Prompt Content Tests (Story 31-8, AC4)
+ * ConversAnalyzer v2 Prompt Content Tests (Story 31-8, AC4; Story 40-2)
  *
  * Verifies that the ConversAnalyzer v2 prompt includes:
  * - Dual-facet extraction check (mandatory)
@@ -7,6 +7,7 @@
  * - Energy band classification with guardrails
  * - Telling band classification
  * - Deviation calibration with negative examples
+ * - Updated domain definitions (Story 40-2: health added, solo removed)
  */
 
 import { describe, expect, it } from "vitest";
@@ -27,7 +28,6 @@ const testInput = {
 		relationships: 1,
 		family: 0,
 		leisure: 0,
-		solo: 0,
 		health: 0,
 		other: 0,
 	},
@@ -122,6 +122,40 @@ describe("ConversAnalyzer v2 Prompt Content (Story 31-8, AC4)", () => {
 		it("includes recent messages in prompt", () => {
 			expect(prompt).toContain("[assistant]: Tell me about your work.");
 			expect(prompt).toContain("[user]: I work in tech and enjoy solving complex problems");
+		});
+	});
+
+	describe("Domain Definitions (Story 40-2)", () => {
+		it("includes all 6 active domains in the Life Domains section", () => {
+			expect(prompt).toContain("- work:");
+			expect(prompt).toContain("- relationships:");
+			expect(prompt).toContain("- family:");
+			expect(prompt).toContain("- leisure:");
+			expect(prompt).toContain("- health:");
+			expect(prompt).toContain("- other:");
+		});
+
+		it("does NOT include solo in the Life Domains section", () => {
+			expect(prompt).not.toContain("- solo:");
+		});
+
+		it("leisure definition includes introspection and daydreaming", () => {
+			expect(prompt).toContain("introspection");
+			expect(prompt).toContain("daydreaming");
+		});
+
+		it("health definition includes Exercise and stress management", () => {
+			expect(prompt).toContain("Exercise");
+			expect(prompt).toContain("stress management");
+		});
+
+		it("work definition includes education and studying", () => {
+			expect(prompt).toContain("education");
+			expect(prompt).toContain("studying");
+		});
+
+		it("other definition includes Target <5%", () => {
+			expect(prompt).toContain("Target <5%");
 		});
 	});
 });
