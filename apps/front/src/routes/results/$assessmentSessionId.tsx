@@ -113,6 +113,12 @@ function ResultsSessionPage() {
 		}
 	}, [waitingForUnlock, portraitStatusData?.status]);
 
+	// Effective portrait status: treat "none" as "generating" while waiting for webhook
+	const effectivePortraitStatus =
+		waitingForUnlock && portraitStatusData?.status === "none"
+			? ("generating" as const)
+			: portraitStatusData?.status;
+
 	// Story 3.4: PWYW modal state
 	const [showPwywModal, setShowPwywModal] = useState(false);
 	const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
@@ -124,9 +130,12 @@ function ResultsSessionPage() {
 		if (!canLoadResults || !results) return;
 		if (pwywAutoOpenRef.current) return;
 
-		const portraitStatus = portraitStatusData?.status;
 		// Don't auto-open if portrait is already unlocked, generating, or failed
-		if (portraitStatus === "ready" || portraitStatus === "generating" || portraitStatus === "failed")
+		if (
+			effectivePortraitStatus === "ready" ||
+			effectivePortraitStatus === "generating" ||
+			effectivePortraitStatus === "failed"
+		)
 			return;
 
 		// Check sessionStorage to avoid re-opening on page refresh
@@ -142,7 +151,7 @@ function ResultsSessionPage() {
 		}, 2500);
 
 		return () => clearTimeout(timer);
-	}, [canLoadResults, results, portraitStatusData?.status, assessmentSessionId]);
+	}, [canLoadResults, results, effectivePortraitStatus, assessmentSessionId]);
 
 	// Story 3.4: Handle Polar checkout for portrait unlock
 	const handlePwywCheckout = useCallback(async () => {
@@ -399,12 +408,12 @@ function ResultsSessionPage() {
 				overallConfidence={results.overallConfidence}
 				isCurated={results.isCurated}
 				fullPortraitContent={portraitStatusData?.portrait?.content}
-				fullPortraitStatus={portraitStatusData?.status}
+				fullPortraitStatus={effectivePortraitStatus}
 				onRetryPortrait={() => void refetchPortraitStatus()}
 				onUnlockPortrait={
-					portraitStatusData?.status !== "ready" &&
-					portraitStatusData?.status !== "generating" &&
-					portraitStatusData?.status !== "failed"
+					effectivePortraitStatus !== "ready" &&
+					effectivePortraitStatus !== "generating" &&
+					effectivePortraitStatus !== "failed"
 						? handleUnlockPortrait
 						: undefined
 				}
