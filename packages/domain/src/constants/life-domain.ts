@@ -14,6 +14,7 @@ export const LIFE_DOMAINS = [
 	"family",
 	"leisure",
 	"solo",
+	"health",
 	"other",
 ] as const;
 
@@ -21,8 +22,11 @@ export type LifeDomain = (typeof LIFE_DOMAINS)[number];
 
 export const LifeDomainSchema = S.Literal(...LIFE_DOMAINS);
 
-/** Type guard for steerable domains (excludes "other") */
-const isSteerableDomain = (d: LifeDomain): d is Exclude<LifeDomain, "other"> => d !== "other";
+/** Domains not eligible for steering: "other" (catch-all) and "solo" (deprecated, pending removal in Story 1.3) */
+const NON_STEERABLE: ReadonlySet<LifeDomain> = new Set(["other", "solo"]);
 
-/** Domains eligible for steering (excludes "other") */
+/** Type guard for steerable domains */
+const isSteerableDomain = (d: LifeDomain): boolean => !NON_STEERABLE.has(d);
+
+/** Domains eligible for steering (excludes "other" and deprecated "solo") */
 export const STEERABLE_DOMAINS = LIFE_DOMAINS.filter(isSteerableDomain);
