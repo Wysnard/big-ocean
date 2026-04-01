@@ -243,11 +243,13 @@ describe("generateFullPortrait Use Case (queue-based)", () => {
 			expect(mockPortraitGen.generatePortrait).toHaveBeenCalledWith(
 				expect.objectContaining({
 					sessionId: "session_123",
-					archetypeName: expect.any(String),
-					archetypeDescription: expect.any(String),
-					oceanCode5: expect.any(String),
 				}),
 			);
+			// Archetype data should NOT be passed to portrait generator
+			const callArg = mockPortraitGen.generatePortrait.mock.calls[0]?.[0];
+			expect(callArg).not.toHaveProperty("archetypeName");
+			expect(callArg).not.toHaveProperty("archetypeDescription");
+			expect(callArg).not.toHaveProperty("oceanCode5");
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 

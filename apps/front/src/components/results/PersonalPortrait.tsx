@@ -95,7 +95,12 @@ export const PersonalPortrait = memo(function PersonalPortrait({
 						sections.map((section, i) => (
 							<div key={section.header} className="space-y-2">
 								{section.level === 1 ? (
-									<h3 className="text-base font-semibold text-foreground">{section.header}</h3>
+									<div>
+										<h3 className="text-base font-semibold text-foreground">{section.header}</h3>
+										{section.inscription && (
+											<p className="text-sm italic text-foreground/60 mt-0.5">{section.inscription}</p>
+										)}
+									</div>
 								) : (
 									<h4 className="text-sm font-semibold text-foreground">{renderHeader(section.header)}</h4>
 								)}

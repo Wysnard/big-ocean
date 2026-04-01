@@ -2,6 +2,8 @@ import type { Components } from "react-markdown";
 
 export interface PortraitSection {
 	header: string;
+	/** h3 inscription line that follows the h1 title (title sections only) */
+	inscription?: string;
 	body: string;
 	/** h1 = portrait title, h2 = body sections */
 	level: 1 | 2;
@@ -28,6 +30,7 @@ export function splitMarkdownSections(markdown: string): PortraitSection[] {
 	for (const line of lines) {
 		const h1Match = line.match(/^# (?!#)(.+)/);
 		const h2Match = line.match(/^## (?!#)(.+)/);
+		const h3Match = line.match(/^### (?!#)(.+)/);
 
 		if (h1Match) {
 			flushSection();
@@ -35,6 +38,15 @@ export function splitMarkdownSections(markdown: string): PortraitSection[] {
 		} else if (h2Match) {
 			flushSection();
 			currentSection = { header: h2Match[1].trim(), body: "", level: 2 };
+		} else if (
+			h3Match &&
+			currentSection?.level === 1 &&
+			!currentSection.inscription &&
+			bodyLines.every((l) => l.trim() === "")
+		) {
+			// h3 immediately after h1 (ignoring blank lines) → inscription
+			currentSection.inscription = h3Match[1].trim().replace(/^\*|\*$/g, "");
+			bodyLines.length = 0;
 		} else if (currentSection) {
 			bodyLines.push(line);
 		}

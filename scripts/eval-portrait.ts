@@ -293,9 +293,13 @@ async function generatePortraits(
 		facetScoresMap: scores.facetScores,
 		traitScoresMap: scores.traitScores,
 		allEvidence: evidence,
-		archetypeName: scores.archetype.name,
-		archetypeDescription: scores.archetype.description,
-		oceanCode5: scores.oceanCode5,
+		scoringEvidence: evidence.map((e) => ({
+			bigfiveFacet: e.bigfiveFacet,
+			deviation: e.deviation as -3 | -2 | -1 | 0 | 1 | 2 | 3,
+			strength: e.strength,
+			confidence: e.confidence,
+			domain: e.domain,
+		})),
 		messages,
 	};
 

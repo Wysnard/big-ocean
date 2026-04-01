@@ -16,9 +16,6 @@ export interface PortraitGenerationInput {
 	readonly allEvidence: ReadonlyArray<ConversationEvidenceRecord>;
 	/** v2 evidence for depth signal computation (Story 18-2) */
 	readonly scoringEvidence: ReadonlyArray<EvidenceInput>;
-	readonly archetypeName: string;
-	readonly archetypeDescription: string;
-	readonly oceanCode5: string;
 	readonly messages: ReadonlyArray<DomainMessage>;
 }
 

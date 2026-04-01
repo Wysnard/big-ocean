@@ -34,9 +34,16 @@ export const PortraitReadingView = memo(function PortraitReadingView({
 					sections.map((section, i) => (
 						<div key={section.header} className={i > 0 ? "mt-8" : ""}>
 							{section.level === 1 ? (
-								<h1 className="text-2xl sm:text-3xl font-heading font-semibold text-foreground mb-4">
-									{section.header}
-								</h1>
+								<div className="mb-6">
+									<h1 className="text-2xl sm:text-3xl font-heading font-semibold text-foreground">
+										{section.header}
+									</h1>
+									{section.inscription && (
+										<p className="text-base sm:text-lg italic text-foreground/60 mt-1">
+											{section.inscription}
+										</p>
+									)}
+								</div>
 							) : (
 								<h2 className="text-lg sm:text-xl font-heading font-semibold text-foreground mb-3">
 									{renderHeader(section.header)}

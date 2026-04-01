@@ -17,12 +17,9 @@ import {
 	AssessmentResultRepository,
 	ConversationEvidenceRepository,
 	computeTraitResults,
-	extract4LetterCode,
 	type FacetName,
 	type FacetScoresMap,
-	generateOceanCode,
 	LoggerRepository,
-	lookupArchetype,
 	PortraitGeneratorRepository,
 	PortraitRepository,
 } from "@workspace/domain";
@@ -88,12 +85,7 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 		// 5. Derive trait scores from facets (derive-at-read pattern)
 		const traitScoresMap = computeTraitResults(facetScoresMap);
 
-		// 6. Generate OCEAN code and lookup archetype
-		const oceanCode5 = generateOceanCode(facetScoresMap);
-		const oceanCode4 = extract4LetterCode(oceanCode5);
-		const archetype = lookupArchetype(oceanCode4);
-
-		// 7. Map conversation evidence to EvidenceInput for depth signal
+		// 6. Map conversation evidence to EvidenceInput for depth signal
 		const scoringEvidence: EvidenceInput[] = conversationEvidence.map((ev) => ({
 			bigfiveFacet: ev.bigfiveFacet,
 			deviation: ev.deviation as -3 | -2 | -1 | 0 | 1 | 2 | 3,
@@ -102,7 +94,7 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 			domain: ev.domain,
 		}));
 
-		// 8. Generate portrait with retry (3 total LLM attempts, exponential backoff)
+		// 7. Generate portrait with retry (3 total LLM attempts, exponential backoff)
 		const contentResult = yield* portraitGen
 			.generatePortrait({
 				sessionId: input.sessionId,
@@ -110,9 +102,6 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 				traitScoresMap,
 				allEvidence: conversationEvidence,
 				scoringEvidence,
-				archetypeName: archetype.name,
-				archetypeDescription: archetype.description,
-				oceanCode5,
 				messages: messages.map((m) => ({
 					id: m.id,
 					role: m.role,
