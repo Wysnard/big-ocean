@@ -33,6 +33,7 @@ export interface PurchaseEvent {
 	readonly amountCents: number | null;
 	readonly currency: string | null;
 	readonly metadata: unknown;
+	readonly assessmentResultId: string | null;
 	readonly createdAt: Date;
 }
 

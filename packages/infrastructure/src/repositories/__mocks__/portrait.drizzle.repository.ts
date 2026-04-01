@@ -3,15 +3,16 @@
  * Vitest auto-resolves when tests call:
  *   vi.mock('@workspace/infrastructure/repositories/portrait.drizzle.repository')
  *
- * Story 32-6: Added resetRetryCount mock.
+ * Queue-based architecture: insert on final outcome (success/failure), no placeholder.
  */
 
-import type { InsertPortraitPlaceholder, Portrait, PortraitTier } from "@workspace/domain";
-import {
-	DuplicatePortraitError,
-	PortraitNotFoundError,
-	PortraitRepository,
+import type {
+	InsertPortraitFailed,
+	InsertPortraitWithContent,
+	Portrait,
+	PortraitTier,
 } from "@workspace/domain";
+import { PortraitRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
 // In-memory storage: Map<id, Portrait>
@@ -48,27 +49,22 @@ const makeIndexKey = (assessmentResultId: string, tier: PortraitTier): string =>
 export const PortraitDrizzleRepositoryLive = Layer.succeed(
 	PortraitRepository,
 	PortraitRepository.of({
-		insertPlaceholder: (data: InsertPortraitPlaceholder) =>
-			Effect.gen(function* () {
+		insertWithContent: (data: InsertPortraitWithContent) =>
+			Effect.sync(() => {
 				const indexKey = makeIndexKey(data.assessmentResultId, data.tier);
 
-				// Check unique constraint
+				// ON CONFLICT DO NOTHING — return null if already exists
 				if (resultTierIndex.has(indexKey)) {
-					return yield* Effect.fail(
-						new DuplicatePortraitError({
-							assessmentResultId: data.assessmentResultId,
-							tier: data.tier,
-						}),
-					);
+					return null;
 				}
 
 				const portrait: Portrait = {
 					id: crypto.randomUUID(),
 					assessmentResultId: data.assessmentResultId,
 					tier: data.tier,
-					content: null, // Placeholder — generating
+					content: data.content,
 					modelUsed: data.modelUsed,
-					retryCount: 0,
+					failedAt: null,
 					createdAt: new Date(),
 				};
 
@@ -78,45 +74,41 @@ export const PortraitDrizzleRepositoryLive = Layer.succeed(
 				return portrait;
 			}),
 
-		updateContent: (id: string, content: string) =>
-			Effect.gen(function* () {
-				const existing = portraitStore.get(id);
+		insertFailed: (data: InsertPortraitFailed) =>
+			Effect.sync(() => {
+				const indexKey = makeIndexKey(data.assessmentResultId, data.tier);
 
-				// Check: exists AND content IS NULL (idempotent update)
-				if (!existing || existing.content !== null) {
-					return yield* Effect.fail(new PortraitNotFoundError({ portraitId: id }));
+				// ON CONFLICT DO NOTHING — return null if already exists
+				if (resultTierIndex.has(indexKey)) {
+					return null;
 				}
 
-				const updated: Portrait = {
-					...existing,
-					content,
+				const portrait: Portrait = {
+					id: crypto.randomUUID(),
+					assessmentResultId: data.assessmentResultId,
+					tier: data.tier,
+					content: null,
+					modelUsed: null,
+					failedAt: data.failedAt,
+					createdAt: new Date(),
 				};
 
-				portraitStore.set(id, updated);
-				const indexKey = makeIndexKey(existing.assessmentResultId, existing.tier);
-				resultTierIndex.set(indexKey, updated);
+				portraitStore.set(portrait.id, portrait);
+				resultTierIndex.set(indexKey, portrait);
 
-				return updated;
+				return portrait;
 			}),
 
-		incrementRetryCount: (id: string) =>
-			Effect.gen(function* () {
-				const existing = portraitStore.get(id);
+		deleteByResultIdAndTier: (assessmentResultId: string, tier: PortraitTier) =>
+			Effect.sync(() => {
+				const indexKey = makeIndexKey(assessmentResultId, tier);
+				const existing = resultTierIndex.get(indexKey);
 
-				if (!existing) {
-					return yield* Effect.fail(new PortraitNotFoundError({ portraitId: id }));
-				}
+				if (!existing) return false;
 
-				const updated: Portrait = {
-					...existing,
-					retryCount: existing.retryCount + 1,
-				};
-
-				portraitStore.set(id, updated);
-				const indexKey = makeIndexKey(existing.assessmentResultId, existing.tier);
-				resultTierIndex.set(indexKey, updated);
-
-				return updated;
+				portraitStore.delete(existing.id);
+				resultTierIndex.delete(indexKey);
+				return true;
 			}),
 
 		getByResultIdAndTier: (assessmentResultId: string, tier: PortraitTier) =>
@@ -127,7 +119,6 @@ export const PortraitDrizzleRepositoryLive = Layer.succeed(
 
 		getFullPortraitBySessionId: (sessionId: string) =>
 			Effect.sync(() => {
-				// Lookup assessment_result_id via session mapping
 				const assessmentResultId = sessionResultMapping.get(sessionId);
 				if (!assessmentResultId) {
 					return null;
@@ -135,26 +126,6 @@ export const PortraitDrizzleRepositoryLive = Layer.succeed(
 
 				const indexKey = makeIndexKey(assessmentResultId, "full");
 				return resultTierIndex.get(indexKey) ?? null;
-			}),
-
-		resetRetryCount: (id: string) =>
-			Effect.gen(function* () {
-				const existing = portraitStore.get(id);
-
-				if (!existing) {
-					return yield* Effect.fail(new PortraitNotFoundError({ portraitId: id }));
-				}
-
-				const updated: Portrait = {
-					...existing,
-					retryCount: 0,
-				};
-
-				portraitStore.set(id, updated);
-				const indexKey = makeIndexKey(existing.assessmentResultId, existing.tier);
-				resultTierIndex.set(indexKey, updated);
-
-				return updated;
 			}),
 	}),
 );

@@ -1,21 +1,22 @@
 /**
- * Retry Portrait Use Case (Story 32-6)
+ * Retry Portrait Use Case (Story 32-6, refactored for queue-based generation)
  *
  * Manual retry for failed portrait generation.
- * Resets retry count to 0, allowing lazy retry mechanism to re-trigger.
+ * Deletes the failed portrait row and queues a new generation job.
  *
  * Validates session ownership before allowing retry.
  */
 
 import {
+	AssessmentResultRepository,
 	AssessmentSessionRepository,
 	LoggerRepository,
+	PortraitJobQueue,
 	PortraitRepository,
 	type PortraitStatus,
 	SessionNotFound,
 } from "@workspace/domain";
-import { Effect } from "effect";
-import { generateFullPortrait } from "./generate-full-portrait.use-case";
+import { Effect, Queue } from "effect";
 import { deriveStatus } from "./get-portrait-status.use-case";
 
 export interface RetryPortraitInput {
@@ -30,7 +31,9 @@ export interface RetryPortraitOutput {
 export const retryPortrait = (input: RetryPortraitInput) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* AssessmentSessionRepository;
+		const resultRepo = yield* AssessmentResultRepository;
 		const portraitRepo = yield* PortraitRepository;
+		const queue = yield* PortraitJobQueue;
 		const logger = yield* LoggerRepository;
 
 		// 1. Validate session ownership
@@ -44,38 +47,32 @@ export const retryPortrait = (input: RetryPortraitInput) =>
 			);
 		}
 
-		// 2. Get current portrait
+		// 2. Get current portrait and check it's failed
 		const portrait = yield* portraitRepo.getFullPortraitBySessionId(input.sessionId);
-		const currentStatus = deriveStatus(portrait);
+		const currentStatus = deriveStatus(portrait, true);
 
-		// 3. Only retry if portrait is failed
 		if (currentStatus !== "failed" || !portrait) {
 			return { status: currentStatus } satisfies RetryPortraitOutput;
 		}
 
-		// 4. Reset retry count and fork new daemon
-		logger.info("Manual portrait retry: resetting retry count and spawning generation", {
+		// 3. Get assessment result to find the result ID for deletion
+		const result = yield* resultRepo
+			.getBySessionId(input.sessionId)
+			.pipe(Effect.catchAll(() => Effect.succeed(null)));
+		if (!result) {
+			return { status: currentStatus } satisfies RetryPortraitOutput;
+		}
+
+		// 4. Delete the failed portrait row
+		logger.info("Manual portrait retry: deleting failed portrait and queuing regeneration", {
 			portraitId: portrait.id,
 			sessionId: input.sessionId,
-			previousRetryCount: portrait.retryCount,
 		});
 
-		yield* portraitRepo.resetRetryCount(portrait.id).pipe(
-			Effect.catchTag("PortraitNotFoundError", () => {
-				// Portrait was deleted between check and reset — log and continue
-				logger.warn("Portrait not found during retry reset, may have been deleted", {
-					portraitId: portrait.id,
-				});
-				return Effect.succeed(portrait);
-			}),
-		);
+		yield* portraitRepo.deleteByResultIdAndTier(result.id, "full");
 
-		yield* Effect.forkDaemon(
-			generateFullPortrait({
-				portraitId: portrait.id,
-				sessionId: input.sessionId,
-			}),
-		);
+		// 5. Queue new generation job
+		yield* Queue.offer(queue, { sessionId: input.sessionId, userId: input.userId });
 
 		return { status: "generating" as PortraitStatus } satisfies RetryPortraitOutput;
 	});

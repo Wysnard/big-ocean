@@ -1,14 +1,18 @@
 /**
- * Generate Full Portrait Use Case (Story 13.3)
+ * Generate Full Portrait Use Case (Story 13.3, refactored for queue-based generation)
  *
  * Background generation of full personality portrait after purchase.
- * Called by forkDaemon from process-purchase use-case.
+ * Called by the portrait generation worker fiber.
  *
- * Uses existing PortraitGeneratorRepository (Sonnet) with Spine prompt.
- * Updates portrait placeholder row on success, increments retry_count on failure.
+ * Flow:
+ * 1. Load assessment result, evidence, messages
+ * 2. Call LLM with Effect.retry (3 total attempts, exponential backoff)
+ * 3. On success: insert portrait row with content
+ * 4. On failure: insert portrait row with failedAt
  */
 
 import {
+	AppConfig,
 	AssessmentMessageRepository,
 	AssessmentResultRepository,
 	ConversationEvidenceRepository,
@@ -23,25 +27,18 @@ import {
 	PortraitRepository,
 } from "@workspace/domain";
 import type { EvidenceInput } from "@workspace/domain/types/evidence";
-import { Effect, Schedule } from "effect";
+import { Effect } from "effect";
 
 export interface GenerateFullPortraitInput {
-	readonly portraitId: string;
 	readonly sessionId: string;
-}
-
-export interface GenerateFullPortraitOutput {
-	readonly success: boolean;
 }
 
 /**
  * Generate full portrait for a completed assessment.
  *
- * This runs in a background daemon fiber. It:
- * 1. Loads all required data (result, evidence, messages)
- * 2. Calls PortraitGeneratorRepository.generatePortrait with retry
- * 3. Updates placeholder row with content on success
- * 4. Increments retry_count on failure
+ * Runs in a background worker fiber. Inserts a portrait row on completion:
+ * - Success: row with content + modelUsed
+ * - Failure: row with failedAt timestamp
  */
 export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 	Effect.gen(function* () {
@@ -51,9 +48,9 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 		const conversationEvidenceRepo = yield* ConversationEvidenceRepository;
 		const messageRepo = yield* AssessmentMessageRepository;
 		const logger = yield* LoggerRepository;
+		const config = yield* AppConfig;
 
 		logger.info("Starting full portrait generation", {
-			portraitId: input.portraitId,
 			sessionId: input.sessionId,
 		});
 
@@ -63,8 +60,12 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 			logger.error("Assessment result not found for portrait generation", {
 				sessionId: input.sessionId,
 			});
-			yield* portraitRepo.incrementRetryCount(input.portraitId);
-			return { success: false };
+			yield* portraitRepo.insertFailed({
+				assessmentResultId: "unknown",
+				tier: "full",
+				failedAt: new Date(),
+			});
+			return;
 		}
 
 		// 2. Load conversation evidence (authoritative source — Story 18-6)
@@ -73,7 +74,7 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 		// 3. Load messages for portrait context
 		const messages = yield* messageRepo.getMessages(input.sessionId);
 
-		// 5. Build facet scores map from result
+		// 4. Build facet scores map from result
 		const facetScoresMap: FacetScoresMap = {} as FacetScoresMap;
 		for (const [facetName, data] of Object.entries(result.facets)) {
 			if (typeof data === "object" && data !== null && "score" in data && "confidence" in data) {
@@ -84,7 +85,7 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 			}
 		}
 
-		// 5b. Derive trait scores from facets (derive-at-read pattern)
+		// 5. Derive trait scores from facets (derive-at-read pattern)
 		const traitScoresMap = computeTraitResults(facetScoresMap);
 
 		// 6. Generate OCEAN code and lookup archetype
@@ -101,8 +102,8 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 			domain: ev.domain,
 		}));
 
-		// 8. Generate portrait with retry (3 total LLM attempts)
-		const content = yield* portraitGen
+		// 8. Generate portrait with retry (3 total LLM attempts, exponential backoff)
+		const contentResult = yield* portraitGen
 			.generatePortrait({
 				sessionId: input.sessionId,
 				facetScoresMap,
@@ -119,40 +120,41 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 				})),
 			})
 			.pipe(
-				Effect.retry({
-					times: 2, // 3 total attempts
-					schedule: Schedule.exponential("2 seconds"),
-				}),
+				Effect.retry({ times: 2 }),
+				Effect.map((content) => ({ _tag: "success" as const, content })),
 				Effect.catchAll((error) =>
-					Effect.gen(function* () {
-						// Log error and increment retry count for daemon invocation
+					Effect.sync(() => {
 						logger.error("Portrait generation failed after retries", {
-							portraitId: input.portraitId,
 							sessionId: input.sessionId,
 							error: error._tag,
 						});
-						yield* portraitRepo.incrementRetryCount(input.portraitId);
-						return yield* Effect.fail(error);
+						return { _tag: "failure" as const, error };
 					}),
 				),
 			);
 
-		// 8. Update placeholder with generated content (idempotent)
-		yield* portraitRepo.updateContent(input.portraitId, content).pipe(
-			Effect.catchTag("PortraitNotFoundError", () => {
-				// Portrait already has content (idempotent) — log and succeed
-				logger.info("Portrait already has content, skipping update", {
-					portraitId: input.portraitId,
-				});
-				return Effect.succeed(undefined);
-			}),
-		);
+		// 9. Insert portrait row based on outcome
+		if (contentResult._tag === "success") {
+			yield* portraitRepo.insertWithContent({
+				assessmentResultId: result.id,
+				tier: "full",
+				content: contentResult.content,
+				modelUsed: config.portraitModelId,
+			});
 
-		logger.info("Full portrait generation completed", {
-			portraitId: input.portraitId,
-			sessionId: input.sessionId,
-			contentLength: content.length,
-		});
+			logger.info("Full portrait generation completed", {
+				sessionId: input.sessionId,
+				contentLength: contentResult.content.length,
+			});
+		} else {
+			yield* portraitRepo.insertFailed({
+				assessmentResultId: result.id,
+				tier: "full",
+				failedAt: new Date(),
+			});
 
-		return { success: true };
+			logger.error("Portrait generation failed, inserted failure record", {
+				sessionId: input.sessionId,
+			});
+		}
 	});

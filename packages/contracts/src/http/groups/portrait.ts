@@ -30,8 +30,8 @@ export const PortraitSchema = S.Struct({
 	assessmentResultId: S.String,
 	tier: S.Literal("full"),
 	content: S.NullOr(S.String),
-	modelUsed: S.String,
-	retryCount: S.Number,
+	modelUsed: S.NullOr(S.String),
+	failedAt: S.NullOr(S.DateTimeUtc),
 	createdAt: S.DateTimeUtc,
 });
 

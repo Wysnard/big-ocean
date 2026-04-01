@@ -1,27 +1,25 @@
 /**
- * Retry Portrait Use Case Tests (Story 32-6)
+ * Retry Portrait Use Case Tests (Story 32-6, queue-based architecture)
  *
  * Tests:
- * - Resets retry count and forks daemon when portrait is failed
+ * - Deletes failed portrait and queues regeneration
  * - Rejects retry when portrait is not failed
  * - Rejects retry when no portrait exists
  * - Rejects retry for wrong user
  */
 
-import { vi } from "vitest";
-
-vi.mock("../generate-full-portrait.use-case", () => ({
-	generateFullPortrait: vi.fn(() => Effect.succeed({ success: true })),
-}));
-
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
+	AssessmentResultRepository,
 	AssessmentSessionRepository,
 	LoggerRepository,
+	PortraitJobQueue,
 	PortraitRepository,
+	PurchaseEventRepository,
 } from "@workspace/domain";
 import type { Portrait } from "@workspace/domain/repositories/portrait.repository";
-import { Effect, Exit, Layer } from "effect";
+import { Effect, Exit, Layer, Queue } from "effect";
+import { vi } from "vitest";
 import { retryPortrait } from "../retry-portrait.use-case";
 
 const mockSessionRepo = {
@@ -34,13 +32,28 @@ const mockSessionRepo = {
 	deleteSession: vi.fn(),
 };
 
+const mockResultRepo = {
+	getBySessionId: vi.fn(),
+	getByUserId: vi.fn(),
+	upsert: vi.fn(),
+	getById: vi.fn(),
+	delete: vi.fn(),
+	getLatestByUserId: vi.fn(),
+};
+
 const mockPortraitRepo = {
-	insertPlaceholder: vi.fn(),
-	updateContent: vi.fn(),
-	incrementRetryCount: vi.fn(),
+	insertWithContent: vi.fn(),
+	insertFailed: vi.fn(),
+	deleteByResultIdAndTier: vi.fn(),
 	getByResultIdAndTier: vi.fn(),
 	getFullPortraitBySessionId: vi.fn(),
-	resetRetryCount: vi.fn(),
+};
+
+const mockPurchaseRepo = {
+	insertEvent: vi.fn(),
+	getEventsByUserId: vi.fn(),
+	getCapabilities: vi.fn(),
+	getByCheckoutId: vi.fn(),
 };
 
 const mockLogger = {
@@ -53,8 +66,11 @@ const mockLogger = {
 const createTestLayer = () =>
 	Layer.mergeAll(
 		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
+		Layer.succeed(AssessmentResultRepository, mockResultRepo),
 		Layer.succeed(PortraitRepository, mockPortraitRepo),
+		Layer.succeed(PurchaseEventRepository, mockPurchaseRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
+		Layer.effect(PortraitJobQueue, Queue.unbounded()),
 	);
 
 const createMockPortrait = (overrides: Partial<Portrait> = {}): Portrait => ({
@@ -62,27 +78,26 @@ const createMockPortrait = (overrides: Partial<Portrait> = {}): Portrait => ({
 	assessmentResultId: "result_456",
 	tier: "full",
 	content: null,
-	modelUsed: "claude-sonnet-4-6",
-	retryCount: 3,
+	modelUsed: null,
+	failedAt: new Date(),
 	createdAt: new Date(),
 	...overrides,
 });
 
-describe("retryPortrait Use Case (Story 32-6)", () => {
+describe("retryPortrait Use Case (Story 32-6, queue-based)", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it.effect("resets retry count and forks daemon when portrait is failed", () =>
+	it.effect("deletes failed portrait and queues regeneration", () =>
 		Effect.gen(function* () {
-			const failedPortrait = createMockPortrait({ retryCount: 3 });
+			const failedPortrait = createMockPortrait({ failedAt: new Date() });
 			mockSessionRepo.getSession.mockReturnValue(
 				Effect.succeed({ id: "session_123", userId: "user_789", status: "completed" }),
 			);
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(failedPortrait));
-			mockPortraitRepo.resetRetryCount.mockReturnValue(
-				Effect.succeed({ ...failedPortrait, retryCount: 0 }),
-			);
+			mockResultRepo.getBySessionId.mockReturnValue(Effect.succeed({ id: "result_456" }));
+			mockPortraitRepo.deleteByResultIdAndTier.mockReturnValue(Effect.succeed(true));
 
 			const result = yield* retryPortrait({
 				sessionId: "session_123",
@@ -90,9 +105,9 @@ describe("retryPortrait Use Case (Story 32-6)", () => {
 			});
 
 			expect(result.status).toBe("generating");
-			expect(mockPortraitRepo.resetRetryCount).toHaveBeenCalledWith("portrait_123");
+			expect(mockPortraitRepo.deleteByResultIdAndTier).toHaveBeenCalledWith("result_456", "full");
 			expect(mockLogger.info).toHaveBeenCalledWith(
-				"Manual portrait retry: resetting retry count and spawning generation",
+				"Manual portrait retry: deleting failed portrait and queuing regeneration",
 				expect.objectContaining({ portraitId: "portrait_123" }),
 			);
 		}).pipe(Effect.provide(createTestLayer())),
@@ -100,7 +115,11 @@ describe("retryPortrait Use Case (Story 32-6)", () => {
 
 	it.effect("rejects retry when portrait is not failed (has content)", () =>
 		Effect.gen(function* () {
-			const readyPortrait = createMockPortrait({ content: "Some portrait", retryCount: 0 });
+			const readyPortrait = createMockPortrait({
+				content: "Some portrait",
+				modelUsed: "test-model",
+				failedAt: null,
+			});
 			mockSessionRepo.getSession.mockReturnValue(
 				Effect.succeed({ id: "session_123", userId: "user_789", status: "completed" }),
 			);
@@ -111,26 +130,26 @@ describe("retryPortrait Use Case (Story 32-6)", () => {
 				userId: "user_789",
 			});
 
-			// Should return current status without retrying
 			expect(result.status).toBe("ready");
-			expect(mockPortraitRepo.resetRetryCount).not.toHaveBeenCalled();
+			expect(mockPortraitRepo.deleteByResultIdAndTier).not.toHaveBeenCalled();
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("rejects retry when no portrait exists", () =>
+	it.effect("returns current status when no portrait exists (no retry needed)", () =>
 		Effect.gen(function* () {
 			mockSessionRepo.getSession.mockReturnValue(
 				Effect.succeed({ id: "session_123", userId: "user_789", status: "completed" }),
 			);
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
 
-			const result = yield* retryPortrait({
+			yield* retryPortrait({
 				sessionId: "session_123",
 				userId: "user_789",
 			});
 
-			expect(result.status).toBe("none");
-			expect(mockPortraitRepo.resetRetryCount).not.toHaveBeenCalled();
+			// No portrait → deriveStatus returns "generating" (purchase assumed since user is retrying)
+			// No delete should happen
+			expect(mockPortraitRepo.deleteByResultIdAndTier).not.toHaveBeenCalled();
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 

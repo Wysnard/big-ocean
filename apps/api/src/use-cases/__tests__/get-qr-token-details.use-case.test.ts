@@ -62,7 +62,6 @@ const mockPurchaseRepo = {
 	insertEvent: vi.fn(),
 	getByCheckoutId: vi.fn(),
 	getByUserId: vi.fn(),
-	insertEventWithPortraitPlaceholder: vi.fn(),
 };
 
 const mockSessionRepo = {

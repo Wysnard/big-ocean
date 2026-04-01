@@ -1,12 +1,12 @@
 /**
- * Portrait Repository Interface (Story 13.3)
+ * Portrait Repository Interface (Story 13.3, refactored for queue-based generation)
  *
- * Database operations for portrait system (teaser tier removed — Story 32-0).
- * Uses placeholder row pattern: content=NULL means generating.
- * Status derived from data, not stored column.
+ * Database operations for portrait system.
+ * Row inserted only on final outcome: content (success) or failedAt (failure).
+ * Status derived from portrait row + purchase event, not stored column.
  */
 
-import { Context, Data, Effect } from "effect";
+import { Context, Effect } from "effect";
 import { DatabaseError } from "../errors/http.errors";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -20,35 +20,23 @@ export interface Portrait {
 	readonly assessmentResultId: string;
 	readonly tier: PortraitTier;
 	readonly content: string | null;
-	readonly modelUsed: string;
-	readonly retryCount: number;
+	readonly modelUsed: string | null;
+	readonly failedAt: Date | null;
 	readonly createdAt: Date;
 }
 
-export interface InsertPortraitPlaceholder {
+export interface InsertPortraitWithContent {
 	readonly assessmentResultId: string;
 	readonly tier: PortraitTier;
+	readonly content: string;
 	readonly modelUsed: string;
 }
 
-// ─── Infrastructure Errors (co-located with repository) ─────────────────────
-
-/**
- * Duplicate portrait error — unique constraint violation
- * This is an infrastructure error, NOT HTTP-facing.
- */
-export class DuplicatePortraitError extends Data.TaggedError("DuplicatePortraitError")<{
+export interface InsertPortraitFailed {
 	readonly assessmentResultId: string;
 	readonly tier: PortraitTier;
-}> {}
-
-/**
- * Portrait not found error — no matching row exists
- * This is an infrastructure error, NOT HTTP-facing.
- */
-export class PortraitNotFoundError extends Data.TaggedError("PortraitNotFoundError")<{
-	readonly portraitId: string;
-}> {}
+	readonly failedAt: Date;
+}
 
 // ─── Repository Interface ────────────────────────────────────────────────────
 
@@ -56,32 +44,32 @@ export class PortraitRepository extends Context.Tag("PortraitRepository")<
 	PortraitRepository,
 	{
 		/**
-		 * Insert a placeholder row for async portrait generation.
-		 * content=NULL indicates generation in progress.
-		 *
-		 * @throws DuplicatePortraitError if (assessment_result_id, tier) already exists
+		 * Insert a completed portrait with content (success path).
+		 * Uses ON CONFLICT DO NOTHING for idempotency on (assessment_result_id, tier).
+		 * Returns the portrait row, or null if it already existed.
 		 */
-		readonly insertPlaceholder: (
-			data: InsertPortraitPlaceholder,
-		) => Effect.Effect<Portrait, DatabaseError | DuplicatePortraitError>;
+		readonly insertWithContent: (
+			data: InsertPortraitWithContent,
+		) => Effect.Effect<Portrait | null, DatabaseError>;
 
 		/**
-		 * Update portrait content (idempotent).
-		 * Uses WHERE content IS NULL to ensure only pending portraits are updated.
-		 *
-		 * @throws PortraitNotFoundError if no row with matching id AND content IS NULL
+		 * Insert a failed portrait record (failure path — retries exhausted).
+		 * Uses ON CONFLICT DO NOTHING for idempotency on (assessment_result_id, tier).
+		 * Returns the portrait row, or null if it already existed.
 		 */
-		readonly updateContent: (
-			id: string,
-			content: string,
-		) => Effect.Effect<Portrait, DatabaseError | PortraitNotFoundError>;
+		readonly insertFailed: (
+			data: InsertPortraitFailed,
+		) => Effect.Effect<Portrait | null, DatabaseError>;
 
 		/**
-		 * Increment retry count after failed generation attempt.
+		 * Delete portrait by assessment result ID and tier.
+		 * Used for manual retry: delete the failed row so generation can create a new one.
+		 * Returns true if a row was deleted, false if nothing matched.
 		 */
-		readonly incrementRetryCount: (
-			id: string,
-		) => Effect.Effect<Portrait, DatabaseError | PortraitNotFoundError>;
+		readonly deleteByResultIdAndTier: (
+			assessmentResultId: string,
+			tier: PortraitTier,
+		) => Effect.Effect<boolean, DatabaseError>;
 
 		/**
 		 * Get portrait by assessment result ID and tier.
@@ -100,15 +88,5 @@ export class PortraitRepository extends Context.Tag("PortraitRepository")<
 		readonly getFullPortraitBySessionId: (
 			sessionId: string,
 		) => Effect.Effect<Portrait | null, DatabaseError>;
-
-		/**
-		 * Reset retry count to 0 for manual retry (Story 32-6).
-		 * Allows the lazy retry mechanism to re-trigger generation.
-		 *
-		 * @throws PortraitNotFoundError if no matching row exists
-		 */
-		readonly resetRetryCount: (
-			id: string,
-		) => Effect.Effect<Portrait, DatabaseError | PortraitNotFoundError>;
 	}
 >() {}

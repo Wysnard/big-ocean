@@ -59,7 +59,6 @@ export {
 	getMirrorsForContext,
 	getPressureModifier,
 	HUMOR_GUARDRAILS,
-	INTERNAL_TRACKING,
 	MIRROR_GUARDRAILS,
 	OBSERVATION_QUALITY_COMMON,
 	OPEN_RELATE_TEMPLATE,
@@ -215,12 +214,11 @@ export {
 	type NerinInvokeInput,
 	type NerinInvokeOutput,
 } from "./repositories/nerin-agent.repository";
-// Portrait repository (Story 13.3 — two-tier portrait system)
+// Portrait repository (Story 13.3, refactored for queue-based generation)
 export {
-	DuplicatePortraitError,
-	type InsertPortraitPlaceholder,
+	type InsertPortraitFailed,
+	type InsertPortraitWithContent,
 	type Portrait,
-	PortraitNotFoundError,
 	PortraitRepository,
 	type PortraitStatus,
 	type PortraitTier,
@@ -242,11 +240,8 @@ export {
 	type PublicProfileData,
 	PublicProfileRepository,
 } from "./repositories/public-profile.repository";
-export type {
-	InsertEventWithPortraitResult,
-	InsertPurchaseEvent,
-} from "./repositories/purchase-event.repository";
-// Purchase event repository (Story 13.1, extended Story 13.3)
+export type { InsertPurchaseEvent } from "./repositories/purchase-event.repository";
+// Purchase event repository (Story 13.1)
 export { PurchaseEventRepository } from "./repositories/purchase-event.repository";
 // QR token repository (Story 34-1)
 export { QrTokenRepository } from "./repositories/qr-token.repository";
@@ -348,6 +343,8 @@ export {
 	calculateCost,
 	PRICING,
 } from "./services/cost-calculator.service";
+// Portrait job queue (webhook → Effect worker bridge)
+export { type PortraitJob, PortraitJobQueue } from "./services/portrait-job-queue";
 // Archetype types (Story 3.2)
 export type {
 	AgreeablenessLevel,
@@ -522,6 +519,7 @@ export {
 	getTraitColor,
 	getTraitGradient,
 	getTribeGroup,
+	hasPortraitForResult,
 	lookupArchetype,
 	mapEnergyBand,
 	mapTellingBand,

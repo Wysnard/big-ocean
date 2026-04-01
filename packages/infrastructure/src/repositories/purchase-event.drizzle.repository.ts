@@ -1,21 +1,12 @@
 /**
- * Purchase Event Repository Implementation (Story 13.1, extended Story 13.3)
+ * Purchase Event Repository Implementation (Story 13.1)
  *
  * Append-only — only insertEvent mutates data.
  * getCapabilities calls getEventsByUserId then deriveCapabilities.
- *
- * Story 13.3 additions:
- * - getByCheckoutId: Idempotency check
- * - insertEventWithPortraitPlaceholder: Transaction with portrait row
  */
 
 import { DatabaseError, DuplicateCheckoutError } from "@workspace/domain/errors/http.errors";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
-import type {
-	InsertPortraitPlaceholder,
-	Portrait,
-	PortraitTier,
-} from "@workspace/domain/repositories/portrait.repository";
 import type { InsertPurchaseEvent } from "@workspace/domain/repositories/purchase-event.repository";
 import { PurchaseEventRepository } from "@workspace/domain/repositories/purchase-event.repository";
 import type { PurchaseEvent, PurchaseEventType } from "@workspace/domain/types/purchase.types";
@@ -23,7 +14,7 @@ import { deriveCapabilities } from "@workspace/domain/utils/derive-capabilities"
 import { Database } from "@workspace/infrastructure/context/database";
 import { asc, eq } from "drizzle-orm";
 import { Effect, Layer } from "effect";
-import { portraits, purchaseEvents } from "../db/drizzle/schema";
+import { purchaseEvents } from "../db/drizzle/schema";
 
 export const PurchaseEventDrizzleRepositoryLive = Layer.effect(
 	PurchaseEventRepository,
@@ -40,6 +31,7 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.effect(
 			amountCents: row.amountCents,
 			currency: row.currency,
 			metadata: row.metadata,
+			assessmentResultId: row.assessmentResultId,
 			createdAt: row.createdAt,
 		});
 
@@ -61,16 +53,6 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.effect(
 					}),
 				);
 
-		const mapPortraitRow = (row: typeof portraits.$inferSelect): Portrait => ({
-			id: row.id,
-			assessmentResultId: row.assessmentResultId,
-			tier: row.tier as PortraitTier,
-			content: row.content,
-			modelUsed: row.modelUsed,
-			retryCount: row.retryCount,
-			createdAt: row.createdAt,
-		});
-
 		return PurchaseEventRepository.of({
 			insertEvent: (event: InsertPurchaseEvent) =>
 				Effect.gen(function* () {
@@ -84,6 +66,7 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.effect(
 							amountCents: event.amountCents ?? null,
 							currency: event.currency ?? null,
 							metadata: event.metadata ?? null,
+							assessmentResultId: event.assessmentResultId ?? null,
 						})
 						.returning()
 						.pipe(
@@ -134,78 +117,6 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.effect(
 							return new DatabaseError({ message: "Failed to get purchase event by checkout ID" });
 						}),
 					),
-
-			insertEventWithPortraitPlaceholder: (
-				event: InsertPurchaseEvent,
-				portraitPlaceholder: InsertPortraitPlaceholder | null,
-			) =>
-				Effect.gen(function* () {
-					// Use Drizzle Effect transaction for atomicity
-					const result = yield* db
-						.transaction((tx) =>
-							Effect.gen(function* () {
-								// 1. Insert purchase event
-								const purchaseRows = yield* tx
-									.insert(purchaseEvents)
-									.values({
-										userId: event.userId,
-										eventType: event.eventType,
-										polarCheckoutId: event.polarCheckoutId ?? null,
-										polarProductId: event.polarProductId ?? null,
-										amountCents: event.amountCents ?? null,
-										currency: event.currency ?? null,
-										metadata: event.metadata ?? null,
-									})
-									.returning();
-								const purchaseEventRow = purchaseRows[0];
-
-								// 2. Insert portrait placeholder if provided (idempotent with onConflictDoNothing)
-								let portraitRow: typeof portraits.$inferSelect | null = null;
-								if (portraitPlaceholder) {
-									const portraitRows = yield* tx
-										.insert(portraits)
-										.values({
-											assessmentResultId: portraitPlaceholder.assessmentResultId,
-											tier: portraitPlaceholder.tier,
-											modelUsed: portraitPlaceholder.modelUsed,
-										})
-										.onConflictDoNothing()
-										.returning();
-									portraitRow = portraitRows[0] ?? null;
-								}
-
-								return { purchaseEventRow, portraitRow };
-							}),
-						)
-						.pipe(
-							Effect.mapError((error) => {
-								const message = error instanceof Error ? error.message : String(error);
-								// Check for duplicate checkout error
-								if (message.includes("purchase_events_polar_checkout_id_unique")) {
-									return new DuplicateCheckoutError({
-										polarCheckoutId: event.polarCheckoutId ?? "",
-										message: `Duplicate checkout: ${event.polarCheckoutId}`,
-									});
-								}
-								logger.error("Database transaction failed", {
-									operation: "insertEventWithPortraitPlaceholder",
-									error: message,
-								});
-								return new DatabaseError({ message: "Failed to insert purchase event with portrait" });
-							}),
-						);
-
-					if (!result.purchaseEventRow) {
-						return yield* Effect.fail(
-							new DatabaseError({ message: "Transaction returned no purchase event" }),
-						);
-					}
-
-					return {
-						purchaseEvent: mapRow(result.purchaseEventRow),
-						portrait: result.portraitRow ? mapPortraitRow(result.portraitRow) : null,
-					};
-				}),
 		});
 	}),
 );

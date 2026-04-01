@@ -372,10 +372,14 @@ export const purchaseEvents = pgTable(
 		amountCents: integer("amount_cents"),
 		currency: text("currency"),
 		metadata: jsonb("metadata"),
+		assessmentResultId: uuid("assessment_result_id").references(() => assessmentResults.id, {
+			onDelete: "set null",
+		}),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => [
 		index("purchase_events_user_id_idx").on(table.userId),
+		index("purchase_events_assessment_result_id_idx").on(table.assessmentResultId),
 		uniqueIndex("purchase_events_polar_checkout_id_unique")
 			.on(table.polarCheckoutId)
 			.where(sql`polar_checkout_id IS NOT NULL`),
@@ -388,8 +392,8 @@ export const purchaseEvents = pgTable(
  * Portraits
  *
  * Full portrait system (teaser tier removed — Story 32-0).
- * Placeholder row pattern: content=NULL means generating.
- * Status derived from data, not stored column.
+ * Row inserted only on final outcome: content (success) or failedAt (failure).
+ * Status derived from portrait row + purchase event, not stored column.
  */
 export const portraits = pgTable(
 	"portraits",
@@ -399,9 +403,9 @@ export const portraits = pgTable(
 			.notNull()
 			.references(() => assessmentResults.id, { onDelete: "cascade" }),
 		tier: text("tier").notNull().$type<"full">(),
-		content: text("content"), // nullable — NULL = generating
-		modelUsed: text("model_used").notNull(),
-		retryCount: integer("retry_count").notNull().default(0),
+		content: text("content"),
+		modelUsed: text("model_used"),
+		failedAt: timestamp("failed_at"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => [

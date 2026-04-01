@@ -13,8 +13,6 @@ import {
 	QrTokenRepository,
 	RelationshipAnalysisRepository,
 } from "@workspace/domain";
-import { Effect, Layer } from "effect";
-import { getRelationshipState } from "../get-relationship-state.use-case";
 import {
 	QrTokenDrizzleRepositoryLive,
 	_resetMockState as resetQrMock,
@@ -23,6 +21,8 @@ import {
 	RelationshipAnalysisDrizzleRepositoryLive,
 	_resetMockState as resetAnalysisMock,
 } from "@workspace/infrastructure/repositories/relationship-analysis.drizzle.repository";
+import { Effect, Layer } from "effect";
+import { getRelationshipState } from "../get-relationship-state.use-case";
 
 const TEST_USER_ID = "user-123";
 
@@ -31,7 +31,6 @@ const mockPurchaseRepo = {
 	insertEvent: vi.fn(),
 	getByCheckoutId: vi.fn(),
 	getByUserId: vi.fn(),
-	insertEventWithPortraitPlaceholder: vi.fn(),
 };
 
 const TestLayer = Layer.mergeAll(

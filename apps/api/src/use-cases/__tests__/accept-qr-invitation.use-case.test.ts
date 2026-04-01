@@ -13,10 +13,7 @@ import {
 	AssessmentSessionRepository,
 	PurchaseEventRepository,
 	QrTokenRepository,
-	RelationshipAnalysisRepository,
 } from "@workspace/domain";
-import { Effect, Exit, Layer } from "effect";
-import { acceptQrInvitation } from "../accept-qr-invitation.use-case";
 import {
 	QrTokenDrizzleRepositoryLive,
 	_resetMockState as resetQrMock,
@@ -25,6 +22,8 @@ import {
 	RelationshipAnalysisDrizzleRepositoryLive,
 	_resetMockState as resetAnalysisMock,
 } from "@workspace/infrastructure/repositories/relationship-analysis.drizzle.repository";
+import { Effect, Exit, Layer } from "effect";
+import { acceptQrInvitation } from "../accept-qr-invitation.use-case";
 
 const GENERATOR_USER_ID = "generator-user-1";
 const ACCEPTOR_USER_ID = "acceptor-user-2";
@@ -34,7 +33,6 @@ const mockPurchaseRepo = {
 	insertEvent: vi.fn(),
 	getByCheckoutId: vi.fn(),
 	getByUserId: vi.fn(),
-	insertEventWithPortraitPlaceholder: vi.fn(),
 };
 
 const mockSessionRepo = {

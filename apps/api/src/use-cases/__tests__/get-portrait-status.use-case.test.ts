@@ -1,51 +1,51 @@
 /**
- * Get Portrait Status Use Case Tests (Story 13.3, extended Story 32-6)
+ * Get Portrait Status Use Case Tests (queue-based architecture)
  *
  * Tests:
  * - deriveStatus pure function for all cases (none, generating, ready, failed)
- * - isStale pure function
- * - Staleness check triggers forkDaemon
- * - Non-stale generating does NOT trigger forkDaemon
- * - Story 32-6: Reconciliation when status is "none" with userId
+ * - Read-only status polling (no reconciliation, no forkDaemon)
  */
 
-import { vi } from "vitest";
-
-vi.mock("../generate-full-portrait.use-case", () => ({
-	generateFullPortrait: vi.fn(() => Effect.succeed({ success: true })),
-}));
-
-vi.mock("../reconcile-portrait-purchase.use-case", () => ({
-	reconcilePortraitPurchase: vi.fn(() => Effect.succeed({ reconciled: false })),
-}));
-
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { LoggerRepository, PortraitRepository } from "@workspace/domain";
+import {
+	AssessmentResultRepository,
+	PortraitRepository,
+	PurchaseEventRepository,
+} from "@workspace/domain";
 import type { Portrait } from "@workspace/domain/repositories/portrait.repository";
 import { Effect, Layer } from "effect";
-import { deriveStatus, getPortraitStatus, isStale } from "../get-portrait-status.use-case";
-import { reconcilePortraitPurchase } from "../reconcile-portrait-purchase.use-case";
+import { vi } from "vitest";
+import { deriveStatus, getPortraitStatus } from "../get-portrait-status.use-case";
 
 const mockPortraitRepo = {
-	insertPlaceholder: vi.fn(),
-	updateContent: vi.fn(),
-	incrementRetryCount: vi.fn(),
+	insertWithContent: vi.fn(),
+	insertFailed: vi.fn(),
+	deleteByResultIdAndTier: vi.fn(),
 	getByResultIdAndTier: vi.fn(),
 	getFullPortraitBySessionId: vi.fn(),
-	resetRetryCount: vi.fn(),
 };
 
-const mockLogger = {
-	info: vi.fn(),
-	error: vi.fn(),
-	warn: vi.fn(),
-	debug: vi.fn(),
+const mockPurchaseRepo = {
+	insertEvent: vi.fn(),
+	getEventsByUserId: vi.fn(),
+	getCapabilities: vi.fn(),
+	getByCheckoutId: vi.fn(),
+};
+
+const mockResultRepo = {
+	getBySessionId: vi.fn(),
+	getByUserId: vi.fn(),
+	upsert: vi.fn(),
+	getById: vi.fn(),
+	delete: vi.fn(),
+	getLatestByUserId: vi.fn(),
 };
 
 const createTestLayer = () =>
 	Layer.mergeAll(
 		Layer.succeed(PortraitRepository, mockPortraitRepo),
-		Layer.succeed(LoggerRepository, mockLogger),
+		Layer.succeed(PurchaseEventRepository, mockPurchaseRepo),
+		Layer.succeed(AssessmentResultRepository, mockResultRepo),
 	);
 
 const createMockPortrait = (overrides: Partial<Portrait> = {}): Portrait => ({
@@ -53,65 +53,42 @@ const createMockPortrait = (overrides: Partial<Portrait> = {}): Portrait => ({
 	assessmentResultId: "result_456",
 	tier: "full",
 	content: null,
-	modelUsed: "claude-sonnet-4-6",
-	retryCount: 0,
+	modelUsed: null,
+	failedAt: null,
 	createdAt: new Date(),
 	...overrides,
 });
 
-describe("deriveStatus Pure Function (Story 13.3)", () => {
-	it("returns 'none' when portrait is null", () => {
-		expect(deriveStatus(null)).toBe("none");
+describe("deriveStatus Pure Function (queue-based)", () => {
+	it("returns 'none' when portrait is null and no purchase", () => {
+		expect(deriveStatus(null, false)).toBe("none");
+	});
+
+	it("returns 'generating' when no portrait but purchase exists", () => {
+		expect(deriveStatus(null, true)).toBe("generating");
 	});
 
 	it("returns 'ready' when portrait has content", () => {
 		const portrait = createMockPortrait({ content: "Your personality portrait..." });
-		expect(deriveStatus(portrait)).toBe("ready");
+		expect(deriveStatus(portrait, true)).toBe("ready");
 	});
 
-	it("returns 'failed' when retryCount >= 3", () => {
-		const portrait = createMockPortrait({ retryCount: 3 });
-		expect(deriveStatus(portrait)).toBe("failed");
+	it("returns 'failed' when portrait has failedAt", () => {
+		const portrait = createMockPortrait({ failedAt: new Date() });
+		expect(deriveStatus(portrait, true)).toBe("failed");
 	});
 
-	it("returns 'failed' when retryCount > 3", () => {
-		const portrait = createMockPortrait({ retryCount: 5 });
-		expect(deriveStatus(portrait)).toBe("failed");
-	});
-
-	it("returns 'generating' when content is null and retryCount < 3", () => {
-		const portrait = createMockPortrait({ content: null, retryCount: 0 });
-		expect(deriveStatus(portrait)).toBe("generating");
-	});
-
-	it("returns 'generating' when content is null and retryCount is 2", () => {
-		const portrait = createMockPortrait({ content: null, retryCount: 2 });
-		expect(deriveStatus(portrait)).toBe("generating");
+	it("returns 'none' when portrait is null and no purchase (explicit false)", () => {
+		expect(deriveStatus(null, false)).toBe("none");
 	});
 });
 
-describe("isStale Pure Function (Story 13.3)", () => {
-	it("returns true when createdAt is older than 5 minutes", () => {
-		const sixMinutesAgo = new Date(Date.now() - 6 * 60 * 1000);
-		expect(isStale(sixMinutesAgo)).toBe(true);
-	});
-
-	it("returns false when createdAt is within 5 minutes", () => {
-		const fourMinutesAgo = new Date(Date.now() - 4 * 60 * 1000);
-		expect(isStale(fourMinutesAgo)).toBe(false);
-	});
-
-	it("returns false when createdAt is exactly now", () => {
-		expect(isStale(new Date())).toBe(false);
-	});
-});
-
-describe("getPortraitStatus Use Case (Story 13.3)", () => {
+describe("getPortraitStatus Use Case (queue-based, read-only)", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it.effect("returns 'none' when no portrait exists", () =>
+	it.effect("returns 'none' when no portrait and no userId", () =>
 		Effect.gen(function* () {
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
 
@@ -124,7 +101,10 @@ describe("getPortraitStatus Use Case (Story 13.3)", () => {
 
 	it.effect("returns 'ready' when portrait has content", () =>
 		Effect.gen(function* () {
-			const portrait = createMockPortrait({ content: "Your personality portrait..." });
+			const portrait = createMockPortrait({
+				content: "Your personality portrait...",
+				modelUsed: "test-model",
+			});
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(portrait));
 
 			const result = yield* getPortraitStatus({ sessionId: "session_123" });
@@ -134,21 +114,28 @@ describe("getPortraitStatus Use Case (Story 13.3)", () => {
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("returns 'generating' when portrait has no content and retries < 3", () =>
+	it.effect("returns 'generating' when purchase exists for this result but no portrait", () =>
 		Effect.gen(function* () {
-			const portrait = createMockPortrait({ content: null, retryCount: 1 });
-			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(portrait));
+			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
+			mockResultRepo.getBySessionId.mockReturnValue(Effect.succeed({ id: "result_456" }));
+			mockPurchaseRepo.getEventsByUserId.mockReturnValue(
+				Effect.succeed([
+					{ eventType: "portrait_unlocked", assessmentResultId: "result_456", createdAt: new Date() },
+				]),
+			);
 
-			const result = yield* getPortraitStatus({ sessionId: "session_123" });
+			const result = yield* getPortraitStatus({
+				sessionId: "session_123",
+				userId: "user_789",
+			});
 
 			expect(result.status).toBe("generating");
-			expect(result.portrait).toEqual(portrait);
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("returns 'failed' when retryCount >= 3", () =>
+	it.effect("returns 'failed' when portrait has failedAt", () =>
 		Effect.gen(function* () {
-			const portrait = createMockPortrait({ content: null, retryCount: 3 });
+			const portrait = createMockPortrait({ failedAt: new Date() });
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(portrait));
 
 			const result = yield* getPortraitStatus({ sessionId: "session_123" });
@@ -158,95 +145,11 @@ describe("getPortraitStatus Use Case (Story 13.3)", () => {
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("does NOT trigger lazy retry when portrait is not stale", () =>
-		Effect.gen(function* () {
-			// Portrait created just now - not stale
-			const portrait = createMockPortrait({
-				content: null,
-				retryCount: 0,
-				createdAt: new Date(),
-			});
-			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(portrait));
-
-			yield* getPortraitStatus({ sessionId: "session_123" });
-
-			// Logger should NOT have been called with lazy retry message
-			expect(mockLogger.info).not.toHaveBeenCalledWith(
-				"Triggering lazy retry for stale portrait",
-				expect.anything(),
-			);
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-
-	it.effect("triggers lazy retry when portrait is stale with retries remaining", () =>
-		Effect.gen(function* () {
-			// Portrait created 6 minutes ago - stale
-			const sixMinutesAgo = new Date(Date.now() - 6 * 60 * 1000);
-			const portrait = createMockPortrait({
-				content: null,
-				retryCount: 1,
-				createdAt: sixMinutesAgo,
-			});
-			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(portrait));
-
-			const result = yield* getPortraitStatus({ sessionId: "session_123" });
-
-			expect(result.status).toBe("generating");
-			// Logger should have been called with lazy retry message
-			expect(mockLogger.info).toHaveBeenCalledWith(
-				"Triggering lazy retry for stale portrait",
-				expect.objectContaining({
-					portraitId: portrait.id,
-					sessionId: "session_123",
-					retryCount: 1,
-				}),
-			);
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-
-	it.effect("does NOT trigger lazy retry when retries exhausted", () =>
-		Effect.gen(function* () {
-			// Portrait is stale but retries exhausted
-			const sixMinutesAgo = new Date(Date.now() - 6 * 60 * 1000);
-			const portrait = createMockPortrait({
-				content: null,
-				retryCount: 3,
-				createdAt: sixMinutesAgo,
-			});
-			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(portrait));
-
-			const result = yield* getPortraitStatus({ sessionId: "session_123" });
-
-			// Status should be failed, no retry triggered
-			expect(result.status).toBe("failed");
-			expect(mockLogger.info).not.toHaveBeenCalledWith(
-				"Triggering lazy retry for stale portrait",
-				expect.anything(),
-			);
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-});
-
-describe("getPortraitStatus Reconciliation (Story 32-6)", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
-
-	it.effect("does NOT attempt reconciliation when no userId provided", () =>
+	it.effect("returns 'none' when no purchase exists for this result", () =>
 		Effect.gen(function* () {
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
-
-			const result = yield* getPortraitStatus({ sessionId: "session_123" });
-
-			expect(result.status).toBe("none");
-			expect(reconcilePortraitPurchase).not.toHaveBeenCalled();
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-
-	it.effect("attempts reconciliation when status is 'none' and userId provided", () =>
-		Effect.gen(function* () {
-			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
-			vi.mocked(reconcilePortraitPurchase).mockReturnValue(Effect.succeed({ reconciled: false }));
+			mockResultRepo.getBySessionId.mockReturnValue(Effect.succeed({ id: "result_456" }));
+			mockPurchaseRepo.getEventsByUserId.mockReturnValue(Effect.succeed([]));
 
 			const result = yield* getPortraitStatus({
 				sessionId: "session_123",
@@ -254,29 +157,6 @@ describe("getPortraitStatus Reconciliation (Story 32-6)", () => {
 			});
 
 			expect(result.status).toBe("none");
-			expect(reconcilePortraitPurchase).toHaveBeenCalledWith({
-				sessionId: "session_123",
-				userId: "user_789",
-			});
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-
-	it.effect("returns 'generating' after successful reconciliation", () =>
-		Effect.gen(function* () {
-			// First call returns null (no portrait), second returns the new placeholder
-			const newPlaceholder = createMockPortrait({ content: null, retryCount: 0 });
-			mockPortraitRepo.getFullPortraitBySessionId
-				.mockReturnValueOnce(Effect.succeed(null))
-				.mockReturnValueOnce(Effect.succeed(newPlaceholder));
-			vi.mocked(reconcilePortraitPurchase).mockReturnValue(Effect.succeed({ reconciled: true }));
-
-			const result = yield* getPortraitStatus({
-				sessionId: "session_123",
-				userId: "user_789",
-			});
-
-			expect(result.status).toBe("generating");
-			expect(result.portrait).toEqual(newPlaceholder);
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 });

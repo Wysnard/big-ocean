@@ -1,55 +1,44 @@
 /**
- * Get Portrait Status Use Case (Story 13.3, extended Story 32-6)
+ * Get Portrait Status Use Case (Story 13.3, refactored for queue-based generation)
  *
  * Returns the current status of a full portrait for a session.
- * Implements lazy retry: if portrait is stale and retries remain, spawns new daemon.
+ * Purely read-only — never triggers generation (webhook is the only trigger).
  *
- * Story 32-6 adds: portrait reconciliation — if status is "none" and a
- * portrait_unlocked purchase event exists, auto-insert placeholder + fork daemon.
- *
- * Status is derived from portrait data, not stored:
- * - none: No portrait exists for this session
- * - generating: Portrait placeholder exists with content=NULL
+ * Status derived from portrait row + result-scoped purchase event:
  * - ready: Portrait has content
- * - failed: Portrait has retry_count >= 3
+ * - failed: Portrait has failedAt
+ * - generating: Purchase event exists for this result but no portrait row
+ * - none: No purchase event for this result
+ *
+ * Story 36-3: Version detection — isLatestVersion flag.
  */
 
 import {
 	AssessmentResultRepository,
 	AssessmentSessionRepository,
+	hasPortraitForResult,
 	isLatestVersion,
-	LoggerRepository,
 	PortraitRepository,
 	type PortraitStatus,
+	PurchaseEventRepository,
 } from "@workspace/domain";
 import type { Portrait } from "@workspace/domain/repositories/portrait.repository";
 import { Effect } from "effect";
-import { generateFullPortrait } from "./generate-full-portrait.use-case";
-import { reconcilePortraitPurchase } from "./reconcile-portrait-purchase.use-case";
-
-const STALENESS_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
- * Derive portrait status from portrait data.
+ * Derive portrait status from portrait data and purchase state.
  * Pure function, exported for unit testing.
  */
-export const deriveStatus = (portrait: Portrait | null): PortraitStatus => {
-	if (!portrait) return "none";
-	if (portrait.content !== null) return "ready";
-	if (portrait.retryCount >= 3) return "failed";
-	return "generating";
+export const deriveStatus = (portrait: Portrait | null, hasPurchase: boolean): PortraitStatus => {
+	if (portrait?.content) return "ready";
+	if (portrait?.failedAt) return "failed";
+	if (hasPurchase && !portrait) return "generating";
+	return "none";
 };
-
-/**
- * Check if portrait generation is stale (exceeded threshold without completing).
- * Pure function, exported for unit testing.
- */
-export const isStale = (createdAt: Date): boolean =>
-	Date.now() - createdAt.getTime() > STALENESS_THRESHOLD_MS;
 
 export interface GetPortraitStatusInput {
 	readonly sessionId: string;
-	/** Optional userId for portrait reconciliation (Story 32-6) */
+	/** Optional userId for result-scoped purchase lookup and version detection */
 	readonly userId?: string;
 }
 
@@ -63,58 +52,33 @@ export interface GetPortraitStatusOutput {
  * Get Portrait Status Use Case
  *
  * 1. Fetches full portrait by session ID
- * 2. Derives status from portrait data
- * 3. If status is "none" and userId provided, attempts reconciliation (Story 32-6)
- * 4. Implements lazy retry: if stale "generating" with retries left, spawns new daemon
+ * 2. If userId provided, checks result-scoped purchase state for status derivation
+ * 3. Derives status from portrait + purchase data
+ * 4. Version detection (Story 36-3)
  */
 export const getPortraitStatus = (input: GetPortraitStatusInput) =>
 	Effect.gen(function* () {
 		const portraitRepo = yield* PortraitRepository;
-		const logger = yield* LoggerRepository;
 
-		let portrait = yield* portraitRepo.getFullPortraitBySessionId(input.sessionId);
-		let status = deriveStatus(portrait);
+		const portrait = yield* portraitRepo.getFullPortraitBySessionId(input.sessionId);
 
-		// Story 32-6: Reconciliation — if no portrait but user has purchased, create placeholder
-		if (status === "none" && input.userId) {
-			const reconciliation = yield* reconcilePortraitPurchase({
-				sessionId: input.sessionId,
-				userId: input.userId,
-			});
+		// Check result-scoped purchase state for status derivation
+		let hasPurchase = false;
+		if (input.userId) {
+			const purchaseRepo = yield* PurchaseEventRepository;
+			const resultRepo = yield* AssessmentResultRepository;
 
-			if (reconciliation.reconciled) {
-				// Re-fetch portrait after reconciliation created a placeholder
-				portrait = yield* portraitRepo.getFullPortraitBySessionId(input.sessionId);
-				status = deriveStatus(portrait);
+			const result = yield* resultRepo
+				.getBySessionId(input.sessionId)
+				.pipe(Effect.catchAll(() => Effect.succeed(null)));
+
+			if (result) {
+				const events = yield* purchaseRepo.getEventsByUserId(input.userId);
+				hasPurchase = hasPortraitForResult(events, result.id);
 			}
 		}
 
-		// Eager trigger: if portrait placeholder exists but generation never started (retryCount 0, no content)
-		// This covers the case where the webhook created a placeholder but couldn't spawn the Effect daemon.
-		// Also handles lazy retry: if portrait is stale "generating" with retries remaining.
-		if (status === "generating" && portrait && portrait.retryCount < 3) {
-			const neverStarted = portrait.retryCount === 0 && !isStale(portrait.createdAt);
-			const staleRetry = isStale(portrait.createdAt);
-			if (neverStarted || staleRetry) {
-				logger.info(
-					neverStarted
-						? "Triggering eager portrait generation"
-						: "Triggering lazy retry for stale portrait",
-					{
-						portraitId: portrait.id,
-						sessionId: input.sessionId,
-						retryCount: portrait.retryCount,
-						ageMs: Date.now() - portrait.createdAt.getTime(),
-					},
-				);
-				yield* Effect.forkDaemon(
-					generateFullPortrait({
-						portraitId: portrait.id,
-						sessionId: input.sessionId,
-					}),
-				);
-			}
-		}
+		const status = deriveStatus(portrait, hasPurchase);
 
 		// Story 36-3: Derive-at-read version detection (fail-open: default to latest)
 		const versionLatest = input.userId

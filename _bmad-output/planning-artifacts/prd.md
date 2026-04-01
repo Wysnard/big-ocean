@@ -1,7 +1,9 @@
 ---
-stepsCompleted: ["step-01-init", "step-02-discovery", "step-03-success", "step-04-journeys", "step-05-domain", "step-06-innovation", "step-07-project-type", "step-08-scoping", "step-09-functional", "step-10-nonfunctional", "step-11-polish", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit"]
-lastEdited: '2026-03-24'
+stepsCompleted: ["step-01-init", "step-02-discovery", "step-03-success", "step-04-journeys", "step-05-domain", "step-06-innovation", "step-07-project-type", "step-08-scoping", "step-09-functional", "step-10-nonfunctional", "step-11-polish", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit"]
+lastEdited: '2026-04-01'
 editHistory:
+  - date: '2026-04-01'
+    changes: 'Result-scoped portrait purchase: added FR22a (one purchase = one portrait for one specific result), rewrote FR23 (extension requires new portrait purchase, prior portrait preserved), updated FR25 (new result has no portrait until purchased), updated FR47 (purchase scoped to current result), updated Journey 3 (Léa purchases new portrait after extension), updated Executive Summary business model (portrait per result, extension produces new result requiring new purchase). Source: codebase refactoring revealed confusion around portrait generation lifecycle'
   - date: '2026-03-24'
     changes: 'Homepage conversion: added Journey 6 (Cold Visitor — Inès), added FR59-FR66 (homepage messaging, universal hook, single CTA, portrait excerpt preview, Nerin conversation preview, fear-addressing content, PWYW transparency, multi-persona content). Added homepage metrics to Success Criteria (bounce rate, sign-up conversion, time-to-CTA). Added Homepage Performance section to Web App Requirements. Updated Executive Summary to flag homepage as primary gap alongside Nerin quality. Updated MVP Feature Set with homepage conversion content. Updated Journey 2 to note invited-friend entry mismatch. Source: brainstorming-session-2026-03-23.md (66 ideas, 6 themes)'
   - date: '2026-03-23'
@@ -105,7 +107,7 @@ big-ocean is a conversational personality assessment platform built on the Big F
 
 **Differentiator:** The only product combining guided conversational UX, LLM-powered adaptive assessment, social sharing (archetype cards, public profiles), and structured 2-person relationship analysis. The assessment experience IS the marketing — conversation quality drives self-recognition, self-recognition drives sharing, sharing drives growth.
 
-**Business model:** Free assessment (OCEAN code + archetype + scores + public profile) → PWYW portrait (€1+ minimum, grants 1 free relationship analysis credit) → relationship analysis credits (€5/additional) → conversation extension (+25 exchanges, €25). Target: 100 completed assessments in 3 months, break-even on LLM costs (~€0.20/assessment, ~€0.20/portrait).
+**Business model:** Free assessment (OCEAN code + archetype + scores + public profile) → PWYW portrait per result (€1+ minimum, grants 1 free relationship analysis credit) → relationship analysis credits (€5/additional) → conversation extension (+25 exchanges, €25, produces new result requiring new portrait purchase). Target: 100 completed assessments in 3 months, break-even on LLM costs (~€0.20/assessment, ~€0.20/portrait).
 
 **Current state:** Brownfield — hexagonal architecture, auth, CI/CD, cloud deployment, and infrastructure already built. Primary gaps: Nerin character quality (~40% → launch-ready) and homepage conversion (the homepage must communicate what the product is and why it's worth 25 minutes to visitors with zero context — the product consistently exceeds expectations, but the homepage undersells the experience). The credibility chain (conversation → self-recognition → portrait revelation → trust → ambassador) requires every link to work at launch.
 
@@ -249,11 +251,11 @@ Now both assessments are complete — the relationship analysis generates. When 
 
 **Rising Action:** She purchases the extension. Nerin picks up where they left off — referencing themes and patterns from the first conversation, acknowledging the time gap. The second session goes deeper: more nuanced territories, heavier energy. Nerin explores her relationship with ambition, her family dynamics, her inner struggles with more precision because the pacing pipeline now has 25 exchanges of prior evidence to steer from. The depth meter climbs further than before.
 
-**Climax:** The updated letter from Nerin arrives. It's noticeably richer — new patterns emerge from the additional evidence. A section on how she handles pressure at work connects to something she said about her childhood. She feels the €25 was worth it.
+**Climax:** After the extension completes, Léa sees her new results — updated scores from the deeper conversation. The PWYW modal appears again for this new result. She pays €3. Nerin's new letter arrives — noticeably richer. New patterns emerge from the additional evidence. A section on how she handles pressure at work connects to something she said about her childhood. She feels it was worth it.
 
 **Resolution:** Léa now wants to analyze her relationship with her mother. She buys a relationship analysis credit (€5) and opens the QR drawer to initiate. She's become a recurring user: portrait extension, multiple relationship analyses, and she shares her archetype card every time someone asks "what's that ocean code?"
 
-**Capabilities revealed:** Re-engagement notifications (email when relationship analysis ready), conversation extension purchase (Polar.sh), continued conversation with context preservation across time gap, portrait regeneration with richer evidence (updated Nerin letter), relationship analysis credit purchase, multi-relationship analysis, returning user dashboard.
+**Capabilities revealed:** Re-engagement notifications (email when relationship analysis ready), conversation extension purchase (Polar.sh), continued conversation with context preservation across time gap, per-result portrait purchase (FR22a), portrait with richer evidence (new Nerin letter for new result), relationship analysis credit purchase, multi-relationship analysis, returning user dashboard.
 
 ### Journey 4: The Public Profile Visitor — Thomas
 
@@ -608,9 +610,10 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 - **FR20:** The system generates a narrative portrait written as a personal letter from Nerin using a high-capability LLM
 - **FR21:** Users are presented with a PWYW modal showing the founder's story and example portrait after completing the assessment
 - **FR22:** Users can view their portrait after payment
-- **FR23:** Conversation extension produces an updated portrait that incorporates observations derived from extended evidence not present in the original portrait
+- **FR22a:** One portrait purchase unlocks one portrait for the specific assessment result the user is viewing at checkout time. A different assessment result (e.g., after conversation extension) requires a separate purchase
+- **FR23:** Conversation extension produces a new assessment result. The user can purchase a new portrait for that result — the new portrait incorporates observations derived from extended evidence not present in the original. The prior portrait remains attached to the prior result as "previous version"
 - **FR24:** The system tracks behavioral proxies for portrait emotional impact: share rate, conversation extension purchase rate, and return visits within 48 hours
-- **FR25:** Conversation extension creates a new assessment session. The pacing pipeline initializes from the prior session's final state and evidence. On completion, new assessment results are generated. The prior portrait and any relationship analyses based on the prior results become "previous version"
+- **FR25:** Conversation extension creates a new assessment session. The pacing pipeline initializes from the prior session's final state and evidence. On completion, new assessment results are generated. The new result has no portrait until the user purchases one separately (FR22a). The prior portrait and any relationship analyses based on the prior results become "previous version"
 - **FR26:** Portrait generation is asynchronous — users are notified when ready
 - **FR27:** The system retries portrait generation on failure and informs the user if it ultimately fails
 
@@ -641,7 +644,7 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 
 ### Payments & Monetization
 
-- **FR47:** Users can pay for portraits via PWYW with embedded checkout. The payment provider handles all pricing UI. Default €5, minimum €1. No preset amount buttons in the product UI — a single "Unlock your portrait" button opens the checkout modal
+- **FR47:** Users can pay for portraits via PWYW with embedded checkout. The payment provider handles all pricing UI. Default €5, minimum €1. No preset amount buttons in the product UI — a single "Unlock your portrait" button opens the checkout modal. The purchase is scoped to the assessment result the user is currently viewing — not a blanket unlock across all results
 - **FR48:** Users can purchase relationship analysis credits via embedded checkout
 - **FR49:** Users can purchase conversation extensions via embedded checkout
 

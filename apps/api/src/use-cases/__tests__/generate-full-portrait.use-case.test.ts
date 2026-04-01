@@ -1,15 +1,17 @@
 /**
- * Generate Full Portrait Use Case Tests (Story 18-6)
+ * Generate Full Portrait Use Case Tests (queue-based architecture)
  *
  * Tests:
- * - Successful generation updates placeholder
- * - Retry on failure increments retry_count
- * - Idempotent update (already has content)
+ * - Successful generation inserts portrait with content
+ * - Missing result inserts failed portrait
+ * - LLM failure inserts failed portrait
+ * - Correct input shape to generator
  * - Uses ConversationEvidenceRepository (not FinalizationEvidenceRepository)
  */
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
+	AppConfig,
 	AssessmentMessageRepository,
 	AssessmentResultRepository,
 	ConversationEvidenceRepository,
@@ -17,16 +19,16 @@ import {
 	PortraitGeneratorRepository,
 	PortraitRepository,
 } from "@workspace/domain";
-import { PortraitNotFoundError } from "@workspace/domain/repositories/portrait.repository";
+import { PortraitGenerationError } from "@workspace/domain/repositories/portrait-generator.repository";
 import { Effect, Layer } from "effect";
 import { vi } from "vitest";
 import { generateFullPortrait } from "../generate-full-portrait.use-case";
 
 // Mocks
 const mockPortraitRepo = {
-	insertPlaceholder: vi.fn(),
-	updateContent: vi.fn(),
-	incrementRetryCount: vi.fn(),
+	insertWithContent: vi.fn(),
+	insertFailed: vi.fn(),
+	deleteByResultIdAndTier: vi.fn(),
 	getByResultIdAndTier: vi.fn(),
 	getFullPortraitBySessionId: vi.fn(),
 };
@@ -72,6 +74,7 @@ const createTestLayer = () =>
 		Layer.succeed(ConversationEvidenceRepository, mockConversationEvidenceRepo),
 		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
+		Layer.succeed(AppConfig, { portraitModelId: "test-model" } as any),
 	);
 
 const mockResult = {
@@ -146,7 +149,7 @@ const mockMessages = [
 	{ id: "msg_2", role: "assistant", content: "Hi there!" },
 ];
 
-describe("generateFullPortrait Use Case (Story 18-6)", () => {
+describe("generateFullPortrait Use Case (queue-based)", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
@@ -159,18 +162,17 @@ describe("generateFullPortrait Use Case (Story 18-6)", () => {
 		mockPortraitGen.generatePortrait.mockReturnValue(
 			Effect.succeed("Your full personality portrait..."),
 		);
-		mockPortraitRepo.updateContent.mockReturnValue(Effect.succeed(undefined));
-		mockPortraitRepo.incrementRetryCount.mockReturnValue(Effect.succeed(undefined));
+		mockPortraitRepo.insertWithContent.mockReturnValue(
+			Effect.succeed({ id: "portrait_123", content: "Your full personality portrait..." }),
+		);
+		mockPortraitRepo.insertFailed.mockReturnValue(
+			Effect.succeed({ id: "portrait_fail", failedAt: new Date() }),
+		);
 	});
 
-	it.effect("should generate portrait and update placeholder on success", () =>
+	it.effect("should generate portrait and insert with content on success", () =>
 		Effect.gen(function* () {
-			const result = yield* generateFullPortrait({
-				portraitId: "portrait_123",
-				sessionId: "session_123",
-			});
-
-			expect(result.success).toBe(true);
+			yield* generateFullPortrait({ sessionId: "session_123" });
 
 			// Verify portrait generator was called with correct data
 			expect(mockPortraitGen.generatePortrait).toHaveBeenCalledWith(
@@ -182,35 +184,29 @@ describe("generateFullPortrait Use Case (Story 18-6)", () => {
 				}),
 			);
 
-			// Verify placeholder was updated with generated content
-			expect(mockPortraitRepo.updateContent).toHaveBeenCalledWith(
-				"portrait_123",
-				"Your full personality portrait...",
-			);
+			// Verify insertWithContent was called
+			expect(mockPortraitRepo.insertWithContent).toHaveBeenCalledWith({
+				assessmentResultId: "result_456",
+				tier: "full",
+				content: "Your full personality portrait...",
+				modelUsed: "test-model",
+			});
 
-			// Verify logging
-			expect(mockLogger.info).toHaveBeenCalledWith(
-				"Starting full portrait generation",
-				expect.objectContaining({ portraitId: "portrait_123" }),
-			);
 			expect(mockLogger.info).toHaveBeenCalledWith(
 				"Full portrait generation completed",
-				expect.objectContaining({ portraitId: "portrait_123" }),
+				expect.objectContaining({ sessionId: "session_123" }),
 			);
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("should increment retry count when assessment result not found", () =>
+	it.effect("should insert failed portrait when assessment result not found", () =>
 		Effect.gen(function* () {
 			mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(null));
 
-			const result = yield* generateFullPortrait({
-				portraitId: "portrait_123",
-				sessionId: "session_123",
-			});
+			yield* generateFullPortrait({ sessionId: "session_123" });
 
-			expect(result.success).toBe(false);
-			expect(mockPortraitRepo.incrementRetryCount).toHaveBeenCalledWith("portrait_123");
+			expect(mockPortraitRepo.insertFailed).toHaveBeenCalled();
+			expect(mockPortraitRepo.insertWithContent).not.toHaveBeenCalled();
 			expect(mockLogger.error).toHaveBeenCalledWith(
 				"Assessment result not found for portrait generation",
 				expect.anything(),
@@ -218,14 +214,32 @@ describe("generateFullPortrait Use Case (Story 18-6)", () => {
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
+	it.effect("should insert failed portrait when LLM generation fails", () =>
+		Effect.gen(function* () {
+			mockPortraitGen.generatePortrait.mockReturnValue(
+				Effect.fail(
+					new PortraitGenerationError({
+						sessionId: "session_123",
+						message: "LLM error",
+					}),
+				),
+			);
+
+			yield* generateFullPortrait({ sessionId: "session_123" });
+
+			expect(mockPortraitRepo.insertFailed).toHaveBeenCalledWith({
+				assessmentResultId: "result_456",
+				tier: "full",
+				failedAt: expect.any(Date),
+			});
+			expect(mockPortraitRepo.insertWithContent).not.toHaveBeenCalled();
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+
 	it.effect("should call portrait generator with correct input shape", () =>
 		Effect.gen(function* () {
-			yield* generateFullPortrait({
-				portraitId: "portrait_123",
-				sessionId: "session_123",
-			});
+			yield* generateFullPortrait({ sessionId: "session_123" });
 
-			// Verify portrait generator received correct structure
 			expect(mockPortraitGen.generatePortrait).toHaveBeenCalledWith(
 				expect.objectContaining({
 					sessionId: "session_123",
@@ -237,42 +251,15 @@ describe("generateFullPortrait Use Case (Story 18-6)", () => {
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("should handle idempotent update gracefully", () =>
-		Effect.gen(function* () {
-			// Simulate updateContent failing because portrait already has content
-			mockPortraitRepo.updateContent.mockReturnValue(
-				Effect.fail(new PortraitNotFoundError({ portraitId: "portrait_123" })),
-			);
-
-			const result = yield* generateFullPortrait({
-				portraitId: "portrait_123",
-				sessionId: "session_123",
-			});
-
-			expect(result.success).toBe(true);
-			expect(mockLogger.info).toHaveBeenCalledWith(
-				"Portrait already has content, skipping update",
-				expect.objectContaining({ portraitId: "portrait_123" }),
-			);
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-
 	it.effect(
 		"should load conversation evidence by session (not finalization evidence by result)",
 		() =>
 			Effect.gen(function* () {
-				yield* generateFullPortrait({
-					portraitId: "portrait_123",
-					sessionId: "session_123",
-				});
+				yield* generateFullPortrait({ sessionId: "session_123" });
 
-				// Verify conversation evidence was loaded by session
 				expect(mockConversationEvidenceRepo.findBySession).toHaveBeenCalledWith("session_123");
-
-				// Verify messages were loaded
 				expect(mockMessageRepo.getMessages).toHaveBeenCalledWith("session_123");
 
-				// Verify portrait generator received conversation evidence directly
 				expect(mockPortraitGen.generatePortrait).toHaveBeenCalledWith(
 					expect.objectContaining({
 						allEvidence: expect.arrayContaining([

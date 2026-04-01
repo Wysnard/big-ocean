@@ -15,15 +15,15 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { checkout, polar, webhooks } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
-import type { AppConfigService, PurchaseEventType } from "@workspace/domain";
-import { AppConfig } from "@workspace/domain";
+import type { AppConfigService, PortraitJob, PurchaseEventType } from "@workspace/domain";
+import { AppConfig, PortraitJobQueue } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import bcrypt from "bcryptjs";
 import { betterAuth } from "better-auth";
 import { haveIBeenPwned } from "better-auth/plugins";
 import { and, eq, isNull, or } from "drizzle-orm";
 import { drizzle as drizzleNodePg } from "drizzle-orm/node-postgres";
-import { Context, Effect, Layer, Redacted } from "effect";
+import { Context, Effect, Layer, Queue, Redacted } from "effect";
 import pg from "pg";
 import { Resend } from "resend";
 import * as authSchema from "../db/drizzle/schema";
@@ -86,6 +86,11 @@ export const BetterAuthLive = Layer.effect(
 		// Receive dependencies through DI during layer construction
 		const config = yield* AppConfig;
 		const logger = yield* LoggerRepository;
+		const portraitQueue = yield* PortraitJobQueue;
+
+		// Bridge Promise→Effect: Queue.offer is self-contained, no runtime needed
+		const offerPortraitJob = (job: PortraitJob): Promise<boolean> =>
+			Effect.runPromise(Queue.offer(portraitQueue, job));
 
 		// Create a plain node-postgres pool for Better Auth
 		// Better Auth's drizzle adapter calls `await db.insert().returning()` which
@@ -219,61 +224,56 @@ export const BetterAuthLive = Layer.effect(
 								const checkoutId = order.checkoutId ?? order.id;
 
 								try {
-									await plainDb.transaction(async (tx) => {
-										// Insert purchase event (idempotent via unique checkout ID)
-										await tx
-											.insert(authSchema.purchaseEvents)
-											.values({
-												id: crypto.randomUUID(),
-												userId,
-												eventType,
-												polarCheckoutId: checkoutId,
-												polarProductId: productId,
-												amountCents: order.totalAmount,
-												currency: order.currency,
-												metadata: is5Pack ? { units: 5 } : null,
-											})
-											.onConflictDoNothing();
+									// Read sessionId from checkout metadata (scopes portrait to specific result)
+									const orderMetadata = order.metadata as Record<string, unknown> | null;
+									const sessionId =
+										typeof orderMetadata?.sessionId === "string" ? orderMetadata.sessionId : null;
 
-										// For portrait-triggering purchases, create portrait placeholder
-										// Portrait generation is triggered lazily via getPortraitStatus polling
-										if (eventType === "portrait_unlocked" || eventType === "extended_conversation_unlocked") {
-											const sessions = await tx
-												.select()
-												.from(authSchema.assessmentSession)
-												.where(
-													and(
-														eq(authSchema.assessmentSession.userId, userId),
-														eq(authSchema.assessmentSession.status, "completed"),
-													),
-												)
-												.limit(1);
+									// Look up assessmentResultId from session (if sessionId provided)
+									let assessmentResultId: string | null = null;
+									if (sessionId) {
+										const results = await plainDb
+											.select()
+											.from(authSchema.assessmentResults)
+											.where(eq(authSchema.assessmentResults.assessmentSessionId, sessionId))
+											.limit(1);
+										assessmentResultId = results[0]?.id ?? null;
+									}
 
-											if (sessions[0]) {
-												const results = await tx
-													.select()
-													.from(authSchema.assessmentResults)
-													.where(eq(authSchema.assessmentResults.assessmentSessionId, sessions[0].id))
-													.limit(1);
+									// Insert purchase event (idempotent via unique checkout ID)
+									await plainDb
+										.insert(authSchema.purchaseEvents)
+										.values({
+											id: crypto.randomUUID(),
+											userId,
+											eventType,
+											polarCheckoutId: checkoutId,
+											polarProductId: productId,
+											amountCents: order.totalAmount,
+											currency: order.currency,
+											metadata: is5Pack ? { units: 5 } : null,
+											assessmentResultId,
+										})
+										.onConflictDoNothing();
 
-												if (results[0]) {
-													await tx
-														.insert(authSchema.portraits)
-														.values({
-															assessmentResultId: results[0].id,
-															tier: "full",
-															modelUsed: "claude-sonnet-4-6",
-														})
-														.onConflictDoNothing();
-												}
-											}
-										}
-									});
+									// For portrait-triggering purchases, queue background generation
+									if (
+										(eventType === "portrait_unlocked" || eventType === "extended_conversation_unlocked") &&
+										sessionId
+									) {
+										await offerPortraitJob({ sessionId, userId });
+										logger.info("Polar webhook: queued portrait generation", {
+											sessionId,
+											userId,
+											assessmentResultId,
+										});
+									}
 
 									logger.info("Polar webhook: purchase event recorded", {
 										userId,
 										productId,
 										eventType,
+										assessmentResultId,
 									});
 								} catch (error) {
 									const msg = error instanceof Error ? error.message : String(error);

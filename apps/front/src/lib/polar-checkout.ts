@@ -14,9 +14,14 @@ import { authClient } from "./auth-client";
  * We call the server endpoint manually (instead of authClient.checkoutEmbed)
  * so we can pass the resolved app theme to the embed overlay.
  */
-export async function createThemedCheckoutEmbed(slug: string, theme: AppTheme) {
+export async function createThemedCheckoutEmbed(
+	slug: string,
+	theme: AppTheme,
+	metadata?: Record<string, string>,
+) {
 	const res = await authClient.checkout({
 		slug,
+		metadata,
 		redirect: false,
 		embedOrigin: window.location.origin,
 	});

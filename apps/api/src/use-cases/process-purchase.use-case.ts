@@ -21,7 +21,6 @@
 import type { PurchaseEventType } from "@workspace/domain";
 import {
 	AppConfig,
-	AssessmentResultRepository,
 	AssessmentSessionRepository,
 	LoggerRepository,
 	PortraitRepository,
@@ -87,7 +86,6 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 		const config = yield* AppConfig;
 		const purchaseRepo = yield* PurchaseEventRepository;
 		const sessionRepo = yield* AssessmentSessionRepository;
-		const resultsRepo = yield* AssessmentResultRepository;
 		const portraitRepo = yield* PortraitRepository;
 		const logger = yield* LoggerRepository;
 
@@ -118,15 +116,12 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 				if (session && session.status === "completed") {
 					const portrait = yield* portraitRepo.getFullPortraitBySessionId(session.id);
 					// Re-trigger if portrait exists but not complete and retries remain
-					if (portrait && portrait.content === null && portrait.retryCount < 3) {
+					if (portrait && portrait.content === null && !portrait.failedAt) {
 						logger.info("Re-triggering portrait generation from duplicate webhook", {
 							portraitId: portrait.id,
 							sessionId: session.id,
-							retryCount: portrait.retryCount,
 						});
-						yield* Effect.forkDaemon(
-							generateFullPortrait({ portraitId: portrait.id, sessionId: session.id }),
-						);
+						yield* Effect.forkDaemon(generateFullPortrait({ sessionId: session.id }));
 					}
 				}
 			}
@@ -149,28 +144,15 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 			metadata: is5Pack ? { units: 5 } : null,
 		};
 
-		// Check if we need to create a portrait placeholder
-		let portraitPlaceholder = null;
+		// Find user's completed assessment for portrait generation
 		let sessionId: string | null = null;
 
 		if (shouldTriggerPortrait(eventType)) {
-			// Find user's completed assessment
 			const session = yield* sessionRepo.findSessionByUserId(input.userId);
 
 			if (session && session.status === "completed") {
 				sessionId = session.id;
-				const result = yield* resultsRepo.getBySessionId(session.id);
-
-				if (result) {
-					portraitPlaceholder = {
-						assessmentResultId: result.id,
-						tier: "full" as const,
-						modelUsed: config.portraitModelId,
-					};
-				}
-			}
-
-			if (!portraitPlaceholder) {
+			} else {
 				logger.info("No completed assessment found, skipping portrait generation", {
 					userId: input.userId,
 					eventType,
@@ -178,11 +160,8 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 			}
 		}
 
-		// Insert purchase event with portrait placeholder (transactional)
-		const insertResult = yield* purchaseRepo.insertEventWithPortraitPlaceholder(
-			eventInput,
-			portraitPlaceholder,
-		);
+		// Insert purchase event
+		const insertResult = yield* purchaseRepo.insertEvent(eventInput);
 
 		// ───────────────────────────────────────────────────────────────
 		// Phase 3: Free credit grant on first portrait purchase (Story 3.4, FR33)
@@ -206,18 +185,10 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 			}
 		}
 
-		// Spawn portrait generation daemon AFTER transaction commits
-		if (insertResult.portrait && sessionId) {
-			logger.info("Spawning portrait generation daemon", {
-				portraitId: insertResult.portrait.id,
-				sessionId,
-			});
-			yield* Effect.forkDaemon(
-				generateFullPortrait({
-					portraitId: insertResult.portrait.id,
-					sessionId,
-				}),
-			);
+		// Spawn portrait generation daemon if portrait-triggering event
+		if (shouldTriggerPortrait(eventType) && sessionId) {
+			logger.info("Spawning portrait generation daemon", { sessionId });
+			yield* Effect.forkDaemon(generateFullPortrait({ sessionId }));
 		}
 
 		// ───────────────────────────────────────────────────────────────
@@ -245,5 +216,5 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 			);
 		}
 
-		return insertResult.purchaseEvent;
+		return insertResult;
 	});

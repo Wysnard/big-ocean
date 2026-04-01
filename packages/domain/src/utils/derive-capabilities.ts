@@ -68,3 +68,27 @@ export const deriveCapabilities = (events: PurchaseEvent[]): UserCapabilities =>
 		hasExtendedConversation: hasExtendedUnlock && !hasExtendedRefund,
 	};
 };
+
+/**
+ * Check if a portrait purchase exists for a specific assessment result.
+ * Result-scoped — one purchase covers one portrait for one result.
+ *
+ * Returns true if a portrait_unlocked or extended_conversation_unlocked event
+ * exists for this result, with no matching refund.
+ */
+export const hasPortraitForResult = (
+	events: PurchaseEvent[],
+	assessmentResultId: string,
+): boolean => {
+	const hasUnlock = events.some(
+		(e) =>
+			(e.eventType === "portrait_unlocked" || e.eventType === "extended_conversation_unlocked") &&
+			e.assessmentResultId === assessmentResultId,
+	);
+	const hasRefund = events.some(
+		(e) =>
+			(e.eventType === "portrait_refunded" || e.eventType === "extended_conversation_refunded") &&
+			e.assessmentResultId === assessmentResultId,
+	);
+	return hasUnlock && !hasRefund;
+};

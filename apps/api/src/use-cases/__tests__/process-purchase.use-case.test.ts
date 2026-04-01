@@ -29,10 +29,7 @@ import {
 	createTestAppConfigLayer,
 	mockAppConfig,
 } from "@workspace/domain/config/__mocks__/app-config";
-import {
-	_getPortraitByResultIdAndTier,
-	_resetMockState,
-} from "@workspace/infrastructure/repositories/__mocks__/purchase-event.drizzle.repository";
+import { _resetMockState } from "@workspace/infrastructure/repositories/__mocks__/purchase-event.drizzle.repository";
 import { PurchaseEventDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/purchase-event.drizzle.repository";
 import { Effect, Exit, Layer } from "effect";
 import { processPurchase } from "../process-purchase.use-case";
@@ -92,9 +89,9 @@ const mockResultsRepo = {
 };
 
 const mockPortraitRepo = {
-	insertPlaceholder: vi.fn(),
-	updateContent: vi.fn(),
-	incrementRetryCount: vi.fn(),
+	insertWithContent: vi.fn(),
+	insertFailed: vi.fn(),
+	deleteByResultIdAndTier: vi.fn(),
 	getByResultIdAndTier: vi.fn(),
 	getFullPortraitBySessionId: vi.fn(),
 };
@@ -262,7 +259,7 @@ describe("processPurchase Portrait Generation (Story 13.3)", () => {
 		updatedAt: new Date(),
 	};
 
-	it.effect("should create portrait placeholder when user has completed assessment", () =>
+	it.effect("should spawn portrait generation when user has completed assessment", () =>
 		Effect.gen(function* () {
 			mockSessionRepo.findSessionByUserId.mockReturnValue(Effect.succeed(mockCompletedSession));
 			mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(mockResult));
@@ -272,14 +269,7 @@ describe("processPurchase Portrait Generation (Story 13.3)", () => {
 				productId: mockAppConfig.polarProductPortraitUnlock,
 			});
 
-			// Verify portrait placeholder was created
-			const portrait = _getPortraitByResultIdAndTier("result_789", "full");
-			expect(portrait).toBeDefined();
-			expect(portrait?.tier).toBe("full");
-			expect(portrait?.content).toBeNull(); // Placeholder
-			expect(portrait?.modelUsed).toBe("claude-sonnet-4-6");
-
-			// Verify logging
+			// Verify portrait generation daemon was spawned
 			expect(mockLogger.info).toHaveBeenCalledWith(
 				"Spawning portrait generation daemon",
 				expect.objectContaining({ sessionId: "session_456" }),
@@ -317,9 +307,11 @@ describe("processPurchase Portrait Generation (Story 13.3)", () => {
 				productId: mockAppConfig.polarProductExtendedConversation,
 			});
 
-			// Verify portrait placeholder was created
-			const portrait = _getPortraitByResultIdAndTier("result_789", "full");
-			expect(portrait).toBeDefined();
+			// Verify portrait generation daemon was spawned
+			expect(mockLogger.info).toHaveBeenCalledWith(
+				"Spawning portrait generation daemon",
+				expect.objectContaining({ sessionId: "session_456" }),
+			);
 		}).pipe(Effect.provide(TestLayer)),
 	);
 
@@ -344,7 +336,7 @@ describe("processPurchase Portrait Generation (Story 13.3)", () => {
 					content: null, // Still generating
 
 					modelUsed: "claude-sonnet-4-6",
-					retryCount: 1,
+					failedAt: null,
 					createdAt: new Date(),
 				};
 				mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(incompletePortrait));
@@ -360,7 +352,7 @@ describe("processPurchase Portrait Generation (Story 13.3)", () => {
 					"Re-triggering portrait generation from duplicate webhook",
 					expect.objectContaining({
 						portraitId: "portrait_incomplete",
-						retryCount: 1,
+						sessionId: "session_456",
 					}),
 				);
 			}).pipe(Effect.provide(TestLayer)),
@@ -376,9 +368,11 @@ describe("processPurchase Portrait Generation (Story 13.3)", () => {
 				productId: mockAppConfig.polarProductRelationshipSingle,
 			});
 
-			// Portrait should NOT be created
-			const portrait = _getPortraitByResultIdAndTier("result_789", "full");
-			expect(portrait).toBeUndefined();
+			// Portrait generation daemon should NOT be spawned
+			expect(mockLogger.info).not.toHaveBeenCalledWith(
+				"Spawning portrait generation daemon",
+				expect.anything(),
+			);
 		}).pipe(Effect.provide(TestLayer)),
 	);
 });

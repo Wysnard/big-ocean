@@ -40,7 +40,7 @@ date: '2026-03-15'
 
 # big-ocean System Architecture
 
-_This document is the authoritative architecture reference for the big-ocean platform. It consolidates all architectural decisions, patterns, and technical specifications into a single source of truth. Last consolidated: 2026-03-18 (integrated QR token model, conversation extension, email infrastructure, portrait reconciliation, free credit timing from UX spec gap analysis; replaced anonymous-first with auth-gated conversation per UX spec design principles #4/#5)._
+_This document is the authoritative architecture reference for the big-ocean platform. It consolidates all architectural decisions, patterns, and technical specifications into a single source of truth. Last consolidated: 2026-04-01 (portrait generation refactored from placeholder-row + lazy retry to queue-based fire-once architecture via Effect Queue + worker fiber; integrated QR token model, conversation extension, email infrastructure, portrait reconciliation, free credit timing from UX spec gap analysis; replaced anonymous-first with auth-gated conversation per UX spec design principles #4/#5)._
 
 ## Project Context Analysis
 
@@ -76,7 +76,7 @@ This consolidated architecture covers the complete big-ocean system across all i
 - **Deferred:** Shadow scoring (topic avoidance detection), adaptive technique selection, meta-evidence from conversation dynamics
 
 #### 3. Portrait & Results (Epics 11-12)
-- Full portrait (Sonnet 4.6, async after PWYW payment, placeholder-row pattern)
+- Full portrait (Sonnet 4.6, async after PWYW payment, queue-based fire-once generation)
   - Sources from **conversation evidence v2** (authoritative, not finalization evidence)
   - Depth-adaptive prompt (RICH/MODERATE/THIN based on evidence density, `finalWeight >= 0.36` threshold)
   - 16,000 max tokens (includes thinking + response), temperature 0.7
@@ -145,7 +145,7 @@ This consolidated architecture covers the complete big-ocean system across all i
 
 1. **Cost tracking & rate limiting** — Redis fixed-window with fail-open, advisory locks, daily budget caps
 2. **Error architecture** — Schema.TaggedError in contracts, plain Error in domain repos, propagation without remapping
-3. **Async generation pattern** — Placeholder-row + forkDaemon + polling + lazy retry (portraits, relationship analyses)
+3. **Async generation pattern** — Queue-based fire-once generation for portraits (Effect Queue + worker fiber); placeholder-row + forkDaemon + lazy retry for relationship analyses
 4. **Derive-at-read** — Trait scores, OCEAN codes, archetypes, capabilities — never store what can be computed
 5. **Consent & access control** — Auth-gated conversation (email collected before first turn), session ownership verification, two-step consent for cross-user data (QR token model)
 6. **Transactional email** — Resend for drop-off re-engagement, Nerin check-in, deferred portrait recapture (3 email types, one-shot each)
@@ -188,7 +188,7 @@ All major architectural decisions are implemented and in production. This sectio
 - V1 constant calibration — E_target weights, scorer weights, observation gating thresholds (empirical post-launch)
 - Continuation experience UX details — conversation 2 model defined (new session + parent_session_id + prior state init), UX polish TBD
 - SSE for real-time portrait/analysis status (replace polling)
-- Background job queue for generation retry (replace lazy polling)
+- Queue-based generation for relationship analyses (portraits already migrated to Effect Queue pattern)
 - Event-driven architecture for cross-domain side effects
 - Gift product flows (Phase B)
 - Full GDPR compliance — encryption at rest, deletion/portability, audit logging (Epic 6)
@@ -367,24 +367,40 @@ flowchart TB
 | Archetype name/description/color | OCEAN code (4-letter, first 4 traits only) | `lookupArchetype()` in-memory registry |
 | Trait summary | OCEAN code (5-letter) | `deriveTraitSummary()` pure function |
 | Available credits | purchase_events aggregate | `getCredits()` use-case |
-| Portrait status | portraits table row state | Derived in `get-portrait-status.use-case.ts` |
+| Portrait status | portraits row + purchase_events (ready/failed/generating/none) | Derived in `get-portrait-status.use-case.ts` |
 | Portrait version status | portrait's `assessment_result_id` vs latest result for user | `isLatestResult(resultId, userId)` shared utility |
 | Relationship analysis version | analysis's `user_a_result_id` / `user_b_result_id` vs latest results | `isLatestResult(resultId, userId)` shared utility |
 | Last conversation topic | last `assessment_exchange` row's `selected_territory` field | Territory name from catalog, used for re-engagement email |
 
 **Rule:** If a value can be computed from evidence or events, compute it in the read path.
 
-### ADR-7: Placeholder-Row Async Pattern
+### ADR-7: Async Generation Patterns
 
-**Decision:** All slow LLM generation uses insert-placeholder → forkDaemon → poll → lazy retry.
+Two patterns exist for async LLM generation:
 
-**Four-part pattern:**
+**Pattern A: Queue-based fire-once (portraits)**
+
+Webhook → `Queue.offer` → worker fiber → LLM → insert portrait row on outcome.
+
+1. **Webhook** — Polar `onOrderPaid` inserts purchase event, then offers job to `PortraitJobQueue` (Effect Queue)
+2. **Worker fiber** — Long-lived `Effect.forever` loop takes from queue, calls `generateFullPortrait` with `Effect.retry({ times: 2 })`, inserts portrait row with content (success) or `failedAt` (failure)
+3. **Client polls** — TanStack Query `refetchInterval` while `generating`, stops on `ready`/`failed`
+4. **Status derivation** — Read-only: `portrait?.content` → ready, `portrait?.failedAt` → failed, `purchaseEvent && !portrait` → generating, else → none
+5. **Reconciliation** — If purchase exists but no portrait row, queues a new job (covers webhook failures)
+6. **Manual retry** — Deletes failed portrait row, queues new job
+
+**Used by:** Full portrait generation.
+
+**Queue bridge:** `PortraitJobQueue` (`Context.Tag` wrapping `Queue.Queue<PortraitJob>`) is created as a Layer, shared between `BetterAuthLive` (webhook offers) and the worker fiber (takes). `Queue.offer` is self-contained and works from Promise context via `Effect.runPromise`.
+
+**Pattern B: Placeholder-row + lazy retry (relationship analyses)**
+
 1. **Insert placeholder** — DB row with `content: null`, `retry_count: 0`
 2. **Fork daemon** — `Effect.forkDaemon(generate(...))` — doesn't block HTTP response
 3. **Client polls** — TanStack Query `refetchInterval` while `generating`, stops on `ready`/`failed`
 4. **Lazy retry** — Status endpoint checks staleness (>5 min + retries remaining) → spawns new daemon
 
-**Used by:** Full portrait generation, relationship analysis generation.
+**Used by:** Relationship analysis generation.
 
 **Idempotency:** `UPDATE ... WHERE content IS NULL` ensures only one daemon's result is written.
 
@@ -408,11 +424,11 @@ betterAuth({
 
 **Customer sync:** `externalId = userId` — Polar customer created automatically on signup with Better Auth user ID as external identifier. Webhook receives `order.customer.externalId` to route purchases.
 
-**Webhook handler (`onOrderPaid`):** Lives inside Better Auth Polar plugin. Uses plain Drizzle (not Effect) for transaction:
+**Webhook handler (`onOrderPaid`):** Lives inside Better Auth Polar plugin. Uses plain Drizzle (not Effect) for purchase event insert, then bridges to Effect via `PortraitJobQueue`:
 - Insert purchase event (`onConflictDoNothing` for idempotency)
-- Insert portrait placeholder if portrait-triggering purchase
+- For portrait-triggering purchases: find completed session, `Queue.offer` to `PortraitJobQueue` (bridges Promise→Effect via `Effect.runPromise(Queue.offer(...))`)
 - On first `portrait_unlocked` event: also insert `free_credit_granted` event (only if no prior `free_credit_granted` exists for this user) — this is the "PWYW >= EUR1 → free EUR5 credit" conversion nudge
-- Portrait daemon spawning handled separately via Effect use-case
+- Portrait generation runs in a background worker fiber, not from the webhook callback
 
 **Database hooks:**
 - `user.create.after` — accepts pending QR invitations (no credit grant — credit is granted on first portrait purchase)
@@ -509,14 +525,14 @@ betterAuth({
 
 ### ADR-13: Portrait Reconciliation
 
-**Decision:** On results page load, if a `portrait_unlocked` purchase event exists but no portrait row exists, auto-insert placeholder and fork daemon.
+**Decision:** On status poll, if a `portrait_unlocked` purchase event exists but no portrait row exists, queue a generation job.
 
-**Implementation:** Reconciliation logic in `reconcile-portrait-purchase.use-case.ts`, called from the results page loader:
+**Implementation:** Reconciliation logic in `reconcile-portrait-purchase.use-case.ts`, called from `getPortraitStatus` when status is "generating" (purchase exists but no portrait row):
 1. Does `portrait_unlocked` event exist for this user?
 2. Does a portrait row exist?
-3. If (1) yes and (2) no → insert placeholder, fork daemon
+3. If (1) yes and (2) no → `Queue.offer` to `PortraitJobQueue`
 
-This covers the "browser closed mid-payment" edge case where webhook fired but placeholder INSERT failed.
+This covers the "browser closed mid-payment" or "webhook Queue.offer failed" edge case.
 
 ### ADR-14: Fail-Open Resilience
 
@@ -728,11 +744,11 @@ assessment_exchange (
 User message → ConversAnalyzer v2 (energy+telling+evidence) → E_target → Scorer → Selector → Governor → Prompt Builder → Nerin → save exchange
 Assessment complete → compute results (derive-at-read) → redirect to results page
 Polar checkout closes → Better Auth webhook → purchase event + placeholder → forkDaemon → polling → "ready"
-First portrait purchase → onOrderPaid inserts portrait_unlocked + free_credit_granted (conditional) → free relationship credit
+First portrait purchase → onOrderPaid inserts portrait_unlocked + free_credit_granted (conditional) + Queue.offer → worker generates portrait → free relationship credit
 QR scan → accept → consume credit → placeholder row → forkDaemon → polling → both users see analysis
 User signup → Polar customer created (externalId = userId) → accepts pending QR invitations (no credit grant)
 Conversation extension purchase → new assessment_session (parent_session_id FK) → 25 exchanges → new assessment_results → prior portrait/analyses become "previous version"
-Results page load → reconcile-portrait-purchase: if portrait_unlocked event but no portrait row → auto-insert placeholder + fork daemon
+Status poll → reconcile-portrait-purchase: if portrait_unlocked event but no portrait row → Queue.offer to worker
 ```
 
 ## Implementation Patterns & Consistency Rules
@@ -834,7 +850,7 @@ import { describe, expect, it } from "@effect/vitest";  // AFTER vi.mock
 - Auth routes: `/api/auth/*` and `/api/polar/*` handled by Better Auth middleware
 - Effect routes: everything else handled by @effect/platform
 - Database hooks for side effects on user/session creation (session linking; free credit granted on first portrait purchase, not signup)
-- Polar webhook processing in Better Auth plugin, portrait daemon spawning in Effect
+- Polar webhook processing in Better Auth plugin, portrait generation via Effect Queue + worker fiber
 
 ### Anti-Patterns to Avoid
 
@@ -1244,7 +1260,7 @@ big-ocean/                                    # Monorepo root
 |------------|--------|-----------|-----------|
 | Assessment | `assessment_sessions` (parent_session_id FK for extensions), `assessment_messages` (territory_id, observed_energy_level), `assessment_results` | Use-cases via Drizzle repos | Use-cases + derive-at-read |
 | Evidence | `conversation_evidence` | ConversAnalyzer → nerin-pipeline → repo | Evidence queries + portrait generation |
-| Portraits | `portraits`, `portrait_ratings` | Placeholder → forkDaemon | Status polling + lazy retry |
+| Portraits | `portraits`, `portrait_ratings` | Worker fiber (queue-based, insert on outcome) | Read-only status polling |
 | Profiles | `public_profiles`, `profile_access_log` | Toggle visibility use-case | Public profile view + fire-and-forget logging |
 | Payments | `purchase_events` | Better Auth webhook → Drizzle | Capability derivation (append-only) |
 | Relationships | `relationship_qr_tokens`, `relationship_analyses` | QR token/accept use-cases | QR token polling + analysis list + analysis view |
@@ -1310,9 +1326,10 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 
 3. **Portrait purchase flow:**
    ```text
-   Polar checkout → webhook → Better Auth onOrderPaid → insert purchase_event + portrait placeholder →
-   Effect forkDaemon → Sonnet 4.6 generation → UPDATE WHERE content IS NULL →
-   Client polls GET /portrait/status → lazy retry if stale
+   Polar checkout → webhook → Better Auth onOrderPaid → insert purchase_event →
+   Queue.offer(PortraitJobQueue) → worker fiber takes job →
+   Sonnet 4.6 generation (retry x2) → INSERT portrait row (content on success, failedAt on failure) →
+   Client polls GET /portrait/status (read-only)
    ```
 
 4. **Relationship flow (QR token model):**
@@ -1335,8 +1352,8 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 
 6. **Portrait reconciliation flow:**
    ```text
-   Results page load → get-portrait-status checks portrait_unlocked event exists but no portrait row →
-   auto-insert placeholder → forkDaemon → Sonnet generation → polling picks up
+   Status poll with userId → get-portrait-status checks portrait_unlocked event exists but no portrait row →
+   Queue.offer(PortraitJobQueue) → worker fiber generates → polling picks up
    ```
 
 ### File Organization Patterns
@@ -1848,7 +1865,7 @@ export async function sendPolarWebhook(
 }
 ```
 
-This generates valid Standard Webhooks HMAC headers. The live `PaymentGatewayPolarRepositoryLive.verifyWebhook()` validates the signature and processes the event through the real use-case pipeline (purchase event insert, portrait placeholder, credit grant). The domain layer is fully exercised.
+This generates valid Standard Webhooks HMAC headers. The live `PaymentGatewayPolarRepositoryLive.verifyWebhook()` validates the signature and processes the event through the real use-case pipeline (purchase event insert, queue portrait generation, credit grant). The domain layer is fully exercised.
 
 **E2E test flow — payment:**
 
@@ -1856,7 +1873,8 @@ This generates valid Standard Webhooks HMAC headers. The live `PaymentGatewayPol
 [Playwright]  → navigates to purchase page, clicks "Buy"
 [E2E helper]  → sendPolarWebhook(apiContext, { type: "order.paid", data: { ... } })
 [API server]  → PaymentGatewayPolarRepositoryLive.verifyWebhook() → valid ✓
-              → onOrderPaid handler → insert purchase_event → insert portrait placeholder
+              → onOrderPaid handler → insert purchase_event → Queue.offer(PortraitJobQueue)
+              → worker fiber takes job → generate portrait → insert row
 [Playwright]  → asserts UI reflects purchase state (credits, portrait unlocked, etc.)
 ```
 

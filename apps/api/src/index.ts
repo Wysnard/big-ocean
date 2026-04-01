@@ -12,7 +12,8 @@ import { createServer } from "node:http";
 import { HttpApiBuilder, HttpMiddleware, HttpServerRequest } from "@effect/platform";
 import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
 import { BigOceanApi } from "@workspace/contracts";
-import { AppConfig } from "@workspace/domain";
+import type { PortraitJob } from "@workspace/domain";
+import { AppConfig, PortraitJobQueue } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import {
 	AppConfigLive,
@@ -43,7 +44,7 @@ import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories
 import { NerinAgentAnthropicRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.anthropic.repository";
 import { RedisIoRedisRepositoryLive } from "@workspace/infrastructure/repositories/redis.ioredis.repository";
 import { UserAccountDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/user-account.drizzle.repository";
-import { Cause, Context, Effect, Layer } from "effect";
+import { Cause, Context, Effect, Layer, Queue } from "effect";
 import { AccountGroupLive } from "./handlers/account";
 import { AssessmentGroupLive } from "./handlers/assessment";
 import { EmailGroupLive } from "./handlers/email";
@@ -57,6 +58,7 @@ import { RelationshipGroupLive } from "./handlers/relationship";
 import { WaitlistGroupLive } from "./handlers/waitlist";
 import { AuthMiddlewareLive, OptionalAuthMiddlewareLive } from "./middleware/auth.middleware";
 import { createBetterAuthHandler } from "./middleware/better-auth";
+import { portraitGenerationWorker } from "./workers/portrait-generation.worker";
 
 /**
  * Infrastructure Layer - Config, Database, Auth, Logger
@@ -71,14 +73,23 @@ const BaseServices = Layer.mergeAll(AppConfigLive, LoggerPinoRepositoryLive);
 // Database stack needs AppConfig
 const DatabaseServices = DatabaseStack.pipe(Layer.provide(AppConfigLive));
 
-// BetterAuth needs AppConfig and LoggerRepository (creates its own pg.Pool internally)
+// Portrait job queue — shared between webhook (offer) and worker fiber (take)
+const PortraitJobQueueLive = Layer.effect(PortraitJobQueue, Queue.unbounded<PortraitJob>());
+
+// BetterAuth needs AppConfig, LoggerRepository, and PortraitJobQueue
 const AuthServices = BetterAuthLive.pipe(
 	Layer.provide(LoggerPinoRepositoryLive),
 	Layer.provide(AppConfigLive),
+	Layer.provide(PortraitJobQueueLive),
 );
 
 // Complete infrastructure layer - merge all services for consumers
-const InfrastructureLayer = Layer.mergeAll(BaseServices, DatabaseServices, AuthServices);
+const InfrastructureLayer = Layer.mergeAll(
+	BaseServices,
+	DatabaseServices,
+	AuthServices,
+	PortraitJobQueueLive,
+);
 
 /**
  * LLM Layer Selection — Production
@@ -321,6 +332,11 @@ const main = Effect.gen(function* () {
 		Layer.provide(ServiceLayers),
 		Layer.provide(InfrastructureLayer),
 	);
+
+	// Start portrait generation worker fiber (takes from queue, runs LLM generation)
+	// Worker inherits PortraitJobQueue + LoggerRepository from main's scope (InfrastructureLayer).
+	// Only provide ServiceLayers for repository access (repos not in main's scope).
+	yield* Effect.forkDaemon(portraitGenerationWorker.pipe(Effect.provide(ServiceLayers)));
 
 	logger.info("Launching HTTP server...");
 

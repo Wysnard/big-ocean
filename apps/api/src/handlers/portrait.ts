@@ -29,6 +29,9 @@ export const PortraitGroupLive = HttpApiBuilder.group(BigOceanApi, "portrait", (
 					const portrait = result.portrait
 						? {
 								...result.portrait,
+								failedAt: result.portrait.failedAt
+									? DateTime.unsafeMake(result.portrait.failedAt.getTime())
+									: null,
 								createdAt: DateTime.unsafeMake(result.portrait.createdAt.getTime()),
 							}
 						: null;

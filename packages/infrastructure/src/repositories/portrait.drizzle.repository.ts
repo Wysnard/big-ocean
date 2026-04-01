@@ -1,24 +1,21 @@
 /**
- * Portrait Repository Implementation (Story 13.3, extended Story 32-6)
+ * Portrait Repository Implementation (Story 13.3, refactored for queue-based generation)
  *
- * Two-tier portrait system with placeholder row pattern.
- * Status derived from data (content IS NULL + retry_count).
- *
- * Story 32-6 adds: resetRetryCount for manual retry.
+ * Row inserted only on final outcome: content (success) or failedAt (failure).
+ * Status derived from portrait row + purchase event.
  */
 
 import { DatabaseError } from "@workspace/domain/errors/http.errors";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import {
-	DuplicatePortraitError,
-	type InsertPortraitPlaceholder,
+	type InsertPortraitFailed,
+	type InsertPortraitWithContent,
 	type Portrait,
-	PortraitNotFoundError,
 	PortraitRepository,
 	type PortraitTier,
 } from "@workspace/domain/repositories/portrait.repository";
 import { Database } from "@workspace/infrastructure/context/database";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { Effect, Layer } from "effect";
 import { assessmentResults, assessmentSession, portraits } from "../db/drizzle/schema";
 
@@ -34,100 +31,79 @@ export const PortraitDrizzleRepositoryLive = Layer.effect(
 			tier: row.tier as PortraitTier,
 			content: row.content,
 			modelUsed: row.modelUsed,
-			retryCount: row.retryCount,
+			failedAt: row.failedAt,
 			createdAt: row.createdAt,
 		});
 
 		return PortraitRepository.of({
-			insertPlaceholder: (data: InsertPortraitPlaceholder) =>
+			insertWithContent: (data: InsertPortraitWithContent) =>
 				Effect.gen(function* () {
 					const rows = yield* db
 						.insert(portraits)
 						.values({
 							assessmentResultId: data.assessmentResultId,
 							tier: data.tier,
+							content: data.content,
 							modelUsed: data.modelUsed,
-							// content defaults to NULL (generating)
-							// retryCount defaults to 0
 						})
-						.returning()
-						.pipe(
-							Effect.mapError((error) => {
-								const message = error instanceof Error ? error.message : String(error);
-								// Catch unique constraint violation on (assessment_result_id, tier)
-								if (message.includes("portraits_result_tier_unique")) {
-									return new DuplicatePortraitError({
-										assessmentResultId: data.assessmentResultId,
-										tier: data.tier,
-									});
-								}
-								logger.error("Database operation failed", {
-									operation: "insertPlaceholder",
-									error: message,
-								});
-								return new DatabaseError({ message: "Failed to insert portrait placeholder" });
-							}),
-						);
-
-					const row = rows[0];
-					if (!row) {
-						return yield* Effect.fail(new DatabaseError({ message: "Insert returned no rows" }));
-					}
-					return mapRow(row);
-				}),
-
-			updateContent: (id: string, content: string) =>
-				Effect.gen(function* () {
-					// Idempotent: only updates if content IS NULL
-					const rows = yield* db
-						.update(portraits)
-						.set({ content })
-						.where(and(eq(portraits.id, id), isNull(portraits.content)))
+						.onConflictDoNothing()
 						.returning()
 						.pipe(
 							Effect.mapError((error) => {
 								logger.error("Database operation failed", {
-									operation: "updateContent",
-									portraitId: id,
+									operation: "insertWithContent",
 									error: error instanceof Error ? error.message : String(error),
 								});
-								return new DatabaseError({ message: "Failed to update portrait content" });
+								return new DatabaseError({ message: "Failed to insert portrait" });
 							}),
 						);
 
-					const row = rows[0];
-					if (!row) {
-						// Either portrait doesn't exist OR content already set (idempotent)
-						return yield* Effect.fail(new PortraitNotFoundError({ portraitId: id }));
-					}
-					return mapRow(row);
+					return rows[0] ? mapRow(rows[0]) : null;
 				}),
 
-			incrementRetryCount: (id: string) =>
+			insertFailed: (data: InsertPortraitFailed) =>
 				Effect.gen(function* () {
 					const rows = yield* db
-						.update(portraits)
-						.set({
-							retryCount: sql`${portraits.retryCount} + 1`,
+						.insert(portraits)
+						.values({
+							assessmentResultId: data.assessmentResultId,
+							tier: data.tier,
+							failedAt: data.failedAt,
 						})
-						.where(eq(portraits.id, id))
+						.onConflictDoNothing()
 						.returning()
 						.pipe(
 							Effect.mapError((error) => {
 								logger.error("Database operation failed", {
-									operation: "incrementRetryCount",
-									portraitId: id,
+									operation: "insertFailed",
 									error: error instanceof Error ? error.message : String(error),
 								});
-								return new DatabaseError({ message: "Failed to increment retry count" });
+								return new DatabaseError({ message: "Failed to insert failed portrait" });
 							}),
 						);
 
-					const row = rows[0];
-					if (!row) {
-						return yield* Effect.fail(new PortraitNotFoundError({ portraitId: id }));
-					}
-					return mapRow(row);
+					return rows[0] ? mapRow(rows[0]) : null;
+				}),
+
+			deleteByResultIdAndTier: (assessmentResultId: string, tier: PortraitTier) =>
+				Effect.gen(function* () {
+					const rows = yield* db
+						.delete(portraits)
+						.where(and(eq(portraits.assessmentResultId, assessmentResultId), eq(portraits.tier, tier)))
+						.returning()
+						.pipe(
+							Effect.mapError((error) => {
+								logger.error("Database operation failed", {
+									operation: "deleteByResultIdAndTier",
+									assessmentResultId,
+									tier,
+									error: error instanceof Error ? error.message : String(error),
+								});
+								return new DatabaseError({ message: "Failed to delete portrait" });
+							}),
+						);
+
+					return rows.length > 0;
 				}),
 
 			getByResultIdAndTier: (assessmentResultId: string, tier: PortraitTier) =>
@@ -168,31 +144,6 @@ export const PortraitDrizzleRepositoryLive = Layer.effect(
 							return new DatabaseError({ message: "Failed to get full portrait" });
 						}),
 					),
-
-			resetRetryCount: (id: string) =>
-				Effect.gen(function* () {
-					const rows = yield* db
-						.update(portraits)
-						.set({ retryCount: 0 })
-						.where(eq(portraits.id, id))
-						.returning()
-						.pipe(
-							Effect.mapError((error) => {
-								logger.error("Database operation failed", {
-									operation: "resetRetryCount",
-									portraitId: id,
-									error: error instanceof Error ? error.message : String(error),
-								});
-								return new DatabaseError({ message: "Failed to reset retry count" });
-							}),
-						);
-
-					const row = rows[0];
-					if (!row) {
-						return yield* Effect.fail(new PortraitNotFoundError({ portraitId: id }));
-					}
-					return mapRow(row);
-				}),
 		});
 	}),
 );

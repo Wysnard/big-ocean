@@ -148,7 +148,9 @@ function ResultsSessionPage() {
 	const handlePwywCheckout = useCallback(async () => {
 		setIsCheckoutLoading(true);
 		try {
-			const checkout = await createThemedCheckoutEmbed("portrait-unlock", appTheme);
+			const checkout = await createThemedCheckoutEmbed("portrait-unlock", appTheme, {
+				sessionId: assessmentSessionId,
+			});
 			// Hide our modal so it doesn't show behind the Polar checkout overlay
 			setShowPwywModal(false);
 			setIsCheckoutLoading(false);
@@ -164,7 +166,7 @@ function ResultsSessionPage() {
 		} catch {
 			setIsCheckoutLoading(false);
 		}
-	}, [appTheme]);
+	}, [appTheme, assessmentSessionId]);
 
 	// Story 3.4: Callback to reopen PWYW modal from the unlock CTA button
 	const handleUnlockPortrait = useCallback(() => {
