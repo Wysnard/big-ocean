@@ -61,6 +61,7 @@ services:
       POLAR_PRODUCT_EXTENDED_CONVERSATION: ${POLAR_PRODUCT_EXTENDED_CONVERSATION:-pol_dev_extended}
       RESEND_API_KEY: ${RESEND_API_KEY}
       EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-noreply@dev.big-ocean.ai}
+      PORTRAIT_MODEL_ID: ${PORTRAIT_MODEL_ID:-claude-sonnet-4-6}
       NODE_ENV: development
       PORT: 4000
       HOST: 0.0.0.0

@@ -17,7 +17,6 @@ import { CONVERSATION_MODE } from "../conversation-mode";
 import { HUMOR_GUARDRAILS } from "../humor-guardrails";
 // Barrel export
 import * as nerinModules from "../index";
-import { INTERNAL_TRACKING } from "../internal-tracking";
 import { MIRROR_GUARDRAILS } from "../mirror-guardrails";
 import { OBSERVATION_QUALITY_COMMON } from "../observation-quality-common";
 import { QUALITY_INSTINCT } from "../quality-instinct";
@@ -57,11 +56,6 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 			expect(typeof HUMOR_GUARDRAILS).toBe("string");
 			expect(HUMOR_GUARDRAILS.length).toBeGreaterThan(0);
 		});
-
-		it("INTERNAL_TRACKING is a non-empty string", () => {
-			expect(typeof INTERNAL_TRACKING).toBe("string");
-			expect(INTERNAL_TRACKING.length).toBeGreaterThan(0);
-		});
 	});
 
 	describe("Tier 2 — Intent-Contextual", () => {
@@ -98,7 +92,6 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 			QUALITY_INSTINCT,
 			MIRROR_GUARDRAILS,
 			HUMOR_GUARDRAILS,
-			INTERNAL_TRACKING,
 			STORY_PULLING,
 			REFLECT,
 			OBSERVATION_QUALITY_COMMON,
@@ -133,8 +126,8 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 			expect(allModules).toContain("Humor must land for BOTH of you");
 		});
 
-		it("contains internal tracking", () => {
-			expect(allModules).toContain("You are silently tracking");
+		it("contains save-reads anti-pattern (moved from internal-tracking)", () => {
+			expect(allModules).toContain("SAVE YOUR READS FOR THE PORTRAIT");
 		});
 
 		it("contains observation quality guidance", () => {
@@ -164,7 +157,6 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 			QUALITY_INSTINCT,
 			MIRROR_GUARDRAILS,
 			HUMOR_GUARDRAILS,
-			INTERNAL_TRACKING,
 			STORY_PULLING,
 			REFLECT,
 			OBSERVATION_QUALITY_COMMON,
@@ -270,7 +262,6 @@ describe("Character Bible Decomposition (Story 27-1)", () => {
 			expect(nerinModules.QUALITY_INSTINCT).toBe(QUALITY_INSTINCT);
 			expect(nerinModules.MIRROR_GUARDRAILS).toBe(MIRROR_GUARDRAILS);
 			expect(nerinModules.HUMOR_GUARDRAILS).toBe(HUMOR_GUARDRAILS);
-			expect(nerinModules.INTERNAL_TRACKING).toBe(INTERNAL_TRACKING);
 		});
 
 		it("exports all Tier 2 modules", () => {

@@ -23,7 +23,6 @@ export { CONVERSATION_INSTINCTS } from "./conversation-instincts";
 // Tier 1 — Core Identity (always-on)
 export { CONVERSATION_MODE } from "./conversation-mode";
 export { HUMOR_GUARDRAILS } from "./humor-guardrails";
-export { INTERNAL_TRACKING } from "./internal-tracking";
 export { MIRROR_GUARDRAILS } from "./mirror-guardrails";
 export { OBSERVATION_QUALITY_COMMON } from "./observation-quality-common";
 // Story 31-2 — Character Quality modules
