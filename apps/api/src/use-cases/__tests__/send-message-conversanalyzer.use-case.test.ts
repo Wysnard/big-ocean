@@ -273,6 +273,7 @@ describe("sendMessage Use Case", () => {
 					family: 0,
 					leisure: 0,
 					solo: 0,
+					health: 0,
 					other: 0,
 				});
 			}).pipe(Effect.provide(createTestLayer())),

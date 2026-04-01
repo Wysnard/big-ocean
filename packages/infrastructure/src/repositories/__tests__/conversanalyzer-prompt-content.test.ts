@@ -28,6 +28,7 @@ const testInput = {
 		family: 0,
 		leisure: 0,
 		solo: 0,
+		health: 0,
 		other: 0,
 	},
 };
