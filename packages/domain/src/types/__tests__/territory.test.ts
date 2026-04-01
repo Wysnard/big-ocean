@@ -1,7 +1,6 @@
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 import type { FacetName } from "../../constants/big-five";
-import type { LifeDomain } from "../../constants/life-domain";
 import { type Territory, TerritoryIdSchema } from "../territory";
 
 describe("Territory Types", () => {
@@ -36,7 +35,7 @@ describe("Territory Types", () => {
 			const territory: Territory = {
 				id: Schema.decodeSync(TerritoryIdSchema)("light-territory"),
 				expectedEnergy: 0.25,
-				domains: ["leisure", "solo"] as const,
+				domains: ["leisure", "health"] as const,
 				expectedFacets: ["imagination"] as readonly FacetName[],
 				opener: "Test",
 			};

@@ -24,7 +24,7 @@ const TestLayer = ConversanalyzerAnthropicRepositoryLive;
 const defaultInput = {
 	message: "I work in tech",
 	recentMessages: [{ id: "1", role: "user" as const, content: "I work in tech" }],
-	domainDistribution: { work: 0, relationships: 0, family: 0, leisure: 0, solo: 0, health: 0, other: 0 },
+	domainDistribution: { work: 0, relationships: 0, family: 0, leisure: 0, health: 0, other: 0 },
 };
 
 describe("ConversAnalyzer v2 State Classification", () => {

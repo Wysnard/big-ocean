@@ -17,16 +17,19 @@ import {
  * Verify table structure matches architecture spec before migration.
  */
 describe("pgEnum values match domain constants", () => {
-	it("evidence_domain enum should have values from LIFE_DOMAINS", () => {
-		expect(evidenceDomainEnum.enumValues).toEqual([...LIFE_DOMAINS]);
+	it("evidence_domain enum includes all active LIFE_DOMAINS", () => {
+		for (const domain of LIFE_DOMAINS) {
+			expect(evidenceDomainEnum.enumValues).toContain(domain);
+		}
 	});
 
 	it("bigfive_facet_name enum should have values from ALL_FACETS", () => {
 		expect(bigfiveFacetNameEnum.enumValues).toEqual([...ALL_FACETS]);
 	});
 
-	it("evidence_domain should have exactly 7 values (including health and solo for backward compat)", () => {
+	it("evidence_domain should have exactly 7 values (solo kept in pgEnum for backward compat)", () => {
 		expect(evidenceDomainEnum.enumValues).toHaveLength(7);
+		expect(evidenceDomainEnum.enumValues).toContain("solo");
 	});
 
 	it("bigfive_facet_name should have exactly 30 values", () => {

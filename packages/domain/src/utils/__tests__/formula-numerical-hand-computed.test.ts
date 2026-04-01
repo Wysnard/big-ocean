@@ -124,7 +124,7 @@ describe("hand-computed example 3: two equal domains (v2)", () => {
 		// Both: deviation=0, weak(0.3), high(0.9) → score=10, conf=0.27
 		const evidence = [
 			ev("anxiety", "work", 0, "weak", "high"),
-			ev("anxiety", "solo", 0, "weak", "high"),
+			ev("anxiety", "health", 0, "weak", "high"),
 		];
 		const result = computeFacetMetrics(evidence, FORMULA_DEFAULTS);
 		const a = m(result, "anxiety");
@@ -132,7 +132,7 @@ describe("hand-computed example 3: two equal domains (v2)", () => {
 		const numConf = 0.27; // 0.3 * 0.9
 		const w = Math.sqrt(numConf);
 		expect(a.domainWeights.get("work")).toBeCloseTo(w, 5);
-		expect(a.domainWeights.get("solo")).toBeCloseTo(w, 5);
+		expect(a.domainWeights.get("health")).toBeCloseTo(w, 5);
 
 		// Score = 10 (deviation=0 → MIDPOINT)
 		expect(a.score).toBeCloseTo(10, 4);

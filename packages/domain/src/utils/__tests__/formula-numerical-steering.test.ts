@@ -53,10 +53,10 @@ describe("steering: exact ΔP domain selection", () => {
 		]);
 
 		const fromWork = computeSteeringTarget(metrics, "work", FORMULA_DEFAULTS);
-		const fromSolo = computeSteeringTarget(metrics, "solo", FORMULA_DEFAULTS);
+		const fromHealth = computeSteeringTarget(metrics, "health", FORMULA_DEFAULTS);
 
 		expect(STEERABLE_DOMAINS).toContain(fromWork.targetDomain);
-		expect(STEERABLE_DOMAINS).toContain(fromSolo.targetDomain);
+		expect(STEERABLE_DOMAINS).toContain(fromHealth.targetDomain);
 	});
 
 	it("lambda=0 eliminates switch cost entirely", () => {
@@ -67,9 +67,9 @@ describe("steering: exact ΔP domain selection", () => {
 
 		const noLambda: FormulaConfig = { ...FORMULA_DEFAULTS, lambda: 0 };
 		const fromWork = computeSteeringTarget(metrics, "work", noLambda);
-		const fromSolo = computeSteeringTarget(metrics, "solo", noLambda);
+		const fromHealth = computeSteeringTarget(metrics, "health", noLambda);
 
-		expect(fromWork.targetDomain).toBe(fromSolo.targetDomain);
+		expect(fromWork.targetDomain).toBe(fromHealth.targetDomain);
 	});
 
 	it("high lambda makes domain switching very expensive", () => {
@@ -189,7 +189,7 @@ describe("edge cases: extreme and boundary values (v2)", () => {
 	});
 
 	it("massive evidence count: 100 items across 6 domains", () => {
-		const domains: LifeDomain[] = ["work", "relationships", "family", "leisure", "solo", "other"];
+		const domains: LifeDomain[] = ["work", "relationships", "family", "leisure", "health", "other"];
 		const strengths: Array<"weak" | "moderate" | "strong"> = ["weak", "moderate", "strong"];
 		const confidences: Array<"low" | "medium" | "high"> = ["low", "medium", "high"];
 		const evidence: EvidenceInput[] = Array.from({ length: 100 }, (_, i) =>

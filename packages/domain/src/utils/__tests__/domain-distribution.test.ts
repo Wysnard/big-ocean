@@ -10,7 +10,6 @@ describe("aggregateDomainDistribution", () => {
 			relationships: 0,
 			family: 0,
 			leisure: 0,
-			solo: 0,
 			health: 0,
 			other: 0,
 		});
@@ -38,7 +37,6 @@ describe("aggregateDomainDistribution", () => {
 		expect(result.relationships).toBe(0);
 		expect(result.family).toBe(0);
 		expect(result.leisure).toBe(0);
-		expect(result.solo).toBe(0);
 		expect(result.health).toBe(0);
 		expect(result.other).toBe(0);
 	});
@@ -79,17 +77,22 @@ describe("aggregateDomainDistribution", () => {
 		expect(result.relationships).toBe(1);
 		expect(result.leisure).toBe(1);
 		expect(result.family).toBe(0);
-		expect(result.solo).toBe(0);
 		expect(result.health).toBe(0);
 		expect(result.other).toBe(0);
 	});
 
-	it("always returns all 7 domain keys (including solo for backward compat)", () => {
+	it("always returns all 6 domain keys", () => {
 		const evidence: EvidenceInput[] = [
-			{ bigfiveFacet: "anxiety", deviation: -2, strength: "weak", confidence: "low", domain: "solo" },
+			{
+				bigfiveFacet: "anxiety",
+				deviation: -2,
+				strength: "weak",
+				confidence: "low",
+				domain: "health",
+			},
 		];
 		const result = aggregateDomainDistribution(evidence);
 		const keys = Object.keys(result).sort();
-		expect(keys).toEqual(["family", "health", "leisure", "other", "relationships", "solo", "work"]);
+		expect(keys).toEqual(["family", "health", "leisure", "other", "relationships", "work"]);
 	});
 });

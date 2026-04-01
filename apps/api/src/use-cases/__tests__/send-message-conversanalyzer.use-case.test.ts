@@ -159,7 +159,7 @@ describe("sendMessage Use Case", () => {
 								deviation: -2,
 								strength: "weak",
 								confidence: "low",
-								domain: "solo",
+								domain: "health",
 								note: "Calm",
 							},
 							{
@@ -272,7 +272,6 @@ describe("sendMessage Use Case", () => {
 					relationships: 0,
 					family: 0,
 					leisure: 0,
-					solo: 0,
 					health: 0,
 					other: 0,
 				});

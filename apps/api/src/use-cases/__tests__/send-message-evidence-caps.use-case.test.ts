@@ -38,7 +38,7 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 								deviation: -1,
 								strength: "weak",
 								confidence: "low",
-								domain: "solo",
+								domain: "health",
 								note: "Low anxiety",
 							},
 							// finalWeight: 0.3 * 0.6 = 0.18 — below threshold, dropped
@@ -145,7 +145,7 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 								deviation: 2,
 								strength: "strong",
 								confidence: "high",
-								domain: "solo",
+								domain: "health",
 								note: "Disciplined",
 							},
 							{
@@ -187,7 +187,7 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 								deviation: -1,
 								strength: "weak",
 								confidence: "low",
-								domain: "solo",
+								domain: "health",
 								note: "Low anxiety",
 							},
 							{
