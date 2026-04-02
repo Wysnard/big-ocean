@@ -55,8 +55,10 @@ export const mockNerinRepo = {
 };
 
 export const mockConversanalyzerRepo = {
-	analyze: vi.fn(),
-	analyzeLenient: vi.fn(),
+	analyzeUserState: vi.fn(),
+	analyzeUserStateLenient: vi.fn(),
+	analyzeEvidence: vi.fn(),
+	analyzeEvidenceLenient: vi.fn(),
 };
 
 export const mockEvidenceRepo = {
@@ -354,8 +356,30 @@ export function setupDefaultMocks() {
 
 	mockNerinRepo.invoke.mockReturnValue(Effect.succeed(mockNerinResponse));
 
-	mockConversanalyzerRepo.analyze.mockReturnValue(Effect.succeed(mockConversanalyzerOutput));
-	mockConversanalyzerRepo.analyzeLenient.mockReturnValue(Effect.succeed(mockConversanalyzerOutput));
+	mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
+		Effect.succeed({
+			userState: mockConversanalyzerOutput.userState,
+			tokenUsage: { input: 100, output: 25 },
+		}),
+	);
+	mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(
+		Effect.succeed({
+			userState: mockConversanalyzerOutput.userState,
+			tokenUsage: { input: 100, output: 25 },
+		}),
+	);
+	mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
+		Effect.succeed({
+			evidence: mockConversanalyzerOutput.evidence,
+			tokenUsage: { input: 100, output: 25 },
+		}),
+	);
+	mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(
+		Effect.succeed({
+			evidence: mockConversanalyzerOutput.evidence,
+			tokenUsage: { input: 100, output: 25 },
+		}),
+	);
 
 	mockEvidenceRepo.save.mockReturnValue(Effect.succeed(undefined));
 	mockEvidenceRepo.findBySession.mockReturnValue(Effect.succeed([]));

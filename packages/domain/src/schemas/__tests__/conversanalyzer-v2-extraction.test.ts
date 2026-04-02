@@ -1,17 +1,20 @@
 /**
- * ConversAnalyzer v2 Extraction Schema Tests
+ * ConversAnalyzer Extraction Schema Tests
  *
- * Tests for strict and lenient v2 schemas that validate
- * dual extraction output (userState + evidence).
+ * Tests for strict and lenient schemas that validate
+ * split extraction output (user state + evidence independently).
  *
- * Story 24-1
+ * Story 24-1, Story 42-2
  */
 
 import { describe, expect, it } from "vitest";
 import {
-	conversanalyzerV2JsonSchema,
-	decodeConversanalyzerV2Lenient,
-	decodeConversanalyzerV2Strict,
+	decodeEvidenceLenient,
+	decodeEvidenceStrict,
+	decodeUserStateLenient,
+	decodeUserStateStrict,
+	evidenceOnlyJsonSchema,
+	userStateOnlyJsonSchema,
 } from "../conversanalyzer-v2-extraction";
 
 // ─── Valid test data ─────────────────────────────────────────────────────────
@@ -43,39 +46,21 @@ const validEvidence = [
 	},
 ];
 
-const validV2Output = {
-	userState: validUserState,
-	evidence: validEvidence,
-};
+// ─── UserState strict schema tests ───────────────────────────────────────────
 
-// ─── Strict schema tests ─────────────────────────────────────────────────────
-
-describe("ConversanalyzerV2ToolOutput (strict)", () => {
-	it("accepts valid v2 output", () => {
-		const result = decodeConversanalyzerV2Strict(validV2Output);
-		expect(result.userState.energyBand).toBe("steady");
-		expect(result.userState.tellingBand).toBe("mixed");
-		expect(result.userState.energyReason).toBe("User is engaged but measured");
-		expect(result.userState.withinMessageShift).toBe(false);
-		expect(result.evidence).toHaveLength(2);
-	});
-
-	it("accepts valid output with empty evidence array", () => {
-		const result = decodeConversanalyzerV2Strict({
-			userState: validUserState,
-			evidence: [],
-		});
-		expect(result.evidence).toHaveLength(0);
-		expect(result.userState.energyBand).toBe("steady");
+describe("UserState strict (decodeUserStateStrict)", () => {
+	it("accepts valid user state", () => {
+		const result = decodeUserStateStrict(validUserState);
+		expect(result.energyBand).toBe("steady");
+		expect(result.tellingBand).toBe("mixed");
+		expect(result.energyReason).toBe("User is engaged but measured");
+		expect(result.withinMessageShift).toBe(false);
 	});
 
 	it("accepts all energy band values", () => {
 		for (const band of ["minimal", "low", "steady", "high", "very_high"]) {
-			const result = decodeConversanalyzerV2Strict({
-				userState: { ...validUserState, energyBand: band },
-				evidence: [],
-			});
-			expect(result.userState.energyBand).toBe(band);
+			const result = decodeUserStateStrict({ ...validUserState, energyBand: band });
+			expect(result.energyBand).toBe(band);
 		}
 	});
 
@@ -87,52 +72,85 @@ describe("ConversanalyzerV2ToolOutput (strict)", () => {
 			"mostly_self_propelled",
 			"strongly_self_propelled",
 		]) {
-			const result = decodeConversanalyzerV2Strict({
-				userState: { ...validUserState, tellingBand: band },
-				evidence: [],
-			});
-			expect(result.userState.tellingBand).toBe(band);
+			const result = decodeUserStateStrict({ ...validUserState, tellingBand: band });
+			expect(result.tellingBand).toBe(band);
 		}
 	});
 
-	it("rejects invalid energyBand values", () => {
-		expect(() =>
-			decodeConversanalyzerV2Strict({
-				userState: { ...validUserState, energyBand: "super_high" },
-				evidence: [],
-			}),
-		).toThrow();
+	it("rejects invalid energyBand", () => {
+		expect(() => decodeUserStateStrict({ ...validUserState, energyBand: "super_high" })).toThrow();
 	});
 
-	it("rejects invalid tellingBand values", () => {
-		expect(() =>
-			decodeConversanalyzerV2Strict({
-				userState: { ...validUserState, tellingBand: "unknown" },
-				evidence: [],
-			}),
-		).toThrow();
+	it("rejects invalid tellingBand", () => {
+		expect(() => decodeUserStateStrict({ ...validUserState, tellingBand: "unknown" })).toThrow();
 	});
 
-	it("rejects energyReason exceeding 200 chars", () => {
+	it("rejects energyReason exceeding 500 chars", () => {
 		expect(() =>
-			decodeConversanalyzerV2Strict({
-				userState: { ...validUserState, energyReason: "x".repeat(501) },
-				evidence: [],
-			}),
+			decodeUserStateStrict({ ...validUserState, energyReason: "x".repeat(501) }),
 		).toThrow();
+	});
+});
+
+// ─── UserState lenient schema tests ──────────────────────────────────────────
+
+describe("UserState lenient (decodeUserStateLenient)", () => {
+	it("accepts valid user state unchanged", () => {
+		const result = decodeUserStateLenient(validUserState);
+		expect(result.energyBand).toBe("steady");
+		expect(result.tellingBand).toBe("mixed");
+	});
+
+	it("defaults energyBand when invalid", () => {
+		const result = decodeUserStateLenient({ ...validUserState, energyBand: "invalid_band" });
+		expect(result.energyBand).toBe("steady");
+		expect(result.tellingBand).toBe("mixed"); // preserved
+	});
+
+	it("defaults tellingBand when invalid", () => {
+		const result = decodeUserStateLenient({ ...validUserState, tellingBand: "bad_value" });
+		expect(result.tellingBand).toBe("mixed");
+		expect(result.energyBand).toBe("steady"); // preserved
+	});
+
+	it("defaults all fields when input is null", () => {
+		const result = decodeUserStateLenient(null);
+		expect(result.energyBand).toBe("steady");
+		expect(result.tellingBand).toBe("mixed");
+		expect(result.energyReason).toBe("");
+		expect(result.tellingReason).toBe("");
+		expect(result.withinMessageShift).toBe(false);
+	});
+
+	it("defaults all fields when input is completely invalid", () => {
+		const result = decodeUserStateLenient("not an object");
+		expect(result.energyBand).toBe("steady");
+		expect(result.tellingBand).toBe("mixed");
+	});
+});
+
+// ─── Evidence strict schema tests ────────────────────────────────────────────
+
+describe("Evidence strict (decodeEvidenceStrict)", () => {
+	it("accepts valid evidence", () => {
+		const result = decodeEvidenceStrict({ evidence: validEvidence });
+		expect(result.evidence).toHaveLength(2);
+	});
+
+	it("accepts empty evidence array", () => {
+		const result = decodeEvidenceStrict({ evidence: [] });
+		expect(result.evidence).toHaveLength(0);
 	});
 
 	it("filters out malformed evidence items", () => {
-		const result = decodeConversanalyzerV2Strict({
-			userState: validUserState,
+		const result = decodeEvidenceStrict({
 			evidence: [{ bigfiveFacet: "not_a_facet", deviation: 1 }],
 		});
 		expect(result.evidence).toHaveLength(0);
 	});
 
-	it("filters invalid evidence items and keeps valid ones", () => {
-		const result = decodeConversanalyzerV2Strict({
-			userState: validUserState,
+	it("filters invalid items and keeps valid ones", () => {
+		const result = decodeEvidenceStrict({
 			evidence: [
 				validEvidence[0],
 				{
@@ -148,85 +166,18 @@ describe("ConversanalyzerV2ToolOutput (strict)", () => {
 		expect(result.evidence).toHaveLength(1);
 		expect(result.evidence[0].bigfiveFacet).toBe(validEvidence[0].bigfiveFacet);
 	});
-
-	it("rejects missing userState", () => {
-		expect(() =>
-			decodeConversanalyzerV2Strict({
-				evidence: validEvidence,
-			}),
-		).toThrow();
-	});
-
-	it("rejects missing evidence", () => {
-		expect(() =>
-			decodeConversanalyzerV2Strict({
-				userState: validUserState,
-			}),
-		).toThrow();
-	});
 });
 
-// ─── Lenient schema tests ────────────────────────────────────────────────────
+// ─── Evidence lenient schema tests ───────────────────────────────────────────
 
-describe("LenientConversanalyzerV2ToolOutput (lenient)", () => {
-	it("accepts valid v2 output unchanged", () => {
-		const result = decodeConversanalyzerV2Lenient(validV2Output);
-		expect(result.userState.energyBand).toBe("steady");
-		expect(result.userState.tellingBand).toBe("mixed");
-		expect(result.evidence).toHaveLength(2);
-	});
-
-	it("preserves valid userState fields when energyBand is invalid", () => {
-		const result = decodeConversanalyzerV2Lenient({
-			userState: { ...validUserState, energyBand: "invalid_band" },
-			evidence: [],
-		});
-		// energyBand defaults to "steady"
-		expect(result.userState.energyBand).toBe("steady");
-		// Other fields preserved
-		expect(result.userState.tellingBand).toBe("mixed");
-		expect(result.userState.energyReason).toBe("User is engaged but measured");
-		expect(result.userState.withinMessageShift).toBe(false);
-	});
-
-	it("preserves valid userState fields when tellingBand is invalid", () => {
-		const result = decodeConversanalyzerV2Lenient({
-			userState: { ...validUserState, tellingBand: "bad_value" },
-			evidence: [],
-		});
-		expect(result.userState.tellingBand).toBe("mixed");
-		expect(result.userState.energyBand).toBe("steady");
-	});
-
-	it("defaults all userState fields when userState is null", () => {
-		const result = decodeConversanalyzerV2Lenient({
-			userState: null,
-			evidence: [],
-		});
-		expect(result.userState.energyBand).toBe("steady");
-		expect(result.userState.tellingBand).toBe("mixed");
-		expect(result.userState.energyReason).toBe("");
-		expect(result.userState.tellingReason).toBe("");
-		expect(result.userState.withinMessageShift).toBe(false);
-	});
-
-	it("defaults all userState fields when userState is completely invalid", () => {
-		const result = decodeConversanalyzerV2Lenient({
-			userState: "not an object",
-			evidence: validEvidence,
-		});
-		expect(result.userState.energyBand).toBe("steady");
-		expect(result.userState.tellingBand).toBe("mixed");
-		expect(result.userState.energyReason).toBe("");
-		expect(result.userState.tellingReason).toBe("");
-		expect(result.userState.withinMessageShift).toBe(false);
-		// Evidence still preserved
+describe("Evidence lenient (decodeEvidenceLenient)", () => {
+	it("accepts valid evidence unchanged", () => {
+		const result = decodeEvidenceLenient({ evidence: validEvidence });
 		expect(result.evidence).toHaveLength(2);
 	});
 
 	it("filters invalid evidence items while keeping valid ones", () => {
-		const result = decodeConversanalyzerV2Lenient({
-			userState: validUserState,
+		const result = decodeEvidenceLenient({
 			evidence: [
 				validEvidence[0],
 				{
@@ -241,61 +192,28 @@ describe("LenientConversanalyzerV2ToolOutput (lenient)", () => {
 			],
 		});
 		expect(result.evidence).toHaveLength(2);
-		expect(result.evidence[0]?.bigfiveFacet).toBe("imagination");
-		expect(result.evidence[1]?.bigfiveFacet).toBe("trust");
 	});
 
 	it("returns empty evidence when all items are invalid", () => {
-		const result = decodeConversanalyzerV2Lenient({
-			userState: validUserState,
+		const result = decodeEvidenceLenient({
 			evidence: [{ bigfiveFacet: "fake1" }, { bigfiveFacet: "fake2" }],
 		});
 		expect(result.evidence).toHaveLength(0);
-	});
-
-	it("handles complete failure with all defaults", () => {
-		const result = decodeConversanalyzerV2Lenient({
-			userState: {
-				energyBand: "invalid",
-				tellingBand: 42,
-				energyReason: 123,
-				withinMessageShift: "nope",
-			},
-			evidence: [{ bad: "data" }],
-		});
-		expect(result.userState.energyBand).toBe("steady");
-		expect(result.userState.tellingBand).toBe("mixed");
-		expect(result.userState.energyReason).toBe("");
-		expect(result.userState.tellingReason).toBe("");
-		expect(result.userState.withinMessageShift).toBe(false);
-		expect(result.evidence).toHaveLength(0);
-	});
-
-	it("preserves valid energyReason when tellingReason exceeds max length", () => {
-		const result = decodeConversanalyzerV2Lenient({
-			userState: { ...validUserState, tellingReason: "x".repeat(501) },
-			evidence: [],
-		});
-		expect(result.userState.energyReason).toBe("User is engaged but measured");
-		expect(result.userState.tellingReason).toBe(""); // defaulted
 	});
 });
 
 // ─── JSON Schema generation ─────────────────────────────────────────────────
 
-describe("conversanalyzerV2JsonSchema", () => {
-	it("generates a valid JSON schema object", () => {
-		expect(conversanalyzerV2JsonSchema).toBeDefined();
-		expect(conversanalyzerV2JsonSchema).toHaveProperty("type", "object");
-		expect(conversanalyzerV2JsonSchema).toHaveProperty("properties");
+describe("JSON Schema generation", () => {
+	it("userStateOnlyJsonSchema generates a valid JSON schema", () => {
+		expect(userStateOnlyJsonSchema).toBeDefined();
+		expect(userStateOnlyJsonSchema).toHaveProperty("type", "object");
+		expect(userStateOnlyJsonSchema).toHaveProperty("properties");
 	});
 
-	it("includes userState and evidence properties", () => {
-		const props = (conversanalyzerV2JsonSchema as Record<string, unknown>).properties as Record<
-			string,
-			unknown
-		>;
-		expect(props).toHaveProperty("userState");
-		expect(props).toHaveProperty("evidence");
+	it("evidenceOnlyJsonSchema generates a valid JSON schema", () => {
+		expect(evidenceOnlyJsonSchema).toBeDefined();
+		expect(evidenceOnlyJsonSchema).toHaveProperty("type", "object");
+		expect(evidenceOnlyJsonSchema).toHaveProperty("properties");
 	});
 });

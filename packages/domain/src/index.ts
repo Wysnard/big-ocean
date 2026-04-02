@@ -188,15 +188,15 @@ export {
 	type DropOffSession,
 	type RecaptureEligibleSession,
 } from "./repositories/assessment-session.repository";
-// Conversanalyzer repository (Story 10.2, v2 Story 24-1)
+// Conversanalyzer repository (Story 10.2, Story 24-1, Story 42-2)
 export {
 	ConversanalyzerError,
+	type ConversanalyzerEvidenceOutput,
 	type ConversanalyzerInput,
-	type ConversanalyzerOutput,
 	ConversanalyzerRepository,
 	type ConversanalyzerUserState,
+	type ConversanalyzerUserStateOutput,
 	type ConversanalyzerV2Output,
-	type ObservedEnergyLevel,
 } from "./repositories/conversanalyzer.repository";
 // Conversation evidence repository (Story 10.1)
 export {
@@ -300,16 +300,22 @@ export {
 } from "./schemas/assessment-message";
 // Big Five name schemas — typed literal schemas for TraitName and FacetName
 export { FacetNameSchema, TraitNameSchema } from "./schemas/big-five-schemas";
-// ConversAnalyzer v2 extraction schemas (Story 24-1)
+// ConversAnalyzer extraction schemas (Story 24-1, Story 42-2)
 export {
-	type ConversanalyzerV2Extraction,
-	ConversanalyzerV2ToolOutput,
-	conversanalyzerV2JsonSchema,
-	decodeConversanalyzerV2Lenient,
-	decodeConversanalyzerV2Strict,
-	LenientConversanalyzerV2ToolOutput,
+	decodeEvidenceLenient,
+	decodeEvidenceStrict,
+	decodeUserStateLenient,
+	decodeUserStateStrict,
+	type EvidenceOnlyExtraction,
+	EvidenceOnlyToolOutput,
+	evidenceOnlyJsonSchema,
+	LenientEvidenceOnlyToolOutput,
+	LenientUserStateOnlyToolOutput,
 	type UserState,
+	type UserStateOnlyExtraction,
+	UserStateOnlyToolOutput,
 	UserStateSchema,
+	userStateOnlyJsonSchema,
 } from "./schemas/conversanalyzer-v2-extraction";
 // Evidence extraction schemas — ConversAnalyzer structured output with lenient filtering
 export {

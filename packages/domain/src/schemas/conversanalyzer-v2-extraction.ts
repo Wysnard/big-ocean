@@ -1,14 +1,14 @@
 /**
- * ConversAnalyzer v2 Extraction Schemas
+ * ConversAnalyzer Extraction Schemas
  *
- * Effect Schema definitions for ConversAnalyzer v2 structured output.
- * v2 adds dual extraction: userState (energy + telling) alongside evidence.
+ * Effect Schema definitions for split ConversAnalyzer structured output.
+ * Two independent LLM calls: user state + evidence.
  *
- * Provides:
+ * Provides per-call:
  * - Strict schema: all-or-nothing validation (for Tier 1 retry)
  * - Lenient schema: independent field parsing with defaults (for Tier 2 fallback)
  *
- * Story 24-1: ConversAnalyzer v2 Schemas & Repository Methods
+ * Story 24-1, Story 42-2 (split calls)
  */
 
 import { Either, JSONSchema } from "effect";
@@ -30,54 +30,6 @@ export const UserStateSchema = S.Struct({
 
 export type UserState = S.Schema.Type<typeof UserStateSchema>;
 
-// ─── Strict schema (userState all-or-nothing, evidence filters invalid items) ─
-
-/**
- * Raw input schema for strict decode: userState is validated all-or-nothing,
- * evidence items are filtered individually (one bad item doesn't reject the batch).
- */
-const RawStrictV2Schema = S.Struct({
-	userState: UserStateSchema,
-	evidence: S.Array(S.Unknown),
-});
-
-/** Decoded output type for both strict and lenient paths */
-const DecodedV2Schema = S.Struct({
-	userState: UserStateSchema,
-	evidence: S.Array(EvidenceItemSchema),
-});
-
-export const ConversanalyzerV2ToolOutput = S.transformOrFail(RawStrictV2Schema, DecodedV2Schema, {
-	strict: true,
-	decode: (raw) => {
-		const decodeItem = S.decodeUnknownEither(EvidenceItemSchema);
-		const validItems: Array<EvidenceItem> = [];
-		for (const item of raw.evidence) {
-			const result = decodeItem(item);
-			if (Either.isRight(result)) {
-				validItems.push(result.right);
-			}
-		}
-		return ParseResult.succeed({
-			userState: raw.userState,
-			evidence: validItems,
-		});
-	},
-	encode: (typed) => ParseResult.succeed(typed),
-});
-
-export type ConversanalyzerV2Extraction = S.Schema.Type<typeof DecodedV2Schema>;
-
-/** JSON Schema for Anthropic tool input_schema (v2) — uses Literal enum for bigfiveFacet */
-export const conversanalyzerV2JsonSchema = JSONSchema.make(
-	S.Struct({
-		userState: UserStateSchema,
-		evidence: S.Array(EvidenceItemJsonSchemaSource),
-	}),
-);
-
-// ─── Lenient schema (independent parsing with defaults) ──────────────────────
-
 /** Default userState values for lenient fallback */
 const DEFAULT_USER_STATE: UserState = {
 	energyBand: "steady",
@@ -87,28 +39,31 @@ const DEFAULT_USER_STATE: UserState = {
 	withinMessageShift: false,
 };
 
-/** Raw schema that accepts unknown userState fields and evidence items */
-const RawV2ExtractionSchema = S.Struct({
-	userState: S.Unknown,
-	evidence: S.Array(S.Unknown),
-});
+// ─── UserState-only schemas ─────────────────────────────────────────────────
 
-/**
- * Lenient v2 schema that parses userState fields independently and
- * filters invalid evidence items instead of rejecting the entire extraction.
- *
- * - Valid userState fields are kept; invalid fields get defaults
- * - Invalid evidence items are discarded; valid items are kept
- * - Partial success is preserved on both sides
- */
-export const LenientConversanalyzerV2ToolOutput = S.transformOrFail(
-	RawV2ExtractionSchema,
-	DecodedV2Schema,
+// --- UserState-only strict schema ---
+
+export const UserStateOnlyToolOutput = UserStateSchema;
+
+export type UserStateOnlyExtraction = S.Schema.Type<typeof UserStateSchema>;
+
+/** JSON Schema for Anthropic tool input_schema — user state only */
+export const userStateOnlyJsonSchema = JSONSchema.make(UserStateSchema);
+
+// --- UserState-only lenient schema ---
+
+/** Raw schema that accepts unknown fields for lenient user state parsing */
+const RawUserStateOnlySchema = S.Unknown;
+
+const DecodedUserStateOnlySchema = UserStateSchema;
+
+export const LenientUserStateOnlyToolOutput = S.transformOrFail(
+	RawUserStateOnlySchema,
+	DecodedUserStateOnlySchema,
 	{
 		strict: true,
 		decode: (raw) => {
-			// Parse userState fields independently, building a mutable draft
-			const rawState = raw.userState as Record<string, unknown> | null | undefined;
+			const rawState = raw as Record<string, unknown> | null | undefined;
 
 			let energyBand = DEFAULT_USER_STATE.energyBand;
 			let tellingBand = DEFAULT_USER_STATE.tellingBand;
@@ -144,15 +99,40 @@ export const LenientConversanalyzerV2ToolOutput = S.transformOrFail(
 				}
 			}
 
-			const parsedState: UserState = {
+			return ParseResult.succeed({
 				energyBand,
 				tellingBand,
 				energyReason,
 				tellingReason,
 				withinMessageShift,
-			};
+			} satisfies UserState);
+		},
+		encode: (typed) => ParseResult.succeed(typed as unknown),
+	},
+);
 
-			// Filter evidence items individually (FacetNameSchema handles remap)
+/** Decode user state with strict schema — all-or-nothing */
+export const decodeUserStateStrict = S.decodeUnknownSync(UserStateOnlyToolOutput);
+
+/** Decode user state with lenient schema — independent field parsing with defaults */
+export const decodeUserStateLenient = S.decodeUnknownSync(LenientUserStateOnlyToolOutput);
+
+// --- Evidence-only strict schema ---
+
+const RawStrictEvidenceOnlySchema = S.Struct({
+	evidence: S.Array(S.Unknown),
+});
+
+const DecodedEvidenceOnlySchema = S.Struct({
+	evidence: S.Array(EvidenceItemSchema),
+});
+
+export const EvidenceOnlyToolOutput = S.transformOrFail(
+	RawStrictEvidenceOnlySchema,
+	DecodedEvidenceOnlySchema,
+	{
+		strict: true,
+		decode: (raw) => {
 			const decodeItem = S.decodeUnknownEither(EvidenceItemSchema);
 			const validItems: Array<EvidenceItem> = [];
 			for (const item of raw.evidence) {
@@ -161,22 +141,49 @@ export const LenientConversanalyzerV2ToolOutput = S.transformOrFail(
 					validItems.push(result.right);
 				}
 			}
-
-			return ParseResult.succeed({
-				userState: parsedState,
-				evidence: validItems,
-			});
+			return ParseResult.succeed({ evidence: validItems });
 		},
-		encode: (typed) => ParseResult.succeed({ ...typed, userState: typed.userState as unknown }),
+		encode: (typed) => ParseResult.succeed(typed),
 	},
 );
 
-// ─── Decode helpers ──────────────────────────────────────────────────────────
+export type EvidenceOnlyExtraction = S.Schema.Type<typeof DecodedEvidenceOnlySchema>;
 
-/** Decode with strict schema — all-or-nothing */
-export const decodeConversanalyzerV2Strict = S.decodeUnknownSync(ConversanalyzerV2ToolOutput);
-
-/** Decode with lenient schema — independent field parsing with defaults */
-export const decodeConversanalyzerV2Lenient = S.decodeUnknownSync(
-	LenientConversanalyzerV2ToolOutput,
+/** JSON Schema for Anthropic tool input_schema — evidence only */
+export const evidenceOnlyJsonSchema = JSONSchema.make(
+	S.Struct({
+		evidence: S.Array(EvidenceItemJsonSchemaSource),
+	}),
 );
+
+// --- Evidence-only lenient schema ---
+
+const RawLenientEvidenceOnlySchema = S.Struct({
+	evidence: S.Array(S.Unknown),
+});
+
+export const LenientEvidenceOnlyToolOutput = S.transformOrFail(
+	RawLenientEvidenceOnlySchema,
+	DecodedEvidenceOnlySchema,
+	{
+		strict: true,
+		decode: (raw) => {
+			const decodeItem = S.decodeUnknownEither(EvidenceItemSchema);
+			const validItems: Array<EvidenceItem> = [];
+			for (const item of raw.evidence) {
+				const result = decodeItem(item);
+				if (Either.isRight(result)) {
+					validItems.push(result.right);
+				}
+			}
+			return ParseResult.succeed({ evidence: validItems });
+		},
+		encode: (typed) => ParseResult.succeed(typed),
+	},
+);
+
+/** Decode evidence with strict schema */
+export const decodeEvidenceStrict = S.decodeUnknownSync(EvidenceOnlyToolOutput);
+
+/** Decode evidence with lenient schema — filters invalid items */
+export const decodeEvidenceLenient = S.decodeUnknownSync(LenientEvidenceOnlyToolOutput);

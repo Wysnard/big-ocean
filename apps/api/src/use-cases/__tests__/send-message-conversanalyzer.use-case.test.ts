@@ -44,7 +44,9 @@ describe("sendMessage Use Case", () => {
 				});
 
 				expect(result.response).toBeDefined();
-				expect(mockConversanalyzerRepo.analyze).toHaveBeenCalledTimes(1);
+				// Split extraction: both methods called
+				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
+				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
@@ -60,8 +62,9 @@ describe("sendMessage Use Case", () => {
 					message: "Hello",
 				});
 
-				// ConversAnalyzer should be called even during cold start
-				expect(mockConversanalyzerRepo.analyze).toHaveBeenCalledTimes(1);
+				// ConversAnalyzer split methods should be called even during cold start
+				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
+				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
@@ -85,7 +88,8 @@ describe("sendMessage Use Case", () => {
 					message: "More",
 				});
 
-				expect(mockConversanalyzerRepo.analyze).toHaveBeenCalledTimes(1);
+				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
+				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
@@ -94,10 +98,13 @@ describe("sendMessage Use Case", () => {
 			() =>
 				Effect.gen(function* () {
 					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-					mockConversanalyzerRepo.analyze.mockReturnValue(
+					// Fail strict calls — lenient methods succeed from default setup
+					mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
 						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
 					);
-					// analyzeLenient succeeds from default setup — Tier 2 fallback
+					mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
+						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
+					);
 
 					const result = yield* sendMessage({
 						sessionId: "session_test_123",
@@ -107,9 +114,9 @@ describe("sendMessage Use Case", () => {
 					// Nerin should still respond normally
 					expect(result.response).toBe(mockNerinResponse.response);
 					expect(mockNerinRepo.invoke).toHaveBeenCalled();
-					// Tier 2 warning was logged (three-tier pipeline, Story 24-2)
+					// Tier 2 warning was logged (split three-tier pipeline)
 					expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
-						"ConversAnalyzer fell back to Tier 2 (lenient schema)",
+						expect.stringContaining("fell back to Tier 2"),
 						expect.objectContaining({ sessionId: "session_test_123" }),
 					);
 				}).pipe(Effect.provide(createTestLayer())),
@@ -118,74 +125,68 @@ describe("sendMessage Use Case", () => {
 		it.effect("should filter evidence by weight threshold (AC: #9)", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				mockConversanalyzerRepo.analyze.mockReturnValue(
+				const customEvidence = [
+					{
+						bigfiveFacet: "imagination" as const,
+						deviation: 2,
+						strength: "strong" as const,
+						confidence: "high" as const,
+						domain: "work" as const,
+						note: "Creative",
+					},
+					{
+						bigfiveFacet: "trust" as const,
+						deviation: 1,
+						strength: "moderate" as const,
+						confidence: "medium" as const,
+						domain: "relationships" as const,
+						note: "Trusting",
+					},
+					{
+						bigfiveFacet: "orderliness" as const,
+						deviation: -1,
+						strength: "moderate" as const,
+						confidence: "high" as const,
+						domain: "work" as const,
+						note: "Structured",
+					},
+					{
+						bigfiveFacet: "cheerfulness" as const,
+						deviation: 2,
+						strength: "strong" as const,
+						confidence: "medium" as const,
+						domain: "leisure" as const,
+						note: "Joyful",
+					},
+					{
+						// finalWeight: 0.3 * 0.3 = 0.09 — below threshold, dropped
+						bigfiveFacet: "anxiety" as const,
+						deviation: -2,
+						strength: "weak" as const,
+						confidence: "low" as const,
+						domain: "health" as const,
+						note: "Calm",
+					},
+					{
+						bigfiveFacet: "intellect" as const,
+						deviation: 1,
+						strength: "moderate" as const,
+						confidence: "medium" as const,
+						domain: "work" as const,
+						note: "Curious",
+					},
+					{
+						bigfiveFacet: "altruism" as const,
+						deviation: 3,
+						strength: "strong" as const,
+						confidence: "high" as const,
+						domain: "family" as const,
+						note: "Giving",
+					},
+				];
+				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
 					Effect.succeed({
-						evidence: [
-							{
-								bigfiveFacet: "imagination",
-								deviation: 2,
-								strength: "strong",
-								confidence: "high",
-								domain: "work",
-								note: "Creative",
-							},
-							{
-								bigfiveFacet: "trust",
-								deviation: 1,
-								strength: "moderate",
-								confidence: "medium",
-								domain: "relationships",
-								note: "Trusting",
-							},
-							{
-								bigfiveFacet: "orderliness",
-								deviation: -1,
-								strength: "moderate",
-								confidence: "high",
-								domain: "work",
-								note: "Structured",
-							},
-							{
-								bigfiveFacet: "cheerfulness",
-								deviation: 2,
-								strength: "strong",
-								confidence: "medium",
-								domain: "leisure",
-								note: "Joyful",
-							},
-							{
-								// finalWeight: 0.3 * 0.3 = 0.09 — below threshold, dropped
-								bigfiveFacet: "anxiety",
-								deviation: -2,
-								strength: "weak",
-								confidence: "low",
-								domain: "health",
-								note: "Calm",
-							},
-							{
-								bigfiveFacet: "intellect",
-								deviation: 1,
-								strength: "moderate",
-								confidence: "medium",
-								domain: "work",
-								note: "Curious",
-							},
-							{
-								bigfiveFacet: "altruism",
-								deviation: 3,
-								strength: "strong",
-								confidence: "high",
-								domain: "family",
-								note: "Giving",
-							},
-						],
-						userState: {
-							energyBand: "steady" as const,
-							tellingBand: "mixed" as const,
-							energyReason: "",
-							tellingReason: "",
-							withinMessageShift: false,
-						},
+						evidence: customEvidence,
 						tokenUsage: { input: 200, output: 50 },
 					}),
 				);
@@ -207,7 +208,7 @@ describe("sendMessage Use Case", () => {
 		it.effect("should skip save when conversanalyzer returns empty evidence (AC: #3)", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				mockConversanalyzerRepo.analyze.mockReturnValue(
+				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
 					Effect.succeed({
 						userState: {
 							energyBand: "low" as const,
@@ -216,6 +217,11 @@ describe("sendMessage Use Case", () => {
 							tellingReason: "",
 							withinMessageShift: false,
 						},
+						tokenUsage: { input: 100, output: 20 },
+					}),
+				);
+				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
+					Effect.succeed({
 						evidence: [],
 						tokenUsage: { input: 100, output: 20 },
 					}),
@@ -227,7 +233,8 @@ describe("sendMessage Use Case", () => {
 				});
 
 				expect(result.response).toBeDefined();
-				expect(mockConversanalyzerRepo.analyze).toHaveBeenCalledTimes(1);
+				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
+				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 				expect(mockEvidenceRepo.save).not.toHaveBeenCalled();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
@@ -266,8 +273,9 @@ describe("sendMessage Use Case", () => {
 					message: "I work in tech",
 				});
 
-				const analyzeCall = mockConversanalyzerRepo.analyze.mock.calls[0][0];
-				expect(analyzeCall.domainDistribution).toEqual({
+				// Both split methods receive correct domain distribution
+				const userStateCall = mockConversanalyzerRepo.analyzeUserState.mock.calls[0][0];
+				expect(userStateCall.domainDistribution).toEqual({
 					work: 2,
 					relationships: 0,
 					family: 0,

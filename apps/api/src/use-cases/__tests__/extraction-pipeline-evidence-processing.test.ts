@@ -27,7 +27,6 @@ import {
 } from "@workspace/domain";
 import { Effect, Layer, Redacted } from "effect";
 import { runNerinPipeline } from "../nerin-pipeline";
-import { NEUTRAL_DEFAULTS } from "../three-tier-extraction";
 
 // ---- Mock Repos ----
 
@@ -80,8 +79,10 @@ const mockNerinRepo = {
 };
 
 const mockConversanalyzerRepo = {
-	analyze: vi.fn(),
-	analyzeLenient: vi.fn(),
+	analyzeUserState: vi.fn(),
+	analyzeUserStateLenient: vi.fn(),
+	analyzeEvidence: vi.fn(),
+	analyzeEvidenceLenient: vi.fn(),
 };
 
 const mockEvidenceRepo = {
@@ -295,9 +296,29 @@ function setupDefaultMocks() {
 
 	mockNerinRepo.invoke.mockReturnValue(Effect.succeed(mockNerinResponse));
 
-	mockConversanalyzerRepo.analyze.mockReturnValue(Effect.succeed(mockConversanalyzerV2Output));
-	mockConversanalyzerRepo.analyzeLenient.mockReturnValue(
-		Effect.succeed(mockConversanalyzerV2Output),
+	mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
+		Effect.succeed({
+			userState: mockConversanalyzerV2Output.userState,
+			tokenUsage: { input: 100, output: 25 },
+		}),
+	);
+	mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(
+		Effect.succeed({
+			userState: mockConversanalyzerV2Output.userState,
+			tokenUsage: { input: 100, output: 25 },
+		}),
+	);
+	mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
+		Effect.succeed({
+			evidence: mockConversanalyzerV2Output.evidence,
+			tokenUsage: { input: 100, output: 25 },
+		}),
+	);
+	mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(
+		Effect.succeed({
+			evidence: mockConversanalyzerV2Output.evidence,
+			tokenUsage: { input: 100, output: 25 },
+		}),
 	);
 
 	mockEvidenceRepo.save.mockReturnValue(Effect.succeed(undefined));
@@ -333,8 +354,9 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 					userMessage: "I love solving complex puzzles at work",
 				});
 
-				// ConversAnalyzer should have been called with analyze()
-				expect(mockConversanalyzerRepo.analyze).toHaveBeenCalledTimes(1);
+				// ConversAnalyzer split methods should have been called
+				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
+				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 
 				// The extraction result was used to update the previous exchange with energy/telling
 				const extractionUpdate = mockExchangeRepo.update.mock.calls[0]?.[1];
@@ -506,12 +528,11 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 	describe("AC6: Fail-Open on Complete Failure", () => {
 		it.effect("no evidence saved when extraction falls to Tier 3 neutral defaults", () =>
 			Effect.gen(function* () {
-				mockConversanalyzerRepo.analyze.mockReturnValue(
-					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-				);
-				mockConversanalyzerRepo.analyzeLenient.mockReturnValue(
-					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-				);
+				const llmError = Effect.fail(new ConversanalyzerError({ message: "LLM timeout" }));
+				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(llmError);
+				mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(llmError);
+				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(llmError);
+				mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(llmError);
 
 				const result = yield* runNerinPipeline({
 					sessionId: "session_test_123",
@@ -537,38 +558,25 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 
 		it.effect("structured failure event is logged (NFR28)", () =>
 			Effect.gen(function* () {
-				mockConversanalyzerRepo.analyze.mockReturnValue(
-					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-				);
-				mockConversanalyzerRepo.analyzeLenient.mockReturnValue(
-					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-				);
+				const llmError = Effect.fail(new ConversanalyzerError({ message: "LLM timeout" }));
+				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(llmError);
+				mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(llmError);
+				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(llmError);
+				mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(llmError);
 
 				yield* runNerinPipeline({
 					sessionId: "session_test_123",
 					userMessage: "Hello",
 				});
 
-				// Tier 3 warning is logged with structured data
+				// Tier 3 warning is logged with structured data (split extraction logs per-call)
 				expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
-					"ConversAnalyzer failed at all tiers, using Tier 3 neutral defaults",
+					expect.stringContaining("failed at all tiers"),
 					expect.objectContaining({
 						sessionId: "session_test_123",
 					}),
 				);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
-	});
-
-	describe("NEUTRAL_DEFAULTS constant (Tier 3)", () => {
-		it("provides correct default values per architecture spec", () => {
-			expect(NEUTRAL_DEFAULTS.userState.energyBand).toBe("steady");
-			expect(NEUTRAL_DEFAULTS.userState.tellingBand).toBe("mixed");
-			expect(NEUTRAL_DEFAULTS.userState.withinMessageShift).toBe(false);
-			expect(NEUTRAL_DEFAULTS.userState.energyReason).toBe("");
-			expect(NEUTRAL_DEFAULTS.userState.tellingReason).toBe("");
-			expect(NEUTRAL_DEFAULTS.evidence).toEqual([]);
-			expect(NEUTRAL_DEFAULTS.tokenUsage).toEqual({ input: 0, output: 0 });
-		});
 	});
 });

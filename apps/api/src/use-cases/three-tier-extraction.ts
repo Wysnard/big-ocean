@@ -1,15 +1,20 @@
 /**
- * Three-Tier Extraction Pipeline (Story 24-2)
+ * Three-Tier Extraction Pipeline (Story 24-2, Story 42-2)
  *
- * Orchestrates ConversAnalyzer v2 extraction with graceful degradation:
- * - Tier 1: `analyze(input)` with retry (strict schema, up to 3 attempts)
- * - Tier 2: `analyzeLenient(input)` (lenient schema, 1 attempt)
+ * Orchestrates ConversAnalyzer extraction with graceful degradation:
+ * - Tier 1: strict schema with retry (up to 3 attempts)
+ * - Tier 2: lenient schema (1 attempt)
  * - Tier 3: neutral defaults (no LLM call)
  *
+ * Two independent parallel calls — user state + evidence — each with its own three-tier fallback.
  * The conversation never breaks due to extraction failure — it just becomes less steered.
  */
 
-import type { DomainDistribution } from "@workspace/domain";
+import type {
+	ConversanalyzerEvidenceOutput,
+	ConversanalyzerUserStateOutput,
+	DomainDistribution,
+} from "@workspace/domain";
 import {
 	ConversanalyzerRepository,
 	type ConversanalyzerV2Output,
@@ -33,8 +38,8 @@ export interface ThreeTierExtractionOutput {
 	readonly extractionTier: ExtractionTier;
 }
 
-/** Neutral defaults for Tier 3 fallback — no LLM call */
-export const NEUTRAL_DEFAULTS: ConversanalyzerV2Output = {
+/** Neutral defaults for user state — Tier 3 fallback */
+const USER_STATE_NEUTRAL_DEFAULTS: ConversanalyzerUserStateOutput = {
 	userState: {
 		energyBand: "steady",
 		tellingBand: "mixed",
@@ -42,20 +47,20 @@ export const NEUTRAL_DEFAULTS: ConversanalyzerV2Output = {
 		tellingReason: "",
 		withinMessageShift: false,
 	},
+	tokenUsage: { input: 0, output: 0 },
+};
+
+/** Neutral defaults for evidence — Tier 3 fallback */
+const EVIDENCE_NEUTRAL_DEFAULTS: ConversanalyzerEvidenceOutput = {
 	evidence: [],
 	tokenUsage: { input: 0, output: 0 },
 };
 
 /**
- * Run the three-tier extraction pipeline.
- *
- * Tier 1: strict schema with `Effect.retry(Schedule.recurs(2))` — 3 attempts total
- * Tier 2: lenient schema via `Effect.orElse` — 1 attempt
- * Tier 3: `Effect.catchAll` returning NEUTRAL_DEFAULTS — no LLM call
- *
- * Returns the extraction result and which tier produced it.
+ * Run user state extraction with three-tier fallback.
+ * Tier 1: strict x3 → Tier 2: lenient x1 → Tier 3: neutral defaults
  */
-export const runThreeTierExtraction = (input: ThreeTierExtractionInput) =>
+export const runUserStateExtraction = (input: ThreeTierExtractionInput) =>
 	Effect.gen(function* () {
 		const conversanalyzer = yield* ConversanalyzerRepository;
 		const logger = yield* LoggerRepository;
@@ -66,61 +71,146 @@ export const runThreeTierExtraction = (input: ThreeTierExtractionInput) =>
 			domainDistribution: input.domainDistribution,
 		};
 
-		// Tier 1: strict schema × 3 attempts (initial + 2 retries)
-		// Effect.suspend ensures analyze() is re-called on each retry attempt
-		const tier1 = Effect.suspend(() => conversanalyzer.analyze(conversanalyzerInput)).pipe(
+		const tier1 = Effect.suspend(() => conversanalyzer.analyzeUserState(conversanalyzerInput)).pipe(
 			Effect.retry(Schedule.recurs(2)),
-			Effect.map(
-				(output): ThreeTierExtractionOutput => ({
-					output,
-					extractionTier: 1 as ExtractionTier,
-				}),
-			),
+			Effect.map((output) => ({
+				output,
+				tier: 1 as ExtractionTier,
+			})),
 		);
 
-		// Orchestrate: Tier 1 → fallback to Tier 2 → fallback to Tier 3
-		const result: ThreeTierExtractionOutput = yield* tier1.pipe(
-			// Tier 2: lenient schema × 1 attempt (lazy — only runs if Tier 1 fails)
+		const result = yield* tier1.pipe(
 			Effect.catchAll((tier1Error) =>
-				conversanalyzer.analyzeLenient(conversanalyzerInput).pipe(
+				conversanalyzer.analyzeUserStateLenient(conversanalyzerInput).pipe(
 					Effect.tap(() =>
 						Effect.sync(() => {
-							logger.warn("ConversAnalyzer fell back to Tier 2 (lenient schema)", {
+							logger.warn("User state extraction fell back to Tier 2 (lenient)", {
 								sessionId: input.sessionId,
 								tier1Error: tier1Error.message,
 							});
 						}),
 					),
-					Effect.map(
-						(output): ThreeTierExtractionOutput => ({
-							output,
-							extractionTier: 2 as ExtractionTier,
-						}),
-					),
+					Effect.map((output) => ({
+						output,
+						tier: 2 as ExtractionTier,
+					})),
 				),
 			),
-			// Tier 3: neutral defaults — no LLM call (lazy — only runs if Tier 2 fails)
 			Effect.catchAll((tier2Error) =>
-				Effect.sync((): ThreeTierExtractionOutput => {
-					logger.warn("ConversAnalyzer failed at all tiers, using Tier 3 neutral defaults", {
+				Effect.sync(() => {
+					logger.warn("User state extraction failed at all tiers, using neutral defaults", {
 						sessionId: input.sessionId,
 						tier2Error: tier2Error.message,
 					});
 					return {
-						output: NEUTRAL_DEFAULTS,
-						extractionTier: 3 as ExtractionTier,
+						output: USER_STATE_NEUTRAL_DEFAULTS,
+						tier: 3 as ExtractionTier,
 					};
 				}),
 			),
 		);
 
-		logger.info("Three-tier extraction completed", {
-			sessionId: input.sessionId,
-			extractionTier: result.extractionTier,
-			evidenceCount: result.output.evidence.length,
-			energyBand: result.output.userState.energyBand,
-			tellingBand: result.output.userState.tellingBand,
-		});
+		return result;
+	});
+
+/**
+ * Run evidence extraction with three-tier fallback.
+ * Tier 1: strict x3 → Tier 2: lenient x1 → Tier 3: neutral defaults (empty array)
+ */
+export const runEvidenceExtraction = (input: ThreeTierExtractionInput) =>
+	Effect.gen(function* () {
+		const conversanalyzer = yield* ConversanalyzerRepository;
+		const logger = yield* LoggerRepository;
+
+		const conversanalyzerInput = {
+			message: input.message,
+			recentMessages: input.recentMessages,
+			domainDistribution: input.domainDistribution,
+		};
+
+		const tier1 = Effect.suspend(() => conversanalyzer.analyzeEvidence(conversanalyzerInput)).pipe(
+			Effect.retry(Schedule.recurs(2)),
+			Effect.map((output) => ({
+				output,
+				tier: 1 as ExtractionTier,
+			})),
+		);
+
+		const result = yield* tier1.pipe(
+			Effect.catchAll((tier1Error) =>
+				conversanalyzer.analyzeEvidenceLenient(conversanalyzerInput).pipe(
+					Effect.tap(() =>
+						Effect.sync(() => {
+							logger.warn("Evidence extraction fell back to Tier 2 (lenient)", {
+								sessionId: input.sessionId,
+								tier1Error: tier1Error.message,
+							});
+						}),
+					),
+					Effect.map((output) => ({
+						output,
+						tier: 2 as ExtractionTier,
+					})),
+				),
+			),
+			Effect.catchAll((tier2Error) =>
+				Effect.sync(() => {
+					logger.warn("Evidence extraction failed at all tiers, using neutral defaults", {
+						sessionId: input.sessionId,
+						tier2Error: tier2Error.message,
+					});
+					return {
+						output: EVIDENCE_NEUTRAL_DEFAULTS,
+						tier: 3 as ExtractionTier,
+					};
+				}),
+			),
+		);
 
 		return result;
+	});
+
+/**
+ * Run the split three-tier extraction pipeline.
+ *
+ * Runs user state and evidence extraction in parallel.
+ * Each call has its own independent three-tier fallback.
+ * Returns combined output compatible with ConversanalyzerV2Output.
+ */
+export const runSplitThreeTierExtraction = (input: ThreeTierExtractionInput) =>
+	Effect.gen(function* () {
+		const logger = yield* LoggerRepository;
+
+		// Run both extractions in parallel — they are fully independent
+		const [userStateResult, evidenceResult] = yield* Effect.all(
+			[runUserStateExtraction(input), runEvidenceExtraction(input)],
+			{ concurrency: 2 },
+		);
+
+		// Combine into the existing ConversanalyzerV2Output shape
+		const combined: ConversanalyzerV2Output = {
+			userState: userStateResult.output.userState,
+			evidence: evidenceResult.output.evidence,
+			tokenUsage: {
+				input: userStateResult.output.tokenUsage.input + evidenceResult.output.tokenUsage.input,
+				output: userStateResult.output.tokenUsage.output + evidenceResult.output.tokenUsage.output,
+			},
+		};
+
+		logger.info("Three-tier extraction completed", {
+			sessionId: input.sessionId,
+			userStateTier: userStateResult.tier,
+			evidenceTier: evidenceResult.tier,
+			evidenceCount: combined.evidence.length,
+			energyBand: combined.userState.energyBand,
+			tellingBand: combined.userState.tellingBand,
+		});
+
+		// Use the worst (highest) tier number for the combined extraction tier
+		const combinedTier = Math.max(userStateResult.tier, evidenceResult.tier) as ExtractionTier;
+
+		return {
+			output: combined,
+			extractionTier: combinedTier,
+		} satisfies ThreeTierExtractionOutput;
 	});

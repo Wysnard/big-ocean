@@ -1,13 +1,10 @@
 /**
- * Conversanalyzer Anthropic Repository Implementation (v2)
+ * Conversanalyzer Anthropic Repository Implementation
  *
- * Calls Claude Haiku via LangChain structured output for dual extraction:
- * 1. User state (energy band + telling band) — positioned FIRST for attention priority
- * 2. Big Five facet evidence — positioned SECOND (battle-tested, tolerates being second)
+ * Two separate Haiku calls — user state + evidence independently.
+ * Each call has its own prompt, structured output schema, and three-tier fallback.
  *
- * v2 includes six load-bearing guardrails against systematic extraction bias.
- *
- * Story 10.2 (v1), Story 24-1 (v2 evolution)
+ * Story 10.2 (v1), Story 24-1 (v2 evolution), Story 42-2 (split calls)
  */
 
 import { ChatAnthropic } from "@langchain/anthropic";
@@ -18,41 +15,34 @@ import {
 	ConversanalyzerError,
 	type ConversanalyzerInput,
 	ConversanalyzerRepository,
-	conversanalyzerV2JsonSchema,
-	decodeConversanalyzerV2Lenient,
-	decodeConversanalyzerV2Strict,
+	decodeEvidenceLenient,
+	decodeEvidenceStrict,
+	decodeUserStateLenient,
+	decodeUserStateStrict,
 	EvidenceItemSchema,
+	evidenceOnlyJsonSchema,
 	FACET_PROMPT_DEFINITIONS,
 	LIFE_DOMAIN_DEFINITIONS,
 	LoggerRepository,
+	userStateOnlyJsonSchema,
 } from "@workspace/domain";
 import { Effect, Either, Layer } from "effect";
 import * as ParseResult from "effect/ParseResult";
 import * as S from "effect/Schema";
 
-// ─── v2 Prompt ───────────────────────────────────────────────────────────────
+// ─── Prompts ─────────────────────────────────────────────────────────────────
 
-/** @internal Exported for testing — not part of public API */
-export function buildV2Prompt(input: ConversanalyzerInput): string {
-	const facetDefs = Object.entries(FACET_PROMPT_DEFINITIONS)
-		.map(([facet, def]) => `  - ${facet}: ${def}`)
-		.join("\n");
-
-	const domainDefs = Object.entries(LIFE_DOMAIN_DEFINITIONS)
-		.map(([domain, definition]) => `- ${domain}: ${definition}`)
-		.join("\n");
-
-	const domainDist = Object.entries(input.domainDistribution)
-		.map(([d, n]) => `${d}=${n}`)
-		.join(", ");
-
+/** @internal Exported for testing — user state extraction prompt */
+export function buildUserStatePrompt(input: ConversanalyzerInput): string {
 	const recentText = input.recentMessages.map((m) => `[${m.role}]: ${m.content}`).join("\n");
 
-	return `You are a dual-purpose conversational state extractor and personality evidence extractor. You will analyze the latest user message in two phases:
+	return `You are a conversational state extractor. Classify the user's conversational state along two independent axes based on the LATEST USER MESSAGE below.
 
-## PHASE 1: USER STATE EXTRACTION (energy + telling)
+### Conversation Context (for reference only)
+${recentText}
 
-Classify the user's conversational state along two independent axes.
+### Latest User Message (analyze THIS)
+[user]: ${input.message}
 
 ### Energy Band — How much emotional/cognitive resource is the user investing?
 
@@ -74,7 +64,7 @@ Energy bands (classify ONE):
 - **very_high** (0.9): Peak engagement. Profound vulnerability, formative experiences, or breakthrough insight.
   Example: "I realized I'd been running from intimacy my whole life because I watched my parents destroy each other"
 
-### ⚠️ SIX LOAD-BEARING GUARDRAILS (apply to every classification)
+### SIX LOAD-BEARING GUARDRAILS (apply to every classification)
 
 1. **Eloquence is not energy.** A beautifully written message about breakfast is still low energy. Rate the EMOTIONAL/COGNITIVE investment, not writing quality.
 
@@ -82,7 +72,7 @@ Energy bands (classify ONE):
 
 3. **Peak dimension, not average.** If ANY one dimension (emotional, cognitive, expressive, urgency) is strongly present, that is sufficient for high energy. Don't average the four dimensions — one high signal dominates.
 
-4. **Understated styles are not low energy.** A quiet person sharing something deeply personal in few words can be very_high energy. Brevity ≠ disengagement. Look at WHAT they reveal, not HOW MANY words they use.
+4. **Understated styles are not low energy.** A quiet person sharing something deeply personal in few words can be very_high energy. Brevity does not equal disengagement. Look at WHAT they reveal, not HOW MANY words they use.
 
 5. **Long detailed answer is not high telling.** Length correlates with engagement, not self-direction. A long answer that directly addresses Nerin's question is still compliant. Telling measures WHO is steering the conversation.
 
@@ -104,23 +94,38 @@ Rate along this spectrum:
 - **strongly_self_propelled** (1.0): Ignores or overrides Nerin's direction entirely.
   [Nerin]: "What's your morning like?" → [User]: "I don't want to talk about routines. Let me tell you about the argument I had with my sister"
 
-### State Output
+### Output
 - energyBand: one of the 5 bands above
 - tellingBand: one of the 5 bands above
 - energyReason: brief explanation (max 200 chars) of why you chose this energy band
 - tellingReason: brief explanation (max 200 chars) of why you chose this telling band
-- withinMessageShift: true if the user's energy noticeably shifts within the message (e.g., starts casual, ends vulnerable)
+- withinMessageShift: true if the user's energy noticeably shifts within the message (e.g., starts casual, ends vulnerable)`;
+}
 
----
+/** @internal Exported for testing — evidence extraction only (Phase 2) */
+export function buildEvidencePrompt(input: ConversanalyzerInput): string {
+	const facetDefs = Object.entries(FACET_PROMPT_DEFINITIONS)
+		.map(([facet, def]) => `  - ${facet}: ${def}`)
+		.join("\n");
 
-## PHASE 2: PERSONALITY EVIDENCE EXTRACTION
+	const domainDefs = Object.entries(LIFE_DOMAIN_DEFINITIONS)
+		.map(([domain, definition]) => `- ${domain}: ${definition}`)
+		.join("\n");
 
-Extract Big Five personality signals from the latest user message.
+	const recentText = input.recentMessages.map((m) => `[${m.role}]: ${m.content}`).join("\n");
+
+	return `You are a personality evidence extractor. Extract Big Five personality signals from the LATEST USER MESSAGE below.
+
+### Conversation Context (for reference only)
+${recentText}
+
+### Latest User Message (analyze THIS)
+[user]: ${input.message}
 
 ### Big Five Facets (30 total)
 ${facetDefs}
 
-### ⚠️ CRITICAL: Valid Facet Names — ONLY these 30 strings are accepted. Any other string will be silently rejected.
+### CRITICAL: Valid Facet Names — ONLY these 30 strings are accepted. Any other string will be silently rejected.
 imagination, artistic_interests, emotionality, adventurousness, intellect, liberalism,
 self_efficacy, orderliness, dutifulness, achievement_striving, self_discipline, cautiousness,
 friendliness, gregariousness, assertiveness, activity_level, excitement_seeking, cheerfulness,
@@ -131,13 +136,6 @@ Copy-paste from this list. If a behavior doesn't map to one of these 30 facets, 
 
 ### Life Domains
 ${domainDefs}
-
-### Current Evidence Distribution
-${domainDist}
-(Use this to be aware of domain drift. If one domain dominates, still tag accurately — but consider whether the message reveals personality in an under-represented domain.)
-
-### Conversation Context (last messages)
-${recentText}
 
 ### Evidence Instructions
 1. Focus ONLY on the latest user message for evidence extraction
@@ -185,28 +183,32 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 			temperature: 0.9,
 		});
 
-		const model = baseModel.withStructuredOutput(conversanalyzerV2JsonSchema, { includeRaw: true });
+		const userStateModel = baseModel.withStructuredOutput(userStateOnlyJsonSchema, {
+			includeRaw: true,
+		});
+		const evidenceModel = baseModel.withStructuredOutput(evidenceOnlyJsonSchema, {
+			includeRaw: true,
+		});
 
-		logger.info("Conversanalyzer v2 configured", {
+		logger.info("Conversanalyzer configured", {
 			model: config.conversanalyzerModelId,
 		});
 
 		return ConversanalyzerRepository.of({
-			analyze: (input: ConversanalyzerInput) =>
+			analyzeUserState: (input: ConversanalyzerInput) =>
 				Effect.tryPromise({
 					try: async () => {
-						const prompt = buildV2Prompt(input);
-						const invokeResult = await model.invoke([new HumanMessage(prompt)]);
+						const prompt = buildUserStatePrompt(input);
+						const invokeResult = await userStateModel.invoke([new HumanMessage(prompt)]);
 
-						// Strict decode — all-or-nothing
-						let parsed: ReturnType<typeof decodeConversanalyzerV2Strict>;
+						let parsed: ReturnType<typeof decodeUserStateStrict>;
 						try {
-							parsed = decodeConversanalyzerV2Strict(invokeResult.parsed);
+							parsed = decodeUserStateStrict(invokeResult.parsed);
 						} catch (parseError) {
 							const formattedError = ParseResult.isParseError(parseError)
 								? ParseResult.TreeFormatter.formatErrorSync(parseError)
 								: String(parseError);
-							logger.warn("ConversAnalyzer v2 strict decode failed", {
+							logger.warn("ConversAnalyzeruser state strict decode failed", {
 								error: formattedError,
 								rawOutput: JSON.stringify(invokeResult.parsed).slice(0, 2000),
 							});
@@ -219,15 +221,87 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 							output: usageMeta?.output_tokens ?? 0,
 						};
 
-						logger.info("ConversAnalyzer v2 strict extraction complete", {
-							energyBand: parsed.userState.energyBand,
-							tellingBand: parsed.userState.tellingBand,
+						logger.info("ConversAnalyzeruser state strict extraction complete", {
+							energyBand: parsed.energyBand,
+							tellingBand: parsed.tellingBand,
+							tokenUsage,
+						});
+
+						return {
+							userState: parsed,
+							tokenUsage,
+						};
+					},
+					catch: (error) =>
+						new ConversanalyzerError({
+							message: error instanceof Error ? error.message : "ConversAnalyzer user state strict failed",
+						}),
+				}),
+
+			analyzeUserStateLenient: (input: ConversanalyzerInput) =>
+				Effect.tryPromise({
+					try: async () => {
+						const prompt = buildUserStatePrompt(input);
+						const invokeResult = await userStateModel.invoke([new HumanMessage(prompt)]);
+
+						const parsed = decodeUserStateLenient(invokeResult.parsed);
+
+						const usageMeta = (invokeResult.raw as AIMessage)?.usage_metadata;
+						const tokenUsage = {
+							input: usageMeta?.input_tokens ?? 0,
+							output: usageMeta?.output_tokens ?? 0,
+						};
+
+						logger.info("ConversAnalyzeruser state lenient extraction complete", {
+							energyBand: parsed.energyBand,
+							tellingBand: parsed.tellingBand,
+							tokenUsage,
+						});
+
+						return {
+							userState: parsed,
+							tokenUsage,
+						};
+					},
+					catch: (error) =>
+						new ConversanalyzerError({
+							message:
+								error instanceof Error ? error.message : "ConversAnalyzer user state lenient failed",
+						}),
+				}),
+
+			analyzeEvidence: (input: ConversanalyzerInput) =>
+				Effect.tryPromise({
+					try: async () => {
+						const prompt = buildEvidencePrompt(input);
+						const invokeResult = await evidenceModel.invoke([new HumanMessage(prompt)]);
+
+						let parsed: ReturnType<typeof decodeEvidenceStrict>;
+						try {
+							parsed = decodeEvidenceStrict(invokeResult.parsed);
+						} catch (parseError) {
+							const formattedError = ParseResult.isParseError(parseError)
+								? ParseResult.TreeFormatter.formatErrorSync(parseError)
+								: String(parseError);
+							logger.warn("ConversAnalyzerevidence strict decode failed", {
+								error: formattedError,
+								rawOutput: JSON.stringify(invokeResult.parsed).slice(0, 2000),
+							});
+							throw parseError;
+						}
+
+						const usageMeta = (invokeResult.raw as AIMessage)?.usage_metadata;
+						const tokenUsage = {
+							input: usageMeta?.input_tokens ?? 0,
+							output: usageMeta?.output_tokens ?? 0,
+						};
+
+						logger.info("ConversAnalyzerevidence strict extraction complete", {
 							evidenceCount: parsed.evidence.length,
 							tokenUsage,
 						});
 
 						return {
-							userState: parsed.userState,
 							evidence: parsed.evidence.map((e) => ({
 								bigfiveFacet: e.bigfiveFacet,
 								deviation: e.deviation,
@@ -241,22 +315,17 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 					},
 					catch: (error) =>
 						new ConversanalyzerError({
-							message: error instanceof Error ? error.message : "ConversAnalyzer v2 strict failed",
+							message: error instanceof Error ? error.message : "ConversAnalyzer evidence strict failed",
 						}),
 				}),
 
-			analyzeLenient: (input: ConversanalyzerInput) =>
+			analyzeEvidenceLenient: (input: ConversanalyzerInput) =>
 				Effect.tryPromise({
 					try: async () => {
-						const prompt = buildV2Prompt(input);
-						const invokeResult = await model.invoke([new HumanMessage(prompt)]);
+						const prompt = buildEvidencePrompt(input);
+						const invokeResult = await evidenceModel.invoke([new HumanMessage(prompt)]);
 
-						const rawInput = invokeResult.parsed as {
-							evidence?: unknown[];
-							userState?: unknown;
-						};
-
-						// Count raw evidence for discard logging
+						const rawInput = invokeResult.parsed as { evidence?: unknown[] };
 						const rawCount = rawInput.evidence?.length ?? 0;
 
 						// Log per-item validation failures before lenient decode
@@ -277,8 +346,7 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 							}
 						}
 
-						// Lenient decode — independent field parsing with defaults
-						const parsed = decodeConversanalyzerV2Lenient(rawInput);
+						const parsed = decodeEvidenceLenient(rawInput);
 
 						const discardedCount = rawCount - parsed.evidence.length;
 						if (discardedCount > 0) {
@@ -295,16 +363,13 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 							output: usageMeta?.output_tokens ?? 0,
 						};
 
-						logger.info("ConversAnalyzer v2 lenient extraction complete", {
-							energyBand: parsed.userState.energyBand,
-							tellingBand: parsed.userState.tellingBand,
+						logger.info("ConversAnalyzerevidence lenient extraction complete", {
 							evidenceCount: parsed.evidence.length,
 							discardedCount,
 							tokenUsage,
 						});
 
 						return {
-							userState: parsed.userState,
 							evidence: parsed.evidence.map((e) => ({
 								bigfiveFacet: e.bigfiveFacet,
 								deviation: e.deviation,
@@ -318,7 +383,7 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 					},
 					catch: (error) =>
 						new ConversanalyzerError({
-							message: error instanceof Error ? error.message : "ConversAnalyzer v2 lenient failed",
+							message: error instanceof Error ? error.message : "ConversAnalyzer evidence lenient failed",
 						}),
 				}),
 		});

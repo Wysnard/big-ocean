@@ -1,8 +1,8 @@
 /**
- * ConversAnalyzer v2 Energy/State Classification Tests (Story 24-1)
+ * ConversAnalyzer State Classification Tests (Story 24-1, Story 42-2)
  *
- * Verifies that ConversanalyzerV2Output includes userState with energyBand/tellingBand
- * and the mock returns appropriate defaults.
+ * Verifies that the split extraction mock returns expected user state defaults
+ * and can be overridden via _setMockOutput.
  */
 import { vi } from "vitest";
 
@@ -17,7 +17,7 @@ import {
 	ConversanalyzerAnthropicRepositoryLive,
 } from "@workspace/infrastructure/repositories/conversanalyzer.anthropic.repository";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 const TestLayer = ConversanalyzerAnthropicRepositoryLive;
 
@@ -27,15 +27,15 @@ const defaultInput = {
 	domainDistribution: { work: 0, relationships: 0, family: 0, leisure: 0, health: 0, other: 0 },
 };
 
-describe("ConversAnalyzer v2 State Classification", () => {
+describe("ConversAnalyzer State Classification (split)", () => {
 	beforeEach(() => {
 		_resetMockState();
 	});
 
-	it("mock returns energyBand: steady and tellingBand: mixed by default", async () => {
+	it("analyzeUserState returns energyBand: steady and tellingBand: mixed by default", async () => {
 		const program = Effect.gen(function* () {
 			const repo = yield* ConversanalyzerRepository;
-			return yield* repo.analyze(defaultInput);
+			return yield* repo.analyzeUserState(defaultInput);
 		});
 
 		const result = await Effect.runPromise(Effect.provide(program, TestLayer));
@@ -45,10 +45,10 @@ describe("ConversAnalyzer v2 State Classification", () => {
 		expect(result.userState.withinMessageShift).toBe(false);
 	});
 
-	it("analyzeLenient returns same defaults", async () => {
+	it("analyzeUserStateLenient returns same defaults", async () => {
 		const program = Effect.gen(function* () {
 			const repo = yield* ConversanalyzerRepository;
-			return yield* repo.analyzeLenient(defaultInput);
+			return yield* repo.analyzeUserStateLenient(defaultInput);
 		});
 
 		const result = await Effect.runPromise(Effect.provide(program, TestLayer));
@@ -73,7 +73,7 @@ describe("ConversAnalyzer v2 State Classification", () => {
 
 		const program = Effect.gen(function* () {
 			const repo = yield* ConversanalyzerRepository;
-			return yield* repo.analyze({
+			return yield* repo.analyzeUserState({
 				...defaultInput,
 				message: "My dad left when I was five",
 			});
@@ -89,7 +89,7 @@ describe("ConversAnalyzer v2 State Classification", () => {
 	it("mock tracks calls correctly", async () => {
 		const program = Effect.gen(function* () {
 			const repo = yield* ConversanalyzerRepository;
-			return yield* repo.analyze(defaultInput);
+			return yield* repo.analyzeUserState(defaultInput);
 		});
 
 		await Effect.runPromise(Effect.provide(program, TestLayer));

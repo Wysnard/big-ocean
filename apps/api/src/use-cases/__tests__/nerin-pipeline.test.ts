@@ -74,8 +74,10 @@ const mockNerinRepo = {
 };
 
 const mockConversanalyzerRepo = {
-	analyze: vi.fn(),
-	analyzeLenient: vi.fn(),
+	analyzeUserState: vi.fn(),
+	analyzeUserStateLenient: vi.fn(),
+	analyzeEvidence: vi.fn(),
+	analyzeEvidenceLenient: vi.fn(),
 };
 
 const mockEvidenceRepo = {
@@ -412,8 +414,30 @@ function setupDefaultMocks() {
 
 	mockNerinRepo.invoke.mockReturnValue(Effect.succeed(mockNerinResponse));
 
-	mockConversanalyzerRepo.analyze.mockReturnValue(Effect.succeed(mockConversanalyzerOutput));
-	mockConversanalyzerRepo.analyzeLenient.mockReturnValue(Effect.succeed(mockConversanalyzerOutput));
+	mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
+		Effect.succeed({
+			userState: mockConversanalyzerOutput.userState,
+			tokenUsage: { input: 100, output: 25 },
+		}),
+	);
+	mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(
+		Effect.succeed({
+			userState: mockConversanalyzerOutput.userState,
+			tokenUsage: { input: 100, output: 25 },
+		}),
+	);
+	mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
+		Effect.succeed({
+			evidence: mockConversanalyzerOutput.evidence,
+			tokenUsage: { input: 100, output: 25 },
+		}),
+	);
+	mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(
+		Effect.succeed({
+			evidence: mockConversanalyzerOutput.evidence,
+			tokenUsage: { input: 100, output: 25 },
+		}),
+	);
 
 	mockEvidenceRepo.save.mockReturnValue(Effect.succeed(undefined));
 	mockEvidenceRepo.findBySession.mockReturnValue(Effect.succeed([]));
@@ -532,8 +556,9 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 				expect(invokeArgs?.systemPrompt).toBeDefined();
 				expect(typeof invokeArgs?.systemPrompt).toBe("string");
 
-				// ConversAnalyzer should be called
-				expect(mockConversanalyzerRepo.analyze).toHaveBeenCalledTimes(1);
+				// ConversAnalyzer split methods should be called
+				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
+				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 
 				// Evidence should be saved
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
@@ -615,10 +640,13 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 				Effect.gen(function* () {
 					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 					mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
-					mockConversanalyzerRepo.analyze.mockReturnValue(
+					// Fail strict calls — lenient methods succeed from default setup
+					mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
 						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
 					);
-					// analyzeLenient succeeds from default setup -- Tier 2 fallback produces evidence
+					mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
+						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
+					);
 
 					const result = yield* runNerinPipeline({
 						sessionId: "session_test_123",
@@ -633,7 +661,7 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 
 					// Tier 2 warning was logged
 					expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
-						"ConversAnalyzer fell back to Tier 2 (lenient schema)",
+						expect.stringContaining("fell back to Tier 2"),
 						expect.objectContaining({ sessionId: "session_test_123" }),
 					);
 
@@ -648,12 +676,11 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 				Effect.gen(function* () {
 					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 					mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
-					mockConversanalyzerRepo.analyze.mockReturnValue(
-						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-					);
-					mockConversanalyzerRepo.analyzeLenient.mockReturnValue(
-						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-					);
+					const llmError = Effect.fail(new ConversanalyzerError({ message: "LLM timeout" }));
+					mockConversanalyzerRepo.analyzeUserState.mockReturnValue(llmError);
+					mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(llmError);
+					mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(llmError);
+					mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(llmError);
 
 					const result = yield* runNerinPipeline({
 						sessionId: "session_test_123",
@@ -666,9 +693,9 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 					// Nerin should have been called
 					expect(mockNerinRepo.invoke).toHaveBeenCalledTimes(1);
 
-					// Tier 3 warning was logged
+					// Tier 3 warning was logged (split extraction logs per-call)
 					expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
-						"ConversAnalyzer failed at all tiers, using Tier 3 neutral defaults",
+						expect.stringContaining("failed at all tiers"),
 						expect.objectContaining({ sessionId: "session_test_123" }),
 					);
 
@@ -678,8 +705,8 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 		);
 	});
 
-	describe("Backward compatibility (NFR1)", () => {
-		it.effect("preserves existing evidence extraction unchanged", () =>
+	describe("Split extraction compatibility (Story 42-2)", () => {
+		it.effect("split extraction calls receive the same input shape as before", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
@@ -689,12 +716,18 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 					userMessage: "I like helping people",
 				});
 
-				// ConversAnalyzer receives the same input shape as before
-				expect(mockConversanalyzerRepo.analyze).toHaveBeenCalledTimes(1);
-				const analyzerInput = mockConversanalyzerRepo.analyze.mock.calls[0]?.[0];
-				expect(analyzerInput).toHaveProperty("message");
-				expect(analyzerInput).toHaveProperty("recentMessages");
-				expect(analyzerInput).toHaveProperty("domainDistribution");
+				// Both split methods receive the same input shape
+				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
+				const userStateInput = mockConversanalyzerRepo.analyzeUserState.mock.calls[0]?.[0];
+				expect(userStateInput).toHaveProperty("message");
+				expect(userStateInput).toHaveProperty("recentMessages");
+				expect(userStateInput).toHaveProperty("domainDistribution");
+
+				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
+				const evidenceInput = mockConversanalyzerRepo.analyzeEvidence.mock.calls[0]?.[0];
+				expect(evidenceInput).toHaveProperty("message");
+				expect(evidenceInput).toHaveProperty("recentMessages");
+				expect(evidenceInput).toHaveProperty("domainDistribution");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});

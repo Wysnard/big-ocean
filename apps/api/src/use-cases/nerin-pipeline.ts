@@ -64,7 +64,7 @@ import {
 	type TerritoryId,
 } from "@workspace/domain";
 import { Effect } from "effect";
-import { runThreeTierExtraction } from "./three-tier-extraction";
+import { runSplitThreeTierExtraction } from "./three-tier-extraction";
 
 export interface NerinPipelineInput {
 	readonly sessionId: string;
@@ -588,7 +588,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			const domainDistribution = aggregateDomainDistribution(allEvidence);
 			const recentMessages: DomainMessage[] = domainMessages.slice(-6);
 
-			const extraction = yield* runThreeTierExtraction({
+			const extraction = yield* runSplitThreeTierExtraction({
 				sessionId: input.sessionId,
 				message: input.userMessage,
 				recentMessages,
