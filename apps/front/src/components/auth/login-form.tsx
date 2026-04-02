@@ -2,10 +2,13 @@
  * Login Form Component
  *
  * Email/password login with Better Auth.
- * Styled with psychedelic brand identity tokens.
+ * Uses TanStack Form + shadcn Field components.
  */
 
+import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
+import { Field, FieldError, FieldLabel } from "@workspace/ui/components/field";
+import { Input } from "@workspace/ui/components/input";
 import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import { OceanSpinner } from "@workspace/ui/components/ocean-spinner";
 import { useState } from "react";
@@ -20,47 +23,61 @@ interface LoginFormProps {
 export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 	const { signIn, isPending } = useAuth();
 	const navigate = useNavigate();
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
-	const [error, setError] = useState<string | null>(null);
+	const [serverError, setServerError] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const errorId = "login-form-error";
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		setError(null);
-		setIsLoading(true);
+	const form = useForm({
+		defaultValues: {
+			email: "",
+			password: "",
+		},
+		validators: {
+			onSubmit: ({ value }) => {
+				const errors: Record<string, string> = {};
+				if (!value.email.trim()) {
+					errors.email = "Email is required";
+				}
+				if (value.password.length < 12) {
+					errors.password = "Password must be at least 12 characters";
+				}
+				return Object.keys(errors).length > 0 ? { fields: errors } : undefined;
+			},
+		},
+		onSubmit: async ({ value }) => {
+			setServerError(null);
+			setIsLoading(true);
 
-		try {
-			await signIn.email(email, password, anonymousSessionId);
+			try {
+				await signIn.email(value.email, value.password, anonymousSessionId);
 
-			// Navigate using TanStack Router
-			if (redirectTo?.startsWith("/")) {
-				await navigate({ to: redirectTo });
-			} else if (anonymousSessionId) {
-				await navigate({
-					to: "/results/$assessmentSessionId",
-					params: { assessmentSessionId: anonymousSessionId },
-				});
-			} else {
-				await navigate({ to: "/dashboard" });
+				if (redirectTo?.startsWith("/")) {
+					await navigate({ to: redirectTo });
+				} else if (anonymousSessionId) {
+					await navigate({
+						to: "/results/$assessmentSessionId",
+						params: { assessmentSessionId: anonymousSessionId },
+					});
+				} else {
+					await navigate({ to: "/dashboard" });
+				}
+			} catch (err) {
+				// 403 = email not verified — redirect to verify-email page (AC6, ADR-24)
+				// Better Auth already auto-resent the verification email (sendOnSignIn: true)
+				if (err instanceof AuthError && err.status === 403) {
+					await navigate({
+						to: "/verify-email",
+						search: { email: value.email, error: undefined },
+					});
+					return;
+				}
+				// Always show generic message to avoid revealing whether email exists (AC #3)
+				setServerError("Invalid email or password");
+			} finally {
+				setIsLoading(false);
 			}
-		} catch (err) {
-			// 403 = email not verified — redirect to verify-email page (AC6, ADR-24)
-			// Better Auth already auto-resent the verification email (sendOnSignIn: true)
-			if (err instanceof AuthError && err.status === 403) {
-				await navigate({
-					to: "/verify-email",
-					search: { email, error: undefined },
-				});
-				return;
-			}
-			// Always show generic message to avoid revealing whether email exists (AC #3)
-			setError("Invalid email or password");
-		} finally {
-			setIsLoading(false);
-		}
-	};
+		},
+	});
 
 	if (isPending) {
 		return (
@@ -100,53 +117,75 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 			</h2>
 			<p className="mt-2 mb-6 text-sm text-muted-foreground">Sign in to continue your journey.</p>
 
-			<form onSubmit={handleSubmit} className="space-y-4">
-				{error && (
+			<form
+				noValidate
+				onSubmit={(e) => {
+					e.preventDefault();
+					form.handleSubmit();
+				}}
+				className="space-y-4"
+			>
+				{serverError && (
 					<p
 						id={errorId}
 						role="alert"
 						className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
 					>
-						{error}
+						{serverError}
 					</p>
 				)}
 
-				<div>
-					<label htmlFor="login-email" className="mb-1 block text-sm font-medium text-foreground">
-						Email
-					</label>
-					<input
-						id="login-email"
-						type="email"
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
-						required
-						autoComplete="email"
-						className="min-h-11 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-						placeholder="you@example.com"
-						aria-invalid={!!error}
-						aria-describedby={error ? errorId : undefined}
-					/>
-				</div>
+				<form.Field name="email">
+					{(field) => {
+						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+						return (
+							<Field data-invalid={isInvalid}>
+								<FieldLabel htmlFor={field.name}>Email</FieldLabel>
+								<Input
+									id={field.name}
+									type="email"
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(e) => field.handleChange(e.target.value)}
+									autoComplete="email"
+									placeholder="you@example.com"
+									aria-invalid={isInvalid}
+									aria-describedby={serverError ? errorId : undefined}
+									className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
+								/>
+								{isInvalid && (
+									<FieldError errors={field.state.meta.errors.map((e) => ({ message: String(e) }))} />
+								)}
+							</Field>
+						);
+					}}
+				</form.Field>
 
-				<div>
-					<label htmlFor="login-password" className="mb-1 block text-sm font-medium text-foreground">
-						Password
-					</label>
-					<input
-						id="login-password"
-						type="password"
-						value={password}
-						onChange={(e) => setPassword(e.target.value)}
-						required
-						minLength={12}
-						autoComplete="current-password"
-						className="min-h-11 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-						placeholder="Your password"
-						aria-invalid={!!error}
-						aria-describedby={error ? errorId : undefined}
-					/>
-				</div>
+				<form.Field name="password">
+					{(field) => {
+						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+						return (
+							<Field data-invalid={isInvalid}>
+								<FieldLabel htmlFor={field.name}>Password</FieldLabel>
+								<Input
+									id={field.name}
+									type="password"
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(e) => field.handleChange(e.target.value)}
+									autoComplete="current-password"
+									placeholder="Your password"
+									aria-invalid={isInvalid}
+									aria-describedby={serverError ? errorId : undefined}
+									className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
+								/>
+								{isInvalid && (
+									<FieldError errors={field.state.meta.errors.map((e) => ({ message: String(e) }))} />
+								)}
+							</Field>
+						);
+					}}
+				</form.Field>
 
 				<div className="flex justify-end">
 					<a

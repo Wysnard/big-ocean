@@ -10,6 +10,8 @@ When working on frontend code (`apps/front` or `packages/ui`), consult [FRONTEND
 
 **Frontend API rule:** When fetching the backend from the frontend, always use the typed Effect `HttpApiClient` with `@workspace/contracts` — never raw `fetch`. See the [Frontend API Client Pattern](#frontend-api-client-pattern-effect-httpapiclient) below.
 
+**Forms rule:** All forms must use `@tanstack/react-form` with shadcn/ui form components — never plain `useState` per field. Follow the [shadcn TanStack Form standard](https://ui.shadcn.com/docs/forms/tanstack-form#validation-modes) for structure and validation modes. Use Effect Schema (`@effect/schema`) for validation when needed.
+
 **Environment variables:** Check `.env` (local dev) and `.env.example` (template) for available environment variables before making assumptions about config values.
 
 **Worktree isolation rule:** When running in a git worktree (e.g., spawned via `isolation: "worktree"`), ONLY read and modify files within the worktree directory. Do NOT access the main repository working tree unless the user explicitly asks you to.

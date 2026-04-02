@@ -2,10 +2,13 @@
  * Signup Form Component
  *
  * Email/password registration with Better Auth.
- * Styled with psychedelic brand identity tokens.
+ * Uses TanStack Form + shadcn Field components.
  */
 
+import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
+import { Field, FieldError, FieldLabel } from "@workspace/ui/components/field";
+import { Input } from "@workspace/ui/components/input";
 import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import { OceanSpinner } from "@workspace/ui/components/ocean-spinner";
 import { useState } from "react";
@@ -20,64 +23,72 @@ interface SignupFormProps {
 export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) {
 	const { signUp } = useAuth();
 	const navigate = useNavigate();
-	const [name, setName] = useState("");
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
-	const [confirmPassword, setConfirmPassword] = useState("");
-	const [error, setError] = useState<string | null>(null);
+	const [serverError, setServerError] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const errorId = "signup-form-error";
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		setError(null);
+	const form = useForm({
+		defaultValues: {
+			name: "",
+			email: "",
+			password: "",
+			confirmPassword: "",
+		},
+		validators: {
+			onSubmit: ({ value }) => {
+				const errors: Record<string, string> = {};
+				if (!value.name.trim()) {
+					errors.name = "Name is required";
+				}
+				if (!value.email.trim()) {
+					errors.email = "Email is required";
+				}
+				if (value.password.length < 12) {
+					errors.password = "Password must be at least 12 characters";
+				}
+				if (value.password !== value.confirmPassword) {
+					errors.confirmPassword = "Passwords do not match";
+				}
+				return Object.keys(errors).length > 0 ? { fields: errors } : undefined;
+			},
+		},
+		onSubmit: async ({ value }) => {
+			setServerError(null);
+			setIsLoading(true);
 
-		// Validate password match
-		if (password !== confirmPassword) {
-			setError("Passwords do not match");
-			return;
-		}
+			try {
+				await signUp.email(
+					value.email,
+					value.password,
+					value.name,
+					anonymousSessionId,
+					`${window.location.origin}/dashboard`,
+				);
 
-		// Validate password length (NIST 2025 standard: 12 chars minimum)
-		if (password.length < 12) {
-			setError("Password must be at least 12 characters");
-			return;
-		}
-
-		setIsLoading(true);
-
-		try {
-			await signUp.email(
-				email,
-				password,
-				name,
-				anonymousSessionId,
-				`${window.location.origin}/dashboard`,
-			);
-
-			// Redirect to verify-email page (Story 31-7b)
-			// Email verification is required before session creation
-			await navigate({
-				to: "/verify-email",
-				search: { email, error: undefined },
-			});
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
-			if (errorMessage.includes("already exists")) {
-				setError("An account with this email already exists");
-			} else if (
-				errorMessage.includes("data breach") ||
-				errorMessage.includes("compromised") ||
-				errorMessage.includes("PASSWORD_COMPROMISED")
-			) {
-				setError("This password has appeared in a data breach. Please choose a different password.");
-			} else {
-				setError(errorMessage || "Sign up failed. Please try again.");
+				await navigate({
+					to: "/verify-email",
+					search: { email: value.email, error: undefined },
+				});
+			} catch (err) {
+				const errorMessage = err instanceof Error ? err.message : String(err);
+				if (errorMessage.includes("already exists")) {
+					setServerError("An account with this email already exists");
+				} else if (
+					errorMessage.includes("data breach") ||
+					errorMessage.includes("compromised") ||
+					errorMessage.includes("PASSWORD_COMPROMISED")
+				) {
+					setServerError(
+						"This password has appeared in a data breach. Please choose a different password.",
+					);
+				} else {
+					setServerError(errorMessage || "Sign up failed. Please try again.");
+				}
+			} finally {
+				setIsLoading(false);
 			}
-		} finally {
-			setIsLoading(false);
-		}
-	};
+		},
+	});
 
 	return (
 		<div className="relative mx-auto max-w-md overflow-hidden rounded-3xl bg-card p-8 shadow-lg sm:p-10">
@@ -111,96 +122,130 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 				Create an account to unlock your personality profile.
 			</p>
 
-			<form onSubmit={handleSubmit} className="space-y-4">
-				{error && (
+			<form
+				noValidate
+				onSubmit={(e) => {
+					e.preventDefault();
+					form.handleSubmit();
+				}}
+				className="space-y-4"
+			>
+				{serverError && (
 					<p
 						id={errorId}
 						role="alert"
 						className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
 					>
-						{error}
+						{serverError}
 					</p>
 				)}
 
-				<div>
-					<label htmlFor="signup-name" className="mb-1 block text-sm font-medium text-foreground">
-						Name
-					</label>
-					<input
-						id="signup-name"
-						type="text"
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-						required
-						autoComplete="name"
-						className="min-h-11 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-						placeholder="Your name"
-						aria-invalid={!!error}
-						aria-describedby={error ? errorId : undefined}
-					/>
-				</div>
+				<form.Field name="name">
+					{(field) => {
+						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+						return (
+							<Field data-invalid={isInvalid}>
+								<FieldLabel htmlFor={field.name}>Name</FieldLabel>
+								<Input
+									id={field.name}
+									type="text"
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(e) => field.handleChange(e.target.value)}
+									autoComplete="name"
+									placeholder="Your name"
+									aria-invalid={isInvalid}
+									aria-describedby={serverError ? errorId : undefined}
+									className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
+								/>
+								{isInvalid && (
+									<FieldError errors={field.state.meta.errors.map((e) => ({ message: String(e) }))} />
+								)}
+							</Field>
+						);
+					}}
+				</form.Field>
 
-				<div>
-					<label htmlFor="signup-email" className="mb-1 block text-sm font-medium text-foreground">
-						Email
-					</label>
-					<input
-						id="signup-email"
-						type="email"
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
-						required
-						autoComplete="email"
-						className="min-h-11 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-						placeholder="you@example.com"
-						aria-invalid={!!error}
-						aria-describedby={error ? errorId : undefined}
-					/>
-				</div>
+				<form.Field name="email">
+					{(field) => {
+						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+						return (
+							<Field data-invalid={isInvalid}>
+								<FieldLabel htmlFor={field.name}>Email</FieldLabel>
+								<Input
+									id={field.name}
+									type="email"
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(e) => field.handleChange(e.target.value)}
+									autoComplete="email"
+									placeholder="you@example.com"
+									aria-invalid={isInvalid}
+									aria-describedby={serverError ? errorId : undefined}
+									className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
+								/>
+								{isInvalid && (
+									<FieldError errors={field.state.meta.errors.map((e) => ({ message: String(e) }))} />
+								)}
+							</Field>
+						);
+					}}
+				</form.Field>
 
-				<div>
-					<label htmlFor="signup-password" className="mb-1 block text-sm font-medium text-foreground">
-						Password
-					</label>
-					<input
-						id="signup-password"
-						type="password"
-						value={password}
-						onChange={(e) => setPassword(e.target.value)}
-						required
-						minLength={12}
-						autoComplete="new-password"
-						className="min-h-11 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-						placeholder="At least 12 characters"
-						aria-invalid={!!error}
-						aria-describedby={error ? errorId : "signup-password-help"}
-					/>
-					<p id="signup-password-help" className="mt-1 text-xs text-muted-foreground">
-						Minimum 12 characters
-					</p>
-				</div>
+				<form.Field name="password">
+					{(field) => {
+						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+						return (
+							<Field data-invalid={isInvalid}>
+								<FieldLabel htmlFor={field.name}>Password</FieldLabel>
+								<Input
+									id={field.name}
+									type="password"
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(e) => field.handleChange(e.target.value)}
+									autoComplete="new-password"
+									placeholder="At least 12 characters"
+									aria-invalid={isInvalid}
+									aria-describedby={serverError ? errorId : `${field.name}-help`}
+									className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
+								/>
+								<p id={`${field.name}-help`} className="text-xs text-muted-foreground">
+									Minimum 12 characters
+								</p>
+								{isInvalid && (
+									<FieldError errors={field.state.meta.errors.map((e) => ({ message: String(e) }))} />
+								)}
+							</Field>
+						);
+					}}
+				</form.Field>
 
-				<div>
-					<label
-						htmlFor="signup-confirm-password"
-						className="mb-1 block text-sm font-medium text-foreground"
-					>
-						Confirm Password
-					</label>
-					<input
-						id="signup-confirm-password"
-						type="password"
-						value={confirmPassword}
-						onChange={(e) => setConfirmPassword(e.target.value)}
-						required
-						minLength={12}
-						autoComplete="new-password"
-						className="min-h-11 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-						placeholder="Confirm password"
-						aria-invalid={!!error}
-						aria-describedby={error ? errorId : undefined}
-					/>
-				</div>
+				<form.Field name="confirmPassword">
+					{(field) => {
+						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+						return (
+							<Field data-invalid={isInvalid}>
+								<FieldLabel htmlFor={field.name}>Confirm Password</FieldLabel>
+								<Input
+									id={field.name}
+									type="password"
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(e) => field.handleChange(e.target.value)}
+									autoComplete="new-password"
+									placeholder="Confirm password"
+									aria-invalid={isInvalid}
+									aria-describedby={serverError ? errorId : undefined}
+									className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
+								/>
+								{isInvalid && (
+									<FieldError errors={field.state.meta.errors.map((e) => ({ message: String(e) }))} />
+								)}
+							</Field>
+						);
+					}}
+				</form.Field>
 
 				<button
 					type="submit"
