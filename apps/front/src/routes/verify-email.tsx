@@ -10,6 +10,7 @@
  */
 
 import { createFileRoute } from "@tanstack/react-router";
+import { Button } from "@workspace/ui/components/button";
 import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -151,15 +152,17 @@ function VerifyEmailPage() {
 							)}
 
 							{email && (
-								<button
+								<Button
 									type="button"
+									variant="outline"
+									size="lg"
 									onClick={handleResend}
 									disabled={isResending || resendSuccess}
-									className="min-h-11 w-full rounded-xl bg-transparent text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary disabled:cursor-not-allowed disabled:text-muted-foreground/50"
+									className="w-full rounded-xl"
 								>
 									{isResending && <Loader2 className="mr-2 inline h-4 w-4 motion-safe:animate-spin" />}
 									{isResending ? "Sending..." : resendSuccess ? "Email sent" : "Resend verification email"}
-								</button>
+								</Button>
 							)}
 
 							<a
