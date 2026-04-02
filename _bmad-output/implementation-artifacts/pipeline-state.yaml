@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
 parallelism_step: 1
 parallelism_step_name: "Catalog Validation + Extraction Prompt"
-baseline_commit: null
+baseline_commit: "504fbca3b85af6d5aa3e05c6c62e9228f8fecf3d"
 created: "2026-04-02"
-last_updated: "2026-04-02"
+last_updated: "2026-04-02T14:00:00Z"
 
 # Optional context documents discovered
 context_docs:
@@ -15,23 +15,25 @@ context_docs:
 # Stories in this step
 stories:
   41-3-facet-additions-to-existing-territories-and-catalog-validation:
-    status: pending
+    status: done
     mode: "parallel"
     notes: "Depends on 41-2 (done). Adds cautiousness→work-dynamics, liberalism→growing-up, validates all facets ≥2 routes across 31 territories."
-    pr_url: null
-    dev_branch: null
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/195"
+    dev_branch: "feat/story-41-3-facet-additions-to-existing-territories-and-catalog-validation"
     error: null
   42-3-evidence-extraction-v3-prompt-with-per-facet-conversational-anchors:
-    status: pending
+    status: done
     mode: "parallel"
     notes: "Depends on 42-2 (done). Per-facet HIGH/LOW anchors for all 30 facets, dual-polarity check, polarity balance audit."
-    pr_url: null
-    dev_branch: null
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/196"
+    dev_branch: "feat/story-42-3-evidence-extraction-v3-prompt-with-per-facet-conversational-anchors"
     error: null
 
 # Conflict detection (populated by step-02b)
 conflicts:
   detected: false
-  scanned_branches: []
+  scanned_branches:
+    - "feat/story-41-3-facet-additions-to-existing-territories-and-catalog-validation"
+    - "feat/story-42-3-evidence-extraction-v3-prompt-with-per-facet-conversational-anchors"
   skipped_branches: []
   overlapping_files: []

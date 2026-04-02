@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-04-02T18:00
+generated: 2026-04-02T20:00
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
