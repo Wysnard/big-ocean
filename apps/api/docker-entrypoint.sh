@@ -8,7 +8,7 @@ echo "🔧 Rebuilding esbuild for Linux platform..."
 pnpm rebuild esbuild
 
 echo "🗃️ Running database migrations..."
-pnpm -C /app db:migrate
+cd /app && pnpm tsx apps/api/src/migrate.ts
 
 echo "✅ Setup complete"
 echo "🚀 Starting development server..."

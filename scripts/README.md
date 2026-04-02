@@ -20,7 +20,7 @@ pnpm seed:test-assessment
 ```
 
 **What it creates:**
-- Test user (`test@bigocean.dev`)
+- Test user (see credentials in `scripts/seed-completed-assessment.ts`)
 - Completed assessment session with realistic personality profile
 - 12-message conversation (Nerin + User)
 - 30 facet scores with high confidence (85%)
@@ -47,7 +47,7 @@ The script prints a session ID that you can use to navigate directly to:
 SESSION DETAILS
 ============================================================
 Session ID: 550e8400-e29b-41d4-a716-446655440000
-User: test@bigocean.dev
+User: (see seed script for credentials)
 Status: completed
 Messages: 12
 Facet Scores: 30

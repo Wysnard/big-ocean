@@ -54,7 +54,7 @@ pnpm dev  # Includes --profile seed flag
 ```
 
 **What gets seeded:**
-- Test user: `test@bigocean.dev`
+- Test user: see credentials in `scripts/seed-completed-assessment.ts`
 - Completed assessment session (12 messages)
 - 30 facet scores + 5 trait scores (realistic personality profile)
 - ~40 facet evidence records with text highlights

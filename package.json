@@ -24,7 +24,7 @@
 		"test:integration:watch": "pnpm --filter=api test:integration:watch",
 		"docker:test:up": "docker compose -f compose.test.yaml up -d --build",
 		"docker:test:down": "docker compose -f compose.test.yaml down -v --remove-orphans",
-		"db:migrate": "drizzle-kit migrate",
+		"db:migrate": "tsx apps/api/src/migrate.ts",
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
 		"db:studio": "drizzle-kit studio",

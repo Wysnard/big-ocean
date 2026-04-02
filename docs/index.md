@@ -176,7 +176,7 @@ pnpm lint
 # Seed database with completed assessment for testing
 pnpm seed:test-assessment
 
-# Test user: test@bigocean.dev
+# Test user: see credentials in scripts/seed-completed-assessment.ts
 ```
 
 ---

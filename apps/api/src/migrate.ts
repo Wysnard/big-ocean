@@ -113,8 +113,12 @@ try {
 
 			for (const migration of pending) {
 				console.log(`  Running: ${migration.name}`);
-				await client.query("BEGIN");
-				try {
+
+				// ALTER TYPE ... ADD VALUE cannot run inside a transaction in PostgreSQL.
+				// Detect these statements and run the entire migration without a transaction wrapper.
+				const hasAddEnumValue = migration.sql.some((s) => /ALTER\s+TYPE\s+.*\s+ADD\s+VALUE/i.test(s));
+
+				if (hasAddEnumValue) {
 					for (const stmt of migration.sql) {
 						if (stmt.trim()) await client.query(stmt);
 					}
@@ -122,10 +126,21 @@ try {
 						`INSERT INTO "drizzle"."__drizzle_migrations" (hash, created_at) VALUES ($1, $2)`,
 						[migration.hash, migration.folderMillis],
 					);
-					await client.query("COMMIT");
-				} catch (error) {
-					await client.query("ROLLBACK");
-					throw error;
+				} else {
+					await client.query("BEGIN");
+					try {
+						for (const stmt of migration.sql) {
+							if (stmt.trim()) await client.query(stmt);
+						}
+						await client.query(
+							`INSERT INTO "drizzle"."__drizzle_migrations" (hash, created_at) VALUES ($1, $2)`,
+							[migration.hash, migration.folderMillis],
+						);
+						await client.query("COMMIT");
+					} catch (error) {
+						await client.query("ROLLBACK");
+						throw error;
+					}
 				}
 			}
 		}
