@@ -481,6 +481,7 @@ const seedProgram = Effect.gen(function* () {
 		const deviation = Math.round(((data.score - 10) / 10) * 3);
 		const strength = data.confidence >= 0.7 ? "strong" : data.confidence >= 0.4 ? "moderate" : "weak";
 		const confidence = data.confidence >= 0.7 ? "high" : data.confidence >= 0.4 ? "medium" : "low";
+		const polarity = deviation >= 0 ? "high" : "low";
 		yield* db
 			.insert(conversationEvidence)
 			.values({
@@ -491,6 +492,7 @@ const seedProgram = Effect.gen(function* () {
 				strength,
 				confidence,
 				domain: data.domain,
+				polarity,
 				note: `Seed evidence for ${facet}`,
 			})
 			.pipe(Effect.mapError((error) => new Error(`Failed to insert conversation evidence: ${error}`)));
