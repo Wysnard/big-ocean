@@ -121,6 +121,7 @@ export {
 	AgentInvocationError,
 	AnalyzerError,
 	AssessmentAlreadyExists,
+	AssessmentNotCompletedError,
 	ConcurrentMessageError,
 	CostLimitExceeded,
 	DatabaseError,

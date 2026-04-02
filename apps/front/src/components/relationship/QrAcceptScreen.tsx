@@ -6,8 +6,9 @@
  * credit balance, and Accept/Refuse buttons.
  */
 
+import { Link } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
-import { AlertCircle, Loader2, UserX, XCircle } from "lucide-react";
+import { AlertCircle, ClipboardList, Loader2, UserX, XCircle } from "lucide-react";
 import { ArchetypeCard } from "../results/ArchetypeCard";
 import { ConfidenceRingCard } from "../results/ConfidenceRingCard";
 
@@ -120,6 +121,11 @@ export function QrAcceptScreen({
 				</p>
 			</div>
 		);
+	}
+
+	// Acceptor hasn't completed their assessment
+	if (!details.acceptor.hasCompletedAssessment) {
+		return <AssessmentRequiredState initiatorName={details.initiator.name} />;
 	}
 
 	// Determine accept error type
@@ -246,6 +252,25 @@ function ExpiredTokenState() {
 			<p className="text-sm text-muted-foreground max-w-sm">
 				This QR code has expired. Ask the person who invited you to generate a new one.
 			</p>
+		</div>
+	);
+}
+
+function AssessmentRequiredState({ initiatorName }: { initiatorName: string }) {
+	return (
+		<div
+			data-testid="qr-accept-assessment-required"
+			className="min-h-[calc(100dvh-3.5rem)] bg-background flex flex-col items-center justify-center px-6 text-center gap-4"
+		>
+			<ClipboardList className="h-12 w-12 text-muted-foreground" />
+			<h1 className="text-xl font-semibold text-foreground">Complete Your Assessment First</h1>
+			<p className="text-sm text-muted-foreground max-w-sm">
+				You need to complete your personality assessment before you can discover your dynamic with{" "}
+				{initiatorName}.
+			</p>
+			<Button asChild className="min-h-11">
+				<Link to="/">Start Your Assessment</Link>
+			</Button>
 		</div>
 	);
 }

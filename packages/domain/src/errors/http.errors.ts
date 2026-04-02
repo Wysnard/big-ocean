@@ -394,6 +394,17 @@ export class RelationshipAnalysisUnauthorizedError extends S.TaggedError<Relatio
 ) {}
 
 /**
+ * Assessment not completed error (403)
+ * User must complete their assessment before generating or accepting a relationship invitation
+ */
+export class AssessmentNotCompletedError extends S.TaggedError<AssessmentNotCompletedError>()(
+	"AssessmentNotCompletedError",
+	{
+		message: S.String,
+	},
+) {}
+
+/**
  * QR token not found error (404)
  */
 export class QrTokenNotFoundError extends S.TaggedError<QrTokenNotFoundError>()(

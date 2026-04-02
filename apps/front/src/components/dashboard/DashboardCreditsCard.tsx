@@ -43,6 +43,10 @@ export function DashboardCreditsCard({ credits, isLoading, userId }: DashboardCr
 		[userId, appTheme],
 	);
 
+	if (credits && !credits.hasCompletedAssessment) {
+		return null;
+	}
+
 	const hasCredits = credits && credits.availableCredits > 0;
 
 	return (

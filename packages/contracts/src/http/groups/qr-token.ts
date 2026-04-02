@@ -11,6 +11,7 @@
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema as S } from "effect";
 import {
+	AssessmentNotCompletedError,
 	DatabaseError,
 	InsufficientCreditsError,
 	QrTokenAlreadyAcceptedError,
@@ -65,6 +66,7 @@ export const QrTokenGroup = HttpApiGroup.make("qrToken")
 	.add(
 		HttpApiEndpoint.post("generateQrToken", "/qr/generate")
 			.addSuccess(GenerateQrTokenResponseSchema)
+			.addError(AssessmentNotCompletedError, { status: 403 })
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.add(
@@ -83,6 +85,7 @@ export const QrTokenGroup = HttpApiGroup.make("qrToken")
 			.addError(QrTokenAlreadyAcceptedError, { status: 409 })
 			.addError(SelfInvitationError, { status: 400 })
 			.addError(InsufficientCreditsError, { status: 402 })
+			.addError(AssessmentNotCompletedError, { status: 403 })
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.add(
