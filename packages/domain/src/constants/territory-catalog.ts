@@ -214,7 +214,13 @@ const WORK_DYNAMICS = territory({
 	descriptionYou: "how you navigate challenge and hierarchy at work",
 	expectedEnergy: 0.42,
 	domains: ["work", "relationships"],
-	expectedFacets: ["assertiveness", "achievement_striving", "self_efficacy", "cooperation"],
+	expectedFacets: [
+		"assertiveness",
+		"achievement_striving",
+		"self_efficacy",
+		"cooperation",
+		"cautiousness",
+	],
 	opener: "What's the most interesting challenge you've faced at work recently?",
 });
 
@@ -247,7 +253,7 @@ const GROWING_UP = territory({
 	descriptionYou: "what shaped you early and what you carried forward",
 	expectedEnergy: 0.45,
 	domains: ["family", "relationships"],
-	expectedFacets: ["emotionality", "trust", "imagination", "dutifulness"],
+	expectedFacets: ["emotionality", "trust", "imagination", "dutifulness", "liberalism"],
 	opener: "What's something from growing up that shaped who you are today?",
 });
 

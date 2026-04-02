@@ -315,6 +315,98 @@ describe("new hard-to-assess coverage territories (Story 41-2)", () => {
 	});
 });
 
+describe("facet additions to existing territories (Story 41-3)", () => {
+	it("work-dynamics includes cautiousness", () => {
+		const id = Schema.decodeSync(TerritoryIdSchema)("work-dynamics");
+		const territory = getTerritoryById(id);
+		expect(territory).toBeDefined();
+		expect(territory?.expectedFacets).toContain("cautiousness");
+	});
+
+	it("growing-up includes liberalism", () => {
+		const id = Schema.decodeSync(TerritoryIdSchema)("growing-up");
+		const territory = getTerritoryById(id);
+		expect(territory).toBeDefined();
+		expect(territory?.expectedFacets).toContain("liberalism");
+	});
+
+	it("inner-life includes artistic_interests (from Story 2.1)", () => {
+		const id = Schema.decodeSync(TerritoryIdSchema)("inner-life");
+		const territory = getTerritoryById(id);
+		expect(territory).toBeDefined();
+		expect(territory?.expectedFacets).toContain("artistic_interests");
+	});
+});
+
+describe("catalog validation (Story 41-3)", () => {
+	it("every facet has >= 2 territory routes", () => {
+		const facetTerritoryCount = new Map<string, number>();
+		for (const facet of ALL_FACETS) {
+			facetTerritoryCount.set(facet, 0);
+		}
+		for (const [, territory] of TERRITORY_CATALOG) {
+			for (const facet of territory.expectedFacets) {
+				facetTerritoryCount.set(facet, (facetTerritoryCount.get(facet) ?? 0) + 1);
+			}
+		}
+		for (const [facet, count] of facetTerritoryCount) {
+			expect(
+				count,
+				`Facet "${facet}" appears in only ${count} territories (expected >= 2)`,
+			).toBeGreaterThanOrEqual(2);
+		}
+	});
+
+	it("no hard-to-assess facet is stuck in a single domain pair", () => {
+		const hardToAssess = [
+			"orderliness",
+			"artistic_interests",
+			"cautiousness",
+			"liberalism",
+			"dutifulness",
+			"altruism",
+			"immoderation",
+			"depression",
+			"modesty",
+			"adventurousness",
+		];
+		for (const facet of hardToAssess) {
+			const domainPairs = new Set<string>();
+			for (const [, territory] of TERRITORY_CATALOG) {
+				if (territory.expectedFacets.includes(facet as any)) {
+					const sortedDomains = [...territory.domains].sort().join(",");
+					domainPairs.add(sortedDomains);
+				}
+			}
+			expect(
+				domainPairs.size,
+				`Hard-to-assess facet "${facet}" is stuck in ${domainPairs.size} domain pair(s): ${[...domainPairs].join(" | ")} (expected >= 2)`,
+			).toBeGreaterThanOrEqual(2);
+		}
+	});
+
+	it("orderliness appears in >= 3 territories across >= 4 domains", () => {
+		const territories: string[] = [];
+		const domains = new Set<string>();
+		for (const [id, territory] of TERRITORY_CATALOG) {
+			if (territory.expectedFacets.includes("orderliness" as any)) {
+				territories.push(id as string);
+				for (const domain of territory.domains) {
+					domains.add(domain);
+				}
+			}
+		}
+		expect(
+			territories.length,
+			`orderliness appears in ${territories.length} territories (expected >= 3)`,
+		).toBeGreaterThanOrEqual(3);
+		expect(
+			domains.size,
+			`orderliness appears across ${domains.size} domains (expected >= 4)`,
+		).toBeGreaterThanOrEqual(4);
+	});
+});
+
 describe("getTerritoryById", () => {
 	it("returns the correct territory for a valid ID", () => {
 		const firstEntry = TERRITORY_CATALOG.entries().next().value!;
