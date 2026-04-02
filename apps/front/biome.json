@@ -13,15 +13,14 @@
   "overrides": [
     {
       "includes": ["**/*.gen.ts", "**/*.gen.js"],
+      "formatter": {
+        "enabled": false
+      },
       "linter": {
-        "rules": {
-          "suspicious": {
-            "noExplicitAny": "off"
-          },
-          "correctness": {
-            "noUnusedImports": "off"
-          }
-        }
+        "enabled": false
+      },
+      "assist": {
+        "enabled": false
       }
     }
   ]
