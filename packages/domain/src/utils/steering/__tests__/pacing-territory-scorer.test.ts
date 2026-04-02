@@ -196,7 +196,7 @@ describe("computeAdjacency", () => {
 		});
 		const candidate = makeTerritory({
 			id: "candidate",
-			domains: ["leisure", "solo"],
+			domains: ["leisure", "health"],
 			expectedFacets: ["trust", "altruism"],
 		});
 		const adj = computeAdjacency(current, candidate, config);
@@ -212,7 +212,7 @@ describe("computeAdjacency", () => {
 		});
 		const candidate = makeTerritory({
 			id: "candidate",
-			domains: ["work", "solo"],
+			domains: ["work", "health"],
 			expectedFacets: ["imagination", "trust"],
 		});
 		const adj = computeAdjacency(current, candidate, config);
@@ -350,7 +350,7 @@ describe("scoreAllTerritoriesV2", () => {
 	const lightTerritory = makeTerritory({
 		id: "light-test",
 		expectedEnergy: 0.25,
-		domains: ["leisure", "solo"],
+		domains: ["leisure", "health"],
 		expectedFacets: ["imagination", "intellect"],
 	});
 	const mediumTerritory = makeTerritory({
@@ -362,7 +362,7 @@ describe("scoreAllTerritoriesV2", () => {
 	const heavyTerritory = makeTerritory({
 		id: "heavy-test",
 		expectedEnergy: 0.65,
-		domains: ["solo", "relationships"],
+		domains: ["health", "relationships"],
 		expectedFacets: ["vulnerability", "depression"],
 	});
 

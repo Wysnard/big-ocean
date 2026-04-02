@@ -80,7 +80,7 @@ describe("computeFacetMetrics", () => {
 
 	it("5.3: confidence approaches C_max asymptotically, never exceeds", () => {
 		const evidence: EvidenceInput[] = [];
-		const domains: LifeDomain[] = ["work", "leisure", "family", "relationships", "solo", "other"];
+		const domains: LifeDomain[] = ["work", "leisure", "family", "relationships", "health", "other"];
 		for (let i = 0; i < 50; i++) {
 			evidence.push(makeEvidence("altruism", domains[i % 6], 2, "strong", "high"));
 		}
@@ -119,7 +119,7 @@ describe("computeFacetMetrics", () => {
 			makeEvidence("assertiveness", "leisure", 1, "strong", "medium"),
 			makeEvidence("assertiveness", "family", 1, "strong", "medium"),
 			makeEvidence("assertiveness", "relationships", 1, "strong", "medium"),
-			makeEvidence("assertiveness", "solo", 1, "strong", "medium"),
+			makeEvidence("assertiveness", "health", 1, "strong", "medium"),
 		];
 		const m = getMetrics(computeFacetMetrics(evidence, FORMULA_DEFAULTS), "assertiveness");
 		expect(m.signalPower).toBeGreaterThan(0.3);
@@ -133,11 +133,11 @@ describe("computeFacetMetrics", () => {
 			makeEvidence("trust", "relationships", 1, "moderate", "high"),
 			makeEvidence("trust", "work", 0, "weak", "medium"),
 			makeEvidence("orderliness", "work", -1, "strong", "medium"),
-			makeEvidence("orderliness", "solo", -1, "moderate", "medium"),
+			makeEvidence("orderliness", "health", -1, "moderate", "medium"),
 			makeEvidence("assertiveness", "work", 2, "moderate", "high"),
 			makeEvidence("assertiveness", "relationships", 2, "strong", "high"),
 			makeEvidence("assertiveness", "leisure", 1, "weak", "medium"),
-			makeEvidence("anxiety", "solo", 0, "moderate", "medium"),
+			makeEvidence("anxiety", "health", 0, "moderate", "medium"),
 		];
 		const result = computeFacetMetrics(evidence, FORMULA_DEFAULTS);
 		expect(result.size).toBe(5);
@@ -191,7 +191,7 @@ describe("computeSteeringTarget", () => {
 		const dw = new Map<LifeDomain, number>([["work", 0.9]]);
 		metrics.set("imagination", { score: 10, confidence: 0.3, signalPower: 0.1, domainWeights: dw });
 		const sameDomain = computeSteeringTarget(metrics, "work", FORMULA_DEFAULTS);
-		const diffDomain = computeSteeringTarget(metrics, "solo", FORMULA_DEFAULTS);
+		const diffDomain = computeSteeringTarget(metrics, "health", FORMULA_DEFAULTS);
 		expect(sameDomain.targetFacet).toBe("imagination");
 		expect(diffDomain.targetFacet).toBe("imagination");
 	});

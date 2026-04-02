@@ -289,7 +289,7 @@ describe("close intent", () => {
 		const domains: DomainScore[] = [
 			{ domain: "work" as LifeDomain, score: 0.7, confidence: 0.8 },
 			{ domain: "relationships" as LifeDomain, score: 0.72, confidence: 0.7 },
-			{ domain: "solo" as LifeDomain, score: 0.68, confidence: 0.6 },
+			{ domain: "health" as LifeDomain, score: 0.68, confidence: 0.6 },
 		];
 		const target: ConvergenceTarget = {
 			facet: "self_efficacy" as never,

@@ -1,28 +1,20 @@
-import { describe, expect, it } from "vitest";
-import {
-	LIFE_DOMAINS,
-	STEERABLE_DOMAINS,
-	LifeDomainSchema,
-} from "../life-domain";
 import * as S from "effect/Schema";
+import { describe, expect, it } from "vitest";
+import { LIFE_DOMAINS, LifeDomainSchema, STEERABLE_DOMAINS } from "../life-domain";
 
 describe("LIFE_DOMAINS", () => {
 	it("includes health as a valid domain", () => {
 		expect(LIFE_DOMAINS).toContain("health");
 	});
 
-	it("contains exactly 7 domains (including solo for backward compat)", () => {
-		expect(LIFE_DOMAINS).toHaveLength(7);
+	it("does not include solo (removed in Story 40-3)", () => {
+		expect(LIFE_DOMAINS).not.toContain("solo");
+	});
+
+	it("contains exactly 6 domains", () => {
+		expect(LIFE_DOMAINS).toHaveLength(6);
 		expect([...LIFE_DOMAINS]).toEqual(
-			expect.arrayContaining([
-				"work",
-				"relationships",
-				"family",
-				"leisure",
-				"solo",
-				"health",
-				"other",
-			]),
+			expect.arrayContaining(["work", "relationships", "family", "leisure", "health", "other"]),
 		);
 	});
 });
@@ -33,9 +25,9 @@ describe("LifeDomainSchema", () => {
 		expect(decode("health")).toBe("health");
 	});
 
-	it("still accepts solo for backward compatibility", () => {
+	it("rejects solo (removed in Story 40-3)", () => {
 		const decode = S.decodeUnknownSync(LifeDomainSchema);
-		expect(decode("solo")).toBe("solo");
+		expect(() => decode("solo")).toThrow();
 	});
 
 	it("rejects invalid domains", () => {
@@ -53,19 +45,13 @@ describe("STEERABLE_DOMAINS", () => {
 		expect(STEERABLE_DOMAINS).not.toContain("other");
 	});
 
-	it("excludes solo (deprecated)", () => {
+	it("does not include solo", () => {
 		expect(STEERABLE_DOMAINS).not.toContain("solo");
 	});
 
 	it("includes work, relationships, family, leisure, health", () => {
 		expect([...STEERABLE_DOMAINS]).toEqual(
-			expect.arrayContaining([
-				"work",
-				"relationships",
-				"family",
-				"leisure",
-				"health",
-			]),
+			expect.arrayContaining(["work", "relationships", "family", "leisure", "health"]),
 		);
 		expect(STEERABLE_DOMAINS).toHaveLength(5);
 	});

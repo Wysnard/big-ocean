@@ -793,7 +793,7 @@ const MOCK_EVIDENCE = [
 		quote: "I often find myself daydreaming about completely different lives I could lead",
 		score: 16,
 		confidence: 0.82,
-		domain: "solo",
+		domain: "leisure",
 		deviation: 3,
 		highlightRange: { start: 0, end: 50 },
 		createdAt: new Date(),

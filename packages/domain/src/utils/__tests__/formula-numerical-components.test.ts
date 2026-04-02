@@ -102,7 +102,7 @@ describe("computeProjectedEntropy: exact computations", () => {
 		const weights = new Map<LifeDomain, number>([
 			["work", 1.5],
 			["leisure", 0.8],
-			["solo", 0.3],
+			["health", 0.3],
 		]);
 		const delta = 0.4;
 		const result = computeProjectedEntropy(weights, "leisure", delta);
@@ -183,7 +183,7 @@ describe("signal power: V × D decomposition (v2)", () => {
 			ev("trust", "leisure", 0, "weak", "low"),
 			ev("trust", "family", 0, "weak", "low"),
 			ev("trust", "relationships", 0, "weak", "low"),
-			ev("trust", "solo", 0, "weak", "low"),
+			ev("trust", "health", 0, "weak", "low"),
 		];
 		const twoDomains = [
 			ev("trust", "work", 0, "moderate", "medium"),
