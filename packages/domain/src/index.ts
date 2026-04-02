@@ -323,6 +323,7 @@ export {
 	type EvidenceExtraction,
 	EvidenceExtractionSchema,
 	type EvidenceItem,
+	EvidenceItemJsonSchemaSource,
 	EvidenceItemSchema,
 	evidenceExtractionJsonSchema,
 	FACET_REMAP,
