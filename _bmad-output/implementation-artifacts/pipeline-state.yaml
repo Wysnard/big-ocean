@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
 parallelism_step: 1
-parallelism_step_name: "Catalog Validation + Extraction Prompt"
-baseline_commit: "504fbca3b85af6d5aa3e05c6c62e9228f8fecf3d"
+parallelism_step_name: "Post-Implementation Cleanup"
+baseline_commit: "6cd8db6ac69c464c7b9764809629afc38f806b4e"
 created: "2026-04-02"
-last_updated: "2026-04-02T14:00:00Z"
+last_updated: "2026-04-02T22:00:00Z"
 
 # Optional context documents discovered
 context_docs:
@@ -14,26 +14,19 @@ context_docs:
 
 # Stories in this step
 stories:
-  41-3-facet-additions-to-existing-territories-and-catalog-validation:
+  cleanup-1-remove-solo-from-postgresql-enum:
     status: done
     mode: "parallel"
-    notes: "Depends on 41-2 (done). Adds cautiousness→work-dynamics, liberalism→growing-up, validates all facets ≥2 routes across 31 territories."
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/195"
-    dev_branch: "feat/story-41-3-facet-additions-to-existing-territories-and-catalog-validation"
-    error: null
-  42-3-evidence-extraction-v3-prompt-with-per-facet-conversational-anchors:
-    status: done
-    mode: "parallel"
-    notes: "Depends on 42-2 (done). Per-facet HIGH/LOW anchors for all 30 facets, dual-polarity check, polarity balance audit."
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/196"
-    dev_branch: "feat/story-42-3-evidence-extraction-v3-prompt-with-per-facet-conversational-anchors"
+    notes: "Removes unused solo value from pgEnum — requires type replacement, schedule during maintenance window."
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/198"
+    dev_branch: "feat/story-cleanup-1-remove-solo-from-postgresql-enum"
     error: null
 
 # Conflict detection (populated by step-02b)
 conflicts:
   detected: false
   scanned_branches:
-    - "feat/story-41-3-facet-additions-to-existing-territories-and-catalog-validation"
-    - "feat/story-42-3-evidence-extraction-v3-prompt-with-per-facet-conversational-anchors"
+    - "feat/story-cleanup-1-remove-solo-from-postgresql-enum"
   skipped_branches: []
   overlapping_files: []
+  note: "Single branch — no overlap possible"

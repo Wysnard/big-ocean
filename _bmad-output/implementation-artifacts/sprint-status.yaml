@@ -716,4 +716,4 @@ development_status:
   # POST-IMPLEMENTATION CLEANUP
   # Run after all Scoring v2 epics verified in production
   # ───────────────────────────────────────────────────────────────
-  cleanup-1-remove-solo-from-postgresql-enum: backlog
+  cleanup-1-remove-solo-from-postgresql-enum: pr-ready
