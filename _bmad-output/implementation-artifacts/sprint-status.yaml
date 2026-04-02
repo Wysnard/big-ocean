@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-04-02
+generated: 2026-04-02T12:30
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -679,10 +679,10 @@ development_status:
   # Stories: 1.1-1.3 in epics.md (Scoring v2)
   # Depends on: Nothing — foundation
   # ───────────────────────────────────────────────────────────────
-  epic-40: in-progress
+  epic-40: done
   40-1-add-health-life-domain-to-constants-schemas-and-database: done
   40-2-update-domain-definitions-and-assignment-guidance: done
-  40-3-migrate-existing-solo-evidence-and-remove-solo-domain: backlog
+  40-3-migrate-existing-solo-evidence-and-remove-solo-domain: done
   epic-40-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
@@ -692,8 +692,8 @@ development_status:
   # Stories: 2.1-2.3 in epics.md (Scoring v2)
   # Depends on: Epic 40 (new territories reference health domain)
   # ───────────────────────────────────────────────────────────────
-  epic-41: backlog
-  41-1-remap-existing-territory-domains-and-replace-identity-and-purpose: backlog
+  epic-41: in-progress
+  41-1-remap-existing-territory-domains-and-replace-identity-and-purpose: done
   41-2-add-6-new-territories: backlog
   41-3-facet-additions-to-existing-territories-and-catalog-validation: backlog
   epic-41-retrospective: optional
@@ -705,8 +705,8 @@ development_status:
   # Stories: 3.1-3.4 in epics.md (Scoring v2)
   # Depends on: Epic 40 (extraction prompt uses updated domain list)
   # ───────────────────────────────────────────────────────────────
-  epic-42: backlog
-  42-1-polarity-schema-database-migration-and-deviation-adapter: backlog
+  epic-42: in-progress
+  42-1-polarity-schema-database-migration-and-deviation-adapter: done
   42-2-split-conversanalyzer-into-two-separate-llm-calls: backlog
   42-3-evidence-extraction-v3-prompt-with-per-facet-conversational-anchors: backlog
   42-4-pipeline-integration-wire-two-call-extraction-into-nerin-pipeline: backlog
