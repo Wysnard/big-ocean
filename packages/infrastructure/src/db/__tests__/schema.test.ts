@@ -27,9 +27,9 @@ describe("pgEnum values match domain constants", () => {
 		expect(bigfiveFacetNameEnum.enumValues).toEqual([...ALL_FACETS]);
 	});
 
-	it("evidence_domain should have exactly 7 values (solo kept in pgEnum for backward compat)", () => {
-		expect(evidenceDomainEnum.enumValues).toHaveLength(7);
-		expect(evidenceDomainEnum.enumValues).toContain("solo");
+	it("evidence_domain should have exactly 6 values (solo removed in Story C.1)", () => {
+		expect(evidenceDomainEnum.enumValues).toHaveLength(6);
+		expect(evidenceDomainEnum.enumValues).not.toContain("solo");
 	});
 
 	it("bigfive_facet_name should have exactly 30 values", () => {

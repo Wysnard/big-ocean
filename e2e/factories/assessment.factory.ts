@@ -131,7 +131,7 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 	const pool = new Pool(TEST_DB_CONFIG);
 	const client = await pool.connect();
 
-	const domains = ["work", "relationships", "family", "leisure", "solo", "other"];
+	const domains = ["work", "relationships", "family", "leisure", "health", "other"];
 
 	try {
 		await client.query("BEGIN");
