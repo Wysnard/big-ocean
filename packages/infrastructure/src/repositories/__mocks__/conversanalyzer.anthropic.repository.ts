@@ -1,9 +1,9 @@
 /**
- * Mock: conversanalyzer.anthropic.repository.ts (v2 + v3 split)
+ * Mock: conversanalyzer.anthropic.repository.ts
  * Vitest auto-resolves when tests call:
  *   vi.mock('@workspace/infrastructure/repositories/conversanalyzer.anthropic.repository')
  *
- * Returns deterministic v2/v3 output with userState + evidence.
+ * Returns deterministic output with userState + evidence.
  * Story 10.2 (v1), Story 24-1 (v2 evolution), Story 42-2 (split calls)
  */
 import {
@@ -59,13 +59,6 @@ const defaultEvidence = [
 	},
 ];
 
-/** Default deterministic v2 output — steady/mixed state, 2 balanced evidence records */
-const defaultOutput: ConversanalyzerV2Output = {
-	userState: defaultUserState,
-	evidence: defaultEvidence,
-	tokenUsage: { input: 0, output: 0 },
-};
-
 /** Override the mock output for specific tests */
 let overrideOutput: ConversanalyzerV2Output | null = null;
 let overrideError: string | null = null;
@@ -91,22 +84,6 @@ export const _setMockEvidenceError = (message: string) => {
 export const ConversanalyzerAnthropicRepositoryLive = Layer.succeed(
 	ConversanalyzerRepository,
 	ConversanalyzerRepository.of({
-		analyze: (params: ConversanalyzerInput) => {
-			_callCount++;
-			calls.push(params);
-			if (overrideError) {
-				return Effect.fail(new ConversanalyzerError({ message: overrideError }));
-			}
-			return Effect.succeed(overrideOutput ?? defaultOutput);
-		},
-		analyzeLenient: (params: ConversanalyzerInput) => {
-			_callCount++;
-			calls.push(params);
-			if (overrideError) {
-				return Effect.fail(new ConversanalyzerError({ message: overrideError }));
-			}
-			return Effect.succeed(overrideOutput ?? defaultOutput);
-		},
 		analyzeUserState: (params: ConversanalyzerInput) => {
 			_callCount++;
 			calls.push(params);

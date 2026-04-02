@@ -55,8 +55,6 @@ export const mockNerinRepo = {
 };
 
 export const mockConversanalyzerRepo = {
-	analyze: vi.fn(),
-	analyzeLenient: vi.fn(),
 	analyzeUserState: vi.fn(),
 	analyzeUserStateLenient: vi.fn(),
 	analyzeEvidence: vi.fn(),
@@ -358,9 +356,6 @@ export function setupDefaultMocks() {
 
 	mockNerinRepo.invoke.mockReturnValue(Effect.succeed(mockNerinResponse));
 
-	mockConversanalyzerRepo.analyze.mockReturnValue(Effect.succeed(mockConversanalyzerOutput));
-	mockConversanalyzerRepo.analyzeLenient.mockReturnValue(Effect.succeed(mockConversanalyzerOutput));
-	// v3 split methods — used by runSplitThreeTierExtraction
 	mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
 		Effect.succeed({
 			userState: mockConversanalyzerOutput.userState,

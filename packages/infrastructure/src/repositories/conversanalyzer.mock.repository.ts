@@ -2,10 +2,9 @@
  * Conversanalyzer Mock Repository
  *
  * Mock implementation for E2E and integration testing that provides deterministic
- * ConversAnalyzer v2/v3 output without calling the real Anthropic API.
+ * ConversAnalyzer output without calling the real Anthropic API.
  *
  * Extracted from conversanalyzer.anthropic.repository.ts to keep production code clean.
- * Story 42-2: Added v3 split methods (analyzeUserState, analyzeEvidence)
  */
 
 import {
@@ -13,7 +12,6 @@ import {
 	type ConversanalyzerInput,
 	ConversanalyzerRepository,
 	type ConversanalyzerUserStateOutput,
-	type ConversanalyzerV2Output,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
@@ -44,14 +42,6 @@ const mockEvidence = [
 	},
 ];
 
-function mockAnalyzeV2(): ConversanalyzerV2Output {
-	return {
-		userState: mockUserState,
-		evidence: mockEvidence,
-		tokenUsage: { input: 0, output: 0 },
-	};
-}
-
 function mockUserStateOutput(): ConversanalyzerUserStateOutput {
 	return {
 		userState: mockUserState,
@@ -75,8 +65,6 @@ function mockEvidenceOutput(): ConversanalyzerEvidenceOutput {
 export const ConversanalyzerMockRepositoryLive = Layer.succeed(
 	ConversanalyzerRepository,
 	ConversanalyzerRepository.of({
-		analyze: (_input: ConversanalyzerInput) => Effect.succeed(mockAnalyzeV2()),
-		analyzeLenient: (_input: ConversanalyzerInput) => Effect.succeed(mockAnalyzeV2()),
 		analyzeUserState: (_input: ConversanalyzerInput) => Effect.succeed(mockUserStateOutput()),
 		analyzeUserStateLenient: (_input: ConversanalyzerInput) => Effect.succeed(mockUserStateOutput()),
 		analyzeEvidence: (_input: ConversanalyzerInput) => Effect.succeed(mockEvidenceOutput()),

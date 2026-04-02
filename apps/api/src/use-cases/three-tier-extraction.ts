@@ -6,9 +6,7 @@
  * - Tier 2: lenient schema (1 attempt)
  * - Tier 3: neutral defaults (no LLM call)
  *
- * v2: Single combined call (analyze/analyzeLenient)
- * v3: Split into two independent calls — user state + evidence (Story 42-2)
- *
+ * Two independent parallel calls — user state + evidence — each with its own three-tier fallback.
  * The conversation never breaks due to extraction failure — it just becomes less steered.
  */
 
@@ -40,100 +38,6 @@ export interface ThreeTierExtractionOutput {
 	readonly extractionTier: ExtractionTier;
 }
 
-/** Neutral defaults for Tier 3 fallback — no LLM call */
-export const NEUTRAL_DEFAULTS: ConversanalyzerV2Output = {
-	userState: {
-		energyBand: "steady",
-		tellingBand: "mixed",
-		energyReason: "",
-		tellingReason: "",
-		withinMessageShift: false,
-	},
-	evidence: [],
-	tokenUsage: { input: 0, output: 0 },
-};
-
-/**
- * Run the three-tier extraction pipeline.
- *
- * Tier 1: strict schema with `Effect.retry(Schedule.recurs(2))` — 3 attempts total
- * Tier 2: lenient schema via `Effect.orElse` — 1 attempt
- * Tier 3: `Effect.catchAll` returning NEUTRAL_DEFAULTS — no LLM call
- *
- * Returns the extraction result and which tier produced it.
- */
-export const runThreeTierExtraction = (input: ThreeTierExtractionInput) =>
-	Effect.gen(function* () {
-		const conversanalyzer = yield* ConversanalyzerRepository;
-		const logger = yield* LoggerRepository;
-
-		const conversanalyzerInput = {
-			message: input.message,
-			recentMessages: input.recentMessages,
-			domainDistribution: input.domainDistribution,
-		};
-
-		// Tier 1: strict schema × 3 attempts (initial + 2 retries)
-		// Effect.suspend ensures analyze() is re-called on each retry attempt
-		const tier1 = Effect.suspend(() => conversanalyzer.analyze(conversanalyzerInput)).pipe(
-			Effect.retry(Schedule.recurs(2)),
-			Effect.map(
-				(output): ThreeTierExtractionOutput => ({
-					output,
-					extractionTier: 1 as ExtractionTier,
-				}),
-			),
-		);
-
-		// Orchestrate: Tier 1 → fallback to Tier 2 → fallback to Tier 3
-		const result: ThreeTierExtractionOutput = yield* tier1.pipe(
-			// Tier 2: lenient schema × 1 attempt (lazy — only runs if Tier 1 fails)
-			Effect.catchAll((tier1Error) =>
-				conversanalyzer.analyzeLenient(conversanalyzerInput).pipe(
-					Effect.tap(() =>
-						Effect.sync(() => {
-							logger.warn("ConversAnalyzer fell back to Tier 2 (lenient schema)", {
-								sessionId: input.sessionId,
-								tier1Error: tier1Error.message,
-							});
-						}),
-					),
-					Effect.map(
-						(output): ThreeTierExtractionOutput => ({
-							output,
-							extractionTier: 2 as ExtractionTier,
-						}),
-					),
-				),
-			),
-			// Tier 3: neutral defaults — no LLM call (lazy — only runs if Tier 2 fails)
-			Effect.catchAll((tier2Error) =>
-				Effect.sync((): ThreeTierExtractionOutput => {
-					logger.warn("ConversAnalyzer failed at all tiers, using Tier 3 neutral defaults", {
-						sessionId: input.sessionId,
-						tier2Error: tier2Error.message,
-					});
-					return {
-						output: NEUTRAL_DEFAULTS,
-						extractionTier: 3 as ExtractionTier,
-					};
-				}),
-			),
-		);
-
-		logger.info("Three-tier extraction completed", {
-			sessionId: input.sessionId,
-			extractionTier: result.extractionTier,
-			evidenceCount: result.output.evidence.length,
-			energyBand: result.output.userState.energyBand,
-			tellingBand: result.output.userState.tellingBand,
-		});
-
-		return result;
-	});
-
-// ─── v3 Split Extraction (Story 42-2) ────────────────────────────────────────
-
 /** Neutral defaults for user state — Tier 3 fallback */
 const USER_STATE_NEUTRAL_DEFAULTS: ConversanalyzerUserStateOutput = {
 	userState: {
@@ -151,13 +55,6 @@ const EVIDENCE_NEUTRAL_DEFAULTS: ConversanalyzerEvidenceOutput = {
 	evidence: [],
 	tokenUsage: { input: 0, output: 0 },
 };
-
-/** Output from the split three-tier extraction pipeline */
-export interface SplitThreeTierExtractionOutput {
-	readonly output: ConversanalyzerV2Output;
-	readonly userStateTier: ExtractionTier;
-	readonly evidenceTier: ExtractionTier;
-}
 
 /**
  * Run user state extraction with three-tier fallback.
@@ -274,9 +171,9 @@ export const runEvidenceExtraction = (input: ThreeTierExtractionInput) =>
 	});
 
 /**
- * Run the split three-tier extraction pipeline (Story 42-2).
+ * Run the split three-tier extraction pipeline.
  *
- * Calls user state extraction then evidence extraction sequentially.
+ * Runs user state and evidence extraction in parallel.
  * Each call has its own independent three-tier fallback.
  * Returns combined output compatible with ConversanalyzerV2Output.
  */
@@ -284,11 +181,11 @@ export const runSplitThreeTierExtraction = (input: ThreeTierExtractionInput) =>
 	Effect.gen(function* () {
 		const logger = yield* LoggerRepository;
 
-		// Call 1: User state extraction
-		const userStateResult = yield* runUserStateExtraction(input);
-
-		// Call 2: Evidence extraction (runs regardless of Call 1 outcome)
-		const evidenceResult = yield* runEvidenceExtraction(input);
+		// Run both extractions in parallel — they are fully independent
+		const [userStateResult, evidenceResult] = yield* Effect.all(
+			[runUserStateExtraction(input), runEvidenceExtraction(input)],
+			{ concurrency: 2 },
+		);
 
 		// Combine into the existing ConversanalyzerV2Output shape
 		const combined: ConversanalyzerV2Output = {
@@ -300,7 +197,7 @@ export const runSplitThreeTierExtraction = (input: ThreeTierExtractionInput) =>
 			},
 		};
 
-		logger.info("Split three-tier extraction completed", {
+		logger.info("Three-tier extraction completed", {
 			sessionId: input.sessionId,
 			userStateTier: userStateResult.tier,
 			evidenceTier: evidenceResult.tier,
@@ -309,7 +206,6 @@ export const runSplitThreeTierExtraction = (input: ThreeTierExtractionInput) =>
 			tellingBand: combined.userState.tellingBand,
 		});
 
-		// Return as ThreeTierExtractionOutput for downstream compatibility
 		// Use the worst (highest) tier number for the combined extraction tier
 		const combinedTier = Math.max(userStateResult.tier, evidenceResult.tier) as ExtractionTier;
 

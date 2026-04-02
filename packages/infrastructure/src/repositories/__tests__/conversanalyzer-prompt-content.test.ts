@@ -1,17 +1,13 @@
 /**
- * ConversAnalyzer v2 Prompt Content Tests (Story 31-8, AC4; Story 40-2)
+ * ConversAnalyzer Prompt Content Tests (Story 31-8, AC4; Story 40-2; Story 42-2)
  *
- * Verifies that the ConversAnalyzer v2 prompt includes:
- * - Dual-facet extraction check (mandatory)
- * - Polarity balance target (>=30% negative deviations)
- * - Energy band classification with guardrails
- * - Telling band classification
- * - Deviation calibration with negative examples
- * - Updated domain definitions (Story 40-2: health added, solo removed)
+ * Verifies that the split ConversAnalyzer prompts include expected content:
+ * - User state prompt: energy/telling bands, guardrails, conversation context
+ * - Evidence prompt: facet definitions, deviation calibration, dual-facet check, polarity balance
  */
 
 import { describe, expect, it } from "vitest";
-import { buildV2Prompt } from "../conversanalyzer.anthropic.repository";
+import { buildEvidencePrompt, buildUserStatePrompt } from "../conversanalyzer.anthropic.repository";
 
 const testInput = {
 	message: "I work in tech and enjoy solving complex problems",
@@ -33,27 +29,8 @@ const testInput = {
 	},
 };
 
-describe("ConversAnalyzer v2 Prompt Content (Story 31-8, AC4)", () => {
-	const prompt = buildV2Prompt(testInput);
-
-	describe("Dual-Facet Extraction Check", () => {
-		it("includes mandatory dual-facet check instruction", () => {
-			expect(prompt).toContain("Dual-Facet Check (MANDATORY)");
-		});
-
-		it("instructs finding NEGATIVE deviation for DIFFERENT facet", () => {
-			expect(prompt).toContain("DIFFERENT facet");
-			expect(prompt).toContain("NEGATIVE deviation");
-		});
-	});
-
-	describe("Polarity Balance Target", () => {
-		it("includes polarity balance target of at least 30%", () => {
-			expect(prompt).toContain("Polarity Balance Target");
-			expect(prompt).toContain("30%");
-			expect(prompt).toContain("negative deviations");
-		});
-	});
+describe("User State Prompt (buildUserStatePrompt)", () => {
+	const prompt = buildUserStatePrompt(testInput);
 
 	describe("Energy Band Classification", () => {
 		it("includes all five energy bands", () => {
@@ -85,6 +62,40 @@ describe("ConversAnalyzer v2 Prompt Content (Story 31-8, AC4)", () => {
 		});
 	});
 
+	describe("Conversation Context", () => {
+		it("includes recent messages as context", () => {
+			expect(prompt).toContain("[assistant]: Tell me about your work.");
+		});
+
+		it("includes latest user message separately", () => {
+			expect(prompt).toContain("Latest User Message (analyze THIS)");
+			expect(prompt).toContain("I work in tech and enjoy solving complex problems");
+		});
+	});
+});
+
+describe("Evidence Prompt (buildEvidencePrompt)", () => {
+	const prompt = buildEvidencePrompt(testInput);
+
+	describe("Dual-Facet Extraction Check", () => {
+		it("includes mandatory dual-facet check instruction", () => {
+			expect(prompt).toContain("Dual-Facet Check (MANDATORY)");
+		});
+
+		it("instructs finding NEGATIVE deviation for DIFFERENT facet", () => {
+			expect(prompt).toContain("DIFFERENT facet");
+			expect(prompt).toContain("NEGATIVE deviation");
+		});
+	});
+
+	describe("Polarity Balance Target", () => {
+		it("includes polarity balance target of at least 30%", () => {
+			expect(prompt).toContain("Polarity Balance Target");
+			expect(prompt).toContain("30%");
+			expect(prompt).toContain("negative deviations");
+		});
+	});
+
 	describe("Deviation Calibration", () => {
 		it("includes deviation range -3 to +3", () => {
 			expect(prompt).toContain("-3 to +3");
@@ -95,33 +106,19 @@ describe("ConversAnalyzer v2 Prompt Content (Story 31-8, AC4)", () => {
 		});
 
 		it("includes negative deviation examples", () => {
-			// Prompt should include examples with negative deviations like gregariousness -3, anxiety -3
 			expect(prompt).toContain("gregariousness -3");
 			expect(prompt).toContain("anxiety -3");
 		});
 	});
 
-	describe("Two-Phase Structure", () => {
-		it("positions state extraction FIRST (PHASE 1)", () => {
-			const phase1Index = prompt.indexOf("PHASE 1: USER STATE EXTRACTION");
-			const phase2Index = prompt.indexOf("PHASE 2: PERSONALITY EVIDENCE EXTRACTION");
-			expect(phase1Index).toBeGreaterThan(-1);
-			expect(phase2Index).toBeGreaterThan(-1);
-			expect(phase1Index).toBeLessThan(phase2Index);
-		});
-	});
-
-	describe("Domain Distribution", () => {
-		it("includes current evidence distribution from input", () => {
-			expect(prompt).toContain("work=2");
-			expect(prompt).toContain("relationships=1");
-		});
-	});
-
 	describe("Conversation Context", () => {
-		it("includes recent messages in prompt", () => {
+		it("includes recent messages as context", () => {
 			expect(prompt).toContain("[assistant]: Tell me about your work.");
-			expect(prompt).toContain("[user]: I work in tech and enjoy solving complex problems");
+		});
+
+		it("includes latest user message separately", () => {
+			expect(prompt).toContain("Latest User Message (analyze THIS)");
+			expect(prompt).toContain("I work in tech and enjoy solving complex problems");
 		});
 	});
 
@@ -156,6 +153,22 @@ describe("ConversAnalyzer v2 Prompt Content (Story 31-8, AC4)", () => {
 
 		it("other definition includes Target <5%", () => {
 			expect(prompt).toContain("Target <5%");
+		});
+	});
+
+	describe("No user state content in evidence prompt", () => {
+		it("does not contain energy band classification", () => {
+			expect(prompt).not.toContain("Energy Band");
+			expect(prompt).not.toContain("energyBand");
+		});
+
+		it("does not contain telling band classification", () => {
+			expect(prompt).not.toContain("Telling Band");
+			expect(prompt).not.toContain("tellingBand");
+		});
+
+		it("does not contain guardrails", () => {
+			expect(prompt).not.toContain("LOAD-BEARING GUARDRAILS");
 		});
 	});
 });

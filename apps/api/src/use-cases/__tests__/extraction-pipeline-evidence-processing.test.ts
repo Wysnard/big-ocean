@@ -27,7 +27,6 @@ import {
 } from "@workspace/domain";
 import { Effect, Layer, Redacted } from "effect";
 import { runNerinPipeline } from "../nerin-pipeline";
-import { NEUTRAL_DEFAULTS } from "../three-tier-extraction";
 
 // ---- Mock Repos ----
 
@@ -80,8 +79,6 @@ const mockNerinRepo = {
 };
 
 const mockConversanalyzerRepo = {
-	analyze: vi.fn(),
-	analyzeLenient: vi.fn(),
 	analyzeUserState: vi.fn(),
 	analyzeUserStateLenient: vi.fn(),
 	analyzeEvidence: vi.fn(),
@@ -299,11 +296,6 @@ function setupDefaultMocks() {
 
 	mockNerinRepo.invoke.mockReturnValue(Effect.succeed(mockNerinResponse));
 
-	mockConversanalyzerRepo.analyze.mockReturnValue(Effect.succeed(mockConversanalyzerV2Output));
-	mockConversanalyzerRepo.analyzeLenient.mockReturnValue(
-		Effect.succeed(mockConversanalyzerV2Output),
-	);
-	// v3 split methods — used by runSplitThreeTierExtraction
 	mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
 		Effect.succeed({
 			userState: mockConversanalyzerV2Output.userState,
@@ -537,8 +529,6 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 		it.effect("no evidence saved when extraction falls to Tier 3 neutral defaults", () =>
 			Effect.gen(function* () {
 				const llmError = Effect.fail(new ConversanalyzerError({ message: "LLM timeout" }));
-				mockConversanalyzerRepo.analyze.mockReturnValue(llmError);
-				mockConversanalyzerRepo.analyzeLenient.mockReturnValue(llmError);
 				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(llmError);
 				mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(llmError);
 				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(llmError);
@@ -569,8 +559,6 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 		it.effect("structured failure event is logged (NFR28)", () =>
 			Effect.gen(function* () {
 				const llmError = Effect.fail(new ConversanalyzerError({ message: "LLM timeout" }));
-				mockConversanalyzerRepo.analyze.mockReturnValue(llmError);
-				mockConversanalyzerRepo.analyzeLenient.mockReturnValue(llmError);
 				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(llmError);
 				mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(llmError);
 				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(llmError);
@@ -590,17 +578,5 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 				);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
-	});
-
-	describe("NEUTRAL_DEFAULTS constant (Tier 3)", () => {
-		it("provides correct default values per architecture spec", () => {
-			expect(NEUTRAL_DEFAULTS.userState.energyBand).toBe("steady");
-			expect(NEUTRAL_DEFAULTS.userState.tellingBand).toBe("mixed");
-			expect(NEUTRAL_DEFAULTS.userState.withinMessageShift).toBe(false);
-			expect(NEUTRAL_DEFAULTS.userState.energyReason).toBe("");
-			expect(NEUTRAL_DEFAULTS.userState.tellingReason).toBe("");
-			expect(NEUTRAL_DEFAULTS.evidence).toEqual([]);
-			expect(NEUTRAL_DEFAULTS.tokenUsage).toEqual({ input: 0, output: 0 });
-		});
 	});
 });
