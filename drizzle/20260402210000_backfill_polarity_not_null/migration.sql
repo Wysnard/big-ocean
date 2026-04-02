@@ -3,8 +3,8 @@
 
 UPDATE conversation_evidence
 SET polarity = CASE
-  WHEN deviation >= 0 THEN 'high'
-  ELSE 'low'
+  WHEN deviation >= 0 THEN 'high'::evidence_polarity
+  ELSE 'low'::evidence_polarity
 END
 WHERE polarity IS NULL;
 
