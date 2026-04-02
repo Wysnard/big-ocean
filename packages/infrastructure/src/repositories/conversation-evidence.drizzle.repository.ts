@@ -37,6 +37,7 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 								strength: r.strength,
 								confidence: r.confidence,
 								domain: r.domain,
+								polarity: r.polarity ?? null,
 								note: r.note,
 							})),
 						)
@@ -75,6 +76,7 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 						strength: row.strength as ConversationEvidenceRecord["strength"],
 						confidence: row.confidence as ConversationEvidenceRecord["confidence"],
 						domain: row.domain as ConversationEvidenceRecord["domain"],
+						polarity: (row.polarity as ConversationEvidenceRecord["polarity"]) ?? null,
 						note: row.note,
 						createdAt: row.createdAt as Date,
 					}));
@@ -93,6 +95,7 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 							strength: conversationEvidence.strength,
 							confidence: conversationEvidence.confidence,
 							domain: conversationEvidence.domain,
+							polarity: conversationEvidence.polarity,
 							note: conversationEvidence.note,
 							createdAt: conversationEvidence.createdAt,
 						})
@@ -121,6 +124,7 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 						strength: row.strength as ConversationEvidenceRecord["strength"],
 						confidence: row.confidence as ConversationEvidenceRecord["confidence"],
 						domain: row.domain as ConversationEvidenceRecord["domain"],
+						polarity: (row.polarity as ConversationEvidenceRecord["polarity"]) ?? null,
 						note: row.note,
 						createdAt: row.createdAt as Date,
 					}));

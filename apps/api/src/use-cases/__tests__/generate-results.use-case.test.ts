@@ -100,6 +100,7 @@ const makeConversationEvidence = (
 		strength: r.strength,
 		confidence: r.confidence,
 		domain: r.domain as ConversationEvidenceRecord["domain"],
+		polarity: null,
 		note: r.note,
 		createdAt: new Date(),
 	}));

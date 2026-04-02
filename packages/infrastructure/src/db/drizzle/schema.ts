@@ -51,6 +51,8 @@ export const evidenceStrengthEnum = pgEnum("evidence_strength", ["weak", "modera
 
 export const evidenceConfidenceEnum = pgEnum("evidence_confidence", ["low", "medium", "high"]);
 
+export const evidencePolarityEnum = pgEnum("evidence_polarity", ["high", "low"]);
+
 export const resultStageEnum = pgEnum("result_stage", ["scored", "completed"]);
 
 export const portraitTypeEnum = pgEnum("portrait_type", PORTRAIT_TYPES);
@@ -287,6 +289,8 @@ export const conversationEvidence = pgTable(
 		strength: evidenceStrengthEnum("strength").notNull(),
 		confidence: evidenceConfidenceEnum("confidence").notNull(),
 		domain: evidenceDomainEnum("domain").notNull(),
+		/** Polarity of evidence — nullable for backward compat with pre-v3 evidence (Story 42-1) */
+		polarity: evidencePolarityEnum("polarity"),
 		note: text("note").notNull(),
 		createdAt: timestamp("created_at").defaultNow(),
 	},
