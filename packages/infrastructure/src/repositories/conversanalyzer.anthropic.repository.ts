@@ -30,7 +30,6 @@ import { Effect, Either, Layer } from "effect";
 import * as ParseResult from "effect/ParseResult";
 import * as S from "effect/Schema";
 
-/** @internal Exported for testing — not part of public API */
 // ─── Prompts ─────────────────────────────────────────────────────────────────
 
 /** @internal Exported for testing — user state extraction prompt */
@@ -235,7 +234,7 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 					},
 					catch: (error) =>
 						new ConversanalyzerError({
-							message: error instanceof Error ? error.message : "ConversAnalyzeruser state strict failed",
+							message: error instanceof Error ? error.message : "ConversAnalyzer user state strict failed",
 						}),
 				}),
 
@@ -266,7 +265,8 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 					},
 					catch: (error) =>
 						new ConversanalyzerError({
-							message: error instanceof Error ? error.message : "ConversAnalyzeruser state lenient failed",
+							message:
+								error instanceof Error ? error.message : "ConversAnalyzer user state lenient failed",
 						}),
 				}),
 
@@ -315,7 +315,7 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 					},
 					catch: (error) =>
 						new ConversanalyzerError({
-							message: error instanceof Error ? error.message : "ConversAnalyzerevidence strict failed",
+							message: error instanceof Error ? error.message : "ConversAnalyzer evidence strict failed",
 						}),
 				}),
 
@@ -383,7 +383,7 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 					},
 					catch: (error) =>
 						new ConversanalyzerError({
-							message: error instanceof Error ? error.message : "ConversAnalyzerevidence lenient failed",
+							message: error instanceof Error ? error.message : "ConversAnalyzer evidence lenient failed",
 						}),
 				}),
 		});
