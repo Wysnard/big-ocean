@@ -85,7 +85,7 @@ function ResetPasswordPage() {
 	const hasValidToken = !!token && urlError !== "INVALID_TOKEN";
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-background">
+		<div className="h-[calc(100vh-3.5rem)] flex items-center justify-center bg-background">
 			<div className="w-full max-w-md">
 				<div className="relative mx-auto max-w-md overflow-hidden rounded-3xl bg-card p-8 shadow-lg sm:p-10">
 					{/* Corner geometric decorations */}

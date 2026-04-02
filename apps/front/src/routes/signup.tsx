@@ -27,7 +27,7 @@ function SignupPage() {
 	const { sessionId, redirectTo } = Route.useSearch();
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-background">
+		<div className="h-[calc(100vh-3.5rem)] flex items-center justify-center bg-background">
 			<div className="w-full max-w-md">
 				<SignupForm anonymousSessionId={sessionId} redirectTo={redirectTo} />
 			</div>

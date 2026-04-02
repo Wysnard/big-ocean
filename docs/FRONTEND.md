@@ -510,6 +510,10 @@ packages/ui/
 4. ✅ Add `data-slot` to all component roots
 5. ✅ Use `cn()` for class merging
 
+### Layout
+
+1. ✅ **Header-aware page height:** The global header is `h-14` (3.5rem / 56px) and sticky. Pages that should fill the viewport without scrolling must use `h-[calc(100vh-3.5rem)]` — never `min-h-screen` or `h-screen`, which ignore the header and cause overflow.
+
 ### Styling
 
 1. ✅ Mobile-first responsive design
