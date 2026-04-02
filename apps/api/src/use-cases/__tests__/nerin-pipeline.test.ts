@@ -121,6 +121,7 @@ const mockConversanalyzerOutput = {
 		{
 			bigfiveFacet: "imagination" as const,
 			deviation: 2,
+			polarity: "high" as const,
 			strength: "strong" as const,
 			confidence: "high" as const,
 			domain: "work" as const,
@@ -129,6 +130,7 @@ const mockConversanalyzerOutput = {
 		{
 			bigfiveFacet: "trust" as const,
 			deviation: 1,
+			polarity: "high" as const,
 			strength: "moderate" as const,
 			confidence: "medium" as const,
 			domain: "relationships" as const,
@@ -728,6 +730,32 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 				expect(evidenceInput).toHaveProperty("message");
 				expect(evidenceInput).toHaveProperty("recentMessages");
 				expect(evidenceInput).toHaveProperty("domainDistribution");
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("Polarity passthrough (Story 42-4)", () => {
+		it.effect("saves evidence with polarity field when present", () =>
+			Effect.gen(function* () {
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
+
+				yield* runNerinPipeline({
+					sessionId: "session_test_123",
+					userMessage: "I like helping people",
+				});
+
+				// Evidence should be saved
+				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
+
+				// Verify polarity is included in saved evidence
+				const savedEvidence = mockEvidenceRepo.save.mock.calls[0]?.[0];
+				expect(savedEvidence).toBeDefined();
+				expect(savedEvidence.length).toBeGreaterThan(0);
+				for (const record of savedEvidence) {
+					expect(record).toHaveProperty("polarity");
+					expect(["high", "low"]).toContain(record.polarity);
+				}
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});

@@ -27,6 +27,7 @@ const mockEvidence = [
 	{
 		bigfiveFacet: "imagination" as const,
 		deviation: 1,
+		polarity: "high" as const,
 		strength: "moderate" as const,
 		confidence: "medium" as const,
 		domain: "work" as const,
@@ -35,6 +36,7 @@ const mockEvidence = [
 	{
 		bigfiveFacet: "trust" as const,
 		deviation: 1,
+		polarity: "high" as const,
 		strength: "weak" as const,
 		confidence: "medium" as const,
 		domain: "relationships" as const,

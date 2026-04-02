@@ -173,19 +173,21 @@ export const runEvidenceExtraction = (input: ThreeTierExtractionInput) =>
 /**
  * Run the split three-tier extraction pipeline.
  *
- * Runs user state and evidence extraction in parallel.
- * Each call has its own independent three-tier fallback.
+ * Runs user state extraction first, then evidence extraction sequentially.
+ * Each call has its own independent three-tier fallback — if user state fails,
+ * evidence extraction still runs.
  * Returns combined output compatible with ConversanalyzerV2Output.
+ *
+ * Story 42-4: Changed from parallel to sequential (user state first, then evidence).
  */
 export const runSplitThreeTierExtraction = (input: ThreeTierExtractionInput) =>
 	Effect.gen(function* () {
 		const logger = yield* LoggerRepository;
 
-		// Run both extractions in parallel — they are fully independent
-		const [userStateResult, evidenceResult] = yield* Effect.all(
-			[runUserStateExtraction(input), runEvidenceExtraction(input)],
-			{ concurrency: 2 },
-		);
+		// Run user state extraction first, then evidence extraction sequentially.
+		// Both are independent — each has its own three-tier fallback.
+		const userStateResult = yield* runUserStateExtraction(input);
+		const evidenceResult = yield* runEvidenceExtraction(input);
 
 		// Combine into the existing ConversanalyzerV2Output shape
 		const combined: ConversanalyzerV2Output = {

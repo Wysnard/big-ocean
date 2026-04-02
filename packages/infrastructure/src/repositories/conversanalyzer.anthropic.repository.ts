@@ -455,6 +455,7 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 								confidence: e.confidence,
 								domain: e.domain,
 								note: e.note,
+								...(e.polarity !== undefined ? { polarity: e.polarity } : {}),
 							})),
 							tokenUsage,
 						};
@@ -523,6 +524,7 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 								confidence: e.confidence,
 								domain: e.domain,
 								note: e.note,
+								...(e.polarity !== undefined ? { polarity: e.polarity } : {}),
 							})),
 							tokenUsage,
 						};
