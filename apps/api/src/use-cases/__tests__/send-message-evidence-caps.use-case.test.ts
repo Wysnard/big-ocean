@@ -29,7 +29,7 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 		it.effect("should drop evidence with finalWeight below 0.36", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				mockConversanalyzerRepo.analyze.mockReturnValue(
+				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
 					Effect.succeed({
 						evidence: [
 							// finalWeight: 0.3 * 0.3 = 0.09 — below threshold, dropped
@@ -69,13 +69,6 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 								note: "Creative",
 							},
 						],
-						userState: {
-							energyBand: "steady" as const,
-							tellingBand: "mixed" as const,
-							energyReason: "",
-							tellingReason: "",
-							withinMessageShift: false,
-						},
 						tokenUsage: { input: 200, output: 50 },
 					}),
 				);
@@ -97,7 +90,7 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 		it.effect("should keep all 7+ high-quality evidence records", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				mockConversanalyzerRepo.analyze.mockReturnValue(
+				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
 					Effect.succeed({
 						evidence: [
 							{
@@ -157,13 +150,6 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 								note: "Assertive",
 							},
 						],
-						userState: {
-							energyBand: "steady" as const,
-							tellingBand: "mixed" as const,
-							energyReason: "",
-							tellingReason: "",
-							withinMessageShift: false,
-						},
 						tokenUsage: { input: 200, output: 50 },
 					}),
 				);
@@ -179,7 +165,7 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 		it.effect("should save nothing when all evidence is below threshold", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				mockConversanalyzerRepo.analyze.mockReturnValue(
+				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
 					Effect.succeed({
 						evidence: [
 							{
@@ -199,13 +185,6 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 								note: "Curious",
 							},
 						],
-						userState: {
-							energyBand: "steady" as const,
-							tellingBand: "mixed" as const,
-							energyReason: "",
-							tellingReason: "",
-							withinMessageShift: false,
-						},
 						tokenUsage: { input: 200, output: 50 },
 					}),
 				);
@@ -238,7 +217,8 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 
 				yield* sendMessage({ sessionId: "session_test_123", message: "I work in tech" });
 
-				expect(mockConversanalyzerRepo.analyze).toHaveBeenCalledTimes(1);
+				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
+				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});

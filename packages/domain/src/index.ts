@@ -191,10 +191,12 @@ export {
 // Conversanalyzer repository (Story 10.2, v2 Story 24-1)
 export {
 	ConversanalyzerError,
+	type ConversanalyzerEvidenceOutput,
 	type ConversanalyzerInput,
 	type ConversanalyzerOutput,
 	ConversanalyzerRepository,
 	type ConversanalyzerUserState,
+	type ConversanalyzerUserStateOutput,
 	type ConversanalyzerV2Output,
 	type ObservedEnergyLevel,
 } from "./repositories/conversanalyzer.repository";
@@ -307,9 +309,21 @@ export {
 	conversanalyzerV2JsonSchema,
 	decodeConversanalyzerV2Lenient,
 	decodeConversanalyzerV2Strict,
+	decodeEvidenceLenient,
+	decodeEvidenceStrict,
+	decodeUserStateLenient,
+	decodeUserStateStrict,
+	type EvidenceOnlyExtraction,
+	EvidenceOnlyToolOutput,
+	evidenceOnlyJsonSchema,
 	LenientConversanalyzerV2ToolOutput,
+	LenientEvidenceOnlyToolOutput,
+	LenientUserStateOnlyToolOutput,
 	type UserState,
+	type UserStateOnlyExtraction,
+	UserStateOnlyToolOutput,
 	UserStateSchema,
+	userStateOnlyJsonSchema,
 } from "./schemas/conversanalyzer-v2-extraction";
 // Evidence extraction schemas — ConversAnalyzer structured output with lenient filtering
 export {

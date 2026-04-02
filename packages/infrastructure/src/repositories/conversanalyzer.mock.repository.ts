@@ -2,45 +2,66 @@
  * Conversanalyzer Mock Repository
  *
  * Mock implementation for E2E and integration testing that provides deterministic
- * ConversAnalyzer v2 output without calling the real Anthropic API.
+ * ConversAnalyzer v2/v3 output without calling the real Anthropic API.
  *
  * Extracted from conversanalyzer.anthropic.repository.ts to keep production code clean.
+ * Story 42-2: Added v3 split methods (analyzeUserState, analyzeEvidence)
  */
 
 import {
+	type ConversanalyzerEvidenceOutput,
 	type ConversanalyzerInput,
 	ConversanalyzerRepository,
+	type ConversanalyzerUserStateOutput,
 	type ConversanalyzerV2Output,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
+const mockUserState = {
+	energyBand: "steady" as const,
+	tellingBand: "mixed" as const,
+	energyReason: "Engaged with moderate self-reflection",
+	tellingReason: "Follows prompts with some self-direction",
+	withinMessageShift: false,
+};
+
+const mockEvidence = [
+	{
+		bigfiveFacet: "imagination" as const,
+		deviation: 1,
+		strength: "moderate" as const,
+		confidence: "medium" as const,
+		domain: "work" as const,
+		note: "Shows creative thinking in professional context",
+	},
+	{
+		bigfiveFacet: "trust" as const,
+		deviation: 1,
+		strength: "weak" as const,
+		confidence: "medium" as const,
+		domain: "relationships" as const,
+		note: "Indicates baseline trust in social interactions",
+	},
+];
+
 function mockAnalyzeV2(): ConversanalyzerV2Output {
 	return {
-		userState: {
-			energyBand: "steady",
-			tellingBand: "mixed",
-			energyReason: "Engaged with moderate self-reflection",
-			tellingReason: "Follows prompts with some self-direction",
-			withinMessageShift: false,
-		},
-		evidence: [
-			{
-				bigfiveFacet: "imagination",
-				deviation: 1,
-				strength: "moderate",
-				confidence: "medium",
-				domain: "work",
-				note: "Shows creative thinking in professional context",
-			},
-			{
-				bigfiveFacet: "trust",
-				deviation: 1,
-				strength: "weak",
-				confidence: "medium",
-				domain: "relationships",
-				note: "Indicates baseline trust in social interactions",
-			},
-		],
+		userState: mockUserState,
+		evidence: mockEvidence,
+		tokenUsage: { input: 0, output: 0 },
+	};
+}
+
+function mockUserStateOutput(): ConversanalyzerUserStateOutput {
+	return {
+		userState: mockUserState,
+		tokenUsage: { input: 0, output: 0 },
+	};
+}
+
+function mockEvidenceOutput(): ConversanalyzerEvidenceOutput {
+	return {
+		evidence: mockEvidence,
 		tokenUsage: { input: 0, output: 0 },
 	};
 }
@@ -49,12 +70,16 @@ function mockAnalyzeV2(): ConversanalyzerV2Output {
  * Conversanalyzer Mock Repository Layer
  *
  * Provides deterministic extraction output for E2E testing.
- * Both analyze and analyzeLenient return the same mock data.
+ * All methods return the same mock data.
  */
 export const ConversanalyzerMockRepositoryLive = Layer.succeed(
 	ConversanalyzerRepository,
 	ConversanalyzerRepository.of({
 		analyze: (_input: ConversanalyzerInput) => Effect.succeed(mockAnalyzeV2()),
 		analyzeLenient: (_input: ConversanalyzerInput) => Effect.succeed(mockAnalyzeV2()),
+		analyzeUserState: (_input: ConversanalyzerInput) => Effect.succeed(mockUserStateOutput()),
+		analyzeUserStateLenient: (_input: ConversanalyzerInput) => Effect.succeed(mockUserStateOutput()),
+		analyzeEvidence: (_input: ConversanalyzerInput) => Effect.succeed(mockEvidenceOutput()),
+		analyzeEvidenceLenient: (_input: ConversanalyzerInput) => Effect.succeed(mockEvidenceOutput()),
 	}),
 );

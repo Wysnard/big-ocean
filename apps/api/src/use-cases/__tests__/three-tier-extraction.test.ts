@@ -23,6 +23,10 @@ import { NEUTRAL_DEFAULTS, runThreeTierExtraction } from "../three-tier-extracti
 const mockConversanalyzerRepo = {
 	analyze: vi.fn(),
 	analyzeLenient: vi.fn(),
+	analyzeUserState: vi.fn(),
+	analyzeUserStateLenient: vi.fn(),
+	analyzeEvidence: vi.fn(),
+	analyzeEvidenceLenient: vi.fn(),
 };
 
 const mockLoggerRepo = {

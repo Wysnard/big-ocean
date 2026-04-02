@@ -3,8 +3,9 @@
  *
  * Pure interface for Haiku-based personality evidence extraction.
  * v2: Dual extraction — userState (energy + telling) alongside evidence.
+ * v3: Split into two separate LLM calls — user state + evidence independently.
  *
- * Story 10.2 (v1), Story 24-1 (v2 evolution)
+ * Story 10.2 (v1), Story 24-1 (v2 evolution), Story 42-2 (split calls)
  */
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
@@ -66,6 +67,18 @@ export interface ConversanalyzerOutput {
 	readonly tokenUsage: { readonly input: number; readonly output: number };
 }
 
+/** v3 user state output — standalone extraction result (Story 42-2) */
+export interface ConversanalyzerUserStateOutput {
+	readonly userState: ConversanalyzerUserState;
+	readonly tokenUsage: { readonly input: number; readonly output: number };
+}
+
+/** v3 evidence output — standalone extraction result (Story 42-2) */
+export interface ConversanalyzerEvidenceOutput {
+	readonly evidence: (EvidenceInput & { readonly note: string })[];
+	readonly tokenUsage: { readonly input: number; readonly output: number };
+}
+
 export class ConversanalyzerRepository extends Context.Tag("ConversanalyzerRepository")<
 	ConversanalyzerRepository,
 	{
@@ -77,5 +90,21 @@ export class ConversanalyzerRepository extends Context.Tag("ConversanalyzerRepos
 		readonly analyzeLenient: (
 			params: ConversanalyzerInput,
 		) => Effect.Effect<ConversanalyzerV2Output, ConversanalyzerError>;
+		/** v3: User state extraction only — strict schema (Story 42-2) */
+		readonly analyzeUserState: (
+			params: ConversanalyzerInput,
+		) => Effect.Effect<ConversanalyzerUserStateOutput, ConversanalyzerError>;
+		/** v3: User state extraction only — lenient schema (Story 42-2) */
+		readonly analyzeUserStateLenient: (
+			params: ConversanalyzerInput,
+		) => Effect.Effect<ConversanalyzerUserStateOutput, ConversanalyzerError>;
+		/** v3: Evidence extraction only — strict schema (Story 42-2) */
+		readonly analyzeEvidence: (
+			params: ConversanalyzerInput,
+		) => Effect.Effect<ConversanalyzerEvidenceOutput, ConversanalyzerError>;
+		/** v3: Evidence extraction only — lenient schema (Story 42-2) */
+		readonly analyzeEvidenceLenient: (
+			params: ConversanalyzerInput,
+		) => Effect.Effect<ConversanalyzerEvidenceOutput, ConversanalyzerError>;
 	}
 >() {}
