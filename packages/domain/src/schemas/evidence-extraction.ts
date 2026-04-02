@@ -6,6 +6,7 @@
  * and a lenient schema (for resilient parsing that filters invalid items).
  *
  * Story 10.2 / Fix: hallucinated facet names
+ * Story 42-3: v3 polarity-based extraction — LLM outputs polarity+strength, deviation derived
  */
 
 import { Either, JSONSchema } from "effect";
@@ -14,6 +15,7 @@ import * as S from "effect/Schema";
 import type { FacetName } from "../constants/big-five";
 import { ALL_FACETS } from "../constants/big-five";
 import { LIFE_DOMAINS } from "../constants/life-domain";
+import { deriveDeviation } from "../utils/derive-deviation";
 
 /**
  * Remap known LLM hallucinated facet names to their closest valid Big Five facet.
@@ -71,34 +73,97 @@ const FacetNameSchema = S.transformOrFail(S.String, S.Literal(...ALL_FACETS), {
 	encode: (facet) => ParseResult.succeed(facet),
 });
 
-// ─── Per-item schema ─────────────────────────────────────────────────────────
+// ─── Per-item raw schema (accepts both old deviation-based and new polarity-based) ────
 
-export const EvidenceItemSchema = S.Struct({
+const EvidenceItemRawSchema = S.Struct({
 	bigfiveFacet: FacetNameSchema,
-	deviation: S.Int.pipe(S.between(-3, 3)),
+	/** Deviation — optional in v3 (derived from polarity+strength). Required in v2 (pre-polarity). */
+	deviation: S.optional(S.Int.pipe(S.between(-3, 3))),
 	strength: S.Literal("weak", "moderate", "strong"),
 	confidence: S.Literal("low", "medium", "high"),
 	domain: S.Literal(...LIFE_DOMAINS),
 	note: S.String.pipe(S.maxLength(500)),
-	/** Polarity field — optional for backward compat with existing extraction pipeline (Story 42-1) */
+	/** Polarity field — present in v3 extraction output */
 	polarity: S.optional(S.Literal("high", "low")),
 });
 
-export type EvidenceItem = S.Schema.Type<typeof EvidenceItemSchema>;
-
-/**
- * Schema using S.Literal for bigfiveFacet — used exclusively for JSON Schema
- * generation so the LLM sees the enum constraint in the tool schema.
- */
-export const EvidenceItemJsonSchemaSource = S.Struct({
+/** Output type with deviation always present (derived from polarity if needed) */
+export const EvidenceItemDecodedSchema = S.Struct({
 	bigfiveFacet: S.Literal(...ALL_FACETS),
 	deviation: S.Int.pipe(S.between(-3, 3)),
 	strength: S.Literal("weak", "moderate", "strong"),
 	confidence: S.Literal("low", "medium", "high"),
 	domain: S.Literal(...LIFE_DOMAINS),
 	note: S.String.pipe(S.maxLength(500)),
-	/** Polarity field — optional for backward compat with existing extraction pipeline (Story 42-1) */
 	polarity: S.optional(S.Literal("high", "low")),
+});
+
+/**
+ * Evidence item decode schema — accepts both:
+ * - v2: deviation present, polarity optional
+ * - v3: polarity present, deviation derived via deriveDeviation()
+ *
+ * Story 42-3: backward compat with existing evidence + forward compat with polarity model
+ */
+export const EvidenceItemSchema = S.transformOrFail(
+	EvidenceItemRawSchema,
+	EvidenceItemDecodedSchema,
+	{
+		strict: true,
+		decode: (raw, _, ast) => {
+			// Compute deviation: use polarity+strength if available, fall back to raw deviation
+			let deviation: number | undefined;
+			if (raw.polarity !== undefined) {
+				deviation = deriveDeviation(raw.polarity, raw.strength);
+			} else if (raw.deviation !== undefined) {
+				deviation = raw.deviation;
+			}
+
+			if (deviation === undefined) {
+				return ParseResult.fail(
+					new ParseResult.Type(ast, raw, "Either polarity or deviation must be present"),
+				);
+			}
+
+			return ParseResult.succeed({
+				bigfiveFacet: raw.bigfiveFacet,
+				deviation,
+				strength: raw.strength,
+				confidence: raw.confidence,
+				domain: raw.domain,
+				note: raw.note,
+				...(raw.polarity !== undefined ? { polarity: raw.polarity } : {}),
+			});
+		},
+		encode: (typed) =>
+			ParseResult.succeed({
+				bigfiveFacet: typed.bigfiveFacet,
+				deviation: typed.deviation,
+				strength: typed.strength,
+				confidence: typed.confidence,
+				domain: typed.domain,
+				note: typed.note,
+				...(typed.polarity !== undefined ? { polarity: typed.polarity } : {}),
+			}),
+	},
+);
+
+export type EvidenceItem = S.Schema.Type<typeof EvidenceItemDecodedSchema>;
+
+/**
+ * JSON Schema source for the v3 extraction prompt — polarity-based output.
+ * Polarity is required, deviation is NOT included (LLM outputs polarity+strength only).
+ * Used exclusively for JSON Schema generation so the LLM sees the correct tool schema.
+ *
+ * Story 42-3: v3 polarity-based extraction
+ */
+export const EvidenceItemJsonSchemaSource = S.Struct({
+	bigfiveFacet: S.Literal(...ALL_FACETS),
+	polarity: S.Literal("high", "low"),
+	strength: S.Literal("weak", "moderate", "strong"),
+	confidence: S.Literal("low", "medium", "high"),
+	domain: S.Literal(...LIFE_DOMAINS),
+	note: S.String.pipe(S.maxLength(500)),
 });
 
 // ─── Strict schema (used for JSON Schema generation → sent to LLM) ──────────

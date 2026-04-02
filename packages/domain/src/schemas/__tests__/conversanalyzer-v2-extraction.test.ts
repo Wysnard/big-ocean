@@ -4,7 +4,7 @@
  * Tests for strict and lenient schemas that validate
  * split extraction output (user state + evidence independently).
  *
- * Story 24-1, Story 42-2
+ * Story 24-1, Story 42-2, Story 42-3 (polarity-based evidence)
  */
 
 import { describe, expect, it } from "vitest";
@@ -27,7 +27,28 @@ const validUserState = {
 	withinMessageShift: false,
 };
 
-const validEvidence = [
+/** v3 polarity-based evidence (LLM outputs polarity, not deviation) */
+const validPolarityEvidence = [
+	{
+		bigfiveFacet: "imagination",
+		polarity: "high",
+		strength: "strong",
+		confidence: "high",
+		domain: "work",
+		note: "Creative thinking in professional context",
+	},
+	{
+		bigfiveFacet: "trust",
+		polarity: "low",
+		strength: "moderate",
+		confidence: "medium",
+		domain: "relationships",
+		note: "Slow to extend trust",
+	},
+];
+
+/** v2 deviation-based evidence (backward compat) */
+const validDeviationEvidence = [
 	{
 		bigfiveFacet: "imagination",
 		deviation: 2,
@@ -129,12 +150,25 @@ describe("UserState lenient (decodeUserStateLenient)", () => {
 	});
 });
 
-// ─── Evidence strict schema tests ────────────────────────────────────────────
+// ─── Evidence strict schema tests (v3 polarity-based) ────────────────────────
 
 describe("Evidence strict (decodeEvidenceStrict)", () => {
-	it("accepts valid evidence", () => {
-		const result = decodeEvidenceStrict({ evidence: validEvidence });
+	it("accepts v3 polarity-based evidence and derives deviation", () => {
+		const result = decodeEvidenceStrict({ evidence: validPolarityEvidence });
 		expect(result.evidence).toHaveLength(2);
+		// high+strong → +3
+		expect(result.evidence[0].deviation).toBe(3);
+		expect(result.evidence[0].polarity).toBe("high");
+		// low+moderate → -2
+		expect(result.evidence[1].deviation).toBe(-2);
+		expect(result.evidence[1].polarity).toBe("low");
+	});
+
+	it("accepts v2 deviation-based evidence (backward compat)", () => {
+		const result = decodeEvidenceStrict({ evidence: validDeviationEvidence });
+		expect(result.evidence).toHaveLength(2);
+		expect(result.evidence[0].deviation).toBe(2);
+		expect(result.evidence[1].deviation).toBe(-1);
 	});
 
 	it("accepts empty evidence array", () => {
@@ -144,7 +178,7 @@ describe("Evidence strict (decodeEvidenceStrict)", () => {
 
 	it("filters out malformed evidence items", () => {
 		const result = decodeEvidenceStrict({
-			evidence: [{ bigfiveFacet: "not_a_facet", deviation: 1 }],
+			evidence: [{ bigfiveFacet: "not_a_facet", polarity: "high" }],
 		});
 		expect(result.evidence).toHaveLength(0);
 	});
@@ -152,10 +186,10 @@ describe("Evidence strict (decodeEvidenceStrict)", () => {
 	it("filters invalid items and keeps valid ones", () => {
 		const result = decodeEvidenceStrict({
 			evidence: [
-				validEvidence[0],
+				validPolarityEvidence[0],
 				{
 					bigfiveFacet: "hallucinated_facet",
-					deviation: 1,
+					polarity: "high",
 					strength: "strong",
 					confidence: "high",
 					domain: "work",
@@ -164,31 +198,97 @@ describe("Evidence strict (decodeEvidenceStrict)", () => {
 			],
 		});
 		expect(result.evidence).toHaveLength(1);
-		expect(result.evidence[0].bigfiveFacet).toBe(validEvidence[0].bigfiveFacet);
+		expect(result.evidence[0].bigfiveFacet).toBe(validPolarityEvidence[0].bigfiveFacet);
+	});
+
+	it("rejects evidence items with neither polarity nor deviation", () => {
+		const result = decodeEvidenceStrict({
+			evidence: [
+				{
+					bigfiveFacet: "imagination",
+					strength: "strong",
+					confidence: "high",
+					domain: "work",
+					note: "missing both polarity and deviation",
+				},
+			],
+		});
+		expect(result.evidence).toHaveLength(0);
+	});
+
+	it("derives deviation correctly for all polarity+strength combos", () => {
+		const combos = [
+			{ polarity: "high", strength: "strong", expected: 3 },
+			{ polarity: "high", strength: "moderate", expected: 2 },
+			{ polarity: "high", strength: "weak", expected: 1 },
+			{ polarity: "low", strength: "strong", expected: -3 },
+			{ polarity: "low", strength: "moderate", expected: -2 },
+			{ polarity: "low", strength: "weak", expected: -1 },
+		] as const;
+
+		for (const combo of combos) {
+			const result = decodeEvidenceStrict({
+				evidence: [
+					{
+						bigfiveFacet: "imagination",
+						polarity: combo.polarity,
+						strength: combo.strength,
+						confidence: "high",
+						domain: "work",
+						note: `${combo.polarity}+${combo.strength}`,
+					},
+				],
+			});
+			expect(result.evidence[0].deviation).toBe(combo.expected);
+		}
+	});
+
+	it("polarity takes precedence over deviation when both present", () => {
+		const result = decodeEvidenceStrict({
+			evidence: [
+				{
+					bigfiveFacet: "imagination",
+					polarity: "low",
+					deviation: 3, // conflict — polarity should win
+					strength: "strong",
+					confidence: "high",
+					domain: "work",
+					note: "polarity should override",
+				},
+			],
+		});
+		expect(result.evidence[0].deviation).toBe(-3); // low+strong → -3 (polarity wins)
 	});
 });
 
 // ─── Evidence lenient schema tests ───────────────────────────────────────────
 
 describe("Evidence lenient (decodeEvidenceLenient)", () => {
-	it("accepts valid evidence unchanged", () => {
-		const result = decodeEvidenceLenient({ evidence: validEvidence });
+	it("accepts v3 polarity-based evidence and derives deviation", () => {
+		const result = decodeEvidenceLenient({ evidence: validPolarityEvidence });
+		expect(result.evidence).toHaveLength(2);
+		expect(result.evidence[0].deviation).toBe(3); // high+strong
+		expect(result.evidence[1].deviation).toBe(-2); // low+moderate
+	});
+
+	it("accepts v2 deviation-based evidence (backward compat)", () => {
+		const result = decodeEvidenceLenient({ evidence: validDeviationEvidence });
 		expect(result.evidence).toHaveLength(2);
 	});
 
 	it("filters invalid evidence items while keeping valid ones", () => {
 		const result = decodeEvidenceLenient({
 			evidence: [
-				validEvidence[0],
+				validPolarityEvidence[0],
 				{
 					bigfiveFacet: "hallucinated_facet",
-					deviation: 1,
+					polarity: "high",
 					strength: "strong",
 					confidence: "high",
 					domain: "work",
 					note: "bad",
 				},
-				validEvidence[1],
+				validPolarityEvidence[1],
 			],
 		});
 		expect(result.evidence).toHaveLength(2);
@@ -215,5 +315,16 @@ describe("JSON Schema generation", () => {
 		expect(evidenceOnlyJsonSchema).toBeDefined();
 		expect(evidenceOnlyJsonSchema).toHaveProperty("type", "object");
 		expect(evidenceOnlyJsonSchema).toHaveProperty("properties");
+	});
+
+	it("evidenceOnlyJsonSchema includes polarity field (not deviation)", () => {
+		const schema = evidenceOnlyJsonSchema as Record<string, unknown>;
+		const props = schema.properties as Record<string, unknown>;
+		const evidenceSchema = props.evidence as Record<string, unknown>;
+		const itemSchema = evidenceSchema.items as Record<string, unknown>;
+		const itemProps = itemSchema.properties as Record<string, unknown>;
+
+		expect(itemProps).toHaveProperty("polarity");
+		expect(itemProps).not.toHaveProperty("deviation");
 	});
 });

@@ -16,7 +16,11 @@ import * as ParseResult from "effect/ParseResult";
 import * as S from "effect/Schema";
 import { ENERGY_BANDS, TELLING_BANDS } from "../types/pacing";
 import type { EvidenceItem } from "./evidence-extraction";
-import { EvidenceItemJsonSchemaSource, EvidenceItemSchema } from "./evidence-extraction";
+import {
+	EvidenceItemDecodedSchema,
+	EvidenceItemJsonSchemaSource,
+	EvidenceItemSchema,
+} from "./evidence-extraction";
 
 // ─── UserState schema ────────────────────────────────────────────────────────
 
@@ -124,7 +128,7 @@ const RawStrictEvidenceOnlySchema = S.Struct({
 });
 
 const DecodedEvidenceOnlySchema = S.Struct({
-	evidence: S.Array(EvidenceItemSchema),
+	evidence: S.Array(EvidenceItemDecodedSchema),
 });
 
 export const EvidenceOnlyToolOutput = S.transformOrFail(
