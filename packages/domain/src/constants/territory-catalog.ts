@@ -1,7 +1,7 @@
 /**
  * Territory Catalog — Evolved for Conversation Pacing Pipeline
  *
- * 25 conversation territories covering all 30 Big Five facets across
+ * 31 conversation territories covering all 30 Big Five facets across
  * diverse life domains (work, relationships, family, leisure, health).
  * Each territory has a continuous expected energy value [0, 1], exactly
  * 2 domain tags, expected facets, and a conversation opener.
@@ -12,7 +12,7 @@
  * - Openers invite storytelling, not introspection
  * - expectedEnergy measures opener cost, not depth potential
  * - Every territory has exactly 2 domains (compile-time enforced)
- * - Energy distribution: 9 light (0.20-0.37), 10 medium (0.38-0.53), 6 heavy (0.58-0.72)
+ * - Energy distribution: 12 light (0.20-0.37), 12 medium (0.38-0.53), 7 heavy (0.58-0.72)
  *
  * Evolved from Epic 21 (22 territories, categorical energy) to Epic 23 (25 territories,
  * continuous energy) per Territory Catalog Migration Spec.
@@ -48,7 +48,18 @@ function territory(def: {
 	} as Territory;
 }
 
-// ─── Light-Energy Territories (9) — expectedEnergy 0.20-0.37 ──────────────
+// ─── Light-Energy Territories (12) — expectedEnergy 0.20-0.37 ─────────────
+
+const HOME_AND_SPACE = territory({
+	id: "home-and-space",
+	name: "Home & Space",
+	description: "how they arrange their space and what it says about how they think",
+	descriptionYou: "how you arrange your space and what it says about how you think",
+	expectedEnergy: 0.22,
+	domains: ["family", "leisure"],
+	expectedFacets: ["orderliness", "activity_level", "cautiousness"],
+	opener: "What does your living space look like — is it more organized or more lived-in?",
+});
 
 const DAILY_ROUTINES = territory({
 	id: "daily-routines",
@@ -59,6 +70,17 @@ const DAILY_ROUTINES = territory({
 	domains: ["work", "health"],
 	expectedFacets: ["orderliness", "self_discipline", "activity_level"],
 	opener: "What does a typical morning look like for you before the day really gets going?",
+});
+
+const BODY_AND_MOVEMENT = territory({
+	id: "body-and-movement",
+	name: "Body & Movement",
+	description: "how they move through the physical world and what drives that",
+	descriptionYou: "how you move through the physical world and what drives that",
+	expectedEnergy: 0.25,
+	domains: ["health", "leisure"],
+	expectedFacets: ["activity_level", "self_discipline", "excitement_seeking"],
+	opener: "What's your relationship with exercise or physical activity like?",
 });
 
 const CREATIVE_PURSUITS = territory({
@@ -92,6 +114,18 @@ const LEARNING_CURIOSITY = territory({
 	domains: ["leisure", "work"],
 	expectedFacets: ["intellect", "imagination", "self_efficacy"],
 	opener: "What's something you've been curious about or wanted to learn more about lately?",
+});
+
+const TRIPS_AND_PLANS = territory({
+	id: "trips-and-plans",
+	name: "Trips & Plans",
+	description: "how they plan adventures and what that reveals about their priorities",
+	descriptionYou: "how you plan adventures and what that reveals about your priorities",
+	expectedEnergy: 0.28,
+	domains: ["leisure", "relationships"],
+	expectedFacets: ["orderliness", "adventurousness", "cooperation"],
+	opener:
+		"When you're planning a trip or outing, are you more of a planner or a go-with-the-flow person?",
 });
 
 const FAMILY_RITUALS = territory({
@@ -149,7 +183,18 @@ const SPONTANEITY_AND_IMPULSE = territory({
 	opener: "What's the most spontaneous thing you've done recently?",
 });
 
-// ─── Medium-Energy Territories (10) — expectedEnergy 0.38-0.53 ─────────────
+// ─── Medium-Energy Territories (12) — expectedEnergy 0.38-0.53 ─────────────
+
+const CRAVINGS_AND_INDULGENCES = territory({
+	id: "cravings-and-indulgences",
+	name: "Cravings & Indulgences",
+	description: "what they give in to and what they hold back from",
+	descriptionYou: "what you give in to and what you hold back from",
+	expectedEnergy: 0.4,
+	domains: ["health", "leisure"],
+	expectedFacets: ["immoderation", "self_discipline", "cautiousness"],
+	opener: "What's something you know you probably shouldn't do but can't help doing anyway?",
+});
 
 const DAILY_FRUSTRATIONS = territory({
 	id: "daily-frustrations",
@@ -217,6 +262,17 @@ const SOCIAL_DYNAMICS = territory({
 	opener: "How do you usually feel when you walk into a room full of people you don't know?",
 });
 
+const TAKING_CARE = territory({
+	id: "taking-care",
+	name: "Taking Care",
+	description: "how they look after the people and things that depend on them",
+	descriptionYou: "how you look after the people and things that depend on you",
+	expectedEnergy: 0.48,
+	domains: ["health", "family"],
+	expectedFacets: ["altruism", "sympathy", "dutifulness", "self_discipline"],
+	opener: "Is there someone or something in your life that really depends on you?",
+});
+
 const FRIENDSHIP_DEPTH = territory({
 	id: "friendship-depth",
 	name: "Close Friendships",
@@ -262,7 +318,7 @@ const GIVING_AND_RECEIVING = territory({
 	opener: "When someone does something really kind for you, how does that sit with you?",
 });
 
-// ─── Heavy-Energy Territories (6) — expectedEnergy 0.58-0.72 ───────────────
+// ─── Heavy-Energy Territories (7) — expectedEnergy 0.58-0.72 ───────────────
 
 const FAMILY_BONDS = territory({
 	id: "family-bonds",
@@ -284,6 +340,17 @@ const CONFLICT_AND_RESOLUTION = territory({
 	domains: ["relationships", "work"],
 	expectedFacets: ["anger", "cooperation", "assertiveness", "morality"],
 	opener: "Tell me about a disagreement that actually taught you something about yourself.",
+});
+
+const STRESS_AND_THE_BODY = territory({
+	id: "stress-and-the-body",
+	name: "Stress & The Body",
+	description: "where stress lands in their body and how they cope with it",
+	descriptionYou: "where stress lands in your body and how you cope with it",
+	expectedEnergy: 0.6,
+	domains: ["health", "work"],
+	expectedFacets: ["vulnerability", "anxiety", "self_efficacy", "self_discipline"],
+	opener: "When you're really stressed, where do you feel it first — and what do you do about it?",
 });
 
 const INNER_LIFE = territory({
@@ -333,30 +400,36 @@ const PRESSURE_AND_RESILIENCE = territory({
 // ─── Catalog Assembly ───────────────────────────────────────────────────────
 
 const ALL_TERRITORIES: readonly Territory[] = [
-	// Light (9)
+	// Light (12)
+	HOME_AND_SPACE,
 	DAILY_ROUTINES,
+	BODY_AND_MOVEMENT,
 	CREATIVE_PURSUITS,
 	WEEKEND_ADVENTURES,
 	LEARNING_CURIOSITY,
+	TRIPS_AND_PLANS,
 	FAMILY_RITUALS,
 	SOCIAL_CIRCLES,
 	HELPING_OTHERS,
 	COMFORT_ZONES,
 	SPONTANEITY_AND_IMPULSE,
-	// Medium (10)
+	// Medium (12)
+	CRAVINGS_AND_INDULGENCES,
 	DAILY_FRUSTRATIONS,
 	WORK_DYNAMICS,
 	EMOTIONAL_AWARENESS,
 	AMBITION_AND_GOALS,
 	GROWING_UP,
 	SOCIAL_DYNAMICS,
+	TAKING_CARE,
 	FRIENDSHIP_DEPTH,
 	OPINIONS_AND_VALUES,
 	TEAM_AND_LEADERSHIP,
 	GIVING_AND_RECEIVING,
-	// Heavy (6)
+	// Heavy (7)
 	FAMILY_BONDS,
 	CONFLICT_AND_RESOLUTION,
+	STRESS_AND_THE_BODY,
 	INNER_LIFE,
 	INNER_STRUGGLES,
 	VULNERABILITY_AND_TRUST,
@@ -364,7 +437,7 @@ const ALL_TERRITORIES: readonly Territory[] = [
 ] as const;
 
 /**
- * The complete territory catalog: 25 territories indexed by TerritoryId.
+ * The complete territory catalog: 31 territories indexed by TerritoryId.
  *
  * Covers all 30 Big Five facets across 5 life domains with continuous
  * expected energy values in [0, 1].
