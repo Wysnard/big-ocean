@@ -173,10 +173,11 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 				confidence: confidence === "high" ? "0.850" : confidence === "medium" ? "0.700" : "0.550",
 			});
 
+			const polarity = deviation >= 0 ? "high" : "low";
 			await client.query(
 				`INSERT INTO conversation_evidence
-				 (assessment_session_id, assessment_message_id, bigfive_facet, deviation, strength, confidence, domain, note, created_at)
-				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
+				 (assessment_session_id, assessment_message_id, bigfive_facet, deviation, strength, confidence, domain, polarity, note, created_at)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())`,
 				[
 					sessionId,
 					userMsgId,
@@ -185,6 +186,7 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 					strength,
 					confidence,
 					domain,
+					polarity,
 					`Seed evidence for ${facet}`,
 				],
 			);
@@ -230,11 +232,22 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 			const deviation = Math.round(((score - 10) / 10) * 3);
 			const strength = confidence >= 0.7 ? "strong" : confidence >= 0.4 ? "moderate" : "weak";
 			const confEnum = confidence >= 0.7 ? "high" : confidence >= 0.4 ? "medium" : "low";
+			const polarity = deviation >= 0 ? "high" : "low";
 			await client.query(
 				`INSERT INTO conversation_evidence
-				 (assessment_session_id, assessment_message_id, bigfive_facet, deviation, strength, confidence, domain, note, created_at)
-				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
-				[sessionId, userMsgId, facet, deviation, strength, confEnum, domain, "Seeded evidence note"],
+				 (assessment_session_id, assessment_message_id, bigfive_facet, deviation, strength, confidence, domain, polarity, note, created_at)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())`,
+				[
+					sessionId,
+					userMsgId,
+					facet,
+					deviation,
+					strength,
+					confEnum,
+					domain,
+					polarity,
+					"Seeded evidence note",
+				],
 			);
 		}
 
@@ -334,8 +347,8 @@ export async function seedFullPortrait(sessionId: string): Promise<void> {
 		const assessmentResultId: string = resultRow.rows[0].id;
 
 		await client.query(
-			`INSERT INTO portraits (assessment_result_id, tier, content, model_used, retry_count, created_at)
-			 VALUES ($1, 'full', $2, 'e2e-seed', 0, NOW())
+			`INSERT INTO portraits (assessment_result_id, tier, content, model_used, created_at)
+			 VALUES ($1, 'full', $2, 'e2e-seed', NOW())
 			 ON CONFLICT (assessment_result_id, tier) DO UPDATE SET content = $2`,
 			[assessmentResultId, SEED_FULL_PORTRAIT],
 		);

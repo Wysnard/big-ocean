@@ -312,11 +312,12 @@ export const test = base.extend<{ db: DbFixture }>({
 					const deviation = Math.round(((ev.score - 10) / 10) * 3);
 					const strength = ev.confidence >= 70 ? "strong" : ev.confidence >= 40 ? "moderate" : "weak";
 					const confEnum = ev.confidence >= 70 ? "high" : ev.confidence >= 40 ? "medium" : "low";
+					const polarity = deviation >= 0 ? "high" : "low";
 
 					await client.query(
 						`INSERT INTO conversation_evidence
-						 (assessment_session_id, assessment_message_id, bigfive_facet, deviation, strength, confidence, domain, note, created_at)
-						 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
+						 (assessment_session_id, assessment_message_id, bigfive_facet, deviation, strength, confidence, domain, polarity, note, created_at)
+						 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())`,
 						[
 							sessionId,
 							realMessageId,
@@ -325,6 +326,7 @@ export const test = base.extend<{ db: DbFixture }>({
 							strength,
 							confEnum,
 							"leisure", // default domain for seeded evidence
+							polarity,
 							ev.quote,
 						],
 					);
