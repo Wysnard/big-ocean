@@ -6,8 +6,8 @@ import { LIFE_DOMAINS } from "../life-domain";
 import { getTerritoryById, TERRITORY_CATALOG } from "../territory-catalog";
 
 describe("TERRITORY_CATALOG", () => {
-	it("contains exactly 25 territories", () => {
-		expect(TERRITORY_CATALOG.size).toBe(25);
+	it("contains exactly 31 territories", () => {
+		expect(TERRITORY_CATALOG.size).toBe(31);
 	});
 
 	it("each territory has 3-6 expected facets", () => {
@@ -154,7 +154,7 @@ describe("TERRITORY_CATALOG", () => {
 		}
 	});
 
-	it("has correct energy distribution: 9 light, 10 medium, 6 heavy", () => {
+	it("has correct energy distribution: 12 light, 12 medium, 7 heavy", () => {
 		let light = 0;
 		let medium = 0;
 		let heavy = 0;
@@ -164,9 +164,9 @@ describe("TERRITORY_CATALOG", () => {
 			else if (e >= 0.38 && e <= 0.53) medium++;
 			else if (e >= 0.58 && e <= 0.72) heavy++;
 		}
-		expect(light, `Expected 9 light territories, got ${light}`).toBe(9);
-		expect(medium, `Expected 10 medium territories, got ${medium}`).toBe(10);
-		expect(heavy, `Expected 6 heavy territories, got ${heavy}`).toBe(6);
+		expect(light, `Expected 12 light territories, got ${light}`).toBe(12);
+		expect(medium, `Expected 12 medium territories, got ${medium}`).toBe(12);
+		expect(heavy, `Expected 7 heavy territories, got ${heavy}`).toBe(7);
 	});
 });
 
@@ -237,6 +237,82 @@ describe("domain remap verification", () => {
 			expect(territory?.domains).toEqual(expectedDomains);
 		});
 	}
+});
+
+describe("new health territories (Story 41-2)", () => {
+	it("body-and-movement has correct definition", () => {
+		const id = Schema.decodeSync(TerritoryIdSchema)("body-and-movement");
+		const territory = getTerritoryById(id);
+		expect(territory).toBeDefined();
+		expect(territory?.domains).toEqual(["health", "leisure"]);
+		expect(territory?.expectedFacets).toEqual(
+			expect.arrayContaining(["activity_level", "self_discipline", "excitement_seeking"]),
+		);
+		expect(territory?.expectedFacets).toHaveLength(3);
+		expect(territory?.expectedEnergy).toBe(0.25);
+	});
+
+	it("cravings-and-indulgences has correct definition", () => {
+		const id = Schema.decodeSync(TerritoryIdSchema)("cravings-and-indulgences");
+		const territory = getTerritoryById(id);
+		expect(territory).toBeDefined();
+		expect(territory?.domains).toEqual(["health", "leisure"]);
+		expect(territory?.expectedFacets).toEqual(
+			expect.arrayContaining(["immoderation", "self_discipline", "cautiousness"]),
+		);
+		expect(territory?.expectedFacets).toHaveLength(3);
+		expect(territory?.expectedEnergy).toBe(0.4);
+	});
+
+	it("stress-and-the-body has correct definition", () => {
+		const id = Schema.decodeSync(TerritoryIdSchema)("stress-and-the-body");
+		const territory = getTerritoryById(id);
+		expect(territory).toBeDefined();
+		expect(territory?.domains).toEqual(["health", "work"]);
+		expect(territory?.expectedFacets).toEqual(
+			expect.arrayContaining(["vulnerability", "anxiety", "self_efficacy", "self_discipline"]),
+		);
+		expect(territory?.expectedFacets).toHaveLength(4);
+		expect(territory?.expectedEnergy).toBe(0.6);
+	});
+});
+
+describe("new hard-to-assess coverage territories (Story 41-2)", () => {
+	it("home-and-space has correct definition", () => {
+		const id = Schema.decodeSync(TerritoryIdSchema)("home-and-space");
+		const territory = getTerritoryById(id);
+		expect(territory).toBeDefined();
+		expect(territory?.domains).toEqual(["family", "leisure"]);
+		expect(territory?.expectedFacets).toEqual(
+			expect.arrayContaining(["orderliness", "activity_level", "cautiousness"]),
+		);
+		expect(territory?.expectedFacets).toHaveLength(3);
+		expect(territory?.expectedEnergy).toBe(0.22);
+	});
+
+	it("trips-and-plans has correct definition", () => {
+		const id = Schema.decodeSync(TerritoryIdSchema)("trips-and-plans");
+		const territory = getTerritoryById(id);
+		expect(territory).toBeDefined();
+		expect(territory?.domains).toEqual(["leisure", "relationships"]);
+		expect(territory?.expectedFacets).toEqual(
+			expect.arrayContaining(["orderliness", "adventurousness", "cooperation"]),
+		);
+		expect(territory?.expectedFacets).toHaveLength(3);
+		expect(territory?.expectedEnergy).toBe(0.28);
+	});
+
+	it("taking-care has correct definition", () => {
+		const id = Schema.decodeSync(TerritoryIdSchema)("taking-care");
+		const territory = getTerritoryById(id);
+		expect(territory).toBeDefined();
+		expect(territory?.domains).toEqual(["health", "family"]);
+		expect(territory?.expectedFacets).toEqual(
+			expect.arrayContaining(["altruism", "sympathy", "dutifulness", "self_discipline"]),
+		);
+		expect(territory?.expectedFacets).toHaveLength(4);
+		expect(territory?.expectedEnergy).toBe(0.48);
+	});
 });
 
 describe("getTerritoryById", () => {
