@@ -2,8 +2,9 @@
  * Territory Catalog — Evolved for Conversation Pacing Pipeline
  *
  * 25 conversation territories covering all 30 Big Five facets across
- * diverse life domains. Each territory has a continuous expected energy
- * value [0, 1], exactly 2 domain tags, expected facets, and a conversation opener.
+ * diverse life domains (work, relationships, family, leisure, health).
+ * Each territory has a continuous expected energy value [0, 1], exactly
+ * 2 domain tags, expected facets, and a conversation opener.
  *
  * Design principles:
  * - Every facet appears in at least one territory
@@ -55,7 +56,7 @@ const DAILY_ROUTINES = territory({
 	description: "how they structure their time and what they protect in it",
 	descriptionYou: "how you structure your time and what you protect in it",
 	expectedEnergy: 0.2,
-	domains: ["work", "solo"],
+	domains: ["work", "health"],
 	expectedFacets: ["orderliness", "self_discipline", "activity_level"],
 	opener: "What does a typical morning look like for you before the day really gets going?",
 });
@@ -66,7 +67,7 @@ const CREATIVE_PURSUITS = territory({
 	description: "what they make or imagine when nobody's watching",
 	descriptionYou: "what you make or imagine when nobody's watching",
 	expectedEnergy: 0.25,
-	domains: ["leisure", "solo"],
+	domains: ["leisure", "work"],
 	expectedFacets: ["imagination", "artistic_interests", "adventurousness"],
 	opener: "Is there something creative you enjoy doing, even if it's just for fun?",
 });
@@ -77,7 +78,7 @@ const WEEKEND_ADVENTURES = territory({
 	description: "what they chase when the schedule opens up",
 	descriptionYou: "what you chase when the schedule opens up",
 	expectedEnergy: 0.25,
-	domains: ["leisure", "solo"],
+	domains: ["leisure", "relationships"],
 	expectedFacets: ["excitement_seeking", "adventurousness", "cheerfulness"],
 	opener: "What's something you did recently on a weekend that you really enjoyed?",
 });
@@ -88,7 +89,7 @@ const LEARNING_CURIOSITY = territory({
 	description: "what pulls their attention and why they follow it",
 	descriptionYou: "what pulls your attention and why you follow it",
 	expectedEnergy: 0.25,
-	domains: ["solo", "work"],
+	domains: ["leisure", "work"],
 	expectedFacets: ["intellect", "imagination", "self_efficacy"],
 	opener: "What's something you've been curious about or wanted to learn more about lately?",
 });
@@ -132,7 +133,7 @@ const COMFORT_ZONES = territory({
 	description: "where they retreat when things get heavy and what that says about them",
 	descriptionYou: "where you retreat when things get heavy and what that says about you",
 	expectedEnergy: 0.33,
-	domains: ["solo", "relationships"],
+	domains: ["health", "relationships"],
 	expectedFacets: ["cautiousness", "vulnerability", "adventurousness"],
 	opener: "What's your go-to way to recharge when things get hectic?",
 });
@@ -143,7 +144,7 @@ const SPONTANEITY_AND_IMPULSE = territory({
 	description: "when they let go of the plan and what happens",
 	descriptionYou: "when you let go of the plan and what happens",
 	expectedEnergy: 0.37,
-	domains: ["leisure", "solo"],
+	domains: ["leisure", "health"],
 	expectedFacets: ["immoderation", "excitement_seeking", "cautiousness"],
 	opener: "What's the most spontaneous thing you've done recently?",
 });
@@ -178,7 +179,7 @@ const EMOTIONAL_AWARENESS = territory({
 	description: "how they read their own internal weather",
 	descriptionYou: "how you read your own internal weather",
 	expectedEnergy: 0.42,
-	domains: ["solo", "relationships"],
+	domains: ["health", "relationships"],
 	expectedFacets: ["emotionality", "anxiety", "self_consciousness"],
 	opener: "When you're having a really good day, what does that feel like for you?",
 });
@@ -189,7 +190,7 @@ const AMBITION_AND_GOALS = territory({
 	description: "what they're building toward and what's driving it",
 	descriptionYou: "what you're building toward and what's driving it",
 	expectedEnergy: 0.43,
-	domains: ["work", "solo"],
+	domains: ["work", "health"],
 	expectedFacets: ["achievement_striving", "self_discipline", "activity_level"],
 	opener: "What's something you're working toward right now that matters to you?",
 });
@@ -200,7 +201,7 @@ const GROWING_UP = territory({
 	description: "what shaped them early and what they carried forward",
 	descriptionYou: "what shaped you early and what you carried forward",
 	expectedEnergy: 0.45,
-	domains: ["family", "solo"],
+	domains: ["family", "relationships"],
 	expectedFacets: ["emotionality", "trust", "imagination", "dutifulness"],
 	opener: "What's something from growing up that shaped who you are today?",
 });
@@ -222,7 +223,7 @@ const FRIENDSHIP_DEPTH = territory({
 	description: "who they let close, what earns that, and what they need from it",
 	descriptionYou: "who you let close, what earns that, and what you need from it",
 	expectedEnergy: 0.48,
-	domains: ["relationships", "solo"],
+	domains: ["relationships", "leisure"],
 	expectedFacets: ["trust", "friendliness", "modesty", "morality"],
 	opener: "Think of a close friend — what made that friendship become important to you?",
 });
@@ -233,7 +234,7 @@ const OPINIONS_AND_VALUES = territory({
 	description: "what they stand for and where they push back",
 	descriptionYou: "what you stand for and where you push back",
 	expectedEnergy: 0.49,
-	domains: ["solo", "relationships"],
+	domains: ["relationships", "work"],
 	expectedFacets: ["liberalism", "morality", "assertiveness"],
 	opener:
 		"Is there something you feel strongly about that most people around you might disagree with?",
@@ -285,15 +286,15 @@ const CONFLICT_AND_RESOLUTION = territory({
 	opener: "Tell me about a disagreement that actually taught you something about yourself.",
 });
 
-const IDENTITY_AND_PURPOSE = territory({
-	id: "identity-and-purpose",
-	name: "Identity & Purpose",
-	description: "what drives them and whether they trust it",
-	descriptionYou: "what drives you and whether you trust it",
-	expectedEnergy: 0.63,
-	domains: ["solo", "work"],
-	expectedFacets: ["intellect", "liberalism", "self_efficacy", "emotionality"],
-	opener: "If someone who knows you well described what drives you, what do you think they'd say?",
+const INNER_LIFE = territory({
+	id: "inner-life",
+	name: "Inner Life",
+	description: "what their mind does when it wanders and what that reveals",
+	descriptionYou: "what your mind does when it wanders and what that reveals",
+	expectedEnergy: 0.6,
+	domains: ["health", "leisure"],
+	expectedFacets: ["intellect", "emotionality", "imagination", "liberalism", "artistic_interests"],
+	opener: "When you have a quiet moment to yourself, where does your mind tend to go?",
 });
 
 const INNER_STRUGGLES = territory({
@@ -302,7 +303,7 @@ const INNER_STRUGGLES = territory({
 	description: "what weighs on them and how they carry it",
 	descriptionYou: "what weighs on you and how you carry it",
 	expectedEnergy: 0.65,
-	domains: ["solo", "relationships"],
+	domains: ["health", "relationships"],
 	expectedFacets: ["depression", "anxiety", "vulnerability", "anger"],
 	opener: "Everyone has tough patches — what's something that's been weighing on you lately?",
 });
@@ -356,7 +357,7 @@ const ALL_TERRITORIES: readonly Territory[] = [
 	// Heavy (6)
 	FAMILY_BONDS,
 	CONFLICT_AND_RESOLUTION,
-	IDENTITY_AND_PURPOSE,
+	INNER_LIFE,
 	INNER_STRUGGLES,
 	VULNERABILITY_AND_TRUST,
 	PRESSURE_AND_RESILIENCE,

@@ -86,15 +86,23 @@ describe("TERRITORY_CATALOG", () => {
 		}
 	});
 
-	it("all domains appear in >= 6 territories", () => {
+	it("no territory references the solo domain", () => {
+		for (const [id, territory] of TERRITORY_CATALOG) {
+			for (const domain of territory.domains) {
+				expect(domain, `Territory "${id}" still references deprecated "solo" domain`).not.toBe("solo");
+			}
+		}
+	});
+
+	it("active steerable domains appear in >= 6 territories", () => {
 		const domainCounts = new Map<string, number>();
 		for (const [, territory] of TERRITORY_CATALOG) {
 			for (const domain of territory.domains) {
 				domainCounts.set(domain, (domainCounts.get(domain) ?? 0) + 1);
 			}
 		}
-		// Check only steerable domains (not "other")
-		for (const domain of ["work", "relationships", "family", "leisure", "solo"]) {
+		// Check active steerable domains (not "other", not deprecated "solo")
+		for (const domain of ["work", "relationships", "family", "leisure", "health"]) {
 			const count = domainCounts.get(domain) ?? 0;
 			expect(
 				count,
@@ -160,6 +168,75 @@ describe("TERRITORY_CATALOG", () => {
 		expect(medium, `Expected 10 medium territories, got ${medium}`).toBe(10);
 		expect(heavy, `Expected 6 heavy territories, got ${heavy}`).toBe(6);
 	});
+});
+
+describe("inner-life territory", () => {
+	it("exists in the catalog with correct id", () => {
+		const innerLifeId = Schema.decodeSync(TerritoryIdSchema)("inner-life");
+		const territory = getTerritoryById(innerLifeId);
+		expect(territory).toBeDefined();
+		expect(territory?.id).toBe(innerLifeId);
+	});
+
+	it("has domains health and leisure", () => {
+		const innerLifeId = Schema.decodeSync(TerritoryIdSchema)("inner-life");
+		const territory = getTerritoryById(innerLifeId);
+		expect(territory?.domains).toEqual(["health", "leisure"]);
+	});
+
+	it("has the correct 5 facets", () => {
+		const innerLifeId = Schema.decodeSync(TerritoryIdSchema)("inner-life");
+		const territory = getTerritoryById(innerLifeId);
+		expect(territory?.expectedFacets).toEqual(
+			expect.arrayContaining([
+				"intellect",
+				"emotionality",
+				"imagination",
+				"liberalism",
+				"artistic_interests",
+			]),
+		);
+		expect(territory?.expectedFacets).toHaveLength(5);
+	});
+
+	it("has expectedEnergy 0.60", () => {
+		const innerLifeId = Schema.decodeSync(TerritoryIdSchema)("inner-life");
+		const territory = getTerritoryById(innerLifeId);
+		expect(territory?.expectedEnergy).toBe(0.6);
+	});
+});
+
+describe("identity-and-purpose removal", () => {
+	it("no longer exists in the catalog", () => {
+		const oldId = Schema.decodeSync(TerritoryIdSchema)("identity-and-purpose");
+		expect(getTerritoryById(oldId)).toBeUndefined();
+	});
+});
+
+describe("domain remap verification", () => {
+	const remapTable: Record<string, [string, string]> = {
+		"daily-routines": ["work", "health"],
+		"creative-pursuits": ["leisure", "work"],
+		"weekend-adventures": ["leisure", "relationships"],
+		"learning-curiosity": ["leisure", "work"],
+		"comfort-zones": ["health", "relationships"],
+		"spontaneity-and-impulse": ["leisure", "health"],
+		"emotional-awareness": ["health", "relationships"],
+		"ambition-and-goals": ["work", "health"],
+		"growing-up": ["family", "relationships"],
+		"friendship-depth": ["relationships", "leisure"],
+		"opinions-and-values": ["relationships", "work"],
+		"inner-struggles": ["health", "relationships"],
+	};
+
+	for (const [territoryId, expectedDomains] of Object.entries(remapTable)) {
+		it(`${territoryId} has domains [${expectedDomains.join(", ")}]`, () => {
+			const id = Schema.decodeSync(TerritoryIdSchema)(territoryId);
+			const territory = getTerritoryById(id);
+			expect(territory).toBeDefined();
+			expect(territory?.domains).toEqual(expectedDomains);
+		});
+	}
 });
 
 describe("getTerritoryById", () => {
