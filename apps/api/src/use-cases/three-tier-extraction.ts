@@ -174,14 +174,16 @@ export const runEvidenceExtraction = (input: ThreeTierExtractionInput) =>
  * Run the split three-tier extraction pipeline.
  *
  * Runs user state and evidence extraction in parallel.
- * Each call has its own independent three-tier fallback.
+ * Each call has its own independent three-tier fallback — if one fails,
+ * the other still completes independently.
  * Returns combined output compatible with ConversanalyzerV2Output.
  */
 export const runSplitThreeTierExtraction = (input: ThreeTierExtractionInput) =>
 	Effect.gen(function* () {
 		const logger = yield* LoggerRepository;
 
-		// Run both extractions in parallel — they are fully independent
+		// Run both extractions in parallel — they are independent,
+		// each with its own three-tier fallback.
 		const [userStateResult, evidenceResult] = yield* Effect.all(
 			[runUserStateExtraction(input), runEvidenceExtraction(input)],
 			{ concurrency: 2 },

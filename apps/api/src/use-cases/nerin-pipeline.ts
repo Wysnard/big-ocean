@@ -619,6 +619,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				evidence: filteredEvidence.map((e) => ({
 					facet: e.bigfiveFacet,
 					deviation: e.deviation,
+					polarity: e.polarity,
 					strength: e.strength,
 					confidence: e.confidence,
 					domain: e.domain,

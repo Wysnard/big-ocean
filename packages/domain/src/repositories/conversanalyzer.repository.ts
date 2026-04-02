@@ -8,7 +8,7 @@
  */
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
-import type { EvidenceInput } from "../types/evidence";
+import type { EvidenceInput, EvidencePolarity } from "../types/evidence";
 import type { DomainMessage } from "../types/message";
 import type { EnergyBand, TellingBand } from "../types/pacing";
 import type { DomainDistribution } from "../utils/domain-distribution";
@@ -41,7 +41,10 @@ export interface ConversanalyzerV2Output {
 	/** Extracted user state (energy + telling) */
 	readonly userState: ConversanalyzerUserState;
 	/** Extracted facet evidence (0-N records) */
-	readonly evidence: (EvidenceInput & { readonly note: string })[];
+	readonly evidence: (EvidenceInput & {
+		readonly note: string;
+		readonly polarity: EvidencePolarity;
+	})[];
 	/** Token usage for cost tracking */
 	readonly tokenUsage: { readonly input: number; readonly output: number };
 }
@@ -54,7 +57,10 @@ export interface ConversanalyzerUserStateOutput {
 
 /** Evidence output — standalone extraction result */
 export interface ConversanalyzerEvidenceOutput {
-	readonly evidence: (EvidenceInput & { readonly note: string })[];
+	readonly evidence: (EvidenceInput & {
+		readonly note: string;
+		readonly polarity: EvidencePolarity;
+	})[];
 	readonly tokenUsage: { readonly input: number; readonly output: number };
 }
 

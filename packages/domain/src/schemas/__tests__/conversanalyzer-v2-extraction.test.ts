@@ -47,26 +47,6 @@ const validPolarityEvidence = [
 	},
 ];
 
-/** v2 deviation-based evidence (backward compat) */
-const validDeviationEvidence = [
-	{
-		bigfiveFacet: "imagination",
-		deviation: 2,
-		strength: "strong",
-		confidence: "high",
-		domain: "work",
-		note: "Creative thinking in professional context",
-	},
-	{
-		bigfiveFacet: "trust",
-		deviation: -1,
-		strength: "moderate",
-		confidence: "medium",
-		domain: "relationships",
-		note: "Slow to extend trust",
-	},
-];
-
 // ─── UserState strict schema tests ───────────────────────────────────────────
 
 describe("UserState strict (decodeUserStateStrict)", () => {
@@ -164,11 +144,20 @@ describe("Evidence strict (decodeEvidenceStrict)", () => {
 		expect(result.evidence[1].polarity).toBe("low");
 	});
 
-	it("accepts v2 deviation-based evidence (backward compat)", () => {
-		const result = decodeEvidenceStrict({ evidence: validDeviationEvidence });
-		expect(result.evidence).toHaveLength(2);
-		expect(result.evidence[0].deviation).toBe(2);
-		expect(result.evidence[1].deviation).toBe(-1);
+	it("rejects evidence without polarity", () => {
+		const result = decodeEvidenceStrict({
+			evidence: [
+				{
+					bigfiveFacet: "imagination",
+					deviation: 2,
+					strength: "strong",
+					confidence: "high",
+					domain: "work",
+					note: "Missing polarity",
+				},
+			],
+		});
+		expect(result.evidence).toHaveLength(0);
 	});
 
 	it("accepts empty evidence array", () => {
@@ -201,21 +190,6 @@ describe("Evidence strict (decodeEvidenceStrict)", () => {
 		expect(result.evidence[0].bigfiveFacet).toBe(validPolarityEvidence[0].bigfiveFacet);
 	});
 
-	it("rejects evidence items with neither polarity nor deviation", () => {
-		const result = decodeEvidenceStrict({
-			evidence: [
-				{
-					bigfiveFacet: "imagination",
-					strength: "strong",
-					confidence: "high",
-					domain: "work",
-					note: "missing both polarity and deviation",
-				},
-			],
-		});
-		expect(result.evidence).toHaveLength(0);
-	});
-
 	it("derives deviation correctly for all polarity+strength combos", () => {
 		const combos = [
 			{ polarity: "high", strength: "strong", expected: 3 },
@@ -242,23 +216,6 @@ describe("Evidence strict (decodeEvidenceStrict)", () => {
 			expect(result.evidence[0].deviation).toBe(combo.expected);
 		}
 	});
-
-	it("polarity takes precedence over deviation when both present", () => {
-		const result = decodeEvidenceStrict({
-			evidence: [
-				{
-					bigfiveFacet: "imagination",
-					polarity: "low",
-					deviation: 3, // conflict — polarity should win
-					strength: "strong",
-					confidence: "high",
-					domain: "work",
-					note: "polarity should override",
-				},
-			],
-		});
-		expect(result.evidence[0].deviation).toBe(-3); // low+strong → -3 (polarity wins)
-	});
 });
 
 // ─── Evidence lenient schema tests ───────────────────────────────────────────
@@ -269,11 +226,6 @@ describe("Evidence lenient (decodeEvidenceLenient)", () => {
 		expect(result.evidence).toHaveLength(2);
 		expect(result.evidence[0].deviation).toBe(3); // high+strong
 		expect(result.evidence[1].deviation).toBe(-2); // low+moderate
-	});
-
-	it("accepts v2 deviation-based evidence (backward compat)", () => {
-		const result = decodeEvidenceLenient({ evidence: validDeviationEvidence });
-		expect(result.evidence).toHaveLength(2);
 	});
 
 	it("filters invalid evidence items while keeping valid ones", () => {

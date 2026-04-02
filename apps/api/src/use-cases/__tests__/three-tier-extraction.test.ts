@@ -190,6 +190,38 @@ describe("Split Three-Tier Extraction Pipeline (Story 42-2)", () => {
 		);
 	});
 
+	describe("Parallel execution (Story 42-4)", () => {
+		it.effect("runs both extractions concurrently", () =>
+			Effect.gen(function* () {
+				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(Effect.succeed(successfulUserState));
+				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(Effect.succeed(successfulEvidence));
+
+				const result = yield* runSplitThreeTierExtraction(testInput);
+
+				// Both extractions should be called
+				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
+				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
+				expect(result.output.userState).toBeDefined();
+				expect(result.output.evidence).toHaveLength(1);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("evidence still succeeds when user state fails to Tier 3", () =>
+			Effect.gen(function* () {
+				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(Effect.fail(conversanalyzerError));
+				mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(
+					Effect.fail(conversanalyzerError),
+				);
+				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(Effect.succeed(successfulEvidence));
+
+				const result = yield* runSplitThreeTierExtraction(testInput);
+
+				// Evidence should succeed despite user state failure
+				expect(result.output.evidence).toHaveLength(1);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
 	describe("Logging", () => {
 		it.effect("logs completion with both tier numbers", () =>
 			Effect.gen(function* () {

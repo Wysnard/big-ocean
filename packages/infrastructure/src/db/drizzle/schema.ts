@@ -305,8 +305,7 @@ export const conversationEvidence = pgTable(
 		strength: evidenceStrengthEnum("strength").notNull(),
 		confidence: evidenceConfidenceEnum("confidence").notNull(),
 		domain: evidenceDomainEnum("domain").notNull(),
-		/** Polarity of evidence — nullable for backward compat with pre-v3 evidence (Story 42-1) */
-		polarity: evidencePolarityEnum("polarity"),
+		polarity: evidencePolarityEnum("polarity").notNull(),
 		note: text("note").notNull(),
 		createdAt: timestamp("created_at").defaultNow(),
 	},
