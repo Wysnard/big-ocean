@@ -23,16 +23,12 @@ vi.mock("@/hooks/use-auth", () => ({
 const mockNavigate = vi.fn();
 vi.mock("@tanstack/react-router", () => ({
 	useNavigate: () => mockNavigate,
+	Link: ({ children, ...props }: any) => <a {...props}>{children}</a>,
 }));
 
 // Mock OceanHieroglyphSet
 vi.mock("@workspace/ui/components/ocean-hieroglyph-set", () => ({
 	OceanHieroglyphSet: () => <span data-testid="ocean-hieroglyphs" />,
-}));
-
-// Mock auth-session-linking
-vi.mock("../../lib/auth-session-linking", () => ({
-	buildAuthPageHref: (path: string) => path,
 }));
 
 import { SignupForm } from "./signup-form";
