@@ -7,16 +7,15 @@
 
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { LoginForm } from "../components/auth";
-import { getSession } from "../lib/auth-client";
+import { getServerSession } from "../lib/auth.server";
 
 export const Route = createFileRoute("/login")({
-	ssr: false,
 	validateSearch: (search: Record<string, unknown>) => ({
 		sessionId: typeof search.sessionId === "string" ? search.sessionId : undefined,
 		redirectTo: typeof search.redirectTo === "string" ? search.redirectTo : undefined,
 	}),
 	beforeLoad: async () => {
-		const { data: session } = await getSession();
+		const session = await getServerSession();
 		if (session?.user) {
 			throw redirect({ to: "/dashboard" });
 		}
