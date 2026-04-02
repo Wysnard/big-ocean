@@ -133,9 +133,11 @@ describe("sendMessage Use Case", () => {
 		it.effect("should still steer on stale evidence when conversanalyzer fails", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				mockConversanalyzerRepo.analyze.mockReturnValue(
-					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-				);
+				const llmError = Effect.fail(new ConversanalyzerError({ message: "LLM timeout" }));
+				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(llmError);
+				mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(llmError);
+				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(llmError);
+				mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(llmError);
 				// Stale evidence exists in DB
 				mockEvidenceRepo.findBySession.mockReturnValue(
 					Effect.succeed([

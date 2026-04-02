@@ -641,9 +641,6 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 					mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
 					// Fail strict calls — lenient methods succeed from default setup
-					mockConversanalyzerRepo.analyze.mockReturnValue(
-						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-					);
 					mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
 						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
 					);
@@ -680,8 +677,6 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 					mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
 					const llmError = Effect.fail(new ConversanalyzerError({ message: "LLM timeout" }));
-					mockConversanalyzerRepo.analyze.mockReturnValue(llmError);
-					mockConversanalyzerRepo.analyzeLenient.mockReturnValue(llmError);
 					mockConversanalyzerRepo.analyzeUserState.mockReturnValue(llmError);
 					mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(llmError);
 					mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(llmError);
