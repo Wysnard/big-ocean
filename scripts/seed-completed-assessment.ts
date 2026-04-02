@@ -118,28 +118,28 @@ const FACET_SCORE_MAP: Record<
 	artistic_interests: { score: 14, confidence: 0.65, domain: "leisure" },
 	emotionality: { score: 16, confidence: 0.6, domain: "relationships" },
 	adventurousness: { score: 13, confidence: 0.68, domain: "leisure" },
-	intellect: { score: 18, confidence: 0.94, domain: "solo" },
-	liberalism: { score: 16, confidence: 0.72, domain: "solo" },
+	intellect: { score: 18, confidence: 0.94, domain: "leisure" },
+	liberalism: { score: 16, confidence: 0.72, domain: "leisure" },
 
 	// Conscientiousness (High: 15-18) - organized, disciplined
 	self_efficacy: { score: 17, confidence: 0.75, domain: "work" },
-	orderliness: { score: 19, confidence: 0.95, domain: "solo" },
+	orderliness: { score: 19, confidence: 0.95, domain: "leisure" },
 	dutifulness: { score: 16, confidence: 0.78, domain: "work" },
 	achievement_striving: { score: 17, confidence: 0.7, domain: "work" },
 	self_discipline: { score: 18, confidence: 0.92, domain: "work" },
-	cautiousness: { score: 15, confidence: 0.74, domain: "solo" },
+	cautiousness: { score: 15, confidence: 0.74, domain: "health" },
 
 	// Extraversion (Low: 4-8) - introverted, reserved
 	friendliness: { score: 8, confidence: 0.66, domain: "relationships" },
 	gregariousness: { score: 5, confidence: 0.87, domain: "relationships" },
 	assertiveness: { score: 9, confidence: 0.64, domain: "work" },
-	activity_level: { score: 10, confidence: 0.62, domain: "solo" },
+	activity_level: { score: 10, confidence: 0.62, domain: "health" },
 	excitement_seeking: { score: 6, confidence: 0.58, domain: "leisure" },
 	cheerfulness: { score: 7, confidence: 0.63, domain: "relationships" },
 
 	// Agreeableness (Medium: 10-14) - helpful but analytical
 	trust: { score: 11, confidence: 0.67, domain: "relationships" },
-	morality: { score: 14, confidence: 0.71, domain: "solo" },
+	morality: { score: 14, confidence: 0.71, domain: "leisure" },
 	altruism: { score: 13, confidence: 0.86, domain: "relationships" },
 	cooperation: { score: 10, confidence: 0.69, domain: "relationships" },
 	modesty: { score: 12, confidence: 0.65, domain: "relationships" },
@@ -147,10 +147,10 @@ const FACET_SCORE_MAP: Record<
 
 	// Neuroticism (Medium: 9-13) - moderate emotional stability
 	anxiety: { score: 11, confidence: 0.73, domain: "work" },
-	anger: { score: 9, confidence: 0.64, domain: "solo" },
-	depression: { score: 10, confidence: 0.61, domain: "solo" },
+	anger: { score: 9, confidence: 0.64, domain: "leisure" },
+	depression: { score: 10, confidence: 0.61, domain: "leisure" },
 	self_consciousness: { score: 12, confidence: 0.66, domain: "relationships" },
-	immoderation: { score: 8, confidence: 0.59, domain: "solo" },
+	immoderation: { score: 8, confidence: 0.59, domain: "health" },
 	vulnerability: { score: 10, confidence: 0.67, domain: "relationships" },
 };
 

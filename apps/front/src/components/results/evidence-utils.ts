@@ -9,7 +9,7 @@ const DOMAIN_LABELS: Record<string, string> = {
 	relationships: "Relationships",
 	family: "Family",
 	leisure: "Leisure",
-	solo: "Solo",
+	health: "Health",
 	other: "Other",
 };
 
