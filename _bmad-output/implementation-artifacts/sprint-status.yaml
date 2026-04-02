@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-04-02T12:30
+generated: 2026-04-02T14:45
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -694,7 +694,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-41: in-progress
   41-1-remap-existing-territory-domains-and-replace-identity-and-purpose: done
-  41-2-add-6-new-territories: pr-ready
+  41-2-add-6-new-territories: done
   41-3-facet-additions-to-existing-territories-and-catalog-validation: backlog
   epic-41-retrospective: optional
 
@@ -707,7 +707,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-42: in-progress
   42-1-polarity-schema-database-migration-and-deviation-adapter: done
-  42-2-split-conversanalyzer-into-two-separate-llm-calls: pr-ready
+  42-2-split-conversanalyzer-into-two-separate-llm-calls: done
   42-3-evidence-extraction-v3-prompt-with-per-facet-conversational-anchors: backlog
   42-4-pipeline-integration-wire-two-call-extraction-into-nerin-pipeline: backlog
   epic-42-retrospective: optional

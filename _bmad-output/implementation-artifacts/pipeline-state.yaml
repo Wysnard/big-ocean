@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
-parallelism_step: 12
-parallelism_step_name: "Readiness Review Gap Closure"
-baseline_commit: "572b5da8be2613388c47274af20fb78ff67be962"
-created: "2026-03-23"
-last_updated: "2026-03-23"
+parallelism_step: 1
+parallelism_step_name: "Catalog Validation + Extraction Prompt"
+baseline_commit: null
+created: "2026-04-02"
+last_updated: "2026-04-02"
 
 # Optional context documents discovered
 context_docs:
@@ -14,26 +14,24 @@ context_docs:
 
 # Stories in this step
 stories:
-  30-3-email-verification-gate:
-    status: done
+  41-3-facet-additions-to-existing-territories-and-catalog-validation:
+    status: pending
     mode: "parallel"
-    notes: "Epic 30 — Better Auth config + /verify-email route + resend flow. Auth/frontend scope."
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/185"
-    dev_branch: "feat/story-30-3-email-verification-gate"
+    notes: "Depends on 41-2 (done). Adds cautiousness→work-dynamics, liberalism→growing-up, validates all facets ≥2 routes across 31 territories."
+    pr_url: null
+    dev_branch: null
     error: null
-  31-8-extraction-pipeline-and-evidence-processing:
-    status: done
+  42-3-evidence-extraction-v3-prompt-with-per-facet-conversational-anchors:
+    status: pending
     mode: "parallel"
-    notes: "Epic 31 — ConversAnalyzer v2 dual extraction, three-tier retry. Backend pipeline scope."
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/186"
-    dev_branch: "feat/story-31-8-extraction-pipeline-and-evidence-processing"
+    notes: "Depends on 42-2 (done). Per-facet HIGH/LOW anchors for all 30 facets, dual-polarity check, polarity balance audit."
+    pr_url: null
+    dev_branch: null
     error: null
 
 # Conflict detection (populated by step-02b)
 conflicts:
   detected: false
-  scanned_branches:
-    - "feat/story-30-3-email-verification-gate"
-    - "feat/story-31-8-extraction-pipeline-and-evidence-processing"
+  scanned_branches: []
   skipped_branches: []
   overlapping_files: []
