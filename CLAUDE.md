@@ -12,6 +12,8 @@ When working on frontend code (`apps/front` or `packages/ui`), consult [FRONTEND
 
 **Forms rule:** All forms must use `@tanstack/react-form` with shadcn/ui form components — never plain `useState` per field. Follow the [shadcn TanStack Form standard](https://ui.shadcn.com/docs/forms/tanstack-form#validation-modes) for structure and validation modes. Use Effect Schema (`@effect/schema`) for validation when needed.
 
+**Navigation rule:** Use TanStack Router's `<Link>` component for all internal navigation — never raw `<a href>`, `window.location.href`, or `<button>` + `navigate()`. Reserve `useNavigate()` for programmatic navigation only (e.g., after form submission, auth redirects). See [TanStack Router navigation docs](https://tanstack.com/router/latest/docs/guide/navigation).
+
 **Environment variables:** Check `.env` (local dev) and `.env.example` (template) for available environment variables before making assumptions about config values.
 
 **Worktree isolation rule:** When running in a git worktree (e.g., spawned via `isolation: "worktree"`), ONLY read and modify files within the worktree directory. Do NOT access the main repository working tree unless the user explicitly asks you to.

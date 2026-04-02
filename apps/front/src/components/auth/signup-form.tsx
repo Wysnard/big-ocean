@@ -6,14 +6,13 @@
  */
 
 import { useForm } from "@tanstack/react-form";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Field, FieldError, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import { OceanSpinner } from "@workspace/ui/components/ocean-spinner";
 import { useState } from "react";
 import { useAuth } from "../../hooks/use-auth";
-import { buildAuthPageHref } from "../../lib/auth-session-linking";
 
 interface SignupFormProps {
 	anonymousSessionId?: string;
@@ -256,18 +255,16 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 					{isLoading ? "Creating account..." : "Create Account"}
 				</button>
 
-				<button
-					type="button"
-					onClick={() => {
-						window.location.href = buildAuthPageHref("/login", {
-							sessionId: anonymousSessionId,
-							redirectTo,
-						});
+				<Link
+					to="/login"
+					search={{
+						sessionId: anonymousSessionId,
+						redirectTo,
 					}}
-					className="min-h-11 w-full rounded-xl bg-transparent text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
+					className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-transparent text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
 				>
 					Already exploring? Sign in
-				</button>
+				</Link>
 			</form>
 		</div>
 	);

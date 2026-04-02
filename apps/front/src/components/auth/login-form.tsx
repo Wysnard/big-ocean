@@ -6,14 +6,13 @@
  */
 
 import { useForm } from "@tanstack/react-form";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Field, FieldError, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import { OceanSpinner } from "@workspace/ui/components/ocean-spinner";
 import { useState } from "react";
 import { AuthError, useAuth } from "../../hooks/use-auth";
-import { buildAuthPageHref } from "../../lib/auth-session-linking";
 
 interface LoginFormProps {
 	anonymousSessionId?: string;
@@ -188,12 +187,12 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 				</form.Field>
 
 				<div className="flex justify-end">
-					<a
-						href="/forgot-password"
+					<Link
+						to="/forgot-password"
 						className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
 					>
 						Forgot password?
-					</a>
+					</Link>
 				</div>
 
 				<button
@@ -205,18 +204,16 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 					{isLoading ? "Signing in..." : "Sign In"}
 				</button>
 
-				<button
-					type="button"
-					onClick={() => {
-						window.location.href = buildAuthPageHref("/signup", {
-							sessionId: anonymousSessionId,
-							redirectTo,
-						});
+				<Link
+					to="/signup"
+					search={{
+						sessionId: anonymousSessionId,
+						redirectTo,
 					}}
-					className="min-h-11 w-full rounded-xl bg-transparent text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
+					className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-transparent text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
 				>
 					New here? Create account
-				</button>
+				</Link>
 			</form>
 		</div>
 	);
