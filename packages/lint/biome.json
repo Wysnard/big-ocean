@@ -8,7 +8,8 @@
 		"defaultBranch": "master"
 	},
 	"files": {
-		"ignoreUnknown": false
+		"ignoreUnknown": false,
+		"ignore": ["**/*.gen.ts", "**/*.gen.tsx"]
 	},
 	"formatter": {
 		"enabled": true,

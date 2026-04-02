@@ -1,32 +1,15 @@
 # Sprint Parallelism Plan
 Generated: 2026-04-02
 
-> Covers all forward-looking stories (not done).
-> Phase 8: Scoring & Confidence v2 (Epics 40-42 + cleanup)
-> Step 1 (40-3, 41-1, 42-1) completed 2026-04-02 — all 3 PRs verified and merged.
-> Step 2 (41-2, 42-2) completed 2026-04-02 — both PRs verified and merged.
+> All Scoring v2 stories (Steps 1-2) completed and merged.
+> Only post-implementation cleanup remains.
 
-## Step 1: Catalog Validation + Extraction Prompt
-| Story | Mode | Notes |
-|-------|------|-------|
-| 41-3-facet-additions-to-existing-territories-and-catalog-validation | parallel | Depends on 41-2 (done). Adds cautiousness→work-dynamics, liberalism→growing-up, validates all facets ≥2 routes across 31 territories. |
-| 42-3-evidence-extraction-v3-prompt-with-per-facet-conversational-anchors | parallel | Depends on 42-2 (done). Per-facet HIGH/LOW anchors for all 30 facets, dual-polarity check, polarity balance audit. |
-
-**Gate:** All stories above must be done before proceeding.
-
-## Step 2: Pipeline Integration
-| Story | Mode | Notes |
-|-------|------|-------|
-| 42-4-pipeline-integration-wire-two-call-extraction-into-nerin-pipeline | parallel | Depends on 42-2, 42-3, 41-3. Wires two-call extraction into nerin-pipeline.ts, end-to-end integration. |
-
-**Gate:** Must be done and all 3 Scoring v2 epics verified in production before proceeding.
-
-## Step 3: Post-Implementation Cleanup
+## Step 1: Post-Implementation Cleanup
 | Story | Mode | Notes |
 |-------|------|-------|
 | cleanup-1-remove-solo-from-postgresql-enum | parallel | Removes unused solo value from pgEnum — requires type replacement, schedule during maintenance window. |
 
-**Gate:** Production verification required before this step.
+**Gate:** All 3 Scoring v2 epics must be verified in production before executing.
 
 ## Deferred Work (not scheduled)
 | Epic | Stories | Reason |
@@ -34,14 +17,8 @@ Generated: 2026-04-02
 | Epic 6 (Privacy/GDPR) | 6-1, 6-2, 6-3 | Deferred to EU launch |
 | Epic 20 (Evidence Review) | 20-1, 20-2 | Deferred — messageId FK already in place |
 
-## Conflict Notes
-- **territory-catalog.ts** (domain): Touched by 41-3 (Step 1). No conflicts with 42-3.
-- **ConversAnalyzer infrastructure**: Touched by 42-3 (Step 1). No conflicts with 41-3.
-- **nerin-pipeline.ts**: Only touched by 42-4 in Step 2 — clean.
-
 ## Summary
-- **3 steps** — 4 stories remaining (3 Scoring v2 + 1 cleanup)
-- **Critical path:** 41-3/42-3 → 42-4 → cleanup-1
-- **Max parallelism:** Step 1 (2 stories)
-- **Epic 41 and Epic 42 are fully independent** — no shared file conflicts, parallelizable within each step
-- **Next action:** Create story files for Step 1 stories (41-3, 42-3) and begin orchestration
+- **1 step** — 1 story remaining (cleanup)
+- **Critical path:** Verify Scoring v2 in production → cleanup-1
+- **All implementation stories are complete.** Phase 8 is functionally done.
+- **Next action:** Verify Scoring v2 epics (40, 41, 42) in production, then schedule cleanup-1 during maintenance window.
