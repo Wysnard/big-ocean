@@ -66,3 +66,27 @@ So that the full pacing pipeline works end-to-end with the new two-call extracti
 - Update tests to verify user state extraction completes before evidence extraction starts
 - Verify independent failure handling still works
 - File: `apps/api/src/use-cases/__tests__/three-tier-extraction.test.ts`
+
+## Architect Notes
+
+### Finding 1 (Major): Polarity dropped in Anthropic repository evidence mapping
+
+The `analyzeEvidence` and `analyzeEvidenceLenient` methods in `packages/infrastructure/src/repositories/conversanalyzer.anthropic.repository.ts` (lines 451-458, 519-526) explicitly map parsed evidence items but DROP the `polarity` field. The `.map()` only includes `bigfiveFacet, deviation, strength, confidence, domain, note`.
+
+**Fix:** Add `polarity: e.polarity` to both `.map()` calls in `analyzeEvidence` and `analyzeEvidenceLenient`.
+
+### Finding 2 (Major): ConversanalyzerEvidenceOutput type missing polarity
+
+The `ConversanalyzerEvidenceOutput.evidence` type is `(EvidenceInput & { readonly note: string })[]`. Since `EvidenceInput` does NOT have a `polarity` field, the type system prevents polarity from flowing through even if the runtime data carries it.
+
+**Fix:** Update `ConversanalyzerEvidenceOutput` in `packages/domain/src/repositories/conversanalyzer.repository.ts` to include polarity:
+```typescript
+readonly evidence: (EvidenceInput & { readonly note: string; readonly polarity?: EvidencePolarity })[];
+```
+This keeps backward compatibility (optional polarity for v2 evidence) while allowing v3 evidence to carry polarity through the pipeline.
+
+Similarly, update `ConversanalyzerV2Output.evidence` type to include polarity.
+
+### Finding 3 (Minor): Mock evidence missing polarity
+
+The mock evidence in `packages/infrastructure/src/repositories/__mocks__/conversanalyzer.anthropic.repository.ts` (defaultEvidence, lines 43-60) should include `polarity` to match the updated types and realistic v3 output.
