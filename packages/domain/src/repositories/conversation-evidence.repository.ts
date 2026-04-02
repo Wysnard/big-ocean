@@ -19,14 +19,13 @@ import type {
 
 export { ConversationEvidenceError };
 
-/** Input for saving conversation evidence — EvidenceInput + FK context + required note + exchange link + optional polarity (Story 42-1) */
+/** Input for saving conversation evidence — EvidenceInput + FK context + required note + exchange link + polarity */
 export type ConversationEvidenceInput = EvidenceInput & {
 	readonly sessionId: string;
 	readonly messageId: string;
 	readonly note: string;
 	readonly exchangeId: string;
-	/** Polarity from v3 extraction — absent for legacy v2 evidence */
-	readonly polarity?: EvidencePolarity;
+	readonly polarity: EvidencePolarity;
 };
 
 /** Full DB row returned from queries */
@@ -40,8 +39,7 @@ export interface ConversationEvidenceRecord {
 	readonly strength: EvidenceStrength;
 	readonly confidence: EvidenceConfidence;
 	readonly domain: LifeDomain;
-	/** Polarity from v3 extraction — null for legacy v2 evidence (Story 42-1) */
-	readonly polarity: EvidencePolarity | null;
+	readonly polarity: EvidencePolarity;
 	readonly note: string;
 	readonly createdAt: Date;
 }

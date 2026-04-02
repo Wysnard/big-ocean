@@ -43,7 +43,7 @@ export interface ConversanalyzerV2Output {
 	/** Extracted facet evidence (0-N records) */
 	readonly evidence: (EvidenceInput & {
 		readonly note: string;
-		readonly polarity?: EvidencePolarity;
+		readonly polarity: EvidencePolarity;
 	})[];
 	/** Token usage for cost tracking */
 	readonly tokenUsage: { readonly input: number; readonly output: number };
@@ -59,7 +59,7 @@ export interface ConversanalyzerUserStateOutput {
 export interface ConversanalyzerEvidenceOutput {
 	readonly evidence: (EvidenceInput & {
 		readonly note: string;
-		readonly polarity?: EvidencePolarity;
+		readonly polarity: EvidencePolarity;
 	})[];
 	readonly tokenUsage: { readonly input: number; readonly output: number };
 }

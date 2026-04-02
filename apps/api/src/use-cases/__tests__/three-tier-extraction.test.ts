@@ -190,48 +190,32 @@ describe("Split Three-Tier Extraction Pipeline (Story 42-2)", () => {
 		);
 	});
 
-	describe("Sequential execution order (Story 42-4)", () => {
-		it.effect("calls user state before evidence extraction", () =>
+	describe("Parallel execution (Story 42-4)", () => {
+		it.effect("runs both extractions concurrently", () =>
 			Effect.gen(function* () {
-				const callOrder: string[] = [];
-
-				mockConversanalyzerRepo.analyzeUserState.mockImplementation(() => {
-					callOrder.push("userState");
-					return Effect.succeed(successfulUserState);
-				});
-				mockConversanalyzerRepo.analyzeEvidence.mockImplementation(() => {
-					callOrder.push("evidence");
-					return Effect.succeed(successfulEvidence);
-				});
-
-				yield* runSplitThreeTierExtraction(testInput);
-
-				// User state must complete before evidence starts
-				expect(callOrder).toEqual(["userState", "evidence"]);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("evidence still runs when user state fails to Tier 3", () =>
-			Effect.gen(function* () {
-				const callOrder: string[] = [];
-
-				mockConversanalyzerRepo.analyzeUserState.mockImplementation(() => {
-					callOrder.push("userState");
-					return Effect.fail(conversanalyzerError);
-				});
-				mockConversanalyzerRepo.analyzeUserStateLenient.mockImplementation(() => {
-					callOrder.push("userStateLenient");
-					return Effect.fail(conversanalyzerError);
-				});
-				mockConversanalyzerRepo.analyzeEvidence.mockImplementation(() => {
-					callOrder.push("evidence");
-					return Effect.succeed(successfulEvidence);
-				});
+				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(Effect.succeed(successfulUserState));
+				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(Effect.succeed(successfulEvidence));
 
 				const result = yield* runSplitThreeTierExtraction(testInput);
 
-				// User state should be attempted (and fail) before evidence runs
-				expect(callOrder[callOrder.length - 1]).toBe("evidence");
+				// Both extractions should be called
+				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
+				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
+				expect(result.output.userState).toBeDefined();
+				expect(result.output.evidence).toHaveLength(1);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("evidence still succeeds when user state fails to Tier 3", () =>
+			Effect.gen(function* () {
+				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(Effect.fail(conversanalyzerError));
+				mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(
+					Effect.fail(conversanalyzerError),
+				);
+				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(Effect.succeed(successfulEvidence));
+
+				const result = yield* runSplitThreeTierExtraction(testInput);
+
 				// Evidence should succeed despite user state failure
 				expect(result.output.evidence).toHaveLength(1);
 			}).pipe(Effect.provide(createTestLayer())),
