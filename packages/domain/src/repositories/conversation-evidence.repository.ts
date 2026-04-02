@@ -19,8 +19,8 @@ import type {
 
 export { ConversationEvidenceError };
 
-/** Input for saving conversation evidence — EvidenceInput + FK context + required note + exchange link + polarity */
-export type ConversationEvidenceInput = EvidenceInput & {
+/** Input for saving conversation evidence — EvidenceInput (minus deviation) + FK context + required note + exchange link + polarity */
+export type ConversationEvidenceInput = Omit<EvidenceInput, "deviation"> & {
 	readonly sessionId: string;
 	readonly messageId: string;
 	readonly note: string;

@@ -176,13 +176,12 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 			const polarity = deviation >= 0 ? "high" : "low";
 			await client.query(
 				`INSERT INTO conversation_evidence
-				 (assessment_session_id, assessment_message_id, bigfive_facet, deviation, strength, confidence, domain, polarity, note, created_at)
-				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())`,
+				 (assessment_session_id, assessment_message_id, bigfive_facet, strength, confidence, domain, polarity, note, created_at)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
 				[
 					sessionId,
 					userMsgId,
 					facet,
-					deviation,
 					strength,
 					confidence,
 					domain,
@@ -235,19 +234,9 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 			const polarity = deviation >= 0 ? "high" : "low";
 			await client.query(
 				`INSERT INTO conversation_evidence
-				 (assessment_session_id, assessment_message_id, bigfive_facet, deviation, strength, confidence, domain, polarity, note, created_at)
-				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())`,
-				[
-					sessionId,
-					userMsgId,
-					facet,
-					deviation,
-					strength,
-					confEnum,
-					domain,
-					polarity,
-					"Seeded evidence note",
-				],
+				 (assessment_session_id, assessment_message_id, bigfive_facet, strength, confidence, domain, polarity, note, created_at)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
+				[sessionId, userMsgId, facet, strength, confEnum, domain, polarity, "Seeded evidence note"],
 			);
 		}
 

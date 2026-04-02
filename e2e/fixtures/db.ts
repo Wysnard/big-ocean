@@ -316,13 +316,12 @@ export const test = base.extend<{ db: DbFixture }>({
 
 					await client.query(
 						`INSERT INTO conversation_evidence
-						 (assessment_session_id, assessment_message_id, bigfive_facet, deviation, strength, confidence, domain, polarity, note, created_at)
-						 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())`,
+						 (assessment_session_id, assessment_message_id, bigfive_facet, strength, confidence, domain, polarity, note, created_at)
+						 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
 						[
 							sessionId,
 							realMessageId,
 							ev.facetName,
-							deviation,
 							strength,
 							confEnum,
 							"leisure", // default domain for seeded evidence

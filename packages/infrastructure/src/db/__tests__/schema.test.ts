@@ -66,7 +66,6 @@ describe("Conversation Evidence Schema (v2 — Story 18-1)", () => {
 		expect(conversationEvidence.assessmentSessionId).toBeDefined();
 		expect(conversationEvidence.assessmentMessageId).toBeDefined();
 		expect(conversationEvidence.bigfiveFacet).toBeDefined();
-		expect(conversationEvidence.deviation).toBeDefined();
 		expect(conversationEvidence.strength).toBeDefined();
 		expect(conversationEvidence.confidence).toBeDefined();
 		expect(conversationEvidence.domain).toBeDefined();

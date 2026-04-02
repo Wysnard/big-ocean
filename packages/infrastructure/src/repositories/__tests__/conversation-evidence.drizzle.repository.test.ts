@@ -27,8 +27,9 @@ describe("ConversationEvidenceRepository", () => {
 	const makeInput = (overrides?: Partial<ConversationEvidenceInput>): ConversationEvidenceInput => ({
 		sessionId: "session-1",
 		messageId: "msg-1",
+		exchangeId: "exchange-1",
 		bigfiveFacet: "imagination",
-		deviation: 2,
+		polarity: "high" as const,
 		strength: "moderate",
 		confidence: "medium",
 		domain: "work",
@@ -57,8 +58,13 @@ describe("ConversationEvidenceRepository", () => {
 				const repo = yield* ConversationEvidenceRepository;
 				yield* repo.save([
 					makeInput({ bigfiveFacet: "imagination" }),
-					makeInput({ bigfiveFacet: "intellect", deviation: 1 }),
-					makeInput({ bigfiveFacet: "orderliness", deviation: -1, domain: "family" }),
+					makeInput({ bigfiveFacet: "intellect", polarity: "high" as const, strength: "weak" as const }),
+					makeInput({
+						bigfiveFacet: "orderliness",
+						polarity: "low" as const,
+						strength: "weak" as const,
+						domain: "family",
+					}),
 				]);
 				const records = yield* repo.findBySession("session-1");
 				expect(records).toHaveLength(3);

@@ -26,7 +26,6 @@ import { PURCHASE_EVENT_TYPES } from "@workspace/domain/types/purchase.types";
 import { defineRelations, sql } from "drizzle-orm";
 import {
 	boolean,
-	check,
 	index,
 	integer,
 	jsonb,
@@ -296,7 +295,6 @@ export const conversationEvidence = pgTable(
 			onDelete: "set null",
 		}),
 		bigfiveFacet: bigfiveFacetNameEnum("bigfive_facet").notNull(),
-		deviation: smallint("deviation").notNull(),
 		strength: evidenceStrengthEnum("strength").notNull(),
 		confidence: evidenceConfidenceEnum("confidence").notNull(),
 		domain: evidenceDomainEnum("domain").notNull(),
@@ -304,10 +302,7 @@ export const conversationEvidence = pgTable(
 		note: text("note").notNull(),
 		createdAt: timestamp("created_at").defaultNow(),
 	},
-	(table) => [
-		index("conversation_evidence_session_id_idx").on(table.assessmentSessionId),
-		check("conversation_evidence_deviation_check", sql`deviation >= -3 AND deviation <= 3`),
-	],
+	(table) => [index("conversation_evidence_session_id_idx").on(table.assessmentSessionId)],
 );
 
 /**

@@ -13,6 +13,8 @@ import {
 	type SavedFacetEvidence,
 } from "@workspace/domain";
 import type { FacetName } from "@workspace/domain/constants/big-five";
+import type { EvidencePolarity, EvidenceStrength } from "@workspace/domain/types/evidence";
+import { deriveDeviation } from "@workspace/domain/utils/derive-deviation";
 import { and, eq } from "drizzle-orm";
 import { Effect, Layer } from "effect";
 import { Database } from "../context/database";
@@ -33,23 +35,27 @@ function toSavedFacetEvidence(row: {
 	id: string;
 	assessmentMessageId: string;
 	bigfiveFacet: string;
-	deviation: number;
+	polarity: string;
 	strength: string;
 	confidence: string;
 	domain: string;
 	note: string;
 	createdAt: Date | null;
 }): SavedFacetEvidence {
+	const deviation = deriveDeviation(
+		row.polarity as EvidencePolarity,
+		row.strength as EvidenceStrength,
+	);
 	return {
 		id: row.id,
 		assessmentMessageId: row.assessmentMessageId,
 		facetName: row.bigfiveFacet as FacetName,
-		score: deviationToScore(row.deviation),
+		score: deviationToScore(deviation),
 		confidence: CONFIDENCE_MAP[row.confidence as keyof typeof CONFIDENCE_MAP] ?? 50,
 		quote: row.note,
 		highlightRange: { start: 0, end: row.note.length },
 		domain: row.domain,
-		deviation: row.deviation,
+		deviation,
 		createdAt: row.createdAt ?? new Date(),
 	};
 }

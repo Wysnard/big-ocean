@@ -8,6 +8,7 @@ import {
 	type ConversationEvidenceRecord,
 	ConversationEvidenceRepository,
 } from "@workspace/domain";
+import { deriveDeviation } from "@workspace/domain/utils/derive-deviation";
 import { Effect, Layer } from "effect";
 
 const records: ConversationEvidenceRecord[] = [];
@@ -37,7 +38,7 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.succeed(
 						messageId: input.messageId,
 						exchangeId: input.exchangeId,
 						bigfiveFacet: input.bigfiveFacet,
-						deviation: input.deviation,
+						deviation: deriveDeviation(input.polarity, input.strength),
 						strength: input.strength,
 						confidence: input.confidence,
 						domain: input.domain,

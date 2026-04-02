@@ -10,6 +10,8 @@ import {
 	type ConversationEvidenceRecord,
 	ConversationEvidenceRepository,
 } from "@workspace/domain/repositories/conversation-evidence.repository";
+import type { EvidencePolarity, EvidenceStrength } from "@workspace/domain/types/evidence";
+import { deriveDeviation } from "@workspace/domain/utils/derive-deviation";
 import { eq, sql } from "drizzle-orm";
 import { Effect, Layer } from "effect";
 import { Database } from "../context/database";
@@ -33,7 +35,6 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 								assessmentMessageId: r.messageId,
 								exchangeId: r.exchangeId,
 								bigfiveFacet: r.bigfiveFacet,
-								deviation: r.deviation,
 								strength: r.strength,
 								confidence: r.confidence,
 								domain: r.domain,
@@ -72,7 +73,10 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 						messageId: row.assessmentMessageId,
 						exchangeId: row.exchangeId as string,
 						bigfiveFacet: row.bigfiveFacet as ConversationEvidenceRecord["bigfiveFacet"],
-						deviation: row.deviation,
+						deviation: deriveDeviation(
+							row.polarity as EvidencePolarity,
+							row.strength as EvidenceStrength,
+						),
 						strength: row.strength as ConversationEvidenceRecord["strength"],
 						confidence: row.confidence as ConversationEvidenceRecord["confidence"],
 						domain: row.domain as ConversationEvidenceRecord["domain"],
@@ -91,7 +95,6 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 							assessmentMessageId: conversationEvidence.assessmentMessageId,
 							exchangeId: conversationEvidence.exchangeId,
 							bigfiveFacet: conversationEvidence.bigfiveFacet,
-							deviation: conversationEvidence.deviation,
 							strength: conversationEvidence.strength,
 							confidence: conversationEvidence.confidence,
 							domain: conversationEvidence.domain,
@@ -120,7 +123,10 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 						messageId: row.assessmentMessageId,
 						exchangeId: row.exchangeId as string,
 						bigfiveFacet: row.bigfiveFacet as ConversationEvidenceRecord["bigfiveFacet"],
-						deviation: row.deviation,
+						deviation: deriveDeviation(
+							row.polarity as EvidencePolarity,
+							row.strength as EvidenceStrength,
+						),
 						strength: row.strength as ConversationEvidenceRecord["strength"],
 						confidence: row.confidence as ConversationEvidenceRecord["confidence"],
 						domain: row.domain as ConversationEvidenceRecord["domain"],

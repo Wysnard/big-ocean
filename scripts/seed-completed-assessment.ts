@@ -488,7 +488,6 @@ const seedProgram = Effect.gen(function* () {
 				assessmentSessionId: sessionRecord.id,
 				assessmentMessageId: message.id,
 				bigfiveFacet: facet as FacetName,
-				deviation,
 				strength,
 				confidence,
 				domain: data.domain,
