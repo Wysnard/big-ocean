@@ -29,10 +29,14 @@ test("signup from home → redirects to verify-email → sign in → navigate to
 	});
 
 	await test.step("fill and submit signup form", async () => {
-		await page.getByLabel("Name").fill("E2E Redirect Test");
-		await page.getByLabel("Email").fill(uniqueEmail);
-		await page.getByLabel("Password", { exact: true }).fill("OceanDepth#Nerin42xQ");
-		await page.getByLabel("Confirm Password").fill("OceanDepth#Nerin42xQ");
+		await page.getByLabel("Name").click();
+		await page.getByLabel("Name").pressSequentially("E2E Redirect Test");
+		await page.getByLabel("Email").click();
+		await page.getByLabel("Email").pressSequentially(uniqueEmail);
+		await page.getByLabel("Password", { exact: true }).click();
+		await page.getByLabel("Password", { exact: true }).pressSequentially("OceanDepth#Nerin42xQ");
+		await page.getByLabel("Confirm Password").click();
+		await page.getByLabel("Confirm Password").pressSequentially("OceanDepth#Nerin42xQ");
 
 		await expect(page.getByLabel("Name")).toHaveValue("E2E Redirect Test");
 		await expect(page.getByLabel("Email")).toHaveValue(uniqueEmail);
@@ -61,8 +65,10 @@ test("signup from home → redirects to verify-email → sign in → navigate to
 		await page.goto("/login");
 		const submitBtn = page.locator('button[type="submit"]');
 		await submitBtn.waitFor({ state: "visible" });
-		await page.getByLabel("Email").fill(uniqueEmail);
-		await page.getByLabel("Password").fill("OceanDepth#Nerin42xQ");
+		await page.getByLabel("Email").click();
+		await page.getByLabel("Email").pressSequentially(uniqueEmail);
+		await page.getByLabel("Password").click();
+		await page.getByLabel("Password").pressSequentially("OceanDepth#Nerin42xQ");
 		await submitBtn.click();
 
 		// After sign-in, wait for navigation away from /login

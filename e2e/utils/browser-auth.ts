@@ -32,10 +32,14 @@ export async function signUpAndLoginViaBrowser(
 	const submitBtn = page.locator('button[type="submit"]');
 	await submitBtn.waitFor({ state: "visible" });
 
-	await page.getByLabel("Name").fill(input.name ?? "E2E Tester");
-	await page.getByLabel("Email").fill(input.email);
-	await page.getByLabel("Password", { exact: true }).fill(input.password);
-	await page.getByLabel("Confirm Password").fill(input.password);
+	await page.getByLabel("Name").click();
+	await page.getByLabel("Name").pressSequentially(input.name ?? "E2E Tester");
+	await page.getByLabel("Email").click();
+	await page.getByLabel("Email").pressSequentially(input.email);
+	await page.getByLabel("Password", { exact: true }).click();
+	await page.getByLabel("Password", { exact: true }).pressSequentially(input.password);
+	await page.getByLabel("Confirm Password").click();
+	await page.getByLabel("Confirm Password").pressSequentially(input.password);
 	await submitBtn.click();
 
 	// 2. Wait for signup to complete (redirects to /verify-email)
@@ -73,8 +77,10 @@ export async function signUpAndLoginViaBrowser(
 	await page.goto("/login");
 	const loginBtn = page.locator('button[type="submit"]');
 	await loginBtn.waitFor({ state: "visible" });
-	await page.getByLabel("Email").fill(input.email);
-	await page.getByLabel("Password").fill(input.password);
+	await page.getByLabel("Email").click();
+	await page.getByLabel("Email").pressSequentially(input.email);
+	await page.getByLabel("Password").click();
+	await page.getByLabel("Password").pressSequentially(input.password);
 	await loginBtn.click();
 	await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15_000 });
 }
@@ -89,8 +95,10 @@ export async function loginViaBrowser(
 	await page.goto("/login");
 	const submitBtn = page.locator('button[type="submit"]');
 	await submitBtn.waitFor({ state: "visible" });
-	await page.getByLabel("Email").fill(input.email);
-	await page.getByLabel("Password").fill(input.password);
+	await page.getByLabel("Email").click();
+	await page.getByLabel("Email").pressSequentially(input.email);
+	await page.getByLabel("Password").click();
+	await page.getByLabel("Password").pressSequentially(input.password);
 	await submitBtn.click();
 	await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15_000 });
 }
