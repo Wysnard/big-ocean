@@ -153,7 +153,7 @@ export function MobileNav() {
 					{!isAuthenticated ? (
 						<div className="flex flex-col gap-2">
 							<SheetClose asChild>
-								<Button variant="ghost" className="w-full justify-start min-h-11" asChild>
+								<Button variant="outline" className="w-full min-h-11" asChild>
 									<Link
 										to="/login"
 										search={{
