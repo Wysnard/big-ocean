@@ -3,8 +3,8 @@ stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 lastStep: 8
 status: 'complete'
 completedAt: '2026-03-15'
-lastUpdated: '2026-03-29 (ADR-26, ADR-27, ADR-28 added)'
-adrsAdded: ['ADR-22: Ocean Hieroglyph System', 'ADR-23: Dashboard/Profile Consolidation', 'ADR-24: Email Verification Gate', 'ADR-25: E2E Sandbox Testing for Email & Payments', 'ADR-26: Life Domain Restructure', 'ADR-27: Evidence Extraction v3 Polarity Model', 'ADR-28: Three-Signal Model Confirmed + Territory Catalog Evolution']
+lastUpdated: '2026-04-03 (ADR-29 added)'
+adrsAdded: ['ADR-22: Ocean Hieroglyph System', 'ADR-23: Dashboard/Profile Consolidation', 'ADR-24: Email Verification Gate', 'ADR-25: E2E Sandbox Testing for Email & Payments', 'ADR-26: Life Domain Restructure', 'ADR-27: Evidence Extraction v3 Polarity Model', 'ADR-28: Three-Signal Model Confirmed + Territory Catalog Evolution', 'ADR-29: Remove Per-User Daily Assessment Count Limit']
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/ux-design-specification.md'
@@ -2041,5 +2041,24 @@ The territory catalog evolves to support ADR-26 (solo → health) with 3 new hea
 **Facet coverage design principle:** Hard-to-assess facets (orderliness, artistic_interests, cautiousness, liberalism) need explicit territory targeting because they won't emerge without steering. Natural-emergence facets (extraversion cluster, trust, anxiety, etc.) emerge from conversational style regardless of territory — they need fewer dedicated territories but the extractor catches them across all domains.
 
 **Full territory remapping:** [Scoring & Confidence v2 Spec](./scoring-confidence-v2-spec.md)
+
+### ADR-29: Remove Per-User Daily Assessment Count Limit
+
+**Decision:** Remove the 1-assessment-per-day per-user rate limit. Users can start unlimited assessments per day.
+
+**Context:** The limit (`canStartAssessment` / `recordAssessmentStart` in `CostGuardRepository`) was a conservative guard during early development. With session-aware cost budgets (per-session cost cap + daily cost cap) already in place, the assessment count limit adds user friction without meaningful cost protection. The cost guard system already prevents budget blowout at session boundaries.
+
+**What changes:**
+- `canStartAssessment` and `recordAssessmentStart` removed from `startAuthenticatedAssessment` use-case
+- Redis `assessments:{userId}:{date}` keys no longer written
+- `RateLimitExceeded` error no longer thrown for assessment starts
+
+**What stays (unaffected):**
+- Message rate limiting (2 messages/minute per user)
+- Daily cost budget per user (`dailyCostLimit`, default $0.75)
+- Per-session cost budget (`sessionCostLimitCents`, default 2000 cents)
+- Global daily assessment circuit breaker (Story 15.3, `globalDailyAssessmentLimit`, default 100)
+
+**Rationale:** Cost protection is better served by cost-based guards (which track actual LLM spend) than by count-based guards (which assume fixed cost per assessment). The global circuit breaker remains as a safety net against runaway usage.
 
 **This document replaces:** `docs/ARCHITECTURE.md` as the single authoritative architecture reference. The standalone documents above contain full implementation-level specifications referenced by the ADRs in this document.

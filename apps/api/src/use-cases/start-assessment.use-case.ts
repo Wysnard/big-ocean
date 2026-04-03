@@ -8,7 +8,7 @@
  * - startAssessment: backward-compat wrapper that dispatches based on userId
  */
 
-import { AssessmentAlreadyExists, RateLimitExceeded } from "@workspace/contracts";
+import { AssessmentAlreadyExists } from "@workspace/contracts";
 import {
 	AppConfig,
 	AssessmentExchangeRepository,
@@ -16,11 +16,10 @@ import {
 	AssessmentSessionRepository,
 	CostGuardRepository,
 	GREETING_MESSAGES,
-	getNextDayMidnightUTC,
 	LoggerRepository,
 	pickOpeningQuestion,
 } from "@workspace/domain";
-import { DateTime, Effect } from "effect";
+import { Effect } from "effect";
 
 export interface StartAssessmentInput {
 	readonly userId?: string;
@@ -100,7 +99,7 @@ const createSessionWithGreetings = (userId?: string) =>
  * For logged-in users: checks for existing session, enforces rate limits,
  * records assessment start, then creates session with greetings.
  *
- * Errors: AssessmentAlreadyExists, RateLimitExceeded, RedisOperationError
+ * Errors: AssessmentAlreadyExists, CostLimitExceeded, GlobalAssessmentLimitReached, DatabaseError
  */
 export const startAuthenticatedAssessment = (input: { userId: string }) =>
 	Effect.gen(function* () {
@@ -176,25 +175,8 @@ export const startAuthenticatedAssessment = (input: { userId: string }) =>
 			),
 		);
 
-		// Check rate limit
-		const canStart = yield* costGuard.canStartAssessment(userId);
-		if (!canStart) {
-			logger.warn("Rate limit exceeded for assessment start", { userId });
-
-			return yield* Effect.fail(
-				new RateLimitExceeded({
-					userId,
-					message: "You can start a new assessment tomorrow",
-					resetAt: DateTime.unsafeMake(getNextDayMidnightUTC().getTime()),
-				}),
-			);
-		}
-
 		// Create session with greetings
 		const result = yield* createSessionWithGreetings(userId);
-
-		// Record assessment start for rate limiting
-		yield* costGuard.recordAssessmentStart(userId);
 
 		return result;
 	});

@@ -23,7 +23,6 @@ import {
 	extract4LetterCode,
 	type FacetEvidencePersistenceError,
 	lookupArchetype,
-	RedisOperationError,
 } from "@workspace/domain";
 import { DateTime, Effect, Redacted } from "effect";
 import { activateConversationExtension } from "../use-cases/activate-conversation-extension.use-case";
@@ -90,15 +89,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 
 					// Call use case - dispatch to authenticated or anonymous path
 					const result = userId
-						? yield* startAuthenticatedAssessment({ userId }).pipe(
-								Effect.catchTag("RedisOperationError", (error: RedisOperationError) =>
-									Effect.fail(
-										new DatabaseError({
-											message: `Rate limiting check failed: ${error.message}`,
-										}),
-									),
-								),
-							)
+						? yield* startAuthenticatedAssessment({ userId })
 						: yield* startAnonymousAssessment();
 
 					// Set httpOnly cookie for anonymous sessions (Story 9.1)
