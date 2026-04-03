@@ -1,21 +1,12 @@
 /**
  * Nerin auto-greeting messages for new assessment sessions.
- * Persisted to the database as the first 5 assistant messages when a session starts.
+ * Persisted to the database as the first 2 assistant messages when a session starts.
  *
- * Messages 1-4 are fixed greeting bubbles. Message 5 is randomly selected from OPENING_QUESTIONS.
- *
- * Greeting includes (per FR8, FR52, FR54):
- * - Big Ocean diving shop introduction (bubble 1)
- * - Dive master introduction + diving log anticipation (bubble 2)
- * - "Not therapy" framing + data storage notice (bubble 3)
- * - Encouragement cues: honesty, concrete stories, going beyond (bubble 4)
+ * Message 1 is a single greeting bubble. Message 2 is randomly selected from OPENING_QUESTIONS.
  */
 
 export const GREETING_MESSAGES = [
-	"Welcome to Big Ocean — a diving shop where the ocean we explore is you 🌊",
-	"I'm Nerin, think of me as your dive master 👋 We'll talk for a bit, and by the end I'll write you a diving log — what waters we've been to, what I found beneath the surface, and what I think it means.",
-	"This isn't therapy, and there are no right answers — just be honest. I keep notes as we go so the log is precise — nothing leaves this dive.",
-	"The messy, contradictory, real stuff is what I work with best — stories beat theories every time. If a question doesn't quite fit, go wherever it takes you 🤿",
+	"I'm Nerin 👋 No scripts, no right answers, nothing leaves this conversation — just you and me and whatever's true. I work best in the deep, messy, real stuff — so don't stay on the surface. Wherever a question takes you, follow it down 🤿",
 ] as const;
 
 /**

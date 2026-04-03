@@ -42,10 +42,10 @@ const wrapper = ({ children }: { children: ReactNode }) =>
 	createElement(QueryClientProvider, { client: queryClient }, children);
 
 describe("useTherapistChat", () => {
-	// Advance timers past all greeting stagger delays (0 + 800 + 1400 + 2000 + 2600ms)
+	// Advance timers past all greeting stagger delays (0 + 800ms)
 	function completeGreetingStagger() {
 		act(() => {
-			vi.advanceTimersByTime(3000);
+			vi.advanceTimersByTime(1000);
 		});
 	}
 
@@ -59,42 +59,20 @@ describe("useTherapistChat", () => {
 		vi.useRealTimers();
 	});
 
-	it("staggers greeting messages for new sessions (0ms / 800ms / 1400ms / 2000ms / 2600ms)", () => {
+	it("staggers greeting messages for new sessions (0ms / 800ms)", () => {
 		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
-		// First greeting message appears immediately (0ms)
+		// Greeting bubble appears immediately (0ms)
 		expect(result.current.messages).toHaveLength(1);
 		expect(result.current.messages[0].role).toBe("assistant");
-		expect(result.current.messages[0].content).toContain("Big Ocean");
+		expect(result.current.messages[0].content).toContain("Nerin");
 
-		// Second message at 800ms
+		// Opening question at 800ms
 		act(() => {
 			vi.advanceTimersByTime(800);
 		});
 		expect(result.current.messages).toHaveLength(2);
 		expect(result.current.messages[1].role).toBe("assistant");
-		expect(result.current.messages[1].content).toContain("Nerin");
-
-		// Third message at 1400ms
-		act(() => {
-			vi.advanceTimersByTime(600);
-		});
-		expect(result.current.messages).toHaveLength(3);
-		expect(result.current.messages[2].role).toBe("assistant");
-
-		// Fourth message at 2000ms
-		act(() => {
-			vi.advanceTimersByTime(600);
-		});
-		expect(result.current.messages).toHaveLength(4);
-		expect(result.current.messages[3].role).toBe("assistant");
-
-		// Fifth message (opening question) at 2600ms
-		act(() => {
-			vi.advanceTimersByTime(600);
-		});
-		expect(result.current.messages).toHaveLength(5);
-		expect(result.current.messages[4].role).toBe("assistant");
 	});
 
 	it("initializes trait scores at zero", () => {
@@ -113,10 +91,10 @@ describe("useTherapistChat", () => {
 			result.current.sendMessage("I love hiking");
 		});
 
-		// 5 greeting messages + 1 user message
-		expect(result.current.messages).toHaveLength(6);
-		expect(result.current.messages[5].role).toBe("user");
-		expect(result.current.messages[5].content).toBe("I love hiking");
+		// 2 greeting messages + 1 user message
+		expect(result.current.messages).toHaveLength(3);
+		expect(result.current.messages[2].role).toBe("user");
+		expect(result.current.messages[2].content).toBe("I love hiking");
 		expect(result.current.isLoading).toBe(true);
 	});
 
@@ -136,10 +114,10 @@ describe("useTherapistChat", () => {
 			result.current.sendMessage("I love hiking");
 		});
 
-		// 5 greeting + user message + assistant response = 7
-		expect(result.current.messages).toHaveLength(7);
-		expect(result.current.messages[6].role).toBe("assistant");
-		expect(result.current.messages[6].content).toBe(
+		// 2 greeting + user message + assistant response = 4
+		expect(result.current.messages).toHaveLength(4);
+		expect(result.current.messages[3].role).toBe("assistant");
+		expect(result.current.messages[3].content).toBe(
 			"That's fascinating! Tell me more about your outdoor adventures.",
 		);
 		expect(result.current.isLoading).toBe(false);

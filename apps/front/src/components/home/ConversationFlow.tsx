@@ -5,7 +5,7 @@ export function ConversationFlow({ children }: { children: React.ReactNode }) {
 		<div
 			id="conversation"
 			data-slot="conversation-flow"
-			className="relative mx-auto max-w-[900px] px-6 pb-[140px] pt-10 min-[1200px]:max-w-[1000px] min-[1440px]:max-w-[1100px]"
+			className="relative mx-auto max-w-[900px] scroll-mt-14 px-6 pb-[140px] pt-10 min-[1200px]:max-w-[1000px] min-[1440px]:max-w-[1100px]"
 		>
 			{/* Vertical thread line */}
 			<div

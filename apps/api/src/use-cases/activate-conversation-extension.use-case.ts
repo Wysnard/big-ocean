@@ -77,7 +77,7 @@ export const activateConversationExtension = (input: ActivateConversationExtensi
 		// Create opener exchange (turn 0) for the opening question
 		const openerExchange = yield* exchangeRepo.create(sessionId, 0);
 
-		// Build greeting messages (4 fixed bubbles + 1 random opening question)
+		// Build greeting messages (1 greeting bubble + 1 random opening question)
 		const openingQuestion = pickOpeningQuestion();
 		const greetingContents = [...GREETING_MESSAGES, openingQuestion];
 

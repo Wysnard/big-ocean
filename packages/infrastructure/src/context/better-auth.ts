@@ -379,6 +379,50 @@ export const BetterAuthLive = Layer.effect(
 			databaseHooks: {
 				user: {
 					create: {
+						before: async (user) => {
+							// Fix stale Polar customers whose externalId points to a user that
+							// no longer exists in our DB (e.g. previously deleted account).
+							// The Polar plugin's onAfterUserCreate will fail if it tries to
+							// update an externalId that is already set — Polar rejects this.
+							// We detect the stale state here and delete + recreate the Polar
+							// customer (without externalId) so the after-hook succeeds.
+							if (!polarToken || polarToken === "not-configured" || polarToken.length === 0) {
+								return;
+							}
+							try {
+								const email =
+									typeof user === "object" && user !== null && "email" in user
+										? (user as { email?: string }).email
+										: undefined;
+								if (!email) return;
+
+								const { result: existing } = await polarClient.customers.list({ email });
+								const customer = existing.items[0];
+								if (!customer?.externalId) return;
+
+								// Only recycle if the externalId points to a user that no longer exists
+								const [dbUser] = await plainDb
+									.select({ id: authSchema.user.id })
+									.from(authSchema.user)
+									.where(eq(authSchema.user.id, customer.externalId))
+									.limit(1);
+
+								if (!dbUser) {
+									await polarClient.customers.delete({ id: customer.id });
+									await polarClient.customers.create({
+										email,
+										name: (user as { name?: string }).name ?? "",
+									});
+									logger.info(
+										`Recycled stale Polar customer for ${email} (old externalId: ${customer.externalId})`,
+									);
+								}
+							} catch (error) {
+								const msg = error instanceof Error ? error.message : String(error);
+								logger.error(`Failed to recycle stale Polar customer: ${msg}`);
+								// Don't block signup — Polar after-hook will surface its own error
+							}
+						},
 						after: async (user, context) => {
 							logger.info(`User created: ${user.id} (${user.email})`);
 

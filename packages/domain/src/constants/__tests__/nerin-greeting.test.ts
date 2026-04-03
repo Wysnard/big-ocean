@@ -3,46 +3,29 @@ import { GREETING_MESSAGES, OPENING_QUESTIONS, pickOpeningQuestion } from "../ne
 
 describe("nerin-greeting", () => {
 	describe("GREETING_MESSAGES", () => {
-		it("has exactly 4 fixed greeting bubbles", () => {
-			expect(GREETING_MESSAGES).toHaveLength(4);
+		it("has exactly 1 greeting bubble", () => {
+			expect(GREETING_MESSAGES).toHaveLength(1);
 		});
 
-		it("bubble 1 introduces Big Ocean as a diving shop", () => {
-			expect(GREETING_MESSAGES[0]).toContain("Big Ocean");
-			expect(GREETING_MESSAGES[0]).toContain("diving shop");
+		it("introduces Nerin", () => {
+			expect(GREETING_MESSAGES[0]).toContain("Nerin");
 		});
 
-		it("bubble 2 introduces Nerin as dive master and creates diving log anticipation", () => {
-			expect(GREETING_MESSAGES[1]).toContain("Nerin");
-			expect(GREETING_MESSAGES[1]).toContain("dive master");
-			expect(GREETING_MESSAGES[1]).toContain("diving log");
+		it("includes 'no right answers' reassurance", () => {
+			expect(GREETING_MESSAGES[0].toLowerCase()).toContain("no right answers");
 		});
 
-		it("bubble 3 includes 'not therapy' framing (FR8)", () => {
-			expect(GREETING_MESSAGES[2].toLowerCase()).toContain("therapy");
+		it("includes privacy reassurance", () => {
+			expect(GREETING_MESSAGES[0].toLowerCase()).toContain("nothing leaves this conversation");
 		});
 
-		it("bubble 3 includes honesty cue", () => {
-			expect(GREETING_MESSAGES[2].toLowerCase()).toContain("honest");
+		it("encourages messy, real sharing", () => {
+			expect(GREETING_MESSAGES[0].toLowerCase()).toContain("messy");
+			expect(GREETING_MESSAGES[0].toLowerCase()).toContain("real");
 		});
 
-		it("bubble 3 includes data storage notice (FR52)", () => {
-			const msg = GREETING_MESSAGES[2].toLowerCase();
-			const hasStorageNotice =
-				msg.includes("keep") || msg.includes("store") || msg.includes("save") || msg.includes("note");
-			expect(hasStorageNotice).toBe(true);
-		});
-
-		it("bubble 4 includes encouragement cues (FR54)", () => {
-			const msg = GREETING_MESSAGES[3].toLowerCase();
-			// Should encourage real/authentic sharing
-			expect(msg).toContain("messy");
-			// Should encourage concrete stories over abstract answers
-			expect(msg).toContain("stories");
-		});
-
-		it("bubble 4 encourages going beyond the question", () => {
-			expect(GREETING_MESSAGES[3]).toContain("go wherever it takes you");
+		it("encourages going deeper", () => {
+			expect(GREETING_MESSAGES[0]).toContain("follow it down");
 		});
 
 		it("does not contain forbidden words as standalone terms", () => {

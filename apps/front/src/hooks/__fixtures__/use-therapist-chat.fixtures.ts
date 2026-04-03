@@ -1,38 +1,21 @@
 import { vi } from "vitest";
 
 /**
- * Simulates the 5 greeting messages that the backend persists during startAssessment.
+ * Simulates the 2 greeting messages that the backend persists during startAssessment.
  * These are returned by the resume endpoint for new sessions.
- * (4 greeting bubbles + 1 opening question)
+ * (1 greeting bubble + 1 opening question)
  */
 export const SERVER_GREETING_MESSAGES = [
 	{
 		role: "assistant" as const,
-		content: "Welcome to Big Ocean — a diving shop where the ocean we explore is you 🌊",
+		content:
+			"I'm Nerin 👋 No scripts, no right answers, nothing leaves this conversation — just you and me and whatever's true. I work best in the deep, messy, real stuff — so don't stay on the surface. Wherever a question takes you, follow it down 🤿",
 		timestamp: "2026-02-01T10:00:00Z",
 	},
 	{
 		role: "assistant" as const,
-		content:
-			"I'm Nerin, think of me as your dive master 👋 We'll talk for a bit, and by the end I'll write you a diving log — what waters we've been to, what I found beneath the surface, and what I think it means.",
-		timestamp: "2026-02-01T10:00:01Z",
-	},
-	{
-		role: "assistant" as const,
-		content:
-			"This isn't therapy, and there are no right answers — just be honest. I keep notes as we go so the log is precise — nothing leaves this dive.",
-		timestamp: "2026-02-01T10:00:02Z",
-	},
-	{
-		role: "assistant" as const,
-		content:
-			"The messy, contradictory, real stuff is what I work with best — stories beat theories every time. If a question doesn't quite fit, go wherever it takes you 🤿",
-		timestamp: "2026-02-01T10:00:03Z",
-	},
-	{
-		role: "assistant" as const,
 		content: "If your closest friend described you in three words, what would they say?",
-		timestamp: "2026-02-01T10:00:04Z",
+		timestamp: "2026-02-01T10:00:01Z",
 	},
 ];
 
@@ -52,7 +35,7 @@ export function setupDefaultMocks(mockResumeSession: ReturnType<typeof vi.fn>) {
 		})),
 	});
 
-	// Default mock: new session with 5 server-persisted greeting messages
+	// Default mock: new session with 2 server-persisted greeting messages
 	mockResumeSession.mockReturnValue({
 		data: {
 			messages: SERVER_GREETING_MESSAGES,

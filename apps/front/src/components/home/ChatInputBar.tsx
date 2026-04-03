@@ -5,7 +5,7 @@ import { useDepthScroll } from "./DepthScrollProvider";
 
 export function ChatInputBar() {
 	const { scrollPercent } = useDepthScroll();
-	const visible = scrollPercent > 0.35;
+	const visible = scrollPercent > 0.15;
 
 	return (
 		<ChatInputBarShell

@@ -58,12 +58,12 @@ const createSessionWithGreetings = (userId?: string) =>
 		// Create opener exchange (turn 0) for the opening question
 		const openerExchange = yield* exchangeRepo.create(result.sessionId, 0);
 
-		// Build greeting messages (4 fixed bubbles + 1 random opening question)
+		// Build greeting messages (1 greeting bubble + 1 random opening question)
 		const openingQuestion = pickOpeningQuestion();
 		const greetingContents = [...GREETING_MESSAGES, openingQuestion];
 
 		// Persist greeting messages to DB so Nerin has full conversation context
-		// Greeting bubbles: exchangeId = null (pure greeting, not a question)
+		// Greeting bubble: exchangeId = null (pure greeting, not a question)
 		// Opening question: exchangeId = opener exchange (this is the AI question)
 		const savedMessages: StartAssessmentMessage[] = [];
 		for (const [i, content] of greetingContents.entries()) {
@@ -232,7 +232,7 @@ export const startAnonymousAssessment = () =>
 		const exchangeRepo = yield* AssessmentExchangeRepository;
 		const openerExchange = yield* exchangeRepo.create(sessionId, 0);
 
-		// Build greeting messages (4 fixed bubbles + 1 random opening question)
+		// Build greeting messages (1 greeting bubble + 1 random opening question)
 		const openingQuestion = pickOpeningQuestion();
 		const greetingContents = [...GREETING_MESSAGES, openingQuestion];
 
