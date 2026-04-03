@@ -228,9 +228,10 @@ import { describe, expect, it } from "@effect/vitest"; // AFTER vi.mock calls
 - Page-specific or business-logic components belong in `apps/front/src/components/`
 
 **Component selection priority (follow this order):**
-1. **Check shadcn/ui first** — look at the shadcn docs for an existing component that fits your use case
-2. **Extend or modify** — if a shadcn component is close but not exact, extend it or modify it directly in `packages/ui` if the change benefits the whole app
-3. **Build custom** — only create a new component from scratch if neither of the above works
+1. **Check `packages/ui` first** — look for an existing component in the workspace UI library that already fits the use case
+2. **Check shadcn/ui** — if nothing exists in `packages/ui`, look at the shadcn docs for a component that fits
+3. **Extend or modify** — if an existing component (from `packages/ui` or shadcn) is close but not exact, extend or modify it directly in `packages/ui` if the change benefits the whole app
+4. **Build custom** — only create a new component from scratch if none of the above works
 
 **`/dev/` routes:** The `/dev/` route is for development-only pages. Prototypes may live here but are throwaway — do not maintain, fix, or update them. If a prototype breaks the build, delete it rather than fix it. Only the `/dev/components` kitchen sink must be kept up to date.
 

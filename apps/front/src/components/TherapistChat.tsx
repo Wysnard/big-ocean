@@ -3,8 +3,14 @@ import { ASSESSMENT_MESSAGE_MAX_LENGTH } from "@workspace/domain";
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import { Button } from "@workspace/ui/components/button";
 import { NerinMessage } from "@workspace/ui/components/chat";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuLabel,
+	DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu";
 import { cn } from "@workspace/ui/lib/utils";
-import { Loader2, Send } from "lucide-react";
+import { Info, Loader2, Send } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import { getPlaceholder } from "@/constants/chat-placeholders";
@@ -49,20 +55,52 @@ function getRelativeTime(date: Date): string {
 const WARNING_THRESHOLD = 0.9;
 
 /** Milestone thresholds and their app-voiced progress messages */
+/** Session context shown in chat header */
+const SESSION_CONTEXT = "~25 min · A personality portrait awaits · Leave and return anytime";
+
 const MILESTONES = [
 	{
 		threshold: 25,
-		message: "Great start — your personality portrait is beginning to emerge.",
+		message: "🫧 Great start — your personality portrait is beginning to emerge.",
 	},
 	{
 		threshold: 50,
-		message: "Halfway there — your personality portrait is taking shape.",
+		message: "🐙 Halfway down — your personality portrait is taking shape.",
 	},
 	{
 		threshold: 75,
-		message: "Almost there — just a few more exchanges to complete your portrait.",
+		message: "🪸 Almost there — just a few more exchanges to complete your portrait.",
 	},
 ] as const;
+
+/** Mobile dropdown for session context info */
+function SessionContextDropdown({ className }: { className?: string }) {
+	return (
+		<div className={className}>
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<button
+						type="button"
+						className="flex items-center justify-center size-8 rounded-full border border-border text-foreground/70 hover:text-foreground hover:bg-muted transition-colors"
+						aria-label="Session info"
+					>
+						<Info className="size-[18px]" />
+					</button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent
+					align="center"
+					sideOffset={8}
+					collisionPadding={16}
+					className="w-[calc(100vw-2rem)] max-w-[900px]"
+				>
+					<DropdownMenuLabel className="text-sm font-normal text-foreground leading-relaxed whitespace-normal text-center py-3">
+						{SESSION_CONTEXT}
+					</DropdownMenuLabel>
+				</DropdownMenuContent>
+			</DropdownMenu>
+		</div>
+	);
+}
 
 /** Typing indicator bubble shown while waiting for Nerin's response. */
 function TypingIndicator() {
@@ -524,6 +562,10 @@ function ChatContent({
 						</Avatar>
 						<span className="text-lg font-heading font-semibold text-foreground">Nerin</span>
 					</div>
+
+					{/* Session context — inline on desktop, dropdown on mobile */}
+					<p className="hidden md:block text-sm text-foreground">{SESSION_CONTEXT}</p>
+					<SessionContextDropdown className="md:hidden" />
 				</div>
 
 				{/* Main Content — scrollable area, input bar is outside this container */}
@@ -623,14 +665,9 @@ function ChatContent({
 												<div
 													key={`milestone-${milestone.threshold}`}
 													data-slot="milestone-badge"
-													className="w-full flex justify-center py-2 mt-2"
+													className="border-y border-border py-3 mt-2 text-center"
 												>
-													<div className="border border-accent rounded-full px-4 py-2 text-center max-w-sm bg-accent/50">
-														<p className="text-sm text-accent-foreground">
-															<span className="mr-1.5">✨</span>
-															{milestone.message}
-														</p>
-													</div>
+													<p className="text-sm text-muted-foreground">{milestone.message}</p>
 												</div>
 											) : null,
 										)}

@@ -971,11 +971,67 @@ function ChatSection() {
 				</div>
 			</SubSection>
 
-			<SubSection title="Milestone Badge">
-				<div className="max-w-2xl flex justify-center">
-					<div className="inline-flex items-center gap-2 rounded-full border border-accent bg-accent/50 px-4 py-2 text-sm text-muted-foreground">
-						<span>✨</span>
-						<span>Halfway there — exploring deeper patterns</span>
+			<SubSection title="Session Context — Header (desktop: inline, mobile: ⓘ dropdown)">
+				<div className="max-w-2xl">
+					{/* Desktop variant */}
+					<p className="text-xs text-muted-foreground mb-3">Desktop — inline in header:</p>
+					<div className="border border-border bg-card/80 px-4 py-3 rounded-lg shadow-sm backdrop-blur-sm flex items-center justify-between">
+						<div className="flex items-center gap-2">
+							<div className="w-8 h-8 rounded-full bg-gradient-to-br from-tertiary to-primary flex items-center justify-center text-xs font-bold text-white">
+								N
+							</div>
+							<span className="text-lg font-heading font-semibold text-foreground">Nerin</span>
+						</div>
+						<p className="text-sm text-foreground">
+							~25 min · A personality portrait awaits · Leave and return anytime
+						</p>
+					</div>
+					{/* Mobile variant */}
+					<p className="text-xs text-muted-foreground mt-6 mb-3">Mobile — ⓘ icon with dropdown:</p>
+					<div className="border border-border bg-card/80 px-4 py-3 rounded-lg shadow-sm backdrop-blur-sm flex items-center justify-between max-w-[320px]">
+						<div className="flex items-center gap-2">
+							<div className="w-8 h-8 rounded-full bg-gradient-to-br from-tertiary to-primary flex items-center justify-center text-xs font-bold text-white">
+								N
+							</div>
+							<span className="text-lg font-heading font-semibold text-foreground">Nerin</span>
+						</div>
+						<div className="flex items-center justify-center size-8 rounded-full border border-border text-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="18"
+								height="18"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<circle cx="12" cy="12" r="10" />
+								<path d="M12 16v-4" />
+								<path d="M12 8h.01" />
+							</svg>
+						</div>
+					</div>
+				</div>
+			</SubSection>
+
+			<SubSection title="Milestone Badge — Progress">
+				<div className="max-w-2xl space-y-6">
+					<div className="border-y border-border py-3 text-center">
+						<p className="text-sm text-muted-foreground">
+							🫧 Great start — your personality portrait is beginning to emerge.
+						</p>
+					</div>
+					<div className="border-y border-border py-3 text-center">
+						<p className="text-sm text-muted-foreground">
+							🐙 Halfway down — your personality portrait is taking shape.
+						</p>
+					</div>
+					<div className="border-y border-border py-3 text-center">
+						<p className="text-sm text-muted-foreground">
+							🪸 Almost there — just a few more exchanges to complete your portrait.
+						</p>
 					</div>
 				</div>
 			</SubSection>
