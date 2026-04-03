@@ -387,18 +387,18 @@ export const BetterAuthLive = Layer.effect(
 							// We detect the stale state here and delete + recreate the Polar
 							// customer (without externalId) so the after-hook succeeds.
 							if (!polarToken || polarToken === "not-configured" || polarToken.length === 0) {
-								return;
+								return { data: user };
 							}
 							try {
 								const email =
 									typeof user === "object" && user !== null && "email" in user
 										? (user as { email?: string }).email
 										: undefined;
-								if (!email) return;
+								if (!email) return { data: user };
 
 								const { result: existing } = await polarClient.customers.list({ email });
 								const customer = existing.items[0];
-								if (!customer?.externalId) return;
+								if (!customer?.externalId) return { data: user };
 
 								// Only recycle if the externalId points to a user that no longer exists
 								const [dbUser] = await plainDb
@@ -422,6 +422,7 @@ export const BetterAuthLive = Layer.effect(
 								logger.error(`Failed to recycle stale Polar customer: ${msg}`);
 								// Don't block signup — Polar after-hook will surface its own error
 							}
+							return { data: user };
 						},
 						after: async (user, context) => {
 							logger.info(`User created: ${user.id} (${user.email})`);
