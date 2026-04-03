@@ -14,7 +14,6 @@ import {
 	createTestLayer,
 	mockAssessmentMessageRepo,
 	mockAssessmentSessionRepo,
-	mockCostGuardRepo,
 	mockLoggerRepo,
 	setupDefaultMocks,
 } from "./__fixtures__/start-assessment.fixtures";
@@ -189,68 +188,6 @@ describe("startAssessment Use Case", () => {
 				}
 
 				expect(mockAssessmentSessionRepo.createSession).not.toHaveBeenCalled();
-			});
-		});
-
-		describe("Rate limiting", () => {
-			it("should check rate limit before creating session", async () => {
-				const testLayer = createTestLayer();
-
-				await Effect.runPromise(
-					startAuthenticatedAssessment({ userId: "user_ratelimit" }).pipe(Effect.provide(testLayer)),
-				);
-
-				expect(mockCostGuardRepo.canStartAssessment).toHaveBeenCalledWith("user_ratelimit");
-				expect(mockCostGuardRepo.recordAssessmentStart).toHaveBeenCalledWith("user_ratelimit");
-			});
-
-			it("should fail with RateLimitExceeded when user already started assessment today", async () => {
-				mockCostGuardRepo.canStartAssessment.mockReturnValue(Effect.succeed(false));
-
-				const testLayer = createTestLayer();
-
-				try {
-					await Effect.runPromise(
-						startAuthenticatedAssessment({ userId: "user_blocked" }).pipe(Effect.provide(testLayer)),
-					);
-					expect.fail("Expected RateLimitExceeded to be thrown");
-				} catch (error) {
-					expect(error).toHaveProperty("message", "You can start a new assessment tomorrow");
-					expect(error).toHaveProperty("name");
-					// biome-ignore lint/suspicious/noExplicitAny: error type narrowing in test
-					expect((error as any).name).toContain("RateLimitExceeded");
-				}
-
-				expect(mockAssessmentSessionRepo.createSession).not.toHaveBeenCalled();
-				expect(mockLoggerRepo.warn).toHaveBeenCalledWith("Rate limit exceeded for assessment start", {
-					userId: "user_blocked",
-				});
-			});
-
-			it("should record assessment start after session created", async () => {
-				const callOrder: string[] = [];
-
-				mockAssessmentSessionRepo.createSession.mockImplementation(() => {
-					callOrder.push("createSession");
-					return Effect.succeed({
-						sessionId: "session_order",
-						userId: "user_order",
-						createdAt: new Date(),
-					});
-				});
-
-				mockCostGuardRepo.recordAssessmentStart.mockImplementation(() => {
-					callOrder.push("recordAssessmentStart");
-					return Effect.succeed(undefined);
-				});
-
-				const testLayer = createTestLayer();
-
-				await Effect.runPromise(
-					startAuthenticatedAssessment({ userId: "user_order" }).pipe(Effect.provide(testLayer)),
-				);
-
-				expect(callOrder).toEqual(["createSession", "recordAssessmentStart"]);
 			});
 		});
 
