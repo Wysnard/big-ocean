@@ -25,24 +25,17 @@ test("signup from home → redirects to verify-email → sign in → navigate to
 		await page.goto("/signup?redirectTo=/");
 		const submitBtn = page.locator('button[type="submit"]');
 		await submitBtn.waitFor({ state: "visible" });
-		await expect(page.locator("#signup-name")).toBeEnabled();
+		await expect(page.getByLabel("Name")).toBeEnabled();
 	});
 
 	await test.step("fill and submit signup form", async () => {
-		await page.locator("#signup-name").fill("E2E Redirect Test");
-		await page.locator("#signup-email").fill(uniqueEmail);
-		await page.locator("#signup-password").fill("OceanDepth#Nerin42xQ");
-		await page.locator("#signup-confirm-password").fill("OceanDepth#Nerin42xQ");
+		await page.getByLabel("Name").fill("E2E Redirect Test");
+		await page.getByLabel("Email").fill(uniqueEmail);
+		await page.getByLabel("Password", { exact: true }).fill("OceanDepth#Nerin42xQ");
+		await page.getByLabel("Confirm Password").fill("OceanDepth#Nerin42xQ");
 
-		if ((await page.locator("#signup-name").inputValue()) === "") {
-			await page.locator("#signup-name").fill("E2E Redirect Test");
-			await page.locator("#signup-email").fill(uniqueEmail);
-			await page.locator("#signup-password").fill("OceanDepth#Nerin42xQ");
-			await page.locator("#signup-confirm-password").fill("OceanDepth#Nerin42xQ");
-		}
-
-		await expect(page.locator("#signup-name")).toHaveValue("E2E Redirect Test");
-		await expect(page.locator("#signup-email")).toHaveValue(uniqueEmail);
+		await expect(page.getByLabel("Name")).toHaveValue("E2E Redirect Test");
+		await expect(page.getByLabel("Email")).toHaveValue(uniqueEmail);
 
 		await page.locator('button[type="submit"]').click();
 	});
@@ -68,8 +61,8 @@ test("signup from home → redirects to verify-email → sign in → navigate to
 		await page.goto("/login");
 		const submitBtn = page.locator('button[type="submit"]');
 		await submitBtn.waitFor({ state: "visible" });
-		await page.locator("#login-email").fill(uniqueEmail);
-		await page.locator("#login-password").fill("OceanDepth#Nerin42xQ");
+		await page.getByLabel("Email").fill(uniqueEmail);
+		await page.getByLabel("Password").fill("OceanDepth#Nerin42xQ");
 		await submitBtn.click();
 
 		// After sign-in, wait for navigation away from /login
