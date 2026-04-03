@@ -39,13 +39,14 @@ export async function signUpAndLoginViaBrowser(
 	await submitBtn.click();
 
 	// 2. Wait for signup to complete (redirects to /verify-email)
-	await page.waitForTimeout(2_000);
+	await page.waitForURL(/\/verify-email/, { timeout: 15_000 }).catch(() => {});
 
 	// 3. Verify email directly in DB (bypass email verification)
+	// Retry with backoff — backend may still be processing the signup (Polar hooks, etc.)
 	const pool = new Pool(TEST_DB_CONFIG);
 	const client = await pool.connect();
 	try {
-		for (let i = 0; i < 5; i++) {
+		for (let i = 0; i < 10; i++) {
 			const result = await client.query(
 				`UPDATE "user" SET "email_verified" = true WHERE "email" = $1 RETURNING id`,
 				[input.email],
