@@ -8,15 +8,16 @@
  * Clean cut migration -- no backward compatibility shim or feature flag.
  *
  * Pipeline steps:
- * 1. Compute E_target from energy/telling histories
- * 2. Score all territories via V2 additive scorer
- * 3. Select territory via V2 selector (cold-start-perimeter for turn 1, argmax for turns 2+)
- * 4. Compute observation focus strengths
- * 5. Run Move Governor to produce PromptBuilderInput
- * 6. Build system prompt via 4-tier prompt builder
- * 7. Call Nerin with composed system prompt
- * 8. Call ConversAnalyzer via three-tier extraction
- * 9. Save evidence + exchange metadata
+ * 1. Extract evidence from user message via ConversAnalyzer (three-tier)
+ * 2. Compute E_target from energy/telling histories (includes current turn)
+ * 3. Score all territories via V2 additive scorer (includes current evidence)
+ * 4. Select territory via V2 selector (cold-start-perimeter for turn 1, argmax for turns 2+)
+ * 5. Compute observation focus strengths
+ * 6. Run Move Governor to produce PromptBuilderInput
+ * 7. Build system prompt via 2-layer prompt builder
+ * 8. Call Nerin with composed system prompt
+ * 9. Cost tracking
+ * 10. Save evidence + exchange metadata
  */
 
 import {
@@ -423,157 +424,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		const tContext = Date.now();
 
-		// ---- Step 1: Compute E_target ----
-
-		// All pipeline exchanges across all user sessions (skip opener turn 0)
-		const allPipelineExchanges = allExchanges.filter((e) => e.turnNumber > 0);
-		// Current session pipeline exchanges only (for session-specific state)
-		const sessionPipelineExchanges = sessionExchanges.filter((e) => e.turnNumber > 0);
-
-		const energyHistory = extractEnergyHistory(sessionPipelineExchanges);
-		const tellingHistory = extractTellingHistory(sessionPipelineExchanges);
-
-		// E_target priors: use current session's last exchange, or fall back to
-		// the most recent exchange across all sessions (covers extension sessions).
-		const lastSessionExchange =
-			sessionPipelineExchanges.length > 0
-				? sessionPipelineExchanges[sessionPipelineExchanges.length - 1]
-				: null;
-		const lastAnyExchange =
-			allPipelineExchanges.length > 0 ? allPipelineExchanges[allPipelineExchanges.length - 1] : null;
-
-		const priorExchange = lastSessionExchange ?? lastAnyExchange;
-		const priorSmoothedEnergy = priorExchange?.smoothedEnergy ?? undefined;
-		const priorSessionTrust = priorExchange?.sessionTrust ?? undefined;
-
-		const eTargetResult = computeETargetV2({
-			energyHistory,
-			tellingHistory,
-			priorSmoothedEnergy,
-			priorSessionTrust,
-		});
-
-		// ---- Step 2: Score all territories ----
-
-		const facetMetrics = computeFacetMetrics(allEvidence as any[]);
-
-		// Visit history and current territory from all user exchanges
-		const visitHistory = buildPacingVisitHistory(allPipelineExchanges);
-		const currentTerritory = getCurrentTerritory(allPipelineExchanges);
-
-		const scorerOutput = scoreAllTerritoriesV2({
-			eTarget: eTargetResult.eTarget,
-			facetMetrics,
-			catalog: TERRITORY_CATALOG,
-			currentTerritory,
-			visitHistory,
-			turnNumber,
-			totalTurns,
-			config: PACING_SCORER_DEFAULTS,
-		});
-
-		// ---- Step 3: Select territory ----
-
-		// Seed for cold-start-perimeter deterministic selection (turn-based)
-		const selectionSeed = turnNumber * 7919; // Prime-based seed for determinism
-		const selectorOutput = selectTerritoryV2(scorerOutput, selectionSeed);
-		const selectedTerritoryId = selectorOutput.selectedTerritory;
-
-		// ---- Step 4: Compute observation focus strengths ----
-
-		// Get current energy/telling from last exchange (or defaults for first turn)
-		const currentEnergy = energyHistory.length > 0 ? energyHistory[energyHistory.length - 1]! : 0.5;
-		const currentTelling =
-			tellingHistory.length > 0 ? (tellingHistory[tellingHistory.length - 1] ?? 0.5) : 0.5;
-
-		// Get previous smoothed clarity from exchange history
-		// (stored as part of governor debug, but for simplicity we recompute)
-		const previousSmoothedClarity = 0; // Will build up over exchanges
-
-		const focusInputs = computeObservationFocusInputs(
-			facetMetrics,
-			currentEnergy,
-			currentTelling,
-			previousSmoothedClarity,
-		);
-
-		const sharedFireCount = countSharedFires(allPipelineExchanges);
-
-		// ---- Step 5: Run Move Governor ----
-
-		const territory = TERRITORY_CATALOG.get(selectedTerritoryId);
-		const expectedEnergy = territory?.expectedEnergy ?? 0.5;
-		const isFinalTurn = turnNumber >= totalTurns;
-
-		const governorInput: MoveGovernorInput = {
-			selectedTerritory: selectedTerritoryId,
-			eTarget: eTargetResult.eTarget,
-			turnNumber,
-			isFinalTurn,
-			expectedEnergy,
-			previousTerritory: getCurrentTerritory(allPipelineExchanges),
-			phase: focusInputs.phase,
-			sharedFireCount,
-			relateStrength: focusInputs.relateStrength,
-			noticingStrength: focusInputs.noticingStrength,
-			contradictionStrength: focusInputs.contradictionStrength,
-			convergenceStrength: focusInputs.convergenceStrength,
-			noticingDomain: focusInputs.noticingDomain,
-			contradictionTarget: focusInputs.contradictionTarget as any,
-			convergenceTarget: focusInputs.convergenceTarget as any,
-		};
-
-		const governorResult = computeGovernorOutput(governorInput);
-
-		// ---- Step 6: Build system prompt via 2-layer prompt builder ----
-
-		const promptResult = buildPrompt(governorResult.output);
-
-		const tPacing = Date.now();
-
-		logger.info("Pacing pipeline computed", {
-			sessionId: input.sessionId,
-			turnNumber,
-			eTarget: +eTargetResult.eTarget.toFixed(3),
-			smoothedEnergy: +eTargetResult.smoothedEnergy.toFixed(3),
-			selectedTerritory: selectedTerritoryId,
-			selectionRule: selectorOutput.selectionRule,
-			governorIntent: governorResult.output.intent,
-			entryPressure: governorResult.debug.entryPressure.level,
-			observationFocus: governorResult.debug.observationGating.winner?.type ?? "relate",
-			templateKey: promptResult.templateKey,
-			isExtensionSession,
-			topScoredTerritories: scorerOutput.ranked.slice(0, 3).map((t) => ({
-				id: t.territoryId,
-				score: +t.score.toFixed(3),
-			})),
-		});
-
-		// ---- Step 7: Call Nerin with composed system prompt ----
-
-		let analyzerTokenUsage: { input: number; output: number } | null = null;
-
-		const result = yield* nerin
-			.invoke({
-				sessionId: input.sessionId,
-				messages: domainMessages,
-				systemPrompt: promptResult.systemPrompt,
-			})
-			.pipe(
-				Effect.tapError((error) =>
-					Effect.sync(() =>
-						logger.error("Nerin invocation failed", {
-							errorTag: error._tag,
-							sessionId: input.sessionId,
-							message: error.message,
-						}),
-					),
-				),
-			);
-
-		const tNerin = Date.now();
-
-		// ---- Step 8: Call ConversAnalyzer via three-tier extraction ----
+		// ---- Step 1: Extract evidence from user message ----
+		// Runs BEFORE scoring so the current message's evidence informs territory selection.
 
 		let pendingEvidence: ConversanalyzerV2Output["evidence"] = [];
 		let observedEnergyBand: EnergyBand = "steady";
@@ -582,8 +434,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		let observedTelling = 0.5;
 		let withinMessageShift = false;
 		let extractionTier: ExtractionTier | null = null;
+		let analyzerTokenUsage: { input: number; output: number } | null = null;
 
-		// Always run extraction (no more cold-start skip)
 		if (turnNumber >= 1) {
 			const domainDistribution = aggregateDomainDistribution(allEvidence);
 			const recentMessages: DomainMessage[] = domainMessages.slice(-6);
@@ -634,6 +486,177 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		const tExtraction = Date.now();
 
+		// Merge freshly extracted evidence into allEvidence for scoring
+		const allEvidenceWithCurrent = [
+			...allEvidence,
+			...pendingEvidence.map((e) => ({
+				...e,
+				// Temporary fields — these records aren't persisted yet but need
+				// to be shaped like DB evidence for computeFacetMetrics
+				sessionId: input.sessionId,
+				messageId: "pending",
+				exchangeId: null,
+			})),
+		];
+
+		// ---- Step 2: Compute E_target ----
+
+		// All pipeline exchanges across all user sessions (skip opener turn 0)
+		const allPipelineExchanges = allExchanges.filter((e) => e.turnNumber > 0);
+		// Current session pipeline exchanges only (for session-specific state)
+		const sessionPipelineExchanges = sessionExchanges.filter((e) => e.turnNumber > 0);
+
+		const energyHistory = extractEnergyHistory(sessionPipelineExchanges);
+		const tellingHistory = extractTellingHistory(sessionPipelineExchanges);
+
+		// Append current message's observed energy/telling so E_target reflects this turn
+		if (turnNumber >= 1) {
+			energyHistory.push(observedEnergy);
+			tellingHistory.push(observedTelling);
+		}
+
+		// E_target priors: use current session's last exchange, or fall back to
+		// the most recent exchange across all sessions (covers extension sessions).
+		const lastSessionExchange =
+			sessionPipelineExchanges.length > 0
+				? sessionPipelineExchanges[sessionPipelineExchanges.length - 1]
+				: null;
+		const lastAnyExchange =
+			allPipelineExchanges.length > 0 ? allPipelineExchanges[allPipelineExchanges.length - 1] : null;
+
+		const priorExchange = lastSessionExchange ?? lastAnyExchange;
+		const priorSmoothedEnergy = priorExchange?.smoothedEnergy ?? undefined;
+		const priorSessionTrust = priorExchange?.sessionTrust ?? undefined;
+
+		const eTargetResult = computeETargetV2({
+			energyHistory,
+			tellingHistory,
+			priorSmoothedEnergy,
+			priorSessionTrust,
+		});
+
+		// ---- Step 3: Score all territories ----
+
+		const facetMetrics = computeFacetMetrics(allEvidenceWithCurrent as any[]);
+
+		// Visit history and current territory from all user exchanges
+		const visitHistory = buildPacingVisitHistory(allPipelineExchanges);
+		const currentTerritory = getCurrentTerritory(allPipelineExchanges);
+
+		const scorerOutput = scoreAllTerritoriesV2({
+			eTarget: eTargetResult.eTarget,
+			facetMetrics,
+			catalog: TERRITORY_CATALOG,
+			currentTerritory,
+			visitHistory,
+			turnNumber,
+			totalTurns,
+			config: PACING_SCORER_DEFAULTS,
+		});
+
+		// ---- Step 4: Select territory ----
+
+		// Seed for cold-start-perimeter: hash session ID so different sessions diverge
+		let sessionHash = 0;
+		for (let i = 0; i < input.sessionId.length; i++) {
+			sessionHash = (sessionHash * 31 + input.sessionId.charCodeAt(i)) | 0;
+		}
+		const selectionSeed = (sessionHash ^ (turnNumber * 7919)) | 0;
+		const selectorOutput = selectTerritoryV2(scorerOutput, selectionSeed);
+		const selectedTerritoryId = selectorOutput.selectedTerritory;
+
+		// ---- Step 5: Compute observation focus strengths ----
+
+		// Get current energy/telling from last exchange (or defaults for first turn)
+		const currentEnergy = energyHistory.length > 0 ? energyHistory[energyHistory.length - 1]! : 0.5;
+		const currentTelling =
+			tellingHistory.length > 0 ? (tellingHistory[tellingHistory.length - 1] ?? 0.5) : 0.5;
+
+		// Get previous smoothed clarity from exchange history
+		// (stored as part of governor debug, but for simplicity we recompute)
+		const previousSmoothedClarity = 0; // Will build up over exchanges
+
+		const focusInputs = computeObservationFocusInputs(
+			facetMetrics,
+			currentEnergy,
+			currentTelling,
+			previousSmoothedClarity,
+		);
+
+		const sharedFireCount = countSharedFires(allPipelineExchanges);
+
+		// ---- Step 6: Run Move Governor ----
+
+		const territory = TERRITORY_CATALOG.get(selectedTerritoryId);
+		const expectedEnergy = territory?.expectedEnergy ?? 0.5;
+		const isFinalTurn = turnNumber >= totalTurns;
+
+		const governorInput: MoveGovernorInput = {
+			selectedTerritory: selectedTerritoryId,
+			eTarget: eTargetResult.eTarget,
+			turnNumber,
+			isFinalTurn,
+			expectedEnergy,
+			previousTerritory: getCurrentTerritory(allPipelineExchanges),
+			phase: focusInputs.phase,
+			sharedFireCount,
+			relateStrength: focusInputs.relateStrength,
+			noticingStrength: focusInputs.noticingStrength,
+			contradictionStrength: focusInputs.contradictionStrength,
+			convergenceStrength: focusInputs.convergenceStrength,
+			noticingDomain: focusInputs.noticingDomain,
+			contradictionTarget: focusInputs.contradictionTarget as any,
+			convergenceTarget: focusInputs.convergenceTarget as any,
+		};
+
+		const governorResult = computeGovernorOutput(governorInput);
+
+		// ---- Step 7: Build system prompt via 2-layer prompt builder ----
+
+		const promptResult = buildPrompt(governorResult.output);
+
+		const tPacing = Date.now();
+
+		logger.info("Pacing pipeline computed", {
+			sessionId: input.sessionId,
+			turnNumber,
+			eTarget: +eTargetResult.eTarget.toFixed(3),
+			smoothedEnergy: +eTargetResult.smoothedEnergy.toFixed(3),
+			selectedTerritory: selectedTerritoryId,
+			selectionRule: selectorOutput.selectionRule,
+			governorIntent: governorResult.output.intent,
+			entryPressure: governorResult.debug.entryPressure.level,
+			observationFocus: governorResult.debug.observationGating.winner?.type ?? "relate",
+			templateKey: promptResult.templateKey,
+			isExtensionSession,
+			topScoredTerritories: scorerOutput.ranked.slice(0, 3).map((t) => ({
+				id: t.territoryId,
+				score: +t.score.toFixed(3),
+			})),
+		});
+
+		// ---- Step 8: Call Nerin with composed system prompt ----
+
+		const result = yield* nerin
+			.invoke({
+				sessionId: input.sessionId,
+				messages: domainMessages,
+				systemPrompt: promptResult.systemPrompt,
+			})
+			.pipe(
+				Effect.tapError((error) =>
+					Effect.sync(() =>
+						logger.error("Nerin invocation failed", {
+							errorTag: error._tag,
+							sessionId: input.sessionId,
+							message: error.message,
+						}),
+					),
+				),
+			);
+
+		const tNerin = Date.now();
+
 		// ---- Cost tracking ----
 
 		const nerinCost = calculateCost(result.tokenCount.input, result.tokenCount.output);
@@ -682,7 +705,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		const tCost = Date.now();
 
-		// ---- Step 9: Save exchange + messages + evidence (two-phase model) ----
+		// ---- Step 10: Save exchange + messages + evidence (two-phase model) ----
 		//
 		// Exchange #N links: AI message #N (question) + user message #N+1 (answer)
 		// Phase A: Close previous exchange — link user message + extraction data
@@ -857,10 +880,10 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			durationMs: {
 				total: tSave - t0,
 				gatherContext: tContext - t0,
-				pacingPipeline: tPacing - tContext,
+				extraction: tExtraction - tContext,
+				pacingPipeline: tPacing - tExtraction,
 				nerinAgent: tNerin - tPacing,
-				extraction: tExtraction - tNerin,
-				costTracking: tCost - tExtraction,
+				costTracking: tCost - tNerin,
 				dbSave: tSave - tCost,
 			},
 		});

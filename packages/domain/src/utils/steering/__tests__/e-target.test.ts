@@ -90,14 +90,19 @@ describe("computeETarget (v3 — trust + drain)", () => {
 
 	// === Cold start ===
 	describe("cold start", () => {
-		it("empty history produces E_target = initEnergy (0.5)", () => {
+		it("empty history produces E_target capped by trust (not raw initEnergy)", () => {
 			const result = computeETarget({
 				energyHistory: [],
 				tellingHistory: [],
 			});
-			expect(result.eTarget).toBeCloseTo(0.5, 5);
+			// trustCap = floor + (maxcap - floor) * trustInit = 0.25 + 0.65 * 0.15 = 0.3475
+			// E_target = min(initEnergy, trustCap) = min(0.5, 0.3475) = 0.3475
+			const expectedTrustCap =
+				PACING_CONFIG.floor + (PACING_CONFIG.maxcap - PACING_CONFIG.floor) * PACING_CONFIG.trustInit;
+			expect(result.eTarget).toBeCloseTo(expectedTrustCap, 5);
 			expect(result.smoothedEnergy).toBeCloseTo(0.5, 5);
 			expect(result.sessionTrust).toBeCloseTo(PACING_CONFIG.trustInit, 5);
+			expect(result.trustCap).toBeCloseTo(expectedTrustCap, 5);
 		});
 
 		it("first turn at E=0.5 — trust cap limits e-target", () => {

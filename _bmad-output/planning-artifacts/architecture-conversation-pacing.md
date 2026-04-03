@@ -213,7 +213,7 @@ Constants: `floor=0.25, maxcap=0.9`
 
 At zero trust (session start): trust_cap ≈ 0.35. At full trust: trust_cap = 0.9. Drain and trust cap are independent constraints — whichever is more restrictive wins.
 
-**Cold start:** Neutral defaults (momentum=0, drain=0, sessionTrust=0.15). First-turn E_target = 0.5 (initEnergy).
+**Cold start:** Neutral defaults (momentum=0, drain=0, sessionTrust=0.15). First-turn E_target = min(initEnergy, trustCap) = min(0.5, 0.3475) ≈ **0.35**. The trust cap is applied even at cold start — low trust means don't go deep, even on turn 1.
 
 **Full specification:** [E_target Formula Spec](../problem-solution-2026-03-07.md)
 
@@ -446,7 +446,7 @@ type TerritoryScorerOutput = {
 
 | Turn | Rule | Mechanism |
 |------|------|-----------|
-| Turn 1 (cold start) | `cold-start-perimeter` | Take top score, include all territories within `COLD_START_PERIMETER` of top score, random pick from pool |
+| Turn 1 (cold start) | `cold-start-perimeter` | Take top score, include all territories within `COLD_START_PERIMETER` of top score, seeded random pick from pool. Seed = `hash(sessionId) XOR (turnNumber × 7919)` — varies across sessions. |
 | Turns 2-24 | `argmax` | Deterministic top-1. Tiebreak: catalog order |
 | Turn 25 (finale) | `argmax` | Same as steady-state — closing behavior lives in the Governor (`intent: "amplify"`), not the selector |
 
@@ -1109,29 +1109,25 @@ Existing pipeline:
 7. Call ConversAnalyzer (parallel) → weight filter → save evidence
 8. Release lock, return response
 
-Evolved pipeline (new steps in bold):
-1. Advisory lock
-2. Rate limit check
-3. **Create exchange row** (session_id, turn_number)
-4. Save user message (with exchange_id)
-5. **ConversAnalyzer v2 (extract evidence + energy + telling)**
-6. **Save evidence** (with exchange_id + message_id)
-7. **Compute E_target (from energy/telling history)**
-8. **Territory Scorer (all 25 territories ranked)**
-9. **Territory Selector (pick from ranked list)**
-10. **Move Governor (intent + observation gating → PromptBuilderInput)**
-11. **Prompt Builder (compose 3-tier system prompt)**
-12. Call Nerin (with composed system prompt)
-13. Save assistant message (with exchange_id)
-14. **Update exchange row** (all metrics: extraction, pacing, scoring, governor)
-15. Release lock, return response
+Implemented pipeline (nerin-pipeline.ts):
+1. Gather context (session, messages, exchanges, evidence)
+2. **Extract evidence from user message** (ConversAnalyzer three-tier)
+3. **Compute E_target** (from energy/telling history, including current turn)
+4. **Score all territories** (V2 additive scorer, including current evidence)
+5. **Select territory** (cold-start-perimeter or argmax)
+6. **Compute observation focus strengths**
+7. **Run Move Governor** (intent + observation gating → PromptBuilderInput)
+8. **Build system prompt** (2-layer prompt builder)
+9. Call Nerin (with composed system prompt)
+10. Cost tracking
+11. Save exchange + messages + evidence (two-phase model)
 ```
 
-**Key change: ConversAnalyzer moves before Nerin.** In the current pipeline, ConversAnalyzer runs parallel with or after Nerin. The evolved pipeline reverses this — ConversAnalyzer must run _first_ because the steering pipeline (E_target → Scorer → Selector → Governor → Prompt Builder) needs energy and telling signals to compose Nerin's system prompt. Evidence extraction still happens in the same ConversAnalyzer call; it just runs earlier.
+**Key change: ConversAnalyzer runs before scoring and Nerin.** Extraction runs first (step 2) so that the current user message's evidence and energy/telling signals feed into E_target, the scorer, and observation focus computation. This eliminates the one-turn evidence delay — the turn 1 scorer has real evidence to differentiate territories instead of scoring blind with uniform coverage.
 
-**Latency implication:** This adds ConversAnalyzer's latency (~1-2s Haiku call) to the critical path _before_ Nerin responds. Previously the two LLM calls overlapped. The tradeoff is accepted because steering quality requires user state signals — without them, E_target defaults to initEnergy and the scorer loses its primary input. The pure-function steps 5-9 add sub-millisecond overhead and do not contribute meaningfully to latency.
+**Latency implication:** Total wall-clock time is unchanged — extraction + Nerin run sequentially in both orderings. The user waits the same amount of time.
 
-**Ordering constraint:** Steps 5-11 are sequential (each feeds the next). Steps 5 and 12 are the two LLM calls (Haiku and Sonnet respectively). Steps 7-11 are pure functions — sub-millisecond total.
+**Ordering constraint:** Steps 2-8 are sequential (each feeds the next). Steps 2 and 9 are the two LLM calls (Haiku and Sonnet respectively). Steps 3-8 are pure functions — sub-millisecond total.
 
 ### Deployment Phases
 
@@ -1292,11 +1288,12 @@ Turn 1 has specific cold-start rules across multiple layers:
 
 | Layer | Turn 1 behavior | Why |
 |-------|-----------------|-----|
-| **ConversAnalyzer** | `tellingBand` is always `"mixed"` (0.5) | No prior assistant message to measure self-propulsion against. This is correct, not a failure. Do not infer telling from energy. |
-| **E_target** | Uses init defaults: `smoothed_energy=0.5, sessionTrust=0.15, drain=0` | No prior exchange state. Real energy from ConversAnalyzer is applied via EMA. |
-| **Scorer (adjacency)** | `adjacency(t) = 0` for all territories | No `currentTerritory`. Coverage gain + conversation skew (early ramp) determine ranking. |
-| **Scorer (freshness)** | `freshnessPenalty(t) = 0` for all territories | All territories never-visited (`turnsSinceLastVisit = ∞`). The `if t == currentTerritory` guard never triggers (null matches nothing). |
-| **Selector** | `cold-start-perimeter` rule | Random pick from pool within perimeter of top score. |
+| **ConversAnalyzer** | Runs on user's first message. Evidence and energy/telling extracted before scoring. | Extraction runs first in the pipeline so the scorer has real evidence on turn 1 instead of scoring blind. |
+| **E_target** | Trust cap applied: `E_target = min(initEnergy, trustCap) ≈ 0.35`. Energy/telling from current message included in histories. | Low trust (0.15) → low trust cap (0.35). Heavy territories penalized more strongly than at E_target=0.5. |
+| **Scorer (coverage)** | `coverageGain` differentiates based on extracted evidence from first message. | Unlike prior behavior where all territories scored 1.0, evidence creates real score differentiation. |
+| **Scorer (adjacency)** | `adjacency(t) = 0` for all territories | No `currentTerritory`. |
+| **Scorer (freshness)** | `freshnessPenalty(t) = 0` for all territories | All territories never-visited. |
+| **Selector** | `cold-start-perimeter` rule with session-derived seed | Seed = `hash(sessionId) XOR (turnNumber × 7919)` — different sessions get different picks. |
 | **Governor** | `intent: "open"`, no `observationFocus`, no `entryPressure` | Nothing to observe yet. |
 
 ### Layer Boundary Contracts
@@ -1498,7 +1495,7 @@ The mock should implement both, with `analyze` always succeeding (no need to sim
 ```
 
 **Seed data should tell a realistic story.** The existing seed creates 12 messages. With the pacing pipeline, those 12 messages map to 6 exchanges (6 user + 6 assistant). The seed should show:
-- Turn 1: `cold-start-perimeter`, `intent: "open"`, light territory
+- Turn 1: `cold-start-perimeter`, `intent: "open"`, light/medium territory (trust-capped E_target ≈ 0.35 favors territories near that energy)
 - Turns 2-5: Territory transitions following adjacency, `intent: "explore"`, 1-2 observation fires (noticing or contradiction)
 - Turn 6: Seeded as final turn for test purposes, `intent: "amplify"` if `MESSAGE_THRESHOLD=6`
 

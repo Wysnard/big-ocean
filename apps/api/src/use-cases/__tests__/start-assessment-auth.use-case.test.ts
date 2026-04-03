@@ -51,7 +51,7 @@ describe("startAssessment Use Case", () => {
 			expect(mockLoggerRepo.info).toHaveBeenCalledWith("Assessment session started", {
 				sessionId: "session_new_789",
 				userId: "user_456",
-				greetingCount: 5,
+				greetingCount: 2,
 			});
 		});
 
@@ -255,14 +255,14 @@ describe("startAssessment Use Case", () => {
 		});
 
 		describe("Greeting message persistence", () => {
-			it("should save exactly 5 greeting messages to the database", async () => {
+			it("should save exactly 2 greeting messages to the database", async () => {
 				const testLayer = createTestLayer();
 
 				await Effect.runPromise(
 					startAuthenticatedAssessment({ userId: "user_greet" }).pipe(Effect.provide(testLayer)),
 				);
 
-				expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledTimes(5);
+				expect(mockAssessmentMessageRepo.saveMessage).toHaveBeenCalledTimes(2);
 			});
 
 			it("should save messages with role 'assistant' and correct session ID", async () => {
@@ -272,7 +272,8 @@ describe("startAssessment Use Case", () => {
 					startAuthenticatedAssessment({ userId: "user_msg" }).pipe(Effect.provide(testLayer)),
 				);
 
-				for (let i = 0; i < 5; i++) {
+				const totalMessages = GREETING_MESSAGES.length + 1; // greetings + opening question
+				for (let i = 0; i < totalMessages; i++) {
 					const call = mockAssessmentMessageRepo.saveMessage.mock.calls[i];
 					expect(call[0]).toBe("session_new_789"); // sessionId
 					expect(call[1]).toBe("assistant"); // role
@@ -289,22 +290,22 @@ describe("startAssessment Use Case", () => {
 
 				const calls = mockAssessmentMessageRepo.saveMessage.mock.calls;
 
-				// First 4 calls are greeting bubbles
+				// First call is the greeting bubble
 				for (let i = 0; i < GREETING_MESSAGES.length; i++) {
 					expect(calls[i][2]).toBe(GREETING_MESSAGES[i]);
 				}
 				// Last call is the opening question
-				expect(OPENING_QUESTIONS).toContain(calls[4][2]);
+				expect(OPENING_QUESTIONS).toContain(calls[GREETING_MESSAGES.length][2]);
 			});
 
-			it("should return 5 messages with role and content in the response", async () => {
+			it("should return 2 messages with role and content in the response", async () => {
 				const testLayer = createTestLayer();
 
 				const result = await Effect.runPromise(
 					startAuthenticatedAssessment({ userId: "user_resp" }).pipe(Effect.provide(testLayer)),
 				);
 
-				expect(result.messages).toHaveLength(5);
+				expect(result.messages).toHaveLength(2);
 				for (const msg of result.messages) {
 					expect(msg.role).toBe("assistant");
 					expect(typeof msg.content).toBe("string");

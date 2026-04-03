@@ -173,15 +173,16 @@ export const computeETarget = (input: ETargetInput): ETargetOutput => {
 	const config = PACING_CONFIG;
 	const { energyHistory, tellingHistory, priorSmoothedEnergy, priorSessionTrust } = input;
 
-	// Empty history → cold start defaults
+	// Empty history → cold start defaults (trust cap still applied)
 	if (energyHistory.length === 0) {
 		const sessionTrust = priorSessionTrust ?? config.trustInit;
+		const trustCap = computeTrustCap(sessionTrust, config);
 		return {
-			eTarget: config.initEnergy,
+			eTarget: Math.min(config.initEnergy, trustCap),
 			smoothedEnergy: config.initEnergy,
 			sessionTrust,
 			drain: 0,
-			trustCap: computeTrustCap(sessionTrust, config),
+			trustCap,
 		};
 	}
 
