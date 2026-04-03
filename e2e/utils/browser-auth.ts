@@ -39,24 +39,34 @@ export async function signUpAndLoginViaBrowser(
 	await submitBtn.click();
 
 	// 2. Wait for signup to complete (redirects to /verify-email)
-	await page.waitForURL(/\/verify-email/, { timeout: 15_000 }).catch(() => {});
+	await page.waitForURL(/\/verify-email/, { timeout: 15_000 }).catch(() => {
+		// Signup may not redirect if the form showed a validation error — continue
+		// to the DB verification step which will retry until the user appears.
+	});
 
 	// 3. Verify email directly in DB (bypass email verification)
 	// Retry with backoff — backend may still be processing the signup (Polar hooks, etc.)
 	const pool = new Pool(TEST_DB_CONFIG);
 	const client = await pool.connect();
+	let verified = false;
 	try {
-		for (let i = 0; i < 10; i++) {
+		for (let i = 0; i < 15; i++) {
 			const result = await client.query(
 				`UPDATE "user" SET "email_verified" = true WHERE "email" = $1 RETURNING id`,
 				[input.email],
 			);
-			if (result.rowCount && result.rowCount > 0) break;
+			if (result.rowCount && result.rowCount > 0) {
+				verified = true;
+				break;
+			}
 			await new Promise((r) => setTimeout(r, 1_000));
 		}
 	} finally {
 		client.release();
 		await pool.end();
+	}
+	if (!verified) {
+		throw new Error(`[signUpAndLoginViaBrowser] User "${input.email}" was not created after 15s`);
 	}
 
 	// 4. Log in via browser login page
