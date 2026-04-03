@@ -139,9 +139,9 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
 						return (
 							<Field data-invalid={isInvalid}>
-								<FieldLabel htmlFor={field.name}>Email</FieldLabel>
+								<FieldLabel htmlFor="login-email">Email</FieldLabel>
 								<Input
-									id={field.name}
+									id="login-email"
 									type="email"
 									value={field.state.value}
 									onBlur={field.handleBlur}
@@ -165,9 +165,9 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
 						return (
 							<Field data-invalid={isInvalid}>
-								<FieldLabel htmlFor={field.name}>Password</FieldLabel>
+								<FieldLabel htmlFor="login-password">Password</FieldLabel>
 								<Input
-									id={field.name}
+									id="login-password"
 									type="password"
 									value={field.state.value}
 									onBlur={field.handleBlur}

@@ -144,9 +144,9 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
 						return (
 							<Field data-invalid={isInvalid}>
-								<FieldLabel htmlFor={field.name}>Name</FieldLabel>
+								<FieldLabel htmlFor="signup-name">Name</FieldLabel>
 								<Input
-									id={field.name}
+									id="signup-name"
 									type="text"
 									value={field.state.value}
 									onBlur={field.handleBlur}
@@ -170,9 +170,9 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
 						return (
 							<Field data-invalid={isInvalid}>
-								<FieldLabel htmlFor={field.name}>Email</FieldLabel>
+								<FieldLabel htmlFor="signup-email">Email</FieldLabel>
 								<Input
-									id={field.name}
+									id="signup-email"
 									type="email"
 									value={field.state.value}
 									onBlur={field.handleBlur}
@@ -196,9 +196,9 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
 						return (
 							<Field data-invalid={isInvalid}>
-								<FieldLabel htmlFor={field.name}>Password</FieldLabel>
+								<FieldLabel htmlFor="signup-password">Password</FieldLabel>
 								<Input
-									id={field.name}
+									id="signup-password"
 									type="password"
 									value={field.state.value}
 									onBlur={field.handleBlur}
@@ -206,10 +206,10 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 									autoComplete="new-password"
 									placeholder="At least 12 characters"
 									aria-invalid={isInvalid}
-									aria-describedby={serverError ? errorId : `${field.name}-help`}
+									aria-describedby={serverError ? errorId : "signup-password-help"}
 									className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
 								/>
-								<p id={`${field.name}-help`} className="text-xs text-muted-foreground">
+								<p id="signup-password-help" className="text-xs text-muted-foreground">
 									Minimum 12 characters
 								</p>
 								{isInvalid && (
@@ -225,9 +225,9 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
 						return (
 							<Field data-invalid={isInvalid}>
-								<FieldLabel htmlFor={field.name}>Confirm Password</FieldLabel>
+								<FieldLabel htmlFor="signup-confirm-password">Confirm Password</FieldLabel>
 								<Input
-									id={field.name}
+									id="signup-confirm-password"
 									type="password"
 									value={field.state.value}
 									onBlur={field.handleBlur}
