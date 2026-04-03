@@ -5,15 +5,20 @@
 import { vi } from "vitest";
 
 vi.mock("@workspace/infrastructure/repositories/qr-token.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { AppConfig, QrTokenRepository } from "@workspace/domain";
+import { AppConfig, AssessmentSessionRepository, QrTokenRepository } from "@workspace/domain";
+import {
+	AssessmentSessionDrizzleRepositoryLive,
+	_resetMockState as resetSessionMock,
+} from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+import {
+	_resetMockState,
+	QrTokenDrizzleRepositoryLive,
+} from "@workspace/infrastructure/repositories/qr-token.drizzle.repository";
 import { Effect, Layer } from "effect";
 import { generateQrToken } from "../generate-qr-token.use-case";
-import {
-	QrTokenDrizzleRepositoryLive,
-	_resetMockState,
-} from "@workspace/infrastructure/repositories/qr-token.drizzle.repository";
 
 const TEST_USER_ID = "user-123";
 const TEST_FRONTEND_URL = "http://localhost:3000";
@@ -43,15 +48,29 @@ const TestAppConfig = Layer.succeed(
 	}),
 );
 
-const TestLayer = Layer.mergeAll(QrTokenDrizzleRepositoryLive, TestAppConfig);
+const TestLayer = Layer.mergeAll(
+	QrTokenDrizzleRepositoryLive,
+	AssessmentSessionDrizzleRepositoryLive,
+	TestAppConfig,
+);
 
 describe("generateQrToken Use Case (Story 34-1)", () => {
 	beforeEach(() => {
 		_resetMockState();
+		resetSessionMock();
 	});
+
+	/** Helper: seed a completed assessment session for the given user */
+	const seedCompletedSession = (userId: string) =>
+		Effect.gen(function* () {
+			const sessionRepo = yield* AssessmentSessionRepository;
+			const session = yield* sessionRepo.createSession(userId);
+			yield* sessionRepo.updateSession(session.sessionId, { status: "completed" });
+		});
 
 	it.effect("generates a new QR token with share URL", () =>
 		Effect.gen(function* () {
+			yield* seedCompletedSession(TEST_USER_ID);
 			const result = yield* generateQrToken(TEST_USER_ID);
 
 			expect(result.token).toBeDefined();
@@ -64,6 +83,7 @@ describe("generateQrToken Use Case (Story 34-1)", () => {
 
 	it.effect("expires existing active token before generating new one", () =>
 		Effect.gen(function* () {
+			yield* seedCompletedSession(TEST_USER_ID);
 			const qrRepo = yield* QrTokenRepository;
 
 			// Generate first token
