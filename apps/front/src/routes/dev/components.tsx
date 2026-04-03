@@ -997,6 +997,8 @@ function ChatSection() {
 						</div>
 						<div className="flex items-center justify-center size-8 rounded-full border border-border text-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer">
 							<svg
+								role="img"
+								aria-label="Session info"
 								xmlns="http://www.w3.org/2000/svg"
 								width="18"
 								height="18"
