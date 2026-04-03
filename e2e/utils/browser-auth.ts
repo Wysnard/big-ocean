@@ -32,10 +32,10 @@ export async function signUpAndLoginViaBrowser(
 	const submitBtn = page.locator('button[type="submit"]');
 	await submitBtn.waitFor({ state: "visible" });
 
-	await page.locator("#signup-name").fill(input.name ?? "E2E Tester");
-	await page.locator("#signup-email").fill(input.email);
-	await page.locator("#signup-password").fill(input.password);
-	await page.locator("#signup-confirm-password").fill(input.password);
+	await page.locator("#name").fill(input.name ?? "E2E Tester");
+	await page.locator("#email").fill(input.email);
+	await page.locator("#password").fill(input.password);
+	await page.locator("#confirmPassword").fill(input.password);
 	await submitBtn.click();
 
 	// 2. Wait for signup to complete (redirects to /verify-email)
@@ -62,8 +62,8 @@ export async function signUpAndLoginViaBrowser(
 	await page.goto("/login");
 	const loginBtn = page.locator('button[type="submit"]');
 	await loginBtn.waitFor({ state: "visible" });
-	await page.locator("#login-email").fill(input.email);
-	await page.locator("#login-password").fill(input.password);
+	await page.locator("#email").fill(input.email);
+	await page.locator("#password").fill(input.password);
 	await loginBtn.click();
 	await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15_000 });
 }
@@ -78,8 +78,8 @@ export async function loginViaBrowser(
 	await page.goto("/login");
 	const submitBtn = page.locator('button[type="submit"]');
 	await submitBtn.waitFor({ state: "visible" });
-	await page.locator("#login-email").fill(input.email);
-	await page.locator("#login-password").fill(input.password);
+	await page.locator("#email").fill(input.email);
+	await page.locator("#password").fill(input.password);
 	await submitBtn.click();
 	await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15_000 });
 }
