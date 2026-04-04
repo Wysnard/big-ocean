@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
 parallelism_step: 1
-parallelism_step_name: "ConversAnalyzer Cleanup"
-baseline_commit: "72e2b1f0275fcd0348dd2c59ab4ec8eb80360db2"
+parallelism_step_name: "Codebase Cleanup"
+baseline_commit: "aea61c30ce63fdc214eef82e28487afbe901acee"
 created: "2026-04-04"
-last_updated: "2026-04-04T23:30:00Z"
+last_updated: "2026-04-04T23:45:00Z"
 
 # Optional context documents discovered
 context_docs:
@@ -14,12 +14,12 @@ context_docs:
 
 # Stories in this step
 stories:
-  43-6-conversanalyzer-cleanup-strip-user-state-extraction:
+  44-1-delete-old-pipeline-code-functions-constants-and-types:
     status: done
     mode: "single"
-    notes: "Pipeline must work (43-5 merged) before stripping user-state"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/204"
-    dev_branch: "feat/story-43-6-conversanalyzer-cleanup-strip-user-state-extraction"
+    notes: "All old code is dead after Epic 43"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/205"
+    dev_branch: "feat/story-44-1-delete-old-pipeline-code-functions-constants-and-types"
     error: null
 
 # Conflict detection (populated by step-02b)
@@ -27,6 +27,6 @@ conflicts:
   detected: false
   note: "Single branch — no overlap possible"
   scanned_branches:
-    - "feat/story-43-6-conversanalyzer-cleanup-strip-user-state-extraction"
+    - "feat/story-44-1-delete-old-pipeline-code-functions-constants-and-types"
   skipped_branches: []
   overlapping_files: []

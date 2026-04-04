@@ -756,8 +756,8 @@ development_status:
   # Stories: 2.1-2.3 in epics-director-model.md
   # Depends on: Epic 43 (old code becomes dead after pipeline replacement)
   # ───────────────────────────────────────────────────────────────
-  epic-44: backlog
-  44-1-delete-old-pipeline-code-functions-constants-and-types: backlog
+  epic-44: in-progress
+  44-1-delete-old-pipeline-code-functions-constants-and-types: pr-ready
   44-2-seed-script-and-exchange-builder-rewrite-for-director-model: backlog
   44-3-barrel-export-cleanup-and-conversanalyzer-mock-removal: backlog
   epic-44-retrospective: optional
