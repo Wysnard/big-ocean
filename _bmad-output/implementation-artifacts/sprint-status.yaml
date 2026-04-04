@@ -743,8 +743,8 @@ development_status:
   epic-43: in-progress
   43-1-exchange-table-migration-and-schema-changes: done
   43-2-coverage-analyzer-evidence-to-target-pure-function: done
-  43-3-nerin-director-repository-prompt-and-langchain-implementation: backlog
-  43-4-nerin-actor-persona-rewrite-prompt-and-repository-adaptation: backlog
+  43-3-nerin-director-repository-prompt-and-langchain-implementation: pr-ready
+  43-4-nerin-actor-persona-rewrite-prompt-and-repository-adaptation: pr-ready
   43-5-pipeline-orchestrator-rewrite-4-step-sequential-pipeline: backlog
   43-6-conversanalyzer-cleanup-strip-user-state-extraction: backlog
   epic-43-retrospective: optional

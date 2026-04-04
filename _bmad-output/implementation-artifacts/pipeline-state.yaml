@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
 parallelism_step: 1
-parallelism_step_name: "Schema Foundation + Independent Components"
-baseline_commit: "cd4f00ce24c9f849c92f0d42ed041a9678b48aa2"
+parallelism_step_name: "Director + Actor (parallel build)"
+baseline_commit: "3004fca895ac6758b32fff616ec62a6fd22bfbe8"
 created: "2026-04-04"
-last_updated: "2026-04-04T15:00:00Z"
+last_updated: "2026-04-04T16:00:00Z"
 
 # Optional context documents discovered
 context_docs:
@@ -14,27 +14,32 @@ context_docs:
 
 # Stories in this step
 stories:
-  43-1-exchange-table-migration-and-schema-changes:
+  43-3-nerin-director-repository-prompt-and-langchain-implementation:
     status: done
     mode: "parallel"
-    notes: "Schema migration — foundation for pipeline"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/200"
-    dev_branch: "feat/story-43-1-exchange-table-migration-and-schema-changes"
+    notes: "Depends on 43-1 (done) — writes to director_output column"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/201"
+    dev_branch: "feat/story-43-3-nerin-director-repository-prompt-and-langchain-implementation"
     error: null
-  43-2-coverage-analyzer-evidence-to-target-pure-function:
+  43-4-nerin-actor-persona-rewrite-prompt-and-repository-adaptation:
     status: done
     mode: "parallel"
-    notes: "Pure function, no schema dependency"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/199"
-    dev_branch: "feat/story-43-2-coverage-analyzer-evidence-to-target-pure-function"
+    notes: "Independent of 43-3 — rename + rewrite existing files"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/202"
+    dev_branch: "feat/story-43-4-nerin-actor-persona-rewrite-prompt-and-repository-adaptation"
     error: null
 
 # Conflict detection (populated by step-02b)
 conflicts:
-  detected: false
+  detected: true
   scanned_branches:
-    - "feat/story-43-1-exchange-table-migration-and-schema-changes"
-    - "feat/story-43-2-coverage-analyzer-evidence-to-target-pure-function"
+    - "feat/story-43-3-nerin-director-repository-prompt-and-langchain-implementation"
+    - "feat/story-43-4-nerin-actor-persona-rewrite-prompt-and-repository-adaptation"
   skipped_branches: []
-  overlapping_files: []
-  note: "Zero file overlap between the two branches — safe to merge independently"
+  overlapping_files:
+    - file: "packages/domain/src/index.ts"
+      risk: low
+      branches:
+        - "feat/story-43-3-nerin-director-repository-prompt-and-langchain-implementation"
+        - "feat/story-43-4-nerin-actor-persona-rewrite-prompt-and-repository-adaptation"
+  note: "Only overlap is a barrel export file — each branch adds different exports, typically auto-resolvable"
