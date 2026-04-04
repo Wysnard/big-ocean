@@ -118,6 +118,18 @@ const configSchema = Config.all({
 
 	// Cost Guard (Story 31-6)
 	sessionCostLimitCents: Config.number("SESSION_COST_LIMIT_CENTS").pipe(Config.withDefault(2000)),
+
+	// Nerin Director (Story 43-3)
+	nerinDirectorModelId: Config.string("NERIN_DIRECTOR_MODEL_ID").pipe(
+		Config.withDefault("claude-sonnet-4-20250514"),
+	),
+	nerinDirectorMaxTokens: Config.number("NERIN_DIRECTOR_MAX_TOKENS").pipe(Config.withDefault(1024)),
+	nerinDirectorTemperature: Config.number("NERIN_DIRECTOR_TEMPERATURE").pipe(
+		Config.withDefault(0.7),
+	),
+	nerinDirectorRetryTemperature: Config.number("NERIN_DIRECTOR_RETRY_TEMPERATURE").pipe(
+		Config.withDefault(0.9),
+	),
 });
 
 /**

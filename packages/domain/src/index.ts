@@ -77,6 +77,12 @@ export {
 	STORY_PULLING,
 	THREADING_COMMON,
 } from "./constants/nerin/index";
+// Nerin Director prompts (Story 43-3)
+export { NERIN_DIRECTOR_CLOSING_PROMPT } from "./constants/nerin-director-closing-prompt";
+export {
+	buildDirectorUserMessage,
+	NERIN_DIRECTOR_PROMPT,
+} from "./constants/nerin-director-prompt";
 // Nerin farewell constants (Story 7.18)
 export {
 	NERIN_FAREWELL_MESSAGES,
@@ -217,6 +223,13 @@ export {
 	type NerinInvokeInput,
 	type NerinInvokeOutput,
 } from "./repositories/nerin-agent.repository";
+// Nerin Director repository (Story 43-3)
+export {
+	NerinDirectorError,
+	type NerinDirectorInput,
+	type NerinDirectorOutput,
+	NerinDirectorRepository,
+} from "./repositories/nerin-director.repository";
 // Portrait repository (Story 13.3, refactored for queue-based generation)
 export {
 	type InsertPortraitFailed,
