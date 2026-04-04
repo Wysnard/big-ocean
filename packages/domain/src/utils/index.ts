@@ -5,7 +5,6 @@
  */
 
 export { extract4LetterCode, lookupArchetype } from "./archetype-lookup";
-export { mapEnergyBand, mapTellingBand } from "./band-mapping";
 export {
 	calculateConfidenceFromFacetScores,
 	calculateOverallConfidence,
@@ -20,8 +19,8 @@ export { deriveCapabilities, hasPortraitForResult } from "./derive-capabilities"
 export { deriveTraitSummary } from "./derive-trait-summary";
 export { toFacetDisplayName } from "./display-name";
 export { getFacetLevel } from "./facet-level";
-export { buildChatSystemPrompt, type ChatSystemPromptParams } from "./nerin-system-prompt";
 export { generateOceanCode } from "./ocean-code-generator";
+export { buildPortraitPrompt } from "./portrait-prompt-builder";
 export {
 	getFacetColor,
 	getTraitAccentColor,
