@@ -99,4 +99,31 @@ So that the pipeline can persist Director briefs and coverage targets for each t
 - **Schema change cascade rule:** Check seed scripts, test fixtures, and mocks after schema changes
 - territory_id and observed_energy_level were already dropped from assessment_message in Story 23-3 — confirm via schema.ts comment
 - The pacing-pipeline.types.ts file exports types still used elsewhere (e.g., ExtractionTier is used by the extraction pipeline) — do NOT delete the file; only remove types no longer imported by the exchange interface
-- The nerin-pipeline.ts currently writes pacing columns to exchanges — this story only changes the schema; pipeline rewrite is Story 1.5
+- The nerin-pipeline.ts currently writes pacing columns to exchanges — this story must also update the exchange update calls in nerin-pipeline.ts to only pass surviving fields (extractionTier) to avoid compilation failure. Full pipeline rewrite is Story 1.5
+
+## Architect Notes
+
+### Finding: nerin-pipeline.ts will fail to compile after interface change
+
+**Severity:** Major
+**File:** `apps/api/src/use-cases/nerin-pipeline.ts` (lines ~736-792)
+**Action:** Update the two `exchangeRepo.update()` calls:
+1. Line ~736: Previous exchange update — currently passes energy, energyBand, telling, tellingBand, withinMessageShift, extractionTier. After change, only pass `extractionTier` (the only surviving field). The rest of the extraction data is no longer persisted — this is intentional; the Director reads energy/telling natively from conversation history.
+2. Line ~764: New exchange update — currently passes all pacing/scoring/governor/derived fields. After change, pass empty object `{}` or remove the call. The Director model pipeline (Story 1.5) will populate director_output and coverage_targets here.
+
+**Pattern:** Keep the update calls in place with reduced fields. Do not remove pipeline logic (that is Story 1.5's job). The update calls become thin/no-ops.
+
+### Finding: Test fixtures and assertions reference old exchange fields
+
+**Severity:** Major
+**Files to update:**
+- `apps/api/src/use-cases/__tests__/__fixtures__/send-message.fixtures.ts` — `mockExchangeRecord` (lines 284-307)
+- `apps/api/src/use-cases/__tests__/__fixtures__/start-assessment.fixtures.ts` — exchange record shapes
+- `apps/api/src/use-cases/__tests__/nerin-pipeline.test.ts` — assertions on update call args (steeringUpdate, extractionUpdate)
+- `apps/api/src/use-cases/__tests__/send-message-steering.use-case.test.ts` — exchange update assertions
+- `apps/api/src/use-cases/__tests__/extraction-pipeline-evidence-processing.test.ts` — extractionUpdate / steeringUpdate assertions
+- `apps/api/src/use-cases/__tests__/check-check-in.use-case.test.ts` — exchange update calls
+- `apps/api/src/use-cases/__tests__/check-drop-off.use-case.test.ts` — exchange update calls
+- `apps/api/src/use-cases/__tests__/resume-session-pipeline.test.ts` — exchange field references
+
+**Action:** Update all `mockExchangeRecord` shapes to match new `AssessmentExchangeRecord`. Update assertions that check for old pacing fields to check for new Director fields (or remove assertions about fields that no longer exist). Tests that validate pipeline steering behavior will need substantial rewrites in Story 1.5 — for this story, make them compile and pass with the new types.
