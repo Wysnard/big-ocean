@@ -740,9 +740,9 @@ development_status:
   # Stories: 1.1-1.6 in epics-director-model.md
   # Depends on: Nothing — core replacement
   # ───────────────────────────────────────────────────────────────
-  epic-43: backlog
-  43-1-exchange-table-migration-and-schema-changes: backlog
-  43-2-coverage-analyzer-evidence-to-target-pure-function: backlog
+  epic-43: in-progress
+  43-1-exchange-table-migration-and-schema-changes: pr-ready
+  43-2-coverage-analyzer-evidence-to-target-pure-function: pr-ready
   43-3-nerin-director-repository-prompt-and-langchain-implementation: backlog
   43-4-nerin-actor-persona-rewrite-prompt-and-repository-adaptation: backlog
   43-5-pipeline-orchestrator-rewrite-4-step-sequential-pipeline: backlog
