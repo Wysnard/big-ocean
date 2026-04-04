@@ -301,6 +301,18 @@ QUESTION: Ask about imagining the future — concrete goals vs. what-if explorat
 			targetDomain: "leisure",
 		},
 	},
+	{
+		// Turn 6 (closing): After user talks about future possibilities and backup plans
+		directorOutput: `OBSERVATION: "I have three backup plans for every backup plan" — said with humor but it's a profound reveal. This is someone who manages anxiety through preparation, who finds peace in having mapped every contingency. The partner joke suggests they know it's excessive but can't help it. That self-awareness paired with inability to change the behavior is the tension that makes them interesting.
+
+This is the final exchange. Make your boldest observation — name the core tension you've been watching build: their deep need for order and structure coexists with a genuinely expansive imagination. They don't just plan — they dream in organized folders. That's not a contradiction; it's their superpower.
+
+QUESTION: End with something that leaves them wanting more. Name what you see in them that they might not see in themselves.`,
+		coverageTargets: {
+			targetFacets: ["vulnerability", "anxiety", "self_consciousness"],
+			targetDomain: "health",
+		},
+	},
 ];
 
 // Build JSONB facets data
@@ -595,7 +607,7 @@ const seedProgram = Effect.gen(function* () {
 	// 6. Insert conversation evidence (linked to messages and exchanges)
 	console.log("\nInserting conversation evidence...");
 	// User messages are at indices 1, 3, 5, 7, 9, 11 → turns 1, 2, 3, 4, 5, 6
-	// We have 5 turns (1-5), distribute 30 facets across them (6 per turn)
+	// We have 6 turns (1-6), distribute 30 facets across them (5 per turn)
 	const userMsgIndices = CONVERSATION_MESSAGES.map((m, i) => ({ role: m.role, index: i }))
 		.filter((m) => m.role === "user")
 		.map((m) => m.index);
@@ -609,11 +621,10 @@ const seedProgram = Effect.gen(function* () {
 		const turn = Math.ceil(msgIndex / 2); // Convert message index to turn number
 		const exchange = exchangeRecords.find((e) => e.turnNumber === turn);
 
-		// Convert v1 seed data to v2 format for conversation_evidence (Story 18-1)
-		const deviation = Math.round(((data.score - 10) / 10) * 3);
+		// Convert seed scores to v2 evidence format (Story 18-1)
 		const strength = data.confidence >= 0.7 ? "strong" : data.confidence >= 0.4 ? "moderate" : "weak";
 		const confidence = data.confidence >= 0.7 ? "high" : data.confidence >= 0.4 ? "medium" : "low";
-		const polarity = deviation >= 0 ? "high" : "low";
+		const polarity = data.score >= 10 ? "high" : "low";
 		yield* db
 			.insert(conversationEvidence)
 			.values({
