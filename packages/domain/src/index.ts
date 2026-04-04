@@ -45,38 +45,8 @@ export {
 	LifeDomainSchema,
 	STEERABLE_DOMAINS,
 } from "./constants/life-domain";
-// Nerin character bible modules — decomposed Tier 1 + Tier 2 (Story 27-1)
-export {
-	BELIEFS_IN_ACTION,
-	CLOSE_CONTRADICTION_TEMPLATE,
-	CLOSE_CONVERGENCE_TEMPLATE,
-	CLOSE_NOTICING_TEMPLATE,
-	CLOSE_RELATE_TEMPLATE,
-	CONVERSATION_INSTINCTS,
-	CONVERSATION_MODE,
-	EXPLORE_CONTRADICTION_TEMPLATE,
-	EXPLORE_CONVERGENCE_TEMPLATE,
-	EXPLORE_NOTICING_TEMPLATE,
-	EXPLORE_RELATE_TEMPLATE,
-	getMirrorsForContext,
-	getPressureModifier,
-	HUMOR_GUARDRAILS,
-	MIRROR_GUARDRAILS,
-	OBSERVATION_QUALITY_COMMON,
-	OPEN_RELATE_TEMPLATE,
-	ORIGIN_STORY,
-	PORTRAIT_CONTEXT,
-	PRESSURE_ANGLED,
-	PRESSURE_DIRECT,
-	PRESSURE_SOFT,
-	QUALITY_INSTINCT,
-	REFLECT,
-	renderSteeringTemplate,
-	renderTemplate,
-	STEERING_PREFIX,
-	STORY_PULLING,
-	THREADING_COMMON,
-} from "./constants/nerin/index";
+// Nerin character bible — live modules (portrait context)
+export { PORTRAIT_CONTEXT } from "./constants/nerin/portrait-context";
 // Nerin Actor prompt (Story 43-4, ADR-DM-3)
 export {
 	ACTOR_BRIEF_FRAMING,
@@ -106,11 +76,6 @@ export { NERIN_PERSONA } from "./constants/nerin-persona";
 export { OCEAN_HIEROGLYPH_PATHS } from "./constants/ocean-hieroglyph-paths";
 // Ocean Hieroglyph lookup table (Story 10.1)
 export { OCEAN_HIEROGLYPHS } from "./constants/ocean-hieroglyphs";
-// Territory catalog (Story 21-1, evolved Story 23-2)
-export {
-	getTerritoryById,
-	TERRITORY_CATALOG,
-} from "./constants/territory-catalog";
 // Trait descriptions (Story 8.2)
 export { TRAIT_DESCRIPTIONS, type TraitDescriptions } from "./constants/trait-descriptions";
 // Validation constants (Story 9.1)
@@ -427,47 +392,8 @@ export type {
 } from "./types/message";
 // Ocean Hieroglyph types (Story 10.1)
 export type { HieroglyphDef, HieroglyphElement } from "./types/ocean-hieroglyph";
-export type {
-	BridgePromptInput,
-	ClosePromptInput,
-	ContradictionFocus,
-	ContradictionTarget,
-	ConvergenceFocus,
-	ConvergenceTarget,
-	DomainScore,
-	EntryPressureDebug,
-	ExplorePromptInput,
-	MoveGovernorDebug,
-	NoticingFocus,
-	ObservationCandidate,
-	ObservationFocus,
-	ObservationGatingDebug,
-	OpenPromptInput,
-	PromptBuilderInput,
-	RankedTerritory,
-	RelateFocus,
-	TerritoryScoreBreakdown,
-	TerritoryScorerOutput,
-	TerritorySelectorOutput,
-} from "./types/pacing";
-// Pacing pipeline types (Story 23-1, 23-2, 23-3)
-export {
-	CONVERSATIONAL_INTENTS,
-	type ConversationalIntent,
-	ENERGY_BANDS,
-	ENTRY_PRESSURES,
-	type EnergyBand,
-	type EntryPressure,
-	TELLING_BANDS,
-	type TellingBand,
-} from "./types/pacing";
-// Pacing pipeline types — Story 23-3 additions
-export type {
-	ExtractionTier,
-	SelectionRule,
-	SessionPhase,
-	TransitionType,
-} from "./types/pacing-pipeline.types";
+// Extraction tier type (still used by exchange repository)
+export type { ExtractionTier } from "./types/pacing-pipeline.types";
 // Portrait rating types (Story 19-2)
 export type {
 	DepthSignalLevel,
@@ -500,14 +426,6 @@ export type {
 export { QR_TOKEN_TTL_HOURS } from "./types/relationship.types";
 // Session types
 export type { MessageRole, Session, SessionStatus } from "./types/session";
-// Steering output type (Story 21-1)
-export type { SteeringOutput } from "./types/steering";
-// Territory types (Story 21-1, evolved Story 23-2)
-export {
-	type Territory,
-	type TerritoryId,
-	TerritoryIdSchema,
-} from "./types/territory";
 // Trait types (Big Five)
 export type { BigFiveTrait, TraitConfidenceScores } from "./types/trait";
 export { BIG_FIVE_TRAITS } from "./types/trait";
@@ -542,7 +460,7 @@ export {
 } from "./utils/formula";
 // Utility functions
 export {
-	buildChatSystemPrompt,
+	buildPortraitPrompt,
 	calculateConfidenceFromFacetScores,
 	calculateOverallConfidence,
 	createInitialFacetScoresMap,
@@ -561,8 +479,6 @@ export {
 	getTribeGroup,
 	hasPortraitForResult,
 	lookupArchetype,
-	mapEnergyBand,
-	mapTellingBand,
 	type TraitConfidence,
 	type TribeGroup,
 	toFacetDisplayName,
@@ -573,64 +489,5 @@ export {
 	computeDomainCoverage,
 	computeTraitResults,
 } from "./utils/score-computation";
-// Steering utilities
-// Pacing territory scorer (Story 25-2)
-// Territory Selector V2 (Story 25-3)
-// Observation Focus Strength (Story 26-1)
-// Observation Gating (Story 26-2)
-// Move Governor (Story 26-3)
-// Prompt Builder (Story 27-2)
-export {
-	buildPortraitPrompt,
-	buildPrompt,
-	buildSurfacingPrompt,
-	buildTerritoryPrompt,
-	buildTerritorySystemPromptSection,
-	COLD_START_PERIMETER,
-	computeAdjacency,
-	computeContradictionStrength,
-	computeConvergenceStrength,
-	computeConversationSkew,
-	computeCoverageGainV2,
-	computeEnergyMalus,
-	computeEntryPressure,
-	computeETargetV2,
-	computeFacetPriority,
-	computeFreshnessPenaltyV2,
-	computeGovernorOutput,
-	computeNoticingStrength,
-	computePerDomainConfidence,
-	computeRelateStrength,
-	computeSmoothedClarity,
-	deriveEnergyGuidanceLevel,
-	deriveIntent,
-	deriveSessionPhase,
-	deriveTransitionType,
-	ENTRY_PRESSURE_LARGE_GAP,
-	ENTRY_PRESSURE_MODERATE_GAP,
-	type EnergyGuidanceLevel,
-	type ETargetInput,
-	type ETargetOutput,
-	evaluateObservationGating,
-	type MoveGovernorInput,
-	type MoveGovernorResult,
-	OBSERVATION_FOCUS_CONSTANTS,
-	OBSERVATION_GATING_CONSTANTS,
-	type ObservationGatingInput,
-	type ObservationGatingMode,
-	type ObservationGatingResult,
-	PACING_CONFIG,
-	PACING_SCORER_DEFAULTS,
-	type PacingConfig,
-	type PacingScorerConfig,
-	type PacingVisitHistory,
-	type PromptBuilderOutput,
-	type ScoreAllTerritoriesV2Input,
-	type SelectorSessionPhase,
-	type SelectorTransitionType,
-	scoreAllTerritoriesV2,
-	selectTerritoryV2,
-	type TerritoryPromptContent,
-} from "./utils/steering";
 // Version detection (Story 36-3)
 export { isLatestVersion } from "./utils/version-detection";
