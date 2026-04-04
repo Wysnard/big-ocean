@@ -124,11 +124,12 @@ const mockActorResponse = {
 };
 
 /** ConversAnalyzer evidence extraction output */
-const mockConversanalyzerV2Output = {
+const mockConversanalyzerEvidenceOutput = {
 	evidence: [
 		{
 			bigfiveFacet: "imagination" as const,
 			deviation: 2,
+			polarity: "high" as const,
 			strength: "strong" as const,
 			confidence: "high" as const,
 			domain: "work" as const,
@@ -137,6 +138,7 @@ const mockConversanalyzerV2Output = {
 		{
 			bigfiveFacet: "anxiety" as const,
 			deviation: -1,
+			polarity: "low" as const,
 			strength: "moderate" as const,
 			confidence: "medium" as const,
 			domain: "work" as const,
@@ -270,13 +272,13 @@ function setupDefaultMocks() {
 
 	mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
 		Effect.succeed({
-			evidence: mockConversanalyzerV2Output.evidence,
+			evidence: mockConversanalyzerEvidenceOutput.evidence,
 			tokenUsage: { input: 100, output: 25 },
 		}),
 	);
 	mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(
 		Effect.succeed({
-			evidence: mockConversanalyzerV2Output.evidence,
+			evidence: mockConversanalyzerEvidenceOutput.evidence,
 			tokenUsage: { input: 100, output: 25 },
 		}),
 	);
