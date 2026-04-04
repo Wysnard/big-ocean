@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-04-04T21:00
+generated: 2026-04-04T22:54
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -745,7 +745,7 @@ development_status:
   43-2-coverage-analyzer-evidence-to-target-pure-function: done
   43-3-nerin-director-repository-prompt-and-langchain-implementation: done
   43-4-nerin-actor-persona-rewrite-prompt-and-repository-adaptation: done
-  43-5-pipeline-orchestrator-rewrite-4-step-sequential-pipeline: pr-ready
+  43-5-pipeline-orchestrator-rewrite-4-step-sequential-pipeline: done
   43-6-conversanalyzer-cleanup-strip-user-state-extraction: backlog
   epic-43-retrospective: optional
 

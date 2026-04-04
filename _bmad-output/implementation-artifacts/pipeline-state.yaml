@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
 parallelism_step: 1
-parallelism_step_name: "Director + Actor (parallel build)"
-baseline_commit: "3004fca895ac6758b32fff616ec62a6fd22bfbe8"
+parallelism_step_name: "Pipeline Integration"
+baseline_commit: "9538bc92b7a3452168871f7e83279259015914ff"
 created: "2026-04-04"
-last_updated: "2026-04-04T16:00:00Z"
+last_updated: "2026-04-04T22:00:00Z"
 
 # Optional context documents discovered
 context_docs:
@@ -14,32 +14,19 @@ context_docs:
 
 # Stories in this step
 stories:
-  43-3-nerin-director-repository-prompt-and-langchain-implementation:
+  43-5-pipeline-orchestrator-rewrite-4-step-sequential-pipeline:
     status: done
-    mode: "parallel"
-    notes: "Depends on 43-1 (done) — writes to director_output column"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/201"
-    dev_branch: "feat/story-43-3-nerin-director-repository-prompt-and-langchain-implementation"
-    error: null
-  43-4-nerin-actor-persona-rewrite-prompt-and-repository-adaptation:
-    status: done
-    mode: "parallel"
-    notes: "Independent of 43-3 — rename + rewrite existing files"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/202"
-    dev_branch: "feat/story-43-4-nerin-actor-persona-rewrite-prompt-and-repository-adaptation"
+    mode: "single"
+    notes: "Wires 43-1 + 43-2 + 43-3 + 43-4 together — all dependencies now done"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/203"
+    dev_branch: "feat/story-43-5-pipeline-orchestrator-rewrite-4-step-sequential-pipeline"
     error: null
 
 # Conflict detection (populated by step-02b)
 conflicts:
-  detected: true
+  detected: false
+  note: "Single branch — no overlap possible"
   scanned_branches:
-    - "feat/story-43-3-nerin-director-repository-prompt-and-langchain-implementation"
-    - "feat/story-43-4-nerin-actor-persona-rewrite-prompt-and-repository-adaptation"
+    - "feat/story-43-5-pipeline-orchestrator-rewrite-4-step-sequential-pipeline"
   skipped_branches: []
-  overlapping_files:
-    - file: "packages/domain/src/index.ts"
-      risk: low
-      branches:
-        - "feat/story-43-3-nerin-director-repository-prompt-and-langchain-implementation"
-        - "feat/story-43-4-nerin-actor-persona-rewrite-prompt-and-repository-adaptation"
-  note: "Only overlap is a barrel export file — each branch adds different exports, typically auto-resolvable"
+  overlapping_files: []
