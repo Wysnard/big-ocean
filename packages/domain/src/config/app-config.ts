@@ -140,6 +140,20 @@ export interface AppConfigService {
 
 	/** Per-session LLM cost limit in cents (default: 2000 = $0.20, matching NFR6) */
 	readonly sessionCostLimitCents: number;
+
+	// ─── Nerin Director Configuration (Story 43-3) ─────────────────────
+
+	/** Nerin Director model ID (default: Sonnet — Haiku as latency fallback) */
+	readonly nerinDirectorModelId: string;
+
+	/** Nerin Director max tokens per request */
+	readonly nerinDirectorMaxTokens: number;
+
+	/** Nerin Director temperature (0-1) */
+	readonly nerinDirectorTemperature: number;
+
+	/** Nerin Director retry temperature — different temperature on retry (ADR-DM-4) */
+	readonly nerinDirectorRetryTemperature: number;
 }
 
 /**

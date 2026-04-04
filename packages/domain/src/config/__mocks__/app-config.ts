@@ -56,6 +56,11 @@ export const mockAppConfig: AppConfigService = {
 	recaptureThresholdDays: 3,
 	// Cost Guard (Story 31-6)
 	sessionCostLimitCents: 2000,
+	// Nerin Director (Story 43-3)
+	nerinDirectorModelId: "claude-sonnet-4-20250514",
+	nerinDirectorMaxTokens: 1024,
+	nerinDirectorTemperature: 0.7,
+	nerinDirectorRetryTemperature: 0.9,
 };
 
 export const createTestAppConfigLayer = () => Layer.succeed(AppConfig, mockAppConfig);
