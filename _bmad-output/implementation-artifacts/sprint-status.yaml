@@ -746,7 +746,7 @@ development_status:
   43-3-nerin-director-repository-prompt-and-langchain-implementation: done
   43-4-nerin-actor-persona-rewrite-prompt-and-repository-adaptation: done
   43-5-pipeline-orchestrator-rewrite-4-step-sequential-pipeline: done
-  43-6-conversanalyzer-cleanup-strip-user-state-extraction: backlog
+  43-6-conversanalyzer-cleanup-strip-user-state-extraction: pr-ready
   epic-43-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
