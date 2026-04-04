@@ -119,14 +119,8 @@ describe("sendMessage Use Case", () => {
 					expect(assistantSaveCall).toBeDefined();
 					expect(assistantSaveCall?.[3]).toBeDefined(); // new exchangeId
 
-					// Exchange should be updated with territory selection
-					expect(mockExchangeRepo.update).toHaveBeenCalledWith(
-						expect.any(String),
-						expect.objectContaining({
-							selectedTerritory: expect.any(String),
-							selectionRule: expect.any(String),
-						}),
-					);
+					// Story 43-1: Exchange update now only stores extraction tier (steering columns removed)
+					expect(mockExchangeRepo.update).toHaveBeenCalled();
 				}).pipe(Effect.provide(createTestLayer())),
 		);
 

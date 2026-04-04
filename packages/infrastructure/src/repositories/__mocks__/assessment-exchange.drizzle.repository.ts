@@ -3,7 +3,7 @@
  * Vitest auto-resolves when tests call:
  *   vi.mock('@workspace/infrastructure/repositories/assessment-exchange.drizzle.repository')
  *
- * Story 23-3: Exchange Table & Schema Migration
+ * Story 43-1: Updated for Director model schema (director_output, coverage_targets).
  */
 import { AssessmentExchangeRepository } from "@workspace/domain";
 import type {
@@ -27,25 +27,9 @@ export const AssessmentExchangeDrizzleRepositoryLive = Layer.succeed(
 					id,
 					sessionId,
 					turnNumber,
-					energy: null,
-					energyBand: null,
-					telling: null,
-					tellingBand: null,
-					withinMessageShift: null,
-					stateNotes: null,
 					extractionTier: null,
-					smoothedEnergy: null,
-					sessionTrust: null,
-					drain: null,
-					trustCap: null,
-					eTarget: null,
-					scorerOutput: null,
-					selectedTerritory: null,
-					selectionRule: null,
-					governorOutput: null,
-					governorDebug: null,
-					sessionPhase: null,
-					transitionType: null,
+					directorOutput: null,
+					coverageTargets: null,
 					createdAt: new Date(),
 				};
 				const existing = exchanges.get(sessionId) || [];

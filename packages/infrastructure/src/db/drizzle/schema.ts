@@ -31,7 +31,6 @@ import {
 	jsonb,
 	pgEnum,
 	pgTable,
-	real,
 	smallint,
 	text,
 	timestamp,
@@ -194,11 +193,12 @@ export const assessmentSession = pgTable(
 /**
  * Assessment Exchange
  *
- * One row per conversation turn, storing all pipeline state:
- * extraction metrics, pacing values, scorer output, territory selection,
- * governor output/debug, and derived annotations.
+ * One row per conversation turn, storing Director model pipeline state:
+ * extraction tier, creative director brief, and coverage analysis targets.
  *
- * This is the single source of truth for pipeline replay / derive-at-read.
+ * Story 43-1: Replaced ~18 pacing/scoring/governor columns with Director model columns.
+ * Kept: id, session_id, turn_number, extraction_tier, created_at.
+ * Added: director_output (text), coverage_targets (jsonb).
  */
 export const assessmentExchange = pgTable(
 	"assessment_exchange",
@@ -210,35 +210,11 @@ export const assessmentExchange = pgTable(
 		turnNumber: smallint("turn_number").notNull(),
 
 		// Extraction
-		energy: real("energy"),
-		energyBand: text("energy_band"),
-		telling: real("telling"),
-		tellingBand: text("telling_band"),
-		withinMessageShift: boolean("within_message_shift"),
-		stateNotes: jsonb("state_notes"),
 		extractionTier: smallint("extraction_tier"),
 
-		// Pacing
-		smoothedEnergy: real("smoothed_energy"),
-		sessionTrust: real("session_trust"),
-		drain: real("drain"),
-		trustCap: real("trust_cap"),
-		eTarget: real("e_target"),
-
-		// Scoring
-		scorerOutput: jsonb("scorer_output"),
-
-		// Selection
-		selectedTerritory: text("selected_territory"),
-		selectionRule: text("selection_rule"),
-
-		// Governor
-		governorOutput: jsonb("governor_output"),
-		governorDebug: jsonb("governor_debug"),
-
-		// Derived
-		sessionPhase: text("session_phase"),
-		transitionType: text("transition_type"),
+		// Director model
+		directorOutput: text("director_output"),
+		coverageTargets: jsonb("coverage_targets"),
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},

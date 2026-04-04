@@ -12,10 +12,8 @@ import {
 	AppConfig,
 	AssessmentExchangeRepository,
 	AssessmentSessionRepository,
-	getTerritoryById,
 	LoggerRepository,
 	ResendEmailRepository,
-	type TerritoryId,
 } from "@workspace/domain";
 import { renderCheckInEmail } from "@workspace/infrastructure/email-templates/nerin-check-in";
 import { Effect } from "effect";
@@ -58,24 +56,13 @@ export const checkCheckIn = Effect.gen(function* () {
 		);
 
 		// Look up last territory from assessment exchanges
-		const exchanges = yield* exchangeRepo
+		const _exchanges = yield* exchangeRepo
 			.findBySession(session.sessionId)
 			.pipe(Effect.catchAll(() => Effect.succeed([] as Array<{ selectedTerritory: string | null }>)));
 
-		let territoryDescription = "your personality";
-		if (exchanges.length > 0) {
-			// Find the last exchange with a selected territory
-			for (let i = exchanges.length - 1; i >= 0; i--) {
-				const exchange = exchanges[i];
-				if (exchange?.selectedTerritory) {
-					const territory = getTerritoryById(exchange.selectedTerritory as TerritoryId);
-					if (territory) {
-						territoryDescription = territory.descriptionYou;
-					}
-					break;
-				}
-			}
-		}
+		// Story 43-1: selectedTerritory removed from exchange table.
+		// Territory description for check-in email defaults to generic.
+		const territoryDescription = "your personality";
 
 		const resultsUrl = `${config.frontendUrl}/results`;
 

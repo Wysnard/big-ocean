@@ -12,10 +12,8 @@ import {
 	AppConfig,
 	AssessmentExchangeRepository,
 	AssessmentSessionRepository,
-	getTerritoryById,
 	LoggerRepository,
 	ResendEmailRepository,
-	type TerritoryId,
 } from "@workspace/domain";
 import { renderDropOffEmail } from "@workspace/infrastructure/email-templates/drop-off-re-engagement";
 import { Effect } from "effect";
@@ -56,24 +54,13 @@ export const checkDropOff = Effect.gen(function* () {
 		);
 
 		// Look up last territory from assessment exchanges
-		const exchanges = yield* exchangeRepo
+		const _exchanges = yield* exchangeRepo
 			.findBySession(session.sessionId)
-			.pipe(Effect.catchAll(() => Effect.succeed([] as Array<{ selectedTerritory: string | null }>)));
+			.pipe(Effect.catchAll(() => Effect.succeed([])));
 
-		let territoryName = "your personality";
-		if (exchanges.length > 0) {
-			// Find the last exchange with a selected territory
-			for (let i = exchanges.length - 1; i >= 0; i--) {
-				const exchange = exchanges[i];
-				if (exchange?.selectedTerritory) {
-					const territory = getTerritoryById(exchange.selectedTerritory as TerritoryId);
-					if (territory) {
-						territoryName = territory.name;
-					}
-					break;
-				}
-			}
-		}
+		// Story 43-1: selectedTerritory removed from exchange table.
+		// Territory name for drop-off email defaults to generic.
+		const territoryName = "your personality";
 
 		const resumeUrl = `${config.frontendUrl}/chat?sessionId=${session.sessionId}`;
 

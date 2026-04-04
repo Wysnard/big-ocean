@@ -2,53 +2,22 @@
  * Assessment Exchange Repository Interface
  *
  * Pure data access layer for assessment_exchange table.
- * One row per conversation turn, storing all pipeline state.
+ * One row per conversation turn, storing Director model pipeline state.
  *
- * Story 23-3: Exchange Table & Schema Migration
+ * Story 43-1: Replaced pacing/scoring/governor fields with Director model fields.
  */
 import { Context, Effect } from "effect";
 import { DatabaseError } from "../errors/http.errors";
-import type {
-	EnergyBand,
-	ExtractionTier,
-	SelectionRule,
-	SessionPhase,
-	TellingBand,
-	TransitionType,
-} from "../types/pacing-pipeline.types";
+import type { ExtractionTier } from "../types/pacing-pipeline.types";
 
 /** Partial update data for an exchange row */
 export interface AssessmentExchangeUpdateInput {
 	// Extraction
-	readonly energy?: number;
-	readonly energyBand?: EnergyBand;
-	readonly telling?: number;
-	readonly tellingBand?: TellingBand;
-	readonly withinMessageShift?: boolean;
-	readonly stateNotes?: unknown;
 	readonly extractionTier?: ExtractionTier;
 
-	// Pacing
-	readonly smoothedEnergy?: number;
-	readonly sessionTrust?: number;
-	readonly drain?: number;
-	readonly trustCap?: number;
-	readonly eTarget?: number;
-
-	// Scoring
-	readonly scorerOutput?: unknown;
-
-	// Selection
-	readonly selectedTerritory?: string;
-	readonly selectionRule?: SelectionRule;
-
-	// Governor
-	readonly governorOutput?: unknown;
-	readonly governorDebug?: unknown;
-
-	// Derived
-	readonly sessionPhase?: SessionPhase;
-	readonly transitionType?: TransitionType;
+	// Director model
+	readonly directorOutput?: string;
+	readonly coverageTargets?: unknown;
 }
 
 /** Full DB row returned from queries */
@@ -58,35 +27,11 @@ export interface AssessmentExchangeRecord {
 	readonly turnNumber: number;
 
 	// Extraction
-	readonly energy: number | null;
-	readonly energyBand: string | null;
-	readonly telling: number | null;
-	readonly tellingBand: string | null;
-	readonly withinMessageShift: boolean | null;
-	readonly stateNotes: unknown;
 	readonly extractionTier: number | null;
 
-	// Pacing
-	readonly smoothedEnergy: number | null;
-	readonly sessionTrust: number | null;
-	readonly drain: number | null;
-	readonly trustCap: number | null;
-	readonly eTarget: number | null;
-
-	// Scoring
-	readonly scorerOutput: unknown;
-
-	// Selection
-	readonly selectedTerritory: string | null;
-	readonly selectionRule: string | null;
-
-	// Governor
-	readonly governorOutput: unknown;
-	readonly governorDebug: unknown;
-
-	// Derived
-	readonly sessionPhase: string | null;
-	readonly transitionType: string | null;
+	// Director model
+	readonly directorOutput: string | null;
+	readonly coverageTargets: unknown;
 
 	readonly createdAt: Date;
 }
