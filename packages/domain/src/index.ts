@@ -499,6 +499,13 @@ export type { BigFiveTrait, TraitConfidenceScores } from "./types/trait";
 export { BIG_FIVE_TRAITS } from "./types/trait";
 // Polarity deviation adapter (Story 42-1)
 export { adaptExtractedEvidence } from "./utils/adapt-extracted-evidence";
+// Coverage analyzer — evidence-to-target pure function (Story 43-2)
+export {
+	analyzeCoverage,
+	type CoverageTarget,
+	type CoverageTargetWithDefinitions,
+	enrichWithDefinitions,
+} from "./utils/coverage-analyzer";
 // Date utilities for cost tracking and rate limiting
 export { getNextDayMidnightUTC, getUTCDateKey } from "./utils/date.utils";
 export { deriveDeviation } from "./utils/derive-deviation";
