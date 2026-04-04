@@ -519,10 +519,12 @@ describe("common layer word budget", () => {
 		const steeringStart = result.systemPrompt.indexOf(STEERING_PREFIX);
 		const commonLayer = result.systemPrompt.slice(0, steeringStart);
 		const wordCount = commonLayer.split(/\s+/).filter((w) => w.length > 0).length;
-		// Budget: common layer (persona + 14 modules) should stay within 1,500-2,500 words
+		// Budget: common layer (persona + 14 modules) should stay within 1,500-2,600 words
 		// to keep LLM context costs reasonable. Current: ~2,500 words.
+		// Story 43-4: NERIN_PERSONA rewrite absorbed Big Ocean/Vincent grounding from ORIGIN_STORY,
+		// adding ~20 words to persona. Slight budget increase.
 		expect(wordCount).toBeGreaterThanOrEqual(1500);
-		expect(wordCount).toBeLessThanOrEqual(2500);
+		expect(wordCount).toBeLessThanOrEqual(2600);
 	});
 });
 

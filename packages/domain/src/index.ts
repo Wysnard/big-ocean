@@ -77,6 +77,12 @@ export {
 	STORY_PULLING,
 	THREADING_COMMON,
 } from "./constants/nerin/index";
+// Nerin Actor prompt (Story 43-4, ADR-DM-3)
+export {
+	ACTOR_BRIEF_FRAMING,
+	ACTOR_VOICE_RULES,
+	buildActorPrompt,
+} from "./constants/nerin-actor-prompt";
 // Nerin Director prompts (Story 43-3)
 export { NERIN_DIRECTOR_CLOSING_PROMPT } from "./constants/nerin-director-closing-prompt";
 export {
@@ -94,7 +100,7 @@ export {
 	OPENING_QUESTIONS,
 	pickOpeningQuestion,
 } from "./constants/nerin-greeting";
-// Nerin persona constant (Story 2.12)
+// Nerin persona constant (Story 2.12, rewritten Story 43-4)
 export { NERIN_PERSONA } from "./constants/nerin-persona";
 // Ocean Hieroglyph normalized path strings (for flubber SVG morphing)
 export { OCEAN_HIEROGLYPH_PATHS } from "./constants/ocean-hieroglyph-paths";
@@ -218,6 +224,12 @@ export {
 	type LoggerMethods,
 	LoggerRepository,
 } from "./repositories/logger.repository";
+export {
+	type NerinActorInvokeInput,
+	type NerinActorInvokeOutput,
+	NerinActorRepository,
+} from "./repositories/nerin-actor.repository";
+// Backward compat re-exports (consumers migrating in Story 43-5)
 export {
 	NerinAgentRepository,
 	type NerinInvokeInput,

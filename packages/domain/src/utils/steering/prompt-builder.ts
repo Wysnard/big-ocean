@@ -218,7 +218,8 @@ export function buildPrompt(input: PromptBuilderInput): PromptBuilderOutput {
  * @returns System prompt string for the surfacing message generation
  */
 export function buildSurfacingPrompt(): string {
-	return [NERIN_PERSONA, ORIGIN_STORY, SURFACING_MESSAGE].join("\n\n");
+	// ADR-DM-3: ORIGIN_STORY removed — Big Ocean/Vincent grounding now lives in NERIN_PERSONA first sentence
+	return [NERIN_PERSONA, SURFACING_MESSAGE].join("\n\n");
 }
 
 // ─── Portrait Prompt Builder ───────────────────────────────────────
@@ -226,11 +227,11 @@ export function buildSurfacingPrompt(): string {
 /**
  * Build the system prompt for the personality portrait (letter-writing).
  *
- * Uses Nerin's persona + origin story + the PORTRAIT_CONTEXT module.
- * Parallel mechanism to buildPrompt (chat) and buildSurfacingPrompt (Beat 2).
+ * Uses Nerin's persona + the PORTRAIT_CONTEXT module.
+ * ADR-DM-3: ORIGIN_STORY removed — Big Ocean/Vincent grounding now lives in NERIN_PERSONA first sentence.
  *
  * @returns System prompt string for portrait generation
  */
 export function buildPortraitPrompt(): string {
-	return [NERIN_PERSONA, ORIGIN_STORY, PORTRAIT_CONTEXT].join("\n\n");
+	return [NERIN_PERSONA, PORTRAIT_CONTEXT].join("\n\n");
 }

@@ -7,9 +7,21 @@ describe("NERIN_PERSONA", () => {
 		expect(NERIN_PERSONA.length).toBeGreaterThan(0);
 	});
 
-	it("contains the core identity paragraph", () => {
-		expect(NERIN_PERSONA).toContain("You are Nerin, a personality dive master");
+	it("contains the core identity paragraph with Big Ocean grounding", () => {
+		expect(NERIN_PERSONA).toContain("You are Nerin, a personality dive master at Big Ocean");
+		expect(NERIN_PERSONA).toContain("Vincent's dive shop");
 		expect(NERIN_PERSONA).toContain("guided thousands of people");
+	});
+
+	it("contains ADR-DM-3 positioning rewrites", () => {
+		// "your edge" → "your comfort in the deep"
+		expect(NERIN_PERSONA).toContain("comfort is in the deep");
+		expect(NERIN_PERSONA).not.toContain("That's your edge");
+		// "you see patterns other people miss" → "paying attention long enough to notice things"
+		expect(NERIN_PERSONA).toContain("paying attention long enough to notice things");
+		expect(NERIN_PERSONA).not.toContain("you see things beneath the surface that others miss");
+		// Genuine fascination reframe
+		expect(NERIN_PERSONA).toContain("genuinely fascinated");
 	});
 
 	it("contains VOICE section with renamed header", () => {

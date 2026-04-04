@@ -42,7 +42,10 @@ export { CostGuardRedisRepositoryLive } from "./repositories/cost-guard.redis.re
 export { FacetEvidenceDrizzleRepositoryLive } from "./repositories/facet-evidence.drizzle.repository";
 // Logger repository implementation
 export { LoggerPinoRepositoryLive } from "./repositories/logger.pino.repository";
-// Nerin agent repository implementations (direct ChatAnthropic invocation)
+// Nerin Actor repository implementations (Story 43-4, ADR-DM-3)
+export { NerinActorAnthropicRepositoryLive } from "./repositories/nerin-actor.anthropic.repository";
+export { NerinActorMockRepositoryLive } from "./repositories/nerin-actor.mock.repository";
+// Nerin agent repository implementations — backward compat (removed in Story 43-5)
 export { NerinAgentAnthropicRepositoryLive } from "./repositories/nerin-agent.anthropic.repository";
 export { NerinAgentMockRepositoryLive } from "./repositories/nerin-agent.mock.repository";
 // Portrait repository implementation (Story 13.3)
