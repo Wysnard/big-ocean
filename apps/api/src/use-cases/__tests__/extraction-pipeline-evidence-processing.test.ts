@@ -326,14 +326,10 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
 				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 
-				// The extraction result was used to update the previous exchange with energy/telling
+				// Story 43-1: energy/telling fields removed from exchange table.
+				// Only extractionTier is persisted on the exchange now.
 				const extractionUpdate = mockExchangeRepo.update.mock.calls[0]?.[1];
-				// userState fields mapped to exchange
-				expect(extractionUpdate).toHaveProperty("energy");
-				expect(extractionUpdate).toHaveProperty("energyBand", "high");
-				expect(extractionUpdate).toHaveProperty("telling");
-				expect(extractionUpdate).toHaveProperty("tellingBand", "mostly_compliant");
-				expect(extractionUpdate).toHaveProperty("withinMessageShift", true);
+				expect(extractionUpdate).toBeDefined();
 
 				// evidence was saved separately
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
