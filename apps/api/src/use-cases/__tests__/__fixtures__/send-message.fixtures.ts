@@ -60,8 +60,6 @@ export const mockActorRepo = {
 };
 
 export const mockConversanalyzerRepo = {
-	analyzeUserState: vi.fn(),
-	analyzeUserStateLenient: vi.fn(),
 	analyzeEvidence: vi.fn(),
 	analyzeEvidenceLenient: vi.fn(),
 };
@@ -197,13 +195,6 @@ export const mockActorResponse = {
 };
 
 export const mockConversanalyzerOutput = {
-	userState: {
-		energyBand: "steady" as const,
-		tellingBand: "mixed" as const,
-		energyReason: "Engaged with moderate self-reflection",
-		tellingReason: "Follows prompts with some self-direction",
-		withinMessageShift: false,
-	},
 	evidence: [
 		{
 			bigfiveFacet: "imagination" as const,
@@ -337,18 +328,6 @@ export function setupDefaultMocks() {
 	mockDirectorRepo.generateBrief.mockReturnValue(Effect.succeed(mockDirectorResponse));
 	mockActorRepo.invoke.mockReturnValue(Effect.succeed(mockActorResponse));
 
-	mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
-		Effect.succeed({
-			userState: mockConversanalyzerOutput.userState,
-			tokenUsage: { input: 100, output: 25 },
-		}),
-	);
-	mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(
-		Effect.succeed({
-			userState: mockConversanalyzerOutput.userState,
-			tokenUsage: { input: 100, output: 25 },
-		}),
-	);
 	mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
 		Effect.succeed({
 			evidence: mockConversanalyzerOutput.evidence,

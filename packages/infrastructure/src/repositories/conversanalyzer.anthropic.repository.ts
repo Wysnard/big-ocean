@@ -1,10 +1,10 @@
 /**
  * Conversanalyzer Anthropic Repository Implementation
  *
- * Two separate Haiku calls — user state + evidence independently.
- * Each call has its own prompt, structured output schema, and three-tier fallback.
+ * Evidence-only Haiku call for personality evidence extraction.
+ * User-state extraction removed in Story 43-6 (Director reads energy/telling natively).
  *
- * Story 10.2 (v1), Story 24-1 (v2 evolution), Story 42-2 (split calls)
+ * Story 10.2 (v1), Story 24-1 (v2 evolution), Story 42-2 (split calls), Story 43-6 (strip user-state)
  */
 
 import { ChatAnthropic } from "@langchain/anthropic";
@@ -17,89 +17,16 @@ import {
 	ConversanalyzerRepository,
 	decodeEvidenceLenient,
 	decodeEvidenceStrict,
-	decodeUserStateLenient,
-	decodeUserStateStrict,
 	EvidenceItemSchema,
 	evidenceOnlyJsonSchema,
 	LIFE_DOMAIN_DEFINITIONS,
 	LoggerRepository,
-	userStateOnlyJsonSchema,
 } from "@workspace/domain";
 import { Effect, Either, Layer } from "effect";
 import * as ParseResult from "effect/ParseResult";
 import * as S from "effect/Schema";
 
 // ─── Prompts ─────────────────────────────────────────────────────────────────
-
-/** @internal Exported for testing — user state extraction prompt */
-export function buildUserStatePrompt(input: ConversanalyzerInput): string {
-	const recentText = input.recentMessages.map((m) => `[${m.role}]: ${m.content}`).join("\n");
-
-	return `You are a conversational state extractor. Classify the user's conversational state along two independent axes based on the LATEST USER MESSAGE below.
-
-### Conversation Context (for reference only)
-${recentText}
-
-### Latest User Message (analyze THIS)
-[user]: ${input.message}
-
-### Energy Band — How much emotional/cognitive resource is the user investing?
-
-Rate the user's energy using FOUR observable dimensions:
-1. **Emotional activation** — vulnerability, personal stakes, affect in language
-2. **Cognitive investment** — depth of reflection, nuance, self-analysis
-3. **Expressive investment** — care in word choice, metaphor, rhetorical structure
-4. **Activation/urgency** — forward lean, eagerness, momentum
-
-Energy bands (classify ONE):
-- **minimal** (0.1): Disengaged or perfunctory. Single-word answers, no personal content.
-  Example: "Yeah" / "I guess so" / "Not really"
-- **low** (0.3): Present but reserved. Surface-level sharing, low emotional weight.
-  Example: "I like cooking on weekends, mostly simple stuff"
-- **steady** (0.5): Engaged and reflective. Sharing opinions, moderate self-reflection.
-  Example: "I've been thinking about changing careers — it's exciting but scary"
-- **high** (0.7): Deeply invested. Rich self-disclosure, vulnerability, or passion.
-  Example: "When my mentor believed in me before I believed in myself, it changed everything about how I approach failure"
-- **very_high** (0.9): Peak engagement. Profound vulnerability, formative experiences, or breakthrough insight.
-  Example: "I realized I'd been running from intimacy my whole life because I watched my parents destroy each other"
-
-### SIX LOAD-BEARING GUARDRAILS (apply to every classification)
-
-1. **Eloquence is not energy.** A beautifully written message about breakfast is still low energy. Rate the EMOTIONAL/COGNITIVE investment, not writing quality.
-
-2. **Sophistication is not cognitive investment.** An intellectually complex explanation of a hobby can be low-energy if it's well-rehearsed and emotionally distant. Look for active reflection, not passive expertise.
-
-3. **Peak dimension, not average.** If ANY one dimension (emotional, cognitive, expressive, urgency) is strongly present, that is sufficient for high energy. Don't average the four dimensions — one high signal dominates.
-
-4. **Understated styles are not low energy.** A quiet person sharing something deeply personal in few words can be very_high energy. Brevity does not equal disengagement. Look at WHAT they reveal, not HOW MANY words they use.
-
-5. **Long detailed answer is not high telling.** Length correlates with engagement, not self-direction. A long answer that directly addresses Nerin's question is still compliant. Telling measures WHO is steering the conversation.
-
-6. **Diagonal examples are mandatory.** Consider:
-   - HIGH energy + LOW telling: Deeply personal confession directly answering Nerin's question (invested but following the lead)
-   - LOW energy + HIGH telling: User changes topic to something they prefer but shares only surface-level info (steering but not investing)
-
-### Telling Band — Is the user following Nerin's lead or directing the conversation?
-
-Rate along this spectrum:
-- **fully_compliant** (0.0): Direct answer to Nerin's question with no additions.
-  [Nerin]: "What's your morning like?" → [User]: "I wake up at 7, have coffee, go to work"
-- **mostly_compliant** (0.25): Answers the question with small tangential additions.
-  [Nerin]: "What's your morning like?" → [User]: "I wake up early. Actually, I've always been a morning person — I think I get it from my dad"
-- **mixed** (0.5): Addresses the question but steers toward own interests.
-  [Nerin]: "What's your morning like?" → [User]: "Mornings are fine, but what I really want to talk about is how my sleep patterns changed after the breakup"
-- **mostly_self_propelled** (0.75): Briefly acknowledges question, then drives own direction.
-  [Nerin]: "What's your morning like?" → [User]: "Sure, mornings. But honestly I've been obsessing over this idea for a startup and I need to think it through"
-- **strongly_self_propelled** (1.0): Ignores or overrides Nerin's direction entirely.
-  [Nerin]: "What's your morning like?" → [User]: "I don't want to talk about routines. Let me tell you about the argument I had with my sister"
-
-### Output
-- energyBand: one of the 5 bands above
-- tellingBand: one of the 5 bands above
-- energyReason: brief explanation (max 200 chars) of why you chose this energy band
-- tellingReason: brief explanation (max 200 chars) of why you chose this telling band
-- withinMessageShift: true if the user's energy noticeably shifts within the message (e.g., starts casual, ends vulnerable)`;
-}
 
 /** @internal Exported for testing — v3 evidence extraction with per-facet conversational anchors (Story 42-3) */
 export function buildEvidencePrompt(input: ConversanalyzerInput): string {
@@ -329,9 +256,6 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 			temperature: 0.9,
 		});
 
-		const userStateModel = baseModel.withStructuredOutput(userStateOnlyJsonSchema, {
-			includeRaw: true,
-		});
 		const evidenceModel = baseModel.withStructuredOutput(evidenceOnlyJsonSchema, {
 			includeRaw: true,
 		});
@@ -341,81 +265,6 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 		});
 
 		return ConversanalyzerRepository.of({
-			analyzeUserState: (input: ConversanalyzerInput) =>
-				Effect.tryPromise({
-					try: async () => {
-						const prompt = buildUserStatePrompt(input);
-						const invokeResult = await userStateModel.invoke([new HumanMessage(prompt)]);
-
-						let parsed: ReturnType<typeof decodeUserStateStrict>;
-						try {
-							parsed = decodeUserStateStrict(invokeResult.parsed);
-						} catch (parseError) {
-							const formattedError = ParseResult.isParseError(parseError)
-								? ParseResult.TreeFormatter.formatErrorSync(parseError)
-								: String(parseError);
-							logger.warn("ConversAnalyzeruser state strict decode failed", {
-								error: formattedError,
-								rawOutput: JSON.stringify(invokeResult.parsed).slice(0, 2000),
-							});
-							throw parseError;
-						}
-
-						const usageMeta = (invokeResult.raw as AIMessage)?.usage_metadata;
-						const tokenUsage = {
-							input: usageMeta?.input_tokens ?? 0,
-							output: usageMeta?.output_tokens ?? 0,
-						};
-
-						logger.info("ConversAnalyzeruser state strict extraction complete", {
-							energyBand: parsed.energyBand,
-							tellingBand: parsed.tellingBand,
-							tokenUsage,
-						});
-
-						return {
-							userState: parsed,
-							tokenUsage,
-						};
-					},
-					catch: (error) =>
-						new ConversanalyzerError({
-							message: error instanceof Error ? error.message : "ConversAnalyzer user state strict failed",
-						}),
-				}),
-
-			analyzeUserStateLenient: (input: ConversanalyzerInput) =>
-				Effect.tryPromise({
-					try: async () => {
-						const prompt = buildUserStatePrompt(input);
-						const invokeResult = await userStateModel.invoke([new HumanMessage(prompt)]);
-
-						const parsed = decodeUserStateLenient(invokeResult.parsed);
-
-						const usageMeta = (invokeResult.raw as AIMessage)?.usage_metadata;
-						const tokenUsage = {
-							input: usageMeta?.input_tokens ?? 0,
-							output: usageMeta?.output_tokens ?? 0,
-						};
-
-						logger.info("ConversAnalyzeruser state lenient extraction complete", {
-							energyBand: parsed.energyBand,
-							tellingBand: parsed.tellingBand,
-							tokenUsage,
-						});
-
-						return {
-							userState: parsed,
-							tokenUsage,
-						};
-					},
-					catch: (error) =>
-						new ConversanalyzerError({
-							message:
-								error instanceof Error ? error.message : "ConversAnalyzer user state lenient failed",
-						}),
-				}),
-
 			analyzeEvidence: (input: ConversanalyzerInput) =>
 				Effect.tryPromise({
 					try: async () => {

@@ -44,8 +44,7 @@ describe("sendMessage Use Case", () => {
 				});
 
 				expect(result.response).toBeDefined();
-				// Split extraction: both methods called
-				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
+				// Evidence extraction called
 				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
 			}).pipe(Effect.provide(createTestLayer())),
@@ -62,8 +61,7 @@ describe("sendMessage Use Case", () => {
 					message: "Hello",
 				});
 
-				// ConversAnalyzer split methods should be called even during cold start
-				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
+				// ConversAnalyzer evidence extraction should be called even during cold start
 				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
@@ -88,7 +86,6 @@ describe("sendMessage Use Case", () => {
 					message: "More",
 				});
 
-				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
 				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
@@ -99,9 +96,6 @@ describe("sendMessage Use Case", () => {
 				Effect.gen(function* () {
 					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 					// Fail strict calls — lenient methods succeed from default setup
-					mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
-						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-					);
 					mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
 						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
 					);
@@ -208,18 +202,6 @@ describe("sendMessage Use Case", () => {
 		it.effect("should skip save when conversanalyzer returns empty evidence (AC: #3)", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
-					Effect.succeed({
-						userState: {
-							energyBand: "low" as const,
-							tellingBand: "mixed" as const,
-							energyReason: "",
-							tellingReason: "",
-							withinMessageShift: false,
-						},
-						tokenUsage: { input: 100, output: 20 },
-					}),
-				);
 				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
 					Effect.succeed({
 						evidence: [],
@@ -233,7 +215,6 @@ describe("sendMessage Use Case", () => {
 				});
 
 				expect(result.response).toBeDefined();
-				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
 				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 				expect(mockEvidenceRepo.save).not.toHaveBeenCalled();
 			}).pipe(Effect.provide(createTestLayer())),
@@ -273,9 +254,9 @@ describe("sendMessage Use Case", () => {
 					message: "I work in tech",
 				});
 
-				// Both split methods receive correct domain distribution
-				const userStateCall = mockConversanalyzerRepo.analyzeUserState.mock.calls[0][0];
-				expect(userStateCall.domainDistribution).toEqual({
+				// Evidence extraction receives correct domain distribution
+				const evidenceCall = mockConversanalyzerRepo.analyzeEvidence.mock.calls[0][0];
+				expect(evidenceCall.domainDistribution).toEqual({
 					work: 2,
 					relationships: 0,
 					family: 0,

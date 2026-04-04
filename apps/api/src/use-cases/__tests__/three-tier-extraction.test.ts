@@ -1,11 +1,12 @@
 /**
- * Three-Tier Extraction Pipeline Tests (Story 24-2, Story 42-2)
+ * Three-Tier Extraction Pipeline Tests (Story 24-2, Story 42-2, Story 43-6)
  *
- * Tests the split three-tier ConversAnalyzer extraction strategy:
- * - Two parallel calls (user state + evidence), each with:
- *   Tier 1: strict schema with retry (3 attempts)
- *   Tier 2: lenient schema (1 attempt)
- *   Tier 3: neutral defaults (no LLM call)
+ * Tests the evidence-only three-tier ConversAnalyzer extraction strategy:
+ * - Tier 1: strict schema with retry (3 attempts)
+ * - Tier 2: lenient schema (1 attempt)
+ * - Tier 3: neutral defaults (no LLM call)
+ *
+ * User-state extraction removed in Story 43-6 — Director reads energy/telling natively.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "@effect/vitest";
@@ -13,18 +14,15 @@ import {
 	ConversanalyzerError,
 	type ConversanalyzerEvidenceOutput,
 	ConversanalyzerRepository,
-	type ConversanalyzerUserStateOutput,
 	LoggerRepository,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 import type { ThreeTierExtractionInput } from "../three-tier-extraction";
-import { runSplitThreeTierExtraction } from "../three-tier-extraction";
+import { runThreeTierExtraction } from "../three-tier-extraction";
 
 // ---- Mock Repos ----
 
 const mockConversanalyzerRepo = {
-	analyzeUserState: vi.fn(),
-	analyzeUserStateLenient: vi.fn(),
 	analyzeEvidence: vi.fn(),
 	analyzeEvidenceLenient: vi.fn(),
 };
@@ -54,17 +52,6 @@ const testInput: ThreeTierExtractionInput = {
 	domainDistribution: { work: 2, relationships: 1, leisure: 0, self: 0, growth: 0, health: 0 },
 };
 
-const successfulUserState: ConversanalyzerUserStateOutput = {
-	userState: {
-		energyBand: "high",
-		tellingBand: "mostly_compliant",
-		energyReason: "User shows enthusiasm",
-		tellingReason: "Sharing personal work experience",
-		withinMessageShift: false,
-	},
-	tokenUsage: { input: 100, output: 25 },
-};
-
 const successfulEvidence: ConversanalyzerEvidenceOutput = {
 	evidence: [
 		{
@@ -81,7 +68,7 @@ const successfulEvidence: ConversanalyzerEvidenceOutput = {
 
 const conversanalyzerError = new ConversanalyzerError({ message: "LLM call failed" });
 
-describe("Split Three-Tier Extraction Pipeline (Story 42-2)", () => {
+describe("Three-Tier Extraction Pipeline (Story 43-6 — evidence-only)", () => {
 	beforeEach(() => {
 		mockLoggerRepo.info.mockImplementation(() => {});
 		mockLoggerRepo.error.mockImplementation(() => {});
@@ -93,78 +80,47 @@ describe("Split Three-Tier Extraction Pipeline (Story 42-2)", () => {
 		vi.clearAllMocks();
 	});
 
-	describe("Both calls succeed at Tier 1", () => {
-		it.effect("happy path: both extractions succeed -> extractionTier = 1", () =>
+	describe("Tier 1: strict succeeds", () => {
+		it.effect("happy path: evidence extraction succeeds -> extractionTier = 1", () =>
 			Effect.gen(function* () {
-				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(Effect.succeed(successfulUserState));
 				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(Effect.succeed(successfulEvidence));
 
-				const result = yield* runSplitThreeTierExtraction(testInput);
+				const result = yield* runThreeTierExtraction(testInput);
 
 				expect(result.extractionTier).toBe(1);
-				expect(result.output.userState.energyBand).toBe("high");
 				expect(result.output.evidence).toHaveLength(1);
-				expect(result.output.tokenUsage).toEqual({ input: 200, output: 50 });
+				expect(result.output.tokenUsage).toEqual({ input: 100, output: 25 });
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
-	describe("Independent fallback", () => {
-		it.effect("user state falls to Tier 3, evidence succeeds at Tier 1 -> extractionTier = 3", () =>
+	describe("Tier 2: lenient fallback", () => {
+		it.effect("strict fails, lenient succeeds -> extractionTier = 2", () =>
 			Effect.gen(function* () {
-				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(Effect.fail(conversanalyzerError));
-				mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(
-					Effect.fail(conversanalyzerError),
+				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(Effect.fail(conversanalyzerError));
+				mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(
+					Effect.succeed(successfulEvidence),
 				);
-				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(Effect.succeed(successfulEvidence));
 
-				const result = yield* runSplitThreeTierExtraction(testInput);
+				const result = yield* runThreeTierExtraction(testInput);
 
-				// Worst tier wins
-				expect(result.extractionTier).toBe(3);
-				// User state defaults
-				expect(result.output.userState.energyBand).toBe("steady");
-				expect(result.output.userState.tellingBand).toBe("mixed");
-				// Evidence still present
+				expect(result.extractionTier).toBe(2);
 				expect(result.output.evidence).toHaveLength(1);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
+	});
 
-		it.effect("evidence falls to Tier 3, user state succeeds at Tier 1 -> extractionTier = 3", () =>
+	describe("Tier 3: neutral defaults", () => {
+		it.effect("both tiers fail -> neutral defaults, extractionTier = 3", () =>
 			Effect.gen(function* () {
-				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(Effect.succeed(successfulUserState));
 				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(Effect.fail(conversanalyzerError));
 				mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(
 					Effect.fail(conversanalyzerError),
 				);
 
-				const result = yield* runSplitThreeTierExtraction(testInput);
+				const result = yield* runThreeTierExtraction(testInput);
 
 				expect(result.extractionTier).toBe(3);
-				expect(result.output.userState.energyBand).toBe("high");
-				expect(result.output.evidence).toEqual([]);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-	});
-
-	describe("Both calls fail to Tier 3", () => {
-		it.effect("both fail -> neutral defaults for everything, extractionTier = 3", () =>
-			Effect.gen(function* () {
-				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(Effect.fail(conversanalyzerError));
-				mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(
-					Effect.fail(conversanalyzerError),
-				);
-				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(Effect.fail(conversanalyzerError));
-				mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(
-					Effect.fail(conversanalyzerError),
-				);
-
-				const result = yield* runSplitThreeTierExtraction(testInput);
-
-				expect(result.extractionTier).toBe(3);
-				expect(result.output.userState.energyBand).toBe("steady");
-				expect(result.output.userState.tellingBand).toBe("mixed");
-				expect(result.output.userState.withinMessageShift).toBe(false);
 				expect(result.output.evidence).toEqual([]);
 				expect(result.output.tokenUsage).toEqual({ input: 0, output: 0 });
 			}).pipe(Effect.provide(createTestLayer())),
@@ -172,69 +128,34 @@ describe("Split Three-Tier Extraction Pipeline (Story 42-2)", () => {
 	});
 
 	describe("Retry behavior", () => {
-		it.effect("user state retries 3 times before falling to Tier 2", () =>
+		it.effect("retries strict 3 times before falling to Tier 2", () =>
 			Effect.gen(function* () {
-				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(Effect.fail(conversanalyzerError));
-				mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(
-					Effect.succeed(successfulUserState),
+				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(Effect.fail(conversanalyzerError));
+				mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(
+					Effect.succeed(successfulEvidence),
 				);
-				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(Effect.succeed(successfulEvidence));
 
-				const result = yield* runSplitThreeTierExtraction(testInput);
+				const result = yield* runThreeTierExtraction(testInput);
 
 				expect(result.extractionTier).toBe(2);
 				// 1 initial + 2 retries = 3 calls
-				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(3);
-				expect(mockConversanalyzerRepo.analyzeUserStateLenient).toHaveBeenCalledTimes(1);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-	});
-
-	describe("Parallel execution (Story 42-4)", () => {
-		it.effect("runs both extractions concurrently", () =>
-			Effect.gen(function* () {
-				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(Effect.succeed(successfulUserState));
-				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(Effect.succeed(successfulEvidence));
-
-				const result = yield* runSplitThreeTierExtraction(testInput);
-
-				// Both extractions should be called
-				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
-				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
-				expect(result.output.userState).toBeDefined();
-				expect(result.output.evidence).toHaveLength(1);
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("evidence still succeeds when user state fails to Tier 3", () =>
-			Effect.gen(function* () {
-				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(Effect.fail(conversanalyzerError));
-				mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(
-					Effect.fail(conversanalyzerError),
-				);
-				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(Effect.succeed(successfulEvidence));
-
-				const result = yield* runSplitThreeTierExtraction(testInput);
-
-				// Evidence should succeed despite user state failure
-				expect(result.output.evidence).toHaveLength(1);
+				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(3);
+				expect(mockConversanalyzerRepo.analyzeEvidenceLenient).toHaveBeenCalledTimes(1);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
 	describe("Logging", () => {
-		it.effect("logs completion with both tier numbers", () =>
+		it.effect("logs completion with extraction tier", () =>
 			Effect.gen(function* () {
-				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(Effect.succeed(successfulUserState));
 				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(Effect.succeed(successfulEvidence));
 
-				yield* runSplitThreeTierExtraction(testInput);
+				yield* runThreeTierExtraction(testInput);
 
 				expect(mockLoggerRepo.info).toHaveBeenCalledWith(
 					expect.stringContaining("extraction"),
 					expect.objectContaining({
-						userStateTier: 1,
-						evidenceTier: 1,
+						extractionTier: 1,
 						sessionId: "session_test_123",
 					}),
 				);

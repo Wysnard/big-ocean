@@ -217,7 +217,6 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 
 				yield* sendMessage({ sessionId: "session_test_123", message: "I work in tech" });
 
-				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
 				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
