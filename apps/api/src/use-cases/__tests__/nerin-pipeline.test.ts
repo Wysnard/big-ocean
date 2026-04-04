@@ -83,8 +83,6 @@ const mockActorRepo = {
 };
 
 const mockConversanalyzerRepo = {
-	analyzeUserState: vi.fn(),
-	analyzeUserStateLenient: vi.fn(),
 	analyzeEvidence: vi.fn(),
 	analyzeEvidenceLenient: vi.fn(),
 };
@@ -126,13 +124,6 @@ const mockActorResponse = {
 };
 
 const mockConversanalyzerOutput = {
-	userState: {
-		energyBand: "steady" as const,
-		tellingBand: "mixed" as const,
-		energyReason: "Engaged with moderate self-reflection",
-		tellingReason: "Follows prompts with some self-direction",
-		withinMessageShift: false,
-	},
 	evidence: [
 		{
 			bigfiveFacet: "imagination" as const,
@@ -382,18 +373,6 @@ function setupDefaultMocks() {
 	mockDirectorRepo.generateBrief.mockReturnValue(Effect.succeed(mockDirectorResponse));
 	mockActorRepo.invoke.mockReturnValue(Effect.succeed(mockActorResponse));
 
-	mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
-		Effect.succeed({
-			userState: mockConversanalyzerOutput.userState,
-			tokenUsage: { input: 100, output: 25 },
-		}),
-	);
-	mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(
-		Effect.succeed({
-			userState: mockConversanalyzerOutput.userState,
-			tokenUsage: { input: 100, output: 25 },
-		}),
-	);
 	mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
 		Effect.succeed({
 			evidence: mockConversanalyzerOutput.evidence,
@@ -443,8 +422,7 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 				expect(result.response).toBeDefined();
 				expect(result.response).toBe(mockActorResponse.response);
 
-				// Evidence extraction happened (ConversAnalyzer split methods called)
-				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
+				// Evidence extraction happened
 				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 
 				// Director was called
@@ -575,9 +553,6 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
 				// Fail strict calls — lenient methods succeed from default setup
-				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
-					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-				);
 				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
 					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
 				);
@@ -612,8 +587,6 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 					mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
 					const llmError = Effect.fail(new ConversanalyzerError({ message: "LLM timeout" }));
-					mockConversanalyzerRepo.analyzeUserState.mockReturnValue(llmError);
-					mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(llmError);
 					mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(llmError);
 					mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(llmError);
 
@@ -680,7 +653,6 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 				});
 
 				// Extraction should be skipped (no ConversAnalyzer calls)
-				expect(mockConversanalyzerRepo.analyzeUserState).not.toHaveBeenCalled();
 				expect(mockConversanalyzerRepo.analyzeEvidence).not.toHaveBeenCalled();
 
 				// Director and Actor should still be called
@@ -787,13 +759,7 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 					userMessage: "I like helping people",
 				});
 
-				// Both split methods receive the same input shape
-				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
-				const userStateInput = mockConversanalyzerRepo.analyzeUserState.mock.calls[0]?.[0];
-				expect(userStateInput).toHaveProperty("message");
-				expect(userStateInput).toHaveProperty("recentMessages");
-				expect(userStateInput).toHaveProperty("domainDistribution");
-
+				// Evidence extraction receives the correct input shape
 				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 				const evidenceInput = mockConversanalyzerRepo.analyzeEvidence.mock.calls[0]?.[0];
 				expect(evidenceInput).toHaveProperty("message");

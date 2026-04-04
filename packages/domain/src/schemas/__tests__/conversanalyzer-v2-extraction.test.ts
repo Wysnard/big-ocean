@@ -2,30 +2,21 @@
  * ConversAnalyzer Extraction Schema Tests
  *
  * Tests for strict and lenient schemas that validate
- * split extraction output (user state + evidence independently).
+ * evidence extraction output.
  *
- * Story 24-1, Story 42-2, Story 42-3 (polarity-based evidence)
+ * User-state schema tests removed in Story 43-6 (Director reads energy/telling natively).
+ *
+ * Story 24-1, Story 42-2, Story 42-3 (polarity-based evidence), Story 43-6
  */
 
 import { describe, expect, it } from "vitest";
 import {
 	decodeEvidenceLenient,
 	decodeEvidenceStrict,
-	decodeUserStateLenient,
-	decodeUserStateStrict,
 	evidenceOnlyJsonSchema,
-	userStateOnlyJsonSchema,
 } from "../conversanalyzer-v2-extraction";
 
 // ─── Valid test data ─────────────────────────────────────────────────────────
-
-const validUserState = {
-	energyBand: "steady",
-	tellingBand: "mixed",
-	energyReason: "User is engaged but measured",
-	tellingReason: "Following prompts with some self-direction",
-	withinMessageShift: false,
-};
 
 /** v3 polarity-based evidence (LLM outputs polarity, not deviation) */
 const validPolarityEvidence = [
@@ -46,89 +37,6 @@ const validPolarityEvidence = [
 		note: "Slow to extend trust",
 	},
 ];
-
-// ─── UserState strict schema tests ───────────────────────────────────────────
-
-describe("UserState strict (decodeUserStateStrict)", () => {
-	it("accepts valid user state", () => {
-		const result = decodeUserStateStrict(validUserState);
-		expect(result.energyBand).toBe("steady");
-		expect(result.tellingBand).toBe("mixed");
-		expect(result.energyReason).toBe("User is engaged but measured");
-		expect(result.withinMessageShift).toBe(false);
-	});
-
-	it("accepts all energy band values", () => {
-		for (const band of ["minimal", "low", "steady", "high", "very_high"]) {
-			const result = decodeUserStateStrict({ ...validUserState, energyBand: band });
-			expect(result.energyBand).toBe(band);
-		}
-	});
-
-	it("accepts all telling band values", () => {
-		for (const band of [
-			"fully_compliant",
-			"mostly_compliant",
-			"mixed",
-			"mostly_self_propelled",
-			"strongly_self_propelled",
-		]) {
-			const result = decodeUserStateStrict({ ...validUserState, tellingBand: band });
-			expect(result.tellingBand).toBe(band);
-		}
-	});
-
-	it("rejects invalid energyBand", () => {
-		expect(() => decodeUserStateStrict({ ...validUserState, energyBand: "super_high" })).toThrow();
-	});
-
-	it("rejects invalid tellingBand", () => {
-		expect(() => decodeUserStateStrict({ ...validUserState, tellingBand: "unknown" })).toThrow();
-	});
-
-	it("rejects energyReason exceeding 500 chars", () => {
-		expect(() =>
-			decodeUserStateStrict({ ...validUserState, energyReason: "x".repeat(501) }),
-		).toThrow();
-	});
-});
-
-// ─── UserState lenient schema tests ──────────────────────────────────────────
-
-describe("UserState lenient (decodeUserStateLenient)", () => {
-	it("accepts valid user state unchanged", () => {
-		const result = decodeUserStateLenient(validUserState);
-		expect(result.energyBand).toBe("steady");
-		expect(result.tellingBand).toBe("mixed");
-	});
-
-	it("defaults energyBand when invalid", () => {
-		const result = decodeUserStateLenient({ ...validUserState, energyBand: "invalid_band" });
-		expect(result.energyBand).toBe("steady");
-		expect(result.tellingBand).toBe("mixed"); // preserved
-	});
-
-	it("defaults tellingBand when invalid", () => {
-		const result = decodeUserStateLenient({ ...validUserState, tellingBand: "bad_value" });
-		expect(result.tellingBand).toBe("mixed");
-		expect(result.energyBand).toBe("steady"); // preserved
-	});
-
-	it("defaults all fields when input is null", () => {
-		const result = decodeUserStateLenient(null);
-		expect(result.energyBand).toBe("steady");
-		expect(result.tellingBand).toBe("mixed");
-		expect(result.energyReason).toBe("");
-		expect(result.tellingReason).toBe("");
-		expect(result.withinMessageShift).toBe(false);
-	});
-
-	it("defaults all fields when input is completely invalid", () => {
-		const result = decodeUserStateLenient("not an object");
-		expect(result.energyBand).toBe("steady");
-		expect(result.tellingBand).toBe("mixed");
-	});
-});
 
 // ─── Evidence strict schema tests (v3 polarity-based) ────────────────────────
 
@@ -257,12 +165,6 @@ describe("Evidence lenient (decodeEvidenceLenient)", () => {
 // ─── JSON Schema generation ─────────────────────────────────────────────────
 
 describe("JSON Schema generation", () => {
-	it("userStateOnlyJsonSchema generates a valid JSON schema", () => {
-		expect(userStateOnlyJsonSchema).toBeDefined();
-		expect(userStateOnlyJsonSchema).toHaveProperty("type", "object");
-		expect(userStateOnlyJsonSchema).toHaveProperty("properties");
-	});
-
 	it("evidenceOnlyJsonSchema generates a valid JSON schema", () => {
 		expect(evidenceOnlyJsonSchema).toBeDefined();
 		expect(evidenceOnlyJsonSchema).toHaveProperty("type", "object");

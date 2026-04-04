@@ -84,8 +84,6 @@ const mockActorRepo = {
 };
 
 const mockConversanalyzerRepo = {
-	analyzeUserState: vi.fn(),
-	analyzeUserStateLenient: vi.fn(),
 	analyzeEvidence: vi.fn(),
 	analyzeEvidenceLenient: vi.fn(),
 };
@@ -125,15 +123,8 @@ const mockActorResponse = {
 	tokenCount: { input: 100, output: 50, total: 150 },
 };
 
-/** ConversAnalyzer v2 output with dual extraction: userState + evidence */
+/** ConversAnalyzer evidence extraction output */
 const mockConversanalyzerV2Output = {
-	userState: {
-		energyBand: "high" as const,
-		tellingBand: "mostly_compliant" as const,
-		energyReason: "User shares vulnerability about career anxiety",
-		tellingReason: "Answering Nerin's question directly",
-		withinMessageShift: true,
-	},
 	evidence: [
 		{
 			bigfiveFacet: "imagination" as const,
@@ -277,18 +268,6 @@ function setupDefaultMocks() {
 	mockDirectorRepo.generateBrief.mockReturnValue(Effect.succeed(mockDirectorResponse));
 	mockActorRepo.invoke.mockReturnValue(Effect.succeed(mockActorResponse));
 
-	mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
-		Effect.succeed({
-			userState: mockConversanalyzerV2Output.userState,
-			tokenUsage: { input: 100, output: 25 },
-		}),
-	);
-	mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(
-		Effect.succeed({
-			userState: mockConversanalyzerV2Output.userState,
-			tokenUsage: { input: 100, output: 25 },
-		}),
-	);
 	mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
 		Effect.succeed({
 			evidence: mockConversanalyzerV2Output.evidence,
@@ -335,8 +314,7 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 					userMessage: "I love solving complex puzzles at work",
 				});
 
-				// ConversAnalyzer split methods should have been called
-				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
+				// ConversAnalyzer evidence extraction should have been called
 				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 
 				// Story 43-1: energy/telling fields removed from exchange table.
@@ -467,8 +445,6 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 		it.effect("no evidence saved when extraction falls to Tier 3 neutral defaults", () =>
 			Effect.gen(function* () {
 				const llmError = Effect.fail(new ConversanalyzerError({ message: "LLM timeout" }));
-				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(llmError);
-				mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(llmError);
 				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(llmError);
 				mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(llmError);
 
@@ -493,8 +469,6 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 		it.effect("structured failure event is logged (NFR28)", () =>
 			Effect.gen(function* () {
 				const llmError = Effect.fail(new ConversanalyzerError({ message: "LLM timeout" }));
-				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(llmError);
-				mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(llmError);
 				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(llmError);
 				mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(llmError);
 

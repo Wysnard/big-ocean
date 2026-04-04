@@ -3,16 +3,14 @@
  * Vitest auto-resolves when tests call:
  *   vi.mock('@workspace/infrastructure/repositories/conversanalyzer.anthropic.repository')
  *
- * Returns deterministic output with userState + evidence.
- * Story 10.2 (v1), Story 24-1 (v2 evolution), Story 42-2 (split calls)
+ * Returns deterministic evidence extraction output.
+ * Story 10.2 (v1), Story 24-1 (v2 evolution), Story 42-2 (split calls), Story 43-6 (strip user-state)
  */
 import {
 	ConversanalyzerError,
 	type ConversanalyzerEvidenceOutput,
 	type ConversanalyzerInput,
 	ConversanalyzerRepository,
-	type ConversanalyzerUserStateOutput,
-	type ConversanalyzerV2Output,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
@@ -23,22 +21,13 @@ const calls: ConversanalyzerInput[] = [];
 export const _resetMockState = () => {
 	_callCount = 0;
 	calls.length = 0;
-	overrideOutput = null;
+	overrideEvidenceOutput = null;
 	overrideError = null;
-	overrideUserStateError = null;
 	overrideEvidenceError = null;
 };
 
 /** Read-only access for test assertions */
 export const _getMockCalls = () => [...calls];
-
-const defaultUserState = {
-	energyBand: "steady" as const,
-	tellingBand: "mixed" as const,
-	energyReason: "Engaged with moderate self-reflection",
-	tellingReason: "Follows prompts with some self-direction",
-	withinMessageShift: false,
-};
 
 const defaultEvidence = [
 	{
@@ -61,22 +50,17 @@ const defaultEvidence = [
 	},
 ];
 
-/** Override the mock output for specific tests */
-let overrideOutput: ConversanalyzerV2Output | null = null;
+/** Override the mock evidence output for specific tests */
+let overrideEvidenceOutput: ConversanalyzerEvidenceOutput | null = null;
 let overrideError: string | null = null;
-let overrideUserStateError: string | null = null;
 let overrideEvidenceError: string | null = null;
 
-export const _setMockOutput = (output: ConversanalyzerV2Output) => {
-	overrideOutput = output;
+export const _setMockEvidenceOutput = (output: ConversanalyzerEvidenceOutput) => {
+	overrideEvidenceOutput = output;
 };
 
 export const _setMockError = (message: string) => {
 	overrideError = message;
-};
-
-export const _setMockUserStateError = (message: string) => {
-	overrideUserStateError = message;
 };
 
 export const _setMockEvidenceError = (message: string) => {
@@ -86,34 +70,6 @@ export const _setMockEvidenceError = (message: string) => {
 export const ConversanalyzerAnthropicRepositoryLive = Layer.succeed(
 	ConversanalyzerRepository,
 	ConversanalyzerRepository.of({
-		analyzeUserState: (params: ConversanalyzerInput) => {
-			_callCount++;
-			calls.push(params);
-			if (overrideUserStateError || overrideError) {
-				return Effect.fail(
-					new ConversanalyzerError({ message: overrideUserStateError ?? overrideError ?? "" }),
-				);
-			}
-			const output: ConversanalyzerUserStateOutput = {
-				userState: overrideOutput?.userState ?? defaultUserState,
-				tokenUsage: overrideOutput?.tokenUsage ?? { input: 0, output: 0 },
-			};
-			return Effect.succeed(output);
-		},
-		analyzeUserStateLenient: (params: ConversanalyzerInput) => {
-			_callCount++;
-			calls.push(params);
-			if (overrideUserStateError || overrideError) {
-				return Effect.fail(
-					new ConversanalyzerError({ message: overrideUserStateError ?? overrideError ?? "" }),
-				);
-			}
-			const output: ConversanalyzerUserStateOutput = {
-				userState: overrideOutput?.userState ?? defaultUserState,
-				tokenUsage: overrideOutput?.tokenUsage ?? { input: 0, output: 0 },
-			};
-			return Effect.succeed(output);
-		},
 		analyzeEvidence: (params: ConversanalyzerInput) => {
 			_callCount++;
 			calls.push(params);
@@ -123,8 +79,8 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.succeed(
 				);
 			}
 			const output: ConversanalyzerEvidenceOutput = {
-				evidence: overrideOutput?.evidence ?? defaultEvidence,
-				tokenUsage: overrideOutput?.tokenUsage ?? { input: 0, output: 0 },
+				evidence: overrideEvidenceOutput?.evidence ?? defaultEvidence,
+				tokenUsage: overrideEvidenceOutput?.tokenUsage ?? { input: 0, output: 0 },
 			};
 			return Effect.succeed(output);
 		},
@@ -137,8 +93,8 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.succeed(
 				);
 			}
 			const output: ConversanalyzerEvidenceOutput = {
-				evidence: overrideOutput?.evidence ?? defaultEvidence,
-				tokenUsage: overrideOutput?.tokenUsage ?? { input: 0, output: 0 },
+				evidence: overrideEvidenceOutput?.evidence ?? defaultEvidence,
+				tokenUsage: overrideEvidenceOutput?.tokenUsage ?? { input: 0, output: 0 },
 			};
 			return Effect.succeed(output);
 		},

@@ -128,8 +128,6 @@ describe("sendMessage Use Case", () => {
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				const llmError = Effect.fail(new ConversanalyzerError({ message: "LLM timeout" }));
-				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(llmError);
-				mockConversanalyzerRepo.analyzeUserStateLenient.mockReturnValue(llmError);
 				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(llmError);
 				mockConversanalyzerRepo.analyzeEvidenceLenient.mockReturnValue(llmError);
 				// Stale evidence exists in DB

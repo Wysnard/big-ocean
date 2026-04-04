@@ -23,7 +23,7 @@ import {
 	aggregateDomainDistribution,
 	analyzeCoverage,
 	buildActorPrompt,
-	type ConversanalyzerV2Output,
+	type ConversanalyzerEvidenceOutput,
 	ConversationEvidenceRepository,
 	CostGuardRepository,
 	calculateCost,
@@ -40,7 +40,7 @@ import {
 	pickFarewellMessage,
 } from "@workspace/domain";
 import { Effect } from "effect";
-import { runSplitThreeTierExtraction } from "./three-tier-extraction";
+import { runThreeTierExtraction } from "./three-tier-extraction";
 
 export interface NerinPipelineInput {
 	readonly sessionId: string;
@@ -155,7 +155,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		const shouldExtract = turnNumber >= 1 && existingEvidenceCount === 0;
 
-		let pendingEvidence: ConversanalyzerV2Output["evidence"] = [];
+		let pendingEvidence: ConversanalyzerEvidenceOutput["evidence"] = [];
 		let extractionTier: ExtractionTier | null = null;
 		let analyzerTokenUsage: { input: number; output: number } | null = null;
 
@@ -163,7 +163,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			const domainDistribution = aggregateDomainDistribution(allEvidence);
 			const recentMessages: DomainMessage[] = domainMessages.slice(-6);
 
-			const extraction = yield* runSplitThreeTierExtraction({
+			const extraction = yield* runThreeTierExtraction({
 				sessionId: input.sessionId,
 				message: input.userMessage,
 				recentMessages,

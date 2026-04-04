@@ -1,14 +1,15 @@
 /**
- * ConversAnalyzer Prompt Content Tests (Story 31-8, AC4; Story 40-2; Story 42-2; Story 42-3)
+ * ConversAnalyzer Prompt Content Tests (Story 31-8, AC4; Story 40-2; Story 42-2; Story 42-3; Story 43-6)
  *
- * Verifies that the split ConversAnalyzer prompts include expected content:
- * - User state prompt: energy/telling bands, guardrails, conversation context
+ * Verifies that the ConversAnalyzer evidence prompt includes expected content:
  * - Evidence prompt (v3): per-facet conversational anchors, polarity-based output,
  *   dual-polarity check, polarity balance audit, domain definitions
+ *
+ * User-state prompt tests removed in Story 43-6 (Director reads energy/telling natively).
  */
 
 import { describe, expect, it } from "vitest";
-import { buildEvidencePrompt, buildUserStatePrompt } from "../conversanalyzer.anthropic.repository";
+import { buildEvidencePrompt } from "../conversanalyzer.anthropic.repository";
 
 const testInput = {
 	message: "I work in tech and enjoy solving complex problems",
@@ -29,51 +30,6 @@ const testInput = {
 		other: 0,
 	},
 };
-
-describe("User State Prompt (buildUserStatePrompt)", () => {
-	const prompt = buildUserStatePrompt(testInput);
-
-	describe("Energy Band Classification", () => {
-		it("includes all five energy bands", () => {
-			expect(prompt).toContain("minimal");
-			expect(prompt).toContain("low");
-			expect(prompt).toContain("steady");
-			expect(prompt).toContain("high");
-			expect(prompt).toContain("very_high");
-		});
-
-		it("includes six load-bearing guardrails", () => {
-			expect(prompt).toContain("SIX LOAD-BEARING GUARDRAILS");
-			expect(prompt).toContain("Eloquence is not energy");
-			expect(prompt).toContain("Sophistication is not cognitive investment");
-			expect(prompt).toContain("Peak dimension, not average");
-			expect(prompt).toContain("Understated styles are not low energy");
-			expect(prompt).toContain("Long detailed answer is not high telling");
-			expect(prompt).toContain("Diagonal examples are mandatory");
-		});
-	});
-
-	describe("Telling Band Classification", () => {
-		it("includes all five telling bands", () => {
-			expect(prompt).toContain("fully_compliant");
-			expect(prompt).toContain("mostly_compliant");
-			expect(prompt).toContain("mixed");
-			expect(prompt).toContain("mostly_self_propelled");
-			expect(prompt).toContain("strongly_self_propelled");
-		});
-	});
-
-	describe("Conversation Context", () => {
-		it("includes recent messages as context", () => {
-			expect(prompt).toContain("[assistant]: Tell me about your work.");
-		});
-
-		it("includes latest user message separately", () => {
-			expect(prompt).toContain("Latest User Message (analyze THIS)");
-			expect(prompt).toContain("I work in tech and enjoy solving complex problems");
-		});
-	});
-});
 
 describe("Evidence Prompt v3 (buildEvidencePrompt)", () => {
 	const prompt = buildEvidencePrompt(testInput);
