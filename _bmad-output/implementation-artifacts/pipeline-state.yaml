@@ -1,9 +1,9 @@
 # Pipeline State — auto-generated, do not edit manually
 parallelism_step: 1
-parallelism_step_name: "Codebase Cleanup"
-baseline_commit: "aea61c30ce63fdc214eef82e28487afbe901acee"
+parallelism_step_name: "Dev Tools + Export Cleanup"
+baseline_commit: "4ade0998c88536c5dcd3b55deecbd442881a234a"
 created: "2026-04-04"
-last_updated: "2026-04-04T23:45:00Z"
+last_updated: "2026-04-04T_post-conflict-check"
 
 # Optional context documents discovered
 context_docs:
@@ -14,19 +14,26 @@ context_docs:
 
 # Stories in this step
 stories:
-  44-1-delete-old-pipeline-code-functions-constants-and-types:
+  44-2-seed-script-and-exchange-builder-rewrite-for-director-model:
     status: done
-    mode: "single"
-    notes: "All old code is dead after Epic 43"
-    pr_url: "https://github.com/Wysnard/big-ocean/pull/205"
-    dev_branch: "feat/story-44-1-delete-old-pipeline-code-functions-constants-and-types"
+    mode: "parallel"
+    notes: "Rewrites exchange-builder to produce Director-format data"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/207"
+    dev_branch: "feat/story-44-2-seed-script-and-exchange-builder-rewrite-for-director-model"
+    error: null
+  44-3-barrel-export-cleanup-and-conversanalyzer-mock-removal:
+    status: done
+    mode: "parallel"
+    notes: "Removes exports for deleted files, cleans dead mocks"
+    pr_url: "https://github.com/Wysnard/big-ocean/pull/206"
+    dev_branch: "feat/story-44-3-barrel-export-cleanup-and-conversanalyzer-mock-removal"
     error: null
 
 # Conflict detection (populated by step-02b)
 conflicts:
   detected: false
-  note: "Single branch — no overlap possible"
   scanned_branches:
-    - "feat/story-44-1-delete-old-pipeline-code-functions-constants-and-types"
+    - "feat/story-44-2-seed-script-and-exchange-builder-rewrite-for-director-model"
+    - "feat/story-44-3-barrel-export-cleanup-and-conversanalyzer-mock-removal"
   skipped_branches: []
   overlapping_files: []

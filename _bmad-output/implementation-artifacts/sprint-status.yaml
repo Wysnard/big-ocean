@@ -758,6 +758,6 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-44: in-progress
   44-1-delete-old-pipeline-code-functions-constants-and-types: done
-  44-2-seed-script-and-exchange-builder-rewrite-for-director-model: backlog
-  44-3-barrel-export-cleanup-and-conversanalyzer-mock-removal: backlog
+  44-2-seed-script-and-exchange-builder-rewrite-for-director-model: pr-ready
+  44-3-barrel-export-cleanup-and-conversanalyzer-mock-removal: pr-ready
   epic-44-retrospective: optional
