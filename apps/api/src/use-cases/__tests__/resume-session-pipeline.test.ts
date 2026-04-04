@@ -40,19 +40,19 @@ describe("Pacing pipeline resume (Story 31-5)", () => {
 					...openerExchangeRecord,
 					id: "exchange_1",
 					turnNumber: 1,
-					selectedTerritory: "daily-routines",
+					extractionTier: 1,
 				},
 				{
 					...openerExchangeRecord,
 					id: "exchange_2",
 					turnNumber: 2,
-					selectedTerritory: "creative-pursuits",
+					extractionTier: 1,
 				},
 				{
 					...openerExchangeRecord,
 					id: "exchange_3",
 					turnNumber: 3,
-					selectedTerritory: "weekend-adventures",
+					extractionTier: 1,
 				},
 			];
 

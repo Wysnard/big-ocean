@@ -85,18 +85,20 @@ export interface NerinPipelineOutput {
 /**
  * Build visit history from exchange records for the V2 scorer.
  * Maps territory ID -> last visit turn number.
+ *
+ * Story 43-1: selectedTerritory removed from exchange table. These functions
+ * return empty/default values until Story 1.5 replaces the pacing pipeline.
  */
 function buildPacingVisitHistory(
-	exchanges: ReadonlyArray<{
-		selectedTerritory?: string | null;
-		turnNumber: number;
-	}>,
+	exchanges: ReadonlyArray<Record<string, unknown>>,
 ): PacingVisitHistory {
 	const visits = new Map<TerritoryId, number>();
 
 	for (const exchange of exchanges) {
-		if (exchange.selectedTerritory) {
-			visits.set(exchange.selectedTerritory as TerritoryId, exchange.turnNumber);
+		const territory = exchange.selectedTerritory as string | null | undefined;
+		const turnNumber = exchange.turnNumber as number;
+		if (territory) {
+			visits.set(territory as TerritoryId, turnNumber);
 		}
 	}
 
@@ -106,12 +108,16 @@ function buildPacingVisitHistory(
 /**
  * Extract energy history from exchange records as continuous [0, 1] values.
  * Chronological order (oldest first) as expected by computeETarget.
+ *
+ * Story 43-1: energy removed from exchange table. Returns empty array
+ * until Story 1.5 replaces the pacing pipeline.
  */
-function extractEnergyHistory(exchanges: ReadonlyArray<{ energy?: number | null }>): number[] {
+function extractEnergyHistory(exchanges: ReadonlyArray<Record<string, unknown>>): number[] {
 	const values: number[] = [];
 	for (const exchange of exchanges) {
-		if (exchange.energy != null) {
-			values.push(exchange.energy);
+		const energy = exchange.energy as number | null | undefined;
+		if (energy != null) {
+			values.push(energy);
 		}
 	}
 	return values;
@@ -120,15 +126,17 @@ function extractEnergyHistory(exchanges: ReadonlyArray<{ energy?: number | null 
 /**
  * Extract telling history from exchange records as continuous [0, 1] values.
  * Chronological order (oldest first) as expected by computeETarget.
- * Null values are preserved as null (telling may be unavailable).
+ *
+ * Story 43-1: telling removed from exchange table. Returns all-null array
+ * until Story 1.5 replaces the pacing pipeline.
  */
 function extractTellingHistory(
-	exchanges: ReadonlyArray<{ telling?: number | null }>,
+	exchanges: ReadonlyArray<Record<string, unknown>>,
 ): (number | null)[] {
 	const values: (number | null)[] = [];
 	for (const exchange of exchanges) {
-		// telling is stored as a continuous value; null if extraction failed
-		values.push(exchange.telling ?? null);
+		const telling = exchange.telling as number | null | undefined;
+		values.push(telling ?? null);
 	}
 	return values;
 }
@@ -136,14 +144,18 @@ function extractTellingHistory(
 /**
  * Get the current territory from the most recent exchange.
  * Returns null if no exchanges exist yet.
+ *
+ * Story 43-1: selectedTerritory removed from exchange table.
+ * Returns null until Story 1.5 replaces the pacing pipeline.
  */
 function getCurrentTerritory(
-	exchanges: ReadonlyArray<{ selectedTerritory?: string | null }>,
+	exchanges: ReadonlyArray<Record<string, unknown>>,
 ): TerritoryId | null {
 	for (let i = exchanges.length - 1; i >= 0; i--) {
 		const exchange = exchanges[i];
-		if (exchange?.selectedTerritory) {
-			return exchange.selectedTerritory as TerritoryId;
+		const territory = exchange?.selectedTerritory as string | null | undefined;
+		if (territory) {
+			return territory as TerritoryId;
 		}
 	}
 	return null;
@@ -332,7 +344,7 @@ function computeObservationFocusInputs(
  * Count the number of non-Relate observation focus events from exchange history.
  * Uses the governorOutput field which stores the PromptBuilderInput.
  */
-function countSharedFires(exchanges: ReadonlyArray<{ governorOutput?: unknown }>): number {
+function countSharedFires(exchanges: ReadonlyArray<Record<string, unknown>>): number {
 	let count = 0;
 	for (const exchange of exchanges) {
 		if (exchange.governorOutput && typeof exchange.governorOutput === "object") {
@@ -432,7 +444,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		let observedTellingBand: TellingBand = "mixed";
 		let observedEnergy = 0.5;
 		let observedTelling = 0.5;
-		let withinMessageShift = false;
+		let _withinMessageShift = false;
 		let extractionTier: ExtractionTier | null = null;
 		let analyzerTokenUsage: { input: number; output: number } | null = null;
 
@@ -455,7 +467,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			observedTellingBand = evidenceResult.userState.tellingBand;
 			observedEnergy = mapEnergyBand(observedEnergyBand);
 			observedTelling = mapTellingBand(observedTellingBand);
-			withinMessageShift = evidenceResult.userState.withinMessageShift;
+			_withinMessageShift = evidenceResult.userState.withinMessageShift;
 
 			const filteredEvidence = evidenceResult.evidence.filter(
 				(e) => computeFinalWeight(e.strength, e.confidence) >= config.minEvidenceWeight,
@@ -506,8 +518,10 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		// Current session pipeline exchanges only (for session-specific state)
 		const sessionPipelineExchanges = sessionExchanges.filter((e) => e.turnNumber > 0);
 
-		const energyHistory = extractEnergyHistory(sessionPipelineExchanges);
-		const tellingHistory = extractTellingHistory(sessionPipelineExchanges);
+		// Story 43-1: cast needed — exchange records no longer have energy/telling fields.
+		// Entire pacing pipeline will be replaced in Story 1.5.
+		const energyHistory = extractEnergyHistory(sessionPipelineExchanges as any[]);
+		const tellingHistory = extractTellingHistory(sessionPipelineExchanges as any[]);
 
 		// Append current message's observed energy/telling so E_target reflects this turn
 		if (turnNumber >= 1) {
@@ -525,8 +539,14 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			allPipelineExchanges.length > 0 ? allPipelineExchanges[allPipelineExchanges.length - 1] : null;
 
 		const priorExchange = lastSessionExchange ?? lastAnyExchange;
-		const priorSmoothedEnergy = priorExchange?.smoothedEnergy ?? undefined;
-		const priorSessionTrust = priorExchange?.sessionTrust ?? undefined;
+		// Story 43-1: smoothedEnergy/sessionTrust removed from exchange table.
+		// Cast defensively — will be undefined for new exchanges.
+		const priorSmoothedEnergy = (priorExchange as Record<string, unknown> | null)?.smoothedEnergy as
+			| number
+			| undefined;
+		const priorSessionTrust = (priorExchange as Record<string, unknown> | null)?.sessionTrust as
+			| number
+			| undefined;
 
 		const eTargetResult = computeETargetV2({
 			energyHistory,
@@ -540,8 +560,9 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const facetMetrics = computeFacetMetrics(allEvidenceWithCurrent as any[]);
 
 		// Visit history and current territory from all user exchanges
-		const visitHistory = buildPacingVisitHistory(allPipelineExchanges);
-		const currentTerritory = getCurrentTerritory(allPipelineExchanges);
+		// Story 43-1: cast needed — pacing fields removed from exchange (Story 1.5 replaces pipeline)
+		const visitHistory = buildPacingVisitHistory(allPipelineExchanges as any[]);
+		const currentTerritory = getCurrentTerritory(allPipelineExchanges as any[]);
 
 		const scorerOutput = scoreAllTerritoriesV2({
 			eTarget: eTargetResult.eTarget,
@@ -583,7 +604,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			previousSmoothedClarity,
 		);
 
-		const sharedFireCount = countSharedFires(allPipelineExchanges);
+		const sharedFireCount = countSharedFires(allPipelineExchanges as any[]);
 
 		// ---- Step 6: Run Move Governor ----
 
@@ -597,7 +618,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			turnNumber,
 			isFinalTurn,
 			expectedEnergy,
-			previousTerritory: getCurrentTerritory(allPipelineExchanges),
+			previousTerritory: getCurrentTerritory(allPipelineExchanges as any[]),
 			phase: focusInputs.phase,
 			sharedFireCount,
 			relateStrength: focusInputs.relateStrength,
@@ -712,9 +733,9 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		// Phase B: Create new exchange — link AI message + steering data
 
 		// Derive session phase and transition type
-		const sessionPhase = deriveSessionPhase(turnNumber, totalTurns);
-		const previousTerritory = getCurrentTerritory(allPipelineExchanges);
-		const transitionType = previousTerritory
+		const _sessionPhase = deriveSessionPhase(turnNumber, totalTurns);
+		const previousTerritory = getCurrentTerritory(allPipelineExchanges as any[]);
+		const _transitionType = previousTerritory
 			? deriveTransitionType(selectedTerritoryId, previousTerritory)
 			: ("transition" as const);
 
@@ -732,13 +753,9 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		);
 
 		if (previousExchangeId) {
-			// Store extraction data on previous exchange
+			// Store extraction tier on previous exchange
+			// Story 43-1: energy/telling fields removed from exchange table (Director reads them natively)
 			yield* exchangeRepo.update(previousExchangeId, {
-				energy: observedEnergy,
-				energyBand: observedEnergyBand,
-				telling: observedTelling,
-				tellingBand: observedTellingBand,
-				withinMessageShift,
 				...(extractionTier != null ? { extractionTier } : {}),
 			});
 		}
@@ -760,36 +777,9 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		// --- Phase B: Create new exchange for AI response ---
 		const exchange = yield* exchangeRepo.create(input.sessionId, turnNumber);
 
-		// Store steering data on new exchange
-		yield* exchangeRepo.update(exchange.id, {
-			// Pacing state
-			smoothedEnergy: eTargetResult.smoothedEnergy,
-			sessionTrust: eTargetResult.sessionTrust,
-			drain: eTargetResult.drain,
-			trustCap: eTargetResult.trustCap,
-			eTarget: eTargetResult.eTarget,
-
-			// Scoring
-			scorerOutput: {
-				ranked: scorerOutput.ranked.slice(0, 5).map((t) => ({
-					id: t.territoryId,
-					score: +t.score.toFixed(3),
-				})),
-			},
-
-			// Selection
-			selectedTerritory: selectedTerritoryId as string,
-			selectionRule: selectorOutput.selectionRule === "cold-start-perimeter" ? "cold_start" : "argmax",
-
-			// Governor
-			governorOutput: governorResult.output,
-			governorDebug: governorResult.debug,
-
-			// Derived
-			sessionPhase:
-				sessionPhase === "opening" ? "opening" : sessionPhase === "closing" ? "closing" : "exploring",
-			transitionType: transitionType === "continue" ? "normal" : "territory_change",
-		});
+		// Story 43-1: Steering data no longer persisted on exchange (columns removed).
+		// Director model pipeline (Story 1.5) will populate director_output and coverage_targets here.
+		// Keeping the exchange create above — it serves as the anchor for the AI message link.
 
 		// Link AI message to new exchange
 		yield* messageRepo.saveMessage(input.sessionId, "assistant", result.response, exchange.id);

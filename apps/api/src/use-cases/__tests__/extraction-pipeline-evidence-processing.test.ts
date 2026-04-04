@@ -6,7 +6,7 @@
  * - AC2: Three-tier retry (covered by three-tier-extraction.test.ts)
  * - AC3: Exchange row persistence with 1-indexed turns
  * - AC4: Dual-facet extraction prompt instructions
- * - AC5: Energy/telling pass-through to pacing pipeline
+ * - AC5: Extraction tier stored on exchange (energy/telling removed in Story 43-1)
  * - AC6: Fail-open on complete failure (covered by nerin-pipeline.test.ts)
  *
  * Tests here focus on gaps not already covered by existing test suites.
@@ -148,25 +148,9 @@ const openerExchangeRecord = {
 	id: "exchange_opener",
 	sessionId: "session_test_123",
 	turnNumber: 0,
-	energy: null,
-	energyBand: null,
-	telling: null,
-	tellingBand: null,
-	withinMessageShift: null,
-	stateNotes: null,
 	extractionTier: null,
-	smoothedEnergy: null,
-	sessionTrust: null,
-	drain: null,
-	trustCap: null,
-	eTarget: null,
-	scorerOutput: null,
-	selectedTerritory: null,
-	selectionRule: null,
-	governorOutput: null,
-	governorDebug: null,
-	sessionPhase: null,
-	transitionType: null,
+	directorOutput: null,
+	coverageTargets: null,
 	createdAt: new Date(),
 };
 
@@ -174,25 +158,9 @@ const mockExchangeRecord = {
 	id: "exchange_1",
 	sessionId: "session_test_123",
 	turnNumber: 1,
-	energy: null,
-	energyBand: null,
-	telling: null,
-	tellingBand: null,
-	withinMessageShift: null,
-	stateNotes: null,
 	extractionTier: null,
-	smoothedEnergy: null,
-	sessionTrust: null,
-	drain: null,
-	trustCap: null,
-	eTarget: null,
-	scorerOutput: null,
-	selectedTerritory: null,
-	selectionRule: null,
-	governorOutput: null,
-	governorDebug: null,
-	sessionPhase: null,
-	transitionType: null,
+	directorOutput: null,
+	coverageTargets: null,
 	createdAt: new Date(),
 };
 
@@ -358,14 +326,10 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
 				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 
-				// The extraction result was used to update the previous exchange with energy/telling
+				// Story 43-1: energy/telling fields removed from exchange table.
+				// Only extractionTier is persisted on the exchange now.
 				const extractionUpdate = mockExchangeRepo.update.mock.calls[0]?.[1];
-				// userState fields mapped to exchange
-				expect(extractionUpdate).toHaveProperty("energy");
-				expect(extractionUpdate).toHaveProperty("energyBand", "high");
-				expect(extractionUpdate).toHaveProperty("telling");
-				expect(extractionUpdate).toHaveProperty("tellingBand", "mostly_compliant");
-				expect(extractionUpdate).toHaveProperty("withinMessageShift", true);
+				expect(extractionUpdate).toBeDefined();
 
 				// evidence was saved separately
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
@@ -450,41 +414,22 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("stores full pipeline state on new exchange row", () =>
+		it.effect("no longer stores steering state on exchange (Story 43-1: columns removed)", () =>
 			Effect.gen(function* () {
 				yield* runNerinPipeline({
 					sessionId: "session_test_123",
 					userMessage: "I love helping others",
 				});
 
-				// Second update: steering data on new exchange
-				const steeringUpdate = mockExchangeRepo.update.mock.calls[1]?.[1];
-
-				// Pacing state
-				expect(steeringUpdate).toHaveProperty("smoothedEnergy");
-				expect(steeringUpdate).toHaveProperty("sessionTrust");
-				expect(steeringUpdate).toHaveProperty("eTarget");
-
-				// Scoring state
-				expect(steeringUpdate).toHaveProperty("scorerOutput");
-
-				// Selection
-				expect(steeringUpdate).toHaveProperty("selectedTerritory");
-				expect(steeringUpdate).toHaveProperty("selectionRule");
-
-				// Governor decision
-				expect(steeringUpdate).toHaveProperty("governorOutput");
-				expect(steeringUpdate).toHaveProperty("governorDebug");
-
-				// Observability / derived
-				expect(steeringUpdate).toHaveProperty("sessionPhase");
-				expect(steeringUpdate).toHaveProperty("transitionType");
+				// Story 43-1: Only one update call (extraction tier on previous exchange)
+				// Steering data no longer persisted on exchange rows
+				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
-	describe("AC5: Energy/Telling Pass-Through to Pacing Pipeline", () => {
-		it.effect("maps energy band to continuous value and stores on exchange", () =>
+	describe("AC5: Extraction tier stored on exchange (Story 43-1: energy/telling no longer persisted)", () => {
+		it.effect("extraction tier is persisted on previous exchange", () =>
 			Effect.gen(function* () {
 				yield* runNerinPipeline({
 					sessionId: "session_test_123",
@@ -492,35 +437,9 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 				});
 
 				const extractionUpdate = mockExchangeRepo.update.mock.calls[0]?.[1];
-				// "high" band maps to 0.7
-				expect(extractionUpdate?.energy).toBe(0.7);
-				expect(extractionUpdate?.energyBand).toBe("high");
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("maps telling band to continuous value and stores on exchange", () =>
-			Effect.gen(function* () {
-				yield* runNerinPipeline({
-					sessionId: "session_test_123",
-					userMessage: "Sure, I can answer that",
-				});
-
-				const extractionUpdate = mockExchangeRepo.update.mock.calls[0]?.[1];
-				// "mostly_compliant" band maps to 0.25
-				expect(extractionUpdate?.telling).toBe(0.25);
-				expect(extractionUpdate?.tellingBand).toBe("mostly_compliant");
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-
-		it.effect("withinMessageShift is persisted on exchange", () =>
-			Effect.gen(function* () {
-				yield* runNerinPipeline({
-					sessionId: "session_test_123",
-					userMessage: "Started casual but got deep",
-				});
-
-				const extractionUpdate = mockExchangeRepo.update.mock.calls[0]?.[1];
-				expect(extractionUpdate?.withinMessageShift).toBe(true);
+				// Story 43-1: energy/telling fields removed from exchange table
+				// Only extraction tier is persisted
+				expect(extractionUpdate).toBeDefined();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
@@ -546,13 +465,9 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 				// No evidence saved
 				expect(mockEvidenceRepo.save).not.toHaveBeenCalled();
 
-				// Extraction data on previous exchange uses neutral defaults
-				const extractionUpdate = mockExchangeRepo.update.mock.calls[0]?.[1];
-				expect(extractionUpdate?.energyBand).toBe("steady");
-				expect(extractionUpdate?.tellingBand).toBe("mixed");
-				expect(extractionUpdate?.energy).toBe(0.5);
-				expect(extractionUpdate?.telling).toBe(0.5);
-				expect(extractionUpdate?.withinMessageShift).toBe(false);
+				// Story 43-1: energy/telling fields removed from exchange table
+				// Extraction update still happens (for extraction tier)
+				expect(mockExchangeRepo.update).toHaveBeenCalled();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 

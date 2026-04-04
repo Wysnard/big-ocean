@@ -264,41 +264,29 @@ const postColdStartMessages = [
 	},
 ];
 
-/** Post-cold-start exchange records with pacing state (includes opener at turn 0) */
+/** Post-cold-start exchange records (includes opener at turn 0) */
 const postColdStartExchanges = [
 	{ ...openerExchangeRecord },
 	{
 		...mockExchangeRecord,
 		id: "ex_1",
 		turnNumber: 1,
-		selectedTerritory: "daily-routines",
-		energy: 0.3,
-		energyBand: "low",
-		telling: 0.5,
-		tellingBand: "mixed",
-		smoothedEnergy: 0.4,
-		sessionTrust: 0.4,
-		eTarget: 0.5,
-		selectionRule: "cold_start",
-		governorOutput: { intent: "open", territory: "daily-routines" },
+		extractionTier: 1,
+		directorOutput: "Explore daily routines",
+		coverageTargets: {
+			targetFacets: ["imagination", "orderliness", "self_discipline"],
+			targetDomain: "work",
+		},
 	},
 	{
 		...mockExchangeRecord,
 		id: "ex_2",
 		turnNumber: 2,
-		selectedTerritory: "daily-routines",
-		energy: 0.5,
-		energyBand: "steady",
-		telling: 0.5,
-		tellingBand: "mixed",
-		smoothedEnergy: 0.45,
-		sessionTrust: 0.45,
-		eTarget: 0.5,
-		selectionRule: "argmax",
-		governorOutput: {
-			intent: "explore",
-			territory: "daily-routines",
-			observationFocus: { type: "relate" },
+		extractionTier: 1,
+		directorOutput: "Continue exploring daily routines",
+		coverageTargets: {
+			targetFacets: ["orderliness", "self_discipline", "dutifulness"],
+			targetDomain: "work",
 		},
 	},
 	{
@@ -483,11 +471,9 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 				expect(typeof invokeArgs?.systemPrompt).toBe("string");
 				expect(invokeArgs?.systemPrompt.length).toBeGreaterThan(0);
 
-				// Exchange update called twice: once for opener extraction, once for new exchange steering
-				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(2);
-				// Second update (new exchange) should store cold_start selection rule
-				const steeringUpdate = mockExchangeRepo.update.mock.calls[1]?.[1];
-				expect(steeringUpdate?.selectionRule).toBe("cold_start");
+				// Exchange update called once: extraction tier on previous exchange
+				// Story 43-1: steering data no longer persisted on exchange (columns removed)
+				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
@@ -504,8 +490,8 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 				expect(mockExchangeRepo.create).toHaveBeenCalledTimes(1);
 				expect(mockExchangeRepo.create).toHaveBeenCalledWith("session_test_123", 1);
 
-				// Exchange update called twice: opener extraction + new exchange steering
-				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(2);
+				// Exchange update called once: extraction tier on previous exchange
+				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
 
 				// saveMessage is called twice: once for user, once for assistant
 				expect(mockMessageRepo.saveMessage).toHaveBeenCalledTimes(2);
@@ -565,33 +551,14 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 				// Evidence should be saved
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
 
-				// Exchange should be created and updated (2 updates: previous extraction + new steering)
+				// Exchange should be created and updated (1 update: extraction tier on previous exchange)
+				// Story 43-1: steering data no longer persisted on exchange (columns removed)
 				expect(mockExchangeRepo.create).toHaveBeenCalledTimes(1);
-				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(2);
+				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
 
-				// First update: extraction data on previous exchange
+				// Update: extraction tier on previous exchange
 				const extractionUpdate = mockExchangeRepo.update.mock.calls[0]?.[1];
-				expect(extractionUpdate?.energy).toBeDefined();
-				expect(extractionUpdate?.energyBand).toBeDefined();
-				expect(extractionUpdate?.telling).toBeDefined();
-				expect(extractionUpdate?.tellingBand).toBeDefined();
-
-				// Second update: steering data on new exchange
-				const steeringUpdate = mockExchangeRepo.update.mock.calls[1]?.[1];
-				// Verify pacing state stored
-				expect(steeringUpdate?.eTarget).toBeDefined();
-				expect(typeof steeringUpdate?.eTarget).toBe("number");
-				expect(steeringUpdate?.smoothedEnergy).toBeDefined();
-				expect(steeringUpdate?.sessionTrust).toBeDefined();
-				// Verify selection state
-				expect(steeringUpdate?.selectedTerritory).toBeDefined();
-				expect(steeringUpdate?.selectionRule).toBe("argmax");
-				// Verify governor state
-				expect(steeringUpdate?.governorOutput).toBeDefined();
-				expect(steeringUpdate?.governorDebug).toBeDefined();
-				// Verify session state
-				expect(steeringUpdate?.sessionPhase).toBeDefined();
-				expect(steeringUpdate?.transitionType).toBeDefined();
+				expect(extractionUpdate).toBeDefined();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
@@ -761,7 +728,7 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 	});
 
 	describe("Pipeline state on exchange (AC6)", () => {
-		it.effect("stores extraction on previous exchange and steering on new exchange", () =>
+		it.effect("stores extraction tier on previous exchange", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
@@ -771,28 +738,12 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 					userMessage: "I enjoy creative work",
 				});
 
-				// Two updates: extraction on previous, steering on new
-				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(2);
+				// Story 43-1: Only extraction tier update on previous exchange (steering columns removed)
+				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
 
-				// First update: extraction data on previous exchange
+				// Update: extraction tier on previous exchange
 				const extractionData = mockExchangeRepo.update.mock.calls[0]?.[1];
-				expect(extractionData).toHaveProperty("energy");
-				expect(extractionData).toHaveProperty("energyBand");
-				expect(extractionData).toHaveProperty("telling");
-				expect(extractionData).toHaveProperty("tellingBand");
-
-				// Second update: steering data on new exchange
-				const steeringData = mockExchangeRepo.update.mock.calls[1]?.[1];
-				expect(steeringData).toHaveProperty("smoothedEnergy");
-				expect(steeringData).toHaveProperty("sessionTrust");
-				expect(steeringData).toHaveProperty("eTarget");
-				expect(steeringData).toHaveProperty("scorerOutput");
-				expect(steeringData).toHaveProperty("selectedTerritory");
-				expect(steeringData).toHaveProperty("selectionRule");
-				expect(steeringData).toHaveProperty("governorOutput");
-				expect(steeringData).toHaveProperty("governorDebug");
-				expect(steeringData).toHaveProperty("sessionPhase");
-				expect(steeringData).toHaveProperty("transitionType");
+				expect(extractionData).toBeDefined();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
@@ -800,26 +751,17 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 
 // ─── Extension Session Tests (Story 36-2) ───────────────────────────
 
-/** Parent session's final exchange with populated pacing state */
+/** Parent session's final exchange with populated Director model state */
 const parentFinalExchange = {
 	...mockExchangeRecord,
 	id: "parent_ex_final",
 	sessionId: "parent_session_id",
 	turnNumber: 25,
-	selectedTerritory: "daily-routines",
-	energy: 0.6,
-	energyBand: "high",
-	telling: 0.75,
-	tellingBand: "mostly_self_propelled",
-	smoothedEnergy: 0.55,
-	sessionTrust: 0.6,
-	eTarget: 0.52,
-	selectionRule: "argmax",
-	governorOutput: {
-		intent: "close",
-		territory: "daily-routines",
-		entryPressure: "direct",
-		observationFocus: { type: "relate" },
+	extractionTier: 1,
+	directorOutput: "Final turn brief: bold observation about user patterns",
+	coverageTargets: {
+		targetFacets: ["imagination", "orderliness", "self_discipline"],
+		targetDomain: "work",
 	},
 };
 
@@ -830,26 +772,18 @@ const parentExchangeHistory = [
 		id: "parent_ex_1",
 		sessionId: "parent_session_id",
 		turnNumber: 1,
-		selectedTerritory: "daily-routines",
-		energy: 0.3,
-		energyBand: "low",
-		telling: 0.5,
-		tellingBand: "mixed",
-		smoothedEnergy: 0.4,
-		sessionTrust: 0.4,
+		extractionTier: 1,
+		directorOutput: "Explore daily routines",
+		coverageTargets: { targetFacets: ["imagination"], targetDomain: "work" },
 	},
 	{
 		...mockExchangeRecord,
 		id: "parent_ex_2",
 		sessionId: "parent_session_id",
 		turnNumber: 2,
-		selectedTerritory: "creative-pursuits",
-		energy: 0.5,
-		energyBand: "steady",
-		telling: 0.5,
-		tellingBand: "mixed",
-		smoothedEnergy: 0.45,
-		sessionTrust: 0.45,
+		extractionTier: 1,
+		directorOutput: "Explore creative pursuits",
+		coverageTargets: { targetFacets: ["orderliness"], targetDomain: "work" },
 	},
 	parentFinalExchange,
 ];

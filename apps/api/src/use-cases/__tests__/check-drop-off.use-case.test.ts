@@ -60,11 +60,8 @@ describe("checkDropOff use-case", () => {
 				userId: "user-123",
 			} as any);
 
-			// Create an exchange with a territory
-			const exchange = yield* exchangeRepo.create(sessionId, 1);
-			yield* exchangeRepo.update(exchange.id, {
-				selectedTerritory: "creative-expression",
-			});
+			// Create an exchange
+			const _exchange = yield* exchangeRepo.create(sessionId, 1);
 
 			// The mock findDropOffSessions returns sessions based on mock state
 			// Since the mock doesn't do time filtering, it returns all active sessions with userId

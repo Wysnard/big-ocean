@@ -101,11 +101,8 @@ describe("checkCheckIn use-case", () => {
 				userId: "user-456",
 			} as any);
 
-			// Create an exchange with a territory
-			const exchange = yield* exchangeRepo.create(sessionId, 1);
-			yield* exchangeRepo.update(exchange.id, {
-				selectedTerritory: "creative-expression",
-			});
+			// Create an exchange
+			const _exchange = yield* exchangeRepo.create(sessionId, 1);
 
 			const result = yield* checkCheckIn;
 
