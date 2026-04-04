@@ -34,7 +34,7 @@
 # - SM typically creates next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
-generated: 2026-04-02T20:00
+generated: 2026-04-04T12:00
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -717,3 +717,47 @@ development_status:
   # Run after all Scoring v2 epics verified in production
   # ───────────────────────────────────────────────────────────────
   cleanup-1-remove-solo-from-postgresql-enum: pr-ready
+
+# ═══════════════════════════════════════════════════════════════
+# PHASE 9: Director Model — Two-Call Steering Architecture
+# ═══════════════════════════════════════════════════════════════
+# Source: _bmad-output/planning-artifacts/epics-director-model.md
+# Architecture: architecture-director-model.md (ADR-DM-1 through DM-8)
+# Replaces territory-based pacing pipeline with Nerin Director (strategist)
+# + Nerin Actor (voice) two-call model. Supersedes ADR-5/17-21.
+#
+# NUMBERING: Continues from Phase 8 (43+).
+# Cross-reference: epics-director-model.md "Epic N" = sprint-status "Epic N+42"
+#   Director Epic 1 (Director-Steered Conversations) = Epic 43
+#   Director Epic 2 (Codebase Cleanup & Dev Tools) = Epic 44
+#
+# DEPENDENCY ORDER: Epic 43 first (core pipeline), then Epic 44 (cleanup)
+
+  # ───────────────────────────────────────────────────────────────
+  # DIRECTOR EPIC 1: Director-Steered Conversations (Epic 43)
+  # Coverage analyzer, Nerin Director + Actor, pipeline rewrite,
+  # exchange table migration, ConversAnalyzer cleanup
+  # Stories: 1.1-1.6 in epics-director-model.md
+  # Depends on: Nothing — core replacement
+  # ───────────────────────────────────────────────────────────────
+  epic-43: backlog
+  43-1-exchange-table-migration-and-schema-changes: backlog
+  43-2-coverage-analyzer-evidence-to-target-pure-function: backlog
+  43-3-nerin-director-repository-prompt-and-langchain-implementation: backlog
+  43-4-nerin-actor-persona-rewrite-prompt-and-repository-adaptation: backlog
+  43-5-pipeline-orchestrator-rewrite-4-step-sequential-pipeline: backlog
+  43-6-conversanalyzer-cleanup-strip-user-state-extraction: backlog
+  epic-43-retrospective: optional
+
+  # ───────────────────────────────────────────────────────────────
+  # DIRECTOR EPIC 2: Codebase Cleanup & Development Tools (Epic 44)
+  # Delete ~25 old pipeline files, rewrite seed scripts,
+  # clean barrel exports, remove dead mocks
+  # Stories: 2.1-2.3 in epics-director-model.md
+  # Depends on: Epic 43 (old code becomes dead after pipeline replacement)
+  # ───────────────────────────────────────────────────────────────
+  epic-44: backlog
+  44-1-delete-old-pipeline-code-functions-constants-and-types: backlog
+  44-2-seed-script-and-exchange-builder-rewrite-for-director-model: backlog
+  44-3-barrel-export-cleanup-and-conversanalyzer-mock-removal: backlog
+  epic-44-retrospective: optional
