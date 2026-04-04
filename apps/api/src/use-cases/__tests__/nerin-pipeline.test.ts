@@ -1,8 +1,11 @@
 /**
- * Nerin Pipeline Tests -- Pacing Pipeline Integration (Story 27-3)
+ * Nerin Pipeline Tests — Director Model Pipeline (Story 43-5)
  *
- * Tests the full pipeline: E_target -> V2 scorer -> V2 selector -> Move Governor ->
- * Prompt Builder -> Nerin -> ConversAnalyzer -> save.
+ * Tests the 4-step Director model pipeline:
+ * 1. Evidence extraction (three-tier fail-open)
+ * 2. Coverage analysis (pure function)
+ * 3. Nerin Director (LLM — generates brief)
+ * 4. Nerin Actor (LLM — voices brief as Nerin)
  *
  * Uses vi.fn() mock pattern.
  */
@@ -18,7 +21,9 @@ import {
 	ConversationEvidenceRepository,
 	CostGuardRepository,
 	LoggerRepository,
-	NerinAgentRepository,
+	NerinActorRepository,
+	NerinDirectorError,
+	NerinDirectorRepository,
 } from "@workspace/domain";
 import { Effect, Layer, Redacted } from "effect";
 import { runNerinPipeline } from "../nerin-pipeline";
@@ -69,7 +74,11 @@ const mockLoggerRepo = {
 	debug: vi.fn(),
 };
 
-const mockNerinRepo = {
+const mockDirectorRepo = {
+	generateBrief: vi.fn(),
+};
+
+const mockActorRepo = {
 	invoke: vi.fn(),
 };
 
@@ -104,9 +113,16 @@ const mockCostGuardRepo = {
 
 // ---- Test Data ----
 
-const mockNerinResponse = {
-	response: "I help you explore your personality through conversation.",
-	tokenCount: { input: 150, output: 80, total: 230 },
+const mockDirectorResponse = {
+	brief:
+		"Observation: They mentioned getting lost in problems. Connection: That absorption pattern. Question: Ask about losing track of time with another person. Warm, medium length.",
+	tokenUsage: { input: 500, output: 80 },
+};
+
+const mockActorResponse = {
+	response:
+		"That thing you said about getting lost in problems... I notice that too, in the way currents pull you somewhere before you realize.",
+	tokenCount: { input: 100, output: 50, total: 150 },
 };
 
 const mockConversanalyzerOutput = {
@@ -145,25 +161,9 @@ const openerExchangeRecord = {
 	id: "exchange_opener",
 	sessionId: "session_test_123",
 	turnNumber: 0,
-	energy: null,
-	energyBand: null,
-	telling: null,
-	tellingBand: null,
-	withinMessageShift: null,
-	stateNotes: null,
 	extractionTier: null,
-	smoothedEnergy: null,
-	sessionTrust: null,
-	drain: null,
-	trustCap: null,
-	eTarget: null,
-	scorerOutput: null,
-	selectedTerritory: null,
-	selectionRule: null,
-	governorOutput: null,
-	governorDebug: null,
-	sessionPhase: null,
-	transitionType: null,
+	directorOutput: null,
+	coverageTargets: null,
 	createdAt: new Date(),
 };
 
@@ -171,25 +171,9 @@ const mockExchangeRecord = {
 	id: "exchange_1",
 	sessionId: "session_test_123",
 	turnNumber: 1,
-	energy: null,
-	energyBand: null,
-	telling: null,
-	tellingBand: null,
-	withinMessageShift: null,
-	stateNotes: null,
 	extractionTier: null,
-	smoothedEnergy: null,
-	sessionTrust: null,
-	drain: null,
-	trustCap: null,
-	eTarget: null,
-	scorerOutput: null,
-	selectedTerritory: null,
-	selectionRule: null,
-	governorOutput: null,
-	governorDebug: null,
-	sessionPhase: null,
-	transitionType: null,
+	directorOutput: null,
+	coverageTargets: null,
 	createdAt: new Date(),
 };
 
@@ -293,19 +277,11 @@ const postColdStartExchanges = [
 		...mockExchangeRecord,
 		id: "ex_3",
 		turnNumber: 3,
-		selectedTerritory: "creative-pursuits",
-		energy: 0.3,
-		energyBand: "low",
-		telling: 0.25,
-		tellingBand: "mostly_compliant",
-		smoothedEnergy: 0.4,
-		sessionTrust: 0.4,
-		eTarget: 0.48,
-		selectionRule: "argmax",
-		governorOutput: {
-			intent: "explore",
-			territory: "creative-pursuits",
-			observationFocus: { type: "relate" },
+		extractionTier: 1,
+		directorOutput: "Explore creative pursuits",
+		coverageTargets: {
+			targetFacets: ["imagination", "artistic_interests", "emotionality"],
+			targetDomain: "leisure",
 		},
 	},
 ];
@@ -354,7 +330,8 @@ const createTestLayer = () =>
 		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
 		Layer.succeed(AssessmentExchangeRepository, mockExchangeRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
-		Layer.succeed(NerinAgentRepository, mockNerinRepo),
+		Layer.succeed(NerinDirectorRepository, mockDirectorRepo),
+		Layer.succeed(NerinActorRepository, mockActorRepo),
 		Layer.succeed(ConversanalyzerRepository, mockConversanalyzerRepo),
 		Layer.succeed(ConversationEvidenceRepository, mockEvidenceRepo),
 		Layer.succeed(CostGuardRepository, mockCostGuardRepo),
@@ -402,7 +379,8 @@ function setupDefaultMocks() {
 	mockLoggerRepo.warn.mockImplementation(() => {});
 	mockLoggerRepo.debug.mockImplementation(() => {});
 
-	mockNerinRepo.invoke.mockReturnValue(Effect.succeed(mockNerinResponse));
+	mockDirectorRepo.generateBrief.mockReturnValue(Effect.succeed(mockDirectorResponse));
+	mockActorRepo.invoke.mockReturnValue(Effect.succeed(mockActorResponse));
 
 	mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
 		Effect.succeed({
@@ -443,7 +421,7 @@ function setupDefaultMocks() {
 	mockCostGuardRepo.checkSessionBudget.mockReturnValue(Effect.void);
 }
 
-describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
+describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 	beforeEach(() => {
 		setupDefaultMocks();
 	});
@@ -452,8 +430,8 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 		vi.clearAllMocks();
 	});
 
-	describe("Turn 1 (cold-start-perimeter path)", () => {
-		it.effect("selects territory via V2 selector with cold-start-perimeter rule", () =>
+	describe("4-step sequential pipeline", () => {
+		it.effect("runs evidence -> coverage -> Director -> Actor on a normal turn", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(turn1Messages));
 
@@ -463,17 +441,28 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 				});
 
 				expect(result.response).toBeDefined();
+				expect(result.response).toBe(mockActorResponse.response);
 
-				// Nerin should be invoked with a system prompt string (not territoryPrompt)
-				expect(mockNerinRepo.invoke).toHaveBeenCalledTimes(1);
-				const invokeArgs = mockNerinRepo.invoke.mock.calls[0]?.[0];
-				expect(invokeArgs?.systemPrompt).toBeDefined();
-				expect(typeof invokeArgs?.systemPrompt).toBe("string");
-				expect(invokeArgs?.systemPrompt.length).toBeGreaterThan(0);
+				// Evidence extraction happened (ConversAnalyzer split methods called)
+				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
+				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 
-				// Exchange update called once: extraction tier on previous exchange
-				// Story 43-1: steering data no longer persisted on exchange (columns removed)
-				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
+				// Director was called
+				expect(mockDirectorRepo.generateBrief).toHaveBeenCalledTimes(1);
+				const directorCall = mockDirectorRepo.generateBrief.mock.calls[0]?.[0];
+				expect(directorCall?.sessionId).toBe("session_test_123");
+				expect(directorCall?.systemPrompt).toBeDefined();
+				expect(directorCall?.messages).toBeDefined();
+				expect(directorCall?.coverageTargets).toBeDefined();
+				expect(directorCall?.coverageTargets.targetFacets).toBeDefined();
+				expect(directorCall?.coverageTargets.targetDomain).toBeDefined();
+
+				// Actor was called with the Director's brief
+				expect(mockActorRepo.invoke).toHaveBeenCalledTimes(1);
+				const actorCall = mockActorRepo.invoke.mock.calls[0]?.[0];
+				expect(actorCall?.sessionId).toBe("session_test_123");
+				expect(actorCall?.actorPrompt).toBeDefined();
+				expect(actorCall?.directorBrief).toBe(mockDirectorResponse.brief);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
@@ -490,8 +479,8 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 				expect(mockExchangeRepo.create).toHaveBeenCalledTimes(1);
 				expect(mockExchangeRepo.create).toHaveBeenCalledWith("session_test_123", 1);
 
-				// Exchange update called once: extraction tier on previous exchange
-				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
+				// Exchange updated with director_output, coverage_targets, and extraction_tier
+				expect(mockExchangeRepo.update).toHaveBeenCalled();
 
 				// saveMessage is called twice: once for user, once for assistant
 				expect(mockMessageRepo.saveMessage).toHaveBeenCalledTimes(2);
@@ -507,64 +496,8 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 				expect(assistantSaveCall?.[3]).toBe("exchange_1"); // new exchangeId
 			}).pipe(Effect.provide(createTestLayer())),
 		);
-	});
 
-	describe("Post-cold-start path (full pacing pipeline)", () => {
-		it.effect("runs E_target -> V2 scorer -> selector -> governor -> prompt builder", () =>
-			Effect.gen(function* () {
-				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
-				mockEvidenceRepo.findBySession.mockReturnValue(
-					Effect.succeed([
-						{
-							id: "ev1",
-							sessionId: "session_test_123",
-							messageId: "msg_2",
-							bigfiveFacet: "imagination",
-							deviation: 1,
-							strength: "moderate",
-							confidence: "medium",
-							domain: "work",
-							note: "test",
-							createdAt: new Date(),
-						},
-					]),
-				);
-
-				const result = yield* runNerinPipeline({
-					sessionId: "session_test_123",
-					userMessage: "I work in tech",
-				});
-
-				expect(result.response).toBeDefined();
-
-				// Nerin should be called with system prompt (not territoryPrompt)
-				expect(mockNerinRepo.invoke).toHaveBeenCalledTimes(1);
-				const invokeArgs = mockNerinRepo.invoke.mock.calls[0]?.[0];
-				expect(invokeArgs?.systemPrompt).toBeDefined();
-				expect(typeof invokeArgs?.systemPrompt).toBe("string");
-
-				// ConversAnalyzer split methods should be called
-				expect(mockConversanalyzerRepo.analyzeUserState).toHaveBeenCalledTimes(1);
-				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
-
-				// Evidence should be saved
-				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
-
-				// Exchange should be created and updated (1 update: extraction tier on previous exchange)
-				// Story 43-1: steering data no longer persisted on exchange (columns removed)
-				expect(mockExchangeRepo.create).toHaveBeenCalledTimes(1);
-				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
-
-				// Update: extraction tier on previous exchange
-				const extractionUpdate = mockExchangeRepo.update.mock.calls[0]?.[1];
-				expect(extractionUpdate).toBeDefined();
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-	});
-
-	describe("Observability logging (NFR5)", () => {
-		it.effect("logs pacing pipeline state including E_target and governor intent", () =>
+		it.effect("saves director_output and coverage_targets on the exchange", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
@@ -574,73 +507,106 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 					userMessage: "I work in tech",
 				});
 
-				// Check that "Pacing pipeline computed" was logged
-				const pacingLogCall = mockLoggerRepo.info.mock.calls.find(
-					(call: unknown[]) => call[0] === "Pacing pipeline computed",
+				// Find the update call that contains directorOutput
+				const updateCalls = mockExchangeRepo.update.mock.calls;
+				const directorUpdateCall = updateCalls.find(
+					(call: unknown[]) =>
+						call[1] && typeof (call[1] as Record<string, unknown>).directorOutput === "string",
 				);
-				expect(pacingLogCall).toBeDefined();
-				const pacingData = pacingLogCall?.[1];
-				expect(pacingData).toHaveProperty("eTarget");
-				expect(pacingData).toHaveProperty("selectedTerritory");
-				expect(pacingData).toHaveProperty("governorIntent");
-				expect(pacingData).toHaveProperty("entryPressure");
-				expect(pacingData).toHaveProperty("observationFocus");
-				expect(pacingData).toHaveProperty("turnNumber");
+				expect(directorUpdateCall).toBeDefined();
+				const updateData = directorUpdateCall?.[1] as Record<string, unknown>;
+				expect(updateData.directorOutput).toBe(mockDirectorResponse.brief);
+				expect(updateData.coverageTargets).toBeDefined();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
 
-				// Check "Message processed" log includes territory info
-				const processedLogCall = mockLoggerRepo.info.mock.calls.find(
-					(call: unknown[]) => call[0] === "Message processed",
-				);
-				expect(processedLogCall).toBeDefined();
-				const processedData = processedLogCall?.[1];
-				expect(processedData).toHaveProperty("selectedTerritory");
-				expect(processedData).toHaveProperty("eTarget");
-				expect(processedData).toHaveProperty("governorIntent");
-				expect(processedData).toHaveProperty("evidenceCount");
-				expect(processedData).toHaveProperty("exchangeId");
+	describe("Closing turn", () => {
+		it.effect("uses closing Director prompt and appends farewell on final turn", () =>
+			Effect.gen(function* () {
+				// Set up final turn: messageCount returns threshold AND turnNumber >= totalTurns
+				mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(25));
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+
+				// Create 25 prior exchanges (opener + 24 pipeline turns) so turnNumber = 25
+				const finalTurnExchanges = [
+					openerExchangeRecord,
+					...Array.from({ length: 24 }, (_, i) => ({
+						...mockExchangeRecord,
+						id: `ex_${i + 1}`,
+						turnNumber: i + 1,
+						extractionTier: 1,
+						directorOutput: `Brief for turn ${i + 1}`,
+						coverageTargets: { targetFacets: ["imagination"], targetDomain: "work" },
+					})),
+				];
+				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(finalTurnExchanges));
+
+				const result = yield* runNerinPipeline({
+					sessionId: "session_test_123",
+					userMessage: "Final message",
+				});
+
+				expect(result.isFinalTurn).toBe(true);
+
+				// Director should have been called with closing prompt
+				const directorCall = mockDirectorRepo.generateBrief.mock.calls[0]?.[0];
+				expect(directorCall?.systemPrompt).toContain("FINAL EXCHANGE");
+
+				// Farewell message should be present
+				expect(result.surfacingMessage).toBeDefined();
+				expect(typeof result.surfacingMessage).toBe("string");
+
+				// Farewell message should be saved to DB
+				// saveMessage called 3 times: user + actor response + farewell
+				expect(mockMessageRepo.saveMessage).toHaveBeenCalledTimes(3);
+
+				// Session transitioned to "finalizing"
+				expect(mockSessionRepo.updateSession).toHaveBeenCalledWith("session_test_123", {
+					status: "finalizing",
+				});
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
 	describe("Fail-open resilience", () => {
-		it.effect(
-			"handles ConversAnalyzer failure non-fatally -- falls back to Tier 2 (Story 24-2)",
-			() =>
-				Effect.gen(function* () {
-					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-					mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
-					// Fail strict calls — lenient methods succeed from default setup
-					mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
-						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-					);
-					mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
-						Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
-					);
+		it.effect("handles ConversAnalyzer failure non-fatally — falls back to Tier 2 (Story 24-2)", () =>
+			Effect.gen(function* () {
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
+				// Fail strict calls — lenient methods succeed from default setup
+				mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
+					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
+				);
+				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
+					Effect.fail(new ConversanalyzerError({ message: "LLM timeout" })),
+				);
 
-					const result = yield* runNerinPipeline({
-						sessionId: "session_test_123",
-						userMessage: "I work in tech",
-					});
+				const result = yield* runNerinPipeline({
+					sessionId: "session_test_123",
+					userMessage: "I work in tech",
+				});
 
-					// Pipeline should still succeed
-					expect(result.response).toBeDefined();
+				// Pipeline should still succeed
+				expect(result.response).toBeDefined();
 
-					// Nerin should have been called
-					expect(mockNerinRepo.invoke).toHaveBeenCalledTimes(1);
+				// Director and Actor should have been called
+				expect(mockDirectorRepo.generateBrief).toHaveBeenCalledTimes(1);
+				expect(mockActorRepo.invoke).toHaveBeenCalledTimes(1);
 
-					// Tier 2 warning was logged
-					expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
-						expect.stringContaining("fell back to Tier 2"),
-						expect.objectContaining({ sessionId: "session_test_123" }),
-					);
+				// Tier 2 warning was logged
+				expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
+					expect.stringContaining("fell back to Tier 2"),
+					expect.objectContaining({ sessionId: "session_test_123" }),
+				);
 
-					// Evidence IS saved from Tier 2 lenient fallback (evidence above weight threshold)
-					expect(mockEvidenceRepo.save).toHaveBeenCalled();
-				}).pipe(Effect.provide(createTestLayer())),
+				// Evidence IS saved from Tier 2 lenient fallback (evidence above weight threshold)
+				expect(mockEvidenceRepo.save).toHaveBeenCalled();
+			}).pipe(Effect.provide(createTestLayer())),
 		);
 
 		it.effect(
-			"handles both ConversAnalyzer tiers failing -- uses Tier 3 neutral defaults (Story 24-2)",
+			"handles all ConversAnalyzer tiers failing — Tier 3 neutral defaults, pipeline continues",
 			() =>
 				Effect.gen(function* () {
 					mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
@@ -656,13 +622,12 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 						userMessage: "I work in tech",
 					});
 
-					// Pipeline should still succeed
+					// Pipeline should still succeed — Director and Actor still called
 					expect(result.response).toBeDefined();
+					expect(mockDirectorRepo.generateBrief).toHaveBeenCalledTimes(1);
+					expect(mockActorRepo.invoke).toHaveBeenCalledTimes(1);
 
-					// Nerin should have been called
-					expect(mockNerinRepo.invoke).toHaveBeenCalledTimes(1);
-
-					// Tier 3 warning was logged (split extraction logs per-call)
+					// Tier 3 warning was logged
 					expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
 						expect.stringContaining("failed at all tiers"),
 						expect.objectContaining({ sessionId: "session_test_123" }),
@@ -671,6 +636,143 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 					// Evidence should NOT be saved (neutral defaults have empty evidence)
 					expect(mockEvidenceRepo.save).not.toHaveBeenCalled();
 				}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("propagates Director failure to the caller", () =>
+			Effect.gen(function* () {
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
+
+				mockDirectorRepo.generateBrief.mockReturnValue(
+					Effect.fail(
+						new NerinDirectorError({
+							message: "Director LLM call failed after retry",
+							sessionId: "session_test_123",
+						}),
+					),
+				);
+
+				const exit = yield* Effect.exit(
+					runNerinPipeline({
+						sessionId: "session_test_123",
+						userMessage: "I work in tech",
+					}),
+				);
+
+				// Should have failed
+				expect(exit._tag).toBe("Failure");
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("Evidence idempotency on retry (AC-2)", () => {
+		it.effect("skips extraction if evidence already exists for this exchange", () =>
+			Effect.gen(function* () {
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
+
+				// Evidence already exists for the previous exchange (retry scenario)
+				mockEvidenceRepo.countByMessage.mockReturnValue(Effect.succeed(2));
+
+				yield* runNerinPipeline({
+					sessionId: "session_test_123",
+					userMessage: "I work in tech",
+				});
+
+				// Extraction should be skipped (no ConversAnalyzer calls)
+				expect(mockConversanalyzerRepo.analyzeUserState).not.toHaveBeenCalled();
+				expect(mockConversanalyzerRepo.analyzeEvidence).not.toHaveBeenCalled();
+
+				// Director and Actor should still be called
+				expect(mockDirectorRepo.generateBrief).toHaveBeenCalledTimes(1);
+				expect(mockActorRepo.invoke).toHaveBeenCalledTimes(1);
+
+				// Evidence should NOT be saved again
+				expect(mockEvidenceRepo.save).not.toHaveBeenCalled();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("Cost tracking (AC-8)", () => {
+		it.effect("tracks cost from evidence extraction + Director + Actor", () =>
+			Effect.gen(function* () {
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
+
+				yield* runNerinPipeline({
+					sessionId: "session_test_123",
+					userMessage: "I work in tech",
+				});
+
+				// Cost should be tracked (incrementDailyCost called)
+				expect(mockCostGuardRepo.incrementDailyCost).toHaveBeenCalled();
+				expect(mockCostGuardRepo.incrementSessionCost).toHaveBeenCalled();
+
+				// Cost logged includes Director info
+				const costLog = mockLoggerRepo.info.mock.calls.find(
+					(call: unknown[]) => call[0] === "Cost tracked",
+				);
+				expect(costLog).toBeDefined();
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("Polarity passthrough", () => {
+		it.effect("saves evidence with polarity field when present", () =>
+			Effect.gen(function* () {
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
+
+				yield* runNerinPipeline({
+					sessionId: "session_test_123",
+					userMessage: "I like helping people",
+				});
+
+				// Evidence should be saved
+				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
+
+				// Verify polarity is included in saved evidence
+				const savedEvidence = mockEvidenceRepo.save.mock.calls[0]?.[0];
+				expect(savedEvidence).toBeDefined();
+				expect(savedEvidence.length).toBeGreaterThan(0);
+				for (const record of savedEvidence) {
+					expect(record).toHaveProperty("polarity");
+					expect(["high", "low"]).toContain(record.polarity);
+				}
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("Observability logging", () => {
+		it.effect("logs Director model pipeline state", () =>
+			Effect.gen(function* () {
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
+
+				yield* runNerinPipeline({
+					sessionId: "session_test_123",
+					userMessage: "I work in tech",
+				});
+
+				// Check that pipeline state was logged
+				const pipelineLog = mockLoggerRepo.info.mock.calls.find(
+					(call: unknown[]) => call[0] === "Director pipeline computed",
+				);
+				expect(pipelineLog).toBeDefined();
+				const pipelineData = pipelineLog?.[1];
+				expect(pipelineData).toHaveProperty("turnNumber");
+				expect(pipelineData).toHaveProperty("targetDomain");
+				expect(pipelineData).toHaveProperty("targetFacets");
+
+				// Check "Message processed" log
+				const processedLogCall = mockLoggerRepo.info.mock.calls.find(
+					(call: unknown[]) => call[0] === "Message processed",
+				);
+				expect(processedLogCall).toBeDefined();
+				const processedData = processedLogCall?.[1];
+				expect(processedData).toHaveProperty("evidenceCount");
+				expect(processedData).toHaveProperty("exchangeId");
+			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
@@ -697,53 +799,6 @@ describe("Nerin Pipeline - Pacing Pipeline Integration (Story 27-3)", () => {
 				expect(evidenceInput).toHaveProperty("message");
 				expect(evidenceInput).toHaveProperty("recentMessages");
 				expect(evidenceInput).toHaveProperty("domainDistribution");
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-	});
-
-	describe("Polarity passthrough (Story 42-4)", () => {
-		it.effect("saves evidence with polarity field when present", () =>
-			Effect.gen(function* () {
-				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
-
-				yield* runNerinPipeline({
-					sessionId: "session_test_123",
-					userMessage: "I like helping people",
-				});
-
-				// Evidence should be saved
-				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
-
-				// Verify polarity is included in saved evidence
-				const savedEvidence = mockEvidenceRepo.save.mock.calls[0]?.[0];
-				expect(savedEvidence).toBeDefined();
-				expect(savedEvidence.length).toBeGreaterThan(0);
-				for (const record of savedEvidence) {
-					expect(record).toHaveProperty("polarity");
-					expect(["high", "low"]).toContain(record.polarity);
-				}
-			}).pipe(Effect.provide(createTestLayer())),
-		);
-	});
-
-	describe("Pipeline state on exchange (AC6)", () => {
-		it.effect("stores extraction tier on previous exchange", () =>
-			Effect.gen(function* () {
-				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
-
-				yield* runNerinPipeline({
-					sessionId: "session_test_123",
-					userMessage: "I enjoy creative work",
-				});
-
-				// Story 43-1: Only extraction tier update on previous exchange (steering columns removed)
-				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
-
-				// Update: extraction tier on previous exchange
-				const extractionData = mockExchangeRepo.update.mock.calls[0]?.[1];
-				expect(extractionData).toBeDefined();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
@@ -884,47 +939,6 @@ describe("Extension Session Pipeline (Story 36-2)", () => {
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("seeds E_target from most recent exchange across all user sessions", () =>
-		Effect.gen(function* () {
-			mockSessionRepo.getSession.mockReturnValue(
-				Effect.succeed({
-					id: "extension_session_id",
-					userId: "user_123",
-					status: "active",
-					messageCount: 0,
-					parentSessionId: "parent_session_id",
-					createdAt: new Date(),
-					updatedAt: new Date(),
-				}),
-			);
-
-			// Extension session has only opener (turn 0)
-			mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed([openerExchangeRecord]));
-			// All user exchanges include parent's pipeline exchanges
-			mockExchangeRepo.findByUserId.mockReturnValue(
-				Effect.succeed([...parentExchangeHistory, openerExchangeRecord]),
-			);
-			mockEvidenceRepo.findByUserId.mockReturnValue(Effect.succeed(parentEvidence));
-			mockMessageRepo.getMessagesByUserId.mockReturnValue(Effect.succeed(turn1Messages));
-
-			const result = yield* runNerinPipeline({
-				sessionId: "extension_session_id",
-				userId: "user_123",
-				userMessage: "Hello again",
-			});
-
-			expect(result.response).toBeDefined();
-
-			// Verify pacing pipeline used parent exchange data via allExchanges
-			const pacingLog = mockLoggerRepo.info.mock.calls.find(
-				(call: unknown[]) => call[0] === "Pacing pipeline computed",
-			);
-			expect(pacingLog).toBeDefined();
-			const pacingData = pacingLog?.[1] as Record<string, unknown>;
-			expect(pacingData?.isExtensionSession).toBe(true);
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-
 	it.effect("handles missing parent session data gracefully via user-level fallback", () =>
 		Effect.gen(function* () {
 			mockSessionRepo.getSession.mockReturnValue(
@@ -939,8 +953,7 @@ describe("Extension Session Pipeline (Story 36-2)", () => {
 				}),
 			);
 
-			// User-level queries succeed (even if parent session is gone, the user's
-			// other sessions may still have data)
+			// User-level queries succeed (even if parent session is gone)
 			mockExchangeRepo.findByUserId.mockReturnValue(Effect.succeed([openerExchangeRecord]));
 			mockEvidenceRepo.findByUserId.mockReturnValue(Effect.succeed([]));
 			mockMessageRepo.getMessagesByUserId.mockReturnValue(Effect.succeed(turn1Messages));
@@ -1032,11 +1045,11 @@ describe("User-level context loading (Story 36-2 refactor)", () => {
 			expect(mockEvidenceRepo.findByUserId).toHaveBeenCalledWith("user_123");
 			expect(mockExchangeRepo.findByUserId).toHaveBeenCalledWith("user_123");
 
-			// Verify Nerin received all messages (parent + extension + current)
-			const nerinCall = mockNerinRepo.invoke.mock.calls[0]?.[0];
-			expect(nerinCall?.messages).toHaveLength(5); // 3 parent + 1 extension + 1 current
-			expect(nerinCall?.messages[0]?.content).toBe("Hi! I'm Nerin.");
-			expect(nerinCall?.messages[1]?.content).toBe("I love painting on weekends");
+			// Verify Director received all messages (parent + extension + current)
+			const directorCall = mockDirectorRepo.generateBrief.mock.calls[0]?.[0];
+			expect(directorCall?.messages).toHaveLength(5); // 3 parent + 1 extension + 1 current
+			expect(directorCall?.messages[0]?.content).toBe("Hi! I'm Nerin.");
+			expect(directorCall?.messages[1]?.content).toBe("I love painting on weekends");
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 

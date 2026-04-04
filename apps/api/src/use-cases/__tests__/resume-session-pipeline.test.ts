@@ -13,9 +13,9 @@ import { Effect } from "effect";
 import { sendMessage } from "../send-message.use-case";
 import {
 	createTestLayer,
+	mockActorResponse,
 	mockExchangeRepo,
 	mockMessageRepo,
-	mockNerinResponse,
 	mockSessionRepo,
 	openerExchangeRecord,
 	setupDefaultMocks,
@@ -151,7 +151,7 @@ describe("Pacing pipeline resume (Story 31-5)", () => {
 				userId: "user_456",
 			});
 
-			expect(result.response).toBe(mockNerinResponse.response);
+			expect(result.response).toBe(mockActorResponse.response);
 
 			// The key assertion: turn number should be 4 (continuing from 3 prior exchanges)
 			expect(capturedTurnNumber).toBe(4);

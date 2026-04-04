@@ -13,11 +13,11 @@ import { sendMessage } from "../send-message.use-case";
 import {
 	coldStartMessages,
 	createTestLayer,
+	mockActorRepo,
+	mockActorResponse,
 	mockCostGuardRepo,
 	mockLoggerRepo,
 	mockMessageRepo,
-	mockNerinRepo,
-	mockNerinResponse,
 	postColdStartMessages,
 	setupDefaultMocks,
 } from "./__fixtures__/send-message.fixtures";
@@ -128,7 +128,7 @@ describe("sendMessage Use Case", () => {
 					if (exit._tag === "Failure") {
 						expect(String(exit.cause)).toContain("MessageRateLimitError");
 					}
-					expect(mockNerinRepo.invoke).not.toHaveBeenCalled();
+					expect(mockActorRepo.invoke).not.toHaveBeenCalled();
 				}).pipe(Effect.provide(createTestLayer())),
 			);
 		});
@@ -171,7 +171,7 @@ describe("sendMessage Use Case", () => {
 					});
 
 					// Fail-open: message should still proceed
-					expect(result.response).toBe(mockNerinResponse.response);
+					expect(result.response).toBe(mockActorResponse.response);
 					expect(mockLoggerRepo.error).toHaveBeenCalledWith(
 						expect.stringContaining("Redis"),
 						expect.any(Object),
@@ -192,7 +192,7 @@ describe("sendMessage Use Case", () => {
 					});
 
 					// Fail-open: message should still succeed
-					expect(result.response).toBe(mockNerinResponse.response);
+					expect(result.response).toBe(mockActorResponse.response);
 				}).pipe(Effect.provide(createTestLayer())),
 			);
 
@@ -209,7 +209,7 @@ describe("sendMessage Use Case", () => {
 					});
 
 					// Fail-open: message should still succeed
-					expect(result.response).toBe(mockNerinResponse.response);
+					expect(result.response).toBe(mockActorResponse.response);
 				}).pipe(Effect.provide(createTestLayer())),
 			);
 		});

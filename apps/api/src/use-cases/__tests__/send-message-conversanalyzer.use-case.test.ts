@@ -13,12 +13,12 @@ import { sendMessage } from "../send-message.use-case";
 import {
 	coldStartMessages,
 	createTestLayer,
+	mockActorRepo,
+	mockActorResponse,
 	mockConversanalyzerRepo,
 	mockEvidenceRepo,
 	mockLoggerRepo,
 	mockMessageRepo,
-	mockNerinRepo,
-	mockNerinResponse,
 	postColdStartMessages,
 	setupDefaultMocks,
 } from "./__fixtures__/send-message.fixtures";
@@ -112,8 +112,8 @@ describe("sendMessage Use Case", () => {
 					});
 
 					// Nerin should still respond normally
-					expect(result.response).toBe(mockNerinResponse.response);
-					expect(mockNerinRepo.invoke).toHaveBeenCalled();
+					expect(result.response).toBe(mockActorResponse.response);
+					expect(mockActorRepo.invoke).toHaveBeenCalled();
 					// Tier 2 warning was logged (split three-tier pipeline)
 					expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
 						expect.stringContaining("fell back to Tier 2"),

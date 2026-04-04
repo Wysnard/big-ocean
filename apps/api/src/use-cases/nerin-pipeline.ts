@@ -1,68 +1,43 @@
 /**
- * Nerin Pipeline -- Pacing Pipeline Integration (Story 27-3)
+ * Nerin Pipeline — Director Model (Story 43-5)
  *
- * Wires the full pacing pipeline into the Nerin conversation loop:
- * E_target -> V2 scorer -> V2 selector -> Move Governor -> Prompt Builder -> Nerin -> ConversAnalyzer -> save.
+ * 4-step sequential pipeline replacing the old 6-layer pacing system:
+ * 1. Evidence extraction (existing Haiku call, three-tier fail-open unchanged)
+ * 2. Coverage analysis (pure function — reads all session evidence, returns targets)
+ * 3. Nerin Director (LLM — receives system prompt + full history + coverage targets, returns brief)
+ * 4. Nerin Actor (LLM — receives actor prompt + brief, returns response)
  *
- * Replaces the old DRS + multiplicative scorer + old prompt builder path.
- * Clean cut migration -- no backward compatibility shim or feature flag.
+ * Exchange is saved with director_output, coverage_targets, and extraction_tier.
  *
- * Pipeline steps:
- * 1. Extract evidence from user message via ConversAnalyzer (three-tier)
- * 2. Compute E_target from energy/telling histories (includes current turn)
- * 3. Score all territories via V2 additive scorer (includes current evidence)
- * 4. Select territory via V2 selector (cold-start-perimeter for turn 1, argmax for turns 2+)
- * 5. Compute observation focus strengths
- * 6. Run Move Governor to produce PromptBuilderInput
- * 7. Build system prompt via 2-layer prompt builder
- * 8. Call Nerin with composed system prompt
- * 9. Cost tracking
- * 10. Save evidence + exchange metadata
+ * Evidence idempotency: on retry, evidence extraction is skipped if evidence
+ * already exists for the current exchange (the exchange row created before
+ * the Director call serves as the idempotency anchor).
  */
 
 import {
+	AgentInvocationError,
 	AppConfig,
 	AssessmentExchangeRepository,
 	AssessmentMessageRepository,
 	AssessmentSessionRepository,
 	aggregateDomainDistribution,
-	buildPrompt,
-	buildSurfacingPrompt,
+	analyzeCoverage,
+	buildActorPrompt,
 	type ConversanalyzerV2Output,
 	ConversationEvidenceRepository,
 	CostGuardRepository,
 	calculateCost,
-	computeContradictionStrength,
-	computeConvergenceStrength,
-	computeETargetV2,
-	computeFacetMetrics,
 	computeFinalWeight,
-	computeGovernorOutput,
-	computeNoticingStrength,
-	computePerDomainConfidence,
-	computeRelateStrength,
-	computeSmoothedClarity,
 	type DomainMessage,
-	deriveSessionPhase,
-	deriveTransitionType,
-	type EnergyBand,
 	type ExtractionTier,
-	type FacetMetrics as FacetMetricsType,
+	enrichWithDefinitions,
 	getUTCDateKey,
-	type LifeDomain,
 	LoggerRepository,
-	type MoveGovernorInput,
-	mapEnergyBand,
-	mapTellingBand,
-	NerinAgentRepository,
-	OBSERVATION_FOCUS_CONSTANTS,
-	PACING_SCORER_DEFAULTS,
-	type PacingVisitHistory,
-	scoreAllTerritoriesV2,
-	selectTerritoryV2,
-	TERRITORY_CATALOG,
-	type TellingBand,
-	type TerritoryId,
+	NERIN_DIRECTOR_CLOSING_PROMPT,
+	NERIN_DIRECTOR_PROMPT,
+	NerinActorRepository,
+	NerinDirectorRepository,
+	pickFarewellMessage,
 } from "@workspace/domain";
 import { Effect } from "effect";
 import { runSplitThreeTierExtraction } from "./three-tier-extraction";
@@ -76,295 +51,21 @@ export interface NerinPipelineInput {
 export interface NerinPipelineOutput {
 	readonly response: string;
 	readonly isFinalTurn: boolean;
-	/** Beat 2 surfacing message — only present on the final turn */
+	/** Static farewell message — only present on the final turn */
 	readonly surfacingMessage?: string;
 }
 
-// ---- Helpers ----
-
 /**
- * Build visit history from exchange records for the V2 scorer.
- * Maps territory ID -> last visit turn number.
+ * Runs the full Nerin Director Model pipeline.
  *
- * Story 43-1: selectedTerritory removed from exchange table. These functions
- * return empty/default values until Story 1.5 replaces the pacing pipeline.
- */
-function buildPacingVisitHistory(
-	exchanges: ReadonlyArray<Record<string, unknown>>,
-): PacingVisitHistory {
-	const visits = new Map<TerritoryId, number>();
-
-	for (const exchange of exchanges) {
-		const territory = exchange.selectedTerritory as string | null | undefined;
-		const turnNumber = exchange.turnNumber as number;
-		if (territory) {
-			visits.set(territory as TerritoryId, turnNumber);
-		}
-	}
-
-	return visits;
-}
-
-/**
- * Extract energy history from exchange records as continuous [0, 1] values.
- * Chronological order (oldest first) as expected by computeETarget.
+ * Steps:
+ * 1. Extract evidence from user message (three-tier fail-open)
+ * 2. Analyze coverage to find weakest domain/facets
+ * 3. Generate Director brief (main or closing prompt)
+ * 4. Voice brief via Nerin Actor
  *
- * Story 43-1: energy removed from exchange table. Returns empty array
- * until Story 1.5 replaces the pacing pipeline.
- */
-function extractEnergyHistory(exchanges: ReadonlyArray<Record<string, unknown>>): number[] {
-	const values: number[] = [];
-	for (const exchange of exchanges) {
-		const energy = exchange.energy as number | null | undefined;
-		if (energy != null) {
-			values.push(energy);
-		}
-	}
-	return values;
-}
-
-/**
- * Extract telling history from exchange records as continuous [0, 1] values.
- * Chronological order (oldest first) as expected by computeETarget.
- *
- * Story 43-1: telling removed from exchange table. Returns all-null array
- * until Story 1.5 replaces the pacing pipeline.
- */
-function extractTellingHistory(
-	exchanges: ReadonlyArray<Record<string, unknown>>,
-): (number | null)[] {
-	const values: (number | null)[] = [];
-	for (const exchange of exchanges) {
-		const telling = exchange.telling as number | null | undefined;
-		values.push(telling ?? null);
-	}
-	return values;
-}
-
-/**
- * Get the current territory from the most recent exchange.
- * Returns null if no exchanges exist yet.
- *
- * Story 43-1: selectedTerritory removed from exchange table.
- * Returns null until Story 1.5 replaces the pacing pipeline.
- */
-function getCurrentTerritory(
-	exchanges: ReadonlyArray<Record<string, unknown>>,
-): TerritoryId | null {
-	for (let i = exchanges.length - 1; i >= 0; i--) {
-		const exchange = exchanges[i];
-		const territory = exchange?.selectedTerritory as string | null | undefined;
-		if (territory) {
-			return territory as TerritoryId;
-		}
-	}
-	return null;
-}
-
-/**
- * Compute observation focus strengths from evidence and exchange state.
- *
- * Returns the raw strengths needed by the Move Governor:
- * - relate: energy x telling
- * - noticing: smoothed clarity for top domain
- * - contradiction: best facet contradiction across domains
- * - convergence: best facet convergence across 3+ domains
- * - phase: mean(confidence) / C_MAX
- * - sharedFireCount: number of prior non-Relate observations
- */
-function computeObservationFocusInputs(
-	facetMetrics: ReadonlyMap<string, FacetMetricsType>,
-	currentEnergy: number,
-	currentTelling: number,
-	previousSmoothedClarity: number,
-): {
-	relateStrength: number;
-	noticingStrength: number;
-	contradictionStrength: number;
-	convergenceStrength: number;
-	noticingDomain: LifeDomain | undefined;
-	contradictionTarget:
-		| {
-				facet: string;
-				pair: readonly [
-					{ domain: LifeDomain; score: number; confidence: number },
-					{ domain: LifeDomain; score: number; confidence: number },
-				];
-				strength: number;
-		  }
-		| undefined;
-	convergenceTarget:
-		| {
-				facet: string;
-				domains: readonly { domain: LifeDomain; score: number; confidence: number }[];
-				strength: number;
-		  }
-		| undefined;
-	phase: number;
-	smoothedClarity: number;
-} {
-	// Relate strength
-	const relateStrength = computeRelateStrength(currentEnergy, currentTelling);
-
-	// Phase: mean confidence across all facets with evidence / C_MAX
-	let sumConf = 0;
-	let countConf = 0;
-	for (const [, metrics] of facetMetrics) {
-		if (metrics.confidence > 0) {
-			sumConf += metrics.confidence;
-			countConf++;
-		}
-	}
-	const phase = countConf > 0 ? sumConf / countConf / OBSERVATION_FOCUS_CONSTANTS.C_MAX : 0;
-
-	// Noticing: find the domain with the highest signal clarity
-	// Clarity = max per-domain confidence across all facets for each domain
-	const domainMaxConf = new Map<LifeDomain, number>();
-	for (const [, metrics] of facetMetrics) {
-		for (const [domain, weight] of metrics.domainWeights) {
-			const conf = computePerDomainConfidence(weight);
-			const current = domainMaxConf.get(domain) ?? 0;
-			if (conf > current) domainMaxConf.set(domain, conf);
-		}
-	}
-
-	let topDomain: LifeDomain | undefined;
-	let topClarity = 0;
-	for (const [domain, conf] of domainMaxConf) {
-		if (conf > topClarity) {
-			topClarity = conf;
-			topDomain = domain;
-		}
-	}
-
-	const smoothedClarity = computeSmoothedClarity(previousSmoothedClarity, topClarity);
-	const noticingStrength = computeNoticingStrength(smoothedClarity);
-
-	// Contradiction: find the facet with the highest score divergence between 2 domains
-	let bestContradictionStrength = 0;
-	let contradictionTarget:
-		| {
-				facet: string;
-				pair: readonly [
-					{ domain: LifeDomain; score: number; confidence: number },
-					{ domain: LifeDomain; score: number; confidence: number },
-				];
-				strength: number;
-		  }
-		| undefined;
-
-	for (const [facet, metrics] of facetMetrics) {
-		const domainEntries = [...metrics.domainWeights.entries()];
-		if (domainEntries.length < 2) continue;
-
-		// Get per-domain confidences for this facet
-		const domainConfs = domainEntries.map(([domain, weight]) => ({
-			domain,
-			confidence: computePerDomainConfidence(weight),
-			score: metrics.score, // Facet-level score (same across domains for now)
-		}));
-
-		// Find pair with maximum confidence divergence
-		for (let i = 0; i < domainConfs.length; i++) {
-			for (let j = i + 1; j < domainConfs.length; j++) {
-				const a = domainConfs[i]!;
-				const b = domainConfs[j]!;
-				// Delta: absolute difference in per-domain confidence
-				const delta = Math.abs(a.confidence - b.confidence);
-				const strength = computeContradictionStrength(delta, a.confidence, b.confidence);
-				if (strength > bestContradictionStrength) {
-					bestContradictionStrength = strength;
-					contradictionTarget = {
-						facet: facet as string,
-						pair: [
-							{ domain: a.domain, score: a.score, confidence: a.confidence },
-							{ domain: b.domain, score: b.score, confidence: b.confidence },
-						] as const,
-						strength,
-					};
-				}
-			}
-		}
-	}
-
-	// Convergence: find the facet with most consistent scores across 3+ domains
-	let bestConvergenceStrength = 0;
-	let convergenceTarget:
-		| {
-				facet: string;
-				domains: readonly { domain: LifeDomain; score: number; confidence: number }[];
-				strength: number;
-		  }
-		| undefined;
-
-	for (const [facet, metrics] of facetMetrics) {
-		const domainEntries = [...metrics.domainWeights.entries()];
-		if (domainEntries.length < 3) continue;
-
-		const domainConfs = domainEntries.map(([domain, weight]) => ({
-			domain,
-			confidence: computePerDomainConfidence(weight),
-			score: metrics.score,
-		}));
-
-		const confidences = domainConfs.map((d) => d.confidence);
-		const maxConf = Math.max(...confidences);
-		const minConf = Math.min(...confidences);
-		const normalizedSpread = maxConf > 0 ? (maxConf - minConf) / maxConf : 0;
-
-		const strength = computeConvergenceStrength(normalizedSpread, confidences);
-		if (strength > bestConvergenceStrength) {
-			bestConvergenceStrength = strength;
-			convergenceTarget = {
-				facet: facet as string,
-				domains: domainConfs.map((d) => ({
-					domain: d.domain,
-					score: d.score,
-					confidence: d.confidence,
-				})),
-				strength,
-			};
-		}
-	}
-
-	return {
-		relateStrength,
-		noticingStrength,
-		contradictionStrength: bestContradictionStrength,
-		convergenceStrength: bestConvergenceStrength,
-		noticingDomain: topDomain,
-		contradictionTarget,
-		convergenceTarget,
-		phase,
-		smoothedClarity,
-	};
-}
-
-/**
- * Count the number of non-Relate observation focus events from exchange history.
- * Uses the governorOutput field which stores the PromptBuilderInput.
- */
-function countSharedFires(exchanges: ReadonlyArray<Record<string, unknown>>): number {
-	let count = 0;
-	for (const exchange of exchanges) {
-		if (exchange.governorOutput && typeof exchange.governorOutput === "object") {
-			const output = exchange.governorOutput as {
-				intent?: string;
-				observationFocus?: { type?: string };
-			};
-			if (output.observationFocus && output.observationFocus.type !== "relate") {
-				count++;
-			}
-		}
-	}
-	return count;
-}
-
-/**
- * Runs the full Nerin pipeline with pacing integration.
- *
- * Atomic write: user message + assistant message are persisted together only after the LLM succeeds.
- * This eliminates orphan user messages when the LLM call fails.
+ * Atomic write: user message + assistant message are persisted together
+ * only after the Actor call succeeds.
  */
 export const runNerinPipeline = (input: NerinPipelineInput) =>
 	Effect.gen(function* () {
@@ -373,7 +74,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const messageRepo = yield* AssessmentMessageRepository;
 		const exchangeRepo = yield* AssessmentExchangeRepository;
 		const logger = yield* LoggerRepository;
-		const nerin = yield* NerinAgentRepository;
+		const director = yield* NerinDirectorRepository;
+		const actor = yield* NerinActorRepository;
 		const evidenceRepo = yield* ConversationEvidenceRepository;
 		const costGuard = yield* CostGuardRepository;
 
@@ -386,7 +88,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const isExtensionSession = !!session.parentSessionId;
 
 		// Load all persisted messages — for authenticated users this spans all
-		// sessions so Nerin sees one continuous conversation history.
+		// sessions so Nerin Director sees one continuous conversation history.
 		const savedMessages = yield* input.userId
 			? messageRepo
 					.getMessagesByUserId(input.userId)
@@ -397,7 +99,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const sessionExchanges = yield* exchangeRepo.findBySession(input.sessionId);
 
 		// For authenticated users, load ALL exchanges/evidence across all sessions
-		// for visit history, E_target seeding, and scoring coverage.
+		// for coverage analysis.
 		const allExchanges = yield* input.userId
 			? exchangeRepo
 					.findByUserId(input.userId)
@@ -437,18 +139,27 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const tContext = Date.now();
 
 		// ---- Step 1: Extract evidence from user message ----
-		// Runs BEFORE scoring so the current message's evidence informs territory selection.
+		// Uses three-tier fail-open: strict x3 -> lenient x1 -> neutral defaults.
+		// Evidence idempotency: skip extraction if evidence already exists for the
+		// previous exchange (retry scenario — ADR-DM-5).
+
+		const previousExchangeId =
+			sessionExchanges.length > 0 ? sessionExchanges[sessionExchanges.length - 1]?.id : null;
+
+		// Check for existing evidence on this exchange (idempotency on retry)
+		const existingEvidenceCount = previousExchangeId
+			? yield* evidenceRepo
+					.countByMessage(previousExchangeId)
+					.pipe(Effect.catchAll(() => Effect.succeed(0)))
+			: 0;
+
+		const shouldExtract = turnNumber >= 1 && existingEvidenceCount === 0;
 
 		let pendingEvidence: ConversanalyzerV2Output["evidence"] = [];
-		let observedEnergyBand: EnergyBand = "steady";
-		let observedTellingBand: TellingBand = "mixed";
-		let observedEnergy = 0.5;
-		let observedTelling = 0.5;
-		let _withinMessageShift = false;
 		let extractionTier: ExtractionTier | null = null;
 		let analyzerTokenUsage: { input: number; output: number } | null = null;
 
-		if (turnNumber >= 1) {
+		if (shouldExtract) {
 			const domainDistribution = aggregateDomainDistribution(allEvidence);
 			const recentMessages: DomainMessage[] = domainMessages.slice(-6);
 
@@ -461,13 +172,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 			extractionTier = extraction.extractionTier;
 			const evidenceResult = extraction.output;
-
 			analyzerTokenUsage = evidenceResult.tokenUsage;
-			observedEnergyBand = evidenceResult.userState.energyBand;
-			observedTellingBand = evidenceResult.userState.tellingBand;
-			observedEnergy = mapEnergyBand(observedEnergyBand);
-			observedTelling = mapTellingBand(observedTellingBand);
-			_withinMessageShift = evidenceResult.userState.withinMessageShift;
 
 			const filteredEvidence = evidenceResult.evidence.filter(
 				(e) => computeFinalWeight(e.strength, e.confidence) >= config.minEvidenceWeight,
@@ -477,8 +182,6 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				sessionId: input.sessionId,
 				rawCount: evidenceResult.evidence.length,
 				filteredCount: filteredEvidence.length,
-				observedEnergyBand,
-				observedTellingBand,
 				extractionTier,
 				evidence: filteredEvidence.map((e) => ({
 					facet: e.bigfiveFacet,
@@ -494,180 +197,98 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			if (filteredEvidence.length > 0) {
 				pendingEvidence = filteredEvidence;
 			}
+		} else if (existingEvidenceCount > 0) {
+			logger.info("Evidence extraction skipped (idempotency — evidence already exists)", {
+				sessionId: input.sessionId,
+				existingEvidenceCount,
+			});
 		}
 
 		const tExtraction = Date.now();
 
-		// Merge freshly extracted evidence into allEvidence for scoring
+		// ---- Step 2: Coverage analysis ----
+		// Merge freshly extracted evidence into allEvidence for coverage analysis
+
 		const allEvidenceWithCurrent = [
 			...allEvidence,
 			...pendingEvidence.map((e) => ({
 				...e,
-				// Temporary fields — these records aren't persisted yet but need
-				// to be shaped like DB evidence for computeFacetMetrics
 				sessionId: input.sessionId,
 				messageId: "pending",
 				exchangeId: null,
 			})),
 		];
 
-		// ---- Step 2: Compute E_target ----
-
-		// All pipeline exchanges across all user sessions (skip opener turn 0)
-		const allPipelineExchanges = allExchanges.filter((e) => e.turnNumber > 0);
-		// Current session pipeline exchanges only (for session-specific state)
-		const sessionPipelineExchanges = sessionExchanges.filter((e) => e.turnNumber > 0);
-
-		// Story 43-1: cast needed — exchange records no longer have energy/telling fields.
-		// Entire pacing pipeline will be replaced in Story 1.5.
-		const energyHistory = extractEnergyHistory(sessionPipelineExchanges as any[]);
-		const tellingHistory = extractTellingHistory(sessionPipelineExchanges as any[]);
-
-		// Append current message's observed energy/telling so E_target reflects this turn
-		if (turnNumber >= 1) {
-			energyHistory.push(observedEnergy);
-			tellingHistory.push(observedTelling);
-		}
-
-		// E_target priors: use current session's last exchange, or fall back to
-		// the most recent exchange across all sessions (covers extension sessions).
-		const lastSessionExchange =
-			sessionPipelineExchanges.length > 0
-				? sessionPipelineExchanges[sessionPipelineExchanges.length - 1]
-				: null;
-		const lastAnyExchange =
-			allPipelineExchanges.length > 0 ? allPipelineExchanges[allPipelineExchanges.length - 1] : null;
-
-		const priorExchange = lastSessionExchange ?? lastAnyExchange;
-		// Story 43-1: smoothedEnergy/sessionTrust removed from exchange table.
-		// Cast defensively — will be undefined for new exchanges.
-		const priorSmoothedEnergy = (priorExchange as Record<string, unknown> | null)?.smoothedEnergy as
-			| number
-			| undefined;
-		const priorSessionTrust = (priorExchange as Record<string, unknown> | null)?.sessionTrust as
-			| number
-			| undefined;
-
-		const eTargetResult = computeETargetV2({
-			energyHistory,
-			tellingHistory,
-			priorSmoothedEnergy,
-			priorSessionTrust,
-		});
-
-		// ---- Step 3: Score all territories ----
-
-		const facetMetrics = computeFacetMetrics(allEvidenceWithCurrent as any[]);
-
-		// Visit history and current territory from all user exchanges
-		// Story 43-1: cast needed — pacing fields removed from exchange (Story 1.5 replaces pipeline)
-		const visitHistory = buildPacingVisitHistory(allPipelineExchanges as any[]);
-		const currentTerritory = getCurrentTerritory(allPipelineExchanges as any[]);
-
-		const scorerOutput = scoreAllTerritoriesV2({
-			eTarget: eTargetResult.eTarget,
-			facetMetrics,
-			catalog: TERRITORY_CATALOG,
-			currentTerritory,
-			visitHistory,
-			turnNumber,
-			totalTurns,
-			config: PACING_SCORER_DEFAULTS,
-		});
-
-		// ---- Step 4: Select territory ----
-
-		// Seed for cold-start-perimeter: hash session ID so different sessions diverge
-		let sessionHash = 0;
-		for (let i = 0; i < input.sessionId.length; i++) {
-			sessionHash = (sessionHash * 31 + input.sessionId.charCodeAt(i)) | 0;
-		}
-		const selectionSeed = (sessionHash ^ (turnNumber * 7919)) | 0;
-		const selectorOutput = selectTerritoryV2(scorerOutput, selectionSeed);
-		const selectedTerritoryId = selectorOutput.selectedTerritory;
-
-		// ---- Step 5: Compute observation focus strengths ----
-
-		// Get current energy/telling from last exchange (or defaults for first turn)
-		const currentEnergy = energyHistory.length > 0 ? energyHistory[energyHistory.length - 1]! : 0.5;
-		const currentTelling =
-			tellingHistory.length > 0 ? (tellingHistory[tellingHistory.length - 1] ?? 0.5) : 0.5;
-
-		// Get previous smoothed clarity from exchange history
-		// (stored as part of governor debug, but for simplicity we recompute)
-		const previousSmoothedClarity = 0; // Will build up over exchanges
-
-		const focusInputs = computeObservationFocusInputs(
-			facetMetrics,
-			currentEnergy,
-			currentTelling,
-			previousSmoothedClarity,
+		const coverageTarget = analyzeCoverage(
+			allEvidenceWithCurrent as Parameters<typeof analyzeCoverage>[0],
 		);
+		const coverageTargetsEnriched = enrichWithDefinitions(coverageTarget);
 
-		const sharedFireCount = countSharedFires(allPipelineExchanges as any[]);
+		const tCoverage = Date.now();
 
-		// ---- Step 6: Run Move Governor ----
+		// ---- Step 3: Nerin Director ----
+		// Swap to closing prompt on last turn (ADR-DM-5)
 
-		const territory = TERRITORY_CATALOG.get(selectedTerritoryId);
-		const expectedEnergy = territory?.expectedEnergy ?? 0.5;
-		const isFinalTurn = turnNumber >= totalTurns;
+		const isFinalTurnPreCheck = turnNumber >= totalTurns;
+		const directorSystemPrompt = isFinalTurnPreCheck
+			? NERIN_DIRECTOR_CLOSING_PROMPT
+			: NERIN_DIRECTOR_PROMPT;
 
-		const governorInput: MoveGovernorInput = {
-			selectedTerritory: selectedTerritoryId,
-			eTarget: eTargetResult.eTarget,
-			turnNumber,
-			isFinalTurn,
-			expectedEnergy,
-			previousTerritory: getCurrentTerritory(allPipelineExchanges as any[]),
-			phase: focusInputs.phase,
-			sharedFireCount,
-			relateStrength: focusInputs.relateStrength,
-			noticingStrength: focusInputs.noticingStrength,
-			contradictionStrength: focusInputs.contradictionStrength,
-			convergenceStrength: focusInputs.convergenceStrength,
-			noticingDomain: focusInputs.noticingDomain,
-			contradictionTarget: focusInputs.contradictionTarget as any,
-			convergenceTarget: focusInputs.convergenceTarget as any,
-		};
-
-		const governorResult = computeGovernorOutput(governorInput);
-
-		// ---- Step 7: Build system prompt via 2-layer prompt builder ----
-
-		const promptResult = buildPrompt(governorResult.output);
-
-		const tPacing = Date.now();
-
-		logger.info("Pacing pipeline computed", {
-			sessionId: input.sessionId,
-			turnNumber,
-			eTarget: +eTargetResult.eTarget.toFixed(3),
-			smoothedEnergy: +eTargetResult.smoothedEnergy.toFixed(3),
-			selectedTerritory: selectedTerritoryId,
-			selectionRule: selectorOutput.selectionRule,
-			governorIntent: governorResult.output.intent,
-			entryPressure: governorResult.debug.entryPressure.level,
-			observationFocus: governorResult.debug.observationGating.winner?.type ?? "relate",
-			templateKey: promptResult.templateKey,
-			isExtensionSession,
-			topScoredTerritories: scorerOutput.ranked.slice(0, 3).map((t) => ({
-				id: t.territoryId,
-				score: +t.score.toFixed(3),
-			})),
-		});
-
-		// ---- Step 8: Call Nerin with composed system prompt ----
-
-		const result = yield* nerin
-			.invoke({
-				sessionId: input.sessionId,
+		const directorResult = yield* director
+			.generateBrief({
+				systemPrompt: directorSystemPrompt,
 				messages: domainMessages,
-				systemPrompt: promptResult.systemPrompt,
+				coverageTargets: coverageTargetsEnriched,
+				sessionId: input.sessionId,
 			})
 			.pipe(
 				Effect.tapError((error) =>
 					Effect.sync(() =>
-						logger.error("Nerin invocation failed", {
+						logger.error("Nerin Director failed", {
+							errorTag: error._tag,
+							sessionId: input.sessionId,
+							message: error.message,
+						}),
+					),
+				),
+				// Map NerinDirectorError → AgentInvocationError so it matches the
+				// existing error channel expected by the handler contract.
+				Effect.mapError(
+					(error) =>
+						new AgentInvocationError({
+							agentName: "NerinDirector",
+							sessionId: input.sessionId,
+							message: error.message,
+						}),
+				),
+			);
+
+		const tDirector = Date.now();
+
+		logger.info("Director pipeline computed", {
+			sessionId: input.sessionId,
+			turnNumber,
+			targetDomain: coverageTarget.targetDomain,
+			targetFacets: coverageTarget.targetFacets,
+			briefLength: directorResult.brief.length,
+			isFinalTurn: isFinalTurnPreCheck,
+			isExtensionSession,
+		});
+
+		// ---- Step 4: Nerin Actor ----
+
+		const actorPrompt = buildActorPrompt();
+
+		const actorResult = yield* actor
+			.invoke({
+				sessionId: input.sessionId,
+				actorPrompt,
+				directorBrief: directorResult.brief,
+			})
+			.pipe(
+				Effect.tapError((error) =>
+					Effect.sync(() =>
+						logger.error("Nerin Actor failed", {
 							errorTag: error._tag,
 							sessionId: input.sessionId,
 							message: error.message,
@@ -676,15 +297,19 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				),
 			);
 
-		const tNerin = Date.now();
+		const tActor = Date.now();
 
 		// ---- Cost tracking ----
 
-		const nerinCost = calculateCost(result.tokenCount.input, result.tokenCount.output);
+		const actorCost = calculateCost(actorResult.tokenCount.input, actorResult.tokenCount.output);
+		const directorCost = calculateCost(
+			directorResult.tokenUsage.input,
+			directorResult.tokenUsage.output,
+		);
 		const analyzerCost = analyzerTokenUsage
 			? calculateCost(analyzerTokenUsage.input, analyzerTokenUsage.output)
 			: { totalCents: 0 };
-		const totalCostCents = nerinCost.totalCents + analyzerCost.totalCents;
+		const totalCostCents = actorCost.totalCents + directorCost.totalCents + analyzerCost.totalCents;
 
 		if (totalCostCents > 0) {
 			yield* costGuard.incrementDailyCost(costKey, totalCostCents).pipe(
@@ -699,7 +324,6 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				),
 			);
 
-			// Per-session cost tracking (Story 31-6) — fail-open
 			yield* costGuard.incrementSessionCost(input.sessionId, totalCostCents).pipe(
 				Effect.catchAll((err) =>
 					Effect.sync(() => {
@@ -717,7 +341,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			event: "session_cost_tracked",
 			sessionId: input.sessionId,
 			costKey,
-			nerinCostCents: nerinCost.totalCents,
+			actorCostCents: actorCost.totalCents,
+			directorCostCents: directorCost.totalCents,
 			analyzerCostCents: analyzerCost.totalCents,
 			totalCostCents,
 			exchangeNumber: turnNumber,
@@ -726,22 +351,11 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		const tCost = Date.now();
 
-		// ---- Step 10: Save exchange + messages + evidence (two-phase model) ----
+		// ---- Save exchange + messages + evidence (two-phase model) ----
 		//
 		// Exchange #N links: AI message #N (question) + user message #N+1 (answer)
 		// Phase A: Close previous exchange — link user message + extraction data
-		// Phase B: Create new exchange — link AI message + steering data
-
-		// Derive session phase and transition type
-		const _sessionPhase = deriveSessionPhase(turnNumber, totalTurns);
-		const previousTerritory = getCurrentTerritory(allPipelineExchanges as any[]);
-		const _transitionType = previousTerritory
-			? deriveTransitionType(selectedTerritoryId, previousTerritory)
-			: ("transition" as const);
-
-		// Previous exchange: opener (turn 0) or last pipeline exchange
-		const previousExchangeId =
-			sessionExchanges.length > 0 ? sessionExchanges[sessionExchanges.length - 1]?.id : null;
+		// Phase B: Create new exchange — link AI message + Director data
 
 		// --- Phase A: Close previous exchange ---
 		// Link user message to previous exchange (user is answering that AI question)
@@ -754,15 +368,12 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		if (previousExchangeId) {
 			// Store extraction tier on previous exchange
-			// Story 43-1: energy/telling fields removed from exchange table (Director reads them natively)
 			yield* exchangeRepo.update(previousExchangeId, {
 				...(extractionTier != null ? { extractionTier } : {}),
 			});
 		}
 
 		// Save evidence linked to user message and the exchange whose question prompted it.
-		// Evidence only exists when turnNumber >= 1 (extraction skipped on turn 0),
-		// so previousExchangeId is always non-null here.
 		if (pendingEvidence.length > 0 && previousExchangeId) {
 			yield* evidenceRepo.save(
 				pendingEvidence.map((e) => ({
@@ -777,12 +388,14 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		// --- Phase B: Create new exchange for AI response ---
 		const exchange = yield* exchangeRepo.create(input.sessionId, turnNumber);
 
-		// Story 43-1: Steering data no longer persisted on exchange (columns removed).
-		// Director model pipeline (Story 1.5) will populate director_output and coverage_targets here.
-		// Keeping the exchange create above — it serves as the anchor for the AI message link.
+		// Populate Director model data on the new exchange
+		yield* exchangeRepo.update(exchange.id, {
+			directorOutput: directorResult.brief,
+			coverageTargets: coverageTarget,
+		});
 
 		// Link AI message to new exchange
-		yield* messageRepo.saveMessage(input.sessionId, "assistant", result.response, exchange.id);
+		yield* messageRepo.saveMessage(input.sessionId, "assistant", actorResult.response, exchange.id);
 
 		// Increment message_count atomically
 		const messageCount = yield* sessionRepo.incrementMessageCount(input.sessionId);
@@ -790,96 +403,55 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		// Compute isFinalTurn from message count
 		const isFinalTurnResult = messageCount >= config.freeTierMessageThreshold;
 
-		// ---- Beat 2: Generate surfacing message on final turn ----
+		// ---- Farewell message on final turn ----
+		// Static farewell replaces the old surfacing LLM call (ADR-DM-5)
 
 		let surfacingMessage: string | undefined;
 
 		if (isFinalTurnResult) {
-			const surfacingPrompt = buildSurfacingPrompt();
+			surfacingMessage = pickFarewellMessage();
 
-			// Build message history for surfacing — include the Beat 1 response
-			const surfacingMessages: ReadonlyArray<DomainMessage> = [
-				...domainMessages,
-				{ id: `surfacing-ctx-${Date.now()}`, role: "assistant" as const, content: result.response },
-			];
-
-			const surfacingResult = yield* nerin
-				.invoke({
-					sessionId: input.sessionId,
-					messages: surfacingMessages,
-					systemPrompt: surfacingPrompt,
-				})
-				.pipe(
-					Effect.tapError((error) =>
-						Effect.sync(() =>
-							logger.error("Surfacing message generation failed", {
-								errorTag: error._tag,
-								sessionId: input.sessionId,
-								message: error.message,
-							}),
-						),
-					),
-				);
-
-			surfacingMessage = surfacingResult.response;
-
-			// Save surfacing message to DB (linked to closing exchange)
+			// Save farewell message to DB (linked to closing exchange)
 			yield* messageRepo.saveMessage(input.sessionId, "assistant", surfacingMessage, exchange.id);
-
-			// Track surfacing cost — fail-open
-			const surfacingCost = calculateCost(
-				surfacingResult.tokenCount.input,
-				surfacingResult.tokenCount.output,
-			);
-			if (surfacingCost.totalCents > 0) {
-				yield* costGuard
-					.incrementDailyCost(costKey, surfacingCost.totalCents)
-					.pipe(Effect.catchAll(() => Effect.void));
-				yield* costGuard
-					.incrementSessionCost(input.sessionId, surfacingCost.totalCents)
-					.pipe(Effect.catchAll(() => Effect.void));
-			}
-
-			logger.info("Surfacing message generated", {
-				sessionId: input.sessionId,
-				surfacingLength: surfacingMessage.length,
-				surfacingTokenCount: surfacingResult.tokenCount,
-			});
 
 			// Transition session to "finalizing"
 			yield* sessionRepo.updateSession(input.sessionId, { status: "finalizing" });
+
+			logger.info("Farewell message appended", {
+				sessionId: input.sessionId,
+				farewellLength: surfacingMessage.length,
+			});
 		}
 
 		const tSave = Date.now();
 
 		logger.info("Message processed", {
 			sessionId: input.sessionId,
-			responseLength: result.response.length,
-			tokenCount: result.tokenCount,
+			responseLength: actorResult.response.length,
+			actorTokenCount: actorResult.tokenCount,
+			directorTokenCount: directorResult.tokenUsage,
 			messageCount,
 			isFinalTurn: isFinalTurnResult,
 			hasSurfacingMessage: !!surfacingMessage,
-			selectedTerritory: selectedTerritoryId,
-			observedEnergyBand,
-			observedTellingBand,
+			targetDomain: coverageTarget.targetDomain,
+			targetFacets: coverageTarget.targetFacets,
 			extractionTier,
-			eTarget: +eTargetResult.eTarget.toFixed(3),
-			governorIntent: governorResult.output.intent,
 			evidenceCount: pendingEvidence.length,
 			exchangeId: exchange.id,
 			durationMs: {
 				total: tSave - t0,
 				gatherContext: tContext - t0,
 				extraction: tExtraction - tContext,
-				pacingPipeline: tPacing - tExtraction,
-				nerinAgent: tNerin - tPacing,
-				costTracking: tCost - tNerin,
+				coverage: tCoverage - tExtraction,
+				director: tDirector - tCoverage,
+				actor: tActor - tDirector,
+				costTracking: tCost - tActor,
 				dbSave: tSave - tCost,
 			},
 		});
 
 		return {
-			response: result.response,
+			response: actorResult.response,
 			isFinalTurn: isFinalTurnResult,
 			...(surfacingMessage ? { surfacingMessage } : {}),
 		} satisfies NerinPipelineOutput;

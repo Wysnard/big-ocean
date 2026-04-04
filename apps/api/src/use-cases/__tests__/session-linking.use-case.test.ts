@@ -31,7 +31,8 @@ import {
 	ConversationEvidenceRepository,
 	CostGuardRepository,
 	LoggerRepository,
-	NerinAgentRepository,
+	NerinActorRepository,
+	NerinDirectorRepository,
 } from "@workspace/domain";
 import { AssessmentExchangeDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-exchange.drizzle.repository";
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
@@ -50,8 +51,18 @@ const MockLoggerLive = Layer.succeed(LoggerRepository, {
 	debug: vi.fn(),
 });
 
-// Minimal nerin mock
-const MockNerinLive = Layer.succeed(NerinAgentRepository, {
+// Minimal Director mock
+const MockDirectorLive = Layer.succeed(NerinDirectorRepository, {
+	generateBrief: vi.fn(() =>
+		Effect.succeed({
+			brief: "Mock director brief. Question: Ask about their day.",
+			tokenUsage: { input: 500, output: 80 },
+		}),
+	),
+});
+
+// Minimal Actor mock
+const MockActorLive = Layer.succeed(NerinActorRepository, {
 	invoke: vi.fn(() =>
 		Effect.succeed({
 			response: "Mock response",
@@ -106,7 +117,8 @@ type TestServices =
 	| ConversationEvidenceRepository
 	| CostGuardRepository
 	| LoggerRepository
-	| NerinAgentRepository
+	| NerinDirectorRepository
+	| NerinActorRepository
 	| AppConfig;
 
 // vi.mock() swaps production layers with __mocks__/ Layer.succeed (no deps),
@@ -119,7 +131,8 @@ const TestLayer = Layer.mergeAll(
 	ConversationEvidenceDrizzleRepositoryLive,
 	CostGuardRedisRepositoryLive,
 	MockLoggerLive,
-	MockNerinLive,
+	MockDirectorLive,
+	MockActorLive,
 	MockConfigLive,
 ) as Layer.Layer<TestServices>;
 

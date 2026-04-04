@@ -14,8 +14,8 @@ import {
 	createTestLayer,
 	FREE_TIER_MESSAGE_THRESHOLD,
 	mockActiveSession,
+	mockActorRepo,
 	mockMessageRepo,
-	mockNerinRepo,
 	mockSessionRepo,
 	setupDefaultMocks,
 } from "./__fixtures__/send-message.fixtures";
@@ -51,7 +51,7 @@ describe("sendMessage Use Case", () => {
 
 		it.effect("should handle Nerin invocation failure", () =>
 			Effect.gen(function* () {
-				mockNerinRepo.invoke.mockReturnValue(
+				mockActorRepo.invoke.mockReturnValue(
 					Effect.fail(
 						new AgentInvocationError({
 							agentName: "Nerin",
@@ -109,13 +109,13 @@ describe("sendMessage Use Case", () => {
 				}
 				// No side effects should have occurred
 				expect(mockMessageRepo.saveMessage).not.toHaveBeenCalled();
-				expect(mockNerinRepo.invoke).not.toHaveBeenCalled();
+				expect(mockActorRepo.invoke).not.toHaveBeenCalled();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
 		it.effect("should release lock even when pipeline fails (Nerin error)", () =>
 			Effect.gen(function* () {
-				mockNerinRepo.invoke.mockReturnValue(
+				mockActorRepo.invoke.mockReturnValue(
 					Effect.fail(
 						new AgentInvocationError({
 							agentName: "Nerin",

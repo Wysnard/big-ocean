@@ -48,6 +48,9 @@ export { NerinActorMockRepositoryLive } from "./repositories/nerin-actor.mock.re
 // Nerin agent repository implementations — backward compat (removed in Story 43-5)
 export { NerinAgentAnthropicRepositoryLive } from "./repositories/nerin-agent.anthropic.repository";
 export { NerinAgentMockRepositoryLive } from "./repositories/nerin-agent.mock.repository";
+// Nerin Director repository implementations (Story 43-3, ADR-DM-1)
+export { NerinDirectorAnthropicRepositoryLive } from "./repositories/nerin-director.anthropic.repository";
+export { NerinDirectorMockRepositoryLive } from "./repositories/nerin-director.mock.repository";
 // Portrait repository implementation (Story 13.3)
 export { PortraitDrizzleRepositoryLive } from "./repositories/portrait.drizzle.repository";
 // Portrait generator repository implementations

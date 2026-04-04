@@ -9,13 +9,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "@effect/vitest"
 import { Effect } from "effect";
 import { sendMessage } from "../send-message.use-case";
 import {
-	coldStartMessages,
 	createTestLayer,
 	FREE_TIER_MESSAGE_THRESHOLD,
 	mockActiveSession,
+	mockActorRepo,
+	mockActorResponse,
 	mockMessageRepo,
-	mockNerinRepo,
-	mockNerinResponse,
 	mockSessionRepo,
 	setupDefaultMocks,
 } from "./__fixtures__/send-message.fixtures";
@@ -38,7 +37,7 @@ describe("sendMessage Use Case", () => {
 				});
 
 				expect(result).toEqual({
-					response: mockNerinResponse.response,
+					response: mockActorResponse.response,
 					isFinalTurn: false,
 				});
 			}).pipe(Effect.provide(createTestLayer())),
@@ -78,29 +77,22 @@ describe("sendMessage Use Case", () => {
 				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
 					"session_test_123",
 					"assistant",
-					mockNerinResponse.response,
+					mockActorResponse.response,
 					"exchange_1", // new exchange
 				);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should invoke Nerin with system prompt (Story 27-3)", () =>
+		it.effect("should invoke Director and Actor (Story 43-5)", () =>
 			Effect.gen(function* () {
 				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
 
-				expect(mockNerinRepo.invoke).toHaveBeenCalledWith(
+				// Actor receives actorPrompt + directorBrief (no conversation history)
+				expect(mockActorRepo.invoke).toHaveBeenCalledWith(
 					expect.objectContaining({
 						sessionId: "session_test_123",
-						messages: [
-							...coldStartMessages.map((m) => ({
-								id: m.id,
-								role: m.role,
-								content: m.content,
-							})),
-							// Current user message appended in-memory by pipeline
-							expect.objectContaining({ role: "user", content: "Test" }),
-						],
-						systemPrompt: expect.any(String),
+						actorPrompt: expect.any(String),
+						directorBrief: expect.any(String),
 					}),
 				);
 			}).pipe(Effect.provide(createTestLayer())),
@@ -149,7 +141,7 @@ describe("sendMessage Use Case", () => {
 					expect(String(exit.cause)).toContain("SessionNotFound");
 				}
 				expect(mockMessageRepo.saveMessage).not.toHaveBeenCalled();
-				expect(mockNerinRepo.invoke).not.toHaveBeenCalled();
+				expect(mockActorRepo.invoke).not.toHaveBeenCalled();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
