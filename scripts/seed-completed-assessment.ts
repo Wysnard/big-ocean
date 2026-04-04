@@ -8,15 +8,18 @@
  * Creates:
  * - Test user (if doesn't exist)
  * - Completed assessment session
- * - Realistic conversation messages (12 messages)
+ * - Exchange rows with Director model data (director briefs + coverage targets)
+ * - Realistic conversation messages (12 messages) linked to exchanges
  * - Assessment results (facets, traits, domain coverage)
- * - Conversation evidence
+ * - Conversation evidence linked to exchanges
  * - Public profile with OCEAN codes
  *
  * Output: Prints session ID that can be used to navigate to /assessment/{sessionId}/results
  *
  * Story 9.1: Updated for two-tier architecture — uses assessment_results
  * and conversation_evidence tables.
+ * Story 44-2: Added exchange rows with Director model data (director briefs,
+ * coverage targets), linked messages and evidence to exchanges.
  */
 
 import "dotenv/config"; // Load .env file
@@ -30,6 +33,7 @@ import { Effect, Redacted } from "effect";
 
 const {
 	account,
+	assessmentExchange,
 	assessmentMessage,
 	assessmentResults,
 	assessmentSession,
@@ -227,6 +231,89 @@ const _EVIDENCE_QUOTES: Partial<
 		},
 	],
 };
+
+/**
+ * Director model exchange data — one entry per user-response turn (turns 1-5).
+ * Turn 0 is the greeting exchange with no director output.
+ *
+ * Each brief follows the three-beat structure:
+ *   Observation (when warranted) → Connection (when needed) → Question (always)
+ */
+const DIRECTOR_EXCHANGE_DATA: Array<{
+	directorOutput: string;
+	coverageTargets: { targetFacets: string[]; targetDomain: string };
+}> = [
+	{
+		// Turn 1: After user talks about home office organization
+		directorOutput: `OBSERVATION: They didn't just reorganize — they color-coded, labeled, and filed. This is someone who finds genuine pleasure in imposing structure on chaos. Note the phrase "I love having everything in its proper place" — that's not obligation, that's desire.
+
+CONNECTION: Their organizational drive is a window into how they approach uncertainty. Bridge from the concrete (physical space) to the abstract (how they think about projects, creative work).
+
+QUESTION: Ask about creative projects — do they plan everything or follow inspiration? This probes the tension between their obvious orderliness and their openness to novelty.`,
+		coverageTargets: {
+			targetFacets: ["orderliness", "self_discipline", "cautiousness"],
+			targetDomain: "work",
+		},
+	},
+	{
+		// Turn 2: After user talks about planning vs. winging it
+		directorOutput: `OBSERVATION: "I can't stand the idea of just 'winging it' — that feels chaotic and stressful." The language is visceral — chaos isn't just inefficient, it's threatening. But then they add "though I have a friend who's the complete opposite and somehow makes it work." That qualifier shows intellectual openness even while behaviorally rigid.
+
+CONNECTION: They've revealed how they manage internal anxiety through external structure. Now shift the lens from individual work habits to social dynamics — how does this structured person navigate the unpredictability of other humans?
+
+QUESTION: Move to social gatherings. Do they seek novelty (new people) or depth (known friends)? This tests extraversion while keeping the conversation natural.`,
+		coverageTargets: {
+			targetFacets: ["gregariousness", "friendliness", "excitement_seeking"],
+			targetDomain: "relationships",
+		},
+	},
+	{
+		// Turn 3: After user talks about social preferences
+		directorOutput: `CONNECTION: They prefer depth over breadth in relationships — "deep one-on-one" over "working the room." But they can do it when needed for work, suggesting adaptability despite preference. Move from how they handle social situations to how they handle others' emotional situations.
+
+QUESTION: Ask about responding to a friend in crisis. This probes altruism, sympathy, and emotional approach — are they a fixer or a listener?`,
+		coverageTargets: {
+			targetFacets: ["altruism", "sympathy", "cooperation"],
+			targetDomain: "relationships",
+		},
+	},
+	{
+		// Turn 4: After user talks about helping friends
+		directorOutput: `OBSERVATION: "I'm usually the first person to show up with food or offer to help with practical things" — action-oriented care, not emotional mirroring. Then the self-awareness: "I'm trying to get better at that." They know their blind spot. This is someone who shows love through competence.
+
+CONNECTION: Their helping style reveals a practical, solution-focused mind. Bridge to their intellectual life — how do they engage with ideas and information?
+
+QUESTION: Probe their relationship with established knowledge. Do they accept or question? This targets intellect and liberalism while exploring a different domain.`,
+		coverageTargets: {
+			targetFacets: ["intellect", "liberalism", "imagination"],
+			targetDomain: "leisure",
+		},
+	},
+	{
+		// Turn 5: After user talks about questioning and intellectual curiosity
+		directorOutput: `OBSERVATION: "I get frustrated when people just accept things at face value" — intellectual impatience suggests high openness to ideas. The frustration itself is telling — they don't just prefer critical thinking, they can't understand its absence.
+
+CONNECTION: They've shown us a rich inner intellectual life. For the final beat, move from how they engage with ideas to how they engage with the future — imagination, planning, possibility-thinking.
+
+QUESTION: Ask about imagining the future — concrete goals vs. what-if exploration. This final question probes imagination and adventurousness, rounding out the openness picture.`,
+		coverageTargets: {
+			targetFacets: ["imagination", "adventurousness", "achievement_striving"],
+			targetDomain: "leisure",
+		},
+	},
+	{
+		// Turn 6 (closing): After user talks about future possibilities and backup plans
+		directorOutput: `OBSERVATION: "I have three backup plans for every backup plan" — said with humor but it's a profound reveal. This is someone who manages anxiety through preparation, who finds peace in having mapped every contingency. The partner joke suggests they know it's excessive but can't help it. That self-awareness paired with inability to change the behavior is the tension that makes them interesting.
+
+This is the final exchange. Make your boldest observation — name the core tension you've been watching build: their deep need for order and structure coexists with a genuinely expansive imagination. They don't just plan — they dream in organized folders. That's not a contradiction; it's their superpower.
+
+QUESTION: End with something that leaves them wanting more. Name what you see in them that they might not see in themselves.`,
+		coverageTargets: {
+			targetFacets: ["vulnerability", "anxiety", "self_consciousness"],
+			targetDomain: "health",
+		},
+	},
+];
 
 // Build JSONB facets data
 const buildFacetsJson = () => {
@@ -430,24 +517,75 @@ const seedProgram = Effect.gen(function* () {
 
 	console.log(`  Created session: ${sessionRecord.id}`);
 
-	// 3. Insert conversation messages
+	// 3. Create exchange rows (Director model pipeline state per turn)
+	// Turn 0 = greeting (no director output), Turns 1-5 = user-response turns
+	console.log("\nCreating exchange rows...");
+	const exchangeRecords: Array<{ id: string; turnNumber: number }> = [];
+
+	// Turn 0: greeting exchange (no extraction, no director output)
+	const [openerExchange] = yield* db
+		.insert(assessmentExchange)
+		.values({
+			sessionId: sessionRecord.id,
+			turnNumber: 0,
+			extractionTier: null,
+			directorOutput: null,
+			coverageTargets: null,
+		})
+		.returning()
+		.pipe(Effect.mapError((error) => new Error(`Failed to create opener exchange: ${error}`)));
+	exchangeRecords.push({ id: openerExchange.id, turnNumber: 0 });
+	console.log("  Turn 0: greeting exchange (no director output)");
+
+	// Turns 1-5: user-response exchanges with director briefs and coverage targets
+	for (let turn = 1; turn <= DIRECTOR_EXCHANGE_DATA.length; turn++) {
+		const exchangeData = DIRECTOR_EXCHANGE_DATA[turn - 1];
+		const [exchangeRecord] = yield* db
+			.insert(assessmentExchange)
+			.values({
+				sessionId: sessionRecord.id,
+				turnNumber: turn,
+				extractionTier: 1, // Successful strict extraction
+				directorOutput: exchangeData.directorOutput,
+				coverageTargets: exchangeData.coverageTargets,
+			})
+			.returning()
+			.pipe(Effect.mapError((error) => new Error(`Failed to create exchange turn ${turn}: ${error}`)));
+		exchangeRecords.push({ id: exchangeRecord.id, turnNumber: turn });
+		console.log(`  Turn ${turn}: exchange with director brief and coverage targets`);
+	}
+	console.log(`  Created ${exchangeRecords.length} exchange rows`);
+
+	// 4. Insert conversation messages (linked to exchanges)
+	// Messages are paired: assistant(0)+user(1) = turn 0→1, assistant(2)+user(3) = turn 1→2, etc.
+	// Turn 0: greeting assistant message (index 0)
+	// Turn N (1-5): user message (index 2N-1) + assistant response (index 2N)
 	console.log("\nInserting conversation messages...");
 	const messageRecords = [];
 	for (const [index, msg] of CONVERSATION_MESSAGES.entries()) {
+		// Determine which exchange this message belongs to
+		// Index 0 (assistant greeting) → turn 0
+		// Index 1 (user) → turn 1, Index 2 (assistant) → turn 1
+		// Index 3 (user) → turn 2, Index 4 (assistant) → turn 2
+		// etc.
+		const turn = index === 0 ? 0 : Math.ceil(index / 2);
+		const exchange = exchangeRecords.find((e) => e.turnNumber === turn);
+
 		const [msgRecord] = yield* db
 			.insert(assessmentMessage)
 			.values({
 				sessionId: sessionRecord.id,
+				exchangeId: exchange?.id ?? null,
 				role: msg.role,
 				content: msg.content,
 			})
 			.returning()
 			.pipe(Effect.mapError((error) => new Error(`Failed to insert message: ${error}`)));
 		messageRecords.push(msgRecord);
-		console.log(`  ${index + 1}. ${msg.role}: ${msg.content.substring(0, 60)}...`);
+		console.log(`  ${index + 1}. [turn ${turn}] ${msg.role}: ${msg.content.substring(0, 50)}...`);
 	}
 
-	// 4. Insert assessment results
+	// 5. Insert assessment results
 	console.log("\nInserting assessment results...");
 	const facetsJson = buildFacetsJson();
 	const traitsJson = buildTraitsJson();
@@ -466,27 +604,33 @@ const seedProgram = Effect.gen(function* () {
 		.pipe(Effect.mapError((error) => new Error(`Failed to insert assessment results: ${error}`)));
 	console.log(`  Created assessment results: ${resultRecord.id}`);
 
-	// 5. Insert conversation evidence (lean, steering-only)
+	// 6. Insert conversation evidence (linked to messages and exchanges)
 	console.log("\nInserting conversation evidence...");
+	// User messages are at indices 1, 3, 5, 7, 9, 11 → turns 1, 2, 3, 4, 5, 6
+	// We have 6 turns (1-6), distribute 30 facets across them (5 per turn)
+	const userMsgIndices = CONVERSATION_MESSAGES.map((m, i) => ({ role: m.role, index: i }))
+		.filter((m) => m.role === "user")
+		.map((m) => m.index);
+
 	let convEvidenceCount = 0;
 	for (const [facet, data] of Object.entries(FACET_SCORE_MAP)) {
-		// Pick an appropriate user message to attach evidence to
-		const userMsgIndices = CONVERSATION_MESSAGES.map((m, i) => ({ role: m.role, index: i }))
-			.filter((m) => m.role === "user")
-			.map((m) => m.index);
-		const msgIndex = userMsgIndices[convEvidenceCount % userMsgIndices.length];
+		// Distribute evidence across the 5 user-response turns (6 evidence per turn)
+		const turnIndex = convEvidenceCount % userMsgIndices.length;
+		const msgIndex = userMsgIndices[turnIndex];
 		const message = messageRecords[msgIndex];
+		const turn = Math.ceil(msgIndex / 2); // Convert message index to turn number
+		const exchange = exchangeRecords.find((e) => e.turnNumber === turn);
 
-		// Convert v1 seed data to v2 format for conversation_evidence (Story 18-1)
-		const deviation = Math.round(((data.score - 10) / 10) * 3);
+		// Convert seed scores to v2 evidence format (Story 18-1)
 		const strength = data.confidence >= 0.7 ? "strong" : data.confidence >= 0.4 ? "moderate" : "weak";
 		const confidence = data.confidence >= 0.7 ? "high" : data.confidence >= 0.4 ? "medium" : "low";
-		const polarity = deviation >= 0 ? "high" : "low";
+		const polarity = data.score >= 10 ? "high" : "low";
 		yield* db
 			.insert(conversationEvidence)
 			.values({
 				assessmentSessionId: sessionRecord.id,
 				assessmentMessageId: message.id,
+				exchangeId: exchange?.id ?? null,
 				bigfiveFacet: facet as FacetName,
 				strength,
 				confidence,
@@ -499,7 +643,7 @@ const seedProgram = Effect.gen(function* () {
 	}
 	console.log(`  Inserted ${convEvidenceCount} conversation evidence records`);
 
-	// 6. Create public profile with OCEAN codes
+	// 7. Create public profile with OCEAN codes
 	console.log("\nCreating public profile...");
 	const [profile] = yield* db
 		.insert(publicProfile)
@@ -516,6 +660,7 @@ const seedProgram = Effect.gen(function* () {
 	console.log(`  Created public profile: ${profile.id} (OCEAN: ODANT)`);
 
 	// 8. Print summary
+	const exchangeCount = exchangeRecords.length;
 	console.log("\nSeed completed successfully!\n");
 	console.log("=".repeat(60));
 	console.log("SESSION DETAILS");
@@ -524,6 +669,9 @@ const seedProgram = Effect.gen(function* () {
 	console.log(`User: ${TEST_USER_EMAIL}`);
 	console.log(`Status: ${sessionRecord.status}`);
 	console.log(`Messages: ${CONVERSATION_MESSAGES.length}`);
+	console.log(
+		`Exchanges: ${exchangeCount} (1 greeting + ${exchangeCount - 1} with director briefs)`,
+	);
 	console.log(`Conversation Evidence: ${convEvidenceCount}`);
 	console.log(`OCEAN Code: ODANT`);
 	console.log(`Public Profile ID: ${profile.id}`);
