@@ -13,7 +13,8 @@ import {
 	ConversationEvidenceRepository,
 	CostGuardRepository,
 	LoggerRepository,
-	NerinAgentRepository,
+	NerinActorRepository,
+	NerinDirectorRepository,
 } from "@workspace/domain";
 import { Effect, Layer, Redacted } from "effect";
 import { vi } from "vitest";
@@ -50,7 +51,11 @@ export const mockLoggerRepo = {
 	debug: vi.fn(),
 };
 
-export const mockNerinRepo = {
+export const mockDirectorRepo = {
+	generateBrief: vi.fn(),
+};
+
+export const mockActorRepo = {
 	invoke: vi.fn(),
 };
 
@@ -180,9 +185,15 @@ export const postColdStartMessages = [
 	},
 ];
 
-export const mockNerinResponse = {
+export const mockDirectorResponse = {
+	brief:
+		"Observation: They mentioned exploring. Question: Ask about what drives their curiosity. Warm, medium length.",
+	tokenUsage: { input: 500, output: 80 },
+};
+
+export const mockActorResponse = {
 	response: "I help you explore your personality through conversation.",
-	tokenCount: { input: 150, output: 80, total: 230 },
+	tokenCount: { input: 100, output: 50, total: 150 },
 };
 
 export const mockConversanalyzerOutput = {
@@ -282,7 +293,8 @@ export const createTestLayer = () =>
 		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
 		Layer.succeed(AssessmentExchangeRepository, mockExchangeRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
-		Layer.succeed(NerinAgentRepository, mockNerinRepo),
+		Layer.succeed(NerinDirectorRepository, mockDirectorRepo),
+		Layer.succeed(NerinActorRepository, mockActorRepo),
 		Layer.succeed(ConversanalyzerRepository, mockConversanalyzerRepo),
 		Layer.succeed(ConversationEvidenceRepository, mockEvidenceRepo),
 		Layer.succeed(CostGuardRepository, mockCostGuardRepo),
@@ -322,7 +334,8 @@ export function setupDefaultMocks() {
 	mockLoggerRepo.warn.mockImplementation(() => {});
 	mockLoggerRepo.debug.mockImplementation(() => {});
 
-	mockNerinRepo.invoke.mockReturnValue(Effect.succeed(mockNerinResponse));
+	mockDirectorRepo.generateBrief.mockReturnValue(Effect.succeed(mockDirectorResponse));
+	mockActorRepo.invoke.mockReturnValue(Effect.succeed(mockActorResponse));
 
 	mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
 		Effect.succeed({

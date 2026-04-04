@@ -41,7 +41,9 @@ import {
 import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
 import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
+import { NerinActorAnthropicRepositoryLive } from "@workspace/infrastructure/repositories/nerin-actor.anthropic.repository";
 import { NerinAgentAnthropicRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.anthropic.repository";
+import { NerinDirectorAnthropicRepositoryLive } from "@workspace/infrastructure/repositories/nerin-director.anthropic.repository";
 import { RedisIoRedisRepositoryLive } from "@workspace/infrastructure/repositories/redis.ioredis.repository";
 import { UserAccountDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/user-account.drizzle.repository";
 import { Cause, Context, Effect, Layer, Queue } from "effect";
@@ -125,7 +127,9 @@ const RepositoryLayers = Layer.mergeAll(
 	PublicProfileDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
 	FacetEvidenceDrizzleRepositoryLive,
+	NerinActorAnthropicRepositoryLive,
 	NerinAgentAnthropicRepositoryLive,
+	NerinDirectorAnthropicRepositoryLive,
 	CostGuardLayer,
 	PortraitGeneratorClaudeRepositoryLive,
 	PortraitDrizzleRepositoryLive,

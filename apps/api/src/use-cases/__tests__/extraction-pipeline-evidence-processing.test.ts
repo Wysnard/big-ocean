@@ -23,7 +23,8 @@ import {
 	ConversationEvidenceRepository,
 	CostGuardRepository,
 	LoggerRepository,
-	NerinAgentRepository,
+	NerinActorRepository,
+	NerinDirectorRepository,
 } from "@workspace/domain";
 import { Effect, Layer, Redacted } from "effect";
 import { runNerinPipeline } from "../nerin-pipeline";
@@ -74,7 +75,11 @@ const mockLoggerRepo = {
 	debug: vi.fn(),
 };
 
-const mockNerinRepo = {
+const mockDirectorRepo = {
+	generateBrief: vi.fn(),
+};
+
+const mockActorRepo = {
 	invoke: vi.fn(),
 };
 
@@ -109,9 +114,15 @@ const mockCostGuardRepo = {
 
 // ---- Test Data ----
 
-const mockNerinResponse = {
+const mockDirectorResponse = {
+	brief:
+		"Observation: They mentioned solving puzzles. Question: Ask about challenges at work. Warm, medium length.",
+	tokenUsage: { input: 500, output: 80 },
+};
+
+const mockActorResponse = {
 	response: "Tell me about how you approach challenges at work.",
-	tokenCount: { input: 150, output: 80, total: 230 },
+	tokenCount: { input: 100, output: 50, total: 150 },
 };
 
 /** ConversAnalyzer v2 output with dual extraction: userState + evidence */
@@ -217,7 +228,8 @@ const createTestLayer = () =>
 		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
 		Layer.succeed(AssessmentExchangeRepository, mockExchangeRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
-		Layer.succeed(NerinAgentRepository, mockNerinRepo),
+		Layer.succeed(NerinDirectorRepository, mockDirectorRepo),
+		Layer.succeed(NerinActorRepository, mockActorRepo),
 		Layer.succeed(ConversanalyzerRepository, mockConversanalyzerRepo),
 		Layer.succeed(ConversationEvidenceRepository, mockEvidenceRepo),
 		Layer.succeed(CostGuardRepository, mockCostGuardRepo),
@@ -262,7 +274,8 @@ function setupDefaultMocks() {
 	mockLoggerRepo.warn.mockImplementation(() => {});
 	mockLoggerRepo.debug.mockImplementation(() => {});
 
-	mockNerinRepo.invoke.mockReturnValue(Effect.succeed(mockNerinResponse));
+	mockDirectorRepo.generateBrief.mockReturnValue(Effect.succeed(mockDirectorResponse));
+	mockActorRepo.invoke.mockReturnValue(Effect.succeed(mockActorResponse));
 
 	mockConversanalyzerRepo.analyzeUserState.mockReturnValue(
 		Effect.succeed({
@@ -414,16 +427,22 @@ describe("Extraction Pipeline & Evidence Processing (Story 31-8)", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("no longer stores steering state on exchange (Story 43-1: columns removed)", () =>
+		it.effect("stores Director model data on new exchange (Story 43-5)", () =>
 			Effect.gen(function* () {
 				yield* runNerinPipeline({
 					sessionId: "session_test_123",
 					userMessage: "I love helping others",
 				});
 
-				// Story 43-1: Only one update call (extraction tier on previous exchange)
-				// Steering data no longer persisted on exchange rows
-				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(1);
+				// Story 43-5: Two update calls:
+				// 1. Extraction tier on previous exchange
+				// 2. Director output + coverage targets on new exchange
+				expect(mockExchangeRepo.update).toHaveBeenCalledTimes(2);
+
+				// Second update: director data on new exchange
+				const directorUpdate = mockExchangeRepo.update.mock.calls[1]?.[1];
+				expect(directorUpdate).toHaveProperty("directorOutput");
+				expect(directorUpdate).toHaveProperty("coverageTargets");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});

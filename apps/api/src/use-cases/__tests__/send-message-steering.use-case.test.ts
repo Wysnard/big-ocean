@@ -13,12 +13,12 @@ import { sendMessage } from "../send-message.use-case";
 import {
 	coldStartMessages,
 	createTestLayer,
+	mockActorResponse,
 	mockConversanalyzerRepo,
+	mockDirectorRepo,
 	mockEvidenceRepo,
 	mockExchangeRepo,
 	mockMessageRepo,
-	mockNerinRepo,
-	mockNerinResponse,
 	postColdStartMessages,
 	setupDefaultMocks,
 } from "./__fixtures__/send-message.fixtures";
@@ -58,7 +58,7 @@ describe("sendMessage Use Case", () => {
 					message: "I work in tech",
 				});
 
-				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
+				const nerinCall = mockDirectorRepo.generateBrief.mock.calls[0][0];
 				expect(nerinCall.systemPrompt).toBeDefined();
 				expect(typeof nerinCall.systemPrompt).toBe("string");
 				expect(nerinCall.systemPrompt.length).toBeGreaterThan(0);
@@ -74,7 +74,7 @@ describe("sendMessage Use Case", () => {
 					message: "Hello",
 				});
 
-				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
+				const nerinCall = mockDirectorRepo.generateBrief.mock.calls[0][0];
 				// Cold-start path provides a composed system prompt
 				expect(nerinCall.systemPrompt).toBeDefined();
 				expect(typeof nerinCall.systemPrompt).toBe("string");
@@ -156,8 +156,8 @@ describe("sendMessage Use Case", () => {
 				});
 
 				// Nerin still gets territory prompt even though conversanalyzer failed
-				expect(result.response).toBe(mockNerinResponse.response);
-				const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
+				expect(result.response).toBe(mockActorResponse.response);
+				const nerinCall = mockDirectorRepo.generateBrief.mock.calls[0][0];
 				expect(nerinCall.systemPrompt).toBeDefined();
 			}).pipe(Effect.provide(createTestLayer())),
 		);
@@ -222,7 +222,7 @@ describe("sendMessage Use Case", () => {
 					});
 
 					expect(result.response).toBeDefined();
-					const nerinCall = mockNerinRepo.invoke.mock.calls[0][0];
+					const nerinCall = mockDirectorRepo.generateBrief.mock.calls[0][0];
 					expect(nerinCall.systemPrompt).toBeDefined();
 				}).pipe(Effect.provide(createTestLayer())),
 		);
