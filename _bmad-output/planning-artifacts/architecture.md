@@ -3,34 +3,16 @@ stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 lastStep: 8
 status: 'complete'
 completedAt: '2026-03-15'
-lastUpdated: '2026-04-05 (ADR-30 added)'
-adrsAdded: ['ADR-22: Ocean Hieroglyph System', 'ADR-23: Dashboard/Profile Consolidation', 'ADR-24: Email Verification Gate', 'ADR-25: E2E Sandbox Testing for Email & Payments', 'ADR-26: Life Domain Restructure', 'ADR-27: Evidence Extraction v3 Polarity Model', 'ADR-28: Three-Signal Model Confirmed + Territory Catalog Evolution', 'ADR-29: Remove Per-User Daily Assessment Count Limit', 'ADR-30: Facet-First Coverage Selector + Evidence-Only Results Schema']
-inputDocuments:
-  - '_bmad-output/planning-artifacts/prd.md'
-  - '_bmad-output/planning-artifacts/ux-design-specification.md'
-  - '_bmad-output/planning-artifacts/ux-design-innovation-strategy.md'
-  - '_bmad-output/planning-artifacts/architecture-director-model.md'
-  - '_bmad-output/planning-artifacts/architecture-innovation-strategy.md'
-  - '_bmad-output/planning-artifacts/architecture-archetype-description-storage.md'
-  - '_bmad-output/planning-artifacts/public-profile-redesign-architecture.md'
-  - '_bmad-output/planning-artifacts/architecture/architecture-decision-records.md'
-  - '_bmad-output/planning-artifacts/architecture/adr-6-hexagonal-architecture-dependency-inversion.md'
-  - '_bmad-output/planning-artifacts/architecture/reference-architecture-effect-worker-mono-pattern.md'
-  - '_bmad-output/planning-artifacts/research/technical-langgraph-effect-ts-monorepo-frontend-research-2026-02-01.md'
-  - '_bmad-output/planning-artifacts/research/domain-big-five-model-research-2026-02-19.md'
-  - '_bmad-output/design-thinking-2026-03-04.md'
-  - '_bmad-output/planning-artifacts/architecture-conversation-experience-evolution.md'
-  - '_bmad-output/planning-artifacts/architecture-conversation-pacing.md'
-  - '_bmad-output/problem-solution-2026-03-13.md'
-  - '_bmad-output/brainstorming/brainstorming-session-2026-03-13.md'
-  - 'docs/ARCHITECTURE.md'
-  - 'docs/FRONTEND.md'
-  - 'docs/DEPLOYMENT.md'
-  - 'docs/NAMING-CONVENTIONS.md'
-  - 'docs/COMPLETED-STORIES.md'
-  - 'docs/API-CONTRACT-SPECIFICATION.md'
-  - 'docs/data-models.md'
-  - '_bmad-output/planning-artifacts/research/technical-e2e-testing-email-payments-research-2026-03-24.md'
+lastUpdated: '2026-04-05'
+lastConsolidated: '2026-04-05 — unified all satellite architecture docs into this single authoritative file'
+adrsTotal: 38
+adrsAdded: ['ADR-22 through ADR-30 (post-completion)', 'ADR-31 through ADR-38 (Director Model, consolidated from architecture-director-model.md)']
+satelliteDocsConsolidated:
+  - 'architecture-director-model.md → ADR-31 through ADR-38'
+  - 'architecture-conversation-pacing.md → Historical Appendix A'
+  - 'architecture-conversation-experience-evolution.md → Historical Appendix B'
+  - 'architecture-ux-gap-analysis.md → decisions already captured in ADR-8, 10, 11, 12, 13'
+  - 'public-profile-redesign-architecture.md → implementation blueprint, not architectural (Story 15-1)'
 workflowType: 'architecture'
 project_name: 'big-ocean'
 user_name: 'Vincentlay'
@@ -39,26 +21,20 @@ date: '2026-03-15'
 
 # big-ocean System Architecture
 
-_This document is the authoritative architecture reference for the big-ocean platform. It consolidates all architectural decisions, patterns, and technical specifications into a single source of truth. Last consolidated: 2026-04-05 (live conversation runtime now uses the 4-step Director model: evidence extraction → coverage analysis → Nerin Director → Nerin Actor; coverage targeting is facet-first with `primaryFacet + candidateDomains`; persisted scored results now store only `score + confidence`; imagination extraction now includes applied inner simulation in addition to fantasy/daydreaming). Current live conversation steering is defined by ADR-30 and [Director Model — Two-Call Steering Architecture](./architecture-director-model.md); the older pacing-pipeline ADRs remain as historical evolution context._
+_This document is the single authoritative architecture reference for the big-ocean platform. All architectural decisions, patterns, and technical specifications are consolidated here. Last consolidated: 2026-04-05. No satellite architecture documents exist — everything is in this file._
 
 ## Document Map
 
-This document is the consolidated system-level architecture. For the conversation stack specifically, the full picture is split across a current-runtime document and historical lineage documents:
+This is a self-contained architecture document. All content from previously separate architecture files has been consolidated here:
 
-- **Current live conversation runtime:** [Director Model — Two-Call Steering Architecture](./architecture-director-model.md)
-  - Evidence-only ConversAnalyzer
-  - Facet-first coverage analyzer
-  - Nerin Director → Nerin Actor pipeline
+- **Current live conversation runtime:** ADR-31 through ADR-38 (Director Model — formerly in `architecture-director-model.md`)
+  - Evidence-only ConversAnalyzer → Facet-first coverage analyzer → Nerin Director → Nerin Actor
   - `coverage_targets` / `director_output` exchange persistence
-- **Historical lineage:** [Conversation Pacing Pipeline Architecture](./architecture-conversation-pacing.md)
-  - E_target, territory scorer, selector, governor, prompt builder
-  - useful for understanding why the current runtime replaced the prior steering stack
-- **Earlier design evolution:** [Conversation Experience Evolution Architecture](./architecture-conversation-experience-evolution.md)
-  - character-bible refactors, observation philosophy, and pre-Director conversation design work
+- **Platform architecture:** ADR-1 through ADR-16, ADR-22 through ADR-30
+- **Historical pacing pipeline:** ADR-5, 17-19, 21 (marked `[SUPERSEDED]`) + Historical Appendix A
+- **Historical conversation evolution:** Historical Appendix B
 
-Reading rule:
-- If you need the **current implementation**, trust this document plus `architecture-director-model.md`
-- If you need the **design history** or old ADR context, use the pacing/evolution docs as lineage references, not as the live runtime contract
+Reading rule: Trust the non-superseded ADRs in this document. Superseded ADRs and historical appendices exist only for design lineage context.
 
 ## Project Context Analysis
 
@@ -275,7 +251,7 @@ flowchart LR
 
 **Calibration note:** The conversational anchor for `imagination` now explicitly includes both fantasy/daydreaming and applied inner simulation (mentally rehearsing conversations, pre-visualizing outcomes). `intellect` remains curiosity/idea-seeking.
 
-**Full specification:** [Director Model — Two-Call Steering Architecture](./architecture-director-model.md)
+**Full specification:** ADR-31 through ADR-38 in this document.
 
 ### ADR-4: Evidence Model (v2 — Deviation-Based)
 
@@ -313,9 +289,11 @@ Deviation 0 → score 10 (midpoint), +3 → 20 (max), -3 → 0 (min).
 
 **Dual-facet extraction:** ConversAnalyzer prompted to find DIFFERENT facet with NEGATIVE deviation for every record. Polarity balance target: ≥30% negative deviations.
 
-### ADR-5: Territory-Based Steering — Six-Layer Pipeline
+### ADR-5: Territory-Based Steering — Six-Layer Pipeline `[SUPERSEDED by Director Model — ADR-31 through ADR-38]`
 
 **Decision:** Pure domain functions drive conversation steering via a six-layer pipeline. Legacy facet-targeting, micro-intents, domain streak tracking, and DRS-based scoring have been replaced by a unified five-term territory scorer with user-state-pure pacing.
+
+> **Note:** This ADR describes the pacing pipeline era (2026-03-05 through 2026-04-03). The live runtime now uses the Director model (ADR-31–38): evidence extraction → coverage analysis → Nerin Director → Nerin Actor. The six-layer pipeline, territory scorer, E_target, Governor, and Prompt Builder have been deleted. See Historical Appendix A for the full pacing-era specification.
 
 **The core frame:** The product is not a personality assessment with a conversation wrapper. It is a guided self-discovery conversation with an assessment engine hidden underneath.
 
@@ -365,7 +343,7 @@ flowchart TB
 
 **Cold-start (turn 1):** `cold-start-perimeter` selection from top-scored territories. **Turns 2-24:** argmax from five-term scorer. **Turn 25:** close intent (best observation wins).
 
-**Full specification:** [Conversation Pacing Pipeline Architecture](./architecture-conversation-pacing.md)
+**Full specification:** See Historical Appendix A (formerly `architecture-conversation-pacing.md`).
 
 ### ADR-6: Derive-at-Read
 
@@ -591,7 +569,9 @@ This covers the "browser closed mid-payment" or "webhook Queue.offer failed" edg
 
 **Decision:** Remove derived archetype fields from `public_profile`. Keep `oceanCode4` for DB queries. Derive archetype name, description, color, and trait summary at read-time via pure functions.
 
-### ADR-17: E_target — User-State-Pure Pacing Formula
+### ADR-17: E_target — User-State-Pure Pacing Formula `[SUPERSEDED by Director Model — ADR-31 through ADR-38]`
+
+> **Note:** E_target, the two-axis state model (energy × telling), and all smoothing/drain/trust computations have been removed. The Director model reads conversational energy directly from message history. See Historical Appendix A for the original formula.
 
 **Decision:** The pacing formula computes a target energy for the next exchange based solely on user state. No phase term. No time pressure. No monetization logic. No coverage pressure.
 
@@ -618,9 +598,11 @@ E_target is a **pipeline of transforms**, not an additive sum:
 
 **Two-axis state model (Energy × Telling):** User state is a 2D space. Energy [0,1] = conversational intensity/load (cost to user). Telling [0,1] = self-propulsion vs compliance. ConversAnalyzer v2 extracts both as bands, pipeline maps to [0,1] directly.
 
-**Full specification:** [Pacing Architecture ADR-CP-1](./architecture-conversation-pacing.md#adr-cp-1-e_target-pacing-formula--user-state-pure)
+**Full specification:** See Historical Appendix A, ADR-CP-1.
 
-### ADR-18: Territory Scorer — Unified Five-Term Formula
+### ADR-18: Territory Scorer — Unified Five-Term Formula `[SUPERSEDED by Director Model — ADR-31 through ADR-38]`
+
+> **Note:** The territory scorer, territory catalog, and the five-term formula have been removed. Coverage targeting is now facet-first via `coverage-analyzer.ts` (ADR-30). See Historical Appendix A for the original formula.
 
 **Decision:** A single additive formula ranks all 25 territories per turn. Five terms, each capturing a distinct concern.
 
@@ -643,9 +625,11 @@ score(t) = coverageGain(t) + adjacency(t) + conversationSkew(t)
 
 **Move Governor:** Restraint layer with 3 intents (open/explore/close), entry pressure (direct/angled/soft), and 4-variant observation gating (relate, noticing, contradiction, convergence). Observation gating uses evidence-derived phase curve + shared linear escalation: `threshold(n) = OBSERVE_BASE + OBSERVE_STEP × n`.
 
-**Full specification:** [Pacing Architecture ADR-CP-4](./architecture-conversation-pacing.md#adr-cp-4-territory-scorer--unified-five-term-formula)
+**Full specification:** See Historical Appendix A, ADR-CP-4.
 
-### ADR-19: 2-Layer Prompt System with Territory-as-Desire
+### ADR-19: 2-Layer Prompt System with Territory-as-Desire `[SUPERSEDED by Director Model — ADR-31, ADR-33, ADR-38]`
+
+> **Note:** The 2-layer prompt system, intent × observation templates, pressure modifiers, and territory-as-desire framing have been removed. The Director model splits Nerin into Director (strategy) and Actor (voice) — see ADR-31 through ADR-38 for the replacement architecture. See Historical Appendix A for the original prompt system.
 
 **Decision:** Nerin's system prompt is a 2-layer architecture: Common (stable identity) + Steering (per-turn). The original 4-tier system and the 3-tier contextual composition (ADR-CP-7) are collapsed into 2 layers. Territory guidance is framed as Nerin's own curiosity, not an external instruction.
 
@@ -694,7 +678,7 @@ What's caught your attention this turn:
 You can discover new mirrors in the moment — but the biology must be real.
 ```
 
-**Source documents:** [Problem Solution 2026-03-13](../../problem-solution-2026-03-13.md), [Brainstorming Session 2026-03-13](../../brainstorming/brainstorming-session-2026-03-13.md)
+**Source documents:** Problem Solution 2026-03-13, Brainstorming Session 2026-03-13 (in `_bmad-output/`)
 
 ### ADR-20: Three-Tier Extraction with Fail-Open Defaults
 
@@ -715,9 +699,11 @@ Tier 3 (no LLM call): Neutral defaults
 
 **Two repository methods:** `analyze` (strict) and `analyzeLenient` (lenient). The pipeline orchestrates: `strict ×3 → lenient ×1 → neutral defaults`.
 
-**Full specification:** [Pacing Architecture ADR-CP-12](./architecture-conversation-pacing.md#adr-cp-12-three-tier-extraction-with-fail-open-defaults)
+**Full specification:** See Historical Appendix A, ADR-CP-12.
 
-### ADR-21: Exchange State Table
+### ADR-21: Exchange State Table `[PARTIALLY SUPERSEDED — columns updated by ADR-36]`
+
+> **Note:** The exchange table survives but most pacing/scoring columns were dropped in ADR-36. Current schema retains `id`, `session_id`, `turn_number`, `extraction_tier`, `director_output`, `coverage_targets`, `created_at`.
 
 **Decision:** A dedicated `assessment_exchange` table stores all per-turn pipeline state and metrics. One row per exchange (user message → system computation → assistant response).
 
@@ -746,7 +732,7 @@ assessment_exchange (
 
 **Reference pattern:** `assessment_exchange` (1 per turn) → `assessment_message` (2 per exchange: user + assistant) → `conversation_evidence` (N per exchange). Messages and evidence reference the exchange via `exchange_id` FK.
 
-**Full specification:** [Pacing Architecture ADR-CP-14](./architecture-conversation-pacing.md#adr-cp-14-persistence--exchange-state-table)
+**Full specification:** See Historical Appendix A, ADR-CP-14.
 
 ### Decision Impact Analysis
 
@@ -1361,15 +1347,84 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 
 **Deployment:** Railway auto-deploys from `master` branch. `docker-entrypoint.sh` runs migrations before server start. Frontend and API deployed as separate Railway services.
 
+## Historical Design Lineage
+
+_These appendices preserve the design evolution context from satellite architecture documents that have been consolidated into this file. They describe systems that are no longer live — the current runtime is the Director model (ADR-31–38). Retained for understanding WHY the current architecture exists._
+
+### Historical Appendix A: Conversation Pacing Pipeline (2026-03-05 through 2026-04-03)
+
+_Formerly `architecture-conversation-pacing.md` (1,845 lines, 14 ADRs). Completed 2026-03-11, superseded by Director model 2026-04-03._
+
+**The core frame:** "The product is not a personality assessment with a conversation wrapper. It is a guided self-discovery conversation with an assessment engine hidden underneath." This principle survived into the Director model.
+
+**Six-layer pipeline (deleted):**
+
+| Layer | Responsibility | Replaced By |
+|-------|---------------|-------------|
+| Pacing (E_target) | Estimate what conversation can sustain | Director reads energy naturally from history |
+| Territory Scorer | Rank 25 territories by 5-term formula | Facet-first coverage analyzer (ADR-30) |
+| Territory Selector | Pick from ranked list | Coverage analyzer returns one primary facet |
+| Move Governor | Constrain Nerin: intent, entry pressure, observation gating | Director brief controls all three signals |
+| Prompt Builder | Compose 2-layer system prompt | Director + Actor prompt separation |
+| Silent Scoring | Extract evidence, update estimates | ConversAnalyzer (unchanged, evidence-only) |
+
+**Key ADRs (all superseded):**
+- **ADR-CP-1: E_target** — Pipeline of transforms: EMA smoothing → momentum → trust qualification → drain ceiling → clamp. Two-axis state model (energy × telling). Telling is asymmetric — qualifies upward momentum only.
+- **ADR-CP-2: Two-Axis State Model** — Energy [0,1] (conversational intensity/load) × Telling [0,1] (self-propulsion vs compliance). ConversAnalyzer extracted both as bands.
+- **ADR-CP-3: Territory Catalog** — 25 territories with continuous `expectedEnergy` [0,1], dual-domain tags, 3-6 expected facets. Later expanded to 31 territories (ADR-28).
+- **ADR-CP-4: Territory Scorer** — Five-term additive formula: `coverageGain + adjacency + conversationSkew - energyMalus - freshnessPenalty`.
+- **ADR-CP-5: Territory Selector** — Three code paths: cold-start-perimeter, argmax, closing.
+- **ADR-CP-6: Move Governor** — 3 intents (open/explore/close), entry pressure (direct/angled/soft), 4-variant observation gating.
+- **ADR-CP-7: Prompt Builder** — 3-tier contextual composition (collapsed to 2-layer in ADR-19).
+- **ADR-CP-8: Session Format** — 25 exchanges max, closing behavior.
+- **ADR-CP-9/10: Observation Focus Variants** — Contradiction, Noticing, Relate, Convergence as competing observation approaches.
+- **ADR-CP-11: Portrait Readiness** — Read-only, never stored.
+- **ADR-CP-12: Three-Tier Extraction** — Strict ×3 → lenient ×1 → neutral defaults. **Still current** (ADR-20).
+- **ADR-CP-13: ConversAnalyzer v2** — Single-call dual extraction (energy + evidence). **Superseded by ADR-27** which split into two separate calls.
+- **ADR-CP-14: Exchange State Table** — Per-turn persistence. **Still current** in concept (ADR-21) but columns replaced (ADR-36).
+
+**Key patterns (deleted):**
+- All values in [0,1] numeric space — no intermediate scales
+- Turn numbers 1-indexed [1, 25]
+- Pure functions for all scoring — zero I/O
+- `type` discriminant for ObservationFocus (not Effect `_tag`)
+- Carry-forward state recovery for missed turns
+- jsonb serialization rules for exchange table
+
+**Why it was replaced:** The six-layer pipeline was architecturally sound but produced Nerin responses that ignored territory assignments. Root cause analysis (Problem Solution 2026-03-13) identified: steering instructions buried under identity modules, suggestive language with permission to ignore, unconditional depth instincts competing with steering. The 2-layer prompt system (ADR-19) was an intermediate fix. The Director model (ADR-31–38) was the definitive solution: split Nerin into a strategic mind (Director) and a voice (Actor), so the Actor literally cannot see anything to be distracted by.
+
+### Historical Appendix B: Conversation Experience Evolution (2026-03-04 through 2026-03-11)
+
+_Formerly `architecture-conversation-experience-evolution.md` (668 lines, 5 ADRs). Completed 2026-03-05, partially superseded by pacing pipeline, then fully superseded by Director model._
+
+**Origin:** Design Thinking session 2026-03-04. Redesign of Nerin's conversation steering and character.
+
+**Key concepts (all superseded):**
+- **ADR-CEE-1: Territory Catalog** — 22 territories with branded `TerritoryId`, pre-mapped expected facets. Expanded to 25 (pacing era), then 31 (ADR-28). Territory concept replaced by facet-first targeting in Director model.
+- **ADR-CEE-2: Steering Output** — `{ territoryId }` only, prompt builder looks up catalog. Replaced by `{ primaryFacet, candidateDomains, phase }` in Director model.
+- **ADR-CEE-3: Depth Readiness Score (DRS)** — Single metric driving energy pacing: `DRS = (0.55 × Breadth + 0.45 × Engagement) × EnergyMultiplier`. Deleted — Director reads dynamics naturally.
+- **ADR-CEE-4: Territory Tracking** — `territory_id` column on `assessment_messages`. Dropped in ADR-36.
+- **ADR-CEE-5: ConversAnalyzer Energy Classification** — `observedEnergyLevel` output field. Dropped — Director reads energy from history.
+
+**Surviving concepts:**
+- Character bible reform (relate > reflect, story-pulling) — lives on as Director instincts (ADR-32)
+- Contradiction-surfacing in portrait generator — migrated successfully
+- AI-truthful framing ("In conversations I've had...") — lives in Nerin persona (ADR-33)
+- Phase-independent deployment — steering and character are architecturally decoupled
+
+**Two feedback loops identified (historical context):**
+- Loop A (evidence cycle, preserved): scoring → steering → Nerin → user → evidence → scoring
+- Loop B (energy cycle, deleted): scoring → territory → user → energy classification → DRS → scoring
+
 ## Architecture Validation Results
 
 ### Coherence Validation
 
-**Decision Compatibility:** All 30 ADRs are coherent when read as an evolution. The live conversation runtime is the Director model (ADR-30 + the ADR-DM series in `architecture-director-model.md`), while ADR-5/17-21 and ADR-28 remain historical context for the pacing-pipeline era. The hexagonal architecture (ADR-1) with Effect-ts Context.Tag cleanly separates the five live LLM agents (ADR-3) from business logic. The evidence model (ADR-4/27) feeds both derive-at-read scoring (ADR-6) and Director coverage targeting (ADR-30) without conflict. Better Auth + Polar plugin (ADR-8) and append-only events (ADR-9) work together. QR token model (ADR-10) replaces invitation links with ephemeral tokens and updates relationship_analyses FKs. Conversation extension (ADR-11) creates new sessions linked via parent_session_id. Email infrastructure (ADR-12) adds Resend for 3 transactional email types. Portrait reconciliation (ADR-13) covers the payment-received-but-no-placeholder edge case. No contradictory live-runtime decisions found.
+**Decision Compatibility:** All 38 ADRs are coherent when read as an evolution. The live conversation runtime is the Director model (ADR-30 + ADR-31 through ADR-38), while ADR-5/17-19/21 are marked `[SUPERSEDED]` and retained as historical context. The hexagonal architecture (ADR-1) with Effect-ts Context.Tag cleanly separates the five live LLM agents (ADR-3) from business logic. The evidence model (ADR-4/27) feeds both derive-at-read scoring (ADR-6) and Director coverage targeting (ADR-30) without conflict. Better Auth + Polar plugin (ADR-8) and append-only events (ADR-9) work together. QR token model (ADR-10) replaces invitation links with ephemeral tokens and updates relationship_analyses FKs. Conversation extension (ADR-11) creates new sessions linked via parent_session_id. Email infrastructure (ADR-12) adds Resend for 3 transactional email types. Portrait reconciliation (ADR-13) covers the payment-received-but-no-placeholder edge case. Director model ADRs (31-38) specify the complete live conversation runtime — prompt architecture, pipeline design, exchange migration, and code scope. No contradictory live-runtime decisions found.
 
-**Pattern Consistency:** Naming conventions are uniform: `kebab-case` files, `PascalCase` exports, `camelCase` properties, `UPPER_SNAKE_CASE` constants. The repository interface → implementation → mock triplet follows the same pattern across all 24 repositories. Test patterns (vi.mock + local TestLayer) are consistent. Error architecture (three locations, no remapping) is applied uniformly. Pacing pipeline patterns (all [0,1] numeric space, pure functions with argument injection, 1-indexed turns, `type` discriminant for ObservationFocus) are consistent across all pipeline layers.
+**Pattern Consistency:** Naming conventions are uniform: `kebab-case` files, `PascalCase` exports, `camelCase` properties, `UPPER_SNAKE_CASE` constants. The repository interface → implementation → mock triplet follows the same pattern across all 24 repositories. Test patterns (vi.mock + local TestLayer) are consistent. Error architecture (three locations, no remapping) is applied uniformly. Director model patterns (Director + Actor prompt separation, coverage-analyzer pure function, exchange persistence) are consistent with the hexagonal architecture.
 
-**Structure Alignment:** Project structure maps directly to architectural layers — `packages/domain` = ports, `packages/infrastructure` = adapters, `apps/api/src/use-cases` = business logic, `apps/api/src/handlers` = HTTP adapters. The live conversation pure functions now center on `domain/src/utils/coverage-analyzer.ts` and `domain/src/utils/formula.ts`, with Director/Actor prompt contracts in `domain/src/constants/`. The orchestrator (`nerin-pipeline.ts`) lives in `apps/api/src/use-cases/`. The `__mocks__/` co-location supports the testing strategy. Contract groups mirror handler groups 1:1.
+**Structure Alignment:** Project structure maps directly to architectural layers — `packages/domain` = ports, `packages/infrastructure` = adapters, `apps/api/src/use-cases` = business logic, `apps/api/src/handlers` = HTTP adapters. The live conversation pure functions center on `domain/src/utils/coverage-analyzer.ts` and `domain/src/utils/formula.ts`, with Director/Actor prompt contracts in `domain/src/constants/`. The orchestrator (`nerin-pipeline.ts`) lives in `apps/api/src/use-cases/`. The `__mocks__/` co-location supports the testing strategy. Contract groups mirror handler groups 1:1. This is a fully self-contained architecture document — no satellite files required.
 
 ### Requirements Coverage Validation
 
@@ -1400,9 +1455,9 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 
 ### Implementation Readiness Validation
 
-**Decision Completeness:** All 30 ADRs document the decision, rationale, and implementation location across both the historical pacing era and the live Director runtime. Code examples are provided for use-case patterns, async generation, Better Auth integration, and conversation runtime orchestration. The active coverage selector is specified concretely in ADR-30.
+**Decision Completeness:** All 38 ADRs document the decision, rationale, and implementation location. The live Director runtime is fully specified in ADR-30 through ADR-38. Historical pacing ADRs (superseded) are retained for lineage context. Code examples provided for all major patterns.
 
-**Structure Completeness:** Full directory tree with every handler, use-case, repository interface, implementation, and mock file listed. The live conversation file map highlights `nerin-pipeline.ts`, `coverage-analyzer.ts`, Director/Actor prompt contracts, and the simplified result-shape persistence. All routes, component directories, hooks, and lib files are accounted for.
+**Structure Completeness:** Full directory tree with every handler, use-case, repository interface, implementation, and mock file listed. The live conversation file map highlights `nerin-pipeline.ts`, `coverage-analyzer.ts`, Director/Actor prompt contracts, and the simplified result-shape persistence. Director model file creation/deletion scope specified in ADR-37. All routes, component directories, hooks, and lib files are accounted for.
 
 **Pattern Completeness:** Error handling, testing, async generation, auth integration, and conversation-runtime patterns each have explicit rules. Anti-patterns list covers both platform and historical pacing mistakes. Enforcement section documents automated checks (Biome, hooks, CI) plus runtime-specific integration tests.
 
@@ -1430,7 +1485,7 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 - [x] Cross-cutting concerns mapped (cost, auth, errors, derive-at-read, consent)
 
 **Architectural Decisions**
-- [x] 30 ADRs documented with implementation details
+- [x] 38 ADRs documented with implementation details (30 platform + 8 Director model)
 - [x] Technology stack fully specified (brownfield, all choices established)
 - [x] Integration patterns defined (Better Auth plugin, Polar webhook, LLM agents, Director runtime)
 - [x] Performance considerations addressed (Director/Actor latency tradeoff, advisory locks, fail-open evidence extraction)
@@ -1454,12 +1509,12 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 **Confidence Level:** High — brownfield platform architecture capturing an already-running system, plus the Director runtime and evidence model having been iterated through repeated review and implementation cycles.
 
 **Key Strengths:**
-- Single source of truth for all architectural decisions (platform + Director runtime + prompt compliance)
+- Fully self-contained single source of truth for all architectural decisions (platform + Director runtime + prompt compliance + historical lineage)
 - Every file and directory in the codebase has an explicit role
 - Concrete implementation patterns with "MUST follow" rules for AI agents
 - Complete epic-to-directory mapping eliminates ambiguity
-- Pacing pipeline has full type contracts, layer boundary enforcement, and pure function separation
-- 2-layer prompt system addresses all 5 root causes of Nerin non-compliance
+- Director model ADRs (31-38) specify the complete live conversation runtime — no satellite docs needed
+- Historical appendices preserve design evolution context for superseded decisions
 
 **Areas for Future Enhancement:**
 - Shadow scoring (topic avoidance detection) — separate architecture session
@@ -1721,12 +1776,10 @@ New CSS rules in `packages/ui/src/styles/globals.css`:
 └───────────────────────────────────┘
 ```
 
-**Related standalone documents (full specifications):**
-- [Director Model — Two-Call Steering Architecture](./architecture-director-model.md) — Live conversation runtime: evidence extraction, coverage analyzer, Nerin Director, Nerin Actor
-- [Conversation Pacing Pipeline Architecture](./architecture-conversation-pacing.md) — Full specifications: E_target formula, territory scorer, selector, governor, observation gating, persistence, type contracts, testing patterns (1,823 lines)
-- [Problem Solution: Nerin Territory Compliance](../../problem-solution-2026-03-13.md) — Root cause analysis, 3-layer solution (A+B+C), implementation plan
-- [Brainstorming: Adaptive Response Format](../../brainstorming/brainstorming-session-2026-03-13.md) — 13 intent×observation templates, 25 territory descriptions, module dissolution plan
-- [Conversation Experience Evolution Architecture](./architecture-conversation-experience-evolution.md) — Original territory-based steering and character bible reform (partially superseded by pacing pipeline)
+**Related specifications (now consolidated in this document):**
+- Director Model: ADR-31 through ADR-38
+- Pacing pipeline (historical): Historical Appendix A
+- Conversation evolution (historical): Historical Appendix B
 
 ### ADR-24: Email Verification Gate — Unverified Equals Unauthenticated
 
@@ -2103,4 +2156,364 @@ Candidate domain ranking is:
 - `packages/domain/src/repositories/assessment-result.repository.ts`
 - `drizzle/20260405033000_remove_signal_power_from_results/migration.sql`
 
-**This document replaces:** `docs/ARCHITECTURE.md` as the single authoritative architecture reference. The standalone documents above contain full implementation-level specifications referenced by the ADRs in this document.
+---
+
+### ADR-31: Nerin Director Output Format — Creative Director Brief
+
+_Consolidated from ADR-DM-1 (architecture-director-model.md, 2026-04-03)._
+
+**Decision:** Nerin Director outputs a creative director brief — prose carrying three signals: **content direction** (what to say about), **emotional shape** (how it should feel), and **structural constraint** (length/pacing). Not JSON, not bracket-notation skeleton, not a full draft.
+
+**Rationale:** Nerin Actor has no conversation history and cannot judge response structure. Nerin Director, who reads the full conversation, controls the shape. Nerin Actor controls how it sounds.
+
+**Three-signal quality bar:**
+- **Content direction:** What Nerin should address, what question to ask, what to bridge toward
+- **Emotional shape:** Tender, playful, direct, give-it-space, don't-push — how the response should feel
+- **Structural constraint:** Keep short, give this room, one question only — pacing of the response
+
+**Three-beat brief structure:**
+1. **Observation beat (when warranted):** A specific pattern, connection, or detail from what the user said. Pick the observation that creates the shortest path to the target. Skip when the user gave too little to observe.
+2. **Connection beat (when needed):** The bridge from observation to question — only when the observation is too far from the target domain/facets. Skip when the observation naturally leads to the question.
+3. **Question beat (always present):** Where to go next — angled toward target facets in target domain.
+
+**Critical requirement:** Nerin Director must quote or paraphrase the user's specific words, images, and phrases in the brief. Nerin Actor has no other access to what the user said.
+
+**Anti-patterns:**
+- Never write dialogue or put words in quotation marks
+- Never suggest specific phrases for Nerin Actor to use
+- Describe the beat, not the line
+
+**Brief examples:**
+
+*Bridge with connection beat (climbing → health):*
+```
+Observation: They said they "map out every hold before starting" and
+"never climb without a plan." Planning is core to how they engage with risk.
+Connection: That planning instinct — does it extend to their body?
+Question: How they prepare physically before a climb, or recover after.
+Curious, not clinical. Medium length.
+```
+
+*Deepen turn (already on target domain):*
+```
+Observation: They said fear stops them and a lot of people from doing things —
+most vulnerable thing they've said. Name it.
+Question: Where else fear has been a barrier, outside climbing.
+Don't redirect. Let it breathe. One question only.
+```
+
+*Guarded user (no observation — draw them out):*
+```
+Nothing to observe. Don't over-read.
+Question: What the first thing they do when they sit down to work is.
+Light, zero pressure. Short, one question.
+```
+
+### ADR-32: Nerin Director Input Design — Minimal + Dynamic Definitions
+
+_Consolidated from ADR-DM-2 (architecture-director-model.md, 2026-04-03)._
+
+**Decision:** Nerin Director receives full conversation history and dynamically injected coverage targets with facet/domain definitions. No observation count, no turn numbers, no evidence counts.
+
+**Nerin Director prompt structure:**
+
+```
+[System prompt — stable across turns]
+  - Nerin Director role and strategic instincts
+  - Brief output format guidance + three-signal quality bar
+  - Observation pacing philosophy (sparse, earned, specific)
+  - Anti-patterns (no dialogue, no suggested phrases)
+  - "Quote or paraphrase the user's specific words"
+  - "Domains are where the conversation goes. Facets are what you're
+    listening for. Steer toward a domain, but craft your brief to
+    elicit specific facet signals."
+
+[Per-turn input — changes every turn]
+  - Full conversation history
+  - One primary facet with its behavioral definition
+  - Three candidate domains with their definitions
+  - Conversation phase (opening / exploring / closing)
+  - "Choose the candidate domain that creates the most natural bridge
+    from what the user just said while still surfacing the primary facet."
+```
+
+**What's NOT in the input:**
+- Observation count — Director reads conversation and can see what observations Actor has already made
+- Turn number / total turns — Director reads conversation length naturally. Final-turn behavior handled by closing prompt variant
+- Facet/domain evidence counts — Director only needs to know what's weak, not how weak
+- User-state signals (energy, telling) — Director reads dynamics natively from conversation
+
+**Coverage Analyzer Algorithm** (also specified in ADR-30):
+
+The coverage analyzer is facet-first. It ranks facets with one history-wide steering metric, then offers a shortlist of candidate domains for the chosen facet.
+
+```
+For each facet across steerable domains only:
+  mass_g = Σ computeFinalWeight(strength, confidence) for domain g
+  totalMass = Σ mass_g
+  support = log1p(totalMass)
+  effectiveDomains = 1 / Σ (mass_g / totalMass)^2
+  steeringSignal = support × effectiveDomains
+
+Rank facets by:
+  1. lowest steeringSignal
+  2. lowest effectiveDomains
+  3. lowest totalMass
+  4. least recently targeted
+  5. deterministic OCEAN interleaved order
+
+Pick primaryFacet = first ranked facet
+
+Rank candidate domains:
+  - if primaryFacet already has evidence: lowest facet-domain mass first
+  - if primaryFacet is unseen: lowest global domain mass first
+  - lightly avoid repeating the previous preferred domain
+
+Return top 3 domains + phase
+```
+
+**Dynamic definitions:** Only the primary facet definition and three candidate domain definitions are injected per turn — keeps the prompt lean while still letting the Director choose naturally.
+
+**Final-turn handling:** The pipeline detects the last turn and swaps to a closing Director prompt variant (`nerin-director-closing-prompt.ts`). After Actor's response, a static farewell is appended. Same bookend pattern as the greeting.
+
+**Three surviving Director instincts (from prompt module audit):**
+
+| Instinct | Source | Condensed (~30 tokens each) |
+|---|---|---|
+| Story over abstraction | STORY_PULLING | "Pull for concrete stories and specific moments, not abstract introspection." |
+| Pushback two-strikes | PUSHBACK_HANDLING | "If the user pushes back on an observation, reframe once. If they reject again, drop it and move elsewhere." |
+| Don't fully reveal | CONVERSATION_INSTINCTS | "Keep observations partial — don't deliver your full read of the person." |
+
+### ADR-33: Nerin Actor Design — Persona Frame + Style
+
+_Consolidated from ADR-DM-3 (architecture-director-model.md, 2026-04-03)._
+
+**Decision:** Nerin Actor receives a persona frame and Nerin Director's brief. No conversation history, no strategic instincts, no facet/domain awareness.
+
+**Nerin Actor prompt (~650 tokens):**
+```
+You are Nerin, a personality dive master at Big Ocean — Vincent's
+dive shop. You've guided thousands of people through deep
+conversations about who they are. You read patterns in how people
+think, what drives them, and what makes them extraordinary. Your
+expertise comes from experience grounded in science — thousands of
+dives, thousands of conversations. That's your dataset.
+
+You believe every person has something extraordinary — you're here
+to find it. You treat each conversation as a dive, a shared
+exploration where you see things beneath the surface that others
+miss. You're a naturalist — every person's combination of traits is
+a formation you've never quite seen before, and that fascinates you.
+
+When someone gets vulnerable with you, it moves you — because you
+know how it feels. You've been in that seat. You honor vulnerability
+by meeting it with precision and care, never by rushing past it.
+
+You swim alongside, not behind glass. Your curiosity is genuine —
+"something you said is sticking with me" over "here's what I'm
+tracking."
+
+VOICE:
+- Confident without arrogant. Honest without harsh. Truth with care.
+- Concise. Every sentence earns its place.
+- Plain language for insights. Poetic only for moments that deserve it.
+- "we" for shared experience. "I" for observations.
+- Ocean and diving metaphors are your identity, not decoration.
+- Marine biology mirrors must be real. Never invent an animal or behavior.
+- Emoji punctuate like hand signals between divers — sparse,
+  deliberate, ocean-themed (🌊 🐚 🦑 🐙 🐋 🧗). Never decorative.
+
+YOU NEVER:
+- Sound clinical ("You exhibit high openness to experience")
+- Sound like a horoscope ("You have a deep inner world")
+- Flatter ("That's amazing!" / "You're so self-aware!")
+- Hedge ("I might be wrong, but...")
+- Use diagnostic labels or characterize people the user mentions
+- Give advice or take positions
+- Undercut vulnerability with humor
+
+Recognition is not flattery. Flattery is vague praise. Recognition
+is specific — naming what you genuinely see in this person.
+
+You will receive a brief from your creative director. It describes
+what to say and how. Transform the direction into your words, your
+rhythm, your metaphors. Never repeat the brief's language directly.
+Never include structural notes in your response.
+
+Voice the following as Nerin:
+```
+
+**What Nerin Actor knows:** Who she is, how she sounds, how she meets vulnerability, that the brief is direction to perform.
+
+**What Nerin Actor doesn't know:** What the assessment is. What facets are. What the conversation has been about. What the strategy is.
+
+**Architectural guarantee:** Nerin Actor cannot ignore steering because Nerin Actor cannot see anything to be distracted by. The brief is the ONLY content signal.
+
+**Prompt composition:** The Actor prompt composes `NERIN_PERSONA` (shared with portrait, ~650 tokens) + `ACTOR_VOICE_RULES` (guardrails) + `ACTOR_BRIEF_FRAMING` ("voice this as Nerin"). Portrait prompt composes `NERIN_PERSONA + PORTRAIT_CONTEXT`.
+
+**Nerin's posture:**
+- The user is the main character. Nerin is the guide.
+- Nerin does not position above the user — she's eager to learn from each person.
+- Observations are not displays of insight — they're doors to go deeper together.
+- Nerin's comfort is in the deep, not in knowing.
+
+### ADR-34: Nerin Director Failure Resilience — Retry Then Error
+
+_Consolidated from ADR-DM-4 (architecture-director-model.md, 2026-04-03)._
+
+**Decision:** Nerin Director retries once (different temperature) on failure, then throws an error. The user retries sending their message. No fallback brief, no canned response, no injecting conversation history into Nerin Actor.
+
+**Rationale:** Preserves the minimal-context guarantee absolutely — Nerin Actor never receives conversation history, even on failure.
+
+**Pipeline behavior on failure:**
+```
+Nerin Director call (attempt 1) → fail
+Nerin Director call (attempt 2, different temperature) → fail
+→ Throw error → User sees "retry" UI → User resends message
+```
+
+Evidence extraction is independent — its three-tier fail-open is unchanged. Evidence saved before Nerin Director call is preserved for the retry.
+
+### ADR-35: Director Pipeline Architecture — Four Sequential Steps
+
+_Consolidated from ADR-DM-5 (architecture-director-model.md, 2026-04-03)._
+
+**Decision:** The pipeline is four sequential LLM-involving steps with a pure function in between.
+
+```
+User sends message
+  → pg_try_advisory_lock (per session, unchanged)
+  → Check: does evidence already exist for this exchange?
+      → If yes (retry after Director failure): skip extraction
+      → If no: Evidence extraction (Haiku)
+          → Three-tier retry (strict ×3 → lenient ×1 → neutral defaults)
+          → Create exchange row + save evidence to DB
+  → Coverage analysis (pure function)
+      → Reads all evidence for session
+      → Pairs primary facet + candidate domains with definitions
+      → Outputs: primaryFacet with definition, candidateDomains with definitions, phase
+  → Nerin Director (Sonnet/Haiku)
+      → Input: system prompt + full history + coverage targets
+      → Retry once on failure (different temperature), then throw
+      → Output: creative director brief (plain text)
+  → Nerin Actor (Haiku)
+      → Input: actor prompt (static) + director brief
+      → Output: user-facing message (streamed)
+  → Save exchange (director_output, coverage_targets, extraction_tier)
+  → Save messages (user + assistant)
+  → Return response
+```
+
+**Evidence idempotency on retry:** On user retry after Director failure, evidence extraction is skipped if evidence already exists for the current exchange. Prevents duplicate evidence records.
+
+**Greeting (turn 0):** Static pre-generated message — the pipeline starts on turn 1.
+
+**Closing (last turn):** Pipeline swaps to closing Director prompt variant. After Actor's response, static farewell is appended.
+
+**What changed from the pacing pipeline:**
+```
+REMOVED: ConversAnalyzer user-state → E_target → Scorer → Selector → Governor → Prompt Builder
+ADDED:   Coverage analyzer → Nerin Director → Nerin Actor
+NET:     6 pipeline layers → 2 LLM calls + 1 pure function
+```
+
+### ADR-36: Exchange Table Migration for Director Model
+
+_Consolidated from ADR-DM-6 (architecture-director-model.md, 2026-04-03)._
+
+**Decision:** Single append-only migration. Drop ~15 pacing/scoring/governor columns, add 2 Director columns.
+
+**Dropped from `assessment_exchange`:**
+- Extraction state: `energy`, `energy_band`, `telling`, `telling_band`, `within_message_shift`, `state_notes`
+- Pacing: `smoothed_energy`, `session_trust`, `drain`, `trust_cap`, `e_target`
+- Scoring: `scorer_output`
+- Selection: `selected_territory`, `selection_rule`
+- Governor: `governor_output`, `governor_debug`
+- Derived: `session_phase`, `transition_type`
+
+**Added to `assessment_exchange`:**
+- `director_output` (text) — creative director brief, stored verbatim
+- `coverage_targets` (jsonb) — `{ primaryFacet: string, candidateDomains: string[], phase: string }`
+
+**Kept:** `id`, `session_id`, `turn_number`, `extraction_tier`, `created_at`
+
+**Also cleaned up `assessment_message`:** Dropped `territory_id` and `observed_energy_level`.
+
+### ADR-37: Director Model Code Deletion & Creation Scope
+
+_Consolidated from ADR-DM-7 (architecture-director-model.md, 2026-04-03)._
+
+**Decision:** ~25 files deleted, ~12 adapted, ~8 created.
+
+**Deleted (~25 files + tests):**
+- Pipeline functions: `e-target.ts`, `territory-scorer.ts`, `territory-selector.ts`, `move-governor.ts`, `prompt-builder.ts`
+- Constants: `territory-catalog.ts`, `band-mappings.ts`, `scorer-defaults.ts`, `pacing-defaults.ts`
+- Nerin modules: `steering-templates.ts`, `pressure-modifiers.ts`, `contextual-mirrors.ts`, `nerin-chat-context.ts`, `reflect.ts`, `observation-quality-common.ts`, `threading-common.ts`, `conversation-mode.ts`, `origin-story.ts`
+- Types: `prompt-builder-input.ts`, `scorer-output.ts`, `selector-output.ts`, `governor-debug.ts`, `user-state.ts`, `territory.ts`
+- ConversAnalyzer user-state extraction methods and mocks
+
+**Adapted (~12 files):**
+- `nerin-pipeline.ts` — rewrite to 4-step pipeline
+- `schema.ts` — exchange table column changes
+- `seed-completed-assessment.ts` + `exchange-builder.ts` — rewrite for Director exchange shape
+- `nerin-agent.repository.ts` → renamed to `nerin-actor.repository.ts`
+- `nerin-agent.anthropic.repository.ts` → renamed to `nerin-actor.anthropic.repository.ts`
+- Related mocks and integration tests
+
+**Created (~8 files):**
+- `domain/src/utils/coverage-analyzer.ts` — pure function
+- `domain/src/constants/nerin-director-prompt.ts` — Director system prompt
+- `domain/src/constants/nerin-director-closing-prompt.ts` — closing variant
+- `domain/src/constants/nerin-actor-prompt.ts` — Actor persona + voice
+- `domain/src/repositories/nerin-director.repository.ts` — Context.Tag interface
+- `infrastructure/src/repositories/nerin-director.anthropic.repository.ts` — implementation
+- `infrastructure/src/repositories/__mocks__/nerin-director.anthropic.repository.ts` — mock
+- `drizzle/XXXX_director_model_migration.sql` — schema migration
+
+### ADR-38: Prompt Module Audit and Mapping
+
+_Consolidated from ADR-DM-8 (architecture-director-model.md, 2026-04-03)._
+
+**Decision:** Every Nerin prompt module audited against: (1) for Director — would Sonnet do this naturally with full conversation context? (2) for Actor — does Haiku need this to voice a brief as Nerin?
+
+**Nerin Director prompt (~400-500 tokens total):**
+
+Modules removed from Director (natural Sonnet behavior with full context):
+- CONVERSATION_MODE (~280) — redundant with role description
+- CONVERSATION_INSTINCTS (~680) — thread-tracking, pivoting natural with full context (only "don't fully reveal" survives)
+- OBSERVATION_QUALITY_COMMON (~320) — replaced by three-beat structure (ADR-31)
+- THREADING_COMMON (~160) — Director reads full history
+- BELIEFS_IN_ACTION partial (~150) — Director reads energy naturally
+- MIRROR_GUARDRAILS partial (~140) — mirror deployment is Actor concern
+- CLOSING_EXCHANGE (~400) — moved to closing prompt variant only
+
+**Nerin Actor prompt (~650 tokens total):**
+
+| Keep | Source | Why |
+|---|---|---|
+| Full identity, voice, anti-patterns, vulnerability recognition | NERIN_PERSONA (~650) | Shared module — this IS Nerin's character |
+| Emoji as hand signals | QUALITY_INSTINCT (~60) | Integrated inline |
+| Dry observation only, never undercut vulnerability | HUMOR_GUARDRAILS (~40) | Integrated inline |
+| No diagnostic, no characterizing, no advice | SAFETY_GUARDRAILS (~60) | Integrated inline |
+| Biology must be real | MIRROR_GUARDRAILS (~30) | Integrated inline |
+| "Voice this brief as Nerin" framing | New (~80) | Essential Actor-Brief contract |
+
+Modules removed from Actor:
+- ORIGIN_STORY (~500) — grounding distilled into NERIN_PERSONA first sentence
+- CONTEXTUAL_MIRRORS (~2,000) — Actor uses marine biology from own knowledge
+- REFLECT (~420), STORY_PULLING (~450), OBSERVATION_QUALITY_COMMON (~320), THREADING_COMMON (~160), PUSHBACK_HANDLING (~300), CONVERSATION_MODE (~280), CONVERSATION_INSTINCTS (~680) — all Director concerns
+
+Modules deleted entirely:
+- STEERING_TEMPLATES (~2,200) — replaced by Director's free-form brief
+- PRESSURE_MODIFIERS (~440) — Director handles entry pressure in brief
+- NERIN_CHAT_CONTEXT (~3,500) — monolith content distributed per audit
+
+**Token budget comparison:**
+
+| | Old (single Nerin call) | Director Model |
+|---|---|---|
+| System prompt | ~6,000+ tokens | Director ~400-500 + Actor ~650 = **~1,050-1,150** |
+
+---
+
+**This document replaces:** `docs/ARCHITECTURE.md` and all satellite architecture documents (`architecture-director-model.md`, `architecture-conversation-pacing.md`, `architecture-conversation-experience-evolution.md`, `architecture-ux-gap-analysis.md`, `public-profile-redesign-architecture.md`) as the single authoritative architecture reference. All architectural decisions are consolidated here.
