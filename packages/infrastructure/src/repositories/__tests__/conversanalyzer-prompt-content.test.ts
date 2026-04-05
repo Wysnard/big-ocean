@@ -2,10 +2,11 @@
  * ConversAnalyzer Prompt Content Tests (Story 31-8, AC4; Story 40-2; Story 42-2; Story 42-3; Story 43-6)
  *
  * Verifies that the ConversAnalyzer evidence prompt includes expected content:
- * - Evidence prompt (v3): per-facet conversational anchors, polarity-based output,
- *   dual-polarity check, polarity balance audit, domain definitions
+ * - Evidence prompt (v4): per-facet conversational anchors, polarity-based output,
+ *   contrast-frame extraction method, domain definitions
  *
  * User-state prompt tests removed in Story 43-6 (Director reads energy/telling natively).
+ * Dual-polarity check and polarity balance audit replaced by contrast-frame method.
  */
 
 import { describe, expect, it } from "vitest";
@@ -46,8 +47,8 @@ describe("Evidence Prompt v3 (buildEvidencePrompt)", () => {
 		it("includes HIGH and LOW anchors for representative openness facets", () => {
 			// imagination
 			expect(prompt).toContain("**imagination**");
-			expect(prompt).toContain("I spend hours daydreaming about scenarios");
-			expect(prompt).toContain("I don't really daydream");
+			expect(prompt).toContain("I catch myself running through future conversations");
+			expect(prompt).toContain("I don't spend much time imagining scenarios in my head");
 
 			// artistic_interests
 			expect(prompt).toContain("**artistic_interests**");
@@ -84,13 +85,13 @@ describe("Evidence Prompt v3 (buildEvidencePrompt)", () => {
 		it("includes HIGH and LOW anchors for representative neuroticism facets", () => {
 			// anxiety
 			expect(prompt).toContain("**anxiety**");
-			expect(prompt).toContain("I lose sleep worrying");
-			expect(prompt).toContain("I genuinely don't worry much");
+			expect(prompt).toContain("I think about things over and over");
+			expect(prompt).toContain("I deal with it and move on");
 
 			// vulnerability
 			expect(prompt).toContain("**vulnerability**");
-			expect(prompt).toContain("I shut down");
-			expect(prompt).toContain("I work well under pressure");
+			expect(prompt).toContain("feels like a lot. I manage, but I feel the weight");
+			expect(prompt).toContain("I don't feel overwhelmed");
 		});
 
 		it("includes all 30 facet names as anchored sections", () => {
@@ -134,7 +135,7 @@ describe("Evidence Prompt v3 (buildEvidencePrompt)", () => {
 
 	describe("Polarity-Based Output Instructions (Story 42-3, AC1 + AC6)", () => {
 		it("instructs LLM to output polarity (high/low)", () => {
-			expect(prompt).toContain("**polarity**: HIGH or LOW expression?");
+			expect(prompt).toContain("**polarity**: HIGH or LOW?");
 		});
 
 		it("instructs LLM to output strength", () => {
@@ -148,37 +149,31 @@ describe("Evidence Prompt v3 (buildEvidencePrompt)", () => {
 		});
 	});
 
-	describe("Dual-Polarity Check (Story 42-3, AC2)", () => {
-		it("includes mandatory dual-polarity check instruction", () => {
-			expect(prompt).toContain("Dual-Polarity Check (MANDATORY)");
+	describe("Contrast-Frame Method (replaces dual-polarity + polarity audit)", () => {
+		it("includes the contrast-frame extraction method", () => {
+			expect(prompt).toContain("Contrast-Frame Method");
 		});
 
-		it("includes 5 dual-polarity examples from spec", () => {
-			expect(prompt).toContain("HIGH self_discipline + LOW gregariousness");
-			expect(prompt).toContain("HIGH assertiveness + LOW morality");
-			expect(prompt).toContain("HIGH intellect + LOW friendliness");
-			expect(prompt).toContain("HIGH activity_level + LOW vulnerability");
-			expect(prompt).toContain("HIGH cooperation + LOW assertiveness");
+		it("includes the three extraction steps", () => {
+			expect(prompt).toContain("Step 1 — Name the choice.");
+			expect(prompt).toContain("Step 2 — Map the active signal.");
+			expect(prompt).toContain("Step 3 — Map the shadow signal.");
 		});
 
-		it("instructs extracting BOTH signals", () => {
-			expect(prompt).toContain("Extract BOTH signals when applicable");
-		});
-	});
-
-	describe("Polarity Balance Audit (Story 42-3, AC3)", () => {
-		it("includes mandatory polarity balance audit", () => {
-			expect(prompt).toContain("Polarity Balance Audit (MANDATORY)");
+		it("instructs not to force shadow pairs", () => {
+			expect(prompt).toContain("do not force pairs");
 		});
 
-		it("specifies 35% LOW threshold", () => {
-			expect(prompt).toContain("fewer than 35% are LOW");
+		it("does NOT include old dual-polarity or polarity audit mechanisms", () => {
+			expect(prompt).not.toContain("Dual-Polarity Check");
+			expect(prompt).not.toContain("Polarity Balance Audit");
+			expect(prompt).not.toContain("fewer than 35% are LOW");
 		});
 
-		it("includes re-read instructions for absences and avoidances", () => {
-			expect(prompt).toContain("ABSENCES");
-			expect(prompt).toContain("AVOIDANCES");
-			expect(prompt).toContain("PREFERENCES AGAINST");
+		it("includes no-duplicate rule", () => {
+			expect(prompt).toContain(
+				"Do NOT extract the same facet + polarity + domain combination more than once per message",
+			);
 		});
 	});
 

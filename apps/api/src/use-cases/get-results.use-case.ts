@@ -221,7 +221,7 @@ export const getResults = (input: GetResultsInput) =>
 			);
 		}
 
-		// Extract FacetScoresMap (score + confidence, ignoring signalPower)
+		// Extract FacetScoresMap (score + confidence)
 		const facetScoresMap: FacetScoresMap = {} as FacetScoresMap;
 		for (const [facetName, data] of Object.entries(result.facets)) {
 			facetScoresMap[facetName as FacetName] = {

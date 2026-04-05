@@ -1,11 +1,14 @@
 /**
- * Coverage Analyzer — Evidence-to-Target Pure Function (Story 43-2)
+ * Coverage Analyzer — Evidence-to-Target Pure Function
  *
- * Analyzes conversation evidence and identifies the weakest personality facets
- * in the weakest life domain. Returns coverage targets for the Director to steer
- * the conversation toward unexplored territory.
+ * Active steering logic for the Director model.
  *
- * Pure function — no DI, no repository, no side effects.
+ * Selector design:
+ * - Rank facets with a single history-wide steering metric
+ * - Steering metric = support × domain spread
+ * - Support keeps growing across the full conversation history
+ * - Domain spread rewards balanced coverage across steerable domains
+ * - Return one primary facet plus a ranked shortlist of candidate domains
  */
 import { ALL_FACETS, type FacetName, OCEAN_INTERLEAVED_ORDER } from "../constants/big-five";
 import { FACET_PROMPT_DEFINITIONS } from "../constants/facet-prompt-definitions";
@@ -15,114 +18,293 @@ import {
 	STEERABLE_DOMAINS,
 } from "../constants/life-domain";
 import type { EvidenceInput } from "../types/evidence";
-import { computeFinalWeight, FORMULA_DEFAULTS, type FormulaConfig } from "./formula";
+import { computeFinalWeight } from "./formula";
 
-// ─── Types ──────────────────────────────────────────────────────────
+/** Evidence count threshold for switching from opening → exploring phase */
+const OPENING_PHASE_THRESHOLD = 10;
+
+export type ConversationPhase = "opening" | "exploring" | "closing";
 
 export interface CoverageTarget {
-	readonly targetFacets: FacetName[];
-	readonly targetDomain: LifeDomain;
+	readonly primaryFacet: FacetName;
+	readonly candidateDomains: LifeDomain[];
+	readonly phase: ConversationPhase;
 }
 
 export interface CoverageTargetWithDefinitions {
-	readonly targetFacets: ReadonlyArray<{ readonly facet: FacetName; readonly definition: string }>;
-	readonly targetDomain: { readonly domain: LifeDomain; readonly definition: string };
+	readonly primaryFacet: { readonly facet: FacetName; readonly definition: string };
+	readonly candidateDomains: ReadonlyArray<{
+		readonly domain: LifeDomain;
+		readonly definition: string;
+	}>;
+	readonly phase: ConversationPhase;
 }
 
-// ─── Core Function ──────────────────────────────────────────────────
+export interface CoverageHistoryEntry {
+	readonly turnNumber: number;
+	readonly primaryFacet: FacetName;
+	readonly preferredDomain: LifeDomain | null;
+}
+
+interface FacetCoverageMetrics {
+	readonly totalMass: number;
+	readonly support: number;
+	readonly effectiveDomains: number;
+	readonly steeringSignal: number;
+	readonly domainMasses: ReadonlyMap<LifeDomain, number>;
+}
 
 /**
- * Analyze evidence coverage and return the weakest domain + 3 weakest facets.
+ * Best-effort decoder for persisted historical coverage targets.
  *
- * Algorithm:
- * 1. Group evidence by (domain, facet), compute per-pair evidence mass W
- * 2. Compute per-pair confidence: C_max × (1 - e^{-k × W})
- * 3. For each steerable domain, find the 3 lowest-confidence facets (bottom-3)
- * 4. Select domain with lowest bottom-3 average
- * 5. Tiebreak: full-domain average (weakest wins), then STEERABLE_DOMAINS order
- * 6. Return { targetDomain, targetFacets: [3 weakest facets in that domain] }
+ * Supports both:
+ * - new shape: { primaryFacet, candidateDomains }
+ * - legacy shape: { targetFacets, targetDomain }
+ */
+export function extractCoverageHistoryEntry(input: {
+	readonly turnNumber: number;
+	readonly coverageTargets: unknown;
+}): CoverageHistoryEntry | null {
+	if (!input.coverageTargets || typeof input.coverageTargets !== "object") return null;
+
+	const record = input.coverageTargets as Record<string, unknown>;
+	const primaryFacet = parseFacet(record.primaryFacet) ?? parseFirstFacet(record.targetFacets);
+	if (!primaryFacet) return null;
+
+	const preferredDomain =
+		parseFirstDomain(record.candidateDomains) ?? parseDomain(record.targetDomain) ?? null;
+
+	return {
+		turnNumber: input.turnNumber,
+		primaryFacet,
+		preferredDomain,
+	};
+}
+
+/**
+ * Analyze evidence coverage and return one primary facet plus candidate domains.
+ *
+ * Ranking:
+ * 1. lowest steeringSignal = support × effectiveDomains
+ * 2. lowest effectiveDomains
+ * 3. lowest totalMass
+ * 4. least recently targeted
+ * 5. OCEAN interleaved order
+ *
+ * Domain ranking:
+ * - for covered facets: lowest facet-domain mass first
+ * - for unseen facets: globally weakest domains first
+ * - lightly avoid repeating the previous preferred domain
  */
 export function analyzeCoverage(
 	evidence: EvidenceInput[],
-	config: FormulaConfig = FORMULA_DEFAULTS,
+	options: { readonly history?: readonly CoverageHistoryEntry[] } = {},
 ): CoverageTarget {
-	// Step 1: Build per-(domain, facet) evidence mass
-	const massMap = new Map<string, number>();
+	const facetMetrics = buildFacetCoverageMetrics(evidence);
+	const globalDomainMasses = buildGlobalDomainMasses(facetMetrics);
+	const history = options.history ?? [];
+	const lastTurnByFacet = buildLastTurnByFacet(history);
+	const previousPreferredDomain = getPreviousPreferredDomain(history);
 
-	for (const e of evidence) {
-		const key = `${e.domain}|${e.bigfiveFacet}`;
-		const weight = computeFinalWeight(e.strength, e.confidence);
-		massMap.set(key, (massMap.get(key) ?? 0) + weight);
-	}
+	const facetsByNeed = ALL_FACETS.map((facet) => {
+		const metrics = facetMetrics.get(facet) ?? emptyFacetCoverageMetrics();
+		return {
+			facet,
+			...metrics,
+			lastTargetedTurn: lastTurnByFacet.get(facet) ?? null,
+			interleavedIndex: OCEAN_INTERLEAVED_ORDER.indexOf(facet),
+		};
+	}).sort((a, b) => {
+		if (a.steeringSignal !== b.steeringSignal) return a.steeringSignal - b.steeringSignal;
+		if (a.effectiveDomains !== b.effectiveDomains) return a.effectiveDomains - b.effectiveDomains;
+		if (a.totalMass !== b.totalMass) return a.totalMass - b.totalMass;
 
-	// Step 2: Compute per-(domain, facet) confidence
-	const confidenceMap = new Map<string, number>();
-	for (const [key, W] of massMap) {
-		const confidence = config.C_max * (1 - Math.exp(-config.k * W));
-		confidenceMap.set(key, confidence);
-	}
-
-	// Helper: get confidence for a (domain, facet) pair
-	const getConfidence = (domain: string, facet: FacetName): number =>
-		confidenceMap.get(`${domain}|${facet}`) ?? 0;
-
-	// Step 3-4: For each steerable domain, compute bottom-3 avg and full avg
-	let bestDomain: LifeDomain = STEERABLE_DOMAINS[0] as LifeDomain;
-	let bestBottom3Avg = Number.POSITIVE_INFINITY;
-	let bestFullAvg = Number.POSITIVE_INFINITY;
-
-	for (const domain of STEERABLE_DOMAINS) {
-		// Get all facet confidences for this domain, sorted ascending
-		const facetConfidences = ALL_FACETS.map((facet) => getConfidence(domain, facet));
-		const sorted = [...facetConfidences].sort((a, b) => a - b);
-
-		// Bottom-3 average
-		const bottom3Sum = (sorted[0] ?? 0) + (sorted[1] ?? 0) + (sorted[2] ?? 0);
-		const bottom3Avg = bottom3Sum / 3;
-
-		// Full-domain average
-		const fullSum = facetConfidences.reduce((a, b) => a + b, 0);
-		const fullAvg = fullSum / facetConfidences.length;
-
-		// Select domain with lowest bottom-3 avg, tiebreak on full avg, then array order
-		if (bottom3Avg < bestBottom3Avg || (bottom3Avg === bestBottom3Avg && fullAvg < bestFullAvg)) {
-			bestBottom3Avg = bottom3Avg;
-			bestFullAvg = fullAvg;
-			bestDomain = domain as LifeDomain;
+		if (a.lastTargetedTurn === null && b.lastTargetedTurn !== null) return -1;
+		if (a.lastTargetedTurn !== null && b.lastTargetedTurn === null) return 1;
+		if (a.lastTargetedTurn !== b.lastTargetedTurn) {
+			return (
+				(a.lastTargetedTurn ?? Number.POSITIVE_INFINITY) -
+				(b.lastTargetedTurn ?? Number.POSITIVE_INFINITY)
+			);
 		}
-	}
 
-	// Step 5: Find the 3 lowest-confidence facets in the selected domain
-	// Tiebreak: OCEAN_INTERLEAVED_ORDER index (lower index = higher priority)
-	const facetsByConfidence = ALL_FACETS.map((facet) => ({
-		facet,
-		confidence: getConfidence(bestDomain, facet),
-		interleavedIndex: OCEAN_INTERLEAVED_ORDER.indexOf(facet),
-	})).sort((a, b) => {
-		if (a.confidence !== b.confidence) return a.confidence - b.confidence;
 		return a.interleavedIndex - b.interleavedIndex;
 	});
 
-	const targetFacets = facetsByConfidence.slice(0, 3).map((f) => f.facet);
+	const primary = facetsByNeed[0];
+	const primaryFacet = primary?.facet ?? OCEAN_INTERLEAVED_ORDER[0]!;
+	const primaryMetrics = facetMetrics.get(primaryFacet) ?? emptyFacetCoverageMetrics();
+	const hasFacetEvidence = primaryMetrics.totalMass > 0;
 
-	return { targetDomain: bestDomain, targetFacets };
+	const candidateDomains = [...STEERABLE_DOMAINS]
+		.map((domain) => ({
+			domain,
+			facetMass: primaryMetrics.domainMasses.get(domain) ?? 0,
+			globalMass: globalDomainMasses.get(domain) ?? 0,
+			repeatsPrevious: previousPreferredDomain === domain ? 1 : 0,
+			domainIndex: STEERABLE_DOMAINS.indexOf(domain),
+		}))
+		.sort((a, b) => {
+			if (hasFacetEvidence && a.facetMass !== b.facetMass) return a.facetMass - b.facetMass;
+			if (a.globalMass !== b.globalMass) return a.globalMass - b.globalMass;
+			if (a.repeatsPrevious !== b.repeatsPrevious) return a.repeatsPrevious - b.repeatsPrevious;
+			return a.domainIndex - b.domainIndex;
+		})
+		.slice(0, 3)
+		.map((entry) => entry.domain as LifeDomain);
+
+	const phase: ConversationPhase =
+		evidence.length < OPENING_PHASE_THRESHOLD ? "opening" : "exploring";
+
+	return { primaryFacet, candidateDomains, phase };
 }
 
-// ─── Definition Enrichment ──────────────────────────────────────────
-
-/**
- * Pair coverage targets with behavioral definitions for injection into
- * the Director prompt (~100-150 tokens of context).
- */
 export function enrichWithDefinitions(target: CoverageTarget): CoverageTargetWithDefinitions {
 	return {
-		targetFacets: target.targetFacets.map((facet) => ({
-			facet,
-			definition: FACET_PROMPT_DEFINITIONS[facet],
-		})),
-		targetDomain: {
-			domain: target.targetDomain,
-			definition: LIFE_DOMAIN_DEFINITIONS[target.targetDomain],
+		primaryFacet: {
+			facet: target.primaryFacet,
+			definition: FACET_PROMPT_DEFINITIONS[target.primaryFacet],
 		},
+		candidateDomains: target.candidateDomains.map((domain) => ({
+			domain,
+			definition: LIFE_DOMAIN_DEFINITIONS[domain],
+		})),
+		phase: target.phase,
 	};
+}
+
+function buildFacetCoverageMetrics(
+	evidence: EvidenceInput[],
+): ReadonlyMap<FacetName, FacetCoverageMetrics> {
+	const byFacet = new Map<FacetName, Map<LifeDomain, number>>();
+
+	for (const item of evidence) {
+		if (!STEERABLE_DOMAINS.includes(item.domain)) continue;
+
+		let domainMasses = byFacet.get(item.bigfiveFacet);
+		if (!domainMasses) {
+			domainMasses = new Map<LifeDomain, number>();
+			byFacet.set(item.bigfiveFacet, domainMasses);
+		}
+
+		const weight = computeFinalWeight(item.strength, item.confidence);
+		domainMasses.set(item.domain, (domainMasses.get(item.domain) ?? 0) + weight);
+	}
+
+	const metrics = new Map<FacetName, FacetCoverageMetrics>();
+
+	for (const [facet, domainMasses] of byFacet) {
+		const totalMass = Array.from(domainMasses.values()).reduce((sum, value) => sum + value, 0);
+		const support = Math.log1p(totalMass);
+		const effectiveDomains = computeEffectiveDomains(totalMass, domainMasses);
+		const steeringSignal = support * effectiveDomains;
+
+		metrics.set(facet, {
+			totalMass,
+			support,
+			effectiveDomains,
+			steeringSignal,
+			domainMasses,
+		});
+	}
+
+	return metrics;
+}
+
+function buildGlobalDomainMasses(
+	metrics: ReadonlyMap<FacetName, FacetCoverageMetrics>,
+): ReadonlyMap<LifeDomain, number> {
+	const globalDomainMasses = new Map<LifeDomain, number>(
+		STEERABLE_DOMAINS.map((domain) => [domain, 0] as const),
+	);
+
+	for (const metric of metrics.values()) {
+		for (const [domain, mass] of metric.domainMasses) {
+			globalDomainMasses.set(domain, (globalDomainMasses.get(domain) ?? 0) + mass);
+		}
+	}
+
+	return globalDomainMasses;
+}
+
+function buildLastTurnByFacet(
+	history: readonly CoverageHistoryEntry[],
+): ReadonlyMap<FacetName, number> {
+	const result = new Map<FacetName, number>();
+
+	for (const entry of history) {
+		const previous = result.get(entry.primaryFacet);
+		if (previous === undefined || entry.turnNumber > previous) {
+			result.set(entry.primaryFacet, entry.turnNumber);
+		}
+	}
+
+	return result;
+}
+
+function getPreviousPreferredDomain(history: readonly CoverageHistoryEntry[]): LifeDomain | null {
+	let latest: CoverageHistoryEntry | null = null;
+
+	for (const entry of history) {
+		if (latest === null || entry.turnNumber > latest.turnNumber) {
+			latest = entry;
+		}
+	}
+
+	return latest?.preferredDomain ?? null;
+}
+
+function computeEffectiveDomains(
+	totalMass: number,
+	domainMasses: ReadonlyMap<LifeDomain, number>,
+): number {
+	if (totalMass <= 0) return 0;
+
+	let concentration = 0;
+	for (const mass of domainMasses.values()) {
+		const p = mass / totalMass;
+		concentration += p * p;
+	}
+
+	return concentration > 0 ? 1 / concentration : 0;
+}
+
+function emptyFacetCoverageMetrics(): FacetCoverageMetrics {
+	return {
+		totalMass: 0,
+		support: 0,
+		effectiveDomains: 0,
+		steeringSignal: 0,
+		domainMasses: new Map<LifeDomain, number>(),
+	};
+}
+
+function parseFacet(value: unknown): FacetName | null {
+	return typeof value === "string" && ALL_FACETS.includes(value as FacetName)
+		? (value as FacetName)
+		: null;
+}
+
+function parseFirstFacet(value: unknown): FacetName | null {
+	if (!Array.isArray(value)) return null;
+	for (const item of value) {
+		const facet = parseFacet(item);
+		if (facet) return facet;
+	}
+	return null;
+}
+
+function parseDomain(value: unknown): LifeDomain | null {
+	return typeof value === "string" && STEERABLE_DOMAINS.includes(value as LifeDomain)
+		? (value as LifeDomain)
+		: null;
+}
+
+function parseFirstDomain(value: unknown): LifeDomain | null {
+	if (!Array.isArray(value)) return null;
+	for (const item of value) {
+		const domain = parseDomain(item);
+		if (domain) return domain;
+	}
+	return null;
 }

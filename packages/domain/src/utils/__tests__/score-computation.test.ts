@@ -22,7 +22,6 @@ describe("computeAllFacetResults", () => {
 			expect(result[facet]).toEqual({
 				score: FORMULA_DEFAULTS.SCORE_MIDPOINT,
 				confidence: 0,
-				signalPower: 0,
 			});
 		}
 	});
@@ -55,7 +54,6 @@ describe("computeAllFacetResults", () => {
 		expect(result.artistic_interests).toEqual({
 			score: FORMULA_DEFAULTS.SCORE_MIDPOINT,
 			confidence: 0,
-			signalPower: 0,
 		});
 	});
 
@@ -96,9 +94,9 @@ describe("computeAllFacetResults", () => {
 
 describe("computeTraitResults", () => {
 	it("returns trait score equal to facet score when all facets are uniform", () => {
-		const facets = {} as Record<string, { score: number; confidence: number; signalPower: number }>;
+		const facets = {} as Record<string, { score: number; confidence: number }>;
 		for (const facet of ALL_FACETS) {
-			facets[facet] = { score: 12, confidence: 0.5, signalPower: 0.3 };
+			facets[facet] = { score: 12, confidence: 0.5 };
 		}
 
 		const result = computeTraitResults(facets as ReturnType<typeof computeAllFacetResults>);
@@ -106,19 +104,18 @@ describe("computeTraitResults", () => {
 		for (const trait of TRAIT_NAMES) {
 			expect(result[trait].score).toBeCloseTo(72);
 			expect(result[trait].confidence).toBeCloseTo(0.5);
-			expect(result[trait].signalPower).toBeCloseTo(0.3);
 		}
 	});
 
 	it("returns trait as average of its 6 facets when mixed", () => {
-		const facets = {} as Record<string, { score: number; confidence: number; signalPower: number }>;
+		const facets = {} as Record<string, { score: number; confidence: number }>;
 		for (const facet of ALL_FACETS) {
-			facets[facet] = { score: 10, confidence: 0, signalPower: 0 };
+			facets[facet] = { score: 10, confidence: 0 };
 		}
 		// Set openness facets to varied scores
 		const opennessFacets = TRAIT_TO_FACETS.openness;
-		facets[opennessFacets[0]] = { score: 18, confidence: 0.9, signalPower: 0.6 };
-		facets[opennessFacets[1]] = { score: 6, confidence: 0.3, signalPower: 0.1 };
+		facets[opennessFacets[0]] = { score: 18, confidence: 0.9 };
+		facets[opennessFacets[1]] = { score: 6, confidence: 0.3 };
 		// Other 4 openness facets stay at defaults (10, 0, 0)
 
 		const result = computeTraitResults(facets as ReturnType<typeof computeAllFacetResults>);
@@ -129,16 +126,15 @@ describe("computeTraitResults", () => {
 	});
 
 	it("returns zero confidence when all facets have zero confidence", () => {
-		const facets = {} as Record<string, { score: number; confidence: number; signalPower: number }>;
+		const facets = {} as Record<string, { score: number; confidence: number }>;
 		for (const facet of ALL_FACETS) {
-			facets[facet] = { score: 10, confidence: 0, signalPower: 0 };
+			facets[facet] = { score: 10, confidence: 0 };
 		}
 
 		const result = computeTraitResults(facets as ReturnType<typeof computeAllFacetResults>);
 
 		for (const trait of TRAIT_NAMES) {
 			expect(result[trait].confidence).toBe(0);
-			expect(result[trait].signalPower).toBe(0);
 		}
 	});
 });

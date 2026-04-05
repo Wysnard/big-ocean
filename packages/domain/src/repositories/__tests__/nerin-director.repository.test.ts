@@ -32,8 +32,8 @@ describe("NerinDirectorRepository", () => {
 				systemPrompt: "test prompt",
 				messages: [],
 				coverageTargets: {
-					targetFacets: [{ facet: "imagination", definition: "test def" }],
-					targetDomain: { domain: "leisure", definition: "test domain def" },
+					primaryFacet: { facet: "imagination", definition: "test def" },
+					candidateDomains: [{ domain: "leisure", definition: "test domain def" }],
 				},
 				sessionId: "test-session",
 			});
@@ -65,8 +65,8 @@ describe("NerinDirectorRepository", () => {
 				systemPrompt: "test",
 				messages: [],
 				coverageTargets: {
-					targetFacets: [],
-					targetDomain: { domain: "work", definition: "test" },
+					primaryFacet: { facet: "imagination", definition: "test" },
+					candidateDomains: [{ domain: "work", definition: "test" }],
 				},
 				sessionId: "s1",
 			});

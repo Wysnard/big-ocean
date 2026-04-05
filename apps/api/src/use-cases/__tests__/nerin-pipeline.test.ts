@@ -249,8 +249,8 @@ const postColdStartExchanges = [
 		extractionTier: 1,
 		directorOutput: "Explore daily routines",
 		coverageTargets: {
-			targetFacets: ["imagination", "orderliness", "self_discipline"],
-			targetDomain: "work",
+			primaryFacet: "imagination",
+			candidateDomains: ["work", "relationships", "leisure"],
 		},
 	},
 	{
@@ -260,8 +260,8 @@ const postColdStartExchanges = [
 		extractionTier: 1,
 		directorOutput: "Continue exploring daily routines",
 		coverageTargets: {
-			targetFacets: ["orderliness", "self_discipline", "dutifulness"],
-			targetDomain: "work",
+			primaryFacet: "orderliness",
+			candidateDomains: ["work", "health", "family"],
 		},
 	},
 	{
@@ -271,8 +271,8 @@ const postColdStartExchanges = [
 		extractionTier: 1,
 		directorOutput: "Explore creative pursuits",
 		coverageTargets: {
-			targetFacets: ["imagination", "artistic_interests", "emotionality"],
-			targetDomain: "leisure",
+			primaryFacet: "imagination",
+			candidateDomains: ["leisure", "relationships", "health"],
 		},
 	},
 ];
@@ -432,8 +432,8 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 				expect(directorCall?.systemPrompt).toBeDefined();
 				expect(directorCall?.messages).toBeDefined();
 				expect(directorCall?.coverageTargets).toBeDefined();
-				expect(directorCall?.coverageTargets.targetFacets).toBeDefined();
-				expect(directorCall?.coverageTargets.targetDomain).toBeDefined();
+				expect(directorCall?.coverageTargets.primaryFacet).toBeDefined();
+				expect(directorCall?.coverageTargets.candidateDomains).toBeDefined();
 
 				// Actor was called with the Director's brief
 				expect(mockActorRepo.invoke).toHaveBeenCalledTimes(1);
@@ -515,7 +515,10 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 						turnNumber: i + 1,
 						extractionTier: 1,
 						directorOutput: `Brief for turn ${i + 1}`,
-						coverageTargets: { targetFacets: ["imagination"], targetDomain: "work" },
+						coverageTargets: {
+							primaryFacet: "imagination",
+							candidateDomains: ["work", "relationships", "leisure"],
+						},
 					})),
 				];
 				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(finalTurnExchanges));
@@ -529,7 +532,7 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 
 				// Director should have been called with closing prompt
 				const directorCall = mockDirectorRepo.generateBrief.mock.calls[0]?.[0];
-				expect(directorCall?.systemPrompt).toContain("FINAL EXCHANGE");
+				expect(directorCall?.systemPrompt).toContain("final exchange");
 
 				// Farewell message should be present
 				expect(result.surfacingMessage).toBeDefined();
@@ -733,8 +736,8 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 				expect(pipelineLog).toBeDefined();
 				const pipelineData = pipelineLog?.[1];
 				expect(pipelineData).toHaveProperty("turnNumber");
-				expect(pipelineData).toHaveProperty("targetDomain");
-				expect(pipelineData).toHaveProperty("targetFacets");
+				expect(pipelineData).toHaveProperty("primaryFacet");
+				expect(pipelineData).toHaveProperty("candidateDomains");
 
 				// Check "Message processed" log
 				const processedLogCall = mockLoggerRepo.info.mock.calls.find(
@@ -781,8 +784,8 @@ const parentFinalExchange = {
 	extractionTier: 1,
 	directorOutput: "Final turn brief: bold observation about user patterns",
 	coverageTargets: {
-		targetFacets: ["imagination", "orderliness", "self_discipline"],
-		targetDomain: "work",
+		primaryFacet: "imagination",
+		candidateDomains: ["work", "relationships", "leisure"],
 	},
 };
 
@@ -795,7 +798,10 @@ const parentExchangeHistory = [
 		turnNumber: 1,
 		extractionTier: 1,
 		directorOutput: "Explore daily routines",
-		coverageTargets: { targetFacets: ["imagination"], targetDomain: "work" },
+		coverageTargets: {
+			primaryFacet: "imagination",
+			candidateDomains: ["work", "relationships", "leisure"],
+		},
 	},
 	{
 		...mockExchangeRecord,
@@ -804,7 +810,10 @@ const parentExchangeHistory = [
 		turnNumber: 2,
 		extractionTier: 1,
 		directorOutput: "Explore creative pursuits",
-		coverageTargets: { targetFacets: ["orderliness"], targetDomain: "work" },
+		coverageTargets: {
+			primaryFacet: "orderliness",
+			candidateDomains: ["work", "health", "family"],
+		},
 	},
 	parentFinalExchange,
 ];

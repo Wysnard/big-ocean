@@ -116,7 +116,7 @@ describe("sendMessage Use Case", () => {
 				}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should filter evidence by weight threshold (AC: #9)", () =>
+		it.effect("should save all evidence without weight filtering", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				const customEvidence = [
@@ -137,45 +137,12 @@ describe("sendMessage Use Case", () => {
 						note: "Trusting",
 					},
 					{
-						bigfiveFacet: "orderliness" as const,
-						deviation: -1,
-						strength: "moderate" as const,
-						confidence: "high" as const,
-						domain: "work" as const,
-						note: "Structured",
-					},
-					{
-						bigfiveFacet: "cheerfulness" as const,
-						deviation: 2,
-						strength: "strong" as const,
-						confidence: "medium" as const,
-						domain: "leisure" as const,
-						note: "Joyful",
-					},
-					{
-						// finalWeight: 0.3 * 0.3 = 0.09 — below threshold, dropped
 						bigfiveFacet: "anxiety" as const,
 						deviation: -2,
 						strength: "weak" as const,
 						confidence: "low" as const,
 						domain: "health" as const,
 						note: "Calm",
-					},
-					{
-						bigfiveFacet: "intellect" as const,
-						deviation: 1,
-						strength: "moderate" as const,
-						confidence: "medium" as const,
-						domain: "work" as const,
-						note: "Curious",
-					},
-					{
-						bigfiveFacet: "altruism" as const,
-						deviation: 3,
-						strength: "strong" as const,
-						confidence: "high" as const,
-						domain: "family" as const,
-						note: "Giving",
 					},
 				];
 				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
@@ -190,12 +157,11 @@ describe("sendMessage Use Case", () => {
 					message: "I work in tech",
 				});
 
-				// 6 records saved (anxiety dropped due to weight < 0.36)
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
 				const savedRecords = mockEvidenceRepo.save.mock.calls[0][0];
-				expect(savedRecords).toHaveLength(6);
+				expect(savedRecords).toHaveLength(3);
 				const facets = savedRecords.map((r: { bigfiveFacet: string }) => r.bigfiveFacet);
-				expect(facets).not.toContain("anxiety");
+				expect(facets).toContain("anxiety");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 

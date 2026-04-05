@@ -1,7 +1,8 @@
 /**
- * Send Message Use Case Tests — Evidence quality-based filtering
+ * Send Message Use Case Tests — Evidence saving behavior
  *
- * Tests weight-threshold filtering (MIN_EVIDENCE_WEIGHT = 0.36) replacing hard caps.
+ * Weight-threshold filtering removed — all extracted evidence is saved.
+ * Tests verify evidence is passed through to persistence without filtering.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "@effect/vitest";
@@ -25,14 +26,13 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 		vi.clearAllMocks();
 	});
 
-	describe("Weight threshold filtering (config.minEvidenceWeight = 0.36)", () => {
-		it.effect("should drop evidence with finalWeight below 0.36", () =>
+	describe("Evidence saving (no weight filtering)", () => {
+		it.effect("should save all extracted evidence regardless of weight", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
 					Effect.succeed({
 						evidence: [
-							// finalWeight: 0.3 * 0.3 = 0.09 — below threshold, dropped
 							{
 								bigfiveFacet: "anxiety",
 								deviation: -1,
@@ -41,7 +41,6 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 								domain: "health",
 								note: "Low anxiety",
 							},
-							// finalWeight: 0.3 * 0.6 = 0.18 — below threshold, dropped
 							{
 								bigfiveFacet: "intellect",
 								deviation: 1,
@@ -50,7 +49,6 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 								domain: "work",
 								note: "Curious",
 							},
-							// finalWeight: 0.6 * 0.6 = 0.36 — exactly at threshold, kept
 							{
 								bigfiveFacet: "trust",
 								deviation: 1,
@@ -59,7 +57,6 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 								domain: "relationships",
 								note: "Trusting",
 							},
-							// finalWeight: 1.0 * 0.9 = 0.90 — above threshold, kept
 							{
 								bigfiveFacet: "imagination",
 								deviation: 3,
@@ -77,13 +74,13 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
 				const savedRecords = mockEvidenceRepo.save.mock.calls[0][0];
-				expect(savedRecords).toHaveLength(2);
+				expect(savedRecords).toHaveLength(4);
 
 				const facets = savedRecords.map((r: { bigfiveFacet: string }) => r.bigfiveFacet);
+				expect(facets).toContain("anxiety");
+				expect(facets).toContain("intellect");
 				expect(facets).toContain("trust");
 				expect(facets).toContain("imagination");
-				expect(facets).not.toContain("anxiety");
-				expect(facets).not.toContain("intellect");
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
@@ -162,7 +159,7 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 
-		it.effect("should save nothing when all evidence is below threshold", () =>
+		it.effect("should save weak evidence too", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 				mockConversanalyzerRepo.analyzeEvidence.mockReturnValue(
@@ -191,7 +188,9 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 
 				yield* sendMessage({ sessionId: "session_test_123", message: "ok" });
 
-				expect(mockEvidenceRepo.save).not.toHaveBeenCalled();
+				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
+				const savedRecords = mockEvidenceRepo.save.mock.calls[0][0];
+				expect(savedRecords).toHaveLength(2);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 

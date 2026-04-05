@@ -26,15 +26,16 @@ import {
 	type ConversanalyzerEvidenceOutput,
 	ConversationEvidenceRepository,
 	CostGuardRepository,
+	type CoverageHistoryEntry,
 	calculateCost,
 	computeFinalWeight,
 	type DomainMessage,
 	type ExtractionTier,
 	enrichWithDefinitions,
+	extractCoverageHistoryEntry,
+	getDirectorPromptForPhase,
 	getUTCDateKey,
 	LoggerRepository,
-	NERIN_DIRECTOR_CLOSING_PROMPT,
-	NERIN_DIRECTOR_PROMPT,
 	NerinActorRepository,
 	NerinDirectorRepository,
 	pickFarewellMessage,
@@ -161,7 +162,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		if (shouldExtract) {
 			const domainDistribution = aggregateDomainDistribution(allEvidence);
-			const recentMessages: DomainMessage[] = domainMessages.slice(-6);
+			const recentMessages: DomainMessage[] = domainMessages.slice(-2);
 
 			const extraction = yield* runThreeTierExtraction({
 				sessionId: input.sessionId,
@@ -174,16 +175,11 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			const evidenceResult = extraction.output;
 			analyzerTokenUsage = evidenceResult.tokenUsage;
 
-			const filteredEvidence = evidenceResult.evidence.filter(
-				(e) => computeFinalWeight(e.strength, e.confidence) >= config.minEvidenceWeight,
-			);
-
-			logger.info("Evidence weights computed", {
+			logger.info("Evidence extracted", {
 				sessionId: input.sessionId,
-				rawCount: evidenceResult.evidence.length,
-				filteredCount: filteredEvidence.length,
+				count: evidenceResult.evidence.length,
 				extractionTier,
-				evidence: filteredEvidence.map((e) => ({
+				evidence: evidenceResult.evidence.map((e) => ({
 					facet: e.bigfiveFacet,
 					deviation: e.deviation,
 					polarity: e.polarity,
@@ -194,8 +190,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 				})),
 			});
 
-			if (filteredEvidence.length > 0) {
-				pendingEvidence = filteredEvidence;
+			if (evidenceResult.evidence.length > 0) {
+				pendingEvidence = evidenceResult.evidence;
 			}
 		} else if (existingEvidenceCount > 0) {
 			logger.info("Evidence extraction skipped (idempotency — evidence already exists)", {
@@ -221,18 +217,27 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		const coverageTarget = analyzeCoverage(
 			allEvidenceWithCurrent as Parameters<typeof analyzeCoverage>[0],
+			{
+				history: allExchanges
+					.map((exchange) =>
+						extractCoverageHistoryEntry({
+							turnNumber: exchange.turnNumber,
+							coverageTargets: exchange.coverageTargets,
+						}),
+					)
+					.filter((entry): entry is CoverageHistoryEntry => entry !== null),
+			},
 		);
 		const coverageTargetsEnriched = enrichWithDefinitions(coverageTarget);
 
 		const tCoverage = Date.now();
 
 		// ---- Step 3: Nerin Director ----
-		// Swap to closing prompt on last turn (ADR-DM-5)
+		// Phase-based prompt selection: opening → exploring → closing
 
 		const isFinalTurnPreCheck = turnNumber >= totalTurns;
-		const directorSystemPrompt = isFinalTurnPreCheck
-			? NERIN_DIRECTOR_CLOSING_PROMPT
-			: NERIN_DIRECTOR_PROMPT;
+		const directorPhase = isFinalTurnPreCheck ? ("closing" as const) : coverageTarget.phase;
+		const directorSystemPrompt = getDirectorPromptForPhase(directorPhase);
 
 		const directorResult = yield* director
 			.generateBrief({
@@ -268,8 +273,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		logger.info("Director pipeline computed", {
 			sessionId: input.sessionId,
 			turnNumber,
-			targetDomain: coverageTarget.targetDomain,
-			targetFacets: coverageTarget.targetFacets,
+			primaryFacet: coverageTarget.primaryFacet,
+			candidateDomains: coverageTarget.candidateDomains,
 			briefLength: directorResult.brief.length,
 			isFinalTurn: isFinalTurnPreCheck,
 			isExtensionSession,
@@ -433,8 +438,8 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			messageCount,
 			isFinalTurn: isFinalTurnResult,
 			hasSurfacingMessage: !!surfacingMessage,
-			targetDomain: coverageTarget.targetDomain,
-			targetFacets: coverageTarget.targetFacets,
+			primaryFacet: coverageTarget.primaryFacet,
+			candidateDomains: coverageTarget.candidateDomains,
 			extractionTier,
 			evidenceCount: pendingEvidence.length,
 			exchangeId: exchange.id,

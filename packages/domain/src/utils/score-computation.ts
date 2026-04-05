@@ -19,18 +19,16 @@ import { computeFacetMetrics, FORMULA_DEFAULTS } from "./formula";
 export interface FacetResult {
 	readonly score: number;
 	readonly confidence: number;
-	readonly signalPower: number;
 }
 
 export interface TraitResult {
 	readonly score: number;
 	readonly confidence: number;
-	readonly signalPower: number;
 }
 
 /**
  * Compute results for all 30 facets from evidence.
- * Missing facets receive defaults: score = SCORE_MIDPOINT, confidence = 0, signalPower = 0.
+ * Missing facets receive defaults: score = SCORE_MIDPOINT, confidence = 0.
  */
 export function computeAllFacetResults(evidence: EvidenceInput[]): Record<FacetName, FacetResult> {
 	const metrics = computeFacetMetrics(evidence);
@@ -39,9 +37,9 @@ export function computeAllFacetResults(evidence: EvidenceInput[]): Record<FacetN
 	for (const facet of ALL_FACETS) {
 		const m = metrics.get(facet);
 		if (m) {
-			result[facet] = { score: m.score, confidence: m.confidence, signalPower: m.signalPower };
+			result[facet] = { score: m.score, confidence: m.confidence };
 		} else {
-			result[facet] = { score: FORMULA_DEFAULTS.SCORE_MIDPOINT, confidence: 0, signalPower: 0 };
+			result[facet] = { score: FORMULA_DEFAULTS.SCORE_MIDPOINT, confidence: 0 };
 		}
 	}
 
@@ -50,10 +48,10 @@ export function computeAllFacetResults(evidence: EvidenceInput[]): Record<FacetN
 
 /**
  * Derive trait results from facet results.
- * Each trait = average of its 6 facets' score, confidence, signalPower.
+ * Each trait = sum of its 6 facet scores and average confidence.
  */
 export function computeTraitResults(
-	facets: Record<FacetName, Pick<FacetResult, "score" | "confidence"> & { signalPower?: number }>,
+	facets: Record<FacetName, Pick<FacetResult, "score" | "confidence">>,
 ): Record<TraitName, TraitResult> {
 	const result = {} as Record<TraitName, TraitResult>;
 
@@ -61,20 +59,17 @@ export function computeTraitResults(
 		const traitFacets = TRAIT_TO_FACETS[trait];
 		let scoreSum = 0;
 		let confidenceSum = 0;
-		let signalPowerSum = 0;
 
 		for (const facet of traitFacets) {
 			const f = facets[facet];
 			scoreSum += f.score;
 			confidenceSum += f.confidence;
-			signalPowerSum += f.signalPower ?? 0;
 		}
 
 		const count = traitFacets.length;
 		result[trait] = {
 			score: scoreSum,
 			confidence: confidenceSum / count,
-			signalPower: signalPowerSum / count,
 		};
 	}
 

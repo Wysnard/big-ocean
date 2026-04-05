@@ -22,12 +22,8 @@ export type ResultStage = "scored" | "completed";
 export interface AssessmentResultRecord {
 	readonly id: string;
 	readonly assessmentSessionId: string;
-	readonly facets:
-		| Record<FacetName, { score: number; confidence: number; signalPower: number }>
-		| Record<string, never>;
-	readonly traits:
-		| Record<TraitName, { score: number; confidence: number; signalPower: number }>
-		| Record<string, never>;
+	readonly facets: Record<FacetName, { score: number; confidence: number }> | Record<string, never>;
+	readonly traits: Record<TraitName, { score: number; confidence: number }> | Record<string, never>;
 	readonly domainCoverage: Record<LifeDomain, number> | Record<string, never>;
 	readonly portrait: string;
 	readonly stage: ResultStage | null;
@@ -36,12 +32,8 @@ export interface AssessmentResultRecord {
 
 export interface AssessmentResultInput {
 	readonly assessmentSessionId: string;
-	readonly facets:
-		| Record<FacetName, { score: number; confidence: number; signalPower: number }>
-		| Record<string, never>;
-	readonly traits:
-		| Record<TraitName, { score: number; confidence: number; signalPower: number }>
-		| Record<string, never>;
+	readonly facets: Record<FacetName, { score: number; confidence: number }> | Record<string, never>;
+	readonly traits: Record<TraitName, { score: number; confidence: number }> | Record<string, never>;
 	readonly domainCoverage: Record<LifeDomain, number> | Record<string, never>;
 	readonly portrait: string;
 	readonly stage?: ResultStage | null;

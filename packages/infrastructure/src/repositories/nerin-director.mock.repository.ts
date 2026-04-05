@@ -12,7 +12,7 @@ import {
 	type NerinDirectorInput,
 	type NerinDirectorOutput,
 	NerinDirectorRepository,
-} from "@workspace/domain/repositories/nerin-director.repository";
+} from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
 /**
@@ -22,12 +22,12 @@ function generateMockBrief(input: NerinDirectorInput): string {
 	const lastUserMessage = [...input.messages].reverse().find((m) => m.role === "user");
 	const userContent = lastUserMessage?.content ?? "the conversation";
 
-	const targetDomain = input.coverageTargets.targetDomain.domain;
-	const targetFacets = input.coverageTargets.targetFacets.map((f) => f.facet).join(", ");
+	const targetDomain = input.coverageTargets.candidateDomains[0]?.domain ?? "their life";
+	const primaryFacet = input.coverageTargets.primaryFacet.facet;
 
 	return `Observation: They said "${userContent.slice(0, 60)}" — there's something underneath that worth exploring. The way they framed it suggests a pattern worth naming.
 Connection: That connects naturally to how they navigate ${targetDomain} contexts.
-Question: Ask about a specific moment where ${targetFacets.split(",")[0] ?? "this pattern"} showed up in their life — something concrete, not abstract.
+Question: Ask about a specific moment where ${primaryFacet} showed up in their life — something concrete, not abstract.
 Warm, give-it-space. One question only.`;
 }
 

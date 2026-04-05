@@ -53,20 +53,20 @@ const SESSION_ID = "session-1";
 
 /** Build facets and traits objects for seeding assessment results */
 function buildFacetsAndTraits() {
-	const facets: Record<string, { score: number; confidence: number; signalPower: number }> = {};
+	const facets: Record<string, { score: number; confidence: number }> = {};
 	for (const facet of ALL_FACETS) {
-		facets[facet] = { score: 15, confidence: 80, signalPower: 1 };
+		facets[facet] = { score: 15, confidence: 80 };
 	}
-	const traits: Record<string, { score: number; confidence: number; signalPower: number }> = {};
+	const traits: Record<string, { score: number; confidence: number }> = {};
 	for (const [trait, traitFacets] of Object.entries(TRAIT_TO_FACETS)) {
 		const totalScore = traitFacets.reduce((sum, f) => sum + (facets[f]?.score ?? 0), 0);
 		const avgConf =
 			traitFacets.reduce((sum, f) => sum + (facets[f]?.confidence ?? 0), 0) / traitFacets.length;
-		traits[trait] = { score: totalScore, confidence: avgConf, signalPower: 1 };
+		traits[trait] = { score: totalScore, confidence: avgConf };
 	}
 	return {
-		facets: facets as Record<FacetName, { score: number; confidence: number; signalPower: number }>,
-		traits: traits as Record<TraitName, { score: number; confidence: number; signalPower: number }>,
+		facets: facets as Record<FacetName, { score: number; confidence: number }>,
+		traits: traits as Record<TraitName, { score: number; confidence: number }>,
 	};
 }
 

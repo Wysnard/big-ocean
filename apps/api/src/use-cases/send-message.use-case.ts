@@ -3,11 +3,11 @@
  *
  * Story 9.2: Rewritten as simple sequential Effect pipeline.
  * Story 10.2: Added conversanalyzer pipeline (post-cold-start).
- * Story 10.4: Integrated steering — computeFacetMetrics + computeSteeringTarget on every message.
+ * Story 10.4: Integrated analysis pipeline on every message.
  * Story 10.5: Advisory lock for concurrent message prevention, threshold consolidation.
  *
  * Pipeline: acquire advisory lock → validate session (inside lock) → save user msg
- *           → runNerinPipeline (ConversAnalyzer → evidence → steering → Nerin → save assistant msg → increment count)
+ *           → runNerinPipeline (ConversAnalyzer → evidence → Director targeting → Nerin → save assistant msg → increment count)
  *           → release lock → return
  */
 
@@ -110,7 +110,7 @@ export const sendMessage = (input: SendMessageInput) =>
 					messageLength: input.message.length,
 				});
 
-				// 5. Run the shared Nerin pipeline (ConversAnalyzer → steering → Nerin → atomic save both messages → increment)
+				// 5. Run the shared Nerin pipeline (ConversAnalyzer → Director targeting → Nerin → atomic save both messages → increment)
 				return yield* runNerinPipeline({
 					sessionId: input.sessionId,
 					userId: input.userId,

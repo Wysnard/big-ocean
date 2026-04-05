@@ -22,7 +22,7 @@ import type { FacetName } from "./big-five";
 export const FACET_PROMPT_DEFINITIONS: Record<FacetName, string> = {
 	// ─── Openness Facets ─────────────────────────────────────────────────────
 	imagination:
-		"Active fantasy life and vivid daydreaming — tendency to create rich mental scenarios and think in 'what if' terms",
+		"Active imagination and rich inner scenario-building — tendency to daydream, mentally simulate possibilities, pre-visualize outcomes, and think in vivid 'what if' terms",
 	artistic_interests:
 		"Appreciation for art, beauty, and aesthetic experiences — drawn to poetry, music, visual design, or nature's elegance",
 	emotionality:

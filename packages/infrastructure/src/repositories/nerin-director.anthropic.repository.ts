@@ -15,13 +15,15 @@
 
 import { ChatAnthropic } from "@langchain/anthropic";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { AppConfig, buildDirectorUserMessage, LoggerRepository } from "@workspace/domain";
 import {
+	AppConfig,
+	buildDirectorUserMessage,
+	LoggerRepository,
 	NerinDirectorError,
 	type NerinDirectorInput,
 	type NerinDirectorOutput,
 	NerinDirectorRepository,
-} from "@workspace/domain/repositories/nerin-director.repository";
+} from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
 /**
@@ -125,6 +127,7 @@ export const NerinDirectorAnthropicRepositoryLive = Layer.effect(
 						const cost = calculateCost(result.tokenUsage);
 						logger.info("Nerin Director brief generated", {
 							sessionId: input.sessionId,
+							brief: result.brief,
 							briefLength: result.brief.length,
 							tokenUsage: result.tokenUsage,
 							cost: cost.totalCost,
@@ -152,6 +155,7 @@ export const NerinDirectorAnthropicRepositoryLive = Layer.effect(
 					const cost = calculateCost(attempt2.tokenUsage);
 					logger.info("Nerin Director brief generated (retry)", {
 						sessionId: input.sessionId,
+						brief: attempt2.brief,
 						briefLength: attempt2.brief.length,
 						tokenUsage: attempt2.tokenUsage,
 						cost: cost.totalCost,

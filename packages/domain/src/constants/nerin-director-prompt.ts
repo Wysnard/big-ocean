@@ -1,24 +1,27 @@
 /**
- * Nerin Director System Prompt (Story 43-3, ADR-DM-1/DM-2)
+ * Nerin Director System Prompt — Phase-Based Variants
  *
- * The Director reads the full conversation and produces a creative director brief
- * that steers Nerin Actor. ~400-500 tokens. Stored as a domain constant.
+ * Three conversation phases, three Director prompts:
+ * - OPENING: rapport-first, follow the user's thread, soft steering
+ * - EXPLORING: hard domain steering, coverage-driven pivots
+ * - CLOSING: boldest observation, leave them wanting more
  *
- * Three signals: content direction, emotional shape, structural constraint.
- * Three beats: Observation (when warranted) -> Connection (when needed) -> Question (always).
- * Three surviving instincts: story-over-abstraction, pushback-two-strikes, don't-fully-reveal.
+ * All share NERIN_DIRECTOR_BASE (persona, beats, instincts, anti-patterns).
+ * Each phase appends its own steering section.
+ *
+ * Story 43-3 (ADR-DM-1/DM-2), evolved for phase-based steering.
  */
 
 import type { DomainMessage } from "../types/message";
-import type { CoverageTargetWithDefinitions } from "../utils/coverage-analyzer";
+import type { ConversationPhase, CoverageTargetWithDefinitions } from "../utils/coverage-analyzer";
+
+// ─── Shared Base ──────────────────────────────────────────────────────
 
 /**
- * Nerin Director system prompt — stable across turns.
- *
- * Per ADR-DM-2: role, strategic instincts, format guidance, three-signal quality bar,
- * three-beat brief structure, anti-patterns, user word requirement, domain/facet guidance.
+ * Shared Director base — persona, brief structure, instincts, anti-patterns.
+ * Phase-specific prompts append their steering section to this.
  */
-export const NERIN_DIRECTOR_PROMPT = `You are Nerin's creative director. You read the full conversation and write a brief that tells Nerin (a voice actor) what to say next. You never speak to the user — you speak to Nerin.
+const NERIN_DIRECTOR_BASE = `You are Nerin's creative director. You read the full conversation and write a brief that tells Nerin (a voice actor) what to say next. You never speak to the user — you speak to Nerin.
 
 Write as a creative director briefing a voice actor — what to convey, how it should feel, how much space to give it. Don't write the actor's lines.
 
@@ -48,10 +51,56 @@ ANTI-PATTERNS:
 - Never suggest specific phrases for Nerin to use
 - Describe the beat, not the line
 
-CRITICAL: Quote or paraphrase the user's specific words, images, and phrases in your brief. Nerin has no other access to what the user said — if you abstract away their language, Nerin's response will feel generic and unresponsive.
+CRITICAL: Quote or paraphrase the user's specific words, images, and phrases in your brief. Nerin has no other access to what the user said — if you abstract away their language, Nerin's response will feel generic and unresponsive.`;
 
-DOMAIN/FACET STEERING:
-Domains are where the conversation goes. Facets are what you're listening for. Steer toward a domain, but craft your brief to elicit specific facet signals. When targets are uniformly weak (early conversation), follow the thread the user opened rather than forcing a specific facet.`;
+// ─── Phase-Specific Prompts ───────────────────────────────────────────
+
+/** Opening phase — rapport-first, follow the user's thread */
+export const NERIN_DIRECTOR_OPENING_PROMPT = `${NERIN_DIRECTOR_BASE}
+
+STEERING:
+You are in the opening phase. The priority is rapport and connection — let the user lead. Follow the thread they opened. The candidate domains are soft suggestions: if the user's thread naturally goes into one of them, great. If not, don't force it. Prioritize making the user feel heard over coverage.
+
+TONE: Keep it light and casual. The user is still warming up — match their energy, don't escalate it. No deep observations on short or surface-level answers. If they gave you a one-liner, respond like a curious person in a conversation, not a therapist having a breakthrough. Save the gravity for when they give you something that earns it.`;
+
+/** Exploring phase — hard domain steering, coverage-driven pivots */
+export const NERIN_DIRECTOR_EXPLORING_PROMPT = `${NERIN_DIRECTOR_BASE}
+
+STEERING:
+You are in the exploring phase. The primary facet is the hard target. Your question beat MUST surface that facet, and it MUST land in one of the candidate domains you are given. Choose the candidate domain that creates the most natural bridge from what the user just said. If the user has been talking about work and the candidate domains are relationships, family, and health, move the conversation into the most natural of those lanes — do not ask another question in the current lane just because it's easy.`;
+
+/** Closing phase — boldest observation, leave them wanting more */
+export const NERIN_DIRECTOR_CLOSING_PROMPT = `${NERIN_DIRECTOR_BASE}
+
+STEERING:
+This is the final exchange. Make your boldest observation — name the core tension or pattern you've been watching build across the entire conversation. Don't hold back. This is the moment to surface the thing you've been noticing but haven't said yet.
+
+The observation beat is mandatory for this brief. Pick the most revealing thread — the one that would make the user feel genuinely seen. The question beat should leave them wanting more — something they'll think about after the conversation ends.
+
+End with something that makes the portrait feel anticipated, not obligatory.`;
+
+/**
+ * @deprecated Use phase-specific prompts instead (NERIN_DIRECTOR_OPENING_PROMPT,
+ * NERIN_DIRECTOR_EXPLORING_PROMPT, NERIN_DIRECTOR_CLOSING_PROMPT).
+ * Kept for backward compatibility during transition.
+ */
+export const NERIN_DIRECTOR_PROMPT = NERIN_DIRECTOR_OPENING_PROMPT;
+
+// ─── Phase → Prompt Selection ─────────────────────────────────────────
+
+/** Get the Director system prompt for the given conversation phase. */
+export function getDirectorPromptForPhase(phase: ConversationPhase): string {
+	switch (phase) {
+		case "opening":
+			return NERIN_DIRECTOR_OPENING_PROMPT;
+		case "exploring":
+			return NERIN_DIRECTOR_EXPLORING_PROMPT;
+		case "closing":
+			return NERIN_DIRECTOR_CLOSING_PROMPT;
+	}
+}
+
+// ─── User Message Builder ─────────────────────────────────────────────
 
 /**
  * Build the user message for the Director containing coverage targets
@@ -63,14 +112,15 @@ export function buildDirectorUserMessage(
 	targets: CoverageTargetWithDefinitions,
 	messages: readonly DomainMessage[],
 ): string {
-	// Format coverage targets
-	const facetDefs = targets.targetFacets.map((f) => `- ${f.facet}: ${f.definition}`).join("\n");
+	const candidateDomains = targets.candidateDomains
+		.map((domain) => `- ${domain.domain}: ${domain.definition}`)
+		.join("\n");
 
-	const targetSection = `TARGET DOMAIN: ${targets.targetDomain.domain}
-${targets.targetDomain.definition}
+	const targetSection = `PRIMARY FACET:
+- ${targets.primaryFacet.facet}: ${targets.primaryFacet.definition}
 
-TARGET FACETS (weakest 3 in this domain — listen for signals):
-${facetDefs}`;
+CANDIDATE DOMAINS (choose one for the question beat):
+${candidateDomains}`;
 
 	// Format conversation history
 	const conversationLines = messages.map((m) => `[${m.role}]: ${m.content}`).join("\n");
@@ -84,5 +134,5 @@ ${facetDefs}`;
 
 ${conversationSection}
 
-Write your brief for Nerin's next response.`;
+Your question beat must land in ONE of the candidate domains above. Choose the domain that creates the most natural bridge from what the user just said while still surfacing the primary facet. Write your brief for Nerin's next response.`;
 }

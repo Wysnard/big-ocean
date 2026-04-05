@@ -201,7 +201,7 @@ export const TRAIT_TO_FACETS: Record<TraitName, readonly FacetName[]> = {
  * Static ordering for round-robin trait coverage:
  * [O[0], C[0], E[0], A[0], N[0], O[1], C[1], E[1], A[1], N[1], ... O[5], C[5], E[5], A[5], N[5]]
  *
- * Used by computeSteeringTarget() as tiebreaker to ensure balanced trait exploration.
+ * Used as a deterministic tiebreaker when selectors need balanced trait exploration.
  */
 export const OCEAN_INTERLEAVED_ORDER: readonly FacetName[] = Array.from({ length: 6 }, (_, i) =>
 	TRAIT_NAMES.map((t) => TRAIT_TO_FACETS[t][i]),

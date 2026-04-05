@@ -228,17 +228,17 @@ export function createTestLayer() {
 export function buildResultFromEvidence(
 	traitScores: Record<BigFiveTrait, { facetScore: number; confidence: number }>,
 ) {
-	const facets: Record<string, { score: number; confidence: number; signalPower: number }> = {};
-	const traits: Record<string, { score: number; confidence: number; signalPower: number }> = {};
+	const facets: Record<string, { score: number; confidence: number }> = {};
+	const traits: Record<string, { score: number; confidence: number }> = {};
 
 	for (const [trait, config] of Object.entries(traitScores)) {
 		const traitFacets = TRAIT_FACETS[trait as BigFiveTrait];
 		let traitTotal = 0;
 		for (const facet of traitFacets) {
-			facets[facet] = { score: config.facetScore, confidence: config.confidence, signalPower: 1 };
+			facets[facet] = { score: config.facetScore, confidence: config.confidence };
 			traitTotal += config.facetScore;
 		}
-		traits[trait] = { score: traitTotal, confidence: config.confidence, signalPower: 1 };
+		traits[trait] = { score: traitTotal, confidence: config.confidence };
 	}
 
 	return {

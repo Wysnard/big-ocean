@@ -4,22 +4,18 @@
  * Verifies the mock follows the Layer.succeed pattern and returns
  * expected output shape.
  */
-import { vi } from "vitest";
-
-vi.mock("@workspace/infrastructure/repositories/nerin-director.anthropic.repository");
-
-import { NerinDirectorRepository } from "@workspace/domain/repositories/nerin-director.repository";
+import { NerinDirectorRepository } from "@workspace/domain";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
-import { NerinDirectorAnthropicRepositoryLive } from "../nerin-director.anthropic.repository";
+import { NerinDirectorMockRepositoryLive } from "../nerin-director.mock.repository";
 
 describe("Nerin Director Mock Repository", () => {
 	const testInput = {
 		systemPrompt: "test prompt",
 		messages: [],
 		coverageTargets: {
-			targetFacets: [{ facet: "imagination" as const, definition: "test def" }],
-			targetDomain: { domain: "leisure" as const, definition: "test domain" },
+			primaryFacet: { facet: "imagination" as const, definition: "test def" },
+			candidateDomains: [{ domain: "leisure" as const, definition: "test domain" }],
 		},
 		sessionId: "test-session",
 	} as const;
@@ -31,7 +27,7 @@ describe("Nerin Director Mock Repository", () => {
 		});
 
 		const result = await Effect.runPromise(
-			program.pipe(Effect.provide(NerinDirectorAnthropicRepositoryLive)),
+			program.pipe(Effect.provide(NerinDirectorMockRepositoryLive)),
 		);
 
 		expect(result.brief).toContain("Observation:");
@@ -46,7 +42,7 @@ describe("Nerin Director Mock Repository", () => {
 		});
 
 		const result = await Effect.runPromise(
-			program.pipe(Effect.provide(NerinDirectorAnthropicRepositoryLive)),
+			program.pipe(Effect.provide(NerinDirectorMockRepositoryLive)),
 		);
 
 		expect(result.tokenUsage.input).toBeGreaterThan(0);

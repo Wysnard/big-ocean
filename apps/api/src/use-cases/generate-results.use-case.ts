@@ -146,7 +146,6 @@ export const generateResults = (input: GenerateResultsInput) =>
 							{
 								score: +v.score.toFixed(2),
 								confidence: +v.confidence.toFixed(3),
-								signalPower: +v.signalPower.toFixed(3),
 							},
 						]),
 					),
@@ -160,7 +159,6 @@ export const generateResults = (input: GenerateResultsInput) =>
 							{
 								score: +v.score.toFixed(2),
 								confidence: +v.confidence.toFixed(3),
-								signalPower: +v.signalPower.toFixed(3),
 							},
 						]),
 					),

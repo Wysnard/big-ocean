@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 import type { DomainMessage } from "../../types/message";
 import type { CoverageTargetWithDefinitions } from "../../utils/coverage-analyzer";
 import { NERIN_DIRECTOR_CLOSING_PROMPT } from "../nerin-director-closing-prompt";
-import { buildDirectorUserMessage, NERIN_DIRECTOR_PROMPT } from "../nerin-director-prompt";
+import {
+	buildDirectorUserMessage,
+	getDirectorPromptForPhase,
+	NERIN_DIRECTOR_EXPLORING_PROMPT,
+	NERIN_DIRECTOR_OPENING_PROMPT,
+	NERIN_DIRECTOR_PROMPT,
+} from "../nerin-director-prompt";
 
 describe("NERIN_DIRECTOR_PROMPT", () => {
 	it("is a non-empty string", () => {
@@ -48,9 +54,47 @@ describe("NERIN_DIRECTOR_PROMPT", () => {
 		expect(NERIN_DIRECTOR_PROMPT).toContain("Quote or paraphrase the user's specific words");
 	});
 
-	it("contains domain/facet steering guidance", () => {
-		expect(NERIN_DIRECTOR_PROMPT).toContain("Domains are where the conversation goes");
-		expect(NERIN_DIRECTOR_PROMPT).toContain("Facets are what you're listening for");
+	it("contains steering guidance (opening phase)", () => {
+		expect(NERIN_DIRECTOR_PROMPT).toContain("opening phase");
+		expect(NERIN_DIRECTOR_PROMPT).toContain("rapport");
+	});
+});
+
+describe("Phase-specific Director prompts", () => {
+	it("all three phases share the base (creative director, beats, instincts)", () => {
+		for (const prompt of [
+			NERIN_DIRECTOR_OPENING_PROMPT,
+			NERIN_DIRECTOR_EXPLORING_PROMPT,
+			NERIN_DIRECTOR_CLOSING_PROMPT,
+		]) {
+			expect(prompt).toContain("creative director");
+			expect(prompt).toContain("Observation beat");
+			expect(prompt).toContain("Connection beat");
+			expect(prompt).toContain("Question beat");
+			expect(prompt).toContain("Keep observations partial");
+		}
+	});
+
+	it("opening prompt prioritizes rapport over coverage", () => {
+		expect(NERIN_DIRECTOR_OPENING_PROMPT).toContain("Follow the thread");
+		expect(NERIN_DIRECTOR_OPENING_PROMPT).toContain("soft suggestion");
+	});
+
+	it("exploring prompt enforces primary facet steering across candidate domains", () => {
+		expect(NERIN_DIRECTOR_EXPLORING_PROMPT).toContain("hard target");
+		expect(NERIN_DIRECTOR_EXPLORING_PROMPT).toContain("MUST surface that facet");
+		expect(NERIN_DIRECTOR_EXPLORING_PROMPT).toContain("one of the candidate domains");
+	});
+
+	it("closing prompt demands boldest observation", () => {
+		expect(NERIN_DIRECTOR_CLOSING_PROMPT).toContain("boldest observation");
+		expect(NERIN_DIRECTOR_CLOSING_PROMPT).toContain("final exchange");
+	});
+
+	it("getDirectorPromptForPhase returns correct prompt per phase", () => {
+		expect(getDirectorPromptForPhase("opening")).toBe(NERIN_DIRECTOR_OPENING_PROMPT);
+		expect(getDirectorPromptForPhase("exploring")).toBe(NERIN_DIRECTOR_EXPLORING_PROMPT);
+		expect(getDirectorPromptForPhase("closing")).toBe(NERIN_DIRECTOR_CLOSING_PROMPT);
 	});
 });
 
@@ -60,8 +104,9 @@ describe("NERIN_DIRECTOR_CLOSING_PROMPT", () => {
 		expect(NERIN_DIRECTOR_CLOSING_PROMPT.length).toBeGreaterThan(0);
 	});
 
-	it("extends the base Director prompt", () => {
-		expect(NERIN_DIRECTOR_CLOSING_PROMPT).toContain(NERIN_DIRECTOR_PROMPT);
+	it("shares the base with other phase prompts", () => {
+		expect(NERIN_DIRECTOR_CLOSING_PROMPT).toContain("creative director");
+		expect(NERIN_DIRECTOR_CLOSING_PROMPT).toContain("Observation beat");
 	});
 
 	it("contains closing-specific instructions", () => {
@@ -77,15 +122,25 @@ describe("NERIN_DIRECTOR_CLOSING_PROMPT", () => {
 
 describe("buildDirectorUserMessage", () => {
 	const sampleTargets: CoverageTargetWithDefinitions = {
-		targetFacets: [
-			{ facet: "imagination", definition: "Rich fantasy life, openness to new experiences" },
-			{ facet: "intellect", definition: "Intellectual curiosity, love of ideas" },
-			{ facet: "emotionality", definition: "Emotional awareness and sensitivity" },
-		],
-		targetDomain: {
-			domain: "leisure",
-			definition: "Hobbies, recreation, alone-time activities, introspection",
+		primaryFacet: {
+			facet: "imagination",
+			definition: "Active imagination and rich inner scenario-building",
 		},
+		candidateDomains: [
+			{
+				domain: "leisure",
+				definition: "Hobbies, recreation, alone-time activities, introspection",
+			},
+			{
+				domain: "relationships",
+				definition: "Romantic partners, close friendships, social connections",
+			},
+			{
+				domain: "health",
+				definition: "Exercise, diet, sleep, self-care routines, physical/mental wellness",
+			},
+		],
+		phase: "exploring",
 	};
 
 	const sampleMessages: DomainMessage[] = [
@@ -95,17 +150,18 @@ describe("buildDirectorUserMessage", () => {
 		{ id: "4", role: "user", content: "It was intense. I had a big presentation at work." },
 	];
 
-	it("includes the target domain name and definition", () => {
+	it("includes candidate domain names and definitions", () => {
 		const result = buildDirectorUserMessage(sampleTargets, sampleMessages);
-		expect(result).toContain("TARGET DOMAIN: leisure");
+		expect(result).toContain("CANDIDATE DOMAINS");
+		expect(result).toContain("leisure");
 		expect(result).toContain("Hobbies, recreation, alone-time activities, introspection");
+		expect(result).toContain("relationships");
 	});
 
-	it("includes all target facets with definitions", () => {
+	it("includes the primary facet with definition", () => {
 		const result = buildDirectorUserMessage(sampleTargets, sampleMessages);
-		expect(result).toContain("imagination: Rich fantasy life");
-		expect(result).toContain("intellect: Intellectual curiosity");
-		expect(result).toContain("emotionality: Emotional awareness");
+		expect(result).toContain("PRIMARY FACET");
+		expect(result).toContain("imagination: Active imagination and rich inner scenario-building");
 	});
 
 	it("includes conversation history in [role]: content format", () => {
@@ -123,6 +179,7 @@ describe("buildDirectorUserMessage", () => {
 
 	it("ends with the brief instruction", () => {
 		const result = buildDirectorUserMessage(sampleTargets, sampleMessages);
+		expect(result).toContain("must land in ONE of the candidate domains");
 		expect(result).toContain("Write your brief for Nerin's next response.");
 	});
 });

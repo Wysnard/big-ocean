@@ -53,10 +53,14 @@ export {
 	ACTOR_VOICE_RULES,
 	buildActorPrompt,
 } from "./constants/nerin-actor-prompt";
-// Nerin Director prompts (Story 43-3)
+// Nerin Director prompts (Story 43-3, phase-based steering)
 export { NERIN_DIRECTOR_CLOSING_PROMPT } from "./constants/nerin-director-closing-prompt";
 export {
 	buildDirectorUserMessage,
+	getDirectorPromptForPhase,
+	NERIN_DIRECTOR_CLOSING_PROMPT as NERIN_DIRECTOR_CLOSING_PROMPT_V2,
+	NERIN_DIRECTOR_EXPLORING_PROMPT,
+	NERIN_DIRECTOR_OPENING_PROMPT,
 	NERIN_DIRECTOR_PROMPT,
 } from "./constants/nerin-director-prompt";
 // Nerin farewell constants (Story 7.18)
@@ -434,9 +438,12 @@ export { adaptExtractedEvidence } from "./utils/adapt-extracted-evidence";
 // Coverage analyzer — evidence-to-target pure function (Story 43-2)
 export {
 	analyzeCoverage,
+	type ConversationPhase,
+	type CoverageHistoryEntry,
 	type CoverageTarget,
 	type CoverageTargetWithDefinitions,
 	enrichWithDefinitions,
+	extractCoverageHistoryEntry,
 } from "./utils/coverage-analyzer";
 // Date utilities for cost tracking and rate limiting
 export { getNextDayMidnightUTC, getUTCDateKey } from "./utils/date.utils";
@@ -449,14 +456,9 @@ export {
 	computeContextWeight,
 	computeFacetMetrics,
 	computeFinalWeight,
-	computeNormalizedEntropy,
-	computeProjectedEntropy,
-	computeSteeringTarget,
 	type FacetMetrics,
 	FORMULA_DEFAULTS,
 	type FormulaConfig,
-	GREETING_SEED_POOL,
-	type SteeringTarget,
 } from "./utils/formula";
 // Utility functions
 export {

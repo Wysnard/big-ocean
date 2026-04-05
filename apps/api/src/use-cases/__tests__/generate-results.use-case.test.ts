@@ -313,10 +313,7 @@ describe("generateResults Use Case (Story 18-4)", () => {
 
 				const results = getStoredResults();
 				const record = results.get("session_123");
-				const facets = record?.facets as Record<
-					string,
-					{ score: number; confidence: number; signalPower: number }
-				>;
+				const facets = record?.facets as Record<string, { score: number; confidence: number }>;
 
 				for (const facet of ALL_FACETS) {
 					expect(facets[facet]).toBeDefined();
@@ -340,10 +337,7 @@ describe("generateResults Use Case (Story 18-4)", () => {
 
 				const results = getStoredResults();
 				const record = results.get("session_123");
-				const traits = record?.traits as Record<
-					string,
-					{ score: number; confidence: number; signalPower: number }
-				>;
+				const traits = record?.traits as Record<string, { score: number; confidence: number }>;
 
 				for (const trait of TRAIT_NAMES) {
 					expect(traits[trait].score).toBeCloseTo(FORMULA_DEFAULTS.SCORE_MIDPOINT * 6);
@@ -407,14 +401,8 @@ describe("generateResults Use Case (Story 18-4)", () => {
 
 				const results = getStoredResults();
 				const record = results.get("session_123");
-				const facets = record?.facets as Record<
-					string,
-					{ score: number; confidence: number; signalPower: number }
-				>;
-				const traits = record?.traits as Record<
-					string,
-					{ score: number; confidence: number; signalPower: number }
-				>;
+				const facets = record?.facets as Record<string, { score: number; confidence: number }>;
+				const traits = record?.traits as Record<string, { score: number; confidence: number }>;
 				const dc = record?.domainCoverage as Record<string, number>;
 
 				for (const facet of ALL_FACETS) {

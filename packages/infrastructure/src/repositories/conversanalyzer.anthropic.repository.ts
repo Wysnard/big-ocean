@@ -40,7 +40,7 @@ export function buildEvidencePrompt(input: ConversanalyzerInput): string {
 		.map(([domain, count]) => `${domain}: ${count}`)
 		.join(", ");
 
-	return `You are a personality evidence extractor. Analyze the latest user message for Big Five personality signals.
+	return `You are a personality signal extractor. You read behavioral choices — what people do AND what they choose not to do — for Big Five personality signals.
 
 ## Big Five Facets — Conversational Anchors
 
@@ -48,9 +48,9 @@ For each facet, HIGH and LOW examples show what each pole sounds like in real co
 
 ### OPENNESS TO EXPERIENCE
 
-**imagination** — Active fantasy life and vivid daydreaming; tendency to create rich mental scenarios
-- HIGH: "I spend hours daydreaming about scenarios that will never happen — what if animals could vote, what if I lived in the 1800s... my head is always somewhere else"
-- LOW: "I don't really daydream. I think about practical stuff — what needs to get done, what's for dinner. Fantasy just isn't my thing"
+**imagination** — Active imagination and rich inner scenario-building; tendency to daydream, mentally simulate possibilities, and pre-visualize how things could unfold
+- HIGH: "I catch myself running through future conversations or picturing how a situation might unfold before it happens. My mind naturally spins up scenes, alternate paths, and 'what if' versions of things"
+- LOW: "I don't spend much time imagining scenarios in my head. I focus on what's concrete and in front of me rather than mentally rehearsing possibilities or drifting into fantasy"
 
 **artistic_interests** — Appreciation for art, beauty, and aesthetic experiences
 - HIGH: "I stood in front of that painting for twenty minutes. There was something about the light that I couldn't stop looking at — I notice beauty in weird places"
@@ -152,29 +152,29 @@ For each facet, HIGH and LOW examples show what each pole sounds like in real co
 
 ### NEUROTICISM
 
-**anxiety** — Level of free-floating worry and nervousness
-- HIGH: "I lose sleep worrying about things that probably won't happen. My mind runs worst-case scenarios constantly — even when everything is fine"
-- LOW: "I genuinely don't worry much. Even in a crisis, I feel calm. People find it weird, but anxiety just isn't something I experience"
+**anxiety** — Level of free-floating worry and rumination
+- HIGH: "I think about things over and over — a mistake I made, something I said wrong. My brain revisits it for days even when I know it doesn't matter anymore"
+- LOW: "When something goes wrong, I deal with it and move on. I don't really replay things or lose sleep over what already happened — it just doesn't stick"
 
-**anger** — Tendency to experience anger, frustration, and bitterness
-- HIGH: "I have a short fuse. Small things set me off — someone cutting in line, a slow driver. I feel the anger physically before I can even think about it"
-- LOW: "It takes a lot to make me angry. I let most things slide. Life's too short to get worked up about small stuff"
+**anger** — Tendency to experience frustration, irritation, and bitterness
+- HIGH: "Little things get under my skin more than they should. Someone being inconsiderate, something not working right — I feel the annoyance before I can reason with it"
+- LOW: "Things that bother other people just don't register for me. If something goes sideways, I shrug and adapt. I don't hold onto frustration"
 
-**depression** — Tendency to experience sadness, guilt, loneliness, and hopelessness
-- HIGH: "I go through periods where everything feels pointless. I feel a heaviness that doesn't have a clear cause — it just sits there"
-- LOW: "I'm generally a content person. Even when bad things happen, I bounce back fast. I don't really do prolonged sadness"
+**depression** — Tendency to experience sadness, guilt, loneliness, and low mood
+- HIGH: "Sometimes there's this heaviness I can't explain. Not every day — but I go through stretches where things feel harder than they should, or I feel alone even when I'm not"
+- LOW: "I'm pretty steady emotionally. I have bad days like anyone, but they don't drag on. I don't dwell — I just naturally come back to a baseline that feels okay"
 
-**self_consciousness** — Sensitivity to social evaluation and others' opinions
-- HIGH: "I replay conversations for hours wondering if I said the wrong thing. I'm hyper-aware of how people perceive me — it's exhausting"
-- LOW: "I genuinely don't care what people think of me. If I embarrass myself, I laugh it off. Other people's judgment doesn't register"
+**self_consciousness** — Sensitivity to how others perceive you and social discomfort
+- HIGH: "I spent years trying to fit in — adjusting how I act depending on who I'm around. I notice when I don't belong somewhere, and it stays with me"
+- LOW: "I stopped worrying about what people think a while ago. I just do my thing — if someone doesn't get it, that's fine. I don't adjust myself to make others comfortable"
 
-**immoderation** — Difficulty resisting cravings and urges
-- HIGH: "I can't resist snacks at night. If I want something, I do it — even when I know I shouldn't. Willpower is not my thing"
-- LOW: "I'm very disciplined about temptation. If I decide not to eat sugar, I just... don't. Cravings don't control me"
+**immoderation** — Difficulty following through on self-set intentions and resisting urges
+- HIGH: "I make plans for myself and then don't follow them. I know what I should do, but in the moment I just... don't. I give in to whatever feels right at the time"
+- LOW: "If I set a rule for myself, I follow it. I don't struggle with that — when I decide something, the decision is made. I don't go back and forth"
 
-**vulnerability** — Susceptibility to stress and difficulty coping under pressure
-- HIGH: "When everything piles up, I shut down. I feel overwhelmed and can't think straight — pressure makes me worse, not better"
-- LOW: "I work well under pressure. Deadlines, chaos, crises — that's when I'm most focused. Stress brings out my best"
+**vulnerability** — Susceptibility to stress and feeling overwhelmed when demands pile up
+- HIGH: "When I'm navigating everything on my own — new city, no support system, everything uncertain — there are moments where it just feels like a lot. I manage, but I feel the weight"
+- LOW: "Even when everything is uncertain and I'm figuring it out alone, I don't feel overwhelmed. I just take it one thing at a time — pressure doesn't really get to me"
 
 ## Extraction Instructions
 
@@ -191,55 +191,43 @@ ${domainDefs}
 ### Current Evidence Distribution
 ${domainDist}
 
-### Conversation Context
+### Conversation Context (for understanding only — extract ONLY from the latest user message)
 ${recentText}
 
-### What To Extract
+### How To Extract — Contrast-Frame Method
 
-For each personality signal in the latest user message:
+Read the latest user message as a series of **choices**. Every behavior, preference, or reaction reveals what the person IS choosing and what they're choosing OVER. Both sides carry personality signal.
 
-1. **bigfiveFacet**: Which facet? Match the user's behavior to the conversational examples above.
-2. **polarity**: HIGH or LOW expression? Compare to the HIGH and LOW examples. Ask: "Does this sound more like the HIGH example or the LOW example for this facet?"
+For each choice you identify:
+
+**Step 1 — Name the choice.** What is the person doing, preferring, or reacting to? What alternative are they implicitly rejecting, avoiding, or deprioritizing?
+
+**Step 2 — Map the active signal.** The thing they're choosing → which facet, which polarity (HIGH or LOW)? Match to the conversational anchors above.
+
+**Step 3 — Map the shadow signal.** The thing they're NOT choosing → which DIFFERENT facet, which polarity? This is not the opposite polarity on the same facet — it's a signal on a different facet implied by the same behavior. Not every choice has a shadow. Extract one only when genuinely implied — do not force pairs.
+
+**Step 4 — Check for cross-domain signals.** Does this behavior operate in more than one life domain? "I climb twice a week" as a hobby = leisure. "Climbing is how I take care of my mental health" = health. When the user describes the same activity serving different life functions, extract a separate record for each domain.
+
+**Step 5 — Assess each signal independently:**
+1. **bigfiveFacet**: Which facet? Match to the conversational anchors above.
+2. **polarity**: HIGH or LOW? Compare to the HIGH and LOW examples for that facet.
 3. **strength**: How diagnostic is this signal?
-   - "strong": Concrete behavioral pattern or strong stated preference that clearly maps to one pole — the person described a specific, repeated action
+   - "strong": Concrete behavioral pattern or strong stated preference — the person described a specific, repeated action
    - "moderate": Suggestive — an opinion, tendency, or indirect signal
    - "weak": Mild hint — could be interpreted differently
 4. **confidence**: How certain is this extraction?
-   - "high": Facet and polarity are clear from the conversational examples
+   - "high": Facet and polarity are clear from the conversational anchors
    - "medium": Reasonable but some ambiguity
    - "low": Uncertain
 5. **domain**: Which life domain?
 6. **note**: Brief behavioral paraphrase (max 200 chars, no direct quotes)
 
-### Dual-Polarity Check (MANDATORY)
-
-For EVERY signal, ask: "Does this same behavior ALSO reveal the OPPOSITE polarity on a DIFFERENT facet?"
-
-Examples from real conversations:
-- "I spend all my free time on solo side projects" → HIGH self_discipline + LOW gregariousness
-- "I invited colleagues to my party to manage perceptions" → HIGH assertiveness + LOW morality (straightforwardness)
-- "Surface-level conversation bores me" → HIGH intellect + LOW friendliness (unconditional warmth)
-- "I can't sit still when nothing is happening" → HIGH activity_level + LOW vulnerability (handles restlessness by staying busy)
-- "I never give advice unless asked" → HIGH cooperation + LOW assertiveness
-
-Extract BOTH signals when applicable.
-
-### Polarity Balance Audit (MANDATORY)
-
-After extracting all signals, count HIGH vs LOW:
-- If fewer than 35% are LOW, re-read the message looking specifically for:
-  - ABSENCES: What the person does NOT do or enjoy
-  - AVOIDANCES: What they actively steer away from
-  - PREFERENCES AGAINST: "I don't enjoy...", "I'm not someone who...", "That's not my thing"
-- "I prefer small groups" → LOW gregariousness (this IS a personality signal, not a neutral statement)
-- "I don't really care about that" → LOW on the relevant facet
-
 ### Rules
 1. Focus ONLY on the latest user message
 2. Return empty array [] if no personality signal (e.g., "hello", "thanks", "ok")
 3. Extract signals at moderate+ strength AND confidence
-4. Same behavior in different domains → separate records
-5. Prefer specific domains over "other"`;
+4. Prefer specific domains over "other"
+5. Do NOT extract the same facet + polarity + domain combination more than once per message`;
 }
 
 // ─── Repository Layer ─────────────────────────────────────────────────────────

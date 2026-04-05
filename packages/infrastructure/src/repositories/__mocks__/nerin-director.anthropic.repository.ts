@@ -3,7 +3,7 @@
  * Vitest auto-resolves when tests call:
  *   vi.mock('@workspace/infrastructure/repositories/nerin-director.anthropic.repository')
  */
-import { NerinDirectorRepository } from "@workspace/domain/repositories/nerin-director.repository";
+import { NerinDirectorRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
 /**

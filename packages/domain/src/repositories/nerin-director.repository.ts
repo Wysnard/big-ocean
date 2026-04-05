@@ -33,7 +33,7 @@ export interface NerinDirectorInput {
 	/** Full conversation history — Director reads the entire conversation */
 	readonly messages: readonly DomainMessage[];
 
-	/** Coverage targets from the coverage analyzer (facets + domain with definitions) */
+	/** Coverage targets from the coverage analyzer (primary facet + candidate domains) */
 	readonly coverageTargets: CoverageTargetWithDefinitions;
 
 	/** Session identifier for logging and error context */
