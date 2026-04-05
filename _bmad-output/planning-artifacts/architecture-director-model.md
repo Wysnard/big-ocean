@@ -3,6 +3,7 @@ stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 lastStep: 8
 status: 'complete'
 completedAt: '2026-04-03'
+lastUpdated: '2026-04-05'
 inputDocuments:
   - '_bmad-output/problem-solution-2026-04-03.md'
   - '_bmad-output/planning-artifacts/architecture.md'
@@ -13,7 +14,7 @@ project_name: 'big-ocean'
 user_name: 'Vincentlay'
 date: '2026-04-03'
 scope: 'Director Model — Two-Call Steering Architecture (replaces territory-based pacing pipeline)'
-relationship: 'Standalone architecture — supersedes ADR-5/17-21 (pacing pipeline) and architecture-conversation-pacing.md after implementation'
+relationship: 'Implemented runtime architecture — supersedes ADR-5/17-21 (pacing pipeline) and architecture-conversation-pacing.md for the live conversation path'
 ---
 
 # Director Model — Two-Call Steering Architecture
@@ -139,7 +140,7 @@ This replaces the current path of Effect Schema → JSON Schema → LLM tool_use
 
 6. **Closing/amplify behavior:** Current system has special turn-25 handling (intent: "amplify", no drain protection, bold format). Director model: pipeline swaps to a closing Nerin Director prompt variant on the last turn. Nerin Actor prompt may include "when the brief signals final turn, be braver." Must be explicitly designed in prompt.
 
-7. **Nerin Director input design:** Coverage analyzer returns an extensible structured object. Ships minimal: `{ targetFacets: FacetName[], targetDomain: LifeDomain }` with dynamic facet definitions. Adding `crossDomainPatterns` or evidence summaries later is additive — iterate based on Nerin Director output quality.
+7. **Nerin Director input design:** Coverage analyzer returns an extensible structured object. Ships minimal: `{ primaryFacet: FacetName, candidateDomains: LifeDomain[], phase }` with dynamic facet/domain definitions. Adding cross-domain pattern summaries later is additive — iterate based on Nerin Director output quality.
 
 8. **Prompt artifact management:** Two new prompts (Nerin Director ~400-500 tokens + Nerin Actor ~650 tokens) replace ~15 files of content (~6,000+ tokens in a single call). Combined ~1,050-1,150 tokens across two calls — massive reduction. Store prompts as domain constants (same pattern as current `nerin-persona.ts`).
 
@@ -257,10 +258,11 @@ Light, zero pressure. Short, one question.
 
 [Per-turn input — changes every turn]
   - Full conversation history
-  - Target facets (3 weakest in target domain) with behavioral definitions
-  - Target domain (most underrepresented) with definition
-  - "When targets are uniformly weak (early conversation), follow the
-    thread the user opened rather than forcing a specific facet."
+  - One primary facet with its behavioral definition
+  - Three candidate domains with their definitions
+  - Conversation phase (opening / exploring / closing)
+  - "Choose the candidate domain that creates the most natural bridge
+    from what the user just said while still surfacing the primary facet."
 ```
 
 **What's NOT in the input:**
@@ -272,37 +274,42 @@ Light, zero pressure. Short, one question.
 
 **Coverage Analyzer Algorithm:**
 
-The coverage analyzer computes targets using confidence-by-domain-by-facet — a `Map<LifeDomain, Map<FacetName, confidence>>`. This guarantees target facets and target domain are aligned (the facets are weak *within* that domain), giving the Nerin Director one coherent direction per turn.
+The coverage analyzer is facet-first. It ranks facets with one history-wide steering metric, then offers a shortlist of candidate domains for the chosen facet.
 
 ```
-1. Build confidence matrix: Map<LifeDomain, Map<FacetName, confidence>>
-   For each domain × facet pair:
-     Filter evidence to (domain, facet)
-     confidence = computeFacetConfidence(filteredEvidence)
-     // Reuses existing formula: C_max × (1 - e^{-kW})
+For each facet across steerable domains only:
+  mass_g = Σ computeFinalWeight(strength, confidence) for domain g
+  totalMass = Σ mass_g
+  support = log1p(totalMass)
+  effectiveDomains = 1 / Σ (mass_g / totalMass)^2
+  steeringSignal = support × effectiveDomains
 
-2. For each domain:
-   Sort its facets ascending by confidence
-   bottom3 = take the 3 lowest-confidence facets in this domain
-   bottom3Avg = mean(bottom3 confidences)
+Rank facets by:
+  1. lowest steeringSignal
+  2. lowest effectiveDomains
+  3. lowest totalMass
+  4. least recently targeted
+  5. deterministic OCEAN interleaved order
 
-3. targetDomain = domain with lowest bottom3Avg
-   Tiebreak: compute full domain average (all facets), take weakest
+Pick primaryFacet = first ranked facet
 
-4. targetFacets = bottom 3 facets within targetDomain
-   (already computed in step 2)
+Rank candidate domains:
+  - if primaryFacet already has evidence: lowest facet-domain mass first
+  - if primaryFacet is unseen: lowest global domain mass first
+  - lightly avoid repeating the previous preferred domain
+
+Return top 3 domains + phase
 ```
 
 **Properties:**
-- Reuses `computeFacetConfidence()` — no new scoring math
-- Target facets are the weakest facets *within* the target domain — one coherent direction
-- A domain with 3 zero-confidence facets beats a domain with many low-confidence facets
-- Tiebreak uses full domain average to prefer the overall weakest domain
-- Pure function, ~30 lines, fully testable
+- Uses one steering metric that combines support and cross-domain spread
+- Avoids repeatedly targeting globally saturated facets just because one domain is sparse
+- Gives the Director one hard target (`primaryFacet`) plus flexible domain choice
+- Pure function, fully testable
 
-**Dynamic facet definitions:** Only the 3 target facets' definitions are injected per turn (~100-150 tokens). The coverage analyzer pairs each target facet with its definition from existing constants.
+**Dynamic facet definitions:** Only the primary facet definition is injected per turn.
 
-**Dynamic domain definition:** Only the target domain's definition is injected per turn alongside target facets. Not all 6 in the system prompt — keeps system prompt lean.
+**Dynamic domain definitions:** Only the three candidate domain definitions are injected per turn. Not all 6 in the system prompt — keeps the prompt lean while still letting the Director choose naturally.
 
 **Final-turn handling:** The pipeline detects the last turn and swaps the Nerin Director system prompt to a closing variant. The closing variant instructs: "This is the final exchange. Make your boldest observation — name the core tension or pattern you've been watching build. Don't hold back. End with something that leaves them wanting more." Nerin Actor doesn't know it's the last turn — the brief's content naturally produces a bolder response. After Nerin Actor's response, a static farewell message is appended (same pattern as the static greeting before the pipeline starts). The closing Nerin Director prompt is stored as a separate constant (`nerin-director-closing-prompt.ts`).
 
@@ -418,8 +425,8 @@ User sends message
           → Create exchange row + save evidence to DB
   → Coverage analysis (pure function)
       → Reads all evidence for session
-      → Pairs target facets with definitions from constants
-      → Outputs: targetFacets with definitions, targetDomain with definition
+      → Pairs primary facet + candidate domains with definitions from constants
+      → Outputs: primaryFacet with definition, candidateDomains with definitions, phase
   → Nerin Director (Sonnet/Haiku)
       → Input: system prompt + full history + coverage targets
       → Retry once on failure (different temperature), then throw
@@ -458,7 +465,7 @@ User sends message
 
 **Add to `assessment_exchange`:**
 - `director_output` (text) — creative director brief, stored verbatim
-- `coverage_targets` (jsonb) — `{ targetFacets: string[], targetDomain: string }`
+- `coverage_targets` (jsonb) — `{ primaryFacet: string, candidateDomains: string[], phase: string }`
 
 **Keep:**
 - `id`, `session_id`, `turn_number`, `extraction_tier`, `created_at`
@@ -630,7 +637,7 @@ packages/domain/src/
   ├── repositories/
   │   └── nerin-director.repository.ts              # Context.Tag interface for Nerin Director
   ├── utils/
-  │   └── coverage-analyzer.ts                      # Pure function: evidence → targetFacets + targetDomain
+  │   └── coverage-analyzer.ts                      # Pure function: evidence → primaryFacet + candidateDomains + phase
   └── constants/
       ├── nerin-director-prompt.ts                  # Nerin Director system prompt (strategic instincts, format guidance)
       ├── nerin-director-closing-prompt.ts           # Nerin Director closing variant (bold observation, last turn)
@@ -774,10 +781,10 @@ File map places every new file in an established directory. No new directories c
 **Important Gaps (non-blocking, resolved during Phase 1/2):**
 1. **Nerin Director prompt content** — architecture defines structure and guidance, not actual text. Phase 1 work.
 2. **Nerin Actor prompt sizing** — 80-500 tokens, validated at multiple sizes in Phase 1.
-3. ~~Coverage analyzer facet prioritization algorithm~~ — resolved, see ADR-DM-2 coverage analyzer spec.
+3. ~~Coverage analyzer facet prioritization algorithm~~ — resolved, see ADR-DM-2 coverage analyzer spec (facet-first steering signal).
 4. **Closing Nerin Director prompt variant** — mentioned, not specified. Design alongside main prompt in Phase 1.
-5. **ADR-27 implementation status** — verify whether user-state/evidence split is implemented to determine ConversAnalyzer refactoring scope.
-6. **`steering/` subdirectory cleanup** — remove empty directory after file deletion.
+5. ~~ADR-27 implementation status~~ — resolved; the live runtime is evidence-only and user-state extraction has been removed from ConversAnalyzer.
+6. ~~`steering/` subdirectory cleanup~~ — resolved; the retired directory has been removed.
 
 **Nice-to-Have (post-launch):**
 1. Batch analysis tooling (Haiku brief classifier) for Nerin Director output quality monitoring

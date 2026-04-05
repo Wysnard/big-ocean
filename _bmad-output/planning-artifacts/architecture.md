@@ -3,14 +3,13 @@ stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 lastStep: 8
 status: 'complete'
 completedAt: '2026-03-15'
-lastUpdated: '2026-04-03 (ADR-29 added)'
-adrsAdded: ['ADR-22: Ocean Hieroglyph System', 'ADR-23: Dashboard/Profile Consolidation', 'ADR-24: Email Verification Gate', 'ADR-25: E2E Sandbox Testing for Email & Payments', 'ADR-26: Life Domain Restructure', 'ADR-27: Evidence Extraction v3 Polarity Model', 'ADR-28: Three-Signal Model Confirmed + Territory Catalog Evolution', 'ADR-29: Remove Per-User Daily Assessment Count Limit']
+lastUpdated: '2026-04-05 (ADR-30 added)'
+adrsAdded: ['ADR-22: Ocean Hieroglyph System', 'ADR-23: Dashboard/Profile Consolidation', 'ADR-24: Email Verification Gate', 'ADR-25: E2E Sandbox Testing for Email & Payments', 'ADR-26: Life Domain Restructure', 'ADR-27: Evidence Extraction v3 Polarity Model', 'ADR-28: Three-Signal Model Confirmed + Territory Catalog Evolution', 'ADR-29: Remove Per-User Daily Assessment Count Limit', 'ADR-30: Facet-First Coverage Selector + Evidence-Only Results Schema']
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/ux-design-specification.md'
   - '_bmad-output/planning-artifacts/ux-design-innovation-strategy.md'
-  - '_bmad-output/planning-artifacts/architecture-assessment-pipeline.md'
-  - '_bmad-output/planning-artifacts/architecture-conversation-pipeline.md'
+  - '_bmad-output/planning-artifacts/architecture-director-model.md'
   - '_bmad-output/planning-artifacts/architecture-innovation-strategy.md'
   - '_bmad-output/planning-artifacts/architecture-archetype-description-storage.md'
   - '_bmad-output/planning-artifacts/public-profile-redesign-architecture.md'
@@ -40,7 +39,26 @@ date: '2026-03-15'
 
 # big-ocean System Architecture
 
-_This document is the authoritative architecture reference for the big-ocean platform. It consolidates all architectural decisions, patterns, and technical specifications into a single source of truth. Last consolidated: 2026-04-01 (portrait generation refactored from placeholder-row + lazy retry to queue-based fire-once architecture via Effect Queue + worker fiber; integrated QR token model, conversation extension, email infrastructure, portrait reconciliation, free credit timing from UX spec gap analysis; replaced anonymous-first with auth-gated conversation per UX spec design principles #4/#5)._
+_This document is the authoritative architecture reference for the big-ocean platform. It consolidates all architectural decisions, patterns, and technical specifications into a single source of truth. Last consolidated: 2026-04-05 (live conversation runtime now uses the 4-step Director model: evidence extraction → coverage analysis → Nerin Director → Nerin Actor; coverage targeting is facet-first with `primaryFacet + candidateDomains`; persisted scored results now store only `score + confidence`; imagination extraction now includes applied inner simulation in addition to fantasy/daydreaming). Current live conversation steering is defined by ADR-30 and [Director Model — Two-Call Steering Architecture](./architecture-director-model.md); the older pacing-pipeline ADRs remain as historical evolution context._
+
+## Document Map
+
+This document is the consolidated system-level architecture. For the conversation stack specifically, the full picture is split across a current-runtime document and historical lineage documents:
+
+- **Current live conversation runtime:** [Director Model — Two-Call Steering Architecture](./architecture-director-model.md)
+  - Evidence-only ConversAnalyzer
+  - Facet-first coverage analyzer
+  - Nerin Director → Nerin Actor pipeline
+  - `coverage_targets` / `director_output` exchange persistence
+- **Historical lineage:** [Conversation Pacing Pipeline Architecture](./architecture-conversation-pacing.md)
+  - E_target, territory scorer, selector, governor, prompt builder
+  - useful for understanding why the current runtime replaced the prior steering stack
+- **Earlier design evolution:** [Conversation Experience Evolution Architecture](./architecture-conversation-experience-evolution.md)
+  - character-bible refactors, observation philosophy, and pre-Director conversation design work
+
+Reading rule:
+- If you need the **current implementation**, trust this document plus `architecture-director-model.md`
+- If you need the **design history** or old ADR context, use the pacing/evolution docs as lineage references, not as the live runtime contract
 
 ## Project Context Analysis
 
@@ -52,21 +70,18 @@ This consolidated architecture covers the complete big-ocean system across all i
 
 #### 1. Conversational Assessment Engine (Epics 1-4, 9-11, 23, 27-29)
 - Auth-gated 25-exchange conversation with Nerin (Claude Haiku via LangChain)
-- Real-time personality evidence extraction + user state (energy × telling) via ConversAnalyzer v2 (Haiku, per-message, runs BEFORE Nerin)
-- Six-layer conversation pacing pipeline: ConversAnalyzer v2 → E_target pacing → Territory Scorer → Territory Selector → Move Governor → Prompt Builder → Nerin
-- 25-territory catalog with continuous expectedEnergy [0,1], dual-domain tags, expected facets
-- E_target: user-state-pure pacing formula (energy EMA × momentum × trust × adaptive drain ceiling)
-- Territory scoring: five-term unified formula (coverageGain + adjacency + conversationSkew − energyMalus − freshnessPenalty)
-- Move Governor: restraint layer with 3 intents (open/explore/close) + observation gating (4 competing variants: relate, noticing, contradiction, convergence)
-- 2-layer prompt system: Common (Nerin identity, stable) + Steering (per-turn intent × observation templates, territory-as-desire framing)
-- Bridge intent for territory transitions: park-bridge-close arc with natural curiosity shifting
-- Cold-start perimeter selection (turn 1) → five-term scoring (turns 2-24) → close intent (turn 25)
+- Evidence-only ConversAnalyzer (Haiku, per-message, three-tier fail-open) runs BEFORE Nerin Director
+- Four-step conversation runtime: evidence extraction → coverage analysis → Nerin Director brief → Nerin Actor response
+- Coverage analyzer is facet-first, not domain-first: it returns one `primaryFacet`, three `candidateDomains`, and a phase (`opening` | `exploring` | `closing`)
+- Coverage ranking uses a single history-wide steering metric: `steeringSignal = log1p(totalMass) × effectiveDomains` over steerable domains
+- Director chooses the most natural bridge into one candidate domain while still surfacing the primary facet; Actor sees only the brief and voices it as Nerin
+- Coverage targets are persisted in `assessment_exchange.coverage_targets`; Director briefs are persisted in `assessment_exchange.director_output`
 - Session ownership verification, advisory locking, message rate limiting
-- Derive-at-read: trait scores, OCEAN codes, archetypes computed from facet scores at read time
-- `assessment_exchange` table: per-turn pipeline state (extraction, pacing, scoring, governor)
+- Derive-at-read: trait scores, OCEAN codes, archetypes computed from facet scores at read time; persisted scored results now store only `score` + `confidence`
+- `assessment_exchange` table: per-turn extraction tier, coverage targets, and Director output
 
 #### 2. Conversation Experience Evolution (Design Thinking 2026-03-04 — Architecture Defined, Implementation In Progress)
-- Territory-based steering replacing facet targeting (architecture-conversation-experience-evolution.md, superseded by pacing pipeline)
+- Territory-based steering replacing facet targeting (architecture-conversation-experience-evolution.md, superseded first by the pacing pipeline and now by the Director model)
 - Two-axis user state model: energy (conversational intensity/load) × telling (self-propulsion vs compliance)
 - Observation gating: evidence-derived phase curve + shared linear escalation controls when Nerin offers observations
 - Character bible decomposed into modular constants: NERIN_PERSONA, CONVERSATION_MODE, BELIEFS_IN_ACTION, CONVERSATION_INSTINCTS (trimmed), QUALITY_INSTINCT, MIRROR_GUARDRAILS, HUMOR_GUARDRAILS, INTERNAL_TRACKING, REFLECT, STORY_PULLING
@@ -108,8 +123,8 @@ This consolidated architecture covers the complete big-ocean system across all i
 
 | NFR | Requirement | Implementation |
 |-----|-------------|----------------|
-| Latency | Nerin response <2s P95 | Haiku model, streaming |
-| Cost | ~$0.20 per assessment (free tier) | ~48 Haiku + 1 Sonnet (FinAnalyzer); +1 Sonnet if paid portrait |
+| Latency | Nerin response <2s P95 | Streaming remains fast, but the live path is now evidence → Director → Actor; sub-2s is a target, not a guarantee |
+| Cost | ~$0.20 per assessment (free tier) | Evidence + Director + Actor per turn; Sonnet remains optional for Director and required for paid portrait / relationship analysis |
 | Resilience | ConversAnalyzer non-fatal, Redis fail-open | Retry-once-then-skip, fail-open pattern |
 | Concurrency | No duplicate message processing | pg_try_advisory_lock per session |
 | Privacy | Default-private profiles, explicit sharing | RLS, URL privacy, consent chains |
@@ -149,7 +164,7 @@ This consolidated architecture covers the complete big-ocean system across all i
 4. **Derive-at-read** — Trait scores, OCEAN codes, archetypes, capabilities — never store what can be computed
 5. **Consent & access control** — Auth-gated conversation (email collected before first turn), session ownership verification, two-step consent for cross-user data (QR token model)
 6. **Transactional email** — Resend for drop-off re-engagement, Nerin check-in, deferred portrait recapture (3 email types, one-shot each)
-7. **LLM prompt architecture** — Six distinct agents with separate prompts, model tiers, error resilience strategies. Nerin uses a 2-layer prompt system: Common (stable identity) + Steering (per-turn intent × observation templates with territory-as-desire framing). ConversAnalyzer v2 uses single-call dual extraction (userState + evidence).
+7. **LLM prompt architecture** — Five distinct agents with separate prompts, model tiers, and resilience strategies. Nerin is split into a Director (strategy) and Actor (voice). ConversAnalyzer is evidence-only and three-tier fail-open.
 
 ## Technology Stack
 
@@ -184,8 +199,8 @@ This is a mature codebase. All technology choices are established and in product
 All major architectural decisions are implemented and in production. This section documents them as the authoritative reference.
 
 **Deferred Decisions (Post-Current State):**
-- Shadow scoring — topic avoidance detection, avoidance classification (requires pacing pipeline running)
-- V1 constant calibration — E_target weights, scorer weights, observation gating thresholds (empirical post-launch)
+- Shadow scoring — topic avoidance detection and classification (if revived, integrate into the Director model rather than the retired pacing stack)
+- Director calibration — prompt balance, model assignment, and recency penalties need empirical tuning from live conversations
 - Continuation experience UX details — conversation 2 model defined (new session + parent_session_id + prior state init), UX polish TBD
 - SSE for real-time portrait/analysis status (replace polling)
 - Queue-based generation for relationship analyses (portraits already migrated to Effect Queue pattern)
@@ -235,36 +250,32 @@ flowchart LR
 
 ### ADR-3: LLM Agent Architecture
 
-**Decision:** Four distinct LLM agents with purpose-separated tiers. ConversAnalyzer evidence is the single source of truth for all scoring — no finalization re-analysis step.
+**Decision:** Five distinct LLM agents with purpose-separated tiers. ConversAnalyzer evidence is the single source of truth for all scoring — no finalization re-analysis step. Nerin is split into a Director (strategy) and Actor (voice).
 
 | Agent | Model | When | Purpose | Error Handling |
 |-------|-------|------|---------|---------------|
-| Nerin | Haiku 4.5 | Every message | Conversational agent with 2-layer composed prompt (Common + Steering) | Fatal |
-| ConversAnalyzer v2 | Haiku 4.5 | Every message, **before Nerin** (sequential, not parallel) | Dual extraction: user state (energy × telling) + evidence records — **single source of truth** for all scoring and pacing | Three-tier: strict ×3 → lenient ×1 → neutral defaults |
+| Nerin Director | Claude Sonnet / Haiku | Every message after evidence extraction | Reads full conversation + coverage targets and writes a creative-director brief | Fatal (mapped to `AgentInvocationError`) |
+| Nerin Actor | Haiku 4.5 | Every message after Nerin Director | Voices the brief as the user-facing Nerin response | Fatal |
+| ConversAnalyzer | Haiku 4.5 | Every user message, **before Nerin Director** (sequential, not parallel) | Evidence-only extraction — **single source of truth** for scoring, coverage, portraits, and relationship analysis | Three-tier: strict ×3 → lenient ×1 → neutral defaults |
 | Full Portrait | Sonnet 4.6 | Once after PWYW payment | Deep narrative from conversation evidence v2 | Placeholder + lazy retry |
 | Relationship Analysis | Sonnet 4.6 | Once on QR token accept | Cross-user comparison | Placeholder + lazy retry |
 
-**Per-assessment LLM budget (free tier):** ~48 Haiku ≈ $0.20. Sonnet only if paid portrait.
+**Per-assessment LLM budget (free tier):** Evidence + Director + Actor on each turn. Sonnet remains optional for the Director and is always used for portraits / relationship analysis.
 
-**Critical pipeline ordering change:** ConversAnalyzer v2 runs BEFORE Nerin (not parallel). The pacing pipeline (E_target → Scorer → Selector → Governor → Prompt Builder) requires energy and telling signals to compose Nerin's system prompt. This adds ConversAnalyzer's latency (~1-2s Haiku) to the critical path before Nerin responds. The tradeoff is accepted because steering quality requires user state signals.
+**Critical pipeline ordering change:** ConversAnalyzer runs BEFORE Nerin Director, and Nerin Director runs BEFORE Nerin Actor. There is no separate user-state extraction call. The Director reads conversational energy and pressure from the message history itself. This makes the live runtime a 3-call sequential path (evidence → Director → Actor).
 
-**ConversAnalyzer v2 output contract:**
+**ConversAnalyzer output contract:**
 
 ```typescript
 {
-  userState: {
-    energyBand: EnergyBand,       // "minimal"|"low"|"steady"|"high"|"very_high"
-    tellingBand: TellingBand,     // "fully_compliant"|...|"strongly_self_propelled"
-    energyReason: string,         // short justification
-    tellingReason: string,        // short justification
-    withinMessageShift: boolean,  // energy or telling shifted within the message
-  },
-  evidence: FacetEvidence[],      // unchanged from v1
+  evidence: FacetEvidence[],
   tokenUsage: TokenUsage,
 }
 ```
 
-**Full specification:** [ConversAnalyzer v2 Architecture](./architecture-conversation-pacing.md#adr-cp-13-conversanalyzer-v2--single-call-dual-extraction)
+**Calibration note:** The conversational anchor for `imagination` now explicitly includes both fantasy/daydreaming and applied inner simulation (mentally rehearsing conversations, pre-visualizing outcomes). `intellect` remains curiosity/idea-seeking.
+
+**Full specification:** [Director Model — Two-Call Steering Architecture](./architecture-director-model.md)
 
 ### ADR-4: Evidence Model (v2 — Deviation-Based)
 
@@ -936,7 +947,7 @@ big-ocean/                                    # Monorepo root
 │   │   │   │   ├── waitlist.ts               # /api/waitlist/*
 │   │   │   │   └── __tests__/                # Handler-level tests
 │   │   │   └── use-cases/                    # Business logic (29 use-cases)
-│   │   │       ├── nerin-pipeline.ts         # Orchestrates 15-step pipeline: ConversAnalyzer v2 → E_target → Scorer → Selector → Governor → Prompt Builder → Nerin
+│   │   │       ├── nerin-pipeline.ts         # Orchestrates live runtime: Evidence → Coverage Analyzer → Nerin Director → Nerin Actor
 │   │   │       ├── send-message.use-case.ts  # Per-message pipeline
 │   │   │       ├── start-assessment.use-case.ts
 │   │   │       ├── generate-results.use-case.ts
@@ -1026,10 +1037,13 @@ big-ocean/                                    # Monorepo root
 │   │   │   ├── repositories/                 # 24 repository interfaces (Context.Tag)
 │   │   │   │   ├── assessment-session.repository.ts
 │   │   │   │   ├── assessment-message.repository.ts
-│   │   │   │   ├── assessment-exchange.repository.ts  # NEW: exchange state (pacing pipeline)
+│   │   │   │   ├── assessment-exchange.repository.ts  # Exchange state (coverage_targets + director_output)
 │   │   │   │   ├── conversation-evidence.repository.ts
-│   │   │   │   ├── conversanalyzer.repository.ts  # v2: analyze (strict) + analyzeLenient
-│   │   │   │   ├── nerin-agent.repository.ts
+│   │   │   │   ├── conversanalyzer.repository.ts      # Evidence-only extraction: analyze (strict) + analyzeLenient
+│   │   │   │   ├── nerin-director.repository.ts
+│   │   │   │   ├── nerin-actor.repository.ts
+│   │   │   │   ├── nerin-agent.repository.ts         # Legacy/shared adapter surface retained during migration
+│   │   │   │   ├── assessment-result.repository.ts
 │   │   │   │   ├── portrait-generator.repository.ts
 │   │   │   │   ├── portrait.repository.ts
 │   │   │   │   ├── purchase-event.repository.ts
@@ -1044,25 +1058,11 @@ big-ocean/                                    # Monorepo root
 │   │   │   │   ├── archetypes.ts             # 81 archetype definitions
 │   │   │   │   ├── nerin-persona.ts          # Nerin personality definition (Layer 1 Common)
 │   │   │   │   ├── nerin-greeting.ts / nerin-farewell.ts
-│   │   │   │   ├── nerin-chat-context.ts     # Chat context builder (being decomposed into modular constants)
-│   │   │   │   ├── nerin/                    # Decomposed character bible modules (Layer 1 + Layer 2)
-│   │   │   │   │   ├── conversation-mode.ts  # CONVERSATION_MODE
-│   │   │   │   │   ├── beliefs-in-action.ts  # BELIEFS_IN_ACTION
-│   │   │   │   │   ├── conversation-instincts.ts  # CONVERSATION_INSTINCTS (trimmed — no unconditional depth)
-│   │   │   │   │   ├── quality-instinct.ts   # QUALITY_INSTINCT
-│   │   │   │   │   ├── mirror-guardrails.ts  # MIRROR_GUARDRAILS
-│   │   │   │   │   ├── humor-guardrails.ts   # HUMOR_GUARDRAILS
-│   │   │   │   │   ├── internal-tracking.ts  # INTERNAL_TRACKING
-│   │   │   │   │   ├── reflect.ts            # REFLECT (question module, now common)
-│   │   │   │   │   ├── story-pulling.ts      # STORY_PULLING (question module, now common)
-│   │   │   │   │   ├── steering-templates.ts # 13 intent × observation templates (Layer 2)
-│   │   │   │   │   ├── pressure-modifiers.ts # direct / angled / soft (Layer 2)
-│   │   │   │   │   ├── mirror-lookup.ts      # Curated mirrors by intent × observation (Layer 2)
-│   │   │   │   │   └── index.ts              # Barrel export
-│   │   │   │   ├── territory-catalog.ts      # TERRITORY_CATALOG: 25 territories with name, description, expectedEnergy
-│   │   │   │   ├── band-mappings.ts          # ENERGY_BAND_MAP, TELLING_BAND_MAP (band → [0,1])
-│   │   │   │   ├── scorer-defaults.ts        # SCORER_DEFAULTS: w_e, w_f, cooldown
-│   │   │   │   ├── pacing-defaults.ts        # EMA lambda, alpha_up/down, drain, observation gate constants
+│   │   │   │   ├── nerin-director-prompt.ts  # Director system prompt variants
+│   │   │   │   ├── nerin-director-closing-prompt.ts
+│   │   │   │   ├── nerin-actor-prompt.ts     # Actor persona + voice contract
+│   │   │   │   ├── nerin/                    # Character bible modules still reused by prompt layer
+│   │   │   │   │   └── index.ts              # Barrel export + supporting modules
 │   │   │   │   ├── facet-descriptions.ts / facet-prompt-definitions.ts
 │   │   │   │   ├── trait-descriptions.ts     # Trait-level descriptions
 │   │   │   │   ├── life-domain.ts            # 6 life domains
@@ -1077,12 +1077,8 @@ big-ocean/                                    # Monorepo root
 │   │   │   │   ├── relationship.types.ts     # Relationship types
 │   │   │   │   ├── portrait-rating.types.ts
 │   │   │   │   ├── facet-levels.ts / facet-evidence.ts
-│   │   │   │   ├── territory.ts              # Territory, TerritoryId (branded), EnergyLevel
-│   │   │   │   ├── user-state.ts             # EnergyBand, TellingBand, UserState
-│   │   │   │   ├── prompt-builder-input.ts   # PromptBuilderInput, ObservationFocus (discriminated union)
-│   │   │   │   ├── scorer-output.ts          # TerritoryScorerOutput, TerritoryScoreBreakdown
-│   │   │   │   ├── selector-output.ts        # TerritorySelectorOutput
-│   │   │   │   └── governor-debug.ts         # MoveGovernorDebug, ObservationGatingDebug, EntryPressureDebug
+│   │   │   │   ├── ocean-hieroglyph.ts       # Public-profile symbol system
+│   │   │   │   └── pacing-pipeline.types.ts  # Historical pacing types retained for legacy docs/tests
 │   │   │   ├── schemas/                      # Effect Schema definitions
 │   │   │   │   ├── big-five-schemas.ts       # Facet/trait schemas
 │   │   │   │   ├── ocean-code.ts             # OCEAN code schema
@@ -1091,28 +1087,21 @@ big-ocean/                                    # Monorepo root
 │   │   │   │   ├── assessment-message.ts     # Message schemas
 │   │   │   │   └── __tests__/
 │   │   │   ├── utils/                        # Pure domain functions
-│   │   │   │   ├── formula.ts                # computeFinalWeight, computeFacetMetrics, computeSteeringTarget
+│   │   │   │   ├── formula.ts                # computeFinalWeight, computeFacetMetrics (score + confidence only)
+│   │   │   │   ├── coverage-analyzer.ts      # Facet-first steering selector
 │   │   │   │   ├── ocean-code-generator.ts   # generateOceanCode()
 │   │   │   │   ├── archetype-lookup.ts       # lookupArchetype() in-memory registry
 │   │   │   │   ├── derive-trait-summary.ts   # deriveTraitSummary()
 │   │   │   │   ├── derive-capabilities.ts    # deriveCapabilities() from events
 │   │   │   │   ├── score-computation.ts      # Deviation → score mapping
 │   │   │   │   ├── confidence.ts             # Confidence computation
-│   │   │   │   ├── nerin-system-prompt.ts    # System prompt builder
 │   │   │   │   ├── domain-distribution.ts    # Domain entropy
 │   │   │   │   ├── facet-level.ts            # Facet level classification
 │   │   │   │   ├── trait-colors.ts           # Trait → color mapping
 │   │   │   │   ├── display-name.ts / date.utils.ts
-│   │   │   │   ├── e-target.ts               # computeETarget() — user-state-pure pacing (pure function)
-│   │   │   │   ├── steering/                 # Steering sub-module (6-layer pipeline)
-│   │   │   │   │   ├── territory-scorer.ts   # scoreAllTerritories() — five-term formula (pure function)
-│   │   │   │   │   ├── territory-selector.ts # selectTerritory() — cold-start or argmax (pure function)
-│   │   │   │   │   ├── move-governor.ts      # computeGovernorOutput() — intent + observation gating (pure function)
-│   │   │   │   │   ├── prompt-builder.ts     # buildSystemPrompt() — 2-layer composition (pure function)
-│   │   │   │   │   ├── cold-start.ts         # DEPRECATED: absorbed into territory-selector.ts
-│   │   │   │   │   ├── drs.ts                # DEPRECATED: replaced by territory-scorer.ts
-│   │   │   │   │   ├── territory-prompt-builder.ts  # DEPRECATED: replaced by prompt-builder.ts
-│   │   │   │   │   └── __tests__/
+│   │   │   │   ├── adapt-extracted-evidence.ts
+│   │   │   │   ├── portrait-prompt-builder.ts
+│   │   │   │   ├── version-detection.ts
 │   │   │   │   └── __tests__/                # 17 test files
 │   │   │   ├── services/                     # Domain services
 │   │   │   │   ├── confidence-calculator.service.ts
@@ -1273,7 +1262,7 @@ big-ocean/                                    # Monorepo root
 
 | Epic | Backend Use-Cases | Frontend Routes/Components | Packages |
 |------|------------------|---------------------------|----------|
-| **1-4: Assessment Engine** | `start-assessment`, `send-message`, `nerin-pipeline`, `resume-session`, `calculate-confidence` | `/chat` → TherapistChat, useTherapistChat | domain/utils/formula.ts, domain/utils/steering/*, domain/constants/nerin-*.ts |
+| **1-4: Assessment Engine** | `start-assessment`, `send-message`, `nerin-pipeline`, `resume-session`, `calculate-confidence` | `/chat` → TherapistChat, useTherapistChat | domain/utils/formula.ts, domain/utils/coverage-analyzer.ts, domain/constants/nerin-director-prompt.ts, domain/constants/nerin-actor-prompt.ts |
 | **9-11: Results & Finalization** | `generate-results`, `get-results`, `get-finalization-status`, `get-facet-evidence`, `get-message-evidence`, `get-transcript` | `/results/$id` → ProfileView, TraitCard, ArchetypeCard, EvidencePanel, DetailZone | domain/utils/ocean-code-generator.ts, scoring, archetype-lookup |
 | **11-12: Portraits** | `generate-full-portrait`, `get-portrait-status`, `rate-portrait` | PersonalPortrait, PortraitReadingView, PortraitUnlockButton, PortraitWaitScreen | infrastructure/portrait-generator.claude.repository.ts |
 | **13: Monetization** | `process-purchase`, `get-credits` | polar-checkout.ts, RelationshipCreditsSection | infrastructure/payment-gateway.polar.repository.ts, better-auth.ts (Polar plugin) |
@@ -1312,9 +1301,9 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 
 1. **Assessment message flow:**
    ```text
-   User input → send-message use-case → advisory lock → ConversAnalyzer v2 (Haiku, sequential before Nerin) →
-   weight filter (>=0.36) → save evidence → E_target → Scorer → Selector → Governor → Prompt Builder →
-   Nerin agent (Haiku, with 2-layer composed prompt) → save message + exchange → return response
+   User input → send-message use-case → advisory lock → ConversAnalyzer (Haiku, sequential) →
+   save evidence → coverage analyzer → Nerin Director → Nerin Actor →
+   save message + exchange → return response
    ```
 
 2. **Results generation flow:**
@@ -1345,7 +1334,7 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
    ```text
    Purchase extended_conversation_unlocked → activate-conversation-extension use-case →
    new assessment_session (parent_session_id = prior session) →
-   pacing pipeline initialized from prior session's last user state →
+   Director model starts a new 25-exchange session with prior messages/evidence visible for continuity →
    25 new exchanges → new assessment_results row →
    prior portrait + relationship analyses become "previous version" (derive-at-read FK comparison)
    ```
@@ -1376,11 +1365,11 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 
 ### Coherence Validation
 
-**Decision Compatibility:** All 21 ADRs are coherent. The hexagonal architecture (ADR-1) with Effect-ts Context.Tag cleanly separates the five LLM agents (ADR-3) from business logic. The single-tier evidence model (ADR-4) feeds into derive-at-read (ADR-6) without conflict. Better Auth + Polar plugin (ADR-8) and append-only events (ADR-9) work together. QR token model (ADR-10) replaces invitation links with ephemeral tokens and updates relationship_analyses FKs. Conversation extension (ADR-11) creates new sessions linked via parent_session_id. Email infrastructure (ADR-12) adds Resend for 3 transactional email types. Portrait reconciliation (ADR-13) covers the payment-received-but-no-placeholder edge case. The conversation pacing pipeline (ADR-5, 17-21) is internally coherent: E_target is user-state-pure, territory scoring consumes E_target, Governor constrains based on scoring, Prompt Builder composes from Governor output. The 2-layer prompt system (ADR-19) eliminates the root causes of Nerin non-compliance identified in the 2026-03-13 analysis. No contradictory decisions found.
+**Decision Compatibility:** All 30 ADRs are coherent when read as an evolution. The live conversation runtime is the Director model (ADR-30 + the ADR-DM series in `architecture-director-model.md`), while ADR-5/17-21 and ADR-28 remain historical context for the pacing-pipeline era. The hexagonal architecture (ADR-1) with Effect-ts Context.Tag cleanly separates the five live LLM agents (ADR-3) from business logic. The evidence model (ADR-4/27) feeds both derive-at-read scoring (ADR-6) and Director coverage targeting (ADR-30) without conflict. Better Auth + Polar plugin (ADR-8) and append-only events (ADR-9) work together. QR token model (ADR-10) replaces invitation links with ephemeral tokens and updates relationship_analyses FKs. Conversation extension (ADR-11) creates new sessions linked via parent_session_id. Email infrastructure (ADR-12) adds Resend for 3 transactional email types. Portrait reconciliation (ADR-13) covers the payment-received-but-no-placeholder edge case. No contradictory live-runtime decisions found.
 
 **Pattern Consistency:** Naming conventions are uniform: `kebab-case` files, `PascalCase` exports, `camelCase` properties, `UPPER_SNAKE_CASE` constants. The repository interface → implementation → mock triplet follows the same pattern across all 24 repositories. Test patterns (vi.mock + local TestLayer) are consistent. Error architecture (three locations, no remapping) is applied uniformly. Pacing pipeline patterns (all [0,1] numeric space, pure functions with argument injection, 1-indexed turns, `type` discriminant for ObservationFocus) are consistent across all pipeline layers.
 
-**Structure Alignment:** Project structure maps directly to architectural layers — `packages/domain` = ports, `packages/infrastructure` = adapters, `apps/api/src/use-cases` = business logic, `apps/api/src/handlers` = HTTP adapters. The pacing pipeline pure functions live in `domain/src/utils/` (scorer, selector, governor, prompt-builder, e-target) while the orchestrator (`nerin-pipeline.ts`) lives in `apps/api/src/use-cases/`. The `__mocks__/` co-location supports the testing strategy. Contract groups mirror handler groups 1:1.
+**Structure Alignment:** Project structure maps directly to architectural layers — `packages/domain` = ports, `packages/infrastructure` = adapters, `apps/api/src/use-cases` = business logic, `apps/api/src/handlers` = HTTP adapters. The live conversation pure functions now center on `domain/src/utils/coverage-analyzer.ts` and `domain/src/utils/formula.ts`, with Director/Actor prompt contracts in `domain/src/constants/`. The orchestrator (`nerin-pipeline.ts`) lives in `apps/api/src/use-cases/`. The `__mocks__/` co-location supports the testing strategy. Contract groups mirror handler groups 1:1.
 
 ### Requirements Coverage Validation
 
@@ -1388,21 +1377,21 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 
 | Epic | Covered? | Notes |
 |------|----------|-------|
-| 1-4: Assessment Engine | Yes | send-message, nerin-pipeline, territory steering (DRS), cold-start |
+| 1-4: Assessment Engine | Yes | send-message, nerin-pipeline, evidence extraction, facet-first coverage targeting, Director + Actor |
 | 9-11: Results & Finalization | Yes | generate-results, derive-at-read |
 | 11-12: Portraits | Yes | Placeholder-row pattern, Sonnet 4.6, depth-adaptive prompt |
 | 13: Monetization | Yes | Polar plugin, append-only events, capability derivation |
 | 14: Relationships | Yes | QR token model, cross-user analysis, two-step consent, analysis archive |
 | 15: Growth | Yes | Satori card gen, Redis budget gate, waitlist |
-| 23, 27-29: Conversation Pacing | Yes | 6-layer pipeline (ADR-5, 17-21), 25 territories, E_target, scorer, governor, 2-layer prompt |
+| 23, 27-29: Conversation Runtime Evolution | Yes | Director model (ADR-30) for live runtime; ADR-5, 17-21, and ADR-28 retained as historical pacing lineage |
 | Design Thinking 2026-03-04 | Yes | Architecture defined (ADR-5, 17-19), implementation in progress |
 
 **Non-Functional Requirements:**
 
 | NFR | Architecturally Supported? | Implementation |
 |-----|---------------------------|----------------|
-| Latency <2s | Yes | Haiku model + streaming. ConversAnalyzer before Nerin adds ~1-2s — accepted tradeoff for steering quality. |
-| Cost ~$0.20 | Yes | Single Haiku call (v2 dual extraction — no additional LLM calls). Weight filter on evidence. |
+| Latency <2s | Yes | Haiku streaming remains fast, but the live runtime is now evidence → Director → Actor. Sub-2s remains a target, not a guarantee. |
+| Cost ~$0.20 | Yes | Evidence + Director + Actor on each turn. Results persistence simplified; no extra stored `signalPower` payload. |
 | Resilience | Yes | Fail-open (ADR-14), three-tier extraction (ADR-20), neutral defaults on full failure |
 | Concurrency | Yes | Advisory locks per session. Exchange transaction boundary prevents turn drift. |
 | Privacy | Yes | Default-private, RLS, consent chains |
@@ -1411,11 +1400,11 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 
 ### Implementation Readiness Validation
 
-**Decision Completeness:** All 21 ADRs document the decision, rationale, and implementation location. Weight matrices, threshold values, and algorithm details are specified with concrete numbers. Code examples provided for use-case pattern, test pattern, async generation pattern, Better Auth integration, and pacing pipeline patterns. Pacing pipeline has full type contracts (PromptBuilderInput, TerritoryScorerOutput, MoveGovernorDebug), layer boundary contracts, and calibration defaults.
+**Decision Completeness:** All 30 ADRs document the decision, rationale, and implementation location across both the historical pacing era and the live Director runtime. Code examples are provided for use-case patterns, async generation, Better Auth integration, and conversation runtime orchestration. The active coverage selector is specified concretely in ADR-30.
 
-**Structure Completeness:** Full directory tree with every handler, use-case, repository interface, implementation, and mock file listed. Pacing pipeline file map includes new files (e-target.ts, territory-scorer.ts, territory-selector.ts, move-governor.ts, prompt-builder.ts) and modified files (nerin-pipeline.ts, ConversAnalyzer, schema.ts). All routes, component directories, hooks, and lib files accounted for.
+**Structure Completeness:** Full directory tree with every handler, use-case, repository interface, implementation, and mock file listed. The live conversation file map highlights `nerin-pipeline.ts`, `coverage-analyzer.ts`, Director/Actor prompt contracts, and the simplified result-shape persistence. All routes, component directories, hooks, and lib files are accounted for.
 
-**Pattern Completeness:** Error handling, testing, async generation, auth integration, and pacing pipeline patterns each have explicit rules. Anti-patterns list covers both platform and pacing pipeline mistakes. Enforcement section documents automated checks (Biome, hooks, CI) plus pipeline-specific enforcement (type contracts, scorer golden test, integration test, e2e pacing spec).
+**Pattern Completeness:** Error handling, testing, async generation, auth integration, and conversation-runtime patterns each have explicit rules. Anti-patterns list covers both platform and historical pacing mistakes. Enforcement section documents automated checks (Biome, hooks, CI) plus runtime-specific integration tests.
 
 ### Gap Analysis Results
 
@@ -1423,8 +1412,8 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 
 **Important Gaps (non-blocking):**
 1. **ElectricSQL sync architecture** — Frontend uses TanStack DB / ElectricSQL for local-first sync, but the sync protocol and shape subscriptions aren't detailed in this document. Currently minimal usage (`db-collections/index.ts`).
-2. **V1 constant calibration** — E_target weights, scorer weights (w_e, w_f, cooldown), observation gating thresholds (OBSERVE_BASE, OBSERVE_STEP) have simulation-derived defaults requiring empirical calibration post-launch.
-3. **Shadow scoring** — Topic avoidance detection and classification deferred. Requires pacing pipeline running (territories being selected).
+2. **Director calibration** — Opening/exploring/closing prompt balance, fallback model choice, and coverage-selector recency tuning still require empirical iteration from live conversations.
+3. **Shadow scoring / avoidance detection** — Topic avoidance detection remains deferred. If revived, it should plug into the Director model rather than the retired pacing stack.
 4. **Continuation experience UX** — Conversation extension model defined (new session, parent_session_id, prior state init). UX details (what Nerin references from prior session) TBD.
 
 **Nice-to-Have:**
@@ -1441,10 +1430,10 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 - [x] Cross-cutting concerns mapped (cost, auth, errors, derive-at-read, consent)
 
 **Architectural Decisions**
-- [x] 21 ADRs documented with implementation details (16 platform + 5 pacing pipeline)
+- [x] 30 ADRs documented with implementation details
 - [x] Technology stack fully specified (brownfield, all choices established)
-- [x] Integration patterns defined (Better Auth plugin, Polar webhook, LLM agents, pacing pipeline)
-- [x] Performance considerations addressed (Haiku tier, advisory locks, fail-open, ConversAnalyzer-before-Nerin latency tradeoff)
+- [x] Integration patterns defined (Better Auth plugin, Polar webhook, LLM agents, Director runtime)
+- [x] Performance considerations addressed (Director/Actor latency tradeoff, advisory locks, fail-open evidence extraction)
 
 **Implementation Patterns**
 - [x] Naming conventions established (DB, TS, files, exports, API)
@@ -1462,10 +1451,10 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 
 **Overall Status:** READY FOR IMPLEMENTATION
 
-**Confidence Level:** High — brownfield platform architecture capturing an already-running system, plus conversation pacing pipeline validated through party mode + red team + pre-mortem reviews.
+**Confidence Level:** High — brownfield platform architecture capturing an already-running system, plus the Director runtime and evidence model having been iterated through repeated review and implementation cycles.
 
 **Key Strengths:**
-- Single source of truth for all architectural decisions (platform + pacing pipeline + prompt compliance)
+- Single source of truth for all architectural decisions (platform + Director runtime + prompt compliance)
 - Every file and directory in the codebase has an explicit role
 - Concrete implementation patterns with "MUST follow" rules for AI agents
 - Complete epic-to-directory mapping eliminates ambiguity
@@ -1733,6 +1722,7 @@ New CSS rules in `packages/ui/src/styles/globals.css`:
 ```
 
 **Related standalone documents (full specifications):**
+- [Director Model — Two-Call Steering Architecture](./architecture-director-model.md) — Live conversation runtime: evidence extraction, coverage analyzer, Nerin Director, Nerin Actor
 - [Conversation Pacing Pipeline Architecture](./architecture-conversation-pacing.md) — Full specifications: E_target formula, territory scorer, selector, governor, observation gating, persistence, type contracts, testing patterns (1,823 lines)
 - [Problem Solution: Nerin Territory Compliance](../../problem-solution-2026-03-13.md) — Root cause analysis, 3-layer solution (A+B+C), implementation plan
 - [Brainstorming: Adaptive Response Format](../../brainstorming/brainstorming-session-2026-03-13.md) — 13 intent×observation templates, 25 territory descriptions, module dissolution plan
@@ -1969,7 +1959,7 @@ high + weak → +1      low + weak → -1
 
 **Why split:** The dual-purpose v2 prompt increased hallucination rates. Separation gives each call a focused task and frees token budget for rich per-facet behavioral examples in the evidence call.
 
-**Per-facet conversational anchors:** The evidence extraction prompt includes HIGH and LOW behavioral examples for each of the 30 facets, written as natural conversation (what a real person would say to Nerin). These give the LLM concrete calibration for polarity judgment.
+**Per-facet conversational anchors:** The evidence extraction prompt includes HIGH and LOW behavioral examples for each of the 30 facets, written as natural conversation (what a real person would say to Nerin). These give the LLM concrete calibration for polarity judgment. The `imagination` anchor includes both whimsical fantasy/daydreaming and applied inner simulation (pre-visualizing conversations, mentally simulating outcomes); `intellect` remains curiosity/learning for its own sake.
 
 **Polarity balance audit:** The extraction prompt includes a mandatory self-check: if <35% of extracted signals are LOW, the LLM re-reads for absences, avoidances, and preferences-against before submitting.
 
@@ -1979,30 +1969,17 @@ high + weak → +1      low + weak → -1
 
 ### ADR-28: Three-Signal Scoring Model Confirmed + Territory Catalog Evolution
 
-**Status:** Preserves existing architecture. No formula changes.
+**Status:** Historical. The territory additions below belonged to the pacing-pipeline era. ADR-30 supersedes the runtime steering, selector, and persistence claims that originally lived in this ADR.
 
-**Decision:** The three-signal scoring model (`score`, `confidence`, `signalPower`) is confirmed as architecturally correct. Confidence remains domain-blind (evidence mass). Signal power remains the domain diversity signal used by steering. No merging of breadth into confidence.
+**Historical context:** This ADR originally confirmed a three-signal runtime (`score`, `confidence`, `signalPower`) and expanded the territory catalog. The live Director model no longer uses territory routing or `signalPower`, but the catalog notes are retained here as migration/history context for the old pacing architecture.
 
-**Rationale:** Exploration of merging domain breadth into confidence (proposed as `conf_reported = conf_mass × (ρ + (1-ρ) × breadth)`) was rejected after analysis revealed cascading complexity:
-1. Merging breadth into confidence penalized narrow facets (orderliness, artistic_interests)
-2. Fixing that required per-facet eligible domain overrides
-3. Natural-emergence facets (extraversion) needed broader eligibility than catalog-derived
-4. That required a weighted observability matrix (30 × 5 hand-tuned values)
-5. Each fix created a new problem — classic architecture smell
+**Superseded by ADR-30:**
+- `signalPower` as a runtime steering metric
+- two-term steering priority using `confidence` + `signalPower`
+- persisted result schema `{ score, confidence, signalPower }`
+- domain-first target selection through territory routing
 
-**Root insight:** Confidence and breadth answer different questions:
-- **Confidence** = "How much evidence supports this score?" (reliability)
-- **Signal power** = "How broadly was it observed across domains?" (generalizability)
-
-These are analogous to precision and recall — merging them into one number loses information. The existing separation is correct. Signal power already incorporates domain diversity (`V × D` where D = normalized entropy) and already drives the steering system to seek broader evidence.
-
-**What stays unchanged:**
-- `confidence = C_max × (1 - e^{-kW})` — evidence mass saturation, domain-blind
-- `signalPower = V × D` — volume × domain diversity, drives steering
-- `priority = α × max(0, C_target - confidence) + β × max(0, P_target - signalPower)` — two-term steering
-- Result schema: `{ score, confidence, signalPower }` per facet and trait
-
-**What changes (territory catalog only):**
+**Historical territory catalog changes (retained for reference):**
 
 The territory catalog evolves to support ADR-26 (solo → health) with 3 new health territories and domain remapping of 12 existing territories. Additionally, hard-to-assess facets get additional territory routes to eliminate single-territory bottlenecks:
 
@@ -2060,5 +2037,70 @@ The territory catalog evolves to support ADR-26 (solo → health) with 3 new hea
 - Global daily assessment circuit breaker (Story 15.3, `globalDailyAssessmentLimit`, default 100)
 
 **Rationale:** Cost protection is better served by cost-based guards (which track actual LLM spend) than by count-based guards (which assume fixed cost per assessment). The global circuit breaker remains as a safety net against runaway usage.
+
+### ADR-30: Facet-First Coverage Selector + Evidence-Only Results Schema
+
+**Supersedes:** The live steering and persistence claims from ADR-28. Updates ADR-27 calibration for `imagination`.
+
+**Decision:** Live conversation steering is facet-first. Each turn gets one `primaryFacet`, three `candidateDomains`, and a phase. The Director chooses the most natural candidate domain from the user's latest message while still surfacing the primary facet. Persisted scored results now store only `{ score, confidence }`; `signalPower` is removed from runtime steering and storage.
+
+**Coverage target contract (`assessment_exchange.coverage_targets`):**
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `primaryFacet` | `FacetName` | Single hard target for the turn |
+| `candidateDomains` | `LifeDomain[]` (top 3) | Weak domains the Director may choose among |
+| `phase` | `"opening" | "exploring" | "closing"` | Prompt variant selector |
+
+**Selector math (`packages/domain/src/utils/coverage-analyzer.ts`):**
+
+For each facet, over steerable domains only:
+
+- `mass_g = Σ computeFinalWeight(strength, confidence)` for evidence in domain `g`
+- `totalMass = Σ mass_g`
+- `support = log1p(totalMass)`
+- `effectiveDomains = 1 / Σ (mass_g / totalMass)^2`
+- `steeringSignal = support × effectiveDomains`
+
+Facet priority is ranked by:
+1. Lowest `steeringSignal`
+2. Lowest `effectiveDomains`
+3. Lowest `totalMass`
+4. Least recently targeted facet
+5. Deterministic OCEAN interleaved order
+
+Candidate domain ranking is:
+- if the facet already has evidence, lowest facet-domain mass first
+- if the facet is unseen, lowest global domain mass first
+- lightly avoid repeating the previous preferred domain
+
+**Director contract:**
+- The Director receives one primary facet, not three co-equal facets
+- The Director must land the question beat in one of the candidate domains
+- Domain choice is flexible within that shortlist so the brief can follow the user's natural thread instead of forcing a hand-maintained affinity matrix
+
+**Result schema simplification:**
+- `computeAllFacetResults()` and `computeTraitResults()` persist only `score` and `confidence`
+- `signalPower` is removed from `formula.ts` exports, assessment-result repository types, and API result payloads
+- Historical `signalPower` keys are stripped from `assessment_results` via migration `20260405033000_remove_signal_power_from_results`
+
+**Extraction calibration update:**
+- `imagination` now includes both fantasy/daydreaming and applied inner simulation: rehearsing future conversations, pre-visualizing outcomes, and building rich inner scenarios
+- `intellect` remains learning-seeking, theory-seeking, and curiosity for its own sake
+
+**Rationale:**
+1. Domain-first coverage selection repeatedly resurfaced globally saturated facets when a single domain cell remained sparse
+2. Three equal target facets produced muddy Director briefs; one primary facet gives one coherent job per turn
+3. `signalPower` no longer matched the active runtime once steering moved into `coverage-analyzer.ts`, so keeping it in persisted results was architectural drift
+
+**Implementation locations:**
+- `apps/api/src/use-cases/nerin-pipeline.ts`
+- `packages/domain/src/utils/coverage-analyzer.ts`
+- `packages/domain/src/constants/nerin-director-prompt.ts`
+- `packages/domain/src/constants/facet-prompt-definitions.ts`
+- `packages/infrastructure/src/repositories/conversanalyzer.anthropic.repository.ts`
+- `packages/domain/src/utils/score-computation.ts`
+- `packages/domain/src/repositories/assessment-result.repository.ts`
+- `drizzle/20260405033000_remove_signal_power_from_results/migration.sql`
 
 **This document replaces:** `docs/ARCHITECTURE.md` as the single authoritative architecture reference. The standalone documents above contain full implementation-level specifications referenced by the ADRs in this document.

@@ -13,8 +13,6 @@ so that {{benefit}}.
 ## Acceptance Criteria
 
 1. [Add acceptance criteria from epics/PRD]
-2. **Documentation**: All new code has JSDoc comments; README/CLAUDE.md updated if applicable
-3. **Tests**: Unit tests added with minimum 80% coverage for new functionality; integration tests if needed
 
 ## Tasks / Subtasks
 
@@ -22,13 +20,14 @@ so that {{benefit}}.
   - [ ] Subtask 1.1
 - [ ] Task 2 (AC: #)
   - [ ] Subtask 2.1
-- [ ] Documentation & Testing (AC: #2-3) — **REQUIRED BEFORE DONE**
-  - [ ] Add JSDoc comments to new functions/classes
-  - [ ] Update README.md if architecture or features changed
-  - [ ] Update CLAUDE.md if patterns or setup changed
-  - [ ] Write unit tests (80% coverage target)
-  - [ ] Write integration tests if needed
-  - [ ] Update story file with completion notes
+
+## Parallelism
+
+- **Blocked by:** (none | list of story IDs)
+- **Blocks:** (list of story IDs)
+- **Mode:** parallel | sequential
+- **Domain:** (e.g., "backend monetization", "frontend results", "full-stack")
+- **Shared files:** (key files this story touches that other parallel stories might also touch)
 
 ## Dev Notes
 
@@ -44,6 +43,15 @@ so that {{benefit}}.
 ### References
 
 - Cite all technical details with source paths and sections, e.g. [Source: docs/<file>.md#Section]
+
+## Anti-Patterns
+
+Do NOT introduce any of these patterns during implementation:
+
+1. **Error handling scope** — No broad `catchAll`/`catchTag` that swallows errors. Only allowed: fail-open `catchTag("RedisOperationError", ...)` for resilience. Errors must propagate unchanged to the HTTP contract layer.
+2. **Mock accuracy** — Mocks in `__mocks__/` must match live repository interfaces exactly. Never add methods to mocks that don't exist in the real implementation. Always use `vi.mock()` + original paths, never import from `__mocks__/` directly.
+3. **Import discipline** — No cross-layer imports (infrastructure must not import from use-cases, domain must not import from infrastructure). No deep imports bypassing barrel exports. Use `@workspace/*` paths.
+4. **Type safety** — No unsafe `as` casts (use type guards or `unknown` instead). No `in` operator for type narrowing (use discriminated unions with `_tag`). No `as any` without a justifying comment.
 
 ## Dev Agent Record
 
