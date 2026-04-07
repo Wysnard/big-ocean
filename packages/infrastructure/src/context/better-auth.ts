@@ -165,7 +165,10 @@ export const BetterAuthLive = Layer.effect(
 		const polarToken = Redacted.value(config.polarAccessToken);
 		const polarClient = new Polar({
 			accessToken: polarToken,
-			server: config.betterAuthUrl.includes("localhost") ? "sandbox" : "production",
+			server:
+				config.betterAuthUrl.includes("localhost") || config.betterAuthUrl.includes("127.0.0.1")
+					? "sandbox"
+					: "production",
 		});
 
 		// Create Better Auth with plain node-postgres drizzle instance

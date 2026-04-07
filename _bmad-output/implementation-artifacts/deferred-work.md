@@ -18,3 +18,7 @@
 
 - `parentSessionId` TS property on `conversation` table not renamed to `parentConversationId` — pre-existing from Story 45-1 (SQL column was renamed to `parent_conversation_id` but TS property was left as `parentSessionId`)
 - 4 legacy `assessment_session_*` prefixed index names on `conversations` table (`assessment_session_user_id_idx`, `assessment_session_original_lifetime_unique`, `assessment_session_token_unique`, `assessment_session_parent_session_id_idx`) — intentionally kept stable per Story 45-1 scope boundary
+
+## Deferred from: code review of 45-5-fk-column-code-cascade (2026-04-08)
+
+- `exchanges` table definition is missing from `docker/init-db-test.sql` — the table was renamed from `assessment_exchange` to `exchanges` in a prior story but the manual init SQL was not updated to include it
