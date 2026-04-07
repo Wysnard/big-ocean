@@ -20,12 +20,12 @@ import { RelationshipCreditsSection } from "@/components/results/RelationshipCre
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
 import { useTraitEvidence } from "@/components/results/useTraitEvidence";
 import { ArchetypeShareCard } from "@/components/sharing/archetype-share-card";
+import { useAuth } from "@/hooks/use-auth";
 import {
 	getResultsQueryOptions,
-	isAssessmentApiError,
+	isConversationApiError,
 	useGetResults,
-} from "@/hooks/use-assessment";
-import { useAuth } from "@/hooks/use-auth";
+} from "@/hooks/use-conversation";
 import { useFacetEvidence } from "@/hooks/use-evidence";
 import { useToggleVisibility } from "@/hooks/use-profile";
 import { useShareFlow } from "@/hooks/use-share-flow";
@@ -42,7 +42,7 @@ const SessionResultsSearchParams = S.Struct({
 	view: S.optional(S.String),
 });
 
-export const Route = createFileRoute("/results/$assessmentSessionId")({
+export const Route = createFileRoute("/results/$conversationSessionId")({
 	ssr: false,
 	validateSearch: (search) => S.decodeUnknownSync(SessionResultsSearchParams)(search),
 	beforeLoad: async () => {
@@ -56,9 +56,9 @@ export const Route = createFileRoute("/results/$assessmentSessionId")({
 	loader: async ({ params, context }) => {
 		if (!context.isAuthenticated) return;
 		try {
-			await context.queryClient.ensureQueryData(getResultsQueryOptions(params.assessmentSessionId));
+			await context.queryClient.ensureQueryData(getResultsQueryOptions(params.conversationSessionId));
 		} catch (error) {
-			if (isAssessmentApiError(error) && error.status === 404) throw notFound();
+			if (isConversationApiError(error) && error.status === 404) throw notFound();
 			// Graceful degradation: client-side useGetResults will retry
 		}
 	},
@@ -72,11 +72,11 @@ function ResultsLoading() {
 }
 
 function ResultsNotFound() {
-	const { assessmentSessionId } = Route.useParams();
+	const { conversationSessionId } = Route.useParams();
 	return (
 		<NotFound
 			title="Assessment not found"
-			description={`The assessment session ${assessmentSessionId} doesn't exist or you don't have access to it.`}
+			description={`The assessment session ${conversationSessionId} doesn't exist or you don't have access to it.`}
 		/>
 	);
 }
@@ -89,12 +89,12 @@ function getDominantTrait(traits: readonly { name: TraitName; score: number }[])
 }
 
 function ResultsSessionPage() {
-	const { assessmentSessionId } = Route.useParams();
+	const { conversationSessionId } = Route.useParams();
 	const { view } = Route.useSearch();
 	const navigate = useNavigate();
 	const { isAuthenticated, isPending: isAuthPending } = useAuth();
 	const canLoadResults = isAuthenticated && !isAuthPending;
-	const { data: results, isLoading, error } = useGetResults(assessmentSessionId, canLoadResults);
+	const { data: results, isLoading, error } = useGetResults(conversationSessionId, canLoadResults);
 	const toggleVisibility = useToggleVisibility();
 
 	// Story 12.3: Track whether we're waiting for portrait unlock after checkout
@@ -102,7 +102,7 @@ function ResultsSessionPage() {
 
 	// Story 13.3: Poll portrait status when authenticated
 	const { data: portraitStatusData, refetch: refetchPortraitStatus } = usePortraitStatus(
-		canLoadResults ? assessmentSessionId : "",
+		canLoadResults ? conversationSessionId : "",
 		{ waitingForUnlock },
 	);
 
@@ -139,7 +139,7 @@ function ResultsSessionPage() {
 			return;
 
 		// Check sessionStorage to avoid re-opening on page refresh
-		const storageKey = `pwyw-modal-shown-${assessmentSessionId}`;
+		const storageKey = `pwyw-modal-shown-${conversationSessionId}`;
 		if (typeof window !== "undefined" && sessionStorage.getItem(storageKey)) return;
 
 		const timer = setTimeout(() => {
@@ -151,14 +151,14 @@ function ResultsSessionPage() {
 		}, 2500);
 
 		return () => clearTimeout(timer);
-	}, [canLoadResults, results, effectivePortraitStatus, assessmentSessionId]);
+	}, [canLoadResults, results, effectivePortraitStatus, conversationSessionId]);
 
 	// Story 3.4: Handle Polar checkout for portrait unlock
 	const handlePwywCheckout = useCallback(async () => {
 		setIsCheckoutLoading(true);
 		try {
 			const checkout = await createThemedCheckoutEmbed("portrait-unlock", appTheme, {
-				sessionId: assessmentSessionId,
+				sessionId: conversationSessionId,
 			});
 			// Hide our modal so it doesn't show behind the Polar checkout overlay
 			setShowPwywModal(false);
@@ -175,7 +175,7 @@ function ResultsSessionPage() {
 		} catch {
 			setIsCheckoutLoading(false);
 		}
-	}, [appTheme, assessmentSessionId]);
+	}, [appTheme, conversationSessionId]);
 
 	// Story 3.4: Callback to reopen PWYW modal from the unlock CTA button
 	const handleUnlockPortrait = useCallback(() => {
@@ -197,7 +197,7 @@ function ResultsSessionPage() {
 
 	// Facet evidence for the selected facet (evidence panel)
 	const { data: selectedFacetEvidence } = useFacetEvidence(
-		assessmentSessionId,
+		conversationSessionId,
 		selectedFacet,
 		canLoadResults && !!selectedFacet,
 	);
@@ -225,7 +225,7 @@ function ResultsSessionPage() {
 
 	// Load evidence for selected trait
 	const { data: facetDetails, isLoading: evidenceLoading } = useTraitEvidence(
-		assessmentSessionId,
+		conversationSessionId,
 		selectedTrait,
 		facetScoreMap,
 		facetConfidenceMap,
@@ -235,20 +235,20 @@ function ResultsSessionPage() {
 	// Track 24-hour auth-gate session persistence
 	useEffect(() => {
 		if (isAuthenticated) {
-			clearPendingResultsGateSession(assessmentSessionId);
+			clearPendingResultsGateSession(conversationSessionId);
 			setIsGateExpired(false);
 			return;
 		}
 
 		const pending = readPendingResultsGateSession();
-		if (pending && pending.sessionId === assessmentSessionId) {
+		if (pending && pending.sessionId === conversationSessionId) {
 			setIsGateExpired(pending.expired);
 			return;
 		}
 
-		persistPendingResultsGateSession(assessmentSessionId);
+		persistPendingResultsGateSession(conversationSessionId);
 		setIsGateExpired(false);
-	}, [isAuthenticated, assessmentSessionId]);
+	}, [isAuthenticated, conversationSessionId]);
 
 	// Initialize share state from results data (profile created eagerly by backend)
 	useEffect(() => {
@@ -304,10 +304,10 @@ function ResultsSessionPage() {
 	}, []);
 
 	const handleAuthSuccess = () => {
-		clearPendingResultsGateSession(assessmentSessionId);
+		clearPendingResultsGateSession(conversationSessionId);
 		void navigate({
-			to: "/results/$assessmentSessionId",
-			params: { assessmentSessionId: assessmentSessionId },
+			to: "/results/$conversationSessionId",
+			params: { conversationSessionId: conversationSessionId },
 			replace: true,
 		});
 	};
@@ -321,11 +321,11 @@ function ResultsSessionPage() {
 	const handleBackToProfile = useCallback(
 		() =>
 			navigate({
-				to: "/results/$assessmentSessionId",
-				params: { assessmentSessionId },
+				to: "/results/$conversationSessionId",
+				params: { conversationSessionId },
 				search: {},
 			}),
-		[navigate, assessmentSessionId],
+		[navigate, conversationSessionId],
 	);
 
 	if (isAuthPending) {
@@ -342,7 +342,7 @@ function ResultsSessionPage() {
 	if (!isAuthenticated) {
 		return (
 			<ResultsAuthGate
-				sessionId={assessmentSessionId}
+				sessionId={conversationSessionId}
 				expired={isGateExpired}
 				onAuthSuccess={handleAuthSuccess}
 				onStartFresh={handleStartFresh}
@@ -354,11 +354,11 @@ function ResultsSessionPage() {
 		return <ResultsLoading />;
 	}
 
-	if (error && isAssessmentApiError(error) && error.status === 404) {
+	if (error && isConversationApiError(error) && error.status === 404) {
 		return (
 			<NotFound
 				title="Assessment not found"
-				description={`The assessment session ${assessmentSessionId} doesn't exist or you don't have access to it.`}
+				description={`The assessment session ${conversationSessionId} doesn't exist or you don't have access to it.`}
 			/>
 		);
 	}
@@ -372,7 +372,7 @@ function ResultsSessionPage() {
 						{error?.message || "Your assessment may not be complete yet."}
 					</p>
 					<Button asChild>
-						<Link to="/chat" search={{ sessionId: assessmentSessionId }}>
+						<Link to="/chat" search={{ sessionId: conversationSessionId }}>
 							<MessageCircle className="w-4 h-4 mr-2" />
 							Continue Assessment
 						</Link>
@@ -442,7 +442,7 @@ function ResultsSessionPage() {
 				}
 				quickActions={
 					<QuickActionsCard
-						sessionId={assessmentSessionId}
+						sessionId={conversationSessionId}
 						publicProfileId={shareState?.publicProfileId}
 					/>
 				}
@@ -479,8 +479,8 @@ function ResultsSessionPage() {
 							{portraitStatusData?.portrait?.content && (
 								<Button data-testid="results-read-portrait" asChild variant="outline" className="min-h-11">
 									<Link
-										to="/results/$assessmentSessionId"
-										params={{ assessmentSessionId }}
+										to="/results/$conversationSessionId"
+										params={{ conversationSessionId }}
 										search={{ view: "portrait" }}
 									>
 										<BookOpen className="w-4 h-4 mr-2" />
@@ -489,7 +489,7 @@ function ResultsSessionPage() {
 								</Button>
 							)}
 							<Button data-testid="results-continue-chat" asChild variant="outline" className="min-h-11">
-								<Link to="/chat" search={{ sessionId: assessmentSessionId }}>
+								<Link to="/chat" search={{ sessionId: conversationSessionId }}>
 									<MessageCircle className="w-4 h-4 mr-2" />
 									Continue Chat
 								</Link>

@@ -1,12 +1,12 @@
 /**
- * Assessment HTTP Hooks
+ * Conversation HTTP Hooks
  *
- * React hooks for type-safe assessment operations using TanStack Query.
+ * React hooks for type-safe conversation operations using TanStack Query.
  * Uses Effect HttpApiClient for type-safe API calls via @workspace/contracts.
  */
 
 import { keepPreviousData, queryOptions, useMutation, useQuery } from "@tanstack/react-query";
-import type { SendMessageRequest, StartAssessmentRequest } from "@workspace/contracts";
+import type { SendMessageRequest, StartConversationRequest } from "@workspace/contracts";
 import { Effect } from "effect";
 import { makeApiClient } from "../lib/api-client";
 
@@ -14,60 +14,60 @@ import { makeApiClient } from "../lib/api-client";
  * Structured API error for backward-compatible error detection.
  * Used by the results route loader and component to detect 404s.
  */
-export class AssessmentApiError extends Error {
+export class ConversationApiError extends Error {
 	readonly status: number;
 	readonly details: unknown;
 
 	constructor(status: number, message: string, details: unknown) {
 		super(message);
-		this.name = "AssessmentApiError";
+		this.name = "ConversationApiError";
 		this.status = status;
 		this.details = details;
 	}
 }
 
-export const isAssessmentApiError = (error: unknown): error is AssessmentApiError =>
-	error instanceof AssessmentApiError;
+export const isConversationApiError = (error: unknown): error is ConversationApiError =>
+	error instanceof ConversationApiError;
 
 /**
- * Start a new assessment session
+ * Start a new conversation session
  */
-export function useStartAssessment() {
+export function useStartConversation() {
 	return useMutation({
-		mutationKey: ["assessment", "start"],
-		mutationFn: (input: StartAssessmentRequest = {}) =>
+		mutationKey: ["conversation", "start"],
+		mutationFn: (input: StartConversationRequest = {}) =>
 			Effect.gen(function* () {
 				const client = yield* makeApiClient;
-				return yield* client.assessment.start({ payload: input });
+				return yield* client.conversation.start({ payload: input });
 			}).pipe(Effect.runPromise),
 	});
 }
 
 /**
- * Send a message in an assessment session
+ * Send a message in a conversation session
  */
 export function useSendMessage() {
 	return useMutation({
-		mutationKey: ["assessment", "sendMessage"],
+		mutationKey: ["conversation", "sendMessage"],
 		mutationFn: (input: SendMessageRequest) =>
 			Effect.gen(function* () {
 				const client = yield* makeApiClient;
-				return yield* client.assessment.sendMessage({ payload: input });
+				return yield* client.conversation.sendMessage({ payload: input });
 			}).pipe(Effect.runPromise),
 	});
 }
 
 /**
- * Fetch assessment results (non-hook)
+ * Fetch conversation results (non-hook)
  *
  * Standalone function for use in route loaders and other non-React contexts.
  * The Promise .catch() converts FiberFailure (from Effect.runPromise) into a real
- * AssessmentApiError instance so instanceof checks work in the loader and component.
+ * ConversationApiError instance so instanceof checks work in the loader and component.
  */
 export function fetchResults(sessionId: string) {
 	return Effect.gen(function* () {
 		const client = yield* makeApiClient;
-		return yield* client.assessment.getResults({ path: { sessionId } });
+		return yield* client.conversation.getResults({ path: { sessionId } });
 	})
 		.pipe(Effect.runPromise)
 		.catch((e: unknown) => {
@@ -78,26 +78,26 @@ export function fetchResults(sessionId: string) {
 				: str.includes("SessionNotCompleted")
 					? 409
 					: 500;
-			throw new AssessmentApiError(status, msg, e);
+			throw new ConversationApiError(status, msg, e);
 		});
 }
 
 /**
- * Query options for assessment results
+ * Query options for conversation results
  *
  * Shared between useGetResults hook and route loader to ensure consistent
  * query key, function, and staleTime for SSR hydration.
  */
 export function getResultsQueryOptions(sessionId: string) {
 	return queryOptions({
-		queryKey: ["assessment", "results", sessionId],
+		queryKey: ["conversation", "results", sessionId],
 		queryFn: () => fetchResults(sessionId),
 		staleTime: 5 * 60 * 1000,
 	});
 }
 
 /**
- * Get assessment results
+ * Get conversation results
  *
  * Retrieves final personality assessment results including OCEAN code and archetype.
  *
@@ -112,7 +112,7 @@ export function useGetResults(sessionId: string, enabled = true) {
 }
 
 /**
- * Resume an existing assessment session
+ * Resume an existing conversation session
  *
  * Loads message history and current state for a previously started session.
  *
@@ -121,11 +121,11 @@ export function useGetResults(sessionId: string, enabled = true) {
  */
 export function useResumeSession(sessionId: string, enabled = true) {
 	return useQuery({
-		queryKey: ["assessment", "session", sessionId],
+		queryKey: ["conversation", "session", sessionId],
 		queryFn: () =>
 			Effect.gen(function* () {
 				const client = yield* makeApiClient;
-				return yield* client.assessment.resumeSession({ path: { sessionId } });
+				return yield* client.conversation.resumeSession({ path: { sessionId } });
 			}).pipe(Effect.runPromise),
 		enabled: enabled && !!sessionId,
 		placeholderData: keepPreviousData,
@@ -133,33 +133,33 @@ export function useResumeSession(sessionId: string, enabled = true) {
 }
 
 /**
- * Query options factory for listing assessments.
+ * Query options factory for listing conversations.
  * Use with queryClient.fetchQuery() for imperative fetching (e.g., post-auth verification).
  */
-export function listAssessmentsQueryOptions() {
+export function listConversationsQueryOptions() {
 	return queryOptions({
-		queryKey: ["assessments", "list"],
+		queryKey: ["conversations", "list"],
 		queryFn: () =>
 			Effect.gen(function* () {
 				const client = yield* makeApiClient;
-				return yield* client.assessment.listSessions();
+				return yield* client.conversation.listSessions();
 			}).pipe(Effect.runPromise),
 		staleTime: 5 * 60 * 1000,
 	});
 }
 
 /**
- * List assessment sessions for the authenticated user (Story 7.13)
+ * List conversation sessions for the authenticated user (Story 7.13)
  */
-export function useListAssessments(enabled = true) {
+export function useListConversations(enabled = true) {
 	return useQuery({
-		...listAssessmentsQueryOptions(),
+		...listConversationsQueryOptions(),
 		enabled,
 	});
 }
 
 /**
- * Get conversation transcript for a completed assessment session (Story 12.2)
+ * Get conversation transcript for a completed session (Story 12.2)
  *
  * Returns all messages with IDs for evidence linking in the transcript panel.
  * Cached with staleTime: Infinity since transcripts are immutable for completed sessions.
@@ -169,11 +169,11 @@ export function useListAssessments(enabled = true) {
  */
 export function useConversationTranscript(sessionId: string, enabled = true) {
 	return useQuery({
-		queryKey: ["assessment", "transcript", sessionId],
+		queryKey: ["conversation", "transcript", sessionId],
 		queryFn: () =>
 			Effect.gen(function* () {
 				const client = yield* makeApiClient;
-				return yield* client.assessment.getTranscript({ path: { sessionId } });
+				return yield* client.conversation.getTranscript({ path: { sessionId } });
 			}).pipe(Effect.runPromise),
 		enabled: enabled && !!sessionId,
 		staleTime: Number.POSITIVE_INFINITY,

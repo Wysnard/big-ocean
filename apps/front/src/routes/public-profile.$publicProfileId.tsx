@@ -30,7 +30,7 @@ import { PsychedelicBackground } from "@/components/results/PsychedelicBackgroun
 import type { AuthState } from "@/components/results/PublicProfileCTA";
 import { PublicProfileCTA } from "@/components/results/PublicProfileCTA";
 import { TraitBand } from "@/components/results/TraitBand";
-import { useListAssessments } from "../hooks/use-assessment";
+import { useListConversations } from "../hooks/use-conversation";
 import { getPublicProfileQueryOptions, useGetPublicProfile } from "../hooks/use-profile";
 import { getSession } from "../lib/auth-client";
 import { generateOgMetaTags } from "../lib/og-meta-tags";
@@ -251,8 +251,8 @@ function ProfilePage() {
 	const profile = loaderData?.profile ?? hookProfile;
 
 	// Derive auth state from existing React Query hook
-	const { data: assessmentData } = useListAssessments(isAuthenticated);
-	const hasCompletedAssessment = (assessmentData?.sessions ?? []).some(
+	const { data: conversationData } = useListConversations(isAuthenticated);
+	const hasCompletedAssessment = (conversationData?.sessions ?? []).some(
 		(s) => s.status === "completed",
 	);
 

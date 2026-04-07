@@ -676,7 +676,7 @@ function ChatContent({
 				{(isCompleted || isFarewellReceived) && isAuthenticated ? (
 					<div className="flex justify-center py-4 px-4">
 						<Button asChild variant="outline" className="min-h-11">
-							<Link to="/results/$assessmentSessionId" params={{ assessmentSessionId: sessionId }}>
+							<Link to="/results/$conversationSessionId" params={{ conversationSessionId: sessionId }}>
 								View Results
 							</Link>
 						</Button>

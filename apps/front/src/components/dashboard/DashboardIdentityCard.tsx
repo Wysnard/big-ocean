@@ -120,7 +120,7 @@ export function DashboardIdentityCard({
 
 			<CardFooter className="relative z-10">
 				<Button variant="outline" className="w-full min-h-11" asChild>
-					<Link to="/results/$assessmentSessionId" params={{ assessmentSessionId: sessionId }}>
+					<Link to="/results/$conversationSessionId" params={{ conversationSessionId: sessionId }}>
 						View Full Results
 						<ArrowRight className="w-4 h-4 ml-2" />
 					</Link>

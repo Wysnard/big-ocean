@@ -10,8 +10,8 @@ import { useState } from "react";
 import { AccountDeletionSection } from "../components/settings/AccountDeletionSection";
 import { ProfileVisibilitySection } from "../components/settings/ProfileVisibilitySection";
 import { useDeleteAccount } from "../hooks/use-account";
-import { useGetResults, useListAssessments } from "../hooks/use-assessment";
 import { useAuth } from "../hooks/use-auth";
+import { useGetResults, useListConversations } from "../hooks/use-conversation";
 import { useToggleVisibility } from "../hooks/use-profile";
 import { getSession, signOut } from "../lib/auth-client";
 
@@ -29,12 +29,12 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
 	const { user } = useAuth();
 	const navigate = useNavigate();
-	const { data: assessmentData, isLoading: isAssessmentsLoading } = useListAssessments(true);
+	const { data: conversationData, isLoading: isConversationsLoading } = useListConversations(true);
 	const toggleVisibility = useToggleVisibility();
 	const deleteAccountMutation = useDeleteAccount();
 
 	// Find the completed session
-	const completedSession = assessmentData?.sessions.find((s) => s.status === "completed");
+	const completedSession = conversationData?.sessions.find((s) => s.status === "completed");
 
 	// Use the existing hook to fetch results (leverages TanStack Query cache)
 	const { data: results } = useGetResults(completedSession?.id ?? "", !!completedSession);
@@ -88,7 +88,7 @@ function SettingsPage() {
 
 				{/* Settings sections */}
 				<div className="flex flex-col gap-6">
-					{isAssessmentsLoading ? (
+					{isConversationsLoading ? (
 						<div className="rounded-2xl border border-border bg-card p-6 animate-pulse">
 							<div className="h-5 w-40 rounded bg-muted mb-3" />
 							<div className="h-4 w-64 rounded bg-muted mb-4" />

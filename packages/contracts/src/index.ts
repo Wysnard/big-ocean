@@ -16,8 +16,8 @@ export { BigOceanApi } from "./http/api";
 export * from "./http/groups/account";
 export { AccountGroup } from "./http/groups/account";
 // HTTP Schemas and Types
-export * from "./http/groups/assessment";
-export { AssessmentGroup } from "./http/groups/assessment";
+export * from "./http/groups/conversation";
+export { ConversationGroup } from "./http/groups/conversation";
 // Email HTTP Schemas and Types (Story 31-7)
 export { EmailGroup } from "./http/groups/email";
 // Evidence HTTP Schemas and Types
@@ -45,5 +45,5 @@ export { AuthMiddleware, OptionalAuthMiddleware } from "./middleware/auth";
 // Shared Schemas & Types
 export * from "./schemas/evidence";
 export * from "./schemas/ocean-code";
-// Assessment Token Security (Story 9.1)
-export { AssessmentTokenSecurity } from "./security/assessment-token";
+// Conversation Token Security (Story 9.1)
+export { ConversationTokenSecurity } from "./security/conversation-token";

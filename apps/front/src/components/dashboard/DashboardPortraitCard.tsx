@@ -95,8 +95,8 @@ export function DashboardPortraitCard({
 				{isReady && (
 					<Button variant="outline" className="w-full min-h-11" asChild>
 						<Link
-							to="/results/$assessmentSessionId"
-							params={{ assessmentSessionId: sessionId }}
+							to="/results/$conversationSessionId"
+							params={{ conversationSessionId: sessionId }}
 							search={{ view: "portrait" }}
 						>
 							<BookOpen className="w-4 h-4 mr-2" />
@@ -107,7 +107,7 @@ export function DashboardPortraitCard({
 
 				{isFailed && (
 					<Button variant="outline" className="w-full min-h-11" asChild>
-						<Link to="/results/$assessmentSessionId" params={{ assessmentSessionId: sessionId }}>
+						<Link to="/results/$conversationSessionId" params={{ conversationSessionId: sessionId }}>
 							Go to Results
 						</Link>
 					</Button>

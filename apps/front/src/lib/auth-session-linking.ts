@@ -62,7 +62,7 @@ export function buildPostAuthRedirect(options?: {
 
 	if (options?.sessionId) {
 		if (url.pathname === "/results") {
-			// Results uses path params: /results/$assessmentSessionId
+			// Results uses path params: /results/$conversationSessionId
 			url.pathname = `/results/${encodeURIComponent(options.sessionId)}`;
 		} else if (url.pathname === "/chat" && !url.searchParams.has("sessionId")) {
 			url.searchParams.set("sessionId", options.sessionId);

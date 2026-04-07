@@ -1,6 +1,6 @@
 import { cn } from "@workspace/ui/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useGetResults } from "@/hooks/use-assessment";
+import { useGetResults } from "@/hooks/use-conversation";
 
 /** Nerin-voiced rotating lines displayed during portrait generation */
 const WAIT_LINES = [

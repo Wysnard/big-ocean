@@ -1,5 +1,5 @@
 /**
- * Assessment Presenters (HTTP Handlers)
+ * Conversation Presenters (HTTP Handlers)
  *
  * Thin presenter layer that connects HTTP requests to use cases.
  * Handles HTTP request/response transformation only.
@@ -10,8 +10,8 @@
 
 import { HttpApiBuilder } from "@effect/platform";
 import {
-	AssessmentTokenSecurity,
 	BigOceanApi,
+	ConversationTokenSecurity,
 	DatabaseError,
 	Unauthorized,
 } from "@workspace/contracts";
@@ -38,7 +38,7 @@ import {
 	startAuthenticatedAssessment,
 } from "../use-cases/index";
 
-export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment", (handlers) =>
+export const ConversationGroupLive = HttpApiBuilder.group(BigOceanApi, "conversation", (handlers) =>
 	Effect.gen(function* () {
 		return handlers
 			.handle("start", ({ payload }) =>
@@ -48,7 +48,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 
 					// Story 9.1: If anonymous (no userId), check for existing session via cookie
 					if (!userId) {
-						const token = yield* HttpApiBuilder.securityDecode(AssessmentTokenSecurity).pipe(
+						const token = yield* HttpApiBuilder.securityDecode(ConversationTokenSecurity).pipe(
 							Effect.map((redacted) => Redacted.value(redacted)),
 							Effect.catchAll(() => Effect.succeed("")),
 						);
@@ -63,13 +63,13 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 
 								// Refresh cookie on successful resumption
 								yield* HttpApiBuilder.securitySetCookie(
-									AssessmentTokenSecurity,
+									ConversationTokenSecurity,
 									session.sessionToken ?? token,
 									{
 										httpOnly: true,
 										secure: true,
 										sameSite: "lax",
-										path: "/api/assessment",
+										path: "/api/conversation",
 										maxAge: "30 days",
 									},
 								);
@@ -96,11 +96,11 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 					const sessionToken =
 						"sessionToken" in result ? (result as { sessionToken: string }).sessionToken : undefined;
 					if (sessionToken) {
-						yield* HttpApiBuilder.securitySetCookie(AssessmentTokenSecurity, sessionToken, {
+						yield* HttpApiBuilder.securitySetCookie(ConversationTokenSecurity, sessionToken, {
 							httpOnly: true,
 							secure: true,
 							sameSite: "lax",
-							path: "/api/assessment",
+							path: "/api/conversation",
 							maxAge: "30 days",
 						});
 					}
@@ -159,7 +159,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 			.handle("sendMessage", ({ payload }) =>
 				Effect.gen(function* () {
 					// Story 9.2: Dual auth — try anonymous cookie first, fall back to Better Auth
-					const token = yield* HttpApiBuilder.securityDecode(AssessmentTokenSecurity).pipe(
+					const token = yield* HttpApiBuilder.securityDecode(ConversationTokenSecurity).pipe(
 						Effect.map((redacted) => Redacted.value(redacted)),
 						Effect.catchAll(() => Effect.succeed("")),
 					);

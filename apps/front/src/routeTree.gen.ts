@@ -19,7 +19,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
-import { Route as ResultsAssessmentSessionIdRouteImport } from './routes/results/$assessmentSessionId'
+import { Route as ResultsConversationSessionIdRouteImport } from './routes/results/$conversationSessionId'
 import { Route as RelationshipAnalysisIdRouteImport } from './routes/relationship/$analysisId'
 import { Route as PublicProfilePublicProfileIdRouteImport } from './routes/public-profile.$publicProfileId'
 import { Route as DevComponentsRouteImport } from './routes/dev/components'
@@ -76,10 +76,10 @@ const ChatIndexRoute = ChatIndexRouteImport.update({
   path: '/chat/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResultsAssessmentSessionIdRoute =
-  ResultsAssessmentSessionIdRouteImport.update({
-    id: '/$assessmentSessionId',
-    path: '/$assessmentSessionId',
+const ResultsConversationSessionIdRoute =
+  ResultsConversationSessionIdRouteImport.update({
+    id: '/$conversationSessionId',
+    path: '/$conversationSessionId',
     getParentRoute: () => ResultsRoute,
   } as any)
 const RelationshipAnalysisIdRoute = RelationshipAnalysisIdRouteImport.update({
@@ -123,7 +123,7 @@ export interface FileRoutesByFullPath {
   '/dev/components': typeof DevComponentsRoute
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
-  '/results/$assessmentSessionId': typeof ResultsAssessmentSessionIdRoute
+  '/results/$conversationSessionId': typeof ResultsConversationSessionIdRoute
   '/chat/': typeof ChatIndexRoute
   '/relationship/$analysisId/ritual': typeof RelationshipAnalysisIdRitualRoute
   '/relationship/qr/$token': typeof RelationshipQrTokenRoute
@@ -141,7 +141,7 @@ export interface FileRoutesByTo {
   '/dev/components': typeof DevComponentsRoute
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
-  '/results/$assessmentSessionId': typeof ResultsAssessmentSessionIdRoute
+  '/results/$conversationSessionId': typeof ResultsConversationSessionIdRoute
   '/chat': typeof ChatIndexRoute
   '/relationship/$analysisId/ritual': typeof RelationshipAnalysisIdRitualRoute
   '/relationship/qr/$token': typeof RelationshipQrTokenRoute
@@ -160,7 +160,7 @@ export interface FileRoutesById {
   '/dev/components': typeof DevComponentsRoute
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
-  '/results/$assessmentSessionId': typeof ResultsAssessmentSessionIdRoute
+  '/results/$conversationSessionId': typeof ResultsConversationSessionIdRoute
   '/chat/': typeof ChatIndexRoute
   '/relationship/$analysisId_/ritual': typeof RelationshipAnalysisIdRitualRoute
   '/relationship/qr/$token': typeof RelationshipQrTokenRoute
@@ -180,7 +180,7 @@ export interface FileRouteTypes {
     | '/dev/components'
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
-    | '/results/$assessmentSessionId'
+    | '/results/$conversationSessionId'
     | '/chat/'
     | '/relationship/$analysisId/ritual'
     | '/relationship/qr/$token'
@@ -198,7 +198,7 @@ export interface FileRouteTypes {
     | '/dev/components'
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
-    | '/results/$assessmentSessionId'
+    | '/results/$conversationSessionId'
     | '/chat'
     | '/relationship/$analysisId/ritual'
     | '/relationship/qr/$token'
@@ -216,7 +216,7 @@ export interface FileRouteTypes {
     | '/dev/components'
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
-    | '/results/$assessmentSessionId'
+    | '/results/$conversationSessionId'
     | '/chat/'
     | '/relationship/$analysisId_/ritual'
     | '/relationship/qr/$token'
@@ -312,11 +312,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/results/$assessmentSessionId': {
-      id: '/results/$assessmentSessionId'
-      path: '/$assessmentSessionId'
-      fullPath: '/results/$assessmentSessionId'
-      preLoaderRoute: typeof ResultsAssessmentSessionIdRouteImport
+    '/results/$conversationSessionId': {
+      id: '/results/$conversationSessionId'
+      path: '/$conversationSessionId'
+      fullPath: '/results/$conversationSessionId'
+      preLoaderRoute: typeof ResultsConversationSessionIdRouteImport
       parentRoute: typeof ResultsRoute
     }
     '/relationship/$analysisId': {
@@ -358,11 +358,11 @@ declare module '@tanstack/react-router' {
 }
 
 interface ResultsRouteChildren {
-  ResultsAssessmentSessionIdRoute: typeof ResultsAssessmentSessionIdRoute
+  ResultsConversationSessionIdRoute: typeof ResultsConversationSessionIdRoute
 }
 
 const ResultsRouteChildren: ResultsRouteChildren = {
-  ResultsAssessmentSessionIdRoute: ResultsAssessmentSessionIdRoute,
+  ResultsConversationSessionIdRoute: ResultsConversationSessionIdRoute,
 }
 
 const ResultsRouteWithChildren =
@@ -388,12 +388,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

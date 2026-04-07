@@ -56,7 +56,7 @@ export const Route = createFileRoute("/chat/")({
 		if (!search.sessionId && !search.waitlist) {
 			const result = await Effect.gen(function* () {
 				const client = yield* makeApiClient;
-				return yield* client.assessment.start({ payload: {} });
+				return yield* client.conversation.start({ payload: {} });
 			}).pipe(
 				Effect.catchTag("GlobalAssessmentLimitReached", () =>
 					Effect.succeed({ _tag: "waitlist" as const }),
@@ -91,7 +91,7 @@ export const Route = createFileRoute("/chat/")({
 			try {
 				const data = await Effect.gen(function* () {
 					const client = yield* makeApiClient;
-					return yield* client.assessment.listSessions();
+					return yield* client.conversation.listSessions();
 				}).pipe(Effect.runPromise);
 
 				const linked = data.sessions.some((s) => s.id === search.sessionId);
@@ -142,8 +142,8 @@ function RouteComponent() {
 	const handlePortraitReveal = useCallback(() => {
 		if (sessionId) {
 			navigate({
-				to: "/results/$assessmentSessionId",
-				params: { assessmentSessionId: sessionId },
+				to: "/results/$conversationSessionId",
+				params: { conversationSessionId: sessionId },
 				search: { view: "portrait" },
 			});
 		}

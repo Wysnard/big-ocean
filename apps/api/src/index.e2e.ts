@@ -49,7 +49,7 @@ import { RedisIoRedisRepositoryLive } from "@workspace/infrastructure/repositori
 import { UserAccountDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/user-account.drizzle.repository";
 import { Cause, Context, Effect, Layer, Queue } from "effect";
 import { AccountGroupLive } from "./handlers/account";
-import { AssessmentGroupLive } from "./handlers/assessment";
+import { ConversationGroupLive } from "./handlers/conversation";
 import { EmailGroupLive } from "./handlers/email";
 import { EvidenceGroupLive } from "./handlers/evidence";
 import { HealthGroupLive } from "./handlers/health";
@@ -155,7 +155,7 @@ const AuthMiddlewareLayer = Layer.mergeAll(AuthMiddlewareLive, OptionalAuthMiddl
 const HttpGroupsLive = Layer.mergeAll(
 	HealthGroupLive,
 	AccountGroupLive,
-	AssessmentGroupLive,
+	ConversationGroupLive,
 	ProfileGroupLive,
 	PortraitGroupLive,
 	EvidenceGroupLive,

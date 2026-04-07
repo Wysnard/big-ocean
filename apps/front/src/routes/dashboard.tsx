@@ -14,8 +14,8 @@ import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState"
 import { DashboardIdentityCard } from "@/components/dashboard/DashboardIdentityCard";
 import { DashboardInProgressCard } from "@/components/dashboard/DashboardInProgressCard";
 import { DashboardRelationshipsCard } from "@/components/dashboard/DashboardRelationshipsCard";
-import { useGetResults, useListAssessments } from "@/hooks/use-assessment";
 import { useAuth } from "@/hooks/use-auth";
+import { useGetResults, useListConversations } from "@/hooks/use-conversation";
 import { useCredits } from "@/hooks/useCredits";
 import { useRelationshipAnalysesList } from "@/hooks/useRelationshipAnalysesList";
 import { getSession } from "@/lib/auth-client";
@@ -43,10 +43,11 @@ function DashboardPage() {
 	const canLoad = !!isAuthenticated && !isAuthPending;
 
 	// Fetch user's assessments
-	const { data: assessmentData, isLoading: isAssessmentsLoading } = useListAssessments(canLoad);
+	const { data: conversationData, isLoading: isConversationsLoading } =
+		useListConversations(canLoad);
 
 	// Get the latest completed session
-	const latestSession = assessmentData?.sessions.find((s) => s.status === "completed");
+	const latestSession = conversationData?.sessions.find((s) => s.status === "completed");
 	const sessionId = latestSession?.id ?? "";
 
 	// Fetch results for the latest completed session
@@ -56,7 +57,7 @@ function DashboardPage() {
 	);
 
 	// Check for in-progress session (not completed)
-	const inProgressSession = assessmentData?.sessions.find((s) => s.status !== "completed");
+	const inProgressSession = conversationData?.sessions.find((s) => s.status !== "completed");
 
 	// Relationship analyses
 	const { data: analyses, isLoading: isAnalysesLoading } = useRelationshipAnalysesList(canLoad);
@@ -64,7 +65,7 @@ function DashboardPage() {
 	// Credits
 	const { data: credits, isLoading: isCreditsLoading } = useCredits(canLoad);
 
-	if (isAuthPending || isAssessmentsLoading) {
+	if (isAuthPending || isConversationsLoading) {
 		return (
 			<div className="min-h-[calc(100dvh-3.5rem)] bg-background flex items-center justify-center px-6">
 				<div className="text-center">
@@ -94,7 +95,7 @@ function DashboardPage() {
 						<DashboardInProgressCard
 							sessionId={inProgressSession.id}
 							messageCount={inProgressSession.messageCount}
-							freeTierMessageThreshold={assessmentData?.freeTierMessageThreshold ?? 0}
+							freeTierMessageThreshold={conversationData?.freeTierMessageThreshold ?? 0}
 						/>
 
 						{/* Credits card */}

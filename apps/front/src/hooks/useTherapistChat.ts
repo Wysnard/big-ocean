@@ -4,7 +4,7 @@ import { Effect } from "effect";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { makeApiClient } from "../lib/api-client";
-import { AssessmentApiError, useResumeSession } from "./use-assessment";
+import { ConversationApiError, useResumeSession } from "./use-conversation";
 
 interface Message {
 	id: string;
@@ -44,7 +44,7 @@ function parseApiError(error: unknown): {
 	message: string;
 	type: "session" | "budget" | "rate-limit" | "limit-reached" | "network" | "generic";
 } {
-	if (error instanceof AssessmentApiError) {
+	if (error instanceof ConversationApiError) {
 		if (error.status === 403) {
 			return {
 				message: "You've reached the message limit. View your results!",
@@ -146,7 +146,7 @@ export function useTherapistChat(sessionId: string) {
 		error: resumeError,
 	} = useResumeSession(sessionId);
 	const isResumeSessionNotFound =
-		resumeError instanceof AssessmentApiError
+		resumeError instanceof ConversationApiError
 			? resumeError.status === 404
 			: resumeError instanceof Error &&
 				(resumeError.message.includes("404") || resumeError.message.includes("SessionNotFound"));
@@ -158,7 +158,7 @@ export function useTherapistChat(sessionId: string) {
 		mutationFn: (input: SendMessageRequest) =>
 			Effect.gen(function* () {
 				const client = yield* makeApiClient;
-				return yield* client.assessment.sendMessage({ payload: input });
+				return yield* client.conversation.sendMessage({ payload: input });
 			}).pipe(Effect.runPromise),
 
 		onMutate: async ({ message }) => {

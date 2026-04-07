@@ -1,7 +1,7 @@
 /**
- * Assessment HTTP API Group
+ * Conversation HTTP API Group
  *
- * Defines assessment endpoints for personality evaluation.
+ * Defines conversation endpoints for personality evaluation.
  * Pattern from: effect-worker-mono/packages/contracts/src/http/groups/*.ts
  */
 
@@ -33,18 +33,18 @@ import { OptionalAuthMiddleware } from "../../middleware/auth";
 import { OceanCode4Schema, OceanCode5Schema } from "../../schemas/ocean-code";
 
 /**
- * Start Assessment Request Schema
+ * Start Conversation Request Schema
  */
-export const StartAssessmentRequestSchema = S.Struct({
+export const StartConversationRequestSchema = S.Struct({
 	userId: S.optional(S.String),
 });
 
 /**
- * Start Assessment Response Schema
+ * Start Conversation Response Schema
  *
  * Returns session metadata plus the 3 persisted Nerin greeting messages.
  */
-export const StartAssessmentResponseSchema = S.Struct({
+export const StartConversationResponseSchema = S.Struct({
 	sessionId: S.String,
 	createdAt: S.DateTimeUtc,
 	messages: S.Array(
@@ -210,22 +210,22 @@ export const ActivateExtensionResponseSchema = S.Struct({
 });
 
 /**
- * Assessment API Group
+ * Conversation API Group
  *
  * Routes:
- * - POST /api/assessment/start - Start new assessment session
- * - POST /api/assessment/message - Send message to assessment agent
- * - GET /api/assessment/:sessionId/results - Get assessment results
- * - GET /api/assessment/:sessionId/resume - Resume existing session
- * - GET /api/assessment/:sessionId/transcript - Get conversation transcript (Story 12.2)
- * - GET /api/assessment/sessions - List user's assessment sessions (Story 7.13)
- * - POST /api/assessment/activate-extension - Activate conversation extension (Story 36-1)
+ * - POST /api/conversation/start - Start new conversation session
+ * - POST /api/conversation/message - Send message to conversation agent
+ * - GET /api/conversation/:sessionId/results - Get conversation results
+ * - GET /api/conversation/:sessionId/resume - Resume existing session
+ * - GET /api/conversation/:sessionId/transcript - Get conversation transcript (Story 12.2)
+ * - GET /api/conversation/sessions - List user's conversation sessions (Story 7.13)
+ * - POST /api/conversation/activate-extension - Activate conversation extension (Story 36-1)
  */
-export const AssessmentGroup = HttpApiGroup.make("assessment")
+export const ConversationGroup = HttpApiGroup.make("conversation")
 	.add(
 		HttpApiEndpoint.post("start", "/start")
-			.addSuccess(StartAssessmentResponseSchema)
-			.setPayload(StartAssessmentRequestSchema)
+			.addSuccess(StartConversationResponseSchema)
+			.setPayload(StartConversationRequestSchema)
 			.addError(AssessmentAlreadyExists, { status: 409 })
 			.addError(RateLimitExceeded, { status: 429 })
 			.addError(DatabaseError, { status: 500 })
@@ -303,11 +303,11 @@ export const AssessmentGroup = HttpApiGroup.make("assessment")
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.middleware(OptionalAuthMiddleware)
-	.prefix("/assessment");
+	.prefix("/conversation");
 
 // Export TypeScript types for frontend use
-export type StartAssessmentRequest = typeof StartAssessmentRequestSchema.Type;
-export type StartAssessmentResponse = typeof StartAssessmentResponseSchema.Type;
+export type StartConversationRequest = typeof StartConversationRequestSchema.Type;
+export type StartConversationResponse = typeof StartConversationResponseSchema.Type;
 export type SendMessageRequest = typeof SendMessageRequestSchema.Type;
 export type SendMessageResponse = typeof SendMessageResponseSchema.Type;
 export type GetResultsResponse = typeof GetResultsResponseSchema.Type;

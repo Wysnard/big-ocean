@@ -1,5 +1,5 @@
 /**
- * Assessment Token Security
+ * Conversation Token Security
  *
  * HttpApiSecurity.apiKey definition for the anonymous session cookie.
  * Used with HttpApiBuilder.securitySetCookie (to set) and
@@ -9,7 +9,7 @@
  */
 import { HttpApiSecurity } from "@effect/platform";
 
-export const AssessmentTokenSecurity = HttpApiSecurity.apiKey({
+export const ConversationTokenSecurity = HttpApiSecurity.apiKey({
 	in: "cookie",
-	key: "assessment_token",
+	key: "conversation_token",
 });

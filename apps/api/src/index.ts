@@ -48,7 +48,7 @@ import { RedisIoRedisRepositoryLive } from "@workspace/infrastructure/repositori
 import { UserAccountDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/user-account.drizzle.repository";
 import { Cause, Context, Effect, Layer, Queue } from "effect";
 import { AccountGroupLive } from "./handlers/account";
-import { AssessmentGroupLive } from "./handlers/assessment";
+import { ConversationGroupLive } from "./handlers/conversation";
 import { EmailGroupLive } from "./handlers/email";
 import { EvidenceGroupLive } from "./handlers/evidence";
 import { HealthGroupLive } from "./handlers/health";
@@ -166,7 +166,7 @@ const AuthMiddlewareLayer = Layer.mergeAll(AuthMiddlewareLive, OptionalAuthMiddl
 const HttpGroupsLive = Layer.mergeAll(
 	HealthGroupLive,
 	AccountGroupLive,
-	AssessmentGroupLive,
+	ConversationGroupLive,
 	ProfileGroupLive,
 	PortraitGroupLive,
 	EvidenceGroupLive,
@@ -275,10 +275,10 @@ const logStartup = (port: number, frontendUrl: string) =>
 		logger.info("");
 		logger.info("✓ Effect/Platform routes (Effect layer):");
 		logger.info("  - GET  /health");
-		logger.info("  - POST /api/assessment/start");
-		logger.info("  - POST /api/assessment/message");
-		logger.info("  - GET  /api/assessment/:sessionId/resume");
-		logger.info("  - GET  /api/assessment/:sessionId/results");
+		logger.info("  - POST /api/conversation/start");
+		logger.info("  - POST /api/conversation/message");
+		logger.info("  - GET  /api/conversation/:sessionId/resume");
+		logger.info("  - GET  /api/conversation/:sessionId/results");
 		logger.info("");
 		logger.info("✓ Public Profile routes (Effect layer):");
 		logger.info("  - POST  /api/public-profile/share");

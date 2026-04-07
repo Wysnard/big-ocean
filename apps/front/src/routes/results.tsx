@@ -3,7 +3,7 @@
  *
  * Canonical behavior:
  * - /results -> attempts 24h local resume from localStorage
- * - /results/$assessmentSessionId -> renders session results (child route)
+ * - /results/$conversationSessionId -> renders session results (child route)
  */
 
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
@@ -36,8 +36,8 @@ function ResultsRouteShell() {
 		const pending = readPendingResultsGateSession();
 		if (pending && !pending.expired) {
 			void navigate({
-				to: "/results/$assessmentSessionId",
-				params: { assessmentSessionId: pending.sessionId },
+				to: "/results/$conversationSessionId",
+				params: { conversationSessionId: pending.sessionId },
 				replace: true,
 			});
 			return;
