@@ -781,15 +781,17 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   # EPIC 45: Conversation Calibration — 15-Turn Assessment
   # ADR-39 table renames (assessment_sessions → conversations, etc.),
-  # turn count 25→15, duration text updates, dead code cleanup
-  # Stories: 1.1-1.5 in epics.md
+  # FK column renames, turn count 25→15, duration text updates, dead code cleanup
+  # Stories: 1.1-1.7 in epics.md (1.4-1.5 added via sprint change 2026-04-07)
   # ───────────────────────────────────────────────────────────────
   epic-45: in-progress
   45-1-schema-migration-table-renames: review
   45-2-repository-and-domain-layer-renames: done
-  45-3-handler-contract-and-frontend-renames: backlog
-  45-4-assessment-turn-count-25-to-15: backlog
-  45-5-dead-code-cleanup: backlog
+  45-3-handler-contract-and-frontend-renames: in-progress
+  45-4-fk-column-migration: backlog
+  45-5-fk-column-code-cascade: backlog
+  45-6-assessment-turn-count-25-to-15: backlog
+  45-7-dead-code-cleanup: backlog
   epic-45-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────

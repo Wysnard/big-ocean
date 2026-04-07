@@ -2569,7 +2569,7 @@ ALTER TABLE conversations RENAME COLUMN parent_session_id TO parent_conversation
 | `journal` | `{ entryType: "deep_session" \| "weekly_review", linkedCheckInIds?: string[] }` | Reflective session context |
 | `career` | `{ topic: string, maxExchanges: number }` | Topic-scoped guidance |
 
-**Cascading renames:**
+**Cascading renames — tables and domain layer (Stories 45-1, 45-2 — done):**
 
 | Old | New |
 |-----|-----|
@@ -2582,8 +2582,51 @@ ALTER TABLE conversations RENAME COLUMN parent_session_id TO parent_conversation
 | `AssessmentExchangeRepository` | `ExchangeRepository` |
 | All FK references, use-cases, handlers | Updated to new names |
 
+**Cascading renames — FK columns (pending, two-story split: DB migration first, then TS cascade):**
+
+Every `session_id` and `assessment_session_id` FK that points at `conversations` becomes `conversation_id`. Every `assessment_message_id` FK that points at `messages` becomes `message_id`. Columns referencing `assessment_results` stay unchanged (table name unchanged).
+
+_DB column renames (Story A — migration + Drizzle schema):_
+
+| Table | Current SQL Column | New SQL Column |
+|-------|-------------------|----------------|
+| `conversation_evidence` | `assessment_session_id` | `conversation_id` |
+| `conversation_evidence` | `assessment_message_id` | `message_id` |
+| `assessment_results` | `assessment_session_id` | `conversation_id` |
+| `portrait_ratings` | `assessment_session_id` | `conversation_id` |
+| `exchanges` | `session_id` | `conversation_id` |
+| `messages` | `session_id` | `conversation_id` |
+| `public_profile` | `session_id` | `conversation_id` |
+
+_Drizzle TS property renames (Story B — code cascade through repos, use-cases, tests):_
+
+| Table Object | Current TS Property | New TS Property |
+|-------------|--------------------|--------------------|
+| `conversationEvidence` | `assessmentSessionId` | `conversationId` |
+| `conversationEvidence` | `assessmentMessageId` | `messageId` |
+| `assessmentResults` | `assessmentSessionId` | `conversationId` |
+| `portraitRatings` | `assessmentSessionId` | `conversationId` |
+| `exchange` | `sessionId` | `conversationId` |
+| `message` | `sessionId` | `conversationId` |
+| `publicProfile` | `sessionId` | `conversationId` |
+
+_Index renames (cosmetic, bundled with Story A migration):_
+
+| Current Index | New Index |
+|---|---|
+| `assessment_results_session_id_unique` | `assessment_results_conversation_id_unique` |
+| `assessment_exchange_session_id_idx` | `exchange_conversation_id_idx` |
+| `assessment_exchange_session_turn_unique` | `exchange_conversation_turn_unique` |
+| `assessment_message_session_created_idx` | `message_conversation_created_idx` |
+| `assessment_session_user_id_idx` | `conversation_user_id_idx` |
+| `assessment_session_original_lifetime_unique` | `conversation_original_lifetime_unique` |
+| `assessment_session_token_unique` | `conversation_token_unique` |
+| `assessment_session_parent_session_id_idx` | `conversation_parent_id_idx` |
+
 **What stays unchanged:**
-- `assessment_results` — table name and schema unchanged (assessment-specific)
+- `assessment_results` — table name and all its own columns unchanged (assessment-specific)
+- `assessment_result_id` FK columns in `public_profile`, `purchase_events`, `portraits` — reference unchanged table
+- `user_a_result_id` / `user_b_result_id` in `relationship_analyses` — already generic
 - All existing queries add implicit `WHERE conversation_type = 'assessment'`
 - Derive-at-read patterns unchanged
 

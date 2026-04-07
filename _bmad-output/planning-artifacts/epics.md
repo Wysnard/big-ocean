@@ -198,7 +198,7 @@ NFR29: Personality scores always recomputed from current facet evidence at read 
 Users experience the right-sized ~30-minute conversation (15 turns) with properly named data structures and clear parameter semantics. This epic combines the ADR-39 table renames with the turn count calibration to avoid double-touching 30+ files.
 **FRs covered:** FR1, FR3, FR4, FR5, FR11, FR12, FR13
 **Architecture:** ADR-39 (table renames), assessmentTurnCount parameter
-**Scope:** Schema migration, repo/use-case/handler renames, turn count constant + cascade, user-facing duration text (~30 min), depth meter milestones, prompt updates, test/mock/seed updates, delete dead DashboardPortraitCard.tsx, UX spec duration fixes
+**Scope:** Schema migration, repo/use-case/handler renames, FK column renames (DB + code cascade), turn count constant + cascade, user-facing duration text (~30 min), depth meter milestones, prompt updates, test/mock/seed updates, delete dead DashboardPortraitCard.tsx, UX spec duration fixes
 
 ### Epic 2: Conversation Extension Cleanup
 The MVP product is cleanly scoped — conversation extension is dormant, not accessible, and won't confuse users or create dead-end UI paths. Extension infrastructure preserved for future subscription.
@@ -269,7 +269,51 @@ So that the full stack is consistent.
 **And** `pnpm test:run` passes
 **And** `pnpm build` succeeds
 
-### Story 1.4: Assessment Turn Count — 25→15
+### Story 1.4: FK Column Migration
+
+As a developer,
+I want downstream FK columns to use conversation-consistent naming,
+So that the schema fully reflects ADR-39's multi-conversation semantics.
+
+**Acceptance Criteria:**
+
+**Given** Stories 1.1–1.3 are complete and the tables are already renamed
+**When** the migration runs
+**Then** the following SQL column renames are applied:
+- `conversation_evidence.assessment_session_id` → `conversation_id`
+- `conversation_evidence.assessment_message_id` → `message_id`
+- `assessment_results.assessment_session_id` → `conversation_id`
+- `portrait_ratings.assessment_session_id` → `conversation_id`
+- `exchanges.session_id` → `conversation_id`
+- `messages.session_id` → `conversation_id`
+- `public_profile.session_id` → `conversation_id`
+**And** index names are updated per ADR-39's index rename table
+**And** the migration is a hand-written SQL file in `drizzle/` following existing format
+**And** the Drizzle schema TS property names are updated to match (`sessionId` → `conversationId`, `assessmentSessionId` → `conversationId`, `assessmentMessageId` → `messageId`)
+**And** `defineRelations(...)` references updated
+**And** `pnpm db:migrate` applies cleanly
+**And** `pnpm typecheck` passes (compilation may break — fix only schema-level callers in this story, defer repo/use-case cascade to Story 1.5)
+
+### Story 1.5: FK Column Code Cascade
+
+As a developer,
+I want the codebase to use the renamed FK column properties consistently,
+So that the full stack reflects the final column naming.
+
+**Acceptance Criteria:**
+
+**Given** Story 1.4 migration is applied and Drizzle schema properties are renamed
+**When** the code cascade is complete
+**Then** all repository interfaces and implementations reference the new TS property names
+**And** all use-cases, handlers, and contracts reference the new property names
+**And** all mock repositories updated
+**And** all test files (unit, integration, e2e) updated
+**And** seed scripts updated
+**And** `pnpm typecheck` passes across all packages
+**And** `pnpm test:run` passes
+**And** `pnpm build` succeeds
+
+### Story 1.6: Assessment Turn Count — 25→15
 
 As a user,
 I want the conversation to be 15 turns (~30 minutes),
@@ -288,7 +332,7 @@ So that the assessment is the right length for meaningful personality discovery 
 **And** all test fixtures and seed scripts use `assessmentTurnCount: 15`
 **And** `pnpm test:run` passes
 
-### Story 1.5: Dead Code Cleanup
+### Story 1.7: Dead Code Cleanup
 
 As a developer,
 I want unused code removed,
