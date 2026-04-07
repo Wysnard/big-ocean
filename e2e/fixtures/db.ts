@@ -86,7 +86,7 @@ interface SeedProfile {
 	userId?: string;
 	facets: FacetSeed[];
 	traits: TraitSeed[];
-	/** JSONB confidence map for assessment_session.confidence column */
+	/** JSONB confidence map for conversations.confidence column */
 	confidenceMap: Record<string, number>;
 }
 
@@ -224,14 +224,14 @@ export const test = base.extend<{ db: DbFixture }>({
 				// 1. Remove existing completed/finalizing session for this user (unique constraint)
 				if (profile.userId) {
 					await client.query(
-						`DELETE FROM assessment_session WHERE user_id = $1 AND status IN ('finalizing', 'completed')`,
+						`DELETE FROM conversations WHERE user_id = $1 AND status IN ('finalizing', 'completed')`,
 						[profile.userId],
 					);
 				}
 
-				// 2. Insert assessment_session (clean-slate schema — no confidence column)
+				// 2. Insert conversations (clean-slate schema — no confidence column)
 				const sessionResult = await client.query(
-					`INSERT INTO assessment_session (status, message_count, user_id)
+					`INSERT INTO conversations (status, message_count, user_id)
 					 VALUES ($1, $2, $3)
 					 RETURNING id`,
 					[profile.status ?? "completed", profile.messageCount ?? 12, profile.userId ?? null],
@@ -293,7 +293,7 @@ export const test = base.extend<{ db: DbFixture }>({
 
 				for (const msg of uniqueMessages) {
 					const msgResult = await client.query(
-						`INSERT INTO assessment_message (session_id, content, role, created_at)
+						`INSERT INTO messages (session_id, content, role, created_at)
 						 VALUES ($1, $2, $3, NOW())
 						 RETURNING id`,
 						[sessionId, msg.content, msg.role],
@@ -358,7 +358,7 @@ export const test = base.extend<{ db: DbFixture }>({
 			const client = await pool.connect();
 			try {
 				for (const id of seededSessionIds) {
-					await client.query("DELETE FROM assessment_session WHERE id = $1", [id]);
+					await client.query("DELETE FROM conversations WHERE id = $1", [id]);
 				}
 			} finally {
 				client.release();

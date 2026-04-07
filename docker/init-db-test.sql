@@ -72,7 +72,9 @@ CREATE TABLE "verification" (
 -- Assessment Tables (Story 9.1 — two-tier architecture)
 -- ============================================================================
 
-CREATE TABLE "assessment_session" (
+CREATE TYPE "public"."conversation_type" AS ENUM('assessment', 'extension', 'coach', 'journal', 'career');
+
+CREATE TABLE "conversations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" text,
 	"session_token" text,
@@ -81,10 +83,13 @@ CREATE TABLE "assessment_session" (
 	"message_count" integer DEFAULT 0 NOT NULL,
 	"personal_description" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"parent_conversation_id" uuid,
+	"conversation_type" "conversation_type" NOT NULL DEFAULT 'assessment',
+	"metadata" jsonb
 );
 
-CREATE TABLE "assessment_message" (
+CREATE TABLE "messages" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"session_id" uuid NOT NULL,
 	"user_id" text,
@@ -229,10 +234,10 @@ CREATE INDEX "session_userId_idx" ON "session" ("user_id");
 CREATE INDEX "verification_identifier_idx" ON "verification" ("identifier");
 
 -- Assessment indexes
-CREATE INDEX "assessment_session_user_id_idx" ON "assessment_session" ("user_id");
-CREATE UNIQUE INDEX "assessment_session_user_id_unique" ON "assessment_session" ("user_id") WHERE user_id IS NOT NULL;
-CREATE UNIQUE INDEX "assessment_session_token_unique" ON "assessment_session" ("session_token") WHERE session_token IS NOT NULL;
-CREATE INDEX "assessment_message_session_created_idx" ON "assessment_message" ("session_id", "created_at");
+CREATE INDEX "assessment_session_user_id_idx" ON "conversations" ("user_id");
+CREATE UNIQUE INDEX "assessment_session_user_id_unique" ON "conversations" ("user_id") WHERE user_id IS NOT NULL;
+CREATE UNIQUE INDEX "assessment_session_token_unique" ON "conversations" ("session_token") WHERE session_token IS NOT NULL;
+CREATE INDEX "assessment_message_session_created_idx" ON "messages" ("session_id", "created_at");
 
 -- Evidence indexes
 CREATE INDEX "conversation_evidence_session_id_idx" ON "conversation_evidence" ("assessment_session_id");
@@ -267,29 +272,29 @@ ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fkey"
 	FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE;
 
 -- Assessment constraints
-ALTER TABLE "assessment_session" ADD CONSTRAINT "assessment_session_user_id_user_id_fkey"
+ALTER TABLE "conversations" ADD CONSTRAINT "assessment_session_user_id_user_id_fkey"
 	FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE SET NULL;
 
-ALTER TABLE "assessment_message" ADD CONSTRAINT "assessment_message_session_id_assessment_session_id_fkey"
-	FOREIGN KEY ("session_id") REFERENCES "assessment_session"("id") ON DELETE CASCADE;
+ALTER TABLE "messages" ADD CONSTRAINT "assessment_message_session_id_assessment_session_id_fkey"
+	FOREIGN KEY ("session_id") REFERENCES "conversations"("id") ON DELETE CASCADE;
 
-ALTER TABLE "assessment_message" ADD CONSTRAINT "assessment_message_user_id_user_id_fkey"
+ALTER TABLE "messages" ADD CONSTRAINT "assessment_message_user_id_user_id_fkey"
 	FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE SET NULL;
 
 -- Assessment results constraints
 ALTER TABLE "assessment_results" ADD CONSTRAINT "assessment_results_session_id_assessment_session_id_fkey"
-	FOREIGN KEY ("assessment_session_id") REFERENCES "assessment_session"("id") ON DELETE CASCADE;
+	FOREIGN KEY ("assessment_session_id") REFERENCES "conversations"("id") ON DELETE CASCADE;
 
 -- Evidence constraints
 ALTER TABLE "conversation_evidence" ADD CONSTRAINT "conversation_evidence_session_id_assessment_session_id_fkey"
-	FOREIGN KEY ("assessment_session_id") REFERENCES "assessment_session"("id") ON DELETE CASCADE;
+	FOREIGN KEY ("assessment_session_id") REFERENCES "conversations"("id") ON DELETE CASCADE;
 
 ALTER TABLE "conversation_evidence" ADD CONSTRAINT "conversation_evidence_message_id_assessment_message_id_fkey"
-	FOREIGN KEY ("assessment_message_id") REFERENCES "assessment_message"("id") ON DELETE CASCADE;
+	FOREIGN KEY ("assessment_message_id") REFERENCES "messages"("id") ON DELETE CASCADE;
 
 -- Public profile constraints
 ALTER TABLE "public_profile" ADD CONSTRAINT "public_profile_session_id_assessment_session_id_fkey"
-	FOREIGN KEY ("session_id") REFERENCES "assessment_session"("id") ON DELETE CASCADE;
+	FOREIGN KEY ("session_id") REFERENCES "conversations"("id") ON DELETE CASCADE;
 
 ALTER TABLE "public_profile" ADD CONSTRAINT "public_profile_result_id_assessment_results_id_fkey"
 	FOREIGN KEY ("assessment_result_id") REFERENCES "assessment_results"("id") ON DELETE CASCADE;
@@ -372,4 +377,4 @@ ALTER TABLE "portrait_ratings" ADD CONSTRAINT "portrait_ratings_user_id_user_id_
 	FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE;
 
 ALTER TABLE "portrait_ratings" ADD CONSTRAINT "portrait_ratings_assessment_session_id_assessment_session_id_fk"
-	FOREIGN KEY ("assessment_session_id") REFERENCES "assessment_session"("id") ON DELETE CASCADE;
+	FOREIGN KEY ("assessment_session_id") REFERENCES "conversations"("id") ON DELETE CASCADE;
